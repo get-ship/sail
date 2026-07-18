@@ -387,17 +387,17 @@ fn source_path_for_cem(repo_root: &Path, cem_abs: &Path) -> String {
     format!("{dir}{stem}.sail")
 }
 
-/// Origin tag for a non-packaged source. `views/<name>/` → `view:<name>`;
+/// Origin tag for a non-packaged source. `routes/<name>/` → `view:<name>`;
 /// else `workspace:<first-seg>`. Per-app labelling is resolved by the
 /// caller from the bundler's own project root, not from a global config.
 fn origin_for_non_packaged_source(norm: &str) -> String {
-    if let Some(rest) = norm.strip_prefix("views/") {
+    if let Some(rest) = norm.strip_prefix("routes/") {
         if let Some(name) = rest.split('/').next().filter(|s| !s.is_empty()) {
             return format!("view:{name}");
         }
     }
-    if let Some(idx) = norm.find("assets/views/") {
-        let rest = &norm[idx + "assets/views/".len()..];
+    if let Some(idx) = norm.find("assets/routes/") {
+        let rest = &norm[idx + "assets/routes/".len()..];
         if let Some(name) = rest.split('/').next().filter(|s| !s.is_empty()) {
             return format!("view:{name}");
         }
@@ -601,7 +601,7 @@ mod tests {
         );
         // A view in the same package must not appear.
         write(
-            &root.join("packages/chrome/src/views/home/page.sail"),
+            &root.join("packages/chrome/src/routes/home/page.sail"),
             "<div>home</div>\n",
         );
 

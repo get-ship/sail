@@ -54,7 +54,7 @@ pub async fn bundle_target(
         format: Some(OutputFormat::Esm),
         minify: Some(production.into()),
         // Hoist every shared module into its own chunk (mirrors the multi-view
-        // build in views_bundle.rs). Without this the single-view path uses
+        // build in routes_bundle.rs). Without this the single-view path uses
         // rolldown's default per-entry split, which produces 1 chunk per shared
         // primitive *per consumer* — N chunks for `sail-pagination` where 1
         // would do. Each duplicate chunk's `customElements.define()` adds a no-op
@@ -82,7 +82,7 @@ pub async fn bundle_target(
     // view uses. Always on for views — the in-process compiler is the linked
     // crate, so there is no compiler-version drift to gate around. Framework/
     // app builds leave component_index empty (no `@sail-tag` imports emitted).
-    let emit_component_imports = target.name.starts_with("views/");
+    let emit_component_imports = target.name.starts_with("routes/");
     let resolver = if emit_component_imports {
         component_index(
             &layout.repo_root,

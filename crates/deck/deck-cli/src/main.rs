@@ -41,7 +41,7 @@ enum Command {
         root: Vec<PathBuf>,
     },
 
-    /// Generate boilerplate for a new view or primitive component.
+    /// Generate boilerplate for a new route or primitive component.
     #[command(subcommand)]
     Scaffold(Scaffold),
 
@@ -118,15 +118,16 @@ enum Command {
 
 #[derive(Subcommand)]
 enum Scaffold {
-    /// New SAIL view under `views/<name>/` (page.sail + controller.ts +
-    /// style.css + manifest.jsonc; optional view-private widget).
-    View {
-        /// View dir name + manifest `name` field. Lowercase ASCII + hyphens.
+    /// New SAIL route under `routes/<name>/` (a `page.sail`; optional
+    /// route-private widget). Deck derives the URL from the directory tree
+    /// — no manifest, no host metadata.
+    Route {
+        /// Route dir name. Lowercase ASCII + hyphens.
         name: String,
         /// URL pattern; defaults to `/<name>`.
         #[arg(long)]
         path: Option<String>,
-        /// Optional view-private widget; tag must start with `<name>-`.
+        /// Optional route-private widget; tag must start with `<name>-`.
         #[arg(long)]
         component: Option<String>,
     },
@@ -203,8 +204,8 @@ fn run() -> Result<()> {
             println!("deck routes → {n_routes} first-party route(s)");
             Ok(())
         }
-        Command::Scaffold(Scaffold::View { name, path, component }) => {
-            scaffold::run_view(name, path, component)
+        Command::Scaffold(Scaffold::Route { name, path, component }) => {
+            scaffold::run_route(name, path, component)
         }
         Command::Scaffold(Scaffold::Component { tag, controller }) => {
             scaffold::run_component(tag, controller)

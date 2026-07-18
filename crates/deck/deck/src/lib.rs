@@ -30,7 +30,7 @@ pub use deck_axum::pages::spa_fallback;
 // `DataPort` is the data seam a host implements (live `<data source>`); the
 // facade surfaces it so hosts write `deck::DataPort`, not `deck_core::DataPort`.
 pub use deck_core::{
-    CachePolicy, DaemonBuildInfo, DaemonMode, DataPort, DeckResponse, Resolution, ViewSetupQuery,
+    CachePolicy, DaemonBuildInfo, DaemonMode, DataPort, DeckResponse, Resolution, RouteSetupQuery,
     inject_mode_meta, mode_str,
 };
 
@@ -45,13 +45,13 @@ pub use deck_core::live_wire;
 // Submodule surfaces consumers reach into directly (shipd, xtask SDK gen).
 //
 // `render_helpers` lives in deck-axum (its `not_found` returns an axum
-// response); `resolver` is pure and lives in deck-core. `view_payload` (the
-// `ViewPayload` wire DTO) is a shared low-level type that lives in deck-host —
+// response); `resolver` is pure and lives in deck-core. `route_payload` (the
+// `RoutePayload` wire DTO) is a shared low-level type that lives in deck-host —
 // it stayed put when the view SERVING moved to ship-views, so the facade still
-// surfaces `deck::view_payload::ViewPayload` from deck-host (no ship-views dep).
+// surfaces `deck::route_payload::RoutePayload` from deck-host (no ship-views dep).
 pub use deck_axum::render_helpers;
 pub use deck_core::resolver;
-pub use deck_host::view_payload;
+pub use deck_host::route_payload;
 
 // The bundler — deck owns bundling (#167). Consumers that named
 // `ship_platform::bundler::*` now use `deck::bundler::*`.

@@ -55,14 +55,14 @@ pub(crate) struct Layout {
 /// The root `dir` itself is also a candidate — `routes/page.sail`
 /// is a mount at `/` (the index route). Subdirs are walked for
 /// nested mounts.
-fn view_dirs(dir: &Path, acc: &mut Vec<std::path::PathBuf>) -> Result<()> {
+fn route_dirs(dir: &Path, acc: &mut Vec<std::path::PathBuf>) -> Result<()> {
     if dir.join("page.sail").is_file() {
         acc.push(dir.to_path_buf());
     }
     for entry in std::fs::read_dir(dir)? {
         let entry = entry?;
         if entry.file_type()?.is_dir() {
-            view_dirs(&entry.path(), acc)?;
+            route_dirs(&entry.path(), acc)?;
         }
     }
     Ok(())
@@ -595,7 +595,7 @@ pub(crate) fn build_route_tree(routes_dir: &Path, label: &str) -> Result<RouteTr
         return Ok(RouteTree { label: label.to_string(), routes: vec![], layouts: vec![] });
     }
     let mut dirs = Vec::new();
-    view_dirs(routes_dir, &mut dirs)
+    route_dirs(routes_dir, &mut dirs)
         .with_context(|| format!("walking routes tree for `{label}`"))?;
     let mut routes: Vec<Route> = dirs.iter().filter_map(|d| to_route(routes_dir, d)).collect();
     routes.sort_by(|a, b| cmp_route_patterns(&a.pattern, &b.pattern));

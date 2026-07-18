@@ -444,7 +444,7 @@ mod tests {
     #[test]
     fn page_sui_detected_as_view() {
         assert_eq!(
-            detect("/repo/views/agents/page.sail"),
+            detect("/repo/routes/agents/page.sail"),
             CompileMode::View,
             "page.sail must be a View"
         );

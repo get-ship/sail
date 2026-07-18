@@ -22,8 +22,8 @@ use crate::{into_axum, mode_from_ext};
 // ── Shared CSS / theme assets ─────────────────────────────────────────────────
 
 /// `GET /api/assets/view-tokens.css`
-pub async fn serve_view_tokens(mode: Option<Extension<DaemonMode>>) -> Response {
-    into_axum(deck_core::serve_view_tokens(mode_from_ext(mode)))
+pub async fn serve_route_tokens(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_route_tokens(mode_from_ext(mode)))
 }
 
 /// `GET /api/assets/sail.css` — the framework stylesheet (contracts + stdlib

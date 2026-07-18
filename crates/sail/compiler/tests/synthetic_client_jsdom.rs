@@ -138,7 +138,7 @@ export default defineConfig({{
 import {{ mount }} from '{mount}'
 import {{ installServerDom }} from '{server_dom}'
 
-// A minimal ViewPayload for a pre-resolved client module + given SSR html.
+// A minimal RoutePayload for a pre-resolved client module + given SSR html.
 function payload(name: string, html: string) {{
   return {{ name, html, css: '', scope: {{}}, moduleUrl: '', params: {{}} }} as any
 }}

@@ -31,10 +31,10 @@ use sail_compiler::CompileMode;
 
 const CONF: &str = "crates/deck/deck-conformance/app";
 // `job/cut-app-manifest` deleted the per-app `app.manifest.jsonc` files for
-// the `hub /` and `views/showcase` targets — `route` / `navigate` now resolve
+// the `hub /` and `routes/showcase` targets — `route` / `navigate` now resolve
 // by convention (`sail_compiler::emit::synthetic::convention_client`) so
 // product apps no longer need one. The conformance manifest is the one
-// remaining checked-in manifest; it covers the `hub /` and `views/showcase`
+// remaining checked-in manifest; it covers the `hub /` and `routes/showcase`
 // cases (its `ship` / `api` declarations are tree-shaken when unused, and
 // the convention covers the `route` reads the two views carry).
 const CONF_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
@@ -96,7 +96,7 @@ impl DataPort for DemoData {
 }
 
 fn conf(view: &str) -> String {
-    format!("{CONF}/views/{view}/page.sail")
+    format!("{CONF}/routes/{view}/page.sail")
 }
 fn conf_ctrl(_view: &str) -> Option<String> {
     // Conformance views carry their controller INLINE (`<controller>` block); the
@@ -132,9 +132,9 @@ fn targets() -> Vec<Target> {
             expect: "Your Ship workspace",
         },
         Target {
-            name: "views/showcase",
+            name: "routes/showcase",
             features: "static gallery, attribute props, custom-element charts, nesting",
-            source: "views/showcase/page.sail".to_string(),
+            source: "routes/showcase/page.sail".to_string(),
             manifest: VIEWS_MANIFEST,
             controller: None,
             needs_data: false,
@@ -289,13 +289,13 @@ fn slice1_reliability_sweep() {
     // launch-relevant core (hub /, showcase, board, counter, glyph,
     // greet/[id]) renders correctly — a regression in those is a real break.
     //
-    // `hub /` + `views/showcase` source from the `apps/` and `views/` trees,
+    // `hub /` + `routes/showcase` source from the `apps/` and `routes/` trees,
     // which live OUTSIDE the framework repo (the framework/app boundary split).
     // When their `.sail` source is absent here, skip the gate with a note rather
     // than fail — the conformance core (board, counter, glyph, greet/[id]) is
     // the in-repo fidelity floor. In an app repo (apps/ present) all six are
     // required again, unchanged.
-    let core = ["hub /", "views/showcase", "board", "counter", "glyph", "greet/[id]"];
+    let core = ["hub /", "routes/showcase", "board", "counter", "glyph", "greet/[id]"];
     for name in core {
         let o = outcomes.iter().find(|o| o.name == name).expect("core target present");
         let src = targets
@@ -306,7 +306,7 @@ fn slice1_reliability_sweep() {
         if !repo.join(&src).exists() {
             eprintln!(
                 "SKIP core target `{name}`: source `{src}` absent — \
-                 apps/ or views/ content outside the framework boundary"
+                 apps/ or routes/ content outside the framework boundary"
             );
             continue;
         }

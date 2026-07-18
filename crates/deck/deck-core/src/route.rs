@@ -1,12 +1,12 @@
 use sail_compiler::{CompileOpts, compile};
-use deck_host::resolver::ResolvedView;
+use deck_host::resolver::ResolvedRoute;
 
 use crate::{DaemonMode, DeckResponse};
-use crate::assets::resolve_view_js;
+use crate::assets::resolve_route_js;
 use crate::resolver::{resolve, Resolution};
 
 #[derive(Debug, serde::Deserialize)]
-pub struct ViewSetupQuery {
+pub struct RouteSetupQuery {
     pub sub: Option<String>,
 }
 
@@ -15,30 +15,30 @@ pub struct ViewSetupQuery {
 /// project root the built bundle + source `.sail` are resolved under, so one
 /// process serving many apps reads each app's views from ITS own root (no
 /// process global).
-pub fn serve_sui_view_setup(
+pub fn serve_sui_route_setup(
     mode: DaemonMode,
     resolution: &Resolution,
     name: &str,
     sub: Option<&str>,
 ) -> DeckResponse {
-    if !is_valid_view_name(name) {
+    if !is_valid_route_name(name) {
         return DeckResponse::not_found("invalid view name", mode);
     }
     if sub.is_none() {
-        if let Some(js) = resolve_view_js(Some(resolution), name) {
-            return DeckResponse::js_view(js, mode);
+        if let Some(js) = resolve_route_js(Some(resolution), name) {
+            return DeckResponse::js_route(js, mode);
         }
     }
     let Some(root) = resolution.project_root() else {
         return DeckResponse::not_found("view: no project root (host must carry a Resolution)", mode);
     };
     match resolve(root, name, sub) {
-        Ok(r) => compile_view_js(name, &r, mode),
+        Ok(r) => compile_route_js(name, &r, mode),
         Err(e) => DeckResponse::not_found(e.message, mode),
     }
 }
 
-fn compile_view_js(name: &str, resolved: &ResolvedView, mode: DaemonMode) -> DeckResponse {
+fn compile_route_js(name: &str, resolved: &ResolvedRoute, mode: DaemonMode) -> DeckResponse {
     let ts_filename = match resolved
         .source_path
         .as_ref()
@@ -92,7 +92,7 @@ fn compile_view_js(name: &str, resolved: &ResolvedView, mode: DaemonMode) -> Dec
         _ => out.js,
     };
 
-    DeckResponse::js_view(final_js, mode)
+    DeckResponse::js_route(final_js, mode)
 }
 
 // The view-name validator is a single source of truth in deck-host so the
@@ -100,7 +100,7 @@ fn compile_view_js(name: &str, resolved: &ResolvedView, mode: DaemonMode) -> Dec
 // path used to carry its own (lenient) copy while the re-exported deck-host one
 // was stricter — a view could render + be handed a subscribe/action URL the
 // SSE/mutation path then rejected. Delegate down to the one canonical rule.
-pub(crate) use deck_host::render_helpers::is_valid_view_name;
+pub(crate) use deck_host::render_helpers::is_valid_route_name;
 
 #[cfg(test)]
 mod tests {
@@ -108,44 +108,44 @@ mod tests {
 
     #[test]
     fn view_name_accepts_digits_upper_under_dash() {
-        assert!(is_valid_view_name("v2"));
-        assert!(is_valid_view_name("MyView"));
-        assert!(is_valid_view_name("my_view"));
-        assert!(is_valid_view_name("my-view"));
-        assert!(is_valid_view_name("v2-dashboard"));
-        assert!(is_valid_view_name("agents"));
+        assert!(is_valid_route_name("v2"));
+        assert!(is_valid_route_name("MyView"));
+        assert!(is_valid_route_name("my_view"));
+        assert!(is_valid_route_name("my-view"));
+        assert!(is_valid_route_name("v2-dashboard"));
+        assert!(is_valid_route_name("agents"));
     }
 
     #[test]
     fn view_name_rejects_traversal_and_dotted_prefixes() {
-        assert!(!is_valid_view_name("../etc"));
-        assert!(!is_valid_view_name(".."));
-        assert!(!is_valid_view_name(".hidden"));
-        assert!(!is_valid_view_name("-leading-dash"));
+        assert!(!is_valid_route_name("../etc"));
+        assert!(!is_valid_route_name(".."));
+        assert!(!is_valid_route_name(".hidden"));
+        assert!(!is_valid_route_name("-leading-dash"));
     }
 
     #[test]
     fn view_name_rejects_empty_and_oversize() {
-        assert!(!is_valid_view_name(""));
+        assert!(!is_valid_route_name(""));
         let too_long: String = "a".repeat(65);
-        assert!(!is_valid_view_name(&too_long));
+        assert!(!is_valid_route_name(&too_long));
         let max_ok: String = "a".repeat(64);
-        assert!(is_valid_view_name(&max_ok));
+        assert!(is_valid_route_name(&max_ok));
     }
 
     #[test]
     fn view_name_rejects_invalid_chars() {
-        assert!(!is_valid_view_name("with space"));
-        assert!(!is_valid_view_name("with.dot"));
-        assert!(!is_valid_view_name("with$dollar"));
+        assert!(!is_valid_route_name("with space"));
+        assert!(!is_valid_route_name("with.dot"));
+        assert!(!is_valid_route_name("with$dollar"));
     }
 
     #[test]
     fn view_name_segment_limits() {
-        assert!(is_valid_view_name("a/b/c"));
+        assert!(is_valid_route_name("a/b/c"));
         let too_deep = "a/b/c/d/e/f/g/h/i";
-        assert!(!is_valid_view_name(too_deep));
-        assert!(!is_valid_view_name("foo//bar"));
-        assert!(!is_valid_view_name("foo/../bar"));
+        assert!(!is_valid_route_name(too_deep));
+        assert!(!is_valid_route_name("foo//bar"));
+        assert!(!is_valid_route_name("foo/../bar"));
     }
 }

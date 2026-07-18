@@ -28,11 +28,11 @@ pub mod host_context;
 pub mod sail_css;
 pub mod tag;
 pub mod themes;
-pub mod view;
-pub mod view_tokens;
-// `view_host` + `view_payload` (the named-view SERVING CORE) moved to the
+pub mod route;
+pub mod route_tokens;
+// `route_host` + `route_payload` (the named-view SERVING CORE) moved to the
 // `ship-views` crate (deck ⊥ ship-views). deck-core keeps the SHARED infra both
-// paths use: `resolver`, `synthetic_ssr` (the SSR seam), `view::serve_sui_view_setup`,
+// paths use: `resolver`, `synthetic_ssr` (the SSR seam), `route::serve_sui_route_setup`,
 // `error_page`, `form_inject`. ship-views calls into those.
 pub mod window_registry;
 
@@ -60,7 +60,7 @@ pub use window_registry::{
 };
 
 pub use assets::{
-    baked_framework_stamps, parse_baked_stamp, resolve_view_js, serve_deck_route,
+    baked_framework_stamps, parse_baked_stamp, resolve_route_js, serve_deck_route,
     serve_public_asset, serve_scaffold, serve_scaffold_asset, serve_sui_dom, serve_sui_error_overlay,
     serve_sui_icon, serve_sui_live_reload, serve_sui_runtime, serve_sui_sdk_client,
 };
@@ -73,9 +73,9 @@ pub use setup::redirect;
 pub use themes::{list_themes, resolve_theme_css, serve_theme_css, serve_themes_list, ThemeMeta, ThemeSource};
 pub use sail_css::serve_sail_css;
 pub use tag::{strip_sail_tag_prefix, SAIL_TAG_PREFIX};
-pub use view_tokens::serve_view_tokens;
-pub use view::{serve_sui_view_setup, ViewSetupQuery};
-// `serve_view_host` / `serve_view_payload[_subpath]` moved to `ship-views`.
+pub use route_tokens::serve_route_tokens;
+pub use route::{serve_sui_route_setup, RouteSetupQuery};
+// `serve_route_host` / `serve_route_payload[_subpath]` moved to `ship-views`.
 
 /// Daemon operating mode — controls cache headers, HMR availability, SSR cache.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

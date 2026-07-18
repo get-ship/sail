@@ -1,6 +1,6 @@
 //! Opt-in `deck build --typecheck`: an on-the-fly tsconfig + `tsc --noEmit`
 //! pass over the app's `.ts` sources (authored controllers + the bundler's
-//! generated `routes.gen.ts` / `entry.gen.ts` / `meta.gen.ts` /
+//! generated `routes.gen.ts` / `entry.gen.ts` /
 //! `components.gen.ts`), failing the build command on TypeScript errors.
 //!
 //! Default build behavior is unchanged — the flag is opt-in for v1. The

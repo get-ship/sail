@@ -34,27 +34,27 @@ fn fixture(root: &Path) {
         &root.join("packages/demo/src/sail-widget/sail-widget.sail"),
         "<div>sail-widget-marker</div>\n",
     );
-    write(&root.join("views/usewidget/page.sail"), "<div><sail-widget></sail-widget></div>\n");
+    write(&root.join("routes/usewidget/page.sail"), "<div><sail-widget></sail-widget></div>\n");
     // A second view that also uses the tag — for the shared-chunk dedup test.
-    write(&root.join("views/usewidget2/page.sail"), "<div><sail-widget></sail-widget></div>\n");
+    write(&root.join("routes/usewidget2/page.sail"), "<div><sail-widget></sail-widget></div>\n");
 }
 
 fn view_target(root: &Path) -> BundleTarget {
     BundleTarget {
-        name: "views/usewidget/view".into(),
-        entry: TargetEntry::Real(root.join("views/usewidget/page.sail")),
+        name: "routes/usewidget/route".into(),
+        entry: TargetEntry::Real(root.join("routes/usewidget/page.sail")),
         externals: vec![],
-        out_file: "views/usewidget/view.js".into(),
+        out_file: "routes/usewidget/route.js".into(),
         lazy: false,
     }
 }
 
 fn second_view_target(root: &Path) -> BundleTarget {
     BundleTarget {
-        name: "views/usewidget2/view".into(),
-        entry: TargetEntry::Real(root.join("views/usewidget2/page.sail")),
+        name: "routes/usewidget2/route".into(),
+        entry: TargetEntry::Real(root.join("routes/usewidget2/page.sail")),
         externals: vec![],
-        out_file: "views/usewidget2/view.js".into(),
+        out_file: "routes/usewidget2/route.js".into(),
         lazy: false,
     }
 }
@@ -82,13 +82,13 @@ async fn bundle(root: &Path, out_root: &Path) -> String {
     bundle_target(&layout, &view_target(root), &staging, false)
         .await
         .expect("view bundles");
-    std::fs::read_to_string(out_root.join(".deck/views/usewidget/view.js"))
-        .expect("view.js written")
+    std::fs::read_to_string(out_root.join(".deck/routes/usewidget/route.js"))
+        .expect("route.js written")
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn view_bundle_carries_its_component() {
-    // In-process compiler (#255), per-view resolver always on for `views/`: a
+    // In-process compiler (#255), per-view resolver always on for `routes/`: a
     // view using <sail-widget> tree-shakes the component INTO its bundle from
     // source (via the CEM index). No binary to locate, no gate to flip — the
     // component is in the bundle *because* the resolver pulled it from source
@@ -115,7 +115,7 @@ async fn shared_component_dedups_into_one_chunk_across_views() {
     let out = tempfile::tempdir().unwrap();
 
     // Both views import <sail-widget>; the multi-entry build must hoist it.
-    deck_bundler::views_bundle::bundle_views(
+    deck_bundler::routes_bundle::bundle_routes(
         &BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults()).with_out_root(out.path().to_path_buf()),
         &[view_target(root), second_view_target(root)],
         &out.path().join("_staging"),

@@ -59,7 +59,7 @@ asset URLs become `/assets/<file>`, matching the on-disk layout. (`deck build
 |---|---|
 | `deck-core` | Transport-agnostic hosting logic. Produces a `DeckResponse` (status + bytes + headers); never speaks HTTP. Owns view resolution, SSR payload assembly, token/theme CSS, the setup flow, and the `DataPort` trait. |
 | `deck-axum` | The axum adapter. Thin `serve_*` shims map `DeckResponse` → `axum::Response`. `router()` registers deck's whole serving surface as one mountable unit; `multiplex_router()` is the live-data transport — **host-wired, not mounted by `deck dev`** (see the data seam below). |
-| `deck-host` | Pure host helpers shared across adapters: `render_helpers`, `resolver` (project-root + view resolution), `view_payload`. |
+| `deck-host` | Pure host helpers shared across adapters: `render_helpers`, `resolver` (project-root + view resolution), `route_payload`. |
 | `deck-bundler` | The one bundler (#163). In-process Rolldown; a Rust plugin compiles `.sail` via the linked `sail-compiler`. Builds framework singletons, packs, views, and app scaffolds. |
 | `deck-config` | Parses `deck.jsonc` into `DeckConfig` — the host's single configuration surface (below). |
 | `deck-cli` | The `deck` binary: `dev`, `build`, `build-assets`, `routes`, `emit`, `scaffold {view,component,pack}`. The `next`/`vite` analog. |

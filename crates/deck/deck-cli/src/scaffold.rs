@@ -1,10 +1,12 @@
-//! `deck scaffold view|component` — generate boilerplate for a new SAIL view
-//! or primitive. Ported verbatim from the retired
+//! `deck scaffold route|component` — generate boilerplate for a new SAIL route
+//! or primitive. Ported from the retired
 //! `scripts/scaffold-view.mjs` + `scripts/scaffold-sail-component.mjs`.
 //!
 //! Scaffolding is a deck capability because deck owns the app/component
-//! shape (manifest fields, the single-file `.sail` convention — state lives
-//! in an inline `<controller>` block). The retired .mjs called into `node` and
+//! shape (the single-file `.sail` convention — state lives in an inline
+//! `<controller>` block). A route is just a directory with a `page.sail`;
+//! deck derives the URL from the tree (no manifest, no host metadata). The
+//! retired .mjs called into `node` and
 //! pointed at since-renamed paths (`packages/ui-components/src/`); the
 //! port writes to the current layout (`packages/components/sail/primitives/`)
 //! and the next-steps text reflects today's toolchain.
@@ -16,7 +18,7 @@ use anyhow::{Context, Result, anyhow, bail};
 
 /// Validate `name` against `/^[a-z][a-z0-9-]*$/` — the route-segment shape
 /// the daemon resolver expects and the file-system shape we write.
-fn validate_view_name(name: &str) -> Result<()> {
+fn validate_route_name(name: &str) -> Result<()> {
     if name.is_empty() {
         bail!("view name is required");
     }
@@ -30,7 +32,7 @@ fn validate_view_name(name: &str) -> Result<()> {
     Ok(())
 }
 
-/// Same shape as `validate_view_name` plus the `sail-` prefix the runtime
+/// Same shape as `validate_route_name` plus the `sail-` prefix the runtime
 /// custom-element registry expects for primitives.
 fn validate_component_tag(tag: &str) -> Result<()> {
     let Some(rest) = deck_core::strip_sail_tag_prefix(tag) else {
@@ -67,8 +69,8 @@ fn find_repo_root(start: &Path) -> Result<PathBuf> {
     })
 }
 
-pub fn run_view(name: String, route_path: Option<String>, component_tag: Option<String>) -> Result<()> {
-    validate_view_name(&name)?;
+pub fn run_route(name: String, route_path: Option<String>, component_tag: Option<String>) -> Result<()> {
+    validate_route_name(&name)?;
     let route = route_path.unwrap_or_else(|| format!("/{name}"));
     if !route.starts_with('/') {
         bail!("--path must start with `/` — got {route:?}");

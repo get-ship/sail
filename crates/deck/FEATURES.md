@@ -64,7 +64,7 @@ Each handler logic lives in `deck-core` and returns a `DeckResponse`; the matchi
 
 | Feature | Route | Implementation | Description |
 | --- | --- | --- | --- |
-| Compiled view module | `GET /_deck/views/{name}/view.js` | `crates/deck/deck-core/src/view.rs::serve_sui_view_setup` | Serves the per-view ESM bundle; compiles on demand when no `.deck` artifact exists. |
+| Compiled route module | `GET /_deck/views/{name}/view.js` | `crates/deck/deck-core/src/route.rs::serve_sui_route_setup` | Serves the per-route ESM bundle; compiles on demand when no `.deck` artifact exists. (The `/_deck/views/*` serving URL is the ship-views wire path — see the ship-ui handoff.) |
 | sail-runtime bundle | `GET /_deck/runtime.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_runtime` | Deck's own baked runtime singleton. |
 | sail-dom bundle | `GET /_deck/dom.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_dom` | Deck's own baked DOM module. |
 | sdk-client bundle | `GET /_deck/sdk-client.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_sdk_client` | Deck's own baked SDK client. |
@@ -75,10 +75,10 @@ Each handler logic lives in `deck-core` and returns a `DeckResponse`; the matchi
 | Meta / drift stamp | `GET /_deck/meta` | `crates/deck/deck-core/src/meta.rs::serve_meta` | Compiler + daemon build identity for the shell's version-drift check. |
 | Workspace catalog | (purged — `GET /_deck/catalog/workspace`) | (purged — `deck-core/src/packs.rs`) | The runtime catalog serving was the framework's hardcoded `.deck/catalogs/` read. Purged. |
 | Live-reload client | `GET /_deck/live-reload.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_live_reload` | The single HMR client; self-gates on the `ship-mode` meta so it only subscribes in dev. |
-| Styled 404 page | (host 404 body) | `crates/deck/deck-core/src/error_page.rs::view_not_found` | Rendered `text/html` not-found page (with servable-view list), not raw JSON. |
+| Styled 404 page | (host 404 body) | `crates/deck/deck-core/src/error_page.rs::route_not_found` | Rendered `text/html` not-found page (with servable-view list), not raw JSON. |
 | View resolution | (internal) | `crates/deck/deck-core/src/resolver.rs::resolve` | Host-agnostic project-root + first-party resolution feeding every view handler. |
 | Asset-graph read | (purged — `deck-core/src/asset_graph.rs`) | (purged — `deck-purge-root`) | The runtime read of `.deck/asset-graph.json` was the framework's hardcoded `.deck/` reach. Purged. |
-| Module URL builder | (internal) | `crates/deck/deck-core/src/routes.rs::view_module_url` | One source of truth for the view-module `/_deck/...` URL. |
+| Module URL builder | (internal) | `crates/deck/deck-core/src/routes.rs::route_module_url` | One source of truth for the view-module `/_deck/...` URL. |
 | Mutation URL builder | (internal) | `crates/deck/deck-core/src/routes.rs::mutation_action` | Builds the `POST /_deck/mutation/{name}` form-action URL. |
 | Subscribe URL builder | (internal) | `crates/deck/deck-core/src/routes.rs::subscribe_url` | Builds the `/_deck/views/{name}/sse` live-data URL. |
 | Form action injection | (host-side SSR) | `crates/deck/deck-core/src/form_inject.rs::inject_form_actions` | Augments `<form mutation="bN">` SSR with the daemon-relative action URL (idempotent). |
@@ -106,7 +106,7 @@ chunks, builds apps and views, writes the asset graph, and watches for HMR.
 | Rolldown driver | per-target `.js` | `crates/deck/deck-bundler/src/rolldown_bundle.rs::bundle_target` | Drives Rolldown for one target with the SAIL plugin; trims arenas after each build. |
 | SAIL resolve/load plugin | (Rolldown plugin) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `resolve_id`/`load` hooks: compile `.sail`, externalize singletons, re-anchor `@ship/<pkg>`, resolve `@sail-tag/<tag>`. |
 | Per-view `@sail-tag` resolver | (view bundle) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `<tag>` → source `.sail` index so a view bundle carries exactly the components it uses. |
-| Shared-chunk dedup | `.deck/` shared chunks | `crates/deck/deck-bundler/src/views_bundle.rs::bundle_views` | Multi-entry view build: a component used by ≥2 views lands in one shared chunk. |
+| Shared-chunk dedup | `.deck/` shared chunks | `crates/deck/deck-bundler/src/routes_bundle.rs::bundle_routes` | Multi-entry view build: a component used by ≥2 views lands in one shared chunk. |
 | App build | static dir | `crates/deck/deck-bundler/src/app.rs::bundle_app` | Bundles a SAIL SPA (hub/space), externalizing the document importmap; compiles its `.sail` in-process. |
 | Asset-graph write | (purged — `deck-bundler/src/asset_graph.rs`) | (purged — `deck-purge-root`) | The framework no longer writes a monorepo-root `.deck/asset-graph.json`. |
 | Watch / HMR | (broadcast events) | `crates/deck/deck-bundler/src/watch.rs` | Pruned non-recursive FS watch, bounded drop-oldest ring, debounced rebuild, emits `BundlerEvent`s. |
@@ -134,13 +134,13 @@ The pure SAIL-facing read side, plus the framework CLI.
 | Feature | Surface | Implementation | Description |
 | --- | --- | --- | --- |
 | View resolver | (on-disk lookup) | `crates/deck/deck-host/src/resolver.rs::resolve` | Resolves a view name + sub-path across first-party / `views/` / `.ship/views/` roots with `[param]` dirs. |
-| Resolved view | (resolution result) | `crates/deck/deck-host/src/resolver.rs::ResolvedView` | Source + params + canonical source path returned by the resolver. |
-| View payload shape | (JSON contract) | `crates/deck/deck-host/src/view_payload.rs::ViewPayload` | The serialized payload contract (html/css/scope/moduleUrl/params) shared with the runtime. |
-| Render helper | (source read) | `crates/deck/deck-host/src/render_helpers.rs::render_view_source` | Reads a view's `page.sail` source from the project root. |
+| Resolved view | (resolution result) | `crates/deck/deck-host/src/resolver.rs::ResolvedRoute` | Source + params + canonical source path returned by the resolver. |
+| View payload shape | (JSON contract) | `crates/deck/deck-host/src/route_payload.rs::RoutePayload` | The serialized payload contract (html/css/scope/moduleUrl/params) shared with the runtime. |
+| Render helper | (source read) | `crates/deck/deck-host/src/render_helpers.rs::render_route_source` | Reads a view's `page.sail` source from the project root. |
 | CLI: build app | `deck build` | `crates/deck/deck-cli/src/main.rs` | Builds a SAIL SPA app to a static output dir. |
 | CLI: bake assets | `deck build-assets` | `crates/deck/deck-cli/src/main.rs` | Bakes framework + consumer bundles via the in-process bundler, with non-empty guards. |
 | CLI: routes | `deck routes` | `crates/deck/deck-cli/src/main.rs` | Regenerates the typed dynamic-route table standalone. `--root=<path>` is required and repeatable; the CLI walks `<root>/routes/` and writes `<root>/routes.gen.ts` with a label auto-derived from the path's basename (no app-name coupling, no monorepo-defaults heuristic). |
-| CLI: scaffold view | `deck scaffold view` | `crates/deck/deck-cli/src/scaffold.rs::run_view` | Generates a new view (page.sail + manifest.jsonc; state goes in an inline `<controller>`). |
+| CLI: scaffold view | `deck scaffold view` | `crates/deck/deck-cli/src/scaffold.rs::run_route` | Generates a new view (page.sail + manifest.jsonc; state goes in an inline `<controller>`). |
 | CLI: scaffold component | `deck scaffold component` | `crates/deck/deck-cli/src/scaffold.rs::run_component` | Generates a new `sail-*` primitive under the primitives package. |
 | CLI: scaffold pack | `deck scaffold pack` | `crates/deck/deck-cli/src/scaffold.rs::run_pack` | Generates a new first-party `@ship/<name>` component pack. |
 
@@ -148,12 +148,12 @@ The pure SAIL-facing read side, plus the framework CLI.
 
 | Feature | Surface | Implementation | Description |
 | --- | --- | --- | --- |
-| HTML security headers | HTML responses | `crates/deck/deck-core/src/response.rs::html_view` | X-Frame-Options, X-Content-Type-Options nosniff, and a self-only CSP on every HTML body. |
-| View-name validation | view routes | `crates/deck/deck-host/src/render_helpers.rs::is_valid_view_name` | Rejects traversal / dotted / oversize / bad-char names before any disk access. |
+| HTML security headers | HTML responses | `crates/deck/deck-core/src/response.rs::html_route` | X-Frame-Options, X-Content-Type-Options nosniff, and a self-only CSP on every HTML body. |
+| View-name validation | view routes | `crates/deck/deck-host/src/render_helpers.rs::is_valid_route_name` | Rejects traversal / dotted / oversize / bad-char names before any disk access. |
 | Scaffold asset traversal guard | scaffold assets | `crates/deck/deck-core/src/assets.rs::serve_scaffold_asset` | Rejects `..`, slashes, and leading dots in asset filenames. |
 | inject_globals key validation | scaffold HTML | `crates/deck/deck-core/src/assets.rs::serve_scaffold` | Skips any `inject_globals` key that is not a safe JS identifier (no script injection). |
-| Symlink containment | view resolution | `crates/deck/deck-host/src/resolver.rs::read_view_artifact` | Canonicalizes + size-caps view artifacts; the resolver rejects leaves that escape their bucket root. |
-| Source-size cap | view source | `crates/deck/deck-host/src/resolver.rs::MAX_VIEW_SOURCE_BYTES` | 4 MiB ceiling (stat-checked before read) so one request can't pin a worker on a giant parse. |
+| Symlink containment | view resolution | `crates/deck/deck-host/src/resolver.rs::read_route_artifact` | Canonicalizes + size-caps view artifacts; the resolver rejects leaves that escape their bucket root. |
+| Source-size cap | view source | `crates/deck/deck-host/src/resolver.rs::MAX_ROUTE_SOURCE_BYTES` | 4 MiB ceiling (stat-checked before read) so one request can't pin a worker on a giant parse. |
 | Prod error redaction | errors / 404s | `crates/deck/deck-core/src/response.rs::not_found` | Suppresses internal detail (paths, build hints) in production; surfaces it only in dev. |
 | Strong ETag (prod) | cacheable bodies | `crates/deck/deck-core/src/response.rs::compute_etag` | Content-derived ETag for prod cacheable responses. |
 </content>

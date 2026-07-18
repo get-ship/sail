@@ -2,7 +2,7 @@
 //!
 //! Spec: `.artifacts/job-spec.md` (job/deck-cli-tests) — top-3 fix #3 of
 //! the 2026-06-19 deck-readiness punch-list (P2-10). `crates/deck/deck-cli/`
-//! shipped zero tests; `emit`, `scaffold {view,component,pack}`, and
+//! shipped zero tests; `emit`, `scaffold {route,component,pack}`, and
 //! `build-assets` were unproven. These tests exercise each subcommand
 //! against a temp dir via `Command::new(env!("CARGO_BIN_EXE_deck"))` and
 //! assert on the PRODUCED ARTIFACTS (not internal logs).
@@ -177,60 +177,51 @@ fn emit_places_target_in_out_dir() {
     assert!(len > 0, "emit wrote empty {}", entry.display());
 }
 
-// ── scaffold view ───────────────────────────────────────────────────────────
+// ── scaffold route ──────────────────────────────────────────────────────────
 
-/// `deck scaffold view <name>` writes the 2 documented files at the
-/// documented paths (`views/<name>/{manifest.jsonc,page.sail}`) and the
-/// manifest's `path` field starts with `/`. The retired sibling files
-/// (`controller.ts`, `style.css`) must NOT be written — state is an
-/// inline `<controller>` block and userland CSS is banned.
+/// `deck scaffold route <name>` writes a generic `routes/<name>/page.sail`.
+/// Deck derives the URL from the directory tree — no `manifest.jsonc`, no
+/// host metadata (`auth`/`rail`/`layout`/`title` are a Ship-shell concern,
+/// excised from deck). The retired sibling files (`controller.ts`,
+/// `style.css`) and the Ship manifest must NOT be written.
 #[test]
-fn scaffold_view_writes_two_files_and_manifest_path() {
+fn scaffold_route_writes_page_and_no_manifest() {
     let mut guard = ScaffoldGuard::new();
-    let name = unique_stem("testview");
-    let view_dir = repo_root().join("views").join(&name);
-    guard.track(view_dir.clone());
+    let name = unique_stem("testroute");
+    let route_dir = repo_root().join("routes").join(&name);
+    guard.track(route_dir.clone());
 
-    let status = run_deck(&["scaffold", "view", &name]).status;
-    assert!(status.success(), "deck scaffold view {name} exited {status:?}");
+    let status = run_deck(&["scaffold", "route", &name]).status;
+    assert!(status.success(), "deck scaffold route {name} exited {status:?}");
 
-    for rel in ["manifest.jsonc", "page.sail"] {
-        let p = view_dir.join(rel);
-        assert!(p.exists(), "missing {} after scaffold view", p.display());
-        let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-        assert!(len > 0, "empty {} after scaffold view", p.display());
-    }
-    for rel in ["controller.ts", "style.css"] {
+    let page = route_dir.join("page.sail");
+    assert!(page.exists(), "missing {} after scaffold route", page.display());
+    let len = std::fs::metadata(&page).map(|m| m.len()).unwrap_or(0);
+    assert!(len > 0, "empty {} after scaffold route", page.display());
+
+    // The Ship-Views manifest + retired siblings must NOT be written.
+    for rel in ["manifest.jsonc", "controller.ts", "style.css"] {
         assert!(
-            !view_dir.join(rel).exists(),
-            "retired sibling {rel} written by scaffold view"
+            !route_dir.join(rel).exists(),
+            "deck must not write {rel} — that is a Ship-Views concern"
         );
     }
-
-    // Manifest `path` must start with `/` (the daemon resolver expects
-    // absolute URL patterns; scaffold defaults to /<name>).
-    let manifest = std::fs::read_to_string(view_dir.join("manifest.jsonc"))
-        .expect("read manifest");
-    assert!(
-        manifest.contains("\"path\": \"/"),
-        "manifest path does not start with `/`: {manifest}"
-    );
 }
 
-/// `deck scaffold view --component <tag>` writes the view-private
-/// widget under `views/<name>/_components/<tag>/`.
+/// `deck scaffold route --component <tag>` writes the route-private
+/// widget under `routes/<name>/_components/<tag>/`.
 #[test]
-fn scaffold_view_with_component_writes_widget() {
+fn scaffold_route_with_component_writes_widget() {
     let mut guard = ScaffoldGuard::new();
-    let name = unique_stem("testview");
-    let view_dir = repo_root().join("views").join(&name);
+    let name = unique_stem("testroute");
+    let route_dir = repo_root().join("routes").join(&name);
     let tag = format!("{name}-widget");
-    let widget_dir = view_dir.join("_components").join(&tag);
-    guard.track(view_dir);
+    let widget_dir = route_dir.join("_components").join(&tag);
+    guard.track(route_dir);
 
     let status = run_deck(&[
         "scaffold",
-        "view",
+        "route",
         &name,
         "--component",
         &tag,
@@ -238,16 +229,16 @@ fn scaffold_view_with_component_writes_widget() {
     .status;
     assert!(
         status.success(),
-        "deck scaffold view {name} --component {tag} exited {status:?}"
+        "deck scaffold route {name} --component {tag} exited {status:?}"
     );
 
     let p = widget_dir.join(format!("{tag}.sail"));
-    assert!(p.exists(), "missing {} after scaffold view --component", p.display());
+    assert!(p.exists(), "missing {} after scaffold route --component", p.display());
     let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-    assert!(len > 0, "empty {} after scaffold view --component", p.display());
+    assert!(len > 0, "empty {} after scaffold route --component", p.display());
     assert!(
         !widget_dir.join(format!("{tag}.controller.ts")).exists(),
-        "retired sibling controller written by scaffold view --component"
+        "retired sibling controller written by scaffold route --component"
     );
 }
 
@@ -289,7 +280,7 @@ fn scaffold_component_writes_sui_under_primitives_package() {
 /// so the absence of artifacts on disk is the failure-mode proof.
 #[test]
 fn scaffold_component_rejects_non_sui_tag() {
-    // `tag` must pass `validate_view_name` (lowercase ASCII + hyphens
+    // `tag` must pass `validate_route_name` (lowercase ASCII + hyphens
     // + digits) but violate the `sail-` prefix requirement.
     let bad_tag = unique_stem("not-sail-widget");
     let base = repo_root()

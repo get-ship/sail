@@ -13,7 +13,7 @@
 //!
 //! Watch seed is GRAPH-DRIVEN (#deck-hmr-graph-watch): the watcher watches
 //! exactly the parent directories of resolved module-graph paths (non-recursive),
-//! plus `cfg.view_dirs` recursively for new view-leaf discovery. No hardcoded
+//! plus `cfg.route_dirs` recursively for new view-leaf discovery. No hardcoded
 //! monorepo dir names.
 
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -39,12 +39,12 @@ const PRUNE: &[&str] =
 
 /// Re-bundle affected targets on filesystem change. Returns when the bundler's
 /// `watching` flag is cleared by `Bundler::shutdown` (#256) or the watcher dies.
-/// Watch seed: module graph parent-dirs (non-recursive) + view_dirs (recursive
+/// Watch seed: module graph parent-dirs (non-recursive) + route_dirs (recursive
 /// for new-leaf discovery). No hardcoded monorepo dirs.
 pub(crate) async fn run(b: &Bundler) {
-    let view_dirs = b.view_bucket_dirs_for_watch();
+    let route_dirs = b.route_bucket_dirs_for_watch();
     let mut seed_dirs: Vec<PathBuf> = b.module_dirs_for_watch();
-    seed_dirs.extend(view_dirs.iter().cloned());
+    seed_dirs.extend(route_dirs.iter().cloned());
     seed_dirs.retain(|p| p.exists());
     if seed_dirs.is_empty() {
         return;
@@ -91,17 +91,17 @@ pub(crate) async fn run(b: &Bundler) {
         }
     };
 
-    // Boot: view_dirs watched recursively (new-leaf discovery); module-graph
+    // Boot: route_dirs watched recursively (new-leaf discovery); module-graph
     // dirs watched non-recursively (exact source coverage, no vendored subtrees).
     // #193: NON-recursive watches only — `watch_subtree` walks explicitly, pruning
     // vendored/build trees so notify never retains a PathBuf per descendant.
     let mut watched_dirs: HashSet<PathBuf> = HashSet::new();
-    let view_dirs_existing: Vec<PathBuf> = view_dirs.into_iter().filter(|d| d.exists()).collect();
+    let route_dirs_existing: Vec<PathBuf> = route_dirs.into_iter().filter(|d| d.exists()).collect();
     let graph_dirs_existing: Vec<PathBuf> = b.module_dirs_for_watch()
         .into_iter()
-        .filter(|d| d.exists() && !view_dirs_existing.contains(d))
+        .filter(|d| d.exists() && !route_dirs_existing.contains(d))
         .collect();
-    let mut watched = watch_subtree(&mut watcher, &view_dirs_existing, &mut watched_dirs);
+    let mut watched = watch_subtree(&mut watcher, &route_dirs_existing, &mut watched_dirs);
     {
         use notify::{RecursiveMode, Watcher};
         for dir in &graph_dirs_existing {

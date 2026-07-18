@@ -221,11 +221,11 @@ mod extractor_tests {
 
     #[test]
     fn extracts_path_and_symbol() {
-        let refs = extract_refs("see `crates/deck/deck-core/src/view.rs::serve_sui_view_setup` here");
+        let refs = extract_refs("see `crates/deck/deck-core/src/view.rs::serve_sui_route_setup` here");
         assert_eq!(refs.len(), 1);
         let r = refs.iter().next().unwrap();
         assert_eq!(r.path, "crates/deck/deck-core/src/view.rs");
-        assert_eq!(r.symbol.as_deref(), Some("serve_sui_view_setup"));
+        assert_eq!(r.symbol.as_deref(), Some("serve_sui_route_setup"));
     }
 
     #[test]

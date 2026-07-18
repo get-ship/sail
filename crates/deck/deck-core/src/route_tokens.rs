@@ -23,7 +23,7 @@ const VIEW_TOKENS_CSS: &str = concat!(
 /// `GET /api/assets/view-tokens.css` — the design-token + base stylesheet.
 ///
 /// No-cache so token/theme edits land on the next load without a hard refresh.
-pub fn serve_view_tokens(mode: DaemonMode) -> DeckResponse {
+pub fn serve_route_tokens(mode: DaemonMode) -> DeckResponse {
     let mut r = DeckResponse::new(
         200,
         "text/css; charset=utf-8",
@@ -41,7 +41,7 @@ mod tests {
 
     #[test]
     fn view_tokens_served_with_css_content_type() {
-        let r = serve_view_tokens(DaemonMode::Development);
+        let r = serve_route_tokens(DaemonMode::Development);
         assert_eq!(r.status, 200);
         assert!(r.content_type.starts_with("text/css"));
         assert_eq!(r.cache_control, "no-cache");

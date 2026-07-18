@@ -25,7 +25,7 @@ use crate::targets::{BundleLayout, BundleTarget, TargetEntry};
 /// views must import their components for there to be anything to dedup). The
 /// oxc graph is dropped + arenas trimmed before returning (#256), though the
 /// multi-entry graph is necessarily larger than a single view's.
-pub async fn bundle_views(
+pub async fn bundle_routes(
     layout: &BundleLayout,
     views: &[BundleTarget],
     staging: &Path,

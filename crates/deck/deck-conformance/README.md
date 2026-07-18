@@ -116,7 +116,7 @@ Still open:
   `/api/assets/view-tokens.css` (and the browser requests `/favicon.ico`); a
   non-ship host 404s both — the only console errors left. deck should serve a
   default/empty token sheet, or not emit the link when no token source is set.
-- **Bundler out-dir must equal the resolver's project root.** `resolve_view_js`
+- **Bundler out-dir must equal the resolver's project root.** `resolve_route_js`
   reads `<DECK_PROJECT_DIR>/.deck`; the bundler writes `<repo_root>/.deck`.
   `deck_app` sets `repo_root = app_dir` so they agree — but nothing enforces it,
   so a host that sets them apart silently fails to find built bundles.
