@@ -9,7 +9,7 @@
 // FormData, and exposes `$mutation: LiveSignal<unknown>` on `$scope`.
 
 import { signal } from './signal'
-import type { LiveState } from './live'
+import type { LiveState } from './live-state'
 
 const toError = (err: unknown): Error =>
   err instanceof Error ? err : new Error(String(err))

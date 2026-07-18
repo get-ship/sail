@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { signal } from '../src/signal'
-import type { LiveSignal, LiveState } from '../src/live'
+import type { LiveSignal, LiveState } from '../src/live-state'
 import { bindWhileError, bindWhileLoading } from '../src/while'
 
 function setup() {

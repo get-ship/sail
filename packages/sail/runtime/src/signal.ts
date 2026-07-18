@@ -716,7 +716,7 @@ export function untrack<T>(fn: () => T): T {
  * `ms` have elapsed without further writes.
  *
  * Useful for search-as-you-type, where you want to debounce the input
- * before firing a query (`live(() => ship.search(query()))` reading
+ * before firing a query (`query(() => ship.search(term()))` reading
  * the debounced signal will only re-run once the user stops typing).
  *
  * @example

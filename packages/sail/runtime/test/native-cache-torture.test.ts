@@ -32,7 +32,7 @@
 
 import { describe, expect, it, vi } from 'vitest'
 import { createScope, withScope, type EffectScope } from '../src/effect-scope'
-import type { LiveState } from '../src/live'
+import type { LiveState } from '../src/live-state'
 import {
   nativeQueried,
   nativePush,

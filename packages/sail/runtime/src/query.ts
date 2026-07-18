@@ -78,10 +78,16 @@
 
 import { signal, effect, untrack, type Signal } from './signal'
 import { onCleanup, createChildScope, withScope } from './effect-scope'
-import type { LiveState } from './live'
-import { nativeQueried, useNativeCache, type QueryKey, type NativeCacheOpts } from './native-cache'
+import type { LiveState, LiveSignal, LiveSource } from './live-state'
+import { nativeQuery, useNativeCache, type QueryKey, type NativeCacheOpts } from './native-cache'
 
 export type { QueryKey } from './native-cache'
+
+// query() OWNS the loading/ok/error + push-source public face. These
+// shapes live in the leaf `live-state` module only to keep the
+// query.ts ↔ native-cache.ts import graph acyclic; query.ts is where
+// they are documented and re-exported from.
+export type { LiveState, LiveSignal, LiveSource, LiveValueOf } from './live-state'
 
 /** Options accepted by `query()`/`queryKeyed()` — identical knobs to
  *  the cache engine (`staleTime`/`gcTime`/`retry`), nothing more. */
@@ -98,10 +104,17 @@ export type QueryOpts = NativeCacheOpts
  * GC on its own schedule) rather than refetched in place. The returned
  * `Signal<LiveState<T>>` is one stable object across key changes; this
  * function forwards whichever entry is current into it.
+ *
+ * PULL vs PUSH is type-directed at the runtime seam: if `fn` returns a
+ * `Promise<T>` the entry is filled once and lets go stale (PULL); if it
+ * returns a `LiveSource<T>` (a `subscribe` method — the shape a
+ * streaming client method returns) the entry is fed by that subscription
+ * (PUSH). One `LiveState<T>` face out either way. See `native-cache.ts`'s
+ * `fetch`/`nativeQuery`.
  */
 export function queryKeyed<T>(
   keyFn: () => QueryKey,
-  fn: (signal: AbortSignal) => Promise<T>,
+  fn: (signal: AbortSignal) => Promise<T> | LiveSource<T>,
   opts?: QueryOpts,
 ): Signal<LiveState<T>> {
   const outer = signal<LiveState<T>>({ kind: 'loading' })
@@ -112,7 +125,7 @@ export function queryKeyed<T>(
     untrack(() => {
       inner?.dispose()
       inner = createChildScope()
-      const entrySig = withScope(inner, () => nativeQueried(key, fn, opts))
+      const entrySig = withScope(inner, () => nativeQuery(key, fn, opts))
       const stopForward = effect(() => {
         outer.set(entrySig())
       })
@@ -140,7 +153,7 @@ export function queryKeyed<T>(
  *   `queryKeyed(keyFn, fn, opts)` for direct/uncompiled calls.
  */
 export function query<T>(
-  fn: (signal: AbortSignal) => Promise<T>,
+  fn: (signal: AbortSignal) => Promise<T> | LiveSource<T>,
   opts?: QueryOpts,
   __compilerKeyFn?: () => QueryKey,
 ): Signal<LiveState<T>> {
@@ -197,6 +210,13 @@ export interface Mutation<T> {
    *  the mutated method's namespace plus anything in `invalidates`.
    *  Resolves/rejects in step with `state`. */
   mutate: () => Promise<T>
+  /** Return a SETTLED mutation (`ok`/`error`) to `idle` — clears a stale
+   *  success banner or error message without re-running the mutation.
+   *  The ergonomic escape for forms: submit → `ok` → `reset()` →
+   *  `idle` for the next entry. A no-op while `idle` or `loading` (there
+   *  is nothing settled to clear); a call in flight is invalidated so a
+   *  late settle can't overwrite the `idle` reset. */
+  reset: () => void
 }
 
 const toError = (err: unknown): Error => (err instanceof Error ? err : new Error(String(err)))
@@ -226,24 +246,37 @@ export function mutation<T>(
   void opts // erased at compile time; kept only for the author-facing type
   const cache = useNativeCache()
   const state = signal<MutationState<T>>({ kind: 'idle' })
+  // Bumped on every `mutate()` start and on `reset()`; a settle whose
+  // token has gone stale (a `reset()` landed, or a later `mutate()`
+  // started) is discarded so it can't clobber the current state.
+  let token = 0
 
   const mutate = async (): Promise<T> => {
+    const myToken = ++token
     state.set({ kind: 'loading' })
     const controller = new AbortController()
     try {
       const value = await fn(controller.signal)
-      state.set({ kind: 'ok', value })
-      if (__compilerAutoInvalidate) cache.invalidate(__compilerAutoInvalidate)
-      for (const prefix of __compilerInvalidates ?? []) cache.invalidate(prefix)
+      if (myToken === token) {
+        state.set({ kind: 'ok', value })
+        if (__compilerAutoInvalidate) cache.invalidate(__compilerAutoInvalidate)
+        for (const prefix of __compilerInvalidates ?? []) cache.invalidate(prefix)
+      }
       return value
     } catch (err) {
       const error = toError(err)
-      state.set({ kind: 'error', error })
+      if (myToken === token) state.set({ kind: 'error', error })
       throw error
     }
   }
 
-  return { state, mutate }
+  const reset = (): void => {
+    // Invalidate any in-flight/settled attempt and drop back to idle.
+    token++
+    if (state.__peek().kind !== 'idle') state.set({ kind: 'idle' })
+  }
+
+  return { state, mutate, reset }
 }
 
 // ---------------------------------------------------------------------------
@@ -272,4 +305,49 @@ export function mutation<T>(
  */
 export function __invalidate(prefix: QueryKey): void {
   useNativeCache().invalidate(prefix)
+}
+
+// ---------------------------------------------------------------------------
+// Envelope unwrap helpers — read a `LiveState<T>` signal down to its value.
+// (Moved here from the deleted `live.ts`; the jobspec keeps them unchanged.)
+// ---------------------------------------------------------------------------
+
+/**
+ * Read a `LiveSignal<T>` and return its value or `undefined`.
+ *
+ * The full discriminated form is `sig().kind === 'ok' ? sig().value : ...`.
+ * `unwrap(sig)` collapses that to a single call when the caller only
+ * cares about "is the value here?" — typical for derived bodies that
+ * pass through optional chains anyway:
+ *
+ * ```ts
+ * derived: {
+ *   total: ({ agents }) => unwrap(agents)?.items.length ?? 0,
+ * }
+ * ```
+ *
+ * Tracks signal reads — calling `unwrap` inside a `derived` or `effect`
+ * subscribes the surrounding scope to the signal, just like calling
+ * the signal directly.
+ */
+export function unwrap<T>(sig: LiveSignal<T>): T | undefined {
+  const s = sig()
+  return s.kind === 'ok' ? s.value : undefined
+}
+
+/**
+ * Read a `LiveSignal<T>` and return its value or `fallback`. The
+ * fallback applies for both `loading` and `error` states — callers
+ * that need to discriminate should keep using the explicit `kind`
+ * check or `<while-loading>`/`<while-error>` boundaries.
+ *
+ * ```ts
+ * derived: {
+ *   items: ({ agents }) => unwrapOr(agents, { items: [] }).items,
+ * }
+ * ```
+ */
+export function unwrapOr<T>(sig: LiveSignal<T>, fallback: T): T {
+  const s = sig()
+  return s.kind === 'ok' ? s.value : fallback
 }

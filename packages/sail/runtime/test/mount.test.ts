@@ -6,7 +6,8 @@
 // idiomatic test seam (mirrors how `attach()` tests inject modules).
 
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { live, mount, mountAmbient, onCleanup, signal } from '../src/index'
+import { mount, mountAmbient, onCleanup, signal } from '../src/index'
+import { queryKeyed } from '../src/query'
 import type { ViewPayload } from '../src/index'
 
 // JSDOM doesn't implement EventSource — stub minimally for live-channel paths.
@@ -497,7 +498,7 @@ describe('mount() keyed clients', () => {
             api: { demo: { clock: () => Promise<{ now: number }> } }
           }
           const $scope: Record<string, unknown> = {}
-          $scope['t'] = live(() => api.demo.clock())
+          $scope['t'] = queryKeyed(() => ['api', 'demo', 'clock'], () => api.demo.clock())
           t = $scope['t'] as typeof t
           return Object.assign({}, $scope)
         },
@@ -507,7 +508,7 @@ describe('mount() keyed clients', () => {
       clients: { api },
       module: mod as never,
     })
-    // live() resolves the thunk's promise on a microtask.
+    // query() resolves the thunk's promise on a microtask.
     await new Promise((r) => setTimeout(r, 0))
     expect(t).toBeTypeOf('function')
     expect(t!()).toEqual({ kind: 'ok', value: { now: 42 } })

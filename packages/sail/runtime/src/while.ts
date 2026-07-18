@@ -9,7 +9,7 @@
 import { effect } from './signal'
 import type { Disposer } from './bind'
 import type { BranchRender } from './if'
-import type { LiveSignal } from './live'
+import type { LiveSignal } from './live-state'
 
 /** Inputs to `bindWhileLoading`. */
 export interface BindWhileLoadingOptions {
@@ -59,7 +59,7 @@ const insertBranch = (anchor: Comment, br: BranchRender): void => {
  *
  * @example
  * ```ts
- * const agent = live(() => ship.agents.get(id()))
+ * const agent = query(() => ship.agents.get(id()))
  * bindWhileLoading({
  *   anchor,
  *   signal: agent,

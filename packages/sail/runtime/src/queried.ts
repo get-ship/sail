@@ -21,13 +21,13 @@
 // is the public primitive `live()` used to be).
 
 import type { Signal } from './signal'
-import type { LiveState } from './live'
+import type { LiveState } from './live-state'
 import { nativeQueried, type QueryKey, type NativeCacheOpts } from './native-cache'
 
 export type QueriedOpts = NativeCacheOpts
 
 /**
- * Cache-backed sibling of `live()`. `key` is the explicit cache
+ * Cache-backed pull seam under `query()`. `key` is the explicit cache
  * identity — no inference from `fn`. `fn` is the fetcher; its return
  * value becomes the `ok` state's `value`.
  *
