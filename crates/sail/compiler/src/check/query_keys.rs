@@ -29,6 +29,32 @@
 //! This is a TEXTUAL pass, like every other `.ts`-shaped check in this
 //! crate (`controller_parse`, `pure_derived`, `sx_vars`) — no JS/TS parser
 //! dependency, just string/brace/comment-aware scanning.
+//!
+//! ## PULL vs PUSH routing is a RUNTIME decision, not an emit fork
+//!
+//! The 2026-07-18 ruling folds `live()`'s PUSH half into `query()` by
+//! "type-directed routing": a client method returning `Promise<T>` is a
+//! PULL, one returning `LiveSource<T>` is a PUSH. The natural reading is
+//! that THIS pass would detect the return type and emit a pull-form vs a
+//! push-form call. It does NOT — and cannot: this is a single-module
+//! TEXTUAL pass with no type resolver and no cross-module access, while
+//! the client method is defined in a DIFFERENT module (`import { crm }
+//! from '../clients/crm'`). Resolving its declared return type would mean
+//! building a cross-module TS type checker in Rust — far outside "wire
+//! the two seams the cache already has".
+//!
+//! So routing is realized at the RUNTIME type-resolved seam instead (the
+//! ruling's own sanctioned fallback: "If the return type is genuinely
+//! unknowable at compile time, fall back to a runtime `isLiveSource`
+//! branch"). This pass emits ONE unified lowering for every `query()` —
+//! `query(thunk, opts, keyFn)` — whose derived KEY is identical whether
+//! the method pulls or pushes (same member-path + args identity). At
+//! runtime, `queryKeyed`/`nativeQuery` inspect the value the thunk
+//! returns (`isLiveSource`) and route to the pull or push cache path. The
+//! returned value's shape faithfully reflects the compile-time return
+//! type, so the outcome matches the ruling; only the DECISION POINT moved
+//! from emit-time to the runtime seam. Every corpus demo hits this path.
+//! See `packages/sail/runtime/src/{query,native-cache,live-state}.ts`.
 
 use std::collections::BTreeSet;
 
@@ -846,6 +872,44 @@ const deals = query(() => crm.deals.list({ stage: stage() }))
                 r#"query(() => crm.deals.list({ stage: stage() }), undefined, () => ["crm", "deals", "list", { stage: stage() }])"#
             ),
             "{out}"
+        );
+    }
+
+    #[test]
+    fn query_lowering_is_return_type_agnostic_routing_is_runtime() {
+        // The PULL-vs-PUSH decision is a RUNTIME property of the value the
+        // thunk returns (`isLiveSource`), NOT an emit fork this textual,
+        // single-module pass could make (it has no cross-module type
+        // resolver). So a thunk calling a PUSH-shaped method (`.wire`,
+        // returning `LiveSource<T>`) lowers to the SAME unified form — and
+        // the SAME derived key identity — as a PULL-shaped one (`.list`,
+        // returning `Promise<T>`): member-path + args, nothing about the
+        // return type. See the module header, "PULL vs PUSH routing".
+        let pull = r#"
+import { query } from '@ship/sail-runtime'
+import { crm } from '../clients/crm'
+const deals = query(() => crm.deals.list())
+"#;
+        let push = r#"
+import { query } from '@ship/sail-runtime'
+import { feed } from '../clients/feed'
+const ticks = query(() => feed.clock.wire())
+"#;
+        let pull_out = rewrite(pull).unwrap();
+        let push_out = rewrite(push).unwrap();
+        assert!(
+            pull_out.contains(
+                r#"query(() => crm.deals.list(), undefined, () => ["crm", "deals", "list"])"#
+            ),
+            "{pull_out}"
+        );
+        // Identical SHAPE of lowering (thunk, opts, key-fn) — the push
+        // method is not marked, flagged, or emitted differently.
+        assert!(
+            push_out.contains(
+                r#"query(() => feed.clock.wire(), undefined, () => ["feed", "clock", "wire"])"#
+            ),
+            "{push_out}"
         );
     }
 
