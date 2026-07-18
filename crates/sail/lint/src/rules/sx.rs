@@ -148,10 +148,12 @@ pub fn is_prefix(p: &str) -> bool {
 struct LayoutIntent {
     tag: Option<&'static str>,
     inline: bool,
+    nowrap: bool,
     align: Option<String>,
     justify: Option<String>,
     gap: Option<String>,
     cols: Option<String>,
+    rows: Option<String>,
     saw_any: bool,
 }
 
@@ -175,12 +177,14 @@ impl LayoutIntent {
             // A `<row>` wraps by default (it absorbed `sail-cluster`), so
             // `flex-wrap`'s intent IS a plain row — absorb it as one.
             "flex-wrap" => self.tag = Some("row"),
-            // `flex-nowrap` (a NON-wrapping row) and `grid-rows-*` (an explicit
-            // row COUNT) have no layout keyword yet — `<row>` has no `nowrap`
-            // axis and `<grid>` has no `rows` axis. Do NOT absorb them into a
-            // fabricated `<row nowrap>` / `<grid rows="N">` (the compiler
-            // refuses both); let them fall through to an honest per-atom
-            // refusal instead. (See owner-judgment flags in the audit report.)
+            // `flex-nowrap` is the single-line row — `<row nowrap>` (built in
+            // job/layout-pass). Absorb it into the redirect so the whole
+            // Tailwind breath (`flex nowrap items-center`) becomes one
+            // buildable element.
+            "flex-nowrap" => {
+                self.tag = Some("row");
+                self.nowrap = true;
+            }
             _ => {
                 if let Some(v) = atom.strip_prefix("items-") {
                     self.align = Some(v.to_string());
@@ -190,6 +194,10 @@ impl LayoutIntent {
                     self.gap = Some(v.to_string());
                 } else if let Some(v) = atom.strip_prefix("grid-cols-") {
                     self.cols = Some(v.to_string());
+                // `grid-rows-N` is an explicit row count — `<grid rows="N">`
+                // (built in job/layout-pass). Absorb it the same way `cols` is.
+                } else if let Some(v) = atom.strip_prefix("grid-rows-") {
+                    self.rows = Some(v.to_string());
                 } else {
                     hit = false;
                 }
@@ -206,13 +214,19 @@ impl LayoutIntent {
     fn render(&self, kept: &[&str]) -> String {
         // No explicit `flex`/`grid`, but `items-`/`gap-` present: the author meant a
         // row — that is what those props are FOR.
-        let tag = self.tag.unwrap_or(if self.cols.is_some() { "grid" } else { "row" });
+        let tag = self
+            .tag
+            .unwrap_or(if self.cols.is_some() || self.rows.is_some() { "grid" } else { "row" });
         let mut el = format!("<{tag}");
         if self.inline {
             el.push_str(" inline");
         }
+        if self.nowrap {
+            el.push_str(" nowrap");
+        }
         for (name, v) in [
             ("cols", &self.cols),
+            ("rows", &self.rows),
             ("gap", &self.gap),
             ("align", &self.align),
             ("justify", &self.justify),
@@ -532,6 +546,23 @@ mod tests {
         // No `grid` atom, but `grid-cols-3` can only mean one thing.
         let m = &run(r#"<div sx="grid-cols-3 gap-4">x</div>"#)[0];
         assert!(m.contains(r#"<grid cols="3" gap="4">"#), "{m}");
+    }
+
+    #[test]
+    fn flex_nowrap_redirects_to_a_buildable_row_nowrap() {
+        // job/layout-pass: the redirect used to say "no layout keyword yet".
+        // Now the whole breath collapses into a single buildable element.
+        let m = &run(r#"<div sx="flex-nowrap items-center gap-2">x</div>"#)[0];
+        assert!(m.contains(r#"<row nowrap gap="2" align="center">"#), "{m}");
+        // And alone, it still names the built form.
+        let m = &run(r#"<div sx="flex-nowrap">x</div>"#)[0];
+        assert!(m.contains("<row nowrap"), "{m}");
+    }
+
+    #[test]
+    fn grid_rows_redirects_to_a_buildable_rows_axis() {
+        let m = &run(r#"<div sx="grid-rows-3 gap-4">x</div>"#)[0];
+        assert!(m.contains(r#"<grid rows="3" gap="4">"#), "{m}");
     }
 
     #[test]

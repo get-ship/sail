@@ -172,7 +172,7 @@
     "flex-row": "<row>",
     "flex-col": "<column>",
     "flex-wrap": "<row> — a row wraps by default",
-    "flex-nowrap": "<row> — a row wraps by default; a non-wrapping row has no layout keyword yet",
+    "flex-nowrap": "<row nowrap> — the single-line row",
     "items-center": "<row align=\"center\"> — the parent decides arrangement",
     "items-start": "<row align=\"start\">",
     "items-end": "<row align=\"end\">",
@@ -186,7 +186,7 @@
     "gap-x": "<row gap=\"2\">",
     "gap-y": "<column gap=\"2\">",
     "grid-cols": "<grid cols=\"3\">",
-    "grid-rows": "<grid> — grid auto-flows rows; there is no rows-count axis yet",
+    "grid-rows": "<grid rows=\"3\"> — an explicit row count",
     "animate": "motion: — springs, scroll, stagger, FLIP",
     "sr-only-focusable": "sr-only"
   }
