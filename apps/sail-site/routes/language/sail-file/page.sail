@@ -104,16 +104,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.slot}></code-block>
 
-  <h2>Two kinds of .sail file</h2>
-  <p>
-    A component file compiles to a custom element — a tag, usable anywhere.
-    A <strong>page</strong> is also a <code>.sail</code> file
-    (<code>routes/…/page.sail</code>) with the same three parts, but it
-    compiles to a route module that the app mounts at a URL rather than a
-    tag you write. Same language, same rules; the only difference is who
-    mounts it.
-  </p>
-
   <h2>The boundaries</h2>
   <p>
     Each part refuses what isn't its job: the template can only speak names
@@ -121,6 +111,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     styling access; styling speaks tokens. When you cross a line, the error
     names the correct form — the boundaries are how five hundred files stay
     one system.
+  </p>
+
+  <p sx="text-sm text-muted-foreground">
+    A page (<code>routes/…/page.sail</code>) is this same file — routing and
+    mounting are <a href="/deck">deck</a>'s job.
   </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
