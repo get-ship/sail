@@ -1,21 +1,24 @@
 <!--
-  /overview — the introduction: what SAIL is, a small working program, and a
-  tour that actually teaches usage. The demo below is live and its source is
-  the snippet above it — same program.
+  /overview — the Introduction (pairing draft, 2026-07-18). Opener is the
+  owner's framing: what SAIL is, prose that breathes — then three live proofs:
+  signals (the team list), themes (a data-theme-preview card), the tunable
+  toolchain (switches rolling up a payload figure). Code is the receipt after
+  the demo, never the greeting. The "How you use it" tour below is legacy and
+  likely migrates to The language section — kept for side-by-side review.
+  NOTE: the add-on payload figures are ILLUSTRATIVE until measured builds land
+  (#96); core 9.4 kB matches the Performance claim but needs re-measuring
+  post motion-inlining.
 -->
 
 <controller>
-// /overview — the first page carries a WORKING demo, not a still life: a
-// filterable team list where Invite actually adds a row. The snippet above
-// it is this exact program in its single-file form.
-
-import { controller, signal, filteredList, type ControllerScope } from '@ship/sail-runtime'
+import { controller, signal, derived, filteredList, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
 
 const BENCH = ['Katherine Johnson', 'Annie Easley', 'Margaret Hamilton', 'Radia Perlman']
 
 export default controller((_ctx: ControllerScope<Scope>) => {
+    // Demo 1 — signals: the filterable team list. Invite really adds a row.
     const people = signal([
       { id: 1, name: 'Ada Lovelace', status: 'active' },
       { id: 2, name: 'Grace Hopper', status: 'away' },
@@ -30,26 +33,50 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         { id: l.length + 1, name: BENCH[(l.length - 3) % BENCH.length] ?? `Member ${l.length + 1}`, status: 'active' },
       ])
     }
-    return { code, query, filtered, invite }
+
+    // Demo 2 — themes: one attribute re-skins the subtree.
+    const themes = ['ship-light', 'ship-dark', 'paper', 'console', 'contrast']
+    const theme = signal('ship-light')
+
+    // Demo 3 — the tunable toolchain: optional pieces roll up the payload.
+    // Add-on figures are illustrative until measured builds land (#96).
+    const withComponents = signal(true)
+    const withMotion = signal(true)
+    const withData = signal(true)
+    const withThemes = signal(true)
+    const CORE = 9.4
+    const bundle = derived(() => (
+      CORE +
+      (withComponents() ? 12 : 0) +
+      (withMotion() ? 6 : 0) +
+      (withData() ? 4 : 0) +
+      (withThemes() ? 2 : 0)
+    ).toFixed(1))
+
+    return { code, query, filtered, invite, themes, theme,
+             withComponents, withMotion, withData, withThemes, bundle }
 })
 </controller>
 
 <column sx="max-w-breakpoint-tablet mx-auto" gap="5">
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Introduction</p>
   <h1>SAIL</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
-    A batteries-included framework for building web pages. It ships a component
-    library, a design system, layout, theming, animation, and state — so a page
-    is markup, and nothing else has to be assembled first.
-  </p>
-  <h2>What a page looks like</h2>
-  <p>
-    A small, complete one — a filtered list with state and animation. No
-    imports, no stylesheet; this is the entire file:
-  </p>
-  <code-block code={code.page}></code-block>
 
-  <p><strong>Running:</strong> type in the filter, press Invite.</p>
+  <p sx="text-lg text-muted-foreground leading-relaxed">
+    SAIL is a compiled language that includes everything you need to build
+    beautiful, consistent, and performant websites. It is optimized for AI
+    agents: the language provides the APIs an interface needs, and a strict
+    compiler enforces how they are used — so best practices and consistency
+    hold across an entire application, not just the files someone reviewed.
+  </p>
+
+  <h2>It reads like HTML, it runs on signals</h2>
+  <p>
+    A component is one file: a template that reads like HTML, TypeScript
+    beneath it, signals connecting the two. Updates are fine-grained — the
+    template binds signals directly, and only what changed re-renders. This
+    list is live: filter it, press Invite.
+  </p>
   <column gap="3" sx="p-6 bg-muted border border-border rounded-lg">
     <input placeholder="Filter people" bind:value={query} />
     {#for p of filtered() key={p.id}}
@@ -65,6 +92,56 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <row gap="2">
       <button on:click={invite} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
     </row>
+  </column>
+  <p sx="text-sm text-muted-foreground">The entire file behind that demo — markup, state, motion, no stylesheet:</p>
+  <code-block code={code.page}></code-block>
+
+  <h2>Design is data</h2>
+  <p>
+    Styling draws from a token system the compiler enforces — colors, spacing,
+    and type resolve through the active theme, and components never name a
+    colour. Which means a theme is data, and swapping it re-skins everything
+    written in the language. Try it:
+  </p>
+  <column gap="3" sx="p-6 bg-muted border border-border rounded-lg">
+    <row gap="2">
+      {#for t of themes key={t}}
+        <button on:click={() => theme.set(t)} size="sm"
+                variant={theme() === t ? 'solid' : 'outline'} tone="primary">{t}</button>
+      {/for}
+    </row>
+    <column data-theme-preview={theme()} gap="3" sx="p-5 bg-background text-foreground border border-border rounded-lg">
+      <row gap="3" align="center">
+        <avatar></avatar>
+        <column gap="0">
+          <strong>Ada Lovelace</strong>
+          <span sx="text-sm text-muted-foreground">Wrote the first one</span>
+        </column>
+        <badge tone="success" sx="ml-auto">active</badge>
+      </row>
+      <row gap="2">
+        <button variant="solid" tone="primary" size="sm">Message</button>
+        <button variant="outline" size="sm">Profile</button>
+      </row>
+    </column>
+  </column>
+
+  <h2>The compiler is a contract you tune</h2>
+  <p>
+    Everything optional is a setting. A team decides what the language
+    includes and what authors — human or agent — may write, and the toolchain
+    ships exactly that much. Turn pieces off and the payload follows:
+  </p>
+  <column gap="3" sx="p-6 bg-muted border border-border rounded-lg">
+    <row gap="3" align="center"><switch bind:checked={withComponents} tone="primary"></switch><span sx="grow-1">Component library</span><span sx="font-mono text-sm text-muted-foreground">12 kB</span></row>
+    <row gap="3" align="center"><switch bind:checked={withMotion} tone="primary"></switch><span sx="grow-1">Motion</span><span sx="font-mono text-sm text-muted-foreground">6 kB</span></row>
+    <row gap="3" align="center"><switch bind:checked={withData} tone="primary"></switch><span sx="grow-1">Data &amp; forms</span><span sx="font-mono text-sm text-muted-foreground">4 kB</span></row>
+    <row gap="3" align="center"><switch bind:checked={withThemes} tone="primary"></switch><span sx="grow-1">Theme runtime</span><span sx="font-mono text-sm text-muted-foreground">2 kB</span></row>
+    <row gap="3" align="center" sx="border-t border-t-border pt-3">
+      <span sx="grow-1 font-semibold">Your bundle</span>
+      <span sx="font-mono text-lg font-semibold text-primary">{bundle()} kB</span>
+    </row>
+    <p sx="text-xs text-muted-foreground">Add-on figures are illustrative while measured builds land; the core runtime is always included.</p>
   </column>
 
   <h2>How you use it</h2>
