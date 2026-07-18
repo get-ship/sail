@@ -69,8 +69,11 @@ export interface Extent {
   count: number
 }
 
-/** One cell of the accessible described-data table. */
+/** One cell of the accessible described-data table. Keyed by `id` (stable
+ * identity), never `text` — two cells/rows can share formatted text (e.g.
+ * two segments both valued 30) and must not collide in a keyed {#for}. */
 export interface AriaCell {
+  id: string
   text: string
   header?: boolean
 }

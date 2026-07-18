@@ -152,9 +152,9 @@ export default controller(({ data, rows, cols, tone, cellSize, gap, label, loadi
   <column id="chart-data" sx="sr-only">
     <slot name="description">
       <table>
-        {#for row of chart.ariaTable() key={row[0].text}}
+        {#for row of chart.ariaTable() key={row[0].id}}
           <tr>
-            {#for c of row key={c.text}}
+            {#for c of row key={c.id}}
               <td>{c.text}</td>
             {/for}
           </tr>
