@@ -1054,11 +1054,18 @@ fn lower_layout(source: &str) -> (String, String) {
             if t.tag == "grid" && has_cols {
                 skip_props.insert("min");
             }
+            // `nowrap` is a boolean axis (row only): it layers a
+            // `flex-wrap:nowrap` override on top of the base's wrap. Emitted
+            // AFTER the base rule (see below) so source order wins — no
+            // specificity game. Detected once here; consumed (not passed
+            // through) in the attr loop below.
+            let nowrap = t.tag == "row" && t.attrs.iter().any(|(n, _)| n == "nowrap");
             for &prop in layout::tag_props(&t.tag) {
-                // `inline` is consumed at the base selection above — never
-                // fed into `lower_axis` (which only knows about enum-style
-                // modifiers) and never emitted as a raw HTML attr.
-                if prop == "inline" {
+                // `inline`/`nowrap` are boolean axes handled outside the
+                // enum-modifier machinery — never fed into `lower_axis` (which
+                // only knows enum-style modifiers) and never emitted as raw
+                // HTML attrs.
+                if prop == "inline" || prop == "nowrap" {
                     continue;
                 }
                 if skip_props.contains(prop) {
@@ -1083,6 +1090,16 @@ fn lower_layout(source: &str) -> (String, String) {
                     None => {}
                 }
             }
+            // Boolean `nowrap` override — injected after the base + axis rules
+            // so its single-class `flex-wrap:nowrap` wins by source order over
+            // the base's `flex-wrap:wrap`.
+            if nowrap {
+                let rule = ".sail-nowrap{flex-wrap:nowrap}".to_string();
+                if seen.insert(rule.clone()) {
+                    css.push_str(&rule);
+                }
+                static_parts.push("sail-nowrap".to_string());
+            }
             let mut rest = String::new();
             for (name, value) in &t.attrs {
                 match name.as_str() {
@@ -1093,7 +1110,8 @@ fn lower_layout(source: &str) -> (String, String) {
                     // base swap (already applied above), not a class
                     // modifier, so it joins the consumed set here to keep the
                     // `inline` attribute from reappearing on the div.
-                    "gap" | "align" | "justify" | "min" | "flow" | "cols" | "direction" | "tracks" | "inline" => {}
+                    "gap" | "align" | "justify" | "min" | "flow" | "cols" | "rows" | "direction"
+                    | "tracks" | "inline" | "nowrap" => {}
                     "class" if value.starts_with('{') => {
                         dyn_parts.push(format!("({})", &value[1..value.len() - 1]));
                     }
@@ -2512,6 +2530,81 @@ mod tests {
                 "rule for cols={n} present: {out}"
             );
         }
+    }
+
+    // --- `<row nowrap>` / `<grid rows="N">` (job/layout-pass) --------------
+
+    #[test]
+    fn row_nowrap_emits_flex_wrap_override() {
+        let out = preprocess(r#"<row nowrap gap="2">x</row>"#);
+        assert!(out.contains("sail-nowrap"), "nowrap class present: {out}");
+        assert!(
+            out.contains(".sail-nowrap{flex-wrap:nowrap}"),
+            "flex-wrap:nowrap rule emitted: {out}"
+        );
+        // Injected AFTER the base row rule so it wins by source order.
+        let base = out.find(".sail-row{").expect("base row rule");
+        let nowrap = out.find(".sail-nowrap{").expect("nowrap rule");
+        assert!(nowrap > base, "nowrap rule follows the base: {out}");
+        assert!(!out.contains("nowrap=\""), "nowrap doesn't leak as a raw attr: {out}");
+        assert!(!out.contains(" nowrap>") && !out.contains(" nowrap "), "nowrap attr consumed: {out}");
+    }
+
+    #[test]
+    fn row_inline_nowrap_composes() {
+        let out = preprocess(r#"<row inline nowrap>x</row>"#);
+        assert!(out.contains("sail-row-i"), "inline base: {out}");
+        assert!(out.contains("sail-nowrap"), "nowrap override: {out}");
+        assert!(out.contains(".sail-row-i{display:inline-flex"), "inline base rule: {out}");
+        assert!(out.contains(".sail-nowrap{flex-wrap:nowrap}"), "nowrap rule: {out}");
+    }
+
+    #[test]
+    fn grid_rows_emits_repeat_minmax_track_list() {
+        let out = preprocess(r#"<grid rows="3" gap="4">x</grid>"#);
+        assert!(
+            out.contains(".sail-gr-3{grid-template-rows:repeat(3,minmax(0,1fr))}"),
+            "rows lowering produced the repeat(minmax) track: {out}"
+        );
+        assert!(out.contains("sail-gr-3"), "the atomic class is present: {out}");
+        assert!(out.contains("sail-grid"), "the base grid class still applied: {out}");
+        assert!(!out.contains("rows=\"3\""), "rows doesn't leak as a raw attr: {out}");
+    }
+
+    #[test]
+    fn grid_cols_and_rows_compose_into_a_fixed_matrix() {
+        // `cols` owns the column track, `rows` the row track — different CSS
+        // properties, so both survive (no precedence, unlike cols/min).
+        let out = preprocess(r#"<grid cols="4" rows="3">x</grid>"#);
+        assert!(out.contains("sail-gc-4"), "cols class: {out}");
+        assert!(out.contains("sail-gr-3"), "rows class: {out}");
+        assert!(out.contains("grid-template-columns:repeat(4,minmax(0,1fr))"), "{out}");
+        assert!(out.contains("grid-template-rows:repeat(3,minmax(0,1fr))"), "{out}");
+    }
+
+    #[test]
+    fn grid_rows_dynamic_lowers_to_a_class_binding_with_all_rules() {
+        let out = preprocess(r#"<grid rows={n()}>x</grid>"#);
+        assert!(out.contains("'sail-gr-' + (n())"), "dynamic rows fragment: {out}");
+        for n in 1..=12 {
+            assert!(
+                out.contains(&format!(".sail-gr-{n}{{grid-template-rows:repeat({n},minmax(0,1fr))}}")),
+                "rule for rows={n} present: {out}"
+            );
+        }
+    }
+
+    #[test]
+    fn column_justify_and_evenly_emit() {
+        let out = preprocess(r#"<column justify="between">x</column>"#);
+        assert!(out.contains("sail-jc-between"), "column justify class: {out}");
+        assert!(out.contains(".sail-jc-between{justify-content:space-between}"), "{out}");
+        // A plain column emits no justify class (no default).
+        let plain = preprocess(r#"<column>x</column>"#);
+        assert!(!plain.contains("sail-jc-"), "no implicit column justify: {plain}");
+
+        let evenly = preprocess(r#"<row justify="evenly">x</row>"#);
+        assert!(evenly.contains(".sail-jc-evenly{justify-content:space-evenly}"), "{evenly}");
     }
 
     #[test]
