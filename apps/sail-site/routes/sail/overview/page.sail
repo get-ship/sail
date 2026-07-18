@@ -97,7 +97,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <a href="/components">Interface patterns</a> — dialogs, comboboxes,
       tables, tabs, toasts — are tags, keyboard-complete and accessible,
       skinned by your <a href="/sail/theming">theme</a>.
-      <a href="/sail/layout">Layout</a> is its own vocabulary
+      <a href="/sail/language/layout">Layout</a> is its own vocabulary
       (<code>row</code>, <code>column</code>, <code>grid</code>) rather than a
       CSS technique. <a href="/sail/motion">Motion</a> is declarative and respects
       reduced motion by default. <a href="/sail/data">Data</a> has a first-class

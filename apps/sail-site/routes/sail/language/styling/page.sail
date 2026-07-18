@@ -115,7 +115,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>align-items</code>, no <code>grid-template-columns</code> — and that
     is not a gap. Structure belongs to the layout elements, where the axis is
     the name and there is nothing to get backwards. The
-    <a href="/sail/layout">next chapter</a> is exactly that.
+    <a href="/sail/language/layout">next chapter</a> is exactly that.
   </p>
   <code-block code={code.layout}></code-block>
 
@@ -141,6 +141,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
     <a variant="default" href="/sail/language/templates">← Templates</a>
-    <a variant="solid" tone="primary" href="/sail/layout">Layout →</a>
+    <a variant="solid" tone="primary" href="/sail/language/layout">Layout →</a>
   </row>
 </column>
