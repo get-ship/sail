@@ -2,11 +2,11 @@
 // program; the tour snippets are deliberately tiny. All compiled by the build.
 export const code = {
   // Section 2 — the whole demo, six lines. The page renders these same lines live.
-  hello: `const name = signal('')
+  hello: `const on = signal(false)
 
 <row gap="2" align="center">
-  <input bind:value={name} placeholder="Type your name" />
-  <badge tone="primary">Hello, {name() || 'sailor'}</badge>
+  <switch bind:checked={on}></switch>
+  <badge>{on() ? 'running' : 'paused'}</badge>
 </row>`,
   // The strict config, pure JSON (rendered by <sail-json-view> on the page).
   configJson: `{"preset": "strict", "sx": true, "raw_containers": true}`,

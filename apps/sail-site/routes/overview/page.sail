@@ -14,8 +14,8 @@ import type { Scope } from './page.sail'
 import { code } from './snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
-    const name = signal('')
-    return { code, name }
+    const on = signal(false)
+    return { code, on }
 })
 </controller>
 
@@ -47,10 +47,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <column gap="2" sx="grow-1 basis-breakpoint-mobile min-w-0">
         <code-block code={code.hello}></code-block>
       </column>
-      <column gap="3" sx="grow-1 basis-breakpoint-mobile min-w-0 p-5 bg-muted border border-border rounded-lg">
+      <column gap="3" sx="grow-1 basis-64 min-w-0 p-5 bg-muted border border-border rounded-lg" justify="center">
         <row gap="2" align="center">
-          <input bind:value={name} placeholder="Type your name" />
-          <badge tone="primary">Hello, {name() || 'sailor'}</badge>
+          <switch bind:checked={on}></switch>
+          <badge>{on() ? 'running' : 'paused'}</badge>
         </row>
       </column>
     </row>
