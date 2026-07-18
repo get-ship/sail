@@ -1,9 +1,12 @@
 <!--
-  /motion — the page must MOVE, unprompted. The hand deals itself the moment
-  you arrive; every section is the live thing beside the code that made it.
-
-  Authored under the floor: no style blocks, no raw containers, no inline
-  style attributes.
+  /sail/language/motion — chapter 6, rebuilt per owner review: say what motion
+  IS first; hero is tiles (no clipping text); full expression leads and
+  presets are one paragraph; scroll/loop prose in plain English; choreography
+  demo full-width with the code below it; compositor talk and the 30 kB jab
+  cut; Under the hood answers where Sail ends and the embedded Motion library
+  begins. The motion:view demos are correct as written — the view trigger
+  currently attaches nothing at runtime (regression, job/motion-view-regression
+  dispatched with this page as the gate).
 -->
 
 <controller>
@@ -57,302 +60,195 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   }
 })
 </controller>
-
 <column sx="max-w-breakpoint-tablet mx-auto" gap="5">
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">The language</p>
   <h1>Motion</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    One directive. <code>motion:</code> takes a <strong>trigger</strong> — when —
-    and a <strong>config</strong> — what moves. No second animation API, no
-    imperative escape hatch you are meant to graduate to. The cards below dealt
-    themselves when you arrived.
+    Animation is declared on the element. <code>motion:</code> names a
+    <strong>trigger</strong> — <code>enter</code>, <code>exit</code>,
+    <code>view</code>, <code>press</code>, <code>loop</code> — and a
+    <strong>config</strong>: which properties move, how far, how fast. When
+    something else owns the clock — a slider, the scroll position —
+    <code>timeline()</code> turns keyframes into signals. This page is both,
+    in that order.
   </p>
 
   <row gap="3" align="center">
-    <button on:click={replay} motion:press={{ scale: 'press' }}>Deal again</button>
+    <button on:click={replay} motion:press={{ scale: 'press' }}>Replay</button>
     <p sx="text-sm text-muted-foreground">
-      <code>stagger</code> is the delay <em>between</em> siblings — a list
-      arrives as a list, not a flash.
+      Five tiles, one <code>motion:enter</code> each; <code>stagger</code>
+      is the delay between siblings.
     </p>
   </row>
-
   {#if dealt()}
-    <grid cols="5" gap="3">
-      <card motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            sx="p-5 transition-transform duration-fast ease-spring hover:scale-105">
-        <h3>snappy</h3>
-        <p sx="text-sm text-muted-foreground">translate-y</p>
-      </card>
-      <card motion:enter={{ opacity: 'fade', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            sx="p-5 transition-transform duration-medium ease-out hover:-translate-y-0_75">
-        <h3>fade</h3>
-        <p sx="text-sm text-muted-foreground">opacity only</p>
-      </card>
-      <card motion:enter={{ rotate: 'spring:bouncy', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            sx="p-5 transition-transform duration-fast ease-spring hover:rotate-2">
-        <h3>bouncy</h3>
-        <p sx="text-sm text-muted-foreground">rotate</p>
-      </card>
-      <card motion:enter={{ translate-x: 'spring:deliberate', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            sx="p-5 transition-transform duration-slow ease-out hover:translate-x-1">
-        <h3>deliberate</h3>
-        <p sx="text-sm text-muted-foreground">translate-x</p>
-      </card>
-      <card motion:enter={{ scale: 'spring:gentle', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            sx="p-5 transition-opacity duration-fast ease-out hover:opacity-75">
-        <h3>gentle</h3>
-        <p sx="text-sm text-muted-foreground">scale</p>
-      </card>
-    </grid>
+    <row gap="3" align="center" sx="min-h-9">
+      <div sx="w-9 h-9 rounded-md bg-primary" motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx="w-9 h-9 rounded-md bg-primary opacity-75" motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx="w-9 h-9 rounded-md bg-primary" motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx="w-9 h-9 rounded-md bg-primary opacity-75" motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx="w-9 h-9 rounded-md bg-primary" motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+    </row>
   {/if}
-
   <code-block code={code.stagger}></code-block>
 
-  <h2>Interaction</h2>
+  <h2>Enter and exit</h2>
   <p>
-    <strong>Hover is not motion's job.</strong> Hover feedback is a
-    <code>hover:</code> prefix on an sx atom — CSS, composited, instant, and
-    interruptible for free; sweep the mouse across a grid and nothing runs.
-    It lives in the <a href="/sail/language/styling">styling chapter</a>,
-    under <em>States are a prefix</em>. Motion's interaction triggers are the
-    ones CSS cannot see: <code>press</code> is a gesture with a release, and
-    <code>focus-visible</code> is the keyboard arriving.
+    <code>enter</code> plays when the element joins the page;
+    <code>exit</code> plays when it leaves. Exit is the one that needs the
+    framework's help: remove a node yourself and its animation has nowhere
+    to play, so the runtime keeps the element mounted until the exit
+    finishes.
   </p>
-  <grid cols="2" gap="4">
-    <column>
-      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Live — hover, press, tab to it</p>
-      <column sx="p-6 border border-border rounded-lg min-h-8 bg-surface-1" gap="3">
-        <row gap="3">
-          <card sx="p-4 transition-all duration-fast ease-out hover:-translate-y-0_75 hover:shadow-hover">
-            <strong>lift</strong>
-            <p sx="text-sm text-muted-foreground">hover: · sx, not motion</p>
-          </card>
-          <card sx="p-4 transition-transform duration-fast ease-spring hover:rotate-2">
-            <strong>tilt</strong>
-            <p sx="text-sm text-muted-foreground">hover: · sx, not motion</p>
-          </card>
-          <card sx="p-4 transition-transform duration-fast ease-out hover:translate-x-1">
-            <strong>nudge</strong>
-            <p sx="text-sm text-muted-foreground">hover: · sx, not motion</p>
-          </card>
-        </row>
-        <row gap="3" align="center">
-          <button motion:press={{ scale: 'press' }}>press</button>
-          <button motion:press={{ rotate: 'spring:snappy' }}>press · rotate</button>
-          <button motion:focus-visible={{ scale: 'spring:snappy' }}>tab to me</button>
-        </row>
-      </column>
-    </column>
-    <column>
-      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Source</p>
-      <code-block code={code.interaction}></code-block>
-    </column>
+  <column sx="p-6 border border-border rounded-lg min-h-8 bg-surface-1" gap="3">
+    <row>
+      <button on:click={() => open.set(!open())} motion:press={{ scale: 'press' }}>
+        {open() ? 'Remove' : 'Add'} the panel
+      </button>
+    </row>
+    {#if open()}
+      <card
+        motion:enter={{ opacity: 'fade', scale: 'spring:snappy' }}
+        motion:exit={{ opacity: 'fade-out' }}
+        sx="p-4"
+      >
+        <strong>I animate in, and I animate out.</strong>
+        <p sx="text-sm text-muted-foreground">Watch me leave before I go.</p>
+      </card>
+    {/if}
+  </column>
+  <code-block code={code.lifecycle}></code-block>
+
+  <h2>Write the animation you mean</h2>
+  <p>
+    Every field of a config takes a value directly:
+    <code>duration</code> and <code>delay</code> in milliseconds,
+    <code>easing</code> as a keyword or a cubic-bezier, and
+    <code>from</code>/<code>to</code> per property. The two tiles below run
+    the same loop — one at 500&nbsp;ms, one at 2500&nbsp;ms:
+  </p>
+  <row gap="5" align="center" sx="min-h-9">
+    <div sx="w-8 h-8 rounded-md bg-primary" motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 500 }}></div>
+    <div sx="w-8 h-8 rounded-md bg-primary opacity-75" motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 2500 }}></div>
   </row>
+  <code-block code={code.express}></code-block>
   <p>
-    The cards above never enter the animation system — the transition atoms
-    say how fast a state flips, and the browser handles the rest. For press
-    and focus the browser knows <em>when</em>; the only question a trigger
-    leaves open is what it should look like — and the answer is a preset, so
-    a typo is a compile error instead of something you ship.
+    Common shapes have names — <code>'fade'</code>,
+    <code>'spring:snappy'</code>, <code>'pulse'</code> — and a name is just
+    a config you didn't have to write. Start from one and override any
+    field, or skip them entirely. One spelling rule covers every value:
+    quoted is a literal, unquoted is code — which is how a signal goes
+    anywhere a number can.
   </p>
 
-  <h2>Lifecycle</h2>
-  <grid cols="2" gap="4">
-    <column>
-      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Live</p>
-      <column sx="p-6 border border-border rounded-lg min-h-8 bg-surface-1" gap="3">
-        <button on:click={() => open.set(!open())} motion:press={{ scale: 'press' }}>
-          {open() ? 'Remove' : 'Add'} the panel
-        </button>
-        {#if open()}
-          <card
-            motion:enter={{ opacity: 'fade', scale: 'spring:snappy' }}
-            motion:exit={{ opacity: 'fade-out' }}
-            sx="p-4"
-          >
-            <strong>I animate in, and I animate out.</strong>
-            <p sx="text-sm text-muted-foreground">
-              The runtime holds me in the DOM until my exit finishes.
-            </p>
-          </card>
-        {/if}
-      </column>
-    </column>
-    <column>
-      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Source</p>
-      <code-block code={code.lifecycle}></code-block>
-    </column>
-  </row>
+  <h2>On scroll — <code>view</code></h2>
   <p>
-    <code>exit</code> is the one a framework must be involved in: remove a node
-    yourself and its exit animation has nowhere to play. The runtime keeps the
-    element mounted until the animation finishes — watch the panel leave before
-    it goes.
+    <code>view</code> plays the animation when the element scrolls into the
+    viewport. Same configs as everything else:
   </p>
-
-  <h2>Timeline — scroll, not time</h2>
-  <p>
-    <code>view</code> and <code>scroll</code> are driven by scroll
-    <em>position</em>. Where the platform supports scroll timelines the browser
-    drives them on the compositor — <strong>no JavaScript runs while you
-    scroll</strong>. Elsewhere they play once on reveal. The effect people
-    install a 30&nbsp;kB library for is a directive with a preset.
-  </p>
-  <p sx="text-muted-foreground">Keep scrolling. Each of these arrives on its own.</p>
-
   <column gap="4">
     <card motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }} sx="p-6">
       <h3>This one fades up as it enters the viewport.</h3>
-      <p sx="text-muted-foreground"><code>motion:view</code> — nothing in the frame loop.</p>
-    </card>
-    <card motion:view={{ opacity: 'fade', translate-x: 'spring:deliberate' }} sx="p-6">
-      <h3>This one slides in, slowly.</h3>
-      <p sx="text-muted-foreground">Same directive, different preset — <code>spring:deliberate</code>.</p>
     </card>
     <card motion:view={{ scale: 'spring:bouncy', opacity: 'fade' }} sx="p-6">
-      <h3>And this one springs.</h3>
-      <p sx="text-muted-foreground">Thirteen presets — four springs, nine tweens — and inline values when none of them is what you meant.</p>
+      <h3>And this one springs in.</h3>
     </card>
   </column>
+  <code-block code={code.view}></code-block>
 
-  <code-block code={code.timeline}></code-block>
-
-  <h2>Ambient — loop</h2>
+  <h2>Forever — <code>loop</code></h2>
   <p>
-    <code>loop</code> is the idle life of a page: the baked animation
-    alternates forever, <code>stagger</code> becomes a phase offset so
-    siblings read as a wave, and <code>prefers-reduced-motion</code> switches
-    it off entirely — ambient motion is decoration.
+    <code>loop</code> repeats until the element leaves — for the decorative
+    layer: pulsing dots, a spinner, a status light. <code>stagger</code>
+    offsets siblings so a row reads as a wave. A user whose system asks for
+    reduced motion gets none of this, automatically.
   </p>
   <row gap="3" align="center" sx="min-h-9">
     <div sx="w-4 h-4 rounded-full bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
     <div sx="w-4 h-4 rounded-full bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
     <div sx="w-4 h-4 rounded-full bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
     <div sx="w-4 h-4 rounded-full bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <row sx="grow-1"></row>
+    <div sx="w-8 h-8 rounded-md bg-primary" motion:loop={{ rotate: 'spin' }}></div>
   </row>
   <code-block code={code.loop}></code-block>
 
-  <p sx="text-sm text-muted-foreground">continuous rotate — one direction, never ping-pongs</p>
-  <row gap="3" align="center" sx="min-h-9">
-    <div data-testid="spin-demo" sx="w-8 h-8 rounded-md bg-primary" motion:loop={{ rotate: 'spin' }}></div>
+  <h2>Gestures</h2>
+  <p>
+    <code>press</code> reacts to the press-and-release gesture;
+    <code>focus-visible</code> to the keyboard arriving. Hover feedback is
+    not animation — it's a <code>hover:</code> atom in the
+    <a href="/sail/language/styling">styling chapter</a>.
+  </p>
+  <row gap="3" align="center">
+    <button motion:press={{ scale: 'press' }}>press me</button>
+    <button motion:focus-visible={{ scale: 'spring:snappy' }}>tab to me</button>
   </row>
-  <code-block code={code.spin}></code-block>
+  <code-block code={code.gestures}></code-block>
 
-  <h2>Presets are defaults, not a cage</h2>
+  <h2>When something else owns the clock</h2>
   <p>
-    A preset is the starting point. When you need a specific animation, write
-    it — <code>duration</code> and <code>delay</code> in milliseconds,
-    <code>easing</code> as a keyword or an inline cubic-bezier, and
-    <code>from</code>/<code>to</code> per channel. One rule covers every
-    value: quoted is a literal, unquoted is code.
+    Everything above starts, plays, and finishes on its own. Some animation
+    instead has to <em>follow</em> something — this slider. Drag it: the
+    tile moves through a seven-stop sequence, holds where the keyframes
+    hold, and pops in place between 54 and 64.
   </p>
-  <row gap="3" align="center" sx="min-h-9">
-    <div
-      data-testid="inline-demo"
-      sx="w-8 h-8 rounded-md bg-primary"
-      motion:loop={{ translate-x: { from: 0, to: '120px' }, rotate: { to: '15deg' }, scale: { to: 1.75 }, duration: 3600, easing: [0.6, 0, 0.2, 1] }}
-    ></div>
-  </row>
-  <p sx="text-sm text-muted-foreground">
-    Three independent channels, a bespoke duration and a bespoke curve — no
-    preset minted, no design token minted. This is the distinction from
-    <code>sx</code>, which stays closed on purpose: colour and spacing are
-    theming integrity, a 3600&nbsp;ms decorative loop is not.
-  </p>
-
-  <h2>Choreography — when something else owns the clock</h2>
+  <column sx="p-6 border border-border rounded-lg bg-surface-1 min-h-11" gap="4">
+    <row align="center" gap="3">
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        bind:value={scrubText}
+        data-testid="timeline-scrub"
+        sx="grow-1 min-w-0"
+      />
+      <span sx="w-8 text-end font-mono text-sm text-muted-foreground">{scrubText()}</span>
+    </row>
+    <row sx="min-h-9" align="center">
+      <card
+        data-testid="timeline-tile"
+        sx="w-9 h-9 bg-primary rounded-md translate-x-(--tile-x) rotate-(--tile-rotate) scale-(--tile-scale)"
+      ></card>
+    </row>
+  </column>
   <p>
-    Everything above is fire-and-forget: you name a preset and the browser runs
-    it. That is the right answer right up until the clock belongs to something
-    else — a slider, a scroll position, a sequence that has to land on exact
-    offsets and <em>stay there</em>. <code>motion:</code> cannot express that,
-    and the honest alternative used to be hand-rolled
-    <code>Math.min/Math.max</code> arithmetic in an effect.
+    The program behind it is <code>timeline()</code>: it takes a progress
+    reader — here, the slider's value scaled to 0…1 — and a set of
+    keyframes per property, and returns one signal per property. Those
+    signals reach the style layer the way any signal does, through
+    <code>(--name)</code>:
   </p>
+  <code-block code={code.choreography}></code-block>
   <p>
-    <code>timeline()</code> is that arithmetic as <strong>data</strong>. It
-    takes a progress reader and returns one signal per track — which the style
-    layer already knows how to read, because
-    <code>(--tile-x)</code> is the same reflection a plain
-    <code>signal(...)</code> gets. The tile below is motion.dev's own seven-stop
-    choreography, keyframe for keyframe.
-  </p>
-
-  <grid cols="2" gap="4">
-    <column>
-      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Live — drag the slider</p>
-      <column sx="p-6 border border-border rounded-lg bg-surface-1 min-h-11" gap="4">
-        <row align="center" gap="3">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="1"
-            bind:value={scrubText}
-            data-testid="timeline-scrub"
-            sx="grow-1 min-w-0"
-          />
-          <span sx="w-8 text-end font-mono text-sm text-muted-foreground">{scrubText()}</span>
-        </row>
-        <row sx="min-h-9" align="center">
-          <card
-            data-testid="timeline-tile"
-            sx="w-9 h-9 bg-primary rounded-md translate-x-(--tile-x) rotate-(--tile-rotate) scale-(--tile-scale)"
-          ></card>
-        </row>
-        <p sx="text-sm text-muted-foreground">
-          Watch it settle at 34 and <strong>hold</strong> — then pop, in place,
-          between 54 and 64. Three channels, one progress value.
-        </p>
-      </column>
-    </column>
-    <column>
-      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Source</p>
-      <code-block code={code.choreography}></code-block>
-    </column>
-  </grid>
-
-  <p>
-    A hold is the same <em>value</em> repeated at a later offset — never a
-    conditional, never a clamp. Per-segment easing follows the platform's own
-    rule (a stop eases the segment it <em>starts</em>), so keyframes captured
-    off a real page transfer verbatim.
-  </p>
-
-  <h3>Drivers</h3>
-  <p>
-    Progress is just a signal, so the thing producing it is interchangeable.
-    That is why the slider above and a self-running animation are the same
-    program with one line changed.
+    A hold is the same value repeated at a later offset. And because
+    progress is just a signal, the slider is swappable for anything that
+    produces one:
   </p>
   <code-block code={code.drivers}></code-block>
 
-  <alert tone="info">
-    <strong>Two lanes, one rule.</strong> If the browser can own the clock, let
-    it — <code>motion:</code> runs on the compositor and costs the main thread
-    nothing. If something else owns the clock, reach for
-    <code>timeline()</code>. It writes custom properties every frame, which is
-    real main-thread work, and it holds 60fps at sixty elements across three
-    channels each — far past what a page actually choreographs at once.
-  </alert>
-
-  <h2>The vocabulary</h2>
+  <h2>Under the hood</h2>
   <p>
-    Small on purpose, and enforced: an unknown trigger, property or preset
-    name is a compile error, not a silent no-op. A typo used to be something
-    you could ship. What is <em>not</em> restricted is the values — those are
-    yours.
+    Sail does not reimplement animation. The runtime embeds the
+    <a href="https://motion.dev">Motion</a> library and compiles your
+    declarations onto it — <code>motion:</code> attributes become Motion
+    animations, springs use Motion's spring generator. What Sail adds is the
+    declaration layer: the compiler checks every trigger, property, and
+    preset name at build, so a typo is a compile error rather than an
+    animation that silently never runs. In-editor autocomplete inside the
+    config braces is not there yet; the vocabulary below is the whole
+    surface in the meantime.
   </p>
 
+  <h2>The vocabulary</h2>
   <grid cols="2" gap="4">
     <column gap="1">
       <label>Triggers</label>
-      <p sx="text-sm text-muted-foreground">hover · press · focus · focus-visible · enter · exit · view · scroll · loop</p>
-      <p sx="text-xs text-muted-foreground"><code>hover</code> compiles, but hover feedback belongs to <code>hover:</code> atoms — see Interaction above.</p>
+      <p sx="text-sm text-muted-foreground">enter · exit · view · scroll · press · focus · focus-visible · loop</p>
     </column>
     <column gap="1">
       <label>Properties</label>
-      <p sx="text-sm text-muted-foreground">scale · opacity · translate-x · translate-y · rotate · <em>stagger</em> (reserved)</p>
+      <p sx="text-sm text-muted-foreground">opacity · scale · scale-x · scale-y · translate-x · translate-y · rotate</p>
     </column>
     <column gap="1">
       <label>Springs</label>
@@ -360,16 +256,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </column>
     <column gap="1">
       <label>Tweens</label>
-      <p sx="text-sm text-muted-foreground">fade · fade-out · press · release · pulse</p>
+      <p sx="text-sm text-muted-foreground">fade · fade-out · press · release · pulse · spin</p>
     </column>
   </grid>
-
-  <alert tone="info">
-    <strong>Reduced motion is not your problem.</strong> Every
-    <code>motion:</code> respects <code>prefers-reduced-motion</code> — the
-    JavaScript triggers check it, and the framework's global rule kills the CSS
-    timelines. Honouring it is not something you can forget to do.
-  </alert>
+  <p sx="text-sm text-muted-foreground">
+    Config fields: <code>duration</code> · <code>delay</code> ·
+    <code>easing</code> · <code>from</code>/<code>to</code> ·
+    <code>stagger</code>. Every name above is compiler-checked; every value
+    is yours.
+  </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/language/layout">← Layout</a>
