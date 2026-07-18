@@ -156,7 +156,7 @@ export default controller(() => {
   <theme-picker slot="actions"></theme-picker>
 </navbar>
 
-<row align="stretch">
+<row nowrap align="stretch">
   {#if product() === 'deck'}
     <navbar placement="rail" bordered sticky offset="14">
       <label>Introduction</label>

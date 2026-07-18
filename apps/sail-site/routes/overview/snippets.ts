@@ -1,6 +1,8 @@
 // Code snippets for the introduction. The `page` snippet IS the live demo's
 // program; the tour snippets are deliberately tiny. All compiled by the build.
 export const code = {
+  // The strict config, pure JSON (rendered by <sail-json-view> on the page).
+  configJson: `{"preset": "strict", "sx": true, "raw_containers": true}`,
   // REAL config files from this repository, verbatim — never invent these.
   configStrict: `// apps/sail-site/routes/sail.config.json — this site's docs pages
 {

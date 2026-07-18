@@ -51,37 +51,37 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </p>
   </column>
 
-  <grid cols="2" gap="6">
-    <column gap="3">
-      <h2>It reads like HTML, it runs on signals</h2>
-      <p>
-        A component is one file: a template that reads like HTML, TypeScript
-        beneath it, signals connecting the two. Updates are fine-grained —
-        the template binds signals directly, and only what changed
-        re-renders. No virtual DOM, no diffing.
-      </p>
-      <p sx="text-sm text-muted-foreground">
-        The list on the right is that file, running — filter it, press
-        Invite.
-      </p>
-    </column>
-    <column gap="3" sx="p-5 bg-muted border border-border rounded-lg">
-      <input placeholder="Filter people" bind:value={query} />
-      {#for p of filtered() key={p.id}}
-        <card sx="p-3 transition-shadow duration-fast hover:shadow-hover"
-              motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
-          <row gap="3" align="center">
-            <avatar></avatar>
-            <strong sx="grow-1">{p.name}</strong>
-            <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
-          </row>
-        </card>
-      {/for}
-      <row gap="2">
-        <button on:click={invite} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
-      </row>
-    </column>
-  </grid>
+  <column gap="3">
+    <h2>It reads like HTML, it runs on signals</h2>
+    <p>
+      A component is one file: a template that reads like HTML, TypeScript
+      beneath it, signals connecting the two. Updates are fine-grained — the
+      template binds signals directly, and only what changed re-renders. No
+      virtual DOM, no diffing. This is a complete component file, and next to
+      it, the same file running:
+    </p>
+    <row gap="6" align="start">
+      <column gap="2" sx="grow-1 basis-breakpoint-mobile min-w-0">
+        <code-block code={code.page}></code-block>
+      </column>
+      <column gap="3" sx="grow-1 basis-breakpoint-mobile min-w-0 p-5 bg-muted border border-border rounded-lg">
+        <input placeholder="Filter people" bind:value={query} />
+        {#for p of filtered() key={p.id}}
+          <card sx="p-3 transition-shadow duration-fast hover:shadow-hover"
+                motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+            <row gap="3" align="center">
+              <avatar></avatar>
+              <strong sx="grow-1">{p.name}</strong>
+              <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
+            </row>
+          </card>
+        {/for}
+        <row gap="2">
+          <button on:click={invite} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
+        </row>
+      </column>
+    </row>
+  </column>
 
   <column gap="3">
     <h2>Design is data</h2>
@@ -105,32 +105,36 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       correct form, so the next attempt — an agent's or yours — is the right
       one.
     </p>
-    <p>
-      How strict is up to you, and the contract is a real file. Any directory
-      can carry a <code>sail.config.json</code> — a few lines that set the
-      rules for the code inside it. These pages compile under the strict
-      preset; the two grants are the only freedoms taken:
-    </p>
-    <code-block code={code.configStrict}></code-block>
-    <p>
-      And the grants go beyond styling. A component that embeds a third-party
-      editor says so in one greppable line; a drawing component may fetch from
-      its own origin and nowhere else. What a directory isn't granted, its
-      code cannot do — the compiler holds every line to the contract:
-    </p>
-    <code-block code={code.configComponent}></code-block>
-    <p>
-      Unknown keys refuse loudly instead of being ignored. Same language, same
-      compiler — a different set of promises per directory, chosen by the team
-      that has to live with the code.
-    </p>
+    <row gap="6" align="start">
+      <column gap="3" sx="grow-1 basis-breakpoint-mobile min-w-0">
+        <p>
+          How strict is up to you, and the contract is a real file. Any
+          directory can carry a <code>sail.config.json</code> — a few lines
+          that set the rules for the code inside it. On the right: the config
+          these docs pages compile under. The strict preset, two grants, and
+          nothing else — an unknown key refuses loudly instead of being
+          ignored.
+        </p>
+        <p>
+          The grants go beyond styling. Our code-editor component embeds
+          CodeMirror, so its config carries <code>"unconfined": true</code> —
+          one greppable line admitting it. The canvas component's config says
+          <code>"network": ["self"]</code>: it may fetch from its own origin
+          and nowhere else. What a directory isn't granted, its code cannot
+          do.
+        </p>
+      </column>
+      <column gap="2" sx="grow-1 basis-breakpoint-mobile min-w-0">
+        <p sx="font-mono text-xs text-muted-foreground">apps/sail-site/routes/sail.config.json</p>
+        <sail-json-view data={code.configJson} expanded depth={2}></sail-json-view>
+      </column>
+    </row>
 
     <h2>What's in the box</h2>
     <p>
-      Batteries included means the parts every site ends up assembling are
-      already here, as language rather than dependencies. Interface patterns —
-      dialogs, comboboxes, tables, tabs, toasts — are tags, keyboard-complete
-      and accessible, skinned by your theme. Layout is its own vocabulary
+      Interface patterns — dialogs, comboboxes, tables, tabs, toasts — are
+      tags, keyboard-complete and accessible, skinned by your theme. Layout
+      is its own vocabulary
       (<code>row</code>, <code>column</code>, <code>grid</code>) rather than a
       CSS technique. Motion is declarative and respects reduced motion by
       default. Data has a first-class shape: <code>query()</code> turns a
@@ -144,13 +148,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     <h2>Performance</h2>
     <p>
-      Fast by construction more than by tuning. Templates compile ahead of
-      time and updates are fine-grained signal writes — no virtual DOM,
-      nothing to diff. The runtime is small and tree-shakable, and the design
-      system adds no JavaScript at all: components, themes, and styling ship
-      as CSS. That matters most compared to the usual stack, where the
-      component library and the design system arrive as their own runtime on
-      top of the framework's.
+      Templates compile ahead of time and updates are fine-grained signal
+      writes — no virtual DOM, nothing to diff. The runtime is small and
+      tree-shakable, and the design system ships as CSS: components render
+      and style without JavaScript, with behavior arriving as progressive
+      enhancement over native elements. That matters most compared to the
+      usual stack, where the component library and the design system arrive
+      as their own runtime on top of the framework's.
     </p>
 
     <p sx="text-sm text-muted-foreground">
