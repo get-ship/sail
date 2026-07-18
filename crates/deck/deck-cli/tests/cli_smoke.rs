@@ -115,6 +115,15 @@ impl Drop for ScaffoldGuard {
 /// `include_str!`). Framework targets bake independently of consumer
 /// targets in `build_all`, so their on-disk artifacts are present
 /// even when a consumer target (e.g. sail-marketing) fails the bake.
+///
+/// Only the singletons this repo actually PROVIDES are asserted. Some
+/// framework singletons are host-provided and node-resolved from the
+/// project being built (`@ship/sdk-client` → `sail-sdk-client.js`,
+/// `@ship/sdk` → `sdk.js`): the bundler skips them when the package is
+/// absent (this repo does not vend `@ship/sdk-client`), and deck-core's
+/// build.rs stages a bootstrap stub for the missing embed rather than
+/// failing the build. Asserting `sail-sdk-client.js` here would demand a
+/// package this repo doesn't ship.
 #[test]
 fn build_assets_writes_framework_bundles() {
     let out = run_deck(&["build-assets"]);
@@ -123,7 +132,7 @@ fn build_assets_writes_framework_bundles() {
     // known-bad on this worktree. Framework bundles are written
     // before build_all returns; their absence is the real signal.
     let fw_dir = repo_root().join(".deck").join("framework");
-    for name in ["sail-runtime.js", "sail-dom.js", "sail-sdk-client.js"] {
+    for name in ["sail-runtime.js", "sail-dom.js", "deck-route.js"] {
         let path = fw_dir.join(name);
         assert!(
             path.exists(),
