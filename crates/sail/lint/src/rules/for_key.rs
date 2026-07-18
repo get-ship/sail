@@ -64,6 +64,21 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             }
         }
         if !source[i..].starts_with("{#for") {
+            // Any other `{` opens a balanced group — an expression
+            // (`{'{#for}'}` in template text), another marker's header, an
+            // attribute value. Skip it whole with the same string-aware
+            // matcher, so a block marker quoted inside a string literal is
+            // never mistaken for a call site. Real `{#for` markers are
+            // always top-level in the raw source (block bodies sit between
+            // brace groups, not inside them).
+            if source.as_bytes()[i] == b'{'
+                && let Some(end) = find_block_header_end(source, i)
+            {
+                while bi < boundaries.len() && boundaries[bi] <= end {
+                    bi += 1;
+                }
+                continue;
+            }
             bi += 1;
             continue;
         }
@@ -272,6 +287,29 @@ mod tests {
     fn real_for_after_comment_still_flagged() {
         // The comment is skipped, but the real keyless block after it fires.
         let src = "<!-- {#for x of xs} -->\n{#for y of ys}<li>{y}</li>{/for}";
+        let findings = lint(src);
+        assert_eq!(findings.len(), 1, "{:?}", findings);
+    }
+
+    #[test]
+    fn for_marker_quoted_in_a_string_expression_is_not_a_call_site() {
+        // `{'{#for}'}` in template text is a string expression whose VALUE
+        // is the marker text — content, not control flow.
+        let src = r#"<p>{'{#for}'}</p>"#;
+        let findings = lint(src);
+        assert_eq!(findings.len(), 0, "{:?}", findings);
+    }
+
+    #[test]
+    fn for_marker_in_double_quoted_string_expression_is_not_a_call_site() {
+        let src = r#"<p>{"{#for x of xs}"}</p>"#;
+        let findings = lint(src);
+        assert_eq!(findings.len(), 0, "{:?}", findings);
+    }
+
+    #[test]
+    fn real_keyless_for_after_a_string_expression_still_flagged() {
+        let src = r#"<p>{'{#for}'}</p>{#for y of ys}<li>{y}</li>{/for}"#;
         let findings = lint(src);
         assert_eq!(findings.len(), 1, "{:?}", findings);
     }

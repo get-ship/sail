@@ -710,14 +710,14 @@ fn parse_motion_static_config(
             }
             return Err(err(format!(
                 "unexpected `,` in motion config near `{}`",
-                &s[i..s.len().min(i + 20)]
+                context_window(s, i)
             )));
         }
         let key_start = i;
         let key_end = scan_ident(bytes, i).ok_or_else(|| {
             err(format!(
                 "expected a property name (scale, opacity, …) near `{}`",
-                &s[key_start..s.len().min(key_start + 20)]
+                context_window(s, key_start)
             ))
         })?;
         let key = &s[key_start..key_end];
@@ -850,7 +850,7 @@ fn parse_motion_channel(
         let key_end = scan_ident(bytes, i).ok_or_else(|| {
             err(format!(
                 "expected `from`, `to`, `preset`, or a timing key inside `{property}`, near `{}`",
-                &s[key_start..s.len().min(key_start + 20)]
+                context_window(s, key_start)
             ))
         })?;
         let key = &s[key_start..key_end];
@@ -1193,6 +1193,17 @@ fn parse_duration_ms(raw: &str) -> Option<u32> {
     Some(ms.round() as u32)
 }
 
+/// Up to 20 chars of source starting at `i`, for "near `…`" diagnostics.
+/// Char-counted, not byte-truncated — a fixed byte window (`i + 20`) can cut
+/// a multibyte char in half and panic the slice.
+fn context_window(s: &str, i: usize) -> &str {
+    let rest = &s[i..];
+    match rest.char_indices().nth(20) {
+        Some((end, _)) => &rest[..end],
+        None => rest,
+    }
+}
+
 fn skip_ws(bytes: &[u8], mut i: usize) -> usize {
     while i < bytes.len() && (bytes[i] as char).is_whitespace() {
         i += 1;
@@ -1416,6 +1427,16 @@ mod tests {
             AttrInstr::Expr { ref expr, .. } => assert_eq!(expr.source, "\"hello\""),
             other => panic!("expected AttrInstr::Expr, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn context_window_never_cuts_a_multibyte_char() {
+        // 7 × `…` = 21 bytes; the old fixed 20-BYTE window (`i + 20`) landed
+        // mid-char and panicked the diagnostic that was trying to help.
+        let s = "………………………";
+        assert_eq!(context_window(s, 0), s, "under 20 chars: whole rest");
+        let long = "…".repeat(30);
+        assert_eq!(context_window(&long, 0), "…".repeat(20));
     }
 
     #[test]
