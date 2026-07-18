@@ -412,6 +412,29 @@ export type { BoundaryHandle, BoundarySource } from './error-boundary'
 // tree-shaken when unused.
 export { __sui_motion_attach } from './motion'
 export type { MotionAttachConfig, MotionConfig } from './motion'
+
+// The choreography lane. `motion:` (above) owns ambient, fire-and-forget
+// animation and hands it to the compositor; `timeline()` owns motion whose
+// clock something ELSE holds — a scrub, a scroll, a sequence of stops that
+// must land on exact offsets. Keyframes go in as data, signals come out, and
+// the existing `(--name)` reflection carries them to the style layer.
+export { timeline, SailTimelineError } from './timeline'
+export type {
+  TimelineValue,
+  TimelineEasing,
+  TimelineEasingName,
+  TimelineStop,
+  TimelineStopOptions,
+  TimelineTrack,
+  TimelineTracks,
+  TimelineSignals,
+  TimelineOptions,
+} from './timeline'
+
+// Stock progress drivers. Each returns a plain signal, so a hand-written
+// `signal(0)` a slider writes is interchangeable with any of them.
+export { clock, scrollProgress, springValue } from './drivers'
+export type { ClockOptions, ClockSignal, ScrollProgressOptions, SpringOptions } from './drivers'
 // Shared-sheet adoption for shadow components. Compiler-emitted client
 // code calls `adoptSuiSheets(__root)` in every component mount (see
 // crates/sail/compiler/src/emit/js/setup.rs). It is client-safe (no-ops

@@ -184,3 +184,94 @@ test('/motion page: the ambient loop dots keep animating (translate-y, staggered
 
   expect(motionWarnings).toEqual([])
 })
+
+// ── The choreography lane, live on the page ──────────────────────────────────
+//
+// The /motion page's `timeline()` demo is the teaching surface for the second
+// lane, and its whole claim is "scrub the slider and the tile moves the way
+// the data says". That claim is only worth making if it survives the real
+// compile -> reflect -> CSS path: `timeline()` returns signals, the compiler
+// emits a custom-property reflection for each `(--tile-x)` read, and the
+// element's `translate`/`rotate`/`scale` resolve from those properties.
+//
+// Sampling the tile's computed values at specific slider positions is the only
+// assertion that proves all three links at once — `toBeVisible()` passes on a
+// tile that never moves, which is precisely the failure this file already
+// exists to catch for `motion:loop`.
+
+test.describe('/motion — timeline() scrub demo', () => {
+  /** Set the range input and let the reflection effect flush. */
+  async function scrubTo(page: Page, value: number): Promise<void> {
+    const slider = page.getByTestId('timeline-scrub')
+    await slider.fill(String(value))
+    await slider.dispatchEvent('input')
+    await page.waitForTimeout(50)
+  }
+
+  /** The tile's computed transform channels, as plain numbers. */
+  async function readTile(page: Page): Promise<{ x: number; rotate: number; scale: number }> {
+    return page.getByTestId('timeline-tile').evaluate((el) => {
+      const s = getComputedStyle(el)
+      return {
+        x: parseFloat(s.translate) || 0,
+        rotate: parseFloat(s.rotate) || 0,
+        scale: parseFloat(s.scale) || 1,
+      }
+    })
+  }
+
+  test('the tile follows the keyframe data, holds, and pops', async ({ page }) => {
+    await page.goto('/motion')
+    await expect(page.getByTestId('timeline-tile')).toBeVisible()
+
+    // 0 — parked at the origin, unrotated, unscaled.
+    await scrubTo(page, 0)
+    expect(await readTile(page)).toMatchObject({ x: 0, rotate: 0, scale: 1 })
+
+    // 34 — the translate and rotate have arrived in full.
+    const settled = (await scrubTo(page, 34), await readTile(page))
+    expect(settled.x).toBeCloseTo(120, 1)
+    expect(settled.rotate).toBeCloseTo(15, 1)
+    expect(settled.scale).toBeCloseTo(1, 2)
+
+    // 44 — unchanged. This is the HOLD: the same VALUE repeated at a later
+    // offset. Clamp-and-hope arithmetic drifts here.
+    const held = (await scrubTo(page, 44), await readTile(page))
+    expect(held.x).toBeCloseTo(120, 1)
+    expect(held.rotate).toBeCloseTo(15, 1)
+
+    // 54 — the pop happens IN PLACE: scale peaks while x and rotate stay put.
+    const popped = (await scrubTo(page, 54), await readTile(page))
+    expect(popped.scale).toBeCloseTo(1.75, 2)
+    expect(popped.x).toBeCloseTo(120, 1)
+    expect(popped.rotate).toBeCloseTo(15, 1)
+
+    // 64 — scale back to 1, still parked.
+    const relaxed = (await scrubTo(page, 64), await readTile(page))
+    expect(relaxed.scale).toBeCloseTo(1, 2)
+    expect(relaxed.x).toBeCloseTo(120, 1)
+
+    // 100 — home.
+    const home = (await scrubTo(page, 100), await readTile(page))
+    expect(home.x).toBeCloseTo(0, 1)
+    expect(home.rotate).toBeCloseTo(0, 1)
+    expect(home.scale).toBeCloseTo(1, 2)
+  })
+
+  test('the demo is genuinely driven — the scrub sweeps it through a real range', async ({
+    page,
+  }) => {
+    await page.goto('/motion')
+    await expect(page.getByTestId('timeline-tile')).toBeVisible()
+
+    const xs: number[] = []
+    for (const v of [0, 10, 20, 25, 30, 34, 70, 80, 90, 100]) {
+      await scrubTo(page, v)
+      xs.push((await readTile(page)).x)
+    }
+    // A tile whose reflection never wired up reports ONE value for all of them.
+    expect(new Set(xs.map((n) => n.toFixed(2))).size).toBeGreaterThan(6)
+    expect(Math.max(...xs)).toBeCloseTo(120, 1)
+    expect(Math.min(...xs)).toBeCloseTo(0, 1)
+  })
+})

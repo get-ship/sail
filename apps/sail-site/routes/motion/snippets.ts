@@ -51,6 +51,43 @@ export const code = {
   Tracks the scroll progress of its container.
 </div>`,
 
+  choreography: `<!-- CHOREOGRAPHY — the other lane. Something else owns the clock
+     (here a slider), keyframes are DATA, and every track comes back as a
+     signal the style layer already knows how to read. No effect, no
+     el.style, no offset arithmetic. -->
+<controller>
+import { controller, signal, timeline } from '@ship/sail-runtime'
+export default controller(() => {
+  const scrubText = signal('0')
+  const p = () => Number(scrubText()) / 100
+  const { tileX, tileRotate, tileScale } = timeline(p, {
+    // translate settles at .34 and HOLDS — a hold is the same VALUE
+    // repeated at a later offset.
+    tileX:     [[0, '0px'], [0.12, '0px'], [0.34, '120px'], [0.44, '120px'],
+                [0.54, '120px'], [0.64, '120px'], [1, '0px']],
+    tileRotate:[[0, '0deg'], [0.12, '0deg'], [0.34, '15deg'], [0.44, '15deg'],
+                [0.54, '15deg'], [0.64, '15deg'], [1, '0deg']],
+    // …while the scale pops on its own, between .54 and .64.
+    tileScale: [[0.44, 1], [0.54, 1.75], [0.64, 1]],
+  }, { easing: [0.6, 0, 0.2, 1] })
+  return { scrubText, tileX, tileRotate, tileScale }
+})
+</controller>
+
+<input type="range" min="0" max="100" step="1" bind:value={scrubText} />
+<card sx="translate-x-(--tile-x) rotate-(--tile-rotate) scale-(--tile-scale)">
+  scrub me
+</card>`,
+
+  drivers: `<!-- A driver is just a signal. Swap the line, keep everything else. -->
+const p = clock(3600, { loop: true })   // wall-clock, with .play()/.pause()
+const p = scrollProgress(section)        // this element's travel through the viewport
+const p = springValue(target)            // real physics chasing another signal
+const p = signal(0)                      // …or a plain signal you write yourself
+
+// Reduced motion is decided once, in the driver — not at every call site.
+// clock() jumps to the end and never schedules a frame.`,
+
   stagger: `<!-- stagger is RESERVED, not a property: it describes the relationship
      BETWEEN siblings (the delay step), not anything about any one of them. -->
 {#for n of items() key={n}}

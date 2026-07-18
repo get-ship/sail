@@ -1,2 +1,6 @@
 test/.compiled/
 test/.compiled-repro/
+
+# Playwright output from the timeline browser proof (`bunx playwright test`).
+test-results/
+playwright-report/

@@ -632,6 +632,79 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         names.sort_unstable();
         let _ = writeln!(md, "{}\n", names.join(", "));
     }
+    // The second motion lane. `motion:` above is the whole story for ambient
+    // animation; it is NOT the story for animation whose clock something else
+    // holds, and an agent that only knows `motion:` hand-rolls Math.min/max
+    // offset arithmetic in an effect the moment it meets a scrub or a
+    // multi-stop sequence. Teach both lanes and which one a task belongs in.
+    let _ = writeln!(md, "## Motion — the second lane: `timeline()`\n");
+    let _ = writeln!(
+        md,
+        "`motion:` above is FIRE-AND-FORGET: you name a preset, the browser owns the\n\
+         clock, the compositor runs it. Reach for `timeline()` when something ELSE owns\n\
+         the clock — a scrub, a scroll position, a sequence that must land on exact\n\
+         offsets and HOLD there.\n\n\
+         | you want | lane |\n\
+         | --- | --- |\n\
+         | hover/press feedback, enter/exit, reveal-on-scroll, an ambient loop | `motion:` |\n\
+         | a slider scrubbing an animation | `timeline()` |\n\
+         | many elements choreographed against ONE progress value | `timeline()` |\n\
+         | keyframes with holds, or per-segment easing | `timeline()` |\n\n\
+         `motion:` is cheaper (compositor, off the main thread) — prefer it whenever it\n\
+         can express the motion. `timeline()` writes custom properties from JS every\n\
+         frame; that is fine at real page scale (60 elements x 3 channels holds 60fps)\n\
+         but it is main-thread work `motion:` does not do.\n"
+    );
+    let _ = writeln!(
+        md,
+        "KEYFRAMES ARE DATA. `timeline(progress, tracks)` takes a progress reader (0..1)\n\
+         and returns ONE SIGNAL PER TRACK. Destructure them into the returned scope and\n\
+         each becomes a `(--name)` an sx read can use — the same reflection a plain\n\
+         `signal(...)` gets. Never hand-roll offset arithmetic in an effect.\n\n\
+         - a stop is `[offset, value]`; offsets are 0..1 and must ASCEND.\n\
+         - a HOLD is the same VALUE repeated at a later offset. (Repeating an OFFSET is\n  \
+           an error.)\n\
+         - `[offset, value, {{ easing: [0.6, 0, 0.2, 1] }}]` eases the segment that\n  \
+           STARTS at that stop — WAAPI's rule, so captured `cubic-bezier(...)` values\n  \
+           transfer verbatim. `{{ easing }}` on the whole timeline sets the default.\n\
+         - a track is all numbers OR all strings sharing ONE unit. Mixed units throw.\n\
+         - progress outside the first/last offset CLAMPS.\n"
+    );
+    let _ = writeln!(
+        md,
+        "```\n\
+         <controller>\n\
+         import {{ controller, timeline, clock }} from '@ship/sail-runtime'\n\
+         export default controller(() => {{\n  \
+           const p = clock(3600, {{ loop: true }})\n  \
+           const {{ tileX, tileScale }} = timeline(p, {{\n    \
+             tileX: [[0, '0px'], [0.12, '0px'], [0.34, '120px'], [0.44, '120px'], [1, '0px']],\n    \
+             tileScale: [[0.44, 1], [0.54, 1.75], [0.64, 1]],\n  \
+           }}, {{ easing: [0.6, 0, 0.2, 1] }})\n  \
+           return {{ p, tileX, tileScale }}\n\
+         }})\n\
+         </controller>\n\
+         <card sx=\"translate-x-(--tile-x) scale-(--tile-scale)\">choreographed</card>\n\
+         ```\n"
+    );
+    let _ = writeln!(
+        md,
+        "DRIVERS — each returns a plain signal, so they are interchangeable with a\n\
+         hand-written `signal(0)` a range input writes:\n\n\
+         - `clock(ms, {{ loop?, direction?, autoplay?, reducedMotion? }})` — wall-clock\n  \
+           progress, plus `.play()` / `.pause()` / `.stop()` / `.running()`.\n\
+         - `scrollProgress(target?)` — document scroll, or an element's travel through\n  \
+           the viewport (0 as it enters, 1 as it leaves).\n\
+         - `springValue(source, opts)` — real physics chasing another signal;\n  \
+           retargets mid-flight without losing velocity. Its output is a VALUE, not\n  \
+           necessarily 0..1 — reflect it directly (`translate-y-(--ball-y)`).\n\n\
+         Every driver stops itself when the scope disposes. Reduced motion is handled\n\
+         once, in the driver: `clock` jumps to the END and never schedules a frame\n\
+         (override with `reducedMotion: 'start' | 'play'`), `springValue` mirrors its\n\
+         source instantly, and `scrollProgress` deliberately does NOT suppress — it\n\
+         reports what the user is already doing.\n"
+    );
+
     // The three things an author reaches for that the skill never mentioned: how
     // behavior attaches, where state comes from, and which door to import through.
     let _ = writeln!(md, "## Behavior — `use:` attaches, functions compose\n");
