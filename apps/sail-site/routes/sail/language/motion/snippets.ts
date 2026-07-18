@@ -15,13 +15,18 @@ export const code = {
 <div sx="w-8 h-8 rounded-md bg-primary" motion:loop={{ rotate: 'spin' }}></div>`,
 
   intro: `<!-- one directive, one system. The trigger says WHEN; the body says WHAT. -->
-<card motion:hover={{ scale: 'spring:gentle' }}>
-  Lift on hover.
-</card>`,
+<button motion:press={{ scale: 'press' }}>
+  Tactile on press.
+</button>`,
 
-  interaction: `<!-- INTERACTION — the browser already knows when these happen. -->
+  interaction: `<!-- INTERACTION — press and focus are motion's; the browser already
+     knows when they happen. Hover is NOT: hover feedback is a hover: atom
+     in sx — CSS, composited, interruptible — see the styling chapter. -->
+<card sx="transition-all duration-fast ease-out hover:-translate-y-0_75 hover:shadow-hover">
+  Lifts on hover — styling, not motion.
+</card>
+
 <button
-  motion:hover={{ scale: 'spring:gentle' }}
   motion:press={{ scale: 'press' }}
   motion:focus-visible={{ scale: 'spring:snappy' }}
 >

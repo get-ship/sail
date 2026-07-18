@@ -385,7 +385,7 @@ export const DETAILS: Record<string, DetailEntry> = {
   }),
   card: lang('card', 'card', {
     blurb:
-      'The surface everything else sits on. Padding, tone, an accent bar and hover motion are attributes — the card never needs a stylesheet.',
+      'The surface everything else sits on. Padding, tone, an accent bar and the hover lift are attributes — the card never needs a stylesheet.',
     variants: ['default', 'outline'],
     variantAttr: 'variant',
     props: [
@@ -393,7 +393,7 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'variant', desc: 'filled or transparent', type: 'default · outline' },
       { name: 'padding', desc: 'inset scale', type: 'none · sm · md · lg' },
       { name: 'accent-bar', desc: 'a tone-coloured leading bar', type: 'off · hover · static' },
-      { name: 'motion:hover', desc: 'lift on hover, one attribute', type: 'preset' },
+      { name: 'interactive', desc: 'pointer cursor + CSS hover lift, one attribute', type: 'boolean' },
     ],
   }),
   avatar: lang('avatar', 'avatar', {

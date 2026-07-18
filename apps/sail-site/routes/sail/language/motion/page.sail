@@ -79,27 +79,27 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   {#if dealt()}
     <grid cols="5" gap="3">
       <card motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            motion:hover={{ scale: 'spring:snappy' }} sx="p-5">
+            sx="p-5 transition-transform duration-fast ease-spring hover:scale-105">
         <h3>snappy</h3>
         <p sx="text-sm text-muted-foreground">translate-y</p>
       </card>
       <card motion:enter={{ opacity: 'fade', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            motion:hover={{ translate-y: 'spring:gentle' }} sx="p-5">
+            sx="p-5 transition-transform duration-medium ease-out hover:-translate-y-0_75">
         <h3>fade</h3>
         <p sx="text-sm text-muted-foreground">opacity only</p>
       </card>
       <card motion:enter={{ rotate: 'spring:bouncy', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            motion:hover={{ rotate: 'spring:bouncy' }} sx="p-5">
+            sx="p-5 transition-transform duration-fast ease-spring hover:rotate-2">
         <h3>bouncy</h3>
         <p sx="text-sm text-muted-foreground">rotate</p>
       </card>
       <card motion:enter={{ translate-x: 'spring:deliberate', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            motion:hover={{ translate-x: 'spring:deliberate' }} sx="p-5">
+            sx="p-5 transition-transform duration-slow ease-out hover:translate-x-1">
         <h3>deliberate</h3>
         <p sx="text-sm text-muted-foreground">translate-x</p>
       </card>
       <card motion:enter={{ scale: 'spring:gentle', stagger: '0.07s' }} motion:exit={{ opacity: 'fade-out' }}
-            motion:hover={{ opacity: 'pulse' }} sx="p-5">
+            sx="p-5 transition-opacity duration-fast ease-out hover:opacity-75">
         <h3>gentle</h3>
         <p sx="text-sm text-muted-foreground">scale</p>
       </card>
@@ -109,29 +109,37 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.stagger}></code-block>
 
   <h2>Interaction</h2>
+  <p>
+    <strong>Hover is not motion's job.</strong> Hover feedback is a
+    <code>hover:</code> prefix on an sx atom — CSS, composited, instant, and
+    interruptible for free; sweep the mouse across a grid and nothing runs.
+    It lives in the <a href="/sail/language/styling">styling chapter</a>,
+    under <em>States are a prefix</em>. Motion's interaction triggers are the
+    ones CSS cannot see: <code>press</code> is a gesture with a release, and
+    <code>focus-visible</code> is the keyboard arriving.
+  </p>
   <grid cols="2" gap="4">
     <column>
       <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Live — hover, press, tab to it</p>
       <column sx="p-6 border border-border rounded-lg min-h-8 bg-surface-1" gap="3">
         <row gap="3">
-          <card motion:hover={{ scale: 'spring:gentle' }} sx="p-4">
+          <card sx="p-4 transition-all duration-fast ease-out hover:-translate-y-0_75 hover:shadow-hover">
             <strong>lift</strong>
-            <p sx="text-sm text-muted-foreground">hover · scale</p>
+            <p sx="text-sm text-muted-foreground">hover: · sx, not motion</p>
           </card>
-          <card motion:hover={{ rotate: 'spring:bouncy' }} sx="p-4">
+          <card sx="p-4 transition-transform duration-fast ease-spring hover:rotate-2">
             <strong>tilt</strong>
-            <p sx="text-sm text-muted-foreground">hover · rotate</p>
+            <p sx="text-sm text-muted-foreground">hover: · sx, not motion</p>
           </card>
-          <card motion:hover={{ translate-x: 'spring:snappy' }} sx="p-4">
+          <card sx="p-4 transition-transform duration-fast ease-out hover:translate-x-1">
             <strong>nudge</strong>
-            <p sx="text-sm text-muted-foreground">hover · translate-x</p>
+            <p sx="text-sm text-muted-foreground">hover: · sx, not motion</p>
           </card>
         </row>
         <row gap="3" align="center">
           <button motion:press={{ scale: 'press' }}>press</button>
           <button motion:press={{ rotate: 'spring:snappy' }}>press · rotate</button>
           <button motion:focus-visible={{ scale: 'spring:snappy' }}>tab to me</button>
-          <badge tone="primary" motion:hover={{ scale: 'pulse' }}>hover · pulse</badge>
         </row>
       </column>
     </column>
@@ -141,9 +149,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </column>
   </row>
   <p>
-    The browser already knows when these happen. The only question a trigger
-    leaves open is what it should look like — and the answer is a preset, so a
-    typo is a compile error instead of something you ship.
+    The cards above never enter the animation system — the transition atoms
+    say how fast a state flips, and the browser handles the rest. For press
+    and focus the browser knows <em>when</em>; the only question a trigger
+    leaves open is what it should look like — and the answer is a preset, so
+    a typo is a compile error instead of something you ship.
   </p>
 
   <h2>Lifecycle</h2>
@@ -338,6 +348,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <column gap="1">
       <label>Triggers</label>
       <p sx="text-sm text-muted-foreground">hover · press · focus · focus-visible · enter · exit · view · scroll · loop</p>
+      <p sx="text-xs text-muted-foreground"><code>hover</code> compiles, but hover feedback belongs to <code>hover:</code> atoms — see Interaction above.</p>
     </column>
     <column gap="1">
       <label>Properties</label>

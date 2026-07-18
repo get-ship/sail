@@ -420,7 +420,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </row>
             {/if}
             {#if stage.card()}
-              <card variant={variant()} sx="p-5" motion:hover={{ scale: 'spring:gentle' }}>
+              <card variant={variant()} interactive sx="p-5">
                 <strong>A surface</strong>
                 <p sx="text-sm text-muted-foreground">the hover lift is one attribute</p>
               </card>

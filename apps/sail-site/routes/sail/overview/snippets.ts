@@ -74,8 +74,7 @@ effect(() => console.log(count()))   // re-runs on change`,
   data: `const users = query(() => api.users.list())
 // users() is { kind: 'loading' } | { kind: 'ok', value } | { kind: 'error', error }`,
 
-  motion: `<card motion:hover={{ scale: 'spring:gentle' }}
-      motion:enter={{ opacity: 'fade' }}>…</card>`,
+  motion: `<card motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>…</card>`,
 
   theming: `import { applyTheme } from '@ship/tokens/themes'
 applyTheme('console')   // one attribute; every component follows`,

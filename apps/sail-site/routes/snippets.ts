@@ -13,8 +13,7 @@ export const code = {
 <column gap="3">
   <input placeholder="Filter people" bind:value={query} />
   {#for p of filtered() key={p.id}}
-    <card motion:enter={{ opacity: 'fade' }}
-          motion:hover={{ scale: 'spring:gentle' }}>
+    <card interactive motion:enter={{ opacity: 'fade' }}>
       <avatar name={p.name} tone="primary" /> {p.name} · {p.team}
       <badge tone={p.status}>{p.status}</badge>
     </card>

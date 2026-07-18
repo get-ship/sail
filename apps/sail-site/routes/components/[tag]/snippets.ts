@@ -241,10 +241,10 @@ export default controller(() => {
   <p>all systems live</p>
 </row>`,
 
-  card: `<card sx="p-5" motion:hover={{ scale: 'spring:gentle' }}>
+  card: `<card interactive sx="p-5">
   <strong>A surface</strong>
   <p sx="text-sm text-muted-foreground">
-    Tone, padding and motion are attributes.
+    Tone, padding and the hover lift are attributes.
   </p>
 </card>`,
 
