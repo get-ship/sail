@@ -44,6 +44,7 @@
 // spring: a sampled curve the browser drives.
 
 import { setTransitionRunner } from './transition-runner'
+import { effect, untrack } from './signal'
 import type { Disposer } from './bind'
 import { animate } from 'motion/mini'
 import {
@@ -63,10 +64,17 @@ export interface MotionConfig {
   mass?: number
   restSpeed?: number
   restDelta?: number
-  from?: number
-  to?: number
-  /** Duration in seconds (Motion's unit). AOT-resolved from a token. */
+  /** A magnitude. A NUMBER is the channel's native unit (px for translate,
+   *  deg for rotate, unitless for scale/opacity). A STRING carries its own
+   *  unit and is used verbatim — which is how `'-12%'` becomes expressible,
+   *  something the preset table could never say (the retired `slip` preset's
+   *  own doc recorded "% is not expressible" and approximated it in px). */
+  from?: number | string
+  to?: number | string
+  /** Duration in seconds (Motion's unit). The compiler converts from the
+   *  milliseconds the author writes. */
   duration?: number
+  delay?: number
   easing?: string
   iterations?: number | 'infinity'
   direction?: 'normal' | 'reverse' | 'alternate' | 'mirror'
@@ -114,6 +122,33 @@ const FINAL_VALUE: Record<MotionConfig['property'], number> = {
   'translate-y': 0,
   'translate-x': 0,
   rotate: 0,
+}
+
+/** Does this magnitude already carry its own unit? `'120px'` and `'-12%'`
+ *  do; `'120'`, `120` and `''` do not. */
+function hasUnit(v: number | string | undefined): boolean {
+  // NOT a type predicate: `'120'` is a string WITHOUT a unit, so narrowing
+  // the negative branch to `number | undefined` would be a lie.
+  return typeof v === 'string' && v.trim() !== '' && Number.isNaN(Number(v))
+}
+
+/** Render a magnitude into a CSS length/angle. A unit-bearing string wins
+ *  verbatim; anything numeric gets the channel's native unit appended. This
+ *  is the ONE place a unit is decided, so `translate-x: { to: 120 }` and
+ *  `translate-x: { to: '120px' }` cannot drift apart. */
+function withUnit(v: number | string | undefined, unit: string, fallback: number): string {
+  if (hasUnit(v)) return (v as string).trim()
+  const n = v === undefined || v === '' ? fallback : Number(v)
+  return `${Number.isNaN(n) ? fallback : n}${unit}`
+}
+
+/** Render a magnitude for a UNITLESS channel (scale, opacity). A string that
+ *  smuggled in a unit here would produce an invalid keyframe, so it is
+ *  coerced back to a bare number. */
+function withoutUnit(v: number | string | undefined, fallback: number): number {
+  if (v === undefined || v === '') return fallback
+  const n = typeof v === 'number' ? v : Number.parseFloat(v)
+  return Number.isNaN(n) ? fallback : n
 }
 
 function isHTMLElement(el: Element): el is HTMLElement {
@@ -193,18 +228,23 @@ function applyReducedMotionSettle(el: Element, motions: MotionConfig[]): void {
  *  `translate` (distinct from the `transform` shorthand, same as
  *  `rotate`/`scale` already used here), so every translate-x/y preset
  *  resolves through it instead. */
-function axisRange(cfg: MotionConfig, el: HTMLElement): [number, number] {
+/** The two ends of a translate channel, already rendered as CSS lengths so
+ *  a unit-bearing inline value (`'-12%'`) survives to the keyframe. */
+function axisRange(cfg: MotionConfig, el: HTMLElement): [string, string] {
   if (cfg.preset === 'bounce') {
     if (cfg.property === 'translate-y') {
       const h = el.getBoundingClientRect().height || el.offsetHeight || 8
-      return [0, -h]
+      return ['0px', `${-h}px`]
     }
     if (cfg.property === 'translate-x') {
       const w = el.getBoundingClientRect().width || el.offsetWidth || 8
-      return [0, -w]
+      return ['0px', `${-w}px`]
     }
   }
-  return [cfg.from ?? REST_VALUE[cfg.property], cfg.to ?? FINAL_VALUE[cfg.property]]
+  return [
+    withUnit(cfg.from, 'px', REST_VALUE[cfg.property]),
+    withUnit(cfg.to, 'px', FINAL_VALUE[cfg.property]),
+  ]
 }
 
 function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, Array<number | string>> {
@@ -214,11 +254,11 @@ function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, Arra
     // keyframes — the same shape `applyRestStyle`/`applyFinalStyle`
     // already write to `el.style.translate`.
     return cfg.property === 'translate-y'
-      ? { translate: [`0px ${from}px`, `0px ${to}px`] }
-      : { translate: [`${from}px 0px`, `${to}px 0px`] }
+      ? { translate: [`0px ${from}`, `0px ${to}`] }
+      : { translate: [`${from} 0px`, `${to} 0px`] }
   }
-  const from = cfg.from ?? REST_VALUE[cfg.property]
-  const to = cfg.to ?? FINAL_VALUE[cfg.property]
+  const from = withoutUnit(cfg.from, REST_VALUE[cfg.property])
+  const to = withoutUnit(cfg.to, FINAL_VALUE[cfg.property])
   switch (cfg.property) {
     case 'opacity': return { opacity: [from, to] }
     case 'scale': return { scale: [from, to] }
@@ -231,7 +271,12 @@ function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, Arra
     // `{ rotate: [-6, 0] }` with "Invalid keyframe value for property
     // rotate". Every other property in this switch is unitless by spec
     // (opacity, scale).
-    case 'rotate': return { rotate: [`${from}deg`, `${to}deg`] }
+    case 'rotate': return {
+      rotate: [
+        withUnit(cfg.from, 'deg', REST_VALUE.rotate),
+        withUnit(cfg.to, 'deg', FINAL_VALUE.rotate),
+      ],
+    }
   }
 }
 
@@ -249,9 +294,9 @@ function buildMergedTranslateKeyframes(
   yCfg: MotionConfig | undefined,
   el: HTMLElement,
 ): Record<string, Array<string>> {
-  const [xFrom, xTo] = xCfg ? axisRange(xCfg, el) : [0, 0]
-  const [yFrom, yTo] = yCfg ? axisRange(yCfg, el) : [0, 0]
-  return { translate: [`${xFrom}px ${yFrom}px`, `${xTo}px ${yTo}px`] }
+  const [xFrom, xTo] = xCfg ? axisRange(xCfg, el) : ['0px', '0px']
+  const [yFrom, yTo] = yCfg ? axisRange(yCfg, el) : ['0px', '0px']
+  return { translate: [`${xFrom} ${yFrom}`, `${xTo} ${yTo}`] }
 }
 
 /** The full set of CSS properties this runtime's preset table can ever
@@ -367,8 +412,12 @@ function buildTransition(
           ? 'reverse'
           : cfg.direction
   }
-  if (delaySec != null) {
-    t.delay = delaySec
+  // Two delays, one field: the per-sibling stagger step (orchestration
+  // BETWEEN elements) and the config's own `delay` (this animation's own
+  // offset). They compose — a staggered list whose members each wait 200ms
+  // should wait 200ms AND stagger.
+  if (delaySec != null || cfg.delay != null) {
+    t.delay = (delaySec ?? 0) + (cfg.delay ?? 0)
   }
   return t
 }
@@ -425,6 +474,22 @@ function computeStaggerDelay(config: MotionAttachConfig, el: Element): number | 
  *  `stop`/`cancel` to tear an animation down, `finished` to know when
  *  it settled on its own. */
 type AnimControls = { stop: () => void; cancel: () => void; finished: Promise<unknown> }
+
+/** Resume a freshly-created set of animations at `timeMs` — used when a
+ *  reactive config change re-creates an ambient loop and we do not want it
+ *  to visibly snap back to the start. Best-effort by construction: a driver
+ *  that does not expose a settable time simply plays from zero. */
+function seekTo(el: HTMLElement, timeMs: number | null): void {
+  if (timeMs == null) return
+  try {
+    for (const a of el.getAnimations?.() ?? []) {
+      const total = (a.effect?.getTiming?.().duration as number | undefined) ?? 0
+      a.currentTime = total > 0 ? timeMs % total : timeMs
+    }
+  } catch {
+    // No getAnimations (jsdom) or a read-only time — play from the top.
+  }
+}
 
 function createAnimations(
   el: HTMLElement,
@@ -501,9 +566,11 @@ function createAnimationsWhenConnected(
   el: HTMLElement,
   config: MotionAttachConfig,
   delaySec: number | undefined,
+  carriedTimeMs: number | null = null,
 ): Disposer {
   if (el.isConnected || typeof requestAnimationFrame === 'undefined') {
     const controls = createAnimations(el, config, delaySec)
+    seekTo(el, carriedTimeMs)
     return () => { for (const c of controls) c.cancel() }
   }
   for (const m of config.motions) applyRestStyle(el, m)
@@ -513,6 +580,7 @@ function createAnimationsWhenConnected(
     if (disposed) return
     if (!el.isConnected) { requestAnimationFrame(start); return }
     controls = createAnimations(el, config, delaySec)
+    seekTo(el, carriedTimeMs)
   }
   requestAnimationFrame(start)
   return () => {
@@ -555,9 +623,90 @@ function classifyTrigger(trigger: string): Branch {
   return 'noop'
 }
 
+/** Attach a `motion:` directive.
+ *
+ *  The compiler emits a PLAIN OBJECT when every field of the config is a
+ *  literal, and a THUNK when any field holds a signal. The thunk form is
+ *  the reactive lane:
+ *
+ *      motion:loop={{ translate-x: { to: dist() }, duration: speed() }}
+ *
+ *  ## Reactive semantics (one rule, deliberately)
+ *
+ *  A config-field signal change TEARS DOWN and RE-CREATES the animation
+ *  with the new values. This holds for every field class — timing
+ *  (duration/delay/easing) and keyframe (from/to) alike — because WAAPI
+ *  offers no coherent way to retime or re-key a running animation: the
+ *  honest primitive is a new animation. Re-creation is the semantics, not
+ *  an implementation detail, so it is the same regardless of which field
+ *  moved and there is no per-field rule for an author to memorise.
+ *
+ *  For an INFINITE loop the playback position is carried across the
+ *  re-creation where the driver exposes it, so an ambient loop does not
+ *  visibly snap back to its start when an unrelated signal changes. A
+ *  finite animation (enter/exit/hover) restarts from zero, which is what a
+ *  one-shot whose target just changed should do.
+ *
+ *  The whole thing is effect-tracked, so it follows every signal the config
+ *  reads, and the returned disposer stops the effect AND cancels the live
+ *  animations.
+ *
+ *  ## The seam with `timeline()`
+ *
+ *  A signal here is reactive CONFIG — it says what the animation IS, and
+ *  changing it makes a new animation. A signal driving a CONTINUOUS,
+ *  per-frame value is the other lane: `timeline()` + `(--x)` reflection
+ *  (job/motion-timeline). Do not reach for `motion:` to scrub a value every
+ *  frame; each change here costs an animation teardown. */
 export function __sui_motion_attach(
   el: Element,
+  config: MotionAttachConfig | (() => MotionAttachConfig),
+): Disposer {
+  if (typeof config !== 'function') return attachOnce(el, config)
+  let inner: Disposer | null = null
+  let carried: number | null = null
+  const stop = effect(() => {
+    // Reading the config inside the effect is what subscribes to every
+    // signal any of its fields touch.
+    const next = config()
+    untrack(() => {
+      if (inner) {
+        carried = readPlaybackTime(el, next)
+        inner()
+        inner = null
+      }
+      inner = attachOnce(el, next, carried)
+    })
+  })
+  return () => {
+    stop()
+    if (inner) inner()
+    inner = null
+  }
+}
+
+/** The playback position to carry across a re-creation, or `null` to start
+ *  from zero. Only infinite loops carry — a finite animation whose target
+ *  just changed should play the new one from the top. */
+function readPlaybackTime(el: HTMLElement | Element, cfg: MotionAttachConfig): number | null {
+  const infinite = cfg.motions.some((m) => m.iterations === Infinity) || cfg.trigger === 'loop'
+  if (!infinite) return null
+  try {
+    const anims = (el as HTMLElement).getAnimations?.() ?? []
+    for (const a of anims) {
+      const t = a.currentTime
+      if (typeof t === 'number' && Number.isFinite(t)) return t
+    }
+  } catch {
+    // Environments without getAnimations (jsdom) simply restart.
+  }
+  return null
+}
+
+function attachOnce(
+  el: Element,
   config: MotionAttachConfig,
+  carriedTimeMs: number | null = null,
 ): Disposer {
   if (!isHTMLElement(el)) return () => {}
   const reduced = prefersReducedMotion()
@@ -586,7 +735,7 @@ export function __sui_motion_attach(
         direction: m.direction ?? 'alternate',
       })),
     }
-    return createAnimationsWhenConnected(el, looped, delaySec)
+    return createAnimationsWhenConnected(el, looped, delaySec, carriedTimeMs)
   }
 
   if (branch === 'enter' || branch === 'exit') {

@@ -64,10 +64,15 @@ AttrInstr::Use { action, param, .. } => {
             action == name
                 || param.as_ref().is_some_and(|e| expr_references_ident(&e.source, name))
         }
+        AttrInstr::Motion { props, timing, .. } => {
+            timing.exprs().iter().any(|e| expr_references_ident(&e.source, name))
+                || props
+                    .iter()
+                    .any(|p| p.exprs().iter().any(|e| expr_references_ident(&e.source, name)))
+        }
         AttrInstr::Static { .. }
         | AttrInstr::BindThis { .. }
-        | AttrInstr::SlotReflectEmpty { .. }
-        | AttrInstr::Motion { .. } => false,
+        | AttrInstr::SlotReflectEmpty { .. } => false,
     }
 }
 

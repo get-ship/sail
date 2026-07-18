@@ -185,6 +185,52 @@ test('/motion page: the ambient loop dots keep animating (translate-y, staggered
   expect(motionWarnings).toEqual([])
 })
 
+// ---------------------------------------------------------------------------
+// Inline values — the end-to-end proof that a hand-written duration/easing/
+// magnitude actually produces a MOVING element, not just a well-formed config.
+//
+// This is the failure mode the loop-dead bug taught: an animation can be
+// `playState: 'running'` with `iterations: Infinity` and still move nothing.
+// Object-existence assertions do not catch that; sampling the computed
+// transform at two points in time does.
+
+test('/motion page: an all-inline loop (bespoke duration, easing, magnitudes) actually moves', async ({
+  page,
+}) => {
+  const motionWarnings: string[] = []
+  page.on('console', (msg) => {
+    if (msg.text().includes('[sail/motion]')) motionWarnings.push(msg.text())
+  })
+
+  await page.goto('/motion', { waitUntil: 'domcontentloaded' })
+
+  const chip = page.locator('[data-testid="inline-demo"]')
+  await expect(chip).toBeVisible()
+
+  // All three channels are driven by inline values only — no preset supplies
+  // any of these magnitudes, and no design token supplies the 3600ms.
+  const translateBefore = await readTranslate(chip)
+  const rotateBefore = await readRotateDeg(chip)
+  await page.waitForTimeout(700)
+  const translateAfter = await readTranslate(chip)
+  const rotateAfter = await readRotateDeg(chip)
+
+  expect(translateAfter).not.toBe(translateBefore)
+  expect(rotateAfter).not.toBe(rotateBefore)
+
+  // And the inline easing/duration produced a real WAAPI animation with the
+  // timing the author wrote — 3600ms, not a token's value.
+  const timing = await chip.evaluate((el) =>
+    el.getAnimations().map((a) => {
+      const t = a.effect?.getTiming()
+      return { duration: t?.duration, iterations: t?.iterations }
+    }),
+  )
+  expect(timing.length).toBeGreaterThan(0)
+  expect(timing.some((t) => t.duration === 3600)).toBe(true)
+  expect(timing.every((t) => t.iterations === Infinity)).toBe(true)
+
+  expect(motionWarnings).toEqual([])
 // ── The choreography lane, live on the page ──────────────────────────────────
 //
 // The /motion page's `timeline()` demo is the teaching surface for the second

@@ -128,7 +128,7 @@ AttrInstr::Use { action, .. } => {
                 out.runtime_imports.insert(builtin);
             }
         }
-        AttrInstr::Motion { trigger, props, stagger_ms: _, span } => {
+        AttrInstr::Motion { trigger, props, stagger_ms: _, timing: _, span } => {
             // `motion:` directives bake to literal `el.animate(...)`
             // calls plus a `__sui_motion_attach(...)` wrapper. The
             // attach wrapper and any animation-side runtime helpers
@@ -151,17 +151,26 @@ AttrInstr::Use { action, .. } => {
                 .with_category("motion")
             })?;
             for prop in props {
-                let Some(spec) = db.preset(&prop.preset) else {
-                    let known = db.known_preset_names();
-                    return Err(CompileError::new(format!(
-                        "motion:{} uses unknown preset '{}'. Known presets: {}",
-                        trigger,
-                        prop.preset,
-                        known.join(", ")
-                    ))
-                    .with_span(*span)
-                    .with_category("motion"));
-                };
+                // A preset is now OPTIONAL — an inline `{ from, to }` channel
+                // needs no named default, so only validate the name when the
+                // author actually reached for one.
+                if let Some(name) = prop.preset.as_deref() {
+                    let Some(spec) = db.preset(name) else {
+                        let known = db.known_preset_names();
+                        return Err(CompileError::new(format!(
+                            "motion:{} uses unknown preset '{}'. Known presets: {}. \
+                             Or drop the preset and write the values inline: \
+                             `{}: {{ from: 0, to: 1 }}`.",
+                            trigger,
+                            name,
+                            known.join(", "),
+                            prop.property,
+                        ))
+                        .with_span(*span)
+                        .with_category("motion"));
+                    };
+                    let _ = spec.kind;
+                }
                 // The motion runtime is a single symbol — the
                 // `__sui_motion_attach` helper that the dom emit
                 // calls. Recording it here drives the side-effect
@@ -169,7 +178,6 @@ AttrInstr::Use { action, .. } => {
                 // per-preset spring/tween helpers will live in a
                 // separate runtime module and be imported only
                 // when their functionality is actually needed.
-                let _ = spec.kind;
                 out.motion_builtins.insert("__sui_motion_attach");
             }
         }

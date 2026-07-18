@@ -480,10 +480,19 @@ where
                 f(e)?;
             }
         }
-        // `motion:` config is statically parsed in the attr
-        // compiler — no JS expression body to type-check. Future
-        // milestones that allow dynamic configs will need an arm here.
-        AttrInstr::Motion { .. } => {}
+        // A `motion:` config is a statically-parsed object, but any of its
+        // fields may hold a signal (`duration: speed()`). Those are ordinary
+        // expressions and get the ordinary treatment.
+        AttrInstr::Motion { props, timing, .. } => {
+            for e in timing.exprs() {
+                f(e)?;
+            }
+            for p in props {
+                for e in p.exprs() {
+                    f(e)?;
+                }
+            }
+        }
     }
     Ok(())
 }

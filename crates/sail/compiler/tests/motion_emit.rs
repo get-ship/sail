@@ -65,11 +65,22 @@ fn unknown_preset_is_a_compile_error() {
     );
 }
 
+/// The whole config cannot be handed in as one opaque expression — the
+/// SHAPE is written out so the compiler can see the channels. Individual
+/// FIELDS may now be signals; that is the point of this surface, and the
+/// error says so rather than the old blanket "dynamic configs".
 #[test]
-fn dynamic_config_is_rejected() {
+fn whole_config_as_one_expression_is_rejected_and_names_the_fix() {
     let err = compile_motion(r#"<button motion:hover={someExpr}>x</button>"#)
         .expect_err("expected compile error");
-    assert!(err.contains("dynamic"), "expected 'dynamic' in error: {err}");
+    assert!(
+        err.contains("must be a config object"),
+        "expected the config-object wording in error: {err}"
+    );
+    assert!(
+        err.contains("signals"),
+        "the rejection should point at the field-level signal form: {err}"
+    );
 }
 
 #[test]
