@@ -14,11 +14,17 @@
 //! Compartment denies at runtime (proven in #165 — confined views run with
 //! `fetch`/`window` undefined). This rule is the author-time mirror.
 //!
-//! **Severity: Error** (security), scoped to the CONFINED surface — view
-//! controllers (a `views/` tree). First-party chrome component controllers
-//! (`apps/shell/src/components`, `packages/components` → any `/components/`
-//! path) run UNCONFINED in the host realm and legitimately use `fetch` /
-//! lazy-`import()`, so they are out of scope.
+//! **Severity: Error** (security). CONFINED BY DEFAULT: every inline
+//! `<controller>` runs this gate, path-independent — an app controller is
+//! app code running under the deck's SES Compartment regardless of which
+//! directory it lives in. A package opts a controller OUT of the gate by
+//! declaring genuine unconfined chrome in its `sail.config.json`
+//! (`"unconfined": true`), the whole-hog escape wired through
+//! `crates/sail/compiler/src/check/policy.rs`'s `Policy`/`PolicyResolution`
+//! — the same capability-vocabulary path the `"network"` per-origin
+//! allowlist already uses. This is NOT a path heuristic: two files in the
+//! same directory can resolve differently depending on which package's
+//! `sail.config.json` owns them.
 //!
 //! Promotion to Error was gated on every confined-surface view controller being
 //! migrated off raw ambient authority — now true (zero violations across the
@@ -49,30 +55,25 @@ const NETWORK_GATED_CALLS: &[&str] = &["fetch"];
 /// `"network"`.
 const NETWORK_GATED_CTORS: &[&str] = &["WebSocket", "EventSource"];
 
-/// The confined surface this rule governs: view controllers (a `views/` tree,
-/// incl. `.ship/views/`). Chrome component controllers (`/components/`) run
-/// unconfined in the host realm and legitimately use fetch/lazy-import, so they
-/// are out of scope. A view's own `_components/` (underscore) stays in scope —
-/// it's part of the confined view, and `/components/` does not match it.
-fn is_confined_surface(path: &Path) -> bool {
-    let p = path.to_string_lossy();
-    p.contains("views/") && !p.contains("/components/")
-}
-
-/// The `"network"`-config-blind entry — the generic `CONTROLLER_RULES` table
-/// (`rules::RuleFn`'s fixed `(path, source) -> Vec<Finding>` shape) calls this.
-/// Consumers reached through that table (the LSP, `sail_lint` CLI, agent
-/// tooling) don't have a resolved `sail.config.json` in hand, so this defaults
-/// to an empty allowlist — today's full refusal, unchanged. The compiler's
+/// The `"network"`/`"unconfined"`-config-blind entry — the generic
+/// `CONTROLLER_RULES` table (`rules::RuleFn`'s fixed `(path, source) ->
+/// Vec<Finding>` shape) calls this. Consumers reached through that table (the
+/// LSP, `sail_lint` CLI, agent tooling) don't have a resolved
+/// `sail.config.json` in hand, so this defaults to confined with an empty
+/// network allowlist — today's full refusal, unchanged. The compiler's
 /// `check::mod::collect` is config-aware and calls [`check_confined`] directly
 /// instead (splicing out this rule's table-driven findings first), the same
 /// "specially invoked" pattern `css_token` uses.
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
-    check_confined(path, source, &[])
+    check_confined(path, source, &[], false)
 }
 
-/// The network-aware entry. `network` is the resolved `"network"` per-origin
+/// The config-aware entry. `network` is the resolved `"network"` per-origin
 /// allowlist (`Policy::network_for`) — empty means no grant (today's default).
+/// `unconfined` is the resolved `"unconfined"` capability
+/// (`Policy::unconfined_for`) — `true` grants the whole-hog opt-out and this
+/// rule is skipped entirely; `false` (the default, including when no config
+/// exists) keeps the controller confined and every check below applies.
 ///
 /// - `eval`, dynamic `import()`, `document.cookie`, `navigator.sendBeacon` are
 ///   ALWAYS banned, regardless of `network`. They are not part of this
@@ -92,10 +93,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 ///   rule intentionally does not take on). So the ctor is simply no longer
 ///   flagged once ANY non-empty `network` list is granted; it stays flagged
 ///   when `network` is empty, same as before.
-pub fn check_confined(path: &Path, source: &str, network: &[String]) -> Vec<Finding> {
-    // Only the confined surface is governed — unconfined chrome may use ambient
-    // authority freely.
-    if !is_confined_surface(path) {
+pub fn check_confined(path: &Path, source: &str, network: &[String], unconfined: bool) -> Vec<Finding> {
+    // Confined by default. Only a package that explicitly grants
+    // `"unconfined": true` may use ambient authority freely.
+    if unconfined {
         return Vec::new();
     }
     let allocator = Allocator::default();
@@ -383,19 +384,26 @@ mod tests {
     }
 
     #[test]
-    fn skips_unconfined_chrome_component_controllers() {
-        // First-party chrome runs unconfined and legitimately uses fetch/import.
+    fn confined_by_default_regardless_of_path() {
+        // No path heuristic — an inline controller anywhere is confined
+        // unless its package's `sail.config.json` grants `"unconfined"`.
         let chrome = "apps/shell/src/components/sail-x/sail-x.controller.ts";
-        assert_eq!(check(Path::new(chrome), "fetch('/x'); import('./y.js')").len(), 0);
+        assert_eq!(check(Path::new(chrome), "fetch('/x'); import('./y.js')").len(), 2);
         let pack = "packages/components/ui-components/src/sail-y/sail-y.controller.ts";
-        assert_eq!(check(Path::new(pack), "fetch('/z')").len(), 0);
+        assert_eq!(check(Path::new(pack), "fetch('/z')").len(), 1);
     }
 
     #[test]
-    fn governs_a_views_private_component() {
-        // `_components` (underscore) inside a view stays in scope.
-        let priv_c = "views/dash/_components/sail-tile/sail-tile.controller.ts";
-        assert_eq!(check(Path::new(priv_c), "fetch('/x')").len(), 1);
+    fn unconfined_capability_skips_the_gate_path_independent() {
+        // `unconfined: true` is a whole-hog escape from `check_confined`'s
+        // `unconfined` param — it applies regardless of the file's path.
+        let f = check_confined(
+            Path::new("packages/components/sail-x/sail-x.controller.ts"),
+            "fetch('/x'); import('./y.js')",
+            &[],
+            true,
+        );
+        assert_eq!(f.len(), 0);
     }
 
     // ------------------------------------------------------------------
@@ -404,7 +412,7 @@ mod tests {
 
     fn nc(src: &str, network: &[&str]) -> usize {
         let net: Vec<String> = network.iter().map(|s| s.to_string()).collect();
-        check_confined(Path::new("views/git/controller.ts"), src, &net).len()
+        check_confined(Path::new("views/git/controller.ts"), src, &net, false).len()
     }
 
     #[test]

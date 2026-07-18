@@ -34,8 +34,8 @@ pub fn owning_dir(from: &Path) -> Option<PathBuf> {
 /// present is a typo/unknown key — the compiler must refuse loudly rather
 /// than silently ignore it (config-loud-strict: a `{"polcy":"strict"}` typo
 /// used to fail closed with zero signal).
-pub const RECOGNIZED_KEYS: [&str; 6] =
-    ["preset", "sx", "variants", "raw_containers", "stylesheets", "network"];
+pub const RECOGNIZED_KEYS: [&str; 7] =
+    ["preset", "sx", "variants", "raw_containers", "stylesheets", "network", "unconfined"];
 
 /// The parsed contents of the nearest `sail.config.json` on the walk up. Holds
 /// the raw JSON; typed accessors read individual fields leniently.
@@ -117,6 +117,20 @@ impl SailConfig {
                 }
                 Some(Ok(out))
             }
+            None => Some(Err(())),
+        }
+    }
+
+    /// The declared `"unconfined"` capability — the whole-hog opt-out of the
+    /// confined-by-default `sail-controller-no-ambient-authority` gate. `None`
+    /// when the key is absent (today's default: confined). `Some(Err(()))`
+    /// when present but not a bool — a type error the caller must fail closed
+    /// on (stays confined), never silently grant. `Some(Ok(bool))` when
+    /// present and well-typed.
+    pub fn unconfined_key(&self) -> Option<Result<bool, ()>> {
+        let v = self.raw.get("unconfined")?;
+        match v.as_bool() {
+            Some(b) => Some(Ok(b)),
             None => Some(Err(())),
         }
     }

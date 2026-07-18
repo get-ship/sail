@@ -214,6 +214,21 @@ impl Policy {
             .map(|(_, r)| r.network)
             .unwrap_or_default()
     }
+
+    /// Whether a source file's nearest `sail.config.json` grants the
+    /// `"unconfined"` capability — the whole-hog opt-out of the
+    /// confined-by-default `sail-controller-no-ambient-authority` gate
+    /// (`sail_lint::rules::controller_no_ambient_authority::check_confined`).
+    /// Re-derives from [`Policy::resolve_outcome`], the same resolver
+    /// `overrides_for`/`network_for` use — not a second `sail.config.json`
+    /// reader. `false` when no config exists, the config fails closed
+    /// (`Rejected`), or the config simply never declares `"unconfined"` —
+    /// confined by default, unchanged for anyone who doesn't opt in.
+    pub fn unconfined_for(source_file: &Path) -> bool {
+        Policy::resolve_outcome(source_file)
+            .map(|(_, r)| r.unconfined)
+            .unwrap_or(false)
+    }
 }
 
 /// WHY a package resolved to its tier — carries enough detail for the log
@@ -230,6 +245,13 @@ pub struct PolicyResolution {
     /// said. Orthogonal to `tier` — the styling capability keys don't gate it
     /// and it doesn't gate them.
     pub network: Vec<String>,
+    /// The declared `"unconfined"` capability — whole-hog opt-out of the
+    /// confined-by-default `sail-controller-no-ambient-authority` gate.
+    /// `false` (confined) by default, and on every `Rejected` resolution too:
+    /// a config that fails closed grants nothing. Orthogonal to `tier` and
+    /// `network` — the styling capability keys and the per-origin network
+    /// grant don't gate it and it doesn't gate them.
+    pub unconfined: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -259,6 +281,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
             tier: Policy::STRICT,
             kind: ResolutionKind::Rejected("the file is not valid JSON".to_string()),
             network: Vec::new(),
+            unconfined: false,
         };
     }
     let unknown = cfg.unknown_keys();
@@ -275,6 +298,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
                     .join(", ")
             )),
             network: Vec::new(),
+            unconfined: false,
         };
     }
 
@@ -293,6 +317,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
                         "unrecognized preset \"{name}\" (expected \"full\" or \"strict\")"
                     )),
                     network: Vec::new(),
+                    unconfined: false,
                 };
             }
         }
@@ -330,6 +355,34 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
                         "\"network\" must be an array of origin strings".to_string(),
                     ),
                     network: Vec::new(),
+                    unconfined: false,
+                };
+            }
+        }
+    }
+
+    // `"unconfined"` — the whole-hog opt-out of the confined-by-default
+    // `sail-controller-no-ambient-authority` gate. Orthogonal to the styling
+    // tier and to `network`: it never touches `p` or `network`. A wrong-typed
+    // value (not a bool) is a type error — fail closed LOUDLY (Rejected),
+    // never silently granted. An explicit `"unconfined": false` is well-typed
+    // and contributes signal like any other explicit capability key — a
+    // declared "stay confined", not a config with no signal at all.
+    let mut unconfined = false;
+    if let Some(uc) = cfg.unconfined_key() {
+        match uc {
+            Ok(b) => {
+                signal.push(format!("unconfined: {b}"));
+                unconfined = b;
+            }
+            Err(()) => {
+                return PolicyResolution {
+                    tier: Policy::STRICT,
+                    kind: ResolutionKind::Rejected(
+                        "\"unconfined\" must be a boolean".to_string(),
+                    ),
+                    network: Vec::new(),
+                    unconfined: false,
                 };
             }
         }
@@ -346,9 +399,14 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
         } else {
             recognized_present.join(", ")
         };
-        PolicyResolution { tier: Policy::STRICT, kind: ResolutionKind::NoSignal(hint), network: Vec::new() }
+        PolicyResolution {
+            tier: Policy::STRICT,
+            kind: ResolutionKind::NoSignal(hint),
+            network: Vec::new(),
+            unconfined: false,
+        }
     } else {
-        PolicyResolution { tier: p, kind: ResolutionKind::Recognized(signal.join(", ")), network }
+        PolicyResolution { tier: p, kind: ResolutionKind::Recognized(signal.join(", ")), network, unconfined }
     }
 }
 

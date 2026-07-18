@@ -260,21 +260,23 @@ pub fn collect(
                 overrides,
             );
         // `sail-controller-no-ambient-authority` is `sail.config.json`
-        // "network"-aware, but the generic `CONTROLLER_RULES` table
-        // (`lint_controller_source`, above) is config-blind — it always ran
-        // the rule's default (empty-allowlist) entry. Drop those findings and
-        // re-run the network-aware `check_confined` with the resolved
-        // allowlist (`Policy::network_for`), same "specially invoked" pattern
-        // `css_token` uses in `run()`. This is not a second `sail.config.json`
-        // reader: `network_for` re-derives from the one resolver
+        // "network"/"unconfined"-aware, but the generic `CONTROLLER_RULES`
+        // table (`lint_controller_source`, above) is config-blind — it always
+        // ran the rule's default (confined, empty-allowlist) entry. Drop
+        // those findings and re-run the config-aware `check_confined` with
+        // the resolved allowlist (`Policy::network_for`) and capability
+        // (`Policy::unconfined_for`), same "specially invoked" pattern
+        // `css_token` uses in `run()`. This is not a second
+        // `sail.config.json` reader: both re-derive from the one resolver
         // (`sail_lint::config::resolve`) via `Policy::resolve_outcome`.
         controller_findings.retain(|f| {
             f.rule != sail_lint::rules::controller_no_ambient_authority::RULE_ID
         });
         let network = crate::check::policy::Policy::network_for(&c.path);
+        let unconfined = crate::check::policy::Policy::unconfined_for(&c.path);
         let ambient_findings = crate::check::lint_overrides::apply_overrides(
             sail_lint::rules::controller_no_ambient_authority::check_confined(
-                &c.path, &c.source, &network,
+                &c.path, &c.source, &network, unconfined,
             ),
             overrides,
         );

@@ -30,9 +30,10 @@ const EVIL_ORIGIN: &str = "https://evil.com";
 
 fn write_fixture(fetch_target: &str) -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
-    // `views/` in the path is required for the ambient-authority rule's
-    // confined-surface scope (`is_confined_surface`); the config sits at the
-    // views root so the walk-up from any file under it finds it.
+    // Confined by default, path-independent — the ambient-authority rule
+    // governs every inline controller regardless of directory. `views/` here
+    // is just fixture layout; the config sits at its root so the walk-up
+    // from any file under it finds it.
     let views_dir = tmp.path().join("views").join("git");
     fs::create_dir_all(&views_dir).unwrap();
     fs::write(
