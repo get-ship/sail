@@ -34,6 +34,18 @@
 //!   `.classList` writes (a class is a CSS target — see `sail-no-class`)
 //!   `setAttribute('style' | 'class', …)`
 //!   `adoptedStyleSheets`, `new CSSStyleSheet`, `createElement('style')`
+//!   `.attributeStyleMap` (the Typed-OM twin of `.style` — the "one rename
+//!    deep" straggler: `el.attributeStyleMap.set('--x', v)` is a `.setProperty`
+//!    with a different spelling), and `.insertRule` (the stylesheet-CSSOM hole:
+//!    `document.styleSheets[i].insertRule(...)`).
+//!
+//! The theme exception — sanctioned by SHAPE. A theme write IS the one
+//! sanctioned CSS write: it writes DECLARED tokens to `:root` (system-wide),
+//! the `:root`-targeting sibling of the `(--x)` reflection. But it goes through
+//! the `theme.*` hatch (`@ship/sail-runtime`), NOT raw CSSOM. So a controller's
+//! `documentElement.style.setProperty('--x', …)` / `document.body.style` /
+//! `attributeStyleMap.set` / `styleSheets.insertRule` is refused HERE and the
+//! diagnostic points at `theme.preview`, not back at CSSOM.
 
 use std::path::{Path, PathBuf};
 
@@ -46,6 +58,30 @@ use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
 
 pub const RULE_ID: &str = "sail-no-imperative-style";
+
+/// Remedy for a `:root` / token write — the theme case. Names the sanctioned
+/// `theme.preview` hatch (NOT CSSOM), plus the reflection path for a non-token
+/// value. Used for `documentElement`/`body` `.style`, `.attributeStyleMap`, and
+/// `.insertRule` — the CSSOM holes a live theme write used to slip through.
+const THEME_REMEDY: &str = "A live theme write goes through the sanctioned hatch: \
+     `theme.preview({'--token': value})` (`import { theme } from '@ship/sail-runtime'`) writes a \
+     DECLARED token to `:root`; `theme.commit(...)` persists it. For a value you own that is NOT a \
+     theme token, declare a signal and read it in sx (`translate-y-(--row-y)`) — the compiler \
+     reflects it. Never raw CSSOM.";
+
+/// Is `expr` a reference to the document root — `document.documentElement`,
+/// a bare `documentElement`, or `document.body`? A `.style` write on one of
+/// these is a `:root`-system write, so its remedy is `theme.preview`, not the
+/// per-element reflection path.
+fn is_document_root(expr: &Expression) -> bool {
+    match expr {
+        Expression::StaticMemberExpression(m) => {
+            matches!(m.property.name.as_str(), "documentElement" | "body")
+        }
+        Expression::Identifier(id) => id.name.as_str() == "documentElement",
+        _ => false,
+    }
+}
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let allocator = Allocator::default();
@@ -121,6 +157,21 @@ impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
                 );
             }
 
+            // `document.styleSheets[i].insertRule('…')` — the stylesheet-CSSOM
+            // hole: injecting a whole CSS rule from JavaScript. Same family as
+            // `.style`, one level up (a rule, not a declaration). Match on the
+            // method name — the receiver is a `CSSStyleSheet` however it was
+            // reached (`styleSheets[i]`, an adopted sheet, a saved reference).
+            if name == "insertRule" {
+                self.report(
+                    expr.span,
+                    "controllers do not `insertRule(...)` — injecting a CSS rule from JavaScript \
+                     is the stylesheet-CSSOM hole, untokenized CSS nothing can check."
+                        .to_string(),
+                    THEME_REMEDY,
+                );
+            }
+
             // classList mutation: `el.classList.add('x')` / `.remove` /
             // `.toggle` / `.replace` — a styling hatch through the back
             // door. Reads (`.contains`, `.item`, `.length`) are allowed —
@@ -157,21 +208,50 @@ impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
         // is one rename deep. `.setProperty('--x')` is included: it is `.style`
         // from JavaScript like any other, closed by the 2026-07-18 ruling.
         if name == "style" {
+            // A `.style` on the document root (`documentElement` / `body`) is a
+            // `:root`-system write — the theme case. Point at `theme.preview`,
+            // the sanctioned hatch, NOT the per-element reflection.
+            if is_document_root(&m.object) {
+                self.report(
+                    m.span,
+                    "controllers do not write `:root` through `documentElement.style` / \
+                     `document.body.style` — a live theme write is a system-wide `:root` write, \
+                     and the sanctioned path for it is `theme.preview`, not raw CSSOM."
+                        .to_string(),
+                    THEME_REMEDY,
+                );
+            } else {
+                self.report(
+                    m.span,
+                    "controllers do not touch `.style` — a CSS property set from JavaScript \
+                     is untokenized CSS that nothing can check (`.setProperty('--x', v)` \
+                     included: a custom property set from a controller is still CSS in JS)."
+                        .to_string(),
+                    "Move the value into CSS without `.style` — three intents: \
+                     (1) a value you own or compute — declare a signal, return it, read it in sx: \
+                     `const rowY = signal(0)` … `return { rowY }` … `sx=\"translate-y-(--row-y)\"` \
+                     (the compiler reflects it onto the host). \
+                     (2) measurement-driven geometry (a dragged node, a measured column) — a `use:` \
+                     action owns the property: `<node use:gridTracks={tracks}>`. \
+                     (3) a design TOKEN (theming) — tokens live in tokens.css (edit the file; HMR \
+                     re-themes), or for a live per-subtree override declare a signal and read `(--x)` \
+                     on a wrapper (the inline custom property inherits to the subtree).",
+                );
+            }
+        }
+
+        // `.attributeStyleMap` — the Typed-OM twin of `.style`. THE ACCESS is
+        // the violation (same as `.style`): `el.attributeStyleMap.set('--x', v)`
+        // is `.setProperty` wearing a different hat — the "one rename deep"
+        // straggler the ban would otherwise leak through.
+        if name == "attributeStyleMap" {
             self.report(
                 m.span,
-                "controllers do not touch `.style` — a CSS property set from JavaScript \
-                 is untokenized CSS that nothing can check (`.setProperty('--x', v)` \
-                 included: a custom property set from a controller is still CSS in JS)."
+                "controllers do not touch `.attributeStyleMap` — the Typed-OM twin of `.style`, \
+                 still CSS written from JavaScript (`.attributeStyleMap.set('--x', v)` is \
+                 `.setProperty` with a different spelling)."
                     .to_string(),
-                "Move the value into CSS without `.style` — three intents: \
-                 (1) a value you own or compute — declare a signal, return it, read it in sx: \
-                 `const rowY = signal(0)` … `return { rowY }` … `sx=\"translate-y-(--row-y)\"` \
-                 (the compiler reflects it onto the host). \
-                 (2) measurement-driven geometry (a dragged node, a measured column) — a `use:` \
-                 action owns the property: `<node use:gridTracks={tracks}>`. \
-                 (3) a design TOKEN (theming) — tokens live in tokens.css (edit the file; HMR \
-                 re-themes), or for a live per-subtree override declare a signal and read `(--x)` \
-                 on a wrapper (the inline custom property inherits to the subtree).",
+                THEME_REMEDY,
             );
         }
 
@@ -300,6 +380,47 @@ mod tests {
         assert!(run("if (el.classList.contains('active')) doThing()").is_empty());
         assert!(run("const x = el.classList.item(0)").is_empty());
         assert!(run("const n = el.classList.length").is_empty());
+    }
+
+    fn suggests(src: &str) -> Vec<String> {
+        check(Path::new("t.controller.ts"), src)
+            .into_iter()
+            .map(|f| f.suggest.unwrap_or_default())
+            .collect()
+    }
+
+    #[test]
+    fn a_root_theme_write_refuses_and_names_theme_preview() {
+        // The three CSSOM holes a live theme write used to slip through — each
+        // REFUSES, and each remedy names `theme.preview`, NOT CSSOM.
+        for src in [
+            "document.documentElement.style.setProperty('--brand-hue', h)",
+            "documentElement.style.setProperty('--brand-hue', h)",
+            "document.body.style.setProperty('--brand-hue', h)",
+            "el.attributeStyleMap.set('--brand-hue', h)",
+            "document.styleSheets[0].insertRule('.x{color:red}')",
+            "sheet.insertRule(rule, 0)",
+        ] {
+            assert_eq!(run(src).len(), 1, "expected exactly one finding for: {src}");
+            let s = suggests(src).remove(0);
+            assert!(s.contains("theme.preview"), "remedy must name theme.preview for `{src}` — got: {s}");
+        }
+    }
+
+    #[test]
+    fn attribute_style_map_access_is_the_violation_even_without_the_set_call() {
+        // THE ACCESS is the violation — aliasing the Typed-OM map can't escape.
+        assert_eq!(run("const m = el.attributeStyleMap").len(), 1);
+    }
+
+    #[test]
+    fn a_plain_element_custom_property_write_still_teaches_the_reflection_not_theme() {
+        // A `--x` write on an ARBITRARY element is NOT a theme write; its remedy
+        // stays the signal/`(--x)` reflection path (one finding, no theme.preview).
+        let s = suggests("el.style.setProperty('--row-y', y)");
+        assert_eq!(s.len(), 1);
+        assert!(s[0].contains("signal("), "arbitrary-element write keeps the reflection remedy: {}", s[0]);
+        assert!(!s[0].contains("theme.preview"), "not a theme write: {}", s[0]);
     }
 
     #[test]
