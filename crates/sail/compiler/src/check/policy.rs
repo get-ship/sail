@@ -59,11 +59,26 @@ use super::lint_overrides::{LintOverride, OverrideSeverity};
 /// compiler's unconditional `enforce_floor` pass
 /// (`check::lint_overrides::enforce_floor`) all read this one list, so a floor
 /// rule added here is enforced everywhere with no second place to update.
-pub const FLOOR_RULES: [&str; 4] = [
+///
+/// `sail-sx` (the typo/unknown-atom catcher, distinct from the `sx` capability
+/// key's `sail-no-sx` gate) joined the floor for compiler-stability-audit #100
+/// item 1: an unknown atom must NEVER become a silent-nothing. Before this,
+/// `sail-sx` rode the ordinary override channel, so a host that softened it to
+/// `Warn`/`Off` turned a typo'd atom (`sx="bg-surfce-2"`) into a dead class —
+/// pushed into the DOM by `parse::preprocess::lower_sx_value` with no matching
+/// CSS rule, and (at `Off`) no diagnostic anywhere. `lower_sx_value` has no
+/// severity awareness at all (it runs in the parse pass, ahead of the lint
+/// gate) and always pushes the class regardless of whether the atom resolved
+/// — so the ONLY place this could be stopped is the gate, by making the rule
+/// un-softenable. As a floor rule, `sail-sx` is `Error` under every policy and
+/// `check::gate` refuses the build before the dead class ever reaches emitted
+/// output.
+pub const FLOOR_RULES: [&str; 5] = [
     "sail-no-style-block",
     "sail-no-inline-style",
     "sail-no-class",
     "sail-no-undeclared-stylesheet",
+    "sail-sx",
 ];
 
 /// True iff `rule` is a floor rule — one the compiler promotes to `Error`
