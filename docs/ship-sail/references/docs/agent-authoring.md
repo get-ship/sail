@@ -168,16 +168,24 @@ One function, one job: `controller(fn)` where `fn: (ctx) => Record<string, unkno
 
 Mutation is always `signal.set(newValue)` (or `signal.set(prev => next)`) — there's no writable-state-proxy assignment style.
 
-**`live()` + `ship` SDK.** Two paths, depending on mount host:
+**`query()` + `ship` SDK.** `query()` reads server data. It inspects
+what the client method returns and routes accordingly: a method that
+returns a `LiveSource<T>` (`{ subscribe(sig) }`, e.g. an SSE channel)
+makes `query()` subscribe and keep patching the same cache entry (push);
+a method that returns a `Promise<T>` makes it fetch once (pull). Either
+way you get the same `LiveState<T>` (`loading`/`ok`/`error`) signal out.
+Two wiring paths, depending on mount host:
 
 1. **Compiler-emitted (preferred when `ship` is in ctx).** Use the
    template's `<data live>` form. The compiler emits
-   `live(() => ship.foo.bar(args))` and wires the channel.
+   `query(() => ship.foo.bar(args))` and wires the channel; since
+   `ship.foo.bar(...)` returns a `LiveSource`, `query()` takes the
+   push path.
 
 2. **Hand-wired (required for view-host mounts).** The daemon's
    `/sail/<name>` host does NOT inject `ship` into ctx, so the
-   compiler-emitted `<data live>` form sticks on `loading`. Wire
-   `live()` directly to `/_deck/data?expr=…` instead. The canonical
+   compiler-emitted `<data live>` form sticks on `loading`. Wire the
+   subscription directly to `/_deck/data?expr=…` instead. The canonical
    helper currently lives in `views/git/page.sail`'s inline
    `<controller>` block (`sseSource`) — copy verbatim:
 

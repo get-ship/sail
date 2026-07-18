@@ -104,7 +104,7 @@ What this exercises:
 - A handler reading framework-injected `navigate` off `ctx`
 - `{#while-loading}` / `{#while-error err}` boundary blocks
 
-What this avoids: a separate live-subscription section in the controller, calling `live()` from JS.
+What this avoids: a separate live-subscription section in the controller, calling `query()` from JS.
 
 ## Tier 3 — agents with compositions
 

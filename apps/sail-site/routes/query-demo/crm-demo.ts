@@ -7,7 +7,7 @@
 // static member path (`.deals.list`/`.deals.update`) is the key
 // segments, the call args are the tracked tail.
 //
-// In-memory + a visible delay (matching /data's live() demo) rather
+// In-memory + a visible delay (matching /data's query() demo) rather
 // than a real network round-trip — this route needs no new server
 // surface, and the delay makes loading -> ok observable in the
 // browser probe.

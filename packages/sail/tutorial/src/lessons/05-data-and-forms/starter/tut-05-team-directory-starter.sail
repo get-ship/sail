@@ -1,47 +1,25 @@
 <!--
   Lesson 05 starter — the roster renders, but only in the happy path.
 
-  A live() handle has THREE states, and this template handles one. Add the
+  A query() handle has THREE states, and this template handles one. Add the
   {#while-loading} and {#while-error} boundaries, then wire the form.
 -->
 
 <controller>
-import { controller, signal, live } from '@ship/sail-runtime'
-
-interface Member {
-  id: number
-  name: string
-  role: 'member' | 'admin'
-}
-
-// The "server": module state behind a latency-simulating fetch. Swap in a
-// real fetch()/SDK call and nothing else in the lesson changes.
-let nextId = 4
-const DB: Member[] = [
-  { id: 1, name: 'Ada Lovelace', role: 'admin' },
-  { id: 2, name: 'Grace Hopper', role: 'member' },
-  { id: 3, name: 'Mary Shelley', role: 'member' },
-]
-
-function fetchTeam(fail: boolean): Promise<Member[]> {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (fail) reject(new Error('503 — the team service is down. Uncheck "break the API" and reload.'))
-      else resolve([...DB])
-    }, 600)
-  })
-}
+import { controller, signal, query } from '@ship/sail-runtime'
+import { directory } from './tut-05-directory-client'
 
 export default controller(() => {
     const breakApi = signal(false)
     const name = signal('')
     const role = signal<'member' | 'admin'>('member')
 
-    // TODO 1: this source reads NO tracked signals, so it runs exactly
-    // once. Add an `attempt` signal, read attempt() and breakApi() inside
-    // the thunk, and both become deps — bumping either re-runs the fetch
-    // (back through 'loading').
-    const team = live(() => fetchTeam(false))
+    // TODO 1: this query passes constant args, so it keys once and never
+    // re-fetches. Add an `attempt` signal and read attempt() (plus
+    // breakApi()) INSIDE the call args — signals in the args are tracked
+    // deps, so bumping either re-keys the query to a fresh cache entry
+    // (a real refetch, back through 'loading').
+    const team = query(() => directory.team.list({ attempt: 1, broken: false }))
 
     return {
       team,
@@ -50,13 +28,10 @@ export default controller(() => {
       role,
       // TODO 2: reload() should bump the attempt signal.
       reload: (): void => {},
-      // TODO 3: add() — push { id: nextId++, name, role } into DB, clear
-      // the inputs, then bump attempt: the list refreshes through the same
-      // fetch path as everything else. (nextId is referenced here only so
-      // the untouched starter typechecks.)
-      add: (): void => {
-        void nextId
-      },
+      // TODO 3: add() — call directory.team.add({ name, role }), clear the
+      // inputs, then bump attempt: the list refreshes through the same
+      // query path as everything else.
+      add: (): void => {},
     }
   })
 </controller>

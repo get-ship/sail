@@ -87,7 +87,7 @@ unwrapOr(sig, fallback)  // T
 ```
 .sail  <data live source="ship.git.overview()" live />
   ↓ sail-compiler
-.js   $scope.git = live(() => ship.git.overview())
+.js   $scope.git = query(() => ship.git.overview())   // ship.git.overview() returns a LiveSource → query() routes to the push (subscribe) path
   ↓ @ship/sdk-client createClient()
 HTTP  GET /_deck/data?expr=ship.git.overview()    [text/event-stream]
   ↓ apps/shipd/src/views/sui_data.rs

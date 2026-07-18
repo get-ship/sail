@@ -57,7 +57,7 @@ mount(() => {
 
 Subscribes to a `ship.*` SDK call. With `live`, the runtime opens an SSE channel and patches the signal as the daemon emits updates. Without `live`, the value is read once at mount.
 
-The `source` expression is plain JS that runs inside `live()`'s tracked reactive scope. It receives three arguments: `ship` (the SDK), `route` (a [`RouteSignals`](data-subscriptions.md#reactive-route-in-source-thunks) — `route.params.<name>` and `route.query.<name>` are themselves signals), and `$scope` (every identifier already in view scope — controller-scope signals, earlier `<data>` declarations). Reading a signal via `$scope.<key>()` or `route.params.<key>()` is tracked; when the signal changes, the prior subscription disposes and a new one opens with the updated args.
+The `source` expression is plain JS that runs inside `query()`'s tracked reactive scope (with `live`, the client method returns a `LiveSource` so `query()` subscribes; without it, the method returns a `Promise` and `query()` fetches once). It receives three arguments: `ship` (the SDK), `route` (a [`RouteSignals`](data-subscriptions.md#reactive-route-in-source-thunks) — `route.params.<name>` and `route.query.<name>` are themselves signals), and `$scope` (every identifier already in view scope — controller-scope signals, earlier `<data>` declarations). Reading a signal via `$scope.<key>()` or `route.params.<key>()` is tracked; when the signal changes, the prior subscription disposes and a new one opens with the updated args.
 
 `<data>` is the **canonical** way to bring server data into a view. See [data-subscriptions.md](data-subscriptions.md).
 

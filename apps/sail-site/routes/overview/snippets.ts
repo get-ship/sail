@@ -45,7 +45,7 @@ export default controller(() => {
 const doubled = derived(() => count() * 2)
 effect(() => console.log(count()))   // re-runs on change`,
 
-  data: `const users = live(() => fetchUsers())
+  data: `const users = query(() => api.users.list())
 // users() is { kind: 'loading' } | { kind: 'ok', value } | { kind: 'error', error }`,
 
   motion: `<card motion:hover={{ scale: 'spring:gentle' }}

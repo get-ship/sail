@@ -32,7 +32,7 @@ client.
 
 | Category | Examples | Where it goes |
 |---|---|---|
-| I/O & authority | `fetch` · `XHR` · `WebSocket` · `eval` · `Function` · `import()` · `localStorage` | a `<data>` subscription or a controller `live` call / event handler |
+| I/O & authority | `fetch` · `XHR` · `WebSocket` · `eval` · `Function` · `import()` · `localStorage` | a `<data>` subscription or a controller `query` call / event handler |
 | Non-determinism | `Date.now()` · `Math.random()` · `new Date()` | seed with a signal in the controller, assigned inside `mount` — or derive from data |
 | Mutation of non-owned state | `arr.sort()` · `arr.reverse()` · `arr.splice()` | copy first: `[...arr].sort()`, inside a `derived` |
 
@@ -61,7 +61,7 @@ JSX**. The split is by *kind of code*, not by *amount*:
   `<client>`, control flow `{#for}` / `{#if}` / `{#while-loading}` — plus pure
   expressions.
 - **Controller (`.ts`):** full JavaScript — variable declarations, `signal` /
-  `derived` / `live` / `effect`, and the auth-gated I/O.
+  `derived` / `query` / `effect`, and the auth-gated I/O.
 
 There are **no `const`/`let`/statements in a `.sail` file.** Want a local
 binding? **Promote it to a `derived`** in the controller. That promotion is not
@@ -141,7 +141,7 @@ access, a loading/error/ready branch — but all of it is pure and re-run-safe.
   enforces.
 - **[The template surface](./template.md)** — every directive and expression a
   `.sail` file may hold.
-- **[The controller surface](./controller.md)** — `signal` / `derived` / `live`
+- **[The controller surface](./controller.md)** — `signal` / `derived` / `query`
   / `on`, the scope, and mutation discipline.
 - **ADR — SAIL authoring model** (`docs/ship-adrs/references/docs/sail-authoring-model.md`)
   — the durable contract and its enforcement.

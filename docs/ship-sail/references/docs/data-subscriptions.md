@@ -34,7 +34,7 @@ The runtime exposes `<name>` as a signal in [view scope](index.md#the-shared-vie
 `live` signals always wrap the daemon's payload in a uniform envelope. The shape is contractual; hooks rely on it.
 
 ```ts
-// from @ship/sail-runtime — `live.ts`
+// from @ship/sail-runtime — `query.ts`
 type LiveState<T> =
   | { kind: 'loading' }
   | { kind: 'error'; error: Error }
@@ -141,7 +141,7 @@ This is why the envelope is contractual — compositions rely on the shape to un
 
 ## Reactive `route` in source thunks
 
-`route.params.<name>` and `route.query.<name>` are themselves signals. Reading one inside a `<data live source="…">` thunk subscribes the live channel to the param: when navigation changes the URL, the prior SSE subscription disposes and a new one opens with the updated arg. No author-side wiring; this is the same `live()` tracking that re-fires on any controller-owned signal change.
+`route.params.<name>` and `route.query.<name>` are themselves signals. Reading one inside a `<data live source="…">` thunk subscribes the live channel to the param: when navigation changes the URL, the prior SSE subscription disposes and a new one opens with the updated arg. No author-side wiring; this is the same `query()` dep-tracking that re-fires on any controller-owned signal change. (A `<data live>` source calls a client method that returns a `LiveSource<T>`, so `query()` routes to the push/subscribe path; a plain `<data>` source whose method returns `Promise<T>` fetches once — the pull path.)
 
 Concrete pattern — a `/agents/<id>` view:
 
@@ -171,9 +171,9 @@ export default controller(({ agent }) => {
 Navigation flow:
 
 1. The user lands on `/agents/42`. `route()` (called by the boot script) seeds `route.params.id` from the pathname-to-pattern match: `'42'`.
-2. `<data live>` evaluates `ship.agents.detail({id: route.params.id()})`. `route.params.id()` is a signal read; `live()` records it as a dep. The SSE channel for agent 42 opens.
+2. `<data live>` evaluates `ship.agents.detail({id: route.params.id()})`. `route.params.id()` is a signal read; `query()` records it as a dep. Because `ship.agents.detail(...)` returns a `LiveSource`, `query()` takes the push path and the SSE channel for agent 42 opens.
 3. The user clicks a link to `/agents/99`. The view's click handler (or the framework's link interceptor) calls `navigate('/agents/99')`. That pushes history and triggers the global `__shipSetRouteUpdate`, which sets `route.params.id` to `'99'`.
-4. The `live()` dep fires. The agent-42 SSE channel disposes; a new one opens for agent 99. The signal flips through `loading → ok` exactly as on first mount.
+4. The `query()` dep fires. The agent-42 SSE channel disposes; a new one opens for agent 99. The signal flips through `loading → ok` exactly as on first mount.
 
 `defineRoutes` is per-view. Without a registered shape that captures `id`, `route.params.id()` returns `undefined`; the source thunk still tracks the signal, so the channel re-binds the moment a future navigation introduces a matching segment. (A compiler-emitted `<route pattern="…" />` directive will make the imperative `defineRoutes` call optional in a follow-up.)
 

@@ -57,7 +57,7 @@ Public API barrel: `packages/sail/runtime/src/index.ts`. Anything not re-exporte
 | Projection | `projectSlots`, `resolveSlots`, `snapshotChildren`, `slotFilled`, `bindSlotEmpty` (light-DOM slot redistribution + empty-reflection; `projectSlots` is the runtime path the component factory uses at connect) |
 | Components | `defineComponent`, `component`, `prop`, `camelOf` |
 | Prop decoders | `decodeString`, `decodeNumber`, `decodeBoolean`, `decodeJson`, `decodeEnum` |
-| Data | `data`, `live`, `unwrap`, `unwrapOr`, `wireFormMutation` |
+| Data | `data`, `query`, `unwrap`, `unwrapOr`, `wireFormMutation` |
 | State helpers | `state`, `debounce`, `useFilteredList`, `useSelection`, `useForm` |
 | Shared context | `shared`, `isShared`, `provide`, `useShared`, `pickShared` |
 | Host API | `emit`, `expose`, `attachHostApi`, `bindNativeEvent`, `slotted`, `bindHostAttr` |

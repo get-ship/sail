@@ -2,7 +2,7 @@
   Lesson 09 solved — the screen as an owner would ship it.
 
   Compare with the starter: the title flows from the prop; all three
-  live() states render; the {#for} keys on identity (m.id); rows exit as
+  query() states render; the {#for} keys on identity (m.id); rows exit as
   well as enter; and the empty case is the semantic <empty-state>, not a
   hand-rolled div.
 -->
@@ -12,32 +12,11 @@
   }
 </scope>
 <controller>
-import { controller, signal, derived, live } from '@ship/sail-runtime'
-
-interface Message {
-  id: number
-  from: string
-  subject: string
-  topic: string
-  tone: 'info' | 'warning' | 'destructive' | 'success'
-  read: boolean
-}
-
-// The "server". Note the repeated topics — a non-unique field is exactly
-// the kind of thing an unreviewed key= reaches for.
-function fetchInbox(): Promise<Message[]> {
-  const MESSAGES: Message[] = [
-    { id: 1, from: 'monitoring', subject: 'p95 back under 200ms', topic: 'latency', tone: 'success', read: true },
-    { id: 2, from: 'jules', subject: 'refund for order #8841?', topic: 'billing', tone: 'warning', read: false },
-    { id: 3, from: 'monitoring', subject: 'error budget 40% consumed', topic: 'latency', tone: 'info', read: false },
-    { id: 4, from: 'sam', subject: 'card declined on renewal', topic: 'billing', tone: 'destructive', read: false },
-    { id: 5, from: 'dana', subject: 'love the new tutorial', topic: 'feedback', tone: 'info', read: true },
-  ]
-  return new Promise((resolve) => setTimeout(() => resolve(MESSAGES), 700))
-}
+import { controller, signal, derived, query } from '@ship/sail-runtime'
+import { inboxClient } from './tut-09-inbox-client'
 
 export default controller(() => {
-    const inbox = live(fetchInbox)
+    const inbox = query(() => inboxClient.messages.list())
     const filter = signal<'all' | 'unread'>('all')
     const archived = signal<number[]>([])
 

@@ -14,7 +14,7 @@ the other half — the flaws that *compile*, run, and demo beautifully,
 and are still wrong.
 
 The starter is a complete support-inbox screen. It builds cleanly. It
-uses live(), keyed lists, motion, tones — everything from lessons 1–8.
+uses query(), keyed lists, motion, tones — everything from lessons 1–8.
 It also contains **five planted review flaws**. Read it like an agent's
 pull request before you read the list below.
 
@@ -31,7 +31,7 @@ is intent:
 - **Do all three states render?** The template handles `error` and
   `ok` — there is no `{#while-loading}`. On a fast dev machine, nobody
   notices; on a real network, first paint is a blank hole. *Check: for
-  every live() handle, find all three states in the template.*
+  every query() handle, find all three states in the template.*
 - **Is the key an identity?** `key={m.topic}` compiles — but topics
   repeat (`latency` twice, `billing` twice). Rows will collide and
   recycle each other's DOM on any reorder or archive. *Check: could two
