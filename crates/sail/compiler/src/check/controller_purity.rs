@@ -31,21 +31,25 @@ pub fn check(
         overrides,
     );
     // `sail-controller-no-ambient-authority` is `sail.config.json`
-    // "network"-aware (the fetch/WebSocket/EventSource per-origin allowlist),
-    // but `lint_controller_source` (above) dispatches through the generic,
+    // "network"/"unconfined"-aware (the fetch/WebSocket/EventSource per-origin
+    // allowlist and the whole-hog confinement opt-out), but
+    // `lint_controller_source` (above) dispatches through the generic,
     // config-blind `CONTROLLER_RULES` table — it always ran the rule's
-    // default (empty-allowlist) entry. Drop those findings and re-run the
-    // network-aware `check_confined` with the resolved allowlist
-    // (`Policy::network_for`), same fix as `check::collect`'s identical
-    // splice — this gate and `collect` are two independent call sites into
-    // the same generic table, so both need it.
+    // default (confined, empty-allowlist) entry. Drop those findings and
+    // re-run the config-aware `check_confined` with the resolved allowlist
+    // (`Policy::network_for`) and capability (`Policy::unconfined_for`), same
+    // fix as `check::collect`'s identical splice — this gate and `collect`
+    // are two independent call sites into the same generic table, so both
+    // need it.
     findings.retain(|f| f.rule != sail_lint::rules::controller_no_ambient_authority::RULE_ID);
     let network = crate::check::policy::Policy::network_for(&controller_path);
+    let unconfined = crate::check::policy::Policy::unconfined_for(&controller_path);
     let ambient_findings = crate::check::lint_overrides::apply_overrides(
         sail_lint::rules::controller_no_ambient_authority::check_confined(
             &controller_path,
             &source,
             &network,
+            unconfined,
         ),
         overrides,
     );
