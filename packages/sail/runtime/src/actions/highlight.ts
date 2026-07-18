@@ -1,8 +1,15 @@
 // A small, dependency-free syntax highlighter for the docs — covers the .sail /
 // HTML / TS we show. It escapes all source text and only ever emits its own
 // <span class="tok-*"> wrappers (no injection), which the codeblock styles via
-// the --syntax-* tokens. A left-to-right single-pass tokenizer, so matches never
-// overlap.
+// the --syntax-* tokens.
+//
+// Context model (the part a flat regex can't do): a snippet is either MARKUP
+// (starts with a tag or a `{#…}` directive) or CODE (TS / bash). Markup text
+// is prose — words there are never keywords. `{…}` in markup is a binding,
+// matched with real nested-brace/quote awareness so `{#for … key={x.id}}` is
+// one span. Inside `<controller>` / `<scope>` / `<script>` the scanner drops
+// into CODE mode until the closing tag; there, braces are plain punctuation
+// (never bindings) and keyword/verb matching applies.
 //
 // (A faithful tree-sitter-sail pass is the eventual upgrade; this gets real,
 // correct colour now.)
@@ -18,44 +25,227 @@ const VERBS = new Set([
   'prop', 'data', 'client', 'npm', 'install',
 ])
 
+// Tags whose content is code, not markup. Mirrors the .sail file sections.
+const CODE_TAGS = new Set(['controller', 'scope', 'script'])
+
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-// Ordered alternation. Comments + strings first so their contents aren't
-// re-tokenized; bindings ({…}) before tags; words last.
-const RE = new RegExp(
-  [
-    String.raw`(?<comment><!--[\s\S]*?-->|\/\/[^\n]*|\/\*[\s\S]*?\*\/|#[^\n]*)`,
-    String.raw`(?<string>\`(?:\\.|[^\`\\])*\`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')`,
-    String.raw`(?<bind>\{[^{}]*\})`,
-    String.raw`(?<tag><\/?[a-zA-Z][\w-]*|\/?>)`,
-    String.raw`(?<num>\b\d+(?:\.\d+)?\b)`,
-    String.raw`(?<word>[A-Za-z_$][\w$]*)`,
-  ].join('|'),
-  'g',
-)
+function span(cls: string, text: string): string {
+  return `<span class="tok-${cls}">${esc(text)}</span>`
+}
+
+/**
+ * Index of the `}` matching the `{` at `openIdx`, or -1. Honours nested
+ * braces and quoted strings so `{#for f of xs key={f.id}}` and
+ * `{playing() ? 'a' : 'b'}` close at the right brace.
+ */
+function findMatchingBrace(source: string, openIdx: number): number {
+  let depth = 1
+  let i = openIdx + 1
+  let quote: string | null = null
+  while (i < source.length) {
+    const ch = source[i]!
+    if (quote) {
+      if (ch === '\\') { i += 2; continue }
+      if (ch === quote) quote = null
+      i++
+      continue
+    }
+    if (ch === '"' || ch === "'" || ch === '`') { quote = ch; i++; continue }
+    if (ch === '{') { depth++; i++; continue }
+    if (ch === '}') {
+      depth--
+      if (depth === 0) return i
+      i++
+      continue
+    }
+    i++
+  }
+  return -1
+}
+
+const IDENT_START = /[A-Za-z_$]/
+const IDENT = /[\w$]/
+
+/** True when only whitespace sits between `idx` and the start of its line. */
+function atLineStart(src: string, idx: number): boolean {
+  for (let k = idx - 1; k >= 0; k--) {
+    const c = src[k]!
+    if (c === '\n') return true
+    if (!/\s/.test(c)) return false
+  }
+  return true
+}
+
+/**
+ * Highlight a run of code (TS or shell). Braces, parens and arrows are plain
+ * punctuation here — a `{` never starts a binding inside code, which is what
+ * keeps `effect(() => { … })` bodies intact.
+ *
+ * `allowMarkupHandoff`: .sail's top-level shape is a code prelude followed by
+ * template markup, so a tag at the start of a line hands the rest of the
+ * source to the markup scanner. Generics (`signal<Flight[]>`) never sit at
+ * line start, so they stay code. Off inside `<controller>`/`<scope>` slices.
+ */
+function highlightCode(src: string, allowMarkupHandoff = false): string {
+  let out = ''
+  let plain = ''
+  const flush = (): void => { out += esc(plain); plain = '' }
+  const len = src.length
+  let i = 0
+  while (i < len) {
+    const ch = src[i]!
+    if (allowMarkupHandoff && ch === '<' && /[A-Za-z/]/.test(src[i + 1] ?? '') &&
+      atLineStart(src, i)) {
+      flush()
+      out += highlightMarkup(src.slice(i))
+      return out
+    }
+    if (ch === '/' && src[i + 1] === '/') {
+      const end = src.indexOf('\n', i)
+      const stop = end < 0 ? len : end
+      flush(); out += span('comment', src.slice(i, stop)); i = stop
+      continue
+    }
+    if (ch === '/' && src[i + 1] === '*') {
+      const end = src.indexOf('*/', i + 2)
+      const stop = end < 0 ? len : end + 2
+      flush(); out += span('comment', src.slice(i, stop)); i = stop
+      continue
+    }
+    // Shell-style comment — only at line start / after whitespace, so TS
+    // private fields (`#x`) and mid-token hashes stay untouched.
+    if (ch === '#' && (i === 0 || /\s/.test(src[i - 1]!))) {
+      const end = src.indexOf('\n', i)
+      const stop = end < 0 ? len : end
+      flush(); out += span('comment', src.slice(i, stop)); i = stop
+      continue
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      let j = i + 1
+      while (j < len) {
+        if (src[j] === '\\') { j += 2; continue }
+        if (src[j] === ch) { j++; break }
+        j++
+      }
+      flush(); out += span('string', src.slice(i, j)); i = j
+      continue
+    }
+    if (/\d/.test(ch)) {
+      let j = i + 1
+      while (j < len && /\d/.test(src[j]!)) j++
+      if (src[j] === '.' && /\d/.test(src[j + 1] ?? '')) {
+        j += 2
+        while (j < len && /\d/.test(src[j]!)) j++
+      }
+      flush(); out += span('number', src.slice(i, j)); i = j
+      continue
+    }
+    if (IDENT_START.test(ch)) {
+      let j = i + 1
+      while (j < len && IDENT.test(src[j]!)) j++
+      const word = src.slice(i, j)
+      flush()
+      if (KEYWORDS.has(word)) out += span('keyword', word)
+      else if (VERBS.has(word)) out += span('fn', word)
+      else out += esc(word)
+      i = j
+      continue
+    }
+    plain += ch
+    i++
+  }
+  flush()
+  return out
+}
+
+/**
+ * Highlight a markup document (.sail template / HTML). Text content is prose
+ * — never keyword-matched. `{…}` is a binding (nested-brace aware). Content
+ * of controller/scope/script tags is handed to `highlightCode`.
+ */
+function highlightMarkup(src: string): string {
+  let out = ''
+  const len = src.length
+  let i = 0
+  while (i < len) {
+    const ch = src[i]!
+    if (src.startsWith('<!--', i)) {
+      const end = src.indexOf('-->', i + 4)
+      const stop = end < 0 ? len : end + 3
+      out += span('comment', src.slice(i, stop)); i = stop
+      continue
+    }
+    if (ch === '<' && /[A-Za-z/]/.test(src[i + 1] ?? '')) {
+      const closing = src[i + 1] === '/'
+      const nameStart = closing ? i + 2 : i + 1
+      let j = nameStart
+      while (j < len && /[\w-]/.test(src[j]!)) j++
+      if (j === nameStart) { out += esc(ch); i++; continue }
+      const tagName = src.slice(nameStart, j)
+      out += span('tag', src.slice(i, j))
+      i = j
+      // Attribute region, until `>` / `/>`.
+      let selfClosing = false
+      while (i < len) {
+        const c = src[i]!
+        if (c === '>') { out += span('tag', '>'); i++; break }
+        if (c === '/' && src[i + 1] === '>') {
+          out += span('tag', '/>'); i += 2; selfClosing = true; break
+        }
+        if (c === '"' || c === "'") {
+          let k = i + 1
+          while (k < len) {
+            if (src[k] === '\\') { k += 2; continue }
+            if (src[k] === c) { k++; break }
+            k++
+          }
+          out += span('string', src.slice(i, k)); i = k
+          continue
+        }
+        if (c === '{') {
+          const close = findMatchingBrace(src, i)
+          if (close >= 0) {
+            out += span('bind', src.slice(i, close + 1)); i = close + 1
+            continue
+          }
+        }
+        if (/[\s=]/.test(c)) { out += esc(c); i++; continue }
+        // Attribute name (incl. directive prefixes like `on:click`).
+        let k = i + 1
+        while (k < len && !/[\s=/>'"{}]/.test(src[k]!)) k++
+        out += span('attr', src.slice(i, k)); i = k
+      }
+      // Code sections: everything up to the closing tag is code.
+      if (!closing && !selfClosing && CODE_TAGS.has(tagName.toLowerCase())) {
+        const closeIdx = src.indexOf(`</${tagName}`, i)
+        const stop = closeIdx < 0 ? len : closeIdx
+        out += highlightCode(src.slice(i, stop))
+        i = stop
+      }
+      continue
+    }
+    if (ch === '{') {
+      const close = findMatchingBrace(src, i)
+      if (close >= 0) {
+        out += span('bind', src.slice(i, close + 1))
+        i = close + 1
+        continue
+      }
+    }
+    // Plain text run — prose, never keyword-matched.
+    let j = i + 1
+    while (j < len && src[j] !== '<' && src[j] !== '{') j++
+    out += esc(src.slice(i, j))
+    i = j
+  }
+  return out
+}
 
 export function highlight(code: string): string {
-  let out = ''
-  let last = 0
-  for (const m of code.matchAll(RE)) {
-    const i = m.index ?? 0
-    out += esc(code.slice(last, i))
-    const g = m.groups ?? {}
-    const text = m[0]
-    if (g.comment != null) out += `<span class="tok-comment">${esc(text)}</span>`
-    else if (g.string != null) out += `<span class="tok-string">${esc(text)}</span>`
-    else if (g.bind != null) out += `<span class="tok-bind">${esc(text)}</span>`
-    else if (g.tag != null) out += `<span class="tok-tag">${esc(text)}</span>`
-    else if (g.num != null) out += `<span class="tok-number">${esc(text)}</span>`
-    else if (g.word != null) {
-      if (KEYWORDS.has(text)) out += `<span class="tok-keyword">${esc(text)}</span>`
-      else if (VERBS.has(text)) out += `<span class="tok-fn">${esc(text)}</span>`
-      else out += esc(text)
-    } else out += esc(text)
-    last = i + text.length
-  }
-  out += esc(code.slice(last))
-  return out
+  const trimmed = code.trimStart()
+  const isMarkup = trimmed.startsWith('<') || trimmed.startsWith('{#')
+  return isMarkup ? highlightMarkup(code) : highlightCode(code, true)
 }
