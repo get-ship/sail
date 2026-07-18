@@ -185,7 +185,6 @@ export default controller(() => {
     <navbar placement="rail" bordered sticky offset="14">
       <label>Start here</label>
       <a href="/overview" aria-current={path() === '/' || path() === '/overview' ? 'page' : null}>Introduction</a>
-      <a href="/thesis" aria-current={path() === '/thesis' ? 'page' : null}>Thesis</a>
       <a href="/getting-started" aria-current={path() === '/getting-started' ? 'page' : null}>Installation</a>
       <a href="/why" aria-current={path() === '/why' ? 'page' : null}>Why SAIL</a>
       <a href="/tutorial" aria-current={path().startsWith('/tutorial') ? 'page' : null}>Tutorial</a>
@@ -198,6 +197,9 @@ export default controller(() => {
       <a href="/theming" aria-current={path() === '/theming' ? 'page' : null}>Theming</a>
       <a href="/motion" aria-current={path() === '/motion' ? 'page' : null}>Animation</a>
       <a href="/behavior" aria-current={path() === '/behavior' ? 'page' : null}>Actions</a>
+
+      <label>The language</label>
+      <a href="/language/sail-file" aria-current={path() === '/language/sail-file' ? 'page' : null}>The .sail file</a>
 
       <label>Building</label>
       <a href="/reactivity" aria-current={path() === '/reactivity' ? 'page' : null}>State</a>
