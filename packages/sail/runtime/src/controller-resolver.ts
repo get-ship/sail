@@ -1,7 +1,7 @@
 // controller-resolver.ts — runtime backing for the typed controller contract.
 //
 // Takes a `ControllerDef` (the ONE setup function) and the resolver
-// context, builds the ambient view scope (ship/clients/route/navigate
+// context, builds the ambient view scope (clients/route/navigate
 // + template-declared signals), and calls it. Whatever the function
 // returns IS the flat bindings record `hydrate()` merges into the
 // template scope — signals, `derived()` values, plain helpers, and
@@ -29,17 +29,27 @@ export type { ResolverContext, ResolvedBindings } from './controller-resolver-ty
  * merge into the template scope.
  *
  * @param def The controller's setup function.
- * @param ctx The setup-time context (`ship`, `route`, `navigate`, `scope`, `stateKeys`).
+ * @param ctx The setup-time context (`clients`, `route`, `navigate`, `scope`,
+ *            `stateKeys`; plus the legacy single-client `ship` alias).
  * @returns A flat record of bindings keyed by name — the def's return, verbatim.
  */
 export function resolveController(
   def: ControllerDef<object>,
   ctx: ResolverContext,
 ): ResolvedBindings {
-  const baseScope: ControllerScope<object> = {
-    ship: ctx.ship,
-    clients: ctx.clients ?? {},
+  // #105 — `ship` is no longer injected as its own scope member. It is one
+  // KEY on the `clients` port (mount.ts does the same aliasing on the mount
+  // path): a caller passing the legacy `ctx.ship` gets it folded into the map,
+  // an explicit `ctx.clients.ship` wins. Spreading the map still resolves a
+  // bare `ship.foo()` in templates compiled before the `<client>` directive,
+  // so this is an injection/type cleanup, not a behavior change.
+  const clients: Record<string, unknown> = {
+    ...(ctx.ship !== undefined ? { ship: ctx.ship } : {}),
     ...(ctx.clients ?? {}),
+  }
+  const baseScope: ControllerScope<object> = {
+    clients,
+    ...clients,
     route: ctx.route ?? {},
     navigate: ctx.navigate ?? ((_path: string) => {}),
     ...(ctx.scope ?? {}),
