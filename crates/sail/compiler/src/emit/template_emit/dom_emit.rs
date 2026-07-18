@@ -698,6 +698,12 @@ fn duration_token_to_ms(token: &str) -> f64 {
         "medium" => 180.0,
         "slow" => 280.0,
         "deliberate" => 420.0,
+        // Ambient-loop durations — bespoke multi-second timings for decorative
+        // infinite loops (a hero diagram's drift/fill), between `deliberate`
+        // and `glacial`. Kept in sync with tokens.css by hand (see note above).
+        "saunter" => 2400.0,
+        "amble" => 3000.0,
+        "cinematic" => 3600.0,
         "glacial" => 14000.0,
         _ => 180.0,
     }

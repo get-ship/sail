@@ -119,6 +119,66 @@
       "iterations": "infinite",
       "direction": "normal",
       "$doc": "rotate 0deg→360deg, one direction, infinite — a slow-spinning logo/mark. NOT alternate: a spin goes one way, it does not ping-pong. Distinct from the spinner ring's fixed 0.7s spin, which is a component-owned CSS animation, not this preset."
+    },
+    "fill": {
+      "kind": "tween",
+      "from": 0.0,
+      "to": 1.0,
+      "duration_token": "duration-saunter",
+      "easing": "cubic-bezier(0.4, 0, 0.4, 1)",
+      "iterations": "infinite",
+      "direction": "alternate",
+      "$doc": "0→1 progress fill, infinite alternate — pair with the `scale-x` property (origin-left) for a bar/track that fills then empties, or `scale-y` (origin-bottom) for a column. A single-axis reveal, distinct from `pulse` (uniform scale)."
+    },
+    "slip": {
+      "kind": "tween",
+      "from": 0.0,
+      "to": -12.0,
+      "duration_token": "duration-amble",
+      "easing": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "iterations": "infinite",
+      "direction": "alternate",
+      "$doc": "translate 0→-12(px on translate-x/y, % is not expressible) then back, infinite alternate — a subtle ambient drift-and-return, e.g. a list row that slides out and back. Pair with `dim` on opacity for a slide+fade."
+    },
+    "dim": {
+      "kind": "tween",
+      "from": 1.0,
+      "to": 0.0,
+      "duration_token": "duration-amble",
+      "easing": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "iterations": "infinite",
+      "direction": "alternate",
+      "$doc": "opacity 1→0→1, infinite alternate — the ambient-loop companion to the one-shot `fade-out`. Same duration token as `slip` so a slide+fade stays in phase."
+    },
+    "drift": {
+      "kind": "tween",
+      "from": 0.0,
+      "to": 24.0,
+      "duration_token": "duration-cinematic",
+      "easing": "cubic-bezier(0.6, 0, 0.2, 1)",
+      "iterations": "infinite",
+      "direction": "alternate",
+      "$doc": "translate 0→24(px) and back, infinite alternate — a slow ambient position drift. Compose with `tilt`+`pop` on the same element to animate x/rotate/scale independently (motion's 'independent transforms')."
+    },
+    "tilt": {
+      "kind": "tween",
+      "from": 0.0,
+      "to": 15.0,
+      "duration_token": "duration-cinematic",
+      "easing": "cubic-bezier(0.6, 0, 0.2, 1)",
+      "iterations": "infinite",
+      "direction": "alternate",
+      "$doc": "rotate 0deg→15deg and back, infinite alternate — a gentle recurring tilt (distinct from `spin`'s continuous full rotation)."
+    },
+    "pop": {
+      "kind": "tween",
+      "from": 1.0,
+      "to": 1.75,
+      "duration_token": "duration-cinematic",
+      "easing": "cubic-bezier(0.6, 0, 0.2, 1)",
+      "iterations": "infinite",
+      "direction": "alternate",
+      "$doc": "scale 1→1.75 and back, infinite alternate — a strong recurring pop, larger than `pulse` (1→1.04). Attention/emphasis in an ambient loop."
     }
   },
 
@@ -128,6 +188,9 @@
     "medium": "duration-medium",
     "slow": "duration-slow",
     "deliberate": "duration-deliberate",
+    "saunter": "duration-saunter",
+    "amble": "duration-amble",
+    "cinematic": "duration-cinematic",
     "glacial": "duration-glacial"
   },
 

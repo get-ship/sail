@@ -102,8 +102,8 @@ error). State prefixes: `hover:` `focus:` `focus-within:` `active:`
 - `contents-` 
 - `cursor-` alias, all-scroll, auto, cell, col-resize, context-menu, copy, crosshair, default, e-resize, ew-resize, grab, grabbing, help, move, n-resize, no-drop, none, not-allowed, ns-resize, pointer, progress, row-resize, s-resize, text, vertical-text, w-resize, wait, zoom-in, zoom-out
 - `decoration-` accent, accent-foreground, active-bg, app-accent-agents, app-accent-canvas, app-accent-chat, app-accent-collections, app-accent-dashboard, app-accent-events, app-accent-git, app-accent-mesh, app-accent-overview, app-accent-pipelines, app-accent-settings, app-accent-setup, app-accent-skills, app-accent-specs, app-accent-theme, backdrop, background, border, border-strong, border-subtle, card, card-foreground, currentColor, destructive, destructive-foreground, divider, foreground, hover-bg, hue-amber, hue-blue, hue-cyan, hue-fuchsia, hue-green, hue-indigo, hue-lime, hue-orange, hue-pink, hue-purple, hue-red, hue-rose, hue-sky, hue-teal, hue-violet, hue-yellow, info, info-foreground, inherit, input, muted, muted-foreground, popover, popover-foreground, primary, primary-foreground, primary-hover, ring, ring-color, scrim, scrollbar-thumb, scrollbar-thumb-hover, secondary, secondary-foreground, selected-bg, selected-border, sidebar, sidebar-accent, sidebar-accent-foreground, sidebar-border, sidebar-foreground, sidebar-primary, sidebar-primary-foreground, sidebar-ring, status-amber, status-blue, status-gray, status-green, status-orange, status-purple, status-red, status-yellow, success, success-foreground, surface-0, surface-1, surface-2, surface-3, surface-inverse, syntax-attr, syntax-comment, syntax-function, syntax-keyword, syntax-number, syntax-string, syntax-tag, syntax-type, syntax-variable, tone, tone-accent-bg, tone-accent-bg-solid, tone-accent-border, tone-accent-fg, tone-accent-ring, tone-bg, tone-border, tone-contrast, tone-default-bg, tone-default-bg-solid, tone-default-border, tone-default-fg, tone-default-ring, tone-destructive-bg, tone-destructive-bg-solid, tone-destructive-border, tone-destructive-fg, tone-destructive-ring, tone-fg, tone-info-bg, tone-info-bg-solid, tone-info-border, tone-info-fg, tone-info-ring, tone-muted-bg, tone-muted-bg-solid, tone-muted-border, tone-muted-fg, tone-muted-ring, tone-primary-bg, tone-primary-bg-solid, tone-primary-border, tone-primary-fg, tone-primary-ring, tone-ring, tone-success-bg, tone-success-bg-solid, tone-success-border, tone-success-fg, tone-success-ring, tone-warning-bg, tone-warning-bg-solid, tone-warning-border, tone-warning-fg, tone-warning-ring, transparent, warning, warning-foreground
-- `delay-` deliberate, fast, glacial, instant, medium, slow
-- `duration-` deliberate, fast, glacial, instant, medium, slow
+- `delay-` amble, cinematic, deliberate, fast, glacial, instant, medium, saunter, slow
+- `duration-` amble, cinematic, deliberate, fast, glacial, instant, medium, saunter, slow
 - `ease-` in, in-out, out, out-soft, spring
 - `fill-` accent, accent-foreground, active-bg, app-accent-agents, app-accent-canvas, app-accent-chat, app-accent-collections, app-accent-dashboard, app-accent-events, app-accent-git, app-accent-mesh, app-accent-overview, app-accent-pipelines, app-accent-settings, app-accent-setup, app-accent-skills, app-accent-specs, app-accent-theme, backdrop, background, border, border-strong, border-subtle, card, card-foreground, currentColor, destructive, destructive-foreground, divider, foreground, hover-bg, hue-amber, hue-blue, hue-cyan, hue-fuchsia, hue-green, hue-indigo, hue-lime, hue-orange, hue-pink, hue-purple, hue-red, hue-rose, hue-sky, hue-teal, hue-violet, hue-yellow, info, info-foreground, inherit, input, muted, muted-foreground, none, popover, popover-foreground, primary, primary-foreground, primary-hover, ring, ring-color, scrim, scrollbar-thumb, scrollbar-thumb-hover, secondary, secondary-foreground, selected-bg, selected-border, sidebar, sidebar-accent, sidebar-accent-foreground, sidebar-border, sidebar-foreground, sidebar-primary, sidebar-primary-foreground, sidebar-ring, status-amber, status-blue, status-gray, status-green, status-orange, status-purple, status-red, status-yellow, success, success-foreground, surface-0, surface-1, surface-2, surface-3, surface-inverse, syntax-attr, syntax-comment, syntax-function, syntax-keyword, syntax-number, syntax-string, syntax-tag, syntax-type, syntax-variable, tone, tone-accent-bg, tone-accent-bg-solid, tone-accent-border, tone-accent-fg, tone-accent-ring, tone-bg, tone-border, tone-contrast, tone-default-bg, tone-default-bg-solid, tone-default-border, tone-default-fg, tone-default-ring, tone-destructive-bg, tone-destructive-bg-solid, tone-destructive-border, tone-destructive-fg, tone-destructive-ring, tone-fg, tone-info-bg, tone-info-bg-solid, tone-info-border, tone-info-fg, tone-info-ring, tone-muted-bg, tone-muted-bg-solid, tone-muted-border, tone-muted-fg, tone-muted-ring, tone-primary-bg, tone-primary-bg-solid, tone-primary-border, tone-primary-fg, tone-primary-ring, tone-ring, tone-success-bg, tone-success-bg-solid, tone-success-border, tone-success-fg, tone-success-ring, tone-warning-bg, tone-warning-bg-solid, tone-warning-border, tone-warning-fg, tone-warning-ring, transparent, warning, warning-foreground
 - `fixed-` 
@@ -229,7 +229,7 @@ colour, or unit.
 - `tracking`: normal, tight, tighter, wide, wider
 - `shadow`: accent, card-rest, edge-top, hover, inset-soft, lg, md, none, sm, sticky, xl, xs
 - `z`: base, dialog, dropdown, elevated, max, overlay, popover, sticky, toast
-- `duration`: deliberate, fast, glacial, instant, medium, slow
+- `duration`: amble, cinematic, deliberate, fast, glacial, instant, medium, saunter, slow
 - `ease`: in, in-out, out, out-soft, spring
 - `border-width`: 0, 1, 2, 3, 4, 8
 - `opacity`: 0, 10, 100, 105, 110, 15, 20, 25, 30, 40, 5, 50, 60, 70, 75, 80, 85, 90, 95
@@ -271,7 +271,7 @@ TRIGGERS (hover, press, focus, focus-visible, enter, exit, view, scroll, loop) c
   parallax, at zero JS runtime cost. `view` = this element's passage through the viewport;
   `scroll` = the scroll container's total progress.
 
-PROPERTIES: scale, opacity, translate-y, translate-x, rotate. Plus the reserved key `stagger` — a DURATION (`'40ms'`), not a preset:
+PROPERTIES: scale, scale-x, scale-y, opacity, translate-y, translate-x, rotate. Plus the reserved key `stagger` — a DURATION (`'40ms'`), not a preset:
 it is the delay STEP between siblings arriving together, which is what turns a list
 that appears into a list that arrives.
 
@@ -283,7 +283,7 @@ that appears into a list that arrives.
 
 PRESETS (closed set — an unknown one fails the build):
 
-bounce, fade, fade-out, marquee, marquee-reverse, press, pulse, release, spin, spring:bouncy, spring:deliberate, spring:gentle, spring:snappy
+bounce, dim, drift, fade, fade-out, fill, marquee, marquee-reverse, pop, press, pulse, release, slip, spin, spring:bouncy, spring:deliberate, spring:gentle, spring:snappy, tilt
 
 ## Behavior — `use:` attaches, functions compose
 
