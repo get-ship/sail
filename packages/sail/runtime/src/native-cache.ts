@@ -29,7 +29,13 @@
 
 import { signal, type Signal } from './signal'
 import { onCleanup, currentScope, createScope, type EffectScope } from './effect-scope'
-import { isLiveSource, type LiveState, type LiveSignal, type LiveSource } from './live-state'
+import {
+  isLiveSource,
+  makeAbortController,
+  type LiveState,
+  type LiveSignal,
+  type LiveSource,
+} from './live-state'
 
 /** A cache identity: client-root + static member-path segments +
  *  (optionally) a tail of call-arg values. Compiler-derived, never
@@ -221,7 +227,7 @@ export class NativeCache {
     }
 
     const run = (): void => {
-      const controller = new AbortController()
+      const controller = makeAbortController()
       entry.abortController = controller
 
       // TYPE-DIRECTED ROUTING at the runtime type-resolved seam: the

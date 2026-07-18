@@ -59,6 +59,32 @@ import type { Signal } from './signal'
 export const toError = (err: unknown): Error =>
   err instanceof Error ? err : new Error(String(err))
 
+/** SSR/older isolates (ship-js's server environment) may not define
+ *  `AbortController`. A pull fetch must still RUN there — cancellation is a
+ *  browser concern — so fall back to a no-op controller whose `signal`
+ *  satisfies the `AbortSignal`-typed fetcher arg. `abort()` flips
+ *  `aborted` but wires no events (nothing to cancel server-side). */
+export function makeAbortController(): AbortController {
+  if (typeof AbortController !== 'undefined') return new AbortController()
+  const signal = {
+    aborted: false,
+    reason: undefined,
+    onabort: null,
+    throwIfAborted() {},
+    addEventListener() {},
+    removeEventListener() {},
+    dispatchEvent() {
+      return false
+    },
+  } as unknown as AbortSignal
+  return {
+    signal,
+    abort() {
+      ;(signal as { aborted: boolean }).aborted = true
+    },
+  } as unknown as AbortController
+}
+
 /** The pull-vs-push routing seam: a value is a PUSH source iff it carries
  *  a `subscribe` method. A `Promise` (or any plain value) is a PULL. This
  *  is the runtime realization of the ruling's "type-directed routing" —

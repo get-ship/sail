@@ -78,7 +78,7 @@
 
 import { signal, effect, untrack, type Signal } from './signal'
 import { onCleanup, createChildScope, withScope } from './effect-scope'
-import type { LiveState, LiveSignal, LiveSource } from './live-state'
+import { makeAbortController, type LiveState, type LiveSignal, type LiveSource } from './live-state'
 import { nativeQuery, useNativeCache, type QueryKey, type NativeCacheOpts } from './native-cache'
 
 export type { QueryKey } from './native-cache'
@@ -254,7 +254,7 @@ export function mutation<T>(
   const mutate = async (): Promise<T> => {
     const myToken = ++token
     state.set({ kind: 'loading' })
-    const controller = new AbortController()
+    const controller = makeAbortController()
     try {
       const value = await fn(controller.signal)
       if (myToken === token) {

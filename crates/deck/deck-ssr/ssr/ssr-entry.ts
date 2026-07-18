@@ -28,17 +28,24 @@ g.__shipServerRoute = route
 const container = dom.container()
 const dispose = mount(container)
 
-// Flush async `live()` sources before serializing (must-build #5):
-// a `<data live source="api.x()">` resolves over the host-dispatch wire — an
-// async op. Mounting renders the `loading` state synchronously; the wire's
+// Flush async data sources before serializing (must-build #5): a controller
+// `query(() => client.x())` resolves over the host-dispatch wire — an async
+// op. Mounting renders the `loading` state synchronously; the wire's
 // in-flight counter (`globalThis.__shipPending()`, maintained by the SDK's
 // `call`) lets us drain DETERMINISTICALLY: keep yielding while host calls are
-// outstanding, then a few quiet turns so each resolved op's `.then` → live
-// signal `.set` → bound effect → server-DOM write completes. Bounded so a
+// outstanding, then some quiet turns so each resolved op's `.then` → cache
+// entry `.set` → forwarding effect → outer signal `.set` → bound template
+// effect → server-DOM write completes. `query()` has a slightly deeper settle
+// chain than the old `live()` (the cache entry + re-keying forwarding effect
+// add hops), so the quiet budget is a touch more generous. Bounded so a
 // never-resolving source can't hang first paint.
 const pending = (g.__shipPending as undefined | (() => number)) ?? (() => 0)
+// Warm-up: a few unconditional turns let a controller's eager fetch dispatch
+// its host call before we start judging "quiet", so a source that hasn't
+// bumped `pending()` yet isn't mistaken for "nothing outstanding".
+for (let i = 0; i < 8; i++) await Promise.resolve()
 let quiet = 0
-for (let i = 0; i < 1000 && quiet < 3; i++) {
+for (let i = 0; i < 3000 && quiet < 12; i++) {
   await Promise.resolve()
   if (pending() > 0) quiet = 0
   else quiet++

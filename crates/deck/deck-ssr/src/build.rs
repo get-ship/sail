@@ -97,8 +97,15 @@ pub async fn synthesize_and_bundle_with(
     let authored = if let Some(p) = authored {
         Some(AuthoredController { specifier: path_str(p) })
     } else if let Some(inline_src) = inline.as_deref() {
+        // Lower `query()`/`mutation()`/`invalidate()` before writing the
+        // controller module — same step the `synthesize` CLI does
+        // (bin/sail-compiler.rs). Without it, a `query(() => client.m())`
+        // reaches the runtime with no compiler-derived key and throws. A
+        // no-op for controllers that use none of the three primitives.
+        let lowered = sail_compiler::check::query_keys::rewrite(inline_src)
+            .map_err(|e| anyhow!("synthesize (query keys): {}", e.render(inline_src)))?;
         let inline_path = build_dir.join("page.inline.controller.ts");
-        std::fs::write(&inline_path, inline_src)
+        std::fs::write(&inline_path, &lowered)
             .with_context(|| format!("write inline controller {}", inline_path.display()))?;
         Some(AuthoredController { specifier: path_str(&inline_path) })
     } else {
