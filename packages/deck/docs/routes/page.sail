@@ -27,7 +27,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ quickstart, layer
   <p role="doc-eyebrow">deck · 0.2.0</p>
   <h1>The standalone web framework for SAIL.</h1>
   <p role="doc-lead">
-    deck mounts SAIL views, routes them from the filesystem, server-renders or
+    deck mounts SAIL routes, routes them from the filesystem, server-renders or
     statically builds them, and serves every asset — with a dev server and
     state-preserving HMR. It is to SAIL what Next is to React.
   </p>

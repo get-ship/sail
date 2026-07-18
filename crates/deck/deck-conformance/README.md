@@ -1,7 +1,7 @@
 # deck-conformance — deck, standing on its own
 
 A **ship-free** deck app: `deck::router()` mounted on axum, serving a plain
-directory of `.sail` views with **no daemon, no ship domains, no
+directory of `.sail` routes with **no daemon, no ship domains, no
 `@ship/primitives`**. It is two things at once:
 
 1. **An instructional example** — the smallest real "how do I serve a deck
@@ -13,7 +13,7 @@ directory of `.sail` views with **no daemon, no ship domains, no
    perturb these tests.
 
 ```
-cargo run  -p deck-conformance      # serve on http://127.0.0.1:7878 (try /_deck/view/hello)
+cargo run  -p deck-conformance      # serve on http://127.0.0.1:7878 (try /_deck/route/hello)
 cargo test -p deck-conformance      # run the harness
 ```
 
@@ -24,7 +24,7 @@ Just two env vars + mounting the router:
 | Var | Meaning here |
 |---|---|
 | `SHIP_DEV_PROJECT_DIR` | App root holding `views/<name>/page.sail`. Set to `app/`. |
-| `SHIP_FIRST_PARTY_VIEWS` | **Unset** — a non-ship host has no first-party view bucket. |
+| `SHIP_FIRST_PARTY_VIEWS` | **Unset** — a non-ship host has no first-party route bucket. |
 
 ```rust
 unsafe { std::env::set_var("SHIP_DEV_PROJECT_DIR", app_dir()); }
@@ -45,10 +45,10 @@ Orthogonal: `DaemonMode::Development` (no-cache + reload) vs `Production`
 
 ## Slices (feature by feature)
 
-- [x] **1 — SSR baseline + assets.** Controller-less view, on-the-fly compile,
+- [x] **1 — SSR baseline + assets.** Controller-less route, on-the-fly compile,
   no build step. `tests/ssr_baseline.rs` (3 tests).
-- [x] **2 — Controller → bundling.** `views/counter` (signal + controller)
-  forces an on-demand Rolldown view bundle in `<app>/.deck/`. Integration:
+- [x] **2 — Controller → bundling.** `routes/counter` (signal + controller)
+  forces an on-demand Rolldown route bundle in `<app>/.deck/`. Integration:
   `tests/bundling.rs` (2 tests). End-to-end (real browser): `e2e/counter.sh` —
   SSR → hydrate(0) → click → 1, proving the whole loop with no daemon/ship.
 - [x] **3 — Reload.** `deck_dev_server` runs the bundler's FS watcher and wires
@@ -112,8 +112,8 @@ Still open:
 - **`Bundler` construction couples to `ship_substrate::ShipHome`.** Its
   constructor takes `&ShipHome` (used only to locate `sail-compiler` + a staging
   dir). A standalone deck should accept a plain compiler path + staging dir.
-- **View-host shell references ship surfaces.** It links
-  `/api/assets/view-tokens.css` (and the browser requests `/favicon.ico`); a
+- **Route-host shell references ship surfaces.** It links
+  `/api/assets/route-tokens.css` (and the browser requests `/favicon.ico`); a
   non-ship host 404s both — the only console errors left. deck should serve a
   default/empty token sheet, or not emit the link when no token source is set.
 - **Bundler out-dir must equal the resolver's project root.** `resolve_route_js`

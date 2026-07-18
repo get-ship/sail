@@ -1,7 +1,7 @@
 # deck
 
-deck is Ship's **host / meta-framework** — the layer that mounts SAIL views,
-does SSR + routing, serves every asset, and supplies views with a data-source
+deck is Ship's **host / meta-framework** — the layer that mounts SAIL routes,
+does SSR + routing, serves every asset, and supplies routes with a data-source
 client. It is to SAIL what Next is to React.
 
 ```
@@ -18,8 +18,8 @@ concepts.
 ## What deck owns
 
 **All frontend serving.** HTML scaffolds, framework bundles
-(runtime/dom/sdk-client), per-icon lucide, design tokens + theme CSS, per-view
-compiled JS + SSR payload, the view-host, space/shell scaffolds, the SPA
+(runtime/dom/sdk-client), per-icon lucide, design tokens + theme CSS, per-route
+compiled JS + SSR payload, the route-host, space/shell scaffolds, the SPA
 navigation handler, and the dev HMR firehose. If a byte reaches the browser, a
 deck handler served it. `shipd` serves no frontend — it is RPC + daemon only.
 
@@ -57,17 +57,17 @@ asset URLs become `/assets/<file>`, matching the on-disk layout. (`deck build
 
 | Crate | Role |
 |---|---|
-| `deck-core` | Transport-agnostic hosting logic. Produces a `DeckResponse` (status + bytes + headers); never speaks HTTP. Owns view resolution, SSR payload assembly, token/theme CSS, the setup flow, and the `DataPort` trait. |
+| `deck-core` | Transport-agnostic hosting logic. Produces a `DeckResponse` (status + bytes + headers); never speaks HTTP. Owns route resolution, SSR payload assembly, token/theme CSS, the setup flow, and the `DataPort` trait. |
 | `deck-axum` | The axum adapter. Thin `serve_*` shims map `DeckResponse` → `axum::Response`. `router()` registers deck's whole serving surface as one mountable unit; `multiplex_router()` is the live-data transport — **host-wired, not mounted by `deck dev`** (see the data seam below). |
-| `deck-host` | Pure host helpers shared across adapters: `render_helpers`, `resolver` (project-root + view resolution), `route_payload`. |
-| `deck-bundler` | The one bundler (#163). In-process Rolldown; a Rust plugin compiles `.sail` via the linked `sail-compiler`. Builds framework singletons, packs, views, and app scaffolds. |
+| `deck-host` | Pure host helpers shared across adapters: `render_helpers`, `resolver` (project-root + route resolution), `route_payload`. |
+| `deck-bundler` | The one bundler (#163). In-process Rolldown; a Rust plugin compiles `.sail` via the linked `sail-compiler`. Builds framework singletons, packs, routes, and app scaffolds. |
 | `deck-config` | Parses `deck.jsonc` into `DeckConfig` — the host's single configuration surface (below). |
-| `deck-cli` | The `deck` binary: `dev`, `build`, `build-assets`, `routes`, `emit`, `scaffold {view,component,pack}`. The `next`/`vite` analog. |
+| `deck-cli` | The `deck` binary: `dev`, `build`, `build-assets`, `routes`, `emit`, `scaffold {route,component,pack}`. The `next`/`vite` analog. |
 | `deck` | Thin re-export facade so a host writes `deck::*` for everything above. |
 
 ## The data seam — `DataPort`
 
-deck mounts views but owns no data. The host implements one trait
+deck mounts routes but owns no data. The host implements one trait
 (`deck_core::DataPort`) and injects it:
 
 ```rust
@@ -94,7 +94,7 @@ assets, SSR and HMR, but do **not** mount the multiplex or any real `DataPort`,
 so a `<data source="ship.x.y()" live />` binding is **not served** standalone —
 live data is a host capability today. Making it work without a host (JS server
 functions backing `DataPort::resolve`) is the server-functions arc (#32),
-targeted for a later release. Standalone views should render without server
+targeted for a later release. Standalone routes should render without server
 `<data>`, or run under a host (shipd) that wires the seam.
 
 ## Configuration surface — `deck.jsonc` / `DeckConfig`
@@ -107,7 +107,7 @@ code. Key fields (`deck-config/src/lib.rs`):
   components resolve from. The host declares its monorepo layout here; deck's
   resolver names none of it.
 - `packs[]` — the per-tag component resolver's roots.
-- `viewDirs` / `viewLeaf` — where views live and the entry filename.
+- `viewDirs` / `viewLeaf` — where routes live and the entry filename.
 - `watch[]` — dev-watch paths.
 
 The Ship app list (hub, spaces) lives in `apps.jsonc` at the workspace
@@ -148,7 +148,7 @@ deck build-assets          # bake framework + consumer bundles (in-process Rolld
 deck routes --root apps/shell --root apps/spaces
 # walks <root>/routes/ → emits <root>/routes.gen.ts (label = basename).
 # Repeatable; required at least once.
-deck scaffold view <name>  # new view (page.sail + manifest.jsonc)
+deck scaffold route <name>  # new route (page.sail + manifest.jsonc)
 deck scaffold component <tag>
 deck scaffold pack <name>
 deck emit --target <name> --out <dir>   # copy baked targets (+ chunk closure) out
@@ -184,5 +184,5 @@ Astro build needs and shells out to `cargo run -p deck-cli -- emit`.
   app exercising routing, dynamic `[param]` routes, layouts, controllers/reactivity,
   the data seam, HMR and the static build) AND the native-path release gate
   (`bunx playwright test` drives the real CLI; 6 specs).
-- `.claude/skills/sail-authoring` — authoring `.sail` views + components.
+- `.claude/skills/sail-authoring` — authoring `.sail` routes + components.
 - `docs/ship-adrs/` — the architectural decisions deck implements.

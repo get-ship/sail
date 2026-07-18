@@ -9,10 +9,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ routeExample, rea
 <article data-doc="true">
   <p role="doc-eyebrow">Routing</p>
   <h1>Dynamic routes</h1>
-  <p role="doc-lead">A directory segment in brackets is a parameter. <code>routes/posts/[id]/page.sail</code> matches <code>/posts/anything</code>, and the view reads the value as a signal.</p>
+  <p role="doc-lead">A directory segment in brackets is a parameter. <code>routes/posts/[id]/page.sail</code> matches <code>/posts/anything</code>, and the route reads the value as a signal.</p>
 
   <h2>The [param] segment</h2>
-  <p>deck emits a typed pattern — <code>/posts/:id</code> — for any <code>[param]</code> directory. Read the value with <code>route.params.&lt;name&gt;()</code>. It's a signal, so the view re-renders when the parameter changes during client-side navigation.</p>
+  <p>deck emits a typed pattern — <code>/posts/:id</code> — for any <code>[param]</code> directory. Read the value with <code>route.params.&lt;name&gt;()</code>. It's a signal, so the route re-renders when the parameter changes during client-side navigation.</p>
   <pre data-code-block="true">{routeExample}</pre>
   <pre data-code-block="true">{readExample}</pre>
 
