@@ -135,6 +135,7 @@ pub(super) fn emit_render(
     program: &Program,
     controller_specifier: &str,
     _component_tag: Option<&str>,
+    authored: bool,
 ) -> Result<String, CompileError> {
     if let Some(err) = unsupported_feature(&program.template) {
         return Err(err);
@@ -158,7 +159,14 @@ pub(super) fn emit_render(
             imports.join(", ")
         ));
     }
-    w.line(&format!("import {{ scope }} from {};", js_string(controller_specifier)));
+    if authored {
+        w.line(&format!(
+            "import {{ scope, __disposeAuthoredSetup }} from {};",
+            js_string(controller_specifier)
+        ));
+    } else {
+        w.line(&format!("import {{ scope }} from {};", js_string(controller_specifier)));
+    }
     w.nl();
     if !walked.module_hoists.is_empty() {
         w.push_str(&walked.module_hoists);
@@ -190,7 +198,20 @@ pub(super) fn emit_render(
         w.push_str(&styles_install);
     }
     w.push_str(&walked.body);
-    w.line("return () => { for (const c of __cleanups) { try { c(); } catch (e) { /* dispose */ } } };");
+    if authored {
+        // Tear down the authored controller's setup scope LAST: any
+        // `query()`'s cache is homed on it (see `__disposeAuthoredSetup`'s
+        // definition), and disposing it aborts in-flight fetches. The
+        // caller (ssr-entry.ts) invokes this disposer only after first
+        // paint is serialized, so a still-settling query never gets its
+        // result discarded — it either landed already or is genuinely
+        // bounded-out (see the SSR entry's settle-deadline race).
+        w.line(
+            "return () => { for (const c of __cleanups) { try { c(); } catch (e) { /* dispose */ } } __disposeAuthoredSetup(); };",
+        );
+    } else {
+        w.line("return () => { for (const c of __cleanups) { try { c(); } catch (e) { /* dispose */ } } };");
+    }
     w.leave();
     w.line("}");
     Ok(w.into_string())

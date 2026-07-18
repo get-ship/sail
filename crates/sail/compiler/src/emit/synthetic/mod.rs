@@ -167,7 +167,8 @@ pub fn emit_synthetic(
 
 
     let controller_ts = emit_controller(program, manifest, &used, authored, mode)?;
-    let render_ts = render::emit_render(program, controller_specifier, component_tag)?;
+    let render_ts =
+        render::emit_render(program, controller_specifier, component_tag, authored.is_some())?;
     let render_client_ts =
         render::emit_render_client(program, controller_specifier, component_tag)?;
     Ok(SyntheticOutput { controller_ts, render_ts, render_client_ts, used_clients: used })
@@ -342,13 +343,21 @@ fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest
     // Run inside a scope: the controller's setup may call the ambient
     // `mount(fn)`/`onCleanup(fn)` (see the import comment above) — without a
     // current scope `mount()` throws `SuiMountOutsideSetupError`. The scope
-    // is disposed immediately after: this is a one-shot SSR pass, nothing
-    // here ever fires a registered mount() callback or needs its cleanups
-    // to outlive the render.
+    // is NOT disposed here: a `query()`/`nativeQuery()` source homes its
+    // cache on this scope as owner-tree root (`useNativeCache()`), and its
+    // in-flight PULL fetch must survive past `setup()` returning — disposing
+    // synchronously here would mark the cache entry `disposed` before the
+    // host-dispatch promise settles, discarding the resolved value and
+    // leaving first paint stuck on `loading` regardless of how long the SSR
+    // entry waits (see native-cache.ts's `disposed` guard in `fetch()`).
+    // Disposal is exported instead — `render.ts`'s `mount()` disposer calls
+    // it only after SSR has flushed pending queries and serialized first
+    // paint (see `render.rs`'s `emit_render`), so this scope's lifetime
+    // spans the whole one-shot render, not just `setup()`.
     w.line("const __authoredSetupScope = createScope();");
     w.line(
         "const __authoredScope = withScope(__authoredSetupScope, () => __authored.setup(__ctx)) as __AuthoredScope;",
     );
-    w.line("__authoredSetupScope.dispose();");
+    w.line("export const __disposeAuthoredSetup = (): void => { __authoredSetupScope.dispose(); };");
     w.nl();
 }
