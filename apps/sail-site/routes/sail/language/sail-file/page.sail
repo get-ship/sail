@@ -1,13 +1,9 @@
 <!--
-  /language/sail-file — THE LANGUAGE, chapter one: The .sail file.
-  Frame (ruled): file walk with the data-flow through-line (props in →
-  signals between → events out). The walked file is the intro's real
-  <demo-player>, shown in SLICES, never dumped. Restraint: styling, blocks
-  depth, signals depth, data, motion each get one line + a link, no more.
-  Truth-map: setup-return rule + boundary-redirects experience-verified;
-  component-vs-page distinction taught explicitly (confusion risk, #89);
-  slots kept brief (depth under-tested — audit item); ctx phrasing chosen to
-  survive #110 either way.
+  /sail/language/sail-file — chapter 1: Components. Builds ONE bespoke
+  component (<departures-board>, src/departures-board/) and walks its file
+  slice by slice: template → scope → controller → flow → nesting. The live
+  board leads; every snippet is a slice of the real file. No backlinks to
+  other chapters' demos, no negative-space claims about other frameworks.
 -->
 
 <controller>
@@ -20,16 +16,25 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="4">
+<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">The language</p>
-  <h1>The .sail file</h1>
-
+  <h1>Components</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    One <code>.sail</code> file is one component, and a component is a tag.
-    There is no wrapper class, no registration step, no separate stylesheet
-    or test-id ceremony — the file is the whole thing. This chapter walks one
-    real file, the music player from the <a href="/sail/overview">Introduction</a>,
-    part by part.
+    A component is one <code>.sail</code> file. This chapter builds this one —
+    a departures board that runs itself: the boarding flight leaves, the next
+    one starts boarding, a new city rolls onto the bottom.
+  </p>
+
+  <departures-board title="Departures — SFO">
+    <p slot="footer" sx="mt-3 text-xs text-muted-foreground">
+      Gate changes are announced. Allegedly.
+    </p>
+  </departures-board>
+
+  <p>
+    Everything the board does — the rotating list, the departed counter, the
+    status badges, the footer line — lives in one file. The rest of this
+    chapter is that file, part by part.
   </p>
 
   <h2>The shape</h2>
@@ -43,84 +48,97 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>The template</h2>
   <p>
-    Markup that reads like HTML, because it mostly is. Braces are
-    expressions: <code>&#123;position()&#125;</code> reads a value, and when that
-    value changes, only that binding updates — the template reads state, and
-    nothing in it ever computes state. Flow is spelled with blocks —
-    <code>&#123;#if&#125;</code> here swaps the equalizer for idle bars; lists use
-    <code>&#123;#for&#125;</code> with a required <code>key</code>. Literal braces
-    in text are escaped as strings.
+    The board's template, in full. Braces are expressions:
+    <code>&#123;departed()&#125;</code> reads a value, and when that value
+    changes, only that text node updates. Lists are spelled
+    <code>&#123;#for&#125;</code> with a required <code>key</code> — as rows
+    shift up the board, the key tells the renderer which row is which, so DOM
+    nodes move instead of being rewritten. <code>&#123;#match&#125;</code>
+    picks a badge per status. The blocks get their full treatment in
+    <a href="/sail/language/templates">Templates</a>; here, notice how little
+    of this is not plain HTML.
   </p>
   <code-block code={code.template}></code-block>
-  <p sx="text-sm text-muted-foreground">
-    Blocks, keying, and expression rules in depth: <a href="/sail/language/templates">Templates</a>.
-    The <code>sx</code> attributes are the styling system — one line here,
-    a whole chapter at <a href="/sail/language/styling">Styling</a>.
-  </p>
 
   <h2>The scope</h2>
   <p>
-    The contract. Props are declared with defaults, and the declaration is
-    what the compiler types the component with — a consumer passing a prop
-    that isn't declared, or the wrong shape, is a compile error, not a
-    runtime surprise. This is the language's standing rule: the surface is
-    declared, never discovered.
+    <code>&lt;scope&gt;</code> is the component's static surface — everything
+    that is true about it before it runs. The board declares a type and one
+    prop:
   </p>
   <code-block code={code.scope}></code-block>
+  <p>
+    Three kinds of member live here. <strong>Props</strong> are the
+    component's inputs. A prop with a default is an optional attribute; a
+    prop with a type and no default is a contract the parent must fill:
+  </p>
+  <code-block code={code.scopeTyped}></code-block>
+  <p>
+    <strong>Types</strong> — <code>Flight</code> is ordinary TypeScript, and
+    because it is declared in scope the controller and the template's
+    expressions can use it without an import. And <strong>variants</strong> —
+    a component's named looks, covered with the rest of
+    <a href="/sail/language/styling">styling</a>. Using a prop nobody
+    declared, or passing the wrong shape, is a compile error, not a runtime
+    surprise.
+  </p>
 
   <h2>The controller</h2>
   <p>
-    TypeScript that runs when the component mounts. Props arrive on the
-    setup's input, typed from the scope; signals hold local state; and the
-    one rule that governs everything: <strong>what setup returns is the
-    template's entire vocabulary.</strong> A name the template uses that
-    setup didn't return is a compile error that lists what is in scope.
-    Lifecycle is ambient — an <code>effect</code> cleans up by returning a
-    function, and the component cleans up on unmount without a hook to
-    remember.
+    The controller owns the component's state and behavior. It runs once per
+    mounted instance, and <strong>whatever it returns is the template's
+    entire vocabulary</strong> — the template can read
+    <code>flights()</code> and <code>departed()</code> because the controller
+    returned them, and nothing it didn't return is reachable.
+  </p>
+  <p>
+    The board keeps two signals and one effect. A <strong>signal</strong> is
+    a value that knows who reads it. An <strong>effect</strong> is a
+    computation that runs once, tracks every signal it read, and re-runs when
+    any of them change; if it returns a function, that runs first as cleanup.
+    The board's effect tracks nothing — it just starts the clock, and hands
+    back the cleanup that stops it when the board unmounts:
   </p>
   <code-block code={code.controller}></code-block>
-  <p>
-    Read the effect closely and you have the whole reactive model: it tracks
-    <code>ctx.playing()</code>, so pausing re-runs it, and its cleanup stops
-    the clock. Signals in depth: <a href="/sail/language/state">State</a>.
-  </p>
 
   <h2>The flow</h2>
   <p>
-    Props in, signals between, events out. The Introduction drives this exact
-    component with one signal — and the wiring is one attribute:
+    Now trace one tick of the board through the file, because this loop is
+    the whole model. The interval fires and writes
+    <code>flights.set(...)</code> — state changes <em>only</em> because
+    something wrote it. The template reads <code>flights()</code>, so the
+    keyed <code>&#123;#for&#125;</code> reconciles: the departed row's DOM
+    leaves, four rows shift up in place, one row enters. The
+    <code>departed</code> write updates exactly one text node. Nothing else
+    in the component runs — no re-render, no lifecycle to reason about.
+  </p>
+  <p>
+    That is the direction of everything in SAIL: <strong>the template reads
+    state; handlers and effects write it</strong>, and data a parent wants a
+    child to have arrives as props. When you read an unfamiliar component,
+    you always know where a value can change: find its writes in the
+    controller, and you have the complete list.
+  </p>
+
+  <h2>Nested components</h2>
+  <p>
+    A compiled component is a custom element, so using one is writing its
+    tag — this page's own source contains exactly what you'd expect:
   </p>
   <code-block code={code.usage}></code-block>
   <p>
-    Events go the other way with <code>on:</code> — a handler writes a
-    signal, the template reads it, and the loop closes. That loop is the
-    entire mental model.
+    Children are the other half of nesting. The board places a named
+    <code>&lt;slot&gt;</code> after its rows:
   </p>
-
-  <h2>Children</h2>
+  <code-block code={code.slotDef}></code-block>
   <p>
-    A component receives content the platform way: <code>&lt;slot&gt;</code>.
+    …and whoever uses the board projects content into it. The footer line on
+    the live board above is not the board's — it belongs to this page:
   </p>
-  <code-block code={code.slot}></code-block>
-
-  <h2>The boundaries</h2>
-  <p>
-    Each part refuses what isn't its job: the template can only speak names
-    the scope and setup expose; the controller has unrestricted logic but no
-    styling access; styling speaks tokens. When you cross a line, the error
-    names the correct form — the boundaries are how five hundred files stay
-    one system.
-  </p>
-
-  <p sx="text-sm text-muted-foreground">
-    A page (<code>routes/…/page.sail</code>) is this same file — routing and
-    mounting are <a href="/deck">deck</a>'s job.
-  </p>
+  <code-block code={code.slotUse}></code-block>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
     <a variant="solid" tone="primary" href="/sail/language/state">State →</a>
     <a variant="default" href="/sail/language/templates">Templates</a>
-    <a variant="default" href="/sail/language/styling">Styling</a>
   </row>
 </column>

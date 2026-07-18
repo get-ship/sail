@@ -30,7 +30,7 @@ export default controller(() => {
       <a href="/sail/behavior" aria-current={path() === '/sail/behavior' ? 'page' : null}>Actions</a>
 
       <label>The language</label>
-      <a href="/sail/language/sail-file" aria-current={path() === '/sail/language/sail-file' ? 'page' : null}>The .sail file</a>
+      <a href="/sail/language/sail-file" aria-current={path() === '/sail/language/sail-file' ? 'page' : null}>Components</a>
       <a href="/sail/language/state" aria-current={path() === '/sail/language/state' ? 'page' : null}>State</a>
       <a href="/sail/language/templates" aria-current={path() === '/sail/language/templates' ? 'page' : null}>Templates</a>
       <a href="/sail/language/styling" aria-current={path() === '/sail/language/styling' ? 'page' : null}>Styling</a>

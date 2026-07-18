@@ -1,63 +1,91 @@
-// Snippets for /language/sail-file — SLICES of a real component
-// (apps/sail-site/src/demo-player/demo-player.sail, the intro's player),
-// walked part by part. Never the whole file at once (ruling: no code dumps).
+// Snippets for /sail/language/sail-file — SLICES of one real component
+// (apps/sail-site/src/departures-board/departures-board.sail, the board at the
+// top of the page), walked part by part. Never the whole file at once.
 export const code = {
-  shape: `<!-- the contract: props, variants, types -->
-<scope>
+  shape: `<scope>
   props: {
-    playing = true
+    title = 'Departures'
   }
 </scope>
 
-<!-- behavior: TypeScript, signals -->
 <controller>
 import { controller } from '@ship/sail-runtime'
 export default controller(() => ({}))
 </controller>
 
-<!-- the template: markup -->
-<card>Signals in the Rain</card>`,
+<card>{title()}</card>`,
 
-  template: `<card sx="p-3 w-full">
-  <row gap="3" align="center" nowrap>
-    <column gap="1" sx="grow-1 min-w-0">
-      <strong sx="text-sm truncate">Signals in the Rain</strong>
-      <progress value={position()} max="100"></progress>
-    </column>
-    {#if playing()}
-      …equalizer bars…
-    {:else}
-      …idle bars…
-    {/if}
+  template: `<card sx="p-4 w-full">
+  <row align="center" justify="between" nowrap>
+    <strong sx="uppercase tracking-wide text-sm">{title()}</strong>
+    <span sx="text-xs text-muted-foreground font-mono">{departed()} departed</span>
   </row>
+  <column gap="1" sx="mt-3 font-mono text-sm">
+    {#for f of flights() key={f.id}}
+      <row align="center" gap="3" nowrap>
+        <span sx="grow-1 min-w-0 truncate">{f.city}</span>
+        <span sx="text-muted-foreground">{f.gate}</span>
+        {#match f.status}
+          {:case 'boarding'} <badge tone="success">Boarding</badge>
+          {:case 'delayed'}  <badge tone="destructive">Delayed</badge>
+          {:default}         <badge tone="muted">On time</badge>
+        {/match}
+      </row>
+    {/for}
+  </column>
 </card>`,
 
   scope: `<scope>
+  type Flight = {
+    id: string
+    city: string
+    gate: string
+    status: 'boarding' | 'on-time' | 'delayed'
+  }
   props: {
-    playing = true
+    title = 'Departures'
+  }
+</scope>`,
+
+  scopeTyped: `<scope>
+  props: {
+    title = 'Departures'      /* has a default — the attribute is optional  */
+    airport: string           /* typed, no default — the parent must fill  */
   }
 </scope>`,
 
   controller: `<controller>
 import { controller, signal, effect } from '@ship/sail-runtime'
-import type { Scope } from './demo-player.sail'
 
-export default controller((ctx: Scope) => {
-    const position = signal(23)
-    effect(() => {
-      if (!ctx.playing()) return
-      const t = setInterval(() => position.set((p) => (p + 1) % 100), 150)
-      return () => clearInterval(t)
-    })
-    return { position }
+export default controller(() => {
+  const flights = signal<Flight[]>([/* five rows */])
+  const departed = signal(0)
+
+  effect(() => {
+    const t = setInterval(() => {
+      flights.set((rows) => {
+        const [head, ...rest] = rows
+        if (head) departed.set((n) => n + 1)
+        return [...rest, nextFlight()]
+      })
+    }, 2400)
+    return () => clearInterval(t)
+  })
+
+  return { flights, departed }
 })
 </controller>`,
 
-  usage: `<demo-player playing={playing()}></demo-player>`,
+  usage: `<departures-board title="Departures — SFO"></departures-board>`,
 
-  slot: `<!-- a component renders its children where it places <slot> -->
-<card><slot></slot></card>
+  slotDef: `<card sx="p-4 w-full">
+  ...the board...
+  <slot name="footer"></slot>
+</card>`,
 
-<!-- …so users write: -->
-<my-panel>Anything in here lands at the slot.</my-panel>`,
+  slotUse: `<departures-board title="Departures — SFO">
+  <p slot="footer" sx="mt-3 text-xs text-muted-foreground">
+    Gate changes are announced. Allegedly.
+  </p>
+</departures-board>`,
 }
