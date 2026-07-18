@@ -1,9 +1,9 @@
 <!--
-  /sail/language/templates — chapter 3. The read surface of the language:
-  expressions, branches, lists (and the keyed-for refusal, quoted verbatim),
-  events, two-way form bindings, slots. Every claim here is checked against
-  the compiler: the block set is tokenize.rs, the modifier list is attrs.rs,
-  the bind: desugaring is runtime bind.ts, the diagnostic is real output.
+  /sail/language/templates — chapter 3, round 2 per owner review: teach, don't
+  sell. Lede says what the chapter IS. "Control flow", not "Branching". The
+  keyed-for requirement is mentioned, not staged. Events and bind: are taught
+  neutrally. bind unification question filed as a claim
+  (c-2026-07-18T22-42-14-627Z-dbd7ee55); dialog replaces the div example.
 -->
 
 <controller>
@@ -20,35 +20,32 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">The language</p>
   <h1>Templates</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    A template reads state; handlers write it. The last chapter was the state
-    side of that sentence. This one is the markup: expressions, branches,
-    lists, events, form bindings, and slots.
+    The template is the markup: expressions, control flow, events, form
+    bindings, and slots. It reads state; handlers write it.
   </p>
 
   <h2>How a template renders</h2>
   <p>
     The compiler turns the markup into real DOM the browser clones once at
-    mount. Every dynamic part — a text expression, an attribute binding, a
-    branch — becomes a subscription to the signals it reads. When a signal
-    changes, only its subscribers run: the one text node updates, the one
-    branch swaps. There is no re-render and no virtual DOM, because nothing
-    needs diffing — the compiler already knows exactly which node each
-    signal touches.
+    mount, and every dynamic part — a text expression, an attribute binding,
+    a branch — becomes a subscription to the signals it reads. The compiler
+    knows exactly which node each signal touches, so when a signal changes,
+    the update goes straight to that node.
   </p>
 
   <h2>Reading</h2>
   <p>
-    Call a signal anywhere an expression goes. That is the entire binding
-    syntax — the same braces work in text and in attributes.
+    Call a signal anywhere an expression goes — the same braces work in text
+    and in attributes.
   </p>
   <code-block code={code.read}></code-block>
 
-  <h2>Branching</h2>
+  <h2>Control flow</h2>
   <p>
-    Flow is spelled with blocks. Blocks splice into the surrounding markup
-    without a wrapper element, so control flow never shows up in your DOM.
-    <code>&#123;#if&#125;</code> takes <code>&#123;:else if&#125;</code> and
-    <code>&#123;:else&#125;</code> arms:
+    Flow is spelled with blocks, and blocks splice into the surrounding
+    markup without a wrapper element. <code>&#123;#if&#125;</code> takes
+    <code>&#123;:else if&#125;</code> and <code>&#123;:else&#125;</code>
+    arms:
   </p>
   <code-block code={code.ifBlock}></code-block>
   <p>
@@ -56,55 +53,52 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     reads like the data it is matching on:
   </p>
   <code-block code={code.matchBlock}></code-block>
-
-  <h2>Lists</h2>
   <p>
-    <code>&#123;#for&#125;</code> renders a list, and <code>key</code> is
-    required — it tells the reconciler which DOM row is which, so a reorder
-    moves nodes instead of rewriting them, and the input you were typing in
-    keeps its cursor. Leaving the key off is the classic lost-focus bug, in
-    every framework. Here it does not compile:
+    <code>&#123;#for&#125;</code> renders a list. <code>key</code> identifies
+    each row, so a reorder moves DOM nodes instead of rewriting them —
+    focus, selection, and in-place edits survive. Leaving it off is a
+    compile error.
   </p>
   <code-block code={code.forBlock}></code-block>
-  <p>Compiling the same block without <code>key</code> stops with:</p>
-  <code-block code={code.forKeyError}></code-block>
 
   <h2>Events</h2>
   <p>
-    <code>on:</code> attaches any DOM event, and the handler is where state
-    gets written. The handler must be a name the controller returned — the
-    template cannot reach anything else.
+    <code>on:</code> attaches any DOM event. The handler is an expression
+    over the controller's returned scope:
   </p>
   <code-block code={code.events}></code-block>
   <p>
-    Modifiers declare intent instead of boilerplate:
-    <code>|prevent</code>, <code>|stop</code>, <code>|self</code>,
-    <code>|trusted</code>, <code>|key:Escape</code>,
-    <code>|debounce:200</code>, <code>|throttle:100</code>. They chain, and
-    you never write <code>e.preventDefault()</code> by hand.
+    Modifiers go after the event name, separated by <code>|</code>:
+    <code>prevent</code> calls <code>preventDefault</code> before the
+    handler, <code>stop</code> stops propagation, <code>self</code> fires
+    only when the event target is the element itself,
+    <code>key:Escape</code> filters a keyboard event to one key, and
+    <code>debounce:200</code> / <code>throttle:100</code> rate-limit in
+    milliseconds. They chain.
   </p>
   <code-block code={code.modifiers}></code-block>
 
-  <h2>Two-way, exactly twice</h2>
+  <h2>Form bindings</h2>
   <p>
-    Form controls are the one place a read and a write happen on the same
-    attribute. <code>bind:value</code> keeps a string signal and an input in
-    sync — it is precisely an effect that writes <code>.value</code> plus an
-    <code>input</code> listener that writes the signal back.
-    <code>bind:checked</code> does the same for checkboxes and radios, on the
-    <code>change</code> event. Everything else in a template flows one way.
+    <code>bind:</code> connects a form control to a signal in both
+    directions: the signal's value sets the control, and user input writes
+    the signal back. <code>bind:value</code> is for text-valued controls —
+    inputs, textareas, selects — and syncs on the <code>input</code> event;
+    <code>bind:checked</code> is for checkboxes and radios, on
+    <code>change</code>. Everything else in a template flows one way.
   </p>
   <code-block code={code.twoWay}></code-block>
 
-  <h2>Slots</h2>
+  <h2>Children and slots</h2>
   <p>
-    Components compose by projection: children you write inside a component's
-    tag land on its <code>&lt;slot&gt;</code>. Named slots give a component
-    more than one landing place — this is the stdlib
-    <code>&lt;field&gt;</code>'s template:
+    Whatever you write between a component's tags is its
+    <strong>children</strong>, and the component decides where children land
+    by placing <code>&lt;slot&gt;</code>. Named slots give it more than one
+    landing place — this is the stdlib <code>&lt;field&gt;</code>'s
+    template:
   </p>
   <code-block code={code.slotDef}></code-block>
-  <p>Which callers fill by name:</p>
+  <p>Callers fill the named places with <code>slot="…"</code>:</p>
   <code-block code={code.slotUse}></code-block>
 
   <p>

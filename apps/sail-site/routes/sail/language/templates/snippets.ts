@@ -22,19 +22,13 @@ export const code = {
   <tr><td>{row.name}</td></tr>
 {/for}`,
 
-  forKeyError: `error: [sail-for-key] {#for} block has no \`key=\` — the reconciler
-  will fall back to positional matching and DOM identity (focus, selection,
-  in-place edits) will be lost on reorder.
-  suggest: Add \`key={EXPR}\` to the for-block header, where EXPR returns a
-  stable unique value per item — e.g. \`{#for item of items key={item.id}}\`.`,
-
   events: `<button on:click={() => count.set((n) => n + 1)}>
   clicked {count()} times
 </button>`,
 
   modifiers: `<form on:submit|prevent={save}>...</form>
 <input on:input|debounce:200={search} />
-<div on:keydown|key:Escape={close}>...</div>`,
+<dialog on:keydown|key:Escape={close}>...</dialog>`,
 
   twoWay: `<input bind:value={draft} />
 <input type="checkbox" bind:checked={agreed} />`,
