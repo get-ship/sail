@@ -6,25 +6,32 @@
 //! a token for, set imperatively, untokenized, with nothing checking it. That is
 //! where a blocked agent goes next, and it was the largest hole in the language.
 //!
-//! THE ACCESS IS THE VIOLATION, not the write. `el.style.color = 'red'` and
-//! `const s = el.style` are both errors, because banning only the write leaves
-//! aliasing as a trivial escape and a rule you can rename your way out of is not
-//! a rule. The single sanctioned form is a CUSTOM PROPERTY:
+//! THE ACCESS IS THE VIOLATION, not the write. `el.style.color = 'red'`,
+//! `const s = el.style`, and `el.style.setProperty('--x', v)` are ALL errors in a
+//! controller. `.setProperty('--x')` was once the sanctioned hatch here; the owner
+//! ruling of 2026-07-18 CLOSED it — a custom property set from a controller is
+//! still CSS written in JavaScript, and the `(--x)`-declared reflection
+//! (inv-dynamic-style-is-declared, 2026-07-17) exists precisely so a controller
+//! never has to touch `.style` to move a runtime value into CSS. Banning only the
+//! write leaves aliasing as a trivial escape; a rule you can rename your way out
+//! of is not a rule, so the ACCESS is what fails.
 //!
-//! ```text
-//! el.style.setProperty('--row-y', y)       // legal — a value, not a design
-//! el.style.transform = `translateY(${y})`  // ERROR
-//! ```
+//! Where a runtime value goes instead — three intents, none through `.style`:
 //!
-//! Why the custom property is not a hatch: a value that comes from measurement or
-//! from the user (a dragged node, a resized column) is DATA, not design. There is
-//! no token for 342px and there should not be. The property itself stays in sx —
-//! `sx="translate-y-(--row-y)"` — where it is auditable and tokenized; only the
-//! number crosses from JS. That is the platform's own mechanism, used with the
-//! grain.
+//!   1. A value you own or compute → declare a signal, return it, read `(--x)`:
+//!      `const rowY = signal(0)` … `return { rowY }` … `sx="translate-y-(--row-y)"`.
+//!      The compiler reflects the signal onto the host as an inline custom
+//!      property; no `.style`.
+//!   2. Measurement-driven geometry (a dragged node, a measured column) → a
+//!      `use:` action. The action OWNS its custom property and is the sanctioned
+//!      home for `el.style.setProperty`; actions live in the framework runtime
+//!      (`packages/sail/runtime/src/**`), which this rule never lints.
+//!   3. A design token (theming) → tokens live in `tokens.css`; in dev, edit the
+//!      file and HMR re-themes. A live per-subtree override is a signal read as
+//!      `(--x)` on a wrapper — the inline custom property inherits to the subtree.
 //!
 //! Also banned, because each is the same hole wearing a different hat:
-//!   `.classList` (a class is a CSS target — see `sail-no-class`)
+//!   `.classList` writes (a class is a CSS target — see `sail-no-class`)
 //!   `setAttribute('style' | 'class', …)`
 //!   `adoptedStyleSheets`, `new CSSStyleSheet`, `createElement('style')`
 
@@ -50,7 +57,6 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         source,
         file: path.to_path_buf(),
         findings: Vec::new(),
-        sanctioned: Vec::new(),
     };
     visitor.visit_program(&ret.program);
     visitor.findings.sort_by_key(|f| (f.line, f.col));
@@ -61,9 +67,6 @@ struct StyleVisitor<'src> {
     source: &'src str,
     file: PathBuf,
     findings: Vec<Finding>,
-    /// Spans of `.style` accesses that ARE the sanctioned custom-property call —
-    /// recorded on the way down so the member visit does not also flag them.
-    sanctioned: Vec<Span>,
 }
 
 impl<'src> StyleVisitor<'src> {
@@ -81,45 +84,13 @@ impl<'src> StyleVisitor<'src> {
     }
 }
 
-/// `el.style.setProperty('--x', …)` — the one legal shape. The property name must
-/// be a literal custom property: `setProperty(prop, …)` with a computed name is
-/// refused, because a name we cannot read is a name we cannot check.
-fn is_custom_property_set(expr: &CallExpression<'_>) -> Option<Span> {
-    let Expression::StaticMemberExpression(call_member) = &expr.callee else {
-        return None;
-    };
-    if call_member.property.name.as_str() != "setProperty" {
-        return None;
-    }
-    let Expression::StaticMemberExpression(style) = &call_member.object else {
-        return None;
-    };
-    if style.property.name.as_str() != "style" {
-        return None;
-    }
-    let first = expr.arguments.first()?.as_expression()?;
-    let Expression::StringLiteral(name) = first else {
-        return None;
-    };
-    if !name.value.starts_with("--") {
-        return None;
-    }
-    Some(style.span)
-}
-
 impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
-        if let Some(style_span) = is_custom_property_set(expr) {
-            self.sanctioned.push(style_span);
-            // Only the arguments need walking; the callee IS the sanctioned form.
-            for arg in &expr.arguments {
-                if let Some(e) = arg.as_expression() {
-                    self.visit_expression(e);
-                }
-            }
-            return;
-        }
-
+        // `el.style.setProperty('--x', …)` is NOT exempt here. This rule only
+        // ever runs on controller / pack sources (the framework runtime, where
+        // `use:` actions live, is exempt at the dispatch level); inside those,
+        // a custom-property write is still `.style` from JavaScript. The
+        // `.style` member access below catches it — no special-case needed.
         if let Expression::StaticMemberExpression(m) = &expr.callee {
             let name = m.property.name.as_str();
 
@@ -133,7 +104,7 @@ impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
                 self.report(
                     expr.span,
                     format!("controllers do not `setAttribute('{attr}', …)` — that is CSS with a JavaScript accent."),
-                    "Style with sx. For a runtime value use `el.style.setProperty('--x', v)` and read it in sx: `translate-y-(--x)`.",
+                    "Style with sx. For a runtime value, declare a signal and read it in sx (`translate-y-(--row-y)`), or use a `use:` action for measurement-driven geometry — never `.style`.",
                 );
             }
 
@@ -183,17 +154,24 @@ impl<'a, 'src> Visit<'a> for StyleVisitor<'src> {
         let name = m.property.name.as_str();
 
         // THE ACCESS is the violation. `const s = el.style` must fail, or the ban
-        // is one rename deep.
-        if name == "style" && !self.sanctioned.contains(&m.span) {
+        // is one rename deep. `.setProperty('--x')` is included: it is `.style`
+        // from JavaScript like any other, closed by the 2026-07-18 ruling.
+        if name == "style" {
             self.report(
                 m.span,
                 "controllers do not touch `.style` — a CSS property set from JavaScript \
-                 is untokenized CSS that nothing can check."
+                 is untokenized CSS that nothing can check (`.setProperty('--x', v)` \
+                 included: a custom property set from a controller is still CSS in JS)."
                     .to_string(),
-                "Style with sx. A value that comes from measurement or from the user is DATA, \
-                 not design: set it as a custom property — `el.style.setProperty('--row-y', y)` \
-                 — and read it in sx: `sx=\"translate-y-(--row-y)\"`. The property stays where it \
-                 can be audited; only the number crosses.",
+                "Move the value into CSS without `.style` — three intents: \
+                 (1) a value you own or compute — declare a signal, return it, read it in sx: \
+                 `const rowY = signal(0)` … `return { rowY }` … `sx=\"translate-y-(--row-y)\"` \
+                 (the compiler reflects it onto the host). \
+                 (2) measurement-driven geometry (a dragged node, a measured column) — a `use:` \
+                 action owns the property: `<node use:gridTracks={tracks}>`. \
+                 (3) a design TOKEN (theming) — tokens live in tokens.css (edit the file; HMR \
+                 re-themes), or for a live per-subtree override declare a signal and read `(--x)` \
+                 on a wrapper (the inline custom property inherits to the subtree).",
             );
         }
 
@@ -270,14 +248,33 @@ mod tests {
     }
 
     #[test]
-    fn a_custom_property_is_data_not_design_and_is_the_one_way_through() {
-        assert!(run("el.style.setProperty('--row-y', y)").is_empty());
-        assert!(run("host.style.setProperty('--sail-grid-template', tracks)").is_empty());
-        // …but only a CUSTOM property. A CSS property through the same call is the
-        // same hole.
+    fn setproperty_of_a_custom_property_is_now_closed_in_a_controller() {
+        // The 2026-07-18 ruling: `.setProperty('--x')` is `.style` from
+        // JavaScript like any other, and is CLOSED in controller/pack source.
+        // (It was legal here before; this is the red/green gate for the closure.)
+        assert_eq!(run("el.style.setProperty('--row-y', y)").len(), 1);
+        assert_eq!(run("host.style.setProperty('--sail-grid-template', tracks)").len(), 1);
+        // A CSS property through the same call was always the hole; still is.
         assert_eq!(run("el.style.setProperty('transform', t)").len(), 1);
         // A name we cannot read is a name we cannot check.
         assert_eq!(run("el.style.setProperty(prop, v)").len(), 1);
+    }
+
+    #[test]
+    fn the_rewritten_diagnostic_teaches_the_declared_paths_not_the_hatch() {
+        // The message must NOT teach `el.style.setProperty('--x', …)` — that was
+        // the hatch the ruling closed. It must point at the declared signal /
+        // `(--x)` reflection, a `use:` action, and tokens.css.
+        let findings = check(Path::new("t.controller.ts"), "el.style.opacity = '0'");
+        assert_eq!(findings.len(), 1);
+        let suggest = findings[0].suggest.as_deref().unwrap_or("");
+        assert!(
+            !suggest.contains(".style.setProperty"),
+            "the remedy must not send the author back to el.style.setProperty — got: {suggest}"
+        );
+        assert!(suggest.contains("signal("), "remedy must name the declared signal path: {suggest}");
+        assert!(suggest.contains("use:"), "remedy must name the use: action path: {suggest}");
+        assert!(suggest.contains("tokens.css"), "remedy must name the token path: {suggest}");
     }
 
     #[test]

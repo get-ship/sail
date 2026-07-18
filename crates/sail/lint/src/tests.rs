@@ -319,3 +319,23 @@ fn pack_source_lints_imperative_style() {
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].rule, "sail-no-imperative-style");
 }
+
+#[test]
+fn setproperty_custom_prop_refuses_in_a_controller_but_an_action_is_never_linted() {
+    use crate::{is_controller_path, is_pack_source_ts, lint_controller_source};
+    // The 2026-07-18 closure: `el.style.setProperty('--x', v)` in a CONTROLLER
+    // now REFUSES (was legal). This is the dispatch-level red/green gate.
+    let controller = lint_controller_source(
+        Path::new("/repo/packages/components/sail/primitives/src/widget.controller.ts"),
+        "el.style.setProperty('--row-y', y)",
+    );
+    assert_eq!(controller.len(), 1);
+    assert_eq!(controller[0].rule, "sail-no-imperative-style");
+
+    // The SAME call inside a `use:` action still compiles: an action lives in
+    // the framework runtime, which is neither a controller nor a pack source,
+    // so no rule ever reaches it — the sanctioned home is untouched.
+    let action = Path::new("/repo/packages/sail/runtime/src/actions/grid-tracks.ts");
+    assert!(!is_controller_path(action));
+    assert!(!is_pack_source_ts(action));
+}

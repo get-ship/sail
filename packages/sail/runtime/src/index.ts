@@ -162,6 +162,7 @@ export {
   autosize,
   avatar,
   chip,
+  chromeOffset,
   clickOutside,
   codeBlock,
   collapsible,

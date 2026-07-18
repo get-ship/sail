@@ -119,36 +119,20 @@ export default controller(() => {
     // chrome offset this shell publishes.
     const workbench = derived(() => path().startsWith('/tutorial/'))
 
-    // Publish the chrome offset — the sticky top bar's height — as
-    // --chrome-offset on :root. The `h:fill` scale is
-    // `calc(100dvh - var(--chrome-offset, 0px))`; without a value it falls
-    // back to the whole viewport, so a workbench pane placed BELOW the bar
-    // overflows by exactly the bar's height (the page starts to scroll).
-    // Measure after paint and keep it fresh as the bar reflows.
-    const publishChromeOffset = () => {
-      const bar = document.querySelector('nav')
-      const h = bar ? Math.round(bar.getBoundingClientRect().height) : 0
-      if (h > 0) root.style.setProperty('--chrome-offset', `${h}px`)
-    }
-    if (typeof requestAnimationFrame !== 'undefined') {
-      requestAnimationFrame(() => {
-        publishChromeOffset()
-        const bar = document.querySelector('nav')
-        if (bar && typeof ResizeObserver !== 'undefined') {
-          new ResizeObserver(publishChromeOffset).observe(bar)
-        }
-      })
-    }
-    if (typeof window !== 'undefined') {
-      window.addEventListener('resize', publishChromeOffset)
-    }
+    // The chrome offset — the sticky top bar's height — is published as
+    // --chrome-offset on :root by `use:chromeOffset` on the <navbar> below.
+    // The `h:fill` scale is `calc(100dvh - var(--chrome-offset, 0px))`; without
+    // a value it falls back to the whole viewport, so a workbench pane placed
+    // BELOW the bar overflows by exactly the bar's height (the page scrolls).
+    // The measurement is geometry the action owns — the controller never
+    // touches .style (owner ruling 2026-07-18).
 
     return { path, product, fullscreen, workbench, landing }
 })
 </controller>
 
 
-<navbar sticky bordered>
+<navbar sticky bordered use:chromeOffset>
   <a slot="brand" href="/" aria-label="Ship UI home">
     <row gap="2" align="center">
       <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
