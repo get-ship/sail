@@ -472,8 +472,26 @@ function computeStaggerDelay(config: MotionAttachConfig, el: Element): number | 
 
 /** The subset of `AnimationPlaybackControls` this runtime relies on —
  *  `stop`/`cancel` to tear an animation down, `finished` to know when
- *  it settled on its own. */
-type AnimControls = { stop: () => void; cancel: () => void; finished: Promise<unknown> }
+ *  it settled on its own. The optional members are what the timeline
+ *  triggers use: `attachTimeline` re-times the animation onto a
+ *  `ViewTimeline`/`ScrollTimeline` (motion-dom's own seam for this),
+ *  and `pause`/`play`/`complete` drive the no-timeline fallback. They
+ *  are optional so a test double that only speaks `stop`/`cancel`
+ *  still satisfies the type — the runtime degrades per-member. */
+type AnimControls = {
+  stop: () => void
+  cancel: () => void
+  finished: Promise<unknown>
+  pause?: () => void
+  play?: () => void
+  complete?: () => void
+  attachTimeline?: (timeline: {
+    timeline?: AnimationTimeline | undefined
+    rangeStart?: string
+    rangeEnd?: string
+    observe: (animation: unknown) => VoidFunction
+  }) => VoidFunction
+}
 
 /** Resume a freshly-created set of animations at `timeMs` — used when a
  *  reactive config change re-creates an ambient loop and we do not want it
@@ -567,26 +585,137 @@ function createAnimationsWhenConnected(
   config: MotionAttachConfig,
   delaySec: number | undefined,
   carriedTimeMs: number | null = null,
+  afterCreate?: (controls: AnimControls[]) => Disposer,
 ): Disposer {
   if (el.isConnected || typeof requestAnimationFrame === 'undefined') {
     const controls = createAnimations(el, config, delaySec)
     seekTo(el, carriedTimeMs)
-    return () => { for (const c of controls) c.cancel() }
+    const extra = afterCreate?.(controls)
+    return () => {
+      extra?.()
+      for (const c of controls) c.cancel()
+    }
   }
   for (const m of config.motions) applyRestStyle(el, m)
-  let controls: Array<{ stop: () => void; cancel: () => void }> = []
+  let controls: AnimControls[] = []
+  let extra: Disposer | undefined
   let disposed = false
   const start = (): void => {
     if (disposed) return
     if (!el.isConnected) { requestAnimationFrame(start); return }
     controls = createAnimations(el, config, delaySec)
     seekTo(el, carriedTimeMs)
+    extra = afterCreate?.(controls)
   }
   requestAnimationFrame(start)
   return () => {
     disposed = true
+    extra?.()
     for (const c of controls) c.cancel()
   }
+}
+
+// ── Timeline triggers — motion:view / motion:scroll ─────────────────────────
+//
+// PROGRESS-driven, not time-driven: the animation's position is a function
+// of scroll, not of the clock. Where the platform has scroll timelines
+// (Chromium), the SAME animation every other trigger bakes is simply
+// re-timed onto a `ViewTimeline` (view: the element's own passage into the
+// viewport) or a `ScrollTimeline` (scroll: the document's total scroll) —
+// zero JS per frame, compositor-driven. Where it does not (Firefox, jsdom),
+// `view` degrades from scrub-to-scroll to play-once-on-first-reveal via
+// IntersectionObserver: a static end state is not a fallback for "animate
+// as it enters the viewport", it reads as the feature being broken.
+//
+// HISTORY, because this has now been broken twice: the pre-motion.dev
+// runtime carried exactly this wiring (`a.timeline = new ViewTimeline(...)`
+// + the IO fallback). The motion.dev migration (8bb03de9) rewrote the
+// branch as a bare `createAnimations()` — identical to `enter` — so every
+// `motion:view` element played its reveal ONCE at mount, below the fold,
+// invisibly, and sat at its final pose forever. No error surfaces because
+// a finished animation is indistinguishable from a correct one. If you are
+// editing this branch: the contract is "hidden until the viewport says
+// otherwise", and the degraded path below must stay LOUD.
+
+interface ProgressTimelineCtors {
+  ViewTimeline?: new (opts: { subject: Element }) => AnimationTimeline
+  ScrollTimeline?: new (opts: { source: Element | null }) => AnimationTimeline
+}
+
+function makeProgressTimeline(kind: 'view' | 'scroll', el: Element): AnimationTimeline | undefined {
+  const g = globalThis as ProgressTimelineCtors
+  try {
+    if (kind === 'view') {
+      return g.ViewTimeline ? new g.ViewTimeline({ subject: el }) : undefined
+    }
+    if (typeof document === 'undefined') return undefined
+    return g.ScrollTimeline ? new g.ScrollTimeline({ source: document.scrollingElement }) : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/** No scroll timeline available. `view` still has a correct meaning —
+ *  play the reveal once, time-driven, the first time the element
+ *  intersects the viewport. `scroll` (progress = container scroll) has
+ *  no time-driven equivalent, so it lands on the END state — visible,
+ *  not invisible — and SAYS SO: this runtime's history is silent
+ *  degradations shipping as "works on my machine", so the degraded
+ *  path is loud by policy. */
+function observeProgressFallback(el: Element, kind: 'view' | 'scroll', c: AnimControls): Disposer {
+  if (kind === 'view' && typeof IntersectionObserver === 'function') {
+    c.pause?.()
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect()
+          c.play?.()
+        }
+      },
+      { threshold: 0.15 },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }
+  console.warn(
+    `[sail/motion] motion:${kind} needs ${kind === 'view' ? 'ViewTimeline or IntersectionObserver' : 'ScrollTimeline'}, ` +
+    `and this environment has neither — settling at the final pose instead of animating. ` +
+    `The trigger is degraded, not silently dropped.`,
+    el,
+  )
+  c.complete?.()
+  return () => {}
+}
+
+/** Re-time a freshly created animation set onto its progress timeline.
+ *  Runs synchronously after `createAnimations` (via the `afterCreate`
+ *  hook), before the just-started time-driven animation can advance or
+ *  finish. Returns the disposer for whatever the fallback installed. */
+function attachProgressTimeline(el: Element, kind: 'view' | 'scroll', controls: AnimControls[]): Disposer {
+  const timeline = makeProgressTimeline(kind, el)
+  const detachers: Disposer[] = []
+  for (const c of controls) {
+    if (typeof c.attachTimeline === 'function') {
+      // motion-dom's own seam: with a timeline (and scroll-timeline
+      // support) it re-homes the WAAPI animation; without one it calls
+      // `observe` for the JS fallback. `entry 0% → entry 100%` scopes a
+      // view reveal to the element's ENTRY into the viewport — the card
+      // is fully arrived once it is fully visible, rather than scrubbing
+      // across the whole `cover` range and never settling on screen.
+      detachers.push(
+        c.attachTimeline({
+          timeline,
+          ...(kind === 'view' && timeline ? { rangeStart: 'entry 0%', rangeEnd: 'entry 100%' } : {}),
+          observe: () => observeProgressFallback(el, kind, c),
+        }),
+      )
+    } else {
+      // A driver without `attachTimeline` (a test double) still gets the
+      // viewport GATE, just not the scrub.
+      detachers.push(observeProgressFallback(el, kind, c))
+    }
+  }
+  return () => { for (const d of detachers) d() }
 }
 
 const TRIGGER_EVENTS: Record<string, [string, string, string?]> = {
@@ -768,7 +897,13 @@ function attachOnce(
       applyReducedMotionSettle(el, config.motions)
       return () => {}
     }
-    return createAnimationsWhenConnected(el, config, delaySec)
+    // The same baked animation as every other trigger, re-timed onto a
+    // progress timeline the moment it exists — never left time-driven,
+    // or a below-the-fold reveal plays invisibly at mount and the
+    // trigger is silently `enter`.
+    return createAnimationsWhenConnected(el, config, delaySec, null, (controls) =>
+      attachProgressTimeline(el, branch, controls),
+    )
   }
 
   const events = TRIGGER_EVENTS[config.trigger]!
