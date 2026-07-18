@@ -1,141 +1,109 @@
 <!--
-  /why — the argument. Spine: the bottleneck in agent-authored UI is decisions,
-  not reactivity; every open decision is variance; variance is where one-shot
-  beauty dies. So remove the decisions and keep the expression. Evidence, not
-  assertion — every claim on this page is a number we can produce on demand.
-  Do not dunk on competitors; the honest section is load-bearing for trust.
+  /why — the argument, written fresh 2026-07-18 (owner + Claude pairing).
+  Shape: (1) the author changed — agents AND newcomers; the decision gauntlet;
+  (2) the one-shot cliff — the bet; (3) the missing layer is a compiler;
+  (4) built from the platform — ARIA/best practices by construction;
+  (5) where it came from — Ship, integration, a toolchain without the node
+  ecosystem. Prior page mined as input only; absorbed the thesis (/thesis is
+  gone). Voice: plain, confident, zero showmanship, no unverified numbers.
 -->
-<column sx="p-0 max-w-breakpoint-tablet mx-auto">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Introduction</p>
-  <h1>Why SAIL</h1>
+<column sx="max-w-breakpoint-tablet mx-auto" gap="4">
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Why SAIL</p>
+  <h1>The author changed</h1>
+
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    SAIL is built to be written by agents. Not "agent-friendly" as a feature —
-    agents are the assumed author, and every decision in the language follows
-    from that. The goal is to give a model 95% of the expression that code
-    offers with 10% of the decisions.
+    Every mainstream web framework is an ergonomics project — built to fit a
+    professional's hands. Hooks, hot reload, clever DX: all of it optimizes
+    for a person who already knows the territory. Two things happened to that
+    assumption at once. Agents started writing a large share of the code. And
+    AI put website-building in front of people who have never written any —
+    for whom the framework was never the hard part.
+  </p>
+  <p>
+    Watch what happens to a newcomer today. Before a single element is on
+    screen, they are routed through a gauntlet of expert decisions: rendering
+    strategy, framework, bundler, data-fetching library, component kit — and
+    then styling, where there are genuinely hundreds of paths. Each library
+    is excellent in isolation and optimized for a different goal, and making
+    them agree is its own skill that has nothing to do with the website. The
+    naive alternative — plain HTML and CSS — gets surprisingly far, and then
+    falls apart exactly when the project starts to matter. Agents don't need
+    the ergonomics; they need determinism. Newcomers don't need the decision
+    tree; they need it gone. SAIL is one system where those are the same
+    answer.
   </p>
 
-  <h2>The web, with default styles</h2>
+  <h2>The one-shot cliff</h2>
   <p>
-    Component libraries exist because nobody owns HTML: the platform's
-    vocabulary froze decades ago, so every team rebuilds the missing patterns
-    — dialogs, comboboxes, toasts — in userspace, forever, with constant
-    governance and constant drift. We own our platform: the compiler, the
-    lint, the LSP, the runtime. So the missing tier isn't a library on top —
-    it is the language. A combobox is a tag the way a paragraph is a tag,
-    with the behavior written once in the toolchain, its anatomy published as
-    a contract, and a default skin any theme can replace wholesale. Remove
-    the userspace tier and you remove its failure mode.
+    Agents are genuinely good at page one. A single prompt produces a
+    handsome landing page, and it is easy to conclude the problem is solved.
+    Then you ask for page twelve. A second spacing rhythm appears, a fourth
+    shade of the brand colour, two animation approaches, state held three
+    ways. Nothing malfunctioned — every decision a language leaves open is a
+    place where two generations can differ, and the differences compound
+    with every file.
+  </p>
+  <p>
+    That is the bet SAIL makes: consistency cannot be a review step or a
+    prompt instruction, because variance is a property of the language, not
+    of the author's skill. Close the decisions — one way to hold state, one
+    way to style, one way to animate — and the five-hundredth page holds the
+    system as well as the first, no matter who or what wrote it.
   </p>
 
-  <h2>The bottleneck was never reactivity</h2>
+  <h2>The missing layer is a compiler</h2>
   <p>
-    Hand a model a spec and it makes hundreds of small choices on the way to a
-    screen: a color, a spacing step, a focus ring, whether that dropdown is
-    genuinely reachable by keyboard. It gets them confidently, plausibly wrong.
-    And when it isn't sure, it falls back on what it knows best — a
-    <code>&lt;div&gt;</code> and a class name. Give it a library of a hundred
-    components and it will route around the library, because HTML is the surface
-    it is fluent in.
+    A person describes, a model writes — and in most stacks, that's the whole
+    pipeline. There is no oracle: a wrong program renders, plausibly, and
+    ships. You find out in review, in production, or never. SAIL puts a
+    compiler between the model and the artifact. Off-system styling, a
+    stylesheet beside a component, an unknown motion trigger — these fail the
+    build, and every refusal names the correct form in the language's own
+    vocabulary. A model doesn't need to have memorized a million lines of
+    SAIL; it needs to be correctable in one turn, and that is a property we
+    can design.
   </p>
   <p>
-    So <strong>every decision a language leaves open is variance</strong>, and
-    variance is where one-shot beauty dies. Two agents diverge. The same agent
-    diverges from itself on Tuesday. One team's animation library meets another
-    team's. Preference leaks into state management. None of that is a skill
-    problem you can prompt your way out of — it's a property of the language.
-  </p>
-
-  <h2>So the decisions are gone</h2>
-  <p>
-    Not discouraged, not linted with a warning — <em>absent</em>. There is one
-    way to hold state, one way to animate, one way to style, one component
-    library, and it is made of tags the model already knows.
-  </p>
-  <ul sx="list-none p-0">
-    <li>
-      <strong>The component library is the platform.</strong> A dialog is
-      <code>&lt;dialog&gt;</code>. A menu is <code>[popover]</code>. There are 48
-      L1 elements and they compile to native markup plus a stylesheet — so the
-      model writes the HTML it already knows, and gets the keyboard handling,
-      the ARIA, and the focus management for free.
-    </li>
-    <li>
-      <strong>Styling is a subset, on purpose.</strong> <code>sx</code> is a
-      deliberately small slice of CSS keyed to the design system. An off-system
-      color is a build error, not a review note. There is no second styling
-      system to choose, so there is nothing to choose.
-    </li>
-    <li>
-      <strong>One animation system.</strong> <code>motion:</code>, eight
-      triggers, nine presets. You cannot reach for GSAP instead, so no two
-      screens move differently.
-    </li>
-    <li>
-      <strong>One way to reach an element.</strong> Behavior attaches with
-      <code>use:</code>. There is no ref to thread, no imperative escape hatch
-      to be tempted by.
-    </li>
-  </ul>
-
-  <h2>The compiler is the feedback loop</h2>
-  <p>
-    This is the part that matters most, and it's the part that's easy to miss.
-    An agent writing React gets no oracle: a wrong program <em>renders</em>,
-    plausibly, and ships. An agent writing SAIL gets told exactly what is wrong,
-    in the language's own vocabulary, the moment it writes it — an unknown
-    motion trigger, a color that isn't on the system, a layout that should have
-    been a primitive.
-  </p>
-  <p>
-    Agents run in a loop. A language that can <em>correct</em> them in one turn
-    beats a language they happen to have memorized. We don't need the model to
-    have read a million lines of SAIL. We need it to be correctable.
+    The same compiler is a contract each team tunes. A brand platform runs
+    strict — every colour a token, raw containers rare. A weekend project
+    opens the dials. What ships is guaranteed either way, because the
+    guarantee is machinery, not memory.
   </p>
 
-  <h2>What the constraint bought</h2>
+  <h2>Built from the platform</h2>
   <p>
-    The point of giving things up is getting something back — and what comes
-    back is the ability to <em>trust</em> the output without reading every
-    line:
+    SAIL doesn't wrap the browser — it compiles to it. A dialog is
+    <code>&lt;dialog&gt;</code>. A menu is a native <code>popover</code>.
+    Components compile to real markup and a stylesheet, so what the model
+    writes is the HTML it already knows, and what a user gets is keyboard
+    handling, focus management, and ARIA that come with the element — by
+    construction, not because the author remembered. Best practice isn't a
+    checklist here; it's the only form the language offers. The same holds
+    for design: colours, spacing, and type are tokens, themes are data, and
+    a rebrand is a data change rather than a rewrite.
   </p>
-  <ul sx="list-none p-0">
-    <li>
-      <strong>Consistency you can check.</strong> Every element renders in
-      every state across every theme on every commit, driven in a real
-      browser — the design system is enforced by machinery, not memory.
-    </li>
-    <li>
-      <strong>Accessibility by construction.</strong> Not because the author
-      was careful; because the element already was, and the language offers
-      no inaccessible way to write the screen.
-    </li>
-    <li>
-      <strong>Performance by architecture.</strong> Templates compile ahead
-      of time, updates are fine-grained signal writes, and components
-      compile away to native markup — there is no virtual DOM and no
-      framework wrapper in the output to pay for.
-    </li>
-  </ul>
 
-  <h2>The honest version</h2>
+  <h2>Where it came from</h2>
   <p>
-    Nobody can tell you what an agent-generated React app <em>is</em>. It might
-    be accessible. It might be on-brand. It might have invented four shades of
-    blue and three ways to open a modal. You find out in review, or in
-    production, or never. That is the trade the ecosystem made when it optimized
-    for human preference: a tool that is pleasant to hand-write and impossible
-    to guarantee.
+    SAIL grew inside Ship, and it shows. The goal there was an integrated
+    system — compiler, design system, components, and docs as one thing
+    rather than a stack of separately-versioned opinions. Integration is why
+    the pieces agree, and it enabled some deliberate choices: the toolchain
+    doesn't drag a package ecosystem behind it, authoring works without
+    Node, and the compiler runs in the browser — this site compiles SAIL
+    live in your tab. None of that is the argument by itself. It is what made
+    the argument buildable.
   </p>
+
   <p>
-    SAIL takes the other side. It will feel constrained if you came looking for a
-    flexible toolkit to hand-write — and it should. That constraint is the
-    product. It is what turns "an agent built this" from a warning into a
-    guarantee.
+    SAIL will feel constrained if you came looking for a flexible toolkit to
+    hand-write — and it should. The constraint is the product. It is what
+    turns "an agent built this" from a warning into a guarantee.
   </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
-    <a variant="default" href="/overview">← Introduction</a>
-    <a variant="solid" tone="primary" href="/components">Component library →</a>
+    <a variant="solid" tone="primary" href="/getting-started">Installation →</a>
+    <a variant="default" href="/overview">Introduction</a>
+    <a variant="default" href="/tutorial">Tutorial</a>
   </row>
 </column>
