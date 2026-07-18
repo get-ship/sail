@@ -11,6 +11,9 @@ export const code = {
 <div sx="w-4 h-4 rounded-full bg-primary"
      motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>`,
 
+  spin: `<!-- continuous rotate — one direction, never ping-pongs. -->
+<div sx="w-8 h-8 rounded-md bg-primary" motion:loop={{ rotate: 'spin' }}></div>`,
+
   intro: `<!-- one directive, one system. The trigger says WHEN; the body says WHAT. -->
 <card motion:hover={{ scale: 'spring:gentle' }}>
   Lift on hover.
