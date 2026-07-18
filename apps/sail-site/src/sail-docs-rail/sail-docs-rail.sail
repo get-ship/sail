@@ -27,7 +27,6 @@ export default controller(() => {
       <label>Components</label>
       <a href="/sail/elements" aria-current={path() === '/sail/elements' ? 'page' : null}>Using components</a>
       <a href="/sail/layout" aria-current={path() === '/sail/layout' ? 'page' : null}>Layout</a>
-      <a href="/sail/styling" aria-current={path() === '/sail/styling' ? 'page' : null}>Styling</a>
       <a href="/sail/theming" aria-current={path() === '/sail/theming' ? 'page' : null}>Theming</a>
       <a href="/sail/motion" aria-current={path() === '/sail/motion' ? 'page' : null}>Animation</a>
       <a href="/sail/behavior" aria-current={path() === '/sail/behavior' ? 'page' : null}>Actions</a>
@@ -36,6 +35,7 @@ export default controller(() => {
       <a href="/sail/language/sail-file" aria-current={path() === '/sail/language/sail-file' ? 'page' : null}>The .sail file</a>
       <a href="/sail/language/state" aria-current={path() === '/sail/language/state' ? 'page' : null}>State</a>
       <a href="/sail/language/templates" aria-current={path() === '/sail/language/templates' ? 'page' : null}>Templates</a>
+      <a href="/sail/language/styling" aria-current={path() === '/sail/language/styling' ? 'page' : null}>Styling</a>
 
       <label>Building</label>
       <a href="/sail/data" aria-current={path() === '/sail/data' ? 'page' : null}>Data &amp; forms</a>

@@ -289,12 +289,19 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             let (prefix, atom) = split_prefix(pair);
             if let Some(p) = prefix {
                 if !is_prefix(p) {
+                    // Rendered FROM the tables — a hand-written list here once
+                    // advertised `print:` (never existed) and omitted real
+                    // prefixes, so the refusal itself was lying about the set.
+                    let states: Vec<String> =
+                        STATE_PREFIXES.iter().map(|(n, _)| format!("{n}:")).collect();
+                    let conditions: Vec<String> =
+                        CONDITION_PREFIXES.iter().map(|(n, _)| format!("{n}:")).collect();
                     findings.push(mk(path, line, col, format!(
-                        "sx unknown prefix `{p}:` — the closed set: hover:/focus:/focus-within:/\
-                         active:/disabled:/current:/selected:/expanded:/busy:/checked:/pressed:/\
-                         open:, a condition (mobile:/tablet:/desktop:/motion-reduce:/\
-                         forced-colors:/print:), `state-<value>:` for a component state, or \
-                         group-<state>: to react to an ancestor"
+                        "sx unknown prefix `{p}:` — the closed set: {}, a condition ({}), \
+                         `state-<value>:` for a component state, or group-<state>: to react \
+                         to an ancestor",
+                        states.join("/"),
+                        conditions.join("/")
                     )));
                     continue;
                 }
