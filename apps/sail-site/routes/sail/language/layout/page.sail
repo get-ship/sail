@@ -1,11 +1,9 @@
 <!--
-  /sail/language/layout — chapter 5. Five keywords, the axis is the name.
-
-  Claims checked against the compiler: the element set + axis props are the
-  sail-layout lint (unknown attributes refuse, with the axis list in the
-  error), rows-wrap-by-default and nowrap are preprocess.rs, min-width:0 on
-  every layout child is in the emitted base rules, span collapse below 720px
-  is layout.rs. The quoted redirect is captured output.
+  /sail/language/layout — chapter 5, round 2 per owner review: lead with WHY
+  one mechanism (many ways exist; one spelling is what tools and agents can
+  reason about), render EVERY element live, explain in sentences not
+  keyword-lists, no "flow not clamp" jargon, no sx-refusal opener (that
+  lives on the styling page), no whole-vocabulary overclaim.
 -->
 
 <controller>
@@ -22,51 +20,75 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">The language</p>
   <h1>Layout</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    Five keywords, and <strong>the axis is the name</strong>. There is no
-    <code>flex-direction</code> to get backwards, no debate about whether a
-    stack is vertical, and no CSS to write.
+    The web has accumulated half a dozen ways to lay things out — floats,
+    positioning, flexbox, grid, and the properties that tune them. Sail
+    ships <strong>one</strong> mechanism: five layout elements —
+    <code>&lt;row&gt;</code>, <code>&lt;column&gt;</code>,
+    <code>&lt;grid&gt;</code>, <code>&lt;stack&gt;</code>,
+    <code>&lt;center&gt;</code>. Everything those systems express —
+    wrapping, two dimensions, spanning, layering, centering — is still
+    expressible; what's gone is the second and third way to spell it.
   </p>
-
-  <code-block code={code.axes}></code-block>
-
-  <h2>Why this is a keyword and not a style</h2>
   <p>
-    Flexbox is four decisions before you have laid anything out: which axis,
-    how the main axis distributes, how the cross axis aligns, whether it
-    wraps. Every one is a place two authors diverge. So <code>sx</code> has
-    none of them — write layout as a style and the compiler hands back the
-    element you meant:
+    One spelling is the point. When every layout in a codebase is a handful
+    of elements with named axes, geometry is readable from source — by the
+    compiler, which checks every attribute and redirects wrong turns, and
+    by an agent, which sees the same five words in every file it opens
+    instead of six eras of CSS technique.
   </p>
-  <code-block code={code.layoutSxError}></code-block>
 
-  <h2><code>&lt;row&gt;</code> — the x axis</h2>
+  <h2><code>&lt;row&gt;</code></h2>
   <p>
-    <code>gap</code> · <code>align</code> (cross axis) · <code>justify</code>
-    (main axis).
+    A row lays children out left to right. <code>gap</code> spaces them
+    (spacing-scale steps), <code>align</code> positions them on the cross
+    axis, <code>justify</code> distributes them along the row:
   </p>
-  <row gap="3" align="center" justify="between" sx="p-4 bg-muted rounded-md">
+  <row gap="3" align="center" justify="between" sx="p-4 bg-surface-1 border border-border rounded-md">
     <strong>Ada Lovelace</strong>
     <badge tone="success">Active</badge>
   </row>
   <code-block code={code.row}></code-block>
   <p>
-    A row <strong>wraps by default</strong> — it is a flow, not a clamp. When
-    content cannot fit, it breaks to the next line instead of overflowing.
-    Most rows want exactly that; the one that does not is the shell whose
-    panes must never stack — a toolbar, a rail beside a content pane. That
-    row says so:
+    When a row runs out of width, its children move to the next line —
+    rows <strong>wrap by default</strong>, like text does. Watch this one
+    as the window narrows:
+  </p>
+  <row gap="2" sx="p-4 bg-surface-1 border border-border rounded-md">
+    <chip>signals</chip>
+    <chip>derived</chip>
+    <chip>effects</chip>
+    <chip>stores</chip>
+    <chip>compositions</chip>
+    <chip>actions</chip>
+    <chip>tones</chip>
+    <chip>variants</chip>
+  </row>
+  <p>
+    Some rows must stay on one line no matter what — a toolbar, a sidebar
+    beside content. Those say <code>nowrap</code>, and manage width with
+    their children instead:
   </p>
   <code-block code={code.nowrap}></code-block>
 
-  <h2><code>&lt;column&gt;</code> — the y axis</h2>
-  <p><code>gap</code> · <code>align</code>.</p>
+  <h2><code>&lt;column&gt;</code></h2>
+  <p>
+    A column is the same idea, top to bottom. <code>gap</code> spaces the
+    children; <code>align</code> positions them horizontally — the label
+    and input below are <code>align="start"</code>, so they hug the left
+    edge instead of stretching:
+  </p>
+  <column gap="2" align="start" sx="p-4 bg-surface-1 border border-border rounded-md">
+    <label>Email</label>
+    <input type="email" placeholder="ada@example.com" />
+    <button>Subscribe</button>
+  </column>
   <code-block code={code.column}></code-block>
 
-  <h2><code>&lt;grid&gt;</code> — two dimensions</h2>
+  <h2><code>&lt;grid&gt;</code></h2>
   <p>
-    <code>cols</code> (and <code>rows</code>) fix a track count;
-    <code>min</code> makes a responsive track that fills as many columns of
-    at least that width as will fit. You do not write a media query.
+    A grid lays children out in columns and rows. <code>cols</code> fixes
+    the column count — every child takes one cell, wrapping to new rows as
+    needed:
   </p>
   <grid cols="3" gap="3">
     <card sx="p-4"><strong>One</strong></card>
@@ -75,49 +97,60 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </grid>
   <code-block code={code.grid}></code-block>
   <p>
-    A child spans tracks with <code>data-col-span</code> /
-    <code>data-row-span</code> — and below 720px every span collapses to a
-    single track on its own, so the wide card never forces a phone to scroll
-    sideways.
+    <code>min</code> is the responsive alternative to a fixed count: give a
+    minimum column width, and the grid fits as many columns of at least
+    that width as the space allows — fewer on a phone, more on a desktop,
+    no media query written.
   </p>
+  <p>
+    A child can cover more than one cell with <code>data-col-span</code> /
+    <code>data-row-span</code>. Below 720px, spans collapse and every child
+    goes back to one cell, so a wide card never forces a phone to scroll
+    sideways:
+  </p>
+  <grid cols="4" gap="3">
+    <card sx="p-3" data-col-span="2">wide — spans 2</card>
+    <card sx="p-3">one</card>
+    <card sx="p-3">two</card>
+  </grid>
   <code-block code={code.spans}></code-block>
 
-  <h2><code>&lt;stack&gt;</code> — the z axis</h2>
+  <h2><code>&lt;stack&gt;</code></h2>
   <p>
-    Children occupy the same cell, one over another: a badge on an avatar, an
-    overlay on an image. It is the third axis, and it has a name for the same
-    reason the other two do.
+    A stack places children on top of each other in the same cell — the
+    overlay cases: a badge on an avatar, a caption on an image, a dot on an
+    icon.
   </p>
+  <row sx="p-4 bg-surface-1 border border-border rounded-md">
+    <stack align="start" justify="end">
+      <card sx="w-24 h-12 bg-muted rounded-md"></card>
+      <div sx="w-4 h-4 rounded-full bg-primary"></div>
+    </stack>
+  </row>
+  <code-block code={code.stack}></code-block>
 
   <h2><code>&lt;center&gt;</code></h2>
   <p>
-    Centres its child on both axes. The single most-Googled question in CSS
-    is a keyword here.
+    Centers its child, horizontally and vertically, in whatever space the
+    element has:
   </p>
+  <center sx="min-h-11 p-4 bg-surface-1 border border-border rounded-md">
+    <badge tone="primary">centered</badge>
+  </center>
+  <code-block code={code.center}></code-block>
 
-  <h2>What children get</h2>
+  <h2>How children size themselves</h2>
   <p>
-    Every child of a layout element is born with <code>min-width: 0</code>.
-    Flexbox's default — an item refuses to shrink below its content — is the
-    reason truncation "doesn't work" and long words blow layouts open in
-    every flex codebase. Here the default is corrected at the language level:
-    <code>truncate</code> works the first time.
+    The parent decides how children sit; a child decides only how it fills
+    the space it was given, with <code>sx</code>: <code>grow-1</code>
+    claims a share of the leftover space, <code>basis-*</code> sets a
+    starting size, and width/height atoms fix one. Every child of a layout
+    element is also born with <code>min-width: 0</code> — the browser
+    default where an item refuses to shrink below its content is the reason
+    truncation "doesn't work" in most flex codebases, and it is corrected
+    here at the language level, so <code>truncate</code> works the first
+    time.
   </p>
-  <p>
-    That is the contract in one sentence: <strong>the parent decides how its
-    children sit; a child decides only how it fills the space it was
-    given</strong> — <code>grow-1</code>, <code>basis-*</code>,
-    <code>min-w-0</code> are <code>sx</code> because they describe the
-    element, not its siblings.
-  </p>
-
-  <h2>That is the whole vocabulary</h2>
-  <p>
-    Rows of columns of rows. Every layout you have ever built is those
-    three, nested — and because they are keywords, two agents nest them the
-    same way.
-  </p>
-  <code-block code={code.nesting}></code-block>
 
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/language/styling">← Styling</a>

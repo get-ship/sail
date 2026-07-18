@@ -138,7 +138,11 @@ fn base_css(tag: &str) -> Vec<String> {
         ],
         "stack" => vec![
             ".sail-stackz{display:grid}".into(),
-            ".sail-stackz>*{grid-area:1/1}".into(),
+            // position:relative on every layer: without it, a positioned child
+            // (any skinned component) paints ABOVE later static siblings and
+            // the stack's DOM order stops meaning front-to-back. All-positioned
+            // restores document-order painting — layering by construction.
+            ".sail-stackz>*{grid-area:1/1;position:relative}".into(),
         ],
         _ => vec![],
     }
@@ -176,7 +180,7 @@ fn inline_base_css(tag: &str) -> Vec<String> {
         ],
         "stack" => vec![
             ".sail-stackz-i{display:inline-grid}".into(),
-            ".sail-stackz-i>*{grid-area:1/1}".into(),
+            ".sail-stackz-i>*{grid-area:1/1;position:relative}".into(),
         ],
         _ => vec![],
     }
@@ -1165,8 +1169,9 @@ mod tests {
         let (classes, css) = lower("stack", &[("inline".into(), "".into())]).unwrap();
         assert_eq!(classes[0], "sail-stackz-i");
         assert!(
-            css.iter().any(|r| r.contains(".sail-stackz-i>*{grid-area:1/1}")),
-            "z-overlay child rule survives the swap: {css:?}"
+            css.iter().any(|r| r.contains(".sail-stackz-i>*{grid-area:1/1;position:relative}")),
+            "z-overlay child rule (all layers positioned, so DOM order IS paint order) \
+             survives the swap: {css:?}"
         );
     }
 
