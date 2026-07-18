@@ -38,6 +38,7 @@ fn opts(name: &str, path: &str) -> CompileOpts {
 
         }),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     }

@@ -40,6 +40,7 @@ fn compile_fixture(name: &str, mode: CompileMode, setup: Option<&str>) -> String
             source_path: Some(path),
             component_meta,
             emit_dts: false,
+            scope_capabilities: Vec::new(),
             emit_component_imports: false,
         lint_overrides: Vec::new(),
         },

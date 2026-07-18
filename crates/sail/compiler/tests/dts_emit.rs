@@ -13,6 +13,7 @@ fn compile_dts(source: &str) -> String {
         source_path: None,
         component_meta: None,
         emit_dts: true,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
@@ -34,6 +35,7 @@ fn compile_dts_with_controller(_stem: &str, sui_src: &str, controller_ts: &str) 
         source_path: None,
         component_meta: None,
         emit_dts: true,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
 
         lint_overrides: Vec::new(),
@@ -53,6 +55,7 @@ fn compile_component_dts(source: &str) -> String {
         source_path: None,
         component_meta: Some(ComponentMeta { name: "test-el".into() }),
         emit_dts: true,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
     
             lint_overrides: Vec::new(),};
@@ -109,6 +112,7 @@ fn emit_dts_false_returns_none() {
         source_path: None,
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
     
             lint_overrides: Vec::new(),};
@@ -274,4 +278,98 @@ fn template_member_clashing_with_factory_is_dropped_from_scope() {
         !dts.contains("config:"),
         "clashing field must be omitted from Scope (SC-sourced), got: {dts}"
     );
+}
+
+// ---------------------------------------------------------------------------
+// Host-granted capabilities (#109) — the resolved client list, typed into Scope
+// ---------------------------------------------------------------------------
+
+/// Compile with a host grant, as deck hands one in: its own context
+/// (`route`/`navigate`, typed by the SAIL-local ports) plus an app-declared
+/// data client (typed through the `Clients` port).
+fn compile_dts_with_capabilities(source: &str) -> String {
+    compile_dts_with_capabilities_as(source, None)
+}
+
+fn compile_dts_with_capabilities_as(
+    source: &str,
+    component_meta: Option<sail_compiler::ComponentMeta>,
+) -> String {
+    use sail_compiler::emit::dts::ScopeCapability;
+    let opts = CompileOpts {
+        component_meta,
+        scope_capabilities: vec![
+            ScopeCapability::client("api"),
+            ScopeCapability {
+                name: "navigate".into(),
+                ts_type: "(path: string) => void".into(),
+                ts_import: None,
+            },
+            ScopeCapability {
+                name: "route".into(),
+                ts_type: "RouteSignals".into(),
+                ts_import: Some(("RouteSignals".into(), "@ship/sail-runtime".into())),
+            },
+        ],
+        ..base_opts()
+    };
+    compile(source, opts).expect("compile").dts.expect("dts emitted")
+}
+
+fn base_opts() -> CompileOpts {
+    CompileOpts {
+        route_params: None,
+        setup_url: None,
+        mode: CompileMode::Component,
+        source_path: None,
+        component_meta: None,
+        emit_dts: true,
+        scope_capabilities: Vec::new(),
+        emit_component_imports: false,
+        lint_overrides: Vec::new(),
+    }
+}
+
+#[test]
+fn granted_capabilities_are_typed_members_of_scope() {
+    let dts = compile_dts_with_capabilities("<p>hi</p>");
+    // The `clients` map itself, plus one member per declared client — exactly
+    // what the runtime `baseScope` provides (`{ clients, ...clients, … }`).
+    assert!(dts.contains("clients: Clients"), "got: {dts}");
+    assert!(dts.contains("api: Clients['api']"), "got: {dts}");
+    // Deck's router, typed through the SAIL-local ports. `navigate` is the
+    // member the hand-maintained wrapper never had (the drift this kills).
+    assert!(dts.contains("route: RouteSignals"), "got: {dts}");
+    assert!(dts.contains("navigate: (path: string) => void"), "got: {dts}");
+    // One import line, both runtime types, no duplicate specifier.
+    assert_eq!(
+        dts.matches("from '@ship/sail-runtime'").count(),
+        1,
+        "capability imports must collapse to one line per module; got: {dts}"
+    );
+    assert!(dts.contains("import type { Clients, RouteSignals }"), "got: {dts}");
+}
+
+#[test]
+fn no_grant_leaves_scope_exactly_as_before() {
+    // A file compiled with no host context gets NO ambient members — reading
+    // `ctx.route` there is a type error, which is the point.
+    let dts = compile_dts("<p>hi</p>");
+    assert!(dts.contains("export interface Scope {}"), "got: {dts}");
+    assert!(!dts.contains("clients"), "got: {dts}");
+    assert!(!dts.contains("route"), "got: {dts}");
+}
+
+#[test]
+fn a_declared_member_shadows_the_granted_capability() {
+    // The runtime spreads `...(ctx.scope ?? {})` LAST, over the client map, so
+    // a template/controller declaration of the same name wins. The type must
+    // agree — one member, the declared one, not a duplicate key.
+    let dts = compile_dts_with_capabilities_as(
+        "<scope>\n  props: {\n    api = ''\n  }\n</scope>\n<p>hi</p>",
+        Some(sail_compiler::ComponentMeta { name: "test-el".into() }),
+    );
+    assert!(dts.contains("api: Signal<string>"), "got: {dts}");
+    assert!(!dts.contains("api: Clients['api']"), "got: {dts}");
+    assert_eq!(dts.matches("  api:").count(), 1, "exactly one `api` member; got: {dts}");
 }

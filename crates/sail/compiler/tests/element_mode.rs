@@ -179,6 +179,7 @@ fn stdlib_elements_can_self_nest() {
         source_path: None,
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };

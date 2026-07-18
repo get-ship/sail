@@ -73,6 +73,7 @@ fn list_newly_refused_controllers() {
             source_path: Some(path.clone()),
             component_meta,
             emit_dts: false,
+            scope_capabilities: Vec::new(),
             emit_component_imports: false,
             lint_overrides: sail_compiler::check::policy::Policy::overrides_for(path),
         };

@@ -130,6 +130,7 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
         source_path: parsed.source_path.map(std::path::PathBuf::from),
         component_meta,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides,
     };

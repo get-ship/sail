@@ -62,6 +62,7 @@ fn compile_route_js(name: &str, resolved: &ResolvedRoute, mode: DaemonMode) -> D
         route_params: None,
         source_path: resolved.source_path.clone(),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         setup_url: ts_path.as_ref().map(|_| format!("./{ts_filename}")),
         ..CompileOpts::default()
     };

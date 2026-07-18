@@ -37,6 +37,7 @@ fn opts_for(path: &Path) -> CompileOpts {
         source_path: Some(path.to_path_buf()),
         component_meta: None,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Policy::overrides_for(path),
     }

@@ -20,6 +20,7 @@ fn view_opts() -> CompileOpts {
     CompileOpts {
         mode: CompileMode::Component,
         emit_dts: true,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
         ..Default::default()
@@ -34,6 +35,7 @@ fn component_opts() -> CompileOpts {
             name: "vs-button".into(),
         }),
         emit_dts: true,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         ..Default::default()
     }

@@ -1319,6 +1319,32 @@ fn collect_targets(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
+/// The scope capabilities for `path`, from the nearest `app.manifest.jsonc` at
+/// or above its directory — the same opt-in the synthetic client path uses, and
+/// the same walk-up as the `sail.config.json` policy lookup. Each declared
+/// client becomes a typed member of the generated `Scope`, so a controller
+/// reads it precisely and an undeclared name is a type error. No manifest → no
+/// capabilities → `Scope` is exactly the template's own declarations, as before.
+///
+/// A host that injects context beyond the app's own manifest (deck's
+/// `route`/`navigate`) merges its grant in on its own build path; this CLI
+/// names no host.
+fn app_manifest_capabilities(path: &Path) -> Vec<sail_compiler::emit::dts::ScopeCapability> {
+    let mut dir = path.parent();
+    while let Some(d) = dir {
+        let candidate = d.join("app.manifest.jsonc");
+        if candidate.is_file() {
+            return fs::read_to_string(&candidate)
+                .ok()
+                .and_then(|src| sail_compiler::emit::synthetic::AppManifest::parse(&src).ok())
+                .map(|m| sail_compiler::emit::synthetic::scope_capabilities(&m))
+                .unwrap_or_default();
+        }
+        dir = d.parent();
+    }
+    Vec::new()
+}
+
 fn compile_one(
     path: &Path,
     out_override: Option<&Path>,
@@ -1393,6 +1419,7 @@ fn compile_one(
         source_path: Some(path.to_path_buf()),
         component_meta,
         emit_dts: !no_dts,
+        scope_capabilities: app_manifest_capabilities(path),
         emit_component_imports,
         lint_overrides: Policy::overrides_for(path),
     };

@@ -107,6 +107,7 @@ fn compile_one(path: &Path, repo: &Path) -> Result<String, String> {
         source_path: Some(path.to_path_buf()),
         component_meta,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };

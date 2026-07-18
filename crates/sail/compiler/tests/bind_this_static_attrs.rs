@@ -32,6 +32,7 @@ fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOp
         source_path: None,
         component_meta: Some(ComponentMeta { name: "probe-test".into() }),
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: component_imports,
         lint_overrides: Vec::new(),
     }

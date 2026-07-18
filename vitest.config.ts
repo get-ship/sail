@@ -17,7 +17,6 @@ const PROJECTS = [
   'packages/components/sail/media',
   'packages/components/sail/primitives',
   'packages/components/sail/viewer',
-  'packages/deck/eval',
   'packages/deck/host',
   'packages/deck/router',
   'packages/sail/dom',

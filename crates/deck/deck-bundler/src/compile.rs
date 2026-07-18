@@ -81,6 +81,7 @@ pub fn compile_sui(
         // The bundler reads only the JS — dts/ssr are the CLI bake's job, and
         // the CEM is walked from disk by the catalog, not returned here.
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports,
         // The resolved per-package floor (empty for unconfigured packages). The
         // bundler never softens the design-system lints beyond a package's own

@@ -391,6 +391,7 @@ fn native_compile(repo: &Path, f: &Fixture) -> Result<String, String> {
         source_path: None,
         component_meta,
         emit_dts: false,
+        scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
