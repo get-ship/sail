@@ -37,4 +37,4 @@ export {
   hydrateWhileError,
 } from './hydrate'
 
-export { registerCustomProperties } from './register-properties'
+export { registerCustomProperties, isRegisteredThemeToken } from './register-properties'

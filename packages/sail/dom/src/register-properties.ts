@@ -20,9 +20,52 @@
  * first install.
  */
 export function registerCustomProperties(id: string, css: string): void {
+  // Record the token names this install declares BEFORE the dedupe early-return,
+  // so the registry is populated even when the `<style>` is already present
+  // (a re-mount, or two components that register the same set). Set adds are
+  // idempotent, so this is cheap and safe to run every time.
+  recordRegisteredTokens(css)
   if (document.getElementById(id)) return
   const style = document.createElement('style')
   style.id = id
   style.textContent = css
   document.head.appendChild(style)
+}
+
+/**
+ * The set of custom-property names the compiler has `@property`-registered this
+ * session — i.e. the DECLARED tokens the `(--x)` reflection reflects onto a host.
+ * Lives on `globalThis` (not a module-level `const`) on purpose: it is the ONE
+ * cross-bundle source of truth for "is this a real token", read by the runtime's
+ * sanctioned `theme.*` write hatch (`@ship/sail-runtime`'s theme module) to
+ * validate a patch. The runtime cannot import this module — that would invert
+ * the layering (sail-dom → sail-runtime, never back) — so the seam is a shared
+ * global, the same pattern as `__shipHostContext`. Parsing here, reading there,
+ * one Set for every bundle that shares the externalized runtime singleton.
+ */
+declare global {
+  // eslint-disable-next-line no-var
+  var __sailRegisteredTokens: Set<string> | undefined
+}
+
+function registry(): Set<string> {
+  return (globalThis.__sailRegisteredTokens ??= new Set<string>())
+}
+
+// `@property --foo { ... }` → capture `--foo`. The compiler emits exactly this
+// shape (see `emit::styles::register_properties_install_js`); a permissive
+// matcher keeps the registry honest even if the block formatting drifts.
+const PROPERTY_RULE = /@property\s+(--[\w-]+)/g
+
+function recordRegisteredTokens(css: string): void {
+  const reg = registry()
+  for (const m of css.matchAll(PROPERTY_RULE)) reg.add(m[1]!)
+}
+
+/** True iff `name` is a compiler-registered `@property` token this session.
+ *  The runtime's `theme.*` hatch uses this as the first (authoritative) leg of
+ *  its TokenName check; a declared-but-unregistered `:root` var is caught by the
+ *  runtime's `getComputedStyle` fallback. */
+export function isRegisteredThemeToken(name: string): boolean {
+  return registry().has(name)
 }
