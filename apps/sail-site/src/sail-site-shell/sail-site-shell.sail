@@ -185,6 +185,7 @@ export default controller(() => {
     <navbar placement="rail" bordered sticky offset="14">
       <label>Start here</label>
       <a href="/overview" aria-current={path() === '/' || path() === '/overview' ? 'page' : null}>Introduction</a>
+      <a href="/thesis" aria-current={path() === '/thesis' ? 'page' : null}>Thesis</a>
       <a href="/getting-started" aria-current={path() === '/getting-started' ? 'page' : null}>Installation</a>
       <a href="/why" aria-current={path() === '/why' ? 'page' : null}>Why SAIL</a>
       <a href="/tutorial" aria-current={path().startsWith('/tutorial') ? 'page' : null}>Tutorial</a>
