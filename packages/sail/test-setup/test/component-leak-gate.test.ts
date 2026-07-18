@@ -94,10 +94,11 @@ interface Primitive {
 // would live. Data surfaces with engine controllers (sail-table, sail-calendar)
 // are a deliberate next step — the pattern above is how to add them.
 const PRIMITIVES: Primitive[] = [
-  // sail-button, sail-separator dissolved to bare <button>/<hr> (L1 contract) —
-  // no longer checked-in .sail files to gate.
-  { file: 'sail-badge/sail-badge.sail', tag: 'sail-badge-gate', attrs: { tone: 'success' } },
-  { file: 'sail-spinner/sail-spinner.sail', tag: 'sail-spinner-gate' },
+  // sail-button, sail-separator, sail-badge, sail-spinner dissolved to bare L1
+  // elements (<button>/<hr>/<badge>/<spinner>) — no longer checked-in
+  // custom-element .sail files to gate.
+  { file: 'sail-error-boundary/sail-error-boundary.sail', tag: 'sail-error-boundary-gate', attrs: { 'fallback-text': 'Oops' } },
+  { file: 'sail-json-view/sail-json-view.sail', tag: 'sail-json-view-gate', attrs: { data: '{}' } },
 ]
 
 /**
