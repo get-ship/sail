@@ -365,34 +365,52 @@ fn parse_tokens(src: &str) -> TokenTable {
     let mut seen: HashSet<String> = HashSet::new();
     // Two state machines interleaved on the char stream:
     //   - `block_depth` — current `{ … }` nesting (0 outside any block).
-    //   - `in_root` — how many `:root` blocks we're nested inside.
+    //   - `root_depths` — the depths at which `:root` blocks opened, so a
+    //     `}` only exits a `:root` when it closes THAT block.
     // `:root` (with or without a `[data-…]` attribute selector) collects
     // tokens; `.dark`, media queries, utility classes don't. Skipping
     // `.dark` overrides is what gets us the canonical `:root` leaves instead
     // of the larger count you'd get reading every `--name: value;` in the file
     // (each `.dark`/media override redeclares names already collected).
+    // Comments are skipped BEFORE anything else: prose in tokens.css quotes
+    // code (`motion:loop={{ … }}`), and counting those braces once knocked
+    // the walker out of `:root` mid-block, silently dropping every token
+    // after the comment.
     let mut block_depth: i32 = 0;
-    let mut in_root: i32 = 0;
+    let mut root_depths: Vec<i32> = Vec::new();
     // Selector being built for a not-yet-opened block. When we see `{`,
-    // the selector is committed and we set `in_root` if the selector
-    // starts with `:root`.
+    // the selector is committed and its depth is pushed onto `root_depths`
+    // if the selector starts with `:root`.
     let mut selector = String::new();
     let mut chars = src.chars().peekable();
     while let Some(c) = chars.next() {
+        if c == '/' && chars.peek() == Some(&'*') {
+            chars.next();
+            let mut prev = '\0';
+            for n in chars.by_ref() {
+                if prev == '*' && n == '/' {
+                    break;
+                }
+                prev = n;
+            }
+            continue;
+        }
         match c {
             '{' => {
                 let s = selector.trim();
+                block_depth += 1;
                 if s.starts_with(":root") {
-                    in_root += 1;
+                    root_depths.push(block_depth);
                 }
                 selector.clear();
-                block_depth += 1;
             }
             '}' => {
+                if root_depths.last() == Some(&block_depth) {
+                    root_depths.pop();
+                }
                 if block_depth > 0 { block_depth -= 1; }
-                if in_root > 0 { in_root -= 1; }
             }
-            _ if in_root > 0 && c == '-' && chars.peek() == Some(&'-') => {
+            _ if !root_depths.is_empty() && c == '-' && chars.peek() == Some(&'-') => {
                 chars.next(); // consume second '-'
                 // Name
                 let mut name = String::new();
