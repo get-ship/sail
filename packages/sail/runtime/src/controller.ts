@@ -21,10 +21,13 @@
 // an Action to a DOM node.
 
 import type { Signal } from './signal'
-import type { ShipHost, Clients } from './ship'
 // Slice 2 — SAIL-local `RouteSignals` (see ./route-signals for the
 // decoupling rationale). Replaces the `@ship/deck-router` import.
 import type { RouteSignals } from './route-signals'
+// #105 — SAIL-local `Clients` PORT (see ./clients), mirroring the route
+// precedent. This file imports NO host module: `./ship` and the host type it
+// declares are gone from the controller scope entirely.
+import type { Clients } from './clients'
 
 // ---------------------------------------------------------------------------
 // State-shape extraction over Scope
@@ -101,8 +104,9 @@ export type MutableState<Scope> =
     readonly [K in Exclude<keyof Scope, StateKeys<Scope>>]: Scope[K]
   } & {
     // The ambient view context the proxy also exposes, matching the runtime
-    // (`baseScope` carries `ship` / `route` / `navigate`).
-    readonly ship: ShipHost
+    // (`baseScope` carries `clients` / `route` / `navigate`). No `ship`: the
+    // generic runtime names no host product (#105). A Ship host's SDK reaches
+    // scope as a `clients` key it augments, like any other provider.
     readonly clients: Clients
     readonly route: RouteSignals
     readonly navigate: (path: string) => void
@@ -114,18 +118,24 @@ export type MutableState<Scope> =
 /**
  * The shared view scope, as destructured by each controller section.
  *
- * Includes `ship`, the reactive `route` proxy, the `<data>`-declared
- * signals from the template, the `<state>`-declared writable signals
- * (read-only here), and the controller-hook contributions.
+ * `Scope` — the template's own `<scope>`/`<state>`/`<data>` members —
+ * plus the two HOST-PROVIDED members the mount seam injects: the
+ * `clients` data port and the reactive `route` proxy. Both are typed by
+ * SAIL-local ports (`./clients`, `./route-signals`); this type names no
+ * host product.
  *
  * `route` is a `RouteSignals` whose `params.<name>` and
  * `query.<name>` are themselves signals — reading them inside a
  * `derived` body or a `<data live>` source thunk subscribes the
  * surrounding scope, so URL changes re-fire the dependent
  * computation.
+ *
+ * NOTE (#105): there is no `ship` member. The runtime's controller scope
+ * is host-agnostic; a Ship host provides its SDK as a `clients` key
+ * (`declare module '@ship/sail-runtime' { interface Clients { ship: ShipSDK } }`),
+ * which the mount path spreads into scope alongside `clients` itself.
  */
 export type ControllerScope<Scope = object> = Scope & {
-  ship: ShipHost
   clients: Clients
   route: RouteSignals
 }
@@ -136,7 +146,7 @@ export type ControllerScope<Scope = object> = Scope & {
 
 /**
  * The controller def: ONE setup function. It receives the view scope
- * (`ship`, `clients`, `route`, `navigate`, plus template-declared
+ * (`clients`, `route`, `navigate`, plus template-declared
  * `<data>`/`<state>` signals) and, optionally, the host element; it
  * returns the surface the template merges into scope — signals,
  * `derived()` values, plain helpers, and event handlers alike, all as

@@ -332,7 +332,10 @@ export type {
 
 // The framework exports only the host seam. The concrete `ShipSDK` + its
 // data types live in `@ship/sdk-client` — the runtime names no host shape.
-export type { ShipHost, Clients } from './ship'
+// `ShipHost` types the MOUNT seam only (see ./ship); `Clients` is the
+// SAIL-local data port the controller scope is typed against (see ./clients).
+export type { ShipHost } from './ship'
+export type { Clients } from './clients'
 
 export { component, prop } from './component'
 // Child composition: mount an (internal, unregistered) component module into a

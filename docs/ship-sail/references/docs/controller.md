@@ -40,7 +40,7 @@ export default controller((ctx) => {
   )
 
   mount((el) => {
-    const id = setInterval(() => ctx.ship.agents.poll(), 5000)
+    const id = setInterval(() => ctx.clients.ship.agents.poll(), 5000)
     return () => clearInterval(id)
   })
 
@@ -51,7 +51,7 @@ export default controller((ctx) => {
     query,
     filtered,
     setQuery: (q: string) => query.set(q),
-    refresh: () => ctx.ship.agents.refresh(),
+    refresh: () => ctx.clients.ship.agents.refresh(),
   }
 })
 </controller>
@@ -59,7 +59,7 @@ export default controller((ctx) => {
 
 `fn` is `(ctx, host?) => Record<string, unknown>`:
 
-- **`ctx`** is the ambient view scope — `ship`, `clients`, `route`, `navigate`, plus every template-declared `<data>`/`<state>` signal, all directly accessible (`ctx.ship`, or destructure `{ ship, count }` in the parameter).
+- **`ctx`** is the ambient view scope — `clients`, `route`, `navigate`, plus every template-declared `<data>`/`<state>` signal, all directly accessible (`ctx.clients`, or destructure `{ clients, count }` in the parameter). There is no `ctx.ship`: the runtime names no host product. A Ship host's SDK is a *client* (`ctx.clients.ship`), typed by the provider augmenting its own key on `Clients` — same as any other data source. Each declared client is also spread into scope under its bare name, so a template written against `ship.git.overview()` keeps resolving.
 - **`host`** (optional second parameter) is the custom-element host, for reaching the shadow root or doing direct DOM work.
 - Whatever `fn` **returns** is the entire contributed template scope: state signals (`signal(...)`), computed values (`derived(...)`), plain helper functions, and event handlers — all as ordinary object properties. There is no separate section for handlers; a handler is just a function returned alongside everything else.
 
@@ -170,7 +170,7 @@ Because there's only one authoring surface — the inline `<controller>` block �
 <controller>
 export default controller((ctx) => {
   const count = signal(0)
-  const logClick = () => ctx.ship.analytics.track('click')
+  const logClick = () => ctx.clients.ship.analytics.track('click')
   return { count, logClick }
 })
 </controller>
