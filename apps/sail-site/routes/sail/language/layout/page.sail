@@ -119,7 +119,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.nesting}></code-block>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
+  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/language/styling">← Styling</a>
     <a variant="solid" tone="primary" href="/sail/language/motion">Motion →</a>
   </row>

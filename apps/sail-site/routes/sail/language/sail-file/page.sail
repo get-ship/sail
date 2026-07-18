@@ -54,33 +54,33 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>&#123;#for&#125;</code> with a required <code>key</code> — as rows
     shift up the board, the key tells the renderer which row is which, so DOM
     nodes move instead of being rewritten. <code>&#123;#match&#125;</code>
-    picks a badge per status. The blocks get their full treatment in
-    <a href="/sail/language/templates">Templates</a>; here, notice how little
-    of this is not plain HTML.
+    picks a badge per status. Blocks are covered in depth in
+    <a href="/sail/language/templates">Templates</a>. Everything else is
+    plain HTML — elements, attributes, text.
   </p>
   <code-block code={code.template}></code-block>
 
   <h2>The scope</h2>
   <p>
     <code>&lt;scope&gt;</code> is the component's static surface — everything
-    that is true about it before it runs. The board declares a type and one
-    prop:
+    that is true about it before it runs. The board's scope, in full:
   </p>
   <code-block code={code.scope}></code-block>
   <p>
-    Three kinds of member live here. <strong>Props</strong> are the
-    component's inputs. A prop with a default is an optional attribute; a
-    prop with a type and no default is a contract the parent must fill:
+    Read it top to bottom: the <code>Flight</code> type is declared, then
+    used two lines later — <code>seed</code> lets a parent hand the board its
+    opening rows. Types live in scope because the contract needs them: a
+    prop like <code>seed</code> is meaningless without <code>Flight</code>,
+    and the controller's state (next section) speaks the same type. Declared
+    once here, it is usable everywhere in the file without an import.
   </p>
-  <code-block code={code.scopeTyped}></code-block>
   <p>
-    <strong>Types</strong> — <code>Flight</code> is ordinary TypeScript, and
-    because it is declared in scope the controller and the template's
-    expressions can use it without an import. And <strong>variants</strong> —
-    a component's named looks, covered with the rest of
-    <a href="/sail/language/styling">styling</a>. Using a prop nobody
-    declared, or passing the wrong shape, is a compile error, not a runtime
-    surprise.
+    Both props have defaults, so both attributes are optional — the live
+    board above sets <code>title</code> and skips <code>seed</code>. Leave
+    the default off (<code>airport: string</code>) and the prop becomes
+    required: a parent that doesn't fill it does not compile. Scope has one
+    more member kind, <strong>variants</strong> — a component's named looks —
+    covered with the rest of <a href="/sail/language/styling">styling</a>.
   </p>
 
   <h2>The controller</h2>
@@ -100,30 +100,35 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     back the cleanup that stops it when the board unmounts:
   </p>
   <code-block code={code.controller}></code-block>
+  <p>
+    Two things to notice. Props arrive on <code>ctx</code> —
+    <code>ctx.seed()</code> is the prop the scope declared, readable like any
+    signal. And <code>signal&lt;Flight[]&gt;</code> is the payoff of putting
+    the type in scope: contract and state speak the same <code>Flight</code>,
+    with no import in sight.
+  </p>
 
   <h2>The flow</h2>
   <p>
-    Now trace one tick of the board through the file, because this loop is
-    the whole model. The interval fires and writes
-    <code>flights.set(...)</code> — state changes <em>only</em> because
-    something wrote it. The template reads <code>flights()</code>, so the
-    keyed <code>&#123;#for&#125;</code> reconciles: the departed row's DOM
-    leaves, four rows shift up in place, one row enters. The
-    <code>departed</code> write updates exactly one text node. Nothing else
-    in the component runs — no re-render, no lifecycle to reason about.
+    Here is one tick of the board, live, as a sequence. Watch what lights
+    up — and what doesn't:
   </p>
+  <flow-trace></flow-trace>
   <p>
-    That is the direction of everything in SAIL: <strong>the template reads
-    state; handlers and effects write it</strong>, and data a parent wants a
-    child to have arrives as props. When you read an unfamiliar component,
-    you always know where a value can change: find its writes in the
-    controller, and you have the complete list.
+    A write, the reconcile it triggers, one repaint. There is no fourth
+    step — no re-render, no lifecycle. That is the direction of everything
+    in SAIL: <strong>the template reads state; handlers and effects write
+    it</strong>. When you read an unfamiliar component, find the writes in
+    its controller and you have the complete list of ways it can change.
   </p>
 
   <h2>Nested components</h2>
   <p>
-    A compiled component is a custom element, so using one is writing its
-    tag — this page's own source contains exactly what you'd expect:
+    Compiling a <code>.sail</code> file produces a <em>custom element</em> —
+    a real HTML tag, registered with the browser itself, that works anywhere
+    HTML works. There is no import to wire up and no wrapper to render
+    through: using a component is writing its tag. This page's own source
+    contains exactly what you'd expect:
   </p>
   <code-block code={code.usage}></code-block>
   <p>
@@ -137,8 +142,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.slotUse}></code-block>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
+  <row sx="mt-8 pt-4 border-t border-t-border" justify="end" gap="2">
     <a variant="solid" tone="primary" href="/sail/language/state">State →</a>
-    <a variant="default" href="/sail/language/templates">Templates</a>
   </row>
 </column>

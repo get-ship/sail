@@ -44,21 +44,17 @@ export default controller(() => ({}))
   }
   props: {
     title = 'Departures'
-  }
-</scope>`,
-
-  scopeTyped: `<scope>
-  props: {
-    title = 'Departures'      /* has a default — the attribute is optional  */
-    airport: string           /* typed, no default — the parent must fill  */
+    seed: Flight[] = []
   }
 </scope>`,
 
   controller: `<controller>
 import { controller, signal, effect } from '@ship/sail-runtime'
 
-export default controller(() => {
-  const flights = signal<Flight[]>([/* five rows */])
+export default controller((ctx) => {
+  const flights = signal<Flight[]>(
+    ctx.seed().length > 0 ? ctx.seed() : defaultBoard(),
+  )
   const departed = signal(0)
 
   effect(() => {

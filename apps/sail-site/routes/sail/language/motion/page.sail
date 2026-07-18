@@ -360,7 +360,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     timelines. Honouring it is not something you can forget to do.
   </alert>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
+  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/language/layout">← Layout</a>
     <a variant="solid" tone="primary" href="/sail/behavior">Behavior →</a>
   </row>

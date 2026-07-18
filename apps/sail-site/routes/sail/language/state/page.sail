@@ -154,8 +154,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.composition}></code-block>
 
-  <row sx="mt-8 pt-4 border-t border-t-border">
-    <a variant="default" href="/sail/language/sail-file">← The .sail file</a>
+  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+    <a variant="default" href="/sail/language/sail-file">← Components</a>
     <a variant="solid" tone="primary" href="/sail/language/templates">Templates →</a>
   </row>
 </column>

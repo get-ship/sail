@@ -13,6 +13,7 @@
   }
   props: {
     title = 'Departures'
+    seed: Flight[] = []
   }
 </scope>
 
@@ -30,20 +31,24 @@ const POOL: Array<[string, string]> = [
   ['Ulaanbaatar', 'B1'],
 ]
 
-export default controller(() => {
+export default controller((ctx) => {
   let seq = 0
   const boardRow = (i: number, status: Flight['status']): Flight => {
     const [city, gate] = POOL[i % POOL.length]
     return { id: `${city}-${seq++}`, city, gate, status }
   }
 
-  const flights = signal<Flight[]>([
-    boardRow(0, 'boarding'),
-    boardRow(1, 'on-time'),
-    boardRow(2, 'delayed'),
-    boardRow(3, 'on-time'),
-    boardRow(4, 'on-time'),
-  ])
+  const flights = signal<Flight[]>(
+    ctx.seed().length > 0
+      ? ctx.seed()
+      : [
+          boardRow(0, 'boarding'),
+          boardRow(1, 'on-time'),
+          boardRow(2, 'delayed'),
+          boardRow(3, 'on-time'),
+          boardRow(4, 'on-time'),
+        ],
+  )
   const departed = signal(0)
 
   effect(() => {

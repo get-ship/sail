@@ -113,7 +113,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     to the <a href="/sail/data">data story</a>.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
+  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/language/state">← State</a>
     <a variant="solid" tone="primary" href="/sail/language/styling">Styling →</a>
   </row>
