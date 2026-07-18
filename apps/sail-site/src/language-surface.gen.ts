@@ -1708,6 +1708,7 @@ export const SX_ATOMS: SxAtom[] = [
     "values": [
       "deliberate",
       "fast",
+      "glacial",
       "instant",
       "medium",
       "slow"
@@ -1718,6 +1719,7 @@ export const SX_ATOMS: SxAtom[] = [
     "values": [
       "deliberate",
       "fast",
+      "glacial",
       "instant",
       "medium",
       "slow"
@@ -5359,6 +5361,11 @@ export const MOTION: { triggers: string[]; properties: string[]; staggerKey: str
       "name": "release",
       "kind": "tween",
       "doc": "scale-up on pointerup — completes the press/release pair"
+    },
+    {
+      "name": "spin",
+      "kind": "tween",
+      "doc": "rotate 0deg→360deg, one direction, infinite — a slow-spinning logo/mark. NOT alternate: a spin goes one way, it does not ping-pong. Distinct from the spinner ring's fixed 0.7s spin, which is a component-owned CSS animation, not this preset."
     },
     {
       "name": "spring:bouncy",
