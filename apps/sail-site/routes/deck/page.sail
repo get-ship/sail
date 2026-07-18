@@ -16,11 +16,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ quickstart, layer
 
 <article sx="max-w-breakpoint-tablet mx-auto">
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">deck · 0.2.0</p>
-  <h1>The standalone web framework for SAIL.</h1>
+  <h1>The standalone web framework for Sail.</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    deck mounts SAIL views, routes them from the filesystem, server-renders or
+    deck mounts Sail views, routes them from the filesystem, server-renders or
     statically builds them, and serves every asset — with a dev server and
-    state-preserving HMR. It is to SAIL what Next is to React.
+    state-preserving HMR. It is to Sail what Next is to React.
   </p>
 
   <alert tone="info">
@@ -32,12 +32,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ quickstart, layer
   <h2>The 30-second app</h2>
   <p>A deck app is a <code>routes/</code> folder and a dev server. No config file, no scaffold step.</p>
   <pre sx="font-mono text-sm leading-relaxed bg-surface-1 border border-border rounded-lg p-4 px-5 whitespace-pre-wrap break-words">{quickstart}</pre>
-  <p>That's a running SAIL single-page app, with HMR, on <code>127.0.0.1:7878</code>.</p>
+  <p>That's a running Sail single-page app, with HMR, on <code>127.0.0.1:7878</code>.</p>
 
   <h2>Where it sits</h2>
   <pre sx="font-mono text-sm leading-relaxed bg-surface-1 border border-border rounded-lg p-4 px-5 whitespace-pre-wrap break-words">{layers}</pre>
   <p>
-    SAIL is the component language — signals, templates, controllers. deck is the
+    Sail is the component language — signals, templates, controllers. deck is the
     framework around it — routing, rendering, build, serving. Your app is what
     you write under <code>routes/</code>.
   </p>

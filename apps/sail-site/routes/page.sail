@@ -81,7 +81,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
       <row gap="4" justify="center" align="center" sx="w-full">
         <a variant="solid" tone="primary" href="/sail/getting-started" sx="rounded-full px-8" motion:press={{ scale: 'press' }}>Get started</a>
-        <a variant="outline" href="/sail/why" sx="rounded-full px-8" motion:press={{ scale: 'press' }}>Why SAIL</a>
+        <a variant="outline" href="/sail/why" sx="rounded-full px-8" motion:press={{ scale: 'press' }}>Why Sail</a>
       </row>
     </column>
   </section>

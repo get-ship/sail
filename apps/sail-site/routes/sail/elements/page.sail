@@ -76,7 +76,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.behavior}></code-block>
   <combobox placeholder="Pick a framework" sx="max-w-panel-max-w-sm">
-    <option value="sail">SAIL</option>
+    <option value="sail">Sail</option>
     <option value="svelte">Svelte</option>
     <option value="solid">Solid</option>
   </combobox>

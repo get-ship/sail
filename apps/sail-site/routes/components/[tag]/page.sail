@@ -242,7 +242,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             {#if stage.combobox()}
               <column gap="3" sx="w-full max-w-panel-max-w-sm">
                 <combobox placeholder="Pick a framework — type to filter" on:sail-combobox-select={(e) => pickFw(e)}>
-                  <option value="sail">SAIL</option>
+                  <option value="sail">Sail</option>
                   <option value="react">React</option>
                   <option value="svelte">Svelte</option>
                   <option value="solid">Solid</option>
@@ -680,7 +680,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             {/if}
             {#if stage.sailMediaImage()}
               <column gap="3" align="center" data-tile-stage="sail-pack-media-image">
-                <sail-media-image src="/sail-oss/sail-mark.svg" alt="SAIL mark"></sail-media-image>
+                <sail-media-image src="/sail-oss/sail-mark.svg" alt="Sail mark"></sail-media-image>
               </column>
             {/if}
             {#if stage.sailMediaAv()}

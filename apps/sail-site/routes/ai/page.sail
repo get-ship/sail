@@ -9,9 +9,9 @@ export default controller(() => ({}))
 
 <column sx="p-0 max-w-breakpoint-tablet mx-auto">
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">AI</p>
-  <h1>SAIL is built for agents</h1>
+  <h1>Sail is built for agents</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    Most UI frameworks optimize for a human at a keyboard. SAIL optimizes for a
+    Most UI frameworks optimize for a human at a keyboard. Sail optimizes for a
     model: a narrow grammar, a strict lint that turns design-system violations
     into build errors, a tight compile-check loop, and a batteries-included
     standard library — so an agent produces correct, on-brand UI on the first pass.
@@ -20,7 +20,7 @@ export default controller(() => ({}))
   <h2>Why agent-first changes the design</h2>
   <p>
     An agent doesn't need ergonomic sugar; it needs fast, unambiguous feedback
-    and guardrails it can't drift past. SAIL leans into that:
+    and guardrails it can't drift past. Sail leans into that:
   </p>
   <ul>
     <li><strong>Strict lint as build errors</strong> — off-token color, ad-hoc spacing, a raw <code>&lt;div&gt;</code> where a real primitive exists: rejected at compile time, not review time.</li>
@@ -30,12 +30,12 @@ export default controller(() => ({}))
   </ul>
 
   <h2>The AI toolchain</h2>
-  <p>The tools that make an agent fluent in SAIL — usable together or on their own:</p>
+  <p>The tools that make an agent fluent in Sail — usable together or on their own:</p>
   <ul>
     <li><strong>MCP server</strong> — serves the live docs and runs static analysis to catch common generative pitfalls before they ship.</li>
-    <li><strong>Skills</strong> — lazy-loaded briefs that teach an agent SAIL's idioms and when to reach for which primitive.</li>
+    <li><strong>Skills</strong> — lazy-loaded briefs that teach an agent Sail's idioms and when to reach for which primitive.</li>
     <li><strong>LSP</strong> — the compiler's diagnostics in-editor, for the human half of the loop.</li>
-    <li><strong>Eval harness</strong> — a scored SAIL-authoring benchmark, so changes to the language or lint are measured against whether agents actually get it right.</li>
+    <li><strong>Eval harness</strong> — a scored Sail-authoring benchmark, so changes to the language or lint are measured against whether agents actually get it right.</li>
   </ul>
 
   <p sx="border border-border border-l-3 border-l-primary rounded-md p-3 px-4 text-sm text-muted-foreground">

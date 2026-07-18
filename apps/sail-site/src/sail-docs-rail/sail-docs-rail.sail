@@ -1,5 +1,5 @@
 <!--
-  <sail-docs-rail> — the SAIL-language docs sidebar + content main, mounted
+  <sail-docs-rail> — the Sail-language docs sidebar + content main, mounted
   by routes/sail/_layout.sail for every /sail/* route. A tutorial LESSON page
   (/sail/tutorial/<slug>) is a fixed-viewport workbench and drops the rail +
   reading padding; the /sail/tutorial index itself is a normal docs page and

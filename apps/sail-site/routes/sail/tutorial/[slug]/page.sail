@@ -7,7 +7,7 @@
   Playground state — active tab, status badge, console lines, editor values —
   is signals in the <controller>; the template is a pure read. tutorial-boot
   owns the FFI seams only (wasm compile, iframe postMessage, theme observer);
-  the editor's imperative API is reached through bind:this refs. The SAIL
+  the editor's imperative API is reached through bind:this refs. The Sail
   docs segment layout renders /sail/tutorial/* lessons full-bleed
   (sail-docs-rail `workbench`).
 

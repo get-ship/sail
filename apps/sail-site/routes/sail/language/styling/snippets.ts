@@ -1,4 +1,4 @@
-// Snippets for /sail/language/styling. SAIL samples are compiled by the build
+// Snippets for /sail/language/styling. Sail samples are compiled by the build
 // (crates/sail/compiler/tests/site_snippets_compile.rs); the two diagnostic
 // samples are real compiler output, captured verbatim.
 export const code = {

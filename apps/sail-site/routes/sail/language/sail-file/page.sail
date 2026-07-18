@@ -117,7 +117,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     A write, the reconcile it triggers, one repaint. There is no fourth
     step — no re-render, no lifecycle. That is the direction of everything
-    in SAIL: <strong>the template reads state; handlers and effects write
+    in Sail: <strong>the template reads state; handlers and effects write
     it</strong>. When you read an unfamiliar component, find the writes in
     its controller and you have the complete list of ways it can change.
   </p>

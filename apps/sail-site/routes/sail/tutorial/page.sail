@@ -20,7 +20,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column sx="max-w-breakpoint-tablet mx-auto" gap="5">
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Tutorial</p>
-  <h1>Learn SAIL</h1>
+  <h1>Learn Sail</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
     Nine hands-on lessons — one per decision surface the language kept, then
     the loop it exists for: agents author, humans review. Each lesson pairs a

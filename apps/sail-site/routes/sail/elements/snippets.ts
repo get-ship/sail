@@ -1,4 +1,4 @@
-// Snippets for the using-components guide. Every SAIL sample is compiled by
+// Snippets for the using-components guide. Every Sail sample is compiled by
 // the build (crates/sail/compiler/tests/site_snippets_compile.rs).
 export const code = {
   useThem: `<!-- components are tags. Write them like HTML. -->
@@ -36,7 +36,7 @@ export const code = {
   behavior: `<!-- the behavior is already wired: this combobox filters as you
      type and commits on Enter — you wrote only the options. -->
 <combobox placeholder="Pick a framework">
-  <option value="sail">SAIL</option>
+  <option value="sail">Sail</option>
   <option value="svelte">Svelte</option>
   <option value="solid">Solid</option>
 </combobox>`,

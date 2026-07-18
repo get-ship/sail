@@ -3,7 +3,7 @@
   picker, and theme/product application. Written in the language, no CSS.
 
   This is the ONLY layout that wraps every route (`routes/_layout.sail`
-  mounts it at prefix `/`). Per-segment sidebars (SAIL/Deck/Components/AI)
+  mounts it at prefix `/`). Per-segment sidebars (Sail/Deck/Components/AI)
   live in their own `routes/<segment>/_layout.sail` + rail component, nested
   inside this one — this file owns none of that, only the always-on top bar.
 -->
@@ -19,17 +19,17 @@
 // owns only the accent hue, on its own attribute (data-product), so crossing
 // into Deck turns the brand violet without repainting the reader's theme.
 //
-// The SAIL theme + the framework contracts are imported HERE (not the clients
+// The Sail theme + the framework contracts are imported HERE (not the clients
 // seam): this header is in every route's module graph, so these side-effect
 // imports can't be tree-shaken — whereas an export-less clients module gets
 // dropped. contracts.css gives every page the design-system typography
 // (bare h1/p/ul/code/pre/button/anchor) without a class hook in any template.
 import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
 import '@ship/tokens/products.css' // brand hue per data-product; themes own lightness/chroma
-import '@ship/tokens/contracts.css' // framework contracts: bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a SAIL document, no class hooks needed
+import '@ship/tokens/contracts.css' // framework contracts: bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a Sail document, no class hooks needed
 import { applyTheme, isValidTheme, THEME_STORAGE_KEY, DEFAULT_THEME } from '@ship/tokens/themes'
 
-// Ship UI is ONE site with a top product switcher (SAIL · Deck · Components · AI).
+// Ship UI is ONE site with a top product switcher (Sail · Deck · Components · AI).
 // The active product is derived from the path; each drives its own segment
 // layout/sidebar/accent (see routes/{sail,deck,components,ai}/_layout.sail).
 function productFor(p: string): string {
@@ -39,7 +39,7 @@ function productFor(p: string): string {
   if (p === '/components' || p.startsWith('/components/')) return 'components'
   return 'sail'
 }
-// The umbrella landing is ship (teal); SAIL red; Deck violet; Components
+// The umbrella landing is ship (teal); Sail red; Deck violet; Components
 // green; AI blue. `product-accents.css` keys on this attribute.
 function productAttr(product: string): string {
   switch (product) {
@@ -88,7 +88,7 @@ export default controller(() => {
     // The umbrella landing (design 1c) is the marketing home — a full-bleed
     // kinetic page (crossing diagonal tickers, giant wordmark) that must NOT
     // sit inside the docs reading gutter, so it renders in a no-padding main
-    // like a workbench. Every other route has its own segment layout (SAIL,
+    // like a workbench. Every other route has its own segment layout (Sail,
     // Deck, Components, AI) that supplies its own <main> — this header must
     // not double-wrap those, so it only wraps when nothing downstream will.
     const landing = derived(() => path() === '/')
@@ -113,7 +113,7 @@ export default controller(() => {
   </a>
 
   <row slot="center" gap="1" align="center" sx="p-1 bg-surface-2 border border-border rounded-full" aria-label="Products">
-    <a href="/sail/overview" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'sail' ? 'page' : null}>SAIL</a>
+    <a href="/sail/overview" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'sail' ? 'page' : null}>Sail</a>
     <a href="/deck" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'deck' ? 'page' : null}>Deck</a>
     <a href="/components" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'components' ? 'page' : null}>Components</a>
     <a href="/ai" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'ai' ? 'page' : null}>AI</a>

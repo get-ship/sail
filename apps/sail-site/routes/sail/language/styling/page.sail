@@ -123,7 +123,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     This is the part that matters. <strong>Authored CSS is a compile
     error.</strong> Not discouraged, not linted with a warning — an error, in
-    every SAIL file. The only exception is the stdlib elements inside the
+    every Sail file. The only exception is the stdlib elements inside the
     compiler, because they <em>are</em> the styling layer.
   </p>
   <p>

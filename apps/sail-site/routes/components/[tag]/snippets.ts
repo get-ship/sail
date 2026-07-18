@@ -59,7 +59,7 @@ export default controller(() => {
 
 <combobox placeholder="Pick a framework"
           on:sail-combobox-select={(e) => pick(e)}>
-  <option value="sail">SAIL</option>
+  <option value="sail">Sail</option>
   <option value="react">React</option>
   <option value="svelte">Svelte</option>
   <option value="solid">Solid</option>

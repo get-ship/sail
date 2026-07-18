@@ -1,5 +1,5 @@
 // Code snippets for the motion page. Kept out of the controller so the compiler's
-// scope scan isn't fooled by `return {…}` / `signal(…)` patterns. Every SAIL sample
+// scope scan isn't fooled by `return {…}` / `signal(…)` patterns. Every Sail sample
 // here is compiled by the build (crates/sail/compiler/tests/site_snippets_compile.rs).
 //
 // The vocabulary is the compiler's: MOTION_TRIGGERS and MOTION_PROPERTIES in

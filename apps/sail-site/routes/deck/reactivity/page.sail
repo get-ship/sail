@@ -1,6 +1,6 @@
 <!--
   /deck/reactivity — deck's role in the reactive update path. Reactivity
-  itself (signal / derived / effect, the glitch-free update pass) is SAIL's;
+  itself (signal / derived / effect, the glitch-free update pass) is Sail's;
   that model lives at /reactivity and is not re-taught here. This page is
   about the sources deck owns and feeds into the graph: the URL, live server
   data, durable app state, and dev edits. Code blocks are highlighted via
@@ -18,17 +18,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Reactivity</p>
   <h1>deck in the reactive path</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    Reactivity is SAIL's, not deck's. SAIL gives a view signals, derived values,
+    Reactivity is Sail's, not deck's. Sail gives a view signals, derived values,
     and effects; deck's job is to keep that graph fed from the things a
     framework owns and changes — the URL, live server data, and state that
     outlives a route.
   </p>
 
   <alert tone="info">
-    <strong>The signal model lives in SAIL.</strong> Signals, <code>derived</code>,
-    <code>effect</code>, batching, and the glitch-free update pass are all the SAIL
+    <strong>The signal model lives in Sail.</strong> Signals, <code>derived</code>,
+    <code>effect</code>, batching, and the glitch-free update pass are all the Sail
     runtime — deck adds no reactive primitive of its own. For how the graph
-    recomputes, see <a href="/sail/language/state">SAIL · Reactivity</a>.
+    recomputes, see <a href="/sail/language/state">Sail · Reactivity</a>.
   </alert>
 
   <h2>The URL is reactive</h2>
