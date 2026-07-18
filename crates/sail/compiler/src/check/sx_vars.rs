@@ -15,7 +15,7 @@
 //!
 //! **Action-owned properties ride the token bucket.** `use:virtualRow`,
 //! `use:eventSpan`, `use:rect`, `use:pin`, `use:zoomPan`, `use:worldTransform`,
-//! `use:maxWidth`, `use:cellPad`, `use:indent`, `use:virtualSpacer`,
+//! `use:maxWidth`, `use:cellPad`, `use:virtualSpacer`,
 //! `use:swatch`, `use:portEdge`, `use:targetCursor`, `use:spotlight`,
 //! `use:gridTracks`, `use:rangeFill` each write a fixed, hardcoded custom
 //! property (`--row-y`, `--evt-top`, …) that is neither a prop nor a

@@ -56,14 +56,14 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                         severity: Severity::Warn,
                         message:
                             "raw <style> is not the floor styling surface — the floor is one way \
-                             to do CSS: sx token utilities (sx=\"p:4 bg:surface-2\"). \
+                             to do CSS: sx token utilities (sx=\"p-4 bg-surface-2\"). \
                              Motion/variants/responsive are becoming language elements, not raw \
                              CSS. This is the opinionated floor; primitives use it too."
                                 .to_string(),
                         suggest: Some(
                             "Text elements (<h1>-<h6>, <p>) are styled from the type scale \
                              automatically — write them plain. Everything else: sx= for surface \
-                             tokens, <sail-stack>/<sail-cluster> for structure. A gap here is a \
+                             tokens, <column>/<row>/<grid> for structure. A gap here is a \
                              missing language element to add, not a reason to hand-author CSS."
                                 .to_string(),
                         ),
