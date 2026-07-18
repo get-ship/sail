@@ -17,6 +17,7 @@ use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn compile_motion(source: &str) -> Result<String, String> {
     let opts = CompileOpts {
+        scope_capabilities: Vec::new(),
         route_params: None,
         setup_url: None,
         mode: CompileMode::Component,
