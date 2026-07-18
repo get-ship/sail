@@ -11,7 +11,7 @@
 // re-deals after the exits finish, so the stagger arrival can be watched
 // again without a reload. No interval: one deal on arrival, replay on demand.
 
-import { controller, signal, type ControllerScope } from '@ship/sail-runtime'
+import { controller, signal, timeline, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
 
@@ -22,12 +22,38 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     dealt.set(false)
     setTimeout(() => dealt.set(true), 450)
   }
+
+  // The choreography lane, live. The slider owns the clock; `timeline()` turns
+  // motion.dev's own 7-stop tile keyframes into one signal per channel. Swap
+  // `p` for `clock(3600, { loop: true })` and the demo runs itself — nothing
+  // else on this page would change.
+  const scrubText = signal('0')
+  const p = (): number => Number(scrubText()) / 100
+  const { tileX, tileRotate, tileScale } = timeline(
+    p,
+    {
+      // Translate settles at .34 and HOLDS through .44 — a hold is the same
+      // VALUE repeated at a later offset, never arithmetic.
+      tileX: [[0, '0px'], [0.12, '0px'], [0.34, '120px'], [0.44, '120px'],
+             [0.54, '120px'], [0.64, '120px'], [1, '0px']],
+      tileRotate: [[0, '0deg'], [0.12, '0deg'], [0.34, '15deg'], [0.44, '15deg'],
+                  [0.54, '15deg'], [0.64, '15deg'], [1, '0deg']],
+      // …while the scale pops on its own, .54 → .64.
+      tileScale: [[0.44, 1], [0.54, 1.75], [0.64, 1]],
+    },
+    { easing: [0.6, 0, 0.2, 1] },
+  )
+
   return {
     code,
     open,
     dealt,
     replay,
     hand: signal(['A', 'K', 'Q', 'J', '10']),
+    scrubText,
+    tileX,
+    tileRotate,
+    tileScale,
   }
 })
 </controller>
@@ -201,6 +227,82 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <div data-testid="spin-demo" sx="w-8 h-8 rounded-md bg-primary" motion:loop={{ rotate: 'spin' }}></div>
   </row>
   <code-block code={code.spin}></code-block>
+
+  <h2>Choreography — when something else owns the clock</h2>
+  <p>
+    Everything above is fire-and-forget: you name a preset and the browser runs
+    it. That is the right answer right up until the clock belongs to something
+    else — a slider, a scroll position, a sequence that has to land on exact
+    offsets and <em>stay there</em>. <code>motion:</code> cannot express that,
+    and the honest alternative used to be hand-rolled
+    <code>Math.min/Math.max</code> arithmetic in an effect.
+  </p>
+  <p>
+    <code>timeline()</code> is that arithmetic as <strong>data</strong>. It
+    takes a progress reader and returns one signal per track — which the style
+    layer already knows how to read, because
+    <code>(--tile-x)</code> is the same reflection a plain
+    <code>signal(...)</code> gets. The tile below is motion.dev's own seven-stop
+    choreography, keyframe for keyframe.
+  </p>
+
+  <grid cols="2" gap="4">
+    <column>
+      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Live — drag the slider</p>
+      <column sx="p-6 border border-border rounded-lg bg-surface-1 min-h-11" gap="4">
+        <row align="center" gap="3">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            bind:value={scrubText}
+            data-testid="timeline-scrub"
+            sx="grow-1 min-w-0"
+          />
+          <span sx="w-8 text-end font-mono text-sm text-muted-foreground">{scrubText()}</span>
+        </row>
+        <row sx="min-h-9" align="center">
+          <card
+            data-testid="timeline-tile"
+            sx="w-9 h-9 bg-primary rounded-md translate-x-(--tile-x) rotate-(--tile-rotate) scale-(--tile-scale)"
+          ></card>
+        </row>
+        <p sx="text-sm text-muted-foreground">
+          Watch it settle at 34 and <strong>hold</strong> — then pop, in place,
+          between 54 and 64. Three channels, one progress value.
+        </p>
+      </column>
+    </column>
+    <column>
+      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Source</p>
+      <code-block code={code.choreography}></code-block>
+    </column>
+  </grid>
+
+  <p>
+    A hold is the same <em>value</em> repeated at a later offset — never a
+    conditional, never a clamp. Per-segment easing follows the platform's own
+    rule (a stop eases the segment it <em>starts</em>), so keyframes captured
+    off a real page transfer verbatim.
+  </p>
+
+  <h3>Drivers</h3>
+  <p>
+    Progress is just a signal, so the thing producing it is interchangeable.
+    That is why the slider above and a self-running animation are the same
+    program with one line changed.
+  </p>
+  <code-block code={code.drivers}></code-block>
+
+  <alert tone="info">
+    <strong>Two lanes, one rule.</strong> If the browser can own the clock, let
+    it — <code>motion:</code> runs on the compositor and costs the main thread
+    nothing. If something else owns the clock, reach for
+    <code>timeline()</code>. It writes custom properties every frame, which is
+    real main-thread work, and it holds 60fps at sixty elements across three
+    channels each — far past what a page actually choreographs at once.
+  </alert>
 
   <h2>The vocabulary</h2>
   <p>

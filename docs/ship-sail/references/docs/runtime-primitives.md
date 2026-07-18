@@ -147,6 +147,85 @@ backed by `packages/sail/runtime/src/motion.ts`'s lifecycle animations.
 See `packages/sail/tutorial/src/prose/06-motion-is-a-directive.md` for the
 canonical walkthrough.
 
+### Two lanes
+
+`motion:` is one of two lanes, and the split is about **who owns the clock**.
+
+| | `motion:` | `timeline()` |
+| --- | --- | --- |
+| clock | the browser | you (a signal) |
+| runs on | the compositor (WAAPI) | the main thread |
+| surface | a directive + a closed preset catalogue | a runtime import |
+| good at | hover/press, enter/exit, reveal-on-scroll, ambient loops | scrubbing, holds, per-segment easing, many elements against one progress value |
+
+`motion:` is cheaper and should be preferred whenever it can express the
+motion. It cannot express motion whose timing something else owns — a slider
+scrubbing an animation, or a multi-stop sequence that must settle at an exact
+offset and hold there. That is `timeline()`.
+
+### `timeline(progress, tracks, options?)`
+
+`packages/sail/runtime/src/timeline.ts`. Takes a progress reader (`() =>
+number`, `0..1`) and a map of keyframe tracks; returns one memoized signal per
+track. Return them from a controller and the existing `(--name)` reflection
+carries each to the style layer — a timeline track resolves in an `sx` read
+exactly like a `signal(...)` does (`crates/sail/compiler/src/check/sx_vars.rs`).
+
+```ts
+const { tileX, tileScale } = timeline(progress, {
+  tileX: [[0, '0px'], [0.34, '120px'], [0.44, '120px'], [1, '0px']],
+  tileScale: [[0.44, 1], [0.54, 1.75], [0.64, 1]],
+}, { easing: [0.6, 0, 0.2, 1] })
+```
+
+- **Offsets** are `0..1` and must ascend. Progress outside the first/last
+  offset clamps.
+- **Holds** are the same VALUE repeated at a later offset. Repeating an
+  *offset* is an error — it is almost always the typo for a hold.
+- **Easing** on a stop governs the segment that STARTS at it (WAAPI's rule, so
+  captured `cubic-bezier(...)` values transfer verbatim). `options.easing` is
+  the default for segments that name none; it defaults to `linear`. Accepts a
+  bezier tuple, a CSS easing name, or a `0..1 → 0..1` function.
+- **Units** are strict: a track is all numbers or all strings sharing one unit,
+  validated at construction. Numbers come back as numbers; unit strings keep
+  their unit. Colors and multi-part values are not supported — split them into
+  numeric channels.
+
+Holds are free downstream: a held segment recomputes to an `Object.is`-equal
+value, so the reflection effect never writes.
+
+### Drivers
+
+`packages/sail/runtime/src/drivers.ts`. Each returns a plain signal, so they
+are interchangeable with a hand-written `signal(0)` that a range input writes.
+All of them stop when the enclosing scope disposes.
+
+- `clock(durationMs, { loop?, direction?, autoplay?, reducedMotion? })` —
+  wall-clock progress on motion.dev's frame loop (the same loop `motion:` uses,
+  so a page mixing both lanes still has one rAF). Carries `.play()`,
+  `.pause()`, `.stop()`, `.running()`.
+- `scrollProgress(target?, { axis? })` — document scroll, or a target
+  element's `cover 0% → 100%` travel through the viewport.
+- `springValue(source, springOptions?)` — chases another signal with real
+  physics; retargeting mid-flight preserves velocity. Its output is a value,
+  not necessarily `0..1`.
+
+**Reduced motion is decided once, in the driver.** `clock` defaults to
+jump-to-end — the settled value, no frame loop — matching what `motion.ts`
+does for `motion:` directives; `reducedMotion: 'start' | 'play'` overrides.
+`springValue` mirrors its source instantly. `scrollProgress` deliberately does
+not suppress: it reports what the user is already doing, and freezing it would
+freeze the page mid-scroll.
+
+### Cost
+
+`timeline()` writes custom properties from JS every frame — main-thread style
+recalc, which is exactly what `motion:` avoids. Measured in headless Chromium
+(`packages/sail/runtime/e2e/timeline-tile.spec.ts`), one clock driving N
+elements at three channels each: ~60fps at 1, 12, and 60 elements (180
+channels). Well past what a page choreographs at once, but it is not free, and
+it is why `motion:` stays the default.
+
 ## Morph — in-place DOM patching
 
 Add the `morph` directive to any element whose contents are produced by `bindRawHtml` (or another HTML-string-replacing path) to preserve focus, scroll, selection, and event-listener identity across re-renders:
