@@ -14,7 +14,7 @@ use crate::diagnostics::Span;
 
 /// Validated expression — the source text the user wrote, minus
 /// surrounding `{` `}`, with `Span` pointing at its location.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Expr {
     /// Raw expression text. Already trimmed and brace-stripped.
     pub source: String,

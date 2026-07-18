@@ -384,9 +384,19 @@ AttrInstr::Use { action, param, .. } => {
                 check_use_value_expr(action, e, v);
             }
         }
-        // `motion:` has no expression body in milestone 1 (statically
-        // parsed object literal) — nothing to check here.
-        AttrInstr::Motion { .. } => {}
+        // A signal in a `motion:` config field must resolve against scope
+        // like any other expression — an undefined name there should read as
+        // the same mistake it is anywhere else.
+        AttrInstr::Motion { props, timing, .. } => {
+            for e in timing.exprs() {
+                check_expr(e, v, &[]);
+            }
+            for p in props {
+                for e in p.exprs() {
+                    check_expr(e, v, &[]);
+                }
+            }
+        }
     }
 }
 

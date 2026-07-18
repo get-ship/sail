@@ -428,85 +428,209 @@ AttrInstr::Use { action, param, .. } => {
                     "runAction({el_var}, {action_rw}, {param_thunk});",
                 ));
             }
-            AttrInstr::Motion { trigger, props, stagger_ms, span: _ } => {
-                // `motion:` is a thin runtime directive. The compiler validates the
-                // closed preset catalogue, then emits its resolved config; motion.dev
-                // creates and orchestrates every animation after the node is live.
-                // This avoids inert-document WAAPI animations and keeps reduced motion
-                // under one runtime authority.
+            AttrInstr::Motion { trigger, props, stagger_ms, timing, span: _ } => {
+                // `motion:` is a thin runtime directive. The compiler resolves the
+                // config — preset defaults, then config-level timing, then per-channel
+                // overrides — and emits it; motion.dev creates and orchestrates every
+                // animation after the node is live. This avoids inert-document WAAPI
+                // animations and keeps reduced motion under one runtime authority.
                 let db = lower::presets::load()
                     .expect("animation-presets.json is bundled at compile time");
                 let mut motions: Vec<String> = Vec::with_capacity(props.len());
                 for prop in props {
-                    let spec = db
-                        .preset(&prop.preset)
-                        .expect("preset already validated in lower/bindings");
-                    let kind = match spec.kind {
-                        lower::presets::PresetKind::Spring => "spring",
-                        lower::presets::PresetKind::Tween => "tween",
+                    let spec = prop
+                        .preset
+                        .as_deref()
+                        .map(|name| {
+                            db.preset(name).expect("preset already validated in lower/bindings")
+                        });
+                    // No preset means a bare inline object, which is always a tween:
+                    // springs are a physics config you name, not magnitudes you write.
+                    let kind = match spec.map(|s| s.kind) {
+                        Some(lower::presets::PresetKind::Spring) => "spring",
+                        _ => "tween",
                     };
                     let mut fields: Vec<String> = vec![
                         format!("property: {}", js_string(&prop.property)),
-                        format!("preset: {}", js_string(&prop.preset)),
+                        format!(
+                            "preset: {}",
+                            js_string(prop.preset.as_deref().unwrap_or("inline"))
+                        ),
                         format!("kind: {}", js_string(kind)),
                     ];
-                    if let Some(value) = spec.stiffness {
-                        fields.push(format!("stiffness: {value}"));
+                    if let Some(spec) = spec {
+                        if let Some(value) = spec.stiffness {
+                            fields.push(format!("stiffness: {value}"));
+                        }
+                        if let Some(value) = spec.damping {
+                            fields.push(format!("damping: {value}"));
+                        }
+                        if let Some(value) = spec.mass {
+                            fields.push(format!("mass: {value}"));
+                        }
+                        if let Some(value) = spec.rest_speed {
+                            fields.push(format!("restSpeed: {value}"));
+                        }
+                        if let Some(value) = spec.rest_delta {
+                            fields.push(format!("restDelta: {value}"));
+                        }
                     }
-                    if let Some(value) = spec.damping {
-                        fields.push(format!("damping: {value}"));
+
+                    // Magnitudes: inline beats the preset's baked from/to.
+                    let preset_from = spec.and_then(|s| s.from);
+                    let preset_to = spec.and_then(|s| s.to);
+                    if let Some(js) = self.motion_magnitude(prop.from.as_ref(), preset_from) {
+                        fields.push(format!("from: {js}"));
                     }
-                    if let Some(value) = spec.mass {
-                        fields.push(format!("mass: {value}"));
+                    if let Some(js) = self.motion_magnitude(prop.to.as_ref(), preset_to) {
+                        fields.push(format!("to: {js}"));
                     }
-                    if let Some(value) = spec.rest_speed {
-                        fields.push(format!("restSpeed: {value}"));
+
+                    // Timing: preset < config-level < channel-level.
+                    let duration = prop.timing.duration.as_ref().or(timing.duration.as_ref());
+                    if let Some(js) = self.motion_seconds(duration) {
+                        fields.push(format!("duration: {js}"));
+                    } else if let Some(token) = spec.and_then(|s| s.duration_token.as_deref()) {
+                        // Motion reads duration in seconds; the compiler resolves the
+                        // token to ms (one source of truth) then converts at the boundary.
+                        fields.push(format!("duration: {}", duration_token_to_ms(token) / 1000.0));
                     }
-                    if let Some(value) = spec.rest_delta {
-                        fields.push(format!("restDelta: {value}"));
+                    let delay = prop.timing.delay.as_ref().or(timing.delay.as_ref());
+                    if let Some(js) = self.motion_seconds(delay) {
+                        fields.push(format!("delay: {js}"));
                     }
-                    if let Some(value) = spec.from {
-                        fields.push(format!("from: {value}"));
+                    let easing = prop.timing.easing.as_ref().or(timing.easing.as_ref());
+                    if let Some(js) = self.motion_easing(easing, &db) {
+                        fields.push(format!("easing: {js}"));
+                    } else if let Some(e) = spec.and_then(|s| s.easing.as_deref()) {
+                        fields.push(format!("easing: {}", js_string(e)));
                     }
-                    if let Some(value) = spec.to {
-                        fields.push(format!("to: {value}"));
-                    }
-                    if let Some(token) = spec.duration_token.as_deref() {
-                        // Motion reads duration in seconds; the compiler
-                        // resolves the token to ms (one source of truth)
-                        // then converts at the boundary.
-                        fields.push(format!(
-                            "duration: {}",
-                            duration_token_to_ms(token) / 1000.0
-                        ));
-                    }
-                    if let Some(easing) = spec.easing.as_deref() {
-                        fields.push(format!("easing: {}", js_string(easing)));
-                    }
-                    if let Some(iterations) = spec.iterations.as_deref() {
+                    let iterations =
+                        prop.timing.iterations.as_ref().or(timing.iterations.as_ref());
+                    if let Some(js) = self.motion_iterations(iterations) {
+                        fields.push(format!("iterations: {js}"));
+                    } else if let Some(it) = spec.and_then(|s| s.iterations.as_deref()) {
                         // `infinite` (the catalogue's spell) maps to Motion's
                         // `Infinity` for `repeat`. `1` means "play once".
-                        let mapped = if iterations == "infinite" {
+                        let mapped = if it == "infinite" {
                             "Infinity".to_string()
                         } else {
-                            iterations.to_string()
+                            it.to_string()
                         };
                         fields.push(format!("iterations: {mapped}"));
                     }
-                    if let Some(direction) = spec.direction.as_deref() {
-                        fields.push(format!("direction: {}", js_string(direction)));
+                    let direction = prop.timing.direction.as_ref().or(timing.direction.as_ref());
+                    if let Some(js) = self.motion_plain_string(direction) {
+                        fields.push(format!("direction: {js}"));
+                    } else if let Some(d) = spec.and_then(|s| s.direction.as_deref()) {
+                        fields.push(format!("direction: {}", js_string(d)));
                     }
                     motions.push(format!("{{ {} }}", fields.join(", ")));
                 }
                 let stagger = stagger_ms
                     .map(|ms| format!(", stagger: {}", ms as f64 / 1000.0))
                     .unwrap_or_default();
-                w.line(&format!(
-                    "__sui_motion_attach({el_var}, {{ trigger: {trigger}, motions: [{motions}]{stagger} }});",
+                let config = format!(
+                    "{{ trigger: {trigger}, motions: [{motions}]{stagger} }}",
                     trigger = js_string(trigger),
                     motions = motions.join(", "),
-                ));
+                );
+                // A config with a signal in it is REACTIVE: pass a thunk so the
+                // runtime can re-read it inside an effect and rebuild the animation
+                // when the signal changes. A fully-literal config stays a plain
+                // object — no effect, no overhead, byte-identical to before.
+                let reactive = props.iter().any(|p| !p.exprs().is_empty())
+                    || !timing.exprs().is_empty();
+                // Either way the disposer is now registered. It was previously
+                // dropped on the floor, which left an ambient loop running against a
+                // node the framework had already torn down.
+                if reactive {
+                    w.line(&format!(
+                        "{cleanups_var}.push(__sui_motion_attach({el_var}, () => ({config})));"
+                    ));
+                } else {
+                    w.line(&format!(
+                        "{cleanups_var}.push(__sui_motion_attach({el_var}, {config}));"
+                    ));
+                }
             }
+        }
+    }
+
+    /// A magnitude (`from` / `to`). A bare number is the channel's native
+    /// unit and passes straight through; a quoted string keeps whatever unit
+    /// it carries (`'120px'`, `'-12%'`) and the runtime uses it verbatim; an
+    /// expression becomes live JS. Falls back to the preset's baked value.
+    fn motion_magnitude(
+        &mut self,
+        inline: Option<&MotionValue>,
+        preset: Option<f64>,
+    ) -> Option<String> {
+        match inline {
+            Some(MotionValue::Num(n)) => Some(fmt_num(*n)),
+            Some(MotionValue::Str(s)) => Some(match s.trim().parse::<f64>() {
+                // `'120'` and `120` should not mean different things.
+                Ok(n) => fmt_num(n),
+                Err(_) => js_string(s),
+            }),
+            Some(MotionValue::Expr(e)) => Some(format!("({})", self.rw(&e.source, &[]))),
+            Some(MotionValue::Bezier(_)) => None,
+            None => preset.map(fmt_num),
+        }
+    }
+
+    /// A time field. The author writes MILLISECONDS; motion.dev wants
+    /// seconds, so the conversion happens here, at the boundary, exactly
+    /// once — including for a signal, whose value is also read as ms.
+    fn motion_seconds(&mut self, v: Option<&MotionValue>) -> Option<String> {
+        match v? {
+            MotionValue::Num(n) => Some(fmt_num(n / 1000.0)),
+            MotionValue::Str(s) => parse_time_ms(s).map(|ms| fmt_num(ms / 1000.0)),
+            MotionValue::Expr(e) => Some(format!("(({}) / 1000)", self.rw(&e.source, &[]))),
+            MotionValue::Bezier(_) => None,
+        }
+    }
+
+    /// An easing. An inline bezier becomes the CSS function; a keyword
+    /// resolves through the catalogue's easing tokens; anything else is
+    /// passed through so `'linear'` and a hand-written `cubic-bezier(...)`
+    /// both work.
+    fn motion_easing(
+        &mut self,
+        v: Option<&MotionValue>,
+        db: &lower::presets::PresetDb,
+    ) -> Option<String> {
+        match v? {
+            MotionValue::Bezier(b) => Some(js_string(&format!(
+                "cubic-bezier({}, {}, {}, {})",
+                fmt_num(b[0]),
+                fmt_num(b[1]),
+                fmt_num(b[2]),
+                fmt_num(b[3])
+            ))),
+            MotionValue::Str(s) => Some(js_string(
+                db.resolver.easing_tokens.get(s.as_str()).map(String::as_str).unwrap_or(s),
+            )),
+            MotionValue::Expr(e) => Some(format!("({})", self.rw(&e.source, &[]))),
+            MotionValue::Num(_) => None,
+        }
+    }
+
+    fn motion_iterations(&mut self, v: Option<&MotionValue>) -> Option<String> {
+        match v? {
+            MotionValue::Num(n) => Some(fmt_num(*n)),
+            MotionValue::Str(s) if s == "infinite" => Some("Infinity".to_string()),
+            MotionValue::Str(s) => s.trim().parse::<f64>().ok().map(fmt_num),
+            MotionValue::Expr(e) => Some(format!("({})", self.rw(&e.source, &[]))),
+            MotionValue::Bezier(_) => None,
+        }
+    }
+
+    fn motion_plain_string(&mut self, v: Option<&MotionValue>) -> Option<String> {
+        match v? {
+            MotionValue::Str(s) => Some(js_string(s)),
+            MotionValue::Expr(e) => Some(format!("({})", self.rw(&e.source, &[]))),
+            _ => None,
         }
     }
 
@@ -685,12 +809,49 @@ fn collect_kbd_shortcuts(children: &[Instr]) -> String {
     format!("[{}]", items.join(", "))
 }
 
+/// Emit a float as a JS number literal without Rust's trailing `.0`
+/// (`3.6`, not `3.6000000000000005`; `120`, not `120.0`). Emitted JS is
+/// read by humans in diffs and in the browser's sources panel.
+fn fmt_num(n: f64) -> String {
+    if n.is_finite() && n.fract() == 0.0 && n.abs() < 1e15 {
+        return format!("{}", n as i64);
+    }
+    let mut s = format!("{n}");
+    if s.contains('e') || s.contains('E') {
+        s = format!("{n:.6}");
+        while s.ends_with('0') {
+            s.pop();
+        }
+        if s.ends_with('.') {
+            s.pop();
+        }
+    }
+    s
+}
+
+/// `'3600ms'` / `'3.6s'` → milliseconds. A quoted time is allowed to carry
+/// its unit; a bare number already means ms.
+fn parse_time_ms(raw: &str) -> Option<f64> {
+    let t = raw.trim();
+    if let Some(n) = t.strip_suffix("ms") {
+        return n.trim().parse::<f64>().ok();
+    }
+    if let Some(n) = t.strip_suffix('s') {
+        return n.trim().parse::<f64>().ok().map(|v| v * 1000.0);
+    }
+    t.parse::<f64>().ok()
+}
+
 /// Resolve a duration token name (e.g. `duration-medium`) to its
 /// numeric ms value. Mirrors the values in
-/// `packages/sail/tokens/src/tokens.css` lines 140-145. The compiler
-/// is the source of truth for these values because it owns the bake;
-/// the runtime reads the resolved number from the emitted JS and
-/// does not look up tokens.
+/// `packages/sail/tokens/src/tokens.css`. The compiler is the source of
+/// truth for these values because it owns the bake; the runtime reads the
+/// resolved number from the emitted JS and does not look up tokens.
+///
+/// This table covers the UI-scale durations the presets are built from.
+/// It is deliberately NOT the way an author spells a bespoke timing —
+/// `duration: 3600` says that directly, and minting a global token for one
+/// decorative loop is the mistake the ambient tokens made.
 fn duration_token_to_ms(token: &str) -> f64 {
     match token.strip_prefix("duration-").unwrap_or(token) {
         "instant" => 60.0,
@@ -698,12 +859,6 @@ fn duration_token_to_ms(token: &str) -> f64 {
         "medium" => 180.0,
         "slow" => 280.0,
         "deliberate" => 420.0,
-        // Ambient-loop durations — bespoke multi-second timings for decorative
-        // infinite loops (a hero diagram's drift/fill), between `deliberate`
-        // and `glacial`. Kept in sync with tokens.css by hand (see note above).
-        "saunter" => 2400.0,
-        "amble" => 3000.0,
-        "cinematic" => 3600.0,
         "glacial" => 14000.0,
         _ => 180.0,
     }

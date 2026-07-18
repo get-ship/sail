@@ -607,64 +607,92 @@ fn compile_motion(
         let s = body.trim();
         s.starts_with('{') && s.contains(':') && s.ends_with('}')
     }
-    let stripped = value.trim();
-    let stripped = stripped.strip_prefix('{').unwrap_or(stripped);
-    let stripped = stripped.strip_suffix('}').unwrap_or(stripped);
-    let (props, stagger_ms) = match parse_motion_static_config(stripped, value_span, loc) {
-        Ok(pair) => pair,
-        Err(_) if !has_static_shape(value) => {
-            return Err(err(format!(
-                "motion:{trigger}={{...}} — dynamic configs are not yet supported; \
-                 the value must be a static object literal like \
-                 `motion:{trigger}={{ scale: 'sm' }}`"
-            )));
+    // Track how many bytes we drop off the front so expression spans inside
+    // the config still point at the author's source.
+    let trimmed = value.trim_start();
+    let mut base = value.len() - trimmed.len();
+    let stripped = trimmed.trim_end();
+    let stripped = match stripped.strip_prefix('{') {
+        Some(rest) => {
+            base += 1;
+            rest
         }
-        Err(parse_err) => return Err(parse_err),
+        None => stripped,
     };
+    let stripped = stripped.strip_suffix('}').unwrap_or(stripped);
+    let (props, stagger_ms, timing) =
+        match parse_motion_static_config(stripped, value_span, base, loc) {
+            Ok(parsed) => parsed,
+            Err(_) if !has_static_shape(value) => {
+                return Err(err(format!(
+                    "motion:{trigger}={{...}} — the value must be a config object like \
+                     `motion:{trigger}={{ scale: 'pop' }}`. Fields may be inline values \
+                     (`duration: 3600`) or signals (`duration: speed()`), but the config \
+                     itself is written out, not passed in."
+                )));
+            }
+            Err(parse_err) => return Err(parse_err),
+        };
     Ok(AttrInstr::Motion {
         trigger: trigger.to_string(),
         props,
         stagger_ms,
+        timing,
         span: value_span,
     })
 }
 
 // The property vocabulary lives in sail-lint — ONE list, two readers. The compiler
 // kept its own copy, and the copies drifted the first time a key was added.
-use sail_lint::rules::animate_token_only::{MOTION_PROPERTIES, MOTION_STAGGER_KEY, MOTION_TRIGGERS};
+use sail_lint::rules::animate_token_only::{
+    MOTION_CHANNEL_KEYS, MOTION_PROPERTIES, MOTION_STAGGER_KEY, MOTION_TIMING_KEYS, MOTION_TRIGGERS,
+};
 
-/// Parse the static object body of a `motion:trigger="…"` directive.
-/// Accepted shape: `{ <bare-identifier>: '<string-literal>' (, …) }`.
-/// Tolerant of whitespace and trailing commas. Anything more complex
-/// (numeric / boolean / nested object values, quoted keys, etc.) is a
-/// hard error with a byte-offset span.
+/// Parse the static object body of a `motion:trigger={{…}}` directive.
+///
+/// The grammar, in one sentence: **quoted is a literal, unquoted is code.**
+///
+/// ```text
+/// config  := '{' (entry (',' entry)* ','?)? '}'
+/// entry   := property ':' (preset | channel)
+///          | timing-key ':' value
+///          | 'stagger' ':' (duration-string | number)
+/// channel := '{' (('from'|'to'|'preset'|timing-key) ':' value ...) '}'
+/// value   := string | number | bezier | expression
+/// bezier  := '[' num ',' num ',' num ',' num ']'
+/// ```
+///
+/// A bare number in a time field is MILLISECONDS; in a magnitude field it
+/// is the channel's native unit (px / deg / unitless). A quoted string may
+/// carry its own unit (`'120px'`, `'-12%'`). Anything unquoted that is not
+/// a number or a bezier is an expression — that is how a signal gets in.
 ///
 /// Why hand-rolled: the compiler crate is WASM-safe and cannot pull in
-/// `serde_json`. The grammar is small and stable; we already have a
-/// similar hand-rolled parser in `lower/presets.rs`.
+/// `serde_json`. We already have a similar hand-rolled parser in
+/// `lower/presets.rs`.
 fn parse_motion_static_config(
     raw: &str,
     value_span: Span,
+    base: usize,
     loc: &str,
-) -> Result<(Vec<MotionProp>, Option<u32>), CompileError> {
+) -> Result<(Vec<MotionProp>, Option<u32>, MotionTiming), CompileError> {
     let err = |msg: String| -> CompileError {
         CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
     };
+    let leading = raw.len() - raw.trim_start().len();
     let s = raw.trim();
+    let base = base + leading;
     let bytes = s.as_bytes();
     let mut i = 0usize;
-    // Skip leading whitespace (already done by `trim`).
     if bytes.first() != Some(&b'{') {
         return Err(err(format!(
-            "motion config must be a static object literal, got `{raw}`"
+            "motion config must be an object literal, got `{raw}`"
         )));
     }
     i += 1;
-    // Future improvement: translate any inner parse offset into a
-    // Span pointing at the offending byte. We don't render that
-    // today — the directive's `value_span` is precise enough.
     let mut props: Vec<MotionProp> = Vec::new();
     let mut stagger_ms: Option<u32> = None;
+    let mut timing = MotionTiming::default();
     loop {
         i = skip_ws(bytes, i);
         if i >= bytes.len() {
@@ -680,13 +708,11 @@ fn parse_motion_static_config(
             if i < bytes.len() && bytes[i] == b'}' {
                 break;
             }
-            // Otherwise it's a leading-comma mistake; surface it.
             return Err(err(format!(
                 "unexpected `,` in motion config near `{}`",
                 &s[i..s.len().min(i + 20)]
             )));
         }
-        // Parse key — bare identifier only.
         let key_start = i;
         let key_end = scan_ident(bytes, i).ok_or_else(|| {
             err(format!(
@@ -694,71 +720,71 @@ fn parse_motion_static_config(
                 &s[key_start..s.len().min(key_start + 20)]
             ))
         })?;
-        let property = &s[key_start..key_end];
+        let key = &s[key_start..key_end];
         // `stagger` is a RESERVED key, not a CSS property: it describes the
         // relationship BETWEEN sibling elements (the delay step between them), not
         // anything about any one of them. This is the orchestration primitive — the
         // difference between a list that appears and a list that arrives.
-        let is_stagger = property == MOTION_STAGGER_KEY;
-        if !is_stagger && !MOTION_PROPERTIES.contains(&property) {
+        let is_stagger = key == MOTION_STAGGER_KEY;
+        let is_timing = MOTION_TIMING_KEYS.contains(&key);
+        let is_property = MOTION_PROPERTIES.contains(&key);
+        if !is_stagger && !is_timing && !is_property {
             return Err(err(format!(
-                "motion property `{property}` is not supported. Supported properties: {}, \
-                 plus the reserved `stagger` (e.g. `stagger: '40ms'`).",
-                MOTION_PROPERTIES.join(", ")
+                "motion config key `{key}` is not supported. Animated properties: {}. \
+                 Config-level timing: {}. Plus the reserved `stagger` (e.g. `stagger: '40ms'`).",
+                MOTION_PROPERTIES.join(", "),
+                MOTION_TIMING_KEYS.join(", "),
             )));
         }
         i = skip_ws(bytes, key_end);
         if i >= bytes.len() || bytes[i] != b':' {
-            return Err(err(format!(
-                "expected `:` after `{property}` in motion config"
-            )));
+            return Err(err(format!("expected `:` after `{key}` in motion config")));
         }
         i = skip_ws(bytes, i + 1);
-        // Parse value — single- or double-quoted string literal.
-        let q = *bytes.get(i).ok_or_else(|| {
-            err(format!(
-                "expected a preset name (e.g. 'sm') after `{property}:`"
-            ))
-        })?;
-        if q != b'"' && q != b'\'' {
-            return Err(err(format!(
-                "motion config value for `{property}` must be a quoted string literal \
-                 (e.g. `{property}: 'sm'`); got `{raw}`"
-            )));
-        }
-        i += 1;
-        let val_start = i;
-        while i < bytes.len() && bytes[i] != q {
-            if bytes[i] == b'\\' && i + 1 < bytes.len() {
-                // Skip the escape — we don't try to interpret it; the
-                // preset name is consumed as raw text and resolved
-                // later against the presets JSON.
-                i += 2;
-                continue;
-            }
-            i += 1;
-        }
         if i >= bytes.len() {
-            return Err(err(format!(
-                "unterminated string literal in motion config for `{property}`"
-            )));
+            return Err(err(format!("expected a value after `{key}:`")));
         }
-        let preset = &s[val_start..i];
-        i += 1; // consume the closing quote
-        if is_stagger {
-            stagger_ms = Some(parse_duration_ms(preset).ok_or_else(|| {
-                err(format!(
-                    "stagger must be a duration like '40ms' or '0.04s', got `{preset}`"
-                ))
-            })?);
+
+        if is_property && bytes[i] == b'{' {
+            // A per-channel object: `translate-x: { from: 0, to: '120px' }`.
+            let (prop, next) = parse_motion_channel(key, s, bytes, i, base, value_span, loc)?;
+            props.push(prop);
+            i = next;
         } else {
-            props.push(MotionProp {
-                property: property.to_string(),
-                preset: preset.to_string(),
-            });
+            let (val, next) = parse_motion_value(key, s, bytes, i, base, value_span, loc)?;
+            i = next;
+            if is_stagger {
+                stagger_ms = Some(motion_value_to_stagger_ms(&val).ok_or_else(|| {
+                    err(format!(
+                        "stagger must be a duration like '40ms' / '0.04s' or a number of \
+                         milliseconds (e.g. `stagger: 450`), got `{}`",
+                        describe_motion_value(&val)
+                    ))
+                })?);
+            } else if is_timing {
+                assign_timing(&mut timing, key, val, &err)?;
+            } else {
+                // `scale: 'pop'` — a preset name, or an expression naming one.
+                match val {
+                    MotionValue::Str(preset) => props.push(MotionProp {
+                        property: key.to_string(),
+                        preset: Some(preset),
+                        ..MotionProp::default()
+                    }),
+                    other => {
+                        return Err(err(format!(
+                            "motion property `{key}` takes a preset name (`{key}: 'fade'`) or an \
+                             inline object (`{key}: {{ from: 0, to: 1 }}`), got `{}`. \
+                             A bare number is a timing value, not a magnitude — put it in \
+                             `from`/`to`.",
+                            describe_motion_value(&other)
+                        )));
+                    }
+                }
+            }
         }
+
         i = skip_ws(bytes, i);
-        // Expect `,` or `}`.
         if i < bytes.len() && bytes[i] == b',' {
             i += 1;
             continue;
@@ -767,15 +793,385 @@ fn parse_motion_static_config(
             break;
         }
         return Err(err(format!(
-            "expected `,` or `}}` after `{property}: '{preset}'`"
+            "expected `,` or `}}` after the value for `{key}`"
         )));
     }
-    // Allow trailing whitespace + optional closing brace + trailing
-    // whitespace — already consumed.
     if props.is_empty() {
-        return Err(err("motion config must declare at least one property".into()));
+        return Err(err(
+            "motion config must declare at least one animated property \
+             (e.g. `scale: 'pop'` or `scale: { to: 1.75 }`)"
+                .into(),
+        ));
     }
-    Ok((props, stagger_ms))
+    Ok((props, stagger_ms, timing))
+}
+
+/// Parse `{ from: 0, to: '120px', duration: 3600 }` — the per-channel
+/// object form. Returns the channel and the offset just past its `}`.
+#[allow(clippy::too_many_arguments)]
+fn parse_motion_channel(
+    property: &str,
+    s: &str,
+    bytes: &[u8],
+    start: usize,
+    base: usize,
+    value_span: Span,
+    loc: &str,
+) -> Result<(MotionProp, usize), CompileError> {
+    let err = |msg: String| -> CompileError {
+        CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
+    };
+    let mut prop = MotionProp {
+        property: property.to_string(),
+        ..MotionProp::default()
+    };
+    let mut i = start + 1; // consume `{`
+    loop {
+        i = skip_ws(bytes, i);
+        if i >= bytes.len() {
+            return Err(err(format!(
+                "unterminated inline object for `{property}` — expected `}}`"
+            )));
+        }
+        if bytes[i] == b'}' {
+            i += 1;
+            break;
+        }
+        if bytes[i] == b',' {
+            i += 1;
+            i = skip_ws(bytes, i);
+            if i < bytes.len() && bytes[i] == b'}' {
+                i += 1;
+                break;
+            }
+            return Err(err(format!("unexpected `,` in the object for `{property}`")));
+        }
+        let key_start = i;
+        let key_end = scan_ident(bytes, i).ok_or_else(|| {
+            err(format!(
+                "expected `from`, `to`, `preset`, or a timing key inside `{property}`, near `{}`",
+                &s[key_start..s.len().min(key_start + 20)]
+            ))
+        })?;
+        let key = &s[key_start..key_end];
+        if !MOTION_CHANNEL_KEYS.contains(&key) && !MOTION_TIMING_KEYS.contains(&key) {
+            return Err(err(format!(
+                "`{key}` is not a field of an inline motion object. Fields: {}, {}.",
+                MOTION_CHANNEL_KEYS.join(", "),
+                MOTION_TIMING_KEYS.join(", "),
+            )));
+        }
+        i = skip_ws(bytes, key_end);
+        if i >= bytes.len() || bytes[i] != b':' {
+            return Err(err(format!("expected `:` after `{key}` in `{property}`")));
+        }
+        i = skip_ws(bytes, i + 1);
+        let (val, next) = parse_motion_value(key, s, bytes, i, base, value_span, loc)?;
+        i = next;
+        match key {
+            "from" => prop.from = Some(val),
+            "to" => prop.to = Some(val),
+            "preset" => match val {
+                MotionValue::Str(p) => prop.preset = Some(p),
+                other => {
+                    return Err(err(format!(
+                        "`preset` inside `{property}` must be a quoted preset name \
+                         (e.g. `preset: 'pop'`), got `{}`",
+                        describe_motion_value(&other)
+                    )))
+                }
+            },
+            _ => assign_timing(&mut prop.timing, key, val, &err)?,
+        }
+        i = skip_ws(bytes, i);
+        if i < bytes.len() && bytes[i] == b',' {
+            i += 1;
+            continue;
+        }
+        if i < bytes.len() && bytes[i] == b'}' {
+            i += 1;
+            break;
+        }
+        return Err(err(format!(
+            "expected `,` or `}}` after `{key}` in `{property}`"
+        )));
+    }
+    if prop.preset.is_none() && prop.from.is_none() && prop.to.is_none() {
+        return Err(err(format!(
+            "`{property}: {{ … }}` declares no motion — give it a `to` \
+             (e.g. `{property}: {{ to: 1.75 }}`) or a `preset`."
+        )));
+    }
+    Ok((prop, i))
+}
+
+fn assign_timing(
+    timing: &mut MotionTiming,
+    key: &str,
+    val: MotionValue,
+    err: &dyn Fn(String) -> CompileError,
+) -> Result<(), CompileError> {
+    // Reject the shapes that would silently mean the wrong thing, and name
+    // the right form in the message — the rejection IS the documentation.
+    match key {
+        "duration" | "delay" => match &val {
+            MotionValue::Num(n) if *n < 0.0 => {
+                return Err(err(format!("`{key}` must not be negative, got {n}")))
+            }
+            MotionValue::Bezier(_) => {
+                return Err(err(format!(
+                    "`{key}` is a number of milliseconds (e.g. `{key}: 3600`), not a bezier"
+                )))
+            }
+            _ => {}
+        },
+        "easing" => match &val {
+            MotionValue::Num(_) => {
+                return Err(err(
+                    "`easing` is a keyword (`'in-out'`, `'linear'`) or an inline bezier \
+                     (`[0.6, 0, 0.2, 1]`), not a number"
+                        .into(),
+                ))
+            }
+            _ => {}
+        },
+        _ => {}
+    }
+    let slot = match key {
+        "duration" => &mut timing.duration,
+        "delay" => &mut timing.delay,
+        "easing" => &mut timing.easing,
+        "iterations" => &mut timing.iterations,
+        "direction" => &mut timing.direction,
+        _ => return Err(err(format!("unknown timing key `{key}`"))),
+    };
+    if slot.is_some() {
+        return Err(err(format!("`{key}` is set twice in the same motion config")));
+    }
+    *slot = Some(val);
+    Ok(())
+}
+
+/// Parse one value. Returns the value and the offset just past it.
+#[allow(clippy::too_many_arguments)]
+fn parse_motion_value(
+    key: &str,
+    s: &str,
+    bytes: &[u8],
+    start: usize,
+    base: usize,
+    value_span: Span,
+    loc: &str,
+) -> Result<(MotionValue, usize), CompileError> {
+    let err = |msg: String| -> CompileError {
+        CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
+    };
+    let mut i = start;
+    let c = *bytes.get(i).ok_or_else(|| err(format!("expected a value after `{key}:`")))?;
+
+    // 1. Quoted string — a literal.
+    if c == b'"' || c == b'\'' {
+        let q = c;
+        i += 1;
+        let val_start = i;
+        while i < bytes.len() && bytes[i] != q {
+            if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                i += 2;
+                continue;
+            }
+            i += 1;
+        }
+        if i >= bytes.len() {
+            return Err(err(format!(
+                "unterminated string literal in motion config for `{key}`"
+            )));
+        }
+        let text = s[val_start..i].to_string();
+        return Ok((MotionValue::Str(text), i + 1));
+    }
+
+    // 2. Inline cubic-bezier — `[0.6, 0, 0.2, 1]`.
+    if c == b'[' {
+        let close = find_matching(bytes, i, b'[', b']').ok_or_else(|| {
+            err(format!("unterminated `[` in motion config for `{key}`"))
+        })?;
+        let inner = &s[i + 1..close];
+        let nums: Vec<&str> = inner.split(',').map(str::trim).filter(|p| !p.is_empty()).collect();
+        if nums.len() != 4 {
+            return Err(err(format!(
+                "`{key}` as an inline easing must be a cubic-bezier of exactly four numbers \
+                 (e.g. `{key}: [0.6, 0, 0.2, 1]`), got {} value(s)",
+                nums.len()
+            )));
+        }
+        let mut out = [0.0f64; 4];
+        for (slot, raw) in out.iter_mut().zip(nums.iter()) {
+            *slot = raw.parse::<f64>().map_err(|_| {
+                err(format!(
+                    "`{key}` bezier control points must be numbers, got `{raw}`"
+                ))
+            })?;
+        }
+        // x1/x2 outside 0..=1 is not a curve CSS will accept — catching it here
+        // beats a silent no-op animation in the browser.
+        if !(0.0..=1.0).contains(&out[0]) || !(0.0..=1.0).contains(&out[2]) {
+            return Err(err(format!(
+                "cubic-bezier x control points must be within 0..1 \
+                 (got {} and {}); y may overshoot",
+                out[0], out[2]
+            )));
+        }
+        return Ok((MotionValue::Bezier(out), close + 1));
+    }
+
+    // 3. A bare number.
+    let num_end = scan_number(bytes, i);
+    if let Some(end) = num_end {
+        // Only a number if the token ENDS here — `3600ms` unquoted is a
+        // mistake worth naming rather than silently reading as `3600`.
+        let after = skip_ws(bytes, end);
+        if after >= bytes.len() || bytes[after] == b',' || bytes[after] == b'}' {
+            let n = s[i..end].parse::<f64>().map_err(|_| {
+                err(format!("could not read `{}` as a number", &s[i..end]))
+            })?;
+            return Ok((MotionValue::Num(n), end));
+        }
+        if bytes[end].is_ascii_alphabetic() || bytes[end] == b'%' {
+            let unit_end = scan_value_end(bytes, end);
+            let written = s[i..unit_end].trim_end();
+            return Err(err(format!(
+                "`{key}: {written}` — a unit-bearing value must be quoted \
+                 (`{key}: '{written}'`); an unquoted number is milliseconds for time \
+                 and the channel's native unit for a magnitude."
+            )));
+        }
+    }
+
+    // 4. Anything else is an expression — this is how a signal gets in.
+    let end = scan_value_end(bytes, i);
+    let src = s[i..end].trim_end();
+    if src.is_empty() {
+        return Err(err(format!("expected a value after `{key}:`")));
+    }
+    let span_start = value_span.start + base + i;
+    let expr_span = Span {
+        start: span_start,
+        end: span_start + src.len(),
+    };
+    // Validate through the same expression machinery every other reactive
+    // attribute uses, so a typo inside a motion config reads like a typo
+    // anywhere else.
+    expr::grammar::parse_expression(src, span_start).map_err(|e| {
+        CompileError::new(format!(
+            "motion config value for `{key}` is neither a literal nor a valid expression: {}. \
+             Quote it for a literal (`{key}: 'fade'`), or write a signal call \
+             (`{key}: speed()`).",
+            e.message
+        ))
+        .with_span(expr_span)
+        .with_category(loc.to_string())
+    })?;
+    expr::validate_at(src, false, loc, expr_span)?;
+    Ok((
+        MotionValue::Expr(Expr::new(src.to_string(), expr_span, false)),
+        end,
+    ))
+}
+
+/// Scan to the end of a value: the next top-level `,` or `}`, respecting
+/// nesting and quotes so `fn(a, b)` and `x['a,b']` survive intact.
+fn scan_value_end(bytes: &[u8], mut i: usize) -> usize {
+    let mut depth = 0i32;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'"' | b'\'' | b'`' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' {
+                        i += 1;
+                    }
+                    i += 1;
+                }
+            }
+            b'(' | b'[' | b'{' => depth += 1,
+            b')' | b']' => depth -= 1,
+            b'}' if depth == 0 => return i,
+            b'}' => depth -= 1,
+            b',' if depth == 0 => return i,
+            _ => {}
+        }
+        if i < bytes.len() {
+            i += 1;
+        }
+    }
+    i
+}
+
+fn find_matching(bytes: &[u8], start: usize, open: u8, close: u8) -> Option<usize> {
+    let mut depth = 0i32;
+    let mut i = start;
+    while i < bytes.len() {
+        let c = bytes[i];
+        if c == open {
+            depth += 1;
+        } else if c == close {
+            depth -= 1;
+            if depth == 0 {
+                return Some(i);
+            }
+        }
+        i += 1;
+    }
+    None
+}
+
+/// A JS number literal: optional sign, digits, optional fraction.
+fn scan_number(bytes: &[u8], mut i: usize) -> Option<usize> {
+    let start = i;
+    if i < bytes.len() && (bytes[i] == b'-' || bytes[i] == b'+') {
+        i += 1;
+    }
+    let digits_start = i;
+    while i < bytes.len() && bytes[i].is_ascii_digit() {
+        i += 1;
+    }
+    if i < bytes.len() && bytes[i] == b'.' {
+        i += 1;
+        while i < bytes.len() && bytes[i].is_ascii_digit() {
+            i += 1;
+        }
+    }
+    if i == digits_start {
+        return None;
+    }
+    let _ = start;
+    Some(i)
+}
+
+fn describe_motion_value(v: &MotionValue) -> String {
+    match v {
+        MotionValue::Num(n) => format!("the number {n}"),
+        MotionValue::Str(s) => format!("'{s}'"),
+        MotionValue::Bezier(b) => format!("[{}, {}, {}, {}]", b[0], b[1], b[2], b[3]),
+        MotionValue::Expr(e) => format!("the expression `{}`", e.source),
+    }
+}
+
+/// `stagger` accepts the historical duration string AND a bare number of
+/// milliseconds — `stagger: '450ms'` was already inline time, so the
+/// number form is the same idea with one less ceremony.
+fn motion_value_to_stagger_ms(v: &MotionValue) -> Option<u32> {
+    match v {
+        MotionValue::Str(s) => parse_duration_ms(s),
+        MotionValue::Num(n) => {
+            if !(0.0..=10_000.0).contains(n) {
+                return None;
+            }
+            Some(n.round() as u32)
+        }
+        _ => None,
+    }
 }
 
 /// `'40ms'` / `'0.04s'` → milliseconds. The only two units that mean anything for a

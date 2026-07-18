@@ -92,6 +92,11 @@ pub enum AttrInstr {
         /// because it describes the relationship BETWEEN elements rather than
         /// anything about one of them.
         stagger_ms: Option<u32>,
+        /// Config-level timing that applies to every channel unless the
+        /// channel overrides it. This is the layer the duration tokens used
+        /// to occupy: `duration: 3600` says in one number what
+        /// `--duration-cinematic` needed a global token to say.
+        timing: MotionTiming,
         span: Span,
     },
     /// `use:action` or `use:action={param}` — attach a reusable behavior
@@ -110,15 +115,117 @@ pub enum AttrInstr {
     },
  }
 
-/// One animated property within a `motion:` config. The preset name
-/// resolves against `crates/sail/compiler/animation-presets.json` at
-/// emit time. Multiple `MotionProp`s in the same `motion:` directive
-/// share a trigger and fire from the same DOM event pair, but each
-/// becomes its own `element.animate(...)` call.
-#[derive(Debug, Clone, PartialEq)]
+/// One animated property within a `motion:` config. The optional preset
+/// name resolves against `crates/sail/lint/animation-presets.json` at emit
+/// time. Multiple `MotionProp`s in the same `motion:` directive share a
+/// trigger and fire from the same DOM event pair, but each becomes its own
+/// `animate(...)` call.
+///
+/// A preset is a NAMED DEFAULT, not a cage. `scale: 'pop'` and
+/// `scale: { from: 1, to: 1.75 }` are both legal, and
+/// `scale: { preset: 'pop', to: 1.9 }` starts from the preset and overrides
+/// one field. `preset` is `None` exactly when the author wrote a bare
+/// inline object — the magnitudes then come from the object (falling back
+/// to the runtime's rest/final values per property).
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct MotionProp {
     pub property: String,
-    pub preset: String,
+    pub preset: Option<String>,
+    /// Inline magnitudes. `None` defers to the preset, then to the
+    /// runtime's per-property rest/final value.
+    pub from: Option<MotionValue>,
+    pub to: Option<MotionValue>,
+    /// Per-channel timing overrides — these beat the config-level
+    /// `timing`, which in turn beats the preset's baked timing.
+    pub timing: MotionTiming,
+}
+
+/// Timing fields shared by the config level and the per-channel level.
+/// Every field is optional; resolution is preset < config < channel.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct MotionTiming {
+    /// Milliseconds. A bare number IS milliseconds — the unit is not a
+    /// question anyone should have to ask on an animation surface.
+    pub duration: Option<MotionValue>,
+    pub delay: Option<MotionValue>,
+    /// A named easing keyword or an inline `[x1, y1, x2, y2]` bezier.
+    pub easing: Option<MotionValue>,
+    pub iterations: Option<MotionValue>,
+    pub direction: Option<MotionValue>,
+}
+
+impl MotionTiming {
+    pub fn is_empty(&self) -> bool {
+        self.duration.is_none()
+            && self.delay.is_none()
+            && self.easing.is_none()
+            && self.iterations.is_none()
+            && self.direction.is_none()
+    }
+
+    /// Every expression this timing block carries, for the passes that
+    /// need to walk expressions (scope-binding, dynamic detection).
+    pub fn exprs(&self) -> Vec<&Expr> {
+        [
+            self.duration.as_ref(),
+            self.delay.as_ref(),
+            self.easing.as_ref(),
+            self.iterations.as_ref(),
+            self.direction.as_ref(),
+        ]
+        .into_iter()
+        .flatten()
+        .filter_map(MotionValue::as_expr)
+        .collect()
+    }
+}
+
+impl MotionProp {
+    /// Every expression on this channel, config-field order.
+    pub fn exprs(&self) -> Vec<&Expr> {
+        let mut out: Vec<&Expr> = [self.from.as_ref(), self.to.as_ref()]
+            .into_iter()
+            .flatten()
+            .filter_map(MotionValue::as_expr)
+            .collect();
+        out.extend(self.timing.exprs());
+        out
+    }
+}
+
+/// A single value inside a `motion:` config.
+///
+/// The animation surface is where numbers are NATIVE — we bundled a real
+/// animation library to build real animation, and a duration is a number of
+/// milliseconds, not a global design token. `sx` stays closed because
+/// colour and spacing are theming integrity; a 3600ms loop is not.
+#[derive(Debug, Clone, PartialEq)]
+pub enum MotionValue {
+    /// A bare number: milliseconds for time fields, a channel-native
+    /// magnitude otherwise (px for translate, deg for rotate, unitless
+    /// for scale/opacity).
+    Num(f64),
+    /// A quoted string — a preset name, an easing keyword, or a
+    /// unit-bearing magnitude like `'120px'` / `'-12%'` / `'15deg'`.
+    Str(String),
+    /// An inline cubic-bezier `[0.6, 0, 0.2, 1]`.
+    Bezier([f64; 4]),
+    /// A reactive expression — `duration: {speed()}`. Emitted as a thunk
+    /// and re-read inside an effect, so the animation follows the signal.
+    Expr(Expr),
+}
+
+impl MotionValue {
+    pub fn as_expr(&self) -> Option<&Expr> {
+        match self {
+            MotionValue::Expr(e) => Some(e),
+            _ => None,
+        }
+    }
+
+    pub fn is_expr(&self) -> bool {
+        matches!(self, MotionValue::Expr(_))
+    }
 }
 
 #[derive(Debug, Clone)]

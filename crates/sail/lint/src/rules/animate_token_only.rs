@@ -31,6 +31,20 @@ pub const MOTION_PROPERTIES: &[&str] = &[
 /// sibling elements (the delay step), not anything about any one of them.
 pub const MOTION_STAGGER_KEY: &str = "stagger";
 
+/// THE timing vocabulary — the config-level (and per-channel) keys that are not
+/// animated properties. Same one-list-two-readers contract as the properties above.
+///
+/// These take INLINE VALUES, and that is the point. `motion:` is the animation
+/// library's surface: a duration is a number of milliseconds and an easing is a
+/// curve, not a global design token. `sx` stays closed because colour and spacing
+/// are theming integrity; a 3600ms decorative loop never was.
+pub const MOTION_TIMING_KEYS: &[&str] =
+    &["duration", "delay", "easing", "iterations", "direction"];
+
+/// The keys legal inside a per-channel inline object:
+/// `translate-x: { from: 0, to: '120px' }`.
+pub const MOTION_CHANNEL_KEYS: &[&str] = &["from", "to", "preset"];
+
 /// THE trigger vocabulary — what can drive a `motion:` directive. One list, read by
 /// the parser (which rejects anything off it), by the runtime (which dispatches on
 /// it), and by the generated agent skill (which teaches it).
@@ -234,8 +248,11 @@ fn validate_static_body(
             continue;
         };
         let key = key_raw.trim();
-        if key == MOTION_STAGGER_KEY {
-            continue; // a duration, not a preset — `stagger: '40ms'`
+        if key == MOTION_STAGGER_KEY || MOTION_TIMING_KEYS.contains(&key) {
+            // Inline timing — a number of ms, a keyword, a bezier, or a signal.
+            // Shape and range are the compiler parser's call; it has the span and
+            // the better message. This rule guards the CLOSED vocabularies only.
+            continue;
         }
         if !MOTION_PROPERTIES.contains(&key) {
             findings.push(Finding {
@@ -254,10 +271,27 @@ fn validate_static_body(
                         .to_string(),
                 ),
             });
+            continue;
         }
-        let val = val_raw.trim().trim_matches('\'').trim_matches('"');
+        // The value is either a preset NAME (closed — this rule's job) or an
+        // inline object / number / expression (open — the author's own values,
+        // which is the whole point of the inline surface).
+        let val_trimmed = val_raw.trim();
+        let preset_name = if val_trimmed.starts_with('{') {
+            // `translate-x: { preset: 'pop', to: 1.9 }` — only the named default
+            // inside is closed vocabulary; the magnitudes are free.
+            match inline_object_preset(val_trimmed) {
+                Some(name) => name,
+                None => continue,
+            }
+        } else if let Some(name) = quoted_literal(val_trimmed) {
+            name
+        } else {
+            // A number, a bezier, or an expression. Not a preset reference.
+            continue;
+        };
         let presets = known_presets();
-        if !presets.iter().any(|p| p == val) {
+        if !presets.iter().any(|p| p == &preset_name) {
             findings.push(Finding {
                 file: path.to_path_buf(),
                 line,
@@ -266,16 +300,45 @@ fn validate_static_body(
                 severity: Severity::Error,
                 message: format!(
                     "motion preset `{}` is not in the closed vocabulary. Known presets: {}",
-                    val,
+                    preset_name,
                     presets.join(", ")
                 ),
                 suggest: Some(
-                    "Use a registered preset (spring:snappy, fade, …) or extend animation-presets.json."
+                    "Use a registered preset, write the values inline \
+                     (`{ from: 0, to: 1 }`), or extend animation-presets.json."
                         .to_string(),
                 ),
             });
         }
     }
+}
+
+/// The text inside a single- or double-quoted literal, or `None` if the
+/// value is not a quoted string at all.
+fn quoted_literal(s: &str) -> Option<String> {
+    let b = s.as_bytes();
+    let q = *b.first()?;
+    if q != b'"' && q != b'\'' {
+        return None;
+    }
+    if b.len() < 2 || *b.last()? != q {
+        return None;
+    }
+    Some(s[1..s.len() - 1].to_string())
+}
+
+/// Pull `preset: 'name'` out of an inline channel object, if it has one.
+fn inline_object_preset(s: &str) -> Option<String> {
+    let inner = s.strip_prefix('{')?.strip_suffix('}')?;
+    for pair in split_top_level_commas(inner) {
+        let Some((k, v)) = pair.split_once(':') else {
+            continue;
+        };
+        if k.trim() == "preset" {
+            return quoted_literal(v.trim());
+        }
+    }
+    None
 }
 
 fn split_top_level_commas(s: &str) -> Vec<String> {
@@ -374,6 +437,10 @@ mod tests {
         let f = findings(
             "<!-- Loading… -->\n<button motion:hover={{ foo: 'mystery' }}>x</button>",
         );
-        assert_eq!(f.len(), 2, "expected 2 findings, got {f:?}");
+        // ONE finding, not two: once `foo` is not a property, its value is
+        // not a preset reference and reporting it as an unknown preset is a
+        // cascade off the real mistake. Report the root cause only.
+        assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
+        assert!(f[0].message.contains("`foo` is not supported"), "got {f:?}");
     }
 }
