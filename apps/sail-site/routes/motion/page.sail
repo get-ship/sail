@@ -175,7 +175,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </card>
     <card motion:view={{ scale: 'spring:bouncy', opacity: 'fade' }} sx="p-6">
       <h3>And this one springs.</h3>
-      <p sx="text-muted-foreground">Nine presets. Four springs, five tweens. That is the whole catalogue.</p>
+      <p sx="text-muted-foreground">Thirteen presets — four springs, nine tweens — and inline values when none of them is what you meant.</p>
     </card>
   </column>
 
@@ -202,10 +202,34 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </row>
   <code-block code={code.spin}></code-block>
 
+  <h2>Presets are defaults, not a cage</h2>
+  <p>
+    A preset is the starting point. When you need a specific animation, write
+    it — <code>duration</code> and <code>delay</code> in milliseconds,
+    <code>easing</code> as a keyword or an inline cubic-bezier, and
+    <code>from</code>/<code>to</code> per channel. One rule covers every
+    value: quoted is a literal, unquoted is code.
+  </p>
+  <row gap="3" align="center" sx="min-h-9">
+    <div
+      data-testid="inline-demo"
+      sx="w-8 h-8 rounded-md bg-primary"
+      motion:loop={{ translate-x: { from: 0, to: '120px' }, rotate: { to: '15deg' }, scale: { to: 1.75 }, duration: 3600, easing: [0.6, 0, 0.2, 1] }}
+    ></div>
+  </row>
+  <p sx="text-sm text-muted-foreground">
+    Three independent channels, a bespoke duration and a bespoke curve — no
+    preset minted, no design token minted. This is the distinction from
+    <code>sx</code>, which stays closed on purpose: colour and spacing are
+    theming integrity, a 3600&nbsp;ms decorative loop is not.
+  </p>
+
   <h2>The vocabulary</h2>
   <p>
-    Small on purpose, and enforced: an unknown trigger or preset is a compile
-    error, not a silent no-op. A typo used to be something you could ship.
+    Small on purpose, and enforced: an unknown trigger, property or preset
+    name is a compile error, not a silent no-op. A typo used to be something
+    you could ship. What is <em>not</em> restricted is the values — those are
+    yours.
   </p>
 
   <grid cols="2" gap="4">

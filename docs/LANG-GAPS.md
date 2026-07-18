@@ -142,10 +142,16 @@ the declaration was left out and written down here.
   authoring surface does not.
 - **Border width.** `border*:` always lowers to `1px solid var(--token)`. A 3px
   category stripe reads as a category stripe; 1px reads as a border.
-- **Continuous animation.** `motion:loop` hardcodes `direction:'alternate'` (an
-  alternating marquee scrolls backwards), presets bake scalar from/to with a
-  duration TOKEN (60–420ms), and there is no percentage-of-own-width translate.
-  A marquee is none of those things.
+- **Continuous animation.** ~~presets bake scalar from/to with a duration TOKEN
+  (60–420ms), and there is no percentage-of-own-width translate~~ — CLOSED by
+  inline values: `duration`/`delay`/`easing` and per-channel `from`/`to` are
+  written directly on any `motion:` config, and a magnitude may carry its own
+  unit (`'-12%'`). What REMAINS: `motion:loop` still defaults
+  `direction:'alternate'`, so an alternating marquee scrolls backwards unless
+  `direction: 'normal'` is set explicitly.
+- **Multi-stop keyframes.** A channel is still 2-stop (`from`→`to`). A timeline
+  with holds and per-channel phase sequencing — the motion.dev tile's 7-stop
+  dance — needs the `timeline()` primitive, not this surface.
 - **Component knobs.** sx cannot emit `var(--knob, var(--token))`, so a
   consumer-overridable per-instance channel has no home. SVG survived only
   because presentation attributes take the fallback form for free.
