@@ -34,8 +34,7 @@ fn compile_attr(
     if name == "part" {
         return Err(CompileError::new(
             "the `part` attribute is retired — light DOM has no shadow parts. \
-             Anatomy is classes + attributes; the element's `class` is the \
-             styling hook (published as CEM).",
+             Style with sx.",
         )
         .with_span(value_span)
         .with_category(loc.to_string()));

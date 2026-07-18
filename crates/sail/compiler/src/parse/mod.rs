@@ -132,8 +132,7 @@ fn reject_retired_host_selector(source: &str) -> Result<(), CompileError> {
             let at = cs + pos;
             return Err(CompileError::new(
                 "`:host` is a shadow-DOM idiom — light DOM has no host to select. \
-                 Style the element's root by its class (`.sail-<name>`, or the bare \
-                 tag for a native-kind element); variants are attribute-keyed.",
+                 Style the element with sx.",
             )
             .with_span(Span::new(at, at + ":host".len())));
         }
@@ -158,8 +157,7 @@ fn reject_part_selector(source: &str) -> Result<(), CompileError> {
             let at = cs + pos;
             return Err(CompileError::new(
                 "the `::part()` selector is retired — light DOM has no shadow \
-                 parts. Style the target's class directly (`.name`); anatomy is \
-                 classes + attributes.",
+                 parts. Style the target with sx.",
             )
             .with_span(Span::new(at, at + "::part".len())));
         }
