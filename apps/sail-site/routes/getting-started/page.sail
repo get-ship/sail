@@ -1,7 +1,7 @@
 <!--
   /getting-started — the real workflow, end to end: toolchain, first app,
   the edit loop with the compiler as feedback, state, routes, production
-  build, and the standalone component path. Honest about what SAIL is — a
+  build, and the standalone component path. Honest about what Sail is — a
   Rust toolchain plus JS packages — not a fake one-liner.
 -->
 
@@ -27,10 +27,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>1 · Install (once)</h2>
   <code-block code={code.toolchain}></code-block>
   <p>
-    SAIL's compiler and dev server are Rust binaries; the runtime is a JS
-    package. Prebuilt binaries are planned — today the build takes a few
-    minutes once, and then <code>deck</code> and <code>sail-compiler</code>
-    are ordinary commands on your path.
+    Sail's compiler and dev server are one Rust binary; the runtime and
+    tokens are JS packages. The install story is decided and landing: a
+    single downloadable binary and an npm wrapper that fetches it — at which
+    point this section becomes one command and the Rust requirement
+    disappears. Until then, the source build above takes a few minutes, once,
+    and <code>deck</code> is an ordinary command on your path.
   </p>
 
   <h2>2 · Start an app</h2>
@@ -60,7 +62,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>4 · Add state</h2>
   <p>
     State lives in a <code>&lt;controller&gt;</code> block in the same file.
-    The template can bind only what <code>scope()</code> returns — the
+    The template can bind only what the controller's setup returns — the
     compiler enforces the boundary.
   </p>
   <code-block code={code.state}></code-block>
@@ -83,7 +85,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>Without deck: components in an existing stack</h2>
   <p>
-    The compiler's output is a standard custom element, so SAIL components can
+    The compiler's output is a standard custom element, so Sail components can
     live inside any page — a React app, a CMS template, plain HTML. You lose
     the app half (routing, SSR, the dev loop) and keep the language.
   </p>
@@ -96,6 +98,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     controller together:
   </p>
   <code-block code={code.interactive}></code-block>
+
+  <p sx="text-sm text-muted-foreground">
+    Working with an agent? Point it at the generated authoring skill
+    (<code>.claude/skills/sail-authoring</code>) — the language's rules in a
+    form a model follows. The compiler corrects the rest.
+  </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
     <a variant="default" href="/overview">← Introduction</a>
