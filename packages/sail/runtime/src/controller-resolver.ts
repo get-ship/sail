@@ -17,6 +17,7 @@
 // connected.
 
 import type { ControllerDef, ControllerScope } from './controller'
+import type { Clients } from './clients'
 import type {
   ResolverContext,
   ResolvedBindings,
@@ -43,13 +44,18 @@ export function resolveController(
   // an explicit `ctx.clients.ship` wins. Spreading the map still resolves a
   // bare `ship.foo()` in templates compiled before the `<client>` directive,
   // so this is an injection/type cleanup, not a behavior change.
-  const clients: Record<string, unknown> = {
+  //
+  // Typed as `Clients`, NOT `Record<string, unknown>`: once a provider
+  // augments the port (`interface Clients { api: … }`) the two are no longer
+  // comparable, and the `as ControllerScope<object>` below stops compiling.
+  // (`controller_scope_port_tsc` is the regression guard.)
+  const clients = {
     ...(ctx.ship !== undefined ? { ship: ctx.ship } : {}),
     ...(ctx.clients ?? {}),
-  }
+  } as Clients
   const baseScope: ControllerScope<object> = {
     clients,
-    ...clients,
+    ...(clients as unknown as Record<string, unknown>),
     route: ctx.route ?? {},
     navigate: ctx.navigate ?? ((_path: string) => {}),
     ...(ctx.scope ?? {}),

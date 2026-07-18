@@ -314,15 +314,20 @@ fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest
     // Map the constructed manifest clients onto the resolver context: the
     // well-known ambient names become `ResolverContext` fields; the rest go
     // into `clients` (spread into scope by the resolver, as in production).
-    let mut ship = "undefined as never".to_string();
     let mut route: Option<&str> = None;
     let mut navigate: Option<&str> = None;
     let mut client_entries: Vec<&str> = Vec::new();
     for name in used {
-        // `navigate` is a plain value-import (construct:false); ship/route are
-        // constructed handles. Either way the const is named `<name>`.
+        // `navigate` is a plain value-import (construct:false); route is a
+        // constructed handle. Either way the const is named `<name>`.
+        //
+        // #105 — `ship` is NOT special-cased any more. It used to be lifted
+        // onto its own `ResolverContext.ship` field, which is what made a Ship
+        // host a framework concept. It is now an ORDINARY manifest client: it
+        // rides `clients` like `api` does, and the resolver spreads the map
+        // into scope, so a template reading `ship.demo.todos()` resolves
+        // exactly as before. Nothing about an app's manifest changes.
         match name.as_str() {
-            "ship" => ship = "ship".to_string(),
             "route" => route = Some("route"),
             "navigate" => navigate = Some("navigate"),
             other => client_entries.push(other),
@@ -330,7 +335,6 @@ fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest
     }
     let _ = manifest; // naming map is the manifest's contract; values are the consts above.
     w.line("const __ctx = {");
-    w.line(&format!("  ship: {ship},"));
     w.line(&format!("  clients: {{ {} }},", client_entries.join(", ")));
     if let Some(r) = route {
         w.line(&format!("  route: {r},"));
