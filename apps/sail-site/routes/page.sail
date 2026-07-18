@@ -80,8 +80,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </p>
 
       <row gap="4" justify="center" align="center" sx="w-full">
-        <a variant="solid" tone="primary" href="/getting-started" sx="rounded-full px-8" motion:press={{ scale: 'press' }}>Get started</a>
-        <a variant="outline" href="/why" sx="rounded-full px-8" motion:press={{ scale: 'press' }}>Why SAIL</a>
+        <a variant="solid" tone="primary" href="/sail/getting-started" sx="rounded-full px-8" motion:press={{ scale: 'press' }}>Get started</a>
+        <a variant="outline" href="/sail/why" sx="rounded-full px-8" motion:press={{ scale: 'press' }}>Why SAIL</a>
       </row>
     </column>
   </section>
@@ -109,8 +109,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <section sx="px-8 pt-8 pb-12">
     <grid cols="3" gap="4" sx="w-full max-w-breakpoint-desktop mx-auto">
 
-      <!-- MOTION → /motion : a spring bar-loop -->
-      <a href="/motion" sx="block no-underline min-w-0">
+      <!-- MOTION → /sail/motion : a spring bar-loop -->
+      <a href="/sail/motion" sx="block no-underline min-w-0">
         <card interactive sx="h-full overflow-hidden">
           <column gap="4" sx="h-full">
             <column gap="1">
@@ -128,8 +128,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </card>
       </a>
 
-      <!-- THEMING → /theming : pulsing repaint swatches -->
-      <a href="/theming" sx="block no-underline min-w-0">
+      <!-- THEMING → /sail/theming : pulsing repaint swatches -->
+      <a href="/sail/theming" sx="block no-underline min-w-0">
         <card interactive sx="h-full overflow-hidden">
           <column gap="4" sx="h-full">
             <column gap="1">
@@ -146,8 +146,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </card>
       </a>
 
-      <!-- REACTIVITY → /reactivity : a live signal counter -->
-      <a href="/reactivity" sx="block no-underline min-w-0">
+      <!-- REACTIVITY → /sail/reactivity : a live signal counter -->
+      <a href="/sail/reactivity" sx="block no-underline min-w-0">
         <card interactive sx="h-full overflow-hidden">
           <column gap="4" sx="h-full">
             <column gap="1">
@@ -224,7 +224,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <section sx="px-8 pt-12">
     <row justify="between" align="center" sx="w-full max-w-breakpoint-desktop mx-auto pb-6 border-b border-border font-mono text-sm text-muted-foreground">
       <row gap="6" align="center">
-        <a href="/overview" sx="text-muted-foreground hover:text-primary">Docs</a>
+        <a href="/sail/overview" sx="text-muted-foreground hover:text-primary">Docs</a>
         <a href="https://github.com" sx="text-muted-foreground hover:text-primary">GitHub</a>
         <a href="https://discord.com" sx="text-muted-foreground hover:text-primary">Discord</a>
       </row>

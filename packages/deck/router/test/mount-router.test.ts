@@ -294,6 +294,10 @@ describe('layout module rendering', () => {
     expect(outer).not.toBeNull()
     const inner = outer!.querySelector('x-inner')
     expect(inner).not.toBeNull()
+    // x-inner is itself a light-DOM child of x-outer's shadow tree — it must
+    // carry slot="route" to land in x-outer's named slot in a real browser
+    // (jsdom has no shadow DOM, so only the attribute is checkable here).
+    expect(inner!.getAttribute('slot')).toBe('route')
     const innerSlot = inner!.querySelector('div[slot="route"]')
     expect(innerSlot).not.toBeNull()
     const routeMountCall = mountCalls.find((c) => c.opts?.module === MOD_LEAF)
