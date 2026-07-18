@@ -2,12 +2,15 @@
 // program; the tour snippets are deliberately tiny. All compiled by the build.
 export const code = {
   // Section 2 — the whole demo, six lines. The page renders these same lines live.
-  hello: `const on = signal(false)
+  hello: `const playing = signal(true)
 
-<row gap="2" align="center">
-  <switch bind:checked={on}></switch>
-  <badge>{on() ? 'running' : 'paused'}</badge>
-</row>`,
+<column gap="2">
+  <demo-player playing={playing()}></demo-player>
+  <row gap="2" align="center">
+    <switch bind:checked={playing}></switch>
+    <badge>{playing() ? 'playing' : 'paused'}</badge>
+  </row>
+</column>`,
   // The strict config, pure JSON (rendered by <sail-json-view> on the page).
   configJson: `{"preset": "strict", "sx": true, "raw_containers": true}`,
   // REAL config files from this repository, verbatim — never invent these.

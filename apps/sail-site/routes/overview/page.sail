@@ -14,17 +14,17 @@ import type { Scope } from './page.sail'
 import { code } from './snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
-    const on = signal(false)
-    return { code, on }
+    const playing = signal(true)
+    return { code, playing }
 })
 </controller>
 
 <column sx="max-w-breakpoint-tablet mx-auto" gap="6">
   <column sx="max-w-breakpoint-tablet" gap="3">
     <p sx="font-mono text-xs uppercase tracking-wide text-accent">Introduction</p>
-    <h1>SAIL</h1>
+    <h1>Sail</h1>
     <p sx="text-lg text-muted-foreground leading-relaxed">
-      SAIL is a compiled language that includes everything you need to build
+      Sail is a compiled language that includes everything you need to build
       beautiful, consistent, and performant websites. It is optimized for AI
       agents: the language provides the APIs an interface needs — signals for
       state, <code>sx</code> for styling, <code>motion</code> for animation,
@@ -41,16 +41,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       A component is one file: a template that reads like HTML, TypeScript
       beneath it, signals connecting the two. Updates are fine-grained — the
       template binds signals directly, and only what changed re-renders. No
-      virtual DOM, no diffing. Six lines, and the same six lines running:
+      virtual DOM, no diffing. One signal, threaded through a nested
+      component — and the same lines running:
     </p>
     <row gap="6" align="start">
       <column gap="2" sx="grow-1 basis-breakpoint-mobile min-w-0">
         <code-block code={code.hello}></code-block>
       </column>
-      <column gap="3" sx="grow-1 basis-64 min-w-0 p-5 bg-muted border border-border rounded-lg" justify="center">
+      <column gap="2" sx="grow-1 basis-64 min-w-0 p-4 bg-muted border border-border rounded-lg" justify="center">
+        <demo-player playing={playing()}></demo-player>
         <row gap="2" align="center">
-          <switch bind:checked={on}></switch>
-          <badge>{on() ? 'running' : 'paused'}</badge>
+          <switch bind:checked={playing}></switch>
+          <badge>{playing() ? 'playing' : 'paused'}</badge>
         </row>
       </column>
     </row>
@@ -63,7 +65,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       spacing, and type resolve through the active theme, and components never
       name a colour. Which means a theme is data, and swapping it re-skins
       everything written in the language. Pick one — this entire site is
-      written in SAIL:
+      written in Sail:
     </p>
     <theme-picker inline></theme-picker>
   </column>
@@ -118,7 +120,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </p>
 
     <p sx="text-sm text-muted-foreground">
-      SAIL is in alpha. It builds real websites today — this site is one —
+      Sail is in alpha. It builds real websites today — this site is one —
       and the language is still settling.
     </p>
 
@@ -126,7 +128,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <a variant="solid" tone="primary" href="/getting-started">Installation →</a>
       <a variant="default" href="/tutorial">Tutorial</a>
       <a variant="default" href="/showcase">Showcase</a>
-      <a variant="default" href="/why">Why SAIL</a>
+      <a variant="default" href="/why">Why Sail</a>
     </row>
   </column>
 </column>

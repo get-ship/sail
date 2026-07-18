@@ -8,7 +8,7 @@
   gone). Voice: plain, confident, zero showmanship, no unverified numbers.
 -->
 <column sx="max-w-breakpoint-tablet mx-auto" gap="4">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Why SAIL</p>
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Why Sail</p>
   <h1>The author changed</h1>
 
   <p sx="text-lg text-muted-foreground leading-relaxed">
@@ -29,7 +29,7 @@
     naive alternative — plain HTML and CSS — gets surprisingly far, and then
     falls apart exactly when the project starts to matter. Agents don't need
     the ergonomics; they need determinism. Newcomers don't need the decision
-    tree; they need it gone. SAIL is one system where those are the same
+    tree; they need it gone. Sail is one system where those are the same
     answer.
   </p>
 
@@ -44,7 +44,7 @@
     with every file.
   </p>
   <p>
-    That is the bet SAIL makes: consistency cannot be a review step or a
+    That is the bet Sail makes: consistency cannot be a review step or a
     prompt instruction, because variance is a property of the language, not
     of the author's skill. Close the decisions — one way to hold state, one
     way to style, one way to animate — and the five-hundredth page holds the
@@ -55,12 +55,12 @@
   <p>
     A person describes, a model writes — and in most stacks, that's the whole
     pipeline. There is no oracle: a wrong program renders, plausibly, and
-    ships. You find out in review, in production, or never. SAIL puts a
+    ships. You find out in review, in production, or never. Sail puts a
     compiler between the model and the artifact. Off-system styling, a
     stylesheet beside a component, an unknown motion trigger — these fail the
     build, and every refusal names the correct form in the language's own
     vocabulary. A model doesn't need to have memorized a million lines of
-    SAIL; it needs to be correctable in one turn, and that is a property we
+    Sail; it needs to be correctable in one turn, and that is a property we
     can design.
   </p>
   <p>
@@ -72,7 +72,7 @@
 
   <h2>Built from the platform</h2>
   <p>
-    SAIL doesn't wrap the browser — it compiles to it. A dialog is
+    Sail doesn't wrap the browser — it compiles to it. A dialog is
     <code>&lt;dialog&gt;</code>. A menu is a native <code>popover</code>.
     Components compile to real markup and a stylesheet, so what the model
     writes is the HTML it already knows, and what a user gets is keyboard
@@ -83,20 +83,19 @@
     a rebrand is a data change rather than a rewrite.
   </p>
 
-  <h2>Where it came from</h2>
+  <h2>Part of SHIP</h2>
   <p>
-    SAIL grew inside Ship, and it shows. The goal there was an integrated
-    system — compiler, design system, components, and docs as one thing
-    rather than a stack of separately-versioned opinions. Integration is why
-    the pieces agree, and it enabled some deliberate choices: the toolchain
-    doesn't drag a package ecosystem behind it, authoring works without
-    Node, and the compiler runs in the browser — this site compiles SAIL
-    live in your tab. None of that is the argument by itself. It is what made
-    the argument buildable.
+    Sail is part of the SHIP ecosystem. SHIP is a consumer platform for
+    building local-first AI applications, and Sail is one of its core
+    technologies — the front end of the platform. That origin set a hard
+    requirement: the framework had to run on a portable toolchain — no Node
+    dependency, a compiler that runs in the browser (this site compiles Sail
+    live in your tab) — and that constraint shaped many of the language's
+    design decisions.
   </p>
 
   <p>
-    SAIL will feel constrained if you came looking for a flexible toolkit to
+    Sail will feel constrained if you came looking for a flexible toolkit to
     hand-write — and it should. The constraint is the product. It is what
     turns "an agent built this" from a warning into a guarantee.
   </p>
