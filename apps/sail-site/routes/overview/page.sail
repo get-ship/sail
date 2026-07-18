@@ -11,6 +11,7 @@
 <controller>
 import { controller, signal, filteredList, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
+import { code } from './snippets'
 
 const BENCH = ['Katherine Johnson', 'Annie Easley', 'Margaret Hamilton', 'Radia Perlman']
 
@@ -30,7 +31,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       ])
     }
 
-    return { query, filtered, invite }
+    return { code, query, filtered, invite }
 })
 </controller>
 
@@ -105,11 +106,23 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       one.
     </p>
     <p>
-      How strict is up to you. Each project carries a small config that sets
-      the contract: a brand platform locks styling to tokens and keeps raw
-      containers rare; a personal site loosens the same dials. Same language,
-      same compiler — a different set of promises, chosen by the team that has
-      to live with the code.
+      How strict is up to you, and the contract is a real file. Any directory
+      can carry a <code>sail.config.json</code> — a few lines that set the
+      rules for the code inside it. These pages compile under the strict
+      preset; the two grants are the only freedoms taken:
+    </p>
+    <code-block code={code.configStrict}></code-block>
+    <p>
+      And the grants go beyond styling. A component that embeds a third-party
+      editor says so in one greppable line; a drawing component may fetch from
+      its own origin and nowhere else. What a directory isn't granted, its
+      code cannot do — the compiler holds every line to the contract:
+    </p>
+    <code-block code={code.configComponent}></code-block>
+    <p>
+      Unknown keys refuse loudly instead of being ignored. Same language, same
+      compiler — a different set of promises per directory, chosen by the team
+      that has to live with the code.
     </p>
 
     <h2>What's in the box</h2>

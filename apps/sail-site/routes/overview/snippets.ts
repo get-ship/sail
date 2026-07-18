@@ -1,6 +1,20 @@
 // Code snippets for the introduction. The `page` snippet IS the live demo's
 // program; the tour snippets are deliberately tiny. All compiled by the build.
 export const code = {
+  // REAL config files from this repository, verbatim — never invent these.
+  configStrict: `// apps/sail-site/routes/sail.config.json — this site's docs pages
+{
+  "preset": "strict",
+  "sx": true,
+  "raw_containers": true
+}`,
+  configComponent: `// packages/components/sail/code-editor/sail.config.json — embeds CodeMirror
+{ "sx": true, "variants": true, "raw_containers": true,
+  "stylesheets": [], "unconfined": true }
+
+// packages/components/sail/canvas/sail.config.json — may fetch from self, nowhere else
+{ "sx": true, "raw_containers": true,
+  "stylesheets": [], "network": ["self"] }`,
   page: `<controller>
 import { controller, signal, filteredList } from '@ship/sail-runtime'
 
