@@ -99,7 +99,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       skinned by your <a href="/sail/theming">theme</a>.
       <a href="/sail/language/layout">Layout</a> is its own vocabulary
       (<code>row</code>, <code>column</code>, <code>grid</code>) rather than a
-      CSS technique. <a href="/sail/motion">Motion</a> is declarative and respects
+      CSS technique. <a href="/sail/language/motion">Motion</a> is declarative and respects
       reduced motion by default. <a href="/sail/data">Data</a> has a first-class
       shape: <code>query()</code> turns a client call into loading, error,
       and value states the template has to handle. Forms, icons, and a

@@ -109,8 +109,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <section sx="px-8 pt-8 pb-12">
     <grid cols="3" gap="4" sx="w-full max-w-breakpoint-desktop mx-auto">
 
-      <!-- MOTION → /sail/motion : a spring bar-loop -->
-      <a href="/sail/motion" sx="block no-underline min-w-0">
+      <!-- MOTION → /sail/language/motion : a spring bar-loop -->
+      <a href="/sail/language/motion" sx="block no-underline min-w-0">
         <card interactive sx="h-full overflow-hidden">
           <column gap="4" sx="h-full">
             <column gap="1">

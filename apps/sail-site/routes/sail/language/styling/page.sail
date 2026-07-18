@@ -104,7 +104,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>(--name)</code>; when the name matches a signal the controller
     returned, the compiler registers the property and reflects the signal's
     value onto the element. State stays in the controller, and the style
-    layer just reads it — the <a href="/sail/motion">motion chapter</a> drives
+    layer just reads it — the <a href="/sail/language/motion">motion chapter</a> drives
     entire choreographies through this.
   </p>
   <code-block code={code.dynamic}></code-block>

@@ -59,7 +59,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Components</p>
+  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">The language</p>
   <h1>Motion</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
     One directive. <code>motion:</code> takes a <strong>trigger</strong> — when —
@@ -361,7 +361,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </alert>
 
   <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
-    <a variant="default" href="/sail/theming">← Theming</a>
+    <a variant="default" href="/sail/language/layout">← Layout</a>
     <a variant="solid" tone="primary" href="/sail/behavior">Behavior →</a>
   </row>
 </column>
