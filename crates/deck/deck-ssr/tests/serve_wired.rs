@@ -81,22 +81,24 @@ fn payload_html(
 /// stripping.
 fn strip_markers(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
-    let bytes = s.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        if s[i..].starts_with("<!--/sail-->") {
-            i += "<!--/sail-->".len();
+    // Char-safe: advance by whole UTF-8 chars so rendered content carrying
+    // multibyte glyphs (e.g. the "…" in a "Loading…" state) doesn't slice a
+    // code point mid-byte.
+    let mut rest = s;
+    while !rest.is_empty() {
+        if let Some(r) = rest.strip_prefix("<!--/sail-->") {
+            rest = r;
             continue;
         }
-        let prefix = "<!--sail:text:b";
-        if s[i..].starts_with(prefix)
-            && let Some(end_rel) = s[i + prefix.len()..].find("-->")
+        if let Some(after) = rest.strip_prefix("<!--sail:text:b")
+            && let Some(end_rel) = after.find("-->")
         {
-            i += prefix.len() + end_rel + "-->".len();
+            rest = &after[end_rel + "-->".len()..];
             continue;
         }
-        out.push(bytes[i] as char);
-        i += 1;
+        let ch = rest.chars().next().unwrap();
+        out.push(ch);
+        rest = &rest[ch.len_utf8()..];
     }
     out
 }
@@ -122,14 +124,14 @@ fn wired_serve_renders_ship_js_first_paint() {
         "per-row aria-pressed: directive (one flagged row); got:\n{on}"
     );
 
-    // ── feed (controller live() + host-dispatch) ───────────────────────────
-    // The live op resolves over the registered DataPort, so first paint reflects
+    // ── feed (controller query() + host-dispatch) ───────────────────────────
+    // The query op resolves over the registered DataPort, so first paint reflects
     // the resolved state, not `loading`.
     let feed_on_raw = payload_html(&root, engine, "feed", None);
     let feed_on = strip_markers(&feed_on_raw);
     assert!(
         feed_on.contains("state: ok"),
-        "ship-js resolves the live() source over host-dispatch; got:\n{feed_on}"
+        "ship-js resolves the query() source over host-dispatch; got:\n{feed_on}"
     );
 
     // ── greet/[id] (route param via host-dispatch) ─────────────────────────

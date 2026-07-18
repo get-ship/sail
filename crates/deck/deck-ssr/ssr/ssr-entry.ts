@@ -28,18 +28,40 @@ g.__shipServerRoute = route
 const container = dom.container()
 const dispose = mount(container)
 
-// Flush async `live()` sources before serializing (must-build #5):
-// a `<data live source="api.x()">` resolves over the host-dispatch wire — an
-// async op. Mounting renders the `loading` state synchronously; the wire's
+// Flush async data sources before serializing (must-build #5): a controller
+// `query(() => client.x())` resolves over the host-dispatch wire — an async
+// op. Mounting renders the `loading` state synchronously; the wire's
 // in-flight counter (`globalThis.__shipPending()`, maintained by the SDK's
 // `call`) lets us drain DETERMINISTICALLY: keep yielding while host calls are
-// outstanding, then a few quiet turns so each resolved op's `.then` → live
-// signal `.set` → bound effect → server-DOM write completes. Bounded so a
+// outstanding, then some quiet turns so each resolved op's `.then` → cache
+// entry `.set` → forwarding effect → outer signal `.set` → bound template
+// effect → server-DOM write completes. `query()` has a slightly deeper settle
+// chain than the old `live()` (the cache entry + re-keying forwarding effect
+// add hops), so the quiet budget is a touch more generous. Bounded so a
 // never-resolving source can't hang first paint.
 const pending = (g.__shipPending as undefined | (() => number)) ?? (() => 0)
+// Yield to the MACROTASK queue, not just microtasks: a host-dispatch op's
+// completion (the cross-boundary `call`) can land on a timer/IO callback,
+// which `await Promise.resolve()` (microtask-only) would spin right past —
+// pending() would stay >0 for the whole bounded loop and first paint would
+// serialize while still loading. `query()`'s own settle chain is synchronous
+// (signal `flush()` drains the effect queue inside `.set`), so once the op
+// resolves the DOM is up to date on the same turn. Fall back to a microtask
+// if the isolate has no `setTimeout`.
+const g2 = globalThis as { setTimeout?: (fn: () => void, ms: number) => unknown }
+const yieldTurn = (): Promise<void> =>
+  typeof g2.setTimeout === 'function'
+    ? new Promise<void>((r) => g2.setTimeout!(r, 0))
+    : Promise.resolve()
+// Warm-up: unconditional macrotask turns so a controller's eager fetch can
+// dispatch and the SDK's `call` can BUMP `pending()` before we start judging
+// "quiet" — otherwise a not-yet-registered op (a cold isolate registers it a
+// turn or two late) reads as "nothing outstanding" and first paint serializes
+// on loading.
+for (let i = 0; i < 6; i++) await yieldTurn()
 let quiet = 0
-for (let i = 0; i < 1000 && quiet < 3; i++) {
-  await Promise.resolve()
+for (let i = 0; i < 500 && quiet < 8; i++) {
+  await yieldTurn()
   if (pending() > 0) quiet = 0
   else quiet++
 }

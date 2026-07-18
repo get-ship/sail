@@ -1,26 +1,19 @@
 <controller>
 // /data — a real async source with a visible delay, so the reader watches
-// loading → ok and loading → error actually happen. `live()` runs its source
-// in an effect, so reading `attempt` inside it makes the button a refetch:
-// bump the signal, the source re-runs, the state walks through loading again.
+// loading → ok and loading → error actually happen. `query()` derives its
+// cache key from the client member path; the `attempt()`/`sabotage()`
+// signals read in the call ARGS are tracked deps — bumping either mints a
+// fresh key, so the state walks through loading again (that is the refetch).
 
-import { controller, live, signal, type ViewScope } from '@ship/sail-runtime'
+import { controller, query, signal, type ViewScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
+import { usersDemo } from './users-demo'
 import { code } from './snippets'
 
 export default controller((_ctx: ViewScope<Scope>) => {
     const attempt = signal(1)
     const sabotage = signal(false)
-    const users = live(() => {
-      attempt() // tracked: bumping it re-runs the source
-      const fail = sabotage()
-      return new Promise<string[]>((resolve, reject) => {
-        setTimeout(() => {
-          if (fail) reject(new Error('503 — the demo API was told to fail'))
-          else resolve(['Ada', 'Grace', 'Edsger', 'Barbara'])
-        }, 900)
-      })
-    })
+    const users = query(() => usersDemo.users.list({ attempt: attempt(), fail: sabotage() }))
     return {
       code,
       users,
@@ -42,7 +35,7 @@ export default controller((_ctx: ViewScope<Scope>) => {
   <p sx="text-lg text-muted-foreground leading-relaxed">
     Asynchronous data has three states — loading, error, and loaded — and
     forgetting one is where interfaces rot. SAIL makes all three explicit.
-    <code>live()</code> wraps any async source in a reactive state signal, and
+    <code>query()</code> turns a client call into a reactive state signal, and
     the template renders each state on its own terms.
   </p>
 
@@ -78,8 +71,8 @@ export default controller((_ctx: ViewScope<Scope>) => {
 
   <h2>Wrap an async source</h2>
   <p>
-    <code>live()</code> takes a function that returns a promise (or a plain
-    value) and hands back a signal of a tagged state:
+    <code>query()</code> takes a thunk that calls a client method and hands
+    back a signal of a tagged state:
     <code>&#123; kind: 'loading' &#125;</code>, then either
     <code>&#123; kind: 'ok', value &#125;</code> or
     <code>&#123; kind: 'error', error &#125;</code>.

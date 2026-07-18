@@ -1,17 +1,17 @@
 // Code snippets for the Live data page. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled by patterns inside these strings.
-// The live() controller + the while-loading/while-error/if-ok template are
+// The query() controller + the while-loading/while-error/if-ok template are
 // compile-checked against the in-repo sail-compiler; data() matches the real
 // @ship/sail-runtime DataOpts signature.
 export const code = {
   demo: `<controller>
-import { controller, live, signal } from '@ship/sail-runtime'
+import { controller, query, signal } from '@ship/sail-runtime'
+import { api } from './api'
 export default controller(() => {
   const attempt = signal(1)
-  const users = live(() => {
-    attempt() // tracked: bump it and the source re-runs
-    return fetchUsers()
-  })
+  // A signal read in the call args is a tracked dep: bump it and query()
+  // re-keys, re-fetching through 'loading'.
+  const users = query(() => api.users.list({ attempt: attempt() }))
   return { users, reload: () => attempt.set((a) => a + 1) }
 })
 </controller>
@@ -31,12 +31,15 @@ export default controller(() => {
 {/if}`,
 
   source: `// the <controller> block body (inline in users.sail)
-import { controller, live } from '@ship/sail-runtime'
+import { controller, query } from '@ship/sail-runtime'
+import { api } from './api' // an imported client — query() derives the key from it
 
 export default controller(() => {
-  // live() wraps any async source in a reactive state signal:
+  // query() turns a client call into a reactive state signal:
   //   { kind: 'loading' } → { kind: 'ok', value } | { kind: 'error', error }
-  const users = live(() => fetch('/api/users').then((r) => r.json()))
+  // A method that returns Promise<T> fetches once (pull); one that returns
+  // LiveSource<T> subscribes (push) — same three states either way.
+  const users = query(() => api.users.list())
   return { users }
 })`,
 

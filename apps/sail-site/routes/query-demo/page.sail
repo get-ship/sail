@@ -4,7 +4,7 @@
 // ES-imported client (./crm-demo.ts); the compiler statically derives
 // the cache key from `crm.deals.list`'s member path + the `stage()`
 // arg — no handwritten key anywhere in this file. Mirrors /data's
-// live() demo (visible delay, a reload/toggle affordance) so the two
+// query() pull demo (visible delay, a reload/toggle affordance) so the two
 // are directly comparable in the browser.
 
 import { controller, query, mutation, signal } from '@ship/sail-runtime'

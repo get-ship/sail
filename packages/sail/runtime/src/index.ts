@@ -294,14 +294,24 @@ export type { DataOpts, DataHandle } from './data'
 
 export { debounce } from './signal'
 
-export { live, unwrap, unwrapOr } from './live'
-export type { LiveState, LiveSignal, LiveSource, LiveOpts, LiveValueOf } from './live'
-
-// query()/mutation() — the read/write primitives that replace live()
-// per data-arch-seed.md ruling 3. live() stays exported above until
-// the corpus migration (query-rename-slice-spec.md) completes.
-export { query, queryKeyed, mutation, __invalidate } from './query'
-export type { QueryOpts, QueryKey, MutationOpts, MutationState, Mutation } from './query'
+// query()/mutation() — the read/write primitives. `live()` is DELETED
+// (data-arch-seed.md, "Owner RULINGS 2026-07-18"): its PULL half is
+// query() (Promise fetcher) and its PUSH half folded into query() by
+// type-directed routing at the runtime seam (LiveSource fetcher). The
+// loading/ok/error + push-source types, and `unwrap`/`unwrapOr`, are
+// owned by query.ts now.
+export { query, queryKeyed, mutation, __invalidate, unwrap, unwrapOr } from './query'
+export type {
+  QueryOpts,
+  QueryKey,
+  MutationOpts,
+  MutationState,
+  Mutation,
+  LiveState,
+  LiveSignal,
+  LiveSource,
+  LiveValueOf,
+} from './query'
 
 export { wireFormMutation } from './mutation'
 

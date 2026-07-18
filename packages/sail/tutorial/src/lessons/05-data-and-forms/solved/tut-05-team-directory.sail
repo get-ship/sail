@@ -1,38 +1,15 @@
 <!--
-  Lesson 05 solved — all three states of a live() handle are explicit.
+  Lesson 05 solved — all three states of a query() handle are explicit.
 
   {#while-loading} covers the first paint and every refetch;
   {#while-error} covers rejection; the value is only reachable behind
   kind === 'ok'. The form writes through bind:value / bind:checked and
-  refetches by bumping a tracked signal.
+  refetches by bumping a tracked signal read in the query's call args.
 -->
 
 <controller>
-import { controller, signal, derived, live } from '@ship/sail-runtime'
-
-interface Member {
-  id: number
-  name: string
-  role: 'member' | 'admin'
-}
-
-// The "server": module state behind a latency-simulating fetch. Swap in a
-// real fetch()/SDK call and nothing else in the lesson changes.
-let nextId = 4
-const DB: Member[] = [
-  { id: 1, name: 'Ada Lovelace', role: 'admin' },
-  { id: 2, name: 'Grace Hopper', role: 'member' },
-  { id: 3, name: 'Mary Shelley', role: 'member' },
-]
-
-function fetchTeam(fail: boolean): Promise<Member[]> {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (fail) reject(new Error('503 — the team service is down. Uncheck "break the API" and reload.'))
-      else resolve([...DB])
-    }, 600)
-  })
-}
+import { controller, signal, derived, query } from '@ship/sail-runtime'
+import { directory } from './tut-05-directory-client'
 
 export default controller(() => {
     const attempt = signal(1)
@@ -40,16 +17,14 @@ export default controller(() => {
     const name = signal('')
     const role = signal<'member' | 'admin'>('member')
 
-    // live() wraps the async source in a state signal:
+    // query() reads from an imported client (directory.team.list) and
+    // hands back a state signal:
     //   { kind: 'loading' } → { kind: 'ok', value } | { kind: 'error', error }
-    // attempt() and breakApi() are read INSIDE the thunk, so both are
-    // tracked deps: change either and the source re-runs, back through
-    // 'loading'. That is the whole refetch story — no refetch() method,
-    // just a signal you bump.
-    const team = live(() => {
-      attempt()
-      return fetchTeam(breakApi())
-    })
+    // The signals read INSIDE the call ARGS — attempt() and breakApi() —
+    // are the tracked deps: change either and query() re-keys to a fresh
+    // cache entry (a real refetch), back through 'loading'. That is the
+    // whole refetch story — no refetch() method, just a signal you bump.
+    const team = query(() => directory.team.list({ attempt: attempt(), broken: breakApi() }))
 
     const canAdd = derived(() => name().trim().length > 0)
 
@@ -62,10 +37,10 @@ export default controller(() => {
       reload: (): void => attempt.set((n) => n + 1),
       add: (): void => {
         if (!canAdd()) return
-        DB.push({ id: nextId++, name: name().trim(), role: role() })
+        directory.team.add({ name: name().trim(), role: role() })
         name.set('')
         role.set('member')
-        attempt.set((n) => n + 1) // refetch: the list refreshes through the same path
+        attempt.set((n) => n + 1) // refetch: bumping attempt re-keys the query, same path
       },
     }
   })

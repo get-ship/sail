@@ -109,7 +109,7 @@ const RAW_LESSONS: TutorialLesson[] = [
   {
     "slug": "05-data-and-forms",
     "title": "Data and forms",
-    "description": "live() makes loading, error, and ok explicit; bind: writes forms; refetch is a signal you bump.",
+    "description": "query() makes loading, error, and ok explicit; bind: writes forms; refetch is a signal you re-key.",
     "chapter": "state",
     "order": 5,
     "prev": "04-templates-react",
@@ -232,7 +232,7 @@ export const TUTORIAL_GROUPS: TutorialGroup[] = [
       {
         "slug": "05-data-and-forms",
         "title": "Data and forms",
-        "description": "live() makes loading, error, and ok explicit; bind: writes forms; refetch is a signal you bump.",
+        "description": "query() makes loading, error, and ok explicit; bind: writes forms; refetch is a signal you re-key.",
         "order": 5,
         "href": "/tutorial/05-data-and-forms"
       }

@@ -104,8 +104,8 @@ export default controller((_ctx: ViewScope<Scope>) => {
   <code-block code={code.state}></code-block>
 
   <p>
-    <strong>Async data is three explicit states.</strong> <code>live()</code>
-    wraps any promise-returning source; the template physically cannot render
+    <strong>Async data is three explicit states.</strong> <code>query()</code>
+    turns a client call into a state signal; the template physically cannot render
     the value without having handled loading and error.
     <a href="/data">Data →</a>
   </p>

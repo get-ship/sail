@@ -18,7 +18,7 @@ loop the language exists for:
 | 02 | styling-is-sx | the one styling attribute; closed token vocabulary; states as prefixes |
 | 03 | state-is-a-controller | signal / derived / effect; one owner for state |
 | 04 | templates-react | zero-arg reads, modifiers, `{#if}` / `{#for key}` / `{#match}` |
-| 05 | data-and-forms | `live()`'s three explicit states; `bind:`; refetch = bump a tracked signal |
+| 05 | data-and-forms | `query()`'s three explicit states; `bind:`; refetch = bump a tracked signal |
 | 06 | motion-is-a-directive | triggers × presets; exit-hold; stagger; reduced motion |
 | 07 | themes-are-one-attribute | tokens + the tone contract; `applyTheme`; `data-theme-preview` |
 | 08 | the-compiler-talks-back | the agent loop: run, read the rejection, fix, run again |

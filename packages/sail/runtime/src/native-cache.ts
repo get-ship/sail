@@ -29,7 +29,13 @@
 
 import { signal, type Signal } from './signal'
 import { onCleanup, currentScope, createScope, type EffectScope } from './effect-scope'
-import type { LiveState } from './live'
+import {
+  isLiveSource,
+  makeAbortController,
+  type LiveState,
+  type LiveSignal,
+  type LiveSource,
+} from './live-state'
 
 /** A cache identity: client-root + static member-path segments +
  *  (optionally) a tail of call-arg values. Compiler-derived, never
@@ -189,7 +195,10 @@ export class NativeCache {
    *  in-flight attempt's `AbortSignal`; dispose, GC eviction, and a
    *  forced invalidate-refetch all abort it for real, not just discard
    *  its eventual result. */
-  fetch<T>(entry: CacheEntry<T>, fn: (signal: AbortSignal) => Promise<T>): void {
+  fetch<T>(
+    entry: CacheEntry<T>,
+    fn: (signal: AbortSignal) => Promise<T> | LiveSource<T>,
+  ): void {
     if (entry.status === 'fetching') return
     entry.status = 'fetching'
     const myToken = ++entry.fetchToken
@@ -201,36 +210,84 @@ export class NativeCache {
     // keeps those two concerns from colliding.
     if (entry.sig.__peek().kind !== 'ok') entry.sig.set({ kind: 'loading' })
 
+    const onError = (err: unknown): void => {
+      if (entry.disposed || myToken !== entry.fetchToken) return
+      entry.abortController = null
+      const maxRetries = entry.retry === false ? 0 : entry.retry === true ? Infinity : entry.retry
+      if (entry.retryCount < maxRetries) {
+        entry.retryCount++
+        entry.retryTimer = setTimeout(() => {
+          if (entry.disposed || myToken !== entry.fetchToken) return
+          run()
+        }, retryDelay(entry.retryCount))
+        return
+      }
+      entry.status = 'idle'
+      entry.sig.set({ kind: 'error', error: toError(err) })
+    }
+
     const run = (): void => {
-      const controller = new AbortController()
+      const controller = makeAbortController()
       entry.abortController = controller
-      fn(controller.signal).then(
-        (value) => {
-          if (entry.disposed || myToken !== entry.fetchToken) return
-          entry.status = 'idle'
-          entry.abortController = null
-          entry.dataUpdatedAt = Date.now()
-          entry.retryCount = 0
-          entry.sig.set({ kind: 'ok', value })
-        },
-        (err) => {
-          if (entry.disposed || myToken !== entry.fetchToken) return
-          entry.abortController = null
-          const maxRetries = entry.retry === false ? 0 : entry.retry === true ? Infinity : entry.retry
-          if (entry.retryCount < maxRetries) {
-            entry.retryCount++
-            entry.retryTimer = setTimeout(() => {
-              if (entry.disposed || myToken !== entry.fetchToken) return
-              run()
-            }, retryDelay(entry.retryCount))
-            return
-          }
-          entry.status = 'idle'
-          entry.sig.set({ kind: 'error', error: toError(err) })
-        },
-      )
+
+      // TYPE-DIRECTED ROUTING at the runtime type-resolved seam: the
+      // fetcher's return value shape reflects the client method's
+      // compile-time return type. A `LiveSource<T>` (a `subscribe`
+      // method) is a PUSH source — hand the entry over to it; a
+      // `Promise<T>` is a PULL — await it with the retry/token machinery
+      // below. Same `CacheEntry`, same `LiveState` face out.
+      let result: Promise<T> | LiveSource<T>
+      try {
+        result = fn(controller.signal)
+      } catch (err) {
+        onError(err)
+        return
+      }
+
+      if (isLiveSource<T>(result)) {
+        // The sync `subscribe` is the whole "fetch" — no promise to
+        // await, no retry, nothing to abort via the controller (the
+        // source owns its own teardown through the returned disposer).
+        entry.status = 'idle'
+        entry.abortController = null
+        entry.retryCount = 0
+        entry.pushUnsubscribe = result.subscribe(this.pushProxy(entry))
+        return
+      }
+
+      result.then((value) => {
+        if (entry.disposed || myToken !== entry.fetchToken) return
+        entry.status = 'idle'
+        entry.abortController = null
+        entry.dataUpdatedAt = Date.now()
+        entry.retryCount = 0
+        entry.sig.set({ kind: 'ok', value })
+      }, onError)
     }
     run()
+  }
+
+  /** Adapt the cache entry's signal into the guarded `LiveSignal` a
+   *  `LiveSource.subscribe` writes into: every push checks the entry
+   *  isn't torn down / superseded, stamps `dataUpdatedAt` on `ok`, then
+   *  forwards to the real entry signal. Reads pass straight through, so a
+   *  source that accumulates (reads `sig()` before its next `set`) sees
+   *  the live value. Mirrors `nativePush`'s inline guards. */
+  private pushProxy<T>(entry: CacheEntry<T>): LiveSignal<T> {
+    const proxy = (() => entry.sig()) as LiveSignal<T>
+    // Guard on `disposed` ONLY (mirrors `nativePush`): a push subscription
+    // is long-lived and independent of fetch tokens — a concurrent pull
+    // refetch bumping `fetchToken` must NOT silence the still-live stream
+    // (the PUSH+PULL interleave contract).
+    proxy.set = (next: LiveState<T> | ((prev: LiveState<T>) => LiveState<T>)): void => {
+      if (entry.disposed) return
+      const s = typeof next === 'function' ? next(entry.sig.__peek()) : next
+      if (s.kind === 'ok') entry.dataUpdatedAt = Date.now()
+      entry.sig.set(s)
+    }
+    proxy.__peek = () => entry.sig.__peek()
+    proxy.__subs = entry.sig.__subs
+    return proxy
   }
 
   /** Invalidate every entry whose key is prefixed by `prefix` (the
@@ -398,7 +455,7 @@ export interface NativeCacheOpts {
 }
 
 /**
- * Cache-backed sibling of `live()` — the native-core counterpart to
+ * Cache-backed pull seam under `query()` — the native-core counterpart to
  * `queried()`. `key` is the explicit cache identity; `fn` is the
  * fetcher. Resolves one `NativeCache` per owner-tree chain root, so
  * two components under the same root sharing `key` share one fetch
@@ -413,6 +470,36 @@ export function nativeQueried<T>(
   const { entry, release } = cache.attach<T>(key, opts)
 
   if (!cache.isFresh(entry as CacheEntry<unknown>)) cache.fetch(entry, fn)
+
+  onCleanup(release)
+  return entry.sig
+}
+
+/**
+ * The unified read seam `query()` sits on: one keyed entry fed by a
+ * fetcher that returns EITHER a `Promise<T>` (PULL — one-shot fill,
+ * staleness, retry) OR a `LiveSource<T>` (PUSH — a `subscribe` that keeps
+ * writing the entry). The pull-vs-push decision is `fetch`'s
+ * `isLiveSource` branch — the return value's shape IS the routing signal,
+ * so there is no second primitive and no author marker. Shares
+ * `CacheEntry<T>` with `nativeQueried`/`nativePush`: a pull and a push on
+ * the same key write the same signal.
+ */
+export function nativeQuery<T>(
+  key: QueryKey,
+  fn: (signal: AbortSignal) => Promise<T> | LiveSource<T>,
+  opts?: NativeCacheOpts,
+): Signal<LiveState<T>> {
+  const cache = useNativeCache()
+  const { entry, release } = cache.attach<T>(key, opts)
+
+  // A push-fed entry is owned by its subscription (never stale, never
+  // refetched) — a later observer just shares it. A pull entry refetches
+  // only when not fresh. `fetch()` itself no-ops on an already-push-fed
+  // or in-flight entry, so this is just the pull-side freshness gate.
+  if (entry.pushUnsubscribe === null && !cache.isFresh(entry as CacheEntry<unknown>)) {
+    cache.fetch(entry, fn)
+  }
 
   onCleanup(release)
   return entry.sig

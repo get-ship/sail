@@ -1,7 +1,7 @@
 <controller>
-import { controller, live } from '@ship/sail-runtime'
+import { controller, query } from '@ship/sail-runtime'
 import { call } from 'ship'
-export default controller((_ctx) => ({ t: live(() => call('api.demo.clock', {})) }))
+export default controller((_ctx) => ({ t: query(() => call('api.demo.clock', {})) }))
 </controller>
 
 <column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">

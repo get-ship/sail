@@ -50,8 +50,9 @@ any allocator.
   cleanup automatically.
 
 You DO need `onCleanup` for:
-- Allocator helpers like `live()`, `data()` that open subscriptions
-  on the caller's behalf
+- Allocator helpers like `query()`, `data()` that open subscriptions
+  on the caller's behalf (a `query()` whose client method returns a
+  `LiveSource` holds an open channel until disposed)
 - Custom hooks that wrap browser APIs (intersection observers, web
   socket clients, broadcast channels)
 - One-off allocations inside the controller function that don't

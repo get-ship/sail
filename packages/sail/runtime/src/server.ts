@@ -32,7 +32,18 @@ export {
   debounce,
   type Signal,
 } from './signal'
-export { live, unwrap, unwrapOr, type LiveSource, type LiveSignal, type LiveState } from './live'
+export { query, queryKeyed, mutation, __invalidate, unwrap, unwrapOr } from './query'
+export type {
+  QueryOpts,
+  QueryKey,
+  MutationOpts,
+  MutationState,
+  Mutation,
+  LiveSource,
+  LiveSignal,
+  LiveState,
+  LiveValueOf,
+} from './query'
 export { data } from './data'
 export { createMountState, componentMountState, pickSignals, SIGNALS_KEY } from './state-proxy'
 export { ref, attachRef } from './ref'

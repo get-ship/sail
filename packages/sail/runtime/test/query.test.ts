@@ -199,4 +199,87 @@ describe('mutation()', () => {
     await m.mutate().catch(() => {})
     expect(invalidateSpy).not.toHaveBeenCalled()
   })
+
+  it('reset() returns a settled ok to idle', async () => {
+    const scope = createScope()
+    const m = withScope(scope, () => mutation(() => Promise.resolve('saved')))
+    await m.mutate()
+    expect(m.state()).toEqual({ kind: 'ok', value: 'saved' })
+    m.reset()
+    expect(m.state()).toEqual({ kind: 'idle' })
+  })
+
+  it('reset() returns a settled error to idle (clears a stale error banner)', async () => {
+    const scope = createScope()
+    const m = withScope(scope, () => mutation(() => Promise.reject(new Error('down'))))
+    await m.mutate().catch(() => {})
+    expect(m.state().kind).toBe('error')
+    m.reset()
+    expect(m.state()).toEqual({ kind: 'idle' })
+  })
+
+  it('reset() is a no-op while idle, and an in-flight mutate cannot overwrite a reset', async () => {
+    const scope = createScope()
+    let resolve: (v: string) => void = () => {}
+    const m = withScope(scope, () => mutation(() => new Promise<string>((r) => { resolve = r })))
+    m.reset()
+    expect(m.state()).toEqual({ kind: 'idle' }) // no-op
+
+    const p = m.mutate()
+    expect(m.state()).toEqual({ kind: 'loading' })
+    m.reset() // reset mid-flight
+    expect(m.state()).toEqual({ kind: 'idle' })
+    resolve('late') // the late settle must NOT clobber the reset
+    await p
+    expect(m.state()).toEqual({ kind: 'idle' })
+  })
+})
+
+// AbortSignal — the taught convention is `signal` as a trailing arg on
+// client methods; the cache/mutation own a real per-fetch AbortController
+// and abort it for real (dispose/GC/invalidate/re-key) so a forwarding
+// thunk cancels REAL network work, not just discards its result.
+describe('AbortSignal cancels real work', () => {
+  it('a query pull whose fetcher forwards `signal` aborts the real op on scope dispose', async () => {
+    const scope = createScope()
+    let aborted = false
+    let settled = false
+    // A fake network op that honors the signal — the shape a generated
+    // client method takes (`method(args, signal)`).
+    const netOp = (signal: AbortSignal) =>
+      new Promise<string>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          settled = true
+          resolve('too late')
+        }, 10_000)
+        signal.addEventListener('abort', () => {
+          aborted = true
+          clearTimeout(timer)
+          reject(new Error('aborted'))
+        })
+      })
+
+    const s = withScope(scope, () =>
+      queryKeyed(() => ['net', 'op'], (signal) => netOp(signal)),
+    )
+    expect(s().kind).toBe('loading')
+    scope.dispose() // dispose aborts the in-flight controller for real
+    await tick()
+    expect(aborted).toBe(true)
+    expect(settled).toBe(false) // the real work was cancelled, not left running
+  })
+
+  it('a mutation forwards `signal` to its client method', async () => {
+    const scope = createScope()
+    let seenSignal: AbortSignal | undefined
+    const m = withScope(scope, () =>
+      mutation((signal) => {
+        seenSignal = signal
+        return Promise.resolve('ok')
+      }),
+    )
+    await m.mutate()
+    expect(seenSignal).toBeInstanceOf(AbortSignal)
+    expect(seenSignal!.aborted).toBe(false)
+  })
 })

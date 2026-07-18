@@ -61,7 +61,7 @@ patterns registered via `defineRoutes`. A view that reads `route.params.id()`
 ```ts
 <controller>
 // views/agents/[id]/page.sail
-import { derived, live, unwrap } from '@ship/sail-runtime'
+import { derived, query, unwrap } from '@ship/sail-runtime'
 import { defineRoutes } from '@ship/sail-runtime/route'
 
 // TOP-LEVEL — before the controller default export.
@@ -69,7 +69,8 @@ defineRoutes([{ pattern: '/agents/:id' }])
 
 export default controller(({ route, ship }) => {
   const id   = derived(() => route.params.id() ?? '')
-  const ctx  = live(() => ship.agents.detail({ id: id() }))
+  // ship.agents.detail(...) returns a LiveSource, so query() subscribes (push).
+  const ctx  = query(() => ship.agents.detail({ id: id() }))
   const data = derived(() => unwrap(ctx) ?? null)
   return { id, ctx, data }
 })

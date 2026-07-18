@@ -304,11 +304,12 @@ from `views/agents/[id]/page.sail`):
 
 ```ts
 <controller>
-import { derived, live, unwrap } from '@ship/sail-runtime'
+import { derived, query, unwrap } from '@ship/sail-runtime'
 
 export default controller(({ route, ship }) => {
   const agentId = derived(() => route.params.id() ?? '')
-  const ctx     = live(() => ship.agents.wire({ id: agentId() }))
+  // ship.agents.wire(...) returns a LiveSource, so query() subscribes (push).
+  const ctx     = query(() => ship.agents.wire({ id: agentId() }))
   const data    = derived(() => unwrap(ctx) ?? null)
   return { agentId, ctx, data }
 })
