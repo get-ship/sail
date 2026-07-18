@@ -665,7 +665,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="card" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx="h-full">
               <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <card sx="p-3" motion:hover={{ scale: 'spring:gentle' }}>
+                <card interactive sx="p-3">
                   <strong>A surface</strong>
                   <p sx="text-xs text-muted-foreground">the hover lift is one attribute</p>
                 </card>
