@@ -9,29 +9,13 @@
 -->
 
 <controller>
-import { controller, signal, filteredList, type ControllerScope } from '@ship/sail-runtime'
+import { controller, signal, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
 
-const BENCH = ['Katherine Johnson', 'Annie Easley', 'Margaret Hamilton', 'Radia Perlman']
-
 export default controller((_ctx: ControllerScope<Scope>) => {
-    const people = signal([
-      { id: 1, name: 'Ada Lovelace', status: 'active' },
-      { id: 2, name: 'Grace Hopper', status: 'away' },
-      { id: 3, name: 'Alan Turing', status: 'active' },
-    ])
-    const { query, filtered } = filteredList(() => people(), (p, q) =>
-      p.name.toLowerCase().includes(q),
-    )
-    const invite = (): void => {
-      people.set((l) => [
-        ...l,
-        { id: l.length + 1, name: BENCH[(l.length - 3) % BENCH.length] ?? `Member ${l.length + 1}`, status: 'active' },
-      ])
-    }
-
-    return { code, query, filtered, invite }
+    const name = signal('')
+    return { code, name }
 })
 </controller>
 
@@ -57,27 +41,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       A component is one file: a template that reads like HTML, TypeScript
       beneath it, signals connecting the two. Updates are fine-grained — the
       template binds signals directly, and only what changed re-renders. No
-      virtual DOM, no diffing. This is a complete component file, and next to
-      it, the same file running:
+      virtual DOM, no diffing. Six lines, and the same six lines running:
     </p>
     <row gap="6" align="start">
       <column gap="2" sx="grow-1 basis-breakpoint-mobile min-w-0">
-        <code-block code={code.page}></code-block>
+        <code-block code={code.hello}></code-block>
       </column>
       <column gap="3" sx="grow-1 basis-breakpoint-mobile min-w-0 p-5 bg-muted border border-border rounded-lg">
-        <input placeholder="Filter people" bind:value={query} />
-        {#for p of filtered() key={p.id}}
-          <card sx="p-3 transition-shadow duration-fast hover:shadow-hover"
-                motion:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
-            <row gap="3" align="center">
-              <avatar></avatar>
-              <strong sx="grow-1">{p.name}</strong>
-              <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
-            </row>
-          </card>
-        {/for}
-        <row gap="2">
-          <button on:click={invite} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Invite</button>
+        <row gap="2" align="center">
+          <input bind:value={name} placeholder="Type your name" />
+          <badge tone="primary">Hello, {name() || 'sailor'}</badge>
         </row>
       </column>
     </row>
@@ -97,31 +70,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <column sx="max-w-breakpoint-tablet" gap="3">
     <h2>The compiler pushes back</h2>
-    <p>
-      Every <code>.sail</code> file passes through a compiler that checks more
-      than syntax. A colour that isn't a token, a stylesheet smuggled in beside
-      a component, an animation bolted on outside the motion system — these
-      don't compile. And a refusal is never a dead end: the error names the
-      correct form, so the next attempt — an agent's or yours — is the right
-      one.
-    </p>
     <row gap="6" align="start">
       <column gap="3" sx="grow-1 basis-breakpoint-mobile min-w-0">
         <p>
-          How strict is up to you, and the contract is a real file. Any
-          directory can carry a <code>sail.config.json</code> — a few lines
-          that set the rules for the code inside it. On the right: the config
-          these docs pages compile under. The strict preset, two grants, and
-          nothing else — an unknown key refuses loudly instead of being
-          ignored.
-        </p>
-        <p>
-          The grants go beyond styling. Our code-editor component embeds
-          CodeMirror, so its config carries <code>"unconfined": true</code> —
-          one greppable line admitting it. The canvas component's config says
-          <code>"network": ["self"]</code>: it may fetch from its own origin
-          and nowhere else. What a directory isn't granted, its code cannot
-          do.
+          The compiler checks more than syntax: a colour that isn't a token, a
+          stylesheet beside a component, an animation outside the motion
+          system — these don't compile, and every refusal names the correct
+          form. How strict is a per-directory contract: the config on the
+          right is what these docs pages compile under. Grants reach beyond
+          styling — our code-editor declares <code>"unconfined": true</code>
+          to embed CodeMirror; the canvas component may fetch from
+          <code>"network": ["self"]</code> and nowhere else. What isn't
+          granted doesn't compile.
         </p>
       </column>
       <column gap="2" sx="grow-1 basis-breakpoint-mobile min-w-0">
@@ -132,19 +92,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     <h2>What's in the box</h2>
     <p>
-      Interface patterns — dialogs, comboboxes, tables, tabs, toasts — are
-      tags, keyboard-complete and accessible, skinned by your theme. Layout
-      is its own vocabulary
+      <a href="/components">Interface patterns</a> — dialogs, comboboxes,
+      tables, tabs, toasts — are tags, keyboard-complete and accessible,
+      skinned by your <a href="/theming">theme</a>.
+      <a href="/layout">Layout</a> is its own vocabulary
       (<code>row</code>, <code>column</code>, <code>grid</code>) rather than a
-      CSS technique. Motion is declarative and respects reduced motion by
-      default. Data has a first-class shape: <code>query()</code> turns a
-      client call into loading, error, and value states the template has to
-      handle. Forms, icons, and a typographic system for prose round it out.
-      The practical difference: there is no stack to choose — and nothing can
-      drift out of step with your design system, because everything reads the
-      same tokens.
+      CSS technique. <a href="/motion">Motion</a> is declarative and respects
+      reduced motion by default. <a href="/data">Data</a> has a first-class
+      shape: <code>query()</code> turns a client call into loading, error,
+      and value states the template has to handle. Forms, icons, and a
+      typographic system for prose round it out. The practical difference:
+      there is no stack to choose — and nothing can drift out of step with
+      your design system, because everything reads the same tokens.
     </p>
-    <p><a href="/components">Explore the components →</a> · <a href="/motion">Animation</a> · <a href="/data">Data &amp; forms</a></p>
 
     <h2>Performance</h2>
     <p>
@@ -158,9 +118,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </p>
 
     <p sx="text-sm text-muted-foreground">
-      SAIL is in alpha. It builds real websites today — this site is one — and
-      the language is still settling; we'd rather be honest about that than
-      polished about it.
+      SAIL is in alpha. It builds real websites today — this site is one —
+      and the language is still settling.
     </p>
 
     <row sx="mt-4 pt-4 border-t border-t-border" gap="2">

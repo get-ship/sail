@@ -1,6 +1,13 @@
 // Code snippets for the introduction. The `page` snippet IS the live demo's
 // program; the tour snippets are deliberately tiny. All compiled by the build.
 export const code = {
+  // Section 2 — the whole demo, six lines. The page renders these same lines live.
+  hello: `const name = signal('')
+
+<row gap="2" align="center">
+  <input bind:value={name} placeholder="Type your name" />
+  <badge tone="primary">Hello, {name() || 'sailor'}</badge>
+</row>`,
   // The strict config, pure JSON (rendered by <sail-json-view> on the page).
   configJson: `{"preset": "strict", "sx": true, "raw_containers": true}`,
   // REAL config files from this repository, verbatim — never invent these.
