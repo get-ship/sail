@@ -36,16 +36,16 @@ export default controller(() => {
     }
     const t = setInterval(() => {
       step.set('write')
-      at(1500, () => {
+      at(2500, () => {
         rows.set((r) => [...r.slice(1), mk()])
         step.set('reconcile')
       })
-      at(3000, () => {
+      at(5000, () => {
         departed.set((n) => n + 1)
         step.set('paint')
       })
-      at(4500, () => step.set('idle'))
-    }, 6000)
+      at(7500, () => step.set('idle'))
+    }, 10000)
     return () => {
       clearInterval(t)
       timers.forEach((x) => clearTimeout(x))
@@ -74,17 +74,17 @@ export default controller(() => {
     </column>
   </card>
   <column gap="2">
-    <card group data-state={step() === 'write' ? 'live' : null} sx="p-3 opacity-75 state-live:opacity-100 state-live:bg-primary">
-      <strong sx="text-sm group-state-live:text-primary-foreground">1 · the write</strong>
-      <p sx="text-xs font-mono text-muted-foreground group-state-live:text-primary-foreground">the interval fires: flights.set(rows =&gt; ...)</p>
+    <card data-state={step() === 'write' ? 'live' : null} sx="p-3 border border-border opacity-50 state-live:opacity-100 state-live:border-primary state-live:bg-muted">
+      <strong sx="text-sm">1 · the write</strong>
+      <p sx="text-xs font-mono text-muted-foreground">the interval fires: flights.set(rows =&gt; ...)</p>
     </card>
-    <card group data-state={step() === 'reconcile' ? 'live' : null} sx="p-3 opacity-75 state-live:opacity-100 state-live:bg-primary">
-      <strong sx="text-sm group-state-live:text-primary-foreground">2 · the reconcile</strong>
-      <p sx="text-xs font-mono text-muted-foreground group-state-live:text-primary-foreground">watch the board: one row leaves, one enters</p>
+    <card data-state={step() === 'reconcile' ? 'live' : null} sx="p-3 border border-border opacity-50 state-live:opacity-100 state-live:border-primary state-live:bg-muted">
+      <strong sx="text-sm">2 · the reconcile</strong>
+      <p sx="text-xs font-mono text-muted-foreground">watch the board: one row leaves, one enters</p>
     </card>
-    <card group data-state={step() === 'paint' ? 'live' : null} sx="p-3 opacity-75 state-live:opacity-100 state-live:bg-primary">
-      <strong sx="text-sm group-state-live:text-primary-foreground">3 · the repaint</strong>
-      <p sx="text-xs font-mono text-muted-foreground group-state-live:text-primary-foreground">one text node: the counter, top right</p>
+    <card data-state={step() === 'paint' ? 'live' : null} sx="p-3 border border-border opacity-50 state-live:opacity-100 state-live:border-primary state-live:bg-muted">
+      <strong sx="text-sm">3 · the repaint</strong>
+      <p sx="text-xs font-mono text-muted-foreground">one text node: the counter, top right</p>
     </card>
   </column>
 </grid>
