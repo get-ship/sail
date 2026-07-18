@@ -1706,22 +1706,28 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "delay",
     "values": [
+      "amble",
+      "cinematic",
       "deliberate",
       "fast",
       "glacial",
       "instant",
       "medium",
+      "saunter",
       "slow"
     ]
   },
   {
     "prop": "duration",
     "values": [
+      "amble",
+      "cinematic",
       "deliberate",
       "fast",
       "glacial",
       "instant",
       "medium",
+      "saunter",
       "slow"
     ]
   },
@@ -5211,7 +5217,7 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   },
   {
     "atom": "flex-nowrap",
-    "instead": "<row nowrap>"
+    "instead": "<row> — a row wraps by default; a non-wrapping row has no layout keyword yet"
   },
   {
     "atom": "flex-row",
@@ -5219,7 +5225,7 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   },
   {
     "atom": "flex-wrap",
-    "instead": "<row wrap>"
+    "instead": "<row> — a row wraps by default"
   },
   {
     "atom": "gap",
@@ -5243,7 +5249,7 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   },
   {
     "atom": "grid-rows",
-    "instead": "<grid rows=\"3\">"
+    "instead": "<grid> — grid auto-flows rows; there is no rows-count axis yet"
   },
   {
     "atom": "inline-flex",
@@ -5315,6 +5321,8 @@ export const MOTION: { triggers: string[]; properties: string[]; staggerKey: str
   ],
   "properties": [
     "scale",
+    "scale-x",
+    "scale-y",
     "opacity",
     "translate-y",
     "translate-x",
@@ -5328,6 +5336,16 @@ export const MOTION: { triggers: string[]; properties: string[]; staggerKey: str
       "doc": "translateY 0→-100% + opacity 0.4→1 — a 7-12px dot's visible bounce, paired per dot, with a 150ms stagger step that lands as a per-dot phase offset (dot 1: 0ms, dot 2: 150ms, dot 3: 300ms). Deliberate (420ms/phase) so the loop reads as a calm breathing rhythm, not a frantic flicker."
     },
     {
+      "name": "dim",
+      "kind": "tween",
+      "doc": "opacity 1→0→1, infinite alternate — the ambient-loop companion to the one-shot `fade-out`. Same duration token as `slip` so a slide+fade stays in phase."
+    },
+    {
+      "name": "drift",
+      "kind": "tween",
+      "doc": "translate 0→24(px) and back, infinite alternate — a slow ambient position drift. Compose with `tilt`+`pop` on the same element to animate x/rotate/scale independently (motion's 'independent transforms')."
+    },
+    {
       "name": "fade",
       "kind": "tween",
       "doc": "opacity 0→1 — extension of existing transition:fade"
@@ -5338,6 +5356,11 @@ export const MOTION: { triggers: string[]; properties: string[]; staggerKey: str
       "doc": "opacity 1→0 — exit phase"
     },
     {
+      "name": "fill",
+      "kind": "tween",
+      "doc": "0→1 progress fill, infinite alternate — pair with the `scale-x` property (origin-left) for a bar/track that fills then empties, or `scale-y` (origin-bottom) for a column. A single-axis reveal, distinct from `pulse` (uniform scale)."
+    },
+    {
       "name": "marquee",
       "kind": "tween",
       "doc": "translateX 0→-50% — the <sail-band> one-direction infinite loop. The runtime derives the duration from measured content width (px/s), so the rate holds for any content. Use `marquee-reverse` to flip direction."
@@ -5346,6 +5369,11 @@ export const MOTION: { triggers: string[]; properties: string[]; staggerKey: str
       "name": "marquee-reverse",
       "kind": "tween",
       "doc": "translateX 0→+50% — the <sail-band direction=\"reverse\"> one-direction loop. Same px/s derivation as `marquee`."
+    },
+    {
+      "name": "pop",
+      "kind": "tween",
+      "doc": "scale 1→1.75 and back, infinite alternate — a strong recurring pop, larger than `pulse` (1→1.04). Attention/emphasis in an ambient loop."
     },
     {
       "name": "press",
@@ -5361,6 +5389,11 @@ export const MOTION: { triggers: string[]; properties: string[]; staggerKey: str
       "name": "release",
       "kind": "tween",
       "doc": "scale-up on pointerup — completes the press/release pair"
+    },
+    {
+      "name": "slip",
+      "kind": "tween",
+      "doc": "translate 0→-12(px on translate-x/y, % is not expressible) then back, infinite alternate — a subtle ambient drift-and-return, e.g. a list row that slides out and back. Pair with `dim` on opacity for a slide+fade."
     },
     {
       "name": "spin",
@@ -5386,6 +5419,11 @@ export const MOTION: { triggers: string[]; properties: string[]; staggerKey: str
       "name": "spring:snappy",
       "kind": "spring",
       "doc": "high-stiffness, well-damped — quick UI feedback (button press, toggle)"
+    },
+    {
+      "name": "tilt",
+      "kind": "tween",
+      "doc": "rotate 0deg→15deg and back, infinite alternate — a gentle recurring tilt (distinct from `spin`'s continuous full rotation)."
     }
   ]
 }
@@ -5718,6 +5756,11 @@ export const ACTIONS: ActionDoc[] = [
     "name": "chip",
     "param": "void",
     "summary": "Dismissible chip behavior; click-to-remove wired to the element."
+  },
+  {
+    "name": "chromeOffset",
+    "param": "void",
+    "summary": "Publish the attached element's measured height as --chrome-offset on :root (pairs with the h:fill scale)."
   },
   {
     "name": "clickOutside",

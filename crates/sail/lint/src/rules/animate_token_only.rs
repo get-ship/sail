@@ -19,6 +19,8 @@ pub const RULE_ID: &str = "sail-animate-token-only";
 /// mechanism; this is.
 pub const MOTION_PROPERTIES: &[&str] = &[
     "scale",
+    "scale-x",
+    "scale-y",
     "opacity",
     "translate-y",
     "translate-x",

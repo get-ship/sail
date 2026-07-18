@@ -55,7 +55,7 @@ import {
 
 /** Per-property motion config the compiler emits. */
 export interface MotionConfig {
-  property: 'scale' | 'opacity' | 'translate-y' | 'translate-x' | 'rotate'
+  property: 'scale' | 'scale-x' | 'scale-y' | 'opacity' | 'translate-y' | 'translate-x' | 'rotate'
   preset: string
   kind: 'spring' | 'tween'
   stiffness?: number
@@ -96,6 +96,11 @@ function prefersReducedMotion(): boolean {
 const REST_VALUE: Record<MotionConfig['property'], number> = {
   opacity: 0,
   scale: 0.96,
+  // Single-axis scale defaults to a fully-collapsed track (0) so a bare
+  // `scale-x`/`scale-y` reads as a reveal/fill that grows to identity (1) —
+  // mirroring how `translate-x` rests offset and settles to 0.
+  'scale-x': 0,
+  'scale-y': 0,
   'translate-y': 16,
   'translate-x': 16,
   rotate: -6,
@@ -104,6 +109,8 @@ const REST_VALUE: Record<MotionConfig['property'], number> = {
 const FINAL_VALUE: Record<MotionConfig['property'], number> = {
   opacity: 1,
   scale: 1,
+  'scale-x': 1,
+  'scale-y': 1,
   'translate-y': 0,
   'translate-x': 0,
   rotate: 0,
@@ -119,6 +126,10 @@ function applyRestStyle(el: Element, cfg: MotionConfig): void {
   switch (cfg.property) {
     case 'opacity': el.style.opacity = String(value); return
     case 'scale': el.style.scale = String(value); return
+    // Single-axis: the OTHER axis is pinned at identity (1), so `scale-x`
+    // stretches horizontally only and `scale-y` vertically only.
+    case 'scale-x': el.style.scale = `${value} 1`; return
+    case 'scale-y': el.style.scale = `1 ${value}`; return
     case 'translate-y': el.style.translate = `0 ${value}px`; return
     case 'translate-x': el.style.translate = `${value}px 0`; return
     case 'rotate': el.style.rotate = `${value}deg`; return
@@ -131,6 +142,8 @@ function applyFinalStyle(el: Element, cfg: MotionConfig): void {
   switch (cfg.property) {
     case 'opacity': el.style.opacity = String(value); return
     case 'scale': el.style.scale = String(value); return
+    case 'scale-x': el.style.scale = `${value} 1`; return
+    case 'scale-y': el.style.scale = `1 ${value}`; return
     case 'translate-y': el.style.translate = '0 0'; return
     case 'translate-x': el.style.translate = '0 0'; return
     case 'rotate': el.style.rotate = '0deg'; return
@@ -209,6 +222,10 @@ function buildKeyframes(cfg: MotionConfig, el: HTMLElement): Record<string, Arra
   switch (cfg.property) {
     case 'opacity': return { opacity: [from, to] }
     case 'scale': return { scale: [from, to] }
+    // Single-axis scale: pin the untouched axis at identity (1) for both
+    // keyframes, exactly as `translate-x`/`-y` pin their other component at 0.
+    case 'scale-x': return { scale: [`${from} 1`, `${to} 1`] }
+    case 'scale-y': return { scale: [`1 ${from}`, `1 ${to}`] }
     // CSS's native `rotate` property (unlike the `translate`/`scale`
     // shorthands) requires an angle, not a bare number — WAAPI rejects
     // `{ rotate: [-6, 0] }` with "Invalid keyframe value for property

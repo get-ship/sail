@@ -204,6 +204,9 @@
   --duration-medium: 180ms;
   --duration-slow: 280ms;
   --duration-deliberate: 420ms;
+  --duration-saunter: 2400ms;
+  --duration-amble: 3000ms;
+  --duration-cinematic: 3600ms;
   --duration-glacial: 14000ms;
 
   /* Focus ring.
@@ -354,6 +357,9 @@ body::after {
     --duration-medium: 0.01ms;
     --duration-slow: 0.01ms;
     --duration-deliberate: 0.01ms;
+    --duration-saunter: 0.01ms;
+    --duration-amble: 0.01ms;
+    --duration-cinematic: 0.01ms;
     --duration-glacial: 0.01ms;
   }
   /* :where(...) carries zero specificity, and neither property below is
