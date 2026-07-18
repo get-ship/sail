@@ -9,7 +9,7 @@
 <controller>
 import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { PROP_REGISTRY } from '../../src/prop-registry.gen'
+import { PROP_REGISTRY } from '../../../src/prop-registry.gen'
 import {
   SX_ATOMS,
   SX_STATE_PREFIXES,
@@ -21,7 +21,7 @@ import {
   ACTIONS,
   CONTROLLER_AMBIENT,
   BLOCKS,
-} from '../../src/language-surface.gen'
+} from '../../../src/language-surface.gen'
 
 interface ElementRow {
   tag: string
