@@ -95,25 +95,61 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </column>
 
   <column sx="max-w-breakpoint-tablet" gap="3">
-    <h2>The compiler is a contract you tune</h2>
+    <h2>The compiler pushes back</h2>
     <p>
-      Every project carries a config that decides what authors — human or
-      agent — may write. A locked brand system runs strict: styling speaks
-      tokens only, raw containers are limited, variants are closed. A looser
-      project opens the same dials. The compiler holds whichever line you
-      draw, and when generated code steps over it, the answer names the
-      correct form instead of just refusing.
+      Every <code>.sail</code> file passes through a compiler that checks more
+      than syntax. A colour that isn't a token, a stylesheet smuggled in beside
+      a component, an animation bolted on outside the motion system — these
+      don't compile. And a refusal is never a dead end: the error names the
+      correct form, so the next attempt — an agent's or yours — is the right
+      one.
     </p>
+    <p>
+      How strict is up to you. Each project carries a small config that sets
+      the contract: a brand platform locks styling to tokens and keeps raw
+      containers rare; a personal site loosens the same dials. Same language,
+      same compiler — a different set of promises, chosen by the team that has
+      to live with the code.
+    </p>
+
+    <h2>What's in the box</h2>
+    <p>
+      Batteries included means the parts every site ends up assembling are
+      already here, as language rather than dependencies. Interface patterns —
+      dialogs, comboboxes, tables, tabs, toasts — are tags, keyboard-complete
+      and accessible, skinned by your theme. Layout is its own vocabulary
+      (<code>row</code>, <code>column</code>, <code>grid</code>) rather than a
+      CSS technique. Motion is declarative and respects reduced motion by
+      default. Data has a first-class shape: <code>query()</code> turns a
+      client call into loading, error, and value states the template has to
+      handle. Forms, icons, and a typographic system for prose round it out.
+      The practical difference: there is no stack to choose — and nothing can
+      drift out of step with your design system, because everything reads the
+      same tokens.
+    </p>
+    <p><a href="/components">Explore the components →</a> · <a href="/motion">Animation</a> · <a href="/data">Data &amp; forms</a></p>
 
     <h2>Performance</h2>
     <p>
-      Fast in the boring way: templates compile ahead of time, updates are
-      fine-grained signal writes, and there is no virtual DOM to diff. The
-      whole runtime is 9.4&nbsp;kB gzipped.
+      Fast by construction more than by tuning. Templates compile ahead of
+      time and updates are fine-grained signal writes — no virtual DOM,
+      nothing to diff. The runtime is small and tree-shakable, and the design
+      system adds no JavaScript at all: components, themes, and styling ship
+      as CSS. That matters most compared to the usual stack, where the
+      component library and the design system arrive as their own runtime on
+      top of the framework's.
+    </p>
+
+    <p sx="text-sm text-muted-foreground">
+      SAIL is in alpha. It builds real websites today — this site is one — and
+      the language is still settling; we'd rather be honest about that than
+      polished about it.
     </p>
 
     <row sx="mt-4 pt-4 border-t border-t-border" gap="2">
       <a variant="solid" tone="primary" href="/getting-started">Installation →</a>
+      <a variant="default" href="/tutorial">Tutorial</a>
+      <a variant="default" href="/showcase">Showcase</a>
       <a variant="default" href="/why">Why SAIL</a>
     </row>
   </column>
