@@ -137,6 +137,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     server requests from sharing state and lets a subtree override cleanly.
   </p>
   <code-block code={code.store}></code-block>
+  <p>
+    Live: two counters and a total, three separate elements, one store.
+    Click either counter — every reader moves, because
+    <code>useStore</code> resolves the same instance up the scope tree.
+  </p>
+  <grid cols="3" gap="3" sx="mb-4">
+    <store-counter label="Counter A"></store-counter>
+    <store-counter label="Counter B"></store-counter>
+    <store-total></store-total>
+  </grid>
 
   <h2>Compositions</h2>
   <p>

@@ -7,7 +7,8 @@
 
 import type { Disposer } from './bind'
 import type { Signal } from './signal'
-import { createScope, withScope, type EffectScope } from './effect-scope'
+import { withScope, type EffectScope } from './effect-scope'
+import { connectElementScope, disconnectElementScope } from './element-scope'
 import { withHost, untrack } from './signal'
 import { attachHostApi } from './host-api'
 import { findNearestBoundary } from './error-boundary'
@@ -211,7 +212,11 @@ export function defineComponent(
         // Operate on the local so the ambient-mount wiring below still runs
         // against the scope THIS call created, not whatever `this.scope`
         // happens to hold by the time we get there.
-        const scope = createScope()
+        // Parented into the DOM-mirroring element-scope tree (element-scope.ts):
+        // nearest ancestor sail host's scope, else the per-document client root —
+        // a bare root-per-element would give every element its own `useStore`
+        // instance instead of the shared nearest-or-root one.
+        const scope = connectElementScope(this)
         this.scope = scope
         try {
           this.cleanup = withScope(scope, () =>
@@ -248,10 +253,16 @@ export function defineComponent(
           console.error(`[ship-set:${tag}] cleanup threw:`, e)
         }
         this.cleanup = undefined
-        try {
-          this.scope?.dispose()
-        } catch (e) {
-          console.error(`[ship-set:${tag}] scope dispose threw:`, e)
+        const scope = this.scope
+        if (scope) {
+          // Un-stamp before dispose so a descendant connecting mid-teardown
+          // never adopts a dying scope as its parent.
+          disconnectElementScope(this, scope)
+          try {
+            scope.dispose()
+          } catch (e) {
+            console.error(`[ship-set:${tag}] scope dispose threw:`, e)
+          }
         }
         this.scope = undefined
       }
@@ -354,7 +365,11 @@ export function defineComponent(
       // Operate on the local so the ambient-mount wiring below still runs
       // against the scope THIS call created, not whatever `this.scope`
       // happens to hold by the time we get there.
-      const scope = createScope()
+      // Parented into the DOM-mirroring element-scope tree (element-scope.ts):
+      // nearest ancestor sail host's scope, else the per-document client root —
+      // a bare root-per-element would give every element its own `useStore`
+      // instance instead of the shared nearest-or-root one.
+      const scope = connectElementScope(this)
       this.scope = scope
       try {
         this.cleanup = withScope(scope, () =>
@@ -390,10 +405,16 @@ export function defineComponent(
         console.error(`[ship-set:${tag}] cleanup threw:`, e)
       }
       this.cleanup = undefined
-      try {
-        this.scope?.dispose()
-      } catch (e) {
-        console.error(`[ship-set:${tag}] scope dispose threw:`, e)
+      const scope = this.scope
+      if (scope) {
+        // Un-stamp before dispose so a descendant connecting mid-teardown
+        // never adopts a dying scope as its parent.
+        disconnectElementScope(this, scope)
+        try {
+          scope.dispose()
+        } catch (e) {
+          console.error(`[ship-set:${tag}] scope dispose threw:`, e)
+        }
       }
       this.scope = undefined
     }
