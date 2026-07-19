@@ -121,7 +121,7 @@
       </svg>
       <div class="fallback-body">
         <div class="message">Something went wrong</div>
-        <button class="retry" type="button">Retry</button>
+        <button class="retry" type="button" anatomy>Retry</button>
       </div>
     </slot>
   </div>

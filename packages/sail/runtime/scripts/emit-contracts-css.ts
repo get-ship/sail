@@ -40,7 +40,7 @@ const fontFace = (f: (typeof FONTS)[number]): string =>
   `  font-style: ${f.style};\n` +
   `  font-weight: ${f.weight};\n` +
   `  font-display: swap;\n` +
-  `  src: url('./fonts/${f.file}') format('woff2-variations');\n` +
+  `  src: url('./fonts/${f.file}') format('${f.format}');\n` +
   `  unicode-range: ${f.unicodeRange};\n` +
   `}\n`
 

@@ -227,13 +227,13 @@ fn l1_surface_count_is_documented() {
     );
     assert_eq!(
         reskins.len(),
-        28,
-        "native reskin count drifted from 28 — same as above"
+        29,
+        "native reskin count drifted from 29 — same as above"
     );
     assert_eq!(
         l1_entries().len(),
-        70,
-        "total L1 surface count drifted from 70"
+        71,
+        "total L1 surface count drifted from 71"
     );
 }
 #[test]

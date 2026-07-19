@@ -449,6 +449,12 @@ const RESKINS: &[ReskinRow] = &[
         description: "Disclosure trigger — semibold trigger header inside `<details>`. Chevron rotates 180° and brightens to --foreground on open.",
     },
     ReskinRow {
+        tag: "kbd",
+        selectors: &["kbd"],
+        attributes: &EMPTY_ATTRS,
+        description: "Keycap — mono glyph on a muted chip with a doubled bottom edge (the pressed-key cue). Stroke rides --border-width, so a theme can thicken the cap.",
+    },
+    ReskinRow {
         tag: "table",
         selectors: &[
             ":where(table)",

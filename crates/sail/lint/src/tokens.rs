@@ -31,6 +31,7 @@ const TOKENS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/toke
 pub const CONVENTION_TOKENS: &[&str] = &[
     // Tone channel — set by the `tone` prop on a parent, read by descendants.
     "tone", "tone-bg", "tone-border", "tone-contrast", "tone-fg", "tone-on-fg", "tone-ring",
+    "tone-glow",
     // Floating-primitive positioning channels (dropdown / hovercard / popover / tooltip).
     "sail-dd-anchor", "sail-dd-default",
     "sail-hc-anchor", "sail-hc-default",

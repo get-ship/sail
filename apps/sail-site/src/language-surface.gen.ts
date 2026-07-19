@@ -443,6 +443,10 @@ export const SX_ATOMS: SxAtom[] = [
     ]
   },
   {
+    "prop": "bg-glow",
+    "values": []
+  },
+  {
     "prop": "bg-glow-accent",
     "values": []
   },
@@ -5623,6 +5627,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     {
       "tag": "input[type=range]",
       "description": "Slider — native appearance:none range, rebuilt as a tone-tinted rail with a white thumb ringed in the tone. size drives track/thumb thickness."
+    },
+    {
+      "tag": "kbd",
+      "description": "Keycap — mono glyph on a muted chip with a doubled bottom edge (the pressed-key cue). Stroke rides --border-width, so a theme can thicken the cap."
     },
     {
       "tag": "legend",

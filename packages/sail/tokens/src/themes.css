@@ -1149,3 +1149,319 @@
   --syntax-comment:  oklch(0.75 0.05 250);
   --syntax-variable: oklch(0.98 0 0);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+ * THE CHANNEL PROOF
+ *
+ * The three themes below are the argument for the Tier-2 expression
+ * channels. None of them edits a component. `brut` is pure tokens with
+ * zero structural rules — the thesis in its strongest form. `8bit` and
+ * `synthwave` push further into their own aesthetics; every structural
+ * rule they still need is logged with the channel that would retire it,
+ * because an honest ceiling is more useful than a hidden one. Today the
+ * channels cover everything these two themes ask for, so the log is
+ * empty.
+ * ═══════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────────────────────────────────────────────
+ * brut — brutalist. Hard black ink on paper-white, no radius, no
+ * shadow, thick stroke, no interaction motion. Every one of those is a
+ * TOKEN, which is the point: this theme is a block, not a patch. It
+ * ships zero structural rules.
+ * ─────────────────────────────────────────────────────────────────── */
+:root[data-theme='brut'],
+[data-theme-preview='brut'] {
+  --background: oklch(0.97 0 0);
+  --foreground: oklch(0.14 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.14 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.14 0 0);
+  --muted: oklch(0.92 0 0);
+  --muted-foreground: oklch(0.38 0 0);
+  --border: oklch(0.14 0 0);
+  --input: oklch(0.14 0 0);
+  --primary: oklch(0.14 0 0);
+  --primary-foreground: oklch(0.97 0 0);
+  --accent: oklch(0.62 0.24 28);
+  --accent-foreground: oklch(0.97 0 0);
+  --destructive: oklch(0.52 0.26 28);
+  --success: oklch(0.48 0.18 145);
+  --warning: oklch(0.72 0.19 85);
+  --info: oklch(0.45 0.18 250);
+  --ring: oklch(0.14 0 0 / 60%);
+
+  /* Surface ladder — paper, not depth. The steps barely move because
+     brutalism separates with RULES, not elevation. */
+  --surface-0: oklch(0.97 0 0);
+  --surface-1: oklch(1 0 0);
+  --surface-2: oklch(0.94 0 0);
+  --surface-3: oklch(0.92 0 0);
+  --border-subtle: oklch(0.14 0 0 / 45%);
+  --border-strong: oklch(0.14 0 0);
+
+  /* No corners. */
+  --radius: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  /* …but round things stay round. This is exactly the split that
+     --shape-pill exists for: squaring the radius SCALE used to also
+     square the status dot, because both spent --radius-full. */
+  --shape-pill: 9999px;
+
+  /* Thick stroke, everywhere at once — the --border-width channel. */
+  --border-width: 2px;
+
+  /* No elevation. Brutalism does not float. */
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-card-rest: none;
+  --shadow-hover: none;
+  --shadow-sticky: none;
+  --shadow-inset-soft: none;
+  --shadow-edge-top: none;
+  --shadow-accent: 0 0 0 3px oklch(0.62 0.24 28 / 40%);
+
+  /* Stillness. The lift/press channels take the personality out of the
+     contract and put it here, where a theme can decline it. */
+  --control-lift: 0px;
+  --press-translate: 0px;
+  --press-scale: 1;
+
+  /* Type: heavy, tight, shouted. */
+  --heading-font: var(--font-mono);
+  --body-font: var(--font-mono);
+  --label-font: var(--font-mono);
+  --font-body: var(--font-mono);
+  --display-font: var(--font-mono);
+  --heading-weight: var(--font-weight-bold);
+  --heading-tracking: var(--tracking-tighter);
+  --heading-transform: uppercase;
+  --label-weight: var(--font-weight-bold);
+  --label-tracking: var(--tracking-wider);
+
+  /* Blunt interaction — a flat ink wash, no easing into it. */
+  --hover-strength: 14%;
+  --active-strength: 22%;
+  --selected-strength: 28%;
+
+  /* No texture, no wash. */
+  --surface-overlay: none;
+  --card-texture: none;
+  --card-backdrop-filter: none;
+  --gradient-surface: none;
+
+  --scrollbar-radius: 0px;
+  --scrollbar-thumb: oklch(0.14 0 0 / 55%);
+  --scrollbar-thumb-hover: oklch(0.14 0 0);
+}
+
+/* ───────────────────────────────────────────────────────────────────
+ * 8bit — arcade/NES. Chunky strokes, zero radius, hard offset shadows
+ * that collapse on press, a dither wash over the page, and shouted
+ * pixel type. This is the theme that tests the ceiling: it wants
+ * things the token layer was never asked to express before.
+ *
+ * The block below is pure tokens. The structural-rule list is empty:
+ * the channel set landed far enough that 8bit needs zero component
+ * patches today. If that changes, any future rule is logged here with
+ * the channel that would retire it.
+ * ─────────────────────────────────────────────────────────────────── */
+:root[data-theme='8bit'],
+[data-theme-preview='8bit'] {
+  --background: oklch(0.18 0.05 265);
+  --foreground: oklch(0.95 0.02 265);
+  --card: oklch(0.24 0.06 265);
+  --card-foreground: oklch(0.95 0.02 265);
+  --popover: oklch(0.24 0.06 265);
+  --popover-foreground: oklch(0.95 0.02 265);
+  --muted: oklch(0.30 0.05 265);
+  --muted-foreground: oklch(0.72 0.04 265);
+  --border: oklch(0.95 0.02 265);
+  --input: oklch(0.95 0.02 265);
+  --primary: oklch(0.72 0.21 25);
+  --primary-foreground: oklch(0.14 0.03 265);
+  --accent: oklch(0.82 0.20 95);
+  --accent-foreground: oklch(0.14 0.03 265);
+  --destructive: oklch(0.62 0.25 25);
+  --success: oklch(0.78 0.22 140);
+  --warning: oklch(0.85 0.20 95);
+  --info: oklch(0.72 0.18 230);
+  --ring: oklch(0.82 0.20 95 / 70%);
+
+  /* Flat colour blocks — an NES has no gradient ramp. */
+  --surface-0: oklch(0.18 0.05 265);
+  --surface-1: oklch(0.24 0.06 265);
+  --surface-2: oklch(0.30 0.05 265);
+  --surface-3: oklch(0.36 0.05 265);
+  --border-subtle: oklch(0.95 0.02 265 / 55%);
+  --border-strong: oklch(0.95 0.02 265);
+
+  /* Square everything — including the round things. A pixel grid has no
+     circles, so unlike brut this theme squares --shape-pill too. */
+  --radius: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --shape-pill: 0px;
+
+  /* Chunky stroke. */
+  --border-width: 3px;
+
+  /* Hard offset shadows — no blur, no spread. The arcade look is a
+     solid block of ink offset down-right, not an elevation gradient. */
+  --shadow-xs: 2px 2px 0 0 oklch(0.14 0.03 265);
+  --shadow-sm: 3px 3px 0 0 oklch(0.14 0.03 265);
+  --shadow-md: 4px 4px 0 0 oklch(0.14 0.03 265);
+  --shadow-lg: 6px 6px 0 0 oklch(0.14 0.03 265);
+  --shadow-xl: 8px 8px 0 0 oklch(0.14 0.03 265);
+  --shadow-card-rest: 4px 4px 0 0 oklch(0.14 0.03 265);
+  --shadow-hover: 6px 6px 0 0 oklch(0.14 0.03 265);
+  --shadow-sticky: 0 3px 0 0 oklch(0.14 0.03 265);
+  --shadow-edge-top: 0 -3px 0 0 oklch(0.14 0.03 265);
+  --shadow-accent: 0 0 0 3px oklch(0.82 0.20 95 / 70%);
+  --shadow-inset-soft: none;
+
+  /* The press: no lift at all, then a hard 2px shove down-right with a
+     collapsed shadow — the button physically moves INTO its own shadow,
+     which is the whole tactile signature of the era. This is exactly
+     what --press-shadow was added for. */
+  --control-lift: 0px;
+  --press-translate: 2px;
+  --press-scale: 1;
+  --press-shadow: -2px -2px 0 0 oklch(0.14 0.03 265);
+
+  /* Type: pixel stack, shouted, wide-tracked. */
+  --heading-font: var(--font-press-start);
+  --display-font: var(--font-press-start);
+  --body-font: var(--font-mono);
+  --label-font: var(--font-mono);
+  --font-body: var(--font-mono);
+  --heading-weight: var(--font-weight-bold);
+  --heading-tracking: var(--tracking-wide);
+  --heading-transform: uppercase;
+  --label-weight: var(--font-weight-bold);
+  --label-tracking: var(--tracking-wider);
+  --label-transform: uppercase;
+
+  /* Every input registers hard. */
+  --hover-strength: 18%;
+  --active-strength: 26%;
+  --selected-strength: 32%;
+
+  /* Dither wash — an ordered 2x2 checker at low alpha, scaled to read as
+     pixel grain rather than noise. Rides --surface-overlay, so it now
+     paints in a [data-theme] SUBTREE too (the docs preview) and not only
+     on <body>. */
+  --surface-overlay: repeating-conic-gradient(
+    oklch(1 0 0 / 4%) 0% 25%,
+    transparent 0% 50%
+  );
+  --surface-overlay-blend: overlay;
+  --surface-overlay-opacity: 0.6;
+  --card-texture: none;
+  --card-backdrop-filter: none;
+
+  /* Neon arcade glow on toned surfaces. */
+  --glow-primary: radial-gradient(circle, oklch(0.72 0.21 25 / 22%), transparent 60%);
+  --glow-accent: radial-gradient(circle, oklch(0.82 0.20 95 / 22%), transparent 60%);
+
+  --scrollbar-radius: 0px;
+  --scrollbar-width: 16px;
+  --scrollbar-thumb: oklch(0.82 0.20 95);
+  --scrollbar-thumb-hover: oklch(0.72 0.21 25);
+}
+
+/* ───────────────────────────────────────────────────────────────────
+ * synthwave — sunset grid. Deep purple-black ground, neon pink primary
+ * and cyan accent, gradient-washed headings, and a glow channel that
+ * makes toned surfaces read like backlit acrylic. The gradient/glow
+ * channels were the blocker; now that they exist, this theme is pure
+ * tokens too.
+ * ─────────────────────────────────────────────────────────────────── */
+:root[data-theme='synthwave'],
+[data-theme-preview='synthwave'] {
+  --background: oklch(0.16 0.06 285);
+  --foreground: oklch(0.95 0.02 100);
+  --card: oklch(0.22 0.08 285);
+  --card-foreground: oklch(0.95 0.02 100);
+  --popover: oklch(0.22 0.08 285);
+  --popover-foreground: oklch(0.95 0.02 100);
+  --muted: oklch(0.30 0.06 285);
+  --muted-foreground: oklch(0.72 0.04 285);
+  --border: oklch(0.95 0.05 320 / 30%);
+  --input: oklch(0.95 0.05 320 / 30%);
+  --primary: oklch(0.65 0.28 340);
+  --primary-foreground: oklch(0.14 0.03 340);
+  --accent: oklch(0.75 0.22 190);
+  --accent-foreground: oklch(0.14 0.03 190);
+  --destructive: oklch(0.60 0.26 25);
+  --success: oklch(0.70 0.20 145);
+  --warning: oklch(0.82 0.20 95);
+  --info: oklch(0.70 0.18 230);
+  --ring: oklch(0.75 0.22 190 / 70%);
+
+  /* Surface ladder — deep purple, lifted by chroma rather than lightness. */
+  --surface-0: oklch(0.16 0.06 285);
+  --surface-1: oklch(0.22 0.08 285);
+  --surface-2: oklch(0.30 0.08 285);
+  --surface-3: oklch(0.38 0.08 285);
+  --border-subtle: oklch(0.95 0.05 320 / 18%);
+  --border-strong: oklch(0.95 0.05 320 / 45%);
+
+  /* Soft neon shadows — purple-tinted, wider spread so elevation reads as
+     a glow behind the card rather than a neutral drop. */
+  --shadow-xs: 0 1px 2px oklch(0.14 0.03 285 / 35%);
+  --shadow-sm: 0 2px 4px oklch(0.14 0.03 285 / 35%), 0 1px 1px oklch(0.14 0.03 285 / 25%);
+  --shadow-md: 0 4px 12px oklch(0.14 0.03 285 / 40%), 0 2px 2px oklch(0.14 0.03 285 / 25%);
+  --shadow-lg: 0 8px 24px oklch(0.14 0.03 285 / 45%), 0 4px 4px oklch(0.14 0.03 285 / 25%);
+  --shadow-xl: 0 16px 48px oklch(0.14 0.03 285 / 50%), 0 8px 8px oklch(0.14 0.03 285 / 25%);
+  --shadow-card-rest: 0 4px 16px oklch(0.14 0.03 285 / 45%), 0 1px 1px oklch(0.14 0.03 285 / 20%);
+  --shadow-hover: 0 8px 24px oklch(0.14 0.03 285 / 55%), 0 2px 2px oklch(0.14 0.03 285 / 25%);
+  --shadow-sticky: 0 3px 10px -2px oklch(0.14 0.03 285 / 40%), 0 -1px 0 oklch(0.14 0.03 285 / 25%);
+  --shadow-edge-top: 0 -8px 24px -8px oklch(0.14 0.03 285 / 40%), 0 -1px 0 oklch(0.14 0.03 285 / 25%);
+  --shadow-accent: 0 0 0 3px oklch(0.75 0.22 190 / 55%);
+  --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 15%);
+
+  /* A little more lift than the default, but not arcade-exaggerated. */
+  --control-lift: -2px;
+  --press-translate: 1px;
+  --press-scale: 0.98;
+
+  /* Gradient channels — the reason this theme could not land until the
+     readers existed. Primary runs sunset pink→transparent down; the page
+     gets a subtle purple horizon wash. */
+  --gradient-primary: linear-gradient(180deg, var(--primary) 0%, transparent 92%);
+  --gradient-accent: linear-gradient(180deg, var(--accent) 0%, transparent 92%);
+  --gradient-surface: linear-gradient(180deg, oklch(0.22 0.08 285) 0%, oklch(0.16 0.06 285) 100%);
+
+  /* Glow channels — toned surfaces emit a soft neon wash. */
+  --glow-primary: radial-gradient(circle, color-mix(in oklch, var(--primary) 18%, transparent), transparent 60%);
+  --glow-accent: radial-gradient(circle, color-mix(in oklch, var(--accent) 18%, transparent), transparent 60%);
+  --glow-default: radial-gradient(circle, color-mix(in oklch, var(--foreground) 6%, transparent), transparent 60%);
+  --glow-muted: radial-gradient(circle, color-mix(in oklch, var(--muted-foreground) 6%, transparent), transparent 60%);
+
+  /* Horizon grid overlay — faint horizontal lines that read as the
+     retro-future ground plane. Rides --surface-overlay so it paints in
+     a [data-theme] subtree too. */
+  --surface-overlay: repeating-linear-gradient(
+    0deg,
+    transparent 0 23px,
+    oklch(0.65 0.28 340 / 5%) 23px 24px,
+    transparent 24px 47px,
+    oklch(0.75 0.22 190 / 5%) 47px 48px
+  );
+  --surface-overlay-blend: screen;
+  --surface-overlay-opacity: 0.35;
+  --card-texture: none;
+  --card-backdrop-filter: none;
+
+  --scrollbar-thumb: oklch(0.65 0.28 340);
+  --scrollbar-thumb-hover: oklch(0.75 0.22 190);
+}

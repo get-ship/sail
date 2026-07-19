@@ -136,7 +136,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
   it('every theme has a unique id, label, and 4-tuple swatches', () => {
     const ids = new Set<string>()
     for (const t of THEMES) {
-      expect(t.id).toMatch(/^[a-z][a-z0-9-]*$/)
+      expect(t.id).toMatch(/^[a-z0-9][a-z0-9-]*$/)
       expect(t.label).toBeTruthy()
       expect(t.swatches).toHaveLength(4)
       expect(t.swatches.every((s) => typeof s === 'string' && s.length > 0)).toBe(true)

@@ -139,7 +139,7 @@
     <div class="body"><slot></slot></div>
     <div class="actions"><slot name="actions"></slot></div>
   </div>
-  <button class="close" type="button" aria-label="Dismiss">
+  <button class="close" type="button" anatomy aria-label="Dismiss">
     <svg viewBox="0 0 10 10" aria-hidden="true">
       <path d="M2 2 L8 8 M8 2 L2 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path>
     </svg>

@@ -58,7 +58,7 @@
     --chip-gap: var(--space-1_5);
     --chip-icon: var(--icon-size-xs);
     --chip-remove: var(--icon-size-md);
-    --chip-radius: var(--radius-full);
+    --chip-radius: var(--shape-pill);
     /* tone: default channels; per-tone overrides below */
     --tone-fg: var(--foreground);
     --tone-bg: var(--tone-default-bg);
@@ -195,7 +195,7 @@
     background: transparent;
     color: inherit;
     cursor: pointer;
-    border-radius: var(--radius-full);
+    border-radius: var(--shape-pill);
     flex-shrink: 0;
     transition: background-color var(--duration-fast) var(--ease-out);
   }
@@ -214,7 +214,7 @@
 <span use:chip>
   <span class="leading"><slot name="leading"></slot></span>
   <slot></slot>
-  <button class="remove" type="button" aria-label="Remove" tabindex="-1">
+  <button class="remove" type="button" anatomy aria-label="Remove" tabindex="-1">
     <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2 L8 8 M8 2 L2 8"></path></svg>
   </button>
 </span>

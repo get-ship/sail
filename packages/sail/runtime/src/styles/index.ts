@@ -2,14 +2,20 @@ const TONES_CSS =
   // The FULL tone contract, framework-owned. A component that declares a
   // `tone` prop gets all six channels for free — no per-component <theme
   // prop="tone"> block. (Extends the prior 3-channel set to bg/border/ring.)
-  ":host([tone='default'])     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-contrast: var(--background);              --tone-bg: var(--hover-bg);            --tone-border: var(--border);                 --tone-ring: var(--ring); }\n" +
-  ":host([tone='primary'])     { --tone: var(--primary);          --tone-fg: var(--primary);          --tone-contrast: var(--primary-foreground);     --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring); }\n" +
-  ":host([tone='info'])        { --tone: var(--info);             --tone-fg: var(--info);             --tone-contrast: var(--info-foreground);        --tone-bg: var(--tone-info-bg);        --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring); }\n" +
-  ":host([tone='success'])     { --tone: var(--success);          --tone-fg: var(--tone-success-fg);  --tone-contrast: var(--success-foreground);     --tone-bg: var(--tone-success-bg);     --tone-border: var(--tone-success-border);     --tone-ring: var(--tone-success-ring); }\n" +
-  ":host([tone='warning'])     { --tone: var(--warning);          --tone-fg: var(--tone-warning-fg);  --tone-contrast: var(--warning-foreground);     --tone-bg: var(--tone-warning-bg);     --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring); }\n" +
-  ":host([tone='destructive']) { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring); }\n" +
-  ":host([tone='accent'])      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring); }\n" +
-  ":host([tone='muted'])       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring); }\n" +
+  //
+  // --tone-glow is the seventh: it routes the per-tone --glow-{tone} channel
+  // into the same `--tone-*` namespace everything else reads from, so a glow
+  // is addressable exactly where a tint is. Without it the glow channels
+  // would only ever be reachable for primary/accent (the two sx atoms that
+  // predate them) and the other six would be tokens nothing could read.
+  ":host([tone='default'])     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-contrast: var(--background);              --tone-bg: var(--hover-bg);            --tone-border: var(--border);                 --tone-ring: var(--ring);                     --tone-glow: var(--glow-default); }\n" +
+  ":host([tone='primary'])     { --tone: var(--primary);          --tone-fg: var(--primary);          --tone-contrast: var(--primary-foreground);     --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring);        --tone-glow: var(--glow-primary); }\n" +
+  ":host([tone='info'])        { --tone: var(--info);             --tone-fg: var(--info);             --tone-contrast: var(--info-foreground);        --tone-bg: var(--tone-info-bg);        --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring);           --tone-glow: var(--glow-info); }\n" +
+  ":host([tone='success'])     { --tone: var(--success);          --tone-fg: var(--tone-success-fg);  --tone-contrast: var(--success-foreground);     --tone-bg: var(--tone-success-bg);     --tone-border: var(--tone-success-border);     --tone-ring: var(--tone-success-ring);        --tone-glow: var(--glow-success); }\n" +
+  ":host([tone='warning'])     { --tone: var(--warning);          --tone-fg: var(--tone-warning-fg);  --tone-contrast: var(--warning-foreground);     --tone-bg: var(--tone-warning-bg);     --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring);        --tone-glow: var(--glow-warning); }\n" +
+  ":host([tone='destructive']) { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring);    --tone-glow: var(--glow-destructive); }\n" +
+  ":host([tone='accent'])      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring);         --tone-glow: var(--glow-accent); }\n" +
+  ":host([tone='muted'])       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring);          --tone-glow: var(--glow-muted); }\n" +
   // Light-DOM mirror for bare L1 field controls — <input tone=primary>/[invalid]
   // set the border+ring channels the field skin reads (`:host()` never matches a
   // light-DOM element). Border+ring only (what a field tints); parity w/ sail-input.
@@ -80,7 +86,10 @@ const BASE_CSS =
 // Every value is a token; nothing here is hand-tuned. Adopted into every shadow
 // component alongside the resets.
 const TYPOGRAPHY_CSS =
-  'h1,h2,h3,h4,h5,h6 { margin: 0; font-family: var(--heading-font, inherit); font-weight: var(--heading-weight, 700); line-height: var(--leading-tight, 1.15); color: var(--foreground); }\n' +
+  // --heading-transform is the casing channel: `none` by default (headings
+  // read as authored), but a theme that wants ALL CAPS chrome sets it once
+  // here instead of every skin hand-writing text-transform.
+  'h1,h2,h3,h4,h5,h6 { margin: 0; font-family: var(--heading-font, inherit); font-weight: var(--heading-weight, 700); line-height: var(--leading-tight, 1.15); color: var(--foreground); text-transform: var(--heading-transform); }\n' +
   'h1 { font-size: var(--text-4xl); }\n' +
   'h2 { font-size: var(--text-2xl); }\n' +
   'h3 { font-size: var(--text-xl); }\n' +
@@ -128,7 +137,9 @@ const SEMANTIC_ELEMENTS_CSS =
   // Tables live in TABLE_SKIN_CSS — they're a control surface, not prose.
   // Inline emphasis.
   'mark { background: var(--tone-warning-bg, var(--hover-bg)); color: inherit; padding: 0 0.2em; border-radius: var(--radius-sm); }\n' +
-  'kbd { font-family: var(--mono-font, monospace); font-size: 0.85em; padding: 0.1em 0.4em; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: var(--radius-sm); background: var(--muted); color: var(--foreground); }\n' +
+  // kbd's keycap edge lowers to --border-width (the bottom stays twice the
+  // stroke, which is what gives it the pressed-key look at any weight).
+  'kbd { font-family: var(--mono-font, monospace); font-size: 0.85em; padding: 0.1em 0.4em; border: var(--border-width) solid var(--border); border-bottom-width: calc(var(--border-width) * 2); border-radius: var(--radius-sm); background: var(--muted); color: var(--foreground); }\n' +
   'abbr[title] { text-decoration: underline dotted; cursor: help; }\n' +
   'sub, sup { font-size: 0.75em; line-height: 0; }\n' +
   // Code block.
@@ -332,19 +343,39 @@ const TOGGLE_CONTROLS_CSS =
 // variant surfaces mirror the hand-polished baseline, and every rule sits at
 // :where() zero specificity so sx atomics and component variants win ties.
 // Fallbacks carry the no-attribute defaults (tone=default, size=md).
+//
+// ANATOMY CONTAINMENT. `button:not([variant])` matched every bare <button>
+// in the document — including the ones a SKIN renders as its own internal
+// anatomy (chip's remove ×, alert's close, error-state's details toggle).
+// Those inherited the control ladder's min-height and the global hover lift,
+// which is why a chip's × sat 34px tall and jumped on hover. They are not
+// author buttons and were never meant to take the author-button contract.
+//
+// The discriminator is an explicit `anatomy` attribute the stdlib puts on
+// such buttons, not a heuristic on class or slot: a skin declares "this is
+// my furniture, not the user's control", and the contract honours it. sx
+// atomics lower to classes, so `:not([class])` would have been wrong; slot
+// is unrelated and unset on most of them.
+const NOT_ANATOMY = ':not([anatomy])'
 const BUTTON_SKIN_CSS =
   ':where(a[variant]) { text-decoration: none; }\n' +
-  ':where(button, a[variant]) { display: inline-flex; align-items: center; justify-content: center; gap: var(--size-gap, var(--space-2)); min-height: var(--size-h, var(--control-h-md)); padding: 0 var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; isolation: isolate; position: relative; }\n' +
+  // Base control box. Stroke weight and corner treatment lower to the Tier-2
+  // channels (--border-width / --corner-image) rather than literals, so a
+  // theme can thicken every hairline or draw pixel-art corners without a
+  // single component edit. `--button-shadow` is the variant's own resting
+  // elevation, held in a variable so the frame/press channels can COMPOSE
+  // with it instead of clobbering it (see the box-shadow list below).
+  `:where(button${NOT_ANATOMY}, a[variant]) { display: inline-flex; align-items: center; justify-content: center; gap: var(--size-gap, var(--space-2)); min-height: var(--size-h, var(--control-h-md)); padding: 0 var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: var(--border-width) solid transparent; border-image: var(--corner-image); background: transparent; isolation: isolate; position: relative; box-shadow: var(--control-frame), var(--button-shadow, 0 0 0 0 transparent); }\n` +
   // default / no-variant: neutral bordered surface.
-  ":where(button:not([variant]), button[variant='default'], a[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); box-shadow: var(--shadow-xs); }\n" +
-  ":where(button:not([variant]), button[variant='default'], a[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n" +
+  `:where(button:not([variant])${NOT_ANATOMY}, button[variant='default'], a[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); --button-shadow: var(--shadow-xs); }\n` +
+  `:where(button:not([variant])${NOT_ANATOMY}, button[variant='default'], a[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n` +
   // solid: the tone fill. Hover shifts the fill TOWARD the foreground —
   // color-mix makes this mode-aware for free (foreground is dark in light
   // mode → darker; light in dark mode → lighter), so the button stays its
   // own tone instead of collapsing to a neutral grey, and --tone-contrast
   // text stays readable.
-  ":where(button[variant='solid'], a[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); box-shadow: var(--shadow-xs); }\n" +
-  ":where(button[variant='solid'], a[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); box-shadow: var(--shadow-sm); }\n" +
+  ":where(button[variant='solid'], a[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); --button-shadow: var(--shadow-xs); }\n" +
+  ":where(button[variant='solid'], a[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }\n" +
   // soft: the tinted surface. Hover deepens the tint by mixing in more of
   // the pure tone (stays in the tone family; --tone-fg text stays readable).
   ":where(button[variant='soft'], a[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }\n" +
@@ -354,10 +385,17 @@ const BUTTON_SKIN_CSS =
   ":where(button[variant='outline'], a[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }\n" +
   ":where(button[variant='outline'], button[variant='ghost'], a[variant='outline'], a[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }\n" +
   ":where(button[variant='ghost'], a[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }\n" +
-  // Interaction motion (the baseline lift/press — reduced-motion kills it
-  // via the global media rule).
-  ':where(button, a[variant]):hover:not(:disabled) { transform: translateY(-1px); }\n' +
-  ':where(button, a[variant]):active:not(:disabled) { transform: translateY(1px) scale(0.98); }\n' +
+  // Interaction motion (reduced-motion kills it via the global media rule).
+  //
+  // These two literals used to decide the whole product's tactile
+  // personality in one place: every button in every app lifted 1px on hover
+  // and pressed 1px + 0.98 scale, with no way for a theme to disagree. They
+  // now lower to --control-lift / --press-translate / --press-scale, whose
+  // defaults are exactly the former numbers. A calm theme sets lift to 0; an
+  // arcade theme exaggerates it. --press-shadow composes over the resting
+  // elevation so a press can gain a hard offset instead of only moving.
+  `:where(button${NOT_ANATOMY}, a[variant]):hover:not(:disabled) { transform: translateY(var(--control-lift)); }\n` +
+  `:where(button${NOT_ANATOMY}, a[variant]):active:not(:disabled) { transform: translateY(var(--press-translate)) scale(var(--press-scale)); box-shadow: var(--control-frame), var(--press-shadow), var(--button-shadow, 0 0 0 0 transparent); }\n` +
   // Disabled surface (the contract handles cursor/opacity; ghost/outline go
   // transparent like the baseline).
   ":where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }\n"
@@ -377,7 +415,7 @@ const HR_SKIN_CSS =
 // different than the control size channel above). tone arrives for free via
 // the generic `[tone=...]` channel (--tone-fg/--tone-border/--tone-ring).
 const STATUS_DOT_SKIN_CSS =
-  ":where(span[dot]) { display: inline-block; vertical-align: middle; width: var(--icon-size-3xs); height: var(--icon-size-3xs); border-radius: var(--radius-full); background: var(--tone-fg); box-shadow: 0 0 0 1.5px var(--tone-border), 0 0 0 4.5px var(--tone-ring); }\n" +
+  ":where(span[dot]) { display: inline-block; vertical-align: middle; width: var(--icon-size-3xs); height: var(--icon-size-3xs); border-radius: var(--shape-pill); background: var(--tone-fg); box-shadow: 0 0 0 1.5px var(--tone-border), 0 0 0 4.5px var(--tone-ring); }\n" +
   ":where(span[dot][size='sm']) { width: var(--space-1_5); height: var(--space-1_5); box-shadow: 0 0 0 1px var(--tone-border), 0 0 0 3.5px var(--tone-ring); }\n" +
   ":where(span[dot][pulse]) { animation: sail-status-dot-pulse 2.5s var(--ease-out) infinite; }\n" +
   '@keyframes sail-status-dot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.82; transform: scale(0.92); } }\n'
@@ -391,7 +429,7 @@ const STATUS_DOT_SKIN_CSS =
 const SKELETON_SKIN_CSS =
   ":where(span[skeleton]) { display: inline-block; vertical-align: middle; background: linear-gradient(90deg, var(--muted) 0%, var(--tone-muted-bg) 50%, var(--muted) 100%); background-size: 200% 100%; animation: sail-skeleton-shimmer 1.5s ease-in-out infinite; border-radius: var(--radius-sm); }\n" +
   ":where(span[skeleton][shape='block']) { display: block; width: 100%; min-height: 80px; }\n" +
-  ":where(span[skeleton][shape='circle']) { border-radius: var(--radius-full); }\n" +
+  ":where(span[skeleton][shape='circle']) { border-radius: var(--shape-pill); }\n" +
   ":where(span[skeleton][shape='text'], span[skeleton][shape='line']) { width: 100%; }\n" +
   ":where(span[skeleton][shape='text'][size='sm'], span[skeleton][shape='line'][size='sm']) { height: var(--space-2); }\n" +
   ":where(span[skeleton][shape='text'][size='md'], span[skeleton][shape='line'][size='md']) { height: var(--space-3); }\n" +
@@ -442,10 +480,10 @@ const RANGE_SKIN_CSS =
   ":where(input[type='range'][size='sm']) { --rng-track: var(--space-1); --rng-thumb: var(--space-3); }\n" +
   ":where(input[type='range'][size='lg']) { --rng-track: var(--space-2); --rng-thumb: var(--space-5); }\n" +
   // Track — muted rail with a subtle inset border (matches sail-slider .track).
-  ":where(input[type='range'])::-webkit-slider-runnable-track { height: var(--rng-track); border-radius: var(--radius-full); background: linear-gradient(to right, var(--tone-fg, var(--primary)) 0 var(--rng-pct, 0%), var(--muted) var(--rng-pct, 0%) 100%); box-shadow: inset 0 0 0 1px var(--border); }\n" +
-  ":where(input[type='range'])::-moz-range-track { height: var(--rng-track); border-radius: var(--radius-full); background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }\n" +
+  ":where(input[type='range'])::-webkit-slider-runnable-track { height: var(--rng-track); border-radius: var(--shape-pill); background: linear-gradient(to right, var(--tone-fg, var(--primary)) 0 var(--rng-pct, 0%), var(--muted) var(--rng-pct, 0%) 100%); box-shadow: inset 0 0 0 1px var(--border); }\n" +
+  ":where(input[type='range'])::-moz-range-track { height: var(--rng-track); border-radius: var(--shape-pill); background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }\n" +
   // Fill (Firefox) — tone with a top highlight (matches sail-slider .fill).
-  ":where(input[type='range'])::-moz-range-progress { height: var(--rng-track); border-radius: var(--radius-full); background: var(--tone-fg, var(--primary)); box-shadow: inset 0 1px 0 var(--surface-2); }\n" +
+  ":where(input[type='range'])::-moz-range-progress { height: var(--rng-track); border-radius: var(--shape-pill); background: var(--tone-fg, var(--primary)); box-shadow: inset 0 1px 0 var(--surface-2); }\n" +
   // Thumb — white surface disc, tone ring, shadow; centered on the thinner track.
   ":where(input[type='range'])::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; box-sizing: border-box; width: var(--rng-thumb); height: var(--rng-thumb); margin-top: calc((var(--rng-track) - var(--rng-thumb)) / 2); border-radius: 50%; background: var(--surface-1); border: 2px solid var(--tone-fg, var(--primary)); box-shadow: var(--shadow-sm); transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }\n" +
   ":where(input[type='range'])::-moz-range-thumb { box-sizing: border-box; width: var(--rng-thumb); height: var(--rng-thumb); border-radius: 50%; background: var(--surface-1); border: 2px solid var(--tone-fg, var(--primary)); box-shadow: var(--shadow-sm); transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }\n" +
@@ -469,14 +507,14 @@ const RANGE_SKIN_CSS =
 // expose the fill through DIFFERENT pseudo-elements, and a rule that groups
 // both selectors is dropped whole by either engine — so they're separate.
 const PROGRESS_SKIN_CSS =
-  ":where(progress) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--progress-h, var(--space-2)); border: 0; border-radius: var(--radius-full); overflow: hidden; background: var(--muted); color: var(--tone-fg, var(--primary)); }\n" +
+  ":where(progress) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--progress-h, var(--space-2)); border: 0; border-radius: var(--shape-pill); overflow: hidden; background: var(--muted); color: var(--tone-fg, var(--primary)); }\n" +
   ":where(progress[size='sm']) { height: var(--space-1_5); }\n" +
   ":where(progress[size='lg']) { height: var(--space-3); }\n" +
   // Track (WebKit) — Firefox uses the element background set above.
-  ":where(progress)::-webkit-progress-bar { background: var(--muted); border-radius: var(--radius-full); }\n" +
+  ":where(progress)::-webkit-progress-bar { background: var(--muted); border-radius: var(--shape-pill); }\n" +
   // Determinate fill — one rule per engine (a shared selector is invalid to both).
-  ":where(progress)::-webkit-progress-value { background: var(--tone-fg, var(--primary)); border-radius: var(--radius-full); transition: width var(--duration-medium) var(--ease-out); }\n" +
-  ":where(progress)::-moz-progress-bar { background: var(--tone-fg, var(--primary)); border-radius: var(--radius-full); }\n" +
+  ":where(progress)::-webkit-progress-value { background: var(--tone-fg, var(--primary)); border-radius: var(--shape-pill); transition: width var(--duration-medium) var(--ease-out); }\n" +
+  ":where(progress)::-moz-progress-bar { background: var(--tone-fg, var(--primary)); border-radius: var(--shape-pill); }\n" +
   // Indeterminate (no [value]) — a sliding sheen, since appearance:none drops
   // the native barber-pole. Animate the WebKit track and the element itself
   // (the Firefox path) so both engines show motion.
@@ -492,17 +530,17 @@ const PROGRESS_SKIN_CSS =
 // exposes the bands as pseudo-ELEMENTS; Firefox as pseudo-CLASSES on a single
 // ::-moz-meter-bar — so, again, one rule per engine.
 const METER_SKIN_CSS =
-  ":where(meter) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--meter-h, var(--space-2)); border: 0; border-radius: var(--radius-full); overflow: hidden; background: var(--muted); }\n" +
+  ":where(meter) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--meter-h, var(--space-2)); border: 0; border-radius: var(--shape-pill); overflow: hidden; background: var(--muted); }\n" +
   ":where(meter[size='sm']) { height: var(--space-1_5); }\n" +
   ":where(meter[size='lg']) { height: var(--space-3); }\n" +
   // WebKit — track + one pseudo-element per band.
-  ":where(meter)::-webkit-meter-bar { background: var(--muted); border: 0; border-radius: var(--radius-full); }\n" +
-  ":where(meter)::-webkit-meter-optimum-value { background: var(--success); border-radius: var(--radius-full); }\n" +
-  ":where(meter)::-webkit-meter-suboptimum-value { background: var(--warning); border-radius: var(--radius-full); }\n" +
-  ":where(meter)::-webkit-meter-even-less-good-value { background: var(--destructive); border-radius: var(--radius-full); }\n" +
+  ":where(meter)::-webkit-meter-bar { background: var(--muted); border: 0; border-radius: var(--shape-pill); }\n" +
+  ":where(meter)::-webkit-meter-optimum-value { background: var(--success); border-radius: var(--shape-pill); }\n" +
+  ":where(meter)::-webkit-meter-suboptimum-value { background: var(--warning); border-radius: var(--shape-pill); }\n" +
+  ":where(meter)::-webkit-meter-even-less-good-value { background: var(--destructive); border-radius: var(--shape-pill); }\n" +
   // Firefox — one fill pseudo-element, colored by a band pseudo-class on the
   // meter. (Kept out of :where() so the vendor selector isn't folded away.)
-  "meter::-moz-meter-bar { border-radius: var(--radius-full); }\n" +
+  "meter::-moz-meter-bar { border-radius: var(--shape-pill); }\n" +
   "meter:-moz-meter-optimum::-moz-meter-bar { background: var(--success); }\n" +
   "meter:-moz-meter-sub-optimum::-moz-meter-bar { background: var(--warning); }\n" +
   "meter:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--destructive); }\n"

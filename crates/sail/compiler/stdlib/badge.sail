@@ -71,7 +71,7 @@
   .sail-badge[size='lg'] { --bdg-h: 26px; --bdg-px: 10px; --bdg-fs: 11.5px; --bdg-gap: 5px; }
 
   /* Shape — square (radius-sm) default; pill opts into the full radius. */
-  .sail-badge[pill] { --bdg-radius: var(--radius-full); }
+  .sail-badge[pill] { --bdg-radius: var(--shape-pill); }
 
   /* Variant matrix (soft is the base above). */
   .sail-badge[variant='solid'] {

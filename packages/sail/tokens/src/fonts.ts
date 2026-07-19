@@ -1,6 +1,8 @@
-// @ship/tokens — webfont manifest. Single source of truth for the three
-// OFL variable woff2 the framework ships. Each entry's `file` lives
-// alongside this module in `./fonts/<file>`. The generator
+// @ship/tokens — webfont manifest. Single source of truth for the
+// framework's self-hosted woff2 fonts. Variable-weight faces cover the
+// Latin block; static display faces (e.g. Press Start 2P) are vendored
+// the same way. Each entry's `file` lives alongside this module in
+// `./fonts/<file>`. The generator
 // `packages/sail/runtime/scripts/emit-contracts-css.ts` reads this
 // manifest, prepends one `@font-face` block per row to the generated
 // `contracts.css` with `src: url('./fonts/<file>')`.
@@ -23,10 +25,15 @@ export interface FontFaceSpec {
   family: string
   /** CSS `font-style`. */
   style: 'normal' | 'italic'
-  /** CSS `font-weight` — variable fonts use a range, e.g. `"100 1000"`. */
+  /**
+   * CSS `font-weight` — variable fonts use a range, e.g. `"100 1000"`.
+   * Static display faces (e.g. Press Start 2P) use a single weight.
+   */
   weight: string
   /** Filename under `./fonts/`; emitted as `url('./fonts/<file>')`. */
   file: string
+  /** CSS `format` — variable fonts use `woff2-variations`; static fonts `woff2`. */
+  format: 'woff2-variations' | 'woff2'
   /** CSS `unicode-range` (the variable woff2 covers the Latin block). */
   unicodeRange: string
 }
@@ -37,6 +44,7 @@ export const FONTS: ReadonlyArray<FontFaceSpec> = [
     style: 'normal',
     weight: '100 1000',
     file: 'dm-sans-latin-wght-normal.woff2',
+    format: 'woff2-variations',
     unicodeRange:
       'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
   },
@@ -45,6 +53,7 @@ export const FONTS: ReadonlyArray<FontFaceSpec> = [
     style: 'normal',
     weight: '400 800',
     file: 'syne-latin-wght-normal.woff2',
+    format: 'woff2-variations',
     unicodeRange:
       'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
   },
@@ -53,6 +62,19 @@ export const FONTS: ReadonlyArray<FontFaceSpec> = [
     style: 'normal',
     weight: '100 800',
     file: 'jetbrains-mono-latin-wght-normal.woff2',
+    format: 'woff2-variations',
+    unicodeRange:
+      'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
+  },
+  {
+    // Press Start 2P is a static OFL pixel font used by the 8bit theme.
+    // It is not a variable font, so format is `woff2` and weight is a
+    // single value. Self-hosted under `./fonts/` so no CDN link is needed.
+    family: 'Press Start 2P',
+    style: 'normal',
+    weight: '400',
+    file: 'press-start-2p-latin-normal.woff2',
+    format: 'woff2',
     unicodeRange:
       'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
   },

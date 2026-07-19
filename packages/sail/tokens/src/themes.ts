@@ -23,6 +23,9 @@ export type ThemeId =
   | 'glass'
   | 'neutral-light'
   | 'neutral-dark'
+  | 'brut'
+  | '8bit'
+  | 'synthwave'
 
 export interface Theme {
   id: ThemeId
@@ -119,6 +122,36 @@ export const THEMES: Theme[] = [
       'oklch(0.22 0.010 264)',     // lifted slate card
       'oklch(0.92 0.008 264)',     // near-white ink primary
       'oklch(0.70 0.100 255)',     // restrained slate-blue accent
+    ],
+  },
+  {
+    // The expression-channel proof: pure tokens, zero structural rules.
+    id: 'brut', label: 'Brutalist', dark: false,
+    swatches: [
+      'oklch(0.97 0 0)',           // paper white
+      'oklch(1 0 0)',              // card
+      'oklch(0.14 0 0)',           // hard black ink primary
+      'oklch(0.62 0.24 28)',       // single red accent
+    ],
+  },
+  {
+    id: '8bit', label: '8-Bit', dark: true,
+    swatches: [
+      'oklch(0.18 0.05 265)',      // NES navy ground
+      'oklch(0.24 0.06 265)',      // lifted card
+      'oklch(0.72 0.21 25)',       // arcade red primary
+      'oklch(0.82 0.20 95)',       // coin-gold accent
+    ],
+  },
+  {
+    // The gradient/glow proof: a neon-future theme that needed the
+    // gradient-primary / gradient-surface / glow-* channels to exist.
+    id: 'synthwave', label: 'Synthwave', dark: true,
+    swatches: [
+      'oklch(0.16 0.06 285)',      // deep purple-black ground
+      'oklch(0.22 0.08 285)',      // lifted purple card
+      'oklch(0.65 0.28 340)',      // neon pink primary
+      'oklch(0.75 0.22 190)',      // cyan accent
     ],
   },
 ]

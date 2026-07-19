@@ -132,8 +132,8 @@ export default () => ({})
         .collect();
     assert_eq!(
         woff2_assets.len(),
-        3,
-        "expected exactly 3 hashed woff2 assets (DM Sans, Syne, JetBrains Mono), got {woff2_assets:?}"
+        4,
+        "expected exactly 4 hashed woff2 assets (DM Sans, Syne, JetBrains Mono, Press Start 2P), got {woff2_assets:?}"
     );
     let contracts_css = names
         .iter()
@@ -158,7 +158,8 @@ export default () => ({})
     assert!(
         !contracts_body.contains("./fonts/dm-sans-")
             && !contracts_body.contains("./fonts/syne-")
-            && !contracts_body.contains("./fonts/jetbrains-"),
+            && !contracts_body.contains("./fonts/jetbrains-")
+            && !contracts_body.contains("./fonts/press-start-"),
         "the source `url('./fonts/X.woff2')` must be rewritten to the hashed asset URL, got body:\n{}",
         contracts_body
     );
@@ -176,21 +177,28 @@ export default () => ({})
         "contracts.css must reference at least one of the emitted woff2 ({woff2_assets:?}), got body:\n{}",
         contracts_body
     );
-    // The body must have three `@font-face` blocks (one per family in
+    // The body must have four `@font-face` blocks (one per family in
     // the FONTS manifest) — confirms the drift lock carried through
     // the bundler without losing rows.
     let font_face_count = contracts_body.matches("@font-face").count();
     assert_eq!(
-        font_face_count, 3,
-        "expected 3 @font-face rules in contracts.css, got {font_face_count} (manifest drift?)"
+        font_face_count, 4,
+        "expected 4 @font-face rules in contracts.css, got {font_face_count} (manifest drift?)"
     );
-    // The body must use `format('woff2-variations')` for every face
-    // (variable axis is the reason to vendor these woff2).
-    let format_count = contracts_body
+    // The three variable faces keep `format('woff2-variations')`; the static
+    // Press Start 2P face uses `format('woff2')`. Verify both shapes are present.
+    let variations_count = contracts_body
         .matches("format('woff2-variations')")
         .count();
     assert_eq!(
-        format_count, 3,
-        "expected 3 woff2-variations format() decls in contracts.css, got {format_count}"
+        variations_count, 3,
+        "expected 3 woff2-variations format() decls in contracts.css, got {variations_count}"
+    );
+    let woff2_count = contracts_body
+        .matches("format('woff2')")
+        .count();
+    assert_eq!(
+        woff2_count, 1,
+        "expected 1 woff2 format() decl in contracts.css, got {woff2_count}"
     );
 }

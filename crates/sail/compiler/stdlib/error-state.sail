@@ -188,7 +188,7 @@
     <div class="title"><slot name="title">Something went wrong</slot></div>
     <div class="desc"><slot></slot></div>
     <div class="code"></div>
-    <button class="details-toggle" type="button" aria-expanded="false">Show details</button>
+    <button class="details-toggle" type="button" anatomy aria-expanded="false">Show details</button>
     <div class="details"><slot name="details"></slot></div>
   </div>
   <div class="actions"><slot name="action"></slot></div>

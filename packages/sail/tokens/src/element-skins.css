@@ -142,7 +142,11 @@ label { display: inline-block; }
     position: relative;
     background: var(--surface-1);
     color: var(--card-foreground);
-    border: 1px solid var(--border);
+    /* Stroke and corner treatment ride the Tier-2 channels: a brutalist
+       theme thickens every card edge and an 8-bit theme draws chunky
+       corners without touching this file. Defaults reproduce 1px/none. */
+    border: var(--border-width) solid var(--border);
+    border-image: var(--corner-image);
     --card-radius: var(--radius-lg);
     border-radius: var(--card-radius);
     overflow: clip;
@@ -275,7 +279,7 @@ label { display: inline-block; }
     cursor: pointer;
     background: var(--muted);
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-full);
+    border-radius: var(--shape-pill);
     -webkit-tap-highlight-color: transparent;
     /* Tone: default reads as a brand toggle (primary). */
     --tone: var(--primary);
@@ -403,7 +407,7 @@ label { display: inline-block; }
   .sail-badge[size='lg'] { --bdg-h: 26px; --bdg-px: 10px; --bdg-fs: 11.5px; --bdg-gap: 5px; }
 
   /* Shape — square (radius-sm) default; pill opts into the full radius. */
-  .sail-badge[pill] { --bdg-radius: var(--radius-full); }
+  .sail-badge[pill] { --bdg-radius: var(--shape-pill); }
 
   /* Variant matrix (soft is the base above). */
   .sail-badge[variant='solid'] {
@@ -1074,7 +1078,7 @@ label { display: inline-block; }
     --chip-gap: var(--space-1_5);
     --chip-icon: var(--icon-size-xs);
     --chip-remove: var(--icon-size-md);
-    --chip-radius: var(--radius-full);
+    --chip-radius: var(--shape-pill);
     /* tone: default channels; per-tone overrides below */
     --tone-fg: var(--foreground);
     --tone-bg: var(--tone-default-bg);
@@ -1211,7 +1215,7 @@ label { display: inline-block; }
     background: transparent;
     color: inherit;
     cursor: pointer;
-    border-radius: var(--radius-full);
+    border-radius: var(--shape-pill);
     flex-shrink: 0;
     transition: background-color var(--duration-fast) var(--ease-out);
   }
@@ -1514,7 +1518,7 @@ label { display: inline-block; }
   .sail-scroll-area::-webkit-scrollbar-track { background: transparent; }
   .sail-scroll-area::-webkit-scrollbar-thumb {
     background: var(--border);
-    border-radius: var(--radius-full);
+    border-radius: var(--shape-pill);
     border: 3px solid transparent;
     background-clip: padding-box;
   }
@@ -1558,7 +1562,7 @@ label { display: inline-block; }
     color: var(--foreground);
     background: transparent;
     border: 1px solid var(--border);
-    border-radius: var(--radius-full);
+    border-radius: var(--shape-pill);
     cursor: pointer;
   }
   .sail-theme-trigger:hover { background: var(--hover-bg); }
@@ -1684,7 +1688,7 @@ label { display: inline-block; }
     letter-spacing: var(--label-tracking);
     font-size: 7px;
     line-height: 1;
-    text-transform: uppercase;
+    text-transform: var(--label-transform);
     color: var(--muted-foreground);
   }
   .sail-theme-swatch .tc-heading {
@@ -1742,7 +1746,7 @@ label { display: inline-block; }
     font-size: 7.5px;
     line-height: 1;
     padding: 2px 5px;
-    border-radius: var(--radius-full);
+    border-radius: var(--shape-pill);
     background: color-mix(in oklch, var(--accent) 18%, transparent);
     color: var(--accent);
     box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 30%, transparent);
@@ -1896,7 +1900,7 @@ label { display: inline-block; }
   .sail-navbar[placement='rail'] .sail-nav-links label {
     font-size: var(--text-xs);
     font-weight: var(--font-weight-bold);
-    text-transform: uppercase;
+    text-transform: var(--label-transform);
     letter-spacing: 0.08em;
     color: var(--muted-foreground);
     margin: var(--space-4) 0 var(--space-1) var(--space-2);

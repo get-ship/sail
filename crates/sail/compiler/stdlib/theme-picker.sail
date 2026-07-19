@@ -35,7 +35,7 @@
     color: var(--foreground);
     background: transparent;
     border: 1px solid var(--border);
-    border-radius: var(--radius-full);
+    border-radius: var(--shape-pill);
     cursor: pointer;
   }
   .sail-theme-trigger:hover { background: var(--hover-bg); }
@@ -161,7 +161,7 @@
     letter-spacing: var(--label-tracking);
     font-size: 7px;
     line-height: 1;
-    text-transform: uppercase;
+    text-transform: var(--label-transform);
     color: var(--muted-foreground);
   }
   .sail-theme-swatch .tc-heading {
@@ -219,7 +219,7 @@
     font-size: 7.5px;
     line-height: 1;
     padding: 2px 5px;
-    border-radius: var(--radius-full);
+    border-radius: var(--shape-pill);
     background: color-mix(in oklch, var(--accent) 18%, transparent);
     color: var(--accent);
     box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 30%, transparent);
@@ -277,6 +277,18 @@
     <button class="sail-theme-option" type="button" role="option" value="neutral-dark">
       <span class="sail-theme-swatch" data-theme-preview="neutral-dark" aria-hidden="true"><span class="tc-overlay"></span><span class="tc-card"><span class="tc-eyebrow">Theme</span><span class="tc-heading">Neutral Dark</span><span class="tc-typo"><span class="tc-body">The quick brown fox</span><span class="tc-mono">build: ok</span></span><span class="tc-controls"><span class="tc-cta">Action</span><span class="tc-ghost">Cancel</span><span class="tc-chip">New</span></span></span></span>
       Neutral Dark
+    </button>
+    <button class="sail-theme-option" type="button" role="option" value="brut">
+      <span class="sail-theme-swatch" data-theme-preview="brut" aria-hidden="true"><span class="tc-overlay"></span><span class="tc-card"><span class="tc-eyebrow">Theme</span><span class="tc-heading">Brutalist</span><span class="tc-typo"><span class="tc-body">The quick brown fox</span><span class="tc-mono">build: ok</span></span><span class="tc-controls"><span class="tc-cta">Action</span><span class="tc-ghost">Cancel</span><span class="tc-chip">New</span></span></span></span>
+      Brutalist
+    </button>
+    <button class="sail-theme-option" type="button" role="option" value="8bit">
+      <span class="sail-theme-swatch" data-theme-preview="8bit" aria-hidden="true"><span class="tc-overlay"></span><span class="tc-card"><span class="tc-eyebrow">Theme</span><span class="tc-heading">8-Bit</span><span class="tc-typo"><span class="tc-body">The quick brown fox</span><span class="tc-mono">build: ok</span></span><span class="tc-controls"><span class="tc-cta">Action</span><span class="tc-ghost">Cancel</span><span class="tc-chip">New</span></span></span></span>
+      8-Bit
+    </button>
+    <button class="sail-theme-option" type="button" role="option" value="synthwave">
+      <span class="sail-theme-swatch" data-theme-preview="synthwave" aria-hidden="true"><span class="tc-overlay"></span><span class="tc-card"><span class="tc-eyebrow">Theme</span><span class="tc-heading">Synthwave</span><span class="tc-typo"><span class="tc-body">The quick brown fox</span><span class="tc-mono">build: ok</span></span><span class="tc-controls"><span class="tc-cta">Action</span><span class="tc-ghost">Cancel</span><span class="tc-chip">New</span></span></span></span>
+      Synthwave
     </button>
   </div>
 </div>

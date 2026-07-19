@@ -35,7 +35,7 @@
     cursor: pointer;
     background: var(--muted);
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius-full);
+    border-radius: var(--shape-pill);
     -webkit-tap-highlight-color: transparent;
     /* Tone: default reads as a brand toggle (primary). */
     --tone: var(--primary);

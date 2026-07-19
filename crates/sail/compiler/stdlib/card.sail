@@ -58,7 +58,11 @@
     position: relative;
     background: var(--surface-1);
     color: var(--card-foreground);
-    border: 1px solid var(--border);
+    /* Stroke and corner treatment ride the Tier-2 channels: a brutalist
+       theme thickens every card edge and an 8-bit theme draws chunky
+       corners without touching this file. Defaults reproduce 1px/none. */
+    border: var(--border-width) solid var(--border);
+    border-image: var(--corner-image);
     --card-radius: var(--radius-lg);
     border-radius: var(--card-radius);
     overflow: clip;

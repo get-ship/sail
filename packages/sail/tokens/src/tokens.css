@@ -257,9 +257,11 @@
   --font-display-app: "Syne Variable", "Syne", "Inter", sans-serif;
   --font-body-app: "DM Sans Variable", "DM Sans", "Inter", sans-serif;
   --font-mono-app: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-press-start-app: "Press Start 2P", "Press Start 2P Fallback", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --font-display: var(--font-display-app);
   --font-body: var(--font-body-app);
   --font-mono: var(--font-mono-app);
+  --font-press-start: var(--font-press-start-app);
 
   /* Typography roles — components read these, themes override. A theme
    * can swap --heading-font to body, or flip display roles entirely. */
@@ -332,6 +334,144 @@
   --card-texture: none;
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
+
+  /* ─── Expression channels (Tier 2) ──────────────────────────────────
+   *
+   * Same discipline as the effect channels above, applied to the
+   * properties a theme most often wants to bend but today cannot: stroke
+   * weight, control framing, interaction motion, corner treatment,
+   * display type, casing, gradient and glow.
+   *
+   * The contract for every name in this block is enforced by the tests in
+   * `crates/sail/compiler/tests/channel_integrity.rs` and
+   * `channel_discipline.rs`:
+   *   1. The default is a NO-OP — it reproduces today's rendering
+   *      exactly, so declaring the channel changes nothing on its own.
+   *      channel_integrity additionally rejects hard literals that would
+   *      break composition (e.g. `none` inside a `box-shadow` list).
+   *   2. A generated reader consumes it. A channel nothing reads is a
+   *      variable in a costume; the `channel-readers` generator check
+   *      fails the build if any name here goes unread.
+   *   3. Where a channel governs a single CSS property, the skin lints in
+   *      channel_discipline stop a skin writing that property literally
+   *      instead of through the channel. Today that coverage is
+   *      `text-transform` and `border-image`; `border-width` is tracked as a
+   *      ratchet rather than an outright ban. Other channels are held
+   *      honest by checks (1) and (2) above.
+   *
+   * Themes opt in; components never change. That is the whole thesis —
+   * a theme should be a token block, not a patch.
+   */
+
+  /* Stroke weight. Every hairline in the system lowers to this instead of
+   * a literal 1px, so a brutalist or 8-bit theme can thicken every control
+   * edge at once. Governed property: `border-width`. */
+  --border-width: 1px;
+
+  /* Control framing — an extra box-shadow "frame" drawn around controls,
+   * stacked BEFORE the variant's own shadow so it reads as chrome rather
+   * than elevation.
+   *
+   * The no-op is a fully transparent shadow, NOT `none`: these values are
+   * composed into a comma-separated box-shadow list, and `none` is not a
+   * legal list member — `box-shadow: none, var(--shadow-xs)` drops the
+   * whole declaration. A zero-size transparent layer paints nothing and
+   * composes cleanly. Same reasoning for --press-shadow and --glow-*. */
+  --control-frame: 0 0 0 0 transparent;
+
+  /* Interaction motion. The baseline button lift/press was decided once,
+   * globally, in the contract (`translateY(-1px)` / `translateY(1px)
+   * scale(0.98)`) — the whole product's personality in two literals.
+   * Routed through channels so a calm theme sets 0 and an arcade theme
+   * exaggerates. Defaults reproduce the historical values. */
+  --control-lift: -1px;
+  --press-translate: 1px;
+  --press-scale: 0.98;
+  /* Shadow applied on :active, composed on top of the control's resting
+   * shadow. Transparent no-op (see --control-frame); an 8-bit theme gives
+   * it a hard offset that collapses on press. */
+  --press-shadow: 0 0 0 0 transparent;
+
+  /* Corner treatment — a `border-image` value for controls and cards.
+   * Default `none` leaves `border-radius` in charge. A pixel-art theme
+   * supplies a slice so corners are drawn, not rounded. */
+  --corner-image: none;
+
+  /* Display type — the hero/wordmark role, themable independently of
+   * --heading-font. Default aliases the existing display stack so nothing
+   * moves. */
+  --display-font: var(--font-display);
+
+  /* Casing channels.
+   *
+   * The defaults are what the system ALREADY does, not a uniform `none`:
+   * headings render as authored, but the label role has always been
+   * upper-cased (hand-written `text-transform: uppercase` in every skin
+   * that carries a label). Defaulting --label-transform to `none` would
+   * have quietly lower-cased every eyebrow and rail heading in the
+   * product — a channel is a seam, not a restyle. */
+  --heading-transform: none;
+  --label-transform: uppercase;
+
+  /* Gradient channels.
+   *
+   * These lived as literals INSIDE the sx vocabulary's atoms
+   * (text-gradient-primary/-accent), so a theme could restyle every colour
+   * in the system and still not touch its own wordmark. Lifted here; the
+   * atoms now read the channel. Defaults are the exact former literals, so
+   * this is a pure refactor until a theme opts in.
+   *
+   * --gradient-accent is a PROMOTION, not a new idea: two atoms wanted the
+   * same shape with a different base, so both now reference named globals
+   * instead of one being implicitly derived from the other. */
+  --gradient-primary: linear-gradient(180deg, var(--primary) 0%, transparent 92%);
+  --gradient-accent: linear-gradient(180deg, var(--accent) 0%, transparent 92%);
+  /* A page-level gradient wash, painted under content by the surface
+   * reader. Nothing gradient-washes the page today, so `none` is both the
+   * no-op and the honest default. */
+  --gradient-surface: none;
+
+  /* Per-tone glow — a radial background wash keyed to the tone ramp names
+   * (see the tone ramps section), so `--glow-{tone}` is addressable
+   * wherever `--tone-*` is. primary/accent default to the former
+   * bg-glow-* literals; the rest are `none` until a theme lights them up.
+   *
+   * NOTE: this is a BACKGROUND channel. A neon box-shadow rim (what a
+   * synthwave theme reaches for on controls) is --control-frame's job —
+   * one token, one meaning. */
+  --glow-primary: radial-gradient(circle, color-mix(in oklch, var(--primary) 8%, transparent), transparent 60%);
+  --glow-accent: radial-gradient(circle, color-mix(in oklch, var(--accent) 8%, transparent), transparent 60%);
+  --glow-default: none;
+  --glow-muted: none;
+  --glow-info: none;
+  --glow-success: none;
+  --glow-warning: none;
+  --glow-destructive: none;
+
+  /* Pill sentinel — SPLIT from --radius-full.
+   *
+   * --radius-full (9999px) was doing double duty: a shape token meaning
+   * "this element is a circle/pill" AND the top of the radius scale. A
+   * theme that squared off its radius scale had no way to say "…but the
+   * status dot is still round", because both meanings lowered to the same
+   * name. --shape-pill carries the SHAPE meaning; --radius-full stays in
+   * the scale. Elements that are intrinsically round (dots, avatars,
+   * spinners, switch thumbs) read --shape-pill. */
+  --shape-pill: 9999px;
+}
+
+/* ─── Surface gradient — body-level wash channel ───────────────────────
+ * Sits UNDER content (z-index -1), unlike --surface-overlay which floats
+ * above it: a wash tints the page, a texture sits on the glass. Default
+ * `none` paints nothing, so a theme that never sets it pays no pixels.
+ * `position: fixed` so the wash doesn't scroll away on a long page. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: var(--gradient-surface);
 }
 
 /* ─── Surface overlay — body-level texture channel ─────────────────────
@@ -350,8 +490,35 @@ body::after {
   mix-blend-mode: var(--surface-overlay-blend);
   opacity: var(--surface-overlay-opacity);
 }
+
+/* The same channel, scoped to a THEMED SUBTREE.
+ *
+ * `body::after` only fires for the theme on <html>/<body>. A subtree that
+ * carries its own [data-theme] — a docs theme preview, a split-screen
+ * comparison, a studio canvas — set --surface-overlay and got nothing:
+ * the only painter was body-level, so scanlines/grain/dither silently
+ * dropped out of exactly the surface built to demonstrate them.
+ *
+ * `position: fixed` would be wrong here (the overlay must clip to the
+ * subtree, not the viewport), so this variant is absolutely positioned
+ * and the subtree is made a containing block. z-index stays local. */
+[data-theme]:not(:root) {
+  position: relative;
+  isolation: isolate;
+}
+[data-theme]:not(:root)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-max);
+  background: var(--surface-overlay);
+  mix-blend-mode: var(--surface-overlay-blend);
+  opacity: var(--surface-overlay-opacity);
+}
 @media (prefers-reduced-motion: reduce) {
-  body::after { display: none; }
+  body::after,
+  [data-theme]:not(:root)::after { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

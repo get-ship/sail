@@ -42,7 +42,7 @@ function buildExpected(face: (typeof FONTS)[number]): string {
     `  font-style: ${face.style};\n` +
     `  font-weight: ${face.weight};\n` +
     `  font-display: swap;\n` +
-    `  src: url('./fonts/${face.file}') format('woff2-variations');\n` +
+    `  src: url('./fonts/${face.file}') format('${face.format}');\n` +
     `  unicode-range: ${face.unicodeRange};\n` +
     `}\n`
   )
@@ -76,11 +76,15 @@ describe('@ship/tokens — webfont manifest (FONTS export)', () => {
     }
   })
 
-  it('every family declares a variable-font weight range (no static fallback)', () => {
+  it('every family declares a valid `font-weight` (variable range or static face)', () => {
     for (const face of FONTS) {
-      expect(face.weight).toMatch(/^\d+\s+\d+$/)
-      const [lo, hi] = face.weight.split(/\s+/).map(Number)
-      expect(hi).toBeGreaterThan(lo!)
+      if (face.format === 'woff2-variations') {
+        expect(face.weight).toMatch(/^\d+\s+\d+$/)
+        const [lo, hi] = face.weight.split(/\s+/).map(Number)
+        expect(hi).toBeGreaterThan(lo!)
+      } else {
+        expect(face.weight).toMatch(/^\d+$/)
+      }
     }
   })
 
@@ -113,9 +117,9 @@ describe('@ship/tokens — contracts.css webfont drift lock', () => {
     }
   })
 
-  it('declares `woff2-variations` format for every face (variable axis is the reason to vendor)', () => {
+  it('declares a woff2 `format` for every face (variable or static)', () => {
     const css = loadSrc('contracts.css')
-    const formatCount = (css.match(/format\('woff2-variations'\)/g) ?? []).length
+    const formatCount = (css.match(/format\('woff2(?:-variations)?'\)/g) ?? []).length
     expect(formatCount).toBe(FONTS.length)
   })
 

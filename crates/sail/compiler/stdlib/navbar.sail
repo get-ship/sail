@@ -173,7 +173,7 @@
   .sail-navbar[placement='rail'] .sail-nav-links label {
     font-size: var(--text-xs);
     font-weight: var(--font-weight-bold);
-    text-transform: uppercase;
+    text-transform: var(--label-transform);
     letter-spacing: 0.08em;
     color: var(--muted-foreground);
     margin: var(--space-4) 0 var(--space-1) var(--space-2);

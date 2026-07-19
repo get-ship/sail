@@ -29,7 +29,7 @@
   .sail-scroll-area::-webkit-scrollbar-track { background: transparent; }
   .sail-scroll-area::-webkit-scrollbar-thumb {
     background: var(--border);
-    border-radius: var(--radius-full);
+    border-radius: var(--shape-pill);
     border: 3px solid transparent;
     background-clip: padding-box;
   }
