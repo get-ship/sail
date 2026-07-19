@@ -37,7 +37,7 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     let s = expand_self_close(&quote_brace_attrs(source));
     // Bare framework-enum shorthand: `<button primary solid sm>` →
     // tone/variant/size attributes. Framework vocabulary on framework tags
-    // only (L1 controls + sail-*); userland components stay explicit.
+    // only (L1 controls); userland components stay explicit.
     let s = lower_prop_shorthand(&s);
     // L1 stdlib elements: `<spinner …>` splices into its structure snippet
     // (use-site attrs merged onto the root, default-slot children placed),
@@ -699,8 +699,8 @@ fn parse_attr_list(s: &str) -> Vec<(String, String)> {
 /// attribute matching a framework enum value desugars to its prop —
 /// `<button primary solid sm>` → `<button tone="primary" variant="solid"
 /// size="sm">`. Rules that keep it deterministic:
-///   - Framework tags only: the L1 control set + any `sail-*` tag. Userland
-///     components keep explicit attributes (their prop names could collide).
+///   - Framework tags only: the L1 control set. Userland components keep
+///     explicit attributes (their prop names could collide).
 ///   - The vocabularies are disjoint by construction (tones ∪ sizes ∪
 ///     variants share no member); `default` is excluded (ambiguous between
 ///     tone and variant, and it IS the default — writing it is a no-op).
@@ -735,7 +735,15 @@ fn lower_prop_shorthand(source: &str) -> String {
                 j += 1;
             }
             let tag_name = &source[i + 1..j];
-            let is_framework = L1_TAGS.contains(&tag_name) || tag_name.starts_with("sail-");
+            // Framework (L1 control) tags only. The legacy `sail-`-prefixed
+            // spelling — the old component namespace the L1 set absorbed —
+            // no longer participates in prop shorthand: there is no
+            // `<sail-button>` to desugar TO (the L1 element is `<button>`),
+            // and live `sail-*` custom elements are not the compiler's
+            // responsibility (they carry their own prop contract). The
+            // pre-L1 source files that used the legacy spelling were
+            // codemodded to the bare L1 names.
+            let is_framework = L1_TAGS.contains(&tag_name);
             // Find tag end honoring quotes.
             let mut k = j;
             let mut quote: Option<u8> = None;
@@ -2346,8 +2354,25 @@ mod tests {
         assert!(out.contains(r#"tone="primary""#), "{out}");
         assert!(out.contains(r#"variant="solid""#), "{out}");
         assert!(out.contains(r#"size="sm""#), "{out}");
+    }
+
+    #[test]
+    fn bare_enum_shorthand_skips_legacy_sail_prefixed_tags() {
+        // The `sail-` prefix is no longer a "framework tag" marker for the
+        // prop shorthand. The L1 element is the BARE name (`<button>`,
+        // `<chip>`); the legacy `sail-`-prefixed spelling was the old
+        // component namespace, and a tag carrying it now passes through
+        // untouched (and likely a compile error downstream if there is no
+        // matching custom element). This test is the boundary: the bare
+        // words remain literal attributes, not desugared prop values.
         let out = preprocess(r#"<sail-chip accent outline>x</sail-chip>"#);
-        assert!(out.contains(r#"tone="accent""#) && out.contains(r#"variant="outline""#), "{out}");
+        assert!(!out.contains(r#"tone="accent""#), "no tone desugar: {out}");
+        assert!(
+            !out.contains(r#"variant="outline""#),
+            "no variant desugar: {out}"
+        );
+        assert!(out.contains(" accent"), "bare word passes through: {out}");
+        assert!(out.contains(" outline"), "bare word passes through: {out}");
     }
 
     #[test]

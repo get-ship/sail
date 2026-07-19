@@ -169,9 +169,9 @@ fn deps_skip_method_names() {
 }
 
 #[test]
-fn arrow_handler_falls_back_to_word_scan() {
-    // Arrow handlers aren't in the renderable subset, so collect_idents
-    // hits the fallback scanner. It picks up `count` (twice — dedup'd).
+fn arrow_handler_dep_walk_uses_arrow_parser() {
+    // Arrow handlers are parsed with arrows enabled. The body reads `count`
+    // (twice — dedup'd); `set` is a property name and must not appear.
     let r = build_for("<button on:click={() => count.set(count() + 1)}></button>");
     let deps = &r.get(0).unwrap().deps;
     assert!(deps.contains(&"count".to_string()), "deps={deps:?}");

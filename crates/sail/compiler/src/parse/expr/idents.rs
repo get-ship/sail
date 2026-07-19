@@ -1,32 +1,38 @@
 //! Root-identifier extraction for binding dep-tracking.
 //!
-//! Walks the (one, real) expression AST collecting the root identifiers a
-//! binding expression reads. Method / property names (`obj.PROP`), object-literal
+//! Walks the expression AST collecting the root identifiers a binding
+//! expression reads. Method / property names (`obj.PROP`), object-literal
 //! keys, and arrow params do not count; a shorthand object entry (`{ foo }`)
-//! does (it references `foo`). Expressions outside the renderable subset — e.g.
-//! arrow handlers, which `parse_expression` rejects — fall back to a
-//! keyword-aware word scan. Analysis only; there is no expression evaluator.
-
-use crate::scan::{is_ident_cont, is_ident_start};
+//! does (it references `foo`). The parser chosen depends on the source: an
+//! `on:` handler is parsed with arrows enabled; every other binding source
+//! is parsed with the renderable subset. If neither parse succeeds, the dep
+//! set is empty — the registry pre-pass must not guess. Analysis only; there
+//! is no expression evaluator.
 
 use super::ast::{Arg, ArrowBody, Ast, AstKind, ObjKey, TemplatePart};
-use super::grammar::parse_expression;
+use super::grammar::{parse_expression, parse_expression_with_arrows};
 
 /// Root identifiers a binding expression reads, in first-seen order.
-pub fn collect_idents(src: &str) -> Vec<String> {
+pub fn collect_idents(src: &str, allow_arrow: bool) -> Vec<String> {
     let trimmed = src.trim();
     if trimmed.is_empty() {
         return Vec::new();
     }
-    match parse_expression(trimmed, 0) {
+    let parser = if allow_arrow {
+        parse_expression_with_arrows
+    } else {
+        parse_expression
+    };
+    match parser(trimmed, 0) {
         Ok(ast) => {
             let mut out = Vec::new();
             walk(&ast, &mut out);
             out
         }
-        // Non-parseable (e.g. an arrow handler) — the registry pre-pass must not
-        // fail compilation, so degrade to a word scan (Phase E binds it anyway).
-        Err(_) => fallback_scan(trimmed),
+        // Non-parseable source — the registry pre-pass must not guess. Downstream
+        // checks (expr_subset, prop-value validation) are the places that diagnose
+        // a bad expression; the manifest simply records no dependencies.
+        Err(_) => Vec::new(),
     }
 }
 
@@ -85,8 +91,10 @@ fn walk(ast: &Ast, out: &mut Vec<String>) {
                 }
             }
         }
-        // Arrows are rejected by `parse_expression` (they reach `fallback_scan`),
-        // so this arm is defensive: read the body, never the params.
+        // Reachable only when `allow_arrow: true`. Read the body, never the
+        // params — a handler's deps are the scope variables it READS, not
+        // the names it binds. (`on:click={(count) => …}` doesn't read
+        // `count` from scope.)
         AstKind::Arrow { body, .. } => {
             if let ArrowBody::Expr(e) = body {
                 walk(e, out);
@@ -110,94 +118,36 @@ fn push_unique(out: &mut Vec<String>, name: &str) {
     }
 }
 
-/// Fallback word scan for non-parseable expressions. Picks ASCII
-/// identifier-shaped tokens, drops keywords, drops anything following a `.`
-/// (method / property names).
-fn fallback_scan(src: &str) -> Vec<String> {
-    let bytes = src.as_bytes();
-    let mut out: Vec<String> = Vec::new();
-    let mut i = 0;
-    let mut last_was_dot = false;
-    while i < bytes.len() {
-        let b = bytes[i];
-        if b == b'.' {
-            last_was_dot = true;
-            i += 1;
-            continue;
-        }
-        if b.is_ascii_whitespace() {
-            i += 1;
-            continue;
-        }
-        if is_ident_start(b) {
-            let start = i;
-            while i < bytes.len() && is_ident_cont(bytes[i]) {
-                i += 1;
-            }
-            let name = &src[start..i];
-            if !last_was_dot && !is_reserved_word(name) {
-                push_unique(&mut out, name);
-            }
-            last_was_dot = false;
-            continue;
-        }
-        last_was_dot = false;
-        i += 1;
-    }
-    out
-}
-
-fn is_reserved_word(s: &str) -> bool {
-    matches!(
-        s,
-        "true"
-            | "false"
-            | "null"
-            | "undefined"
-            | "void"
-            | "typeof"
-            | "instanceof"
-            | "in"
-            | "of"
-            | "new"
-            | "this"
-            | "delete"
-            | "return"
-            | "function"
-            | "if"
-            | "else"
-            | "for"
-            | "while"
-            | "do"
-            | "switch"
-            | "case"
-            | "default"
-            | "break"
-            | "continue"
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use super::collect_idents;
 
     #[test]
     fn root_idents_only_through_member_and_call() {
-        assert_eq!(collect_idents("agents().items.length"), vec!["agents".to_string()]);
-        assert_eq!(collect_idents("count.set(1)"), vec!["count".to_string()]);
+        assert_eq!(collect_idents("agents().items.length", false), vec!["agents".to_string()]);
+        assert_eq!(collect_idents("count.set(1)", false), vec!["count".to_string()]);
     }
 
     #[test]
     fn skips_literals_and_object_keys() {
-        assert_eq!(collect_idents("true"), Vec::<String>::new());
+        assert_eq!(collect_idents("true", false), Vec::<String>::new());
         // `{ a: b }` reads `b`, not the key `a`.
-        assert_eq!(collect_idents("{ a: b }"), vec!["b".to_string()]);
+        assert_eq!(collect_idents("{ a: b }", false), vec!["b".to_string()]);
     }
 
     #[test]
-    fn arrow_falls_back_to_word_scan() {
-        let deps = collect_idents("() => count.set(count() + 1)");
+    fn arrow_handler_uses_arrow_parser() {
+        // Handlers are parsed with arrows enabled. The body references `count`
+        // (twice — dedup'd); `set` is a property name and must not appear.
+        let deps = collect_idents("() => count.set(count() + 1)", true);
         assert!(deps.contains(&"count".to_string()));
         assert!(!deps.contains(&"set".to_string()));
+    }
+
+    #[test]
+    fn non_parseable_source_yields_empty_deps() {
+        // When a source cannot be parsed in its allowed subset, the dep set is
+        // empty rather than a guessed set. (A bare `=>` is not a valid expression.)
+        assert_eq!(collect_idents("=> foo", false), Vec::<String>::new());
     }
 }

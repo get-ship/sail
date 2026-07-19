@@ -57,13 +57,13 @@ struct Builder {
 }
 
 impl Builder {
-    fn push(&mut self, kind: BindingKind, expr_src: &str) {
+    fn push(&mut self, kind: BindingKind, expr_src: &str, allow_arrow: bool) {
         let key = self.keys.alloc();
         self.bindings.push(Binding {
             key,
             kind,
             expr: expr_src.to_string(),
-            deps: collect_idents(expr_src),
+            deps: collect_idents(expr_src, allow_arrow),
             render_key: None,
             suppressed: self.suppress_depth > 0,
         });
@@ -79,7 +79,7 @@ impl Builder {
         match instr {
             Instr::StaticText { .. } | Instr::Comment { .. } => {}
             Instr::DynamicText { expr } => {
-                self.push(BindingKind::Text, &expr.source);
+                self.push(BindingKind::Text, &expr.source, expr.allow_arrow);
             }
             Instr::Element(el) => self.walk_element(el),
             Instr::If(if_instr) => self.walk_if(if_instr),
@@ -104,25 +104,25 @@ impl Builder {
         match attr {
             AttrInstr::Static { .. } => {}
             AttrInstr::Expr { name, expr, .. } => {
-                self.push(BindingKind::Attr(name.clone()), &expr.source);
+                self.push(BindingKind::Attr(name.clone()), &expr.source, expr.allow_arrow);
             }
             AttrInstr::Class { name, expr, .. } => {
-                self.push(BindingKind::Class(name.clone()), &expr.source);
+                self.push(BindingKind::Class(name.clone()), &expr.source, expr.allow_arrow);
             }
             AttrInstr::Prop { name, expr, .. } => {
-                self.push(BindingKind::Prop(name.clone()), &expr.source);
+                self.push(BindingKind::Prop(name.clone()), &expr.source, expr.allow_arrow);
             }
             AttrInstr::BindValue { expr, .. } => {
-                self.push(BindingKind::BindValue, &expr.source);
+                self.push(BindingKind::BindValue, &expr.source, expr.allow_arrow);
             }
             AttrInstr::BindChecked { expr, .. } => {
-                self.push(BindingKind::BindChecked, &expr.source);
+                self.push(BindingKind::BindChecked, &expr.source, expr.allow_arrow);
             }
             AttrInstr::BindThis { var, .. } => {
                 // The "expr" carried by the manifest is the bare scope
                 // variable name; deps is the same single identifier so the
                 // attach runtime knows which scope key to write into.
-                self.push(BindingKind::BindThis, var);
+                self.push(BindingKind::BindThis, var, false);
             }
             AttrInstr::SlotReflectEmpty { .. } => {
                 // Side-effect wiring on the host's attribute set. No scope
@@ -130,13 +130,13 @@ impl Builder {
                 // emits the runtime call inline; views never see this kind.
             }
             AttrInstr::On { event, handler, .. } => {
-                self.push(BindingKind::On(event.clone()), &handler.source);
+                self.push(BindingKind::On(event.clone()), &handler.source, handler.allow_arrow);
             }
             AttrInstr::DynamicAttr { expr, .. } => {
-                self.push(BindingKind::AttrDynamic, &expr.source);
+                self.push(BindingKind::AttrDynamic, &expr.source, expr.allow_arrow);
             }
             AttrInstr::Mutation { expr, .. } => {
-                self.push(BindingKind::Mutation, &expr.source);
+                self.push(BindingKind::Mutation, &expr.source, expr.allow_arrow);
             }
 AttrInstr::Use { .. } => {
                 // Actions register on element construction, same as
@@ -161,7 +161,7 @@ AttrInstr::Use { .. } => {
             .first()
             .map(|b| b.cond.source.as_str())
             .unwrap_or("");
-        self.push(BindingKind::If, cond_src);
+        self.push(BindingKind::If, cond_src, false);
         for branch in &instr.branches {
             self.walk_block(&branch.body);
         }
@@ -173,7 +173,7 @@ AttrInstr::Use { .. } => {
     /// `{#for}`: one binding for the boundary (expr = iterable source),
     /// body walked once, else body walked once.
     fn walk_for(&mut self, instr: &ForInstr) {
-        self.push(BindingKind::For, &instr.iterable.source);
+        self.push(BindingKind::For, &instr.iterable.source, false);
         self.walk_block(&instr.body);
         if let Some(else_body) = &instr.else_body {
             self.walk_block(else_body);
@@ -183,7 +183,7 @@ AttrInstr::Use { .. } => {
     /// `{#match}`: one binding for the boundary (expr = discriminant),
     /// each case body walked, default walked.
     fn walk_match(&mut self, instr: &MatchInstr) {
-        self.push(BindingKind::Match, &instr.discriminant.source);
+        self.push(BindingKind::Match, &instr.discriminant.source, false);
         for case in &instr.cases {
             self.walk_block(&case.body);
         }
