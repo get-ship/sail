@@ -287,6 +287,9 @@ export { resolveSlots, snapshotChildren, slotFilled } from './slot'
 export type { SlotDecl } from './slot'
 
 export { defineComponent, camelOf } from './component'
+// Element-scope tree (browser side): the per-document root element
+// scopes chain to, plus the read-side stamp lookup for diagnostics.
+export { clientRootScope, elementScopeOf } from './element-scope'
 export type { ComponentFactory, ComponentSchema } from './component'
 
 export {
