@@ -37,6 +37,7 @@ export default controller(() => {
 
       <label>Guide</label>
       <a href="/sail/elements" aria-current={path() === '/sail/elements' ? 'page' : null}>Using components</a>
+      <a href="/sail/guide/forms" aria-current={path() === '/sail/guide/forms' ? 'page' : null}>Forms</a>
 
       <label>Reference</label>
       <a href="/sail/reference" aria-current={path() === '/sail/reference' ? 'page' : null}>API reference</a>

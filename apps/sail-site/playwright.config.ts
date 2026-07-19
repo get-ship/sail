@@ -4,6 +4,8 @@
 
 import { defineConfig, devices } from '@playwright/test'
 
+const PORT = process.env.SAIL_SITE_TEST_PORT ?? '7878'
+
 export default defineConfig({
   testDir: './test',
   fullyParallel: false,
@@ -12,7 +14,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: {
-    baseURL: 'http://127.0.0.1:7878',
+    baseURL: `http://127.0.0.1:${PORT}`,
     trace: 'off',
     headless: true,
     viewport: { width: 1280, height: 800 },
@@ -21,9 +23,9 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: 'bun run dev',
+    command: `bun run gen && (cd ../.. && cargo run -q -p deck-cli -- dev --project apps/sail-site --addr 127.0.0.1:${PORT})`,
     cwd: __dirname,
-    url: 'http://127.0.0.1:7878',
+    url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: true,
     timeout: 120_000,
     stdout: 'pipe',
