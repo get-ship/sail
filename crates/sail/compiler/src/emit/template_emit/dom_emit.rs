@@ -895,6 +895,12 @@ const DELEGATABLE_EVENTS: &[&str] = &[
     "pointerup", "touchend", "touchmove", "touchstart", "submit", "reset",
 ];
 
+/// The delegatable-event list exposed to tooling (browser LSP) so completion
+/// mirrors the events the compiler will route through root delegation.
+pub fn delegatable_events() -> &'static [&'static str] {
+    DELEGATABLE_EVENTS
+}
+
 /// HTML void elements — serialized without a closing tag.
 const VOID_ELEMENTS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",

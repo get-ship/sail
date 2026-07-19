@@ -42,6 +42,11 @@ use crate::keys::{BindingRegistry, KeyAllocator};
 mod control_emit;
 mod dom_emit;
 
+/// Events the compiler routes through root delegation; exposed to tooling.
+pub fn delegatable_events() -> &'static [&'static str] {
+    dom_emit::delegatable_events()
+}
+
 pub struct TemplateEmitter {
     next_id: usize,
     /// Hoisted `const __tplN = __tpl("<tr>…</tr>");` cloners — one per static

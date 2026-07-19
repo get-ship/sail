@@ -21,6 +21,7 @@
 #![cfg(target_arch = "wasm32")]
 
 use crate::{compile as native_compile, CompileMode, CompileOpts, ComponentMeta};
+use crate::{block_manifest, directive_manifest};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -141,6 +142,56 @@ pub fn analyze(source: &str) -> Result<JsValue, JsValue> {
     let analysis = crate::analyze(source, None, &[]);
     serde_wasm_bindgen::to_value(&analysis)
         .map_err(|e| JsValue::from_str(&format!("serialize analysis: {e}")))
+}
+
+/// Browser completion surface: every name in scope for a `.sail` template,
+/// with binding kind and origin. Mirrors `sail_compiler::completions_at` as
+/// called by the native LSP; the browser has no source path, so pass `None`.
+#[wasm_bindgen]
+pub fn completions_at(source: &str) -> Result<JsValue, JsValue> {
+    let items = crate::completions_at(source, None);
+    serde_wasm_bindgen::to_value(&items)
+        .map_err(|e| JsValue::from_str(&format!("serialize completions: {e}")))
+}
+
+/// Browser hover surface: resolve the symbol under a 1-based `(line, col)`
+/// cursor. Mirrors `sail_compiler::hover_at` as called by the native LSP;
+/// returns `undefined` when the cursor is not over a known symbol.
+#[wasm_bindgen]
+pub fn hover_at(source: &str, line: usize, col: usize) -> Result<JsValue, JsValue> {
+    let h = crate::hover_at(source, None, line, col);
+    serde_wasm_bindgen::to_value(&h)
+        .map_err(|e| JsValue::from_str(&format!("serialize hover: {e}")))
+}
+
+/// Closed vocabulary the browser LSP needs for trigger-based completions and
+/// hover docs: event names, modifiers, bind targets, blocks, directives, and
+/// retired forms. All tables are owned by the compiler; this export replaces
+/// every hand-maintained TypeScript copy in the browser LSP.
+#[derive(Serialize)]
+struct CompletionVocabulary {
+    events: Vec<&'static str>,
+    modifiers: &'static [directive_manifest::ModifierEntry],
+    bind_targets: &'static [directive_manifest::BindTargetEntry],
+    blocks: &'static [block_manifest::BlockEntry],
+    directives: &'static [directive_manifest::DirectiveEntry],
+    retired_directives: &'static [directive_manifest::RetiredEntry],
+    motion_value_forms: &'static [directive_manifest::MotionValueForm],
+}
+
+#[wasm_bindgen]
+pub fn completion_vocabulary() -> Result<JsValue, JsValue> {
+    let vocab = CompletionVocabulary {
+        events: crate::emit::template_emit::delegatable_events().to_vec(),
+        modifiers: directive_manifest::EVENT_MODIFIERS,
+        bind_targets: directive_manifest::BIND_TARGETS,
+        blocks: block_manifest::BLOCKS,
+        directives: directive_manifest::DIRECTIVES,
+        retired_directives: directive_manifest::RETIRED_DIRECTIVES,
+        motion_value_forms: directive_manifest::MOTION_VALUE_FORMS,
+    };
+    serde_wasm_bindgen::to_value(&vocab)
+        .map_err(|e| JsValue::from_str(&format!("serialize vocabulary: {e}")))
 }
 
 /// Convert a byte offset into a 1-based line number. Mirrors the

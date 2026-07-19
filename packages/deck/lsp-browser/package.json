@@ -14,8 +14,8 @@
     "./hover": "./src/hover.ts"
   },
   "scripts": {
-    "test": "bun test test/",
-    "test:watch": "bun test --watch test/"
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
     "@ship/sail-compiler-wasm": "workspace:*"

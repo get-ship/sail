@@ -1,10 +1,11 @@
 // Context-aware completions for .sail templates.
 //
-// Inspects the character immediately before the cursor (and a small
-// look-back window) to decide which completion list to surface.
-// Triggers are stable strings the static SUI_TEMPLATE_COMPLETIONS
-// list also keys on — so the editor sees the same shape it does
-// today, just with the *set* picked dynamically.
+// All closed vocabulary is read from the compiler's tables via WASM; no
+// hand-maintained completion lists live here. The trigger shape is preserved
+// for CodeMirror consumers, but every item set comes from
+// `@ship/sail-compiler-wasm`'s `completion_vocabulary` export.
+
+import initWasm, { completion_vocabulary } from '@ship/sail-compiler-wasm'
 
 export interface SuiCompletionSource {
   trigger: string
@@ -16,83 +17,116 @@ export interface SuiCompletionSource {
   }>
 }
 
-/** Hard-coded sources keyed by trigger. Source of truth for the
- *  modifier list: crates/sail/compiler/src/parse/template/attrs.rs */
-const SOURCES: Record<string, SuiCompletionSource> = {
-  'on:': {
-    trigger: 'on:',
-    items: [
-      { label: 'click', detail: 'event' },
-      { label: 'input', detail: 'event' },
-      { label: 'change', detail: 'event' },
-      { label: 'submit', detail: 'event' },
-      { label: 'keydown', detail: 'event' },
-      { label: 'keyup', detail: 'event' },
-      { label: 'focus', detail: 'event' },
-      { label: 'blur', detail: 'event' },
-      { label: 'mouseenter', detail: 'event' },
-      { label: 'mouseleave', detail: 'event' },
-      { label: 'sail-change', detail: 'custom event (ship-code-editor, sail-input)' },
-      { label: 'sail-tab-change', detail: 'custom event (sail-tabs)' },
-    ],
-  },
-  '|': {
-    trigger: '|',
-    items: [
-      { label: 'preventDefault', detail: 'modifier', info: 'Calls e.preventDefault() before handler' },
-      { label: 'stopPropagation', detail: 'modifier', info: 'Calls e.stopPropagation() before handler' },
-      { label: 'stopImmediatePropagation', detail: 'modifier' },
-      { label: 'self', detail: 'modifier', info: 'Only fires when e.target === currentTarget' },
-      { label: 'trusted', detail: 'modifier', info: 'Only fires when e.isTrusted' },
-      { label: 'key:Enter', detail: 'key filter', insert: 'key:Enter' },
-      { label: 'key:Escape', detail: 'key filter', insert: 'key:Escape' },
-      { label: 'key:Tab', detail: 'key filter', insert: 'key:Tab' },
-      { label: 'key:ArrowUp', detail: 'key filter', insert: 'key:ArrowUp' },
-      { label: 'key:ArrowDown', detail: 'key filter', insert: 'key:ArrowDown' },
-      { label: 'debounce:150', detail: 'modifier', insert: 'debounce:150', info: 'Trailing-edge debounce in ms' },
-      { label: 'throttle:150', detail: 'modifier', insert: 'throttle:150', info: 'Leading-edge throttle in ms' },
-    ],
-  },
-  'bind:': {
-    trigger: 'bind:',
-    items: [
-      { label: 'value', detail: 'two-way bind to {signal}' },
-      { label: 'checked', detail: 'two-way bind to {signal} (checkbox/radio)' },
-      { label: 'this', detail: 'capture element ref into {signal}' },
-      { label: 'group', detail: 'two-way bind for radio group / select multiple' },
-    ],
-  },
-  'prop:': {
-    trigger: 'prop:',
-    items: [
-      { label: 'value', detail: 'one-way set DOM property' },
-      { label: 'checked', detail: 'one-way set DOM property' },
-      { label: 'disabled', detail: 'one-way set DOM property' },
-    ],
-  },
-  'class:': {
-    trigger: 'class:',
-    items: [
-      { label: 'active', detail: 'class toggle: {signal} truthy → class on' },
-    ],
-  },
-  '{#': {
-    trigger: '{#',
-    items: [
-      { label: 'if', detail: 'block', insert: 'if condition}\n  \n{/if}' },
-      { label: 'for', detail: 'block', insert: 'for item of items() key={item.id}}\n  \n{/for}' },
-      { label: 'while-loading', detail: 'data block', insert: 'while-loading of data}\n  \n{/while-loading}' },
-      { label: 'while-error', detail: 'data block', insert: 'while-error err of data}\n  \n{/while-error}' },
-    ],
-  },
-  '{:': {
-    trigger: '{:',
-    items: [
-      { label: 'else', detail: 'else branch', insert: 'else}' },
-      { label: 'else if', detail: 'else-if branch', insert: 'else if condition}' },
-    ],
-  },
+interface WasmVocabulary {
+  events: string[]
+  modifiers: Array<{
+    canonical: string
+    alias?: string
+    arg?: string
+    summary: string
+  }>
+  bind_targets: Array<{ target: string; summary: string }>
+  blocks: Array<{ open: string; clauses: string[]; summary: string }>
 }
+
+const WASM_URL = '/sail_compiler_bg.wasm'
+
+// Initialize WASM once at module load. The consumers of this package import
+// it dynamically and await the module, so the init cost is paid before any
+// completion function is called.
+let vocab: WasmVocabulary | null = null
+let initDone: Promise<void> | null = null
+
+function ensureInit(): Promise<void> {
+  if (!initDone) {
+    initDone = (async () => {
+      await initWasm(WASM_URL)
+      vocab = completion_vocabulary() as WasmVocabulary
+    })()
+  }
+  return initDone
+}
+
+await ensureInit()
+
+function blockName(open: string): string {
+  return open.replace('{#', '').replace('}', '')
+}
+
+function clauseName(clause: string): string {
+  return clause.replace('{:', '').replace('}', '').trim()
+}
+
+function buildSources(): Record<string, SuiCompletionSource> {
+  if (!vocab) throw new Error('sail-lsp-browser completions: WASM not initialized')
+
+  const sources: Record<string, SuiCompletionSource> = {}
+
+  sources['on:'] = {
+    trigger: 'on:',
+    items: vocab.events.map((e) => ({ label: e, detail: 'event' })),
+  }
+
+  sources['|'] = {
+    trigger: '|',
+    items: vocab.modifiers.flatMap((m) => {
+      const base = { label: m.canonical, detail: 'modifier', info: m.summary }
+      const alias = m.alias
+        ? { label: m.alias, detail: `modifier alias (${m.canonical})`, info: m.summary }
+        : []
+      const examples: SuiCompletionSource['items'] = []
+      if (m.arg) {
+        if (m.canonical === 'key') {
+          examples.push(
+            { label: 'key:Enter', detail: 'key filter', insert: 'key:Enter' },
+            { label: 'key:Escape', detail: 'key filter', insert: 'key:Escape' },
+          )
+        } else if (m.canonical === 'debounce' || m.canonical === 'throttle') {
+          examples.push({
+            label: `${m.canonical}:150`,
+            detail: 'modifier',
+            insert: `${m.canonical}:150`,
+            info: m.summary,
+          })
+        }
+      }
+      return [base, alias, ...examples].filter((x): x is { label: string; detail?: string; info?: string; insert?: string } => !!x)
+    }),
+  }
+
+  sources['bind:'] = {
+    trigger: 'bind:',
+    items: vocab.bind_targets.map((b) => ({
+      label: b.target,
+      detail: 'bind target',
+      info: b.summary,
+    })),
+  }
+
+  sources['{#'] = {
+    trigger: '{#',
+    items: vocab.blocks.map((b) => ({
+      label: blockName(b.open),
+      detail: 'block',
+      info: b.summary,
+    })),
+  }
+
+  sources['{:'] = {
+    trigger: '{:',
+    items: vocab.blocks.flatMap((b) =>
+      b.clauses.map((c) => ({
+        label: clauseName(c),
+        detail: 'clause',
+        info: b.summary,
+      })),
+    ),
+  }
+
+  return sources
+}
+
+const SOURCES = buildSources()
 
 /** Pick the right completion source for the cursor position. Looks
  *  back at most 8 characters for a trigger string. Returns null if
@@ -102,7 +136,7 @@ export function completionsAt(source: string, offset: number): SuiCompletionSour
   const safe = Math.max(0, Math.min(offset, source.length))
   const lookback = source.slice(Math.max(0, safe - 8), safe)
   // Longest triggers first so 'bind:' wins over ':' etc.
-  for (const trigger of ['{#', '{:', 'bind:', 'prop:', 'class:', 'on:', '|']) {
+  for (const trigger of ['{#', '{:', 'bind:', 'on:', '|']) {
     if (lookback.endsWith(trigger)) return SOURCES[trigger]!
   }
   return null
