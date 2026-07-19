@@ -113,6 +113,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     built-in closest to what you want, copy its file, and change the values;
     because a theme is data rather than CSS rules, the tooling can check it,
     and nothing in it can conflict with a component's own styles.
+    <a href="/sail/guide/making-a-theme">Making a theme</a> walks the exact
+    mechanics, start to finish.
   </p>
   <p>
     Token files also layer. The product accents on this site — the shift to

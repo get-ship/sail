@@ -141,6 +141,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     the live board above is not the board's — it belongs to this page:
   </p>
   <code-block code={code.slotUse}></code-block>
+  <p>
+    To write one of these yourself, from an empty file to a running tag,
+    follow <a href="/sail/guide/building-a-component">Building a
+    component</a>.
+  </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" justify="end" gap="2">
     <a variant="solid" tone="primary" href="/sail/language/state">State →</a>
