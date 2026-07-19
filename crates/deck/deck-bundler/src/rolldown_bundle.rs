@@ -7,7 +7,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow, bail};
 use rolldown::{BundlerBuilder, BundlerOptions, InputItem, OutputFormat};
 use rolldown_common::{ManualCodeSplittingOptions, PreserveEntrySignatures};
 
@@ -53,6 +53,15 @@ pub async fn bundle_target(
         dir: Some(out_dir.to_string_lossy().to_string()),
         format: Some(OutputFormat::Esm),
         minify: Some(production.into()),
+        // The target's DECLARED externals (e.g. `@ship/sail-compiler-wasm` for
+        // sail-lsp-diagnostics — importmap-covered framework singletons) are
+        // applied here. Before this they were recorded on the target but never
+        // handed to Rolldown, so a declared external externalized ONLY by
+        // accident — through rolldown's unresolved-import fallback ("Module
+        // not found, treating it as an external dependency") — which the
+        // `assert_no_unresolved_imports` guard below now treats as a build
+        // failure. Declaration, not resolution luck, decides what stays bare.
+        external: (!target.externals.is_empty()).then(|| target.externals.clone().into()),
         // Hoist every shared module into its own chunk (mirrors the multi-view
         // build in routes_bundle.rs). Without this the single-view path uses
         // rolldown's default per-entry split, which produces 1 chunk per shared
@@ -116,6 +125,7 @@ pub async fn bundle_target(
             .write()
             .await
             .map_err(|e| anyhow!("rolldown write({}): {e:?}", target.name))?;
+        assert_no_unresolved_imports(&output, &target.name)?;
         extract_module_paths(&output)
     };
 
@@ -167,6 +177,47 @@ pub async fn bundle_target(
         modules: module_paths,
         dropped_side_effect_modules,
     })
+}
+
+/// Fail the build when Rolldown could not resolve an import and silently
+/// externalized it. Rolldown reports an unresolvable BARE specifier as an
+/// `UNRESOLVED_IMPORT` *warning* ("Module not found, treating it as an
+/// external dependency") and ships the specifier verbatim in the emitted
+/// chunk. The document importmap only covers deck's framework singletons, so
+/// the browser dies at module-instantiation time — `Failed to resolve module
+/// specifier "<spec>"` — on EVERY route: a blank page from a build that
+/// reported success. The class case is dependencies missing at bake time —
+/// a fresh clone that ran the gen/dev step before `bun install`, or an
+/// install predating a newly-added dependency (`motion/mini` in
+/// `@ship/sail-runtime` shipped exactly this way). Deliberate externals never
+/// reach this guard: deck's resolve hooks mark them `external: true`, so
+/// Rolldown never warns on them. (An unresolvable PATH-LIKE specifier is
+/// already a hard error inside Rolldown; this guard covers the bare-import
+/// half.)
+pub(crate) fn assert_no_unresolved_imports(
+    output: &rolldown::BundleOutput,
+    target: &str,
+) -> Result<()> {
+    let unresolved: Vec<String> = output
+        .warnings
+        .iter()
+        // `EventKind` has no `PartialEq` in rolldown_error 1.0; its `Display`
+        // IS the stable diagnostic code rolldown prints ("UNRESOLVED_IMPORT").
+        .filter(|w| w.kind().to_string() == "UNRESOLVED_IMPORT")
+        .map(|w| w.to_string())
+        .collect();
+    if unresolved.is_empty() {
+        return Ok(());
+    }
+    bail!(
+        "bundle({target}): {} import(s) did not resolve and would ship as bare \
+         specifiers no importmap covers — the browser would fail with \
+         `Failed to resolve module specifier` on every route:\n  {}\nA \
+         dependency the bundle inlines is missing from node_modules — run \
+         `bun install` at the workspace root and rebuild.",
+        unresolved.len(),
+        unresolved.join("\n  "),
+    );
 }
 
 /// Detect side-effect-only modules that the bundler dropped (a bare
@@ -692,6 +743,82 @@ mod tests {
         })), "node_modules must not appear in module set");
     }
 
+    /// The unresolved-import guard's failure contract: a bare import rolldown
+    /// cannot resolve must FAIL the build naming the specifier — never ship
+    /// as a silent external the importmap doesn't cover (the `motion/mini`
+    /// blank-page class).
+    #[tokio::test(flavor = "multi_thread")]
+    async fn unresolved_bare_import_fails_the_build() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::write(
+            root.join("app/main.ts"),
+            "import { ghost } from 'this-package-does-not-exist'; export default ghost;",
+        )
+        .unwrap();
+
+        let scratch = tempfile::tempdir().unwrap();
+        let staging = tempfile::tempdir().unwrap();
+        let layout = BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
+        let target = BundleTarget {
+            name: "test/main".to_string(),
+            entry: TargetEntry::Real(root.join("app/main.ts")),
+            externals: vec![],
+            out_file: "main.js".to_string(),
+            lazy: false,
+        };
+        let err = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .expect_err("an unresolvable bare import must fail the build");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("this-package-does-not-exist"),
+            "error must name the unresolved specifier, got: {msg}"
+        );
+        assert!(
+            msg.contains("bun install"),
+            "error must carry the install hint, got: {msg}"
+        );
+    }
+
+    /// The other half of the contract: a DECLARED external stays external by
+    /// declaration, not by resolution luck — it builds fine with the package
+    /// absent from disk, and the bare specifier rides the output (the
+    /// importmap's job to cover it, e.g. `@ship/sail-compiler-wasm`).
+    #[tokio::test(flavor = "multi_thread")]
+    async fn declared_external_stays_external_without_resolving() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("app")).unwrap();
+        std::fs::write(
+            root.join("app/main.ts"),
+            "import { ghost } from 'ghost-pkg'; export default ghost;",
+        )
+        .unwrap();
+
+        let scratch = tempfile::tempdir().unwrap();
+        let staging = tempfile::tempdir().unwrap();
+        let layout = BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
+        let target = BundleTarget {
+            name: "test/main".to_string(),
+            entry: TargetEntry::Real(root.join("app/main.ts")),
+            externals: vec!["ghost-pkg".to_string()],
+            out_file: "main.js".to_string(),
+            lazy: false,
+        };
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .expect("a declared external builds with the package absent");
+        let body = std::fs::read_to_string(&manifest.out_path).unwrap();
+        assert!(
+            body.contains("ghost-pkg"),
+            "declared external must stay a bare specifier in the output, got: {body}"
+        );
+    }
+
     #[tokio::test(flavor = "multi_thread")]
     async fn app_source_coverage_outside_conventional_dirs() {
         let tmp = tempfile::tempdir().unwrap();
@@ -1068,7 +1195,16 @@ mod tests {
         // finds no `SideEffectDetail::Unknown` statements, so
         // the body can't justify itself. The module is
         // dropped entirely (its only export was never
-        // consumed either).
+        // consumed either). The file must EXIST: an
+        // unresolvable bare import is a build failure now
+        // (`assert_no_unresolved_imports`), not a silent
+        // external — this test exercises the resolved-then-
+        // tree-shaken drop path.
+        std::fs::write(
+            root.join("sidefx-pkg/src/index.ts"),
+            "export const sentinelOrphan = 'sentinel-orphan';\n",
+        )
+        .unwrap();
 
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();

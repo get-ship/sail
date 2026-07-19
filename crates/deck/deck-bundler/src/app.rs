@@ -911,10 +911,11 @@ pub async fn bundle_app_with_base(
         ])
         .build()
         .map_err(|e| anyhow!("rolldown build(app): {e:?}"))?;
-    bundler
+    let app_output = bundler
         .write()
         .await
         .map_err(|e| anyhow!("rolldown write(app): {e:?}"))?;
+    crate::rolldown_bundle::assert_no_unresolved_imports(&app_output, "app")?;
     // 5b. Blank-page guard: every emitted chunk's bare `@ship/*` imports must be
     // resolvable by the document importmap (or have been inlined). A bare
     // `@ship/*` the importmap doesn't cover throws "Failed to resolve module

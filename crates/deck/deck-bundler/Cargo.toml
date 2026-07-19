@@ -22,6 +22,11 @@ tempfile = { workspace = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "time", "sync", "macros"] }
 rolldown = "1.0.3"
 rolldown_common = "1.0.3"
+# `BundleOutput.warnings` carries `rolldown_error::BuildDiagnostic`; the
+# unresolved-import guard (`rolldown_bundle::assert_no_unresolved_imports`)
+# matches its `UNRESOLVED_IMPORT` diagnostic code. Already in the lockfile
+# (transitive via `rolldown`); pinned direct so the bundler can name the type.
+rolldown_error = "1.0.3"
 # `module_types` on `BundlerOptions` takes `FxHashMap<String, ModuleType>`.
 # Already in the lockfile (transitive via `rolldown_common`); pinned direct
 # so the bundler can build the `{ ".css" -> Asset }` map without a wrapper.

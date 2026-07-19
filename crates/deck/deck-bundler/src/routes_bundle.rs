@@ -102,14 +102,14 @@ pub async fn bundle_routes(
             .with_plugins(vec![Arc::new(plugin)])
             .build()
             .map_err(|e| anyhow!("rolldown build(views multi-entry): {e:?}"))?;
-        bundler
+        let output = bundler
             .write()
             .await
             .map_err(|e| anyhow!("rolldown write(views multi-entry): {e:?}"))?;
+        crate::rolldown_bundle::assert_no_unresolved_imports(&output, "routes")?;
+    }
     // (cut 4: arena.rs deleted; the malloc_trim(0) call here was the
     // glibc band-aid. shipd now uses jemalloc, which returns freed
     // arenas to the OS by default.)
     Ok(())
-
-}
 }
