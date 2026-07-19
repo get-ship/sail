@@ -29,7 +29,10 @@ const { animateCalls } = vi.hoisted(() => ({
 vi.mock('motion/mini', () => ({
   animate: (el: unknown, keyframes: unknown, transition: unknown) => {
     animateCalls.push({ el, keyframes, transition })
-    return { stop: () => {}, cancel: () => {} }
+    // `attachTimeline` is what the view/scroll triggers re-time through —
+    // present so a 'view'-trigger test exercises the timeline seam
+    // instead of falling into the no-driver fallback.
+    return { stop: () => {}, cancel: () => {}, attachTimeline: () => () => {} }
   },
 }))
 
