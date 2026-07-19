@@ -448,7 +448,7 @@ fn for_render_closure_emits_update_field() {
 /// `$scope.route = route` straight from the ctx destructure.
 #[test]
 fn route_view_reads_route_from_ctx() {
-    let path = fixtures_dir().join("route-view.sail");
+    let path = fixtures_dir().join("route-module.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {
         route_params: Some(vec!["name".to_string()]),
@@ -475,7 +475,7 @@ fn route_view_reads_route_from_ctx() {
 }
 
 #[test]
-fn routeless_view_omits_route_import() {
+fn routeless_route_omits_route_import() {
     let path = fixtures_dir().join("counter.sail");
     let source = std::fs::read_to_string(&path).unwrap();
     let opts = CompileOpts {

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # GAP 5 e2e — error boundary, ship-free.
 #
-# Boots the deck-conformance server, requests the boom view, and asserts:
+# Boots the deck-conformance server, requests the boom route, and asserts:
 #   - The response is 200 (not a 500 or blank)
 #   - The SSR body contains the fallback text (non-blank on first paint)
 #
@@ -55,20 +55,20 @@ done
 [ -n "$ready" ] || fail "demo server did not come up; see $WORK/server.log"
 
 STATUS=$(curl -s -o "$WORK/boom.html" -w "%{http_code}" "$URL_BOOM")
-[ "$STATUS" = "200" ] || fail "boom view must return 200; got $STATUS"
-ok "boom view SSR → 200"
+[ "$STATUS" = "200" ] || fail "boom route must return 200; got $STATUS"
+ok "boom route SSR → 200"
 
 BODY_LEN=$(wc -c < "$WORK/boom.html")
 [ "$BODY_LEN" -gt 100 ] || fail "SSR body is blank (${BODY_LEN} bytes)"
-ok "boom view body non-empty (${BODY_LEN} bytes)"
+ok "boom route body non-empty (${BODY_LEN} bytes)"
 
 grep -qi "loading\|boom-fallback\|Error Boundary" "$WORK/boom.html" \
   || fail "SSR body does not contain the fallback content (no Loading/Error Boundary text)"
-ok "boom view SSR contains fallback content"
+ok "boom route SSR contains fallback content"
 
 grep -qi "while-error" "$WORK/boom.html" \
   || fail "SSR body does not contain the while-error structural placeholder"
-ok "boom view SSR contains while-error placeholder"
+ok "boom route SSR contains while-error placeholder"
 
 # ── 3. Browser: skip gracefully if no playwright or no browser installed ──────
 if ! command -v "$PW" >/dev/null 2>&1; then

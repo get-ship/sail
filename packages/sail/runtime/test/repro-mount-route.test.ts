@@ -5,7 +5,7 @@
 // this fix, silently wrong) thing to do given every other ambient primitive
 // (`signal`, `effect`, `controller`) is explicitly importable from the same
 // barrel with no ill effect. `@ship/sail-runtime`'s bare `mount` export is
-// the F1 HOST view-mounting entry point, not the ambient lifecycle hook —
+// the F1 HOST route-mounting entry point, not the ambient lifecycle hook —
 // the controller's `mount((host) => {...})` call then invokes THAT function
 // with the callback as its `target` argument, and throws deep inside
 // `mount.ts`'s `seedRouteParams` the first time the page mounts: `Cannot
@@ -22,7 +22,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync, existsSync, copyFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { describe, expect, it, beforeAll, vi } from 'vitest'
-import { mount, type ViewPayload } from '../src/mount'
+import { mount, type RoutePayload } from '../src/mount'
 import { route } from '../src/route'
 
 const REPO_ROOT = resolve(__dirname, '../../../..')
@@ -88,7 +88,7 @@ describe('job/mount-route-bug — ambient mount() in a route-level page controll
     // fix works with actual route plumbing present, not just its absence.
     const routeSignals = route({ url: new URL('http://localhost/word') })
 
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'repro-route-page',
       html: '',
       css: '',
@@ -96,7 +96,7 @@ describe('job/mount-route-bug — ambient mount() in a route-level page controll
       moduleUrl: '',
       params: {},
       clients: [],
-    } as unknown as ViewPayload
+    } as unknown as RoutePayload
 
     const handle = await mount(target, payload, {
       module: mod as never,

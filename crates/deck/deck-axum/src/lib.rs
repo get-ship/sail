@@ -22,7 +22,7 @@ pub use handlers::{
     serve_sui_runtime,
     serve_sui_sdk_client,
 };
-// The named-view handlers (serve_sui_route_setup / serve_route_host /
+// The named-route handlers (serve_sui_route_setup / serve_route_host /
 // serve_route_payload[_subpath]) moved to the `ship-views` crate. deck-axum's
 // router serves ONLY deck's own framework + routes/ SPA surface.
 
@@ -77,9 +77,9 @@ pub fn into_axum(resp: DeckResponse) -> Response {
 /// the HMR firehose, and `/_deck/meta`. Paths mirror shipd's canonical `Route`
 /// enum so a host can mount this in lieu of wiring each handler.
 ///
-/// The named-view surface (`/_deck/view(s)/*`) is NO LONGER registered here —
+/// The named-route surface (`/_deck/view(s)/*`) is NO LONGER registered here —
 /// it moved to `ship_views::router()` (deck ⊥ ship-views). A host that serves
-/// views merges that router alongside this one.
+/// routes merges that router alongside this one.
 ///
 /// HMR and the state-aware SAIL endpoints (sse/data/mutation/patch) are NOT
 /// registered here — they need host-supplied extensions or router state.
@@ -146,18 +146,18 @@ pub fn router() -> Router {
         .route("/_deck/live-reload.js", get(serve_sui_live_reload))
         .route("/_deck/error-overlay.js", get(serve_sui_error_overlay))
         // (formerly `/\_deck/{file}` → `serve_sui_chunk`) — purged:
-        // shared chunks from the multi-entry view build were served
+        // shared chunks from the multi-entry route build were served
         // from `<root>/.deck/<chunk>.js`; the framework no longer reads
-        // a monorepo-root `.deck/` (deck-purge-root). View bundles that
+        // a monorepo-root `.deck/` (deck-purge-root). Route bundles that
         // imported `../../<chunk>.js` no longer find their chunks at
-        // runtime — view chunk serving is a follow-up.
+        // runtime — route chunk serving is a follow-up.
         // (formerly `/\_deck/catalog/workspace` → `serve_catalog_workspace`)
         // — purged with `packs::serve_catalog_workspace` and the
         // `.deck/catalogs/workspace.json` write.
         .route("/_deck/meta", get(serve_meta))
-        // The named-view routes (`/_deck/views/{name}/view.js`,
+        // The named-route endpoints (`/_deck/views/{name}/view.js`,
         // `/_deck/views/{name}[/{*sub}]`, `/_deck/view/{name}[/{*sub}]`) moved to
-        // `ship_views::router()`. A host that serves views merges that router
+        // `ship_views::router()`. A host that serves routes merges that router
         // alongside this one; deck itself no longer carries the feature
         // (deck ⊥ ship-views).
         // `POST /_deck/mutation/{name}` — 410 tombstone. The progressive-

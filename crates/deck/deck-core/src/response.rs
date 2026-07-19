@@ -6,14 +6,14 @@
 
 use crate::DaemonMode;
 
-/// Cache-control family. Bundles are immutable-in-prod; view artifacts must
+/// Cache-control family. Bundles are immutable-in-prod; route artifacts must
 /// revalidate. Picked per-response so the adapter needs no mode awareness.
 #[derive(Clone, Copy, Debug)]
 pub enum CachePolicy {
     /// Framework bundles (runtime/dom/components/islands) + per-icon lucide SVGs.
     Asset,
-    /// View artifacts (template/setup/css/payload/host).
-    View,
+    /// Route artifacts (template/setup/css/payload/host).
+    Route,
     /// Never cache (errors, not-found).
     None,
 }
@@ -22,7 +22,7 @@ pub enum CachePolicy {
 //
 // Every HTML response emitted by deck (`html_route`) carries a fixed set of
 // security headers. The set is the SINGLE mint point for these headers; the
-// `html_view_carries_security_headers` behavior test pins them so a half-edit
+// `html_route_carries_security_headers` behavior test pins them so a half-edit
 // (dropping a header, weakening the CSP, renaming X-Frame-Options) is caught
 // before it ships. The headers live as a `const &[(&str, &str)]` rather than
 // `format!`-inlined so:
@@ -118,7 +118,7 @@ impl CachePolicy {
                 DaemonMode::Development => "no-cache",
                 DaemonMode::Production => "public, immutable, max-age=31536000",
             },
-            CachePolicy::View => match mode {
+            CachePolicy::Route => match mode {
                 DaemonMode::Development => "no-cache",
                 DaemonMode::Production => "must-revalidate, max-age=0",
             },
@@ -168,10 +168,10 @@ impl DeckResponse {
         Self::new(200, "application/javascript; charset=utf-8", CachePolicy::Asset, mode, body)
     }
     pub fn js_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
-        Self::new(200, "application/javascript; charset=utf-8", CachePolicy::View, mode, body)
+        Self::new(200, "application/javascript; charset=utf-8", CachePolicy::Route, mode, body)
     }
     pub fn css_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
-        Self::new(200, "text/css; charset=utf-8", CachePolicy::View, mode, body)
+        Self::new(200, "text/css; charset=utf-8", CachePolicy::Route, mode, body)
     }
     /// A binary font asset (the bundler-emitted hashed woff2). Immutable by
     /// construction — the hash is in the filename — so it takes the Asset
@@ -185,14 +185,14 @@ impl DeckResponse {
         // mint point, with a behavior test pinning the bytes so a half-edit
         // is caught before it ships. The error responses (`not_found`/
         // `render_error`) carry the same set via `carrying_security_headers`.
-        Self::new(200, "text/html; charset=utf-8", CachePolicy::View, mode, body)
+        Self::new(200, "text/html; charset=utf-8", CachePolicy::Route, mode, body)
             .carrying_security_headers()
     }
     pub fn json_asset(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
         Self::new(200, "application/json; charset=utf-8", CachePolicy::Asset, mode, body)
     }
     pub fn json_route(body: impl Into<Vec<u8>>, mode: DaemonMode) -> Self {
-        Self::new(200, "application/json; charset=utf-8", CachePolicy::View, mode, body)
+        Self::new(200, "application/json; charset=utf-8", CachePolicy::Route, mode, body)
     }
 
     /// 404 with a plain-text reason (no cache, no etag).
@@ -271,7 +271,7 @@ mod tests {
     }
 
     #[test]
-    fn html_view_carries_security_headers() {
+    fn html_route_carries_security_headers() {
         let resp = DeckResponse::html_route("<html></html>", DaemonMode::Development);
         assert_eq!(
             header_value(&resp, "X-Frame-Options"),
@@ -308,10 +308,10 @@ mod tests {
     /// This is the transport-agnostic assertion — it catches a header added
     /// to the const but not emitted by `html_route`, or a header emitted by
     /// `html_route` but missing from the const. The wire-level mirror in
-    /// `deck-axum` (`html_view_security_headers_reach_the_wire`) confirms
+    /// `deck-axum` (`html_route_security_headers_reach_the_wire`) confirms
     /// the adapter preserves them, completing the chain.
     #[test]
-    fn html_view_emits_exactly_the_security_header_set() {
+    fn html_route_emits_exactly_the_security_header_set() {
         let resp = DeckResponse::html_route("<html></html>", DaemonMode::Development);
         assert_eq!(
             resp.extra_headers.len(),
@@ -339,13 +339,13 @@ mod tests {
     /// here so the test surfaces the failure mode without spinning up a
     /// deck-axum dep.
     #[test]
-    fn html_view_security_headers_are_not_substring_matchable() {
+    fn html_route_security_headers_are_not_substring_matchable() {
         // The security-header assertion above checks the WHOLE response,
         // not a substring. If the const ever shrank to `X-Frame-Options`
-        // alone, `html_view_carries_security_headers` (which uses
+        // alone, `html_route_carries_security_headers` (which uses
         // `header_value` lookups for X-Content-Type-Options and CSP) would
         // also fail. Belt-and-suspenders: a third, exact-set equality
-        // assertion (`html_view_emits_exactly_the_security_header_set`)
+        // assertion (`html_route_emits_exactly_the_security_header_set`)
         // catches partial overlaps a single substring check would miss.
         let resp = DeckResponse::html_route("<html></html>", DaemonMode::Development);
         let names: Vec<&str> = resp
@@ -500,7 +500,7 @@ mod tests {
 
         // 2. Cache-control policy×mode matrix — every byte-string Rust mints
         //    must appear in the TS `cacheControl` function.
-        for policy in [CachePolicy::Asset, CachePolicy::View, CachePolicy::None] {
+        for policy in [CachePolicy::Asset, CachePolicy::Route, CachePolicy::None] {
             for mode in [DaemonMode::Development, DaemonMode::Production] {
                 let bytes = policy.header(mode);
                 assert!(

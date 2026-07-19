@@ -2,17 +2,17 @@
 group: Agents
 order: 2
 title: SAIL — Agent Authoring
-description: How agents author .sail views end to end.
+description: How agents author .sail routes end to end.
 ---
 
 # SAIL — Agent-Authoring Guide
 
-For an AI agent producing a Ship view in one shot. Read the parent
+For an AI agent producing a Ship route in one shot. Read the parent
 `SKILL.md` first for the four-layer overview and the hard rules; this
 file is the do-now checklist.
 
 Throughout: file paths are relative to the repo root, every snippet is
-either lifted from a real view (cited inline) or testable in isolation
+either lifted from a real route (cited inline) or testable in isolation
 against `bun run --filter @ship/sail-runtime test`.
 
 > **Light-DOM contract.** Every `sail-*` element renders into its
@@ -41,7 +41,7 @@ Output (`views/<name>/`):
 | `page.sail` | Template — declares route body, control flow, and (if needed) an inline `<controller>` block for state, lifecycle, data subscriptions, mutations | Yes |
 | `style.css` | Page-scoped CSS, auto-linked by the daemon | Optional |
 | `manifest.jsonc` | `{ name, path, title, layout, auth, rail? }` | **Yes — routes are manifest-driven** |
-| `_components/<view>-<tag>/` | View-private component (`<tag>.sail`, with its own inline `<controller>` block if needed) | Optional |
+| `_components/<route>-<tag>/` | Route-private component (`<tag>.sail`, with its own inline `<controller>` block if needed) | Optional |
 
 **Rules from `references/4-layer-overview.md` § Layer 4 that an agent
 gets wrong most often:**
@@ -50,10 +50,10 @@ gets wrong most often:**
   never `<name>.sail`.
 - A controller is always an inline `<controller>` block inside the
   `.sail` file — a paired `<stem>.controller.ts` sibling file is a
-  compile error. The directory IS the view.
-- View-private components live under `_components/<view>-<tag>/`, and
-  the tag MUST start with the view name (so `tasks-row`, not `row`)
-  to avoid `customElements.define()` collisions across views.
+  compile error. The directory IS the route.
+- Route-private components live under `_components/<route>-<tag>/`, and
+  the tag MUST start with the route name (so `tasks-row`, not `row`)
+  to avoid `customElements.define()` collisions across routes.
 
 Verify the scaffold parses before adding logic:
 
@@ -116,7 +116,7 @@ Surface in compact form (full grammar in
 | `<slot name="leading"></slot>` (component body) + `slot="leading"` (consumer) | Projection region: consumer-side `slot="…"` attribute fills the matching `<slot name="…">` wrapper; runtime projects at connect. |
 | `<use-kbd>…</use-kbd>` / `<use-click-outside>` | Template hooks; side-effect import emitted by compiler. |
 
-**Scoped CSS.** A view's `style.css` is page-scoped (auto-linked). A
+**Scoped CSS.** A route's `style.css` is page-scoped (auto-linked). A
 component's CSS goes in a `<style>` block inside the `.sail`, or for
 external CSS via `compile_opts.styles`. The compiler does **not**
 shadow-DOM anything by default — every `sail-*` renders into its
@@ -125,10 +125,10 @@ own element with no shadow root. Scoped CSS is `@scope
 at nested component boundaries); the compiler rewrites `:host` →
 `:scope` and `::slotted(<sel>)` → `slot > <sel>` at emit time
 (`crates/sail/compiler/src/emit/styles.rs` `light_dom_selectors`).
-Class names still need a per-view prefix (`<name>-…`, see
+Class names still need a per-route prefix (`<name>-…`, see
 `views/agents/style.css` for the `.agents-*` pattern) for the
 **page-cascade** portion — `@scope` covers component-internal
-rules, not view-scoped page CSS.
+rules, not route-scoped page CSS.
 
 ---
 
@@ -160,7 +160,7 @@ One function, one job: `controller(fn)` where `fn: (ctx) => Record<string, unkno
 
 | Piece | Receives | Returns | Notes |
 |---|---|---|---|
-| `ctx` (the `fn` argument) | `{ ship, clients, route, navigate }` | — | Ambient view scope, directly accessible or destructured. |
+| `ctx` (the `fn` argument) | `{ ship, clients, route, navigate }` | — | Ambient route scope, directly accessible or destructured. |
 | return value of `fn` | — | Bag of `signal` / `derived` / plain helpers / event handlers | Whatever is returned IS the whole contributed template scope — no separate section for handlers. |
 | `mount(fn)` | `fn: (el: HTMLElement) => (() => void) \| void` | — | Ambient, callable anywhere in the setup call graph. Fires once after the instance's DOM connects; a returned function is a cleanup on dispose. |
 | `onCleanup(fn)` | `fn: () => void` | — | Ambient. Runs on dispose; no-ops (doesn't throw) outside a scope. |
@@ -209,7 +209,7 @@ function sseSource<T>(expr: string): LiveSource<T> {
 ```
 
 Default to the direct form (path 1) when authoring inside shell.
-Adopt the `sseSource` helper if the view will also be linked to
+Adopt the `sseSource` helper if the route will also be linked to
 directly via `/sail/<name>`.
 
 **Refs (`bind:this`).** Declare in the controller function as
@@ -286,7 +286,7 @@ Worked exemplars in this repo: `views/home/page.sail` (compact),
 
 The `kind === 'ok'` guard is **mandatory** before reading
 `items().value` — accessing `.value` while `kind === 'loading'` or
-`'error'` throws. This was the bug fixed in `dba0113f` (`fix(views/skills
+`'error'` throws. This was the bug fixed in `dba0113f` (`fix(routes/skills
 + probe): null-guard skill().value`).
 
 ---
@@ -369,14 +369,14 @@ Two places, both required:
    }
    ```
 
-   `auth: "public"` for views that work without an active workspace
+   `auth: "public"` for routes that work without an active workspace
    (home, dashboard); `auth: "user"` for everything else. `path` may
    include `[param]` segments for sub-routes — see
    `views/agents/[id]/manifest.jsonc`.
 
 2. **`apps/shell/index.html` `<sail-rail>` block** — the shell's rail
    is currently a static list at `apps/shell/index.html:103-113`. Add
-   your view:
+   your route:
 
    ```html
    <sail-rail-item icon="<lucide>" label="<Label>" href="/<name>" data-view="<name>"></sail-rail-item>
@@ -453,15 +453,15 @@ Hard-won. Each one is from a real fix in this repo.
    too late, and the first `route()` call from a `derived` will throw.
 
 8. **A direct `query(() => ship.foo.bar())` call sticks on `loading`
-   under `/sail/<name>`.** The daemon's view-host mounts views without
-   injecting `ship` into ctx. If the view will be linked to directly
+   under `/sail/<name>`.** The daemon's view-host mounts routes without
+   injecting `ship` into ctx. If the route will be linked to directly
    (not just through shell), hand-wire the live source with
    `sseSource(...)` (see § 3 above and the `<controller>` blocks in
    `views/skills/page.sail`, `views/git/page.sail`).
 
-9. **Tag-name collisions across views.** Two views each shipping a
+9. **Tag-name collisions across routes.** Two routes each shipping a
    private `row` widget will fight for `customElements.define('row',
-   …)`. The convention prefixes view-private tags with the view name
+   …)`. The convention prefixes route-private tags with the route name
    (`tasks-row`, `agents-card`) — see
    `references/4-layer-overview.md` § Layer 4 rule 5.
 
@@ -486,27 +486,27 @@ cargo run -p sail-compiler -- build views/<name>/page.sail
 just smoke-deploy
 ```
 
-Then exercise the view in a real browser. `apps/shell/inventory-probe.mjs`
-walks every registered view and screenshots each one:
+Then exercise the route in a real browser. `apps/shell/inventory-probe.mjs`
+walks every registered route and screenshots each one:
 
 ```sh
 just dev                                  # daemon + bundler + shell watch
 node apps/shell/inventory-probe.mjs      # writes /tmp/shell-inventory/
-cat /tmp/shell-inventory/report.json     # per-view: status, els, hasError, errors[]
-ls  /tmp/shell-inventory/view_<name>.png # per-view screenshot
+cat /tmp/shell-inventory/report.json     # per-route: status, els, hasError, errors[]
+ls  /tmp/shell-inventory/view_<name>.png # per-route screenshot
 ```
 
-A healthy view in the probe report has `status === '200'`,
+A healthy route in the probe report has `status === '200'`,
 `errors.length === 0`, `hasError === false`, and either
 `hasSkeleton === true` (live data still streaming) or
 `els >= 35` (rendered content). `loadingText === true` after the
-800 ms settle window means the view is stuck on `'Loading…'` text —
+800 ms settle window means the route is stuck on `'Loading…'` text —
 fix the live-data wire-up (§ 5, § 7-8).
 
 Direct-mount path (skips shell's router):
 `http://localhost:$PORT/sail/<name>` — confirms the view-host serves
 the compiled bundle and SSR snapshot. Useful when bisecting
-shell-routing bugs vs view-content bugs.
+shell-routing bugs vs route-content bugs.
 
 ---
 
@@ -515,7 +515,7 @@ shell-routing bugs vs view-content bugs.
 | Question | File |
 |---|---|
 | Runtime symbol I'm using doesn't exist | `references/runtime-primitives.md` |
-| Component vs view; what `<prop>` accepts | `references/authoring-patterns.md` |
+| Component vs route; what `<prop>` accepts | `references/authoring-patterns.md` |
 | Where the compiler lives, what `view-host` serves | `references/4-layer-overview.md` |
 | deck bundler / LSP / per-edit lint loop | `references/tooling.md` |
 | Copy-paste-and-modify worked examples | `references/cookbook.md` |

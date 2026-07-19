@@ -72,8 +72,8 @@ async function main() {
     const container2 = dom2.window.document.getElementById('x')
     if (f.mode === 'view') {
       const def = compiledMod.default
-      const view = def.setup({ ship: {}, route: {}, navigate: () => {} })
-      view.__mount(container2)
+      const route = def.setup({ ship: {}, route: {}, navigate: () => {} })
+      route.__mount(container2)
     } else {
       // component mode — registration happens by import; compare nothing.
       // Could instantiate `<ship-button-test>` and snapshot, but the

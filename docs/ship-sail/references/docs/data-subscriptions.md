@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 5
 title: Data subscriptions
 description: query()/queryKeyed() is the canonical bridge to the daemon. Live envelope shape, signal conventions, why hooks don't subscribe.
@@ -7,7 +7,7 @@ description: query()/queryKeyed() is the canonical bridge to the daemon. Live en
 
 # Data subscriptions
 
-The Ship daemon (`shipd`) is the model. Views bridge to it via `query()`/`queryKeyed()` calls in the controller. This is the **only** sanctioned way to bring server data into a view. It is not interchangeable with hooks.
+The Ship daemon (`shipd`) is the model. Routes bridge to it via `query()`/`queryKeyed()` calls in the controller. This is the **only** sanctioned way to bring server data into a route. It is not interchangeable with hooks.
 
 > The catalog is also served live at `GET /api/ship/schema` and checked into `packages/sdk/src/generated/sdk-ship-ops.json` for offline browsing.
 
@@ -28,7 +28,7 @@ export default controller(({ ship, route }) => ({
 </controller>
 ```
 
-`query()` derives its own cache key from the call shape; `queryKeyed()` takes an explicit key function when you need control over what's tracked (e.g. an id from `route.params`). Both expose the identifier as a signal in [view scope](index.md#the-shared-view-scope). Read it via `name()` in expressions and controller sections.
+`query()` derives its own cache key from the call shape; `queryKeyed()` takes an explicit key function when you need control over what's tracked (e.g. an id from `route.params`). Both expose the identifier as a signal in [route scope](index.md#the-shared-route-scope). Read it via `name()` in expressions and controller sections.
 
 ## Live envelope
 
@@ -89,7 +89,7 @@ If the call is async and pulls once, the runtime exposes the signal once it reso
 
 ## Why subscriptions don't go in hooks
 
-Subscriptions are declarations, not pattern slices. The author should always see, in the controller, every server channel a view depends on. Hiding a subscription inside `useAgents()` (or any hook) loses that visibility — readers can't tell what data the view needs without opening the hook.
+Subscriptions are declarations, not pattern slices. The author should always see, in the controller, every server channel a route depends on. Hiding a subscription inside `useAgents()` (or any hook) loses that visibility — readers can't tell what data the route needs without opening the hook.
 
 Concretely:
 
@@ -108,7 +108,7 @@ export const useAgents = () => ({
 })
 ```
 
-Repetition across views is the right trade. If three views all subscribe to `ship.agents.summaries()`, all three call `query(() => ship.agents.summaries())` directly. The pattern *of subscribing to agents* is not abstracted; the visibility is preserved.
+Repetition across routes is the right trade. If three routes all subscribe to `ship.agents.summaries()`, all three call `query(() => ship.agents.summaries())` directly. The pattern *of subscribing to agents* is not abstracted; the visibility is preserved.
 
 The hook layer is for **bundling state + derived + handlers**. A hook that *uses* an `agents` signal (filtering, selecting, paginating, sorting) is doing real work and earns its existence. A hook that just wraps a subscription is double-dipping.
 
@@ -142,7 +142,7 @@ This is why the envelope is contractual — compositions rely on the shape to un
 
 `route.params.<name>` and `route.query.<name>` are themselves signals. Reading one inside a `query()`/`queryKeyed()` thunk subscribes the channel to the param: when navigation changes the URL, the prior subscription disposes and a new one opens with the updated arg. No author-side wiring beyond the call itself — this is `query()`'s own dep-tracking, which re-fires on any controller-owned signal change.
 
-Concrete pattern — a `/agents/<id>` view:
+Concrete pattern — a `/agents/<id>` route:
 
 ```ts
 <controller>
@@ -173,10 +173,10 @@ Navigation flow:
 
 1. The user lands on `/agents/42`. `route()` (called by the boot script) seeds `route.params.id` from the pathname-to-pattern match: `'42'`.
 2. `queryKeyed()` evaluates `ship.agents.detail({id: route.params.id()})`. `route.params.id()` is a signal read; `query()` records it as a dep. Because `ship.agents.detail(...)` returns a `LiveSource`, `query()` takes the push path and the subscription for agent 42 opens.
-3. The user clicks a link to `/agents/99`. The view's click handler (or the framework's link interceptor) calls `navigate('/agents/99')`. That pushes history and triggers the global `__shipSetRouteUpdate`, which sets `route.params.id` to `'99'`.
+3. The user clicks a link to `/agents/99`. The route's click handler (or the framework's link interceptor) calls `navigate('/agents/99')`. That pushes history and triggers the global `__shipSetRouteUpdate`, which sets `route.params.id` to `'99'`.
 4. The `query()` dep fires. The agent-42 subscription disposes; a new one opens for agent 99. The signal flips through `loading → ok` exactly as on first mount.
 
-`defineRoutes` is per-view. Without a registered shape that captures `id`, `route.params.id()` returns `undefined`; the query thunk still tracks the signal, so the channel re-binds the moment a future navigation introduces a matching segment.
+`defineRoutes` is per-route. Without a registered shape that captures `id`, `route.params.id()` returns `undefined`; the query thunk still tracks the signal, so the channel re-binds the moment a future navigation introduces a matching segment.
 
 ## SDK access
 
@@ -207,7 +207,7 @@ The `mutation` attribute is a `ship.*` SDK chain. On submit the compiler-wired `
 4. On success: sets `$mutation` to `{ kind: 'ok', value: result }` and dispatches a `success` CustomEvent.
 5. On error: sets `$mutation` to `{ kind: 'error', error }` and dispatches an `error` CustomEvent.
 
-`$mutation` is a `Signal<LiveState<unknown>>` injected into view scope by the compiler. Use it the same way you'd use any live query() signal:
+`$mutation` is a `Signal<LiveState<unknown>>` injected into route scope by the compiler. Use it the same way you'd use any live query() signal:
 
 ```html
 <form mutation="ship.agents.create">

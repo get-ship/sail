@@ -18,10 +18,10 @@ pub struct RoutePayload {
     /// seeds `route.params` from this so dynamic-route controllers read
     /// the segment value without depending on client-side path matching.
     pub params: HashMap<String, String>,
-    /// Client keys the view declares via top-level `<client name="…" />`
+    /// Client keys the route declares via top-level `<client name="…" />`
     /// directives. The host page builds the keyed `clients` map it passes
     /// to `mount()` from this list — each name bound to the host's data
-    /// client. Empty for views that rely on the ambient-`ship`
+    /// client. Empty for routes that rely on the ambient-`ship`
     /// compatibility default.
     pub clients: Vec<String>,
 }

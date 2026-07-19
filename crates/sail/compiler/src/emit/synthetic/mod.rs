@@ -3,7 +3,7 @@
 //! Thesis: the `.sail` compiler can be *ignorant of* `route` (and, by
 //! extension, `ship`, data sources, components). Those are **deck/app**
 //! concepts, not SAIL ones — SAIL compiles `.sail` into TS; deck owns the
-//! "view" feature (routing, the route handle, the view-host). Composition
+//! "route" feature (routing, the route handle, the route-host). Composition
 //! happens through real ESM imports declared in an **app manifest** (a
 //! name → module-specifier import map) and injected here, validated
 //! downstream by tsgo/tsc.
@@ -132,7 +132,7 @@ const HEADER: &str = "\
 // `route.parms.id` is a hard type error, not an ambient passthrough.";
 
 /// Compute the set of manifest client names this `program`'s template
-/// actually references. Per-view resolver: import only what's used. Names
+/// actually references. Per-route resolver: import only what's used. Names
 /// are taken solely from the app manifest — there is no
 /// host convention; the host declares `route`/`navigate`/etc. into the
 /// manifest itself. Manifest key order (a `BTreeMap`) keeps the import block
@@ -160,7 +160,7 @@ pub fn scope_capabilities(manifest: &AppManifest) -> Vec<crate::emit::dts::Scope
 /// Emit the synthetic controller + render for `program`. Pure
 /// transformation. `controller_specifier` is the render's import path back
 /// to the emitted controller (e.g. `"./page.synthetic.controller.ts"`).
-/// `mode` selects view vs component lowering.
+/// `mode` selects route vs component lowering.
 pub fn emit_synthetic(
     program: &Program,
     manifest: &AppManifest,
@@ -169,9 +169,9 @@ pub fn emit_synthetic(
     mode: CompileMode,
     component_tag: Option<&str>,
 ) -> Result<SyntheticOutput, CompileError> {
-    // Per-view resolver: import only the manifest clients this template
+    // Per-route resolver: import only the manifest clients this template
     // actually references — mirrors how the production emitter imports only
-    // the tags a view uses. Names come solely from the manifest (see
+    // the tags a route uses. Names come solely from the manifest (see
     // [`used_clients`]); the compiler names no host provider.
     let used = used_clients(program, manifest);
 
@@ -195,7 +195,7 @@ pub(super) fn emit_controller(
     // synthetic controller is a standalone `export const scope`, so propful
     // components are a Phase-2 concern. Propless components (state-only,
     // composed from an authored controller, or pure markup) synthesize
-    // through the same path as views.
+    // through the same path as routes.
     if mode == CompileMode::Component && !program.props.is_empty() {
         return Err(CompileError::new(
             "synthesize: component `<scope>` prop declarations are not supported yet — \
@@ -260,7 +260,7 @@ pub(super) fn emit_controller(
     w.nl();
 
     if used.iter().any(|n| resolve_client(manifest, n).is_some_and(|c| c.construct)) {
-        w.line("// Manifest value-clients, constructed once per view.");
+        w.line("// Manifest value-clients, constructed once per route.");
         for name in used {
             if resolve_client(manifest, name).is_some_and(|c| c.construct) {
                 w.line(&format!("const {name} = __make_{name}();"));
@@ -275,7 +275,7 @@ pub(super) fn emit_controller(
     // The single typed scope. Member order: manifest clients, then the
     // spread of the composed authored scope. `tsgo`/`tsc` type-checks the
     // render against THIS type.
-    w.line("// The view's typed scope: every name a template expression resolves,");
+    w.line("// The module's typed scope: every name a template expression resolves,");
     w.line("// merged from manifest imports and the composed controller.");
     w.line("// `tsgo`/`tsc` type-checks the template against THIS type.");
     let mut members: Vec<String> = used.to_vec();
@@ -309,11 +309,11 @@ pub(super) fn emit_controller(
 fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest) {
     w.line("// Authored controller — COMPOSED via its real `controller(fn)` DSL:");
     w.line("// `setup(ctx)` runs the SAME resolver the browser hydrate path runs");
-    w.line("// (calls `fn` with the ambient view scope) and returns fn's result —");
+    w.line("// (calls `fn` with the ambient scope) and returns fn's result —");
     w.line("// the flat bindings — verbatim. The scope's contributed type is");
     w.line("// recovered from the controller's `__def` function return (not the");
     w.line("// legacy `ControllerExport<infer S>` generic — the generic is often");
-    w.line("// pinned to the empty view `Scope` and would erase setup-added");
+    w.line("// pinned to the empty `Scope` and would erase setup-added");
     w.line("// members from the recovered type).");
     // `__def` IS the setup function (the object-form's `{ setup?: F }` wrapper
     // is gone with the sections it wrapped) — `ReturnType`-idiom infer over

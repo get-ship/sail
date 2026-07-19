@@ -32,9 +32,9 @@ export function lowerFrameworkImports(source: string): string {
 }
 
 /**
- * Lower a built view MODULE to a self-contained expression the SES runner can
+ * Lower a built route MODULE to a self-contained expression the SES runner can
  * `Compartment.evaluate()` — which runs source as a script, so ESM `export`
- * syntax must go. We confine the WHOLE compiled view (glue + bundled
+ * syntax must go. We confine the WHOLE compiled route (glue + bundled
  * controller): there's no trust boundary between them, and the glue is just the
  * DOM renderer + runtime wiring, all reachable through endowments (a narrowed
  * node-factory `document`, the runtime surface, the policy-gated ops).

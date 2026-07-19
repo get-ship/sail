@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { mount, type ViewPayload } from '../src/mount'
+import { mount, type RoutePayload } from '../src/mount'
 import { onCleanup, mount as ambientMount } from '../src/effect-scope'
 
 // Regression for the navigation OOM: a subscription opened inside a
 // controller's ambient mount() callback (the common `live()`/`data()`
-// shape) must be torn down when the view is disposed. Before the fix,
+// shape) must be torn down when the route is disposed. Before the fix,
 // the (then section-based) mount callback ran AFTER setup's withScope
 // closed (CURRENT_SCOPE = null), so onCleanup() was a no-op and the
 // subscription leaked one open handle per navigation — the
@@ -17,7 +17,7 @@ describe('mount — live-subscription teardown (navigation-OOM regression)', () 
   // mount() callbacks → handle, with no SSE channel. opts.module bypasses
   // the moduleUrl import.
   const minimalPayload = () =>
-    ({ name: 't', html: '', css: '', scope: {}, moduleUrl: '', params: {} } as unknown as ViewPayload)
+    ({ name: 't', html: '', css: '', scope: {}, moduleUrl: '', params: {} } as unknown as RoutePayload)
 
   it('disposes a cleanup registered inside the controller mount() callback', async () => {
     let cleaned = 0

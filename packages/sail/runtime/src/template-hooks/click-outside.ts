@@ -3,7 +3,7 @@
 //
 // Used by every dropdown / modal / popover that closes on outside
 // click. The target is passed via `bind:target={ref}`; the action is
-// looked up by name from view scope (typically a controller `on.*`
+// looked up by name from route scope (typically a controller `on.*`
 // handler).
 //
 // Example:

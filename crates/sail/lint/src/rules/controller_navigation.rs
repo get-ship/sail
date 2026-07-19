@@ -7,7 +7,7 @@
 //! These are hand-rolled SPA routing. The framework affordance is
 //! `navigate(path)` (`@ship/sail-runtime`), which routes through the host
 //! `RouterPort` — history + path matching + mounting + the route-change
-//! notification — so a single call actually switches views from any view
+//! notification — so a single call actually switches routes from any route
 //! bundle. See ADR `unified-deck-router`.
 //!
 //! A deliberate full-page navigation (`window.location.href = …`,

@@ -5,7 +5,7 @@
 //! baked into the binary at compile time via `include_str!` (see
 //! `deck-core/build.rs`). Nothing enforced that the bake was regenerated
 //! after its TypeScript sources changed — a 20h-stale `sail-runtime.js` served
-//! against post-rename compiled views rendered nothing, with only a silent
+//! against post-rename compiled routes rendered nothing, with only a silent
 //! console error as the symptom.
 //!
 //! This module computes a content hash of each framework singleton's SOURCE

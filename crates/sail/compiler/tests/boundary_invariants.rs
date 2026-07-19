@@ -9,12 +9,12 @@
 //!   - emit a `/_deck/...` URL or an `importmap` (serving is Deck's concern;
 //!     SAIL knows no URLs).
 //!
-//! These gates run on representative compiled output (view + component) so a
+//! These gates run on representative compiled output (route + component) so a
 //! regression fails the build rather than slipping to web-QA.
 
 use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 
-fn view_opts(setup: Option<&str>) -> CompileOpts {
+fn route_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {
         route_params: None,
         setup_url: setup.map(|s| s.to_string()),
@@ -57,10 +57,10 @@ fn assert_clean(js: &str, ctx: &str) {
 }
 
 #[test]
-fn view_output_emits_no_behavior_or_urls() {
-    let out = compile(r#"<p>{x()}</p>"#, view_opts(Some("./controller.ts")))
-        .expect("compile view");
-    assert_clean(&out.js, "view");
+fn route_output_emits_no_behavior_or_urls() {
+    let out = compile(r#"<p>{x()}</p>"#, route_opts(Some("./controller.ts")))
+        .expect("compile route");
+    assert_clean(&out.js, "route");
 }
 
 #[test]
@@ -73,5 +73,5 @@ fn component_output_emits_no_behavior_or_urls() {
 // The render-eval SSR I1 tests (compiler SSR/init contains no `/_deck/`) were
 // removed with render-eval: the compiler no longer emits SSR, so there is no
 // SSR output to leak a URL into. The I1 invariant is still enforced above on
-// the compiled JS (view/component), and the host-injection + has_live_data
+// the compiled JS (route/component), and the host-injection + has_live_data
 // behavior is covered by deck-core's payload tests.

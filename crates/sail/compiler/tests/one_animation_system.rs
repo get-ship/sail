@@ -141,7 +141,7 @@ fn the_animation_vocabulary_has_exactly_one_source() {
 
 
 // ── TIMELINE TRIGGERS ───────────────────────────────────────────────────────
-// `motion:view` / `motion:scroll` are PROGRESS-driven, not time-driven: position is
+// `motion:reveal` / `motion:scroll` are PROGRESS-driven, not time-driven: position is
 // a function of scroll, not of the clock. Reveal-on-scroll and parallax, at ZERO JS
 // runtime cost — no scroll listener, no rAF loop, no IntersectionObserver. The
 // platform drives them off the main thread, which is why a scroll effect built
@@ -152,8 +152,8 @@ fn the_animation_vocabulary_has_exactly_one_source() {
 // timeline. One directive, one catalog, one code path.
 
 #[test]
-fn view_and_scroll_are_triggers_like_any_other() {
-    for trigger in ["view", "scroll"] {
+fn reveal_and_scroll_are_triggers_like_any_other() {
+    for trigger in ["reveal", "scroll"] {
         let src = format!(r#"<card motion:{trigger}={{{{ opacity: 'fade' }}}}>x</card>"#);
         let js = compile(&src, opts()).expect("compiles").js;
         assert!(js.contains(&format!(r#"trigger: "{trigger}""#)), "{js}");
@@ -161,13 +161,13 @@ fn view_and_scroll_are_triggers_like_any_other() {
     }
 }
 
-/// Parallax is `translate-y` on a view timeline. The point of the whole exercise:
+/// Parallax is `translate-y` on a reveal timeline. The point of the whole exercise:
 /// the thing people reach for GSAP to do is a directive with a preset.
 #[test]
 fn parallax_is_one_directive() {
-    let src = r#"<card motion:view={{ translate-y: 'spring:gentle', opacity: 'fade' }}>x</card>"#;
+    let src = r#"<card motion:reveal={{ translate-y: 'spring:gentle', opacity: 'fade' }}>x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
-    assert!(js.contains(r#"trigger: "view""#), "{js}");
+    assert!(js.contains(r#"trigger: "reveal""#), "{js}");
     let motion_count = js.matches("property:").count();
     assert_eq!(motion_count, 2, "one motion per property:\n{js}");
 }

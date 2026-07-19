@@ -1,6 +1,6 @@
 <!--
   <demo-chip> — trivial custom element for the deck-conformance shared-chunk dedup
-  showcase (GAP 4). Both views/widgets and views/gallery use this tag; the
+  showcase (GAP 4). Both routes/widgets and routes/gallery use this tag; the
   multi-entry build must hoist it into ONE shared chunk.
 
   `data-marker="demo-chip-marker"` is the stable literal the deck-conformance

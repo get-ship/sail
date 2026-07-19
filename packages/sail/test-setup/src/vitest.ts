@@ -191,7 +191,7 @@ export function pinImportMetaUrlPlugin(name: string): Plugin {
  * Inject `shadow: true` into the component-mode compile opts so an inline
  * test compile matches the production shadow-DOM shape. The bin/FFI compiler
  * that produces `.compiled.js` hardcodes `shadow:true`; the WASM/native
- * default is `shadow:false`. Component mode only — view compiles are untouched.
+ * default is `shadow:false`. Component mode only — route compiles are untouched.
  *
  * @param name - Component name used as the plugin name prefix (e.g. `'sail-media'`).
  */
@@ -211,7 +211,7 @@ export function shadowForComponentCompilePlugin(name: string): Plugin {
   }
 }
 
-// The @ship/* specifiers that renderView/renderComponent (and the SAIL runtime's
+// The @ship/* specifiers that renderRoute/renderComponent (and the SAIL runtime's
 // internal subpaths) need pinned to ONE resolved instance. Subpaths first (most
 // specific) so they win over the bare-name aliases. A JS-only consumer may not
 // ship every runtime subpath (`./route`, `./virtual` were dropped in the

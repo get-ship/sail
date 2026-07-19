@@ -1,14 +1,14 @@
-//! Shared design tokens + base styles for every deck-served view.
+//! Shared design tokens + base styles for every deck-served route.
 //!
 //! Canonical OKLCH palette sourced from `packages/sail/tokens/src/tokens.css`
-//! so SAIL components, deck-served views, and the theme studio can never drift.
-//! View-scoped base rules live alongside in `deck-core/assets/view-tokens.css`
+//! so SAIL components, deck-served routes, and the theme studio can never drift.
+//! Route-scoped base rules live alongside in `deck-core/assets/view-tokens.css`
 //! (deck owns this file — relocated out of shipd in the UI-purge so deck is
 //! self-contained). Per-theme overrides come from `themes.css`.
 
 use crate::{CachePolicy, DaemonMode, DeckResponse};
 
-/// Design tokens + view base styles + per-theme overrides, concatenated at
+/// Design tokens + route base styles + per-theme overrides, concatenated at
 /// compile time. The theme picker applies a theme by toggling `data-theme`
 /// on `<html>` — the `:root[data-theme='paper']` etc. blocks come from
 /// `themes.css`.

@@ -148,7 +148,7 @@ describe('mountRouter', () => {
    })
 
   it('renders <ship-error-state> as the 404 surface when registered', async () => {
-    // The hub's chrome view auto-registers <ship-error-state>; the router
+    // The hub's chrome route auto-registers <ship-error-state>; the router
     // then mounts the upgraded element instead of the bare fallback div.
     if (!customElements.get('ship-error-state')) {
       class ShipErrorState extends HTMLElement {
@@ -326,7 +326,7 @@ describe('layout module rendering', () => {
 
 // ---------------------------------------------------------------------------
 // Default route error boundary — every route outlet is wrapped so a throwing
-// view degrades to an error card instead of a dead subtree.
+// route degrades to an error card instead of a dead subtree.
 // ---------------------------------------------------------------------------
 
 describe('default route error boundary', () => {
@@ -349,11 +349,11 @@ describe('default route error boundary', () => {
     expect(findNearestBoundary(slot)).not.toBeNull()
   })
 
-  it('a view that throws on render degrades to an error card, not a crash', async () => {
+  it('a route that throws on render degrades to an error card, not a crash', async () => {
     router = start()
     await flush()
     const root = document.getElementById('root')!
-    // Simulate the view throwing through a runtime-protected call site.
+    // Simulate the route throwing through a runtime-protected call site.
     const viewNode = document.createElement('span')
     root.appendChild(viewNode)
     expect(() =>

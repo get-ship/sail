@@ -22,7 +22,7 @@ export const code = {
   express: `<div motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 500 }}></div>
 <div motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 2500 }}></div>`,
 
-  view: `<card motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
+  reveal: `<card motion:reveal={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
   This one fades up as it enters the viewport.
 </card>`,
 

@@ -7,7 +7,7 @@
 //
 // The compiler-emitted `hydrate(root, ctx)` calls this once per attach
 // and dispatches each binding by key — one tree walk for the whole
-// view rather than one per binding. Mirrors the `collectTextOpens`
+// route rather than one per binding. Mirrors the `collectTextOpens`
 // pattern used for text bindings.
 
 const BOUNDARY_TAGS = new Set([

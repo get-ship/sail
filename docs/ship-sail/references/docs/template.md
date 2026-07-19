@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 2
 title: The template surface
 description: Everything you can write in a `.sail` file — directives, control flow, bindings, hooks, projection, expressions.
@@ -68,7 +68,7 @@ Subscribes to a `ship.*` SDK call. When the client method returns a `LiveSource`
 
 The thunk is plain JS that runs inside `query()`'s tracked reactive scope. It closes over whatever's already in controller scope — `ship`/`route` from `ctx`, or signals declared earlier in the same controller. Reading a signal via `route.params.<key>()` or any other controller-owned signal is tracked; when it changes, the prior subscription disposes and a new one opens with the updated args.
 
-`query()`/`queryKeyed()` are the **canonical** way to bring server data into a view. See [data-subscriptions.md](data-subscriptions.md).
+`query()`/`queryKeyed()` are the **canonical** way to bring server data into a route. See [data-subscriptions.md](data-subscriptions.md).
 
 ### Host-injected data clients
 
@@ -107,7 +107,7 @@ Templates that consume no clients still receive the ambient `ship` (the grandfat
 <button disabled={disabled() || loading()}>{label()}</button>
 ```
 
-The file IS the component. `<prop>` appears at the top of a component `.sail` file — no wrapper element needed. Convention is the contract: directory name is the tag name. Views (top-level page surfaces) do not use `<prop>`.
+The file IS the component. `<prop>` appears at the top of a component `.sail` file — no wrapper element needed. Convention is the contract: directory name is the tag name. Routes (top-level page surfaces) do not use `<prop>`.
 
 Prop kinds: `string` (default), `bool`, `number`, `values="a|b|c"` (union). `reflect` mirrors the prop to the host element's attributes.
 
@@ -147,7 +147,7 @@ Prop kinds: `string` (default), `bool`, `number`, `values="a|b|c"` (union). `ref
 {/if}
 ```
 
-The `mutation` attribute is a `ship.*` SDK chain. `<form mutation>` is the write-side complement to `query()`. The compiler wires it at compile time: on submit, the form is serialized as `FormData` and the SDK chain is called. `$mutation` is injected into view scope as a `Signal<LiveState<unknown>>` — the same `{ kind: 'loading' | 'ok' | 'error' }` envelope as a live query() signal.
+The `mutation` attribute is a `ship.*` SDK chain. `<form mutation>` is the write-side complement to `query()`. The compiler wires it at compile time: on submit, the form is serialized as `FormData` and the SDK chain is called. `$mutation` is injected into route scope as a `Signal<LiveState<unknown>>` — the same `{ kind: 'loading' | 'ok' | 'error' }` envelope as a live query() signal.
 
 Progressive enhancement: when JS is absent the SSR walker injects `action="/_deck/mutation/{view}?form=bN"` and `method="post"` on the form. The daemon handles the POST and redirects back to `Referer`. See [data-subscriptions.md](data-subscriptions.md#mutations) for the full envelope shape and PE flow.
 
@@ -160,7 +160,7 @@ Progressive enhancement: when JS is absent the SSR walker injects `action="/_dec
 
 ```
 page.sail: line 1 col 30: [on:click handler]
-multi-statement handler — paired `<view>.ts` controller required for tier-2 work
+multi-statement handler — paired `<route>.ts` controller required for tier-2 work
 ```
 
 Single-expression handlers and single-statement blocks are fine at tier 1. Add a paired `controller.ts` to lift the restriction. See [controller.md](controller.md#tier-1--tier-2-threshold-rule).
@@ -224,7 +224,7 @@ The element forms (`<while-loading bind="X">`, `<while-error bind="X" let:err>`)
 
 ## Expressions
 
-Any `{ ... }` opens an expression. Resolved against the [shared view scope](index.md#the-shared-view-scope).
+Any `{ ... }` opens an expression. Resolved against the [shared route scope](index.md#the-shared-route-scope).
 
 ```html
 <p>Hello, {user().name}.</p>

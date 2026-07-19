@@ -15,7 +15,7 @@ motion:TRIGGER={{ property: 'preset' }}
 ```
 
 The **trigger** says when: `hover`, `press`, `focus`, `focus-visible`
-(interaction), `enter`, `exit` (lifecycle), `view`, `scroll`
+(interaction), `enter`, `exit` (lifecycle), `reveal`, `scroll`
 (scroll-timeline), `loop` (ambient). The **body** says what:
 `scale`, `scale-x`, `scale-y`, `opacity`, `translate-x`, `translate-y`,
 `rotate`, each mapped to a preset — `fade`, `fade-out`, `press`,

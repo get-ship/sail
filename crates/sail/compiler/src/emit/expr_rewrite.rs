@@ -21,7 +21,7 @@
 /// unqualified by the rewriter.
 const BUILTINS: &[&str] = &[
     // Setup context propagated onto $scope by the compiled module.
-    // `ship`, `route`, `navigate` are seeded into $scope for views, so
+    // `ship`, `route`, `navigate` are seeded into $scope for routes, so
     // they DO need qualification (handled by the default branch).
     // `ctx` is only ever a parent-scope ident in handlers — leave bare.
     "ctx",

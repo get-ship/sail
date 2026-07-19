@@ -1,17 +1,17 @@
 ---
-group: Views
+group: Routes
 order: 3
 title: SAIL — Authoring Patterns
-description: Canonical patterns for .sail view authoring.
+description: Canonical patterns for .sail route authoring.
 ---
 
 # SAIL — Authoring Patterns
 
-How to author a SAIL view, a SAIL component, and the controller that lives inside each.
+How to author a SAIL route, a SAIL component, and the controller that lives inside each.
 
-## Component vs view
+## Component vs route
 
-| Trait | View | Component |
+| Trait | Route | Component |
 |---|---|---|
 | Filename stem | `page.sail` (manifest-keyed route) | `<tag>.sail` (registers a custom element) |
 | Lives under | `views/<name>/`, `.ship/views/<name>/` | `packages/components/ui-components/src/<tag>/`, `_components/<view>-<tag>/` |
@@ -22,9 +22,9 @@ How to author a SAIL view, a SAIL component, and the controller that lives insid
 | Has scoped CSS? | `style.css` (auto-linked, page-scoped) | Component rules compile to `@scope (sail-x) to ([data-sail])` donuts. A skin restyles an existing anatomy; a skin cannot add regions or states. |
 | Form participation? | Native (the element is in the light DOM) | Native (the host is in the light DOM; projected inputs are real descendants). |
 | `customElements.define`? | n/a | Compiler-emitted; never written by hand |
-| Used by | Other views, the shell, deep links from `<a>` | Composed inside views or other components |
+| Used by | Other routes, the shell, deep links from `<a>` | Composed inside routes or other components |
 
-A view that wants reusable markup pulls a component in (`packages/components/ui-components/` for first-party, `_components/` for view-private). The reverse is illegal — components don't mount routes.
+A route that wants reusable markup pulls a component in (`packages/components/ui-components/` for first-party, `_components/` for route-private). The reverse is illegal — components don't mount routes.
 
 > **Anatomy manifest shape** (shipped): the compiler emits an `anatomy`
 > block on each declaration in the standard `custom-elements.json` —
@@ -68,7 +68,7 @@ export default controller((ctx) => {
 </controller>
 ```
 
-One function, one job: `controller(fn)` where `fn` is `(ctx) => Record<string, unknown>`. `ctx` is the ambient view scope — `ship`, `clients`, `route`, `navigate`, directly accessible. Whatever the function returns IS the contributed template scope: state signals, derived values (including `query()`/`queryKeyed()` data signals), plain helpers, and event handlers all live together as ordinary object properties — there's no separate section for handlers anymore.
+One function, one job: `controller(fn)` where `fn` is `(ctx) => Record<string, unknown>`. `ctx` is the ambient route scope — `ship`, `clients`, `route`, `navigate`, directly accessible. Whatever the function returns IS the contributed template scope: state signals, derived values (including `query()`/`queryKeyed()` data signals), plain helpers, and event handlers all live together as ordinary object properties — there's no separate section for handlers anymore.
 
 `mount(fn)` and `onCleanup(fn)` are ambient — ✅ callable from anywhere in the setup call graph (the controller body itself, or a plain helper function it calls), no import needed. `mount` fires once after the instance's DOM connects; `onCleanup` runs on dispose. Mutation is always `signal.set(newValue)` (or the updater form `signal.set(prev => next)`) — there's no writable-state-proxy assignment style.
 
@@ -196,48 +196,48 @@ deck scaffold component my-widget --controller
 
 The first generates `views/settings/` with `page.sail` (including an inline `<controller>` block) + `style.css` + `manifest.jsonc`. The `--component` flag also scaffolds `_components/settings-toolbar/`. The component scaffold drops `packages/components/ui-components/src/my-widget/` with `<tag>.sail`; `--controller` adds the inline `<controller>` block to it.
 
-## User-app views — authoring outside the Ship repo
+## User-app routes — authoring outside the Ship repo
 
-Built-in views live under `<repo-root>/views/<name>/`. You can author the same kind of view inside *your own* workspace — the daemon doesn't require Ship's repo layout to discover and serve them.
+Built-in routes live under `<repo-root>/views/<name>/`. You can author the same kind of route inside *your own* workspace — the daemon doesn't require Ship's repo layout to discover and serve them.
 
 Two layouts are honored, both rooted at the workspace `shipd --workspace <path>` was launched with:
 
 ```
 ~/my-project/
 ├── views/
-│   └── my-view/
+│   └── my-route/
 │       ├── page.sail            # required (controller, if any, is an inline <controller> block inside)
-│       ├── style.css           # optional — view-scoped CSS
-│       └── manifest.jsonc      # optional — rail label/icon, view type
+│       ├── style.css           # optional — route-scoped CSS
+│       └── manifest.jsonc      # optional — rail label/icon, route type
 └── .ship/
     └── views/
-        └── another-view/
+        └── another-route/
             ├── index.sail                 # required (note the stem: index, not page)
             └── manifest.jsonc            # optional
 ```
 
-- **`<workspace>/views/<name>/page.sail`** — same convention as in-tree views. Use this when the view *is* the app surface (e.g. you're building a Ship-shaped tool).
-- **`<workspace>/.ship/views/<name>/index.sail`** — colocates the view with the rest of your `.ship/` config. Use this for views that are auxiliary to a non-Ship project.
+- **`<workspace>/views/<name>/page.sail`** — same convention as in-tree routes. Use this when the route *is* the app surface (e.g. you're building a Ship-shaped tool).
+- **`<workspace>/.ship/views/<name>/index.sail`** — colocates the route with the rest of your `.ship/` config. Use this for routes that are auxiliary to a non-Ship project.
 
 A controller is always authored inline as a `<controller>` block inside the `.sail` file — a paired `<stem>.controller.ts` sibling file is a compile error.
 
-When both layouts contain a view with the same name, the top-level `views/` directory wins — that's how a workspace can shadow a built-in by id without renaming.
+When both layouts contain a route with the same name, the top-level `views/` directory wins — that's how a workspace can shadow a built-in by id without renaming.
 
 ### Rail registration
 
-Drop a `manifest.jsonc` next to the leaf source to opt the view into the launcher / rail surface:
+Drop a `manifest.jsonc` next to the leaf source to opt the route into the launcher / rail surface:
 
 ```jsonc
 {
   "type": "html",
   "rail": {
-    "label": "My View",
+    "label": "My Route",
     "icon": "rocket"
   }
 }
 ```
 
-`/api/v1/views` will include the view with its rail metadata, and any shell that renders the rail dynamically will pick it up. (Shell2's rail is currently hardcoded; dynamic rendering ships in the next iteration.)
+`/api/v1/views` will include the route with its rail metadata, and any shell that renders the rail dynamically will pick it up. (Shell2's rail is currently hardcoded; dynamic rendering ships in the next iteration.)
 
 ### Running the daemon against your workspace
 
@@ -249,7 +249,7 @@ The daemon persists this workspace into `~/.ship/machine/daemons/<hash>/workspac
 
 ## Hot reload in dev
 
-`.sail` edits (including changes inside the inline `<controller>` block) trigger an in-place view re-mount without a full page reload. `apps/shell/src/hmr.ts` subscribes to `shipd`'s `/_deck/dev/hmr` SSE channel. When the bundler emits `module-changed` for `views/<name>/view`, shell cache-busts the rebuilt `view.js` and re-mounts through `mount()`. Other bundles (sail-components, islands, sail-runtime, sail-dom, sail-components) trigger a full reload — custom-element re-registration without reload is not yet supported.
+`.sail` edits (including changes inside the inline `<controller>` block) trigger an in-place route re-mount without a full page reload. `apps/shell/src/hmr.ts` subscribes to `shipd`'s `/_deck/dev/hmr` SSE channel. When the bundler emits `module-changed` for `views/<name>/view`, shell cache-busts the rebuilt `view.js` and re-mounts through `mount()`. Other bundles (sail-components, islands, sail-runtime, sail-dom, sail-components) trigger a full reload — custom-element re-registration without reload is not yet supported.
 
 Production builds inline `import.meta.env.DEV` to `false`, so HMR is a no-op and no EventSource opens.
 

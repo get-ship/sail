@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-/// Per-instance resolution context — the mount-scoped root(s) + per-app view
+/// Per-instance resolution context — the mount-scoped root(s) + per-app route
 /// outputs a request resolves against. This is the WHOLE of deck's resolution
 /// state: there is no process-global `PROJECT_ROOT_OVERRIDE` / `VIEW_OUTPUTS`
 /// backing it, so one process can serve many projects with no cross-talk
@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 /// carries it per-request (an axum `Extension`, like the `DataPort`); the serve
 /// path threads `Option<&Resolution>` end to end.
 ///
-/// The host declares view roots in PRECEDENCE ORDER and expresses "these are
+/// The host declares route roots in PRECEDENCE ORDER and expresses "these are
 /// mine first" by ordering — deck privileges no named 'first-party' bucket
 /// (`inv-deck-no-first-party`); `roots[0]` simply wins.
 #[derive(Debug, Clone, Default)]
@@ -19,12 +19,12 @@ pub struct Resolution {
 }
 
 impl Resolution {
-    /// An empty context — no roots, no view outputs.
+    /// An empty context — no roots, no route outputs.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Append a view root. Earlier calls have higher precedence (first wins).
+    /// Append a route root. Earlier calls have higher precedence (first wins).
     pub fn with_root(mut self, root: impl Into<PathBuf>) -> Self {
         self.roots.push(root.into());
         self
@@ -45,8 +45,8 @@ impl Resolution {
         r
     }
 
-    /// Register a per-app view-output dir. Hosts call this for each app whose
-    /// built view bundles live outside the conventional `<root>/.deck/views`
+    /// Register a per-app route-output dir. Hosts call this for each app whose
+    /// built route bundles live outside the conventional `<root>/.deck/views`
     /// (e.g. `apps/hub/.deck/views/<name>/view.js`). Probed BEFORE the
     /// project-root `.deck` fallback by [`route_bundle_roots`](Self::route_bundle_roots).
     pub fn register_route_output(&mut self, app: impl Into<String>, dir: impl Into<PathBuf>) {
@@ -64,13 +64,13 @@ impl Resolution {
         self.roots.first().map(|p| p.as_path())
     }
 
-    /// The view-output dir for `app`, if registered.
+    /// The route-output dir for `app`, if registered.
     pub fn route_output(&self, app: &str) -> Option<&Path> {
         self.route_outputs.get(app).map(|p| p.as_path())
     }
 
-    /// View-bundle roots to probe for `<root>/views/<name>/view.js`, in
-    /// precedence order: the per-app view-output dirs first (host-registered),
+    /// Route-bundle roots to probe for `<root>/views/<name>/view.js`, in
+    /// precedence order: the per-app route-output dirs first (host-registered),
     /// then the project root's `<root>/.deck` (the bundler's default output).
     /// The `.deck` join is the SAME single constant the bundler writes through
     /// (`deck_config::deck_out_path`), so this reader can never drift from the
@@ -125,14 +125,14 @@ pub use deck_host::resolver::{ResolveError, ResolvedRoute};
 /// single `page.sail` leaf. The leaf is unified across all buckets (fixes the
 /// #254 `index.sail` vs `page.sail` divergence). The framework loads no config
 /// file — a host that needs a different layout constructs a `DeckConfig` and
-/// threads it into `Bundler::start`; the bundler's view-discovery walks
+/// threads it into `Bundler::start`; the bundler's route-discovery walks
 /// `cfg.route_dirs` directly. The runtime resolver here reports the conventional
 /// defaults.
 fn route_layout() -> RouteLayout {
     RouteLayout::conventional()
 }
 
-/// Resolve a view by name under an EXPLICIT project `root` (mount-scoped — the
+/// Resolve a route by name under an EXPLICIT project `root` (mount-scoped — the
 /// caller passes the root from its per-request [`Resolution`], never a process
 /// global). Delegates the on-disk walk to `deck_host::resolver::resolve`.
 pub fn resolve(
@@ -144,8 +144,8 @@ pub fn resolve(
     deck_host::resolver::resolve(root, &layout, name, sub_path)
 }
 
-/// Best-effort list of top-level view names servable under `root`, for the
-/// human-facing not-found page. Scans the conventional view buckets (default
+/// Best-effort list of top-level route names servable under `root`, for the
+/// human-facing not-found page. Scans the conventional route buckets (default
 /// `["views"]`) under the given root. Cheap (one shallow `read_dir` per bucket,
 /// no compilation) and graceful: a missing bucket contributes nothing. Names
 /// are deduped and sorted so the page renders deterministically.
@@ -161,7 +161,7 @@ pub fn list_route_names(root: &Path) -> Vec<String> {
     names.into_iter().collect()
 }
 
-/// Add each immediate child directory of `dir` whose name is a valid view name
+/// Add each immediate child directory of `dir` whose name is a valid route name
 /// to `out`. A non-directory or unreadable `dir` contributes nothing.
 fn collect_route_dirs(dir: &Path, out: &mut std::collections::BTreeSet<String>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
@@ -334,7 +334,7 @@ mod project_root_tests {
         );
     }
 
-    /// The per-app view-output dirs are probed BEFORE the project-root `.deck`,
+    /// The per-app route-output dirs are probed BEFORE the project-root `.deck`,
     /// and the project-root fallback resolves through the single output-dir
     /// constant — so the reader can't drift from the bundler writer.
     #[test]

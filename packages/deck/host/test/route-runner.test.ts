@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import {
-  buildViewEndowments,
-  confineViewModule,
+  buildRouteEndowments,
+  confineRouteModule,
   lockdownRealm,
 } from '../src/index.ts'
 
@@ -16,13 +16,13 @@ const fakeDoc = {
   createDocumentFragment: () => ({ kind: 'fragment' }),
 } as unknown as Document
 
-describe('buildViewEndowments', () => {
+describe('buildRouteEndowments', () => {
   beforeAll(() => lockdownRealm())
 
   it('assembles runtime + narrow document + ops, hardened', () => {
     const signal = (v: number) => () => v
     const ship = { git: { overview: () => ({}) } }
-    const surface = buildViewEndowments({
+    const surface = buildRouteEndowments({
       runtime: { signal, controller: () => ({}) },
       dom: { bindText: () => {} },
       ship,
@@ -38,12 +38,12 @@ describe('buildViewEndowments', () => {
     expect(typeof doc.createElement).toBe('function')
     expect(doc.querySelector).toBeUndefined()
     expect('cookie' in doc).toBe(false)
-    // Hardened — the view can't graft new capabilities onto the surface.
+    // Hardened — the route can't graft new capabilities onto the surface.
     expect(Object.isFrozen(surface)).toBe(true)
   })
 
   it('does not endow fetch by default (no "network" grant) — unchanged from before the capability existed', () => {
-    const surface = buildViewEndowments({
+    const surface = buildRouteEndowments({
       runtime: {},
       ship: {},
       doc: fakeDoc,
@@ -52,7 +52,7 @@ describe('buildViewEndowments', () => {
   })
 
   it('endows a confined fetch WRAPPER (never the bare global) when "network" is granted', async () => {
-    const surface = buildViewEndowments({
+    const surface = buildRouteEndowments({
       runtime: {},
       ship: {},
       doc: fakeDoc,
@@ -71,7 +71,7 @@ describe('buildViewEndowments', () => {
   })
 
   it('an empty "network" array behaves like no grant at all — fetch stays un-endowed', () => {
-    const surface = buildViewEndowments({
+    const surface = buildRouteEndowments({
       runtime: {},
       ship: {},
       doc: fakeDoc,
@@ -81,11 +81,11 @@ describe('buildViewEndowments', () => {
   })
 })
 
-describe('confineViewModule', () => {
+describe('confineRouteModule', () => {
   beforeAll(() => lockdownRealm())
 
-  it('confines a whole view into the mount opts.module shape; setup runs confined', () => {
-    // A view-shaped module: framework import, raw document node creation in
+  it('confines a whole route into the mount opts.module shape; setup runs confined', () => {
+    // A route-shaped module: framework import, raw document node creation in
     // setup (what the compiler emits), default export, ambient probe.
     const source = `
       import { signal } from "@ship/sail-runtime";
@@ -97,17 +97,17 @@ describe('confineViewModule', () => {
         },
       };
     `
-    const endowments = buildViewEndowments({
+    const endowments = buildRouteEndowments({
       runtime: { signal: (v: number) => () => v },
       ship: {},
       doc: fakeDoc,
     })
 
-    const mod = confineViewModule(source, endowments)
+    const mod = confineRouteModule(source, endowments)
     expect(typeof mod.default.setup).toBe('function')
 
     const out = mod.default.setup({}) as Record<string, unknown>
-    // Endowed rendering + runtime work inside the confined view.
+    // Endowed rendering + runtime work inside the confined route.
     expect(out.tag).toBe('SECTION')
     expect(out.n).toBe(3)
     // Ambient authority + dangerous document caps stay denied even when the

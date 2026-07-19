@@ -5,7 +5,7 @@
 //!     an `ETag` header.
 //!   - In Development the same asset must NOT be immutable-cached.
 //!
-//! (The view-payload error-redaction cases moved out with `ship-views`; those
+//! (The route-payload error-redaction cases moved out with `ship-views`; those
 //! `/_deck/views/*` routes are no longer served by this harness.)
 //!
 //! Uses tower `oneshot` — no server, no browser.

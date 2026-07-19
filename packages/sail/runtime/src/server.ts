@@ -11,7 +11,7 @@
 //      guarded by `typeof customElements`, so it is inert; the point is to
 //      not pull the whole browser graph in at all.)
 //   2. The index transitively imports `./generated` (Specta/proto codegen
-//      types) and the full view/controller/mount/chrome graph — none of
+//      types) and the full route/controller/mount/chrome graph — none of
 //      which a synthesized render or controller needs.
 //
 // The bindings (`bindText`, `bindAttr`, `bindIf`, `bindFor`, …) only touch
@@ -90,7 +90,7 @@ export type { StoreDef, StoreInstance } from './store'
 // on })` by calling its `setup(ctx)` — the same resolver the browser hydrate
 // path runs. `controller`/`resolveController` are environment-agnostic (they
 // build signal/derived/on bindings, no DOM), so they belong in the server
-// entry too: a synthesized view's authored controller imports `controller`
+// entry too: a synthesized route's authored controller imports `controller`
 // from `@ship/sail-runtime`, which the SSR build aliases here.
 export { controller, resolveController } from './controller-resolver'
 export type {

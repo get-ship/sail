@@ -11,7 +11,7 @@
 //! references hashed assets that aren't on disk yet. Stale files from the
 //! previous build are pruned AFTER the swap, and only inside top-level entries
 //! this build actually produced — foreign trees sharing the out dir (e.g. the
-//! bundler's on-demand `routes/<name>/route.js` view bundles) are never
+//! bundler's on-demand `routes/<name>/route.js` route bundles) are never
 //! touched.
 
 use std::collections::HashSet;
@@ -63,7 +63,7 @@ fn collect_files(root: &Path, rel: &Path, out: &mut Vec<PathBuf>) {
 /// top-level files and files inside top-level directories the stage itself
 /// wrote (`assets/`, `_deck/`, …). A top-level directory the stage did not
 /// produce is foreign (another writer owns it — e.g. the bundler's
-/// `routes/` view bundles) and is left untouched. The staging dir is removed
+/// `routes/` route bundles) and is left untouched. The staging dir is removed
 /// on success.
 pub fn publish_build(stage: &Path, dest: &Path, prune: bool) -> Result<()> {
     let files = ordered_rel_files(stage);
@@ -162,7 +162,7 @@ mod tests {
 
     /// The publish swaps new content in, prunes the previous build's stale
     /// hashed assets, and NEVER touches a foreign top-level tree (the
-    /// bundler's `routes/` view bundles share the out dir).
+    /// bundler's `routes/` route bundles share the out dir).
     #[test]
     fn publish_swaps_prunes_and_preserves_foreign_trees() {
         let tmp = tempfile::tempdir().unwrap();

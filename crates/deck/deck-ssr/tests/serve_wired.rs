@@ -4,7 +4,7 @@
 //! the JS-only SSR cutover, so ship-js is the single path; there is no
 //! `DECK_SSR` opt-back.
 //!
-//! This drives the SAME seam the view serving calls — the registered `deck-ssr`
+//! This drives the SAME seam the route serving calls — the registered `deck-ssr`
 //! renderer (pooled isolate, synthesize→bundle→run) behind
 //! `deck_core::synthetic_ssr::first_paint` — proving the seam end-to-end, not
 //! just the capability in isolation. (The HTTP/JSON-payload wrapper around this
@@ -20,7 +20,7 @@ use deck_core::DataPort;
 use deck_ssr::build::repo_root;
 use serde_json::Value;
 
-/// Host data surface for the feed view's `live(() => call('api.demo.clock'))`.
+/// Host data surface for the feed route's `live(() => call('api.demo.clock'))`.
 struct DemoData;
 impl DataPort for DemoData {
     fn resolve(&self, domain: &str, op: &str, _args: &Value) -> Option<Value> {
@@ -43,7 +43,7 @@ fn setup() -> (
     (repo.join("crates/deck/deck-conformance/app"), engine)
 }
 
-/// First-paint HTML through the deck-core SSR seam for a (sub-folded) view.
+/// First-paint HTML through the deck-core SSR seam for a (sub-folded) route.
 /// Mirrors `serve_route_payload`'s internal SSR call: resolve → build the
 /// `SsrRequest` from the resolved source path + captured params → run the
 /// registered ship-js renderer → host-inject `<form mutation>` actions.
@@ -53,8 +53,8 @@ fn payload_html(
     name: &str,
     sub: Option<&str>,
 ) -> String {
-    let resolved = deck_core::resolver::resolve(root, name, sub).expect("resolve view");
-    let source_path = resolved.source_path.as_deref().expect("resolved view has a source path");
+    let resolved = deck_core::resolver::resolve(root, name, sub).expect("resolve route");
+    let source_path = resolved.source_path.as_deref().expect("resolved route has a source path");
     let params = serde_json::to_value(&resolved.params).unwrap_or(Value::Null);
     let route_name = match sub {
         Some(s) => format!("{name}/{s}"),
@@ -108,7 +108,7 @@ fn wired_serve_renders_ship_js_first_paint() {
     let (root, engine) = setup();
     let engine = &*engine;
 
-    // ── board (a REAL controller({...}) DSL view) ──────────────────────────
+    // ── board (a REAL controller({...}) DSL route) ─────────────────────────
     // ship-js runs the controller, so first paint carries the controller-signal
     // rows: the `{#if}` branch renders and the per-row `aria-pressed:`
     // directive fires (post-floor migration; the prior `class:flagged`

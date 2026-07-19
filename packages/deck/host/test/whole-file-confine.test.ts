@@ -1,4 +1,4 @@
-// Whole-file confinement: a compiled view (glue + bundled controller) IS the
+// Whole-file confinement: a compiled route (glue + bundled controller) IS the
 // sandbox unit. The glue is the DOM renderer (raw document.createElement &c.),
 // so the endowment surface includes a NARROW node-factory `document` — not the
 // full one. Node creation works; querySelector / cookie / fetch stay denied.
@@ -29,11 +29,11 @@ describe('lowerModuleToExpression', () => {
   })
 })
 
-describe('whole compiled view runs confined with a narrow document', () => {
+describe('whole compiled route runs confined with a narrow document', () => {
   beforeAll(() => lockdownRealm())
 
   it('endows node factories + runtime; denies query/cookie/fetch', () => {
-    // A view-shaped module: framework import, raw document node creation (what
+    // A route-shaped module: framework import, raw document node creation (what
     // the compiler emits), a default export — and ambient-authority probes.
     const viewModule = `
       import { signal } from "@ship/sail-runtime";

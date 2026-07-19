@@ -1,7 +1,7 @@
 //! The serve-path SSR renderer — the [`deck_core::synthetic_ssr::SyntheticSsr`]
 //! implementation deck-ssr registers into deck-core's gated seam.
 //!
-//! deck-core declares the result ("first-paint HTML for this view + request");
+//! deck-core declares the result ("first-paint HTML for this route + request");
 //! this owns the procedure: locate the app manifest + sibling controller
 //! relative to the source `.sail`, synthesize + Rolldown-bundle (mtime-cached on
 //! the source), then run the bundle in a POOLED isolate ([`ScriptPool`], not
@@ -69,7 +69,7 @@ impl ShipJsSsr {
     }
 
     /// The bundled ES module for `source`, mtime-cached. A source whose mtime
-    /// advanced is a MISS and is re-synthesized, so an edited view is never
+    /// advanced is a MISS and is re-synthesized, so an edited route is never
     /// stale-pinned (mirrors deck-core's SPLIT_CACHE/SSR_CACHE gate).
     fn bundle_for(&self, source: &Path) -> Result<Arc<String>> {
         let mtime = std::fs::metadata(source).and_then(|m| m.modified()).ok();
@@ -89,7 +89,7 @@ impl ShipJsSsr {
         Ok(bundle)
     }
 
-    /// Synthesize + Rolldown-bundle one view. Discovers the app manifest +
+    /// Synthesize + Rolldown-bundle one route. Discovers the app manifest +
     /// sibling controller relative to `source`; aliases the manifest's
     /// `@app/*` clients to their `.server.ts` entries.
     fn synth_bundle(&self, source: &Path) -> Result<String> {
@@ -211,7 +211,7 @@ fn rel(repo: &Path, p: &Path) -> Result<String> {
         .map_err(|_| anyhow!("{} is not under repo root {}", p.display(), repo.display()))
 }
 
-/// A filesystem-safe build-dir name from a relative view path.
+/// A filesystem-safe build-dir name from a relative route path.
 fn sanitize(rel: &str) -> String {
     rel.chars()
         .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })

@@ -1,5 +1,5 @@
 //! Slice-1 reliability sweep: run a representative, feature-diverse set of
-//! REAL views + components through the synthetic emit → Rolldown bundle →
+//! REAL routes + components through the synthetic emit → Rolldown bundle →
 //! ship-js (deno_core/V8) SSR, and catalog which render correctly + reliably.
 //!
 //! This is the ship-js (SSR) half of the slice's reliability proof. The CSR /
@@ -38,7 +38,7 @@ const CONF: &str = "crates/deck/deck-conformance/app";
 // The conformance manifest is the one remaining checked-in manifest; it covers
 // the `hub /` and `routes/showcase` cases (its `ship` / `api` declarations are
 // tree-shaken when unused, and deck's injection covers the `route` reads the
-// two views carry).
+// two routes carry).
 const CONF_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
 const HUB_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
 const VIEWS_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
@@ -77,7 +77,7 @@ struct Outcome {
     note: String,
 }
 
-/// The demo data surface: answers the ops the conformance data-views call.
+/// The demo data surface: answers the ops the conformance data-routes call.
 /// `ship.demo.boom` is deliberately absent — boom's query() thunk must throw
 /// (the error-boundary fixture), proving the error branch renders.
 struct DemoData;
@@ -101,7 +101,7 @@ fn conf(view: &str) -> String {
     format!("{CONF}/routes/{view}/page.sail")
 }
 fn conf_ctrl(_view: &str) -> Option<String> {
-    // Conformance views carry their controller INLINE (`<controller>` block); the
+    // Conformance routes carry their controller INLINE (`<controller>` block); the
     // SSR bundler reads it directly — no sibling controller.ts path.
     None
 }
@@ -119,7 +119,7 @@ fn targets() -> Vec<Target> {
         expect,
     };
     vec![
-        // ── Launch-relevant: hub / and a real view-host view ───────────────
+        // ── Launch-relevant: hub / and a real route-host route ─────────────
         Target {
             name: "hub /",
             features: "text-binding, slots, custom-element chrome, authored controller",
@@ -144,7 +144,7 @@ fn targets() -> Vec<Target> {
             params: json!({}),
             expect: "sail-area-chart",
         },
-        // ── Control flow + bindings (conformance views) ────────────────────
+        // ── Control flow + bindings (conformance routes) ───────────────────
         v("board", "{#if}, {#for} keyed, class:, on:, nested component", "board", conf_ctrl("board"), false, "Alpha"),
         v("counter", "on:, signal reactivity", "counter", conf_ctrl("counter"), false, "<button"),
         v("todos", "{#for} keyed, {#if}, {#while}, class:, controller live(), form mutation", "todos", None, true, "ship it"),
@@ -166,7 +166,7 @@ fn targets() -> Vec<Target> {
         v("hello", "constant folding, static markup", "hello", None, false, ""),
         v("widgets", "repeated nested component (shared-chunk)", "widgets", None, false, "demo-chip"),
         v("gallery", "on:, class:, authored controller, nested", "gallery", conf_ctrl("gallery"), false, ""),
-        // ── Component-gallery views (render real component tags) ────────────
+        // ── Component-gallery routes (render real component tags) ───────────
         v("gallery-sail-primitives", "{#if}, bind:, on:, style:, transitions, nested", "gallery-sail-primitives", conf_ctrl("gallery-sail-primitives"), false, ""),
         v("gallery-sail-charts", "static chart components", "gallery-sail-charts", None, false, ""),
         v("gallery-sail-media", "static media components", "gallery-sail-media", None, false, ""),
@@ -190,7 +190,7 @@ fn run_target(repo: &Path, t: &Target) -> Outcome {
     };
 
     let build_dir = repo.join("target/deck-ssr-reliability").join(sanitize(t.name));
-    // Always alias the demo client. A view-host always has its clients
+    // Always alias the demo client. A route-host always has its clients
     // available; aliasing an UNused client is harmless (tree-shaken). This
     // also absorbs the synthetic scan's string-literal false positive —
     // `class:active={x === 'ship-light'}` trips the free-identifier scan on
@@ -389,7 +389,7 @@ fn slice1_warm_ssr_latency() {
 /// (gap G1: props flow in at mount; the standalone synthetic controller can't
 /// model them). This catalogs that concretely on the ACTUAL closure, so the
 /// dominant sweep gap has honest, measurable counts rather than prose. The
-/// view hub `/` still renders (its chrome SSRs as custom-element tags); it is
+/// route hub `/` still renders (its chrome SSRs as custom-element tags); it is
 /// the components THEMSELVES that the synthetic emit can't yet synthesize.
 #[test]
 fn slice1_hub_closure_component_catalog() {

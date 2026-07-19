@@ -1,4 +1,4 @@
-// Public author-facing test API for SAIL views and components.
+// Public author-facing test API for SAIL routes and components.
 //
 // This is the "shared unlock": a `views/<name>/` or component author imports
 // ONE function, points it at their `.sail` source + controller, and asserts
@@ -11,11 +11,11 @@
 // ergonomic surface on top: it returns the mounted root, the live scope, and
 // helpers to fire events and flush microtasks.
 //
-//   import { renderView } from '@ship/test-setup'
-//   import gitView from '../controller'
+//   import { renderRoute } from '@ship/test-setup'
+//   import gitRoute from '../controller'
 //   const TEMPLATE = readFileSync(new URL('./page.sail', import.meta.url), 'utf8')
 //
-//   const v = renderView(TEMPLATE, { controller: gitView, ship: fakeShip })
+//   const v = renderRoute(TEMPLATE, { controller: gitRoute, ship: fakeShip })
 //   expect(v.html()).toContain('main')
 //   v.fire('button.refresh', 'click')
 //   await v.flush()
@@ -34,14 +34,14 @@ export type ControllerInput =
   | ((ctx: unknown) => Record<string, unknown> | void)
 
 export interface RenderOpts {
-  /** The view's controller — its default export, or a raw setup function.
+  /** The route's controller — its default export, or a raw setup function.
    *  Omit for templates with no controller. */
   controller?: ControllerInput
-  /** Fake `ship` SDK. Provide only the domains/ops the view reads. */
+  /** Fake `ship` SDK. Provide only the domains/ops the route reads. */
   ship?: unknown
   /** Initial URL backing the `route` signal. Defaults to `http://localhost/`. */
   url?: string
-  /** Navigation sink — called when the view navigates. Defaults to a no-op. */
+  /** Navigation sink — called when the route navigates. Defaults to a no-op. */
   navigate?: (path: string) => void
   /** On-disk path of the `.sail` source. Pass it when the source was read off
    *  disk (`readFileSync(new URL('./page.sail', import.meta.url))`) so the
@@ -52,9 +52,9 @@ export interface RenderOpts {
 }
 
 export interface Rendered {
-  /** The container the view mounted into. Query it with `.querySelector`. */
+  /** The container the route mounted into. Query it with `.querySelector`. */
   root: HTMLElement
-  /** The view's reactive scope (signals + derived + controller keys). */
+  /** The route's reactive scope (signals + derived + controller keys). */
   scope: Record<string, unknown>
   /** Current rendered HTML of the root. */
   html(): string
@@ -63,7 +63,7 @@ export interface Rendered {
   fire(selector: string, type: string, init?: EventInit): boolean
   /** Resolve after a microtask + macrotask so signal effects have flushed. */
   flush(): Promise<void>
-  /** Unmount the view and remove the root from the document. */
+  /** Unmount the route and remove the root from the document. */
   unmount(): void
 }
 
@@ -73,10 +73,10 @@ export interface Rendered {
 const SETUP_MARKER = '__test_setup__'
 
 /**
- * Compile a `.sail` view from source, mount it against jsdom with the given
+ * Compile a `.sail` route from source, mount it against jsdom with the given
  * controller + fakes, and return handles to assert and drive it.
  */
-export function renderView(source: string, opts: RenderOpts = {}): Rendered {
+export function renderRoute(source: string, opts: RenderOpts = {}): Rendered {
   const usesController = opts.controller != null
   const compiled = compileSui(source, {
     ...(usesController ? { setupMarker: SETUP_MARKER } : {}),
@@ -104,7 +104,7 @@ export function renderView(source: string, opts: RenderOpts = {}): Rendered {
     html: () => root.innerHTML,
     fire(selector, type, init) {
       const el = root.querySelector(selector)
-      if (!el) throw new Error(`renderView.fire: no element matches "${selector}"`)
+      if (!el) throw new Error(`renderRoute.fire: no element matches "${selector}"`)
       return el.dispatchEvent(new Event(type, { bubbles: true, ...init }))
     },
     flush: () => new Promise((r) => setTimeout(r, 0)),
@@ -151,7 +151,7 @@ export function renderComponent(
   // Component compile is a side-effecting `component(tag, def)` that registers
   // the custom element. When a controller is supplied, compile with the setup
   // marker so eval rewrites the `import setup` line to the injected controller
-  // (mirrors renderView); otherwise the template renders without scope.
+  // (mirrors renderRoute); otherwise the template renders without scope.
   // An SFC carries its controller inline — the compile returns the body and
   // the emitted template imports it as `setup`. An explicit `opts.controller`
   // still wins, for a fake or a block whose imports need the real module graph.

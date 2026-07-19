@@ -12,10 +12,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ routeExample, rea
 <article sx="max-w-breakpoint-tablet mx-auto">
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Routing</p>
   <h1>Dynamic routes</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">A directory segment in brackets is a parameter. <code>routes/posts/[id]/page.sail</code> matches <code>/posts/anything</code>, and the view reads the value as a signal.</p>
+  <p sx="text-lg text-muted-foreground leading-relaxed">A directory segment in brackets is a parameter. <code>routes/posts/[id]/page.sail</code> matches <code>/posts/anything</code>, and the route reads the value as a signal.</p>
 
   <h2>The [param] segment</h2>
-  <p>deck emits a typed pattern — <code>/posts/:id</code> — for any <code>[param]</code> directory. Read the value with <code>route.params.&lt;name&gt;()</code>. It's a signal, so the view re-renders when the parameter changes during client-side navigation.</p>
+  <p>deck emits a typed pattern — <code>/posts/:id</code> — for any <code>[param]</code> directory. Read the value with <code>route.params.&lt;name&gt;()</code>. It's a signal, so the route re-renders when the parameter changes during client-side navigation.</p>
   <pre sx="font-mono text-sm leading-relaxed bg-surface-1 border border-border rounded-lg p-4 px-5 whitespace-pre-wrap break-words">{routeExample}</pre>
   <code-block code={readExample} lang="sail"></code-block>
 

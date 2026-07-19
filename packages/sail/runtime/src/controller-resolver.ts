@@ -1,7 +1,7 @@
 // controller-resolver.ts — runtime backing for the typed controller contract.
 //
 // Takes a `ControllerDef` (the ONE setup function) and the resolver
-// context, builds the ambient view scope (clients/route/navigate
+// context, builds the ambient route scope (clients/route/navigate
 // + template-declared signals), and calls it. Whatever the function
 // returns IS the flat bindings record `hydrate()` merges into the
 // template scope — signals, `derived()` values, plain helpers, and

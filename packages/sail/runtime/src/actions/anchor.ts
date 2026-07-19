@@ -51,7 +51,7 @@ export const anchor: Action<AnchorPlacement | undefined> = (node, placement) => 
 
   // Find the trigger — the element whose popovertarget names this popover.
   // Two rootings to cover:
-  //   1. Co-rooted (a light-DOM view, or both inside the same shadow tree):
+  //   1. Co-rooted (a light-DOM route, or both inside the same shadow tree):
   //      the trigger shares the popover's root — a plain root query finds it.
   //   2. Custom element: the panel lives in the host's shadow DOM while the
   //      trigger is SLOTTED in the host's light DOM. A shadow-root query can't

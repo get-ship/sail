@@ -27,7 +27,7 @@ fn asset_dev_mode_no_etag() {
     assert!(resp.etag.is_none(), "dev asset must not have ETag");
 }
 
-// ── Shared chunk serving (#267 per-view resolver, multi-entry build) — PURGED ───
+// ── Shared chunk serving (#267 per-route resolver, multi-entry build) — PURGED ──
 // The `serve_sui_chunk` runtime read of `<root>/.deck/<file>` was the
 // framework's hardcoded `.deck/` reach (deck-purge-root). The route
 // `/_deck/{file}` is gone; chunk serving is a follow-up. The rejection

@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 1.5
 title: The authoring model — pure-expression templates, controller logic
 description: The line between a `.sail` template and its inline `<controller>` block. Templates carry declarative directives plus pure expressions; capabilities, statements, and declarations belong in the controller, reached through the ship SDK. SAIL is the Svelte/Vue/Astro SFC lineage — deliberately not JSX.
@@ -7,7 +7,7 @@ description: The line between a `.sail` template and its inline `<controller>` b
 
 # The authoring model
 
-Every line you write in a view lands on one side of a single boundary: the
+Every line you write in a route lands on one side of a single boundary: the
 `.sail` template, or its inline `<controller>` block. Get the boundary right and the
 rest of the framework — SSR, the LSP, route generation, the capability gate —
 works for free. Get it wrong and you fight the renderer.
@@ -66,9 +66,9 @@ JSX**. The split is by *kind of code*, not by *amount*:
 There are **no `const`/`let`/statements in a `.sail` file.** Want a local
 binding? **Promote it to a `derived`** in the controller. That promotion is not
 a tax — the friction *is* the feature: it forces every named computation to be a
-declared, typed, statically analyzable part of the view's scope.
+declared, typed, statically analyzable part of the route's scope.
 
-Keeping the template to directives + expressions is what makes a view
+Keeping the template to directives + expressions is what makes a route
 **statically analyzable**: props, data dependencies, and routes are known
 without running any JS, which is what powers the LSP, route generation, and prop
 contracts. The cutover grows authoring power the right way — template

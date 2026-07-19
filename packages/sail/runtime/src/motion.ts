@@ -186,7 +186,7 @@ function applyFinalStyle(el: Element, cfg: MotionConfig): void {
 }
 
 /** Reduced-motion policy for a whole `motions` set, in one place (every
- *  branch below — loop/enter/view/scroll/event — used to duplicate this).
+ *  branch below — loop/enter/reveal/scroll/event — used to duplicate this).
  *
  *  Ruling: translate/scale/rotate are vestibular-hazard motion under
  *  `prefers-reduced-motion`, so they never PLAY. Every config in the set —
@@ -623,7 +623,7 @@ function createAnimationsWhenConnected(
 // re-timed onto a `ViewTimeline` (view: the element's own passage into the
 // viewport) or a `ScrollTimeline` (scroll: the document's total scroll) —
 // zero JS per frame, compositor-driven. Where it does not (Firefox, jsdom),
-// `view` degrades from scrub-to-scroll to play-once-on-first-reveal via
+// `reveal` degrades from scrub-to-scroll to play-once-on-first-reveal via
 // IntersectionObserver: a static end state is not a fallback for "animate
 // as it enters the viewport", it reads as the feature being broken.
 //
@@ -631,7 +631,7 @@ function createAnimationsWhenConnected(
 // runtime carried exactly this wiring (`a.timeline = new ViewTimeline(...)`
 // + the IO fallback). The motion.dev migration (8bb03de9) rewrote the
 // branch as a bare `createAnimations()` — identical to `enter` — so every
-// `motion:view` element played its reveal ONCE at mount, below the fold,
+// `motion:reveal` element played its reveal ONCE at mount, below the fold,
 // invisibly, and sat at its final pose forever. No error surfaces because
 // a finished animation is indistinguishable from a correct one. If you are
 // editing this branch: the contract is "hidden until the viewport says
@@ -642,10 +642,10 @@ interface ProgressTimelineCtors {
   ScrollTimeline?: new (opts: { source: Element | null }) => AnimationTimeline
 }
 
-function makeProgressTimeline(kind: 'view' | 'scroll', el: Element): AnimationTimeline | undefined {
+function makeProgressTimeline(kind: 'reveal' | 'scroll', el: Element): AnimationTimeline | undefined {
   const g = globalThis as ProgressTimelineCtors
   try {
-    if (kind === 'view') {
+    if (kind === 'reveal') {
       return g.ViewTimeline ? new g.ViewTimeline({ subject: el }) : undefined
     }
     if (typeof document === 'undefined') return undefined
@@ -655,15 +655,15 @@ function makeProgressTimeline(kind: 'view' | 'scroll', el: Element): AnimationTi
   }
 }
 
-/** No scroll timeline available. `view` still has a correct meaning —
+/** No scroll timeline available. `reveal` still has a correct meaning —
  *  play the reveal once, time-driven, the first time the element
  *  intersects the viewport. `scroll` (progress = container scroll) has
  *  no time-driven equivalent, so it lands on the END state — visible,
  *  not invisible — and SAYS SO: this runtime's history is silent
  *  degradations shipping as "works on my machine", so the degraded
  *  path is loud by policy. */
-function observeProgressFallback(el: Element, kind: 'view' | 'scroll', c: AnimControls): Disposer {
-  if (kind === 'view' && typeof IntersectionObserver === 'function') {
+function observeProgressFallback(el: Element, kind: 'reveal' | 'scroll', c: AnimControls): Disposer {
+  if (kind === 'reveal' && typeof IntersectionObserver === 'function') {
     c.pause?.()
     const io = new IntersectionObserver(
       (entries) => {
@@ -678,7 +678,7 @@ function observeProgressFallback(el: Element, kind: 'view' | 'scroll', c: AnimCo
     return () => io.disconnect()
   }
   console.warn(
-    `[sail/motion] motion:${kind} needs ${kind === 'view' ? 'ViewTimeline or IntersectionObserver' : 'ScrollTimeline'}, ` +
+    `[sail/motion] motion:${kind} needs ${kind === 'reveal' ? 'ViewTimeline or IntersectionObserver' : 'ScrollTimeline'}, ` +
     `and this environment has neither — settling at the final pose instead of animating. ` +
     `The trigger is degraded, not silently dropped.`,
     el,
@@ -691,7 +691,7 @@ function observeProgressFallback(el: Element, kind: 'view' | 'scroll', c: AnimCo
  *  Runs synchronously after `createAnimations` (via the `afterCreate`
  *  hook), before the just-started time-driven animation can advance or
  *  finish. Returns the disposer for whatever the fallback installed. */
-function attachProgressTimeline(el: Element, kind: 'view' | 'scroll', controls: AnimControls[]): Disposer {
+function attachProgressTimeline(el: Element, kind: 'reveal' | 'scroll', controls: AnimControls[]): Disposer {
   const timeline = makeProgressTimeline(kind, el)
   const detachers: Disposer[] = []
   for (const c of controls) {
@@ -705,7 +705,7 @@ function attachProgressTimeline(el: Element, kind: 'view' | 'scroll', controls: 
       detachers.push(
         c.attachTimeline({
           timeline,
-          ...(kind === 'view' && timeline ? { rangeStart: 'entry 0%', rangeEnd: 'entry 100%' } : {}),
+          ...(kind === 'reveal' && timeline ? { rangeStart: 'entry 0%', rangeEnd: 'entry 100%' } : {}),
           observe: () => observeProgressFallback(el, kind, c),
         }),
       )
@@ -742,12 +742,12 @@ function isFocusVisible(ev: FocusEvent): boolean {
   return focusSource === 'keyboard'
 }
 
-type Branch = 'loop' | 'enter' | 'exit' | 'view' | 'scroll' | 'event' | 'noop'
+type Branch = 'loop' | 'enter' | 'exit' | 'reveal' | 'scroll' | 'event' | 'noop'
 
 function classifyTrigger(trigger: string): Branch {
   if (trigger === 'loop') return 'loop'
   if (trigger === 'enter' || trigger === 'exit') return trigger
-  if (trigger === 'view' || trigger === 'scroll') return trigger
+  if (trigger === 'reveal' || trigger === 'scroll') return trigger
   if (TRIGGER_EVENTS[trigger]) return 'event'
   return 'noop'
 }
@@ -892,7 +892,7 @@ function attachOnce(
     }
   }
 
-  if (branch === 'view' || branch === 'scroll') {
+  if (branch === 'reveal' || branch === 'scroll') {
     if (reduced) {
       applyReducedMotionSettle(el, config.motions)
       return () => {}

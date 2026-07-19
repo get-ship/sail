@@ -1,7 +1,7 @@
 //! HTML escaping + void-element classification.
 //!
 //! Tiny, pure helpers shared by binding analysis and any host that
-//! splices values into HTML (e.g. deck's view-host). Kept at crate
+//! splices values into HTML (e.g. deck's route-host). Kept at crate
 //! level so they outlive any single emit/analysis pass.
 
 /// HTML5 void elements — cannot have a closing tag.

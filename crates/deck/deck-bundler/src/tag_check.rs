@@ -1,7 +1,7 @@
 //! Post-bundle tag-collision check (#308).
 //!
 //! The deck bundler deduplicates shared modules into a single chunk via
-//! `manual_code_splitting` so two views importing the same primitive get one
+//! `manual_code_splitting` so two routes importing the same primitive get one
 //! `customElements.define("ship-foo", …)` call across the whole bundle —
 //! the silent-hijack class this check kills was the regression where
 //! `min_share_count: Some(1)` was off and a primitive was duplicated per

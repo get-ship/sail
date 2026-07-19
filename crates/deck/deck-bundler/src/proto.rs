@@ -26,7 +26,7 @@ pub struct DroppedSideEffectModule {
 /// What one target produced.
 #[derive(Debug, Clone)]
 pub struct BundleManifest {
-    /// Logical target name (e.g. `sail-runtime`, `views/git/view`).
+    /// Logical target name (e.g. `sail-runtime`, `routes/git/route`).
     pub target: String,
     /// Absolute output path.
     pub out_path: String,

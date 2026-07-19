@@ -1,10 +1,10 @@
-//! SES Compartment runner — confined execution of view-controller code.
+//! SES Compartment runner — confined execution of route-controller code.
 //!
-//! Deck runs views, so Deck owns secure execution (the SAIL runtime provides the
+//! Deck runs routes, so Deck owns secure execution (the SAIL runtime provides the
 //! hardened endowment surface; the author-time `sail-controller-no-ambient-
 //! authority` lint is the static first line). A controller is untrusted code;
 //! the Compartment is the capability boundary. We endow ONLY the runtime
-//! reactive surface + the view's policy-gated `ship.*` ops, and deny everything
+//! reactive surface + the route's policy-gated `ship.*` ops, and deny everything
 //! else (`fetch`, `XMLHttpRequest`, `window`, `process`, intrinsic tampering).
 //!
 //! Import model: per the SES spike, the compiler's *confined build mode* lowers
@@ -51,7 +51,7 @@ export function isRealmLocked(): boolean {
 /**
  * Evaluate confined-built controller `source` in a Compartment whose only
  * reachable bindings are `endowments` — the hardened runtime reactive surface
- * plus the view's policy-gated op set. Ambient authority is unreachable;
+ * plus the route's policy-gated op set. Ambient authority is unreachable;
  * intrinsics are frozen (when {@link lockdownRealm} has run). Returns the
  * controller's evaluation result (its setup return / default export value).
  *
@@ -75,7 +75,7 @@ export function confineController<T = unknown>(
 // template with interpolation) can't be verified statically — this wrapper is
 // the ACTUAL runtime wall for that case, and the one enforcement point full
 // stop for anything the Compartment endows. Never endow the bare global
-// `fetch`; endow this instead (`view-runner.ts`'s `buildViewEndowments` does).
+// `fetch`; endow this instead (`route-runner.ts`'s `buildRouteEndowments` does).
 
 /** Extract the `scheme://host[:port]` authority from an absolute URL-ish
  *  string. `null` for a relative/schemeless string (`/api/x`, `./x`) — those

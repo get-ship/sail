@@ -29,7 +29,7 @@ pub const RUNTIME_SPECIFIER: &str = "@ship/sail-runtime/internal";
 /// Each entry is `(authored_ident, exported_ident, doc)`. Most idents import
 /// under their own name (`exported_ident == authored_ident`). `mount` is the
 /// one exception: `@ship/sail-runtime/internal` already exports a `mount`
-/// (the F1 "mount a view into the DOM" host entry point — see
+/// (the F1 "mount a route into the DOM" host entry point — see
 /// `packages/sail/runtime/src/mount.ts`), so the ambient lifecycle function a
 /// controller body calls is exported under `mountAmbient` and imported
 /// aliased back to `mount` (`import { mountAmbient as mount } from '...'`).

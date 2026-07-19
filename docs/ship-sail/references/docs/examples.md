@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 7
 title: Canonical examples
 description: Three example shapes to anchor the framework's discipline. Home (minimal controller + live data), agents (controller + a derived bundle), form (composition + two-way binding).
@@ -41,7 +41,7 @@ What this avoids: a pile of named handlers for trivial state. Inline handlers co
 
 ## Tier 2 — agents (controller + a derived bundle)
 
-The actual working view in the repo today (`views/agents/`). Server data via `query()`, two memos, one navigation handler. No compositions yet — the composition-based version is below.
+The actual working route in the repo today (`views/agents/`). Server data via `query()`, two memos, one navigation handler. No compositions yet — the composition-based version is below.
 
 ```html
 <!-- views/agents/page.sail (excerpt) -->
@@ -105,7 +105,7 @@ What this avoids: a scattered live-subscription declaration outside the controll
 
 ## Tier 3 — agents with compositions
 
-The same view, scaled with the v1 compositions (`useFilteredList`, `useSelection`, `<use-kbd>`) — all shipped, see [status.md](status.md).
+The same route, scaled with the v1 compositions (`useFilteredList`, `useSelection`, `<use-kbd>`) — all shipped, see [status.md](status.md).
 
 ```html
 <!-- views/agents/page.sail -->
@@ -250,4 +250,4 @@ What this avoids: hand-rolled form state with five signals and four handlers. Th
 | Host primitives | Template hook (`<use-*>`) |
 | Lifecycle | Ambient `mount(...)` / `onCleanup(...)` |
 
-Three examples, three tiers, one controller function, both composition and template-hook categories, every binding form. If a new view doesn't fit one of these shapes, it is *almost certainly* combinable from these primitives. If it isn't, escalate to a discipline conversation — see [the discipline](index.md#the-discipline).
+Three examples, three tiers, one controller function, both composition and template-hook categories, every binding form. If a new route doesn't fit one of these shapes, it is *almost certainly* combinable from these primitives. If it isn't, escalate to a discipline conversation — see [the discipline](index.md#the-discipline).

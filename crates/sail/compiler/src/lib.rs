@@ -134,7 +134,7 @@ pub struct CompileOpts {
     /// params, passed IN — the sail compiler never sniffs the filesystem
     /// for a routing convention it does not own.
     pub route_params: Option<Vec<String>>,
-    /// HOST GRANT: the capabilities the host puts on this file's view scope —
+    /// HOST GRANT: the capabilities the host puts on this file's scope —
     /// the app manifest's declared clients plus whatever context the host
     /// injects (deck merges its own `route`/`navigate` in). Emitted as typed
     /// members of the generated `Scope` (see `emit::dts::ScopeCapability`), so
@@ -147,7 +147,7 @@ pub struct CompileOpts {
     pub emit_dts: bool,
     /// Emit a side-effect `import "@sail-tag/<tag>";` for every custom-element
     /// tag the template uses, so components enter the module's import graph and
-    /// the bundler can tree-shake exactly what a view needs — the per-view
+    /// the bundler can tree-shake exactly what a route needs — the per-route
     /// resolver that replaces the umbrella/islands registry. Pure: the
     /// specifier is a function of the tag; the bundler's `resolve_id` maps
     /// `@sail-tag/<tag>` to the component source. Defaults to `false` — the
@@ -344,7 +344,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     let effective_source: &str = &stripped_source;
     // Resolve the controller for the scope-aware checks in-memory: the inline
     // `<controller>` block (SFC) wins; else the paired `.controller.ts` on disk
-    // (views / not-yet-migrated). No filesystem round-trip for the inline case.
+    // (route modules / not-yet-migrated). No filesystem round-trip for the inline case.
     let controller = inline_controller_src.and_then(|body| {
         check::controller_parse::parse(opts.source_path.clone().unwrap_or_default(), body)
     });
@@ -396,9 +396,9 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     let sx_var_bindings = check::sx_vars::resolve(effective_source, &program, controller.as_ref())
         .map_err(|e| attach_path(e, &opts))?;
     let bindings = bindings::build(&program);
-    // `is_view` is the master view/component switch in lowering (which runtime
+    // `is_route` is the master route/component switch in lowering (which runtime
     // factory to import, direct-emit hydration, route detection). A source is a
-    // view iff it is tagless (no `component_meta`); a tag makes it a component.
+    // route iff it is tagless (no `component_meta`); a tag makes it a component.
     let lowered = lower::lower(&program, opts.component_meta.is_none()).map_err(|e| attach_path(e, &opts))?;
 
     let js = emit::js::emit_module(&program, &lowered, &bindings, &opts, &sx_var_bindings);

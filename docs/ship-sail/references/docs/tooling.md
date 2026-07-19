@@ -1,13 +1,13 @@
 ---
-group: Views
+group: Routes
 order: 6
 title: SAIL — Tooling
-description: The toolchain from .sail source to a live hot-reloaded view.
+description: The toolchain from .sail source to a live hot-reloaded route.
 ---
 
 # SAIL — Tooling
 
-The chain from `.sail` source on disk to a live, hot-reloaded view in the browser passes through six tools. Each maps to one entry point.
+The chain from `.sail` source on disk to a live, hot-reloaded route in the browser passes through six tools. Each maps to one entry point.
 
 ## `sail-compiler` — the Rust ahead-of-time compiler
 
@@ -46,13 +46,13 @@ The binary is also exposed as a `cdylib` (`crate-type = ["lib", "cdylib"]` in `C
 
 There is one bundler: the in-process Rust Rolldown bundler in `crates/deck/deck-bundler/` (#163, #167, #220). The retired `@ship/sail-build` (esbuild, one package at a time) and the old `packages/deck/bundler/index.ts` Bun worker are both gone — components are no longer pre-compiled to on-disk `dist/` bundles per package.
 
-**How it works.** A Rust Rolldown plugin (`SuiPlugin`) compiles each `.sail` via `sail-compiler` in its `load` hook — no bun worker, no subprocess, no `.compiled.js` pre-step. Membership is **traced**, not declared: each entry (a view, an app, a marketing/arcade page) is bundled by following its imports and template tags.
+**How it works.** A Rust Rolldown plugin (`SuiPlugin`) compiles each `.sail` via `sail-compiler` in its `load` hook — no bun worker, no subprocess, no `.compiled.js` pre-step. Membership is **traced**, not declared: each entry (a route, an app, a marketing/arcade page) is bundled by following its imports and template tags.
 
 **Two modes**, wired to `DaemonMode`:
 - **Development** — the daemon serves compiled `.sail` as un-bundled native ESM; HMR re-compiles only the edited component.
 - **Production** — Rolldown emits per-entry traced chunks with `sail-runtime`/`sail-dom` as the shared external, immutable-cached.
 
-**Baking.** `cargo run -p deck-cli -- build-assets` (aliased `bun run build:bundles`) bakes the framework singletons + the `sail-components` umbrella + per-component islands (`<bundle separate />`) + per-view bundles + the site's `sail-marketing.js` / `sail-arcade.js` into `crates/deck/deck-core/assets/` and `.deck/` — the same on-disk asset trees the release binary `include_str!`s. It's what `smoke-deploy.sh` runs and what `just cem` invokes.
+**Baking.** `cargo run -p deck-cli -- build-assets` (aliased `bun run build:bundles`) bakes the framework singletons + the `sail-components` umbrella + per-component islands (`<bundle separate />`) + per-route bundles + the site's `sail-marketing.js` / `sail-arcade.js` into `crates/deck/deck-core/assets/` and `.deck/` — the same on-disk asset trees the release binary `include_str!`s. It's what `smoke-deploy.sh` runs and what `just cem` invokes.
 
 ## `sail-lsp` — the language server
 
@@ -107,15 +107,15 @@ cargo run -p sail-compiler -- build views/hello/page.sail
 
 | File | Owns |
 |---|---|
-| `page.sail` (with its inline `<controller>` block) | Catalog index — search, filter (All / Components / Views), grouped nav |
+| `page.sail` (with its inline `<controller>` block) | Catalog index — search, filter (All / Components / Routes), grouped nav |
 | `[name]/page.sail` (with its inline `<controller>` block) | Detail page — exercise prop knobs, slot compositions, deep-link state, render matrix |
-| `catalog.ts` | The component / view registry the index reads |
+| `catalog.ts` | The component / route registry the index reads |
 | `[name]/matrix.ts` | Render-matrix configurations (prop × value grid) |
 | `[name]/slot-compositions.ts` | Slot composition presets |
 | `[name]/deep-link.ts` | URL-state serialization for the detail page |
 | `[name]/snippet.ts` | Copy-as-snippet renderer |
 
-Use it to find a component, browse its props (including enum values from `<prop values="…">`), exercise edge cases (long strings, empty slots, error states), and copy the matching template snippet straight into your view.
+Use it to find a component, browse its props (including enum values from `<prop values="…">`), exercise edge cases (long strings, empty slots, error states), and copy the matching template snippet straight into your route.
 
 ## Devtools panes — in-page introspection
 
@@ -123,8 +123,8 @@ Use it to find a component, browse its props (including enum values from `<prop 
 
 | Tag | What it shows |
 |---|---|
-| `<sail-devtools-source>` | The mounted view's template + manifest. Editable for user-scoped views; read-only for project-scoped (Fork affordance for project scope). Embeds `<sail-code-editor>` lazily. |
-| `<sail-devtools-components>` | Live component tree of the mounted view |
+| `<sail-devtools-source>` | The mounted route's template + manifest. Editable for user-scoped routes; read-only for project-scoped (Fork affordance for project scope). Embeds `<sail-code-editor>` lazily. |
+| `<sail-devtools-components>` | Live component tree of the mounted route |
 | `<sail-devtools-lint>` | SAIL lint findings for the current file |
 | `<sail-devtools-schema>` | Prop schema for selected component |
 | `<sail-devtools-signals>` | Live signal values; subscribes + repaints on change |
@@ -160,7 +160,7 @@ The script honours `SHIP_DISPATCH_CONFIRM` for non-interactive confirmation prom
 ## Scaffolds
 
 ```sh
-# Drop a fresh view directory:
+# Drop a fresh route directory:
 deck scaffold view settings
 deck scaffold view settings --path /settings
 deck scaffold view settings --component settings-toolbar
@@ -202,8 +202,8 @@ Shipd has two operating modes, selected via `--mode <development|production>` (o
 |---|---|---|
 | Frontend serving | Vite dev server (`just shell-dev`) at 3200 +offset, proxying `/api`, `/_deck`, `/view-host` to the daemon | Daemon serves prebuilt shell HTML directly; no Vite, no proxy, no second port |
 | Bundler | In-process Rolldown (`Bundler::start_watching`, notify) re-bundles on edit; no spawned worker | Pre-bundled by `just build`; daemon `include_str!`s the static output |
-| HMR | `/_deck/dev/hmr` SSE channel; `apps/shell/src/hmr.ts` cache-busts view modules and re-runs `mount()` in place | Disabled — HMR routes are not registered in production |
-| Cache headers | `Cache-Control: no-cache` on every asset and view artifact; no ETag | `Cache-Control: public, immutable, max-age=31536000` on framework bundles, `must-revalidate` on view artifacts; ETag on every response |
+| HMR | `/_deck/dev/hmr` SSE channel; `apps/shell/src/hmr.ts` cache-busts route modules and re-runs `mount()` in place | Disabled — HMR routes are not registered in production |
+| Cache headers | `Cache-Control: no-cache` on every asset and route artifact; no ETag | `Cache-Control: public, immutable, max-age=31536000` on framework bundles, `must-revalidate` on route artifacts; ETag on every response |
 | SSR cache | Bypassed every request (sources may have changed under us) | Memoized on first hit and reused until the daemon restarts |
 | Error detail | Full error bodies | Redacted; only the kind of failure leaks to the client |
 | Status bar | `<sail-status-bar mode="development">` shows a hairline `DEV` badge between the connection dot and the branch | Badge hidden; same component, no chrome |

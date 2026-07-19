@@ -1,6 +1,6 @@
 // Direct-emit hydrate helpers for `{#while-loading}` / `{#while-error}`.
 //
-// The compiler-emitted view's `hydrate(root, ctx)` calls these for each
+// The compiler-emitted route's `hydrate(root, ctx)` calls these for each
 // SSR'd `<sail-while-loading key="bN">` / `<sail-while-error key="bN">`
 // element. On signal transitions, the render callback (also emitted by
 // the compiler, captured in the setup closure) builds fresh CSR DOM

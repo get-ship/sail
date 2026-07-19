@@ -5,7 +5,7 @@
 #   1. GET /_deck/views/greet/zelda → 200 JSON
 #   2. Payload params.id == "zelda"
 #   3. Payload html contains "Hello" (static scaffold from the template)
-#   4. GET /_deck/view/greet/zelda → 200 HTML (view-host resolves the view)
+#   4. GET /_deck/view/greet/zelda → 200 HTML (route-host resolves the route)
 #
 # No browser. No ~/.ship. curl-only.
 # Usage: crates/deck/deck-conformance/e2e/param.sh   (needs `cargo build -p deck-conformance`)
@@ -50,7 +50,7 @@ echo "$PAYLOAD" | python3 -c "import sys,json; html=json.load(sys.stdin)['html']
   || fail "SSR html does not contain 'Hello'"
 echo "ok: SSR html contains 'Hello'"
 
-# 5. View-host page returns 200 for the sub-path route.
+# 5. Route-host page returns 200 for the sub-path route.
 curl -sf "$BASE/_deck/view/greet/zelda" >/dev/null \
   || fail "GET /_deck/view/greet/zelda returned non-2xx"
 echo "ok: /_deck/view/greet/zelda → 200 HTML"

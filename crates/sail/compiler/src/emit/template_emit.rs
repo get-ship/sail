@@ -18,7 +18,7 @@
 //!   1. A hoisted `const __wireBoundary_b<N> = (anchor) => bindIf({...})`
 //!      defined inside `setup(ctx)`. Captures `$scope`. Used by
 //!      `__mount`'s inline path AND by the public attach handler below.
-//!   2. (Views only) A public property `__b<N>_attach: (target) => …`
+//!   2. (Routes only) A public property `__b<N>_attach: (target) => …`
 //!      on the setup return. `attach()` walks SSR'd
 //!      `<sail-{if|for|match|await} key="b<N>">` elements, finds the
 //!      handler by key, swaps the SSR wrapper for a Comment anchor, and
@@ -72,9 +72,9 @@ pub struct TemplateEmitter {
     /// boundary dispatch emitted into `hydrate_calls`.
     pub(super) boundary_hoists: Writer,
     /// Direct-emit hydrate calls for migrated binding kinds (Phase 3b.3).
-    /// Each line is one statement inside the view's `hydrate(root, ctx)`
+    /// Each line is one statement inside the route's `hydrate(root, ctx)`
     /// function — e.g. `if (__t["b0"]) __cleanups.push(hydrateText(...));`.
-    /// Only populated in view mode; components stay manifest-driven this
+    /// Only populated in route mode; components stay manifest-driven this
     /// phase. The corresponding manifest entries are skipped in
     /// `js.rs::emit_bindings`, so each migrated kind moves out of the
     /// manifest and into hydrate atomically.
@@ -100,9 +100,9 @@ pub struct TemplateEmitter {
     /// key — so the `b<N>` we read here for control-flow boundaries
     /// matches the SSR walker's emitted `<sail-{kind} key="b<N>">`.
     pub(super) keys: KeyAllocator,
-    /// Whether the current compile mode is `View`. Components don't
+    /// Whether the current compile is a route. Components don't
     /// emit `hydrate(root, ctx)` (no SSR/attach() path).
-    pub(super) is_view: bool,
+    pub(super) is_route: bool,
     /// True while emitting the per-item IIFE body of a `{#for}` loop.
     /// When set, reactive binding closures void-read `$scope.__v` to
     /// track the per-row version signal and re-run when `update` fires.
@@ -165,7 +165,7 @@ pub struct TemplateEmitter {
     /// is a transparent pass-through). Set true at the start of a component's
     /// top-level walk; the first element emitted claims the `sail-root` class and
     /// clears it, so root-styling CSS (`.sail-root`, `:host(X)` → `.sail-root`)
-    /// targets that element. Views never set it.
+    /// targets that element. Routes never set it.
     pub(super) root_pending: bool,
     /// Template cloning is a BROWSER optimization (parse once in C++, clone per
     /// instance). The ship-js SSR render runs against the parserless server-DOM
@@ -175,7 +175,7 @@ pub struct TemplateEmitter {
 }
 
 impl TemplateEmitter {
-    pub fn new(_registry: &BindingRegistry, is_view: bool) -> Self {
+    pub fn new(_registry: &BindingRegistry, is_route: bool) -> Self {
         Self {
             next_id: 0,
             module_hoists: Writer::new(),
@@ -190,7 +190,7 @@ impl TemplateEmitter {
             hydrate_uses_markers: false,
             boundary_depth: 0,
             keys: KeyAllocator::default(),
-            is_view,
+            is_route,
             for_in_scope: false,
             for_var_name: None,
             for_idx_name: None,
@@ -275,7 +275,7 @@ impl TemplateEmitter {
         std::mem::replace(&mut self.boundary_hoists, Writer::new()).into_string()
     }
 
-    /// Drain the hydrate-call buffer. Returns the body of the view's
+    /// Drain the hydrate-call buffer. Returns the body of the route's
     /// `hydrate(root, ctx)` named property — empty when no leaf binding
     /// kinds have been migrated to direct-emit yet.
     pub fn take_hydrate_calls(&mut self) -> String {
@@ -484,12 +484,12 @@ impl TemplateEmitter {
                         "{cleanups_var}.push(bindText({v}, () => ({fv}{rw})));"
                     ));
                 }
-                // Phase 3b.3: at depth 0 in views, also emit a direct
+                // Phase 3b.3: at depth 0 in routes, also emit a direct
                 // hydrate call so SSR'd `<!--sail:text:bN-->…<!--/sail-->`
                 // markers wire up without going through the runtime
                 // walker / `bindings` manifest. The matching `text`
                 // manifest entry is suppressed in `js.rs::emit_bindings`.
-                if self.is_view && self.boundary_depth == 0 {
+                if self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_text = true;
                     self.hydrate_calls.line(&format!(
                         "if (__t[{k}]) __cleanups.push(hydrateText(__t[{k}], () => ({rw})));",

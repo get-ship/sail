@@ -10,11 +10,11 @@
 //! 1. Point the resolver at an app dir via `DECK_PROJECT_DIR` (leave
 //!    `DECK_FIRST_PARTY_VIEWS` unset — non-ship host, no first-party bucket).
 //!    The resolver also reads built bundles from `<app_dir>/.deck/`.
-//! 2. Mount `deck::router()`. (The named-view surface — `/_deck/view(s)/*` —
+//! 2. Mount `deck::router()`. (The named-route surface — `/_deck/view(s)/*` —
 //!    was extracted out of deck into the separate `ship-views` repo and is no
 //!    longer served here; its conformance tests moved out with it.)
 //! 3. Layer the extensions deck's handlers read — `DaemonMode` and a
-//!    `Bundler` (so a controller view gets its Rolldown bundle on demand).
+//!    `Bundler` (so a controller route gets its Rolldown bundle on demand).
 //! 4. Mount the data port (`data_port::router`) for the live-data endpoints
 //!    backed by the in-memory [`DemoStore`]. Tokens, the HMR SSE route, and
 //!    the mutation tombstone all come from `deck::router()` itself.
@@ -52,7 +52,7 @@ pub fn default_app_dir() -> PathBuf {
 
 /// Construct the bundler for `app_dir`. repo_root == app_dir so bundle output
 /// lands where the resolver reads it. Zero-config host: no `deck.jsonc` — use
-/// built-in defaults (no consumer targets, conventional view buckets).
+/// built-in defaults (no consumer targets, conventional route buckets).
 fn make_bundler(app_dir: &Path) -> Bundler {
     let cfg = deck::config::DeckConfig::defaults();
     Bundler::start(app_dir.to_path_buf(), None, cfg)
@@ -63,7 +63,7 @@ fn make_bundler(app_dir: &Path) -> Bundler {
 ///
 /// `app_dir` becomes the mount-scoped `Resolution` root, layered as an
 /// Extension so deck's handlers (and the data port's live-data SSE) resolve
-/// view sources against THIS app's root — not a process global.
+/// route sources against THIS app's root — not a process global.
 fn build_router(
     mode: DaemonMode,
     app_dir: &Path,
@@ -73,7 +73,7 @@ fn build_router(
 ) -> Router {
     let resolution = Arc::new(deck::Resolution::new().with_root(app_dir.to_path_buf()));
     router()
-        // The named-view surface (`/_deck/view(s)/*`) was extracted out of deck
+        // The named-route surface (`/_deck/view(s)/*`) was extracted out of deck
         // into the separate `ship-views` repo; deck's own `router()` no longer
         // carries it and this harness no longer merges it back. The remaining
         // conformance tests cover deck's own surface (assets, mutation

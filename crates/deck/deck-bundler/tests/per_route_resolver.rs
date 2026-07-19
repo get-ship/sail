@@ -1,5 +1,5 @@
-//! End-to-end proof of the per-view resolver (#267 wave 0, capability gap #1):
-//! with `DECK_PER_VIEW_RESOLVER` on, a view that uses `<sail-widget>` has the
+//! End-to-end proof of the per-route resolver (#267 wave 0, capability gap #1):
+//! with the per-route resolver on, a route that uses `<sail-widget>` has the
 //! component's code tree-shaken INTO its bundle (resolved from source via the
 //! CEM index); with it off, the component is absent (the umbrella registers it
 //! at runtime). Uses the LOCAL sail-compiler — which carries
@@ -39,7 +39,7 @@ fn fixture(root: &Path) {
     write(&root.join("routes/usewidget2/page.sail"), "<div><sail-widget></sail-widget></div>\n");
 }
 
-fn view_target(root: &Path) -> BundleTarget {
+fn route_target(root: &Path) -> BundleTarget {
     BundleTarget {
         name: "routes/usewidget/route".into(),
         entry: TargetEntry::Real(root.join("routes/usewidget/page.sail")),
@@ -49,7 +49,7 @@ fn view_target(root: &Path) -> BundleTarget {
     }
 }
 
-fn second_view_target(root: &Path) -> BundleTarget {
+fn second_route_target(root: &Path) -> BundleTarget {
     BundleTarget {
         name: "routes/usewidget2/route".into(),
         entry: TargetEntry::Real(root.join("routes/usewidget2/page.sail")),
@@ -79,7 +79,7 @@ async fn bundle(root: &Path, out_root: &Path) -> String {
         BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults()).with_out_root(out_root.to_path_buf());
     let staging = out_root.join("_staging");
     std::fs::create_dir_all(&staging).unwrap();
-    bundle_target(&layout, &view_target(root), &staging, false)
+    bundle_target(&layout, &route_target(root), &staging, false)
         .await
         .expect("view bundles");
     std::fs::read_to_string(out_root.join(".deck/routes/usewidget/route.js"))
@@ -87,7 +87,7 @@ async fn bundle(root: &Path, out_root: &Path) -> String {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn view_bundle_carries_its_component() {
+async fn route_bundle_carries_its_component() {
     // In-process compiler (#255), per-view resolver always on for `routes/`: a
     // view using <sail-widget> tree-shakes the component INTO its bundle from
     // source (via the CEM index). No binary to locate, no gate to flip — the
@@ -108,7 +108,7 @@ async fn view_bundle_carries_its_component() {
 /// chunk in a multi-entry build, not inline N times. This is the dedup the
 /// umbrella does today — required before the umbrella can be deleted.
 #[tokio::test(flavor = "multi_thread")]
-async fn shared_component_dedups_into_one_chunk_across_views() {
+async fn shared_component_dedups_into_one_chunk_across_routes() {
     let src = tempfile::tempdir().unwrap();
     let root = src.path();
     fixture(root);
@@ -117,7 +117,7 @@ async fn shared_component_dedups_into_one_chunk_across_views() {
     // Both views import <sail-widget>; the multi-entry build must hoist it.
     deck_bundler::routes_bundle::bundle_routes(
         &BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults()).with_out_root(out.path().to_path_buf()),
-        &[view_target(root), second_view_target(root)],
+        &[route_target(root), second_route_target(root)],
         &out.path().join("_staging"),
         false,
     )

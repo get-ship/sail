@@ -54,7 +54,7 @@ pub const MOTION_CHANNEL_KEYS: &[&str] = &["from", "to", "preset"];
 ///   LIFECYCLE    enter, exit — the element joining or leaving the DOM. `exit` is the
 ///                one thing CSS cannot do alone: it needs the framework to HOLD the
 ///                element in the tree until the animation finishes.
-///   TIMELINE     view, scroll — PROGRESS-driven, not time-driven. Reveal-on-scroll
+///   TIMELINE     reveal, scroll — PROGRESS-driven, not time-driven. Reveal-on-scroll
 ///                and parallax, at zero JS runtime cost (the platform drives them off
 ///                the main thread — no listener, no rAF, no IntersectionObserver).
 ///   AMBIENT      loop — continuous: the baked animation alternates forever
@@ -68,7 +68,7 @@ pub const MOTION_TRIGGERS: &[&str] = &[
     "focus-visible",
     "enter",
     "exit",
-    "view",
+    "reveal",
     "scroll",
     "loop",
 ];

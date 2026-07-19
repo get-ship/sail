@@ -111,7 +111,7 @@ pub struct PatchElements {
 
 /// Format one `patch-elements` SSE frame.
 ///
-/// The selector is passed through verbatim — view-root scoping is the
+/// The selector is passed through verbatim — route-root scoping is the
 /// runtime's job (it queries against `[data-sail-root][data-view]`, not
 /// the document). The daemon does not rewrite or sanitize selectors.
 ///

@@ -42,7 +42,7 @@ export function hydrateText(open: Comment, getter: () => unknown): () => void {
 // Single-pass scan for every `<!--sail:text:bN-->` opener under `root`.
 // The compiler-emitted `hydrate(root, ctx)` calls this once and then
 // dispatches each text binding by key — one tree walk for the whole
-// view rather than one per binding.
+// route rather than one per binding.
 export function collectTextOpens(root: Node): Record<string, Comment> {
   const owner = (root as Element).ownerDocument ?? document
   const walker = owner.createTreeWalker(root, 128 /* SHOW_COMMENT */)

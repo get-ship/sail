@@ -96,13 +96,13 @@ pub fn build_catalog_scoped(
 }
 
 /// Map every workspace component tag → its source `.sail` path (absolute), for
-/// the per-view resolver: the bundler resolves `@sail-tag/<tag>` to this path so
-/// the component compiles into the view bundle.
+/// the per-route resolver: the bundler resolves `@sail-tag/<tag>` to this path so
+/// the component compiles into the route bundle.
 ///
 /// SOURCE-MODE (primary): for every workspace package, recursively scan
 /// `<pkg>/src/` for `.sail` files whose stem contains a hyphen and is not
 /// "page" or "index" (the HTML custom-element tag-name rule). This is the
-/// authoritative component convention and requires no pre-built CEM. Views
+/// authoritative component convention and requires no pre-built CEM. Routes
 /// (`page.sail`, `index.sail`) are excluded by the guard and never leak into the
 /// resolver index.
 ///
@@ -197,7 +197,7 @@ pub fn tag_pack_index(repo_root: &Path) -> std::collections::HashMap<String, Str
 ///
 /// Every workspace component tag whose owning pack is not in the resolved scope.
 /// Empty when `packs` is empty (global scope excludes nothing). This powers the
-/// author diagnostic the bundler emits when a built view references a scoped-out
+/// author diagnostic the bundler emits when a built route references a scoped-out
 /// tag: "`<tag>` is provided by `<pack>`, which you didn't declare."
 pub fn shadowed_tags(
     repo_root: &Path,
@@ -549,9 +549,9 @@ mod tests {
             &root.join("packages/mycomp/src/sail-foo/sail-foo.sail"),
             "<span>foo</span>\n",
         );
-        // A view alongside it must NOT appear (stem "page" has no hyphen).
+        // A route alongside it must NOT appear (stem "page" has no hyphen).
         write(
-            &root.join("packages/mycomp/src/myview/page.sail"),
+            &root.join("packages/mycomp/src/myroute/page.sail"),
             "<div>view</div>\n",
         );
 
@@ -567,10 +567,10 @@ mod tests {
             "resolved path must be the component .sail source; got: {src:?}"
         );
 
-        // The view (stem=page, no hyphen) must NOT be indexed.
+        // The route (stem=page, no hyphen) must NOT be indexed.
         assert!(
             !idx.contains_key("page"),
-            "page.sail (view) must not leak into the resolver index"
+            "page.sail (route) must not leak into the resolver index"
         );
     }
 
@@ -599,7 +599,7 @@ mod tests {
             &root.join("packages/chrome/src/sail-rail/sail-rail-section.sail"),
             "<div></div>\n",
         );
-        // A view in the same package must not appear.
+        // A route in the same package must not appear.
         write(
             &root.join("packages/chrome/src/routes/home/page.sail"),
             "<div>home</div>\n",
@@ -730,7 +730,7 @@ mod tests {
     /// Monorepo-decoupled discovery: scan a registry-composed root's
     /// `components/` tree (`components/<pkg.path>/<tag>/<tag>.sail`) — the shape
     /// `compose::materialize_space` produces. The dep'd component resolves; a
-    /// view alongside it does not leak; a non-present tag is absent.
+    /// route alongside it does not leak; a non-present tag is absent.
     #[test]
     fn composed_root_components_resolve_from_dep_namespace() {
         let tmp = tempdir().unwrap();
@@ -740,7 +740,7 @@ mod tests {
             &composed.join("components/github.com/acme/agents/ship-agent-card/ship-agent-card.sail"),
             "<article><slot></slot></article>\n",
         );
-        // A view that happens to sit in the tree must NOT be indexed (no hyphen).
+        // A route that happens to sit in the tree must NOT be indexed (no hyphen).
         write(&composed.join("components/github.com/acme/agents/page.sail"), "<div>v</div>\n");
 
         let idx = composed_component_index(composed);
@@ -762,7 +762,7 @@ mod tests {
     }
 
     /// Declaring a pack that doesn't exist in the workspace contributes no tags
-    /// (silently absent at the discovery layer). A view that then references a
+    /// (silently absent at the discovery layer). A route that then references a
     /// real tag from an *undeclared* pack is what surfaces the author diagnostic.
     #[test]
     fn declaring_unknown_pack_yields_no_tags() {

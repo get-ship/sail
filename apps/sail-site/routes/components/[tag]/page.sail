@@ -1,5 +1,5 @@
 <!--
-  /components/[tag] — the detail view. The live component holds center stage
+  /components/[tag] — the detail route. The live component holds center stage
   (press it, type in it, pick from it); the variant chips drive a REAL
   attribute on it; usage is a complete compiling program; props are the
   curated truth from the stdlib declarations.
@@ -12,7 +12,7 @@
 -->
 
 <controller>
-// /components/[tag] — the detail view. route.params.tag() picks the entry
+// /components/[tag] — the detail route. route.params.tag() picks the entry
 // out of the DETAILS registry (the full L1 surface); one variant signal
 // drives the live stage (each entry maps its chips onto whichever
 // attribute its variants mean — button:variant, slider:tone, switch:size,

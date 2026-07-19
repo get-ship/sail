@@ -13,7 +13,7 @@
 //   - deck → sail only: this imports the runtime's `mount()`; the runtime never
 //     imports this.
 
-import { mount, type MountHandle, type ViewPayload } from '@ship/sail-runtime'
+import { mount, type MountHandle, type RoutePayload } from '@ship/sail-runtime'
 import {
   installScrollRestoration,
   onNavigate,
@@ -38,16 +38,16 @@ export interface MountRouterOptions {
   routes: RouteShape[]
   /** The generated layout table (`LAYOUTS`); empty = no chrome wrappers. */
   layouts?: LayoutShape[]
-  /** Pattern → statically-imported view module. The emitted entry imports each
+  /** Pattern → statically-imported route module. The emitted entry imports each
    *  route's `page.sail` and builds this map. */
   modules: Record<string, unknown>
-  /** Host-injected named clients, spread into view scope. Generic — the client
+  /** Host-injected named clients, spread into route scope. Generic — the client
    *  name is the app's (e.g. `ship`), not a framework constant. */
   clients?: Record<string, unknown>
   /** Optional host loader (by-name/by-path payload fetch). Per-app bundles
-   *  co-bundle their views, so this is usually unset. */
+   *  co-bundle their routes, so this is usually unset. */
   loader?: unknown
-  /** pathPrefix → statically-imported layout view module. When an entry exists
+  /** pathPrefix → statically-imported layout route module. When an entry exists
    *  for a prefix, the layout is rendered via mount() so its full authored
    *  markup (chrome element + any composed slotted children) appears in the
    *  DOM. When absent for a prefix, falls back to bare createElement(tag) —
@@ -55,7 +55,7 @@ export interface MountRouterOptions {
    *  never regress. Emitted by the bundler alongside `modules`. */
   layoutModules?: Record<string, unknown>
   /** Install the DEFAULT route-level error boundary (the framework wraps every
-   *  route outlet so a throwing view degrades to an error card, not a dead
+   *  route outlet so a throwing route degrades to an error card, not a dead
    *  subtree). On by default. Set `false` to opt the whole app out — a layout
    *  can opt out a subtree on its own by supplying its own `<sail-error-boundary>`
    *  (which this detects and defers to). */
@@ -75,7 +75,7 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
   }
 
   // Registers the patterns (route() calls defineRoutes internally) and returns
-  // the reactive URL handle injected into every mounted view.
+  // the reactive URL handle injected into every mounted route.
   const routeSignals = createRoute({ routes: opts.routes })
   const layouts = opts.layouts ?? []
   const layoutModules = opts.layoutModules ?? {}
@@ -103,7 +103,7 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     const matched = matchRoute(pathname)
     const raw = matched ? opts.modules[matched.pattern] : undefined
     if (!raw) {
-      // No bundled view for this path — build the layout chain (so the nav +
+      // No bundled route for this path — build the layout chain (so the nav +
       // studio rail stay visible) and mount a graceful fallback in the route slot.
       // A missing route must never produce a blank screen.
       const chain = resolveLayoutChain(pathname, layouts)
@@ -120,7 +120,7 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
       return
     }
     // Module resolution. Eager (co-bundled, static `import * as`) modules ARE
-    // the view namespace already. Code-split modules are a `() => import(...)`
+    // the route namespace already. Code-split modules are a `() => import(...)`
     // thunk that resolves to the namespace — await it here so a route's chunk
     // loads on demand (the module-granular bundling path). Backward-compatible:
     // a non-function `raw` (the eager norm) passes straight through.
@@ -141,8 +141,8 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
       for (const h of layoutHandles) h.dispose()
       return
     }
-    // Install the DEFAULT route boundary on the outlet BEFORE mounting the view,
-    // so a throw during the view's render / controller mount / effect is caught
+    // Install the DEFAULT route boundary on the outlet BEFORE mounting the route,
+    // so a throw during the route's render / controller mount / effect is caught
     // and degrades to an error card. No-op when a layout already supplied a
     // boundary (installRouteBoundary returns null) or when opted out.
     if (errorBoundaryEnabled) {
@@ -153,10 +153,10 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
     }
     const previous = current
     const prevHandles = prevLayoutHandles
-    // Co-bundled views are the norm: `opts.modules` is statically imported, so
+    // Co-bundled routes are the norm: `opts.modules` is statically imported, so
     // there is no SSR payload to fetch and no loader. Pass an empty payload so
     // `mount()` skips by-name resolution (which requires a loader) and, finding
-    // the target empty, runs the view's `__mount(target)` to build the DOM
+    // the target empty, runs the route's `__mount(target)` to build the DOM
     // (CSR) then `hydrate`. A host that DOES inject a loader keeps by-name SSR
     // fetching (pass the pathname so `mount()` resolves the payload).
     const handle = await mount(
@@ -301,14 +301,14 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
 }
 
 /**
- * Empty CSR payload for the co-bundled case. The view module is statically
+ * Empty CSR payload for the co-bundled case. The route module is statically
  * imported (`opts.modules`), so there is no daemon-produced SSR payload and no
  * loader to fetch one. Empty `html`/`css`/`scope` leave the mount target empty,
- * so `mount()` runs the view's `__mount(target)` (the per-app CSR builder) then
+ * so `mount()` runs the route's `__mount(target)` (the per-app CSR builder) then
  * `hydrate`. `params` is empty — `route.params` is seeded from the URL by the
  * `route()` instance (`routeSignals`), not from a payload.
  */
-function coBundledPayload(name: string): ViewPayload {
+function coBundledPayload(name: string): RoutePayload {
   return { name, html: '', css: '', scope: {}, moduleUrl: '', params: {}, clients: [] }
 }
 
@@ -317,7 +317,7 @@ function coBundledPayload(name: string): ViewPayload {
   * this point (see `mountCurrent`'s no-match branch), so this element lives
   * INSIDE the chrome's route slot — the rail and nav stay visible. The
   * surface is the shared `<ship-error-state>` primitive from
-  * `@ship/primitives`; the chrome's compiled view emits a
+  * `@ship/primitives`; the chrome's compiled route emits a
   * `@sail-tag/ship-error-state` import for us, so by the time this runs
   * the custom element is registered.
   *
@@ -329,7 +329,7 @@ function coBundledPayload(name: string): ViewPayload {
    // Guard against an unbuilt workspace — falling back to a bare text node
    // (the previous behaviour) is better than throwing. The framework
    // never imports `@ship/primitives` directly; registration is a bundler
-   // concern, and the chrome view does the heavy lifting.
+   // concern, and the chrome route does the heavy lifting.
    if (!customElements.get('ship-error-state')) {
      const fallback = document.createElement('div')
      fallback.className = 'deck-not-found'
@@ -352,7 +352,7 @@ function coBundledPayload(name: string): ViewPayload {
  * the innermost `<div slot="route">` to mount the route content into, plus any
  * layout MountHandles for later disposal. Empty chain → the root element itself.
  *
- * When a layout has an entry in `layoutModules`, its view module is mounted via
+ * When a layout has an entry in `layoutModules`, its route module is mounted via
  * the runtime's `mount()` so its full authored markup (the chrome element plus
  * any composed slotted children, e.g. `<sail-command-bar slot="command-bar">`)
  * renders into the DOM. The rendered chrome element is located by `layout.tag`
@@ -381,7 +381,7 @@ async function buildMountTarget(
   for (const layout of chain) {
     const mod = layoutModules[layout.pathPrefix]
     if (mod) {
-      // Layout has a view module — mount it to render authored markup.
+      // Layout has a route module — mount it to render authored markup.
       // Mount into a temporary container so the rendered chrome can be
       // extracted and moved into the chain (DOM move, no clone needed).
       const container = document.createElement('div')

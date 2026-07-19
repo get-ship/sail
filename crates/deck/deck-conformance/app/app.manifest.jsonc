@@ -1,9 +1,9 @@
-// App manifest — a name → real-ESM-import map (the synthetic-view import map).
+// App manifest — a name → real-ESM-import map (the synthetic-route import map).
 //
 // SAIL stays ignorant of what these names MEAN. `ship` and `api` are the
 // conformance app's custom data clients (declared here so the conformance
-// views can resolve `ship.demo.todos()` and `api.demo.clock()` against real
-// ESM imports, type-checked by tsgo). The view-host handles `route` and
+// routes can resolve `ship.demo.todos()` and `api.demo.clock()` against real
+// ESM imports, type-checked by tsgo). The route-host handles `route` and
 // `navigate` are NOT here because DECK injects them into the manifest on its
 // own build path (`deck_core::host_context::host_context_clients`) — there is
 // no convention fallback in the compiler; a name resolves through the

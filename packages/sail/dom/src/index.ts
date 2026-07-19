@@ -17,7 +17,7 @@ export { loadSetup, pairedTsPath } from './setup-loader'
 
 // Direct-emit hydrators (Phase 3b.2).
 //
-// The compiler emits per-view/per-component `hydrate(root, ctx)` that
+// The compiler emits per-route/per-component `hydrate(root, ctx)` that
 // walks SSR'd DOM via `walk(root, [path])` and dispatches to per-kind
 // hydrators below.
 export {

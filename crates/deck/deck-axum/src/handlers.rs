@@ -55,9 +55,9 @@ pub async fn serve_sui_error_overlay(mode: Option<Extension<DaemonMode>>) -> Res
 // with the runtime `.deck/` reads. The routes are gone too (deck-axum
 // `router()`).
 
-// ── View handlers — MOVED to the `ship-views` crate ────────────────────────────
+// ── Route handlers — MOVED to the `ship-views` crate ───────────────────────────
 // `serve_sui_route_setup`, `serve_route_host`, `serve_route_payload`, and
-// `serve_view_payload_subpath` (the named-view serving surface) now live in
+// `serve_view_payload_subpath` (the named-route serving surface) now live in
 // `ship-views::handlers` and are registered by `ship_views::router()`. deck-axum
 // keeps ONLY deck's own routes/ SPA + framework surface (deck ⊥ ship-views).
 

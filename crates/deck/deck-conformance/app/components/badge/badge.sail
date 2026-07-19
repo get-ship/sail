@@ -1,7 +1,7 @@
 <controller>
 // Authored controller for the `badge` component proof — a REAL
 // `controller(setup)` export. Confirms a COMPONENT (`.sail` +
-// controller) composes through the same `setup(ctx)` path as a view: the
+// controller) composes through the same `setup(ctx)` path as a route: the
 // synthetic controller runs `resolveController` and recovers the contributed
 // scope type from the `ControllerExport`. Component props remain a Phase-2
 // concern (the standalone synthetic controller can't model mount-time props

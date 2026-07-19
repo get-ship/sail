@@ -6,7 +6,7 @@ order: 24
 slug: "24-morphs"
 prev: "23-while-loading"
 next: "25-going-further"
-chapter: "views"
+chapter: "routes"
 ---
 
 A live `query()` subscribes you to a stream. To **change** the data, you

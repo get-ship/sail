@@ -6,7 +6,7 @@ use sail_compiler::bindings;
 use sail_compiler::parse::parse;
 use sail_compiler::{CompileMode, CompileOpts, compile};
 
-fn compile_view(source: &str) -> sail_compiler::CompileError {
+fn compile_route(source: &str) -> sail_compiler::CompileError {
     compile(
         source,
         CompileOpts {
@@ -40,7 +40,7 @@ fn form_mutation_appears_in_binding_manifest() {
 #[test]
 fn invalid_mutation_expr_is_rejected() {
     let src = r#"<form mutation="agents.create"></form>"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(
         err.message.contains("mutation="),
         "error should mention mutation=; got: {}",

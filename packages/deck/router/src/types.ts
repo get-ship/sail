@@ -7,7 +7,7 @@
 import type { Signal } from '@ship/sail-runtime'
 
 /**
- * The reactive URL handle exposed to view scope as `route`.
+ * The reactive URL handle exposed to route scope as `route`.
  *
  * Each `params.<name>` and `query.<name>` is a `Signal<string | undefined>`
  * — call it to read the current value (and subscribe the surrounding

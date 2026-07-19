@@ -1,6 +1,6 @@
 // clients.ts — SAIL-local data/ops PORT.
 //
-// The keyed, host-injected data/ops clients a view consumes. This is the
+// The keyed, host-injected data/ops clients a route consumes. This is the
 // abstract port: the runtime declares the seam, providers declare the types,
 // hosts supply the values at mount.
 //
@@ -11,7 +11,7 @@
 //      ESM import that provides it
 //      (`emit::synthetic::AppManifest`, crates/sail/compiler/src/emit/synthetic/mod.rs).
 //   2. The compiler scans the template for each manifest key it actually
-//      references (`used_clients`) and imports only those — the per-view
+//      references (`used_clients`) and imports only those — the per-route
 //      resolver. A name the template never mentions costs nothing.
 //   3. Every manifest key becomes a `ScopeCapability::client` typed through
 //      THIS port as `Clients['<name>']` (`emit::synthetic::scope_capabilities`
@@ -19,7 +19,7 @@
 //      generated `Scope`. Reading a name no manifest declares is a type error.
 //   4. At mount the host supplies the concrete map —
 //      `mount(target, payload, { clients: { api } })` — and `./mount` spreads
-//      it into the view scope under both `clients.api` and bare `api`.
+//      it into the route scope under both `clients.api` and bare `api`.
 //
 // The compiler names no client and no provider: the manifest is the only
 // place a name is bound to an implementation.

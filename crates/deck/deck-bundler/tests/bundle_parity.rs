@@ -9,7 +9,7 @@
 //!
 //! Enumerate `BundleLayout::all_targets()` — the static framework singletons
 //! (`sail-runtime`, `sail-dom`, the umbrella, the heavy lazy packs) PLUS every
-//! discovered per-component island AND every discovered view bundle —
+//! discovered per-component island AND every discovered route bundle —
 //! and build each one through the deck Rolldown path. Every target must return
 //! `Ok`.
 //!
@@ -166,7 +166,7 @@ async fn gate_bundle_parity_all_targets_build() {
     let layout = BundleLayout::with_config(repo.clone(), None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
 
     // The full target set: static framework singletons + discovered consumer
-    // bundles (per-package `deck.bundles`) + discovered view bundles. This is
+    // bundles (per-package `deck.bundles`) + discovered route bundles. This is
     // the EXACT set `Bundler::build_all` would iterate.
     let targets = layout.all_targets();
     assert!(
@@ -274,22 +274,22 @@ struct Fixture {
     component_name: Option<&'static str>,
 }
 
-/// The fixture corpus. Views, components, and the
+/// The fixture corpus. Route modules, components, and the
 /// control-flow / binding edge cases. Components carry a `component_name` so the
-/// component emit path is exercised on both producers, not just views.
+/// component emit path is exercised on both producers, not just route modules.
 fn fixtures() -> Vec<Fixture> {
-    use CompileMode::{Component, View};
+    use CompileMode::{Component, Route};
     vec![
-        Fixture { name: "hello", mode: View, setup_url: None, component_name: None },
-        Fixture { name: "counter", mode: View, setup_url: Some("./counter.controller.ts"), component_name: None },
-        Fixture { name: "agents", mode: View, setup_url: Some("./agents.controller.ts"), component_name: None },
-        Fixture { name: "comment-and-whitespace", mode: View, setup_url: None, component_name: None },
-        Fixture { name: "for-static", mode: View, setup_url: None, component_name: None },
-        Fixture { name: "for-static-text", mode: View, setup_url: None, component_name: None },
-        Fixture { name: "for-static-attr", mode: View, setup_url: None, component_name: None },
-        Fixture { name: "for-dynamic-mixed", mode: View, setup_url: None, component_name: None },
-        Fixture { name: "for-update", mode: View, setup_url: None, component_name: None },
-        Fixture { name: "route-view", mode: View, setup_url: None, component_name: None },
+        Fixture { name: "hello", mode: Route, setup_url: None, component_name: None },
+        Fixture { name: "counter", mode: Route, setup_url: Some("./counter.controller.ts"), component_name: None },
+        Fixture { name: "agents", mode: Route, setup_url: Some("./agents.controller.ts"), component_name: None },
+        Fixture { name: "comment-and-whitespace", mode: Route, setup_url: None, component_name: None },
+        Fixture { name: "for-static", mode: Route, setup_url: None, component_name: None },
+        Fixture { name: "for-static-text", mode: Route, setup_url: None, component_name: None },
+        Fixture { name: "for-static-attr", mode: Route, setup_url: None, component_name: None },
+        Fixture { name: "for-dynamic-mixed", mode: Route, setup_url: None, component_name: None },
+        Fixture { name: "for-update", mode: Route, setup_url: None, component_name: None },
+        Fixture { name: "route-module", mode: Route, setup_url: None, component_name: None },
         Fixture { name: "ship-button", mode: Component, setup_url: None, component_name: Some("ship-button-test") },
         Fixture { name: "reflect-empty-slot", mode: Component, setup_url: None, component_name: Some("reflect-empty-slot") },
         Fixture { name: "shadow-tones", mode: Component, setup_url: None, component_name: Some("shadow-tones") },
@@ -440,7 +440,7 @@ fn wasm_compile_all(repo: &Path, fixtures: &[Fixture]) -> Vec<WasmRow> {
             let source = std::fs::read_to_string(&path)
                 .unwrap_or_else(|e| panic!("read {} for wasm side: {e}", f.name));
             let mode = match f.mode {
-                CompileMode::View => "view",
+                CompileMode::Route => "route",
                 CompileMode::Component => "component",
                 CompileMode::Auto => "auto",
             };

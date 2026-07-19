@@ -111,7 +111,7 @@ pub fn run(
 /// Error-severity `sail-lint` rules (`sail-prop-value`, `sail-attr-bool-prop`,
 /// `sail-css-content-text`, `controller-*`). Before #255 those rules rejected in
 /// the CLI bin's `fatal_diagnostics_gate` but passed silently through library
-/// `compile()` — which the daemon (`deck-core/src/view.rs`) and the napi test
+/// `compile()` — which the daemon (`deck-core/src/route.rs`) and the napi test
 /// harness both call. One contract per boundary: a `Severity::Error` finding is
 /// a compile error in ALL three artifacts (CLI, daemon, harness).
 ///

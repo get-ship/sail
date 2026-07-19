@@ -1,7 +1,7 @@
 //! Run the bundle in ship-js and collect the first-paint HTML.
 //!
 //! A `JsRuntime` is `!Send`, so the run happens on a dedicated current-thread
-//! VM thread; the caller blocks on it. The production view-host would instead
+//! VM thread; the caller blocks on it. The production route-host would instead
 //! pool `ship_js::deno::ScriptExecutor` threads (one isolate live per thread),
 //! awaiting their `Send` reply futures — a fresh isolate per request, pooled
 //! across VM threads. This single-shot path is the unit the pool repeats.
@@ -43,7 +43,7 @@ pub fn render(bundle: &str, dispatch: Arc<SsrDispatch>) -> Result<RenderOut> {
 }
 
 /// Render `bundle` once with an explicit `limits` bound. Use this when a host
-/// wants to tune the wall-clock / heap cap per request (e.g. a richer view
+/// wants to tune the wall-clock / heap cap per request (e.g. a richer route
 /// getting more time) rather than relying on the env defaults.
 pub fn render_with_limits(
     bundle: &str,

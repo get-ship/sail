@@ -6,7 +6,7 @@
 
 use sail_compiler::{compile, compiler_version, CompileMode, CompileOpts, ComponentMeta};
 
-const VIEW_SRC: &str = r#"<ul bind:this={listEl}>{#for (row, _i) of [{id: 1, label: "a"}] key={row.id}}<li>{row.label}</li>{/for}</ul>
+const ROUTE_SRC: &str = r#"<ul bind:this={listEl}>{#for (row, _i) of [{id: 1, label: "a"}] key={row.id}}<li>{row.label}</li>{/for}</ul>
 "#;
 
 const COMPONENT_SRC: &str = r#"<scope>
@@ -16,7 +16,7 @@ const COMPONENT_SRC: &str = r#"<scope>
 </scope><button><slot /></button>
 "#;
 
-fn view_opts() -> CompileOpts {
+fn route_opts() -> CompileOpts {
     CompileOpts {
         mode: CompileMode::Component,
         emit_dts: true,
@@ -56,7 +56,7 @@ fn compiler_version_struct_is_populated() {
 
 #[test]
 fn js_carries_compiler_version_marker() {
-    let out = compile(VIEW_SRC, view_opts()).expect("compile view");
+    let out = compile(ROUTE_SRC, route_opts()).expect("compile route");
     let cv = compiler_version();
     let first_real = out
         .js
@@ -79,7 +79,7 @@ fn js_carries_compiler_version_marker() {
     );
     // Property on the default export — survives bundling under
     // Bun.build / esbuild even when leading comments get rewritten by
-    // the bundler. For views the property hangs off the `view(...)`
+    // the bundlers. For routes the property hangs off the `route(...)`
     // result via `Object.assign(..., { _compilerVersion })`.
     assert!(
         out.js.contains("_compilerVersion:"),
@@ -115,7 +115,7 @@ fn cem_carries_compiler_version_field() {
 
 #[test]
 fn schema_carries_compiler_version_field() {
-    let out = compile(VIEW_SRC, view_opts()).expect("compile view");
+    let out = compile(ROUTE_SRC, route_opts()).expect("compile route");
     let schema = out.schema.expect("schema emitted");
     let stamp = schema
         .get("_compilerVersion")
@@ -125,7 +125,7 @@ fn schema_carries_compiler_version_field() {
 
 #[test]
 fn meta_carries_compiler_version_field() {
-    let out = compile(VIEW_SRC, view_opts()).expect("compile view");
+    let out = compile(ROUTE_SRC, route_opts()).expect("compile route");
     let meta = out.meta.expect("meta emitted");
     let stamp = meta
         .get("_compilerVersion")
@@ -135,7 +135,7 @@ fn meta_carries_compiler_version_field() {
 
 #[test]
 fn dts_carries_compiler_version_comment() {
-    let out = compile(VIEW_SRC, view_opts()).expect("compile view");
+    let out = compile(ROUTE_SRC, route_opts()).expect("compile route");
     let dts = out.dts.expect("dts emitted");
     assert!(
         dts.lines().any(|l| l.starts_with("// _compilerVersion ")),

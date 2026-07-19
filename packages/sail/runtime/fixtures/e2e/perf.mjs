@@ -3,8 +3,8 @@
 //
 // Two measurements:
 //
-//   1. Cold-load time-to-interactive per fixture view. Median of 3.
-//   2. 1000-cycle mount/unmount on the counter view, with a heap-size
+//   1. Cold-load time-to-interactive per fixture route. Median of 3.
+//   2. 1000-cycle mount/unmount on the counter route, with a heap-size
 //      delta sampled before/after. Catches retain-on-mount leaks.
 //
 // Numbers are baselines. Report and compare across changes.

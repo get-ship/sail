@@ -20,7 +20,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ loopDiagram }))
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">AI</p>
   <h1>The agent authoring loop</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    An agent authoring a Sail view produces a <code>.sail</code> +
+    An agent authoring a Sail route produces a <code>.sail</code> +
     <code>controller.ts</code> pair that compiles, stays in scope, and behaves
     to spec — all in one turn. Ship gives the agent six surfaces to make that
     one-turn target reachable.
@@ -29,7 +29,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ loopDiagram }))
   <pre sx="font-mono text-sm leading-relaxed bg-surface-1 border border-border rounded-lg p-4 px-5 whitespace-pre-wrap break-words">{loopDiagram}</pre>
 
   <p>
-    The example to the right is a view with <strong>four deliberate
+    The example to the right is a route with <strong>four deliberate
     diagnostics</strong> baked in: an unknown event modifier, a missing prop
     declaration, a stale signal reference, and a render-subset escape
     (<code>.toFixed()</code> in the template). An agent would:
@@ -51,7 +51,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ loopDiagram }))
       missed (lowering-only failures). A non-zero exit is a hard failure.
     </li>
     <li>
-      <strong>Score</strong> — once the view compiles, <code>@ship/sail-eval</code>
+      <strong>Score</strong> — once the route compiles, <code>@ship/sail-eval</code>
       runs it in jsdom against a behavioural spec and returns
       <code>&#123; score, sub, report &#125;</code>. The agent decides whether
       to retry based on the score.

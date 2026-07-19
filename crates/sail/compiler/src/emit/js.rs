@@ -32,7 +32,7 @@
 //!
 //! Phase 2 client-side control flow: each `{#if}` / `{#for}` / `{#match}`
 //! emits a hoisted `__wireBoundary_b<N>` (used by both `__mount` and
-//! `__b<N>_attach`) plus a `__b<N>_attach` named property on the view's
+//! `__b<N>_attach`) plus a `__b<N>_attach` named property on the route's
 //! setup return. The compiled module exports no manifest entries for
 //! `if` / `for` / `match` / `await` kinds — `attach()` finds these
 //! boundaries by walking SSR'd `<sail-{kind} key="…">` elements and
@@ -117,10 +117,10 @@ pub fn emit_module(
         mount::emit_mount_export(&mut w, program, body);
     }
     // Phase 3b.5 (gate I): the `bindings` manifest is gone — every
-    // binding kind is now wired by the compiled view's
+    // binding kind is now wired by the compiled route's
     // `hydrate(root, ctx)` directly, so the runtime walker has nothing
     // left to dispatch through. Components never used the manifest;
-    // views no longer need it either. Saves ~9 KB ungzipped across the
-    // ported primitives + per-view overhead.
+    // route modules no longer need it either. Saves ~9 KB ungzipped across the
+    // ported primitives + per-route overhead.
     w.into_string()
 }

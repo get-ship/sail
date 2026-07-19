@@ -107,7 +107,7 @@ export function pickSignals(scope: Record<string, unknown>): Record<string, Sign
 
 /**
  * Component-mount state. The compiler emits `componentMountState($scope)` in
- * place of a hand-rolled proxy. Behavior matches view-mount — one shape,
+ * place of a hand-rolled proxy. Behavior matches route-mount — one shape,
  * one builder, no flag.
  */
 export function componentMountState(scope: Record<string, unknown>): Record<string, unknown> {

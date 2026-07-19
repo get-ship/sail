@@ -63,7 +63,7 @@ fn walk_collect(dir: &Path, out: &mut Vec<PathBuf>) {
 /// Determine compile mode + component metadata for a given `.sail` path.
 /// Files under `packages/components/` are components; their component name is
 /// the file stem. (The framework builds components, full stop — there is no
-/// `views/` concept here; views are a Ship/deck applet feature.)
+/// `views/` concept here; routed pages are a Ship/deck applet feature.)
 fn classify(path: &Path, repo: &Path) -> (CompileMode, Option<ComponentMeta>) {
     let rel = path.strip_prefix(repo).unwrap_or(path);
     let is_component = rel.starts_with("packages/components");

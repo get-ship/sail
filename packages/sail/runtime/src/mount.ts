@@ -2,9 +2,9 @@
 //
 // Replaces attach() (legacy, in @ship/sail-dom) with a payload-driven
 // flow. Hosts (shell, view-host static, embed surfaces, tests) pass
-// either a fetched ViewPayload or a name string; mount injects the
+// either a fetched RoutePayload or a name string; mount injects the
 // SSR HTML, builds signals from payload.scope, imports the compiled
-// view module, runs setup() + hydrate() + ambient mount() callbacks,
+// route module, runs setup() + hydrate() + ambient mount() callbacks,
 // opens any live SSE channel, and returns a typed MountHandle.
 //
 // Spec: .artifacts/design-f1-mount-unification.md
@@ -14,7 +14,7 @@
 // scripts, doctype) lives OUTSIDE this file — in the host page.
 //
 // FILE_CAP_OVERRIDE: one cohesive concern — the mount() lifecycle. The private
-// helpers (build scope from payload, resolve/load the view + islands, open the
+// helpers (build scope from payload, resolve/load the route + islands, open the
 // live SSE channel) are sequential steps of that one flow; they share the
 // payload/scope context and have no use apart from mount().
 
@@ -23,36 +23,36 @@ import type { RouteSignals } from './route-signals'
 import { createScope, withScope } from './effect-scope'
 import { morph } from './morph'
 import type { LiveState, LiveSignal } from './live-state'
-import type { ViewPayload as GeneratedViewPayload } from './generated'
+import type { RoutePayload as GeneratedRoutePayload } from './generated'
 
 /**
  * Wire shape returned by `GET /_deck/views/<name>[/<sub>]`. The base type
  * is committed at `./generated.d.ts` (a hand-maintained mirror of
- * `crates/deck/deck-host/src/view_payload.rs::ViewPayload`; `./generated.ts`
+ * `crates/deck/deck-host/src/route_payload.rs::RoutePayload`; `./generated.ts`
  * is gitignored and no `gen-types` task exists in this repo). The local
- * generic specializes `scope` — Rust ships it as untyped JSON; per-view
+ * generic specializes `scope` — Rust ships it as untyped JSON; per-route
  * modules narrow it here.
  */
-export type ViewPayload<Scope = Record<string, unknown>> =
-  Omit<GeneratedViewPayload, 'scope'> & { scope: Scope }
+export type RoutePayload<Scope = Record<string, unknown>> =
+  Omit<GeneratedRoutePayload, 'scope'> & { scope: Scope }
 
 /**
  * Host-provided loader. The runtime is host-agnostic — it does NOT know the
- * URL scheme for fetching view payloads or component bundles. The host (deck
+ * URL scheme for fetching route payloads or component bundles. The host (deck
  * view-host, shell) injects this adapter so the `/_deck/...` (or any) scheme
  * lives at the boundary, not in the framework.
  */
 export interface SuiLoader {
-  /** Resolve a view payload by `name[/sub]` (for the `mount(target, name)` form). */
-  fetchView(nameOrPath: string): Promise<ViewPayload>
+  /** Resolve a route payload by `name[/sub]` (for the `mount(target, name)` form). */
+  fetchRoute(nameOrPath: string): Promise<RoutePayload>
 }
 
 export interface MountOptions {
-  /** Legacy single-client alias. Mirrored into `clients.ship` so a view
+  /** Legacy single-client alias. Mirrored into `clients.ship` so a route
    *  reading bare `ship` resolves the same object; prefer `clients: { ship }`
    *  going forward. */
   ship?: unknown
-  /** Host-injected named data/ops clients, spread into scope so a view's
+  /** Host-injected named data/ops clients, spread into scope so a route's
    *  expressions and handlers resolve bare `X`. The names come from the app
    *  manifest (see `./clients`); the host supplies the values here. `ship` is
    *  just a key on this map (aliased from `opts.ship` when only the legacy
@@ -82,7 +82,7 @@ export interface MountHandle<Scope = Record<string, unknown>> {
   element: HTMLElement
   /** HMR: dispose, reuse target, mount the new payload. Preserves
    *  signal values for keys present in both payloads' scope. */
-  reload(next: ViewPayload): Promise<void>
+  reload(next: RoutePayload): Promise<void>
 }
 
 interface SetupContext {
@@ -99,27 +99,27 @@ interface CompiledModule {
 }
 
 /**
- * Mount a view into a DOM target.
+ * Mount a route into a DOM target.
  *
- * @param target Element to receive the rendered view. If the
+ * @param target Element to receive the rendered route. If the
  *               target already contains markup (SSR pre-render),
  *               mount morph-patches it toward payload.html, preserving
  *               node identity. Otherwise children are built fresh.
- * @param payloadOrName  A fetched ViewPayload, or a `name[/sub]`
+ * @param payloadOrName  A fetched RoutePayload, or a `name[/sub]`
  *               string the runtime fetches from `/_deck/views/...`.
  * @param opts   ship / route / navigate / restoreScope / cssScope.
  * @returns      MountHandle — call `dispose()` when done.
  */
 export async function mount<Scope = Record<string, unknown>>(
   target: HTMLElement,
-  payloadOrName: ViewPayload<Scope> | string,
+  payloadOrName: RoutePayload<Scope> | string,
   opts: MountOptions = {},
 ): Promise<MountHandle<Scope>> {
   if (!target) throw new Error('[sail/mount] target is required')
 
   const payload =
     typeof payloadOrName === 'string'
-      ? await resolveView(payloadOrName, opts.loader)
+      ? await resolveRoute(payloadOrName, opts.loader)
       : payloadOrName
 
   // 0a. Seed route params from the payload. The daemon captured these
@@ -171,7 +171,7 @@ export async function mount<Scope = Record<string, unknown>>(
   // surface; `ship` is one key on it plus the legacy ctx alias. A host
   // passing only `opts.ship` still populates `clients.ship`, and a host
   // passing only `clients: { ship }` still feeds `ctx.ship` — both styles
-  // reach a view reading bare `ship`.
+  // reach a route reading bare `ship`.
   // An explicit `opts.clients.ship` wins over `opts.ship` in the map.
   const ship = opts.ship ?? opts.clients?.['ship']
   const clients: Record<string, unknown> | undefined =
@@ -202,7 +202,7 @@ export async function mount<Scope = Record<string, unknown>>(
   // hook subscriptions allocated during setup register their
   // cleanup with this mount. The scope is disposed by `dispose()`
   // below — without it, EventSource subscriptions opened by
-  // live-querying views leaked across every navigation and tabs
+  // live-querying routes leaked across every navigation and tabs
   // eventually OOM'd.
   const scope = createScope()
   const setupRet = withScope(scope, () =>
@@ -242,8 +242,8 @@ export async function mount<Scope = Record<string, unknown>>(
   }
 
   // 7. CSR path: if the target is still empty (no SSR HTML and no
-  // `payload.html`), call the view's `__mount(target)` to create
-  // the DOM. The compiled view's `__mount` is the CSR equivalent
+  // `payload.html`), call the route's `__mount(target)` to create
+  // the DOM. The compiled route's `__mount` is the CSR equivalent
   // of the SSR template — it builds the elements and wires the
   // text-open / attr-marker hooks that `hydrate` then activates.
   // (The legacy `attach()` path in @ship/sail-dom followed this same
@@ -293,16 +293,16 @@ export async function mount<Scope = Record<string, unknown>>(
   // 9. Open live SSE channel if the payload declared one.
   //
   // SSE frames must patch the signals the *template* reads. The compiled
-  // view seeds `$scope.<name>` envelope signals (the controller's
+  // route seeds `$scope.<name>` envelope signals (the controller's
   // `query()`/`queryKeyed()` entries) and
   // returns those signals flattened into `setupRet` via
   // `Object.assign({}, $scope, { __mount, hydrate })`. That `$scope.<name>`
   // is the signal `bindWhileLoading` / `bindIf` close over; the mount-built
   // copy in `built.scope.<name>` is a server-rendered seed nobody reads.
   // Patching the seed leaves the template stuck on `loading` while the
-  // view's signal idles in `error` (view-host: `ship` is undefined, the
-  // live thunk throws synchronously) or in whatever state the in-view SDK
-  // subscription happens to drive (shell). Target the view's signals so
+  // route's signal idles in `error` (view-host: `ship` is undefined, the
+  // live thunk throws synchronously) or in whatever state the in-route SDK
+  // subscription happens to drive (shell). Target the route's signals so
   // the patch-signals channel resolves the template's loading branches.
   const subscribeUrl = pluckSubscribe(payload.scope as Record<string, unknown>)
   let liveSource: EventSource | null = null
@@ -321,7 +321,7 @@ export async function mount<Scope = Record<string, unknown>>(
     cleanups.push(() => liveSource?.close())
     // Gate the mount handle on the SSE channel reaching OPEN. Hosts and
     // e2e probes treat `__suiDispose` as the "channel is live" signal —
-    // if a patch-elements POST hits the daemon before its per-view
+    // if a patch-elements POST hits the daemon before its per-route
     // broadcast registry has registered this connection's subscriber
     // (`apps/shipd/src/views/sui_patch_channel.rs::publish` does not
     // retain frames for late subscribers), the frame is silently
@@ -363,7 +363,7 @@ export async function mount<Scope = Record<string, unknown>>(
       scope.dispose()
       styleEl?.remove()
     },
-    async reload(next: ViewPayload) {
+    async reload(next: RoutePayload) {
       // Snapshot current signal values for the keys present in `next.scope`.
       const restored: Record<string, unknown> = {}
       const nextScope = (next.scope ?? {}) as Record<string, unknown>
@@ -372,7 +372,7 @@ export async function mount<Scope = Record<string, unknown>>(
         if (sig) restored[k] = sig()
       }
       handle.dispose()
-      const remounted = (await mount(target, next as ViewPayload, {
+      const remounted = (await mount(target, next as RoutePayload, {
         ...opts,
         restoreScope: restored,
       })) as MountHandle<Scope>
@@ -385,6 +385,7 @@ export async function mount<Scope = Record<string, unknown>>(
   }
   return handle
 }
+
 
 
 function hasHydratableMarkup(el: HTMLElement): boolean {
@@ -410,17 +411,17 @@ function seedRouteParams(
   }
 }
 
-async function resolveView(
+async function resolveRoute(
   nameOrPath: string,
   loader: SuiLoader | undefined,
-): Promise<ViewPayload> {
+): Promise<RoutePayload> {
   if (!loader) {
     throw new Error(
       `[sail/mount] mounting by name ("${nameOrPath}") requires opts.loader — the ` +
-        `host must provide a SuiLoader. The runtime does not know the view URL scheme.`,
+        `host must provide a SuiLoader. The runtime does not know the route URL scheme.`,
     )
   }
-  return loader.fetchView(nameOrPath)
+  return loader.fetchRoute(nameOrPath)
 }
 
 interface BuiltScope {
@@ -493,10 +494,10 @@ function awaitChannelOpen(es: EventSource, timeoutMs: number): Promise<void> {
 
 /**
  * Resolve which signals the SSE patch-signals channel should target for
- * each declared live key. Prefers the signal the compiled view's setup
+ * each declared live key. Prefers the signal the compiled route's setup
  * exposed (the one the template's hydrate bindings actually read), and
  * falls back to the SSR-built seed when setup did not surface one — keeps
- * legacy / hand-rolled view modules that don't flatten `$scope` working.
+ * legacy / hand-rolled route modules that don't flatten `$scope` working.
  */
 function pickLiveSignals(
   setupRet: Record<string, unknown> | undefined,
@@ -592,9 +593,9 @@ function openLiveChannel(
 // `/_deck/views/<name>/patch-elements` endpoint. The trust boundary is the
 // SSE auth in shipd's `sui_agent_push.rs` — by the time a frame reaches
 // here it's already a trusted caller. The runtime's only job is to scope
-// the selector to the view root: `[data-sail-root][data-view="<name>"]`
+// the selector to the route root: `[data-sail-root][data-view="<name>"]`
 // is the mount target, so anything outside is silently dropped (with a
-// console warning) — patches can't escape the hosted view even if a
+// console warning) — patches can't escape the hosted route even if a
 // publisher sends `body` or `html`.
 
 interface PatchElementsPayload {
@@ -628,12 +629,12 @@ function applyPatchElementsFrame(root: HTMLElement, raw: string): void {
     return
   }
   if (!target) {
-    // Either no match anywhere, or the match lives outside the view
+    // Either no match anywhere, or the match lives outside the route
     // root. The view-host shell tagged the root with
     // `data-sail-root[data-view]` precisely so external publishers can't
     // mutate the rest of the page through this channel.
     console.warn(
-      `[sail/mount] patch-elements: selector ${selector!} matched no element inside the view root; dropped`,
+      `[sail/mount] patch-elements: selector ${selector!} matched no element inside the route root; dropped`,
     )
     return
   }

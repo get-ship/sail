@@ -7,7 +7,7 @@
 // and template read against THESE types — there is no ambient passthrough.
 //
 // The SSR build aliases `./clients/demo` to a host-dispatch-backed server
-// entry (see the deck view-host SSR path), so server-side these methods
+// entry (see the deck route-host SSR path), so server-side these methods
 // resolve through `op_ship_call`; in the browser they fetch the deck op
 // surface. Either way the typed shape is the one source of truth.
 

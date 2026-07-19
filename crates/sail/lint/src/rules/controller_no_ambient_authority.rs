@@ -8,10 +8,10 @@
 //! - `document.cookie`
 //!
 //! Rationale (ADR unified-deck-router's sibling, the secure-execution model):
-//! view code is untrusted (agent-authored) and runs on the highest-privilege
+//! route code is untrusted (agent-authored) and runs on the highest-privilege
 //! surface. All I/O must go through the `ship` SDK (the only sanctioned,
 //! policy-gated path); ambient network/eval is exactly what the Deck SES
-//! Compartment denies at runtime (proven in #165 — confined views run with
+//! Compartment denies at runtime (proven in #165 — confined routes run with
 //! `fetch`/`window` undefined). This rule is the author-time mirror.
 //!
 //! **Severity: Error** (security). CONFINED BY DEFAULT: every inline
@@ -26,7 +26,7 @@
 //! same directory can resolve differently depending on which package's
 //! `sail.config.json` owns them.
 //!
-//! Promotion to Error was gated on every confined-surface view controller being
+//! Promotion to Error was gated on every confined-surface route controller being
 //! migrated off raw ambient authority — now true (zero violations across the
 //! confined surface, verified by the repo-wide scan). Error hard-fails compile
 //! on any regression. Note `fetch` is flagged only as a bare call or on a global
@@ -84,7 +84,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 ///   relative/same-origin path and `network` contains `"self"`) — flagged
 ///   otherwise. A DYNAMIC (non-literal) argument is allowed only when
 ///   `network` is non-empty (we can't statically verify a dynamic target;
-///   the runtime fetch wrapper — `packages/deck/host/src/view-runner.ts` —
+///   the runtime fetch wrapper — `packages/deck/host/src/route-runner.ts` —
 ///   is the actual enforcement for that case) — still banned when `network`
 ///   is empty/absent.
 /// - `new XMLHttpRequest()`: the constructor call itself carries no URL (that
@@ -332,7 +332,7 @@ mod tests {
     use super::*;
     use std::path::Path;
 
-    // A confined-surface path (view controller) — where the rule applies.
+    // A confined-surface path (route controller) — where the rule applies.
     fn n(src: &str) -> usize {
         check(Path::new("views/git/controller.ts"), src).len()
     }

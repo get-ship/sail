@@ -77,7 +77,7 @@ pub struct Bundler {
     /// cold-misses for the same target wait on the same `Notify` instead of
     /// each spinning a fresh `BundlerBuilder` + oxc module graph (the primary
     /// 470MB/min driver). Without this, N concurrent fanout lanes requesting
-    /// the same view → N full module graphs live simultaneously.
+    /// the same route → N full module graphs live simultaneously.
     in_flight: Arc<tokio::sync::Mutex<HashMap<String, Arc<Notify>>>>,
     /// Cached `all_targets()` snapshot (#256). `all_targets` re-reads every
     /// `.sail` under the source roots; the watcher hit it on every FS event and
@@ -134,7 +134,7 @@ impl Bundler {
     }
 
     /// Drop the cached target snapshot so the next `targets_snapshot` re-walks.
-    /// Called by the watcher when a directory is created/removed (a new view
+    /// Called by the watcher when a directory is created/removed (a new route
     /// may have appeared/disappeared).
     fn invalidate_targets(&self) {
         *self.targets_cache.lock().unwrap_or_else(|e| e.into_inner()) = None;
@@ -217,7 +217,7 @@ impl Bundler {
     /// — the handler only needs the bundle on disk, which the leader wrote.
     pub async fn build(&self, target: &str) -> Result<BundleManifest, BundlerError> {
         // Resolve the target from the cached snapshot. On a miss, refresh once
-        // (a just-created view won't be in a stale snapshot) and retry before
+        // (a just-created route won't be in a stale snapshot) and retry before
         // giving up.
         let t = match self.find_target(target) {
             Some(t) => t,
@@ -275,7 +275,7 @@ impl Bundler {
     /// set, every consumer target whose self-declaration marks it `lazy` is
     /// skipped during the build. The dev loop page never imports the arcade
     /// or PDF packs (Pixi.js + pdfjs-dist together are ~4 MB of JS that the
-    /// browser heap retains even though no view references them; this is the
+    /// browser heap retains even though no route references them; this is the
     /// 400 MB dev-loop reading measured 2026-06-06). Production builds
     /// (`cargo run -p deck-cli -- build-assets` for the dist, or any consumer that
     /// explicitly wants the full asset graph) leave the env var unset and
@@ -285,8 +285,8 @@ impl Bundler {
         let layout = self.layout();
         let mut failed: Vec<String> = Vec::new();
         let mut built: Vec<BundleTarget> = Vec::new();
-        // Per-view resolver (#255/#267): bundle the view targets TOGETHER
-        // (multi-entry) so components shared across views dedup into shared
+        // Per-route resolver (#255/#267): bundle the route targets TOGETHER
+        // (multi-entry) so components shared across routes dedup into shared
         // chunks — the dedup that replaces the umbrella. Everything else stays
         // per-target. `build_all` is the bake path (xtask build-assets), so the
         // larger multi-entry graph is a one-shot peak, not a daemon-resident cost.
@@ -329,13 +329,13 @@ impl Bundler {
                 }
             }
         }
-        // View targets together (shared-chunk dedup). Atomic: one bad view fails
-        // the whole view bundle — the bake must not ship a broken view.
+        // Route targets together (shared-chunk dedup). Atomic: one bad route fails
+        // the whole route bundle — the bake must not ship a broken route.
         if !views.is_empty() {
             match crate::routes_bundle::bundle_routes(&layout, &views, &self.staging, true).await {
                 Ok(()) => built.extend(views),
                 Err(e) => {
-                    error!(error = %e, "bundler: multi-entry view bundle failed");
+                    error!(error = %e, "bundler: multi-entry route bundle failed");
                     failed.push(format!("views ({e})"));
                 }
             }
@@ -412,7 +412,7 @@ impl Bundler {
     }
     /// Rebuild one target from the watcher, COALESCED through the same
     /// single-flight gate the on-demand `build` path uses. A watcher rebuild of
-    /// `routes/git/view` must not run a second `BundlerBuilder` concurrently with
+    /// `routes/git/route` must not run a second `BundlerBuilder` concurrently with
     /// an on-demand build of the same target — that's the cross-build collision
     /// class. Route through `build_single_flight`; a coalesced waiter gets the
     /// on-disk manifest the leader wrote (same fallback as `build`).

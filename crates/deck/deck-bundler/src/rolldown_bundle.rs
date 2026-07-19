@@ -62,8 +62,8 @@ pub async fn bundle_target(
         // `assert_no_unresolved_imports` guard below now treats as a build
         // failure. Declaration, not resolution luck, decides what stays bare.
         external: (!target.externals.is_empty()).then(|| target.externals.clone().into()),
-        // Hoist every shared module into its own chunk (mirrors the multi-view
-        // build in routes_bundle.rs). Without this the single-view path uses
+        // Hoist every shared module into its own chunk (mirrors the multi-route
+        // build in routes_bundle.rs). Without this the single-route path uses
         // rolldown's default per-entry split, which produces 1 chunk per shared
         // primitive *per consumer* — N chunks for `sail-pagination` where 1
         // would do. Each duplicate chunk's `customElements.define()` adds a no-op
@@ -80,15 +80,15 @@ pub async fn bundle_target(
         // export surface. The default `ExportsOnly` tree-shook a re-exported const
         // (`DECK_API_ASSETS`) with no in-bundle consumer, producing a runtime
         // "does not provide an export named …" error. `Strict` makes the entry's
-        // declared exports roots. App/view targets keep the default.
+        // declared exports roots. App/route targets keep the default.
         preserve_entry_signatures: crate::targets::is_framework_singleton(&target.name)
             .then_some(PreserveEntrySignatures::Strict),
         ..Default::default()
     };
 
-    // Per-view resolver (#255/#267): view builds emit `@sail-tag/<tag>` imports
+    // Per-route resolver (#255/#267): route builds emit `@sail-tag/<tag>` imports
     // that resolve to component source so the bundle carries exactly what the
-    // view uses. Always on for views — the in-process compiler is the linked
+    // route uses. Always on for routes — the in-process compiler is the linked
     // crate, so there is no compiler-version drift to gate around. Framework/
     // app builds leave component_index empty (no `@sail-tag` imports emitted).
     let emit_component_imports = target.name.starts_with("routes/");
@@ -294,7 +294,7 @@ fn detect_dropped_side_effect_modules(
             //
             // The list mirrors what the deck bundler hands to
             // the AssetModulePlugin via `module_types` (the
-            // `.css` → Asset mapping in `app.rs` / the per-view
+            // `.css` → Asset mapping in `app.rs` / the per-route
             // build). The detector's contract is "JS side-effect
             // imports" — assets are out of scope; their absence
             // from the JS chunk graph is expected, not a bug.

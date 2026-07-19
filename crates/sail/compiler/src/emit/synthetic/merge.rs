@@ -39,7 +39,7 @@ pub fn emit_synthetic_client_module(
     mode: CompileMode,
     component_tag: Option<&str>,
 ) -> Result<String, CompileError> {
-    // Per-view resolver, including the convention-backed `route`/`navigate`
+    // Per-route resolver, including the convention-backed `route`/`navigate`
     // names — the bundler and the SSR build both feed through this seam.
     let used = super::used_clients(program, manifest);
     let controller_ts = emit_controller(program, manifest, &used, authored, mode)?;

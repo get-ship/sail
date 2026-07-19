@@ -31,7 +31,7 @@ pub struct WorkspacePackage {
 /// One consumer-bundle self-declaration, read from a package's `package.json`
 /// `deck.bundles[]`. Replaces the central `deck.jsonc` `TargetDecl`: the package
 /// that owns the entry declares the bundle, and the bundler discovers it the
-/// same way it discovers `views/*`. `entry` is relative to the declaring
+/// same way it discovers `routes/*`. `entry` is relative to the declaring
 /// package's root (not the repo root).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -247,7 +247,7 @@ fn discover_dependency_packages(repo_root: &Path) -> Vec<WorkspacePackage> {
 /// declaring package's absolute root (to resolve the package-relative `entry`).
 /// This is the discovery half of the dissolved `deck.jsonc targets`: instead of
 /// a central registry, each package declares its bundles and the bundler walks
-/// the workspace to find them — the same model used for `views/*`. Order follows
+/// the workspace to find them — the same model used for `routes/*`. Order follows
 /// `discover_workspace_packages` (byte-stable, sorted by package name).
 pub fn discover_bundle_declarations(repo_root: &Path) -> Vec<(PathBuf, BundleDecl)> {
     discover_workspace_packages(repo_root)
@@ -385,7 +385,7 @@ pub fn pack_id_for_name(npm_name: &str) -> String {
 /// Recursively walk `dir`, collecting `(tag, abs_path)` pairs for component
 /// `.sail` files. A `.sail` is a component iff its stem contains a hyphen and is
 /// neither "page" nor "index" — the HTML custom-element tag-name rule (HTML spec
-/// §4.13.3 requires a hyphen). Views use `page.sail` or `index.sail` and are
+/// §4.13.3 requires a hyphen). Routes use `page.sail` or `index.sail` and are
 /// excluded by this guard. `dist`, `node_modules`, `.git`, and `target` are
 /// skipped for speed.
 fn scan_sui_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
@@ -413,7 +413,7 @@ fn scan_sui_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
 
 /// Return all `(tag, abs_path)` component pairs discovered by source scan of
 /// `pkg_root/src/`. Only `.sail` files whose stem contains a hyphen and is not
-/// "page" or "index" are returned; views and other files are excluded by the
+/// "page" or "index" are returned; routes and other files are excluded by the
 /// guard.
 pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
     let src = pkg_root.join("src");
@@ -433,7 +433,7 @@ pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
 /// root (`ship_platform::registry::compose::composed_root_for`), which holds
 /// each declared dep's components namespaced as
 /// `components/<pkg.path>/<tag>/<tag>.sail`. The same custom-element hyphen rule
-/// applies (component iff hyphenated stem ∉ {page,index}), so views never leak.
+/// applies (component iff hyphenated stem ∉ {page,index}), so routes never leak.
 /// First tag wins on collision (byte-stable: WalkDir is lexical).
 pub fn composed_component_index(composed_root: &Path) -> std::collections::HashMap<String, PathBuf> {
     let mut out = std::collections::HashMap::new();

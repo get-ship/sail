@@ -13,21 +13,43 @@
         set: __exportSetter.bind(all, name)
       });
   };
+  var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+    get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+  }) : x)(function(x) {
+    if (typeof require !== "undefined")
+      return require.apply(this, arguments);
+    throw Error('Dynamic require of "' + x + '" is not supported');
+  });
 
-  // ../runtime/src/actions/index.ts
+  // packages/sail/runtime/src/actions/index.ts
   var exports_actions = {};
   __export(exports_actions, {
+    zoomPan: () => zoomPan,
+    worldTransform: () => worldTransform,
+    virtualSpacer: () => virtualSpacer,
+    virtualRow: () => virtualRow,
     tooltip: () => tooltip,
     toggleGroup: () => toggleGroup,
     toast: () => toast,
     themePicker: () => themePicker,
+    targetCursor: () => targetCursor,
     tabs: () => tabs,
+    swatch: () => swatch,
+    spotlight: () => spotlight,
+    rect: () => rect,
     rangeFill: () => rangeFill,
     radioGroup: () => radioGroup,
+    primeIconCache: () => primeIconCache,
+    portEdge: () => portEdge,
+    pin: () => pin,
     pagination: () => pagination,
     menu: () => menu,
+    maxWidth: () => maxWidth,
+    icon: () => icon,
     hoverCard: () => hoverCard,
+    gridTracks: () => gridTracks,
     field: () => field,
+    eventSpan: () => eventSpan,
     errorState: () => errorState,
     errorBoundary: () => errorBoundary,
     emptyState: () => emptyState,
@@ -37,14 +59,16 @@
     collapsible: () => collapsible,
     codeBlock: () => codeBlock,
     clickOutside: () => clickOutside,
+    chromeOffset: () => chromeOffset,
     chip: () => chip,
+    cellPad: () => cellPad,
     avatar: () => avatar,
     autosize: () => autosize,
     anchor: () => anchor,
     alert: () => alert
   });
 
-  // ../runtime/src/actions/autosize.ts
+  // packages/sail/runtime/src/actions/autosize.ts
   var autosize = (node) => {
     const el = node;
     const reflow = () => {
@@ -57,7 +81,7 @@
       destroy: () => el.removeEventListener("input", reflow)
     };
   };
-  // ../runtime/src/actions/click-outside.ts
+  // packages/sail/runtime/src/actions/click-outside.ts
   var clickOutside = (node, onOutside) => {
     const handler = (e) => {
       const target = e.target;
@@ -81,7 +105,7 @@
       }
     };
   };
-  // ../runtime/src/actions/anchor.ts
+  // packages/sail/runtime/src/actions/anchor.ts
   var GAP = 4;
   var clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi));
   var anchor = (node, placement) => {
@@ -163,7 +187,7 @@
       }
     };
   };
-  // ../runtime/src/actions/dropzone.ts
+  // packages/sail/runtime/src/actions/dropzone.ts
   var dropzone = (node) => {
     const el = node;
     const getInput = () => el.querySelector('input[type="file"]');
@@ -217,7 +241,7 @@
       }
     };
   };
-  // ../runtime/src/actions/avatar.ts
+  // packages/sail/runtime/src/actions/avatar.ts
   var avatar = (node) => {
     const el = node;
     const doc = el.ownerDocument;
@@ -258,7 +282,7 @@
     });
     return { destroy: () => obs.disconnect() };
   };
-  // ../runtime/src/actions/tooltip.ts
+  // packages/sail/runtime/src/actions/tooltip.ts
   var _seq = 0;
   var tooltip = (node) => {
     const el = node;
@@ -294,7 +318,115 @@
       }
     };
   };
-  // ../runtime/src/actions/alert.ts
+  // packages/sail/runtime/src/actions/icon.ts
+  var ENDPOINT = "/_deck/icons/";
+  var cache = new Map;
+  var inflight = new Map;
+  function primeIconCache(glyphs) {
+    for (const [name, svg] of Object.entries(glyphs))
+      cache.set(name, svg);
+  }
+  function fetchKey(url, key) {
+    const pending = inflight.get(key);
+    if (pending)
+      return pending;
+    const p = fetch(url).then((r) => r.ok ? r.text() : null).catch(() => null).then((svg) => {
+      cache.set(key, svg);
+      inflight.delete(key);
+      return svg;
+    });
+    inflight.set(key, p);
+    return p;
+  }
+  function parseSvg(doc, markup) {
+    const parsed = new DOMParser().parseFromString(markup, "image/svg+xml");
+    const root = parsed.documentElement;
+    if (root.nodeName.toLowerCase() !== "svg")
+      return null;
+    return doc.adoptNode(root);
+  }
+  var icon = (node) => {
+    let svgEl = null;
+    let lastKey = null;
+    let seq = 0;
+    const syncAria = () => {
+      const label = node.getAttribute("label") ?? "";
+      if (label) {
+        node.setAttribute("role", "img");
+        node.setAttribute("aria-label", label);
+        node.removeAttribute("aria-hidden");
+      } else {
+        node.setAttribute("aria-hidden", "true");
+        node.removeAttribute("role");
+        node.removeAttribute("aria-label");
+      }
+      if (svgEl) {
+        if (label)
+          svgEl.removeAttribute("aria-hidden");
+        else
+          svgEl.setAttribute("aria-hidden", "true");
+      }
+    };
+    const drop = () => {
+      if (svgEl) {
+        svgEl.remove();
+        svgEl = null;
+      }
+      lastKey = null;
+    };
+    const inject = (markup, key) => {
+      if (key === lastKey)
+        return;
+      const parsed = parseSvg(node.ownerDocument, markup);
+      if (!parsed)
+        return;
+      parsed.setAttribute("class", "sail-icon-svg");
+      if (svgEl)
+        svgEl.replaceWith(parsed);
+      else
+        node.insertBefore(parsed, node.firstChild);
+      svgEl = parsed;
+      lastKey = key;
+      syncAria();
+    };
+    const render = () => {
+      syncAria();
+      const src = node.getAttribute("src") ?? "";
+      const name = node.getAttribute("name") ?? "";
+      const key = src ? `src:${src}` : name ? `name:${name}` : "";
+      if (!key) {
+        drop();
+        return;
+      }
+      let cached = cache.get(key);
+      if (cached === undefined && !src)
+        cached = cache.get(name);
+      if (cached !== undefined) {
+        if (cached)
+          inject(cached, key);
+        else
+          drop();
+        return;
+      }
+      const ticket = ++seq;
+      const url = src || `${ENDPOINT}${encodeURIComponent(name)}.svg`;
+      fetchKey(url, key).then((svg) => {
+        if (ticket !== seq)
+          return;
+        if (svg)
+          inject(svg, key);
+        else
+          drop();
+      });
+    };
+    const mo = new MutationObserver(render);
+    mo.observe(node, { attributes: true, attributeFilter: ["name", "src", "label"] });
+    render();
+    return {
+      destroy: () => mo.disconnect()
+    };
+  };
+  // packages/sail/runtime/src/actions/alert.ts
   var alert = (node) => {
     const el = node;
     const syncLive = () => {
@@ -320,7 +452,7 @@
       }
     };
   };
-  // ../runtime/src/actions/empty-state.ts
+  // packages/sail/runtime/src/actions/empty-state.ts
   var emptyState = (node) => {
     const el = node;
     const sync = () => {
@@ -333,7 +465,7 @@
     obs.observe(el, { attributes: true, attributeFilter: ["variant"] });
     return { destroy: () => obs.disconnect() };
   };
-  // ../runtime/src/actions/error-state.ts
+  // packages/sail/runtime/src/actions/error-state.ts
   var errorState = (node) => {
     const el = node;
     const code = el.querySelector(".code");
@@ -382,7 +514,7 @@
       }
     };
   };
-  // ../runtime/src/error-boundary.ts
+  // packages/sail/runtime/src/error-boundary.ts
   var exports_error_boundary = {};
   __export(exports_error_boundary, {
     runProtected: () => runProtected,
@@ -390,7 +522,7 @@
     detachBoundary: () => detachBoundary,
     attachBoundary: () => attachBoundary
   });
-  var BOUNDARY_KEY = Symbol.for("sui:error-boundary");
+  var BOUNDARY_KEY = Symbol.for("sail:error-boundary");
   function attachBoundary(host, handle) {
     host[BOUNDARY_KEY] = handle;
   }
@@ -428,12 +560,12 @@
         handle.catch(err, source);
         return;
       }
-      console.error("[sui] uncaught throw (no error boundary):", err);
+      console.error("[sail] uncaught throw (no error boundary):", err);
       return;
     }
   }
 
-  // ../runtime/src/actions/error-boundary.ts
+  // packages/sail/runtime/src/actions/error-boundary.ts
   var errorBoundary = (node) => {
     const el = node;
     const message = el.querySelector(".message");
@@ -472,7 +604,7 @@
       }
     };
   };
-  // ../runtime/src/actions/highlight.ts
+  // packages/sail/runtime/src/actions/highlight.ts
   var KEYWORDS = new Set([
     "import",
     "export",
@@ -511,51 +643,266 @@
     "npm",
     "install"
   ]);
+  var CODE_TAGS = new Set(["controller", "scope", "script"]);
   function esc(s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
-  var RE = new RegExp([
-    String.raw`(?<comment><!--[\s\S]*?-->|\/\/[^\n]*|\/\*[\s\S]*?\*\/|#[^\n]*)`,
-    String.raw`(?<string>\`(?:\\.|[^\`\\])*\`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')`,
-    String.raw`(?<bind>\{[^{}]*\})`,
-    String.raw`(?<tag><\/?[a-zA-Z][\w-]*|\/?>)`,
-    String.raw`(?<num>\b\d+(?:\.\d+)?\b)`,
-    String.raw`(?<word>[A-Za-z_$][\w$]*)`
-  ].join("|"), "g");
-  function highlight(code) {
-    let out = "";
-    let last = 0;
-    for (const m of code.matchAll(RE)) {
-      const i = m.index ?? 0;
-      out += esc(code.slice(last, i));
-      const g = m.groups ?? {};
-      const text = m[0];
-      if (g.comment != null)
-        out += `<span class="tok-comment">${esc(text)}</span>`;
-      else if (g.string != null)
-        out += `<span class="tok-string">${esc(text)}</span>`;
-      else if (g.bind != null)
-        out += `<span class="tok-bind">${esc(text)}</span>`;
-      else if (g.tag != null)
-        out += `<span class="tok-tag">${esc(text)}</span>`;
-      else if (g.num != null)
-        out += `<span class="tok-number">${esc(text)}</span>`;
-      else if (g.word != null) {
-        if (KEYWORDS.has(text))
-          out += `<span class="tok-keyword">${esc(text)}</span>`;
-        else if (VERBS.has(text))
-          out += `<span class="tok-fn">${esc(text)}</span>`;
-        else
-          out += esc(text);
-      } else
-        out += esc(text);
-      last = i + text.length;
+  function span(cls, text) {
+    return `<span class="tok-${cls}">${esc(text)}</span>`;
+  }
+  function findMatchingBrace(source, openIdx) {
+    let depth = 1;
+    let i = openIdx + 1;
+    let quote = null;
+    while (i < source.length) {
+      const ch = source[i];
+      if (quote) {
+        if (ch === "\\") {
+          i += 2;
+          continue;
+        }
+        if (ch === quote)
+          quote = null;
+        i++;
+        continue;
+      }
+      if (ch === '"' || ch === "'" || ch === "`") {
+        quote = ch;
+        i++;
+        continue;
+      }
+      if (ch === "{") {
+        depth++;
+        i++;
+        continue;
+      }
+      if (ch === "}") {
+        depth--;
+        if (depth === 0)
+          return i;
+        i++;
+        continue;
+      }
+      i++;
     }
-    out += esc(code.slice(last));
+    return -1;
+  }
+  var IDENT_START = /[A-Za-z_$]/;
+  var IDENT = /[\w$]/;
+  function atLineStart(src, idx) {
+    for (let k = idx - 1;k >= 0; k--) {
+      const c = src[k];
+      if (c === `
+`)
+        return true;
+      if (!/\s/.test(c))
+        return false;
+    }
+    return true;
+  }
+  function highlightCode(src, allowMarkupHandoff = false) {
+    let out = "";
+    let plain = "";
+    const flush = () => {
+      out += esc(plain);
+      plain = "";
+    };
+    const len = src.length;
+    let i = 0;
+    while (i < len) {
+      const ch = src[i];
+      if (allowMarkupHandoff && ch === "<" && /[A-Za-z/]/.test(src[i + 1] ?? "") && atLineStart(src, i)) {
+        flush();
+        out += highlightMarkup(src.slice(i));
+        return out;
+      }
+      if (ch === "/" && src[i + 1] === "/") {
+        const end = src.indexOf(`
+`, i);
+        const stop = end < 0 ? len : end;
+        flush();
+        out += span("comment", src.slice(i, stop));
+        i = stop;
+        continue;
+      }
+      if (ch === "/" && src[i + 1] === "*") {
+        const end = src.indexOf("*/", i + 2);
+        const stop = end < 0 ? len : end + 2;
+        flush();
+        out += span("comment", src.slice(i, stop));
+        i = stop;
+        continue;
+      }
+      if (ch === "#" && (i === 0 || /\s/.test(src[i - 1]))) {
+        const end = src.indexOf(`
+`, i);
+        const stop = end < 0 ? len : end;
+        flush();
+        out += span("comment", src.slice(i, stop));
+        i = stop;
+        continue;
+      }
+      if (ch === '"' || ch === "'" || ch === "`") {
+        let j = i + 1;
+        while (j < len) {
+          if (src[j] === "\\") {
+            j += 2;
+            continue;
+          }
+          if (src[j] === ch) {
+            j++;
+            break;
+          }
+          j++;
+        }
+        flush();
+        out += span("string", src.slice(i, j));
+        i = j;
+        continue;
+      }
+      if (/\d/.test(ch)) {
+        let j = i + 1;
+        while (j < len && /\d/.test(src[j]))
+          j++;
+        if (src[j] === "." && /\d/.test(src[j + 1] ?? "")) {
+          j += 2;
+          while (j < len && /\d/.test(src[j]))
+            j++;
+        }
+        flush();
+        out += span("number", src.slice(i, j));
+        i = j;
+        continue;
+      }
+      if (IDENT_START.test(ch)) {
+        let j = i + 1;
+        while (j < len && IDENT.test(src[j]))
+          j++;
+        const word = src.slice(i, j);
+        flush();
+        if (KEYWORDS.has(word))
+          out += span("keyword", word);
+        else if (VERBS.has(word))
+          out += span("fn", word);
+        else
+          out += esc(word);
+        i = j;
+        continue;
+      }
+      plain += ch;
+      i++;
+    }
+    flush();
     return out;
   }
+  function highlightMarkup(src) {
+    let out = "";
+    const len = src.length;
+    let i = 0;
+    while (i < len) {
+      const ch = src[i];
+      if (src.startsWith("<!--", i)) {
+        const end = src.indexOf("-->", i + 4);
+        const stop = end < 0 ? len : end + 3;
+        out += span("comment", src.slice(i, stop));
+        i = stop;
+        continue;
+      }
+      if (ch === "<" && /[A-Za-z/]/.test(src[i + 1] ?? "")) {
+        const closing = src[i + 1] === "/";
+        const nameStart = closing ? i + 2 : i + 1;
+        let j2 = nameStart;
+        while (j2 < len && /[\w-]/.test(src[j2]))
+          j2++;
+        if (j2 === nameStart) {
+          out += esc(ch);
+          i++;
+          continue;
+        }
+        const tagName = src.slice(nameStart, j2);
+        out += span("tag", src.slice(i, j2));
+        i = j2;
+        let selfClosing = false;
+        while (i < len) {
+          const c = src[i];
+          if (c === ">") {
+            out += span("tag", ">");
+            i++;
+            break;
+          }
+          if (c === "/" && src[i + 1] === ">") {
+            out += span("tag", "/>");
+            i += 2;
+            selfClosing = true;
+            break;
+          }
+          if (c === '"' || c === "'") {
+            let k2 = i + 1;
+            while (k2 < len) {
+              if (src[k2] === "\\") {
+                k2 += 2;
+                continue;
+              }
+              if (src[k2] === c) {
+                k2++;
+                break;
+              }
+              k2++;
+            }
+            out += span("string", src.slice(i, k2));
+            i = k2;
+            continue;
+          }
+          if (c === "{") {
+            const close = findMatchingBrace(src, i);
+            if (close >= 0) {
+              out += span("bind", src.slice(i, close + 1));
+              i = close + 1;
+              continue;
+            }
+          }
+          if (/[\s=]/.test(c)) {
+            out += esc(c);
+            i++;
+            continue;
+          }
+          let k = i + 1;
+          while (k < len && !/[\s=/>'"{}]/.test(src[k]))
+            k++;
+          out += span("attr", src.slice(i, k));
+          i = k;
+        }
+        if (!closing && !selfClosing && CODE_TAGS.has(tagName.toLowerCase())) {
+          const closeIdx = src.indexOf(`</${tagName}`, i);
+          const stop = closeIdx < 0 ? len : closeIdx;
+          out += highlightCode(src.slice(i, stop));
+          i = stop;
+        }
+        continue;
+      }
+      if (ch === "{") {
+        const close = findMatchingBrace(src, i);
+        if (close >= 0) {
+          out += span("bind", src.slice(i, close + 1));
+          i = close + 1;
+          continue;
+        }
+      }
+      let j = i + 1;
+      while (j < len && src[j] !== "<" && src[j] !== "{")
+        j++;
+      out += esc(src.slice(i, j));
+      i = j;
+    }
+    return out;
+  }
+  function highlight(code) {
+    const trimmed = code.trimStart();
+    const isMarkup = trimmed.startsWith("<") || trimmed.startsWith("{#");
+    return isMarkup ? highlightMarkup(code) : highlightCode(code, true);
+  }
 
-  // ../runtime/src/actions/code-block.ts
+  // packages/sail/runtime/src/actions/code-block.ts
   var codeBlock = (node) => {
     const el = node;
     const pre = el.querySelector("pre") ?? el;
@@ -568,7 +915,7 @@
     mo.observe(el, { attributes: true, attributeFilter: ["code"] });
     return { destroy: () => mo.disconnect() };
   };
-  // ../runtime/src/actions/chip.ts
+  // packages/sail/runtime/src/actions/chip.ts
   var chip = (node) => {
     const el = node;
     if (!el.hasAttribute("role"))
@@ -620,7 +967,42 @@
       }
     };
   };
-  // ../runtime/src/actions/field.ts
+  // packages/sail/runtime/src/actions/chrome-offset.ts
+  var chromeOffset = (node) => {
+    const root = typeof document !== "undefined" ? document.documentElement : null;
+    const publish = () => {
+      if (!root)
+        return;
+      const h = Math.round(node.getBoundingClientRect().height);
+      if (h > 0)
+        root.style.setProperty("--chrome-offset", `${h}px`);
+    };
+    let ro;
+    if (typeof requestAnimationFrame !== "undefined") {
+      requestAnimationFrame(() => {
+        publish();
+        if (typeof ResizeObserver !== "undefined") {
+          ro = new ResizeObserver(publish);
+          ro.observe(node);
+        }
+      });
+    } else {
+      publish();
+    }
+    const onResize = () => publish();
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", onResize);
+    }
+    return {
+      destroy: () => {
+        ro?.disconnect();
+        if (typeof window !== "undefined") {
+          window.removeEventListener("resize", onResize);
+        }
+      }
+    };
+  };
+  // packages/sail/runtime/src/actions/field.ts
   var _seq2 = 0;
   var field = (node) => {
     const el = node;
@@ -654,7 +1036,7 @@
       obs.observe(control, { childList: true, subtree: true });
     return { destroy: () => obs.disconnect() };
   };
-  // ../runtime/src/actions/collapsible.ts
+  // packages/sail/runtime/src/actions/collapsible.ts
   var collapsible = (node) => {
     const el = node;
     const onToggle = () => {
@@ -679,7 +1061,7 @@
       }
     };
   };
-  // ../runtime/src/actions/range-fill.ts
+  // packages/sail/runtime/src/actions/range-fill.ts
   var rangeFill = (node) => {
     const el = node;
     const sync = () => {
@@ -700,7 +1082,7 @@
       }
     };
   };
-  // ../runtime/src/actions/radio-group.ts
+  // packages/sail/runtime/src/actions/radio-group.ts
   var _seq3 = 0;
   var radioGroup = (node) => {
     const el = node;
@@ -771,7 +1153,7 @@
       }
     };
   };
-  // ../runtime/src/actions/tabs.ts
+  // packages/sail/runtime/src/actions/tabs.ts
   var tabs = (node) => {
     const root = node;
     const keyOf = (el, i) => el.getAttribute("name") || String(i);
@@ -880,7 +1262,7 @@
       }
     };
   };
-  // ../runtime/src/actions/toggle-group.ts
+  // packages/sail/runtime/src/actions/toggle-group.ts
   var toggleGroup = (node) => {
     const root = node;
     const isMulti = () => root.getAttribute("type") === "multiple";
@@ -968,7 +1350,7 @@
       }
     };
   };
-  // ../tokens/src/themes.ts
+  // packages/sail/tokens/src/themes.ts
   var THEMES = [
     {
       id: "ship-light",
@@ -1093,7 +1475,7 @@
     themeTransport?.save(id);
   }
 
-  // ../runtime/src/actions/theme-picker.ts
+  // packages/sail/runtime/src/actions/theme-picker.ts
   var themePicker = (node) => {
     const root = node;
     const trigger = root.querySelector(".sail-theme-trigger");
@@ -1181,7 +1563,7 @@
       }
     };
   };
-  // ../runtime/src/actions/pagination.ts
+  // packages/sail/runtime/src/actions/pagination.ts
   var pagination = (node) => {
     const root = node;
     const valueOf = (el) => el.getAttribute("value") ?? "";
@@ -1225,7 +1607,7 @@
       }
     };
   };
-  // ../runtime/src/actions/menu.ts
+  // packages/sail/runtime/src/actions/menu.ts
   var isOpen = (el) => {
     try {
       return el.matches(":popover-open");
@@ -1310,7 +1692,7 @@
       }
     };
   };
-  // ../runtime/src/actions/context-menu.ts
+  // packages/sail/runtime/src/actions/context-menu.ts
   var contextMenu = (node) => {
     const root = node;
     const target = () => {
@@ -1349,7 +1731,291 @@
       }
     };
   };
-  // ../runtime/src/actions/hover-card.ts
+  // packages/sail/runtime/src/actions/virtual-row.ts
+  var virtualRow = (node, initial) => {
+    const el = node;
+    const apply = (start) => {
+      if (start == null || Number.isNaN(start)) {
+        el.style.removeProperty("--row-y");
+      } else {
+        el.style.setProperty("--row-y", `${start}px`);
+      }
+    };
+    apply(initial);
+    return {
+      update: (next) => apply(next)
+    };
+  };
+  var virtualSpacer = (node, initial) => {
+    const el = node;
+    const apply = (total) => {
+      if (total == null || Number.isNaN(total)) {
+        el.style.removeProperty("--rows-h");
+      } else {
+        el.style.setProperty("--rows-h", `${total}px`);
+      }
+    };
+    apply(initial);
+    return {
+      update: (next) => apply(next)
+    };
+  };
+  var cellPad = (node, initial) => {
+    const el = node;
+    const apply = (indent) => {
+      if (indent == null || Number.isNaN(indent)) {
+        el.style.removeProperty("--cell-ps");
+      } else {
+        el.style.setProperty("--cell-ps", `calc(var(--density-row-px) + ${indent}px)`);
+      }
+    };
+    apply(initial);
+    return {
+      update: (next) => apply(next)
+    };
+  };
+  // packages/sail/runtime/src/actions/event-span.ts
+  var toValue = (v) => {
+    if (v == null)
+      return null;
+    if (typeof v === "number")
+      return Number.isFinite(v) ? `${v}px` : null;
+    return v === "" ? null : v;
+  };
+  var eventSpan = (node, initial) => {
+    const el = node;
+    const apply = (rect) => {
+      if (!rect) {
+        el.style.removeProperty("--evt-top");
+        el.style.removeProperty("--evt-h");
+        el.style.removeProperty("--evt-left");
+        el.style.removeProperty("--evt-w");
+        return;
+      }
+      const set = (name, v) => {
+        const val = toValue(v);
+        if (val == null)
+          el.style.removeProperty(name);
+        else
+          el.style.setProperty(name, val);
+      };
+      set("--evt-top", rect.top);
+      set("--evt-h", rect.height);
+      set("--evt-left", rect.left);
+      set("--evt-w", rect.width);
+    };
+    apply(initial);
+    return {
+      update: (next) => apply(next)
+    };
+  };
+  // packages/sail/runtime/src/actions/rect-box.ts
+  var toValue2 = (v) => {
+    if (v == null)
+      return null;
+    if (typeof v === "number")
+      return Number.isFinite(v) ? `${v}px` : null;
+    return v === "" ? null : v;
+  };
+  var rect = (node, initial) => {
+    const el = node;
+    const apply = (box) => {
+      if (!box) {
+        el.style.removeProperty("--box-top");
+        el.style.removeProperty("--box-left");
+        el.style.removeProperty("--box-w");
+        el.style.removeProperty("--box-h");
+        return;
+      }
+      const set = (name, v) => {
+        const val = toValue2(v);
+        if (val == null)
+          el.style.removeProperty(name);
+        else
+          el.style.setProperty(name, val);
+      };
+      set("--box-top", box.top);
+      set("--box-left", box.left);
+      set("--box-w", box.width);
+      set("--box-h", box.height);
+    };
+    apply(initial);
+    return {
+      update: (next) => apply(next)
+    };
+  };
+  var pin = (node, initial) => {
+    const el = node;
+    const apply = (p) => {
+      if (!p) {
+        el.style.removeProperty("--pin-x");
+        el.style.removeProperty("--pin-y");
+        return;
+      }
+      el.style.setProperty("--pin-x", Number.isFinite(p.x) ? `${p.x}px` : "0");
+      el.style.setProperty("--pin-y", Number.isFinite(p.y) ? `${p.y}px` : "0");
+    };
+    apply(initial);
+    return {
+      update: (next) => apply(next)
+    };
+  };
+  // packages/sail/runtime/src/actions/port-edge.ts
+  var KEYS = ["--port-top", "--port-left", "--port-right", "--port-bottom"];
+  var writeEdge = (el, side, parentW, parentH, selfW, selfH) => {
+    if (!side) {
+      for (const k of KEYS)
+        el.style.removeProperty(k);
+      return;
+    }
+    const halfW = selfW / 2;
+    const halfH = selfH / 2;
+    switch (side) {
+      case "left": {
+        el.style.setProperty("--port-top", `${parentH / 2 - halfH}px`);
+        el.style.setProperty("--port-left", `${-halfW}px`);
+        el.style.removeProperty("--port-right");
+        el.style.removeProperty("--port-bottom");
+        break;
+      }
+      case "right": {
+        el.style.setProperty("--port-top", `${parentH / 2 - halfH}px`);
+        el.style.removeProperty("--port-left");
+        el.style.setProperty("--port-right", `-${halfW}px`);
+        el.style.removeProperty("--port-bottom");
+        break;
+      }
+      case "top": {
+        el.style.setProperty("--port-top", `${-halfH}px`);
+        el.style.setProperty("--port-left", `${parentW / 2 - halfW}px`);
+        el.style.removeProperty("--port-right");
+        el.style.removeProperty("--port-bottom");
+        break;
+      }
+      case "bottom": {
+        el.style.setProperty("--port-bottom", `-${halfH}px`);
+        el.style.setProperty("--port-left", `${parentW / 2 - halfW}px`);
+        el.style.removeProperty("--port-right");
+        el.style.removeProperty("--port-top");
+        break;
+      }
+    }
+  };
+  var portEdge = (node, initial) => {
+    const el = node;
+    let observer = null;
+    let currentSide = initial;
+    const recompute = () => {
+      if (!currentSide) {
+        writeEdge(el, currentSide, 0, 0, 0, 0);
+        return;
+      }
+      const parent = el.parentElement;
+      if (!parent) {
+        writeEdge(el, currentSide, 0, 0, 0, 0);
+        return;
+      }
+      const pr = parent.getBoundingClientRect();
+      const sr = el.getBoundingClientRect();
+      writeEdge(el, currentSide, pr.width, pr.height, sr.width, sr.height);
+    };
+    const startObserve = () => {
+      if (typeof ResizeObserver === "undefined")
+        return;
+      observer = new ResizeObserver(recompute);
+      const parent = el.parentElement;
+      if (parent)
+        observer.observe(parent);
+    };
+    startObserve();
+    recompute();
+    return {
+      update(next) {
+        currentSide = next;
+        if (next && !observer)
+          startObserve();
+        recompute();
+      },
+      destroy() {
+        observer?.disconnect();
+        observer = null;
+        for (const k of KEYS)
+          el.style.removeProperty(k);
+      }
+    };
+  };
+  // packages/sail/runtime/src/actions/world-transform.ts
+  var worldTransform = (node, initial) => {
+    const el = node;
+    const apply = (cssTransform) => {
+      if (cssTransform == null || cssTransform === "") {
+        el.style.removeProperty("--world-tx");
+      } else {
+        el.style.setProperty("--world-tx", cssTransform);
+      }
+    };
+    apply(initial);
+    return {
+      update: (next) => apply(next)
+    };
+  };
+  // packages/sail/runtime/src/actions/zoom-pan.ts
+  var zoomPan = (node, initial) => {
+    const el = node;
+    const compose = (s) => {
+      const x = Number.isFinite(s.x) ? s.x : 0;
+      const y = Number.isFinite(s.y) ? s.y : 0;
+      const sc = Number.isFinite(s.scale) ? s.scale : 1;
+      return `translate(${x}px, ${y}px) scale(${sc})`;
+    };
+    const apply = (state) => {
+      if (!state) {
+        el.style.removeProperty("--zoom-tx");
+        return;
+      }
+      el.style.setProperty("--zoom-tx", compose(state));
+    };
+    apply(initial);
+    return {
+      update: (next) => apply(next)
+    };
+  };
+  var maxWidth = (node, initial) => {
+    const el = node;
+    const toValue3 = (v) => {
+      if (v == null)
+        return null;
+      if (typeof v === "number")
+        return Number.isFinite(v) ? `${v}px` : null;
+      return v === "" ? null : v;
+    };
+    const apply = (v) => {
+      const val = toValue3(v);
+      if (val == null)
+        el.style.removeProperty("--max-w");
+      else
+        el.style.setProperty("--max-w", val);
+    };
+    apply(initial);
+    return {
+      update: (next) => apply(next)
+    };
+  };
+  var swatch = (node, initial) => {
+    const el = node;
+    const apply = (c) => {
+      if (c == null || c === "") {
+        el.style.removeProperty("--swatch-color");
+      } else {
+        el.style.setProperty("--swatch-color", c);
+      }
+    };
+    apply(initial);
+    return {
+      update: (next) => apply(next)
+    };
+  };
+  // packages/sail/runtime/src/actions/hover-card.ts
   var hoverCard = (node) => {
     const root = node;
     const openMs = Number(root.getAttribute("open-delay") ?? "") || 200;
@@ -1399,7 +2065,277 @@
       }
     };
   };
-  // ../runtime/src/actions/toast.ts
+  // packages/sail/runtime/src/actions/grid-tracks.ts
+  var gridTracks = (node, initial) => {
+    const el = node;
+    const apply = (tracks) => {
+      if (tracks == null || tracks === "") {
+        el.style.removeProperty("--sail-grid-template");
+      } else {
+        el.style.setProperty("--sail-grid-template", tracks);
+      }
+    };
+    apply(initial);
+    return {
+      update: (next) => apply(next)
+    };
+  };
+  // packages/sail/runtime/src/actions/spotlight.ts
+  var OVERLAY_STYLE_ID = "sail-spotlight-overlay-style";
+  var overlayCss = `
+.sail-spotlight-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  background: radial-gradient(
+    38rem circle at var(--spot-x, 50%) var(--spot-y, 40%),
+    color-mix(in oklch, var(--primary) var(--spot-strength, 10%), transparent),
+    transparent 65%
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .sail-spotlight-glow { transition: none; }
+}
+.sail-spotlight-glow[data-on='true'] { opacity: 1; }
+`.trim();
+  var styleInjected = null;
+  function ensureOverlayCss(doc) {
+    if (styleInjected && styleInjected.isConnected)
+      return;
+    let el = doc.getElementById(OVERLAY_STYLE_ID);
+    if (!el) {
+      el = doc.createElement("style");
+      el.id = OVERLAY_STYLE_ID;
+      el.textContent = overlayCss;
+      doc.head.appendChild(el);
+    }
+    styleInjected = el;
+  }
+  var spotlight = (node) => {
+    const host = node;
+    ensureOverlayCss(document);
+    const glow = document.createElement("div");
+    glow.className = "sail-spotlight-glow";
+    glow.setAttribute("aria-hidden", "true");
+    const finePointer = matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (!finePointer) {
+      glow.dataset.on = "true";
+      host.prepend(glow);
+      return { destroy: () => glow.remove() };
+    }
+    host.prepend(glow);
+    let raf = 0;
+    const onMove = (e) => {
+      if (raf)
+        return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const r = host.getBoundingClientRect();
+        glow.style.setProperty("--spot-x", `${e.clientX - r.left}px`);
+        glow.style.setProperty("--spot-y", `${e.clientY - r.top}px`);
+        glow.style.setProperty("--spot-strength", "14");
+        glow.dataset.on = "true";
+      });
+    };
+    const onLeave = () => {
+      glow.dataset.on = "false";
+    };
+    host.addEventListener("pointermove", onMove);
+    host.addEventListener("pointerleave", onLeave);
+    return {
+      destroy: () => {
+        host.removeEventListener("pointermove", onMove);
+        host.removeEventListener("pointerleave", onLeave);
+        if (raf)
+          cancelAnimationFrame(raf);
+        glow.remove();
+      }
+    };
+  };
+  // packages/sail/runtime/src/actions/target-cursor.ts
+  var TARGETS = 'a, button, [role="tab"], input, summary, select, textarea, [data-cursor]';
+  var IDLE_HALF = 14;
+  var PAD = 8;
+  var OVERLAY_STYLE_ID2 = "sail-target-cursor-overlay-style";
+  var overlayCss2 = `
+.sail-tc-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483000;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.sail-tc-layer[data-on='true'] { opacity: 1; }
+.sail-tc-bracket {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  border-top: 2px solid var(--primary);
+  border-left: 2px solid var(--primary);
+  /* The action sets --tc-x / --tc-y per-frame as custom properties; the
+     translate consumes them. The framework exemption covers the
+     setProperty write — translate itself lives in the framework sheet. */
+  translate: var(--tc-x, 0) var(--tc-y, 0);
+  left: 0;
+  top: 0;
+  will-change: translate;
+}
+/* One mechanism: each corner is DRAWN by its two borders — no rotation.
+   The old rules drew the right borders AND rotated, which un-cornered
+   them (br drew ┘ then flipped it 180° into ┌ — the wrong-facing
+   bracket). The never-written --tc-rot var died with the rotations. */
+.sail-tc-bracket[data-side='tr'] { border-left: 0; border-right: 2px solid var(--primary); }
+.sail-tc-bracket[data-side='br'] { border: 0; border-bottom: 2px solid var(--primary); border-right: 2px solid var(--primary); }
+.sail-tc-bracket[data-side='bl'] { border: 0; border-bottom: 2px solid var(--primary); border-left: 2px solid var(--primary); }
+.sail-tc-dot {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--primary);
+  translate: var(--tc-x, 0) var(--tc-y, 0);
+  /* Hide the dot until the first pointermove lands the cursor. Without
+     this, the initial mx/innerWidth/2 + my/innerHeight/2 rAF tick would
+     put a stray dot at the viewport centre on every page that mounts the
+     action. */
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.sail-tc-layer[data-on='true'] .sail-tc-dot { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .sail-tc-layer { transition: none; }
+  .sail-tc-dot { transition: none; }
+}
+`.trim();
+  var hostCss = `
+[data-tc-on='true'] { cursor: none; }
+`.trim();
+  var styleInjected2 = null;
+  function ensureOverlayCss2(doc) {
+    if (styleInjected2 && styleInjected2.isConnected)
+      return;
+    let el = doc.getElementById(OVERLAY_STYLE_ID2);
+    if (!el) {
+      el = doc.createElement("style");
+      el.id = OVERLAY_STYLE_ID2;
+      el.textContent = overlayCss2 + `
+` + hostCss;
+      doc.head.appendChild(el);
+    }
+    styleInjected2 = el;
+  }
+  var targetCursor = (node) => {
+    const host = node;
+    if (!matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      return { destroy: () => {} };
+    }
+    ensureOverlayCss2(document);
+    const snap = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const layer = document.createElement("div");
+    layer.className = "sail-tc-layer";
+    layer.setAttribute("aria-hidden", "true");
+    const sides = ["tl", "tr", "br", "bl"];
+    const corners = sides.map((side) => {
+      const c = document.createElement("div");
+      c.className = "sail-tc-bracket";
+      c.dataset.side = side;
+      layer.appendChild(c);
+      return c;
+    });
+    const dot = document.createElement("div");
+    dot.className = "sail-tc-dot";
+    layer.appendChild(dot);
+    layer.dataset.on = "false";
+    host.dataset.tcOn = "false";
+    document.body.appendChild(layer);
+    let mx = -9999;
+    let my = -9999;
+    let seenPointer = false;
+    let target = null;
+    const cur = sides.map(() => ({ x: mx, y: my }));
+    const goals = () => {
+      if (target) {
+        const r = target.getBoundingClientRect();
+        return [
+          { x: r.left - PAD, y: r.top - PAD },
+          { x: r.right + PAD, y: r.top - PAD },
+          { x: r.right + PAD, y: r.bottom + PAD },
+          { x: r.left - PAD, y: r.bottom + PAD }
+        ];
+      }
+      return [
+        { x: mx - IDLE_HALF, y: my - IDLE_HALF },
+        { x: mx + IDLE_HALF, y: my - IDLE_HALF },
+        { x: mx + IDLE_HALF, y: my + IDLE_HALF },
+        { x: mx - IDLE_HALF, y: my + IDLE_HALF }
+      ];
+    };
+    let raf = 0;
+    const ease = snap ? 1 : 0.22;
+    const tick = () => {
+      const hr = host.getBoundingClientRect();
+      const inside = seenPointer && mx >= hr.left && mx <= hr.right && my >= hr.top && my <= hr.bottom;
+      layer.dataset.on = inside ? "true" : "false";
+      host.dataset.tcOn = inside ? "true" : "false";
+      if (!inside)
+        target = null;
+      const g = goals();
+      corners.forEach((c, i) => {
+        const ci = cur[i];
+        const gi = g[i];
+        ci.x += (gi.x - ci.x) * ease;
+        ci.y += (gi.y - ci.y) * ease;
+        const ox = i === 1 || i === 2 ? -12 : 0;
+        const oy = i === 2 || i === 3 ? -12 : 0;
+        c.style.setProperty("--tc-x", `${ci.x + ox}px`);
+        c.style.setProperty("--tc-y", `${ci.y + oy}px`);
+      });
+      dot.style.setProperty("--tc-x", `${mx - 2}px`);
+      dot.style.setProperty("--tc-y", `${my - 2}px`);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    const onMove = (e) => {
+      mx = e.clientX;
+      my = e.clientY;
+      seenPointer = true;
+    };
+    const onOver = (e) => {
+      const t = e.target?.closest?.(TARGETS);
+      if (t)
+        target = t;
+    };
+    const onOut = (e) => {
+      if (target && e.target instanceof Element && e.target.closest(TARGETS) === target)
+        target = null;
+    };
+    const onLeave = () => {
+      mx = -9999;
+      my = -9999;
+      target = null;
+    };
+    host.addEventListener("pointermove", onMove, { passive: true });
+    host.addEventListener("pointerover", onOver, { passive: true });
+    host.addEventListener("pointerout", onOut, { passive: true });
+    host.addEventListener("pointerleave", onLeave);
+    return {
+      destroy: () => {
+        cancelAnimationFrame(raf);
+        host.removeEventListener("pointermove", onMove);
+        host.removeEventListener("pointerover", onOver);
+        host.removeEventListener("pointerout", onOut);
+        host.removeEventListener("pointerleave", onLeave);
+        if (host.dataset.tcOn !== undefined)
+          delete host.dataset.tcOn;
+        layer.remove();
+      }
+    };
+  };
+  // packages/sail/runtime/src/actions/toast.ts
   var toast = (node) => {
     const el = node;
     const duration = Number(el.getAttribute("duration") ?? "") || 5000;
@@ -1452,7 +2388,7 @@
       }
     };
   };
-  // ../runtime/src/actions/combobox.ts
+  // packages/sail/runtime/src/actions/combobox.ts
   var uid = 0;
   var combobox = (node) => {
     const root = node;
@@ -1630,7 +2566,7 @@
       }
     };
   };
-  // ../runtime/src/transition-runner.ts
+  // packages/sail/runtime/src/transition-runner.ts
   var _runEnter = () => {};
   var _runLeave = () => null;
   var _cancelTransitions = () => {};
@@ -1641,9 +2577,1416 @@
     _cancelTransitions = impl.cancelTransitions;
   }
 
-  // ../runtime/src/motion.ts
-  function prefersReducedMotion() {
-    return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // packages/sail/runtime/src/error-overlay.ts
+  function dispatchSuiError(host, error, phase) {
+    const detail = { error, phase };
+    let target = typeof document !== "undefined" ? document : null;
+    if (host != null && typeof host.tagName === "string") {
+      detail.host = host;
+      target = host;
+      const tag = host.dataset?.component;
+      if (tag)
+        detail.tag = tag;
+    }
+    if (typeof target?.dispatchEvent !== "function")
+      return;
+    if (typeof CustomEvent !== "function")
+      return;
+    try {
+      target.dispatchEvent(new CustomEvent("sail:error", { detail, bubbles: true, composed: true }));
+    } catch {}
+  }
+
+  // packages/sail/runtime/src/effect-scope.ts
+  var CURRENT_SCOPE = null;
+  function withScope(scope, body) {
+    const prev = CURRENT_SCOPE;
+    CURRENT_SCOPE = scope;
+    try {
+      return body();
+    } finally {
+      CURRENT_SCOPE = prev;
+    }
+  }
+  function onCleanup(fn) {
+    const scope = CURRENT_SCOPE;
+    if (!scope)
+      return;
+    scope.cleanup(fn);
+  }
+  function currentScope() {
+    return CURRENT_SCOPE;
+  }
+
+  // packages/sail/runtime/src/signal.ts
+  var CLEAN = 0;
+  var DIRTY = 2;
+  function makeOwnerScope(node) {
+    const ctx = new Map;
+    return {
+      cleanup(fn) {
+        node.cleanups.push(fn);
+      },
+      registerMount(fn) {
+        node.owner?.registerMount(fn);
+      },
+      runMounts() {},
+      dispose() {},
+      disposed: false,
+      parent: node.owner ?? null,
+      contexts: ctx
+    };
+  }
+  var CURRENT_OBSERVER = null;
+  var HOST_STACK = [];
+  function currentHost() {
+    return HOST_STACK.length > 0 ? HOST_STACK[HOST_STACK.length - 1] : null;
+  }
+  function runCleanups(node) {
+    const cs = node.cleanups;
+    if (cs.length === 0)
+      return;
+    node.cleanups = [];
+    for (let i = 0;i < cs.length; i++) {
+      try {
+        cs[i]();
+      } catch (e) {
+        console.error("[sail] cleanup threw:", e);
+      }
+    }
+  }
+  function unlinkSources(node) {
+    const srcs = node.sources;
+    for (let i = 0;i < srcs.length; i++)
+      srcs[i].observers.delete(node);
+    node.sources = [];
+  }
+  function runEffect(node) {
+    runCleanups(node);
+    unlinkSources(node);
+    node.state = CLEAN;
+    const scope = node.scope ??= makeOwnerScope(node);
+    const prev = CURRENT_OBSERVER;
+    CURRENT_OBSERVER = node;
+    try {
+      const c = withScope(scope, () => node.fn());
+      if (typeof c === "function")
+        node.cleanups.push(c);
+    } catch (e) {
+      const boundary = node.host ? findNearestBoundary(node.host) : null;
+      if (boundary) {
+        boundary.catch(e, "effect");
+      } else {
+        console.error("[sail] effect threw:", e);
+        dispatchSuiError(node.host ?? null, e, "effect");
+      }
+    } finally {
+      CURRENT_OBSERVER = prev;
+    }
+  }
+  function effect(fn) {
+    const node = {
+      fn,
+      state: DIRTY,
+      sources: [],
+      observers: new Set,
+      cleanups: [],
+      isEffect: true,
+      active: true,
+      computation: true,
+      host: currentHost(),
+      owner: currentScope()
+    };
+    runEffect(node);
+    const dispose = () => {
+      if (!node.active)
+        return;
+      node.active = false;
+      runCleanups(node);
+      unlinkSources(node);
+      node.state = CLEAN;
+    };
+    if (CURRENT_OBSERVER !== null)
+      onCleanup(dispose);
+    return dispose;
+  }
+  function untrack(fn) {
+    const prev = CURRENT_OBSERVER;
+    CURRENT_OBSERVER = null;
+    try {
+      return fn();
+    } finally {
+      CURRENT_OBSERVER = prev;
+    }
+  }
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/GroupAnimation.mjs
+  class GroupAnimation {
+    constructor(animations) {
+      this.stop = () => this.runAll("stop");
+      this.animations = animations.filter(Boolean);
+    }
+    get finished() {
+      return Promise.all(this.animations.map((animation) => animation.finished));
+    }
+    getAll(propName) {
+      return this.animations[0][propName];
+    }
+    setAll(propName, newValue) {
+      for (let i = 0;i < this.animations.length; i++) {
+        this.animations[i][propName] = newValue;
+      }
+    }
+    attachTimeline(timeline) {
+      const subscriptions = this.animations.map((animation) => animation.attachTimeline(timeline));
+      return () => {
+        subscriptions.forEach((cancel, i) => {
+          cancel && cancel();
+          this.animations[i].stop();
+        });
+      };
+    }
+    get time() {
+      return this.getAll("time");
+    }
+    set time(time) {
+      this.setAll("time", time);
+    }
+    get speed() {
+      return this.getAll("speed");
+    }
+    set speed(speed) {
+      this.setAll("speed", speed);
+    }
+    get state() {
+      return this.getAll("state");
+    }
+    get startTime() {
+      return this.getAll("startTime");
+    }
+    get duration() {
+      return getMax(this.animations, "duration");
+    }
+    get iterationDuration() {
+      return getMax(this.animations, "iterationDuration");
+    }
+    runAll(methodName) {
+      this.animations.forEach((controls) => controls[methodName]());
+    }
+    play() {
+      this.runAll("play");
+    }
+    pause() {
+      this.runAll("pause");
+    }
+    cancel() {
+      this.runAll("cancel");
+    }
+    complete() {
+      this.runAll("complete");
+    }
+  }
+  function getMax(animations, propName) {
+    let max = 0;
+    for (let i = 0;i < animations.length; i++) {
+      const value = animations[i][propName];
+      if (value !== null && value > max) {
+        max = value;
+      }
+    }
+    return max;
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/GroupAnimationWithThen.mjs
+  class GroupAnimationWithThen extends GroupAnimation {
+    then(onResolve, _onReject) {
+      return this.finished.finally(onResolve).then(() => {});
+    }
+  }
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/clamp.mjs
+  var clamp2 = (min, max, v) => {
+    if (v > max)
+      return max;
+    if (v < min)
+      return min;
+    return v;
+  };
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/format-error-message.mjs
+  function formatErrorMessage(message, errorCode) {
+    return errorCode ? `${message}. For more information and steps for solving, visit https://motion.dev/troubleshooting/${errorCode}` : message;
+  }
+
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/errors.mjs
+  var warning = () => {};
+  var invariant = () => {};
+  if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {
+    warning = (check, message, errorCode) => {
+      if (!check && typeof console !== "undefined") {
+        console.warn(formatErrorMessage(message, errorCode));
+      }
+    };
+    invariant = (check, message, errorCode) => {
+      if (!check) {
+        throw new Error(formatErrorMessage(message, errorCode));
+      }
+    };
+  }
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/memo.mjs
+  function memo(callback) {
+    let result;
+    return () => {
+      if (result === undefined)
+        result = callback();
+      return result;
+    };
+  }
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/noop.mjs
+  var noop = (any) => any;
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/time-conversion.mjs
+  var secondsToMilliseconds = (seconds) => seconds * 1000;
+  var millisecondsToSeconds = (milliseconds) => milliseconds / 1000;
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/easing/modifiers/reverse.mjs
+  var reverseEasing = (easing) => (p) => 1 - easing(1 - p);
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/easing/utils/is-bezier-definition.mjs
+  var isBezierDefinition = (easing) => Array.isArray(easing) && typeof easing[0] === "number";
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/easing/cubic-bezier.mjs
+  var calcBezier = (t, a1, a2) => (((1 - 3 * a2 + 3 * a1) * t + (3 * a2 - 6 * a1)) * t + 3 * a1) * t;
+  var subdivisionPrecision = 0.0000001;
+  var subdivisionMaxIterations = 12;
+  function binarySubdivide(x, lowerBound, upperBound, mX1, mX2) {
+    let currentX;
+    let currentT;
+    let i = 0;
+    do {
+      currentT = lowerBound + (upperBound - lowerBound) / 2;
+      currentX = calcBezier(currentT, mX1, mX2) - x;
+      if (currentX > 0) {
+        upperBound = currentT;
+      } else {
+        lowerBound = currentT;
+      }
+    } while (Math.abs(currentX) > subdivisionPrecision && ++i < subdivisionMaxIterations);
+    return currentT;
+  }
+  function cubicBezier(mX1, mY1, mX2, mY2) {
+    if (mX1 === mY1 && mX2 === mY2)
+      return noop;
+    const getTForX = (aX) => binarySubdivide(aX, 0, 1, mX1, mX2);
+    return (t) => t === 0 || t === 1 ? t : calcBezier(getTForX(t), mY1, mY2);
+  }
+
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/easing/modifiers/mirror.mjs
+  var mirrorEasing = (easing) => (p) => p <= 0.5 ? easing(2 * p) / 2 : (2 - easing(2 * (1 - p))) / 2;
+
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/easing/back.mjs
+  var backOut = /* @__PURE__ */ cubicBezier(0.33, 1.53, 0.69, 0.99);
+  var backIn = /* @__PURE__ */ reverseEasing(backOut);
+  var backInOut = /* @__PURE__ */ mirrorEasing(backIn);
+
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/easing/anticipate.mjs
+  var anticipate = (p) => p >= 1 ? 1 : (p *= 2) < 1 ? 0.5 * backIn(p) : 0.5 * (2 - Math.pow(2, -10 * (p - 1)));
+
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/easing/circ.mjs
+  var circIn = (p) => 1 - Math.sin(Math.acos(p));
+  var circOut = reverseEasing(circIn);
+  var circInOut = mirrorEasing(circIn);
+
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/easing/ease.mjs
+  var easeIn = /* @__PURE__ */ cubicBezier(0.42, 0, 1, 1);
+  var easeOut = /* @__PURE__ */ cubicBezier(0, 0, 0.58, 1);
+  var easeInOut = /* @__PURE__ */ cubicBezier(0.42, 0, 0.58, 1);
+
+  // node_modules/.bun/motion-utils@12.39.0/node_modules/motion-utils/dist/es/easing/utils/map.mjs
+  var easingLookup = {
+    linear: noop,
+    easeIn,
+    easeInOut,
+    easeOut,
+    circIn,
+    circInOut,
+    circOut,
+    backIn,
+    backInOut,
+    backOut,
+    anticipate
+  };
+  var isValidEasing = (easing) => {
+    return typeof easing === "string";
+  };
+  var easingDefinitionToFunction = (definition) => {
+    if (isBezierDefinition(definition)) {
+      invariant(definition.length === 4, `Cubic bezier arrays must contain four numerical values.`, "cubic-bezier-length");
+      const [x1, y1, x2, y2] = definition;
+      return cubicBezier(x1, y1, x2, y2);
+    } else if (isValidEasing(definition)) {
+      invariant(easingLookup[definition] !== undefined, `Invalid easing type '${definition}'`, "invalid-easing-type");
+      return easingLookup[definition];
+    }
+    return definition;
+  };
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/render/dom/is-css-var.mjs
+  var isCSSVar = (name) => name.startsWith("--");
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/render/dom/style-set.mjs
+  function setStyle(element, name, value) {
+    isCSSVar(name) ? element.style.setProperty(name, value) : element.style[name] = value;
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/utils/supports/flags.mjs
+  var supportsFlags = {};
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/utils/supports/memo.mjs
+  function memoSupports(callback, supportsFlag) {
+    const memoized = memo(callback);
+    return () => supportsFlags[supportsFlag] ?? memoized();
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/utils/supports/scroll-timeline.mjs
+  var supportsScrollTimeline = /* @__PURE__ */ memoSupports(() => window.ScrollTimeline !== undefined, "scrollTimeline");
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/keyframes/get-final.mjs
+  var isNotNull = (value) => value !== null;
+  function getFinalKeyframe(keyframes, { repeat, repeatType = "loop" }, finalKeyframe, speed = 1) {
+    const resolvedKeyframes = keyframes.filter(isNotNull);
+    const useFirstKeyframe = speed < 0 || repeat && repeatType !== "loop" && repeat % 2 === 1;
+    const index = useFirstKeyframe ? 0 : resolvedKeyframes.length - 1;
+    return !index || finalKeyframe === undefined ? resolvedKeyframes[index] : finalKeyframe;
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/utils/WithPromise.mjs
+  class WithPromise {
+    constructor() {
+      this.updateFinished();
+    }
+    get finished() {
+      return this._finished;
+    }
+    updateFinished() {
+      this._finished = new Promise((resolve) => {
+        this.resolve = resolve;
+      });
+    }
+    notifyFinished() {
+      this.resolve();
+    }
+    then(onResolve, onReject) {
+      return this.finished.then(onResolve, onReject);
+    }
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/utils/supports/linear-easing.mjs
+  var supportsLinearEasing = /* @__PURE__ */ memoSupports(() => {
+    try {
+      document.createElement("div").animate({ opacity: 0 }, { easing: "linear(0, 1)" });
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }, "linearEasing");
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/waapi/utils/linear.mjs
+  var generateLinearEasing = (easing, duration, resolution = 10) => {
+    let points = "";
+    const numPoints = Math.max(Math.round(duration / resolution), 2);
+    for (let i = 0;i < numPoints; i++) {
+      points += Math.round(easing(i / (numPoints - 1)) * 1e4) / 1e4 + ", ";
+    }
+    return `linear(${points.substring(0, points.length - 2)})`;
+  };
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/waapi/easing/cubic-bezier.mjs
+  var cubicBezierAsString = ([a, b, c, d]) => `cubic-bezier(${a}, ${b}, ${c}, ${d})`;
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/waapi/easing/supported.mjs
+  var supportedWaapiEasing = {
+    linear: "linear",
+    ease: "ease",
+    easeIn: "ease-in",
+    easeOut: "ease-out",
+    easeInOut: "ease-in-out",
+    circIn: /* @__PURE__ */ cubicBezierAsString([0, 0.65, 0.55, 1]),
+    circOut: /* @__PURE__ */ cubicBezierAsString([0.55, 0, 1, 0.45]),
+    backIn: /* @__PURE__ */ cubicBezierAsString([0.31, 0.01, 0.66, -0.59]),
+    backOut: /* @__PURE__ */ cubicBezierAsString([0.33, 1.53, 0.69, 0.99])
+  };
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/waapi/easing/map-easing.mjs
+  function mapEasingToNativeEasing(easing, duration) {
+    if (!easing) {
+      return;
+    } else if (typeof easing === "function") {
+      return supportsLinearEasing() ? generateLinearEasing(easing, duration) : "ease-out";
+    } else if (isBezierDefinition(easing)) {
+      return cubicBezierAsString(easing);
+    } else if (Array.isArray(easing)) {
+      return easing.map((segmentEasing) => mapEasingToNativeEasing(segmentEasing, duration) || supportedWaapiEasing.easeOut);
+    } else {
+      return supportedWaapiEasing[easing];
+    }
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/waapi/start-waapi-animation.mjs
+  function startWaapiAnimation(element, valueName, keyframes, { delay = 0, duration = 300, repeat = 0, repeatType = "loop", ease = "easeOut", times } = {}, pseudoElement = undefined) {
+    const keyframeOptions = {
+      [valueName]: keyframes
+    };
+    if (times)
+      keyframeOptions.offset = times;
+    const easing = mapEasingToNativeEasing(ease, duration);
+    if (Array.isArray(easing))
+      keyframeOptions.easing = easing;
+    const options = {
+      delay,
+      duration,
+      easing: !Array.isArray(easing) ? easing : "linear",
+      fill: "both",
+      iterations: repeat + 1,
+      direction: repeatType === "reverse" ? "alternate" : "normal"
+    };
+    if (pseudoElement)
+      options.pseudoElement = pseudoElement;
+    return element.animate(keyframeOptions, options);
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/generators/utils/is-generator.mjs
+  function isGenerator(type) {
+    return typeof type === "function" && "applyToOptions" in type;
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/waapi/utils/apply-generator.mjs
+  function applyGeneratorOptions({ type, ...options }) {
+    if (isGenerator(type) && supportsLinearEasing()) {
+      return type.applyToOptions(options);
+    } else {
+      options.duration ?? (options.duration = 300);
+      options.ease ?? (options.ease = "easeOut");
+    }
+    return options;
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/NativeAnimation.mjs
+  class NativeAnimation extends WithPromise {
+    constructor(options) {
+      super();
+      this.finishedTime = null;
+      this.isStopped = false;
+      this.manualStartTime = null;
+      if (!options)
+        return;
+      const { element, name, keyframes, pseudoElement, allowFlatten = false, finalKeyframe, onComplete } = options;
+      this.isPseudoElement = Boolean(pseudoElement);
+      this.allowFlatten = allowFlatten;
+      this.options = options;
+      invariant(typeof options.type !== "string", `Mini animate() doesn't support "type" as a string.`, "mini-spring");
+      const transition = applyGeneratorOptions(options);
+      this.animation = startWaapiAnimation(element, name, keyframes, transition, pseudoElement);
+      if (transition.autoplay === false) {
+        this.animation.pause();
+      }
+      this.animation.onfinish = () => {
+        this.finishedTime = this.time;
+        if (!pseudoElement) {
+          const keyframe = getFinalKeyframe(keyframes, this.options, finalKeyframe, this.speed);
+          if (this.updateMotionValue) {
+            this.updateMotionValue(keyframe);
+          }
+          setStyle(element, name, keyframe);
+          this.animation.cancel();
+        }
+        onComplete?.();
+        this.notifyFinished();
+      };
+    }
+    play() {
+      if (this.isStopped)
+        return;
+      this.manualStartTime = null;
+      this.animation.play();
+      if (this.state === "finished") {
+        this.updateFinished();
+      }
+    }
+    pause() {
+      this.animation.pause();
+    }
+    complete() {
+      this.animation.finish?.();
+    }
+    cancel() {
+      try {
+        this.animation.cancel();
+      } catch (e) {}
+    }
+    stop() {
+      if (this.isStopped)
+        return;
+      this.isStopped = true;
+      const { state } = this;
+      if (state === "idle" || state === "finished") {
+        return;
+      }
+      if (this.updateMotionValue) {
+        this.updateMotionValue();
+      } else {
+        this.commitStyles();
+      }
+      if (!this.isPseudoElement)
+        this.cancel();
+    }
+    commitStyles() {
+      const element = this.options?.element;
+      if (!this.isPseudoElement && element?.isConnected) {
+        this.animation.commitStyles?.();
+      }
+    }
+    get duration() {
+      const duration = this.animation.effect?.getComputedTiming?.().duration || 0;
+      return millisecondsToSeconds(Number(duration));
+    }
+    get iterationDuration() {
+      const { delay = 0 } = this.options || {};
+      return this.duration + millisecondsToSeconds(delay);
+    }
+    get time() {
+      return millisecondsToSeconds(Number(this.animation.currentTime) || 0);
+    }
+    set time(newTime) {
+      const wasFinished = this.finishedTime !== null;
+      this.manualStartTime = null;
+      this.finishedTime = null;
+      this.animation.currentTime = secondsToMilliseconds(newTime);
+      if (wasFinished) {
+        this.animation.pause();
+      }
+    }
+    get speed() {
+      return this.animation.playbackRate;
+    }
+    set speed(newSpeed) {
+      if (newSpeed < 0)
+        this.finishedTime = null;
+      this.animation.playbackRate = newSpeed;
+    }
+    get state() {
+      return this.finishedTime !== null ? "finished" : this.animation.playState;
+    }
+    get startTime() {
+      return this.manualStartTime ?? Number(this.animation.startTime);
+    }
+    set startTime(newStartTime) {
+      this.manualStartTime = this.animation.startTime = newStartTime;
+    }
+    attachTimeline({ timeline, rangeStart, rangeEnd, observe }) {
+      if (this.allowFlatten) {
+        this.animation.effect?.updateTiming({ easing: "linear" });
+      }
+      this.animation.onfinish = null;
+      if (timeline && supportsScrollTimeline()) {
+        this.animation.timeline = timeline;
+        if (rangeStart)
+          this.animation.rangeStart = rangeStart;
+        if (rangeEnd)
+          this.animation.rangeEnd = rangeEnd;
+        return noop;
+      } else {
+        return observe(this);
+      }
+    }
+  }
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/utils/active-animations.mjs
+  var animationMaps = new WeakMap;
+  var animationMapKey = (name, pseudoElement = "") => `${name}:${pseudoElement}`;
+  function getAnimationMap(element) {
+    let map = animationMaps.get(element);
+    if (!map) {
+      map = new Map;
+      animationMaps.set(element, map);
+    }
+    return map;
+  }
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/utils/resolve-transition.mjs
+  function resolveTransition(transition, parentTransition) {
+    if (transition?.inherit && parentTransition) {
+      const { inherit: _, ...rest } = transition;
+      return { ...parentTransition, ...rest };
+    }
+    return transition;
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/utils/get-value-transition.mjs
+  function getValueTransition(transition, key) {
+    const valueTransition = transition?.[key] ?? transition?.["default"] ?? transition;
+    if (valueTransition !== transition) {
+      return resolveTransition(valueTransition, transition);
+    }
+    return valueTransition;
+  }
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/generators/utils/calc-duration.mjs
+  var maxGeneratorDuration = 20000;
+  function calcGeneratorDuration(generator) {
+    let duration = 0;
+    const timeStep = 50;
+    let state = generator.next(duration);
+    while (!state.done && duration < maxGeneratorDuration) {
+      duration += timeStep;
+      state = generator.next(duration);
+    }
+    return duration >= maxGeneratorDuration ? Infinity : duration;
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/generators/utils/create-generator-easing.mjs
+  function createGeneratorEasing(options, scale = 100, createGenerator) {
+    const generator = createGenerator({ ...options, keyframes: [0, scale] });
+    const duration = Math.min(calcGeneratorDuration(generator), maxGeneratorDuration);
+    return {
+      type: "keyframes",
+      ease: (progress) => {
+        return generator.next(duration * progress).value / scale;
+      },
+      duration: millisecondsToSeconds(duration)
+    };
+  }
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/generators/spring.mjs
+  var springDefaults = {
+    stiffness: 100,
+    damping: 10,
+    mass: 1,
+    velocity: 0,
+    duration: 800,
+    bounce: 0.3,
+    visualDuration: 0.3,
+    restSpeed: {
+      granular: 0.01,
+      default: 2
+    },
+    restDelta: {
+      granular: 0.005,
+      default: 0.5
+    },
+    minDuration: 0.01,
+    maxDuration: 10,
+    minDamping: 0.05,
+    maxDamping: 1
+  };
+  function calcAngularFreq(undampedFreq, dampingRatio) {
+    return undampedFreq * Math.sqrt(1 - dampingRatio * dampingRatio);
+  }
+  var rootIterations = 12;
+  function approximateRoot(envelope, derivative, initialGuess) {
+    let result = initialGuess;
+    for (let i = 1;i < rootIterations; i++) {
+      result = result - envelope(result) / derivative(result);
+    }
+    return result;
+  }
+  var safeMin = 0.001;
+  function findSpring({ duration = springDefaults.duration, bounce = springDefaults.bounce, velocity = springDefaults.velocity, mass = springDefaults.mass }) {
+    let envelope;
+    let derivative;
+    warning(duration <= secondsToMilliseconds(springDefaults.maxDuration), "Spring duration must be 10 seconds or less", "spring-duration-limit");
+    let dampingRatio = 1 - bounce;
+    dampingRatio = clamp2(springDefaults.minDamping, springDefaults.maxDamping, dampingRatio);
+    duration = clamp2(springDefaults.minDuration, springDefaults.maxDuration, millisecondsToSeconds(duration));
+    if (dampingRatio < 1) {
+      envelope = (undampedFreq2) => {
+        const exponentialDecay = undampedFreq2 * dampingRatio;
+        const delta = exponentialDecay * duration;
+        const a = exponentialDecay - velocity;
+        const b = calcAngularFreq(undampedFreq2, dampingRatio);
+        const c = Math.exp(-delta);
+        return safeMin - a / b * c;
+      };
+      derivative = (undampedFreq2) => {
+        const exponentialDecay = undampedFreq2 * dampingRatio;
+        const delta = exponentialDecay * duration;
+        const d = delta * velocity + velocity;
+        const e = Math.pow(dampingRatio, 2) * Math.pow(undampedFreq2, 2) * duration;
+        const f = Math.exp(-delta);
+        const g = calcAngularFreq(Math.pow(undampedFreq2, 2), dampingRatio);
+        const factor = -envelope(undampedFreq2) + safeMin > 0 ? -1 : 1;
+        return factor * ((d - e) * f) / g;
+      };
+    } else {
+      envelope = (undampedFreq2) => {
+        const a = Math.exp(-undampedFreq2 * duration);
+        const b = (undampedFreq2 - velocity) * duration + 1;
+        return -safeMin + a * b;
+      };
+      derivative = (undampedFreq2) => {
+        const a = Math.exp(-undampedFreq2 * duration);
+        const b = (velocity - undampedFreq2) * (duration * duration);
+        return a * b;
+      };
+    }
+    const initialGuess = 5 / duration;
+    const undampedFreq = approximateRoot(envelope, derivative, initialGuess);
+    duration = secondsToMilliseconds(duration);
+    if (isNaN(undampedFreq)) {
+      return {
+        stiffness: springDefaults.stiffness,
+        damping: springDefaults.damping,
+        duration
+      };
+    } else {
+      const stiffness = Math.pow(undampedFreq, 2) * mass;
+      return {
+        stiffness,
+        damping: dampingRatio * 2 * Math.sqrt(mass * stiffness),
+        duration
+      };
+    }
+  }
+  var durationKeys = ["duration", "bounce"];
+  var physicsKeys = ["stiffness", "damping", "mass"];
+  function isSpringType(options, keys) {
+    return keys.some((key) => options[key] !== undefined);
+  }
+  function getSpringOptions(options) {
+    let springOptions = {
+      velocity: springDefaults.velocity,
+      stiffness: springDefaults.stiffness,
+      damping: springDefaults.damping,
+      mass: springDefaults.mass,
+      isResolvedFromDuration: false,
+      ...options
+    };
+    if (!isSpringType(options, physicsKeys) && isSpringType(options, durationKeys)) {
+      springOptions.velocity = 0;
+      if (options.visualDuration) {
+        const visualDuration = options.visualDuration;
+        const root = 2 * Math.PI / (visualDuration * 1.2);
+        const stiffness = root * root;
+        const damping = 2 * clamp2(0.05, 1, 1 - (options.bounce || 0)) * Math.sqrt(stiffness);
+        springOptions = {
+          ...springOptions,
+          mass: springDefaults.mass,
+          stiffness,
+          damping
+        };
+      } else {
+        const derived = findSpring({ ...options, velocity: 0 });
+        springOptions = {
+          ...springOptions,
+          ...derived,
+          mass: springDefaults.mass
+        };
+        springOptions.isResolvedFromDuration = true;
+      }
+    }
+    return springOptions;
+  }
+  function spring(optionsOrVisualDuration = springDefaults.visualDuration, bounce = springDefaults.bounce) {
+    const options = typeof optionsOrVisualDuration !== "object" ? {
+      visualDuration: optionsOrVisualDuration,
+      keyframes: [0, 1],
+      bounce
+    } : optionsOrVisualDuration;
+    let { restSpeed, restDelta } = options;
+    const origin = options.keyframes[0];
+    const target = options.keyframes[options.keyframes.length - 1];
+    const state = { done: false, value: origin };
+    const { stiffness, damping, mass, duration, velocity, isResolvedFromDuration } = getSpringOptions({
+      ...options,
+      velocity: -millisecondsToSeconds(options.velocity || 0)
+    });
+    const initialVelocity = velocity || 0;
+    const dampingRatio = damping / (2 * Math.sqrt(stiffness * mass));
+    const initialDelta = target - origin;
+    const undampedAngularFreq = millisecondsToSeconds(Math.sqrt(stiffness / mass));
+    const isGranularScale = Math.abs(initialDelta) < 5;
+    restSpeed || (restSpeed = isGranularScale ? springDefaults.restSpeed.granular : springDefaults.restSpeed.default);
+    restDelta || (restDelta = isGranularScale ? springDefaults.restDelta.granular : springDefaults.restDelta.default);
+    let resolveSpring;
+    let resolveVelocity;
+    let angularFreq;
+    let A;
+    let sinCoeff;
+    let cosCoeff;
+    if (dampingRatio < 1) {
+      angularFreq = calcAngularFreq(undampedAngularFreq, dampingRatio);
+      A = (initialVelocity + dampingRatio * undampedAngularFreq * initialDelta) / angularFreq;
+      resolveSpring = (t) => {
+        const envelope = Math.exp(-dampingRatio * undampedAngularFreq * t);
+        return target - envelope * (A * Math.sin(angularFreq * t) + initialDelta * Math.cos(angularFreq * t));
+      };
+      sinCoeff = dampingRatio * undampedAngularFreq * A + initialDelta * angularFreq;
+      cosCoeff = dampingRatio * undampedAngularFreq * initialDelta - A * angularFreq;
+      resolveVelocity = (t) => {
+        const envelope = Math.exp(-dampingRatio * undampedAngularFreq * t);
+        return envelope * (sinCoeff * Math.sin(angularFreq * t) + cosCoeff * Math.cos(angularFreq * t));
+      };
+    } else if (dampingRatio === 1) {
+      resolveSpring = (t) => target - Math.exp(-undampedAngularFreq * t) * (initialDelta + (initialVelocity + undampedAngularFreq * initialDelta) * t);
+      const C = initialVelocity + undampedAngularFreq * initialDelta;
+      resolveVelocity = (t) => Math.exp(-undampedAngularFreq * t) * (undampedAngularFreq * C * t - initialVelocity);
+    } else {
+      const dampedAngularFreq = undampedAngularFreq * Math.sqrt(dampingRatio * dampingRatio - 1);
+      resolveSpring = (t) => {
+        const envelope = Math.exp(-dampingRatio * undampedAngularFreq * t);
+        const freqForT = Math.min(dampedAngularFreq * t, 300);
+        return target - envelope * ((initialVelocity + dampingRatio * undampedAngularFreq * initialDelta) * Math.sinh(freqForT) + dampedAngularFreq * initialDelta * Math.cosh(freqForT)) / dampedAngularFreq;
+      };
+      const P = (initialVelocity + dampingRatio * undampedAngularFreq * initialDelta) / dampedAngularFreq;
+      const sinhCoeff = dampingRatio * undampedAngularFreq * P - initialDelta * dampedAngularFreq;
+      const coshCoeff = dampingRatio * undampedAngularFreq * initialDelta - P * dampedAngularFreq;
+      resolveVelocity = (t) => {
+        const envelope = Math.exp(-dampingRatio * undampedAngularFreq * t);
+        const freqForT = Math.min(dampedAngularFreq * t, 300);
+        return envelope * (sinhCoeff * Math.sinh(freqForT) + coshCoeff * Math.cosh(freqForT));
+      };
+    }
+    const generator = {
+      calculatedDuration: isResolvedFromDuration ? duration || null : null,
+      velocity: (t) => secondsToMilliseconds(resolveVelocity(t)),
+      next: (t) => {
+        if (!isResolvedFromDuration && dampingRatio < 1) {
+          const envelope = Math.exp(-dampingRatio * undampedAngularFreq * t);
+          const sin = Math.sin(angularFreq * t);
+          const cos = Math.cos(angularFreq * t);
+          const current2 = target - envelope * (A * sin + initialDelta * cos);
+          const currentVelocity = secondsToMilliseconds(envelope * (sinCoeff * sin + cosCoeff * cos));
+          state.done = Math.abs(currentVelocity) <= restSpeed && Math.abs(target - current2) <= restDelta;
+          state.value = state.done ? target : current2;
+          return state;
+        }
+        const current = resolveSpring(t);
+        if (!isResolvedFromDuration) {
+          const currentVelocity = secondsToMilliseconds(resolveVelocity(t));
+          state.done = Math.abs(currentVelocity) <= restSpeed && Math.abs(target - current) <= restDelta;
+        } else {
+          state.done = t >= duration;
+        }
+        state.value = state.done ? target : current;
+        return state;
+      },
+      toString: () => {
+        const calculatedDuration = Math.min(calcGeneratorDuration(generator), maxGeneratorDuration);
+        const easing = generateLinearEasing((progress) => generator.next(calculatedDuration * progress).value, calculatedDuration, 30);
+        return calculatedDuration + "ms " + easing;
+      },
+      toTransition: () => {}
+    };
+    return generator;
+  }
+  spring.applyToOptions = (options) => {
+    const generatorOptions = createGeneratorEasing(options, 100, spring);
+    options.ease = generatorOptions.ease;
+    options.duration = secondsToMilliseconds(generatorOptions.duration);
+    options.type = "keyframes";
+    return options;
+  };
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/utils/border-radius.mjs
+  var cornerRadiusProps = [
+    "borderTopLeftRadius",
+    "borderTopRightRadius",
+    "borderBottomRightRadius",
+    "borderBottomLeftRadius"
+  ];
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/waapi/utils/px-values.mjs
+  var pxValues = new Set([
+    "borderWidth",
+    "borderTopWidth",
+    "borderRightWidth",
+    "borderBottomWidth",
+    "borderLeftWidth",
+    "borderRadius",
+    ...cornerRadiusProps,
+    "width",
+    "maxWidth",
+    "height",
+    "maxHeight",
+    "top",
+    "right",
+    "bottom",
+    "left",
+    "inset",
+    "insetBlock",
+    "insetBlockStart",
+    "insetBlockEnd",
+    "insetInline",
+    "insetInlineStart",
+    "insetInlineEnd",
+    "padding",
+    "paddingTop",
+    "paddingRight",
+    "paddingBottom",
+    "paddingLeft",
+    "paddingBlock",
+    "paddingBlockStart",
+    "paddingBlockEnd",
+    "paddingInline",
+    "paddingInlineStart",
+    "paddingInlineEnd",
+    "margin",
+    "marginTop",
+    "marginRight",
+    "marginBottom",
+    "marginLeft",
+    "marginBlock",
+    "marginBlockStart",
+    "marginBlockEnd",
+    "marginInline",
+    "marginInlineStart",
+    "marginInlineEnd",
+    "fontSize",
+    "backgroundPositionX",
+    "backgroundPositionY"
+  ]);
+
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/keyframes/utils/apply-px-defaults.mjs
+  function applyPxDefaults(keyframes, name) {
+    for (let i = 0;i < keyframes.length; i++) {
+      if (typeof keyframes[i] === "number" && pxValues.has(name)) {
+        keyframes[i] = keyframes[i] + "px";
+      }
+    }
+  }
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/animation/keyframes/utils/fill-wildcards.mjs
+  function fillWildcards(keyframes) {
+    for (let i = 1;i < keyframes.length; i++) {
+      keyframes[i] ?? (keyframes[i] = keyframes[i - 1]);
+    }
+  }
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/render/dom/style-computed.mjs
+  function getComputedStyle(element, name) {
+    const computedStyle = window.getComputedStyle(element);
+    return isCSSVar(name) ? computedStyle.getPropertyValue(name) : computedStyle[name];
+  }
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/utils/resolve-elements.mjs
+  function resolveElements(elementOrSelector, scope, selectorCache) {
+    if (elementOrSelector == null) {
+      return [];
+    }
+    if (elementOrSelector instanceof EventTarget) {
+      return [elementOrSelector];
+    } else if (typeof elementOrSelector === "string") {
+      let root = document;
+      if (scope) {
+        root = scope.current;
+      }
+      const elements = selectorCache?.[elementOrSelector] ?? root.querySelectorAll(elementOrSelector);
+      return elements ? Array.from(elements) : [];
+    }
+    return Array.from(elementOrSelector).filter((element) => element != null);
+  }
+  // node_modules/.bun/motion-dom@12.42.2/node_modules/motion-dom/dist/es/utils/stagger.mjs
+  function getOriginIndex(from, total) {
+    if (from === "first") {
+      return 0;
+    } else {
+      const lastIndex = total - 1;
+      return from === "last" ? lastIndex : lastIndex / 2;
+    }
+  }
+  function stagger(duration = 0.1, { startDelay = 0, from = 0, ease } = {}) {
+    return (i, total) => {
+      const fromIndex = typeof from === "number" ? from : getOriginIndex(from, total);
+      const distance = Math.abs(fromIndex - i);
+      let delay = duration * distance;
+      if (ease) {
+        const maxDelay = total * duration;
+        const easingFunction = easingDefinitionToFunction(ease);
+        delay = easingFunction(delay / maxDelay) * maxDelay;
+      }
+      return startDelay + delay;
+    };
+  }
+  // node_modules/.bun/framer-motion@12.42.2/node_modules/framer-motion/dist/es/animation/animators/waapi/animate-elements.mjs
+  function animateElements(elementOrSelector, keyframes2, options, scope) {
+    if (elementOrSelector == null) {
+      return [];
+    }
+    const elements = resolveElements(elementOrSelector, scope);
+    const numElements = elements.length;
+    invariant(Boolean(numElements), "No valid elements provided.", "no-valid-elements");
+    const animationDefinitions = [];
+    for (let i = 0;i < numElements; i++) {
+      const element = elements[i];
+      const elementTransition = { ...options };
+      if (typeof elementTransition.delay === "function") {
+        elementTransition.delay = elementTransition.delay(i, numElements);
+      }
+      for (const valueName in keyframes2) {
+        let valueKeyframes = keyframes2[valueName];
+        if (!Array.isArray(valueKeyframes)) {
+          valueKeyframes = [valueKeyframes];
+        }
+        const valueOptions = {
+          ...getValueTransition(elementTransition, valueName)
+        };
+        valueOptions.duration && (valueOptions.duration = secondsToMilliseconds(valueOptions.duration));
+        valueOptions.delay && (valueOptions.delay = secondsToMilliseconds(valueOptions.delay));
+        const map = getAnimationMap(element);
+        const key = animationMapKey(valueName, valueOptions.pseudoElement || "");
+        const currentAnimation = map.get(key);
+        currentAnimation && currentAnimation.stop();
+        animationDefinitions.push({
+          map,
+          key,
+          unresolvedKeyframes: valueKeyframes,
+          options: {
+            ...valueOptions,
+            element,
+            name: valueName,
+            allowFlatten: !elementTransition.type && !elementTransition.ease
+          }
+        });
+      }
+    }
+    for (let i = 0;i < animationDefinitions.length; i++) {
+      const { unresolvedKeyframes, options: animationOptions } = animationDefinitions[i];
+      const { element, name, pseudoElement } = animationOptions;
+      if (!pseudoElement && unresolvedKeyframes[0] === null) {
+        unresolvedKeyframes[0] = getComputedStyle(element, name);
+      }
+      fillWildcards(unresolvedKeyframes);
+      applyPxDefaults(unresolvedKeyframes, name);
+      if (!pseudoElement && unresolvedKeyframes.length < 2) {
+        unresolvedKeyframes.unshift(getComputedStyle(element, name));
+      }
+      animationOptions.keyframes = unresolvedKeyframes;
+    }
+    const animations = [];
+    for (let i = 0;i < animationDefinitions.length; i++) {
+      const { map, key, options: animationOptions } = animationDefinitions[i];
+      const animation = new NativeAnimation(animationOptions);
+      map.set(key, animation);
+      animation.finished.finally(() => map.delete(key));
+      animations.push(animation);
+    }
+    return animations;
+  }
+
+  // node_modules/.bun/framer-motion@12.42.2/node_modules/framer-motion/dist/es/animation/animators/waapi/animate-style.mjs
+  var createScopedWaapiAnimate = (scope) => {
+    function scopedAnimate(elementOrSelector, keyframes2, options) {
+      return new GroupAnimationWithThen(animateElements(elementOrSelector, keyframes2, options, scope));
+    }
+    return scopedAnimate;
+  };
+  var animateMini = /* @__PURE__ */ createScopedWaapiAnimate();
+  // packages/sail/runtime/src/motion.ts
+  var reducedMedia = null;
+  function prefersReducedMotion2() {
+    if (typeof matchMedia === "undefined")
+      return false;
+    if (!reducedMedia) {
+      const mql = matchMedia("(prefers-reduced-motion: reduce)");
+      reducedMedia = mql;
+      if (typeof mql.addEventListener === "function") {
+        mql.addEventListener("change", () => {});
+      }
+    }
+    return reducedMedia.matches;
+  }
+  var REST_VALUE = {
+    opacity: 0,
+    scale: 0.96,
+    "scale-x": 0,
+    "scale-y": 0,
+    "translate-y": 16,
+    "translate-x": 16,
+    rotate: -6
+  };
+  var FINAL_VALUE = {
+    opacity: 1,
+    scale: 1,
+    "scale-x": 1,
+    "scale-y": 1,
+    "translate-y": 0,
+    "translate-x": 0,
+    rotate: 0
+  };
+  function hasUnit(v) {
+    return typeof v === "string" && v.trim() !== "" && Number.isNaN(Number(v));
+  }
+  function withUnit(v, unit, fallback) {
+    if (hasUnit(v))
+      return v.trim();
+    const n = v === undefined || v === "" ? fallback : Number(v);
+    return `${Number.isNaN(n) ? fallback : n}${unit}`;
+  }
+  function withoutUnit(v, fallback) {
+    if (v === undefined || v === "")
+      return fallback;
+    const n = typeof v === "number" ? v : Number.parseFloat(v);
+    return Number.isNaN(n) ? fallback : n;
+  }
+  function isHTMLElement2(el) {
+    return "style" in el;
+  }
+  function applyRestStyle(el, cfg) {
+    if (!isHTMLElement2(el))
+      return;
+    const value = REST_VALUE[cfg.property];
+    switch (cfg.property) {
+      case "opacity":
+        el.style.opacity = String(value);
+        return;
+      case "scale":
+        el.style.scale = String(value);
+        return;
+      case "scale-x":
+        el.style.scale = `${value} 1`;
+        return;
+      case "scale-y":
+        el.style.scale = `1 ${value}`;
+        return;
+      case "translate-y":
+        el.style.translate = `0 ${value}px`;
+        return;
+      case "translate-x":
+        el.style.translate = `${value}px 0`;
+        return;
+      case "rotate":
+        el.style.rotate = `${value}deg`;
+        return;
+    }
+  }
+  function applyFinalStyle(el, cfg) {
+    if (!isHTMLElement2(el))
+      return;
+    const value = FINAL_VALUE[cfg.property];
+    switch (cfg.property) {
+      case "opacity":
+        el.style.opacity = String(value);
+        return;
+      case "scale":
+        el.style.scale = String(value);
+        return;
+      case "scale-x":
+        el.style.scale = `${value} 1`;
+        return;
+      case "scale-y":
+        el.style.scale = `1 ${value}`;
+        return;
+      case "translate-y":
+        el.style.translate = "0 0";
+        return;
+      case "translate-x":
+        el.style.translate = "0 0";
+        return;
+      case "rotate":
+        el.style.rotate = "0deg";
+        return;
+    }
+  }
+  function applyReducedMotionSettle(el, motions) {
+    if (!isHTMLElement2(el))
+      return;
+    for (const m of motions)
+      applyFinalStyle(el, m);
+  }
+  function axisRange(cfg, el) {
+    if (cfg.preset === "bounce") {
+      if (cfg.property === "translate-y") {
+        const h = el.getBoundingClientRect().height || el.offsetHeight || 8;
+        return ["0px", `${-h}px`];
+      }
+      if (cfg.property === "translate-x") {
+        const w = el.getBoundingClientRect().width || el.offsetWidth || 8;
+        return ["0px", `${-w}px`];
+      }
+    }
+    return [
+      withUnit(cfg.from, "px", REST_VALUE[cfg.property]),
+      withUnit(cfg.to, "px", FINAL_VALUE[cfg.property])
+    ];
+  }
+  function buildKeyframes(cfg, el) {
+    if (cfg.property === "translate-y" || cfg.property === "translate-x") {
+      const [from2, to2] = axisRange(cfg, el);
+      return cfg.property === "translate-y" ? { translate: [`0px ${from2}`, `0px ${to2}`] } : { translate: [`${from2} 0px`, `${to2} 0px`] };
+    }
+    const from = withoutUnit(cfg.from, REST_VALUE[cfg.property]);
+    const to = withoutUnit(cfg.to, FINAL_VALUE[cfg.property]);
+    switch (cfg.property) {
+      case "opacity":
+        return { opacity: [from, to] };
+      case "scale":
+        return { scale: [from, to] };
+      case "scale-x":
+        return { scale: [`${from} 1`, `${to} 1`] };
+      case "scale-y":
+        return { scale: [`1 ${from}`, `1 ${to}`] };
+      case "rotate":
+        return {
+          rotate: [
+            withUnit(cfg.from, "deg", REST_VALUE.rotate),
+            withUnit(cfg.to, "deg", FINAL_VALUE.rotate)
+          ]
+        };
+    }
+  }
+  function buildMergedTranslateKeyframes(xCfg, yCfg, el) {
+    const [xFrom, xTo] = xCfg ? axisRange(xCfg, el) : ["0px", "0px"];
+    const [yFrom, yTo] = yCfg ? axisRange(yCfg, el) : ["0px", "0px"];
+    return { translate: [`${xFrom} ${yFrom}`, `${xTo} ${yTo}`] };
+  }
+  var ANIMATABLE_KEYFRAME_PROPERTIES = new Set(["opacity", "scale", "translate", "rotate"]);
+  function warnIfNotAnimatable(el, keyframes2) {
+    const supports = typeof CSS !== "undefined" && typeof CSS.supports === "function" ? CSS.supports : null;
+    for (const prop of Object.keys(keyframes2)) {
+      if (!ANIMATABLE_KEYFRAME_PROPERTIES.has(prop)) {
+        console.warn(`[sail/motion] keyframe property "${prop}" is not one of this runtime's known-animatable ` + `properties (${[...ANIMATABLE_KEYFRAME_PROPERTIES].join(", ")}) — WAAPI accepts unknown ` + `keyframe properties silently, so this animation will run forever and move nothing.`, el);
+        continue;
+      }
+      if (!supports)
+        continue;
+      for (const value of keyframes2[prop]) {
+        if (!supports(prop, String(value))) {
+          console.warn(`[sail/motion] keyframe value ${JSON.stringify(value)} is not valid for CSS property ` + `"${prop}" — the animation will silently no-op.`, el);
+        }
+      }
+    }
+  }
+  function warnIfOutOfVisibleRange(el, cfg, keyframes2) {
+    if (cfg.property !== "opacity")
+      return;
+    for (const value of keyframes2.opacity ?? []) {
+      const n = typeof value === "number" ? value : Number(value);
+      if (Number.isFinite(n) && (n < 0 || n > 1)) {
+        console.warn(`[sail/motion] opacity keyframe value ${JSON.stringify(value)} (from preset "${cfg.preset}") ` + `is outside the visible 0..1 range — the computed style clamps it, so this animation runs ` + `and moves nothing. "${cfg.preset}" looks like a preset authored for a different property ` + `(e.g. scale) — check the property this preset is attached to.`, el);
+        return;
+      }
+    }
+  }
+  function buildTransition(cfg, delaySec) {
+    const t = {};
+    if (cfg.kind === "spring") {
+      const springArgs = {
+        keyframes: [0, 1]
+      };
+      if (cfg.stiffness != null)
+        springArgs.stiffness = cfg.stiffness;
+      if (cfg.damping != null)
+        springArgs.damping = cfg.damping;
+      if (cfg.mass != null)
+        springArgs.mass = cfg.mass;
+      if (cfg.restSpeed != null)
+        springArgs.restSpeed = cfg.restSpeed;
+      if (cfg.restDelta != null)
+        springArgs.restDelta = cfg.restDelta;
+      const generator = spring(springArgs);
+      const durationMs = calcGeneratorDuration(generator);
+      t.duration = durationMs / 1000;
+      t.ease = generateLinearEasing((s) => generator.next(s * durationMs).value, durationMs);
+    } else {
+      if (cfg.duration != null)
+        t.duration = cfg.duration;
+      if (cfg.easing)
+        t.ease = cfg.easing;
+    }
+    if (cfg.iterations != null)
+      t.repeat = cfg.iterations;
+    if (cfg.direction != null) {
+      t.repeatType = cfg.direction === "normal" ? "loop" : cfg.direction === "alternate" ? "reverse" : cfg.direction;
+    }
+    if (delaySec != null || cfg.delay != null) {
+      t.delay = (delaySec ?? 0) + (cfg.delay ?? 0);
+    }
+    return t;
+  }
+  var staggerIndices = new WeakMap;
+  function nextStaggerIndex(parent, trigger) {
+    let byTrigger = staggerIndices.get(parent);
+    if (!byTrigger) {
+      byTrigger = new Map;
+      staggerIndices.set(parent, byTrigger);
+    }
+    const index = byTrigger.get(trigger) ?? 0;
+    byTrigger.set(trigger, index + 1);
+    return index;
+  }
+  function computeStaggerDelay(config, el) {
+    if (config.stagger == null)
+      return;
+    const parent = el.parentElement;
+    if (!parent)
+      return 0;
+    const index = nextStaggerIndex(parent, config.trigger);
+    return stagger(config.stagger)(index, index + 1);
+  }
+  function seekTo(el, timeMs) {
+    if (timeMs == null)
+      return;
+    try {
+      for (const a of el.getAnimations?.() ?? []) {
+        const total = a.effect?.getTiming?.().duration ?? 0;
+        a.currentTime = total > 0 ? timeMs % total : timeMs;
+      }
+    } catch {}
+  }
+  function createAnimations(el, config, delaySec) {
+    const controls = [];
+    const total = config.motions.length;
+    const xIndex = config.motions.findIndex((m) => m.property === "translate-x");
+    const yIndex = config.motions.findIndex((m) => m.property === "translate-y");
+    const merged = new Set;
+    if (xIndex !== -1 && yIndex !== -1) {
+      const xCfg = config.motions[xIndex];
+      const yCfg = config.motions[yIndex];
+      const keyframes2 = buildMergedTranslateKeyframes(xCfg, yCfg, el);
+      warnIfNotAnimatable(el, keyframes2);
+      const leadIndex = Math.min(xIndex, yIndex);
+      const transition = buildTransition(config.motions[leadIndex], delaySec);
+      try {
+        const c = animateMini(el, keyframes2, transition);
+        controls.push(c);
+      } catch {
+        applyFinalStyle(el, xCfg);
+        applyFinalStyle(el, yCfg);
+      }
+      merged.add(xIndex);
+      merged.add(yIndex);
+    }
+    for (let i = 0;i < total; i++) {
+      if (merged.has(i))
+        continue;
+      const cfg = config.motions[i];
+      const keyframes2 = buildKeyframes(cfg, el);
+      warnIfNotAnimatable(el, keyframes2);
+      warnIfOutOfVisibleRange(el, cfg, keyframes2);
+      const transition = buildTransition(cfg, delaySec);
+      try {
+        const c = animateMini(el, keyframes2, transition);
+        controls.push(c);
+      } catch {
+        applyFinalStyle(el, cfg);
+      }
+    }
+    return controls;
+  }
+  function createAnimationsWhenConnected(el, config, delaySec, carriedTimeMs = null) {
+    if (el.isConnected || typeof requestAnimationFrame === "undefined") {
+      const controls2 = createAnimations(el, config, delaySec);
+      seekTo(el, carriedTimeMs);
+      return () => {
+        for (const c of controls2)
+          c.cancel();
+      };
+    }
+    for (const m of config.motions)
+      applyRestStyle(el, m);
+    let controls = [];
+    let disposed = false;
+    const start = () => {
+      if (disposed)
+        return;
+      if (!el.isConnected) {
+        requestAnimationFrame(start);
+        return;
+      }
+      controls = createAnimations(el, config, delaySec);
+      seekTo(el, carriedTimeMs);
+    };
+    requestAnimationFrame(start);
+    return () => {
+      disposed = true;
+      for (const c of controls)
+        c.cancel();
+    };
   }
   var TRIGGER_EVENTS = {
     hover: ["mouseenter", "mouseleave"],
@@ -1651,15 +3994,6 @@
     focus: ["focus", "blur"],
     "focus-visible": ["focusin", "focusout"]
   };
-  function isFocusVisible(ev) {
-    const target = ev.target;
-    if (target && typeof target.matches === "function") {
-      try {
-        return target.matches(":focus-visible");
-      } catch {}
-    }
-    return focusSource === "keyboard";
-  }
   var focusSource = "unknown";
   var focusTrackerInstalled = false;
   function trackFocusSource() {
@@ -1673,188 +4007,152 @@
       focusSource = "mouse";
     }, { capture: true });
   }
-  function rehome(a) {
-    if (typeof document === "undefined" || typeof Animation !== "function") {
-      return a;
+  function isFocusVisible(ev) {
+    const target = ev.target;
+    if (target && typeof target.matches === "function") {
+      try {
+        return target.matches(":focus-visible");
+      } catch {}
     }
-    const timeline = document.timeline;
-    if (!timeline || a.timeline === timeline)
-      return a;
-    const effect = a.effect;
-    if (!effect)
-      return a;
-    a.cancel();
-    return new Animation(effect, timeline);
+    return focusSource === "keyboard";
+  }
+  function classifyTrigger(trigger) {
+    if (trigger === "loop")
+      return "loop";
+    if (trigger === "enter" || trigger === "exit")
+      return trigger;
+    if (trigger === "reveal" || trigger === "scroll")
+      return trigger;
+    if (TRIGGER_EVENTS[trigger])
+      return "event";
+    return "noop";
   }
   function __sui_motion_attach(el, config) {
-    const { trigger } = config;
-    const rehomed = new Map;
-    const fix = (a) => {
-      if (a == null)
-        return null;
-      let r = rehomed.get(a);
-      if (!r) {
-        r = rehome(a);
-        rehomed.set(a, r);
-      }
-      return r;
-    };
-    const enter = config.enter.map(fix).filter((a) => a != null);
-    const leave = config.leave.map(fix).filter((a) => a != null);
-    if (enter.length === 0)
-      return () => {};
-    for (const a of enter) {
-      a.cancel();
-    }
-    const playForward = () => {
-      for (const a of enter) {
-        a.play();
-      }
-    };
-    const playReverse = () => {
-      enter.forEach((a, i) => {
-        const b = leave[i] ?? a;
-        try {
-          a.cancel();
-        } catch {}
-        b.currentTime = 0;
-        b.play();
+    if (typeof config !== "function")
+      return attachOnce(el, config);
+    let inner = null;
+    let carried = null;
+    const stop = effect(() => {
+      const next = config();
+      untrack(() => {
+        if (inner) {
+          carried = readPlaybackTime(el, next);
+          inner();
+          inner = null;
+        }
+        inner = attachOnce(el, next, carried);
       });
+    });
+    return () => {
+      stop();
+      if (inner)
+        inner();
+      inner = null;
     };
-    if (trigger === "loop") {
-      if (prefersReducedMotion()) {
-        return () => {
-          for (const a of enter)
-            a.cancel();
-        };
+  }
+  function readPlaybackTime(el, cfg) {
+    const infinite = cfg.motions.some((m) => m.iterations === Infinity) || cfg.trigger === "loop";
+    if (!infinite)
+      return null;
+    try {
+      const anims = el.getAnimations?.() ?? [];
+      for (const a of anims) {
+        const t = a.currentTime;
+        if (typeof t === "number" && Number.isFinite(t))
+          return t;
       }
-      const phase = config.stagger ? staggerOffset() * config.stagger : 0;
-      for (const a of enter) {
-        a.effect?.updateTiming({ iterations: Infinity, direction: "alternate", delay: phase });
-        a.play();
+    } catch {}
+    return null;
+  }
+  function attachOnce(el, config, carriedTimeMs = null) {
+    if (!isHTMLElement2(el))
+      return () => {};
+    const reduced = prefersReducedMotion2();
+    const branch = classifyTrigger(config.trigger);
+    if (branch === "noop")
+      return () => {};
+    const delaySec = computeStaggerDelay(config, el);
+    if (branch === "loop") {
+      if (reduced) {
+        applyReducedMotionSettle(el, config.motions);
+        return () => {};
       }
-      return () => {
-        for (const a of enter)
-          a.cancel();
+      const looped = {
+        ...config,
+        motions: config.motions.map((m) => ({
+          ...m,
+          iterations: m.iterations ?? Infinity,
+          direction: m.direction ?? "alternate"
+        }))
       };
+      return createAnimationsWhenConnected(el, looped, delaySec, carriedTimeMs);
     }
-    if (trigger === "view" || trigger === "scroll") {
-      if (prefersReducedMotion()) {
-        for (const a of enter)
-          a.finish();
-        return () => {
-          for (const a of enter)
-            a.cancel();
-        };
-      }
-      const timeline = makeTimeline(trigger, el);
-      if (!timeline) {
-        if (trigger === "view" && typeof IntersectionObserver !== "undefined") {
-          const io = new IntersectionObserver((entries) => {
-            if (entries.some((e) => e.isIntersecting)) {
-              io.disconnect();
-              for (const a of enter)
-                a.play();
-            }
-          }, { threshold: 0.15 });
-          io.observe(el);
-          return () => {
-            io.disconnect();
-            for (const a of enter)
-              a.cancel();
-          };
-        }
-        for (const a of enter)
-          a.finish();
-        return () => {
-          for (const a of enter)
-            a.cancel();
-        };
-      }
-      for (const a of enter) {
-        a.timeline = timeline;
-        a.play();
-      }
-      return () => {
-        for (const a of enter)
-          a.cancel();
-      };
-    }
-    if (trigger === "enter" || trigger === "exit") {
+    if (branch === "enter" || branch === "exit") {
       installLifecycleRunner();
-      if (trigger === "enter") {
-        if (prefersReducedMotion()) {
-          for (const a of enter)
-            a.finish();
-          return () => {
-            for (const a of enter)
-              a.cancel();
-          };
+      if (branch === "enter") {
+        if (reduced) {
+          applyReducedMotionSettle(el, config.motions);
+          return () => {};
         }
-        if (config.stagger) {
-          const delay = staggerOffset() * config.stagger;
-          for (const a of enter) {
-            a.effect?.updateTiming({ delay });
-          }
-        }
-        playForward();
-        return () => {
-          for (const a of enter)
-            a.cancel();
-        };
+        return createAnimationsWhenConnected(el, config, delaySec);
       }
-      for (const a of enter)
-        a.cancel();
-      EXITS.set(el, enter);
+      if (reduced)
+        return () => {};
+      EXITS.set(el, { config, controls: [], delaySec });
       return () => {
+        const entry = EXITS.get(el);
         EXITS.delete(el);
-        for (const a of enter)
-          a.cancel();
+        if (entry)
+          for (const c of entry.controls)
+            c.cancel();
       };
     }
-    const events = TRIGGER_EVENTS[trigger];
-    if (!events) {
-      return () => {
-        for (const a of enter)
-          a.cancel();
-      };
+    if (branch === "reveal" || branch === "scroll") {
+      if (reduced) {
+        applyReducedMotionSettle(el, config.motions);
+        return () => {};
+      }
+      return createAnimationsWhenConnected(el, config, delaySec);
     }
-    if (trigger === "focus-visible")
+    const events = TRIGGER_EVENTS[config.trigger];
+    if (config.trigger === "focus-visible")
       trackFocusSource();
     const [enterEvent, leaveEvent, cancelEvent] = events;
+    let live = [];
+    const playForward = () => {
+      if (prefersReducedMotion2())
+        return;
+      for (const c of live)
+        c.cancel();
+      live = createAnimations(el, config, delaySec);
+    };
     const onEnter = (ev) => {
-      if (prefersReducedMotion())
+      if (config.trigger === "focus-visible" && !isFocusVisible(ev))
         return;
-      if (trigger === "focus-visible" && !isFocusVisible(ev)) {
-        return;
-      }
       playForward();
     };
     const onLeave = () => {
-      if (prefersReducedMotion())
-        return;
-      playReverse();
+      playForward();
     };
     el.addEventListener(enterEvent, onEnter);
     el.addEventListener(leaveEvent, onLeave);
-    if (cancelEvent) {
+    if (cancelEvent)
       el.addEventListener(cancelEvent, onLeave);
-    }
     return () => {
       el.removeEventListener(enterEvent, onEnter);
       el.removeEventListener(leaveEvent, onLeave);
-      if (cancelEvent) {
+      if (cancelEvent)
         el.removeEventListener(cancelEvent, onLeave);
-      }
-      for (const a of enter) {
+      for (const c of live) {
         try {
-          a.cancel();
+          c.cancel();
         } catch {}
       }
     };
   }
   var EXITS = new WeakMap;
   var runnerInstalled = false;
+  var EXIT_TIMEOUT_MS = 4000;
   function installLifecycleRunner() {
     if (runnerInstalled)
       return;
@@ -1862,64 +4160,65 @@
     setTransitionRunner({
       runEnter: () => null,
       runLeave: (nodes) => {
-        const playing = [];
+        const matched = [];
         for (const n of nodes) {
           if (!(n instanceof Element))
             continue;
           const targets = EXITS.has(n) ? [n] : [...n.querySelectorAll("*")].filter((e) => EXITS.has(e));
           for (const t of targets) {
-            const anims = EXITS.get(t);
-            if (!anims)
-              continue;
-            for (const a of anims) {
-              a.currentTime = 0;
-              a.play();
-              playing.push(a.finished.catch(() => {}));
-            }
+            const entry = EXITS.get(t);
+            if (entry)
+              matched.push({ el: t, entry });
           }
         }
-        if (playing.length === 0)
+        if (matched.length === 0)
           return null;
-        if (prefersReducedMotion())
+        if (prefersReducedMotion2()) {
+          for (const { el, entry } of matched) {
+            for (const m of entry.config.motions)
+              applyFinalStyle(el, m);
+          }
           return null;
-        return Promise.all(playing).then(() => {});
+        }
+        const playing = [];
+        for (const { el, entry } of matched) {
+          const controls = createAnimations(el, entry.config, entry.delaySec);
+          entry.controls = controls;
+          for (const c of controls)
+            playing.push(c.finished.catch(() => {}));
+        }
+        let timeoutId;
+        const settled = Promise.race([
+          Promise.all(playing).then(() => {}),
+          new Promise((resolve) => {
+            timeoutId = setTimeout(resolve, EXIT_TIMEOUT_MS);
+          })
+        ]);
+        return settled.then(() => {
+          clearTimeout(timeoutId);
+          for (const { el, entry } of matched) {
+            for (const c of entry.controls)
+              c.cancel();
+            for (const m of entry.config.motions)
+              applyFinalStyle(el, m);
+            entry.controls = [];
+          }
+        });
       },
       cancelTransitions: (node) => {
         if (!(node instanceof Element))
           return;
-        const anims = EXITS.get(node);
-        if (anims)
-          for (const a of anims)
-            a.cancel();
+        const entry = EXITS.get(node);
+        if (entry) {
+          for (const c of entry.controls)
+            c.cancel();
+          entry.controls = [];
+        }
       }
     });
   }
-  var waveCount = 0;
-  var waveScheduled = false;
-  function staggerOffset() {
-    const i = waveCount++;
-    if (!waveScheduled) {
-      waveScheduled = true;
-      queueMicrotask(() => {
-        waveCount = 0;
-        waveScheduled = false;
-      });
-    }
-    return i;
-  }
-  function makeTimeline(kind, el) {
-    const g = globalThis;
-    try {
-      if (kind === "view") {
-        return g.ViewTimeline ? new g.ViewTimeline({ subject: el }) : null;
-      }
-      return g.ScrollTimeline ? new g.ScrollTimeline({ source: document.scrollingElement }) : null;
-    } catch {
-      return null;
-    }
-  }
 
-  // behavior-entry.ts
+  // packages/sail/l1-conformance/behavior-entry.ts
   var motion = { attach: __sui_motion_attach, runLeave };
   globalThis.SuiActions = exports_actions;
   globalThis.SuiBoundary = exports_error_boundary;

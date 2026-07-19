@@ -101,7 +101,7 @@ pub fn emit_targets(layout: &BundleLayout, names: &[String], out_dir: &Path) -> 
                 src.display()
             );
         }
-        // out_file may itself be nested (e.g. `views/git/view.js`); the closure
+        // out_file may itself be nested (e.g. `routes/git/route.js`); the closure
         // copy preserves that subpath under out_dir.
         total += copy_with_closure(&src_dir, &target.out_file, out_dir, &mut seen)?;
     }

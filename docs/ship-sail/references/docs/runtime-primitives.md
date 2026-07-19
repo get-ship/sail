@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 5
 title: SAIL — Runtime Primitives
 description: The signal/bind/effect primitives the SAIL runtime exposes.
@@ -106,7 +106,7 @@ SSE   event: patch \n data: {"op":"set","value":{…}}
   ↓ makeSseSource() in @ship/sdk-client
 sig   LiveSignal<T> flips loading → ok → ok (per patch)
   ↓ bindWhileLoading / bindWhileError / bindIf
-DOM   morphs in place — no re-render of the surrounding view
+DOM   morphs in place — no re-render of the surrounding route
 ```
 
 **Worked example.** `views/home/` ships the canonical demo: a live `query()` subscribes to `ship.git.overview()`; the daemon's git-signal singleton refreshes on `.ship/` filesystem events and on git ops, so staging a file flips the badge live.
@@ -118,7 +118,7 @@ PORT=$(cat $(./target/debug/ship daemon dir)/port)
 # 1. Confirm the SDK channel is live (Ctrl-C after a few `patch` events).
 curl -N "http://localhost:$PORT/_deck/data?expr=$(printf 'ship.git.overview()' | jq -sRr @uri)"
 
-# 2. Open the view, stage a file, watch the badge flip.
+# 2. Open the route, stage a file, watch the badge flip.
 xdg-open "http://localhost:$PORT/"
 touch CHANGE_ME && git add CHANGE_ME            # status flips to "1 changed"
 git restore --staged CHANGE_ME && rm CHANGE_ME  # back to "clean"
@@ -337,7 +337,7 @@ DOM appends, so this covers the authored surface.
 <use-intersection callback={onIntersect} />
 ```
 
-The compiler emits a side-effect import of `@ship/sail-runtime/template-hooks` into views that contain `<use-*>` elements, so hook code only ships with views that use it. Register a custom hook via `registerTemplateHook(name, factory)`; `listRegisteredHooks()` enumerates.
+The compiler emits a side-effect import of `@ship/sail-runtime/template-hooks` into routes that contain `<use-*>` elements, so hook code only ships with routes that use it. Register a custom hook via `registerTemplateHook(name, factory)`; `listRegisteredHooks()` enumerates.
 
 ## Routes — reactive URL state
 
@@ -358,7 +358,7 @@ export default controller(({ route }) => {
 </controller>
 ```
 
-`route` is part of the ambient `ctx` every controller function receives. `route.params.<name>` and `route.query.<name>` are signals — call them (`route.params.id()`) to read and subscribe inside `effect`, `derived`, or a `query()`/`queryKeyed()` thunk. `popstate` and `navigate` both fire the global updater so every attached view re-evaluates. (`route` is also importable as a `route()` factory from `@ship/sail-runtime/route` for non-controller code; the namespace form `route.params.id()` is the controller exemplar — see `views/agents/[id]/page.sail`'s `<controller>` block.)
+`route` is part of the ambient `ctx` every controller function receives. `route.params.<name>` and `route.query.<name>` are signals — call them (`route.params.id()`) to read and subscribe inside `effect`, `derived`, or a `query()`/`queryKeyed()` thunk. `popstate` and `navigate` both fire the global updater so every attached route re-evaluates. (`route` is also importable as a `route()` factory from `@ship/sail-runtime/route` for non-controller code; the namespace form `route.params.id()` is the controller exemplar — see `views/agents/[id]/page.sail`'s `<controller>` block.)
 
 ## Mount API
 
@@ -369,4 +369,4 @@ const handle: MountHandle = mount(target, payload, opts)
 // later: handle.dispose()
 ```
 
-`mount(target, payload, opts)` is the single entry hosts call to put a view on screen — used by the daemon view-host and by `apps/shell/src/main.ts` for route-driven mounts. The HMR layer disposes and re-mounts through the same call.
+`mount(target, payload, opts)` is the single entry hosts call to put a route on screen — used by the daemon view-host and by `apps/shell/src/main.ts` for route-driven mounts. The HMR layer disposes and re-mounts through the same call.

@@ -1,5 +1,5 @@
 // Code snippets for the Deck overview page, kept OUT of the paired
-// controller.ts on purpose: the Sail compiler scans a view's controller for
+// controller.ts on purpose: the Sail compiler scans a route's controller for
 // `signal(...)` to infer scope, and example code containing literal braces
 // must not be scope-scanned.
 

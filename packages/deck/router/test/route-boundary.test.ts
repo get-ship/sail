@@ -30,7 +30,7 @@ vi.mock('@ship/sail-runtime', () => {
 })
 
 import { installRouteBoundary, isDevMode } from '../src/route-boundary'
-// The faithful runProtected from the mock — used to simulate a view throwing
+// The faithful runProtected from the mock — used to simulate a route throwing
 // through the runtime's protected call site, the way bindFor/bindIf/effect do.
 import { runProtected, findNearestBoundary } from '@ship/sail-runtime'
 
@@ -72,24 +72,24 @@ describe('isDevMode', () => {
 })
 
 describe('installRouteBoundary — throwing route degrades to a card', () => {
-  it('renders <sail-error-state> (not a crash) when a view throws on render', () => {
+  it('renders <sail-error-state> (not a crash) when a route throws on render', () => {
     defineSuiErrorState()
     installRouteBoundary(outlet, { onReset: () => {}, dev: true })
 
-    // Simulate the view mounting a node and then throwing during render — the
+    // Simulate the route mounting a node and then throwing during render — the
     // runtime's render primitives wrap such call sites in runProtected().
     const viewNode = document.createElement('span')
     outlet.appendChild(viewNode)
     expect(() =>
       runProtected(viewNode, 'render', () => {
-        throw new Error('probe: view exploded on render')
+        throw new Error('probe: route exploded on render')
       }),
     ).not.toThrow()
 
     const card = outlet.querySelector('sail-error-state')
     expect(card).not.toBeNull()
     expect(outlet.hasAttribute('data-route-error')).toBe(true)
-    // Broken view DOM is gone — degraded, not dead.
+    // Broken route DOM is gone — degraded, not dead.
     expect(outlet.querySelector('span')).toBeNull()
   })
 

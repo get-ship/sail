@@ -38,7 +38,7 @@ struct Target {
     source_rel: &'static str,
     manifest_rel: &'static str,
     mode: CompileMode,
-    /// Component tag name (kebab-case) for component-mode emit; `None` for views.
+    /// Component tag name (kebab-case) for component-mode emit; `None` for routes.
     component_tag: Option<&'static str>,
 }
 
@@ -220,7 +220,7 @@ describe('isomorphic-render parity / clean hydration (acceptance #3)', () => {{
   // SSR HTML leaves the DOM byte-identical — no teardown) and the
   // hydrate-reattach-reactivity proof below previously used the `hub`/`showcase`
   // app targets, which lived OUTSIDE the framework boundary. They need a
-  // dedicated in-repo conformance fixture: a clean view whose mount has no
+  // dedicated in-repo conformance fixture: a clean route whose mount has no
   // side-effect AND a controller-owned signal + dynamic text. The conformance
   // app's `badge` is stateful (mounting flips its count), so it's not a clean
   // adopt fixture. board-parity (above) + greet markers (below) still gate the

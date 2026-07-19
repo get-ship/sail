@@ -54,7 +54,7 @@ use std::sync::{Mutex, OnceLock};
 use super::lint_overrides::{LintOverride, OverrideSeverity};
 
 /// The floor rule IDs — the styling constructs banned in EVERY `.sail` compiled
-/// as a component or view, with or without a `sail.config.json`. This is the
+/// as a component or route, with or without a `sail.config.json`. This is the
 /// single source of truth: [`is_floor_rule`], [`Policy::floor`], and the
 /// compiler's unconditional `enforce_floor` pass
 /// (`check::lint_overrides::enforce_floor`) all read this one list, so a floor

@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 use sail_compiler::{compile, CompileMode, CompileOpts};
 
-fn view_opts(source_path: Option<PathBuf>) -> CompileOpts {
+fn route_opts(source_path: Option<PathBuf>) -> CompileOpts {
     CompileOpts {
         route_params: None,
         setup_url: None,
@@ -28,7 +28,7 @@ fn view_opts(source_path: Option<PathBuf>) -> CompileOpts {
 fn single_expr_arrow_passes_without_ts() {
     compile(
         r#"<button on:click={() => count.set(count() + 1)}>+</button>"#,
-        view_opts(None),
+        route_opts(None),
     )
     .expect("single-expression handler must pass without paired .ts");
 }
@@ -37,7 +37,7 @@ fn single_expr_arrow_passes_without_ts() {
 fn single_stmt_block_passes_without_ts() {
     compile(
         r#"<button on:click={() => { count.set(count() + 1) }}>+</button>"#,
-        view_opts(None),
+        route_opts(None),
     )
     .expect("single-statement block handler must pass without paired .ts");
 }
@@ -46,7 +46,7 @@ fn single_stmt_block_passes_without_ts() {
 fn multi_stmt_fails_without_ts() {
     let err = compile(
         r#"<button on:click={() => { x.set(1); y.set(2) }}>+</button>"#,
-        view_opts(None),
+        route_opts(None),
     )
     .expect_err("multi-statement handler without paired .ts must fail");
 
@@ -79,6 +79,6 @@ fn multi_stmt_passes_with_inline_controller() {
         </controller>\n\
         <button on:click={() => { x.set(1); y.set(2) }}>+</button>";
 
-    compile(src, view_opts(None))
+    compile(src, route_opts(None))
         .expect("multi-statement handler with inline <controller> must pass");
 }

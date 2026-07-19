@@ -5,7 +5,7 @@
 //  • Exposes a tiny PERSISTED store — a `visits` counter that survives
 //    client-side navigation AND reload. Route signals reset on nav (each route
 //    remounts); this lives above the router, so it's how you demonstrate
-//    durable state. Read it in any view as `ctx.clients.store`.
+//    durable state. Read it in any route as `ctx.clients.store`.
 import './deck-theme.css'
 import './base.css'
 import { signal } from '@ship/sail-runtime'

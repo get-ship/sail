@@ -2,7 +2,7 @@
   // The clients seam. deck always generates `entry.gen.ts` (imports the route
   // tables + the design-token CSS, calls `mountRouter`). Declaring `entry` here
   // customizes the `clients` map: deck emits `import { store } from './src/clients'`
-  // and spreads `{ store }` into `mountRouter({ clients })`, so every view reads
+  // and spreads `{ store }` into `mountRouter({ clients })`, so every route reads
   // it as `ctx.clients.store`. `clients.ts` also imports the deck theme CSS — a
   // global, document-level stylesheet — so the whole app wears the deck palette.
   //

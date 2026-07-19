@@ -1,7 +1,7 @@
 use std::path::Path;
 
-/// The ONE canonical view-name validator — the single source of truth for the
-/// whole render→serve contract. The SSR/payload path (deck-core `view`/
+/// The ONE canonical route-name validator — the single source of truth for the
+/// whole render→serve contract. The SSR/payload path (deck-core `route`/
 /// `route_payload`) and the SSE/mutation handlers (shipd) both resolve to this
 /// via the `render_helpers` re-export chain, so a name the render path accepts
 /// (and mints a `__subscribe__`/mutation-action URL for) is exactly a name the
@@ -53,7 +53,7 @@ mod tests {
         assert!(is_valid_route_name("agent-detail"));
         assert!(is_valid_route_name("v2"));
         assert!(is_valid_route_name("MyView"));
-        assert!(is_valid_route_name("my_view"));
+        assert!(is_valid_route_name("my_route"));
         assert!(is_valid_route_name("studio/agents"));
     }
 }

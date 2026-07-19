@@ -3,10 +3,10 @@
 //! that uses the `routes/` convention) to a static dir.
 //!
 //! This is the deck-owned replacement for the retired `shell-app.ts`
-//! (`Bun.build`) — one bundler engine (Rolldown) for framework + views +
+//! (`Bun.build`) — one bundler engine (Rolldown) for framework + routes +
 //! projects. Driven by `deck build` (`crates/deck/deck-cli`). The project
 //! graph compiles its own `.sail` in-process via the shared `SailPlugin`
-//! (`rolldown_bundle.rs`) — the exact resolve/load hooks the view/component
+//! (`rolldown_bundle.rs`) — the exact resolve/load hooks the route/component
 //! build uses — so no on-disk `.compiled.js` pre-step is needed.
 //! `AppPlugin` runs alongside it to externalize the framework singletons
 //! (which resolve to `/_deck/*` via the document's importmap); it runs FIRST so
@@ -63,9 +63,9 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
     ("@ship/sail-runtime/route", "sail-runtime.js", "_deck/runtime.js"),
     ("@ship/sail-runtime/template-hooks", "sail-runtime.js", "_deck/runtime.js"),
     ("@ship/sail-runtime/patch", "sail-runtime.js", "_deck/runtime.js"),
-    // `/internal` is what COMPILED VIEWS import (__tpl, bind*, effect — the
+    // `/internal` is what COMPILED ROUTES import (__tpl, bind*, effect — the
     // emitter's surface). Its absence here inlined a SECOND copy of the
-    // signal graph into every app bundle: view bindings subscribed in the
+    // signal graph into every app bundle: route bindings subscribed in the
     // copy, controller signals wrote in the real one, and no page reacted
     // to anything. The resolve guard below makes this class of miss a
     // build error instead of a silent fork.
@@ -97,7 +97,7 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
 /// `framework_clients` map: the package that owns the singleton
 /// declares its serve contract, and the bundler discovers it via the
 /// app's dep graph (the same walker that finds components, bundles,
-/// views). Mirror of how packs declare `customElements` — the package
+/// routes). Mirror of how packs declare `customElements` — the package
 /// names itself; deck names no ship path.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DeckFrameworkDecl {
@@ -164,7 +164,7 @@ fn generate_importmap(
 /// doesn't author the importmap; the bundler writes it via `generate_importmap`
 /// and reads it back here to get the externals list. The two views must agree:
 /// any package the importmap resolves to `/foo` is a runtime external; the
-/// view bundle's ESM imports of that package stay as bare specifiers.
+/// route bundle's ESM imports of that package stay as bare specifiers.
 fn importmap_externals_from_json(importmap_json: &str) -> Result<HashSet<String>> {
     let v: serde_json::Value = serde_json::from_str(importmap_json)
         .context("generated importmap is not valid JSON")?;
@@ -967,8 +967,8 @@ pub async fn bundle_app_with_base(
     // the entry chunk; CSS assets (if any) get a `<link rel="stylesheet">`
     // injected BEFORE the entry script so the browser fetches and applies
     // them in parallel with the module load — same first-paint guarantee
-    // the per-view synthetic CSS render lifts (orthogonal layer — this is
-    // the GLOBAL/linkable CSS path; the view-synthetic one handles view
+    // the per-route synthetic CSS render lifts (orthogonal layer — this is
+    // the GLOBAL/linkable CSS path; the route-synthetic one handles route
     // chrome inline in SSR/CSR first-paint).
     let mut final_html = html.replace(
         &format!("/{entry_module}"),
@@ -1209,7 +1209,7 @@ mod tests {
         );
         // A GENERIC dynamic route — deliberately not any app's real route, so
         // this framework test never couples to a specific app's IA. The
-        // emitter statically imports + compiles each route view, so the
+        // emitter statically imports + compiles each route module, so the
         // fixture must compile: `id` is bound by the page's own controller.
         write(
             &r.join("routes/widgets/[id]/page.sail"),
@@ -1239,7 +1239,7 @@ export default controller(() => ({ id: signal('demo') }))\n\
         // routes directory's `page.sail` pattern.
         assert!(!r.join("src/main.ts").exists(), "dev did not author main.ts");
         // The bundler generated the entry, and the dynamic route bundled —
-        // bundle_app() above would have errored if the route view failed to
+        // bundle_app() above would have errored if the route module failed to
         // compile into the graph. We do NOT string-match the generated TS:
         // that's presentation, and the router's behavior is covered by
         // @ship/deck/router's mount-router tests.
@@ -1452,8 +1452,8 @@ export default controller(() => ({}))\n\
             );
         }
         // The link must precede the entry script (link is fetched + applied
-        // before module eval; same first-paint guarantee the view-synthetic
-        // CSS render lifts — but for GLOBAL/linkable CSS, not view chrome).
+        // before module eval; same first-paint guarantee the route-synthetic
+        // CSS render lifts — but for GLOBAL/linkable CSS, not route chrome).
         let link_pos = html.find("<link rel=\"stylesheet\"").unwrap();
         let script_pos = html.find("<script type=\"module\"").unwrap();
         assert!(

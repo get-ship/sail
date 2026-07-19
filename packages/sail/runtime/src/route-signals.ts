@@ -1,10 +1,10 @@
 // route-signals.ts — SAIL-local structural route type.
 //
-// SAIL views declare their `route` scope via the app manifest (e.g.
+// SAIL routes declare their `route` scope via the app manifest (e.g.
 // `route: { from: '@ship/deck-router', import: 'route', construct: true }`).
 // The runtime doesn't need to know the precise deck/route implementation
 // — it only needs a structural shape the render can read against. This
-// is the SAIL side of the contract: a view reads `scope.route.params.id()`
+// is the SAIL side of the contract: a route reads `scope.route.params.id()`
 // and gets a `Signal<string | undefined>` back.
 //
 // Slice 2 — this type replaces the `import type { RouteSignals } from
@@ -18,9 +18,9 @@
 import type { Signal } from './signal'
 
 /**
- * The reactive URL handle exposed to view scope as `route`. SAIL's
+ * The reactive URL handle exposed to route scope as `route`. SAIL's
  * structural view of the deck-side `RouteSignals` — every property is
- * a `Signal` (already a SAIL primitive) so the view's typed scope can
+ * a `Signal` (already a SAIL primitive) so the route's typed scope can
  * read `scope.route.params.<name>()` and subscribe to changes.
  */
 export interface RouteSignals {

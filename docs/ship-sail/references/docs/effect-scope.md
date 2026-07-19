@@ -1,16 +1,16 @@
 ---
-group: Views
+group: Routes
 order: 10
 title: Effect scopes — cleanup ownership
-description: The effect-scope primitive that releases a view's resources (EventSource, observers, timers, hook subscriptions) on unmount.
+description: The effect-scope primitive that releases a route's resources (EventSource, observers, timers, hook subscriptions) on unmount.
 audience: internal
 ---
 
 # Effect scopes — cleanup ownership
 
-Resources allocated while a view's controller runs — `EventSource`,
+Resources allocated while a route's controller runs — `EventSource`,
 `MutationObserver`, `setInterval`, custom hook subscriptions — need
-to be released when the view unmounts. The runtime ships an effect
+to be released when the route unmounts. The runtime ships an effect
 scope primitive that handles this for you, so you can't accidentally
 leak. (Forgotten cleanups were the root cause of multiple OOM
 crashes during early shell development; commit `87cf3223`.)
@@ -79,7 +79,7 @@ scope.dispose() // runs every cleanup userCode registered
 
 ### `createChildScope()` — sub-lifecycle
 
-When part of your view has its own teardown that's independent of
+When part of your route has its own teardown that's independent of
 the outer mount but should still get cleaned up if the mount goes
 away first, create a child scope:
 

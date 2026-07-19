@@ -56,7 +56,7 @@ Object.defineProperty(window, 'matchMedia', {
 })
 
 const fade: MotionAttachConfig = {
-  trigger: 'view',
+  trigger: 'reveal',
   motions: [{ property: 'opacity', preset: 'fade', kind: 'tween', from: 0, to: 1, duration: 0.12 }],
 }
 

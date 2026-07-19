@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 12
 title: Mutations
 description: The declarative `<form mutation="…">` path, controller-side mutation via the typed client in a controller event handler, the deck mutation route, and error/pending UX.
@@ -108,7 +108,7 @@ Both paths surface the same `loading → ok | error` shape.
 
 - **Declarative.** Read the injected `$mutation` signal (`{ kind }`), and/or
   attach `on:success` / `on:error` handlers for side effects (toast, close
-  drawer). The settings views use `on:success={() => flashSaved(…)}`.
+  drawer). The settings routes use `on:success={() => flashSaved(…)}`.
 - **Imperative.** Hold a `signal` for the in-flight state, set it around the
   `await`, and branch the template with `{#if}` / `{#match}`:
 

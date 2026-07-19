@@ -9,7 +9,7 @@
 //! and `{#while-error}`.
 //!
 //! Phase 3b.5 (gate H): control-flow boundaries are direct-emit through
-//! the unified `hydrate(root, ctx)` function on the view's setup return.
+//! the unified `hydrate(root, ctx)` function on the route's setup return.
 //! Each `{#if}` / `{#for}` / `{#match}` boundary still hoists a
 //! `__wireBoundary_b<N>` const inside `setup(ctx)` so the legacy
 //! `__mount` path can call it inline; the hydrate function looks up the
@@ -204,7 +204,7 @@ impl TemplateEmitter {
         // Direct-emit hydrate dispatch (parent before children — outer
         // boundary swaps detach inner SSR'd nodes, so inner hydrate
         // calls become no-ops via the `__m[k]` guard).
-        if self.is_view && self.boundary_depth == 0 {
+        if self.is_route && self.boundary_depth == 0 {
             self.hydrate_uses_markers = true;
             self.emit_boundary_hydrate(&key, "if", needs_host);
         }
@@ -291,7 +291,7 @@ impl TemplateEmitter {
             host = Self::boundary_host_arg(needs_host)
         ));
 
-        if self.is_view && self.boundary_depth == 0 {
+        if self.is_route && self.boundary_depth == 0 {
             self.hydrate_uses_markers = true;
             self.emit_boundary_hydrate(&key, "for", needs_host);
         }
@@ -610,7 +610,7 @@ impl TemplateEmitter {
             host = Self::boundary_host_arg(needs_host)
         ));
 
-        if self.is_view && self.boundary_depth == 0 {
+        if self.is_route && self.boundary_depth == 0 {
             self.hydrate_uses_markers = true;
             self.emit_boundary_hydrate(&key, "match", needs_host);
         }
@@ -693,7 +693,7 @@ impl TemplateEmitter {
         // runtime. Production emits untyped JS, so no cast there.
         let anchor_arg = if self.is_synthetic() { "__anchor as Comment" } else { "__anchor" };
         // When the boundary reflects a slot, pass the host. In hydrate the
-        // mount target `root` IS the host (a view hydrates into its container);
+        // mount target `root` IS the host (a route hydrates into its container);
         // synthetic mode narrows since `root`'s param type is broader.
         let host_arg = if needs_host {
             if self.is_synthetic() { ", root as HTMLElement" } else { ", root" }
@@ -744,7 +744,7 @@ impl TemplateEmitter {
         // Phase 3b.5 gate G: direct-emit hydrate call. The render fn is
         // already in the setup closure (no need to expose it as a named
         // property anymore).
-        if self.is_view && self.boundary_depth == 0 {
+        if self.is_route && self.boundary_depth == 0 {
             self.hydrate_uses_markers = true;
             self.hydrate_calls.line(&format!(
                 "if (__m[{k}]) __cleanups.push(hydrateWhileLoading(__m[{k}], {k}, () => $scope.{bind}(), {render_key}));",
@@ -779,7 +779,7 @@ impl TemplateEmitter {
             "{cleanups_var}.push(bindWhileError({{ anchor: {anchor}, signal: $scope.{bind}, render: {render_key} }}));"
         ));
 
-        if self.is_view && self.boundary_depth == 0 {
+        if self.is_route && self.boundary_depth == 0 {
             self.hydrate_uses_markers = true;
             // The `{#while-error}` render binds its error as `Error` (so the
             // author's `err.message` type-checks), matching `bindWhileError`.

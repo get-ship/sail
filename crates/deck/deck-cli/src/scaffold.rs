@@ -1,6 +1,6 @@
 //! `deck scaffold route|component` — generate boilerplate for a new SAIL route
 //! or primitive. Ported from the retired
-//! `scripts/scaffold-view.mjs` + `scripts/scaffold-sail-component.mjs`.
+//! `scripts/scaffold-route.mjs` + `scripts/scaffold-sail-component.mjs`.
 //!
 //! Scaffolding is a deck capability because deck owns the app/component
 //! shape (the single-file `.sail` convention — state lives in an inline
@@ -20,14 +20,14 @@ use anyhow::{Context, Result, anyhow, bail};
 /// the daemon resolver expects and the file-system shape we write.
 fn validate_route_name(name: &str) -> Result<()> {
     if name.is_empty() {
-        bail!("view name is required");
+        bail!("route name is required");
     }
     let first = name.chars().next().unwrap();
     if !first.is_ascii_lowercase() {
-        bail!("view name must start with a lowercase letter — got {name:?}");
+        bail!("route name must start with a lowercase letter — got {name:?}");
     }
     if !name.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-') {
-        bail!("view name must match /^[a-z][a-z0-9-]*$/ — got {name:?}");
+        bail!("route name must match /^[a-z][a-z0-9-]*$/ — got {name:?}");
     }
     Ok(())
 }
@@ -79,7 +79,7 @@ pub fn run_route(name: String, route_path: Option<String>, component_tag: Option
         let prefix = format!("{name}-");
         if !tag.starts_with(&prefix) {
             bail!(
-                "--component {tag:?} must be prefixed with view name `{name}-` to avoid registry collisions"
+                "--component {tag:?} must be prefixed with route name `{name}-` to avoid registry collisions"
             );
         }
     }

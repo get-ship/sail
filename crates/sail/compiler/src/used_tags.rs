@@ -7,7 +7,7 @@ use crate::ir::Instr;
 ///
 /// The compiler deliberately knows NOTHING about islands. Which of these
 /// tags are lazy separate bundles is derived downstream by the bundler's
-/// per-view tree-shaking resolver; deck-core intersects this used-tag set
+/// per-route tree-shaking resolver; deck-core intersects this used-tag set
 /// with that manifest to build `payload.islands`.
 pub fn collect_used_tags(instrs: &[Instr]) -> BTreeSet<String> {
     let mut found = BTreeSet::new();

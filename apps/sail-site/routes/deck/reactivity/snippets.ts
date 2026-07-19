@@ -1,15 +1,15 @@
 // Code snippets for the deck reactivity page. Kept OUT of the controller so
 // the compiler's scope scan isn't fooled by binding-shaped patterns inside
-// these strings. Both are real deck view shapes:
-//   - `route` is the reactive URL handle deck injects into every view scope;
+// these strings. Both are real deck route shapes:
+//   - `route` is the reactive URL handle deck injects into every route scope;
 //     its fields are signals (packages/sail/runtime/src/route-signals.ts).
 //   - `query()` is deck's live-data seam, exactly as the conformance
-//     view drives it (crates/deck/deck-conformance/app/routes/feed/page.sail).
+//     route drives it (crates/deck/deck-conformance/app/routes/feed/page.sail).
 export const code = {
   // The URL as a reactive source. Navigating re-runs only the bindings that
   // read `route`, with no document reload and no component re-mount.
   routeSignals: `<!-- routes/posts/[id]/page.sail -->
-<!-- \`route\` is ambient in every deck view; its fields are signals. -->
+<!-- \`route\` is ambient in every deck route; its fields are signals. -->
 <h1>Post {route.params.id()}</h1>
 <p>Sorted by {route.query.sort() ?? 'newest'}</p>
 
@@ -17,9 +17,9 @@ export const code = {
      No document reload, no component re-mount. -->
 <a href="/posts/42?sort=top">Post 42, top →</a>`,
 
-  // A live server-data source. deck subscribes the view to the stream and
+  // A live server-data source. deck subscribes the route to the stream and
   // patches \`t\` as values arrive; only the bindings reading it re-render.
-  liveData: `<!-- routes/feed/page.sail — subscribe a view to live server data -->
+  liveData: `<!-- routes/feed/page.sail — subscribe a route to live server data -->
 <controller>
 import { controller, query } from '@ship/sail-runtime'
 import { call } from 'ship'

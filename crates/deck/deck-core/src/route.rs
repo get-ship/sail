@@ -13,7 +13,7 @@ pub struct RouteSetupQuery {
 /// Serve `/_deck/views/{name}/view.js` — the built bundle when present, else an
 /// on-demand compile. Mount-scoped: the per-request [`Resolution`] carries the
 /// project root the built bundle + source `.sail` are resolved under, so one
-/// process serving many apps reads each app's views from ITS own root (no
+/// process serving many apps reads each app's routes from ITS own root (no
 /// process global).
 pub fn serve_sui_route_setup(
     mode: DaemonMode,
@@ -22,7 +22,7 @@ pub fn serve_sui_route_setup(
     sub: Option<&str>,
 ) -> DeckResponse {
     if !is_valid_route_name(name) {
-        return DeckResponse::not_found("invalid view name", mode);
+        return DeckResponse::not_found("invalid route name", mode);
     }
     if sub.is_none() {
         if let Some(js) = resolve_route_js(Some(resolution), name) {
@@ -30,7 +30,7 @@ pub fn serve_sui_route_setup(
         }
     }
     let Some(root) = resolution.project_root() else {
-        return DeckResponse::not_found("view: no project root (host must carry a Resolution)", mode);
+        return DeckResponse::not_found("route: no project root (host must carry a Resolution)", mode);
     };
     match resolve(root, name, sub) {
         Ok(r) => compile_route_js(name, &r, mode),
@@ -71,19 +71,19 @@ fn compile_route_js(name: &str, resolved: &ResolvedRoute, mode: DaemonMode) -> D
         Err(err) => return DeckResponse::render_error(err.render(&resolved.source), mode),
     };
 
-    // A view with a paired controller must be served as a bundle (the
+    // A route with a paired controller must be served as a bundle (the
     // compiled module imports `./<controller>`). Deck used to bundle
     // that in-process via Rolldown to `.deck/views/<name>/view.js`
     // (#167); the runtime read of that path was purged (deck-purge-root).
-    // Until view chunk serving has a host-supplied path, controller
-    // views fall back to this honest error. The in-process bundler
+    // Until route chunk serving has a host-supplied path, controller
+    // routes fall back to this honest error. The in-process bundler
     // path (when wired via `Extension<Bundler>`) can produce a bundle
     // and serve it; the runtime read step is what was purged.
     let final_js = match (&ts_path, resolved.source_path.as_deref()) {
         (Some(ts), Some(_sui)) => {
             return DeckResponse::render_error(
                 format!(
-                    "view `{name}` has a paired controller ({}) but no compiled \
+                    "route `{name}` has a paired controller ({}) but no compiled \
                      bundle is available and no in-process bundler produced one",
                     ts.display()
                 ),
@@ -96,10 +96,10 @@ fn compile_route_js(name: &str, resolved: &ResolvedRoute, mode: DaemonMode) -> D
     DeckResponse::js_route(final_js, mode)
 }
 
-// The view-name validator is a single source of truth in deck-host so the
+// The route-name validator is a single source of truth in deck-host so the
 // render/payload path (here) and the SSE/mutation handlers share one rule. This
 // path used to carry its own (lenient) copy while the re-exported deck-host one
-// was stricter — a view could render + be handed a subscribe/action URL the
+// was stricter — a route could render + be handed a subscribe/action URL the
 // SSE/mutation path then rejected. Delegate down to the one canonical rule.
 pub(crate) use deck_host::render_helpers::is_valid_route_name;
 
@@ -108,17 +108,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn view_name_accepts_digits_upper_under_dash() {
+    fn route_name_accepts_digits_upper_under_dash() {
         assert!(is_valid_route_name("v2"));
         assert!(is_valid_route_name("MyView"));
-        assert!(is_valid_route_name("my_view"));
+        assert!(is_valid_route_name("my_route"));
         assert!(is_valid_route_name("my-view"));
         assert!(is_valid_route_name("v2-dashboard"));
         assert!(is_valid_route_name("agents"));
     }
 
     #[test]
-    fn view_name_rejects_traversal_and_dotted_prefixes() {
+    fn route_name_rejects_traversal_and_dotted_prefixes() {
         assert!(!is_valid_route_name("../etc"));
         assert!(!is_valid_route_name(".."));
         assert!(!is_valid_route_name(".hidden"));
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn view_name_rejects_empty_and_oversize() {
+    fn route_name_rejects_empty_and_oversize() {
         assert!(!is_valid_route_name(""));
         let too_long: String = "a".repeat(65);
         assert!(!is_valid_route_name(&too_long));
@@ -135,14 +135,14 @@ mod tests {
     }
 
     #[test]
-    fn view_name_rejects_invalid_chars() {
+    fn route_name_rejects_invalid_chars() {
         assert!(!is_valid_route_name("with space"));
         assert!(!is_valid_route_name("with.dot"));
         assert!(!is_valid_route_name("with$dollar"));
     }
 
     #[test]
-    fn view_name_segment_limits() {
+    fn route_name_segment_limits() {
         assert!(is_valid_route_name("a/b/c"));
         let too_deep = "a/b/c/d/e/f/g/h/i";
         assert!(!is_valid_route_name(too_deep));

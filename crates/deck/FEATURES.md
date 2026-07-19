@@ -122,7 +122,7 @@ chunks, builds apps and routes, writes the asset graph, and watches for HMR.
 
 | Feature | File | Implementation | Description |
 | --- | --- | --- | --- |
-| Manifest schema | `deck.jsonc` (optional) | `crates/deck/deck-config/src/lib.rs::DeckConfig` | Optional host override for the VIEW-discovery + watch layout: source roots, watch dirs, packs, route dirs, route leaf. Consumer bundles + `@ship/<name>` resolution are NOT here (self-declared + discovered). |
+| Manifest schema | `deck.jsonc` (optional) | `crates/deck/deck-config/src/lib.rs::DeckConfig` | Optional host override for the ROUTE-discovery + watch layout: source roots, watch dirs, packs, route dirs, route leaf. Consumer bundles + `@ship/<name>` resolution are NOT here (self-declared + discovered). |
 | Config load | (startup) | `crates/deck/deck-config/src/lib.rs` | Reads `<root>/deck.jsonc` when present, strips JSONC comments, falls back to defaults (never panics). |
 | Zero-config defaults | (built-in) | `crates/deck/deck-config/src/lib.rs::defaults` | The defaults a host with no `deck.jsonc` (deck-conformance, and the Ship repo itself) runs on. |
 | Bundle self-declaration | `package.json` `deck.bundles[]` | `crates/deck/deck-bundler/src/catalog/workspace.rs::BundleDecl` | One consumer bundle a package declares for itself (name, package-relative entry, externals, lazy). Discovered by the bundler — no central registry. |
@@ -133,7 +133,7 @@ The pure SAIL-facing read side, plus the framework CLI.
 
 | Feature | Surface | Implementation | Description |
 | --- | --- | --- | --- |
-| View resolver | (on-disk lookup) | `crates/deck/deck-host/src/resolver.rs::resolve` | Resolves a view name + sub-path across first-party / `views/` / `.ship/views/` roots with `[param]` dirs. |
+| Route resolver | (on-disk lookup) | `crates/deck/deck-host/src/resolver.rs::resolve` | Resolves a route name + sub-path across first-party / `views/` / `.ship/views/` roots with `[param]` dirs. |
 | Resolved route | (resolution result) | `crates/deck/deck-host/src/resolver.rs::ResolvedRoute` | Source + params + canonical source path returned by the resolver. |
 | Route payload shape | (JSON contract) | `crates/deck/deck-host/src/route_payload.rs::RoutePayload` | The serialized payload contract (html/css/scope/moduleUrl/params) shared with the runtime. |
 | Render helper | (source read) | `crates/deck/deck-host/src/render_helpers.rs::render_route_source` | Reads a route's `page.sail` source from the project root. |

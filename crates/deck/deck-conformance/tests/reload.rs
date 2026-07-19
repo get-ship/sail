@@ -13,7 +13,7 @@ use std::time::Duration;
 
 use deck::bundler::{Bundler, BundlerEvent};
 
-/// THE loop net. One edit to a view must fire a BOUNDED number of rebuilds and
+/// THE loop net. One edit to a route must fire a BOUNDED number of rebuilds and
 /// then SETTLE — never a continuous stream. A self-trigger regression shows up
 /// as an unsettling flood of ModuleChanged events (caught by the runaway guard
 /// and the upper bound).
@@ -22,12 +22,12 @@ use deck::bundler::{Bundler, BundlerEvent};
 // (the watcher sees 0 events), so this settles-loop assertion cannot run there.
 // Real filesystem: run explicitly with `cargo test -p deck-conformance -- --ignored`.
 #[ignore = "requires a real inotify-capable filesystem; run with --ignored"]
-async fn editing_a_view_fires_bounded_rebuilds_then_settles() {
+async fn editing_a_route_fires_bounded_rebuilds_then_settles() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let root = tmp.path();
-    let view = root.join("routes/probe/page.sail");
-    std::fs::create_dir_all(view.parent().unwrap()).unwrap();
-    std::fs::write(&view, "<div>probe {1 + 1}</div>\n").unwrap();
+    let route = root.join("routes/probe/page.sail");
+    std::fs::create_dir_all(route.parent().unwrap()).unwrap();
+    std::fs::write(&route, "<div>probe {1 + 1}</div>\n").unwrap();
 
     let cfg = deck::config::DeckConfig::defaults();
     let bundler = Bundler::start(root.to_path_buf(), None, cfg);
@@ -37,7 +37,7 @@ async fn editing_a_view_fires_bounded_rebuilds_then_settles() {
 
     // Let the watcher arm, then make exactly one edit.
     tokio::time::sleep(Duration::from_millis(700)).await;
-    std::fs::write(&view, "<div>probe {2 + 2}</div>\n").unwrap();
+    std::fs::write(&route, "<div>probe {2 + 2}</div>\n").unwrap();
 
     // Collect events until the stream settles (no event within the window) or
     // a runaway guard trips (a loop would blow past it).
@@ -70,11 +70,11 @@ async fn editing_a_view_fires_bounded_rebuilds_then_settles() {
 
     assert!(
         rebuilds >= 1,
-        "one edit should rebuild routes/probe/view at least once (got 0 in {total} events)"
+        "one edit should rebuild routes/probe/route at least once (got 0 in {total} events)"
     );
     assert!(
         rebuilds <= 4,
-        "one edit must not loop: {rebuilds} rebuilds of a single view — \
+        "one edit must not loop: {rebuilds} rebuilds of a single route — \
          watch.rs read/atime self-trigger regression?"
     );
 }

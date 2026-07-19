@@ -1,12 +1,12 @@
-//! View-side controller pairing: when a `.sail` view is compiled with
+//! Route-side controller pairing: when a `.sail` route is compiled with
 //! `setup_url: Some(...)`, the emitted JS must import the controller
 //! module, call `setup.setup(ctx)`, and merge its return into `$scope`
 //! via `Object.assign`. Components have always done this; this test
-//! locks in the parity for views.
+//! locks in the parity for routes.
 
 use sail_compiler::{compile, CompileMode, CompileOpts};
 
-fn view_opts(setup: Option<&str>) -> CompileOpts {
+fn route_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {
         route_params: None,
         setup_url: setup.map(|s| s.to_string()),
@@ -21,9 +21,9 @@ fn view_opts(setup: Option<&str>) -> CompileOpts {
 }
 
 #[test]
-fn view_with_paired_controller_emits_import() {
+fn route_with_paired_controller_emits_import() {
     let src = r#"<p>{x()}</p>"#;
-    let out = compile(src, view_opts(Some("./index.controller.ts")))
+    let out = compile(src, route_opts(Some("./index.controller.ts")))
         .expect("compile view + paired controller");
     assert!(
         out.js.contains("import setup from \"./index.controller.ts\""),
@@ -33,11 +33,11 @@ fn view_with_paired_controller_emits_import() {
 }
 
 #[test]
-fn view_with_paired_controller_calls_setup_and_merges() {
+fn route_with_paired_controller_calls_setup_and_merges() {
     let src = r#"<p>{x()}</p>"#;
-    let out = compile(src, view_opts(Some("./index.controller.ts")))
-        .expect("compile view + paired controller");
-    // The view-side setup-call branch (emit_setup_call) must run. It
+    let out = compile(src, route_opts(Some("./index.controller.ts")))
+        .expect("compile route + paired controller");
+    // The route-side setup-call branch (emit_setup_call) must run. It
     // guards on `setup.setup` being a function and merges the return
     // into $scope so derived/scope additions land in template scope.
     assert!(
@@ -58,9 +58,9 @@ fn view_with_paired_controller_calls_setup_and_merges() {
 }
 
 #[test]
-fn view_without_paired_controller_emits_no_import_or_setup_call() {
+fn route_without_paired_controller_emits_no_import_or_setup_call() {
     let src = r#"<p>{x()}</p>"#;
-    let out = compile(src, view_opts(None)).expect("compile bare view");
+    let out = compile(src, route_opts(None)).expect("compile bare view");
     assert!(
         !out.js.contains("import setup from"),
         "no controller — must not emit import, got:\n{}",

@@ -19,8 +19,8 @@
 //! exception: an author who follows that same, otherwise-correct convention
 //! and writes `import { controller, signal, mount } from '@ship/sail-runtime'`
 //! silently wins over the ambient injection — the controller's `mount(fn)`
-//! call now invokes the HOST's view-mounting entry with `fn` as its `target`
-//! argument. It compiles clean and throws at runtime the first time the view
+//! call now invokes the HOST's route-mounting entry with `fn` as its `target`
+//! argument. It compiles clean and throws at runtime the first time the route
 //! mounts: `Cannot read properties of undefined (reading 'params')`, deep
 //! inside `mount.ts`'s `seedRouteParams`. Catch the collision here instead,
 //! with text that names both `mount`s and says what to do.

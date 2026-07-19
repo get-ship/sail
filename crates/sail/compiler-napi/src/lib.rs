@@ -103,11 +103,13 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
     };
 
     let mode = match parsed.mode.as_deref() {
+        // "route" is an alias — a tagless source is just Auto with no
+        // component_name (deck owns the route feature; SAIL builds components).
+        Some("route") | Some("auto") | None => CompileMode::Auto,
         Some("component") => CompileMode::Component,
-        Some("auto") | None => CompileMode::Auto,
         Some(other) => {
             return Err(format!(
-                "unknown mode {other:?} — expected component / auto"
+                "unknown mode {other:?} — expected route / component / auto"
             ))
         }
     };

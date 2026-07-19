@@ -18,7 +18,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ quickstart, layer
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">deck · 0.2.0</p>
   <h1>The standalone web framework for Sail.</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    deck mounts Sail views, routes them from the filesystem, server-renders or
+    deck mounts Sail routes, routes them from the filesystem, server-renders or
     statically builds them, and serves every asset — with a dev server and
     state-preserving HMR. It is to Sail what Next is to React.
   </p>

@@ -25,12 +25,12 @@
 
 use super::writer::js_string;
 
-/// Emit the idempotent runtime install of a view/component's lifted `<style>`
+/// Emit the idempotent runtime install of a route/component's lifted `<style>`
 /// CSS at the top of `container`. Returns the JS statements to inline at the
 /// start of a mount body, or an empty string when `css` is blank.
 ///
 /// The `data-sail-style` key is an FNV-1a 32-bit hash of the content — a
-/// re-mount of the same view finds the existing `<style>` and skips
+/// re-mount of the same route finds the existing `<style>` and skips
 /// re-inserting. The `<style>` lives inside `container` so it serializes into
 /// the SSR first-paint and applies on the client (the browser treats any
 /// in-document `<style>` as an active stylesheet, regardless of location). No
@@ -40,7 +40,7 @@ use super::writer::js_string;
 ///
 /// `typed` selects the flavor: `true` emits TS type annotations + casts (the
 /// synthetic emit produces type-checked `.ts`); `false` emits plain JS (the
-/// production view emit). One source of truth for both mount paths.
+/// production route emit). One source of truth for both mount paths.
 pub(crate) fn styles_install_js(css: &str, typed: bool) -> String {
     let css = css.trim();
     if css.is_empty() {

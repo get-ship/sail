@@ -8,7 +8,7 @@
 //
 //   1. SSR HTML carries the marker attribute `prop:NAME="bN"` on the
 //      element.
-//   2. The compiled view's `hydrate(root, ctx)` runs
+//   2. The compiled route's `hydrate(root, ctx)` runs
 //        const __m = collectElementMarkers(root);
 //        if (__m[bN]) __cleanups.push(hydrateProp(__m[bN], "name", …));
 //

@@ -10,7 +10,7 @@
 //
 // Where it lives — on an EffectScope. NOT an ESM module singleton.
 // Two parallel server requests must not share store state, and a
-// scoped view subtree must not see a sibling's overrides; the
+// scoped route subtree must not see a sibling's overrides; the
 // scope tree is the only structure that gives both.
 //
 // When it gets created — on first `useStore(def)` for a given
@@ -366,7 +366,7 @@ export const _internal = { idKey, rootOf }
  * Name of the global the SSR entry writes the per-request store
  * payload to. The client entry reads it via `hydrateStoreSSRPayload`.
  * The `<script>` tag with this payload is emitted into the HTML
- * BEFORE the view bundle, so by the time any `useStore` runs the
+ * BEFORE the route bundle, so by the time any `useStore` runs the
  * payload is available.
  */
 export const SSR_PAYLOAD_GLOBAL = '__SUI_STORES__'

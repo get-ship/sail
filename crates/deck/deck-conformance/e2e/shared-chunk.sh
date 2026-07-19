@@ -25,7 +25,7 @@ trap cleanup EXIT
 fail() { echo "SHARED-CHUNK E2E FAIL: $*" >&2; exit 1; }
 ok()   { echo "ok: $*"; }
 
-# ── 1. Build the demo-app views via the multi-entry bundler ───────────────────
+# ── 1. Build the demo-app routes via the multi-entry bundler ──────────────────
 #
 # We invoke the Rust unit test directly (no binary needed, no daemon) so the
 # shared-chunk assertion is self-contained in the sandbox. If `cargo test` is
@@ -43,7 +43,7 @@ fi
 # ── 2. Build the demo app's .deck/ via deck-cli build-assets ─────────────────
 # build-assets is a bake of the full framework + consumer bundles declared in
 # deck.jsonc. For the demo app there is no deck.jsonc consumer section — the
-# views are served on-demand by the bundler. The CLI still exercises the
+# routes are served on-demand by the bundler. The CLI still exercises the
 # build path and must exit 0.
 DECK="$ROOT/target/debug/deck"
 if [ ! -x "$DECK" ]; then
@@ -92,7 +92,7 @@ if [ -d "$APP/.deck" ]; then
       echo "note: $GALLERY not found (on-demand build — trigger a request first)"
     fi
   else
-    echo "note: .deck/ exists but demo-chip not yet bundled (run a view request first)"
+    echo "note: .deck/ exists but demo-chip not yet bundled (run a route request first)"
   fi
 else
   echo "note: $APP/.deck not found; shared-chunk assertion via cargo test above"

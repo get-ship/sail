@@ -1,14 +1,14 @@
 // effect-scope — mount-time cleanup ownership.
 //
 // Pieces of the runtime that allocate long-lived resources during a
-// view's `setup()` — `live()` opens an EventSource, `data()` opens an
+// route's `setup()` — `live()` opens an EventSource, `data()` opens an
 // SSE subscription, custom hooks may install global listeners — need
-// a way to register a cleanup that fires when the enclosing view
+// a way to register a cleanup that fires when the enclosing route
 // unmounts. Without this, every `mount()` call leaks the resources
 // allocated by its setup body. Tabs OOM'd from exactly this class of
 // leak before commit `87cf3223`.
 //
-// Pattern: `mount.ts` wraps the call to the view module's `setup()`
+// Pattern: `mount.ts` wraps the call to the route module's `setup()`
 // in `withScope(scope, () => setup(ctx))`. Allocators inside that
 // scope call `onCleanup(fn)` to enroll a teardown function; the
 // scope's `dispose()` runs them all in reverse insertion order.
@@ -227,8 +227,8 @@ export function createScope(): EffectScope {
  *  `parent` is omitted). The child auto-disposes when its owner
  *  disposes — registered as a cleanup at creation. Use when you
  *  need a sub-lifecycle inside a mount: e.g. a hook that tears down
- *  its own resources independently of the outer view but should still
- *  clean up if the view unmounts first. */
+ *  its own resources independently of the outer route but should still
+ *  clean up if the route unmounts first. */
 export function createChildScope(parent?: EffectScope): EffectScope {
   const owner = parent ?? CURRENT_SCOPE
   const child = createScope()

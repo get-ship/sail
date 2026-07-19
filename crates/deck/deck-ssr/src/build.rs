@@ -19,7 +19,7 @@ use sail_compiler::parse::preprocess::extract_controller_block;
 use sail_compiler::CompileMode;
 
 /// Walk up from this crate to the repo root (the dir holding `package.json`
-/// and `packages/`). Anchors the view / manifest / server-entry paths.
+/// and `packages/`). Anchors the route / manifest / server-entry paths.
 pub fn repo_root() -> Result<PathBuf> {
     let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     loop {

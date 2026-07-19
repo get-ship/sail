@@ -73,8 +73,8 @@ for _ in $(seq 1 60); do
   sleep 0.25
 done
 $PW screenshot >"$ART/screenshots/before-submit.png" 2>/dev/null || true
-[ -n "$hydrated" ] || fail "todos view never hydrated (form not found)"
-echo "ok: todos view loaded"
+[ -n "$hydrated" ] || fail "todos route never hydrated (form not found)"
+echo "ok: todos route loaded"
 
 # 4. Fill in the input and submit the form.
 TODO_TEXT="e2e-todo-$(date +%s)"

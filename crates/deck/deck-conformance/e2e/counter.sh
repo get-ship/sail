@@ -61,7 +61,7 @@ for _ in $(seq 1 60); do
   sleep 0.25
 done
 $PW screenshot >"$ART/screenshots/hydrated.png" 2>/dev/null || true
-[ -n "$hydrated" ] || fail "view never hydrated to count 0 (last: '$(read_count)')"
+[ -n "$hydrated" ] || fail "route never hydrated to count 0 (last: '$(read_count)')"
 echo "ok: hydrated to count 0"
 
 # 4. Click increment -> reactive update to 1.
@@ -76,7 +76,7 @@ $PW screenshot >"$ART/screenshots/after-click.png" 2>/dev/null || true
 echo "ok: click incremented to 1 (signal reactivity through deck)"
 
 # 5. Evidence: capture console + network; report error count (inspected, not
-#    auto-gated — the view-host's transitional catalog/umbrella loader may emit
+#    auto-gated — the route-host's transitional catalog/umbrella loader may emit
 #    benign 404s for a pack-less vanilla app; documented in the run note).
 $PW console >"$ART/console.log" 2>/dev/null || true
 $PW requests >"$ART/network.log" 2>/dev/null || true

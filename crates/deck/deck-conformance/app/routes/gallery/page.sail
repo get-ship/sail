@@ -4,7 +4,7 @@ import { controller, signal, effect } from '@ship/sail-runtime'
 // Dark themes pair with `data-mode="dark"` on <html> so the [data-mode="light"]
 // override in deck-theme.css can layer the light palette on top. This is the
 // mode-of-data-theme contract the deck shell uses for its own chrome — the
-// gallery reuses the same handle so the conformance views theme consistently
+// gallery reuses the same handle so the conformance routes theme consistently
 // with the surrounding host.
 const DARK_THEMES = new Set(['ship-dark', 'console', 'contrast'])
 

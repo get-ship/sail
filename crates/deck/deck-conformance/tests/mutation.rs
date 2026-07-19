@@ -67,7 +67,7 @@ async fn resolve_demo_shows_added_todo_after_add() {
     assert_eq!(items[0]["text"], "hi");
 }
 
-/// The todos view contains exactly one mutation binding pointing at
+/// The todos route contains exactly one mutation binding pointing at
 /// `ship.demo.addTodo`.  This proves the wire vocabulary contract is in place.
 #[test]
 fn todos_view_has_mutation_binding_for_add_todo() {
@@ -85,7 +85,7 @@ fn todos_view_has_mutation_binding_for_add_todo() {
         .iter()
         .filter(|b| matches!(b.kind, BindingKind::Mutation))
         .collect();
-    assert_eq!(mutations.len(), 1, "todos view must have exactly one mutation");
+    assert_eq!(mutations.len(), 1, "todos route must have exactly one mutation");
     assert_eq!(
         mutations[0].expr, "ship.demo.addTodo",
         "mutation must point at ship.demo.addTodo; got: {}",

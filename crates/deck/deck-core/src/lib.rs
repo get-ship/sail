@@ -1,6 +1,6 @@
 //! deck-core — transport-agnostic SAIL hosting logic.
 //!
-//! This crate owns *what* deck serves (compiled views, bundles, the catalog)
+//! This crate owns *what* deck serves (compiled routes, bundles, the catalog)
 //! and produces a [`DeckResponse`] for each. It never touches axum or any
 //! HTTP framework. Server adapters (`deck-axum`, a future `deck-bun`)
 //! translate `DeckResponse` onto their own response type — the
@@ -30,7 +30,7 @@ pub mod tag;
 pub mod themes;
 pub mod route;
 pub mod route_tokens;
-// `route_host` + `route_payload` (the named-view SERVING CORE) moved to the
+// `route_host` + `route_payload` (the named-route SERVING CORE) moved to the
 // `ship-views` crate (deck ⊥ ship-views). deck-core keeps the SHARED infra both
 // paths use: `resolver`, `synthetic_ssr` (the SSR seam), `route::serve_sui_route_setup`,
 // `error_page`, `form_inject`. ship-views calls into those.

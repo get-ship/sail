@@ -2,7 +2,7 @@ use std::path::Path;
 
 pub use deck_host::render_helpers::is_valid_route_name;
 
-/// Read a view's source `.sail` under an EXPLICIT project `root` (the caller
+/// Read a route's source `.sail` under an EXPLICIT project `root` (the caller
 /// resolves it from its per-request [`crate::Resolution`], never a process
 /// global) — HOST-AGNOSTIC: any host that carries the workspace root resolves
 /// `views/<name>/page.sail` the same way the daemon does.

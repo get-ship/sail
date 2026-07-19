@@ -24,31 +24,31 @@ export type JsonValue =
   | Partial<{ [key in string]: JsonValue }>
 
 /**
- * View identity for the shell rail / launcher.
+ * Route identity for the shell rail / launcher.
  */
 export type ManifestRail = { label: string | null; icon: string | null }
 
 /**
- * Per-view shell display metadata. Maps to `<ship-rail>` / `<ship-launcher>`.
+ * Per-route shell display metadata. Maps to `<ship-rail>` / `<ship-launcher>`.
  */
 export type RailMeta = { label: string; icon: string }
 
 export type ResolveError = { message: string }
 
-export type ResolvedView = {
+export type ResolvedRoute = {
   source: string
   params: Partial<{ [key in string]: string }>
   source_path: string | null
 }
 
-export type ViewListEntry = {
+export type RouteListEntry = {
   name: string
   type: string
   source: string
   rail?: RailMeta | null
 }
 
-export type ViewManifest = {
+export type RouteManifest = {
   name: string
   type: string
   elementName?: string | null
@@ -57,7 +57,7 @@ export type ViewManifest = {
   entry?: string | null
 }
 
-export type ViewPayload = {
+export type RoutePayload = {
   name: string
   sub?: string | null
   html: string

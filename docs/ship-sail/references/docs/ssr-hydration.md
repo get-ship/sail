@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 6
 title: SSR and the attach runtime
 description: How `shipd` renders `.sail` to HTML server-side, and how the client runtime attaches reactivity to the rendered DOM. Progressive enhancement first.
@@ -79,7 +79,7 @@ Any addition to the allowlist must satisfy four constraints, **in this order**:
 
 1. **Referentially transparent.** No I/O, no allocation that escapes, no mutation, no closures-as-args, no eval-shaped args. If the method takes a function (e.g. `.map(fn)`), the function must itself stay inside the renderable subset — verified by walking the AST.
 2. **SSR implementation in `crates/sail/compiler/src/render/eval/methods.rs::dispatch`.** Match the method name, evaluate via the `coerce`/`exec` helpers, return a `serde_json::Value`. Must produce identical output to the runtime JS semantics for the same inputs — round-trip tested.
-3. **Test pair.** One test in `crates/sail/compiler/tests/` exercising the method through SSR (input → expected HTML). One test in a framework integration test exercising the same expression in a `.sail` view's attached state — confirms SSR output matches client-eval output character-for-character.
+3. **Test pair.** One test in `crates/sail/compiler/tests/` exercising the method through SSR (input → expected HTML). One test in a framework integration test exercising the same expression in a `.sail` route's attached state — confirms SSR output matches client-eval output character-for-character.
 4. **Docs entry.** Add to the allowlist line above (this section), with one line of rationale if non-obvious. If the method has subtle browser-vs-server semantics (number formatting locales, etc.), call them out.
 
 Reject the addition if any of (1)–(4) can't be met. The subset is intentionally narrow — a method that requires special-casing in SSR is a method we shouldn't admit. Better to direct the author to a `derived()` in the controller.
@@ -123,7 +123,7 @@ Live query() patches arrive as JSON; the runtime applies them to the live signal
 
 ## Progressive enhancement
 
-A view rendered without JavaScript is still meaningful:
+A route rendered without JavaScript is still meaningful:
 
 - Static structure renders.
 - Initial values from query() signals are inlined; reactive controller-scope signals are dormant until JS runs.
@@ -154,9 +154,9 @@ Both follow from the IR-as-source-of-truth move. Two parsers (Rust + JS) and two
 
 | Path | Exports | Who uses it |
 |---|---|---|
-| `from '@ship/sail-dom'` | `attach()`, `AttachOptions`, `loadSetup` | Production views, daemon asset bundles |
+| `from '@ship/sail-dom'` | `attach()`, `AttachOptions`, `loadSetup` | Production routes, daemon asset bundles |
 | `from '@ship/sail-dom/legacy'` | `hydrate()`, `parseSetSource()`, `HydrateOptions` | Tests, eval harness |
 
 The parser (`hydrate`, `parseSetSource`, `directives/`) lives exclusively in the `legacy` subpath. The default `@ship/sail-dom` bundle (`sail-dom.js`) contains zero parser code; it sits at ≤ 4.8 KB gzip today, against a 9 KB ceiling enforced by `scripts/lint/check-sail-bundle-size.sh` in CI.
 
-**Never import `@ship/sail-dom/legacy` from a production view.** Doing so would pull the full parser (~5 KB gzip) into the view bundle and violate the size budget. The bundle-size lint asserts zero references to `parseSetSource` in `sail-dom.js`.
+**Never import `@ship/sail-dom/legacy` from a production route.** Doing so would pull the full parser (~5 KB gzip) into the route bundle and violate the size budget. The bundle-size lint asserts zero references to `parseSetSource` in `sail-dom.js`.

@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 3
 title: The controller surface
 description: The optional inline `<controller>` block. One function, ambient lifecycle, direct signal mutation.
@@ -9,11 +9,11 @@ description: The optional inline `<controller>` block. One function, ambient lif
 
 A controller is an **optional** `<controller>` block inline in the `.sail` file — never a separate file. There is no config, no import statement to wire it up, no directory-pairing convention: the block lives where the template lives.
 
-The controller is the view's view-model: reactive state, derived values, event handlers, and lifecycle. Templates declare structure; the controller owns everything reactive.
+The controller is the route's view-model: reactive state, derived values, event handlers, and lifecycle. Templates declare structure; the controller owns everything reactive.
 
 ## A minimal controller for a one-shot read
 
-Any server data subscription — even a single read-only one — goes through `query()`/`queryKeyed()` in the controller. There's no template-level shortcut; a view with one subscription and no other reactive state still gets the smallest possible `<controller>` block.
+Any server data subscription — even a single read-only one — goes through `query()`/`queryKeyed()` in the controller. There's no template-level shortcut; a route with one subscription and no other reactive state still gets the smallest possible `<controller>` block.
 
 ```html
 <!-- views/static/page.sail -->
@@ -25,11 +25,11 @@ export default controller(({ ship }) => ({ overview: query(() => ship.git.overvi
 <p>Branch: {overview().value?.branch}</p>
 ```
 
-Most one-shot read-only views land here.
+Most one-shot read-only routes land here.
 
 ## One function, one idiom
 
-The moment a view needs local state, a derived value, or an event handler, add a `<controller>` block. It contains exactly one call: `controller(fn)`.
+The moment a route needs local state, a derived value, or an event handler, add a `<controller>` block. It contains exactly one call: `controller(fn)`.
 
 ```html
 <!-- views/agents/page.sail -->
@@ -47,7 +47,7 @@ export default controller((ctx) => {
     return () => clearInterval(id)
   })
 
-  onCleanup(() => console.log('agents view disposed'))
+  onCleanup(() => console.log('agents route disposed'))
 
   return {
     items,
@@ -62,7 +62,7 @@ export default controller((ctx) => {
 
 `fn` is `(ctx, host?) => Record<string, unknown>`:
 
-- **`ctx`** is the ambient view scope — `clients`, `route`, `navigate`, all directly accessible (`ctx.clients`, or destructure `{ clients, ship }` in the parameter). There is no `ctx.ship` by that literal key unless a client is named `ship`: the runtime names no host product. A Ship host's SDK is a *client* (`ctx.clients.ship`), typed by the provider augmenting its own key on `Clients` — same as any other data source. Each declared client is also spread into scope under its bare name, so a controller written against `ship.git.overview()` keeps resolving.
+- **`ctx`** is the ambient route scope — `clients`, `route`, `navigate`, all directly accessible (`ctx.clients`, or destructure `{ clients, ship }` in the parameter). There is no `ctx.ship` by that literal key unless a client is named `ship`: the runtime names no host product. A Ship host's SDK is a *client* (`ctx.clients.ship`), typed by the provider augmenting its own key on `Clients` — same as any other data source. Each declared client is also spread into scope under its bare name, so a controller written against `ship.git.overview()` keeps resolving.
 - **`host`** (optional second parameter) is the custom-element host, for reaching the shadow root or doing direct DOM work.
 - Whatever `fn` **returns** is the entire contributed template scope: state signals (`signal(...)`), computed values (`derived(...)`), plain helper functions, and event handlers — all as ordinary object properties. There is no separate section for handlers; a handler is just a function returned alongside everything else.
 
@@ -147,7 +147,7 @@ The controller lives inline. Most common shape:
 views/<name>/
   page.sail              # template + inline <controller> block (controller optional)
   style.css             # styles (optional)
-  manifest.jsonc         # route descriptor (required for views)
+  manifest.jsonc         # route descriptor (required for routes)
 ```
 
 Components follow the same rule — the file IS the component, and any controller for it is an inline `<controller>` block inside that same `.sail` file:
@@ -158,7 +158,7 @@ packages/components/ui-components/src/sail-button/
   sail-button.css            # extracted styles (optional)
 ```
 
-A `<tag>.controller.ts` (or `<view>.controller.ts`) sibling file is **not** a valid way to author a controller — the compiler rejects it as a compile error. If you see one in older code or docs, it's the retired paired-file convention; port it into an inline `<controller>` block.
+A `<tag>.controller.ts` (or `<route>.controller.ts`) sibling file is **not** a valid way to author a controller — the compiler rejects it as a compile error. If you see one in older code or docs, it's the retired paired-file convention; port it into an inline `<controller>` block.
 
 ## Handler complexity has no threshold rule
 

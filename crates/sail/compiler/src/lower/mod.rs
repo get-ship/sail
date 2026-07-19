@@ -26,7 +26,7 @@ pub struct Lowered {
     /// Symbols imported from `@ship/sail-runtime`. Sorted for stable emit.
     pub runtime_imports: BTreeSet<&'static str>,
     /// Symbols imported from `@ship/sail-dom`. Sorted for stable emit.
-    /// Phase 3b.3: views with depth-0 `DynamicText` import the hydrate
+    /// Phase 3b.3: routes with depth-0 `DynamicText` import the hydrate
     /// helpers (`hydrateText`, `collectTextOpens`) — direct-emit replaces
     /// the `text` manifest entry that the runtime walker used to wire.
     pub dom_imports: BTreeSet<&'static str>,
@@ -35,17 +35,17 @@ pub struct Lowered {
     /// `true` if the template contains any `<use-*>` element. The
     /// emitter drops a side-effect import of
     /// `@ship/sail-runtime/template-hooks` so the eight built-in hooks
-    /// register on view module load — `@ship/sail-runtime`'s entry no
-    /// longer ships them, so views that need them have to ask.
+    /// register on route module load — `@ship/sail-runtime`'s entry no
+    /// longer ships them, so routes that need them have to ask.
     pub uses_template_hooks: bool,
     /// `true` if any template expression references `route` as an
     /// identifier. The emitter adds `import { route } from
-    /// "@ship/sail-runtime/route"` so routeless views don't pull in the
+    /// "@ship/sail-runtime/route"` so routeless modules don't pull in the
     /// route module.
     pub uses_route: bool,
     /// Runtime attacher symbols referenced by `motion:` directives.
     /// The emitter folds these into
-    /// the `@ship/sail-runtime` import list so views using `motion:`
+    /// the `@ship/sail-runtime` import list so routes using `motion:`
     /// pull in the spring_attach / tween_attach helpers transparently.
     /// In milestone 1 the only entries are `"spring_attach"` (when any
     /// `motion:` preset resolves to a spring) and `"tween_attach"`
@@ -56,7 +56,7 @@ pub struct Lowered {
     /// Every custom-element tag the template uses (`sail-*` / `ship-*`).
     /// Emitted as side-effect `import "@sail-tag/<tag>";` when
     /// `CompileOpts::emit_component_imports` is set, so components join the
-    /// view's import graph (the per-view resolver). Collected once here; the
+    /// route's import graph (the per-route resolver). Collected once here; the
     /// emitter decides whether to write the imports.
     pub used_component_tags: BTreeSet<String>,
 }
@@ -67,7 +67,7 @@ pub struct Lowered {
 /// walk (currently: `motion:` directives that reference an unknown
 /// preset). Soft signals (`uses_setup`, `uses_route`, …) stay on the
 /// [`Lowered`] value.
-pub fn lower(program: &Program, is_view: bool) -> Result<Lowered, CompileError> {
+pub fn lower(program: &Program, is_route: bool) -> Result<Lowered, CompileError> {
     let mut out = Lowered::default();
     // Every compiled `.sail` exports `component(...)` — the tagless mount-form
     // (`component(setup)`) or the registered custom element (`component(tag,
@@ -76,11 +76,11 @@ pub fn lower(program: &Program, is_view: bool) -> Result<Lowered, CompileError> 
     // A tagged source registers itself via `component(tag, def, __default)` —
     // the same `component` symbol, 3-arg overload — so no extra import. `prop`
     // rides along only when a registered component declares props.
-    if !is_view && !program.props.is_empty() {
+    if !is_route && !program.props.is_empty() {
         out.runtime_imports.insert("prop");
     }
     let mut depth = 0;
-    walk_instrs(&program.template, &mut out, is_view, &mut depth)?;
+    walk_instrs(&program.template, &mut out, is_route, &mut depth)?;
     out.used_component_tags = crate::used_tags::collect_used_tags(&program.template);
     Ok(out)
 }
@@ -147,13 +147,13 @@ AttrInstr::Use { param, .. } => {
     }
 }
 
-fn walk_instrs(instrs: &[Instr], out: &mut Lowered, is_view: bool, depth: &mut usize) -> Result<(), CompileError> {
+fn walk_instrs(instrs: &[Instr], out: &mut Lowered, is_route: bool, depth: &mut usize) -> Result<(), CompileError> {
     for instr in instrs {
-        walk_instr(instr, out, is_view, depth)?;
+        walk_instr(instr, out, is_route, depth)?;
     }
     Ok(())
 }
-fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize) -> Result<(), CompileError> {
+fn walk_instr(instr: &Instr, out: &mut Lowered, is_route: bool, depth: &mut usize) -> Result<(), CompileError> {
     match instr {
         Instr::StaticText { .. } | Instr::Comment { .. } => {}
         Instr::DynamicText { expr } => {
@@ -164,14 +164,14 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
             // DOM ignores (no `__hydrateKey` field on a real Text);
             // server-DOM wraps the node at toHTML time.
             out.runtime_imports.insert("markHydrateText");
-            // Phase 3b.3: depth-0 text bindings in views are direct-emit.
+            // Phase 3b.3: depth-0 text bindings in routes are direct-emit.
             // The compiler still calls `bindText` from `__mount` (legacy
             // CSR path), but `hydrate(root, ctx)` wires via these helpers.
-            if is_view && *depth == 0 {
+            if is_route && *depth == 0 {
                 out.dom_imports.insert("collectTextOpens");
                 out.dom_imports.insert("hydrateText");
             }
-            if is_view && !out.uses_route && expr_references_route(&expr.source) {
+            if is_route && !out.uses_route && expr_references_route(&expr.source) {
                 out.uses_route = true;
             }
         }
@@ -184,47 +184,47 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
             }
             let is_custom_element = el.tag.contains('-');
             for a in &el.attrs {
-                if is_view {
+                if is_route {
                     check_attr_for_route(a, out);
                 }
-                bindings::collect_attr_imports(a, out, is_view, *depth, is_custom_element)?;
+                bindings::collect_attr_imports(a, out, is_route, *depth, is_custom_element)?;
             }
-            walk_instrs(&el.children, out, is_view, depth)?;
+            walk_instrs(&el.children, out, is_route, depth)?;
         }
         Instr::WhileLoading(wl) => {
             out.runtime_imports.insert("bindWhileLoading");
-            if is_view && *depth == 0 {
+            if is_route && *depth == 0 {
                 out.dom_imports.insert("collectElementMarkers");
                 out.dom_imports.insert("hydrateWhileLoading");
             }
             *depth += 1;
-            walk_instrs(&wl.body, out, is_view, depth)?;
+            walk_instrs(&wl.body, out, is_route, depth)?;
             *depth -= 1;
         }
         Instr::WhileError(we) => {
             out.runtime_imports.insert("bindWhileError");
-            if is_view && *depth == 0 {
+            if is_route && *depth == 0 {
                 out.dom_imports.insert("collectElementMarkers");
                 out.dom_imports.insert("hydrateWhileError");
             }
             *depth += 1;
-            walk_instrs(&we.body, out, is_view, depth)?;
+            walk_instrs(&we.body, out, is_route, depth)?;
             *depth -= 1;
         }
         Instr::If(IfInstr { branches, else_body, .. }) => {
             out.runtime_imports.insert("bindIf");
-            if is_view && *depth == 0 {
+            if is_route && *depth == 0 {
                 out.dom_imports.insert("collectElementMarkers");
             }
             *depth += 1;
             for b in branches {
-                if is_view && !out.uses_route && expr_references_route(&b.cond.source) {
+                if is_route && !out.uses_route && expr_references_route(&b.cond.source) {
                     out.uses_route = true;
                 }
-                walk_instrs(&b.body, out, is_view, depth)?;
+                walk_instrs(&b.body, out, is_route, depth)?;
             }
             if let Some(eb) = else_body {
-                walk_instrs(eb, out, is_view, depth)?;
+                walk_instrs(eb, out, is_route, depth)?;
             }
             *depth -= 1;
         }
@@ -239,10 +239,10 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
             ) {
                 out.runtime_imports.insert("signal");
             }
-            if is_view && *depth == 0 {
+            if is_route && *depth == 0 {
                 out.dom_imports.insert("collectElementMarkers");
             }
-            if is_view && !out.uses_route {
+            if is_route && !out.uses_route {
                 if expr_references_route(&iterable.source) {
                     out.uses_route = true;
                 } else if let Some(k) = key
@@ -251,29 +251,29 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
                     }
             }
             *depth += 1;
-            walk_instrs(body, out, is_view, depth)?;
+            walk_instrs(body, out, is_route, depth)?;
             if let Some(eb) = else_body {
-                walk_instrs(eb, out, is_view, depth)?;
+                walk_instrs(eb, out, is_route, depth)?;
             }
             *depth -= 1;
         }
         Instr::Match(MatchInstr { discriminant, cases, default, .. }) => {
             out.runtime_imports.insert("bindIf");
-            if is_view && *depth == 0 {
+            if is_route && *depth == 0 {
                 out.dom_imports.insert("collectElementMarkers");
             }
-            if is_view && !out.uses_route && expr_references_route(&discriminant.source) {
+            if is_route && !out.uses_route && expr_references_route(&discriminant.source) {
                 out.uses_route = true;
             }
             *depth += 1;
             for c in cases {
-                if is_view && !out.uses_route && expr_references_route(&c.test.source) {
+                if is_route && !out.uses_route && expr_references_route(&c.test.source) {
                     out.uses_route = true;
                 }
-                walk_instrs(&c.body, out, is_view, depth)?;
+                walk_instrs(&c.body, out, is_route, depth)?;
             }
             if let Some(d) = default {
-                walk_instrs(d, out, is_view, depth)?;
+                walk_instrs(d, out, is_route, depth)?;
             }
             *depth -= 1;
         }

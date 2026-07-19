@@ -1,7 +1,7 @@
 //! Ship-free in-memory data port for the deck-conformance live-data showcases.
 //!
 //! Provides the two live `/_deck/` endpoints the SAIL wire protocol requires:
-//! - `GET /_deck/views/{name}/sse`         — per-view live-data SSE channel
+//! - `GET /_deck/views/{name}/sse`         — per-route live-data SSE channel
 //! - `GET /_deck/data?expr=`               — single-expression SSE stream
 //!
 //! (`POST /_deck/mutation/{name}` is NOT wired here: deck's own router
@@ -12,8 +12,8 @@
 //! removed. All SSE encoding comes from `deck_core::live_wire` — no copies.
 //!
 //! The data vocabulary is `<root>.demo.*` where `<root>` is the client key
-//! the view chose: `ship` for legacy (undeclared) views, `api` for the
-//! `<client name="api" />` exemplar (views/clock). The root is the view's
+//! the route chose: `ship` for legacy (undeclared) routes, `api` for the
+//! `<client name="api" />` exemplar (routes/clock). The root is the route's
 //! alias into the host-supplied clients map — proving the wire vocabulary
 //! is a contract, not a Ship coupling.
 
@@ -63,7 +63,7 @@ pub struct Deal {
     pub amount: u64,
 }
 
-/// Shared in-memory state for the demo views.
+/// Shared in-memory state for the demo routes.
 /// The background ticker advances `tick` every second and sends a `bump`
 /// so every open SSE connection re-resolves and emits a fresh patch.
 pub struct DemoStore {
@@ -168,7 +168,7 @@ pub async fn resolve_demo(chain: &str, args: &Value, store: &DemoStore) -> Resul
             item.done = !item.done;
             Ok(json!({ "done": item.done }))
         }
-        // `demo.boom` always returns an error — used by views/boom to exercise
+        // `demo.boom` always returns an error — used by routes/boom to exercise
         // the {#while-error} error-recovery branch without white-screening.
         "demo.boom" => Err("demo.boom: intentional error for the error-boundary showcase".to_string()),
         _ => Err(format!("unknown_service: demo resolver has no op `{chain}`")),
@@ -178,10 +178,10 @@ pub async fn resolve_demo(chain: &str, args: &Value, store: &DemoStore) -> Resul
 /// Strip the leading client root and parse args from a `*.demo.*()`
 /// expression. Returns `(chain_without_root, args_json)`.
 ///
-/// The root segment is the view's `<client name="…" />` alias for this
-/// host's data surface — `ship` for legacy (undeclared) views, `api` for
-/// the declared-client exemplar (views/clock). The server resolves the
-/// chain regardless of the alias: the name is the view's key into the
+/// The root segment is the route's `<client name="…" />` alias for this
+/// host's data surface — `ship` for legacy (undeclared) routes, `api` for
+/// the declared-client exemplar (routes/clock). The server resolves the
+/// chain regardless of the alias: the name is the route's key into the
 /// host-supplied clients map, not part of the data vocabulary.
 fn parse_demo_expr(expr: &str) -> Option<(String, Value)> {
     let (head, tail) = expr.split_once('(')?;
@@ -217,7 +217,7 @@ async fn keepalive_loop(tx: mpsc::Sender<Result<String, std::io::Error>>, cancel
     }
 }
 
-// ── SSE per-view handler ──────────────────────────────────────────────────────
+// ── SSE per-route handler ──────────────────────────────────────────────────────
 
 /// `GET /_deck/views/{name}/sse`
 /// Mirror: `apps/shipd/src/views/sui_sse.rs` (kernel removed).
@@ -248,8 +248,8 @@ async fn serve_sse_inner(
         None => return sse_error(StatusCode::NOT_FOUND, "view not found"),
     };
 
-    // A view may carry its controller INLINE (`<controller>…</controller>`) —
-    // strip it before the template-only parser sees it (the view is only
+    // A route may carry its controller INLINE (`<controller>…</controller>`) —
+    // strip it before the template-only parser sees it (the route is only
     // parsed here to validate it exists / is well-formed; see below).
     let (stripped, _inline_controller) =
         sail_compiler::parse::preprocess::extract_controller_block(&source);
@@ -264,7 +264,7 @@ async fn serve_sse_inner(
     // authoring surface is gone (compiler-side) and its replacement — how a
     // controller's own `live(() => …)` sources get discovered for a
     // server-push SSE channel — is a redesign owned elsewhere. Until that
-    // lands, every view's SSE channel is keepalive-only; a first-paint /
+    // lands, every route's SSE channel is keepalive-only; a first-paint /
     // hydrate read still resolves data correctly via host-dispatch (see
     // `deck-ssr`), this channel just doesn't yet re-push updates.
     let live_data: Vec<(String, String)> = Vec::new();
@@ -569,8 +569,8 @@ mod tests {
 
     #[test]
     fn parse_demo_expr_accepts_declared_client_root() {
-        // views/clock declares `<client name="api" />` — the root is the
-        // view's alias for this host's data surface, not a fixed `ship`.
+        // routes/clock declares `<client name="api" />` — the root is the
+        // route's alias for this host's data surface, not a fixed `ship`.
         let (chain, _) = parse_demo_expr("api.demo.clock()").unwrap();
         assert_eq!(chain, "demo.clock");
     }

@@ -38,11 +38,11 @@ const SAIL_TAG_NOOP: &str = "\0sail-tag-noop";
 /// Detect compile mode for a `.sail` file using the HTML custom-element tag-name
 /// rule: a valid custom element tag MUST contain a hyphen (HTML spec §4.13.3).
 /// Every component `.sail` file uses its stem as the tag name (`sail-button`,
-/// `sail-rail-item`) and therefore contains a hyphen. Every view uses `page.sail`
+/// `sail-rail-item`) and therefore contains a hyphen. Every route uses `page.sail`
 /// or `index.sail` — no hyphen. So the rule is exact and path-structure-free:
 ///
 ///   stem contains `'-'` AND stem ∉ {"page", "index"} → Component
-///   otherwise → View
+///   otherwise → Route
 ///
 /// This replaces the old `stem == parent_dir` heuristic, which missed all
 /// GROUPED-DIRECTORY components (e.g. `sail-rail/sail-rail-item.sail`,
@@ -54,7 +54,7 @@ pub(crate) fn detect_mode(abs: &Path, _repo_root: &Path) -> (CompileMode, String
     let mode = if stem.contains('-') && stem != "page" && stem != "index" {
         CompileMode::Component
     } else {
-        CompileMode::View
+        CompileMode::Route
     };
     (mode, stem)
 }
@@ -81,15 +81,15 @@ pub(crate) fn normalize(p: &Path) -> PathBuf {
 #[derive(Debug)]
 pub struct SailPlugin {
     pub repo_root: PathBuf,
-    /// View builds opt in: each `.sail` compiled in this build emits
-    /// `@sail-tag/<tag>` registration imports (the per-view resolver). Off for
+    /// Route builds opt in: each `.sail` compiled in this build emits
+    /// `@sail-tag/<tag>` registration imports (the per-route resolver). Off for
     /// framework/app builds.
     pub emit_component_imports: bool,
     /// `<tag>` → component source `.sail`, for resolving `@sail-tag/<tag>`.
     /// Empty when `emit_component_imports` is false.
     pub component_index: Arc<HashMap<String, PathBuf>>,
     /// `<tag>` → providing-pack name, for every tag a declared-`packs` scope
-    /// EXCLUDES. Empty under global resolution. When a built view references one
+    /// EXCLUDES. Empty under global resolution. When a built route references one
     /// of these tags, the resolver no-ops it AND warns the author (naming the
     /// pack to declare).
     pub shadowed_tags: Arc<HashMap<String, String>>,
@@ -101,7 +101,7 @@ pub struct SailPlugin {
     pub component_roots: Arc<HashMap<String, PathBuf>>,
 }
 
-/// The per-view resolver's lookup tables, built once per `(repo_root, packs)`.
+/// The per-route resolver's lookup tables, built once per `(repo_root, packs)`.
 
 /// `index` resolves `@sail-tag/<tag>` to component source; `shadowed` explains a
 /// tag a declared scope excluded (empty under global resolution).
@@ -169,7 +169,7 @@ impl Plugin for SailPlugin {
                     // workspace doesn't provide at all (view-private, HTML, typo)
                     // is not shadowed and stays a quiet no-op.
                     if let Some(pack) = self.shadowed_tags.get(tag) {
-                        let view = args
+                        let importer = args
                             .importer
                             .map(|i| {
                                 Path::new(i)
@@ -182,7 +182,7 @@ impl Plugin for SailPlugin {
                         tracing::warn!(
                             tag,
                             pack,
-                            view,
+                            importer,
                             "deck: `{tag}` is provided by pack `{pack}`, not declared in \
                              deck.jsonc `packs` — it will not render. Add `{pack}` to `packs`."
                         );
@@ -442,10 +442,10 @@ mod tests {
 
     /// Views use page.sail (no hyphen in stem).
     #[test]
-    fn page_sui_detected_as_view() {
+    fn page_sui_detected_as_route() {
         assert_eq!(
             detect("/repo/routes/agents/page.sail"),
-            CompileMode::View,
+            CompileMode::Route,
             "page.sail must be a View"
         );
     }
@@ -463,10 +463,10 @@ mod tests {
     /// index.sail is a view even though it could theoretically have a hyphen
     /// (no known case, but the exclusion is correct by spec).
     #[test]
-    fn index_sui_detected_as_view() {
+    fn index_sui_detected_as_route() {
         assert_eq!(
             detect("/repo/.ship/views/component-viewer/index.sail"),
-            CompileMode::View,
+            CompileMode::Route,
             "index.sail must be a View"
         );
     }

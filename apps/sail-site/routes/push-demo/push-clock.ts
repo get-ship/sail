@@ -3,7 +3,7 @@
 // ES-imported client whose `clock.stream()` method returns a
 // `LiveSource<Tick>` (a `{ subscribe }` shape) rather than a Promise — so
 // query() routes it to the cache's push path and the entry is fed by the
-// interval subscription, one `ok` per tick, until the view is disposed.
+// interval subscription, one `ok` per tick, until the route is disposed.
 
 import type { LiveSource, LiveSignal } from '@ship/sail-runtime'
 

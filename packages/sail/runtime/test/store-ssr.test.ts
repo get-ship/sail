@@ -88,7 +88,7 @@ describe('SSR — client seed (no flash)', () => {
 
   it('an existing instance is not re-seeded (idempotent over re-renders)', () => {
     // Both `a` and `b` are looked up on the SAME chain — that
-    // is the re-render / HMR case (the view re-runs, calls
+    // is the re-render / HMR case (the route re-runs, calls
     // useStore again). The second call returns the cached
     // instance, NOT a fresh one seeded from the latest payload.
     const def = defineStore('ssr.seed.hmr', () => ({ n: signal(0) }))

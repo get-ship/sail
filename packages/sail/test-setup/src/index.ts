@@ -7,7 +7,7 @@ export {
 } from './dom-harness'
 export { loadLucideIconMap, primeLucideIcons, defaultLucideIconsPath } from './lucide-icons'
 export {
-  renderView,
+  renderRoute,
   renderComponent,
   type Rendered,
   type RenderOpts,

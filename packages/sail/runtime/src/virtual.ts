@@ -281,7 +281,7 @@ export function createVirtualizer<TScroll extends Element = HTMLElement>(
 const UNMEASURED_VIEWPORT = 400
 
 /** Local `observeElementRect`: reads `offsetWidth`/`offsetHeight` (the size the
- *  view sets on the scroll element) synchronously on attach, then keeps it
+ *  route sets on the scroll element) synchronously on attach, then keeps it
  *  current via a ResizeObserver when available. Mirrors the vendored core's
  *  default but binds to the thunked element identity the adapter already owns,
  *  so the very first synchronous `virtualItems()` read has a real viewport size

@@ -14,12 +14,12 @@ use sail_compiler::parse::parse;
 use sail_compiler::parse::preprocess::extract_controller_block;
 use sail_compiler::{compile, CompileMode as SuiMode, CompileOpts, ComponentMeta, Policy};
 
-/// A `.sail` compiles as a custom-element (`component`) or a view. Component mode
-/// passes a tag name so the element is registered; view mode emits a route module.
+/// A `.sail` compiles as a custom-element (`component`) or a route. Component mode
+/// passes a tag name so the element is registered; route mode emits a route module.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CompileMode {
     Component,
-    View,
+    Route,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -35,7 +35,7 @@ pub enum CompileError {
 /// Compile one `.sail` to JS via `sail_compiler::compile` (in-process). Auto-wires
 /// a sibling controller (`page.sail`→`controller.ts`, `<stem>.sail`→
 /// `<stem>.controller.ts`) as `import setup from "./<controller>"`.
-/// `emit_component_imports` opts the view into the per-view resolver — it emits
+/// `emit_component_imports` opts the route into the per-route resolver — it emits
 /// `@sail-tag/<tag>` registration imports the bundler resolves to source.
 pub fn compile_sui(
     sui_file: &Path,
@@ -44,12 +44,12 @@ pub fn compile_sui(
     emit_component_imports: bool,
 ) -> Result<String, CompileError> {
     // Gated, scoped synthetic CLIENT emit (slice 1). When `SAIL_CLIENT_EMIT=
-    // synthetic` AND this is a VIEW with an `app.manifest.jsonc` above it, emit
+    // synthetic` AND this is a ROUTE with an `app.manifest.jsonc` above it, emit
     // the synthetic client contract (`default.setup` → `__mount` + `hydrate`)
     // instead of the production module. Default OFF and scoped to manifested
-    // views, so every other target — and the flag-off case — is byte-for-byte
+    // routes, so every other target — and the flag-off case — is byte-for-byte
     // the production emit below.
-    if mode == CompileMode::View && synthetic_client_enabled() {
+    if mode == CompileMode::Route && synthetic_client_enabled() {
         if let Some(js) = try_synthetic_client(sui_file)? {
             return Ok(js);
         }
@@ -65,14 +65,14 @@ pub fn compile_sui(
     // POSITION GRANT, computed once: deck routes by file location, so deck
     // (not the author, not the sail compiler) decides whether this file may
     // read `route` — and with which params.
-    let route_params = (mode == CompileMode::View)
+    let route_params = (mode == CompileMode::Route)
         .then(|| deck_core::routes::route_params_for(sui_file))
         .flatten();
     let opts = CompileOpts {
         setup_url: controller_specifier(sui_file, stem, &source),
         mode: match mode {
             CompileMode::Component => SuiMode::Component,
-            CompileMode::View => SuiMode::Component,
+            CompileMode::Route => SuiMode::Component,
         },
         source_path: Some(sui_file.to_path_buf()),
         component_meta: (mode == CompileMode::Component)
@@ -162,7 +162,7 @@ fn paired_controller(sui_file: &Path, stem: &str) -> Option<String> {
 
 /// The gate for the synthetic CLIENT emit. Default OFF — the bundler emits the
 /// production module. ON only when `SAIL_CLIENT_EMIT=synthetic`, and even then
-/// only for views that opt in by having an `app.manifest.jsonc` above them
+/// only for routes that opt in by having an `app.manifest.jsonc` above them
 /// (see [`try_synthetic_client`]). This is the slice-1 proof seam: additive,
 /// scoped, never a global default flip.
 pub fn synthetic_client_enabled() -> bool {
@@ -172,7 +172,7 @@ pub fn synthetic_client_enabled() -> bool {
 /// Emit the synthetic CLIENT module for `sui_file` when it opts into the
 /// synthetic path: an `app.manifest.jsonc` exists at or above its directory.
 /// Returns `Ok(None)` (→ production emit) when no manifest is found, so a
-/// non-manifested view is untouched even with the flag set. The merged module
+/// non-manifested route is untouched even with the flag set. The merged module
 /// composes a sibling `controller.ts` (absolute path so Rolldown resolves it)
 /// and resolves the manifest's free names as real ESM imports.
 fn try_synthetic_client(sui_file: &Path) -> Result<Option<String>, CompileError> {
@@ -239,20 +239,20 @@ mod tests {
     static EMIT_ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
     #[test]
-    fn compiles_view_to_js_in_process() {
+    fn compiles_route_to_js_in_process() {
         let src = tempdir().unwrap();
         let sail = src.path().join("page.sail");
         std::fs::write(&sail, "<div>hi {1 + 1}</div>\n").unwrap();
-        let js = compile_sui(&sail, CompileMode::View, "page", false).expect("view compiles");
+        let js = compile_sui(&sail, CompileMode::Route, "page", false).expect("view compiles");
         assert!(js.contains("@ship/sail-runtime"), "emits a runtime import; got:\n{js}");
     }
 
     #[test]
-    fn view_raw_style_block_is_rejected_by_the_floor() {
+    fn route_raw_style_block_is_rejected_by_the_floor() {
         // The FLOOR: authored <style> is a compile error in every SAIL file,
-        // config or not — deck enforces it for route views like everything
+        // config or not — deck enforces it for route modules like everything
         // else. (This test used to pin the pre-floor behavior — inline
-        // <style> bundled into the view JS. That surface is gone.)
+        // <style> bundled into the route JS. That surface is gone.)
         let src = tempdir().unwrap();
         let sail = src.path().join("page.sail");
         std::fs::write(
@@ -260,7 +260,7 @@ mod tests {
             "<style>.hero { color: var(--foreground); }</style>\n<p>hi</p>\n",
         )
         .unwrap();
-        let err = compile_sui(&sail, CompileMode::View, "page", false)
+        let err = compile_sui(&sail, CompileMode::Route, "page", false)
             .expect_err("raw <style> in a view must not compile");
         assert!(
             format!("{err}").contains("sail-no-style-block"),
@@ -273,7 +273,7 @@ mod tests {
         let src = tempdir().unwrap();
         let sail = src.path().join("broken.sail");
         std::fs::write(&sail, "<div>{#if cond()}oops</div>\n").unwrap();
-        let err = compile_sui(&sail, CompileMode::View, "broken", false).unwrap_err();
+        let err = compile_sui(&sail, CompileMode::Route, "broken", false).unwrap_err();
         assert!(matches!(err, CompileError::Compile(_)));
     }
 
@@ -282,13 +282,13 @@ mod tests {
         let src = tempdir().unwrap();
         let sail = src.path().join("page.sail");
         std::fs::write(&sail, "<div><sail-table></sail-table></div>\n").unwrap();
-        let on = compile_sui(&sail, CompileMode::View, "page", true).expect("compiles");
+        let on = compile_sui(&sail, CompileMode::Route, "page", true).expect("compiles");
         assert!(on.contains("@sail-tag/sail-table"), "flag emits the registration import");
-        let off = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
+        let off = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(!off.contains("@sail-tag/"), "off: no component imports");
     }
 
-    /// The synthetic gate is OFF by default and ON only for manifested views.
+    /// The synthetic gate is OFF by default and ON only for manifested routes.
     /// Serialized via the env var; restore it so sibling tests are unaffected.
     #[test]
     fn synthetic_gate_is_scoped_and_additive() {
@@ -304,7 +304,7 @@ mod tests {
         // Flag OFF (default): production emit regardless of manifest presence.
         let prev = std::env::var("SAIL_CLIENT_EMIT").ok();
         unsafe { std::env::remove_var("SAIL_CLIENT_EMIT") };
-        let off = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
+        let off = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(
             off.contains("component((ctx)") && !off.contains("export default component(() =>"),
             "flag-off must be the production emit:\n{off}"
@@ -312,7 +312,7 @@ mod tests {
 
         // Flag ON but NO manifest above → still production (scoped opt-in).
         unsafe { std::env::set_var("SAIL_CLIENT_EMIT", "synthetic") };
-        let on_no_manifest = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
+        let on_no_manifest = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(
             on_no_manifest.contains("component((ctx)"),
             "flag-on without a manifest stays production:\n{on_no_manifest}"
@@ -324,7 +324,7 @@ mod tests {
             r#"{ "clients": { "route": { "from": "@ship/deck/router", "import": "route", "construct": true } } }"#,
         )
         .unwrap();
-        let on = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
+        let on = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(
             on.contains("export default component(() =>") && on.contains("__mount(container"),
             "flag-on + manifest emits the synthetic client contract:\n{on}"
@@ -336,11 +336,11 @@ mod tests {
         }
     }
 
-    /// `route` and `navigate` are the view-host handles every `.sail` view may
+    /// `route` and `navigate` are the route-host handles every `.sail` route may
     /// reference; they resolve through the synthetic emit's convention
     /// (`@ship/deck/router` import, `construct: true` for `route`) so an
     /// app needs no `app.manifest.jsonc` entry for them. The synthetic
-    /// CLIENT contract still gates on the manifest (it scopes which views
+    /// CLIENT contract still gates on the manifest (it scopes which routes
     /// opt in), but the route handle is now convention-driven and reaches
     /// the bundled module the moment the flag turns on.
     #[test]
@@ -357,17 +357,17 @@ mod tests {
 
         // Flag ON, NO manifest above → convention still kicks in and the
         // synthetic client contract is emitted (the manifest here is the
-        // "any view that opts in" trigger, not the source of `route`).
+        // "any route that opts in" trigger, not the source of `route`).
         let prev = std::env::var("SAIL_CLIENT_EMIT").ok();
         unsafe { std::env::set_var("SAIL_CLIENT_EMIT", "synthetic") };
         std::fs::write(
             dir.join("app.manifest.jsonc"),
-            // The manifest is now ONLY used to opt this view in. The
-            // view-host handles resolve by convention.
+            // The manifest is now ONLY used to opt this route in. The
+            // route-host handles resolve by convention.
             r#"{ "clients": {} }"#,
         )
         .unwrap();
-        let on = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
+        let on = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(
             on.contains("export default component(() =>") && on.contains("__mount(container"),
             "convention must drive the synthetic client contract:\n{on}"
@@ -380,14 +380,14 @@ mod tests {
             "convention must import `route` from `@ship/deck/router`:\n{on}"
         );
 
-        // A view that does NOT reference `route` must not pull in
-        // `@ship/deck/router` — the convention is per-view, not global.
+        // A route that does NOT reference `route` must not pull in
+        // `@ship/deck/router` — the convention is per-route, not global.
         std::fs::write(
             dir.join("page.sail"),
             "<p>just a paragraph, no route reads</p>\n",
         )
         .unwrap();
-        let on_no_route = compile_sui(&sail, CompileMode::View, "page", false).expect("compiles");
+        let on_no_route = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(
             !on_no_route.contains("@ship/deck/router"),
             "a view that never references `route` must not import `@ship/deck/router`:\n{on_no_route}"

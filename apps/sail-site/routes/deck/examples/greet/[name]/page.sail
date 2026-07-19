@@ -2,7 +2,7 @@
   /deck/examples/greet/[name] — adapted from
   packages/deck/docs/routes/examples/greet/[name]/page.sail. A live [param]
   route: routes/examples/greet/[name]/page.sail matches /examples/greet/:name.
-  `route` is ambient in every view; route.params.name() reads the segment
+  `route` is ambient in every route; route.params.name() reads the segment
   as a signal, so the heading tracks the URL.
 -->
 <article sx="max-w-breakpoint-tablet mx-auto">

@@ -5,7 +5,7 @@
 
 use sail_compiler::{compile, compile_element, CompileMode, CompileOpts, Diagnostic};
 
-fn compile_view(source: &str) -> sail_compiler::CompileError {
+fn compile_route(source: &str) -> sail_compiler::CompileError {
     compile(
         source,
         CompileOpts {
@@ -30,7 +30,7 @@ fn state_directive_is_retired() {
     // still ship the old form get a parse error pointing at the
     // migration target.
     let src = r#"<state name="x" value="0" />"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(
         err.message.contains("no longer supported"),
         "msg: {}",
@@ -47,14 +47,14 @@ fn state_directive_is_retired() {
 #[test]
 fn arrow_in_attr_expression_is_rejected() {
     let src = r#"<button disabled={() => true}></button>"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(err.message.contains("arrow"), "msg: {}", err.message);
 }
 
 #[test]
 fn statement_in_text_expression_is_rejected() {
     let src = "<p>{a; b}</p>";
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(err.message.contains("statements"), "msg: {}", err.message);
 }
 
@@ -82,7 +82,7 @@ fn arrow_in_on_handler_is_allowed() {
 #[test]
 fn assignment_diagnostic_has_a_span() {
     let src = r#"<p>{a = 1}</p>"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(err.span.is_some(), "should carry a span");
     let rendered = err.render(src);
     assert!(rendered.contains("line 1"), "rendered: {rendered}");
@@ -91,7 +91,7 @@ fn assignment_diagnostic_has_a_span() {
 #[test]
 fn bind_this_with_non_identifier_is_rejected() {
     let src = r#"<button bind:this={a.b}>x</button>"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(
         err.message.contains("identifier") || err.message.contains("bare"),
         "msg: {}",
@@ -103,7 +103,7 @@ fn bind_this_with_non_identifier_is_rejected() {
 #[test]
 fn bind_this_with_call_expression_is_rejected() {
     let src = r#"<button bind:this={getRef()}>x</button>"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(
         err.message.contains("identifier") || err.message.contains("bare"),
         "msg: {}",
@@ -114,7 +114,7 @@ fn bind_this_with_call_expression_is_rejected() {
 #[test]
 fn reflect_empty_on_non_slot_is_rejected() {
     let src = r#"<div reflect-empty="data-x">x</div>"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(
         err.message.contains("slot"),
         "msg: {}",
@@ -125,7 +125,7 @@ fn reflect_empty_on_non_slot_is_rejected() {
 #[test]
 fn reflect_empty_with_invalid_attr_name_is_rejected() {
     let src = r#"<slot reflect-empty="DataIconOnly"></slot>"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(
         err.message.contains("[a-z]") || err.message.contains("must match"),
         "msg: {}",
@@ -136,7 +136,7 @@ fn reflect_empty_with_invalid_attr_name_is_rejected() {
 #[test]
 fn reflect_empty_with_expression_is_rejected() {
     let src = r#"<slot reflect-empty={attr}></slot>"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(
         err.message.contains("static") || err.message.contains("expression"),
         "msg: {}",
@@ -147,7 +147,7 @@ fn reflect_empty_with_expression_is_rejected() {
 #[test]
 fn reflect_empty_with_empty_value_is_rejected() {
     let src = r#"<slot reflect-empty=""></slot>"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(
         err.message.contains("attribute name") || err.message.contains("requires"),
         "msg: {}",
@@ -158,14 +158,14 @@ fn reflect_empty_with_empty_value_is_rejected() {
 #[test]
 fn unknown_modifier_is_rejected() {
     let src = r#"<button on:click|wat={() => x()}></button>"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(err.message.contains("modifier"), "msg: {}", err.message);
 }
 
 #[test]
 fn missing_close_tag_is_rejected() {
     let src = r#"<div>"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(err.message.contains("</div>") || err.message.contains("unterminated"));
 }
 
@@ -180,7 +180,7 @@ fn the_retired_prop_tag_is_rejected() {
     // NOTE: this literal must stay a `<prop>` tag. It is the specimen, not an
     // authoring example — a migration sweep that "fixes" it silently guts the guard.
     let src = r#"<prop name="x" type="custom" default="" />"#;
-    let err = compile_view(src);
+    let err = compile_route(src);
     assert!(
         err.message.contains("<prop>") || err.message.contains("unknown element"),
         "the retired `<prop>` tag must be rejected by name: {}",

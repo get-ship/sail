@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SAIL framework E2E runner.
 //
-// Spins up a chromium page per view in `VIEWS`, asserts the body
+// Spins up a chromium page per route in `VIEWS`, asserts the body
 // contains the expected sentinel string, and fails on any console
 // error or page error.
 //
@@ -72,5 +72,5 @@ for (const v of VIEWS) {
 
 await browser.close()
 const dt = ((Date.now() - t0) / 1000).toFixed(1)
-console.log(`\n${VIEWS.length - fails.length}/${VIEWS.length} views OK in ${dt}s`)
+console.log(`\n${VIEWS.length - fails.length}/${VIEWS.length} routes OK in ${dt}s`)
 process.exit(fails.length ? 1 : 0)

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Accessibility audit — runs axe-core against every fixture view and
+// Accessibility audit — runs axe-core against every fixture route and
 // fails on any `critical` or `serious` violation. `moderate` and
 // `minor` are reported but not gated, so the suite can land without
 // fixing every cosmetic edge.
@@ -93,7 +93,7 @@ if (allWarnings.length) {
 
 if (allFails.length) {
   const total = allFails.reduce((a, b) => a + b.count, 0)
-  console.error(`\na11y FAIL: ${total} gated violation(s) across ${allFails.length} view(s)`)
+  console.error(`\na11y FAIL: ${total} gated violation(s) across ${allFails.length} route(s)`)
   process.exit(1)
 }
 console.log('\na11y OK (zero critical/serious)')

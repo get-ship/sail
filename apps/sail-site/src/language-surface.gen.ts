@@ -5312,7 +5312,7 @@ export const MOTION: { triggers: string[]; properties: string[]; staggerKey: str
     "focus-visible",
     "enter",
     "exit",
-    "view",
+    "reveal",
     "scroll",
     "loop"
   ],

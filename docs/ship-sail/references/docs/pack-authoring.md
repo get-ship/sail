@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 13
 title: Authoring a component pack
 description: deck scaffold pack, the package.json/vitest conventions, the compile gate, the grouped-directory convention, CEM emission, and design-token rules.
@@ -56,7 +56,7 @@ packages/components/sail/primitives/src/
 ```
 
 The hyphenated stem is the custom-element tag — `sail-button.sail` compiles to the
-`<sail-button>` element. Components carry no `manifest.jsonc` (that is a view-only
+`<sail-button>` element. Components carry no `manifest.jsonc` (that is a route-only
 file).
 
 ## The compile gate — `sail-compiler build --component-name`

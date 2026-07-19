@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Slice 7 e2e — live-clock view, browser driven via playwright-cli.
+# Slice 7 e2e — live-clock route, browser driven via playwright-cli.
 #
 # Boots the ship-free deck-conformance server, loads /_deck/view/clock in a browser,
 # reads the tick value, waits ~1.5 s, reads again, asserts it advanced.
@@ -89,7 +89,7 @@ for _ in $(seq 1 60); do
   sleep 0.25
 done
 $PW screenshot >"$ART/screenshots/t0.png" 2>/dev/null || true
-[ -n "$hydrated" ] || fail "clock view never hydrated (no tick visible)"
+[ -n "$hydrated" ] || fail "clock route never hydrated (no tick visible)"
 echo "ok: hydrated with tick=$tick0"
 
 # 5. Wait ~1.5 s and read again; tick must have advanced.

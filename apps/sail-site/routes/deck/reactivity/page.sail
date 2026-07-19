@@ -18,7 +18,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
   <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Reactivity</p>
   <h1>deck in the reactive path</h1>
   <p sx="text-lg text-muted-foreground leading-relaxed">
-    Reactivity is Sail's, not deck's. Sail gives a view signals, derived values,
+    Reactivity is Sail's, not deck's. Sail gives a route signals, derived values,
     and effects; deck's job is to keep that graph fed from the things a
     framework owns and changes — the URL, live server data, and state that
     outlives a route.
@@ -33,7 +33,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
 
   <h2>The URL is reactive</h2>
   <p>
-    deck injects a <code>route</code> handle into every view scope, and its fields
+    deck injects a <code>route</code> handle into every route scope, and its fields
     are signals — <code>route.params.&lt;name&gt;()</code>,
     <code>route.query.&lt;name&gt;()</code>, <code>route.pathname()</code>, and
     <code>route.hash()</code>. A client-side navigation updates them in place, so
@@ -49,7 +49,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
   <h2>Live server data flows in the same way</h2>
   <p>
     A <code>&lt;data source="…" live&gt;</code> binding is just another reactive
-    source: deck subscribes the view to a server stream and patches the signal as
+    source: deck subscribes the route to a server stream and patches the signal as
     values arrive, so only the bindings that read it re-render. That transport is
     <strong>host-wired</strong> — a host (like shipd) mounts it and supplies the
     resolver.

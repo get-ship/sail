@@ -1,14 +1,14 @@
 // Behavioral scenario runner. Executes a behavior spec (see behavior-spec.md)
-// against a mounted view and reports pass/fail per scenario. Queries are by
+// against a mounted route and reports pass/fail per scenario. Queries are by
 // what a USER perceives — visible text, role+name, field label — never CSS or
 // signal names, so two faithful-but-different builds of the same behavior both
 // pass.
 //
-// Substrate note: this runs on `renderView` (jsdom) — correct for the EVAL,
+// Substrate note: this runs on `renderRoute` (jsdom) — correct for the EVAL,
 // which grades in Ship's own infra. The in-app author path is the same scenario
 // format mounted in the Tauri webview; that's a separate runner, not this one.
 
-import { renderView, type ControllerInput } from './render'
+import { renderRoute, type ControllerInput } from './render'
 
 export type Step =
   | { see: string }
@@ -175,8 +175,8 @@ function buildShip(given: Record<string, unknown> | undefined): unknown {
 /* --------------------------------- run --------------------------------- */
 
 /**
- * Run every scenario in a spec against the given view source + controller.
- * Each scenario mounts a fresh view, so they're isolated.
+ * Run every scenario in a spec against the given route source + controller.
+ * Each scenario mounts a fresh route, so they're isolated.
  */
 export async function runScenarios(
   source: string,
@@ -191,7 +191,7 @@ export async function runScenarios(
     if (controller !== undefined) opts.controller = controller
     opts.ship = buildShip(scenario.given?.ship)
     if (scenario.given?.url !== undefined) opts.url = scenario.given.url
-    const v = renderView(source, opts)
+    const v = renderRoute(source, opts)
     let result: ScenarioResult = { name: scenario.name, passed: true }
     let i = 0
     try {

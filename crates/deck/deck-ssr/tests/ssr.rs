@@ -1,4 +1,4 @@
-//! SSR acceptance: a SYNTHESIZED view renders correct first-paint HTML through
+//! SSR acceptance: a SYNTHESIZED route renders correct first-paint HTML through
 //! ship-js (deno_core/V8), with the route param resolved over host-dispatch.
 //! This is the production TS-SSR path (the Rust render-eval engine was removed).
 

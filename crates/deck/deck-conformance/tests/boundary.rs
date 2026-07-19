@@ -1,7 +1,7 @@
 //! Boundary invariant I2 — Deck's HOST and BUNDLER crates name no Ship app
 //! concepts.
 //!
-//! deck-core / deck-axum / deck-host serve SAIL views + assets for ANY host.
+//! deck-core / deck-axum / deck-host serve SAIL routes + assets for ANY host.
 //! deck-bundler builds those assets. deck-config holds the config schema.
 //! None of them may hardcode a Ship app layout (`apps/shell`, `apps/shipd`,
 //! `apps/site`) or a Ship-specific identifier (`sail-chrome`, `sail-marketing`,
@@ -316,13 +316,13 @@ fn deck_crates_name_no_ship_app() {
 /// Positive zero-config test: `DeckConfig::defaults()` + a temp `routes/foo/page.sail`
 /// yields exactly one routes/foo target and zero consumer targets.
 #[test]
-fn zero_config_discovers_views_only() {
+fn zero_config_discovers_routes_only() {
     use deck_bundler::targets::{BundleLayout, BundleTarget};
 
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path().to_path_buf();
 
-    // Write a single view.
+    // Write a single route.
     let page_sui = root.join("routes/foo/page.sail");
     std::fs::create_dir_all(page_sui.parent().unwrap()).unwrap();
     std::fs::write(&page_sui, "<div>foo</div>\n").unwrap();
@@ -339,7 +339,7 @@ fn zero_config_discovers_views_only() {
     // install). In the framework repo without a `bun install`, @ship/sail-runtime
     // does not resolve from a synthetic tempdir, so the singleton-presence checks
     // are install-gated — skip them with a note (not an apps/ coupling). The
-    // test's subject — view discovery + zero consumer targets — runs regardless.
+    // test's subject — route discovery + zero consumer targets — runs regardless.
     // sail-components is NOT a singleton — the umbrella was retired (#221/#269);
     // the `sail-components/<tag>` prefix is now the per-tag resolver namespace.
     if deck_bundler::node_resolve::resolve_entry(&root, "@ship/sail-runtime").is_some() {
@@ -348,14 +348,14 @@ fn zero_config_discovers_views_only() {
         assert!(names.contains(&"sail-sdk-client"), "sail-sdk-client present");
     } else {
         eprintln!(
-            "SKIP zero_config_discovers_views_only singleton checks: @ship/sail-runtime \
+            "SKIP zero_config_discovers_routes_only singleton checks: @ship/sail-runtime \
              not resolvable from the project (no node_modules / workspace install) — \
              install-gated, not an apps/ coupling"
         );
     }
 
-    // Discovered view.
-    assert!(names.contains(&"routes/foo/route"), "routes/foo/view discovered");
+    // Discovered route.
+    assert!(names.contains(&"routes/foo/route"), "routes/foo/route discovered");
 
     // Zero consumer targets from defaults (no deck.jsonc declares any).
     assert!(

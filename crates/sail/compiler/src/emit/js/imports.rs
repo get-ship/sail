@@ -46,7 +46,7 @@ pub(super) fn emit_imports(
     if let Some(setup) = &opts.setup_url {
         w.line(&format!("import setup from {};", js_string(setup)));
     }
-    // Per-used-tag component registration imports — the per-view resolver: the
+    // Per-used-tag component registration imports — the per-route resolver: the
     // bundler maps `@sail-tag/<tag>` to the component source and tree-shakes it
     // into the bundle (replacing the umbrella/islands registry). Off by
     // default; only the bundled path opts in via `emit_component_imports`.

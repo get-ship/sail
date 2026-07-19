@@ -35,14 +35,14 @@ export default controller((ctx) => {
 
   // Runs once the DOM connects.
   mount((el) => {
-    console.log('view attached', el)
+    console.log('route attached', el)
 
     const id = window.setInterval(() => count.set(count() + 1), 1000)
 
     // Runs at unmount — the cleanup mount() returns.
     return () => {
       window.clearInterval(id)
-      console.log(`view unmounted after ${performance.now() - start}ms`)
+      console.log(`route unmounted after ${performance.now() - start}ms`)
     }
   })
 
@@ -72,7 +72,7 @@ lifetime on unmount. Try:
    Compare with stopping/restarting the interval entirely (recreate
    it inside an effect that reads `paused()`).
 2. **Two cleanups, observe order**: register an `onCleanup` alongside
-   the `mount` cleanup, log "first" and "second". Toggle the view and
+   the `mount` cleanup, log "first" and "second". Toggle the route and
    verify the later-registered one logs first.
 3. **Cleanup throws**: register an `onCleanup` that throws. Verify
    later cleanups still run.

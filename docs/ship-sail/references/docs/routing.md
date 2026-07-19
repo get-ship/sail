@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 11
 title: Routing
 description: Manifest paths, dynamic routes with defineRoutes and route.params, SPA navigation via navigate(), and the in-page-tabs vs sub-routes split.
@@ -7,14 +7,14 @@ description: Manifest paths, dynamic routes with defineRoutes and route.params, 
 
 # Routing
 
-A view's URL is declared in its `manifest.jsonc`; dynamic segments are read
+A route's URL is declared in its `manifest.jsonc`; dynamic segments are read
 through the reactive `route` handle. The runtime owns the *mechanism* (the
 `route.*` signals); the host (the shell, the view-host) owns the *policy*
-(history, path→view matching, mounting).
+(history, path→route matching, mounting).
 
 ## The manifest path
 
-Every view directory carries a `manifest.jsonc` whose `path` is the route the
+Every route directory carries a `manifest.jsonc` whose `path` is the route the
 host serves it at:
 
 ```jsonc
@@ -53,7 +53,7 @@ navigation changes the URL, the matched param signals fire and dependents re-run
 — the prior subscription disposes and a new one opens with the updated arg.
 
 Param names are not declared at construction. They are matched against the
-patterns registered via `defineRoutes`. A view that reads `route.params.id()`
+patterns registered via `defineRoutes`. A route that reads `route.params.id()`
 **must** register the pattern that captures `id`, or the signal stays
 `undefined` until a future navigation introduces a matching segment
 (`packages/sail/runtime/src/route/index.ts:98`, `:237`).
@@ -104,7 +104,7 @@ registration — `route.query.q()` works for any key.
 
 `navigate(path)` is the single entry point for changing the URL. It delegates to
 the host's registered `RouterPort` when one exists (the shell owns matching +
-mounting, so the view actually switches); without a port — a single-view host or
+mounting, so the route actually switches); without a port — a single-route host or
 a test — it updates history and the `route.*` signals in place
 (`packages/sail/runtime/src/route/index.ts:192`).
 
@@ -116,7 +116,7 @@ navigate('/login', { replace: true })   // replaceState instead of pushState
 ```
 
 `navigate` and the browser back/forward `popstate` listener both fire the same
-global updater, so every attached view re-evaluates from one navigation
+global updater, so every attached route re-evaluates from one navigation
 (`route/index.ts:317`). Writing to `route.params` or `route.query` directly
 throws — change the URL through `navigate`.
 

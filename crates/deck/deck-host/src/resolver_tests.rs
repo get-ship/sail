@@ -11,7 +11,7 @@ fn with_tempdir<F: FnOnce(&Path)>(f: F) {
     f(tmp.path());
 }
 
-/// The deck-native zero-config layout — the single `views/` bucket and the
+/// The deck-native zero-config layout — the single `routes/` bucket and the
 /// `page.sail` leaf. Deck names no host-private path in its default.
 fn layout() -> RouteLayout {
     RouteLayout::conventional()
@@ -30,7 +30,7 @@ fn host_layout() -> RouteLayout {
 
 #[test]
 fn on_disk_page_sui_resolves_in_overridden_ship_views() {
-    // A host that overrides `route_dirs` to add `.ship/views` resolves views
+    // A host that overrides `route_dirs` to add `.ship/views` resolves routes
     // from that bucket — the override path the framework default no longer bakes.
     with_tempdir(|root| {
         let route_dir = root.join(".ship/views/widget");
@@ -118,10 +118,10 @@ fn read_view_artifact_caps_oversized() {
 #[cfg(unix)]
 #[test]
 fn symlink_leaf_escaping_root_is_rejected() {
-    // A symlink inside `views/<name>` whose target lives outside the
-    // views bucket (here: a secret elsewhere on disk) must NOT be followed
+    // A symlink inside `routes/<name>` whose target lives outside the
+    // route bucket (here: a secret elsewhere on disk) must NOT be followed
     // and served — the containment guard rejects it (404 upstream), even
-    // though the view NAME is perfectly valid.
+    // though the route NAME is perfectly valid.
     with_tempdir(|root| {
         let secret_dir = root.join("outside");
         fs::create_dir_all(&secret_dir).unwrap();
@@ -130,7 +130,7 @@ fn symlink_leaf_escaping_root_is_rejected() {
 
         let route_dir = root.join("routes/leaky");
         fs::create_dir_all(&route_dir).unwrap();
-        // page.sail in the view dir is a symlink pointing OUT of the bucket.
+        // page.sail in the route dir is a symlink pointing OUT of the bucket.
         std::os::unix::fs::symlink(&secret, route_dir.join("page.sail")).unwrap();
 
         let err = resolve(root, &layout(), "leaky", None).unwrap_err();
@@ -145,7 +145,7 @@ fn symlink_leaf_escaping_root_is_rejected() {
 #[cfg(unix)]
 #[test]
 fn symlink_leaf_inside_root_is_allowed() {
-    // A symlink that stays WITHIN the views bucket is fine — containment is
+    // A symlink that stays WITHIN the route bucket is fine — containment is
     // about escaping the project, not banning symlinks outright.
     with_tempdir(|root| {
         let routes = root.join("routes");
@@ -183,24 +183,24 @@ fn on_disk_page_sui_resolves_in_top_views() {
 
 #[test]
 fn dotdot_segments_in_sub_path_stripped_before_walk() {
-    // A sub_path like "../../etc/passwd" must not traverse outside the view
+    // A sub_path like "../../etc/passwd" must not traverse outside the route
     // root. The ".." segments are filtered during split so they never reach
     // PathBuf::join and cannot build an escaping path even before the
     // canonicalize containment guard fires.
     with_tempdir(|root| {
-        // Create a view that would be hit IF ".." didn't escape.
-        let route_dir = root.join("routes/myview");
+        // Create a route that would be hit IF ".." didn't escape.
+        let route_dir = root.join("routes/myroute");
         fs::create_dir_all(&route_dir).unwrap();
         fs::write(route_dir.join("page.sail"), r#"<p>safe</p>"#).unwrap();
 
-        // Place a "secret" outside the views bucket.
+        // Place a "secret" outside the route bucket.
         let outside = root.join("secret.sail");
         fs::write(&outside, r#"<p>LEAKED</p>"#).unwrap();
 
         // The traversal sub_path; after stripping ".." this becomes empty,
-        // which resolves myview's page.sail (the normal path), NOT the outside file.
-        let result = resolve(root, &layout(), "myview", Some("../../secret"));
-        // Either resolves the view (traversal stripped → normal resolution) or
+        // which resolves myroute's page.sail (the normal path), NOT the outside file.
+        let result = resolve(root, &layout(), "myroute", Some("../../secret"));
+        // Either resolves the route (traversal stripped → normal resolution) or
         // returns a not-found. Either way it must NOT read the outside secret.
         match &result {
             Ok(r) => {

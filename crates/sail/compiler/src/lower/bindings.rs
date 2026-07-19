@@ -28,17 +28,17 @@ pub const BUILTIN_ACTIONS: &[&str] = crate::action_manifest::BUILTIN_ACTION_NAME
 pub fn collect_attr_imports(
     a: &AttrInstr,
     out: &mut Lowered,
-    is_view: bool,
+    is_route: bool,
     depth: usize,
     is_custom_element: bool,
 ) -> Result<(), CompileError> {
-    // Phase 3b.4: depth-0 element bindings in views are direct-emit.
+    // Phase 3b.4: depth-0 element bindings in routes are direct-emit.
     // The hydrate(root, ctx) closure walks SSR'd elements once via
     // `collectElementMarkers` and dispatches to the matching `hydrate*`
     // helper by binding key. The legacy `__mount` path keeps using the
     // runtime helpers below — both paths coexist until the walker is
     // deleted in 3b.5.
-    let direct_emit = is_view && depth == 0;
+    let direct_emit = is_route && depth == 0;
     match a {
         AttrInstr::Static { .. } => {}
         AttrInstr::Expr { .. } => {

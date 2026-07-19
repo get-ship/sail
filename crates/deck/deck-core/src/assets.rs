@@ -19,7 +19,7 @@ fn read_asset(rel: &str) -> Option<String> {
 }
 
 /// App + user build output, read from the host-supplied output tree. deck
-/// bakes none of this — view + chrome bundles are the project's content,
+/// bakes none of this — route + chrome bundles are the project's content,
 /// served from the path the host passes in via `scaffold.source` (per-app)
 /// or the asset graph (workspace-level). The legacy `<root>/.deck/<rel>`
 /// read was the framework's hardcoded `.deck/` reach — PURGED
@@ -31,7 +31,7 @@ fn read_asset(rel: &str) -> Option<String> {
 /// caller resolves it from the per-request [`Resolution`] — never a process
 /// global). When a scaffold has no built artifact under `<root>/<source>/`,
 /// this serves the authored source at the same path — the built-or-source
-/// pattern view.rs uses.
+/// pattern route.rs uses.
 /// Binary-safe: assets include bundler-emitted woff2, which is not UTF-8 —
 /// a text read would 404 every font.
 fn read_source_asset(root: &std::path::Path, rel: &str) -> Option<Vec<u8>> {
@@ -72,14 +72,14 @@ static ICON_MAP: std::sync::LazyLock<std::collections::HashMap<String, String>> 
 fn alias_for(name: &str) -> Option<&'static str> {
     ICON_ALIASES.iter().find_map(|(k, v)| (*k == name).then_some(*v))
 }
-/// Public helper (used by view.rs). The in-process bundler writes view bundles
-/// to `<root>/.deck/routes/<name>/route.js` (the per-view output dir the bundler
-/// owns). This reads that bundle when it exists so a controller view is served
+/// Public helper (used by route.rs). The in-process bundler writes route bundles
+/// to `<root>/.deck/routes/<name>/route.js` (the per-route output dir the bundler
+/// owns). This reads that bundle when it exists so a controller route is served
 /// from its compiled, inlined-controller form — the on-demand build path in
-/// `view.rs::compile_route_js` only kicks in when no bundle is on disk yet.
+/// `route.rs::compile_route_js` only kicks in when no bundle is on disk yet.
 ///
 /// Mount-scoped: the roots come from the per-request [`Resolution`] (per-app
-/// view outputs first, then `<project_root>/.deck`), never a process global —
+/// route outputs first, then `<project_root>/.deck`), never a process global —
 /// so one process serving many apps reads each app's bundles from ITS own root.
 pub fn resolve_route_js(resolution: Option<&crate::resolver::Resolution>, name: &str) -> Option<String> {
     let resolution = resolution?;
@@ -118,7 +118,7 @@ fn read_route_bundle(root: &std::path::Path, name: &str) -> Option<String> {
 /// falls back to the authored source `<source>/index.html`. Returns a styled
 /// 404 only when neither exists.
 /// First-paint HTML for the `routes/` page matching `request_path`, via the
-/// ship-js SSR seam. Mirrors the named-`view` path (`route_payload`) but with the
+/// ship-js SSR seam. Mirrors the named-route path (`route_payload`) but with the
 /// file-routed layout: split the URL into name + sub-path, resolve the matching
 /// `routes/<…>/page.sail` (+ captured `[param]` params), and render through the
 /// CARRIED `renderer`. Returns `None` (→ empty `#root`, client mounts CSR) when
@@ -535,7 +535,7 @@ pub fn serve_sui_icon(mode: DaemonMode, name: &str) -> DeckResponse {
     )
 }
 
-/// `GET /_deck/live-reload.js` — the one HMR client, shared by the view
+/// `GET /_deck/live-reload.js` — the one HMR client, shared by the route
 /// host and the shell. Served in every mode (it self-gates on the
 /// `deck-mode` meta tag); only subscribes when the daemon is in dev.
 pub fn serve_sui_live_reload(mode: DaemonMode) -> DeckResponse {
@@ -552,12 +552,12 @@ pub fn serve_sui_error_overlay(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(js, mode)
 }
 
-/// `GET /_deck/{file}` — was a shared chunk emitted by the multi-entry view
+/// `GET /_deck/{file}` — was a shared chunk emitted by the multi-entry route
 /// build (#267), served content-addressed from the `.deck/` root. PURGED
 /// (deck-purge-root): the framework no longer reads a monorepo-root
 /// `.deck/`, so the runtime serves no shared chunks at this path. The
-/// route is gone; view bundles that used to import `../../<chunk>.js`
-/// now fail to load — view chunk serving is a follow-up.
+/// route is gone; route bundles that used to import `../../<chunk>.js`
+/// now fail to load — route chunk serving is a follow-up.
 // (formerly `pub fn serve_sui_chunk(mode, file) -> DeckResponse`) removed.
 
 #[cfg(test)]
@@ -590,7 +590,7 @@ mod tests {
             SUI_RUNTIME_JS.contains("as route,") || SUI_RUNTIME_JS.contains("as route}"),
             "baked sail-runtime.js missing the `route` export — `@ship/sail-runtime/route` \
              maps to this same bundle in production; a stale bake or a missing index.ts \
-             re-export breaks every compiled view's route import"
+             re-export breaks every compiled route's router import"
         );
         // The removed `view()` export must be gone. Match the export list (`as
         // view`), not warning strings that merely mention the word "view".
@@ -849,7 +849,7 @@ mod tests {
 
     /// serve_scaffold falls back to the authored SOURCE `<source>/index.html`
     /// when there is no built `.deck/<source>/` artifact — the dev/source path
-    /// (mirrors view.rs). Gates the fallback so the demo (and any host) never
+    /// (mirrors route.rs). Gates the fallback so the demo (and any host) never
     /// needs to commit a `.deck/` artifact to serve a scaffold.
     #[test]
     fn serve_scaffold_falls_back_to_source_when_unbuilt() {

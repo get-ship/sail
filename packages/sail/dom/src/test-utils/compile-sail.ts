@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url'
 import * as sailRuntime from '@ship/sail-runtime'
 import * as sailDom from '@ship/sail-dom'
 // The runtime's `/route` subpath provides a passive `RouteSignals` reader
-// built from a URL — exactly the shape the compiled view's
+// built from a URL — exactly the shape the compiled route's
 // `import { route as __routeFactory } from "@ship/sail-runtime/route"`
 // expects after the eval layer strips imports. The deck router owns the
 // *policy* (history, popstate, route table, `navigate`); the runtime
@@ -190,7 +190,7 @@ export function compileSui(source: string, opts: CompileOpts = {}): CompiledSui 
   }
 }
 
-// The module shape a compiled view's
+// The module shape a compiled route's
 // `import { route as __routeFactory } from "@ship/sail-runtime/route"`
 // resolves to after `stripImports` rewrites it to `__route.route`. Backed
 // by the runtime's `/route` subpath — see the import note at the top.

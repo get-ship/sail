@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 4
 title: Hooks — template and controller
 description: Two categories of hook with different jobs and different syntax. Template hooks for host-side side effects; controller hooks for UI pattern bundles. When to reach for which.
@@ -19,7 +19,7 @@ SAIL has **two** categories of hook with different jobs and different syntax. Th
 Three questions cover almost every "I need something" moment:
 
 1. **Need data from the platform?** → `query()`/`queryKeyed()` in the controller. Not a hook.
-2. **Need a side effect tied to the view's lifecycle?** → Template hook (`<use-*>`).
+2. **Need a side effect tied to the route's lifecycle?** → Template hook (`<use-*>`).
 3. **Need a reusable bundle of state, derived values, and handlers?** → Controller hook — call a composition function inside the controller's setup function.
 
 If the answer doesn't fit one of the three, the case is either expressible as a *combination* of these primitives, or it's signaling a gap in the framework that should be filled deliberately — not accommodated with a fourth pattern.
@@ -259,6 +259,6 @@ This is a manual choice, not a framework guarantee — pick namespacing whenever
 
 Resist these. They look like hooks but aren't.
 
-- **Subscribing to server data.** That's `query()`/`queryKeyed()` in the controller, not a hook. Even if you reuse a subscription across views, repeat the `query()` call. The author should always see the subscription in the controller.
+- **Subscribing to server data.** That's `query()`/`queryKeyed()` in the controller, not a hook. Even if you reuse a subscription across routes, repeat the `query()` call. The author should always see the subscription in the controller.
 - **Sharing global state.** That's a controller hook instantiated once and imported wherever needed. Same role as any other controller hook; no new primitive. (Yes, this might end up looking like a "store." It's still just a controller hook.)
 - **Routing.** Routing is a `shipd` concern, exposed via `query()` and template route helpers (TBD). Not a hook.

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Counter view: full reactive round-trip.
+// Counter route: full reactive round-trip.
 //   node packages/sail/runtime/fixtures/e2e/counter.mjs
 
 import { chromium, firefox, webkit } from 'playwright'

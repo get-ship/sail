@@ -10,7 +10,7 @@ use crate::check::controller_parse::ParsedController;
 use crate::ir::{AttrInstr, ElementInstr, Instr, Program, PropDecl, PropKind};
 
 /// One CAPABILITY the host grants this file: a name the runtime puts on the
-/// view scope, with the TypeScript type it carries.
+/// module's scope, with the TypeScript type it carries.
 ///
 /// The compiler names no capability and no provider — the caller resolves the
 /// list (app manifest + whatever context the host injects) and hands it in, the

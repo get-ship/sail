@@ -1,4 +1,4 @@
-//! deck-config — `DeckConfig` (the host's view-discovery + watch layout) and
+//! deck-config — `DeckConfig` (the host's route-discovery + watch layout) and
 //! per-app `AppServeConfig`.
 //!
 //! `DeckConfig` is HOST-SUPPLIED. The framework does not read any file from
@@ -70,7 +70,7 @@ mod jsonc;
 pub use jsonc::strip_jsonc_comments;
 
 /// The single build-output directory name. Every deck build artifact — the
-/// framework singletons (`.deck/framework/`), the per-view bundles
+/// framework singletons (`.deck/framework/`), the per-route bundles
 /// (`.deck/views/<name>/view.js`), and each app's generated `index.html` +
 /// hashed `assets/` — lands under `<root>/.deck`.
 ///
@@ -83,7 +83,7 @@ pub const DECK_OUT_DIRNAME: &str = ".deck";
 
 /// `<root>/.deck` — the build-output dir for `root`. The SINGLE join shared by
 /// the writer ([`BundleLayout::deck_out`](../deck_bundler/targets) in
-/// deck-bundler) and the runtime view-bundle reader (`deck_core::assets`), so
+/// deck-bundler) and the runtime route-bundle reader (`deck_core::assets`), so
 /// reader and writer resolve the SAME path for the same root — no convention
 /// duplicated across crates.
 pub fn deck_out_path(root: &Path) -> PathBuf {
@@ -180,7 +180,7 @@ pub struct AppServeConfig {
     /// Host-owned entry bootstrap. The bundler generates a typed
     /// `entry.gen.ts` from this — the file that constructs the named
     /// `clients` map and hands it to `mountRouter({...})`. The data
-    /// side of the bootstrap (route table, layout table, view modules,
+    /// side of the bootstrap (route table, layout table, route modules,
     /// layout modules) is the framework's `routes.gen.ts`; the
     /// client-construction side is the HOST's `entry.gen.ts`. Same
     /// `data + bootstrap` discipline every per-app host follows; deck
@@ -208,8 +208,8 @@ pub struct EntryBootstrap {
     pub clients_module: String,
     /// Names the bundler reads off the factory's exports and spreads into
     /// the `clients` map. Each name becomes a key on the `clients` object
-    /// `mountRouter({ clients })` receives; views read it via `ctx.clients.<name>`
-    /// (and the legacy `ctx.<name>` alias, so pre-migration view code still
+    /// `mountRouter({ clients })` receives; routes read it via `ctx.clients.<name>`
+    /// (and the legacy `ctx.<name>` alias, so pre-migration route code still
     /// resolves during the cutover).
     #[serde(rename = "exposeNames")]
     pub expose_names: Vec<String>,
@@ -226,19 +226,19 @@ impl AppServeConfig {
         serde_json::from_str(&strip_jsonc_comments(raw))
     }
 }
-/// The parsed contents of the host's view-discovery `DeckConfig`.
+/// The parsed contents of the host's route-discovery `DeckConfig`.
 ///
 /// The container-level `#[serde(default)]` fills every missing field from
 /// [`DeckConfig::defaults`] (via the `Default` impl), so a minimal — or
 /// missing — `deck.jsonc` degrades gracefully. Fields must NOT carry their
 /// own `#[serde(default)]`: a field-level default takes precedence over the
 /// container default and silently replaces the documented fallback with the
-/// type's empty value (an empty `route_dirs` once disabled view discovery for
+/// type's empty value (an empty `route_dirs` once disabled route discovery for
 /// every host with a partial deck.jsonc).
 ///
 /// ## What this is NOT
 ///
-/// `DeckConfig` describes the host's VIEW-DISCOVERY + watch layout. It does NOT
+/// `DeckConfig` describes the host's ROUTE-DISCOVERY + watch layout. It does NOT
 /// describe the host's app list (the host reads its own `apps.jsonc` and passes
 /// a per-app `Vec<AppServeConfig>` to `serve_apps()`), the consumer bundle set
 /// (self-declared per-package in `package.json` `deck.bundles[]`, discovered by
@@ -247,14 +247,14 @@ impl AppServeConfig {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DeckConfig {
-    /// Source roots to scan for views. Defaults to `["."]` (workspace root).
+    /// Source roots to scan for routes. Defaults to `["."]` (workspace root).
     pub source_roots: Vec<PathBuf>,
     /// Directories the bundler watches for live-reload. Defaults to `[]`.
     pub watch: Vec<PathBuf>,
     /// Declared component packs (per-project component scope).
     ///
     /// When present and non-empty, component resolution is SCOPED to ONLY these
-    /// packs: the per-view resolver's tag index is filtered down to tags a
+    /// packs: the per-route resolver's tag index is filtered down to tags a
     /// declared pack provides (matched by `package.json` `name`, e.g.
     /// `"@ship/sail-primitives"`). A tag from an undeclared pack resolves to a
     /// no-op (it never bundles) and the build emits an author diagnostic naming
@@ -262,14 +262,14 @@ pub struct DeckConfig {
     /// is GLOBAL — every workspace pack's tags are resolvable (zero behavior
     /// change for existing projects).
     pub packs: Vec<String>,
-    /// Per-source-root view bucket names. The resolver and bundler scan
+    /// Per-source-root route bucket names. The resolver and bundler scan
     /// `<source_root>/<route_dir>/<name>/<route_leaf>` for each `route_dir` in
     /// this list. Defaults to the deck-native `["routes"]`, so a zero-config
-    /// host resolves from the top-level view bucket. A host that serves
+    /// host resolves from the top-level route bucket. A host that serves
     /// additional buckets (Ship's `.ship/views`) overrides this list — deck
     /// no longer bakes a host-private path into its default.
     pub route_dirs: Vec<String>,
-    /// The leaf filename for view artifacts under each `route_dir/<name>/`.
+    /// The leaf filename for route artifacts under each `route_dir/<name>/`.
     /// Defaults to `"page.sail"`. A single leaf convention across all
     /// `route_dirs` fixes the #254 leaf-name divergence (`page.sail` vs
     /// `index.sail`) that broke `.ship/views/<name>/index.sail` resolution.
@@ -291,7 +291,7 @@ impl DeckConfig {
             source_roots: vec![PathBuf::from(".")],
             watch: Vec::new(),
             packs: Vec::new(),
-            // Deck-native view bucket. Hosts that need a different layout
+            // Deck-native route bucket. Hosts that need a different layout
             // (or additional buckets like Ship's `.ship/views`) construct a
             // `DeckConfig` (clone `defaults()` + override) and pass it in — no
             // file load, no baked host path.
@@ -310,11 +310,11 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
-    /// Minimal example deck.jsonc that exercises the view-layout fields a host
+    /// Minimal example deck.jsonc that exercises the route-layout fields a host
     /// may override. Consumer bundle targets are NO LONGER here — they are
     /// self-declared per-package (`package.json` `deck.bundles[]`) and
     /// discovered by the bundler; `@ship/<name>` resolution is derived from the
-    /// workspace package map. So this config carries only view discovery + watch
+    /// workspace package map. So this config carries only route discovery + watch
     /// + pack scope.
     const EXAMPLE_JSONC: &str = r#"{
   "sourceRoots": ["."],
@@ -364,9 +364,9 @@ mod tests {
     }
 
     /// A PARTIAL deck.jsonc (deck-conformance's shape: scaffolds only) must keep the
-    /// built-in view-layout defaults. Field-level `#[serde(default)]` attrs
+    /// built-in route-layout defaults. Field-level `#[serde(default)]` attrs
     /// used to shadow the container default here: `route_dirs` parsed to `[]`
-    /// and view discovery found zero targets (`unknown target: views/*/view`).
+    /// and route discovery found zero targets (`unknown target: views/*/view`).
     #[test]
     fn partial_file_keeps_view_layout_defaults() {
         let json = r#"{
@@ -535,7 +535,7 @@ mod tests {
     fn stray_deck_jsonc_has_no_effect() {
         let d = DeckConfig::defaults();
         // A stray deck.jsonc the framework would have read before — a
-        // non-empty override with custom view buckets. Parsed via the
+        // non-empty override with custom route buckets. Parsed via the
         // public `strip_jsonc_comments` helper to show a host CAN parse
         // it (host-supplied config still works), but the framework does
         // not load it on its own.

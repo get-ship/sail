@@ -56,8 +56,8 @@ export interface RouteBoundaryHandle {
 /**
  * Install the DEFAULT route-level error boundary on `outlet` (the chrome's
  * `<div slot="route">`, or the root element when there is no chrome). The route
- * view still mounts into `outlet` exactly as before — this only attaches a
- * `BoundaryHandle`, so a throw in the view's render / controller `mount()` /
+ * route still mounts into `outlet` exactly as before — this only attaches a
+ * `BoundaryHandle`, so a throw in the route's render / controller `mount()` /
  * reactive effect degrades to an error card rather than a dead subtree.
  *
  * Opt-out / no-double-wrap: if a boundary is already present in `outlet`'s
@@ -91,7 +91,7 @@ export function installRouteBoundary(
       const error = err instanceof Error ? err : new Error(String(err))
       // Always log the raw error so devtools + server logs see it regardless
       // of whether the on-page card is redacted.
-      console.error('[deck/route] route view threw — rendered error card:', error)
+      console.error('[deck/route] route module threw — rendered error card:', error)
       outlet.setAttribute('data-route-error', '')
       outlet.replaceChildren(
         buildErrorCard(error, source, dev, () => handle.reset()),
@@ -113,7 +113,7 @@ export function installRouteBoundary(
 }
 
 /**
- * Build the card shown when a route view throws. Prefers `<sail-error-state>`
+ * Build the card shown when a route module throws. Prefers `<sail-error-state>`
  * (the SAIL port) and falls back to a self-contained styled `<div>` so the card
  * never depends on a primitive being registered — the same guard pattern
  * `mountRouter`'s `buildNotFound` uses for the 404 surface.

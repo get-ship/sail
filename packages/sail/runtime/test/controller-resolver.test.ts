@@ -4,7 +4,7 @@
 // returned bindings.
 //
 // `resolveController` no longer walks sections or builds a writable
-// proxy: it builds the ambient view scope (ship/clients/route/navigate
+// proxy: it builds the ambient route scope (ship/clients/route/navigate
 // + template state) and calls `def` with it. Whatever `def` returns —
 // signals, `derived()`, handlers — IS the bindings record, verbatim.
 // Handlers close over the scope's signals directly and mutate them via

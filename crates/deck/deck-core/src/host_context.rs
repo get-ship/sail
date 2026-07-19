@@ -37,7 +37,7 @@ pub fn host_context_clients() -> Vec<(String, ManifestClient)> {
 }
 
 /// The same context, as SCOPE CAPABILITIES — the typed members the compiler
-/// writes into a view's generated `Scope`, so an authored controller reads
+/// writes into a route's generated `Scope`, so an authored controller reads
 /// `ctx.route.params.id()` / `ctx.navigate('/x')` precisely and a name the app
 /// never declared is a type error.
 ///

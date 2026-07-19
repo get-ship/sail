@@ -12,7 +12,7 @@
 
 use sail_compiler::{compile, CompileMode, CompileOpts};
 
-fn view_opts() -> CompileOpts {
+fn route_opts() -> CompileOpts {
     CompileOpts {
         route_params: None,
         setup_url: None,
@@ -36,7 +36,7 @@ fn key_line(js: &str) -> &str {
 #[test]
 fn scope_free_key_emits_flat_closure() {
     let src = r#"<ul>{#for row of rows() key={row.id}}<li>{row.label}</li>{/for}</ul>"#;
-    let r = compile(src, view_opts()).expect("compile");
+    let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(
         line.contains("key: (row, __i) => (row.id),"),
@@ -51,7 +51,7 @@ fn scope_free_key_emits_flat_closure() {
 #[test]
 fn index_binding_key_emits_flat_closure() {
     let src = r#"<ul>{#for (row, i) of rows() key={i}}<li>{row.label}</li>{/for}</ul>"#;
-    let r = compile(src, view_opts()).expect("compile");
+    let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(
         line.contains("key: (row, i) => (i),"),
@@ -64,7 +64,7 @@ fn index_binding_key_emits_flat_closure() {
 fn template_literal_key_over_loop_bindings_is_flat() {
     let src =
         "<ul>{#for (row, i) of rows() key={`${row.id}-${i}`}}<li>{row.label}</li>{/for}</ul>";
-    let r = compile(src, view_opts()).expect("compile");
+    let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(
         line.contains("key: (row, i) => (`${row.id}-${i}`),"),
@@ -80,7 +80,7 @@ fn builtin_ident_key_is_flat() {
     // `String(row.id)` are rejected upstream by the renderable-expr
     // subset and never reach the emitter.)
     let src = r#"<ul>{#for row of rows() key={row.id ?? Infinity}}<li>{row.label}</li>{/for}</ul>"#;
-    let r = compile(src, view_opts()).expect("compile");
+    let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(
         line.contains("key: (row, __i) => (row.id ?? Infinity),"),
@@ -93,7 +93,7 @@ fn builtin_ident_key_is_flat() {
 fn scoped_key_falls_back_to_child_scope() {
     let src =
         r#"<ul>{#for row of rows() key={prefix() + row.id}}<li>{row.label}</li>{/for}</ul>"#;
-    let r = compile(src, view_opts()).expect("compile");
+    let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(
         line.contains("Object.create($scope)"),

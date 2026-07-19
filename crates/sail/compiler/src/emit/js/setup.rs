@@ -17,8 +17,8 @@ pub(super) fn emit_setup_body(
     sx_var_bindings: &[crate::check::sx_vars::SxVarBinding],
 ) -> Writer {
     // A source is a COMPONENT (custom element) iff it carries a tag
-    // (`component_meta`); otherwise it's a tagless mount-form ("view"/page).
-    // This is the sole view/component distinction now that `CompileMode::View`
+    // (`component_meta`); otherwise it's a tagless mount-form (a route/page).
+    // This is the sole route/component distinction now that `CompileMode::Route`
     // is gone — keyed on the tag, not a mode flag.
     let is_component = opts.component_meta.is_some();
 
@@ -63,7 +63,7 @@ pub(super) fn emit_setup_body(
     // ── deferred render: `__mount(container)` + optional `hydrate(root, ctx)` ─
     // One shape for both forms. The custom-element adapter calls `__mount(host)`
     // on connect (`__root = host.shadowRoot ?? host`); a page / internal child
-    // calls it with its container. Always view-shaped so the hydrate buffers
+    // calls it with its container. Always route-shaped so the hydrate buffers
     // populate (harmless for CSR-island components — `mountComponent` ignores
     // `hydrate`). The controller lifecycle is wired by `mountComponent` from the
     // LIFECYCLE_KEY that rides the return, not inline here. Hoists drain into
@@ -79,7 +79,7 @@ pub(super) fn emit_setup_body(
     // same `effect()` that seeds it (an effect's body runs once
     // synchronously at creation, which IS mount time, then again on every
     // write). `__root` is the host: for a registered component `container`
-    // IS the host element (light DOM, no shadow root); for a page/view it's
+    // IS the host element (light DOM, no shadow root); for a page/route it's
     // the mount target, which plays the same "inline custom property host"
     // role for its subtree's `var(--x)` reads.
     if !sx_var_bindings.is_empty() {
@@ -135,7 +135,7 @@ pub(super) fn emit_setup_body(
     w.leave();
     w.line("},");
     if !hydrate_calls.is_empty() {
-        emit_view_hydrate(w, &hydrate_calls, hydrate_uses_text, hydrate_uses_markers);
+        emit_route_hydrate(w, &hydrate_calls, hydrate_uses_text, hydrate_uses_markers);
     }
     if !callbacks.is_empty() {
         w.push_str(&callbacks);
@@ -145,11 +145,11 @@ pub(super) fn emit_setup_body(
     module_hoists
 }
 
-/// Emit the `hydrate(root, ctx)` named property on a view's setup
+/// Emit the `hydrate(root, ctx)` named property on a route's setup
 /// return. Wires every binding kind the compiler now direct-emits
 /// (Phase 3b.3+) — runs after `wireBoundaries` so SSR'd markers inside
 /// boundary subtrees are already detached and won't be matched.
-fn emit_view_hydrate(
+fn emit_route_hydrate(
     w: &mut Writer,
     hydrate_calls: &str,
     uses_text: bool,
@@ -236,8 +236,8 @@ fn emit_setup_call(w: &mut Writer) {
     // the template sees the patched one. Mount.ts hands us `ctx.scope` as a
     // snapshot of the SSR-built scope; we narrow it to `$scope` here so
     // controller-and-template agree on a single source-of-truth signal.
-    // Components already did this via `emit_component_setup_call`; views
-    // were lagging.
+    // Components already did this via `emit_component_setup_call`; route
+    // modules were lagging.
     w.line("if (setup && typeof setup.setup === \"function\") {");
     w.enter();
     w.line("ctx.scope = $scope;");

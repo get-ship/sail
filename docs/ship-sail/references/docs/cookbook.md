@@ -1,14 +1,14 @@
 ---
-group: Views
+group: Routes
 order: 4
 title: SAIL — Cookbook
-description: Worked recipes for common SAIL view tasks.
+description: Worked recipes for common SAIL route tasks.
 ---
 
 # SAIL — Cookbook
 
 Copy-paste-and-modify worked examples for an agent authoring a SAIL
-view. Every recipe is either lifted from a working view in this repo
+route. Every recipe is either lifted from a working route in this repo
 (cited) or testable in isolation against `@ship/sail-runtime`.
 
 Read `agent-authoring.md` first — these are the patterns; that file
@@ -27,7 +27,7 @@ explains the rules.
 
 ---
 
-## 1. Simple list view with live SSE
+## 1. Simple list route with live SSE
 
 A typed list, the 3-branch loading/error/ok shape, an empty state.
 Worked exemplar in the repo: `views/agents/page.sail` (template plus
@@ -190,7 +190,7 @@ Declarative-form alternative (no optimistic overlay):
 ## 3. Master-detail with a selection signal
 
 A list on the left drives a detail panel on the right. The selection
-is a `Signal<string>`; the detail view subscribes to a live source
+is a `Signal<string>`; the detail route subscribes to a live source
 parameterized by it. Pattern from `views/skills/page.sail`'s inline
 `<controller>` block, adapted for the typed-SDK path.
 
@@ -316,7 +316,7 @@ export default controller(({ route, ship }) => {
 </controller>
 ```
 
-If `defineRoutes` is needed (catalog-style detail views):
+If `defineRoutes` is needed (catalog-style detail routes):
 
 ```ts
 import { defineRoutes } from '@ship/sail-runtime/route'
@@ -420,7 +420,7 @@ returned from the controller (recipe 1's shape).
 ```
 
 The `data-test="…"` hooks let the probe at
-`apps/shell/inventory-probe.mjs:89-103` classify each view's state
+`apps/shell/inventory-probe.mjs:89-103` classify each route's state
 without relying on text content (skeletons have no visible text — the
 probe's `hasSkeleton` flag is true).
 
@@ -500,18 +500,18 @@ Component-side `<prop>` syntax (full table in
 </div>
 ```
 
-Then consume from a view: `<my-widget tone="primary"
+Then consume from a route: `<my-widget tone="primary"
 prop:rows={rowsSignal}>…</my-widget>`. The compiler emits the
 `customElements.define('my-widget', …)` call — never hand-write it.
 
 ---
 
-## 8. Host-injected clients — a view on a non-Ship host
+## 8. Host-injected clients — a route on a non-Ship host
 
 `ship` is just the key Ship hosts use — a non-Ship host injects its
 own client under its own name via the mount call's `clients` map, and
 the controller's `query()` thunks call it the same way. Worked
-exemplar in the repo: `crates/deck/deck-conformance/app/views/clock/page.sail`.
+exemplar in the repo: `crates/deck/deck-conformance/app/routes/clock/page.sail`.
 
 `app/views/clock/page.sail`:
 
@@ -555,5 +555,5 @@ declare module '@ship/sail-runtime' {
 }
 ```
 
-Views that consume no clients still get the ambient `ship` (compatibility
+Routes that consume no clients still get the ambient `ship` (compatibility
 default) — a non-Ship host injects its own clients under its own names.

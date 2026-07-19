@@ -15,7 +15,7 @@ import {
   type DaemonMode,
   type DeckResponse,
   cssAsset,
-  htmlView,
+  html_route,
   intoResponse,
   jsAsset,
   jsonAsset,
@@ -127,7 +127,7 @@ export function createDeckRouter(config: DeckAdaptorConfig) {
     // 5. index shell
     if (path === "/") {
       const body = await readOpt(indexPath);
-      return body ? serve(htmlView(body)) : serve(notFound("index.html not built", mode));
+      return body ? serve(html_route(body)) : serve(notFound("index.html not built", mode));
     }
 
     // 6. SPA fallback: GET nav to a client route -> the index shell.
@@ -135,7 +135,7 @@ export function createDeckRouter(config: DeckAdaptorConfig) {
     const isReserved = RESERVED_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
     if (!isReserved && !path.includes(".")) {
       const body = await readOpt(indexPath);
-      if (body) return serve(htmlView(body));
+      if (body) return serve(html_route(body));
     }
 
     // 7. not a deck route — let the host handle it (or 404 there)

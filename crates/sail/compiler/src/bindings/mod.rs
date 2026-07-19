@@ -127,7 +127,7 @@ impl Builder {
             AttrInstr::SlotReflectEmpty { .. } => {
                 // Side-effect wiring on the host's attribute set. No scope
                 // entry, no marker — the compiled component setup body
-                // emits the runtime call inline; views never see this kind.
+                // emits the runtime call inline; routes never see this kind.
             }
             AttrInstr::On { event, handler, .. } => {
                 self.push(BindingKind::On(event.clone()), &handler.source, handler.allow_arrow);

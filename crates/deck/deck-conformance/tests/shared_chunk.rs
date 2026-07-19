@@ -1,10 +1,10 @@
-//! GAP 4 — Per-view tree-shake resolver + cross-view shared-chunk dedup.
+//! GAP 4 — Per-route tree-shake resolver + cross-route shared-chunk dedup.
 //!
 //! The deck-conformance app ships a `<demo-chip>` component in its own workspace
 //! package (`app/components/demo-chip`). Both `routes/widgets` and
 //! `routes/gallery` use the tag. The multi-entry build (`bundle_routes`) must
 //! hoist `demo-chip`'s code into EXACTLY ONE shared chunk — not inline it into
-//! each view bundle.
+//! each route bundle.
 //!
 //! This test drives a real Rolldown build of the demo app and asserts:
 //!   1. `demo-chip`'s marker class (`demo-chip-marker`) appears in only ONE
@@ -50,7 +50,7 @@ fn js_files(dir: &Path) -> Vec<PathBuf> {
     out
 }
 
-/// Build both demo-app views (`widgets` and `gallery`) in one multi-entry
+/// Build both demo-app routes (`widgets` and `gallery`) in one multi-entry
 /// Rolldown pass and assert the shared dedup invariant.
 #[tokio::test(flavor = "multi_thread")]
 async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
@@ -96,7 +96,7 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
     // `demo-chip` → resolves `@sail-tag/demo-chip` to the source .sail.
     bundle_routes(&layout, &[widgets, gallery], &staging, false)
         .await
-        .expect("multi-entry views bundle must succeed");
+        .expect("multi-entry routes bundle must succeed");
 
     // ── assertion 1: demo-chip code in exactly ONE chunk ──────────────────────
     let deck_dir = out.path().join(".deck");
@@ -132,7 +132,7 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
         .to_string_lossy()
         .to_string();
 
-    // ── assertion 2: both view bundles import the shared chunk ────────────────
+    // ── assertion 2: both route bundles import the shared chunk ───────────────
     let widgets_js = std::fs::read_to_string(out.path().join(".deck/routes/widgets/route.js"))
         .expect("routes/widgets/route.js must exist after build");
     let gallery_js = std::fs::read_to_string(out.path().join(".deck/routes/gallery/route.js"))

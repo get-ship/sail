@@ -87,8 +87,8 @@ enum Command {
         #[arg(long)]
         no_dts: bool,
         /// Emit `import "@sail-tag/<tag>";` per used custom-element tag so the
-        /// bundler can tree-shake exactly the components a view uses (the
-        /// per-view resolver). The bundler resolves `@sail-tag/<tag>` to the
+        /// bundler can tree-shake exactly the components a route uses (the
+        /// per-route resolver). The bundler resolves `@sail-tag/<tag>` to the
         /// component source; default off leaves component loading to the host.
         #[arg(long)]
         emit_component_imports: bool,
@@ -611,8 +611,8 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          - INTERACTION — `hover` `press` `focus` `focus-visible`: rest <-> active, driven by events.\n\
          - LIFECYCLE — `enter` `exit`: the element joining or leaving the DOM. `exit` is the one\n  \
            thing CSS cannot do alone (the framework holds the element in the tree until it finishes).\n\
-         - TIMELINE — `view` `scroll`: PROGRESS-driven, not time-driven. Reveal-on-scroll and\n  \
-           parallax, at zero JS runtime cost. `view` = this element's passage through the viewport;\n  \
+         - TIMELINE — `reveal` `scroll`: PROGRESS-driven, not time-driven. Reveal-on-scroll and\n  \
+           parallax, at zero JS runtime cost. `reveal` = this element's passage through the viewport;\n  \
            `scroll` = the scroll container's total progress.\n",
         MOTION_TRIGGERS.join(", ")
     );
@@ -624,7 +624,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     );
     let _ = writeln!(
         md,
-        "```\n<card motion:view={{{{ opacity: 'fade', translate-y: 'spring:gentle' }}}}>reveal on scroll</card>\n<row motion:enter={{{{ opacity: 'fade', stagger: '40ms' }}}}>cascades in</row>\n<button motion:press={{{{ scale: 'press' }}}}>tactile</button>\n```\n"
+        "```\n<card motion:reveal={{{{ opacity: 'fade', translate-y: 'spring:gentle' }}}}>reveal on scroll</card>\n<row motion:enter={{{{ opacity: 'fade', stagger: '40ms' }}}}>cascades in</row>\n<button motion:press={{{{ scale: 'press' }}}}>tactile</button>\n```\n"
     );
     let _ = writeln!(
         md,
@@ -1077,7 +1077,7 @@ fn synthesize(
 
     let file = input.file_name().and_then(|f| f.to_str()).unwrap_or("view.sail");
     let raw_stem = file.strip_suffix(".sail").unwrap_or(file);
-    // Every `.sail` synthesizes to a component; the retired `page.sail` view
+    // Every `.sail` synthesizes to a component; the retired `page.sail` route
     // path is gone, so the mode is always `Component`.
     let mode = CompileMode::Component;
 
@@ -1090,7 +1090,7 @@ fn synthesize(
     // `controller({…})` form) and composed by `emit_synthetic`, exactly as a
     // paired file would be — so the synthetic controller + render pair is
     // tsc-checkable for the SFC model too. Otherwise fall back to a sibling
-    // `controller.ts` on disk (views / not-yet-migrated).
+    // `controller.ts` on disk (route modules / not-yet-migrated).
     fs::create_dir_all(&out_dir)
         .with_context(|| format!("create out dir {}", out_dir.display()))?;
     let authored = if let Some(body) = &inline_controller_src {

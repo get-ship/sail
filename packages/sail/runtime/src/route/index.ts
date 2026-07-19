@@ -4,7 +4,7 @@
 // routing: it builds a `RouteSignals` (pathname/hash + lazy params/query
 // proxies) from a URL. The *policy* half (history, route table, popstate
 // listener, `navigate()`) lives in `@ship/deck-router`. SAIL packs and the
-// `sail-dom` test harness import this module so a compiled view that reads
+// `sail-dom` test harness import this module so a compiled route that reads
 // `route.params.x()` evaluates without pulling deck into the dependency
 // graph — sail ⊥ deck at the module boundary.
 //

@@ -15,7 +15,7 @@
 //!
 //! The importmap MUST come before any module script: browsers freeze the
 //! importmap at first module fetch, so it lives at the top of `<head>` to
-//! win the race against `routes.gen.ts` and any per-view bundles.
+//! win the race against `routes.gen.ts` and any per-route bundles.
 
 /// The DOM id of the SPA mount point. Single source for the `index.html`
 /// `<div id>` AND the `mountRouter({ root })` call the route emitter writes

@@ -4,7 +4,7 @@
   presets are one paragraph; scroll/loop prose in plain English; choreography
   demo full-width with the code below it; compositor talk and the 30 kB jab
   cut; Under the hood answers where Sail ends and the embedded Motion library
-  begins. The motion:view demos are correct as written — the view trigger
+  begins. The motion:reveal demos are correct as written — the reveal trigger
   currently attaches nothing at runtime (regression, job/motion-view-regression
   dispatched with this page as the gate).
 -->
@@ -66,7 +66,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p sx="text-lg text-muted-foreground leading-relaxed">
     Animation is declared on the element. <code>motion:</code> names a
     <strong>trigger</strong> — <code>enter</code>, <code>exit</code>,
-    <code>view</code>, <code>press</code>, <code>loop</code> — and a
+    <code>reveal</code>, <code>press</code>, <code>loop</code> — and a
     <strong>config</strong>: which properties move, how far, how fast. When
     something else owns the clock — a slider, the scroll position —
     <code>timeline()</code> turns keyframes into signals. This page is both,
@@ -140,20 +140,20 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     anywhere a number can.
   </p>
 
-  <h2>On scroll — <code>view</code></h2>
+  <h2>On scroll — <code>reveal</code></h2>
   <p>
-    <code>view</code> plays the animation when the element scrolls into the
+    <code>reveal</code> plays the animation when the element scrolls into the
     viewport. Same configs as everything else:
   </p>
   <column gap="4">
-    <card motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }} sx="p-6">
+    <card motion:reveal={{ opacity: 'fade', translate-y: 'spring:gentle' }} sx="p-6">
       <h3>This one fades up as it enters the viewport.</h3>
     </card>
-    <card motion:view={{ scale: 'spring:bouncy', opacity: 'fade' }} sx="p-6">
+    <card motion:reveal={{ scale: 'spring:bouncy', opacity: 'fade' }} sx="p-6">
       <h3>And this one springs in.</h3>
     </card>
   </column>
-  <code-block code={code.view}></code-block>
+  <code-block code={code.reveal}></code-block>
 
   <h2>Forever — <code>loop</code></h2>
   <p>
@@ -244,7 +244,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <grid cols="2" gap="4">
     <column gap="1">
       <label>Triggers</label>
-      <p sx="text-sm text-muted-foreground">enter · exit · view · scroll · press · focus · focus-visible · loop</p>
+      <p sx="text-sm text-muted-foreground">enter · exit · reveal · scroll · press · focus · focus-visible · loop</p>
     </column>
     <column gap="1">
       <label>Properties</label>

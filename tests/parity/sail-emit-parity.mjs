@@ -7,7 +7,7 @@
 // emits side-by-side — brittle and slow against an evolving rewrite.
 //
 // This trimmed runtime check enforces the structural contract every
-// view bundle now relies on:
+// route bundle now relies on:
 //
 //   1. Compile every fixture via `cargo run -p sail-compiler -- build`.
 //   2. The compiled module has a `default.setup(ctx)` function.
@@ -33,12 +33,12 @@ const __dirname = dirname(__filename)
 const repoRoot = resolve(__dirname, '..', '..')
 
 const FIXTURES = [
-  { name: 'hello',                 mode: 'view' },
-  { name: 'counter',               mode: 'view' },
-  { name: 'agents',                mode: 'view' },
-  { name: 'bind-this-button',      mode: 'view' },
-  { name: 'with-island',           mode: 'view' },
-  { name: 'without-island',        mode: 'view' },
+  { name: 'hello',                 mode: 'route' },
+  { name: 'counter',               mode: 'route' },
+  { name: 'agents',                mode: 'route' },
+  { name: 'bind-this-button',      mode: 'route' },
+  { name: 'with-island',           mode: 'route' },
+  { name: 'without-island',        mode: 'route' },
   { name: 'ship-button',           mode: 'component', componentName: 'ship-button-test' },
   { name: 'reflect-empty-slot',    mode: 'component', componentName: 'reflect-empty-slot-test' },
   { name: 'shadow-tones',          mode: 'component', componentName: 'shadow-tones-test' },
@@ -70,15 +70,15 @@ function assertNoBindingsExport(stem, body) {
   }
 }
 
-function assertHydrateOrStaticView(stem, body) {
-  // hydrate(root, ctx) is emitted only when the view has direct-emit
-  // bindings. Pure-static views (no reactive content) skip hydrate
+function assertHydrateOrStaticRoute(stem, body) {
+  // hydrate(root, ctx) is emitted only when the route has direct-emit
+  // bindings. Pure-static routes (no reactive content) skip hydrate
   // entirely, which is fine — there's nothing to wire.
   const hasHydrate = /hydrate\(root,\s*ctx\)/.test(body)
   const hasReactiveMarkers =
     /__cleanups\.push\((bind|hydrate|wire)/.test(body)
   if (hasReactiveMarkers && !hasHydrate) {
-    throw new Error(`[${stem}] view has reactive bindings but no hydrate(root, ctx)`)
+    throw new Error(`[${stem}] route has reactive bindings but no hydrate(root, ctx)`)
   }
 }
 
@@ -101,8 +101,8 @@ for (const fx of FIXTURES) {
     const out = readFileSync(join(tmp, `${fx.name}.js`), 'utf8')
     assertNoBindingsExport(fx.name, out)
     assertNoBoundaryAttachProps(fx.name, out)
-    if (fx.mode === 'view') {
-      assertHydrateOrStaticView(fx.name, out)
+    if (fx.mode === 'route') {
+      assertHydrateOrStaticRoute(fx.name, out)
     } else {
       assertComponentRegistration(fx.name, out)
     }

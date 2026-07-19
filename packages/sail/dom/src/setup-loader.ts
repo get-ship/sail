@@ -1,11 +1,11 @@
 // Resolver for the paired `.ts` setup file referenced by a `.sail`
-// view. Given the URL of the template, look for a sibling file with
+// route. Given the URL of the template, look for a sibling file with
 // the same base name and a `.ts` extension; dynamic-import it and
 // return the default export.
 //
 // The interpreter never invokes this on its own — `hydrate` accepts
 // an already-resolved `setup` thunk. This helper exists so tooling
-// (devserver, view loader) can do the resolution in one place.
+// (devserver, route loader) can do the resolution in one place.
 
 /**
  * Locate the `.ts` setup file paired with a `.sail` template and

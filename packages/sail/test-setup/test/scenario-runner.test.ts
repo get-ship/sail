@@ -1,5 +1,5 @@
 // Proves the behavioral scenario runner — all 5 verbs (see/notSee/click/fill/
-// choose) against a real mounted view, queried by what a user perceives.
+// choose) against a real mounted route, queried by what a user perceives.
 
 import { describe, expect, it } from 'vitest'
 import { signal } from '@ship/sail-runtime'

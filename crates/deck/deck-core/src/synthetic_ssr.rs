@@ -1,7 +1,7 @@
 //! Gated, additive injection seam for the ship-js (synthetic-view) SSR path.
 //!
 //! deck-core declares the **result** it wants — "first-paint HTML for this
-//! resolved view + request" — and owns the **gate**. It does not own the
+//! resolved route + request" — and owns the **gate**. It does not own the
 //! mechanism: the ship-js renderer lives in `deck-ssr` (which depends on
 //! deck-core and pulls V8 + Rolldown), so deck-core can't depend on it without
 //! a cycle. Instead deck-ssr **registers** an implementation here at host
@@ -32,12 +32,12 @@ use std::path::Path;
 
 use serde_json::Value;
 
-/// The resolved view + request a first-paint render needs. deck-core fills
+/// The resolved route + request a first-paint render needs. deck-core fills
 /// this from what the serve path already resolved — no new IO, no new config.
 pub struct SsrRequest<'a> {
-    /// The view name as routed (e.g. `greet`, or `studio/agents` folded).
+    /// The route name as routed (e.g. `greet`, or `studio/agents` folded).
     pub route_name: &'a str,
-    /// Nested sub-path, when the view was served at `/_deck/view/<name>/<sub>`.
+    /// Nested sub-path, when the route was served at `/_deck/view/<name>/<sub>`.
     pub sub_path: Option<&'a str>,
     /// Absolute path to the source `.sail` (the synth input). The renderer
     /// discovers the app manifest + sibling controller relative to this.
@@ -51,7 +51,7 @@ pub struct SsrRequest<'a> {
 }
 
 /// The capability deck-core declares: produce first-paint HTML for a resolved
-/// view through ship-js. The implementor (deck-ssr) owns the whole procedure —
+/// route through ship-js. The implementor (deck-ssr) owns the whole procedure —
 /// locate the app manifest, synthesize, bundle, run in a pooled isolate — and
 /// returns only the result.
 pub trait SyntheticSsr: Send + Sync + 'static {

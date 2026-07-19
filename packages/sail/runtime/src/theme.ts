@@ -257,7 +257,7 @@ export function hydrateTheme(): void {
 /**
  * `theme` — the sanctioned runtime theme-write hatch. A plain ambient API
  * (`import { theme } from '@ship/sail-runtime'`), NOT `ctx`-scoped: a theme
- * write is a GLOBAL `:root` write, so it needs no view scope.
+ * write is a GLOBAL `:root` write, so it needs no route scope.
  */
 export const theme = {
   preview,

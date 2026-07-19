@@ -46,7 +46,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ evalExample, hatc
   </p>
   <h3><code>behaviour</code></h3>
   <p>
-    Does the mounted view in jsdom pass every interaction + assert in the
+    Does the mounted route in jsdom pass every interaction + assert in the
     spec? Failure looks like: click → no DOM change, assertion text mismatch,
     signal never updated.
   </p>

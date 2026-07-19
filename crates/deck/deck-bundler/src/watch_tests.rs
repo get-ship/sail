@@ -145,10 +145,10 @@ fn no_hardcoded_packages_or_ship_views_in_watch_seeds() {
 }
 
 #[test]
-fn new_view_discovery_via_entry_match() {
+fn new_route_discovery_via_entry_match() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path().to_path_buf();
-    let route_dir = root.join("routes/newview");
+    let route_dir = root.join("routes/newroute");
     std::fs::create_dir_all(&route_dir).unwrap();
     let leaf = route_dir.join("page.sail");
     std::fs::write(&leaf, "<div>new</div>").unwrap();
@@ -161,5 +161,5 @@ fn new_view_discovery_via_entry_match() {
         matches!(&t.entry, TargetEntry::Real(p) if *p == leaf)
     });
     assert!(found.is_some(), "new view leaf is discoverable via all_targets() after invalidation");
-    assert_eq!(found.unwrap().name, "routes/newview/route");
+    assert_eq!(found.unwrap().name, "routes/newroute/route");
 }

@@ -13,7 +13,7 @@
 //!
 //! Watch seed is GRAPH-DRIVEN (#deck-hmr-graph-watch): the watcher watches
 //! exactly the parent directories of resolved module-graph paths (non-recursive),
-//! plus `cfg.route_dirs` recursively for new view-leaf discovery. No hardcoded
+//! plus `cfg.route_dirs` recursively for new route-leaf discovery. No hardcoded
 //! monorepo dir names.
 
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -150,7 +150,7 @@ pub(crate) async fn run(b: &Bundler) {
             match classify(&sig) {
                 // #193/#256: a dir created after boot is membership-checked
                 // (skip pruned trees, watch the survivor) and invalidates the
-                // snapshot (a view may appear under it).
+                // snapshot (a route may appear under it).
                 SignalAction::NewDir => {
                     let name = sig.path.file_name().and_then(|s| s.to_str()).unwrap_or("");
                     if !PRUNE.contains(&name) {
@@ -168,7 +168,7 @@ pub(crate) async fn run(b: &Bundler) {
                     }
                     // Graph-driven reverse-map: which targets own this changed file?
                     let mut graph_targets = b.targets_for_module_for_watch(&sig.path);
-                    // New-view-leaf bootstrap: not in graph yet (first time seen),
+                    // New-route-leaf bootstrap: not in graph yet (first time seen),
                     // but the entry path matches after snapshot invalidation.
                     if graph_targets.is_empty() && invalidate {
                         if let Some(t) = b.target_for_entry_path_for_watch(&sig.path) {
@@ -249,7 +249,7 @@ pub(crate) fn module_parent_dirs(graph: &HashMap<String, HashSet<PathBuf>>) -> H
 
 /// One FS signal from the notify callback: the changed path plus whether the
 /// originating event was a CREATE (a new directory to re-prune, #193 completion,
-/// or a new `.sail` view leaf to discover, P0-1). Modify/remove events carry
+/// or a new `.sail` route leaf to discover, P0-1). Modify/remove events carry
 /// `is_create = false`.
 struct WatchSignal {
     path: PathBuf,
@@ -264,7 +264,7 @@ enum SignalAction {
     /// invalidate the target snapshot.
     NewDir,
     /// A source file that may rebuild targets. `invalidate` is true only when the
-    /// event CREATED a `.sail` leaf — a new view target the snapshot predates, so
+    /// event CREATED a `.sail` leaf — a new route target the snapshot predates, so
     /// it must be re-walked (P0-1). A `.sail` edit / `.ts` change leaves the
     /// target set unchanged.
     Rebuild { invalidate: bool },

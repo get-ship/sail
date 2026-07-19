@@ -97,7 +97,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>data()</code> gives you a signal that's server-rendered at request
     time and then patched over a stream — no polling, no manual wiring. The
     server half — the endpoint, the patch feed, SSR — is <a href="/deck">deck</a>'s
-    job; the view just reads the signal.
+    job; the route just reads the signal.
   </p>
   <code-block code={code.server}></code-block>
 

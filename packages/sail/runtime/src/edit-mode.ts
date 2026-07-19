@@ -1,27 +1,27 @@
-// edit-mode.ts — per-view edit-mode UI state.
+// edit-mode.ts — per-route edit-mode UI state.
 //
-// View authoring (the per-view "edit mode") needs a single, shared bit
-// per (project, view) pair so the shell can decide whether to render the
-// dev panel + tabs and any view can read the same state without going
+// Route authoring (the per-route "edit mode") needs a single, shared bit
+// per (project, route) pair so the shell can decide whether to render the
+// dev panel + tabs and any route can read the same state without going
 // through chrome events.
 //
 // State model
-//   - Each (project, view) has an independent boolean signal.
+//   - Each (project, route) has an independent boolean signal.
 //   - Signals are in-memory only — they survive SPA navigation via the
 //     memoized SIGNALS map but reset on hard reload. Persistence was
 //     previously held in localStorage (`ship.edit-mode.<project>.<view>`)
-//     but a single accidental Alt+E hit on a built-in view (e.g.
+//     but a single accidental Alt+E hit on a built-in route (e.g.
 //     /artifacts) would stick forever and re-open the dev panel on every
 //     visit. Per-tab UI state doesn't survive reload; the user re-enters
 //     edit mode explicitly when they want it.
 //   - Entering/exiting calls the host's `editModeTransport` (HostContext)
 //     so the runtime names no daemon URL — the host wires it to its
-//     view-service enter/exit RPC, or omits it (the toggle still works
+//     route-service enter/exit RPC, or omits it (the toggle still works
 //     locally). No `fetch`, no session-key, no /api/v1 from the runtime.
 //
-// The signals are memoized: calling `editModeForView('foo')` twice
+// The signals are memoized: calling `editModeForRoute('foo')` twice
 // returns the same Signal instance, so multiple consumers in the shell
-// + the active view auto-update together.
+// + the active route auto-update together.
 
 import { signal, type Signal } from './signal'
 import { hostContext } from './host-context'
@@ -38,7 +38,7 @@ function signalKey(name: string): string {
 
 // One-shot migration: purge legacy `ship.edit-mode.*` keys from
 // localStorage. Pre-fix, edit-mode persisted across browser sessions —
-// users who accidentally hit Alt+E on a built-in view (e.g. /artifacts)
+// users who accidentally hit Alt+E on a built-in route (e.g. /artifacts)
 // would re-enter edit mode on every visit. Clearing here is idempotent
 // and cheap.
 let migrated = false
@@ -57,7 +57,7 @@ function purgeLegacyPersistence(): void {
 }
 
 function postLifecycle(name: string, action: 'enter' | 'exit'): void {
-  // The host owns the edit-mode lifecycle transport (its view-service
+  // The host owns the edit-mode lifecycle transport (its route-service
   // enter/exit RPC). The runtime names no daemon URL — it calls the
   // injected callback, or no-ops when no host registered one.
   void hostContext().editModeTransport?.(name, action)
@@ -66,8 +66,8 @@ function postLifecycle(name: string, action: 'enter' | 'exit'): void {
 /** Return the (memoized) Signal<boolean> for whether edit-mode is on
  *  for `name`. Subsequent calls with the same name return the same
  *  signal instance. Always starts OFF on first access; a hard reload
- *  resets every view to off. */
-export function editModeForView(name: string): Signal<boolean> {
+ *  resets every route to off. */
+export function editModeForRoute(name: string): Signal<boolean> {
   purgeLegacyPersistence()
   const k = signalKey(name)
   const existing = SIGNALS.get(k)
@@ -81,7 +81,7 @@ export function editModeForView(name: string): Signal<boolean> {
  *  lifecycle POST, and dispatches `sail:edit-mode:change` on document so
  *  shell chrome (which doesn't run inside a tracked effect) can react. */
 export function toggleEditMode(name: string): boolean {
-  const sig = editModeForView(name)
+  const sig = editModeForRoute(name)
   const next = !sig()
   setEditMode(name, next)
   return next
@@ -89,7 +89,7 @@ export function toggleEditMode(name: string): boolean {
 
 /** Set edit-mode explicitly. No-op when already at the target value. */
 export function setEditMode(name: string, on: boolean): void {
-  const sig = editModeForView(name)
+  const sig = editModeForRoute(name)
   if (sig() === on) return
   sig.set(on)
   void postLifecycle(name, on ? 'enter' : 'exit')
@@ -103,10 +103,10 @@ export function setEditMode(name: string, on: boolean): void {
 
 // ── Annotation mode (sub-toggle inside edit mode) ────────────────────
 //
-// Annotation mode is a SECOND boolean per (project, view), only
+// Annotation mode is a SECOND boolean per (project, route), only
 // meaningful when edit-mode is also on. ON ⇒ the overlay binds
 // hover/click handlers so the user picks elements to annotate; OFF ⇒
-// the view is interactive normally even though the dev panel + tabs
+// the route is interactive normally even though the dev panel + tabs
 // are still in edit-mode shape.
 //
 // Session-only: not persisted to localStorage so a reload always
@@ -115,7 +115,7 @@ export function setEditMode(name: string, on: boolean): void {
 
 const ANNOTATION_SIGNALS = new Map<string, Signal<boolean>>()
 
-export function annotationModeForView(name: string): Signal<boolean> {
+export function annotationModeForRoute(name: string): Signal<boolean> {
   const k = `ship.annotation-mode.${spaceId()}.${name}`
   const existing = ANNOTATION_SIGNALS.get(k)
   if (existing) return existing
@@ -125,17 +125,17 @@ export function annotationModeForView(name: string): Signal<boolean> {
 }
 
 export function toggleAnnotationMode(name: string): boolean {
-  const sig = annotationModeForView(name)
+  const sig = annotationModeForRoute(name)
   const next = !sig()
   setAnnotationMode(name, next)
   return next
 }
 
 export function setAnnotationMode(name: string, on: boolean): void {
-  const sig = annotationModeForView(name)
+  const sig = annotationModeForRoute(name)
   if (sig() === on) return
   // Annotation mode requires edit mode on; refuse to flip on otherwise.
-  if (on && !editModeForView(name)()) return
+  if (on && !editModeForRoute(name)()) return
   sig.set(on)
   if (typeof document !== 'undefined') {
     document.dispatchEvent(new CustomEvent('sail:annotation-mode:change', {

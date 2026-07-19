@@ -16,11 +16,11 @@
 // Single source of truth for navigation: `navigate(path)` calls
 // `history.pushState` (or `replaceState`) and triggers a global
 // `__shipSetRouteUpdate` callback. Every `route()` instance registers
-// itself with that updater on construction so all attached views see
+// itself with that updater on construction so all attached routes see
 // the same URL state.
 //
 // Hosts (deck shell, spaces scaffold, view-host) own the *policy* —
-// history, path→view matching, mounting. The runtime owns the
+// history, path→route matching, mounting. The runtime owns the
 // *mechanism* (reactive signals + popstate listener). The
 // `setRouterPort` plug-in keeps the runtime host-agnostic.
 
@@ -61,7 +61,7 @@ interface RouteInstance {
 }
 
 // Module-level registry of route shapes. Shared across every
-// `route()` instance so a `defineRoutes` call from one view's setup
+// `route()` instance so a `defineRoutes` call from one route's setup
 // affects param matching for any subsequently constructed route.
 const SHAPES: CompiledShape[] = []
 
@@ -79,7 +79,7 @@ let updaterInstalled = false
 // calls' sorted-join must START WITH the baseline string (so
 // additions are allowed; removals and reorderings are not). When
 // `EDIT_MODE` is `true`, anything goes — runtime route additions
-// from downloaded views or hot-reload are accepted without
+// from downloaded routes or hot-reload are accepted without
 // enforcement.
 //
 // `mergeRoutes` is the supported way to bring a runtime half into a
@@ -119,7 +119,7 @@ export function isEditMode(): boolean {
  * what was registered. In edit mode (`setEditMode(true)`) the gate
  * is skipped and any pattern set is accepted.
  *
- * Per-view convention: call `defineRoutes` from the view's `view.ts`
+ * Per-route convention: call `defineRoutes` from the route's `view.ts`
  * (or controller setup) before reading any params. The compiler may
  * lift this to a `<route pattern="..." />` directive in a follow-up;
  * for now it's an imperative call.
@@ -209,7 +209,7 @@ export function route(opts?: { url?: URL; routes?: RouteShape[] }): RouteSignals
 /**
  * A host-supplied router. The runtime owns the *mechanism* (the reactive
  * `route.*` signals); the host (Deck shell, Tauri shell, view-host) owns
- * the *policy* — history, path→view matching, and mounting. `navigate()`
+ * the *policy* — history, path→route matching, and mounting. `navigate()`
  * delegates here so a single call from any bundle actually navigates.
  *
  * Registered via {@link setRouterPort}. Mirrors `SuiLoader` / `ShipHost`:
@@ -217,7 +217,7 @@ export function route(opts?: { url?: URL; routes?: RouteShape[] }): RouteSignals
  */
 export interface RouterPort {
   /** Navigate to `to` (a path). The host matches, updates history, and
-   *  mounts or updates the view as appropriate. */
+   *  mounts or updates the route as appropriate. */
   navigate(to: string, opts?: { replace?: boolean }): void
   /** Go back one history entry. */
   back(): void
@@ -235,11 +235,11 @@ export function setRouterPort(port: RouterPort): void {
 /**
  * SPA-aware navigation. Delegates to the host {@link RouterPort} when one
  * is registered — the host owns matching + mounting, so this actually
- * switches views.
+ * switches routes.
  *
- * When no port is registered (a single-view host like the view-host, or
+ * When no port is registered (a single-route host like the view-host, or
  * tests), it falls back to updating the URL + reactive `route.*` signals
- * in place. Cross-view mounting requires a host router.
+ * in place. Cross-route mounting requires a host router.
  *
  * ```ts
  * navigate('/agents/42')
@@ -262,7 +262,7 @@ export function navigate(path: string, opts: { replace?: boolean } = {}): void {
     window.history.pushState(state, '', path)
   }
   globalThis.__shipSetRouteUpdate?.()
-  // A fresh push scrolls to the top once the new view has rendered.
+  // A fresh push scrolls to the top once the new route has rendered.
   applyScroll()
 }
 
@@ -271,7 +271,7 @@ export function navigate(path: string, opts: { replace?: boolean } = {}): void {
  * table (codegen'd from the file tree) AND a runtime route table
  * (fetched from the daemon) call `mergeRoutes` to combine them.
  *
- * The static half always wins on collision — a downloaded view that
+ * The static half always wins on collision — a downloaded route that
  * declares `/agents/:id` cannot shadow the first-party shell's
  * `/agents/:id` route.
  */
@@ -363,7 +363,7 @@ export function mergeRoutes(
 
 /**
  * Find the registered route shape whose pattern matches `pathname` (or
- * `undefined`). The router uses this to pick the view module for a
+ * `undefined`). The router uses this to pick the route module for a
  * navigation — modules are keyed by pattern. Reuses the same compiled
  * regexes as `route.params` matching, so there is one matcher, not two.
  */

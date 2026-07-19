@@ -35,7 +35,7 @@ pub const RULE_ID: &str = "sail-controller-no-load-state";
 const KIND_LITERALS: &[&str] = &["loading", "error", "ok"];
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
-    // Controller-only — templates SHOULD branch on `.kind`. View controllers are
+    // Controller-only — templates SHOULD branch on `.kind`. Route controllers are
     // `<dir>/controller.ts`; component controllers are `<tag>.controller.ts`.
     let p = path.to_string_lossy();
     if !(p.ends_with("/controller.ts") || p.ends_with(".controller.ts") || p == "controller.ts") {

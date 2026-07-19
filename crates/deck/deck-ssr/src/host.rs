@@ -7,12 +7,12 @@
 //!
 //!   * `route.current` → the URL state the deck router already matched for
 //!     this request (the host KNOWS the params — it matched the route to pick
-//!     the view; server-side they are data, not a `window.location` re-parse).
+//!     the route module; server-side they are data, not a `window.location` re-parse).
 //!   * any other op → the real op surface via [`deck_core::DataPort`]. The
 //!     conformance data vocabulary is `<root>.demo.<method>`; the op string is
 //!     split on its first `.` into `(domain, op)` for `DataPort::resolve`.
 //!
-//! This is the seam the full view-host plugs the live op surface into.
+//! This is the seam the full route-host plugs the live op surface into.
 
 use std::sync::{Arc, Mutex};
 
@@ -30,7 +30,7 @@ pub struct SsrDispatch {
 
 impl SsrDispatch {
     /// Build for a matched request. `params`/`query` are the values the deck
-    /// router captured when it picked the view for this pathname.
+    /// router captured when it picked the route for this pathname.
     pub fn for_request(pathname: &str, params: Value, query: Value) -> Self {
         Self {
             route: json!({ "pathname": pathname, "params": params, "query": query }),

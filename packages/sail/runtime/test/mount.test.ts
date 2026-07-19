@@ -8,7 +8,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { mount, mountAmbient, onCleanup, signal } from '../src/index'
 import { queryKeyed } from '../src/query'
-import type { ViewPayload } from '../src/index'
+import type { RoutePayload } from '../src/index'
 
 // JSDOM doesn't implement EventSource — stub minimally for live-channel paths.
 class FakeEventSource {
@@ -71,7 +71,7 @@ describe('mount()', () => {
   })
 
   it('mounts a payload and returns a handle', async () => {
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'demo',
       html: '<p>hello</p>',
       css: '',
@@ -89,7 +89,7 @@ describe('mount()', () => {
   })
 
   it('builds signals from payload.scope', async () => {
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'demo',
       html: '<div></div>',
       css: '',
@@ -104,7 +104,7 @@ describe('mount()', () => {
   })
 
   it('injects css into a <style> adjacent to the target by default', async () => {
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'demo',
       html: '<div></div>',
       css: '.x { color: red }',
@@ -120,7 +120,7 @@ describe('mount()', () => {
   })
 
   it('cssScope: "none" skips css injection', async () => {
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'demo',
       html: '<div></div>',
       css: '.x { color: red }',
@@ -134,7 +134,7 @@ describe('mount()', () => {
 
   it('runs setup() with the provided ship/route/navigate', async () => {
     let captured: { ship?: unknown; navigate?: string } = {}
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'demo',
       html: '<div></div>',
       css: '',
@@ -159,7 +159,7 @@ describe('mount()', () => {
   })
 
   it('reload preserves serializable signal values', async () => {
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'demo',
       html: '<div>v1</div>',
       css: '',
@@ -172,7 +172,7 @@ describe('mount()', () => {
     scope.count!.set(42)
     expect(scope.count!()).toBe(42)
 
-    const next: ViewPayload = {
+    const next: RoutePayload = {
       ...payload,
       html: '<div>v2</div>',
       // Server reset count to 0; runtime should restore from current signal.
@@ -190,7 +190,7 @@ describe('mount()', () => {
   })
 
   it('restoreScope overlays values during initial mount', async () => {
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'demo',
       html: '<div></div>',
       css: '',
@@ -221,7 +221,7 @@ describe('mount()', () => {
         },
       },
     }
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'demo',
       html: '<div></div>',
       css: '',
@@ -245,7 +245,7 @@ describe('mount()', () => {
     const ssrHero = target.querySelector('#hero') as HTMLElement
     const ssrTail = target.querySelector('p') as HTMLElement
 
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'demo',
       html: '<div id="hero">new</div><p>tail</p>',
       css: '',
@@ -275,7 +275,7 @@ describe('mount()', () => {
       },
     })
     try {
-      const payload: ViewPayload = {
+      const payload: RoutePayload = {
         name: 'demo',
         html: '<p>fresh</p>',
         css: '',
@@ -293,24 +293,24 @@ describe('mount()', () => {
 
   it('mount via name string resolves through the injected loader', async () => {
     // The runtime is host-agnostic: mounting by name delegates payload
-    // resolution to `opts.loader.fetchView`. The `/_deck/...` URL scheme lives
+    // resolution to `opts.loader.fetchRoute`. The `/_deck/...` URL scheme lives
     // in the host's loader (shell / deck view-host), not in mount().
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'demo-fetch',
       html: '<div>fetched</div>',
       css: '',
       scope: {},
       moduleUrl: '/x',
     }
-    const fetchView = vi.fn(async (nameOrPath: string) => {
+    const fetchRoute = vi.fn(async (nameOrPath: string) => {
       expect(nameOrPath).toBe('demo-fetch')
       return payload
     })
     const handle = await mount(target, 'demo-fetch', {
       module: emptyModule(),
-      loader: { fetchView, loadComponent: async () => {} },
+      loader: { fetchRoute, loadComponent: async () => {} },
     })
-    expect(fetchView).toHaveBeenCalledWith('demo-fetch')
+    expect(fetchRoute).toHaveBeenCalledWith('demo-fetch')
     expect(target.querySelector('div')?.textContent).toBe('fetched')
     handle.dispose()
   })
@@ -323,12 +323,12 @@ describe('mount()', () => {
 
   it('throws if target is missing', async () => {
     await expect(
-      mount(null as unknown as HTMLElement, {} as ViewPayload, { module: emptyModule() }),
+      mount(null as unknown as HTMLElement, {} as RoutePayload, { module: emptyModule() }),
     ).rejects.toThrow(/target is required/)
   })
 
   it('throws if module has no default.setup', async () => {
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'broken',
       html: '<div></div>',
       css: '',
@@ -356,7 +356,7 @@ describe('signal sanity in test harness', () => {
 //
 // Mount creates a FakeEventSource (via the global stub above), registers
 // patch-signals handlers on it, and patches the live signal when a frame
-// arrives. We intercept the constructed instance, mount a view that has a
+// arrives. We intercept the constructed instance, mount a route that has a
 // live scope key + __subscribe__, then emit SSE frames and verify the
 // LiveSignal walks loading → ok → ok (second value).
 
@@ -386,7 +386,7 @@ describe('openLiveChannel (via mount)', () => {
 
   it('patch-signals frame transitions LiveSignal loading → ok, second frame advances value', async () => {
     // Payload: one live key + __subscribe__ triggers openLiveChannel.
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'live-test',
       html: '<div></div>',
       css: '',
@@ -428,7 +428,7 @@ describe('openLiveChannel (via mount)', () => {
   })
 
   it('ignores patch-signals frames for keys not in liveKeys', async () => {
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'live-test-filter',
       html: '<div></div>',
       css: '',
@@ -458,7 +458,7 @@ describe('openLiveChannel (via mount)', () => {
 // `ctx.clients.X` and is spread into scope as bare `X`. The NAMES come from
 // the app manifest (there is no `<client>` declaration — see
 // `src/clients.ts`); the host supplies the VALUES here. `ship` is just a
-// key — aliased both ways with the legacy `opts.ship` so hosts and views
+// key — aliased both ways with the legacy `opts.ship` so hosts and routes
 // on either side of the migration interoperate.
 describe('mount() keyed clients', () => {
   let target: HTMLElement
@@ -469,7 +469,7 @@ describe('mount() keyed clients', () => {
     document.body.appendChild(target)
   })
 
-  const payload = (): ViewPayload => ({
+  const payload = (): RoutePayload => ({
     name: 'clients-demo',
     html: '<div></div>',
     css: '',
@@ -535,7 +535,7 @@ describe('mount() keyed clients', () => {
     handle.dispose()
   })
 
-  it('opts.ship is aliased into clients.ship (legacy host, new view)', async () => {
+  it('opts.ship is aliased into clients.ship (legacy host, new route)', async () => {
     const ship = { id: 'sdk' }
     let captured: Ctx = {}
     const handle = await mount(target, payload(), {
@@ -554,7 +554,7 @@ describe('mount() keyed clients', () => {
     handle.dispose()
   })
 
-  it('clients.ship feeds the legacy ctx.ship alias (new host, old view)', async () => {
+  it('clients.ship feeds the legacy ctx.ship alias (new host, old route)', async () => {
     const ship = { id: 'sdk' }
     let captured: Ctx = {}
     const handle = await mount(target, payload(), {

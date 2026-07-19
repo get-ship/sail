@@ -262,13 +262,13 @@ There is no separate `variants:` block. One declaration surface: `props`.
 `motion:<trigger>={{ <property>: '<preset>' }}`. There is exactly one animation
 directive; `transition:` / `in:` / `out:` are retired.
 
-TRIGGERS (hover, press, focus, focus-visible, enter, exit, view, scroll, loop) come in three kinds:
+TRIGGERS (hover, press, focus, focus-visible, enter, exit, reveal, scroll, loop) come in three kinds:
 
 - INTERACTION — `hover` `press` `focus` `focus-visible`: rest <-> active, driven by events.
 - LIFECYCLE — `enter` `exit`: the element joining or leaving the DOM. `exit` is the one
   thing CSS cannot do alone (the framework holds the element in the tree until it finishes).
-- TIMELINE — `view` `scroll`: PROGRESS-driven, not time-driven. Reveal-on-scroll and
-  parallax, at zero JS runtime cost. `view` = this element's passage through the viewport;
+- TIMELINE — `reveal` `scroll`: PROGRESS-driven, not time-driven. Reveal-on-scroll and
+  parallax, at zero JS runtime cost. `reveal` = this element's passage through the viewport;
   `scroll` = the scroll container's total progress.
 
 PROPERTIES: scale, scale-x, scale-y, opacity, translate-y, translate-x, rotate. Plus the reserved key `stagger` — a DURATION (`'40ms'`), not a preset:
@@ -276,7 +276,7 @@ it is the delay STEP between siblings arriving together, which is what turns a l
 that appears into a list that arrives.
 
 ```
-<card motion:view={{ opacity: 'fade', translate-y: 'spring:gentle' }}>reveal on scroll</card>
+<card motion:reveal={{ opacity: 'fade', translate-y: 'spring:gentle' }}>reveal on scroll</card>
 <row motion:enter={{ opacity: 'fade', stagger: '40ms' }}>cascades in</row>
 <button motion:press={{ scale: 'press' }}>tactile</button>
 ```
@@ -310,12 +310,70 @@ ONE RULE: **quoted is a literal, unquoted is code.**
                      duration: 3600, easing: [0.6, 0, 0.2, 1] }}>the whole hero, inline</card>
 ```
 
-TWO LANES, one story. `motion:` is reactive CONFIG — a signal says what the
-animation IS, and changing it makes a new animation (WAAPI, compositor-driven;
-use it for ambient loops and lifecycle). A signal driving a CONTINUOUS per-frame
-value is the other lane: derive it in the `<controller>` and reflect it through
-sx with `(--name)`. Do not scrub a value frame-by-frame through `motion:` — each
-change there costs an animation teardown.
+## Motion — the second lane: `timeline()`
+
+`motion:` above is FIRE-AND-FORGET: you name a preset, the browser owns the
+clock, the compositor runs it. Reach for `timeline()` when something ELSE owns
+the clock — a scrub, a scroll position, a sequence that must land on exact
+offsets and HOLD there.
+
+| you want | lane |
+| --- | --- |
+| hover/press feedback, enter/exit, reveal-on-scroll, an ambient loop | `motion:` |
+| a slider scrubbing an animation | `timeline()` |
+| many elements choreographed against ONE progress value | `timeline()` |
+| keyframes with holds, or per-segment easing | `timeline()` |
+
+`motion:` is cheaper (compositor, off the main thread) — prefer it whenever it
+can express the motion. `timeline()` writes custom properties from JS every
+frame; that is fine at real page scale (60 elements x 3 channels holds 60fps)
+but it is main-thread work `motion:` does not do.
+
+KEYFRAMES ARE DATA. `timeline(progress, tracks)` takes a progress reader (0..1)
+and returns ONE SIGNAL PER TRACK. Destructure them into the returned scope and
+each becomes a `(--name)` an sx read can use — the same reflection a plain
+`signal(...)` gets. Never hand-roll offset arithmetic in an effect.
+
+- a stop is `[offset, value]`; offsets are 0..1 and must ASCEND.
+- a HOLD is the same VALUE repeated at a later offset. (Repeating an OFFSET is
+  an error.)
+- `[offset, value, { easing: [0.6, 0, 0.2, 1] }]` eases the segment that
+  STARTS at that stop — WAAPI's rule, so captured `cubic-bezier(...)` values
+  transfer verbatim. `{ easing }` on the whole timeline sets the default.
+- a track is all numbers OR all strings sharing ONE unit. Mixed units throw.
+- progress outside the first/last offset CLAMPS.
+
+```
+<controller>
+import { controller, timeline, clock } from '@ship/sail-runtime'
+export default controller(() => {
+  const p = clock(3600, { loop: true })
+  const { tileX, tileScale } = timeline(p, {
+    tileX: [[0, '0px'], [0.12, '0px'], [0.34, '120px'], [0.44, '120px'], [1, '0px']],
+    tileScale: [[0.44, 1], [0.54, 1.75], [0.64, 1]],
+  }, { easing: [0.6, 0, 0.2, 1] })
+  return { p, tileX, tileScale }
+})
+</controller>
+<card sx="translate-x-(--tile-x) scale-(--tile-scale)">choreographed</card>
+```
+
+DRIVERS — each returns a plain signal, so they are interchangeable with a
+hand-written `signal(0)` a range input writes:
+
+- `clock(ms, { loop?, direction?, autoplay?, reducedMotion? })` — wall-clock
+  progress, plus `.play()` / `.pause()` / `.stop()` / `.running()`.
+- `scrollProgress(target?)` — document scroll, or an element's travel through
+  the viewport (0 as it enters, 1 as it leaves).
+- `springValue(source, opts)` — real physics chasing another signal;
+  retargets mid-flight without losing velocity. Its output is a VALUE, not
+  necessarily 0..1 — reflect it directly (`translate-y-(--ball-y)`).
+
+Every driver stops itself when the scope disposes. Reduced motion is handled
+once, in the driver: `clock` jumps to the END and never schedules a frame
+(override with `reducedMotion: 'start' | 'play'`), `springValue` mirrors its
+source instantly, and `scrollProgress` deliberately does NOT suppress — it
+reports what the user is already doing.
 
 ## Behavior — `use:` attaches, functions compose
 
@@ -474,7 +532,7 @@ this file is out of date.
 
 - `<tabs>` — L1 tab strip (element mode). Compose a <tab-list> of <tab>s with (props: `active`, `variant`, `size`, `tone`, `orientation`, `sticky`)
 
-- `<theme-picker>` — the theme switcher: a trigger that opens a panel of theme (props: `value`)
+- `<theme-picker>` — the theme switcher: a trigger that opens a panel of theme (props: `value`, `inline`)
 
 - `<ticker>` — L1 stdlib element (element mode). An infinite, linear marquee: (props: `duration`, `reverse`)
 

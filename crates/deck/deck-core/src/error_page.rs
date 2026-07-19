@@ -1,11 +1,11 @@
-//! Human-facing error pages for the view host.
+//! Human-facing error pages for the route host.
 //!
-//! The browser-facing view route (`/_deck/view/<name>`) serves an HTML shell.
-//! When the requested view can't be resolved, the daemon must return a
+//! The browser-facing route shell (`/_deck/view/<name>`) serves an HTML page.
+//! When the requested route can't be resolved, the daemon must return a
 //! *rendered* page — not the raw `{"error":{"route_not_found":…}}` JSON that
 //! the programmatic `/_deck/views/<name>` payload endpoint emits for API
 //! callers. This module owns that page: it fills the baked
-//! `view-not-found.html` shell with the requested name and the views the
+//! `view-not-found.html` shell with the requested name and the routes the
 //! daemon can actually serve, then returns a `404 text/html` `DeckResponse`.
 //!
 //! Styling rides the daemon-served design tokens (`/api/assets/view-tokens.css`,
@@ -22,7 +22,7 @@ const ROUTES_PLACEHOLDER: &str = "<!-- SAIL_NF_ROUTES -->";
 
 /// Render the `404 view-not-found` HTML page for `name`.
 ///
-/// `text/html`, status 404, never cached. The available-view list is a
+/// `text/html`, status 404, never cached. The available-route list is a
 /// best-effort scan of the mount's project `root` (`list_route_names`) — empty
 /// when the caller has no root (`None`), in which case the routes block is
 /// omitted gracefully rather than rendering an empty list.
@@ -41,7 +41,7 @@ pub fn route_not_found(mode: DaemonMode, name: &str, root: Option<&std::path::Pa
     )
 }
 
-/// Build the "available views" block: a labelled list of links to
+/// Build the "available routes" block: a labelled list of links to
 /// `/_deck/view/<name>`. Empty input yields an empty string so the shell shows
 /// no stray "available routes" heading over a blank list.
 fn routes_block(routes: &[String]) -> String {

@@ -13,9 +13,9 @@ pub use deck_axum::{
     serve_sui_dom, serve_sui_icon, serve_sui_live_reload,
     serve_sui_runtime, serve_sui_sdk_client,
 };
-// The named-view handlers + router moved to the `ship-views` crate
-// (deck ⊥ ship-views). A host serves views by merging `ship_views::router()`;
-// the facade no longer re-exports the view handlers (it cannot depend on
+// The named-route handlers + router moved to the `ship-views` crate
+// (deck ⊥ ship-views). A host serves routes by merging `ship_views::router()`;
+// the facade no longer re-exports the route handlers (it cannot depend on
 // ship-views).
 pub use deck_config::{AppServeConfig, RenderMode};
 pub use deck_core::AppRegistry;
@@ -47,7 +47,7 @@ pub use deck_core::live_wire;
 // `render_helpers` lives in deck-axum (its `not_found` returns an axum
 // response); `resolver` is pure and lives in deck-core. `route_payload` (the
 // `RoutePayload` wire DTO) is a shared low-level type that lives in deck-host —
-// it stayed put when the view SERVING moved to ship-views, so the facade still
+// it stayed put when the route SERVING moved to ship-views, so the facade still
 // surfaces `deck::route_payload::RoutePayload` from deck-host (no ship-views dep).
 pub use deck_axum::render_helpers;
 pub use deck_core::resolver;
@@ -57,6 +57,6 @@ pub use deck_host::route_payload;
 // `ship_platform::bundler::*` now use `deck::bundler::*`.
 pub use deck_bundler as bundler;
 
-// deck.jsonc config — the OPTIONAL host override for view-discovery + watch
+// deck.jsonc config — the OPTIONAL host override for route-discovery + watch
 // layout. Consumer bundles are self-declared per-package + discovered.
 pub use deck_config as config;

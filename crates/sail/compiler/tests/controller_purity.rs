@@ -5,7 +5,7 @@
 use std::fs;
 use sail_compiler::{compile, CompileMode, CompileOpts};
 
-fn view_opts(source_path: Option<std::path::PathBuf>) -> CompileOpts {
+fn route_opts(source_path: Option<std::path::PathBuf>) -> CompileOpts {
     CompileOpts {
         route_params: None,
         setup_url: Some("./view.controller.ts".into()),
@@ -40,7 +40,7 @@ export default controller((ctx, host) => {
 <div></div>"#;
     fs::write(&sui_path, src).unwrap();
 
-    let err = compile(src, view_opts(Some(sui_path)))
+    let err = compile(src, route_opts(Some(sui_path)))
         .expect_err("a controller writing .innerHTML must fail the compile");
     assert_eq!(
         err.category.as_deref(),
@@ -73,7 +73,7 @@ export default controller((ctx, host) => {
 <div></div>"#;
     fs::write(&sui_path, src).unwrap();
 
-    compile(src, view_opts(Some(sui_path))).expect("a clean inline controller compiles");
+    compile(src, route_opts(Some(sui_path))).expect("a clean inline controller compiles");
 }
 
 /// The one spelling: a sibling `<stem>.controller.ts` is a compile error, not a
@@ -90,7 +90,7 @@ fn paired_controller_file_is_rejected() {
     let src = r#"<div></div>"#;
     fs::write(&sui_path, src).unwrap();
 
-    let err = compile(src, view_opts(Some(sui_path))).unwrap_err();
+    let err = compile(src, route_opts(Some(sui_path))).unwrap_err();
     assert_eq!(err.category.as_deref(), Some("sail-paired-controller"), "{err:?}");
 }
 
@@ -101,6 +101,6 @@ fn no_controller_paired_skips_rule() {
     let sui_path = dir.path().join("view.sail");
     fs::write(&sui_path, r#"<div></div>"#).unwrap();
 
-    compile(r#"<div></div>"#, view_opts(Some(sui_path)))
+    compile(r#"<div></div>"#, route_opts(Some(sui_path)))
         .expect("no controller — rule must be skipped");
 }

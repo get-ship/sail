@@ -122,7 +122,7 @@ export function onPopState(): void {
 
 /**
  * Call AFTER the route has re-rendered (right after `__shipSetRouteUpdate`).
- * Applies the pending scroll on the next frame, once the new view's DOM is in
+ * Applies the pending scroll on the next frame, once the new route's DOM is in
  * place. No pending intent → no-op.
  */
 export function applyScroll(): void {
@@ -137,7 +137,7 @@ export function applyScroll(): void {
     const pos = positions.get(intent.key)
     window.scrollTo(pos?.x ?? 0, pos?.y ?? 0)
   }
-  // Restore after paint so the destination view's height exists; fall back to
+  // Restore after paint so the destination route's height exists; fall back to
   // a synchronous apply when rAF is unavailable (jsdom without a shim).
   if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run)
   else run()

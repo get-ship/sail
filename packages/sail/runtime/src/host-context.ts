@@ -2,7 +2,7 @@
 //
 // Some runtime helpers need ambient host facts — which project is active,
 // the per-tab session id — to scope their behavior (edit-mode keys,
-// view-authoring sessions). Historically the host stashed these on
+// route-authoring sessions). Historically the host stashed these on
 // `window.__shipProjectId` / `__shipSessionId` and the runtime fished them
 // off `window`. That's the same leak the router had: host state on a global
 // instead of a declared seam (and in practice nothing primed them, so the
@@ -19,9 +19,9 @@
 export interface HostContext {
   /** Active project/workspace id. Scopes per-project runtime state. */
   spaceId?: string
-  /** Per-tab session id, shared with the view-authoring handshake. */
+  /** Per-tab session id, shared with the route-authoring handshake. */
   sessionId?: string
-  /** Edit-mode lifecycle transport. The host wires this to its view
+  /** Edit-mode lifecycle transport. The host wires this to its route
    *  service enter/exit RPC; the runtime calls it on toggle and names no
    *  daemon URL. Omitted ⇒ the lifecycle notify is a no-op (the local
    *  toggle still works). */

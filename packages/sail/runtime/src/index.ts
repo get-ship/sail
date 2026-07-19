@@ -81,7 +81,7 @@ export {
 } from './effect-scope'
 export type { EffectScope, ContextKey } from './effect-scope'
 // Ambient controller/component lifecycle `mount(fn)` — aliased on export
-// because `mount` (below) is already the host-facing "mount a view into
+// because `mount` (below) is already the host-facing "mount a route into
 // the DOM" entry point (F1). The compiler's ambient-injection table maps
 // the authored bare identifier `mount` to this export under that alias
 // (`crates/sail/compiler/src/runtime_ambient.rs`), so a controller body
@@ -395,8 +395,8 @@ export {
 export type { KbdShortcut } from './template-hooks/kbd'
 // Built-in hook factories are loaded on demand via the
 // `@ship/sail-runtime/template-hooks` subpath: the SAIL compiler emits a
-// side-effect import of that subpath into compiled views that contain
-// `<use-*>` elements, so hook code only ships with views that use it.
+// side-effect import of that subpath into compiled routes that contain
+// `<use-*>` elements, so hook code only ships with routes that use it.
 // Register <sail-if>, <sail-for>, <sail-match> custom elements.
 import './boundary-elements'
 
@@ -445,19 +445,19 @@ export type { ClockOptions, ClockSignal, ScrollProgressOptions, SpringOptions } 
 // or the bundled runtime lacks the export the emit imports.
 export { adoptSuiSheets } from './styles/index'
 // F1 mount unification — hosts call mount(target, payload, opts) to put
-// a view on screen. See .artifacts/design-f1-mount-unification.md.
+// a route on screen. See .artifacts/design-f1-mount-unification.md.
 export { mount } from './mount'
-export type { ViewPayload, MountOptions, MountHandle, SuiLoader } from './mount'
+export type { RoutePayload, MountOptions, MountHandle, SuiLoader } from './mount'
 
 // SAIL-local structural route type. Canonical home is the runtime (see
-// route-signals.ts) — views read `scope.route.params.<name>()` against this
+// route-signals.ts) — routes read `scope.route.params.<name>()` against this
 // shape, and the deck router's `route()` factory returns a structurally
 // compatible value. Exported so consumers (and the dom test harness) can
 // name `RouteSignals` without importing `@ship/deck-router` (keeps sail ⊥ deck).
 export type { RouteSignals } from './route-signals'
 
 // Re-export the route factory (the passive RouteSignals reader) for the SAME
-// reason as the patch surface below: a compiled view imports `route` from
+// reason as the patch surface below: a compiled route imports `route` from
 // `@ship/sail-runtime/route`, and the deck importmap points that subpath at the
 // single `runtime.js` bundle — so the symbol must be reachable from THIS entry
 // or production resolves it to a bundle that doesn't export it. (Policy —
@@ -466,11 +466,11 @@ export type { RouteSignals } from './route-signals'
 export { route, routeWithUpdate } from './route'
 export type { RouteHandle } from './route'
 
-// Per-view edit-mode UI state. Used by the dev panel to gate
-// view-authoring tabs and annotation rendering. See edit-mode.ts.
+// Per-route edit-mode UI state. Used by the dev panel to gate
+// route-authoring tabs and annotation rendering. See edit-mode.ts.
 export {
-  editModeForView, toggleEditMode, setEditMode,
-  annotationModeForView, toggleAnnotationMode, setAnnotationMode,
+  editModeForRoute, toggleEditMode, setEditMode,
+  annotationModeForRoute, toggleAnnotationMode, setAnnotationMode,
 } from './edit-mode'
 
 // Re-export the patch applicator for the same reason as the route
@@ -484,14 +484,14 @@ export type { Patch, PatchOp, PathToken } from './patch'
 // hand-maintained mirror of the Rust wire types in this repo (no `gen-types`
 // task exists; `./generated.ts` is gitignored). Keep `.d.ts` in sync when
 // the Rust wire types grow a new field the runtime depends on — the
-// typecheck script will catch drift. View-system contract types only — Ship
+// typecheck script will catch drift. Route-system contract types only — Ship
 // daemon-domain data (git/agents/account) lives in @ship/sdk-client, never
 // the framework.
 export type {
   ManifestRail,
   RailMeta,
   ResolveError,
-  ResolvedView,
-  ViewListEntry,
-  ViewManifest,
+  ResolvedRoute,
+  RouteListEntry,
+  RouteManifest,
 } from './generated'

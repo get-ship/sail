@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { signal, derived, effect, batch } from '../src/signal'
 import { mount, hostContext } from '../src/index'
-import type { ViewPayload } from '../src/index'
+import type { RoutePayload } from '../src/index'
 
 // JSDOM has no EventSource; mount() can reference it on the live path. A no-live
 // payload never uses it — stub minimally so construction is never the failure.
@@ -106,10 +106,10 @@ describe('runtime/4 — host-agnostic mount', () => {
     expect(() => hostContext()).not.toThrow()
   })
 
-  it('mounts and renders a view with no ship/route/navigate supplied', async () => {
+  it('mounts and renders a route with no ship/route/navigate supplied', async () => {
     const target = document.createElement('div')
     document.body.appendChild(target)
-    const payload: ViewPayload = {
+    const payload: RoutePayload = {
       name: 'host-free',
       html: '<p>hello</p>',
       css: '',

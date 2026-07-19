@@ -214,7 +214,7 @@ impl TemplateEmitter {
                         n = js_string(&emit_name)
                     ));
                 }
-                if self.is_view && self.boundary_depth == 0 {
+                if self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_markers = true;
                     self.hydrate_calls.line(&format!(
                         "if (__m[{k}]) __cleanups.push(hydrateAttr(__m[{k}], {n}, () => ({rw})));",
@@ -226,7 +226,7 @@ impl TemplateEmitter {
             AttrInstr::DynamicAttr { name_expr, expr, .. } => {
                 let key = self.next_key();
                 self.emit_dynamic_attr(w, name_expr, expr, el_var, cleanups_var);
-                if self.is_view && self.boundary_depth == 0 {
+                if self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_markers = true;
                     self.emit_dynamic_attr_hydrate(&key, name_expr, expr);
                 }
@@ -237,7 +237,7 @@ impl TemplateEmitter {
                 w.line(&format!(
                     "{cleanups_var}.push(bindValue({el_var}, ({rw})));"
                 ));
-                if self.is_view && self.boundary_depth == 0 {
+                if self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_markers = true;
                     self.hydrate_calls.line(&format!(
                         "if (__m[{k}]) __cleanups.push(hydrateBindValue(__m[{k}], ({rw})));",
@@ -251,7 +251,7 @@ impl TemplateEmitter {
                 w.line(&format!(
                     "{cleanups_var}.push(bindChecked({el_var}, ({rw})));"
                 ));
-                if self.is_view && self.boundary_depth == 0 {
+                if self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_markers = true;
                     self.hydrate_calls.line(&format!(
                         "if (__m[{k}]) __cleanups.push(hydrateBindChecked(__m[{k}], ({rw})));",
@@ -268,7 +268,7 @@ impl TemplateEmitter {
                 // element. Same shape as React's `ref.current`, but
                 // signal-typed.
                 w.line(&format!("attachRef($scope, {v}, {el_var});", v = js_string(var)));
-                if self.is_view && self.boundary_depth == 0 {
+                if self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_markers = true;
                     self.hydrate_calls.line(&format!(
                         "if (__m[{k}]) __cleanups.push(hydrateRef(__m[{k}], $scope, {v}));",
@@ -312,12 +312,12 @@ impl TemplateEmitter {
                         ev = js_string(event)
                     ));
                 }
-                // Phase 3b.4: at depth 0 in views, also emit a direct
+                // Phase 3b.4: at depth 0 in routes, also emit a direct
                 // hydrate call so SSR'd `on:{event}="bN"` markers wire
                 // up without going through the runtime walker /
                 // `bindings` manifest. The matching `on:*` manifest
                 // entry is suppressed in `js.rs::emit_bindings`.
-                if self.is_view && self.boundary_depth == 0 {
+                if self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_markers = true;
                     self.hydrate_calls.line(&format!(
                         "if (__m[{k}]) __cleanups.push(hydrateOn(__m[{k}], {ev}, (function () {{ const __h = ({rw}); return (typeof __h === \"function\") ? __h.bind(undefined) : (() => {{}}); }})(), {mods_js}));",
@@ -347,7 +347,7 @@ impl TemplateEmitter {
                         n = js_string(name)
                     ));
                 }
-                if self.is_view && self.boundary_depth == 0 {
+                if self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_markers = true;
                     self.hydrate_calls.line(&format!(
                         "if (__m[{k}]) __cleanups.push(hydrateClass(__m[{k}], {n}, () => ({rw})));",
@@ -384,7 +384,7 @@ impl TemplateEmitter {
                         n = js_string(&prop_key)
                     ));
                 }
-                if self.is_view && self.boundary_depth == 0 {
+                if self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_markers = true;
                     self.hydrate_calls.line(&format!(
                         "if (__m[{k}]) __cleanups.push(hydrateProp(__m[{k}], {n}, () => ({rw})));",
@@ -399,7 +399,7 @@ impl TemplateEmitter {
                 w.line(&format!(
                     "{cleanups_var}.push(wireFormMutation({el_var}, {chain}, $scope));"
                 ));
-                if self.is_view && self.boundary_depth == 0 {
+                if self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_markers = true;
                     self.hydrate_calls.line(&format!(
                         "if (__m[{k}]) __cleanups.push(wireFormMutation(__m[{k}], {chain}, $scope));",

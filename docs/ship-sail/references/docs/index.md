@@ -1,5 +1,5 @@
 ---
-group: Views
+group: Routes
 order: 1
 title: Architecture
 description: The three-role split, MVVM mapping, and the discipline that holds the framework's shape together. Read this before any other doc in this skill.
@@ -34,9 +34,9 @@ Two things this mapping makes explicit:
 1. The framework does not own the model. `shipd` is its own process; the SDK is the seam. `query()` subscriptions are *bridges*, not models.
 2. Templates carry wiring. `<use-*>`, `on:click`, `bind:value` are all view-side concerns even though they're declarative. Authors who treat `.sail` as pure markup will write controllers that try to take over wiring and end up in mud.
 
-## The shared view scope
+## The shared route scope
 
-Each view has a single scope. Both the template and the controller contribute identifiers to it; both can read from it.
+Each route has a single scope. Both the template and the controller contribute identifiers to it; both can read from it.
 
 **Scope contributors**:
 
@@ -51,7 +51,7 @@ Each view has a single scope. Both the template and the controller contribute id
 
 The runtime calls the controller's setup function once, with `ctx` as its first argument and the host element as an optional second argument. Whatever it returns is merged into scope.
 
-The mental model is **"this view has a scope; everything in this view contributes to it."** No imports between template and controller. No sharing rule beyond the scope. If you can see an identifier in the scope, you can read it. Mutation is always a direct `signal.set(...)` call — there is no read-only-vs-writable proxy split between contexts; a signal returned from the controller is the same signal everywhere.
+The mental model is **"this route has a scope; everything in this route contributes to it."** No imports between template and controller. No sharing rule beyond the scope. If you can see an identifier in the scope, you can read it. Mutation is always a direct `signal.set(...)` call — there is no read-only-vs-writable proxy split between contexts; a signal returned from the controller is the same signal everywhere.
 
 ## The discipline
 
@@ -77,7 +77,7 @@ Six edges SAIL has over comparable frameworks:
 2. **Single binary, no asset pipeline.** AOT compiler is invisible; `shipd` serves rendered HTML directly.
 3. **Typed end-to-end.** Rust schema → TS types → template references → controller signatures. Same identity all the way through the stack.
 4. **Agent-first ergonomics.** The framework is designed to be writable by an LLM. Buckets, naming, and rails exist partly so the eval rig has something to grade against.
-5. **MCP-native.** Controllers can be exposed as MCP tools. A view becomes both a UI surface and an agent-callable surface.
+5. **MCP-native.** Controllers can be exposed as MCP tools. A route becomes both a UI surface and an agent-callable surface.
 6. **Mesh / multi-daemon.** When ship daemons mesh, controllers can subscribe to live signals from another daemon. Distribution is a framework primitive.
 
 ## See also
@@ -89,7 +89,7 @@ Six edges SAIL has over comparable frameworks:
 - **[Data subscriptions](./data-subscriptions/)** — the canonical bridge to the daemon.
 - **[Effect scopes](./effect-scope/)** — cleanup ownership on unmount.
 - **[SSR and the attach runtime](./ssr-hydration/)** — server-rendered HTML, client attach.
-- **[Canonical examples](./examples/)** — three view shapes that anchor the discipline.
+- **[Canonical examples](./examples/)** — three route shapes that anchor the discipline.
 - **[Agent surfaces](./agent-surfaces/)** — every MCP tool, LSP CLI subcommand, `@ship/sail-eval` entrypoint, and `ship://` resource an authoring agent uses.
 - **[E2E test suite](./e2e-testing/)** — Playwright coverage and interpretation.
 - **[Implementation status](./status/)** — what's stable, what's in flight.

@@ -187,8 +187,8 @@ mod tests {
     #[test]
     fn handles_multiple_forms() {
         let html = r#"<form mutation="b0"></form><form mutation="b2"></form>"#;
-        let out = inject_form_actions(html, "myview");
-        assert!(out.contains(r#"action="/_deck/mutation/myview?form=b0""#), "first form; got: {out}");
-        assert!(out.contains(r#"action="/_deck/mutation/myview?form=b2""#), "second form; got: {out}");
+        let out = inject_form_actions(html, "myroute");
+        assert!(out.contains(r#"action="/_deck/mutation/myroute?form=b0""#), "first form; got: {out}");
+        assert!(out.contains(r#"action="/_deck/mutation/myroute?form=b2""#), "second form; got: {out}");
     }
 }
