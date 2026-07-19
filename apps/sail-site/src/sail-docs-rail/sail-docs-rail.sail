@@ -33,6 +33,7 @@ export default controller(() => {
       <a href="/sail/language/motion" aria-current={path() === '/sail/language/motion' ? 'page' : null}>Motion</a>
       <a href="/sail/language/actions" aria-current={path() === '/sail/language/actions' ? 'page' : null}>Actions</a>
       <a href="/sail/language/data" aria-current={path() === '/sail/language/data' ? 'page' : null}>Data</a>
+      <a href="/sail/language/capabilities" aria-current={path() === '/sail/language/capabilities' ? 'page' : null}>Capabilities</a>
       <a href="/sail/language/theming" aria-current={path() === '/sail/language/theming' ? 'page' : null}>Theming</a>
 
       <label>Guide</label>

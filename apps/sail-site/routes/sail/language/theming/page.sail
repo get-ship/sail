@@ -122,7 +122,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
-    <a variant="default" href="/sail/language/data">← Data</a>
+    <a variant="default" href="/sail/language/capabilities">← Capabilities</a>
     <a variant="solid" tone="primary" href="/sail/reference">Reference →</a>
   </row>
 </column>
