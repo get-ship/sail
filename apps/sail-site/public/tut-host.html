@@ -122,8 +122,7 @@
         "@ship/sail-runtime/patch": "/_deck/runtime.js",
         "@ship/sail-runtime/internal": "/_deck/runtime.js",
         "@ship/sail-dom": "/_deck/dom.js",
-        "@ship/deck/router": "/_deck/route.js",
-        "@ship/sail-primitives": "/tut-sail-primitives.js"
+        "@ship/deck/router": "/_deck/route.js"
       }
     }
   </script>
@@ -133,11 +132,6 @@
     // (a separate document → its own registry) BEFORE we signal ready, so a
     // lesson that mounts e.g. <sail-card> finds it defined. Guarded: a missing or
     // broken bundle degrades to plain elements rather than breaking every lesson.
-    try {
-      await import('/tut-sail-primitives.js')
-    } catch (e) {
-      console.warn('[tutorial-host] primitives bundle failed to load:', e)
-    }
 
     // Mock-daemon service worker — intercepts /_deck/data/<source> SSE requests
     // and /_deck/api/<path> mutations, serving them from per-step scenarios.
@@ -224,7 +218,7 @@
         // The compiled template imports its setup from `./<tag>.controller.ts`.
         // Rewrite that import to a blob URL of the compiled controller, then
         // dynamic-import the template blob and mount a fresh <tag> instance.
-        const controllerBlob = makeBlobUrl(controller)
+        const controllerBlob = controller ? makeBlobUrl(controller) : makeBlobUrl('export default {}')
         const templateRewritten = template.replace(
           /from\s+["'][^"']*\.controller\.ts["']/,
           `from ${JSON.stringify(controllerBlob)}`,
