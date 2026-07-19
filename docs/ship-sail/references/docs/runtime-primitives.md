@@ -58,17 +58,26 @@ Runtime helpers behind these: `bindIf`, `bindFor`, `bindForSignal`, `bindWhileLo
 
 `{#for}` requires `key={EXPR}` — without a stable key the reconciler falls back to positional matching and DOM identity (focus, selection, in-progress edits) is lost on reorder. `sail-for-key` lint warns when missing.
 
-## `<data>` — fetch + subscribe
+## `query()` / `queryKeyed()` — fetch + subscribe
 
-```html
-<!-- one-shot fetch -->
-<data name="settings" source="ship.settings.state()" />
+```ts
+<controller>
+import { controller, query, queryKeyed } from '@ship/sail-runtime'
 
-<!-- live subscription via SSE -->
-<data name="agents" source="ship.agents.summaries()" live />
+export default controller(({ ship }) => ({
+  // one-shot fetch
+  settings: query(() => ship.settings.state()),
 
-<!-- reactive args — re-subscribes when selectedId changes -->
-<data name="agent" source="ship.agents.detail({id: $scope.selectedId()})" live />
+  // live subscription
+  agents: query(() => ship.agents.summaries()),
+
+  // reactive args — re-subscribes when selectedId changes
+  agent: queryKeyed(
+    () => ['ship', 'agents', 'detail', selectedId()],
+    () => ship.agents.detail({ id: selectedId() }),
+  ),
+}))
+</controller>
 ```
 
 The expression must resolve to a `LiveSource<T>` (anything with `.subscribe(sig)`) — every SDK method in `packages/sdk-client/src/index.ts` returns this shape,
@@ -85,9 +94,9 @@ unwrapOr(sig, fallback)  // T
 ## Live SSE — end-to-end loop
 
 ```
-.sail  <data live source="ship.git.overview()" live />
+.ts   query(() => ship.git.overview())   // in the controller — ship.git.overview() returns a LiveSource → query() routes to the push (subscribe) path
   ↓ sail-compiler
-.js   $scope.git = query(() => ship.git.overview())   // ship.git.overview() returns a LiveSource → query() routes to the push (subscribe) path
+.js   $scope.git = query(() => ship.git.overview())
   ↓ @ship/sdk-client createClient()
 HTTP  GET /_deck/data?expr=ship.git.overview()    [text/event-stream]
   ↓ apps/shipd/src/views/sui_data.rs
@@ -100,7 +109,7 @@ sig   LiveSignal<T> flips loading → ok → ok (per patch)
 DOM   morphs in place — no re-render of the surrounding view
 ```
 
-**Worked example.** `views/home/` ships the canonical demo: `<data live>` subscribes to `ship.git.overview()`; the daemon's git-signal singleton refreshes on `.ship/` filesystem events and on git ops, so staging a file flips the badge live.
+**Worked example.** `views/home/` ships the canonical demo: a live `query()` subscribes to `ship.git.overview()`; the daemon's git-signal singleton refreshes on `.ship/` filesystem events and on git ops, so staging a file flips the badge live.
 
 ```bash
 just dev-restart                                # rebuilds shipd + restarts the daemon
@@ -349,7 +358,7 @@ export default controller(({ route }) => {
 </controller>
 ```
 
-`route` is part of the ambient `ctx` every controller function receives. `route.params.<name>` and `route.query.<name>` are signals — call them (`route.params.id()`) to read and subscribe inside `effect`, `derived`, or a `<data>` source thunk. `popstate` and `navigate` both fire the global updater so every attached view re-evaluates. (`route` is also importable as a `route()` factory from `@ship/sail-runtime/route` for non-controller code; the namespace form `route.params.id()` is the controller exemplar — see `views/agents/[id]/page.sail`'s `<controller>` block.)
+`route` is part of the ambient `ctx` every controller function receives. `route.params.<name>` and `route.query.<name>` are signals — call them (`route.params.id()`) to read and subscribe inside `effect`, `derived`, or a `query()`/`queryKeyed()` thunk. `popstate` and `navigate` both fire the global updater so every attached view re-evaluates. (`route` is also importable as a `route()` factory from `@ship/sail-runtime/route` for non-controller code; the namespace form `route.params.id()` is the controller exemplar — see `views/agents/[id]/page.sail`'s `<controller>` block.)
 
 ## Mount API
 

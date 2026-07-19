@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 
 /// Format one `patch-signals` SSE frame for a named data source.
 ///
-/// `name` is the `<data name="...">` declaration's name; `value` is the
+/// `name` is the live query declaration's name; `value` is the
 /// `LiveState<T>` JSON value to apply (e.g. `{"kind":"ok","value":{...}}`).
 pub fn format_patch_signals(name: &str, value: &serde_json::Value) -> String {
     let payload = serde_json::json!({

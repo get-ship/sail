@@ -202,7 +202,7 @@ export async function mount<Scope = Record<string, unknown>>(
   // hook subscriptions allocated during setup register their
   // cleanup with this mount. The scope is disposed by `dispose()`
   // below — without it, EventSource subscriptions opened by
-  // `<data live>` views leaked across every navigation and tabs
+  // live-querying views leaked across every navigation and tabs
   // eventually OOM'd.
   const scope = createScope()
   const setupRet = withScope(scope, () =>
@@ -293,8 +293,8 @@ export async function mount<Scope = Record<string, unknown>>(
   // 9. Open live SSE channel if the payload declared one.
   //
   // SSE frames must patch the signals the *template* reads. The compiled
-  // view (see crates/sail/compiler/src/emit/js/setup.rs::emit_data_decls)
-  // emits `$scope.<name> = live(() => …)` for every `<data live>` and
+  // view seeds `$scope.<name>` envelope signals (the controller's
+  // `query()`/`queryKeyed()` entries) and
   // returns those signals flattened into `setupRet` via
   // `Object.assign({}, $scope, { __mount, hydrate })`. That `$scope.<name>`
   // is the signal `bindWhileLoading` / `bindIf` close over; the mount-built
@@ -358,7 +358,7 @@ export async function mount<Scope = Record<string, unknown>>(
         }
       }
       // Dispose the scope: closes any EventSource subscription opened
-      // by `<data live>` / `live()` during setup, plus any other
+      // by live query() sources during setup, plus any other
       // resource registered via `onCleanup`.
       scope.dispose()
       styleEl?.remove()
@@ -385,6 +385,7 @@ export async function mount<Scope = Record<string, unknown>>(
   }
   return handle
 }
+
 
 function hasHydratableMarkup(el: HTMLElement): boolean {
   if (el.children.length > 0) return true

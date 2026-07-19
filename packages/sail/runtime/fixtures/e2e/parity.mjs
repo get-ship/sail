@@ -37,7 +37,6 @@ function stripJinja(src) {
 
 function stripSui(src) {
   return src
-    .replace(/<data [^>]*\/?>/g, '')  // <data ...> directives
     .replace(/\{#[a-z][\w-]*[^}]*\}/g, '')  // {#if}, {#for}, {#while-*}
     .replace(/\{:[a-z][\w-]*[^}]*\}/g, '')  // {:else}, {:else if}
     .replace(/\{\/[a-z][\w-]*\}/g, '')  // {/if}, {/for}

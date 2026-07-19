@@ -7,7 +7,7 @@
 //                             `{#while-loading}` / `{#while-error}`
 //   • prefixed binding attrs `bind:` `on:` `class:` `attr:` `prop:`
 //                             `use:` `motion:`
-//   • directive elements     `<data>` `<scope>` (just HTML elements as
+//   • directive elements     `<scope>` (just an HTML element as
 //                             far as the grammar is concerned)
 //
 // Directive elements are *just* HTML elements as far as the grammar

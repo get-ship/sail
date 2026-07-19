@@ -1,5 +1,3 @@
-<data name="agents" source="ship.agents.summaries()" live />
-
 <section>
   {#while-loading of agents}
     <p data-test="loading">Loading agents...</p>

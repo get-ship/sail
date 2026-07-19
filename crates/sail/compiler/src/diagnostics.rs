@@ -49,7 +49,7 @@ pub struct CompileError {
     pub message: String,
     pub span: Option<Span>,
     pub source_path: Option<PathBuf>,
-    /// Optional category, e.g. `"<data>"` or the offending expression text.
+    /// Optional category, e.g. a check category or the offending expression text.
     pub category: Option<String>,
 }
 
@@ -120,7 +120,7 @@ pub struct Diagnostic {
     pub end_col: usize,
     pub severity: DiagSeverity,
     pub message: String,
-    /// Lint rule id (`sail-for-key`) or check category (`<data>`), when known.
+    /// Lint rule id (`sail-for-key`) or check category, when known.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rule: Option<String>,
 }

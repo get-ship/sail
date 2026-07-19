@@ -32,7 +32,7 @@ client.
 
 | Category | Examples | Where it goes |
 |---|---|---|
-| I/O & authority | `fetch` · `XHR` · `WebSocket` · `eval` · `Function` · `import()` · `localStorage` | a `<data>` subscription or a controller `query` call / event handler |
+| I/O & authority | `fetch` · `XHR` · `WebSocket` · `eval` · `Function` · `import()` · `localStorage` | a controller `query()`/`queryKeyed()` call or event handler |
 | Non-determinism | `Date.now()` · `Math.random()` · `new Date()` | seed with a signal in the controller, assigned inside `mount` — or derive from data |
 | Mutation of non-owned state | `arr.sort()` · `arr.reverse()` · `arr.splice()` | copy first: `[...arr].sort()`, inside a `derived` |
 
@@ -57,8 +57,8 @@ explicit, with instant author feedback — is the same contract stated positivel
 SAIL is the Svelte/Vue/Astro single-file-component lineage, **deliberately not
 JSX**. The split is by *kind of code*, not by *amount*:
 
-- **Template (`.sail`):** declarative directives — `<prop>` / `<data>` /
-  `<client>`, control flow `{#for}` / `{#if}` / `{#while-loading}` — plus pure
+- **Template (`.sail`):** declarative directives — `<prop>`,
+  control flow `{#for}` / `{#if}` / `{#while-loading}` — plus pure
   expressions.
 - **Controller (`.ts`):** full JavaScript — variable declarations, `signal` /
   `derived` / `query` / `effect`, and the auth-gated I/O.
@@ -92,13 +92,17 @@ in-place sort. Every one of these belongs in the controller:
 </ul>
 ```
 
-**After** — the data comes through a `<data>` subscription (the SDK is the auth
-gate), the `const` becomes a `derived`, the sort copies first, and the template
-holds only declarative directives and pure expressions:
+**After** — the data comes through a `query()` subscription in the
+controller (the SDK is the auth gate), the `const` becomes a `derived`, the
+sort copies first, and the template holds only declarative directives and
+pure expressions:
 
 ```html
 <!-- ✅ page.sail — declarative directives + pure expressions only -->
-<data name="users" source="ship.users.list()" live />
+<controller>
+import { controller, query } from '@ship/sail-runtime'
+export default controller(({ ship }) => ({ users: query(() => ship.users.list()) }))
+</controller>
 
 {#if users().kind === 'loading'}
   <p class="muted">loading…</p>

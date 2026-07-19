@@ -6,7 +6,7 @@
 // `ariaTable` accessible-data derivations — all as `Derived<…>`.
 //
 // PURE: imports `{ signal, derived, batch, isSignal }` from `@ship/sail-runtime`
-// ONLY. No DOM, no ship.*, no fetch, no <data>, no effect-into-signal — the
+// ONLY. No DOM, no ship.*, no fetch, no query(), no effect-into-signal — the
 // derivation is one-direction `derived`, the single fix for the per-controller
 // effect-into-signal anti-pattern.
 
@@ -48,7 +48,7 @@ function read<T>(v: Reactive<T> | undefined, fallback: T): T {
 
 export function createChartData(o: ChartDataOptions): ChartData {
   // `series` lifts to a signal; a raw array is wrapped, a live signal passes
-  // through so a consumer's `<data live>` drives the chain without a re-wrap.
+  // through so a consumer's live query() drives the chain without a re-wrap.
   const seriesSig: Signal<ChartSeries[]> = isSignal(o.series)
     ? (o.series as Signal<ChartSeries[]>)
     : signal(o.series as ChartSeries[])

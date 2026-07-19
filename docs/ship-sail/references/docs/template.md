@@ -43,38 +43,46 @@ mount(() => {
 })
 ```
 
-### `<data>` — daemon subscription
+### `query()` / `queryKeyed()` — daemon subscription
 
-```html
-<data name="agents" source="ship.agents.summaries()" live />
-<data name="settings" source="ship.settings.state()" />
+```ts
+<controller>
+import { controller, query, queryKeyed } from '@ship/sail-runtime'
 
-<!-- Reactive args via $scope: re-subscribes when selectedId changes.
-     `selectedId` is a signal returned by the controller function;
-     the template just declares the subscription. -->
-<data name="agent" source="ship.agents.detail({id: $scope.selectedId()})" live />
+export default controller(({ ship, route }) => ({
+  agents: query(() => ship.agents.summaries()),
+  settings: query(() => ship.settings.state()),
+
+  // Reactive args: re-subscribes when selectedId changes. `selectedId`
+  // is a signal returned elsewhere in the controller; the key fn and
+  // the thunk both read it, so a change re-derives both.
+  agent: queryKeyed(
+    () => ['ship', 'agents', 'detail', selectedId()],
+    () => ship.agents.detail({ id: selectedId() }),
+  ),
+}))
+</controller>
 ```
 
-Subscribes to a `ship.*` SDK call. With `live`, the runtime opens an SSE channel and patches the signal as the daemon emits updates. Without `live`, the value is read once at mount.
+Subscribes to a `ship.*` SDK call. When the client method returns a `LiveSource`, `query()` opens a subscription and patches the signal as the daemon emits updates (PUSH). When it returns a `Promise`, the value is read once at mount (PULL).
 
-The `source` expression is plain JS that runs inside `query()`'s tracked reactive scope (with `live`, the client method returns a `LiveSource` so `query()` subscribes; without it, the method returns a `Promise` and `query()` fetches once). It receives three arguments: `ship` (the SDK), `route` (a [`RouteSignals`](data-subscriptions.md#reactive-route-in-source-thunks) — `route.params.<name>` and `route.query.<name>` are themselves signals), and `$scope` (every identifier already in view scope — controller-scope signals, earlier `<data>` declarations). Reading a signal via `$scope.<key>()` or `route.params.<key>()` is tracked; when the signal changes, the prior subscription disposes and a new one opens with the updated args.
+The thunk is plain JS that runs inside `query()`'s tracked reactive scope. It closes over whatever's already in controller scope — `ship`/`route` from `ctx`, or signals declared earlier in the same controller. Reading a signal via `route.params.<key>()` or any other controller-owned signal is tracked; when it changes, the prior subscription disposes and a new one opens with the updated args.
 
-`<data>` is the **canonical** way to bring server data into a view. See [data-subscriptions.md](data-subscriptions.md).
+`query()`/`queryKeyed()` are the **canonical** way to bring server data into a view. See [data-subscriptions.md](data-subscriptions.md).
 
-### `<client>` — host-injected data client
+### Host-injected data clients
 
-```html
-<client name="ship" />
-<data name="overview" source="ship.git.overview()" live />
+```ts
+<controller>
+import { controller, query } from '@ship/sail-runtime'
 
-<!-- Any key works — the name is the view's alias into the host's
-     clients map, not a fixed vocabulary. A non-Ship host injects
-     whatever it has: -->
-<client name="api" />
-<data name="t" source="api.demo.clock()" live />
+export default controller(({ ship }) => ({
+  overview: query(() => ship.git.overview()),
+}))
+</controller>
 ```
 
-Declares a named data/ops client the view consumes. The host supplies a keyed map at mount (`mount(target, payload, { clients: { ship } })`) and the framework wires only what's declared: each declared name is destructured from `ctx.clients`, seeded into view scope, and legal as a `<data source>` / handler root. An undeclared root is a compile error (typo-safe); duplicate declarations, non-identifier names, and reserved context names (`route`, `navigate`, `ctx`, `scope`, `props`, `derived`) are rejected.
+The host supplies a keyed map at mount (`mount(target, payload, { clients: { ship } })`) and each declared name is destructured from `ctx.clients`, also spread into scope under its bare name so a query thunk written against `ship.git.overview()` resolves.
 
 The client's TYPE comes from declaration-merging the runtime's `Clients` interface — the provider augments its own key, the framework names no host shape:
 
@@ -85,9 +93,9 @@ declare module '@ship/sail-runtime' {
 }
 ```
 
-With the declaration in place, a `<data source>` that is a single call on a declared client types its signal from the client's method return (`Clients['ship']['git']['overview']`) in the generated `.sail.d.ts`.
+With the declaration in place, a `query()` call that is a single call on a declared client types its signal from the client's method return (`Clients['ship']['git']['overview']`).
 
-**Compatibility default:** a template that declares NO clients still receives the ambient `ship` (the grandfathered pre-directive behavior). New and migrated templates declare it explicitly — the `sail-client-directive` lint (Warn) flags `ship.*` usage without the declaration.
+Templates that consume no clients still receive the ambient `ship` (the grandfathered compatibility default) — a non-Ship host injects its own clients under its own names.
 
 ### `<prop>` — component prop declaration
 
@@ -99,7 +107,7 @@ With the declaration in place, a `<data source>` that is a single call on a decl
 <button disabled={disabled() || loading()}>{label()}</button>
 ```
 
-The file IS the component. `<prop>` appears at the top of a component `.sail` file alongside `<data>` — no wrapper element needed. Convention is the contract: directory name is the tag name. Views (top-level page surfaces) do not use `<prop>`.
+The file IS the component. `<prop>` appears at the top of a component `.sail` file — no wrapper element needed. Convention is the contract: directory name is the tag name. Views (top-level page surfaces) do not use `<prop>`.
 
 Prop kinds: `string` (default), `bool`, `number`, `values="a|b|c"` (union). `reflect` mirrors the prop to the host element's attributes.
 
@@ -139,7 +147,7 @@ Prop kinds: `string` (default), `bool`, `number`, `values="a|b|c"` (union). `ref
 {/if}
 ```
 
-The `mutation` attribute is a `ship.*` SDK chain. `<form mutation>` is the write-side complement to `<data>`. The compiler wires it at compile time: on submit, the form is serialized as `FormData` and the SDK chain is called. `$mutation` is injected into view scope as a `Signal<LiveState<unknown>>` — the same `{ kind: 'loading' | 'ok' | 'error' }` envelope as `<data live>`.
+The `mutation` attribute is a `ship.*` SDK chain. `<form mutation>` is the write-side complement to `query()`. The compiler wires it at compile time: on submit, the form is serialized as `FormData` and the SDK chain is called. `$mutation` is injected into view scope as a `Signal<LiveState<unknown>>` — the same `{ kind: 'loading' | 'ok' | 'error' }` envelope as a live query() signal.
 
 Progressive enhancement: when JS is absent the SSR walker injects `action="/_deck/mutation/{view}?form=bN"` and `method="post"` on the form. The daemon handles the POST and redirects back to `Referer`. See [data-subscriptions.md](data-subscriptions.md#mutations) for the full envelope shape and PE flow.
 
@@ -196,11 +204,9 @@ Mustache-style, directly in the template body:
 
 ### `{#while-loading}` / `{/while-loading}` and `{#while-error err}` / `{/while-error}`
 
-Convenience boundaries for `<data live>` envelopes. Renders the body only when the bound signal is in the matching `LiveState` kind, swaps automatically as the envelope flips. The error variant binds the error value to a local name preceding `of` (mirrors `{#for x of xs}`).
+Convenience boundaries for live `query()` envelopes. Renders the body only when the bound signal is in the matching `LiveState` kind, swaps automatically as the envelope flips. The error variant binds the error value to a local name preceding `of` (mirrors `{#for x of xs}`).
 
 ```html
-<data name="agents" source="ship.agents.summaries()" live />
-
 {#while-loading of agents}
   <p>Loading…</p>
 {/while-loading}
@@ -383,6 +389,6 @@ For clarity — these go in the controller, never the template:
 - Coordinated state (multiple signals that interact)
 - Derived values used in more than one place
 - Effects that do something other than render
-- Anything that calls `ship.*` outside a `<data>` declaration
+- Anything that calls `ship.*` outside a `query()`/`queryKeyed()` call
 
 If you find yourself wanting a multi-line script block in the template, you want a controller. Add a paired `.ts`.

@@ -16,7 +16,7 @@
 //      injected; the engine has no loading state).
 //
 // The KEY invariant under test: the PACK itself contains zero fetch/EventSource/
-// `ship.*`/`@ship/sdk-client`/`<data>` — the entire async round-trip lives in
+// `ship.*`/`@ship/sdk-client`/`query()` — the entire async round-trip lives in
 // the (mocked) consumer. `manualExpanding:true` (pre-flattened server rows) is
 // NOT exercised — that option is absent from the engine; if wanted it is a
 // flagged Table-engine feature request.
@@ -201,7 +201,7 @@ describe('<sail-tree> — lazy-children consumer seam (behavioral spec #9)', () 
 })
 
 // ── Boundary purity (behavioral spec #13 — TEST-asserted, NOT sail-lint) ───────
-describe('sail-tree pack — boundary purity (no fetch / SDK / ship.* / <data>)', () => {
+describe('sail-tree pack — boundary purity (no fetch / SDK / ship.* / query())', () => {
   const here = dirname(fileURLToPath(import.meta.url))
   const packDirs = [
     join(here, '../src/sail-tree'),
@@ -227,7 +227,7 @@ describe('sail-tree pack — boundary purity (no fetch / SDK / ship.* / <data>)'
     { name: 'EventSource', re: /\bEventSource\b/ },
     { name: 'ship.* call', re: /\bship\.\w+\.\w+\s*\(/ },
     { name: '@ship/sdk-client import', re: /@ship\/sdk-client/ },
-    { name: '<data> directive', re: /<data\b/ },
+    { name: 'query() call', re: /query\(/ },
   ]
 
   it('scans a non-empty set of pack source files', () => {

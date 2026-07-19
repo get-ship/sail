@@ -98,7 +98,7 @@ export type MutableState<Scope> =
   } & {
     // Every non-state scope key is readable as-is — a `derived` stays a
     // callable `ReadonlyView<T>` (read it by calling, `s.label()`), a
-    // `<data>` live-signal stays its live shape. The runtime proxy falls
+    // live envelope signal stays its live shape. The runtime proxy falls
     // through to the base scope for these. Readonly: handlers mutate only
     // state keys.
     readonly [K in Exclude<keyof Scope, StateKeys<Scope>>]: Scope[K]
@@ -143,7 +143,7 @@ export type ControllerScope<Scope = object> = Scope
 /**
  * The controller def: ONE setup function. It receives the view scope
  * (`clients`, `route`, `navigate`, plus template-declared
- * `<data>`/`<state>` signals) and, optionally, the host element; it
+ * live envelope signals) and, optionally, the host element; it
  * returns the surface the template merges into scope — signals,
  * `derived()` values, plain helpers, and event handlers alike, all as
  * ordinary object properties.

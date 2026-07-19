@@ -17,7 +17,7 @@ Every authoring decision lives in exactly one of three roles:
 |---|---|---|
 | **Template** | `page.sail` | Structure + declarative wiring |
 | **Controller** | inline `<controller>` block in `page.sail` (optional) | Behavior — state, derived, handlers, lifecycle |
-| **Data subscription** | `<data>` element in template | Bridge to the daemon's reactive surface |
+| **Data subscription** | `query()`/`queryKeyed()` in the controller | Bridge to the daemon's reactive surface |
 
 The three do not overlap. There is no fourth role, and there will not be a fourth role until a real edge case forces a deliberate widening of the framework. Adding a fourth role to accommodate a one-off case is the easiest way to lose the coherence the three-role split buys.
 
@@ -25,14 +25,14 @@ The three do not overlap. There is no fourth role, and there will not be a fourt
 
 | MVVM | SAIL | Notes |
 |---|---|---|
-| **Model** | The Ship daemon (`shipd`) | Out of band. Not a framework concept. The SDK on the other side of `<data>`. |
+| **Model** | The Ship daemon (`shipd`) | Out of band. Not a framework concept. The SDK on the other side of `query()`. |
 | **View** | The template (`.sail`) | Markup + declarative wiring. Per Vue/Svelte usage, "template" is more honest than "view" because it carries wiring, not pure structure — but it occupies the V slot. |
 | **ViewModel** | The controller (inline `<controller>` block) | State, derived, handlers, lifecycle. The classic VM definition. |
 
 Two things this mapping makes explicit:
 
-1. The framework does not own the model. `shipd` is its own process; the SDK is the seam. `<data>` declarations are *bridges*, not models.
-2. Templates carry wiring. `<data>`, `<use-*>`, `on:click`, `bind:value` are all view-side concerns even though they're declarative. Authors who treat `.sail` as pure markup will write controllers that try to take over wiring and end up in mud.
+1. The framework does not own the model. `shipd` is its own process; the SDK is the seam. `query()` subscriptions are *bridges*, not models.
+2. Templates carry wiring. `<use-*>`, `on:click`, `bind:value` are all view-side concerns even though they're declarative. Authors who treat `.sail` as pure markup will write controllers that try to take over wiring and end up in mud.
 
 ## The shared view scope
 
@@ -40,7 +40,7 @@ Each view has a single scope. Both the template and the controller contribute id
 
 **Scope contributors**:
 
-- Template `<data name="agents" src="..." live />` → `agents` as a live signal
+- The controller's `query(() => ship.agents.summaries())` → `agents` as a live signal, returned like any other scope member
 - The controller's setup function → everything it returns: state signals, `derived(...)` values, plain helpers, and event handlers, all merged into scope verbatim (the **only** site for reactive component state)
 - Template `<use-* as="X" />` → `X` as a hook-contributed identifier
 

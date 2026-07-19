@@ -4,7 +4,7 @@ import type { Signal } from '@ship/sail-runtime'
 /**
  * A list source: a plain array, a `Signal<T[]>`, a `derived(() => T[])`, or any
  * tracked callable returning one — including a live envelope around one, which is
- * what `<data>` hands you.
+ * what a live `query()` hands you.
  */
 export type ListSource<T> = T[] | (() => unknown)
 
@@ -13,7 +13,7 @@ function readItems<T>(source: ListSource<T>): T[] {
   if (Array.isArray(source)) return source
   const v = (source as () => unknown)()
   if (Array.isArray(v)) return v
-  // A live envelope (`<data>`): { kind: 'ok', value: { items } }.
+  // A live envelope (`query()`): { kind: 'ok', value: { items } }.
   if (v && typeof v === 'object') {
     const env = v as { kind?: string; value?: { items?: T[] } }
     if (env.kind === 'ok' && Array.isArray(env.value?.items)) return env.value.items

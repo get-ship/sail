@@ -598,7 +598,7 @@ fn build(
 //
 // The data port is a `NoopDataPort` and the live-data multiplex transport
 // (`/_deck/mux/*`) is NOT mounted: standalone `deck dev` serves routing,
-// assets, SSR and HMR, but NOT live server `<data source>`. Live data is a
+// assets, SSR and HMR, but NOT live server query() sources. Live data is a
 // HOST capability — a host (shipd) merges `deck::multiplex_router()` and
 // layers its own `DataPort`. Wiring live data into the standalone CLI is the
 // server-functions arc (#32), targeted for a later release.
@@ -865,7 +865,7 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // `DeckConfig` (Arc), the app list (`serve_index` / `spa_fallback`
         // read it to find the primary app), the `Bundler`, and the no-op
         // `DataPort`. The live-data multiplex (`/_deck/mux/*`) is intentionally
-        // NOT merged here — standalone deck has no live `<data source>` (#32).
+        // NOT merged here — standalone deck has no live query() source (#32).
         use axum::routing::get;
         let mut app = deck_axum::router()
             // `/` → the primary app's index.html.

@@ -2,36 +2,37 @@
 group: Views
 order: 5
 title: Data subscriptions
-description: `<data>` is the canonical bridge to the daemon. Live envelope shape, signal conventions, why hooks don't subscribe.
+description: query()/queryKeyed() is the canonical bridge to the daemon. Live envelope shape, signal conventions, why hooks don't subscribe.
 ---
 
 # Data subscriptions
 
-The Ship daemon (`shipd`) is the model. Views bridge to it via `<data>` elements declared in the template. This is the **only** sanctioned way to bring server data into a view. It is not interchangeable with hooks.
+The Ship daemon (`shipd`) is the model. Views bridge to it via `query()`/`queryKeyed()` calls in the controller. This is the **only** sanctioned way to bring server data into a view. It is not interchangeable with hooks.
 
 > The catalog is also served live at `GET /api/ship/schema` and checked into `packages/sdk/src/generated/sdk-ship-ops.json` for offline browsing.
 
-## The element
+## The primitive
 
-```html
-<data name="agents" source="ship.agents.summaries()" live />
-<data name="settings" source="ship.settings.state()" />
-<data name="agent" source="ship.agents.detail({id: route.params.id()})" live />
+```ts
+<controller>
+import { controller, query, queryKeyed } from '@ship/sail-runtime'
+
+export default controller(({ ship, route }) => ({
+  agents: queryKeyed(() => ['ship', 'agents', 'summaries'], () => ship.agents.summaries()),
+  settings: query(() => ship.settings.state()),
+  agent: queryKeyed(
+    () => ['ship', 'agents', 'detail', route.params.id()],
+    () => ship.agents.detail({ id: route.params.id() }),
+  ),
+}))
+</controller>
 ```
 
-Attributes:
-
-| Attr | Required | Purpose |
-|---|---|---|
-| `name="..."` | yes | Identifier exposed in view scope. |
-| `source="..."` | yes | A `ship.*` SDK call expression. Evaluated with `ship` and `route` in scope. |
-| `live` | no | If present, the runtime opens an SSE channel and patches the signal as the daemon emits updates. |
-
-The runtime exposes `<name>` as a signal in [view scope](index.md#the-shared-view-scope). Read it via `name()` in expressions and controller sections.
+`query()` derives its own cache key from the call shape; `queryKeyed()` takes an explicit key function when you need control over what's tracked (e.g. an id from `route.params`). Both expose the identifier as a signal in [view scope](index.md#the-shared-view-scope). Read it via `name()` in expressions and controller sections.
 
 ## Live envelope
 
-`live` signals always wrap the daemon's payload in a uniform envelope. The shape is contractual; hooks rely on it.
+`query()`/`queryKeyed()` signals always wrap the daemon's payload in a uniform envelope. The shape is contractual; hooks rely on it.
 
 ```ts
 // from @ship/sail-runtime — `query.ts`
@@ -75,31 +76,29 @@ Or use the convenience boundary blocks:
 
 `{#while-loading}` and `{#while-error err}` are syntactic sugar over the kind check. They render their children only while the bound signal is in the matching state and clean up automatically. The error variant binds the error value to the local name preceding `of`.
 
-## Static `<data>` (no `live`)
+## PULL vs PUSH
 
-Without `live`, the SDK call runs once at mount; the result is exposed as a plain signal containing the resolved value (no envelope). Used for one-shot reads where streaming updates aren't relevant — config, lookups.
+`query()`/`queryKeyed()` route at runtime by the return shape of the client method's thunk: a method returning `Promise<T>` fetches once (PULL); a method returning a `LiveSource<T>` opens a subscription and patches the signal as the daemon emits updates (PUSH). Both surface through the identical `LiveState<T>` envelope, so template code never branches on which path is in play.
 
-```html
-<data name="settings" source="ship.settings.state()" />
-
-<p>Theme: {settings().theme}</p>
+```ts
+settings: query(() => ship.settings.state()),   // Promise<T> → one-shot PULL
+agents: query(() => ship.agents.summaries()),   // LiveSource<T> → subscribed PUSH
 ```
 
-If the call is async, the runtime exposes the signal once it resolves; pre-resolution reads return `undefined`. For a loading state, add `live` to the `<data>` element and use `{#while-loading}` or discriminate by `kind`.
+If the call is async and pulls once, the runtime exposes the signal once it resolves; pre-resolution reads return `{ kind: 'loading' }`.
 
 ## Why subscriptions don't go in hooks
 
-Subscriptions are declarations, not pattern slices. The author should always see, in the template, every server channel a view depends on. Hiding a subscription inside `useAgents()` (or any hook) loses that visibility — readers can't tell what data the view needs without opening the hook.
+Subscriptions are declarations, not pattern slices. The author should always see, in the controller, every server channel a view depends on. Hiding a subscription inside `useAgents()` (or any hook) loses that visibility — readers can't tell what data the view needs without opening the hook.
 
 Concretely:
 
-```html
-<!-- right: every subscription visible at the top of the file -->
-<data name="agents"   source="ship.agents.summaries()" live />
-<data name="settings" source="ship.settings.state()" />
-
-<!-- wrong: subscriptions hidden behind a hook -->
-<!-- (don't author this) -->
+```ts
+// right: every subscription visible at the top of the controller
+export default controller(({ ship }) => ({
+  agents: query(() => ship.agents.summaries()),
+  settings: query(() => ship.settings.state()),
+}))
 ```
 
 ```ts
@@ -109,7 +108,7 @@ export const useAgents = () => ({
 })
 ```
 
-Repetition across views is the right trade. If three views all subscribe to `ship.agents.summaries()`, all three have the `<data>` element. The pattern *of subscribing to agents* is not abstracted; the visibility is preserved.
+Repetition across views is the right trade. If three views all subscribe to `ship.agents.summaries()`, all three call `query(() => ship.agents.summaries())` directly. The pattern *of subscribing to agents* is not abstracted; the visibility is preserved.
 
 The hook layer is for **bundling state + derived + handlers**. A hook that *uses* an `agents` signal (filtering, selecting, paginating, sorting) is doing real work and earns its existence. A hook that just wraps a subscription is double-dipping.
 
@@ -139,31 +138,33 @@ const items = () => {
 
 This is why the envelope is contractual — compositions rely on the shape to unwrap consistently.
 
-## Reactive `route` in source thunks
+## Reactive `route` in query thunks
 
-`route.params.<name>` and `route.query.<name>` are themselves signals. Reading one inside a `<data live source="…">` thunk subscribes the live channel to the param: when navigation changes the URL, the prior SSE subscription disposes and a new one opens with the updated arg. No author-side wiring; this is the same `query()` dep-tracking that re-fires on any controller-owned signal change. (A `<data live>` source calls a client method that returns a `LiveSource<T>`, so `query()` routes to the push/subscribe path; a plain `<data>` source whose method returns `Promise<T>` fetches once — the pull path.)
+`route.params.<name>` and `route.query.<name>` are themselves signals. Reading one inside a `query()`/`queryKeyed()` thunk subscribes the channel to the param: when navigation changes the URL, the prior subscription disposes and a new one opens with the updated arg. No author-side wiring beyond the call itself — this is `query()`'s own dep-tracking, which re-fires on any controller-owned signal change.
 
 Concrete pattern — a `/agents/<id>` view:
 
 ```ts
 <controller>
 // page.sail — inline <controller> block
-import { derived } from '@ship/sail-runtime'
+import { controller, derived, query } from '@ship/sail-runtime'
 import { defineRoutes } from '@ship/sail-runtime/route'
 
 defineRoutes([{ pattern: '/agents/:id' }])
 
-export default controller(({ agent }) => {
+export default controller(({ ship, route }) => {
+  const agent = queryKeyed(
+    () => ['ship', 'agents', 'detail', route.params.id()],
+    () => ship.agents.detail({ id: route.params.id() }),
+  )
   const name = derived(() => agent().kind === 'ok' ? agent().value.name : '')
-  return { name }
+  return { agent, name }
 })
 </controller>
 ```
 
 ```html
 <!-- page.sail -->
-<data name="agent" source="ship.agents.detail({id: route.params.id()})" live />
-
 <h1>{name()}</h1>
 {#if agent().kind === 'loading'}<p>Loading…</p>{/if}
 ```
@@ -171,26 +172,25 @@ export default controller(({ agent }) => {
 Navigation flow:
 
 1. The user lands on `/agents/42`. `route()` (called by the boot script) seeds `route.params.id` from the pathname-to-pattern match: `'42'`.
-2. `<data live>` evaluates `ship.agents.detail({id: route.params.id()})`. `route.params.id()` is a signal read; `query()` records it as a dep. Because `ship.agents.detail(...)` returns a `LiveSource`, `query()` takes the push path and the SSE channel for agent 42 opens.
+2. `queryKeyed()` evaluates `ship.agents.detail({id: route.params.id()})`. `route.params.id()` is a signal read; `query()` records it as a dep. Because `ship.agents.detail(...)` returns a `LiveSource`, `query()` takes the push path and the subscription for agent 42 opens.
 3. The user clicks a link to `/agents/99`. The view's click handler (or the framework's link interceptor) calls `navigate('/agents/99')`. That pushes history and triggers the global `__shipSetRouteUpdate`, which sets `route.params.id` to `'99'`.
-4. The `query()` dep fires. The agent-42 SSE channel disposes; a new one opens for agent 99. The signal flips through `loading → ok` exactly as on first mount.
+4. The `query()` dep fires. The agent-42 subscription disposes; a new one opens for agent 99. The signal flips through `loading → ok` exactly as on first mount.
 
-`defineRoutes` is per-view. Without a registered shape that captures `id`, `route.params.id()` returns `undefined`; the source thunk still tracks the signal, so the channel re-binds the moment a future navigation introduces a matching segment. (A compiler-emitted `<route pattern="…" />` directive will make the imperative `defineRoutes` call optional in a follow-up.)
+`defineRoutes` is per-view. Without a registered shape that captures `id`, `route.params.id()` returns `undefined`; the query thunk still tracks the signal, so the channel re-binds the moment a future navigation introduces a matching segment.
 
 ## SDK access
 
-The `ship.*` SDK is the typed bridge to `shipd`. It is *not* a global; it's one key on the host-supplied clients map. A view declares the clients it consumes with a top-level `<client name="ship" />` directive (see [template.md](template.md#client--host-injected-data-client)); the host passes the map at mount (`mount(target, payload, { clients: { ship } })`) and the runtime injects each declared name into:
+The `ship.*` SDK is the typed bridge to `shipd`. It is *not* a global; it's one key on the host-supplied clients map. The host passes the map at mount (`mount(target, payload, { clients: { ship } })`) and the runtime injects each declared name into:
 
-- The `source=` attribute of `<data>` elements (where the declared clients and `route` are in scope)
-- The function form of a controller (`({ ship, clients }) => ...`)
+- The function form of a controller (`({ ship, clients }) => ...`), where `query()`/`queryKeyed()` thunks read it
 - Each controller section's destructure (`{ ship }` is part of the scope object; so is every other declared client)
 - Each controller hook's factory (when it accepts scope)
 
-Authors do not import `ship`. The host owns the value, the runtime owns the wiring, and the SDK provider owns the type (`declare module '@ship/sail-runtime' { interface Clients { ship: ShipSDK } }`). `ship` is just the key Ship hosts use — a non-Ship host injects its own clients under its own names. Templates that declare no clients still receive the ambient `ship` as a grandfathered compatibility default.
+Authors do not import `ship`. The host owns the value, the runtime owns the wiring, and the SDK provider owns the type (`declare module '@ship/sail-runtime' { interface Clients { ship: ShipSDK } }`). `ship` is just the key Ship hosts use — a non-Ship host injects its own clients under its own names. Controllers that declare no clients still receive the ambient `ship` as a grandfathered compatibility default.
 
 ## Mutations
 
-`<data>` is the read surface. The symmetric write surface is `<form mutation="ship.X.Y">`.
+`query()`/`queryKeyed()` is the read surface. The symmetric write surface is `<form mutation="ship.X.Y">`.
 
 ```html
 <form mutation="ship.agents.create">
@@ -207,7 +207,7 @@ The `mutation` attribute is a `ship.*` SDK chain. On submit the compiler-wired `
 4. On success: sets `$mutation` to `{ kind: 'ok', value: result }` and dispatches a `success` CustomEvent.
 5. On error: sets `$mutation` to `{ kind: 'error', error }` and dispatches an `error` CustomEvent.
 
-`$mutation` is a `Signal<LiveState<unknown>>` injected into view scope by the compiler. Use it the same way you'd use a `<data live>` signal:
+`$mutation` is a `Signal<LiveState<unknown>>` injected into view scope by the compiler. Use it the same way you'd use any live query() signal:
 
 ```html
 <form mutation="ship.agents.create">

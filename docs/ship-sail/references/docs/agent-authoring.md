@@ -38,7 +38,7 @@ Output (`views/<name>/`):
 
 | File | Purpose | Required |
 |---|---|---|
-| `page.sail` | Template — declares route body, `<data>`, control flow, and (if needed) an inline `<controller>` block for state, lifecycle, mutations | Yes |
+| `page.sail` | Template — declares route body, control flow, and (if needed) an inline `<controller>` block for state, lifecycle, data subscriptions, mutations | Yes |
 | `style.css` | Page-scoped CSS, auto-linked by the daemon | Optional |
 | `manifest.jsonc` | `{ name, path, title, layout, auth, rail? }` | **Yes — routes are manifest-driven** |
 | `_components/<view>-<tag>/` | View-private component (`<tag>.sail`, with its own inline `<controller>` block if needed) | Optional |
@@ -69,7 +69,6 @@ cargo run -p sail-lint --example check -- views/<name>/page.sail
 <!-- views/<name>/page.sail — declarative only. No <script>. -->
 
 <!-- 1. TOP-LEVEL DIRECTIVES — declare scope before the body -->
-<data name="items" source="ship.<domain>.<op>(args)" live />
 <prop name="tone" values="default|primary" default="default" reflect /> <!-- components only -->
 
 <!-- 2. BODY — element tree with reactive expressions -->
@@ -103,12 +102,11 @@ Surface in compact form (full grammar in
 
 | Form | Meaning |
 |---|---|
-| `<data name="x" source="ship.foo.bar()" live />` | Open SSE channel; produces `LiveSignal<T>`. |
-| `<data name="x" source="ship.foo.bar()" />` | One-shot fetch; produces `Promise<T>`-shaped signal. |
+| `query(() => ship.foo.bar())` in the controller | `ship.foo.bar` returning a `LiveSource` opens a subscription (push); returning a `Promise` fetches once (pull). Either way, produces a `LiveSignal<T>`. |
 | `{#if expr}…{:else if expr}…{:else}…{/if}` | Conditional. `:else if` is allowed. |
 | `{#for x of arr() key={x.id}}…{/for}` | List. **`key={EXPR}` is required** (lint warns). |
 | `{#match expr}{:case 'a'}…{:default}…{/match}` | Discriminated union dispatch. |
-| `{#while-loading of liveSig}…{/while-loading}` | Loading branch for `<data live>`. |
+| `{#while-loading of liveSig}…{/while-loading}` | Loading branch for a live `query()` signal. |
 | `{#while-error err of liveSig}…{/while-error}` | Error branch; `err: Error` in scope. |
 | `bind:value={sig}` / `bind:checked={sig}` | Two-way input binding. |
 | `bind:this={refSig}` | Element ref; controller scope must declare `refSig: ref(null)`. |
@@ -139,10 +137,11 @@ rules, not view-scoped page CSS.
 ```ts
 <!-- inside views/<name>/page.sail -->
 <controller>
-import { signal, derived, unwrap } from '@ship/sail-runtime'
+import { signal, derived, query, unwrap } from '@ship/sail-runtime'
 
 export default controller((ctx) => {
-  const { items /* live signal from <data> */, ship, route, navigate } = ctx
+  const { ship, route, navigate } = ctx
+  const items = query(() => ship.<domain>.<op>(args))
   const q = signal('')
   const rows  = derived(() => unwrap(items)?.rows ?? [])
   const total = derived(() => unwrap(items)?.rows.length ?? 0)
@@ -152,7 +151,7 @@ export default controller((ctx) => {
   mount((el) => { /* runs after first attach */ })
   onCleanup(() => { /* runs on dispose */ })
 
-  return { q, rows, total, create }
+  return { items, q, rows, total, create }
 })
 </controller>
 ```
@@ -161,7 +160,7 @@ One function, one job: `controller(fn)` where `fn: (ctx) => Record<string, unkno
 
 | Piece | Receives | Returns | Notes |
 |---|---|---|---|
-| `ctx` (the `fn` argument) | `{ <data-names>, ship, clients, route, navigate }` and every template-declared `<data>`/`<state>` signal | — | Ambient view scope, directly accessible or destructured. |
+| `ctx` (the `fn` argument) | `{ ship, clients, route, navigate }` | — | Ambient view scope, directly accessible or destructured. |
 | return value of `fn` | — | Bag of `signal` / `derived` / plain helpers / event handlers | Whatever is returned IS the whole contributed template scope — no separate section for handlers. |
 | `mount(fn)` | `fn: (el: HTMLElement) => (() => void) \| void` | — | Ambient, callable anywhere in the setup call graph. Fires once after the instance's DOM connects; a returned function is a cleanup on dispose. |
 | `onCleanup(fn)` | `fn: () => void` | — | Ambient. Runs on dispose; no-ops (doesn't throw) outside a scope. |
@@ -176,18 +175,18 @@ a method that returns a `Promise<T>` makes it fetch once (pull). Either
 way you get the same `LiveState<T>` (`loading`/`ok`/`error`) signal out.
 Two wiring paths, depending on mount host:
 
-1. **Compiler-emitted (preferred when `ship` is in ctx).** Use the
-   template's `<data live>` form. The compiler emits
-   `query(() => ship.foo.bar(args))` and wires the channel; since
+1. **Direct (preferred when `ship` is in ctx).** Call
+   `query(() => ship.foo.bar(args))` in the controller. Since
    `ship.foo.bar(...)` returns a `LiveSource`, `query()` takes the
    push path.
 
 2. **Hand-wired (required for view-host mounts).** The daemon's
-   `/sail/<name>` host does NOT inject `ship` into ctx, so the
-   compiler-emitted `<data live>` form sticks on `loading`. Wire the
-   subscription directly to `/_deck/data?expr=…` instead. The canonical
-   helper currently lives in `views/git/page.sail`'s inline
-   `<controller>` block (`sseSource`) — copy verbatim:
+   `/sail/<name>` host does NOT inject `ship` into ctx, so a direct
+   `query(() => ship.foo.bar())` call has no `ship` to close over and
+   sticks on `loading`. Wire the subscription directly to
+   `/_deck/data?expr=…` instead. The canonical helper currently lives
+   in `views/git/page.sail`'s inline `<controller>` block (`sseSource`)
+   — copy verbatim:
 
 ```ts
 function sseSource<T>(expr: string): LiveSource<T> {
@@ -209,7 +208,7 @@ function sseSource<T>(expr: string): LiveSource<T> {
 }
 ```
 
-Default to the template form (path 1) when authoring inside shell.
+Default to the direct form (path 1) when authoring inside shell.
 Adopt the `sseSource` helper if the view will also be linked to
 directly via `/sail/<name>`.
 
@@ -240,8 +239,6 @@ Every live data source has three states. The template MUST render
 all three; never assume `ok`:
 
 ```html
-<data name="items" source="ship.<domain>.<op>()" live />
-
 {#while-loading of items}
   <!-- skeleton with the same outer structure as the loaded state -->
   <ul class="<name>-list" aria-label="Loading items">
@@ -349,7 +346,7 @@ const create = async () => {
 ```
 
 Out-of-band: `await ship.sessions.start({...})` resolves to the daemon
-response. The live `<data>` subscription receives the projection patch
+response. The live `query()` subscription receives the projection patch
 immediately — **don't** also call a manual refresh.
 
 ---
@@ -455,8 +452,8 @@ Hard-won. Each one is from a real fix in this repo.
    default export. Putting it inside the controller function runs it
    too late, and the first `route()` call from a `derived` will throw.
 
-8. **Compiler-emitted `<data live>` sticks on `loading` under
-   `/sail/<name>`.** The daemon's view-host mounts views without
+8. **A direct `query(() => ship.foo.bar())` call sticks on `loading`
+   under `/sail/<name>`.** The daemon's view-host mounts views without
    injecting `ship` into ctx. If the view will be linked to directly
    (not just through shell), hand-wire the live source with
    `sseSource(...)` (see § 3 above and the `<controller>` blocks in

@@ -36,7 +36,7 @@ use crate::SHIP_SDK;
 /// path threads per-request. NOT a process-global `register` install (that
 /// global was removed for `inv-deck-mount-scoped-resolution`), so one process
 /// can carry different (or no) engines per mount. `data` is the host's live
-/// data surface — the `<data>`/`<client>` op resolver; pass `None` for a
+/// data surface — the controller's query()/client op resolver; pass `None` for a
 /// route-only host.
 pub fn engine(data: Option<Arc<dyn DataPort>>) -> Result<Arc<dyn SyntheticSsr>> {
     Ok(Arc::new(ShipJsSsr::new(data)?))

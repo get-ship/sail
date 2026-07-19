@@ -9,7 +9,7 @@ next: "25-going-further"
 chapter: "views"
 ---
 
-`<data live>` subscribes you to a stream. To **change** the data, you
+A live `query()` subscribes you to a stream. To **change** the data, you
 POST a mutation to the server, and the server pushes a new envelope
 on the same stream — every subscriber (the current tab, other tabs,
 peer agents) sees it.
@@ -17,8 +17,6 @@ peer agents) sees it.
 The shape:
 
 ```sail
-<data name="users" source="ship.users.list()" live />
-
 <form on:submit|preventDefault={(e) => add(name())}>
   <input bind:value={name} placeholder="user name" />
   <button type="submit">add user</button>
@@ -30,9 +28,13 @@ The shape:
 ```
 
 ```ts
-export default controller((ctx) => {
+import { controller, query, signal } from '@ship/sail-runtime'
+
+export default controller(({ ship }) => {
+  const users = query(() => ship.users.list())
   const name = signal('')
   return {
+    users,
     name,
     add: async (label: string): Promise<void> => {
       if (!label.trim()) return

@@ -9,7 +9,7 @@
 //!      (the host wire) left external.
 //!   2. [`run::render`] runs that module in the deno_core/V8 isolate via
 //!      `ship_js::deno::run_module`, with a [`host::SsrDispatch`] answering
-//!      `route.current` (the matched request) and `<data>`/client ops over
+//!      `route.current` (the matched request) and controller data/client ops over
 //!      the real op surface. A minimal server-DOM lets the SAME synthesized
 //!      render run unchanged and serialize to a first-paint HTML string.
 //!

@@ -36,8 +36,6 @@ its inline `<controller>` block).
 `views/example-list/page.sail`:
 
 ```html
-<data name="items" source="ship.agents.summaries()" live />
-
 <div class="ship-view ex-list">
   <header class="ex-head">
     <h1>Items</h1>
@@ -77,12 +75,13 @@ its inline `<controller>` block).
 
 ```ts
 <controller>
-import { derived, unwrap } from '@ship/sail-runtime'
+import { derived, query, unwrap } from '@ship/sail-runtime'
 
-export default controller(({ items }) => {
+export default controller(({ ship }) => {
+  const items = query(() => ship.agents.summaries())
   const rows  = derived(() => unwrap(items)?.items ?? [])
   const total = derived(() => unwrap(items)?.items.length ?? 0)
-  return { rows, total }
+  return { items, rows, total }
 })
 </controller>
 ```
@@ -105,8 +104,6 @@ exemplar: `views/workspaces/page.sail` and its inline `<controller>` block.
 `page.sail`:
 
 ```html
-<data name="projects" source="ship.workspaces.list()" live />
-
 <div class="ship-view ex-mut">
   {#if activationError()}
     <sail-error-state variant="inline" size="sm" title="Couldn't switch">
@@ -136,12 +133,13 @@ Its inline `<controller>` block:
 
 ```ts
 <controller>
-import { signal, derived, unwrap } from '@ship/sail-runtime'
+import { signal, derived, query, unwrap } from '@ship/sail-runtime'
 
 interface Row { id: string; name: string; label?: string }
 interface State { items: Row[]; active: string | null }
 
-export default controller(({ ship, projects }) => {
+export default controller(({ ship }) => {
+  const projects = query(() => ship.workspaces.list())
   const activatingId    = signal('')
   const activationError = signal('')
   const pendingActiveId = signal('')   // optimistic overlay
@@ -152,7 +150,7 @@ export default controller(({ ship, projects }) => {
     activatingId.set(id); activationError.set(''); pendingActiveId.set(id)
     try {
       await s.workspaces.activate({ id })
-      // live <data> patch arrives; effectiveActiveId() flips to `id` on its own
+      // live query() patch arrives; effectiveActiveId() flips to `id` on its own
     } catch (e) {
       pendingActiveId.set('')
       activationError.set((e as Error).message)
@@ -168,7 +166,7 @@ export default controller(({ ship, projects }) => {
     return pending && pending !== live ? pending : live
   })
 
-  return { activatingId, activationError, pendingActiveId, activate, items, effectiveActiveId }
+  return { projects, activatingId, activationError, pendingActiveId, activate, items, effectiveActiveId }
 })
 </controller>
 ```
@@ -199,9 +197,6 @@ parameterized by it. Pattern from `views/skills/page.sail`'s inline
 `page.sail`:
 
 ```html
-<data name="rows" source="ship.agents.summaries()" live />
-<data name="detail" source="ship.agents.detail({id: $scope.selectedId()})" live />
-
 <div class="ex-md">
   <aside>
     {#while-loading of rows}<sail-skeleton shape="line"></sail-skeleton>{/while-loading}
@@ -235,20 +230,25 @@ Its inline `<controller>` block:
 
 ```ts
 <controller>
-import { signal, derived, unwrap } from '@ship/sail-runtime'
+import { signal, derived, query, queryKeyed, unwrap } from '@ship/sail-runtime'
 
-export default controller(({ rows }) => {
+export default controller(({ ship }) => {
+  const rows = query(() => ship.agents.summaries())
   const selectedId = signal('')
+  const detail = queryKeyed(
+    () => ['ship', 'agents', 'detail', selectedId()],
+    () => ship.agents.detail({ id: selectedId() }),
+  )
   const items = derived(() => unwrap(rows)?.items ?? [])
-  return { selectedId, items }
+  return { rows, selectedId, detail, items }
 })
 </controller>
 ```
 
-The `<data live source="ship.agents.detail({id: $scope.selectedId()})">`
-form re-subscribes whenever `selectedId` changes — the compiler tracks
-deps inside the `source=` expression. See `references/runtime-primitives.md`
-§ `<data>` reactive args.
+The `queryKeyed(() => [..., selectedId()], () => ship.agents.detail({id: selectedId()}))`
+form re-subscribes whenever `selectedId` changes — `query()`/`queryKeyed()`
+track deps read inside the key fn and the thunk. See
+`references/runtime-primitives.md` § `query()` reactive args.
 
 ---
 
@@ -370,11 +370,10 @@ template.
 Canonical skeleton → empty → error shape — the `{#while-loading}` →
 `{#while-error}` → `{#if … 'ok'}` block. Same outer wrapper
 across all three branches so the layout doesn't reflow when state
-transitions.
+transitions. `sessions` here is `query(() => ship.sessions.list())`
+returned from the controller (recipe 1's shape).
 
 ```html
-<data name="sessions" source="ship.sessions.list()" live />
-
 <div class="ses-wrap">
   {#while-loading of sessions}
     <ul class="ses-list" data-test="loading" aria-label="Loading sessions">
@@ -507,19 +506,16 @@ prop:rows={rowsSignal}>…</my-widget>`. The compiler emits the
 
 ---
 
-## 8. Declared clients — a view on a non-Ship host
+## 8. Host-injected clients — a view on a non-Ship host
 
-A view names the data clients it consumes with `<client>`; the host
-supplies a keyed map at mount. `ship` is just the key Ship hosts use —
-here a deck host injects its own client as `api`. Worked exemplar in
-the repo: `crates/deck/deck-conformance/app/views/clock/page.sail`.
+`ship` is just the key Ship hosts use — a non-Ship host injects its
+own client under its own name via the mount call's `clients` map, and
+the controller's `query()` thunks call it the same way. Worked
+exemplar in the repo: `crates/deck/deck-conformance/app/views/clock/page.sail`.
 
 `app/views/clock/page.sail`:
 
 ```html
-<client name="api" />
-<data name="t" source="api.demo.clock()" live />
-
 <div class="clock-demo">
   {#while-loading of t}<p>Loading…</p>{/while-loading}
   {#while-error err of t}<p>Error: {err.message}</p>{/while-error}
@@ -527,6 +523,16 @@ the repo: `crates/deck/deck-conformance/app/views/clock/page.sail`.
     <p>Tick: <strong>{t().value.now}</strong></p>
   {/if}
 </div>
+```
+
+```ts
+<controller>
+import { controller, query } from '@ship/sail-runtime'
+
+export default controller(({ clients }) => ({
+  t: query(() => clients.api.demo.clock()),
+}))
+</controller>
 ```
 
 The host's mount call (the deck view-host does this from the payload's
@@ -541,7 +547,7 @@ const handle = await mount(target, payload, {
 ```
 
 Typing — the provider augments its own key on the runtime's `Clients`
-interface, so `api.demo.clock()` and the `t` signal are fully typed:
+interface, so `clients.api.demo.clock()` and the `t` signal are fully typed:
 
 ```ts
 declare module '@ship/sail-runtime' {
@@ -549,8 +555,5 @@ declare module '@ship/sail-runtime' {
 }
 ```
 
-Declared names are checked: an undeclared root in a `<data source>` is
-a compile error, and the generated `.sail.d.ts` types each data signal
-from the client method's return. Views that declare nothing still get
-the ambient `ship` (compatibility default); the `sail-client-directive`
-lint (Warn) nudges those toward an explicit `<client name="ship" />`.
+Views that consume no clients still get the ambient `ship` (compatibility
+default) — a non-Ship host injects its own clients under its own names.

@@ -1,6 +1,6 @@
 //! Slice 7 — live-data SSE transport (no browser, ship-free).
 //!
-//! `data_port.rs`'s `serve_sse_inner` used to parse a view's `<data live>`
+//! `data_port.rs`'s `serve_sse_inner` used to parse a view's live-query
 //! directives to discover what to stream. That compiler-level authoring
 //! surface is retired; the replacement discovery mechanism (how a
 //! controller's own `live(() => …)` sources get pushed over this channel) is

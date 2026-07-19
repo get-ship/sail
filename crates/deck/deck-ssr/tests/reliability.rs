@@ -56,7 +56,7 @@ struct Target {
     manifest: &'static str,
     /// Sibling authored controller, repo-relative (when present).
     controller: Option<String>,
-    /// Does it read `<data>`/`<client>` ops (needs the demo client alias)?
+    /// Does it read controller data/client ops (needs the demo client alias)?
     needs_data: bool,
     /// Request pathname + route params (for `[id]` routes).
     pathname: &'static str,
@@ -78,7 +78,7 @@ struct Outcome {
 }
 
 /// The demo data surface: answers the ops the conformance data-views call.
-/// `ship.demo.boom` is deliberately absent — boom's `<data>` thunk must throw
+/// `ship.demo.boom` is deliberately absent — boom's query() thunk must throw
 /// (the error-boundary fixture), proving the error branch renders.
 struct DemoData;
 impl DataPort for DemoData {

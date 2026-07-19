@@ -118,7 +118,7 @@ cargo run -p deck-cli -- emit --target <name> --out <dir>
 ```
 
 Standalone deck serves routing, assets, SSR and HMR without any daemon; live
-`<data>` subscriptions are a host capability today — a host mounts
+`query()` subscriptions are a host capability today — a host mounts
 `deck::multiplex_router()` and injects its `DataPort`.
 
 ## Conventions

@@ -39,7 +39,7 @@ impl SsrDispatch {
         }
     }
 
-    /// Attach the live op surface so `<data>`/`<client>` ops resolve.
+    /// Attach the live op surface so controller query()/client ops resolve.
     pub fn with_data(mut self, data: Arc<dyn DataPort>) -> Self {
         self.data = Some(data);
         self

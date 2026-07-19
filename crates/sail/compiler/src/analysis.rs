@@ -39,7 +39,7 @@ pub struct Symbol {
     /// Origin section: `data` | `prop` | `scope` | `derived` | `on` | `use`.
     pub source: String,
     /// 1-based declaration position in the controller. `(0, 0)` when the
-    /// symbol is declared in the `.sail` itself (`<data>` / `<prop>`).
+    /// symbol is declared in the `.sail` itself (`<prop>`).
     pub line: usize,
     pub col: usize,
 }

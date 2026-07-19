@@ -18,12 +18,12 @@
 "/>" @punctuation.bracket
 
 ; ── directive elements (recognised by tag name) ──────────────────────
-; Highlight `<data>`, `<scope>` distinctively so authors can see the
-; runtime contract at a glance. `<state>`, `<component>`, `<prop>` are
-; retired; element-form `<while-loading>`/`<while-error>` are retired
-; in favor of the brace-block forms below.
+; Highlight `<scope>` distinctively so authors can see the
+; runtime contract at a glance. `<data>`, `<state>`, `<component>`,
+; `<prop>` are retired; element-form `<while-loading>`/`<while-error>`
+; are retired in favor of the brace-block forms below.
 ((tag_name) @keyword.directive
-  (#match? @keyword.directive "^(data|scope|slot)$"))
+  (#match? @keyword.directive "^(scope|slot)$"))
 
 ; ── binding attribute prefixes ───────────────────────────────────────
 ; `style:` and `let:` are deliberately absent: the compiler hard-refuses

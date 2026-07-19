@@ -13,7 +13,7 @@
 // chain recomputes only its suffix — proven here with a recompute counter").
 //
 // Engine purity (Cardinal 4): imports ONLY @ship/sail-runtime. No ship.*, no fetch,
-// no <data>. The purity GREP-test is Slice 4's contract, not this file's.
+// no query(). The purity GREP-test is Slice 4's contract, not this file's.
 
 import { describe, expect, it, vi } from 'vitest'
 import { signal, derived } from '@ship/sail-runtime'

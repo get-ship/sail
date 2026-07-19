@@ -48,7 +48,7 @@ The IR is the single source of truth. Both the server render walker (Rust, in `s
 | `{#match expr}` | Server evaluates `expr`; only the matching case is emitted. |
 | `{#while-loading of X}` | Server emits the body if `X.kind === 'loading'`, otherwise emits a hidden placeholder. Client swaps on envelope flips. |
 | `{#while-error err of X}` | Server emits the body if `X.kind === 'error'` (with `err` bound to `X.error`), otherwise emits a hidden placeholder. Client swaps on envelope flips. |
-| `<data live />` | Server emits the initial value inline (with envelope `kind: 'ok'`); client opens the SSE channel for patches. |
+| Live `query()`/`queryKeyed()` signal | Server emits the initial value inline (with envelope `kind: 'ok'`); client opens the subscription for patches. |
 | `on:click={fn}` | Marker emitted; no listener attached server-side. |
 | `bind:value={sig}` | Marker emitted; client wires both directions. |
 | `<use-* />` | Marker emitted; client invokes the hook factory at mount. |
@@ -110,23 +110,23 @@ The browser-side runtime is **attach-only**. It does not parse templates, does n
 
 1. Walk the rendered DOM looking for markers.
 2. For each marker, read the binding from the manifest (or inline annotation).
-3. Initialize signals from inlined initial values (`<data>` markers carry `kind: 'ok'` envelopes with values; reactive component state returned by the controller function materializes when the controller runs at hydrate).
+3. Initialize signals from inlined initial values (query-signal markers carry `kind: 'ok'` envelopes with values; reactive component state returned by the controller function materializes when the controller runs at hydrate).
 4. Attach event listeners (`on:click`, `bind:`).
 5. Wire reactive bindings (text interp, attribute interp, control-flow boundaries) to track signals and update the DOM on change.
-6. Open SSE channels for each `<data live>` and apply patches as they arrive.
+6. Open a subscription for each live query signal and apply patches as they arrive.
 7. Invoke template hook factories (`<use-*>`) and register their cleanups.
 8. Run controller `mount` after all of the above.
 
 State changes from local signals (button clicks, bind:value) flow through handlers, mutate state, and trigger surgical DOM updates against the existing nodes. There is no morph step — the runtime knows precisely which nodes correspond to which bindings.
 
-`data live` SSE patches arrive as JSON; the runtime applies them to the live signal and downstream bindings update.
+Live query() patches arrive as JSON; the runtime applies them to the live signal and downstream bindings update.
 
 ## Progressive enhancement
 
 A view rendered without JavaScript is still meaningful:
 
 - Static structure renders.
-- Initial values from `<data>` are inlined; reactive controller-scope signals are dormant until JS runs.
+- Initial values from query() signals are inlined; reactive controller-scope signals are dormant until JS runs.
 - `{#if}` / `{#for}` / `{#match}` show their initial branches.
 - Custom elements show their server-rendered children (the framework does not require client-side construction for non-island components).
 

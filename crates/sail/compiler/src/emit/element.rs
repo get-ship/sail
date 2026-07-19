@@ -13,7 +13,7 @@
 //!
 //! The mode enforces the seam test mechanically: element templates are
 //! static structure + slots. Control flow, dynamic attributes, dynamic
-//! text, `<data>`, or a controller mean the source is a COMPONENT — the
+//! text, or a controller mean the source is a COMPONENT — the
 //! error says so.
 
 use crate::diagnostics::Span;

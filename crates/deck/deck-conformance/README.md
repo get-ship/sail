@@ -77,7 +77,7 @@ endpoint, and the live-data SSE/data/mutation endpoints — those need
 host-supplied extensions or router state. So this pure-deck app gets routing +
 SSR + assets + bundling + reload, but **live data is the host's job**. A later
 slice stands up a tiny non-ship data port (or a test axum/hono server) to
-exercise `<data live>` without pulling in ship.
+exercise a live query() subscription without pulling in ship.
 
 ## Findings (deck gaps surfaced while building this)
 

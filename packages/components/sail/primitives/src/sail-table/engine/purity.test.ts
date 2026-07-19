@@ -4,13 +4,13 @@
 // source (not an import of it), so its red is "no engine source files exist
 // yet" — the precondition `engine source files are present` fails. Once the
 // engine lands, the scan asserts the boundary holds (Cardinal 4 + the sail-*
-// boundary): the engine is pure reactive state — no SDK, no network, no <data>.
+// boundary): the engine is pure reactive state — no SDK, no network, no query().
 //
 // Authority: build-spec §"Backbone #1" ("Imports { signal, derived, batch,
 // untrack } from @ship/sail-runtime ONLY — no @ship/sdk-client, no ship.*, no
-// fetch, no <data>. It emits no DOM and makes no SDK calls"), §Slices ("Engine
+// fetch, no query(). It emits no DOM and makes no SDK calls"), §Slices ("Engine
 // purity is NOT lint-enforced … Assert via a grep test"), behavioral spec #14
-// ("a grep/test scan confirms no @ship/sdk-client/ship.*/fetch/EventSource/<data>
+// ("a grep/test scan confirms no @ship/sdk-client/ship.*/fetch/EventSource/query()
 // in sail-table/ or engine/ … Test-asserted; not sail-lint-asserted").
 //
 // NOTE (per build-spec): engine purity is TEST-asserted here, NOT sail-lint —
@@ -37,7 +37,7 @@ const FORBIDDEN: { token: string; why: string }[] = [
   { token: 'ship.', why: 'ship.* call — backend coupling belongs in the consumer controller' },
   { token: 'fetch(', why: 'network call — the engine never performs I/O' },
   { token: 'EventSource', why: 'server-sent events — not the engine\'s concern' },
-  { token: '<data', why: '<data> directive — a view/controller concern, never the engine' },
+  { token: 'query(', why: 'query() call — a view/controller concern, never the engine' },
 ]
 
 describe('engine purity (Slice 4 grep gate — Cardinal 4 + sail-* boundary)', () => {
@@ -56,7 +56,7 @@ describe('engine purity (Slice 4 grep gate — Cardinal 4 + sail-* boundary)', (
     }
   })
 
-  it('contains NONE of the forbidden boundary tokens (ship.*/fetch/EventSource/<data)', () => {
+  it('contains NONE of the forbidden boundary tokens (ship.*/fetch/EventSource/query())', () => {
     for (const file of engineSourceFiles()) {
       const src = readFileSync(file, 'utf8')
       for (const { token, why } of FORBIDDEN) {

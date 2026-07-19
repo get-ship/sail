@@ -11,12 +11,10 @@ These three examples cover the discipline boundaries. Each tier has a representa
 
 ## Tier 1 — home (minimal controller + live data)
 
-The smallest reactive shape: a single signal returned from the inline controller plus an inline arrow handler in the template, alongside one `<data live>` subscription. Worked exemplar in the repo: `views/home/`.
+The smallest reactive shape: a single signal returned from the inline controller plus an inline arrow handler in the template, alongside one live `query()` subscription. Worked exemplar in the repo: `views/home/`.
 
 ```html
 <!-- views/home/page.sail (excerpt) -->
-<data name="git" source="ship.git.overview()" live />
-
 <section class="counter">
   <p>You've opened the home page <strong>{seen()}</strong> times this session.</p>
   <sail-button size="sm" variant="outline" on:click={() => seen.set(seen() + 1)}>Bump</sail-button>
@@ -26,28 +24,27 @@ The smallest reactive shape: a single signal returned from the inline controller
 ```ts
 <controller>
 // views/home/page.sail (excerpt)
-import { signal, derived } from '@ship/sail-runtime'
+import { signal, derived, query } from '@ship/sail-runtime'
 
-export default controller(() => {
+export default controller(({ ship }) => {
   const seen = signal(0)
+  const git = query(() => ship.git.overview())
   // derived(...) values project the `git` envelope: branch, clean, headShort, …
-  return { seen }
+  return { seen, git }
 })
 </controller>
 ```
 
-What this exercises: the controller function returning a bag of signals, expression interpolation, `on:click` with a call-only arrow body, a `<data live>` subscription.
+What this exercises: the controller function returning a bag of signals, expression interpolation, `on:click` with a call-only arrow body, a live `query()` subscription.
 
 What this avoids: a pile of named handlers for trivial state. Inline handlers cover the simplest mutations.
 
 ## Tier 2 — agents (controller + a derived bundle)
 
-The actual working view in the repo today (`views/agents/`). Server data via `<data>`, two memos, one navigation handler. No compositions yet — the composition-based version is below.
+The actual working view in the repo today (`views/agents/`). Server data via `query()`, two memos, one navigation handler. No compositions yet — the composition-based version is below.
 
 ```html
 <!-- views/agents/page.sail (excerpt) -->
-<data name="agents" source="ship.agents.summaries()" live />
-
 <header class="agents-head">
   <h1>Agents</h1>
   <p>{total()} agent{total() === 1 ? '' : 's'}</p>
@@ -78,11 +75,11 @@ The actual working view in the repo today (`views/agents/`). Server data via `<d
 ```ts
 <controller>
 // views/agents/page.sail
-import { derived } from '@ship/sail-runtime'
-import type { LiveSignal } from '@ship/sail-runtime'
-import type { AgentsSummariesResponse, AgentSummary } from '@ship/sdk-client'
+import { derived, query } from '@ship/sail-runtime'
+import type { AgentSummary } from '@ship/sdk-client'
 
-export default controller(({ agents, navigate }: { agents: LiveSignal<AgentsSummariesResponse>; navigate: (path: string) => void }) => {
+export default controller(({ ship, navigate }) => {
+  const agents = query(() => ship.agents.summaries())
   const items = derived((): AgentSummary[] => {
     const s = agents()
     return s.kind === 'ok' ? s.value.items : []
@@ -91,20 +88,20 @@ export default controller(({ agents, navigate }: { agents: LiveSignal<AgentsSumm
 
   const newAgent = () => navigate('/agents/create')
 
-  return { items, total, newAgent }
+  return { agents, items, total, newAgent }
 })
 </controller>
 ```
 
 What this exercises:
 
-- `<data live>` subscription — daemon-streamed data, declared in the template
+- A live `query()` subscription — daemon-streamed data, declared in the controller
 - The controller function reading its `ctx` argument directly (no closure-scoped vars needed)
-- `derived` reading template-declared scope (`agents`, then `items`)
+- `derived` reading a controller-owned query signal (`agents`, then `items`)
 - A handler reading framework-injected `navigate` off `ctx`
 - `{#while-loading}` / `{#while-error err}` boundary blocks
 
-What this avoids: a separate live-subscription section in the controller, calling `query()` from JS.
+What this avoids: a scattered live-subscription declaration outside the controller — every subscription is visible in one place, the `query()` call itself.
 
 ## Tier 3 — agents with compositions
 
@@ -112,8 +109,6 @@ The same view, scaled with the v1 compositions (`useFilteredList`, `useSelection
 
 ```html
 <!-- views/agents/page.sail -->
-<data name="agents" source="ship.agents.summaries()" live />
-
 <use-kbd>
   <on key="/"        action="toggleSearch" />
   <on key="cmd+n"    action="newAgent" />
@@ -154,9 +149,10 @@ The search-toggle signal lives in the inline controller, alongside two compositi
 ```ts
 <controller>
 // views/agents/page.sail
-import { signal, useFilteredList, useSelection } from '@ship/sail-runtime'
+import { signal, query, useFilteredList, useSelection } from '@ship/sail-runtime'
 
-export default controller(({ agents, navigate }) => {
+export default controller(({ ship, navigate }) => {
+  const agents = query(() => ship.agents.summaries())
   const searchOpen = signal(false)
 
   const filter = useFilteredList(agents, (a, q) => a.name.toLowerCase().includes(q.toLowerCase()))
@@ -166,7 +162,7 @@ export default controller(({ agents, navigate }) => {
   const newAgent        = () => navigate('/agents/create')
   const clearSelection  = () => sel.clear()
 
-  return { searchOpen, filter, sel, toggleSearch, newAgent, clearSelection }
+  return { agents, searchOpen, filter, sel, toggleSearch, newAgent, clearSelection }
 })
 </controller>
 ```
@@ -185,8 +181,6 @@ Forms exercise two-way binding, validation, and the `useForm` composition — al
 
 ```html
 <!-- views/settings/page.sail -->
-<data name="settings" source="ship.settings.state()" />
-
 <form on:submit={form.submit}>
   <label>
     Theme
@@ -217,9 +211,10 @@ Forms exercise two-way binding, validation, and the `useForm` composition — al
 ```ts
 <controller>
 // views/settings/page.sail
-import { useForm } from '@ship/sail-runtime'
+import { useForm, query } from '@ship/sail-runtime'
 
-export default controller(({ ship, settings }) => {
+export default controller(({ ship }) => {
+  const settings = query(() => ship.settings.state())
   const form = useForm({
     initial:  () => settings(),
     validate: (v) => ({
@@ -228,7 +223,7 @@ export default controller(({ ship, settings }) => {
     submit:   (v) => ship.settings.write(v),
   })
 
-  return { form }
+  return { settings, form }
 })
 </controller>
 ```
@@ -246,7 +241,7 @@ What this avoids: hand-rolled form state with five signals and four handlers. Th
 
 | Decision | Where it lives |
 |---|---|
-| Server data | `<data>` in the template |
+| Server data | `query()`/`queryKeyed()` in the controller |
 | Local state (any) | `signal(...)` returned from the controller function |
 | Computed-initial state (`crypto.randomUUID()`, etc.) | Placeholder signal + assignment inside `mount` |
 | Computed values | `derived(...)` (named) or inline expressions (one-off) |

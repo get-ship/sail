@@ -91,11 +91,11 @@ stays host-generic; the app keeps its domains.
 
 **Standalone has no live data (yet).** `deck dev` / `deck build` serve routing,
 assets, SSR and HMR, but do **not** mount the multiplex or any real `DataPort`,
-so a `<data source="ship.x.y()" live />` binding is **not served** standalone —
+so a live `query(() => ship.x.y())` binding is **not served** standalone —
 live data is a host capability today. Making it work without a host (JS server
 functions backing `DataPort::resolve`) is the server-functions arc (#32),
 targeted for a later release. Standalone routes should render without server
-`<data>`, or run under a host (shipd) that wires the seam.
+data, or run under a host (shipd) that wires the seam.
 
 ## Configuration surface — `deck.jsonc` / `DeckConfig`
 

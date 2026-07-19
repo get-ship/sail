@@ -1,6 +1,6 @@
 // sail-media engine — the reactive source→descriptor slice. The ONLY engine
 // file that imports `@ship/sail-runtime` (signal/derived). No I/O, no DOM, no
-// `ship.*`/`fetch`/`<data>`.
+// `ship.*`/`fetch`/`query()`.
 //
 // Authority: build-spec §"API sketch" (the `MimeRegistry` facade), §"Backbone
 // #1 — the headless-engine-behind-a-thin-shell pattern".

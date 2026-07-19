@@ -75,7 +75,7 @@ export default controller(({ ship }) => {
 The `ship.<domain>.<op>` methods that return `Promise` are mutations (e.g.
 `ship.agents.create`, `ship.agents.update`, `ship.collections.create_item`,
 `ship.pipelines.dispatch`); the ones returning `LiveSource` are subscriptions
-and belong in `<data>` or a controller `query()`, which routes a `LiveSource`-returning method to its push path (`packages/sdk-client/src/ship-sdk.ts`).
+and belong in a controller `query()`/`queryKeyed()` call, which routes a `LiveSource`-returning method to its push path (`packages/sdk-client/src/ship-sdk.ts`).
 `await` the promise to sequence follow-up state changes; wrap in `try/catch`
 for error UX.
 

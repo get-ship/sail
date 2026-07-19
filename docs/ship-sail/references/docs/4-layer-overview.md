@@ -37,7 +37,7 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
 | `css` | Extracted / passed-through CSS (component `<style>` blocks, `styles` opt), present when the source carries styles. |
 | `cem` | Custom Elements Manifest (components only) — fuel for editor tooling. |
 | `schema` | Prop schema JSON — read by `decode.ts` to validate runtime prop values. |
-| `dts` | Typed `Scope` for the inline `<controller>` block. Includes both `<data>` names and the controller function's returned keys. |
+| `dts` | Typed `Scope` for the inline `<controller>` block. Includes the controller function's returned keys. |
 | `meta` | `.sail.meta.json` — binding kinds / exprs / deps / renderKey. Developer-tooling fuel; the runtime never loads it. |
 
 Pipeline (`src/lib.rs:185` `compile()`): `parse::parse` → `check::run` → `bindings::build` → `lower::lower` → `emit::js::emit_module` (+ `emit::cem`, `emit::schema`, `emit::dts`, `emit::meta`). SSR is no longer a compiler concern — the host (ship-js) renders the module server-side. Diagnostics carry byte spans (`src/diagnostics.rs`).
@@ -79,7 +79,7 @@ Public API barrel: `packages/sail/runtime/src/index.ts`. Anything not re-exporte
 | `css` | Extracted / passed-through CSS (component `<style>` blocks, `styles` opt), present when the source carries styles. |
 | `cem` | Custom Elements Manifest (components only) — fuel for editor tooling. |
 | `schema` | Prop schema JSON — read by `decode.ts` to validate runtime prop values. |
-| `dts` | Typed `Scope` for the inline `<controller>` block. Includes both `<data>` names and the controller function's returned keys. |
+| `dts` | Typed `Scope` for the inline `<controller>` block. Includes the controller function's returned keys. |
 | `meta` | `.sail.meta.json` — binding kinds / exprs / deps / renderKey. Developer-tooling fuel; the runtime never loads it. |
 
 The dev-only leak detector lives at the subpath `@ship/sail-runtime/dev` so it doesn't ship in production bundles.
@@ -113,7 +113,7 @@ Daemon-side route table (`apps/shipd/src/router.rs`) mounts the surface:
 | `GET /_deck/views/{name}` | `crates/ship-views/src/view_payload.rs` (extracted out of deck into the `ship-views` crate) |
 | `GET /_deck/views/{name}/sse` | `apps/shipd/src/views/sui_patch_channel.rs` |
 | `GET /_deck/hmr` / `hmr-client.js` / `dev/hmr` | `apps/shipd/src/views/sui_hmr.rs` |
-| `GET /_deck/data` | `apps/shipd/src/views/sui_data.rs` (the `<data live>` SSE channel) |
+| `GET /_deck/data` | `apps/shipd/src/views/sui_data.rs` (the live query() SSE channel) |
 | `POST /_deck/mutation/{name}` | `apps/shipd/src/views/sui_mutation.rs` |
 | `POST /_deck/views/{name}/patch-elements` | `apps/shipd/src/views/sui_patches.rs` |
 | `GET /_deck/source/{tag}` | `apps/shipd/src/views/sui_source.rs` |
@@ -161,5 +161,5 @@ A request for `/agents` resolves end-to-end:
 2. Shell loads `/_deck/views/agents` → SSR payload (compiled HTML + manifest).
 3. Shell loads `/_deck/views/agents/view.js` → compiled ESM module.
 4. Module imports from `/_deck/runtime.js` (the SAIL runtime barrel) and `/_deck/sdk-client.js`.
-5. `attach()` walks the SSR DOM, binds reactive identifiers from the module's controller, opens `<data live>` SSE channels to `/_deck/data?expr=…`.
+5. `attach()` walks the SSR DOM, binds reactive identifiers from the module's controller, opens live query() SSE channels to `/_deck/data?expr=…`.
 6. Edits in dev mode emit `module-changed` on `/_deck/dev/hmr`; `apps/shell/src/hmr.ts` cache-busts the rebuilt `view.js` and re-mounts in place.

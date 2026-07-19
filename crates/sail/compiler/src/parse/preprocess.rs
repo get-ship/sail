@@ -6,7 +6,7 @@
 //! Transforms, in order, before the HTML parser sees the source:
 //!  1. Quote unquoted brace attributes — `disabled={x || y}` becomes
 //!     `disabled="{x || y}"` with `"` inside the expression escaped to `&quot;`.
-//!  2. Expand non-void self-closing tags — `<data … />` becomes `<data …></data>`.
+//!  2. Expand non-void self-closing tags — `<time … />` becomes `<time …></time>`.
 //!  3. Lower `sx="…"` surface attributes → atomic `class`es.
 //!  4. Lower the layout keywords (`<column>`/`<row>`/…) → `<div>` + atomic classes.
 //! Steps 3–4 emit deduped CSS that `preprocess` injects as one `<style>`.
@@ -2391,10 +2391,10 @@ mod tests {
 
     #[test]
     fn full_pipeline() {
-        let src = r#"<data name="agents" source="ship.agents.summaries()" live />
+        let src = r#"<time datetime="2026-07-19" />
 <button on:click={() => x()}>hi</button>"#;
         let out = preprocess(src);
-        assert!(out.contains("</data>"));
+        assert!(out.contains("</time>"));
         assert!(out.contains(r#"on:click="{() =&gt; x()}""#) || out.contains(r#"on:click="{() => x()}""#));
     }
 
@@ -2420,14 +2420,14 @@ mod tests {
 
     #[test]
     fn html_comment_with_nested_tag_does_not_leak() {
-        // The fake `<data>` inside this comment used to be read as a
-        // tag boundary. The first `>` (inside `<data>`) ended the
+        // The fake `<time>` inside this comment used to be read as a
+        // tag boundary. The first `>` (inside `<time>`) ended the
         // inner-while's "tag mode" early; subsequent text was
         // misclassified. With the comment-aware skip, the body is
         // copied verbatim and the real `<button>` is parsed correctly.
-        let src = r#"<!-- see <data> usage --><button on:click={() => f()}>x</button>"#;
+        let src = r#"<!-- see <time> usage --><button on:click={() => f()}>x</button>"#;
         let out = preprocess(src);
-        assert!(out.contains("</data>") || out.contains("<data>"));
+        assert!(out.contains("</time>") || out.contains("<time>"));
         assert!(
             out.contains(r#"on:click="{() => f()}""#)
                 || out.contains(r#"on:click="{() =&gt; f()}""#),

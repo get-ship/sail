@@ -19,9 +19,9 @@
 //!     tsgo checks them against the controller's `Scope` type.
 //!   * `$scope` — the runtime-mutable scope (`Object.create(scope)`). The
 //!     emitter's machinery (child scopes, per-row `__v` version signals,
-//!     `bindWhileLoading({ signal: $scope.<data> })`) drives this. It
+//!     `bindWhileLoading({ signal: $scope.<name> })`) drives this. It
 //!     inherits every member of `scope` through the prototype, so a
-//!     machinery read of a `<data>` signal resolves to the same object an
+//!     machinery read of a scope signal resolves to the same object an
 //!     author read does — one source of truth, two reference paths.
 
 use super::super::template_emit::TemplateEmitter;
@@ -176,7 +176,7 @@ pub(super) fn emit_render(
     w.line("export function mount(container: HTMLElement): () => void {");
     w.enter();
     // `$scope` is the runtime-mutable scope the emitter machinery drives;
-    // it inherits `scope`'s members so a machinery read of a `<data>`
+    // it inherits `scope`'s members so a machinery read of a scope
     // signal resolves to the same object an author `scope.X` read does.
     // Typed `any` because the emitter adds ad-hoc props (`__v`, row binders).
     w.line("// eslint-disable-next-line @typescript-eslint/no-explicit-any");

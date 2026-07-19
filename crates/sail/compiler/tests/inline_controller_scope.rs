@@ -42,7 +42,7 @@ fn inline_controller_in_scope_ref_passes() {
 #[test]
 fn inline_controller_out_of_scope_ref_fails_without_source_path() {
     // `countt` is a typo — not in the controller scope, and there is no
-    // `<data>`/`<prop>` declaring it. With the inline controller as scope
+    // `<prop>` declaring it. With the inline controller as scope
     // context, this must now be a compile error (it silently passed before).
     let src = format!("{CONTROLLER}<button>{{countt()}}</button>");
     let err = compile(&src, opts())

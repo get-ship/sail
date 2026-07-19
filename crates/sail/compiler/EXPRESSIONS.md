@@ -109,7 +109,7 @@ checker won't recognise them as identifiers).
 
 | Construct | Example | Notes |
 |-----------|---------|-------|
-| Identifier read | `count` | Resolves against `<data>`, `<prop>`, controller `scope` / `derived` / `on` / `use` keys, plus a small builtins allowlist. |
+| Identifier read | `count` | Resolves against `<prop>`, controller `scope` / `derived` / `on` / `use` keys, plus a small builtins allowlist. |
 | Property access | `obj.field`, `arr.length` | |
 | Optional chaining | `a?.b`, `a?.()`, `a?.[k]` | |
 | Indexing | `arr[0]`, `obj['key']` | |

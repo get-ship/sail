@@ -5,7 +5,7 @@
 //      share one in-flight init) and fetches EXACTLY the injected `wasmUrl`,
 //      never a hardcoded / daemon path.
 //   2. Pack boundary purity: no `@ship/sdk-client`, no `ship.*` call form, no
-//      `EventSource`, no `<data>`, and exactly ONE real `fetch` in the pack —
+//      `EventSource`, no `query()`, and exactly ONE real `fetch` in the pack —
 //      the `wasmUrl` fetch in `wasm-bootstrap.ts`.
 
 import { createRequire } from 'node:module'

@@ -1,8 +1,8 @@
 ==================
-data directive (top-level query declaration)
+self-closing element with a boolean attribute
 ==================
 
-<data name="agents" source="ship.list('agents')" live/>
+<video poster="/agents.png" src="/agents.mp4" autoplay/>
 
 ---
 

@@ -15,14 +15,11 @@ use crate::ir::*;
 use std::collections::BTreeSet;
 
 pub mod bindings;
-pub mod data_decl;
 pub mod directives;
 pub mod for_uses_row;
 pub mod presets;
 pub mod row_field_uses;
 pub mod template;
-
-pub use data_decl::DataDecl;
 
 #[derive(Debug, Clone, Default)]
 pub struct Lowered {
@@ -62,10 +59,6 @@ pub struct Lowered {
     /// view's import graph (the per-view resolver). Collected once here; the
     /// emitter decides whether to write the imports.
     pub used_component_tags: BTreeSet<String>,
-    /// Every `<data name=… source=… live? />` declaration, in source
-    /// order. The setup emitter seeds one `$scope.<name>` signal per
-    /// entry — see `emit::js::setup::emit_setup_body`.
-    pub data_decls: Vec<DataDecl>,
 }
 
 /// Walk the program, build a `Lowered` summary.
@@ -183,16 +176,6 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_view: bool, depth: &mut usize
             }
         }
         Instr::Element(el) => {
-            if el.tag.eq_ignore_ascii_case("data") {
-                let decl = data_decl::extract(el)?;
-                out.runtime_imports.insert(if decl.live { "queryKeyed" } else { "signal" });
-                out.data_decls.push(decl);
-                // Mirror `bindings::Builder::walk_element`: `<data>` is a
-                // directive, not markup — no children walked, no attr
-                // imports collected (`source`/`name`/`live` are consumed
-                // above, not template bindings).
-                return Ok(());
-            }
             if el.tag.starts_with("use-") {
                 out.uses_template_hooks = true;
                 // Hook activation needs `getTemplateHook` to look the

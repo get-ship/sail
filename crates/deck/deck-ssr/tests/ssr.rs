@@ -191,7 +191,7 @@ fn glyph_svg_first_paint_serializes_namespaced() {
 #[test]
 fn feed_data_client_value_resolves_via_host_dispatch() {
     // A controller-side `live(() => call('api.demo.clock', {}))` source (the
-    // real living-async surface — no `<data>`/`<client>` authoring elements
+    // real living-async surface — no template-level data/client authoring elements
     // involved). `call` crosses the host-dispatch wire directly; the fake
     // `DataPort` (`DemoData`, above) answers it; after the async flush, first
     // paint carries the resolved state (not `loading`).

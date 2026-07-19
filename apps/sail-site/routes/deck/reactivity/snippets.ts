@@ -3,7 +3,7 @@
 // these strings. Both are real deck view shapes:
 //   - `route` is the reactive URL handle deck injects into every view scope;
 //     its fields are signals (packages/sail/runtime/src/route-signals.ts).
-//   - `<data … live>` is deck's live-data seam, exactly as the conformance
+//   - `query()` is deck's live-data seam, exactly as the conformance
 //     view drives it (crates/deck/deck-conformance/app/routes/feed/page.sail).
 export const code = {
   // The URL as a reactive source. Navigating re-runs only the bindings that
@@ -18,13 +18,15 @@ export const code = {
 <a href="/posts/42?sort=top">Post 42, top →</a>`,
 
   // A live server-data source. deck subscribes the view to the stream and
-  // patches \`tick\` as values arrive; only the bindings reading it re-render.
+  // patches \`t\` as values arrive; only the bindings reading it re-render.
   liveData: `<!-- routes/feed/page.sail — subscribe a view to live server data -->
-<!-- \`api\` is a client the app manifest names; using it here is the
-     whole declaration. The host supplies the value. -->
-<data name="tick" source="api.demo.clock()" live />
+<controller>
+import { controller, query } from '@ship/sail-runtime'
+import { call } from 'ship'
+export default controller((_ctx) => ({ t: query(() => call('api.demo.clock', {})) }))
+</controller>
 
-{#while-loading of tick}<p>Connecting…</p>{/while-loading}
-{#while-error err of tick}<p>Lost: {err.message}</p>{/while-error}
-<p>state: {tick().kind}</p>`,
+{#while-loading of t}<p>Connecting…</p>{/while-loading}
+{#while-error err of t}<p>Lost: {err.message}</p>{/while-error}
+<p>state: {t().kind}</p>`,
 }

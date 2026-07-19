@@ -11,7 +11,7 @@ import type { ShipHost, Clients } from './ship'
 /**
  * Setup-time context passed to the resolver. Mirrors what `hydrate`
  * passes to a setup function, plus a `scope` field carrying any
- * signals already declared in the template (`<data>`, `<state>`)
+ * signals already declared in the view scope
  * by the time setup runs.
  */
 export interface ResolverContext {
@@ -41,7 +41,7 @@ export interface ResolverContext {
    * call `.set()` on these; assignments to other keys warn and are
    * dropped. Defaults to "every callable signal in scope" when
    * omitted, which is fine for unit tests but lossy for real hydrate
-   * (since `<data>` signals are also writable in shape).
+   * (since live envelope signals are also writable in shape).
    */
   stateKeys?: ReadonlySet<string>
   /**

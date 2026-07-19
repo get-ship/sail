@@ -484,8 +484,9 @@ describe('mount() keyed clients', () => {
   }
 
   it('a non-ship client key resolves a live data source end-to-end', async () => {
-    // Fake `api` client — what a non-Ship host injects at mount, for an
-    // `api` the app manifest names and the template references.
+    // Fake `api` client — what a non-Ship host injects. The module body
+    // mirrors compiled output for a controller declaring a live
+    // `queryKeyed` entry over the injected `api` client.
     const api = {
       demo: { clock: async () => ({ now: 42 }) },
     }

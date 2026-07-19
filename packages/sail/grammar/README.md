@@ -16,10 +16,9 @@ silently re-drift from `crates/sail/compiler`.
 `.sail` is HTML extended with template grammar. The grammar
 recognises:
 
-- **Directive elements** — `<data>` (top-level query declaration),
-  `<scope>` (declares props/variants) (just HTML elements as far as
-  the grammar is concerned; the runtime extracts them by tag name;
-  queries flag them visually).
+- **Directive elements** — `<scope>` (declares props/variants) (just
+  an HTML element as far as the grammar is concerned; the runtime
+  extracts it by tag name; queries flag it visually).
 - **Standard HTML elements** — both the explicit-close form
   (`<div>…</div>`) and the self-closing form (`<ship-icon …/>`),
   plus the void-element forms (`<link>`, `<br>`, `<img>`, …).

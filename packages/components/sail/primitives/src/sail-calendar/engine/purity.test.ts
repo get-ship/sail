@@ -3,7 +3,7 @@
 //
 // STATIC SCAN of the engine source (not an import): asserts the boundary holds
 // (Cardinal 4 + the sail-* boundary). The engine is pure reactive state — no
-// SDK, no network, no <data>. Engine purity is NOT lint-enforced (sail-lint
+// SDK, no network, no query(). Engine purity is NOT lint-enforced (sail-lint
 // targets .sail/.controller.ts and never sees these .ts modules) — it is
 // TEST-asserted here. Authority: build-spec §"Backbone #1" + §Slices +
 // behavioral spec #15.
@@ -26,7 +26,7 @@ const FORBIDDEN: { token: string; why: string }[] = [
   { token: 'ship.', why: 'ship.* call — backend coupling belongs in the consumer controller' },
   { token: 'fetch(', why: 'network call — the engine never performs I/O' },
   { token: 'EventSource', why: "server-sent events — not the engine's concern" },
-  { token: '<data', why: '<data> directive — a view/controller concern, never the engine' },
+  { token: 'query(', why: 'query() call — a view/controller concern, never the engine' },
 ]
 
 describe('engine purity (grep gate — Cardinal 4 + sail-* boundary)', () => {
@@ -41,7 +41,7 @@ describe('engine purity (grep gate — Cardinal 4 + sail-* boundary)', () => {
     }
   })
 
-  it('contains NONE of the forbidden boundary tokens (ship.*/fetch/EventSource/<data)', () => {
+  it('contains NONE of the forbidden boundary tokens (ship.*/fetch/EventSource/query())', () => {
     for (const file of engineSourceFiles()) {
       const src = readFileSync(file, 'utf8')
       for (const { token, why } of FORBIDDEN) {

@@ -11,7 +11,7 @@
 //! Behavior-preserving and conservative: the cloned DOM is exactly what the
 //! imperative path would have built, and anything not provably static falls
 //! back to the imperative emit. The first cut excludes custom elements, SVG,
-//! and the behavior-bearing special tags (`<data>`, `<slot>`, `<use-*>`), whose
+//! and the behavior-bearing special tags (`<slot>`, `<use-*>`), whose
 //! imperative paths do more than build plain DOM.
 
 use crate::ir::template::{AttrInstr, ElementInstr, Instr};
@@ -23,12 +23,11 @@ const VOID: &[&str] = &[
 ];
 
 /// Tags whose imperative emit does more than build plain DOM, so they are never
-/// cloned: custom elements (upgrade), SVG (namespaced), `<data>` (skipped),
-/// `<slot>` (slotting), `<use-*>` (template hooks).
+/// cloned: custom elements (upgrade), SVG (namespaced), `<slot>` (slotting),
+/// `<use-*>` (template hooks).
 fn tag_blocks_clone(tag_lower: &str) -> bool {
     tag_lower.contains('-')
         || tag_lower == "svg"
-        || tag_lower == "data"
         || tag_lower == "slot"
         || tag_lower.starts_with("use-")
 }
@@ -175,7 +174,6 @@ mod tests {
         assert!(!is_static_element(&el("sail-icon", vec![attr("name", "home")], vec![])));
         assert!(!is_static_element(&el("svg", vec![], vec![])));
         assert!(!is_static_element(&el("slot", vec![], vec![])));
-        assert!(!is_static_element(&el("data", vec![], vec![])));
         assert!(!is_static_element(&el("use-tooltip", vec![], vec![])));
     }
 }

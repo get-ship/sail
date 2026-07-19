@@ -17,8 +17,8 @@
 //! the object-literal sections they named: the controller's setup function
 //! returns ONE flat scope object now, so `ctx` (the setup function's own
 //! first parameter, whatever the author named it) is the only remaining
-//! head worth checking — it exposes the ambient view scope + template
-//! `<data>`/`<state>` signals, and its declared members are exactly the
+//! head worth checking — it exposes the ambient view scope
+//! signals, and its declared members are exactly the
 //! returned scope member set (the same names a bare `{count}` reference
 //! resolves against).
 

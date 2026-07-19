@@ -2,9 +2,27 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { compileAndMount as hydrate } from '../src/test-utils/compile-sail'
-import { state, signal, type Signal } from '@ship/sail-runtime'
+import { state, signal, queryKeyed, type Signal } from '@ship/sail-runtime'
 
 const counterSetup = (): { count: Signal<number> } => ({ count: signal(0) })
+
+// The agents fixture's live signal, declared the sanctioned way: the
+// controller seeds an envelope-shaped `queryKeyed` entry from the ship
+// client on ctx. `retry: false` so a rejection surfaces in the
+// `{#while-error}` branch immediately.
+type AgentsShip = {
+  ship: { agents: { summaries: () => Promise<{ items: { id: string; name: string }[] }> } }
+}
+const agentsSetup = (ctx: unknown) => {
+  const { ship } = ctx as AgentsShip
+  return {
+    agents: queryKeyed(
+      () => ['ship', 'agents', 'summaries'],
+      () => ship.agents.summaries(),
+      { retry: false },
+    ),
+  }
+}
 
 const fixturePath = (name: string): string =>
   resolve(__dirname, 'fixtures', name)
@@ -94,7 +112,7 @@ describe('hydrate — agents (live data + while + if + for)', () => {
           }),
       },
     }
-    const handle = hydrate(loadFixture('agents.sail'), undefined, {
+    const handle = hydrate(loadFixture('agents.sail'), agentsSetup, {
       container,
       ship,
     })
@@ -116,7 +134,7 @@ describe('hydrate — agents (live data + while + if + for)', () => {
     const ship = {
       agents: { summaries: () => Promise.resolve({ items: [] }) },
     }
-    const handle = hydrate(loadFixture('agents.sail'), undefined, {
+    const handle = hydrate(loadFixture('agents.sail'), agentsSetup, {
       container,
       ship,
     })
@@ -131,7 +149,7 @@ describe('hydrate — agents (live data + while + if + for)', () => {
     const ship = {
       agents: { summaries: () => Promise.reject(new Error('boom')) },
     }
-    const handle = hydrate(loadFixture('agents.sail'), undefined, {
+    const handle = hydrate(loadFixture('agents.sail'), agentsSetup, {
       container,
       ship,
     })
@@ -149,7 +167,7 @@ describe('hydrate — agents (live data + while + if + for)', () => {
         summaries: () => Promise.resolve({ items: [{ id: 'x', name: 'X' }] }),
       },
     }
-    const handle = hydrate(loadFixture('agents.sail'), undefined, {
+    const handle = hydrate(loadFixture('agents.sail'), agentsSetup, {
       container,
       ship,
     })

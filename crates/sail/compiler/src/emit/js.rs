@@ -92,7 +92,7 @@ pub fn emit_module(
     let mut body = Writer::new();
     body.enter();
     let module_hoists =
-        setup::emit_setup_body(&mut body, program, bindings, opts, lowered, sx_var_bindings);
+        setup::emit_setup_body(&mut body, program, bindings, opts, sx_var_bindings);
     body.leave();
     let hoisted = module_hoists.into_string();
     let uses_templates = hoisted.contains("__tpl(");

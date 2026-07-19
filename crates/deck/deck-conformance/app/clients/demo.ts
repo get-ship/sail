@@ -3,7 +3,7 @@
 // In the ambient/`BUILTINS` path these are injected at runtime via
 // `ctx.clients` (the `<client name="…">` seam). The synthetic path replaces
 // that with a real import named by the app manifest: `ship` → `makeShip`,
-// `api` → `makeApi`. tsgo/tsc then type-checks every `<data source="ship.…">`
+// `api` → `makeApi`. tsgo/tsc then type-checks every `query(() => ship.…)`
 // and template read against THESE types — there is no ambient passthrough.
 //
 // The SSR build aliases `./clients/demo` to a host-dispatch-backed server
@@ -34,7 +34,7 @@ export interface Tick {
   now: string
 }
 
-/** A demo app config blob (the non-live `<data>` shape exerciser). */
+/** A demo app config blob (the non-live query() shape exerciser). */
 export interface DemoConfig {
   title: string
 }

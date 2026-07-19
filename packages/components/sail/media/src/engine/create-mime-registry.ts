@@ -2,7 +2,7 @@
 // detection slices (detect.ts → resolve.ts → descriptor.ts) and returns the
 // `MimeRegistry` facade. PURE reactive resolution: imports `@ship/sail-runtime`
 // ONLY (transitively, via descriptor.ts). No I/O, no DOM, no `ship.*`/`fetch`/
-// `<data>`/`@ship/sdk-client`. Inspects already-resolved inputs (content-type
+// `query()`/`@ship/sdk-client`. Inspects already-resolved inputs (content-type
 // string, filename, the first N bytes) and returns a descriptor.
 //
 // The kind→TAG table (the dispatch decision — WHICH renderer a kind routes to)

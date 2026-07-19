@@ -18,7 +18,7 @@ SAIL has **two** categories of hook with different jobs and different syntax. Th
 
 Three questions cover almost every "I need something" moment:
 
-1. **Need data from the platform?** → `<data>` element in the template. Not a hook.
+1. **Need data from the platform?** → `query()`/`queryKeyed()` in the controller. Not a hook.
 2. **Need a side effect tied to the view's lifecycle?** → Template hook (`<use-*>`).
 3. **Need a reusable bundle of state, derived values, and handlers?** → Controller hook — call a composition function inside the controller's setup function.
 
@@ -259,6 +259,6 @@ This is a manual choice, not a framework guarantee — pick namespacing whenever
 
 Resist these. They look like hooks but aren't.
 
-- **Subscribing to server data.** That's `<data>` in the template, not a hook. Even if you reuse a subscription across views, repeat the `<data>` element. The author should always see the subscription in the template.
+- **Subscribing to server data.** That's `query()`/`queryKeyed()` in the controller, not a hook. Even if you reuse a subscription across views, repeat the `query()` call. The author should always see the subscription in the controller.
 - **Sharing global state.** That's a controller hook instantiated once and imported wherever needed. Same role as any other controller hook; no new primitive. (Yes, this might end up looking like a "store." It's still just a controller hook.)
-- **Routing.** Routing is a `shipd` concern, exposed via `<data>` and template route helpers (TBD). Not a hook.
+- **Routing.** Routing is a `shipd` concern, exposed via `query()` and template route helpers (TBD). Not a hook.

@@ -27,7 +27,7 @@ pub use deck_axum::multiplex::{MultiplexState, multiplex_router, HEARTBEAT_MS};
 pub use deck_axum::pages::spa_fallback;
 
 // Contract types (transport-agnostic), surfaced for hosts that name them.
-// `DataPort` is the data seam a host implements (live `<data source>`); the
+// `DataPort` is the data seam a host implements (live query() sources); the
 // facade surfaces it so hosts write `deck::DataPort`, not `deck_core::DataPort`.
 pub use deck_core::{
     CachePolicy, DaemonBuildInfo, DaemonMode, DataPort, DeckResponse, Resolution, RouteSetupQuery,

@@ -2,7 +2,7 @@
 conformance smoke: full live surface in one document
 ==================
 
-<data name="agents" source="ship.list('agents')" live/>
+<video poster="/agents.png" src="/agents.mp4" autoplay/>
 
 <div class="ship-view agents-view">
   <link rel="stylesheet" href="/_ship-set/views/agents/view.css">

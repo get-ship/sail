@@ -284,7 +284,7 @@ fn validate_custom_element_name(name: &str) -> Result<(), &'static str> {
 /// parse — but the outputs are the element artifacts: a static structure
 /// snippet for use-site lowering, framework-sheet skin CSS keyed on
 /// `.sail-<name>`, and the element manifest. The mode enforces the seam test:
-/// control flow, dynamic attributes, `<data>`/`<client>`, or a controller
+/// control flow, dynamic attributes, or a controller
 /// are compile errors naming the source a component.
 pub fn compile_element(
     source: &str,

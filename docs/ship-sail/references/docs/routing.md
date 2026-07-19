@@ -48,9 +48,9 @@ directory; the runtime pattern (next section) uses the `:name` form:
 `route` is a `RouteSignals` injected into every controller section's scope.
 `route.params.<name>` and `route.query.<name>` are lazy `Signal<string |
 undefined>`s; reading one (`route.params.id()`) inside a `derived`, an `effect`,
-or a `<data live>` source thunk subscribes the surrounding scope. When
+or a `query()`/`queryKeyed()` thunk subscribes the surrounding scope. When
 navigation changes the URL, the matched param signals fire and dependents re-run
-— the prior SSE subscription disposes and a new one opens with the updated arg.
+— the prior subscription disposes and a new one opens with the updated arg.
 
 Param names are not declared at construction. They are matched against the
 patterns registered via `defineRoutes`. A view that reads `route.params.id()`

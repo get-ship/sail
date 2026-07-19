@@ -9,7 +9,7 @@
 // This catches the leak class fixed in two recent commits:
 //   - 87cf3223 — `live()` discarded its effect's stop fn, so the
 //     EventSource opened by a `LiveSource.subscribe(sig)` was never
-//     closed; `<data live>` views OOM'd tabs after a few-dozen
+//     closed; live-querying views OOM'd tabs after a few-dozen
 //     navigations.
 //   - 0efea6d7 — `mount()` was dropping the `() => …` cleanup that
 //     controllers return from their `mount()` lifecycle hook.

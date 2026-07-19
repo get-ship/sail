@@ -180,7 +180,7 @@ fn scope_factory_fields_omitted_from_scope() {
     // Re-declaring them in Scope put the same key in both Ctx and SC, so
     // `$signals.x` collapsed to `unknown` — the root cause of the state casts
     // (#121/#122). They are OMITTED from Scope now. Template expression reads
-    // (`{foo()}`) do not add Scope members; only `<data>`/props/use/ref do.
+    // (`{foo()}`) do not add Scope members; only props/use/ref do.
     let sail = r#"<p>{foo()} {label()}</p>"#;
     let controller = r#"
         import { controller, signal } from '@ship/sail-runtime'

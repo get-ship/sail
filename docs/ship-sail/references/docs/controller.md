@@ -11,13 +11,16 @@ A controller is an **optional** `<controller>` block inline in the `.sail` file 
 
 The controller is the view's view-model: reactive state, derived values, event handlers, and lifecycle. Templates declare structure; the controller owns everything reactive.
 
-## No controller at all
+## A minimal controller for a one-shot read
 
-Pure declarative views need nothing. The template uses `<data>` for subscriptions and inline expressions for anything computed. **No reactive state, no `<controller>` block.**
+Any server data subscription — even a single read-only one — goes through `query()`/`queryKeyed()` in the controller. There's no template-level shortcut; a view with one subscription and no other reactive state still gets the smallest possible `<controller>` block.
 
 ```html
 <!-- views/static/page.sail -->
-<data name="overview" source="ship.git.overview()" live />
+<controller>
+import { controller, query } from '@ship/sail-runtime'
+export default controller(({ ship }) => ({ overview: query(() => ship.git.overview()) }))
+</controller>
 
 <p>Branch: {overview().value?.branch}</p>
 ```
@@ -59,7 +62,7 @@ export default controller((ctx) => {
 
 `fn` is `(ctx, host?) => Record<string, unknown>`:
 
-- **`ctx`** is the ambient view scope — `clients`, `route`, `navigate`, plus every template-declared `<data>`/`<state>` signal, all directly accessible (`ctx.clients`, or destructure `{ clients, count }` in the parameter). There is no `ctx.ship`: the runtime names no host product. A Ship host's SDK is a *client* (`ctx.clients.ship`), typed by the provider augmenting its own key on `Clients` — same as any other data source. Each declared client is also spread into scope under its bare name, so a template written against `ship.git.overview()` keeps resolving.
+- **`ctx`** is the ambient view scope — `clients`, `route`, `navigate`, all directly accessible (`ctx.clients`, or destructure `{ clients, ship }` in the parameter). There is no `ctx.ship` by that literal key unless a client is named `ship`: the runtime names no host product. A Ship host's SDK is a *client* (`ctx.clients.ship`), typed by the provider augmenting its own key on `Clients` — same as any other data source. Each declared client is also spread into scope under its bare name, so a controller written against `ship.git.overview()` keeps resolving.
 - **`host`** (optional second parameter) is the custom-element host, for reaching the shadow root or doing direct DOM work.
 - Whatever `fn` **returns** is the entire contributed template scope: state signals (`signal(...)`), computed values (`derived(...)`), plain helper functions, and event handlers — all as ordinary object properties. There is no separate section for handlers; a handler is just a function returned alongside everything else.
 
@@ -127,9 +130,8 @@ There is no hook registry, no namespacing convention, no `ControllerHook` type �
 
 ## What's NOT in the controller
 
-For clarity — these go in the template, never the controller:
+For clarity — these go in the template, never the controller (server data subscriptions are the one exception: they live in the controller, via `query()`/`queryKeyed()`, precisely so every subscription a view depends on is visible in one place):
 
-- Server data subscriptions (use `<data>` in the template).
 - Host-side side effects like keybindings, document title, focus traps (use `<use-*>` template hooks).
 - DOM structure (templates own structure, full stop).
 

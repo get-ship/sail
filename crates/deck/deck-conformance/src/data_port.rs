@@ -259,7 +259,7 @@ async fn serve_sse_inner(
         return sse_error(StatusCode::INTERNAL_SERVER_ERROR, "view parse error");
     }
 
-    // Live-data discovery: the retired `<data live>` directive used to be
+    // Live-data discovery: the retired <data live> directive used to be
     // parsed straight out of the `.sail` to find sources to stream. That
     // authoring surface is gone (compiler-side) and its replacement — how a
     // controller's own `live(() => …)` sources get discovered for a

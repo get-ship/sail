@@ -68,7 +68,7 @@ export default controller((ctx) => {
 </controller>
 ```
 
-One function, one job: `controller(fn)` where `fn` is `(ctx) => Record<string, unknown>`. `ctx` is the ambient view scope — `ship`, `clients`, `route`, `navigate`, plus every template-declared `<data>`/`<state>` signal, directly accessible. Whatever the function returns IS the contributed template scope: state signals, derived values, plain helpers, and event handlers all live together as ordinary object properties — there's no separate section for handlers anymore.
+One function, one job: `controller(fn)` where `fn` is `(ctx) => Record<string, unknown>`. `ctx` is the ambient view scope — `ship`, `clients`, `route`, `navigate`, directly accessible. Whatever the function returns IS the contributed template scope: state signals, derived values (including `query()`/`queryKeyed()` data signals), plain helpers, and event handlers all live together as ordinary object properties — there's no separate section for handlers anymore.
 
 `mount(fn)` and `onCleanup(fn)` are ambient — ✅ callable from anywhere in the setup call graph (the controller body itself, or a plain helper function it calls), no import needed. `mount` fires once after the instance's DOM connects; `onCleanup` runs on dispose. Mutation is always `signal.set(newValue)` (or the updater form `signal.set(prev => next)`) — there's no writable-state-proxy assignment style.
 

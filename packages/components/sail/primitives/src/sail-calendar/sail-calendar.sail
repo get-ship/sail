@@ -46,7 +46,7 @@
 // as scope signals the template reads, and emits `sail-*` events via the runtime
 // `host.emit!` helper (NOT open-coded `dispatchEvent`).
 //
-// Cardinals honored: mutations only in on:* / mount; no fetch / ship.* / <data>
+// Cardinals honored: mutations only in on:* / mount; no fetch / ship.* / query()
 // (engine purity asserted by engine/purity.test.ts). Range selection +
 // drag-to-create/move ride the engine's range/intent mutators; the DOM bridge
 // (pointer drag + Shift+Arrow → engine + sail-* emits) lives in `./sail-calendar.interactions`.

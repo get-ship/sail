@@ -38,7 +38,7 @@ describe('MutableState<Scope> (handler-state arg)', () => {
     // `Signal<T>` API — there is no separate writable-proxy type for
     // handlers; a handler returned from setup closes over the same
     // signal and calls `.set()` on it, same as setup itself would.
-    interface Tpl { /* template-declared <data>/<state> only */ }
+    interface Tpl { /* template-declared scope members only */ }
     controller((_ctx: ControllerScope<Tpl>) => {
       const count = signal(0)
       const flag = signal(false)

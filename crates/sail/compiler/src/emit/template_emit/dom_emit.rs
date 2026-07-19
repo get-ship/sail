@@ -89,11 +89,6 @@ impl TemplateEmitter {
         cleanups_var: &str,
     ) -> String {
         let lower = el.tag.to_ascii_lowercase();
-        // Mirror `bindings::Builder::walk_element`: skip `<data>`
-        // entirely (no children walked, no keys allocated).
-        if lower == "data" {
-            return String::new();
-        }
         // ── TEMPLATE CLONE (the fast path) ──────────────────────────────────
         // If this subtree is static structure, clone it instead of building it.
         // One DOM call instead of one per node AND one per attribute — 2.1x on the
@@ -937,9 +932,9 @@ impl super::TemplateEmitter {
 
     fn write_skeleton(&self, el: &ElementInstr, is_root: bool, out: &mut String) -> Option<()> {
         let lower = el.tag.to_ascii_lowercase();
-        // `<data>` is a directive, not markup; `<use-*>` needs a runtime activation
-        // hook. Neither belongs in a cloned skeleton.
-        if lower == "data" || lower.starts_with("use-") {
+        // `<use-*>` needs a runtime activation hook — it doesn't belong in a
+        // cloned skeleton.
+        if lower.starts_with("use-") {
             return None;
         }
 
