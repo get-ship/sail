@@ -37,6 +37,9 @@ export default controller(() => {
 
       <label>Guide</label>
       <a href="/sail/elements" aria-current={path() === '/sail/elements' ? 'page' : null}>Using components</a>
+      <a href="/sail/guide/building-a-component" aria-current={path() === '/sail/guide/building-a-component' ? 'page' : null}>Building a component</a>
+      <a href="/sail/guide/making-a-theme" aria-current={path() === '/sail/guide/making-a-theme' ? 'page' : null}>Making a theme</a>
+      <a href="/sail/guide/embedding-third-party-code" aria-current={path() === '/sail/guide/embedding-third-party-code' ? 'page' : null}>Embedding third-party code</a>
 
       <label>Reference</label>
       <a href="/sail/reference" aria-current={path() === '/sail/reference' ? 'page' : null}>API reference</a>
