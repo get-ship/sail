@@ -282,6 +282,10 @@ fn split_top_level(bytes: &[u8], start: usize, end: usize) -> Vec<(usize, usize)
                 i = skip_string(bytes, i, end, c);
                 continue;
             }
+            b'/' if let Some(after) = crate::scan::try_skip_regex(bytes, i, end) => {
+                i = after;
+                continue;
+            }
             b'(' | b'{' | b'[' | b'<' => depth += 1,
             b')' | b'}' | b']' | b'>' => depth -= 1,
             b',' if depth == 0 => {
@@ -314,6 +318,10 @@ fn param_name_text(bytes: &[u8], span: (usize, usize)) -> String {
         match c {
             b'"' | b'\'' | b'`' => {
                 i = skip_string(bytes, i, end, c);
+                continue;
+            }
+            b'/' if let Some(after) = crate::scan::try_skip_regex(bytes, i, end) => {
+                i = after;
                 continue;
             }
             b'(' | b'{' | b'[' | b'<' => depth += 1,
@@ -472,43 +480,125 @@ fn resolve_local_binding_span(bytes: &[u8], name: &str, start: usize, end: usize
             let post_ok = after_kw < end && !is_ident_cont(bytes[after_kw]);
             if prev_ok && post_ok {
                 let j = skip_trivia(bytes, after_kw);
-                // `const { a, b } = <expr>` — an object-destructuring
-                // binding. Every name in the pattern shares ONE initializer,
-                // so each resolves to the same right-hand-side span. This is
-                // how a multi-channel producer like `timeline(...)` reaches
-                // the returned scope; without it every destructured name
-                // falls through to `Other` and an sx `(--a)` read is refused.
-                if j < end && bytes[j] == b'{' {
-                    let pat_end = skip_balanced(bytes, j, end);
-                    if destructures_name(bytes, j + 1, pat_end.saturating_sub(1), nb) {
-                        let mut k = skip_trivia(bytes, pat_end);
-                        if k < end && bytes[k] == b':' {
-                            k = skip_type_annotation(bytes, k + 1, end);
-                            k = skip_trivia(bytes, k);
-                        }
-                        if k < end && bytes[k] == b'=' {
-                            let rhs_start = skip_trivia(bytes, k + 1);
-                            let bound = bound_expr_end(bytes, rhs_start, end);
-                            return Some(Span::new(rhs_start, bound));
-                        }
-                    }
-                }
-                if j + nb.len() <= end
-                    && &bytes[j..j + nb.len()] == nb
-                    && (j + nb.len() >= end || !is_ident_cont(bytes[j + nb.len()]))
-                {
-                    let mut k = skip_trivia(bytes, j + nb.len());
-                    if k < end && bytes[k] == b':' {
-                        k = skip_type_annotation(bytes, k + 1, end);
-                        k = skip_trivia(bytes, k);
-                    }
-                    if k < end && bytes[k] == b'=' {
-                        let rhs_start = skip_trivia(bytes, k + 1);
-                        let bound = bound_expr_end(bytes, rhs_start, end);
-                        return Some(Span::new(rhs_start, bound));
-                    }
+                if let Some(span) = resolve_declarator_list(bytes, nb, j, end) {
+                    return Some(span);
                 }
             }
+        }
+        i += 1;
+    }
+    None
+}
+
+/// Walk the declarator list of ONE `const`/`let` statement — `start` points at
+/// the first declarator's binding pattern — and return the initializer span of
+/// whichever declarator binds `nb`.
+///
+/// `const a = signal(0), b = signal(1)` is one statement with TWO declarators.
+/// The scan used to inspect the first and stop, so `b` never resolved to its
+/// `signal(...)` initializer and fell through to [`ScopeKind::Other`]: an sx
+/// `(--b)` read was refused as "not a setup-returned signal" — with a
+/// did-you-mean helpfully pointing at its own sibling `a`. Every declarator
+/// registers now, in either binding form:
+///
+///   - `NAME = <init>` — a plain identifier.
+///   - `{ a, b } = <init>` — object destructuring. Every name in the pattern
+///     shares ONE initializer, so each resolves to the same right-hand side.
+///     This is how a multi-channel producer like `timeline(...)` reaches the
+///     returned scope.
+///
+/// A declarator with no initializer (`let a, b = signal(0)`) contributes no
+/// span for `a` — there is nothing to classify — but does not stop the walk
+/// reaching `b`.
+fn resolve_declarator_list(bytes: &[u8], nb: &[u8], start: usize, end: usize) -> Option<Span> {
+    let mut j = start;
+    loop {
+        if j >= end {
+            return None;
+        }
+        // The binding pattern, and whether it binds `nb`.
+        let (binds, after_pat) = if bytes[j] == b'{' {
+            let pat_end = skip_balanced(bytes, j, end);
+            (
+                destructures_name(bytes, j + 1, pat_end.saturating_sub(1), nb),
+                pat_end,
+            )
+        } else if bytes[j] == b'[' {
+            // Array destructuring — not a shape any scope member takes today.
+            (false, skip_balanced(bytes, j, end))
+        } else if is_ident_start(bytes[j]) {
+            let mut k = j;
+            while k < end && is_ident_cont(bytes[k]) {
+                k += 1;
+            }
+            (&bytes[j..k] == nb, k)
+        } else {
+            return None;
+        };
+        let mut k = skip_trivia(bytes, after_pat);
+        if k < end && bytes[k] == b':' {
+            k = skip_type_annotation(bytes, k + 1, end);
+            k = skip_trivia(bytes, k);
+        }
+        // The declarator's own end: its initializer's bound, clamped to the
+        // list separator so one declarator never swallows the next.
+        let mut next = None;
+        if k < end && bytes[k] == b'=' && !(k + 1 < end && bytes[k + 1] == b'>') {
+            let rhs_start = skip_trivia(bytes, k + 1);
+            let bound = bound_expr_end(bytes, rhs_start, end);
+            let sep = depth0_separator(bytes, rhs_start, end);
+            let value_end = match sep {
+                Some((pos, _)) => bound.min(pos),
+                None => bound,
+            };
+            if binds {
+                return Some(Span::new(rhs_start, value_end));
+            }
+            if let Some((pos, b',')) = sep {
+                next = Some(pos + 1);
+            }
+        } else if binds {
+            // Declared with no initializer — nothing to classify.
+            return None;
+        } else if let Some((pos, b',')) = depth0_separator(bytes, k, end) {
+            next = Some(pos + 1);
+        }
+        j = skip_trivia(bytes, next?);
+    }
+}
+
+/// The first `,` or statement terminator (`;` / newline) at bracket depth 0
+/// within `start..end`, with which one it was. String, comment, and regex
+/// contents are skipped — the same lexical care [`statement_boundary`] takes.
+fn depth0_separator(bytes: &[u8], start: usize, end: usize) -> Option<(usize, u8)> {
+    let mut i = start;
+    let mut depth: i32 = 0;
+    while i < end {
+        let c = bytes[i];
+        match c {
+            b'"' | b'\'' | b'`' => {
+                i = skip_string(bytes, i, end, c);
+                continue;
+            }
+            // A `//` comment runs to the newline that would otherwise
+            // terminate the statement, so stop AT the comment: whatever
+            // follows on this line is trivia, and the newline is the answer.
+            b'/' if i + 1 < end && bytes[i + 1] == b'/' && depth <= 0 => {
+                let nl = crate::scan::skip_trivia(bytes, i, end);
+                return Some((nl.min(end), b'\n'));
+            }
+            b'/' if i + 1 < end && bytes[i + 1] == b'*' => {
+                i = crate::scan::skip_trivia(bytes, i, end);
+                continue;
+            }
+            b'/' if let Some(after) = crate::scan::try_skip_regex(bytes, i, end) => {
+                i = after;
+                continue;
+            }
+            b'(' | b'{' | b'[' => depth += 1,
+            b')' | b'}' | b']' => depth -= 1,
+            b',' | b';' | b'\n' if depth <= 0 => return Some((i, c)),
+            _ => {}
         }
         i += 1;
     }
@@ -604,6 +694,10 @@ fn statement_boundary(bytes: &[u8], start: usize, end: usize) -> usize {
                 i = skip_string(bytes, i, end, c);
                 continue;
             }
+            b'/' if let Some(after) = crate::scan::try_skip_regex(bytes, i, end) => {
+                i = after;
+                continue;
+            }
             b'(' | b'{' | b'[' => depth += 1,
             b')' | b'}' | b']' => depth -= 1,
             b';' if depth <= 0 => return i,
@@ -674,6 +768,10 @@ fn skip_to_depth0_comma(bytes: &[u8], start: usize, end: usize) -> usize {
     let mut depth = 0i32;
     while i < end {
         match bytes[i] {
+            b'/' if let Some(after) = crate::scan::try_skip_regex(bytes, i, end) => {
+                i = after;
+                continue;
+            }
             b'{' | b'[' | b'(' => depth += 1,
             b'}' | b']' | b')' => depth -= 1,
             b',' if depth == 0 => return i + 1,
@@ -879,6 +977,14 @@ fn find_last_top_level_return_object(bytes: &[u8], start: usize, end: usize) -> 
             i = (i + 2).min(end);
             continue;
         }
+        // A regex literal's brackets are text — counting them here is what
+        // used to make `return {…}` unfindable and collapse the whole scope.
+        if c == b'/'
+            && let Some(after) = crate::scan::try_skip_regex(bytes, i, end)
+        {
+            i = after;
+            continue;
+        }
         if c == b'{' {
             brace_depth += 1;
             i += 1;
@@ -1010,6 +1116,9 @@ fn next_entry(bytes: &[u8], start: usize, end: usize) -> usize {
             b'"' | b'\'' | b'`' => {
                 in_str = Some(c);
                 k += 1;
+            }
+            b'/' if let Some(after) = crate::scan::try_skip_regex(bytes, k, end) => {
+                k = after;
             }
             b'(' | b'{' | b'[' => {
                 k = skip_balanced(bytes, k, end);

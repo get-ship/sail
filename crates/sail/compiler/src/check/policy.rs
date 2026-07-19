@@ -81,6 +81,14 @@ pub const FLOOR_RULES: [&str; 5] = [
     "sail-sx",
 ];
 
+/// The CAPABILITY rule ids — the dial ABOVE the floor, one per key on
+/// [`Policy`]. Unlike the floor these are opt-in: they gate a surface a package
+/// declares it wants closed. [`Policy::capabilities`] and
+/// [`Policy::capability_defaults_for`] both derive from this one list, so a
+/// fourth key is added in exactly one place.
+pub const CAPABILITY_RULES: [&str; 3] =
+    ["sail-no-sx", "sail-no-variants", "sail-no-raw-container"];
+
 /// True iff `rule` is a floor rule — one the compiler promotes to `Error`
 /// unconditionally and that no `lint_override` can soften. See [`FLOOR_RULES`].
 pub fn is_floor_rule(rule: &str) -> bool {
@@ -167,12 +175,58 @@ impl Policy {
     /// The capability keys only — the floor is added separately by `overrides_for`.
     pub fn capabilities(self) -> Vec<LintOverride> {
         use OverrideSeverity::{Error, Off};
-        let cap = |on: bool| if on { Off } else { Error };
-        vec![
-            LintOverride { rule: "sail-no-sx".to_string(), severity: cap(self.sx) },
-            LintOverride { rule: "sail-no-variants".to_string(), severity: cap(self.variants) },
-            LintOverride { rule: "sail-no-raw-container".to_string(), severity: cap(self.raw_containers) },
-        ]
+        CAPABILITY_RULES
+            .iter()
+            .map(|&rule| LintOverride {
+                rule: rule.to_string(),
+                severity: if self.grants(rule) { Off } else { Error },
+            })
+            .collect()
+    }
+
+    /// Does this policy grant the capability the named rule gates? Unknown
+    /// rule ids are not capabilities and are never granted here.
+    fn grants(self, rule: &str) -> bool {
+        match rule {
+            "sail-no-sx" => self.sx,
+            "sail-no-variants" => self.variants,
+            "sail-no-raw-container" => self.raw_containers,
+            _ => false,
+        }
+    }
+
+    /// The capability-rule severities that apply to `path` when the host has
+    /// NOT named the rule itself — the seam that keeps `analyze()` honest
+    /// about what `compile()` will do.
+    ///
+    /// The capability rules carry a natural `Warn` so an unconfigured package
+    /// keeps compiling. But `Warn` is not silence: `analyze()` surfaced
+    /// "sx= is not allowed under the strict policy" for source that
+    /// `compile()` accepted, on a package that had never opted into `strict`
+    /// — so the editor squiggled a tier nobody had declared, and the squiggle
+    /// disagreed with the build. A capability is a thing a package DECLARES;
+    /// with no `sail.config.json` in reach there is no policy to violate, so
+    /// the rule is `Off` rather than `Warn`. Where a config does exist, its
+    /// resolved tier decides (`Off` granted / `Error` withheld) — the same
+    /// answer [`Policy::overrides_for`] hands the build host, so both surfaces
+    /// read one resolver.
+    ///
+    /// Host-supplied overrides still win: anything already named in
+    /// `host_overrides` is left alone.
+    pub fn capability_defaults_for(path: &Path, host_overrides: &[LintOverride]) -> Vec<LintOverride> {
+        let declared = Policy::resolve_opt(path);
+        CAPABILITY_RULES
+            .iter()
+            .filter(|&&rule| !host_overrides.iter().any(|o| o.rule == rule))
+            .map(|&rule| LintOverride {
+                rule: rule.to_string(),
+                severity: match declared {
+                    None => OverrideSeverity::Off,
+                    Some(p) if p.grants(rule) => OverrideSeverity::Off,
+                    Some(_) => OverrideSeverity::Error,
+                },
+            })
+            .collect()
     }
 
     /// The full `LintOverride` bundle this policy implies: the **floor**

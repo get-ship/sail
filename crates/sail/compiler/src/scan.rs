@@ -47,6 +47,119 @@ pub(crate) fn skip_trivia(bytes: &[u8], mut i: usize, end: usize) -> usize {
     i
 }
 
+/// Can a `/` at `i` open a REGEX LITERAL rather than a division?
+///
+/// JavaScript's one genuinely context-dependent token. Every byte-walking pass
+/// in this compiler used to answer "division, always" — so
+/// `v.match(/cubic-bezier\(([^)]+)\)/)` fed its `(`/`)`/`[`/`]` to the
+/// bracket-depth counters as real brackets, the counts went negative, and the
+/// controller's `return {...}` extraction silently produced an EMPTY scope. The
+/// template then blamed its first binding ("Identifier 'rail' is not declared
+/// in scope. Available: ctx.") — a phantom error pointing away from the cause.
+///
+/// The standard lexical heuristic: a regex may start wherever an *operand* may
+/// start. It may not directly follow something that ends an operand — an
+/// identifier, a literal, or a closing `)`/`]`/`}`. The keyword exceptions
+/// (`return /re/`, `typeof /re/`, …) are identifiers that are NOT operands.
+/// Lookback skips whitespace only; a `/` that ends a `*/` comment is read as
+/// regex-permitting, which is the safe direction (a division right after a
+/// block comment is not a shape this compiler's inputs take).
+pub(crate) fn regex_allowed_at(bytes: &[u8], i: usize) -> bool {
+    let mut k = i;
+    while k > 0 && bytes[k - 1].is_ascii_whitespace() {
+        k -= 1;
+    }
+    if k == 0 {
+        return true;
+    }
+    let prev = bytes[k - 1];
+    if is_ident_cont(prev) {
+        // An identifier or numeric literal ends an operand — UNLESS it is one
+        // of the keywords a regex may legally follow.
+        let mut s = k;
+        while s > 0 && is_ident_cont(bytes[s - 1]) {
+            s -= 1;
+        }
+        return matches!(
+            std::str::from_utf8(&bytes[s..k]).unwrap_or(""),
+            "return"
+                | "typeof"
+                | "instanceof"
+                | "in"
+                | "of"
+                | "case"
+                | "do"
+                | "else"
+                | "yield"
+                | "await"
+                | "delete"
+                | "void"
+                | "new"
+                | "throw"
+        );
+    }
+    // `)`/`]` close an operand; `}` is ambiguous (block vs object literal) and
+    // is read as operand-closing, the conservative direction — mis-reading an
+    // object literal's `}` would break far more than it fixes. Quote bytes
+    // close a string operand.
+    !matches!(prev, b')' | b']' | b'}' | b'"' | b'\'' | b'`')
+}
+
+/// At a `/` that [`regex_allowed_at`] blesses, walk the regex literal and
+/// return the offset just past its flags. Returns `None` when the literal
+/// doesn't terminate before a newline or `end` — an unterminated regex is far
+/// more likely a division we misjudged, so the caller keeps its old behavior.
+///
+/// Handles `\` escapes and `[...]` character classes, inside which `/` is a
+/// literal slash (`/[a/b]/`) — the reason a naive "scan to the next `/`" is
+/// not enough.
+pub(crate) fn skip_regex(bytes: &[u8], i: usize, end: usize) -> Option<usize> {
+    if i >= end || bytes[i] != b'/' {
+        return None;
+    }
+    // `//` and `/*` are ALWAYS comments — an empty regex is spelled `/(?:)/`.
+    // Without this guard every line comment scans as a zero-width regex whose
+    // "flags" eat the comment's first word.
+    if i + 1 < end && matches!(bytes[i + 1], b'/' | b'*') {
+        return None;
+    }
+    let mut k = i + 1;
+    let mut in_class = false;
+    while k < end {
+        match bytes[k] {
+            b'\\' => k += 2,
+            b'\n' => return None,
+            b'[' => {
+                in_class = true;
+                k += 1;
+            }
+            b']' if in_class => {
+                in_class = false;
+                k += 1;
+            }
+            b'/' if !in_class => {
+                k += 1;
+                while k < end && is_ident_cont(bytes[k]) {
+                    k += 1;
+                }
+                return Some(k);
+            }
+            _ => k += 1,
+        }
+    }
+    None
+}
+
+/// If a regex literal starts at `i`, return the offset past it; else `None`.
+/// The one call the byte-walking passes make — it bundles the "may a regex
+/// start here?" lookback with the literal scan so no caller can forget half.
+pub(crate) fn try_skip_regex(bytes: &[u8], i: usize, end: usize) -> Option<usize> {
+    if i >= end || bytes[i] != b'/' || !regex_allowed_at(bytes, i) {
+        return None;
+    }
+    skip_regex(bytes, i, end)
+}
+
 /// At a `(`, `{`, or `[`, return the offset just past the matching closer,
 /// within `[i, end)`. String/template-literal contents and `//`+`/* */`
 /// comments are skipped. Returns `i + 1` when `bytes[i]` isn't an opener so
@@ -84,8 +197,61 @@ pub(crate) fn skip_balanced(bytes: &[u8], i: usize, end: usize) -> usize {
                 while k + 1 < end && !(bytes[k] == b'*' && bytes[k + 1] == b'/') { k += 1; }
                 k = (k + 2).min(end);
             }
+            // A regex literal's brackets are TEXT, not structure — counting
+            // them corrupts `depth` and walks past the real closer.
+            b'/' => k = try_skip_regex(bytes, k, end).unwrap_or(k + 1),
             _ => k += 1,
         }
     }
     end
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn past(src: &str) -> Option<usize> {
+        let b = src.as_bytes();
+        let i = src.find('/').unwrap();
+        try_skip_regex(b, i, b.len())
+    }
+
+    #[test]
+    fn recognises_a_regex_where_an_operand_may_start() {
+        // The literal that started this: brackets and parens inside a regex.
+        assert_eq!(past(r"v.match(/cubic-bezier\(([^)]+)\)/)"), Some(33));
+        assert_eq!(past("= /ab+c/gi"), Some(10));
+        assert_eq!(past("return /x/"), Some(10));
+        // `/` inside a character class is not the terminator.
+        assert_eq!(past("(/[a/b]/)"), Some(8));
+    }
+
+    #[test]
+    fn leaves_division_alone() {
+        assert_eq!(past("a / b"), None);
+        assert_eq!(past("total() / 2"), None);
+        assert_eq!(past("arr[0] / n"), None);
+        assert_eq!(past("'s' / 2"), None);
+    }
+
+    #[test]
+    fn comments_are_never_regexes() {
+        assert_eq!(past("= // note\n"), None);
+        assert_eq!(past("= /* note */ 1"), None);
+    }
+
+    #[test]
+    fn an_unterminated_slash_is_not_claimed() {
+        // A lone `/` at line end is far likelier a division we misjudged than
+        // a regex — leave the caller's old behavior in place.
+        assert_eq!(past("= /oops\nnext"), None);
+    }
+
+    #[test]
+    fn skip_balanced_walks_over_a_regex_literal() {
+        // Without regex awareness the `)` inside `[^)]` closed this call early.
+        let src = r"(v.match(/cubic-bezier\(([^)]+)\)/)) rest";
+        let b = src.as_bytes();
+        assert_eq!(skip_balanced(b, 0, b.len()), src.find(") rest").unwrap() + 1);
+    }
 }
