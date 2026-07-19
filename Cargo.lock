@@ -3798,6 +3798,7 @@ dependencies = [
  "clap",
  "libc",
  "sail-build-info",
+ "sail-layout",
  "sail-lint",
  "serde",
  "serde-wasm-bindgen",
@@ -3825,7 +3826,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
- "sail-compiler",
  "sail-lint",
  "serde",
  "serde_json",

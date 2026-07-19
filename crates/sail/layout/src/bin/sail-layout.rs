@@ -1,13 +1,17 @@
-//! `sail-layout` — compile-time box-tree diagnostics for a `.sail` template.
+//! `sail-layout` — compile-time box-tree diagnostics for a preprocessed `.sail`
+//! template.
 //!
 //! SPIKE. Usage:
 //!
 //!     sail-layout <FILE> [--viewport WxH]
 //!
+//! The input must already be lowered HTML (sx→class and layout keywords→div),
+//! e.g. the output of `sail-compiler`'s preprocess pass. For raw `.sail`
+//! source, use the compiler's `check_all` path.
+//!
 //! Example:
 //!
-//!     sail-layout apps/sail-site/routes/tutorial/\[slug\]/page.sail \
-//!         --viewport 1440x900
+//!     sail-layout lowered.html --viewport 1440x900
 //!
 //! Emits each diagnostic on its own line in the rough shape the compiler
 //! error formatter produces, so a future LSP integration doesn't need to
@@ -49,10 +53,7 @@ fn main() -> Result<()> {
     let source = read_source(&args.input)
         .with_context(|| format!("reading {}", args.input.display()))?;
 
-    // Allow `<column viewport="1440x900">` in source to override.
-    let vp = layout::html::source_viewport(&source).unwrap_or(args.viewport);
-
-    let result = layout::check(&source, vp)
+    let result = layout::check_preprocessed(&source, args.viewport)
         .with_context(|| "compiling layout")?;
 
     if args.json {
@@ -63,7 +64,7 @@ fn main() -> Result<()> {
     }
 
     if result.diagnostics.is_empty() {
-        eprintln!("ok — no layout diagnostics at viewport {}x{}", vp.0 as u32, vp.1 as u32);
+        eprintln!("ok — no layout diagnostics at viewport {}x{}", args.viewport.0 as u32, args.viewport.1 as u32);
         return Ok(());
     }
 
@@ -88,8 +89,8 @@ fn main() -> Result<()> {
         "\n{}/{} layout diagnostic(s) at viewport {}x{}",
         result.diagnostics.len(),
         result.diagnostics.len(),
-        vp.0 as u32,
-        vp.1 as u32
+        args.viewport.0 as u32,
+        args.viewport.1 as u32
     );
     Ok(())
 }

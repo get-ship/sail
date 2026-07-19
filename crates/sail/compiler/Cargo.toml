@@ -57,6 +57,9 @@ optional = true
 [dependencies.sail-lint]
 path = "../lint"
 
+[dependencies.sail-layout]
+path = "../layout"
+
 [dependencies.build-info]
 # Per-repo build-time identity. sail owns its copy (package `sail-build-info`,
 # referenced in code as `build_info`) so there is no absolute back-edge to the

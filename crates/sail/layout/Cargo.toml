@@ -24,7 +24,6 @@ taffy = { version = "0.12", default-features = false, features = ["std", "grid",
 # Adding a token name to `tokens.css` lights it up in the static layout
 # without a code change here.
 sail-lint = { path = "../lint" }
-sail-compiler = { path = "../compiler" }
 
 anyhow = { workspace = true }
 thiserror = { workspace = true }

@@ -219,7 +219,7 @@ mod tests {
             Element::default(),
             Element {
                 tag: "div".to_string(),
-                class: "sail-col grow-1".to_string(),
+                class: "sail-col sx-grow".to_string(),
                 children: vec![2],
                 parent: Some(0),
                 ..Default::default()
@@ -246,7 +246,7 @@ mod tests {
             Element::default(),
             Element {
                 tag: "div".to_string(),
-                class: "sail-col grow-1".to_string(),
+                class: "sail-col sx-grow".to_string(),
                 children: vec![2],
                 parent: Some(0),
                 ..Default::default()

@@ -77,7 +77,7 @@ where
         if i == 0 {
             continue;
         }
-        let resolved = resolve(elem);
+        let resolved = resolve(elem, &elements, viewport.0);
         let style = resolved.style.clone();
         let node = taffy
             .new_leaf_with_context(style, NodeContext { elem_index: i })
@@ -122,7 +122,7 @@ where
             root,
             available,
             |known_dimensions, available_space, node_id, ctx, _style| {
-                let Some(ctx) = ctx else { return Size::ZERO };
+                let Some(_ctx) = ctx else { return Size::ZERO };
                 let Some(&elem_index) = id_to_elem.get(&node_id) else { return Size::ZERO };
                 let elem = &elements[elem_index];
                 if elem.text.is_empty() {
@@ -287,7 +287,7 @@ mod tests {
             Element::default(),
             Element {
                 tag: "div".to_string(),
-                class: "sail-col grow-1".to_string(),
+                class: "sail-col sx-grow".to_string(),
                 children: vec![2],
                 parent: Some(0),
                 ..Default::default()
@@ -311,7 +311,7 @@ mod tests {
             Element::default(),
             Element {
                 tag: "div".to_string(),
-                class: "sail-col grow-1".to_string(),
+                class: "sail-col sx-grow".to_string(),
                 children: vec![2],
                 parent: Some(0),
                 ..Default::default()
@@ -335,7 +335,7 @@ mod tests {
             Element::default(),
             Element {
                 tag: "div".to_string(),
-                class: "sail-col grow-1".to_string(),
+                class: "sail-col sx-grow".to_string(),
                 children: vec![2],
                 parent: Some(0),
                 ..Default::default()
@@ -437,7 +437,7 @@ mod tests {
             Element::default(),
             Element {
                 tag: "div".to_string(),
-                class: "sail-col grow-1".to_string(),
+                class: "sail-col sx-grow".to_string(),
                 children: vec![],
                 parent: Some(0),
                 ..Default::default()

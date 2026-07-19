@@ -13,7 +13,7 @@
 //! ```text
 //!   .sail source
 //!        │
-//!        ├── sail_compiler::parse::preprocess::preprocess  (sx→class, layout→div+class)
+//!        ├── caller-supplied preprocess  (sx→class, layout→div+class)
 //!        ▼
 //!   lowered HTML ──► sail_layout::html::parse  ──►  Vec<Element>
 //!        │
@@ -44,6 +44,7 @@
 //!   real-world layout bugs.
 
 pub mod html;
+pub mod mapping;
 pub mod style;
 pub mod taffy_tree;
 pub mod diagnostics;
@@ -59,18 +60,26 @@ pub use taffy_tree::Layout;
 /// hooks) build trees and call compute_layout through this alias.
 pub use taffy;
 
-/// Compute a layout for a `.sail` source string at `viewport` px and emit
-/// diagnostics. The single entry API: every other surface lowers into this.
-pub fn check(source: &str, viewport: (f32, f32)) -> anyhow::Result<ScanResult> {
-    // 1. Lower sx + layout keywords to atomic CSS the same way the compiler
-    let preprocessed = sail_compiler::parse::preprocess::preprocess(source);
+/// Compute a layout for an already-preprocessed `.sail` template at `viewport`
+/// px and emit diagnostics. This is the primary entry point for callers that
+/// already have a preprocessor (e.g. `sail-compiler`).
+pub fn check_preprocessed(preprocessed: &str, viewport: (f32, f32)) -> anyhow::Result<ScanResult> {
+    // 1. Parse the lowered HTML (controller-style block already extracted).
+    let elements = parse_source(preprocessed);
 
-    // 2. Parse the lowered HTML (controller-style block already extracted).
-    let elements = parse_source(&preprocessed);
-
-    // 3. Resolve every element to a taffy style and compute the tree.
+    // 2. Resolve every element to a taffy style and compute the tree.
     let tree = taffy_tree::build(elements, viewport)?;
 
-    // 4. Walk the computed tree and emit diagnostics.
+    // 3. Walk the computed tree and emit diagnostics.
     diagnostics::scan(&tree, viewport)
+}
+
+/// Convenience for standalone callers that have their own preprocessor.
+/// `preprocess` must perform the same sx + layout lowering the compiler does.
+pub fn check_with_preprocessor(
+    source: &str,
+    viewport: (f32, f32),
+    preprocess: impl FnOnce(&str) -> String,
+) -> anyhow::Result<ScanResult> {
+    check_preprocessed(&preprocess(source), viewport)
 }

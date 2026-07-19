@@ -28,6 +28,10 @@ pub struct Element {
     /// bare `style="…"`. Lowercased key → raw value (no parsing done at this
     /// layer — style resolution decodes CSS lengths from these).
     pub style: HashMap<String, String>,
+    /// Explicit grid-column span from `data-col-span`.
+    pub col_span: Option<u16>,
+    /// Explicit grid-row span from `data-row-span`.
+    pub row_span: Option<u16>,
     /// Span into the ORIGINAL (un-preprocessed) source. We keep both: the
     /// preprocessed span for in-file precision, plus the parent source's
     /// byte offset of the preprocessed start, so we can re-locate in the
@@ -327,6 +331,10 @@ fn set_attr(elem: &mut Element, name: &str, value: String) {
                 elem.style.insert(k.trim().to_string(), v.trim().to_string());
             }
         }
+    } else if name == "data-col-span" {
+        elem.col_span = value.parse().ok();
+    } else if name == "data-row-span" {
+        elem.row_span = value.parse().ok();
     }
     // Other attrs are ignored at this layer — text/event/etc. don't affect
     // box geometry.

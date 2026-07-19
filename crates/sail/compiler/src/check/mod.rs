@@ -9,6 +9,7 @@ pub mod controller_parse;
 #[cfg(test)]
 mod controller_parse_tests;
 pub mod controller_purity;
+pub mod layout;
 pub mod light_shadow_root;
 pub mod paired_controller;
 pub mod mount_ambient_shadow;
@@ -297,6 +298,12 @@ pub fn collect(
             diags.push(finding_to_diag(&f));
         }
     }
+
+    // Layout diagnostics — build the same box tree the runtime will build and
+    // report collapsed / overflow findings back as warnings. This must run on
+    // the preprocessed source so class tokens line up with the CSS the compiler
+    // emits, then spans are mapped back to the author's original source.
+    diags.extend(layout::collect(source));
 
     diags.sort_by(|a, b| a.line.cmp(&b.line).then(a.col.cmp(&b.col)));
     diags.dedup_by(|a, b| a.line == b.line && a.col == b.col && a.message == b.message);
