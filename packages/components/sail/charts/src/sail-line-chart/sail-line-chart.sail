@@ -40,7 +40,8 @@
 </scope>
 
 <controller>
-import { controller, derived, ref } from '@ship/sail-runtime'
+import { controller, derived } from '@ship/sail-runtime'
+import type { Action } from '@ship/sail-runtime'
 import { createChartData } from '../engine/create-chart-data'
 import { createChartViewport } from '../engine/create-chart-viewport'
 import { normalizeSeries } from '../engine/normalize'
@@ -56,7 +57,6 @@ interface LineHost extends Element {
 }
 
 export default controller(({ series, width, height, grid, label, loading }: Scope) => {
-    const svgEl = ref<SVGSVGElement>(null) // bind:this target → viewport observe
     const viewport = createChartViewport({
       initialWidth: width(),
       initialHeight: height(),
@@ -79,15 +79,21 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
     )
     const ariaLabel = derived(() => `${label()}: ${chart.ariaSummary()}`)
 
+    // The <svg> lives behind {#if}, so it mounts and unmounts as the chart
+    // moves between loading/error/empty and data. The action runs on each
+    // mount and disposes on each unmount — `observe()` builds a fresh
+    // observer per call, so the pair is re-entrant.
+    const observeViewport: Action<void> = (node) => {
+      viewport.observe(node)
+      return { destroy: () => viewport.dispose() }
+    }
+
     mount((host) => {
-      const el = svgEl()
-      if (el) viewport.observe(el)
       const err = (host as LineHost).error
       if (err !== undefined) chart.setOptions({ error: err })
-      return () => viewport.dispose()
     })
 
-    return { chart, viewport, svgEl, seriesPaths, gridLines, ariaLabel }
+    return { chart, viewport, observeViewport, seriesPaths, gridLines, ariaLabel }
   })
 
 </controller>
@@ -106,7 +112,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       aria-label={ariaLabel()}
       aria-describedby="chart-data"
       sx="block w-full overflow-hidden"
-      bind:this={svgEl}>
+      use:observeViewport>
       {#for g of gridLines() key={g.id}}
         <line x1="0" x2={viewport.width()} y1={g.y} y2={g.y} stroke="var(--border)" stroke-width="1" stroke-dasharray="2 3"></line>
       {/for}

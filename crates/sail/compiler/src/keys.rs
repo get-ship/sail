@@ -75,8 +75,6 @@ pub enum BindingKind {
     BindValue,
     /// `bind:checked`.
     BindChecked,
-    /// `bind:this={var}`. The expression is the bare scope variable name.
-    BindThis,
     /// `attr:NAME={expr}`. Carries the attribute name.
     Attr(String),
     /// `attr:{nameExpr}={valueExpr}`.
@@ -110,7 +108,6 @@ impl BindingKind {
             BindingKind::On(ev) => format!("on:{ev}"),
             BindingKind::BindValue => "bind:value".into(),
             BindingKind::BindChecked => "bind:checked".into(),
-            BindingKind::BindThis => "bind:this".into(),
             BindingKind::Attr(n) => format!("attr:{n}"),
             BindingKind::AttrDynamic => "attr-dynamic".into(),
             BindingKind::Class(n) => format!("class:{n}"),

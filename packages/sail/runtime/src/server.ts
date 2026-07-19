@@ -54,7 +54,6 @@ export type {
 } from './query'
 export { data } from './data'
 export { createMountState, componentMountState, pickSignals, SIGNALS_KEY } from './state-proxy'
-export { ref, attachRef } from './ref'
 
 // ── scope + store (scope-homed shared state) ────────────────────────────────
 export {

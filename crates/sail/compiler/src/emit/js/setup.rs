@@ -4,7 +4,6 @@ use super::super::writer::{js_string, Writer};
 use crate::ir::*;
 use crate::keys::BindingRegistry;
 use crate::CompileOpts;
-use std::collections::BTreeSet;
 
 /// Returns the MODULE-scope hoists (the `__tpl(...)` cloners). They cannot live in
 /// the setup body: a template parsed there would be re-parsed for every component
@@ -43,15 +42,6 @@ pub(super) fn emit_setup_body(
             w.line(&format!("$scope.{ident} = __props.{ident};"));
         }
     }
-    // Pre-seed `$scope.<var> = signal(null)` for every `bind:this={var}`
-    // target the template references — including ones inside conditional /
-    // loop branches that won't render until later. The controller's
-    // setup: factory may overwrite specific keys with an author-declared
-    // `ref(null)`; either way, `scope.<var>()` is always callable at
-    // setup time, so a controller mount() reading `scope.headerEl()`
-    // before the `{#if open()}` branch first renders sees `null`
-    // instead of crashing with `headerEl is not a function`.
-    emit_ref_slot_seeds(w, &program.template);
     if opts.setup_url.is_some() {
         // Expose `$scope` to the controller (`ctx.scope`) and merge its return.
         // The LIFECYCLE_KEY bundle flows through the setup return to
@@ -168,57 +158,6 @@ fn emit_route_hydrate(
     w.line("return () => { for (const c of __cleanups) try { c(); } catch (e) {} };");
     w.leave();
     w.line("},");
-}
-
-fn emit_ref_slot_seeds(w: &mut Writer, template: &[Instr]) {
-    let mut names: BTreeSet<String> = BTreeSet::new();
-    collect_bind_this_targets(template, &mut names);
-    for name in &names {
-        w.line(&format!(
-            "$scope[{n}] = signal(null);",
-            n = js_string(name),
-        ));
-    }
-}
-
-fn collect_bind_this_targets(instrs: &[Instr], out: &mut BTreeSet<String>) {
-    for instr in instrs {
-        match instr {
-            Instr::Element(el) => {
-                for a in &el.attrs {
-                    if let AttrInstr::BindThis { var, .. } = a {
-                        out.insert(var.clone());
-                    }
-                }
-                collect_bind_this_targets(&el.children, out);
-            }
-            Instr::If(if_instr) => {
-                for b in &if_instr.branches {
-                    collect_bind_this_targets(&b.body, out);
-                }
-                if let Some(eb) = &if_instr.else_body {
-                    collect_bind_this_targets(eb, out);
-                }
-            }
-            Instr::For(f) => {
-                collect_bind_this_targets(&f.body, out);
-                if let Some(eb) = &f.else_body {
-                    collect_bind_this_targets(eb, out);
-                }
-            }
-            Instr::Match(m) => {
-                for c in &m.cases {
-                    collect_bind_this_targets(&c.body, out);
-                }
-                if let Some(d) = &m.default {
-                    collect_bind_this_targets(d, out);
-                }
-            }
-            Instr::WhileLoading(wl) => collect_bind_this_targets(&wl.body, out),
-            Instr::WhileError(we) => collect_bind_this_targets(&we.body, out),
-            _ => {}
-        }
-    }
 }
 
 fn emit_setup_call(w: &mut Writer) {

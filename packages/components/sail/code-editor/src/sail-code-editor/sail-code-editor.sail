@@ -57,10 +57,10 @@
 
 
 <controller>
-// bind:this + mount() pattern: ref → EditorView → event bridge → cleanup.
+// use: action + mount() pattern: element → EditorView → event bridge → cleanup.
 
 import { controller, effect } from '@ship/sail-runtime'
-import type { Signal } from '@ship/sail-runtime'
+import type { Action, Signal } from '@ship/sail-runtime'
 import { EditorState, Compartment } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
 import {
@@ -108,14 +108,6 @@ export interface SuiCompletionSource {
 const DEBOUNCE_MS = 150
 
 export default controller((ctx: Scope) => {
-  mount((host) => {
-
-    const hostEl = (ctx.editorHost as unknown as Signal<HTMLElement | null>)()
-    if (!hostEl) {
-      console.warn('[sail-code-editor] bind:this ref is null — CodeMirror not initialized')
-      return
-    }
-
     const langCompartment = new Compartment()
     const readonlyCompartment = new Compartment()
     const lineNumCompartment = new Compartment()
@@ -139,82 +131,6 @@ export default controller((ctx: Scope) => {
       if (completions.length === 0) return []
       return autocompletion({ override: completions.map(makeCompletionSource), defaultKeymap: true })
     }
-
-    function onDocChange(newValue: string): void {
-      suppressUpdate = true
-      valSig.set(newValue)
-      suppressUpdate = false
-      host.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
-      if (debounceTimer) clearTimeout(debounceTimer)
-      debounceTimer = setTimeout(() => {
-        host.dispatchEvent(new CustomEvent('sail-change', {
-          detail: { value: newValue }, bubbles: true, composed: true,
-        }))
-      }, DEBOUNCE_MS)
-    }
-
-    const showLn = lnSig() !== false
-    const extensions: Extension[] = [
-      showLn
-        ? lineNumCompartment.of([lineNumbers(), highlightActiveLineGutter(), foldGutter()])
-        : lineNumCompartment.of([]),
-      history(),
-      drawSelection(),
-      EditorState.allowMultipleSelections.of(true),
-      indentOnInput(),
-      syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-      bracketMatching(),
-      closeBrackets(),
-      rectangularSelection(),
-      highlightActiveLine(),
-      highlightSelectionMatches(),
-      keymap.of([
-        {
-          key: 'Mod-s',
-          preventDefault: true,
-          run: () => {
-            host.dispatchEvent(new CustomEvent('sail-save', {
-              detail: { value: view?.state.doc.toString() ?? '' },
-              bubbles: true, composed: true,
-            }))
-            return true
-          },
-        },
-        {
-          key: 'Escape',
-          run: () => {
-            host.dispatchEvent(new CustomEvent('sail-cancel', { bubbles: true, composed: true }))
-            return false
-          },
-        },
-        ...closeBracketsKeymap, ...defaultKeymap,
-        ...searchKeymap, ...historyKeymap, ...foldKeymap,
-        indentWithTab,
-      ]),
-      sailEditorTheme,
-      sailHighlighting,
-      lintGutter(),
-      langCompartment.of([]),
-      completionCompartment.of(buildCompletionExt()),
-      readonlyCompartment.of(EditorState.readOnly.of(roSig())),
-      placeholderCompartment.of(phSig() ? cmPlaceholder(phSig()) : []),
-      EditorView.updateListener.of((update) => {
-        if (update.docChanged && !suppressUpdate) {
-          onDocChange(update.state.doc.toString())
-        }
-      }),
-    ]
-
-    view = new EditorView({
-      state: EditorState.create({ doc: valSig() || '', extensions }),
-      parent: hostEl,
-    })
-
-    if (pendingDiagnostics) {
-      applyDiagnostics(pendingDiagnostics)
-      pendingDiagnostics = null
-    }
-
     function applyDiagnostics(diagnostics: SuiDiagnostic[]): void {
       if (!view) return
       const st = view.state
@@ -241,6 +157,99 @@ export default controller((ctx: Scope) => {
       view.dispatch(cmSetDiagnostics(st, cmDiags))
     }
 
+    // The editor element owns the EditorView: the action builds it on mount
+    // and destroys it on unmount. `editorHost` used to be a `bind:this`
+    // target that was never declared in scope at all — it existed only
+    // because the compiler pre-seeds a signal slot for every bind:this
+    // target, and the controller reached it through a double cast.
+    const editorMount: Action<void> = (node) => {
+
+
+      function onDocChange(newValue: string): void {
+        suppressUpdate = true
+        valSig.set(newValue)
+        suppressUpdate = false
+        node.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
+        if (debounceTimer) clearTimeout(debounceTimer)
+        debounceTimer = setTimeout(() => {
+          node.dispatchEvent(new CustomEvent('sail-change', {
+            detail: { value: newValue }, bubbles: true, composed: true,
+          }))
+        }, DEBOUNCE_MS)
+      }
+
+      const showLn = lnSig() !== false
+      const extensions: Extension[] = [
+        showLn
+          ? lineNumCompartment.of([lineNumbers(), highlightActiveLineGutter(), foldGutter()])
+          : lineNumCompartment.of([]),
+        history(),
+        drawSelection(),
+        EditorState.allowMultipleSelections.of(true),
+        indentOnInput(),
+        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+        bracketMatching(),
+        closeBrackets(),
+        rectangularSelection(),
+        highlightActiveLine(),
+        highlightSelectionMatches(),
+        keymap.of([
+          {
+            key: 'Mod-s',
+            preventDefault: true,
+            run: () => {
+              node.dispatchEvent(new CustomEvent('sail-save', {
+                detail: { value: view?.state.doc.toString() ?? '' },
+                bubbles: true, composed: true,
+              }))
+              return true
+            },
+          },
+          {
+            key: 'Escape',
+            run: () => {
+              node.dispatchEvent(new CustomEvent('sail-cancel', { bubbles: true, composed: true }))
+              return false
+            },
+          },
+          ...closeBracketsKeymap, ...defaultKeymap,
+          ...searchKeymap, ...historyKeymap, ...foldKeymap,
+          indentWithTab,
+        ]),
+        sailEditorTheme,
+        sailHighlighting,
+        lintGutter(),
+        langCompartment.of([]),
+        completionCompartment.of(buildCompletionExt()),
+        readonlyCompartment.of(EditorState.readOnly.of(roSig())),
+        placeholderCompartment.of(phSig() ? cmPlaceholder(phSig()) : []),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged && !suppressUpdate) {
+            onDocChange(update.state.doc.toString())
+          }
+        }),
+      ]
+
+      view = new EditorView({
+        state: EditorState.create({ doc: valSig() || '', extensions }),
+        parent: node,
+      })
+
+      if (pendingDiagnostics) {
+        applyDiagnostics(pendingDiagnostics)
+        pendingDiagnostics = null
+      }
+
+      return {
+        destroy: () => {
+          if (debounceTimer) clearTimeout(debounceTimer)
+          try { view?.destroy() } catch { /* teardown race */ }
+          view = null
+        },
+      }
+    }
+
+  mount((host) => {
     const el = host as HTMLElement & {
       setDiagnostics?: ((d: SuiDiagnostic[]) => void) | undefined
       setCompletions?: ((src: SuiCompletionSource[]) => void) | undefined
@@ -380,7 +389,6 @@ export default controller((ctx: Scope) => {
     }))
 
     return () => {
-      if (debounceTimer) clearTimeout(debounceTimer)
       for (const d of disposers) d()
       el.setDiagnostics = undefined
       el.setCompletions = undefined
@@ -390,11 +398,9 @@ export default controller((ctx: Scope) => {
       } catch {
         (host as unknown as Record<string, unknown>).value = undefined
       }
-      try { view?.destroy() } catch { /* teardown race */ }
-      view = null
     }
   })
-  return {}
+  return { editorMount }
 })
 
 // CodeMirror's Completion treats absent detail/info as "none"; under
@@ -431,4 +437,4 @@ function makeCompletionSource(src: SuiCompletionSource) {
 }
 
 </controller>
-<div bind:this={editorHost} sx="relative overflow-hidden font-mono w-full h-full min-h-0 focus-within:ring-ring"></div>
+<div use:editorMount sx="relative overflow-hidden font-mono w-full h-full min-h-0 focus-within:ring-ring"></div>

@@ -41,8 +41,8 @@
   }
 </scope>
 <controller>
-import { controller, signal, derived, ref } from '@ship/sail-runtime'
-import type { ControllerScope } from '@ship/sail-runtime'
+import { controller, signal, derived } from '@ship/sail-runtime'
+import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-annotation-layer.sail'
 import { type AnnotationEvent, buildAnnotationEvent } from './sail-annotation.internals'
 
@@ -212,22 +212,12 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
       }
     }
 
-    const overlayEl = ref<HTMLDivElement>(null)
-
-    mount((host) => {
-      // The runtime hands the real host element here. The scope's `sendOne`
-      // and `confirmNote` closures read through `hostEl` (the dead-`host`
-      // workaround) — publish the element now that it exists, before the
-      // first user gesture can fire.
-      hostEl.set(host as HTMLElement)
-
+    const overlayAction: Action<void> = (node) => {
       let _drag: Drag | null = null
       let _raf: number | null = null
 
       const overlayPos = (e: PointerEvent): { x: number; y: number } => {
-        const el = overlayEl() as HTMLElement | null
-        if (!el) return { x: 0, y: 0 }
-        const r = el.getBoundingClientRect()
+        const r = node.getBoundingClientRect()
         return { x: e.clientX - r.left, y: e.clientY - r.top }
       }
 
@@ -285,12 +275,29 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
         if (next) pending.set(next)
       }
 
-      const overlayNode = overlayEl() as HTMLElement | null
-      if (overlayNode) {
-        overlayNode.addEventListener('pointerdown', onPointerDown)
-        overlayNode.addEventListener('pointermove', onPointerMove)
-        overlayNode.addEventListener('pointerup', onPointerUp)
+      node.addEventListener('pointerdown', onPointerDown)
+      node.addEventListener('pointermove', onPointerMove)
+      node.addEventListener('pointerup', onPointerUp)
+
+      return {
+        destroy: () => {
+          if (_raf !== null) {
+            cancelAnimationFrame(_raf)
+            _raf = null
+          }
+          node.removeEventListener('pointerdown', onPointerDown)
+          node.removeEventListener('pointermove', onPointerMove)
+          node.removeEventListener('pointerup', onPointerUp)
+        },
       }
+    }
+
+    mount((host) => {
+      // The runtime hands the real host element here. The scope's `sendOne`
+      // and `confirmNote` closures read through `hostEl` (the dead-`host`
+      // workaround) — publish the element now that it exists, before the
+      // first user gesture can fire.
+      hostEl.set(host as HTMLElement)
 
       Object.defineProperty(host, 'staged', {
         configurable: true,
@@ -307,18 +314,6 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
       ;(host as LayerHost).clear = () => {
         staged.set([])
       }
-
-      return () => {
-        if (_raf !== null) {
-          cancelAnimationFrame(_raf)
-          _raf = null
-        }
-        if (overlayNode) {
-          overlayNode.removeEventListener('pointerdown', onPointerDown)
-          overlayNode.removeEventListener('pointermove', onPointerMove)
-          overlayNode.removeEventListener('pointerup', onPointerUp)
-        }
-      }
     })
 
     return {
@@ -331,7 +326,7 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
       popoverPos,
       captureState,
       markers,
-      overlayEl,
+      overlayAction,
       confirmNote,
       sendNote,
       cancelPending,
@@ -344,7 +339,7 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
 </controller>
 <div sx="relative w-full h-full font-body">
   <slot></slot>
-  <div bind:this={overlayEl} data-state={captureState()} sx="absolute top-0 right-0 bottom-0 left-0 z-dropdown pointer-events-none state-capture:pointer-events-auto">
+  <div use:overlayAction data-state={captureState()} sx="absolute top-0 right-0 bottom-0 left-0 z-dropdown pointer-events-none state-capture:pointer-events-auto">
     {#if dragVisible()}
       <div
         aria-hidden="true"

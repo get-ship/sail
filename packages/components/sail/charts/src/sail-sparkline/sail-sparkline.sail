@@ -39,7 +39,8 @@
 </scope>
 
 <controller>
-import { controller, derived, ref } from '@ship/sail-runtime'
+import { controller, derived } from '@ship/sail-runtime'
+import type { Action } from '@ship/sail-runtime'
 import { createChartData } from '../engine/create-chart-data'
 import { createChartViewport } from '../engine/create-chart-viewport'
 import { normalizeSeries } from '../engine/normalize'
@@ -54,7 +55,6 @@ interface SparkHost extends Element {
 }
 
 export default controller(({ data, tone, width, height, label, loading }: Scope) => {
-    const svgEl = ref<SVGSVGElement>(null) // bind:this target → viewport observe
     const viewport = createChartViewport({
       initialWidth: width(),
       initialHeight: height(),
@@ -76,15 +76,21 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
     })
     const ariaLabel = derived(() => `${label()}: ${chart.ariaSummary()}`)
 
+    // The <svg> lives behind {#if}, so it mounts and unmounts as the chart
+    // moves between loading/error/empty and data. The action runs on each
+    // mount and disposes on each unmount — `observe()` builds a fresh
+    // observer per call, so the pair is re-entrant.
+    const observeViewport: Action<void> = (node) => {
+      viewport.observe(node)
+      return { destroy: () => viewport.dispose() }
+    }
+
     mount((host) => {
-      const el = svgEl()
-      if (el) viewport.observe(el)
       const err = (host as SparkHost).error
       if (err !== undefined) chart.setOptions({ error: err })
-      return () => viewport.dispose()
     })
 
-    return { chart, viewport, svgEl, seriesPaths, ariaLabel }
+    return { chart, viewport, observeViewport, seriesPaths, ariaLabel }
   })
 
 </controller>
@@ -106,7 +112,7 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
     role="img"
     aria-label={ariaLabel()}
     sx="inline-block overflow-visible"
-    bind:this={svgEl}>
+    use:observeViewport>
     {#for s of seriesPaths() key={s.name}}
       {#if fill()}
         <path d={s.fillD} fill={s.color} fill-opacity="0.18" stroke="none"></path>

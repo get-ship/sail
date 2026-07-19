@@ -72,8 +72,8 @@
 // derived here; mutations (highlight, select, open/close sync) + emission live
 // in mount's listeners.
 
-import { controller, signal, derived, effect, ref } from '@ship/sail-runtime'
-import type { ControllerScope } from '@ship/sail-runtime'
+import { controller, signal, derived, effect} from '@ship/sail-runtime'
+import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-cmdk.sail'
 import { type CmdkItem, str, parseJsonItems } from './decode'
 
@@ -115,9 +115,38 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const highlight = signal(0)
     const listId = signal(`sail-cmdk-list-${seq}`)
 
-    const dialogEl = ref<HTMLDialogElement>(null)
-    const inputEl = ref<HTMLInputElement>(null)
-    const listEl = ref<HTMLUListElement>(null)
+    // KEPT as refs, deliberately: `scrollActiveIntoView` reads `listEl` from
+    // keydown handlers bound to the INPUT, and `openPicker`-style cross-element
+    // reach is the one thing an action can't express. See the ref-excision
+    // report's (b) classification.
+    const inputEl = signal<HTMLInputElement | null>(null)
+    const listEl = signal<HTMLUListElement | null>(null)
+
+    // Set by mount before any handler below can fire.
+    let hostEl: (HTMLElement & { open: boolean }) | null = null
+
+    // `open` prop ⇄ the native modal. The platform owns top layer, focus trap,
+    // ESC and focus-return; the dialog owns this behavior, so it rides an
+    // action: the open/close bridge and the native-close mirror both live with
+    // the element and tear down with it.
+    const dialogBridge: Action<void> = (node) => {
+      const el = node as HTMLDialogElement
+      const stop = effect(() => {
+        const want = _ctx.open() === true
+        if (want && !el.open) el.showModal()
+        else if (!want && el.open) el.close()
+      })
+      const onNativeClose = (): void => {
+        if (_ctx.open() && hostEl) hostEl.open = false
+      }
+      el.addEventListener('close', onNativeClose)
+      return {
+        destroy: () => {
+          stop()
+          el.removeEventListener('close', onNativeClose)
+        },
+      }
+    }
 
     // Filter case-insensitively over label + keywords, preserving order, and
     // tag each survivor with a stable per-instance option id.
@@ -197,7 +226,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       // compiler-installed accessor (the same signal `_ctx.open()` reads),
       // never a disconnected local copy, so `el.open = true` set externally
       // and `sail-cmdk`'s own show()/close()/toggle() stay in sync.
-      const hostEl = host as HTMLElement & { open: boolean }
+      hostEl = host as HTMLElement & { open: boolean }
+      // Non-null alias for the mount body; the action guards its own read.
+      const h = hostEl
       // ── `items` IDENTITY property + JSON-attribute SSR fallback ──────────────
       // A live CmdkItem[] assigned to the host `items` property (never a string).
       // Defined on the instance so it shadows nothing — `items` is intentionally
@@ -256,31 +287,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       // trap, ESC and focus-return; the component owns this element, so it
       // calls showModal()/close() directly and mirrors a native close (ESC,
       // backdrop, form method=dialog) back into `open`.
-      const stopOpenBridge = effect(() => {
-        const el = dialogEl() as HTMLDialogElement | null
-        if (!el) return
-        const want = _ctx.open() === true
-        if (want && !el.open) el.showModal()
-        else if (!want && el.open) el.close()
-      })
-      const onNativeClose = (): void => {
-        if (_ctx.open()) hostEl.open = false
-      }
-      const stopCloseMirror = (): void => {
-        const el = dialogEl() as HTMLDialogElement | null
-        el?.removeEventListener('close', onNativeClose)
-      }
-      {
-        const el = dialogEl() as HTMLDialogElement | null
-        el?.addEventListener('close', onNativeClose)
-      }
-
       const input = inputEl() as HTMLInputElement | null
 
       const selectByItem = (item: VisibleItem | undefined) => {
         if (!item || item.disabled) return
         host.emit?.('sail-cmdk-select', { id: item.id, value: item.value })
-        hostEl.open = false
+        h.open = false
       }
 
       const onInput = () => {
@@ -341,20 +353,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       // `el.open = true` directly.
       host.expose?.({
         show: () => {
-          hostEl.open = true
+          h.open = true
         },
         close: () => {
-          hostEl.open = false
+          h.open = false
         },
         toggle: () => {
-          hostEl.open = !_ctx.open()
+          h.open = !_ctx.open()
         },
       })
 
       return () => {
         stopOpenSync()
-        stopOpenBridge()
-        stopCloseMirror()
         input?.removeEventListener('input', onInput)
         input?.removeEventListener('keydown', onKeydown)
         list?.removeEventListener('mousedown', onListMousedown)
@@ -363,13 +373,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     return {
       itemsSig, query, highlight, listId,
-      dialogEl, inputEl, listEl,
+      dialogBridge, inputEl, listEl,
       visible, navigable, safeHighlight, highlightId, activeId, rows,
     }
   })
 
 </controller>
-<dialog bind:this={dialogEl} size={size()} backdrop="blur">
+<dialog use:dialogBridge size={size()} backdrop="blur">
   <column gap="0" sx="min-h-0 text-foreground font-body">
     <row align="center" gap="2" sx="p-3 px-4 grow-0 border-b border-b-border-subtle">
       <icon name="search" size="sm" sx="grow-0"></icon>

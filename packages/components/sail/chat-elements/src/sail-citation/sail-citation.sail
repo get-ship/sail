@@ -27,19 +27,17 @@
 
 
 <controller>
-import { controller, ref } from '@ship/sail-runtime'
-import type { ControllerScope } from '@ship/sail-runtime'
+import { controller } from '@ship/sail-runtime'
+import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-citation.sail'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
-    const pillEl = ref<HTMLButtonElement>(null)
-
-    mount((host) => {
-      const btn = pillEl()
-      if (!btn) return
-
+    // The pill dispatches its own open event. `bubbles: true, composed: true`
+    // carries it across the shadow boundary, so the action needs the button,
+    // not the host.
+    const openOnClick: Action<void> = (node) => {
       const onClick = () => {
-        host.dispatchEvent(
+        node.dispatchEvent(
           new CustomEvent('sail-citation-open', {
             detail: { source: _ctx.source(), index: _ctx.index() },
             bubbles: true,
@@ -47,17 +45,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           }),
         )
       }
-      btn.addEventListener('click', onClick)
-      return () => btn.removeEventListener('click', onClick)
-    })
+      node.addEventListener('click', onClick)
+      return { destroy: () => node.removeEventListener('click', onClick) }
+    }
 
-    return { pillEl }
+    return { openOnClick }
   })
 
 </controller>
 <button
   type="button"
-  bind:this={pillEl}
+  use:openOnClick
   aria-label={'Open citation ' + index() + ': ' + source()}
   sx="min-h-0 py-half pl-0_75 pr-2 rounded-full text-xs leading-snug font-normal text-foreground bg-muted border border-border shadow-none cursor-pointer hover:bg-tone-primary-bg hover:border hover:border-tone-primary-border"
 >

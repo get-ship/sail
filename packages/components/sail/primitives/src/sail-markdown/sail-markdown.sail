@@ -28,6 +28,7 @@
 
 <controller>
 import { controller, bindHtml } from '@ship/sail-runtime'
+import type { Action } from '@ship/sail-runtime'
 import type { Scope } from './sail-markdown.sail'
 
 function escape(s: string): string {
@@ -107,15 +108,18 @@ export function renderMarkdown(src: string): string {
 }
 
 export default controller((ctx: Scope) => {
-  mount(() => {
-    const el = ctx.contentEl() as HTMLElement | null
-    if (!el) return () => {}
-    return bindHtml(el, () => renderMarkdown(ctx.value() ?? ''))
-  })
-  return {}
+  // The prose <div> owns its own painting: the action receives the element on
+  // mount and hands back bindHtml's stop as its teardown. No ref, no cast —
+  // `contentEl` was never declared in scope, it only existed because the
+  // compiler pre-seeds a signal slot for every `bind:this` target.
+  const paintMarkdown: Action<void> = (node) => {
+    const stop = bindHtml(node as HTMLElement, () => renderMarkdown(ctx.value() ?? ''))
+    return { destroy: stop }
+  }
+  return { paintMarkdown }
 })
 
 </controller>
 <prose>
-  <div sx="block text-base" bind:this={contentEl}></div>
+  <div sx="block text-base" use:paintMarkdown></div>
 </prose>

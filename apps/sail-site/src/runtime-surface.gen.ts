@@ -27,7 +27,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, config: MotionAttachConfig | (() => MotionAttachConfig)): Disposer",
     "doc": "Attach a `motion:` directive.",
-    "loc": "src/motion.ts:661"
+    "loc": "src/motion.ts:790"
   },
   {
     "subpath": ".",
@@ -67,7 +67,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:199"
+    "loc": "src/styles/index.ts:210"
   },
   {
     "subpath": ".",
@@ -95,7 +95,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "annotationModeForView",
+    "name": "annotationModeForRoute",
     "kind": "function",
     "signature": "(name: string): Signal<boolean>",
     "doc": "",
@@ -132,14 +132,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(host: HTMLElement): void",
     "doc": "Wire `host.emit` and `host.expose` onto a host element. Idempotent — called from `defineComponent`'s `connectedCallback` once per connect.",
     "loc": "src/host-api.ts:103"
-  },
-  {
-    "subpath": ".",
-    "name": "attachRef",
-    "kind": "function",
-    "signature": "<T extends Element>(scope: Record<string, unknown>, varName: string, el: T): Signal<T | null>",
-    "doc": "`bind:this` setup used by compiler-emitted templates. Reuses an existing writable signal in `scope[varName]` (typically a pre-declared `ref(null)`), otherwise installs a fresh signal seeded with the element.",
-    "loc": "src/ref.ts:39"
   },
   {
     "subpath": ".",
@@ -387,7 +379,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(attr: string): string",
     "doc": "Convert a kebab-case HTML attribute name to its camelCase prop name. Single-word attributes pass through unchanged.",
-    "loc": "src/component.ts:505"
+    "loc": "src/component.ts:526"
   },
   {
     "subpath": ".",
@@ -455,11 +447,19 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
+    "name": "clientRootScope",
+    "kind": "function",
+    "signature": "(): EffectScope",
+    "doc": "The shared per-document client root. Exposed so tests (and future bootstrap code that wants module-level `useStore` calls to share the element tree's root) can reach it.",
+    "loc": "src/element-scope.ts:57"
+  },
+  {
+    "subpath": ".",
     "name": "Clients",
     "kind": "interface",
     "signature": "export interface Clients {}",
     "doc": "",
-    "loc": "src/clients.ts:26"
+    "loc": "src/clients.ts:45"
   },
   {
     "subpath": ".",
@@ -539,14 +539,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ComponentFactory = ( host: HTMLElement, propSignals: Record<string, Signal<unknown>>, internals?: ElementInternals, ) => Disposer",
     "doc": "The factory the compiler emits per component. Receives the host element, a place to attach prop signals, and (for form-associated components) the ElementInternals instance attached at construction time. Returns a cleanup function that runs on disconnect.",
-    "loc": "src/component.ts:33"
+    "loc": "src/component.ts:34"
   },
   {
     "subpath": ".",
     "name": "componentMountState",
     "kind": "function",
     "signature": "(scope: Record<string, unknown>): Record<string, unknown>",
-    "doc": "Component-mount state. The compiler emits `componentMountState($scope)` in place of a hand-rolled proxy. Behavior matches view-mount — one shape, one builder, no flag.",
+    "doc": "Component-mount state. The compiler emits `componentMountState($scope)` in place of a hand-rolled proxy. Behavior matches route-mount — one shape, one builder, no flag.",
     "loc": "src/state-proxy.ts:113"
   },
   {
@@ -555,7 +555,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ComponentSchema { observedAttrs: string[] props: Record< string, { camel: string decode: (raw: string | null) => unknown } > formAssociated?: boolean }",
     "doc": "Schema the compiler emits alongside the factory — drives prop decode + observed-attributes registration.",
-    "loc": "src/component.ts:60"
+    "loc": "src/component.ts:61"
   },
   {
     "subpath": ".",
@@ -595,7 +595,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<Ctx, SC extends Record<string, unknown>>(fn: (init: ControllerScope<Ctx>, host?: Element) => SC): ControllerExport<Ctx & SC> & { __def: (init: ControllerScope<Ctx>, host?: Element) => SC; }",
     "doc": "Author-facing helper. Wrap a setup function with `controller(fn)` to get a `{ setup, __def }` export the daemon's hydrate path can call directly, with `Ctx`/`SC` inferred from `fn` — no explicit type argument, no currying.",
-    "loc": "src/controller-resolver.ts:119"
+    "loc": "src/controller-resolver.ts:125"
   },
   {
     "subpath": ".",
@@ -611,7 +611,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ControllerExport<Scope = object> { setup: (ctx: ResolverContext) => ResolvedBindings __def: ControllerDef<Scope> }",
     "doc": "The shape `controller(setup)` returns — a setup-shaped export the daemon's hydrate path consumes verbatim. The daemon extracts `.setup` and calls it with a `ResolverContext` (built from the hydrate flow); `setup` runs the resolver and returns flat bindings the template merges into scope.",
-    "loc": "src/controller-resolver.ts:78"
+    "loc": "src/controller-resolver.ts:84"
   },
   {
     "subpath": ".",
@@ -626,7 +626,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "ControllerSetup",
     "kind": "type",
     "signature": "export type ControllerSetup<Ctx, SC extends Record<string, unknown>> = ( init: Ctx, host?: Element, ) => SC",
-    "doc": "The controller def: ONE setup function. It receives the view scope (`clients`, `route`, `navigate`, plus template-declared `<data>`/`<state>` signals) and, optionally, the host element; it returns the surface the template merges into scope — signals, `derived()` values, plain helpers, and event handlers alike, all as ordinary object properties.",
+    "doc": "The controller def: ONE setup function. It receives the route scope (`clients`, `route`, `navigate`, plus template-declared live envelope signals) and, optionally, the host element; it returns the surface the template merges into scope — signals, `derived()` values, plain helpers, and event handlers alike, all as ordinary object properties.",
     "loc": "src/controller.ts:175"
   },
   {
@@ -634,7 +634,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "createChildScope",
     "kind": "function",
     "signature": "(parent?: EffectScope): EffectScope",
-    "doc": "Create a child scope owned by `parent` (or the current scope if `parent` is omitted). The child auto-disposes when its owner disposes — registered as a cleanup at creation. Use when you need a sub-lifecycle inside a mount: e.g. a hook that tears down its own resources independently of the outer view but should still clean up if the view unmounts first.",
+    "doc": "Create a child scope owned by `parent` (or the current scope if `parent` is omitted). The child auto-disposes when its owner disposes — registered as a cleanup at creation. Use when you need a sub-lifecycle inside a mount: e.g. a hook that tears down its own resources independently of the outer route but should still clean up if the route unmounts first.",
     "loc": "src/effect-scope.ts:232"
   },
   {
@@ -747,7 +747,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(tag: string, schema: ComponentSchema, factory: ComponentFactory): void",
     "doc": "",
-    "loc": "src/component.ts:131"
+    "loc": "src/component.ts:132"
   },
   {
     "subpath": ".",
@@ -815,10 +815,10 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "editModeForView",
+    "name": "editModeForRoute",
     "kind": "function",
     "signature": "(name: string): Signal<boolean>",
-    "doc": "Return the (memoized) Signal<boolean> for whether edit-mode is on for `name`. Subsequent calls with the same name return the same signal instance. Always starts OFF on first access; a hard reload resets every view to off.",
+    "doc": "Return the (memoized) Signal<boolean> for whether edit-mode is on for `name`. Subsequent calls with the same name return the same signal instance. Always starts OFF on first access; a hard reload resets every route to off.",
     "loc": "src/edit-mode.ts:70"
   },
   {
@@ -836,6 +836,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "export interface EffectScope { cleanup(fn: () => void): void registerMount(fn: (el: HTMLElement) => (() => void) | void): void runMounts(el: HTMLElement): void dispose(): void readonly disposed: boole",
     "doc": "A unit of resource ownership. Cleanups registered while the scope is the current scope (via `withScope`) run when the scope is disposed.",
     "loc": "src/effect-scope.ts:48"
+  },
+  {
+    "subpath": ".",
+    "name": "elementScopeOf",
+    "kind": "function",
+    "signature": "(el: Element): EffectScope | null",
+    "doc": "The live element scope stamped on `el`, or `null` when `el` is not a connected sail host (or its scope already disposed).",
+    "loc": "src/element-scope.ts:74"
   },
   {
     "subpath": ".",
@@ -1042,7 +1050,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "ListSource",
     "kind": "type",
     "signature": "export type ListSource<T> = T[] | (() => unknown)",
-    "doc": "A list source: a plain array, a `Signal<T[]>`, a `derived(() => T[])`, or any tracked callable returning one — including a live envelope around one, which is what `<data>` hands you.",
+    "doc": "A list source: a plain array, a `Signal<T[]>`, a `derived(() => T[])`, or any tracked callable returning one — including a live envelope around one, which is what a live `query()` hands you.",
     "loc": "src/compositions/filtered-list.ts:9"
   },
   {
@@ -1082,7 +1090,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "ManifestRail",
     "kind": "type",
     "signature": "export type ManifestRail = { label: string | null; icon: string | null }",
-    "doc": "View identity for the shell rail / launcher.",
+    "doc": "Route identity for the shell rail / launcher.",
     "loc": "src/generated.d.ts:29"
   },
   {
@@ -1177,8 +1185,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "subpath": ".",
     "name": "mount",
     "kind": "function",
-    "signature": "<Scope = Record<string, unknown>>(target: HTMLElement, payloadOrName: ViewPayload<Scope> | string, opts?: MountOptions): Promise<MountHandle<Scope>>",
-    "doc": "Mount a view into a DOM target.",
+    "signature": "<Scope = Record<string, unknown>>(target: HTMLElement, payloadOrName: RoutePayload<Scope> | string, opts?: MountOptions): Promise<MountHandle<Scope>>",
+    "doc": "Mount a route into a DOM target.",
     "loc": "src/mount.ts:113"
   },
   {
@@ -1209,7 +1217,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "subpath": ".",
     "name": "MountHandle",
     "kind": "interface",
-    "signature": "export interface MountHandle<Scope = Record<string, unknown>> { dispose(): void scope: Scope element: HTMLElement reload(next: ViewPayload): Promise<void> }",
+    "signature": "export interface MountHandle<Scope = Record<string, unknown>> { dispose(): void scope: Scope element: HTMLElement reload(next: RoutePayload): Promise<void> }",
     "doc": "",
     "loc": "src/mount.ts:76"
   },
@@ -1242,7 +1250,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "MutableState",
     "kind": "type",
     "signature": "export type MutableState<Scope> = { [K in StateKeys<Scope>]: SignalValueAt<Scope, K> } & { readonly [K in Exclude<keyof Scope, StateKeys<Scope>>]: Scope[K] } & { readonly clients: Clients readonly rou",
-    "doc": "The \"this view's state, as seen from imperative contexts\" (handlers, `mount`, `unmount`).",
+    "doc": "The \"this route's state, as seen from imperative contexts\" (handlers, `mount`, `unmount`).",
     "loc": "src/controller.ts:93"
   },
   {
@@ -1466,7 +1474,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "RailMeta",
     "kind": "type",
     "signature": "export type RailMeta = { label: string; icon: string }",
-    "doc": "Per-view shell display metadata. Maps to `<ship-rail>` / `<ship-launcher>`.",
+    "doc": "Per-route shell display metadata. Maps to `<ship-rail>` / `<ship-launcher>`.",
     "loc": "src/generated.d.ts:34"
   },
   {
@@ -1482,7 +1490,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "ReadonlyState",
     "kind": "type",
     "signature": "export type ReadonlyState<Scope> = { readonly [K in StateKeys<Scope>]: ReadonlyView<SignalValueAt<Scope, K>> }",
-    "doc": "The \"this view's state, as seen from declarative contexts.\"",
+    "doc": "The \"this route's state, as seen from declarative contexts.\"",
     "loc": "src/controller.ts:81"
   },
   {
@@ -1508,22 +1516,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(node: Element, param: BoxRect | null | undefined): void | ActionResult<BoxRect | null | undefined>",
     "doc": "",
     "loc": "src/actions/rect-box.ts:35"
-  },
-  {
-    "subpath": ".",
-    "name": "ref",
-    "kind": "function",
-    "signature": "<T extends Element = HTMLElement>(_initial?: null): Ref<T>",
-    "doc": "Construct a writable ref slot, seeded with `null`. The runtime fills it from the matching `bind:this={var}` mount; the compiler's `bind_this_target` check requires every `bind:this` target to be declared as `name: ref(null)` in the controller's setup factory.",
-    "loc": "src/ref.ts:29"
-  },
-  {
-    "subpath": ".",
-    "name": "Ref",
-    "kind": "type",
-    "signature": "export type Ref<T extends Element = HTMLElement> = Signal<T | null>",
-    "doc": "Typed handle to a single rendered element. Reads as `null` before the runtime resolves the element and after the boundary unmounts; returns the live element while attached.",
-    "loc": "src/ref.ts:21"
   },
   {
     "subpath": ".",
@@ -1563,13 +1555,13 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ResolvedBindings = Record<string, unknown>",
     "doc": "The flat bindings record returned by `resolveController`. Each entry is something the template scope can consume directly:",
-    "loc": "src/controller-resolver-types.ts:64"
+    "loc": "src/controller-resolver-types.ts:65"
   },
   {
     "subpath": ".",
-    "name": "ResolvedView",
+    "name": "ResolvedRoute",
     "kind": "type",
-    "signature": "export type ResolvedView = { source: string params: Partial<{ [key in string]: string }> source_path: string | null }",
+    "signature": "export type ResolvedRoute = { source: string params: Partial<{ [key in string]: string }> source_path: string | null }",
     "doc": "",
     "loc": "src/generated.d.ts:38"
   },
@@ -1586,7 +1578,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "ResolverContext",
     "kind": "interface",
     "signature": "export interface ResolverContext { ship: ShipHost clients?: Clients route?: RouteSignals | Record<string, string> navigate?: (path: string) => void scope?: Record<string, unknown> stateKeys?: Readonly",
-    "doc": "Setup-time context passed to the resolver. Mirrors what `hydrate` passes to a setup function, plus a `scope` field carrying any signals already declared in the template (`<data>`, `<state>`) by the time setup runs.",
+    "doc": "Setup-time context passed to the resolver. Mirrors what `hydrate` passes to a setup function, plus a `scope` field carrying any signals already declared in the view scope by the time setup runs.",
     "loc": "src/controller-resolver-types.ts:17"
   },
   {
@@ -1615,10 +1607,34 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
+    "name": "RouteListEntry",
+    "kind": "type",
+    "signature": "export type RouteListEntry = { name: string type: string source: string rail?: RailMeta | null }",
+    "doc": "",
+    "loc": "src/generated.d.ts:44"
+  },
+  {
+    "subpath": ".",
+    "name": "RouteManifest",
+    "kind": "type",
+    "signature": "export type RouteManifest = { name: string type: string elementName?: string | null bundleUrl?: string | null claims?: string[] | null entry?: string | null }",
+    "doc": "",
+    "loc": "src/generated.d.ts:51"
+  },
+  {
+    "subpath": ".",
+    "name": "RoutePayload",
+    "kind": "type",
+    "signature": "export type RoutePayload<Scope = Record<string, unknown>> = Omit<GeneratedRoutePayload, 'scope'> & { scope: Scope }",
+    "doc": "Wire shape returned by `GET /_deck/views/<name>[/<sub>]`. The base type is committed at `./generated.d.ts` (a hand-maintained mirror of `crates/deck/deck-host/src/route_payload.rs::RoutePayload`; `./generated.ts` is gitignored and no `gen-types` task exists in this repo). The local generic specializes `scope` — Rust ships it as untyped JSON; per-route modules narrow it here.",
+    "loc": "src/mount.ts:36"
+  },
+  {
+    "subpath": ".",
     "name": "RouteSignals",
     "kind": "interface",
     "signature": "export interface RouteSignals { params: Record<string, Signal<string | undefined>> query: Record<string, Signal<string | undefined>> pathname: Signal<string> hash: Signal<string> }",
-    "doc": "The reactive URL handle exposed to view scope as `route`. SAIL's structural view of the deck-side `RouteSignals` — every property is a `Signal` (already a SAIL primitive) so the view's typed scope can read `scope.route.params.<name>()` and subscribe to changes.",
+    "doc": "The reactive URL handle exposed to route scope as `route`. SAIL's structural view of the deck-side `RouteSignals` — every property is a `Signal` (already a SAIL primitive) so the route's typed scope can read `scope.route.params.<name>()` and subscribe to changes.",
     "loc": "src/route-signals.ts:26"
   },
   {
@@ -1858,7 +1874,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "SSR_PAYLOAD_GLOBAL",
     "kind": "const",
     "signature": "\"__SUI_STORES__\"",
-    "doc": "Name of the global the SSR entry writes the per-request store payload to. The client entry reads it via `hydrateStoreSSRPayload`. The `<script>` tag with this payload is emitted into the HTML BEFORE the view bundle, so by the time any `useStore` runs the payload is available.",
+    "doc": "Name of the global the SSR entry writes the per-request store payload to. The client entry reads it via `hydrateStoreSSRPayload`. The `<script>` tag with this payload is emitted into the HTML BEFORE the route bundle, so by the time any `useStore` runs the payload is available.",
     "loc": "src/store.ts:372"
   },
   {
@@ -1881,8 +1897,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "subpath": ".",
     "name": "SuiLoader",
     "kind": "interface",
-    "signature": "export interface SuiLoader { fetchView(nameOrPath: string): Promise<ViewPayload> }",
-    "doc": "Host-provided loader. The runtime is host-agnostic — it does NOT know the URL scheme for fetching view payloads or component bundles. The host (deck view-host, shell) injects this adapter so the `/_deck/...` (or any) scheme lives at the boundary, not in the framework.",
+    "signature": "export interface SuiLoader { fetchRoute(nameOrPath: string): Promise<RoutePayload> }",
+    "doc": "Host-provided loader. The runtime is host-agnostic — it does NOT know the URL scheme for fetching route payloads or component bundles. The host (deck view-host, shell) injects this adapter so the `/_deck/...` (or any) scheme lives at the boundary, not in the framework.",
     "loc": "src/mount.ts:45"
   },
   {
@@ -1946,7 +1962,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "theme",
     "kind": "const",
     "signature": "{ readonly preview: (patch: ThemePatch) => void; readonly commit: (patch: ThemePatch) => void; readonly reset: () => void; readonly current: () => ThemeState; }",
-    "doc": "`theme` — the sanctioned runtime theme-write hatch. A plain ambient API (`import { theme } from '@ship/sail-runtime'`), NOT `ctx`-scoped: a theme write is a GLOBAL `:root` write, so it needs no view scope.",
+    "doc": "`theme` — the sanctioned runtime theme-write hatch. A plain ambient API (`import { theme } from '@ship/sail-runtime'`), NOT `ctx`-scoped: a theme write is a GLOBAL `:root` write, so it needs no route scope.",
     "loc": "src/theme.ts:262"
   },
   {
@@ -2159,30 +2175,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "ViewListEntry",
-    "kind": "type",
-    "signature": "export type ViewListEntry = { name: string type: string source: string rail?: RailMeta | null }",
-    "doc": "",
-    "loc": "src/generated.d.ts:44"
-  },
-  {
-    "subpath": ".",
-    "name": "ViewManifest",
-    "kind": "type",
-    "signature": "export type ViewManifest = { name: string type: string elementName?: string | null bundleUrl?: string | null claims?: string[] | null entry?: string | null }",
-    "doc": "",
-    "loc": "src/generated.d.ts:51"
-  },
-  {
-    "subpath": ".",
-    "name": "ViewPayload",
-    "kind": "type",
-    "signature": "export type ViewPayload<Scope = Record<string, unknown>> = Omit<GeneratedViewPayload, 'scope'> & { scope: Scope }",
-    "doc": "Wire shape returned by `GET /_deck/views/<name>[/<sub>]`. The base type is committed at `./generated.d.ts` (a hand-maintained mirror of `crates/deck/deck-host/src/view_payload.rs::ViewPayload`; `./generated.ts` is gitignored and no `gen-types` task exists in this repo). The local generic specializes `scope` — Rust ships it as untyped JSON; per-view modules narrow it here.",
-    "loc": "src/mount.ts:36"
-  },
-  {
-    "subpath": ".",
     "name": "virtualRow",
     "kind": "function",
     "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
@@ -2322,7 +2314,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "RouteSignals",
     "kind": "interface",
     "signature": "export interface RouteSignals { params: Record<string, Signal<string | undefined>> query: Record<string, Signal<string | undefined>> pathname: Signal<string> hash: Signal<string> }",
-    "doc": "The reactive URL handle exposed to view scope as `route`. SAIL's structural view of the deck-side `RouteSignals` — every property is a `Signal` (already a SAIL primitive) so the view's typed scope can read `scope.route.params.<name>()` and subscribe to changes.",
+    "doc": "The reactive URL handle exposed to route scope as `route`. SAIL's structural view of the deck-side `RouteSignals` — every property is a `Signal` (already a SAIL primitive) so the route's typed scope can read `scope.route.params.<name>()` and subscribe to changes.",
     "loc": "src/route-signals.ts:26"
   },
   {
@@ -2347,15 +2339,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:199"
-  },
-  {
-    "subpath": "./server",
-    "name": "attachRef",
-    "kind": "function",
-    "signature": "<T extends Element>(scope: Record<string, unknown>, varName: string, el: T): Signal<T | null>",
-    "doc": "`bind:this` setup used by compiler-emitted templates. Reuses an existing writable signal in `scope[varName]` (typically a pre-declared `ref(null)`), otherwise installs a fresh signal seeded with the element.",
-    "loc": "src/ref.ts:39"
+    "loc": "src/styles/index.ts:210"
   },
   {
     "subpath": "./server",
@@ -2490,7 +2474,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "componentMountState",
     "kind": "function",
     "signature": "(scope: Record<string, unknown>): Record<string, unknown>",
-    "doc": "Component-mount state. The compiler emits `componentMountState($scope)` in place of a hand-rolled proxy. Behavior matches view-mount — one shape, one builder, no flag.",
+    "doc": "Component-mount state. The compiler emits `componentMountState($scope)` in place of a hand-rolled proxy. Behavior matches route-mount — one shape, one builder, no flag.",
     "loc": "src/state-proxy.ts:113"
   },
   {
@@ -2515,7 +2499,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<Ctx, SC extends Record<string, unknown>>(fn: (init: ControllerScope<Ctx>, host?: Element) => SC): ControllerExport<Ctx & SC> & { __def: (init: ControllerScope<Ctx>, host?: Element) => SC; }",
     "doc": "Author-facing helper. Wrap a setup function with `controller(fn)` to get a `{ setup, __def }` export the daemon's hydrate path can call directly, with `Ctx`/`SC` inferred from `fn` — no explicit type argument, no currying.",
-    "loc": "src/controller-resolver.ts:119"
+    "loc": "src/controller-resolver.ts:125"
   },
   {
     "subpath": "./server",
@@ -2523,14 +2507,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ControllerExport<Scope = object> { setup: (ctx: ResolverContext) => ResolvedBindings __def: ControllerDef<Scope> }",
     "doc": "The shape `controller(setup)` returns — a setup-shaped export the daemon's hydrate path consumes verbatim. The daemon extracts `.setup` and calls it with a `ResolverContext` (built from the hydrate flow); `setup` runs the resolver and returns flat bindings the template merges into scope.",
-    "loc": "src/controller-resolver.ts:78"
+    "loc": "src/controller-resolver.ts:84"
   },
   {
     "subpath": "./server",
     "name": "createChildScope",
     "kind": "function",
     "signature": "(parent?: EffectScope): EffectScope",
-    "doc": "Create a child scope owned by `parent` (or the current scope if `parent` is omitted). The child auto-disposes when its owner disposes — registered as a cleanup at creation. Use when you need a sub-lifecycle inside a mount: e.g. a hook that tears down its own resources independently of the outer view but should still clean up if the view unmounts first.",
+    "doc": "Create a child scope owned by `parent` (or the current scope if `parent` is omitted). The child auto-disposes when its owner disposes — registered as a cleanup at creation. Use when you need a sub-lifecycle inside a mount: e.g. a hook that tears down its own resources independently of the outer route but should still clean up if the route unmounts first.",
     "loc": "src/effect-scope.ts:232"
   },
   {
@@ -2839,14 +2823,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": "./server",
-    "name": "ref",
-    "kind": "function",
-    "signature": "<T extends Element = HTMLElement>(_initial?: null): Ref<T>",
-    "doc": "Construct a writable ref slot, seeded with `null`. The runtime fills it from the matching `bind:this={var}` mount; the compiler's `bind_this_target` check requires every `bind:this` target to be declared as `name: ref(null)` in the controller's setup factory.",
-    "loc": "src/ref.ts:29"
-  },
-  {
-    "subpath": "./server",
     "name": "registerTemplateHook",
     "kind": "function",
     "signature": "<Attrs extends Record<string, unknown>, Contributes>(hook: TemplateHook<Attrs, Contributes>): void",
@@ -2867,14 +2843,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ResolvedBindings = Record<string, unknown>",
     "doc": "The flat bindings record returned by `resolveController`. Each entry is something the template scope can consume directly:",
-    "loc": "src/controller-resolver-types.ts:64"
+    "loc": "src/controller-resolver-types.ts:65"
   },
   {
     "subpath": "./server",
     "name": "ResolverContext",
     "kind": "interface",
     "signature": "export interface ResolverContext { ship: ShipHost clients?: Clients route?: RouteSignals | Record<string, string> navigate?: (path: string) => void scope?: Record<string, unknown> stateKeys?: Readonly",
-    "doc": "Setup-time context passed to the resolver. Mirrors what `hydrate` passes to a setup function, plus a `scope` field carrying any signals already declared in the template (`<data>`, `<state>`) by the time setup runs.",
+    "doc": "Setup-time context passed to the resolver. Mirrors what `hydrate` passes to a setup function, plus a `scope` field carrying any signals already declared in the view scope by the time setup runs.",
     "loc": "src/controller-resolver-types.ts:17"
   },
   {
@@ -2970,7 +2946,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "SSR_PAYLOAD_GLOBAL",
     "kind": "const",
     "signature": "\"__SUI_STORES__\"",
-    "doc": "Name of the global the SSR entry writes the per-request store payload to. The client entry reads it via `hydrateStoreSSRPayload`. The `<script>` tag with this payload is emitted into the HTML BEFORE the view bundle, so by the time any `useStore` runs the payload is available.",
+    "doc": "Name of the global the SSR entry writes the per-request store payload to. The client entry reads it via `hydrateStoreSSRPayload`. The `<script>` tag with this payload is emitted into the HTML BEFORE the route bundle, so by the time any `useStore` runs the payload is available.",
     "loc": "src/store.ts:372"
   },
   {

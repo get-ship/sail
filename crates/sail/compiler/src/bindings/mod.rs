@@ -118,11 +118,9 @@ impl Builder {
             AttrInstr::BindChecked { expr, .. } => {
                 self.push(BindingKind::BindChecked, &expr.source, expr.allow_arrow);
             }
-            AttrInstr::BindThis { var, .. } => {
-                // The "expr" carried by the manifest is the bare scope
-                // variable name; deps is the same single identifier so the
-                // attach runtime knows which scope key to write into.
-                self.push(BindingKind::BindThis, var, false);
+            AttrInstr::BindThis { .. } => {
+                // `bind:this` is direct-emitted as `runAction(...)` in the
+                // generated JS; it does not need a runtime manifest entry.
             }
             AttrInstr::SlotReflectEmpty { .. } => {
                 // Side-effect wiring on the host's attribute set. No scope

@@ -137,8 +137,13 @@ fn bind_this_button_direct_emits_hydrate_ref() {
     // `hydrate(root, ctx)` calls `hydrateRef` with the bare scope
     // variable name; the manifest no longer carries a `bind:this` row.
     assert!(
-        out.js.contains("hydrateRef(__m[\"b0\"], $scope, \"btnEl\")"),
-        "expected hydrateRef call in hydrate(), got:\n{}",
+        out.js.contains("runAction(__e0, (__n) =>"),
+        "expected runAction call for bind:this, got:\n{}",
+        out.js
+    );
+    assert!(
+        !out.js.contains("hydrateRef"),
+        "did not expect hydrateRef after unifying onto actions, got:\n{}",
         out.js
     );
     assert!(

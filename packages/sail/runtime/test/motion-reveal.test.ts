@@ -80,7 +80,7 @@ Object.defineProperty(window, 'matchMedia', {
 })
 
 const viewFade: MotionAttachConfig = {
-  trigger: 'view',
+  trigger: 'reveal',
   motions: [{ property: 'opacity', preset: 'fade', kind: 'tween', from: 0, to: 1, duration: 0.12 }],
 }
 
@@ -138,7 +138,7 @@ function attachConnected(config: MotionAttachConfig): { el: HTMLElement; dispose
   return { el, dispose }
 }
 
-describe('motion:view — re-timed onto a ViewTimeline when the platform has one', () => {
+describe('motion:reveal — re-timed onto a ViewTimeline when the platform has one', () => {
   it('hands every created animation a ViewTimeline scoped to the entry range', () => {
     globals.ViewTimeline = FakeViewTimeline
     const { el, dispose } = attachConnected(viewFade)
@@ -168,7 +168,7 @@ describe('motion:view — re-timed onto a ViewTimeline when the platform has one
   })
 })
 
-describe('motion:view — no timeline support degrades to play-on-first-reveal', () => {
+describe('motion:reveal — no timeline support degrades to play-on-first-reveal', () => {
   it('pauses at creation and plays on the first intersection, then stops observing', () => {
     globals.IntersectionObserver = FakeIntersectionObserver
     const { el, dispose } = attachConnected(viewFade)
@@ -198,7 +198,7 @@ describe('motion:view — no timeline support degrades to play-on-first-reveal',
     const c = controlsMade[0]!
     expect(c.complete).toHaveBeenCalledTimes(1) // visible, not invisible-forever
     expect(warn).toHaveBeenCalledTimes(1)
-    expect(String(warn.mock.calls[0]![0])).toContain('motion:view')
+    expect(String(warn.mock.calls[0]![0])).toContain('motion:reveal')
     dispose()
   })
 })

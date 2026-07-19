@@ -31,6 +31,11 @@ export type InjectedSetup =
 function rewriteImports(js: string): string {
   return (
     js
+      // import { …names… } from "@ship/sail-runtime/internal"
+      .replace(
+        /^\s*import\s*\{\s*([^}]+?)\s*\}\s*from\s*["']@ship\/sail-runtime\/internal["']\s*;?\s*$/gm,
+        'const { $1 } = __runtime;',
+      )
       // import { …names… } from "@ship/sail-runtime"
       .replace(
         /^\s*import\s*\{\s*([^}]+?)\s*\}\s*from\s*["']@ship\/sail-runtime["']\s*;?\s*$/gm,

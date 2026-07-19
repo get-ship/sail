@@ -90,17 +90,6 @@ fn for_iterable_number_rejected() {
 }
 
 #[test]
-fn bind_this_to_signal_rejected() {
-    let (src, path) = read("bind-this-signal");
-    let err = compile(&src, paired_opts(path)).expect_err("bind:this on signal must fail");
-    assert!(
-        err.message.contains("`ref(...)`"),
-        "msg: {}",
-        err.message
-    );
-}
-
-#[test]
 fn on_handler_must_be_callable() {
     let (src, path) = read("on-handler-signal");
     let err = compile(&src, paired_opts(path)).expect_err("signal handler must fail");

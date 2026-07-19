@@ -832,7 +832,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          </controller>\n\
          ```\n\n\
          Mutation is ALWAYS `signal.set(newValue)` (or `signal.set(prev => next)`). Lifecycle\nis ambient, not a section — call `mount(fn)` (fires once after this instance's DOM\nconnects; a returned function is cleanup run on dispose) or `onCleanup(fn)` (runs on\ndispose) from anywhere in the setup call graph, including a composition function\ncalled from setup. Both are auto-injected — no import needed.\n\n\
-         Import primitives from `@ship/sail-runtime` — the front door. Never from\n`@ship/sail-runtime/internal`: that is the COMPILER's ABI (`bindFor`, `attachRef`,\n`runAction`, …). If you are typing a symbol from there, you are hand-writing something\nthe compiler emits.\n\n\
+         Import primitives from `@ship/sail-runtime` — the front door. Never from\n`@ship/sail-runtime/internal`: that is the COMPILER's ABI (`bindFor`,\n`runAction`, …). If you are typing a symbol from there, you are hand-writing something\nthe compiler emits.\n\n\
          Reactivity: `signal` `derived` `effect` `batch` `untrack` `shared`. Reach for\n`effect` rarely — it is the escape hatch, not the pattern. Cleanup is automatic: an\neffect created during setup dies with the component.\n\n\
          Control flow: `{{#if cond}}…{{/if}}`, `{{#for item of items key={{item.id}}}}…{{/for}}`\n(the `key=` is required — without it the reconciler falls back to positional matching\nand loses DOM identity on reorder).\n"
     );

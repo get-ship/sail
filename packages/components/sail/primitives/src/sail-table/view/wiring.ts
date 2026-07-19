@@ -154,23 +154,6 @@ export function windowRows<T>(
   })
 }
 
-/** Build the virtualizer over the engine's center band. `getViewport` is the
- *  element thunk (null until `bind:this` mounts); `rowHeight` seeds the
- *  estimate. The center-row identity keys the window so `{#for}` recycles. */
-export function buildViewportVirtualizer<T>(
-  table: () => Table<T> | null,
-  getViewport: () => HTMLElement | null,
-  rowHeight: number,
-): Virtual {
-  return createVirtualizer({
-    count: () => table()?.centerRows().length ?? 0,
-    estimateSize: () => rowHeight,
-    getScrollElement: getViewport,
-    overscan: 8,
-    getItemKey: (i) => table()?.centerRows()[i]?.id ?? i,
-  })
-}
-
 /** Resolve the live `Row<T>` for an id over the engine's center band (used by
  *  the selection click path so toggles go through the engine, not the view). */
 export function findCenterRow<T>(table: Table<T>, id: string): Row<T> | undefined {

@@ -35,8 +35,8 @@
   }
 </scope>
 <controller>
-import { controller, derived, ref, signal } from '@ship/sail-runtime'
-import type { ControllerScope } from '@ship/sail-runtime'
+import { controller, derived, signal } from '@ship/sail-runtime'
+import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-file-upload.sail'
 
 function fmtSize(bytes: number): string {
@@ -57,9 +57,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const files = signal<File[]>([])
     const over = signal(false)
     const errorMsg = signal('')
-    const dropzoneEl = ref<HTMLDivElement>(null)
-    const inputEl = ref<HTMLInputElement>(null)
-    const fileListEl = ref<HTMLDivElement>(null)
+    // KEPT as a ref, deliberately: `openPicker` clicks this input from the
+    // DROPZONE's handlers. The element is needed as a VALUE reachable from
+    // another element's behavior, which is the one thing an action can't do.
+    const inputEl = signal<HTMLInputElement | null>(null)
     const displayFiles = derived<DisplayFile[]>(() =>
       files().map((file, idx) => ({
         file,
@@ -69,101 +70,121 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         sizeStr: fmtSize(file.size),
       })),
     )
+
+    // The change event is dispatched from the host. `mount` sets this before
+    // any handler below can fire (actions only REGISTER at attach time).
+    let hostEl: HTMLElement | null = null
+
+    const matchesAccept = (file: File): boolean => {
+      const tokens = (_ctx.accept() as string)
+        .split(',')
+        .map((t: string) => t.trim().toLowerCase())
+        .filter(Boolean)
+      if (tokens.length === 0) return true
+      const ext = '.' + (file.name.split('.').pop() || '').toLowerCase()
+      const type = file.type.toLowerCase()
+      return tokens.some((t: string) => {
+        if (t.startsWith('.')) return ext === t
+        if (t.endsWith('/*')) return type.startsWith(t.slice(0, -1))
+        return type === t
+      })
+    }
+
+    const emitChange = (list: File[]) => {
+      hostEl?.dispatchEvent(
+        new CustomEvent('sail-change', {
+          detail: { files: [...list] },
+          bubbles: true,
+          composed: true,
+        }),
+      )
+    }
+
+    const addFiles = (incoming: File[]) => {
+      errorMsg.set('')
+      const valid: File[] = []
+      for (const f of incoming) {
+        if (f.size > (_ctx.maxSize() as number)) {
+          errorMsg.set(`\"${f.name}\" exceeds max size (${fmtSize(_ctx.maxSize() as number)}).`)
+          continue
+        }
+        if (_ctx.accept() && !matchesAccept(f)) {
+          errorMsg.set(`"${f.name}" is not an accepted file type.`)
+          continue
+        }
+        valid.push(f)
+      }
+      const cur = files()
+      const next = _ctx.multiple() ? [...cur, ...valid] : valid.slice(0, 1)
+      files.set(next)
+      emitChange(next)
+    }
+
+    const removeAt = (idx: number) => {
+      const cur = files()
+      if (idx < 0 || idx >= cur.length) return
+      const next = cur.filter((_: File, i: number) => i !== idx)
+      files.set(next)
+      errorMsg.set('')
+      emitChange(next)
+    }
+
+    const openPicker = () => {
+      if (_ctx.disabled()) return
+      ;(inputEl() as HTMLInputElement | null)?.click()
+    }
+
+    const onClick = () => openPicker()
+    const onKey = (e: KeyboardEvent) => {
+      if (_ctx.disabled()) return
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        openPicker()
+      }
+    }
+    const onDragOver = (e: DragEvent) => {
+      if (_ctx.disabled()) return
+      e.preventDefault()
+      over.set(true)
+    }
+    const onDragLeave = () => { over.set(false) }
+    const onDrop = (e: DragEvent) => {
+      if (_ctx.disabled()) return
+      e.preventDefault()
+      over.set(false)
+      const list = e.dataTransfer?.files
+      if (list && list.length) addFiles(Array.from(list))
+    }
+    const onInputChange = (e: Event) => {
+      const inp = e.target as HTMLInputElement
+      if (inp.files && inp.files.length) addFiles(Array.from(inp.files))
+      inp.value = ''
+    }
+
+    // The dropzone's five listeners are behavior ON the dropzone, so they ride
+    // an action: it receives the element and owns the removal. NOT named
+    // `dropzone` — that is a BUILT-IN action name, and a scope member that
+    // shadows one is silently ignored in favour of the auto-import.
+    const dropTarget: Action<void> = (node) => {
+      node.addEventListener('click', onClick)
+      node.addEventListener('keydown', onKey as EventListener)
+      node.addEventListener('dragover', onDragOver as EventListener)
+      node.addEventListener('dragleave', onDragLeave)
+      node.addEventListener('drop', onDrop as EventListener)
+      return {
+        destroy: () => {
+          node.removeEventListener('click', onClick)
+          node.removeEventListener('keydown', onKey as EventListener)
+          node.removeEventListener('dragover', onDragOver as EventListener)
+          node.removeEventListener('dragleave', onDragLeave)
+          node.removeEventListener('drop', onDrop as EventListener)
+        },
+      }
+    }
+
     mount((host) => {
-      const matchesAccept = (file: File): boolean => {
-        const tokens = (_ctx.accept() as string)
-          .split(',')
-          .map((t: string) => t.trim().toLowerCase())
-          .filter(Boolean)
-        if (tokens.length === 0) return true
-        const ext = '.' + (file.name.split('.').pop() || '').toLowerCase()
-        const type = file.type.toLowerCase()
-        return tokens.some((t: string) => {
-          if (t.startsWith('.')) return ext === t
-          if (t.endsWith('/*')) return type.startsWith(t.slice(0, -1))
-          return type === t
-        })
-      }
-
-      const emitChange = (list: File[]) => {
-        host.dispatchEvent(
-          new CustomEvent('sail-change', {
-            detail: { files: [...list] },
-            bubbles: true,
-            composed: true,
-          }),
-        )
-      }
-
-      const addFiles = (incoming: File[]) => {
-        errorMsg.set('')
-        const valid: File[] = []
-        for (const f of incoming) {
-          if (f.size > (_ctx.maxSize() as number)) {
-            errorMsg.set(`\"${f.name}\" exceeds max size (${fmtSize(_ctx.maxSize() as number)}).`)
-            continue
-          }
-          if (_ctx.accept() && !matchesAccept(f)) {
-            errorMsg.set(`"${f.name}" is not an accepted file type.`)
-            continue
-          }
-          valid.push(f)
-        }
-        const cur = files()
-        const next = _ctx.multiple() ? [...cur, ...valid] : valid.slice(0, 1)
-        files.set(next)
-        emitChange(next)
-      }
-
-      const removeAt = (idx: number) => {
-        const cur = files()
-        if (idx < 0 || idx >= cur.length) return
-        const next = cur.filter((_: File, i: number) => i !== idx)
-        files.set(next)
-        errorMsg.set('')
-        emitChange(next)
-      }
-
-      const openPicker = () => {
-        if (_ctx.disabled()) return
-        ;(inputEl() as HTMLInputElement | null)?.click()
-      }
-
-      const onClick = () => openPicker()
-      const onKey = (e: KeyboardEvent) => {
-        if (_ctx.disabled()) return
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          openPicker()
-        }
-      }
-      const onDragOver = (e: DragEvent) => {
-        if (_ctx.disabled()) return
-        e.preventDefault()
-        over.set(true)
-      }
-      const onDragLeave = () => { over.set(false) }
-      const onDrop = (e: DragEvent) => {
-        if (_ctx.disabled()) return
-        e.preventDefault()
-        over.set(false)
-        const list = e.dataTransfer?.files
-        if (list && list.length) addFiles(Array.from(list))
-      }
-      const onInputChange = (e: Event) => {
-        const inp = e.target as HTMLInputElement
-        if (inp.files && inp.files.length) addFiles(Array.from(inp.files))
-        inp.value = ''
-      }
-
-      const dropzoneElNode = dropzoneEl() as HTMLDivElement | null
+      hostEl = host
       const inputElNode = inputEl() as HTMLInputElement | null
-
-      dropzoneElNode?.addEventListener('click', onClick)
-      dropzoneElNode?.addEventListener('keydown', onKey)
-      dropzoneElNode?.addEventListener('dragover', onDragOver)
-      dropzoneElNode?.addEventListener('dragleave', onDragLeave)
-      dropzoneElNode?.addEventListener('drop', onDrop)
       inputElNode?.addEventListener('change', onInputChange)
 
       // Event delegation for the dynamic .remove buttons inside the file list.
@@ -177,21 +198,16 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       ;(host.shadowRoot ?? host).addEventListener('click', onShadowClick)
 
       return () => {
-        dropzoneElNode?.removeEventListener('click', onClick)
-        dropzoneElNode?.removeEventListener('keydown', onKey)
-        dropzoneElNode?.removeEventListener('dragover', onDragOver)
-        dropzoneElNode?.removeEventListener('dragleave', onDragLeave)
-        dropzoneElNode?.removeEventListener('drop', onDrop)
         inputElNode?.removeEventListener('change', onInputChange)
         ;(host.shadowRoot ?? host).removeEventListener('click', onShadowClick)
       }
     })
 
-    return { files, over, errorMsg, displayFiles, dropzoneEl, inputEl, fileListEl }
+    return { files, over, errorMsg, displayFiles, dropTarget, inputEl }
   })
 
 </controller>
-<center gap="2" data-state={over() ? 'over' : null} role="button" tabindex={disabled() ? '-1' : '0'} aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'} aria-disabled={disabled() ? 'true' : 'false'} bind:this={dropzoneEl} sx="group py-6 px-4 border border-border border-dashed rounded-lg cursor-pointer text-muted-foreground select-none text-center focus:ring-ring state-over:border state-over:border-tone-ring state-over:bg-tone-bg">
+<center gap="2" data-state={over() ? 'over' : null} role="button" tabindex={disabled() ? '-1' : '0'} aria-label={accept() ? 'Upload files (' + accept() + ')' : 'Upload files'} aria-disabled={disabled() ? 'true' : 'false'} use:dropTarget sx="group py-6 px-4 border border-border border-dashed rounded-lg cursor-pointer text-muted-foreground select-none text-center focus:ring-ring state-over:border state-over:border-tone-ring state-over:bg-tone-bg">
   <row align="center" justify="center" gap="0" aria-hidden="true" sx="w-9 h-9 min-w-9 rounded-lg bg-muted text-muted-foreground text-lg leading-none group-state-over:bg-selected-bg group-state-over:text-tone-ring">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" sx="w-icon-size-md h-icon-size-md"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
   </row>
@@ -202,7 +218,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <div role="alert" sx="text-sm text-destructive">{errorMsg()}</div>
 {/if}
 {#if displayFiles().length > 0}
-  <column gap="1" aria-live="polite" bind:this={fileListEl} sx="mt-2">
+  <column gap="1" aria-live="polite" sx="mt-2">
     {#for f of displayFiles() key={f.key}}
       <row align="center" gap="3">
         <span aria-hidden="true" sx="text-muted-foreground">

@@ -87,7 +87,7 @@
   }
 </scope>
 <controller>
-import { controller, derived, ref, signal } from '@ship/sail-runtime'
+import { controller, derived, signal } from '@ship/sail-runtime'
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-date-picker.sail'
 
@@ -154,8 +154,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
     const focused = signal(todayIso())
     const viewYear = signal(new Date().getFullYear())
     const viewMonth = signal(new Date().getMonth())
-    const inputEl = ref<HTMLInputElement>(null)
-    const panelEl = ref<HTMLDivElement>(null)
+    const inputEl = signal<HTMLInputElement | null>(null)
 
     const monthLabel = derived<string>(() =>
       `${MONTHS[viewMonth()]} ${viewYear()}`,
@@ -364,7 +363,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
       }
     })
 
-    return { open, today, focused, viewYear, viewMonth, inputEl, panelEl, monthLabel, dayHeaders, monthCells }
+    return { open, today, focused, viewYear, viewMonth, inputEl, monthLabel, dayHeaders, monthCells }
   })
 
 </controller>
@@ -377,7 +376,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
   </svg>
 </row>
 {#if open() && !disabled()}
-  <div role="dialog" aria-label="Choose date" bind:this={panelEl} sx="absolute left-0 z-popover w-panel-max-w-sm p-2 mt-1 bg-popover text-popover-foreground border border-border rounded-md shadow-md font-body">
+  <div role="dialog" aria-label="Choose date" sx="absolute left-0 z-popover w-panel-max-w-sm p-2 mt-1 bg-popover text-popover-foreground border border-border rounded-md shadow-md font-body">
     <row align="center" justify="between" sx="mb-1">
       <button type="button" data-act="prev" aria-label="Previous month" sx="w-icon-size-2xl h-icon-size-2xl rounded-sm text-muted-foreground cursor-pointer hover:bg-muted hover:text-foreground">‹</button>
       <span sx="grow-1 font-semibold text-center">{monthLabel()}</span>

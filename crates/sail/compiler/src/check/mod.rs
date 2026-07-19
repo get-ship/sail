@@ -32,7 +32,6 @@ pub mod symbol_table;
 pub mod scope_member;
 pub mod signal_called;
 pub mod key_identity;
-pub mod bind_this_target;
 pub mod on_callable;
 pub mod for_iterable;
 pub mod query_keys;
@@ -99,7 +98,6 @@ pub fn run(
         // A reactive value rendered without its `()` — the silent one: it
         // emitted the getter's SOURCE into the DOM and warned about nothing.
         signal_called::check(program, controller)?;
-        bind_this_target::check(program, controller)?;
         on_callable::check(program, controller)?;
     }
     Ok(())
@@ -226,7 +224,6 @@ pub fn collect(
     if has_scope_context {
         push_all(scope_member::collect(program, controller), source, &mut diags);
         push_all(signal_called::collect(program, controller), source, &mut diags);
-        push(bind_this_target::check(program, controller), source, &mut diags);
         push(on_callable::check(program, controller), source, &mut diags);
     }
 

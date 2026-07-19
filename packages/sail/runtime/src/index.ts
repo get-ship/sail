@@ -125,9 +125,6 @@ export type { HostContext } from './host-context'
 export { theme, setThemePersist, hydrateTheme, clearThemeOverrides } from './theme'
 export type { Theme, ThemePatch, ThemeTokenName, ThemeState, ThemePersist } from './theme'
 
-export { ref, attachRef } from './ref'
-export type { Ref } from './ref'
-
 export { bindSlotEmpty } from './slot-empty'
 
 export {

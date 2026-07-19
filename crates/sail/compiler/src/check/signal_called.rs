@@ -259,7 +259,7 @@ impl Cx<'_> {
 fn reads_by_call(kind: ScopeKind) -> bool {
     matches!(
         kind,
-        ScopeKind::Signal | ScopeKind::Derived | ScopeKind::Ref | ScopeKind::Timeline
+        ScopeKind::Signal | ScopeKind::Derived | ScopeKind::Timeline
     )
 }
 

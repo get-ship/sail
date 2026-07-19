@@ -38,7 +38,7 @@
   }
 </scope>
 <controller>
-import { controller, signal, derived, effect, debounce, ref } from '@ship/sail-runtime'
+import { controller, signal, derived, effect, debounce} from '@ship/sail-runtime'
 import type { Scope } from './sail-canvas.sail'
 import { createCanvas } from '../engine/create-canvas'
 import type { Canvas, Transform } from '../engine/types'
@@ -59,7 +59,7 @@ function parseSnapshot(raw: string): { transform?: Partial<Transform> } | null {
 // as returned handlers, and emits a debounced sail-canvas-viewport event via
 // host.emit! from mount.
 export default controller(({ value }: Scope) => {
-  const viewportEl = ref<HTMLDivElement>(null)
+  const viewportEl = signal<HTMLDivElement | null>(null)
   // Fallback engine — used when no engine is injected via prop:canvas.
   // exactOptionalPropertyTypes: only set initialTransform when present —
   // passing `undefined` to the optional field is itself a type error.

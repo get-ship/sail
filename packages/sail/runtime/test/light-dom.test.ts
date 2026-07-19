@@ -116,7 +116,7 @@ describe('light-DOM component registration', () => {
     expect(css).toContain("button[variant='solid']")
     expect(css).toContain("button[variant='soft']")
     expect(css).toMatch(/min-height: var\(--size-h, var\(--control-h-md\)\)/)
-    expect(css).toContain('translateY(-1px)')
+    expect(css).toContain('translateY(var(--control-lift))')
   })
 
   it('shadow: true still attaches a shadow root (the containment feature)', () => {

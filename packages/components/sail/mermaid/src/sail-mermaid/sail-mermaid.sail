@@ -13,8 +13,10 @@
   Rendering is async (mermaid.render returns a Promise) so we don't bindHtml the
   source directly: a render effect (tracks `value` + the theme) does the async
   render and writes the resulting SVG (or an escaped error box) into an `html`
-  signal, which a bindHtml() binding morphs into a `bind:this` shadow-root
-  <div> — the sanctioned, purity-lint-clean path for reactive innerHTML.
+  signal, which a bindHtml() binding morphs into the container <div> — the
+  sanctioned, purity-lint-clean path for reactive innerHTML. The container
+  reaches the binding through `use:paintDiagram`, so the paint owns its own
+  teardown.
 -->
 
 <scope>
@@ -35,8 +37,8 @@
 // the source directly (bindHtml wants a SYNC string). Instead a render effect
 // tracks `value` + the theme, runs the async render off to the side, and
 // writes the resulting SVG (or an escaped error box) into a local `html`
-// signal. A single bindHtml(container, () => html()) then morphs that into
-// the container — the sanctioned, purity-lint-clean path for reactive
+// signal. The `use:paintDiagram` action bindHtml's that into the container
+// element it receives — the sanctioned, purity-lint-clean path for reactive
 // innerHTML (a raw `el.innerHTML =` inside an effect is forbidden by
 // sail-controller-purity).
 //
@@ -51,7 +53,8 @@
 // author time; the lazy-load boundary is the deck bundle, not the import
 // expression.
 
-import { controller, signal, derived, effect, ref, bindHtml } from "@ship/sail-runtime";
+import { controller, signal, derived, effect, bindHtml } from "@ship/sail-runtime";
+import type { Action } from "@ship/sail-runtime";
 import mermaid from "mermaid";
 
 type RenderResult =
@@ -96,7 +99,6 @@ async function renderMermaid(src: string, dark: boolean): Promise<RenderResult> 
 
 export default controller((ctx) => {
     const error = signal<string>("");
-    const container = ref<HTMLElement>(null);
     // The SVG mermaid produced: foreign markup, and the only thing bindHtml paints.
     const html = signal<string>("");
     // Reactive theme cell — flips when the app toggles dark/light so the render
@@ -104,10 +106,16 @@ export default controller((ctx) => {
     const dark = signal<boolean>(isDark());
     const hasError = derived(() => error() !== "");
 
-    mount((host: HTMLElement) => {
-      const containerEl = container();
-      if (!containerEl) return () => {};
+    // The one sanctioned reactive innerHTML write (morph-based, identity-safe).
+    // It carries the diagram and nothing else. The container owns its own
+    // painting, so the theme/render wiring below no longer has to bail out
+    // when the element hasn't landed yet.
+    const paintDiagram: Action<void> = (node) => {
+      const stop = bindHtml(node as HTMLElement, () => html());
+      return { destroy: stop };
+    };
 
+    mount((host: HTMLElement) => {
       // Monotonic guard so a stale async render never overwrites a newer one.
       let seq = 0;
 
@@ -124,7 +132,7 @@ export default controller((ctx) => {
       document.addEventListener("sail-theme-change", syncTheme);
 
       // Render effect — tracks `value` + `dark`; runs the async render and writes
-      // the result into `html` (the bindHtml below morphs it into the container).
+      // the result into `html` (paintDiagram's bindHtml morphs it into the DOM).
       const stopRender = effect(() => {
         const src = (ctx.value() ?? "").trim();
         const dk = dark();
@@ -150,20 +158,15 @@ export default controller((ctx) => {
         });
       });
 
-      // The one sanctioned reactive innerHTML write (morph-based, identity-safe).
-      // It carries the diagram and nothing else.
-      const stopBind = bindHtml(containerEl, () => html());
-
       return () => {
         stopRender();
-        stopBind();
         obs.disconnect();
         document.removeEventListener("sail-theme-change", syncTheme);
       };
     });
 
     return {
-      container,
+      paintDiagram,
       html,
       dark,
       error,
@@ -172,7 +175,7 @@ export default controller((ctx) => {
   });
 
 </controller>
-<center bind:this={container} sx="w-full min-h-8" attr:hidden={hasError()}></center>
+<center use:paintDiagram sx="w-full min-h-8" attr:hidden={hasError()}></center>
 
 {#if error()}
   <column gap="2" sx="w-full p-3 px-4 border border-tone-destructive-border rounded-md bg-tone-destructive-bg text-sm">

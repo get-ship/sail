@@ -17,8 +17,6 @@
 //!    (e.g. `signal(false)` → `Signal<boolean>`). The generic may itself be a
 //!    nested generic — `signal<Record<K, V>>(…)` — whose internal commas are
 //!    not entry separators (see `next_top_separator`/`skip_angle`).
-//!  * `ref<T>(…)` → `Signal<T | null>`; `ref(null)` → `Signal<HTMLElement | null>`
-//!    (`Ref<T>` is itself an alias for `Signal<T | null>`, so this is exact).
 //!  * `derived(() => …)` / `computed` / `memo` → `Signal<unknown>` (the body's
 //!    return type is genuinely uninferrable from a byte scan; annotate
 //!    `derived<T>(…)` for a tighter type).
@@ -597,7 +595,7 @@ mod tests {
     fn ref_with_generic() {
         let c = ctrl(
             "export default controller((ctx) => ({\n    \
-               btn: ref<HTMLButtonElement>(null),\n  \
+               btn: signal<HTMLButtonElement | null>(null),\n  \
              }));",
         );
         let v = extract(&c);
@@ -698,7 +696,7 @@ mod tests {
             "interface Pin { id: string }\n\
              export default controller((ctx) => ({\n    \
                pins: signal<Pin[]>([]),\n    \
-               btn: ref<HTMLButtonElement>(null),\n  \
+               btn: signal<HTMLButtonElement | null>(null),\n  \
              }));",
         );
         let v = extract(&c);

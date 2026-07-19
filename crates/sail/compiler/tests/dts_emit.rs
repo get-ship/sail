@@ -127,42 +127,6 @@ fn no_declarations_emits_empty_scope() {
 }
 
 #[test]
-fn bind_this_on_button_emits_html_button_element_ref() {
-    let dts = compile_dts(r#"<button bind:this={btnEl}>x</button>"#);
-    assert!(
-        dts.contains("btnEl: Signal<HTMLButtonElement | null>"),
-        "got: {dts}"
-    );
-}
-
-#[test]
-fn bind_this_on_input_emits_html_input_element_ref() {
-    let dts = compile_dts(r#"<input bind:this={field} />"#);
-    assert!(
-        dts.contains("field: Signal<HTMLInputElement | null>"),
-        "got: {dts}"
-    );
-}
-
-#[test]
-fn bind_this_on_custom_element_falls_back_to_html_element() {
-    let dts = compile_dts(r#"<sail-button bind:this={el}>x</sail-button>"#);
-    assert!(
-        dts.contains("el: Signal<HTMLElement | null>"),
-        "got: {dts}"
-    );
-}
-
-#[test]
-fn bind_this_on_div_emits_html_div_element_ref() {
-    let dts = compile_dts(r#"<div bind:this={panel}>x</div>"#);
-    assert!(
-        dts.contains("panel: Signal<HTMLDivElement | null>"),
-        "got: {dts}"
-    );
-}
-
-#[test]
 fn reflect_empty_does_not_add_scope_entry() {
     // The slot lives inside a component since slots are component-only.
     // The reflect-empty side-effect must not surface in Scope.
@@ -270,8 +234,8 @@ fn template_member_clashing_with_factory_is_dropped_from_scope() {
     // from Scope entirely and typed solely by the inferred SC.
     let sail = r#"<div bind:this={config}>x</div>"#;
     let controller = r#"
-        import { controller, ref } from '@ship/sail-runtime'
-        export default controller((ctx) => ({ config: ref<HTMLDivElement>(null) }))
+        import { controller, signal } from '@ship/sail-runtime'
+        export default controller((ctx) => ({ config: signal<HTMLDivElement | null>(null) }))
     "#;
     let dts = compile_dts_with_controller("page", sail, controller);
     assert!(

@@ -32,7 +32,6 @@ export {
   hydrateOn,
   hydrateBindValue,
   hydrateBindChecked,
-  hydrateRef,
   hydrateWhileLoading,
   hydrateWhileError,
 } from './hydrate'

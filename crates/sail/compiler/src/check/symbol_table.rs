@@ -7,7 +7,7 @@
 //! and a derived getter is only a callable when invoked with `()`.
 //!
 //! This module owns the flat symbol table each downstream check
-//! (`scope_member`, `bind_this_target`, `on_callable`) reads instead of
+//! (`scope_member`, `on_callable`) reads instead of
 //! re-walking the controller source. The controller's setup function
 //! returns ONE flat scope object — there is no more `derived:`/`on:`/
 //! `use:` section to separate; everything the setup function returns
@@ -109,7 +109,7 @@ mod tests {
             }))"#,
         );
         let t = SymbolTable::build(&empty_program(), Some(&c));
-        assert_eq!(t.kind_of_scope("el"), Some(ScopeKind::Ref));
+        assert_eq!(t.kind_of_scope("el"), Some(ScopeKind::Signal));
         assert_eq!(t.kind_of_scope("n"), Some(ScopeKind::Signal));
         assert_eq!(t.kind_of_scope("doubled"), Some(ScopeKind::Derived));
         assert_eq!(t.kind_of_scope("handle"), Some(ScopeKind::Action));
@@ -170,7 +170,7 @@ mod tests {
             }))"#,
         );
         let t = SymbolTable::build(&empty_program(), Some(&c));
-        assert_eq!(t.kind_of_scope("btn"), Some(ScopeKind::Ref));
+        assert_eq!(t.kind_of_scope("btn"), Some(ScopeKind::Signal));
         assert_eq!(t.kind_of_scope("list"), Some(ScopeKind::Signal));
     }
 

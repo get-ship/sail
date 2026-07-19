@@ -43,7 +43,8 @@
 </scope>
 
 <controller>
-import { controller, derived, ref } from '@ship/sail-runtime'
+import { controller, derived } from '@ship/sail-runtime'
+import type { Action } from '@ship/sail-runtime'
 import { createChartData } from '../engine/create-chart-data'
 import { createChartViewport } from '../engine/create-chart-viewport'
 import { normalizeSeries } from '../engine/normalize'
@@ -58,7 +59,6 @@ interface BarHost extends Element {
 }
 
 export default controller(({ data, labels, tone, orientation, max, width, height, label, loading }: Scope) => {
-    const svgEl = ref<SVGSVGElement>(null) // bind:this target → viewport observe
     const viewport = createChartViewport({
       initialWidth: width(),
       initialHeight: height(),
@@ -82,15 +82,21 @@ export default controller(({ data, labels, tone, orientation, max, width, height
     )
     const ariaLabel = derived(() => `${label()}: ${chart.ariaSummary()}`)
 
+    // The <svg> lives behind {#if}, so it mounts and unmounts as the chart
+    // moves between loading/error/empty and data. The action runs on each
+    // mount and disposes on each unmount — `observe()` builds a fresh
+    // observer per call, so the pair is re-entrant.
+    const observeViewport: Action<void> = (node) => {
+      viewport.observe(node)
+      return { destroy: () => viewport.dispose() }
+    }
+
     mount((host) => {
-      const el = svgEl()
-      if (el) viewport.observe(el)
       const err = (host as BarHost).error
       if (err !== undefined) chart.setOptions({ error: err })
-      return () => viewport.dispose()
     })
 
-    return { chart, viewport, svgEl, bars, ariaLabel }
+    return { chart, viewport, observeViewport, bars, ariaLabel }
   })
 
 </controller>
@@ -108,7 +114,7 @@ export default controller(({ data, labels, tone, orientation, max, width, height
     aria-label={ariaLabel()}
     aria-describedby="chart-data"
     sx="block w-full overflow-hidden"
-    bind:this={svgEl}>
+    use:observeViewport>
     {#for b of bars() key={b.id}}
       <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={b.rx} ry={b.ry} fill={b.color} fill-opacity="0.85">
         <title>{b.title}</title>

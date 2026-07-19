@@ -38,8 +38,8 @@
 
 
 <controller>
-import { controller, effect, ref, signal } from '@ship/sail-runtime'
-import type { ControllerScope } from '@ship/sail-runtime'
+import { controller, signal } from '@ship/sail-runtime'
+import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-composer.sail'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
@@ -47,10 +47,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     // Consumer-owned attachment payloads. The composer never fabricates
     // these — it echoes whatever the host assigned in the submit event.
     const attachments = signal<unknown[]>([])
-    const fieldEl = ref<HTMLInputElement | HTMLTextAreaElement>(null)
-    const sendEl = ref<HTMLElement>(null)
+    // The submit event is dispatched from the host, so the handlers need it.
+    // `mount` runs after the template is built, but an action only REGISTERS
+    // listeners at attach time — by the time any of them fires, mount has run
+    // and this is set.
+    let hostEl: Element | null = null
 
     mount((host) => {
+      hostEl = host
       // Expose `attachments` as a JS-property: `el.attachments = [...]`.
       const init = (host as unknown as { attachments?: unknown[] }).attachments
       if (init != null) attachments.set(init)
@@ -59,56 +63,46 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         get: () => attachments(),
         set: (v: unknown[]) => { attachments.set(v) },
       })
-
-      const submit = () => {
-        if (_ctx.disabled()) return
-        const trimmed = text().trim()
-        if (trimmed.length === 0) return
-        host.dispatchEvent(
-          new CustomEvent('sail-composer-submit', {
-            detail: { text: trimmed, attachments: [...attachments()] },
-            bubbles: true,
-            composed: true,
-          }),
-        )
-        text.set('')
-      }
-
-      const onKeydown = (e: KeyboardEvent) => {
-        if (e.key !== 'Enter') return
-        // Shift+Enter inserts a newline in multiline mode; plain Enter
-        // always submits. Single-line mode submits on Enter regardless.
-        if (_ctx.multiline() && e.shiftKey) return
-        e.preventDefault()
-        submit()
-      }
-
-      // `fieldEl` swaps element when `multiline` toggles the {#if}, so
-      // track it via effect to rebind keydown onto the live field.
-      const stopField = effect(() => {
-        // HTMLElement (not the input|textarea union): addEventListener's typed
-        // overload resolves the 'keydown' listener cleanly on a single element
-        // type, where the union receiver collapses it to a non-assignable shape.
-        const field = fieldEl() as HTMLElement | null
-        if (!field) return
-        field.addEventListener('keydown', onKeydown)
-        return () => field.removeEventListener('keydown', onKeydown)
-      })
-
-      const stopSend = effect(() => {
-        const send = sendEl() as HTMLElement | null
-        if (!send) return
-        send.addEventListener('click', submit)
-        return () => send.removeEventListener('click', submit)
-      })
-
-      return () => {
-        stopField()
-        stopSend()
-      }
     })
 
-    return { text, attachments, fieldEl, sendEl }
+    const submit = () => {
+      if (_ctx.disabled()) return
+      const trimmed = text().trim()
+      if (trimmed.length === 0) return
+      hostEl?.dispatchEvent(
+        new CustomEvent('sail-composer-submit', {
+          detail: { text: trimmed, attachments: [...attachments()] },
+          bubbles: true,
+          composed: true,
+        }),
+      )
+      text.set('')
+    }
+
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return
+      // Shift+Enter inserts a newline in multiline mode; plain Enter
+      // always submits. Single-line mode submits on Enter regardless.
+      if (_ctx.multiline() && e.shiftKey) return
+      e.preventDefault()
+      submit()
+    }
+
+    // `multiline` toggles the {#if}, swapping <textarea> for <input>. The
+    // action re-runs on whichever element mounts and tears down with the one
+    // that leaves — the rebind that used to need a ref + tracking effect is
+    // just the action's lifecycle.
+    const fieldKeys: Action<void> = (node) => {
+      node.addEventListener('keydown', onKeydown as EventListener)
+      return { destroy: () => node.removeEventListener('keydown', onKeydown as EventListener) }
+    }
+
+    const sendClick: Action<void> = (node) => {
+      node.addEventListener('click', submit)
+      return { destroy: () => node.removeEventListener('click', submit) }
+    }
+
+    return { text, attachments, fieldKeys, sendClick }
   })
 
 </controller>
@@ -127,7 +121,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         placeholder={placeholder()}
         disabled={disabled()}
         bind:value={text}
-        bind:this={fieldEl}
+        use:fieldKeys
         sx="grow-1 min-w-0 min-h-0 py-1 px-half font-body text-base leading-normal text-foreground bg-transparent border-0 rounded-none shadow-none overflow-y-auto"
       ></textarea>
     {/if}
@@ -137,14 +131,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         placeholder={placeholder()}
         disabled={disabled()}
         bind:value={text}
-        bind:this={fieldEl}
+        use:fieldKeys
         sx="grow-1 min-w-0 min-h-0 py-1 px-half font-body text-base leading-normal text-foreground bg-transparent border-0 rounded-none shadow-none"
       />
     {/if}
     <row gap="1" align="center" sx="grow-0">
       <slot name="trailing"></slot>
       <button
-        bind:this={sendEl}
+        use:sendClick
         solid
         primary
         sm

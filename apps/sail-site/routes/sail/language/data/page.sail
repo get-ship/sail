@@ -119,10 +119,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/language/actions">← Actions</a>
-<<<<<<< HEAD
     <a variant="solid" tone="primary" href="/sail/language/capabilities">Capabilities →</a>
-=======
-    <a variant="solid" tone="primary" href="/sail/language/errors">Errors →</a>
->>>>>>> job/stdlib-story
   </row>
 </column>

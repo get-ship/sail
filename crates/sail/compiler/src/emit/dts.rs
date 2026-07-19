@@ -7,7 +7,7 @@
 //! typed by TS itself, so it has no `.d.ts` entry.
 
 use crate::check::controller_parse::ParsedController;
-use crate::ir::{AttrInstr, ElementInstr, Instr, Program, PropDecl, PropKind};
+use crate::ir::{Instr, Program, PropDecl, PropKind};
 
 /// One CAPABILITY the host grants this file: a name the runtime puts on the
 /// module's scope, with the TypeScript type it carries.
@@ -80,7 +80,6 @@ pub fn emit_dts(
         members.push((super::util::camel_of(&p.name), prop_ts_type(p)));
     }
     collect_use_bindings(&program.template, &mut members);
-    collect_ref_bindings(&program.template, &mut members);
 
     let scope_factory_fields: Vec<(String, String)> = controller
         .map(super::scope_factory::extract)
@@ -208,128 +207,6 @@ fn prop_ts_type(p: &PropDecl) -> String {
     format!("Signal<{inner}>")
 }
 
-/// Walk template instructions and collect `bind:this={var}` refs.
-/// Each ref contributes `var: Signal<T | null>` where `T` is inferred
-/// from the parent element's tag — `HTMLElementTagNameMap` for known
-/// built-ins, `HTMLElement` for everything else (custom elements,
-/// unknown tags).
-fn collect_ref_bindings(instrs: &[Instr], out: &mut Vec<(String, String)>) {
-    for instr in instrs {
-        match instr {
-            Instr::Element(el) => {
-                walk_element_for_refs(el, out);
-            }
-            Instr::If(if_instr) => {
-                for b in &if_instr.branches {
-                    collect_ref_bindings(&b.body, out);
-                }
-                if let Some(eb) = &if_instr.else_body {
-                    collect_ref_bindings(eb, out);
-                }
-            }
-            Instr::For(f) => {
-                collect_ref_bindings(&f.body, out);
-                if let Some(eb) = &f.else_body {
-                    collect_ref_bindings(eb, out);
-                }
-            }
-            Instr::Match(m) => {
-                for c in &m.cases {
-                    collect_ref_bindings(&c.body, out);
-                }
-                if let Some(d) = &m.default {
-                    collect_ref_bindings(d, out);
-                }
-            }
-            Instr::WhileLoading(wl) => collect_ref_bindings(&wl.body, out),
-            Instr::WhileError(we) => collect_ref_bindings(&we.body, out),
-            _ => {}
-        }
-    }
-}
-
-fn walk_element_for_refs(el: &ElementInstr, out: &mut Vec<(String, String)>) {
-    for attr in &el.attrs {
-        if let AttrInstr::BindThis { var, .. } = attr {
-            let element_ts = element_type_for_tag(&el.tag);
-            out.push((var.clone(), format!("Signal<{element_ts} | null>")));
-        }
-    }
-    collect_ref_bindings(&el.children, out);
-}
-
-/// Map an HTML tag to its `HTMLElementTagNameMap` interface name.
-/// Custom elements (containing `-`) and unknown tags fall through to
-/// `HTMLElement`. The set covers the tags an author plausibly hangs
-/// `bind:this` on; expand as the surface grows.
-fn element_type_for_tag(tag: &str) -> &'static str {
-    let lower = tag.to_ascii_lowercase();
-    if lower.contains('-') {
-        return "HTMLElement";
-    }
-    match lower.as_str() {
-        "a" => "HTMLAnchorElement",
-        "area" => "HTMLAreaElement",
-        "audio" => "HTMLAudioElement",
-        "br" => "HTMLBRElement",
-        "base" => "HTMLBaseElement",
-        "body" => "HTMLBodyElement",
-        "button" => "HTMLButtonElement",
-        "canvas" => "HTMLCanvasElement",
-        "data" => "HTMLDataElement",
-        "datalist" => "HTMLDataListElement",
-        "details" => "HTMLDetailsElement",
-        "dialog" => "HTMLDialogElement",
-        "div" => "HTMLDivElement",
-        "dl" => "HTMLDListElement",
-        "embed" => "HTMLEmbedElement",
-        "fieldset" => "HTMLFieldSetElement",
-        "form" => "HTMLFormElement",
-        "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => "HTMLHeadingElement",
-        "head" => "HTMLHeadElement",
-        "hr" => "HTMLHRElement",
-        "html" => "HTMLHtmlElement",
-        "iframe" => "HTMLIFrameElement",
-        "img" => "HTMLImageElement",
-        "input" => "HTMLInputElement",
-        "label" => "HTMLLabelElement",
-        "legend" => "HTMLLegendElement",
-        "li" => "HTMLLIElement",
-        "link" => "HTMLLinkElement",
-        "map" => "HTMLMapElement",
-        "menu" => "HTMLMenuElement",
-        "meta" => "HTMLMetaElement",
-        "meter" => "HTMLMeterElement",
-        "object" => "HTMLObjectElement",
-        "ol" => "HTMLOListElement",
-        "optgroup" => "HTMLOptGroupElement",
-        "option" => "HTMLOptionElement",
-        "output" => "HTMLOutputElement",
-        "p" => "HTMLParagraphElement",
-        "picture" => "HTMLPictureElement",
-        "pre" => "HTMLPreElement",
-        "progress" => "HTMLProgressElement",
-        "q" => "HTMLQuoteElement",
-        "script" => "HTMLScriptElement",
-        "select" => "HTMLSelectElement",
-        "slot" => "HTMLSlotElement",
-        "source" => "HTMLSourceElement",
-        "span" => "HTMLSpanElement",
-        "style" => "HTMLStyleElement",
-        "table" => "HTMLTableElement",
-        "tbody" | "tfoot" | "thead" => "HTMLTableSectionElement",
-        "td" | "th" => "HTMLTableCellElement",
-        "template" => "HTMLTemplateElement",
-        "textarea" => "HTMLTextAreaElement",
-        "time" => "HTMLTimeElement",
-        "title" => "HTMLTitleElement",
-        "tr" => "HTMLTableRowElement",
-        "track" => "HTMLTrackElement",
-        "ul" => "HTMLUListElement",
-        "video" => "HTMLVideoElement",
-        _ => "HTMLElement",
-    }
-}
 
 /// Walk template instructions and collect `<use-X as="Y">` bindings.
 fn collect_use_bindings(instrs: &[Instr], out: &mut Vec<(String, String)>) {

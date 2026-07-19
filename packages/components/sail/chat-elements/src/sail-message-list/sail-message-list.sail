@@ -34,7 +34,6 @@ import {
   controller,
   derived,
   effect,
-  ref,
   signal,
 } from '@ship/sail-runtime'
 import type { Derived, ControllerScope } from '@ship/sail-runtime'
@@ -76,7 +75,7 @@ const ESTIMATED_MESSAGE_HEIGHT = 72
 
 export default controller((_ctx: ControllerScope<Scope>) => {
     const items = signal<MessageItem[]>([])
-    const scrollEl = ref<HTMLElement>(null)
+    const scrollEl = signal<HTMLElement | null>(null)
 
     // The virtualizer windows the thread over the scroll element. `count`
     // tracks `items().length`; `getScrollElement` is the ref thunk (null until

@@ -164,7 +164,7 @@ export default controller((ctx: ControllerScope<Scope>) => {{
   const spread: Promise<string[]> = ctx.api.list()
   const path: string = ctx.route.pathname()
   const go: (p: string) => void = ctx.navigate
-  return {{ rows, spread, path, go, btnEl: ctx.btnEl }}
+  return {{ rows, spread, path, go }}
 }})
 
 // (1b) A host's CONCRETE map is assignable to the scope's `clients` slot from

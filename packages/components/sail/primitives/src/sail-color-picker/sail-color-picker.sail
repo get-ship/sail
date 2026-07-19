@@ -15,7 +15,7 @@
   }
 </scope>
 <controller>
-import { controller, effect, ref, signal } from '@ship/sail-runtime'
+import { controller, effect, signal } from '@ship/sail-runtime'
 import type { ControllerScope } from '@ship/sail-runtime'
 import {
   type Swatch,
@@ -39,9 +39,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const satText = signal('0')
     const lightText = signal('0')
     const hexDraft = signal('')
-    const inputEl = ref<HTMLInputElement>(null)
-    const panelEl = ref<HTMLDivElement>(null)
-    const hexInputEl = ref<HTMLInputElement>(null)
+    const inputEl = signal<HTMLInputElement | null>(null)
     const id = ++idSeq
     const hueId = signal(`sail-color-picker-h-${id}`)
     const satId = signal(`sail-color-picker-s-${id}`)
@@ -205,7 +203,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     return {
       open, hue, sat, light, hueText, satText, lightText, hexDraft,
-      inputEl, panelEl, hexInputEl, hueId, satId, lightId, swatches,
+      inputEl, hueId, satId, lightId, swatches,
     }
   })
 
@@ -216,7 +214,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <input type="text" flush sx="grow-1 min-w-0 font-mono lowercase" name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
 </row>
 {#if open() && !disabled()}
-  <column gap="2" role="dialog" aria-label="Choose color" bind:this={panelEl} sx="absolute left-0 z-popover w-panel-max-w-md p-3 mt-1 bg-popover text-popover-foreground border border-border rounded-md shadow-md text-size-fs">
+  <column gap="2" role="dialog" aria-label="Choose color" sx="absolute left-0 z-popover w-panel-max-w-md p-3 mt-1 bg-popover text-popover-foreground border border-border rounded-md shadow-md text-size-fs">
     <grid cols="6" gap="2">
       {#for sw of swatches() key={sw.hex}}
         <button
@@ -254,7 +252,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <input
         type="text"
         bind:value={hexDraft}
-        bind:this={hexInputEl}
         spellcheck="false"
         autocomplete="off"
         aria-label="Hex color"

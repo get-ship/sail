@@ -260,22 +260,15 @@ impl TemplateEmitter {
                 }
             }
             AttrInstr::BindThis { var, .. } => {
-                let key = self.next_key();
-                // Refs are write-once-from-runtime. If the controller's
-                // setup: factory pre-declared `var: ref(null)` we write
-                // the freshly constructed element into that slot;
-                // otherwise we install a fresh signal seeded with the
-                // element. Same shape as React's `ref.current`, but
-                // signal-typed.
-                w.line(&format!("attachRef($scope, {v}, {el_var});", v = js_string(var)));
-                if self.is_route && self.boundary_depth == 0 {
-                    self.hydrate_uses_markers = true;
-                    self.hydrate_calls.line(&format!(
-                        "if (__m[{k}]) __cleanups.push(hydrateRef(__m[{k}], $scope, {v}));",
-                        k = js_string(&key),
-                        v = js_string(var),
-                    ));
-                }
+                // `bind:this={var}` is an element-as-value capture: it writes
+                // the mounted element into the plain signal slot the controller
+                // declared as `var`. It uses the same `runAction` lifecycle as
+                // `use:` actions, so the slot is reset to `null` on unmount.
+                w.line(&format!(
+                    "runAction({el_var}, (__n) => {{ $scope.{var}.set(__n); return {{ destroy: () => $scope.{var}.set(null) }}; }}, undefined);",
+                    el_var = el_var,
+                    var = var
+                ));
             }
             AttrInstr::SlotReflectEmpty { attr, .. } => {
                 // `bindSlotEmpty(slot, host, attr)` reflects the attr on the

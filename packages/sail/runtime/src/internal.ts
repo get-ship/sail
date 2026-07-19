@@ -1,7 +1,7 @@
 // THE COMPILER'S ABI. Not the language.
 //
 // Everything here is something the EMITTER writes into generated code. No human
-// types `bindFor` or `attachRef`, and no agent should ever see them offered as
+// types `bindFor` or `runAction`, and no agent should ever see them offered as
 // API — but they sat in the same public export as `signal` and `effect`, so the
 // runtime's front door advertised ~80 symbols when the language is about ten.
 // That is the single largest thing standing between us and a teachable surface:
@@ -16,8 +16,8 @@
 // because the root still re-exports these for now. Step two points the emitter
 // here (a hardcoded '@ship/sail-runtime' literal in emit/js.rs, emit/dts.rs and
 // emit/synthetic/render.rs). Step three strips the ABI from the root, which is
-// the only breaking part and is coupled to the legacy migration — the 66 files
-// still importing `ref` are all pre-cutover and don't compile anyway.
+// the only breaking part. Once the emitter no longer writes the removed symbols
+// the root can drop them too.
 
 // A TOTAL re-export, deliberately. A curated list would break silently the first
 // time the emitter reaches for a symbol nobody remembered to add here — and the

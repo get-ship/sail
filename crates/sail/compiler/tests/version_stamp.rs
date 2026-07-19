@@ -135,7 +135,7 @@ fn meta_carries_compiler_version_field() {
 
 #[test]
 fn dts_carries_compiler_version_comment() {
-    let out = compile(ROUTE_SRC, route_opts()).expect("compile route");
+    let out = compile(COMPONENT_SRC, component_opts()).expect("compile component");
     let dts = out.dts.expect("dts emitted");
     assert!(
         dts.lines().any(|l| l.starts_with("// _compilerVersion ")),

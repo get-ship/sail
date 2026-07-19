@@ -22,7 +22,6 @@ import {
   controller,
   derived,
   effect,
-  ref,
   signal,
   bindHtml,
   type Action,
@@ -78,8 +77,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const nextSlug = derived(() => lesson()?.next ?? '')
 
     // ── FFI refs: the editors, the preview iframe ────────────────────────
-    const editorEl = ref<CodeEditorHost>(null)
-    const iframeEl = ref<HTMLIFrameElement>(null)
+    const editorEl = signal<CodeEditorHost | null>(null)
+    const iframeEl = signal<HTMLIFrameElement | null>(null)
 
     // ── Playground state — signals the template reads ────────────────────
     const tab = signal<string>('source')

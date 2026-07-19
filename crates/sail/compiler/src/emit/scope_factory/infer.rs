@@ -73,10 +73,6 @@ pub(super) fn infer_ts_type(bytes: &[u8], start: usize, end: usize) -> String {
                     Some(t) => format!("Signal<{t}>"),
                     None => format!("Signal<{}>", literal_ts(arg_slice)),
                 },
-                "ref" => match generic {
-                    Some(t) => format!("Signal<{t} | null>"),
-                    None => "Signal<HTMLElement | null>".to_string(),
-                },
                 "derived" | "computed" | "memo" => match generic {
                     Some(t) => format!("Signal<{t}>"),
                     None => "Signal<unknown>".to_string(),

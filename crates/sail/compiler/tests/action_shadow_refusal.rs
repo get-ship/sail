@@ -52,11 +52,11 @@ const SUI_CANVAS_COLLISION_SHAPE: &str = r#"<scope>
   }
 </scope>
 <controller>
-import { controller, signal, derived, ref } from '@ship/sail-runtime'
+import { controller, signal, derived } from '@ship/sail-runtime'
 import type { Scope } from './sail-canvas.sail'
 
 export default controller(({ value }: Scope) => {
-  const viewportEl = ref<HTMLDivElement>(null)
+  const viewportEl = signal<HTMLDivElement | null>(null)
   const canvas = signal<{ transform: () => { x: number; y: number; scale: number } }>(
     null as unknown as { transform: () => { x: number; y: number; scale: number } },
   )

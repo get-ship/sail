@@ -72,20 +72,13 @@ pub fn collect_attr_imports(
             }
         }
         AttrInstr::BindThis { .. } => {
-            // The setup body pre-seeds `$scope.<var> = signal(null)` for
-            // every bind:this target the template references — including
-            // ones inside conditional / loop branches that haven't
-            // rendered yet. Without the pre-seed, a controller reading
-            // `scope.headerEl()` before the `{#if open()}` branch mounted
-            // would see `undefined` and crash with
-            // `headerEl is not a function`. attachRef() reuses the
-            // pre-seeded slot when the element finally mounts.
-            out.runtime_imports.insert("attachRef");
-            out.runtime_imports.insert("signal");
-            if direct_emit {
-                out.dom_imports.insert("collectElementMarkers");
-                out.dom_imports.insert("hydrateRef");
-            }
+            // `bind:this={var}` is an element capture: it writes the mounted
+            // element into a plain signal slot declared by the controller.
+            // The directive is lowered to the same `runAction` lifecycle the
+            // `use:` directive uses, so it auto-disposes (sets the slot back
+            // to null) when the element unmounts. The target must be declared
+            // in scope; undeclared targets are caught by scope_bound.
+            out.runtime_imports.insert("runAction");
         }
         AttrInstr::SlotReflectEmpty { .. } => {
             out.runtime_imports.insert("bindSlotEmpty");

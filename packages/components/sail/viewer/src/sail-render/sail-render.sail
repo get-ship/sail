@@ -6,7 +6,7 @@
   component-mode createElement / prop-apply / slot-inject / versioned-tag swap
   + dispose) lives in the paired controller + `engine/*.ts`. The template only:
     - declares the scalar control props (mode / component-name / viewport-width)
-    - hosts the stage container via `bind:this={stageEl}` (ref in scope) —
+    - hosts the stage container via `use:captureStage` (action) —
       NEVER a post-mount querySelector
     - wraps the fault-prone subtree in <error-boundary> so an agent's `.sail`
       that throws in setup/mount/render is CAUGHT, not a white screen
@@ -38,8 +38,8 @@
 // `engine/*.ts` (the legitimate render-engine seam, outside
 // `sail-controller-purity` scope). No `innerHTML`/`outerHTML`/`insertAdjacentHTML`.
 
-import { controller, signal, effect, untrack, ref } from '@ship/sail-runtime'
-import type { ControllerScope } from '@ship/sail-runtime'
+import { controller, signal, effect, untrack } from '@ship/sail-runtime'
+import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-render.sail'
 import { attachEngineShadow, mountBySource, type ViewMount } from './engine/mount-source'
 import { mountByTag, type TagMount } from './engine/mount-tag'
@@ -60,7 +60,11 @@ function diagFromError(e: unknown): CompileDiagnostic {
 }
 
 export default controller((ctx: ControllerScope<Scope>) => {
-    const stageEl = ref<HTMLElement>(null)
+    const stageEl = signal<HTMLElement | null>(null)
+    const captureStage: Action<void> = (node) => {
+      stageEl.set(node as HTMLElement)
+      return { destroy: () => stageEl.set(null) }
+    }
     // Stage framing: the reflected viewport-width prop picks a breakpoint
     // token; full means unconstrained.
     const viewportWidth = (ctx as unknown as { viewportWidth?: () => string }).viewportWidth
@@ -171,13 +175,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
         setupUrl()
         if (!stage || !fn || src == null) return
 
-        untrack(() => {
-          if (mode === 'tag') {
-            mountTag(stage, fn, tag, src, pv, slotHtml)
-          } else {
-            mountSource(stage, fn, src)
-          }
-        })
+        if (mode === 'tag') {
+          untrack(() => mountTag(stage, fn, tag, src, pv, slotHtml))
+        } else {
+          untrack(() => mountSource(stage, fn, src))
+        }
       })
 
       function mountSource(stage: HTMLElement, fn: CompileFn, src: string): void {
@@ -285,7 +287,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       }
     })
 
-    return { stageEl, stageMaxWidth, compiling, compileError, runtimeError, compileErrorSummary, compileErrorBody }
+    return { stageEl, captureStage, stageMaxWidth, compiling, compileError, runtimeError, compileErrorSummary, compileErrorBody }
   })
 
 </controller>
@@ -319,6 +321,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </column>
     {/if}
 
-    <div bind:this={stageEl} use:maxWidth={stageMaxWidth()} sx="w-full ml-auto mr-auto max-w-(--max-w)"></div>
+    <div use:captureStage use:maxWidth={stageMaxWidth()} sx="w-full ml-auto mr-auto max-w-(--max-w)"></div>
   </column>
 </error-boundary>

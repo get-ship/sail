@@ -22,7 +22,14 @@ use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 // `bind:this` must survive every emit path — the ref binding must not
 // claim or suppress the element's static attribute slot.
 const REF_WITH_STATIC: &str =
-    r#"<div data-static="rows" bind:this={rowsEl}><span>x</span></div>"#;
+    r#"<controller>
+import { controller, signal } from '@ship/sail-runtime'
+export default controller((ctx) => {
+  const rowsEl = signal<HTMLElement | null>(null)
+  return { rowsEl }
+})
+</controller>
+<div data-static="rows" bind:this={rowsEl}><span>x</span></div>"#;
 
 fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOpts {
     CompileOpts {
@@ -53,14 +60,22 @@ fn static_attrs_survive_bind_this_in_component_csr() {
         "data-static must reach the DOM alongside bind:this — baked into the template or set at runtime:\n{}",
         out.js
     );
-    assert!(out.js.contains("attachRef"), "bind:this still wires its ref:\n{}", out.js);
+    assert!(out.js.contains("runAction"), "bind:this still wires via an action:\n{}", out.js);
 }
 
 #[test]
 fn static_attrs_survive_bind_this_with_production_component_opts() {
     // Exact path the @ship/pipelines packs (dag/graph/run-history) compile
     // through: shadow component, a controller (setup_url), component-imports on.
-    let src = r#"<div data-static="dag" bind:this={contentEl}></div>"#;
+    let src = r#"
+<controller>
+import { controller, signal } from '@ship/sail-runtime'
+export default controller((ctx) => {
+  const contentEl = signal<HTMLElement | null>(null)
+  return { contentEl }
+})
+</controller>
+<div data-static="dag" bind:this={contentEl}></div>"#;
     let out = compile(src, component_opts(Some("./x.controller.ts"), true)).expect("compile");
     // The static attribute rides alongside bind:this into the DOM.
     assert!(
@@ -68,5 +83,5 @@ fn static_attrs_survive_bind_this_with_production_component_opts() {
         "data-static must survive in production component compile:\n{}",
         out.js
     );
-    assert!(out.js.contains("attachRef"), "bind:this still wires its ref:\n{}", out.js);
+    assert!(out.js.contains("runAction"), "bind:this still wires via an action:\n{}", out.js);
 }

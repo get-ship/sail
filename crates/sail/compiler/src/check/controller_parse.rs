@@ -39,9 +39,6 @@ use crate::diagnostics::Span;
 /// Author-declared shape of a returned scope member's value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ScopeKind {
-    /// `key: ref(initial)` — DOM-handle slot; written by the runtime,
-    /// read like a signal.
-    Ref,
     /// `key: signal(initial)` — readable + writable cell.
     Signal,
     /// `key: derived(() => ...)` — read-only computed getter.
@@ -61,7 +58,6 @@ pub enum ScopeKind {
 impl ScopeKind {
     pub fn label(self) -> &'static str {
         match self {
-            ScopeKind::Ref => "ref",
             ScopeKind::Signal => "signal",
             ScopeKind::Derived => "derived",
             ScopeKind::Timeline => "timeline track",
@@ -840,11 +836,7 @@ fn classify_scope_value(bytes: &[u8], start: usize, end: usize) -> ScopeKind {
         }
         if after < end && bytes[after] == b'(' {
             return match word {
-                "ref" => ScopeKind::Ref,
-                // The stock progress drivers each hand back a plain signal,
-                // so a `const p = clock(3600)` reads exactly like a
-                // `signal(0)` a slider writes — same `(--p)` reflection.
-                "signal" | "clock" | "scrollProgress" | "springValue" => ScopeKind::Signal,
+                "ref" | "signal" | "clock" | "scrollProgress" | "springValue" => ScopeKind::Signal,
                 "derived" | "computed" => ScopeKind::Derived,
                 "timeline" => ScopeKind::Timeline,
                 _ => ScopeKind::Other,
