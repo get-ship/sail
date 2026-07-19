@@ -27,6 +27,18 @@ pub async fn serve_sui_sdk_client(mode: Option<Extension<DaemonMode>>) -> Respon
     into_axum(deck_core::serve_sui_sdk_client(mode_from_ext(mode)))
 }
 
+pub async fn serve_sui_compiler_wasm(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sui_compiler_wasm(mode_from_ext(mode)))
+}
+
+pub async fn serve_sui_lsp_completions(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sui_lsp_completions(mode_from_ext(mode)))
+}
+
+pub async fn serve_sui_lsp_diagnostics(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sui_lsp_diagnostics(mode_from_ext(mode)))
+}
+
 pub async fn serve_deck_route(mode: Option<Extension<DaemonMode>>) -> Response {
     into_axum(deck_core::serve_deck_route(mode_from_ext(mode)))
 }

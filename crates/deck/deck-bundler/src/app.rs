@@ -92,6 +92,14 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
     ("@ship/sail-lsp-browser/completions", "sail-lsp-completions.js", "_deck/lsp-completions.js"),
     ("@ship/sail-lsp-browser/diagnostics", "sail-lsp-diagnostics.js", "_deck/lsp-diagnostics.js"),
 ];
+
+/// The deck-owned framework singletons surfaced in every generated importmap.
+/// Tuple is `(package_alias, source_bundle_filename, dist_url_path)`. The set
+/// is the SSOT for both the bundler's importmap and the dev daemon's `/_deck/*`
+/// routes — a new singleton needs an entry here AND a matching serve handler.
+pub fn framework_assets() -> &'static [(&'static str, &'static str, &'static str)] {
+    FRAMEWORK_ASSETS
+}
 /// A framework-singleton self-declaration, read from a package's
 /// `package.json#deckFramework`. Replaces the host-declared
 /// `framework_clients` map: the package that owns the singleton

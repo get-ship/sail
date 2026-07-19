@@ -53,6 +53,13 @@ const FRAMEWORK_BUNDLES: &[&str] = &[
     "sail-dom.js",
     "sail-sdk-client.js",
     "deck-route.js",
+    // In-browser compiler + LSP singletons. Built by `deck build-assets` from
+    // `@ship/sail-compiler-wasm` (wasm-pack `pkg/`) and `@ship/sail-lsp-browser`
+    // subpaths; the importmap points every app at `/_deck/*.js`, so they must be
+    // baked into the dev daemon the same way runtime/dom are.
+    "sail-compiler-wasm.js",
+    "sail-lsp-completions.js",
+    "sail-lsp-diagnostics.js",
 ];
 
 /// Committed source assets that must be non-empty before the build proceeds.

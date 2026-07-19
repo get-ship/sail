@@ -10,7 +10,8 @@ pub use deck_axum::{
     into_axum, mode_from_ext, pages, router,
     serve_meta,
     serve_deck_route,
-    serve_sui_dom, serve_sui_icon, serve_sui_live_reload,
+    serve_sui_compiler_wasm, serve_sui_dom, serve_sui_icon, serve_sui_live_reload,
+    serve_sui_lsp_completions, serve_sui_lsp_diagnostics,
     serve_sui_runtime, serve_sui_sdk_client,
 };
 // The named-route handlers + router moved to the `ship-views` crate

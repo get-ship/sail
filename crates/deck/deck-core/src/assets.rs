@@ -46,6 +46,14 @@ const SUI_SDK_CLIENT_JS: &str = include_str!("../assets/sail-sdk-client.js");
 // `setEditMode` — every app's entry needs this singleton, so the
 // framework ships the bundle as an `include_str!` constant.
 const DECK_ROUTE_JS: &str = include_str!("../assets/deck-route.js");
+// In-browser WASM compiler + browser LSP singletons. The importmap binds
+// `@ship/sail-compiler-wasm` → `/_deck/compiler-wasm.js` and the
+// `@ship/sail-lsp-browser/*` subpaths → `/_deck/lsp-*.js`; dev serves them
+// from the same baked constants as the runtime. The `.wasm` binary itself is
+// served by the host app from `public/sail_compiler_bg.wasm`.
+const SAIL_COMPILER_WASM_JS: &str = include_str!("../assets/sail-compiler-wasm.js");
+const SAIL_LSP_COMPLETIONS_JS: &str = include_str!("../assets/sail-lsp-completions.js");
+const SAIL_LSP_DIAGNOSTICS_JS: &str = include_str!("../assets/sail-lsp-diagnostics.js");
 const SUI_LUCIDE_ICONS_JSON: &str = include_str!("../assets/lucide-icons.json");
 const LIVE_RELOAD_JS: &str = include_str!("../assets/live-reload.js");
 const ERROR_OVERLAY_JS: &str = include_str!("../assets/error-overlay.js");
@@ -457,6 +465,26 @@ pub fn serve_sui_sdk_client(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SUI_SDK_CLIENT_JS.to_string(), mode)
 }
 
+/// `GET /_deck/compiler-wasm.js` — the `@ship/sail-compiler-wasm` singleton
+/// (wasm-bindgen glue for the in-browser SAIL compiler). The importmap binds
+/// every bare import of this package to this URL; the companion `.wasm` binary
+/// is served at `/sail_compiler_bg.wasm` by the host app's `public/` assets.
+pub fn serve_sui_compiler_wasm(mode: DaemonMode) -> DeckResponse {
+    DeckResponse::js_asset(SAIL_COMPILER_WASM_JS.to_string(), mode)
+}
+
+/// `GET /_deck/lsp-completions.js` — the `@ship/sail-lsp-browser/completions`
+/// singleton used by the code editor for scope-aware `.sail` completions.
+pub fn serve_sui_lsp_completions(mode: DaemonMode) -> DeckResponse {
+    DeckResponse::js_asset(SAIL_LSP_COMPLETIONS_JS.to_string(), mode)
+}
+
+/// `GET /_deck/lsp-diagnostics.js` — the `@ship/sail-lsp-browser/diagnostics`
+/// singleton used by the code editor for streaming `.sail` diagnostics.
+pub fn serve_sui_lsp_diagnostics(mode: DaemonMode) -> DeckResponse {
+    DeckResponse::js_asset(SAIL_LSP_DIAGNOSTICS_JS.to_string(), mode)
+}
+
 /// Parse the `/*! sail-framework-stamp: sha=<hash> */` leading comment
 /// `deck-cli build_assets` writes into a baked bundle (deck-deploy-gap). The
 /// writer half lives in `deck_bundler::stamp::format_stamp_header` — keep the
@@ -481,6 +509,9 @@ pub fn baked_framework_stamps() -> Vec<(&'static str, Option<&'static str>)> {
         ("sail-dom.js", parse_baked_stamp(SUI_DOM_JS)),
         ("sail-sdk-client.js", parse_baked_stamp(SUI_SDK_CLIENT_JS)),
         ("deck-route.js", parse_baked_stamp(DECK_ROUTE_JS)),
+        ("sail-compiler-wasm.js", parse_baked_stamp(SAIL_COMPILER_WASM_JS)),
+        ("sail-lsp-completions.js", parse_baked_stamp(SAIL_LSP_COMPLETIONS_JS)),
+        ("sail-lsp-diagnostics.js", parse_baked_stamp(SAIL_LSP_DIAGNOSTICS_JS)),
     ]
 }
 
@@ -621,7 +652,15 @@ mod tests {
         let names: Vec<_> = stamps.iter().map(|(n, _)| *n).collect();
         assert_eq!(
             names,
-            vec!["sail-runtime.js", "sail-dom.js", "sail-sdk-client.js", "deck-route.js"]
+            vec![
+                "sail-runtime.js",
+                "sail-dom.js",
+                "sail-sdk-client.js",
+                "deck-route.js",
+                "sail-compiler-wasm.js",
+                "sail-lsp-completions.js",
+                "sail-lsp-diagnostics.js",
+            ]
         );
     }
 
