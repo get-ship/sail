@@ -151,6 +151,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/elements">← Using components</a>
-    <a variant="solid" tone="primary" href="/sail/guide/making-a-theme">Making a theme →</a>
+    <a variant="solid" tone="primary" href="/sail/guide/forms">Forms →</a>
   </row>
 </column>

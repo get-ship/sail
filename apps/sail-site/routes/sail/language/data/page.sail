@@ -108,6 +108,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     discipline.
   </p>
 
+  <p>
+    <code>query()</code> is the read side of the story; the write side —
+    forms that validate, submit, and carry the same pending and failure
+    states — is the <a href="/sail/guide/forms">Forms guide</a>.
+  </p>
+
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/language/actions">← Actions</a>
     <a variant="solid" tone="primary" href="/sail/language/capabilities">Capabilities →</a>

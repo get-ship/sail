@@ -196,7 +196,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
-    <a variant="default" href="/sail/guide/building-a-component">← Building a component</a>
+    <a variant="default" href="/sail/guide/forms">← Forms</a>
     <a variant="solid" tone="primary" href="/sail/guide/embedding-third-party-code">Embedding third-party code →</a>
   </row>
 </column>
