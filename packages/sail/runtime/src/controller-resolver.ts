@@ -42,8 +42,8 @@ export function resolveController(
   // KEY on the `clients` port (mount.ts does the same aliasing on the mount
   // path): a caller passing the legacy `ctx.ship` gets it folded into the map,
   // an explicit `ctx.clients.ship` wins. Spreading the map still resolves a
-  // bare `ship.foo()` in templates compiled before the `<client>` directive,
-  // so this is an injection/type cleanup, not a behavior change.
+  // bare `ship.foo()` in a template, so this is an injection/type cleanup,
+  // not a behavior change.
   //
   // Typed as `Clients`, NOT `Record<string, unknown>`: once a provider
   // augments the port (`interface Clients { api: … }`) the two are no longer
@@ -56,6 +56,12 @@ export function resolveController(
   const baseScope: ControllerScope<object> = {
     clients,
     ...(clients as unknown as Record<string, unknown>),
+    // `?? {}` is a WEAK guard, not a safety net. It is cast to `RouteSignals`
+    // but has none of its members, so `route.params.id()` still throws — and
+    // on the real mount path it never even applies: the compiled module writes
+    // `$scope.route = route` unconditionally, so a present-but-undefined
+    // `route` key inside `ctx.scope` spreads OVER this default below. It only
+    // helps callers that pass no `ctx.scope` (unit tests, mostly).
     route: ctx.route ?? {},
     navigate: ctx.navigate ?? ((_path: string) => {}),
     ...(ctx.scope ?? {}),

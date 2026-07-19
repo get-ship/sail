@@ -31,12 +31,14 @@ use sail_compiler::CompileMode;
 
 const CONF: &str = "crates/deck/deck-conformance/app";
 // `job/cut-app-manifest` deleted the per-app `app.manifest.jsonc` files for
-// the `hub /` and `routes/showcase` targets — `route` / `navigate` now resolve
-// by convention (`sail_compiler::emit::synthetic::convention_client`) so
-// product apps no longer need one. The conformance manifest is the one
-// remaining checked-in manifest; it covers the `hub /` and `routes/showcase`
-// cases (its `ship` / `api` declarations are tree-shaken when unused, and
-// the convention covers the `route` reads the two views carry).
+// the `hub /` and `routes/showcase` targets, so product apps no longer need
+// one: deck injects `route` / `navigate` into the manifest itself on its build
+// path (`deck_core::host_context::host_context_clients`). The compiler has no
+// convention fallback — a name resolves through the manifest or not at all.
+// The conformance manifest is the one remaining checked-in manifest; it covers
+// the `hub /` and `routes/showcase` cases (its `ship` / `api` declarations are
+// tree-shaken when unused, and deck's injection covers the `route` reads the
+// two views carry).
 const CONF_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
 const HUB_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";
 const VIEWS_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc";

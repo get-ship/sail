@@ -452,10 +452,12 @@ describe('openLiveChannel (via mount)', () => {
   })
 })
 
-// ── keyed clients injection (the `<client>` directive's runtime half) ──
+// ── keyed clients injection (the mount half of the data/ops port) ──
 //
-// `opts.clients` is THE injection surface: each key a view declares via
-// `<client name="X" />` resolves from `ctx.clients.X`. `ship` is just a
+// `opts.clients` is THE injection surface at mount: each key resolves from
+// `ctx.clients.X` and is spread into scope as bare `X`. The NAMES come from
+// the app manifest (there is no `<client>` declaration — see
+// `src/clients.ts`); the host supplies the VALUES here. `ship` is just a
 // key — aliased both ways with the legacy `opts.ship` so hosts and views
 // on either side of the migration interoperate.
 describe('mount() keyed clients', () => {
@@ -482,10 +484,8 @@ describe('mount() keyed clients', () => {
   }
 
   it('a non-ship client key resolves a live data source end-to-end', async () => {
-    // Fake `api` client — what a non-Ship host injects. The module body
-    // mirrors compiled output for:
-    //   <client name="api" />
-    //   <data name="t" source="api.demo.clock()" live />
+    // Fake `api` client — what a non-Ship host injects at mount, for an
+    // `api` the app manifest names and the template references.
     const api = {
       demo: { clock: async () => ({ now: 42 }) },
     }
@@ -592,33 +592,4 @@ describe('mount() keyed clients', () => {
     handle.dispose()
   })
 
-  it('warns when the module declares a client the host did not supply', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    try {
-      const mod = {
-        default: {
-          clients: ['api'],
-          setup: () => ({}),
-        },
-      }
-      const handle = await mount(target, payload(), { module: mod as never })
-      expect(
-        warn.mock.calls.some((c) => String(c[0]).includes('<client name="api">')),
-      ).toBe(true)
-      handle.dispose()
-
-      // Supplying the key silences the warning.
-      warn.mockClear()
-      const handle2 = await mount(target, payload(), {
-        clients: { api: {} },
-        module: mod as never,
-      })
-      expect(
-        warn.mock.calls.some((c) => String(c[0]).includes('<client name="api">')),
-      ).toBe(false)
-      handle2.dispose()
-    } finally {
-      warn.mockRestore()
-    }
-  })
 })

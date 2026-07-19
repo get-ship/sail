@@ -208,15 +208,14 @@ pub(super) fn emit_controller(
     let mut w = Writer::new();
     w.line(HEADER);
 
-    // Real ESM imports for the manifested names. Convention-backed names
-    // (`route`/`navigate`) resolve through the same path when the
-    // manifest is silent — see [`resolve_client`].
+    // Real ESM imports for the manifested names. EVERY name resolves through
+    // the manifest and nothing else — `route`/`navigate` included; a host that
+    // wants them injects them into the manifest itself (see [`resolve_client`]).
     for name in used {
         let Some(c) = resolve_client(manifest, name) else {
             // An unknown used name shouldn't reach here — `used_clients`
-            // only emits names that are either in the manifest or in the
-            // convention table. Defensive: skip rather than panic so a
-            // future caller doesn't break the emit.
+            // only emits names it read out of the manifest. Defensive: skip
+            // rather than panic so a future caller doesn't break the emit.
             continue;
         };
         if c.construct {

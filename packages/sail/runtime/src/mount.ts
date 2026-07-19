@@ -48,15 +48,15 @@ export interface SuiLoader {
 }
 
 export interface MountOptions {
-  /** Legacy single-client alias. Mirrored into `clients.ship` so views
-   *  compiled either side of the `<client>` directive resolve the same
-   *  object; prefer `clients: { ship }` going forward. */
+  /** Legacy single-client alias. Mirrored into `clients.ship` so a view
+   *  reading bare `ship` resolves the same object; prefer `clients: { ship }`
+   *  going forward. */
   ship?: unknown
   /** Host-injected named data/ops clients, spread into scope so a view's
-   *  `<data source="X.op()">` + handlers resolve bare `X` (the `<client>`-
-   *  declared map). The implementor-named replacement for the single `ship`;
-   *  `ship` itself is just a key here (aliased from `opts.ship` when only
-   *  the legacy option is passed). */
+   *  expressions and handlers resolve bare `X`. The names come from the app
+   *  manifest (see `./clients`); the host supplies the values here. `ship` is
+   *  just a key on this map (aliased from `opts.ship` when only the legacy
+   *  option is passed). */
   clients?: Record<string, unknown>
   route?: RouteSignals
   navigate?: (path: string) => void
@@ -155,29 +155,36 @@ export async function mount<Scope = Record<string, unknown>>(
   }
 
   // 5. Build setup context + run setup(ctx).
-  // Route signals come from opts.route (host-provided) or the compiled
-  // view's own import of @ship/sail-runtime/route. Mount no longer creates
-  // a fallback instance — route.ts is out of the static bundle.
+  // Route signals come from opts.route — the host supplies them. On deck's
+  // CLIENT bundle the compiled module reads `route` straight off this ctx
+  // (`emit/js/setup.rs` destructures it and assigns `$scope.route`); only the
+  // SSR/synthesize emit self-constructs one from the manifest's
+  // `construct: true` entry (`deck_core::host_context::host_context_clients`).
+  // Mount creates no fallback: there is no route implementation in this
+  // package to fall back to. A host that grants no route leaves this
+  // `undefined`, and because the compiled module still writes
+  // `$scope.route = undefined`, that undefined SPREADS OVER
+  // `controller-resolver`'s `ctx.route ?? {}` guard — the guard only protects
+  // callers that pass no `ctx.scope` at all.
   //
   // Clients ↔ ship aliasing: the keyed `clients` map is the injection
   // surface; `ship` is one key on it plus the legacy ctx alias. A host
   // passing only `opts.ship` still populates `clients.ship`, and a host
   // passing only `clients: { ship }` still feeds `ctx.ship` — both styles
-  // reach views compiled before AND after the `<client>` directive.
+  // reach a view reading bare `ship`.
   // An explicit `opts.clients.ship` wins over `opts.ship` in the map.
   const ship = opts.ship ?? opts.clients?.['ship']
   const clients: Record<string, unknown> | undefined =
     opts.clients !== undefined || opts.ship !== undefined
       ? { ...(ship !== undefined ? { ship } : {}), ...opts.clients }
       : undefined
-  warnUndeclaredClients(mod, payload.name, clients)
   const route = opts.route
   const navigate = opts.navigate ?? noop
   const baseScope: Record<string, unknown> = {
     ship,
     clients,
-    // Spread each declared client by name so `<data source="X.op()">` resolves
-    // bare `X`. Before `...built.scope` so author scope still shadows.
+    // Spread each supplied client by name so an expression reading bare `X`
+    // resolves. Before `...built.scope` so author scope still shadows.
     ...(clients ?? {}),
     route,
     navigate,
@@ -377,29 +384,6 @@ export async function mount<Scope = Record<string, unknown>>(
     },
   }
   return handle
-}
-
-/**
- * Compiled view modules carry their declared `<client>` names on the
- * default export (`clients: ["api", …]` — the mount-contract half emitted
- * by `emit/js/view.rs`). When the host's map is missing a declared key the
- * view's `<data source>` thunks fail opaquely later, so name the gap now.
- */
-function warnUndeclaredClients(
-  mod: CompiledModule,
-  viewName: string,
-  clients: Record<string, unknown> | undefined,
-): void {
-  const declared = (mod.default as { clients?: unknown }).clients
-  if (!Array.isArray(declared)) return
-  for (const name of declared) {
-    if (typeof name !== 'string') continue
-    if (clients === undefined || !(name in clients)) {
-      console.warn(
-        `[sail/mount] view "${viewName}" declares <client name="${name}"> but the host did not supply opts.clients.${name}`,
-      )
-    }
-  }
 }
 
 function hasHydratableMarkup(el: HTMLElement): boolean {
