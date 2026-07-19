@@ -20,7 +20,8 @@ export const code = {
   // A live server-data source. deck subscribes the view to the stream and
   // patches \`tick\` as values arrive; only the bindings reading it re-render.
   liveData: `<!-- routes/feed/page.sail — subscribe a view to live server data -->
-<client name="api" />
+<!-- \`api\` is a client the app manifest names; using it here is the
+     whole declaration. The host supplies the value. -->
 <data name="tick" source="api.demo.clock()" live />
 
 {#while-loading of tick}<p>Connecting…</p>{/while-loading}

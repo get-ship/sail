@@ -16,7 +16,8 @@ import type { ShipHost, Clients } from './ship'
  */
 export interface ResolverContext {
   ship: ShipHost
-  /** Host-injected named data/ops clients (the `<client>`-declared map).
+  /** Host-injected named data/ops clients — the map whose keys the app
+   *  manifest names (see `./clients`; there is no `<client>` declaration).
    *  Optional through the migration; spread into scope so bare `<name>.foo()`
    *  resolves. */
   clients?: Clients

@@ -3,9 +3,11 @@
 // SAIL stays ignorant of what these names MEAN. `ship` and `api` are the
 // conformance app's custom data clients (declared here so the conformance
 // views can resolve `ship.demo.todos()` and `api.demo.clock()` against real
-// ESM imports, type-checked by tsgo); the view-host handles `route` and
-// `navigate` are NOT here — the synthetic emit resolves them by convention
-// (see `sui_compiler::emit::synthetic::convention_client`). This map is
+// ESM imports, type-checked by tsgo). The view-host handles `route` and
+// `navigate` are NOT here because DECK injects them into the manifest on its
+// own build path (`deck_core::host_context::host_context_clients`) — there is
+// no convention fallback in the compiler; a name resolves through the
+// manifest or not at all. This map is
 // what REPLACES the reserved-word `BUILTINS`/ambient-ctx mechanism:
 // composition by real import, type-checked by tsgo, the compiler unaware
 // that "ship", "api", or "route" exist.
