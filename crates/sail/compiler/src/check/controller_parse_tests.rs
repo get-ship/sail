@@ -86,3 +86,81 @@ fn empty_return_is_legal() {
     let r = p(src);
     assert!(r.returned.is_empty());
 }
+
+// ── regex literals + multi-declarator lists (job/silent-failures D4, D2) ────
+
+/// A regex literal is valid JS whose brackets are TEXT. The scanner used to
+/// count them as structure, so `return {...}` became unfindable and the whole
+/// contributed scope came back EMPTY — the template then blamed its first
+/// binding with "Available: ctx.", a phantom error at a consumer line.
+#[test]
+fn regex_literal_does_not_collapse_the_returned_scope() {
+    let src = r#"
+export default controller((ctx) => {
+  const bez = (v) => v.match(/cubic-bezier\(([^)]+)\)/)
+  const rail = signal(0)
+  return { rail, bez }
+})
+"#;
+    let r = p(src);
+    let names: Vec<&str> = r.returned.iter().map(|m| m.name.as_str()).collect();
+    assert_eq!(names, vec!["rail", "bez"]);
+    assert_eq!(r.member("rail").unwrap().kind, ScopeKind::Signal);
+    assert_eq!(r.member("bez").unwrap().kind, ScopeKind::Action);
+}
+
+/// The other half of the ambiguity: a `/` that really is division must stay
+/// division, or the scanner swallows the rest of the file as a "regex".
+#[test]
+fn division_is_still_division() {
+    let src = r#"
+export default controller((ctx) => {
+  const half = derived(() => ctx.total() / 2)
+  const n = signal(0)
+  return { half, n }
+})
+"#;
+    let r = p(src);
+    let names: Vec<&str> = r.returned.iter().map(|m| m.name.as_str()).collect();
+    assert_eq!(names, vec!["half", "n"]);
+    assert_eq!(r.member("n").unwrap().kind, ScopeKind::Signal);
+}
+
+/// `const a = signal(0), b = signal(1)` is ONE statement with TWO declarators.
+/// Only the first used to register; `b` fell through to `Other`, so `(--b)`
+/// was refused with a did-you-mean pointing at its own sibling.
+#[test]
+fn every_declarator_in_a_comma_list_classifies() {
+    let src = r#"
+export default controller((ctx) => {
+  const a = signal(0), b = signal(1), c = derived(() => 2)
+  return { a, b, c }
+})
+"#;
+    let r = p(src);
+    assert_eq!(r.member("a").unwrap().kind, ScopeKind::Signal);
+    assert_eq!(r.member("b").unwrap().kind, ScopeKind::Signal);
+    assert_eq!(r.member("c").unwrap().kind, ScopeKind::Derived);
+}
+
+/// Each declarator's value span must stay its OWN — an over-long span would
+/// make `pure_derived` and the type inference read a sibling's initializer.
+#[test]
+fn declarator_spans_do_not_overrun_their_sibling() {
+    let src = "export default controller((ctx) => {\n  const a = signal(0), b = signal(1)\n  return { a, b }\n})";
+    let r = p(src);
+    assert_eq!(r.slice(r.member("a").unwrap().value_span), "signal(0)");
+    assert_eq!(r.slice(r.member("b").unwrap().value_span), "signal(1)");
+}
+
+#[test]
+fn declarator_list_mixes_patterns_and_uninitialized_names() {
+    let src = r#"
+export default controller((ctx) => {
+  let seen, { x } = point, n = signal(3)
+  return { n, x }
+})
+"#;
+    let r = p(src);
+    assert_eq!(r.member("n").unwrap().kind, ScopeKind::Signal);
+}

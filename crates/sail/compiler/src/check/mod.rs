@@ -30,6 +30,7 @@ mod scope_bound_expr;
 mod scope_bound_expr_tests;
 pub mod symbol_table;
 pub mod scope_member;
+pub mod signal_called;
 pub mod key_identity;
 pub mod bind_this_target;
 pub mod on_callable;
@@ -95,6 +96,9 @@ pub fn run(
     for_iterable::check(program)?;
     if has_scope_context {
         scope_member::check(program, controller)?;
+        // A reactive value rendered without its `()` — the silent one: it
+        // emitted the getter's SOURCE into the DOM and warned about nothing.
+        signal_called::check(program, controller)?;
         bind_this_target::check(program, controller)?;
         on_callable::check(program, controller)?;
     }
@@ -221,6 +225,7 @@ pub fn collect(
     push(for_iterable::check(program), source, &mut diags);
     if has_scope_context {
         push_all(scope_member::collect(program, controller), source, &mut diags);
+        push_all(signal_called::collect(program, controller), source, &mut diags);
         push(bind_this_target::check(program, controller), source, &mut diags);
         push(on_callable::check(program, controller), source, &mut diags);
     }
@@ -243,6 +248,16 @@ pub fn collect(
     // (`check_all` → here) flow through, so the floor is a compiler property, not
     // opt-in host wiring. L1 element sources bypass this entirely (`compile_element`).
     let lint_path = source_path.unwrap_or_else(|| Path::new("<synthetic>.sail"));
+    // ONE answer about the capability tier, for the build gate and the editor
+    // alike. Both `compile()` (via `gate`) and `analyze()` reach the lint
+    // stream through this function, so resolving the package's declared
+    // capabilities HERE is what stops `analyze` from squiggling a policy the
+    // build never applied. Host-supplied overrides win; see
+    // `Policy::capability_defaults_for`.
+    let defaults = crate::check::policy::Policy::capability_defaults_for(lint_path, overrides);
+    let mut resolved = overrides.to_vec();
+    resolved.extend(defaults);
+    let overrides = &resolved[..];
     let template_findings =
         crate::check::lint_overrides::enforce_floor(
             crate::check::lint_overrides::apply_overrides(
