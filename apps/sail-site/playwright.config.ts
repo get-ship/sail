@@ -1,6 +1,6 @@
 // Playwright config for the SAIL site smoke test. Spins up the deck dev
 // server (the canonical sail-site serving loop) and drives three surface
-// checks: landing, /components, /tutorial/01-hello-signal.
+// checks: landing, /components, /sail/tutorial/<slug>.
 
 import { defineConfig, devices } from '@playwright/test'
 

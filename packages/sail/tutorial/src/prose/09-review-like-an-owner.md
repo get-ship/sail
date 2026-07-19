@@ -8,10 +8,10 @@ next: null
 chapter: "agents"
 ---
 
-The north star of this language is a loop: **agents author, humans
-review**. Lesson 08 showed the half the compiler owns. This lesson is
-the other half — the flaws that *compile*, run, and demo beautifully,
-and are still wrong.
+This language is built around a loop: **agents author, humans review**.
+Lesson 08 showed the half the compiler owns. This lesson is the other
+half — the flaws that *compile*, run, and demo beautifully, and are
+still wrong.
 
 The starter is a complete support-inbox screen. It builds cleanly. It
 uses query(), keyed lists, motion, tones — everything from lessons 1–8.

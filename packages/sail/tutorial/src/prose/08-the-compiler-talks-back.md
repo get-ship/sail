@@ -33,10 +33,14 @@ Run 1. The compiler reports one costed rejection at a time — first, a
 call shape the render path forbids:
 
 ```
-Error: tut-08-release-notes-starter.sail: line 33 col 1: [expr `formatDate(publishedAt())`]
+Error: tut-08-release-notes-starter.sail: line 62 col 1: [expr `formatDate(publishedAt())`]
 call `formatDate(…)` with arguments is not allowed in renderable expressions;
 only zero-arg signal reads are permitted
 ```
+
+Go by the expression in brackets, not the line number: this diagnostic
+currently points at the end of the file rather than at the offending
+line. The bracketed source is exact, and it is the part you search for.
 
 The fix is lesson 04's move: do the work in the controller, expose a
 zero-arg read. `formatDate(publishedAt())` becomes a `published`
@@ -45,45 +49,64 @@ derived, and the template reads `{published()}`.
 Run 2. Now it reaches the sx lint:
 
 ```
-Error: tut-08-release-notes-starter.sail: line 12 col 21: [sail-sx] sx `p:12px` —
-`12px` is not a token (raw values are not allowed; spend a token). allowed: 0,
-0_75, 1, 1_25, 1_5, 2, 2_5, 3, 3_5, 4, 4_5, 5, 6, 7, 8, 9, half, size-px; did
-you mean `p:1`?
-  suggest: sx is surface-only: spacing 0–8 (p/m…), colors (bg/fg), radius, text.
-  Layout is the primitives' job (<row>/<column>/<grid>). Raw px/hex are not expressible.
+Error: tut-08-release-notes-starter.sail: line 45 col 21: [sail-sx] sx `p-12px` —
+`12px` is not a token (a value is a design decision; spend a token). `p-` accepts:
+0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4,
+40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap,
+density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px; did
+you mean `p-12`?
+  suggest: sx is surface-only: spacing (p/m…, the Tailwind-aligned space ramp
+  1..64 plus half-steps), colors (bg/fg), radius, text. Layout is the primitives'
+  job (<row>/<column>/<grid>). Raw px/hex are not expressible.
 ```
 
-The message *is* the spacing scale. `p:12px` was aiming at comfortable
-padding; `p:4` is the token that means it.
+The message *is* the spacing scale. Its guess is textual — `p-12` is
+one character from `p-12px` — so read past it to the intent: `p-12px`
+was aiming at comfortable padding, and `p-4` is the token that means
+that.
 
 Run 3. The motion system holds its vocabulary the same way:
 
 ```
-Error: tut-08-release-notes-starter.sail: line 15 col 1: [sail-animate-token-only]
+Error: tut-08-release-notes-starter.sail: line 48 col 1: [sail-animate-token-only]
 motion preset `whoosh` is not in the closed vocabulary. Known presets:
 spring:snappy, spring:gentle, spring:bouncy, spring:deliberate, press, release,
-pulse, fade, fade-out
-  suggest: Use a registered preset (spring:snappy, fade, …) or extend animation-presets.json.
+pulse, fade, fade-out, bounce, marquee, marquee-reverse, spin
+  suggest: Use a registered preset, write the values inline (`{ from: 0, to: 1 }`),
+  or extend animation-presets.json.
 ```
 
-There is no `whoosh`. There is `fade`, and the full legal set is right
-there in the error.
+There is no `whoosh`. There is `fade`, the full legal set is right there
+in the error — and, as lesson 06 showed, the inline form if none of
+them is what you meant.
 
-Run 4. Last, the floor itself:
+Run 4. Now the `<style>` block, which answers twice. First for what is
+*in* it:
 
 ```
-Error: tut-08-release-notes-starter.sail: line 30 col 1: [sail-no-style-block]
+Error: tut-08-release-notes-starter.sail: line 64 col 19: [sail-css-literal]
+raw color `#ff0000` in `color` — use a design-system token (`var(--…)`)
+```
+
+Fix the colour and it objects to the block itself:
+
+```
+Error: tut-08-release-notes-starter.sail: line 64 col 1: [sail-no-style-block]
 raw <style> is not the floor styling surface — the floor is one way to do CSS:
-sx token utilities (sx="p:4 bg:surface-2"). Motion/variants/responsive are
+sx token utilities (sx="p-4 bg-surface-2"). Motion/variants/responsive are
 becoming language elements, not raw CSS. This is the opinionated floor;
 primitives use it too.
   suggest: Text elements (<h1>-<h6>, <p>) are styled from the type scale
-  automatically — write them plain. Everything else: sx= for surface tokens…
+  automatically — write them plain. Everything else: sx= for surface tokens,
+  <column>/<row>/<grid> for structure. A gap here is a missing language element
+  to add, not a reason to hand-author CSS.
 ```
 
-Delete the block. Whatever it was painting, the answer is sx or a
-component — and if the vocabulary genuinely cannot express the design,
-that is a **language gap to report**, never a reason to smuggle CSS.
+That order is the point. Tokenising the colour was a real improvement
+and still not enough — the block was never a legal surface. Delete it.
+Whatever it was painting, the answer is sx or a component; and if the
+vocabulary genuinely cannot express the design, that is a **language
+gap to report**, never a reason to smuggle CSS.
 
 Run 5: `compiled 1 file(s)`.
 
@@ -99,7 +122,7 @@ mechanically. The compiler is the review that never gets tired. What it
 
 1. Work the loop until the starter compiles. Resist fixing ahead of the
    errors — the order the compiler chooses is part of the exercise.
-2. Compare your result with the solved version. If you picked `p:3` or
+2. Compare your result with the solved version. If you picked `p-3` or
    a spring instead of `fade`, fine: you stayed inside the vocabulary,
    which is the only thing the compiler was defending.
 3. Plant a defect of your own — an unknown tone, a `style=` attribute,

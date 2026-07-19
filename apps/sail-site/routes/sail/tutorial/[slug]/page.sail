@@ -244,7 +244,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const cur = lesson()?.order ?? 0
       return ORDERED_LESSONS.map((l) => ({
         slug: l.slug,
-        href: '/tutorial/' + l.slug,
+        href: '/sail/tutorial/' + l.slug,
         state: l.order < cur ? 'done' : l.order === cur ? 'current' : 'todo',
         title: 'Lesson ' + l.order + ' — ' + l.title,
       }))
@@ -275,7 +275,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       lessonNumLabel: derived(() => pad2(lesson()?.order ?? 0)),
       totalLessons: derived(() => ORDERED_LESSONS.length),
       hasNext: derived(() => Boolean(nextSlug())),
-      nextHref: derived(() => (nextSlug() ? '/tutorial/' + nextSlug() : '/tutorial')),
+      nextHref: derived(() => (nextSlug() ? '/sail/tutorial/' + nextSlug() : '/sail/tutorial')),
       nextTitle: derived(() => (BY_SLUG[nextSlug()]?.title ?? '') + ' →'),
     }
 })

@@ -67,10 +67,21 @@ cargo build -q -p sail-compiler
 target/debug/sail-compiler build --mode component <lesson>.sail
 ```
 
+This is enforced, not just documented:
+`crates/sail/compiler/tests/tutorial_steps.rs` discovers every `.sail`
+under `src/lessons/` from disk and builds it the same way, so a new
+lesson is covered the moment it lands.
+
+```
+cargo test -p sail-compiler --test tutorial_steps
+```
+
 The one exception is `08-the-compiler-talks-back/starter/` — that file
 FAILS the build by design (four planted defects); the lesson's prose
-walks the fix loop with the compiler's verbatim output. If compiler
-error text changes shape, re-run the loop and refresh the prose.
+walks the fix loop with the compiler's verbatim output. The test asserts
+that it fails, and that its first rejection still matches the text the
+prose quotes. If compiler error text changes shape, re-run the loop and
+refresh `src/prose/08-the-compiler-talks-back.md`.
 
 ## Use
 

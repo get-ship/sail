@@ -28,10 +28,11 @@ is nothing for it to say.
 </grid>
 ```
 
-The layout keywords take `gap`, `align`, `justify`, and (on `<grid>`)
-`cols`. That is the whole layout API. An attribute the keyword does not
-recognize is a **compile error** — the language never silently drops
-what you wrote.
+The layout keywords take `gap`, `align`, and `justify`; `<grid>` adds
+`cols` and `rows` (a fixed track count, 1–12). Rows wrap by default —
+`<row nowrap>` is the single-line row. That is nearly the whole layout
+API. An attribute the keyword does not recognize is a **compile
+error** — the language never silently drops what you wrote.
 
 ## Props carry the design system
 

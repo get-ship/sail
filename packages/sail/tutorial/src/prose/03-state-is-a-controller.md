@@ -29,19 +29,22 @@ effect(() => {                    // a side-effect that owns its cleanup
 })
 ```
 
-- A **signal** is a callable cell: `elapsed()` reads (and subscribes,
-  inside any tracked scope), `elapsed.set(v)` or `elapsed.set(fn)`
-  writes. Reading it in a template binding subscribes exactly that DOM
-  node — no virtual DOM, no re-render.
+- A **signal** is a readable, writable value: `elapsed()` reads,
+  `elapsed.set(v)` or `elapsed.set(fn)` writes. Reading one inside a
+  derived, an effect, or a template binding subscribes automatically.
+  A binding subscribes exactly the DOM node it sits in, so a write
+  updates that node and nothing else.
 - A **derived** recomputes from whatever it reads, only when read, and
   only notifies downstream when its output actually changes. The clock
   string is derived; nobody ever sets it.
-- An **effect** is the escape hatch to the outside world — timers,
-  storage, sockets. Return a function and the effect *owns its undo*:
-  the cleanup runs before every re-run and when the component unmounts.
-  There is no dependency array to forget; the effect subscribes to what
-  it read. Reach for `effect` rarely — if it does not touch the outside
-  world, you probably wanted a `derived`.
+- An **effect** is for the edges — the places state has to touch the
+  world outside the graph: timers, storage, sockets. Return a function
+  and that function is the undo: it runs before every re-run and when
+  the component is disposed, so a timer the effect started is never
+  left running. You never declare what an effect depends on; it
+  subscribes to whatever it actually read. Reach for `effect` rarely —
+  if it does not touch the outside world, you probably wanted a
+  `derived`.
 
 ## One file
 

@@ -19,7 +19,15 @@ export type CompileFn = (
 
 // Slugs that ship a mock-daemon scenario (public/tut-<slug>.js). Explicit set
 // so we don't HEAD-probe non-existent scenarios and surface 404s as errors.
-const SCENARIO_SLUGS = new Set(['22-data-live', '23-while-loading', '24-morphs'])
+//
+// Empty since the 25-step tutorial was replaced by the nine lessons in
+// `packages/sail/tutorial`: none of them needs a mock daemon (lesson 05 and
+// lesson 09 use in-repo client modules instead). The set — and `pushScenario`
+// below — are kept because the mechanism is still the answer if a future
+// lesson needs a scripted backend; add the slug here and drop the script at
+// `public/tut-<slug>.js`. It previously held three retired slugs, which made
+// `pushScenario` dead code that read as live.
+const SCENARIO_SLUGS = new Set<string>([])
 
 /** Strip TypeScript-only syntax from a (simple) lesson controller so it runs
  *  as ESM in the preview iframe. The lesson controllers are simple and this

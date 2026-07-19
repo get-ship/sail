@@ -19,7 +19,7 @@ const statusText = (page: Page): Promise<string> =>
   page.locator('badge').first().innerText()
 
 async function openLesson(page: Page, slug: string): Promise<void> {
-  await page.goto(`/tutorial/${slug}`, { waitUntil: 'domcontentloaded' })
+  await page.goto(`/sail/tutorial/${slug}`, { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(
     () => {
       const el = document.querySelector('sail-code-editor[data-pane="source"]')

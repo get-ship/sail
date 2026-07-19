@@ -12,7 +12,8 @@
   "types": "src/index.ts",
   "customElements": "dist/custom-elements.json",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./wasm-bootstrap": "./src/wasm-bootstrap.ts"
   },
   "scripts": {
     "prepublishOnly": "test -f dist/custom-elements.json || (cd ../../../.. && cargo run -p deck-cli -- build-assets)",

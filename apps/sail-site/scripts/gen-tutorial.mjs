@@ -220,7 +220,7 @@ for (const l of lessons) {
     title: l.title,
     description: l.description,
     order: l.order,
-    href: `/tutorial/${l.slug}`,
+    href: `/sail/tutorial/${l.slug}`,
   })
 }
 const groups = groupOrder.map((chapter) => ({

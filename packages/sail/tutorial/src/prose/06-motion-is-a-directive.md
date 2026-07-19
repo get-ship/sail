@@ -17,9 +17,10 @@ motion:TRIGGER={{ property: 'preset' }}
 The **trigger** says when: `hover`, `press`, `focus`, `focus-visible`
 (interaction), `enter`, `exit` (lifecycle), `view`, `scroll`
 (scroll-timeline), `loop` (ambient). The **body** says what:
-`scale`, `opacity`, `translate-x`, `translate-y`, `rotate`, each mapped
-to a preset — `fade`, `fade-out`, `press`, `release`, `pulse`, and the
-four springs (`spring:snappy`, `spring:gentle`, `spring:bouncy`,
+`scale`, `scale-x`, `scale-y`, `opacity`, `translate-x`, `translate-y`,
+`rotate`, each mapped to a preset — `fade`, `fade-out`, `press`,
+`release`, `pulse`, `spin`, `bounce`, `marquee`, `marquee-reverse`, and
+the four springs (`spring:snappy`, `spring:gentle`, `spring:bouncy`,
 `spring:deliberate`). An unknown preset name fails the build.
 
 The solved tray deliberately varies the vocabulary — rotate on the
@@ -49,9 +50,8 @@ field: `scale: { preset: 'pulse', to: 1.9 }`.
 
 This is where `motion:` differs from `sx` on purpose. sx is closed
 because colour and spacing are theming integrity — an off-system colour
-is a bug. A 3600ms decorative loop is not a theming decision, and there
-was a period where expressing one meant minting a global
-`--duration-cinematic` token. That does not scale, and it is gone.
+is a bug. A 3600ms decorative loop is not a theming decision, so it does
+not need a token to exist before you can write it.
 
 ## Signals: config that follows state
 
