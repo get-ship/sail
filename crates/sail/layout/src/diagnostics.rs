@@ -83,6 +83,13 @@ pub fn scan(layout: &Layout, _viewport: (f32, f32)) -> anyhow::Result<ScanResult
             }
         }
 
+        let subtree_unknown = layout.unknown_subtree.get(i).copied().unwrap_or(false);
+        let biggest_child_unknown = layout
+            .unknown_subtree
+            .get(biggest_child_main.0)
+            .copied()
+            .unwrap_or(false);
+
         let parent_overflow = layout.styles[i].style.overflow;
         let parent_silently_absorbs = matches!(
             parent_overflow,
@@ -95,7 +102,14 @@ pub fn scan(layout: &Layout, _viewport: (f32, f32)) -> anyhow::Result<ScanResult
         // Case 1: the COLLAPSED-PARENT 1779px regression. Parent has 0 main
         // axis size + non-zero children + `overflow:hidden` (or `clip`) →
         // the silent clip is exactly what the spec example describes.
-        if main_size <= EPSILON && biggest_child_main.1 > EPSILON && parent_silently_absorbs {
+        // Suppressed when the parent's subtree contains an unknown element
+        // — we can't tell whether the child wants space at compile time.
+        if !subtree_unknown
+            && !biggest_child_unknown
+            && main_size <= EPSILON
+            && biggest_child_main.1 > EPSILON
+            && parent_silently_absorbs
+        {
             let (cidx, child_main) = biggest_child_main;
             out.push(Diagnostic {
                 kind: "collapsed-into-overflow-hidden-parent",
@@ -165,7 +179,11 @@ pub fn scan(layout: &Layout, _viewport: (f32, f32)) -> anyhow::Result<ScanResult
         // Case 3: zero main-axis without silent absorbing — the parent has
         // truly zero size; report it as a layout collapse (no regression
         // framing, just a hint that the developer probably wanted more).
-        if main_size <= EPSILON && !children.is_empty() {
+        // Suppressed when the parent's subtree contains an unknown
+        // element — a zero measurement on a column wrapping
+        // `<sail-code-editor>` is not a layout bug; it's a foreign web
+        // component whose body only exists at runtime.
+        if !subtree_unknown && main_size <= EPSILON && !children.is_empty() {
             out.push(Diagnostic {
                 kind: "zero-main-axis",
                 severity: Severity::Warning,
@@ -187,6 +205,68 @@ pub fn scan(layout: &Layout, _viewport: (f32, f32)) -> anyhow::Result<ScanResult
     }
 
     Ok(ScanResult { diagnostics: out })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::html::Element;
+    use crate::taffy_tree::build;
+
+    #[test]
+    fn zero_main_axis_on_known_container_still_fires() {
+        let elements = vec![
+            Element::default(),
+            Element {
+                tag: "div".to_string(),
+                class: "sail-col grow-1".to_string(),
+                children: vec![2],
+                parent: Some(0),
+                ..Default::default()
+            },
+            Element {
+                tag: "div".to_string(),
+                class: String::new(),
+                children: vec![],
+                parent: Some(1),
+                ..Default::default()
+            },
+        ];
+        let tree = build(elements, (1440.0, 900.0)).unwrap();
+        let result = scan(&tree, (1440.0, 900.0)).unwrap();
+        assert!(
+            result.diagnostics.iter().any(|d| d.kind == "zero-main-axis"),
+            "known empty child should still trigger zero-main-axis"
+        );
+    }
+
+    #[test]
+    fn zero_main_axis_suppressed_for_unknown_child() {
+        let elements = vec![
+            Element::default(),
+            Element {
+                tag: "div".to_string(),
+                class: "sail-col grow-1".to_string(),
+                children: vec![2],
+                parent: Some(0),
+                ..Default::default()
+            },
+            Element {
+                tag: "iframe".to_string(),
+                class: String::new(),
+                children: vec![],
+                parent: Some(1),
+                ..Default::default()
+            },
+        ];
+        let tree = build(elements, (1440.0, 900.0)).unwrap();
+        let result = scan(&tree, (1440.0, 900.0)).unwrap();
+        assert!(
+            !result.diagnostics.iter().any(|d| d.kind == "zero-main-axis"),
+            "unknown child should suppress zero-main-axis: {:?}",
+            result.diagnostics
+        );
+    }
 }
 
 #[allow(dead_code)]

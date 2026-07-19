@@ -78,10 +78,7 @@ pub fn resolve(elem: &Element) -> ResolvedStyle {
     let position = detect_position(&classes);
     let overflow = detect_overflow(&classes);
 
-    let is_leaf = !matches!(display, Display::Flex | Display::Grid | Display::Block)
-        || matches!(position, Position::Absolute);
-
-    let mut style = Style {
+    let style = Style {
         display,
         overflow,
         scrollbar_width: 0.0,
@@ -112,36 +109,7 @@ pub fn resolve(elem: &Element) -> ResolvedStyle {
         ..Default::default()
     };
 
-    if is_leaf && elem.children.is_empty() {
-        let (_w, h) = text_shape(elem);
-        style.size.height = Dimension::length(h as f32);
-    }
-
     ResolvedStyle { style, role: Role::None, visibility: Visibility::Visible }
-    // (silence the unused-mut warning on `style` for now; future leaf-shape work will use it)
-}
-
-#[allow(dead_code)]
-pub fn text_shape(elem: &Element) -> (f64, f64) {
-    let line_height_token = elem
-        .class
-        .split_whitespace()
-        .find_map(|c| c.strip_prefix("text-"))
-        .unwrap_or("base");
-    let font_size_px = match line_height_token {
-        "xs" => 11.0,
-        "sm" => 12.0,
-        "base" => 13.0,
-        "md" => 14.0,
-        "lg" => 16.0,
-        "xl" => 20.0,
-        "2xl" => 24.0,
-        "3xl" => 28.0,
-        "4xl" => 36.0,
-        _ => 16.0,
-    };
-    let line_height_px = font_size_px * 1.5;
-    (font_size_px * 32.0, line_height_px)
 }
 
 fn detect_display(classes: &[&str], tag: &str) -> Display {

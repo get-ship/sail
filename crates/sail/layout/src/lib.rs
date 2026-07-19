@@ -19,18 +19,26 @@
 //!        │
 //!        ├── sail_layout::style::resolve  (class → taffy Style)
 //!        ▼
-//!   taffy::TaffyTree ──► compute_layout at viewport
-//!        │
+//!   taffy::TaffyTree<NodeContext> ──► compute_layout_with_measure
+//!        │                              (text leaves use the metrics table)
 //!        ├── sail_layout::diagnostics::scan
 //!        ▼
 //!   Vec<Diagnostic>
 //! ```
 //!
-//! ## What is NOT in this spike
+//! ## What is measured and what is not
 //!
-//! - **Text shaping.** Without a font shaper (cosmic-text, fontdue), a leaf
-//!   `<p>` measures `0×0`. We supply a placeholder intrinsic size and call
-//!   that gap out explicitly in the verdict.
+//! - **Text leaves.** The parser captures text content onto elements; the
+//!   taffy measure function resolves `font-*` and `text-*` classes (and tag
+//!   defaults) to a baked metrics table generated from the framework's own
+//!   woff2 fonts in `packages/sail/tokens/src/fonts/`. See [`metrics`] for the
+//!   contract and the list of deliberate cuts (kerning, ligatures, BiDi).
+//! - **Custom / replaced elements.** Tags the layout pass cannot size (custom
+//!   elements containing a hyphen, plus replaced elements like `<iframe>` that
+//!   taffy does not model) are marked `unknown_subtree`. Any collapse or
+//!   zero-size diagnostic whose subtree contains an unknown node is
+//!   suppressed, because reporting a parent as "collapsed" when its only
+//!   child is an unmeasurable web component would be confidently wrong.
 //! - **Multiple viewports / breakpoints.** One fixed viewport per call.
 //! - **`if` / `for` / dynamic content.** The static-only path catches most
 //!   real-world layout bugs.
@@ -39,9 +47,11 @@ pub mod html;
 pub mod style;
 pub mod taffy_tree;
 pub mod diagnostics;
+pub mod metrics;
 
 pub use diagnostics::{Diagnostic, ScanResult, ScanInput, Severity};
 pub use html::{Element, parse_source, source_viewport};
+pub use metrics::{Family, Size as TextSize, table as metrics_table};
 pub use style::ResolvedStyle;
 pub use taffy_tree::Layout;
 

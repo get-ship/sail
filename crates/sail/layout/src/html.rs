@@ -39,6 +39,38 @@ pub struct Element {
     pub children: Vec<usize>,
     /// Parent index, or `None` for the synthetic document root.
     pub parent: Option<usize>,
+    /// Text content directly inside this element (between its open tag and
+    /// the first child or close tag). Whitespace is collapsed to a single
+    /// space the way a browser would; an empty string means "no text leaf".
+    pub text: String,
+}
+
+impl Element {
+    /// True if this element's size is **unknown** to the layout pass.
+    /// An element is unknown when:
+    ///
+    /// 1. **It is a custom element** (web component) — its body is rendered
+    ///    by JS at runtime, so it has no compile-time intrinsic size.
+    ///    W3C naming rule: a tag name must contain at least one hyphen.
+    ///
+    /// 2. **It is a replaced element taffy does not model.** Browsers give
+    ///    these intrinsic sizes (300×150 for iframe by default; viewBox-driven
+    ///    for svg) that taffy treats as zero. Reporting a parent as "collapsed"
+    ///    because its iframe-only child measures 0 in taffy is a taffy
+    ///    limitation masquerading as a layout bug.
+    pub fn is_unknown(&self) -> bool {
+        if self.tag.is_empty() {
+            return false;
+        }
+        if self.tag.contains('-') {
+            return true;
+        }
+        matches!(
+            self.tag.as_str(),
+            "iframe" | "video" | "audio" | "embed" | "object" | "canvas" | "svg"
+                | "picture" | "source" | "track" | "math" | "slot" | "template"
+        )
+    }
 }
 
 /// Parse the **preprocessed** source for one component into a forest of
@@ -106,8 +138,19 @@ pub fn parse_source(source: &str) -> Vec<Element> {
                     continue;
                 }
             }
-            // Text content between tags — skip past it. We do not model it
-            // (text shaping is the gap the spike calls out).
+            // Text content between tags — accumulate it onto whichever
+            // element is currently on the stack. The measure function will
+            // collapse whitespace the way a browser would.
+            if let Some(&top) = stack.last() {
+                let raw = &source[pos..rel_lt];
+                let trimmed = raw.trim();
+                if !trimmed.is_empty() {
+                    if !out[top].text.is_empty() {
+                        out[top].text.push(' ');
+                    }
+                    out[top].text.push_str(trimmed);
+                }
+            }
             pos = rel_lt;
             continue;
         }
@@ -375,5 +418,49 @@ mod tests {
         let src = r#"<controller>x</controller><div></div>"#;
         let tree = parse_source(src);
         assert_eq!(tree.iter().filter(|e| e.tag == "div").count(), 1);
+    }
+
+    #[test]
+    fn captures_text_on_open_element() {
+        let src = r#"<h1>  Hello World  </h1><p>foo bar</p>"#;
+        let tree = parse_source(src);
+        let h1 = tree.iter().find(|e| e.tag == "h1").unwrap();
+        let p = tree.iter().find(|e| e.tag == "p").unwrap();
+        assert_eq!(h1.text, "Hello World");
+        assert_eq!(p.text, "foo bar");
+    }
+
+    #[test]
+    fn whitespace_only_text_stays_empty() {
+        let src = r#"<div>   </div>"#;
+        let tree = parse_source(src);
+        let div = tree.iter().find(|e| e.tag == "div").unwrap();
+        assert!(div.text.is_empty());
+    }
+
+    #[test]
+    fn is_unknown_recognises_custom_and_replaced_elements() {
+        let cases = [
+            // known
+            ("div", false),
+            ("p", false),
+            ("h1", false),
+            ("img", false),
+            ("input", false),
+            // custom elements
+            ("sail-code-editor", true),
+            ("my-widget", true),
+            // replaced elements taffy doesn't model
+            ("iframe", true),
+            ("video", true),
+            ("svg", true),
+            ("slot", true),
+            ("template", true),
+            ("", false),
+        ];
+        for (tag, expected) in cases {
+            let e = Element { tag: tag.to_string(), ..Default::default() };
+            assert_eq!(e.is_unknown(), expected, "tag={tag:?}");
+        }
     }
 }
