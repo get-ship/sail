@@ -22,7 +22,7 @@ export default controller(() => {
       <a href="/sail/getting-started" aria-current={path() === '/sail/getting-started' ? 'page' : null}>Installation</a>
       <a href="/sail/why" aria-current={path() === '/sail/why' ? 'page' : null}>Why Sail</a>
       <a href="/sail/tutorial" aria-current={path().startsWith('/sail/tutorial') ? 'page' : null}>Tutorial</a>
-      <a href="/sail/showcase" aria-current={path() === '/sail/showcase' ? 'page' : null}>Showcase</a>
+      <a href="/showcase" aria-current={path() === '/showcase' ? 'page' : null}>Showcase</a>
 
       <label>Concepts</label>
       <a href="/sail/language/sail-file" aria-current={path() === '/sail/language/sail-file' ? 'page' : null}>Components</a>
