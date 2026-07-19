@@ -5994,3 +5994,379 @@ export const BLOCKS: BlockDoc[] = [
     "summary": "renders while an async query's promise is rejected"
   }
 ]
+export interface DirectiveDoc {
+  syntax: string
+  summary: string
+}
+
+export const DIRECTIVES: DirectiveDoc[] = [
+  {
+    "syntax": "on:<event>|<modifier>…={handler}",
+    "summary": "attach a DOM event handler; chain modifiers with | (full modifier table below)"
+  },
+  {
+    "syntax": "bind:value / bind:checked / bind:this",
+    "summary": "two-way binding sugar; the three targets are the whole surface (table below)"
+  },
+  {
+    "syntax": "use:<action> / use:<action>={param}",
+    "summary": "attach behavior bound to the element's lifecycle; built-ins live in the actions reference, a scope value works too"
+  },
+  {
+    "syntax": "prop:<name>={expr}",
+    "summary": "set a JS property on the element — for identity values that are not attributes"
+  },
+  {
+    "syntax": "attr:<name>={expr}",
+    "summary": "force attribute semantics for a dynamic value"
+  },
+  {
+    "syntax": "attr:{nameExpr}={expr}",
+    "summary": "dynamic attribute name — both the name and the value are expressions"
+  },
+  {
+    "syntax": "class:<name>={condition}",
+    "summary": "toggle one class while the condition holds"
+  },
+  {
+    "syntax": "sx=\"atom atom …\"",
+    "summary": "static styling atoms from the closed sx vocabulary; sx={expr} is a compile error"
+  },
+  {
+    "syntax": "motion:<trigger>={…}",
+    "summary": "the one animation directive — triggers, properties, and config in the motion reference"
+  },
+  {
+    "syntax": "(--name) inside sx values",
+    "summary": "read a CSS custom property: any sx atom accepts (--name) and lowers to var(--name); typed actions write them"
+  },
+  {
+    "syntax": "slot=\"name\" (use site)",
+    "summary": "assign this subtree to the component's named slot; unassigned children fill the default slot"
+  },
+  {
+    "syntax": "<slot name=\"…\">fallback</slot>",
+    "summary": "declare a fill region; children of the <slot> render when the use site provides nothing"
+  },
+  {
+    "syntax": "<slot reflect-empty=\"data-attr\">",
+    "summary": "mirror the slot's emptiness onto a static data attribute, live — slot elements only"
+  },
+  {
+    "syntax": "mutation=\"ship.X.Y\" (on <form>)",
+    "summary": "wire a form's submit to a typed mutation"
+  },
+  {
+    "syntax": "&#123; and &#125; in text",
+    "summary": "a { with no matching } stays literal text; entity-escape a brace to force a literal one — there is no {{ escape"
+  }
+]
+
+export interface ModifierDoc {
+  canonical: string
+  alias: string | null
+  arg: string | null
+  summary: string
+}
+
+export const EVENT_MODIFIERS: ModifierDoc[] = [
+  {
+    "canonical": "preventDefault",
+    "alias": "prevent",
+    "arg": null,
+    "summary": "call event.preventDefault() before the handler runs"
+  },
+  {
+    "canonical": "stopPropagation",
+    "alias": "stop",
+    "arg": null,
+    "summary": "call event.stopPropagation()"
+  },
+  {
+    "canonical": "stopImmediatePropagation",
+    "alias": null,
+    "arg": null,
+    "summary": "call event.stopImmediatePropagation()"
+  },
+  {
+    "canonical": "self",
+    "alias": null,
+    "arg": null,
+    "summary": "run only when the event's target is this element, not a descendant"
+  },
+  {
+    "canonical": "trusted",
+    "alias": null,
+    "arg": null,
+    "summary": "run only for user-generated events (event.isTrusted)"
+  },
+  {
+    "canonical": "key",
+    "alias": null,
+    "arg": "Name",
+    "summary": "run only when the pressed key matches, e.g. on:keydown|key:Enter"
+  },
+  {
+    "canonical": "debounce",
+    "alias": null,
+    "arg": "ms",
+    "summary": "wait for ms of quiet before running the handler"
+  },
+  {
+    "canonical": "throttle",
+    "alias": null,
+    "arg": "ms",
+    "summary": "run the handler at most once per ms"
+  }
+]
+
+export interface BindTargetDoc {
+  target: string
+  summary: string
+}
+
+export const BIND_TARGETS: BindTargetDoc[] = [
+  {
+    "target": "value",
+    "summary": "two-way binding to the element's value"
+  },
+  {
+    "target": "checked",
+    "summary": "two-way binding to a checkbox or radio checked state"
+  },
+  {
+    "target": "this",
+    "summary": "capture the element handle into a bare scope variable — write-once, not derivable"
+  }
+]
+
+export interface RetiredDoc {
+  syntax: string
+  instead: string
+}
+
+export const RETIRED_DIRECTIVES: RetiredDoc[] = [
+  {
+    "syntax": "style:<prop>",
+    "instead": "runtime geometry is owned by named, typed actions (use:rect, use:pin, use:virtualRow, …) — sx reads the variables they write via (--name)"
+  },
+  {
+    "syntax": "part=\"…\"",
+    "instead": "style with sx on the element itself"
+  },
+  {
+    "syntax": "transition: / in: / out:",
+    "instead": "motion:enter / motion:exit"
+  }
+]
+
+export interface MotionValueFormDoc {
+  form: string
+  summary: string
+}
+
+export const MOTION_VALUE_FORMS: MotionValueFormDoc[] = [
+  {
+    "form": "'quoted'",
+    "summary": "a literal: a preset name, an easing keyword, or a unit-bearing magnitude like '120px'"
+  },
+  {
+    "form": "bare number",
+    "summary": "milliseconds for time keys (duration, delay, stagger); a native magnitude for properties"
+  },
+  {
+    "form": "[x1, y1, x2, y2]",
+    "summary": "an inline cubic-bezier easing (x values in 0..1)"
+  },
+  {
+    "form": "unquoted expression",
+    "summary": "a reactive expression — how a signal drives motion; unit-bearing literals must be quoted"
+  },
+  {
+    "form": "{ from, to, preset, duration, delay, easing, iterations, direction }",
+    "summary": "per-channel config object; preset supplies defaults, explicit keys override it"
+  }
+]
+
+export interface ScopeGrammarDoc {
+  form: string
+  syntax: string
+  summary: string
+  example: string
+}
+
+export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
+  {
+    "form": "boolean prop",
+    "syntax": "open = false",
+    "summary": "a true/false literal default infers a boolean attribute, reflected onto the host",
+    "example": "<scope>\n  props: { open = false }\n</scope>\n<p>{open}</p>"
+  },
+  {
+    "form": "number prop",
+    "syntax": "count = 0",
+    "summary": "a numeric literal default infers a number prop",
+    "example": "<scope>\n  props: { count = 0 }\n</scope>\n<p>{count}</p>"
+  },
+  {
+    "form": "string prop",
+    "syntax": "label = 'Hi'",
+    "summary": "a quoted literal default infers a string prop",
+    "example": "<scope>\n  props: { label = 'Hi' }\n</scope>\n<p>{label}</p>"
+  },
+  {
+    "form": "annotated prop",
+    "syntax": "title: string",
+    "summary": "an annotation may stand alone (string / number / boolean); annotation and default are each optional, but a field needs at least one",
+    "example": "<scope>\n  props: { title: string }\n</scope>\n<p>{title}</p>"
+  },
+  {
+    "form": "union prop",
+    "syntax": "variant: 'solid' | 'soft' = 'solid'",
+    "summary": "a union of string literals, reflected as an attribute; the default is required and must be a member — there is no first-member magic",
+    "example": "<scope>\n  props: { variant: 'solid' | 'soft' = 'solid' }\n</scope>\n<p>{variant}</p>"
+  },
+  {
+    "form": "framework channel",
+    "syntax": "tone = 'primary'  ·  size = 'md'",
+    "summary": "a bare tone/size default types as the full framework channel union (tone: default·primary·info·success·warning·destructive·accent·muted; size: xs·sm·md·lg), reflected",
+    "example": "<scope>\n  props: { tone = 'primary', size = 'md' }\n</scope>\n<p>{tone}</p>"
+  },
+  {
+    "form": "identity prop",
+    "syntax": "rows: Row[] = []",
+    "summary": "any other TS type is an identity prop — a plain reactive JS property (set with prop:), never an attribute, no coercion; the type is carried verbatim into the .d.ts",
+    "example": "<scope>\n  type Row = { id: string }\n  props: { rows: Row[] = [] }\n</scope>\n<p>{rows.length}</p>"
+  },
+  {
+    "form": "as-cast default",
+    "syntax": "items = [] as string[]",
+    "summary": "a literal default with an `as` cast — the cast supplies the type when no annotation was written",
+    "example": "<scope>\n  props: { items = [] as string[] }\n</scope>\n<p>{items.length}</p>"
+  },
+  {
+    "form": "kebab-case name",
+    "syntax": "'line-numbers' = false",
+    "summary": "quote a prop name to declare a hyphenated attribute",
+    "example": "<scope>\n  props: { 'line-numbers' = false }\n</scope>\n<p>ok</p>"
+  },
+  {
+    "form": "documented prop",
+    "syntax": "/** Shown when the list is empty. */ emptyText = ''",
+    "summary": "a JSDoc block immediately before a field becomes the prop's description — it feeds the CEM and the generated docs tables",
+    "example": "<scope>\n  props: {\n    /** Shown when the list is empty. */\n    emptyText = ''\n  }\n</scope>\n<p>{emptyText}</p>"
+  },
+  {
+    "form": "type alias",
+    "syntax": "type Row = { id: string }  ·  export type …",
+    "summary": "TypeScript type aliases, threaded verbatim into the compiled module; `export type` makes the alias importable from the emitted .d.ts",
+    "example": "<scope>\n  export type Item = { id: string, label: string }\n  props: { selected: Item | null = null }\n</scope>\n<p>ok</p>"
+  },
+  {
+    "form": "variants axis",
+    "syntax": "variants: { size: { sm: 'px-2', lg: 'px-4' } }",
+    "summary": "a CVA-shaped styling table; each axis becomes a reflected union prop whose first key is the default, and each value is sx lowered to attribute-keyed CSS",
+    "example": "<scope>\n  variants: {\n    density: { cozy: 'p-2', compact: 'p-1' }\n  }\n</scope>\n<p>ok</p>"
+  },
+  {
+    "form": "compound variant",
+    "syntax": "compound: [ { when: { variant: 'solid', size: 'lg' }, sx: '…' } ]",
+    "summary": "rows keyed on several axes at once; they contribute CSS only and never declare a prop",
+    "example": "<scope>\n  variants: {\n    variant: { solid: 'font-semibold', soft: 'font-normal' }\n    size: { sm: 'p-1', lg: 'p-4' }\n    compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'tracking-wide' } ]\n  }\n</scope>\n<p>ok</p>"
+  }
+]
+
+export interface ScopeRefusalDoc {
+  syntax: string
+  instead: string
+  example: string
+}
+
+export const SCOPE_REFUSALS: ScopeRefusalDoc[] = [
+  {
+    "syntax": "import …",
+    "instead": "inline the type — <scope> is types and literals only",
+    "example": "<scope>\n  import type { X } from './x'\n  props: { open = false }\n</scope>\n<p>ok</p>"
+  },
+  {
+    "syntax": "const / let / var",
+    "instead": "a literal default on a prop, or state in the <controller>",
+    "example": "<scope>\n  const n = 1\n  props: { open = false }\n</scope>\n<p>ok</p>"
+  }
+]
+
+export interface ConfigKeyDoc {
+  key: string
+  type: string
+  default: string
+  doc: string
+}
+
+export const CONFIG_KEYS: ConfigKeyDoc[] = [
+  {
+    "key": "preset",
+    "type": "\"strict\" | \"full\"",
+    "default": "no tier — capabilities opt in individually",
+    "doc": "select a capability tier above the floor in one word"
+  },
+  {
+    "key": "sx",
+    "type": "boolean",
+    "default": "off",
+    "doc": "capability override: allow the sx surface beyond the floor allowance"
+  },
+  {
+    "key": "variants",
+    "type": "boolean",
+    "default": "off",
+    "doc": "capability override: allow variants: authoring in <scope>"
+  },
+  {
+    "key": "raw_containers",
+    "type": "boolean",
+    "default": "off",
+    "doc": "capability override: allow raw container elements instead of the layout keywords"
+  },
+  {
+    "key": "stylesheets",
+    "type": "string[]",
+    "default": "none",
+    "doc": "the CSS files this package may ship; an undeclared stylesheet fails the floor check"
+  },
+  {
+    "key": "network",
+    "type": "string[] of origins",
+    "default": "absent = full refusal",
+    "doc": "fetch/WebSocket/EventSource allowlist; [] grants nothing explicitly; a wrong-typed value fails closed"
+  },
+  {
+    "key": "unconfined",
+    "type": "boolean",
+    "default": "confined",
+    "doc": "opt out of controller ambient-authority confinement entirely; a wrong-typed value stays confined"
+  }
+]
+
+export interface SxExtraFormDoc {
+  form: string
+  doc: string
+}
+
+export const SX_EXTRA_FORMS: SxExtraFormDoc[] = [
+  {
+    "form": "group",
+    "doc": "bare marker in an ancestor's sx; descendants react to that ancestor with group-<state>:"
+  },
+  {
+    "form": "group-<state>:",
+    "doc": "apply when the group-marked ancestor is in <state> — any state prefix, or a state-<value>"
+  },
+  {
+    "form": "state-<value>:",
+    "doc": "component-state prefix keyed on the reserved data-state attribute; lowers to [data-state~='<value>'], value is [a-z0-9-]+"
+  },
+  {
+    "form": "(--name)",
+    "doc": "read a CSS custom property as any atom's value — lowers to var(--name); typed actions write the property at runtime"
+  }
+]

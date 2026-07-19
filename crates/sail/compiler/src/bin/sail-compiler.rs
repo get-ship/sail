@@ -456,9 +456,74 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(&serde_json::to_string_pretty(&blocks)?);
     sf.push_str("\n");
 
+    // DIRECTIVES — every attribute-position directive, straight from
+    // directive_manifest::DIRECTIVES.
+    sf.push_str("export interface DirectiveDoc {\n  syntax: string\n  summary: string\n}\n\n");
+    sf.push_str("export const DIRECTIVES: DirectiveDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&sail_compiler::directive_manifest::DIRECTIVES)?);
+    sf.push_str("\n\n");
+
+    sf.push_str("export interface ModifierDoc {\n  canonical: string\n  alias: string | null\n  arg: string | null\n  summary: string\n}\n\n");
+    sf.push_str("export const EVENT_MODIFIERS: ModifierDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&sail_compiler::directive_manifest::EVENT_MODIFIERS)?);
+    sf.push_str("\n\n");
+
+    sf.push_str("export interface BindTargetDoc {\n  target: string\n  summary: string\n}\n\n");
+    sf.push_str("export const BIND_TARGETS: BindTargetDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&sail_compiler::directive_manifest::BIND_TARGETS)?);
+    sf.push_str("\n\n");
+
+    sf.push_str("export interface RetiredDoc {\n  syntax: string\n  instead: string\n}\n\n");
+    sf.push_str("export const RETIRED_DIRECTIVES: RetiredDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&sail_compiler::directive_manifest::RETIRED_DIRECTIVES)?);
+    sf.push_str("\n\n");
+
+    sf.push_str("export interface MotionValueFormDoc {\n  form: string\n  summary: string\n}\n\n");
+    sf.push_str("export const MOTION_VALUE_FORMS: MotionValueFormDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&sail_compiler::directive_manifest::MOTION_VALUE_FORMS)?);
+    sf.push_str("\n\n");
+
+    // SCOPE GRAMMAR — every <scope> construct + refusal, straight from
+    // scope_manifest (each row's `example` is compiled by that module's tests).
+    sf.push_str("export interface ScopeGrammarDoc {\n  form: string\n  syntax: string\n  summary: string\n  example: string\n}\n\n");
+    sf.push_str("export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&sail_compiler::scope_manifest::SCOPE_GRAMMAR)?);
+    sf.push_str("\n\n");
+
+    sf.push_str("export interface ScopeRefusalDoc {\n  syntax: string\n  instead: string\n  example: string\n}\n\n");
+    sf.push_str("export const SCOPE_REFUSALS: ScopeRefusalDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&sail_compiler::scope_manifest::SCOPE_REFUSALS)?);
+    sf.push_str("\n\n");
+
+    // CONFIG — every sail.config.json key, straight from
+    // sail_lint::config::CONFIG_KEY_DOCS (kept in lockstep with
+    // RECOGNIZED_KEYS by that module's own test).
+    let config_keys: Vec<serde_json::Value> = sail_lint::config::CONFIG_KEY_DOCS
+        .iter()
+        .map(|(key, ty, default, doc)| {
+            serde_json::json!({ "key": key, "type": ty, "default": default, "doc": doc })
+        })
+        .collect();
+    sf.push_str("export interface ConfigKeyDoc {\n  key: string\n  type: string\n  default: string\n  doc: string\n}\n\n");
+    sf.push_str("export const CONFIG_KEYS: ConfigKeyDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&config_keys)?);
+    sf.push_str("\n\n");
+
+    // SX EXTRAS — the group/state-<value>/(--var) forms that are grammar
+    // rather than a closed name table, straight from
+    // sail_lint::rules::sx::SX_EXTRA_FORMS.
+    let sx_extras: Vec<serde_json::Value> = sail_lint::rules::sx::SX_EXTRA_FORMS
+        .iter()
+        .map(|(form, doc)| serde_json::json!({ "form": form, "doc": doc }))
+        .collect();
+    sf.push_str("export interface SxExtraFormDoc {\n  form: string\n  doc: string\n}\n\n");
+    sf.push_str("export const SX_EXTRA_FORMS: SxExtraFormDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&sx_extras)?);
+    sf.push_str("\n");
+
     std::fs::write(&surface_path, sf)?;
     println!(
-        "wrote {} (sx {} atoms, {} presets, {} elements, {} actions, {} ambient, {} blocks)",
+        "wrote {} (sx {} atoms, {} presets, {} elements, {} actions, {} ambient, {} blocks, {} directives, {} config keys)",
         surface_path.display(),
         atoms.len(),
         presets.len(),
@@ -466,6 +531,8 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
         actions.len(),
         controller_vocab.len(),
         blocks.len(),
+        sail_compiler::directive_manifest::DIRECTIVES.len(),
+        config_keys.len(),
     );
     Ok(())
 }

@@ -37,6 +37,55 @@ pub fn owning_dir(from: &Path) -> Option<PathBuf> {
 pub const RECOGNIZED_KEYS: [&str; 7] =
     ["preset", "sx", "variants", "raw_containers", "stylesheets", "network", "unconfined"];
 
+/// Documentation rows for [`RECOGNIZED_KEYS`] — key, value type, default
+/// when absent, and one line of semantics. The reference generator renders
+/// this table; the test below keeps it in lockstep with the recognized set,
+/// so a key added to the parser without a doc row fails the build.
+pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str)] = &[
+    (
+        "preset",
+        "\"strict\" | \"full\"",
+        "no tier — capabilities opt in individually",
+        "select a capability tier above the floor in one word",
+    ),
+    (
+        "sx",
+        "boolean",
+        "off",
+        "capability override: allow the sx surface beyond the floor allowance",
+    ),
+    (
+        "variants",
+        "boolean",
+        "off",
+        "capability override: allow variants: authoring in <scope>",
+    ),
+    (
+        "raw_containers",
+        "boolean",
+        "off",
+        "capability override: allow raw container elements instead of the layout keywords",
+    ),
+    (
+        "stylesheets",
+        "string[]",
+        "none",
+        "the CSS files this package may ship; an undeclared stylesheet fails the floor check",
+    ),
+    (
+        "network",
+        "string[] of origins",
+        "absent = full refusal",
+        "fetch/WebSocket/EventSource allowlist; [] grants nothing explicitly; a wrong-typed value fails closed",
+    ),
+    (
+        "unconfined",
+        "boolean",
+        "confined",
+        "opt out of controller ambient-authority confinement entirely; a wrong-typed value stays confined",
+    ),
+];
+
 /// The parsed contents of the nearest `sail.config.json` on the walk up. Holds
 /// the raw JSON; typed accessors read individual fields leniently.
 #[derive(Debug, Clone)]
@@ -183,4 +232,18 @@ pub fn resolve(dir: &Path) -> Option<(PathBuf, SailConfig)> {
         }
     }
     None
+}
+
+#[cfg(test)]
+mod config_doc_tests {
+    use super::*;
+
+    #[test]
+    fn every_recognized_key_has_a_doc_row_and_no_extras() {
+        let doc_keys: Vec<&str> = CONFIG_KEY_DOCS.iter().map(|(k, _, _, _)| *k).collect();
+        assert_eq!(
+            doc_keys, RECOGNIZED_KEYS,
+            "CONFIG_KEY_DOCS must document exactly RECOGNIZED_KEYS, in the same order"
+        );
+    }
 }

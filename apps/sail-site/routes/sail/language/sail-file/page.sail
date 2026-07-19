@@ -147,6 +147,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     component</a>.
   </p>
 
+  <p sx="mt-4 text-sm text-muted-foreground">
+    For the full surface: <a href="/sail/reference/scope">reference → Scope grammar</a>.
+  </p>
+
   <row sx="mt-8 pt-4 border-t border-t-border" justify="end" gap="2">
     <a variant="solid" tone="primary" href="/sail/language/state">State →</a>
   </row>

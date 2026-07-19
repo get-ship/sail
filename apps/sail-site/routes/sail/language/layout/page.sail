@@ -152,6 +152,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     time.
   </p>
 
+  <p sx="mt-4 text-sm text-muted-foreground">
+    For the full surface: <a href="/sail/reference/layout">reference → Layout keywords</a>.
+  </p>
+
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/language/styling">← Styling</a>
     <a variant="solid" tone="primary" href="/sail/language/motion">Motion →</a>

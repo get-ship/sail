@@ -56,6 +56,30 @@ pub fn condition_media(name: &str) -> Option<&'static str> {
     CONDITION_PREFIXES.iter().find(|(n, _)| *n == name).map(|(_, m)| *m)
 }
 
+/// The sx prefix/value forms that are grammar rather than named tables —
+/// the `group` ancestor marker, the `group-<state>:` and `state-<value>:`
+/// prefix families, and the `(--name)` custom-property value read. Table
+/// form (form → one-line semantics) so surface documentation renders the
+/// same shapes `is_prefix` / `state_data` / `Utility::is_var_ref` enforce.
+pub const SX_EXTRA_FORMS: &[(&str, &str)] = &[
+    (
+        "group",
+        "bare marker in an ancestor's sx; descendants react to that ancestor with group-<state>:",
+    ),
+    (
+        "group-<state>:",
+        "apply when the group-marked ancestor is in <state> — any state prefix, or a state-<value>",
+    ),
+    (
+        "state-<value>:",
+        "component-state prefix keyed on the reserved data-state attribute; lowers to [data-state~='<value>'], value is [a-z0-9-]+",
+    ),
+    (
+        "(--name)",
+        "read a CSS custom property as any atom's value — lowers to var(--name); typed actions write the property at runtime",
+    ),
+];
+
 /// A state prefix (`hover:`/`focus:`/…) → its CSS pseudo-class. `focus` maps to
 /// `:focus-visible` (the modern default — no ring on a mouse click). Shared by
 /// the lint (validation) and preprocess (lowering) so they can't diverge.

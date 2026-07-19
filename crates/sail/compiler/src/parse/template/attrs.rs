@@ -369,9 +369,19 @@ fn parse_modifier(raw: &str, span: Span, loc: &str) -> Result<Modifier, CompileE
         "debounce" => Modifier::Debounce(arg),
         "throttle" => Modifier::Throttle(arg),
         _ => {
-            return Err(CompileError::new(format!("unknown modifier \"{head}\""))
-                .with_span(span)
-                .with_category(loc.to_string()));
+            let known = crate::directive_manifest::EVENT_MODIFIERS
+                .iter()
+                .map(|m| match m.alias {
+                    Some(a) => format!("{} ({a})", m.canonical),
+                    None => m.canonical.to_string(),
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            return Err(CompileError::new(format!(
+                "unknown modifier \"{head}\" — the modifiers are: {known}"
+            ))
+            .with_span(span)
+            .with_category(loc.to_string()));
         }
     })
 }
@@ -403,9 +413,16 @@ fn compile_bind(
     match target {
         "value" => Ok(AttrInstr::BindValue { expr, span: value_span }),
         "checked" => Ok(AttrInstr::BindChecked { expr, span: value_span }),
-        other => Err(CompileError::new(format!("unknown bind:{other}"))
-            .with_span(value_span)
-            .with_category(loc.to_string())),
+        other => {
+            let known = crate::directive_manifest::BIND_TARGETS
+                .iter()
+                .map(|b| b.target)
+                .collect::<Vec<_>>()
+                .join(", ");
+            Err(CompileError::new(format!("unknown bind:{other} — the targets are: {known}"))
+                .with_span(value_span)
+                .with_category(loc.to_string()))
+        }
     }
 }
 
@@ -1447,5 +1464,60 @@ mod tests {
         let msg = err.message.as_str();
         assert!(msg.contains("data"), "must name the attribute, got: {msg}");
         assert!(err.span.is_some(), "must carry a span");
+    }
+
+    // ── directive-manifest parity: the docs tables ARE the parser's tables ──
+
+    #[test]
+    fn every_manifest_modifier_parses_and_no_others() {
+        let span = Span::new(0, 0);
+        for m in crate::directive_manifest::EVENT_MODIFIERS {
+            let raw = match m.arg {
+                Some(_) => format!("{}:x", m.canonical),
+                None => m.canonical.to_string(),
+            };
+            assert!(
+                parse_modifier(&raw, span, "t").is_ok(),
+                "manifest modifier `{}` is not accepted by the parser",
+                m.canonical
+            );
+            if let Some(alias) = m.alias {
+                assert!(
+                    parse_modifier(alias, span, "t").is_ok(),
+                    "manifest alias `{alias}` is not accepted by the parser"
+                );
+            }
+        }
+        let err = parse_modifier("bogus", span, "t").unwrap_err();
+        for m in crate::directive_manifest::EVENT_MODIFIERS {
+            assert!(
+                err.message.contains(m.canonical),
+                "unknown-modifier error must render the manifest list; missing `{}` in: {}",
+                m.canonical,
+                err.message
+            );
+        }
+    }
+
+    #[test]
+    fn every_manifest_bind_target_parses_and_no_others() {
+        let span = Span::new(0, 0);
+        for b in crate::directive_manifest::BIND_TARGETS {
+            let value = if b.target == "this" { "{el}" } else { "{sig}" };
+            assert!(
+                compile_bind(b.target, value, span, "t").is_ok(),
+                "manifest bind target `{}` is not accepted by the parser",
+                b.target
+            );
+        }
+        let err = compile_bind("bogus", "{sig}", span, "t").unwrap_err();
+        for b in crate::directive_manifest::BIND_TARGETS {
+            assert!(
+                err.message.contains(b.target),
+                "unknown-bind error must render the manifest list; missing `{}` in: {}",
+                b.target,
+                err.message
+            );
+        }
     }
 }

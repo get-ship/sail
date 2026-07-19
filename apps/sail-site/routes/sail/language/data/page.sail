@@ -113,6 +113,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     forms that validate, submit, and carry the same pending and failure
     states — is the <a href="/sail/guide/forms">Forms guide</a>.
   </p>
+  <p sx="mt-4 text-sm text-muted-foreground">
+    For the full surface: <a href="/sail/reference/runtime">reference → Runtime</a>.
+  </p>
 
   <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
     <a variant="default" href="/sail/language/actions">← Actions</a>

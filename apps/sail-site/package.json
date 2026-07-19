@@ -5,7 +5,7 @@
   "description": "The SAIL docs site — a deck app: docs, the 9-lesson tutorial, the component library, and an interactive component playground. SAIL's own red identity, light + dark.",
   "scripts": {
     "wasm": "(cd ../.. && bun run wasm) && cp ../../packages/sail/compiler-wasm/pkg/sail_compiler_bg.wasm public/sail_compiler_bg.wasm",
-    "gen": "(cd ../.. && cargo run -q -p sail-compiler -- prop-registry) && (cd ../.. && cargo run -q -p deck-cli -- build-assets) && (cp ../../packages/sail/compiler-wasm/pkg/sail_compiler_bg.wasm public/sail_compiler_bg.wasm 2>/dev/null || true) && node scripts/gen-tutorial.mjs && node scripts/gen-tut-preview-theme.mjs",
+    "gen": "(cd ../.. && cargo run -q -p sail-compiler -- prop-registry) && node scripts/gen-runtime-surface.mjs && (cd ../.. && cargo run -q -p deck-cli -- build-assets) && (cp ../../packages/sail/compiler-wasm/pkg/sail_compiler_bg.wasm public/sail_compiler_bg.wasm 2>/dev/null || true) && node scripts/gen-tutorial.mjs && node scripts/gen-tut-preview-theme.mjs",
     "dev": "bun run gen && (cd ../.. && cargo run -q -p deck-cli -- dev --project apps/sail-site --addr 127.0.0.1:7878)",
     "build": "bun run gen && (cd ../.. && cargo run -q -p deck-cli -- build --project apps/sail-site --base assets --bundle-framework)",
     "test": "playwright test"
