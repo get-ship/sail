@@ -615,3 +615,12 @@ pub fn reskin_selectors() -> Vec<(&'static str, &'static str)> {
 pub fn reskin_tags() -> Vec<&'static str> {
     RESKINS.iter().map(|r| r.tag).collect()
 }
+
+/// HTML void elements — tags that the parser must treat as self-closing
+/// open tags with no closing tag. This is the grammar's source of truth
+/// for void-tag parsing; it is emitted to the grammar generator so the
+/// tree-sitter grammar cannot drift from the compiler's element surface.
+pub const VOID_TAGS: &[&str] = &[
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
+    "source", "track", "wbr",
+];

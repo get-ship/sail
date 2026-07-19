@@ -23,6 +23,19 @@ pub struct DirectiveEntry {
     pub summary: &'static str,
 }
 
+/// Attribute-position directive prefixes that win the lexer race against
+/// plain attribute names. The grammar generates a dedicated rule for
+/// each prefix so `bind:value`, `on:click`, etc. parse as directives
+/// rather than as ordinary `attr_name` tokens. Keep this in sync with
+/// the `DIRECTIVES` entries whose syntax starts with `<prefix>:`.
+pub const DIRECTIVE_PREFIXES: &[&str] = &["bind", "on", "class", "attr", "prop", "use", "motion"];
+
+/// Element names that are directive-like in the grammar: the parser treats
+/// them as ordinary HTML elements, but the highlight query gives them a
+/// directive keyword scope so they stand out in editors. Must be kept in
+/// sync with the rows in `DIRECTIVES` that describe `<scope>` / `<slot>`.
+pub const DIRECTIVE_ELEMENTS: &[&str] = &["scope", "slot"];
+
 /// The directive registry, in the order the docs present them.
 pub const DIRECTIVES: &[DirectiveEntry] = &[
     DirectiveEntry {

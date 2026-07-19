@@ -49,6 +49,7 @@ pub mod runtime_ambient;
 pub mod block_manifest;
 pub mod directive_manifest;
 pub mod scope_manifest;
+pub mod grammar_vocabulary;
 pub(crate) mod scan;
 
 #[cfg(target_arch = "wasm32")]
@@ -58,7 +59,8 @@ pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, Span};
 pub use check::lint_overrides::{LintOverride, OverrideSeverity};
 pub use check::policy::Policy;
 pub use analysis::{analyze, completions_at, hover_at, Analysis, Hover, Symbol};
-pub use l1_manifest::{l1_by_kind, l1_count, l1_entries, l1_kind, L1Attribute, L1Entry, L1Kind};
+pub use l1_manifest::{l1_by_kind, l1_count, l1_entries, l1_kind, L1Attribute, L1Entry, L1Kind, VOID_TAGS};
+pub use grammar_vocabulary::{to_json as grammar_vocabulary_to_json, GrammarVocabulary};
 /// Identity stamp embedded in every emitted artifact (JS leading
 /// comment, CEM, schema, meta sidecar) so the daemon and runtime can
 /// detect drift between the compiled bundle and the running shell —

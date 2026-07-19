@@ -141,6 +141,15 @@ enum Command {
         #[arg(long)]
         ts_out: Option<PathBuf>,
     },
+    /// Emit the closed vocabulary used by the tree-sitter grammar generator
+    /// as JSON. The grammar package consumes this to regenerate `grammar.js`
+    /// and `queries/highlights.scm` so they cannot drift from the compiler's
+    /// own manifests. Default writes to stdout; pass `--out` for a file.
+    Vocabulary {
+        /// Output file. Default: stdout.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
     /// Synthesize a single `.sail` into a manifest-driven, tsc-checkable
     /// pair — a **synthetic controller** (`<stem>.synthetic.controller.ts`)
     /// and a **render** (`<stem>.render.ts`). Each name in `--manifest`
@@ -216,7 +225,26 @@ fn main() -> Result<()> {
             synthesize(input, manifest, out_dir)
         }
         Command::Duplicates { dir, out } => gen_duplicates_report(dir, out),
+        Command::Vocabulary { out } => gen_vocabulary(out),
     }
+}
+
+/// Emit the closed grammar vocabulary as JSON. Used by the tree-sitter
+/// grammar generator so `grammar.js` and `queries/highlights.scm` stay in
+/// lockstep with the compiler's own manifests.
+fn gen_vocabulary(out: Option<PathBuf>) -> Result<()> {
+    let value = sail_compiler::grammar_vocabulary_to_json();
+    let text = serde_json::to_string_pretty(&value)? + "\n";
+    match out {
+        Some(path) => {
+            std::fs::write(&path, text)?;
+            println!("wrote {}", path.display());
+        }
+        None => {
+            print!("{}", text);
+        }
+    }
+    Ok(())
 }
 
 /// Materialize the stdlib element skins to a static CSS file — the
