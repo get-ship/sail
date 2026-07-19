@@ -12,6 +12,7 @@ members = [
     "crates/sail/lint",
     "crates/sail/layout",
     "crates/sail/lsp",
+    "crates/sail/render",
     "crates/deck/deck-host",
     "crates/deck/deck-bundler",
     "crates/deck/deck-cli",
@@ -33,6 +34,7 @@ default-members = [
     "crates/sail/compiler-napi",
     "crates/sail/lint",
     "crates/sail/lsp",
+    "crates/sail/render",
     "crates/deck/deck-host",
     "crates/deck/deck-bundler",
     "crates/deck/deck-cli",
@@ -90,6 +92,7 @@ libc = "0.2"
 # Misc
 ulid = "1"
 regex = "1"
+takumi = { version = "=2.3.2", features = ["raster-backend", "woff2"] }
 
 # Type-bridging (RC pin shared by every consumer)
 specta = { version = "=2.0.0-rc.22", features = ["derive"] }

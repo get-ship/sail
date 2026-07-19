@@ -1,0 +1,32 @@
+[package]
+name = "sail-render"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+publish = false
+description = "Render a .sail page to a PNG screenshot without a browser. SPIKE."
+
+[lib]
+name = "sail_render"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sail-render"
+path = "src/main.rs"
+
+[dependencies]
+sail-compiler = { path = "../compiler" }
+sail-layout = { path = "../layout" }
+
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+takumi = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true
