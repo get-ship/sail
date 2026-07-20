@@ -50,6 +50,9 @@
 }
 
 @layer sail {
+@keyframes sail-spin { to { transform: rotate(360deg); } }
+:root, :host { --animate-spin: sail-spin 0.7s linear infinite; }
+@media (prefers-reduced-motion: reduce) { :root, :host { --animate-spin: sail-spin 1.5s linear infinite; } }
 *, *::before, *::after { box-sizing: border-box; }
 :where(html) { font-family: var(--font-body); color: var(--foreground); line-height: var(--leading-normal); }
 [tone='default']     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-contrast: var(--background);              --tone-bg: var(--hover-bg);            --tone-border: var(--border);                 --tone-ring: var(--ring);                     --tone-glow: var(--glow-default); }
@@ -132,6 +135,7 @@ iframe { max-width: 100%; border: 0; }
 :where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']), textarea, select):hover:not(:disabled):not([tone]):not([invalid]):not([aria-invalid='true']) { border-color: var(--border-strong); }
 :where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']), textarea, select)::placeholder { color: var(--muted-foreground); }
 :where(textarea) { min-height: calc(var(--control-h-md) * 2); resize: vertical; }
+:where(textarea[data-autosize]) { height: var(--autosize-h, auto); overflow-y: hidden; resize: none; }
 :where(select) { padding-right: var(--space-8); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%23888888' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right var(--space-3) center; background-size: 1rem; }
 :where(select) option { color: var(--foreground); background: var(--background); }
 :where(input[type='file']) { display: flex; align-items: center; padding: var(--space-1) var(--space-3); cursor: pointer; }

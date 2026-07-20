@@ -20,17 +20,16 @@
   .sail-spinner {
     display: inline-flex;
     vertical-align: middle;
-    --tone-fg: var(--muted-foreground);
+    /* Do not set --tone-fg on the bare host: skins load after contracts.css and
+       would clobber `[tone=…]` channel fills (same specificity). */
     --sz: var(--icon-size-md);
     --bw: var(--control-stroke);
   }
-  .sail-spinner[tone='primary']     { --tone-fg: var(--primary);     --tone-ring: var(--tone-primary-ring); }
-  .sail-spinner[tone='info']        { --tone-fg: var(--info);        --tone-ring: var(--tone-info-ring); }
-  .sail-spinner[tone='success']     { --tone-fg: var(--success);     --tone-ring: var(--tone-success-ring); }
-  .sail-spinner[tone='warning']     { --tone-fg: var(--warning);     --tone-ring: var(--tone-warning-ring); }
-  .sail-spinner[tone='destructive'] { --tone-fg: var(--destructive); --tone-ring: var(--tone-destructive-ring); }
-  .sail-spinner[tone='accent']      { --tone-fg: var(--accent);      --tone-ring: var(--tone-accent-ring); }
-  .sail-spinner[size='xs'] { --sz: 10px; --bw: 1.5px; }
+  .sail-spinner:not([tone]),
+  .sail-spinner[tone='default'] {
+    --tone-fg: var(--muted-foreground);
+  }
+  .sail-spinner[size='xs'] { --sz: var(--icon-size-2xs); --bw: 1.5px; }
   .sail-spinner[size='sm'] { --sz: var(--icon-size-sm); --bw: 1.5px; }
   .sail-spinner[size='lg'] { --sz: var(--icon-size-xl); --bw: 2.5px; }
   .sail-spinner[centered] {
@@ -43,11 +42,9 @@
     height: var(--sz);
     border: var(--bw) solid var(--tone-ring, var(--border-subtle));
     border-right-color: var(--tone-fg);
-    border-radius: 50%;
-    animation: sail-spin 0.7s linear infinite;
+    border-radius: var(--shape-pill);
+    animation: var(--animate-spin);
   }
-  @keyframes sail-spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) { .ring { animation-duration: 1.5s; } }
 </style>
 
 <span class="spin" role="status" aria-label="Loading">
