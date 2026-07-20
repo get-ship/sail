@@ -35,11 +35,11 @@ const __wireBoundary_b4 = (anchor) => bindIf({
 const __cleanups = [];
 const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("button");
-__e0.classList.add("sail-root");
 __e0.setAttribute("data-test", "root");
 __cleanups.push(bindAttr(__e0, "disabled", () => ($scope.disabled() || $scope.loading())));
 __cleanups.push(bindAttr(__e0, "aria-busy", () => ($scope.loading() ? 'true' : 'false')));
 __cleanups.push(bindAttr(__e0, "aria-label", () => ($scope.label())));
+__e0.classList.add("sail-root");
 const __e1 = __tpl0();
 const __t2 = __e1.firstChild;
 markHydrateText(__t2, "b3");
