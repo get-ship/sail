@@ -53,6 +53,8 @@
 @keyframes sail-spin { to { transform: rotate(360deg); } }
 :root, :host { --animate-spin: sail-spin 0.7s linear infinite; }
 @media (prefers-reduced-motion: reduce) { :root, :host { --animate-spin: sail-spin 1.5s linear infinite; } }
+@keyframes sail-ticker-scroll { to { transform: translateX(-50%); } }
+:root, :host { --animate-ticker: sail-ticker-scroll 24s linear infinite; }
 *, *::before, *::after { box-sizing: border-box; }
 :where(html) { font-family: var(--font-body); color: var(--foreground); line-height: var(--leading-normal); }
 [tone='default']     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-contrast: var(--background);              --tone-bg: var(--hover-bg);            --tone-border: var(--border);                 --tone-ring: var(--ring);                     --tone-glow: var(--glow-default); }

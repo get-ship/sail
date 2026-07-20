@@ -91,7 +91,9 @@ const AMBIENT_FX_CSS =
   // override so the media rule is in the shared place, not left in spinner.
   '@keyframes sail-spin { to { transform: rotate(360deg); } }\n' +
   ':root, :host { --animate-spin: sail-spin 0.7s linear infinite; }\n' +
-  '@media (prefers-reduced-motion: reduce) { :root, :host { --animate-spin: sail-spin 1.5s linear infinite; } }\n'
+  '@media (prefers-reduced-motion: reduce) { :root, :host { --animate-spin: sail-spin 1.5s linear infinite; } }\n' +
+  '@keyframes sail-ticker-scroll { to { transform: translateX(-50%); } }\n' +
+  ':root, :host { --animate-ticker: sail-ticker-scroll 24s linear infinite; }\n'
 
 // LANGUAGE-LAYER TYPOGRAPHY. Semantic content tags are styled from the type
 // scale automatically — the author writes `<h1>`/`<p>` plain and gets taste,
