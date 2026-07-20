@@ -17,11 +17,20 @@
 </scope>
 
 <style>
+  /* Line color is a LOCAL paint channel (--separator-line), not a write into
+     global --tone-*. Default reads --border-subtle; branded tones read the
+     global contract's --tone-border (filled by [tone=…] in contracts.css).
+     muted/default share the subtle border (baseline parity). */
   .sail-separator {
+    --separator-line: var(--border-subtle);
     border: 0;
     margin: 0;
     padding: 0;
     flex: 0 0 auto;
+  }
+  .sail-separator[tone='primary'],
+  .sail-separator[tone='destructive'] {
+    --separator-line: var(--tone-border);
   }
 
   .sail-separator:not([orientation='vertical']) {
@@ -29,25 +38,12 @@
     width: 100%;
     height: 1px;
     margin: var(--space-2) 0;
-    background: var(--border-subtle);
+    background: var(--separator-line);
   }
-  .sail-separator[tone='primary']:not([orientation='vertical']) {
-    background: var(--tone-border);
-  }
-  .sail-separator[tone='destructive']:not([orientation='vertical']) {
-    background: var(--tone-border);
-  }
-
   .sail-separator:not([orientation='vertical'])[variant='dashed'] {
     background: transparent;
-    border-top: 1px dashed var(--border-subtle);
+    border-top: 1px dashed var(--separator-line);
     height: 0;
-  }
-  .sail-separator[tone='primary']:not([orientation='vertical'])[variant='dashed'] {
-    border-top-color: var(--tone-border);
-  }
-  .sail-separator[tone='destructive']:not([orientation='vertical'])[variant='dashed'] {
-    border-top-color: var(--tone-border);
   }
 
   .sail-separator[orientation='vertical'] {
@@ -56,25 +52,12 @@
     width: 1px;
     height: 100%;
     margin: 0 var(--space-2);
-    background: var(--border-subtle);
+    background: var(--separator-line);
   }
-  .sail-separator[tone='primary'][orientation='vertical'] {
-    background: var(--tone-border);
-  }
-  .sail-separator[tone='destructive'][orientation='vertical'] {
-    background: var(--tone-border);
-  }
-
   .sail-separator[orientation='vertical'][variant='dashed'] {
     background: transparent;
-    border-left: 1px dashed var(--border-subtle);
+    border-left: 1px dashed var(--separator-line);
     width: 0;
-  }
-  .sail-separator[tone='primary'][orientation='vertical'][variant='dashed'] {
-    border-left-color: var(--tone-border);
-  }
-  .sail-separator[tone='destructive'][orientation='vertical'][variant='dashed'] {
-    border-left-color: var(--tone-border);
   }
 </style>
 
