@@ -194,7 +194,10 @@ fn stdlib_elements_can_self_nest() {
 }
 
 #[test]
-fn element_allows_controller_and_stamps_data_sail_el() {
+fn element_rejects_controller_block() {
+    // `<controller>` is the L2-component behavior channel. An element carries
+    // behavior as stacked `use:<behavior>` stamps on its static structure —
+    // an inline block is a targeted compile error, not a captured module.
     let src = r#"
 <scope>
   props: { selected = false }
@@ -209,39 +212,36 @@ export default function chip(node: Element) {
 </controller>
 <span>label</span>
 "#;
-    let el = compile_element(src, "chip").expect("controller-bearing element compiles");
+    let err = compile_element(src, "chip").unwrap_err();
     assert!(
-        el.controller_src.is_some(),
-        "controller body captured"
+        format!("{err:?}").contains(
+            "element mode: `<controller>` is not supported — attach behavior with `use:<behavior>`."
+        ),
+        "targeted rejection: {err:?}"
     );
-    assert!(
-        el.structure_html.contains("data-sail-el=\"chip\""),
-        "discovery stamp on root: {}",
-        el.structure_html
-    );
-    assert!(
-        !el.structure_html.contains("use:chip"),
-        "no use: stamp required: {}",
-        el.structure_html
-    );
-    assert_eq!(el.manifest["controller"], true);
-    assert_eq!(el.manifest["controllerDiscovery"], "data-sail-el");
 }
 
 #[test]
-fn stdlib_chip_compiles_with_controller_no_use_chip() {
+fn stdlib_chip_compiles_with_use_stamps() {
     let src = include_str!("../stdlib/chip.sail");
     let el = compile_element(src, "chip").expect("stdlib chip compiles");
-    assert!(el.controller_src.is_some(), "chip has controller");
+    for stamp in ["use:pressable", "use:pressed", "use:dismissible"] {
+        assert!(
+            el.structure_html.contains(stamp),
+            "{stamp} on chip root: {}",
+            el.structure_html
+        );
+    }
     assert!(
-        el.structure_html.contains("data-sail-el=\"chip\""),
-        "{}",
+        !el.structure_html.contains("data-sail"),
+        "no discovery stamp: {}",
         el.structure_html
     );
     assert!(
-        !el.structure_html.contains("use:chip"),
-        "use:chip removed from chip root: {}",
-        el.structure_html
+        el.manifest.get("controller").is_none()
+            && el.manifest.get("controllerDiscovery").is_none(),
+        "no controller keys in manifest: {}",
+        el.manifest
     );
     assert_eq!(el.root_class, "sail-chip");
 }

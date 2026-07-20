@@ -103,12 +103,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "chip",
-        param: "void",
-        summary: "Generic chip keyboard/ARIA/remove mix-in for non-chip hosts (L1 <chip> uses its element controller).",
-        auto_import: true,
-    },
-    ActionEntry {
         name: "chromeOffset",
         param: "void",
         summary: "Publish the attached element's measured height as --chrome-offset on :root (pairs with the h:fill scale).",
@@ -344,7 +338,7 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// this — the table is the single source, the constant is a derived
 /// view.
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
-    "alert", "anchor", "autosize", "avatar", "cellPad", "chip",
+    "alert", "anchor", "autosize", "avatar", "cellPad",
     "chromeOffset", "clickOutside", "codeBlock", "collapsible", "combobox",
     "contextMenu", "dismissible", "dropzone", "emptyState", "errorBoundary",
     "errorState", "eventSpan", "field", "gridTracks", "hoverCard",

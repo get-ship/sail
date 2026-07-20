@@ -139,7 +139,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "Make a `<textarea>` grow to fit its content. Reflows on input and once on mount. `use:autosize` — no parameter.",
-    "loc": "src/actions/autosize.ts:14"
+    "loc": "src/actions/autosize.ts:19"
   },
   {
     "subpath": ".",
@@ -388,14 +388,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
     "doc": "`use:cellPad={indent}` — a first-column cell's `padding-inline-start`.",
     "loc": "src/actions/virtual-row.ts:75"
-  },
-  {
-    "subpath": ".",
-    "name": "chip",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:chip` — the L1 `<chip>` element's behavior. The chip IS the interactive surface. Visuals (tone/variant/size/selected/disabled) are pure CSS; this action supplies the interaction: - role=button + tabindex; aria-pressed (from [selected]) and aria-disabled (from [disabled]) kept in sync, tabindex dropped to -1 while disabled; - keyboard: Enter/Space activate (host.click()); Backspace/Delete on a [removable] chip fire `sail-remove`; - the × button's click fires `sail-remove` (and stops the activate). Written once in the toolchain — no per-instance controller, compiles away.",
-    "loc": "src/actions/chip.ts:14"
   },
   {
     "subpath": ".",
@@ -791,6 +783,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
+    "name": "dismissible",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Emit `sail-remove` (bubbles, composed) from a removable host:",
+    "loc": "src/actions/dismissible.ts:23"
+  },
+  {
+    "subpath": ".",
     "name": "Disposer",
     "kind": "type",
     "signature": "export type Disposer = () => void",
@@ -1090,8 +1090,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "markHydrateAttr",
     "kind": "function",
     "signature": "(el: Element, name: string, key: string): void",
-    "doc": "Tag an element with a marker attribute (`on:event`, `style:name`, `prop:name`, `attr:name`, `bind:value`, `bind:checked`, `bind:this`, `attr-dynamic`, `mutation`). Server-DOM serialization sets the attribute on the element; browser DOM ignores.",
-    "loc": "src/hydrate-mark.ts:69"
+    "doc": "Tag an element with a hydration marker attribute. Names are the SSR wire format (`on:event`, `attr:name`, `prop:name`, `bind:value`, `bind:checked`, `bind:this`, `attr-dynamic`, `mutation`) — backend mechanism strings, not author directives. Server-DOM serialization sets the attribute on the element; browser DOM ignores.",
+    "loc": "src/hydrate-mark.ts:70"
   },
   {
     "subpath": ".",
@@ -1099,7 +1099,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, key: string): void",
     "doc": "Tag a control-flow boundary wrapper element. The synthetic render inserts `<sail-{if,for,match,await,while-loading,while-error}>` comment or element wrappers around each branch's children; this stamps the key onto the wrapper so the client's `collectElementMarkers` picks it up via the `key=\"bN\"` attribute (matches the walker contract).",
-    "loc": "src/hydrate-mark.ts:83"
+    "loc": "src/hydrate-mark.ts:84"
   },
   {
     "subpath": ".",
@@ -1380,6 +1380,22 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "export type PortSide = 'left' | 'right' | 'top' | 'bottom' | null | undefined",
     "doc": "`use:portEdge={side}` — anchor a fixed-size port element to the MIDPOINT of one of its parent's four edges.",
     "loc": "src/actions/port-edge.ts:44"
+  },
+  {
+    "subpath": ".",
+    "name": "pressable",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Make a non-button host behave like a button:",
+    "loc": "src/actions/pressable.ts:24"
+  },
+  {
+    "subpath": ".",
+    "name": "pressed",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Reflect the host's `[selected]` attribute to `aria-pressed` (`\"true\"` / `\"false\"`), kept in sync by a MutationObserver.",
+    "loc": "src/actions/pressed.ts:18"
   },
   {
     "subpath": ".",
@@ -1843,15 +1859,15 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "",
-    "loc": "src/actions/spotlight.ts:54"
+    "loc": "src/actions/spotlight.ts:50"
   },
   {
     "subpath": ".",
     "name": "SpringOptions",
-    "kind": "value",
-    "signature": "",
+    "kind": "interface",
+    "signature": "interface SpringOptions extends DurationSpringOptions, VelocityOptions { stiffness?: number; damping?: number; mass?: number; }",
     "doc": "",
-    "loc": ""
+    "loc": "(from motion-dom)"
   },
   {
     "subpath": ".",
@@ -1923,7 +1939,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "",
-    "loc": "src/actions/target-cursor.ts:104"
+    "loc": "src/actions/target-cursor.ts:89"
   },
   {
     "subpath": ".",
@@ -2650,8 +2666,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "markHydrateAttr",
     "kind": "function",
     "signature": "(el: Element, name: string, key: string): void",
-    "doc": "Tag an element with a marker attribute (`on:event`, `style:name`, `prop:name`, `attr:name`, `bind:value`, `bind:checked`, `bind:this`, `attr-dynamic`, `mutation`). Server-DOM serialization sets the attribute on the element; browser DOM ignores.",
-    "loc": "src/hydrate-mark.ts:69"
+    "doc": "Tag an element with a hydration marker attribute. Names are the SSR wire format (`on:event`, `attr:name`, `prop:name`, `bind:value`, `bind:checked`, `bind:this`, `attr-dynamic`, `mutation`) — backend mechanism strings, not author directives. Server-DOM serialization sets the attribute on the element; browser DOM ignores.",
+    "loc": "src/hydrate-mark.ts:70"
   },
   {
     "subpath": "./server",
@@ -2659,7 +2675,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, key: string): void",
     "doc": "Tag a control-flow boundary wrapper element. The synthetic render inserts `<sail-{if,for,match,await,while-loading,while-error}>` comment or element wrappers around each branch's children; this stamps the key onto the wrapper so the client's `collectElementMarkers` picks it up via the `key=\"bN\"` attribute (matches the walker contract).",
-    "loc": "src/hydrate-mark.ts:83"
+    "loc": "src/hydrate-mark.ts:84"
   },
   {
     "subpath": "./server",

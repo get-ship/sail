@@ -203,25 +203,27 @@ in our own code first.
 
 **One authoring TECHNOLOGY for every layer (element mode).** L1 elements are
 authored in `.sail` like everything else — scope/props, template, variants/sx
-skin, and an optional `<controller>` — compiled in **element mode**, which
-changes only the output targets: the template becomes a use-site lowering
-(like the layout keywords) instead of a registered module; the skin routes
-into the framework sheet keyed on the element + attributes; the props block
-feeds the manifest AND derives the bare-shorthand vocabulary; a controller
-(when present) is optional JS enhancement registered by tag and discovered
-via `data-sail-el` on the lowered root. Element mode enforces the seam test
-on the *template* as a compile error: element templates are static structure
-+ slots — no control flow, no dynamic attributes/text. A `<controller>` is
-allowed: behavior lives in script next to the element, not mixed in via a
-parallel `use:<tag>` stamp. Without JS the static HTML/CSS still ships
-(progressive enhancement). Stdlib element sources compile at toolchain build
-and bake in; an element moves between L1 and L2 by changing its compile mode,
-never by rewriting its source.
+skin — compiled in **element mode**, which changes only the output targets:
+the template becomes a use-site lowering (like the layout keywords) instead
+of a registered module; the skin routes into the framework sheet keyed on
+the element + attributes; the props block feeds the manifest AND derives the
+bare-shorthand vocabulary. JS enhancement rides **stacked `use:<behavior>`
+stamps** on the static structure, lowered to `runAction` at the use site by
+the normal action pipeline. Element mode enforces the seam test on the
+*template* as a compile error: element templates are static structure +
+slots — no control flow, no dynamic attributes/text. A `<controller>` block
+is rejected: that is the L2-component behavior channel. Without JS the
+static HTML/CSS still ships (progressive enhancement); with JS the stamped
+behaviors enhance ARIA/keyboard through the standard `use:` machinery.
+Stdlib element sources compile at toolchain build and bake in; an element
+moves between L1 and L2 by changing its compile mode, never by rewriting
+its source.
 
-**`use:` is a mix-in API**, not the L1 widget brain channel. Generic node
-behaviors (autosize, clickOutside, geometry bridges) stay on `use:`. Element-
-owned interaction (chip keyboard/ARIA/remove, …) belongs in the element's
-controller.
+**`use:` is a mix-in API** — and the L1 behavior channel. Generic node
+behaviors (autosize, clickOutside, geometry bridges) and element interaction
+alike ride `use:`; an L1 element stamps the reusable behaviors it needs on
+its static structure (chip: `use:pressable use:pressed use:dismissible`) and
+the use-site pipeline attaches them.
 
 **One authoring API, two implementations (the layer-invisibility rule).**
 The single biggest footgun in this architecture: L1 elements are lowered at
@@ -295,9 +297,9 @@ Action: (node, param) => { update?(param); destroy?() } | void
   a token (drag offset, virtualizer start, measured height) crosses JS by
   writing a **`--*` custom property** the skin/sx reads (`(--row-y)`,
   `left: var(--anchor-left)`, …).
-- **Is not:** the L1 element brain; not app state; not a styling/layout
-  channel. Element behavior belongs **on the element** (Part B controllers).
-  Dual names like `chip` + `use:chip` are the smell to retire.
+- **Is not:** app state; not a styling/layout channel. Element-owned
+  interaction is expressed as stacked, reusable behaviors the element stamps
+  — never a per-element private `use:<tag>` mix-in.
 - **Registry (`action_manifest`):** curated builtins/examples that ship with
   the runtime — same Action API and the same floor as author Actions, not a
   privilege tier.

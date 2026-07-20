@@ -3,13 +3,18 @@
   pill: the element IS the interactive surface (role=button + keyboard). A
   leading slot + the default label slot, an optional remove button (× shown
   under [removable]), and selected/disabled states. Bare tag lowers to
-  <span class="sail-chip" data-sail-el="chip">.
+  <span class="sail-chip" use:pressable use:pressed use:dismissible>.
 
-  Behavior lives in the element <controller> (not use:chip): role=button +
-  tabindex, aria-pressed (from [selected]) and aria-disabled (from [disabled])
-  sync, keyboard (Enter/Space activate, Backspace/Delete → sail-remove), and
-  the remove button's click → sail-remove. Without JS the static structure +
-  skin still ship; with JS the runtime attaches via data-sail-el="chip".
+  Behavior rides stacked use: behaviors, each a reusable mix-in the normal
+  use: pipeline lowers to runAction at the use site:
+    use:pressable   — role=button + tabindex, aria-disabled from [disabled],
+                      Enter/Space activate
+    use:pressed     — aria-pressed reflects [selected]
+    use:dismissible — under [removable]: Backspace/Delete and the remove
+                      button's click fire sail-remove
+  PE: without JS the static structure + skin still ship; with JS the
+  behaviors enhance ARIA/keyboard through the standard use: machinery — no
+  element-private runtime, no discovery walk.
 
   Faithful to the sail-chip twin. Two shadow-isms dissolve at L1: the host/.chip
   split collapses onto the single root span; the {#if removable} remove button
@@ -213,62 +218,7 @@
   }
 </style>
 
-<controller>
-// L1 chip brain — executable attach lives in
-// packages/sail/runtime/src/element-controllers/chip.ts (registry by tag).
-// This block marks the element as controller-bearing so compile_element
-// stamps data-sail-el="chip" and captures the source for PE discovery.
-export default function chipController(node: Element) {
-  const el = node as HTMLElement
-  if (!el.hasAttribute('role')) el.setAttribute('role', 'button')
-  const sync = (): void => {
-    const disabled = el.hasAttribute('disabled')
-    el.setAttribute('aria-pressed', el.hasAttribute('selected') ? 'true' : 'false')
-    if (disabled) {
-      el.setAttribute('aria-disabled', 'true')
-      el.setAttribute('tabindex', '-1')
-    } else {
-      el.removeAttribute('aria-disabled')
-      if (el.getAttribute('tabindex') == null || el.getAttribute('tabindex') === '-1') {
-        el.setAttribute('tabindex', '0')
-      }
-    }
-  }
-  sync()
-  const obs = new MutationObserver(sync)
-  obs.observe(el, { attributes: true, attributeFilter: ['selected', 'disabled'] })
-  const emitRemove = (): void => {
-    el.dispatchEvent(new CustomEvent('sail-remove', { detail: {}, bubbles: true, composed: true }))
-  }
-  const onKeydown = (e: KeyboardEvent): void => {
-    if (el.hasAttribute('disabled')) return
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      el.click()
-    } else if (el.hasAttribute('removable') && (e.key === 'Backspace' || e.key === 'Delete')) {
-      e.preventDefault()
-      emitRemove()
-    }
-  }
-  el.addEventListener('keydown', onKeydown)
-  const remove = el.querySelector('.remove') as HTMLElement | null
-  const onRemoveClick = (e: MouseEvent): void => {
-    e.stopPropagation()
-    if (el.hasAttribute('disabled')) return
-    emitRemove()
-  }
-  remove?.addEventListener('click', onRemoveClick)
-  return {
-    destroy: () => {
-      obs.disconnect()
-      el.removeEventListener('keydown', onKeydown)
-      remove?.removeEventListener('click', onRemoveClick)
-    },
-  }
-}
-</controller>
-
-<span>
+<span use:pressable use:pressed use:dismissible>
   <span class="leading"><slot name="leading"></slot></span>
   <slot></slot>
   <button class="remove" type="button" anatomy aria-label="Remove" tabindex="-1">

@@ -1,9 +1,9 @@
 // dismissible — removable host emits `sail-remove`. `use:dismissible`
 //
-// One of the three behaviors decomposed from the L1 `<chip>` element
-// controller (pressable / pressed / dismissible); stack them with `use:`
-// stamps instead of a monolithic controller. Extracted verbatim from
-// `element-controllers/chip.ts` — parity is the contract.
+// One of the three behaviors the L1 `<chip>` element stacks with `use:`
+// stamps (pressable / pressed / dismissible) instead of a monolithic
+// controller. Behavior parity with the retired chip controller is the
+// contract.
 
 import type { Action } from '../action'
 

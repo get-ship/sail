@@ -2,23 +2,21 @@
 //!
 //! One authoring technology per layer: an element source is a normal `.sail`
 //! file (scope for the contract, template for the structure, variants/sx for
-//! the skin, optional `<controller>` for JS enhancement), but the outputs
-//! differ from a component:
+//! the skin), but the outputs differ from a component:
 //!
 //!   - the template becomes a STRUCTURE snippet for use-site lowering (like
 //!     the layout keywords) — no registered module, no runtime identity;
 //!   - the skin routes to the FRAMEWORK SHEET, keyed on the element's root
 //!     class (`.sail-<name>`) instead of `:host`;
 //!   - the props block feeds the element MANIFEST (and, downstream, the
-//!     bare-shorthand vocabulary);
-//!   - an optional controller is captured as a behavior module the runtime
-//!     registers by tag and attaches on mount when JS is present (PE: without
-//!     JS the static HTML/CSS still ships).
+//!     bare-shorthand vocabulary).
 //!
 //! The mode enforces the seam test mechanically: element *templates* are
 //! static structure + slots. Control flow, dynamic attributes, or dynamic
-//! text mean the source is a COMPONENT — the error says so. A `<controller>`
-//! block is allowed: behavior lives in script, not in the template.
+//! text mean the source is a COMPONENT — the error says so. JS enhancement
+//! rides stacked `use:<behavior>` stamps on the static structure (lowered
+//! to `runAction` at the use site); an inline `<controller>` block is an
+//! L2-component facility and is REJECTED here (see `compile_element`).
 
 use crate::diagnostics::Span;
 use crate::ir::*;
@@ -51,8 +49,6 @@ fn skip_scope_and_style(source: &str) -> usize {
             "</scope>"
         } else if rest.starts_with("<style") {
             "</style>"
-        } else if rest.starts_with("<controller") {
-            "</controller>"
         } else {
             return i + ws;
         };
@@ -164,19 +160,12 @@ pub struct ElementOutput {
     pub skin_css: String,
     /// The element manifest (contract): tag, attributes, anatomy.
     pub manifest: Value,
-    /// Optional L1 controller source (body of an inline `<controller>` block),
-    /// already ambient-import-wrapped by `extract_controller_block`. When
-    /// present the structure root is stamped `data-sail-el="<tag>"` so the
-    /// runtime can discover and enhance matching nodes after mount. `None`
-    /// means pure structure/skin (no JS enhancement).
-    pub controller_src: Option<String>,
 }
 
 pub fn emit_element(
     program: &Program,
     source: &str,
     name: &str,
-    controller_src: Option<String>,
 ) -> Result<ElementOutput, CompileError> {
     // L1 element names are lowercase words, optionally hyphen-joined
     // (`badge`, `empty-state`, `date-picker`). The naming seam is the STDLIB
@@ -241,8 +230,7 @@ pub fn emit_element(
 
     let native = root.tag == name;
     let mut structure = String::new();
-    let stamp_el = controller_src.is_some().then_some(name);
-    serialize_static(root, &root_class, true, stamp_el, &mut structure)?;
+    serialize_static(root, &root_class, true, &mut structure)?;
 
     // Spliced elements key their skin on the stamped root class; native-kind
     // elements key on the tag itself — the tag IS the element.
@@ -264,21 +252,14 @@ pub fn emit_element(
         })
         .collect();
     let (classes, slots) = super::cem::collect_anatomy(&program.template);
-    let mut manifest = json!({
+    let manifest = json!({
         "kind": "element",
         "tag": name,
         "native": native,
         "rootClass": root_class,
         "attributes": attributes,
         "anatomy": { "dom": "light", "classes": classes, "slots": slots },
-        "controller": controller_src.is_some(),
     });
-    if controller_src.is_some() {
-        manifest.as_object_mut().unwrap().insert(
-            "controllerDiscovery".into(),
-            json!("data-sail-el"),
-        );
-    }
 
     Ok(ElementOutput {
         root_class,
@@ -286,7 +267,6 @@ pub fn emit_element(
         structure_html: structure,
         skin_css,
         manifest,
-        controller_src,
     })
 }
 
@@ -297,13 +277,11 @@ fn serialize_static(
     el: &ElementInstr,
     root_class: &str,
     is_root: bool,
-    data_sail_el: Option<&str>,
     out: &mut String,
 ) -> Result<(), CompileError> {
     out.push('<');
     out.push_str(&el.tag);
     let mut class_written = false;
-    let mut data_el_written = false;
     for a in &el.attrs {
         match a {
             AttrInstr::Static { name, value, .. } => {
@@ -311,9 +289,6 @@ fn serialize_static(
                 if is_root && name == "class" {
                     class_written = true;
                     value = format!("{root_class} {value}");
-                }
-                if is_root && name == "data-sail-el" {
-                    data_el_written = true;
                 }
                 out.push(' ');
                 out.push_str(name);
@@ -356,13 +331,6 @@ fn serialize_static(
     if is_root && !class_written {
         out.push_str(&format!(" class=\"{root_class}\""));
     }
-    if is_root {
-        if let Some(tag) = data_sail_el {
-            if !data_el_written {
-                out.push_str(&format!(" data-sail-el=\"{tag}\""));
-            }
-        }
-    }
     out.push('>');
     // Void elements (hr, br, img, input, …) take NO closing tag — emitting
     // `</hr>` is invalid HTML the template parser rejects when the lowered
@@ -379,7 +347,7 @@ fn serialize_static(
     }
     for child in &el.children {
         match child {
-            Instr::Element(c) => serialize_static(c, root_class, false, None, out)?,
+            Instr::Element(c) => serialize_static(c, root_class, false, out)?,
             Instr::StaticText { text, .. } => out.push_str(text),
             Instr::Comment { .. } => {}
             _ => {
