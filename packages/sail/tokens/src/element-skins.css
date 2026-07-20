@@ -119,23 +119,23 @@ label { display: inline-block; }
   label {
     display: inline-block;
     font-family: var(--font-body);
-    font-weight: 600;
-    letter-spacing: 0;
+    font-weight: var(--label-weight);
+    letter-spacing: var(--tracking-normal);
     color: var(--foreground);
     cursor: pointer;
+    --label-fs: var(--text-base);
+    font-size: var(--label-fs);
   }
   label[hidden] { display: none; }
 
-  label:not([size]),
-  label[size='md'] { font-size: var(--text-base); }
   label[size='sm'],
-  label[size='lg'] { font-size: var(--text-sm); }
+  label[size='lg'] { --label-fs: var(--text-sm); }
 
   .req {
     display: none;
     color: var(--destructive);
     margin-left: var(--space-1);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
   }
   label[required] .req { display: inline; }
 
