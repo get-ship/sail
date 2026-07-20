@@ -8,6 +8,7 @@
 pub use deck_axum::{
     apps::serve_apps,
     into_axum, mode_from_ext, pages, router,
+    serve_framework_font,
     serve_meta,
     serve_deck_route,
     serve_sui_compiler_wasm, serve_sui_dom, serve_sui_icon, serve_sui_live_reload,

@@ -15,6 +15,7 @@ pub mod sail_source;
 pub use handlers::{
     serve_bundle_hmr,
     serve_deck_route,
+    serve_framework_font,
     serve_meta,
     serve_sui_compiler_wasm, serve_sui_dom, serve_sui_icon,
     serve_sui_error_overlay,
@@ -146,6 +147,7 @@ pub fn router() -> Router {
         .route("/_deck/lsp-diagnostics.js", get(serve_sui_lsp_diagnostics))
         .route("/_deck/route.js", get(serve_deck_route))
         .route("/_deck/icons/{file}", get(serve_sui_icon))
+        .route("/_deck/fonts/{file}", get(serve_framework_font))
         .route("/_deck/live-reload.js", get(serve_sui_live_reload))
         .route("/_deck/error-overlay.js", get(serve_sui_error_overlay))
         // (formerly `/\_deck/{file}` → `serve_sui_chunk`) — purged:

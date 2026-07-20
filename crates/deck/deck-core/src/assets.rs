@@ -566,6 +566,75 @@ pub fn serve_sui_icon(mode: DaemonMode, name: &str) -> DeckResponse {
     )
 }
 
+/// Framework woff2 files baked from `packages/sail/tokens/src/fonts/`.
+/// Keep in lockstep with `FONTS` in `packages/sail/tokens/src/fonts.ts` —
+/// the gen-tut-preview-theme rewrite and the drift lock both assume this
+/// basename set is the allowlist for `GET /_deck/fonts/{file}`.
+const FRAMEWORK_FONTS: &[(&str, &[u8])] = &[
+    (
+        "dm-sans-latin-wght-normal.woff2",
+        include_bytes!("../../../../packages/sail/tokens/src/fonts/dm-sans-latin-wght-normal.woff2"),
+    ),
+    (
+        "syne-latin-wght-normal.woff2",
+        include_bytes!("../../../../packages/sail/tokens/src/fonts/syne-latin-wght-normal.woff2"),
+    ),
+    (
+        "jetbrains-mono-latin-wght-normal.woff2",
+        include_bytes!(
+            "../../../../packages/sail/tokens/src/fonts/jetbrains-mono-latin-wght-normal.woff2"
+        ),
+    ),
+    (
+        "press-start-2p-latin-normal.woff2",
+        include_bytes!(
+            "../../../../packages/sail/tokens/src/fonts/press-start-2p-latin-normal.woff2"
+        ),
+    ),
+];
+
+/// `GET /_deck/fonts/{file}` — one framework woff2 from the token package.
+///
+/// The bundled path rewrites `url('./fonts/X.woff2')` to hashed assets via
+/// `ShipAssetCssPlugin`. Non-bundled consumers (tutorial preview CSS dumb-
+/// concatenated into a public sheet) rewrite to this stable route instead,
+/// so the app never re-hosts framework font bytes under `public/fonts`.
+///
+/// Allowlist-only: basename must end in `.woff2`, pass a simple shape check
+/// (no `..` / slashes), and match a row baked from the FONTS manifest. Unknown
+/// or traversal inputs 404.
+pub fn serve_framework_font(mode: DaemonMode, file: &str) -> DeckResponse {
+    if !is_safe_framework_font_name(file) {
+        return DeckResponse::not_found(format!("invalid framework font path: {file}"), mode);
+    }
+    match FRAMEWORK_FONTS.iter().find(|(name, _)| *name == file) {
+        Some((_, bytes)) => DeckResponse::font_asset(*bytes, mode),
+        None => DeckResponse::not_found(format!("framework font not found: {file}"), mode),
+    }
+}
+
+/// Basename allow shape for `/_deck/fonts/{file}`: single segment, `.woff2`
+/// suffix, kebab/alnum characters only. Rejects traversal and non-font names
+/// before the baked allowlist is consulted.
+fn is_safe_framework_font_name(file: &str) -> bool {
+    if file.is_empty()
+        || file.len() > 128
+        || !file.ends_with(".woff2")
+        || file.contains("..")
+        || file.contains('/')
+        || file.contains('\\')
+        || file.starts_with('.')
+    {
+        return false;
+    }
+    // Stem: ASCII lowercase / digit / hyphen only (matches FONTS basenames).
+    let stem = &file[..file.len() - ".woff2".len()];
+    !stem.is_empty()
+        && stem
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+}
+
 /// `GET /_deck/live-reload.js` — the one HMR client, shared by the route
 /// host and the shell. Served in every mode (it self-gates on the
 /// `deck-mode` meta tag); only subscribes when the daemon is in dev.
@@ -699,6 +768,70 @@ mod tests {
     fn icon_empty_name_rejected() {
         let resp = serve_sui_icon(DaemonMode::Development, "");
         assert_eq!(resp.status, 404);
+    }
+
+    #[test]
+    fn framework_font_known_file_returns_woff2() {
+        let resp = serve_framework_font(
+            DaemonMode::Development,
+            "dm-sans-latin-wght-normal.woff2",
+        );
+        assert_eq!(resp.status, 200);
+        assert_eq!(resp.content_type, "font/woff2");
+        assert_eq!(resp.cache_control, "no-cache");
+        // wOFF2 files start with the ASCII tag "wOF2".
+        assert!(
+            resp.body.starts_with(b"wOF2"),
+            "expected woff2 magic, got {} bytes",
+            resp.body.len()
+        );
+        assert!(!resp.body.is_empty());
+    }
+
+    #[test]
+    fn framework_font_production_is_immutable() {
+        let resp = serve_framework_font(
+            DaemonMode::Production,
+            "syne-latin-wght-normal.woff2",
+        );
+        assert_eq!(resp.status, 200);
+        assert_eq!(resp.content_type, "font/woff2");
+        assert_eq!(resp.cache_control, "public, immutable, max-age=31536000");
+        assert!(resp.etag.is_some(), "prod assets carry an ETag");
+    }
+
+    #[test]
+    fn framework_font_unknown_returns_404() {
+        let resp = serve_framework_font(DaemonMode::Development, "not-a-real-face.woff2");
+        assert_eq!(resp.status, 404);
+    }
+
+    #[test]
+    fn framework_font_path_traversal_rejected() {
+        for bad in [
+            "../etc/passwd",
+            "..%2Fetc%2Fpasswd.woff2",
+            "/etc/passwd.woff2",
+            "fonts/../../../etc/passwd.woff2",
+            ".hidden.woff2",
+            "nope.ttf",
+            "",
+        ] {
+            let resp = serve_framework_font(DaemonMode::Development, bad);
+            assert_eq!(resp.status, 404, "expected 404 for {bad:?}");
+        }
+    }
+
+    #[test]
+    fn framework_font_allowlist_matches_baked_set() {
+        // Every baked row must serve; keeps the const table honest if a
+        // basename is mistyped relative to the include_bytes! path.
+        for (name, bytes) in FRAMEWORK_FONTS {
+            let resp = serve_framework_font(DaemonMode::Development, name);
+            assert_eq!(resp.status, 200, "{name} must serve");
+            assert_eq!(resp.body.as_slice(), *bytes);
+        }
+        assert_eq!(FRAMEWORK_FONTS.len(), 4, "FONTS manifest currently has 4 faces");
     }
 
     // ── serve_scaffold ────────────────────────────────────────────────────────

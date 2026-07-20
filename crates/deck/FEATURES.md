@@ -69,6 +69,7 @@ Each handler logic lives in `deck-core` and returns a `DeckResponse`; the matchi
 | sail-dom bundle | `GET /_deck/dom.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_dom` | Deck's own baked DOM module. |
 | sdk-client bundle | `GET /_deck/sdk-client.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_sdk_client` | Deck's own baked SDK client. |
 | Per-icon SVG | `GET /_deck/icons/{name}.svg` | `crates/deck/deck-core/src/assets.rs::serve_sui_icon` | One lucide icon per request, alias-resolved server-side, from the embedded set. |
+| Framework font | `GET /_deck/fonts/{file}` | `crates/deck/deck-core/src/assets.rs::serve_framework_font` | One token-package woff2 per request, allowlist-only (FONTS basenames), no path traversal. Non-bundled consumers (e.g. tutorial preview CSS) rewrite relative `url('./fonts/…')` here instead of re-hosting under app `public/fonts`. |
 | Shared chunk | `GET /_deck/{file}` | `crates/deck/deck-core/src/assets.rs::serve_sui_chunk` | Content-addressed shared chunk from the multi-entry route build, served from `.deck/`. |
 | Scaffold shell | `GET /` and `GET /space/{id}` | `crates/deck/deck-core/src/assets.rs::serve_scaffold` | Serves an HTML scaffold (shell/space), rewriting asset hrefs and injecting validated globals. |
 | Scaffold asset | `GET /{shell,space}/_assets/{file}` | `crates/deck/deck-core/src/assets.rs::serve_scaffold_asset` | Serves a scaffold's hashed static asset with path-traversal rejection. |

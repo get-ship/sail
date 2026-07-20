@@ -61,9 +61,10 @@ pub use window_registry::{
 
 pub use assets::{
     baked_framework_stamps, parse_baked_stamp, resolve_route_js, serve_deck_route,
-    serve_public_asset, serve_scaffold, serve_scaffold_asset, serve_sui_compiler_wasm,
-    serve_sui_dom, serve_sui_error_overlay, serve_sui_icon, serve_sui_live_reload,
-    serve_sui_lsp_completions, serve_sui_lsp_diagnostics, serve_sui_runtime, serve_sui_sdk_client,
+    serve_framework_font, serve_public_asset, serve_scaffold, serve_scaffold_asset,
+    serve_sui_compiler_wasm, serve_sui_dom, serve_sui_error_overlay, serve_sui_icon,
+    serve_sui_live_reload, serve_sui_lsp_completions, serve_sui_lsp_diagnostics, serve_sui_runtime,
+    serve_sui_sdk_client,
 };
 pub use form_inject::inject_form_actions;
 pub use resolver::{resolve_project_root_with, Resolution};

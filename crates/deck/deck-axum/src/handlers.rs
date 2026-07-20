@@ -55,6 +55,16 @@ pub async fn serve_sui_icon(
     into_axum(deck_core::serve_sui_icon(mode_from_ext(mode), name))
 }
 
+/// `GET /_deck/fonts/{file}` — one framework woff2 (token-package SSOT).
+/// `{file}` is the full basename (e.g. `dm-sans-latin-wght-normal.woff2`);
+/// deck-core allowlists + serves the baked bytes.
+pub async fn serve_framework_font(
+    mode: Option<Extension<DaemonMode>>,
+    Path(file): Path<String>,
+) -> Response {
+    into_axum(deck_core::serve_framework_font(mode_from_ext(mode), &file))
+}
+
 pub async fn serve_sui_live_reload(mode: Option<Extension<DaemonMode>>) -> Response {
     into_axum(deck_core::serve_sui_live_reload(mode_from_ext(mode)))
 }
