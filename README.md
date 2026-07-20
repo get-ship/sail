@@ -89,10 +89,31 @@ distribution item, not yet done. Nothing else in this repo is affected:
 `cargo build` / `cargo test` (default members) work from a clean clone with
 no sibling checkout.
 
-Run the SAIL site:
+### Cold worktree → live sail-site
+
+No borrowed `.deck/`, no pre-baked `public/*.wasm`. From a clean checkout:
 
 ```sh
-cd apps/sail-site && bun run dev          # deck dev server on 127.0.0.1:7878
+bun install
+cd apps/sail-site && bun run gen         # wasm + framework bake + tutorial assets
+# default binds 127.0.0.1:7890 (override with SAIL_SITE_ADDR=127.0.0.1:7892)
+bun run dev
+```
+
+`gen` is the honest one-command bake: wasm-pack → prop-registry → grammar →
+runtime surface → `deck build-assets` → tutorial data → tut-preview-theme
+(font URLs rewritten to `/_deck/fonts/…`). `dev` re-runs `gen` then starts
+`deck dev`. Playwright uses port **7891** and only reuses a server when
+`SAIL_SITE_REUSE_SERVER=1`.
+
+Do **not** invent `public/fonts` — framework faces are served at
+`GET /_deck/fonts/{file}`. Do **not** commit bake outputs under `.deck/` or
+`public/sail_compiler_bg.wasm` / `public/tut-preview-theme.css`.
+
+Run the SAIL site (after gen, or via `bun run dev` which gens first):
+
+```sh
+cd apps/sail-site && bun run dev          # deck dev on SAIL_SITE_ADDR (default :7890)
 ```
 
 ## Test

@@ -79,7 +79,7 @@ fn split_spec(spec: &str) -> (String, String) {
 }
 
 /// Find a package's root directory by name, starting from `start`.
-fn resolve_package_root(start: &Path, name: &str) -> Option<PathBuf> {
+pub fn resolve_package_root(start: &Path, name: &str) -> Option<PathBuf> {
     // 1. node_modules ancestor walk.
     let mut cur = Some(start);
     while let Some(dir) = cur {

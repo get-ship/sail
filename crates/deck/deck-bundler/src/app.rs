@@ -602,6 +602,128 @@ fn walk_deck_frameworks(
     }
     Ok(())
 }
+/// Stage framework co-assets (today: `sail_compiler_bg.wasm`) into `out_dir`
+/// root so `/sail_compiler_bg.wasm` is served.
+///
+/// Runs on EVERY app build — not only `--bundle-framework`. deck dev keeps
+/// framework JS external (served from the daemon bake at `/_deck/*`) but the
+/// wasm binary is still a public root asset. Historically only
+/// `bundle_owned_framework` copied it, so bare `deck dev` after a cold wipe
+/// returned HTTP 200 on `/` while `/sail_compiler_bg.wasm` 404'd.
+///
+/// Loud when the package is installed but unbuilt; silent skip when the
+/// dep isn't present (consumer apps that don't ship the in-browser compiler).
+fn stage_framework_co_assets(repo_root: &Path, project: &Path, out_dir: &Path) -> Result<()> {
+    // Prefer the project graph: monorepo workspace always contains
+    // `@ship/sail-compiler-wasm`, but only apps that depend on it need the
+    // `.wasm` co-asset. Fail loud for those; skip for everyone else.
+    let project_deps = project_runtime_dep_names(project);
+    for s in crate::targets::FRAMEWORK_SINGLETONS {
+        if s.co_assets.is_empty() {
+            continue;
+        }
+        let pkg_name = package_name_of_spec(s.spec);
+        let project_needs = project_deps.iter().any(|d| d == pkg_name);
+
+        // Happy path: entry resolves from repo (workspace or node_modules).
+        if let Some(entry) = crate::node_resolve::resolve_entry(repo_root, s.spec) {
+            // If neither the project nor a successful prior public/ copy needs
+            // it, still stage when resolvable — cheap and keeps --bundle-framework
+            // consumers consistent. Missing co-asset next to a resolved entry is
+            // always a broken install.
+            let Some(entry_dir) = entry.parent() else {
+                continue;
+            };
+            for co in s.co_assets {
+                let src = entry_dir.join(co);
+                if !src.is_file() {
+                    if !project_needs {
+                        // Workspace member present but unbuilt, and this app
+                        // doesn't depend on it — skip rather than block.
+                        continue;
+                    }
+                    bail!(
+                        "app build: framework singleton `{}` resolved to {} but co-asset \
+                         `{co}` is missing at {} — run `bun run wasm` (builds \
+                         packages/sail/compiler-wasm/pkg) before `deck dev` / `deck build`",
+                        s.name,
+                        entry.display(),
+                        src.display()
+                    );
+                }
+                let dst = out_dir.join(co);
+                std::fs::copy(&src, &dst).with_context(|| {
+                    format!(
+                        "copy co-asset {} -> {} (framework singleton `{}`)",
+                        src.display(),
+                        dst.display(),
+                        s.name
+                    )
+                })?;
+            }
+            continue;
+        }
+
+        // Entry missing. Only fail when THIS project depends on the package —
+        // monorepo workspace membership alone must not block unrelated apps.
+        if !project_needs {
+            continue;
+        }
+        if let Some(pkg_root) = crate::node_resolve::resolve_package_root(repo_root, pkg_name) {
+            bail!(
+                "app build: `{}` is installed at {} but its entry/co-assets are missing \
+                 (need {}). Run `bun run wasm` from the repo root (or \
+                 `cd apps/sail-site && bun run gen`) before `deck dev` / `deck build`.",
+                s.spec,
+                pkg_root.display(),
+                s.co_assets.join(", ")
+            );
+        }
+        bail!(
+            "app build: project depends on `{}` but it is not installed and co-assets \
+             ({}) cannot be staged. Run `bun install` and `bun run wasm`.",
+            s.spec,
+            s.co_assets.join(", ")
+        );
+    }
+    Ok(())
+}
+
+fn package_name_of_spec(spec: &str) -> &str {
+    // `@scope/name/sub` → `@scope/name`; `pkg/sub` → `pkg`.
+    let parts: Vec<&str> = spec.split('/').collect();
+    let n = if spec.starts_with('@') { 2 } else { 1 };
+    if parts.len() <= n {
+        spec
+    } else {
+        // Can't return a temporary join; specs in FRAMEWORK_SINGLETONS never
+        // carry a subpath today. Keep the simple path.
+        spec
+    }
+}
+
+/// Runtime dependency names from `<project>/package.json` (dependencies +
+/// devDependencies + peerDependencies). Used to decide whether a missing
+/// framework co-asset is this app's problem.
+fn project_runtime_dep_names(project: &Path) -> Vec<String> {
+    let raw = match std::fs::read_to_string(project.join("package.json")) {
+        Ok(s) => s,
+        Err(_) => return Vec::new(),
+    };
+    let pkg: serde_json::Value = match serde_json::from_str(&raw) {
+        Ok(v) => v,
+        Err(_) => return Vec::new(),
+    };
+    let mut out = Vec::new();
+    for key in ["dependencies", "devDependencies", "peerDependencies"] {
+        if let Some(deps) = pkg.get(key).and_then(|d| d.as_object()) {
+            out.extend(deps.keys().cloned());
+        }
+    }
+    out
+}
+
+
 /// Build deck's OWN framework singletons from node-resolved source and write
 /// each onto its served `_deck/<file>` path under `out_dir` — the self-contained
 /// `--bundle-framework` path. Entries are resolved by node resolution from
@@ -970,6 +1092,14 @@ pub async fn bundle_app_with_base(
             }
         }
     }
+    // Framework co-assets (e.g. `sail_compiler_bg.wasm`) must land at the SPA
+    // root even when `bundle_framework` is false. deck dev serves the JS glue
+    // from the baked `/_deck/compiler-wasm.js` singleton, but the companion
+    // `.wasm` is requested at `/sail_compiler_bg.wasm` and is NOT embedded —
+    // without this stage a bare `deck dev` (no prior `public/` copy from gen)
+    // silently 404s the binary and the tutorial/playground die.
+    stage_framework_co_assets(repo_root, project, out_dir)?;
+
     // 8. Write the rendered index.html (the dev doesn't author it; the
     // template was rendered above in step 4). The script tag references
     // the entry chunk; CSS assets (if any) get a `<link rel="stylesheet">`
@@ -1281,6 +1411,82 @@ export default controller(() => ({ id: signal('demo') }))\n\
         // Behavior 5: public/ assets are copied to out/.
         assert!(out.join("favicon.ico").exists(), "public/ copied");
     }
+
+    /// Bare `deck dev` (`bundle_framework = false`) must still stage the
+    /// wasm-bindgen co-asset at the SPA root. Without it `/sail_compiler_bg.wasm`
+    /// 404s while `/` returns 200 — the cold-worktree silent-partial.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn bundle_app_stages_wasm_co_asset_without_bundle_framework() {
+        let root = tempfile::tempdir().unwrap();
+        let r = root.path();
+        write(
+            &r.join("package.json"),
+            r#"{"name":"wasm-app","private":true,"type":"module",
+                "dependencies":{"@ship/sail-compiler-wasm":"workspace:*"}}"#,
+        );
+        write(&r.join("routes/page.sail"), "<div>hi</div>\n");
+        write(
+            &r.join("node_modules/@ship/sail-compiler-wasm/package.json"),
+            r#"{ "name": "@ship/sail-compiler-wasm", "exports": {
+                ".": "./pkg/sail_compiler.js",
+                "./sail_compiler_bg.wasm": "./pkg/sail_compiler_bg.wasm" } }"#,
+        );
+        write(
+            &r.join("node_modules/@ship/sail-compiler-wasm/pkg/sail_compiler.js"),
+            "export default function init() {}\n",
+        );
+        std::fs::write(
+            r.join("node_modules/@ship/sail-compiler-wasm/pkg/sail_compiler_bg.wasm"),
+            b"\0asm-co-asset",
+        )
+        .unwrap();
+
+        let out = r.join("dist");
+        bundle_app(r, &[], r, &out, false, false)
+            .await
+            .expect("bundle_app without --bundle-framework");
+
+        let wasm = out.join("sail_compiler_bg.wasm");
+        assert!(
+            wasm.is_file(),
+            "co-asset must land at SPA root even when framework JS stays external"
+        );
+        assert_eq!(std::fs::read(&wasm).unwrap(), b"\0asm-co-asset");
+    }
+
+    /// Installed-but-unbuilt `@ship/sail-compiler-wasm` must fail the app build
+    /// with a loud fix command — never start a half-live site.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn bundle_app_fails_loud_when_wasm_pkg_unbuilt() {
+        let root = tempfile::tempdir().unwrap();
+        let r = root.path();
+        write(
+            &r.join("package.json"),
+            r#"{"name":"wasm-app","private":true,"type":"module",
+                "dependencies":{"@ship/sail-compiler-wasm":"workspace:*"}}"#,
+        );
+        write(&r.join("routes/page.sail"), "<div>hi</div>\n");
+        // Package root present, but no pkg/ entry or .wasm (cold wipe of
+        // wasm-pack output).
+        write(
+            &r.join("node_modules/@ship/sail-compiler-wasm/package.json"),
+            r#"{ "name": "@ship/sail-compiler-wasm", "exports": {
+                ".": "./pkg/sail_compiler.js",
+                "./sail_compiler_bg.wasm": "./pkg/sail_compiler_bg.wasm" } }"#,
+        );
+        let out = r.join("dist");
+        let result = bundle_app(r, &[], r, &out, false, false).await;
+        let err = match result {
+            Ok(_) => panic!("unbuilt wasm package must fail the build"),
+            Err(e) => e,
+        };
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("bun run wasm") || msg.contains("sail_compiler_bg.wasm"),
+            "error must name the fix / missing co-asset, got: {msg}"
+        );
+    }
+
 
     /// The dev doesn't write a main.ts. The entry is `routes.gen.ts`,
     /// which the bundler generates. A `.sail` file inside `routes/`
