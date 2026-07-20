@@ -79,6 +79,20 @@ const BASE_CSS =
   // gets stopped here — this is the floor, not a universal override.
   '@media (prefers-reduced-motion: reduce) { :where(*) { transition: none !important; animation: none; } }\n'
 
+const AMBIENT_FX_CSS =
+  // Ambient / platform loops (CSS-fx). Framework-owned infinite animations
+  // for L1 elements that need decorative motion (the spinner ring, status
+  // dot pulse, skeleton shimmer, progress barber-pole). These live in the
+  // shared contracts/styles SSOT (not per-<style> in stdlib .sail, not in
+  // motion/mini WAAPI) so the @keyframes are single-sourced and components
+  // reference via tokenised var. Tailwind-shaped `--animate-*` name for the
+  // shorthand value (consistent with neighbors in the fx catalog).
+  // Reduced-motion: 1.5s slow (spinner semantics), expressed here via var
+  // override so the media rule is in the shared place, not left in spinner.
+  '@keyframes sail-spin { to { transform: rotate(360deg); } }\n' +
+  ':root, :host { --animate-spin: sail-spin 0.7s linear infinite; }\n' +
+  '@media (prefers-reduced-motion: reduce) { :root, :host { --animate-spin: sail-spin 1.5s linear infinite; } }\n'
+
 // LANGUAGE-LAYER TYPOGRAPHY. Semantic content tags are styled from the type
 // scale automatically — the author writes `<h1>`/`<p>` plain and gets taste,
 // with no sx and no <style>. This is what makes the `strictest` policy livable:
@@ -698,6 +712,7 @@ const POPOVER_SKIN_CSS =
 // (adoptedStyleSheets isn't constructable under jsdom, so the effect itself
 // is browser-only).
 export const CONTROL_SKINS_CSS =
+  AMBIENT_FX_CSS +
   hostAttrs(TONES_CSS) +
   hostAttrs(SIZES_CSS) +
   CONTROL_CONTRACTS_CSS +
@@ -715,6 +730,7 @@ export const CONTROL_SKINS_CSS =
   DETAILS_SKIN_CSS
 
 export const LIGHT_CONTRACTS_CSS =
+  AMBIENT_FX_CSS +
   BOX_MODEL_CSS +
   // Root typography anchor for light-DOM pages: bare text inherits the body
   // family and ink from here. The type scale sizes <p>/<h1> but never declares
