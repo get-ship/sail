@@ -136,9 +136,12 @@ impl TemplateEmitter {
         // Model-A root: a component's first template element IS the styled root
         // (the host is a transparent pass-through). It claims the `sail-root`
         // class so root CSS (`.sail-root`, `:host(X)` → `.sail-root`) targets it.
+        // Model-A root: claim `sail-root` AFTER attrs so a static
+        // `class` setAttribute cannot wipe it (setAttribute replaces
+        // the whole class string). Template-clone merges in write_skeleton.
+        let claim_root = self.root_pending;
         if self.root_pending {
             self.root_pending = false;
-            w.line(&format!("{v}.classList.add(\"sail-root\");"));
         }
         // Bump svg_depth BEFORE emitting attrs so that the <svg> root's
         // own attrs (viewBox, preserveAspectRatio, etc.) get camelCase
@@ -148,6 +151,9 @@ impl TemplateEmitter {
         }
         for a in &el.attrs {
             self.emit_attr(w, a, &v, cleanups_var, &el.tag);
+        }
+        if claim_root {
+            w.line(&format!("{v}.classList.add(\"sail-root\");"));
         }
         self.emit_children(w, &el.children, &v, cleanups_var);
         if is_svg_root {

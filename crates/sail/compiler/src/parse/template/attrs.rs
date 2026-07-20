@@ -521,6 +521,15 @@ fn compile_prop(
             .with_span(value_span)
             .with_category(loc.to_string()));
     }
+    // Floor: style/class are not reachable via prop: either — same teaching as
+    // bare `style=` / `class=` and retired `style:`.
+    if name.eq_ignore_ascii_case("style") || name.eq_ignore_ascii_case("class") {
+        return Err(CompileError::new(format!(
+            "`prop:{name}` is refused — styling is sx (or a named `use:` action              that writes a custom property sx can read). Bare `{name}=` is also banned."
+        ))
+        .with_span(value_span)
+        .with_category(loc.to_string()));
+    }
     if !is_expr_value(value) {
         return Err(CompileError::new(format!("prop:{name} expects {{expr}}"))
             .with_span(value_span)
@@ -1248,6 +1257,16 @@ fn compile_dynamic_attr(
     value_span: Span,
     loc: &str,
 ) -> Result<AttrInstr, CompileError> {
+    // Floor: cannot smuggle style/class through attr: — one style system.
+    if !is_expr_value(raw_name)
+        && (raw_name.eq_ignore_ascii_case("style") || raw_name.eq_ignore_ascii_case("class"))
+    {
+        return Err(CompileError::new(format!(
+            "`attr:{raw_name}` is refused — styling is static `sx` (or a named              `use:` action writing a custom property). Bare `{raw_name}=` is also banned."
+        ))
+        .with_span(value_span)
+        .with_category(loc.to_string()));
+    }
     if !is_expr_value(value) {
         // `attr:foo="bar"` is the most common mistake — author reached
         // for `attr:` to bind a *static* value, when plain `foo="bar"`
@@ -1313,6 +1332,30 @@ mod tests {
         // Don't regress the happy path.
         compile_dynamic_attr("min", "{n()}", Span::new(0, 5), "[<sail-slider> attr:min]")
             .expect("expression-value attr: should compile");
+    }
+
+    #[test]
+    fn attr_style_is_refused() {
+        let err = compile_dynamic_attr("style", "{bg}", Span::new(0, 4), "[span attr:style]")
+            .unwrap_err();
+        assert!(
+            err.message.contains("refused") && err.message.contains("sx"),
+            "expected floor refuse, got: {}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn attr_class_is_refused() {
+        let err = compile_dynamic_attr("class", "{c}", Span::new(0, 3), "[span attr:class]")
+            .unwrap_err();
+        assert!(err.message.contains("refused"), "got: {}", err.message);
+    }
+
+    #[test]
+    fn prop_style_is_refused() {
+        let err = compile_prop("style", "{bg}", Span::new(0, 4), "[span prop:style]").unwrap_err();
+        assert!(err.message.contains("refused"), "got: {}", err.message);
     }
 
     // ── Fix 1: fail-loud on malformed `{…}` attribute bodies ─────────────
