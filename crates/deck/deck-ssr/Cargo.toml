@@ -16,17 +16,11 @@ doctest = false
 [dependencies]
 # The synthetic emitter — used as a pure function (no CLI shell-out).
 sail-compiler = { path = "../../sail/compiler" }
-# ship-js — the org's shared L0 deno_core/V8 isolate (the consistent JS execution
+# ship-js — the project's L0 deno_core/V8 isolate (the consistent JS execution
 # environment; home for configurable sandboxes / egress / allowed-expression
-# policy). Shared org INFRASTRUCTURE, not a ship-PRODUCT coupling. Local path dep
-# against the sibling ship checkout: kills the machine-specific `file://` URL AND
-# the rev-drift (builds against the current ship-js, not a pinned rev).
-# NOTE: a path dep doesn't resolve from a git WORKTREE at a different depth — the
-# worktree-robust + smell-free home is a LOCAL CARGO REGISTRY (the Verdaccio-for-
-# cargo equivalent: Kellnr / cargo-http-registry), published when ship-js
-# stabilizes. ship-js is a clean leaf (crates.io + deno_core only), so that
-# publish won't cascade. Tracked as the proper fix.
-ship-js = { path = "/home/madvib/dev/Ship/ship-exec/crates/ship-js", features = ["deno"] }
+# policy). Vendored under crates/vendor/ship-js and excluded from default-members
+# so the heavy V8 build remains opt-in.
+ship-js = { path = "../../vendor/ship-js", features = ["deno"] }
 # Deck's request/data contracts (DataPort) the host Dispatch maps onto.
 deck-core = { path = "../deck-core" }
 # The project's own bundler (Rolldown), so the measured bundle matches the

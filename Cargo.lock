@@ -4552,7 +4552,7 @@ dependencies = [
  "deno_core",
  "deno_error",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
  "tokio",
 ]
 
@@ -6305,6 +6305,14 @@ dependencies = [
 ]
 
 [[patch.unused]]
+name = "ship-js"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "ship-proto"
+version = "0.1.0"
+
+[[patch.unused]]
 name = "deck"
 version = "0.1.0"
 
@@ -6318,8 +6326,4 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "sui-compiler"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "ship-proto"
 version = "0.1.0"

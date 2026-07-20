@@ -17,7 +17,7 @@
 //   OVERFLOW-X     a box scrolls horizontally with overflow-x:visible
 //   LOW-CONTRAST   visible text below ~2.5:1 against its effective background
 //   ERR:…          an uncaught page error (compiler/runtime break)
-import { chromium } from '/home/madvib/dev/Ship/worktrees/sail/sail-sx/node_modules/.bun/playwright@1.61.0/node_modules/playwright/index.mjs'
+import { chromium } from 'playwright'
 import { readFileSync, writeFileSync } from 'node:fs'
 
 const BASE = process.env.SAIL_PROBE_BASE ?? 'http://127.0.0.1:7878'

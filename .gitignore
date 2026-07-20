@@ -77,3 +77,7 @@ skills-lock.json
 # bundle-cost.mjs scratch
 apps/sail-site/.bundle-cost/
 .archive/
+
+# Internal planning (not product docs)
+spike-notes/
+docs/ship-sail/

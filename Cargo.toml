@@ -1,7 +1,7 @@
 [workspace]
 # All carved Rust crates. deck-ssr is included so it is part of the workspace +
-# lockfile, but excluded from default-members below (it links V8 via ship-js and
-# is heavy; ship excludes ship-host for the same reason).
+# lockfile, but excluded from default-members below (it links V8 via vendored ship-js and
+# is heavy; excluded from default-members).
 members = [
     # Per-repo build-time identity (git sha/dirty/timestamp). A copy of Ship's
     # build-info under a distinct package name (sail-build-info) so there is no
@@ -21,11 +21,12 @@ members = [
     "crates/deck/deck",
     "crates/deck/deck-conformance",
     "crates/deck/deck-ssr",
+    "crates/vendor/ship-js",
     "packages/sail/grammar",
     "xtask-deck",
 ]
 # A bare `cargo build` (no -p) builds this subset, which EXCLUDES deck-ssr.
-# deck-ssr links V8 (via ship-js); `cargo test` of it fails to link as `-shared`
+# deck-ssr links V8 (via crates/vendor/ship-js); `cargo test` of it fails to link as `-shared`
 # (a known V8/deno quirk). `cargo build -p deck-ssr` builds the lib fine; it just
 # must be opt-in. `members` above stays complete so the crate is still part of
 # the workspace (path deps, `cargo build -p deck-ssr`, lockfile).
@@ -96,6 +97,10 @@ takumi = { version = "=2.3.2", features = ["raster-backend", "woff2"] }
 
 # Type-bridging (RC pin shared by every consumer)
 specta = { version = "=2.0.0-rc.22", features = ["derive"] }
+
+# deno_core / V8 isolate (used by ship-js; optional, heavy, off by default)
+deno_core = "0.403.0"
+deno_error = "0.7"
 
 # Workspace-wide lint posture. Member crates opt in via `[lints] workspace = true`.
 [workspace.lints.rust]

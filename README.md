@@ -60,7 +60,7 @@ the bun workspace / crates.io with no external sibling checkout required.
 | `apps/sail-site` | The SAIL site: docs, tutorial, component catalog + interactive playground. A deck app dogfooding the framework. |
 | `packages/deck/eval` | The SAIL authoring eval (`@ship/sail-eval`) — lane agents build a route from a spec; compile + lint + structural rubric grade the output. |
 | `tests/` | `integration` (vitest), `parity` (emit parity), `perf` (js-framework-benchmark baselines). |
-| `docs/` | `ARCHITECTURE.md` (the governing language/userland map), `LANG-GAPS.md` (the migration ledger), generated reports. |
+| `docs/` | `ARCHITECTURE.md` (the governing language/userland map). Product docs live in `apps/sail-site`. |
 | `scripts/`, `xtask-deck/` | Repo tooling: typecheck orchestration, config lints, lucide icon bake. |
 
 ## Build
@@ -79,15 +79,9 @@ bundles (`sail-runtime.js`, `sail-dom.js`, …) and fails with instructions when
 they haven't been baked. Baked output is gitignored, never committed.
 
 A bare `cargo build` excludes `deck-ssr` (see `default-members` in the root
-`Cargo.toml`). Honest caveat: this isn't just an opt-in feature flag —
-`deck-ssr`'s V8 isolate dependency (`ship-js`) is currently a Cargo path
-dependency pointed at a private sibling repo via a machine-specific absolute
-path, so `cargo build -p deck-ssr` will not build for anyone outside the
-author's machine today. Making `deck-ssr` buildable from a clean clone (a
-published/pinned `ship-js`, or an alternative SSR path) is a later
-distribution item, not yet done. Nothing else in this repo is affected:
-`cargo build` / `cargo test` (default members) work from a clean clone with
-no sibling checkout.
+`Cargo.toml`). `deck-ssr` pulls V8 via the vendored `crates/vendor/ship-js`
+leaf (opt-in: `cargo build -p deck-ssr`). Default members need no V8 and no
+sibling checkouts.
 
 ### Cold worktree → live sail-site
 

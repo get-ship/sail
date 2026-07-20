@@ -1,0 +1,24 @@
+[package]
+name = "ship-js"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license.workspace = true
+description = "L0 JS engine — deno_core/V8 isolate with host-dispatch seam. Vendored leaf for standalone Sail builds (was external path dep)."
+
+[features]
+default = []
+# deno_core / V8 runtime. Off by default so default-members pay no V8.
+deno = ["dep:deno_core", "dep:deno_error", "dep:tokio", "dep:anyhow"]
+
+[dependencies]
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+deno_core = { workspace = true, optional = true }
+deno_error = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true, features = ["rt", "sync", "macros", "time"] }
+anyhow = { workspace = true, optional = true }
+
+[lints]
+workspace = true
