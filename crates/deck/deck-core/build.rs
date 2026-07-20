@@ -40,7 +40,8 @@
 //! checkout, not the bootstrap race).
 
 use std::fs;
-use std::path::PathBuf;
+use std::io::Write;
+use std::path::{Path, PathBuf};
 
 /// Framework singletons that must be baked into the binary.
 /// Sourced from `.deck/framework/`, staged to `assets/` by this script.
@@ -101,6 +102,7 @@ fn main() {
         .expect("repo root (three levels above crates/deck/deck-core)")
         .to_path_buf();
     let framework_src = deck_config::deck_out_path(&repo_root).join("framework");
+    let framework_stamp = deck_config::deck_out_path(&repo_root).join("framework-stamp");
 
     fs::create_dir_all(&assets)
         .unwrap_or_else(|e| panic!("build.rs: mkdir assets: {e}"));
@@ -119,7 +121,7 @@ fn main() {
             let src = framework_src.join(name);
             let dst = assets.join(name);
             if src.exists() && !file_is_empty(&src) {
-                fs::copy(&src, &dst).unwrap_or_else(|e| {
+                copy_if_changed(&src, &dst).unwrap_or_else(|e| {
                     panic!("build.rs: failed to stage {name} from .deck/framework/: {e}")
                 });
             }
@@ -140,7 +142,7 @@ fn main() {
     for name in FRAMEWORK_BUNDLES {
         let dst = assets.join(name);
         if !dst.exists() || file_is_empty(&dst) {
-            fs::write(&dst, BOOTSTRAP_STUB)
+            write_atomic(&dst, BOOTSTRAP_STUB.as_bytes())
                 .unwrap_or_else(|e| panic!("build.rs: writing bootstrap stub for {name}: {e}"));
             stubbed.push(name);
         }
@@ -182,17 +184,30 @@ fn main() {
         );
     }
 
-    // ── rerun-if-changed: watch .deck/framework/ for the 4 bundles ───────────
+    // ── rerun-if-changed: watch the framework bake stamp ───────────────────────
     //
-    // When any of the 4 framework bundles in .deck/framework/ change,
-    // Cargo re-runs build.rs so the staged copies stay in sync.
-    for name in FRAMEWORK_BUNDLES {
-        let fw_path = framework_src.join(name);
-        println!("cargo:rerun-if-changed={}", fw_path.display());
-    }
-    // Also watch the staged copies so a manual edit to assets/ (or a stub being
-    // overwritten with real bytes) triggers a rebuild.
-    for rel in FRAMEWORK_BUNDLES.iter().chain(COMMITTED_ASSETS.iter()) {
+    // `deck build-assets` touches `.deck/framework-stamp` after it finishes
+    // baking and stamping the framework singletons. Watching that stamp (rather
+    // than the individual `.deck/framework/*.js` files) lets Cargo re-run this
+    // build script once per explicit bake, while tests can invoke
+    // `deck build-assets --no-stamp` to avoid re-triggering the script while
+    // downstream doctests are queued.
+    //
+    // The stamp is committed empty so it is a stable, present path on fresh
+    // checkouts; `build-assets` updates its mtime to trigger re-staging. Cargo
+    // treats a *missing* `rerun-if-changed` path as a stale fingerprint, which
+    // itself invalidates downstream crates mid-doctest, so we never rely on a
+    // missing-path watch.
+    //
+    // We intentionally do NOT watch `assets/<name>`: those files are WRITTEN by
+    // this build script. Watching outputs created a self-triggering rebuild loop
+    // (fs::copy touched mtime every run, so Cargo reran build.rs, which copied
+    // again). That loop was the other source of the E0463 invalidation.
+    // See claim c-2026-07-19T18-12-45-685Z-f499ce4b.
+    println!("cargo:rerun-if-changed={}", framework_stamp.display());
+    // Watch committed source assets (inputs we do not write) so a manual edit
+    // triggers a rebuild.
+    for rel in COMMITTED_ASSETS {
         println!("cargo:rerun-if-changed=assets/{rel}");
     }
 
@@ -211,4 +226,34 @@ fn main() {
 
 fn file_is_empty(p: &std::path::Path) -> bool {
     fs::metadata(p).map(|m| m.len() == 0).unwrap_or(true)
+}
+
+/// Copy `from` to `to`, but only if the bytes differ. Preserves `to`'s mtime
+/// when the source has not changed so Cargo does not re-run this build script
+/// in a loop.
+fn copy_if_changed(from: &Path, to: &Path) -> std::io::Result<()> {
+    let src = fs::read(from)?;
+    if let Ok(dst_meta) = fs::metadata(to) {
+        if dst_meta.len() == src.len() as u64 {
+            if let Ok(dst) = fs::read(to) {
+                if dst == src {
+                    return Ok(());
+                }
+            }
+        }
+    }
+    write_atomic(to, &src)
+}
+
+/// Write `contents` to `path` atomically via a same-directory temp file +
+/// `rename`. A reader sees the old bytes or the new bytes, never a truncated
+/// file.
+fn write_atomic(path: &Path, contents: &[u8]) -> std::io::Result<()> {
+    let tmp = path.with_extension("tmp");
+    {
+        let mut f = fs::File::create(&tmp)?;
+        f.write_all(contents)?;
+        f.flush()?;
+    }
+    fs::rename(&tmp, path)
 }

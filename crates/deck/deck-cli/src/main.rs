@@ -113,7 +113,14 @@ enum Command {
     /// `deck.bundles`; framework singletons are hardcoded in deck-bundler.
     /// Honesty guards verify every framework bundle is non-empty after the
     /// bake — a silently-failed target cannot ship empty bytes.
-    BuildAssets,
+    BuildAssets {
+        /// Skip writing the `.deck/framework-stamp` file. Used by tests that
+        /// invoke `deck build-assets` in a workspace where the stamp would
+        /// otherwise re-trigger `deck-core/build.rs` and invalidate downstream
+        /// crates while doctests are queued.
+        #[arg(long = "no-stamp")]
+        no_stamp: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -217,7 +224,7 @@ fn run() -> Result<()> {
             scaffold::run_pack(name)
         }
         Command::Emit { targets, out } => emit(targets, out),
-        Command::BuildAssets => build_assets(),
+        Command::BuildAssets { no_stamp } => build_assets(no_stamp),
         Command::Dev { project, addr } => dev(project, addr),
     }
 }
@@ -233,7 +240,7 @@ fn emit(targets: Vec<String>, out: PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn build_assets() -> Result<()> {
+fn build_assets(no_stamp: bool) -> Result<()> {
     let cwd = std::env::current_dir().context("cwd")?;
     let repo_root = find_repo_root(&cwd)?;
 
@@ -314,19 +321,35 @@ fn build_assets() -> Result<()> {
                 None => body,
             };
             let stamped = format!("{}{body}", deck_bundler::stamp::format_stamp_header(&stamp.hash));
-            std::fs::write(&path, stamped)
+            deck_bundler::atomic::write(&path, stamped)
                 .with_context(|| format!("writing stamped {}", path.display()))?;
             manifest.insert(t.out_file.clone(), serde_json::Value::String(stamp.hash.clone()));
         }
         if !manifest.is_empty() {
             let manifest_dir = layout.assets_dir_for(&fw_targets[0].name);
             let manifest_path = manifest_dir.join("manifest.json");
-            std::fs::write(
+            deck_bundler::atomic::write(
                 &manifest_path,
                 serde_json::to_string_pretty(&serde_json::Value::Object(manifest))?,
             )
             .with_context(|| format!("writing {}", manifest_path.display()))?;
             println!("  manifest: {}", manifest_path.display());
+        }
+
+        // Touch the framework bake stamp used by `deck-core/build.rs` to
+        // decide when to re-stage bundles into `assets/`. The content is
+        // irrelevant; only the mtime matters. Tests pass `--no-stamp` so they
+        // can run `deck build-assets` without re-triggering this build script
+        // while downstream doctests are queued.
+        if !no_stamp {
+            let stamp_path = deck_config::deck_out_path(&repo_root).join("framework-stamp");
+            deck_bundler::atomic::write(&stamp_path,
+                // Empty content keeps the committed stamp unmodified in git;
+                // Cargo's rerun-if-changed tracks mtime, not content.
+                b"",
+            )
+            .with_context(|| format!("writing {}", stamp_path.display()))?;
+            println!("  stamp: {}", stamp_path.display());
         }
     }
 
@@ -399,12 +422,12 @@ fn build_assets() -> Result<()> {
 ///   - stale AND regeneration is possible (a real Cargo workspace + `cargo`
 ///     on PATH, and we haven't already tried once this restart cycle): log
 ///     loud, run `build_assets()` in-process to re-stage `.deck/framework/`
-///     with a fresh stamp, then `cargo run -p deck-cli -- dev …` — cargo
-///     picks up the changed `.deck/framework/*.js` via `build.rs`'s
-///     `cargo:rerun-if-changed`, rebuilds `deck-core` (re-baking the fresh,
-///     now-stamped bundle) and `deck-cli`, and launches the new binary with
-///     the same args. This process then exits with the child's status — the
-///     restart IS the "then continue."
+///     with a fresh stamp and update `.deck/framework-stamp`, then
+///     `cargo run -p deck-cli -- dev …` — cargo picks up the changed stamp
+///     via `build.rs`'s `cargo:rerun-if-changed`, rebuilds `deck-core`
+///     (re-baking the fresh, now-stamped bundle) and `deck-cli`, and launches
+///     the new binary with the same args. This process then exits with the
+///     child's status — the restart IS the "then continue."
 ///   - stale AND regeneration is impossible (no Cargo workspace / no cargo /
 ///     already tried once and still mismatched): HARD FAIL, naming the exact
 ///     commands. Never serve a mismatched runtime silently.
@@ -470,7 +493,7 @@ fn ensure_framework_fresh(repo_root: &Path, project: &Path, addr: &str) -> Resul
         "deck dev: STALE framework bundle(s) detected — regenerating automatically:\n  {}",
         stale.join("\n  ")
     );
-    build_assets().context("deck dev: automatic build-assets (staleness regen) failed")?;
+    build_assets(false).context("deck dev: automatic build-assets (staleness regen) failed")?;
 
     eprintln!("deck dev: rebuilding + restarting `deck dev` with the fresh bake...");
     let status = std::process::Command::new("cargo")

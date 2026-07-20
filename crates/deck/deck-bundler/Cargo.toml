@@ -8,6 +8,11 @@ description = "Deck's in-process Rolldown bundler (#163/#167) — compiles + bun
 [lib]
 name = "deck_bundler"
 path = "src/lib.rs"
+# Work around the Cargo cdylib/rlib filename collision described in
+# crates/deck/deck/Cargo.toml. deck-bundler has no Rust doctests, so disabling
+# the doctest harness avoids the E0463/E0460 collision without losing coverage.
+# See claim c-2026-07-19T18-12-45-685Z-f499ce4b.
+doctest = false
 
 [dependencies]
 deck-config = { path = "../deck-config" }

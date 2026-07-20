@@ -14,6 +14,7 @@ pub mod templates;
 
 pub mod app;
 // (formerly `mod asset_graph;`) — purged with the runtime `.deck/asset-graph.json` read.
+pub mod atomic;
 pub mod catalog;
 pub mod cem;
 pub mod emit;

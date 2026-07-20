@@ -106,11 +106,12 @@ macro_rules! build_info {
 
 /// Emit the canonical `BUILD_*` env vars from a binary's `build.rs`.
 ///
-/// Idempotent. Re-runs when HEAD or the working tree changes (declared
-/// via `cargo:rerun-if-changed`).
+/// Idempotent. Intentionally does NOT declare `cargo:rerun-if-changed`, so the
+/// build script only re-runs when the calling crate's source changes. Git
+/// HEAD/worktree churn therefore cannot force a rebuild of every crate that
+/// depends on sail-compiler.
 pub fn emit_build_env() {
     use std::process::Command;
-    use std::time::{SystemTime, UNIX_EPOCH};
 
     let sha = Command::new("git")
         .args(["rev-parse", "--short=8", "HEAD"])
@@ -130,12 +131,28 @@ pub fn emit_build_env() {
         .map(|o| !o.stdout.is_empty())
         .unwrap_or(false);
 
-    // Best-effort RFC 3339 from epoch seconds. We avoid a chrono dep
-    // because this runs in build scripts where adding deps is costly.
-    let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| format_rfc3339_utc(d.as_secs()))
-        .unwrap_or_else(|_| "unknown".to_string());
+    // Deterministic timestamp. `SystemTime::now()` changed on every build-script
+    // run, so `cargo:rustc-env=BUILD_TIMESTAMP` differed between runs of the same
+    // cargo invocation. That changed sail-compiler's `DependencyInfo` fingerprint
+    // and forced a mid-invocation rebuild, which invalidated deck-core/deck-axum/
+    // deck while rustdoc was compiling the doctest harness (intermittent E0463).
+    // We use SOURCE_DATE_EPOCH (reproducible-builds standard) if present, else the
+    // committer date of HEAD, so the same checkout always emits the same value.
+    let timestamp = std::env::var("SOURCE_DATE_EPOCH")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .map(format_rfc3339_utc)
+        .or_else(|| {
+            Command::new("git")
+                .args(["log", "-1", "--format=%ct", "HEAD"])
+                .output()
+                .ok()
+                .filter(|o| o.status.success())
+                .and_then(|o| String::from_utf8(o.stdout).ok())
+                .and_then(|s| s.trim().parse::<u64>().ok())
+                .map(format_rfc3339_utc)
+        })
+        .unwrap_or_else(|| "unknown".to_string());
 
     let rustc = Command::new(std::env::var("RUSTC").unwrap_or_else(|_| "rustc".to_string()))
         .arg("--version")
@@ -154,13 +171,16 @@ pub fn emit_build_env() {
     println!("cargo:rustc-env=BUILD_TIMESTAMP={timestamp}");
     println!("cargo:rustc-env=BUILD_RUSTC_VERSION={rustc}");
     println!("cargo:rustc-env=BUILD_PROFILE={profile}");
-    // Re-run when HEAD moves. We deliberately do not rerun on every
-    // working-tree change — that would force every cargo build to
-    // re-link. Dirty flag goes stale until the next rebuild for any
-    // other reason; that's acceptable since dirty is only an advisory
-    // telemetry signal.
-    println!("cargo:rerun-if-changed=../../.git/HEAD");
-    println!("cargo:rerun-if-changed=../../.git/refs/heads");
+    // NOTE: we intentionally do NOT emit `cargo:rerun-if-changed` here.
+    // The old hardcoded `../../.git/HEAD` resolved incorrectly for callers
+    // outside crates/build-info and produced missing-path stale fingerprints;
+    // fixing it to the real gitdir still left worktrees vulnerable to HEAD
+    // mtime churn. Re-running on every build would force a full rebuild of
+    // every crate that depends on sail-compiler (including deck-core/deck-axum/
+    // deck), which races with rustdoc and produces intermittent E0463. Build
+    // info (sha/dirty/timestamp) is advisory telemetry; stale values are
+    // acceptable until the next source-driven rebuild. See claim
+    // c-2026-07-19T18-12-45-685Z-f499ce4b.
 }
 
 /// Format `secs` (UNIX epoch) as `YYYY-MM-DDTHH:MM:SSZ`. Pure stdlib —

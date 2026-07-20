@@ -8,6 +8,11 @@ description = "SAIL framework core — view resolution, compilation, SSR, asset 
 [lib]
 name = "deck_host"
 path = "src/lib.rs"
+# Work around the Cargo cdylib/rlib filename collision described in
+# crates/deck/deck/Cargo.toml. deck-host has no doctests, so disabling the
+# doctest harness avoids the E0463/E0460 collision without losing coverage.
+# See claim c-2026-07-19T18-12-45-685Z-f499ce4b.
+doctest = false
 
 [features]
 default = []

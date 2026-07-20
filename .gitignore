@@ -22,8 +22,13 @@ crates/deck/deck-core/assets/*.js
 crates/deck/deck-core/assets/sail-custom-elements.json
 
 # View bundles, framework bundles, code-split chunks — all bake into .deck/ at
-# build/runtime. Never tracked.
-.deck/
+# build/runtime. Never tracked. Use `.deck/*` (not `.deck/`) so the exception
+# below can re-include the committed empty stamp file; git cannot re-include a
+# file inside an ignored parent directory.
+.deck/*
+# The bake stamp is committed empty and touched by `deck build-assets`; it is
+# the single trigger for `deck-core/build.rs` to re-stage framework bundles.
+!.deck/framework-stamp
 
 # Generated sources
 **/src/generated.ts

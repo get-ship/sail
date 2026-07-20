@@ -7,7 +7,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Context, Result, anyhow, bail};
 use rolldown::{BundlerBuilder, BundlerOptions, InputItem, OutputFormat};
 use rolldown_common::{ManualCodeSplittingOptions, PreserveEntrySignatures};
 
@@ -41,7 +41,9 @@ pub async fn bundle_target(
     };
 
     let out_dir = layout.assets_dir_for(&target.name);
+    let stage_dir = crate::atomic::stage_dir_for(&out_dir, &target.name.replace('/', "_"));
     std::fs::create_dir_all(&out_dir)?;
+    std::fs::create_dir_all(&stage_dir)?;
     let entry_name = target.out_file.strip_suffix(".js").unwrap_or(&target.out_file);
 
     let options = BundlerOptions {
@@ -50,7 +52,7 @@ pub async fn bundle_target(
             import: entry.to_string_lossy().to_string(),
         }]),
         cwd: Some(layout.repo_root.clone()),
-        dir: Some(out_dir.to_string_lossy().to_string()),
+        dir: Some(stage_dir.to_string_lossy().to_string()),
         format: Some(OutputFormat::Esm),
         minify: Some(production.into()),
         // The target's DECLARED externals (e.g. `@ship/sail-compiler-wasm` for
@@ -128,6 +130,11 @@ pub async fn bundle_target(
         assert_no_unresolved_imports(&output, &target.name)?;
         extract_module_paths(&output)
     };
+
+    // Publish atomically from the staging dir to the live dir. A reader of
+    // .deck/framework/ never sees a partially-written bundle.
+    crate::atomic::publish_dir(&stage_dir, &out_dir)
+        .with_context(|| format!("publish bundle for {}", target.name))?;
 
     // Post-bundle tag-collision check (#308). Walks every emitted
     // chunk and errors on a tag defined by more than one file. Runs

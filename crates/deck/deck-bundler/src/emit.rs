@@ -62,7 +62,7 @@ fn copy_with_closure(
     if let Some(parent) = dst.parent() {
         std::fs::create_dir_all(parent).ok();
     }
-    std::fs::write(&dst, &body).with_context(|| format!("write {}", dst.display()))?;
+    crate::atomic::write(&dst, &body).with_context(|| format!("write {}", dst.display()))?;
     let mut n = 1;
     let chunks: Vec<String> = chunk_names(&body).collect();
     for chunk in chunks {

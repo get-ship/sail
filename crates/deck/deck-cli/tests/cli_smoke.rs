@@ -30,9 +30,16 @@
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use tempfile::TempDir;
+
+// Serialize tests that invoke `deck build-assets`. The command writes framework
+// bundles into the shared repo-root `.deck/framework/` directory; without this
+// lock, parallel test threads can truncate a file another thread is reading or
+// emitting. See claim c-2026-07-19T18-12-45-685Z-f499ce4b.
+static BUILD_ASSETS_LOCK: Mutex<()> = Mutex::new(());
 
 // ── Repo + binary discovery ─────────────────────────────────────────────────
 
@@ -126,7 +133,9 @@ impl Drop for ScaffoldGuard {
 /// package this repo doesn't ship.
 #[test]
 fn build_assets_writes_framework_bundles() {
-    let out = run_deck(&["build-assets"]);
+    let _guard = BUILD_ASSETS_LOCK.lock().unwrap();
+
+    let out = run_deck(&["build-assets", "--no-stamp"]);
     let stderr = String::from_utf8_lossy(&out.stderr);
     // Don't assert status — consumer failures (sail-marketing) are a
     // known-bad on this worktree. Framework bundles are written
@@ -159,9 +168,11 @@ fn build_assets_writes_framework_bundles() {
 /// non-zero build-assets exit (see `build_assets_writes_framework_bundles`).
 #[test]
 fn emit_places_target_in_out_dir() {
+    let _guard = BUILD_ASSETS_LOCK.lock().unwrap();
+
     // Ensure the target is baked. If the framework dir is already
     // populated, this is a fast no-op rewrite.
-    let _ = run_deck(&["build-assets"]);
+    let _ = run_deck(&["build-assets", "--no-stamp"]);
 
     let out = TempDir::new().expect("tempdir");
     let status = run_deck(&[

@@ -12,7 +12,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result, anyhow};
 use rolldown::{BundlerBuilder, BundlerOptions, InputItem, OutputFormat};
 use rolldown_common::ManualCodeSplittingOptions;
 
@@ -35,7 +35,9 @@ pub async fn bundle_routes(
         return Ok(());
     }
     let out_dir = layout.assets_dir_for(&views[0].name);
+    let stage_dir = crate::atomic::stage_dir_for(&out_dir, "routes");
     std::fs::create_dir_all(&out_dir)?;
+    std::fs::create_dir_all(&stage_dir)?;
     std::fs::create_dir_all(staging)?;
 
     let mut input = Vec::with_capacity(views.len());
@@ -64,7 +66,7 @@ pub async fn bundle_routes(
     let options = BundlerOptions {
         input: Some(input),
         cwd: Some(layout.repo_root.clone()),
-        dir: Some(out_dir.to_string_lossy().to_string()),
+        dir: Some(stage_dir.to_string_lossy().to_string()),
         format: Some(OutputFormat::Esm),
         minify: Some(production.into()),
         // `min_share_count: 1` (was 2): hoist every shared module into its
@@ -108,6 +110,10 @@ pub async fn bundle_routes(
             .map_err(|e| anyhow!("rolldown write(views multi-entry): {e:?}"))?;
         crate::rolldown_bundle::assert_no_unresolved_imports(&output, "routes")?;
     }
+
+    // Publish atomically from the staging dir to the live dir.
+    crate::atomic::publish_dir(&stage_dir, &out_dir)
+        .with_context(|| "publish route bundles")?;
     // (cut 4: arena.rs deleted; the malloc_trim(0) call here was the
     // glibc band-aid. shipd now uses jemalloc, which returns freed
     // arenas to the OS by default.)
