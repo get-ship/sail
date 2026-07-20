@@ -4,7 +4,7 @@
 
 import { defineConfig, devices } from '@playwright/test'
 
-const PORT = process.env.SAIL_SITE_TEST_PORT ?? '7878'
+const PORT = process.env.SAIL_SITE_TEST_PORT ?? '7891'
 
 export default defineConfig({
   testDir: './test',
@@ -26,7 +26,7 @@ export default defineConfig({
     command: `bun run gen && (cd ../.. && cargo run -q -p deck-cli -- dev --project apps/sail-site --addr 127.0.0.1:${PORT})`,
     cwd: __dirname,
     url: `http://127.0.0.1:${PORT}`,
-    reuseExistingServer: true,
+    reuseExistingServer: process.env.SAIL_SITE_REUSE_SERVER === '1',
     timeout: 120_000,
     stdout: 'pipe',
     stderr: 'pipe',
