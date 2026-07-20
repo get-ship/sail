@@ -145,6 +145,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
+        name: "dismissible",
+        param: "void",
+        summary: "Emit `sail-remove` from a `[removable]` host on Backspace/Delete or `.remove` click — the attr-gated dismiss mix-in.",
+        auto_import: true,
+    },
+    ActionEntry {
         name: "dropzone",
         param: "undefined",
         summary: "Drag-and-drop file receiver; reads files into a controller-side handler.",
@@ -226,6 +232,18 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "portEdge",
         param: "PortSide",
         summary: "Anchor a fixed-size port to the midpoint of one of its parent's four edges.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "pressable",
+        param: "void",
+        summary: "Button semantics (role, aria-disabled/tabindex sync, Enter/Space activation) for a non-button host — the pressable mix-in.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "pressed",
+        param: "void",
+        summary: "Reflect `[selected]` to `aria-pressed` on a toggle host — the pressed-state mix-in (pairs with pressable).",
         auto_import: true,
     },
     ActionEntry {
@@ -328,10 +346,11 @@ pub const ACTIONS: &[ActionEntry] = &[
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "alert", "anchor", "autosize", "avatar", "cellPad", "chip",
     "chromeOffset", "clickOutside", "codeBlock", "collapsible", "combobox",
-    "contextMenu", "dropzone", "emptyState", "errorBoundary",
+    "contextMenu", "dismissible", "dropzone", "emptyState", "errorBoundary",
     "errorState", "eventSpan", "field", "gridTracks", "hoverCard",
     "icon", "maxWidth", "menu", "pagination", "pin", "portEdge",
-    "radioGroup", "rangeFill", "rect", "spotlight", "swatch", "tabs",
+    "pressable", "pressed", "radioGroup", "rangeFill", "rect", "spotlight",
+    "swatch", "tabs",
     "targetCursor", "themePicker", "toast", "toggleGroup", "tooltip",
     "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
 ];
