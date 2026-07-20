@@ -4,7 +4,17 @@
 //! already takes a pre-resolved module, so Deck drives confinement without a
 //! SAIL→Deck dependency or a live-path edit. Default (unconfined) mount is
 //! untouched; a host opts in per route.
+//!
+//! Config → endowments: `sail.config.json` `"network"` / `"unconfined"` are the
+//! only ambient knobs. Resolve them with `resolveAmbientAuthority` (Node,
+//! `./ambient-resolve` — JS mirror of `Policy::network_for` /
+//! `Policy::unconfined_for`) or a bake-stamped {@link AmbientAuthority}, then
+//! feed the result through {@link prepareRouteConfinement} /
+//! {@link buildRouteEndowments}. Lint and runtime share that resolution —
+//! never a second hardcoded default.
 
+import type { AmbientAuthority } from './ambient-policy'
+import { AMBIENT_DENY_ALL } from './ambient-policy'
 import { confineController, createConfinedFetch } from './confine'
 import { lowerModuleToExpression } from './lower-imports'
 
@@ -22,11 +32,13 @@ interface NodeFactories {
  *  `innerHTML`, write access etc. are NOT carried over. */
 function narrowDocument(doc: Document): NodeFactories {
   return {
-    createElement: doc.createElement.bind(doc),
-    createElementNS: doc.createElementNS.bind(doc),
-    createTextNode: doc.createTextNode.bind(doc),
-    createComment: doc.createComment.bind(doc),
-    createDocumentFragment: doc.createDocumentFragment.bind(doc),
+    createElement: (tag) => doc.createElement(tag),
+    createElementNS: doc.createElementNS
+      ? (ns, tag) => doc.createElementNS(ns, tag)
+      : undefined,
+    createTextNode: (text) => doc.createTextNode(text),
+    createComment: (text) => doc.createComment(text),
+    createDocumentFragment: () => doc.createDocumentFragment(),
   }
 }
 
@@ -54,14 +66,21 @@ export interface RouteEndowmentInput {
    * call's target origin against this list at call time — the actual
    * runtime wall; the lint is a static mirror of it for literal targets.
    *
-   * NOT YET WIRED to a live per-route resolved config: nothing in this repo
-   * currently calls `buildRouteEndowments` from a real route-serving path with
-   * a resolved `sail.config.json` in hand (only tests construct
-   * `RouteEndowmentInput` today) — the host call site that would resolve a
-   * route's package config and pass its `"network"` list here is a follow-up.
-   * This field + `createConfinedFetch` are the correctly-shaped pieces.
+   * Resolve via `resolveAmbientAuthority` (`./ambient-resolve`) or a bake
+   * stamp, then {@link prepareRouteConfinement}. Do not hardcode a second
+   * default here — empty/absent is the only deny-by-default.
    */
   network?: string[]
+  /**
+   * The package's resolved `sail.config.json` `"unconfined"` capability —
+   * same flag `Policy::unconfined_for` feeds the lint. When true, the host
+   * MUST NOT pretend SES full-deny: use {@link prepareRouteConfinement} which
+   * skips the Compartment and evaluates against real ambient. Passing
+   * `unconfined: true` into `buildRouteEndowments` alone is a programming
+   * error for the confine path (endowments still harden); the live path is
+   * `prepareRouteConfinement`.
+   */
+  unconfined?: boolean
 }
 
 /**
@@ -69,6 +88,10 @@ export interface RouteEndowmentInput {
  * runtime + dom binding surfaces, a node-factory-only `document`, and the
  * policy-gated ops/route. `harden`-ed so the route can't mutate shared host
  * state through them. Requires {@link lockdownRealm} to have run.
+ *
+ * Network grant: only endow `fetch` when `input.network` is non-empty — an
+ * always-throwing endowed `fetch` is observably different from the default
+ * `undefined` (today's full refusal).
  */
 export function buildRouteEndowments(input: RouteEndowmentInput): Record<string, unknown> {
   const doc = input.doc ?? (globalThis as { document?: Document }).document
@@ -98,7 +121,8 @@ export interface CompiledRouteModule {
 /**
  * Confine a whole compiled route module `source` against `endowments` and return
  * it in the `{ default: { setup } }` shape `mount()` consumes. The route's glue +
- * bundled controller run inside one Compartment; ambient authority is denied.
+ * bundled controller run inside one Compartment; ambient authority is denied
+ * except what the endowments explicitly grant (e.g. confined `fetch`).
  */
 export function confineRouteModule(
   source: string,
@@ -109,6 +133,70 @@ export function confineRouteModule(
     endowments,
   )
   return { default: def }
+}
+
+/** Inputs shared by confined and unconfined live-path preparation. */
+export interface PrepareRouteConfinementInput {
+  /** Compiled route module source (ESM). */
+  source: string
+  /** Host endowment pieces other than network/unconfined. */
+  endowments: Omit<RouteEndowmentInput, 'network' | 'unconfined'>
+  /**
+   * Pre-resolved ambient authority — REQUIRED so this module stays free of
+   * `node:fs` (browser-safe). Node hosts: `resolveAmbientAuthority(sourcePath)`
+   * from `./ambient-resolve`. Browser/CSR: bake stamp or host-supplied
+   * `Policy::*_for` twin. Omit only when intentionally deny-all
+   * ({@link AMBIENT_DENY_ALL}).
+   */
+  ambient?: AmbientAuthority
+}
+
+export type PreparedRouteModule =
+  | {
+      /** Package did not opt out — module runs inside a SES Compartment. */
+      kind: 'confined'
+      module: CompiledRouteModule
+      ambient: AmbientAuthority
+      endowments: Record<string, unknown>
+    }
+  | {
+      /**
+       * `"unconfined": true` — lint already skipped; runtime matches by NOT
+       * evaluating inside a Compartment. The host loads the module with real
+       * ambient (`fetch`, etc.). `source` is returned unchanged so the caller
+       * can `import()` / evaluate it in the host realm.
+       */
+      kind: 'unconfined'
+      source: string
+      ambient: AmbientAuthority
+    }
+
+/**
+ * Live path for route confinement: resolve ambient authority the same way the
+ * compiler did, then either confine with a network-aware endowment surface or
+ * skip the Compartment entirely when the package is `"unconfined": true`.
+ *
+ * This is the production call site the earlier `network` field comment said
+ * was missing — hosts that actually confine a route MUST go through here (or
+ * pass an equivalent pre-resolved ambient into `buildRouteEndowments` +
+ * `confineRouteModule` themselves). CSR product paths that still dynamic-
+ * import without SES are a residual product choice, not a second policy.
+ */
+export function prepareRouteConfinement(input: PrepareRouteConfinementInput): PreparedRouteModule {
+  // Default deny when the host forgot to resolve — same as no sail.config.json.
+  const ambient = input.ambient ?? AMBIENT_DENY_ALL
+
+  if (ambient.unconfined) {
+    return { kind: 'unconfined', source: input.source, ambient }
+  }
+
+  const endowments = buildRouteEndowments({
+    ...input.endowments,
+    network: ambient.network,
+    unconfined: false,
+  })
+  const module = confineRouteModule(input.source, endowments)
+  return { kind: 'confined', module, ambient, endowments }
 }
 
 // `harden` is a realm global installed by `import 'ses'` (via ./confine.ts).

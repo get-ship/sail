@@ -157,5 +157,18 @@ The pure SAIL-facing read side, plus the framework CLI.
 | Source-size cap | route source | `crates/deck/deck-host/src/resolver.rs::MAX_ROUTE_SOURCE_BYTES` | 4 MiB ceiling (stat-checked before read) so one request can't pin a worker on a giant parse. |
 | Prod error redaction | errors / 404s | `crates/deck/deck-core/src/response.rs::not_found` | Suppresses internal detail (paths, build hints) in production; surfaces it only in dev. |
 | Strong ETag (prod) | cacheable bodies | `crates/deck/deck-core/src/response.rs::compute_etag` | Content-derived ETag for prod cacheable responses. |
-</content>
-</invoke>
+| Network-aware CSP connect-src | HTML responses | `crates/deck/deck-core/src/response.rs::connect_src_directive` | Derives `connect-src` from a package's resolved `sail.config.json` `"network"` allowlist (same list as `Policy::network_for`). Empty → `'self'`. Live HTML shell wiring still residual. |
+| Ambient policy (compile) | controller lint | `crates/sail/compiler/src/check/policy.rs::network_for` | Walk-up `sail.config.json` → `"network"` / `"unconfined"` for `check_confined`. Fail closed on bad types. |
+
+
+### Browser SES host (`packages/deck/host`)
+
+Compile-time ambient grants and runtime SES endowments share one resolution:
+
+- Pure ambient classify (browser-safe): `packages/deck/host/src/ambient-policy.ts` (`classifyAmbient`).
+- Node walk-up mirror of `Policy::network_for` / `unconfined_for`: `packages/deck/host/src/ambient-resolve.ts` (`resolveAmbientAuthority`).
+- Live confine path: `packages/deck/host/src/route-runner.ts` (`prepareRouteConfinement` → `buildRouteEndowments` / skip Compartment when `unconfined`).
+- Confined `fetch` wrapper: `packages/deck/host/src/confine.ts` (`createConfinedFetch`).
+- Parity tests: `packages/deck/host/test/ambient-parity.test.ts`.
+
+Knobs (`network`, `unconfined`) are unsafe-shaped: a grant voids the default deny at **both** gates. CSR product paths that still dynamic-import without SES are a residual product choice, not a second policy reader.
