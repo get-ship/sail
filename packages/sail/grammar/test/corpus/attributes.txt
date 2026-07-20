@@ -34,23 +34,6 @@ event attribute with modifiers
     close_tag: (tag_name)))
 
 ==================
-class toggle attribute
-==================
-
-<div class:active={ok}></div>
-
----
-
-(source_file
-  (element
-    tag: (tag_name)
-    (class_attr
-      name: (attr_local)
-      value: (brace_expression
-        (identifier)))
-    close_tag: (tag_name)))
-
-==================
 prop attribute
 ==================
 

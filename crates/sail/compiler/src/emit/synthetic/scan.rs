@@ -52,7 +52,6 @@ fn attr_references_ident(attr: &AttrInstr, name: &str) -> bool {
         AttrInstr::Expr { expr, .. }
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. }
-        | AttrInstr::Class { expr, .. }
         | AttrInstr::Prop { expr, .. }
         | AttrInstr::Mutation { expr, .. } => expr_references_ident(&expr.source, name),
         AttrInstr::On { handler, .. } => expr_references_ident(&handler.source, name),
@@ -82,7 +81,7 @@ fn is_ident_char(b: u8) -> bool {
 
 /// Word-boundary scan for `name` in `src`. A leading `.` disqualifies a
 /// match (it would be a member access, not a free root identifier).
-/// String literals are skipped — `class:active={x === 'ship-light'}`
+/// String literals are skipped — `aria-current={x === 'ship-light'}`
 /// would otherwise spuriously import the `ship` client (gap G3, slice
 /// 2). Template literals (backticks) are likewise skipped: the host
 /// surface never references template-literal contents as a free

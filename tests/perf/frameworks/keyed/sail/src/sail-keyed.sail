@@ -1,5 +1,5 @@
 <controller>
-import { controller, signal } from '@ship/sail-runtime'
+import { controller, signal, type Action } from '@ship/sail-runtime'
 
 interface Row {
   id: number
@@ -32,15 +32,30 @@ function buildData(count: number): Row[] {
   return data
 }
 
+// Harness-only: js-framework-benchmark scores select via `tbody>tr.danger`
+// (webdriver-ts checkCountForSelector). Sail refuses class: / bare class=
+// toggles; this use: action is package-local pack chrome, not a language feature.
+const benchDanger: Action<boolean> = (node, on) => {
+  const apply = (v: boolean) => {
+    if (v) node.classList.add('danger')
+    else node.classList.remove('danger')
+  }
+  apply(!!on)
+  return {
+    update: (next: boolean) => apply(!!next),
+  }
+}
+
 export default controller(() => {
     const rows = signal<Row[]>([])
-    // -1 = nothing selected (no row carries id -1, so the `=== selected()`
-    // class test is false for every row until one is clicked).
+    // -1 = nothing selected (no row carries id -1, so the selected
+    // predicate is false for every row until one is clicked).
     const selected = signal<number>(-1)
 
     return {
       rows,
       selected,
+      benchDanger,
 
       // 01_run1k / runlots: replace the whole list.
       run: (): void => rows.set(buildData(1000)),
@@ -116,7 +131,7 @@ export default controller(() => {
   <table class="table table-hover table-striped test-data">
     <tbody>
       {#for row of rows() key={row.id}}
-        <tr class:danger={row.id === selected()}>
+        <tr data-selected={row.id === selected() ? '' : undefined} use:benchDanger={row.id === selected()}>
           <td class="col-md-1">{row.id}</td>
           <td class="col-md-4"><a on:click={() => select(row.id)}>{row.label}</a></td>
           <td class="col-md-1"><a on:click={() => remove(row.id)}><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a></td>

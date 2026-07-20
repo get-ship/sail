@@ -195,7 +195,7 @@ fn parse_open_tag_attributes(inner_offset: usize, inner: &str) -> Vec<Attribute<
         }
         let name = &inner[name_start..i];
         // Bound-style names (`bind:value`, `on:click`, `attr:foo`,
-        // `class:bar`, `style:baz`) are framework-binding sugar.
+        // `prop:bar`, `use:baz`, …) are framework-binding sugar.
         // Skip — this rule only validates plain HTML attribute values.
         let skip_name = name.contains(':');
         if i >= bytes.len() || bytes[i] != b'=' {

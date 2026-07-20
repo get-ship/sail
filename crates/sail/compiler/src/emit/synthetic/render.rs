@@ -10,8 +10,8 @@
 //! Unlike the desugar spike — which hand-rolled a minimal element/text
 //! emitter — this REUSES the production [`TemplateEmitter`]. Driving the
 //! same walk with a `"scope."` prefix is the whole point: every template
-//! feature (`{#if/#for/#match/#while-*}`, `on:`, `bind:`, `class:`,
-//! `style:`, slots, nested components) emits identically to production,
+//! feature (`{#if/#for/#match/#while-*}`, `on:`, `bind:`, `attr:`,
+//! `prop:`, slots, nested components) emits identically to production,
 //! so the synthetic path inherits the emitter's full behavior for free.
 //!
 //! Two scope variables coexist in `mount()`:

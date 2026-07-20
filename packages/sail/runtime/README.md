@@ -57,7 +57,6 @@ semver bump. Treat the absence of an export from `src/index.ts` as a
 | `bindText`     | Reactive `textContent`.                                            |
 | `bindShow`     | Toggle visibility via `display:none`.                              |
 | `bindAttr`     | Reactive HTML attribute (with presence semantics for `null`/`""`). |
-| `bindClass`    | Toggle a single class.                                             |
 | `bindProp`     | Reactive JS property (typed, no string round-trip).                |
 | `bindValue`    | Two-way bind a string signal to an input/textarea/select.          |
 | `bindChecked`  | Two-way bind a boolean signal to a checkbox/radio.                 |

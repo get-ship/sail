@@ -15,7 +15,7 @@
 //! ## Where it applies
 //!
 //! Every RENDERING position — text holes, attribute values, dynamic attribute
-//! names, `class:` conditions, and the `{#if}` / `{#each}` / `{#match}`
+//! names, attribute conditions, and the `{#if}` / `{#each}` / `{#match}`
 //! control-flow expressions. In each, the value is consumed, so a bare
 //! reference is always the mistake.
 //!
@@ -120,7 +120,7 @@ impl Cx<'_> {
 
     fn attr(&mut self, attr: &AttrInstr) {
         match attr {
-            AttrInstr::Expr { expr, .. } | AttrInstr::Class { expr, .. } => self.rendered(expr),
+            AttrInstr::Expr { expr, .. } => self.rendered(expr),
             AttrInstr::DynamicAttr { name_expr, expr, .. } => {
                 self.rendered(name_expr);
                 self.rendered(expr);

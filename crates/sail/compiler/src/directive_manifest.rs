@@ -1,6 +1,6 @@
 //! The template-directive vocabulary — one source of truth for every
 //! attribute-position directive the parser accepts (`on:`, `bind:`, `use:`,
-//! `prop:`, `attr:`, `class:`, `motion:`, slots, `mutation`), every `on:`
+//! `prop:`, `attr:`, `motion:`, slots, `mutation`), every `on:`
 //! event modifier, every `bind:` target, and every retired directive with
 //! the thing to use instead.
 //!
@@ -28,7 +28,7 @@ pub struct DirectiveEntry {
 /// each prefix so `bind:value`, `on:click`, etc. parse as directives
 /// rather than as ordinary `attr_name` tokens. Keep this in sync with
 /// the `DIRECTIVES` entries whose syntax starts with `<prefix>:`.
-pub const DIRECTIVE_PREFIXES: &[&str] = &["bind", "on", "class", "attr", "prop", "use", "motion"];
+pub const DIRECTIVE_PREFIXES: &[&str] = &["bind", "on", "attr", "prop", "use", "motion"];
 
 /// Element names that are directive-like in the grammar: the parser treats
 /// them as ordinary HTML elements, but the highlight query gives them a
@@ -61,10 +61,6 @@ pub const DIRECTIVES: &[DirectiveEntry] = &[
     DirectiveEntry {
         syntax: "attr:{nameExpr}={expr}",
         summary: "dynamic attribute name — both the name and the value are expressions",
-    },
-    DirectiveEntry {
-        syntax: "class:<name>={condition}",
-        summary: "toggle one class while the condition holds",
     },
     DirectiveEntry {
         syntax: "sx=\"atom atom …\"",
@@ -197,6 +193,10 @@ pub struct RetiredEntry {
 
 /// Every directive the parser refuses by name, with what to use instead.
 pub const RETIRED_DIRECTIVES: &[RetiredEntry] = &[
+    RetiredEntry {
+        syntax: "class:<name>",
+        instead: "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is aria-*/closed sx state prefixes/layout — not a global CSS class toggle. Bare class= is also banned",
+    },
     RetiredEntry {
         syntax: "style:<prop>",
         instead: "runtime geometry is owned by named, typed actions (use:rect, use:pin, use:virtualRow, …) — sx reads the variables they write via (--name)",

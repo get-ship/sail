@@ -79,8 +79,6 @@ pub enum BindingKind {
     Attr(String),
     /// `attr:{nameExpr}={valueExpr}`.
     AttrDynamic,
-    /// `class:NAME={cond}`.
-    Class(String),
     /// `style:NAME={value}`.
     Style(String),
     /// `prop:NAME={expr}` — JS property assignment on the element.
@@ -110,7 +108,6 @@ impl BindingKind {
             BindingKind::BindChecked => "bind:checked".into(),
             BindingKind::Attr(n) => format!("attr:{n}"),
             BindingKind::AttrDynamic => "attr-dynamic".into(),
-            BindingKind::Class(n) => format!("class:{n}"),
             BindingKind::Style(n) => format!("style:{n}"),
             BindingKind::Prop(n) => format!("prop:{n}"),
             BindingKind::If => "if".into(),
@@ -196,10 +193,6 @@ mod tests {
             "attr:href"
         );
         assert_eq!(BindingKind::AttrDynamic.as_marker_str(), "attr-dynamic");
-        assert_eq!(
-            BindingKind::Class("active".into()).as_marker_str(),
-            "class:active"
-        );
         assert_eq!(BindingKind::Style("--c".into()).as_marker_str(), "style:--c");
         assert_eq!(BindingKind::If.as_marker_str(), "if");
         assert_eq!(BindingKind::For.as_marker_str(), "for");

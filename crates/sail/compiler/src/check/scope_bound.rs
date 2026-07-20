@@ -379,7 +379,6 @@ fn visit_attr(attr: &AttrInstr, v: &mut Visitor) {
         AttrInstr::Expr { expr, .. }
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. }
-        | AttrInstr::Class { expr, .. }
         | AttrInstr::Prop { expr, .. } => check_expr(expr, v, &[]),
         AttrInstr::DynamicAttr { name_expr, expr, .. } => {
             check_expr(name_expr, v, &[]);

@@ -11,7 +11,7 @@
  * Surface map:
  *   - Reactivity:    `signal`, `derived`, `effect`, `batch`, `untrack`
  *                    (+ types `Signal`, `Derived`)
- *   - DOM bindings:  `bindText`, `bindShow`, `bindAttr`, `bindClass`,
+ *   - DOM bindings:  `bindText`, `bindShow`, `bindAttr`,
  *                    `bindProp`, `bindValue`, `bindChecked`, `bindRawHtml`
  *                    (+ type `Disposer`)
  *   - Events:        `on`, `matchesKey` (+ types `OnOptions`, `Modifier`)
@@ -131,7 +131,6 @@ export {
   bindText,
   bindShow,
   bindAttr,
-  bindClass,
   bindProp,
   bindDynamic,
   bindValue,

@@ -70,8 +70,6 @@ pub enum AttrInstr {
     SlotReflectEmpty { attr: String, span: Span },
     /// `on:event|mod[:arg]…={handler}`.
     On { event: String, handler: Expr, modifiers: Vec<Modifier>, span: Span },
-    /// `class:name={cond}`.
-    Class { name: String, expr: Expr, span: Span },
     /// `prop:foo={expr}` — assign the value to the element's JS
     /// property `foo` (camelCase). Use when passing complex objects
     /// (signals, arrays, structured data) to a child custom element.

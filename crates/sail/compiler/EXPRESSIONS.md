@@ -28,8 +28,8 @@ Three positions:
 
 - **Text interpolation** — `<p>{expr}</p>`. Allowed: full subset
   below. Disallowed: arrow functions.
-- **Attribute expression** — `attr={expr}`, `class:foo={expr}`,
-  `style:color={expr}`, `prop:foo={expr}`, `bind:value={expr}`.
+- **Attribute expression** — `attr={expr}`, `prop:foo={expr}`,
+  `bind:value={expr}`, `aria-*={expr}`.
   Allowed: full subset. Disallowed: arrow functions.
 - **Event handler** — `on:click={expr}`. Allowed: full subset
   **plus** arrow functions and statement bodies (`(e) => x.set(1)`,

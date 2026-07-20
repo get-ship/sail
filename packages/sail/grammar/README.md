@@ -23,7 +23,7 @@ recognises:
   (`<div>…</div>`) and the self-closing form (`<ship-icon …/>`),
   plus the void-element forms (`<link>`, `<br>`, `<img>`, …).
 - **Binding attributes** — `bind:value={x}`, `on:event[|mod]*={fn}`,
-  `class:active={cond}`, `attr:name={value}` / `attr:{nameExpr}={value}`,
+  `attr:name={value}` / `attr:{nameExpr}={value}`,
   `prop:name={value}`, `use:action` / `use:action={param}`,
   `motion:trigger={{ prop: 'preset' }}`. Plain attributes (`name="x"`,
   `name={expr}`, `sx="…"`, bare-name boolean attrs) round-trip through
@@ -128,7 +128,7 @@ Expected: no `FAIL:` lines.
   jump-to-def in editors that consume the `@local.*` family.
   Currently absent.
 - **HTML attribute namespaces.** `attr_name` excludes `:` so the
-  `bind:` / `on:` / `class:` / `attr:` / `prop:` / `use:` / `motion:`
+  `bind:` / `on:` / `attr:` / `prop:` / `use:` / `motion:`
   directives win the lexer race; the corpus has no SVG-style
   namespaced attributes (`xlink:href`, …) so this is safe today
   but worth revisiting if SVG lands as a first-class template

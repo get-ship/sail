@@ -448,9 +448,9 @@ impl TemplateEmitter {
         //                       `update()` bumps only the per-field
         //                       signals whose value actually changed.
         //                       This is the path that drops Krausest's
-        //                       update-every-10th cost — the `class:
-        //                       danger={row.id === selected()}` binding
-        //                       subscribes to `__v_id`, which never
+        //                       update-every-10th cost — the
+        //                       `aria-selected={row.id === selected()}`
+        //                       binding subscribes to `__v_id`, which never
         //                       fires when only `label` changes.
         // Splice signal allocs at the current indent (inside the IIFE,
         // before captured hoists / body emit) so any nested boundary's

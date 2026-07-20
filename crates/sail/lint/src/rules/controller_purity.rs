@@ -6,7 +6,7 @@
 //! - `<expr>.insertAdjacentHTML(…)` calls
 //!
 //! Dynamic markup belongs in the `.sail` template via `{#if}/{#for}/{#match}`
-//! and the binding primitives (`bindAttr`/`bindText`/`bindClass`/`bindValue`).
+//! and the binding primitives (`bindAttr`/`bindText`/`bindValue`).
 //! Controllers own state, refs, lifecycle, and async I/O.
 
 use std::path::{Path, PathBuf};

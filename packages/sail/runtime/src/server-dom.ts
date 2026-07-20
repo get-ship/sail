@@ -280,7 +280,7 @@ class El {
   tag: string
   parentNode: Parent | null = null
   attrs = new Map<string, string>()
-  /** Slice 2 — hydration marker attributes (`on:event`, `class:name`, etc.)
+  /** Slice 2 — hydration marker attributes (`on:event`, `prop:name`, etc.)
    *  the synthetic bind* calls record via `markHydrateAttr`. The El's
    *  `toHTML()` folds them into the serialized attribute set so the
    *  client `collectElementMarkers` finds them. `null` on the browser
@@ -438,7 +438,7 @@ class El {
     const cls = this._classes.size ? ` class="${esc([...this._classes].join(' '))}"` : ''
     const styleStr = this.style.props.size ? ` style="${esc(this.style.serialize())}"` : ''
     // Slice 2 — fold the hydration marker attrs (`on:click="bN"`,
-    // `class:active="bN"`, etc.) into the serialized set so the
+    // `prop:items="bN"`, etc.) into the serialized set so the
     // client `collectElementMarkers` picks them up. Boundary keys
     // (for `<sail-if key="bN">` etc.) go on as `key="bN"` (the
     // `collectElementMarkers` walker reads `getAttribute('key')`).

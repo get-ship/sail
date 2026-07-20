@@ -286,10 +286,6 @@
         },
         {
           "type": "SYMBOL",
-          "name": "class_attr"
-        },
-        {
-          "type": "SYMBOL",
           "name": "attr_attr"
         },
         {
@@ -389,35 +385,6 @@
         {
           "type": "FIELD",
           "name": "handler",
-          "content": {
-            "type": "SYMBOL",
-            "name": "brace_expression"
-          }
-        }
-      ]
-    },
-    "class_attr": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "class:"
-        },
-        {
-          "type": "FIELD",
-          "name": "name",
-          "content": {
-            "type": "SYMBOL",
-            "name": "attr_local"
-          }
-        },
-        {
-          "type": "STRING",
-          "value": "="
-        },
-        {
-          "type": "FIELD",
-          "name": "value",
           "content": {
             "type": "SYMBOL",
             "name": "brace_expression"

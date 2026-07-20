@@ -4,7 +4,6 @@ import {
   bindText,
   bindShow,
   bindAttr,
-  bindClass,
   bindProp,
   bindDynamic,
   bindValue,
@@ -190,35 +189,6 @@ describe('bindDynamic — toolchain owns the attribute/property split', () => {
   })
 })
 
-describe('bindClass', () => {
-  it('truthy adds class', () => {
-    const el = document.createElement('div')
-    const $active = signal(true)
-    bindClass(el, 'active', () => $active())
-    expect(el.classList.contains('active')).toBe(true)
-  })
-
-  it('toggles on change', () => {
-    const el = document.createElement('div')
-    const $active = signal(false)
-    bindClass(el, 'active', () => $active())
-    expect(el.classList.contains('active')).toBe(false)
-    $active.set(true)
-    expect(el.classList.contains('active')).toBe(true)
-    $active.set(false)
-    expect(el.classList.contains('active')).toBe(false)
-  })
-
-  it('does not interfere with other classes', () => {
-    const el = document.createElement('div')
-    el.className = 'base'
-    const $active = signal(true)
-    bindClass(el, 'active', () => $active())
-    expect(el.classList.contains('base')).toBe(true)
-    expect(el.classList.contains('active')).toBe(true)
-  })
-})
-
 describe('bindProp', () => {
   it('sets a property directly', () => {
     const el = document.createElement('div') as HTMLDivElement & { items?: number[] }
@@ -324,7 +294,7 @@ describe('bindChecked', () => {
 // micro-optimization detail of the bind short-circuit path. The
 // user-visible behavior (textContent / hasAttribute / classList state
 // for empty / null / same-value writes) is already covered by the
-// bindText / bindAttr / bindClass describe blocks above. Removing the
+// bindText / bindAttr describe blocks above. Removing the
 // redundant implementation-detail layer lifted the suite from 76%
 // behavior-driven to ~78% (per the audit's coverage-quality report).
 describe('bindHtml', () => {

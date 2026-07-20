@@ -53,12 +53,16 @@ fn attribute_interp_emits_attr_binding() {
 }
 
 #[test]
-fn class_directive_emits_class_binding() {
-    let r = build_for("<p class:active={on}>x</p>");
-    assert_eq!(r.len(), 1);
-    assert_eq!(
-        r.get(0).unwrap().kind,
-        BindingKind::Class("active".into())
+fn class_directive_is_rejected_at_parse_time() {
+    // `class:` has been deleted from the language — same floor as bare
+    // `class=`. Styling is sx / named use: actions; state is aria-* /
+    // closed sx prefixes / layout. The compiler refuses so the rejection
+    // names the replacement.
+    let err = crate::parse::parse("<p class:active={on}>x</p>").unwrap_err();
+    let msg = format!("{err:?}");
+    assert!(
+        msg.contains("class:") && (msg.contains("removed") || msg.contains("retired")),
+        "the rejection should name class: retirement; got: {msg}"
     );
 }
 
@@ -114,14 +118,11 @@ fn for_iterable_emits_for_binding() {
 #[test]
 fn for_body_yields_one_binding_not_per_iteration() {
     // Even if the body has many bindings, the registry walks it once.
-    let r = build_for("{#for n of xs}<li class:hot={n}>{n}</li>{/for}");
-    // for boundary, class:hot, dynamic text — 3 entries total.
+    let r = build_for("{#for n of xs}<li aria-current={n}>{n}</li>{/for}");
+    // for boundary, aria-current attr binding, dynamic text — 3 entries total.
     assert_eq!(r.len(), 3);
     assert_eq!(r.get(0).unwrap().kind, BindingKind::For);
-    assert_eq!(
-        r.get(1).unwrap().kind,
-        BindingKind::Class("hot".into())
-    );
+    assert_eq!(r.get(1).unwrap().kind, BindingKind::Attr("aria-current".into()));
     assert_eq!(r.get(2).unwrap().kind, BindingKind::Text);
 }
 

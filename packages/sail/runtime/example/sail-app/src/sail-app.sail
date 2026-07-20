@@ -10,7 +10,7 @@
     - signal/derived: counter at the top, ticks-per-second derived
     - effect: 250ms tick keeps a sparkline-ish log moving
     - bindFor + keyed reorder: kanban-ish board with HTML5 DnD
-    - bindClass: per-card "high-priority" + selected highlight
+    - data-*: per-card priority + selected highlight
     - on: handlers, including async one (chrome.modal not used —
       standalone build has no daemon)
     - motion: enter/exit on card add/remove (fade + scale)

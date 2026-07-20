@@ -267,10 +267,10 @@ fn sx_only_source_passes_real_compile_path() {
 
 #[test]
 fn class_directive_fails_real_compile_path() {
-    // The `class:name={value}` directive form (a state-flavored class
-    // assignment) is also banned. This pins the directive side of the
-    // rule — the static-class test covers `class="x"`, this covers
-    // `class:active={...}`. Both are the same back door.
+    // The `class:name={value}` directive form is retired at the parser
+    // (same shape as `style:`). Floor lint still matches `class:` for
+    // defense in depth; either path must surface an Error naming the
+    // retirement — never emit a class toggle binding.
     let (_tmp, sui_path) = write_pack(
         &[],
         r#"{"stylesheets": []}"#,
@@ -283,12 +283,22 @@ fn class_directive_fails_real_compile_path() {
         .iter()
         .filter(|d| {
             d.severity == DiagSeverity::Error
-                && d.rule.as_deref() == Some("sail-no-class")
+                && (d.rule.as_deref() == Some("sail-no-class")
+                    || d.message.contains("`class:`")
+                    || d.message.contains("class:"))
         })
         .collect();
-    assert_eq!(
-        class_errors.len(),
-        1,
-        "class:active= must be an Error, got {diags:?}"
+    assert!(
+        !class_errors.is_empty(),
+        "class:active= must be an Error naming retirement, got {diags:?}"
+    );
+    assert!(
+        class_errors.iter().any(|d| {
+            d.message.contains("removed")
+                || d.message.contains("retired")
+                || d.message.contains("sx")
+                || d.rule.as_deref() == Some("sail-no-class")
+        }),
+        "error should teach retirement / sx, got {class_errors:?}"
     );
 }

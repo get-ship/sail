@@ -40,7 +40,6 @@
 ; `style:` and never implemented `let:` — neither is live syntax.
 "bind:"     @keyword.directive
 "on:"       @keyword.directive
-"class:"    @keyword.directive
 "attr:"     @keyword.directive
 "prop:"     @keyword.directive
 "use:"      @keyword.directive

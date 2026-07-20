@@ -98,3 +98,18 @@ fn grammar_does_not_recognize_retired_style_directive() {
          file using `style:` must fail to parse, not round-trip as valid.",
     );
 }
+
+#[test]
+fn grammar_does_not_recognize_retired_class_directive() {
+    // `class:` is a hard compile error
+    // (parse/template/attrs.rs::compile_attr) — styling is sx / state is
+    // aria-* and closed sx prefixes. The grammar must not have a
+    // dedicated rule for `class:` (that would make it parse as a valid
+    // directive instead of producing an ERROR node).
+    assert!(
+        !GRAMMAR_SRC.contains("class_attr") && !GRAMMAR_SRC.contains("'class:'"),
+        "grammar.js still declares a `class:` attribute rule, but the \
+         compiler hard-refuses `class:` (parse/template/attrs.rs). A .sail \
+         file using `class:` must fail to parse, not round-trip as valid.",
+    );
+}

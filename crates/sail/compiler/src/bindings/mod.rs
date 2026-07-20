@@ -106,9 +106,6 @@ impl Builder {
             AttrInstr::Expr { name, expr, .. } => {
                 self.push(BindingKind::Attr(name.clone()), &expr.source, expr.allow_arrow);
             }
-            AttrInstr::Class { name, expr, .. } => {
-                self.push(BindingKind::Class(name.clone()), &expr.source, expr.allow_arrow);
-            }
             AttrInstr::Prop { name, expr, .. } => {
                 self.push(BindingKind::Prop(name.clone()), &expr.source, expr.allow_arrow);
             }

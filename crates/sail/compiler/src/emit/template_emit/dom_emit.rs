@@ -325,36 +325,6 @@ impl TemplateEmitter {
                     ));
                 }
             }
-            AttrInstr::Class { name, expr, .. } => {
-                let key = self.next_key();
-                let rw = self.rw(&expr.source, &[]);
-                if self.is_static_row_expr(&expr.source) {
-                    // D5: row-scope static class — truthy → add. Also
-                    // recorded for the for's `update()` callback so
-                    // keyed-row reuse refreshes the class.
-                    let stmt = format!(
-                        "if ({rw}) {el_var}.classList.add({n}); else {el_var}.classList.remove({n});",
-                        n = js_string(name)
-                    );
-                    w.line(&stmt);
-                    let use_ = self.row_use_for_source(&expr.source);
-                    self.inline_update_stmts.push((stmt, use_));
-                } else {
-                    let fv = self.for_version_comma(&expr.source);
-                    w.line(&format!(
-                        "{cleanups_var}.push(bindClass({el_var}, {n}, () => ({fv}{rw})));",
-                        n = js_string(name)
-                    ));
-                }
-                if self.is_route && self.boundary_depth == 0 {
-                    self.hydrate_uses_markers = true;
-                    self.hydrate_calls.line(&format!(
-                        "if (__m[{k}]) __cleanups.push(hydrateClass(__m[{k}], {n}, () => ({rw})));",
-                        k = js_string(&key),
-                        n = js_string(name),
-                    ));
-                }
-            }
             AttrInstr::Prop { name, expr, .. } => {
                 let key = self.next_key();
                 let rw = self.rw(&expr.source, &[]);

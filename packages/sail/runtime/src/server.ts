@@ -103,7 +103,6 @@ export {
   bindText,
   bindShow,
   bindAttr,
-  bindClass,
   bindProp,
   bindValue,
   bindChecked,

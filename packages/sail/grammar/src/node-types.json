@@ -178,32 +178,6 @@
     }
   },
   {
-    "type": "class_attr",
-    "named": true,
-    "fields": {
-      "name": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "attr_local",
-            "named": true
-          }
-        ]
-      },
-      "value": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "brace_expression",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "type": "default_clause",
     "named": true,
     "fields": {},
@@ -315,10 +289,6 @@
         },
         {
           "type": "boolean_attr",
-          "named": true
-        },
-        {
-          "type": "class_attr",
           "named": true
         },
         {
@@ -1158,10 +1128,6 @@
   },
   {
     "type": "bind:",
-    "named": false
-  },
-  {
-    "type": "class:",
     "named": false
   },
   {

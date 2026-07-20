@@ -165,7 +165,7 @@ mod tests {
         let dyn_tree = el("div", vec![], vec![Instr::DynamicText { expr: expr("x") }]);
         assert!(!is_static_element(&dyn_tree));
         // A bound attr is not static.
-        let bound = el("div", vec![AttrInstr::Class { name: "on".into(), expr: expr("y"), span: sp() }], vec![]);
+        let bound = el("div", vec![AttrInstr::Expr { name: "title".into(), expr: expr("y"), span: sp() }], vec![]);
         assert!(!is_static_element(&bound));
     }
 

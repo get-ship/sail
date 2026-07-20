@@ -251,14 +251,14 @@ fn only_referenced_manifest_clients_are_imported() {
 
 /// Slice 2 G3 — a manifest client name appearing inside a string literal
 /// does NOT spuriously import the client. The classic case is
-/// `class:active={x === 'ship-light'}` where `ship` would otherwise
+/// `aria-current={x === 'ship-light'}` where `ship` would otherwise
 /// be matched as a free identifier inside the literal span, importing
 /// the (unprovided) `ship` client and breaking the bundle.
 #[test]
 fn string_literal_does_not_trigger_manifest_import() {
     let manifest = r#"{ "clients": { "ship": { "from": "@app/clients/demo", "import": "makeShip", "construct": true } } }"#;
     let (ctrl, _render) = synth(
-        r#"<span class:active={kind === 'ship-light'}>x</span>"#,
+        r#"<span aria-current={kind === 'ship-light'}>x</span>"#,
         manifest,
         CompileMode::Component,
     );
@@ -276,7 +276,7 @@ fn string_literal_does_not_trigger_manifest_import() {
 fn template_literal_outside_interpolation_does_not_trigger_manifest_import() {
     let manifest = r#"{ "clients": { "ship": { "from": "@app/clients/demo", "import": "makeShip", "construct": true } } }"#;
     let (ctrl, _render) = synth(
-        r#"<p class:active={kind === `ship-light`}>x</p>"#,
+        r#"<p aria-current={kind === `ship-light`}>x</p>"#,
         manifest,
         CompileMode::Component,
     );

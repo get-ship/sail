@@ -88,7 +88,7 @@ pub struct TemplateEmitter {
     /// the `collectTextOpens(root)` preamble emit in `js.rs`.
     pub(super) hydrate_uses_text: bool,
     /// True iff `hydrate_calls` includes any element-binding wiring
-    /// (`on:*`, `attr:*`, `class:*`, `style:*`, `bind:value`, `bind:this`)
+    /// (`on:*`, `attr:*`, `prop:*`, `bind:value`, `bind:this`)
     /// — drives the `collectElementMarkers(root)` preamble emit in
     /// `js.rs`.
     pub(super) hydrate_uses_markers: bool,
@@ -135,7 +135,7 @@ pub struct TemplateEmitter {
     /// restores this list around its body walk to scope it per for-loop.
     pub(super) inline_update_stmts: Vec<(String, crate::lower::row_field_uses::RowUse)>,
     /// Accumulated row-field usage across REACTIVE binding closures
-    /// in the current `{#for}` row body (bindClass / bindAttr-effect
+    /// in the current `{#for}` row body (bindAttr-effect
     /// / bindProp / etc. — anything that subscribes via for_version_*
     /// prefixes). emit_for reads this to decide which per-field `__v_<f>`
     /// signals to allocate and which to bump in `update()`. Defaults

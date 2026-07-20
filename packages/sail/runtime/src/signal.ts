@@ -581,14 +581,14 @@ export function effect(fn: () => void | (() => void)): () => void {
  *
  * The Krausest motivation: SAIL's bench has
  *
- *   class:danger={row.id === selected()}
+ *   aria-selected={row.id === selected()}
  *
  * For 1000 rows this puts 1000 effects in `selected`'s subscriber
  * set; a `selected.set(newId)` notifies all 1000, every one
  * re-evaluates the comparison. With `selector`:
  *
  *   const isSelected = selector(selected)
- *   // template: class:danger={isSelected(row.id)}
+ *   // template: aria-selected={isSelected(row.id)}
  *
  * Each row's effect subscribes to its OWN per-id bucket inside the
  * selector. `selected.set(newId)` notifies only the previously-

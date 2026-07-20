@@ -163,7 +163,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, name: string, get: () => unknown): Disposer",
     "doc": "Bind a reactive value to a DOM attribute, with attribute-presence semantics built in.",
-    "loc": "src/bind.ts:116"
+    "loc": "src/bind.ts:115"
   },
   {
     "subpath": ".",
@@ -171,15 +171,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLInputElement, sig: Signal<boolean>): Disposer",
     "doc": "Two-way bind a boolean signal to a checkbox or radio input. Signal writes set `el.checked`; the `change` event writes back into the signal.",
-    "loc": "src/bind.ts:303"
-  },
-  {
-    "subpath": ".",
-    "name": "bindClass",
-    "kind": "function",
-    "signature": "(el: Element, name: string, get: () => unknown): Disposer",
-    "doc": "Toggle a single class on an element. Truthy → class added; falsy → class removed. Other classes already on the element are untouched.",
-    "loc": "src/bind.ts:152"
+    "loc": "src/bind.ts:268"
   },
   {
     "subpath": ".",
@@ -187,7 +179,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, name: string, get: () => unknown): Disposer",
     "doc": "Route a dynamic binding to the right channel so the AUTHOR never has to. This is the toolchain owning the DOM's attribute/property split: for a custom element, a value that can't be an attribute (object / array / function), or a name the element exposes as a property (a declared prop → accessor), is assigned as a PROPERTY — identity preserved; the component reflects it to an attribute itself if it wants (e.g. `variant`, `tone`). Everything else is a plain HTML attribute (aria-*, data-*, native).",
-    "loc": "src/bind.ts:220"
+    "loc": "src/bind.ts:185"
   },
   {
     "subpath": ".",
@@ -227,7 +219,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, get: () => string): Disposer",
     "doc": "Bind a reactive HTML/SVG string to an element's contents. The string is parsed once and morphed into `el` via `morph()` — DOM identity preserved where possible, so focus/scroll/selection survive updates.",
-    "loc": "src/bind.ts:346"
+    "loc": "src/bind.ts:311"
   },
   {
     "subpath": ".",
@@ -275,7 +267,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T extends Element>(el: T, prop: string, get: () => unknown): Disposer",
     "doc": "Bind a value to a JS property of an element (not an attribute). Use this when the target is a typed property — arrays, objects, instances — so the value flows through without an `attribute → string → parse` round-trip.",
-    "loc": "src/bind.ts:190"
+    "loc": "src/bind.ts:155"
   },
   {
     "subpath": ".",
@@ -315,7 +307,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, sig: Signal<string>, onWrite?: (value: string) => void): Disposer",
     "doc": "Two-way bind a string signal to an `<input>` / `<textarea>` / `<select>` element. Initial render and signal-driven updates flow signal → element; user edits flow element → signal via the `input` event. Setting the same value re-checks identity to avoid moving the caret.",
-    "loc": "src/bind.ts:262"
+    "loc": "src/bind.ts:227"
   },
   {
     "subpath": ".",
@@ -1098,7 +1090,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "markHydrateAttr",
     "kind": "function",
     "signature": "(el: Element, name: string, key: string): void",
-    "doc": "Tag an element with a marker attribute (`on:event`, `class:name`, `style:name`, `prop:name`, `attr:name`, `bind:value`, `bind:checked`, `bind:this`, `attr-dynamic`, `mutation`). Server-DOM serialization sets the attribute on the element; browser DOM ignores.",
+    "doc": "Tag an element with a marker attribute (`on:event`, `style:name`, `prop:name`, `attr:name`, `bind:value`, `bind:checked`, `bind:this`, `attr-dynamic`, `mutation`). Server-DOM serialization sets the attribute on the element; browser DOM ignores.",
     "loc": "src/hydrate-mark.ts:69"
   },
   {
@@ -1856,10 +1848,10 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   {
     "subpath": ".",
     "name": "SpringOptions",
-    "kind": "interface",
-    "signature": "interface SpringOptions extends DurationSpringOptions, VelocityOptions { stiffness?: number; damping?: number; mass?: number; }",
+    "kind": "value",
+    "signature": "",
     "doc": "",
-    "loc": "(from motion-dom)"
+    "loc": ""
   },
   {
     "subpath": ".",
@@ -2355,7 +2347,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, name: string, get: () => unknown): Disposer",
     "doc": "Bind a reactive value to a DOM attribute, with attribute-presence semantics built in.",
-    "loc": "src/bind.ts:116"
+    "loc": "src/bind.ts:115"
   },
   {
     "subpath": "./server",
@@ -2363,15 +2355,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLInputElement, sig: Signal<boolean>): Disposer",
     "doc": "Two-way bind a boolean signal to a checkbox or radio input. Signal writes set `el.checked`; the `change` event writes back into the signal.",
-    "loc": "src/bind.ts:303"
-  },
-  {
-    "subpath": "./server",
-    "name": "bindClass",
-    "kind": "function",
-    "signature": "(el: Element, name: string, get: () => unknown): Disposer",
-    "doc": "Toggle a single class on an element. Truthy → class added; falsy → class removed. Other classes already on the element are untouched.",
-    "loc": "src/bind.ts:152"
+    "loc": "src/bind.ts:268"
   },
   {
     "subpath": "./server",
@@ -2395,7 +2379,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, get: () => string): Disposer",
     "doc": "Bind a reactive HTML/SVG string to an element's contents. The string is parsed once and morphed into `el` via `morph()` — DOM identity preserved where possible, so focus/scroll/selection survive updates.",
-    "loc": "src/bind.ts:346"
+    "loc": "src/bind.ts:311"
   },
   {
     "subpath": "./server",
@@ -2411,7 +2395,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T extends Element>(el: T, prop: string, get: () => unknown): Disposer",
     "doc": "Bind a value to a JS property of an element (not an attribute). Use this when the target is a typed property — arrays, objects, instances — so the value flows through without an `attribute → string → parse` round-trip.",
-    "loc": "src/bind.ts:190"
+    "loc": "src/bind.ts:155"
   },
   {
     "subpath": "./server",
@@ -2443,7 +2427,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, sig: Signal<string>, onWrite?: (value: string) => void): Disposer",
     "doc": "Two-way bind a string signal to an `<input>` / `<textarea>` / `<select>` element. Initial render and signal-driven updates flow signal → element; user edits flow element → signal via the `input` event. Setting the same value re-checks identity to avoid moving the caret.",
-    "loc": "src/bind.ts:262"
+    "loc": "src/bind.ts:227"
   },
   {
     "subpath": "./server",
@@ -2666,7 +2650,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "markHydrateAttr",
     "kind": "function",
     "signature": "(el: Element, name: string, key: string): void",
-    "doc": "Tag an element with a marker attribute (`on:event`, `class:name`, `style:name`, `prop:name`, `attr:name`, `bind:value`, `bind:checked`, `bind:this`, `attr-dynamic`, `mutation`). Server-DOM serialization sets the attribute on the element; browser DOM ignores.",
+    "doc": "Tag an element with a marker attribute (`on:event`, `style:name`, `prop:name`, `attr:name`, `bind:value`, `bind:checked`, `bind:this`, `attr-dynamic`, `mutation`). Server-DOM serialization sets the attribute on the element; browser DOM ignores.",
     "loc": "src/hydrate-mark.ts:69"
   },
   {

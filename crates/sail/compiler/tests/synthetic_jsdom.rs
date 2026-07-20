@@ -4,7 +4,7 @@
 //! client-mount and stay reactive in a browser DOM. This synthesizes the
 //! control-flow `board` surface, then drives the workspace `vitest` in a jsdom
 //! environment to `mount()` it and assert: the {#if}/{#for} DOM builds, the
-//! nested component + class: directive render, and an on:click handler mutates
+//! nested component render, and an on:click handler mutates
 //! the controller signal so the list re-renders (proving live reactivity, not
 //! just first paint).
 //!

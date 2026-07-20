@@ -40,7 +40,7 @@ describe('hydrate/markers — collectElementMarkers', () => {
   it('still collects the other marker kinds (positive control)', () => {
     const root = document.createElement('div')
     root.innerHTML =
-      '<a attr:href="b0"></a><span class:active="b1"></span>' +
+      '<a attr:href="b0"></a><span prop:items="b1"></span>' +
       '<input bind:value="b2" /><button on:click="b3"></button>'
 
     const markers = collectElementMarkers(root)

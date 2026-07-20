@@ -59,8 +59,21 @@ fn compile_attr(
     if let Some(rest) = name.strip_prefix("bind:") {
         return compile_bind(rest, value, value_span, loc);
     }
-    if let Some(rest) = name.strip_prefix("class:") {
-        return compile_class(rest, value, value_span, loc);
+    // `class:` is DELETED from the language — same floor as bare `class=`.
+    // Styling is sx (and named `use:` actions that write custom properties
+    // sx can read). State is aria-* / closed sx state prefixes / layout —
+    // not a global CSS class toggle. Refuse so the error names the
+    // replacement rather than silently accepting a refused HTML-lookalike.
+    if name.starts_with("class:") {
+        return Err(CompileError::new(
+            "`class:` has been removed — styling is sx (or a named `use:` action \
+             that writes a custom property sx can read via (--name)); state is \
+             aria-* attributes, closed sx state prefixes (`selected:`, `hover:`, …), \
+             or layout. Bare `class=` is also banned. Do not use `class=` as a \
+             substitute."
+        )
+        .with_span(value_span)
+        .with_category(loc.to_string()));
     }
     // `style:` is DELETED from the language — runtime geometry moves to
     // a named, typed action (`use:virtualRow={start}`,
@@ -485,30 +498,6 @@ fn is_valid_attr_name(s: &str) -> bool {
     chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
 }
 
-fn compile_class(
-    name: &str,
-    value: &str,
-    value_span: Span,
-    loc: &str,
-) -> Result<AttrInstr, CompileError> {
-    if name.is_empty() {
-        return Err(CompileError::new("class: requires a class name")
-            .with_span(value_span)
-            .with_category(loc.to_string()));
-    }
-    if !is_expr_value(value) {
-        return Err(CompileError::new(format!("class:{name} expects {{expr}}"))
-            .with_span(value_span)
-            .with_category(loc.to_string()));
-    }
-    let inner = strip_braces(value).to_string();
-    expr::validate_at(&inner, false, loc, value_span)?;
-    Ok(AttrInstr::Class {
-        name: name.to_string(),
-        expr: Expr::new(inner, value_span, false),
-        span: value_span,
-    })
-}
 
 fn compile_prop(
     name: &str,
@@ -522,7 +511,7 @@ fn compile_prop(
             .with_category(loc.to_string()));
     }
     // Floor: style/class are not reachable via prop: either — same teaching as
-    // bare `style=` / `class=` and retired `style:`.
+    // bare `style=` / `class=` and retired `style:` / `class:`.
     if name.eq_ignore_ascii_case("style") || name.eq_ignore_ascii_case("class") {
         return Err(CompileError::new(format!(
             "`prop:{name}` is refused — styling is sx (or a named `use:` action              that writes a custom property sx can read). Bare `{name}=` is also banned."

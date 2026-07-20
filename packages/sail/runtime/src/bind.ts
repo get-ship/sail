@@ -67,7 +67,7 @@ export function bindText(node: Node, get: () => unknown): Disposer {
  * bindShow(panel, () => expanded())
  * ```
  *
- * @see bindIf for branch swap; bindClass to toggle visibility via CSS.
+ * @see bindIf for branch swap.
  */
 export function bindShow(el: HTMLElement, get: () => unknown): Disposer {
   let prev: string | null = null
@@ -110,8 +110,7 @@ export function bindShow(el: HTMLElement, get: () => unknown): Disposer {
  * busy.set(false)  // <button>
  * ```
  *
- * @see bindProp when binding to a typed JS property; bindClass for class
- *   toggles.
+ * @see bindProp when binding to a typed JS property.
  */
 export function bindAttr(el: Element, name: string, get: () => unknown): Disposer {
   let prev: unknown
@@ -127,40 +126,6 @@ export function bindAttr(el: Element, name: string, get: () => unknown): Dispose
     }
     prev = v
     init = true
-  })
-}
-
-/**
- * Toggle a single class on an element. Truthy → class added; falsy →
- * class removed. Other classes already on the element are untouched.
- *
- * Compiler target: `class:active={cond}` template syntax.
- *
- * @param el Element to toggle the class on.
- * @param name Class name (no leading `.`).
- * @param get Reactive predicate.
- * @returns Disposer that stops the binding.
- *
- * @example
- * ```ts
- * const isActive = signal(false)
- * bindClass(tab, 'active', () => isActive())
- * ```
- *
- * @see bindAttr for general attribute binding; bindShow for visibility.
- */
-export function bindClass(el: Element, name: string, get: () => unknown): Disposer {
-  let prev: boolean | undefined
-  return effect(() => {
-    const v = !!get()
-    if (v === prev) return
-    if (prev === undefined && v === el.classList.contains(name)) {
-      prev = v
-      return
-    }
-    if (v) el.classList.add(name)
-    else el.classList.remove(name)
-    prev = v
   })
 }
 

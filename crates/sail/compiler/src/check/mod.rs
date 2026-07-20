@@ -492,7 +492,7 @@ where
         AttrInstr::BindValue { expr, .. } | AttrInstr::BindChecked { expr, .. } => f(expr)?,
         AttrInstr::BindThis { .. } | AttrInstr::SlotReflectEmpty { .. } => {}
         AttrInstr::On { handler, .. } => f(handler)?,
-        AttrInstr::Class { expr, .. } | AttrInstr::Prop { expr, .. } => f(expr)?,
+        AttrInstr::Prop { expr, .. } => f(expr)?,
         AttrInstr::Mutation { .. } => {}
         AttrInstr::Use { param, .. } => {
             if let Some(e) = param {
