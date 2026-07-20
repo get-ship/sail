@@ -27,34 +27,36 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
 const srcDir = resolve(root, 'src')
 
-// --- resolve the sui checkout ------------------------------------------------
+// --- resolve the sail checkout ----------------------------------------------
 // Precedence: explicit SAIL_REPO env → granular SAIL_RUNTIME/SAIL_COMPILER envs →
-// discovery across conventional locations. Moving the sui checkout then needs
-// only `SAIL_REPO=/new/path` (or nothing, if it lands in a probed location).
+// discovery across conventional locations. Moving the checkout then needs only
+// `SAIL_REPO=/new/path` (or nothing, if it lands in a probed location).
 function firstExisting(paths) {
   for (const p of paths) if (p && existsSync(p)) return p
   return null
 }
-function discoverSuiRepo() {
+function discoverSailRepo() {
   const probes = [
     process.env.SAIL_REPO,
-    resolve(homedir(), 'dev/sui'),
-    resolve(homedir(), 'dev/Ship/sui'), // post-carve: sui nested under Ship
+    resolve(homedir(), 'dev/sail'),
+    resolve(homedir(), 'dev/Ship/sail'),
+    // This worktree / monorepo root when precompile is run in-tree:
+    resolve(__dirname, '../../../../..'),
   ].filter(Boolean)
   return probes.find((p) => existsSync(resolve(p, 'packages/sail/runtime'))) ?? null
 }
 
-const SAIL_REPO = discoverSuiRepo()
+const SAIL_REPO = discoverSailRepo()
 
-// Resolve @ship/sail-runtime to the live sui checkout WITHOUT a package.json
+// Resolve @ship/sail-runtime to the live sail checkout WITHOUT a package.json
 // `file:` dep — that drags in the runtime's `workspace:*` devDeps, which don't
-// resolve outside the sui monorepo. A direct symlink gives esbuild the current
+// resolve outside the monorepo. A direct symlink gives esbuild the current
 // source AND lets the bench runner read the version from its package.json.
 const RUNTIME_SRC = process.env.SAIL_RUNTIME
   ?? (SAIL_REPO ? resolve(SAIL_REPO, 'packages/sail/runtime') : null)
 if (!RUNTIME_SRC || !existsSync(RUNTIME_SRC)) {
   console.error(
-    'sui runtime source not found. Set SAIL_REPO to your sui checkout root\n' +
+    'sail runtime source not found. Set SAIL_REPO to your sail checkout root\n' +
     '(expects <SAIL_REPO>/packages/sail/runtime), or SAIL_RUNTIME to the runtime\n' +
     'directory directly.',
   )
@@ -66,7 +68,7 @@ mkdirSync(shipModules, { recursive: true })
 const runtimeLink = resolve(shipModules, 'sail-runtime')
 
 // (Re)link @ship/sail-runtime → the resolved runtime. Recreate when missing OR
-// stale (dangling / points elsewhere) — a moved sui checkout would otherwise
+// stale (dangling / points elsewhere) — a moved sail checkout would otherwise
 // leave a dead symlink esbuild can't follow.
 let linkOk = false
 try {
@@ -87,7 +89,7 @@ const compiler = process.env.SAIL_COMPILER ?? firstExisting([
 if (!compiler || !existsSync(compiler)) {
   console.error(
     'sail-compiler not found. Build it (cargo build -p sail-compiler [--release])\n' +
-    'under your sui checkout, or set SAIL_COMPILER to a binary path.' +
+    'under your sail checkout, or set SAIL_COMPILER to a binary path.' +
     (SAIL_REPO ? `\n(searched ${SAIL_REPO}/target/{release,debug}/sail-compiler)` : ''),
   )
   process.exit(1)

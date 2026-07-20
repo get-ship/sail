@@ -1,3 +1,9 @@
+// FOREIGN js-framework-benchmark chrome — not a Sail product exemplar.
+// Owned at tests/perf/frameworks/keyed/sail; $BENCH_HOME/.../keyed/sail is sync output only.
+// Static Bootstrap class= strings match the benchmark's shared CSS sheet (driver layout).
+// Row highlight: local Action `benchDanger` toggles classList 'danger' for tr.danger only —
+// the webdriver-ts select contract. Do not copy this pattern into product Sail.
+
 <controller>
 import { controller, signal, type Action } from '@ship/sail-runtime'
 

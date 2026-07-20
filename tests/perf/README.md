@@ -1,32 +1,57 @@
 # SAIL perf baselines
 
-Checked-in median results from the js-framework-benchmark suite, captured
-against `keyed/sail` at a known git SHA. Standard filename is
-`YYYY-MM-DD-baseline.json`; the latest such filename (sorted) is the
-active anchor that `just bench-check` reads.
+Checked-in median results from the
+[js-framework-benchmark](https://github.com/krausest/js-framework-benchmark)
+suite, captured against the owned `keyed/sail` app at a known git SHA.
 
-## Current anchor
+## Source of truth
 
-`just bench-check` reads `latestBaseline()` = the **lexically-latest** matching
-filename, which is `2026-05-14-current.json` (swap1k 7.2 ms, SHA `747a5f17`) —
-not `post-d2-d4`. That anchor is **architecturally stale**: it was captured
-against the old cursor-based `bindFor` in the bundled runtime, before the
-LIS-based `packages/sail/runtime/src/for.ts` (`0c65c6568`) replaced it. Gating
-the current LIS runtime against it reports a spurious +56% `05_swap1k`
-regression that is an architecture-gap accounting artifact, not a code
-regression. Re-capture a contemporary `<date>-current.json` with `just bench`
-before trusting the gate. Full write-up: `.artifacts/sail-arc/perf-status.md`.
+| Path | Role |
+|------|------|
+| `tests/perf/frameworks/keyed/sail/` | **Owned** keyed app (edit only here) |
+| `$BENCH_HOME/frameworks/keyed/sail` | **Sync output** — overwritten by the sync script; never hand-edit |
+| `$BENCH_HOME/frameworks/keyed/sui` | **Stale** pre-rename leftover — the sync script deletes it |
+
+Sync:
+
+```sh
+bun tests/perf/scripts/sync-keyed-sail.mjs
+# or: BENCH_HOME=/path/to/js-framework-benchmark bun tests/perf/scripts/sync-keyed-sail.mjs
+# dry-run: bun tests/perf/scripts/sync-keyed-sail.mjs --dry-run
+```
+
+Default `BENCH_HOME` is `~/dev/js-framework-benchmark`.
+
+There is **no in-repo driver** today: no `just bench`, no `just bench-check`,
+no `scripts/dev/bench-lib.mjs`, no `scripts/dev/perf-profile.mjs`, and no CI
+bench gate. Capturing a new baseline means running js-framework-benchmark’s
+own tooling against the synced `keyed/sail` tree after a manual or scripted
+build there. Do not treat missing recipes as working.
+
+## Baseline files
+
+Files live under `tests/perf/baselines/`. Naming:
+
+- `YYYY-MM-DD-baseline.json` — standard capture
+- `YYYY-MM-DD-<label>.json` — deliberate inflection (optimization, methodology)
+
+**Lexically latest** filename on disk (sorted) is currently
+`2026-06-26-reconstituted.json`. Prefer that name when referring to “latest
+file,” not a hard-coded older label.
+
+`2026-05-14-current.json` (swap1k 7.2 ms, SHA `747a5f17`) is **architecturally
+stale**: it was captured against the old cursor-based `bindFor` in the bundled
+runtime, before the LIS-based `packages/sail/runtime/src/for.ts` replaced it.
+Comparing a contemporary LIS runtime to that file reports a spurious
+`05_swap1k` gap that is an architecture-accounting artifact, not a live code
+regression. Re-capture before trusting any gate built on these numbers.
+
+Other historical notes:
 
 - `2026-05-13-post-d2-d4.json` — post D2 (`bindFor` scratch reuse) + D4
-  (bind\* short-circuit) merges. Captured at `2a951ef6` on 2026-05-13.
-- `2026-05-13-baseline.json` — preserved pre-perf-cycle reference
-  (captured at `56bea690`). Do not overwrite.
-
-Files tagged with a `-<label>.json` suffix (e.g. `-post-d2-d4`) record
-a deliberate inflection point — a merged optimization, an abandoned
-attempt, a methodology change. They sit beside the standard
-`-baseline.json` files so history is legible. Naming convention for
-future deliberate captures: `YYYY-MM-DD-<short-label>.json`.
+  (bind\* short-circuit); SHA `2a951ef6`
+- `2026-05-13-baseline.json` — pre-perf-cycle reference (`56bea690`); do not
+  overwrite
 
 ## Format
 
@@ -36,117 +61,51 @@ future deliberate captures: `YYYY-MM-DD-<short-label>.json`.
   "git_sha": "<short SHA>",
   "framework_version": "0.1.0",
   "compared_against": ["solid", "svelte", "vue", "vanillajs"],
-  "operations":   { "01_run1k":  { "sail": 59.8, "solid": 49.5, ... }, ... },
-  "memory_mb":    { "22_run-memory":  { "sail": 3.4, ... }, ... },
-  "size_kb":      { "41_size-uncompressed": { "sail": 18.3, ... }, ... },
-  "first_paint_ms": { "43_first-paint": { "sail": 38.0, ... } }
+  "operations":   { "01_run1k":  { "sail": 59.8, "solid": 49.5 }, "...": "..." },
+  "memory_mb":    { "22_run-memory":  { "sail": 3.4 }, "...": "..." },
+  "size_kb":      { "41_size-uncompressed": { "sail": 18.3 }, "...": "..." },
+  "first_paint_ms": { "43_first-paint": { "sail": 38.0 } }
 }
 ```
 
-Median values only — variance lives in the raw `webdriver-ts/results/*.json`
-files inside the bench checkout.
+Median values only — variance lives in the raw
+`webdriver-ts/results/*.json` files inside the bench checkout.
 
-## Capturing a new baseline
+## Optional compile smoke (in-tree)
 
-```sh
-just bench
-```
-
-This rebuilds the SAIL bench bundle, runs the benchmark against SAIL plus
-comparison frameworks (solid, svelte, vue, vanillajs), and writes a fresh
-`<today>-baseline.json`. Commit it.
-
-The SAIL bench app is **owned in this repo** at
-`tests/perf/frameworks/keyed/sail/` (see its README) and synced into the external
-checkout (`syncSailFramework()` in `scripts/dev/bench-lib.mjs`) before each build
-— we maintain only those source files, not a fork of the whole benchmark. The
-comparison frameworks (solid, lit, svelte, vue, vanillajs) still live in the
-external checkout. Its clone URL is not recorded in-tree — record it as the repo
-variable `SUI_BENCH_REPO` (and a pinned `SUI_BENCH_REF`) so the nightly CI gate
-(`.github/workflows/bench.yml`) can clone it. Until that variable is set the CI
-`js-bench` job no-ops with an explanation.
-
-Requires:
-- An external js-framework-benchmark checkout (default `~/dev/js-framework-benchmark`,
-  override with `BENCH_HOME=...`) with comparison frameworks already built
-  (`npm run build-prod` in each). On first use, `bun install` once inside the
-  synced `frameworks/keyed/sail` dir (esbuild).
-- Playwright Chromium installed at the path in `scripts/dev/bench-lib.mjs`
-  (override with `CHROME_BINARY=...`).
-- A sail checkout the vendored `precompile.mjs` can find — it resolves `SAIL_REPO`
-  (env), then `SAIL_COMPILER`/`SAIL_RUNTIME` (env), then probes `~/dev/sail` and
-  `~/dev/Ship/sail`. Set `SAIL_REPO` if the checkout lives elsewhere. Build the
-  compiler first: `cargo build -p sail-compiler` under that checkout.
-
-## Checking against the baseline
+Does **not** run the multi-hour webdriver suite. Verifies the owned app still
+compiles:
 
 ```sh
-just bench-check
+# from repo root; build the compiler first if needed
+cargo build -p sail-compiler
+SAIL_REPO="$PWD" bun tests/perf/frameworks/keyed/sail/scripts/precompile.mjs
 ```
 
-Re-runs the benchmark against `keyed/sail` only (skips comparison frameworks
-for speed), reads the most recent committed baseline, and compares medians
-op-by-op. Exits non-zero if any op regresses by more than 15%. Override the
-threshold with `BENCH_REGRESSION_THRESHOLD=0.25 just bench-check`.
+`precompile.mjs` resolves `SAIL_REPO` (or `SAIL_COMPILER` / `SAIL_RUNTIME`),
+links `@ship/sail-runtime`, and emits under the app’s `src/dist/`.
 
-## On regression
+## Capturing a baseline (external harness)
 
-1. Reproduce locally — `just bench-check` once is noisy. Run twice; if the
-   second run is clean, treat as flake.
-2. If the regression is real, either fix it before merge or capture a new
-   baseline with `just bench` and commit that, with a commit message
-   explaining the deliberate movement.
-3. Never silently raise `BENCH_REGRESSION_THRESHOLD` to hide a regression.
+1. Sync: `bun tests/perf/scripts/sync-keyed-sail.mjs`
+2. Once in the checkout: `cd "$BENCH_HOME/frameworks/keyed/sail" && bun install`
+3. Build prod for sail (and any comparison frameworks you care about) with the
+   benchmark repo’s usual `npm run build-prod` / framework scripts
+4. Run js-framework-benchmark’s webdriver driver for the frameworks you want
+5. Fold medians into a new `tests/perf/baselines/YYYY-MM-DD-….json` and commit
 
-## Profiling methodology
+Requires a sail checkout the synced `precompile.mjs` can find (`SAIL_REPO` or
+discovery), with `cargo build -p sail-compiler` already done.
 
-`just bench` answers "how fast"; profiling answers "why this fast / what's
-the dominant cost". Use `scripts/dev/perf-profile.mjs` to capture a V8
-CPU profile of any bench op against SAIL plus one comparison framework.
+## Profiles
 
-```sh
-# Default: SAIL / 01_run1k / 10 iterations
-node scripts/dev/perf-profile.mjs
+`tests/perf/profiles/*.cpuprofile` are checked-in V8 CPU profiles from earlier
+manual captures (open in Chrome DevTools → Performance → Load profile). There
+is no in-tree profiler driver script at present.
 
-# Sweep the create-path ops against both frameworks
-node scripts/dev/perf-profile.mjs --all --iter 10
+## On the keyed app itself
 
-# Targeted capture
-node scripts/dev/perf-profile.mjs --framework solid --op 02_replace1k --iter 20
-
-# Watch the run in a visible browser (useful when the page can't load)
-node scripts/dev/perf-profile.mjs --headed
-```
-
-The harness:
-
-1. Starts the bench's http-server on :8080 if it isn't already up
-   (override the path with `BENCH_HOME=…`).
-2. Launches Playwright Chromium (already a devDep — no new install).
-3. Attaches a CDP session and enables `Profiler` at 100µs sampling
-   (10 kHz — fine enough to resolve sub-ms native calls).
-4. Warms the page with one unprofiled click, clears, then runs the
-   op N times under the profiler with `waitForFunction` predicates
-   between iterations.
-5. Writes `tests/perf/profiles/YYYY-MM-DD-<framework>-<op>.cpuprofile`
-   (open it in Chrome devtools → Performance → Load profile) and
-   prints a self-time top-10 to stdout.
-
-Currently mapped ops: `01_run1k`, `02_replace1k`, `05_swap1k`. Add new
-ops to the `OPS` table in `scripts/dev/perf-profile.mjs` (each entry
-declares the setup clicks, measured click(s), and a `waitForFunction`
-predicate so the profiled window covers the right work).
-
-When analysing a profile, group self-time by:
-
-- **native** (`createElement`, `setAttribute`, `appendChild`, etc.)
-  — the DOM construction model. Compare against the comparison
-  framework's `cloneNode` count.
-- **framework code** (URLs ending `.compiled.js`, `dist/main.js`,
-  or `sail-runtime/*`) — reconciler + binding overhead. The `bindFor`
-  effect body's per-render allocations show up here.
-- **GC** — proxy for allocation pressure. Bigger gap than the bench
-  number suggests = signal/object churn in the row body.
-
-The first audit using this harness is `.artifacts/sail-arc/perf-profile.md`
-(gitignored — transient report).
+See `tests/perf/frameworks/keyed/sail/README.md`. It is foreign
+js-framework-benchmark chrome (Bootstrap class names in the template for the
+shared CSS sheet, `use:benchDanger` for `tr.danger` selection) — **not** a Sail
+product exemplar.
