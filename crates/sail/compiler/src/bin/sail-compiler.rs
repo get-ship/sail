@@ -491,6 +491,11 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(&serde_json::to_string_pretty(&sail_compiler::directive_manifest::DIRECTIVES)?);
     sf.push_str("\n\n");
 
+    sf.push_str("export interface EventDoc {\n  name: string\n  summary: string\n}\n\n");
+    sf.push_str("export const EVENT_NAMES: EventDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&sail_compiler::directive_manifest::EVENT_NAMES)?);
+    sf.push_str("\n\n");
+
     sf.push_str("export interface ModifierDoc {\n  canonical: string\n  alias: string | null\n  arg: string | null\n  summary: string\n}\n\n");
     sf.push_str("export const EVENT_MODIFIERS: ModifierDoc[] = ");
     sf.push_str(&serde_json::to_string_pretty(&sail_compiler::directive_manifest::EVENT_MODIFIERS)?);

@@ -1,6 +1,6 @@
 <!--
   /sail/reference/template — every template directive, every on: modifier,
-  every bind: target, retired directives, and the block vocabulary. Rendered
+  every on: event, every bind: target, retired directives, and the block vocabulary. Rendered
   from src/language-surface.gen.ts (emitted by `sail-compiler prop-registry`).
 -->
 <controller>
@@ -8,6 +8,7 @@ import { controller, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import {
   DIRECTIVES,
+  EVENT_NAMES,
   EVENT_MODIFIERS,
   BIND_TARGETS,
   RETIRED_DIRECTIVES,
@@ -29,6 +30,7 @@ const BLOCK_ROWS = BLOCKS.map((b) => ({
 
 export default controller((_ctx: ControllerScope<Scope>) => ({
   directives: () => DIRECTIVES,
+  eventNames: () => EVENT_NAMES,
   modifierRows: () => MODIFIER_ROWS,
   bindTargets: () => BIND_TARGETS,
   retired: () => RETIRED_DIRECTIVES,
@@ -53,6 +55,25 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
             <code sx="min-w-40">{d.syntax}</code>
             <small sx="text-muted-foreground">{d.summary}</small>
           </row>
+        </card>
+      {/for}
+    </grid>
+  </column>
+
+  <column gap="3">
+    <h3>on: events</h3>
+    <p sx="max-w-breakpoint-tablet">
+      Web DOM event names plus framework custom events the runtime fires.
+      <code>sail-*</code> / <code>ship-*</code> prefixes and namespaced
+      <code>tag:event</code> names stay open without a row here.
+    </p>
+    <grid cols="2" gap="2">
+      {#for e of eventNames() key={e.name}}
+        <card padding="sm" sx="min-w-0">
+          <column gap="1">
+            <code>on:{e.name}</code>
+            <small sx="text-muted-foreground max-w-panel-max-w-sm">{e.summary}</small>
+          </column>
         </card>
       {/for}
     </grid>

@@ -6046,6 +6046,574 @@ export const DIRECTIVES: DirectiveDoc[] = [
   }
 ]
 
+export interface EventDoc {
+  name: string
+  summary: string
+}
+
+export const EVENT_NAMES: EventDoc[] = [
+  {
+    "name": "click",
+    "summary": "primary activation (mouse / pen / touch synthesized click)"
+  },
+  {
+    "name": "dblclick",
+    "summary": "double-click"
+  },
+  {
+    "name": "contextmenu",
+    "summary": "context-menu gesture (usually right-click)"
+  },
+  {
+    "name": "mousedown",
+    "summary": "mouse button pressed"
+  },
+  {
+    "name": "mouseup",
+    "summary": "mouse button released"
+  },
+  {
+    "name": "mousemove",
+    "summary": "mouse moved"
+  },
+  {
+    "name": "mouseenter",
+    "summary": "mouse entered the element (does not bubble)"
+  },
+  {
+    "name": "mouseleave",
+    "summary": "mouse left the element (does not bubble)"
+  },
+  {
+    "name": "mouseover",
+    "summary": "mouse entered the element or a descendant"
+  },
+  {
+    "name": "mouseout",
+    "summary": "mouse left the element or a descendant"
+  },
+  {
+    "name": "wheel",
+    "summary": "mouse wheel / trackpad scroll gesture"
+  },
+  {
+    "name": "pointerdown",
+    "summary": "pointer (mouse/pen/touch) pressed"
+  },
+  {
+    "name": "pointerup",
+    "summary": "pointer released"
+  },
+  {
+    "name": "pointermove",
+    "summary": "pointer moved"
+  },
+  {
+    "name": "pointerenter",
+    "summary": "pointer entered (does not bubble)"
+  },
+  {
+    "name": "pointerleave",
+    "summary": "pointer left (does not bubble)"
+  },
+  {
+    "name": "pointerover",
+    "summary": "pointer entered the element or a descendant"
+  },
+  {
+    "name": "pointerout",
+    "summary": "pointer left the element or a descendant"
+  },
+  {
+    "name": "pointercancel",
+    "summary": "pointer input cancelled by the UA"
+  },
+  {
+    "name": "gotpointercapture",
+    "summary": "element received pointer capture"
+  },
+  {
+    "name": "lostpointercapture",
+    "summary": "element lost pointer capture"
+  },
+  {
+    "name": "touchstart",
+    "summary": "touch point placed on the surface"
+  },
+  {
+    "name": "touchend",
+    "summary": "touch point removed"
+  },
+  {
+    "name": "touchmove",
+    "summary": "touch point moved"
+  },
+  {
+    "name": "touchcancel",
+    "summary": "touch point cancelled by the UA"
+  },
+  {
+    "name": "keydown",
+    "summary": "key pressed (repeats while held)"
+  },
+  {
+    "name": "keyup",
+    "summary": "key released"
+  },
+  {
+    "name": "keypress",
+    "summary": "character key pressed (deprecated; prefer keydown)"
+  },
+  {
+    "name": "focus",
+    "summary": "element received focus (does not bubble; prefer focusin)"
+  },
+  {
+    "name": "blur",
+    "summary": "element lost focus (does not bubble; prefer focusout)"
+  },
+  {
+    "name": "focusin",
+    "summary": "element or descendant received focus (bubbles)"
+  },
+  {
+    "name": "focusout",
+    "summary": "element or descendant lost focus (bubbles)"
+  },
+  {
+    "name": "input",
+    "summary": "value changed (fires on every edit)"
+  },
+  {
+    "name": "beforeinput",
+    "summary": "value is about to change; cancelable"
+  },
+  {
+    "name": "change",
+    "summary": "value committed (blur/select/commit)"
+  },
+  {
+    "name": "submit",
+    "summary": "form submit attempted"
+  },
+  {
+    "name": "reset",
+    "summary": "form reset"
+  },
+  {
+    "name": "invalid",
+    "summary": "form control failed constraint validation"
+  },
+  {
+    "name": "select",
+    "summary": "text selection changed inside an input/textarea"
+  },
+  {
+    "name": "formdata",
+    "summary": "FormData is being constructed on submit"
+  },
+  {
+    "name": "dragstart",
+    "summary": "drag operation began"
+  },
+  {
+    "name": "drag",
+    "summary": "drag source is being dragged"
+  },
+  {
+    "name": "dragend",
+    "summary": "drag operation ended"
+  },
+  {
+    "name": "dragenter",
+    "summary": "drag entered a drop target"
+  },
+  {
+    "name": "dragleave",
+    "summary": "drag left a drop target"
+  },
+  {
+    "name": "dragover",
+    "summary": "drag is over a drop target (call preventDefault to allow drop)"
+  },
+  {
+    "name": "drop",
+    "summary": "drop completed on a target"
+  },
+  {
+    "name": "copy",
+    "summary": "copy to clipboard"
+  },
+  {
+    "name": "cut",
+    "summary": "cut to clipboard"
+  },
+  {
+    "name": "paste",
+    "summary": "paste from clipboard"
+  },
+  {
+    "name": "compositionstart",
+    "summary": "IME composition began"
+  },
+  {
+    "name": "compositionupdate",
+    "summary": "IME composition updated"
+  },
+  {
+    "name": "compositionend",
+    "summary": "IME composition finished"
+  },
+  {
+    "name": "play",
+    "summary": "media playback started"
+  },
+  {
+    "name": "pause",
+    "summary": "media playback paused"
+  },
+  {
+    "name": "ended",
+    "summary": "media reached the end"
+  },
+  {
+    "name": "timeupdate",
+    "summary": "media currentTime changed"
+  },
+  {
+    "name": "volumechange",
+    "summary": "media volume or mute changed"
+  },
+  {
+    "name": "ratechange",
+    "summary": "media playbackRate changed"
+  },
+  {
+    "name": "loadeddata",
+    "summary": "media frame data loaded at current position"
+  },
+  {
+    "name": "loadedmetadata",
+    "summary": "media metadata loaded"
+  },
+  {
+    "name": "canplay",
+    "summary": "media can start playing"
+  },
+  {
+    "name": "canplaythrough",
+    "summary": "media can play through without buffering"
+  },
+  {
+    "name": "stalled",
+    "summary": "media data unexpectedly not available"
+  },
+  {
+    "name": "suspend",
+    "summary": "media data loading suspended"
+  },
+  {
+    "name": "waiting",
+    "summary": "playback stopped pending data"
+  },
+  {
+    "name": "seeking",
+    "summary": "seek operation began"
+  },
+  {
+    "name": "seeked",
+    "summary": "seek operation completed"
+  },
+  {
+    "name": "durationchange",
+    "summary": "media duration changed"
+  },
+  {
+    "name": "emptied",
+    "summary": "media became empty (e.g. network error / reload)"
+  },
+  {
+    "name": "abort",
+    "summary": "loading aborted"
+  },
+  {
+    "name": "error",
+    "summary": "resource failed to load (media, img, …)"
+  },
+  {
+    "name": "load",
+    "summary": "resource finished loading"
+  },
+  {
+    "name": "unload",
+    "summary": "document is unloading"
+  },
+  {
+    "name": "beforeunload",
+    "summary": "document is about to unload (may prompt)"
+  },
+  {
+    "name": "resize",
+    "summary": "viewport resized"
+  },
+  {
+    "name": "scroll",
+    "summary": "element scrolled (does not bubble; listen on the scroller)"
+  },
+  {
+    "name": "scrollend",
+    "summary": "scroll sequence finished"
+  },
+  {
+    "name": "hashchange",
+    "summary": "location.hash changed"
+  },
+  {
+    "name": "popstate",
+    "summary": "session history changed (back/forward)"
+  },
+  {
+    "name": "pagehide",
+    "summary": "page is being hidden (bfcache-aware)"
+  },
+  {
+    "name": "pageshow",
+    "summary": "page is being shown (bfcache-aware)"
+  },
+  {
+    "name": "visibilitychange",
+    "summary": "document.visibilityState changed"
+  },
+  {
+    "name": "online",
+    "summary": "browser went online"
+  },
+  {
+    "name": "offline",
+    "summary": "browser went offline"
+  },
+  {
+    "name": "animationstart",
+    "summary": "CSS animation started"
+  },
+  {
+    "name": "animationend",
+    "summary": "CSS animation finished"
+  },
+  {
+    "name": "animationiteration",
+    "summary": "CSS animation completed one iteration"
+  },
+  {
+    "name": "animationcancel",
+    "summary": "CSS animation cancelled"
+  },
+  {
+    "name": "transitionstart",
+    "summary": "CSS transition started"
+  },
+  {
+    "name": "transitionend",
+    "summary": "CSS transition finished"
+  },
+  {
+    "name": "transitionrun",
+    "summary": "CSS transition created / running"
+  },
+  {
+    "name": "transitioncancel",
+    "summary": "CSS transition cancelled"
+  },
+  {
+    "name": "toggle",
+    "summary": "details/dialog open state toggled"
+  },
+  {
+    "name": "close",
+    "summary": "dialog closed"
+  },
+  {
+    "name": "cancel",
+    "summary": "dialog cancel (Escape) or similar"
+  },
+  {
+    "name": "pointerlockchange",
+    "summary": "pointer lock acquired or released"
+  },
+  {
+    "name": "pointerlockerror",
+    "summary": "pointer lock request failed"
+  },
+  {
+    "name": "message",
+    "summary": "message received (window/worker/BroadcastChannel)"
+  },
+  {
+    "name": "messageerror",
+    "summary": "message could not be deserialized"
+  },
+  {
+    "name": "storage",
+    "summary": "another document changed localStorage/sessionStorage"
+  },
+  {
+    "name": "success",
+    "summary": "form mutation settled ok — fired by <form mutation=…> on its host"
+  },
+  {
+    "name": "failure",
+    "summary": "form mutation settled with an error — fired by <form mutation=…> on its host"
+  },
+  {
+    "name": "sail-change",
+    "summary": "generic value change from a sail control"
+  },
+  {
+    "name": "sail-combobox-select",
+    "summary": "combobox option selected"
+  },
+  {
+    "name": "sail-tab-change",
+    "summary": "active tab changed"
+  },
+  {
+    "name": "sail-page-change",
+    "summary": "pagination page changed"
+  },
+  {
+    "name": "sail-variant-change",
+    "summary": "variant selection changed"
+  },
+  {
+    "name": "sail-remove",
+    "summary": "item remove requested"
+  },
+  {
+    "name": "sail-error-reset",
+    "summary": "error boundary reset requested"
+  },
+  {
+    "name": "sail-toggle",
+    "summary": "toggle pressed"
+  },
+  {
+    "name": "sail-toggle-change",
+    "summary": "toggle checked state changed"
+  },
+  {
+    "name": "sail-select",
+    "summary": "selection changed"
+  },
+  {
+    "name": "sail-menu-select",
+    "summary": "menu item selected"
+  },
+  {
+    "name": "sail-dismiss",
+    "summary": "overlay/toast dismissed"
+  },
+  {
+    "name": "sail-toast-dismiss",
+    "summary": "toast dismissed"
+  },
+  {
+    "name": "sail-cancel",
+    "summary": "cancel action (e.g. composer)"
+  },
+  {
+    "name": "sail-save",
+    "summary": "save action"
+  },
+  {
+    "name": "sail-composer-submit",
+    "summary": "chat composer submitted"
+  },
+  {
+    "name": "sail-citation-open",
+    "summary": "citation pill activated"
+  },
+  {
+    "name": "sail-theme-change",
+    "summary": "theme selection changed"
+  },
+  {
+    "name": "sail-date-change",
+    "summary": "date picker value changed"
+  },
+  {
+    "name": "sail-range-change",
+    "summary": "range control value changed"
+  },
+  {
+    "name": "sail-view-change",
+    "summary": "view mode changed"
+  },
+  {
+    "name": "sail-error-caught",
+    "summary": "error boundary caught an error"
+  },
+  {
+    "name": "sail-mermaid-error",
+    "summary": "mermaid diagram failed to render"
+  },
+  {
+    "name": "sail-canvas-viewport",
+    "summary": "canvas pan/zoom viewport changed"
+  },
+  {
+    "name": "sail-board-change",
+    "summary": "board model mutated"
+  },
+  {
+    "name": "sail-node-select",
+    "summary": "board node selection changed"
+  },
+  {
+    "name": "sail-edge-create",
+    "summary": "board edge created via port drag"
+  },
+  {
+    "name": "sail-draw-change",
+    "summary": "draw scene mutated"
+  },
+  {
+    "name": "sail-draw-select",
+    "summary": "draw selection changed"
+  },
+  {
+    "name": "sail-annotation-staged",
+    "summary": "annotation staged for send"
+  },
+  {
+    "name": "sail-annotation-sent",
+    "summary": "annotation POST succeeded"
+  },
+  {
+    "name": "sail-annotation-error",
+    "summary": "annotation POST failed"
+  },
+  {
+    "name": "sail-annotation-remove",
+    "summary": "annotation remove requested"
+  },
+  {
+    "name": "sail-event-click",
+    "summary": "calendar event clicked"
+  },
+  {
+    "name": "sail-event-select",
+    "summary": "calendar event selected"
+  },
+  {
+    "name": "sail-event-move",
+    "summary": "calendar event moved"
+  },
+  {
+    "name": "sail-event-create-intent",
+    "summary": "calendar empty-slot create intent"
+  }
+]
+
 export interface ModifierDoc {
   canonical: string
   alias: string | null

@@ -182,7 +182,7 @@ struct CompletionVocabulary {
 #[wasm_bindgen]
 pub fn completion_vocabulary() -> Result<JsValue, JsValue> {
     let vocab = CompletionVocabulary {
-        events: crate::emit::template_emit::delegatable_events().to_vec(),
+        events: crate::directive_manifest::EVENT_NAMES.iter().map(|e| e.name).collect(),
         modifiers: directive_manifest::EVENT_MODIFIERS,
         bind_targets: directive_manifest::BIND_TARGETS,
         blocks: block_manifest::BLOCKS,

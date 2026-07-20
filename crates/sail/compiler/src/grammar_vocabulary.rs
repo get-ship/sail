@@ -33,7 +33,7 @@ pub fn to_json() -> serde_json::Value {
         directive_prefixes: crate::directive_manifest::DIRECTIVE_PREFIXES,
         directive_elements: crate::directive_manifest::DIRECTIVE_ELEMENTS,
         blocks: crate::block_manifest::BLOCKS,
-        events: crate::emit::template_emit::delegatable_events().to_vec(),
+        events: crate::directive_manifest::EVENT_NAMES.iter().map(|e| e.name).collect(),
         modifiers: crate::directive_manifest::EVENT_MODIFIERS,
         bind_targets: crate::directive_manifest::BIND_TARGETS,
         retired_directives: crate::directive_manifest::RETIRED_DIRECTIVES,

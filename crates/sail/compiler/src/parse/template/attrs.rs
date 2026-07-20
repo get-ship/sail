@@ -360,6 +360,19 @@ fn compile_on(
             .with_span(value_span)
             .with_category(loc.to_string()));
     }
+    if !crate::directive_manifest::is_known_event(&event) {
+        let mut msg = format!("unknown event {event}");
+        if let Some(hint) = crate::directive_manifest::suggest_event(&event) {
+            msg.push_str(&format!(" — did you mean {hint}?"));
+        } else {
+            msg.push_str(
+                " — on: accepts standard DOM event names, sail-*/ship-* custom events, and namespaced tag:event names",
+            );
+        }
+        return Err(CompileError::new(msg)
+            .with_span(value_span)
+            .with_category(loc.to_string()));
+    }
     let mut modifiers: Vec<Modifier> = Vec::new();
     for raw in parts {
         if raw.is_empty() {
@@ -1459,5 +1472,39 @@ mod tests {
                 err.message
             );
         }
+    }
+
+    #[test]
+    fn every_manifest_event_compiles_and_unknown_suggests() {
+        let span = Span::new(0, 0);
+        for e in crate::directive_manifest::EVENT_NAMES {
+            assert!(
+                compile_on(e.name, "{handler}", span, "t").is_ok(),
+                "manifest event `{}` is not accepted by the parser",
+                e.name
+            );
+        }
+        // Framework escape hatches stay open.
+        assert!(compile_on("sail-rail:toggle", "{handler}", span, "t").is_ok());
+        assert!(compile_on("ship-thing:done", "{handler}", span, "t").is_ok());
+
+        let err = compile_on("clik", "{handler}", span, "t").unwrap_err();
+        assert!(
+            err.message.contains("unknown event clik"),
+            "must name the bad event, got: {}",
+            err.message
+        );
+        assert!(
+            err.message.contains("did you mean click"),
+            "must suggest click, got: {}",
+            err.message
+        );
+
+        let err = compile_on("Click", "{handler}", span, "t").unwrap_err();
+        assert!(
+            err.message.contains("did you mean click"),
+            "capitalization typo must suggest click, got: {}",
+            err.message
+        );
     }
 }
