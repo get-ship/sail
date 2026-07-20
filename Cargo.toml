@@ -1,6 +1,6 @@
 [workspace]
 # All carved Rust crates. deck-ssr is included so it is part of the workspace +
-# lockfile, but excluded from default-members below (it links V8 via vendored ship-js and
+# lockfile, but excluded from default-members below (it links V8 via ship-js (git dep on ship-exec) and
 # is heavy; excluded from default-members).
 members = [
     # Per-repo build-time identity (git sha/dirty/timestamp). A copy of Ship's
@@ -21,12 +21,11 @@ members = [
     "crates/deck/deck",
     "crates/deck/deck-conformance",
     "crates/deck/deck-ssr",
-    "crates/vendor/ship-js",
     "packages/sail/grammar",
     "xtask-deck",
 ]
 # A bare `cargo build` (no -p) builds this subset, which EXCLUDES deck-ssr.
-# deck-ssr links V8 (via crates/vendor/ship-js); `cargo test` of it fails to link as `-shared`
+# deck-ssr links V8 (via ship-js git dep); `cargo test` of it fails to link as `-shared`
 # (a known V8/deno quirk). `cargo build -p deck-ssr` builds the lib fine; it just
 # must be opt-in. `members` above stays complete so the crate is still part of
 # the workspace (path deps, `cargo build -p deck-ssr`, lockfile).

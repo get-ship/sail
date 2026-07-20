@@ -16,11 +16,9 @@ doctest = false
 [dependencies]
 # The synthetic emitter — used as a pure function (no CLI shell-out).
 sail-compiler = { path = "../../sail/compiler" }
-# ship-js — the project's L0 deno_core/V8 isolate (the consistent JS execution
-# environment; home for configurable sandboxes / egress / allowed-expression
-# policy). Vendored under crates/vendor/ship-js and excluded from default-members
-# so the heavy V8 build remains opt-in.
-ship-js = { path = "../../vendor/ship-js", features = ["deno"] }
+# ship-js — L0 deno_core/V8 isolate. Git dep on ship-exec (publish-to-crates.io
+# is the long-term home; do NOT vendor a fork into this repo).
+ship-js = { git = "https://github.com/get-ship/ship-exec.git", package = "ship-js", features = ["deno"] }
 # Deck's request/data contracts (DataPort) the host Dispatch maps onto.
 deck-core = { path = "../deck-core" }
 # The project's own bundler (Rolldown), so the measured bundle matches the

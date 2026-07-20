@@ -79,9 +79,9 @@ bundles (`sail-runtime.js`, `sail-dom.js`, …) and fails with instructions when
 they haven't been baked. Baked output is gitignored, never committed.
 
 A bare `cargo build` excludes `deck-ssr` (see `default-members` in the root
-`Cargo.toml`). `deck-ssr` pulls V8 via the vendored `crates/vendor/ship-js`
-leaf (opt-in: `cargo build -p deck-ssr`). Default members need no V8 and no
-sibling checkouts.
+`Cargo.toml`). `deck-ssr` pulls V8 via the `ship-js` crate from the ship-exec
+git repo (opt-in: `cargo build -p deck-ssr`). Default members need no V8.
+`ship-js` is intended for crates.io publication; the git dep is the interim.
 
 ### Cold worktree → live sail-site
 
