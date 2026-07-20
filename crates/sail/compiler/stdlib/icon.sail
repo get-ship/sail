@@ -1,8 +1,10 @@
 <!--
   <icon> — L1 language element. Sizes and inks one glyph: a slotted SVG, a
   `name` from the host's icon endpoint (deck serves the embedded lucide set),
-  or an arbitrary `src` URL. Behavior rides `use:icon` (fetch, single-flight
-  cache, ARIA); ink is currentColor inheritance. Brand/identity mappings are app-land composition, not language.
+  or an arbitrary `src` URL. Fetch/ARIA currently attach via `use:icon`
+  (mix-in); L1 behavior belongs on an element controller long-term (Part B).
+  Ink is currentColor inheritance. Brand/identity mappings are app-land
+  composition, not language.
 -->
 
 <scope>

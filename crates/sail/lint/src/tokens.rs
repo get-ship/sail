@@ -64,6 +64,8 @@ pub const CONVENTION_TOKENS: &[&str] = &[
     "spot-x", "spot-y", "spot-strength",                 // use:spotlight
     "sail-grid-template",                                 // use:gridTracks
     "rng-pct",                                           // use:rangeFill
+    "anchor-left", "anchor-top",                         // use:anchor / use:contextMenu
+    "autosize-h",                                        // use:autosize
 ];
 
 /// Every valid design-token name (no `--` prefix): the custom-property

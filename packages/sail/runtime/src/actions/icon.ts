@@ -74,8 +74,7 @@ export const icon = (node: Element) => {
     if (key === lastKey) return
     const parsed = parseSvg(node.ownerDocument, markup)
     if (!parsed) return
-    // The daemon emits stroke="currentColor", so host CSS color flows through.
-    parsed.setAttribute('class', 'sail-icon-svg')
+    // Glyph sizing is `.sail-icon svg` in the L1 skin — no class stamp.
     if (svgEl) svgEl.replaceWith(parsed)
     else node.insertBefore(parsed, node.firstChild)
     svgEl = parsed

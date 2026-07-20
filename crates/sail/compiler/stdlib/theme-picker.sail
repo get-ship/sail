@@ -48,6 +48,8 @@
   .sail-theme-panel {
     margin: 0;
     position: fixed;
+    left: var(--anchor-left);
+    top: var(--anchor-top);
     padding: var(--space-1_5);
     width: 380px;
     max-width: calc(100vw - var(--space-4));

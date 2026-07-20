@@ -121,10 +121,10 @@ describe('targetCursor — the floor-legal write shape', () => {
     firePointer(host, 'pointermove', { clientX: 100, clientY: 120 })
     await pumpFrame()
 
-    const layer = document.body.querySelector('.sail-tc-layer') as HTMLElement
+    const layer = document.body.querySelector("[data-sail='tc-layer']") as HTMLElement
     expect(layer).toBeTruthy()
-    const brackets = layer.querySelectorAll('.sail-tc-bracket')
-    const dot = layer.querySelector('.sail-tc-dot') as HTMLElement
+    const brackets = layer.querySelectorAll("[data-sail='tc-bracket']")
+    const dot = layer.querySelector("[data-sail='tc-dot']") as HTMLElement
     expect(brackets.length).toBe(4)
     expect(dot).toBeTruthy()
 
@@ -185,14 +185,14 @@ describe('targetCursor — initial state has no stray dot', () => {
     // The layer is mounted to <body> but its visibility is gated on
     // both `data-on='true'` AND a seen pointer. Before the first
     // pointermove, the dot must NOT be drawn at the viewport centre.
-    const layer = document.body.querySelector('.sail-tc-layer') as HTMLElement
+    const layer = document.body.querySelector("[data-sail='tc-layer']") as HTMLElement
     expect(layer).toBeTruthy()
     expect(layer.dataset.on).toBe('false')
     expect(host.dataset.tcOn).toBe('false')
 
     // Let the rAF tick fire once with the parked values.
     await pumpFrame()
-    const dot = layer.querySelector('.sail-tc-dot') as HTMLElement
+    const dot = layer.querySelector("[data-sail='tc-dot']") as HTMLElement
     // The custom property is set (the tick always writes it), but it
     // sits at -10001px / -10001px (the parked mx/my of -9999 minus the
     // 2px dot-centre offset) — not at the viewport centre.
@@ -217,8 +217,8 @@ describe('targetCursor — pointer tracking', () => {
 
     firePointer(host, 'pointermove', { clientX: 200, clientY: 300 })
     await pumpFrame()
-    const layer = document.body.querySelector('.sail-tc-layer') as HTMLElement
-    const dot = layer.querySelector('.sail-tc-dot') as HTMLElement
+    const layer = document.body.querySelector("[data-sail='tc-layer']") as HTMLElement
+    const dot = layer.querySelector("[data-sail='tc-dot']") as HTMLElement
     expect(layer.dataset.on).toBe('true')
     expect(host.dataset.tcOn).toBe('true')
     // Dot centre sits at (mx-2, my-2).
@@ -228,7 +228,7 @@ describe('targetCursor — pointer tracking', () => {
     // toward the (200-14, 300-14) idle crosshair goal. We assert it
     // MOVED — not the exact eased value, which depends on the ease
     // constant.
-    const tlCorner = layer.querySelector('.sail-tc-bracket[data-side="tl"]') as HTMLElement
+    const tlCorner = layer.querySelector("[data-sail='tc-bracket'][data-side='tl']") as HTMLElement
     expect(tlCorner.style.getPropertyValue('--tc-x')).not.toBe('-9999px')
 
     result.destroy!()
@@ -246,8 +246,8 @@ describe('targetCursor — pointer tracking', () => {
 
     firePointer(host, 'pointerleave', { clientX: 0, clientY: 0 })
     await pumpFrame()
-    const layer = document.body.querySelector('.sail-tc-layer') as HTMLElement
-    const dot = layer.querySelector('.sail-tc-dot') as HTMLElement
+    const layer = document.body.querySelector("[data-sail='tc-layer']") as HTMLElement
+    const dot = layer.querySelector("[data-sail='tc-dot']") as HTMLElement
     expect(host.dataset.tcOn).toBe('false')
     expect(layer.dataset.on).toBe('false')
     // The dot translates by (mx-2, my-2); with mx/my parked at -9999
@@ -270,14 +270,14 @@ describe('targetCursor — cleanup', () => {
     document.body.appendChild(host)
     stubHostRect(host)
     const result = targetCursor(host)
-    expect(document.body.querySelector('.sail-tc-layer')).toBeTruthy()
+    expect(document.body.querySelector("[data-sail='tc-layer']")).toBeTruthy()
 
     firePointer(host, 'pointermove', { clientX: 10, clientY: 20 })
     await pumpFrame()
     expect(host.dataset.tcOn).toBe('true')
 
     result.destroy!()
-    expect(document.body.querySelector('.sail-tc-layer')).toBeNull()
+    expect(document.body.querySelector("[data-sail='tc-layer']")).toBeNull()
     expect(host.dataset.tcOn).toBeUndefined()
   })
 
@@ -287,9 +287,9 @@ describe('targetCursor — cleanup', () => {
     stubHostRect(host)
     const d1 = targetCursor(host)
     d1.destroy!()
-    expect(document.body.querySelectorAll('.sail-tc-layer').length).toBe(0)
+    expect(document.body.querySelectorAll("[data-sail='tc-layer']").length).toBe(0)
     const d2 = targetCursor(host)
-    expect(document.body.querySelectorAll('.sail-tc-layer').length).toBe(1)
+    expect(document.body.querySelectorAll("[data-sail='tc-layer']").length).toBe(1)
     d2.destroy!()
   })
 })
@@ -301,7 +301,7 @@ describe('targetCursor — touch / coarse pointer is a no-op', () => {
     document.body.appendChild(host)
     stubHostRect(host)
     const result = targetCursor(host)
-    expect(document.body.querySelector('.sail-tc-layer')).toBeNull()
+    expect(document.body.querySelector("[data-sail='tc-layer']")).toBeNull()
     expect(typeof result.destroy).toBe('function')
     expect(() => result.destroy!()).not.toThrow()
   })

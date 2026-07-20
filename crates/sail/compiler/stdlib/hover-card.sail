@@ -20,6 +20,8 @@
     position: fixed;
     inset: auto;
     margin: 0;
+    left: var(--anchor-left);
+    top: var(--anchor-top);
     min-width: 14rem;
     max-width: 20rem;
     padding: var(--space-3);

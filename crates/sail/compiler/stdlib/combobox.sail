@@ -46,6 +46,8 @@
     position: fixed;
     inset: auto;
     margin: 0;
+    left: var(--anchor-left);
+    top: var(--anchor-top);
     /* The listbox tracks the field it filters — narrower is a lie about the
        content, wider is a second box floating over the page. */
     min-width: anchor-size(width, 12rem);

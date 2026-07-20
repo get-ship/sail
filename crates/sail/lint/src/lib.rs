@@ -1,9 +1,9 @@
 //! SAIL authoring lint engine.
 //!
 //! Lints `*.controller.ts` (paired SAIL controllers), `*.sail` templates,
-//! and the `.ts` composition modules under a component pack's `src/`
-//! (the seam the floor closes: every `.ts` file a component ships, not
-//! just the `<controller>` block). Rule IDs are prefixed `sail-<descriptor>`.
+//! the `.ts` composition modules under a component pack's `src/`, and
+//! shipped `use:` Action bodies under `packages/sail/runtime/src/actions/`.
+//! Rule IDs are prefixed `sail-<descriptor>`.
 
 pub mod config;
 pub mod prop_registry;
@@ -25,6 +25,7 @@ pub fn all_rule_ids() -> Vec<&'static str> {
         .iter()
         .chain(rules::SUI_TEMPLATE_RULES.iter())
         .chain(rules::PACK_SOURCE_RULES.iter())
+        .chain(rules::ACTION_RULES.iter())
         .map(|(id, _)| *id)
         .collect()
 }
@@ -49,10 +50,9 @@ pub fn is_sui_template_path(path: &std::path::Path) -> bool {
 /// True iff `path` is a pack source `.ts` (a composition module a component ships).
 ///
 /// The set is "any `.ts` file a component pack ships, not under the framework
-/// runtime". The framework (the actions themselves) is EXEMPT — the
-/// `.style` writes inside `<controller>` blocks are already gated by
-/// `lint_controller_source`; this third category closes the hatch a
-/// plain `.ts` helper in a pack would otherwise leave open.
+/// runtime". Action bodies are a separate category (`is_action_source_path`)
+/// with their own floor (custom-property writes allowed). Controllers stay
+/// on `lint_controller_source`.
 ///
 /// Detection walks the path's segments: a path under `packages/components/sail/**/src/`
 /// (or the repo-local equivalent) is a pack source. The `*.controller.ts`
@@ -61,17 +61,15 @@ pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
     if path.extension().and_then(|e| e.to_str()) != Some("ts") {
         return false;
     }
-    // Controllers go through  first in ; the
+    // Controllers go through first in lint_path; the
     // caller that bypasses the dispatch and asks this directly won't see a
     // controller file as a pack source.
     if is_controller_path(path) {
         return false;
     }
-    // The framework layer — exempt: the actions live here, and .style writes
-    // inside an action are the seam, not an authoring hatch.
-    // We detect by a `packages/sail/runtime/src/` parent path; both the
-    // public barrel (`runtime/src/index.ts`) and the actions themselves
-    // match.
+    // The framework layer — actions are NOT pack sources. They have their
+    // own path gate (`is_action_source_path`) with a looser style floor
+    // (custom-property setProperty is the sanctioned sx bridge).
     let p = path.to_string_lossy();
     let components_hit = p.contains("/packages/components/sail/")
         && (p.contains("/src/") || p.ends_with("/src"));
@@ -84,6 +82,38 @@ pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
     p.contains("/src/")
         || p.ends_with("/src")
 }
+
+/// True iff `path` is a `use:` Action implementation the floor lints.
+///
+/// Today: shipped registry actions under
+/// `packages/sail/runtime/src/actions/**/*.ts`. Author-local Actions are
+/// not path-detectable yet (Part A ships the registry gate first).
+///
+/// **Exempt:** anything under `tests/perf/` (bench harness / interop may
+/// need `class=` — fail-open by path prefix, documented in ARCHITECTURE).
+pub fn is_action_source_path(path: &std::path::Path) -> bool {
+    if path.extension().and_then(|e| e.to_str()) != Some("ts") {
+        return false;
+    }
+    let p = path.to_string_lossy().replace('\\', "/");
+    if p.contains("/tests/perf/") {
+        return false;
+    }
+    // index.ts re-exports only — no body to constrain, but cheap to lint.
+    p.contains("/packages/sail/runtime/src/actions/")
+}
+
+/// Lint a `use:` Action body from its source. Returns findings sorted by
+/// `(line, col)`. No filesystem access.
+pub fn lint_action_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for (_id, check) in rules::ACTION_RULES {
+        findings.extend(check(path, source));
+    }
+    findings.sort_by(|a, b| a.line.cmp(&b.line).then_with(|| a.col.cmp(&b.col)));
+    findings
+}
+
 /// Lint a SAIL controller from its source. Returns findings sorted by
 /// `(line, col)`.
 ///
@@ -140,6 +170,12 @@ pub fn lint_path(path: &std::path::Path) -> Vec<Finding> {
             return Vec::new();
         };
         return lint_sui_template_source(path, &source);
+    }
+    if is_action_source_path(path) {
+        let Ok(source) = std::fs::read_to_string(path) else {
+            return Vec::new();
+        };
+        return lint_action_source(path, &source);
     }
     if is_pack_source_ts(path) {
         let Ok(source) = std::fs::read_to_string(path) else {

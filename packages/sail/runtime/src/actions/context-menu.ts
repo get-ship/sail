@@ -39,14 +39,13 @@ export const contextMenu: Action<void> = (node) => {
       } catch {
         return // no popover support
       }
-      // Place at the pointer, clamped into the viewport.
-      root.style.position = 'fixed'
-      root.style.margin = '0'
+      // Place at the pointer, clamped into the viewport. Skins own
+      // position:fixed + margin:0; the action only publishes geometry vars.
       const r = root.getBoundingClientRect()
       const x = Math.min(px, Math.max(0, window.innerWidth - r.width - 8))
       const y = Math.min(py, Math.max(0, window.innerHeight - r.height - 8))
-      root.style.left = `${Math.max(8, x)}px`
-      root.style.top = `${Math.max(8, y)}px`
+      root.style.setProperty('--anchor-left', `${Math.max(8, x)}px`)
+      root.style.setProperty('--anchor-top', `${Math.max(8, y)}px`)
     }, 0)
   }
 

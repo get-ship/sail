@@ -297,10 +297,12 @@ fn pack_source_lints_imperative_style() {
 }
 
 #[test]
-fn setproperty_custom_prop_refuses_in_a_controller_but_an_action_is_never_linted() {
-    use crate::{is_controller_path, is_pack_source_ts, lint_controller_source};
-    // The 2026-07-18 closure: `el.style.setProperty('--x', v)` in a CONTROLLER
-    // now REFUSES (was legal). This is the dispatch-level red/green gate.
+fn setproperty_custom_prop_refuses_in_controller_allows_in_action() {
+    use crate::{
+        is_action_source_path, is_controller_path, is_pack_source_ts, lint_action_source,
+        lint_controller_source,
+    };
+    // Controllers: `el.style.setProperty('--x', v)` still REFUSES (2026-07-18).
     let controller = lint_controller_source(
         Path::new("/repo/packages/components/sail/primitives/src/widget.controller.ts"),
         "el.style.setProperty('--row-y', y)",
@@ -308,10 +310,21 @@ fn setproperty_custom_prop_refuses_in_a_controller_but_an_action_is_never_linted
     assert_eq!(controller.len(), 1);
     assert_eq!(controller[0].rule, "sail-no-imperative-style");
 
-    // The SAME call inside a `use:` action still compiles: an action lives in
-    // the framework runtime, which is neither a controller nor a pack source,
-    // so no rule ever reaches it — the sanctioned home is untouched.
+    // Actions (2026-07-20): same call is the sanctioned sx bridge — allowed.
     let action = Path::new("/repo/packages/sail/runtime/src/actions/grid-tracks.ts");
     assert!(!is_controller_path(action));
     assert!(!is_pack_source_ts(action));
+    assert!(is_action_source_path(action));
+    let action_ok = lint_action_source(action, "el.style.setProperty('--row-y', y)");
+    assert!(action_ok.is_empty(), "{action_ok:?}");
+
+    // Plain CSS property assignment in an action REFUSES.
+    let action_bad = lint_action_source(action, "el.style.height = 'auto'");
+    assert_eq!(action_bad.len(), 1);
+    assert_eq!(action_bad[0].rule, "sail-action-no-style");
+
+    // Bench harness path is exempt (interop class=).
+    assert!(!is_action_source_path(Path::new(
+        "/repo/tests/perf/frameworks/keyed/sail/src/main.ts"
+    )));
 }

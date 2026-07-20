@@ -117,10 +117,10 @@ export const anchor: Action<AnchorPlacement | undefined> = (node, placement) => 
       top = end ? r.bottom - h : r.top
     }
 
-    el.style.position = 'fixed'
-    el.style.margin = '0'
-    el.style.left = `${clamp(left, GAP, Math.max(GAP, vw - w - GAP))}px`
-    el.style.top = `${clamp(top, GAP, Math.max(GAP, vh - h - GAP))}px`
+    // Geometry only — skins already declare position:fixed + margin:0.
+    // Publish the computed box through the sx/skin custom-property bridge.
+    el.style.setProperty('--anchor-left', `${clamp(left, GAP, Math.max(GAP, vw - w - GAP))}px`)
+    el.style.setProperty('--anchor-top', `${clamp(top, GAP, Math.max(GAP, vh - h - GAP))}px`)
   }
 
   const onToggle = (e: Event) => {
@@ -141,6 +141,8 @@ export const anchor: Action<AnchorPlacement | undefined> = (node, placement) => 
       el.removeEventListener('toggle', onToggle)
       window.removeEventListener('resize', reposition)
       window.removeEventListener('scroll', reposition, true)
+      el.style.removeProperty('--anchor-left')
+      el.style.removeProperty('--anchor-top')
     },
   }
 }

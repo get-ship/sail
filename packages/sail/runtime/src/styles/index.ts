@@ -274,6 +274,8 @@ const INPUT_SKIN_CSS =
   `:where(${TEXT_FIELD}, textarea, select):hover:not(:disabled):not([tone]):not([invalid]):not([aria-invalid='true']) { border-color: var(--border-strong); }\n` +
   `:where(${TEXT_FIELD}, textarea, select)::placeholder { color: var(--muted-foreground); }\n` +
   ':where(textarea) { min-height: calc(var(--control-h-md) * 2); resize: vertical; }\n' +
+  // use:autosize stamps data-autosize and publishes --autosize-h.
+  ':where(textarea[data-autosize]) { height: var(--autosize-h, auto); overflow-y: hidden; resize: none; }\n' +
   // <select> — appearance:none dropped the native arrow, so draw a chevron.
   // A background SVG (neutral gray so it reads in both themes — a data-URI
   // can't inherit currentColor); padding-right clears the glyph.

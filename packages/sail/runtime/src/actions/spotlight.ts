@@ -5,21 +5,17 @@
 // static ambient glow instead of nothing.
 //
 // The overlay's visual style is carried by a companion <style> block that
-// uses custom properties (`--spot-strength`, `--spot-x`, `--spot-y`) set
-// from JS. The host element is NOT styled from JS — `position: relative`
-// is the only thing that must happen for the overlay to anchor, and that
-// is declared by the consumer (`sx="relative"`).
-//
-// `use:spotlight` is the primitive; `use:style={{...}}` is the hatch.
-// `host.style.position = 'relative'` would have been the hatch here too —
-// done via `class="relative"` from sx instead.
+// keys on `data-sail="spotlight-glow"` and reads custom properties
+// (`--spot-strength`, `--spot-x`, `--spot-y`) set from JS. The host element
+// is NOT styled from JS — `position: relative` is declared by the consumer
+// (`sx="relative"`).
 
 import type { Action } from '../action'
 
 const OVERLAY_STYLE_ID = 'sail-spotlight-overlay-style'
 
 const overlayCss = `
-.sail-spotlight-glow {
+[data-sail='spotlight-glow'] {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -33,9 +29,9 @@ const overlayCss = `
   );
 }
 @media (prefers-reduced-motion: reduce) {
-  .sail-spotlight-glow { transition: none; }
+  [data-sail='spotlight-glow'] { transition: none; }
 }
-.sail-spotlight-glow[data-on='true'] { opacity: 1; }
+[data-sail='spotlight-glow'][data-on='true'] { opacity: 1; }
 `.trim()
 
 let styleInjected: HTMLStyleElement | null = null
@@ -56,7 +52,7 @@ export const spotlight: Action<void> = (node) => {
   ensureOverlayCss(document)
 
   const glow = document.createElement('div')
-  glow.className = 'sail-spotlight-glow'
+  glow.dataset.sail = 'spotlight-glow'
   glow.setAttribute('aria-hidden', 'true')
 
   const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches

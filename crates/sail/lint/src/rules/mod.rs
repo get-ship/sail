@@ -48,6 +48,7 @@ pub mod no_imperative_style;
 pub mod no_undeclared_stylesheet;
 pub mod no_inline_style;
 pub mod animate_token_only;
+pub mod action_no_style;
 pub type RuleFn = fn(&Path, &str) -> Vec<Finding>;
 
 /// Rules that lint a paired `<stem>.controller.ts` source. The dispatcher
@@ -114,4 +115,16 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
 pub const PACK_SOURCE_RULES: &[(&str, RuleFn)] = &[
     (no_imperative_style::RULE_ID, no_imperative_style::check),
     (no_undeclared_stylesheet::RULE_ID, no_undeclared_stylesheet::check),
+];
+
+/// Rules that lint a shipped / author `use:` Action body.
+///
+/// Dispatches on `packages/sail/runtime/src/actions/**` (and any future
+/// path `is_action_source_path` admits). Bench harness sources under
+/// `tests/perf/` are exempt at the path gate — interop may need `class=`.
+///
+/// Floor matches the template invariants: no class, no style assignment,
+/// only `setProperty`/`removeProperty` on `--*` custom properties.
+pub const ACTION_RULES: &[(&str, RuleFn)] = &[
+    (action_no_style::RULE_ID, action_no_style::check),
 ];

@@ -34,7 +34,10 @@ function harness(triggerRect: Rect, panel = { w: 120, h: 80 }) {
   const place = (p: AnchorPlacement) => {
     const h = anchor(el, p) as { update: (p: AnchorPlacement) => void; destroy: () => void }
     h.update(p) // synchronous reposition (initial attach only wires listeners)
-    const out = { top: el.style.top, left: el.style.left }
+    const out = {
+      top: el.style.getPropertyValue('--anchor-top'),
+      left: el.style.getPropertyValue('--anchor-left'),
+    }
     h.destroy()
     return out
   }

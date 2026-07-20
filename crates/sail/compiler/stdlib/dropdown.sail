@@ -23,6 +23,8 @@
     position: fixed;
     inset: auto;
     margin: 0;
+    left: var(--anchor-left);
+    top: var(--anchor-top);
     min-width: 12rem;
     padding: var(--space-1);
     color: var(--foreground);

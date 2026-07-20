@@ -272,6 +272,42 @@ only at computed-style equivalence with the `feat/next` baseline across
 parts × states × variants × sizes, plus green behavior tests. A port that
 cannot pass files a language gap; nothing ships degraded.
 
+## `use:` — author mix-in API (not the L1 brain)
+
+```
+use:<name> / use:<name>={param}
+
+Attaches a mix-in to the mounted host node.
+name resolves to an Action in scope (import or local).
+Action: (node, param) => { update?(param); destroy?() } | void
+```
+
+- **Is:** a node-lifetime mix-in API authors extend. Geometry that cannot be
+  a token (drag offset, virtualizer start, measured height) crosses JS by
+  writing a **`--*` custom property** the skin/sx reads (`(--row-y)`,
+  `left: var(--anchor-left)`, …).
+- **Is not:** the L1 element brain; not app state; not a styling/layout
+  channel. Element behavior belongs **on the element** (Part B controllers).
+  Dual names like `chip` + `use:chip` are the smell to retire.
+- **Registry (`action_manifest`):** curated builtins/examples that ship with
+  the runtime — same Action API and the same floor as author Actions, not a
+  privilege tier.
+- **No-JS honesty:** an Action simply does not run; static lowered HTML/CSS
+  still ships. Same progressive-enhancement reality as any controller.
+
+**Action body floor** (`sail-action-no-style` on
+`packages/sail/runtime/src/actions/**`):
+
+| Refuse | Allow |
+| --- | --- |
+| `.classList` mutation, `.className`, `set/removeAttribute('class'\|'style')` | listeners, focus, measure (RO/IO), DOM queries |
+| `.style.*` except `setProperty`/`removeProperty` on `--*` names | `style.setProperty('--x', …)` / `removeProperty('--x')` |
+| plain CSS property names in `setProperty('height', …)` | ARIA / `role` updates |
+
+Bench harness sources under `tests/perf/` are path-exempt (interop may need
+`class=`). Controllers remain on the stricter `sail-no-imperative-style`
+(no `.style` at all — reflect via signals + `(--x)`).
+
 ## `style:` is dead — the `(--x)` binding replaced it
 
 `style:prop={expr}` is gone: the parser refuses it outright, with a
@@ -342,6 +378,7 @@ user. None are part of the taggable authoring surface:
 | Seam | Mechanism | Status |
 | --- | --- | --- |
 | No authored CSS in userland | policy floor (`sail-no-style-block`, `sail-no-inline-style`) | exists (spike) |
+| No class/style in Action bodies | `sail-action-no-style` on `runtime/src/actions/**` (`--*` setProperty only); `tests/perf/**` exempt | exists |
 | No raw containers | `sail-no-raw-container` → layout keywords | exists (spike) |
 | sx closed vocabulary | `sail-sx` lint + token registry single-sourced from tokens.css | exists; channel back door **to close** |
 | `<theme>` retirement from userland | compile error outside toolchain | planned (Phase 1) |

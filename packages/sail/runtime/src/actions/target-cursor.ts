@@ -9,11 +9,10 @@
 // one legal write shape) and via a data-attribute the companion sheet
 // reads; the action never assigns a CSS property.
 //
-// `use:targetCursor` is the primitive; the per-frame writes below are
-// `--tc-x` / `--tc-y` custom properties consumed by the companion
-// stylesheet via `translate: var(--tc-x) var(--tc-y)`. The framework
-// exemption from `sail-no-imperative-style` covers the custom-property
-// write by definition; nothing here assigns a real CSS property.
+// Overlay nodes are stamped with `data-sail` (not class) so the action
+// floor's no-class rule holds. Per-frame writes are `--tc-x` / `--tc-y`
+// custom properties consumed by the companion stylesheet via
+// `translate: var(--tc-x) var(--tc-y)`.
 
 import type { Action } from '../action'
 
@@ -24,7 +23,7 @@ const PAD = 8
 const OVERLAY_STYLE_ID = 'sail-target-cursor-overlay-style'
 
 const overlayCss = `
-.sail-tc-layer {
+[data-sail='tc-layer'] {
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -32,56 +31,44 @@ const overlayCss = `
   opacity: 0;
   transition: opacity 200ms ease;
 }
-.sail-tc-layer[data-on='true'] { opacity: 1; }
-.sail-tc-bracket {
+[data-sail='tc-layer'][data-on='true'] { opacity: 1; }
+[data-sail='tc-bracket'] {
   position: fixed;
   width: 12px;
   height: 12px;
   border-top: 2px solid var(--primary);
   border-left: 2px solid var(--primary);
   /* The action sets --tc-x / --tc-y per-frame as custom properties; the
-     translate consumes them. The framework exemption covers the
-     setProperty write — translate itself lives in the framework sheet. */
+     translate consumes them. */
   translate: var(--tc-x, 0) var(--tc-y, 0);
   left: 0;
   top: 0;
   will-change: translate;
 }
-/* One mechanism: each corner is DRAWN by its two borders — no rotation.
-   The old rules drew the right borders AND rotated, which un-cornered
-   them (br drew ┘ then flipped it 180° into ┌ — the wrong-facing
-   bracket). The never-written --tc-rot var died with the rotations. */
-.sail-tc-bracket[data-side='tr'] { border-left: 0; border-right: 2px solid var(--primary); }
-.sail-tc-bracket[data-side='br'] { border: 0; border-bottom: 2px solid var(--primary); border-right: 2px solid var(--primary); }
-.sail-tc-bracket[data-side='bl'] { border: 0; border-bottom: 2px solid var(--primary); border-left: 2px solid var(--primary); }
-.sail-tc-dot {
+/* One mechanism: each corner is DRAWN by its two borders — no rotation. */
+[data-sail='tc-bracket'][data-side='tr'] { border-left: 0; border-right: 2px solid var(--primary); }
+[data-sail='tc-bracket'][data-side='br'] { border: 0; border-bottom: 2px solid var(--primary); border-right: 2px solid var(--primary); }
+[data-sail='tc-bracket'][data-side='bl'] { border: 0; border-bottom: 2px solid var(--primary); border-left: 2px solid var(--primary); }
+[data-sail='tc-dot'] {
   position: fixed;
   width: 4px;
   height: 4px;
   border-radius: 99px;
   background: var(--primary);
   translate: var(--tc-x, 0) var(--tc-y, 0);
-  /* Hide the dot until the first pointermove lands the cursor. Without
-     this, the initial mx/innerWidth/2 + my/innerHeight/2 rAF tick would
-     put a stray dot at the viewport centre on every page that mounts the
-     action. */
+  /* Hide the dot until the first pointermove lands the cursor. */
   opacity: 0;
   transition: opacity 120ms ease;
 }
-.sail-tc-layer[data-on='true'] .sail-tc-dot { opacity: 1; }
+[data-sail='tc-layer'][data-on='true'] [data-sail='tc-dot'] { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .sail-tc-layer { transition: none; }
-  .sail-tc-dot { transition: none; }
+  [data-sail='tc-layer'] { transition: none; }
+  [data-sail='tc-dot'] { transition: none; }
 }
 `.trim()
 
 // The host element gets `cursor: none` only WHILE the custom cursor is
-// active (a data-attribute the action toggles on enter/leave). The
-// consumer's own cursor declaration survives the action's lifetime
-// because we never write `host.style.cursor` directly — the rule keys on
-// `[data-tc-on='true']` which we set and clear. This is the only thing
-// the companion sheet asserts about the host; the action never assigns
-// a CSS property.
+// active (a data-attribute the action toggles on enter/leave).
 const hostCss = `
 [data-tc-on='true'] { cursor: none; }
 `.trim()
@@ -89,8 +76,6 @@ const hostCss = `
 let styleInjected: HTMLStyleElement | null = null
 function ensureOverlayCss(doc: Document): void {
   if (styleInjected && styleInjected.isConnected) return
-  // The two styles share an id namespace on purpose — a single
-  // companion sheet per app keeps the document's <style> count low.
   let el = doc.getElementById(OVERLAY_STYLE_ID) as HTMLStyleElement | null
   if (!el) {
     el = doc.createElement('style')
@@ -110,18 +95,18 @@ export const targetCursor: Action<void> = (node) => {
   const snap = matchMedia('(prefers-reduced-motion: reduce)').matches
 
   const layer = document.createElement('div')
-  layer.className = 'sail-tc-layer'
+  layer.dataset.sail = 'tc-layer'
   layer.setAttribute('aria-hidden', 'true')
   const sides = ['tl', 'tr', 'br', 'bl'] as const
   const corners = sides.map((side) => {
     const c = document.createElement('div')
-    c.className = 'sail-tc-bracket'
+    c.dataset.sail = 'tc-bracket'
     c.dataset.side = side
     layer.appendChild(c)
     return c
   })
   const dot = document.createElement('div')
-  dot.className = 'sail-tc-dot'
+  dot.dataset.sail = 'tc-dot'
   layer.appendChild(dot)
   // dataset.on starts at 'false' so a caller querying the layer's state
   // before the first rAF tick (e.g. a unit test) sees the same answer
@@ -133,10 +118,7 @@ export const targetCursor: Action<void> = (node) => {
   document.body.appendChild(layer)
 
   // Initial mx/my are intentionally off-screen so a stray dot cannot
-  // appear at the viewport centre before the first pointermove. The dot
-  // is also opacity:0 until data-on='true' lands (the CSS guard above),
-  // so a page that mounts the action but never sees a pointer still
-  // renders nothing.
+  // appear at the viewport centre before the first pointermove.
   let mx = -9999
   let my = -9999
   let seenPointer = false
@@ -174,10 +156,6 @@ export const targetCursor: Action<void> = (node) => {
     if (!inside) target = null
     const g = goals()
     corners.forEach((c, i) => {
-      // noUncheckedIndexedAccess: every indexed read here is guaranteed
-      // by the parallel `cur` and `goals()` construction (sides and goal
-      // arrays are both length-4 by the same consts). The non-null
-      // assertions are bookkeeping, not guesses.
       const ci = cur[i]!
       const gi = g[i]!
       ci.x += (gi.x - ci.x) * ease
@@ -211,7 +189,6 @@ export const targetCursor: Action<void> = (node) => {
   const onLeave = () => {
     // Park the pointer far away so the geometry check agrees with the
     // event and the dot/brackets collapse out of view on the next tick.
-    // seenPointer stays true so a re-enter resumes immediately.
     mx = -9999
     my = -9999
     target = null

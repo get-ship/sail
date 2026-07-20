@@ -16,9 +16,9 @@ test('elements guide: icons inject, tabs demo answers clicks, no errors', async 
   await expect(page.getByRole('heading', { name: 'Using components' })).toBeVisible()
 
   // The live icon row: each <icon name="…"> fetches its glyph from
-  // /_deck/icons/ and injects an svg.sail-icon-svg.
+  // /_deck/icons/ and injects an svg under .sail-icon.
   await page.waitForFunction(
-    () => document.querySelectorAll('svg.sail-icon-svg').length >= 5,
+    () => document.querySelectorAll('.sail-icon svg').length >= 5,
     undefined,
     { timeout: 30_000 },
   )
