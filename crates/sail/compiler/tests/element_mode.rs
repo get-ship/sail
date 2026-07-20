@@ -131,7 +131,7 @@ fn ticker_loops_via_two_slots_and_pauses_under_reduced_motion() {
         "two independently-filled slots build the seamless-loop duplicate track: {}",
         el.structure_html
     );
-    assert!(el.skin_css.contains("@keyframes sail-ticker-scroll"), "{}", el.skin_css);
+    assert!(el.skin_css.contains("var(--animate-ticker)"), "skin must reference shared token not embed @keyframes: {}", el.skin_css);
     assert!(
         el.skin_css.contains("prefers-reduced-motion")
             && el.skin_css.contains("animation-play-state: paused"),

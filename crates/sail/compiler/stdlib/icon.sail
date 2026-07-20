@@ -47,7 +47,7 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .sail-icon[spin] svg { animation: sail-spin 0.8s linear infinite; }
+    .sail-icon[spin] svg { animation: var(--animate-spin); }
   }
 
 </style>

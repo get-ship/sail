@@ -48,14 +48,11 @@
     display: flex;
     flex-wrap: nowrap;
     width: max-content;
-    animation: sail-ticker-scroll 24s linear infinite;
+    animation: var(--animate-ticker);
   }
   .sail-ticker[duration='fast'] .track { animation-duration: 16s; }
   .sail-ticker[duration='slow'] .track { animation-duration: 32s; }
   .sail-ticker[reverse] .track { animation-direction: reverse; }
-  @keyframes sail-ticker-scroll {
-    to { transform: translateX(-50%); }
-  }
   @media (prefers-reduced-motion: reduce) {
     .sail-ticker .track { animation-play-state: paused; }
   }
