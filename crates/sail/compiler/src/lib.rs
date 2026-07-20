@@ -284,21 +284,13 @@ fn validate_custom_element_name(name: &str) -> Result<(), &'static str> {
 
 /// ELEMENT MODE — compile a `.sail` source as an L1 language element (one
 /// authoring technology per layer; see `emit::element`). Same parse pipeline
-/// as `compile()` — preprocess (sx/variants/component-block lowering) then
-/// parse — but the outputs are the element artifacts: a static structure
-/// snippet for use-site lowering, framework-sheet skin CSS keyed on
-/// `.sail-<name>`, and the element manifest. The mode enforces the seam test:
-/// control flow, dynamic attributes, or a controller
-/// are compile errors naming the source a component.
-/// ELEMENT MODE — compile a `.sail` source as an L1 language element (one
-/// authoring technology per layer; see `emit::element`). Same parse pipeline
 /// as `compile()` — preprocess then parse — but the outputs are the element
 /// artifacts: a static structure snippet for use-site lowering, framework-sheet
-/// skin CSS keyed on `.sail-<name>`, the element manifest, and an optional
-/// controller module for JS enhancement. The mode enforces the seam test on
-/// the *template*: control flow or dynamic attributes are compile errors
-/// naming the source a component. A `<controller>` block is allowed and
-/// captured for PE attach.
+/// skin CSS keyed on `.sail-<name>`, and the element manifest. The mode enforces
+/// the seam test on the *template*: control flow or dynamic attributes are
+/// compile errors naming the source a component. A `<controller>` block is an
+/// L2-component facility — element mode REJECTS it: JS enhancement rides
+/// stacked `use:<behavior>` stamps instead.
 pub fn compile_element(
     source: &str,
     name: &str,
@@ -320,13 +312,22 @@ pub fn compile_element(
             "element name `{name}` must be a bare lowercase name (hyphens allowed: `tab-list`)."
         )));
     }
-    // Strip an inline `<controller>` before parse (same SFC path as `compile()`):
-    // the block is behavior, not template. Capture the body for ElementOutput.
+    // A `<controller>` block is the L2-component behavior channel; L1
+    // elements carry behavior as stacked `use:<behavior>` stamps on their
+    // static structure (lowered to `runAction` at the use site), so the
+    // block is a targeted compile error here, not a captured module.
     let (stripped, controller_src) = parse::preprocess::extract_controller_block(source);
+    if controller_src.is_some() {
+        let at = source.find("<controller").unwrap_or(0);
+        return Err(CompileError::new(
+            "element mode: `<controller>` is not supported — attach behavior with `use:<behavior>`.",
+        )
+        .with_span(crate::diagnostics::Span::point(at)));
+    }
     // parse_element_source: the pipeline minus the stdlib-element pass — an
     // element source may not use stdlib elements (no recursion).
     let program = parse::parse_element_source(&stripped)?;
-    emit::element::emit_element(&program, &stripped, name, controller_src)
+    emit::element::emit_element(&program, &stripped, name)
 }
 
 pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, CompileError> {

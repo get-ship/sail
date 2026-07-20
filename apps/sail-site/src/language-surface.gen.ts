@@ -5728,11 +5728,6 @@ export const ACTIONS: ActionDoc[] = [
     "summary": "Track the current cell's left/right padding for a virtualized grid."
   },
   {
-    "name": "chip",
-    "param": "void",
-    "summary": "Dismissible chip behavior; click-to-remove wired to the element."
-  },
-  {
     "name": "chromeOffset",
     "param": "void",
     "summary": "Publish the attached element's measured height as --chrome-offset on :root (pairs with the h:fill scale)."
@@ -5761,6 +5756,11 @@ export const ACTIONS: ActionDoc[] = [
     "name": "contextMenu",
     "param": "void",
     "summary": "Right-click menu: open on contextmenu, close on outside-click / ESC."
+  },
+  {
+    "name": "dismissible",
+    "param": "void",
+    "summary": "Emit `sail-remove` from a `[removable]` host on Backspace/Delete or `.remove` click — the attr-gated dismiss mix-in."
   },
   {
     "name": "dropzone",
@@ -5831,6 +5831,16 @@ export const ACTIONS: ActionDoc[] = [
     "name": "portEdge",
     "param": "PortSide",
     "summary": "Anchor a fixed-size port to the midpoint of one of its parent's four edges."
+  },
+  {
+    "name": "pressable",
+    "param": "void",
+    "summary": "Button semantics (role, aria-disabled/tabindex sync, Enter/Space activation) for a non-button host — the pressable mix-in."
+  },
+  {
+    "name": "pressed",
+    "param": "void",
+    "summary": "Reflect `[selected]` to `aria-pressed` on a toggle host — the pressed-state mix-in (pairs with pressable)."
   },
   {
     "name": "radioGroup",

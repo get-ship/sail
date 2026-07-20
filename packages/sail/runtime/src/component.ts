@@ -13,7 +13,6 @@ import { withHost, untrack } from './signal'
 import { attachHostApi } from './host-api'
 import { findNearestBoundary } from './error-boundary'
 import { dispatchSuiError } from './error-overlay'
-import { attachElementControllers } from './element-controllers'
 
 // The declarative `component()` factory lives in component-factory.ts to
 // keep this file under the 300-line cap. Re-exported here so the public
@@ -229,10 +228,6 @@ export function defineComponent(
           // withScope so a mount() callback's own onCleanup()/live()/data()
           // calls still enroll on this.scope, not a dangling one.
           withScope(scope, () => scope.runMounts(this))
-          // L1 element controllers under this host (compiles-away chips, …).
-          const detachEls = attachElementControllers(this)
-          const prevCleanup = this.cleanup
-          this.cleanup = () => { try { detachEls() } finally { prevCleanup?.() } }
         } catch (err) {
           const boundary = findNearestBoundary(this.parentNode)
           if (boundary) {
@@ -386,10 +381,6 @@ export function defineComponent(
         // withScope so a mount() callback's own onCleanup()/live()/data()
         // calls still enroll on this.scope, not a dangling one.
         withScope(scope, () => scope.runMounts(this))
-        // L1 element controllers under this host (compiles-away chips, …).
-        const detachEls = attachElementControllers(this)
-        const prevCleanup = this.cleanup
-        this.cleanup = () => { try { detachEls() } finally { prevCleanup?.() } }
         // Apply any prop set via JS property before connection created the
         // signals (the prop accessors buffer pre-connect writes here).
         if (this.pendingProps) {
