@@ -25,8 +25,8 @@
 //! handle onward rather than reading it:
 //!
 //!   - `bind:value={p}` / `bind:checked={p}` — two-way binding writes back.
-//!   - `prop:foo={p}` — the documented way to hand a signal to a child
-//!     custom element.
+//!   - (none for plain fields — `name={p}` is a render position; call the
+//!     signal. Hand a cell via `use:` / two-way `bind:` when needed.)
 //!   - `use:action={p}` — the action receives the reactive param.
 //!   - `on:click={handler}` — a handler is called by the event, not by the
 //!     template (`on_callable` polices that position).
@@ -121,16 +121,11 @@ impl Cx<'_> {
     fn attr(&mut self, attr: &AttrInstr) {
         match attr {
             AttrInstr::Expr { expr, .. } => self.rendered(expr),
-            AttrInstr::DynamicAttr { name_expr, expr, .. } => {
-                self.rendered(name_expr);
-                self.rendered(expr);
-            }
             // Handle-passing positions — see the module docs.
             AttrInstr::BindValue { .. }
             | AttrInstr::BindChecked { .. }
             | AttrInstr::BindThis { .. }
-            | AttrInstr::Prop { .. }
-            | AttrInstr::Use { .. }
+                        | AttrInstr::Use { .. }
             | AttrInstr::On { .. }
             | AttrInstr::Motion { .. }
             | AttrInstr::Mutation { .. }

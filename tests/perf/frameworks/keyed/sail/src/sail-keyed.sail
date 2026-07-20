@@ -32,9 +32,10 @@ function buildData(count: number): Row[] {
   return data
 }
 
-// Harness-only: js-framework-benchmark scores select via `tbody>tr.danger`
-// (webdriver-ts checkCountForSelector). Sail refuses class: / bare class=
-// toggles; this use: action is package-local pack chrome, not a language feature.
+// FOREIGN BENCHMARK DRIVER ONLY — js-framework-benchmark scores select via
+// `tbody>tr.danger` (webdriver-ts checkCountForSelector). Not a Sail app pattern.
+// Sail refuses class: / bare class= toggles; this single harness-local use: action
+// is the one allowed classList path for that foreign selector.
 const benchDanger: Action<boolean> = (node, on) => {
   const apply = (v: boolean) => {
     if (v) node.classList.add('danger')
@@ -131,7 +132,7 @@ export default controller(() => {
   <table class="table table-hover table-striped test-data">
     <tbody>
       {#for row of rows() key={row.id}}
-        <tr data-selected={row.id === selected() ? '' : undefined} use:benchDanger={row.id === selected()}>
+        <tr use:benchDanger={row.id === selected()}>
           <td class="col-md-1">{row.id}</td>
           <td class="col-md-4"><a on:click={() => select(row.id)}>{row.label}</a></td>
           <td class="col-md-1"><a on:click={() => remove(row.id)}><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a></td>

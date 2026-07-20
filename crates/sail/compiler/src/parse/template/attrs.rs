@@ -92,11 +92,22 @@ fn compile_attr(
         .with_span(value_span)
         .with_category(loc.to_string()));
     }
-    if let Some(rest) = name.strip_prefix("attr:") {
-        return compile_dynamic_attr(rest, value, value_span, loc);
+    // `prop:` / `attr:` are DELETED from the author surface. Web is a compile
+    // target: plain `name={expr}` is the field form; the backend picks
+    // bindDynamic / bindProp / bindAttr. Refuse with teaching text.
+    if name.starts_with("prop:") {
+        return Err(CompileError::new(
+            "`prop:` has been removed — write plain `name={expr}`. Identity and              non-string fields are plain bindings; the compiler/runtime lowers              property vs attribute from contracts and value shape. There is no              author attr/property split."
+        )
+        .with_span(value_span)
+        .with_category(loc.to_string()));
     }
-    if let Some(rest) = name.strip_prefix("prop:") {
-        return compile_prop(rest, value, value_span, loc);
+    if name.starts_with("attr:") {
+        return Err(CompileError::new(
+            "`attr:` has been removed — write plain `name={expr}`. Fixed-name              fields are plain bindings; dynamic attribute names are not an              author directive. The web backend chooses attribute vs property."
+        )
+        .with_span(value_span)
+        .with_category(loc.to_string()));
     }
     // `transition:` / `in:` / `out:` are RETIRED. They were a second animation
     // system — a second preset catalog (fade/slide/scale), a second registry
@@ -498,40 +509,6 @@ fn is_valid_attr_name(s: &str) -> bool {
     chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
 }
 
-
-fn compile_prop(
-    name: &str,
-    value: &str,
-    value_span: Span,
-    loc: &str,
-) -> Result<AttrInstr, CompileError> {
-    if name.is_empty() {
-        return Err(CompileError::new("prop: requires a property name")
-            .with_span(value_span)
-            .with_category(loc.to_string()));
-    }
-    // Floor: style/class are not reachable via prop: either — same teaching as
-    // bare `style=` / `class=` and retired `style:` / `class:`.
-    if name.eq_ignore_ascii_case("style") || name.eq_ignore_ascii_case("class") {
-        return Err(CompileError::new(format!(
-            "`prop:{name}` is refused — styling is sx (or a named `use:` action              that writes a custom property sx can read). Bare `{name}=` is also banned."
-        ))
-        .with_span(value_span)
-        .with_category(loc.to_string()));
-    }
-    if !is_expr_value(value) {
-        return Err(CompileError::new(format!("prop:{name} expects {{expr}}"))
-            .with_span(value_span)
-            .with_category(loc.to_string()));
-    }
-    let inner = strip_braces(value).to_string();
-    expr::validate_at(&inner, false, loc, value_span)?;
-    Ok(AttrInstr::Prop {
-        name: name.to_string(),
-        expr: Expr::new(inner, value_span, false),
-        span: value_span,
-    })
-}
 
 
 /// Compile a `use:action` / `use:action={param}` directive — attach a
@@ -1240,112 +1217,38 @@ fn scan_ident(bytes: &[u8], mut i: usize) -> Option<usize> {
     Some(i)
 }
 
-fn compile_dynamic_attr(
-    raw_name: &str,
-    value: &str,
-    value_span: Span,
-    loc: &str,
-) -> Result<AttrInstr, CompileError> {
-    // Floor: cannot smuggle style/class through attr: — one style system.
-    if !is_expr_value(raw_name)
-        && (raw_name.eq_ignore_ascii_case("style") || raw_name.eq_ignore_ascii_case("class"))
-    {
-        return Err(CompileError::new(format!(
-            "`attr:{raw_name}` is refused — styling is static `sx` (or a named              `use:` action writing a custom property). Bare `{raw_name}=` is also banned."
-        ))
-        .with_span(value_span)
-        .with_category(loc.to_string()));
-    }
-    if !is_expr_value(value) {
-        // `attr:foo="bar"` is the most common mistake — author reached
-        // for `attr:` to bind a *static* value, when plain `foo="bar"`
-        // is what they wanted. Surface the fix in the error so the
-        // author doesn't have to know that `attr:` is reserved for
-        // expression bindings (`attr:foo={expr}`). Hit five+ times
-        // during the harness build with shapes like `attr:min="0"`.
-        return Err(CompileError::new(format!(
-            "attr:{raw_name}=\"{value}\" — `attr:` expects an expression binding (attr:{raw_name}={{expr}}). For a static value, drop the `attr:` prefix: {raw_name}=\"{value}\"."
-        ))
-        .with_span(value_span)
-        .with_category(loc.to_string()));
-    }
-    let value_inner = strip_braces(value).to_string();
-    expr::validate_at(&value_inner, false, loc, value_span)?;
-    if is_expr_value(raw_name) {
-        let name_inner = strip_braces(raw_name).to_string();
-        expr::validate_at(&name_inner, false, loc, value_span)?;
-        return Ok(AttrInstr::DynamicAttr {
-            name_expr: Expr::new(name_inner, value_span, false),
-            expr: Expr::new(value_inner, value_span, false),
-            span: value_span,
-        });
-    }
-    if !is_valid_attr_name(raw_name) {
-        return Err(CompileError::new(
-            "attr: expects attr:<name>={valueExpr} or attr:{nameExpr}={valueExpr}",
-        )
-        .with_span(value_span)
-        .with_category(loc.to_string()));
-    }
-    Ok(AttrInstr::Expr {
-        name: raw_name.to_string(),
-        expr: Expr::new(value_inner, value_span, false),
-        span: value_span,
-    })
-}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn attr_with_literal_value_suggests_dropping_prefix() {
-        // Pre-fix the error read "attr: expects ={valueExpr}", which is
-        // technically correct but doesn't tell the author what to do.
-        // Most of the time the fix is "drop attr: and write min=\"0\""
-        // — surface that in the message.
-        // The HTML attribute parser strips quotes before handing us
-        // the value, so we re-quote in the suggestion.
-        let err = compile_dynamic_attr("min", "0", Span::new(0, 1), "[<sail-slider> attr:min]")
-            .unwrap_err();
-        assert!(
-            err.message.contains("drop the `attr:` prefix"),
-            "expected suggestion, got: {}",
-            err.message
-        );
-        assert!(err.message.contains("min=\"0\""), "expected suggested form, got: {}", err.message);
-    }
 
     #[test]
-    fn attr_with_expr_value_still_compiles() {
-        // Don't regress the happy path.
-        compile_dynamic_attr("min", "{n()}", Span::new(0, 5), "[<sail-slider> attr:min]")
-            .expect("expression-value attr: should compile");
-    }
-
-    #[test]
-    fn attr_style_is_refused() {
-        let err = compile_dynamic_attr("style", "{bg}", Span::new(0, 4), "[span attr:style]")
+    fn prop_prefix_is_refused_with_teaching() {
+        let err = compile_attr("prop:items", "{rows()}", Span::new(0, 8), "[grid prop:items]", false)
             .unwrap_err();
         assert!(
-            err.message.contains("refused") && err.message.contains("sx"),
-            "expected floor refuse, got: {}",
+            err.message.contains("`prop:`") && err.message.contains("plain"),
+            "expected prop: teaching refuse, got: {}",
             err.message
         );
     }
 
     #[test]
-    fn attr_class_is_refused() {
-        let err = compile_dynamic_attr("class", "{c}", Span::new(0, 3), "[span attr:class]")
+    fn attr_prefix_is_refused_with_teaching() {
+        let err = compile_attr("attr:hidden", "{h()}", Span::new(0, 5), "[div attr:hidden]", false)
             .unwrap_err();
-        assert!(err.message.contains("refused"), "got: {}", err.message);
+        assert!(
+            err.message.contains("`attr:`") && err.message.contains("plain"),
+            "expected attr: teaching refuse, got: {}",
+            err.message
+        );
     }
 
-    #[test]
-    fn prop_style_is_refused() {
-        let err = compile_prop("style", "{bg}", Span::new(0, 4), "[span prop:style]").unwrap_err();
-        assert!(err.message.contains("refused"), "got: {}", err.message);
-    }
+
+
+
+
 
     // ── Fix 1: fail-loud on malformed `{…}` attribute bodies ─────────────
     //

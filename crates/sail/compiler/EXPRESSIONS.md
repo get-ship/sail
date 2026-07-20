@@ -28,8 +28,7 @@ Three positions:
 
 - **Text interpolation** — `<p>{expr}</p>`. Allowed: full subset
   below. Disallowed: arrow functions.
-- **Attribute expression** — `attr={expr}`, `prop:foo={expr}`,
-  `bind:value={expr}`, `aria-*={expr}`.
+- **Attribute expression** — `attr={expr}`, `bind:value={expr}`, `aria-*={expr}`.
   Allowed: full subset. Disallowed: arrow functions.
 - **Event handler** — `on:click={expr}`. Allowed: full subset
   **plus** arrow functions and statement bodies (`(e) => x.set(1)`,
@@ -163,9 +162,6 @@ fine" used to hide:
    See `check/key_identity.rs`.
 5. **`bind:this` target** — must be a controller-declared `ref(...)`
    in `setup:`. See `check/bind_this_target.rs`.
-6. **`prop:foo` typo** — when the child element is a sibling SAIL
-   component file with declared `<prop>` directives, `prop:foo={…}`
-   must match a declared prop name. See `check/prop_target.rs`.
 7. **`on:event` callable** — non-arrow handlers must reference an
    `on:` action, a `setup:` action, or a callable in scope. See
    `check/on_callable.rs`.

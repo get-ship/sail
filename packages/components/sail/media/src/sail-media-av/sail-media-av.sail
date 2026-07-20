@@ -2,7 +2,7 @@
   <sail-media-av> — the video/audio renderer arm of the sail-media family
   (Backbone #2 — ViewerRenderer).
 
-  Read-only, source-in-never-fetch. A resolved source arrives via `prop:src`
+  Read-only, source-in-never-fetch. A resolved source arrives via `src`
   identity (a video/audio object-url, or resolved bytes the consumer fetched)
   — NEVER an attribute, NEVER a fetch. The renderer auto-detects video-vs-audio
   from the descriptor (overridable via `kind`) and plays it through the NATIVE
@@ -35,7 +35,7 @@
 </scope>
 <controller>
 // sail-media-av — the video/audio renderer controller (tier-2, glue-only).
-// A resolved source arrives via `prop:src` identity. The controller:
+// A resolved source arrives via `src` identity. The controller:
 //   - picks <video> vs <audio> from the `kind` override or a content-type sniff;
 //   - points the native element at the resolved url (minting an object-url from
 //     resolved bytes when the consumer did not pre-resolve a url, and revoking
@@ -90,7 +90,7 @@ function bytesOf(src: MediaSrc): ArrayBuffer | Uint8Array | null {
 }
 
 export default controller((_ctx: Scope) => {
-    // prop:src identity — assigned to the host `src` property in mount.
+    // src identity — assigned to the host `src` property in mount.
     const srcSig = signal<MediaSrc>(null)
     // The `kind` override is read off the host attribute in `isVideo` so the
     // enum prop need not surface through the typed Scope.
@@ -187,7 +187,7 @@ export default controller((_ctx: Scope) => {
       kindOverride.set(host.getAttribute('kind') ?? 'auto')
 
       // The waveform canvas shows only for an AUDIO element with the bool prop on.
-      // Keep it reactive on the source (the prop:src identity supersedes the
+      // Keep it reactive on the source (the src identity supersedes the
       // initial null), so a late-assigned audio source still draws the canvas.
       const waveformOn =
         host.hasAttribute('waveform') && host.getAttribute('waveform') !== 'false'
@@ -195,7 +195,7 @@ export default controller((_ctx: Scope) => {
         showWaveform.set(waveformOn && !isVideo())
       })
 
-      // prop:src identity setter — a live JS reference, never a stringified
+      // src identity setter — a live JS reference, never a stringified
       // attribute. Routes into the scope signal so render re-resolves.
       Object.defineProperty(host, 'src', {
         configurable: true,

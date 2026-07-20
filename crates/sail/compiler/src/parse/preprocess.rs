@@ -2434,10 +2434,10 @@ mod tests {
         let src = r#"<!--
   Note: the renderable subset doesn't admit `.items({…})` here.
 -->
-<article attr:data-passed={c ? 'true' : 'false'}></article>"#;
+<article data-passed={c ? 'true' : 'false'}></article>"#;
         let out = preprocess(src);
         assert!(
-            out.contains(r#"attr:data-passed="{c ? 'true' : 'false'}""#),
+            out.contains(r#"data-passed="{c ? 'true' : 'false'}""#),
             "brace-attr after a comment containing an apostrophe must \
              still get quoted, got:\n{out}",
         );
@@ -2658,7 +2658,7 @@ mod tests {
     }
     #[test]
     fn directive_prefixes_ride_to_the_div() {
-        // SAIL directive attrs (`bind:this`, `attr:*`, `prop:*`, `use:*`,
+        // SAIL directive attrs (`bind:this`, `use:*`, plain fields,
         // etc.) are framework bindings — they ride through the layout
         // lowering unchanged so the compiler's later directive-handling
         // pass can resolve them. The lint acknowledges the same
@@ -2669,10 +2669,10 @@ mod tests {
         // does NOT carry those attributes forward; the parser refuses
         // each form with a hint at the replacement.
         let out = preprocess(
-            r#"<row bind:this={panelEl} attr:hidden={!cr.cell.inMonth}>x</row>"#,
+            r#"<row bind:this={panelEl} hidden={!cr.cell.inMonth}>x</row>"#,
         );
         assert!(out.contains("bind:this="), "bind:this survives: {out}");
-        assert!(out.contains("attr:hidden="), "attr:hidden survives: {out}");
+        assert!(out.contains("hidden="), "plain hidden survives: {out}");
         assert!(!out.contains("class:"), "the deleted `class:` directive is not allowed through: {out}");
         assert!(!out.contains("style:"), "the deleted `style:` directive is not allowed through: {out}");
     }

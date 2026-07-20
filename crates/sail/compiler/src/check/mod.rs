@@ -485,14 +485,9 @@ where
     match attr {
         AttrInstr::Static { .. } => {}
         AttrInstr::Expr { expr, .. } => f(expr)?,
-        AttrInstr::DynamicAttr { name_expr, expr, .. } => {
-            f(name_expr)?;
-            f(expr)?;
-        }
         AttrInstr::BindValue { expr, .. } | AttrInstr::BindChecked { expr, .. } => f(expr)?,
         AttrInstr::BindThis { .. } | AttrInstr::SlotReflectEmpty { .. } => {}
         AttrInstr::On { handler, .. } => f(handler)?,
-        AttrInstr::Prop { expr, .. } => f(expr)?,
         AttrInstr::Mutation { .. } => {}
         AttrInstr::Use { param, .. } => {
             if let Some(e) = param {

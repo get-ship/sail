@@ -8,7 +8,7 @@
   respecting table.rows(), and renders it WINDOWED through createVirtualizer —
   one [role=treeitem] per VISIBLE node, indented by row.depth.
 
-  The live Table<T> arrives via prop:tree IDENTITY binding (never a serialized
+  The live Table<T> arrives via tree IDENTITY binding (never a serialized
   object attribute); a `nodes` JSON attribute is the SSR/declarative fallback.
 
   Density is the platform axis (<html data-density>) — rows read the --density-*
@@ -69,7 +69,7 @@
 //
 // REUSES the Table engine (createTable with getSubRows+expanded) and the shipped
 // createVirtualizer; there is NO createTree(). The live `Table<T>` arrives via
-// the `prop:tree` IDENTITY host property (never serialized); a `nodes` JSON
+// the `tree` IDENTITY host property (never serialized); a `nodes` JSON
 // attribute is the SSR/declarative fallback. The windowed body renders
 // `tree.rows()` (flattened, depth-first, expansion-respecting) through a
 // createVirtualizer viewport, one [role=treeitem] per VISIBLE node.
@@ -138,7 +138,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     )
 
     mount((host) => {
-      // ── prop:tree IDENTITY wiring ────────────────────────────────────────────
+      // ── tree IDENTITY wiring ────────────────────────────────────────────
       // The engine is a LIVE JS reference assigned to the host `tree` property
       // (never a stringified attribute). Route it into the scope signal so the
       // windowed render reacts.
@@ -235,8 +235,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 type="checkbox"
                 size="sm"
                 aria-label={`Select ${w.label}`}
-                prop:checked={w.checked}
-                prop:indeterminate={w.someSelected}
+                checked={w.checked}
+                indeterminate={w.someSelected}
               />
             </span>
           {/if}

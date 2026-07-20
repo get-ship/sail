@@ -10,7 +10,7 @@
 
   Props
   ─────────────────────────────────────────────────────────────────────────────
-  data       string  reflect   JSON [{label,value,tone?}] SSR fallback; prop:series
+  data       string  reflect   JSON [{label,value,tone?}] SSR fallback; series
                                identity supersedes (normalizeSeries handles both).
   diameter   number  120       outer diameter in px (square viewBox). NOT `size`:
                                that name is the framework's xs|sm|md|lg channel,
@@ -18,7 +18,7 @@
   thickness  number  16        ring stroke width.
   label      string  "donut chart"  aria-label kind (prefixes the data summary).
   loading    bool    reflect   loading branch (engine isLoading) → sail-skeleton.
-  error      —       prop:error identity-only → sail-error-state.
+  error      —       error identity-only → sail-error-state.
   ─────────────────────────────────────────────────────────────────────────────
   Slots: (default) center content · description (described-data override)
 
@@ -44,7 +44,7 @@ import { normalizeSeries } from '../engine/normalize'
 import { arcGeometry } from '../engine/geometry-radial'
 import type { Scope } from './sail-donut.sail'
 
-// `error` arrives via `prop:error={…}` identity (no decodable <prop> for
+// `error` arrives via `error={…}` identity (no decodable <prop> for
 // `unknown`); read off the host in `mount` and patch the engine.
 interface DonutHost extends Element {
   error?: unknown
@@ -53,7 +53,7 @@ interface DonutHost extends Element {
 export default controller(({ data, diameter, thickness, label, loading }: Scope) => {
     const chart = createChartData({
       // normalizeSeries accepts string | ChartSeries[] — ONE scope key handles
-      // both the SSR JSON string AND a live prop:series identity, no cast.
+      // both the SSR JSON string AND a live series identity, no cast.
       series: derived(() => normalizeSeries(data())),
       isLoading: loading,
     })

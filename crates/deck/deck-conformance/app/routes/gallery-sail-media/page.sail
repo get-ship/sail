@@ -5,8 +5,8 @@
       Pack <strong>sui/media</strong>. Each card renders the real custom element
       tag with static mock attribute values so the shell registers and paints.
       A visible badge marks each card as a domain stub — no <code>ship.*</code>
-      calls, no live data. Structured inputs (<code>prop:src</code>,
-      <code>prop:table</code>) arrive via identity at runtime; this gallery
+      calls, no live data. Structured inputs (<code>src</code>,
+      <code>table</code>) arrive via identity at runtime; this gallery
       exercises only reflected scalar attributes and the <code>text</code>
       string fallback prop.
     </p>
@@ -23,7 +23,7 @@
       <code>autoplay: bool</code> (reflect, default false),
       <code>controls: bool</code> (reflect, default true),
       <code>waveform: bool</code> (reflect, default false).
-      The resolved media source arrives via <code>prop:src</code> identity —
+      The resolved media source arrives via <code>src</code> identity —
       never a URL attribute. This stub shows the tag shell with reflected
       attributes; no source is wired so the native element renders its
       default empty state.
@@ -58,7 +58,7 @@
       Props: <code>delimiter: comma|tab|auto</code> (reflect, default auto),
       <code>header: bool</code> (reflect, default true),
       <code>text: string</code> (SSR/declarative fallback — inline CSV text).
-      The resolved CSV/TSV bytes arrive via <code>prop:src</code> identity;
+      The resolved CSV/TSV bytes arrive via <code>src</code> identity;
       the <code>text</code> prop is the static fallback and is used here.
       Composes <code>sail-table variant="data"</code> internally.
     </p>
@@ -97,9 +97,9 @@ gamma,3,true"></sail-media-csv>
       <code>fit: contain|cover|actual</code> (reflect, default contain),
       <code>zoomable: bool</code> (reflect, default true),
       <code>gallery: bool</code> (reflect, default false).
-      The resolved image source arrives via <code>prop:src</code> identity;
+      The resolved image source arrives via <code>src</code> identity;
       the stage renders its empty state here. In gallery mode a
-      <code>prop:src</code> array drives the thumbnail strip.
+      <code>src</code> array drives the thumbnail strip.
     </p>
     <column gap="4">
       <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">

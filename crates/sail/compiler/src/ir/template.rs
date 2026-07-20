@@ -51,10 +51,9 @@ pub struct WhileErrorInstr {
 pub enum AttrInstr {
     /// `attr="value"` — no expression markers.
     Static { name: String, value: String, span: Span },
-    /// `attr={expr}` — single-expression attribute.
+    /// `name={expr}` — single-expression dynamic field. Web backend lowers
+    /// to bindDynamic / bindProp / bindAttr; authors never pick the channel.
     Expr { name: String, expr: Expr, span: Span },
-    /// `attr:{nameExpr}={valueExpr}` — dynamic attribute name.
-    DynamicAttr { name_expr: Expr, expr: Expr, span: Span },
     /// `bind:value={signal}`.
     BindValue { expr: Expr, span: Span },
     /// `bind:checked={signal}`.
@@ -70,11 +69,6 @@ pub enum AttrInstr {
     SlotReflectEmpty { attr: String, span: Span },
     /// `on:event|mod[:arg]…={handler}`.
     On { event: String, handler: Expr, modifiers: Vec<Modifier>, span: Span },
-    /// `prop:foo={expr}` — assign the value to the element's JS
-    /// property `foo` (camelCase). Use when passing complex objects
-    /// (signals, arrays, structured data) to a child custom element.
-    /// Compiles to `bindProp(el, "foo", () => expr())`.
-    Prop { name: String, expr: Expr, span: Span },
     /// `mutation="ship.X.Y"` on a `<form>` — the SDK call chain.
     Mutation { expr: Expr, span: Span },
     /// `motion:trigger={...}` — declarative state-triggered animation.

@@ -1,6 +1,6 @@
 <!--
   <demo-player> — the intro's nested-component demo. A compact music-player
-  card driven entirely by one prop: `playing`. The equalizer bars only exist
+  card driven entirely by one field, `playing`. The equalizer bars only exist
   (and loop) while playing() holds them in the DOM; the position clock is an
   effect that TRACKS playing(), so pausing re-runs the effect and its cleanup
   stops the timer. Lifted from the showcase player, shrunk to embed.

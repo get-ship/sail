@@ -203,8 +203,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       ) : 'In the language'}
       variant-attr={variantAttr()}
       usage={usageCode()}
-      prop:variants={variants()}
-      prop:rows={knownPack() ? packProps() : props()}
+      variants={variants()}
+      rows={knownPack() ? packProps() : props()}
       on:sail-variant-change={onVariantChange}
     >
       <column slot="stage" gap="4" align="center">

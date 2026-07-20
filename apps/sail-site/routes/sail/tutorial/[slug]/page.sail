@@ -339,7 +339,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         </tabs>
       </row>
       <column sx="grow-1 min-h-0 relative">
-        <tab-panel name="source" attr:hidden={tab() !== 'source'} sx="grow-1 min-h-0">
+        <tab-panel name="source" hidden={tab() !== 'source'} sx="grow-1 min-h-0">
           <sail-code-editor
             data-pane="source"
             language="sail"
@@ -349,7 +349,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             on:sail-change={onSourceChange}
           ></sail-code-editor>
         </tab-panel>
-        <tab-panel name="diff" attr:hidden={tab() !== 'diff'} sx="grow-1 min-h-0 overflow-y-auto">
+        <tab-panel name="diff" hidden={tab() !== 'diff'} sx="grow-1 min-h-0 overflow-y-auto">
           <column gap="3" sx="p-3">
             <small sx="font-mono text-xs tracking-wide text-muted-foreground">{fileName()}</small>
             <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>

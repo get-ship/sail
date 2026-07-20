@@ -77,12 +77,8 @@ pub enum BindingKind {
     BindChecked,
     /// `attr:NAME={expr}`. Carries the attribute name.
     Attr(String),
-    /// `attr:{nameExpr}={valueExpr}`.
-    AttrDynamic,
     /// `style:NAME={value}`.
     Style(String),
-    /// `prop:NAME={expr}` — JS property assignment on the element.
-    Prop(String),
     /// `{#if}` boundary.
     If,
     /// `{#for}` boundary.
@@ -107,9 +103,7 @@ impl BindingKind {
             BindingKind::BindValue => "bind:value".into(),
             BindingKind::BindChecked => "bind:checked".into(),
             BindingKind::Attr(n) => format!("attr:{n}"),
-            BindingKind::AttrDynamic => "attr-dynamic".into(),
             BindingKind::Style(n) => format!("style:{n}"),
-            BindingKind::Prop(n) => format!("prop:{n}"),
             BindingKind::If => "if".into(),
             BindingKind::For => "for".into(),
             BindingKind::Match => "match".into(),
@@ -192,7 +186,6 @@ mod tests {
             BindingKind::Attr("href".into()).as_marker_str(),
             "attr:href"
         );
-        assert_eq!(BindingKind::AttrDynamic.as_marker_str(), "attr-dynamic");
         assert_eq!(BindingKind::Style("--c".into()).as_marker_str(), "style:--c");
         assert_eq!(BindingKind::If.as_marker_str(), "if");
         assert_eq!(BindingKind::For.as_marker_str(), "for");

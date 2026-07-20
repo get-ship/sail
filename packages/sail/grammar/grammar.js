@@ -104,8 +104,6 @@ export default grammar({
     _attribute: $ => choice(
       $.bind_attr,
       $.event_attr,
-      $.attr_attr,
-      $.prop_attr,
       $.use_attr,
       $.motion_attr,
       $.dynamic_attr,
@@ -125,19 +123,6 @@ export default grammar({
       repeat(seq('|', field('modifier', $.attr_local))),
       '=',
       field('handler', $.brace_expression),
-    ),
-    // `attr:name={value}` — bare name, or `attr:{nameExpr}={value}`.
-    attr_attr: $ => seq(
-      'attr:',
-      field('name', choice($.attr_local, $.brace_expression)),
-      '=',
-      field('value', $.brace_expression),
-    ),
-    prop_attr: $ => seq(
-      'prop:',
-      field('name', $.attr_local),
-      '=',
-      field('value', $.brace_expression),
     ),
     // `use:action` / `use:action={param}` — attach a reusable action.
     use_attr: $ => seq(

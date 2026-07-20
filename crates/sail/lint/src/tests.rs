@@ -243,36 +243,12 @@ fn lint_tpl(source: &str) -> Vec<crate::Finding> {
 }
 
 #[test]
-fn attr_bool_on_sui_component_reports() {
-    let f = lint_tpl(r#"<alert attr:dismissible={busy()}>Go</alert>"#);
-    assert_eq!(f.len(), 1, "attr:dismissible on alert is a bool prop: {f:?}");
-    assert!(f[0].message.contains("prop:dismissible"), "msg: {}", f[0].message);
-}
-
-#[test]
-fn attr_bool_multiline_tag_reports() {
-    let f = lint_tpl("<badge\n  tone=\"primary\"\n  attr:pill={busy()}>x</badge>");
-    assert_eq!(f.len(), 1, "multi-line tag bool attr should report: {f:?}");
-}
-
-#[test]
-fn prop_bool_passes() {
-    let f = lint_tpl(r#"<alert prop:dismissible={busy()}>Go</alert>"#);
-    assert!(f.is_empty(), "prop:dismissible is correct: {f:?}");
-}
-
-#[test]
-fn attr_on_native_option_passes() {
-    // <option> isn't in the registry → not flagged (attr:selected is correct there).
-    let f = lint_tpl(r#"<option value="x" attr:selected={sel()}>x</option>"#);
-    assert!(f.is_empty(), "native element must not be flagged: {f:?}");
-}
-
-#[test]
-fn attr_on_string_prop_passes() {
-    // variant is a string/enum prop, not bool → not flagged.
-    let f = lint_tpl(r#"<sail-button attr:variant={v()}>x</sail-button>"#);
-    assert!(f.is_empty(), "string prop attr not flagged by this rule: {f:?}");
+fn attr_bool_rule_is_noop_after_prefix_removal() {
+    // attr:/prop: are parser-refused; this lint no longer fires on plain fields.
+    let f = lint_tpl(r#"<alert dismissible={busy()}>Go</alert>"#);
+    assert!(f.is_empty(), "plain bool field must not be flagged: {f:?}");
+    let f = lint_tpl(r#"<option value="x" selected={sel()}>x</option>"#);
+    assert!(f.is_empty(), "{f:?}");
 }
 
 #[test]

@@ -192,49 +192,61 @@ impl TemplateEmitter {
             AttrInstr::Expr { name, expr, .. } => {
                 let key = self.next_key();
                 let rw = self.rw(&expr.source, &[]);
+                let binder = crate::lower::bindings::plain_field_binder(tag, name);
                 if self.is_static_row_expr(&expr.source) {
-                    // D5: row-scope static attr — initial setAttribute
-                    // only, matching bindAttr's null/false/"" → drop and
-                    // true → "" semantics. Also recorded for the for's
-                    // `update()` callback so keyed-row reuse refreshes
-                    // the attribute when the row instance changes.
-                    let v = self.fresh("av");
-                    let emit_name = self.attr_name_for_emit(name);
-                    let stmt = format!(
-                        "{{ const {v} = ({rw}); if ({v} == null || {v} === false || {v} === \"\") {el_var}.removeAttribute({n}); else {el_var}.setAttribute({n}, {v} === true ? \"\" : String({v})); }}",
-                        n = js_string(&emit_name)
-                    );
+                    // D5: row-scope static field. IDL props assign the property;
+                    // everything else matches bindAttr presence semantics.
+                    let stmt = if binder == "bindProp" {
+                        let prop_key = camel_of(name);
+                        format!(
+                            "{el_var}[{n}] = ({rw});",
+                            n = js_string(&prop_key)
+                        )
+                    } else {
+                        let v = self.fresh("av");
+                        let emit_name = self.attr_name_for_emit(name);
+                        format!(
+                            "{{ const {v} = ({rw}); if ({v} == null || {v} === false || {v} === \"\") {el_var}.removeAttribute({n}); else {el_var}.setAttribute({n}, {v} === true ? \"\" : String({v})); }}",
+                            n = js_string(&emit_name)
+                        )
+                    };
                     w.line(&stmt);
                     let use_ = self.row_use_for_source(&expr.source);
                     self.inline_update_stmts.push((stmt, use_));
                 } else {
                     let fv = self.for_version_comma(&expr.source);
-                    let emit_name = self.attr_name_for_emit(name);
-                    // Native elements are attribute-only (`bindAttr`). Custom
-                    // elements get `bindDynamic`, which the toolchain uses to
-                    // route attribute-vs-property at runtime — so the author
-                    // writes one plain binding and never picks the channel.
-                    let binder = if tag.contains('-') { "bindDynamic" } else { "bindAttr" };
-                    w.line(&format!(
-                        "{cleanups_var}.push({binder}({el_var}, {n}, () => ({fv}{rw})));",
-                        n = js_string(&emit_name)
-                    ));
+                    // Web backend: CE → bindDynamic; native IDL table → bindProp
+                    // (camelCase property key); else bindAttr (attribute name).
+                    if binder == "bindProp" {
+                        let prop_key = camel_of(name);
+                        w.line(&format!(
+                            "{cleanups_var}.push(bindProp({el_var}, {n}, () => ({fv}{rw})));",
+                            n = js_string(&prop_key)
+                        ));
+                    } else {
+                        let emit_name = self.attr_name_for_emit(name);
+                        w.line(&format!(
+                            "{cleanups_var}.push({binder}({el_var}, {n}, () => ({fv}{rw})));",
+                            n = js_string(&emit_name)
+                        ));
+                    }
                 }
                 if self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_markers = true;
-                    self.hydrate_calls.line(&format!(
-                        "if (__m[{k}]) __cleanups.push(hydrateAttr(__m[{k}], {n}, () => ({rw})));",
-                        k = js_string(&key),
-                        n = js_string(name),
-                    ));
-                }
-            }
-            AttrInstr::DynamicAttr { name_expr, expr, .. } => {
-                let key = self.next_key();
-                self.emit_dynamic_attr(w, name_expr, expr, el_var, cleanups_var);
-                if self.is_route && self.boundary_depth == 0 {
-                    self.hydrate_uses_markers = true;
-                    self.emit_dynamic_attr_hydrate(&key, name_expr, expr);
+                    if binder == "bindProp" {
+                        let prop_key = camel_of(name);
+                        self.hydrate_calls.line(&format!(
+                            "if (__m[{k}]) __cleanups.push(hydrateProp(__m[{k}], {n}, () => ({rw})));",
+                            k = js_string(&key),
+                            n = js_string(&prop_key),
+                        ));
+                    } else {
+                        self.hydrate_calls.line(&format!(
+                            "if (__m[{k}]) __cleanups.push(hydrateAttr(__m[{k}], {n}, () => ({rw})));",
+                            k = js_string(&key),
+                            n = js_string(name),
+                        ));
+                    }
                 }
             }
             AttrInstr::BindValue { expr, .. } => {
@@ -325,43 +337,6 @@ impl TemplateEmitter {
                     ));
                 }
             }
-            AttrInstr::Prop { name, expr, .. } => {
-                let key = self.next_key();
-                let rw = self.rw(&expr.source, &[]);
-                // `prop:` targets a JS PROPERTY on the element, camelCase as it
-                // appears on the object — but the template attribute name is
-                // HTML-lowercased, so a multi-word target arrives kebab/lower
-                // (`prop:prop-values`). camelCase it (the same `<prop>` → scope
-                // identifier rule, `camel_of`) so `prop:prop-values` writes the
-                // `propValues` property a component declares, not `prop-values`.
-                let prop_key = camel_of(name);
-                if self.is_static_row_expr(&expr.source) {
-                    // D5: row-scope static prop — initial assignment.
-                    // Also recorded for the for's `update()` callback
-                    // so keyed-row reuse refreshes the prop.
-                    let stmt = format!(
-                        "{el_var}[{n}] = ({rw});",
-                        n = js_string(&prop_key)
-                    );
-                    w.line(&stmt);
-                    let use_ = self.row_use_for_source(&expr.source);
-                    self.inline_update_stmts.push((stmt, use_));
-                } else {
-                    let fv = self.for_version_comma(&expr.source);
-                    w.line(&format!(
-                        "{cleanups_var}.push(bindProp({el_var}, {n}, () => ({fv}{rw})));",
-                        n = js_string(&prop_key)
-                    ));
-                }
-                if self.is_route && self.boundary_depth == 0 {
-                    self.hydrate_uses_markers = true;
-                    self.hydrate_calls.line(&format!(
-                        "if (__m[{k}]) __cleanups.push(hydrateProp(__m[{k}], {n}, () => ({rw})));",
-                        k = js_string(&key),
-                        n = js_string(&prop_key),
-                    ));
-                }
-            }
             AttrInstr::Mutation { expr, .. } => {
                 let key = self.next_key();
                 let chain = js_string(&expr.source);
@@ -376,7 +351,7 @@ impl TemplateEmitter {
                     ));
                 }
             }
-AttrInstr::Use { action, param, .. } => {
+            AttrInstr::Use { action, param, .. } => {
                 // `use:action` / `use:action={param}`. The action resolves
                 // from scope (a use-able hook handle or an imported action
                 // fn); `runAction` invokes it with the element on mount,
@@ -596,66 +571,6 @@ AttrInstr::Use { action, param, .. } => {
             MotionValue::Expr(e) => Some(format!("({})", self.rw(&e.source, &[]))),
             _ => None,
         }
-    }
-
-    fn emit_dynamic_attr(
-        &mut self,
-        w: &mut Writer,
-        name_expr: &Expr,
-        value_expr: &Expr,
-        el_var: &str,
-        cleanups_var: &str,
-    ) {
-        let n_rw = self.rw(&name_expr.source, &[]);
-        let v_rw = self.rw(&value_expr.source, &[]);
-        let prev = self.fresh("prevAttr");
-        // Dynamic attr: subscribe to row-deps of BOTH the name and
-        // value expressions (the effect re-runs when either changes).
-        // Conservative — same field-set logic applies; if either
-        // expression has Whole-row use, the whole effect escalates.
-        let combined_source = format!("{} ; {}", name_expr.source, value_expr.source);
-        let fvs = self.for_version_stmt(&combined_source);
-        w.line(&format!("{{ let {prev} = null;"));
-        w.line(&format!("  {cleanups_var}.push(effect(() => {{"));
-        w.line(&format!("    {fvs}const __n = String({n_rw});"));
-        w.line(&format!("    const __v = ({v_rw});"));
-        w.line(&format!(
-            "    if ({prev} && {prev} !== __n) {el_var}.removeAttribute({prev});"
-        ));
-        w.line(&format!("    {prev} = __n;"));
-        w.line(&format!(
-            "    if (__v == null || __v === false || __v === \"\") {el_var}.removeAttribute(__n);"
-        ));
-        w.line(&format!(
-            "    else if (__v === true) {el_var}.setAttribute(__n, \"\");"
-        ));
-        w.line(&format!("    else {el_var}.setAttribute(__n, String(__v));"));
-        w.line("  })); }");
-    }
-
-    /// Hydrate-side mirror of `emit_dynamic_attr`. The marker carrying
-    /// the binding key is `attr-dynamic="bN"` on the SSR'd element, so
-    /// `__m[bN]` resolves to the same element the CSR effect would
-    /// observe. The body matches CSR exactly, modulo the element source.
-    fn emit_dynamic_attr_hydrate(&mut self, key: &str, name_expr: &Expr, value_expr: &Expr) {
-        let n_rw = self.rw(&name_expr.source, &[]);
-        let v_rw = self.rw(&value_expr.source, &[]);
-        let k = js_string(key);
-        self.hydrate_calls.line(&format!("if (__m[{k}]) {{"));
-        self.hydrate_calls.line(&format!("  const __el = __m[{k}];"));
-        self.hydrate_calls.line("  let __prev = null;");
-        self.hydrate_calls.line("  __cleanups.push(effect(() => {");
-        self.hydrate_calls.line(&format!("    const __n = String({n_rw});"));
-        self.hydrate_calls.line(&format!("    const __v = ({v_rw});"));
-        self.hydrate_calls.line("    if (__prev && __prev !== __n) __el.removeAttribute(__prev);");
-        self.hydrate_calls.line("    __prev = __n;");
-        self.hydrate_calls.line(
-            "    if (__v == null || __v === false || __v === \"\") __el.removeAttribute(__n);",
-        );
-        self.hydrate_calls.line("    else if (__v === true) __el.setAttribute(__n, \"\");");
-        self.hydrate_calls.line("    else __el.setAttribute(__n, String(__v));");
-        self.hydrate_calls.line("  }));");
-        self.hydrate_calls.line("}");
     }
 }
 

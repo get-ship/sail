@@ -20,7 +20,7 @@
   thickness       number  12        arc stroke width.
   label           string  "gauge"   aria-label kind (prefixes the data summary).
   loading         bool    reflect   loading branch (engine isLoading) → sail-skeleton.
-  error           —       prop:error identity-only → sail-error-state.
+  error           —       error identity-only → sail-error-state.
   ─────────────────────────────────────────────────────────────────────────────
   Slots: (default) center label
 
@@ -51,7 +51,7 @@ import { gaugeGeometry } from '../engine/geometry-radial'
 import type { ChartSeries } from '../engine/types'
 import type { Scope } from './sail-gauge.sail'
 
-// `error` arrives via `prop:error={…}` identity (no decodable <prop> for
+// `error` arrives via `error={…}` identity (no decodable <prop> for
 // `unknown`); read off the host in `mount` and patch the engine.
 interface GaugeHost extends Element {
   error?: unknown

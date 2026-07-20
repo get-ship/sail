@@ -10,7 +10,7 @@
   ─────────────────────────────────────────────────────────────────────
   value       (string, '')          SSR/declarative snapshot FALLBACK only
                                      (parsed via JSON.parse in the controller).
-                                     prop:* identity supersedes.
+                                     * identity supersedes.
   readonly    (bool,  false reflect) Pan/zoom allowed but no edits.
   theme       ('light'|'dark')       Read imperatively off the host.
   grid        ('none'|'dots'|'lines')Background grid render hint.
@@ -44,7 +44,7 @@ import { createCanvas } from '../engine/create-canvas'
 import type { Canvas, Transform } from '../engine/types'
 
 // SSR fallback = the verified sail-combobox shape: plain JSON.parse in the
-// controller, try/caught. The live path is prop:* identity onto the engine.
+// controller, try/caught. The live path is * identity onto the engine.
 function parseSnapshot(raw: string): { transform?: Partial<Transform> } | null {
   if (!raw) return null
   try {
@@ -60,7 +60,7 @@ function parseSnapshot(raw: string): { transform?: Partial<Transform> } | null {
 // host.emit! from mount.
 export default controller(({ value }: Scope) => {
   const viewportEl = signal<HTMLDivElement | null>(null)
-  // Fallback engine — used when no engine is injected via prop:canvas.
+  // Fallback engine — used when no engine is injected via canvas.
   // exactOptionalPropertyTypes: only set initialTransform when present —
   // passing `undefined` to the optional field is itself a type error.
   const seedTransform = parseSnapshot(value())?.transform
@@ -69,7 +69,7 @@ export default controller(({ value }: Scope) => {
     ...(seedTransform ? { initialTransform: seedTransform } : {}),
   })
   // An engine injected by a composing face (sail-board / sail-draw) via
-  // prop:canvas identity. When present it supersedes the fallback so the
+  // canvas identity. When present it supersedes the fallback so the
   // board/draw transform and sail-canvas pan/zoom share ONE engine.
   const injected = signal<Canvas | null>(null)
   const canvas = derived<Canvas>(() => injected() ?? fallback)
@@ -98,10 +98,10 @@ export default controller(({ value }: Scope) => {
   }
 
   mount((host) => {
-    // prop:canvas identity — a composing face (sail-board / sail-draw) injects
+    // canvas identity — a composing face (sail-board / sail-draw) injects
     // its engine (built with getViewportElement:()=>null) here; we rewire it
     // onto sail-canvas's REAL viewport so screenToWorld/pan/zoom share ONE
-    // engine. Mirrors the sail-calendar prop:calendar identity pattern.
+    // engine. Mirrors the sail-calendar calendar identity pattern.
     Object.defineProperty(host, 'canvas', {
       configurable: true,
       get: () => injected(),

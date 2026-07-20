@@ -14,7 +14,7 @@
       runtime-error panel, plus a <sail-spinner> while compiling
 
   Data (the bound `compile()`, raw `source`, `propValues`, `setup`, `slots`)
-  arrives via `prop:*` identity/snapshot — the host owns discovery. NO
+  arrives via `*` identity/snapshot — the host owns discovery. NO
   object/json attribute props (Cardinal: `<prop type=json>` does not exist).
 -->
 
@@ -32,7 +32,7 @@
 // <sail-render> controller — the render-engine lifecycle (build-spec §1).
 //
 // Controller-purity: this file does NO view-markup DOM construction. It owns
-// LIFECYCLE only — wiring host `prop:*` into signals, running the reactive
+// LIFECYCLE only — wiring host `*` into signals, running the reactive
 // compile+mount effect, disposing prior mounts, and emitting events. All
 // `createElement` / `createContextualFragment` / `__mount` lives in
 // `engine/*.ts` (the legitimate render-engine seam, outside
@@ -83,7 +83,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       // (build-spec §Isolation — the engine stage is a shadow on the host).
       attachEngineShadow(host)
 
-      // --- host prop:* → signals (the property-apply path; identity preserved) ---
+      // --- host * → signals (the property-apply path; identity preserved) ---
       const compile = signal<CompileFn | null>(null)
       const source = signal<string | null>(null)
       const propValues = signal<Record<string, unknown> | null>(null)

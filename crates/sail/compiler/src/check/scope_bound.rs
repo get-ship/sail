@@ -378,15 +378,10 @@ fn visit_attr(attr: &AttrInstr, v: &mut Visitor) {
         }
         AttrInstr::Expr { expr, .. }
         | AttrInstr::BindValue { expr, .. }
-        | AttrInstr::BindChecked { expr, .. }
-        | AttrInstr::Prop { expr, .. } => check_expr(expr, v, &[]),
-        AttrInstr::DynamicAttr { name_expr, expr, .. } => {
-            check_expr(name_expr, v, &[]);
-            check_expr(expr, v, &[]);
-        }
+        | AttrInstr::BindChecked { expr, .. } => check_expr(expr, v, &[]),
         AttrInstr::On { handler, .. } => check_expr(handler, v, &[]),
         AttrInstr::Mutation { .. } => {}
-AttrInstr::Use { action, param, .. } => {
+            AttrInstr::Use { action, param, .. } => {
             if let Some(e) = param {
                 check_use_value_expr(action, e, v);
             }

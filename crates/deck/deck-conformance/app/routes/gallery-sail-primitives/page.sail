@@ -613,7 +613,7 @@ export default controller(() => ({
         <p sx="text-xs text-muted-foreground leading-normal">Destructive confirm dialog with built-in cancel/confirm footer</p>
         <sail-button variant="outline" tone="destructive" size="sm" on:click={() => alertDialogOpen.set(true)}>Delete item</sail-button>
         <dialog role="alertdialog"
-          prop:open={alertDialogOpen()}
+          open={alertDialogOpen()}
           tone="destructive"
           confirm-label="Delete"
           cancel-label="Keep it"
@@ -632,7 +632,7 @@ export default controller(() => ({
       <column gap="3" sx="border border-border rounded-md bg-surface-1 p-4 min-w-48">
         <p sx="text-xs text-muted-foreground leading-normal">Side-sheet panel — side=right, size=md</p>
         <sail-button variant="outline" size="sm" on:click={() => drawerOpen.set(true)}>Open drawer</sail-button>
-        <dialog side="end" prop:open={drawerOpen()} side="right" size="md">
+        <dialog side="end" open={drawerOpen()} side="right" size="md">
           <span slot="title">Settings</span>
           <span slot="description">Adjust your workspace preferences.</span>
           <column gap="3">
@@ -925,7 +925,7 @@ export default controller(() => ({
           the boundary catches it and shows the fallback. Click Retry to recover.
         </p>
         <row gap="3" align="start">
-          <label><switch name="demo-eb-trigger" prop:checked={triggerError()} on:change={(e) => triggerError.set(e.target.checked)}></switch> Trigger subtree error</label>
+          <label><switch name="demo-eb-trigger" checked={triggerError()} on:change={(e) => triggerError.set(e.target.checked)}></switch> Trigger subtree error</label>
         </row>
         <error-boundary fallback-text="The widget threw an error — click Retry to recover.">
           {#if triggerError()}

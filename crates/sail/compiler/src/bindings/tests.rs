@@ -81,10 +81,10 @@ fn style_directive_is_rejected_at_parse_time() {
 }
 
 #[test]
-fn dynamic_attr_emits_attr_dynamic_binding() {
-    let r = build_for("<a attr:{name}={value}>x</a>");
-    assert_eq!(r.len(), 1);
-    assert_eq!(r.get(0).unwrap().kind, BindingKind::AttrDynamic);
+fn prop_and_attr_prefixes_are_rejected() {
+    // Author surface no longer has prop:/attr:; plain fields only.
+    assert!(crate::parse::parse("<a prop:href={x}>x</a>").is_err());
+    assert!(crate::parse::parse("<a attr:href={x}>x</a>").is_err());
 }
 
 #[test]

@@ -175,7 +175,7 @@ export default controller((ctx) => {
   });
 
 </controller>
-<center use:paintDiagram sx="w-full min-h-8" attr:hidden={hasError()}></center>
+<center use:paintDiagram sx="w-full min-h-8" hidden={hasError()}></center>
 
 {#if error()}
   <column gap="2" sx="w-full p-3 px-4 border border-tone-destructive-border rounded-md bg-tone-destructive-bg text-sm">

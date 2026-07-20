@@ -218,7 +218,7 @@ compiled 1 file(s)
   <section>
     <h2 sx="text-lg font-semibold font-mono text-primary mb-1">sail-message-list</h2>
     <p sx="text-base text-muted-foreground mb-4">
-      Keyed, windowed, auto-scrolling column. Items via <code>prop:items</code>;
+      Keyed, windowed, auto-scrolling column. Items via <code>items</code>;
       <code>sticky-bottom</code> pins to newest. Empty state via the
       <code>empty</code> slot.
     </p>
@@ -227,7 +227,7 @@ compiled 1 file(s)
       <column gap="3" sx="bg-card border border-border rounded-md p-4">
         <h3 sx="text-xs font-medium uppercase tracking-wide text-muted-foreground">empty state — no items</h3>
         <column sx="h-48 border border-border rounded-md">
-          <sail-message-list prop:items={emptyItems()}>
+          <sail-message-list items={emptyItems()}>
             <span slot="empty" sx="text-muted-foreground text-base">
               No messages yet. Start the conversation.
             </span>
@@ -238,7 +238,7 @@ compiled 1 file(s)
       <column gap="3" sx="bg-card border border-border rounded-md p-4">
         <h3 sx="text-xs font-medium uppercase tracking-wide text-muted-foreground">sticky-bottom=true — pre-loaded thread</h3>
         <column sx="h-64 border border-border rounded-md">
-          <sail-message-list prop:items={threadItems()}>
+          <sail-message-list items={threadItems()}>
             <span slot="empty">No messages.</span>
           </sail-message-list>
         </column>

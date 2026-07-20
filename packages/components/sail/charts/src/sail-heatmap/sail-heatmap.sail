@@ -15,7 +15,7 @@
 
   Props
   ─────────────────────────────────────────────────────────────────────────────
-  data       string  reflect   1D comma nums OR JSON [[row],[row]]; prop:series
+  data       string  reflect   1D comma nums OR JSON [[row],[row]]; series
                                identity supersedes (normalizeSeries handles both).
   rows       string             comma-separated y labels (shapes the grid).
   cols       string             comma-separated x labels (shapes the grid).
@@ -24,7 +24,7 @@
   gap        number  3          px between cells.
   label      string  "heatmap"  aria-label kind (prefixes the data summary).
   loading    bool    reflect    loading branch (engine isLoading) → sail-skeleton.
-  error      —       prop:error identity-only → sail-error-state.
+  error      —       error identity-only → sail-error-state.
   ─────────────────────────────────────────────────────────────────────────────
   Slots: description (described-data override)
 
@@ -54,7 +54,7 @@ import { parseLabels } from '../chart-util'
 import type { ChartSeries, ChartValue, ChartPoint } from '../engine/types'
 import type { Scope } from './sail-heatmap.sail'
 
-// `error` arrives via `prop:error={…}` identity (no decodable <prop> for
+// `error` arrives via `error={…}` identity (no decodable <prop> for
 // `unknown`); read off the host in `mount` and patch the engine.
 interface HeatmapHost extends Element {
   error?: unknown

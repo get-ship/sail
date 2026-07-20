@@ -30,7 +30,7 @@ pub fn collect_attr_imports(
     out: &mut Lowered,
     is_route: bool,
     depth: usize,
-    is_custom_element: bool,
+    tag: &str,
 ) -> Result<(), CompileError> {
     // Phase 3b.4: depth-0 element bindings in routes are direct-emit.
     // The hydrate(root, ctx) closure walks SSR'd elements once via
@@ -41,20 +41,18 @@ pub fn collect_attr_imports(
     let direct_emit = is_route && depth == 0;
     match a {
         AttrInstr::Static { .. } => {}
-        AttrInstr::Expr { .. } => {
-            // Native elements are attribute-only (`bindAttr`). Custom elements
-            // get `bindDynamic`, which routes attribute-vs-property at runtime
-            // so the author writes one plain binding either way.
-            out.runtime_imports.insert(if is_custom_element { "bindDynamic" } else { "bindAttr" });
+        AttrInstr::Expr { name, .. } => {
+            // Web backend (hidden from author): CE → bindDynamic; native IDL
+            // prop table → bindProp; else bindAttr. See `native_idl_prop`.
+            let binder = plain_field_binder(tag, name);
+            out.runtime_imports.insert(binder);
             if direct_emit {
                 out.dom_imports.insert("collectElementMarkers");
-                out.dom_imports.insert("hydrateAttr");
-            }
-        }
-        AttrInstr::DynamicAttr { .. } => {
-            out.runtime_imports.insert("effect");
-            if direct_emit {
-                out.dom_imports.insert("collectElementMarkers");
+                if binder == "bindProp" {
+                    out.dom_imports.insert("hydrateProp");
+                } else {
+                    out.dom_imports.insert("hydrateAttr");
+                }
             }
         }
         AttrInstr::BindValue { .. } => {
@@ -90,20 +88,13 @@ pub fn collect_attr_imports(
                 out.dom_imports.insert("hydrateOn");
             }
         }
-        AttrInstr::Prop { .. } => {
-            out.runtime_imports.insert("bindProp");
-            if direct_emit {
-                out.dom_imports.insert("collectElementMarkers");
-                out.dom_imports.insert("hydrateProp");
-            }
-        }
         AttrInstr::Mutation { .. } => {
             out.runtime_imports.insert("wireFormMutation");
             if direct_emit {
                 out.dom_imports.insert("collectElementMarkers");
             }
         }
-AttrInstr::Use { action, .. } => {
+            AttrInstr::Use { action, .. } => {
             out.runtime_imports.insert("runAction");
             // A bare built-in action name (`use:anchor`, `use:autosize`, …)
             // is auto-imported from the runtime so it resolves as an ESM
@@ -169,4 +160,42 @@ AttrInstr::Use { action, .. } => {
         }
     }
     Ok(())
+}
+
+/// Closed IDL property table for **native** HTML tags — backend knowledge,
+/// not an author directive. When a plain `name={expr}` targets one of these
+/// names on a non-custom element, emit `bindProp` so boolean/object identity
+/// (checked, value, indeterminate, …) is preserved. Everything else on a
+/// native tag is `bindAttr`. Custom elements always use `bindDynamic`.
+pub fn native_idl_prop(name: &str) -> bool {
+    matches!(
+        name,
+        "value"
+            | "checked"
+            | "indeterminate"
+            | "selected"
+            | "open"
+            | "disabled"
+            | "multiple"
+            | "readOnly"
+            | "readonly"
+            | "required"
+            | "defaultValue"
+            | "defaultChecked"
+            | "innerHTML"
+            | "textContent"
+            | "scrollTop"
+            | "scrollLeft"
+    )
+}
+
+/// Pick the web runtime binder for a plain dynamic field.
+pub fn plain_field_binder(tag: &str, name: &str) -> &'static str {
+    if tag.contains('-') {
+        "bindDynamic"
+    } else if native_idl_prop(name) {
+        "bindProp"
+    } else {
+        "bindAttr"
+    }
 }

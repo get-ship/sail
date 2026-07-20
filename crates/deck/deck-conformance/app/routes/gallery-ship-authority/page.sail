@@ -18,7 +18,7 @@
     <p sx="text-muted-foreground text-sm leading-relaxed">
       Props: <code>request: string</code> (JSON-encoded AuthorityRequest). No slots.
       In production the host owns <code>ship.authority.pending()</code> via
-      <code>live()</code> and passes each item via <code>prop:request</code>;
+      <code>live()</code> and passes each item via <code>request</code>;
       this stub passes a static JSON string. Emits <code>ship-decide</code> and
       <code>ship-inspect</code> custom events.
     </p>

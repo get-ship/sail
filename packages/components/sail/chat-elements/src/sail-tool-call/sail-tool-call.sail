@@ -48,7 +48,7 @@
       <span
         dot
         aria-hidden="true"
-        attr:pulse={status() === 'running'}
+        pulse={status() === 'running'}
         sx="bg-tone shadow-none"
       ></span>
       <span sx="font-mono text-sm font-medium text-foreground truncate">{name()}</span>

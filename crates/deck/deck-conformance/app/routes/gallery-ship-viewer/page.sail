@@ -5,7 +5,7 @@
       Pack <strong>ship/viewer</strong>. The card below renders the real custom
       element tag with static mock attribute values so the shell registers and
       paints. A visible badge marks it as a domain stub — no
-      <code>ship.*</code> calls, no live data. The <code>prop:src</code> identity
+      <code>ship.*</code> calls, no live data. The <code>src</code> identity
       binding is intentionally absent; the component falls back to the
       <code>content-type</code>, <code>filename</code>, and <code>text</code>
       scalar props for detection and dispatch.
@@ -22,7 +22,7 @@
       Props: <code>content-type: string</code> (MIME hint, e.g.
       <code>text/markdown</code>), <code>filename: string</code> (extension
       fallback for detection), <code>text: string</code> (text-content fallback
-      when no <code>prop:src</code> identity is wired). The dispatcher resolves
+      when no <code>src</code> identity is wired). The dispatcher resolves
       the renderer through the pure <code>createMimeRegistry()</code> engine and
       branches via <code>&#123;#match kind()&#125;</code> — one of:
       <code>markdown</code>, <code>code</code>, <code>json</code>,
@@ -31,7 +31,7 @@
       empty-state. Slots: <code>toolbar</code> (above renderer),
       <code>download</code> (forwarded into the empty-state action slot).
       Read-only — no <code>fetch</code> or <code>ship.*</code> calls; the host
-      resolves bytes/text and passes via <code>prop:src</code>.
+      resolves bytes/text and passes via <code>src</code>.
     </p>
 
     <column gap="4">

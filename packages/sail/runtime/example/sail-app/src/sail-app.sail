@@ -247,18 +247,18 @@ export default controller(() => {
     </div>
     <div>
       {#for col of columns() key={col.id}}
-        <section attr:data-col={col.id}>
+        <section data-col={col.id}>
           <div>
             <span data-tone="plain" use:swatch={col.tone} sx="bg-(--swatch-color)"></span>
             <span>{col.title}</span>
             <span>({col.cards.length})</span>
           </div>
-          <ol attr:data-col-cards={col.id}
+          <ol data-col-cards={col.id}
               on:dragover|preventDefault={(e) => onDragOver(e)}
               on:drop|preventDefault={(e) => onDrop(e, col.id, null)}>
             {#for card of col.cards key={card.id}}
               <li data-card="true"
-                  attr:data-card={card.id}
+                  data-card={card.id}
                   draggable="true"
                   motion:enter={{ scale: 'spring:snappy', opacity: 'fade' }}
                   motion:exit={{ opacity: 'fade-out' }}

@@ -10,7 +10,7 @@
 
   Props
   ─────────────────────────────────────────────────────────────────────────────
-  series   string  reflect   JSON [{name,data,tone?}] SSR fallback; prop:series
+  series   string  reflect   JSON [{name,data,tone?}] SSR fallback; series
                              identity supersedes (normalizeSeries handles both).
   labels   string            comma-separated x labels (feeds the aria table).
   width    number  300       initial estimate — measured box drives the render.
@@ -19,7 +19,7 @@
   grid     bool    reflect   render subtle y-grid lines.
   label    string  "area chart"  aria-label kind (prefixes the data summary).
   loading  bool    reflect   loading branch (engine isLoading) → sail-skeleton.
-  error    —       prop:error identity-only (unknown has no <prop>) → sail-error-state.
+  error    —       error identity-only (unknown has no <prop>) → sail-error-state.
   ─────────────────────────────────────────────────────────────────────────────
   Slots: (default) legend · description (described-data override)
 
@@ -50,7 +50,7 @@ import { areaGeometry } from '../engine/geometry-cartesian'
 import { gridGeometry } from '../engine/geometry-grid'
 import type { Scope } from './sail-area-chart.sail'
 
-// `error` is injected via `prop:error={…}` identity — `unknown` has no decodable
+// `error` is injected via `error={…}` identity — `unknown` has no decodable
 // `<prop>` type, so it is not in the compiler-emitted `Scope`. The controller
 // reads it off the host in `mount` and patches the engine.
 interface AreaHost extends Element {
@@ -64,7 +64,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
     })
     const chart = createChartData({
       // normalizeSeries accepts string | ChartSeries[] — ONE scope key handles
-      // both the SSR JSON string AND a live prop:series identity, no cast.
+      // both the SSR JSON string AND a live series identity, no cast.
       series: derived(() => normalizeSeries(series())),
       isLoading: loading, // engine reflects the consumer flag
     })

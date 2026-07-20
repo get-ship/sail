@@ -3,7 +3,7 @@
 
   Builds createCanvas() + a board model in the controller. Nodes/edges/ports/
   selection are DOM/SVG (selectable, accessible, token-themeable) — NO canvas
-  engine. The board composes <sail-canvas> as its substrate via prop:canvas
+  engine. The board composes <sail-canvas> as its substrate via canvas
   identity and renders its domain layer into the world slot. Edges live in an
   SVG overlay; nodes are absolutely-positioned <div>s carrying a default slot
   for consumer-owned visuals (the board owns geometry, not content).
@@ -11,7 +11,7 @@
   Props
   ─────────────────────────────────────────────────────────────────────
   value     (string, '')              SSR/declarative board-JSON FALLBACK
-                                        (parsed via JSON.parse). prop:* wins.
+                                        (parsed via JSON.parse). * wins.
   readonly  (bool, false reflect)      Pan/zoom only; no node edits.
   theme     ('light'|'dark' reflect)   Forwarded to the substrate.
   grid      ('none'|'dots'|'lines')    Forwarded background grid hint.
@@ -43,7 +43,7 @@ import { applyBoardKey } from './engine/board-keys'
 import type { LayoutKind } from './engine/layout-adapter'
 
 // SSR fallback = the verified sail-combobox shape: plain JSON.parse, try/caught.
-// The live path is prop:* identity onto the board model.
+// The live path is * identity onto the board model.
 function parseBoard(raw: string): { nodes?: Node[]; edges?: Edge[] } | null {
   if (!raw) return null
   try {
@@ -227,8 +227,8 @@ export default controller(({ value, layout }: Scope) => {
 <sail-canvas
   role="application"
   aria-label={label()}
-  prop:canvas={canvas}
-  prop:readonly={readonly()}
+  canvas={canvas}
+  readonly={readonly()}
   sx="block relative w-full h-full"
 >
   <svg aria-hidden="true" sx="absolute top-0 left-0 overflow-visible pointer-events-none">

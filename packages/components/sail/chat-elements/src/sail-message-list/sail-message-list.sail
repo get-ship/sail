@@ -1,7 +1,7 @@
 <!--
   <sail-message-list> — a keyed, windowed, scrollable column of
   <sail-message> bubbles. Items arrive via the `items` JS-property
-  (`prop:items={...}`); each must carry a stable `id` for keyed
+  (`items={...}`); each must carry a stable `id` for keyed
   reconciliation. With `sticky-bottom` (default), the list auto-scrolls
   to the newest message unless the user has scrolled up to read history.
 

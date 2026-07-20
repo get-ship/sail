@@ -6013,22 +6013,6 @@ export const DIRECTIVES: DirectiveDoc[] = [
     "summary": "attach behavior bound to the element's lifecycle; built-ins live in the actions reference, a scope value works too"
   },
   {
-    "syntax": "prop:<name>={expr}",
-    "summary": "set a JS property on the element — for identity values that are not attributes"
-  },
-  {
-    "syntax": "attr:<name>={expr}",
-    "summary": "force attribute semantics for a dynamic value"
-  },
-  {
-    "syntax": "attr:{nameExpr}={expr}",
-    "summary": "dynamic attribute name — both the name and the value are expressions"
-  },
-  {
-    "syntax": "class:<name>={condition}",
-    "summary": "toggle one class while the condition holds"
-  },
-  {
     "syntax": "sx=\"atom atom …\"",
     "summary": "static styling atoms from the closed sx vocabulary; sx={expr} is a compile error"
   },
@@ -6147,6 +6131,18 @@ export interface RetiredDoc {
 
 export const RETIRED_DIRECTIVES: RetiredDoc[] = [
   {
+    "syntax": "prop:<name>",
+    "instead": "write plain name={expr}; the compiler/runtime lowers field → property or attribute from contracts + value shape — no author attr/property split"
+  },
+  {
+    "syntax": "attr:<name> / attr:{nameExpr}",
+    "instead": "write plain name={expr}; dynamic field names are not an author directive — fixed-name fields only"
+  },
+  {
+    "syntax": "class:<name>",
+    "instead": "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is aria-*/closed sx state prefixes/layout — not a global CSS class toggle. Bare class= is also banned"
+  },
+  {
     "syntax": "style:<prop>",
     "instead": "runtime geometry is owned by named, typed actions (use:rect, use:pin, use:virtualRow, …) — sx reads the variables they write via (--name)"
   },
@@ -6235,7 +6231,7 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
   {
     "form": "identity prop",
     "syntax": "rows: Row[] = []",
-    "summary": "any other TS type is an identity prop — a plain reactive JS property (set with prop:), never an attribute, no coercion; the type is carried verbatim into the .d.ts",
+    "summary": "any other TS type is an identity prop — a plain reactive JS property (set with plain name={expr}), never an attribute, no coercion; the type is carried verbatim into the .d.ts",
     "example": "<scope>\n  type Row = { id: string }\n  props: { rows: Row[] = [] }\n</scope>\n<p>{rows.length}</p>"
   },
   {

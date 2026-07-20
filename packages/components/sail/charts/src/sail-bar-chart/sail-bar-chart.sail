@@ -19,7 +19,7 @@
   max          number  0          0 = auto (engine extent yMax-null semantics).
   label        string  "bar chart"  aria-label kind (prefixes the data summary).
   loading      bool    reflect    loading branch (engine isLoading) → sail-skeleton.
-  error        —       prop:error identity-only → sail-error-state.
+  error        —       error identity-only → sail-error-state.
   ─────────────────────────────────────────────────────────────────────────────
   Slots: description (described-data override)
 
@@ -52,7 +52,7 @@ import { barGeometry } from '../engine/geometry-cartesian'
 import { parseLabels } from '../chart-util'
 import type { Scope } from './sail-bar-chart.sail'
 
-// `error` arrives via `prop:error={…}` identity (no decodable <prop> for
+// `error` arrives via `error={…}` identity (no decodable <prop> for
 // `unknown`); read off the host in `mount` and patch the engine.
 interface BarHost extends Element {
   error?: unknown

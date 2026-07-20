@@ -52,13 +52,8 @@ fn attr_references_ident(attr: &AttrInstr, name: &str) -> bool {
         AttrInstr::Expr { expr, .. }
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. }
-        | AttrInstr::Prop { expr, .. }
-        | AttrInstr::Mutation { expr, .. } => expr_references_ident(&expr.source, name),
+                | AttrInstr::Mutation { expr, .. } => expr_references_ident(&expr.source, name),
         AttrInstr::On { handler, .. } => expr_references_ident(&handler.source, name),
-        AttrInstr::DynamicAttr { name_expr, expr, .. } => {
-            expr_references_ident(&name_expr.source, name)
-                || expr_references_ident(&expr.source, name)
-        }
 AttrInstr::Use { action, param, .. } => {
             action == name
                 || param.as_ref().is_some_and(|e| expr_references_ident(&e.source, name))

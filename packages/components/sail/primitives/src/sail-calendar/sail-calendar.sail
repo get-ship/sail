@@ -3,7 +3,7 @@
   Pure-framework component over the COMMITTED headless engine
   (`./engine/createCalendar`), which owns all reactive state + view-model
   (monthCells / dayColumns / timeSlots / agenda / selection / navigation). The
-  engine arrives via `prop:calendar` IDENTITY; `events`/`focus-date` (type=string)
+  engine arrives via `calendar` IDENTITY; `events`/`focus-date` (type=string)
   are the SSR/declarative fallback (JSON.parse in the controller — `type="json"`
   does NOT compile). All emits go through host.emit! (see controller).
 
@@ -40,7 +40,7 @@
 // The headless engine (`./engine/createCalendar`) owns ALL reactive state +
 // view-model derivation (month/week/day, agenda, selection, navigation). This
 // controller is the thin seam: it routes the live `Calendar` in via the
-// `prop:calendar` IDENTITY path (a JS reference, never a stringified attribute),
+// `calendar` IDENTITY path (a JS reference, never a stringified attribute),
 // falls back to building an engine from the `events` `type="string"` SSR prop
 // (sail-combobox JSON.parse pattern), re-exposes the engine's `Derived` surfaces
 // as scope signals the template reads, and emits `sail-*` events via the runtime
@@ -103,7 +103,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       left: `${(pe.laneIndex / pe.laneCount) * 100}%`,
       width: `${(1 / pe.laneCount) * 100}%`,
     })
-    // The live engine. `prop:calendar` identity (set in mount) supersedes; until
+    // The live engine. `calendar` identity (set in mount) supersedes; until
     // then we seed from the SSR `events` string + the focus-date attr so a
     // declarative (no-parent-controller) mount still renders.
     const engine = signal<Calendar | null>(null)
@@ -121,7 +121,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       rangeMode: (rangeMode() || 'none') as 'none',
     })
 
-    /** The active engine — the prop:calendar identity if present, else fallback. */
+    /** The active engine — the calendar identity if present, else fallback. */
     const cal = derived<Calendar>(() => engine() ?? fallback)
 
     // Re-expose the engine view-model as scope deriveds the template reads.
@@ -191,7 +191,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const focusedIso = derived(() => cal().focusDate())
 
     mount((host) => {
-      // prop:calendar identity — a live `Calendar` reference (the engine path),
+      // calendar identity — a live `Calendar` reference (the engine path),
       // routed into the scope signal so every derived re-resolves onto it.
       Object.defineProperty(host, 'calendar', {
         configurable: true,
@@ -211,7 +211,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       const active = (): Calendar => cal()
 
       // Deduped emit (sail-combobox lastEmitted pattern) over host.emit!. When
-      // prop:calendar swaps the engine identity we re-seed from the NEW engine
+      // calendar swaps the engine identity we re-seed from the NEW engine
       // (no emit) instead of diffing its view/date against the prior engine's —
       // otherwise the stale closure fires a spurious sail-view/date-change.
       let lastEngine: Calendar | null = null

@@ -10,7 +10,7 @@
 
   Props
   ─────────────────────────────────────────────────────────────────────────────
-  data     string  reflect   comma-separated numbers (normalizeSeries); prop:series
+  data     string  reflect   comma-separated numbers (normalizeSeries); series
                              identity supersedes (normalizeSeries handles both).
   tone     union   reflect   line color (toneColor role-token map).
   width    number  80        initial estimate — measured box drives the render.
@@ -48,7 +48,7 @@ import { areaGeometry } from '../engine/geometry-cartesian'
 import { toneColor } from '../chart-util'
 import type { Scope } from './sail-sparkline.sail'
 
-// `error` arrives via `prop:error={…}` identity (no decodable <prop> for
+// `error` arrives via `error={…}` identity (no decodable <prop> for
 // `unknown`); read off the host in `mount` and patch the engine.
 interface SparkHost extends Element {
   error?: unknown

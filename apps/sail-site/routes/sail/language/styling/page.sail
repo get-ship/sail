@@ -133,7 +133,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     plain pages usually don't need them.
   </p>
   <code-block code={code.variants}></code-block>
-  <p>Callers pick a look the way they set any prop:</p>
+  <p>Callers pick a look the way they set any field:</p>
   <code-block code={code.variantUse}></code-block>
 
   <h2>Styles can be dynamic too</h2>

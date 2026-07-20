@@ -6,7 +6,7 @@
   token-themeable) — NO canvas engine. Pen outlines come from vendored
   perfect-freehand; the optional hand-drawn aesthetic from vendored roughjs
   (the rough-adapter is the sole importer). The whiteboard composes
-  <sail-canvas> as its substrate via prop:canvas identity and renders its scene
+  <sail-canvas> as its substrate via canvas identity and renders its scene
   into the world layer; selection/transform are an SVG overlay.
 
   This REPLACES the deleted React + Excalidraw bridge. v1 ships owned
@@ -18,7 +18,7 @@
   Props
   ─────────────────────────────────────────────────────────────────────
   value     (string, '')                       SSR scene-JSON FALLBACK
-                                                  (JSON.parse). prop:* wins.
+                                                  (JSON.parse). * wins.
   readonly  (bool, false reflect)               Pan/zoom only; no edits.
   theme     ('light'|'dark' reflect)            Forwarded to the substrate.
   grid      ('none'|'dots'|'lines')             Forwarded background grid hint.
@@ -51,7 +51,7 @@ import { createDrawScene, type DrawElement, type DrawTool } from './engine/scene
 import type { ShapeKind } from './engine/shape'
 
 // SSR fallback = the verified sail-combobox shape: plain JSON.parse, try/caught.
-// The live path is prop:* identity onto the scene model.
+// The live path is * identity onto the scene model.
 function parseScene(raw: string): { elements?: DrawElement[] } | null {
   if (!raw) return null
   try {
@@ -249,8 +249,8 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
 <sail-canvas
   role="application"
   aria-label={label()}
-  prop:canvas={canvas}
-  prop:readonly={readonly()}
+  canvas={canvas}
+  readonly={readonly()}
   on:pointerdown={surfaceDown}
   sx="block relative w-full h-full text-foreground"
 >

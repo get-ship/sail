@@ -67,7 +67,7 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
     ScopeEntry {
         form: "identity prop",
         syntax: "rows: Row[] = []",
-        summary: "any other TS type is an identity prop — a plain reactive JS property (set with prop:), never an attribute, no coercion; the type is carried verbatim into the .d.ts",
+        summary: "any other TS type is an identity prop — a plain reactive JS property (set with plain name={expr}), never an attribute, no coercion; the type is carried verbatim into the .d.ts",
         example: "<scope>\n  type Row = { id: string }\n  props: { rows: Row[] = [] }\n</scope>\n<p>{rows.length}</p>",
     },
     ScopeEntry {

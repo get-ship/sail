@@ -4,7 +4,7 @@
   keyed on label; the contract feeds the element manifest.
 
   Faithful to the feat/next sail-label baseline for `size` and `required`.
-  `for` is deliberately NOT a declared prop: the baseline forwards it to an
+  `for` is deliberately NOT a declared prop — the baseline forwards it to an
   inner native `<label>` through controller JS (`labelEl.htmlFor = ...`) —
   that indirection is a LANG-GAP that dissolves at L1. Here the root IS a
   real `<label>`, so a use-site `for="…"` attribute merges straight onto it

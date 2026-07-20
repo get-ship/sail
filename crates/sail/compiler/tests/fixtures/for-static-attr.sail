@@ -7,6 +7,6 @@ export default controller((ctx) => ({
 
 <table>
   {#for row of rows() key={row.id}}
-    <tr attr:id={row.id}><td>cell</td></tr>
+    <tr id={row.id}><td>cell</td></tr>
   {/for}
 </table>

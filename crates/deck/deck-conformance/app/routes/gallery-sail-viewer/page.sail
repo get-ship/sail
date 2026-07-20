@@ -6,7 +6,7 @@
       <strong>sail-prop-knobs</strong>, <strong>sail-prop-matrix</strong>,
       <strong>sail-render</strong>, and <strong>sail-source-panel</strong>.
       Scalar props are demonstrated below. Structured inputs (source signal,
-      CEM attrs, compile fn) arrive via <code>prop:*</code> identity at runtime.
+      CEM attrs, compile fn) arrive via <code>*</code> identity at runtime.
     </p>
   </header>
 
@@ -43,8 +43,8 @@
     <p sx="text-muted-foreground text-sm leading-relaxed">
       The CEM-driven playground — classifies each attribute into an enum
       toggle-group, bool switch, number input, or text input. No scalar
-      structural props: knob content arrives via <code>prop:props</code>
-      (CEM attrs) and <code>prop:value</code> (current values) at runtime.
+      structural props: knob content arrives via <code>props</code>
+      (CEM attrs) and <code>value</code> (current values) at runtime.
     </p>
     <column gap="4">
       <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
@@ -83,7 +83,7 @@
     <p sx="text-muted-foreground text-sm leading-relaxed">
       The engine primitive — a live, reactive mount stage. The bound
       <code>compile()</code> and raw <code>source</code> arrive via
-      <code>prop:*</code> identity; the three scalar attrs control mode and
+      <code>*</code> identity; the three scalar attrs control mode and
       viewport framing.
     </p>
     <column gap="4">

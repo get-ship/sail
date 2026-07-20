@@ -349,11 +349,11 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
     {/if}
     {#for m of markers() key={m.id}}
       <sail-annotation-marker
-        prop:kind={m.kind}
-        prop:index={m.index}
-        prop:rect={m.rect}
-        prop:x={m.pos.x}
-        prop:y={m.pos.y}
+        kind={m.kind}
+        index={m.index}
+        rect={m.rect}
+        x={m.pos.x}
+        y={m.pos.y}
       ></sail-annotation-marker>
     {/for}
     {#if pending()}

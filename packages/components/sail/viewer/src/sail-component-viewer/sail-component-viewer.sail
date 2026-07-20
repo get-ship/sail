@@ -5,8 +5,8 @@
   component composes this one — docs, studio, devtools, eval.
 
     <sail-component-viewer name="badge" variant-attr="variant"
-                          prop:variants={['solid','soft','outline']}
-                          prop:props={PROP_REGISTRY.badge}
+                          variants={['solid','soft','outline']}
+                          props={PROP_REGISTRY.badge}
                           usage={snippet}>
       <badge slot="stage" variant="solid" tone="primary">Live</badge>
     </sail-component-viewer>

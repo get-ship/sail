@@ -116,7 +116,6 @@ fn check_attr_for_route(a: &AttrInstr, out: &mut Lowered) {
         AttrInstr::Expr { expr, .. }
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. }
-        | AttrInstr::Prop { expr, .. }
         | AttrInstr::Mutation { expr, .. } => {
             if expr_references_route(&expr.source) {
                 out.uses_route = true;
@@ -124,11 +123,6 @@ fn check_attr_for_route(a: &AttrInstr, out: &mut Lowered) {
         }
         AttrInstr::On { handler, .. } => {
             if expr_references_route(&handler.source) {
-                out.uses_route = true;
-            }
-        }
-        AttrInstr::DynamicAttr { name_expr, expr, .. } => {
-            if expr_references_route(&name_expr.source) || expr_references_route(&expr.source) {
                 out.uses_route = true;
             }
         }
@@ -181,12 +175,11 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_route: bool, depth: &mut usiz
                 // factory up in the registry at mount time.
                 out.runtime_imports.insert("getTemplateHook");
             }
-            let is_custom_element = el.tag.contains('-');
             for a in &el.attrs {
                 if is_route {
                     check_attr_for_route(a, out);
                 }
-                bindings::collect_attr_imports(a, out, is_route, *depth, is_custom_element)?;
+                bindings::collect_attr_imports(a, out, is_route, *depth, &el.tag)?;
             }
             walk_instrs(&el.children, out, is_route, depth)?;
         }

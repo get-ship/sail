@@ -8,7 +8,7 @@
   type-to-filter, keyboard-navigable listbox of items, optionally grouped.
 
   RUNTIME-FREE / SDK-FREE. Items + handlers arrive as data/events:
-    • `prop:items` IDENTITY binding — a live `CmdkItem[]` from a parent
+    • `items` IDENTITY binding — a live `CmdkItem[]` from a parent
       controller (the primary runtime path; never serialized).
     • `items='[…JSON…]'` attribute — the SSR/declarative fallback (the
       compiler's <prop> vocab is string|bool|number, so structured data
@@ -265,7 +265,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       }
 
       // Reset query + highlight on each open; emit open/close. The dialog drives
-      // its own native open via prop:open={open()}; here we react to the state.
+      // its own native open via open={open()}; here we react to the state.
       let wasOpen = false
       const stopOpenSync = effect(() => {
         const isOpen = _ctx.open() === true

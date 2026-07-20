@@ -1,6 +1,6 @@
 //! The template-directive vocabulary — one source of truth for every
 //! attribute-position directive the parser accepts (`on:`, `bind:`, `use:`,
-//! `prop:`, `attr:`, `motion:`, slots, `mutation`), every `on:`
+//! `motion:`, slots, `mutation`), every `on:`
 //! event modifier, every `bind:` target, and every retired directive with
 //! the thing to use instead.
 //!
@@ -28,7 +28,7 @@ pub struct DirectiveEntry {
 /// each prefix so `bind:value`, `on:click`, etc. parse as directives
 /// rather than as ordinary `attr_name` tokens. Keep this in sync with
 /// the `DIRECTIVES` entries whose syntax starts with `<prefix>:`.
-pub const DIRECTIVE_PREFIXES: &[&str] = &["bind", "on", "attr", "prop", "use", "motion"];
+pub const DIRECTIVE_PREFIXES: &[&str] = &["bind", "on", "use", "motion"];
 
 /// Element names that are directive-like in the grammar: the parser treats
 /// them as ordinary HTML elements, but the highlight query gives them a
@@ -49,18 +49,6 @@ pub const DIRECTIVES: &[DirectiveEntry] = &[
     DirectiveEntry {
         syntax: "use:<action> / use:<action>={param}",
         summary: "attach behavior bound to the element's lifecycle; built-ins live in the actions reference, a scope value works too",
-    },
-    DirectiveEntry {
-        syntax: "prop:<name>={expr}",
-        summary: "set a JS property on the element — for identity values that are not attributes",
-    },
-    DirectiveEntry {
-        syntax: "attr:<name>={expr}",
-        summary: "force attribute semantics for a dynamic value",
-    },
-    DirectiveEntry {
-        syntax: "attr:{nameExpr}={expr}",
-        summary: "dynamic attribute name — both the name and the value are expressions",
     },
     DirectiveEntry {
         syntax: "sx=\"atom atom …\"",
@@ -193,6 +181,14 @@ pub struct RetiredEntry {
 
 /// Every directive the parser refuses by name, with what to use instead.
 pub const RETIRED_DIRECTIVES: &[RetiredEntry] = &[
+    RetiredEntry {
+        syntax: "prop:<name>",
+        instead: "write plain name={expr}; the compiler/runtime lowers field → property or attribute from contracts + value shape — no author attr/property split",
+    },
+    RetiredEntry {
+        syntax: "attr:<name> / attr:{nameExpr}",
+        instead: "write plain name={expr}; dynamic field names are not an author directive — fixed-name fields only",
+    },
     RetiredEntry {
         syntax: "class:<name>",
         instead: "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is aria-*/closed sx state prefixes/layout — not a global CSS class toggle. Bare class= is also banned",

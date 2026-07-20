@@ -6,7 +6,7 @@
   the Table view's COLUMN/CELL machinery (row.getVisibleCells()), with the
   disclosure caret + indent in the FIRST visible column. navMode:'cell' (vs
   'row' for sail-tree); role=treegrid (vs role=tree). The live Table<T>
-  (carrying the column defs) arrives via prop:tree IDENTITY binding; a
+  (carrying the column defs) arrives via tree IDENTITY binding; a
   nodes+columns JSON pair is the SSR fallback.
 
   Density is the platform axis (<html data-density>). NO density/dense prop.
@@ -37,7 +37,7 @@
       ├─ .tree-error part=error (sail-error-state inside, when error attr)
       └─ .tree-empty part=empty (sail-empty-state inside, when no rows)
 
-  Columns arrive on the live `Table<T>` via the `prop:tree` identity host
+  Columns arrive on the live `Table<T>` via the `tree` identity host
   property; `nodes`/`columns` JSON pair is the SSR fallback.
 
   Tests pin to `part=` / `data-*` / `role=` — never to a class name.
@@ -72,7 +72,7 @@
 // Differs from `sail-tree` only in navMode/role/render: it reads the same
 // flattened `tree.rows()` but maps each row's `getVisibleCells()` into cells
 // (the disclosure caret + indent land in the FIRST visible column). Columns
-// arrive on the live `Table<T>` via the `prop:tree` identity host property; a
+// arrive on the live `Table<T>` via the `tree` identity host property; a
 // `nodes`/`columns` JSON pair is the SSR fallback.
 //
 // Runtime geometry (track string, row offset, indent, spacer height) leaves

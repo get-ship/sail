@@ -202,7 +202,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </button>
   </row>
   <p sx="text-sm text-muted-foreground">
-    Accessibility is the <code>label</code> prop: with it the icon is
+    Accessibility is the <code>label</code> field — with it the icon is
     <code>role="img"</code> with an <code>aria-label</code>; without it the
     icon is marked <code>aria-hidden</code> — decoration, invisible to a
     screen reader. <code>size</code> runs <code>xs</code> to

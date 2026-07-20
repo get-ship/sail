@@ -106,9 +106,6 @@ impl Builder {
             AttrInstr::Expr { name, expr, .. } => {
                 self.push(BindingKind::Attr(name.clone()), &expr.source, expr.allow_arrow);
             }
-            AttrInstr::Prop { name, expr, .. } => {
-                self.push(BindingKind::Prop(name.clone()), &expr.source, expr.allow_arrow);
-            }
             AttrInstr::BindValue { expr, .. } => {
                 self.push(BindingKind::BindValue, &expr.source, expr.allow_arrow);
             }
@@ -127,13 +124,10 @@ impl Builder {
             AttrInstr::On { event, handler, .. } => {
                 self.push(BindingKind::On(event.clone()), &handler.source, handler.allow_arrow);
             }
-            AttrInstr::DynamicAttr { expr, .. } => {
-                self.push(BindingKind::AttrDynamic, &expr.source, expr.allow_arrow);
-            }
             AttrInstr::Mutation { expr, .. } => {
                 self.push(BindingKind::Mutation, &expr.source, expr.allow_arrow);
             }
-AttrInstr::Use { .. } => {
+            AttrInstr::Use { .. } => {
                 // Actions register on element construction, same as
                 // transitions — no SSR marker, no key, no manifest entry.
             }

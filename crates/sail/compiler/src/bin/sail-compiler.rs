@@ -280,7 +280,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     };
     // Two consumers, two shapes from one walk:
     //  * primitives.json — the lint's validation registry: attribute-checkable
-    //    props only (Identity props are `prop:`-set JS values, nothing for
+    //    props only (Identity props are plain-field JS values, nothing for
     //    static-attribute validation to check).
     //  * prop-registry.gen.ts — the docs site's props tables: the FULL surface
     //    including Identity props (shown as their verbatim TS type), so the

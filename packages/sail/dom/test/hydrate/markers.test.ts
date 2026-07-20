@@ -4,7 +4,7 @@
 //
 // The compiler emits TWO halves of the same contract for a `prop:`
 // binding on an SSR'd component (see crates/sail/compiler/src/render/
-// walker_attrs.rs `AttrInstr::Prop` and emit/template_emit/dom_emit.rs):
+// emit/template_emit/dom_emit.rs plain-field lowering):
 //
 //   1. SSR HTML carries the marker attribute `prop:NAME="bN"` on the
 //      element.

@@ -2,7 +2,7 @@
   <sail-media-image> — the raster + SVG image renderer arm of the sail-media
   family (Backbone #2 — ViewerRenderer).
 
-  Read-only, source-in-never-fetch. A resolved source arrives via `prop:src`
+  Read-only, source-in-never-fetch. A resolved source arrives via `src`
   identity (a raster object-url/bytes, or SVG text the consumer already fetched)
   — NEVER an attribute, NEVER a fetch. A raster source paints into the native
   <img> (whose `load`/`error` drive the lifecycle events) inside a zoom/pan
@@ -18,7 +18,7 @@
     alt       string                    reflect — the real accessible name (<img alt> / SVG aria-label)
     fit       contain|cover|actual      reflect — object-fit
     zoomable  bool, true                reflect — wheel/keyboard zoom + pan
-    gallery   bool, false               reflect — multi-image strip (sources via prop:src array)
+    gallery   bool, false               reflect — multi-image strip (sources via src array)
 
   Events (ViewerRenderer contract, via emit):
     sail-viewer-load              — first successful raster load / SVG inline
@@ -37,7 +37,7 @@
 </scope>
 <controller>
 // sail-media-image — the raster + SVG image renderer controller (tier-2, glue-
-// only). A resolved source arrives via `prop:src` identity (single ViewerSource
+// only). A resolved source arrives via `src` identity (single ViewerSource
 // OR an array for `gallery`). The controller:
 //   - routes raster sources into the use:rasterImg <img> (resolving bytes→object-url
 //     when the consumer did not pre-resolve a url) and wires load/error → the
@@ -71,7 +71,7 @@ interface GalleryItem {
   selected: boolean
 }
 
-/** First source of a (possibly array) prop:src assignment. */
+/** First source of a (possibly array) src assignment. */
 function firstSource(src: ImageSrc): ViewerSource | string | null {
   if (src == null) return null
   if (Array.isArray(src)) return src[0] ?? null
@@ -102,7 +102,7 @@ function rasterUrlOf(src: ViewerSource | string | null): { url: string; created:
 }
 
 export default controller((_ctx: Scope) => {
-    // prop:src identity — assigned to the host `src` property in mount.
+    // src identity — assigned to the host `src` property in mount.
     const srcSig = signal<ImageSrc>(null)
     const activeIndex = signal(0)
 
@@ -224,7 +224,7 @@ export default controller((_ctx: Scope) => {
       // CSS + the affordance check see it when the consumer left it unset.
       if (!host.hasAttribute('zoomable')) host.setAttribute('zoomable', '')
 
-      // prop:src identity setter — a live JS reference (or array), never a
+      // src identity setter — a live JS reference (or array), never a
       // stringified attribute. Routes into the scope signal so render re-resolves.
       Object.defineProperty(host, 'src', {
         configurable: true,

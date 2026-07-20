@@ -1,4 +1,5 @@
-//! `prop:foo={expr}` parses and emits `bindProp` + `hydrateProp`.
+//! Plain `name={expr}` on custom elements emits `bindDynamic`; on native
+//! IDL props emits `bindProp`. Author `prop:` / `attr:` prefixes are refused.
 
 use sail_compiler::{compile, CompileMode, CompileOpts};
 
@@ -17,51 +18,71 @@ fn route_opts() -> CompileOpts {
 }
 
 #[test]
-fn prop_attribute_emits_bind_prop_call() {
-    let src = r#"<my-grid prop:items={items()}></my-grid>"#;
+fn plain_ce_field_emits_bind_dynamic() {
+    let src = r#"<my-grid items={items()}></my-grid>"#;
     let r = compile(src, route_opts()).expect("compile");
     assert!(
-        r.js.contains(r#"bindProp(__e0, "items""#),
-        "expected bindProp call, got:\n{}",
+        r.js.contains(r#"bindDynamic(__e0, "items""#),
+        "expected bindDynamic call, got:\n{}",
         r.js
     );
 }
 
 #[test]
-fn prop_imports_runtime_and_dom_helpers() {
+fn plain_ce_field_imports_bind_dynamic() {
+    let src = r#"<my-grid items={items()}></my-grid>"#;
+    let r = compile(src, route_opts()).expect("compile");
+    assert!(r.js.contains("bindDynamic"), "missing bindDynamic import");
+}
+
+#[test]
+fn prop_prefix_is_compile_error() {
     let src = r#"<my-grid prop:items={items()}></my-grid>"#;
-    let r = compile(src, route_opts()).expect("compile");
-    assert!(r.js.contains("bindProp"), "missing bindProp import");
-    assert!(r.js.contains("hydrateProp"), "missing hydrateProp import");
-}
-
-#[test]
-fn prop_without_expr_is_compile_error() {
-    let src = r#"<my-grid prop:items="literal"></my-grid>"#;
-    let err = compile(src, route_opts())
-        .expect_err("prop:items=literal must fail — needs {expr}");
+    let err = compile(src, route_opts()).expect_err("prop: must fail");
     assert!(
-        err.message.contains("prop:items expects {expr}"),
+        err.message.contains("`prop:`") && err.message.contains("plain"),
         "msg: {}",
         err.message
     );
 }
 
 #[test]
-fn empty_prop_name_is_compile_error() {
-    let src = r#"<my-grid prop:={items()}></my-grid>"#;
-    let err = compile(src, route_opts()).expect_err("empty prop name must fail");
+fn attr_prefix_is_compile_error() {
+    let src = r#"<div attr:hidden={h()}></div>"#;
+    let err = compile(src, route_opts()).expect_err("attr: must fail");
     assert!(
-        err.message.contains("prop: requires a property name"),
+        err.message.contains("`attr:`") && err.message.contains("plain"),
         "msg: {}",
         err.message
     );
 }
 
 #[test]
-fn multiple_props_each_emit_their_own_call() {
-    let src = r#"<my-grid prop:rows={rows()} prop:label={title()}></my-grid>"#;
+fn native_idl_value_emits_bind_prop() {
+    let src = r#"<progress value={n()} max="100"></progress>"#;
     let r = compile(src, route_opts()).expect("compile");
-    let count = r.js.matches("bindProp(").count();
-    assert_eq!(count, 2, "expected 2 bindProp calls, got {count}\n{}", r.js);
+    assert!(
+        r.js.contains(r#"bindProp(__e0, "value""#),
+        "expected bindProp for IDL value, got:\n{}",
+        r.js
+    );
+}
+
+#[test]
+fn native_non_idl_emits_bind_attr() {
+    let src = r#"<div title={t()}></div>"#;
+    let r = compile(src, route_opts()).expect("compile");
+    assert!(
+        r.js.contains(r#"bindAttr(__e0, "title""#),
+        "expected bindAttr, got:\n{}",
+        r.js
+    );
+}
+
+#[test]
+fn multiple_ce_fields_each_emit_bind_dynamic() {
+    let src = r#"<my-grid rows={rows()} label={title()}></my-grid>"#;
+    let r = compile(src, route_opts()).expect("compile");
+    let count = r.js.matches("bindDynamic(").count();
+    assert_eq!(count, 2, "expected 2 bindDynamic calls, got {count}\n{}", r.js);
 }

@@ -55,7 +55,7 @@ function clauseName(clause: string): string {
 }
 
 function directivePrefix(syntax: string): string {
-  // Attribute directives: `on:<event>...`, `bind:value / ...`, `prop:<name>...`,
+  // Attribute directives: `on:<event>...`, `bind:value / ...`, plain fields,
   // `sx="..."`, `slot="name"`, `<slot name="...">`, etc.
   const attr = syntax.match(/^<?[\w:-]+/)
   if (attr) return attr[0]

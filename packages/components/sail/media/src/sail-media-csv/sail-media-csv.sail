@@ -1,7 +1,7 @@
 <!--
   <sail-media-csv> — the CSV/TSV renderer arm of the sail-media family.
 
-  Read-only. Parses resolved csv/tsv text (via `prop:src` identity OR the
+  Read-only. Parses resolved csv/tsv text (via `src` identity OR the
   `type="string"` SSR fallback prop) into `{ rows, columns }`, feeds the shared
   `createTable` engine (Backbone #1 — it does NOT re-invent a row model), and
   renders the engine's columns/rows as a plain `<table>`. The table skin is the
@@ -34,7 +34,7 @@
 </scope>
 <controller>
 // sail-media-csv — the CSV/TSV renderer controller (tier-2, glue-only). Parses
-// resolved text (prop:src identity OR the `text` SSR prop) into the shared
+// resolved text (src identity OR the `text` SSR prop) into the shared
 // `createTable` engine, and exposes the engine's columns/rows as flat views the
 // template renders as a plain `<table>`. Heavy parse logic lives in
 // `../engine/csv-parse.ts` (the pre-committed split); the row model is the
@@ -66,7 +66,7 @@ interface RowView {
   cells: Array<{ id: string; value: string }>
 }
 
-/** Pull the renderable text out of a live ViewerSource (prop:src identity). */
+/** Pull the renderable text out of a live ViewerSource (src identity). */
 function textOf(src: ViewerSource | string | null): string {
   if (src == null) return ''
   if (typeof src === 'string') return src
@@ -74,7 +74,7 @@ function textOf(src: ViewerSource | string | null): string {
 }
 
 export default controller((_ctx: Scope) => {
-    // prop:src identity — assigned to the host `src` property in mount; the
+    // src identity — assigned to the host `src` property in mount; the
     // table engine + error message are the reactive render inputs.
     const srcSig = signal<ViewerSource | string | null>(null)
     const tableEngine = signal<Table<CsvRecord> | null>(null)
@@ -105,7 +105,7 @@ export default controller((_ctx: Scope) => {
     })
 
     mount((host) => {
-      // prop:src identity setter — a live JS reference, never a stringified
+      // src identity setter — a live JS reference, never a stringified
       // attribute. Routes into the scope signal so the parse reacts.
       Object.defineProperty(host, 'src', {
         configurable: true,
@@ -119,11 +119,11 @@ export default controller((_ctx: Scope) => {
         (host.getAttribute('delimiter') as CsvDelimiter | null) ?? 'auto'
       const readHeader = (): boolean => host.getAttribute('header') !== 'false'
 
-      // Re-parse whenever the prop:src signal OR the `text` SSR prop changes.
+      // Re-parse whenever the src signal OR the `text` SSR prop changes.
       // The effect READS srcSig/text (reactive deps) and WRITES tableEngine/
       // errorMsg (not read here → no loop). Lifecycle emits are side effects.
       const stop = effect(() => {
-        // prop:src supersedes the `text` SSR/declarative fallback prop.
+        // src supersedes the `text` SSR/declarative fallback prop.
         const fromSrc = textOf(srcSig())
         const text = fromSrc || (_ctx.text() ?? '')
         if (!text) {
