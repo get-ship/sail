@@ -94,6 +94,10 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
                     }
                     continue;
                 }
+                // Inline `<controller>` is stripped by `extract_controller_block`
+                // before parse in `compile` / `compile_element`. If one still
+                // lands here, drop it — it is not template content.
+                "controller" => continue,
                 _ => {}
             },
             _ => {}

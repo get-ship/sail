@@ -105,7 +105,7 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "chip",
         param: "void",
-        summary: "Dismissible chip behavior; click-to-remove wired to the element.",
+        summary: "Generic chip keyboard/ARIA/remove mix-in for non-chip hosts (L1 <chip> uses its element controller).",
         auto_import: true,
     },
     ActionEntry {

@@ -1383,12 +1383,16 @@ fn build(
                 "structure": el.structure_html,
                 "skin": el.skin_css,
                 "manifest": el.manifest,
+                "controller": el.controller_src.is_some(),
             });
             std::fs::write(
                 out_dir.join(format!("{name}.element.json")),
                 serde_json::to_string_pretty(&artifact)?,
             )?;
             std::fs::write(out_dir.join(format!("{name}.skin.css")), &el.skin_css)?;
+            if let Some(ctrl) = &el.controller_src {
+                std::fs::write(out_dir.join(format!("{name}.controller.ts")), ctrl)?;
+            }
             continue;
         }
         let component_meta = match (mode.clone(), component_name.clone()) {

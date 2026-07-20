@@ -202,17 +202,26 @@ in our own code first.
 ## The seams in detail
 
 **One authoring TECHNOLOGY for every layer (element mode).** L1 elements are
-authored in `.sail` like everything else — `<component>{ props }`, template,
-variants/sx skin — compiled in **element mode**, which changes only the
-output targets: the template becomes a use-site lowering (like the layout
-keywords) instead of a registered module; the skin routes into the framework
-sheet keyed on the element + attributes; the props block feeds the manifest
-AND derives the bare-shorthand vocabulary. Element mode enforces the seam
-test as a compile error: element templates are static structure + slots —
-no control flow, no `<controller>`. Needing either means the element is a
-component. Stdlib element sources compile at toolchain build and bake in;
-an element moves between L1 and L2 by changing its compile mode, never by
-rewriting its source.
+authored in `.sail` like everything else — scope/props, template, variants/sx
+skin, and an optional `<controller>` — compiled in **element mode**, which
+changes only the output targets: the template becomes a use-site lowering
+(like the layout keywords) instead of a registered module; the skin routes
+into the framework sheet keyed on the element + attributes; the props block
+feeds the manifest AND derives the bare-shorthand vocabulary; a controller
+(when present) is optional JS enhancement registered by tag and discovered
+via `data-sail-el` on the lowered root. Element mode enforces the seam test
+on the *template* as a compile error: element templates are static structure
++ slots — no control flow, no dynamic attributes/text. A `<controller>` is
+allowed: behavior lives in script next to the element, not mixed in via a
+parallel `use:<tag>` stamp. Without JS the static HTML/CSS still ships
+(progressive enhancement). Stdlib element sources compile at toolchain build
+and bake in; an element moves between L1 and L2 by changing its compile mode,
+never by rewriting its source.
+
+**`use:` is a mix-in API**, not the L1 widget brain channel. Generic node
+behaviors (autosize, clickOutside, geometry bridges) stay on `use:`. Element-
+owned interaction (chip keyboard/ARIA/remove, …) belongs in the element's
+controller.
 
 **One authoring API, two implementations (the layer-invisibility rule).**
 The single biggest footgun in this architecture: L1 elements are lowered at

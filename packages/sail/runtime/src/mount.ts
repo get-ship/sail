@@ -22,6 +22,7 @@ import { signal, isSignal, type Signal } from './signal'
 import type { RouteSignals } from './route-signals'
 import { createScope, withScope } from './effect-scope'
 import { morph } from './morph'
+import { attachElementControllers } from './element-controllers'
 import type { LiveState, LiveSignal } from './live-state'
 import type { RoutePayload as GeneratedRoutePayload } from './generated'
 
@@ -278,6 +279,12 @@ export async function mount<Scope = Record<string, unknown>>(
       console.error('[sail/mount] hydrate threw:', err)
     }
   }
+
+  // 8a. L1 element controllers (optional PE). Structure may include
+  // `data-sail-el="<tag>"` from element-mode compile; attach matching
+  // controllers once. WeakSet-guarded against double-bind on remount paths
+  // that re-enter the same nodes.
+  cleanups.push(attachElementControllers(target))
 
   // 8. Ambient mount() callbacks. A controller/component's setup body may
   // have called `mount(fn)` any number of times (directly, or from a

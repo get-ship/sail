@@ -207,6 +207,17 @@ export {
 } from './actions'
 export type { AnchorPlacement, PortSide } from './actions'
 
+
+// L1 element controllers — optional PE attach by `data-sail-el` tag.
+// compile_element stamps the attribute when a `<controller>` is present;
+// mount/component call attachElementControllers after DOM is live.
+export {
+  attachElementControllers,
+  ELEMENT_CONTROLLERS,
+  chip as chipController,
+} from './element-controllers'
+export type { ElementController, ElementControllerResult } from './element-controllers'
+
 // Scroll-lock / focus-return — runtime seams for overlays (dialog, drawer).
 // The body is part of the DOCUMENT, not a component, so a per-element `use:`
 // action cannot reach it. Controllers import these directly; the framework

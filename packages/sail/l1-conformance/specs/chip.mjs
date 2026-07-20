@@ -1,6 +1,6 @@
 // L1 conformance spec: <chip> (mechanism-1, compiles-away via element mode +
-// use:chip). States: every tone, every variant, and the behavioural gates
-// (selected/removable/icon/disabled/size). The probe runs the use:chip essentials
+// chip controller). States: every tone, every variant, and the behavioural gates
+// (selected/removable/icon/disabled/size). The probe runs the chip controller essentials
 // and asserts the ARIA contract + the remove/leading visibility gates.
 
 const dot = '<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg>'
@@ -30,7 +30,7 @@ export default {
   probe() {
     const bad = []
     document.querySelectorAll('.sail-chip').forEach((el) => {
-      // use:chip essentials
+      // chip controller essentials (ARIA + gates; full keyboard in runtime test)
       if (!el.hasAttribute('role')) el.setAttribute('role', 'button')
       const disabled = el.hasAttribute('disabled')
       el.setAttribute('aria-pressed', el.hasAttribute('selected') ? 'true' : 'false')

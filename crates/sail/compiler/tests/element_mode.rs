@@ -192,3 +192,56 @@ fn stdlib_elements_can_self_nest() {
     let n = out.js.matches("sail-card").count();
     assert!(n >= 2, "expected both cards lowered, got {n}:\n{}", out.js);
 }
+
+#[test]
+fn element_allows_controller_and_stamps_data_sail_el() {
+    let src = r#"
+<scope>
+  props: { selected = false }
+</scope>
+<style>
+  .sail-chip { display: inline-flex; }
+</style>
+<controller>
+export default function chip(node: Element) {
+  (node as HTMLElement).setAttribute('role', 'button')
+}
+</controller>
+<span>label</span>
+"#;
+    let el = compile_element(src, "chip").expect("controller-bearing element compiles");
+    assert!(
+        el.controller_src.is_some(),
+        "controller body captured"
+    );
+    assert!(
+        el.structure_html.contains("data-sail-el=\"chip\""),
+        "discovery stamp on root: {}",
+        el.structure_html
+    );
+    assert!(
+        !el.structure_html.contains("use:chip"),
+        "no use: stamp required: {}",
+        el.structure_html
+    );
+    assert_eq!(el.manifest["controller"], true);
+    assert_eq!(el.manifest["controllerDiscovery"], "data-sail-el");
+}
+
+#[test]
+fn stdlib_chip_compiles_with_controller_no_use_chip() {
+    let src = include_str!("../stdlib/chip.sail");
+    let el = compile_element(src, "chip").expect("stdlib chip compiles");
+    assert!(el.controller_src.is_some(), "chip has controller");
+    assert!(
+        el.structure_html.contains("data-sail-el=\"chip\""),
+        "{}",
+        el.structure_html
+    );
+    assert!(
+        !el.structure_html.contains("use:chip"),
+        "use:chip removed from chip root: {}",
+        el.structure_html
+    );
+    assert_eq!(el.root_class, "sail-chip");
+}
