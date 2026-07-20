@@ -1,7 +1,5 @@
-// `attr:NAME={expr}` hydrator — reactive attribute value.
-//
-// Nullish or `false` removes the attribute (so authors can flip an
-// attribute on/off via the signal value).
+// Reactive attribute hydrator for SSR plain-field bindings lowered to
+// `bindAttr` / attribute channel. Nullish or `false` removes the attribute.
 
 import { effect } from '@ship/sail-runtime'
 

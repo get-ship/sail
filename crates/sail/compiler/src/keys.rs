@@ -75,10 +75,9 @@ pub enum BindingKind {
     BindValue,
     /// `bind:checked`.
     BindChecked,
-    /// `attr:NAME={expr}`. Carries the attribute name.
+    /// Dynamic plain-field binding. Marker name form is still `attr:NAME`
+    /// (SSR mechanism string, not an author `attr:` directive).
     Attr(String),
-    /// `style:NAME={value}`.
-    Style(String),
     /// `{#if}` boundary.
     If,
     /// `{#for}` boundary.
@@ -103,7 +102,6 @@ impl BindingKind {
             BindingKind::BindValue => "bind:value".into(),
             BindingKind::BindChecked => "bind:checked".into(),
             BindingKind::Attr(n) => format!("attr:{n}"),
-            BindingKind::Style(n) => format!("style:{n}"),
             BindingKind::If => "if".into(),
             BindingKind::For => "for".into(),
             BindingKind::Match => "match".into(),
@@ -186,7 +184,6 @@ mod tests {
             BindingKind::Attr("href".into()).as_marker_str(),
             "attr:href"
         );
-        assert_eq!(BindingKind::Style("--c".into()).as_marker_str(), "style:--c");
         assert_eq!(BindingKind::If.as_marker_str(), "if");
         assert_eq!(BindingKind::For.as_marker_str(), "for");
         assert_eq!(BindingKind::Match.as_marker_str(), "match");

@@ -1,8 +1,8 @@
 // Runtime seam: body-level scroll lock + focus management for overlays.
 //
 // `acquireScrollLock` / `releaseScrollLock` are a refcounted document.body
-// effect. The body is part of the DOCUMENT, not a component — `style:`, sx,
-// and per-element actions have nothing to attach to. The framework owns
+// effect. The body is part of the DOCUMENT, not a component — sx and
+// per-element actions have nothing to attach to. The framework owns
 // the seam: NO lint can touch this file (it touches `.style.overflow`
 // deliberately, and that is on the body — the place where an overlay lock
 // belongs).

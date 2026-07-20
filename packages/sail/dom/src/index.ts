@@ -26,7 +26,6 @@ export {
   collectTextOpens,
   collectElementMarkers,
   hydrateAttr,
-  hydrateStyle,
   hydrateProp,
   hydrateOn,
   hydrateBindValue,

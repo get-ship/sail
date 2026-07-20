@@ -280,11 +280,11 @@ class El {
   tag: string
   parentNode: Parent | null = null
   attrs = new Map<string, string>()
-  /** Slice 2 — hydration marker attributes (`on:event`, `prop:name`, etc.)
-   *  the synthetic bind* calls record via `markHydrateAttr`. The El's
-   *  `toHTML()` folds them into the serialized attribute set so the
-   *  client `collectElementMarkers` finds them. `null` on the browser
-   *  DOM (only meaningful in the server-DOM). */
+  /** Slice 2 — hydration marker attributes (`on:event`, `attr:name`, etc.;
+   *  SSR wire names, not author directives) the synthetic bind* calls
+   *  record via `markHydrateAttr`. The El's `toHTML()` folds them into the
+   *  serialized attribute set so the client `collectElementMarkers` finds
+   *  them. `null` on the browser DOM (only meaningful in the server-DOM). */
   __hydrateAttr: Record<string, string> | null = null
   /** Slice 2 — boundary key for control-flow wrappers (`<sail-if key="bN">`).
    *  Set via `markHydrateBoundary`. Browser DOM uses the standard

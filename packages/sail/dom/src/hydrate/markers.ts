@@ -1,9 +1,14 @@
-// Single-pass scan for every author-syntax binding marker attribute
+// Single-pass scan for every SSR hydration marker attribute
 // (`on:*`, `attr:*`, `attr-dynamic`, `style:*`, `prop:*`,
 // `bind:*`, `mutation`) AND every control-flow boundary wrapper element
 // (`<sail-if|sail-for|sail-match|sail-await|sail-while-loading|sail-while-error key="bN">`)
 // under `root`. Returns a map from binding key (`bN`) → the SSR'd
 // element carrying the marker.
+//
+// Marker attribute *names* like `attr:href` / `prop:items` are the SSR
+// wire format (backend mechanism), not author directives — authors write
+// plain `name={expr}`. `style:*` markers are historical; `style:` is
+// refused at parse time and nothing emits them anymore.
 //
 // The compiler-emitted `hydrate(root, ctx)` calls this once per attach
 // and dispatches each binding by key — one tree walk for the whole

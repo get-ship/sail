@@ -1,4 +1,5 @@
-// `prop:NAME={expr}` hydrator — assigns the JS property on the element.
+// Property hydrator for SSR plain-field bindings lowered to `bindProp`
+// (JS property channel). Assigns the live property on the element.
 
 import { bindProp } from '@ship/sail-runtime'
 

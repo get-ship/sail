@@ -1,21 +1,21 @@
 // @vitest-environment jsdom
 
-// Regression coverage for the SSR `prop:NAME={expr}` hydrate path.
+// Regression coverage for the SSR property-channel hydrate path.
 //
-// The compiler emits TWO halves of the same contract for a `prop:`
-// binding on an SSR'd component (see crates/sail/compiler/src/render/
-// emit/template_emit/dom_emit.rs plain-field lowering):
+// Plain `name={expr}` on a CE/IDL property lowers to bindProp. The
+// compiler emits TWO halves of the same contract (see
+// crates/sail/compiler/src/emit/template_emit/dom_emit.rs):
 //
-//   1. SSR HTML carries the marker attribute `prop:NAME="bN"` on the
-//      element.
+//   1. SSR HTML carries a marker attribute `prop:NAME="bN"` (wire name;
+//      not an author directive) on the element.
 //   2. The compiled route's `hydrate(root, ctx)` runs
 //        const __m = collectElementMarkers(root);
 //        if (__m[bN]) __cleanups.push(hydrateProp(__m[bN], "name", …));
 //
 // `collectElementMarkers` is the bridge between the two: it maps each
 // SSR marker's binding key (`bN`) → the element carrying it. If it does
-// not recognise `prop:*`, `__m[bN]` is `undefined`, the `hydrateProp`
-// dispatch is skipped, and the prop set at SSR time is silently dropped
+// not recognise `prop:*` wire markers, `__m[bN]` is `undefined`, the
+// `hydrateProp` dispatch is skipped, and the value is silently dropped
 // on hydration.
 
 import { describe, expect, it } from 'vitest'
@@ -24,9 +24,10 @@ import { collectElementMarkers } from '../../src/hydrate/markers'
 import { hydrateProp } from '../../src/hydrate/prop'
 
 describe('hydrate/markers — collectElementMarkers', () => {
-  it('collects a prop:* marker so the prop hydrator can find its element', () => {
-    // Mirrors the SSR HTML the compiler emits for
-    //   <my-grid prop:items={items()}></my-grid>
+  it('collects a prop:* wire marker so the prop hydrator can find its element', () => {
+    // Mirrors the SSR HTML the compiler emits for plain
+    //   <my-grid items={items()}></my-grid>
+    // lowered to the property channel (marker name remains `prop:items`).
     const root = document.createElement('div')
     root.innerHTML = '<my-grid prop:items="b0"></my-grid>'
 
@@ -54,7 +55,7 @@ describe('hydrate/markers — collectElementMarkers', () => {
 describe('hydrate — prop survives SSR → hydrate', () => {
   it('assigns the SSR-bound prop onto the child element during hydration', () => {
     // Reconstruct the compiler-emitted hydrate path end-to-end:
-    //   1. SSR HTML with the `prop:items="b0"` marker.
+    //   1. SSR HTML with the `prop:items="b0"` wire marker.
     //   2. collectElementMarkers → key map.
     //   3. the compiled `if (__m["b0"]) hydrateProp(__m["b0"], "items", …)`.
     const items = signal<string[]>(['a', 'b'])

@@ -1,5 +1,5 @@
 //! Attribute classifier. Maps each attribute on an element to an
-//! `AttrInstr`. Mirrors `packages/sail/dom/src/bindings/attr-compile.ts`.
+//! `AttrInstr`.
 
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::*;
@@ -97,14 +97,19 @@ fn compile_attr(
     // bindDynamic / bindProp / bindAttr. Refuse with teaching text.
     if name.starts_with("prop:") {
         return Err(CompileError::new(
-            "`prop:` has been removed — write plain `name={expr}`. Identity and              non-string fields are plain bindings; the compiler/runtime lowers              property vs attribute from contracts and value shape. There is no              author attr/property split."
+            "`prop:` has been removed — write plain `name={expr}`. Identity and \
+             non-string fields are plain bindings; the compiler/runtime lowers \
+             property vs attribute from contracts and value shape. There is no \
+             author attr/property split."
         )
         .with_span(value_span)
         .with_category(loc.to_string()));
     }
     if name.starts_with("attr:") {
         return Err(CompileError::new(
-            "`attr:` has been removed — write plain `name={expr}`. Fixed-name              fields are plain bindings; dynamic attribute names are not an              author directive. The web backend chooses attribute vs property."
+            "`attr:` has been removed — write plain `name={expr}`. Fixed-name \
+             fields are plain bindings; dynamic attribute names are not an \
+             author directive. The web backend chooses attribute vs property."
         )
         .with_span(value_span)
         .with_category(loc.to_string()));
