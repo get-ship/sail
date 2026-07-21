@@ -32,9 +32,6 @@
      the icon chip. */
   .sail-alert:not([tone]),
   .sail-alert[tone='default'] {
-    --tone: var(--muted-foreground);
-    --tone-fg: var(--muted-foreground);
-    --tone-bg: var(--tone-muted-bg);
   }
 
   /* Leading tone stripe (anchored to the relative root). */
@@ -176,11 +173,6 @@
      tone without a per-tone rule here and without an order-dependent clash. */
   .sail-badge:not([tone]),
   .sail-badge[tone='default'] {
-    --tone: var(--muted-foreground);
-    --tone-fg: var(--muted-foreground);
-    --tone-contrast: var(--background);
-    --tone-bg: var(--tone-muted-bg);
-    --tone-border: var(--tone-muted-border);
   }
 
   .sail-badge[size='sm'] {
@@ -1464,7 +1456,6 @@
   }
   .sail-spinner:not([tone]),
   .sail-spinner[tone='default'] {
-    --tone-fg: var(--muted-foreground);
   }
   .sail-spinner[size='xs'] { --sz: var(--icon-size-2xs); --bw: 1.5px; }
   .sail-spinner[size='sm'] { --sz: var(--icon-size-sm); --bw: 1.5px; }
@@ -1495,7 +1486,6 @@
     border: 1px solid var(--border-strong);
     border-radius: var(--shape-pill);
     -webkit-tap-highlight-color: transparent;
-    --tone: var(--primary);
     --tone-on-fg: var(--primary-foreground);
     --sw-w: var(--control-h-sm);
     --sw-h: var(--icon-size-md);
