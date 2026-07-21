@@ -1,12 +1,7 @@
 <!--
-  <radio> — L1 language element (element mode). A single radio option: a native
-  <input type="radio"> (skinned by the framework's control contracts) + a label.
-  Bare tag lowers to <label class="sail-radio">. Used inside <radio-group>, which
-  wires the shared name, checked state, and value via use:radioGroup.
-
-  Host paint: typeface/color/cursor/select on sx. Layout (inline-flex + gap +
-  align) stays author CSS — root must remain <label> (not <row>) for native
-  label semantics. Disabled opacity residue.
+  <radio> — label + native radio. Root stays <label> for native semantics.
+  Layout flex/gap is contracts (cannot put <row> on label). Disabled dim is
+  contracts too ([disabled] attr; disabled: prefix only matches :disabled/aria-disabled).
 -->
 
 <scope>
@@ -17,5 +12,5 @@
 </scope>
 
 <label sx="font-body text-sm text-foreground cursor-pointer select-none">
-  <input type="radio" /><span class="rlabel"><slot></slot></span>
+  <input type="radio" sx="shrink-0 m-0" /><span class="rlabel"><slot></slot></span>
 </label>

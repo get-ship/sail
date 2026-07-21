@@ -1,8 +1,6 @@
 <!--
-  <tab-panel name="…"> — the content panel for the matching <tab>. use:tabs on
-  the parent <tabs> wires role=tabpanel, aria-labelledby, tabindex, and toggles
-  `hidden` so only the active panel shows. Bare tag lowers to
-  <div class="sail-tab-panel">.
+  <tab-panel name="…"> — content panel for the matching <tab>. Host sx owns
+  default pad; vertical orientation parent-keyed pad lives in contracts.
 -->
 
 <scope>

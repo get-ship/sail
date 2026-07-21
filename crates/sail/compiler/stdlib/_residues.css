@@ -47,55 +47,6 @@
     box-sizing: border-box;
   }
 
-  /* --- breadcrumb (relocated from stdlib/breadcrumb.sail <style>) --- */
-
-  .sail-breadcrumb ol {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-  }
-  .sail-breadcrumb li { display: inline-flex; align-items: center; gap: var(--space-2); }
-  /* separators are ::before anatomy (not sx content) */
-  .sail-breadcrumb li:not(:first-child)::before {
-    content: '/';
-    color: var(--muted-foreground);
-    user-select: none;
-  }
-  .sail-breadcrumb a {
-    color: var(--muted-foreground);
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    transition: color var(--duration-fast) var(--ease-out);
-  }
-  .sail-breadcrumb a:hover { color: var(--foreground); }
-  .sail-breadcrumb a:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: var(--ring-offset); }
-  .sail-breadcrumb [aria-current='page'] { color: var(--foreground); font-weight: var(--font-weight-medium); }
-
-  /* --- code-block (relocated from stdlib/code-block.sail <style>) --- */
-
-  .sail-code-block pre {
-    line-height: 1.6; /* residue — no exact 1.6 leading token (normal=1.5; relaxed=1.7) */
-    tab-size: 2; /* residue literal — no tab-size token */
-  }
-  .sail-code-block .tok-tag { color: var(--syntax-tag); }
-  .sail-code-block .tok-attr { color: var(--syntax-attr); }
-  .sail-code-block .tok-string { color: var(--syntax-string); }
-  .sail-code-block .tok-comment { color: var(--syntax-comment); font-style: italic; }
-  .sail-code-block .tok-keyword { color: var(--syntax-keyword); }
-  .sail-code-block .tok-fn { color: var(--syntax-function); }
-  .sail-code-block .tok-number { color: var(--syntax-number); }
-  .sail-code-block .tok-bind { color: var(--syntax-function); }
-
-  /* --- collapsible (relocated from stdlib/collapsible.sail <style>) --- */
-
-  .sail-collapsible[disabled] summary { cursor: not-allowed; opacity: 0.5; }
-
   /* --- combobox (relocated from stdlib/combobox.sail <style>) --- */
 
   .sail-combobox {
@@ -543,32 +494,6 @@
     .sail-error-state .icon { background: Canvas; color: CanvasText; }
   }
 
-  /* --- field (relocated from stdlib/field.sail <style>) --- */
-
-  /* residue lock: named slots + [invalid] CSS swap + svg stroke (tokenized; no bare leading/space/ring literals) */
-  .sail-field[hidden] { display: none; }
-
-  .sail-field .msg { margin-top: var(--space-1); }
-  .sail-field .hint,
-  .sail-field .error {
-    font-size: var(--text-xs);
-    line-height: var(--leading-snug);
-  }
-  .sail-field .hint { color: var(--muted-foreground); }
-  .sail-field .hint:empty { display: none; }
-  .sail-field .error {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-1);
-    color: var(--destructive);
-    font-weight: var(--font-weight-medium);
-  }
-  .sail-field .error svg { width: var(--icon-size-sm); height: var(--icon-size-sm); flex-shrink: 0; }
-
-  /* hint shows when valid, error shows when [invalid] — pure CSS swap. */
-  .sail-field:not([invalid]) .error { display: none; }
-  .sail-field[invalid] .hint { display: none; }
-
   /* --- hover-card (relocated from stdlib/hover-card.sail <style>) --- */
 
   .sail-hover-card {
@@ -581,62 +506,6 @@
     max-width: 20rem;
   }
   .sail-hover-card::backdrop { background: transparent; }
-
-  /* --- icon (relocated from stdlib/icon.sail <style>) --- */
-
-  .sail-icon {
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    color: currentColor;
-    --sz: var(--icon-size-md);
-  }
-  .sail-icon[size='xs'] { --sz: var(--icon-size-2xs); }
-  .sail-icon[size='sm'] { --sz: var(--icon-size-sm); }
-  .sail-icon[size='lg'] { --sz: var(--icon-size-xl); }
-  .sail-icon[size='xl'] { --sz: var(--icon-size-2xl); }
-
-  .sail-icon svg {
-    display: block;
-    width: var(--sz);
-    height: var(--sz);
-    flex: 0 0 auto;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .sail-icon[spin] svg { animation: var(--animate-spin); }
-  }
-
-  /* --- label (relocated from stdlib/label.sail <style>) --- */
-
-  label { font-weight: var(--label-weight); }
-  label[hidden] { display: none; }
-  /* sm/lg share text-sm — baseline; md default is host sx text-base */
-  label[size='sm'],
-  label[size='lg'] { font-size: var(--text-sm); }
-
-  .req {
-    display: none;
-    color: var(--destructive);
-    margin-left: var(--space-1);
-    font-weight: var(--font-weight-bold);
-  }
-  label[required] .req { display: inline; }
-
-  /* --- menu-item (relocated from stdlib/menu-item.sail <style>) --- */
-
-  .sail-menu-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    width: 100%;
-    padding: var(--space-2) var(--space-2_5);
-    border: 0;
-    text-align: start;
-  }
-  .sail-menu-item:hover:not([disabled]) { background: var(--muted); }
-  .sail-menu-item:focus-visible { background: var(--muted); outline: var(--ring-width) solid var(--ring); outline-offset: -1px; }
-  .sail-menu-item[disabled] { opacity: 0.5; cursor: not-allowed; }
 
   /* --- navbar (relocated from stdlib/navbar.sail <style>) --- */
 
@@ -799,38 +668,6 @@
     font-weight: var(--font-weight-semibold);
   }
 
-  /* --- page (relocated from stdlib/page.sail <style>) --- */
-
-  .sail-page {
-    align-items: center;
-    justify-content: center;
-    min-width: var(--pg-h, var(--control-h-md));
-    height: var(--pg-h, var(--control-h-md));
-    padding: 0 var(--space-2);
-    border: 1px solid transparent;
-    transition:
-      background-color var(--duration-fast) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out),
-      color var(--duration-fast) var(--ease-out);
-  }
-  .sail-page:hover:not([disabled]):not([aria-current='page']) { background: var(--muted); }
-  .sail-page[aria-current='page'] {
-    color: var(--tone-fg, var(--primary-foreground));
-    background: var(--tone, var(--primary));
-    border-color: var(--tone, var(--primary));
-  }
-  .sail-page[disabled] { opacity: 0.5; cursor: not-allowed; }
-  .sail-page:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 1px; /* residue */ }
-
-  /* --- pagination (relocated from stdlib/pagination.sail <style>) --- */
-
-  .sail-pagination {
-    --pg-h: var(--control-h-md);
-    --pg-fs: var(--text-sm);
-  }
-  .sail-pagination[size='sm'] { --pg-h: var(--control-h-sm); --pg-fs: var(--text-xs); }
-  .sail-pagination[size='lg'] { --pg-h: var(--control-h-lg); --pg-fs: var(--text-base); }
-
   /* --- popover (relocated from stdlib/popover.sail <style>) --- */
 
   .sail-popover {
@@ -927,16 +764,6 @@
   }
   .sail-prose tbody tr:last-child td { border-bottom: 0; }
 
-  /* --- radio (relocated from stdlib/radio.sail <style>) --- */
-
-  .sail-radio {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-  .sail-radio[disabled] { cursor: not-allowed; opacity: 0.55; /* residue lock */ }
-  .sail-radio input { flex-shrink: 0; margin: 0; }
-
   /* --- scroll-area (relocated from stdlib/scroll-area.sail <style>) --- */
 
   .sail-scroll-area {
@@ -958,66 +785,6 @@
   }
   .sail-scroll-area:hover::-webkit-scrollbar-thumb { background: var(--muted-foreground); background-clip: padding-box; }
   .sail-scroll-area::-webkit-scrollbar-thumb:hover { background: var(--foreground); background-clip: padding-box; }
-
-  /* --- separator (relocated from stdlib/separator.sail <style>) --- */
-
-  .sail-separator {
-    --separator-line: var(--border-subtle);
-  }
-  .sail-separator[tone='primary'],
-  .sail-separator[tone='destructive'] {
-    --separator-line: var(--tone-border);
-  }
-
-  .sail-separator:not([orientation='vertical'])[variant='dashed'] {
-    background: transparent;
-    border-top: 1px dashed var(--separator-line);
-    height: 0;
-  }
-
-  .sail-separator[orientation='vertical'] {
-    display: inline-block;
-    align-self: stretch;
-    width: 1px;
-    height: 100%;
-    margin: 0 var(--space-2);
-    background: var(--separator-line);
-  }
-  .sail-separator[orientation='vertical'][variant='dashed'] {
-    background: transparent;
-    border-left: 1px dashed var(--separator-line);
-    width: 0;
-  }
-
-  /* --- spinner (relocated from stdlib/spinner.sail <style>) --- */
-
-  .sail-spinner {
-    /* Do not set --tone-fg on the bare host: skins load after contracts.css and
-       would clobber `[tone=…]` channel fills (same specificity). */
-    --sz: var(--icon-size-md);
-    --bw: var(--control-stroke);
-  }
-  /* Default stroke ink when no tone attr (contracts only fill [tone=X]). */
-  .sail-spinner:not([tone]),
-  .sail-spinner[tone='default'] {
-    --tone-fg: var(--muted-foreground);
-  }
-  .sail-spinner[size='xs'] { --sz: var(--icon-size-2xs); --bw: 1.5px; }
-  .sail-spinner[size='sm'] { --sz: var(--icon-size-sm); --bw: 1.5px; }
-  .sail-spinner[size='lg'] { --sz: var(--icon-size-xl); --bw: 2.5px; }
-  .sail-spinner[centered] {
-    display: block;
-    margin: var(--space-8) auto;
-  }
-  .ring {
-    display: inline-block;
-    width: var(--sz);
-    height: var(--sz);
-    border: var(--bw) solid var(--tone-ring, var(--border-subtle));
-    border-right-color: var(--tone-fg);
-    border-radius: var(--shape-pill);
-    animation: var(--animate-spin);
-  }
 
   /* --- switch (relocated from stdlib/switch.sail <style>) --- */
 
@@ -1112,19 +879,6 @@
   @media (prefers-reduced-motion: reduce) {
     .sail-switch, .sail-switch::before { transition: none; }
   }
-
-  /* --- tab-list (relocated from stdlib/tab-list.sail <style>) --- */
-
-  .sail-tabs[orientation='vertical'] .sail-tab-list {
-    flex-direction: column;
-    align-items: stretch;
-    border-bottom: 0;
-    border-right: 1px solid var(--border);
-  }
-
-  /* --- tab-panel (relocated from stdlib/tab-panel.sail <style>) --- */
-
-  .sail-tabs[orientation='vertical'] .sail-tab-panel { padding: 0 0 0 var(--space-4); }
 
   /* --- tab (relocated from stdlib/tab.sail <style>) --- */
 
@@ -1418,35 +1172,6 @@
   @media (forced-colors: active) {
     .sail-theme-option[aria-selected='true'] { border-color: CanvasText; }
   }
-
-  /* --- ticker (relocated from stdlib/ticker.sail <style>) --- */
-
-  .sail-ticker .track {
-    display: flex;
-    flex-wrap: nowrap;
-    width: max-content;
-    animation: var(--animate-ticker);
-  }
-  .sail-ticker[duration='fast'] .track { animation-duration: 16s; }
-  .sail-ticker[duration='slow'] .track { animation-duration: 32s; }
-  .sail-ticker[reverse] .track { animation-direction: reverse; }
-  @media (prefers-reduced-motion: reduce) {
-    .sail-ticker .track { animation-play-state: paused; }
-  }
-
-  /* --- toast-region (relocated from stdlib/toast-region.sail <style>) --- */
-
-  .sail-toast-region {
-    width: min(24rem, calc(100vw - var(--space-8)));
-    inset-block-end: 0;
-    inset-inline-end: 0;
-  }
-  .sail-toast-region[position='top-start'] { inset: 0 auto auto 0; }
-  .sail-toast-region[position='top-end'] { inset: 0 0 auto auto; }
-  .sail-toast-region[position='bottom-start'] { inset: auto auto 0 0; }
-  .sail-toast-region[position='bottom-end'] { inset: auto 0 0 auto; }
-  .sail-toast-region[position^='bottom'] { flex-direction: column-reverse; }
-  .sail-toast-region > * { pointer-events: auto; }
 
   /* --- toast (relocated from stdlib/toast.sail <style>) --- */
 

@@ -448,3 +448,139 @@ meter:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--destructive
   .sail-alert { border-color: CanvasText; }
   .sail-alert::before { background: CanvasText; }
 }
+
+/* ── L1 named unexpressibles (burned residues) ───────────────────────────
+   Expressible paint lives on host sx / CVA-in-props. Only parent-keyed
+   geometry, ::pseudo anatomy, channel writes, and highlighter/fx child
+   rules remain here. */
+
+/* radio — root is <label>; flex/gap not expressible without abandoning native label.
+   label.sail-radio beats framework host-display `.sail-radio { display:inline-block }`.
+   disabled: sx prefix only matches :disabled/aria-disabled — dim via [disabled] attr. */
+label.sail-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.sail-radio[disabled] { cursor: not-allowed; opacity: 0.55; }
+
+/* label — weight channel (no sx atom maps to --label-weight) + required star gate */
+label { font-weight: var(--label-weight); }
+label .req { display: none; }
+label[required] .req { display: inline; }
+
+/* pagination size channels for child <page> geometry */
+.sail-pagination { --pg-h: var(--control-h-md); --pg-fs: var(--text-sm); }
+.sail-pagination[size='sm'] { --pg-h: var(--control-h-sm); --pg-fs: var(--text-xs); }
+.sail-pagination[size='lg'] { --pg-h: var(--control-h-lg); --pg-fs: var(--text-base); }
+
+/* tab-list / tab-panel — vertical orientation is parent-keyed on <tabs> */
+.sail-tabs[orientation='vertical'] .sail-tab-list {
+  flex-direction: column;
+  align-items: stretch;
+  border-bottom: 0;
+  border-right: 1px solid var(--border);
+}
+.sail-tabs[orientation='vertical'] .sail-tab-panel { padding: 0 0 0 var(--space-4); }
+
+/* code-block — tab-size + non-token leading; highlighter .tok-* anatomy */
+.sail-code-block pre {
+  line-height: 1.6;
+  tab-size: 2;
+}
+.sail-code-block .tok-tag { color: var(--syntax-tag); }
+.sail-code-block .tok-attr { color: var(--syntax-attr); }
+.sail-code-block .tok-string { color: var(--syntax-string); }
+.sail-code-block .tok-comment { color: var(--syntax-comment); font-style: italic; }
+.sail-code-block .tok-keyword { color: var(--syntax-keyword); }
+.sail-code-block .tok-fn { color: var(--syntax-function); }
+.sail-code-block .tok-number { color: var(--syntax-number); }
+.sail-code-block .tok-bind { color: var(--syntax-function); }
+
+/* ticker — track animation axes (no animation sx primitive) */
+.sail-ticker .track { animation: var(--animate-ticker); }
+.sail-ticker[duration='fast'] .track { animation-duration: 16s; }
+.sail-ticker[duration='slow'] .track { animation-duration: 32s; }
+.sail-ticker[reverse] .track { animation-direction: reverse; }
+@media (prefers-reduced-motion: reduce) {
+  .sail-ticker .track { animation-play-state: paused; }
+}
+
+/* toast-region — width min() formula; bottom* stack reverse; child hit targets */
+.sail-toast-region {
+  width: min(24rem, calc(100vw - var(--space-8)));
+}
+.sail-toast-region[position^='bottom'] { flex-direction: column-reverse; }
+.sail-toast-region > * { pointer-events: auto; }
+
+/* field — invalid hint/error swap + empty hint gate (parent attr → child) */
+.sail-field .hint:empty { display: none; }
+.sail-field:not([invalid]) .error { display: none; }
+.sail-field[invalid] .hint { display: none; }
+
+/* icon — injected svg box + spin (glyph has no structure sx hook) */
+.sail-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sail-icon[spin] svg { animation: var(--animate-spin); }
+}
+
+/* breadcrumb — list geometry, ::before separators, author-child link paint */
+.sail-breadcrumb ol {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+}
+.sail-breadcrumb li { display: inline-flex; align-items: center; gap: var(--space-2); }
+.sail-breadcrumb li:not(:first-child)::before {
+  content: '/';
+  color: var(--muted-foreground);
+  user-select: none;
+}
+.sail-breadcrumb a {
+  color: var(--muted-foreground);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+.sail-breadcrumb a:hover { color: var(--foreground); }
+.sail-breadcrumb a:focus-visible {
+  outline: var(--ring-width) solid var(--ring);
+  outline-offset: var(--ring-offset);
+}
+.sail-breadcrumb [aria-current='page'] {
+  color: var(--foreground);
+  font-weight: var(--font-weight-medium);
+}
+
+/* separator — PE channel default + branded tone overrides (channel writes) */
+.sail-separator { --separator-line: var(--border-subtle); }
+.sail-separator[tone='primary'],
+.sail-separator[tone='destructive'] {
+  --separator-line: var(--tone-border);
+}
+
+/* spinner — PE muted stroke; size stroke widths; two-tone ring anatomy */
+.sail-spinner:not([tone]),
+.sail-spinner[tone='default'] {
+  --tone-fg: var(--muted-foreground);
+}
+.sail-spinner { --bw: var(--control-stroke); }
+.sail-spinner[size='xs'],
+.sail-spinner[size='sm'] { --bw: 1.5px; }
+.sail-spinner[size='lg'] { --bw: 2.5px; }
+.sail-spinner .ring {
+  border: var(--bw) solid var(--tone-ring, var(--border-subtle));
+  border-right-color: var(--tone-fg);
+  border-radius: var(--shape-pill);
+  animation: var(--animate-spin);
+}

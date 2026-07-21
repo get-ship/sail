@@ -1,10 +1,6 @@
 <!--
-  <tab-list> — the tab strip inside <tabs>. Rows the <tab>s (columns when the
-  parent is [orientation='vertical']) with a hairline rail. role=tablist. Bare
-  tag lowers to a layout row (`.sail-tab-list`).
-
-  Host paint: layout owns row+gap+align; sx owns bottom rail. Vertical
-  orientation (column + side rail) stays parent-keyed residue.
+  <tab-list> — tab strip inside <tabs>. Layout owns row+gap+align; sx owns
+  bottom rail. Vertical orientation (column + side rail) is parent-keyed contracts.
 -->
 
 <scope>

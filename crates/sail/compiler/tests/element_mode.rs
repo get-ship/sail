@@ -132,20 +132,34 @@ fn ticker_loops_via_two_slots_and_pauses_under_reduced_motion() {
         "two independently-filled slots build the seamless-loop duplicate track: {}",
         el.structure_html
     );
-    // Track/fx rules live in framework residues (relocated from author <style>)
-    // so the .sail source stays structure + sx only — same paint, shared sheet.
-    let skins = sail_compiler::stdlib::skins_css();
+    // Track/fx rules live in contracts (named unexpressibles) after residue burn —
+    // .sail source stays structure + sx + layout only.
+    let contracts = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../packages/sail/tokens/src/contracts.css"
+    ));
     assert!(
-        skins.contains("var(--animate-ticker)"),
-        "framework skin must reference shared token not embed @keyframes: {skins}"
+        contracts.contains("var(--animate-ticker)"),
+        "contracts must reference shared ticker token not embed @keyframes: {contracts}"
     );
     assert!(
-        skins.contains("prefers-reduced-motion") && skins.contains("animation-play-state: paused"),
-        "reduced motion pauses, it does not stop: {skins}"
+        contracts.contains("prefers-reduced-motion")
+            && contracts.contains("animation-play-state: paused"),
+        "reduced motion pauses, it does not stop: {contracts}"
     );
+    // Ticker reduced-motion must pause, not `animation: none` on the track.
     assert!(
-        !skins.contains("animation: none"),
-        "must not hard-stop under reduced motion: {skins}"
+        !contracts
+            .lines()
+            .any(|l| l.contains("sail-ticker") && l.contains("animation: none")),
+        "must not hard-stop ticker under reduced motion"
+    );
+    // Layout track: nowrap row + w-max on structure
+    assert!(
+        el.structure_html.contains("sail-nowrap") || el.skin_css.contains("nowrap"),
+        "track is a nowrap row: struct={} skin={}",
+        el.structure_html,
+        el.skin_css
     );
     let attrs = el.manifest["attributes"].as_array().unwrap();
     assert!(attrs.iter().any(|a| a["name"] == "duration"), "{}", el.manifest);

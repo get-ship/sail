@@ -1,19 +1,28 @@
 <!--
-  <separator> — L1 language element (element mode). Native <hr>.
-
-  Host paint (via sx): display/width/height/margin/background (solid horizontal
-  default) + border-0/p-0.
-  Residue (author <style>): --separator-line channel writes, tone overrides that
-  set the channel, dashed/orientation matrices, dashed border-top/left, vertical
-  geometry (inline-block, align-self, size/margin/bg overrides).
+  <separator> — native <hr>. Solid horizontal PE on host sx; orientation +
+  dashed via CVA/compound. --separator-line channel writes live in contracts
+  (PE default + branded tone overrides).
 -->
 
 <scope>
   props: {
-    orientation: 'horizontal' | 'vertical' = 'horizontal'
+    // first key = default = PE horizontal
+    orientation: {
+      // h/w 1px via --border-width (no h-px token on size scale)
+      horizontal: 'block w-full h-(--border-width) my-2',
+      vertical: 'inline-block self-stretch w-(--border-width) h-full mx-2 my-0',
+    }
     tone: 'default' | 'muted' | 'primary' | 'destructive' = 'default'
-    variant: 'solid' | 'dashed' = 'solid'
+    // first key = default = PE solid
+    variant: {
+      solid: 'bg-(--separator-line) border-0 p-0',
+      dashed: 'bg-transparent border-0 p-0',
+    }
   }
+  compound: [
+    { when: { variant: 'dashed', orientation: 'horizontal' }, sx: 'h-0 border-t border-dashed border-t-(--separator-line)' },
+    { when: { variant: 'dashed', orientation: 'vertical' }, sx: 'w-0 border-l border-dashed border-l-(--separator-line)' },
+  ]
 </scope>
 
-<hr sx="block w-full h-px m-2 border-0 p-0 bg-(--separator-line)">
+<hr sx="block w-full h-(--border-width) my-2 border-0 p-0 bg-(--separator-line)">

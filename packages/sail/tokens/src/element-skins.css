@@ -6,18 +6,22 @@
 @layer sail {
 /* spinner */
 .sail-spinner { display: inline-flex; }
-.sx-alignmiddle{vertical-align:middle}
+.sx-inlineblock{display:inline-block}.sx-alignmiddle{vertical-align:middle}.sx-sizeiconsizemd{width:var(--icon-size-md);height:var(--icon-size-md)}.sx-block{display:block}.sx-sizefull{width:100%;height:100%}
+.sail-spinner[size='md']{width:var(--icon-size-md);height:var(--icon-size-md);}.sail-spinner[size='xs']{width:var(--icon-size-2xs);height:var(--icon-size-2xs);}.sail-spinner[size='sm']{width:var(--icon-size-sm);height:var(--icon-size-sm);}.sail-spinner[size='lg']{width:var(--icon-size-xl);height:var(--icon-size-xl);}.sail-spinner[centered]{display:block;margin-block:var(--space-8);margin-inline:auto;}
 
 /* separator */
-.sx-block{display:block}.sx-wfull{width:100%}.sx-m2{margin:var(--space-2)}.sx-border0{border-width:0px}.sx-p0{padding:0}.sx-bgseparatorline{background-color:var(--separator-line)}
+.sx-block{display:block}.sx-wfull{width:100%}.sx-hborderwidth{height:var(--border-width)}.sx-my2{margin-block:var(--space-2)}.sx-border0{border-width:0px}.sx-p0{padding:0}.sx-bgseparatorline{background-color:var(--separator-line)}
+.sail-separator[orientation='horizontal']{display:block;width:100%;height:var(--border-width);margin-block:var(--space-2);}.sail-separator[orientation='vertical']{display:inline-block;align-self:stretch;width:var(--border-width);height:100%;margin-inline:var(--space-2);margin-block:0;}.sail-separator[variant='solid']{background-color:var(--separator-line);border-width:0px;padding:0;}.sail-separator[variant='dashed']{background-color:transparent;border-width:0px;padding:0;}.sail-separator[variant='dashed'][orientation='horizontal']{height:0;border-top-width:1px;border-top-style:solid;border-style:dashed;border-top-color:var(--separator-line);}.sail-separator[variant='dashed'][orientation='vertical']{width:0;border-left-width:1px;border-left-style:solid;border-style:dashed;border-left-color:var(--separator-line);}
 
 /* icon */
 .sail-icon { display: inline-flex; }
-.sx-alignmiddle{vertical-align:middle}
+.sx-inlineblock{display:inline-block}.sx-alignmiddle{vertical-align:middle}.sx-sizeiconsizemd{width:var(--icon-size-md);height:var(--icon-size-md)}.sx-shrink0{flex-shrink:0}
+.sail-icon[size='md']{width:var(--icon-size-md);height:var(--icon-size-md);}.sail-icon[size='xs']{width:var(--icon-size-2xs);height:var(--icon-size-2xs);}.sail-icon[size='sm']{width:var(--icon-size-sm);height:var(--icon-size-sm);}.sail-icon[size='lg']{width:var(--icon-size-xl);height:var(--icon-size-xl);}.sail-icon[size='xl']{width:var(--icon-size-2xl);height:var(--icon-size-2xl);}
 
 /* label */
 label { display: inline-block; }
-.sx-fontbody{font-family:var(--body-font)}.sx-trackingnormal{letter-spacing:var(--tracking-normal)}.sx-textforeground{color:var(--foreground)}.sx-cursorpointer{cursor:pointer}.sx-textbase{font-size:var(--text-base)}
+.sx-fontbody{font-family:var(--body-font)}.sx-trackingnormal{letter-spacing:var(--tracking-normal)}.sx-textforeground{color:var(--foreground)}.sx-cursorpointer{cursor:pointer}.sx-textbase{font-size:var(--text-base)}.sx-textdestructive{color:var(--destructive)}.sx-fontbold{font-weight:var(--font-weight-bold)}.sx-ms1{margin-inline-start:var(--space-1)}
+label[size='md']{font-size:var(--text-base);}label[size='sm']{font-size:var(--text-sm);}label[size='lg']{font-size:var(--text-sm);}
 
 /* card */
 .sx-relative{position:relative}.sx-overflowclip{overflow:clip}.sx-roundedlg{border-radius:var(--radius-lg)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-textforeground{color:var(--foreground)}.sx-shadowxs{box-shadow:var(--shadow-xs)}.sx-transitioncolors{transition-property:color, background-color, border-color, outline-color, fill, stroke}.sx-durationfast{transition-duration:var(--duration-fast)}.sx-easeout{transition-timing-function:var(--ease-out)}.sx-bgsurface1{background-color:var(--surface-1)}.sx-py4{padding-block:var(--space-4)}.sx-px5{padding-inline:var(--space-5)}
@@ -52,17 +56,18 @@ label { display: inline-block; }
 .sail-chip[variant='solid']{background-color:var(--tone);color:var(--tone-contrast);border-color:var(--tone);box-shadow:var(--shadow-xs);}.sail-chip[variant='soft']{background-color:var(--tone-bg);color:var(--tone-fg);border-color:var(--tone-border);box-shadow:none;}.sail-chip[variant='soft']:hover{background-color:var(--muted);border-color:var(--tone);}.sail-chip[variant='outline']{background-color:transparent;color:var(--tone-fg);border-color:var(--tone);box-shadow:none;}.sail-chip[variant='outline']:hover{background-color:var(--tone-bg);}.sail-chip[variant='ghost']{background-color:transparent;color:var(--tone-fg);border-color:transparent;box-shadow:none;}.sail-chip[variant='ghost']:hover{background-color:var(--tone-bg);}.sail-chip[size='md']{min-height:var(--control-h-xs);padding-inline:var(--space-2_5);font-size:var(--text-sm);}.sail-chip[size='sm']{min-height:var(--control-h-2xs);padding-inline:var(--space-2);font-size:var(--text-xs);}.sail-chip[size='lg']{min-height:var(--control-h-md);padding-inline:var(--space-3);font-size:var(--text-base);}.sail-chip[selected][tone='muted']{background-color:var(--primary);color:var(--primary-foreground);border-color:var(--primary);}
 
 /* field */
-.sx-fontbody{font-family:var(--body-font)}.sail-col{display:flex;flex-direction:column;min-width:0}.sail-col>*{min-width:0}.sail-g-1{gap:var(--space-1)}.sail-ai-stretch{align-items:stretch}
+.sx-fontbody{font-family:var(--body-font)}.sx-mt1{margin-top:var(--space-1)}.sx-textxs{font-size:var(--text-xs)}.sx-leadingsnug{line-height:var(--leading-snug)}.sx-textmutedforeground{color:var(--muted-foreground)}.sx-textdestructive{color:var(--destructive)}.sx-fontmedium{font-weight:var(--font-weight-medium)}.sx-sizeiconsizesm{width:var(--icon-size-sm);height:var(--icon-size-sm)}.sx-shrink0{flex-shrink:0}.sail-col{display:flex;flex-direction:column;min-width:0}.sail-col>*{min-width:0}.sail-g-1{gap:var(--space-1)}.sail-ai-stretch{align-items:stretch}.sail-row{display:flex;flex-wrap:wrap;min-width:0}.sail-row>*{min-width:0}.sail-ai-start{align-items:flex-start}.sail-jc-start{justify-content:flex-start}
 
 /* collapsible */
 .sx-block{display:block}.sx-fontbody{font-family:var(--body-font)}.sx-px4{padding-inline:var(--space-4)}.sx-py3{padding-block:var(--space-3)}
+.sail-collapsible[disabled]{opacity:0.5;cursor:not-allowed;}
 
 /* slider */
 .sail-slider { display: inline-flex; }
 
 /* radio */
 .sail-radio { display: inline-block; }
-.sx-fontbody{font-family:var(--body-font)}.sx-textsm{font-size:var(--text-sm)}.sx-textforeground{color:var(--foreground)}.sx-cursorpointer{cursor:pointer}.sx-selectnone{user-select:none}
+.sx-fontbody{font-family:var(--body-font)}.sx-textsm{font-size:var(--text-sm)}.sx-textforeground{color:var(--foreground)}.sx-cursorpointer{cursor:pointer}.sx-selectnone{user-select:none}.sx-shrink0{flex-shrink:0}.sx-m0{margin:0}
 
 /* radio-group */
 .sx-fontbody{font-family:var(--body-font)}.sail-col{display:flex;flex-direction:column;min-width:0}.sail-col>*{min-width:0}.sail-g-2{gap:var(--space-2)}.sail-ai-stretch{align-items:stretch}
@@ -93,7 +98,7 @@ label { display: inline-block; }
 .sx-overflowauto{overflow:auto}
 
 /* ticker */
-.sx-overflowhidden{overflow:hidden}
+.sx-overflowhidden{overflow:hidden}.sx-wmax{width:max-content}.sail-row{display:flex;flex-wrap:wrap;min-width:0}.sail-row>*{min-width:0}.sail-g-3{gap:var(--space-3)}.sail-ai-center{align-items:center}.sail-jc-start{justify-content:flex-start}.sail-nowrap{flex-wrap:nowrap}
 
 /* pagination */
 .sail-pagination { display: inline-flex; }
@@ -101,7 +106,7 @@ label { display: inline-block; }
 
 /* page */
 .sail-page { display: inline-flex; }
-.sx-fontbody{font-family:var(--body-font)}.sx-fontmedium{font-weight:var(--font-weight-medium)}.sx-textforeground{color:var(--foreground)}.sx-bgtransparent{background-color:transparent}.sx-roundedmd{border-radius:var(--radius-md)}.sx-cursorpointer{cursor:pointer}.sx-selectnone{user-select:none}
+.sx-fontbody{font-family:var(--body-font)}.sx-fontmedium{font-weight:var(--font-weight-medium)}.sx-textforeground{color:var(--foreground)}.sx-bgtransparent{background-color:transparent}.sx-roundedmd{border-radius:var(--radius-md)}.sx-cursorpointer{cursor:pointer}.sx-selectnone{user-select:none}.sx-minwpgh{min-width:var(--pg-h)}.sx-hpgh{height:var(--pg-h)}.sx-px2{padding-inline:var(--space-2)}.sx-border{border-width:1px;border-style:solid}.sx-bordertransparent{border-color:transparent}.sx-transitioncolors{transition-property:color, background-color, border-color, outline-color, fill, stroke}.sx-durationfast{transition-duration:var(--duration-fast)}.sx-easeout{transition-timing-function:var(--ease-out)}.sx-hover-bgmuted:hover{background-color:var(--muted)}.sx-current-bgprimary[aria-current]:not([aria-current='false']){background-color:var(--primary)}.sx-current-textprimaryforeground[aria-current]:not([aria-current='false']){color:var(--primary-foreground)}.sx-current-borderprimary[aria-current]:not([aria-current='false']){border-color:var(--primary)}.sx-disabled-opacity50:is(:disabled,[aria-disabled='true']){opacity:0.5}.sx-disabled-cursornotallowed:is(:disabled,[aria-disabled='true']){cursor:not-allowed}.sx-focus-outlinesolid:focus-visible{outline-style:solid}.sx-focus-outline2:focus-visible{outline-width:2px}.sx-focus-outlinering:focus-visible{outline-color:var(--ring)}
 
 /* popover */
 .sx-p3{padding:var(--space-3)}.sx-textforeground{color:var(--foreground)}.sx-bgbackground{background-color:var(--background)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-shadowmd{box-shadow:var(--shadow-md)}.sx-zzpopover{z-index:var(--z-popover)}
@@ -114,7 +119,7 @@ label { display: inline-block; }
 
 /* menu-item */
 .sail-menu-item { display: inline-flex; }
-.sx-fontbody{font-family:var(--body-font)}.sx-textsm{font-size:var(--text-sm)}.sx-leadingtight{line-height:var(--leading-tight)}.sx-textforeground{color:var(--foreground)}.sx-bgtransparent{background-color:transparent}.sx-roundedsm{border-radius:var(--radius-sm)}.sx-cursorpointer{cursor:pointer}.sx-whitespacenowrap{white-space:nowrap}
+.sx-wfull{width:100%}.sx-p2{padding:var(--space-2)}.sx-px25{padding-inline:var(--space-2_5)}.sx-border0{border-width:0px}.sx-textstart{text-align:start}.sx-fontbody{font-family:var(--body-font)}.sx-textsm{font-size:var(--text-sm)}.sx-leadingtight{line-height:var(--leading-tight)}.sx-textforeground{color:var(--foreground)}.sx-bgtransparent{background-color:transparent}.sx-roundedsm{border-radius:var(--radius-sm)}.sx-cursorpointer{cursor:pointer}.sx-whitespacenowrap{white-space:nowrap}.sx-hover-bgmuted:hover{background-color:var(--muted)}.sx-focus-bgmuted:focus-visible{background-color:var(--muted)}.sx-focus-outlinesolid:focus-visible{outline-style:solid}.sx-focus-outline2:focus-visible{outline-width:2px}.sx-focus-outlinering:focus-visible{outline-color:var(--ring)}.sx-disabled-opacity50:is(:disabled,[aria-disabled='true']){opacity:0.5}.sx-disabled-cursornotallowed:is(:disabled,[aria-disabled='true']){cursor:not-allowed}
 
 /* context-menu */
 .sx-p1{padding:var(--space-1)}.sx-textforeground{color:var(--foreground)}.sx-bgbackground{background-color:var(--background)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-shadowmd{box-shadow:var(--shadow-md)}.sx-zzpopover{z-index:var(--z-popover)}
@@ -123,7 +128,8 @@ label { display: inline-block; }
 .sx-p3{padding:var(--space-3)}.sx-textforeground{color:var(--foreground)}.sx-bgbackground{background-color:var(--background)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-shadowmd{box-shadow:var(--shadow-md)}.sx-zzpopover{z-index:var(--z-popover)}
 
 /* toast-region */
-.sx-fixed{position:fixed}.sx-zztoast{z-index:var(--z-toast)}.sx-p4{padding:var(--space-4)}.sx-pointereventsnone{pointer-events:none}.sail-col{display:flex;flex-direction:column;min-width:0}.sail-col>*{min-width:0}.sail-g-2{gap:var(--space-2)}.sail-ai-stretch{align-items:stretch}
+.sx-fixed{position:fixed}.sx-zztoast{z-index:var(--z-toast)}.sx-p4{padding:var(--space-4)}.sx-pointereventsnone{pointer-events:none}.sx-top0{top:0}.sx-rightauto{right:auto}.sx-bottomauto{bottom:auto}.sx-left0{left:0}.sail-col{display:flex;flex-direction:column;min-width:0}.sail-col>*{min-width:0}.sail-g-2{gap:var(--space-2)}.sail-ai-stretch{align-items:stretch}
+.sail-toast-region[position='top-start']{top:0;right:auto;bottom:auto;left:0;}.sail-toast-region[position='top-end']{top:0;right:0;bottom:auto;left:auto;}.sail-toast-region[position='bottom-start']{top:auto;right:auto;bottom:0;left:0;}.sail-toast-region[position='bottom-end']{top:auto;right:0;bottom:0;left:auto;}
 
 /* toast */
 .sx-fontbody{font-family:var(--body-font)}.sx-textsm{font-size:var(--text-sm)}.sx-textforeground{color:var(--foreground)}.sx-bgbackground{background-color:var(--background)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-shadowmd{box-shadow:var(--shadow-md)}
@@ -177,55 +183,6 @@ label { display: inline-block; }
     padding: 10%;
     box-sizing: border-box;
   }
-
-  /* --- breadcrumb (relocated from stdlib/breadcrumb.sail <style>) --- */
-
-  .sail-breadcrumb ol {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-  }
-  .sail-breadcrumb li { display: inline-flex; align-items: center; gap: var(--space-2); }
-  /* separators are ::before anatomy (not sx content) */
-  .sail-breadcrumb li:not(:first-child)::before {
-    content: '/';
-    color: var(--muted-foreground);
-    user-select: none;
-  }
-  .sail-breadcrumb a {
-    color: var(--muted-foreground);
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    transition: color var(--duration-fast) var(--ease-out);
-  }
-  .sail-breadcrumb a:hover { color: var(--foreground); }
-  .sail-breadcrumb a:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: var(--ring-offset); }
-  .sail-breadcrumb [aria-current='page'] { color: var(--foreground); font-weight: var(--font-weight-medium); }
-
-  /* --- code-block (relocated from stdlib/code-block.sail <style>) --- */
-
-  .sail-code-block pre {
-    line-height: 1.6; /* residue — no exact 1.6 leading token (normal=1.5; relaxed=1.7) */
-    tab-size: 2; /* residue literal — no tab-size token */
-  }
-  .sail-code-block .tok-tag { color: var(--syntax-tag); }
-  .sail-code-block .tok-attr { color: var(--syntax-attr); }
-  .sail-code-block .tok-string { color: var(--syntax-string); }
-  .sail-code-block .tok-comment { color: var(--syntax-comment); font-style: italic; }
-  .sail-code-block .tok-keyword { color: var(--syntax-keyword); }
-  .sail-code-block .tok-fn { color: var(--syntax-function); }
-  .sail-code-block .tok-number { color: var(--syntax-number); }
-  .sail-code-block .tok-bind { color: var(--syntax-function); }
-
-  /* --- collapsible (relocated from stdlib/collapsible.sail <style>) --- */
-
-  .sail-collapsible[disabled] summary { cursor: not-allowed; opacity: 0.5; }
 
   /* --- combobox (relocated from stdlib/combobox.sail <style>) --- */
 
@@ -674,32 +631,6 @@ label { display: inline-block; }
     .sail-error-state .icon { background: Canvas; color: CanvasText; }
   }
 
-  /* --- field (relocated from stdlib/field.sail <style>) --- */
-
-  /* residue lock: named slots + [invalid] CSS swap + svg stroke (tokenized; no bare leading/space/ring literals) */
-  .sail-field[hidden] { display: none; }
-
-  .sail-field .msg { margin-top: var(--space-1); }
-  .sail-field .hint,
-  .sail-field .error {
-    font-size: var(--text-xs);
-    line-height: var(--leading-snug);
-  }
-  .sail-field .hint { color: var(--muted-foreground); }
-  .sail-field .hint:empty { display: none; }
-  .sail-field .error {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-1);
-    color: var(--destructive);
-    font-weight: var(--font-weight-medium);
-  }
-  .sail-field .error svg { width: var(--icon-size-sm); height: var(--icon-size-sm); flex-shrink: 0; }
-
-  /* hint shows when valid, error shows when [invalid] — pure CSS swap. */
-  .sail-field:not([invalid]) .error { display: none; }
-  .sail-field[invalid] .hint { display: none; }
-
   /* --- hover-card (relocated from stdlib/hover-card.sail <style>) --- */
 
   .sail-hover-card {
@@ -712,62 +643,6 @@ label { display: inline-block; }
     max-width: 20rem;
   }
   .sail-hover-card::backdrop { background: transparent; }
-
-  /* --- icon (relocated from stdlib/icon.sail <style>) --- */
-
-  .sail-icon {
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    color: currentColor;
-    --sz: var(--icon-size-md);
-  }
-  .sail-icon[size='xs'] { --sz: var(--icon-size-2xs); }
-  .sail-icon[size='sm'] { --sz: var(--icon-size-sm); }
-  .sail-icon[size='lg'] { --sz: var(--icon-size-xl); }
-  .sail-icon[size='xl'] { --sz: var(--icon-size-2xl); }
-
-  .sail-icon svg {
-    display: block;
-    width: var(--sz);
-    height: var(--sz);
-    flex: 0 0 auto;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .sail-icon[spin] svg { animation: var(--animate-spin); }
-  }
-
-  /* --- label (relocated from stdlib/label.sail <style>) --- */
-
-  label { font-weight: var(--label-weight); }
-  label[hidden] { display: none; }
-  /* sm/lg share text-sm — baseline; md default is host sx text-base */
-  label[size='sm'],
-  label[size='lg'] { font-size: var(--text-sm); }
-
-  .req {
-    display: none;
-    color: var(--destructive);
-    margin-left: var(--space-1);
-    font-weight: var(--font-weight-bold);
-  }
-  label[required] .req { display: inline; }
-
-  /* --- menu-item (relocated from stdlib/menu-item.sail <style>) --- */
-
-  .sail-menu-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    width: 100%;
-    padding: var(--space-2) var(--space-2_5);
-    border: 0;
-    text-align: start;
-  }
-  .sail-menu-item:hover:not([disabled]) { background: var(--muted); }
-  .sail-menu-item:focus-visible { background: var(--muted); outline: var(--ring-width) solid var(--ring); outline-offset: -1px; }
-  .sail-menu-item[disabled] { opacity: 0.5; cursor: not-allowed; }
 
   /* --- navbar (relocated from stdlib/navbar.sail <style>) --- */
 
@@ -930,38 +805,6 @@ label { display: inline-block; }
     font-weight: var(--font-weight-semibold);
   }
 
-  /* --- page (relocated from stdlib/page.sail <style>) --- */
-
-  .sail-page {
-    align-items: center;
-    justify-content: center;
-    min-width: var(--pg-h, var(--control-h-md));
-    height: var(--pg-h, var(--control-h-md));
-    padding: 0 var(--space-2);
-    border: 1px solid transparent;
-    transition:
-      background-color var(--duration-fast) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out),
-      color var(--duration-fast) var(--ease-out);
-  }
-  .sail-page:hover:not([disabled]):not([aria-current='page']) { background: var(--muted); }
-  .sail-page[aria-current='page'] {
-    color: var(--tone-fg, var(--primary-foreground));
-    background: var(--tone, var(--primary));
-    border-color: var(--tone, var(--primary));
-  }
-  .sail-page[disabled] { opacity: 0.5; cursor: not-allowed; }
-  .sail-page:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 1px; /* residue */ }
-
-  /* --- pagination (relocated from stdlib/pagination.sail <style>) --- */
-
-  .sail-pagination {
-    --pg-h: var(--control-h-md);
-    --pg-fs: var(--text-sm);
-  }
-  .sail-pagination[size='sm'] { --pg-h: var(--control-h-sm); --pg-fs: var(--text-xs); }
-  .sail-pagination[size='lg'] { --pg-h: var(--control-h-lg); --pg-fs: var(--text-base); }
-
   /* --- popover (relocated from stdlib/popover.sail <style>) --- */
 
   .sail-popover {
@@ -1058,16 +901,6 @@ label { display: inline-block; }
   }
   .sail-prose tbody tr:last-child td { border-bottom: 0; }
 
-  /* --- radio (relocated from stdlib/radio.sail <style>) --- */
-
-  .sail-radio {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-  .sail-radio[disabled] { cursor: not-allowed; opacity: 0.55; /* residue lock */ }
-  .sail-radio input { flex-shrink: 0; margin: 0; }
-
   /* --- scroll-area (relocated from stdlib/scroll-area.sail <style>) --- */
 
   .sail-scroll-area {
@@ -1089,66 +922,6 @@ label { display: inline-block; }
   }
   .sail-scroll-area:hover::-webkit-scrollbar-thumb { background: var(--muted-foreground); background-clip: padding-box; }
   .sail-scroll-area::-webkit-scrollbar-thumb:hover { background: var(--foreground); background-clip: padding-box; }
-
-  /* --- separator (relocated from stdlib/separator.sail <style>) --- */
-
-  .sail-separator {
-    --separator-line: var(--border-subtle);
-  }
-  .sail-separator[tone='primary'],
-  .sail-separator[tone='destructive'] {
-    --separator-line: var(--tone-border);
-  }
-
-  .sail-separator:not([orientation='vertical'])[variant='dashed'] {
-    background: transparent;
-    border-top: 1px dashed var(--separator-line);
-    height: 0;
-  }
-
-  .sail-separator[orientation='vertical'] {
-    display: inline-block;
-    align-self: stretch;
-    width: 1px;
-    height: 100%;
-    margin: 0 var(--space-2);
-    background: var(--separator-line);
-  }
-  .sail-separator[orientation='vertical'][variant='dashed'] {
-    background: transparent;
-    border-left: 1px dashed var(--separator-line);
-    width: 0;
-  }
-
-  /* --- spinner (relocated from stdlib/spinner.sail <style>) --- */
-
-  .sail-spinner {
-    /* Do not set --tone-fg on the bare host: skins load after contracts.css and
-       would clobber `[tone=…]` channel fills (same specificity). */
-    --sz: var(--icon-size-md);
-    --bw: var(--control-stroke);
-  }
-  /* Default stroke ink when no tone attr (contracts only fill [tone=X]). */
-  .sail-spinner:not([tone]),
-  .sail-spinner[tone='default'] {
-    --tone-fg: var(--muted-foreground);
-  }
-  .sail-spinner[size='xs'] { --sz: var(--icon-size-2xs); --bw: 1.5px; }
-  .sail-spinner[size='sm'] { --sz: var(--icon-size-sm); --bw: 1.5px; }
-  .sail-spinner[size='lg'] { --sz: var(--icon-size-xl); --bw: 2.5px; }
-  .sail-spinner[centered] {
-    display: block;
-    margin: var(--space-8) auto;
-  }
-  .ring {
-    display: inline-block;
-    width: var(--sz);
-    height: var(--sz);
-    border: var(--bw) solid var(--tone-ring, var(--border-subtle));
-    border-right-color: var(--tone-fg);
-    border-radius: var(--shape-pill);
-    animation: var(--animate-spin);
-  }
 
   /* --- switch (relocated from stdlib/switch.sail <style>) --- */
 
@@ -1243,19 +1016,6 @@ label { display: inline-block; }
   @media (prefers-reduced-motion: reduce) {
     .sail-switch, .sail-switch::before { transition: none; }
   }
-
-  /* --- tab-list (relocated from stdlib/tab-list.sail <style>) --- */
-
-  .sail-tabs[orientation='vertical'] .sail-tab-list {
-    flex-direction: column;
-    align-items: stretch;
-    border-bottom: 0;
-    border-right: 1px solid var(--border);
-  }
-
-  /* --- tab-panel (relocated from stdlib/tab-panel.sail <style>) --- */
-
-  .sail-tabs[orientation='vertical'] .sail-tab-panel { padding: 0 0 0 var(--space-4); }
 
   /* --- tab (relocated from stdlib/tab.sail <style>) --- */
 
@@ -1549,35 +1309,6 @@ label { display: inline-block; }
   @media (forced-colors: active) {
     .sail-theme-option[aria-selected='true'] { border-color: CanvasText; }
   }
-
-  /* --- ticker (relocated from stdlib/ticker.sail <style>) --- */
-
-  .sail-ticker .track {
-    display: flex;
-    flex-wrap: nowrap;
-    width: max-content;
-    animation: var(--animate-ticker);
-  }
-  .sail-ticker[duration='fast'] .track { animation-duration: 16s; }
-  .sail-ticker[duration='slow'] .track { animation-duration: 32s; }
-  .sail-ticker[reverse] .track { animation-direction: reverse; }
-  @media (prefers-reduced-motion: reduce) {
-    .sail-ticker .track { animation-play-state: paused; }
-  }
-
-  /* --- toast-region (relocated from stdlib/toast-region.sail <style>) --- */
-
-  .sail-toast-region {
-    width: min(24rem, calc(100vw - var(--space-8)));
-    inset-block-end: 0;
-    inset-inline-end: 0;
-  }
-  .sail-toast-region[position='top-start'] { inset: 0 auto auto 0; }
-  .sail-toast-region[position='top-end'] { inset: 0 0 auto auto; }
-  .sail-toast-region[position='bottom-start'] { inset: auto auto 0 0; }
-  .sail-toast-region[position='bottom-end'] { inset: auto 0 0 auto; }
-  .sail-toast-region[position^='bottom'] { flex-direction: column-reverse; }
-  .sail-toast-region > * { pointer-events: auto; }
 
   /* --- toast (relocated from stdlib/toast.sail <style>) --- */
 

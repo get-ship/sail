@@ -1,11 +1,8 @@
 <!--
   <code-block> — syntax-highlighted source.
 
-    <code-block code={src} lang="sail"></code-block>
-
-  Colours are the `--syntax-*` theme tokens. Host paint: display block is sx.
-  pre chrome (mono/size/surface/border/radius/pad/overflow) is sx on <pre>.
-  Residue: line-height 1.6, tab-size 2, tok-* token colors (highlighter anatomy).
+  Host paint: display block is sx. pre chrome is sx on <pre>.
+  Contracts: pre line-height 1.6 + tab-size 2; .tok-* highlighter ink (anatomy).
 -->
 
 <scope>

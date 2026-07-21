@@ -264,10 +264,10 @@ fn residual_default_tone_fills_for_untoned_hosts() {
         "badge untoned default must fill muted tone channels for host sx"
     );
 
-    // spinner default stroke
+    // spinner default stroke — contracts after dissolve (channel-write home)
     assert!(
-        css.contains(".sail-spinner:not([tone])")
-            && css.contains("--tone-fg: var(--muted-foreground)"),
+        pe.contains(".sail-spinner:not([tone])")
+            && pe.contains("--tone-fg: var(--muted-foreground)"),
         "spinner untoned default must fill --tone-fg for .ring accent stroke"
     );
 
