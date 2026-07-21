@@ -35,12 +35,10 @@
   }
 
 /* separator */
-.sx-block{display:block}.sx-wfull{width:100%}.sx-m2{margin:var(--space-2)}.sx-bgseparatorline{background-color:var(--separator-line)}
+.sx-block{display:block}.sx-wfull{width:100%}.sx-m2{margin:var(--space-2)}.sx-border0{border-width:0px}.sx-p0{padding:0}.sx-bgseparatorline{background-color:var(--separator-line)}
 
   .sail-separator {
     --separator-line: var(--border-subtle);
-    border: 0;
-    padding: 0;
   }
   .sail-separator[tone='primary'],
   .sail-separator[tone='destructive'] {
