@@ -1,7 +1,8 @@
-// L1 conformance spec: <toast> + <toast-region> (mechanism-1 + use:toast).
-// RENDER: toasts across tones in-flow (the region is position:fixed, so the grid
-// shows the toasts themselves). BEHAVIOR: auto-dismiss fires, hovering PAUSES it,
-// and the close control dismisses immediately — each emitting sail-toast-dismiss.
+// L1 conformance spec: <toast> + <toast-region> (mechanism-1 + use:autoDismiss
+// + use:dismissControl). RENDER: toasts across tones in-flow (the region is
+// position:fixed, so the grid shows the toasts themselves). BEHAVIOR:
+// auto-dismiss fires, hovering PAUSES it, and the close control dismisses
+// immediately — each emitting sail-toast-dismiss.
 
 const toast = (tone, body, extra = '') =>
   `<div class="sail-toast" role="status" aria-live="polite" tone="${tone}" ${extra}>` +
@@ -46,7 +47,7 @@ export default {
         toast('info', 'Manual', 'id="t-close" duration="0"'),
       ]
     },
-    attach: [['.sail-toast', 'toast']],
+    attach: [['.sail-toast', 'autoDismiss'], ['.sail-toast', 'dismissControl']],
     async run(page) {
       const bad = []
       await page.evaluate(() => {

@@ -67,7 +67,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:210"
+    "loc": "src/styles/index.ts:226"
   },
   {
     "subpath": ".",
@@ -132,6 +132,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(host: HTMLElement): void",
     "doc": "Wire `host.emit` and `host.expose` onto a host element. Idempotent — called from `defineComponent`'s `connectedCallback` once per connect.",
     "loc": "src/host-api.ts:103"
+  },
+  {
+    "subpath": ".",
+    "name": "autoDismiss",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Auto-dismiss after `duration` ms (attr). 0 / negative = sticky (no timer). Pause while hovered or focused so a reader is never cut off mid-read.",
+    "loc": "src/actions/auto-dismiss.ts:24"
   },
   {
     "subpath": ".",
@@ -479,14 +487,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "collapsible",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:collapsible` — the L1 `<collapsible>` element's behavior. The native <details>/<summary> owns open/close, keyboard, focus, and ARIA; this action supplies only the two things native can't: - re-emit the native `toggle` as a composed `sail-toggle` {open} so hosts can sync a bound signal; - suppress activation (click + Enter/Space) while [disabled] — native <details> has no disabled state. Written once in the toolchain — no per-instance controller, compiles away.",
-    "loc": "src/actions/collapsible.ts:13"
-  },
-  {
-    "subpath": ".",
     "name": "combobox",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
@@ -775,11 +775,35 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
+    "name": "detailsDisabled",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "While the host has `[disabled]`, suppress activation paths native <details>/<summary> would otherwise honor: click + Enter/Space, both in capture so the default toggle never runs.",
+    "loc": "src/actions/details-disabled.ts:14"
+  },
+  {
+    "subpath": ".",
+    "name": "detailsToggle",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Re-emit the native `toggle` event as a composed `sail-toggle` with `{ open: el.open }` so hosts can sync a bound signal. The browser owns open/close, keyboard, focus, and ARIA — this only bridges the event.",
+    "loc": "src/actions/details-toggle.ts:14"
+  },
+  {
+    "subpath": ".",
     "name": "DialogOptions",
     "kind": "interface",
     "signature": "export interface DialogOptions { dismissible?: boolean }",
     "doc": "Options for {@link bindOpen}.",
     "loc": "src/enhance-dialog.ts:15"
+  },
+  {
+    "subpath": ".",
+    "name": "dismissControl",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Click on a descendant close control (`[data-toast-close]` or `[data-dismiss]`) dismisses the host: composed `sail-toast-dismiss`, then `el.remove()`.",
+    "loc": "src/actions/dismiss-control.ts:18"
   },
   {
     "subpath": ".",
@@ -2103,14 +2127,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "toast",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:toast` — the L1 `<toast>` behavior. Auto-dismisses after `duration` ms (0 = sticky), wires the close control (`[data-toast-close]`), pauses the timer while hovered/focused so a reader is never cut off, and emits `sail-toast-dismiss` when it goes. Removal is the element's own job — it removes itself from the region on dismiss.",
-    "loc": "src/actions/toast.ts:10"
-  },
-  {
-    "subpath": ".",
     "name": "toggleAnnotationMode",
     "kind": "function",
     "signature": "(name: string): boolean",
@@ -2347,7 +2363,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:210"
+    "loc": "src/styles/index.ts:226"
   },
   {
     "subpath": "./server",
