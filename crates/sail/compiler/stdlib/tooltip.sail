@@ -1,15 +1,9 @@
 <!--
-  <tooltip> — L1 language element (element mode). Wraps a trigger (default slot)
-  and shows a text bubble on hover/focus, positioned with CSS Anchor Positioning.
-  Show/hide + placement are PURE CSS (the skin); the behavior layer (`use:tooltip`,
-  packages/sail/runtime/src/actions/tooltip.ts) supplies only a per-instance anchor
-  name, the bubble text (from `content`) + aria-describedby wiring, and Escape.
+  <tooltip> — hover/focus text bubble via CSS Anchor Positioning. use:tooltip
+  supplies anchor name + content + Escape.
 
-  Faithful to the feat/next sail-tooltip baseline for placement/positioning/arrow.
-  L1 divergence: the bubble body is a `content` STRING prop (not a named `content`
-  slot — element mode projects only the default slot). Text tooltips are the
-  common case; a rich-content tooltip stays an L2 component until named-slot
-  projection lands.
+  Host paint: bubble chrome on sx. Residue: anchor-name/positioning matrix,
+  arrow pseudo, opacity show/hide, placement @supports branches.
 -->
 
 <scope>
@@ -21,7 +15,6 @@
 
 <style>
   .sail-tooltip {
-    display: inline-flex;
     anchor-name: var(--sail-tooltip-anchor);
   }
 
@@ -29,17 +22,7 @@
     --tt-arrow-shift: -3.5px;
     position: fixed;
     position-anchor: var(--sail-tooltip-anchor);
-    padding: var(--space-1) var(--space-2);
-    background: var(--foreground);
-    color: var(--background);
-    font-family: var(--font-body);
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-medium);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
     z-index: var(--z-popover);
-    white-space: nowrap;
-    pointer-events: none;
     opacity: 0;
     transition: opacity var(--duration-fast) var(--ease-out);
     position-try-fallbacks: flip-block, flip-inline;
@@ -58,11 +41,6 @@
   }
 
   @supports (anchor-name: --x) {
-    /* Placement + centering via position-area: the box is laid into the region
-       on the named side of the anchor and centered on the perpendicular axis;
-       `margin` opens the gap toward the trigger. flip-* only kicks in on a real
-       viewport clip (we do NOT reorder by most-room, which would ignore the
-       author's chosen side). */
     .bubble { margin: var(--space-2); }
     .sail-tooltip:not([placement]) .bubble,
     .sail-tooltip[placement='top'] .bubble { position-area: top; }
@@ -93,4 +71,4 @@
   }
 </style>
 
-<span use:tooltip><slot></slot><span class="bubble" role="tooltip"></span></span>
+<span use:tooltip><slot></slot><span class="bubble" role="tooltip" sx="py-1 px-2 bg-foreground text-background font-body text-xs font-medium rounded-md shadow-md whitespace-nowrap pointer-events-none"></span></span>

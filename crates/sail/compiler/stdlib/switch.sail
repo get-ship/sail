@@ -1,16 +1,9 @@
 <!--
-  <switch> — L1 language element (element mode). A native
-  <input type="checkbox"> replaced (appearance:none) into a sliding toggle:
-  the input IS the root, so `checked`/`disabled`/`name`/`value`/`required`
-  land on the real element and behave natively (Space toggles, Tab focus,
-  form submission) — no controller, no reflected prop. The track is the
-  input's own box; the thumb is a ::before that slides on :checked.
+  <switch> — native checkbox restyled as sliding toggle. No controller.
 
-  Faithful to the feat/next sail-switch baseline for size/tone/state, re-homed
-  from the baseline's :host([checked]) (a controller-maintained attribute) to
-  the native :host(:checked) pseudo-class — the point of the replaced input.
-  The label text is composition: a use site writes
-  `<label><switch></switch> Wi-Fi</label>`; the switch is only the control.
+  Host paint: cursor/align/m-0 on sx. Residue: appearance:none track/thumb
+  geometry, size/tone channels, checked/hover/disabled/focus, forced-colors,
+  reduced-motion.
 -->
 
 <scope>
@@ -27,20 +20,14 @@
     appearance: none;
     -webkit-appearance: none;
     position: relative;
-    display: inline-block;
     flex-shrink: 0;
-    vertical-align: middle;
     box-sizing: border-box;
-    margin: 0;
-    cursor: pointer;
     background: var(--muted);
     border: 1px solid var(--border-strong);
     border-radius: var(--shape-pill);
     -webkit-tap-highlight-color: transparent;
-    /* Tone: default reads as a brand toggle (primary). */
     --tone: var(--primary);
     --tone-on-fg: var(--primary-foreground);
-    /* Size: md base; sm/lg override. */
     --sw-w: var(--control-h-sm);
     --sw-h: var(--icon-size-md);
     --sw-thumb: var(--space-3);
@@ -62,7 +49,6 @@
   .sail-switch[tone='accent']      { --tone: var(--accent);           --tone-on-fg: var(--accent-foreground); }
   .sail-switch[tone='muted']       { --tone: var(--muted-foreground); --tone-on-fg: var(--background); }
 
-  /* Thumb — a pseudo-element (works because appearance:none un-replaces the box). */
   .sail-switch::before {
     content: '';
     position: absolute;
@@ -116,4 +102,4 @@
   }
 </style>
 
-<input type="checkbox" role="switch" />
+<input type="checkbox" role="switch" sx="inline-block align-middle m-0 cursor-pointer" />
