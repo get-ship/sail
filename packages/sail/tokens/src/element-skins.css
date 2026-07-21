@@ -1619,9 +1619,6 @@ label { display: inline-block; }
     border: 1px solid var(--border-strong);
     border-radius: var(--shape-pill);
     -webkit-tap-highlight-color: transparent;
-    /* Attr-absent PE: :checked uses var(--tone) with no fallback. */
-    --tone: var(--primary);
-    --tone-on-fg: var(--primary-foreground);
     --sw-w: var(--control-h-sm);
     --sw-h: var(--icon-size-md);
     --sw-thumb: var(--space-3);
@@ -1631,6 +1628,14 @@ label { display: inline-block; }
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
       box-shadow var(--duration-fast) var(--ease-out);
+  }
+  /* Attr-absent PE defaults — :checked uses var(--tone) with no fallback.
+     Must NOT live on bare .sail-switch (same specificity as contracts [tone=X],
+     skins load later → would clobber branded fills). */
+  .sail-switch:not([tone]),
+  .sail-switch[tone='default'] {
+    --tone: var(--primary);
+    --tone-on-fg: var(--primary-foreground);
   }
   .sail-switch[size='sm'] { --sw-w: var(--control-h-xs); --sw-h: var(--icon-size-sm); --sw-thumb: var(--space-2_5); }
   .sail-switch[size='lg'] { --sw-w: var(--space-7);      --sw-h: var(--icon-size-lg); --sw-thumb: var(--icon-size-sm); }
