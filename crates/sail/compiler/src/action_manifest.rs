@@ -169,12 +169,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "emptyState",
-        param: "void",
-        summary: "Empty-state element behavior; arms an action for the call-to-action slot.",
-        auto_import: true,
-    },
-    ActionEntry {
         name: "errorBoundary",
         param: "void",
         summary: "Catch render errors thrown by descendants; show a fallback UI.",
@@ -319,6 +313,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
+        name: "variantLive",
+        param: "void",
+        summary: "Variant-gated live region: variant=connecting → role=status/aria-live=polite; else role=note/aria-live=off. Re-syncs on variant mutation.",
+        auto_import: true,
+    },
+    ActionEntry {
         name: "virtualRow",
         param: "number | null | undefined",
         summary: "Register a virtualized row; tells the parent scroller its measured height.",
@@ -353,12 +353,12 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "alert", "anchor", "autoDismiss", "autosize", "avatar", "cellPad",
     "chromeOffset", "clickOutside", "codeBlock", "combobox",
     "contextMenu", "detailsDisabled", "detailsToggle", "dismissControl",
-    "dismissible", "dropzone", "emptyState", "errorBoundary",
+    "dismissible", "dropzone", "errorBoundary",
     "errorState", "eventSpan", "field", "gridTracks", "hoverCard",
     "icon", "maxWidth", "menu", "pagination", "pin", "portEdge",
     "pressable", "pressed", "radioGroup", "rangeFill", "rect", "spotlight",
     "swatch", "tabs",
-    "targetCursor", "themePicker", "toggleGroup", "tooltip",
+    "targetCursor", "themePicker", "toggleGroup", "tooltip", "variantLive",
     "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
 ];
 

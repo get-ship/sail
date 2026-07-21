@@ -2257,7 +2257,7 @@ mod tests {
         );
         assert!(out.contains("sail-empty-state"), "root class stamped: {out}");
         assert!(out.contains(r#"variant="placeholder""#), "attr merged: {out}");
-        assert!(out.contains("use:emptyState"), "action rides the splice: {out}");
+        assert!(out.contains("use:variantLive"), "action rides the splice: {out}");
         assert!(!out.contains("<slot"), "no slot survives: {out}");
         assert!(out.contains(r#"class="icon" aria-hidden="true"><svg slot="icon"></svg>"#), "icon slot: {out}");
         assert!(out.contains(r#"class="title"><span slot="title">No results</span>"#), "title slot: {out}");

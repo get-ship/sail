@@ -871,14 +871,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "emptyState",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:emptyState` — the L1 `<empty-state>` element's only behavior. The surface, tile, typography, and variant/size/tone are all PURE CSS. The one thing CSS can't express is the `connecting` variant's live region: a connecting placeholder should announce (role=status / aria-live=polite), while an ordinary empty state is inert (role=note / aria-live=off, the static defaults). This action flips those two attributes off the `variant`, and re-evaluates when it changes. Written once — no per-instance controller.",
-    "loc": "src/actions/empty-state.ts:12"
-  },
-  {
-    "subpath": ".",
     "name": "errorBoundary",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
@@ -2196,6 +2188,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "<Shape>(def: StoreDef<Shape>): Shape",
     "doc": "Resolve a store instance. Walks the current scope's parent chain; returns the first instance found. If none is found on the chain, allocates a fresh one on the CHAIN ROOT (so all sibling subtrees see the same root instance — the unit of sharing is the request / mount root, not the local scope).",
     "loc": "src/store.ts:262"
+  },
+  {
+    "subpath": ".",
+    "name": "variantLive",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Observe `variant` and flip role/aria-live for connecting placeholders. Static defaults on the template (`role=note`, `aria-live=off`) keep the host inert before hydrate; this action only upgrades `connecting` and re-evaluates when the attribute changes.",
+    "loc": "src/actions/variant-live.ts:17"
   },
   {
     "subpath": ".",

@@ -10,7 +10,7 @@
   - reflect-empty="data-no-icon" (a JS slot-emptiness reflect) → `.icon:empty`
     (pure CSS — an empty icon slot leaves the tile empty, so it hides itself).
   - reactive role/aria-live (only the `connecting` variant is a live region) →
-    the use:emptyState action, off a static role=note default.
+    the use:variantLive capability, off a static role=note default.
   Icon tile tints per tone from the global [tone] channel; default/muted stay
   neutral (empty states read quiet by default).
 -->
@@ -157,7 +157,7 @@
   }
 </style>
 
-<div use:emptyState role="note" aria-live="off">
+<div use:variantLive role="note" aria-live="off">
   <div class="icon" aria-hidden="true"><slot name="icon"></slot></div>
   <div class="copy">
     <div class="title"><slot name="title"></slot></div>

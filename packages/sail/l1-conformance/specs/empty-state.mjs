@@ -1,4 +1,4 @@
-// L1 conformance spec: <empty-state> (mechanism-1, use:emptyState). Probe runs
+// L1 conformance spec: <empty-state> (mechanism-1, use:variantLive). Probe runs
 // the essentials (role/aria-live by variant) and asserts the empty-region
 // gates: title/desc filled, icon shown iff it has an svg, actions shown iff
 // non-empty. default / inline / connecting variants.
