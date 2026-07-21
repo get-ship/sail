@@ -1,15 +1,9 @@
 <!--
   <dropdown id="…" placement="bottom-start"> — L1 anchored menu (element mode).
-  A native [popover] carrying menu semantics: use:anchor positions it, use:menu
-  gives role=menu + roving keyboard (Arrow/Home/End), Escape-to-close, first-item
-  focus on open, and close-on-select (`sail-menu-select`). Compose <menu-item>s.
-  Bare tag lowers to <div class="sail-dropdown" popover use:anchor use:menu>.
+  Native [popover] + use:anchor + use:menu. Compose <menu-item>s.
 
-    <button popovertarget="m1">Actions</button>
-    <dropdown id="m1">
-      <menu-item value="edit">Edit</menu-item>
-      <menu-item value="del" disabled>Delete</menu-item>
-    </dropdown>
+  Host paint: chrome (color/bg/border/radius/shadow/pad/z) on sx. Positioning
+  (fixed/anchor insets) + backdrop + min-width residue stay author CSS.
 -->
 
 <scope>
@@ -25,16 +19,9 @@
     margin: 0;
     left: var(--anchor-left);
     top: var(--anchor-top);
-    min-width: 12rem; /* residue — 12rem/22rem NOT equal to panel-min/max tokens (180/320px); leave rem */
-    padding: var(--space-1);
-    color: var(--foreground);
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    z-index: var(--z-popover, 1000);
+    min-width: 12rem; /* residue — 12rem not equal to panel-min token */
   }
   .sail-dropdown::backdrop { background: transparent; }
 </style>
 
-<div popover use:anchor use:menu><slot></slot></div>
+<div popover use:anchor use:menu sx="p-1 text-foreground bg-background border border-border rounded-md shadow-md z-(--z-popover)"><slot></slot></div>

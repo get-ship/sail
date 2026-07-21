@@ -1,11 +1,7 @@
 <!--
-  <spinner> — L1 language element (element mode). Bare tag: it lowers away
-  at compile time; the skin below routes to the framework layer keyed on
-  .sail-spinner; the contract feeds the element manifest.
-
-  Faithful to the feat/next sail-spinner baseline. Per-instance dynamics
-  (a custom aria-label) belong to the USE SITE — its attributes merge onto
-  the root, overriding the static defaults here.
+  <spinner> — L1 loading indicator. Host paint: vertical-align on sx.
+  Size/tone channels + .ring geometry + --animate-spin stay (child anatomy / fx).
+  centered remains attr CSS (display/margin block).
 -->
 
 <scope>
@@ -18,8 +14,6 @@
 
 <style>
   .sail-spinner {
-    display: inline-flex;
-    vertical-align: middle;
     /* Do not set --tone-fg on the bare host: skins load after contracts.css and
        would clobber `[tone=…]` channel fills (same specificity). */
     --sz: var(--icon-size-md);
@@ -47,6 +41,6 @@
   }
 </style>
 
-<span class="spin" role="status" aria-label="Loading">
+<span class="spin" role="status" aria-label="Loading" sx="align-middle">
   <span class="ring" aria-hidden="true"></span>
 </span>

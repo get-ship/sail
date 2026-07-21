@@ -2,35 +2,13 @@
   <ticker> — L1 stdlib element (element mode). An infinite, linear marquee:
   overflow hidden on the root, a flex track carrying TWO copies of the
   projected content (the second `aria-hidden`), animated left by exactly
-  half its own width so the loop seams invisibly. The author never
-  hand-duplicates their text — write it once:
+  half its own width so the loop seams invisibly.
 
-    <ticker sx="bg-primary text-primary-foreground rotate-1">
-      <p>NO RAW CSS · SIGNALS BUILT IN · 48 COMPONENTS</p>
-    </ticker>
+  duration: 'fast' (16s) | 'normal' (24s, default) | 'slow' (32s).
+  reverse: runs the track backwards.
 
-    <ticker duration="slow" reverse sx="bg-surface-2 text-muted-foreground -rotate-1">
-      <p>forms · live data · springs · ssr · hot reload</p>
-    </ticker>
-
-  The track is exactly two copies of the slot back-to-back (no gap between
-  them, so `translateX(-50%)` loops seamlessly) — end the projected content
-  with its own separator/trailing space (e.g. "· 48 COMPONENTS ·&nbsp;") so
-  the seam between the two copies reads as continuous, not glued.
-
-  duration: 'fast' (16s) | 'normal' (24s, default) | 'slow' (32s) — a closed
-  set; ticker owns its own scale (a marquee's period is an order of
-  magnitude past the sx `duration-*` UI-transition tokens, so it does not
-  reuse them). reverse: runs the track backwards.
-
-  Typography, color, and rotation are NOT baked into the skin — they are
-  page authorship via ordinary sx atoms on the `<ticker>` tag, same as any
-  other element. The skin here is mechanics only: overflow, flex layout,
-  the loop keyframe, and reduced-motion.
-
-  Reduced motion: the track is PAUSED (`animation-play-state: paused`),
-  not stopped (`animation: none`) — content stays put and fully visible
-  rather than vanishing or jumping.
+  Host paint: overflow is sx. Track flex + --animate-ticker + reduced-motion
+  stay mechanics residue (child anatomy / fx duration axes).
 -->
 
 <scope>
@@ -41,9 +19,6 @@
 </scope>
 
 <style>
-  .sail-ticker {
-    overflow: hidden;
-  }
   .sail-ticker .track {
     display: flex;
     flex-wrap: nowrap;
@@ -58,7 +33,7 @@
   }
 </style>
 
-<div>
+<div sx="overflow-hidden">
   <div class="track">
     <span class="segment"><slot></slot></span>
     <span class="segment" aria-hidden="true"><slot></slot></span>

@@ -1,19 +1,16 @@
 <!--
   <tab-list> — the tab strip inside <tabs>. Rows the <tab>s (columns when the
   parent is [orientation='vertical']) with a hairline rail. role=tablist. Bare
-  tag lowers to <div class="sail-tab-list" role="tablist">.
+  tag lowers to a layout row (`.sail-tab-list`).
+
+  Host paint: layout owns row+gap+align; sx owns bottom rail. Vertical
+  orientation (column + side rail) stays parent-keyed residue.
 -->
 
 <scope>
 </scope>
 
 <style>
-  .sail-tab-list {
-    display: flex;
-    align-items: stretch;
-    gap: var(--space-1);
-    border-bottom: 1px solid var(--border);
-  }
   .sail-tabs[orientation='vertical'] .sail-tab-list {
     flex-direction: column;
     align-items: stretch;
@@ -22,4 +19,4 @@
   }
 </style>
 
-<div role="tablist"><slot></slot></div>
+<row align="stretch" gap="1" role="tablist" sx="border-b border-border"><slot></slot></row>

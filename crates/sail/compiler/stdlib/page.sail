@@ -1,7 +1,9 @@
 <!--
-  <page value="…"> — a page control inside <pagination>. aria-current is wired
-  by use:pagination on the parent. Bare tag lowers to
-  <button class="sail-page" type="button">.
+  <page value="…"> — page control inside <pagination>. aria-current via
+  use:pagination on the parent.
+
+  Host paint: typeface/color/chrome/cursor on sx. Size channels (--pg-h/--pg-fs),
+  hover/current/disabled/focus stay author CSS.
 -->
 
 <scope>
@@ -13,21 +15,12 @@
 
 <style>
   .sail-page {
-    display: inline-flex;
     align-items: center;
     justify-content: center;
     min-width: var(--pg-h, var(--control-h-md));
     height: var(--pg-h, var(--control-h-md));
     padding: 0 var(--space-2);
-    font-family: var(--font-body);
-    font-size: var(--pg-fs, var(--text-sm));
-    font-weight: var(--font-weight-medium);
-    color: var(--foreground);
-    background: transparent;
     border: 1px solid transparent;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
@@ -43,4 +36,4 @@
   .sail-page:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 1px; /* residue */ }
 </style>
 
-<button type="button"><slot></slot></button>
+<button type="button" sx="font-body font-medium text-foreground bg-transparent rounded-md cursor-pointer select-none"><slot></slot></button>

@@ -1,12 +1,7 @@
 <!--
-  <hover-card id="…" placement="top"> — L1 hover-preview overlay (element mode).
-  A native [popover] opened on hover/focus of its trigger (popovertarget) with
-  open/close delays so it doesn't flicker; use:anchor positions it. Optional
-  `open-delay` / `close-delay` (ms) attributes tune the dwell.
-  Bare tag lowers to <div class="sail-hover-card" popover use:anchor use:hoverCard>.
-
-    <a href="#" popovertarget="hc1">@ada</a>
-    <hover-card id="hc1" placement="top">…profile card…</hover-card>
+  <hover-card id="…" placement="top"> — L1 hover-preview overlay. Native
+  [popover] + use:anchor + use:hoverCard. Host paint: chrome on sx.
+  Positioning + min/max-width residues + backdrop stay.
 -->
 
 <scope>
@@ -24,15 +19,8 @@
     top: var(--anchor-top);
     min-width: 14rem;
     max-width: 20rem;
-    padding: var(--space-3);
-    color: var(--foreground);
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    z-index: var(--z-popover, 1000);
   }
   .sail-hover-card::backdrop { background: transparent; }
 </style>
 
-<div popover use:anchor use:hoverCard><slot></slot></div>
+<div popover use:anchor use:hoverCard sx="p-3 text-foreground bg-background border border-border rounded-md shadow-md z-(--z-popover)"><slot></slot></div>

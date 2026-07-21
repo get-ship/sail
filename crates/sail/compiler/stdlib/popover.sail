@@ -1,12 +1,8 @@
 <!--
-  <popover id="…" placement="bottom"> — L1 anchored overlay (element mode) on the
-  NATIVE popover API. Any element with popovertarget="<id>" is the trigger; the
-  platform gives open/close, light-dismiss and top-layer for free, and use:anchor
-  does the one thing it doesn't: positioning (with a flip when there's no room).
-  Bare tag lowers to <div class="sail-popover" popover use:anchor>.
+  <popover id="…" placement="bottom"> — L1 anchored overlay on the native
+  popover API + use:anchor.
 
-    <button popovertarget="p1">Open</button>
-    <popover id="p1" placement="bottom-end">…</popover>
+  Host paint: chrome on sx. Positioning + min/max-width residues + backdrop stay.
 -->
 
 <scope>
@@ -22,17 +18,10 @@
     margin: 0;
     left: var(--anchor-left);
     top: var(--anchor-top);
-    min-width: 12rem; /* residue — 12rem/22rem NOT equal to panel-min/max tokens (180/320px); leave rem */
-    max-width: 22rem;
-    padding: var(--space-3);
-    color: var(--foreground);
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    z-index: var(--z-popover, 1000);
+    min-width: 12rem; /* residue */
+    max-width: 22rem; /* residue */
   }
   .sail-popover::backdrop { background: transparent; }
 </style>
 
-<div popover use:anchor><slot></slot></div>
+<div popover use:anchor sx="p-3 text-foreground bg-background border border-border rounded-md shadow-md z-(--z-popover)"><slot></slot></div>

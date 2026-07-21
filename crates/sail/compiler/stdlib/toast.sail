@@ -1,13 +1,8 @@
 <!--
-  <toast tone="success" duration="5000"> — L1 toast (element mode). use:toast
-  auto-dismisses after `duration` ms (0 = sticky), PAUSES while hovered/focused so
-  a reader is never cut off, wires [data-toast-close], and emits
-  `sail-toast-dismiss` before removing itself. Bare tag lowers to
-  <div class="sail-toast" role="status" aria-live="polite">.
+  <toast tone="success" duration="5000"> — L1 toast. use:toast auto-dismisses.
 
-    <toast tone="destructive" duration="0">
-      Couldn't save. <button data-toast-close>Dismiss</button>
-    </toast>
+  Host paint: typeface/color/bg/radius/shadow on sx. Flex geometry + 3px tone
+  stripe border residue + close-button anatomy stay author CSS.
 -->
 
 <scope>
@@ -23,14 +18,8 @@
     align-items: flex-start;
     gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    color: var(--foreground);
-    background: var(--background);
     border: 1px solid var(--tone-border, var(--border));
-    border-inline-start: 3px solid var(--tone-fg, var(--border)); /* residue (tone stripe): 3px literal — no --space token for 3px category stripe (space-1=4px forbidden squash); tone-border/tone-fg fallbacks kept verbatim */
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
+    border-inline-start: 3px solid var(--tone-fg, var(--border)); /* residue — 3px tone stripe */
   }
   .sail-toast [data-toast-close] {
     margin-inline-start: auto;
@@ -44,4 +33,4 @@
   .sail-toast [data-toast-close]:hover { color: var(--foreground); background: var(--muted); }
 </style>
 
-<div use:toast><slot></slot></div>
+<div use:toast sx="font-body text-sm text-foreground bg-background rounded-md shadow-md"><slot></slot></div>

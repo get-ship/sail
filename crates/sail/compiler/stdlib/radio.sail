@@ -2,12 +2,11 @@
   <radio> — L1 language element (element mode). A single radio option: a native
   <input type="radio"> (skinned by the framework's control contracts) + a label.
   Bare tag lowers to <label class="sail-radio">. Used inside <radio-group>, which
-  wires the shared name, checked state, and value via use:radioGroup — so single
-  selection, arrow-key roving, focus, and form participation are the browser's.
+  wires the shared name, checked state, and value via use:radioGroup.
 
-  The `value` and `disabled` attributes ride the label root; use:radioGroup
-  forwards them onto the inner <input>. Faithful to the sail-radio twin, rebuilt
-  on the native input.
+  Host paint: typeface/color/cursor/select on sx. Layout (inline-flex + gap +
+  align) stays author CSS — root must remain <label> (not <row>) for native
+  label semantics. Disabled opacity residue.
 -->
 
 <scope>
@@ -22,15 +21,11 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    cursor: pointer;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    color: var(--foreground);
-    user-select: none;
-    -webkit-user-select: none;
   }
   .sail-radio[disabled] { cursor: not-allowed; opacity: 0.55; /* residue lock */ }
   .sail-radio input { flex-shrink: 0; margin: 0; }
 </style>
 
-<label><input type="radio" /><span class="rlabel"><slot></slot></span></label>
+<label sx="font-body text-sm text-foreground cursor-pointer select-none">
+  <input type="radio" /><span class="rlabel"><slot></slot></span>
+</label>

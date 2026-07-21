@@ -3,12 +3,9 @@
 
     <code-block code={src} lang="sail"></code-block>
 
-  Colours are the `--syntax-*` theme tokens, so a code block re-themes with
-  everything else — Console renders it green-on-black, Paper renders it on cream.
-  A hand-picked hex cannot do that, which is why four hand-rolled highlighters
-  (docs, markdown, diff, editor) each drifted their own palette.
-
-  The highlighter escapes all source and only ever emits its own `tok-*` spans.
+  Colours are the `--syntax-*` theme tokens. Host paint: display block is sx.
+  pre chrome (mono/size/surface/border/radius/pad/overflow) is sx on <pre>.
+  Residue: line-height 1.6, tab-size 2, tok-* token colors (highlighter anatomy).
 -->
 
 <scope>
@@ -19,19 +16,8 @@
 </scope>
 
 <style>
-  .sail-code-block { display: block; }
   .sail-code-block pre {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
     line-height: 1.6; /* residue — no exact 1.6 leading token (normal=1.5; relaxed=1.7) */
-    background: var(--surface-1);
-    color: var(--foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4) var(--space-5);
-    overflow-x: auto;
-    white-space: pre;
     tab-size: 2; /* residue literal — no tab-size token */
   }
   .sail-code-block .tok-tag { color: var(--syntax-tag); }
@@ -44,6 +30,6 @@
   .sail-code-block .tok-bind { color: var(--syntax-function); }
 </style>
 
-<div use:codeBlock>
-  <pre></pre>
+<div use:codeBlock sx="block">
+  <pre sx="m-0 font-mono text-sm bg-surface-1 text-foreground border border-border rounded-lg py-4 px-5 overflow-x-auto whitespace-pre"></pre>
 </div>
