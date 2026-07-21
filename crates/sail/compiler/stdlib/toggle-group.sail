@@ -1,17 +1,8 @@
 <!--
-  <toggle-group> — L1 segmented toggle group (element mode). A row/column of
-  joined <toggle> cells; behavior rides use:toggleGroup (role=group, roving
-  tabindex, arrow-key nav, single/multiple selection, `value` sync,
-  `sail-toggle-change`). Bare tag lowers to <div class="sail-toggle-group">.
+  <toggle-group> — segmented toggle group. use:toggleGroup owns behavior.
 
-    <toggle-group type="single" value="grid">
-      <toggle value="grid">Grid</toggle>
-      <toggle value="list">List</toggle>
-    </toggle-group>
-
-  type single (deselectable, one value) / multiple (space-separated set).
-  variant outline (joined bordered cells) / ghost (spaced, no frame) /
-  segmented (muted track). size sm/md/lg. orientation horizontal/vertical.
+  Host paint: inline row layout (gap 0 default). Residue: size channels,
+  orientation column, outline join radii, ghost/segmented variant matrices.
 -->
 
 <scope>
@@ -26,8 +17,7 @@
 
 <style>
   .sail-toggle-group {
-    display: inline-flex;
-    gap: 0;
+    
     /* size vocabulary (md base) — read by <toggle> */
     --tg-fs: var(--text-sm);
     --tg-h: var(--control-h-md);
@@ -61,6 +51,6 @@
   .sail-toggle-group[variant='segmented'] > .sail-toggle { margin: 0; border-color: transparent; border-radius: var(--radius-sm); }
 </style>
 
-<div use:toggleGroup>
+<row inline gap="0" use:toggleGroup>
   <slot></slot>
-</div>
+</row>

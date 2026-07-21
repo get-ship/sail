@@ -1,8 +1,8 @@
 <!--
-  <tab name="…"> — a tab button inside <tab-list>. role=tab, aria-selected,
-  roving tabindex, and the active state are wired by use:tabs on the parent
-  <tabs>. The line variant paints a tone-colored underline when active. Bare tag
-  lowers to <button class="sail-tab" type="button">.
+  <tab name="…"> — tab button inside <tab-list>. use:tabs on parent wires a11y.
+
+  Host paint: typeface/color/chrome/cursor on sx. Geometry channels, underline
+  active, hover/disabled/focus stay author CSS.
 -->
 
 <scope>
@@ -14,22 +14,13 @@
 
 <style>
   .sail-tab {
-    display: inline-flex;
     align-items: center;
     gap: var(--space-2);
     padding: var(--tab-py, var(--space-2)) var(--tab-px, var(--space-3));
-    font-family: var(--font-body);
-    font-size: var(--tab-fs, var(--text-sm));
-    font-weight: var(--font-weight-medium);
     line-height: 1;
-    color: var(--muted-foreground);
-    background: transparent;
     border: 0;
     border-bottom: 2px solid transparent;
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    cursor: pointer;
-    white-space: nowrap;
-    user-select: none;
     -webkit-tap-highlight-color: transparent;
     transition:
       color var(--duration-fast) var(--ease-out),
@@ -50,4 +41,4 @@
   }
 </style>
 
-<button type="button"><slot></slot></button>
+<button type="button" sx="font-body font-medium text-muted-foreground bg-transparent cursor-pointer whitespace-nowrap select-none"><slot></slot></button>

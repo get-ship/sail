@@ -1,21 +1,8 @@
 <!--
-  <tabs> — L1 tab strip (element mode). Compose a <tab-list> of <tab>s with
-  <tab-panel> children; behavior rides use:tabs (roving tabindex, arrow-key nav
-  per orientation, Home/End, Enter/Space, panel show/hide, `sail-tab-change`).
-  Bare tag lowers to <div class="sail-tabs" use:tabs>.
+  <tabs> — tab strip + panels. use:tabs owns behavior.
 
-    <tabs active="overview">
-      <tab-list>
-        <tab name="overview">Overview</tab>
-        <tab name="activity">Activity</tab>
-      </tab-list>
-      <tab-panel name="overview">…</tab-panel>
-      <tab-panel name="activity">…</tab-panel>
-    </tabs>
-
-  variant line (default, underline) / pill (filled active in a muted track) /
-  enclosed (folder tabs). size sm/md/lg. orientation horizontal/vertical. tone
-  drives the active accent (the global channel). sticky pins the strip.
+  Host paint: column+gap+min-w layout. Residue: size channels, orientation row,
+  sticky list, pill/enclosed variant matrices (child-keyed).
 -->
 
 <scope>
@@ -31,10 +18,6 @@
 
 <style>
   .sail-tabs {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    min-width: 0;
     /* size vocabulary (md base) — read by <tab> */
     --tab-fs: var(--text-sm);
     --tab-py: var(--space-2);
@@ -85,6 +68,6 @@
   }
 </style>
 
-<div use:tabs>
+<column gap="3" sx="min-w-0" use:tabs>
   <slot></slot>
-</div>
+</column>

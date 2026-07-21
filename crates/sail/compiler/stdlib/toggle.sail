@@ -1,8 +1,8 @@
 <!--
-  <toggle value="…"> — a toggle cell inside <toggle-group>. role=button,
-  aria-pressed, and roving tabindex are wired by use:toggleGroup on the parent.
-  Pressed = inverted fill (theme-safe, high-contrast). Bare tag lowers to
-  <button class="sail-toggle" type="button">.
+  <toggle value="…"> — cell inside <toggle-group>. use:toggleGroup wires a11y.
+
+  Host paint: typeface/color/chrome/cursor on sx. Size channels, hover/pressed/
+  disabled/focus stay author CSS.
 -->
 
 <scope>
@@ -14,22 +14,12 @@
 
 <style>
   .sail-toggle {
-    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
     height: var(--tg-h, var(--control-h-md));
     padding: 0 var(--tg-px, var(--space-3));
-    font-family: var(--font-body);
-    font-size: var(--tg-fs, var(--text-sm));
-    font-weight: var(--font-weight-medium);
-    line-height: var(--leading-none);
-    color: var(--foreground);
-    background: var(--background);
     border: 1px solid var(--border);
-    cursor: pointer;
-    white-space: nowrap;
-    user-select: none;
     -webkit-tap-highlight-color: transparent;
     transition:
       background-color var(--duration-fast) var(--ease-out),
@@ -53,4 +43,4 @@
   }
 </style>
 
-<button type="button"><slot></slot></button>
+<button type="button" sx="font-body font-medium leading-none text-foreground bg-background cursor-pointer whitespace-nowrap select-none"><slot></slot></button>

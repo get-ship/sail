@@ -1,11 +1,8 @@
 <!--
-  <scroll-area> — L1 scroll container (element mode) with thin, themed,
-  overlay-style scrollbars. Constrain it (height/max-height via sx) and it
-  scrolls its overflow. Bare tag lowers to <div class="sail-scroll-area">.
+  <scroll-area> — themed overlay scrollbars. Constrain via sx (h-*/max-h-*).
 
-    <scroll-area sx="h-60 p-4"> … long content … </scroll-area>
-
-  orientation vertical (default axis auto) / horizontal / both.
+  Host paint: overflow-auto on sx. Residue: overscroll/scrollbar-* + webkit
+  pseudos + orientation overflow axes.
 -->
 
 <scope>
@@ -16,7 +13,6 @@
 
 <style>
   .sail-scroll-area {
-    overflow: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
@@ -30,11 +26,11 @@
   .sail-scroll-area::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: var(--shape-pill);
-    border: 3px solid transparent; /* residue — 3px scrollbar border on thumb (inset); webkit pseudos anatomy kept; no squash to space-1 */
+    border: 3px solid transparent; /* residue — 3px scrollbar thumb inset */
     background-clip: padding-box;
   }
   .sail-scroll-area:hover::-webkit-scrollbar-thumb { background: var(--muted-foreground); background-clip: padding-box; }
   .sail-scroll-area::-webkit-scrollbar-thumb:hover { background: var(--foreground); background-clip: padding-box; }
 </style>
 
-<div><slot></slot></div>
+<div sx="overflow-auto"><slot></slot></div>

@@ -1,14 +1,9 @@
 <!--
-  <toast-region position="bottom-end"> — L1 toast host (element mode). A fixed,
-  stacking region that toasts are appended into. aria-live is on each <toast>, so
-  the region is a plain landmark. Bare tag lowers to
-  <div class="sail-toast-region">.
+  <toast-region position="bottom-end"> — fixed stacking region for <toast>s.
 
-    <toast-region position="bottom-end">
-      <toast tone="success">Saved.</toast>
-    </toast-region>
-
-  position: top-start / top-end / bottom-start / bottom-end (default).
+  Host paint: column+gap layout; fixed/z/pad/pointer-events on sx.
+  Residue: width min() formula, logical inset position matrix, column-reverse
+  for bottom*, child pointer-events auto.
 -->
 
 <scope>
@@ -19,14 +14,7 @@
 
 <style>
   .sail-toast-region {
-    position: fixed;
-    z-index: var(--z-toast, 1100);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
     width: min(24rem, calc(100vw - var(--space-8)));
-    padding: var(--space-4);
-    pointer-events: none;
     inset-block-end: 0;
     inset-inline-end: 0;
   }
@@ -38,4 +26,4 @@
   .sail-toast-region > * { pointer-events: auto; }
 </style>
 
-<div><slot></slot></div>
+<column gap="2" sx="fixed z-(--z-toast) p-4 pointer-events-none"><slot></slot></column>
