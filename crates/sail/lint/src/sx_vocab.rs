@@ -342,6 +342,37 @@ fn var_ref_score(var_name: &str, u: &Utility) -> i32 {
         {
             score -= 15;
         }
+        // Width vs color for shared `border` / `outline` heads: `--bw`,
+        // `--control-stroke`, `*-width` bind to width; color names to color.
+        if p.ends_with("width")
+            && (var == "bw"
+                || var.ends_with("-bw")
+                || var.contains("width")
+                || var.contains("stroke")
+                || var.ends_with("-w") && !var.contains("color") && var.len() <= 4)
+        {
+            score += 20;
+        }
+        if p.ends_with("color")
+            && (var.contains("color") || var.ends_with("-fg") || var.ends_with("-bg") || var.contains("tone"))
+        {
+            score += 20;
+        }
+        if p.ends_with("color")
+            && (var == "bw" || var.contains("width") || var.contains("stroke") || var == "sw-w" || var.ends_with("-bw"))
+        {
+            score -= 15;
+        }
+        if p.ends_with("width") && (var.contains("color") || var.ends_with("-fg") || var.ends_with("-bg")) {
+            score -= 15;
+        }
+        // Font-size vs color for the shared `text` head: `--tab-fs`, `--tg-fs`.
+        if p == "font-size" && (var.ends_with("-fs") || var.contains("font-size") || var.ends_with("-fontsize")) {
+            score += 25;
+        }
+        if p.contains("color") && var.ends_with("-fs") {
+            score -= 20;
+        }
     }
     score
 }

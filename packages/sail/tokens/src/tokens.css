@@ -425,6 +425,8 @@
    * product — a channel is a seam, not a restyle. */
   --heading-transform: none;
   --label-transform: uppercase;
+  /* Separator stroke — themable line colour for <separator>. */
+  --separator-line: var(--border);
 
   /* Gradient channels.
    *

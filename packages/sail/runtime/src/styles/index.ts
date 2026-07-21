@@ -104,6 +104,7 @@ const TYPOGRAPHY_CSS =
   // read as authored), but a theme that wants ALL CAPS chrome sets it once
   // here instead of every skin hand-writing text-transform.
   'h1,h2,h3,h4,h5,h6 { margin: 0; font-family: var(--heading-font, inherit); font-weight: var(--heading-weight, 700); line-height: var(--leading-tight, 1.15); color: var(--foreground); text-transform: var(--heading-transform); }\n' +
+  'label, .sail-label { text-transform: var(--label-transform); }\n' +
   'h1 { font-size: var(--text-4xl); }\n' +
   'h2 { font-size: var(--text-2xl); }\n' +
   'h3 { font-size: var(--text-xl); }\n' +

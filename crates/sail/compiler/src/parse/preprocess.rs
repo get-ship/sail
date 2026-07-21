@@ -1403,7 +1403,11 @@ pub(crate) fn parse_object_fields(obj: &str) -> Vec<(String, String)> {
         .trim_start_matches('{')
         .trim_end_matches('}')
         .trim();
-    split_top_level(inner, ',')
+    // Scope grammar is newline- OR comma-separated (props, channels, CVA maps).
+    // Comma-only split silently merged `default: {…}\nsize: {…}` into one field
+    // whose last value swallowed the rest — spinner emitted `--bw:'control-stroke' }`
+    // and dropped size rekeys. Treat both separators at depth 0.
+    split_top_level_fields(inner)
         .into_iter()
         .filter_map(|entry| {
             // Comments are stripped here too: EVERY caller reading a field name needs
@@ -1425,6 +1429,92 @@ pub(crate) fn parse_object_fields(obj: &str) -> Vec<(String, String)> {
             }
         })
         .collect()
+}
+
+/// Split object-field text on top-level `,` **or** newline. Nested `{}`/`[]`,
+/// strings, and comments are opaque — same discipline as [`split_top_level`].
+fn split_top_level_fields(s: &str) -> Vec<String> {
+    let mut parts = Vec::new();
+    let mut depth = 0i32;
+    let mut in_str: Option<char> = None;
+    let mut in_line_comment = false;
+    let mut in_block_comment = false;
+    let mut prev = '\0';
+    let mut cur = String::new();
+    for c in s.chars() {
+        if in_line_comment {
+            // Line comments end at newline; the newline is also a field separator
+            // only when depth is 0 and we are not mid-value (depth already 0).
+            if c == '\n' {
+                in_line_comment = false;
+                prev = c;
+                if depth == 0 && !cur.trim().is_empty() {
+                    parts.push(cur.trim().to_string());
+                    cur.clear();
+                } else {
+                    cur.push(c);
+                }
+                continue;
+            }
+            cur.push(c);
+            prev = c;
+            continue;
+        }
+        if in_block_comment {
+            cur.push(c);
+            if prev == '*' && c == '/' {
+                in_block_comment = false;
+                prev = '\0';
+                continue;
+            }
+            prev = c;
+            continue;
+        }
+        if in_str.is_none() && prev == '/' && (c == '/' || c == '*') {
+            if c == '/' {
+                in_line_comment = true;
+            } else {
+                in_block_comment = true;
+            }
+            cur.push(c);
+            prev = c;
+            continue;
+        }
+        prev = c;
+        match in_str {
+            Some(q) => {
+                cur.push(c);
+                if c == q {
+                    in_str = None;
+                }
+            }
+            None => match c {
+                '\'' | '"' => {
+                    in_str = Some(c);
+                    cur.push(c);
+                }
+                '{' | '[' => {
+                    depth += 1;
+                    cur.push(c);
+                }
+                '}' | ']' => {
+                    depth -= 1;
+                    cur.push(c);
+                }
+                ',' | '\n' if depth == 0 => {
+                    if !cur.trim().is_empty() {
+                        parts.push(cur.trim().to_string());
+                        cur.clear();
+                    }
+                }
+                _ => cur.push(c),
+            },
+        }
+    }
+    if !cur.trim().is_empty() {
+        parts.push(cur.trim().to_string());
+    }
+    parts
 }
 
 /// Lower the TS-object form of a `<variants>` body to the same `(selector-dsl,
@@ -1911,6 +2001,21 @@ fn channel_layout_decl(key: &str, value: &str) -> Option<String> {
         "width" | "height" | "min-width" | "min-height" | "max-width" | "max-height" => {
             Some(format!("{key}:{}", channel_value_css(value)))
         }
+        // Anatomy / host chrome (not custom props): used by e.g. `[hidden]: { display: 'none' }`.
+        "display" => {
+            let v = match value {
+                "none" | "block" | "inline" | "inline-block" | "flex" | "inline-flex" | "grid"
+                | "contents" | "hidden" => {
+                    if value == "hidden" {
+                        "none"
+                    } else {
+                        value
+                    }
+                }
+                _ => return None,
+            };
+            Some(format!("display:{v}"))
+        }
         _ => None,
     }
 }
@@ -1921,14 +2026,20 @@ fn channel_value_css(value: &str) -> String {
     if v.is_empty() {
         return String::new();
     }
-    // Already a CSS function / multi-token expression / keyword / length.
+    // Already a CSS function / multi-token expression / keyword / length / number.
+    // Bare numbers (`1`, `0.5`) and keywords (`auto`) must NOT become `var(--1)`.
     if v.starts_with("var(")
         || v.contains('(')
         || v.contains(' ')
         || v == "none"
         || v == "transparent"
         || v == "currentColor"
+        || v == "auto"
+        || v == "inherit"
+        || v == "initial"
+        || v == "unset"
         || v == "0"
+        || v.parse::<f64>().is_ok()
         || v.ends_with("px")
         || v.ends_with("rem")
         || v.ends_with("em")
@@ -3040,5 +3151,66 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
             !out.contains("var(--row.y)"),
             "an invalid var-ref never reaches CSS:\n{out}"
         );
+    }
+
+    #[test]
+    fn channels_newline_separated_fields_do_not_swallow_siblings() {
+        // Stdlib authors write channels: without commas between default/size
+        // (same field style as props). Comma-only split used to merge them.
+        let css = channels_object_to_css(
+            r#"{
+  default: { bw: 'control-stroke' }
+  size: {
+    sm: { bw: '1.5px' }
+    lg: { bw: '2.5px' }
+  }
+}"#,
+        );
+        assert!(
+            css.contains(":host{--bw:var(--control-stroke)}")
+                || css.contains(":host{--bw:var(--control-stroke);"),
+            "default must lower token → var(--…), no quotes:\n{css}"
+        );
+        assert!(
+            !css.contains("--bw:'control-stroke'") && !css.contains("--bw:'"),
+            "must not leave quoted token names in CSS:\n{css}"
+        );
+        assert!(
+            css.contains(":host([size='sm'])") && css.contains("1.5px"),
+            "size sm rekey must land:\n{css}"
+        );
+        assert!(
+            css.contains(":host([size='lg'])") && css.contains("2.5px"),
+            "size lg rekey must land:\n{css}"
+        );
+        // No leftover channels source leaked into declarations.
+        assert!(
+            !css.contains("size:") && !css.contains("default:"),
+            "must not leak object-field source into CSS:\n{css}"
+        );
+    }
+
+    #[test]
+    fn channels_switch_shape_lowers_all_axes() {
+        let css = channels_object_to_css(
+            r#"{
+  default: { 'sw-w': 'control-h-sm', 'sw-h': 'icon-size-md', 'sw-thumb': 'space-3' }
+  size: {
+    sm: { 'sw-w': 'control-h-xs', 'sw-h': 'icon-size-sm', 'sw-thumb': 'space-2_5' }
+    lg: { 'sw-w': 'space-7', 'sw-h': 'icon-size-lg', 'sw-thumb': 'icon-size-sm' }
+  }
+}"#,
+        );
+        for needle in [
+            "--sw-w:var(--control-h-sm)",
+            "--sw-h:var(--icon-size-md)",
+            "--sw-thumb:var(--space-3)",
+            ":host([size='sm'])",
+            "--sw-w:var(--control-h-xs)",
+            ":host([size='lg'])",
+            "--sw-w:var(--space-7)",
+        ] {
+            assert!(css.contains(needle), "missing `{needle}` in:\n{css}");
+        }
     }
 }

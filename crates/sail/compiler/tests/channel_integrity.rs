@@ -120,17 +120,32 @@ fn no_emitted_var_is_undeclared() {
     // Names a runtime `use:<action>` writes onto the element. They are
     // legitimately absent from tokens.css (a measurement, not a design
     // decision) and are referenced without a fallback on purpose.
-    const RUNTIME_WRITTEN: &[&str] = &[
-        "sail-tooltip-anchor",
-        "sail-dd-anchor",
-        "sail-hc-anchor",
-        "sail-popover-anchor",
-    ];
+    // Single source: sail_lint::tokens::CONVENTION_TOKENS + tip-describe geometry.
+    let runtime_written: std::collections::HashSet<&str> = sail_lint::tokens::CONVENTION_TOKENS
+        .iter()
+        .copied()
+        .chain([
+            // use:tipDescribe / tooltip geometry (action-owned, not in tokens.css)
+            "tt-top",
+            "tt-bottom",
+            "tt-left",
+            "tt-right",
+            "tt-tx",
+            "tt-arrow-top",
+            "tt-arrow-bottom",
+            "tt-arrow-left",
+            "tt-arrow-right",
+            "tt-arrow-ml",
+            "tt-arrow-mt",
+            // use:anchor width measurement (paired with anchor-left/top in CONVENTION)
+            "anchor-width",
+        ])
+        .collect();
 
     let mut dangling: Vec<String> = Vec::new();
     for (label, css) in [("contracts.css", CONTRACTS_CSS), ("element-skins.css", SKINS_CSS)] {
         for (name, has_fallback) in refs_with_fallback_flag(css) {
-            if has_fallback || declared.contains(&name) || RUNTIME_WRITTEN.contains(&name.as_str()) {
+            if has_fallback || declared.contains(&name) || runtime_written.contains(name.as_str()) {
                 continue;
             }
             dangling.push(format!("{label}: var(--{name})"));

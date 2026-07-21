@@ -12,6 +12,6 @@
     }
   }
 </scope>
-<button type="button" sx="font-body font-medium leading-none text-muted-foreground bg-transparent cursor-pointer whitespace-nowrap select-none py-(--tab-py) px-(--tab-px) border-0 border-b-2 border-b-transparent rounded-t-sm tap-highlight-none transition-colors duration-fast ease-out hover:text-foreground selected:text-foreground selected:font-semibold selected:border-b-tone focus:outline-solid focus:outline-ring-width focus:outline-tone-ring focus:outline-offset-ring-inset disabled:opacity-50 disabled:cursor-not-allowed">
+<button type="button" sx="font-body font-medium leading-none text-muted-foreground bg-transparent cursor-pointer whitespace-nowrap select-none text-(--tab-fs) py-(--tab-py) px-(--tab-px) border-0 border-b-2 border-b-transparent rounded-t-sm tap-highlight-none transition-colors duration-fast ease-out hover:text-foreground selected:text-foreground selected:font-semibold selected:border-b-tone focus:outline-solid focus:outline-ring-width focus:outline-tone-ring focus:outline-offset-ring-inset disabled:opacity-50 disabled:cursor-not-allowed">
   <slot></slot>
 </button>

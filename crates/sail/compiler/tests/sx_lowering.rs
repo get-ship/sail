@@ -302,6 +302,66 @@ fn group_required_and_group_invalid_lower_to_ancestor_attr() {
 }
 
 #[test]
+fn group_presence_attrs_are_closed_and_lower() {
+    // group-dismissible / group-open are presence attrs (not :hover state).
+    let out = pp(
+        r#"<div sx="group"><span sx="group-dismissible:inline group-open:block">x</span></div>"#,
+    );
+    assert!(
+        out.contains(".sail-grp[dismissible]") && out.contains("display:inline"),
+        "group-dismissible:inline → ancestor [dismissible]:\n{out}"
+    );
+    assert!(
+        out.contains(".sail-grp[open]") && out.contains("display:block"),
+        "group-open:block → ancestor [open]:\n{out}"
+    );
+}
+
+#[test]
+fn border_bw_var_ref_lowers_to_border_width_not_color() {
+    // Spinner: border-(--bw) must prefer border-width over border-color.
+    let out = pp(r#"<div sx="border-(--bw)">x</div>"#);
+    assert!(
+        out.contains("border-width:var(--bw)") || out.contains("border-width: var(--bw)"),
+        "border-(--bw) → border-width, not border-color:\n{out}"
+    );
+    assert!(
+        !out.contains("border-color:var(--bw)"),
+        "must not bind --bw as border-color:\n{out}"
+    );
+}
+
+#[test]
+fn checked_before_multi_prefix_chain() {
+    let out = pp(r#"<div sx="checked:before:bg-primary">x</div>"#);
+    // Native :checked and ARIA [aria-checked='true'] are both legal hosts.
+    assert!(
+        out.contains(":checked::before")
+            || out.contains("[aria-checked='true']::before")
+            || out.contains("[aria-checked=\"true\"]::before"),
+        "checked:before: must chain state + pseudo-element:\n{out}"
+    );
+    assert!(
+        out.contains("background-color:var(--primary)")
+            || out.contains("background-color:var(--primary);}"),
+        "checked:before:bg-primary paint:\n{out}"
+    );
+}
+
+#[test]
+fn text_fs_var_ref_lowers_to_font_size_not_color() {
+    let out = pp(r#"<div sx="text-(--tab-fs)">x</div>"#);
+    assert!(
+        out.contains("font-size:var(--tab-fs)") || out.contains("font-size: var(--tab-fs)"),
+        "text-(--tab-fs) → font-size:\n{out}"
+    );
+    assert!(
+        !out.contains("color:var(--tab-fs)"),
+        "must not bind --tab-fs as color:\n{out}"
+    );
+}
+
+#[test]
 fn content_empty_lowers_to_quoted_empty_string() {
     // Decorative ::before/::after bars need content:'' to paint. TW's
     // content-[''] is closed to the empty value only (no free string content).
