@@ -22,22 +22,6 @@
   }
 </scope>
 
-<style>
-  label { font-weight: var(--label-weight); }
-  label[hidden] { display: none; }
-  /* sm/lg share text-sm — baseline; md default is host sx text-base */
-  label[size='sm'],
-  label[size='lg'] { font-size: var(--text-sm); }
-
-  .req {
-    display: none;
-    color: var(--destructive);
-    margin-left: var(--space-1);
-    font-weight: var(--font-weight-bold);
-  }
-  label[required] .req { display: inline; }
-</style>
-
 <label sx="font-body tracking-normal text-foreground cursor-pointer text-base">
   <slot></slot>
   <span class="req" aria-hidden="true">*</span>

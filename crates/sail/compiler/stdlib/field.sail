@@ -20,32 +20,6 @@
   }
 </scope>
 
-<style>
-  /* residue lock: named slots + [invalid] CSS swap + svg stroke (tokenized; no bare leading/space/ring literals) */
-  .sail-field[hidden] { display: none; }
-
-  .sail-field .msg { margin-top: var(--space-1); }
-  .sail-field .hint,
-  .sail-field .error {
-    font-size: var(--text-xs);
-    line-height: var(--leading-snug);
-  }
-  .sail-field .hint { color: var(--muted-foreground); }
-  .sail-field .hint:empty { display: none; }
-  .sail-field .error {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-1);
-    color: var(--destructive);
-    font-weight: var(--font-weight-medium);
-  }
-  .sail-field .error svg { width: var(--icon-size-sm); height: var(--icon-size-sm); flex-shrink: 0; }
-
-  /* hint shows when valid, error shows when [invalid] — pure CSS swap. */
-  .sail-field:not([invalid]) .error { display: none; }
-  .sail-field[invalid] .hint { display: none; }
-</style>
-
 <column gap="1" sx="font-body" use:describedControl>
   <div class="label"><slot name="label"></slot></div>
   <div class="control"><slot></slot></div>

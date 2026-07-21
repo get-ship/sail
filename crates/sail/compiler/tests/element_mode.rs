@@ -131,17 +131,20 @@ fn ticker_loops_via_two_slots_and_pauses_under_reduced_motion() {
         "two independently-filled slots build the seamless-loop duplicate track: {}",
         el.structure_html
     );
-    assert!(el.skin_css.contains("var(--animate-ticker)"), "skin must reference shared token not embed @keyframes: {}", el.skin_css);
+    // Track/fx rules live in framework residues (relocated from author <style>)
+    // so the .sail source stays structure + sx only — same paint, shared sheet.
+    let skins = sail_compiler::stdlib::skins_css();
     assert!(
-        el.skin_css.contains("prefers-reduced-motion")
-            && el.skin_css.contains("animation-play-state: paused"),
-        "reduced motion pauses, it does not stop: {}",
-        el.skin_css
+        skins.contains("var(--animate-ticker)"),
+        "framework skin must reference shared token not embed @keyframes: {skins}"
     );
     assert!(
-        !el.skin_css.contains("animation: none"),
-        "must not hard-stop under reduced motion: {}",
-        el.skin_css
+        skins.contains("prefers-reduced-motion") && skins.contains("animation-play-state: paused"),
+        "reduced motion pauses, it does not stop: {skins}"
+    );
+    assert!(
+        !skins.contains("animation: none"),
+        "must not hard-stop under reduced motion: {skins}"
     );
     let attrs = el.manifest["attributes"].as_array().unwrap();
     assert!(attrs.iter().any(|a| a["name"] == "duration"), "{}", el.manifest);

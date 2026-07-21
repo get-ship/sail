@@ -11,8 +11,4 @@
   }
 </scope>
 
-<style>
-  .sail-tabs[orientation='vertical'] .sail-tab-panel { padding: 0 0 0 var(--space-4); }
-</style>
-
 <div sx="pt-4 min-w-0"><slot></slot></div>

@@ -18,21 +18,6 @@
   }
 </scope>
 
-<style>
-  .sail-ticker .track {
-    display: flex;
-    flex-wrap: nowrap;
-    width: max-content;
-    animation: var(--animate-ticker);
-  }
-  .sail-ticker[duration='fast'] .track { animation-duration: 16s; }
-  .sail-ticker[duration='slow'] .track { animation-duration: 32s; }
-  .sail-ticker[reverse] .track { animation-direction: reverse; }
-  @media (prefers-reduced-motion: reduce) {
-    .sail-ticker .track { animation-play-state: paused; }
-  }
-</style>
-
 <div sx="overflow-hidden">
   <div class="track">
     <span class="segment"><slot></slot></span>

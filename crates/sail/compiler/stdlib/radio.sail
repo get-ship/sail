@@ -16,16 +16,6 @@
   }
 </scope>
 
-<style>
-  .sail-radio {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-  .sail-radio[disabled] { cursor: not-allowed; opacity: 0.55; /* residue lock */ }
-  .sail-radio input { flex-shrink: 0; margin: 0; }
-</style>
-
 <label sx="font-body text-sm text-foreground cursor-pointer select-none">
   <input type="radio" /><span class="rlabel"><slot></slot></span>
 </label>

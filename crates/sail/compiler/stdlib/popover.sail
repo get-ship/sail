@@ -11,17 +11,4 @@
   }
 </scope>
 
-<style>
-  .sail-popover {
-    position: fixed;
-    inset: auto;
-    margin: 0;
-    left: var(--anchor-left);
-    top: var(--anchor-top);
-    min-width: 12rem; /* residue */
-    max-width: 22rem; /* residue */
-  }
-  .sail-popover::backdrop { background: transparent; }
-</style>
-
 <div popover use:anchor sx="p-3 text-foreground bg-background border border-border rounded-md shadow-md z-(--z-popover)"><slot></slot></div>

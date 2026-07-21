@@ -22,10 +22,6 @@
   }
 </scope>
 
-<style>
-  .sail-collapsible[disabled] summary { cursor: not-allowed; opacity: 0.5; }
-</style>
-
 <details use:detailsToggle use:detailsDisabled sx="block font-body">
   <summary class="trigger-wrap"><slot name="trigger"></slot></summary>
   <div class="content-wrap"><div class="content-inner" sx="px-4 py-3"><slot></slot></div></div>

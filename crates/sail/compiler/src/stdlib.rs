@@ -87,12 +87,21 @@ pub fn element(tag: &str) -> Option<&'static StdlibElement> {
     elements().iter().find(|e| e.tag == tag)
 }
 
+/// Residual L1 skins relocated out of `.sail` `<style>` blocks so element
+/// sources author only structure + sx + layout + capability `use:` (same
+/// invariants as L2+). Prefer deleting rules here when expressible via
+/// sx/layout/global contracts. Bundled into `element-skins.css` with any
+/// remaining per-element skins.
+const L1_RESIDUES_CSS: &str = include_str!("../stdlib/_residues.css");
+
 /// The concatenated stdlib element skins — the compiler's half of the
 /// framework stylesheet (the runtime's `LIGHT_CONTRACTS_CSS` is the other
 /// half). This is the SSOT: the served `sail.css` and the materialized
 /// `packages/sail/tokens/src/element-skins.css` both derive from here, and a
 /// drift test re-derives and compares. Each element contributes its skin
-/// once, under a header naming the tag.
+/// once, under a header naming the tag; residual rules (relocated from
+/// author `<style>`) follow so PE visuals stay identical without dual
+/// authoring surfaces.
 pub fn skins_css() -> String {
     let mut out = String::new();
     for el in elements() {
@@ -101,6 +110,12 @@ pub fn skins_css() -> String {
         }
         out.push_str(&format!("/* {} */\n", el.tag));
         out.push_str(el.out.skin_css.trim_end());
+        out.push_str("\n\n");
+    }
+    let residues = L1_RESIDUES_CSS.trim();
+    if !residues.is_empty() {
+        out.push_str("/* l1 residues (from stdlib/_residues.css) */\n");
+        out.push_str(residues);
         out.push_str("\n\n");
     }
     out.truncate(out.trim_end().len());

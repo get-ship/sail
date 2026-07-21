@@ -10,13 +10,4 @@
 <scope>
 </scope>
 
-<style>
-  .sail-tabs[orientation='vertical'] .sail-tab-list {
-    flex-direction: column;
-    align-items: stretch;
-    border-bottom: 0;
-    border-right: 1px solid var(--border);
-  }
-</style>
-
 <row align="stretch" gap="1" role="tablist" sx="border-b border-border"><slot></slot></row>

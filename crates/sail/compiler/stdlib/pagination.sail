@@ -18,14 +18,6 @@
   }
 </scope>
 
-<style>
-  .sail-pagination {
-    --pg-h: var(--control-h-md);
-    --pg-fs: var(--text-sm);
-  }
-  .sail-pagination[size='sm'] { --pg-h: var(--control-h-sm); --pg-fs: var(--text-xs); }
-  .sail-pagination[size='lg'] { --pg-h: var(--control-h-lg); --pg-fs: var(--text-base); }
-</style>
 <row inline nowrap align="center" gap="1" use:pagination role="navigation">
   <slot></slot>
 </row>
