@@ -211,6 +211,24 @@ fn residual_default_tone_fills_for_untoned_hosts() {
         "spinner untoned default must fill --tone-fg for .ring accent stroke"
     );
 
+    // switch host base: attr-absent :checked uses var(--tone) with no fallback
+    {
+        let Some(idx) = css.find(".sail-switch {") else {
+            panic!("missing .sail-switch host rule");
+        };
+        let rest = &css[idx..];
+        let end = rest.find('}').unwrap_or(rest.len());
+        let block = &rest[..end];
+        assert!(
+            block.contains("--tone: var(--primary)"),
+            "untoned switch host must set --tone: var(--primary) for PE checked paint: {block}"
+        );
+        assert!(
+            block.contains("--tone-on-fg: var(--primary-foreground)"),
+            "untoned switch host must set default thumb contrast: {block}"
+        );
+    }
+
     // switch must NOT re-write global --tone on branded tones
     for tone in ["primary", "info", "success", "warning", "destructive", "accent", "muted"] {
         let needle = format!(".sail-switch[tone='{tone}']");

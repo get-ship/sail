@@ -1619,6 +1619,8 @@ label { display: inline-block; }
     border: 1px solid var(--border-strong);
     border-radius: var(--shape-pill);
     -webkit-tap-highlight-color: transparent;
+    /* Attr-absent PE: :checked uses var(--tone) with no fallback. */
+    --tone: var(--primary);
     --tone-on-fg: var(--primary-foreground);
     --sw-w: var(--control-h-sm);
     --sw-h: var(--icon-size-md);
