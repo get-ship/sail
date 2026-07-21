@@ -22,7 +22,7 @@
     margin: 0;
     left: var(--anchor-left);
     top: var(--anchor-top);
-    min-width: 12rem;
+    min-width: 12rem; /* residue — 12rem/22rem NOT equal to panel-min/max tokens (180/320px); leave rem */
     max-width: 22rem;
     padding: var(--space-3);
     color: var(--foreground);
