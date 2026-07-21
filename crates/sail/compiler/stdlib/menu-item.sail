@@ -20,7 +20,7 @@
     padding: var(--space-2) var(--space-2_5);
     font-family: var(--font-body);
     font-size: var(--text-sm);
-    line-height: 1.2;
+    line-height: var(--leading-tight);
     color: var(--foreground);
     background: transparent;
     border: 0;
