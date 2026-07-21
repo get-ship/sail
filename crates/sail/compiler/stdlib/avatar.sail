@@ -21,6 +21,7 @@
 <style>
   .sail-avatar {
     position: relative;
+    /* residue: text-transform governed by channel; keep literal here, not in sx */
     align-items: center;
     justify-content: center;
     flex: none;
@@ -61,4 +62,4 @@
   }
 </style>
 
-<span use:avatar sx="font-body font-bold leading-none text-foreground uppercase overflow-hidden select-none align-middle"></span>
+<span use:avatar sx="font-body font-bold leading-none text-foreground overflow-hidden select-none align-middle"></span>

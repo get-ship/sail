@@ -410,10 +410,11 @@ label { display: inline-block; }
 
 /* avatar */
 .sail-avatar { display: inline-flex; }
-.sx-fontbody{font-family:var(--body-font)}.sx-fontbold{font-weight:var(--font-weight-bold)}.sx-leadingnone{line-height:var(--leading-none)}.sx-textforeground{color:var(--foreground)}.sx-uppercase{text-transform:uppercase}.sx-overflowhidden{overflow:hidden}.sx-selectnone{user-select:none}.sx-alignmiddle{vertical-align:middle}
+.sx-fontbody{font-family:var(--body-font)}.sx-fontbold{font-weight:var(--font-weight-bold)}.sx-leadingnone{line-height:var(--leading-none)}.sx-textforeground{color:var(--foreground)}.sx-overflowhidden{overflow:hidden}.sx-selectnone{user-select:none}.sx-alignmiddle{vertical-align:middle}
 
   .sail-avatar {
     position: relative;
+    /* residue: text-transform governed by channel; keep literal here, not in sx */
     align-items: center;
     justify-content: center;
     flex: none;
