@@ -2,7 +2,10 @@
   <field> — L1 language element (element mode). A vertical form-field stack:
   label → control → hint / error. Named slots (label / hint / error + the
   default control slot) project at compile time; hint↔error swap on [invalid]
-  is pure CSS. Bare tag lowers to <div class="sail-field">.
+  is pure CSS. Bare tag lowers to a layout column (`.sail-field`).
+
+  Host paint: layout owns stack+gap (`<column gap="1">`); typeface is sx
+  (`font-body`).
 
   Behavior rides use:field: assign ids to the hint/error regions and wire the
   first slotted control's aria-describedby to the active one (hint when valid,
@@ -18,13 +21,7 @@
 </scope>
 
 <style>
-  /* residue lock: layout flex + named slots + [invalid] CSS swap + svg stroke (tokenized; no bare leading/space/ring literals) */
-  .sail-field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    font-family: var(--font-body);
-  }
+  /* residue lock: named slots + [invalid] CSS swap + svg stroke (tokenized; no bare leading/space/ring literals) */
   .sail-field[hidden] { display: none; }
 
   .sail-field .msg { margin-top: var(--space-1); }
@@ -49,7 +46,7 @@
   .sail-field[invalid] .hint { display: none; }
 </style>
 
-<div use:field>
+<column gap="1" sx="font-body" use:field>
   <div class="label"><slot name="label"></slot></div>
   <div class="control"><slot></slot></div>
   <div class="hint msg"><slot name="hint"></slot></div>
@@ -57,4 +54,4 @@
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg>
     <span><slot name="error"></slot></span>
   </div>
-</div>
+</column>
