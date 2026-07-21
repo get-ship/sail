@@ -5703,11 +5703,6 @@ export interface ActionDoc {
 
 export const ACTIONS: ActionDoc[] = [
   {
-    "name": "alert",
-    "param": "void",
-    "summary": "Inline alert surface; renders a dismissable message with tone."
-  },
-  {
     "name": "anchor",
     "param": "AnchorPlacement | undefined",
     "summary": "Position a popper-like surface against an anchor element."
@@ -5770,7 +5765,7 @@ export const ACTIONS: ActionDoc[] = [
   {
     "name": "dismissControl",
     "param": "void",
-    "summary": "Click on a `[data-toast-close]` / `[data-dismiss]` descendant dismisses the host (event + remove)."
+    "summary": "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button.close`) dismisses the host (event + remove); toast → sail-toast-dismiss, else sail-dismiss gated on [dismissible]."
   },
   {
     "name": "dismissible",
@@ -5821,6 +5816,11 @@ export const ACTIONS: ActionDoc[] = [
     "name": "icon",
     "param": "void",
     "summary": "Resolve a glyph from the icon cache and stamp the matching <use href>."
+  },
+  {
+    "name": "liveRegion",
+    "param": "void",
+    "summary": "Sync role/aria-live from tone: warning|destructive → assertive alert; else polite status."
   },
   {
     "name": "maxWidth",

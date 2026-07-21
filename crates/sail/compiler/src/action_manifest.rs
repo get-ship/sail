@@ -73,12 +73,6 @@ pub struct ActionEntry {
 /// updated. That is the bar.
 pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
-        name: "alert",
-        param: "void",
-        summary: "Inline alert surface; renders a dismissable message with tone.",
-        auto_import: true,
-    },
-    ActionEntry {
         name: "anchor",
         param: "AnchorPlacement | undefined",
         summary: "Position a popper-like surface against an anchor element.",
@@ -153,7 +147,7 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "dismissControl",
         param: "void",
-        summary: "Click on a `[data-toast-close]` / `[data-dismiss]` descendant dismisses the host (event + remove).",
+        summary: "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button.close`) dismisses the host (event + remove); toast → sail-toast-dismiss, else sail-dismiss gated on [dismissible].",
         auto_import: true,
     },
     ActionEntry {
@@ -214,6 +208,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "icon",
         param: "void",
         summary: "Resolve a glyph from the icon cache and stamp the matching <use href>.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "liveRegion",
+        param: "void",
+        summary: "Sync role/aria-live from tone: warning|destructive → assertive alert; else polite status.",
         auto_import: true,
     },
     ActionEntry {
@@ -350,12 +350,12 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// this — the table is the single source, the constant is a derived
 /// view.
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
-    "alert", "anchor", "autoDismiss", "autosize", "avatar", "cellPad",
+    "anchor", "autoDismiss", "autosize", "avatar", "cellPad",
     "chromeOffset", "clickOutside", "codeBlock", "combobox",
     "contextMenu", "detailsDisabled", "detailsToggle", "dismissControl",
     "dismissible", "dropzone", "emptyState", "errorBoundary",
     "errorState", "eventSpan", "field", "gridTracks", "hoverCard",
-    "icon", "maxWidth", "menu", "pagination", "pin", "portEdge",
+    "icon", "liveRegion", "maxWidth", "menu", "pagination", "pin", "portEdge",
     "pressable", "pressed", "radioGroup", "rangeFill", "rect", "spotlight",
     "swatch", "tabs",
     "targetCursor", "themePicker", "toggleGroup", "tooltip",
@@ -404,8 +404,8 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
 ///   "kind": "actions",
 ///   "version": 1,
 ///   "actions": [
-///     { "name": "alert", "param": "void", "autoImport": true,
-///       "summary": "Inline alert surface; …" },
+///     { "name": "anchor", "param": "AnchorPlacement | undefined", "autoImport": true,
+///       "summary": "Position a popper-like surface…" },
 ///     …
 ///   ]
 /// }
