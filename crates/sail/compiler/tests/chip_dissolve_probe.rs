@@ -56,6 +56,17 @@ fn chip_compiles_with_cva_and_no_residue_matrix() {
 }
 
 #[test]
+fn residues_file_has_no_element_sections() {
+    // Goal bar: residual element skins must not live in _residues.css.
+    // Named unexpressibles (if any) live in contracts, not this dump.
+    let residues = include_str!("../stdlib/_residues.css");
+    assert!(
+        !residues.contains("/* --- ") && !residues.contains("(relocated from stdlib/"),
+        "element residual sections must be gone from _residues.css"
+    );
+}
+
+#[test]
 fn chip_residue_section_burned() {
     let residues = include_str!("../stdlib/_residues.css");
     assert!(

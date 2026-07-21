@@ -20,7 +20,7 @@
   }
 </scope>
 
-<div use:themeSelect>
+<div use:themeSelect sx="inline-flex">
   <button class="sail-theme-trigger" type="button" popovertarget="sail-theme-panel" aria-label="Choose theme">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="13.5" cy="6.5" r="1.5"></circle>
