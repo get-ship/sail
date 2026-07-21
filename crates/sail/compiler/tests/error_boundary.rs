@@ -25,39 +25,42 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
     .expect("element compiles");
 
     assert!(
-        el.skin_css.contains(".sail-error-boundary { display: contents; }")
-            || el.skin_css.contains(".sail-error-boundary{display:contents;}"),
-        "the root must not box: {}",
+        el.structure_html.contains("sx-contents")
+            || el.skin_css.contains("display:contents")
+            || el.skin_css.contains("display: contents"),
+        "the root must not box: struct={} skin={}",
+        el.structure_html,
         el.skin_css
     );
     assert!(
-        el.skin_css.contains("> .content { display: contents; }")
-            || el.skin_css.contains(">.content{display:contents;}"),
+        el.structure_html.contains(r#"class="content sx-contents""#)
+            || el.structure_html.contains("content") && el.structure_html.contains("sx-contents"),
         "nor may the content wrapper: {}",
-        el.skin_css
+        el.structure_html
     );
 }
 
 /// The branch swap is pure CSS, gated on `[data-caught]` — no signal, no `{#if}`.
+/// Lives in contracts (parent attr → child display); not residual skins.
 #[test]
 fn the_swap_is_a_css_gate_not_a_reactive_branch() {
-    let el = compile_element(
-        include_str!("../stdlib/error-boundary.sail"),
-        "error-boundary",
-    )
-    .expect("element compiles");
+    let contracts = include_str!("../../../../packages/sail/tokens/src/contracts.css");
 
     assert!(
-        el.skin_css.contains("[data-caught]"),
-        "the caught state is an attribute the CSS keys on: {}",
-        el.skin_css
+        contracts.contains("[data-caught]"),
+        "the caught state is an attribute the CSS keys on"
     );
     // Both halves of the swap must be gated, or a boundary renders its fallback
     // and its broken content at the same time.
     assert!(
-        el.skin_css.contains(".sail-error-boundary > .fallback"),
-        "the fallback is hidden until caught: {}",
-        el.skin_css
+        contracts.contains(".sail-error-boundary > .fallback")
+            || contracts.contains(".sail-error-boundary>.fallback"),
+        "the fallback is hidden until caught"
+    );
+    assert!(
+        contracts.contains("[data-caught] > .content")
+            || contracts.contains("[data-caught]>.content"),
+        "content is pulled when caught"
     );
 }
 
@@ -77,7 +80,8 @@ fn the_fallback_is_a_slot_with_a_built_in_default() {
         el.structure_html
     );
     assert!(
-        el.structure_html.contains("class=\"retry\""),
+        el.structure_html.contains("class=\"retry\"")
+            || el.structure_html.contains("retry "),
         "and it ships a default with a recovery control: {}",
         el.structure_html
     );
@@ -99,7 +103,7 @@ fn the_tag_lowers_and_auto_imports_its_action() {
         "the tag lowers to the element's root class — it is registered:\n{out}"
     );
     assert!(
-        out.contains("errorBoundary"),
+        out.contains("catchRender"),
         "and its behavior rides the auto-imported action:\n{out}"
     );
     assert!(

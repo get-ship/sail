@@ -135,7 +135,7 @@ fn no_skin_hardcodes_a_channel_governed_property() {
 fn literal_border_widths_in_skins_do_not_increase() {
     // Census lives in framework residual skins now — author `.sail` sources no
     // longer carry `<style>` (relocated to `stdlib/_residues.css`).
-    const BASELINE: usize = 9; // lowered after mid-weight L1 residue burn
+    const BASELINE: usize = 8; // lowered after empty/error/combobox/tooltip residue burn
 
     let mut count = 0usize;
     let residues = concat!(env!("CARGO_MANIFEST_DIR"), "/stdlib/_residues.css");
