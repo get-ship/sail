@@ -18,6 +18,7 @@
 </scope>
 
 <style>
+  /* residue lock: layout flex + named slots + [invalid] CSS swap + svg stroke (tokenized; no bare leading/space/ring literals) */
   .sail-field {
     display: flex;
     flex-direction: column;
