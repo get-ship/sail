@@ -27,6 +27,7 @@
     font-size: var(--text-sm);
   }
   .sail-breadcrumb li { display: inline-flex; align-items: center; gap: var(--space-2); }
+  /* separators are ::before anatomy (not sx content) */
   .sail-breadcrumb li:not(:first-child)::before {
     content: '/';
     color: var(--muted-foreground);
@@ -39,7 +40,7 @@
     transition: color var(--duration-fast) var(--ease-out);
   }
   .sail-breadcrumb a:hover { color: var(--foreground); }
-  .sail-breadcrumb a:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 2px; }
+  .sail-breadcrumb a:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: var(--ring-offset); }
   .sail-breadcrumb [aria-current='page'] { color: var(--foreground); font-weight: var(--font-weight-medium); }
 </style>
 
