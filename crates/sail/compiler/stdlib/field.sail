@@ -7,11 +7,11 @@
   Host paint: layout owns stack+gap (`<column gap="1">`); typeface is sx
   (`font-body`).
 
-  Behavior rides use:field: assign ids to the hint/error regions and wire the
-  first slotted control's aria-describedby to the active one (hint when valid,
-  error when [invalid]) + set aria-invalid. Faithful to the sail-field twin;
-  label↔control association (for/id) stays the author's responsibility, exactly
-  as the twin.
+  Behavior rides use:describedControl: assign ids to the hint/error regions and
+  wire the first slotted control's aria-describedby to the active one (hint when
+  valid, error when [invalid]) + set aria-invalid. Faithful to the sail-field
+  twin; label↔control association (for/id) stays the author's responsibility,
+  exactly as the twin.
 -->
 
 <scope>
@@ -46,7 +46,7 @@
   .sail-field[invalid] .hint { display: none; }
 </style>
 
-<column gap="1" sx="font-body" use:field>
+<column gap="1" sx="font-body" use:describedControl>
   <div class="label"><slot name="label"></slot></div>
   <div class="control"><slot></slot></div>
   <div class="hint msg"><slot name="hint"></slot></div>

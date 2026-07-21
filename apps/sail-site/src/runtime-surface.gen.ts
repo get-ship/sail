@@ -767,6 +767,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
+    "name": "describedControl",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:describedControl` — form control ↔ hint/error association for any host with `.hint` / `.error` / `.control` anatomy. The hint↔error visibility swap is pure CSS; this action wires accessibility: give the hint and error regions stable ids, then point the first slotted control's aria-describedby at the active region (hint when valid, error when [invalid]) and set aria-invalid to match. Re-wires when [invalid] toggles or the control changes. Written once — no per-instance controller, compiles away. The L1 `<field>` stamps this.",
+    "loc": "src/actions/described-control.ts:15"
+  },
+  {
+    "subpath": ".",
     "name": "detachBoundary",
     "kind": "function",
     "signature": "(host: HTMLElement): void",
@@ -908,14 +916,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(host: HTMLElement, methods: Record<string, (...args: never[]) => unknown>): void",
     "doc": "Attach `methods` to `host` and register a cleanup to delete them on the next scope disposal. Free-function form of `host.expose`.",
     "loc": "src/host-api.ts:66"
-  },
-  {
-    "subpath": ".",
-    "name": "field",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:field` — the L1 `<field>` element's behavior. The vertical stack and the hint↔error swap are pure CSS; this action wires accessibility: give the hint and error regions stable ids, then point the first slotted control's aria-describedby at the active region (hint when valid, error when [invalid]) and set aria-invalid to match. Re-wires when [invalid] toggles or the control changes. Written once — no per-instance controller, compiles away.",
-    "loc": "src/actions/field.ts:13"
   },
   {
     "subpath": ".",

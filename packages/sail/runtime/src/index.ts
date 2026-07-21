@@ -182,7 +182,7 @@ export {
   emptyState,
   errorBoundary,
   errorState,
-  field,
+  describedControl,
   hoverCard,
   menu,
   pagination,
