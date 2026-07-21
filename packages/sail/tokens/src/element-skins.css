@@ -1318,13 +1318,7 @@ label { display: inline-block; }
   .sail-radio input { flex-shrink: 0; margin: 0; }
 
 /* radio-group */
-
-  .sail-radio-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    font-family: var(--font-body);
-  }
+.sx-fontbody{font-family:var(--body-font)}.sail-col{display:flex;flex-direction:column;min-width:0}.sail-col>*{min-width:0}.sail-g-2{gap:var(--space-2)}.sail-ai-stretch{align-items:stretch}
 
 /* tabs */
 

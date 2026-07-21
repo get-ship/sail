@@ -1,12 +1,15 @@
 <!--
   <radio-group> — L1 language element (element mode). A vertical group of
-  <radio> options. Bare tag lowers to <div class="sail-radio-group">. Selection,
-  arrow-key roving, focus, and form participation are the BROWSER's: use:radioGroup
-  gives every child radio's <input> the shared name (so native single-select +
-  arrow navigation kick in), reflects the group's `value` to the checked radio,
-  writes a hidden <input> for the form, and dispatches sail-change. disabled /
-  aria-label / required propagate from the group. Faithful to the sail-radio-group
-  twin, rebuilt on native radios.
+  <radio> options. Bare tag lowers to a layout column (`.sail-radio-group`).
+  Selection, arrow-key roving, focus, and form participation are the BROWSER's:
+  use:radioGroup gives every child radio's <input> the shared name (so native
+  single-select + arrow navigation kick in), reflects the group's `value` to the
+  checked radio, writes a hidden <input> for the form, and dispatches sail-change.
+  disabled / aria-label / required propagate from the group. Faithful to the
+  sail-radio-group twin, rebuilt on native radios.
+
+  Host paint: layout owns stack+gap (`<column gap="2">`); typeface is sx
+  (`font-body`). No author `<style>` — first stdlib element at zero raw skin.
 -->
 
 <scope>
@@ -21,13 +24,4 @@
   }
 </scope>
 
-<style>
-  .sail-radio-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    font-family: var(--font-body);
-  }
-</style>
-
-<div use:radioGroup role="radiogroup"><slot></slot></div>
+<column gap="2" sx="font-body" use:radioGroup role="radiogroup"><slot></slot></column>
