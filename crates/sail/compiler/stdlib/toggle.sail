@@ -23,7 +23,7 @@
     font-family: var(--font-body);
     font-size: var(--tg-fs, var(--text-sm));
     font-weight: var(--font-weight-medium);
-    line-height: 1;
+    line-height: var(--leading-none);
     color: var(--foreground);
     background: var(--background);
     border: 1px solid var(--border);
