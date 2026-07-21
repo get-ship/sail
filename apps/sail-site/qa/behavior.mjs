@@ -45,7 +45,14 @@ const CEM_MATCH = CEM_TEXT.match(/export const COMPONENTS_CATALOG = ([\s\S]*?) a
 if (!CEM_MATCH) throw new Error('could not parse components.gen.ts')
 const CEM = eval('(' + CEM_MATCH[1] + ')')
 
-const CAT_MAP_TEXT = readFileSync(join(APP_ROOT, 'src/sail-catalog/category-map.ts'), 'utf8')
+// Category map is optional — site refactors have moved/removed it. Missing
+// map ⇒ empty hidden set (probe all CEM public tags).
+let CAT_MAP_TEXT = ''
+try {
+  CAT_MAP_TEXT = readFileSync(join(APP_ROOT, 'src/sail-catalog/category-map.ts'), 'utf8')
+} catch {
+  CAT_MAP_TEXT = ''
+}
 const HIDDEN = new Set(
   [...CAT_MAP_TEXT.matchAll(/'(sail-[a-z-]+)':\s*true/g)].map(m => m[1]),
 )
@@ -154,6 +161,15 @@ const probeSource = `
   }
   globalThis.__sel = sel
   globalThis.__walk = walk
+  // L1 light-DOM classed hosts (.sail-chip) + pack custom elements.
+  globalThis.__findHost = (root, t) => {
+    if (!root || !t) return null
+    const byTag = root.querySelector(t)
+    if (byTag) return byTag
+    const bare = t.startsWith('sail-') ? t.slice('sail-'.length) : t
+    return root.querySelector('.sail-' + CSS.escape(bare))
+      || root.querySelector('.' + CSS.escape(t))
+  }
 `
 
 // ── Result aggregation ────────────────────────────────────────────────────
@@ -181,7 +197,7 @@ async function sampleSurface(page, tag) {
   return page.evaluate(({ tag }) => {
     const stage = document.querySelector('.detail-stage')
     if (!stage) return null
-    const host = stage.querySelector(tag)
+    const host = globalThis.__findHost?.(stage, tag) || stage.querySelector(tag)
     if (!host) return null
     const addCand = (el, acc) => {
       if (!(el instanceof HTMLElement)) return
@@ -517,7 +533,15 @@ async function probeOne(browser, tag) {
     await page.goto(`${BASE}/components/${tag}`, { waitUntil: 'domcontentloaded', timeout: 25000 })
     await page.addScriptTag({ content: probeSource })
     await page.waitForFunction(
-      ({ tag }) => !!document.querySelector('.detail-stage')?.querySelector(tag),
+      ({ tag }) => {
+        const stage = document.querySelector('.detail-stage')
+          || document.querySelector('[data-test="detail-stage"]')
+        if (!stage) return false
+        if (stage.querySelector(tag)) return true
+        const bare = tag.startsWith('sail-') ? tag.slice('sail-'.length) : tag
+        return !!(stage.querySelector('.sail-' + CSS.escape(bare))
+          || stage.querySelector('.' + CSS.escape(tag)))
+      },
       { tag }, { timeout: 8000 },
     ).catch(() => null)
     await page.waitForTimeout(700)

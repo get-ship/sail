@@ -360,8 +360,8 @@ export default controller(() => {
   </footer>
 </dialog>`,
 
-  tabs: `<tabs variant="pill" tone="primary">
-  <tab-list>
+  tabs: `<tabs tone="primary">
+  <tab-list variant="pill">
     <tab>Overview</tab>
     <tab>Activity</tab>
     <tab>Settings</tab>

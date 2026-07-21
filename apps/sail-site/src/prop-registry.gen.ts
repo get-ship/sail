@@ -47,12 +47,12 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "tone",
-      "type": "default · primary · info · success · warning · destructive · accent · muted",
+      "type": "default · primary · accent · info · success · warning · destructive · muted",
       "default": "default"
     },
     {
       "name": "size",
-      "type": "xs · sm · md · lg · xl",
+      "type": "md · xs · sm · lg · xl",
       "default": "md"
     },
     {
@@ -69,12 +69,12 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "variant",
-      "type": "solid · soft · outline",
-      "default": "solid"
+      "type": "soft · solid · outline",
+      "default": "soft"
     },
     {
       "name": "size",
-      "type": "sm · md · lg",
+      "type": "md · sm · lg",
       "default": "md"
     },
     {
@@ -133,7 +133,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "size",
-      "type": "sm · md · lg",
+      "type": "md · sm · lg",
       "default": "md"
     },
     {
@@ -210,7 +210,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "size",
-      "type": "sm · md · lg",
+      "type": "md · sm · lg",
       "default": "md"
     },
     {
@@ -234,7 +234,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "size",
-      "type": "sm · md · lg",
+      "type": "md · sm · lg",
       "default": "md"
     },
     {
@@ -275,7 +275,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "size",
-      "type": "xs · sm · md · lg · xl",
+      "type": "md · xs · sm · lg · xl",
       "default": "md"
     },
     {
@@ -287,7 +287,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "label": [
     {
       "name": "size",
-      "type": "sm · md · lg",
+      "type": "md · sm · lg",
       "default": "md"
     },
     {
@@ -311,7 +311,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "navbar": [
     {
       "name": "placement",
-      "type": "top · rail · bottom",
+      "type": "top · bottom · rail",
       "default": "top"
     },
     {
@@ -474,7 +474,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "spinner": [
     {
       "name": "size",
-      "type": "xs · sm · md · lg",
+      "type": "md · xs · sm · lg",
       "default": "md"
     },
     {
@@ -522,6 +522,18 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "false"
     }
   ],
+  "tab-list": [
+    {
+      "name": "sticky",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "variant",
+      "type": "line · pill · enclosed",
+      "default": "line"
+    }
+  ],
   "tab-panel": [
     {
       "name": "name",
@@ -534,11 +546,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "active",
       "type": "string",
       "default": ""
-    },
-    {
-      "name": "variant",
-      "type": "line · pill · enclosed",
-      "default": "line"
     },
     {
       "name": "size",
@@ -554,11 +561,6 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "orientation",
       "type": "horizontal · vertical",
       "default": "horizontal"
-    },
-    {
-      "name": "sticky",
-      "type": "bool",
-      "default": "false"
     }
   ],
   "theme-picker": [

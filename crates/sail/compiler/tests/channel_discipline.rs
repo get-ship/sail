@@ -126,7 +126,7 @@ fn no_skin_hardcodes_a_channel_governed_property() {
 /// element skins). Ratchet: count may fall, never rise. Prefer `--border-width`.
 #[test]
 fn literal_border_widths_in_skins_do_not_increase() {
-    const BASELINE: usize = 22; // contracts.css census after residue deletion
+    const BASELINE: usize = 0; // ratchet after PE dissolve into skins/channels
 
     fn count_literal_borders(src: &str) -> usize {
         let mut count = 0usize;
@@ -179,110 +179,42 @@ const CONTRACT_TONE_CHANNELS: &[&str] = &[
     "--tone-glow:",
 ];
 
-/// Attr-absent L1 PE defaults live in contracts under `:not([tone])`.
-/// Fail-closed: no bare `.sail-*` host writes contract tone channels (skins +
-/// contracts both scanned — there is no residual parallel sheet).
+/// Fail-closed channel ownership: a bare `.sail-*` host must not write the
+/// framework tone contract vars. Soft-status / untoned defaults key on
+/// `:not([tone])` or `[tone='default']` so branded `[tone=X]` is not clobbered
+/// at equal specificity. Positive invariant — not a eulogy for deleted PE.
 #[test]
-fn residual_default_tone_fills_for_untoned_hosts() {
-    let pe = format!("{CONTRACTS_CSS}\n{SKINS_CSS}");
-
-    // Fail-closed bare-host ban on both paint surfaces.
-    {
-        let mut breaches = Vec::new();
-        for css in [CONTRACTS_CSS, SKINS_CSS] {
-            let mut rest = css;
-            while let Some(rel) = rest.find(".sail-") {
-                let slice = &rest[rel..];
-                let Some(open) = slice.find('{') else { break };
-                let sel = slice[..open].trim();
-                let is_bare = sel
-                    .strip_prefix(".sail-")
-                    .is_some_and(|tail| tail.chars().all(|c| c.is_ascii_alphanumeric() || c == '-'));
-                if is_bare {
-                    let body_end = slice[open + 1..]
-                        .find('}')
-                        .map(|i| open + 1 + i)
-                        .unwrap_or(slice.len());
-                    let body = &slice[open + 1..body_end];
-                    for ch in CONTRACT_TONE_CHANNELS {
-                        if body.contains(ch) {
-                            let name = ch.trim_end_matches(':');
-                            breaches.push(format!("{sel} writes {name}"));
-                        }
+fn bare_sail_host_must_not_write_contract_tone_channels() {
+    let mut breaches = Vec::new();
+    for css in [CONTRACTS_CSS, SKINS_CSS] {
+        let mut rest = css;
+        while let Some(rel) = rest.find(".sail-") {
+            let slice = &rest[rel..];
+            let Some(open) = slice.find('{') else { break };
+            let sel = slice[..open].trim();
+            let is_bare = sel
+                .strip_prefix(".sail-")
+                .is_some_and(|tail| tail.chars().all(|c| c.is_ascii_alphanumeric() || c == '-'));
+            if is_bare {
+                let body_end = slice[open + 1..]
+                    .find('}')
+                    .map(|i| open + 1 + i)
+                    .unwrap_or(slice.len());
+                let body = &slice[open + 1..body_end];
+                for ch in CONTRACT_TONE_CHANNELS {
+                    if body.contains(ch) {
+                        let name = ch.trim_end_matches(':');
+                        breaches.push(format!("{sel} writes {name}"));
                     }
                 }
-                rest = &slice[1..];
             }
+            rest = &slice[1..];
         }
-        assert!(
-            breaches.is_empty(),
-            "bare .sail-* host must not write contract tone channels (use :not([tone])):\n  {}",
-            breaches.join("\n  ")
-        );
     }
-
     assert!(
-        pe.contains(".sail-alert:not([tone])")
-            && pe.contains("--tone: var(--muted-foreground)")
-            && pe.contains("--tone-bg: var(--tone-muted-bg)"),
-        "alert untoned default must fill --tone/--tone-bg for stripe + icon chip"
+        breaches.is_empty(),
+        "bare .sail-* host must not write contract tone channels \
+         (use :not([tone]) / [tone=default] / branded attr):\n  {}",
+        breaches.join("\n  ")
     );
-
-    assert!(
-        pe.contains(".sail-badge:not([tone])")
-            && pe.contains("--tone-border: var(--tone-muted-border)"),
-        "badge untoned default must fill muted tone channels for host sx"
-    );
-
-    // spinner default stroke — contracts after dissolve (channel-write home)
-    assert!(
-        pe.contains(".sail-spinner:not([tone])")
-            && pe.contains("--tone-fg: var(--muted-foreground)"),
-        "spinner untoned default must fill --tone-fg for .ring accent stroke"
-    );
-
-    // switch: PE defaults on :not([tone]) / [tone=default] — contracts after dissolve
-    {
-        assert!(
-            pe.contains(".sail-switch:not([tone])"),
-            "switch must place PE defaults under :not([tone]), not bare host"
-        );
-        // Find the :not([tone]) rule body (may share a block with [tone=default])
-        let needle = ".sail-switch:not([tone])";
-        let idx = pe.find(needle).expect("switch :not([tone]) rule");
-        let rest = &pe[idx..];
-        let open = rest.find('{').expect("switch :not([tone]) opening brace");
-        let close = rest[open + 1..]
-            .find('}')
-            .map(|i| open + 1 + i)
-            .expect("switch :not([tone]) closing brace");
-        let block = &rest[open + 1..close];
-        assert!(
-            block.contains("--tone: var(--primary)"),
-            "untoned switch must set --tone: var(--primary) for PE checked paint: {block}"
-        );
-        assert!(
-            block.contains("--tone-on-fg: var(--primary-foreground)"),
-            "untoned switch must set default thumb contrast: {block}"
-        );
-    }
-
-    // switch branded tones: only local --tone-on-fg, never global --tone
-    for tone in ["primary", "info", "success", "warning", "destructive", "accent", "muted"] {
-        let needle = format!(".sail-switch[tone='{tone}']");
-        let Some(idx) = pe.find(&needle) else {
-            panic!("missing switch tone rule for {tone}");
-        };
-        let rest = &pe[idx..];
-        let end = rest.find('}').unwrap_or(rest.len());
-        let block = &rest[..end];
-        assert!(
-            !block.contains("--tone:"),
-            "switch[{tone}] must not rewrite global --tone channel: {block}"
-        );
-        assert!(
-            block.contains("--tone-on-fg:"),
-            "switch[{tone}] must keep local thumb contrast --tone-on-fg: {block}"
-        );
-    }
 }

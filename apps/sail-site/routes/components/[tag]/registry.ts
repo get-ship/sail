@@ -546,15 +546,19 @@ export const DETAILS: Record<string, DetailEntry> = {
   // ── Navigation ───────────────────────────────────────────────────────
   tabs: lang('tabs', 'tabs', {
     blurb:
-      'Tabs with the full keyboard suite — arrows rove, Home/End jump, panels wire their ARIA automatically. Three looks via one attribute.',
+      'Tabs with the full keyboard suite — arrows rove, Home/End jump, panels wire their ARIA automatically. Three looks via variant on <tab-list>.',
     variants: ['line', 'pill', 'enclosed'],
     variantAttr: 'variant',
     props: [
-      { name: 'variant', desc: 'the look of the tab list', type: 'line · pill · enclosed' },
       { name: 'active', desc: 'initially selected tab', type: 'string' },
       { name: 'size', desc: 'tab height and text', type: 'sm · md · lg' },
       { name: 'tone', desc: 'accent colour token', type: TONES },
       { name: 'orientation', desc: 'stack the list vertically', type: 'horizontal · vertical' },
+      {
+        name: '<tab-list variant>',
+        desc: 'the look of the tab strip — line · pill · enclosed (lives on the strip, not <tabs>)',
+        type: 'line · pill · enclosed',
+      },
     ],
   }),
   breadcrumb: lang('breadcrumb', 'breadcrumb', {

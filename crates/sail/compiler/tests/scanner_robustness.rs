@@ -37,10 +37,22 @@ fn multibyte_in_props_position_is_a_diagnostic_not_a_panic() {
 }
 
 #[test]
-fn multibyte_in_variants_position_is_a_diagnostic_not_a_panic() {
-    let src = "<scope>\n  variants: {\n    … tone: { solid: 'bg' }\n  }\n</scope>\n<div>hi</div>";
-    let err = compile_src(src).expect_err("… is not an axis name");
+fn multibyte_in_cva_axis_position_is_a_diagnostic_not_a_panic() {
+    // Multibyte junk as a props field name must diagnose, not panic.
+    let src = "<scope>\n  props: {\n    …: { solid: 'bg' }\n  }\n</scope>\n<div>hi</div>";
+    let err = compile_src(src).expect_err("… is not a field name");
     assert!(err.message.contains("…"), "names the offending char: {}", err.message);
+}
+
+#[test]
+fn scope_variants_field_is_rejected() {
+    let src = "<scope>\n  variants: {\n    tone: { solid: 'bg' }\n  }\n</scope>\n<div>hi</div>";
+    let err = compile_src(src).expect_err("variants: dual path killed");
+    assert!(
+        err.message.contains("variants:") && err.message.contains("CVA-in-props"),
+        "must reject variants: and name CVA-in-props: {}",
+        err.message
+    );
 }
 
 #[test]

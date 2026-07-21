@@ -74,6 +74,10 @@ GEMINI.md
 .agents/
 skills-lock.json
 
+# Local worktree junk / cost benches — not product
+scratch/
+.l1cost/
+
 # bundle-cost.mjs scratch
 apps/sail-site/.bundle-cost/
 .archive/

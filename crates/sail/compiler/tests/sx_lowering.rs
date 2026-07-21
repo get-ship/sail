@@ -104,6 +104,21 @@ fn layout_keyword_gap_lowers_to_gap_css() {
 }
 
 #[test]
+fn font_label_weight_var_ref_lowers_to_font_weight() {
+    // Label-weight channel: TW-shaped font-(--label-weight) must emit
+    // font-weight (not font-family) via shared-name var-ref disambiguation.
+    let out = pp(r#"<label sx="font-(--label-weight)">x</label>"#);
+    assert!(
+        out.contains("font-weight:var(--label-weight)"),
+        "font-(--label-weight) must bind font-weight to --label-weight:\n{out}"
+    );
+    assert!(
+        !out.contains("font-family:var(--label-weight)"),
+        "must not bind the weight channel to font-family:\n{out}"
+    );
+}
+
+#[test]
 fn radius_md_lowers_to_radius_var() {
     let out = pp(r#"<div sx="rounded-md">x</div>"#);
     assert!(
@@ -126,6 +141,26 @@ fn p0_emits_zero_padding_literal() {
     assert!(
         out.contains(".sx-p0{padding:0}"),
         "p-0 must use the literal 0 (no --space-0):\n{out}"
+    );
+}
+
+#[test]
+fn z_numeric_steps_lower_to_unitless_index() {
+    // TW-shaped local stack (joined toggles): z-1 / z-2 are bare integers,
+    // not phantom var(--z-1). Named elevation tokens still spend --z-*.
+    let out = pp(r#"<div sx="relative z-1 pressed:z-1 focus:z-2">x</div>"#);
+    assert!(
+        out.contains("z-index:1") && out.contains("z-index:2"),
+        "numeric z steps must be unitless:\n{out}"
+    );
+    assert!(
+        !out.contains("var(--z-1)") && !out.contains("var(--z-2)"),
+        "numeric z must not invent token vars:\n{out}"
+    );
+    let named = pp(r#"<div sx="z-popover">x</div>"#);
+    assert!(
+        named.contains("z-index:var(--z-popover)"),
+        "named elevation still uses the token var:\n{named}"
     );
 }
 
@@ -180,6 +215,104 @@ fn sx_with_state_prefix_lowers_to_state_pseudo_class() {
     assert!(
         out.contains(".sx-hover-bgmuted:hover{background-color:var(--muted)}"),
         "hover:bg-muted CSS must scope to :hover:\n{out}"
+    );
+}
+
+#[test]
+fn sx_with_before_prefix_lowers_to_pseudo_element() {
+    // before:bg-muted → atomic class scoped to ::before (same class-on-host
+    // shape as hover:, different pseudo attachment).
+    let out = pp(r#"<div sx="before:bg-muted">x</div>"#);
+    assert!(
+        out.contains(r#"class="sx-before-bgmuted""#),
+        "before:bg-muted must lower to sx-before-bgmuted:\n{out}"
+    );
+    assert!(
+        out.contains(".sx-before-bgmuted::before{background-color:var(--muted)}"),
+        "before:bg-muted CSS must scope to ::before:\n{out}"
+    );
+}
+
+#[test]
+fn sx_hover_before_chain_lowers_to_state_and_pseudo() {
+    // hover:before:opacity-100 → :hover::before on the atomic class.
+    let out = pp(r#"<div sx="before:opacity-0 hover:before:opacity-100">x</div>"#);
+    assert!(
+        out.contains("sx-hoverbefore-opacity100") || out.contains("hover:before"),
+        "hover:before chain class:\n{out}"
+    );
+    assert!(
+        out.contains(":hover::before{opacity:1}")
+            || out.contains(":hover::before{opacity:1.0}")
+            || out.contains(":hover::before{opacity:1;}"),
+        "hover:before:opacity-100 must attach :hover::before:\n{out}"
+    );
+    assert!(
+        out.contains("::before{opacity:0}") || out.contains("::before{opacity:0;}"),
+        "before:opacity-0 base:\n{out}"
+    );
+}
+
+#[test]
+fn sx_with_after_prefix_lowers_to_pseudo_element() {
+    let out = pp(r#"<div sx="after:bg-muted">x</div>"#);
+    assert!(
+        out.contains(r#"class="sx-after-bgmuted""#),
+        "after:bg-muted must lower to sx-after-bgmuted:\n{out}"
+    );
+    assert!(
+        out.contains(".sx-after-bgmuted::after{background-color:var(--muted)}"),
+        "after:bg-muted CSS must scope to ::after:\n{out}"
+    );
+}
+
+#[test]
+fn empty_prefix_lowers_to_empty_pseudo() {
+    // TW-shaped empty: for unfilled-slot collapse (field/empty-state anatomy).
+    let out = pp(r#"<div sx="empty:hidden">x</div>"#);
+    assert!(
+        out.contains(r#"class="sx-empty-hidden""#),
+        "empty:hidden class:\n{out}"
+    );
+    assert!(
+        out.contains(".sx-empty-hidden:empty{display:none}"),
+        "empty:hidden must key on :empty:\n{out}"
+    );
+}
+
+#[test]
+fn group_required_and_group_invalid_lower_to_ancestor_attr() {
+    let out = pp(
+        r#"<div sx="group"><span sx="hidden group-required:inline group-invalid:hidden">*</span></div>"#,
+    );
+    assert!(
+        out.contains("sail-grp"),
+        "bare group marks ancestor:\n{out}"
+    );
+    assert!(
+        out.contains(".sail-grp[required] .sx-grouprequired-inline{display:inline}")
+            || out.contains(".sail-grp[required] .sx-grouprequired-inline{display:inline;}"),
+        "group-required:inline keys on ancestor [required]:\n{out}"
+    );
+    assert!(
+        out.contains(".sail-grp[invalid] .sx-groupinvalid-hidden{display:none}")
+            || out.contains(".sail-grp[invalid] .sx-groupinvalid-hidden{display:none;}"),
+        "group-invalid:hidden keys on ancestor [invalid]:\n{out}"
+    );
+}
+
+#[test]
+fn content_empty_lowers_to_quoted_empty_string() {
+    // Decorative ::before/::after bars need content:'' to paint. TW's
+    // content-[''] is closed to the empty value only (no free string content).
+    let out = pp(r#"<div sx="before:content-empty">x</div>"#);
+    assert!(
+        out.contains(r#"class="sx-before-contentempty""#),
+        "before:content-empty class:\n{out}"
+    );
+    assert!(
+        out.contains(".sx-before-contentempty::before{content:''}"),
+        "content-empty must emit content:'':\n{out}"
     );
 }
 
@@ -293,5 +426,72 @@ fn layout_keyword_inline_does_not_emit_inline_attr_on_the_div() {
     assert!(
         !lowered.contains(" inline"),
         "no raw `inline` attr on the lowered div: {lowered}"
+    );
+}
+
+#[test]
+fn border_s_logical_start_width_and_color() {
+    // TW border-s-* → border-inline-start-* (toast stripe shape).
+    let out = pp(r#"<div sx="border-s-3 border-s-tone-fg">x</div>"#);
+    assert!(
+        out.contains("border-inline-start-width:3px")
+            || out.contains("border-inline-start-width: 3px"),
+        "border-s-3 width:\n{out}"
+    );
+    assert!(
+        out.contains("border-inline-start-color:var(--tone-fg)")
+            || out.contains("border-inline-start-color: var(--tone-fg)"),
+        "border-s-tone-fg color:\n{out}"
+    );
+}
+
+#[test]
+fn scrollbar_pack_lowers_width_color_and_thumb_token() {
+    // Real lowerer: scrollbar-thin + thumb-border (+ optional track).
+    let out = pp(r#"<div sx="scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">x</div>"#);
+    assert!(
+        out.contains("sx-scrollbarthin")
+            && out.contains("sx-scrollbarthumbborder")
+            && out.contains("sx-scrollbartracktransparent"),
+        "scrollbar pack classes:\n{out}"
+    );
+    assert!(
+        out.contains("scrollbar-width:thin")
+            || out.contains("scrollbar-width: thin"),
+        "scrollbar-thin width:\n{out}"
+    );
+    assert!(
+        out.contains("scrollbar-color:")
+            && out.contains("--sx-scrollbar-thumb")
+            && out.contains("--sx-scrollbar-track"),
+        "scrollbar-thin composes scrollbar-color:\n{out}"
+    );
+    assert!(
+        out.contains("--sx-scrollbar-thumb:var(--border)")
+            || out.contains("--sx-scrollbar-thumb: var(--border)"),
+        "scrollbar-thumb-border binds --border:\n{out}"
+    );
+    assert!(
+        out.contains("--sx-scrollbar-track:transparent")
+            || out.contains("--sx-scrollbar-track: transparent"),
+        "scrollbar-track-transparent:\n{out}"
+    );
+}
+
+#[test]
+fn tab_size_and_leading_code_lower() {
+    let out = pp(r#"<pre sx="tab-2 leading-code">x</pre>"#);
+    assert!(
+        out.contains("sx-tab2") && out.contains("sx-leadingcode"),
+        "tab-2 + leading-code classes:\n{out}"
+    );
+    assert!(
+        out.contains("tab-size:2") || out.contains("tab-size: 2"),
+        "tab-2 → tab-size:2:\n{out}"
+    );
+    assert!(
+        out.contains("line-height:var(--leading-code)")
+            || out.contains("line-height: var(--leading-code)"),
+        "leading-code binds --leading-code:\n{out}"
     );
 }

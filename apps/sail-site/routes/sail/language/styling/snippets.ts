@@ -29,8 +29,6 @@ export const code = {
   variants: `<scope>
   props: {
     label = ''
-  }
-  variants: {
     emphasis: {
       solid: 'bg-primary text-primary-foreground',
       soft: 'bg-muted text-foreground',

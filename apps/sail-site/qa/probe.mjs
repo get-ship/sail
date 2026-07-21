@@ -53,7 +53,17 @@ export async function probe(page, tag, theme) {
   await page.waitForTimeout(350)
   return page.evaluate(({ tag, SKIP }) => {
     const skip = new Set(SKIP)
-    const el = document.querySelector(tag)
+    // L1 language elements are light-DOM classed hosts (`.sail-chip`), not
+    // custom-element tags. Pack components remain real CEs (`<sail-…>`).
+    // Accept either so the probe is a real dissolve gate, not a false NOT-RENDERED.
+    const findHost = (t) => {
+      const byTag = document.querySelector(t)
+      if (byTag) return byTag
+      const bare = t.startsWith('sail-') ? t.slice('sail-'.length) : t
+      return document.querySelector(`.sail-${CSS.escape(bare)}`)
+        || document.querySelector(`.${CSS.escape(t)}`)
+    }
+    const el = findHost(tag)
     if (!el) return { defects: ['NOT-RENDERED'] }
     // Bounds reference: the detail stage. Overlays are trapped inside it, so an
     // escape shows as a rect outside these bounds even if visually clipped.
@@ -108,10 +118,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const argv = process.argv.slice(2)
   const themeArg = (argv.find((a) => a.startsWith('--theme=')) || '--theme=ship-light,glass,ship-dark').split('=')[1]
   const THEMES = themeArg.split(',')
-  const catMap = readFileSync('src/sail-catalog/category-map.ts', 'utf8')
   const one = argv[0] && !argv[0].startsWith('--') ? argv[0] : null
-  const TAGS = one ? [one]
-    : [...catMap.matchAll(/'(sail-[a-z-]+)':\s*'(?!true)/g)].map((m) => m[1]).filter((t, i, a) => a.indexOf(t) === i)
+  // Single-tag mode never needs the catalog map (and the map path has moved
+  // across site refactors). Sweep still loads it for the full L1/pack list.
+  let TAGS
+  if (one) {
+    TAGS = [one]
+  } else {
+    const catMap = readFileSync('src/sail-catalog/category-map.ts', 'utf8')
+    TAGS = [...catMap.matchAll(/'(sail-[a-z-]+)':\s*'(?!true)/g)].map((m) => m[1]).filter((t, i, a) => a.indexOf(t) === i)
+  }
 
   const b = await chromium.launch()
   const ctx = await b.newContext({ viewport: { width: 1280, height: 900 } })

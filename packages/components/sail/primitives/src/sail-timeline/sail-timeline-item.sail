@@ -16,11 +16,9 @@
     at = ''
     interactive = false
   }
-  variants: {
-    compound: [
-      { when: { interactive: true }, sx: 'cursor-pointer rounded-sm hover:bg-muted focus:ring-ring' },
-    ]
-  }
+  compound: [
+    { when: { interactive: true }, sx: 'cursor-pointer rounded-sm hover:bg-muted focus:ring-ring' },
+  ]
 </scope>
 
 <controller>

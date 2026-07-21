@@ -118,7 +118,7 @@ fn element_skins_css_matches_registry() {
 }
 
 #[test]
-fn ticker_loops_via_two_slots_and_pauses_under_reduced_motion() {
+fn ticker_loops_via_two_slots_and_marquee_action() {
     let src = sail_compiler::stdlib::sources()
         .iter()
         .find(|(tag, _)| *tag == "ticker")
@@ -132,27 +132,23 @@ fn ticker_loops_via_two_slots_and_pauses_under_reduced_motion() {
         "two independently-filled slots build the seamless-loop duplicate track: {}",
         el.structure_html
     );
-    // Track/fx rules live in contracts (named unexpressibles) after residue burn —
-    // .sail source stays structure + sx + layout only.
+    // Track animation is use:marquee (motion:loop), not contracts PE.
+    assert!(
+        el.structure_html.contains("use:marquee"),
+        "track stamps use:marquee for duration/reverse-driven motion: {}",
+        el.structure_html
+    );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/contracts.css"
     ));
     assert!(
-        contracts.contains("var(--animate-ticker)"),
-        "contracts must reference shared ticker token not embed @keyframes: {contracts}"
-    );
-    assert!(
-        contracts.contains("prefers-reduced-motion")
-            && contracts.contains("animation-play-state: paused"),
-        "reduced motion pauses, it does not stop: {contracts}"
-    );
-    // Ticker reduced-motion must pause, not `animation: none` on the track.
-    assert!(
-        !contracts
-            .lines()
-            .any(|l| l.contains("sail-ticker") && l.contains("animation: none")),
-        "must not hard-stop ticker under reduced motion"
+        !contracts.contains("var(--animate-ticker)")
+            && !contracts.contains("sail-ticker-scroll")
+            && !contracts
+                .lines()
+                .any(|l| l.contains("sail-ticker") && l.contains("animation")),
+        "ticker animation PE must be gone from contracts: {contracts}"
     );
     // Layout track: nowrap row + w-max on structure
     assert!(
@@ -291,4 +287,28 @@ fn stdlib_element_sources_have_no_author_style_blocks() {
             i += 1;
         }
     }
+}
+
+#[test]
+fn native_label_folds_host_sx_into_tag_rule() {
+    // Native <label> never stamps host classes at use sites — host sx must
+    // land as tag-keyed decls so font-(--label-weight) paints every bare label.
+    let out = sail_compiler::compile_element(
+        include_str!("../stdlib/label.sail"),
+        "label",
+    )
+    .expect("label compiles");
+    assert!(out.native, "label is native-kind");
+    assert!(
+        out.skin_css.contains("font-weight:var(--label-weight)")
+            || out.skin_css.contains("font-weight: var(--label-weight)"),
+        "weight channel must be on the tag rule:\n{}",
+        out.skin_css
+    );
+    // Prefer tag-keyed host rule over orphaned atomic that never stamps.
+    assert!(
+        out.skin_css.contains("label {") || out.skin_css.contains("label{"),
+        "native skin keys on bare tag:\n{}",
+        out.skin_css
+    );
 }

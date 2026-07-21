@@ -331,8 +331,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
     <column sx="grow-1 min-h-0 border border-border rounded-lg bg-surface-1 overflow-hidden">
       <row align="center" justify="between" gap="2" sx="p-2 px-3 border-b border-b-border">
-        <tabs active="source" variant="pill" size="sm" on:sail-tab-change={onTabChange}>
-          <tab-list>
+        <tabs active="source" size="sm" on:sail-tab-change={onTabChange}>
+          <tab-list variant="pill">
             <tab name="source">{fileName()}</tab>
             <tab name="diff">diff</tab>
           </tab-list>

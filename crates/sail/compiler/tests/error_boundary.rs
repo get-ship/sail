@@ -41,26 +41,39 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
 }
 
 /// The branch swap is pure CSS, gated on `[data-caught]` — no signal, no `{#if}`.
-/// Lives in contracts (parent attr → child display); not residual skins.
+/// Lives on structure sx via group-caught: (element-skins), not contracts PE.
 #[test]
 fn the_swap_is_a_css_gate_not_a_reactive_branch() {
-    let contracts = include_str!("../../../../packages/sail/tokens/src/contracts.css");
+    let el = compile_element(
+        include_str!("../stdlib/error-boundary.sail"),
+        "error-boundary",
+    )
+    .expect("element compiles");
+    let src = include_str!("../stdlib/error-boundary.sail");
 
     assert!(
-        contracts.contains("[data-caught]"),
-        "the caught state is an attribute the CSS keys on"
+        src.contains("group-caught:hidden")
+            && src.contains("group-caught:contents")
+            && src.contains("group"),
+        "structure must express caught swap via group-caught:"
     );
-    // Both halves of the swap must be gated, or a boundary renders its fallback
+    // Both halves of the swap must lower, or a boundary renders its fallback
     // and its broken content at the same time.
     assert!(
-        contracts.contains(".sail-error-boundary > .fallback")
-            || contracts.contains(".sail-error-boundary>.fallback"),
-        "the fallback is hidden until caught"
+        el.structure_html.contains("sail-grp")
+            && (el.skin_css.contains("[data-caught]")
+                || el.structure_html.contains("sx-groupcaught-hidden")
+                || el.structure_html.contains("sx-groupcaught-contents")),
+        "group-caught must lower into structure/skin:\nstruct={}\nskin={}",
+        el.structure_html,
+        el.skin_css
     );
+    let contracts = include_str!("../../../../packages/sail/tokens/src/contracts.css");
     assert!(
-        contracts.contains("[data-caught] > .content")
-            || contracts.contains("[data-caught]>.content"),
-        "content is pulled when caught"
+        !contracts.contains(".sail-error-boundary > .content")
+            && !contracts.contains(".sail-error-boundary > .fallback")
+            && !contracts.contains("[data-caught] > .content"),
+        "error-boundary swap PE must be gone from contracts"
     );
 }
 

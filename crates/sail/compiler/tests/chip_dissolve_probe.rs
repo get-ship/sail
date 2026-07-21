@@ -103,9 +103,16 @@ fn badge_and_card_compile_cva() {
         "attr-absent PE card padding=md + surface base: {}",
         card.structure_html
     );
+    // status-rail paint + pad-adjust are CVA compounds (no contracts PE).
     assert!(
-        !card.skin_css.contains("border-left-width:2px") && !card.skin_css.contains("status-rail"),
-        "no dual status-rail CVA paint: {}",
+        card.skin_css.contains("status-rail")
+            && (card.skin_css.contains("border-inline-start-width:3px")
+                || card.skin_css.contains("border-inline-start-width: 3px"))
+            && (card.skin_css.contains("border-inline-start-color:var(--border-strong)")
+                || card.skin_css.contains("border-inline-start-color: var(--border-strong)"))
+            && (card.skin_css.contains("padding-inline-start:var(--space-4)")
+                || card.skin_css.contains("padding-inline-start: var(--space-4)")),
+        "status-rail CVA border-s + pad-adjust: {}",
         card.skin_css
     );
     let contracts = include_str!(concat!(
@@ -113,10 +120,11 @@ fn badge_and_card_compile_cva() {
         "/../../../packages/sail/tokens/src/contracts.css"
     ));
     assert!(
-        contracts.contains(".sail-card[status-rail]")
-            && contracts.contains("border-left-width: 3px")
-            && contracts.contains("border-left-color: var(--tone-fg)"),
-        "status-rail PE: 3px solid tone-fg in contracts"
+        !contracts.contains(".sail-card")
+            && !contracts.contains("--card-px")
+            && !contracts.contains("border-left-width: 3px")
+            && !contracts.contains("border-left-color: var(--tone-fg)"),
+        "card PE fully left contracts"
     );
 }
 
@@ -131,14 +139,19 @@ fn alert_compiles_with_capability_mixins() {
         out.structure_html
     );
     assert!(!out.structure_html.contains("use:alert"), "no element brain");
+    assert!(
+        src.contains("before:bg-muted-foreground")
+            && src.contains("default: 'before:bg-muted-foreground'"),
+        "soft-status muted default is host/CVA, not contracts channel PE"
+    );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/contracts.css"
     ));
     assert!(
-        contracts.contains(".sail-alert:not([tone])")
-            && contracts.contains("--tone-bg: var(--tone-muted-bg)"),
-        "alert PE defaults in contracts"
+        !contracts.contains(".sail-alert:not([tone])")
+            && !contracts.contains("grid-template-columns: auto 1fr auto"),
+        "alert PE defaults/grid must be gone from contracts"
     );
 }
 

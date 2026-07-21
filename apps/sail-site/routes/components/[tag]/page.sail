@@ -554,8 +554,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Navigation ══════════════════════════════════════════ -->
             {#if stage.tabs()}
-              <tabs variant={variant()} tone="primary" sx="w-full">
-                <tab-list>
+              <tabs tone="primary" sx="w-full">
+                <tab-list variant={variant()}>
                   <tab>Overview</tab>
                   <tab>Activity</tab>
                   <tab>Settings</tab>

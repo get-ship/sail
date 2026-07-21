@@ -67,7 +67,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:226"
+    "loc": "src/styles/index.ts:231"
   },
   {
     "subpath": ".",
@@ -2363,7 +2363,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:226"
+    "loc": "src/styles/index.ts:231"
   },
   {
     "subpath": "./server",

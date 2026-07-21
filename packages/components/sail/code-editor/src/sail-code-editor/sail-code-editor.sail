@@ -41,8 +41,6 @@
     tone: 'default' | 'info' | 'success' | 'warning' | 'destructive' = 'default'
     theme: 'auto' | 'light' | 'dark' = 'auto'
     'wasm-url' = '/sui_compiler_bg.wasm'
-  }
-  variants: {
     size: {
       md: 'text-sm leading-normal-plus',
       sm: 'text-xs leading-normal',

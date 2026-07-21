@@ -124,11 +124,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>Variants</h2>
   <p>
-    When a component has named looks, the looks are data: a
-    <code>variants:</code> table in <code>&lt;scope&gt;</code>. Each axis
+    When a component has named looks, the looks are data: a prop whose value
+    is a key→sx map inside <code>props:</code> (CVA-in-props). Each axis
     becomes a typed prop — the first key is the default — and each value is
-    ordinary <code>sx</code>. Variant tables are a per-directory compiler
-    permit (<code>"variants": true</code> in that directory's
+    ordinary <code>sx</code>, lowered through the same pipeline as host
+    <code>sx=</code>. There is no separate <code>variants:</code> block.
+    Variance authoring is a per-directory compiler permit
+    (<code>"variants": true</code> in that directory's
     <code>sail.config.json</code>) — component libraries turn them on;
     plain pages usually don't need them.
   </p>
