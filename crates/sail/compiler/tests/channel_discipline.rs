@@ -135,7 +135,7 @@ fn no_skin_hardcodes_a_channel_governed_property() {
 fn literal_border_widths_in_skins_do_not_increase() {
     // Census lives in framework residual skins now — author `.sail` sources no
     // longer carry `<style>` (relocated to `stdlib/_residues.css`).
-    const BASELINE: usize = 30; // lowered after chip/badge/card/alert residue burn
+    const BASELINE: usize = 9; // lowered after mid-weight L1 residue burn
 
     let mut count = 0usize;
     let residues = concat!(env!("CARGO_MANIFEST_DIR"), "/stdlib/_residues.css");
@@ -271,16 +271,16 @@ fn residual_default_tone_fills_for_untoned_hosts() {
         "spinner untoned default must fill --tone-fg for .ring accent stroke"
     );
 
-    // switch: PE defaults on :not([tone]) / [tone=default] — NOT bare host
+    // switch: PE defaults on :not([tone]) / [tone=default] — contracts after dissolve
     {
         assert!(
-            css.contains(".sail-switch:not([tone])"),
+            pe.contains(".sail-switch:not([tone])"),
             "switch must place PE defaults under :not([tone]), not bare host"
         );
         // Find the :not([tone]) rule body (may share a block with [tone=default])
         let needle = ".sail-switch:not([tone])";
-        let idx = css.find(needle).expect("switch :not([tone]) rule");
-        let rest = &css[idx..];
+        let idx = pe.find(needle).expect("switch :not([tone]) rule");
+        let rest = &pe[idx..];
         let open = rest.find('{').expect("switch :not([tone]) opening brace");
         let close = rest[open + 1..]
             .find('}')
@@ -300,10 +300,10 @@ fn residual_default_tone_fills_for_untoned_hosts() {
     // switch branded tones: only local --tone-on-fg, never global --tone
     for tone in ["primary", "info", "success", "warning", "destructive", "accent", "muted"] {
         let needle = format!(".sail-switch[tone='{tone}']");
-        let Some(idx) = css.find(&needle) else {
+        let Some(idx) = pe.find(&needle) else {
             panic!("missing switch tone rule for {tone}");
         };
-        let rest = &css[idx..];
+        let rest = &pe[idx..];
         let end = rest.find('}').unwrap_or(rest.len());
         let block = &rest[..end];
         assert!(

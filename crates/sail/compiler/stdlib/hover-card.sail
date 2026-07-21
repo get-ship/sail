@@ -1,7 +1,7 @@
 <!--
   <hover-card id="…" placement="top"> — L1 hover-preview overlay. Native
   [popover] + use:anchor + use:hoverSurface. Host paint: chrome on sx.
-  Positioning + min/max-width residues + backdrop stay.
+  Anchor positioning recipe in contracts.
 -->
 
 <scope>

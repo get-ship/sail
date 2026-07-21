@@ -1,6 +1,6 @@
 <!--
   <context-menu for="…"> — L1 right-click menu. Native [popover] + use:contextMenu
-  + use:menu. Host paint: chrome on sx. Positioning + min-width + backdrop residue.
+  + use:menu. Host paint: chrome on sx. Anchor positioning recipe in contracts.
 -->
 
 <scope>

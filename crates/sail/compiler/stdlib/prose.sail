@@ -1,9 +1,9 @@
 <!--
   <prose> — typography scope for rendered content (markdown blobs etc.).
 
-  Host paint: block + body typeface/color/leading via sx.
-  Residue: all descendant rules (headings, p, a, code/pre, blockquote, lists,
-  table, strong, ::marker) + specific sizes/margins/spacings.
+  Host: block + body typeface/color/leading via sx.
+  Contracts: all descendant rules (headings, p, a, code/pre, blockquote, lists,
+  table, strong, ::marker) — child-keyed typography recipe.
 -->
 
 <scope>

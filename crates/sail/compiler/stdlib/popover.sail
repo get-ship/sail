@@ -2,7 +2,7 @@
   <popover id="…" placement="bottom"> — L1 anchored overlay on the native
   popover API + use:anchor.
 
-  Host paint: chrome on sx. Positioning + min/max-width residues + backdrop stay.
+  Host paint: chrome on sx. Anchor positioning recipe in contracts.
 -->
 
 <scope>

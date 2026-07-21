@@ -22,17 +22,12 @@
   Recovery: the built-in Retry button resets the boundary, as does `el.reset()`.
   A reset clears the caught state and the content returns.
 
-  SCOPE. The protected content arrives through a `<slot>`, so it belongs to the
-  enclosing component's reactive scope, not the boundary's — a boundary hides a
-  broken subtree, it does not dispose one. Effects inside it stay alive and may
-  throw again; the re-entrancy guard makes that a no-op, so the first error is the
-  one reported. Disposal would require locating the boundary by owner chain rather
-  than by DOM walk.
-
-  The visible message is the `message` prop (default "Something went wrong"), not
-  the raw error text: an exception string is for a developer, not a user. The real
-  error rides the `sail-error-caught` event detail and the `data-error-message`
-  attribute.
+  Paint (one path):
+    host sx=         — display:contents (healthy boundary is layout-invisible)
+    child sx=        — fallback chrome + retry control paint
+    contracts        — [data-caught] swap (parent attr → child display);
+                       content/fallback display gates; forced-colors
+  No residual error-boundary matrix.
 -->
 
 <scope>
@@ -41,19 +36,28 @@
   }
 </scope>
 
-<div use:catchRender>
-  <div class="content"><slot></slot></div>
-  <div class="fallback" role="alert">
+<div use:catchRender sx="contents">
+  <div class="content" sx="contents"><slot></slot></div>
+  <div
+    class="fallback"
+    role="alert"
+    sx="py-4 px-5 bg-tone-destructive-bg border border-tone-destructive-border rounded-md shadow-xs text-foreground font-body text-sm"
+  >
     <slot name="fallback">
-      <svg class="fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg class="fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" sx="shrink-0 size-icon-size-lg text-destructive mt-1">
         <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
         <path d="M12 9v4"></path>
         <path d="M12 17h.01"></path>
       </svg>
-      <div class="fallback-body">
-        <div class="message">Something went wrong</div>
-        <button class="retry" type="button" anatomy>Retry</button>
-      </div>
+      <column gap="1" class="fallback-body" sx="min-w-0">
+        <div class="message" sx="text-muted-foreground leading-normal">Something went wrong</div>
+        <button
+          class="retry"
+          type="button"
+          anatomy
+          sx="self-start bg-surface-1 border border-border rounded-sm py-1 px-3 font-body text-xs font-semibold text-foreground shadow-xs cursor-pointer hover:bg-muted focus:outline-solid focus:outline-2 focus:outline-ring focus:outline-offset-2"
+        >Retry</button>
+      </column>
     </slot>
   </div>
 </div>

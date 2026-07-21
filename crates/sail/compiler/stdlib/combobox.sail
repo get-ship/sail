@@ -22,6 +22,14 @@
       <option value="apple">Apple</option>
       <option value="banana">Banana</option>
     </combobox>
+
+  Paint (one path):
+    host sx=         — block relative + typeface
+    child sx=        — input full width; listbox chrome
+    contracts        — listbox anchor positioning + ::backdrop; option anatomy
+                       (author-supplied children; [data-active]/:disabled/:hover/
+                       [hidden]; empty state)
+  No residual combobox matrix.
 -->
 
 <scope>
@@ -31,9 +39,15 @@
   }
 </scope>
 
-<div use:combobox>
-  <input class="input" type="text">
-  <div class="listbox" popover use:anchor placement="bottom-start">
+<div use:combobox sx="block relative font-body">
+  <input class="input" type="text" sx="w-full">
+  <div
+    class="listbox"
+    popover
+    use:anchor
+    placement="bottom-start"
+    sx="p-1 text-popover-foreground bg-popover border border-border rounded-md shadow-lg z-(--z-popover)"
+  >
     <slot></slot>
   </div>
 </div>

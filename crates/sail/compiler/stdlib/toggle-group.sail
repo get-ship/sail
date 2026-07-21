@@ -1,8 +1,8 @@
 <!--
   <toggle-group> — segmented toggle group. use:toggleGroup owns behavior.
 
-  Host paint: inline row layout (gap 0 default). Residue: size channels,
-  orientation column, outline join radii, ghost/segmented variant matrices.
+  Host: inline row layout (gap 0 PE). Size channels, orientation column, outline
+  join radii, and ghost/segmented child matrices are contracts (parent-keyed).
 -->
 
 <scope>

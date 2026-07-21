@@ -1,9 +1,9 @@
 <!--
   <switch> — native checkbox restyled as sliding toggle. No controller.
 
-  Host paint: cursor/align/m-0 on sx. Residue: appearance:none track/thumb
-  geometry, size/tone channels, checked/hover/disabled/focus, forced-colors,
-  reduced-motion.
+  Host: cursor/align/m-0 on sx. Track/thumb anatomy (appearance:none, ::before,
+  size channels, checked/hover/disabled/focus, forced-colors, reduced-motion)
+  and PE tone defaults under :not([tone]) live in contracts.
 -->
 
 <scope>

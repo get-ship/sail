@@ -2,8 +2,12 @@
   <tooltip> — hover/focus text bubble via CSS Anchor Positioning. use:tipDescribe
   supplies anchor name + content + Escape.
 
-  Host paint: bubble chrome on sx. Residue: anchor-name/positioning matrix,
-  arrow pseudo, opacity show/hide, placement @supports branches.
+  Paint (one path):
+    host sx=         — (inline-flex from span root display)
+    child sx=        — bubble chrome (pad/colors/type/radius/shadow)
+    contracts        — anchor-name / position-anchor / position-area placement;
+                       opacity show/hide; arrow ::after; @supports fallbacks
+  No residual tooltip matrix.
 -->
 
 <scope>
@@ -13,4 +17,11 @@
   }
 </scope>
 
-<span use:tipDescribe><slot></slot><span class="bubble" role="tooltip" sx="py-1 px-2 bg-foreground text-background font-body text-xs font-medium rounded-md shadow-md whitespace-nowrap pointer-events-none"></span></span>
+<span use:tipDescribe>
+  <slot></slot>
+  <span
+    class="bubble"
+    role="tooltip"
+    sx="py-1 px-2 bg-foreground text-background font-body text-xs font-medium rounded-md shadow-md whitespace-nowrap pointer-events-none"
+  ></span>
+</span>

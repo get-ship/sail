@@ -1,8 +1,8 @@
 <!--
   <tabs> — tab strip + panels. use:tabs owns behavior.
 
-  Host paint: column+gap+min-w layout. Residue: size channels, orientation row,
-  sticky list, pill/enclosed variant matrices (child-keyed).
+  Host: column+gap+min-w layout. Size channels (for <tab>), orientation row,
+  sticky list, and pill/enclosed variant matrices are contracts (parent-keyed).
 -->
 
 <scope>
