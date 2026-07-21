@@ -254,26 +254,20 @@ label { display: inline-block; }
 
 /* switch */
 .sail-switch { display: inline-flex; }
-
+.sx-inlineblock{display:inline-block}.sx-alignmiddle{vertical-align:middle}.sx-m0{margin:0}.sx-cursorpointer{cursor:pointer}
 
   .sail-switch {
     appearance: none;
     -webkit-appearance: none;
     position: relative;
-    display: inline-block;
     flex-shrink: 0;
-    vertical-align: middle;
     box-sizing: border-box;
-    margin: 0;
-    cursor: pointer;
     background: var(--muted);
     border: 1px solid var(--border-strong);
     border-radius: var(--shape-pill);
     -webkit-tap-highlight-color: transparent;
-    /* Tone: default reads as a brand toggle (primary). */
     --tone: var(--primary);
     --tone-on-fg: var(--primary-foreground);
-    /* Size: md base; sm/lg override. */
     --sw-w: var(--control-h-sm);
     --sw-h: var(--icon-size-md);
     --sw-thumb: var(--space-3);
@@ -295,7 +289,6 @@ label { display: inline-block; }
   .sail-switch[tone='accent']      { --tone: var(--accent);           --tone-on-fg: var(--accent-foreground); }
   .sail-switch[tone='muted']       { --tone: var(--muted-foreground); --tone-on-fg: var(--background); }
 
-  /* Thumb — a pseudo-element (works because appearance:none un-replaces the box). */
   .sail-switch::before {
     content: '';
     position: absolute;
@@ -417,32 +410,19 @@ label { display: inline-block; }
 
 /* avatar */
 .sail-avatar { display: inline-flex; }
-
+.sx-fontbody{font-family:var(--body-font)}.sx-fontbold{font-weight:var(--font-weight-bold)}.sx-leadingnone{line-height:var(--leading-none)}.sx-textforeground{color:var(--foreground)}.sx-uppercase{text-transform:uppercase}.sx-overflowhidden{overflow:hidden}.sx-selectnone{user-select:none}.sx-alignmiddle{vertical-align:middle}
 
   .sail-avatar {
     position: relative;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
-    vertical-align: middle;
     flex: none;
-    overflow: hidden;
-    user-select: none;
-    /* Round (circle) is the default — uses --shape-pill (9999px) for consistency
-       with pill shapes elsewhere. (50% was prior residue; square overrides.) */
+    /* Round (circle) is the default — uses --shape-pill (9999px). */
     border-radius: var(--shape-pill);
-    font-family: var(--font-body);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    line-height: var(--leading-none);
-    color: var(--foreground);
-    /* Default (no branded tone) fill: the brand gradient. Branded tones below
-       override it with a solid fill; default/muted keep the gradient. */
+    letter-spacing: 0.02em; /* residue */
+    /* Default fill: brand gradient. Branded tones override below. */
     background: linear-gradient(135deg, var(--primary), var(--accent));
     box-shadow: inset 0 0 0 1px var(--border), inset 0 1px 0 var(--background);
-    /* Size channels (local): md base; size attrs reassign channels only.
-       Channels cover w/h/fs so no duplicates on base. */
     --avatar-size: var(--space-7);
     --avatar-fs: var(--text-base);
     width: var(--avatar-size);
@@ -475,10 +455,9 @@ label { display: inline-block; }
 
 /* tooltip */
 .sail-tooltip { display: inline-flex; }
-
+.sx-py1{padding-block:var(--space-1)}.sx-px2{padding-inline:var(--space-2)}.sx-bgforeground{background-color:var(--foreground)}.sx-textbackground{color:var(--background)}.sx-fontbody{font-family:var(--body-font)}.sx-textxs{font-size:var(--text-xs)}.sx-fontmedium{font-weight:var(--font-weight-medium)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-shadowmd{box-shadow:var(--shadow-md)}.sx-whitespacenowrap{white-space:nowrap}.sx-pointereventsnone{pointer-events:none}
 
   .sail-tooltip {
-    display: inline-flex;
     anchor-name: var(--sail-tooltip-anchor);
   }
 
@@ -486,17 +465,7 @@ label { display: inline-block; }
     --tt-arrow-shift: -3.5px;
     position: fixed;
     position-anchor: var(--sail-tooltip-anchor);
-    padding: var(--space-1) var(--space-2);
-    background: var(--foreground);
-    color: var(--background);
-    font-family: var(--font-body);
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-medium);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
     z-index: var(--z-popover);
-    white-space: nowrap;
-    pointer-events: none;
     opacity: 0;
     transition: opacity var(--duration-fast) var(--ease-out);
     position-try-fallbacks: flip-block, flip-inline;
@@ -515,11 +484,6 @@ label { display: inline-block; }
   }
 
   @supports (anchor-name: --x) {
-    /* Placement + centering via position-area: the box is laid into the region
-       on the named side of the anchor and centered on the perpendicular axis;
-       `margin` opens the gap toward the trigger. flip-* only kicks in on a real
-       viewport clip (we do NOT reorder by most-room, which would ignore the
-       author's chosen side). */
     .bubble { margin: var(--space-2); }
     .sail-tooltip:not([placement]) .bubble,
     .sail-tooltip[placement='top'] .bubble { position-area: top; }
