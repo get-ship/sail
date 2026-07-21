@@ -1314,7 +1314,7 @@ label { display: inline-block; }
     user-select: none;
     -webkit-user-select: none;
   }
-  .sail-radio[disabled] { cursor: not-allowed; opacity: 0.55; }
+  .sail-radio[disabled] { cursor: not-allowed; opacity: 0.55; /* residue lock */ }
   .sail-radio input { flex-shrink: 0; margin: 0; }
 
 /* radio-group */
@@ -1539,7 +1539,7 @@ label { display: inline-block; }
   .sail-scroll-area::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: var(--shape-pill);
-    border: 3px solid transparent;
+    border: 3px solid transparent; /* residue — 3px scrollbar border on thumb (inset); webkit pseudos anatomy kept; no squash to space-1 */
     background-clip: padding-box;
   }
   .sail-scroll-area:hover::-webkit-scrollbar-thumb { background: var(--muted-foreground); background-clip: padding-box; }
@@ -1980,7 +1980,7 @@ label { display: inline-block; }
     border-color: var(--tone, var(--primary));
   }
   .sail-page[disabled] { opacity: 0.5; cursor: not-allowed; }
-  .sail-page:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 1px; }
+  .sail-page:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 1px; /* residue */ }
 
 /* breadcrumb */
 
@@ -2020,7 +2020,7 @@ label { display: inline-block; }
     margin: 0;
     left: var(--anchor-left);
     top: var(--anchor-top);
-    min-width: 12rem;
+    min-width: 12rem; /* residue — 12rem/22rem NOT equal to panel-min/max tokens (180/320px); leave rem */
     max-width: 22rem;
     padding: var(--space-3);
     color: var(--foreground);
@@ -2197,7 +2197,7 @@ label { display: inline-block; }
     margin: 0;
     left: var(--anchor-left);
     top: var(--anchor-top);
-    min-width: 12rem;
+    min-width: 12rem; /* residue — 12rem/22rem NOT equal to panel-min/max tokens (180/320px); leave rem */
     padding: var(--space-1);
     color: var(--foreground);
     background: var(--background);
