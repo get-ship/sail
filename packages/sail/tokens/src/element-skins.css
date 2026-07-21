@@ -531,16 +531,12 @@ label { display: inline-block; }
     --chip-remove: var(--icon-size-md);
     --chip-radius: var(--shape-pill);
     /* tone: default channels; per-tone overrides below */
-    --tone-fg: var(--foreground);
-    --tone-bg: var(--tone-default-bg);
-    --tone-border: var(--tone-default-border);
     --tone-bg-hover: var(--tone-default-bg);
     --tone-border-hover: var(--tone-default-border);
     --tone-bg-solid: var(--foreground);
     --tone-outline-border: var(--border-strong);
     --tone-outline-bg-hover: var(--hover-bg);
     --tone-ghost-bg-hover: var(--hover-bg);
-    --tone-contrast: var(--background);
   }
   .sail-chip[hidden] { display: none; }
 
@@ -555,53 +551,39 @@ label { display: inline-block; }
 
   /* Per-tone channel overrides (default is the base above). */
   .sail-chip[tone='primary'] {
-    --tone-fg: var(--primary); --tone-bg: var(--tone-primary-bg); --tone-border: var(--tone-primary-border);
     --tone-bg-hover: var(--tone-primary-border); --tone-border-hover: var(--tone-primary-border);
     --tone-bg-solid: var(--primary); --tone-outline-border: var(--tone-primary-border);
     --tone-outline-bg-hover: var(--tone-primary-bg); --tone-ghost-bg-hover: var(--tone-primary-bg);
-    --tone-contrast: var(--primary-foreground);
   }
   .sail-chip[tone='info'] {
-    --tone-fg: var(--info); --tone-bg: var(--tone-info-bg); --tone-border: var(--tone-info-border);
     --tone-bg-hover: var(--tone-info-border); --tone-border-hover: var(--tone-info-border);
     --tone-bg-solid: var(--info); --tone-outline-border: var(--tone-info-border);
     --tone-outline-bg-hover: var(--tone-info-bg); --tone-ghost-bg-hover: var(--tone-info-bg);
-    --tone-contrast: var(--info-foreground);
   }
   .sail-chip[tone='success'] {
-    --tone-fg: var(--success); --tone-bg: var(--tone-success-bg); --tone-border: var(--tone-success-border);
     --tone-bg-hover: var(--tone-success-border); --tone-border-hover: var(--tone-success-border);
     --tone-bg-solid: var(--success); --tone-outline-border: var(--tone-success-border);
     --tone-outline-bg-hover: var(--tone-success-bg); --tone-ghost-bg-hover: var(--tone-success-bg);
-    --tone-contrast: var(--success-foreground);
   }
   .sail-chip[tone='warning'] {
-    --tone-fg: var(--warning); --tone-bg: var(--tone-warning-bg); --tone-border: var(--tone-warning-border);
     --tone-bg-hover: var(--tone-warning-border); --tone-border-hover: var(--tone-warning-border);
     --tone-bg-solid: var(--warning); --tone-outline-border: var(--tone-warning-border);
     --tone-outline-bg-hover: var(--tone-warning-bg); --tone-ghost-bg-hover: var(--tone-warning-bg);
-    --tone-contrast: var(--warning-foreground);
   }
   .sail-chip[tone='destructive'] {
-    --tone-fg: var(--destructive); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border);
     --tone-bg-hover: var(--tone-destructive-border); --tone-border-hover: var(--tone-destructive-border);
     --tone-bg-solid: var(--destructive); --tone-outline-border: var(--tone-destructive-border);
     --tone-outline-bg-hover: var(--tone-destructive-bg); --tone-ghost-bg-hover: var(--tone-destructive-bg);
-    --tone-contrast: var(--destructive-foreground);
   }
   .sail-chip[tone='accent'] {
-    --tone-fg: var(--accent); --tone-bg: var(--tone-accent-bg); --tone-border: var(--tone-accent-border);
     --tone-bg-hover: var(--tone-accent-border); --tone-border-hover: var(--tone-accent-border);
     --tone-bg-solid: var(--accent); --tone-outline-border: var(--tone-accent-border);
     --tone-outline-bg-hover: var(--tone-accent-bg); --tone-ghost-bg-hover: var(--tone-accent-bg);
-    --tone-contrast: var(--accent-foreground);
   }
   .sail-chip[tone='muted'] {
-    --tone-fg: var(--muted-foreground); --tone-bg: var(--tone-muted-bg); --tone-border: var(--tone-muted-border);
     --tone-bg-hover: var(--tone-muted-bg); --tone-border-hover: var(--tone-muted-border);
     --tone-bg-solid: var(--muted); --tone-outline-border: var(--border-strong);
     --tone-outline-bg-hover: var(--tone-muted-bg); --tone-ghost-bg-hover: var(--tone-muted-bg);
-    --tone-contrast: var(--background);
   }
 
   /* Variant matrix (soft is the default). */

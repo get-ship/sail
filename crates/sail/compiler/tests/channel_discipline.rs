@@ -133,47 +133,42 @@ fn no_skin_hardcodes_a_channel_governed_property() {
 /// site for "hairline or graphic?", a separate pass from landing the channel.
 #[test]
 fn literal_border_widths_in_skins_do_not_increase() {
-    const BASELINE: usize = 35;
+    // Census lives in framework residual skins now — author `.sail` sources no
+    // longer carry `<style>` (relocated to `stdlib/_residues.css`).
+    const BASELINE: usize = 38;
 
     let mut count = 0usize;
-    for entry in std::fs::read_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/stdlib"))
-        .expect("stdlib directory must exist")
-    {
-        let path = entry.expect("readable dir entry").path();
-        if path.extension().and_then(|e| e.to_str()) != Some("sail") {
+    let residues = concat!(env!("CARGO_MANIFEST_DIR"), "/stdlib/_residues.css");
+    let src = std::fs::read_to_string(residues).expect("stdlib/_residues.css must exist");
+    for line in src.lines() {
+        let t = line.trim();
+        if !t.starts_with("border") {
             continue;
         }
-        let src = std::fs::read_to_string(&path).expect("readable stdlib source");
-        for line in src.lines() {
-            let t = line.trim();
-            if !t.starts_with("border") {
-                continue;
-            }
-            // border-radius/-collapse/-spacing are not stroke weight — a
-            // radius literal is the radius scale's business, not this channel's.
-            if t.starts_with("border-radius")
-                || t.starts_with("border-collapse")
-                || t.starts_with("border-spacing")
-            {
-                continue;
-            }
-            let Some(colon) = t.find(':') else { continue };
-            let value = t[colon + 1..].trim();
-            // A literal width is a bare `Npx` in the first position of the
-            // shorthand, or as the whole value of a *-width property.
-            if value
-                .split_whitespace()
-                .next()
-                .is_some_and(|first| first.trim_end_matches(';').ends_with("px"))
-            {
-                count += 1;
-            }
+        // border-radius/-collapse/-spacing are not stroke weight — a
+        // radius literal is the radius scale's business, not this channel's.
+        if t.starts_with("border-radius")
+            || t.starts_with("border-collapse")
+            || t.starts_with("border-spacing")
+        {
+            continue;
+        }
+        let Some(colon) = t.find(':') else { continue };
+        let value = t[colon + 1..].trim();
+        // A literal width is a bare `Npx` in the first position of the
+        // shorthand, or as the whole value of a *-width property.
+        if value
+            .split_whitespace()
+            .next()
+            .is_some_and(|first| first.trim_end_matches(';').ends_with("px"))
+        {
+            count += 1;
         }
     }
 
     assert!(
         count <= BASELINE,
-        "literal border widths in stdlib skins rose to {count} (baseline {BASELINE}).\n\
+        "literal border widths in residual skins rose to {count} (baseline {BASELINE}).\n\
          New skins must spend --border-width so themes can thicken hairlines. \
          If this is a decorative graphic rather than a control hairline, say so \
          in a comment and raise the baseline deliberately."
