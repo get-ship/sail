@@ -356,33 +356,22 @@ label { display: inline-block; }
 
 /* badge */
 .sail-badge { display: inline-flex; }
-
+.sx-fontbody{font-family:var(--body-font)}.sx-fontsemibold{font-weight:var(--font-weight-semibold)}.sx-leadingnone{line-height:var(--leading-none)}.sx-whitespacenowrap{white-space:nowrap}.sx-alignmiddle{vertical-align:middle}.sx-tabularnums{font-variant-numeric:tabular-nums}.sx-bgtonebg{background-color:var(--tone-bg)}.sx-texttonefg{color:var(--tone-fg)}.sx-border{border-width:1px;border-style:solid}.sx-bordertoneborder{border-color:var(--tone-border)}
 
   .sail-badge {
-    display: inline-flex;
-    align-items: center;
-    vertical-align: middle;
     /* Size: md base (exact tokens); sm/lg override below (residues kept literal where no exact token). */
     --badge-h: var(--control-h-2xs);
     --badge-px: var(--space-2);
     --badge-fs: 10.5px; /* residue literal — no text token */
     --badge-gap: var(--space-1);
     --badge-radius: var(--radius-sm);
+    align-items: center;
     gap: var(--badge-gap);
     min-height: var(--badge-h);
     padding: 0 var(--badge-px);
-    font-family: var(--font-body);
     font-size: var(--badge-fs);
-    font-weight: var(--font-weight-semibold);
-    line-height: var(--leading-none);
-    white-space: nowrap;
     border-radius: var(--badge-radius);
     -webkit-font-smoothing: antialiased;
-    font-variant-numeric: tabular-nums;
-    /* soft is the default variant — base .sail-badge renders soft. */
-    background: var(--tone-bg);
-    border: 1px solid var(--tone-border);
-    color: var(--tone-fg);
   }
   .sail-badge[hidden] { display: none; }
 
@@ -414,7 +403,7 @@ label { display: inline-block; }
   /* Shape — square (radius-sm) default; pill opts into the full radius. */
   .sail-badge[pill] { --badge-radius: var(--shape-pill); }
 
-  /* Variant matrix (soft is the base above). */
+  /* Variant matrix — soft base is host sx; solid/outline override. */
   .sail-badge[variant='solid'] {
     background: var(--tone);
     border-color: var(--tone);
