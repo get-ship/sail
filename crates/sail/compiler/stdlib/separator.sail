@@ -1,11 +1,10 @@
 <!--
-  <separator> — L1 language element (element mode). Native <hr> carries the
-  implicit separator role. There is no host wrapper in L1 — the root IS the
-  <hr> — so the skin keys everything on :host (rewritten to .sail-separator).
+  <separator> — L1 language element (element mode). Native <hr>.
 
-  Faithful to the feat/next sail-separator baseline minus the `decorative`
-  prop (dynamic role swapping is per-instance behavior — use-site attrs
-  merge onto the root, so `<separator role="none">` covers it).
+  Host paint: display/width/height/margin/background (for solid horizontal default)
+  via sx. Residue: --separator-line channel, border:0/p-0, orientation/variant
+  matrices, dashed border-top/left, vertical inline-block + align-self, tone
+  overrides.
 -->
 
 <scope>
@@ -17,29 +16,16 @@
 </scope>
 
 <style>
-  /* Line color is a LOCAL paint channel (--separator-line), not a write into
-     global --tone-*. Default reads --border-subtle; branded tones read the
-     global contract's --tone-border (filled by [tone=…] in contracts.css).
-     muted/default share the subtle border (baseline parity). */
   .sail-separator {
     --separator-line: var(--border-subtle);
     border: 0;
-    margin: 0;
     padding: 0;
-    flex: 0 0 auto;
   }
   .sail-separator[tone='primary'],
   .sail-separator[tone='destructive'] {
     --separator-line: var(--tone-border);
   }
 
-  .sail-separator:not([orientation='vertical']) {
-    display: block;
-    width: 100%;
-    height: 1px;
-    margin: var(--space-2) 0;
-    background: var(--separator-line);
-  }
   .sail-separator:not([orientation='vertical'])[variant='dashed'] {
     background: transparent;
     border-top: 1px dashed var(--separator-line);
@@ -61,4 +47,4 @@
   }
 </style>
 
-<hr>
+<hr sx="block w-full h-px m-2 bg-(--separator-line)">
