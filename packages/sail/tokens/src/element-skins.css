@@ -114,22 +114,13 @@
 
 /* label */
 label { display: inline-block; }
+.sx-fontbody{font-family:var(--body-font)}.sx-trackingnormal{letter-spacing:var(--tracking-normal)}.sx-textforeground{color:var(--foreground)}.sx-cursorpointer{cursor:pointer}.sx-textbase{font-size:var(--text-base)}
 
-
-  label {
-    display: inline-block;
-    font-family: var(--font-body);
-    font-weight: var(--label-weight);
-    letter-spacing: var(--tracking-normal);
-    color: var(--foreground);
-    cursor: pointer;
-    --label-fs: var(--text-base);
-    font-size: var(--label-fs);
-  }
+  label { font-weight: var(--label-weight); }
   label[hidden] { display: none; }
-
+  /* sm/lg share text-sm — baseline; md default is host sx text-base */
   label[size='sm'],
-  label[size='lg'] { --label-fs: var(--text-sm); }
+  label[size='lg'] { font-size: var(--text-sm); }
 
   .req {
     display: none;
@@ -1250,14 +1241,9 @@ label { display: inline-block; }
   }
 
 /* field */
+.sx-fontbody{font-family:var(--body-font)}.sail-col{display:flex;flex-direction:column;min-width:0}.sail-col>*{min-width:0}.sail-g-1{gap:var(--space-1)}.sail-ai-stretch{align-items:stretch}
 
-  /* residue lock: layout flex + named slots + [invalid] CSS swap + svg stroke (tokenized; no bare leading/space/ring literals) */
-  .sail-field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    font-family: var(--font-body);
-  }
+  /* residue lock: named slots + [invalid] CSS swap + svg stroke (tokenized; no bare leading/space/ring literals) */
   .sail-field[hidden] { display: none; }
 
   .sail-field .msg { margin-top: var(--space-1); }
@@ -1282,19 +1268,9 @@ label { display: inline-block; }
   .sail-field[invalid] .hint { display: none; }
 
 /* collapsible */
+.sx-block{display:block}.sx-fontbody{font-family:var(--body-font)}.sx-px4{padding-inline:var(--space-4)}.sx-py3{padding-block:var(--space-3)}
 
-  /* The framework's global :where(summary) / :where(details) treatment in
-     contracts.css already supplies the flex summary, the rotating chevron
-     (::after), the open-state header, and the ::details-content open/close
-     animation — collapsible inherits all of it. This skin adds only what is
-     element-specific: identity + the disabled state (native <details> has no
-     disabled concept) + the content padding hook. */
-  .sail-collapsible {
-    display: block;
-    font-family: var(--font-body);
-  }
   .sail-collapsible[disabled] summary { cursor: not-allowed; opacity: 0.5; }
-  .sail-collapsible .content-inner { padding: var(--space-3) var(--space-4); }
 
 /* slider */
 .sail-slider { display: inline-flex; }
@@ -1432,8 +1408,8 @@ label { display: inline-block; }
   }
 
 /* tab-panel */
+.sx-pt4{padding-top:var(--space-4)}.sx-minw0{min-width:0}
 
-  .sail-tab-panel { padding: var(--space-4) 0 0; min-width: 0; }
   .sail-tabs[orientation='vertical'] .sail-tab-panel { padding: 0 0 0 var(--space-4); }
 
 /* toggle-group */
@@ -1931,11 +1907,10 @@ label { display: inline-block; }
   }
 
 /* pagination */
+.sail-pagination { display: inline-flex; }
+.sail-row-i{display:inline-flex;flex-wrap:wrap;min-width:0}.sail-row-i>*{min-width:0}.sail-g-1{gap:var(--space-1)}.sail-ai-center{align-items:center}.sail-jc-start{justify-content:flex-start}.sail-nowrap{flex-wrap:nowrap}
 
   .sail-pagination {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
     --pg-h: var(--control-h-md);
     --pg-fs: var(--text-sm);
   }
