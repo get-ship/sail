@@ -1,13 +1,8 @@
 <!--
-  <scroll-area> — themed overlay scrollbars. Constrain via sx (h-*/max-h-*).
-
-  Paint: CVA orientation overflow axes + overscroll on host sx.
-  Contracts: scrollbar-width/color + webkit scrollbar pseudos.
+  <scroll-area> — standard + webkit scrollbar packs on host sx.
 -->
-
 <scope>
   props: {
-    // first key = default = PE vertical
     orientation: {
       vertical: 'overflow-x-hidden overflow-y-auto',
       horizontal: 'overflow-x-auto overflow-y-hidden',
@@ -15,5 +10,4 @@
     }
   }
 </scope>
-
-<div sx="overflow-x-hidden overflow-y-auto overscroll-contain"><slot></slot></div>
+<div sx="overflow-x-hidden overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-border scrollbar:w-2_5 scrollbar:h-2_5 scrollbar-track:bg-transparent scrollbar-thumb:bg-border scrollbar-thumb:rounded-full scrollbar-thumb:border-3 scrollbar-thumb:border-transparent scrollbar-thumb:bg-clip-padding hover:scrollbar-thumb:bg-muted-foreground"><slot></slot></div>

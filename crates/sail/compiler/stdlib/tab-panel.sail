@@ -1,12 +1,13 @@
 <!--
-  <tab-panel name="…"> — content panel for the matching <tab>. Host sx owns
-  default pad; vertical orientation parent-keyed pad lives in contracts.
+  <tab-panel> — orientation CVA (stamped by use:tabs).
 -->
-
 <scope>
   props: {
     name = ''
+    orientation: {
+      horizontal: 'pt-4 min-w-0',
+      vertical: 'pt-0 ps-4 min-w-0',
+    }
   }
 </scope>
-
 <div sx="pt-4 min-w-0"><slot></slot></div>

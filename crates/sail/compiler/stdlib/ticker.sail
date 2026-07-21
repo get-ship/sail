@@ -1,7 +1,6 @@
 <!--
   <ticker> — infinite linear marquee. Host overflow is sx; track is a nowrap
-  row. Animation duration/reverse/reduced-motion pause are contracts (fx on
-  child anatomy; no animation sx primitive).
+  row. Duration/reverse drive use:marquee (motion:loop) — not contracts PE.
 -->
 
 <scope>
@@ -12,7 +11,7 @@
 </scope>
 
 <div sx="overflow-hidden">
-  <row nowrap class="track" sx="w-max">
+  <row nowrap class="track" use:marquee sx="w-max">
     <span class="segment"><slot></slot></span>
     <span class="segment" aria-hidden="true"><slot></slot></span>
   </row>

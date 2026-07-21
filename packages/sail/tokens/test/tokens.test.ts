@@ -117,6 +117,7 @@ const COMPONENT_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
   // Panel clamps
   ['--panel-max-w-md', /--panel-max-w-md\s*:/i],
   ['--panel-min-w-md', /--panel-min-w-md\s*:/i],
+  ['--panel-rail-w', /--panel-rail-w\s*:/i],
   // Control heights + stroke
   ['--control-h-md', /--control-h-md\s*:/i],
   ['--control-stroke', /--control-stroke\s*:/i],

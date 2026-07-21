@@ -1,15 +1,11 @@
 <!--
-  <icon> — sizes/inks one glyph. use:icon fetches named/src glyphs.
-  Host sx: align + ink + PE size md. CVA size maps box. SVG fill + spin fx
-  are contracts (injected anatomy; no structure hook for the glyph).
+  <icon> — glyph-fill child pack for svg box; use:icon owns spin.
 -->
-
 <scope>
   props: {
     name = ''
     src = ''
     label = ''
-    // first key = default = PE md
     size: {
       md: 'size-icon-size-md',
       xs: 'size-icon-size-2xs',
@@ -20,7 +16,6 @@
     spin = false
   }
 </scope>
-
-<span use:icon sx="inline-block align-middle text-current size-icon-size-md shrink-0">
+<span use:icon sx="inline-block align-middle text-current size-icon-size-md shrink-0 glyph-fill">
   <slot></slot>
 </span>

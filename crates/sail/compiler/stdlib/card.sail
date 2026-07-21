@@ -4,12 +4,16 @@
 
   Paint (one path):
     host sx=         — base surface + PE padding md (attr-absent; defaults not stamped)
+                       + token backdrop-filter via backdrop-(--card-backdrop-filter)
+                       + corner treatment via border-image-(--corner-image)
+    structure        — named header/footer slots with chrome sx (bleed to host pad edges);
+                       empty:hidden collapses unfilled regions (no parent→child PE)
     CVA-in-props     — variant + padding maps (first key = default = PE)
-    compound         — interactive / fill flags only
-    global [tone]    — channel reads for border/fill
-    contracts        — named unexpressibles: backdrop-filter, accent-bar
-                       ::before stripe, status-rail 3px, header/footer slot chrome
-  No residual card matrix in _residues.css.
+    compound         — interactive (lift + chrome + forced-colors focus) / fill /
+                       status-rail (border-s + pad-adjust) / branded tone border /
+                       accent-bar (before: stripe + hover:before: opacity)
+    global [tone]    — channel writes for --tone-*
+  No card PE in contracts.css. No residual card matrix in _residues.css.
 -->
 
 <scope>
@@ -33,11 +37,41 @@
     fill = false
   }
   compound: [
-    { when: { interactive: true }, sx: 'cursor-pointer tap-highlight-none hover:border-border-strong hover:shadow-hover active:shadow-xs focus:outline-solid focus:outline-2 focus:outline-ring focus:outline-offset-2' },
+    { when: { interactive: true }, sx: 'cursor-pointer tap-highlight-none hover:border-border-strong hover:shadow-hover hover:-translate-y-px active:shadow-card-rest active:translate-y-0 active:duration-instant motion-reduce:translate-y-0 focus:outline-solid focus:outline-2 focus:outline-ring focus:outline-offset-2 forced-colors:focus:outline-CanvasText' },
     { when: { fill: true }, sx: 'bg-tone-bg border-tone-border' },
+    { when: { tone: 'primary' }, sx: 'border-tone-border' },
+    { when: { tone: 'info' }, sx: 'border-tone-border' },
+    { when: { tone: 'success' }, sx: 'border-tone-border' },
+    { when: { tone: 'warning' }, sx: 'border-tone-border' },
+    { when: { tone: 'destructive' }, sx: 'border-tone-border' },
+    { when: { tone: 'accent' }, sx: 'border-tone-border' },
+    { when: { tone: 'muted' }, sx: 'border-tone-border' },
+    // Untoned/default rail = border-strong (covers attr-absent + tone=default).
+    // Branded tones recolor to tone-fg. Pad-adjust: space-N − space-1 for 3px rail
+    // (md PE default ps-4; sm/lg/none compounds override).
+    { when: { 'status-rail': true }, sx: 'border-s-3 border-s-border-strong ps-4' },
+    { when: { 'status-rail': true, padding: 'sm' }, sx: 'ps-2' },
+    { when: { 'status-rail': true, padding: 'md' }, sx: 'ps-4' },
+    { when: { 'status-rail': true, padding: 'lg' }, sx: 'ps-5' },
+    { when: { 'status-rail': true, padding: 'none' }, sx: 'ps-0' },
+    { when: { 'status-rail': true, tone: 'primary' }, sx: 'border-s-tone-fg' },
+    { when: { 'status-rail': true, tone: 'info' }, sx: 'border-s-tone-fg' },
+    { when: { 'status-rail': true, tone: 'success' }, sx: 'border-s-tone-fg' },
+    { when: { 'status-rail': true, tone: 'warning' }, sx: 'border-s-tone-fg' },
+    { when: { 'status-rail': true, tone: 'destructive' }, sx: 'border-s-tone-fg' },
+    { when: { 'status-rail': true, tone: 'accent' }, sx: 'border-s-tone-fg' },
+    { when: { 'status-rail': true, tone: 'muted' }, sx: 'border-s-tone-fg' },
+    { when: { 'accent-bar': 'static' }, sx: 'before:content-empty before:absolute before:inset-x-0 before:top-0 before:h-half before:bg-gradient-to-r before:from-primary before:to-accent before:opacity-100 before:rounded-t-lg before:pointer-events-none before:transition-opacity before:duration-medium before:ease-out' },
+    { when: { 'accent-bar': 'hover' }, sx: 'before:content-empty before:absolute before:inset-x-0 before:top-0 before:h-half before:bg-gradient-to-r before:from-primary before:to-accent before:opacity-0 hover:before:opacity-100 before:rounded-t-lg before:pointer-events-none before:transition-opacity before:duration-medium before:ease-out' },
   ]
 </scope>
 
-<div sx="relative overflow-clip rounded-lg border border-border text-foreground shadow-xs transition-colors duration-fast ease-out bg-surface-1 py-4 px-5">
+<div sx="relative isolate overflow-clip rounded-lg border border-border text-card-foreground shadow-card-rest transition-colors duration-fast ease-out bg-surface-1 py-4 px-5 backdrop-(--card-backdrop-filter) border-image-(--corner-image)">
+  <div class="header" sx="empty:hidden block -mt-4 -mx-5 mb-3 px-5 py-4 border-b border-border-subtle font-heading font-(--heading-weight)">
+    <slot name="header"></slot>
+  </div>
   <slot></slot>
+  <div class="footer" sx="empty:hidden block mt-3 -mx-5 -mb-4 px-5 py-4 border-t border-border-subtle">
+    <slot name="footer"></slot>
+  </div>
 </div>

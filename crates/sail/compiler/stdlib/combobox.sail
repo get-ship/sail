@@ -25,10 +25,9 @@
 
   Paint (one path):
     host sx=         — block relative + typeface
-    child sx=        — input full width; listbox chrome
-    contracts        — listbox anchor positioning + ::backdrop; option anatomy
-                       (author-supplied children; [data-active]/:disabled/:hover/
-                       [hidden]; empty state)
+    child sx=        — input full width; listbox chrome + anchor geometry
+    POPOVER_SKIN     — [role=listbox] option anatomy (author children; same
+                       shape as [role=menu] menuitem chrome)
   No residual combobox matrix.
 -->
 
@@ -46,7 +45,7 @@
     popover
     use:anchor
     placement="bottom-start"
-    sx="p-1 text-popover-foreground bg-popover border border-border rounded-md shadow-lg z-(--z-popover)"
+    sx="fixed inset-auto m-0 left-(--anchor-left) top-(--anchor-top) min-w-(--anchor-width) max-h-panel-max-h-sm overflow-y-auto overscroll-contain p-1 text-popover-foreground bg-popover border border-border rounded-md shadow-lg z-(--z-popover)"
   >
     <slot></slot>
   </div>

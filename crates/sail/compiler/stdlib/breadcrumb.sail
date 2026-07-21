@@ -1,10 +1,10 @@
 <!--
-  <breadcrumb> — nav > ol trail. Author crumbs as <li><a>. Separators are
-  ::before anatomy (contracts). List geometry + link paint also contracts
-  (author-supplied children; no structure hook for per-item sx).
+  <breadcrumb> — list-trail on ol; author li/a anatomy in element-skins.
 -->
-
 <scope>
 </scope>
-
-<nav aria-label="Breadcrumb"><ol><slot></slot></ol></nav>
+<nav aria-label="Breadcrumb">
+  <ol sx="m-0 p-0 list-none font-body text-sm list-trail">
+    <slot></slot>
+  </ol>
+</nav>

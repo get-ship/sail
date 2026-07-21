@@ -44,6 +44,7 @@
   --space-8: 32px;
   /* Fine steps between the 4px base — kills the `calc(var(--space-2)/2)`
      anti-pattern (60 raw occurrences across 17 primitives). */
+  --space-px: 1px;
   --space-half: 2px;
   --space-0_75: 3px;
   --space-1_25: 5px;
@@ -103,6 +104,8 @@
   --panel-max-w-sm: 320px;
   --panel-max-w-md: 480px;
   --panel-max-w-lg: 720px;
+  /* Tooltip / tight overlay clamp (was bare 20rem fallback in popover skin). */
+  --panel-max-w-xs: 20rem;
   --panel-max-h-sm: 240px;
   --panel-max-h-md: 480px;
   --panel-max-h-lg: 720px;
@@ -114,6 +117,10 @@
   --panel-vh-lg: 90vh;
   --panel-ch-w-md: 38ch;
   --panel-ch-w-lg: 60ch;
+  /* Navbar rail min-width (placement=rail). Read via min-w-(--panel-rail-w). */
+  --panel-rail-w: 14rem;
+  /* Menu / popover floor width (role=menu contract + anchored panels). */
+  --menu-min-w: 12rem;
 
   /* Panel paddings — the component-token tier for overlay shells
      (dialog/drawer/sheet/toast + the popover/menu quartet), census-locked
@@ -132,6 +139,8 @@
   --panel-pad-card: var(--space-2);
   --panel-pad-menu: var(--space-1);
   --panel-w-side: 420px;
+  /* Toast region fluid width — min(24rem, viewport minus pad). */
+  --panel-w-toast: min(24rem, calc(100vw - var(--space-8)));
 
   /* Control accents — census/control-glyph.md. The glyph box scale ALIASES
      the icon scale exactly (14/16/18 = icon-size-sm/md/lg): no separate
@@ -177,6 +186,8 @@
   --leading-snug: 1.35;
   --leading-normal: 1.5;
   --leading-normal-plus: 1.55;
+  /* Code / pre leading — denser than relaxed, looser than normal (syntax blocks). */
+  --leading-code: 1.6;
   --leading-relaxed: 1.7;
 
   --font-weight-normal: 400;
@@ -301,6 +312,8 @@
   --shadow-sticky: 0 2px 6px -2px oklch(0 0 0 / 8%), 0 1px 2px oklch(0 0 0 / 4%);
   --shadow-accent: 0 0 0 3px color-mix(in oklch, var(--primary) 22%, transparent);
   --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 5%);
+  /* Hairline inset ring + top edge highlight — avatar frame, tile chrome. */
+  --shadow-inset-ring: inset 0 0 0 1px var(--border), inset 0 1px 0 var(--background);
   /* Top-edge cue for floating panels seated above content (debug dock). */
   --shadow-edge-top: 0 -8px 24px -8px oklch(0 0 0 / 8%), 0 -1px 0 oklch(0 0 0 / 4%);
 
@@ -532,9 +545,10 @@ body::after {
   }
   /* :where(...) carries zero specificity, and neither property below is
    * !important — so a component that OWNS its reduced-motion behaviour
-   * (spinner's slowdown, ticker's animation-play-state: paused) has real
-   * rule specificity (`.sail-spinner .ring`, `.sail-ticker .track`) and wins
-   * this default on the cascade, unforced. Anything that has NOT opted in
+   * (spinner's CSS-fx slowdown via `.sail-spinner .ring`) has real rule
+   * specificity and wins this default on the cascade, unforced. Ticker/icon
+   * spin ride motion: (use:marquee / use:icon) and settle under reduced
+   * motion in the runtime, not via CSS PE. Anything that has NOT opted in
    * still gets stopped here — this is the floor, not a universal override.
    * transition-duration/scroll-behavior stay a blanket !important kill:
    * hover/interaction micro-transitions are not a component's motion

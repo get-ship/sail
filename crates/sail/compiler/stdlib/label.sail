@@ -1,11 +1,8 @@
 <!--
-  <label> — native label root. Size via CVA (PE md on host sx); weight reads
-  --label-weight channel; required star gated in contracts.
+  <label> — size CVA; weight channel; .req gate in element-skins anatomy.
 -->
-
 <scope>
   props: {
-    // first key = default = PE md (attr-absent)
     size: {
       md: 'text-base',
       sm: 'text-sm',
@@ -14,8 +11,7 @@
     required = false
   }
 </scope>
-
-<label sx="font-body tracking-normal text-foreground cursor-pointer text-base">
+<label sx="font-body font-(--label-weight) tracking-normal text-foreground cursor-pointer text-base group">
   <slot></slot>
-  <span class="req" aria-hidden="true" sx="text-destructive font-bold ms-1">*</span>
+  <span class="req" aria-hidden="true" sx="hidden group-required:inline text-destructive font-bold ms-1">*</span>
 </label>

@@ -7,8 +7,9 @@
     host sx=         — soft base + PE size md (attr-absent; defaults not stamped)
     CVA-in-props     — variant + size maps (first key = default = PE)
     compound         — pill → rounded-full
-    global [tone]    — channel reads; PE muted default lives in contracts
-  No residual badge matrix.
+    channels:        — soft-status muted --tone-* when tone absent/default
+    global [tone]    — branded channel reads (primary/… override soft baseline)
+  Zero contracts PE.
 -->
 
 <scope>
@@ -31,6 +32,24 @@
   compound: [
     { when: { pill: true }, sx: 'rounded-full' },
   ]
+  channels: {
+    default: {
+      tone: 'muted-foreground',
+      'tone-fg': 'muted-foreground',
+      'tone-contrast': 'background',
+      'tone-bg': 'tone-muted-bg',
+      'tone-border': 'tone-muted-border',
+    }
+    tone: {
+      default: {
+        tone: 'muted-foreground',
+        'tone-fg': 'muted-foreground',
+        'tone-contrast': 'background',
+        'tone-bg': 'tone-muted-bg',
+        'tone-border': 'tone-muted-border',
+      }
+    }
+  }
 </scope>
 
 <span sx="font-body font-semibold leading-none whitespace-nowrap align-middle tabular-nums antialiased border rounded-sm bg-tone-bg text-tone-fg border-tone-border min-h-control-h-2xs px-2 text-xs">
