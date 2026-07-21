@@ -122,72 +122,53 @@ fn no_skin_hardcodes_a_channel_governed_property() {
     );
 }
 
-/// The literal-border census.
-///
-/// `--border-width` governs stroke weight, but 42 literal `Npx` borders
-/// predate it across the stdlib (measured by this test, which is why the
-/// number is not the 39 a naive grep reports — the grep misses multi-value
-/// shorthands). They are NOT all breaches: a decorative 2px quote rule is a
-/// design detail, not a control hairline. So this is a RATCHET, not a ban —
-/// the count may fall, never rise. Driving it to zero means auditing each
-/// site for "hairline or graphic?", a separate pass from landing the channel.
+/// The literal-border census on the real paint surfaces (contracts + lowered
+/// element skins). Ratchet: count may fall, never rise. Prefer `--border-width`.
 #[test]
 fn literal_border_widths_in_skins_do_not_increase() {
-    // Census lives in framework residual skins now — author `.sail` sources no
-    // longer carry `<style>` (relocated to `stdlib/_residues.css`).
-    const BASELINE: usize = 0; // residues emptied — no residual literal borders
+    const BASELINE: usize = 22; // contracts.css census after residue deletion
 
-    let mut count = 0usize;
-    let residues = concat!(env!("CARGO_MANIFEST_DIR"), "/stdlib/_residues.css");
-    let src = std::fs::read_to_string(residues).expect("stdlib/_residues.css must exist");
-    for line in src.lines() {
-        let t = line.trim();
-        if !t.starts_with("border") {
-            continue;
+    fn count_literal_borders(src: &str) -> usize {
+        let mut count = 0usize;
+        for line in src.lines() {
+            let t = line.trim();
+            if !t.starts_with("border") {
+                continue;
+            }
+            if t.starts_with("border-radius")
+                || t.starts_with("border-collapse")
+                || t.starts_with("border-spacing")
+            {
+                continue;
+            }
+            let Some(colon) = t.find(':') else { continue };
+            let value = t[colon + 1..].trim();
+            if value
+                .split_whitespace()
+                .next()
+                .is_some_and(|first| first.trim_end_matches(';').ends_with("px"))
+            {
+                count += 1;
+            }
         }
-        // border-radius/-collapse/-spacing are not stroke weight — a
-        // radius literal is the radius scale's business, not this channel's.
-        if t.starts_with("border-radius")
-            || t.starts_with("border-collapse")
-            || t.starts_with("border-spacing")
-        {
-            continue;
-        }
-        let Some(colon) = t.find(':') else { continue };
-        let value = t[colon + 1..].trim();
-        // A literal width is a bare `Npx` in the first position of the
-        // shorthand, or as the whole value of a *-width property.
-        if value
-            .split_whitespace()
-            .next()
-            .is_some_and(|first| first.trim_end_matches(';').ends_with("px"))
-        {
-            count += 1;
-        }
+        count
     }
 
+    let count = count_literal_borders(CONTRACTS_CSS) + count_literal_borders(SKINS_CSS);
     assert!(
         count <= BASELINE,
-        "literal border widths in residual skins rose to {count} (baseline {BASELINE}).\n\
-         New skins must spend --border-width so themes can thicken hairlines. \
-         If this is a decorative graphic rather than a control hairline, say so \
-         in a comment and raise the baseline deliberately."
+        "literal border widths rose to {count} (baseline {BASELINE}). \
+         Spend --border-width for control hairlines."
     );
-    // Tightening is welcome — but the baseline must be lowered with it, or the
-    // ratchet stops ratcheting.
     assert!(
         count >= BASELINE || BASELINE - count <= 5,
-        "literal border widths dropped to {count}; lower BASELINE to {count} so \
-         the ratchet keeps its grip."
+        "literal border widths dropped to {count}; lower BASELINE to {count}."
     );
 }
 
-/// Contract-owned tone channel vars. Residues may write these **only** under
-/// attr-absent selectors (`.sail-*:not([tone])` / `[tone='default']`). Bare
-/// `.sail-* { … }` blocks must not — skins load after contracts in `@layer sail`
-/// at the same (0,1,0) specificity, so a bare-host write clobbers branded
-/// `[tone=X]` fills. Element-private locals (`--tone-on-fg`, chip hover/solid
-/// matrix channels) are free on host or branded rules.
+/// Contract-owned tone channel vars. PE untoned defaults write these only
+/// under `:not([tone])` / `[tone='default']`. Bare `.sail-* { … }` must not —
+/// same specificity as branded `[tone=X]` would clobber them after load order.
 const CONTRACT_TONE_CHANNELS: &[&str] = &[
     "--tone:",
     "--tone-fg:",
@@ -198,49 +179,40 @@ const CONTRACT_TONE_CHANNELS: &[&str] = &[
     "--tone-glow:",
 ];
 
-/// Attr-absent L1 defaults: contracts only keys branded `[tone='X']`, so PE
-/// muted defaults live under `:not([tone])` / `[tone=default]` — either in
-/// contracts (preferred, channel-write home) or residual skins (debt). Never
-/// on a bare `.sail-*` host (that clobbers branded tones).
+/// Attr-absent L1 PE defaults live in contracts under `:not([tone])`.
+/// Fail-closed: no bare `.sail-*` host writes contract tone channels (skins +
+/// contracts both scanned — there is no residual parallel sheet).
 #[test]
 fn residual_default_tone_fills_for_untoned_hosts() {
-    let residues = include_str!("../stdlib/_residues.css");
-    let contracts = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
-    ));
-    // PE fills may live in contracts or residues; bare-host ban scans residues.
-    let css = residues;
-    let pe = format!("{contracts}\n{residues}");
+    let pe = format!("{CONTRACTS_CSS}\n{SKINS_CSS}");
 
-    // Fail-closed: no bare `.sail-foo {` block may write contract tone channels.
-    // (Skins after contracts, same specificity → bare host clobbers [tone=X].)
+    // Fail-closed bare-host ban on both paint surfaces.
     {
         let mut breaches = Vec::new();
-        let mut rest = css;
-        while let Some(rel) = rest.find(".sail-") {
-            let slice = &rest[rel..];
-            // bare host: `.sail-name {` with no pseudo/attr before the brace
-            let Some(open) = slice.find('{') else { break };
-            let sel = slice[..open].trim();
-            // only pure host class, optional whitespace — no : or [
-            let is_bare = sel
-                .strip_prefix(".sail-")
-                .is_some_and(|tail| tail.chars().all(|c| c.is_ascii_alphanumeric() || c == '-'));
-            if is_bare {
-                let body_end = slice[open + 1..]
-                    .find('}')
-                    .map(|i| open + 1 + i)
-                    .unwrap_or(slice.len());
-                let body = &slice[open + 1..body_end];
-                for ch in CONTRACT_TONE_CHANNELS {
-                    if body.contains(ch) {
-                        let name = ch.trim_end_matches(':');
-                        breaches.push(format!("{sel} writes {name}"));
+        for css in [CONTRACTS_CSS, SKINS_CSS] {
+            let mut rest = css;
+            while let Some(rel) = rest.find(".sail-") {
+                let slice = &rest[rel..];
+                let Some(open) = slice.find('{') else { break };
+                let sel = slice[..open].trim();
+                let is_bare = sel
+                    .strip_prefix(".sail-")
+                    .is_some_and(|tail| tail.chars().all(|c| c.is_ascii_alphanumeric() || c == '-'));
+                if is_bare {
+                    let body_end = slice[open + 1..]
+                        .find('}')
+                        .map(|i| open + 1 + i)
+                        .unwrap_or(slice.len());
+                    let body = &slice[open + 1..body_end];
+                    for ch in CONTRACT_TONE_CHANNELS {
+                        if body.contains(ch) {
+                            let name = ch.trim_end_matches(':');
+                            breaches.push(format!("{sel} writes {name}"));
+                        }
                     }
                 }
+                rest = &slice[1..];
             }
-            rest = &slice[1..];
         }
         assert!(
             breaches.is_empty(),
@@ -249,7 +221,6 @@ fn residual_default_tone_fills_for_untoned_hosts() {
         );
     }
 
-    // alert muted default — attr-absent pattern (residue until alert dissolve)
     assert!(
         pe.contains(".sail-alert:not([tone])")
             && pe.contains("--tone: var(--muted-foreground)")
@@ -257,7 +228,6 @@ fn residual_default_tone_fills_for_untoned_hosts() {
         "alert untoned default must fill --tone/--tone-bg for stripe + icon chip"
     );
 
-    // badge muted default (host sx reads tone-bg/fg/border) — contracts after dissolve
     assert!(
         pe.contains(".sail-badge:not([tone])")
             && pe.contains("--tone-border: var(--tone-muted-border)"),

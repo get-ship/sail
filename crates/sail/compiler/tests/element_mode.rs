@@ -267,7 +267,7 @@ fn stdlib_chip_compiles_with_use_stamps() {
 #[test]
 fn stdlib_element_sources_have_no_author_style_blocks() {
     // L1 elements author structure + sx + layout + capability use: only.
-    // Residual paint lives in stdlib/_residues.css (framework sheet).
+    // Paint is host sx + CVA-in-props (and contracts for shared channels).
     for (tag, src) in sail_compiler::stdlib::sources() {
         let mut in_comment = false;
         let bytes = src.as_bytes();

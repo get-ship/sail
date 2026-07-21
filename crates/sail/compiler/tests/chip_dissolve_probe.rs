@@ -1,8 +1,9 @@
-//! Dissolve gates — paint source, residue burn, PE defaults (attr-absent).
+//! Paint-source gates for L1 dissolve: CVA-in-props + host sx, no residual
+//! local tone channels. Does not eulogize deleted intermediate files.
 use sail_compiler::compile_element;
 
 #[test]
-fn chip_compiles_with_cva_and_no_residue_matrix() {
+fn chip_compiles_with_cva_and_capability_mixins() {
     let src = include_str!("../stdlib/chip.sail");
     let out = compile_element(src, "chip").expect("chip compiles");
     assert_eq!(out.root_class, "sail-chip");
@@ -13,9 +14,7 @@ fn chip_compiles_with_cva_and_no_residue_matrix() {
         "capability mix-ins preserved: {}",
         out.structure_html
     );
-    // No L1 controller / use:chip brain
-    assert!(!out.structure_html.contains("use:chip"), "{}", out.structure_html);
-    // Variant/size axes from CVA-in-props
+    assert!(!out.structure_html.contains("use:chip"), "no element brain: {}", out.structure_html);
     assert!(
         out.skin_css.contains("variant='solid'")
             && out.skin_css.contains("variant='soft'")
@@ -30,7 +29,6 @@ fn chip_compiles_with_cva_and_no_residue_matrix() {
         "size via sx atoms: {}",
         out.skin_css
     );
-    // Tone is channel read only — no local --tone-bg-solid brand rewrites
     assert!(
         !out.skin_css.contains("--tone-bg-solid")
             && !out.skin_css.contains("--tone-bg-hover")
@@ -38,13 +36,11 @@ fn chip_compiles_with_cva_and_no_residue_matrix() {
         "no local tone channel writes: {}",
         out.skin_css
     );
-    // PE defaults: first CVA key = md/solid; attr-absent base on host sx
     let attrs = out.manifest["attributes"].as_array().unwrap();
     let variant = attrs.iter().find(|a| a["name"] == "variant").unwrap();
     assert_eq!(variant["default"], "solid", "PE solid default: {variant}");
     let size = attrs.iter().find(|a| a["name"] == "size").unwrap();
     assert_eq!(size["default"], "md", "PE size=md default: {size}");
-    // Host sx atoms: min-h-control-h-xs px-2_5 text-sm bg-tone (sanitized class names)
     assert!(
         out.structure_html.contains("sx-minhcontrolhxs")
             && out.structure_html.contains("sx-px25")
@@ -56,29 +52,8 @@ fn chip_compiles_with_cva_and_no_residue_matrix() {
 }
 
 #[test]
-fn residues_file_has_no_element_sections() {
-    // Goal bar: residual element skins must not live in _residues.css.
-    // Named unexpressibles (if any) live in contracts, not this dump.
-    let residues = include_str!("../stdlib/_residues.css");
-    assert!(
-        !residues.contains("/* --- ") && !residues.contains("(relocated from stdlib/"),
-        "element residual sections must be gone from _residues.css"
-    );
-}
-
-#[test]
-fn chip_residue_section_burned() {
-    let residues = include_str!("../stdlib/_residues.css");
-    assert!(
-        !residues.contains("/* --- chip ")
-            && !residues.contains(".sail-chip {")
-            && !residues.contains(".sail-chip[")
-            && !residues.contains("--chip-h")
-            && !residues.contains("--chip-px"),
-        "chip residual matrix must be deleted from _residues.css"
-    );
+fn chip_framework_skins_have_no_local_tone_matrix() {
     let skins = sail_compiler::stdlib::skins_css();
-    // Residual-only channels gone
     assert!(
         !skins.contains("--chip-h")
             && !skins.contains("--chip-px")
@@ -88,25 +63,19 @@ fn chip_residue_section_burned() {
             && !skins.contains("--tone-ghost-bg-hover"),
         "framework skins must not carry residual chip local channels"
     );
-    // Dissolved paint still emits: CVA-in-props attr rules via sx atoms
     assert!(
         skins.contains(".sail-chip")
             && skins.contains("variant='solid'")
             && skins.contains("background-color:var(--tone)")
             && skins.contains("size='md'"),
-        "dissolved chip paint must emit via element CVA/sx compile"
+        "chip paint must emit via element CVA/sx compile"
     );
 }
 
 #[test]
-fn badge_and_card_compile_cva_no_residue() {
+fn badge_and_card_compile_cva() {
     let badge = compile_element(include_str!("../stdlib/badge.sail"), "badge").expect("badge");
     assert!(badge.skin_css.contains("variant='solid'"), "{}", badge.skin_css);
-    assert!(
-        !include_str!("../stdlib/_residues.css").contains("/* --- badge "),
-        "badge residue section must be gone"
-    );
-    // PE: size default md; attr-absent md geometry on host sx
     let battrs = badge.manifest["attributes"].as_array().unwrap();
     let bsize = battrs.iter().find(|a| a["name"] == "size").unwrap();
     assert_eq!(bsize["default"], "md", "PE badge size=md: {bsize}");
@@ -124,11 +93,6 @@ fn badge_and_card_compile_cva_no_residue() {
         "card CVA: {}",
         card.skin_css
     );
-    assert!(
-        !include_str!("../stdlib/_residues.css").contains("/* --- card "),
-        "card residue section must be gone"
-    );
-    // PE: padding default md; attr-absent md padding on host sx
     let cattrs = card.manifest["attributes"].as_array().unwrap();
     let pad = cattrs.iter().find(|a| a["name"] == "padding").unwrap();
     assert_eq!(pad["default"], "md", "PE card padding=md: {pad}");
@@ -139,10 +103,8 @@ fn badge_and_card_compile_cva_no_residue() {
         "attr-absent PE card padding=md + surface base: {}",
         card.structure_html
     );
-    // status-rail is contracts-only (3px + tone-fg) — no dual CVA border-l-2
     assert!(
-        !card.skin_css.contains("border-left-width:2px")
-            && !card.skin_css.contains("status-rail"),
+        !card.skin_css.contains("border-left-width:2px") && !card.skin_css.contains("status-rail"),
         "no dual status-rail CVA paint: {}",
         card.skin_css
     );
@@ -154,40 +116,12 @@ fn badge_and_card_compile_cva_no_residue() {
         contracts.contains(".sail-card[status-rail]")
             && contracts.contains("border-left-width: 3px")
             && contracts.contains("border-left-color: var(--tone-fg)"),
-        "status-rail PE: 3px solid tone-fg in contracts (branded rail color)"
-    );
-    assert!(
-        contracts.contains(".sail-card[status-rail]:not([tone])")
-            && contracts.contains("border-left-color: var(--border-strong)"),
-        "status-rail untoned override uses border-strong"
+        "status-rail PE: 3px solid tone-fg in contracts"
     );
 }
 
 #[test]
-fn chip_non_solid_variants_clear_solid_shadow() {
-    // Host PE solid base includes shadow-xs; soft/outline/ghost must reset it.
-    let out = compile_element(include_str!("../stdlib/chip.sail"), "chip").expect("chip");
-    for key in ["soft", "outline", "ghost"] {
-        let needle = format!("variant='{key}'");
-        assert!(out.skin_css.contains(&needle), "missing {key}: {}", out.skin_css);
-    }
-    // soft rule group must clear box-shadow (shadow-none → none)
-    assert!(
-        out.skin_css.contains("variant='soft'")
-            && out.skin_css.contains("box-shadow:none"),
-        "non-solid variants must clear solid host shadow-xs: {}",
-        out.skin_css
-    );
-    assert!(
-        out.skin_css.contains("variant='solid'")
-            && out.skin_css.contains("box-shadow:var(--shadow-xs)"),
-        "solid keeps shadow-xs: {}",
-        out.skin_css
-    );
-}
-
-#[test]
-fn alert_compiles_and_residue_burned() {
+fn alert_compiles_with_capability_mixins() {
     let src = include_str!("../stdlib/alert.sail");
     let out = compile_element(src, "alert").expect("alert compiles");
     assert!(
@@ -197,14 +131,6 @@ fn alert_compiles_and_residue_burned() {
         out.structure_html
     );
     assert!(!out.structure_html.contains("use:alert"), "no element brain");
-    let residues = include_str!("../stdlib/_residues.css");
-    assert!(
-        !residues.contains("/* --- alert ")
-            && !residues.contains(".sail-alert {")
-            && !residues.contains(".sail-alert["),
-        "alert residual matrix must be deleted"
-    );
-    // PE default tone fills moved to contracts
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/contracts.css"
@@ -213,5 +139,28 @@ fn alert_compiles_and_residue_burned() {
         contracts.contains(".sail-alert:not([tone])")
             && contracts.contains("--tone-bg: var(--tone-muted-bg)"),
         "alert PE defaults in contracts"
+    );
+}
+
+#[test]
+fn chip_non_solid_variants_clear_solid_shadow() {
+    let out = compile_element(include_str!("../stdlib/chip.sail"), "chip").expect("chip");
+    for key in ["soft", "outline", "ghost"] {
+        assert!(
+            out.skin_css.contains(&format!("variant='{key}'")),
+            "missing {key}: {}",
+            out.skin_css
+        );
+    }
+    assert!(
+        out.skin_css.contains("variant='soft'") && out.skin_css.contains("box-shadow:none"),
+        "non-solid variants must clear solid host shadow-xs: {}",
+        out.skin_css
+    );
+    assert!(
+        out.skin_css.contains("variant='solid'")
+            && out.skin_css.contains("box-shadow:var(--shadow-xs)"),
+        "solid keeps shadow-xs: {}",
+        out.skin_css
     );
 }

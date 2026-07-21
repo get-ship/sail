@@ -1,9 +1,0 @@
-/* L1 residual skins — framework SSOT for rules relocated out of stdlib
- * .sail <style> blocks. Element sources author structure + sx + layout +
- * capability use: only. Prefer deleting rules here when expressible via
- * sx/layout/global contracts. Bundled into element-skins.css via skins_css().
- *
- * STATUS: no element residual sections remain. True unexpressibles (navbar
- * multi-region chrome, theme-picker swatch anatomy) live as named contracts
- * recipes. This file stays as an empty SSOT shell so skins_css() keeps working.
- */
