@@ -30,7 +30,7 @@
   .sail-scroll-area::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: var(--shape-pill);
-    border: 3px solid transparent;
+    border: 3px solid transparent; /* residue — 3px scrollbar border on thumb (inset); webkit pseudos anatomy kept; no squash to space-1 */
     background-clip: padding-box;
   }
   .sail-scroll-area:hover::-webkit-scrollbar-thumb { background: var(--muted-foreground); background-clip: padding-box; }
