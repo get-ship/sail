@@ -258,8 +258,7 @@ fn gen_framework_css(out: Option<PathBuf>) -> Result<()> {
     };
     let banner = "/* GENERATED from the sail-compiler stdlib registry — do not hand-edit.\n \
                   * Regenerate: cargo run -p sail-compiler -- framework-css\n \
-                  * L1 element skins: per-element skin_css (usually empty) + residual\n \
-                  * lowered host sx + CVA-in-props attr rules.\n \
+                  * L1 element skins: lowered host sx + CVA-in-props attr rules.\n \
                   * Framework contracts (tone/size channels) ride in contracts.css. */\n";
     // Wrapped in the `sail` cascade layer (matches the runtime contracts) so
     // author CSS (unlayered) overrides element skins by layer order.

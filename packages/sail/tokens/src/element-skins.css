@@ -1,7 +1,6 @@
 /* GENERATED from the sail-compiler stdlib registry — do not hand-edit.
  * Regenerate: cargo run -p sail-compiler -- framework-css
- * L1 element skins: per-element skin_css (usually empty) + residual
- * lowered host sx + CVA-in-props attr rules.
+ * L1 element skins: lowered host sx + CVA-in-props attr rules.
  * Framework contracts (tone/size channels) ride in contracts.css. */
 @layer sail {
 /* spinner */
