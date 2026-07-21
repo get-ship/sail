@@ -5788,11 +5788,6 @@ export const ACTIONS: ActionDoc[] = [
     "summary": "Drag-and-drop file receiver; reads files into a controller-side handler."
   },
   {
-    "name": "emptyState",
-    "param": "void",
-    "summary": "Empty-state element behavior; arms an action for the call-to-action slot."
-  },
-  {
     "name": "errorBoundary",
     "param": "void",
     "summary": "Catch render errors thrown by descendants; show a fallback UI."
@@ -5906,6 +5901,11 @@ export const ACTIONS: ActionDoc[] = [
     "name": "tooltip",
     "param": "void",
     "summary": "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay."
+  },
+  {
+    "name": "variantLive",
+    "param": "void",
+    "summary": "Variant-gated live region: variant=connecting → role=status/aria-live=polite; else role=note/aria-live=off. Re-syncs on variant mutation."
   },
   {
     "name": "virtualRow",
