@@ -20,10 +20,6 @@
   its visibility toggled by CSS on the `required` attribute — the baseline's
   `{#if required()}…{/if}` is template control flow, which element mode
   rejects (components have control flow; elements are static structure).
-
-  The per-attribute font-size matrix below (size=lg → text-sm, same rung as
-  size=sm) is copied verbatim from the baseline — preserved as-is, not
-  "fixed", since faithful porting is the job here.
 -->
 
 <scope>
@@ -31,23 +27,17 @@
     size: 'sm' | 'md' | 'lg' = 'md'
     required = false
   }
+  variants: {
+    size: {
+      sm: 'text-sm',
+      lg: 'text-sm',
+    }
+  }
 </scope>
 
 <style>
-  label {
-    display: inline-block;
-    font-family: var(--font-body);
-    font-weight: var(--label-weight);
-    letter-spacing: var(--tracking-normal);
-    color: var(--foreground);
-    cursor: pointer;
-    --label-fs: var(--text-base);
-    font-size: var(--label-fs);
-  }
+  label { font-weight: var(--label-weight); }
   label[hidden] { display: none; }
-
-  label[size='sm'],
-  label[size='lg'] { --label-fs: var(--text-sm); }
 
   .req {
     display: none;
@@ -58,7 +48,7 @@
   label[required] .req { display: inline; }
 </style>
 
-<label>
+<label sx="inline-block font-body tracking-normal text-foreground cursor-pointer text-base">
   <slot></slot>
   <span class="req" aria-hidden="true">*</span>
 </label>
