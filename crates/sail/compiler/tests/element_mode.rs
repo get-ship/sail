@@ -2,10 +2,11 @@
 //! element sources are normal `.sail` (a `<scope>` block, a template, and a
 //! `<style>` skin); the mode changes the outputs and enforces the seam test.
 //!
-//! Both retired idioms this file used to exercise are gone: the `variants:` field
-//! (variants are PROPS now — a union type — and their CSS is attribute-keyed in
-//! `<style>`), and author `:host` (element mode keys the skin on `.sail-<name>`
-//! directly; `:host` is a shadow idiom and light DOM has no host to select).
+//! Variant paint is **CVA-in-props**: a prop whose value is a key→sx map types
+//! as the key union, reflects as an attribute, and lowers through the same sx
+//! atom pipeline as host `sx=` (not hand attr-keyed CSS in `<style>`). Legacy
+//! `variants:` still lowers the same way for back-compat. Author `:host` is
+//! gone (element mode keys the skin on `.sail-<name>`; light DOM has no host).
 
 use sail_compiler::compile_element;
 

@@ -1,27 +1,15 @@
 <!--
-  <alert> — L1 language element (element mode). An inline status banner: a
-  tone-colored surface with an optional leading icon, a title, body copy,
-  action buttons, and an optional dismiss control. Bare tag lowers to
-  <div class="sail-alert">; the skin routes to the framework @layer.
+  <alert> — L1 language element (element mode). Inline status banner: tone
+  stripe, optional icon, title, body, actions, dismiss control.
 
-  This is the first L1 element to use COMPILE-TIME NAMED-SLOT PROJECTION: the
-  icon / title / actions regions are named slots (`slot="icon"` etc.), and the
-  default slot is the body. A use site distributes its slotted children into
-  the matching region at compile time — zero runtime, still compiles away.
+  Behavior: use:liveRegion + use:dismissControl (capability mix-ins).
 
-  Behavior rides stacked capability use: mix-ins
-  (packages/sail/runtime/src/actions/live-region.ts + dismiss-control.ts):
-  - use:liveRegion — role/aria-live upgrade to assertive alert for
-    warning/destructive tones (sensible static defaults — status/polite —
-    mean it announces correctly even before the action hydrates);
-  - use:dismissControl — the dismiss button (shown only under [dismissible])
-    fires `sail-dismiss` and removes the banner.
-
-  Faithful to the feat/next sail-alert baseline. Two shadow-isms dissolve at L1:
-  the reactive role/aria-live (a controller effect) becomes use:liveRegion,
-  and the bare `<button ghost xs>` (which rendered unskinned across the
-  shadow boundary — the baseline's LANG-GAP) becomes a self-contained close
-  skin authored here, where L1 is allowed to own CSS.
+  Paint (one path):
+    host sx=         — surface, type, padding, border, shadow
+    global [tone]    — stripe/icon channel reads; PE muted default in contracts
+    contracts        — named unexpressibles: grid template, ::before stripe,
+                       :empty anatomy, dismissible close gate
+  No residual alert matrix.
 -->
 
 <scope>
@@ -31,16 +19,37 @@
   }
 </scope>
 
-<div use:liveRegion use:dismissControl role="status" aria-live="polite" aria-atomic="true">
-  <span class="ico"><slot name="icon"></slot></span>
-  <div class="content">
-    <div class="title"><slot name="title"></slot></div>
-    <div class="body"><slot></slot></div>
-    <div class="actions"><slot name="actions"></slot></div>
+<div
+  use:liveRegion
+  use:dismissControl
+  role="status"
+  aria-live="polite"
+  aria-atomic="true"
+  sx="relative overflow-hidden p-3 border border-border rounded-md bg-surface-1 text-foreground font-body text-base leading-normal shadow-xs"
+>
+  <span class="ico" sx="shrink-0 size-control-h-xs rounded-md bg-tone-bg text-tone-fg">
+    <slot name="icon"></slot>
+  </span>
+  <div class="content" sx="min-w-0">
+    <div class="title" sx="font-semibold">
+      <slot name="title"></slot>
+    </div>
+    <div class="body" sx="text-muted-foreground">
+      <slot></slot>
+    </div>
+    <div class="actions" sx="mt-2">
+      <slot name="actions"></slot>
+    </div>
   </div>
-  <button class="close" type="button" anatomy aria-label="Dismiss">
-    <svg viewBox="0 0 10 10" aria-hidden="true">
-      <path d="M2 2 L8 8 M8 2 L2 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" fill="none"></path>
+  <button
+    class="close"
+    type="button"
+    anatomy
+    aria-label="Dismiss"
+    sx="size-control-h-xs shrink-0 self-start p-0 border-0 rounded-sm bg-transparent text-muted-foreground cursor-pointer transition-colors duration-fast ease-out hover:bg-muted hover:text-foreground focus:outline-solid focus:outline-2 focus:outline-ring focus:outline-offset-2"
+  >
+    <svg viewBox="0 0 10 10" aria-hidden="true" sx="block size-icon-size-sm stroke-current fill-none" stroke-width="1.75" stroke-linecap="round">
+      <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>
 </div>

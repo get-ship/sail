@@ -19,13 +19,18 @@
 label { display: inline-block; }
 .sx-fontbody{font-family:var(--body-font)}.sx-trackingnormal{letter-spacing:var(--tracking-normal)}.sx-textforeground{color:var(--foreground)}.sx-cursorpointer{cursor:pointer}.sx-textbase{font-size:var(--text-base)}
 
+/* card */
+.sx-relative{position:relative}.sx-overflowclip{overflow:clip}.sx-roundedlg{border-radius:var(--radius-lg)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-textforeground{color:var(--foreground)}.sx-shadowxs{box-shadow:var(--shadow-xs)}.sx-transitioncolors{transition-property:color, background-color, border-color, outline-color, fill, stroke}.sx-durationfast{transition-duration:var(--duration-fast)}.sx-easeout{transition-timing-function:var(--ease-out)}
+.sail-card[variant='default']{background-color:var(--surface-1);}.sail-card[variant='outline']{background-color:transparent;}.sail-card[padding='none']{padding:0;}.sail-card[padding='sm']{padding-block:var(--space-2);padding-inline:var(--space-3);}.sail-card[padding='md']{padding-block:var(--space-4);padding-inline:var(--space-5);}.sail-card[padding='lg']{padding-block:var(--space-5);padding-inline:var(--space-6);}.sail-card[interactive]{cursor:pointer;-webkit-tap-highlight-color:transparent;}.sail-card[interactive]:hover{border-color:var(--border-strong);box-shadow:var(--shadow-hover);}.sail-card[interactive]:active{box-shadow:var(--shadow-xs);}.sail-card[interactive]:focus-visible{outline-style:solid;outline-width:2px;outline-color:var(--ring);outline-offset:var(--space-2);}.sail-card[fill]{background-color:var(--tone-bg);border-color:var(--tone-border);}.sail-card[status-rail]{border-left-width:2px;border-left-color:var(--tone-fg);}
+
 /* switch */
 .sail-switch { display: inline-flex; }
 .sx-inlineblock{display:inline-block}.sx-alignmiddle{vertical-align:middle}.sx-m0{margin:0}.sx-cursorpointer{cursor:pointer}
 
 /* badge */
 .sail-badge { display: inline-flex; }
-.sx-fontbody{font-family:var(--body-font)}.sx-fontsemibold{font-weight:var(--font-weight-semibold)}.sx-leadingnone{line-height:var(--leading-none)}.sx-whitespacenowrap{white-space:nowrap}.sx-alignmiddle{vertical-align:middle}.sx-tabularnums{font-variant-numeric:tabular-nums}.sx-bgtonebg{background-color:var(--tone-bg)}.sx-texttonefg{color:var(--tone-fg)}.sx-border{border-width:1px;border-style:solid}.sx-bordertoneborder{border-color:var(--tone-border)}
+.sx-fontbody{font-family:var(--body-font)}.sx-fontsemibold{font-weight:var(--font-weight-semibold)}.sx-leadingnone{line-height:var(--leading-none)}.sx-whitespacenowrap{white-space:nowrap}.sx-alignmiddle{vertical-align:middle}.sx-tabularnums{font-variant-numeric:tabular-nums}.sx-border{border-width:1px;border-style:solid}.sx-roundedsm{border-radius:var(--radius-sm)}.sx-bgtonebg{background-color:var(--tone-bg)}.sx-texttonefg{color:var(--tone-fg)}.sx-bordertoneborder{border-color:var(--tone-border)}
+.sail-badge[variant='soft']{background-color:var(--tone-bg);color:var(--tone-fg);border-color:var(--tone-border);}.sail-badge[variant='solid']{background-color:var(--tone);color:var(--tone-contrast);border-color:var(--tone);box-shadow:var(--shadow-xs);}.sail-badge[variant='outline']{background-color:transparent;color:var(--tone-fg);border-color:var(--tone-border);}.sail-badge[size='sm']{min-height:var(--space-4);padding-inline:var(--space-1_5);font-size:var(--text-xs);}.sail-badge[size='md']{min-height:var(--control-h-2xs);padding-inline:var(--space-2);font-size:var(--text-xs);}.sail-badge[size='lg']{min-height:var(--control-h-xs);padding-inline:var(--space-2_5);font-size:var(--text-xs);}.sail-badge[pill]{border-radius:var(--radius-full);}
 
 /* avatar */
 .sail-avatar { display: inline-flex; }
@@ -35,11 +40,16 @@ label { display: inline-block; }
 .sail-tooltip { display: inline-flex; }
 .sx-py1{padding-block:var(--space-1)}.sx-px2{padding-inline:var(--space-2)}.sx-bgforeground{background-color:var(--foreground)}.sx-textbackground{color:var(--background)}.sx-fontbody{font-family:var(--body-font)}.sx-textxs{font-size:var(--text-xs)}.sx-fontmedium{font-weight:var(--font-weight-medium)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-shadowmd{box-shadow:var(--shadow-md)}.sx-whitespacenowrap{white-space:nowrap}.sx-pointereventsnone{pointer-events:none}
 
+/* alert */
+.sx-relative{position:relative}.sx-overflowhidden{overflow:hidden}.sx-p3{padding:var(--space-3)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-bgsurface1{background-color:var(--surface-1)}.sx-textforeground{color:var(--foreground)}.sx-fontbody{font-family:var(--body-font)}.sx-textbase{font-size:var(--text-base)}.sx-leadingnormal{line-height:var(--leading-normal)}.sx-shadowxs{box-shadow:var(--shadow-xs)}.sx-shrink0{flex-shrink:0}.sx-sizecontrolhxs{width:var(--control-h-xs);height:var(--control-h-xs)}.sx-bgtonebg{background-color:var(--tone-bg)}.sx-texttonefg{color:var(--tone-fg)}.sx-minw0{min-width:0}.sx-fontsemibold{font-weight:var(--font-weight-semibold)}.sx-textmutedforeground{color:var(--muted-foreground)}.sx-mt2{margin-top:var(--space-2)}.sx-selfstart{align-self:flex-start}.sx-p0{padding:0}.sx-border0{border-width:0px}.sx-roundedsm{border-radius:var(--radius-sm)}.sx-bgtransparent{background-color:transparent}.sx-cursorpointer{cursor:pointer}.sx-transitioncolors{transition-property:color, background-color, border-color, outline-color, fill, stroke}.sx-durationfast{transition-duration:var(--duration-fast)}.sx-easeout{transition-timing-function:var(--ease-out)}.sx-hover-bgmuted:hover{background-color:var(--muted)}.sx-hover-textforeground:hover{color:var(--foreground)}.sx-focus-outlinesolid:focus-visible{outline-style:solid}.sx-focus-outline2:focus-visible{outline-width:2px}.sx-focus-outlinering:focus-visible{outline-color:var(--ring)}.sx-focus-outlineoffset2:focus-visible{outline-offset:var(--space-2)}.sx-block{display:block}.sx-sizeiconsizesm{width:var(--icon-size-sm);height:var(--icon-size-sm)}.sx-fillnone{fill:none}
+
 /* code-block */
 .sx-block{display:block}.sx-m0{margin:0}.sx-fontmono{font-family:var(--mono-font)}.sx-textsm{font-size:var(--text-sm)}.sx-bgsurface1{background-color:var(--surface-1)}.sx-textforeground{color:var(--foreground)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-roundedlg{border-radius:var(--radius-lg)}.sx-py4{padding-block:var(--space-4)}.sx-px5{padding-inline:var(--space-5)}.sx-overflowxauto{overflow-x:auto}.sx-whitespacepre{white-space:pre}
 
 /* chip */
 .sail-chip { display: inline-flex; }
+.sx-fontbody{font-family:var(--body-font)}.sx-fontmedium{font-weight:var(--font-weight-medium)}.sx-leadingnone{line-height:var(--leading-none)}.sx-alignmiddle{vertical-align:middle}.sx-whitespacenowrap{white-space:nowrap}.sx-cursorpointer{cursor:pointer}.sx-selectnone{user-select:none}.sx-taphighlightnone{-webkit-tap-highlight-color:transparent}.sx-roundedfull{border-radius:var(--radius-full)}.sx-border{border-width:1px;border-style:solid}.sx-bordertransparent{border-color:transparent}.sx-texttonefg{color:var(--tone-fg)}.sx-transitioncolors{transition-property:color, background-color, border-color, outline-color, fill, stroke}.sx-durationfast{transition-duration:var(--duration-fast)}.sx-easeout{transition-timing-function:var(--ease-out)}.sx-pressed-bgtone[aria-pressed='true']{background-color:var(--tone)}.sx-pressed-texttonecontrast[aria-pressed='true']{color:var(--tone-contrast)}.sx-pressed-bordertone[aria-pressed='true']{border-color:var(--tone)}.sx-pressed-fontsemibold[aria-pressed='true']{font-weight:var(--font-weight-semibold)}.sx-pressed-shadowxs[aria-pressed='true']{box-shadow:var(--shadow-xs)}.sx-disabled-cursornotallowed:is(:disabled,[aria-disabled='true']){cursor:not-allowed}.sx-disabled-bgmuted:is(:disabled,[aria-disabled='true']){background-color:var(--muted)}.sx-disabled-borderbordersubtle:is(:disabled,[aria-disabled='true']){border-color:var(--border-subtle)}.sx-disabled-textmutedforeground:is(:disabled,[aria-disabled='true']){color:var(--muted-foreground)}.sx-disabled-saturate65:is(:disabled,[aria-disabled='true']){filter:saturate(0.65)}.sx-disabled-shadownone:is(:disabled,[aria-disabled='true']){box-shadow:none}.sx-focus-outlinesolid:focus-visible{outline-style:solid}.sx-focus-outline2:focus-visible{outline-width:2px}.sx-focus-outlinering:focus-visible{outline-color:var(--ring)}.sx-focus-outlineoffset2:focus-visible{outline-offset:var(--space-2)}.sx-contents{display:contents}.sx-sizeiconsizemd{width:var(--icon-size-md);height:var(--icon-size-md)}.sx-shrink0{flex-shrink:0}.sx-p0{padding:0}.sx-border0{border-width:0px}.sx-bgtransparent{background-color:transparent}.sx-block{display:block}.sx-sizefull{width:100%;height:100%}.sx-fillnone{fill:none}.sail-row-i{display:inline-flex;flex-wrap:wrap;min-width:0}.sail-row-i>*{min-width:0}.sail-g-2{gap:var(--space-2)}.sail-ai-center{align-items:center}.sail-jc-start{justify-content:flex-start}.sail-nowrap{flex-wrap:nowrap}
+.sail-chip[variant='solid']{background-color:var(--tone);color:var(--tone-contrast);border-color:var(--tone);box-shadow:var(--shadow-xs);}.sail-chip[variant='soft']{background-color:var(--tone-bg);color:var(--tone-fg);border-color:var(--tone-border);}.sail-chip[variant='soft']:hover{background-color:var(--muted);border-color:var(--tone);}.sail-chip[variant='outline']{background-color:transparent;color:var(--tone-fg);border-color:var(--tone);}.sail-chip[variant='outline']:hover{background-color:var(--tone-bg);}.sail-chip[variant='ghost']{background-color:transparent;color:var(--tone-fg);border-color:transparent;}.sail-chip[variant='ghost']:hover{background-color:var(--tone-bg);}.sail-chip[size='sm']{min-height:var(--control-h-2xs);padding-inline:var(--space-2);font-size:var(--text-xs);}.sail-chip[size='md']{min-height:var(--control-h-xs);padding-inline:var(--space-2_5);font-size:var(--text-sm);}.sail-chip[size='lg']{min-height:var(--control-h-md);padding-inline:var(--space-3);font-size:var(--text-base);}.sail-chip[selected][tone='muted']{background-color:var(--primary);color:var(--primary-foreground);border-color:var(--primary);}
 
 /* field */
 .sx-fontbody{font-family:var(--body-font)}.sail-col{display:flex;flex-direction:column;min-width:0}.sail-col>*{min-width:0}.sail-g-1{gap:var(--space-1)}.sail-ai-stretch{align-items:stretch}
@@ -124,112 +134,6 @@ label { display: inline-block; }
  * capability use: only. Prefer deleting rules here when expressible via
  * sx/layout/global contracts. Bundled into element-skins.css via skins_css().
  */
-/* --- alert (relocated from stdlib/alert.sail <style>) --- */
-
-  .sail-alert {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: start;
-    gap: var(--space-3);
-    position: relative;
-    overflow: hidden;
-    padding: var(--space-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--surface-1);
-    color: var(--foreground);
-    font-family: var(--font-body);
-    font-size: var(--text-base);
-    line-height: var(--leading-normal);
-    box-shadow: var(--shadow-xs);
-    /* Local channel for shared icon/close control size (optional anatomy
-       residue lock; collapses duplicate var(--control-h-xs)). */
-    --alert-ico: var(--control-h-xs);
-  }
-  .sail-alert[hidden] { display: none; }
-
-  /* Tone: muted default (specificity 0,2,0) so the GLOBAL [tone='X'] channel
-     fills every branded tone. --tone drives the leading stripe; --tone-bg/-fg
-     the icon chip. Not a rewrite of branded [tone=X] — only the attr-absent
-     default contracts does not fill. */
-  .sail-alert:not([tone]),
-  .sail-alert[tone='default'] {
-    --tone: var(--muted-foreground);
-    --tone-fg: var(--muted-foreground);
-    --tone-bg: var(--tone-muted-bg);
-  }
-
-  /* Leading tone stripe (anchored to the relative root). */
-  .sail-alert::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: var(--space-1);
-    background: var(--tone);
-  }
-
-  .sail-alert .ico {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--alert-ico);
-    height: var(--alert-ico);
-    border-radius: var(--radius-md);
-    background: var(--tone-bg);
-    color: var(--tone-fg);
-  }
-  .sail-alert .ico:empty { display: none; }
-  .sail-alert .ico svg,
-  .sail-alert .ico ::slotted(*) { width: var(--icon-size-sm); height: var(--icon-size-sm); }
-
-  .sail-alert .content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    min-width: 0;
-  }
-  .sail-alert .title { font-weight: var(--font-weight-semibold); }
-  .sail-alert .title:empty { display: none; }
-  .sail-alert .body { color: var(--muted-foreground); }
-  .sail-alert .actions {
-    display: flex;
-    flex-direction: row;
-    gap: var(--space-2);
-    margin-top: var(--space-2);
-  }
-  .sail-alert .actions:empty { display: none; }
-
-  /* Self-contained dismiss control — hidden until [dismissible]. */
-  .sail-alert .close {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    align-self: start;
-    width: var(--alert-ico);
-    height: var(--alert-ico);
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--muted-foreground);
-    cursor: pointer;
-    transition:
-      background-color var(--duration-fast) var(--ease-out),
-      color var(--duration-fast) var(--ease-out);
-  }
-  .sail-alert[dismissible] .close { display: inline-flex; }
-  .sail-alert .close:hover { background: var(--hover-bg); color: var(--foreground); }
-  .sail-alert .close:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
-  .sail-alert .close svg { width: var(--icon-size-sm); height: var(--icon-size-sm); }
-
-  @media (forced-colors: active) {
-    .sail-alert { border-color: CanvasText; }
-    .sail-alert::before { background: CanvasText; }
-  }
-
   /* --- avatar (relocated from stdlib/avatar.sail <style>) --- */
 
   .sail-avatar {
@@ -274,72 +178,6 @@ label { display: inline-block; }
     box-sizing: border-box;
   }
 
-  /* --- badge (relocated from stdlib/badge.sail <style>) --- */
-
-  .sail-badge {
-    /* Size: md base (exact tokens); sm/lg override below (residues kept literal where no exact token). */
-    --badge-h: var(--control-h-2xs);
-    --badge-px: var(--space-2);
-    --badge-fs: 10.5px; /* residue literal — no text token */
-    --badge-gap: var(--space-1);
-    --badge-radius: var(--radius-sm);
-    align-items: center;
-    gap: var(--badge-gap);
-    min-height: var(--badge-h);
-    padding: 0 var(--badge-px);
-    font-size: var(--badge-fs);
-    border-radius: var(--badge-radius);
-    -webkit-font-smoothing: antialiased;
-  }
-  .sail-badge[hidden] { display: none; }
-
-  /* Tone: muted is the default. Scoped to no-tone/default (specificity 0,2,0)
-     so the GLOBAL [tone='X'] channel (contracts.css, 0,1,0) fills every branded
-     tone without a per-tone rule here and without an order-dependent clash.
-     Attr-absent badge has no contracts fill — this is the PE default path. */
-  .sail-badge:not([tone]),
-  .sail-badge[tone='default'] {
-    --tone: var(--muted-foreground);
-    --tone-fg: var(--muted-foreground);
-    --tone-contrast: var(--background);
-    --tone-bg: var(--tone-muted-bg);
-    --tone-border: var(--tone-muted-border);
-  }
-
-  .sail-badge[size='sm'] {
-    --badge-h: 18px; /* residue */
-    --badge-px: var(--space-1_5);
-    --badge-fs: 9.5px; /* residue */
-    --badge-gap: 3px; /* residue */
-  }
-  .sail-badge[size='lg'] {
-    --badge-h: 26px; /* residue */
-    --badge-px: var(--space-2_5);
-    --badge-fs: 11.5px; /* residue */
-    --badge-gap: var(--space-1_25);
-  }
-
-  /* Shape — square (radius-sm) default; pill opts into the full radius. */
-  .sail-badge[pill] { --badge-radius: var(--shape-pill); }
-
-  /* Variant matrix — soft base is host sx; solid/outline override. */
-  .sail-badge[variant='solid'] {
-    background: var(--tone);
-    border-color: var(--tone);
-    color: var(--tone-contrast);
-    box-shadow: inset 0 1px 0 0 var(--hover-bg);
-  }
-  .sail-badge[variant='outline'] {
-    background: transparent;
-    border-color: var(--tone-border);
-    color: var(--tone-fg);
-  }
-
-  @media (forced-colors: active) {
-    .sail-badge { border-color: CanvasText; color: CanvasText; }
-    .sail-badge[variant='solid'] { background: Highlight; color: HighlightText; border-color: Highlight; }
-  }
-
   /* --- breadcrumb (relocated from stdlib/breadcrumb.sail <style>) --- */
 
   .sail-breadcrumb ol {
@@ -369,301 +207,6 @@ label { display: inline-block; }
   .sail-breadcrumb a:hover { color: var(--foreground); }
   .sail-breadcrumb a:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: var(--ring-offset); }
   .sail-breadcrumb [aria-current='page'] { color: var(--foreground); font-weight: var(--font-weight-medium); }
-
-  /* --- card (relocated from stdlib/card.sail <style>) --- */
-
-  .sail-card {
-    display: block;
-    position: relative;
-    background: var(--surface-1);
-    color: var(--card-foreground);
-    /* Stroke and corner treatment ride the Tier-2 channels: a brutalist
-       theme thickens every card edge and an 8-bit theme draws chunky
-       corners without touching this file. Defaults reproduce 1px/none. */
-    border: var(--border-width) solid var(--border);
-    border-image: var(--corner-image);
-    --card-radius: var(--radius-lg);
-    border-radius: var(--card-radius);
-    overflow: clip;
-    /* Frost on glass themes (--card-backdrop-filter resolves to a blur there,
-       `none` everywhere else). isolation establishes a stacking context so the
-       backdrop-filter clips to --card-radius — belt-and-suspenders with the
-       existing overflow:clip. */
-    backdrop-filter: var(--card-backdrop-filter);
-    -webkit-backdrop-filter: var(--card-backdrop-filter);
-    isolation: isolate;
-    box-shadow: var(--shadow-card-rest);
-    --card-px: var(--space-5);
-    --card-py: var(--space-4);
-    --card-gap: var(--space-3);
-    padding: var(--card-py) var(--card-px);
-    transition:
-      background-color var(--duration-fast) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out),
-      box-shadow var(--duration-fast) var(--ease-out),
-      transform var(--duration-fast) var(--ease-out);
-  }
-
-  /* variant=outline: background:transparent is a raw CSS keyword, not a
-     token — belongs in <style>, not the sx vocabulary. */
-  .sail-card[variant='outline'] { background: transparent; }
-
-  /* Tone-bound border. Default tone resolves --tone-border to --border (the
-     same as the host baseline), so the override is a no-op for it. */
-  .sail-card[tone]:not([tone='default']) { border-color: var(--tone-border); }
-
-  /* Accent bar. hover fades in on hover; static stays at full opacity
-   * (hero cards, print exports, touch contexts where hover never fires). */
-  .sail-card[accent-bar='hover']::before,
-  .sail-card[accent-bar='static']::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--primary), var(--accent));
-    opacity: 0;
-    border-radius: var(--card-radius) var(--card-radius) 0 0;
-    transition: opacity var(--duration-medium) var(--ease-out);
-    pointer-events: none;
-  }
-  .sail-card[accent-bar='hover']:hover::before { opacity: 1; }
-  .sail-card[accent-bar='static']::before { opacity: 1; }
-
-  .sail-card[interactive] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
-  .sail-card[interactive]:hover {
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-1px);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .sail-card[interactive]:hover { transform: none; }
-  }
-  .sail-card[interactive]:active {
-    box-shadow: var(--shadow-card-rest);
-    transform: translateY(0);
-    transition-duration: 60ms;
-  }
-  .sail-card[interactive]:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
-
-  /* Tone-rail. Only meaningful once a tone is set — otherwise --tone-fg
-   * resolves to --foreground and the rail would read as body-text-colored
-   * decoration with the weight of an emphasis cue. */
-  .sail-card[status-rail] {
-    border-left: 3px solid var(--tone-fg);
-    padding-inline-start: calc(var(--card-px) - var(--space-1));
-  }
-  .sail-card[status-rail]:not([tone]),
-  .sail-card[status-rail][tone='default'] {
-    border-left-color: var(--border-strong);
-  }
-
-  .sail-card[fill] { background: var(--tone-bg); border-color: var(--tone-border); }
-
-  /* Per-padding local-var recompute + fallback padding. */
-  .sail-card[padding='none'] { --card-px: 0px; --card-py: 0px; --card-gap: 0px; padding: 0; }
-  .sail-card[padding='sm']   { --card-px: var(--space-3); --card-py: var(--space-2); --card-gap: var(--space-2); padding: var(--space-2) var(--space-3); }
-  .sail-card[padding='md']   { --card-px: var(--space-5); --card-py: var(--space-4); padding: var(--space-4) var(--space-5); }
-  .sail-card[padding='lg']   { --card-px: var(--space-6); --card-py: var(--space-5); --card-gap: var(--space-4); padding: var(--space-5) var(--space-6); }
-
-  /* Header/footer — presence-selected direct children (see the structural
-     divergence note above), edge-to-edge via negative margins that cancel
-     the host's own padding, separated by a hairline. */
-  .sail-card > [slot='header'] {
-    display: block;
-    margin: calc(var(--card-py) * -1) calc(var(--card-px) * -1) var(--card-gap);
-    padding: var(--card-py) var(--card-px);
-    border-bottom: 1px solid var(--border-subtle);
-    font-family: var(--heading-font);
-    font-weight: var(--heading-weight);
-  }
-  .sail-card > [slot='footer'] {
-    display: block;
-    margin: var(--card-gap) calc(var(--card-px) * -1) calc(var(--card-py) * -1);
-    padding: var(--card-py) var(--card-px);
-    border-top: 1px solid var(--border-subtle);
-  }
-  .sail-card[padding='none'] > [slot='header'] {
-    margin: 0 0 var(--space-3);
-    padding: 0 0 var(--space-3);
-  }
-  .sail-card[padding='none'] > [slot='footer'] {
-    margin: var(--space-3) 0 0;
-    padding: var(--space-3) 0 0;
-  }
-
-  @media (forced-colors: active) {
-    .sail-card[interactive]:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
-  }
-
-  /* --- chip (relocated from stdlib/chip.sail <style>) --- */
-
-  .sail-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--chip-gap);
-    vertical-align: middle;
-    min-height: var(--chip-h);
-    padding: 0 var(--chip-px);
-    font-family: var(--font-body);
-    font-size: var(--chip-fs);
-    font-weight: var(--font-weight-medium);
-    line-height: 1;
-    color: var(--tone-fg);
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: var(--chip-radius);
-    cursor: pointer;
-    user-select: none;
-    white-space: nowrap;
-    -webkit-tap-highlight-color: transparent;
-    transition:
-      background-color var(--duration-fast) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out),
-      box-shadow var(--duration-fast) var(--ease-out),
-      color var(--duration-fast) var(--ease-out);
-    /* size: md base; sm/lg override below */
-    --chip-h: var(--control-h-xs);
-    --chip-px: var(--space-2_5);
-    --chip-fs: var(--text-sm);
-    --chip-gap: var(--space-1_5);
-    --chip-icon: var(--icon-size-xs);
-    --chip-remove: var(--icon-size-md);
-    --chip-radius: var(--shape-pill);
-    /* tone: default channels; per-tone overrides below */
-    --tone-bg-hover: var(--tone-default-bg);
-    --tone-border-hover: var(--tone-default-border);
-    --tone-bg-solid: var(--foreground);
-    --tone-outline-border: var(--border-strong);
-    --tone-outline-bg-hover: var(--hover-bg);
-    --tone-ghost-bg-hover: var(--hover-bg);
-  }
-  .sail-chip[hidden] { display: none; }
-
-  .sail-chip[size='sm'] {
-    --chip-h: var(--control-h-2xs); --chip-px: var(--space-2); --chip-fs: var(--text-xs);
-    --chip-gap: var(--space-1); --chip-icon: var(--icon-size-2xs); --chip-remove: var(--icon-size-sm);
-  }
-  .sail-chip[size='lg'] {
-    --chip-h: var(--control-h-md); --chip-px: var(--space-3); --chip-fs: var(--text-base);
-    --chip-gap: var(--space-1_5); --chip-icon: var(--icon-size-sm); --chip-remove: var(--icon-size-lg);
-  }
-
-  /* Per-tone channel overrides (default is the base above). */
-  .sail-chip[tone='primary'] {
-    --tone-bg-hover: var(--tone-primary-border); --tone-border-hover: var(--tone-primary-border);
-    --tone-bg-solid: var(--primary); --tone-outline-border: var(--tone-primary-border);
-    --tone-outline-bg-hover: var(--tone-primary-bg); --tone-ghost-bg-hover: var(--tone-primary-bg);
-  }
-  .sail-chip[tone='info'] {
-    --tone-bg-hover: var(--tone-info-border); --tone-border-hover: var(--tone-info-border);
-    --tone-bg-solid: var(--info); --tone-outline-border: var(--tone-info-border);
-    --tone-outline-bg-hover: var(--tone-info-bg); --tone-ghost-bg-hover: var(--tone-info-bg);
-  }
-  .sail-chip[tone='success'] {
-    --tone-bg-hover: var(--tone-success-border); --tone-border-hover: var(--tone-success-border);
-    --tone-bg-solid: var(--success); --tone-outline-border: var(--tone-success-border);
-    --tone-outline-bg-hover: var(--tone-success-bg); --tone-ghost-bg-hover: var(--tone-success-bg);
-  }
-  .sail-chip[tone='warning'] {
-    --tone-bg-hover: var(--tone-warning-border); --tone-border-hover: var(--tone-warning-border);
-    --tone-bg-solid: var(--warning); --tone-outline-border: var(--tone-warning-border);
-    --tone-outline-bg-hover: var(--tone-warning-bg); --tone-ghost-bg-hover: var(--tone-warning-bg);
-  }
-  .sail-chip[tone='destructive'] {
-    --tone-bg-hover: var(--tone-destructive-border); --tone-border-hover: var(--tone-destructive-border);
-    --tone-bg-solid: var(--destructive); --tone-outline-border: var(--tone-destructive-border);
-    --tone-outline-bg-hover: var(--tone-destructive-bg); --tone-ghost-bg-hover: var(--tone-destructive-bg);
-  }
-  .sail-chip[tone='accent'] {
-    --tone-bg-hover: var(--tone-accent-border); --tone-border-hover: var(--tone-accent-border);
-    --tone-bg-solid: var(--accent); --tone-outline-border: var(--tone-accent-border);
-    --tone-outline-bg-hover: var(--tone-accent-bg); --tone-ghost-bg-hover: var(--tone-accent-bg);
-  }
-  .sail-chip[tone='muted'] {
-    --tone-bg-hover: var(--tone-muted-bg); --tone-border-hover: var(--tone-muted-border);
-    --tone-bg-solid: var(--muted); --tone-outline-border: var(--border-strong);
-    --tone-outline-bg-hover: var(--tone-muted-bg); --tone-ghost-bg-hover: var(--tone-muted-bg);
-  }
-
-  /* Variant matrix (soft is the default). */
-  .sail-chip:not([variant]),
-  .sail-chip[variant='soft'] { background: var(--tone-bg); border-color: var(--tone-border); }
-  .sail-chip[variant='soft']:not([disabled]):hover { background: var(--tone-bg-hover); border-color: var(--tone-border-hover); }
-  .sail-chip[variant='outline'] { background: transparent; border-color: var(--tone-outline-border); }
-  .sail-chip[variant='outline']:not([disabled]):hover { background: var(--tone-outline-bg-hover); }
-  .sail-chip[variant='solid'] {
-    background: var(--tone-bg-solid); border-color: var(--tone-border); color: var(--tone-contrast);
-    box-shadow: inset 0 1px 0 0 var(--hover-bg);
-  }
-  .sail-chip[variant='ghost'] { background: transparent; border-color: transparent; }
-  .sail-chip[variant='ghost']:not([disabled]):hover { background: var(--tone-ghost-bg-hover); }
-
-  /* Selected. */
-  .sail-chip[selected] {
-    background: var(--tone-bg-solid); border-color: var(--tone-border); color: var(--tone-contrast);
-    box-shadow: inset 0 1px 0 0 var(--hover-bg); font-weight: var(--font-weight-semibold);
-  }
-  .sail-chip[selected]:not([disabled]):hover { background: var(--tone-bg-hover); }
-  .sail-chip[selected]:not([tone]),
-  .sail-chip[selected][tone='muted'] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
-  .sail-chip[selected][tone='default'] { background: var(--foreground); border-color: var(--foreground); color: var(--background); }
-
-  .sail-chip:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-ring-offset);
-    border-radius: var(--chip-radius);
-  }
-  .sail-chip[disabled]:focus-visible { outline: none; }
-  .sail-chip[disabled] {
-    cursor: not-allowed;
-    background: var(--muted);
-    border-color: var(--border-subtle);
-    color: var(--muted-foreground);
-    filter: saturate(0.65);
-    box-shadow: none;
-  }
-
-  .sail-chip .leading {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    width: var(--chip-icon);
-    height: var(--chip-icon);
-    flex-shrink: 0;
-    color: currentColor;
-  }
-  .sail-chip .leading:not(:empty) { display: inline-flex; }
-  .sail-chip .leading svg { width: 100%; height: 100%; }
-
-  .sail-chip .remove {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    width: var(--chip-remove);
-    height: var(--chip-remove);
-    margin-inline: var(--space-1) calc(var(--space-1) * -1);
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-    border-radius: var(--shape-pill);
-    flex-shrink: 0;
-    transition: background-color var(--duration-fast) var(--ease-out);
-  }
-  .sail-chip[removable] .remove { display: inline-flex; }
-  .sail-chip .remove svg { width: 70%; height: 70%; display: block; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; }
-  .sail-chip .remove:hover:not(:disabled) { background: var(--hover-bg); }
-  .sail-chip[disabled] .remove { cursor: not-allowed; }
-
-  @media (forced-colors: active) {
-    .sail-chip { border-color: CanvasText; color: CanvasText; }
-    .sail-chip[selected] { background: Highlight; color: HighlightText; border-color: Highlight; }
-    .sail-chip:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
-  }
 
   /* --- code-block (relocated from stdlib/code-block.sail <style>) --- */
 

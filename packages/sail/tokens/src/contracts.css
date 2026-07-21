@@ -65,6 +65,25 @@
 [tone='destructive'] { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring);    --tone-glow: var(--glow-destructive); }
 [tone='accent']      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring);         --tone-glow: var(--glow-accent); }
 [tone='muted']       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring);          --tone-glow: var(--glow-muted); }
+
+/* PE soft-status defaults — muted tone channels when tone attr absent/default.
+   Specificity beats bare channel readers; branded [tone=X] (different selector)
+   still owns branded hosts. Lives in contracts (channel writes), not element residue. */
+.sail-badge:not([tone]),
+.sail-badge[tone='default'] {
+  --tone: var(--muted-foreground);
+  --tone-fg: var(--muted-foreground);
+  --tone-contrast: var(--background);
+  --tone-bg: var(--tone-muted-bg);
+  --tone-border: var(--tone-muted-border);
+}
+
+.sail-alert:not([tone]),
+.sail-alert[tone='default'] {
+  --tone: var(--muted-foreground);
+  --tone-fg: var(--muted-foreground);
+  --tone-bg: var(--tone-muted-bg);
+}
 :where(input, select, textarea)[tone='primary']     { --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring); }
 :where(input, select, textarea)[tone='info']        { --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring); }
 :where(input, select, textarea)[tone='success']     { --tone-border: var(--tone-success-border);     --tone-ring: var(--tone-success-ring); }
@@ -118,6 +137,14 @@ iframe { max-width: 100%; border: 0; }
 :where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: var(--ring-width, 2px) solid var(--ring); outline-offset: var(--ring-offset, 2px); }
 @media (forced-colors: active) { :where(button, input, textarea, select, a, [tabindex]):focus-visible { outline: 2px solid CanvasText; } }
 :where(button, input, textarea, select):disabled { cursor: not-allowed; opacity: 0.5; }
+
+/* Removable host — anatomy dismiss control (chip ×). Hidden until [removable];
+   dimensions/hover paint may also ride node sx. Shared recipe, not element residue. */
+:where(button[anatomy][aria-label='Remove']) { display: none; align-items: center; justify-content: center; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; flex-shrink: 0; border-radius: var(--shape-pill); }
+:where([removable] button[anatomy][aria-label='Remove']) { display: inline-flex; }
+:where([removable] button[anatomy][aria-label='Remove']:hover:not(:disabled)) { background: var(--hover-bg); }
+:where([disabled] button[anatomy][aria-label='Remove']),
+:where([aria-disabled='true'] button[anatomy][aria-label='Remove']) { cursor: not-allowed; }
 :where(button, input, textarea, select, a, [tabindex]) { transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
 :where(a[variant]) { text-decoration: none; }
 :where(button:not([anatomy]), a[variant]) { display: inline-flex; align-items: center; justify-content: center; gap: var(--size-gap, var(--space-2)); min-height: var(--size-h, var(--control-h-md)); padding: 0 var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: var(--border-width) solid transparent; border-image: var(--corner-image); background: transparent; isolation: isolate; position: relative; box-shadow: var(--control-frame), var(--button-shadow, 0 0 0 0 transparent); }
@@ -296,4 +323,125 @@ meter:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--destructive
 [data-component][hidden] { display: none !important; }
 [data-component] slot { display: contents; }
 @media (prefers-reduced-motion: reduce) { :where([data-component], [data-component] *, button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none; } }
+}
+
+/* ── card surface mechanics (named unexpressibles — not sx) ─────────────
+   backdrop-filter, accent-bar ::before stripe, header/footer slot chrome.
+   Expressible axes (variant/padding/interactive/fill/status-rail) live on
+   CVA-in-props + host sx in card.sail. */
+.sail-card {
+  border-image: var(--corner-image);
+  backdrop-filter: var(--card-backdrop-filter);
+  -webkit-backdrop-filter: var(--card-backdrop-filter);
+  isolation: isolate;
+  box-shadow: var(--shadow-card-rest);
+  color: var(--card-foreground, var(--foreground));
+  --card-radius: var(--radius-lg);
+  --card-px: var(--space-5);
+  --card-py: var(--space-4);
+  --card-gap: var(--space-3);
+}
+.sail-card[padding='none'] { --card-px: 0px; --card-py: 0px; --card-gap: 0px; }
+.sail-card[padding='sm']   { --card-px: var(--space-3); --card-py: var(--space-2); --card-gap: var(--space-2); }
+.sail-card[padding='md']   { --card-px: var(--space-5); --card-py: var(--space-4); }
+.sail-card[padding='lg']   { --card-px: var(--space-6); --card-py: var(--space-5); --card-gap: var(--space-4); }
+.sail-card[tone]:not([tone='default']) { border-color: var(--tone-border); }
+.sail-card[accent-bar='hover']::before,
+.sail-card[accent-bar='static']::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  opacity: 0;
+  border-radius: var(--card-radius) var(--card-radius) 0 0;
+  transition: opacity var(--duration-medium) var(--ease-out);
+  pointer-events: none;
+}
+.sail-card[accent-bar='hover']:hover::before { opacity: 1; }
+.sail-card[accent-bar='static']::before { opacity: 1; }
+.sail-card[interactive]:hover { transform: translateY(-1px); }
+@media (prefers-reduced-motion: reduce) {
+  .sail-card[interactive]:hover { transform: none; }
+}
+.sail-card[interactive]:active {
+  box-shadow: var(--shadow-card-rest);
+  transform: translateY(0);
+  transition-duration: 60ms;
+}
+.sail-card[status-rail] {
+  border-left-width: 3px;
+  border-left-style: solid;
+  padding-inline-start: calc(var(--card-px) - var(--space-1));
+}
+.sail-card[status-rail]:not([tone]),
+.sail-card[status-rail][tone='default'] {
+  border-left-color: var(--border-strong);
+}
+.sail-card > [slot='header'] {
+  display: block;
+  margin: calc(var(--card-py) * -1) calc(var(--card-px) * -1) var(--card-gap);
+  padding: var(--card-py) var(--card-px);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--heading-font);
+  font-weight: var(--heading-weight);
+}
+.sail-card > [slot='footer'] {
+  display: block;
+  margin: var(--card-gap) calc(var(--card-px) * -1) calc(var(--card-py) * -1);
+  padding: var(--card-py) var(--card-px);
+  border-top: 1px solid var(--border-subtle);
+}
+.sail-card[padding='none'] > [slot='header'] {
+  margin: 0 0 var(--space-3);
+  padding: 0 0 var(--space-3);
+}
+.sail-card[padding='none'] > [slot='footer'] {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) 0 0;
+}
+@media (forced-colors: active) {
+  .sail-card[interactive]:focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
+}
+
+/* ── alert surface mechanics (named unexpressibles — not sx) ────────────
+   Leading tone stripe (::before), empty-slot collapse, dismissible close gate.
+   Host layout + sx + PE tone defaults cover expressible paint. */
+.sail-alert {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: var(--space-3);
+}
+.sail-alert .ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.sail-alert .content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.sail-alert .actions {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-2);
+}
+.sail-alert::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: var(--space-1);
+  background: var(--tone);
+}
+.sail-alert .ico:empty { display: none; }
+.sail-alert .ico svg { width: var(--icon-size-sm); height: var(--icon-size-sm); }
+.sail-alert .title:empty { display: none; }
+.sail-alert .actions:empty { display: none; }
+:where(button[anatomy][aria-label='Dismiss']) { display: none; }
+:where([dismissible] button[anatomy][aria-label='Dismiss']) { display: inline-flex; }
+@media (forced-colors: active) {
+  .sail-alert { border-color: CanvasText; }
+  .sail-alert::before { background: CanvasText; }
 }

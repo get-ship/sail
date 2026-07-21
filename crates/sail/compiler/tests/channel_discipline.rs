@@ -135,7 +135,7 @@ fn no_skin_hardcodes_a_channel_governed_property() {
 fn literal_border_widths_in_skins_do_not_increase() {
     // Census lives in framework residual skins now — author `.sail` sources no
     // longer carry `<style>` (relocated to `stdlib/_residues.css`).
-    const BASELINE: usize = 38;
+    const BASELINE: usize = 30; // lowered after chip/badge/card/alert residue burn
 
     let mut count = 0usize;
     let residues = concat!(env!("CARGO_MANIFEST_DIR"), "/stdlib/_residues.css");
@@ -198,12 +198,20 @@ const CONTRACT_TONE_CHANNELS: &[&str] = &[
     "--tone-glow:",
 ];
 
-/// Attr-absent L1 defaults that contracts does NOT fill (contracts only keys
-/// `[tone='X']`). Residual skins must still supply PE defaults under
-/// `:not([tone])` so paint stays valid without clobbering branded tones.
+/// Attr-absent L1 defaults: contracts only keys branded `[tone='X']`, so PE
+/// muted defaults live under `:not([tone])` / `[tone=default]` — either in
+/// contracts (preferred, channel-write home) or residual skins (debt). Never
+/// on a bare `.sail-*` host (that clobbers branded tones).
 #[test]
 fn residual_default_tone_fills_for_untoned_hosts() {
-    let css = include_str!("../stdlib/_residues.css");
+    let residues = include_str!("../stdlib/_residues.css");
+    let contracts = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../packages/sail/tokens/src/contracts.css"
+    ));
+    // PE fills may live in contracts or residues; bare-host ban scans residues.
+    let css = residues;
+    let pe = format!("{contracts}\n{residues}");
 
     // Fail-closed: no bare `.sail-foo {` block may write contract tone channels.
     // (Skins after contracts, same specificity → bare host clobbers [tone=X].)
@@ -241,18 +249,18 @@ fn residual_default_tone_fills_for_untoned_hosts() {
         );
     }
 
-    // alert muted default — attr-absent pattern
+    // alert muted default — attr-absent pattern (residue until alert dissolve)
     assert!(
-        css.contains(".sail-alert:not([tone])")
-            && css.contains("--tone: var(--muted-foreground)")
-            && css.contains("--tone-bg: var(--tone-muted-bg)"),
+        pe.contains(".sail-alert:not([tone])")
+            && pe.contains("--tone: var(--muted-foreground)")
+            && pe.contains("--tone-bg: var(--tone-muted-bg)"),
         "alert untoned default must fill --tone/--tone-bg for stripe + icon chip"
     );
 
-    // badge muted default (host sx reads tone-bg/fg/border)
+    // badge muted default (host sx reads tone-bg/fg/border) — contracts after dissolve
     assert!(
-        css.contains(".sail-badge:not([tone])")
-            && css.contains("--tone-border: var(--tone-muted-border)"),
+        pe.contains(".sail-badge:not([tone])")
+            && pe.contains("--tone-border: var(--tone-muted-border)"),
         "badge untoned default must fill muted tone channels for host sx"
     );
 

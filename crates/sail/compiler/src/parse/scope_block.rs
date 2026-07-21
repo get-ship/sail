@@ -6,17 +6,23 @@
 //! Members:
 //!   - `type X = …` / `export type X = …` — aliases, threaded into the
 //!     compiled module so the controller can reuse them.
-//!   - `props: { … }`   — the component's typed inputs (field declarations).
-//!   - `variants: { … }` — the CVA-shaped styling table: each axis becomes a
-//!     reflected union prop (first key = default; the table is ordered data)
-//!     and lowers to attribute-keyed CSS. `compound:` rows ride inside the
-//!     table, CVA-style.
+//!   - `props: { … }` — the component's typed inputs (field declarations).
+//!     **CVA-in-props (the only prop→paint matrix form):** an axis whose
+//!     value is a map of key → sx string (`variant: { solid: 'bg-tone', … }`)
+//!     types as the key union (first key = default), reflects as an
+//!     attribute, and lowers through the **same sx atom pipeline** as host
+//!     `sx=`. Host `sx=` remains base paint.
+//!   - `compound: [ { when: { … }, sx: '…' }, … ]` — combination rules over
+//!     prop axes (sibling of `props`).
+//!   - `variants: { … }` — **legacy** parallel surface (same lowerer). Prefer
+//!     CVA-in-props; do not grow this as a second stylesheet language.
 //!
 //! Field grammar (props): `name = literal` (type inferred), `name: Type`
-//! (parent must fill), `name: Type = literal`. Unions require an explicit
-//! default — there is no first-member magic in props. `tone` / `size` are the
-//! framework channels: declared with a bare vocabulary default they type as
-//! the full channel union.
+//! (parent must fill), `name: Type = literal`, or CVA map `name: { k: 'sx…' }`.
+//! Unions require an explicit default — there is no first-member magic in
+//! ordinary props (CVA maps use first key as default). `tone` / `size` are
+//! the framework channels: declared with a bare vocabulary default they type
+//! as the full channel union.
 
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::directive::{PropDecl, PropKind};
@@ -37,8 +43,9 @@ pub(crate) struct ScopeBlock {
 const TONE_VOCAB: &str = "default|primary|info|success|warning|destructive|accent|muted";
 const SIZE_VOCAB: &str = "xs|sm|md|lg";
 
-const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, `props:`, and `variants:` \
-     — types and literal values only; logic goes in `<controller>`";
+const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, `props:` (incl. CVA key→sx maps), \
+     optional `compound:`, and legacy `variants:` — types and literal values only; \
+     logic goes in `<controller>`";
 
 pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, CompileError> {
     let bytes = body.as_bytes();
@@ -66,10 +73,22 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
             }
             "props" => {
                 let obj_span = expect_member_object(body, after, "props", span)?;
-                out.props.extend(parse_props_fields(&body[obj_span.0 + 1..obj_span.1], span)?);
+                let (props, cva_css) =
+                    parse_props_fields(&body[obj_span.0 + 1..obj_span.1], span)?;
+                out.props.extend(props);
+                out.variants_css.push_str(&cva_css);
                 i = obj_span.1 + 1;
             }
+            "compound" => {
+                // Sibling of `props`: combination rules over axes.
+                let arr_span = expect_member_array(body, after, "compound", span)?;
+                let inner = &body[arr_span.0..arr_span.1 + 1]; // include brackets
+                let css = variants_object_to_css(&format!("{{ compound: {inner} }}"));
+                out.variants_css.push_str(&css);
+                i = arr_span.1 + 1;
+            }
             "variants" => {
+                // Legacy parallel surface — same lowerer as CVA-in-props.
                 let obj_span = expect_member_object(body, after, "variants", span)?;
                 let inner = &body[obj_span.0 + 1..obj_span.1];
                 let (axis_props, normalized) = parse_variants_table(inner, span)?;
@@ -191,11 +210,68 @@ fn expect_member_object(
     Ok((i, close))
 }
 
+/// `compound: [ … ]` — array body. Returns `(open_bracket, close_bracket)`.
+fn expect_member_array(
+    s: &str,
+    after_kw: usize,
+    member: &str,
+    span: Span,
+) -> Result<(usize, usize), CompileError> {
+    let bytes = s.as_bytes();
+    let mut i = skip_trivia(s, after_kw, None);
+    if i >= bytes.len() || bytes[i] != b':' {
+        return Err(CompileError::new(format!(
+            "`{member}` in `<scope>` is a member — write `{member}: [ … ]`."
+        ))
+        .with_span(span));
+    }
+    i = skip_trivia(s, i + 1, None);
+    if i >= bytes.len() || bytes[i] != b'[' {
+        return Err(CompileError::new(format!(
+            "`{member}:` expects an array body — write `{member}: [ {{ when: {{…}}, sx: '…' }}, … ]`."
+        ))
+        .with_span(span));
+    }
+    let close = find_balanced_bracket(s, i)?;
+    Ok((i, close))
+}
+
+/// Offset of the `]` matching the `[` at `open`.
+fn find_balanced_bracket(s: &str, open: usize) -> Result<usize, CompileError> {
+    let bytes = s.as_bytes();
+    let mut depth = 0i32;
+    let mut i = open;
+    while i < bytes.len() {
+        let j = skip_strings_and_comments(s, i);
+        if j != i {
+            i = j;
+            continue;
+        }
+        match bytes[i] {
+            b'[' | b'{' | b'(' => depth += 1,
+            b']' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Ok(i);
+                }
+            }
+            b'}' | b')' => depth -= 1,
+            _ => {}
+        }
+        i += 1;
+    }
+    Err(CompileError::new("unclosed `[` in `<scope>` member."))
+}
+
 // ── props fields ─────────────────────────────────────────────────────────────
 
-fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileError> {
+/// Parse `props:` fields. Returns declared props plus CSS lowered from any
+/// CVA-in-props axes (key → sx string maps) through the same pipeline as
+/// host `sx=` / legacy `variants:`.
+fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String), CompileError> {
     let bytes = body.as_bytes();
     let mut out = Vec::new();
+    let mut cva_axes: Vec<String> = Vec::new();
     let mut i = 0usize;
     loop {
         let mut doc: Option<String> = None;
@@ -218,8 +294,8 @@ fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileEr
         let name = name.as_str();
         if name.is_empty() {
             return Err(CompileError::new(format!(
-                "unexpected `{}` in `props:` — fields are `name: Type = literal` \
-                 (annotation and default each optional, one of the two required).",
+                "unexpected `{}` in `props:` — fields are `name: Type = literal`, \
+                 or a CVA map `name: {{ key: 'sx…', … }}`.",
                 char_at(body, i)
             ))
             .with_span(span));
@@ -240,6 +316,50 @@ fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileEr
             }
             annotation = Some(text.to_string());
             i = end;
+        }
+
+        // CVA-in-props: `name: { key: 'sx…', … }` — object of string-literal
+        // sx lists. Keys become the union type (first = default); values lower
+        // via the same sx atom pipeline as host `sx=`. No separate `= default`.
+        if let Some(ann) = annotation.as_deref() {
+            if is_sx_cva_table(ann) {
+                let keys: Vec<String> = parse_object_fields(
+                    ann.trim().trim_start_matches('{').trim_end_matches('}'),
+                )
+                .into_iter()
+                .map(|(k, _)| k)
+                .collect();
+                if keys.is_empty() {
+                    return Err(CompileError::new(format!(
+                        "CVA prop `{name}` has no values — write `{name}: {{ key: 'sx…', … }}`."
+                    ))
+                    .with_span(span));
+                }
+                // Reject a following `= default` — first key is the default.
+                i = skip_trivia(body, i, None);
+                if i < bytes.len()
+                    && bytes[i] == b'='
+                    && (i + 1 >= bytes.len() || bytes[i + 1] != b'>')
+                {
+                    return Err(CompileError::new(format!(
+                        "CVA prop `{name}` takes its default from the first map key — \
+                         drop the `= …` (first key is `{}`).",
+                        keys[0]
+                    ))
+                    .with_span(span));
+                }
+                out.push(PropDecl {
+                    name: name.to_string(),
+                    kind: PropKind::Union(keys.clone()),
+                    default: keys.first().cloned(),
+                    reflect: true,
+                    bindable: false,
+                    description: doc,
+                    span: Span::new(0, 0),
+                });
+                cva_axes.push(format!("{name}: {ann}"));
+                continue;
+            }
         }
 
         // Optional `= literal` — up to a terminator at depth 0.
@@ -276,7 +396,52 @@ fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileEr
 
         out.push(classify_field(name, annotation.as_deref(), value.as_deref(), doc, span)?);
     }
-    Ok(out)
+    let cva_css = if cva_axes.is_empty() {
+        String::new()
+    } else {
+        variants_object_to_css(&format!("{{ {} }}", cva_axes.join(", ")))
+    };
+    Ok((out, cva_css))
+}
+
+/// True when `ann` is a CVA key→sx table: a `{ … }` object whose every value
+/// is a **single** string literal (sx list). Distinguishes from TS object
+/// types like `{ id: string }` or `{ a: 'x' | 'y' }` (union types end with a
+/// quote but are not one literal).
+fn is_sx_cva_table(ann: &str) -> bool {
+    let t = ann.trim();
+    if !(t.starts_with('{') && t.ends_with('}')) {
+        return false;
+    }
+    let fields = parse_object_fields(&t[1..t.len() - 1]);
+    if fields.is_empty() {
+        return false;
+    }
+    fields.iter().all(|(_, v)| is_single_string_literal(v.trim()))
+}
+
+/// A complete `'…'` / `"…"` literal and nothing else (so `'x' | 'y'` is false).
+fn is_single_string_literal(v: &str) -> bool {
+    let bytes = v.as_bytes();
+    if bytes.len() < 2 {
+        return false;
+    }
+    let q = bytes[0];
+    if q != b'\'' && q != b'"' {
+        return false;
+    }
+    let mut i = 1usize;
+    while i < bytes.len() {
+        if bytes[i] == b'\\' {
+            i = i.saturating_add(2);
+            continue;
+        }
+        if bytes[i] == q {
+            return i + 1 == bytes.len();
+        }
+        i += 1;
+    }
+    false
 }
 
 /// Map one parsed field onto a `PropDecl` — the kind/default/reflect rules.
@@ -980,6 +1145,40 @@ mod tests {
         // compound contributes CSS only, never a prop
         assert!(b.props.iter().all(|p| p.name != "compound"));
         assert!(!b.variants_css.is_empty(), "axes must lower to CSS");
+    }
+
+    #[test]
+    fn cva_in_props_axes_lower_like_variants() {
+        // The only matrix form: prop value is key → sx string; type = key union;
+        // first key = default; same sx pipeline as host sx=.
+        let b = block(
+            "props: {\n  variant: {\n    solid: 'bg-tone text-tone-contrast',\n    soft: 'bg-tone-bg text-tone-fg hover:bg-muted',\n  }\n  size: { sm: 'text-xs px-2', md: 'text-sm px-2_5' }\n  tone: 'default' | 'primary' = 'default'\n}",
+        );
+        assert_eq!(
+            prop(&b, "variant").kind,
+            PropKind::Union(vec!["solid".into(), "soft".into()])
+        );
+        assert_eq!(prop(&b, "variant").default.as_deref(), Some("solid"));
+        assert!(prop(&b, "variant").reflect, "CVA axes reflect as attributes");
+        assert_eq!(prop(&b, "size").default.as_deref(), Some("sm"));
+        assert_eq!(
+            prop(&b, "tone").kind,
+            PropKind::Union(vec!["default".into(), "primary".into()])
+        );
+        assert!(
+            b.variants_css.contains("variant='solid'")
+                && b.variants_css.contains("background-color:var(--tone)")
+                && b.variants_css.contains("variant='soft'")
+                && b.variants_css.contains("size='sm'"),
+            "CVA-in-props must lower through sx atoms to attr-keyed CSS: {}",
+            b.variants_css
+        );
+        // hover state prefix on a map value
+        assert!(
+            b.variants_css.contains(":hover") || b.variants_css.contains("hover"),
+            "state prefixes on map values must lower: {}",
+            b.variants_css
+        );
     }
 
     #[test]
