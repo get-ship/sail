@@ -1043,7 +1043,7 @@ label { display: inline-block; }
     margin: 0;
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    line-height: 1.6;
+    line-height: 1.6; /* residue — no exact 1.6 leading token (normal=1.5; relaxed=1.7) */
     background: var(--surface-1);
     color: var(--foreground);
     border: 1px solid var(--border);
@@ -1051,7 +1051,7 @@ label { display: inline-block; }
     padding: var(--space-4) var(--space-5);
     overflow-x: auto;
     white-space: pre;
-    tab-size: 2;
+    tab-size: 2; /* residue literal — no tab-size token */
   }
   .sail-code-block .tok-tag { color: var(--syntax-tag); }
   .sail-code-block .tok-attr { color: var(--syntax-attr); }
@@ -1251,6 +1251,7 @@ label { display: inline-block; }
 
 /* field */
 
+  /* residue lock: layout flex + named slots + [invalid] CSS swap + svg stroke (tokenized; no bare leading/space/ring literals) */
   .sail-field {
     display: flex;
     flex-direction: column;
@@ -1492,7 +1493,7 @@ label { display: inline-block; }
     font-family: var(--font-body);
     font-size: var(--tg-fs, var(--text-sm));
     font-weight: var(--font-weight-medium);
-    line-height: 1;
+    line-height: var(--leading-none);
     color: var(--foreground);
     background: var(--background);
     border: 1px solid var(--border);
@@ -2219,7 +2220,7 @@ label { display: inline-block; }
     padding: var(--space-2) var(--space-2_5);
     font-family: var(--font-body);
     font-size: var(--text-sm);
-    line-height: 1.2;
+    line-height: var(--leading-tight);
     color: var(--foreground);
     background: transparent;
     border: 0;
@@ -2304,7 +2305,7 @@ label { display: inline-block; }
     color: var(--foreground);
     background: var(--background);
     border: 1px solid var(--tone-border, var(--border));
-    border-inline-start: 3px solid var(--tone-fg, var(--border));
+    border-inline-start: 3px solid var(--tone-fg, var(--border)); /* residue (tone stripe): 3px literal — no --space token for 3px category stripe (space-1=4px forbidden squash); tone-border/tone-fg fallbacks kept verbatim */
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
   }
