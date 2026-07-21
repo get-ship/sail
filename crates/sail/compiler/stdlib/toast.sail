@@ -1,5 +1,6 @@
 <!--
-  <toast tone="success" duration="5000"> — L1 toast. use:toast auto-dismisses.
+  <toast> — L1 toast: auto-dismiss + close control via stacked use: behaviors
+    (use:autoDismiss, use:dismissControl). tone + duration attrs; PE role/aria-live.
 
   Host paint: typeface/color/bg/radius/shadow on sx. Flex geometry + 3px tone
   stripe border residue + close-button anatomy stay author CSS.
@@ -33,4 +34,4 @@
   .sail-toast [data-toast-close]:hover { color: var(--foreground); background: var(--muted); }
 </style>
 
-<div use:toast sx="font-body text-sm text-foreground bg-background rounded-md shadow-md"><slot></slot></div>
+<div use:autoDismiss use:dismissControl role="status" aria-live="polite" sx="font-body text-sm text-foreground bg-background rounded-md shadow-md"><slot></slot></div>

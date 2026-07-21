@@ -85,6 +85,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
+        name: "autoDismiss",
+        param: "void",
+        summary: "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; emits a dismiss event then removes the host.",
+        auto_import: true,
+    },
+    ActionEntry {
         name: "autosize",
         param: "void",
         summary: "Autosize a textarea to its content as the user types.",
@@ -121,12 +127,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "collapsible",
-        param: "void",
-        summary: "Toggle a <collapsible> body open or closed.",
-        auto_import: true,
-    },
-    ActionEntry {
         name: "combobox",
         param: "void",
         summary: "Combobox keyboard/ARIA behavior for an input + list pairing.",
@@ -136,6 +136,24 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "contextMenu",
         param: "void",
         summary: "Right-click menu: open on contextmenu, close on outside-click / ESC.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "detailsDisabled",
+        param: "void",
+        summary: "Suppress click + Enter/Space activation on a disclosure host while it carries `[disabled]`.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "detailsToggle",
+        param: "void",
+        summary: "Re-emit a native <details> `toggle` as composed `sail-toggle` with `{open}`.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "dismissControl",
+        param: "void",
+        summary: "Click on a `[data-toast-close]` / `[data-dismiss]` descendant dismisses the host (event + remove).",
         auto_import: true,
     },
     ActionEntry {
@@ -289,12 +307,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "toast",
-        param: "void",
-        summary: "Toast notification behavior; auto-dismiss timer + close on click.",
-        auto_import: true,
-    },
-    ActionEntry {
         name: "toggleGroup",
         param: "void",
         summary: "Toggle-group keyboard nav: arrow keys move focus, space toggles.",
@@ -338,14 +350,15 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// this — the table is the single source, the constant is a derived
 /// view.
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
-    "alert", "anchor", "autosize", "avatar", "cellPad",
-    "chromeOffset", "clickOutside", "codeBlock", "collapsible", "combobox",
-    "contextMenu", "dismissible", "dropzone", "emptyState", "errorBoundary",
+    "alert", "anchor", "autoDismiss", "autosize", "avatar", "cellPad",
+    "chromeOffset", "clickOutside", "codeBlock", "combobox",
+    "contextMenu", "detailsDisabled", "detailsToggle", "dismissControl",
+    "dismissible", "dropzone", "emptyState", "errorBoundary",
     "errorState", "eventSpan", "field", "gridTracks", "hoverCard",
     "icon", "maxWidth", "menu", "pagination", "pin", "portEdge",
     "pressable", "pressed", "radioGroup", "rangeFill", "rect", "spotlight",
     "swatch", "tabs",
-    "targetCursor", "themePicker", "toast", "toggleGroup", "tooltip",
+    "targetCursor", "themePicker", "toggleGroup", "tooltip",
     "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
 ];
 

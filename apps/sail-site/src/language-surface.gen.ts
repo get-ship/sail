@@ -5412,7 +5412,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "avatar",
-      "description": "L1 language element (element mode). A circular/square identity"
+      "description": "identity frame (image/icon/initials). use:avatar owns render/fallback."
     },
     {
       "tag": "badge",
@@ -5444,7 +5444,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "context-menu",
-      "description": "L1 right-click menu (element mode). Same native"
+      "description": "L1 right-click menu. Native [popover] + use:contextMenu"
     },
     {
       "tag": "dropdown",
@@ -5468,11 +5468,11 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "hover-card",
-      "description": "L1 hover-preview overlay (element mode)."
+      "description": "L1 hover-preview overlay. Native"
     },
     {
       "tag": "icon",
-      "description": "L1 language element. Sizes and inks one glyph: a slotted SVG, a"
+      "description": "sizes/inks one glyph. use:icon fetches named/src glyphs."
     },
     {
       "tag": "label",
@@ -5480,7 +5480,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "menu-item",
-      "description": "an item inside <dropdown> / <context-menu>. role=menuitem,"
+      "description": "item inside <dropdown> / <context-menu>. role=menuitem"
     },
     {
       "tag": "navbar",
@@ -5488,7 +5488,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "page",
-      "description": "a page control inside <pagination>. aria-current is wired"
+      "description": "page control inside <pagination>. aria-current via"
     },
     {
       "tag": "pagination",
@@ -5496,11 +5496,11 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "popover",
-      "description": "L1 anchored overlay (element mode) on the"
+      "description": "L1 anchored overlay on the native"
     },
     {
       "tag": "prose",
-      "description": "the prose typography surface. Wraps RENDERED content (markdown"
+      "description": "typography scope for rendered content (markdown blobs etc.)."
     },
     {
       "tag": "radio",
@@ -5512,11 +5512,11 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "scroll-area",
-      "description": "L1 scroll container (element mode) with thin, themed,"
+      "description": "themed overlay scrollbars. Constrain via sx (h-*/max-h-*)."
     },
     {
       "tag": "separator",
-      "description": "L1 language element (element mode). Native <hr> carries the"
+      "description": "L1 language element (element mode). Native <hr>."
     },
     {
       "tag": "slider",
@@ -5524,15 +5524,15 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "spinner",
-      "description": "L1 language element (element mode). Bare tag: it lowers away"
+      "description": "L1 loading indicator. Host paint: vertical-align on sx."
     },
     {
       "tag": "switch",
-      "description": "L1 language element (element mode). A native"
+      "description": "native checkbox restyled as sliding toggle. No controller."
     },
     {
       "tag": "tab",
-      "description": "a tab button inside <tab-list>. role=tab, aria-selected,"
+      "description": "tab button inside <tab-list>. use:tabs on parent wires a11y."
     },
     {
       "tag": "tab-list",
@@ -5544,7 +5544,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "tabs",
-      "description": "L1 tab strip (element mode). Compose a <tab-list> of <tab>s with"
+      "description": "tab strip + panels. use:tabs owns behavior."
     },
     {
       "tag": "theme-picker",
@@ -5556,23 +5556,23 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "toast",
-      "description": "L1 toast (element mode). use:toast"
+      "description": "L1 toast: auto-dismiss + close control via stacked use: behaviors"
     },
     {
       "tag": "toast-region",
-      "description": "L1 toast host (element mode). A fixed,"
+      "description": "fixed stacking region for <toast>s."
     },
     {
       "tag": "toggle",
-      "description": "a toggle cell inside <toggle-group>. role=button,"
+      "description": "cell inside <toggle-group>. use:toggleGroup wires a11y."
     },
     {
       "tag": "toggle-group",
-      "description": "L1 segmented toggle group (element mode). A row/column of"
+      "description": "segmented toggle group. use:toggleGroup owns behavior."
     },
     {
       "tag": "tooltip",
-      "description": "L1 language element (element mode). Wraps a trigger (default slot)"
+      "description": "hover/focus text bubble via CSS Anchor Positioning. use:tooltip"
     }
   ],
   "reskins": [
@@ -5713,6 +5713,11 @@ export const ACTIONS: ActionDoc[] = [
     "summary": "Position a popper-like surface against an anchor element."
   },
   {
+    "name": "autoDismiss",
+    "param": "void",
+    "summary": "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; emits a dismiss event then removes the host."
+  },
+  {
     "name": "autosize",
     "param": "void",
     "summary": "Autosize a textarea to its content as the user types."
@@ -5743,11 +5748,6 @@ export const ACTIONS: ActionDoc[] = [
     "summary": "Syntax-highlight + copy-button behavior for a <code-block>."
   },
   {
-    "name": "collapsible",
-    "param": "void",
-    "summary": "Toggle a <collapsible> body open or closed."
-  },
-  {
     "name": "combobox",
     "param": "void",
     "summary": "Combobox keyboard/ARIA behavior for an input + list pairing."
@@ -5756,6 +5756,21 @@ export const ACTIONS: ActionDoc[] = [
     "name": "contextMenu",
     "param": "void",
     "summary": "Right-click menu: open on contextmenu, close on outside-click / ESC."
+  },
+  {
+    "name": "detailsDisabled",
+    "param": "void",
+    "summary": "Suppress click + Enter/Space activation on a disclosure host while it carries `[disabled]`."
+  },
+  {
+    "name": "detailsToggle",
+    "param": "void",
+    "summary": "Re-emit a native <details> `toggle` as composed `sail-toggle` with `{open}`."
+  },
+  {
+    "name": "dismissControl",
+    "param": "void",
+    "summary": "Click on a `[data-toast-close]` / `[data-dismiss]` descendant dismisses the host (event + remove)."
   },
   {
     "name": "dismissible",
@@ -5881,11 +5896,6 @@ export const ACTIONS: ActionDoc[] = [
     "name": "themePicker",
     "param": "void",
     "summary": "Theme switcher: click to write the picked theme to the host context."
-  },
-  {
-    "name": "toast",
-    "param": "void",
-    "summary": "Toast notification behavior; auto-dismiss timer + close on click."
   },
   {
     "name": "toggleGroup",
