@@ -1,23 +1,15 @@
 <!--
-  <prose> — the prose typography surface. Wraps RENDERED content (markdown
-  output, doc blobs) and scopes the rhythm-between-elements sheet: heading
-  cadence, paragraph/list spacing, links, inline and block code, blockquote,
-  tables. Authored templates don't need it — bare h1/p take the type scale;
-  this element exists because a runtime-rendered subtree has no other way to
-  declare "this is prose".
+  <prose> — typography scope for rendered content (markdown blobs etc.).
+
+  Host paint: block + body typeface/color/leading via sx.
+  Residue: all descendant rules (headings, p, a, code/pre, blockquote, lists,
+  table, strong, ::marker) + specific sizes/margins/spacings.
 -->
 
 <scope>
 </scope>
 
 <style>
-  .sail-prose {
-    display: block;
-    font-family: var(--font-body);
-    color: var(--foreground);
-    line-height: var(--leading-normal-plus);
-  }
-
   .sail-prose h1, .sail-prose h2, .sail-prose h3,
   .sail-prose h4, .sail-prose h5, .sail-prose h6 {
     font-family: var(--heading-font);
@@ -100,4 +92,4 @@
   .sail-prose tbody tr:last-child td { border-bottom: 0; }
 </style>
 
-<div><slot></slot></div>
+<div sx="block font-body text-foreground leading-normal-plus"><slot></slot></div>
