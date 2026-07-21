@@ -9,16 +9,17 @@
   default slot is the body. A use site distributes its slotted children into
   the matching region at compile time — zero runtime, still compiles away.
 
-  Behavior rides use:alert (packages/sail/runtime/src/actions/alert.ts):
-  - role/aria-live upgrade to assertive alert for warning/destructive tones
-    (sensible static defaults — status/polite — mean it announces correctly
-    even before the action hydrates);
-  - the dismiss button (shown only under [dismissible]) fires `sail-dismiss` and
-    removes the banner.
+  Behavior rides stacked capability use: mix-ins
+  (packages/sail/runtime/src/actions/live-region.ts + dismiss-control.ts):
+  - use:liveRegion — role/aria-live upgrade to assertive alert for
+    warning/destructive tones (sensible static defaults — status/polite —
+    mean it announces correctly even before the action hydrates);
+  - use:dismissControl — the dismiss button (shown only under [dismissible])
+    fires `sail-dismiss` and removes the banner.
 
   Faithful to the feat/next sail-alert baseline. Two shadow-isms dissolve at L1:
-  the reactive role/aria-live (a controller effect) becomes the use:alert
-  action, and the bare `<button ghost xs>` (which rendered unskinned across the
+  the reactive role/aria-live (a controller effect) becomes use:liveRegion,
+  and the bare `<button ghost xs>` (which rendered unskinned across the
   shadow boundary — the baseline's LANG-GAP) becomes a self-contained close
   skin authored here, where L1 is allowed to own CSS.
 -->
@@ -135,7 +136,7 @@
   }
 </style>
 
-<div use:alert role="status" aria-live="polite" aria-atomic="true">
+<div use:liveRegion use:dismissControl role="status" aria-live="polite" aria-atomic="true">
   <span class="ico"><slot name="icon"></slot></span>
   <div class="content">
     <div class="title"><slot name="title"></slot></div>

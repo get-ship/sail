@@ -1,5 +1,6 @@
 // dismiss-self — shared dismiss path for autoDismiss + dismissControl.
 // Not a `use:` action; keeps dual stamps from double-firing / double-removing.
+// Callers pick the event name (toast → sail-toast-dismiss, alert → sail-dismiss).
 
 const dismissed = new WeakSet<Element>()
 

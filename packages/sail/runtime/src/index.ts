@@ -162,7 +162,6 @@ export type { Action, ActionResult } from './action'
 // passes conformance, and then fails to bundle. `builtin_actions_are_exported`
 // in the compiler's test suite holds the two lists together.
 export {
-  alert,
   anchor,
   autosize,
   avatar,
@@ -178,6 +177,7 @@ export {
   detailsDisabled,
   autoDismiss,
   dismissControl,
+  liveRegion,
   dropzone,
   errorBoundary,
   errorState,

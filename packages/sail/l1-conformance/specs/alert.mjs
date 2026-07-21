@@ -1,6 +1,7 @@
-// L1 conformance spec: <alert> (mechanism-1, use:alert). Probe runs the alert
-// essentials (role/aria-live by urgency) and asserts structure: icon chip
-// filled + shown, dismiss shown, role correct per tone. One alert per tone.
+// L1 conformance spec: <alert> (mechanism-1, use:liveRegion + use:dismissControl).
+// Probe runs the alert essentials (role/aria-live by urgency) and asserts
+// structure: icon chip filled + shown, dismiss shown, role correct per tone.
+// One alert per tone.
 
 const ICON = { info: 'M8 7.5v4M8 4.8h.01', success: 'M4.5 8.2l2.3 2.3 4.7-5', warning: 'M8 5v3.5M8 11h.01', destructive: 'M5.5 5.5l5 5M10.5 5.5l-5 5' }
 const copy = {

@@ -71,14 +71,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "alert",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:alert` — the L1 `<alert>` element's behavior. The surface, the leading tone stripe, the icon chip, and the dismiss control's visibility are all PURE CSS (the skin, gated on the `tone` / `dismissible` attributes). This action supplies only what CSS can't: - role / aria-live upgrade to an ASSERTIVE alert for warning/destructive tones (the static defaults — role=status, aria-live=polite — already announce correctly, so the banner is accessible even before this hydrates; the action only sharpens urgent tones), re-evaluated when `tone` changes; - the dismiss button fires `sail-dismiss` (bubbles, composed) and removes the banner — but only while the element is [dismissible]. Written once in the toolchain — no per-instance controller, compiles away.",
-    "loc": "src/actions/alert.ts:16"
-  },
-  {
-    "subpath": ".",
     "name": "anchor",
     "kind": "function",
     "signature": "(node: Element, param: AnchorPlacement | undefined): void | ActionResult<AnchorPlacement | undefined>",
@@ -810,8 +802,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "dismissControl",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "Click on a descendant close control (`[data-toast-close]` or `[data-dismiss]`) dismisses the host: composed `sail-toast-dismiss`, then `el.remove()`.",
-    "loc": "src/actions/dismiss-control.ts:18"
+    "doc": "Click on a descendant close control dismisses the host: composed dismiss event, then `el.remove()`. Toast → `sail-toast-dismiss` (no dismissible gate). Alert / other → `sail-dismiss`, only while `[dismissible]`.",
+    "loc": "src/actions/dismiss-control.ts:27"
   },
   {
     "subpath": ".",
@@ -1060,6 +1052,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "export type ListSource<T> = T[] | (() => unknown)",
     "doc": "A list source: a plain array, a `Signal<T[]>`, a `derived(() => T[])`, or any tracked callable returning one — including a live envelope around one, which is what a live `query()` hands you.",
     "loc": "src/compositions/filtered-list.ts:9"
+  },
+  {
+    "subpath": ".",
+    "name": "liveRegion",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Sync host `role` / `aria-live` from the `tone` attribute. Urgent tones (`warning`, `destructive`) become an assertive alert; everything else stays status/polite. Observes `tone` so flips re-evaluate immediately.",
+    "loc": "src/actions/live-region.ts:15"
   },
   {
     "subpath": ".",
@@ -1880,10 +1880,10 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   {
     "subpath": ".",
     "name": "SpringOptions",
-    "kind": "interface",
-    "signature": "interface SpringOptions extends DurationSpringOptions, VelocityOptions { stiffness?: number; damping?: number; mass?: number; }",
+    "kind": "value",
+    "signature": "",
     "doc": "",
-    "loc": "(from motion-dom)"
+    "loc": ""
   },
   {
     "subpath": ".",

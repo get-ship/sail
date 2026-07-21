@@ -2226,7 +2226,8 @@ mod tests {
         assert!(out.contains("sail-alert"), "root class stamped: {out}");
         assert!(out.contains(r#"tone="success""#), "tone merged: {out}");
         assert!(out.contains("dismissible"), "dismissible merged: {out}");
-        assert!(out.contains("use:alert"), "behavior action rides the splice: {out}");
+        assert!(out.contains("use:liveRegion"), "liveRegion rides the splice: {out}");
+        assert!(out.contains("use:dismissControl"), "dismissControl rides the splice: {out}");
         // each slot region receives its projected child, none survive as <slot>
         assert!(!out.contains("<slot"), "no slot tags survive projection: {out}");
         assert!(
