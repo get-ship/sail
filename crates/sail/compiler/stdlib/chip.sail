@@ -32,9 +32,10 @@
     // first key = default = PE solid
     variant: {
       solid: 'bg-tone text-tone-contrast border-tone shadow-xs',
-      soft: 'bg-tone-bg text-tone-fg border-tone-border hover:bg-muted hover:border-tone',
-      outline: 'bg-transparent text-tone-fg border-tone hover:bg-tone-bg',
-      ghost: 'bg-transparent text-tone-fg border-transparent hover:bg-tone-bg',
+      // shadow-none: host PE solid base carries shadow-xs — non-solid must clear it
+      soft: 'bg-tone-bg text-tone-fg border-tone-border shadow-none hover:bg-muted hover:border-tone',
+      outline: 'bg-transparent text-tone-fg border-tone shadow-none hover:bg-tone-bg',
+      ghost: 'bg-transparent text-tone-fg border-transparent shadow-none hover:bg-tone-bg',
     }
     // first key = default = PE md
     size: {

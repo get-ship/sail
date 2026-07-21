@@ -369,9 +369,12 @@ meter:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--destructive
   transform: translateY(0);
   transition-duration: 60ms;
 }
+/* Branded rail uses tone-fg; untoned/default override to border-strong so the
+   rail is not body-text-colored emphasis without a tone. */
 .sail-card[status-rail] {
   border-left-width: 3px;
   border-left-style: solid;
+  border-left-color: var(--tone-fg);
   padding-inline-start: calc(var(--card-px) - var(--space-1));
 }
 .sail-card[status-rail]:not([tone]),

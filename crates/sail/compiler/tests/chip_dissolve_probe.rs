@@ -128,7 +128,7 @@ fn badge_and_card_compile_cva_no_residue() {
         "attr-absent PE card padding=md + surface base: {}",
         card.structure_html
     );
-    // status-rail is contracts-only (3px) — no dual CVA border-l-2
+    // status-rail is contracts-only (3px + tone-fg) — no dual CVA border-l-2
     assert!(
         !card.skin_css.contains("border-left-width:2px")
             && !card.skin_css.contains("status-rail"),
@@ -141,8 +141,37 @@ fn badge_and_card_compile_cva_no_residue() {
     ));
     assert!(
         contracts.contains(".sail-card[status-rail]")
-            && contracts.contains("border-left-width: 3px"),
-        "status-rail PE 3px lives in contracts only"
+            && contracts.contains("border-left-width: 3px")
+            && contracts.contains("border-left-color: var(--tone-fg)"),
+        "status-rail PE: 3px solid tone-fg in contracts (branded rail color)"
+    );
+    assert!(
+        contracts.contains(".sail-card[status-rail]:not([tone])")
+            && contracts.contains("border-left-color: var(--border-strong)"),
+        "status-rail untoned override uses border-strong"
+    );
+}
+
+#[test]
+fn chip_non_solid_variants_clear_solid_shadow() {
+    // Host PE solid base includes shadow-xs; soft/outline/ghost must reset it.
+    let out = compile_element(include_str!("../stdlib/chip.sail"), "chip").expect("chip");
+    for key in ["soft", "outline", "ghost"] {
+        let needle = format!("variant='{key}'");
+        assert!(out.skin_css.contains(&needle), "missing {key}: {}", out.skin_css);
+    }
+    // soft rule group must clear box-shadow (shadow-none → none)
+    assert!(
+        out.skin_css.contains("variant='soft'")
+            && out.skin_css.contains("box-shadow:none"),
+        "non-solid variants must clear solid host shadow-xs: {}",
+        out.skin_css
+    );
+    assert!(
+        out.skin_css.contains("variant='solid'")
+            && out.skin_css.contains("box-shadow:var(--shadow-xs)"),
+        "solid keeps shadow-xs: {}",
+        out.skin_css
     );
 }
 
