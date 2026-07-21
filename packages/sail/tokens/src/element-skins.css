@@ -1264,12 +1264,9 @@ label { display: inline-block; }
 .sx-fontbody{font-family:var(--body-font)}.sail-col{display:flex;flex-direction:column;min-width:0}.sail-col>*{min-width:0}.sail-g-2{gap:var(--space-2)}.sail-ai-stretch{align-items:stretch}
 
 /* tabs */
+.sx-minw0{min-width:0}.sail-col{display:flex;flex-direction:column;min-width:0}.sail-col>*{min-width:0}.sail-g-3{gap:var(--space-3)}.sail-ai-stretch{align-items:stretch}
 
   .sail-tabs {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    min-width: 0;
     /* size vocabulary (md base) — read by <tab> */
     --tab-fs: var(--text-sm);
     --tab-py: var(--space-2);
@@ -1332,25 +1329,16 @@ label { display: inline-block; }
 
 /* tab */
 .sail-tab { display: inline-flex; }
-
+.sx-fontbody{font-family:var(--body-font)}.sx-fontmedium{font-weight:var(--font-weight-medium)}.sx-textmutedforeground{color:var(--muted-foreground)}.sx-bgtransparent{background-color:transparent}.sx-cursorpointer{cursor:pointer}.sx-whitespacenowrap{white-space:nowrap}.sx-selectnone{user-select:none}
 
   .sail-tab {
-    display: inline-flex;
     align-items: center;
     gap: var(--space-2);
     padding: var(--tab-py, var(--space-2)) var(--tab-px, var(--space-3));
-    font-family: var(--font-body);
-    font-size: var(--tab-fs, var(--text-sm));
-    font-weight: var(--font-weight-medium);
     line-height: 1;
-    color: var(--muted-foreground);
-    background: transparent;
     border: 0;
     border-bottom: 2px solid transparent;
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    cursor: pointer;
-    white-space: nowrap;
-    user-select: none;
     -webkit-tap-highlight-color: transparent;
     transition:
       color var(--duration-fast) var(--ease-out),
@@ -1376,10 +1364,10 @@ label { display: inline-block; }
   .sail-tabs[orientation='vertical'] .sail-tab-panel { padding: 0 0 0 var(--space-4); }
 
 /* toggle-group */
+.sail-row-i{display:inline-flex;flex-wrap:wrap;min-width:0}.sail-row-i>*{min-width:0}.sail-g-0{gap:0}.sail-ai-center{align-items:center}.sail-jc-start{justify-content:flex-start}
 
   .sail-toggle-group {
-    display: inline-flex;
-    gap: 0;
+    
     /* size vocabulary (md base) — read by <toggle> */
     --tg-fs: var(--text-sm);
     --tg-h: var(--control-h-md);
@@ -1414,25 +1402,15 @@ label { display: inline-block; }
 
 /* toggle */
 .sail-toggle { display: inline-flex; }
-
+.sx-fontbody{font-family:var(--body-font)}.sx-fontmedium{font-weight:var(--font-weight-medium)}.sx-leadingnone{line-height:var(--leading-none)}.sx-textforeground{color:var(--foreground)}.sx-bgbackground{background-color:var(--background)}.sx-cursorpointer{cursor:pointer}.sx-whitespacenowrap{white-space:nowrap}.sx-selectnone{user-select:none}
 
   .sail-toggle {
-    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
     height: var(--tg-h, var(--control-h-md));
     padding: 0 var(--tg-px, var(--space-3));
-    font-family: var(--font-body);
-    font-size: var(--tg-fs, var(--text-sm));
-    font-weight: var(--font-weight-medium);
-    line-height: var(--leading-none);
-    color: var(--foreground);
-    background: var(--background);
     border: 1px solid var(--border);
-    cursor: pointer;
-    white-space: nowrap;
-    user-select: none;
     -webkit-tap-highlight-color: transparent;
     transition:
       background-color var(--duration-fast) var(--ease-out),
@@ -1456,9 +1434,9 @@ label { display: inline-block; }
   }
 
 /* scroll-area */
+.sx-overflowauto{overflow:auto}
 
   .sail-scroll-area {
-    overflow: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
@@ -1472,7 +1450,7 @@ label { display: inline-block; }
   .sail-scroll-area::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: var(--shape-pill);
-    border: 3px solid transparent; /* residue — 3px scrollbar border on thumb (inset); webkit pseudos anatomy kept; no squash to space-1 */
+    border: 3px solid transparent; /* residue — 3px scrollbar thumb inset */
     background-clip: padding-box;
   }
   .sail-scroll-area:hover::-webkit-scrollbar-thumb { background: var(--muted-foreground); background-clip: padding-box; }
@@ -2162,16 +2140,10 @@ label { display: inline-block; }
   .sail-hover-card::backdrop { background: transparent; }
 
 /* toast-region */
+.sx-fixed{position:fixed}.sx-zztoast{z-index:var(--z-toast)}.sx-p4{padding:var(--space-4)}.sx-pointereventsnone{pointer-events:none}.sail-col{display:flex;flex-direction:column;min-width:0}.sail-col>*{min-width:0}.sail-g-2{gap:var(--space-2)}.sail-ai-stretch{align-items:stretch}
 
   .sail-toast-region {
-    position: fixed;
-    z-index: var(--z-toast, 1100);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
     width: min(24rem, calc(100vw - var(--space-8)));
-    padding: var(--space-4);
-    pointer-events: none;
     inset-block-end: 0;
     inset-inline-end: 0;
   }
