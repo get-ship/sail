@@ -133,7 +133,7 @@ fn no_skin_hardcodes_a_channel_governed_property() {
 /// site for "hairline or graphic?", a separate pass from landing the channel.
 #[test]
 fn literal_border_widths_in_skins_do_not_increase() {
-    const BASELINE: usize = 42;
+    const BASELINE: usize = 35;
 
     let mut count = 0usize;
     for entry in std::fs::read_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/stdlib"))
