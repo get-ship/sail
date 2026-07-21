@@ -40,7 +40,7 @@
     border-color: var(--tone, var(--primary));
   }
   .sail-page[disabled] { opacity: 0.5; cursor: not-allowed; }
-  .sail-page:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 1px; }
+  .sail-page:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: 1px; /* residue */ }
 </style>
 
 <button type="button"><slot></slot></button>
