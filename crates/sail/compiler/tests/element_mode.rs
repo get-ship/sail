@@ -5,7 +5,7 @@
 //! Variant paint is **CVA-in-props**: a prop whose value is a key→sx map types
 //! as the key union, reflects as an attribute, and lowers through the same sx
 //! atom pipeline as host `sx=` (not hand attr-keyed CSS in `<style>`). Legacy
-//! `variants:` still lowers the same way for back-compat. Author `:host` is
+//! Scope-level `variants:` is rejected (CVA-in-props only). Author `:host` is
 //! gone (element mode keys the skin on `.sail-<name>`; light DOM has no host).
 
 use sail_compiler::compile_element;

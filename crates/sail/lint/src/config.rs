@@ -58,7 +58,7 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str)] = &[
         "variants",
         "boolean",
         "off",
-        "capability override: allow variants: authoring in <scope>",
+        "capability override: allow CVA-in-props variance matrices (key→sx maps on props) and compound:",
     ),
     (
         "raw_containers",

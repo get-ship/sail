@@ -14,8 +14,9 @@
 //!     `sx=`. Host `sx=` remains base paint.
 //!   - `compound: [ { when: { … }, sx: '…' }, … ]` — combination rules over
 //!     prop axes (sibling of `props`).
-//!   - `variants: { … }` — **legacy** parallel surface (same lowerer). Prefer
-//!     CVA-in-props; do not grow this as a second stylesheet language.
+//!   - `channels: { … }` — attr-keyed custom-property writes (+ closed layout
+//!     axes / descendant anatomy). Framework/stdlib paint path.
+//!   - `variants: { … }` — **rejected**. CVA-in-props is the only variance matrix.
 //!
 //! Field grammar (props): `name = literal` (type inferred), `name: Type`
 //! (parent must fill), `name: Type = literal`, or CVA map `name: { k: 'sx…' }`.
@@ -44,8 +45,8 @@ const TONE_VOCAB: &str = "default|primary|info|success|warning|destructive|accen
 const SIZE_VOCAB: &str = "xs|sm|md|lg";
 
 const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, `props:` (incl. CVA key→sx maps), \
-     optional `compound:` / `channels:`, and legacy `variants:` — types and literal values only; \
-     logic goes in `<controller>`";
+     optional `compound:` / `channels:` — types and literal values only; logic goes in `<controller>`. \
+     There is no `variants:` block — put key→sx maps on props";
 
 pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, CompileError> {
     let bytes = body.as_bytes();
@@ -94,13 +95,14 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
                 i = obj_span.1 + 1;
             }
             "variants" => {
-                // Legacy parallel surface — same lowerer as CVA-in-props.
-                let obj_span = expect_member_object(body, after, "variants", span)?;
-                let inner = &body[obj_span.0 + 1..obj_span.1];
-                let (axis_props, normalized) = parse_variants_table(inner, span)?;
-                out.props.extend(axis_props);
-                out.variants_css.push_str(&variants_object_to_css(&normalized));
-                i = obj_span.1 + 1;
+                // Dual path killed: CVA-in-props is the only variance matrix.
+                return Err(CompileError::new(
+                    "`variants:` is not a `<scope>` member — put key→sx maps on props \
+                     (CVA-in-props: `variant: { solid: 'bg-tone …', … }`) and combination \
+                     rules on sibling `compound: [ { when, sx } ]`."
+                        .to_string(),
+                )
+                .with_span(span));
             }
             "" => {
                 return Err(CompileError::new(format!(
@@ -273,7 +275,7 @@ fn find_balanced_bracket(s: &str, open: usize) -> Result<usize, CompileError> {
 
 /// Parse `props:` fields. Returns declared props plus CSS lowered from any
 /// CVA-in-props axes (key → sx string maps) through the same pipeline as
-/// host `sx=` / legacy `variants:`.
+/// host `sx=`.
 fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String), CompileError> {
     let bytes = body.as_bytes();
     let mut out = Vec::new();
@@ -630,88 +632,6 @@ fn split_as_cast(s: &str) -> (&str, Option<&str>) {
         i += 1;
     }
     (s, None)
-}
-
-// ── variants ─────────────────────────────────────────────────────────────────
-
-/// Each axis in the CVA table becomes a reflected union prop. The first key is
-/// the default — the table is ordered data, its order IS the declaration.
-/// `compound:` rows contribute CSS only, never a prop.
-///
-/// Members are newline- or comma-separated (field style, like the rest of the
-/// block). Returns the derived props plus a comma-normalized copy of the table
-/// for the CVA CSS core, which expects object-literal syntax.
-fn parse_variants_table(
-    table_inner: &str,
-    span: Span,
-) -> Result<(Vec<PropDecl>, String), CompileError> {
-    let bytes = table_inner.as_bytes();
-    let mut props = Vec::new();
-    let mut normalized: Vec<String> = Vec::new();
-    let mut i = 0usize;
-    while i < bytes.len() {
-        i = skip_trivia(table_inner, i, None);
-        if i >= bytes.len() {
-            break;
-        }
-        if bytes[i] == b',' || bytes[i] == b';' {
-            i += 1;
-            continue;
-        }
-        let (axis, after) = read_word(table_inner, i);
-        if axis.is_empty() {
-            return Err(CompileError::new(format!(
-                "unexpected `{}` in `variants:` — axes are `name: {{ value: 'sx…', … }}`.",
-                char_at(table_inner, i)
-            ))
-            .with_span(span));
-        }
-        let axis = axis.to_string();
-        let mut j = skip_trivia(table_inner, after, None);
-        if j >= bytes.len() || bytes[j] != b':' {
-            return Err(CompileError::new(format!(
-                "variants axis `{axis}` needs a table — `{axis}: {{ value: 'sx…', … }}`."
-            ))
-            .with_span(span));
-        }
-        j = skip_trivia(table_inner, j + 1, None);
-        let end = scan_value_end(table_inner, j);
-        let val = table_inner[j..end].trim();
-        if axis == "compound" {
-            normalized.push(format!("compound: {val}"));
-            i = end;
-            continue;
-        }
-        if !val.starts_with('{') {
-            return Err(CompileError::new(format!(
-                "variants axis `{axis}` must be a table — `{axis}: {{ value: 'sx…', … }}`."
-            ))
-            .with_span(span));
-        }
-        let keys: Vec<String> =
-            parse_object_fields(val.trim_start_matches('{').trim_end_matches('}'))
-                .into_iter()
-                .map(|(k, _)| k)
-                .collect();
-        if keys.is_empty() {
-            return Err(CompileError::new(format!(
-                "variants axis `{axis}` has no values — a variant axis needs at least one row."
-            ))
-            .with_span(span));
-        }
-        props.push(PropDecl {
-            name: axis.clone(),
-            kind: PropKind::Union(keys.clone()),
-            default: keys.first().cloned(),
-            reflect: true,
-            bindable: false,
-            description: None,
-            span: Span::new(0, 0),
-        });
-        normalized.push(format!("{axis}: {val}"));
-        i = end;
-    }
-    Ok((props, format!("{{ {} }}", normalized.join(", "))))
 }
 
 // ── literal validation ───────────────────────────────────────────────────────
@@ -1138,19 +1058,17 @@ mod tests {
     }
 
     #[test]
-    fn variants_axes_become_reflected_union_props_and_css() {
-        let b = block(
-            "variants: {\n  variant: { solid: 'bg-muted', outline: 'border-border' }\n  size: { sm: 'text-xs', lg: 'text-base' }\n  compound: [\n    { when: { variant: 'solid' }, sx: 'shadow-xs' },\n  ]\n}",
+    fn variants_field_is_rejected() {
+        let err = parse_scope_block(
+            "variants: {\n  variant: { solid: 'bg-muted' }\n}",
+            Span::new(0, 0),
+        )
+        .expect_err("variants: dual path killed");
+        assert!(
+            err.message.contains("variants:") && err.message.contains("CVA-in-props"),
+            "must reject variants: and name CVA-in-props: {}",
+            err.message
         );
-        assert_eq!(
-            prop(&b, "variant").kind,
-            PropKind::Union(vec!["solid".into(), "outline".into()])
-        );
-        assert_eq!(prop(&b, "variant").default.as_deref(), Some("solid"));
-        assert_eq!(prop(&b, "size").default.as_deref(), Some("sm"));
-        // compound contributes CSS only, never a prop
-        assert!(b.props.iter().all(|p| p.name != "compound"));
-        assert!(!b.variants_css.is_empty(), "axes must lower to CSS");
     }
 
     #[test]
