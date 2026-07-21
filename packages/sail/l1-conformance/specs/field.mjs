@@ -1,6 +1,6 @@
-// L1 conformance spec: <field> (mechanism-1, use:field). Probe runs the field
-// essentials (id wiring, aria-describedby → hint|error, aria-invalid) and
-// asserts the valid/invalid gate: valid → hint shown/error hidden; invalid →
+// L1 conformance spec: <field> (mechanism-1, use:describedControl). Probe runs
+// the field essentials (id wiring, aria-describedby → hint|error, aria-invalid)
+// and asserts the valid/invalid gate: valid → hint shown/error hidden; invalid →
 // error shown/hint hidden. Valid + invalid rendered side by side.
 
 const inputCss = 'font:inherit;font-size:14px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface-1);color:var(--foreground);width:100%;box-sizing:border-box'

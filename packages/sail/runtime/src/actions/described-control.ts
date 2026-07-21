@@ -3,14 +3,16 @@ import type { Action } from '../action'
 let _seq = 0
 
 /**
- * `use:field` — the L1 `<field>` element's behavior. The vertical stack and the
- * hint↔error swap are pure CSS; this action wires accessibility: give the hint
- * and error regions stable ids, then point the first slotted control's
- * aria-describedby at the active region (hint when valid, error when [invalid])
- * and set aria-invalid to match. Re-wires when [invalid] toggles or the control
- * changes. Written once — no per-instance controller, compiles away.
+ * `use:describedControl` — form control ↔ hint/error association for any host
+ * with `.hint` / `.error` / `.control` anatomy. The hint↔error visibility swap
+ * is pure CSS; this action wires accessibility: give the hint and error regions
+ * stable ids, then point the first slotted control's aria-describedby at the
+ * active region (hint when valid, error when [invalid]) and set aria-invalid
+ * to match. Re-wires when [invalid] toggles or the control changes. Written
+ * once — no per-instance controller, compiles away. The L1 `<field>` stamps
+ * this.
  */
-export const field: Action<void> = (node) => {
+export const describedControl: Action<void> = (node) => {
   const el = node as HTMLElement
   const n = ++_seq
   const hint = el.querySelector('.hint') as HTMLElement | null

@@ -139,6 +139,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
+        name: "describedControl",
+        param: "void",
+        summary: "Form control ↔ hint/error association (aria-describedby + aria-invalid) for any host with `.hint`/`.error`/`.control` anatomy.",
+        auto_import: true,
+    },
+    ActionEntry {
         name: "detailsDisabled",
         param: "void",
         summary: "Suppress click + Enter/Space activation on a disclosure host while it carries `[disabled]`.",
@@ -190,12 +196,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "eventSpan",
         param: "RectSpan | null | undefined",
         summary: "Track the bounding rect of a pointer event target across the screen.",
-        auto_import: true,
-    },
-    ActionEntry {
-        name: "field",
-        param: "void",
-        summary: "Form-field wiring: label, hint, error slot, and ARIA association.",
         auto_import: true,
     },
     ActionEntry {
@@ -352,9 +352,9 @@ pub const ACTIONS: &[ActionEntry] = &[
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "alert", "anchor", "autoDismiss", "autosize", "avatar", "cellPad",
     "chromeOffset", "clickOutside", "codeBlock", "combobox",
-    "contextMenu", "detailsDisabled", "detailsToggle", "dismissControl",
-    "dismissible", "dropzone", "emptyState", "errorBoundary",
-    "errorState", "eventSpan", "field", "gridTracks", "hoverCard",
+    "contextMenu", "describedControl", "detailsDisabled", "detailsToggle",
+    "dismissControl", "dismissible", "dropzone", "emptyState", "errorBoundary",
+    "errorState", "eventSpan", "gridTracks", "hoverCard",
     "icon", "maxWidth", "menu", "pagination", "pin", "portEdge",
     "pressable", "pressed", "radioGroup", "rangeFill", "rect", "spotlight",
     "swatch", "tabs",

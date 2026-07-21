@@ -5758,6 +5758,11 @@ export const ACTIONS: ActionDoc[] = [
     "summary": "Right-click menu: open on contextmenu, close on outside-click / ESC."
   },
   {
+    "name": "describedControl",
+    "param": "void",
+    "summary": "Form control ↔ hint/error association (aria-describedby + aria-invalid) for any host with `.hint`/`.error`/`.control` anatomy."
+  },
+  {
     "name": "detailsDisabled",
     "param": "void",
     "summary": "Suppress click + Enter/Space activation on a disclosure host while it carries `[disabled]`."
@@ -5801,11 +5806,6 @@ export const ACTIONS: ActionDoc[] = [
     "name": "eventSpan",
     "param": "RectSpan | null | undefined",
     "summary": "Track the bounding rect of a pointer event target across the screen."
-  },
-  {
-    "name": "field",
-    "param": "void",
-    "summary": "Form-field wiring: label, hint, error slot, and ARIA association."
   },
   {
     "name": "gridTracks",
