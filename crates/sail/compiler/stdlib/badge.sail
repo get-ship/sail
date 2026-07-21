@@ -4,6 +4,12 @@
   to <span class="sail-badge">; the skin routes to the framework @layer keyed on
   the element + attributes; the props feed the manifest + bare shorthand.
 
+  Host paint: soft look is the attr-absent base on host `sx=` (bg/text/border +
+  typeface). solid/outline stay attribute CSS (and solid inset shadow). Geometry
+  stays channel CSS — size residues have no exact tokens; gap/align-items are
+  layout atoms refused on non-layout hosts. Default muted tone fill stays author
+  CSS (specificity vs global [tone]).
+
   Faithful to the feat/next sail-badge baseline for tone/variant/size/pill.
   Two baseline shadow-isms dissolve at L1:
   - host/.badge split → collapsed onto the single root span (same as <label>
@@ -28,30 +34,19 @@
 
 <style>
   .sail-badge {
-    display: inline-flex;
-    align-items: center;
-    vertical-align: middle;
     /* Size: md base (exact tokens); sm/lg override below (residues kept literal where no exact token). */
     --badge-h: var(--control-h-2xs);
     --badge-px: var(--space-2);
     --badge-fs: 10.5px; /* residue literal — no text token */
     --badge-gap: var(--space-1);
     --badge-radius: var(--radius-sm);
+    align-items: center;
     gap: var(--badge-gap);
     min-height: var(--badge-h);
     padding: 0 var(--badge-px);
-    font-family: var(--font-body);
     font-size: var(--badge-fs);
-    font-weight: var(--font-weight-semibold);
-    line-height: var(--leading-none);
-    white-space: nowrap;
     border-radius: var(--badge-radius);
     -webkit-font-smoothing: antialiased;
-    font-variant-numeric: tabular-nums;
-    /* soft is the default variant — base .sail-badge renders soft. */
-    background: var(--tone-bg);
-    border: 1px solid var(--tone-border);
-    color: var(--tone-fg);
   }
   .sail-badge[hidden] { display: none; }
 
@@ -83,7 +78,7 @@
   /* Shape — square (radius-sm) default; pill opts into the full radius. */
   .sail-badge[pill] { --badge-radius: var(--shape-pill); }
 
-  /* Variant matrix (soft is the base above). */
+  /* Variant matrix — soft base is host sx; solid/outline override. */
   .sail-badge[variant='solid'] {
     background: var(--tone);
     border-color: var(--tone);
@@ -102,4 +97,6 @@
   }
 </style>
 
-<span><slot></slot></span>
+<span sx="font-body font-semibold leading-none whitespace-nowrap align-middle tabular-nums bg-tone-bg text-tone-fg border border-tone-border">
+  <slot></slot>
+</span>
