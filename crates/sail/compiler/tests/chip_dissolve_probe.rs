@@ -1,4 +1,4 @@
-//! Chip dissolve — paint source + residue burn gate.
+//! Dissolve gates — paint source, residue burn, PE defaults (attr-absent).
 use sail_compiler::compile_element;
 
 #[test]
@@ -38,17 +38,21 @@ fn chip_compiles_with_cva_and_no_residue_matrix() {
         "no local tone channel writes: {}",
         out.skin_css
     );
-    // Host base sx present
-    assert!(
-        out.structure_html.contains("sx-") || out.skin_css.contains("font-family"),
-        "host sx base: struct={} skin={}",
-        out.structure_html,
-        out.skin_css
-    );
-    // Manifest reflects CVA axes
+    // PE defaults: first CVA key = md/solid; attr-absent base on host sx
     let attrs = out.manifest["attributes"].as_array().unwrap();
     let variant = attrs.iter().find(|a| a["name"] == "variant").unwrap();
-    assert_eq!(variant["default"], "solid");
+    assert_eq!(variant["default"], "solid", "PE solid default: {variant}");
+    let size = attrs.iter().find(|a| a["name"] == "size").unwrap();
+    assert_eq!(size["default"], "md", "PE size=md default: {size}");
+    // Host sx atoms: min-h-control-h-xs px-2_5 text-sm bg-tone (sanitized class names)
+    assert!(
+        out.structure_html.contains("sx-minhcontrolhxs")
+            && out.structure_html.contains("sx-px25")
+            && out.structure_html.contains("sx-textsm")
+            && out.structure_html.contains("sx-bgtone"),
+        "attr-absent PE size=md + solid base on host sx: {}",
+        out.structure_html
+    );
 }
 
 #[test]
@@ -91,16 +95,54 @@ fn badge_and_card_compile_cva_no_residue() {
         !include_str!("../stdlib/_residues.css").contains("/* --- badge "),
         "badge residue section must be gone"
     );
+    // PE: size default md; attr-absent md geometry on host sx
+    let battrs = badge.manifest["attributes"].as_array().unwrap();
+    let bsize = battrs.iter().find(|a| a["name"] == "size").unwrap();
+    assert_eq!(bsize["default"], "md", "PE badge size=md: {bsize}");
+    assert!(
+        badge.structure_html.contains("sx-minhcontrolh2xs")
+            && badge.structure_html.contains("sx-px2")
+            && badge.structure_html.contains("sx-bgtonebg"),
+        "attr-absent PE badge size=md + soft base: {}",
+        badge.structure_html
+    );
 
     let card = compile_element(include_str!("../stdlib/card.sail"), "card").expect("card");
     assert!(
-        card.skin_css.contains("variant='outline'") || card.skin_css.contains("padding='md'"),
+        card.skin_css.contains("variant='outline'") && card.skin_css.contains("padding='md'"),
         "card CVA: {}",
         card.skin_css
     );
     assert!(
         !include_str!("../stdlib/_residues.css").contains("/* --- card "),
         "card residue section must be gone"
+    );
+    // PE: padding default md; attr-absent md padding on host sx
+    let cattrs = card.manifest["attributes"].as_array().unwrap();
+    let pad = cattrs.iter().find(|a| a["name"] == "padding").unwrap();
+    assert_eq!(pad["default"], "md", "PE card padding=md: {pad}");
+    assert!(
+        card.structure_html.contains("sx-py4")
+            && card.structure_html.contains("sx-px5")
+            && card.structure_html.contains("sx-bgsurface1"),
+        "attr-absent PE card padding=md + surface base: {}",
+        card.structure_html
+    );
+    // status-rail is contracts-only (3px) — no dual CVA border-l-2
+    assert!(
+        !card.skin_css.contains("border-left-width:2px")
+            && !card.skin_css.contains("status-rail"),
+        "no dual status-rail CVA paint: {}",
+        card.skin_css
+    );
+    let contracts = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../packages/sail/tokens/src/contracts.css"
+    ));
+    assert!(
+        contracts.contains(".sail-card[status-rail]")
+            && contracts.contains("border-left-width: 3px"),
+        "status-rail PE 3px lives in contracts only"
     );
 }
 

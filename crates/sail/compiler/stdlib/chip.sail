@@ -18,8 +18,9 @@
 
   Paint (one path — same as L2+/app code):
     layout keywords  — inline row, gap, align
-    host sx=         — base type/border/cursor/pressed/disabled/focus
-    CVA-in-props     — variant + size maps → attr-keyed rules via sx atoms
+    host sx=         — base type/border/cursor + PE defaults (solid, size md)
+                       for attr-absent (defaults are not stamped on structure)
+    CVA-in-props     — variant + size maps (first key = default = PE)
     global [tone]    — channel reads only (contracts write --tone*)
     contracts        — shared removable anatomy dismiss control
   No residual chip matrix. No L1 controller.
@@ -28,15 +29,17 @@
 <scope>
   props: {
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    // first key = default = PE solid
     variant: {
       solid: 'bg-tone text-tone-contrast border-tone shadow-xs',
       soft: 'bg-tone-bg text-tone-fg border-tone-border hover:bg-muted hover:border-tone',
       outline: 'bg-transparent text-tone-fg border-tone hover:bg-tone-bg',
       ghost: 'bg-transparent text-tone-fg border-transparent hover:bg-tone-bg',
     }
+    // first key = default = PE md
     size: {
-      sm: 'min-h-control-h-2xs px-2 text-xs',
       md: 'min-h-control-h-xs px-2_5 text-sm',
+      sm: 'min-h-control-h-2xs px-2 text-xs',
       lg: 'min-h-control-h-md px-3 text-base',
     }
     selected = false
@@ -56,7 +59,7 @@
   use:pressable
   use:pressed
   use:dismissible
-  sx="font-body font-medium leading-none align-middle whitespace-nowrap cursor-pointer select-none tap-highlight-none rounded-full border border-transparent text-tone-fg transition-colors duration-fast ease-out pressed:bg-tone pressed:text-tone-contrast pressed:border-tone pressed:font-semibold pressed:shadow-xs disabled:cursor-not-allowed disabled:bg-muted disabled:border-border-subtle disabled:text-muted-foreground disabled:saturate-65 disabled:shadow-none focus:outline-solid focus:outline-2 focus:outline-ring focus:outline-offset-2 forced-colors:border-canvastext forced-colors:text-canvastext"
+  sx="font-body font-medium leading-none align-middle whitespace-nowrap cursor-pointer select-none tap-highlight-none rounded-full border min-h-control-h-xs px-2_5 text-sm bg-tone text-tone-contrast border-tone shadow-xs transition-colors duration-fast ease-out pressed:bg-tone pressed:text-tone-contrast pressed:border-tone pressed:font-semibold pressed:shadow-xs disabled:cursor-not-allowed disabled:bg-muted disabled:border-border-subtle disabled:text-muted-foreground disabled:saturate-65 disabled:shadow-none focus:outline-solid focus:outline-2 focus:outline-ring focus:outline-offset-2"
 >
   <span class="leading" sx="contents">
     <slot name="leading"></slot>

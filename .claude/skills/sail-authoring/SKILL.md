@@ -26,7 +26,9 @@ allowed list. Trust errors over memory.
 - Components declare their static surface in `<scope>` — TypeScript field
   syntax, types and literal values only: `props: { label = 'Default';
   tone = 'default'; kind: 'a' | 'b' = 'a' }`. `tone`/`size` are the framework
-  channels. Styling tables live in `variants:`. If it computes, it goes in
+  channels. Styling tables live in `props` as CVA key→sx maps
+  (`variant: { solid: 'bg-tone …' }` — first key = default). There is no
+  separate `variants:` block. If it computes, it goes in
   `<controller>`.
 
 ## What sx is NOT
