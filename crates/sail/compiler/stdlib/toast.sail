@@ -28,7 +28,7 @@
     color: var(--foreground);
     background: var(--background);
     border: 1px solid var(--tone-border, var(--border));
-    border-inline-start: 3px solid var(--tone-fg, var(--border));
+    border-inline-start: 3px solid var(--tone-fg, var(--border)); /* residue (tone stripe): 3px literal — no --space token for 3px category stripe (space-1=4px forbidden squash); tone-border/tone-fg fallbacks kept verbatim */
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
   }
