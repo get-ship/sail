@@ -248,3 +248,32 @@ fn stdlib_chip_compiles_with_use_stamps() {
     );
     assert_eq!(el.root_class, "sail-chip");
 }
+
+#[test]
+fn stdlib_element_sources_have_no_author_style_blocks() {
+    // L1 elements author structure + sx + layout + capability use: only.
+    // Residual paint lives in stdlib/_residues.css (framework sheet).
+    for (tag, src) in sail_compiler::stdlib::sources() {
+        let mut in_comment = false;
+        let bytes = src.as_bytes();
+        let mut i = 0;
+        while i < bytes.len() {
+            if !in_comment && i + 4 <= bytes.len() && &bytes[i..i + 4] == b"<!--" {
+                in_comment = true;
+                i += 4;
+                continue;
+            }
+            if in_comment && i + 3 <= bytes.len() && &bytes[i..i + 3] == b"-->" {
+                in_comment = false;
+                i += 3;
+                continue;
+            }
+            if !in_comment && i + 7 <= bytes.len() && &bytes[i..i + 7] == b"<style>" {
+                panic!(
+                    "stdlib element {tag} still has an author <style> block — relocate to residues/sx/contracts"
+                );
+            }
+            i += 1;
+        }
+    }
+}
