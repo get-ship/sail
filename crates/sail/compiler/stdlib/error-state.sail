@@ -5,7 +5,7 @@
   optional collapsible technical-details section, and a retry action.
 
   Named slots project at compile time (title / details / action + the default
-  description slot). Behavior rides use:errorState: fill the code chip from the
+  description slot). Behavior rides use:recoverySurface: fill the code chip from the
   `code` attribute, gate + drive the details toggle (Show/Hide, aria-expanded),
   and auto-focus the retry action. Bare tag lowers to <div class=sail-error-state>.
 
@@ -23,7 +23,7 @@
   }
 </scope>
 
-<div use:errorState role="alert">
+<div use:recoverySurface role="alert">
   <div class="icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="9"></circle>

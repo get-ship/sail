@@ -261,20 +261,17 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     {
       "name": "name",
       "type": "string",
-      "default": "",
-      "desc": "Named glyph from the icon endpoint (deck serves the embedded lucide set). Empty keeps slotted children."
+      "default": ""
     },
     {
       "name": "src",
       "type": "string",
-      "default": "",
-      "desc": "Fetch an arbitrary SVG URL instead of a named glyph; wins over name."
+      "default": ""
     },
     {
       "name": "label",
       "type": "string",
-      "default": "",
-      "desc": "Accessible name — role=img + aria-label; label-less icons are aria-hidden decoration."
+      "default": ""
     },
     {
       "name": "size",

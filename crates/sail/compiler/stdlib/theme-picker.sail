@@ -9,7 +9,7 @@
   and each card previews its theme by setting `data-theme` on the swatch itself,
   so the colors come from the real stylesheet rather than a hand-copied hex.
 
-  Selection routes through `applyTheme` (see use:themePicker), which sets
+  Selection routes through `applyTheme` (see use:themeSelect), which sets
   `data-theme`, toggles `.dark`, and announces `ship:theme:change`.
 -->
 
@@ -20,7 +20,7 @@
   }
 </scope>
 
-<div use:themePicker>
+<div use:themeSelect>
   <button class="sail-theme-trigger" type="button" popovertarget="sail-theme-panel" aria-label="Choose theme">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="13.5" cy="6.5" r="1.5"></circle>

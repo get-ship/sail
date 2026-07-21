@@ -312,13 +312,11 @@
     "icon": {
       "label": {
         "type": "string",
-        "default": "",
-        "description": "Accessible name — role=img + aria-label; label-less icons are aria-hidden decoration."
+        "default": ""
       },
       "name": {
         "type": "string",
-        "default": "",
-        "description": "Named glyph from the icon endpoint (deck serves the embedded lucide set). Empty keeps slotted children."
+        "default": ""
       },
       "size": {
         "values": [
@@ -336,8 +334,7 @@
       },
       "src": {
         "type": "string",
-        "default": "",
-        "description": "Fetch an arbitrary SVG URL instead of a named glyph; wins over name."
+        "default": ""
       }
     },
     "label": {

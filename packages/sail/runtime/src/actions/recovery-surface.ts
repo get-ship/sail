@@ -1,7 +1,7 @@
 import type { Action } from '../action'
 
 /**
- * `use:errorState` — the L1 `<error-state>` element's behavior. Surface, icon
+ * `use:recoverySurface` — the L1 `<error-state>` element's behavior. Surface, icon
  * tile, and the details/toggle visibility are PURE CSS (gated on the
  * `data-has-details` / `data-details-open` attributes). This action supplies
  * what CSS can't:
@@ -12,7 +12,7 @@ import type { Action } from '../action'
  *  - auto-focus the first action so the recovery control is reachable at once.
  * Written once in the toolchain — no per-instance controller, compiles away.
  */
-export const errorState: Action<void> = (node) => {
+export const recoverySurface: Action<void> = (node) => {
   const el = node as HTMLElement
   const code = el.querySelector('.code') as HTMLElement | null
   const details = el.querySelector('.details') as HTMLElement | null

@@ -18,7 +18,7 @@ const AUTHOR: &str = "@ship/sail-runtime";
 /// A component exercising the emit paths that pull ABI symbols: text binding,
 /// an event handler (`on`), and an action (`runAction` + the auto-imported
 /// builtin). All three are things the emitter writes, none are things a human does.
-const SRC: &str = r#"<button on:click={() => go()} use:tooltip>{label()}</button>"#;
+const SRC: &str = r#"<button on:click={() => go()} use:tipDescribe>{label()}</button>"#;
 
 fn opts() -> CompileOpts {
     CompileOpts {

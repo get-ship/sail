@@ -1,4 +1,4 @@
-// L1 conformance spec: <error-state> (mechanism-1, use:errorState). Probe runs
+// L1 conformance spec: <error-state> (mechanism-1, use:recoverySurface). Probe runs
 // the essentials (fill code region, expand details when present) and asserts the
 // gates: title filled, role=alert, code region shown iff a code, details toggle
 // shown iff there are details. default (code+details) / inline variants.

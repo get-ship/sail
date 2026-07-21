@@ -5412,7 +5412,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "avatar",
-      "description": "identity frame (image/icon/initials). use:avatar owns render/fallback."
+      "description": "identity frame (image/icon/initials). use:mediaFallback owns render/fallback."
     },
     {
       "tag": "badge",
@@ -5572,7 +5572,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "tooltip",
-      "description": "hover/focus text bubble via CSS Anchor Positioning. use:tooltip"
+      "description": "hover/focus text bubble via CSS Anchor Positioning. use:tipDescribe"
     }
   ],
   "reskins": [
@@ -5718,7 +5718,7 @@ export const ACTIONS: ActionDoc[] = [
     "summary": "Autosize a textarea to its content as the user types."
   },
   {
-    "name": "avatar",
+    "name": "mediaFallback",
     "param": "void",
     "summary": "Image-with-fallback behavior for an <avatar> element."
   },
@@ -5738,7 +5738,7 @@ export const ACTIONS: ActionDoc[] = [
     "summary": "Fire a callback when a click lands outside the element."
   },
   {
-    "name": "codeBlock",
+    "name": "syntaxHighlight",
     "param": "void",
     "summary": "Syntax-highlight + copy-button behavior for a <code-block>."
   },
@@ -5783,12 +5783,12 @@ export const ACTIONS: ActionDoc[] = [
     "summary": "Drag-and-drop file receiver; reads files into a controller-side handler."
   },
   {
-    "name": "errorBoundary",
+    "name": "catchRender",
     "param": "void",
     "summary": "Catch render errors thrown by descendants; show a fallback UI."
   },
   {
-    "name": "errorState",
+    "name": "recoverySurface",
     "param": "void",
     "summary": "Error-state element behavior; arms a retry action for the call-to-action slot."
   },
@@ -5803,7 +5803,7 @@ export const ACTIONS: ActionDoc[] = [
     "summary": "Measure a CSS grid's resolved track widths/positions for layout math."
   },
   {
-    "name": "hoverCard",
+    "name": "hoverSurface",
     "param": "void",
     "summary": "Hover-triggered card; open on pointer-in, close on pointer-out with delay."
   },
@@ -5888,7 +5888,7 @@ export const ACTIONS: ActionDoc[] = [
     "summary": "Switch the cursor to a custom 'target' style while over the element."
   },
   {
-    "name": "themePicker",
+    "name": "themeSelect",
     "param": "void",
     "summary": "Theme switcher: click to write the picked theme to the host context."
   },
@@ -5898,7 +5898,7 @@ export const ACTIONS: ActionDoc[] = [
     "summary": "Toggle-group keyboard nav: arrow keys move focus, space toggles."
   },
   {
-    "name": "tooltip",
+    "name": "tipDescribe",
     "param": "void",
     "summary": "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay."
   },

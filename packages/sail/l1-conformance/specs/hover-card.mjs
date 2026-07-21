@@ -1,4 +1,4 @@
-// L1 conformance spec: <hover-card> (native [popover] + use:anchor + use:hoverCard).
+// L1 conformance spec: <hover-card> (native [popover] + use:anchor + use:hoverSurface).
 // RENDER: the card surface in-flow across 7 themes. BEHAVIOR: hovering the trigger
 // opens it after the dwell delay; leaving closes it.
 

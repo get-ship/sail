@@ -143,14 +143,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "avatar",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:avatar` — the L1 `<avatar>` element's behavior, written once in the toolchain (no per-instance controller). It reads `src` / `icon-slug` / `name` / `initials` off the element's OWN attributes (which merge onto the compiles-away root) and renders either an `<img>` — falling back to initials when the image is absent or fails to load — or the initials directly. The frame (circle/square, tone, size) is the skin; this is the behavior layer.",
-    "loc": "src/actions/avatar.ts:14"
-  },
-  {
-    "subpath": ".",
     "name": "batch",
     "kind": "function",
     "signature": "(fn: () => void): void",
@@ -383,6 +375,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
+    "name": "catchRender",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:catchRender` — the `<error-boundary>` element's behavior.",
+    "loc": "src/actions/catch-render.ts:21"
+  },
+  {
+    "subpath": ".",
     "name": "cellPad",
     "kind": "function",
     "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
@@ -468,14 +468,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "export interface ClockSignal extends Signal<number> { play(): void pause(): void stop(): void running(): boolean }",
     "doc": "A progress signal with transport controls. It reads exactly like any other signal — `clock(3600)()` is a number in `0..1` — so it drops into `timeline()` and into `(--name)` reflection with no special-casing.",
     "loc": "src/drivers.ts:72"
-  },
-  {
-    "subpath": ".",
-    "name": "codeBlock",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:codeBlock` — the `<code-block>` element's behavior.",
-    "loc": "src/actions/code-block.ts:18"
   },
   {
     "subpath": ".",
@@ -871,22 +863,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "errorBoundary",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:errorBoundary` — the `<error-boundary>` element's behavior.",
-    "loc": "src/actions/error-boundary.ts:21"
-  },
-  {
-    "subpath": ".",
-    "name": "errorState",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:errorState` — the L1 `<error-state>` element's behavior. Surface, icon tile, and the details/toggle visibility are PURE CSS (gated on the `data-has-details` / `data-details-open` attributes). This action supplies what CSS can't: - fill the code chip from the `code` attribute (re-synced on change); - detect whether the details region has content → mark [data-has-details] so the Show/Hide toggle appears, and wire the toggle (label, aria-expanded, [data-details-open]); - auto-focus the first action so the recovery control is reachable at once. Written once in the toolchain — no per-instance controller, compiles away.",
-    "loc": "src/actions/error-state.ts:15"
-  },
-  {
-    "subpath": ".",
     "name": "eventSpan",
     "kind": "function",
     "signature": "(node: Element, param: RectSpan | null | undefined): void | ActionResult<RectSpan | null | undefined>",
@@ -983,11 +959,11 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "hoverCard",
+    "name": "hoverSurface",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:hoverCard` — opens the L1 `<hover-card>` (a native `[popover]`) on hover or focus of its trigger (the element whose `popovertarget` names it), with open/close delays so it doesn't flicker. Positioning is `use:anchor`'s job; top-layer + light-dismiss are the native popover's.",
-    "loc": "src/actions/hover-card.ts:9"
+    "doc": "`use:hoverSurface` — opens the L1 `<hover-card>` (a native `[popover]`) on hover or focus of its trigger (the element whose `popovertarget` names it), with open/close delays so it doesn't flicker. Positioning is `use:anchor`'s job; top-layer + light-dismiss are the native popover's.",
+    "loc": "src/actions/hover-surface.ts:9"
   },
   {
     "subpath": ".",
@@ -1140,6 +1116,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(node: Element, param: string | number | null | undefined): void | ActionResult<string | number | null | undefined>",
     "doc": "`use:maxWidth={px}` — runtime max-width (e.g. a viewer stage sized to the host viewport minus chrome). A value the user resized to, not a design decision. Writes `--max-w`; the consuming template uses sx=\"max-w-(--max-w)\"",
     "loc": "src/actions/zoom-pan.ts:49"
+  },
+  {
+    "subpath": ".",
+    "name": "mediaFallback",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:mediaFallback` — the L1 `<avatar>` element's behavior, written once in the toolchain (no per-instance controller). It reads `src` / `icon-slug` / `name` / `initials` off the element's OWN attributes (which merge onto the compiles-away root) and renders either an `<img>` — falling back to initials when the image is absent or fails to load — or the initials directly. The frame (circle/square, tone, size) is the skin; this is the behavior layer.",
+    "loc": "src/actions/media-fallback.ts:14"
   },
   {
     "subpath": ".",
@@ -1535,6 +1519,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
+    "name": "recoverySurface",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:recoverySurface` — the L1 `<error-state>` element's behavior. Surface, icon tile, and the details/toggle visibility are PURE CSS (gated on the `data-has-details` / `data-details-open` attributes). This action supplies what CSS can't: - fill the code chip from the `code` attribute (re-synced on change); - detect whether the details region has content → mark [data-has-details] so the Show/Hide toggle appears, and wire the toggle (label, aria-expanded, [data-details-open]); - auto-focus the first action so the recovery control is reachable at once. Written once in the toolchain — no per-instance controller, compiles away.",
+    "loc": "src/actions/recovery-surface.ts:15"
+  },
+  {
+    "subpath": ".",
     "name": "rect",
     "kind": "function",
     "signature": "(node: Element, param: BoxRect | null | undefined): void | ActionResult<BoxRect | null | undefined>",
@@ -1880,10 +1872,10 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   {
     "subpath": ".",
     "name": "SpringOptions",
-    "kind": "value",
-    "signature": "",
+    "kind": "interface",
+    "signature": "interface SpringOptions extends DurationSpringOptions, VelocityOptions { stiffness?: number; damping?: number; mass?: number; }",
     "doc": "",
-    "loc": ""
+    "loc": "(from motion-dom)"
   },
   {
     "subpath": ".",
@@ -1940,6 +1932,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(node: Element, param: string | null | undefined): void | ActionResult<string | null | undefined>",
     "doc": "`use:swatch={hex}` — runtime swatch background for sail-color-picker. The colour is user input (#3366ff or `oklch(...)`, whatever they typed); it is not a token. The action writes the value to `--swatch-color` verbatim. The consuming template reads it via sx=\"bg-(--swatch-color)\"",
     "loc": "src/actions/zoom-pan.ts:77"
+  },
+  {
+    "subpath": ".",
+    "name": "syntaxHighlight",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:syntaxHighlight` — the `<code-block>` element's behavior.",
+    "loc": "src/actions/syntax-highlight.ts:18"
   },
   {
     "subpath": ".",
@@ -2015,11 +2015,11 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "themePicker",
+    "name": "themeSelect",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:themePicker` — the `<theme-picker>` behavior: a trigger that opens a panel of theme cards.",
-    "loc": "src/actions/theme-picker.ts:16"
+    "doc": "`use:themeSelect` — the `<theme-picker>` behavior: a trigger that opens a panel of theme cards.",
+    "loc": "src/actions/theme-select.ts:16"
   },
   {
     "subpath": ".",
@@ -2119,6 +2119,14 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
+    "name": "tipDescribe",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:tipDescribe` — the L1 `<tooltip>` element's behavior. Show/hide and positioning are PURE CSS (hover/focus-within opacity + CSS Anchor Positioning in the skin); this action supplies only what CSS can't: - a per-instance anchor name (`--sail-tooltip-N`) so multiple tooltips on a page don't collide on one shared anchor, - the bubble text (from the `content` attribute) + `aria-describedby` wiring from the trigger to the bubble, - Escape blurs the host to dismiss. Written once in the toolchain — no per-instance controller, compiles away.",
+    "loc": "src/actions/tip-describe.ts:16"
+  },
+  {
+    "subpath": ".",
     "name": "toggleAnnotationMode",
     "kind": "function",
     "signature": "(name: string): boolean",
@@ -2148,14 +2156,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(path: string): PathToken[]",
     "doc": "Parse a path string (`field`, `[i]`, chains like `a.b[3].c`) into a list of tokens. The empty string returns an empty list and addresses the root.",
     "loc": "src/patch.ts:120"
-  },
-  {
-    "subpath": ".",
-    "name": "tooltip",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:tooltip` — the L1 `<tooltip>` element's behavior. Show/hide and positioning are PURE CSS (hover/focus-within opacity + CSS Anchor Positioning in the skin); this action supplies only what CSS can't: - a per-instance anchor name (`--sail-tooltip-N`) so multiple tooltips on a page don't collide on one shared anchor, - the bubble text (from the `content` attribute) + `aria-describedby` wiring from the trigger to the bubble, - Escape blurs the host to dismiss. Written once in the toolchain — no per-instance controller, compiles away.",
-    "loc": "src/actions/tooltip.ts:16"
   },
   {
     "subpath": ".",

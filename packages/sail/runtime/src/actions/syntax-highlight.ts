@@ -2,7 +2,7 @@ import type { Action } from '../action'
 import { highlight } from './highlight'
 
 /**
- * `use:codeBlock` — the `<code-block>` element's behavior.
+ * `use:syntaxHighlight` — the `<code-block>` element's behavior.
  *
  * There were FOUR syntax highlighters: the docs site hand-rolled one with its own
  * token spans and its own CSS, <sail-markdown> had a second, <sail-diff> a third,
@@ -15,7 +15,7 @@ import { highlight } from './highlight'
  * so `innerHTML` here cannot inject. Colours come from the `--syntax-*` theme
  * tokens, which means the code block re-themes with everything else.
  */
-export const codeBlock: Action<void> = (node) => {
+export const syntaxHighlight: Action<void> = (node) => {
   const el = node as HTMLElement
   const pre = el.querySelector('pre') ?? el
 

@@ -1,4 +1,4 @@
-// L1 conformance spec: <theme-picker> (mechanism-1, use:themePicker + use:anchor).
+// L1 conformance spec: <theme-picker> (mechanism-1, use:themeSelect + use:anchor).
 //
 // A trigger that opens a native [popover] of theme cards. Each card previews its
 // theme through [data-theme-preview], so the swatch is painted by the real

@@ -41,7 +41,7 @@
   }
 </scope>
 
-<div use:errorBoundary>
+<div use:catchRender>
   <div class="content"><slot></slot></div>
   <div class="fallback" role="alert">
     <slot name="fallback">

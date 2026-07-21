@@ -1,5 +1,5 @@
 <!--
-  <avatar> — identity frame (image/icon/initials). use:avatar owns render/fallback.
+  <avatar> — identity frame (image/icon/initials). use:mediaFallback owns render/fallback.
 
   Host paint: typeface/overflow/select/align on sx. Residue: size channels,
   gradient default fill, tone matrix, inset ring shadow, shape, img anatomy,
@@ -18,4 +18,4 @@
   }
 </scope>
 
-<span use:avatar sx="font-body font-bold leading-none text-foreground overflow-hidden select-none align-middle"></span>
+<span use:mediaFallback sx="font-body font-bold leading-none text-foreground overflow-hidden select-none align-middle"></span>

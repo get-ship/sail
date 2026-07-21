@@ -1,12 +1,12 @@
 import type { Action } from '../action'
 
 /**
- * `use:hoverCard` — opens the L1 `<hover-card>` (a native `[popover]`) on hover or
+ * `use:hoverSurface` — opens the L1 `<hover-card>` (a native `[popover]`) on hover or
  * focus of its trigger (the element whose `popovertarget` names it), with
  * open/close delays so it doesn't flicker. Positioning is `use:anchor`'s job;
  * top-layer + light-dismiss are the native popover's.
  */
-export const hoverCard: Action<void> = (node) => {
+export const hoverSurface: Action<void> = (node) => {
   const root = node as HTMLElement & { showPopover?: () => void; hidePopover?: () => void }
   const openMs = Number(root.getAttribute('open-delay') ?? '') || 200
   const closeMs = Number(root.getAttribute('close-delay') ?? '') || 150

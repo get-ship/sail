@@ -1,7 +1,7 @@
 import type { Action } from '../action'
 
 /**
- * `use:avatar` — the L1 `<avatar>` element's behavior, written once in the
+ * `use:mediaFallback` — the L1 `<avatar>` element's behavior, written once in the
  * toolchain (no per-instance controller). It reads `src` / `icon-slug` /
  * `name` / `initials` off the element's OWN attributes (which merge onto the
  * compiles-away root) and renders either an `<img>` — falling back to initials
@@ -11,7 +11,7 @@ import type { Action } from '../action'
  * Re-renders when any of those attributes change, so a src swap retries and a
  * name change re-derives the initials.
  */
-export const avatar: Action<void> = (node) => {
+export const mediaFallback: Action<void> = (node) => {
   const el = node as HTMLElement
   const doc = el.ownerDocument
 

@@ -2,7 +2,7 @@ import { applyTheme, persistTheme, THEMES, isValidTheme, type ThemeId } from '@s
 import type { Action } from '../action'
 
 /**
- * `use:themePicker` — the `<theme-picker>` behavior: a trigger that opens a
+ * `use:themeSelect` — the `<theme-picker>` behavior: a trigger that opens a
  * panel of theme cards.
  *
  * Selection goes through `applyTheme`, the framework's own function: it sets
@@ -13,7 +13,7 @@ import type { Action } from '../action'
  * The panel is a native `[popover]`: top layer, Escape and outside-click close
  * for free, no positioning code.
  */
-export const themePicker: Action<void> = (node) => {
+export const themeSelect: Action<void> = (node) => {
   const root = node as HTMLElement
   const trigger = root.querySelector<HTMLButtonElement>('.sail-theme-trigger')
   const panel = root.querySelector<HTMLElement>('.sail-theme-panel')

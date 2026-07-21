@@ -1,4 +1,4 @@
-// L1 conformance spec: <tooltip> (mechanism-1, use:tooltip). Probe runs the
+// L1 conformance spec: <tooltip> (mechanism-1, use:tipDescribe). Probe runs the
 // tooltip essentials (per-instance anchor name, bubble text from content=,
 // aria-describedby wiring) and force-shows the bubbles for the screenshot, then
 // asserts the bubble text is set and the trigger is described by it.

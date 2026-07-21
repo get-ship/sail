@@ -1,4 +1,4 @@
-// L1 conformance spec: <avatar> (mechanism-1, use:avatar). Probe runs the
+// L1 conformance spec: <avatar> (mechanism-1, use:mediaFallback). Probe runs the
 // avatar behavior (initials | img with error-fallback) then asserts: every
 // avatar resolves to an image OR initials (never empty), a broken src falls
 // back to initials, a name-only avatar shows initials. Async — waits for the

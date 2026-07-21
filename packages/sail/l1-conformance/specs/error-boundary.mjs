@@ -1,4 +1,4 @@
-// L1 conformance spec: <error-boundary> (mechanism-1, use:errorBoundary).
+// L1 conformance spec: <error-boundary> (mechanism-1, use:catchRender).
 //
 // Snapshot rows show the two states: healthy (the boundary is invisible — only the
 // content shows) and caught (the fallback).

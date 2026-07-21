@@ -3,7 +3,7 @@ import type { Action } from '../action'
 let _seq = 0
 
 /**
- * `use:tooltip` — the L1 `<tooltip>` element's behavior. Show/hide and
+ * `use:tipDescribe` — the L1 `<tooltip>` element's behavior. Show/hide and
  * positioning are PURE CSS (hover/focus-within opacity + CSS Anchor
  * Positioning in the skin); this action supplies only what CSS can't:
  *  - a per-instance anchor name (`--sail-tooltip-N`) so multiple tooltips on a
@@ -13,7 +13,7 @@ let _seq = 0
  *  - Escape blurs the host to dismiss.
  * Written once in the toolchain — no per-instance controller, compiles away.
  */
-export const tooltip: Action<void> = (node) => {
+export const tipDescribe: Action<void> = (node) => {
   const el = node as HTMLElement
   const n = ++_seq
   const bubbleId = `sail-tooltip-${n}`

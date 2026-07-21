@@ -8,7 +8,7 @@ interface HostWithReset extends HTMLElement {
 }
 
 /**
- * `use:errorBoundary` — the `<error-boundary>` element's behavior.
+ * `use:catchRender` — the `<error-boundary>` element's behavior.
  *
  * `runProtected` routes a throw by walking up the DOM for an element carrying a
  * boundary handle; this registers that handle. Without it `findNearestBoundary`
@@ -18,7 +18,7 @@ interface HostWithReset extends HTMLElement {
  * This supplies what CSS cannot: the handle, the caught mark, the error published
  * out of band, and Retry.
  */
-export const errorBoundary: Action<void> = (node) => {
+export const catchRender: Action<void> = (node) => {
   const el = node as HostWithReset
   // Present only when the default fallback is in play — an author-supplied
   // `slot="fallback"` replaces it wholesale, and then we touch neither.

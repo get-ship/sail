@@ -91,7 +91,7 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "avatar",
+        name: "mediaFallback",
         param: "void",
         summary: "Image-with-fallback behavior for an <avatar> element.",
         auto_import: true,
@@ -115,7 +115,7 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "codeBlock",
+        name: "syntaxHighlight",
         param: "void",
         summary: "Syntax-highlight + copy-button behavior for a <code-block>.",
         auto_import: true,
@@ -169,13 +169,13 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "errorBoundary",
+        name: "catchRender",
         param: "void",
         summary: "Catch render errors thrown by descendants; show a fallback UI.",
         auto_import: true,
     },
     ActionEntry {
-        name: "errorState",
+        name: "recoverySurface",
         param: "void",
         summary: "Error-state element behavior; arms a retry action for the call-to-action slot.",
         auto_import: true,
@@ -193,7 +193,7 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "hoverCard",
+        name: "hoverSurface",
         param: "void",
         summary: "Hover-triggered card; open on pointer-in, close on pointer-out with delay.",
         auto_import: true,
@@ -295,7 +295,7 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "themePicker",
+        name: "themeSelect",
         param: "void",
         summary: "Theme switcher: click to write the picked theme to the host context.",
         auto_import: true,
@@ -307,7 +307,7 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "tooltip",
+        name: "tipDescribe",
         param: "void",
         summary: "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
         auto_import: true,
@@ -350,15 +350,15 @@ pub const ACTIONS: &[ActionEntry] = &[
 /// this — the table is the single source, the constant is a derived
 /// view.
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
-    "anchor", "autoDismiss", "autosize", "avatar", "cellPad",
-    "chromeOffset", "clickOutside", "codeBlock", "combobox",
+    "anchor", "autoDismiss", "autosize", "mediaFallback", "cellPad",
+    "chromeOffset", "clickOutside", "syntaxHighlight", "combobox",
     "contextMenu", "describedControl", "detailsDisabled", "detailsToggle",
-    "dismissControl", "dismissible", "dropzone", "errorBoundary",
-    "errorState", "eventSpan", "gridTracks", "hoverCard",
+    "dismissControl", "dismissible", "dropzone", "catchRender",
+    "recoverySurface", "eventSpan", "gridTracks", "hoverSurface",
     "icon", "liveRegion", "maxWidth", "menu", "pagination", "pin", "portEdge",
     "pressable", "pressed", "radioGroup", "rangeFill", "rect", "spotlight",
     "swatch", "tabs",
-    "targetCursor", "themePicker", "toggleGroup", "tooltip", "variantLive",
+    "targetCursor", "themeSelect", "toggleGroup", "tipDescribe", "variantLive",
     "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
 ];
 
