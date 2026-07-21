@@ -24,7 +24,7 @@
     margin: 0;
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    line-height: 1.6;
+    line-height: 1.6; /* residue — no exact 1.6 leading token (normal=1.5; relaxed=1.7) */
     background: var(--surface-1);
     color: var(--foreground);
     border: 1px solid var(--border);
@@ -32,7 +32,7 @@
     padding: var(--space-4) var(--space-5);
     overflow-x: auto;
     white-space: pre;
-    tab-size: 2;
+    tab-size: 2; /* residue literal — no tab-size token */
   }
   .sail-code-block .tok-tag { color: var(--syntax-tag); }
   .sail-code-block .tok-attr { color: var(--syntax-attr); }
