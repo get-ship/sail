@@ -5,11 +5,9 @@
 @layer sail {
 /* spinner */
 .sail-spinner { display: inline-flex; }
-
+.sx-alignmiddle{vertical-align:middle}
 
   .sail-spinner {
-    display: inline-flex;
-    vertical-align: middle;
     /* Do not set --tone-fg on the bare host: skins load after contracts.css and
        would clobber `[tone=…]` channel fills (same specificity). */
     --sz: var(--icon-size-md);
@@ -83,13 +81,11 @@
 
 /* icon */
 .sail-icon { display: inline-flex; }
-
+.sx-alignmiddle{vertical-align:middle}
 
   .sail-icon {
-    display: inline-flex;
     align-items: center;
     justify-content: center;
-    vertical-align: -0.125em;
     flex: 0 0 auto;
     color: currentColor;
     --sz: var(--icon-size-md);
@@ -99,8 +95,6 @@
   .sail-icon[size='lg'] { --sz: var(--icon-size-xl); }
   .sail-icon[size='xl'] { --sz: var(--icon-size-2xl); }
 
-  /* Both glyph sources fill the icon box: the action-injected svg and a
-     slotted one. */
   .sail-icon svg {
     display: block;
     width: var(--sz);
@@ -1017,20 +1011,10 @@ label { display: inline-block; }
   }
 
 /* code-block */
+.sx-block{display:block}.sx-m0{margin:0}.sx-fontmono{font-family:var(--mono-font)}.sx-textsm{font-size:var(--text-sm)}.sx-bgsurface1{background-color:var(--surface-1)}.sx-textforeground{color:var(--foreground)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-roundedlg{border-radius:var(--radius-lg)}.sx-py4{padding-block:var(--space-4)}.sx-px5{padding-inline:var(--space-5)}.sx-overflowxauto{overflow-x:auto}.sx-whitespacepre{white-space:pre}
 
-  .sail-code-block { display: block; }
   .sail-code-block pre {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
     line-height: 1.6; /* residue — no exact 1.6 leading token (normal=1.5; relaxed=1.7) */
-    background: var(--surface-1);
-    color: var(--foreground);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4) var(--space-5);
-    overflow-x: auto;
-    white-space: pre;
     tab-size: 2; /* residue literal — no tab-size token */
   }
   .sail-code-block .tok-tag { color: var(--syntax-tag); }
@@ -1266,18 +1250,12 @@ label { display: inline-block; }
 
 /* radio */
 .sail-radio { display: inline-block; }
-
+.sx-fontbody{font-family:var(--body-font)}.sx-textsm{font-size:var(--text-sm)}.sx-textforeground{color:var(--foreground)}.sx-cursorpointer{cursor:pointer}.sx-selectnone{user-select:none}
 
   .sail-radio {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    cursor: pointer;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    color: var(--foreground);
-    user-select: none;
-    -webkit-user-select: none;
   }
   .sail-radio[disabled] { cursor: not-allowed; opacity: 0.55; /* residue lock */ }
   .sail-radio input { flex-shrink: 0; margin: 0; }
@@ -1342,13 +1320,9 @@ label { display: inline-block; }
   }
 
 /* tab-list */
+.sail-tab-list { display: inline-flex; }
+.sx-borderb{border-bottom-width:1px;border-bottom-style:solid}.sx-borderborder{border-color:var(--border)}.sail-row{display:flex;flex-wrap:wrap;min-width:0}.sail-row>*{min-width:0}.sail-g-1{gap:var(--space-1)}.sail-ai-stretch{align-items:stretch}.sail-jc-start{justify-content:flex-start}
 
-  .sail-tab-list {
-    display: flex;
-    align-items: stretch;
-    gap: var(--space-1);
-    border-bottom: 1px solid var(--border);
-  }
   .sail-tabs[orientation='vertical'] .sail-tab-list {
     flex-direction: column;
     align-items: stretch;
@@ -1505,10 +1479,8 @@ label { display: inline-block; }
   .sail-scroll-area::-webkit-scrollbar-thumb:hover { background: var(--foreground); background-clip: padding-box; }
 
 /* ticker */
+.sx-overflowhidden{overflow:hidden}
 
-  .sail-ticker {
-    overflow: hidden;
-  }
   .sail-ticker .track {
     display: flex;
     flex-wrap: nowrap;
@@ -1908,24 +1880,15 @@ label { display: inline-block; }
 
 /* page */
 .sail-page { display: inline-flex; }
-
+.sx-fontbody{font-family:var(--body-font)}.sx-fontmedium{font-weight:var(--font-weight-medium)}.sx-textforeground{color:var(--foreground)}.sx-bgtransparent{background-color:transparent}.sx-roundedmd{border-radius:var(--radius-md)}.sx-cursorpointer{cursor:pointer}.sx-selectnone{user-select:none}
 
   .sail-page {
-    display: inline-flex;
     align-items: center;
     justify-content: center;
     min-width: var(--pg-h, var(--control-h-md));
     height: var(--pg-h, var(--control-h-md));
     padding: 0 var(--space-2);
-    font-family: var(--font-body);
-    font-size: var(--pg-fs, var(--text-sm));
-    font-weight: var(--font-weight-medium);
-    color: var(--foreground);
-    background: transparent;
     border: 1px solid transparent;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
@@ -1971,6 +1934,7 @@ label { display: inline-block; }
   .sail-breadcrumb [aria-current='page'] { color: var(--foreground); font-weight: var(--font-weight-medium); }
 
 /* popover */
+.sx-p3{padding:var(--space-3)}.sx-textforeground{color:var(--foreground)}.sx-bgbackground{background-color:var(--background)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-shadowmd{box-shadow:var(--shadow-md)}.sx-zzpopover{z-index:var(--z-popover)}
 
   .sail-popover {
     position: fixed;
@@ -1978,15 +1942,8 @@ label { display: inline-block; }
     margin: 0;
     left: var(--anchor-left);
     top: var(--anchor-top);
-    min-width: 12rem; /* residue — 12rem/22rem NOT equal to panel-min/max tokens (180/320px); leave rem */
-    max-width: 22rem;
-    padding: var(--space-3);
-    color: var(--foreground);
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    z-index: var(--z-popover, 1000);
+    min-width: 12rem; /* residue */
+    max-width: 22rem; /* residue */
   }
   .sail-popover::backdrop { background: transparent; }
 
@@ -2148,6 +2105,7 @@ label { display: inline-block; }
   }
 
 /* dropdown */
+.sx-p1{padding:var(--space-1)}.sx-textforeground{color:var(--foreground)}.sx-bgbackground{background-color:var(--background)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-shadowmd{box-shadow:var(--shadow-md)}.sx-zzpopover{z-index:var(--z-popover)}
 
   .sail-dropdown {
     position: fixed;
@@ -2155,20 +2113,13 @@ label { display: inline-block; }
     margin: 0;
     left: var(--anchor-left);
     top: var(--anchor-top);
-    min-width: 12rem; /* residue — 12rem/22rem NOT equal to panel-min/max tokens (180/320px); leave rem */
-    padding: var(--space-1);
-    color: var(--foreground);
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    z-index: var(--z-popover, 1000);
+    min-width: 12rem; /* residue — 12rem not equal to panel-min token */
   }
   .sail-dropdown::backdrop { background: transparent; }
 
 /* menu-item */
 .sail-menu-item { display: inline-flex; }
-
+.sx-fontbody{font-family:var(--body-font)}.sx-textsm{font-size:var(--text-sm)}.sx-leadingtight{line-height:var(--leading-tight)}.sx-textforeground{color:var(--foreground)}.sx-bgtransparent{background-color:transparent}.sx-roundedsm{border-radius:var(--radius-sm)}.sx-cursorpointer{cursor:pointer}.sx-whitespacenowrap{white-space:nowrap}
 
   .sail-menu-item {
     display: flex;
@@ -2176,22 +2127,15 @@ label { display: inline-block; }
     gap: var(--space-2);
     width: 100%;
     padding: var(--space-2) var(--space-2_5);
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    line-height: var(--leading-tight);
-    color: var(--foreground);
-    background: transparent;
     border: 0;
-    border-radius: var(--radius-sm);
     text-align: start;
-    cursor: pointer;
-    white-space: nowrap;
   }
   .sail-menu-item:hover:not([disabled]) { background: var(--muted); }
   .sail-menu-item:focus-visible { background: var(--muted); outline: var(--ring-width) solid var(--ring); outline-offset: -1px; }
   .sail-menu-item[disabled] { opacity: 0.5; cursor: not-allowed; }
 
 /* context-menu */
+.sx-p1{padding:var(--space-1)}.sx-textforeground{color:var(--foreground)}.sx-bgbackground{background-color:var(--background)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-shadowmd{box-shadow:var(--shadow-md)}.sx-zzpopover{z-index:var(--z-popover)}
 
   .sail-context-menu {
     position: fixed;
@@ -2200,17 +2144,11 @@ label { display: inline-block; }
     left: var(--anchor-left);
     top: var(--anchor-top);
     min-width: 12rem;
-    padding: var(--space-1);
-    color: var(--foreground);
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    z-index: var(--z-popover, 1000);
   }
   .sail-context-menu::backdrop { background: transparent; }
 
 /* hover-card */
+.sx-p3{padding:var(--space-3)}.sx-textforeground{color:var(--foreground)}.sx-bgbackground{background-color:var(--background)}.sx-border{border-width:1px;border-style:solid}.sx-borderborder{border-color:var(--border)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-shadowmd{box-shadow:var(--shadow-md)}.sx-zzpopover{z-index:var(--z-popover)}
 
   .sail-hover-card {
     position: fixed;
@@ -2220,13 +2158,6 @@ label { display: inline-block; }
     top: var(--anchor-top);
     min-width: 14rem;
     max-width: 20rem;
-    padding: var(--space-3);
-    color: var(--foreground);
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    z-index: var(--z-popover, 1000);
   }
   .sail-hover-card::backdrop { background: transparent; }
 
@@ -2252,20 +2183,15 @@ label { display: inline-block; }
   .sail-toast-region > * { pointer-events: auto; }
 
 /* toast */
+.sx-fontbody{font-family:var(--body-font)}.sx-textsm{font-size:var(--text-sm)}.sx-textforeground{color:var(--foreground)}.sx-bgbackground{background-color:var(--background)}.sx-roundedmd{border-radius:var(--radius-md)}.sx-shadowmd{box-shadow:var(--shadow-md)}
 
   .sail-toast {
     display: flex;
     align-items: flex-start;
     gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    color: var(--foreground);
-    background: var(--background);
     border: 1px solid var(--tone-border, var(--border));
-    border-inline-start: 3px solid var(--tone-fg, var(--border)); /* residue (tone stripe): 3px literal — no --space token for 3px category stripe (space-1=4px forbidden squash); tone-border/tone-fg fallbacks kept verbatim */
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
+    border-inline-start: 3px solid var(--tone-fg, var(--border)); /* residue — 3px tone stripe */
   }
   .sail-toast [data-toast-close] {
     margin-inline-start: auto;
