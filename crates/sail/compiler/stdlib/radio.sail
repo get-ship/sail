@@ -29,7 +29,7 @@
     user-select: none;
     -webkit-user-select: none;
   }
-  .sail-radio[disabled] { cursor: not-allowed; opacity: 0.55; }
+  .sail-radio[disabled] { cursor: not-allowed; opacity: 0.55; /* residue lock */ }
   .sail-radio input { flex-shrink: 0; margin: 0; }
 </style>
 
