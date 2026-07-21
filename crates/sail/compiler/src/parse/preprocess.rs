@@ -199,48 +199,64 @@ fn lower_sx_value(
             classes.push("sail-grp".to_string());
             continue;
         }
-        // `atom`, or `prefix:atom` — a prefix lowers to an atomic class carrying
-        // that pseudo-class (`hover:bg-surface-2` →
-        // `.sx-hover-bg-surface2:hover{background-color:var(--surface-2)}`).
-        let (state, atom) = match pair.rsplit_once(':') {
-            Some((prefix, atom)) => (Some(prefix), atom),
-            None => (None, pair),
-        };
-        // A `<state>` is a pseudo (`hover`) or a propagation (`group-hover` → the
-        // rule keys on an ancestor `.sail-grp:hover`). `prefix` is a leading
-        // ancestor selector; `pseudo` a trailing pseudo-class on the element.
-        let (media, prefix, pseudo): (&str, String, String) = match state {
-            None => ("", String::new(), String::new()),
-            Some(s) => {
-                if let Some(m) = sail_lint::rules::sx::condition_media(s) {
-                    (m, String::new(), String::new())
-                } else if let Some(base) = s.strip_prefix("group-") {
-                    match sail_lint::rules::sx::state_pseudo(base)
-                        .map(str::to_string)
-                        .or_else(|| sail_lint::rules::sx::state_data(base))
-                    {
-                        Some(p) => ("", format!(".sail-grp{p} "), String::new()),
-                        None => continue,
-                    }
-                } else {
-                    match sail_lint::rules::sx::state_pseudo(s)
-                        .map(str::to_string)
-                        .or_else(|| sail_lint::rules::sx::state_data(s))
-                    {
-                        Some(p) => ("", String::new(), p),
-                        None => continue,
+        // `atom`, or `prefix:…:atom` — one or more closed prefixes (hover,
+        // before, forced-colors, group-dismissible, …) then the utility atom.
+        // `checked:before:bg-primary-foreground` → state chain + ::before.
+        let (prefix_chain, atom_owned) = split_sx_prefixes(pair);
+        let atom = atom_owned.as_str();
+        if atom.is_empty() {
+            continue;
+        }
+        // A `<state>` is a pseudo (`hover`), a propagation (`group-hover` →
+        // ancestor `.sail-grp:hover`), a pseudo-element (`before` → `::before`),
+        // or a condition (`motion-reduce` → @media). `prefix` is a leading
+        // ancestor selector; `pseudo` is trailing pseudo(s) on the element.
+        let mut media = "";
+        let mut ancestor = String::new();
+        let mut pseudo = String::new();
+        let mut ok = true;
+        for s in &prefix_chain {
+            if let Some(m) = sail_lint::rules::sx::condition_media(s) {
+                media = m;
+            } else if let Some(base) = s.strip_prefix("group-") {
+                match sail_lint::rules::sx::state_pseudo(base)
+                    .map(str::to_string)
+                    .or_else(|| sail_lint::rules::sx::state_data(base))
+                    .or_else(|| {
+                        sail_lint::rules::sx::group_attr_presence(base).map(|n| format!("[{n}]"))
+                    }) {
+                    Some(p) => ancestor = format!(".sail-grp{p} "),
+                    None => {
+                        ok = false;
+                        break;
                     }
                 }
+            } else if let Some(pe) = sail_lint::rules::sx::pseudo_element_prefix(s) {
+                pseudo.push_str(pe);
+            } else if let Some(p) = sail_lint::rules::sx::state_pseudo(s) {
+                pseudo.push_str(p);
+            } else if let Some(p) = sail_lint::rules::sx::state_data(s) {
+                pseudo.push_str(&p);
+            } else {
+                ok = false;
+                break;
             }
-        };
+        }
+        if !ok {
+            continue;
+        }
         let sanitized: String = atom.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
-        let class = match state {
-            None => format!("sx-{sanitized}"),
-            Some(s) => {
-                let sp: String = s.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
-                format!("sx-{sp}-{sanitized}")
-            }
+        let class = if prefix_chain.is_empty() {
+            format!("sx-{sanitized}")
+        } else {
+            let sp: String = prefix_chain
+                .iter()
+                .flat_map(|s| s.chars())
+                .filter(|c| c.is_ascii_alphanumeric())
+                .collect();
+            format!("sx-{sp}-{sanitized}")
         };
+        let prefix = ancestor;
         // The vocabulary is the TABLE (`sx-vocabulary.json`). There is deliberately
         // no per-file channel path: a `<theme>`-declared channel is not sx
         // vocabulary — ad-hoc channels were how translation snuck past the design
@@ -263,6 +279,29 @@ fn lower_sx_value(
         classes.push(class);
     }
     classes.join(" ")
+}
+
+/// Split `hover:before:bg-muted` → prefixes `["hover","before"]`, atom `bg-muted`.
+/// Consumes a leading chain of closed prefixes; the remainder is the utility.
+fn split_sx_prefixes(pair: &str) -> (Vec<String>, String) {
+    let parts: Vec<&str> = pair.split(':').collect();
+    if parts.len() < 2 {
+        return (Vec::new(), pair.to_string());
+    }
+    let mut i = 0usize;
+    while i < parts.len() - 1 {
+        if sail_lint::rules::sx::is_prefix(parts[i]) {
+            i += 1;
+        } else {
+            break;
+        }
+    }
+    if i == 0 {
+        return (Vec::new(), pair.to_string());
+    }
+    let prefixes = parts[..i].iter().map(|s| (*s).to_string()).collect();
+    let atom = parts[i..].join(":");
+    (prefixes, atom)
 }
 
 /// After the `sx` name: optional ws, `=`, optional ws, then a `"`.
@@ -1699,8 +1738,9 @@ fn variant_pairs_to_css(pairs: &[(String, String)]) -> String {
             if decls.is_empty() {
                 continue;
             }
-            let (media, host_pseudo, _) = classify_variant_state(&state, false);
-            let rule = format!(":host({selector}{host_pseudo}){{{decls}}}");
+            let (media, host_pseudo, target_pseudo) = classify_variant_state(&state, true);
+            let rule =
+                format!(":host({selector}{host_pseudo}){target_pseudo}{{{decls}}}");
             match media {
                 Some(q) => css.push_str(&format!("@media {q}{{{rule}}}")),
                 None => css.push_str(&rule),
@@ -1715,22 +1755,199 @@ pub(crate) fn variants_object_to_css(body: &str) -> String {
     variant_pairs_to_css(&parse_variants_object(body))
 }
 
-/// Lower every `<theme prop="…" channels="…">` block to `:host` custom-property
-/// declarations — the *channel contract* (StyleX/vanilla-extract theme model). A
-/// row `value: fill1, fill2, …` fills the declared channels for that prop value;
-/// `default:` fills them on the bare `:host`. Fills are token names → `var(--…)`.
-/// The channels themselves become file-local sx values (see `theme_channels`).
+/// Lower scope `channels:` maps into `:host` CSS custom-property writes (and a
+/// small closed set of host layout axes + descendant anatomy).
 ///
-///   <theme prop="tone" channels="tone-fg, tone-border">
-///     default: foreground, border
-///     info:    info, tone-info-border
-///   </theme>
+/// Shape (sibling of `props:` / `compound:`):
+/// ```text
+/// channels: {
+///   default: { 'sw-w': 'control-h-sm', bw: 'control-stroke' }
+///   size: {
+///     sm: { 'sw-w': 'control-h-xs', gap: '2' }
+///     lg: { bw: '2.5px' }
+///   }
+///   variant: { inline: { direction: 'row', align: 'center' } }
+///   '.icon svg': { width: 'es-icon', height: 'es-icon' }
+/// }
+/// ```
 ///
-/// →  :host{--tone-fg:var(--foreground);--tone-border:var(--border);}
-///    :host([tone='info']){--tone-fg:var(--info);--tone-border:var(--tone-info-border);}
-/// A variant selector → a `:host(...)` attribute-match. `tone=success` →
-/// `[tone='success']`; `[disabled]` → `[disabled]`; `(a=x, b=y)` →
-/// `[a='x'][b='y']` (compound).
+/// - `default` → bare `:host{…}` (attr-absent baseline)
+/// - `prop: { value: { … } }` → `:host([prop='value']){…}`
+/// - `'.sel …': { … }` → `:host .sel …{…}` (descendant anatomy)
+///
+/// Token-shaped values become `var(--token)`; raw CSS (`none`, `1.5px`,
+/// `transparent`, `var(…)`, multi-word) passes through. Layout keys `gap` /
+/// `direction` / `align` / `justify` write real CSS properties (so variant
+/// can flip flex axes without a second layout path in contracts).
+pub(crate) fn channels_object_to_css(body: &str) -> String {
+    let mut css = String::new();
+    for (key, val) in parse_object_fields(body) {
+        let key = key.trim();
+        let val = val.trim();
+        if key.is_empty() || val.is_empty() {
+            continue;
+        }
+        // Descendant anatomy: selector keys start with `.` / `#` / `:` or
+        // contain a combinator / space (e.g. `.icon svg`).
+        if key.starts_with('.')
+            || key.starts_with('#')
+            || key.starts_with(':')
+            || key.contains(' ')
+            || key.contains('>')
+        {
+            let decls = channel_decls_object(val);
+            if !decls.is_empty() {
+                css.push_str(&format!(":host {key}{{{decls}}}"));
+            }
+            continue;
+        }
+        if key == "default" {
+            let decls = channel_decls_object(val);
+            if !decls.is_empty() {
+                // Soft-status tone fills must not land on bare host (would clobber
+                // branded [tone=X] at equal specificity). Key untoned + explicit
+                // default the same way contracts PE did: :not([tone]) + [tone=default].
+                if decls.contains("--tone") {
+                    css.push_str(&format!(
+                        ":host(:not([tone])){{{decls}}}:host([tone='default']){{{decls}}}"
+                    ));
+                } else {
+                    css.push_str(&format!(":host{{{decls}}}"));
+                }
+            }
+            continue;
+        }
+        // Prop axis → nested value → decl map.
+        for (attr_val, nested) in parse_object_fields(val) {
+            let attr_val = unquote(&attr_val);
+            let decls = channel_decls_object(&nested);
+            if decls.is_empty() {
+                continue;
+            }
+            css.push_str(&format!(":host([{key}='{attr_val}']){{{decls}}}"));
+        }
+    }
+    css
+}
+
+/// One channel-value object → semicolon-joined CSS declarations.
+fn channel_decls_object(obj: &str) -> String {
+    let mut parts = Vec::new();
+    for (k, v) in parse_object_fields(obj) {
+        let k = unquote(&k).trim().to_string();
+        let v = unquote(&v).trim().to_string();
+        // Skip empties (trailing commas) and non-ident keys that would emit `--:`.
+        if k.is_empty()
+            || v.is_empty()
+            || !k
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        {
+            continue;
+        }
+        if let Some(decl) = channel_layout_decl(&k, &v) {
+            parts.push(decl);
+            continue;
+        }
+        // Custom property write: key may be quoted `'sw-w'` or bare `bw`.
+        let prop = if k.starts_with("--") {
+            k
+        } else {
+            format!("--{k}")
+        };
+        // Never emit a bare `--` custom property.
+        if prop == "--" {
+            continue;
+        }
+        parts.push(format!("{prop}:{}", channel_value_css(&v)));
+    }
+    parts.join(";")
+}
+
+/// Closed layout axes allowed inside channel maps (host geometry only).
+fn channel_layout_decl(key: &str, value: &str) -> Option<String> {
+    match key {
+        "gap" => {
+            let v = if value == "0" {
+                "0".to_string()
+            } else if value.chars().all(|c| c.is_ascii_digit()) {
+                format!("var(--space-{value})")
+            } else {
+                channel_value_css(value)
+            };
+            Some(format!("gap:{v}"))
+        }
+        "direction" => {
+            let v = match value {
+                "row" => "row",
+                "column" | "col" => "column",
+                "row-reverse" => "row-reverse",
+                "column-reverse" => "column-reverse",
+                _ => return None,
+            };
+            Some(format!("flex-direction:{v}"))
+        }
+        "align" => {
+            let v = match value {
+                "start" => "flex-start",
+                "end" => "flex-end",
+                "center" | "stretch" | "baseline" => value,
+                _ => return None,
+            };
+            Some(format!("align-items:{v}"))
+        }
+        "justify" => {
+            let v = match value {
+                "start" => "flex-start",
+                "end" => "flex-end",
+                "center" => "center",
+                "between" => "space-between",
+                "around" => "space-around",
+                "evenly" => "space-evenly",
+                _ => return None,
+            };
+            Some(format!("justify-content:{v}"))
+        }
+        "width" | "height" | "min-width" | "min-height" | "max-width" | "max-height" => {
+            Some(format!("{key}:{}", channel_value_css(value)))
+        }
+        _ => None,
+    }
+}
+
+/// Token name → `var(--token)`; raw CSS passes through.
+fn channel_value_css(value: &str) -> String {
+    let v = value.trim();
+    if v.is_empty() {
+        return String::new();
+    }
+    // Already a CSS function / multi-token expression / keyword / length.
+    if v.starts_with("var(")
+        || v.contains('(')
+        || v.contains(' ')
+        || v == "none"
+        || v == "transparent"
+        || v == "currentColor"
+        || v == "0"
+        || v.ends_with("px")
+        || v.ends_with("rem")
+        || v.ends_with("em")
+        || v.ends_with('%')
+        || v.ends_with("fr")
+        || v.ends_with("vh")
+        || v.ends_with("vw")
+        || v.starts_with('#')
+    {
+        return v.to_string();
+    }
+    // Bare token or custom-prop reference without --.
+    if v.starts_with("--") {
+        format!("var({v})")
+    } else {
+        format!("var(--{v})")
+    }
+}
+
 /// Where a variants-v2 state prefix attaches. Returns
 /// `(media_query, host_pseudo, target_pseudo)`:
 /// - base (`""`) → nowhere
@@ -1741,24 +1958,39 @@ pub(crate) fn variants_object_to_css(body: &str) -> String {
 /// - a plain state → pseudo on the target when one exists, else on the host
 fn classify_variant_state(
     state: &str,
-    has_target: bool,
+    _has_target: bool,
 ) -> (Option<&'static str>, String, String) {
     if state.is_empty() {
         return (None, String::new(), String::new());
     }
-    if let Some(q) = sail_lint::rules::sx::condition_media(state) {
-        return (Some(q), String::new(), String::new());
+    // Multi-prefix chains: `checked:before`, `forced-colors:before`, `hover`.
+    // Pseudo-elements attach as target (`::before`); everything else that is a
+    // host state/condition attaches on the host selector.
+    let mut media: Option<&'static str> = None;
+    let mut host_pseudo = String::new();
+    let mut target_pseudo = String::new();
+    for part in state.split(':').filter(|p| !p.is_empty()) {
+        if let Some(q) = sail_lint::rules::sx::condition_media(part) {
+            media = Some(q);
+        } else if let Some(pe) = sail_lint::rules::sx::pseudo_element_prefix(part) {
+            target_pseudo.push_str(pe);
+        } else if let Some(base) = part.strip_prefix("group-") {
+            if let Some(p) = sail_lint::rules::sx::state_pseudo(base)
+                .map(str::to_string)
+                .or_else(|| sail_lint::rules::sx::state_data(base))
+                .or_else(|| {
+                    sail_lint::rules::sx::group_attr_presence(base).map(|n| format!("[{n}]"))
+                })
+            {
+                host_pseudo.push_str(&p);
+            }
+        } else if let Some(p) = sail_lint::rules::sx::state_pseudo(part) {
+            host_pseudo.push_str(p);
+        } else if let Some(p) = sail_lint::rules::sx::state_data(part) {
+            host_pseudo.push_str(&p);
+        }
     }
-    if let Some(base) = state.strip_prefix("group-")
-        && let Some(p) = sail_lint::rules::sx::state_pseudo(base)
-    {
-        return (None, p.to_string(), String::new());
-    }
-    match sail_lint::rules::sx::state_pseudo(state) {
-        Some(p) if has_target => (None, String::new(), p.to_string()),
-        Some(p) => (None, p.to_string(), String::new()),
-        None => (None, String::new(), String::new()),
-    }
+    (media, host_pseudo, target_pseudo)
 }
 
 /// One `name=value` condition → an attribute match. Bool props reflect as
@@ -1816,19 +2048,15 @@ fn lower_variant_sx(list: &str) -> Vec<(String, String)> {
         }
     };
     for pair in list.split_whitespace() {
-        match pair.rsplit_once(':') {
-            None => {
-                if let Some(decls) = sail_lint::rules::sx::lower_atom(pair) {
-                    push("", decls);
-                }
-            }
-            Some((state, atom)) => {
-                if sail_lint::rules::sx::is_prefix(state)
-                    && let Some(decls) = sail_lint::rules::sx::lower_atom(atom)
-                {
-                    push(state, decls);
-                }
-            }
+        let (prefix_chain, atom) = split_sx_prefixes(pair);
+        if atom.is_empty() {
+            continue;
+        }
+        if let Some(decls) = sail_lint::rules::sx::lower_atom(&atom) {
+            // Join multi-prefix chain so classify_variant_state can peel group-/media;
+            // pseudo-elements (before/after) are handled in variant_pairs_to_css.
+            let state = prefix_chain.join(":");
+            push(&state, decls);
         }
     }
     groups

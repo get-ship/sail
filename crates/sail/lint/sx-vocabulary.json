@@ -876,6 +876,76 @@
       ]
     },
     {
+      "bare": true,
+      "atom": "dir-column",
+      "decls": [
+        [
+          "flex-direction",
+          "column"
+        ],
+        [
+          "align-items",
+          "stretch"
+        ]
+      ]
+    },
+    {
+      "bare": true,
+      "atom": "border-e",
+      "decls": [
+        [
+          "border-inline-end-width",
+          "1px"
+        ],
+        [
+          "border-inline-end-style",
+          "solid"
+        ]
+      ]
+    },
+    {
+      "bare": true,
+      "atom": "border-s",
+      "decls": [
+        [
+          "border-inline-start-width",
+          "1px"
+        ],
+        [
+          "border-inline-start-style",
+          "solid"
+        ]
+      ]
+    },
+    {
+      "name": "border-e",
+      "css": [
+        "border-inline-end-width"
+      ],
+      "scale": "border-width"
+    },
+    {
+      "name": "border-s",
+      "css": [
+        "border-inline-start-width"
+      ],
+      "scale": "border-width"
+    },
+    {
+      "name": "border-e",
+      "css": [
+        "border-inline-end-color"
+      ],
+      "scale": "color"
+    },
+    {
+      "name": "border-s",
+      "css": [
+        "border-inline-start-color"
+      ],
+      "scale": "color"
+    },
+    {
       "name": "border",
       "css": [
         "border-width"
@@ -1464,6 +1534,88 @@
         "none": "none",
         "line-through": "line-through"
       }
+    },
+    {
+      "bare": true,
+      "atom": "animate-spin",
+      "decls": [
+        [
+          "animation",
+          "var(--animate-spin)"
+        ]
+      ]
+    },
+    {
+      "bare": true,
+      "atom": "glyph-fill",
+      "child": "svg",
+      "decls": [
+        [
+          "display",
+          "block"
+        ],
+        [
+          "width",
+          "100%"
+        ],
+        [
+          "height",
+          "100%"
+        ]
+      ]
+    },
+    {
+      "bare": true,
+      "atom": "avatar-media",
+      "child": "img",
+      "decls": [
+        [
+          "display",
+          "block"
+        ],
+        [
+          "width",
+          "100%"
+        ],
+        [
+          "height",
+          "100%"
+        ],
+        [
+          "object-fit",
+          "contain"
+        ],
+        [
+          "padding",
+          "10%"
+        ],
+        [
+          "box-sizing",
+          "border-box"
+        ]
+      ]
+    },
+    {
+      "name": "bg-clip",
+      "css": [
+        "background-clip"
+      ],
+      "map": {
+        "border": "border-box",
+        "padding": "padding-box",
+        "content": "content-box",
+        "text": "text"
+      }
+    },
+    {
+      "name": "content",
+      "css": [
+        "content"
+      ],
+      "map": {
+        "empty": "''"
+      },
+      "$comment": "Pseudo content; empty \u2192 ''"
     }
   ],
   "refused": {

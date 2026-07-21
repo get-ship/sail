@@ -44,18 +44,16 @@ suite is green and the build is warning-free.
 
 ## L1 language elements
 
-### `<card>` uses attribute-selected header/footer, not real named slots
-- **What:** Element mode (light-DOM, use-site splicing) projects only a single
-  default slot. `<card>` selects header/footer via the child's `slot="header"`
-  / `slot="footer"` attribute (`:host > [slot='header']`) rather than true
-  `<slot name>` projection. It works — existing `slot="…"` markup needs no
-  change — but real named-slot projection is unimplemented compiler machinery.
-- **Repro:** `<card><h3 slot="header">Title</h3>…</card>` renders correctly;
-  a `<slot name="header">` inside a userland element mode component does not
-  yet route children by name.
-- **Where:** `stdlib/card.sail` (STRUCTURAL DIVERGENCE note);
-  use-site splicing in `src/parse/preprocess.rs`.
-- **Status:** needs-design — named-slot projection for element mode.
+### `<card>` header/footer bleed chrome is PE-md-sized
+- **What:** Named header/footer slots carry fixed space-token bleed (`-mx-5`
+  / `-mt-4` / … matching padding=md). Combining `padding="sm|lg|none"` with
+  filled header/footer slots does not re-bleed to the new pad; body-only
+  cards (no header/footer) track padding CVA correctly.
+- **Repro:** `<card padding="sm"><h3 slot="header">…</h3>…</card>` header
+  bleed is still md-width.
+- **Where:** `stdlib/card.sail` structure sx on `.header` / `.footer`.
+- **Status:** accepted trade for zero `--card-*` channel PE; revisit if
+  padding×slot combinations become common.
 
 ### `<card interactive>` is visual only — no keyboard/role semantics
 - **What:** `interactive` applies the full hover/active/focus-visible skin but

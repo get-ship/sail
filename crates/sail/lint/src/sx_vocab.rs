@@ -54,6 +54,8 @@ struct RawUtility {
     negatable: bool,
     /// `translate-x` / `translate-y` both write `translate`; the axis says which.
     axis: Option<String>,
+    #[serde(default)]
+    child: Option<String>,
 }
 
 /// One resolved utility. `css` is empty exactly when `decls` is not.
@@ -68,6 +70,7 @@ pub struct Utility {
     pub decls: Vec<(String, String)>,
     pub negatable: bool,
     pub axis: Option<String>,
+    pub child: Option<String>,
 }
 
 impl Utility {
@@ -179,6 +182,7 @@ fn vocab() -> &'static Vocab {
                     .collect(),
                 negatable: r.negatable,
                 axis: r.axis,
+                child: r.child,
             };
             if r.bare {
                 // A bare entry contributes one atom per key of its map, or the one
@@ -199,6 +203,7 @@ fn vocab() -> &'static Vocab {
                                 decls: Vec::new(),
                                 negatable: false,
                                 axis: None,
+                                child: None,
                             },
                         );
                     }
@@ -224,6 +229,12 @@ pub enum Resolved {
     BadValue { name: String, options: Vec<String> },
     /// No such utility.
     Unknown,
+}
+
+/// Descendant combinator for bare child-pack atoms.
+pub fn child_of(atom: &str) -> Option<&'static str> {
+    let body = atom.strip_prefix('-').unwrap_or(atom);
+    vocab().bare.get(body).and_then(|u| u.child.as_deref())
 }
 
 /// Resolve one atom (already stripped of its prefixes).
@@ -269,19 +280,70 @@ pub fn resolve(atom: &str) -> Resolved {
     };
 
     // Several utilities can share a name; the value picks which one.
+    // `(--name)` is accepted by every utility, so when multiple share a head
+    // (`font` → family vs weight) score the custom-property name against the
+    // CSS properties each candidate writes (label-weight → font-weight, not
+    // font-family).
     let candidates = &v.by_name[name];
-    for u in candidates {
-        if u.accepts(value) {
-            if negative && !u.negatable {
-                return Resolved::BadValue { name: name.to_string(), options: values_of(candidates) };
-            }
-            return match u.lower(value, negative) {
-                Some(decls) => Resolved::Ok(decls),
-                None => Resolved::Unknown,
-            };
+    let mut matched: Vec<&Utility> = candidates.iter().filter(|u| u.accepts(value)).collect();
+    if matched.is_empty() {
+        return Resolved::BadValue {
+            name: name.to_string(),
+            options: values_of(candidates),
+        };
+    }
+    if matched.len() > 1 {
+        if let Some(var) = Utility::is_var_ref(value) {
+            matched.sort_by_key(|u| std::cmp::Reverse(var_ref_score(var, u)));
         }
     }
-    Resolved::BadValue { name: name.to_string(), options: values_of(candidates) }
+    let u = matched[0];
+    if negative && !u.negatable {
+        return Resolved::BadValue {
+            name: name.to_string(),
+            options: values_of(candidates),
+        };
+    }
+    match u.lower(value, negative) {
+        Some(decls) => Resolved::Ok(decls),
+        None => Resolved::Unknown,
+    }
+}
+
+/// Prefer the candidate whose CSS property best matches the custom-property
+/// name (e.g. `--label-weight` → `font-weight`, `--label-font` → `font-family`).
+fn var_ref_score(var_name: &str, u: &Utility) -> i32 {
+    let var = var_name.to_ascii_lowercase();
+    let mut score = 0i32;
+    for prop in &u.css {
+        let p = prop.to_ascii_lowercase();
+        // Exact tail match: `--foo-weight` with `font-weight`.
+        if let Some(tail) = p.rsplit('-').next() {
+            if var.ends_with(tail) || var.contains(&format!("-{tail}")) || var.contains(tail) {
+                score += 10;
+            }
+        }
+        // Full property token inside the var name.
+        let compact: String = p.chars().filter(|c| *c != '-').collect();
+        if var.replace('-', "").contains(&compact) {
+            score += 5;
+        }
+        // Weight vs family disambiguation for the shared `font` head.
+        if p.contains("weight") && var.contains("weight") {
+            score += 20;
+        }
+        if p.contains("family") && (var.contains("family") || var.ends_with("-font") || var.contains("-font-")) {
+            score += 20;
+        }
+        if p.contains("family") && var.contains("weight") {
+            score -= 15;
+        }
+        if p.contains("weight") && (var.ends_with("-font") || var.contains("family")) && !var.contains("weight")
+        {
+            score -= 15;
+        }
+    }
+    score
 }
 
 /// Everything a name will accept — this is what an error prints, so the author is

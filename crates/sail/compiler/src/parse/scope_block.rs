@@ -27,7 +27,7 @@
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::directive::{PropDecl, PropKind};
 
-use super::preprocess::{parse_object_fields, unquote, variants_object_to_css};
+use super::preprocess::{channels_object_to_css, parse_object_fields, unquote, variants_object_to_css};
 
 /// Everything a `<scope>` block contributes to the Program.
 #[derive(Debug)]
@@ -44,7 +44,7 @@ const TONE_VOCAB: &str = "default|primary|info|success|warning|destructive|accen
 const SIZE_VOCAB: &str = "xs|sm|md|lg";
 
 const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, `props:` (incl. CVA key→sx maps), \
-     optional `compound:`, and legacy `variants:` — types and literal values only; \
+     optional `compound:` / `channels:`, and legacy `variants:` — types and literal values only; \
      logic goes in `<controller>`";
 
 pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, CompileError> {
@@ -86,6 +86,12 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
                 let css = variants_object_to_css(&format!("{{ compound: {inner} }}"));
                 out.variants_css.push_str(&css);
                 i = arr_span.1 + 1;
+            }
+            "channels" => {
+                let obj_span = expect_member_object(body, after, "channels", span)?;
+                let css = channels_object_to_css(&body[obj_span.0..=obj_span.1]);
+                out.variants_css.push_str(&css);
+                i = obj_span.1 + 1;
             }
             "variants" => {
                 // Legacy parallel surface — same lowerer as CVA-in-props.

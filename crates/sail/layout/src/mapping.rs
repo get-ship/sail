@@ -163,6 +163,21 @@ pub enum GridTemplate {
     /// arbitrary variable, so this leaves the explicit grid undefined and
     /// relies on auto-placement.
     Var,
+    /// Closed track recipe from `<grid tracks="…">` (see
+    /// `sail_lint::rules::layout::TRACK_RECIPES`). Keep the single algorithm:
+    /// compiler emits the class; this maps it into taffy track sizes.
+    Recipe(TrackRecipe),
+}
+
+/// Closed `tracks` recipes the compiler and taffy share.
+/// Mirror of `sail_lint::rules::layout::TRACK_RECIPES` (names must match class
+/// slugs `sail-gt-<name>`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TrackRecipe {
+    /// `auto 1fr auto` — icon | body | action (also `icon-main-action` alias).
+    AutoFrAuto,
+    /// `1fr 1fr` — equal two-column split.
+    FrFr,
 }
 
 // ---------------------------------------------------------------------------
@@ -572,4 +587,17 @@ pub fn grid_count_template(prefix: &str, value: &str) -> Option<(bool, GridTempl
         return None;
     }
     Some((is_cols, GridTemplate::Fixed(n)))
+}
+
+/// Parse a `sail-gt-<recipe>` class into a closed track recipe (columns axis).
+/// Returns `None` for custom-property slugs (`--x` → `sail-gt-x`) that taffy
+/// cannot resolve — those fall through as auto-placement (`GridTemplate::Var`).
+pub fn grid_recipe_template(class: &str) -> Option<GridTemplate> {
+    let name = class.strip_prefix("sail-gt-")?;
+    match name {
+        "auto-fr-auto" | "icon-main-action" => Some(GridTemplate::Recipe(TrackRecipe::AutoFrAuto)),
+        "fr-fr" => Some(GridTemplate::Recipe(TrackRecipe::FrFr)),
+        // Custom-property slug (no hyphens-only recipe match): leave as Var.
+        _ => Some(GridTemplate::Var),
+    }
 }

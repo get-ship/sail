@@ -38,7 +38,11 @@ pub fn values(scale: &str) -> Vec<String> {
             let mut s: Vec<String> = tokens::size_values().iter().map(|t| t.to_string()).collect();
             s.extend(tokens::space_values().iter().map(|t| t.to_string()));
             s.extend(channels());
-            s.extend(["auto", "full", "screen", "fill", "fit", "min", "max", "0"].iter().map(|t| t.to_string()));
+            s.extend(
+                ["auto", "full", "screen", "fill", "rail-fill", "fit", "min", "max", "0"]
+                    .iter()
+                    .map(|t| t.to_string()),
+            );
             // A closed, content-relative width family: a FIXED text slot (a
             // rotating-word `<strong>` that must not reflow the line around
             // it) needs a step sized to a character count, not a rem. Same
@@ -114,6 +118,7 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
             // (the tutorial's editor pane) is not expressible with `screen` — it
             // overruns by the height of the navbar.
             "fill" => "calc(100dvh - var(--chrome-offset, 0px))".into(),
+            "rail-fill" => "calc(100dvh - var(--rail-offset, 0px))".into(),
             // A dimensional family token is used by its whole name; anything else
             // on this scale is a step of the space ramp.
             t if is_channel(t)
@@ -204,7 +209,7 @@ const ANGLE: &[&str] = &["0", "1", "2", "3", "6", "12", "45", "90", "180", "270"
 
 /// The CSS colour keywords sx lets through unsanctioned — they name no design
 /// decision, so there is nothing to tokenize.
-pub const KEYWORD_COLORS: &[&str] = &["transparent", "currentColor", "inherit"];
+pub const KEYWORD_COLORS: &[&str] = &["transparent", "currentColor", "inherit", "Canvas", "CanvasText", "Highlight", "HighlightText", "ButtonText", "ButtonFace"];
 
 pub fn is_keyword_color(token: &str) -> bool {
     KEYWORD_COLORS.contains(&token)

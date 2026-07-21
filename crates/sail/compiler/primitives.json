@@ -40,9 +40,9 @@
       },
       "size": {
         "values": [
+          "md",
           "xs",
           "sm",
-          "md",
           "lg",
           "xl"
         ],
@@ -56,11 +56,11 @@
         "values": [
           "default",
           "primary",
+          "accent",
           "info",
           "success",
           "warning",
           "destructive",
-          "accent",
           "muted"
         ],
         "default": "default"
@@ -73,8 +73,8 @@
       },
       "size": {
         "values": [
-          "sm",
           "md",
+          "sm",
           "lg"
         ],
         "default": "md"
@@ -94,11 +94,11 @@
       },
       "variant": {
         "values": [
-          "solid",
           "soft",
+          "solid",
           "outline"
         ],
-        "default": "solid"
+        "default": "soft"
       }
     },
     "card": {
@@ -167,8 +167,8 @@
       },
       "size": {
         "values": [
-          "sm",
           "md",
+          "sm",
           "lg"
         ],
         "default": "md"
@@ -241,8 +241,8 @@
     "empty-state": {
       "size": {
         "values": [
-          "sm",
           "md",
+          "sm",
           "lg"
         ],
         "default": "md"
@@ -283,8 +283,8 @@
       },
       "size": {
         "values": [
-          "sm",
           "md",
+          "sm",
           "lg"
         ],
         "default": "md"
@@ -320,9 +320,9 @@
       },
       "size": {
         "values": [
+          "md",
           "xs",
           "sm",
-          "md",
           "lg",
           "xl"
         ],
@@ -344,8 +344,8 @@
       },
       "size": {
         "values": [
-          "sm",
           "md",
+          "sm",
           "lg"
         ],
         "default": "md"
@@ -369,8 +369,8 @@
       "placement": {
         "values": [
           "top",
-          "rail",
-          "bottom"
+          "bottom",
+          "rail"
         ],
         "default": "top"
       },
@@ -551,9 +551,9 @@
       },
       "size": {
         "values": [
+          "md",
           "xs",
           "sm",
-          "md",
           "lg"
         ],
         "default": "md"
@@ -612,6 +612,20 @@
         "default": ""
       }
     },
+    "tab-list": {
+      "sticky": {
+        "type": "bool",
+        "default": "false"
+      },
+      "variant": {
+        "values": [
+          "line",
+          "pill",
+          "enclosed"
+        ],
+        "default": "line"
+      }
+    },
     "tab-panel": {
       "name": {
         "type": "string",
@@ -638,10 +652,6 @@
         ],
         "default": "md"
       },
-      "sticky": {
-        "type": "bool",
-        "default": "false"
-      },
       "tone": {
         "values": [
           "default",
@@ -654,14 +664,6 @@
           "muted"
         ],
         "default": "default"
-      },
-      "variant": {
-        "values": [
-          "line",
-          "pill",
-          "enclosed"
-        ],
-        "default": "line"
       }
     },
     "theme-picker": {

@@ -108,3 +108,166 @@ pub fn skins_css() -> String {
     out.push('\n');
     out
 }
+
+/// Append freeform-HTML / runtime-anatomy descendant paint for `tag`.
+/// Owned by the compiler element map → skins (not hand contracts).
+pub fn append_descendant_skin(tag: &str, skin_css: &mut String) {
+    let Some(map) = descendant_map(tag) else { return };
+    let prefix = format!(".sail-{tag}");
+    let css = lower_descendant_map(&prefix, map);
+    if css.is_empty() {
+        return;
+    }
+    if !skin_css.is_empty() && !skin_css.ends_with('\n') {
+        skin_css.push('\n');
+    }
+    skin_css.push_str(&css);
+}
+
+fn descendant_map(tag: &str) -> Option<&'static [DescRule]> {
+    match tag {
+        "prose" => Some(PROSE_MAP),
+        "code-block" => Some(CODE_BLOCK_MAP),
+        _ => None,
+    }
+}
+
+struct DescRule {
+    sel: &'static str,
+    paint: DescPaint,
+}
+
+enum DescPaint {
+    Sx(&'static str),
+    Decls(&'static [(&'static str, &'static str)]),
+}
+
+const PROSE_MAP: &[DescRule] = &[
+    DescRule {
+        sel: "h1, h2, h3, h4, h5, h6",
+        paint: DescPaint::Sx(
+            "font-heading font-(--heading-weight) tracking-(--heading-tracking) leading-tight mt-5 mb-2",
+        ),
+    },
+    DescRule { sel: "h1", paint: DescPaint::Sx("text-2xl mt-6 mb-3") },
+    DescRule { sel: "h2", paint: DescPaint::Sx("text-xl mt-6 mb-3") },
+    DescRule { sel: "h3", paint: DescPaint::Sx("text-lg") },
+    DescRule { sel: "h4, h5, h6", paint: DescPaint::Sx("text-md") },
+    DescRule { sel: "p", paint: DescPaint::Sx("my-3") },
+    DescRule {
+        sel: "a",
+        paint: DescPaint::Sx(
+            "text-primary underline decoration-selected-border underline-offset-(--ring-offset)",
+        ),
+    },
+    DescRule { sel: "a:hover", paint: DescPaint::Sx("decoration-primary") },
+    DescRule {
+        sel: "code",
+        paint: DescPaint::Sx(
+            "font-mono text-sm tabular-nums py-1 px-2 rounded-sm bg-surface-1 border border-border-subtle",
+        ),
+    },
+    DescRule {
+        sel: "pre",
+        paint: DescPaint::Sx(
+            "font-mono text-sm bg-surface-2 border border-border-subtle rounded-md py-3 px-4 leading-normal-plus whitespace-pre-wrap break-words",
+        ),
+    },
+    DescRule { sel: "pre code", paint: DescPaint::Sx("bg-transparent border-0 p-0") },
+    DescRule {
+        sel: "blockquote",
+        paint: DescPaint::Sx(
+            "my-4 py-2 px-4 border-l border-l-3 border-l-primary text-muted-foreground bg-tone-primary-bg rounded-r-sm",
+        ),
+    },
+    DescRule { sel: "ul, ol", paint: DescPaint::Sx("my-3 ps-5") },
+    DescRule { sel: "li", paint: DescPaint::Sx("my-1") },
+    DescRule { sel: "li::marker", paint: DescPaint::Sx("text-muted-foreground") },
+    DescRule { sel: "strong", paint: DescPaint::Sx("font-semibold") },
+    DescRule {
+        sel: "table",
+        paint: DescPaint::Decls(&[
+            ("border-collapse", "collapse"),
+            ("width", "100%"),
+            ("margin", "var(--space-3) 0"),
+            ("font-size", "var(--text-sm)"),
+            ("border", "1px solid var(--border-subtle)"),
+            ("border-radius", "var(--radius-md)"),
+            ("overflow", "hidden"),
+        ]),
+    },
+    DescRule {
+        sel: "thead th",
+        paint: DescPaint::Sx("bg-muted text-foreground font-semibold"),
+    },
+    DescRule {
+        sel: "th, td",
+        paint: DescPaint::Sx("border-b border-b-border-subtle py-2 px-3 text-start tabular-nums"),
+    },
+    DescRule {
+        sel: "tbody tr:last-child td",
+        paint: DescPaint::Decls(&[("border-bottom", "0")]),
+    },
+];
+
+const CODE_BLOCK_MAP: &[DescRule] = &[
+    DescRule { sel: ".tok-tag", paint: DescPaint::Sx("text-(--syntax-tag)") },
+    DescRule { sel: ".tok-attr", paint: DescPaint::Sx("text-(--syntax-attr)") },
+    DescRule { sel: ".tok-string", paint: DescPaint::Sx("text-(--syntax-string)") },
+    DescRule { sel: ".tok-comment", paint: DescPaint::Sx("text-(--syntax-comment) italic") },
+    DescRule { sel: ".tok-keyword", paint: DescPaint::Sx("text-(--syntax-keyword)") },
+    DescRule { sel: ".tok-fn", paint: DescPaint::Sx("text-(--syntax-function)") },
+    DescRule { sel: ".tok-number", paint: DescPaint::Sx("text-(--syntax-number)") },
+    DescRule { sel: ".tok-bind", paint: DescPaint::Sx("text-(--syntax-function)") },
+];
+
+fn lower_descendant_map(host: &str, rules: &[DescRule]) -> String {
+    let mut out = String::new();
+    for rule in rules {
+        let body = match rule.paint {
+            DescPaint::Sx(list) => lower_sx_list(list),
+            DescPaint::Decls(decls) => decls
+                .iter()
+                .map(|(p, v)| format!("{p}:{v};"))
+                .collect::<String>(),
+        };
+        if body.is_empty() {
+            panic!("descendant skin for {host} selector `{}` lowered empty", rule.sel);
+        }
+        let sels: Vec<String> = rule
+            .sel
+            .split(',')
+            .map(|s| format!("{host} {}", s.trim()))
+            .collect();
+        out.push_str(&sels.join(", "));
+        out.push_str(" { ");
+        out.push_str(&body);
+        out.push_str(" }\n");
+    }
+    out
+}
+
+fn lower_sx_list(list: &str) -> String {
+    use sail_lint::rules::sx;
+    let mut body = String::new();
+    for atom in list.split_whitespace() {
+        if let Some((head, rest)) = atom.split_once(':') {
+            if !rest.starts_with('(') && sx::is_prefix(head) {
+                panic!(
+                    "descendant sx map must put state on the selector, not as a prefix: `{atom}`"
+                );
+            }
+        }
+        let decls = sx::lower_atom(atom).unwrap_or_else(|| {
+            panic!("descendant sx map has unknown atom `{atom}` in `{list}`")
+        });
+        for (p, v) in decls {
+            body.push_str(&p);
+            body.push(':');
+            body.push_str(&v);
+            body.push(';');
+        }
+    }
+    body
+}
+

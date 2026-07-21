@@ -148,6 +148,37 @@ fn split_prefix(pair: &str) -> (Option<&str>, &str) {
     }
 }
 
+/// Boolean presence attrs that `group-<name>:` may key (host prop reflected as
+/// a bare attribute). Closed — free attrs stay closed.
+pub fn group_attr_presence(name: &str) -> Option<&'static str> {
+    const PRESENCE: &[&str] = &[
+        "dismissible",
+        "inline",
+        "sticky",
+        "interactive",
+        "bordered",
+        "fill",
+        "centered",
+        "required",
+        "invalid",
+        "disabled",
+        "open",
+        "pill",
+    ];
+    PRESENCE.iter().copied().find(|&n| n == name)
+}
+
+/// Pseudo-element / structural prefixes (TW-shaped): attach as `::before`,
+/// `::after`, or `:empty` on the styled element.
+pub fn pseudo_element_prefix(p: &str) -> Option<&'static str> {
+    match p {
+        "before" => Some("::before"),
+        "after" => Some("::after"),
+        "empty" => Some(":empty"),
+        _ => None,
+    }
+}
+
 /// Is this a legal prefix? The set is closed and every member keys on semantics
 /// an assistive technology also reads — which is what makes the accessible
 /// component the cheapest one to build rather than a chore.
@@ -155,8 +186,12 @@ pub fn is_prefix(p: &str) -> bool {
     state_pseudo(p).is_some()
         || condition_media(p).is_some()
         || state_data(p).is_some()
-        || p.strip_prefix("group-")
-            .is_some_and(|b| state_pseudo(b).is_some() || state_data(b).is_some())
+        || pseudo_element_prefix(p).is_some()
+        || p.strip_prefix("group-").is_some_and(|b| {
+            state_pseudo(b).is_some()
+                || state_data(b).is_some()
+                || group_attr_presence(b).is_some()
+        })
 }
 
 

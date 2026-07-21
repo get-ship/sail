@@ -7,11 +7,11 @@
 
 use crate::html::Element;
 use crate::mapping::{
-    grid_count_template, Declaration, Dimension as MappingDimension, Display as MappingDisplay,
-    FlexDirection as MappingFlexDirection, FlexWrap as MappingFlexWrap, GridAutoFlow as MappingGridAutoFlow,
-    GridTemplate, JustifyContent as MappingJustifyContent, Overflow as MappingOverflow,
-    PaddingSide, Position as MappingPosition, Selector, SideSet, SxScaleRule, LAYOUT_RULES,
-    SX_SCALE_RULES,
+    grid_count_template, grid_recipe_template, Declaration, Dimension as MappingDimension,
+    Display as MappingDisplay, FlexDirection as MappingFlexDirection, FlexWrap as MappingFlexWrap,
+    GridAutoFlow as MappingGridAutoFlow, GridTemplate, JustifyContent as MappingJustifyContent,
+    Overflow as MappingOverflow, PaddingSide, Position as MappingPosition, Selector, SideSet,
+    SxScaleRule, TrackRecipe, LAYOUT_RULES, SX_SCALE_RULES,
 };
 use sail_lint::scales;
 use taffy::prelude::*;
@@ -70,10 +70,14 @@ pub fn resolve(elem: &Element, elements: &[Element], viewport_width: f32) -> Res
         }
     }
 
-    // 2. Grid column/row count modifiers (`sail-gc-N`, `sail-gr-N`).
+    // 2. Grid column/row count modifiers (`sail-gc-N`, `sail-gr-N`) and
+    //    closed `tracks` recipes / var refs (`sail-gt-*`).
     for c in &classes {
         if let Some((is_cols, template)) = grid_count_from_class(c) {
             apply_grid_template(&mut style, is_cols, template);
+        }
+        if let Some(template) = grid_recipe_from_class(c) {
+            apply_grid_template(&mut style, true, template);
         }
     }
 
@@ -277,7 +281,27 @@ fn build_grid_template(template: GridTemplate) -> Vec<GridTemplateComponent<Stri
             })]
         }
         GridTemplate::Var => Vec::new(),
+        GridTemplate::Recipe(recipe) => match recipe {
+            // auto 1fr auto — content | flex | content
+            TrackRecipe::AutoFrAuto => vec![
+                GridTemplateComponent::Single(auto()),
+                GridTemplateComponent::Single(fr(1.0)),
+                GridTemplateComponent::Single(auto()),
+            ],
+            // 1fr 1fr
+            TrackRecipe::FrFr => vec![
+                GridTemplateComponent::Single(fr(1.0)),
+                GridTemplateComponent::Single(fr(1.0)),
+            ],
+        },
     }
+}
+
+fn grid_recipe_from_class(c: &str) -> Option<GridTemplate> {
+    if !c.starts_with("sail-gt-") {
+        return None;
+    }
+    grid_recipe_template(c)
 }
 
 fn apply_grid_template(style: &mut Style, is_cols: bool, template: GridTemplate) {

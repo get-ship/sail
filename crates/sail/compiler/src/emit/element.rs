@@ -235,7 +235,8 @@ pub fn emit_element(
     // Spliced elements key their skin on the stamped root class; native-kind
     // elements key on the tag itself — the tag IS the element.
     let skin_root = if native { name.to_string() } else { format!(".{root_class}") };
-    let skin_css = element_skin_selectors(&program.styles, &skin_root);
+    let mut skin_css = element_skin_selectors(&program.styles, &skin_root);
+    crate::stdlib::append_descendant_skin(name, &mut skin_css);
 
     let attributes: Vec<Value> = program
         .props

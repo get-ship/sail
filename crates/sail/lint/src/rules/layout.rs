@@ -664,6 +664,8 @@ pub fn is_passthrough_attr(name: &str) -> bool {
             | "itemid"
             | "inert"
             | "popover"
+            | "placement"
+            | "popovertarget"
             | "autofocus"
             | "nonce"
             | "is"
