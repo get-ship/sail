@@ -150,9 +150,13 @@ label { display: inline-block; }
 
   /* Tone: muted default (specificity 0,2,0) so the GLOBAL [tone='X'] channel
      fills every branded tone. --tone drives the leading stripe; --tone-bg/-fg
-     the icon chip. */
+     the icon chip. Not a rewrite of branded [tone=X] — only the attr-absent
+     default contracts does not fill. */
   .sail-alert:not([tone]),
   .sail-alert[tone='default'] {
+    --tone: var(--muted-foreground);
+    --tone-fg: var(--muted-foreground);
+    --tone-bg: var(--tone-muted-bg);
   }
 
   /* Leading tone stripe (anchored to the relative root). */
@@ -291,9 +295,15 @@ label { display: inline-block; }
 
   /* Tone: muted is the default. Scoped to no-tone/default (specificity 0,2,0)
      so the GLOBAL [tone='X'] channel (contracts.css, 0,1,0) fills every branded
-     tone without a per-tone rule here and without an order-dependent clash. */
+     tone without a per-tone rule here and without an order-dependent clash.
+     Attr-absent badge has no contracts fill — this is the PE default path. */
   .sail-badge:not([tone]),
   .sail-badge[tone='default'] {
+    --tone: var(--muted-foreground);
+    --tone-fg: var(--muted-foreground);
+    --tone-contrast: var(--background);
+    --tone-bg: var(--tone-muted-bg);
+    --tone-border: var(--tone-muted-border);
   }
 
   .sail-badge[size='sm'] {
@@ -1575,8 +1585,10 @@ label { display: inline-block; }
     --sz: var(--icon-size-md);
     --bw: var(--control-stroke);
   }
+  /* Default stroke ink when no tone attr (contracts only fill [tone=X]). */
   .sail-spinner:not([tone]),
   .sail-spinner[tone='default'] {
+    --tone-fg: var(--muted-foreground);
   }
   .sail-spinner[size='xs'] { --sz: var(--icon-size-2xs); --bw: 1.5px; }
   .sail-spinner[size='sm'] { --sz: var(--icon-size-sm); --bw: 1.5px; }
@@ -1621,13 +1633,14 @@ label { display: inline-block; }
   .sail-switch[size='sm'] { --sw-w: var(--control-h-xs); --sw-h: var(--icon-size-sm); --sw-thumb: var(--space-2_5); }
   .sail-switch[size='lg'] { --sw-w: var(--space-7);      --sw-h: var(--icon-size-lg); --sw-thumb: var(--icon-size-sm); }
 
-  .sail-switch[tone='primary']     { --tone: var(--primary);          --tone-on-fg: var(--primary-foreground); }
-  .sail-switch[tone='info']        { --tone: var(--info);             --tone-on-fg: var(--info-foreground); }
-  .sail-switch[tone='success']     { --tone: var(--success);          --tone-on-fg: var(--success-foreground); }
-  .sail-switch[tone='warning']     { --tone: var(--warning);          --tone-on-fg: var(--warning-foreground); }
-  .sail-switch[tone='destructive'] { --tone: var(--destructive);      --tone-on-fg: var(--destructive-foreground); }
-  .sail-switch[tone='accent']      { --tone: var(--accent);           --tone-on-fg: var(--accent-foreground); }
-  .sail-switch[tone='muted']       { --tone: var(--muted-foreground); --tone-on-fg: var(--background); }
+  /* --tone comes from GLOBAL [tone] contracts; only thumb contrast is local. */
+  .sail-switch[tone='primary']     { --tone-on-fg: var(--primary-foreground); }
+  .sail-switch[tone='info']        { --tone-on-fg: var(--info-foreground); }
+  .sail-switch[tone='success']     { --tone-on-fg: var(--success-foreground); }
+  .sail-switch[tone='warning']     { --tone-on-fg: var(--warning-foreground); }
+  .sail-switch[tone='destructive'] { --tone-on-fg: var(--destructive-foreground); }
+  .sail-switch[tone='accent']      { --tone-on-fg: var(--accent-foreground); }
+  .sail-switch[tone='muted']       { --tone-on-fg: var(--background); }
 
   .sail-switch::before {
     content: '';

@@ -181,3 +181,52 @@ fn literal_border_widths_in_skins_do_not_increase() {
          the ratchet keeps its grip."
     );
 }
+
+/// Attr-absent L1 defaults that contracts does NOT fill (contracts only keys
+/// `[tone='X']`). Residual skins must still supply muted/default channels so
+/// PE paint (alert stripe, badge soft base, spinner ring) stays valid.
+#[test]
+fn residual_default_tone_fills_for_untoned_hosts() {
+    let css = include_str!("../stdlib/_residues.css");
+
+    // alert muted default
+    assert!(
+        css.contains(".sail-alert:not([tone])")
+            && css.contains("--tone: var(--muted-foreground)")
+            && css.contains("--tone-bg: var(--tone-muted-bg)"),
+        "alert untoned default must fill --tone/--tone-bg for stripe + icon chip"
+    );
+
+    // badge muted default (host sx reads tone-bg/fg/border)
+    assert!(
+        css.contains(".sail-badge:not([tone])")
+            && css.contains("--tone-border: var(--tone-muted-border)"),
+        "badge untoned default must fill muted tone channels for host sx"
+    );
+
+    // spinner default stroke
+    assert!(
+        css.contains(".sail-spinner:not([tone])")
+            && css.contains("--tone-fg: var(--muted-foreground)"),
+        "spinner untoned default must fill --tone-fg for .ring accent stroke"
+    );
+
+    // switch must NOT re-write global --tone on branded tones
+    for tone in ["primary", "info", "success", "warning", "destructive", "accent", "muted"] {
+        let needle = format!(".sail-switch[tone='{tone}']");
+        let Some(idx) = css.find(&needle) else {
+            panic!("missing switch tone rule for {tone}");
+        };
+        let rest = &css[idx..];
+        let end = rest.find('}').unwrap_or(rest.len());
+        let block = &rest[..end];
+        assert!(
+            !block.contains("--tone:"),
+            "switch[{tone}] must not rewrite global --tone channel: {block}"
+        );
+        assert!(
+            block.contains("--tone-on-fg:"),
+            "switch[{tone}] must keep local thumb contrast --tone-on-fg: {block}"
+        );
+    }
+}
