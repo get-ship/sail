@@ -38,39 +38,41 @@
     flex: none;
     overflow: hidden;
     user-select: none;
-    /* Round is the default — a perfect circle (base, since a defaulted shape
-       isn't reflected; square overrides below). sx has no 50% utility. */
-    border-radius: 50%;
+    /* Round (circle) is the default — uses --shape-pill (9999px) for consistency
+       with pill shapes elsewhere. (50% was prior residue; square overrides.) */
+    border-radius: var(--shape-pill);
     font-family: var(--font-body);
     font-weight: var(--font-weight-bold);
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    line-height: 1;
+    line-height: var(--leading-none);
     color: var(--foreground);
     /* Default (no branded tone) fill: the brand gradient. Branded tones below
        override it with a solid fill; default/muted keep the gradient. */
     background: linear-gradient(135deg, var(--primary), var(--accent));
     box-shadow: inset 0 0 0 1px var(--border), inset 0 1px 0 var(--background);
-    /* Size: md base; others override. */
-    width: var(--space-7);
-    height: var(--space-7);
-    font-size: var(--text-base);
+    /* Size channels (local): md base; size attrs reassign channels only.
+       Channels cover w/h/fs so no duplicates on base. */
+    --avatar-size: var(--space-7);
+    --avatar-fs: var(--text-base);
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    font-size: var(--avatar-fs);
   }
   .sail-avatar[hidden] { display: none; }
   .sail-avatar[shape='square'] { border-radius: var(--radius-sm); }
 
-  .sail-avatar[size='xs'] { width: 1.25rem;             height: 1.25rem;             font-size: var(--text-xs); }
-  .sail-avatar[size='sm'] { width: var(--control-h-sm); height: var(--control-h-sm); font-size: var(--text-xs); }
-  .sail-avatar[size='md'] { width: var(--space-7);      height: var(--space-7);      font-size: var(--text-base); }
-  .sail-avatar[size='lg'] { width: var(--control-h-lg); height: var(--control-h-lg); font-size: var(--text-lg); }
-  .sail-avatar[size='xl'] { width: var(--control-h-xl); height: var(--control-h-xl); font-size: var(--text-2xl); }
+  .sail-avatar[size='xs'] { --avatar-size: var(--space-5); --avatar-fs: var(--text-xs); }
+  .sail-avatar[size='sm'] { --avatar-size: var(--control-h-sm); --avatar-fs: var(--text-xs); }
+  .sail-avatar[size='lg'] { --avatar-size: var(--control-h-lg); --avatar-fs: var(--text-lg); }
+  .sail-avatar[size='xl'] { --avatar-size: var(--control-h-xl); --avatar-fs: var(--text-2xl); }
 
-  .sail-avatar[tone='primary']     { background: var(--primary);           color: var(--primary-foreground); }
-  .sail-avatar[tone='accent']      { background: var(--accent);            color: var(--accent-foreground); }
-  .sail-avatar[tone='info']        { background: var(--tone-info-bg);      color: var(--info); }
+  .sail-avatar[tone='primary']     { background: var(--tone);           color: var(--tone-contrast); }
+  .sail-avatar[tone='accent']      { background: var(--tone);            color: var(--tone-contrast); }
+  .sail-avatar[tone='info']        { background: var(--tone-bg);      color: var(--tone-fg); }
   .sail-avatar[tone='success']     { background: var(--tone-success-bg);   color: var(--success); }
   .sail-avatar[tone='warning']     { background: var(--tone-warning-bg);   color: var(--warning); }
-  .sail-avatar[tone='destructive'] { background: var(--tone-destructive-bg); color: var(--destructive); }
+  .sail-avatar[tone='destructive'] { background: var(--tone-bg); color: var(--tone-fg); }
 
   img {
     width: 100%;
