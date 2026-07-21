@@ -1879,13 +1879,7 @@ label { display: inline-block; }
   .sail-popover::backdrop { background: transparent; }
 
 /* prose */
-
-  .sail-prose {
-    display: block;
-    font-family: var(--font-body);
-    color: var(--foreground);
-    line-height: var(--leading-normal-plus);
-  }
+.sx-block{display:block}.sx-fontbody{font-family:var(--body-font)}.sx-textforeground{color:var(--foreground)}.sx-leadingnormalplus{line-height:var(--leading-normal-plus)}
 
   .sail-prose h1, .sail-prose h2, .sail-prose h3,
   .sail-prose h4, .sail-prose h5, .sail-prose h6 {
