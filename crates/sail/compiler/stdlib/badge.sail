@@ -31,21 +31,21 @@
     display: inline-flex;
     align-items: center;
     vertical-align: middle;
-    /* Size: md base; sm/lg override below. */
-    --bdg-h: 22px;
-    --bdg-px: 8px;
-    --bdg-fs: 10.5px;
-    --bdg-gap: 4px;
-    --bdg-radius: var(--radius-sm);
-    gap: var(--bdg-gap);
-    min-height: var(--bdg-h);
-    padding: 0 var(--bdg-px);
+    /* Size: md base (exact tokens); sm/lg override below (residues kept literal where no exact token). */
+    --badge-h: var(--control-h-2xs);
+    --badge-px: var(--space-2);
+    --badge-fs: 10.5px; /* residue literal — no text token */
+    --badge-gap: var(--space-1);
+    --badge-radius: var(--radius-sm);
+    gap: var(--badge-gap);
+    min-height: var(--badge-h);
+    padding: 0 var(--badge-px);
     font-family: var(--font-body);
-    font-size: var(--bdg-fs);
+    font-size: var(--badge-fs);
     font-weight: var(--font-weight-semibold);
-    line-height: 1;
+    line-height: var(--leading-none);
     white-space: nowrap;
-    border-radius: var(--bdg-radius);
+    border-radius: var(--badge-radius);
     -webkit-font-smoothing: antialiased;
     font-variant-numeric: tabular-nums;
     /* soft is the default variant — base .sail-badge renders soft. */
@@ -67,11 +67,21 @@
     --tone-border: var(--tone-muted-border);
   }
 
-  .sail-badge[size='sm'] { --bdg-h: 18px; --bdg-px: 6px;  --bdg-fs: 9.5px;  --bdg-gap: 3px; }
-  .sail-badge[size='lg'] { --bdg-h: 26px; --bdg-px: 10px; --bdg-fs: 11.5px; --bdg-gap: 5px; }
+  .sail-badge[size='sm'] {
+    --badge-h: 18px; /* residue */
+    --badge-px: var(--space-1_5);
+    --badge-fs: 9.5px; /* residue */
+    --badge-gap: 3px; /* residue */
+  }
+  .sail-badge[size='lg'] {
+    --badge-h: 26px; /* residue */
+    --badge-px: var(--space-2_5);
+    --badge-fs: 11.5px; /* residue */
+    --badge-gap: var(--space-1_25);
+  }
 
   /* Shape — square (radius-sm) default; pill opts into the full radius. */
-  .sail-badge[pill] { --bdg-radius: var(--shape-pill); }
+  .sail-badge[pill] { --badge-radius: var(--shape-pill); }
 
   /* Variant matrix (soft is the base above). */
   .sail-badge[variant='solid'] {
