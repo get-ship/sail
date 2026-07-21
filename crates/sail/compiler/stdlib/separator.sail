@@ -1,10 +1,11 @@
 <!--
   <separator> — L1 language element (element mode). Native <hr>.
 
-  Host paint: display/width/height/margin/background (for solid horizontal default)
-  via sx. Residue: --separator-line channel, border:0/p-0, orientation/variant
-  matrices, dashed border-top/left, vertical inline-block + align-self, tone
-  overrides.
+  Host paint (via sx): display/width/height/margin/background (solid horizontal
+  default) + border-0/p-0.
+  Residue (author <style>): --separator-line channel writes, tone overrides that
+  set the channel, dashed/orientation matrices, dashed border-top/left, vertical
+  geometry (inline-block, align-self, size/margin/bg overrides).
 -->
 
 <scope>
@@ -18,8 +19,6 @@
 <style>
   .sail-separator {
     --separator-line: var(--border-subtle);
-    border: 0;
-    padding: 0;
   }
   .sail-separator[tone='primary'],
   .sail-separator[tone='destructive'] {
@@ -47,4 +46,4 @@
   }
 </style>
 
-<hr sx="block w-full h-px m-2 bg-(--separator-line)">
+<hr sx="block w-full h-px m-2 border-0 p-0 bg-(--separator-line)">
