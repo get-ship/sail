@@ -21,21 +21,10 @@
 </scope>
 
 <style>
-  /* The framework's global :where(summary) / :where(details) treatment in
-     contracts.css already supplies the flex summary, the rotating chevron
-     (::after), the open-state header, and the ::details-content open/close
-     animation — collapsible inherits all of it. This skin adds only what is
-     element-specific: identity + the disabled state (native <details> has no
-     disabled concept) + the content padding hook. */
-  .sail-collapsible {
-    display: block;
-    font-family: var(--font-body);
-  }
   .sail-collapsible[disabled] summary { cursor: not-allowed; opacity: 0.5; }
-  .sail-collapsible .content-inner { padding: var(--space-3) var(--space-4); }
 </style>
 
-<details use:collapsible>
+<details use:collapsible sx="block font-body">
   <summary class="trigger-wrap"><slot name="trigger"></slot></summary>
-  <div class="content-wrap"><div class="content-inner"><slot></slot></div></div>
+  <div class="content-wrap"><div class="content-inner" sx="px-4 py-3"><slot></slot></div></div>
 </details>
