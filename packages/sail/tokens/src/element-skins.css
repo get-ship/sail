@@ -593,6 +593,9 @@ label { display: inline-block; }
     font-size: var(--text-base);
     line-height: var(--leading-normal);
     box-shadow: var(--shadow-xs);
+    /* Local channel for shared icon/close control size (optional anatomy
+       residue lock; collapses duplicate var(--control-h-xs)). */
+    --alert-ico: var(--control-h-xs);
   }
   .sail-alert[hidden] { display: none; }
 
@@ -619,8 +622,8 @@ label { display: inline-block; }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--control-h-xs);
-    height: var(--control-h-xs);
+    width: var(--alert-ico);
+    height: var(--alert-ico);
     border-radius: var(--radius-md);
     background: var(--tone-bg);
     color: var(--tone-fg);
@@ -652,8 +655,8 @@ label { display: inline-block; }
     align-items: center;
     justify-content: center;
     align-self: start;
-    width: var(--control-h-xs);
-    height: var(--control-h-xs);
+    width: var(--alert-ico);
+    height: var(--alert-ico);
     padding: 0;
     border: 0;
     border-radius: var(--radius-sm);
