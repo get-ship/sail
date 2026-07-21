@@ -18,7 +18,11 @@ export const pagination: Action<void> = (node) => {
 
   const sync = (): void => {
     const cur = current()
+    // Size lives on the pagination host; stamp onto each page so page.sail
+    // size CVA owns cell geometry (no parent --pg-* channel PE).
+    const size = root.getAttribute('size') || 'md'
     for (const p of pagesOf()) {
+      if (p.getAttribute('size') !== size) p.setAttribute('size', size)
       if (valueOf(p) === cur) p.setAttribute('aria-current', 'page')
       else p.removeAttribute('aria-current')
     }

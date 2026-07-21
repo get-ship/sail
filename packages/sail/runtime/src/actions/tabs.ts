@@ -10,6 +10,10 @@ import type { Action } from '../action'
  * Home/End, Enter/Space), panel show/hide, and emits `sail-tab-change`. The
  * active tab is the element's `active` attribute (the name of the active tab);
  * unset defaults to the first tab.
+ *
+ * Also stamps `orientation` onto `.sail-tab-list` / `.sail-tab-panel` and
+ * `variant` from the list onto each `.sail-tab` so child CVA owns chrome
+ * without parent→child PE matrices in contracts.css.
  */
 export const tabs: Action<void> = (node) => {
   const root = node as HTMLElement
@@ -21,9 +25,29 @@ export const tabs: Action<void> = (node) => {
     Array.from(root.querySelectorAll<HTMLElement>('.sail-tab'))
   const panelsOf = (): HTMLElement[] =>
     Array.from(root.querySelectorAll<HTMLElement>('.sail-tab-panel'))
+  const listOf = (): HTMLElement | null =>
+    root.querySelector<HTMLElement>('.sail-tab-list')
   const activeName = (): string => root.getAttribute('active') ?? ''
+  const orientationOf = (): 'horizontal' | 'vertical' =>
+    root.getAttribute('orientation') === 'vertical' ? 'vertical' : 'horizontal'
+
+  const stampChrome = (): void => {
+    const orientation = orientationOf()
+    const list = listOf()
+    if (list) {
+      list.setAttribute('orientation', orientation)
+    }
+    const variant = list?.getAttribute('variant') || 'line'
+    for (const t of tabsOf()) {
+      t.setAttribute('variant', variant)
+    }
+    for (const p of panelsOf()) {
+      p.setAttribute('orientation', orientation)
+    }
+  }
 
   const sync = (): void => {
+    stampChrome()
     const tabs = tabsOf()
     let active = activeName()
     if (!active && tabs.length) {
@@ -91,7 +115,7 @@ export const tabs: Action<void> = (node) => {
     const enabled = tabsOf().filter((x) => !x.hasAttribute('disabled'))
     const i = enabled.indexOf(t)
     if (i < 0) return
-    const vertical = root.getAttribute('orientation') === 'vertical'
+    const vertical = orientationOf() === 'vertical'
     const [next, prev] = vertical ? ['ArrowDown', 'ArrowUp'] : ['ArrowRight', 'ArrowLeft']
     let j = -1
     if (e.key === next) j = (i + 1) % enabled.length
@@ -112,7 +136,12 @@ export const tabs: Action<void> = (node) => {
   root.addEventListener('click', onClick)
   root.addEventListener('keydown', onKeydown)
   const mo = new MutationObserver(() => sync())
-  mo.observe(root, { childList: true, subtree: true })
+  mo.observe(root, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['orientation', 'variant', 'active'],
+  })
   sync()
 
   return {

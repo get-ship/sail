@@ -189,6 +189,7 @@ export {
   rangeFill,
   tabs,
   icon,
+  marquee,
   primeIconCache,
   themeSelect,
   toggleGroup,

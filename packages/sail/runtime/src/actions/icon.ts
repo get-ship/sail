@@ -7,6 +7,13 @@
 // `label` makes the element role=img with an aria-label; label-less icons are
 // aria-hidden. A failed resolve removes any injected glyph so the slotted
 // fallback shows.
+//
+// `spin` is owned here (not contracts PE): the glyph is injected with no
+// structure slot, so the action attaches a motion:loop rotate on the host
+// when `[spin]` is present. Duration matches the ambient `--animate-spin`
+// 0.7s; reduced motion settles via the motion runtime (no spin).
+
+import { __sui_motion_attach } from '../motion'
 
 const ENDPOINT = '/_deck/icons/'
 
@@ -44,6 +51,7 @@ export const icon = (node: Element) => {
   let svgEl: SVGSVGElement | null = null
   let lastKey: string | null = null
   let seq = 0
+  let spinDispose: (() => void) | null = null
 
   const syncAria = (): void => {
     const label = node.getAttribute('label') ?? ''
@@ -60,6 +68,30 @@ export const icon = (node: Element) => {
       if (label) svgEl.removeAttribute('aria-hidden')
       else svgEl.setAttribute('aria-hidden', 'true')
     }
+  }
+
+  const syncSpin = (): void => {
+    spinDispose?.()
+    spinDispose = null
+    if (!node.hasAttribute('spin')) return
+    // Host rotate spins the injected glyph (no structure slot for the svg).
+    // 0.7s matches the ambient --animate-spin catalog entry the PE used.
+    spinDispose = __sui_motion_attach(node, {
+      trigger: 'loop',
+      motions: [
+        {
+          property: 'rotate',
+          preset: 'spin',
+          kind: 'tween',
+          from: 0,
+          to: 360,
+          duration: 0.7,
+          easing: 'linear',
+          iterations: Infinity,
+          direction: 'normal',
+        },
+      ],
+    })
   }
 
   const drop = (): void => {
@@ -84,6 +116,7 @@ export const icon = (node: Element) => {
 
   const render = (): void => {
     syncAria()
+    syncSpin()
     const src = node.getAttribute('src') ?? ''
     const name = node.getAttribute('name') ?? ''
 
@@ -110,9 +143,13 @@ export const icon = (node: Element) => {
   }
 
   const mo = new MutationObserver(render)
-  mo.observe(node, { attributes: true, attributeFilter: ['name', 'src', 'label'] })
+  mo.observe(node, { attributes: true, attributeFilter: ['name', 'src', 'label', 'spin'] })
   render()
   return {
-    destroy: () => mo.disconnect(),
+    destroy: () => {
+      mo.disconnect()
+      spinDispose?.()
+      spinDispose = null
+    },
   }
 }

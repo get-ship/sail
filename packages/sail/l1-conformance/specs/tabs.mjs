@@ -11,8 +11,8 @@ const panel = (name, sel) =>
   `<div class="sail-tab-panel" name="${name}" role="tabpanel" ${sel ? '' : 'hidden'}>${name} panel</div>`
 
 const tabs = (variant, attrs, active, items) =>
-  `<div class="sail-tabs" variant="${variant}" active="${active}" ${attrs}>` +
-  `<div class="sail-tab-list" role="tablist">` +
+  `<div class="sail-tabs" active="${active}" ${attrs}>` +
+  `<div class="sail-tab-list" role="tablist" variant="${variant}">` +
   items.map(([n, l, x]) => tab(n, l, n === active, x || '')).join('') +
   `</div>` +
   items.map(([n]) => panel(n, n === active)).join('') +

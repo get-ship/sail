@@ -3,10 +3,10 @@
 // renders as a horizontal bar with all three regions laid out.
 
 const bar = (attrs) =>
-  `<header class="sail-navbar" ${attrs}>` +
-  `<div class="sail-nav-brand"><strong>Acme</strong></div>` +
-  `<nav class="sail-nav-links"><a href="#">Home</a><a href="#">Docs</a><a href="#">Pricing</a></nav>` +
-  `<div class="sail-nav-actions"><button class="sail-page">Sign in</button></div>` +
+  `<header class="sail-navbar sail-row sail-nowrap sail-ai-center sail-g-4 sx-wfull sx-bgbackground sx-textforeground sx-minh14 sx-py2 sx-px4" ${attrs}>` +
+  `<div class="sail-nav-brand sail-row-i sail-nowrap sail-ai-center sail-g-2 sx-fontsemibold sx-shrink0"><strong>Acme</strong></div>` +
+  `<div class="sail-nav-links sx-contents"><a href="#" class="sx-nounderline">Home</a><a href="#" class="sx-nounderline">Docs</a><a href="#" class="sx-nounderline">Pricing</a></div>` +
+  `<div class="sail-nav-actions sail-row-i sail-nowrap sail-ai-center sail-g-2 sx-shrink0 sx-msauto"><button class="sail-page">Sign in</button></div>` +
   `</header>`
 
 export default {

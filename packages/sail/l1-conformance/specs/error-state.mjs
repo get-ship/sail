@@ -26,7 +26,7 @@ export default {
       const toggle = el.querySelector('.details-toggle')
       if (code) code.textContent = el.getAttribute('code') ?? ''
       const has = details && (details.textContent ?? '').trim().length > 0
-      if (has) { el.setAttribute('data-has-details', ''); el.setAttribute('data-details-open', ''); toggle.textContent = 'Hide details'; toggle.setAttribute('aria-expanded', 'true') }
+      if (has) { el.setAttribute('data-state', 'has-details open'); toggle.textContent = 'Hide details'; toggle.setAttribute('aria-expanded', 'true') }
       const variant = el.getAttribute('variant') || 'default'
       const titleOk = (el.querySelector('.title').textContent || '').trim().length > 0
       const roleOk = el.getAttribute('role') === 'alert'

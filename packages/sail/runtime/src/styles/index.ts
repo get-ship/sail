@@ -81,19 +81,17 @@ const BASE_CSS =
 
 const AMBIENT_FX_CSS =
   // Ambient / platform loops (CSS-fx). Framework-owned infinite animations
-  // for L1 elements that need decorative motion (the spinner ring, status
-  // dot pulse, skeleton shimmer, progress barber-pole). These live in the
-  // shared contracts/styles SSOT (not per-<style> in stdlib .sail, not in
-  // motion/mini WAAPI) so the @keyframes are single-sourced and components
-  // reference via tokenised var. Tailwind-shaped `--animate-*` name for the
-  // shorthand value (consistent with neighbors in the fx catalog).
-  // Reduced-motion: 1.5s slow (spinner semantics), expressed here via var
-  // override so the media rule is in the shared place, not left in spinner.
+  // for L1 surfaces that still need decorative CSS motion (the spinner
+  // ring, status-dot pulse, skeleton shimmer, progress barber-pole).
+  // Ticker/icon spin dissolved to motion: via use:marquee / use:icon —
+  // no --animate-ticker catalog entry remains. Tailwind-shaped
+  // `--animate-*` name for the shorthand value (consistent with neighbors
+  // in the fx catalog). Reduced-motion: 1.5s slow (spinner semantics),
+  // expressed here via var override so the media rule is in the shared
+  // place, not left in spinner.
   '@keyframes sail-spin { to { transform: rotate(360deg); } }\n' +
   ':root, :host { --animate-spin: sail-spin 0.7s linear infinite; }\n' +
-  '@media (prefers-reduced-motion: reduce) { :root, :host { --animate-spin: sail-spin 1.5s linear infinite; } }\n' +
-  '@keyframes sail-ticker-scroll { to { transform: translateX(-50%); } }\n' +
-  ':root, :host { --animate-ticker: sail-ticker-scroll 24s linear infinite; }\n'
+  '@media (prefers-reduced-motion: reduce) { :root, :host { --animate-spin: sail-spin 1.5s linear infinite; } }\n'
 
 // LANGUAGE-LAYER TYPOGRAPHY. Semantic content tags are styled from the type
 // scale automatically — the author writes `<h1>`/`<p>` plain and gets taste,
@@ -694,15 +692,20 @@ const TABLE_SKIN_CSS =
 const POPOVER_SKIN_CSS =
   ":where([popover]) { width: max-content; max-width: var(--panel-max-w-sm); padding: var(--space-1); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--popover); color: var(--popover-foreground); box-shadow: var(--shadow-lg); font-family: var(--font-body); font-size: var(--text-sm); }\n" +
   // Tooltip variant: tighter, muted surface, no interactive affordance.
-  ":where([popover][role='tooltip']) { padding: var(--space-1_5) var(--space-2_5); max-width: var(--panel-max-w-xs, 20rem); background: var(--foreground); color: var(--background); border-color: transparent; box-shadow: var(--shadow-md); }\n" +
+  ":where([popover][role='tooltip']) { padding: var(--space-1_5) var(--space-2_5); max-width: var(--panel-max-w-xs); background: var(--foreground); color: var(--background); border-color: transparent; box-shadow: var(--shadow-md); }\n" +
   // Menu variant: item rows. An item <button> (or [role='menuitem']) sheds the
   // L1 button box and becomes a full-width row — hover/focus highlights, <hr>
   // divides, disabled dims. This is what turns a popover into a dropdown menu.
-  ":where([popover][role='menu']) { min-width: var(--menu-min-w, 12rem); }\n" +
+  ":where([popover][role='menu']) { min-width: var(--menu-min-w); }\n" +
   ":where([popover][role='menu']) button, :where([popover][role='menu']) [role='menuitem'] { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-2); width: 100%; min-height: var(--control-h-sm); padding: var(--space-1_5) var(--space-2_5); border: 0; border-radius: var(--radius-sm); background: transparent; box-shadow: none; color: inherit; font: inherit; font-weight: var(--font-weight-normal); text-align: left; white-space: nowrap; cursor: pointer; }\n" +
   ":where([popover][role='menu']) button:hover, :where([popover][role='menu']) [role='menuitem']:hover, :where([popover][role='menu']) button:focus-visible, :where([popover][role='menu']) [role='menuitem']:focus-visible { background: var(--hover-bg); outline: none; }\n" +
   ":where([popover][role='menu']) button:disabled, :where([popover][role='menu']) [role='menuitem'][aria-disabled='true'] { color: var(--muted-foreground); pointer-events: none; }\n" +
   ":where([popover][role='menu']) hr { margin: var(--space-1) calc(-1 * var(--space-1)); border: 0; border-top: 1px solid var(--border-subtle); }\n" +
+  // Listbox variant (combobox options): author-supplied <option> children —
+  // same role-keyed shape as menu items (no structure sx hook on slotted options).
+  ":where([popover][role='listbox'] option) { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1_5) var(--space-2); border-radius: var(--radius-sm); font-size: var(--text-sm); color: inherit; cursor: pointer; }\n" +
+  ":where([popover][role='listbox'] option[data-active]), :where([popover][role='listbox'] option:hover:not([disabled])) { background: var(--hover-bg); }\n" +
+  ":where([popover][role='listbox'] option[disabled]) { opacity: 0.5; cursor: not-allowed; }\n" +
   ":where([popover])::backdrop { background: transparent; }\n"
 
 // The CONTROL half of the contracts — element-keyed channels + control
@@ -773,10 +776,11 @@ export const LIGHT_CONTRACTS_CSS =
   // transition stays a blanket !important kill (interaction micro-transitions
   // carry no component-authored intent to lose). animation is NOT !important
   // and the whole selector list sits inside :where() (zero specificity), so a
-  // component that owns its own reduced-motion behavior (e.g. a marquee that
-  // pauses instead of vanishing) has real specificity in its own skin and
-  // wins the cascade unforced — this rule is only the floor default for
-  // anything that has not opted in.
+  // component that owns its own reduced-motion behavior (e.g. spinner's
+  // CSS-fx slowdown) has real specificity in its own skin and wins the
+  // cascade unforced — this rule is only the floor default for anything
+  // that has not opted in. Ticker/icon spin use motion: and settle in the
+  // runtime, not via CSS PE.
   '@media (prefers-reduced-motion: reduce) { :where([data-component], [data-component] *, button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none; } }\n'
 
 // `ensureLightContracts()` used to live here and inject the contracts from a string

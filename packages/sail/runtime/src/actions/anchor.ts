@@ -119,8 +119,11 @@ export const anchor: Action<AnchorPlacement | undefined> = (node, placement) => 
 
     // Geometry only — skins already declare position:fixed + margin:0.
     // Publish the computed box through the sx/skin custom-property bridge.
+    // --anchor-width mirrors the trigger so listboxes can min-w-(--anchor-width)
+    // without CSS anchor-size() (combobox match-trigger-width).
     el.style.setProperty('--anchor-left', `${clamp(left, GAP, Math.max(GAP, vw - w - GAP))}px`)
     el.style.setProperty('--anchor-top', `${clamp(top, GAP, Math.max(GAP, vh - h - GAP))}px`)
+    el.style.setProperty('--anchor-width', `${Math.max(r.width, 0)}px`)
   }
 
   const onToggle = (e: Event) => {
@@ -143,6 +146,7 @@ export const anchor: Action<AnchorPlacement | undefined> = (node, placement) => 
       window.removeEventListener('scroll', reposition, true)
       el.style.removeProperty('--anchor-left')
       el.style.removeProperty('--anchor-top')
+      el.style.removeProperty('--anchor-width')
     },
   }
 }

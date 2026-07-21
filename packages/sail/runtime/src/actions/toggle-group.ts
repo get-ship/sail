@@ -6,6 +6,9 @@ import type { Action } from '../action'
  * nav (per orientation) + Home/End, click selection, and `value` sync. `type`
  * = `single` (one value, deselectable) or `multiple` (space-separated set).
  * Each `.sail-toggle` gets `aria-pressed`. Emits `sail-toggle-change`.
+ *
+ * Stamps group `variant` + `orientation` onto each cell so join radii /
+ * ghost/segmented chrome live as child CVA + first:/last: (no parent→child PE).
  */
 export const toggleGroup: Action<void> = (node) => {
   const root = node as HTMLElement
@@ -15,14 +18,24 @@ export const toggleGroup: Action<void> = (node) => {
     Array.from(root.querySelectorAll<HTMLElement>('.sail-toggle'))
   const activeSet = (): Set<string> =>
     new Set((root.getAttribute('value') ?? '').split(/\s+/).filter(Boolean))
+  const orientationOf = (): 'horizontal' | 'vertical' =>
+    root.getAttribute('orientation') === 'vertical' ? 'vertical' : 'horizontal'
+  const variantOf = (): string => root.getAttribute('variant') || 'outline'
 
   if (!root.hasAttribute('role')) root.setAttribute('role', 'group')
 
+  const stampChrome = (): void => {
+    const orientation = orientationOf()
+    const variant = variantOf()
+    for (const t of togglesOf()) {
+      t.setAttribute('orientation', orientation)
+      t.setAttribute('variant', variant)
+    }
+  }
+
   const sync = (): void => {
-    root.setAttribute(
-      'aria-orientation',
-      root.getAttribute('orientation') === 'vertical' ? 'vertical' : 'horizontal',
-    )
+    stampChrome()
+    root.setAttribute('aria-orientation', orientationOf())
     const active = activeSet()
     const toggles = togglesOf()
     for (const t of toggles) {
@@ -68,7 +81,7 @@ export const toggleGroup: Action<void> = (node) => {
     const enabled = togglesOf().filter((x) => !x.hasAttribute('disabled'))
     const i = enabled.indexOf(t)
     if (i < 0) return
-    const vertical = root.getAttribute('orientation') === 'vertical'
+    const vertical = orientationOf() === 'vertical'
     const [next, prev] = vertical ? ['ArrowDown', 'ArrowUp'] : ['ArrowRight', 'ArrowLeft']
     let j = -1
     if (e.key === next) j = (i + 1) % enabled.length
@@ -87,7 +100,12 @@ export const toggleGroup: Action<void> = (node) => {
   root.addEventListener('click', onClick)
   root.addEventListener('keydown', onKeydown)
   const mo = new MutationObserver(() => sync())
-  mo.observe(root, { childList: true, subtree: true })
+  mo.observe(root, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['orientation', 'variant', 'value', 'type'],
+  })
   sync()
 
   return {
