@@ -18,8 +18,8 @@
 // (the runtime reads var() at paint time and would just defer to the
 // same files). This catches a dropped var, a typo'd name, and a
 // reskin-by-token that left a tier out.
-import { dirname, resolve } from 'node:path'
-import { readFileSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
+import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
@@ -294,9 +294,8 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
   const loadRegistry = (): Registry =>
     JSON.parse(loadSrc('../src/token-registry.json')) as Registry
 
-  /** Walk grouped DTCG base.json → public cssNames (via $extensions.ship.cssName or path join). */
+  /** Walk base + model/components/* → public cssNames (via $extensions.ship.cssName or path join). */
   function modelBaseCssNames(): Set<string> {
-    const doc = JSON.parse(loadSrc('../model/base.json')) as Record<string, unknown>
     const names = new Set<string>()
     const walk = (node: unknown, path: string[]) => {
       if (!node || typeof node !== 'object' || Array.isArray(node)) return
@@ -312,7 +311,23 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
         walk(v, [...path, k])
       }
     }
-    walk(doc, [])
+    walk(JSON.parse(loadSrc('../model/base.json')) as Record<string, unknown>, [])
+    // Component packs merge into the base layer at generate time.
+    const componentsDir = resolve(
+      dirname(fileURLToPath(import.meta.url)),
+      '../model/components',
+    )
+    try {
+      for (const file of readdirSync(componentsDir)) {
+        if (!file.endsWith('.json')) continue
+        walk(
+          JSON.parse(readFileSync(join(componentsDir, file), 'utf8')) as Record<string, unknown>,
+          [],
+        )
+      }
+    } catch {
+      // no components/ dir yet
+    }
     return names
   }
 
@@ -328,7 +343,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(css).toMatch(/model\/themes/)
   })
 
-  it('token-registry.json canonical names equal model/base.json cssNames', () => {
+  it('token-registry.json canonical names equal base + component source cssNames', () => {
     const reg = loadRegistry()
     const model = modelBaseCssNames()
     expect(model.size).toBeGreaterThan(100)

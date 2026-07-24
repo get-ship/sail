@@ -67,35 +67,6 @@
         "$type": "color"
       }
     },
-    "card": {
-      "backdrop-filter": {
-        "$value": "none",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-backdrop-filter"
-          }
-        },
-        "$type": "string"
-      },
-      "foreground": {
-        "$value": "oklch(0.92 0.06 145)",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-foreground"
-          }
-        },
-        "$type": "color"
-      },
-      "texture": {
-        "$value": "none",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-texture"
-          }
-        },
-        "$type": "string"
-      }
-    },
     "destructive": {
       "default": {
         "$value": "oklch(0.70 0.22 25)",
@@ -560,17 +531,6 @@
       }
     }
   },
-  "misc": {
-    "card": {
-      "$value": "oklch(0.16 0.010 220)",
-      "$extensions": {
-        "ship": {
-          "cssName": "card"
-        }
-      },
-      "$type": "color"
-    }
-  },
   "radius": {
     "default": {
       "$value": "2px",
@@ -755,6 +715,46 @@
         }
       },
       "$type": "shadow"
+    }
+  },
+  "component": {
+    "card": {
+      "backdrop-filter": {
+        "$value": "none",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-backdrop-filter"
+          }
+        },
+        "$type": "string"
+      },
+      "texture": {
+        "$value": "none",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-texture"
+          }
+        },
+        "$type": "string"
+      },
+      "fg": {
+        "$value": "oklch(0.92 0.06 145)",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-foreground"
+          }
+        },
+        "$type": "color"
+      },
+      "bg": {
+        "$value": "oklch(0.16 0.010 220)",
+        "$extensions": {
+          "ship": {
+            "cssName": "card"
+          }
+        },
+        "$type": "color"
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "$description": "Sail base design tokens (:root). SSOT — edit here, run generate.",
+  "$description": "Sail base design tokens (:root). SSOT \u2014 edit here, run generate.",
   "radius": {
     "default": {
       "$value": "10px",
@@ -1320,53 +1320,6 @@
         "$extensions": {
           "ship": {
             "cssName": "ring-color"
-          }
-        }
-      }
-    },
-    "card": {
-      "backdrop-filter": {
-        "$value": "none",
-        "$type": "string",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-backdrop-filter"
-          }
-        }
-      },
-      "texture": {
-        "$value": "none",
-        "$type": "string",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-texture"
-          }
-        }
-      },
-      "texture-blend": {
-        "$value": "overlay",
-        "$type": "string",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-texture-blend"
-          }
-        }
-      },
-      "texture-opacity": {
-        "$value": "1",
-        "$type": "number",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-texture-opacity"
-          }
-        }
-      },
-      "foreground": {
-        "$value": "oklch(0.147 0.004 49.25)",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-foreground"
           }
         }
       }
@@ -3258,17 +3211,7 @@
     },
     "$type": "shadow"
   },
-  "misc": {
-    "card": {
-      "$value": "oklch(1 0 0)",
-      "$type": "color",
-      "$extensions": {
-        "ship": {
-          "cssName": "card"
-        }
-      }
-    }
-  },
+  "misc": {},
   "scrollbar": {
     "thumb": {
       "$value": "color-mix(in oklab, var(--foreground) 22%, transparent)",

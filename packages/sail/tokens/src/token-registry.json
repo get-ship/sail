@@ -1390,36 +1390,6 @@
       "type": "color",
       "value": "var(--primary)"
     },
-    "card-backdrop-filter": {
-      "path": "color.card.backdrop-filter",
-      "cssName": "card-backdrop-filter",
-      "type": "string",
-      "value": "none"
-    },
-    "card-texture": {
-      "path": "color.card.texture",
-      "cssName": "card-texture",
-      "type": "string",
-      "value": "none"
-    },
-    "card-texture-blend": {
-      "path": "color.card.texture-blend",
-      "cssName": "card-texture-blend",
-      "type": "string",
-      "value": "overlay"
-    },
-    "card-texture-opacity": {
-      "path": "color.card.texture-opacity",
-      "cssName": "card-texture-opacity",
-      "type": "number",
-      "value": "1"
-    },
-    "card-foreground": {
-      "path": "color.card.foreground",
-      "cssName": "card-foreground",
-      "type": "color",
-      "value": "oklch(0.147 0.004 49.25)"
-    },
     "surface-0": {
       "path": "color.surface.0",
       "cssName": "surface-0",
@@ -2620,12 +2590,6 @@
       "type": "shadow",
       "value": "0 -8px 24px -8px oklch(0 0 0 / 8%), 0 -1px 0 oklch(0 0 0 / 4%)"
     },
-    "card": {
-      "path": "misc.card",
-      "cssName": "card",
-      "type": "color",
-      "value": "oklch(1 0 0)"
-    },
     "scrollbar-thumb": {
       "path": "scrollbar.thumb",
       "cssName": "scrollbar-thumb",
@@ -2661,6 +2625,42 @@
       "cssName": "scrollbar-radius",
       "type": "dimension",
       "value": "999px"
+    },
+    "card": {
+      "path": "component.card.bg",
+      "cssName": "card",
+      "type": "color",
+      "value": "var(--surface-1)"
+    },
+    "card-foreground": {
+      "path": "component.card.fg",
+      "cssName": "card-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "card-backdrop-filter": {
+      "path": "component.card.backdrop-filter",
+      "cssName": "card-backdrop-filter",
+      "type": "string",
+      "value": "none"
+    },
+    "card-texture": {
+      "path": "component.card.texture",
+      "cssName": "card-texture",
+      "type": "string",
+      "value": "none"
+    },
+    "card-texture-blend": {
+      "path": "component.card.texture-blend",
+      "cssName": "card-texture-blend",
+      "type": "string",
+      "value": "overlay"
+    },
+    "card-texture-opacity": {
+      "path": "component.card.texture-opacity",
+      "cssName": "card-texture-opacity",
+      "type": "number",
+      "value": "1"
     },
     "app-accent-agents": {
       "path": "color.accent.agents",
@@ -2800,12 +2800,12 @@
     "breakpoint.desktop": "breakpoint-desktop",
     "breakpoint.mobile": "breakpoint-mobile",
     "breakpoint.tablet": "breakpoint-tablet",
-    "misc.card": "card",
-    "color.card.backdrop-filter": "card-backdrop-filter",
-    "color.card.foreground": "card-foreground",
-    "color.card.texture": "card-texture",
-    "color.card.texture-blend": "card-texture-blend",
-    "color.card.texture-opacity": "card-texture-opacity",
+    "component.card.bg": "card",
+    "component.card.backdrop-filter": "card-backdrop-filter",
+    "component.card.fg": "card-foreground",
+    "component.card.texture": "card-texture",
+    "component.card.texture-blend": "card-texture-blend",
+    "component.card.texture-opacity": "card-texture-opacity",
     "control.frame": "control-frame",
     "control.h-2xs": "control-h-2xs",
     "control.h-lg": "control-h-lg",

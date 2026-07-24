@@ -67,35 +67,6 @@
         "$type": "color"
       }
     },
-    "card": {
-      "backdrop-filter": {
-        "$value": "blur(24px) saturate(180%)",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-backdrop-filter"
-          }
-        },
-        "$type": "string"
-      },
-      "foreground": {
-        "$value": "oklch(0.22 0.02 250)",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-foreground"
-          }
-        },
-        "$type": "color"
-      },
-      "texture": {
-        "$value": "none",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-texture"
-          }
-        },
-        "$type": "string"
-      }
-    },
     "destructive": {
       "default": {
         "$value": "oklch(0.60 0.22 27)",
@@ -560,17 +531,6 @@
       }
     }
   },
-  "misc": {
-    "card": {
-      "$value": "oklch(1 0 0 / 55%)",
-      "$extensions": {
-        "ship": {
-          "cssName": "card"
-        }
-      },
-      "$type": "color"
-    }
-  },
   "motion": {
     "duration": {
       "fast": {
@@ -741,6 +701,46 @@
         }
       },
       "$type": "shadow"
+    }
+  },
+  "component": {
+    "card": {
+      "backdrop-filter": {
+        "$value": "blur(24px) saturate(180%)",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-backdrop-filter"
+          }
+        },
+        "$type": "string"
+      },
+      "texture": {
+        "$value": "none",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-texture"
+          }
+        },
+        "$type": "string"
+      },
+      "fg": {
+        "$value": "oklch(0.22 0.02 250)",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-foreground"
+          }
+        },
+        "$type": "color"
+      },
+      "bg": {
+        "$value": "oklch(1 0 0 / 55%)",
+        "$extensions": {
+          "ship": {
+            "cssName": "card"
+          }
+        },
+        "$type": "color"
+      }
     }
   }
 }

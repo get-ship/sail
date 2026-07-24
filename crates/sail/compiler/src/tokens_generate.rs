@@ -442,15 +442,22 @@ fn load_base_layers(model_dir: &Path) -> Result<(Vec<Layer>, NameIndex, Vec<Toke
             .cloned()
             .ok_or_else(|| anyhow!("no layer JSON files in {}", model_dir.display()))?
     };
-    let base_doc = load_json(&model_dir.join(&base_file))?;
+    let mut base_doc = load_json(&model_dir.join(&base_file))?;
+    // Component token packs live under model/components/*.json and merge into
+    // the base layer (paths like component.card.bg → public cssNames).
+    merge_component_sources(model_dir, &mut base_doc)?;
     let base_tokens_raw = flatten_tokens(&base_doc, &[], None);
     let name_index = build_name_index(&base_tokens_raw);
 
     let mut layers = Vec::new();
     for file in &files {
-        let doc = load_json(&model_dir.join(file))?;
+        let mut doc = load_json(&model_dir.join(file))?;
         let fallback = file.trim_end_matches(".json");
         let meta = layer_meta(&doc, file, fallback);
+        if meta.layer == "base" {
+            // Use the merged base document (includes components/).
+            doc = base_doc.clone();
+        }
         let raw = flatten_tokens(&doc, &[], None);
         let mut tokens = Vec::with_capacity(raw.len());
         for mut t in raw {
@@ -468,6 +475,64 @@ fn load_base_layers(model_dir: &Path) -> Result<(Vec<Layer>, NameIndex, Vec<Toke
         .unwrap_or_default();
 
     Ok((layers, name_index, base_tokens))
+}
+
+/// Deep-merge `model/components/*.json` into the base DTCG document.
+/// Each file may define a `component` group (or any top-level groups).
+fn merge_component_sources(model_dir: &Path, base_doc: &mut Value) -> Result<()> {
+    let components_dir = model_dir.join("components");
+    if !components_dir.is_dir() {
+        return Ok(());
+    }
+    let mut files: Vec<String> = fs::read_dir(&components_dir)
+        .with_context(|| format!("read dir {}", components_dir.display()))?
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_file())
+        .filter_map(|e| e.file_name().into_string().ok())
+        .filter(|f| f.ends_with(".json"))
+        .collect();
+    files.sort();
+    for file in files {
+        let path = components_dir.join(&file);
+        let doc = load_json(&path)?;
+        deep_merge_objects(base_doc, &doc).with_context(|| {
+            format!(
+                "merge component source {} into base",
+                path.display()
+            )
+        })?;
+    }
+    Ok(())
+}
+
+/// Merge `overlay` into `base` for JSON objects (DTCG groups). Non-object
+/// leaves in `overlay` replace. `$`-metadata keys from overlay win when present.
+fn deep_merge_objects(base: &mut Value, overlay: &Value) -> Result<()> {
+    let Some(over_map) = overlay.as_object() else {
+        *base = overlay.clone();
+        return Ok(());
+    };
+    if !base.is_object() {
+        *base = Value::Object(serde_json::Map::new());
+    }
+    let base_map = base
+        .as_object_mut()
+        .ok_or_else(|| anyhow!("base document root must be a JSON object"))?;
+    for (k, v) in over_map {
+        if k.starts_with('$') {
+            base_map.insert(k.clone(), v.clone());
+            continue;
+        }
+        match base_map.get_mut(k) {
+            Some(existing) if existing.is_object() && v.is_object() => {
+                deep_merge_objects(existing, v)?;
+            }
+            _ => {
+                base_map.insert(k.clone(), v.clone());
+            }
+        }
+    }
+    Ok(())
 }
 
 fn load_theme_layers(model_dir: &Path, name_index: &NameIndex) -> Result<Vec<Layer>> {
@@ -894,5 +959,96 @@ mod tests {
             fs::read_to_string(&report.registry_json).unwrap(),
             fs::read_to_string(&again.registry_json).unwrap()
         );
+    }
+
+    #[test]
+    fn component_sources_merge_into_base_with_stable_css_names() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "ship": { "selector": ":root", "layer": "base" } },
+  "color": {
+    "surface": {
+      "1": {
+        "$value": "oklch(0.98 0 0)",
+        "$type": "color",
+        "$extensions": { "ship": { "cssName": "surface-1" } }
+      }
+    },
+    "foreground": {
+      "$value": "oklch(0.2 0 0)",
+      "$type": "color",
+      "$extensions": { "ship": { "cssName": "foreground" } }
+    }
+  }
+}
+"#,
+        );
+        write_file(
+            &model.join("components/card.json"),
+            r#"{
+  "component": {
+    "card": {
+      "bg": {
+        "$value": "{color.surface.1}",
+        "$type": "color",
+        "$extensions": { "ship": { "cssName": "card" } }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": { "ship": { "cssName": "card-foreground" } }
+      }
+    }
+  }
+}
+"#,
+        );
+        write_file(
+            &model.join("themes/glass.json"),
+            r#"{
+  "$extensions": {
+    "ship": {
+      "layer": "theme",
+      "themeId": "glass",
+      "selector": ":root[data-theme='glass']"
+    }
+  },
+  "component": {
+    "card": {
+      "bg": {
+        "$value": "oklch(1 0 0 / 55%)",
+        "$type": "color",
+        "$extensions": { "ship": { "cssName": "card" } }
+      }
+    }
+  }
+}
+"#,
+        );
+
+        let report = generate(&model, &out).unwrap();
+        let tokens_css = fs::read_to_string(&report.tokens_css).unwrap();
+        assert!(
+            tokens_css.contains("--card: var(--surface-1);"),
+            "card defaults through global surface: {tokens_css}"
+        );
+        assert!(tokens_css.contains("--card-foreground: var(--foreground);"));
+
+        let themes_css = fs::read_to_string(&report.themes_css).unwrap();
+        assert!(
+            themes_css.contains("--card: oklch(1 0 0 / 55%);"),
+            "theme overrides component.card only: {themes_css}"
+        );
+
+        let reg: Value =
+            serde_json::from_str(&fs::read_to_string(&report.registry_json).unwrap()).unwrap();
+        assert_eq!(reg["paths"]["component.card.bg"], "card");
+        assert_eq!(reg["paths"]["component.card.fg"], "card-foreground");
+        assert!(reg["paths"].get("color.card.foreground").is_none());
+        assert!(reg["paths"].get("misc.card").is_none());
     }
 }

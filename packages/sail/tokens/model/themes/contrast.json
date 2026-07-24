@@ -67,44 +67,6 @@
         "$type": "color"
       }
     },
-    "card": {
-      "backdrop-filter": {
-        "$value": "none",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-backdrop-filter"
-          }
-        },
-        "$type": "string"
-      },
-      "foreground": {
-        "$value": "oklch(0.99 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-foreground"
-          }
-        },
-        "$type": "color"
-      },
-      "texture": {
-        "$value": "none",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-texture"
-          }
-        },
-        "$type": "string"
-      },
-      "default": {
-        "$value": "oklch(0.12 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "card"
-          }
-        },
-        "$type": "color"
-      }
-    },
     "destructive": {
       "default": {
         "$value": "oklch(0.65 0.24 25)",
@@ -578,17 +540,6 @@
       }
     }
   },
-  "misc": {
-    "card": {
-      "$value": "oklch(0.15 0 0)",
-      "$extensions": {
-        "ship": {
-          "cssName": "card"
-        }
-      },
-      "$type": "color"
-    }
-  },
   "radius": {
     "lg": {
       "$value": "4px",
@@ -728,6 +679,46 @@
         }
       },
       "$type": "shadow"
+    }
+  },
+  "component": {
+    "card": {
+      "backdrop-filter": {
+        "$value": "none",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-backdrop-filter"
+          }
+        },
+        "$type": "string"
+      },
+      "texture": {
+        "$value": "none",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-texture"
+          }
+        },
+        "$type": "string"
+      },
+      "fg": {
+        "$value": "oklch(0.99 0 0)",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-foreground"
+          }
+        },
+        "$type": "color"
+      },
+      "bg": {
+        "$value": "oklch(0.15 0 0)",
+        "$extensions": {
+          "ship": {
+            "cssName": "card"
+          }
+        },
+        "$type": "color"
+      }
     }
   }
 }

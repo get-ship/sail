@@ -161,11 +161,6 @@
   --ring-opacity: 25%;
   --ring: oklch(0.67 0.16 var(--brand-hue, 58)/ 40%);
   --ring-color: var(--primary);
-  --card-backdrop-filter: none;
-  --card-texture: none;
-  --card-texture-blend: overlay;
-  --card-texture-opacity: 1;
-  --card-foreground: oklch(0.147 0.004 49.25);
   --surface-0: oklch(0.97 0.004 80);
   --surface-1: oklch(1 0 0);
   --surface-2: oklch(1 0 0);
@@ -366,13 +361,18 @@
   --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 5%);
   --shadow-inset-ring: inset 0 0 0 1px var(--border), inset 0 1px 0 var(--background);
   --shadow-edge-top: 0 -8px 24px -8px oklch(0 0 0 / 8%), 0 -1px 0 oklch(0 0 0 / 4%);
-  --card: oklch(1 0 0);
   --scrollbar-thumb: color-mix(in oklab, var(--foreground) 22%, transparent);
   --scrollbar-thumb-hover: color-mix(in oklab, var(--foreground) 38%, transparent);
   --scrollbar-track: transparent;
   --scrollbar-width: 10px;
   --scrollbar-width-thin: 6px;
   --scrollbar-radius: 999px;
+  --card: var(--surface-1);
+  --card-foreground: var(--foreground);
+  --card-backdrop-filter: none;
+  --card-texture: none;
+  --card-texture-blend: overlay;
+  --card-texture-opacity: 1;
 }
 
 /* ─── compat aliases (legacy CSS names) ─── */
@@ -577,7 +577,6 @@ body::after {
 .dark {
   --background: oklch(0.16 0.012 250);
   --foreground: oklch(0.98 0.001 106);
-  --card-foreground: oklch(0.98 0.001 106);
   --popover: oklch(0.28 0.020 250);
   --popover-foreground: oklch(0.985 0.001 106.423);
   --surface-0: oklch(0.16 0.012 250);
@@ -626,7 +625,6 @@ body::after {
   --accent-setup: oklch(0.80 0.16 110);
   --accent-overview: oklch(0.74 0.10 230);
   --accent-mesh: oklch(0.76 0.14 195);
-  --card: oklch(0.22 0.016 250);
   --shadow-xs: 0 1px 2px 0 oklch(0.05 0.02 250 / 40%);
   --shadow-sm: 0 1px 3px 0 oklch(0.05 0.02 250 / 45%), 0 1px 2px -1px oklch(0.05 0.02 250 / 30%);
   --shadow-md: 0 4px 14px -2px oklch(0.05 0.03 250 / 50%), 0 2px 6px -2px oklch(0.05 0.02 250 / 35%);
@@ -637,6 +635,8 @@ body::after {
   --shadow-sticky: 0 2px 6px -2px oklch(0.05 0.02 250 / 45%), 0 1px 2px oklch(0.05 0.02 250 / 30%);
   --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 25%);
   --shadow-edge-top: 0 -8px 24px -8px oklch(0.05 0.03 250 / 45%), 0 -1px 0 oklch(1 0 0 / 4%);
+  --card-foreground: oklch(0.98 0.001 106);
+  --card: oklch(0.22 0.016 250);
 }
 
 /* ─── compat aliases under .dark ─── */

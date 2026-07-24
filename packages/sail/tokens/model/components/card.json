@@ -1,0 +1,61 @@
+{
+  "$description": "Card component tokens. Defaults alias global design values; themes may override component.card.* only.",
+  "component": {
+    "card": {
+      "bg": {
+        "$value": "{color.surface.1}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "card"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-foreground"
+          }
+        }
+      },
+      "backdrop-filter": {
+        "$value": "none",
+        "$type": "string",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-backdrop-filter"
+          }
+        }
+      },
+      "texture": {
+        "$value": "none",
+        "$type": "string",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-texture"
+          }
+        }
+      },
+      "texture-blend": {
+        "$value": "overlay",
+        "$type": "string",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-texture-blend"
+          }
+        }
+      },
+      "texture-opacity": {
+        "$value": "1",
+        "$type": "number",
+        "$extensions": {
+          "ship": {
+            "cssName": "card-texture-opacity"
+          }
+        }
+      }
+    }
+  }
+}
