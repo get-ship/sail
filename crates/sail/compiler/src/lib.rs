@@ -50,6 +50,7 @@ pub mod block_manifest;
 pub mod directive_manifest;
 pub mod scope_manifest;
 pub mod grammar_vocabulary;
+pub mod tokens_generate;
 pub(crate) mod scan;
 
 #[cfg(target_arch = "wasm32")]

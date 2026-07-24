@@ -55,6 +55,60 @@ fn cli_builds_a_single_fixture() {
 }
 
 #[test]
+fn cli_tokens_writes_three_artifacts() {
+    let bin = binary_path();
+    if !bin.exists() {
+        eprintln!("binary not built; run `cargo build -p sail-compiler`");
+        return;
+    }
+    let workspace = manifest_dir()
+        .ancestors()
+        .find(|p| p.join("Cargo.toml").exists()
+            && std::fs::read_to_string(p.join("Cargo.toml"))
+                .map(|s| s.contains("[workspace]"))
+                .unwrap_or(false))
+        .expect("workspace root")
+        .to_path_buf();
+    let model = workspace.join("packages/sail/tokens/model");
+    if !model.is_dir() {
+        eprintln!("skip: tokens model missing at {}", model.display());
+        return;
+    }
+    let tmp = tempfile::tempdir().unwrap();
+    let out = tmp.path().join("src");
+    let output = Command::new(&bin)
+        .args(["tokens"])
+        .arg("--model")
+        .arg(&model)
+        .arg("--out")
+        .arg(&out)
+        .output()
+        .expect("invoke sail-compiler tokens");
+    assert!(
+        output.status.success(),
+        "tokens CLI failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(out.join("tokens.css").is_file());
+    assert!(out.join("themes.css").is_file());
+    assert!(out.join("token-registry.json").is_file());
+    let css = std::fs::read_to_string(out.join("tokens.css")).unwrap();
+    assert!(css.contains("GENERATED FILE"));
+    assert!(css.contains("--space-4:"));
+    // Re-run is stable.
+    let again = Command::new(&bin)
+        .args(["tokens", "--model"])
+        .arg(&model)
+        .args(["--out"])
+        .arg(&out)
+        .status()
+        .expect("re-invoke");
+    assert!(again.success());
+    let css2 = std::fs::read_to_string(out.join("tokens.css")).unwrap();
+    assert_eq!(css, css2);
+}
+
+#[test]
 fn cli_renders_diagnostic_with_path() {
     let bin = binary_path();
     if !bin.exists() {

@@ -183,6 +183,19 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// Emit design tokens from the DTCG model (`packages/sail/tokens/model/**`)
+    /// into `tokens.css`, `themes.css`, and `token-registry.json`. Authoritative
+    /// token generate — edit the model, then run this (no Node).
+    Tokens {
+        /// Model directory (DTCG JSON + themes/). Default:
+        /// `packages/sail/tokens/model` relative to the workspace root.
+        #[arg(long)]
+        model: Option<PathBuf>,
+        /// Output directory for the three artifacts. Default:
+        /// `packages/sail/tokens/src` relative to the workspace root.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
 }
 
 #[derive(Clone, Debug, clap::ValueEnum)]
@@ -226,7 +239,40 @@ fn main() -> Result<()> {
         }
         Command::Duplicates { dir, out } => gen_duplicates_report(dir, out),
         Command::Vocabulary { out } => gen_vocabulary(out),
+        Command::Tokens { model, out } => gen_tokens(model, out),
     }
+}
+
+/// DTCG model → tokens.css + themes.css + token-registry.json.
+fn gen_tokens(model: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
+    let root = workspace_root()?;
+    let model_dir = match model {
+        Some(p) => p,
+        None => root.join("packages/sail/tokens/model"),
+    };
+    let out_dir = match out {
+        Some(p) => p,
+        None => root.join("packages/sail/tokens/src"),
+    };
+    let report = sail_compiler::tokens_generate::generate(&model_dir, &out_dir)?;
+    println!(
+        "generate: {} tokens → {}",
+        report.token_count,
+        report.tokens_css.display()
+    );
+    println!(
+        "  themes: {} → {}",
+        report.theme_count,
+        report.themes_css.display()
+    );
+    println!(
+        "  registry: {} (colors: {}; paths: {})",
+        report.registry_json.display(),
+        report.color_count,
+        report.path_count
+    );
+    println!("  layers: {}", report.layers.join(", "));
+    Ok(())
 }
 
 /// Emit the closed grammar vocabulary as JSON. Used by the tree-sitter
