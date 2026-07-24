@@ -1,0 +1,25 @@
+{
+  "$description": "Menu-item component tokens. Defaults alias global design values; themes may override component.menu-item.* only.",
+  "component": {
+    "menu-item": {
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "menu-item-foreground"
+          }
+        }
+      },
+      "hover-bg": {
+        "$value": "{color.muted.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "menu-item-hover-bg"
+          }
+        }
+      }
+    }
+  }
+}

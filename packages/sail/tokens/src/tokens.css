@@ -373,6 +373,35 @@
   --card-texture: none;
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
+  --code-block: var(--surface-1);
+  --code-block-foreground: var(--foreground);
+  --combobox: var(--popover);
+  --combobox-foreground: var(--popover-foreground);
+  --context-menu: var(--background);
+  --context-menu-foreground: var(--foreground);
+  --dropdown: var(--background);
+  --dropdown-foreground: var(--foreground);
+  --error-boundary: var(--tone-destructive-bg);
+  --error-boundary-border: var(--tone-destructive-border);
+  --error-boundary-foreground: var(--foreground);
+  --error-boundary-message-foreground: var(--muted-foreground);
+  --error-boundary-icon: var(--destructive);
+  --error-boundary-retry-bg: var(--surface-1);
+  --error-boundary-retry-foreground: var(--foreground);
+  --menu-item-foreground: var(--foreground);
+  --menu-item-hover-bg: var(--muted);
+  --navbar: var(--background);
+  --navbar-foreground: var(--foreground);
+  --page-foreground: var(--foreground);
+  --page-hover-bg: var(--muted);
+  --page-current-bg: var(--primary);
+  --page-current-foreground: var(--primary-foreground);
+  --prose-foreground: var(--foreground);
+  --theme-picker: var(--popover);
+  --theme-picker-foreground: var(--popover-foreground);
+  --theme-picker-trigger-foreground: var(--foreground);
+  --theme-picker-option-foreground: var(--muted-foreground);
+  --theme-picker-option-hover-bg: var(--hover-bg);
 }
 
 /* ─── compat aliases (legacy CSS names) ─── */

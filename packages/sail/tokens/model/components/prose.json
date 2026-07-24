@@ -1,0 +1,16 @@
+{
+  "$description": "Prose component tokens. Defaults alias global design values; themes may override component.prose.* only.",
+  "component": {
+    "prose": {
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "prose-foreground"
+          }
+        }
+      }
+    }
+  }
+}

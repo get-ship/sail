@@ -505,6 +505,45 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     }
   })
 
+  it('NAV/CHROME/MISC component packs register path → cssName', () => {
+    const reg = loadRegistry()
+    const expected: Array<[path: string, cssName: string]> = [
+      ['component.card.bg', 'card'],
+      ['component.navbar.bg', 'navbar'],
+      ['component.navbar.fg', 'navbar-foreground'],
+      ['component.menu-item.fg', 'menu-item-foreground'],
+      ['component.menu-item.hover-bg', 'menu-item-hover-bg'],
+      ['component.dropdown.bg', 'dropdown'],
+      ['component.dropdown.fg', 'dropdown-foreground'],
+      ['component.context-menu.bg', 'context-menu'],
+      ['component.context-menu.fg', 'context-menu-foreground'],
+      ['component.combobox.bg', 'combobox'],
+      ['component.combobox.fg', 'combobox-foreground'],
+      ['component.page.fg', 'page-foreground'],
+      ['component.page.hover-bg', 'page-hover-bg'],
+      ['component.page.current-bg', 'page-current-bg'],
+      ['component.page.current-fg', 'page-current-foreground'],
+      ['component.prose.fg', 'prose-foreground'],
+      ['component.code-block.bg', 'code-block'],
+      ['component.code-block.fg', 'code-block-foreground'],
+      ['component.theme-picker.bg', 'theme-picker'],
+      ['component.theme-picker.fg', 'theme-picker-foreground'],
+      ['component.error-boundary.bg', 'error-boundary'],
+      ['component.error-boundary.border', 'error-boundary-border'],
+      ['component.error-boundary.fg', 'error-boundary-foreground'],
+    ]
+    for (const [path, cssName] of expected) {
+      expect(reg.paths?.[path], path).toBe(cssName)
+      expect(reg.tokens[cssName]?.path).toBe(path)
+      expect(reg.tokens[cssName]?.cssName).toBe(cssName)
+    }
+    const css = loadSrc('../src/tokens.css')
+    expect(css).toMatch(/--navbar\s*:\s*var\(--background\)/)
+    expect(css).toMatch(/--combobox\s*:\s*var\(--popover\)/)
+    expect(css).toMatch(/--code-block\s*:\s*var\(--surface-1\)/)
+    expect(css).toMatch(/--error-boundary\s*:\s*var\(--tone-destructive-bg\)/)
+  })
+
   it('color surface includes brand + tone tokens and excludes space/text', () => {
     const reg = loadRegistry()
     const colors = new Set(reg.colors)

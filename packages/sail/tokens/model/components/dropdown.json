@@ -1,0 +1,25 @@
+{
+  "$description": "Dropdown component tokens. Defaults alias global design values; themes may override component.dropdown.* only.",
+  "component": {
+    "dropdown": {
+      "bg": {
+        "$value": "{color.background}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "dropdown"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "dropdown-foreground"
+          }
+        }
+      }
+    }
+  }
+}

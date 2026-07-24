@@ -1,0 +1,52 @@
+{
+  "$description": "Theme-picker panel tokens. Defaults alias popover surfaces; themes may override component.theme-picker.* only. Swatch previews keep reading card/background globals intentionally.",
+  "component": {
+    "theme-picker": {
+      "bg": {
+        "$value": "{popover}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "theme-picker"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{popover-foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "theme-picker-foreground"
+          }
+        }
+      },
+      "trigger-fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "theme-picker-trigger-foreground"
+          }
+        }
+      },
+      "option-fg": {
+        "$value": "{color.muted.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "theme-picker-option-foreground"
+          }
+        }
+      },
+      "option-hover-bg": {
+        "$value": "{interaction.hover.bg}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "theme-picker-option-hover-bg"
+          }
+        }
+      }
+    }
+  }
+}

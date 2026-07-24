@@ -1,0 +1,43 @@
+{
+  "$description": "Pagination page control tokens. Defaults alias global design values; themes may override component.page.* only.",
+  "component": {
+    "page": {
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "page-foreground"
+          }
+        }
+      },
+      "hover-bg": {
+        "$value": "{color.muted.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "page-hover-bg"
+          }
+        }
+      },
+      "current-bg": {
+        "$value": "{color.primary.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "page-current-bg"
+          }
+        }
+      },
+      "current-fg": {
+        "$value": "{color.primary.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "page-current-foreground"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "$description": "Error-boundary fallback tokens. Defaults alias destructive tone + foreground; themes may override component.error-boundary.* only.",
+  "component": {
+    "error-boundary": {
+      "bg": {
+        "$value": "{color.tone.destructive.bg}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "error-boundary"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.tone.destructive.border}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "error-boundary-border"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "error-boundary-foreground"
+          }
+        }
+      },
+      "message-fg": {
+        "$value": "{color.muted.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "error-boundary-message-foreground"
+          }
+        }
+      },
+      "icon-fg": {
+        "$value": "{color.destructive.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "error-boundary-icon"
+          }
+        }
+      },
+      "retry-bg": {
+        "$value": "{color.surface.1}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "error-boundary-retry-bg"
+          }
+        }
+      },
+      "retry-fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "error-boundary-retry-foreground"
+          }
+        }
+      }
+    }
+  }
+}

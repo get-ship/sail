@@ -1,0 +1,25 @@
+{
+  "$description": "Combobox listbox tokens. Defaults alias popover surfaces; themes may override component.combobox.* only.",
+  "component": {
+    "combobox": {
+      "bg": {
+        "$value": "{popover}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "combobox"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{popover-foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "combobox-foreground"
+          }
+        }
+      }
+    }
+  }
+}

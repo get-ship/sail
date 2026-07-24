@@ -1,0 +1,25 @@
+{
+  "$description": "Code-block component tokens. Defaults alias global design values; themes may override component.code-block.* only.",
+  "component": {
+    "code-block": {
+      "bg": {
+        "$value": "{color.surface.1}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "code-block"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "code-block-foreground"
+          }
+        }
+      }
+    }
+  }
+}

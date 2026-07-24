@@ -1,0 +1,25 @@
+{
+  "$description": "Context-menu component tokens. Defaults alias global design values; themes may override component.context-menu.* only.",
+  "component": {
+    "context-menu": {
+      "bg": {
+        "$value": "{color.background}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "context-menu"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "context-menu-foreground"
+          }
+        }
+      }
+    }
+  }
+}
