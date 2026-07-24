@@ -50,14 +50,9 @@ export const anchor: Action<AnchorPlacement | undefined> = (node, placement) => 
     placement ?? ((el.getAttribute('placement') as AnchorPlacement) || 'bottom')
 
   // Find the trigger — the element whose popovertarget names this popover.
-  // Two rootings to cover:
-  //   1. Co-rooted (a light-DOM route, or both inside the same shadow tree):
-  //      the trigger shares the popover's root — a plain root query finds it.
-  //   2. Custom element: the panel lives in the host's shadow DOM while the
-  //      trigger is SLOTTED in the host's light DOM. A shadow-root query can't
-  //      cross the slot boundary, so fall through to the host's light DOM.
-  //      (Native popovertarget activation doesn't cross this boundary either —
-  //      the attribute serves purely as the trigger marker for positioning.)
+  // L1 is light DOM: trigger and panel share the document (or page root).
+  // Residual: if a rare foreign-content shadow wrapper hosts the panel, fall
+  // through to that host's light children for the trigger marker.
   const trigger = (): HTMLElement | null => {
     if (!el.id) return null
     const sel = `[popovertarget="${el.id}"]`

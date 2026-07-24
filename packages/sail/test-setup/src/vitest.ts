@@ -122,9 +122,8 @@ function ensureWasm(): (source: string, optsJson: string) => unknown {
 }
 
 /** Compile a `.sail` file to its emitted JS module. Throws on compile error.
- *  Pass `shadow: true` for component sources so the WASM emit matches the
- *  bin/FFI `.compiled.js` shape (which hardcodes shadow DOM) — without it the
- *  WASM/native default is `shadow:false` and `el.shadowRoot` comes back null. */
+ *  Light DOM is the default. Pass `shadow: true` only for residual foreign-
+ *  content containment tests that still attach a shadow root. */
 export function compileSuiToJs(sailPath: string, opts: { shadow?: boolean } = {}): string {
   const compile = ensureWasm()
   const source = readFileSync(sailPath, 'utf8')
@@ -188,10 +187,10 @@ export function pinImportMetaUrlPlugin(name: string): Plugin {
 }
 
 /**
- * Inject `shadow: true` into the component-mode compile opts so an inline
- * test compile matches the production shadow-DOM shape. The bin/FFI compiler
- * that produces `.compiled.js` hardcodes `shadow:true`; the WASM/native
- * default is `shadow:false`. Component mode only — route compiles are untouched.
+ * Residual test helper: inject `shadow: true` into component-mode compile
+ * opts for packages that still exercise foreign-content shadow wrappers.
+ * Light DOM is the Sail product model; prefer tests that query the host.
+ * Component mode only — route compiles are untouched.
  *
  * @param name - Component name used as the plugin name prefix (e.g. `'sail-media'`).
  */
@@ -418,10 +417,10 @@ export function sailSourceLoaderPlugin(): Plugin {
       const sailStem = basename(sail, '.sail')
       // Same component-vs-route classification the main `.sail` branch below
       // uses. Without it every hyphenated component whose `<scope>` declares
-      // `props:`/`variants:` alongside an inline `<controller>` block hits
-      // the route/page rejection (`component_meta` is None, so a route's
-      // "props has no parent to fill it" check fires) — the controller-only
-      // compile call never told the compiler this was a component at all.
+      // `props:` alongside an inline `<controller>` block hits the route/page
+      // rejection (`component_meta` is None, so a route's "props has no parent
+      // to fill it" check fires) — the controller-only compile call never
+      // told the compiler this was a component at all.
       const sailIsComponent = sailStem.includes('-') && sailStem !== 'page' && sailStem !== 'index'
       const out = JSON.parse(
         nativeCompileJson(

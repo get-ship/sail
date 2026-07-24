@@ -52,15 +52,19 @@ pub(super) fn emit_setup_body(
 
     // ── deferred render: `__mount(container)` + optional `hydrate(root, ctx)` ─
     // One shape for both forms. The custom-element adapter calls `__mount(host)`
-    // on connect (`__root = host.shadowRoot ?? host`); a page / internal child
-    // calls it with its container. Always route-shaped so the hydrate buffers
-    // populate (harmless for CSR-island components — `mountComponent` ignores
-    // `hydrate`). The controller lifecycle is wired by `mountComponent` from the
-    // LIFECYCLE_KEY that rides the return, not inline here. Hoists drain into
-    // `w` before the body so the `__wireBoundary_b<N>` consts are in scope.
+    // on connect; a page / internal child calls it with its container. Always
+    // route-shaped so the hydrate buffers populate (harmless for CSR-island
+    // components — `mountComponent` ignores `hydrate`). The controller lifecycle
+    // is wired by `mountComponent` from the LIFECYCLE_KEY that rides the return,
+    // not inline here. Hoists drain into `w` before the body so the
+    // `__wireBoundary_b<N>` consts are in scope.
     let mut emitter = TemplateEmitter::new(bindings, true);
     let mut mount_w = Writer::new();
     mount_w.line("const __cleanups = [];");
+    // Light DOM is the product model: render into `container` (the host or page
+    // mount target). Residual: `container.shadowRoot ?? container` still prefers
+    // an attached shadow root for rare foreign-content containment wrappers
+    // (`shadow: true`) — not taught as L1. Golden fixtures lock this form.
     mount_w.line("const __root = container.shadowRoot ?? container;");
     // The `(--x)` binding: every prop/signal a `sx="…"` read matched gets a
     // CSS `@property` registration (own, unscoped install — see
@@ -69,9 +73,9 @@ pub(super) fn emit_setup_body(
     // same `effect()` that seeds it (an effect's body runs once
     // synchronously at creation, which IS mount time, then again on every
     // write). `__root` is the host: for a registered component `container`
-    // IS the host element (light DOM, no shadow root); for a page/route it's
-    // the mount target, which plays the same "inline custom property host"
-    // role for its subtree's `var(--x)` reads.
+    // IS the host element (light DOM); for a page/route it's the mount target,
+    // which plays the same "inline custom property host" role for its
+    // subtree's `var(--x)` reads.
     if !sx_var_bindings.is_empty() {
         mount_w.push_str(&crate::emit::styles::register_properties_install_js(sx_var_bindings));
         for b in sx_var_bindings {
@@ -84,7 +88,7 @@ pub(super) fn emit_setup_body(
     }
     // Pages install their lifted top-level `<style>` into the container.
     // Registered components install styles via the custom-element adapter
-    // (scoped by `data-component` / the shadow root), so the module skips it.
+    // (scoped by `data-component` / @scope donut), so the module skips it.
     if !is_component {
         let styles_install = crate::emit::styles::styles_install_js(&program.styles, false);
         if !styles_install.is_empty() {

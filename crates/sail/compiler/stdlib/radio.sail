@@ -11,6 +11,6 @@
   }
 </scope>
 
-<label sx="font-body text-sm text-foreground cursor-pointer select-none">
-  <input type="radio" sx="shrink-0 m-0" /><span class="rlabel"><slot></slot></span>
+<label sx="font-family: body font-size: sm color: foreground cursor: pointer select: none">
+  <input type="radio" sx="shrink: 0 m: 0" /><span class="rlabel"><slot></slot></span>
 </label>

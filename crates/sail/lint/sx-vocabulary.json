@@ -1206,6 +1206,56 @@
       ]
     },
     {
+      "name": "tab",
+      "css": [
+        "tab-size"
+      ],
+      "map": {
+        "1": "1",
+        "2": "2",
+        "4": "4",
+        "8": "8"
+      }
+    },
+    {
+      "name": "scrollbar",
+      "css": [
+        "scrollbar-width"
+      ],
+      "map": {
+        "none": "none",
+        "auto": "auto"
+      }
+    },
+    {
+      "atom": "scrollbar-thin",
+      "bare": true,
+      "decls": [
+        [
+          "scrollbar-width",
+          "thin"
+        ],
+        [
+          "scrollbar-color",
+          "var(--sx-scrollbar-thumb, var(--border)) var(--sx-scrollbar-track, transparent)"
+        ]
+      ]
+    },
+    {
+      "name": "scrollbar-thumb",
+      "css": [
+        "--sx-scrollbar-thumb"
+      ],
+      "scale": "color"
+    },
+    {
+      "name": "scrollbar-track",
+      "css": [
+        "--sx-scrollbar-track"
+      ],
+      "scale": "color"
+    },
+    {
       "name": "overflow",
       "css": [
         "overflow"
@@ -1542,6 +1592,26 @@
         [
           "animation",
           "var(--animate-spin)"
+        ]
+      ]
+    },
+    {
+      "bare": true,
+      "atom": "bg-none",
+      "decls": [
+        [
+          "background-image",
+          "none"
+        ]
+      ]
+    },
+    {
+      "bare": true,
+      "atom": "bg-gradient-primary-accent",
+      "decls": [
+        [
+          "background-image",
+          "linear-gradient(135deg, var(--primary), var(--accent))"
         ]
       ]
     },

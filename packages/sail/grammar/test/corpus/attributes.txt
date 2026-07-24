@@ -34,7 +34,7 @@ event attribute with modifiers
     close_tag: (tag_name)))
 
 ==================
-prop attribute
+prop: attribute is refused syntax — must NOT parse as a directive
 ==================
 
 <sail-donut prop:data={rows()}></sail-donut>
@@ -44,8 +44,11 @@ prop attribute
 (source_file
   (element
     tag: (tag_name)
-    (prop_attr
-      name: (attr_local)
+    (dynamic_attr
+      name: (attr_name)
+      (ERROR
+        (UNEXPECTED ':')
+        (identifier))
       value: (brace_expression
         (identifier)))
     close_tag: (tag_name)))
@@ -100,25 +103,7 @@ motion attribute with static preset object
     close_tag: (tag_name)))
 
 ==================
-attr dynamic name
-==================
-
-<x attr:{key}={v}></x>
-
----
-
-(source_file
-  (element
-    tag: (tag_name)
-    (attr_attr
-      name: (brace_expression
-        (identifier))
-      value: (brace_expression
-        (identifier)))
-    close_tag: (tag_name)))
-
-==================
-attr bare name (the common real-world form)
+attr: attribute is refused syntax — must NOT parse as a directive
 ==================
 
 <section attr:hidden={tab() !== 'source'}></section>
@@ -128,8 +113,11 @@ attr bare name (the common real-world form)
 (source_file
   (element
     tag: (tag_name)
-    (attr_attr
-      name: (attr_local)
+    (dynamic_attr
+      name: (attr_name)
+      (ERROR
+        (UNEXPECTED ':')
+        (identifier))
       value: (brace_expression
         (identifier)))
     close_tag: (tag_name)))

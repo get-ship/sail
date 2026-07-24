@@ -7,7 +7,7 @@ use crate::ComponentMeta;
 /// Emit a TAGGED source: the mount-form module bound to a const, then a
 /// `component(tag, def, module)` registration. The runtime registration builds
 /// the observed-attribute schema from `props`, injects `styles` (data-component
-/// scoped, or into the shadow root), wires form-association, and on connect
+/// scoped via `@scope` — light DOM), wires form-association, and on connect
 /// mounts the module via `mountComponent` — the one engine the page /
 /// internal-composition paths also use. Setup/lifecycle live in the module
 /// (via `emit_setup_body` + `mountComponent`), not here.
@@ -24,11 +24,11 @@ pub(super) fn emit_registered_component(
     w.line(&format!("component({}, {{", js_string(&meta.name)));
     w.enter();
     emit_props_object(w, &program.props);
-    // LIGHT DOM (the architecture): the runtime wraps these styles in an
-    // `@scope ([data-component="tag"]) to ([data-component])` donut, so
-    // shadow idioms rewrite — :host → :scope, ::slotted(X) → slot > X.
-    // Shared-rule stripping also applies: the document-level contract
-    // sheets carry those rules once.
+    // LIGHT DOM (the product model): the runtime wraps these styles in an
+    // `@scope ([data-component="tag"]) to ([data-component])` donut. Legacy
+    // author idioms rewrite — :host → :scope / .sail-root, ::slotted(X) →
+    // slot > X. Shared-rule stripping also applies: the document-level
+    // contract sheets carry those rules once.
     let emitted_styles = light_dom_selectors(&strip_shared_rules(&program.styles));
     if !emitted_styles.trim().is_empty() {
         w.line(&format!("styles: {},", js_string(&emitted_styles)));

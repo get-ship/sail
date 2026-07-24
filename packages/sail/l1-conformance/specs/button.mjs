@@ -1,6 +1,6 @@
 // L1 conformance spec: <button> (mechanism-2, native + BUTTON_SKIN_CSS). A bare
-// <button> IS the design-system button; tone/size arrive via the attribute
-// channels, variant surfaces via the skin. The probe asserts per-variant chrome
+// <button> IS the design-system button; tone/size arrive via ordinary
+// attribute-keyed props, variant surfaces via the skin. The probe asserts per-variant chrome
 // resolves (fills aren't transparent, solid text ≠ fill) AND a cross-theme
 // frozen-token guard: the neutral surface must differ light vs dark.
 

@@ -18,8 +18,8 @@ const freshTag = (): string => `light-probe-${++n}`
 const moduleWithTemplate = (html: string): MountModule =>
   ({
     setup: () => ({
-      // Mirrors the compiled module shape: render into the shadow root when
-      // one exists, else into the element (`__root = shadowRoot ?? container`).
+      // Mirrors the compiled module shape: light DOM renders into the host.
+      // Residual: `shadow: true` wrappers use shadowRoot when present.
       __mount: (host: HTMLElement) => {
         const root = host.shadowRoot ?? host
         const tmpl = document.createElement('template')
@@ -63,7 +63,7 @@ describe('light-DOM component registration', () => {
     expect(el.querySelector(':scope > b')).toBeNull()
   })
 
-  it('drops unslotted children when the template has no slots (shadow parity)', () => {
+  it('drops unslotted children when the template has no slots', () => {
     const tag = freshTag()
     component(tag, {}, moduleWithTemplate('<span class="only"></span>'))
     const el = document.createElement(tag)
@@ -110,16 +110,17 @@ describe('light-DOM component registration', () => {
     expect(css).toContain(':disabled')
     expect(css).toContain('forced-colors: active')
     expect(css).toMatch(/:where\(button[^)]*\)[^}]*user-select: none/)
-    // The L1 <button> skin: variant surfaces at zero specificity, channels
-    // with no-attribute fallbacks. Layer invisibility: the same [tone]/[size]
-    // contracts drive a bare <button> and a light L2 component identically.
+    // The L1 <button> skin: variant surfaces at zero specificity, tone/size
+    // props with no-attribute fallbacks. Layer invisibility: the same
+    // [tone]/[size] contracts drive a bare <button> and a light L2 component
+    // identically.
     expect(css).toContain("button[variant='solid']")
     expect(css).toContain("button[variant='soft']")
     expect(css).toMatch(/min-height: var\(--size-h, var\(--control-h-md\)\)/)
     expect(css).toContain('translateY(var(--control-lift))')
   })
 
-  it('shadow: true still attaches a shadow root (the containment feature)', () => {
+  it('shadow: true still attaches a shadow root (residual foreign-content containment)', () => {
     const tag = freshTag()
     component(tag, { shadow: true }, moduleWithTemplate('<span class="inner">x</span>'))
     const el = document.createElement(tag)

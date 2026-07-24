@@ -11,7 +11,7 @@
 //
 // Limitations:
 // - Doesn't preserve `<select>` value across morphs (browser-specific)
-// - Doesn't morph into shadow DOM (use a fresh re-render for those)
+// - Light DOM only (Sail product model); residual shadow wrappers re-render
 // - No content-similarity heuristics — only id and tag+position
 
 /** Options that control which subtrees `morph` will descend into. */

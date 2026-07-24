@@ -259,7 +259,7 @@ fn gen_framework_css(out: Option<PathBuf>) -> Result<()> {
     let banner = "/* GENERATED from the sail-compiler stdlib registry — do not hand-edit.\n \
                   * Regenerate: cargo run -p sail-compiler -- framework-css\n \
                   * L1 element skins: lowered host sx + CVA-in-props attr rules.\n \
-                  * Framework contracts (tone/size channels) ride in contracts.css. */\n";
+                  * Framework contracts (tone/size as attribute-keyed props) ride in contracts.css. */\n";
     // Wrapped in the `sail` cascade layer (matches the runtime contracts) so
     // author CSS (unlayered) overrides element skins by layer order.
     let body = format!("{banner}@layer sail {{\n{}}}\n", sail_compiler::stdlib::skins_css());
@@ -452,13 +452,37 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
 
     // ACTIONS — the `use:` registry, straight from action_manifest::ACTIONS
     // (already sorted, already carries a prose `summary` per entry).
+    // `public` marks the curated app-author surface (PUBLIC_ACTION_NAMES).
     let actions: Vec<serde_json::Value> = sail_compiler::action_manifest::ACTIONS
         .iter()
-        .map(|a| serde_json::json!({ "name": a.name, "param": a.param, "summary": a.summary }))
+        .map(|a| {
+            serde_json::json!({
+                "name": a.name,
+                "param": a.param,
+                "summary": a.summary,
+                "public": sail_compiler::action_manifest::is_public_action(a.name),
+            })
+        })
         .collect();
-    sf.push_str("export interface ActionDoc {\n  name: string\n  param: string\n  summary: string\n}\n\n");
+    let public_actions: Vec<serde_json::Value> = sail_compiler::action_manifest::public_actions()
+        .map(|a| {
+            serde_json::json!({
+                "name": a.name,
+                "param": a.param,
+                "summary": a.summary,
+                "public": true,
+            })
+        })
+        .collect();
+    sf.push_str(
+        "export interface ActionDoc {\n  name: string\n  param: string\n  summary: string\n  public: boolean\n}\n\n",
+    );
     sf.push_str("export const ACTIONS: ActionDoc[] = ");
     sf.push_str(&serde_json::to_string_pretty(&actions)?);
+    sf.push_str("\n\n");
+    sf.push_str("/** Curated app-author `use:` surface (subset of ACTIONS). */\n");
+    sf.push_str("export const PUBLIC_ACTIONS: ActionDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&public_actions)?);
     sf.push_str("\n\n");
 
     // CONTROLLER — the ambient runtime vocabulary a `<controller>` block may
@@ -622,7 +646,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(md, "## The hard rules (every policy)\n");
     let _ = writeln!(
         md,
-        "- NO `<style>` blocks, NO `style=` attributes — ever. Visuals flow through\n  tokens, props, and the surfaces listed below.\n- NO raw values anywhere (no px, no hex): spend a token.\n- Layout is elements, not CSS: `<row>`, `<column>`, `<grid>`, `<center>`,\n  `<stack>` with `gap`/`align`/`justify`/`cols` attributes. `cols` (and `rows`)\n  is a fixed track count (1..=12) on `<grid>`; `cols` takes precedence over\n  `min` when both are present. `<row nowrap>` is the single-line row (rows wrap\n  by default). Unrecognized attributes on a layout keyword are a compile error —\n  the language won't silently drop them.\n- Behavior is unrestricted TypeScript in `<controller>` — the restraint is\n  visual, never logical.\n- Components declare their static surface in `<scope>` — TypeScript field\n  syntax, types and literal values only: `props: {{ label = 'Default';\n  tone = 'default'; kind: 'a' | 'b' = 'a' }}`. `tone`/`size` are the framework\n  channels. Styling tables live in `props` as CVA key→sx maps\n  (`variant: {{ solid: 'bg-tone …' }}` — first key = default). There is no\n  separate `variants:` block. If it computes, it goes in `<controller>`.\n"
+        "- NO `<style>` blocks, NO `style=` attributes — ever. Visuals flow through\n  tokens, props, and the surfaces listed below.\n- NO raw values anywhere (no px, no hex): spend a token.\n- Layout is elements, not CSS: `<row>`, `<column>`, `<grid>`, `<center>`,\n  `<stack>` with `gap`/`align`/`justify`/`cols` attributes. `cols` (and `rows`)\n  is a fixed track count (1..=12) on `<grid>`; `cols` takes precedence over\n  `min` when both are present. `<row nowrap>` is the single-line row (rows wrap\n  by default). Unrecognized attributes on a layout keyword are a compile error —\n  the language won't silently drop them.\n- Behavior is unrestricted TypeScript in `<controller>` — the restraint is\n  visual, never logical.\n- Components declare their static surface in `<scope>` — TypeScript field\n  syntax, types and literal values only: `props: {{ label = 'Default';\n  tone = 'default'; kind: 'a' | 'b' = 'a' }}`. `tone`/`size` are ordinary\n  props (shared stdlib unions by convention — CVA axes). Styling tables live\n  in `props` as CVA key→sx maps (`variant: {{ solid: 'bg-tone …' }}` — first\n  key = default) + optional `compound:`. If it computes, it goes in\n  `<controller>`.\n"
     );
     if effective.sx {
         // LEAD WITH WHAT WE ARE NOT. The agent's Tailwind prior is right
@@ -675,16 +699,10 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         );
     }
     if effective.variants {
-        // This section used to teach a top-level `variants: { … }` field in the
-        // component block. That field is RETIRED — the compiler rejects it outright
-        // ("unknown `<component>` field `variants`") — so the skill was instructing
-        // agents to write code that cannot compile. It was hardcoded prose rather
-        // than generated from a table, which is exactly how it rotted while the rest
-        // of this file stayed honest.
         let _ = writeln!(md, "## variants — a prop whose values are sx tables\n");
         let _ = writeln!(
             md,
-            "A variant IS A PROP. Declare it inside `props`, with the value being the\nvariant->sx table; the prop's type is the union of the keys (first = default),\nand it reflects to an attribute so CSS can key on it:\n\n```\n<component>{{\n  props: {{\n    variant: {{ solid: 'bg-tone text-tone-fg', soft: 'bg-tone-bg', outline: 'border-tone' }},\n    tone: 'default' | 'primary' | 'destructive',\n  }},\n}}</component>\n```\n\nValues are sx lists and take the same state prefixes\n(`solid: 'bg-tone hover:bg-tone-bg-hover'`). `compound` (a sibling field of `props`)\nkeys rules on COMBINATIONS of variant values.\n\nThere is no separate `variants:` block. One declaration surface: `props`.\n"
+            "A variant IS A PROP. Declare it inside `props`, with the value being the\nvariant->sx table; the prop's type is the union of the keys (first = default),\nand it reflects to an attribute so CSS can key on it:\n\n```\n<component>{{\n  props: {{\n    variant: {{ solid: 'bg-tone text-tone-fg', soft: 'bg-tone-bg', outline: 'border-tone' }},\n    tone: 'default' | 'primary' | 'destructive',\n  }},\n}}</component>\n```\n\nValues are sx lists and take the same state prefixes\n(`solid: 'bg-tone hover:bg-tone-bg-hover'`). `compound` (a sibling field of `props`)\nkeys rules on COMBINATIONS of variant values. One declaration surface: `props`.\n"
         );
     }
     if !effective.raw_containers {
@@ -849,6 +867,21 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            is why anyone can write one. Call it in the `<controller>`, and the signals it\n  \
            returns are ordinary scope members the template binds to.\n"
     );
+    // Curated public `use:` surface — only these 12 are taught to app authors.
+    // Stdlib may use additional internal stamps not listed here (auto-imported
+    // from `@ship/sail-runtime/actions`).
+    let _ = writeln!(md, "### Public `use:` actions (app-author surface)\n");
+    let _ = writeln!(
+        md,
+        "These are the built-in actions the package API and this skill teach.\n\
+         Attach with `use:<name>` / `use:<name>={{param}}` — the compiler auto-imports them.\n\
+         **Stdlib may use additional internal stamps not listed here**; app authors should\n\
+         stick to this set (or their own `import {{ myAction }} from './…'`).\n"
+    );
+    for a in sail_compiler::action_manifest::public_actions() {
+        let _ = writeln!(md, "- `use:{}` — {}", a.name, a.summary);
+    }
+    let _ = writeln!(md);
     let _ = writeln!(md, "## State + imports\n");
     let _ = writeln!(
         md,
@@ -874,7 +907,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         md,
         "ONE RULE: **scope owns props, the controller owns state** — there is no state block\nin scope; state is code, not a declaration table. `style:` is gone; a `style:` use\nrefuses with a diagnostic that teaches this.\n\n\
          `sx` reads runtime values through `(--name)` (camelCase → kebab, e.g. a prop or\nsignal named `rowY` reads as `(--row-y)`): `translate-y-(--row-y)`, `bg-(--hue)`. When\n`(--name)` matches a declared prop or a value `setup()` returns via `signal(...)`, the\ncompiler registers a typed CSS `@property` (a `number` gets `syntax: '<number>'`, so a\nCSS transition on it tweens natively, no JS) and reflects the value onto the host as an\ninline custom property, kept live automatically — no action, no manual `effect`. A name\nnever read via `(--x)` gets no wiring; an unmatched name is a compile error with a\ndid-you-mean.\n\n\
-         Runtime GEOMETRY (a virtualizer offset, a drag position — not a prop, not scope\nstate) stays on `use:` actions: a named, typed action\n(`use:virtualRow`, `use:eventSpan`, `use:rect`, `use:zoomPan`, `use:swatch`, …) writes\nits own fixed custom property; sx reads it the same way, `(--name)`. `el.style` stays\nclosed — actions gain no styling powers beyond the one property they own.\n"
+         Runtime GEOMETRY (a virtualizer offset, a drag position — not a prop, not scope\nstate) stays on `use:` actions: a named, typed action\n(`use:virtualRow`, `use:rect`, `use:zoomPan`, …) writes\nits own fixed custom property; sx reads it the same way, `(--name)`. `el.style` stays\nclosed — actions gain no styling powers beyond the one property they own.\n"
     );
     // L1 ELEMENTS — the language's first-class surface. Listed
     // verbatim from the same manifest the consistency test enforces

@@ -15,8 +15,10 @@ use crate::lower::Lowered;
 
 /// Built-in `use:` actions shipped by the runtime. When a `use:` directive
 /// names one of these (a bare identifier), the compiler auto-imports it from
-/// `@ship/sail-runtime` so it resolves as an ESM binding — no controller
-/// import, no `$scope.` lookup.
+/// `@ship/sail-runtime/actions` so it resolves as an ESM binding — no
+/// controller import, no `$scope.` lookup. The full table is imported
+/// (public + internal); only the public subset is re-exported from the
+/// runtime front door.
 ///
 /// This is the same slice as
 /// `crate::action_manifest::BUILTIN_ACTION_NAMES` — the table is the
@@ -101,6 +103,9 @@ pub fn collect_attr_imports(
             // binding rather than an undefined `$scope.` lookup. Non-builtin
             // actions (a hook handle or a controller-imported fn) resolve
             // from scope and need no import.
+            // Recorded on `runtime_imports`; the imports emitter splits
+            // action symbols onto `@ship/sail-runtime/actions` so
+            // internal stamps resolve without the front-door export.
             if let Some(&builtin) = BUILTIN_ACTIONS.iter().find(|&&b| b == action.trim()) {
                 out.runtime_imports.insert(builtin);
             }

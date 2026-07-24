@@ -64,7 +64,7 @@ suite is green and the build is warning-free.
 - **Status:** by-design — add `role`/`tabindex`/keydown at the use site, or
   slot a real `<button>`/`<a>`.
 
-### `<icon>` has no tone channel
+### `<icon>` has no tone prop paint
 - **What:** L1 `<icon>` inks via `currentColor` only. Per-tone icon color
   needs a tones sheet shared across stdlib elements, which the stdlib compiler
   can't emit yet.

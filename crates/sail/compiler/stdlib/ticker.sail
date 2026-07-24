@@ -10,8 +10,8 @@
   }
 </scope>
 
-<div sx="overflow-hidden">
-  <row nowrap class="track" use:marquee sx="w-max">
+<div sx="overflow: hidden">
+  <row nowrap class="track" use:marquee sx="w: max">
     <span class="segment"><slot></slot></span>
     <span class="segment" aria-hidden="true"><slot></slot></span>
   </row>

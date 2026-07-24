@@ -1,24 +1,24 @@
 //! Compile-time CSS rule stripping.
 //!
-//! R3 (bundle-perf): rules that exist verbatim in `@ship/sail-runtime`'s
-//! `sailBaseSheet` are duplicated across nearly every shadow component's
-//! `<style>` block. The runtime adopts `sailBaseSheet` into every shadow
-//! root, so the per-component copies are dead weight in the bundle.
+//! R3 (bundle-perf): rules that exist verbatim in residual `sailBaseSheet`
+//! (opt-in shadow containment via `adoptSuiSheets` — not the L1 product model)
+//! may still appear in component `<style>` blocks. Those copies are dead weight
+//! when BASE is already adopted. Light-DOM L1 paint uses document contracts +
+//! `@scope` donuts, not this path.
 //!
-//! This module recognises the exact author-form text of those rules and
-//! removes them from the `styles:` string before emit. Conservative by
-//! design — only literal-form matches are stripped; anything with
-//! different whitespace, ordering, or extra declarations is left alone
-//! so authors keep control of edge cases.
+//! This module recognises the exact author-form text of those residual rules
+//! and removes them from the `styles:` string before emit. Conservative by
+//! design — only literal-form matches are stripped; anything with different
+//! whitespace, ordering, or extra declarations is left alone so authors keep
+//! control of edge cases.
 //!
 //! See `packages/sail/runtime/src/styles/index.ts` (`BASE_CSS`) for the
-//! source-of-truth list of rules adopted at runtime; the patterns
-//! below must mirror that set.
+//! residual list; the patterns below must mirror that set.
 //!
 //! Patterns currently stripped (all variants tolerate inner whitespace
 //! and an optional trailing semicolon):
 //!
-//! - `:host([hidden]) { display: none; }`
+//! - `:host([hidden]) { display: none; }` (residual shadow base only)
 //! - `:host([hidden]) { display: none !important; }`
 //! - `@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }`
 //!   (single-line, single inner rule with `*` selector)

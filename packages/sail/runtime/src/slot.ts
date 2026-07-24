@@ -1,8 +1,8 @@
 // Light-DOM slot resolution.
 //
-// ship-set components use light DOM (no shadow root). Native <slot> elements
-// don't distribute children in light DOM, so the runtime walks the
-// host's children and places them at slot anchors at hydrate time.
+// Sail components use light DOM. Native <slot> distribution is shadow-only,
+// so the runtime walks the host's children and places them at slot anchors
+// at hydrate time.
 //
 // See .artifacts/specs/ship-set/03-runtime-architecture.md § Slots.
 

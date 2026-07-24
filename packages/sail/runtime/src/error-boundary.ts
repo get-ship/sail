@@ -64,10 +64,10 @@ export function detachBoundary(host: HTMLElement): void {
 
 /**
  * Walk up the DOM from `node` until the nearest element carrying a
- * `BoundaryHandle` is found, or the root is reached. Traverses shadow
- * roots: when the walk reaches a `ShadowRoot`, it continues from the
- * host element so a `<sail-error-boundary>` outside the shadow tree
- * still catches inner throws.
+ * `BoundaryHandle` is found, or the root is reached. L1 is light DOM.
+ * Residual: when the walk hits a `ShadowRoot` (foreign-content wrapper),
+ * continues from the host so a boundary outside that tree still catches
+ * inner throws.
  *
  * @param node Any node (element, text, comment) inside the subtree
  *   being protected. Typically a binding anchor or a custom-element

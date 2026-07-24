@@ -1,35 +1,5 @@
 [
   {
-    "type": "attr_attr",
-    "named": true,
-    "fields": {
-      "name": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "attr_local",
-            "named": true
-          },
-          {
-            "type": "brace_expression",
-            "named": true
-          }
-        ]
-      },
-      "value": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "brace_expression",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "type": "attr_local",
     "named": true,
     "fields": {}
@@ -280,10 +250,6 @@
       "required": false,
       "types": [
         {
-          "type": "attr_attr",
-          "named": true
-        },
-        {
           "type": "bind_attr",
           "named": true
         },
@@ -325,10 +291,6 @@
         },
         {
           "type": "motion_attr",
-          "named": true
-        },
-        {
-          "type": "prop_attr",
           "named": true
         },
         {
@@ -826,32 +788,6 @@
     }
   },
   {
-    "type": "prop_attr",
-    "named": true,
-    "fields": {
-      "name": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "attr_local",
-            "named": true
-          }
-        ]
-      },
-      "value": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "brace_expression",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "type": "source_file",
     "named": true,
     "root": true,
@@ -1123,10 +1059,6 @@
     "named": false
   },
   {
-    "type": "attr:",
-    "named": false
-  },
-  {
     "type": "bind:",
     "named": false
   },
@@ -1152,10 +1084,6 @@
   },
   {
     "type": "on:",
-    "named": false
-  },
-  {
-    "type": "prop:",
     "named": false
   },
   {

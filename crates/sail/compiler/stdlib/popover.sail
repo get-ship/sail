@@ -12,4 +12,4 @@
   }
 </scope>
 
-<div popover use:anchor sx="fixed inset-auto m-0 left-(--anchor-left) top-(--anchor-top) min-w-(--menu-min-w) p-3 text-foreground bg-background border border-border rounded-md shadow-md z-(--z-popover)"><slot></slot></div>
+<div popover use:anchor sx="fixed inset: auto m: 0 left: (--anchor-left) top: (--anchor-top) min-w: (--menu-min-w) p: 3 color: foreground bg: background border border: border rounded: md shadow: md z: (--z-popover)"><slot></slot></div>

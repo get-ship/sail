@@ -24,4 +24,4 @@
   }
 </scope>
 
-<column gap="2" sx="font-body" use:radioGroup role="radiogroup"><slot></slot></column>
+<column gap="2" sx="font-family: body" use:radioGroup role="radiogroup"><slot></slot></column>

@@ -38,14 +38,14 @@
   }
 </scope>
 
-<div use:combobox sx="block relative font-body">
-  <input class="input" type="text" sx="w-full">
+<div use:combobox sx="block relative font-family: body">
+  <input class="input" type="text" sx="w: full">
   <div
     class="listbox"
     popover
     use:anchor
     placement="bottom-start"
-    sx="fixed inset-auto m-0 left-(--anchor-left) top-(--anchor-top) min-w-(--anchor-width) max-h-panel-max-h-sm overflow-y-auto overscroll-contain p-1 text-popover-foreground bg-popover border border-border rounded-md shadow-lg z-(--z-popover)"
+    sx="fixed inset: auto m: 0 left: (--anchor-left) top: (--anchor-top) min-w: (--anchor-width) max-h: panel-max-h-sm overflow-y: auto overscroll: contain p: 1 color: popover-foreground bg: popover border border: border rounded: md shadow: lg z: (--z-popover)"
   >
     <slot></slot>
   </div>

@@ -1,30 +1,77 @@
 //! The shared design-token registry — the **single source** both the
 //! `sail-css-token` lint and the `sx` vocabulary read from.
 //!
-//! There is exactly one source of truth for design-token *names*: the canonical
-//! token CSS at `packages/sail/tokens/src/tokens.css`. This module parses the
-//! `--name:` custom-property declarations out of it directly — no hand-mirrored
-//! JSON, so the registry can never drift from the CSS (the drift that made
-//! `sx="text-3xl"` wrongly fail). `themes.css` only *overrides* these names, so
-//! parsing `tokens.css` alone captures every global token.
+//! There is exactly one source of truth for design-token *definitions*: the
+//! grouped DTCG model at `packages/sail/tokens/model/` (plus
+//! `model/themes/*.json`). A generate step emits:
+//!   - `packages/sail/tokens/src/tokens.css` (web delivery)
+//!   - `packages/sail/tokens/src/themes.css` (theme overrides)
+//!   - `packages/sail/tokens/src/token-registry.json` (this registry)
 //!
-//! Token names are stored WITHOUT the `--` prefix (e.g. `"space-4"`,
-//! `"text-3xl"`). `sx`'s allowed spacing/text/radius values are *derived* from
-//! this registry (filtered by prefix), so adding `--text-3xl` to the token CSS
-//! makes `sx="text-3xl"` legal automatically.
+//! Lint reads the **generated registry**, not a CSS scrape. Hand-edit of
+//! generated CSS is not SSOT; edit the model and re-run `pnpm --filter
+//! @ship/tokens generate`.
+//!
+//! Token **css names** are stored WITHOUT the `--` prefix (e.g. `"space-4"`,
+//! `"text-3xl"`). Grouped DTCG paths (e.g. `space.4`) are recorded on each
+//! registry entry as `path` for tooling / J2. `sx`'s allowed spacing/text/radius
+//! values are *derived* from this registry (filtered by css-name prefix), so
+//! adding a token to the DTCG model (and regenerating) makes `sx="text-3xl"`
+//! legal automatically.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 
-/// The canonical token definitions. This is the ONE source — no mirror file.
-const TOKENS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/tokens.css");
+use serde::Deserialize;
+
+/// Generated registry artifact (DTCG emit). Path is relative to this crate.
+const TOKEN_REGISTRY_JSON: &str =
+    include_str!("../../../../packages/sail/tokens/src/token-registry.json");
+
+#[derive(Debug, Deserialize)]
+struct RegistryFile {
+    /// Public CSS custom-property names (no `--` prefix). Includes legacy
+    /// aliases dual-emitted for PE stability (e.g. `app-accent-*`).
+    names: Vec<String>,
+    colors: Vec<String>,
+    /// Optional full map — present for value-aware tests / tooling.
+    /// Keyed by cssName.
+    #[serde(default)]
+    tokens: HashMap<String, TokenMeta>,
+    /// path → cssName (canonical tokens only). Present from registry v2.
+    #[serde(default)]
+    paths: HashMap<String, String>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+struct TokenMeta {
+    /// DTCG `$type` (color, dimension, …). Retained for tooling; name
+    /// membership and the `colors` array are what lint scales use today.
+    #[serde(default)]
+    #[allow(dead_code)]
+    r#type: String,
+    #[serde(default)]
+    value: String,
+    /// Grouped DTCG path (e.g. `space.4`, `color.primary.default`).
+    #[serde(default)]
+    #[allow(dead_code)]
+    path: String,
+    /// Public CSS name without `--` (same as the map key for canonical entries).
+    #[serde(default, rename = "cssName")]
+    #[allow(dead_code)]
+    css_name: String,
+    /// When set, this entry is a legacy alias of another cssName.
+    #[serde(default, rename = "aliasOf")]
+    #[allow(dead_code)]
+    alias_of: String,
+}
 
 /// Contextual custom properties that are legitimate in component `var(--x)`
 /// references but are **not** global design tokens, so they carry no value in
-/// `tokens.css:root` and cannot be parsed from it. They are set per-context
-/// (at runtime, by a parent primitive, or inside a component's own shadow) —
+/// the DTCG base layer and are not in the generated registry. They are set
+/// per-context (at runtime, by a parent primitive, or inside a component) —
 /// a curated lint allowlist, not the token system. Keep this list tight;
-/// anything with a global value belongs in `tokens.css`, not here.
+/// anything with a global value belongs in the DTCG model, not here.
 ///
 /// Public so the LSP shares the exact same list (it completes these too) —
 /// one definition, no cross-crate drift.
@@ -68,21 +115,28 @@ pub const CONVENTION_TOKENS: &[&str] = &[
     "autosize-h",                                        // use:autosize
 ];
 
-/// Every valid design-token name (no `--` prefix): the custom-property
-/// declarations parsed from `tokens.css`, plus the [`CONVENTION_TOKENS`]
-/// allowlist. Parsed once.
+fn registry_file() -> &'static RegistryFile {
+    static CACHE: OnceLock<RegistryFile> = OnceLock::new();
+    CACHE.get_or_init(|| {
+        serde_json::from_str(TOKEN_REGISTRY_JSON)
+            .unwrap_or_else(|e| panic!("token-registry.json parse failed: {e}"))
+    })
+}
+
+/// Every valid design-token name (no `--` prefix): names from the generated
+/// registry, plus the [`CONVENTION_TOKENS`] allowlist. Loaded once.
 pub fn registry() -> &'static HashSet<&'static str> {
     static CACHE: OnceLock<HashSet<&'static str>> = OnceLock::new();
     CACHE.get_or_init(|| {
+        let file = registry_file();
         let mut out: HashSet<&'static str> = CONVENTION_TOKENS.iter().copied().collect();
-        // A custom-property *declaration* is `--name: …`. A `var(--name)` usage
-        // is `--name)` (no following `:`), so keying on the colon skips usages.
-        for line in TOKENS_CSS.lines() {
-            let Some(rest) = line.trim_start().strip_prefix("--") else { continue };
-            let Some(colon) = rest.find(':') else { continue };
-            let name = rest[..colon].trim_end();
-            if !name.is_empty() && name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') {
-                out.insert(&*Box::leak(name.to_owned().into_boxed_str()));
+        for name in &file.names {
+            if !name.is_empty()
+                && name
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+            {
+                out.insert(Box::leak(name.clone().into_boxed_str()));
             }
         }
         out
@@ -120,47 +174,22 @@ pub fn text_values() -> &'static [&'static str] {
 }
 
 /// Every token whose VALUE is a color — the surface `sx`'s `bg`/`fg`/`border`
-/// draw from. Found by parsing `tokens.css`: a color is an `oklch`/`rgb`/`hsl`/
-/// hex/`color-mix` literal, or a `var(--X)` alias resolving to one. Derived, so a
-/// new tone channel or surface is usable in sx the moment it lands in the CSS —
-/// no hand-maintained color list to drift (the flaw that dropped `bg:success-bg`).
+/// draw from. Taken from the generated registry's `colors` list (DTCG `$type:
+/// color` + alias resolution at generate time). Derived, so a new tone channel
+/// or surface is usable in sx the moment it lands in the model and is
+/// regenerated — no hand-maintained color list to drift.
 pub fn color_values() -> &'static [&'static str] {
     static C: OnceLock<Vec<&'static str>> = OnceLock::new();
     C.get_or_init(|| {
-        // (name, value) for every custom-property declaration.
-        let decls: Vec<(&'static str, &'static str)> = TOKENS_CSS
-            .lines()
-            .filter_map(|line| {
-                let rest = line.trim_start().strip_prefix("--")?;
-                let colon = rest.find(':')?;
-                let name = rest[..colon].trim_end();
-                if name.is_empty() || !name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') {
-                    return None;
-                }
-                Some((name, rest[colon + 1..].trim()))
-            })
-            .collect();
-        let is_literal = |v: &str| {
-            v.starts_with("oklch")
-                || v.starts_with("rgb")
-                || v.starts_with("hsl")
-                || v.starts_with('#')
-                || v.starts_with("color-mix")
-        };
-        let mut colors: HashSet<&'static str> =
-            decls.iter().filter(|(_, v)| is_literal(v)).map(|(n, _)| *n).collect();
-        // Resolve `var(--X)` aliases to a known color — a few rounds for chains.
-        for _ in 0..4 {
-            for (n, v) in &decls {
-                if colors.contains(n) {
-                    continue;
-                }
-                if let Some(inner) = v.strip_prefix("var(--") {
-                    let refname = inner.split([',', ')']).next().unwrap_or("").trim();
-                    if colors.contains(refname) {
-                        colors.insert(n);
-                    }
-                }
+        let file = registry_file();
+        let mut colors: HashSet<&'static str> = HashSet::new();
+        for name in &file.colors {
+            if !name.is_empty()
+                && name
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+            {
+                colors.insert(Box::leak(name.clone().into_boxed_str()));
             }
         }
         // The universal framework tone channels. sailTonesSheet sets these on
@@ -194,7 +223,7 @@ pub fn color_values() -> &'static [&'static str] {
 /// Dimensional size tokens the sx `w`/`h`/`min-*`/`max-*` props draw from — the
 /// icon, control-height, and panel-clamp families that the primitives now depend
 /// on. The value IS the token name (`max-h:panel-max-h-md` → `var(--panel-max-h-md)`),
-/// so a new size family is usable in sx the moment it lands in `tokens.css`.
+/// so a new size family is usable in sx the moment it lands in the model.
 pub fn size_values() -> &'static [&'static str] {
     static C: OnceLock<Vec<&'static str>> = OnceLock::new();
     C.get_or_init(|| {
@@ -232,6 +261,49 @@ pub fn radius_values() -> &'static [&'static str] {
     })
 }
 
+/// Resolve a DTCG path (`space.4`, `color.primary.default`) to the public
+/// cssName (`space-4`, `primary`). Registry v2 `paths` map; falls back to
+/// kebab of the path when the map is absent (flat registries).
+pub fn path_to_css_name(path: &str) -> Option<&'static str> {
+    static MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+    let map = MAP.get_or_init(|| {
+        let file = registry_file();
+        let mut m = HashMap::new();
+        for (path, css) in &file.paths {
+            let k: &'static str = Box::leak(path.clone().into_boxed_str());
+            let v: &'static str = Box::leak(css.clone().into_boxed_str());
+            m.insert(k, v);
+        }
+        // Also index TokenMeta.path when present.
+        for (css_name, meta) in &file.tokens {
+            if !meta.path.is_empty() {
+                let k: &'static str = Box::leak(meta.path.clone().into_boxed_str());
+                let v: &'static str = Box::leak(css_name.clone().into_boxed_str());
+                m.entry(k).or_insert(v);
+            }
+        }
+        m
+    });
+    map.get(path).copied()
+}
+
+/// Look up a token's generated CSS value (base layer). Used by tests that pin
+/// scale alignment (e.g. Tailwind space ramp). Returns `None` if unknown.
+pub fn token_value(name: &str) -> Option<&'static str> {
+    static MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+    let map = MAP.get_or_init(|| {
+        let file = registry_file();
+        let mut m = HashMap::new();
+        for (k, meta) in &file.tokens {
+            let key: &'static str = Box::leak(k.clone().into_boxed_str());
+            let val: &'static str = Box::leak(meta.value.clone().into_boxed_str());
+            m.insert(key, val);
+        }
+        m
+    });
+    map.get(name).copied()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -254,7 +326,7 @@ mod tests {
         }
         // The ramp above 8 was added in job-E-space-ramp: an agent reaching
         // for a 48px thumb or a 180px canvas can now SPEND a token (and
-        // sx accepts those names because the lint parses the CSS).
+        // sx accepts those names because the lint reads the registry).
         for n in ["12", "16", "24", "32", "48", "64"] {
             assert!(
                 s.contains(&n),
@@ -276,37 +348,26 @@ mod tests {
 
     #[test]
     fn space_lower_aligns_with_tailwind() {
-        // The ramp carries our tokens as a private var() — sx spends them,
-        // not numbers — so the lower() check is whether the value at the
-        // right name is the right thing. 7/8 were silently divergent from
-        // Tailwind's prior (32/40 vs 28/32); this pins the alignment.
-        let tokens = include_str!("../../../../packages/sail/tokens/src/tokens.css");
+        // Values come from the generated registry (DTCG model), not a CSS scrape.
         for (name, want_px) in [("7", "28px"), ("8", "32px")] {
-            let decl = format!("--space-{name}:");
-            let got = tokens
-                .lines()
-                .find_map(|l| l.trim().strip_prefix(&decl))
-                .unwrap_or_default()
-                .trim()
-                .trim_end_matches(';')
-                .trim();
+            let got = token_value(&format!("space-{name}")).unwrap_or("");
             assert_eq!(got, want_px, "--space-{name} drifted from Tailwind");
         }
-        // The full Tailwind-aligned space ramp, lower()'d to its var and the
-        // var itself resolved from tokens.css — both must agree, end to end.
+        // The full Tailwind-aligned space ramp.
         for (n, want_px) in [
-            ("1", "4px"), ("4", "16px"), ("6", "24px"), ("7", "28px"),
-            ("8", "32px"), ("10", "40px"), ("12", "48px"), ("16", "64px"),
-            ("24", "96px"), ("48", "192px"), ("64", "256px"),
+            ("1", "4px"),
+            ("4", "16px"),
+            ("6", "24px"),
+            ("7", "28px"),
+            ("8", "32px"),
+            ("10", "40px"),
+            ("12", "48px"),
+            ("16", "64px"),
+            ("24", "96px"),
+            ("48", "192px"),
+            ("64", "256px"),
         ] {
-            let decl = format!("--space-{n}:");
-            let got = tokens
-                .lines()
-                .find_map(|l| l.trim().strip_prefix(&decl))
-                .unwrap_or_default()
-                .trim()
-                .trim_end_matches(';')
-                .trim();
+            let got = token_value(&format!("space-{n}")).unwrap_or("");
             assert_eq!(got, want_px, "--space-{n} drifted from Tailwind ({want_px})");
         }
     }
@@ -316,16 +377,22 @@ mod tests {
         let r = radius_values();
         assert!(r.contains(&"none"));
         assert!(r.contains(&"full") && r.contains(&"lg"));
-        assert!(!r.contains(&"xs"), "radius `xs` was a phantom — not in tokens.css");
+        assert!(!r.contains(&"xs"), "radius `xs` was a phantom — not in token registry");
     }
 
     #[test]
     fn color_values_derive_the_full_surface_not_a_curated_list() {
         let c = color_values();
-        // base palette + tonal channels + surfaces — all value-derived from CSS
+        // base palette + tonal channels + surfaces — all from registry colors
         for want in [
-            "primary", "foreground", "success", "surface-1", "muted-foreground",
-            "tone-success-bg", "tone-primary-fg", "accent-foreground",
+            "primary",
+            "foreground",
+            "success",
+            "surface-1",
+            "muted-foreground",
+            "tone-success-bg",
+            "tone-primary-fg",
+            "accent-foreground",
         ] {
             assert!(c.contains(&want), "color surface missing `{want}`");
         }
@@ -337,13 +404,50 @@ mod tests {
     #[test]
     fn parses_global_tokens_and_keeps_conventions() {
         let reg = registry();
-        // parsed straight from tokens.css
-        assert!(reg.contains("primary"), "brand token from tokens.css");
-        assert!(reg.contains("surface-1"), "semantic surface from tokens.css");
+        // from generated registry
+        assert!(reg.contains("primary"), "brand token from registry");
+        assert!(reg.contains("surface-1"), "semantic surface from registry");
         assert!(reg.contains("space-4") && reg.contains("text-2xl"));
         // curated convention allowlist (no global value, must still be accepted)
         assert!(reg.contains("tone-bg") && reg.contains("sail-tooltip-anchor"));
         // a var() *usage* inside a value must never be mistaken for a declaration
         assert!(!reg.contains("foreground)"), "var() usages must not leak in");
+    }
+
+    #[test]
+    fn registry_json_is_non_empty_and_matches_name_set() {
+        let file = registry_file();
+        assert!(file.names.len() > 100, "expected full token set, got {}", file.names.len());
+        assert!(!file.colors.is_empty());
+        let reg = registry();
+        for name in &file.names {
+            assert!(reg.contains(name.as_str()), "registry missing {name}");
+        }
+    }
+
+    #[test]
+    fn registry_entries_carry_dtcg_paths() {
+        let file = registry_file();
+        // Canonical space/primary tokens must expose path + cssName for J2.
+        let space = file
+            .tokens
+            .get("space-4")
+            .expect("space-4 in tokens map");
+        assert_eq!(space.path, "space.4", "space-4 path");
+        assert!(
+            space.css_name.is_empty() || space.css_name == "space-4",
+            "cssName should be space-4 or omitted, got {}",
+            space.css_name
+        );
+        let primary = file.tokens.get("primary").expect("primary in tokens map");
+        assert!(
+            primary.path.starts_with("color."),
+            "primary should live under color.* path, got {}",
+            primary.path
+        );
+        // path index (v2) maps path → cssName
+        if !file.paths.is_empty() {
+            assert_eq!(file.paths.get("space.4").map(String::as_str), Some("space-4"));
+        }
     }
 }

@@ -1,16 +1,15 @@
-// Light-DOM slot projection — the compiler-managed replacement for native
-// <slot> assignment (which only exists inside shadow roots). A light
-// component's original children are captured at connect, the template
+// Light-DOM slot projection — Sail's compiler-managed slotting (native
+// <slot> distribution is a shadow-only browser feature; L1 does not use it).
+// A component's original children are captured at connect, the template
 // renders, then each captured node moves INTO its <slot> element, which
 // stays in the tree as a display:contents wrapper (the light contracts
 // sheet carries `slot { display: contents }`).
 //
-// Semantics mirrored from shadow slotting:
+// Semantics:
 //   - a node with slot="name" goes to <slot name="name">
 //   - nodes without a slot attribute (elements and non-empty text) go to
 //     the default <slot>
-//   - nodes with no matching slot are removed (unslotted content does not
-//     render in shadow DOM either)
+//   - nodes with no matching slot are removed (unslotted content does not render)
 //   - slot fallback content is dropped when anything is assigned, kept
 //     when nothing is
 //

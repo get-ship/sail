@@ -68,13 +68,6 @@ fn parse_line(line: &str) -> Option<TsDiag> {
     })
 }
 
-/// Type-check a `variants:` table against the declared
-/// `props:` — REAL TS validates the table's group keys are declared props and
-/// its value keys are members of that prop's union (catches `variant: { sold }`,
-/// a typo'd group like `varient`, a value outside the union). The sx *strings*
-/// are the sx lint's job; this owns the *shape* — killing the hand-parse's
-/// silent shadowing. Returns tsgo diagnostics (empty = clean); `Ok(vec![])` when
-
 /// Type-check the synthetic controller + render pair for an SFC `source`: emit
 /// the pair (composing the inline `<controller>` block), write them alongside a
 /// tsconfig whose `paths` map `@ship/sail-runtime` / `@ship/sail-dom` to the real

@@ -279,7 +279,7 @@ const RESKINS: &[ReskinRow] = &[
         tag: "a",
         selectors: &[":where(a[variant])"],
         attributes: &[("variant", &VARIANT_BTN)],
-        description: "Anchor — when `variant` is set, becomes a button link. Tone rides the global [tone] channel; hover shifts the fill toward the tone.",
+        description: "Anchor — when `variant` is set, becomes a button link. Tone is an ordinary [tone] prop (attribute-keyed contract tokens); hover shifts the fill toward the tone.",
     },
     ReskinRow {
         tag: "button",
@@ -290,7 +290,7 @@ const RESKINS: &[ReskinRow] = &[
             ("tone", &TONE_8),
             ("disabled", &EMPTY),
         ],
-        description: "Button — bare `<button>` IS the design system's button. tone/size ride the framework channels; variant chooses default/solid/soft/outline/ghost.",
+        description: "Button — bare `<button>` IS the design system's button. tone/size are ordinary props (attribute-keyed contract tokens); variant chooses default/solid/soft/outline/ghost.",
     },
     ReskinRow {
         tag: "details",
@@ -440,7 +440,7 @@ const RESKINS: &[ReskinRow] = &[
             ("shape", &SHAPE_4),
             ("pulse", &EMPTY),
         ],
-        description: "Status dot (`<span dot>`) and skeleton placeholder (`<span skeleton>`). tone rides the global channel; pulse animates the dot.",
+        description: "Status dot (`<span dot>`) and skeleton placeholder (`<span skeleton>`). tone is an ordinary [tone] prop; pulse animates the dot.",
     },
     ReskinRow {
         tag: "summary",

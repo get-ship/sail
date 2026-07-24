@@ -4,4 +4,4 @@
 -->
 <scope>
 </scope>
-<div sx="block font-body text-foreground leading-normal-plus"><slot></slot></div>
+<div sx="block font-family: body color: foreground leading: normal-plus"><slot></slot></div>

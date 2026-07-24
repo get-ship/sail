@@ -31,7 +31,7 @@ conformance smoke: full live surface in one document
         <span slot="title">No agents yet</span>
       </ship-empty-state>
     {:else}
-      <div class="agents-grid" data-view-enter data-test="grid" attr:hidden={items().length === 0}>
+      <div class="agents-grid" data-view-enter data-test="grid" hidden={items().length === 0}>
         {#for a of items() key={a.id}}
           <ship-list-tile variant="card" navigable={'/agents/' + a.id} use:hoverCard>
             <span class="agents-card-letter">{a.letter}</span>
@@ -189,8 +189,8 @@ conformance smoke: full live surface in one document
             (static_attr
               name: (attr_name)
               value: (string_literal))
-            (attr_attr
-              name: (attr_local)
+            (dynamic_attr
+              name: (attr_name)
               value: (brace_expression
                 (identifier)))
             (for_block

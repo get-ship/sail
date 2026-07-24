@@ -21,8 +21,10 @@
     host sx=         — base type/border/cursor + PE defaults (solid, size md)
                        for attr-absent (defaults are not stamped on structure)
     CVA-in-props     — variant + size maps (first key = default = PE)
-    global [tone]    — channel reads only (contracts write --tone*)
+    compound         — selected+muted combination
     contracts        — shared removable anatomy dismiss control
+  Variance = CVA-in-props axes + optional compound only. tone/size/variant are
+  ordinary props (axes or unions), not language channels.
   No residual chip matrix. No L1 controller.
 -->
 
@@ -31,24 +33,24 @@
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
     // first key = default = PE solid
     variant: {
-      solid: 'bg-tone text-tone-contrast border-tone shadow-xs',
+      solid: 'bg: tone color: tone-contrast border: tone shadow: xs',
       // shadow-none: host PE solid base carries shadow-xs — non-solid must clear it
-      soft: 'bg-tone-bg text-tone-fg border-tone-border shadow-none hover:bg-muted hover:border-tone',
-      outline: 'bg-transparent text-tone-fg border-tone shadow-none hover:bg-tone-bg',
-      ghost: 'bg-transparent text-tone-fg border-transparent shadow-none hover:bg-tone-bg',
+      soft: 'bg: tone-bg color: tone-fg border: tone-border shadow: none hover:bg: muted hover:border: tone',
+      outline: 'bg: transparent color: tone-fg border: tone shadow: none hover:bg: tone-bg',
+      ghost: 'bg: transparent color: tone-fg border: transparent shadow: none hover:bg: tone-bg',
     }
     // first key = default = PE md
     size: {
-      md: 'min-h-control-h-xs px-2_5 text-sm',
-      sm: 'min-h-control-h-2xs px-2 text-xs',
-      lg: 'min-h-control-h-md px-3 text-base',
+      md: 'min-h: control-h-xs px: 2_5 font-size: sm',
+      sm: 'min-h: control-h-2xs px: 2 font-size: xs',
+      lg: 'min-h: control-h-md px: 3 font-size: base',
     }
     selected = false
     removable = false
     disabled = false
   }
   compound: [
-    { when: { selected: true, tone: 'muted' }, sx: 'bg-primary text-primary-foreground border-primary' },
+    { when: { selected: true, tone: 'muted' }, sx: 'bg: primary color: primary-foreground border: primary' },
   ]
 </scope>
 
@@ -60,7 +62,7 @@
   use:pressable
   use:pressed
   use:dismissible
-  sx="font-body font-medium leading-none align-middle whitespace-nowrap cursor-pointer select-none tap-highlight-none rounded-full border min-h-control-h-xs px-2_5 text-sm bg-tone text-tone-contrast border-tone shadow-xs transition-colors duration-fast ease-out pressed:bg-tone pressed:text-tone-contrast pressed:border-tone pressed:font-semibold pressed:shadow-xs disabled:cursor-not-allowed disabled:bg-muted disabled:border-border-subtle disabled:text-muted-foreground disabled:saturate-65 disabled:shadow-none focus:outline-solid focus:outline-2 focus:outline-ring focus:outline-offset-2"
+  sx="font-family: body font-weight: medium leading: none align: middle whitespace: nowrap cursor: pointer select: none tap-highlight: none rounded: full border min-h: control-h-xs px: 2_5 font-size: sm bg: tone color: tone-contrast border: tone shadow: xs transition: colors duration: fast ease: out pressed:bg: tone pressed:color: tone-contrast pressed:border: tone pressed:font-weight: semibold pressed:shadow: xs disabled:cursor: not-allowed disabled:bg: muted disabled:border: border-subtle disabled:color: muted-foreground disabled:saturate: 65 disabled:shadow: none focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: 2"
 >
   <span class="leading" sx="contents">
     <slot name="leading"></slot>
@@ -72,9 +74,9 @@
     anatomy
     aria-label="Remove"
     tabindex="-1"
-    sx="size-icon-size-md shrink-0 p-0 border-0 bg-transparent text-current cursor-pointer rounded-full transition-colors duration-fast ease-out"
+    sx="size: icon-size-md shrink: 0 p: 0 border: 0 bg: transparent color: currentColor cursor: pointer rounded: full transition: colors duration: fast ease: out"
   >
-    <svg viewBox="0 0 10 10" aria-hidden="true" sx="block size-full stroke-current fill-none" stroke-width="1.75" stroke-linecap="round">
+    <svg viewBox="0 0 10 10" aria-hidden="true" sx="block size: full stroke: currentColor fill: none" stroke-width="1.75" stroke-linecap="round">
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>

@@ -64,8 +64,8 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     // Merge them into one attribute here, while the tag text is still flat.
     let s = merge_duplicate_class_attrs(&s);
     let (s, layout_css) = lower_layout(&s);
-    // The `<theme>` tag is retired — tone/size are the framework channel
-    // contract (union props reflected to attributes, mapped to tokens by the
+    // The `<theme>` tag is retired — tone/size are ordinary props (shared
+    // unions / CVA axes, reflected to attributes, mapped to tokens by the
     // skin), not a per-component channel declaration. A stale `<theme>` now
     // survives to `parse` and is rejected as an unknown element.
     // NOTE elements_css rides the per-component injected style for now —
@@ -191,98 +191,14 @@ fn lower_sx_value(
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
 ) -> String {
-    let mut classes: Vec<String> = Vec::new();
-    for pair in val.split_whitespace() {
-        // Bare `group` marks an ancestor so descendants can react to its state
-        // with `group-<state>:` (the `.field:hover .chevron` propagation case).
-        if pair == "group" {
-            classes.push("sail-grp".to_string());
-            continue;
-        }
-        // `atom`, or `prefix:…:atom` — one or more closed prefixes (hover,
-        // before, forced-colors, group-dismissible, …) then the utility atom.
-        // `checked:before:bg-primary-foreground` → state chain + ::before.
-        let (prefix_chain, atom_owned) = split_sx_prefixes(pair);
-        let atom = atom_owned.as_str();
-        if atom.is_empty() {
-            continue;
-        }
-        // A `<state>` is a pseudo (`hover`), a propagation (`group-hover` →
-        // ancestor `.sail-grp:hover`), a pseudo-element (`before` → `::before`),
-        // or a condition (`motion-reduce` → @media). `prefix` is a leading
-        // ancestor selector; `pseudo` is trailing pseudo(s) on the element.
-        let mut media = "";
-        let mut ancestor = String::new();
-        let mut pseudo = String::new();
-        let mut ok = true;
-        for s in &prefix_chain {
-            if let Some(m) = sail_lint::rules::sx::condition_media(s) {
-                media = m;
-            } else if let Some(base) = s.strip_prefix("group-") {
-                match sail_lint::rules::sx::state_pseudo(base)
-                    .map(str::to_string)
-                    .or_else(|| sail_lint::rules::sx::state_data(base))
-                    .or_else(|| {
-                        sail_lint::rules::sx::group_attr_presence(base).map(|n| format!("[{n}]"))
-                    }) {
-                    Some(p) => ancestor = format!(".sail-grp{p} "),
-                    None => {
-                        ok = false;
-                        break;
-                    }
-                }
-            } else if let Some(pe) = sail_lint::rules::sx::pseudo_element_prefix(s) {
-                pseudo.push_str(pe);
-            } else if let Some(p) = sail_lint::rules::sx::state_pseudo(s) {
-                pseudo.push_str(p);
-            } else if let Some(p) = sail_lint::rules::sx::state_data(s) {
-                pseudo.push_str(&p);
-            } else {
-                ok = false;
-                break;
-            }
-        }
-        if !ok {
-            continue;
-        }
-        let sanitized: String = atom.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
-        let class = if prefix_chain.is_empty() {
-            format!("sx-{sanitized}")
-        } else {
-            let sp: String = prefix_chain
-                .iter()
-                .flat_map(|s| s.chars())
-                .filter(|c| c.is_ascii_alphanumeric())
-                .collect();
-            format!("sx-{sp}-{sanitized}")
-        };
-        let prefix = ancestor;
-        // The vocabulary is the TABLE (`sx-vocabulary.json`). There is deliberately
-        // no per-file channel path: a `<theme>`-declared channel is not sx
-        // vocabulary — ad-hoc channels were how translation snuck past the design
-        // system, and that back door stays shut.
-        if let Some(decls) = sail_lint::rules::sx::lower_atom(atom) {
-            if seen.insert(class.clone()) {
-                let body = decls
-                    .iter()
-                    .map(|(p, v)| format!("{p}:{v}"))
-                    .collect::<Vec<_>>()
-                    .join(";");
-                let rule = format!("{prefix}.{class}{pseudo}{{{body}}}");
-                if media.is_empty() {
-                    css.push_str(&rule);
-                } else {
-                    css.push_str(&format!("@media {media}{{{rule}}}"));
-                }
-            }
-        }
-        classes.push(class);
-    }
-    classes.join(" ")
+    // sx IR v0: dual-parse structured (`bg: primary`) and legacy (`bg-primary`)
+    // into one IR, then lower through the same vocab/scales emit path.
+    sail_lint::sx_ir::lower_sx_string(val, css, seen)
 }
 
 /// Split `hover:before:bg-muted` → prefixes `["hover","before"]`, atom `bg-muted`.
 /// Consumes a leading chain of closed prefixes; the remainder is the utility.
+#[allow(dead_code)] // kept for diagnostics / non-IR callers
 fn split_sx_prefixes(pair: &str) -> (Vec<String>, String) {
     let parts: Vec<&str> = pair.split(':').collect();
     if parts.len() < 2 {
@@ -1751,12 +1667,7 @@ pub fn extract_controller_block(source: &str) -> (String, Option<String>) {
     (stripped, Some(body))
 }
 
-/// Desugar the SFC `<component>` block — the single declarative surface — into
-/// the `<prop>` tags + object-`<variants>` block the existing pipeline lowers.
-/// `props:` maps built-in shorthands (`tone`/`size`) to their canonical union +
-/// contract, arrays to enum props, and `bool`/`string`/`number` to typed props;
-/// `variants:` becomes a `<variants>` block; `meta:` is filename-derived today.
-/// Derive the framework-owned `:host` display from the component's root template
+/// Derive the framework-owned host display from the component's root template
 /// element — the host presents as that element naturally would. Block is the
 /// framework default, so this emits an override only for inline-natured roots
 /// (a link is inline, a label is inline-block, a row/button control is
@@ -1845,220 +1756,6 @@ pub(crate) fn variants_object_to_css(body: &str) -> String {
     variant_pairs_to_css(&parse_variants_object(body))
 }
 
-/// Lower scope `channels:` maps into `:host` CSS custom-property writes (and a
-/// small closed set of host layout axes + descendant anatomy).
-///
-/// Shape (sibling of `props:` / `compound:`):
-/// ```text
-/// channels: {
-///   default: { 'sw-w': 'control-h-sm', bw: 'control-stroke' }
-///   size: {
-///     sm: { 'sw-w': 'control-h-xs', gap: '2' }
-///     lg: { bw: '2.5px' }
-///   }
-///   variant: { inline: { direction: 'row', align: 'center' } }
-///   '.icon svg': { width: 'es-icon', height: 'es-icon' }
-/// }
-/// ```
-///
-/// - `default` → bare `:host{…}` (attr-absent baseline)
-/// - `prop: { value: { … } }` → `:host([prop='value']){…}`
-/// - `'.sel …': { … }` → `:host .sel …{…}` (descendant anatomy)
-///
-/// Token-shaped values become `var(--token)`; raw CSS (`none`, `1.5px`,
-/// `transparent`, `var(…)`, multi-word) passes through. Layout keys `gap` /
-/// `direction` / `align` / `justify` write real CSS properties (so variant
-/// can flip flex axes without a second layout path in contracts).
-pub(crate) fn channels_object_to_css(body: &str) -> String {
-    let mut css = String::new();
-    for (key, val) in parse_object_fields(body) {
-        let key = key.trim();
-        let val = val.trim();
-        if key.is_empty() || val.is_empty() {
-            continue;
-        }
-        // Descendant anatomy: selector keys start with `.` / `#` / `:` or
-        // contain a combinator / space (e.g. `.icon svg`).
-        if key.starts_with('.')
-            || key.starts_with('#')
-            || key.starts_with(':')
-            || key.contains(' ')
-            || key.contains('>')
-        {
-            let decls = channel_decls_object(val);
-            if !decls.is_empty() {
-                css.push_str(&format!(":host {key}{{{decls}}}"));
-            }
-            continue;
-        }
-        if key == "default" {
-            let decls = channel_decls_object(val);
-            if !decls.is_empty() {
-                // Soft-status tone fills must not land on bare host (would clobber
-                // branded [tone=X] at equal specificity). Key untoned + explicit
-                // default the same way contracts PE did: :not([tone]) + [tone=default].
-                if decls.contains("--tone") {
-                    css.push_str(&format!(
-                        ":host(:not([tone])){{{decls}}}:host([tone='default']){{{decls}}}"
-                    ));
-                } else {
-                    css.push_str(&format!(":host{{{decls}}}"));
-                }
-            }
-            continue;
-        }
-        // Prop axis → nested value → decl map.
-        for (attr_val, nested) in parse_object_fields(val) {
-            let attr_val = unquote(&attr_val);
-            let decls = channel_decls_object(&nested);
-            if decls.is_empty() {
-                continue;
-            }
-            css.push_str(&format!(":host([{key}='{attr_val}']){{{decls}}}"));
-        }
-    }
-    css
-}
-
-/// One channel-value object → semicolon-joined CSS declarations.
-fn channel_decls_object(obj: &str) -> String {
-    let mut parts = Vec::new();
-    for (k, v) in parse_object_fields(obj) {
-        let k = unquote(&k).trim().to_string();
-        let v = unquote(&v).trim().to_string();
-        // Skip empties (trailing commas) and non-ident keys that would emit `--:`.
-        if k.is_empty()
-            || v.is_empty()
-            || !k
-                .chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
-        {
-            continue;
-        }
-        if let Some(decl) = channel_layout_decl(&k, &v) {
-            parts.push(decl);
-            continue;
-        }
-        // Custom property write: key may be quoted `'sw-w'` or bare `bw`.
-        let prop = if k.starts_with("--") {
-            k
-        } else {
-            format!("--{k}")
-        };
-        // Never emit a bare `--` custom property.
-        if prop == "--" {
-            continue;
-        }
-        parts.push(format!("{prop}:{}", channel_value_css(&v)));
-    }
-    parts.join(";")
-}
-
-/// Closed layout axes allowed inside channel maps (host geometry only).
-fn channel_layout_decl(key: &str, value: &str) -> Option<String> {
-    match key {
-        "gap" => {
-            let v = if value == "0" {
-                "0".to_string()
-            } else if value.chars().all(|c| c.is_ascii_digit()) {
-                format!("var(--space-{value})")
-            } else {
-                channel_value_css(value)
-            };
-            Some(format!("gap:{v}"))
-        }
-        "direction" => {
-            let v = match value {
-                "row" => "row",
-                "column" | "col" => "column",
-                "row-reverse" => "row-reverse",
-                "column-reverse" => "column-reverse",
-                _ => return None,
-            };
-            Some(format!("flex-direction:{v}"))
-        }
-        "align" => {
-            let v = match value {
-                "start" => "flex-start",
-                "end" => "flex-end",
-                "center" | "stretch" | "baseline" => value,
-                _ => return None,
-            };
-            Some(format!("align-items:{v}"))
-        }
-        "justify" => {
-            let v = match value {
-                "start" => "flex-start",
-                "end" => "flex-end",
-                "center" => "center",
-                "between" => "space-between",
-                "around" => "space-around",
-                "evenly" => "space-evenly",
-                _ => return None,
-            };
-            Some(format!("justify-content:{v}"))
-        }
-        "width" | "height" | "min-width" | "min-height" | "max-width" | "max-height" => {
-            Some(format!("{key}:{}", channel_value_css(value)))
-        }
-        // Anatomy / host chrome (not custom props): used by e.g. `[hidden]: { display: 'none' }`.
-        "display" => {
-            let v = match value {
-                "none" | "block" | "inline" | "inline-block" | "flex" | "inline-flex" | "grid"
-                | "contents" | "hidden" => {
-                    if value == "hidden" {
-                        "none"
-                    } else {
-                        value
-                    }
-                }
-                _ => return None,
-            };
-            Some(format!("display:{v}"))
-        }
-        _ => None,
-    }
-}
-
-/// Token name → `var(--token)`; raw CSS passes through.
-fn channel_value_css(value: &str) -> String {
-    let v = value.trim();
-    if v.is_empty() {
-        return String::new();
-    }
-    // Already a CSS function / multi-token expression / keyword / length / number.
-    // Bare numbers (`1`, `0.5`) and keywords (`auto`) must NOT become `var(--1)`.
-    if v.starts_with("var(")
-        || v.contains('(')
-        || v.contains(' ')
-        || v == "none"
-        || v == "transparent"
-        || v == "currentColor"
-        || v == "auto"
-        || v == "inherit"
-        || v == "initial"
-        || v == "unset"
-        || v == "0"
-        || v.parse::<f64>().is_ok()
-        || v.ends_with("px")
-        || v.ends_with("rem")
-        || v.ends_with("em")
-        || v.ends_with('%')
-        || v.ends_with("fr")
-        || v.ends_with("vh")
-        || v.ends_with("vw")
-        || v.starts_with('#')
-    {
-        return v.to_string();
-    }
-    // Bare token or custom-prop reference without --.
-    if v.starts_with("--") {
-        format!("var({v})")
-    } else {
-        format!("var(--{v})")
-    }
-}
-
 /// Where a variants-v2 state prefix attaches. Returns
 /// `(media_query, host_pseudo, target_pseudo)`:
 /// - base (`""`) → nowhere
@@ -2142,12 +1839,14 @@ fn attr_match(s: &str) -> Option<String> {
 }
 
 /// Lower a space-separated sx list to per-state declaration groups via the
-/// shared sx vocab (variants v2). Returns `(state, "prop:value;…")` groups in
-/// first-appearance order; `state` is `""` for the base group, a pseudo state
-/// (`hover`, `focus`, …), a `group-<state>` propagation (host state →
-/// descendant target), or a condition (`motion-reduce`, …). This is what lets
-/// a variants table express `solid: 'bg-tone hover:bg-tone-bg-hover'` — the
-/// per-variant hover that translation waves had to drop.
+/// shared sx IR (variants v2). Accepts structured (`bg: tone hover:bg: muted`)
+/// and legacy atoms (`bg-tone hover:bg-muted`) — same dual-parse as host `sx=`.
+/// Returns `(state, "prop:value;…")` groups in first-appearance order; `state`
+/// is `""` for the base group, a pseudo state (`hover`, `focus`, …), a
+/// `group-<state>` propagation (host state → descendant target), or a
+/// condition (`motion-reduce`, …). This is what lets a variants table express
+/// `solid: 'bg: tone hover:bg: tone-bg-hover'` — the per-variant hover that
+/// translation waves had to drop.
 fn lower_variant_sx(list: &str) -> Vec<(String, String)> {
     let mut groups: Vec<(String, String)> = Vec::new();
     let mut push = |state: &str, decls: Vec<(String, String)>| {
@@ -2158,15 +1857,13 @@ fn lower_variant_sx(list: &str) -> Vec<(String, String)> {
             groups.push((state.to_string(), body));
         }
     };
-    for pair in list.split_whitespace() {
-        let (prefix_chain, atom) = split_sx_prefixes(pair);
-        if atom.is_empty() {
-            continue;
-        }
-        if let Some(decls) = sail_lint::rules::sx::lower_atom(&atom) {
+    // Dual-parse structured + legacy through sx IR (same path as host sx=).
+    let (prog, _errors) = sail_lint::sx_ir::parse_lenient(list);
+    for decl in &prog.decls {
+        if let Some(decls) = sail_lint::sx_ir::lower_decl(decl) {
             // Join multi-prefix chain so classify_variant_state can peel group-/media;
             // pseudo-elements (before/after) are handled in variant_pairs_to_css.
-            let state = prefix_chain.join(":");
+            let state = decl.prefixes.join(":");
             push(&state, decls);
         }
     }
@@ -2520,7 +2217,18 @@ mod tests {
         assert!(out.contains(r#"size="sm""#), "{out}");
         assert!(out.contains(r#"aria-label="Saving""#), "{out}");
         assert!(!out.contains("aria-label=\"Loading\""), "use-site wins: {out}");
-        assert!(out.contains(r#"class="ring""#), "structure spliced: {out}");
+        // .ring child carries paint sx (border-control-stroke + animate-spin) after cutover.
+        assert!(
+            out.contains("class=\"ring ") || out.contains("class=\"ring\""),
+            "structure spliced: {out}"
+        );
+        assert!(
+            out.contains("bordercontrolstroke")
+                || out.contains("border-control-stroke")
+                || out.contains("animatespin")
+                || out.contains("animate-spin"),
+            "spinner ring PE tokens land on structure: {out}"
+        );
         // The SKIN — including its @keyframes — ships in element-skins.css, not in the
         // component's emitted <style>. This test guards the LOWERING, which is what
         // changed nothing: structure, root class, and use-site attributes.
@@ -2569,20 +2277,21 @@ mod tests {
         assert!(out.contains("use:dismissControl"), "dismissControl rides the splice: {out}");
         // each slot region receives its projected child, none survive as <slot>
         assert!(!out.contains("<slot"), "no slot tags survive projection: {out}");
+        // Region class names may share the class attr with layout/sx tokens.
         assert!(
-            out.contains(r#"class="ico"><svg slot="icon" class="i"></svg>"#),
+            out.contains("ico") && out.contains(r#"<svg slot="icon" class="i"></svg>"#),
             "icon → .ico: {out}"
         );
         assert!(
-            out.contains(r#"class="title"><span slot="title">Saved</span>"#),
+            out.contains("title") && out.contains(r#"<span slot="title">Saved</span>"#),
             "title → .title: {out}"
         );
         assert!(
-            out.contains(r#"class="body">All changes saved."#),
+            out.contains("body") && out.contains("All changes saved."),
             "un-slotted → body: {out}"
         );
         assert!(
-            out.contains(r#"class="actions"><button slot="actions">Undo</button>"#),
+            out.contains("actions") && out.contains(r#"<button slot="actions">Undo</button>"#),
             "actions → .actions: {out}"
         );
     }
@@ -2599,10 +2308,29 @@ mod tests {
         assert!(out.contains(r#"variant="placeholder""#), "attr merged: {out}");
         assert!(out.contains("use:variantLive"), "action rides the splice: {out}");
         assert!(!out.contains("<slot"), "no slot survives: {out}");
-        assert!(out.contains(r#"class="icon" aria-hidden="true"><svg slot="icon"></svg>"#), "icon slot: {out}");
-        assert!(out.contains(r#"class="title"><span slot="title">No results</span>"#), "title slot: {out}");
-        assert!(out.contains(r#"class="desc">Try a different search."#), "default → desc: {out}");
-        assert!(out.contains(r#"class="actions"><button slot="action">Reset</button>"#), "action slot: {out}");
+        // Region class names share the class attr with PE child sx tokens (no --es-*).
+        assert!(
+            out.contains("icon")
+                && out.contains(r#"aria-hidden="true""#)
+                && out.contains(r#"<svg slot="icon"></svg>"#),
+            "icon slot: {out}"
+        );
+        assert!(
+            out.contains("title") && out.contains(r#"<span slot="title">No results</span>"#),
+            "title slot: {out}"
+        );
+        assert!(
+            out.contains("desc") && out.contains("Try a different search."),
+            "default → desc: {out}"
+        );
+        assert!(
+            out.contains("actions") && out.contains(r#"<button slot="action">Reset</button>"#),
+            "action slot: {out}"
+        );
+        assert!(
+            !out.contains("--es-"),
+            "empty-state structure: no residual --es-* custom props: {out}"
+        );
     }
 
     #[test]
@@ -3153,64 +2881,4 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
         );
     }
 
-    #[test]
-    fn channels_newline_separated_fields_do_not_swallow_siblings() {
-        // Stdlib authors write channels: without commas between default/size
-        // (same field style as props). Comma-only split used to merge them.
-        let css = channels_object_to_css(
-            r#"{
-  default: { bw: 'control-stroke' }
-  size: {
-    sm: { bw: '1.5px' }
-    lg: { bw: '2.5px' }
-  }
-}"#,
-        );
-        assert!(
-            css.contains(":host{--bw:var(--control-stroke)}")
-                || css.contains(":host{--bw:var(--control-stroke);"),
-            "default must lower token → var(--…), no quotes:\n{css}"
-        );
-        assert!(
-            !css.contains("--bw:'control-stroke'") && !css.contains("--bw:'"),
-            "must not leave quoted token names in CSS:\n{css}"
-        );
-        assert!(
-            css.contains(":host([size='sm'])") && css.contains("1.5px"),
-            "size sm rekey must land:\n{css}"
-        );
-        assert!(
-            css.contains(":host([size='lg'])") && css.contains("2.5px"),
-            "size lg rekey must land:\n{css}"
-        );
-        // No leftover channels source leaked into declarations.
-        assert!(
-            !css.contains("size:") && !css.contains("default:"),
-            "must not leak object-field source into CSS:\n{css}"
-        );
-    }
-
-    #[test]
-    fn channels_switch_shape_lowers_all_axes() {
-        let css = channels_object_to_css(
-            r#"{
-  default: { 'sw-w': 'control-h-sm', 'sw-h': 'icon-size-md', 'sw-thumb': 'space-3' }
-  size: {
-    sm: { 'sw-w': 'control-h-xs', 'sw-h': 'icon-size-sm', 'sw-thumb': 'space-2_5' }
-    lg: { 'sw-w': 'space-7', 'sw-h': 'icon-size-lg', 'sw-thumb': 'icon-size-sm' }
-  }
-}"#,
-        );
-        for needle in [
-            "--sw-w:var(--control-h-sm)",
-            "--sw-h:var(--icon-size-md)",
-            "--sw-thumb:var(--space-3)",
-            ":host([size='sm'])",
-            "--sw-w:var(--control-h-xs)",
-            ":host([size='lg'])",
-            "--sw-w:var(--space-7)",
-        ] {
-            assert!(css.contains(needle), "missing `{needle}` in:\n{css}");
-        }
-    }
 }

@@ -11,4 +11,4 @@
   }
 </scope>
 
-<div popover use:anchor use:hoverSurface sx="fixed inset-auto m-0 left-(--anchor-left) top-(--anchor-top) min-w-(--panel-rail-w) max-w-panel-max-w-sm p-3 text-foreground bg-background border border-border rounded-md shadow-md z-(--z-popover)"><slot></slot></div>
+<div popover use:anchor use:hoverSurface sx="fixed inset: auto m: 0 left: (--anchor-left) top: (--anchor-top) min-w: (--panel-rail-w) max-w: panel-max-w-sm p: 3 color: foreground bg: background border border: border rounded: md shadow: md z: (--z-popover)"><slot></slot></div>

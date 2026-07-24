@@ -37,9 +37,12 @@
 //!     table is hand-authored (it carries prose), not derived from
 //!     a grep.
 //!   * `auto_import` — whether the compiler auto-imports this from
-//!     `@ship/sail-runtime` when a template references it. Every entry
-//!     here is auto-imported today; the field is present so a future
-//!     author-side action can opt out without restructuring.
+//!     `@ship/sail-runtime/actions` when a template references it.
+//!     Every entry here is auto-imported today (stdlib needs internal
+//!     stamps too); the field is present so a future author-side
+//!     action can opt out without restructuring. The curated *public*
+//!     surface taught in skill/docs is [`PUBLIC_ACTION_NAMES`] — a
+//!     strict subset; runtime top-level re-exports only those.
 
 use serde_json::{json, Value};
 
@@ -58,9 +61,12 @@ pub struct ActionEntry {
     /// docs site / agent skill — the table is the source.
     pub summary: &'static str,
     /// If `true`, the compiler auto-imports this action from
-    /// `@ship/sail-runtime` when a template references it. Every entry
-    /// in the language is auto-imported today; the field is here so a
-    /// future author-side action can opt out without restructuring.
+    /// `@ship/sail-runtime/actions` when a template references it.
+    /// Every entry in the language is auto-imported today (stdlib
+    /// needs the full set); the field is here so a future author-side
+    /// action can opt out without restructuring. Auto-import is
+    /// independent of the public `use:` skill surface — see
+    /// [`PUBLIC_ACTION_NAMES`].
     pub auto_import: bool,
 }
 
@@ -91,9 +97,9 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "mediaFallback",
+        name: "catchRender",
         param: "void",
-        summary: "Image-with-fallback behavior for an <avatar> element.",
+        summary: "Catch render errors thrown by descendants; show a fallback UI.",
         auto_import: true,
     },
     ActionEntry {
@@ -112,12 +118,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "clickOutside",
         param: "(() => void) | undefined",
         summary: "Fire a callback when a click lands outside the element.",
-        auto_import: true,
-    },
-    ActionEntry {
-        name: "syntaxHighlight",
-        param: "void",
-        summary: "Syntax-highlight + copy-button behavior for a <code-block>.",
         auto_import: true,
     },
     ActionEntry {
@@ -169,18 +169,6 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "catchRender",
-        param: "void",
-        summary: "Catch render errors thrown by descendants; show a fallback UI.",
-        auto_import: true,
-    },
-    ActionEntry {
-        name: "recoverySurface",
-        param: "void",
-        summary: "Error-state element behavior; arms a retry action for the call-to-action slot.",
-        auto_import: true,
-    },
-    ActionEntry {
         name: "eventSpan",
         param: "RectSpan | null | undefined",
         summary: "Track the bounding rect of a pointer event target across the screen.",
@@ -214,6 +202,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "maxWidth",
         param: "number | string | null | undefined",
         summary: "Cap the element's content width to a max (px or CSS length).",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "mediaFallback",
+        param: "void",
+        summary: "Image-with-fallback behavior for an <avatar> element.",
         auto_import: true,
     },
     ActionEntry {
@@ -265,6 +259,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
+        name: "recoverySurface",
+        param: "void",
+        summary: "Error-state element behavior; arms a retry action for the call-to-action slot.",
+        auto_import: true,
+    },
+    ActionEntry {
         name: "rect",
         param: "BoxRect | null | undefined",
         summary: "Track the element's bounding rect via ResizeObserver.",
@@ -280,6 +280,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "swatch",
         param: "string | null | undefined",
         summary: "Render a color swatch keyed by a token name from the active theme.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "syntaxHighlight",
+        param: "void",
+        summary: "Syntax-highlight + copy-button behavior for a <code-block>.",
         auto_import: true,
     },
     ActionEntry {
@@ -301,15 +307,15 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
-        name: "toggleGroup",
-        param: "void",
-        summary: "Toggle-group keyboard nav: arrow keys move focus, space toggles.",
-        auto_import: true,
-    },
-    ActionEntry {
         name: "tipDescribe",
         param: "void",
         summary: "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "toggleGroup",
+        param: "void",
+        summary: "Toggle-group keyboard nav: arrow keys move focus, space toggles.",
         auto_import: true,
     },
     ActionEntry {
@@ -342,24 +348,52 @@ pub const ACTIONS: &[ActionEntry] = &[
         summary: "Pinch/wheel zoom + drag pan on a surface; emits state changes to the controller.",
         auto_import: true,
     },
-
 ];
+
+/// App-author `use:` surface taught in skill/docs. Internal stamps stay
+/// auto-imported for stdlib but are not the taught package API.
+pub const PUBLIC_ACTION_COUNT: usize = 12;
+pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
+    "anchor",
+    "autosize",
+    "clickOutside",
+    "contextMenu",
+    "dropzone",
+    "icon",
+    "menu",
+    "rect",
+    "tabs",
+    "tipDescribe",
+    "virtualRow",
+    "zoomPan",
+];
+
+/// Whether `name` is part of the curated public `use:` surface.
+pub fn is_public_action(name: &str) -> bool {
+    PUBLIC_ACTION_NAMES.contains(&name)
+}
+
+/// Iterate the public subset of [`ACTIONS`] (order follows the table).
+pub fn public_actions() -> impl Iterator<Item = &'static ActionEntry> {
+    ACTIONS.iter().filter(|a| is_public_action(a.name))
+}
 
 /// Every name in `ACTIONS` whose `auto_import` is `true`. The
 /// compiler's `lower::bindings::BUILTIN_ACTIONS` is a re-export of
 /// this — the table is the single source, the constant is a derived
-/// view.
+/// view. The full set (public + internal) is auto-imported so stdlib
+/// stamps resolve; only [`PUBLIC_ACTION_NAMES`] are taught / re-exported
+/// from the runtime front door.
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
-    "anchor", "autoDismiss", "autosize", "mediaFallback", "cellPad",
-    "chromeOffset", "clickOutside", "syntaxHighlight", "combobox",
-    "contextMenu", "describedControl", "detailsDisabled", "detailsToggle",
-    "dismissControl", "dismissible", "dropzone", "catchRender",
-    "recoverySurface", "eventSpan", "gridTracks", "hoverSurface",
-    "icon", "liveRegion", "maxWidth", "menu", "pagination", "pin", "portEdge",
-    "pressable", "pressed", "radioGroup", "rangeFill", "rect", "spotlight",
-    "swatch", "tabs",
-    "targetCursor", "themeSelect", "toggleGroup", "tipDescribe", "variantLive",
-    "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
+    "anchor", "autoDismiss", "autosize", "catchRender", "cellPad",
+    "chromeOffset", "clickOutside", "combobox", "contextMenu",
+    "describedControl", "detailsDisabled", "detailsToggle", "dismissControl",
+    "dismissible", "dropzone", "eventSpan", "gridTracks", "hoverSurface",
+    "icon", "liveRegion", "maxWidth", "mediaFallback", "menu", "pagination",
+    "pin", "portEdge", "pressable", "pressed", "radioGroup", "rangeFill",
+    "recoverySurface", "rect", "spotlight", "swatch", "syntaxHighlight",
+    "tabs", "targetCursor", "themeSelect", "tipDescribe", "toggleGroup",
+    "variantLive", "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
 ];
 
 // Drift guards: the const-time panic pattern would be cleaner but
@@ -405,7 +439,7 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
 ///   "version": 1,
 ///   "actions": [
 ///     { "name": "anchor", "param": "AnchorPlacement | undefined", "autoImport": true,
-///       "summary": "Position a popper-like surface…" },
+///       "public": true, "summary": "Position a popper-like surface…" },
 ///     …
 ///   ]
 /// }
@@ -418,6 +452,7 @@ pub fn to_json() -> Value {
                 "name": a.name,
                 "param": a.param,
                 "autoImport": a.auto_import,
+                "public": is_public_action(a.name),
                 "summary": a.summary,
             })
         })
@@ -466,8 +501,36 @@ mod tests {
             assert_eq!(entry["name"].as_str(), Some(src.name));
             assert_eq!(entry["param"].as_str(), Some(src.param));
             assert_eq!(entry["autoImport"].as_bool(), Some(src.auto_import));
+            assert_eq!(entry["public"].as_bool(), Some(is_public_action(src.name)));
             assert_eq!(entry["summary"].as_str(), Some(src.summary));
         }
+    }
+
+    #[test]
+    fn public_action_count_matches_names_array() {
+        assert_eq!(PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES.len());
+        assert_eq!(PUBLIC_ACTION_COUNT, 12);
+    }
+
+    #[test]
+    fn every_public_name_exists_in_actions() {
+        for name in *PUBLIC_ACTION_NAMES {
+            assert!(
+                ACTIONS.iter().any(|a| a.name == name),
+                "PUBLIC_ACTION_NAMES entry `{name}` is not in ACTIONS"
+            );
+        }
+    }
+
+    #[test]
+    fn public_action_names_are_sorted() {
+        let mut sorted = PUBLIC_ACTION_NAMES.to_vec();
+        sorted.sort();
+        assert_eq!(
+            PUBLIC_ACTION_NAMES.as_slice(),
+            sorted.as_slice(),
+            "PUBLIC_ACTION_NAMES must be sorted alphabetically for determinism"
+        );
     }
 }
 

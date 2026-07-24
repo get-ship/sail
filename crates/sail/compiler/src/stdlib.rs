@@ -128,9 +128,30 @@ fn descendant_map(tag: &str) -> Option<&'static [DescRule]> {
     match tag {
         "prose" => Some(PROSE_MAP),
         "code-block" => Some(CODE_BLOCK_MAP),
+        // Ring PE must live in element-skins (host CVA only sizes/tones the host).
+        "spinner" => Some(SPINNER_MAP),
         _ => None,
     }
 }
+
+const SPINNER_MAP: &[DescRule] = &[
+    DescRule {
+        sel: ".ring",
+        paint: DescPaint::Decls(&[
+            ("display", "block"),
+            ("box-sizing", "border-box"),
+            ("width", "100%"),
+            ("height", "100%"),
+            (
+                "border",
+                "var(--control-stroke) solid var(--border-subtle)",
+            ),
+            ("border-right-color", "currentColor"),
+            ("border-radius", "var(--radius-full)"),
+            ("animation", "var(--animate-spin)"),
+        ]),
+    },
+];
 
 struct DescRule {
     sel: &'static str,

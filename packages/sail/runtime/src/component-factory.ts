@@ -3,10 +3,11 @@
 // Sits on top of `defineComponent`: takes a PropDef-typed declaration
 // plus an optional setup, translates it into a `ComponentSchema` +
 // `ComponentFactory`, and registers the element. Reflect/bindable
-// behavior, style injection (light DOM scoped via `data-component`,
-// shadow DOM attached to shadowRoot), and form-association are all
-// handled by the wrapped factory so component() can stay declarative
-// and the underlying defineComponent stays unchanged.
+// behavior, style injection (light DOM scoped via `data-component` —
+// the default), optional `shadow: true` only for foreign-content
+// containment wrappers, and form-association are all handled by the
+// wrapped factory so component() can stay declarative and the
+// underlying defineComponent stays unchanged.
 
 import { defineComponent, camelOf } from './component'
 import type { ComponentSchema } from './component'
@@ -90,7 +91,7 @@ export const prop = {
 export interface ComponentSetupContext {
   /** Map of camelCased prop names to their reactive signals. */
   props: Record<string, Signal<unknown>>
-  /** The host element (or its shadow root's host — same node either way). */
+  /** The host element (the custom element itself — Sail is light DOM). */
   host: HTMLElement
   /**
    * Push cleanup callbacks onto this array; they all run on disconnect
@@ -103,9 +104,12 @@ export interface ComponentSetupContext {
 
 /** Declarative shape passed to `component()`. */
 export interface ComponentDef<Bindings = unknown> {
-  /** CSS injected scoped to this component (or attached to shadowRoot). */
+  /** CSS injected scoped to this component (`@scope` donut in light DOM). */
   styles?: string
-  /** When true, attach a shadow root and inject styles into it. */
+  /**
+   * Residual: when true, attach a shadow root (foreign-content containment —
+   * tiptap, third-party widgets). Not the L1 product model; default is light DOM.
+   */
   shadow?: boolean
   /** When true, declare `static formAssociated = true` on the element. */
   formAssociated?: boolean
@@ -156,10 +160,10 @@ const injectScopedStyles = (tag: string, css: string): void => {
   const style = document.createElement('style')
   style.id = id
   // The @scope DONUT: rules apply from this component's element down, and
-  // STOP at any nested component boundary — light DOM's answer to shadow
-  // encapsulation, by construction instead of by technology. The compiler
-  // has already rewritten shadow idioms (:host → :scope, ::slotted →
-  // slot >) for exactly this wrapper.
+  // STOP at any nested component boundary — style containment by
+  // construction (Sail is light DOM). The compiler rewrites legacy
+  // authoring idioms (:host → :scope / .sail-root, ::slotted → slot >)
+  // for exactly this wrapper.
   style.textContent =
     `@scope ([data-component="${tag}"]) to ([data-component]) { ${css} }`
   document.head.appendChild(style)
@@ -213,10 +217,9 @@ const buildSchema = (def: ComponentDef): ComponentSchema => {
  * `component(tag, def)` desugars `def` into the lower-level `ComponentSchema` +
  * `ComponentFactory` shape that `defineComponent` consumes. Props become
  * observed attributes with per-type decoders; `styles` are injected
- * (scoped via `[data-component="<tag>"]` in light DOM, attached to the
- * shadow root in shadow DOM); `formAssociated` is forwarded; and `setup`
- * runs on connect with prop signals plus a `cleanups` array for
- * teardown.
+ * scoped via `[data-component="<tag>"]` (light DOM default); `formAssociated`
+ * is forwarded; and `setup` runs on connect with prop signals plus a
+ * `cleanups` array for teardown.
  *
  * Idempotent — calling twice with the same tag is a no-op.
  *
@@ -343,9 +346,8 @@ export function component<Bindings>(
     // controllers. The returned disposer tears the child down on disconnect.
     //
     // `host` MUST ride on `ctx`: `resolveController` passes it as the
-    // controller scope factory's 2nd arg, where a controller can reach its
-    // own shadow root (e.g. to imperatively mount a third-party editor like
-    // TipTap, or to focus an input). The runtime no longer auto-publishes
+    // controller scope factory's 2nd arg (imperative mount of a third-party
+    // editor, focus an input, etc.). The runtime no longer auto-publishes
     // shared signals on the element — that's scope-homed now via
     // `useStore` / `provideContext` (see `./store` / `./effect-scope`), so
     // `host` here is for imperative reach, not shared-state publication.

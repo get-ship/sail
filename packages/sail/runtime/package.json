@@ -15,7 +15,8 @@
     "./patch": "./src/patch.ts",
     "./virtual": "./src/virtual.ts",
     "./internal": "./src/internal.ts",
-    "./contracts": "./src/contracts.ts"
+    "./contracts": "./src/contracts.ts",
+    "./actions": "./src/actions/index.ts"
   },
   "files": [
     "src",

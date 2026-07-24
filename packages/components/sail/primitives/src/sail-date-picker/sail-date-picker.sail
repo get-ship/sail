@@ -30,7 +30,7 @@
   ─────────────────────────────────────────────────────────────────────
   - Deleted the per-component tone theme block (prop=tone, channels
     tone-border + tone-ring) — those two channel names are now GLOBAL
-    framework channels (contracts.css), and this component's old block
+    framework tone/size contracts (contracts.css), and this component's old block
     collided with them 1:1. `border-tone-border` /
     `focus-within:ring-tone-ring` below now resolve against the framework's
     tone contract directly, same as sail-alert/sail-card/sail-select.

@@ -292,9 +292,9 @@ impl TemplateEmitter {
                 // `bindSlotEmpty(slot, host, attr)` reflects the attr on the
                 // HOST element. In the emitted `__mount(container)` scope the
                 // host is `container` (the CE adapter calls `__mount(host)`;
-                // `__root = container.shadowRoot ?? container` is the render
-                // root, NOT the host). Emitting bare `host` referenced an
-                // unbound identifier → `ReferenceError` on mount for every
+                // residual `__root = container.shadowRoot ?? container` is the
+                // render root, NOT the host). Emitting bare `host` referenced
+                // an unbound identifier → `ReferenceError` on mount for every
                 // primitive with `<slot reflect-empty>`.
                 w.line(&format!(
                     "{cleanups_var}.push(bindSlotEmpty({el_var}, container, {a}));",

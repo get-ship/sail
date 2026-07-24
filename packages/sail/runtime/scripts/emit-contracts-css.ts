@@ -59,11 +59,12 @@ const fontFaces = FONTS.map(fontFace).join('\n')
 const banner =
   '/* GENERATED from @ship/sail-runtime styles — do not hand-edit.\n' +
   ' * Regenerate: bun packages/sail/runtime/scripts/emit-contracts-css.ts\n' +
-  ' * The light-DOM framework contracts: tone/size channels (attribute-\n' +
-  ' * keyed), interactive-surface baseline, focus/disabled, L1 element\n' +
-  ' * skins ride separately via the stdlib registry. Framework webfonts\n' +
-  ' * are listed at the top of the file and resolved as hashed assets\n' +
-  ' * by the deck bundler at build time. */\n'
+  ' * The light-DOM framework contracts: tone/size as attribute-keyed\n' +
+  ' * props (CSS custom properties on the element), interactive-surface\n' +
+  ' * baseline, focus/disabled. L1 element skins ride separately via the\n' +
+  ' * stdlib registry. Not a product "channels" API — ordinary props +\n' +
+  ' * CVA. Framework webfonts are listed at the top of the file and\n' +
+  ' * resolved as hashed assets by the deck bundler at build time. */\n'
 
 writeFileSync(
   out,

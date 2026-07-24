@@ -1,5 +1,6 @@
 <!--
-  <pagination> — stamps size onto child pages via use:pagination.
+  <pagination> — nav state via use:pagination (ARIA current). Size is an ordinary
+  prop on each <page> (child CVA).
 -->
 <scope>
   props: {

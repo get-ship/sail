@@ -143,7 +143,7 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
     fs::create_dir_all(&base)?;
 
     // Current-generation stub: `<scope>` declares the static surface (the
-    // bare `tone` default opts into the framework channel), the body is
+    // bare `tone` default opts into the shared tone vocabulary), the body is
     // layout elements + sx, and state — when asked for — is an inline
     // `<controller>` block in the same file. No siblings, no `<style>`,
     // no `:host`: the compiler rejects all three.

@@ -45,11 +45,11 @@ export interface ResolverContext {
    */
   stateKeys?: ReadonlySet<string>
   /**
-   * The custom-element host. Useful for controller code that
-   * needs to reach its own shadow root (e.g. to imperatively
-   * mount a third-party editor, or to focus an input). Not used
-   * for shared-state publication — that's scope-homed now via
-   * `useStore` / `provideContext` (see `./store` / `./effect-scope`).
+   * The custom-element host (light DOM). Controllers use it for
+   * imperative reach (focus an input, mount a third-party editor into
+   * an opt-in shadow containment root). Not used for shared-state
+   * publication — that's scope-homed via `useStore` / `provideContext`
+   * (see `./store` / `./effect-scope`).
    */
   host?: Element
 }

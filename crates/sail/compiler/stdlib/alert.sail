@@ -13,7 +13,8 @@
     child sx=        — empty:hidden on ico/title/actions; dismiss close via
                        host group + group-dismissible:
     CVA-in-props     — tone stripe (first key = default = PE muted)
-    global [tone]    — stripe/icon channel reads for branded tones
+  Variance = CVA-in-props axes + optional compound only. tone is an ordinary
+  prop/axis, not a language channel.
   No residual alert matrix.
 -->
 
@@ -21,12 +22,12 @@
   props: {
     // first key = default = PE muted stripe (attr-absent host sx matches)
     tone: {
-      default: 'before:bg-muted-foreground',
-      muted: 'before:bg-muted-foreground',
-      info: 'before:bg-tone',
-      success: 'before:bg-tone',
-      warning: 'before:bg-tone',
-      destructive: 'before:bg-tone',
+      default: 'before:bg: muted-foreground',
+      muted: 'before:bg: muted-foreground',
+      info: 'before:bg: tone',
+      success: 'before:bg: tone',
+      warning: 'before:bg: tone',
+      destructive: 'before:bg: tone',
     }
     dismissible = false
   }
@@ -41,19 +42,19 @@
   role="status"
   aria-live="polite"
   aria-atomic="true"
-  sx="group relative overflow-hidden p-3 border border-border rounded-md bg-surface-1 text-foreground font-body text-base leading-normal shadow-xs before:content-empty before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-muted-foreground forced-colors:border-CanvasText forced-colors:before:bg-CanvasText"
+  sx="group relative overflow: hidden p: 3 border border: border rounded: md bg: surface-1 color: foreground font-family: body font-size: base leading: normal shadow: xs before:content: empty before:absolute before:left: 0 before:top: 0 before:bottom: 0 before:w: 1 before:bg: muted-foreground forced-colors:border: CanvasText forced-colors:before:bg: CanvasText"
 >
-  <row inline nowrap align="center" justify="center" class="ico" sx="shrink-0 size-control-h-xs rounded-md bg-tone-bg text-tone-fg empty:hidden">
+  <row inline nowrap align="center" justify="center" class="ico" sx="shrink: 0 size: control-h-xs rounded: md bg: tone-bg color: tone-fg empty:hidden">
     <slot name="icon"></slot>
   </row>
-  <column gap="1" class="content" sx="min-w-0 grow-1">
-    <div class="title" sx="font-semibold empty:hidden">
+  <column gap="1" class="content" sx="min-w: 0 grow: 1">
+    <div class="title" sx="font-weight: semibold empty:hidden">
       <slot name="title"></slot>
     </div>
-    <div class="body" sx="text-muted-foreground">
+    <div class="body" sx="color: muted-foreground">
       <slot></slot>
     </div>
-    <row align="center" gap="2" class="actions" sx="mt-2 empty:hidden">
+    <row align="center" gap="2" class="actions" sx="mt: 2 empty:hidden">
       <slot name="actions"></slot>
     </row>
   </column>
@@ -62,9 +63,9 @@
     type="button"
     anatomy
     aria-label="Dismiss"
-    sx="hidden group-dismissible:inline-block size-control-h-xs shrink-0 self-start p-0 border-0 rounded-sm bg-transparent text-muted-foreground cursor-pointer transition-colors duration-fast ease-out hover:bg-muted hover:text-foreground focus:outline-solid focus:outline-2 focus:outline-ring focus:outline-offset-2"
+    sx="hidden group-dismissible:inline-block size: control-h-xs shrink: 0 self: start p: 0 border: 0 rounded: sm bg: transparent color: muted-foreground cursor: pointer transition: colors duration: fast ease: out hover:bg: muted hover:color: foreground focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: 2"
   >
-    <svg viewBox="0 0 10 10" aria-hidden="true" sx="block size-icon-size-sm stroke-current fill-none" stroke-width="1.75" stroke-linecap="round">
+    <svg viewBox="0 0 10 10" aria-hidden="true" sx="block size: icon-size-sm stroke: currentColor fill: none" stroke-width="1.75" stroke-linecap="round">
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>

@@ -154,63 +154,27 @@ export type { FormOptions, ListSource } from './compositions'
 export { runAction } from './action'
 export type { Action, ActionResult } from './action'
 
-// Built-in `use:` actions — reusable element behaviors (autosize, clickOutside…)
-// the L1 components lean on. `use:<name>` attaches them; no hand-wired refs/effects.
-// Every built-in `use:` action. The compiler AUTO-IMPORTS these by name when a
-// template uses one (see `BUILTIN_ACTIONS` in lower/bindings.rs), so an action
-// missing here is not a missing convenience — it is an L1 element that compiles,
-// passes conformance, and then fails to bundle. `builtin_actions_are_exported`
-// in the compiler's test suite holds the two lists together.
+// Public `use:` surface — the 12 app-author actions taught in the skill/docs.
+// The full set (stdlib-internal stamps included) lives on
+// `@ship/sail-runtime/actions`; the compiler auto-imports *all* actions from
+// that subpath so stdlib stamps resolve without polluting this front door.
+// Drift is guarded by `public_action_surface_is_curated` in abi_boundary.rs.
 export {
   anchor,
   autosize,
-  mediaFallback,
-  pressable,
-  pressed,
-  dismissible,
-  chromeOffset,
   clickOutside,
-  syntaxHighlight,
-  combobox,
   contextMenu,
-  detailsToggle,
-  detailsDisabled,
-  autoDismiss,
-  dismissControl,
-  liveRegion,
   dropzone,
-  catchRender,
-  recoverySurface,
-  describedControl,
-  hoverSurface,
-  menu,
-  pagination,
-  radioGroup,
-  rangeFill,
-  tabs,
   icon,
-  marquee,
   primeIconCache,
-  themeSelect,
-  toggleGroup,
-  tipDescribe,
-  variantLive,
-  virtualRow,
-  virtualSpacer,
-  cellPad,
+  menu,
   rect,
-  pin,
-  portEdge,
-  eventSpan,
-  worldTransform,
+  tabs,
+  tipDescribe,
+  virtualRow,
   zoomPan,
-  maxWidth,
-  swatch,
-  spotlight,
-  targetCursor,
-  gridTracks,
 } from './actions'
-export type { AnchorPlacement, PortSide } from './actions'
+export type { AnchorPlacement } from './actions'
 
 
 // Scroll-lock / focus-return — runtime seams for overlays (dialog, drawer).
@@ -440,11 +404,9 @@ export type {
 // `signal(0)` a slider writes is interchangeable with any of them.
 export { clock, scrollProgress, springValue } from './drivers'
 export type { ClockOptions, ClockSignal, ScrollProgressOptions, SpringOptions } from './drivers'
-// Shared-sheet adoption for shadow components. Compiler-emitted client
-// code calls `adoptSuiSheets(__root)` in every component mount (see
-// crates/sail/compiler/src/emit/js/setup.rs). It is client-safe (no-ops
-// without ShadowRoot) and MUST be on the client entry, not just server.ts,
-// or the bundled runtime lacks the export the emit imports.
+// Residual shared-sheet adoption for opt-in shadow containment wrappers
+// (foreign content — not L1). No-ops without a ShadowRoot. Kept on the client
+// entry so legacy/compiled call sites that still import it resolve.
 export { adoptSuiSheets } from './styles/index'
 // F1 mount unification — hosts call mount(target, payload, opts) to put
 // a route on screen. See .artifacts/design-f1-mount-unification.md.

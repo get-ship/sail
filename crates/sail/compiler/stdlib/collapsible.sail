@@ -9,11 +9,11 @@
     disabled = false
   }
   compound: [
-    { when: { disabled: true }, sx: 'opacity-50 cursor-not-allowed' },
+    { when: { disabled: true }, sx: 'opacity: 50 cursor: not-allowed' },
   ]
 </scope>
 
-<details use:detailsToggle use:detailsDisabled sx="block font-body">
+<details use:detailsToggle use:detailsDisabled sx="block font-family: body">
   <summary class="trigger-wrap"><slot name="trigger"></slot></summary>
-  <div class="content-wrap"><div class="content-inner" sx="px-4 py-3"><slot></slot></div></div>
+  <div class="content-wrap"><div class="content-inner" sx="px: 4 py: 3"><slot></slot></div></div>
 </details>

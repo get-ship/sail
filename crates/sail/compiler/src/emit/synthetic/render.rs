@@ -149,14 +149,25 @@ pub(super) fn emit_render(
     if walked.uses_delegation && !imports.iter().any(|s| s == "delegateEvents") {
         imports.push("delegateEvents".to_string());
     }
-    imports.sort();
+    let (action_imports, mut abi_imports): (Vec<String>, Vec<String>) = imports
+        .into_iter()
+        .partition(|name| crate::action_manifest::ACTIONS.iter().any(|a| a.name == name));
+    abi_imports.sort();
+    let mut action_imports = action_imports;
+    action_imports.sort();
 
     let mut w = Writer::new();
     w.line(HEADER);
-    if !imports.is_empty() {
+    if !abi_imports.is_empty() {
         w.line(&format!(
             "import {{ {} }} from \"@ship/sail-runtime/internal\";",
-            imports.join(", ")
+            abi_imports.join(", ")
+        ));
+    }
+    if !action_imports.is_empty() {
+        w.line(&format!(
+            "import {{ {} }} from \"@ship/sail-runtime/actions\";",
+            action_imports.join(", ")
         ));
     }
     if authored {
@@ -252,17 +263,31 @@ pub(super) fn emit_render_client(
     if walked.uses_delegation && !runtime_imports.iter().any(|s| s == "delegateEvents") {
         runtime_imports.push("delegateEvents".to_string());
     }
-    runtime_imports.sort();
+    // Split `use:` action symbols onto `@ship/sail-runtime/actions` —
+    // same partition the production imports emitter uses (internal
+    // stamps are not on the front door / ABI barrel).
+    let (action_imports, mut abi_imports): (Vec<String>, Vec<String>) = runtime_imports
+        .into_iter()
+        .partition(|name| crate::action_manifest::ACTIONS.iter().any(|a| a.name == name));
+    abi_imports.sort();
+    let mut action_imports = action_imports;
+    action_imports.sort();
     // DOM imports: the `hydrate*` helpers + `collect*` preambles the hydrate
     // body calls. Same `@ship/sail-dom` split the production route emit uses.
     let dom_imports = render_dom_imports(program, true);
 
     let mut w = Writer::new();
     w.line(CLIENT_HEADER);
-    if !runtime_imports.is_empty() {
+    if !abi_imports.is_empty() {
         w.line(&format!(
             "import {{ {} }} from \"@ship/sail-runtime/internal\";",
-            runtime_imports.join(", ")
+            abi_imports.join(", ")
+        ));
+    }
+    if !action_imports.is_empty() {
+        w.line(&format!(
+            "import {{ {} }} from \"@ship/sail-runtime/actions\";",
+            action_imports.join(", ")
         ));
     }
     if !dom_imports.is_empty() {

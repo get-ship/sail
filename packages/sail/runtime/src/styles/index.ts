@@ -1,82 +1,62 @@
 const TONES_CSS =
-  // The FULL tone contract, framework-owned. A component that declares a
-  // `tone` prop gets all six channels for free — no per-component <theme
-  // prop="tone"> block. (Extends the prior 3-channel set to bg/border/ring.)
+  // The FULL tone contract, framework-owned, LIGHT DOM. A component or L1
+  // control that carries a `tone` attribute gets the `--tone-*` custom
+  // properties for free — no per-component <theme prop="tone"> block.
+  // Attribute-keyed on the element itself: Sail L1/L2 are light DOM, so the
+  // host IS the element; `:host` is not an L1 paint path.
   //
-  // --tone-glow is the seventh: it routes the per-tone --glow-{tone} channel
+  // --tone-glow is the seventh: it routes the per-tone --glow-{tone} token
   // into the same `--tone-*` namespace everything else reads from, so a glow
-  // is addressable exactly where a tint is. Without it the glow channels
-  // would only ever be reachable for primary/accent (the two sx atoms that
-  // predate them) and the other six would be tokens nothing could read.
-  ":host([tone='default'])     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-contrast: var(--background);              --tone-bg: var(--hover-bg);            --tone-border: var(--border);                 --tone-ring: var(--ring);                     --tone-glow: var(--glow-default); }\n" +
-  ":host([tone='primary'])     { --tone: var(--primary);          --tone-fg: var(--primary);          --tone-contrast: var(--primary-foreground);     --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring);        --tone-glow: var(--glow-primary); }\n" +
-  ":host([tone='info'])        { --tone: var(--info);             --tone-fg: var(--info);             --tone-contrast: var(--info-foreground);        --tone-bg: var(--tone-info-bg);        --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring);           --tone-glow: var(--glow-info); }\n" +
-  ":host([tone='success'])     { --tone: var(--success);          --tone-fg: var(--tone-success-fg);  --tone-contrast: var(--success-foreground);     --tone-bg: var(--tone-success-bg);     --tone-border: var(--tone-success-border);     --tone-ring: var(--tone-success-ring);        --tone-glow: var(--glow-success); }\n" +
-  ":host([tone='warning'])     { --tone: var(--warning);          --tone-fg: var(--tone-warning-fg);  --tone-contrast: var(--warning-foreground);     --tone-bg: var(--tone-warning-bg);     --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring);        --tone-glow: var(--glow-warning); }\n" +
-  ":host([tone='destructive']) { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring);    --tone-glow: var(--glow-destructive); }\n" +
-  ":host([tone='accent'])      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring);         --tone-glow: var(--glow-accent); }\n" +
-  ":host([tone='muted'])       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring);          --tone-glow: var(--glow-muted); }\n" +
-  // Light-DOM mirror for bare L1 field controls — <input tone=primary>/[invalid]
-  // set the border+ring channels the field skin reads (`:host()` never matches a
-  // light-DOM element). Border+ring only (what a field tints); parity w/ sail-input.
-  ":where(input, select, textarea)[tone='primary']     { --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring); }\n" +
-  ":where(input, select, textarea)[tone='info']        { --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring); }\n" +
-  ":where(input, select, textarea)[tone='success']     { --tone-border: var(--tone-success-border);     --tone-ring: var(--tone-success-ring); }\n" +
-  ":where(input, select, textarea)[tone='warning']     { --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring); }\n" +
-  ":where(input, select, textarea)[tone='accent']      { --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring); }\n" +
-  ":where(input, select, textarea)[tone='muted']       { --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring); }\n" +
+  // is addressable exactly where a tint is.
+  "[tone='default']     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-contrast: var(--background);              --tone-bg: var(--hover-bg);            --tone-border: var(--border);                 --tone-ring: var(--ring);                     --tone-glow: var(--glow-default); }\n" +
+  "[tone='primary']     { --tone: var(--primary);          --tone-fg: var(--primary);          --tone-contrast: var(--primary-foreground);     --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring);        --tone-glow: var(--glow-primary); }\n" +
+  "[tone='info']        { --tone: var(--info);             --tone-fg: var(--info);             --tone-contrast: var(--info-foreground);        --tone-bg: var(--tone-info-bg);        --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring);           --tone-glow: var(--glow-info); }\n" +
+  "[tone='success']     { --tone: var(--success);          --tone-fg: var(--tone-success-fg);  --tone-contrast: var(--success-foreground);     --tone-bg: var(--tone-success-bg);     --tone-border: var(--tone-success-border);     --tone-ring: var(--tone-success-ring);        --tone-glow: var(--glow-success); }\n" +
+  "[tone='warning']     { --tone: var(--warning);          --tone-fg: var(--tone-warning-fg);  --tone-contrast: var(--warning-foreground);     --tone-bg: var(--tone-warning-bg);     --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring);        --tone-glow: var(--glow-warning); }\n" +
+  "[tone='destructive'] { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring);    --tone-glow: var(--glow-destructive); }\n" +
+  "[tone='accent']      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring);         --tone-glow: var(--glow-accent); }\n" +
+  "[tone='muted']       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring);          --tone-glow: var(--glow-muted); }\n" +
+  // Invalid fields always paint destructive border+ring (overrides a tone attr).
   ":where(input[invalid], input[aria-invalid='true'], select[invalid], select[aria-invalid='true'], textarea[invalid], textarea[aria-invalid='true']) { --tone-border: var(--destructive); --tone-ring: var(--tone-destructive-ring); }\n"
 
 const SIZES_CSS =
-  // The FULL size contract, framework-owned — the exact analogue of tone. A
-  // component that declares a `size` prop gets the dimensional channels for free
+  // The FULL size contract, framework-owned, LIGHT DOM — the exact analogue of
+  // tone. Attribute-keyed on the element itself (`[size='md']`), so a bare L1
+  // <input size=sm> and a light L2 component share one scale. A component that
+  // declares a `size` prop gets the dimensional custom properties for free
   // (`--size-h` control height, `--size-px` inline padding, `--size-fs` font
-  // size, `--size-gap` inner gap). No per-component <theme prop="size"> block:
-  // one global scale keeps every control coherent, and we own the compiler.
-  ":host([size='xs']) { --size-h: var(--control-h-2xs); --size-px: var(--space-2);   --size-fs: var(--text-xs);   --size-gap: var(--space-1); }\n" +
-  ":host([size='sm']) { --size-h: var(--control-h-sm);  --size-px: var(--space-2_5); --size-fs: var(--text-sm);   --size-gap: var(--space-1_5); }\n" +
-  ":host([size='md']) { --size-h: var(--control-h-md);  --size-px: var(--space-3);   --size-fs: var(--text-base); --size-gap: var(--space-2); }\n" +
-  ":host([size='lg']) { --size-h: var(--control-h-lg);  --size-px: var(--space-4);   --size-fs: var(--text-md);   --size-gap: var(--space-2); }\n" +
-  // Light-DOM mirror — bare L1 native controls (input/select/textarea/button)
-  // carry `size` in light DOM, where `:host()` never matches. Same scale, scoped
-  // to the controls so it only sets the vars their skins consume.
-  ":where(input, select, textarea, button)[size='xs'] { --size-h: var(--control-h-2xs); --size-px: var(--space-2);   --size-fs: var(--text-xs);   --size-gap: var(--space-1); }\n" +
-  ":where(input, select, textarea, button)[size='sm'] { --size-h: var(--control-h-sm);  --size-px: var(--space-2_5); --size-fs: var(--text-sm);   --size-gap: var(--space-1_5); }\n" +
-  ":where(input, select, textarea, button)[size='md'] { --size-h: var(--control-h-md);  --size-px: var(--space-3);   --size-fs: var(--text-base); --size-gap: var(--space-2); }\n" +
-  ":where(input, select, textarea, button)[size='lg'] { --size-h: var(--control-h-lg);  --size-px: var(--space-4);   --size-fs: var(--text-md);   --size-gap: var(--space-2); }\n"
+  // size, `--size-gap` inner gap). No per-component <theme prop="size"> block.
+  "[size='xs'] { --size-h: var(--control-h-2xs); --size-px: var(--space-2);   --size-fs: var(--text-xs);   --size-gap: var(--space-1); }\n" +
+  "[size='sm'] { --size-h: var(--control-h-sm);  --size-px: var(--space-2_5); --size-fs: var(--text-sm);   --size-gap: var(--space-1_5); }\n" +
+  "[size='md'] { --size-h: var(--control-h-md);  --size-px: var(--space-3);   --size-fs: var(--text-base); --size-gap: var(--space-2); }\n" +
+  "[size='lg'] { --size-h: var(--control-h-lg);  --size-px: var(--space-4);   --size-fs: var(--text-md);   --size-gap: var(--space-2); }\n"
 
-// R3: shared host-resets adopted into every shadow component. Rules
-// here are duplicated literally in nearly every <style> block; hoisting
-// them lets the sail-compiler strip the per-component copies (see
-// `crates/sail-compiler/src/emit/styles.rs`). Keep this list strictly to
-// rules whose author-form text the compiler can recognize and remove.
-// The box model EVERYTHING in this file is authored against. Every --control-h-*
+// Box model EVERYTHING in this file is authored against. Every --control-h-*
 // token, every min-height, every padding measures the BORDER box: the size you
 // ask for is the size you get. Without it the framework silently inherits
 // whatever box model the host page happens to have — a [size=md] input stops
 // being --control-h-md, and a <textarea rows=4> stops honoring `rows` (the
 // min-height floor swallows the rows whole). Specificity 0 and inside @layer sail,
-// so an author still wins. Shared by BOTH surfaces below: shadow components adopt
-// it via BASE_CSS, light-DOM pages get it via LIGHT_CONTRACTS_CSS. One definition.
+// so an author still wins. Light-DOM pages get it via LIGHT_CONTRACTS_CSS.
+// Residual: `adoptSuiSheets` also ships it for opt-in shadow containment roots
+// (foreign-content wrappers — not the L1 product model).
 const BOX_MODEL_CSS = '*, *::before, *::after { box-sizing: border-box; }\n'
 
+// Residual BASE for opt-in shadow containment only (`adoptSuiSheets`). Sail L1
+// is light DOM — host defaults live as `[data-component]` in LIGHT_CONTRACTS_CSS.
+// Keep these `:host` rules here so a rare `shadow: true` foreign wrapper still
+// gets display/color/hidden; do not author new L1 paint against them.
 const BASE_CSS =
   BOX_MODEL_CSS +
-  // Framework-owned host defaults. Custom elements default to `display:inline`
-  // (almost never wanted) and every component wants the foreground color — so
-  // the framework decides both. A component needing a different display (inline
-  // -flex, grid) overrides in its own styles, which win in the cascade. This is
-  // what lets most <host> blocks disappear entirely.
   ':host { display: block; color: var(--foreground); }\n' +
   ':host([hidden]) { display: none !important; }\n' +
   // transition kill stays a blanket !important — hover/interaction micro-
   // transitions carry no component-authored reduced-motion intent to lose.
   // The animation kill is NOT !important and is wrapped in :where() (zero
-  // specificity): a shadow component that owns its own reduced-motion
-  // behavior (a slowdown, a pause) has real selector specificity inside
-  // its own adopted stylesheet and wins the cascade unforced, instead of
-  // being defeated by this default. Anything that has NOT opted in still
-  // gets stopped here — this is the floor, not a universal override.
+  // specificity): a component that owns its own reduced-motion behavior
+  // (a slowdown, a pause) has real selector specificity inside its own
+  // stylesheet and wins the cascade unforced. Anything that has NOT opted
+  // in still gets stopped here — this is the floor, not a universal override.
   '@media (prefers-reduced-motion: reduce) { :where(*) { transition: none !important; animation: none; } }\n'
 
 const AMBIENT_FX_CSS =
@@ -88,17 +68,17 @@ const AMBIENT_FX_CSS =
   // `--animate-*` name for the shorthand value (consistent with neighbors
   // in the fx catalog). Reduced-motion: 1.5s slow (spinner semantics),
   // expressed here via var override so the media rule is in the shared
-  // place, not left in spinner.
+  // place, not left in spinner. `:root` only — light DOM inherits from the
+  // document.
   '@keyframes sail-spin { to { transform: rotate(360deg); } }\n' +
-  ':root, :host { --animate-spin: sail-spin 0.7s linear infinite; }\n' +
-  '@media (prefers-reduced-motion: reduce) { :root, :host { --animate-spin: sail-spin 1.5s linear infinite; } }\n'
+  ':root { --animate-spin: sail-spin 0.7s linear infinite; }\n' +
+  '@media (prefers-reduced-motion: reduce) { :root { --animate-spin: sail-spin 1.5s linear infinite; } }\n'
 
 // LANGUAGE-LAYER TYPOGRAPHY. Semantic content tags are styled from the type
 // scale automatically — the author writes `<h1>`/`<p>` plain and gets taste,
 // with no sx and no <style>. This is what makes the `strictest` policy livable:
 // text has a home (the tags themselves) instead of needing a styling escape.
-// Every value is a token; nothing here is hand-tuned. Adopted into every shadow
-// component alongside the resets.
+// Every value is a token; nothing here is hand-tuned. Part of LIGHT_CONTRACTS.
 const TYPOGRAPHY_CSS =
   // --heading-transform is the casing channel: `none` by default (headings
   // read as authored), but a theme that wants ALL CAPS chrome sets it once
@@ -192,28 +172,18 @@ export const sailTypographySheet: CSSStyleSheet | null = makeSheet(
 )
 
 /**
- * Adopt every shared sheet into a shadow root (no-op for light DOM /
- * environments without `CSSStyleSheet`).
+ * Residual: adopt shared sheets into an opt-in shadow root (foreign-content
+ * containment wrappers — not the Sail L1 product model). No-op for light DOM
+ * / environments without `CSSStyleSheet`. L1 paint does not require this.
  *
- * Called once per shadow component instance from compiler-emitted code
- * (see `crates/sail-compiler/src/emit/js.rs`). Centralising the call
- * here keeps the per-component adoption snippet to a single function
- * call — a meaningful saving across N×76 components in the bundle.
- *
- * The compiler relies on this importing zero other module-level
- * symbols at the call site. Keep the API surface tiny so the emitter
- * doesn't need to learn new imports per sheet.
+ * Tone/size/control sheets are attribute-keyed (`[tone=…]`), so nested
+ * framework controls inside a rare shadow wrapper still resolve tone/size props.
+ * Host defaults remain `:host` only inside BASE (shadow host box).
  */
-// The CONTROL skins (button/input/checkbox/radio surfaces + their baseline)
-// live in the light-DOM document contracts, which do NOT cross a shadow
-// boundary. A shadow component that nests a framework-styled control (a
-// `<button ghost>` dismiss, an `<input>`) would render it visually bare
-// unless its shadow root ALSO carries the control skins. So build a sheet of
-// {element-keyed tone/size channels + control contracts + button/input/toggle
-// skins} and adopt it alongside the base sheets. Element-keyed (not :host-
-// keyed) so a nested `<button tone=primary>` resolves --tone on itself.
-// Lazy: the skin constants are defined further down the module. (Surfaced by
-// the sail-alert re-port pilot — bare controls in every shadow L2 otherwise.)
+// Control skins for residual shadow roots that nest framework-styled controls
+// (a `<button ghost>` dismiss). Document contracts do not cross a shadow
+// boundary, so those roots adopt the same element-keyed skins. Lazy: skin
+// constants are defined further down the module.
 let controlsSheetMemo: CSSStyleSheet | null | undefined
 function sailControlsSheet(): CSSStyleSheet | null {
   if (controlsSheetMemo === undefined) {
@@ -241,23 +211,17 @@ export function adoptSuiSheets(root: unknown): void {
 }
 
 // ── LIGHT-DOM contracts ─────────────────────────────────────────────────────
-// The document-level, attribute-keyed form of the framework contracts. Where
-// the shadow path adopts :host-keyed sheets into every root, the light path
-// installs ONE sheet keyed on plain attributes — which is also what makes the
-// contracts layer-invisible: `[tone='primary']` styles an L1 <button> and a
-// light L2 <sail-chip> identically, and dynamic `tone={x()}` restyles both.
-const hostAttrs = (css: string): string =>
-  // `:host([tone='x'])` → `[tone='x']` — the element IS the host in light DOM.
-  css.replace(/:host\(\[([^)]+)\]\)/g, '[$1]')
+// The document-level framework contracts. Sail L1 is light DOM: tone/size are
+// ordinary attribute-keyed props (`[tone='primary']`) so one sheet styles an L1
+// <button> and a light L2 <sail-chip> identically, and dynamic `tone={x()}`
+// restyles both.
 
 // The INTERACTIVE-SURFACE contracts — the framework decisions no component
 // re-makes (the audit's control-baseline + focus + disabled clusters:
 // ~18% of all baseline CSS was these, hand-repeated). GLOBAL: a SAIL document
 // is SAIL's canvas, so these apply to every control in the light tree, not
-// just component subtrees — "the web, with default styles." Interop with a
-// foreign page is a DIFFERENT mode (emit a web component; its shadow root
-// insulates it for free). :where() keeps specificity at zero so any explicit
-// component/sx rule wins ties.
+// just component subtrees — "the web, with default styles." :where() keeps
+// specificity at zero so any explicit component/sx rule wins ties.
 const CONTROL_CONTRACTS_CSS =
   // Control baseline: what a control IS before any skin.
   ':where(button, input, textarea, select) { font: inherit; font-family: var(--font-body); letter-spacing: inherit; color: inherit; }\n' +
@@ -272,7 +236,7 @@ const CONTROL_CONTRACTS_CSS =
   ':where(button, input, textarea, select, a, [tabindex]) { transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }\n'
 
 // L1 <input> / <textarea> / <select> — the field surface. A bordered control
-// on the background, sized by the size channel and sharing the button's
+// on the background, sized by the size prop contract and sharing the button's
 // radius/shadow language, so a plain <input> IS the design system's field.
 // select/textarea share it (native chrome already dropped via appearance:none
 // in the baseline). Every rule at :where() zero specificity.
@@ -334,8 +298,8 @@ const DASH_MARK =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' d='M4 8h8'/%3E%3C/svg%3E\")"
 const TOGGLE_CONTROLS_CSS =
   // Shared box: sized to the font, bordered, on the background. The box is
-  // 1.15em square, so the `[size=...]` channel's --size-fs (shared with
-  // button/input) scales it too — same channel, same fallback (md/text-base).
+  // 1.15em square, so the `[size=...]` contract's --size-fs (shared with
+  // button/input) scales it too — same prop contract, same fallback (md/text-base).
   ":where(input[type='checkbox'], input[type='radio']) { appearance: none; flex: none; width: 1.15em; height: 1.15em; min-height: 0; padding: 0; font-size: var(--size-fs, var(--text-base)); border: 1.5px solid var(--border-strong); background: var(--background); box-shadow: var(--shadow-xs); cursor: pointer; vertical-align: -0.2em; }\n" +
   ":where(input[type='checkbox']) { border-radius: var(--radius-sm); }\n" +
   ":where(input[type='radio']) { border-radius: 50%; }\n" +
@@ -356,10 +320,11 @@ const TOGGLE_CONTROLS_CSS =
 
 // L1 <button> — the first language element skin. A bare <button> anywhere in
 // a SAIL document IS the design system's button ("the web with default styles"):
-// tone/size arrive through the attribute-keyed channel contracts above,
-// variant surfaces mirror the hand-polished baseline, and every rule sits at
-// :where() zero specificity so sx atomics and component variants win ties.
-// Fallbacks carry the no-attribute defaults (tone=default, size=md).
+// tone/size arrive through the attribute-keyed contracts above (ordinary
+// props → CSS custom properties), variant surfaces mirror the hand-polished
+// baseline, and every rule sits at :where() zero specificity so sx atomics
+// and component variants win ties. Fallbacks carry the no-attribute defaults
+// (tone=default, size=md).
 //
 // ANATOMY CONTAINMENT. `button:not([variant])` matched every bare <button>
 // in the document — including the ones a SKIN renders as its own internal
@@ -419,8 +384,8 @@ const BUTTON_SKIN_CSS =
 
 // L1 <hr> — the separator surface. Horizontal by default (a thin tone-tinted
 // rule); `orientation="vertical"` and `variant="dashed"` are attribute-keyed
-// like every other channel here. tone arrives for free via the generic
-// `[tone=...]` channel above (--tone-bg), so `<hr tone="primary">` just works.
+// like every other contract here. tone arrives for free via the generic
+// `[tone=...]` prop above (--tone-bg), so `<hr tone="primary">` just works.
 const HR_SKIN_CSS =
   ":where(hr) { border: 0; margin: var(--space-2) 0; padding: 0; flex: 0 0 auto; display: block; width: 100%; height: 1px; background: var(--tone-bg, var(--border-subtle)); }\n" +
   ":where(hr[variant='dashed']) { background: transparent; border-top: 1px dashed var(--tone-bg, var(--border-subtle)); height: 0; }\n" +
@@ -429,8 +394,8 @@ const HR_SKIN_CSS =
 
 // L1 <span dot> — the status-dot surface. `dot` scopes the skin so a plain
 // <span size="..."> elsewhere isn't affected (its size scale means something
-// different than the control size channel above). tone arrives for free via
-// the generic `[tone=...]` channel (--tone-fg/--tone-border/--tone-ring).
+// different than the control size contract above). tone arrives for free via
+// the generic `[tone=...]` prop (--tone-fg/--tone-border/--tone-ring).
 const STATUS_DOT_SKIN_CSS =
   ":where(span[dot]) { display: inline-block; vertical-align: middle; width: var(--icon-size-3xs); height: var(--icon-size-3xs); border-radius: var(--shape-pill); background: var(--tone-fg); box-shadow: 0 0 0 1.5px var(--tone-border), 0 0 0 4.5px var(--tone-ring); }\n" +
   ":where(span[dot][size='sm']) { width: var(--space-1_5); height: var(--space-1_5); box-shadow: 0 0 0 1px var(--tone-border), 0 0 0 3.5px var(--tone-ring); }\n" +
@@ -519,7 +484,7 @@ const RANGE_SKIN_CSS =
 // L1 <progress> — the determinate/indeterminate progress bar. A bare native
 // <progress value=.6> IS the design system's progress: the platform gives the
 // value semantics + a11y for free; this skin just replaces the OS chrome with
-// the token vocabulary. tone arrives via the generic `[tone=...]` channel
+// the token vocabulary. tone arrives via the generic `[tone=...]` prop
 // (--tone-fg), so `<progress tone=success>` tints the fill. WebKit and Firefox
 // expose the fill through DIFFERENT pseudo-elements, and a rule that groups
 // both selectors is dropped whole by either engine — so they're separate.
@@ -606,7 +571,7 @@ const DETAILS_SKIN_CSS =
 // focus-return for free — no sentinels, no scroll-lock JS beyond a :has()
 // page rule, no custom element. This is the skin: panel, backdrop, size
 // matrix, and the header/body/footer structure. size + backdrop are
-// attribute-keyed like every other channel here.
+// attribute-keyed like every other contract here.
 const DIALOG_SKIN_CSS =
   // The panel — centered in the top layer, a flex column so header/footer pin
   // and the body scrolls. Closed state is the UA default (display:none), so
@@ -638,7 +603,7 @@ const DIALOG_SKIN_CSS =
   // stops taking input — one rule, not a per-component reimplementation.
   ":where([data-component][disabled]) { color: var(--muted-foreground); filter: saturate(0.6); pointer-events: none; }\n" +
   // Native range/checkbox/radio take the platform's own theming hook — the
-  // tone channel fills it, so a toned control paints without author CSS.
+  // tone prop fills it, so a toned control paints without author CSS.
   ":where(input[type='range'], input[type='checkbox'], input[type='radio']) { accent-color: var(--tone, var(--primary)); }\n" +
   '@media (prefers-reduced-motion: reduce) { :where(dialog)::backdrop { transition: none; } }\n' +
   // Scroll-lock — pure CSS, no JS. showModal() sets the [open] attribute, so an
@@ -709,18 +674,16 @@ const POPOVER_SKIN_CSS =
   ":where([popover][role='listbox'] option[disabled]) { opacity: 0.5; cursor: not-allowed; }\n" +
   ":where([popover])::backdrop { background: transparent; }\n"
 
-// The CONTROL half of the contracts — element-keyed channels + control
+// The CONTROL half of the contracts — attribute-keyed tone/size props + control
 // baseline + button/input/toggle skins, WITHOUT the light host rules
 // (display:block, slot, [hidden]) which are the light-DOM component's job.
-// This is what shadow roots adopt (via adoptSuiSheets) so their nested
-// controls are skinned; the sail-alert pilot proved the boundary blocks the
-// document contracts otherwise. Exported so a unit test guards the invariant
-// (adoptedStyleSheets isn't constructable under jsdom, so the effect itself
-// is browser-only).
+// Residual shadow roots adopt this via adoptSuiSheets so nested controls are
+// skinned. Exported so a unit test guards the invariant (adoptedStyleSheets
+// isn't constructable under jsdom, so the effect itself is browser-only).
 export const CONTROL_SKINS_CSS =
   AMBIENT_FX_CSS +
-  hostAttrs(TONES_CSS) +
-  hostAttrs(SIZES_CSS) +
+  TONES_CSS +
+  SIZES_CSS +
   CONTROL_CONTRACTS_CSS +
   BUTTON_SKIN_CSS +
   INPUT_SKIN_CSS +
@@ -740,15 +703,13 @@ export const LIGHT_CONTRACTS_CSS =
   BOX_MODEL_CSS +
   // Root typography anchor for light-DOM pages: bare text inherits the body
   // family and ink from here. The type scale sizes <p>/<h1> but never declares
-  // a family, so without this anchor the page root falls to the UA serif. Shadow
-  // components inherit the family across their boundary and own their ink via
-  // [data-component]. Specificity 0 — an author :root/body rule wins.
+  // a family, so without this anchor the page root falls to the UA serif.
+  // Specificity 0 — an author :root/body rule wins.
   ':where(html) { font-family: var(--font-body); color: var(--foreground); line-height: var(--leading-normal); }\n' +
-  hostAttrs(TONES_CSS) +
-  hostAttrs(SIZES_CSS) +
-  // Semantic-element + typography defaults reach light-DOM pages here (they
-  // were shadow-only before) — a bare <table>/<ul>/<img>/<h1> on a page is
-  // styled by the framework, no .ship-view wrapper needed.
+  TONES_CSS +
+  SIZES_CSS +
+  // Semantic-element + typography defaults — a bare <table>/<ul>/<img>/<h1>
+  // on a page is styled by the framework, no wrapper needed.
   TYPOGRAPHY_CSS +
   SEMANTIC_ELEMENTS_CSS +
   CONTROL_CONTRACTS_CSS +
@@ -767,7 +728,7 @@ export const LIGHT_CONTRACTS_CSS =
   DIALOG_SKIN_CSS +
   TABLE_SKIN_CSS +
   POPOVER_SKIN_CSS +
-  // Host defaults for light components (the :host base rules, element-keyed).
+  // Host defaults for light components (attribute-keyed on data-component).
   '[data-component] { display: block; color: var(--foreground); }\n' +
   '[data-component][hidden] { display: none !important; }\n' +
   // <slot> stays in the light tree as the projection wrapper — transparent.

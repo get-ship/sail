@@ -555,3 +555,68 @@ fn tab_size_and_leading_code_lower() {
         "leading-code binds --leading-code:\n{out}"
     );
 }
+
+// ─── sx IR v0 structured form (`prop: value`) ────────────────────────────────
+
+#[test]
+fn structured_bg_px_lowers_like_legacy_atoms() {
+    let structured = pp(r#"<div sx="bg: primary px: 2">x</div>"#);
+    let legacy = pp(r#"<div sx="bg-primary px-2">x</div>"#);
+    assert!(
+        structured.contains("background-color:var(--primary)"),
+        "structured bg: primary:\n{structured}"
+    );
+    assert!(
+        structured.contains("padding-inline:var(--space-2)"),
+        "structured px: 2:\n{structured}"
+    );
+    // Same CSS bindings as legacy (class names may share sanitized atom).
+    assert!(
+        legacy.contains("background-color:var(--primary)")
+            && legacy.contains("padding-inline:var(--space-2)"),
+        "legacy baseline:\n{legacy}"
+    );
+}
+
+#[test]
+fn structured_dotted_paths_and_hover_prefix() {
+    let out = pp(r#"<div sx="px: space.2 rounded: radius.sm hover:bg: muted">x</div>"#);
+    assert!(
+        out.contains("padding-inline:var(--space-2)"),
+        "px: space.2 dual-resolve:\n{out}"
+    );
+    assert!(
+        out.contains("border-radius:var(--radius-sm)"),
+        "rounded: radius.sm:\n{out}"
+    );
+    assert!(
+        out.contains(":hover{background-color:var(--muted)}")
+            || out.contains(":hover{background-color:var(--muted);"),
+        "hover:bg: muted:\n{out}"
+    );
+}
+
+#[test]
+fn structured_color_alias_and_raw_escape() {
+    let color = pp(r#"<span sx="color: primary">x</span>"#);
+    assert!(
+        color.contains("color:var(--primary)"),
+        "color: alias → text color:\n{color}"
+    );
+    let raw = pp(r#"<div sx="bg: raw:#3366ff">x</div>"#);
+    assert!(
+        raw.contains("background-color:#3366ff"),
+        "raw: escape emits literal:\n{raw}"
+    );
+}
+
+#[test]
+fn dual_parse_mixed_structured_and_legacy() {
+    let out = pp(r#"<div sx="bg: primary px-2 rounded: sm">x</div>"#);
+    assert!(
+        out.contains("background-color:var(--primary)")
+            && out.contains("padding-inline:var(--space-2)")
+            && out.contains("border-radius:var(--radius-sm)"),
+        "mixed structured+legacy:\n{out}"
+    );
+}

@@ -1,7 +1,8 @@
 //! `sail-css-token` — `var(--xyz)` inside a `.sail` `<style>` block must
-//! resolve to either the canonical token CSS
-//! (`packages/sail/tokens/src/tokens.css`, parsed by `crate::tokens`) or a
-//! custom property set locally inside the same `<style>` block.
+//! resolve to either a design token from the generated registry
+//! (`packages/sail/tokens/src/token-registry.json`, loaded by `crate::tokens`,
+//! emitted from the DTCG model) or a custom property set locally inside the
+//! same `<style>` block.
 //!
 //! Catches typos that today fall through silently (the variable is
 //! undefined, the fallback or empty string is used, the visual is
@@ -39,8 +40,8 @@
 //! Position reporting is on the `var(...)` call, not the `<style>`
 //! block as a whole — exactly where the typo lives.
 //!
-//! The registry is parsed once from `tokens.css`'s `--name:` declarations
-//! by `crate::tokens` (plus the convention allowlist) — no mirror file.
+//! The registry is loaded once from `token-registry.json` by `crate::tokens`
+//! (plus the convention allowlist). Edit DTCG under `model/`, then generate.
 //!
 //! Related rule: `sail-controller-purity` (controllers don't write raw
 //! HTML) — same finding shape, same plumbing into the compiler check
@@ -96,7 +97,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 /// fix the typo.
 fn suggest_text(closest: Option<&str>) -> String {
     let mut s = String::from(
-        "Use a token from the canonical token CSS (packages/sail/tokens/src/tokens.css) \
+        "Use a token from the design-token registry (packages/sail/tokens/model → generate) \
          or define `--<name>: ...;` in this <style> block.",
     );
     if let Some(name) = closest {
@@ -106,7 +107,7 @@ fn suggest_text(closest: Option<&str>) -> String {
 }
 
 /// The flat set of theme token names — delegated to the shared
-/// `crate::tokens` registry, parsed from `tokens.css` (plus the convention
+/// `crate::tokens` registry (generated from DTCG, plus the convention
 /// allowlist). The single source both this lint and the `sx` vocabulary read.
 fn theme_tokens() -> &'static HashSet<&'static str> {
     crate::tokens::registry()

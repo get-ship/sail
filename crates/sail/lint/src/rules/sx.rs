@@ -141,6 +141,8 @@ pub fn lower_atom(atom: &str) -> Option<Vec<(String, String)>> {
 
 /// Split an sx pair into its prefixes and its atom. `hover:bg-surface-2` is one
 /// prefix and one atom; `bg-surface-2` is none and one.
+/// Kept for callers outside the IR path (tests / diagnostics helpers).
+#[allow(dead_code)]
 fn split_prefix(pair: &str) -> (Option<&str>, &str) {
     match pair.rsplit_once(':') {
         Some((prefix, atom)) => (Some(prefix), atom),
@@ -314,99 +316,125 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             SxHit::Static(val, offset) => (val, offset),
         };
         let (line, col) = offset_to_line_col(source, offset);
-        // Gather the layout atoms across the WHOLE attribute before reporting any of
-        // them, so `flex items-center gap-2` is one redirect and not three refusals.
+
+        // IR path (structured `bg: primary` + legacy `bg-primary`). Layout
+        // refusals are still absorbed into one compound redirect.
+        let (prog, parse_errs) = crate::sx_ir::parse_lenient(val);
+        for e in &parse_errs {
+            findings.push(mk(path, line, col, e.message()));
+        }
+
         let mut layout = LayoutIntent::default();
-        let mut kept: Vec<&str> = Vec::new();
-        for pair in val.split_whitespace() {
-            if pair == "group" {
-                continue;
-            }
-            let (_, atom) = split_prefix(pair);
-            if matches!(crate::sx_vocab::resolve(atom), crate::sx_vocab::Resolved::Refused { .. }) {
-                if layout.absorb(atom) {
+        let mut kept: Vec<String> = Vec::new();
+        for decl in &prog.decls {
+            let atom = crate::sx_ir::decl_atom(decl);
+            if matches!(
+                crate::sx_vocab::resolve(&atom),
+                crate::sx_vocab::Resolved::Refused { .. }
+            ) {
+                if layout.absorb(&atom) {
                     continue;
                 }
             } else {
-                kept.push(pair);
+                kept.push(decl.source.clone());
             }
         }
         if layout.saw_any {
+            let kept_refs: Vec<&str> = kept.iter().map(String::as_str).collect();
             findings.push(mk(path, line, col, format!(
                 "sx does not do layout — the parent decides how its children sit. Write:\n\n    {}\n\nA layout element names the axis and closes the vocabulary, which is what stops two \
                  authors diverging on four flex properties.",
-                layout.render(&kept)
+                layout.render(&kept_refs)
             )));
         }
 
-        for pair in val.split_whitespace() {
-            // Bare `group` marks an ancestor so a descendant can react to its
-            // state with `group-<state>:`.
-            if pair == "group" {
+        for decl in &prog.decls {
+            let atom = crate::sx_ir::decl_atom(decl);
+            // Layout atoms already reported as one redirect.
+            if matches!(
+                crate::sx_vocab::resolve(&atom),
+                crate::sx_vocab::Resolved::Refused { .. }
+            ) && LayoutIntent::default().absorb(&atom)
+            {
                 continue;
             }
-            let (prefix, atom) = split_prefix(pair);
-            if let Some(p) = prefix {
-                if !is_prefix(p) {
-                    // Rendered FROM the tables — a hand-written list here once
-                    // advertised `print:` (never existed) and omitted real
-                    // prefixes, so the refusal itself was lying about the set.
-                    let states: Vec<String> =
-                        STATE_PREFIXES.iter().map(|(n, _)| format!("{n}:")).collect();
-                    let conditions: Vec<String> =
-                        CONDITION_PREFIXES.iter().map(|(n, _)| format!("{n}:")).collect();
-                    findings.push(mk(path, line, col, format!(
-                        "sx unknown prefix `{p}:` — the closed set: {}, a condition ({}), \
-                         `state-<value>:` for a component state, or group-<state>: to react \
-                         to an ancestor",
-                        states.join("/"),
-                        conditions.join("/")
-                    )));
-                    continue;
-                }
-            }
-
-            match crate::sx_vocab::resolve(atom) {
-                crate::sx_vocab::Resolved::Ok(_) => {}
-                // THE MISSION: never "not allowed, find another way". Always
-                // "use this instead".
-                crate::sx_vocab::Resolved::Refused { instead } => {
-                    // A layout atom was already absorbed into the ONE compound
-                    // redirect above; reporting it again would be the very
-                    // three-rejections-per-breath this rule exists to prevent.
-                    if !LayoutIntent::default().absorb(atom) {
-                        findings.push(mk(path, line, col, format!(
-                            "sx `{atom}` is not sx — use {instead}"
-                        )));
+            if let Err(e) = crate::sx_ir::validate_decl(decl) {
+                // Enrich BadValue with options when possible.
+                let msg = match &e {
+                    crate::sx_ir::SxError::BadValue { prop, value, .. } => {
+                        let atom = crate::sx_ir::decl_atom(decl);
+                        match crate::sx_vocab::resolve(&atom) {
+                            crate::sx_vocab::Resolved::BadValue { name, options } => {
+                                let raw = value
+                                    .chars()
+                                    .next()
+                                    .is_some_and(|c| c.is_ascii_digit() || c == '#')
+                                    || value.ends_with("px")
+                                    || value.ends_with("rem")
+                                    || value.ends_with('%');
+                                let mut m = format!("sx `{atom}` — `{value}` is not a token");
+                                if raw {
+                                    m.push_str(
+                                        " (a value is a design decision; spend a token)",
+                                    );
+                                }
+                                m.push_str(&format!(
+                                    ". `{name}-` accepts: {}",
+                                    options.join(", ")
+                                ));
+                                let opts: Vec<&str> =
+                                    options.iter().map(String::as_str).collect();
+                                if let Some(s) = nearest(value, &opts) {
+                                    m.push_str(&format!("; did you mean `{name}-{s}`?"));
+                                }
+                                m
+                            }
+                            _ => {
+                                let _ = prop;
+                                if crate::sx_ir::looks_like_raw_color(value)
+                                    || crate::sx_ir::looks_like_raw_length(value)
+                                {
+                                    crate::sx_ir::SxError::RawWithoutEscape {
+                                        value: value.clone(),
+                                        source: decl.source.clone(),
+                                    }
+                                    .message()
+                                } else {
+                                    e.message()
+                                }
+                            }
+                        }
                     }
-                }
-                crate::sx_vocab::Resolved::BadValue { name, options } => {
-                    let value = atom.strip_prefix(&name).unwrap_or(atom).trim_start_matches('-');
-                    let raw = value.chars().next().is_some_and(|c| c.is_ascii_digit() || c == '#')
-                        || value.ends_with("px")
-                        || value.ends_with("rem")
-                        || value.ends_with('%');
-                    let mut m = format!("sx `{atom}` — `{value}` is not a token");
-                    if raw {
-                        m.push_str(" (a value is a design decision; spend a token)");
+                    crate::sx_ir::SxError::UnknownPrefix { prefix, .. } => {
+                        let states: Vec<String> = STATE_PREFIXES
+                            .iter()
+                            .map(|(n, _)| format!("{n}:"))
+                            .collect();
+                        let conditions: Vec<String> = CONDITION_PREFIXES
+                            .iter()
+                            .map(|(n, _)| format!("{n}:"))
+                            .collect();
+                        format!(
+                            "sx unknown prefix `{prefix}:` — the closed set: {}, a condition ({}), \
+                             `state-<value>:` for a component state, or group-<state>: to react \
+                             to an ancestor",
+                            states.join("/"),
+                            conditions.join("/")
+                        )
                     }
-                    m.push_str(&format!(". `{name}-` accepts: {}", options.join(", ")));
-                    let opts: Vec<&str> = options.iter().map(String::as_str).collect();
-                    if let Some(s) = nearest(value, &opts) {
-                        m.push_str(&format!("; did you mean `{name}-{s}`?"));
+                    crate::sx_ir::SxError::UnknownAtom { atom, .. } => {
+                        let mut m = format!("sx `{atom}` — not in the vocabulary");
+                        let names = crate::sx_vocab::names();
+                        let opts: Vec<&str> = names.iter().map(String::as_str).collect();
+                        let head = atom.split('-').next().unwrap_or(atom);
+                        if let Some(s) = nearest(head, &opts) {
+                            m.push_str(&format!("; did you mean `{s}-`?"));
+                        }
+                        m
                     }
-                    findings.push(mk(path, line, col, m));
-                }
-                crate::sx_vocab::Resolved::Unknown => {
-                    let mut m = format!("sx `{atom}` — not in the vocabulary");
-                    let names = crate::sx_vocab::names();
-                    let opts: Vec<&str> = names.iter().map(String::as_str).collect();
-                    let head = atom.split('-').next().unwrap_or(atom);
-                    if let Some(s) = nearest(head, &opts) {
-                        m.push_str(&format!("; did you mean `{s}-`?"));
-                    }
-                    findings.push(mk(path, line, col, m));
-                }
+                    other => other.message(),
+                };
+                findings.push(mk(path, line, col, msg));
             }
         }
     }
@@ -584,6 +612,25 @@ mod tests {
     }
 
     #[test]
+    fn structured_form_passes_and_rejects_raw_without_escape() {
+        // IR v0: `prop: value` dual-parsed with legacy.
+        assert!(
+            run(r#"<div sx="bg: primary px: 2 rounded: sm hover:bg: muted">x</div>"#).is_empty(),
+            "structured tokens must pass"
+        );
+        assert!(
+            run(r#"<div sx="bg: primary px-2">x</div>"#).is_empty(),
+            "mixed structured+legacy must pass"
+        );
+        let raw = run(r#"<div sx="bg: #3366ff">x</div>"#);
+        assert_eq!(raw.len(), 1, "{raw:?}");
+        assert!(raw[0].contains("raw:"), "must demand raw: escape: {}", raw[0]);
+        let px = run(r#"<div sx="p: 16px">x</div>"#);
+        assert_eq!(px.len(), 1, "{px:?}");
+        assert!(px[0].contains("raw:"), "length needs raw:: {}", px[0]);
+    }
+
+    #[test]
     fn a_bad_value_prints_the_scale_so_the_author_knows_what_to_spend() {
         let m = &run(r#"<card sx="p-99">x</card>"#)[0];
         assert!(m.contains("accepts:"), "{m}");
@@ -668,18 +715,12 @@ mod tests {
     fn breakpoints_match_the_tokens() {
         // A media query cannot read a custom property, so the widths are literal
         // here. That is the one place sx can drift from the theme — so it can't.
-        let css = include_str!("../../../../../packages/sail/tokens/src/tokens.css");
+        // Values come from the generated token registry (DTCG emit).
         for (name, query) in CONDITION_PREFIXES.iter().filter(|(n, _)| {
             matches!(*n, "mobile" | "tablet" | "desktop")
         }) {
-            let decl = format!("--breakpoint-{name}:");
-            let value = css
-                .lines()
-                .find_map(|l| l.trim().strip_prefix(&decl))
-                .expect("the breakpoint token exists")
-                .trim()
-                .trim_end_matches(';')
-                .trim();
+            let value = crate::tokens::token_value(&format!("breakpoint-{name}"))
+                .expect("the breakpoint token exists in the registry");
             assert!(
                 query.contains(value),
                 "`{name}:` is {query} but --breakpoint-{name} is {value} — sx has drifted from the theme"

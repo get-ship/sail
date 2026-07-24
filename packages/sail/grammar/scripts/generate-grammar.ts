@@ -223,15 +223,6 @@ ${clauses}
       field('handler', $.brace_expression),
     ),`;
       }
-      if (prefix === 'attr') {
-        return `    // \`attr:name={value}\` — bare name, or \`attr:{nameExpr}={value}\`.
-    ${rule}: $ => seq(
-      'attr:',
-      field('name', choice($.attr_local, $.brace_expression)),
-      '=',
-      field('value', $.brace_expression),
-    ),`;
-      }
       if (prefix === 'use') {
         return `    // \`use:action\` / \`use:action={param}\` — attach a reusable action.
     ${rule}: $ => seq(

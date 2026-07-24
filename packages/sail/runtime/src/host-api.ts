@@ -137,17 +137,11 @@ export function bindNativeEvent(
 }
 
 /**
- * Subscribe to a `<slot>`'s assigned-elements list. `render` runs
- * once on initial mount AND on every `slotchange`. The returned
- * elements are whatever `assignedElements()` reports — already-
- * filtered to nodes the consumer actually slotted.
+ * Subscribe to a native `<slot>`'s assigned-elements list (shadow slot API).
+ * Residual helper for opt-in foreign-content shadow wrappers — Sail L1 uses
+ * light-DOM projection (`projectSlots`), not `assignedElements()`.
  *
- * Replaces the boilerplate dance of grabbing the slot ref, attaching
- * a `slotchange` listener, calling `assignedElements()` once for the
- * initial state, and remembering to remove the listener on
- * disconnect. The inner-effect's returned cleanup detaches the
- * `slotchange` listener if `slot()` returns a different node (or
- * null) on a subsequent run.
+ * `render` runs once on initial mount AND on every `slotchange`.
  *
  * @param slot Reactive read of the slot element (typically
  *   `() => scope.fooSlot()`). May return `null` on first run if the

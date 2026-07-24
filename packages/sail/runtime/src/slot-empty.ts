@@ -30,13 +30,12 @@ export function bindSlotEmpty(
   host: HTMLElement,
   attrName: string,
 ): () => void {
-  // Where the content lives depends on the DOM kind: shadow assigns the
-  // host's light children to the slot (assignedNodes); light projection
-  // moves them INTO the slot wrapper (childNodes). This is decided LAZILY
-  // per read — the slot may still be detached (built in a fragment) at bind
-  // time, so a once-at-bind decision mis-routes (the sail-empty-state
-  // reflect-empty regression). Duck-type the shadow root by `.host`
-  // (`instanceof ShadowRoot` is unreliable under jsdom).
+  // Light DOM projection moves children INTO the slot wrapper (childNodes).
+  // Residual: a native shadow slot uses assignedNodes. Decided LAZILY per
+  // read — the slot may still be detached (built in a fragment) at bind time,
+  // so a once-at-bind decision mis-routes (the sail-empty-state reflect-empty
+  // regression). Duck-type a shadow root by `.host` (`instanceof ShadowRoot`
+  // is unreliable under jsdom).
   const nodesOf = (): Node[] => {
     const root = slot.getRootNode() as { host?: unknown } | null
     const inShadow = !!(root && root !== slot.ownerDocument && root.host)
@@ -47,10 +46,8 @@ export function bindSlotEmpty(
     if (hasText) host.removeAttribute(attrName)
     else host.setAttribute(attrName, '')
   }
-  // Universal change signal: observe the HOST subtree — it catches shadow
-  // light-child assignment AND light projection (children moved into the
-  // wrapper), regardless of when the slot attaches. slotchange rides along
-  // for shadow browsers where it fires precisely (harmless where it doesn't).
+  // Observe the HOST subtree — catches light projection (children moved into
+  // the wrapper). slotchange rides along for residual native shadow slots.
   slot.addEventListener('slotchange', sync)
   let observer: MutationObserver | null = null
   if (typeof MutationObserver !== 'undefined') {

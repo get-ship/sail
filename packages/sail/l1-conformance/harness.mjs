@@ -10,8 +10,8 @@
 // element-skins) and render each element's lowered-output shape across the theme
 // grid — faithful for mechanism-1 (compiles-away) and mechanism-2 (native+skin)
 // L1, whose lowered output IS static HTML + that CSS. Mechanism-3 composites
-// (shadow DOM + controllers) need real mounting — a second render mode tracked
-// as follow-up, not a second framework.
+// (light-DOM components + controllers) need real mounting — a second render
+// mode tracked as follow-up, not a second framework.
 
 import { chromium } from 'playwright'
 import { readFileSync, mkdirSync } from 'node:fs'

@@ -246,22 +246,25 @@ pub fn resolve(atom: &str) -> Resolved {
         None => (false, atom),
     };
 
-    // A refusal is checked FIRST, and on the whole atom AND its head, so both
-    // `flex` and `gap-4` land on their replacement rather than on "unknown".
+    // Exact full-atom refusal first (`flex`, not a longer bare allowlist).
     if let Some(instead) = v.refused.get(body) {
         return Resolved::Refused { instead: instead.clone() };
     }
-    if let Some((head, _)) = body.split_once('-') {
-        if let Some(instead) = v.refused.get(head) {
-            return Resolved::Refused { instead: instead.clone() };
-        }
-    }
 
+    // Bare exact allowlist BEFORE head refusal so `animate-spin` (bare) is not
+    // killed by refused head `animate` (which means motion:, not CSS animation).
     if let Some(u) = v.bare.get(body) {
         return match u.lower(body, false) {
             Some(decls) => Resolved::Ok(decls),
             None => Resolved::Unknown,
         };
+    }
+
+    // Head refusal for open ramps: `gap-4`, bare `animate-foo` without allowlist.
+    if let Some((head, _)) = body.split_once('-') {
+        if let Some(instead) = v.refused.get(head) {
+            return Resolved::Refused { instead: instead.clone() };
+        }
     }
 
     // Longest name match: `min-w-full` is (min-w, full), not (min, w-full).
@@ -500,6 +503,34 @@ mod tests {
         assert!(glow.iter().any(|(p, v)| p == "position" && v == "absolute"));
         assert!(glow.iter().any(|(p, _)| p == "background"));
         assert!(decls("bg-glow-accent").iter().any(|(p, _)| p == "background"));
+    }
+
+    #[test]
+    fn animate_spin_bare_not_killed_by_refused_animate_head() {
+        // `animate` is refused (use motion:) but `animate-spin` is a bare CSS PE atom.
+        let d = decls("animate-spin");
+        assert!(
+            d.iter()
+                .any(|(p, v)| p == "animation" && v == "var(--animate-spin)"),
+            "got {d:?}"
+        );
+        assert!(matches!(resolve("animate"), Resolved::Refused { .. }));
+    }
+
+    #[test]
+    fn avatar_pe_gradient_and_bg_none_lower() {
+        let g = decls("bg-gradient-primary-accent");
+        assert!(
+            g.iter().any(|(p, v)| p == "background-image"
+                && v.contains("linear-gradient")
+                && v.contains("var(--primary)")
+                && v.contains("var(--accent)")),
+            "got {g:?}"
+        );
+        assert_eq!(
+            decls("bg-none"),
+            vec![("background-image".into(), "none".into())]
+        );
     }
 
     #[test]

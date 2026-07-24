@@ -1,10 +1,10 @@
-//! `sail-light-shadow-root` — a light-DOM component has no shadow root.
+//! `sail-light-shadow-root` — Sail L1 components are light DOM.
 //!
-//! Components are light DOM — there is no shadow opt-in; every
-//! component renders into its host element, so a controller reading
-//! `.shadowRoot` wires listeners and queries to null (or silently no-ops via
-//! `?.`). The one sanctioned form is the root-agnostic `host.shadowRoot ??
-//! host`, which is correct under both architectures.
+//! Controllers must not wire against bare `.shadowRoot` (null for light
+//! components). Prefer the host element. The residual form
+//! `host.shadowRoot ?? host` is allowed for rare foreign-content
+//! containment wrappers that still attach a shadow root — it is not the
+//! L1 product model.
 
 use crate::check::controller_parse::ParsedController;
 use crate::diagnostics::CompileError;
@@ -23,10 +23,9 @@ pub fn check(controller: Option<&ParsedController>) -> Result<(), CompileError> 
         if !after.starts_with("??") {
             let line = c.source[..at].bytes().filter(|&b| b == b'\n').count() + 1;
             return Err(CompileError::new(format!(
-                "`{}` line {line} reads `.shadowRoot`, but this component is light DOM \
-                 — the shadow root is null \
-                 at runtime, so this wiring is dead. Use the host element, or the \
-                 root-agnostic `host.shadowRoot ?? host`.",
+                "`{}` line {line} reads `.shadowRoot`, but Sail components are light DOM \
+                 — the shadow root is null at runtime, so this wiring is dead. Use the \
+                 host element (or residual `host.shadowRoot ?? host` only for foreign-content wrappers).",
                 c.path.display()
             ))
             .with_category(RULE_ID.to_string()));

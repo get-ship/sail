@@ -140,8 +140,8 @@ export interface RenderComponentOpts {
 /**
  * Compile a component `.sail` (one declaring `<prop>`s) under the given tag,
  * register it, instantiate it with `attrs`, and return handles. Assert against
- * `root` (the host) or `scope` is unused for components — query the element /
- * its shadow root via `root.querySelector(tag)`.
+ * the host element (light DOM). `shadow` is usually null unless a residual
+ * containment wrapper attached one — query via `el` / `root.querySelector(tag)`.
  */
 export function renderComponent(
   source: string,

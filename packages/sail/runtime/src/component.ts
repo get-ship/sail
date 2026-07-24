@@ -284,6 +284,8 @@ export function defineComponent(
       // new factory would otherwise duplicate it), re-runs. State resets.
       __suiReRun() {
         this.teardown()
+        // Light DOM is the product model; clear the host. Residual:
+        // `shadow: true` foreign-content wrappers still render into shadowRoot.
         ;(this.shadowRoot ?? this).replaceChildren()
         this.propSignals = {}
         this.runSetup()
@@ -436,6 +438,8 @@ export function defineComponent(
     // new factory would otherwise duplicate it), re-runs. State resets.
     __suiReRun() {
       this.teardown()
+      // Light DOM is the product model; clear the host. Residual:
+      // `shadow: true` foreign-content wrappers still render into shadowRoot.
       ;(this.shadowRoot ?? this).replaceChildren()
       this.propSignals = {}
       this.runSetup()

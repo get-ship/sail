@@ -5,8 +5,8 @@
 // tests can pass while the actual JS is broken; this can't.
 //
 // Fixtures live in test/fixtures/ — one .sail per
-// component under test. Components compile with shadow DOM (the CLI
-// default for component mode), so DOM queries go via el.shadowRoot.
+// component under test. L1/components are light DOM by default; query
+// helpers fall back to shadowRoot only for residual containment wrappers.
 
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync, existsSync, rmSync, copyFileSync } from 'node:fs'
@@ -65,8 +65,8 @@ async function loadCompiled(file: string): Promise<string> {
   return file.replace(/\.sail$/, '')
 }
 
-/** Query helper — light DOM (the default) renders into the host itself;
- *  shadow components (the `shadow: true` opt-in) render into the shadow root. */
+/** Query helper — light DOM (the product model) renders into the host;
+ * residual `shadow: true` wrappers may still use shadowRoot. */
 function q(el: Element, selector: string): Element | null {
   return (el.shadowRoot ?? el).querySelector(selector)
 }

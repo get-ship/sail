@@ -66,12 +66,11 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
                 }
                 "scope" => {
                     // The component's static surface: `type` aliases +
-                    // `props:` (incl. CVA key→sx maps) + optional `compound:` /
-                    // `channels:`, in TypeScript field syntax with
-                    // literal values only (see parse::scope_block). Types
-                    // thread to the controller module; CVA maps lower through
-                    // the sx atom pipeline to attribute-keyed CSS + reflected
-                    // union props.
+                    // `props:` (incl. CVA key→sx maps) + optional `compound:`,
+                    // in TypeScript field syntax with literal values only
+                    // (see parse::scope_block). Types thread to the controller
+                    // module; CVA maps lower through the sx atom pipeline to
+                    // attribute-keyed CSS + reflected union props.
                     let body: String = el
                         .children
                         .iter()

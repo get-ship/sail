@@ -43,8 +43,9 @@ violation.
   element-skins`) and renders each element's lowered-output shape. Faithful for
   **mechanism-1** (compiles-away) and **mechanism-2** (native + skin) L1, whose
   output *is* static HTML + that CSS.
-- **Follow-up:** **mechanism-3** composites (shadow DOM + controllers) need real
-  mounting — a second render mode in this same harness, not a second framework.
+- **Follow-up:** **mechanism-3** composites (light-DOM components + controllers)
+  need real mounting — a second render mode in this same harness, not a second
+  framework.
 
 ## Fidelity note
 

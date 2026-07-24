@@ -77,7 +77,10 @@ fn sibling_subpaths_are_not_rewritten_into_the_abi_path() {
         out.js
     );
 }
-/// Every action the action table declares must be exported by the runtime.
+/// Every *public* action the action table declares must be exported by
+/// the runtime front door (`index.ts`). Internal stamps are NOT on the
+/// front door — they live on `@ship/sail-runtime/actions` only (see
+/// `action_table_has_no_phantom_consumers` / `public_action_surface_is_curated`).
 ///
 /// Before this test read `lower::bindings::BUILTIN_ACTIONS` — a
 /// constant the compiler maintained by hand in lockstep with the
@@ -89,19 +92,21 @@ fn sibling_subpaths_are_not_rewritten_into_the_abi_path() {
 /// never have been separate.
 ///
 /// The compiler now has ONE source of truth
-/// (`sail_compiler::action_manifest::ACTIONS`); the runtime barrel
-/// is checked against it here. A new action means one entry in the
-/// table — this test fails the build until the runtime barrel is
-/// updated to match.
+/// (`sail_compiler::action_manifest::ACTIONS` + `PUBLIC_ACTION_NAMES`);
+/// the runtime barrel is checked against the public subset here.
 #[test]
 fn action_table_is_exported_by_the_runtime() {
+    use sail_compiler::action_manifest::{is_public_action, ACTIONS, PUBLIC_ACTION_COUNT};
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let index = root.join("packages/sail/runtime/src/index.ts");
     let Ok(src) = std::fs::read_to_string(&index) else { return };
 
-    let missing: Vec<&str> = sail_compiler::action_manifest::ACTIONS
+    assert_eq!(PUBLIC_ACTION_COUNT, 12);
+
+    let missing: Vec<&str> = ACTIONS
         .iter()
         .map(|a| a.name)
+        .filter(|a| is_public_action(a))
         .filter(|a| {
             // The runtime's front door carries a single
             // `export { … } from './actions'` block; the format is
@@ -115,55 +120,136 @@ fn action_table_is_exported_by_the_runtime() {
 
     assert!(
         missing.is_empty(),
-        "the action table lists these names and the runtime's top-level \
-         `index.ts` does not export them — every L1 element that uses one will \
-         compile, pass conformance, and then fail to bundle. The action table \
-         is the single source of truth; update the runtime barrel, not the \
-         table, when adding a new action:\n  {}",
+        "PUBLIC_ACTION_NAMES lists these names and the runtime's top-level \
+         `index.ts` does not export them — the taught public surface must \
+         match the front door:\n  {}",
         missing.join("\n  ")
     );
 }
 
 /// The action table is the single source of truth. A consumer
-/// (runtime barrel, type re-export, scope-bound builtin list,
-/// expression-rewrite builtin list) that disagrees with the table
-/// must fail this test. The spec calls this the "anti-drift
-/// property" — a table nothing enforces is just a fifth list.
+/// that disagrees with the table must fail this test.
 ///
-/// This test lives in the same suite as
-/// `action_table_is_exported_by_the_runtime` so a regression in the
-/// invariant is visible next to the test that detects it.
+/// - ALL actions must appear in `actions/index.ts` (full auto-import surface)
+/// - ONLY public actions may appear as `\n  {name},` in the top-level
+///   `export { … } from './actions'` block
 #[test]
 fn action_table_has_no_phantom_consumers() {
-    use sail_compiler::action_manifest::ACTIONS;
+    use sail_compiler::action_manifest::{is_public_action, ACTIONS, PUBLIC_ACTION_COUNT};
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let runtime_actions_barrel = root.join("packages/sail/runtime/src/actions/index.ts");
     let runtime_top_barrel = root.join("packages/sail/runtime/src/index.ts");
     let Ok(actions_src) = std::fs::read_to_string(&runtime_actions_barrel) else { return };
     let Ok(top_src) = std::fs::read_to_string(&runtime_top_barrel) else { return };
 
-    // Every action in the table must be re-exported from BOTH
-    // barrels. Drift between the table and either barrel is the
-    // exact class of bug this test exists to catch (`portEdge`).
+    assert_eq!(PUBLIC_ACTION_COUNT, 12);
+
+    // Every action in the table must be re-exported from the full
+    // actions barrel. Drift here is the class of bug this test exists
+    // to catch (`portEdge`) — the compiler auto-imports from this path.
     let missing_actions_barrel: Vec<&str> = ACTIONS
         .iter()
         .map(|a| a.name)
-        .filter(|n| !actions_src.contains(&format!(" {n}\n")) && !actions_src.contains(&format!("{n} ")) && !actions_src.contains(&format!(",{n},")) && !actions_src.contains(&format!(" {n},")) && !actions_src.contains(&format!("{n},")))
+        .filter(|n| {
+            !actions_src.contains(&format!(" {n}\n"))
+                && !actions_src.contains(&format!("{n} "))
+                && !actions_src.contains(&format!(",{n},"))
+                && !actions_src.contains(&format!(" {n},"))
+                && !actions_src.contains(&format!("{n},"))
+        })
         .collect();
-    let missing_top_barrel: Vec<&str> = ACTIONS
+
+    // Top-level front door: only public names as `\n  {name},` inside
+    // the actions re-export block. Non-public actions must not appear
+    // in that form (careful not to false-positive other exports).
+    let leaked_internal: Vec<&str> = ACTIONS
         .iter()
         .map(|a| a.name)
-        .filter(|n| !top_src.contains(&format!("\n  {n},")) && !top_src.contains(&format!("{n},")))
+        .filter(|n| !is_public_action(n))
+        .filter(|n| top_src.contains(&format!("\n  {n},")))
+        .collect();
+
+    let missing_public_top: Vec<&str> = ACTIONS
+        .iter()
+        .map(|a| a.name)
+        .filter(|n| is_public_action(n))
+        .filter(|n| !top_src.contains(&format!("\n  {n},")))
         .collect();
 
     assert!(
-        missing_actions_barrel.is_empty() && missing_top_barrel.is_empty(),
+        missing_actions_barrel.is_empty()
+            && leaked_internal.is_empty()
+            && missing_public_top.is_empty(),
         "action table disagrees with the runtime barrels — the table is the \
          single source; update the barrels, not the table. \
          Missing from actions/index.ts: {:?}. \
-         Missing from index.ts: {:?}.",
+         Non-public leaked into top-level actions export: {:?}. \
+         Public missing from top-level actions export: {:?}.",
         missing_actions_barrel,
-        missing_top_barrel,
+        leaked_internal,
+        missing_public_top,
+    );
+}
+
+/// The curated public `use:` surface is exactly 12 names, all present
+/// in ACTIONS, sorted, and the only action names on the runtime front
+/// door. The compiler still auto-imports *all* actions from
+/// `@ship/sail-runtime/actions` (stdlib needs internal stamps).
+#[test]
+fn public_action_surface_is_curated() {
+    use sail_compiler::action_manifest::{
+        is_public_action, public_actions, ACTIONS, PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES,
+    };
+
+    assert_eq!(PUBLIC_ACTION_COUNT, 12);
+    assert_eq!(PUBLIC_ACTION_NAMES.len(), 12);
+    assert_eq!(public_actions().count(), 12);
+
+    let mut sorted = PUBLIC_ACTION_NAMES.to_vec();
+    sorted.sort();
+    assert_eq!(
+        PUBLIC_ACTION_NAMES.as_slice(),
+        sorted.as_slice(),
+        "PUBLIC_ACTION_NAMES must be sorted alphabetically"
+    );
+
+    for name in *PUBLIC_ACTION_NAMES {
+        assert!(
+            ACTIONS.iter().any(|a| a.name == name),
+            "public action `{name}` missing from ACTIONS"
+        );
+        assert!(is_public_action(name));
+    }
+
+    // Emitter pulls every builtin action (including internal) from the
+    // dedicated actions subpath — never from the front door or ABI barrel
+    // alone, so stripping internal names from index.ts does not break stdlib.
+    let src = r#"<div use:recoverySurface use:tabs use:toggleGroup></div>"#;
+    let out = sail_compiler::compile(
+        src,
+        sail_compiler::CompileOpts {
+            mode: sail_compiler::CompileMode::Component,
+            ..Default::default()
+        },
+    )
+    .expect("compiles")
+    .js;
+    assert!(
+        out.contains("from \"@ship/sail-runtime/actions\""),
+        "auto-imported actions must come from `@ship/sail-runtime/actions`:\n{out}"
+    );
+    for name in ["recoverySurface", "tabs", "toggleGroup"] {
+        assert!(
+            out.contains(name),
+            "expected auto-import of internal/public action `{name}`:\n{out}"
+        );
+    }
+    // Must not pull actions through the author front door (exact root
+    // specifier — subpaths like /actions and /internal are fine).
+    assert!(
+        !out.contains("from \"@ship/sail-runtime\";")
+            && !out.contains("from \"@ship/sail-runtime\"\n"),
+        "generated code must not import the author front door for actions:\n{out}"
     );
 }
 

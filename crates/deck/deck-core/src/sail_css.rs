@@ -3,7 +3,7 @@
 //! injection (SSR / static / L1-in-page / the showcase site). Two halves,
 //! two SSOTs, concatenated at compile time:
 //!
-//!   - `contracts.css` — the tone/size channels, interactive-surface
+//!   - `contracts.css` — tone/size as attribute-keyed props, interactive-surface
 //!     baseline, focus/disabled, button skin. Generated from the runtime's
 //!     `LIGHT_CONTRACTS_CSS` (`packages/sail/runtime/scripts/emit-contracts-css.ts`).
 //!   - `element-skins.css` — the L1 element skins (spinner/separator/icon/

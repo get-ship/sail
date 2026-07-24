@@ -9,8 +9,8 @@
 //! stable, and each carries a `var()` template. Utilities live in the table
 //! because they are many and they grow.
 //!
-//! Values come from the token registry (`tokens.rs`, parsed from `tokens.css`),
-//! so a scale can never drift from the theme.
+//! Values come from the token registry (`tokens.rs`, loaded from generated
+//! `token-registry.json` / DTCG model), so a scale can never drift from the theme.
 
 use crate::tokens;
 
@@ -72,7 +72,15 @@ pub fn values(scale: &str) -> Vec<String> {
             s.push("none".into());
             s
         }
-        "z" => tokens::suffixes("z-").iter().map(|t| t.to_string()).collect(),
+        "z" => {
+            // Named elevation tokens (`popover`, `sticky`, …) plus a closed
+            // unitless local-stack ramp (TW-shaped `z-1`/`z-2` for joined
+            // toggles — not phantom `var(--z-1)`).
+            let mut s: Vec<String> =
+                tokens::suffixes("z-").iter().map(|t| t.to_string()).collect();
+            s.extend(Z_INDEX.iter().map(|t| t.to_string()));
+            s
+        }
         "duration" => tokens::suffixes("duration-").iter().map(|t| t.to_string()).collect(),
         "ease" => tokens::suffixes("ease-").iter().map(|t| t.to_string()).collect(),
         "ring" => {
@@ -161,7 +169,13 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
         "leading" => format!("var(--leading-{token})"),
         "tracking" => format!("var(--tracking-{token})"),
         "shadow" => if token == "none" { "none".into() } else { format!("var(--shadow-{token})") },
-        "z" => format!("var(--z-{token})"),
+        "z" => {
+            if Z_INDEX.contains(&token) {
+                token.into()
+            } else {
+                format!("var(--z-{token})")
+            }
+        }
         "duration" => format!("var(--duration-{token})"),
         "ease" => format!("var(--ease-{token})"),
         "border-width" => format!("{token}px"),
@@ -190,6 +204,10 @@ fn is_channel(t: &str) -> bool {
 /// category stripe and 1px reads as a border — that distinction is a design
 /// decision, and every border in the old sx lowered to 1px.
 const BORDER_WIDTH: &[&str] = &["0", "1", "2", "3", "4", "8"];
+
+/// Unitless local z-index steps (not design-token elevation). Closed so a
+/// free `z-9999` never sneaks past the vocabulary.
+const Z_INDEX: &[&str] = &["0", "1", "2", "3", "4", "5", "10", "20", "30", "40", "50"];
 
 /// Content-relative width steps, in characters. A fixed text slot (e.g. a
 /// rotating word that must not reflow its line) sizes itself to the longest

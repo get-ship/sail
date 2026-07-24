@@ -16,18 +16,16 @@ silently re-drift from `crates/sail/compiler`.
 `.sail` is HTML extended with template grammar. The grammar
 recognises:
 
-- **Directive elements** — `<scope>` (declares props/variants) (just
+- **Directive elements** — `<scope>` (static props/types) (just
   an HTML element as far as the grammar is concerned; the runtime
   extracts it by tag name; queries flag it visually).
 - **Standard HTML elements** — both the explicit-close form
   (`<div>…</div>`) and the self-closing form (`<ship-icon …/>`),
   plus the void-element forms (`<link>`, `<br>`, `<img>`, …).
 - **Binding attributes** — `bind:value={x}`, `on:event[|mod]*={fn}`,
-  `attr:name={value}` / `attr:{nameExpr}={value}`,
-  `prop:name={value}`, `use:action` / `use:action={param}`,
-  `motion:trigger={{ prop: 'preset' }}`. Plain attributes (`name="x"`,
-  `name={expr}`, `sx="…"`, bare-name boolean attrs) round-trip through
-  their own rules.
+  `use:action` / `use:action={param}`, `motion:trigger={…}`.
+  Plain attributes (`name="x"`, `name={expr}`, `sx="…"`, bare-name
+  boolean attrs) round-trip through their own rules.
 - **Brace interpolation** — `{expr}` in text and attribute-value
   position. The expression body is captured as an opaque balanced
   atom stream; host-language highlighting comes from a TypeScript
@@ -48,18 +46,12 @@ recognises:
 
 ### Deliberately NOT recognised (retired/refused surface)
 
-- `style:` attrs — the compiler hard-refuses them
-  (`parse/template/attrs.rs`); runtime geometry moves through a named
-  `use:<action>`.
-- `let:` attrs — never implemented by the compiler and unused in the
-  wild; slot/async bindings are declared on the block header itself
-  (`{#while-error err of x}`).
-- `<state>` as a top-level directive — retired; use the controller's
-  `setup:` factory.
-- `<component>` / `<prop>` directive elements — retired; replaced by
-  `<scope>`.
-- Element-form `<while-loading>` / `<while-error>` — these are brace
-  blocks now, not elements.
+- `style:` / `prop:` / `attr:` / `class:` attrs — compiler hard-refuses
+  (`parse/template/attrs.rs`); plain `name={expr}` is field binding.
+- `let:` attrs — never implemented; slot/async bindings sit on the
+  block header (`{#while-error err of x}`).
+- `<state>`, `<component>`, `<prop>` directive elements — not language.
+- Element-form `<while-loading>` / `<while-error>` — brace blocks only.
 - `{:elif}` — only `{:else if}` is compiler-recognized.
 
 ## Architecture
@@ -128,8 +120,7 @@ Expected: no `FAIL:` lines.
   jump-to-def in editors that consume the `@local.*` family.
   Currently absent.
 - **HTML attribute namespaces.** `attr_name` excludes `:` so the
-  `bind:` / `on:` / `attr:` / `prop:` / `use:` / `motion:`
-  directives win the lexer race; the corpus has no SVG-style
-  namespaced attributes (`xlink:href`, …) so this is safe today
-  but worth revisiting if SVG lands as a first-class template
-  surface.
+  `bind:` / `on:` / `use:` / `motion:` directives win the lexer race;
+  the corpus has no SVG-style namespaced attributes (`xlink:href`, …)
+  so this is safe today but worth revisiting if SVG lands as a
+  first-class template surface.
