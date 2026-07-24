@@ -1,241 +1,866 @@
 /*
- * Ship theme catalog.
+ * GENERATED FILE — do not edit by hand.
  *
- * Every theme is a full design-system override — not just color. Themes
- * bend: surface depth, radii, motion curves, shadow vocabulary,
- * typography roles, and interaction strength. The palette is the
- * starting point; the feel is what keeps people here.
- *
- * How themes layer:
- *   1. ./tokens.css defines the canonical ship-light palette under :root
- *      and the sibling ship-dark overrides under .dark, plus all
- *      surface/tone/motion/density primitives.
- *   2. This file applies per-theme overrides via :root[data-theme='id'].
- *      ship-light is canonical in tokens.css and therefore not
- *      re-declared here. ship-dark adds the amber/navy sibling tweaks
- *      on top of the base .dark block. Every other theme is a full
- *      aesthetic override.
- *
- * Guidance for theme authors:
- *   • Override the highest layer that captures intent. A theme that
- *     wants a flatter feel overrides shadow + hover-strength too. A
- *     theme that wants an editorial feel swaps --heading-font.
- *   • Always override the tone-ramp base colors (--success, --warning,
- *     --destructive, --info) so status semantics stay legible against
- *     your background. The ramp variables rebuild automatically.
+ * Theme token overrides from packages/sail/tokens/model/themes/*.json.
+ * Structural flourishes: packages/sail/tokens/model/themes-chrome.css
+ * Regenerate: pnpm --filter @ship/tokens generate
  */
 
-/* ───────────────────────────────────────────────────────────────────
- * ship-dark — sibling to ship-light. Warm amber on deep warm-navy.
- * Same motion, radii, and typography feel as the default so users
- * can dark-mode the canonical SHIP aesthetic without losing its feel.
- * Most tokens are inherited from the .dark block in tokens.css; this
- * selector exists so `data-theme='ship-dark'` resolves cleanly and
- * can pin a couple of surface details.
- * ─────────────────────────────────────────────────────────────────── */
+/* ─── theme:ship-dark (themes/ship-dark.json) ─── */
+/* SHIP dark sibling — amber on warm navy. */
 :root[data-theme='ship-dark'],
 [data-theme-preview='ship-dark'] {
-  /* Sibling theme, on purpose: shares ship-light's motion, radii, and
-   * typography. Earns its slot via cool-blue shadow tinting + heavier
-   * --selected-strength (see the ship-dark personality block below),
-   * plus the full .dark palette flip in tokens.css. Don't "upgrade" it
-   * with more bends — the point is that night ship-light feels the same
-   * as day ship-light. */
-  --surface-2: oklch(0.22 0.012 50);
-  --border-subtle: oklch(1 0 0 / 8%);
+  --accent: oklch(0.3 0.05 300);
+  --accent-foreground: oklch(0.9 0.02 300);
+  --background: oklch(0.158 0.012 250);
+  --border: oklch(1 0 0 / 12%);
   --border-strong: oklch(1 0 0 / 22%);
-  --shadow-accent: 0 8px 24px -6px oklch(0.77 0.16 70 / 40%);
+  --border-subtle: oklch(1 0 0 / 8%);
+  --card-backdrop-filter: none;
+  --card-foreground: oklch(0.98 0.001 106);
+  --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
+  --card-texture-blend: overlay;
+  --card-texture-opacity: 1;
+  --card: oklch(0.20 0.014 250);
+  --foreground: oklch(0.98 0.001 106);
+  --muted: oklch(0.2 0.01 50);
+  --muted-foreground: oklch(0.75 0.015 50);
+  --primary: oklch(0.77 0.16 70);
+  --primary-foreground: oklch(0.2 0.01 50);
+  --ring: oklch(0.77 0.16 70 / 30%);
+  --surface-0: oklch(0.14 0.012 250);
+  --surface-1: oklch(0.20 0.014 250);
+  --surface-2: oklch(0.24 0.014 50);
+  --surface-3: oklch(0.28 0.016 250);
+  --surface-overlay: none;
+  --surface-overlay-blend: normal;
+  --surface-overlay-opacity: 1;
+  --body-font: var(--font-body);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-display, var(--font-body));
+  --heading-tracking: var(--tracking-tight);
+  --heading-weight: var(--font-weight-semibold);
+  --label-font: var(--font-body);
+  --label-tracking: var(--tracking-normal);
+  --label-weight: var(--font-weight-semibold);
+  --card: oklch(0.205 0.012 250);
+  --radius-md: 6px;
+  --radius-sm: 4px;
+  --selected-strength: 18%;
+  --shadow-accent: 0 0 0 3px oklch(0.77 0.16 70 / 22%), 0 8px 24px -6px oklch(0.77 0.16 70 / 38%);
+  --shadow-card-rest: 0 1px 2px 0 oklch(0.05 0.02 250 / 35%), 0 0 0 1px oklch(1 0 0 / 4%);
+  --shadow-hover: 0 8px 22px -4px oklch(0.10 0.04 250 / 50%), 0 2px 6px oklch(0 0 0 / 35%);
+  --shadow-lg: 0 14px 32px -6px oklch(0.10 0.04 250 / 60%), 0 4px 12px oklch(0 0 0 / 40%);
+  --shadow-md: 0 6px 18px -4px oklch(0.10 0.04 250 / 55%), 0 2px 6px oklch(0 0 0 / 35%);
+  --shadow-sm: 0 2px 6px -1px oklch(0.10 0.04 250 / 50%), 0 0 0 1px oklch(1 0 0 / 4%);
 }
 
-/* ───────────────────────────────────────────────────────────────────
- * paper — editorial reading mode. Warmer cream with a real papery
- * weight: warm-brown shadows, heavier book-print body weight, headings
- * demoted to body font, slow calm motion, low interaction tints. Not
- * tinted shadcn — a different feel of surface entirely.
- * ─────────────────────────────────────────────────────────────────── */
+/* ─── theme:paper (themes/paper.json) ─── */
+/* Editorial reading mode. */
 :root[data-theme='paper'],
 [data-theme-preview='paper'] {
-  --background: oklch(0.985 0.020 75);
-  --foreground: oklch(0.20 0.015 60);
-  --card: oklch(0.995 0.012 75);
-  --card-foreground: oklch(0.20 0.015 60);
-  --popover: oklch(1.000 0.000 75);
-  --popover-foreground: oklch(0.20 0.015 60);
-  --muted: oklch(0.92 0.020 75);
-  --muted-foreground: oklch(0.45 0.015 60);
-  --border: oklch(0.20 0.015 60 / 14%);
-  --input: oklch(0.20 0.015 60 / 14%);
-  --primary: oklch(0.50 0.16 var(--brand-hue, 30));
-  --primary-foreground: oklch(0.985 0.02 75);
   --accent: oklch(0.45 0.10 var(--brand-hue, 280));
   --accent-foreground: oklch(0.985 0.02 75);
+  --background: oklch(0.985 0.020 75);
+  --border: oklch(0.20 0.015 60 / 14%);
+  --border-strong: oklch(0.20 0.015 60 / 30%);
+  --border-subtle: oklch(0.20 0.015 60 / 8%);
+  --card-backdrop-filter: none;
+  --card-foreground: oklch(0.20 0.015 60);
+  --card-texture: none;
   --destructive: oklch(0.55 0.22 27);
-  --success: oklch(0.58 0.14 150);
-  --warning: oklch(0.70 0.15 75);
+  --foreground: oklch(0.20 0.015 60);
   --info: oklch(0.55 0.15 240);
+  --input: oklch(0.20 0.015 60 / 14%);
+  --muted: oklch(0.92 0.020 75);
+  --muted-foreground: oklch(0.45 0.015 60);
+  --popover: oklch(1.000 0.000 75);
+  --popover-foreground: oklch(0.20 0.015 60);
+  --primary: oklch(0.50 0.16 var(--brand-hue, 30));
+  --primary-foreground: oklch(0.985 0.02 75);
   --ring: oklch(0.50 0.16 var(--brand-hue, 30)/ 35%);
-
-  /* Paper surfaces: slightly brighter than the page so cards lift
-   * off the pulp. Light mode plateaus at 1.0 — surface-1..3 do not
-   * undercut each other, depth above the card comes from shadow. */
+  --sidebar: oklch(0.985 0.020 75);
+  --sidebar-accent: oklch(0.95 0.020 75);
+  --sidebar-accent-foreground: oklch(0.20 0.015 60);
+  --sidebar-border: oklch(0.20 0.015 60 / 14%);
+  --sidebar-foreground: oklch(0.20 0.015 60);
+  --success: oklch(0.58 0.14 150);
   --surface-0: oklch(0.985 0.020 75);
   --surface-1: oklch(0.995 0.012 75);
   --surface-2: oklch(1.000 0.000 75);
   --surface-3: oklch(1.000 0.000 75);
-  --border-subtle: oklch(0.20 0.015 60 / 8%);
-  --border-strong: oklch(0.20 0.015 60 / 30%);
-
-  /* Rounded book-corners. */
-  --radius: 10px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 12px;
-  --radius-xl: 18px;
-
-  /* Slower, calmer motion — long reading sessions. */
-  --duration-fast: 200ms;
-  --duration-medium: 300ms;
-  --duration-slow: 420ms;
-  --duration-deliberate: 560ms;
-  --ease-out: var(--ease-out-soft);
-
-  /* Warm-brown tinted shadows — soft, papery, never crisp. */
-  --shadow-card-rest: 0 1px 2px oklch(0.30 0.04 60 / 8%), 0 0 0 1px oklch(0.20 0.015 60 / 6%);
-  --shadow-hover:     0 6px 18px oklch(0.30 0.04 60 / 14%), 0 2px 6px oklch(0.30 0.04 60 / 8%);
-  --shadow-xs: 0 1px 2px 0 oklch(0.30 0.04 60 / 6%);
-  --shadow-sm: 0 2px 4px -1px oklch(0.30 0.04 60 / 9%);
-  --shadow-md: 0 4px 12px oklch(0.30 0.04 60 / 12%), 0 2px 4px oklch(0.30 0.04 60 / 8%);
-  --shadow-lg: 0 12px 32px oklch(0.30 0.04 60 / 18%), 0 4px 12px oklch(0.30 0.04 60 / 10%);
-  --shadow-xl: 0 24px 64px oklch(0.30 0.04 60 / 24%);
-  --shadow-edge-top: 0 -6px 18px oklch(0.30 0.04 60 / 8%), 0 -1px 0 oklch(0.30 0.04 60 / 6%);
-  --shadow-accent: 0 8px 24px -6px oklch(0.50 0.16 30 / 30%);
-
-  /* Chrome surfaces use the warm cream so rail/topbar/status bar match
-   * views, not the canonical light defaults. */
-  --sidebar: oklch(0.985 0.020 75);
-  --sidebar-foreground: oklch(0.20 0.015 60);
-  --sidebar-accent: oklch(0.95 0.020 75);
-  --sidebar-accent-foreground: oklch(0.20 0.015 60);
-  --sidebar-border: oklch(0.20 0.015 60 / 14%);
-
-  /* Editorial voice: demote display, body for headings; heavier
-   * book-print body weight via the role token so the primitive scale
-   * stays canonical across every other theme. */
-  --heading-font: var(--font-body);
-  --heading-weight: var(--font-weight-semibold);
-  --heading-tracking: var(--tracking-tight);
-  --label-font: var(--font-body);
-  --label-weight: var(--font-weight-medium);
-  --label-tracking: var(--tracking-normal);
-  --body-weight: var(--font-weight-semibold);
-
-  /* Calm tints — don't fight the paper. */
-  --hover-strength: 4%;
-  --active-strength: 7%;
-  --selected-strength: 10%;
-
-  /* Heavier scrollbar thumb — papery. */
-  --scrollbar-width: 12px;
-  --scrollbar-thumb: oklch(0.20 0.015 60 / 18%);
-  --scrollbar-thumb-hover: oklch(0.20 0.015 60 / 36%);
-}
-
-/* Subtle paper grain — very faint, only on the paper theme. Riding on the
- * --surface-overlay channel so future themes opt in via the same hook
- * (tokens.css owns the body::after rule and reduced-motion guard). */
-:root[data-theme='paper'],
-[data-theme-preview='paper'] {
   --surface-overlay: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.05'/%3E%3C/svg%3E");
   --surface-overlay-blend: multiply;
   --surface-overlay-opacity: 0.4;
+  --syntax-attr: oklch(0.48 0.20 55);
+  --syntax-comment: oklch(0.50 0.04 250);
+  --syntax-function: oklch(0.42 0.24 305);
+  --syntax-keyword: oklch(0.42 0.22 285);
+  --syntax-number: oklch(0.42 0.20 245);
+  --syntax-string: oklch(0.40 0.18 152);
+  --syntax-tag: oklch(0.45 0.22 20);
+  --syntax-type: oklch(0.42 0.20 195);
+  --warning: oklch(0.70 0.15 75);
+  --active-strength: 7%;
+  --hover-strength: 4%;
+  --selected-strength: 10%;
+  --body-font: var(--font-body);
+  --body-weight: var(--font-weight-semibold);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-body);
+  --heading-tracking: var(--tracking-tight);
+  --heading-weight: var(--font-weight-semibold);
+  --label-font: var(--font-mono);
+  --label-tracking: 0.14em;
+  --label-weight: 500;
+  --card: oklch(0.995 0.012 75);
+  --duration-deliberate: 560ms;
+  --duration-fast: 200ms;
+  --duration-medium: 300ms;
+  --duration-slow: 420ms;
+  --ease-out: var(--ease-out-soft);
+  --radius: 10px;
+  --radius-lg: 12px;
+  --radius-md: 6px;
+  --radius-sm: 4px;
+  --radius-xl: 18px;
+  --scrollbar-thumb: oklch(0.20 0.015 60 / 18%);
+  --scrollbar-thumb-hover: oklch(0.20 0.015 60 / 36%);
+  --scrollbar-width: 12px;
+  --shadow-accent: 0 8px 24px -6px oklch(0.50 0.16 30 / 30%);
+  --shadow-card-rest: 0 1px 2px oklch(0.30 0.04 60 / 8%), 0 0 0 1px oklch(0.20 0.015 60 / 6%);
+  --shadow-edge-top: 0 -6px 18px oklch(0.30 0.04 60 / 8%), 0 -1px 0 oklch(0.30 0.04 60 / 6%);
+  --shadow-hover: 0 6px 18px oklch(0.30 0.04 60 / 14%), 0 2px 6px oklch(0.30 0.04 60 / 8%);
+  --shadow-lg: 0 12px 32px oklch(0.30 0.04 60 / 18%), 0 4px 12px oklch(0.30 0.04 60 / 10%);
+  --shadow-md: 0 4px 12px oklch(0.30 0.04 60 / 12%), 0 2px 4px oklch(0.30 0.04 60 / 8%);
+  --shadow-sm: 0 2px 4px -1px oklch(0.30 0.04 60 / 9%);
+  --shadow-xl: 0 24px 64px oklch(0.30 0.04 60 / 24%);
+  --shadow-xs: 0 1px 2px 0 oklch(0.30 0.04 60 / 6%);
 }
 
-/* ───────────────────────────────────────────────────────────────────
- * halo — neumorphic. Soft, monochromatic, near-flat surface with
- * dual inset/outset shadows providing all the depth. No borders;
- * edges read via shadow alone. Surfaces stay within a 2% lightness
- * band so depth comes from light direction, not contrast. Brand
- * orange survives at slightly lower chroma to harmonize with the
- * soft mid-grey-blue ground.
- * ─────────────────────────────────────────────────────────────────── */
+/* ─── theme:halo (themes/halo.json) ─── */
+/* Soft soft-UI. */
 :root[data-theme='halo'],
 [data-theme-preview='halo'] {
+  --accent: oklch(0.55 0.05 var(--brand-hue, 230));
+  --accent-foreground: oklch(0.99 0.005 230);
   --background: oklch(0.92 0.008 230);
-  --foreground: oklch(0.30 0.015 230);
-  --card: oklch(0.92 0.008 230);
+  --border: transparent;
+  --border-strong: oklch(0.30 0.015 230 / 18%);
+  --border-subtle: transparent;
+  --card-backdrop-filter: none;
   --card-foreground: oklch(0.30 0.015 230);
-  --popover: oklch(0.94 0.008 230);
-  --popover-foreground: oklch(0.30 0.015 230);
+  --card-texture: none;
+  --destructive: oklch(0.55 0.20 27);
+  --foreground: oklch(0.30 0.015 230);
+  --info: oklch(0.55 0.12 240);
+  --input: oklch(0.90 0.008 230);
   --muted: oklch(0.90 0.008 230);
   --muted-foreground: oklch(0.46 0.012 230);
+  --popover: oklch(0.94 0.008 230);
+  --popover-foreground: oklch(0.30 0.015 230);
+  --primary: oklch(0.62 0.14 var(--brand-hue, 50));
+  --primary-foreground: oklch(0.99 0.005 75);
+  --ring: oklch(0.62 0.14 var(--brand-hue, 50)/ 40%);
   --sidebar: oklch(0.92 0.008 230);
-  --sidebar-foreground: oklch(0.30 0.015 230);
   --sidebar-accent: oklch(0.90 0.010 230);
   --sidebar-accent-foreground: oklch(0.30 0.015 230);
   --sidebar-border: transparent;
+  --sidebar-foreground: oklch(0.30 0.015 230);
   --sidebar-primary: oklch(0.62 0.14 var(--brand-hue, 50));
   --sidebar-primary-foreground: oklch(0.99 0.005 75);
   --sidebar-ring: oklch(0.62 0.14 50 / 40%);
-
-  /* No borders — depth is shadow only. */
-  --border: transparent;
-  --input: oklch(0.90 0.008 230);
-  --primary: oklch(0.62 0.14 var(--brand-hue, 50));
-  --primary-foreground: oklch(0.99 0.005 75);
-  --accent: oklch(0.55 0.05 var(--brand-hue, 230));
-  --accent-foreground: oklch(0.99 0.005 230);
-  --destructive: oklch(0.55 0.20 27);
   --success: oklch(0.58 0.14 150);
-  --warning: oklch(0.70 0.15 75);
-  --info: oklch(0.55 0.12 240);
-  --ring: oklch(0.62 0.14 var(--brand-hue, 50)/ 40%);
-
-  /* Surface ladder kept within ±2% lightness — depth is shadow, not tint. */
   --surface-0: oklch(0.92 0.008 230);
   --surface-1: oklch(0.93 0.008 230);
   --surface-2: oklch(0.94 0.008 230);
   --surface-3: oklch(0.95 0.008 230);
-  --border-subtle: transparent;
-  --border-strong: oklch(0.30 0.015 230 / 18%);
-
-  /* Larger, softer radii — neumorph signature. */
-  --radius: 14px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-
-  /* Dual outset shadows — top-left highlight, bottom-right shade. */
-  --shadow-xs: -2px -2px 5px oklch(1 0 0 / 70%), 2px 2px 5px oklch(0 0 0 / 6%);
-  --shadow-sm: -3px -3px 7px oklch(1 0 0 / 75%), 3px 3px 7px oklch(0 0 0 / 7%);
-  --shadow-card-rest: -3px -3px 8px oklch(1 0 0 / 80%), 3px 3px 8px oklch(0 0 0 / 8%);
-  --shadow-hover:     -5px -5px 14px oklch(1 0 0 / 85%), 5px 5px 14px oklch(0 0 0 / 12%);
-  --shadow-md:        -4px -4px 10px oklch(1 0 0 / 80%), 4px 4px 10px oklch(0 0 0 / 10%);
-  --shadow-lg:        -8px -8px 20px oklch(1 0 0 / 85%), 8px 8px 20px oklch(0 0 0 / 14%);
-  --shadow-xl:       -12px -12px 32px oklch(1 0 0 / 90%), 12px 12px 32px oklch(0 0 0 / 16%);
-  --shadow-inset-soft: inset 2px 2px 5px oklch(0 0 0 / 8%), inset -2px -2px 5px oklch(1 0 0 / 80%);
-  --shadow-edge-top: none;
-  --shadow-sticky: -3px 6px 12px oklch(1 0 0 / 70%), 3px 4px 12px oklch(0 0 0 / 8%);
-  --shadow-accent: -3px -3px 10px oklch(1 0 0 / 80%), 4px 4px 12px oklch(0.62 0.14 50 / 26%);
-
-  /* Calm tints — the surface should never fight the user. */
-  --hover-strength: 5%;
+  --surface-overlay: none;
+  --surface-overlay-blend: normal;
+  --surface-overlay-opacity: 1;
+  --syntax-attr: oklch(0.48 0.20 55);
+  --syntax-comment: oklch(0.50 0.04 250);
+  --syntax-function: oklch(0.42 0.24 305);
+  --syntax-keyword: oklch(0.42 0.22 285);
+  --syntax-number: oklch(0.42 0.20 245);
+  --syntax-string: oklch(0.40 0.18 152);
+  --syntax-tag: oklch(0.45 0.22 20);
+  --syntax-type: oklch(0.42 0.20 195);
+  --warning: oklch(0.70 0.15 75);
   --active-strength: 8%;
+  --hover-strength: 5%;
   --selected-strength: 11%;
-
-  /* Soft, deliberate motion. */
+  --body-font: var(--font-body);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --font-weight-medium: 500;
+  --heading-font: var(--font-display, var(--font-body));
+  --heading-tracking: var(--tracking-tight);
+  --heading-weight: var(--font-weight-semibold);
+  --label-font: var(--font-body);
+  --label-tracking: var(--tracking-normal);
+  --label-weight: var(--font-weight-semibold);
+  --card: oklch(0.92 0.008 230);
   --duration-fast: 140ms;
   --duration-medium: 220ms;
   --duration-slow: 320ms;
   --ease-out: var(--ease-out-soft);
-
-  /* Slightly heavier default body weight — soft surface needs the ink. */
-  --font-weight-medium: 500;
-  --heading-weight: var(--font-weight-semibold);
+  --radius: 16px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --radius-xl: 28px;
+  --shadow-accent: -3px -3px 10px oklch(1 0 0 / 80%), 4px 4px 12px oklch(0.62 0.14 50 / 26%);
+  --shadow-card-rest: -3px -3px 8px oklch(1 0 0 / 80%), 3px 3px 8px oklch(0 0 0 / 8%);
+  --shadow-edge-top: none;
+  --shadow-hover: -5px -5px 14px oklch(1 0 0 / 85%), 5px 5px 14px oklch(0 0 0 / 12%);
+  --shadow-inset-soft: inset 2px 2px 5px oklch(0 0 0 / 8%), inset -2px -2px 5px oklch(1 0 0 / 80%);
+  --shadow-lg: -8px -8px 20px oklch(1 0 0 / 85%), 8px 8px 20px oklch(0 0 0 / 14%);
+  --shadow-md: -4px -4px 10px oklch(1 0 0 / 80%), 4px 4px 10px oklch(0 0 0 / 10%);
+  --shadow-sm: -3px -3px 7px oklch(1 0 0 / 75%), 3px 3px 7px oklch(0 0 0 / 7%);
+  --shadow-sticky: -3px 6px 12px oklch(1 0 0 / 70%), 3px 4px 12px oklch(0 0 0 / 8%);
+  --shadow-xl: -12px -12px 32px oklch(1 0 0 / 90%), 12px 12px 32px oklch(0 0 0 / 16%);
+  --shadow-xs: -2px -2px 5px oklch(1 0 0 / 70%), 2px 2px 5px oklch(0 0 0 / 6%);
 }
 
-/* Subtle "spotlit from above" radial — gives the otherwise-flat ground
- * a directional cue that cooperates with the neumorph shadow lighting. */
+/* ─── theme:console (themes/console.json) ─── */
+/* Terminal phosphor. */
+:root[data-theme='console'],
+[data-theme-preview='console'] {
+  --accent: oklch(0.78 0.16 var(--brand-hue, 195));
+  --accent-foreground: oklch(0.13 0.008 220);
+  --background: oklch(0.13 0.008 220);
+  --border: oklch(0.30 0.04 145 / 40%);
+  --border-strong: oklch(0.78 0.20 145 / 60%);
+  --border-subtle: oklch(0.30 0.04 145 / 20%);
+  --card-backdrop-filter: none;
+  --card-foreground: oklch(0.92 0.06 145);
+  --card-texture: none;
+  --destructive: oklch(0.70 0.22 25);
+  --foreground: oklch(0.92 0.06 145);
+  --info: oklch(0.78 0.16 195);
+  --input: oklch(0.30 0.04 145 / 40%);
+  --muted: oklch(0.20 0.012 220);
+  --muted-foreground: oklch(0.62 0.05 145);
+  --popover: oklch(0.18 0.012 220);
+  --popover-foreground: oklch(0.92 0.06 145);
+  --primary: oklch(0.78 0.20 var(--brand-hue, 145));
+  --primary-foreground: oklch(0.13 0.008 220);
+  --ring: oklch(0.78 0.20 var(--brand-hue, 145)/ 50%);
+  --sidebar: oklch(0.13 0.008 220);
+  --sidebar-accent: oklch(0.18 0.012 220);
+  --sidebar-accent-foreground: oklch(0.92 0.06 145);
+  --sidebar-border: oklch(0.30 0.04 145 / 30%);
+  --sidebar-foreground: oklch(0.92 0.06 145);
+  --sidebar-primary: oklch(0.78 0.20 var(--brand-hue, 145));
+  --sidebar-primary-foreground: oklch(0.13 0.008 220);
+  --sidebar-ring: oklch(0.78 0.20 145 / 50%);
+  --success: oklch(0.78 0.20 145);
+  --surface-0: oklch(0.13 0.008 220);
+  --surface-1: oklch(0.16 0.010 220);
+  --surface-2: oklch(0.18 0.012 220);
+  --surface-3: oklch(0.20 0.014 220);
+  --surface-overlay: repeating-linear-gradient( to bottom, transparent 0px, transparent 1px, oklch(0 0 0 / 8%) 1px, oklch(0 0 0 / 8%) 2px );
+  --surface-overlay-blend: multiply;
+  --surface-overlay-opacity: 0.55;
+  --syntax-attr: oklch(0.82 0.16 90);
+  --syntax-comment: oklch(0.55 0.06 145);
+  --syntax-function: oklch(0.85 0.18 145);
+  --syntax-keyword: oklch(0.82 0.20 145);
+  --syntax-number: oklch(0.78 0.16 60);
+  --syntax-string: oklch(0.85 0.16 100);
+  --syntax-tag: oklch(0.78 0.18 145);
+  --syntax-type: oklch(0.78 0.14 180);
+  --warning: oklch(0.85 0.18 90);
+  --active-strength: 18%;
+  --hover-strength: 12%;
+  --selected-strength: 22%;
+  --body-font: var(--font-mono);
+  --font-body: var(--font-mono);
+  --heading-font: var(--font-mono);
+  --heading-tracking: var(--tracking-normal);
+  --heading-weight: var(--font-weight-bold);
+  --label-font: var(--font-mono);
+  --label-tracking: var(--tracking-wide);
+  --label-weight: var(--font-weight-bold);
+  --card: oklch(0.16 0.010 220);
+  --radius: 2px;
+  --radius-lg: 3px;
+  --radius-md: 2px;
+  --radius-sm: 2px;
+  --radius-xl: 4px;
+  --scrollbar-radius: 2px;
+  --scrollbar-thumb: oklch(0.78 0.20 145 / 30%);
+  --scrollbar-thumb-hover: oklch(0.78 0.20 145 / 60%);
+  --scrollbar-width: 12px;
+  --scrollbar-width-thin: 8px;
+  --shadow-accent: 0 0 0 2px oklch(0.78 0.20 145 / 55%), 0 0 18px oklch(0.78 0.20 145 / 18%);
+  --shadow-card-rest: 0 0 0 1px oklch(0.78 0.20 145 / 30%);
+  --shadow-edge-top: 0 -1px 0 oklch(0.78 0.20 145 / 30%);
+  --shadow-hover: 0 0 0 1px oklch(0.78 0.20 145 / 60%), 0 0 0 3px oklch(0.78 0.20 145 / 10%);
+  --shadow-lg: 0 0 0 1px oklch(0.78 0.20 145 / 40%), 0 8px 0 -2px oklch(0 0 0 / 70%);
+  --shadow-md: 0 0 0 1px oklch(0.78 0.20 145 / 30%), 0 4px 0 -1px oklch(0 0 0 / 60%);
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 50%), 0 0 0 1px oklch(0.78 0.20 145 / 12%);
+  --shadow-sticky: 0 1px 0 oklch(0.78 0.20 145 / 24%);
+  --shadow-xl: 0 24px 64px oklch(0 0 0 / 70%);
+  --shadow-xs: 0 0 0 1px oklch(0.78 0.20 145 / 10%);
+}
+
+/* ─── theme:contrast (themes/contrast.json) ─── */
+/* High contrast. */
+:root[data-theme='contrast'],
+[data-theme-preview='contrast'] {
+  --accent: oklch(0.87 0.18 var(--brand-hue, 85));
+  --accent-foreground: oklch(0.08 0 0);
+  --background: oklch(0.09 0 0);
+  --border: oklch(0.75 0 0);
+  --border-strong: oklch(0.99 0 0);
+  --border-subtle: oklch(0.50 0 0);
+  --card-backdrop-filter: none;
+  --card-foreground: oklch(0.99 0 0);
+  --card-texture: none;
+  --card: oklch(0.12 0 0);
+  --destructive: oklch(0.65 0.24 25);
+  --foreground: oklch(0.99 0 0);
+  --info: oklch(0.75 0.22 260);
+  --input: oklch(0.75 0 0);
+  --muted: oklch(0.20 0 0);
+  --muted-foreground: oklch(0.85 0 0);
+  --popover: oklch(0.15 0 0);
+  --popover-foreground: oklch(0.99 0 0);
+  --primary: oklch(0.87 0.18 var(--brand-hue, 85));
+  --primary-foreground: oklch(0.08 0 0);
+  --ring: oklch(0.87 0.18 var(--brand-hue, 85)/ 60%);
+  --sidebar: oklch(0.09 0 0);
+  --sidebar-accent: oklch(0.20 0 0);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(0.99 0 0);
+  --sidebar-foreground: oklch(0.99 0 0);
+  --sidebar-primary: oklch(0.87 0.18 var(--brand-hue, 85));
+  --sidebar-primary-foreground: oklch(0.08 0 0);
+  --sidebar-ring: oklch(0.87 0.18 85 / 60%);
+  --success: oklch(0.80 0.22 150);
+  --surface-0: oklch(0.07 0 0);
+  --surface-1: oklch(0.12 0 0);
+  --surface-2: oklch(0.18 0 0);
+  --surface-3: oklch(0.24 0 0);
+  --surface-overlay: none;
+  --surface-overlay-blend: normal;
+  --surface-overlay-opacity: 1;
+  --syntax-attr: oklch(0.95 0.18 90);
+  --syntax-comment: oklch(0.75 0.05 250);
+  --syntax-function: oklch(0.95 0.16 300);
+  --syntax-keyword: oklch(0.92 0.18 90);
+  --syntax-number: oklch(0.92 0.18 230);
+  --syntax-string: oklch(0.92 0.18 145);
+  --syntax-tag: oklch(0.95 0.18 25);
+  --syntax-type: oklch(0.92 0.16 195);
+  --syntax-variable: oklch(0.98 0 0);
+  --warning: oklch(0.87 0.18 85);
+  --active-strength: 22%;
+  --hover-strength: 14%;
+  --selected-strength: 30%;
+  --body-font: var(--font-body);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-display, var(--font-body));
+  --heading-tracking: var(--tracking-tight);
+  --heading-weight: var(--font-weight-bold);
+  --label-font: var(--font-body);
+  --label-tracking: var(--tracking-normal);
+  --label-weight: var(--font-weight-bold);
+  --card: oklch(0.15 0 0);
+  --radius-lg: 4px;
+  --radius-md: 3px;
+  --radius-sm: 2px;
+  --radius-xl: 6px;
+  --scrollbar-radius: 4px;
+  --scrollbar-thumb: color-mix(in oklab, var(--foreground) 50%, transparent);
+  --scrollbar-thumb-hover: var(--foreground);
+  --shadow-accent: 0 0 0 3px oklch(0.87 0.18 85 / 60%);
+  --shadow-hover: 0 0 0 2px oklch(0.87 0.18 85 / 70%);
+  --shadow-lg: 0 0 0 2px oklch(1 0 0 / 80%);
+  --shadow-md: 0 0 0 1px oklch(1 0 0 / 75%);
+  --shadow-sm: 0 0 0 1px oklch(1 0 0 / 65%);
+  --shadow-sticky: 0 0 0 1px oklch(1 0 0 / 60%);
+  --shadow-xl: 0 0 0 2px oklch(1 0 0 / 90%);
+  --shadow-xs: 0 0 0 1px oklch(1 0 0 / 60%);
+}
+
+/* ─── theme:neutral-light (themes/neutral-light.json) ─── */
+/* Neutral light. */
+:root[data-theme='neutral-light'],
+[data-theme-preview='neutral-light'] {
+  --accent: oklch(0.55 0.090 var(--brand-hue, 255));
+  --accent-foreground: oklch(0.985 0.005 255);
+  --backdrop: oklch(0 0 0 / 40%);
+  --background: oklch(0.985 0.002 264);
+  --border: oklch(0.21 0.015 264 / 14%);
+  --border-strong: oklch(0.21 0.015 264 / 30%);
+  --border-subtle: oklch(0.21 0.015 264 / 8%);
+  --card-backdrop-filter: none;
+  --card-foreground: oklch(0.21 0.015 264);
+  --destructive: oklch(0.58 0.220 27);
+  --foreground: oklch(0.21 0.015 264);
+  --info: oklch(0.58 0.150 245);
+  --input: oklch(0.21 0.015 264 / 14%);
+  --muted: oklch(0.96 0.004 264);
+  --muted-foreground: oklch(0.50 0.015 264);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.015 264);
+  --primary: oklch(0.27 0.020 var(--brand-hue, 264));
+  --primary-foreground: oklch(0.985 0.002 264);
+  --ring: oklch(0.55 0.090 var(--brand-hue, 255)/ 40%);
+  --ring-color: var(--accent);
+  --scrim: oklch(0 0 0 / 20%);
+  --secondary: oklch(0.96 0.004 264);
+  --secondary-foreground: oklch(0.27 0.020 264);
+  --sidebar: oklch(0.985 0.002 264);
+  --sidebar-accent: oklch(0.96 0.004 264);
+  --sidebar-accent-foreground: oklch(0.21 0.015 264);
+  --sidebar-border: oklch(0.21 0.015 264 / 12%);
+  --sidebar-foreground: oklch(0.21 0.015 264);
+  --sidebar-primary: oklch(0.27 0.020 var(--brand-hue, 264));
+  --sidebar-primary-foreground: oklch(0.985 0.002 264);
+  --sidebar-ring: oklch(0.55 0.090 255 / 30%);
+  --success: oklch(0.62 0.150 150);
+  --surface-0: oklch(0.985 0.002 264);
+  --surface-1: oklch(1 0 0);
+  --surface-2: oklch(1 0 0);
+  --surface-3: oklch(1 0 0);
+  --surface-overlay: none;
+  --surface-overlay-blend: normal;
+  --surface-overlay-opacity: 1;
+  --warning: oklch(0.72 0.150 75);
+  --body-font: var(--font-body);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-body);
+  --heading-tracking: var(--tracking-tight);
+  --heading-weight: var(--font-weight-semibold);
+  --label-font: var(--font-body);
+  --label-tracking: var(--tracking-normal);
+  --label-weight: var(--font-weight-semibold);
+  --card: oklch(1 0 0);
+  --radius-md: 6px;
+  --radius-sm: 4px;
+  --shadow-accent: 0 0 0 3px oklch(0.55 0.090 255 / 22%), 0 8px 24px -6px oklch(0.55 0.090 255 / 28%);
+  --shadow-card-rest: 0 1px 2px 0 oklch(0 0 0 / 4%), 0 0 0 1px oklch(0 0 0 / 5%);
+  --shadow-edge-top: 0 -8px 24px -8px oklch(0 0 0 / 8%), 0 -1px 0 oklch(0 0 0 / 4%);
+  --shadow-hover: 0 8px 20px oklch(0 0 0 / 10%), 0 0 0 1px oklch(0 0 0 / 6%);
+  --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 5%);
+  --shadow-lg: 0 12px 32px -6px oklch(0 0 0 / 13%), 0 4px 12px -4px oklch(0 0 0 / 8%);
+  --shadow-md: 0 4px 12px -2px oklch(0 0 0 / 9%), 0 2px 4px -2px oklch(0 0 0 / 6%);
+  --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 7%), 0 1px 2px -1px oklch(0 0 0 / 5%);
+  --shadow-sticky: 0 2px 6px -2px oklch(0 0 0 / 8%), 0 1px 2px oklch(0 0 0 / 4%);
+  --shadow-xl: 0 24px 64px -12px oklch(0 0 0 / 18%), 0 8px 24px -8px oklch(0 0 0 / 10%);
+  --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 5%);
+}
+
+/* ─── theme:neutral-dark (themes/neutral-dark.json) ─── */
+/* Neutral dark. */
+:root[data-theme='neutral-dark'],
+[data-theme-preview='neutral-dark'] {
+  --accent: oklch(0.70 0.100 var(--brand-hue, 255));
+  --accent-foreground: oklch(0.18 0.020 255);
+  --backdrop: oklch(0 0 0 / 55%);
+  --background: oklch(0.18 0.008 264);
+  --border: oklch(1 0 0 / 12%);
+  --border-strong: oklch(1 0 0 / 22%);
+  --border-subtle: oklch(1 0 0 / 8%);
+  --card-backdrop-filter: none;
+  --card-foreground: oklch(0.96 0.003 264);
+  --destructive: oklch(0.62 0.210 25);
+  --foreground: oklch(0.96 0.003 264);
+  --info: oklch(0.68 0.140 240);
+  --input: oklch(1 0 0 / 14%);
+  --muted: oklch(0.27 0.012 264);
+  --muted-foreground: oklch(0.70 0.012 264);
+  --popover: oklch(0.24 0.012 264);
+  --popover-foreground: oklch(0.96 0.003 264);
+  --primary: oklch(0.92 0.008 var(--brand-hue, 264));
+  --primary-foreground: oklch(0.21 0.015 264);
+  --ring: oklch(0.70 0.100 var(--brand-hue, 255)/ 40%);
+  --ring-color: var(--accent);
+  --scrim: oklch(0 0 0 / 30%);
+  --secondary: oklch(0.27 0.012 264);
+  --secondary-foreground: oklch(0.96 0.003 264);
+  --sidebar: oklch(0.16 0.008 264);
+  --sidebar-accent: oklch(0.25 0.012 264);
+  --sidebar-accent-foreground: oklch(0.96 0.003 264);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-foreground: oklch(0.96 0.003 264);
+  --sidebar-primary: oklch(0.92 0.008 var(--brand-hue, 264));
+  --sidebar-primary-foreground: oklch(0.21 0.015 264);
+  --sidebar-ring: oklch(0.70 0.100 255 / 30%);
+  --success: oklch(0.70 0.150 150);
+  --surface-0: oklch(0.18 0.008 264);
+  --surface-1: oklch(0.22 0.010 264);
+  --surface-2: oklch(0.25 0.012 264);
+  --surface-3: oklch(0.28 0.014 264);
+  --surface-overlay: none;
+  --surface-overlay-blend: normal;
+  --surface-overlay-opacity: 1;
+  --warning: oklch(0.78 0.150 80);
+  --body-font: var(--font-body);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-body);
+  --heading-tracking: var(--tracking-tight);
+  --heading-weight: var(--font-weight-semibold);
+  --label-font: var(--font-body);
+  --label-tracking: var(--tracking-normal);
+  --label-weight: var(--font-weight-semibold);
+  --card: oklch(0.22 0.010 264);
+  --radius-md: 6px;
+  --radius-sm: 4px;
+  --shadow-accent: 0 0 0 3px oklch(0.70 0.100 255 / 22%), 0 8px 24px -6px oklch(0.70 0.100 255 / 30%);
+  --shadow-card-rest: 0 1px 3px oklch(0 0 0 / 30%), 0 0 0 1px oklch(0.5 0.010 264 / 12%);
+  --shadow-edge-top: 0 -8px 24px -8px oklch(0.05 0.010 264 / 45%), 0 -1px 0 oklch(1 0 0 / 4%);
+  --shadow-hover: 0 8px 20px oklch(0 0 0 / 40%), 0 0 0 1px oklch(0.5 0.010 264 / 18%);
+  --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 25%);
+  --shadow-lg: 0 14px 32px -6px oklch(0.05 0.010 264 / 60%), 0 4px 12px -4px oklch(0.05 0.010 264 / 40%);
+  --shadow-md: 0 4px 14px -2px oklch(0.05 0.010 264 / 50%), 0 2px 6px -2px oklch(0.05 0.010 264 / 35%);
+  --shadow-sm: 0 1px 3px 0 oklch(0.05 0.010 264 / 45%), 0 1px 2px -1px oklch(0.05 0.010 264 / 30%);
+  --shadow-sticky: 0 2px 6px -2px oklch(0.05 0.010 264 / 45%), 0 1px 2px oklch(0.05 0.010 264 / 30%);
+  --shadow-xl: 0 28px 64px -12px oklch(0.05 0.010 264 / 65%), 0 8px 24px -8px oklch(0.05 0.010 264 / 45%);
+  --shadow-xs: 0 1px 2px 0 oklch(0.05 0.010 264 / 40%);
+}
+
+/* ─── theme:glass (themes/glass.json) ─── */
+/* Glass / frosted. */
+:root[data-theme='glass'],
+[data-theme-preview='glass'] {
+  --accent: oklch(0.62 0.14 var(--brand-hue, 280));
+  --accent-foreground: oklch(0.99 0.005 240);
+  --background: oklch(0.97 0.005 240);
+  --border: oklch(1 0 0 / 22%);
+  --border-strong: oklch(1 0 0 / 36%);
+  --border-subtle: oklch(1 0 0 / 14%);
+  --card-backdrop-filter: blur(24px) saturate(180%);
+  --card-foreground: oklch(0.22 0.02 250);
+  --card-texture: none;
+  --destructive: oklch(0.60 0.22 27);
+  --foreground: oklch(0.22 0.02 250);
+  --info: oklch(0.62 0.14 230);
+  --input: oklch(1 0 0 / 28%);
+  --muted: oklch(0.94 0.008 240);
+  --muted-foreground: oklch(0.42 0.02 250);
+  --popover: oklch(1 0 0 / 78%);
+  --popover-foreground: oklch(0.22 0.02 250);
+  --primary: oklch(0.62 0.16 var(--brand-hue, 50));
+  --primary-foreground: oklch(0.99 0.005 240);
+  --ring: oklch(0.62 0.16 var(--brand-hue, 50)/ 45%);
+  --sidebar: oklch(1 0 0 / 55%);
+  --sidebar-accent: oklch(1 0 0 / 70%);
+  --sidebar-accent-foreground: oklch(0.22 0.02 250);
+  --sidebar-border: oklch(1 0 0 / 22%);
+  --sidebar-foreground: oklch(0.22 0.02 250);
+  --sidebar-primary: oklch(0.62 0.16 var(--brand-hue, 50));
+  --sidebar-primary-foreground: oklch(0.99 0.005 240);
+  --sidebar-ring: oklch(0.62 0.16 50 / 40%);
+  --success: oklch(0.62 0.14 152);
+  --surface-0: oklch(0.97 0.005 240);
+  --surface-1: oklch(1 0 0 / 55%);
+  --surface-2: oklch(1 0 0 / 65%);
+  --surface-3: oklch(1 0 0 / 75%);
+  --surface-overlay: none;
+  --surface-overlay-blend: normal;
+  --surface-overlay-opacity: 1;
+  --syntax-attr: oklch(0.48 0.20 55);
+  --syntax-comment: oklch(0.45 0.04 250);
+  --syntax-function: oklch(0.42 0.24 305);
+  --syntax-keyword: oklch(0.42 0.22 285);
+  --syntax-number: oklch(0.42 0.20 245);
+  --syntax-string: oklch(0.40 0.18 152);
+  --syntax-tag: oklch(0.45 0.22 20);
+  --syntax-type: oklch(0.42 0.20 195);
+  --warning: oklch(0.72 0.15 75);
+  --active-strength: 9%;
+  --hover-strength: 5%;
+  --selected-strength: 12%;
+  --body-font: var(--font-body);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-display, var(--font-body));
+  --heading-tracking: var(--tracking-tight);
+  --heading-weight: var(--font-weight-semibold);
+  --label-font: var(--font-body);
+  --label-tracking: var(--tracking-normal);
+  --label-weight: var(--font-weight-semibold);
+  --card: oklch(1 0 0 / 55%);
+  --duration-fast: 160ms;
+  --duration-medium: 240ms;
+  --ease-out: var(--ease-out-soft);
+  --radius: 14px;
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --radius-xl: 24px;
+  --shadow-accent: 0 1px 0 oklch(1 0 0 / 60%) inset, 0 8px 24px oklch(0.62 0.16 50 / 28%);
+  --shadow-card-rest: 0 1px 0 oklch(1 0 0 / 50%) inset, 0 6px 16px oklch(0.30 0.04 240 / 8%);
+  --shadow-edge-top: 0 -1px 0 oklch(1 0 0 / 36%) inset;
+  --shadow-hover: 0 1px 0 oklch(1 0 0 / 60%) inset, 0 12px 32px oklch(0.30 0.04 240 / 14%);
+  --shadow-lg: 0 1px 0 oklch(1 0 0 / 60%) inset, 0 16px 48px oklch(0.30 0.04 240 / 16%);
+  --shadow-md: 0 1px 0 oklch(1 0 0 / 50%) inset, 0 8px 24px oklch(0.30 0.04 240 / 10%);
+  --shadow-sm: 0 1px 0 oklch(1 0 0 / 50%) inset, 0 4px 12px oklch(0.30 0.04 240 / 8%);
+  --shadow-sticky: 0 1px 0 oklch(1 0 0 / 50%) inset, 0 2px 8px oklch(0.30 0.04 240 / 8%);
+  --shadow-xl: 0 1px 0 oklch(1 0 0 / 60%) inset, 0 28px 72px oklch(0.30 0.04 240 / 22%);
+  --shadow-xs: 0 1px 0 oklch(1 0 0 / 40%) inset, 0 2px 8px oklch(0.30 0.04 240 / 6%);
+}
+
+/* ─── theme:brut (themes/brut.json) ─── */
+/* Neo-brutalist. */
+:root[data-theme='brut'],
+[data-theme-preview='brut'] {
+  --accent: oklch(0.62 0.24 28);
+  --accent-foreground: oklch(0.97 0 0);
+  --background: oklch(0.97 0 0);
+  --border: oklch(0.14 0 0);
+  --border-strong: oklch(0.14 0 0);
+  --border-subtle: oklch(0.14 0 0 / 45%);
+  --border-width: 2px;
+  --card-backdrop-filter: none;
+  --card-foreground: oklch(0.14 0 0);
+  --card-texture: none;
+  --destructive: oklch(0.52 0.26 28);
+  --foreground: oklch(0.14 0 0);
+  --gradient-surface: none;
+  --info: oklch(0.45 0.18 250);
+  --input: oklch(0.14 0 0);
+  --muted: oklch(0.92 0 0);
+  --muted-foreground: oklch(0.38 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.14 0 0);
+  --primary: oklch(0.14 0 0);
+  --primary-foreground: oklch(0.97 0 0);
+  --ring: oklch(0.14 0 0 / 60%);
+  --shape-pill: 9999px;
+  --success: oklch(0.48 0.18 145);
+  --surface-0: oklch(0.97 0 0);
+  --surface-1: oklch(1 0 0);
+  --surface-2: oklch(0.94 0 0);
+  --surface-3: oklch(0.92 0 0);
+  --surface-overlay: none;
+  --warning: oklch(0.72 0.19 85);
+  --active-strength: 22%;
+  --hover-strength: 14%;
+  --selected-strength: 28%;
+  --body-font: var(--font-mono);
+  --display-font: var(--font-mono);
+  --font-body: var(--font-mono);
+  --heading-font: var(--font-mono);
+  --heading-tracking: var(--tracking-tighter);
+  --heading-transform: uppercase;
+  --heading-weight: var(--font-weight-bold);
+  --label-font: var(--font-mono);
+  --label-tracking: var(--tracking-wider);
+  --label-weight: var(--font-weight-bold);
+  --card: oklch(1 0 0);
+  --control-lift: 0px;
+  --press-scale: 1;
+  --press-translate: 0px;
+  --radius: 0px;
+  --radius-lg: 0px;
+  --radius-md: 0px;
+  --radius-sm: 0px;
+  --radius-xl: 0px;
+  --scrollbar-radius: 0px;
+  --scrollbar-thumb: oklch(0.14 0 0 / 55%);
+  --scrollbar-thumb-hover: oklch(0.14 0 0);
+  --shadow-accent: 0 0 0 3px oklch(0.62 0.24 28 / 40%);
+  --shadow-card-rest: none;
+  --shadow-edge-top: none;
+  --shadow-hover: none;
+  --shadow-inset-soft: none;
+  --shadow-lg: none;
+  --shadow-md: none;
+  --shadow-sm: none;
+  --shadow-sticky: none;
+  --shadow-xl: none;
+  --shadow-xs: none;
+}
+
+/* ─── theme:8bit (themes/8bit.json) ─── */
+/* Pixel / 8-bit. */
+:root[data-theme='8bit'],
+[data-theme-preview='8bit'] {
+  --accent: oklch(0.82 0.20 95);
+  --accent-foreground: oklch(0.14 0.03 265);
+  --background: oklch(0.18 0.05 265);
+  --border: oklch(0.95 0.02 265);
+  --border-strong: oklch(0.95 0.02 265);
+  --border-subtle: oklch(0.95 0.02 265 / 55%);
+  --border-width: 3px;
+  --card-backdrop-filter: none;
+  --card-foreground: oklch(0.95 0.02 265);
+  --card-texture: none;
+  --destructive: oklch(0.62 0.25 25);
+  --foreground: oklch(0.95 0.02 265);
+  --glow-accent: radial-gradient(circle, oklch(0.82 0.20 95 / 22%), transparent 60%);
+  --glow-primary: radial-gradient(circle, oklch(0.72 0.21 25 / 22%), transparent 60%);
+  --info: oklch(0.72 0.18 230);
+  --input: oklch(0.95 0.02 265);
+  --muted: oklch(0.30 0.05 265);
+  --muted-foreground: oklch(0.72 0.04 265);
+  --popover: oklch(0.24 0.06 265);
+  --popover-foreground: oklch(0.95 0.02 265);
+  --primary: oklch(0.72 0.21 25);
+  --primary-foreground: oklch(0.14 0.03 265);
+  --ring: oklch(0.82 0.20 95 / 70%);
+  --shape-pill: 0px;
+  --success: oklch(0.78 0.22 140);
+  --surface-0: oklch(0.18 0.05 265);
+  --surface-1: oklch(0.24 0.06 265);
+  --surface-2: oklch(0.30 0.05 265);
+  --surface-3: oklch(0.36 0.05 265);
+  --surface-overlay: repeating-conic-gradient( oklch(1 0 0 / 4%) 0% 25%, transparent 0% 50% );
+  --surface-overlay-blend: overlay;
+  --surface-overlay-opacity: 0.6;
+  --warning: oklch(0.85 0.20 95);
+  --active-strength: 26%;
+  --hover-strength: 18%;
+  --selected-strength: 32%;
+  --body-font: var(--font-mono);
+  --display-font: var(--font-press-start);
+  --font-body: var(--font-mono);
+  --heading-font: var(--font-press-start);
+  --heading-tracking: var(--tracking-wide);
+  --heading-transform: uppercase;
+  --heading-weight: var(--font-weight-bold);
+  --label-font: var(--font-mono);
+  --label-tracking: var(--tracking-wider);
+  --label-transform: uppercase;
+  --label-weight: var(--font-weight-bold);
+  --card: oklch(0.24 0.06 265);
+  --control-lift: 0px;
+  --press-scale: 1;
+  --press-shadow: -2px -2px 0 0 oklch(0.14 0.03 265);
+  --press-translate: 2px;
+  --radius: 0px;
+  --radius-lg: 0px;
+  --radius-md: 0px;
+  --radius-sm: 0px;
+  --radius-xl: 0px;
+  --scrollbar-radius: 0px;
+  --scrollbar-thumb: oklch(0.82 0.20 95);
+  --scrollbar-thumb-hover: oklch(0.72 0.21 25);
+  --scrollbar-width: 16px;
+  --shadow-accent: 0 0 0 3px oklch(0.82 0.20 95 / 70%);
+  --shadow-card-rest: 4px 4px 0 0 oklch(0.14 0.03 265);
+  --shadow-edge-top: 0 -3px 0 0 oklch(0.14 0.03 265);
+  --shadow-hover: 6px 6px 0 0 oklch(0.14 0.03 265);
+  --shadow-inset-soft: none;
+  --shadow-lg: 6px 6px 0 0 oklch(0.14 0.03 265);
+  --shadow-md: 4px 4px 0 0 oklch(0.14 0.03 265);
+  --shadow-sm: 3px 3px 0 0 oklch(0.14 0.03 265);
+  --shadow-sticky: 0 3px 0 0 oklch(0.14 0.03 265);
+  --shadow-xl: 8px 8px 0 0 oklch(0.14 0.03 265);
+  --shadow-xs: 2px 2px 0 0 oklch(0.14 0.03 265);
+}
+
+/* ─── theme:synthwave (themes/synthwave.json) ─── */
+/* Retro-future neon. */
+:root[data-theme='synthwave'],
+[data-theme-preview='synthwave'] {
+  --accent: oklch(0.75 0.22 190);
+  --accent-foreground: oklch(0.14 0.03 190);
+  --background: oklch(0.16 0.06 285);
+  --border: oklch(0.95 0.05 320 / 30%);
+  --border-strong: oklch(0.95 0.05 320 / 45%);
+  --border-subtle: oklch(0.95 0.05 320 / 18%);
+  --card-backdrop-filter: none;
+  --card-foreground: oklch(0.95 0.02 100);
+  --card-texture: none;
+  --destructive: oklch(0.60 0.26 25);
+  --foreground: oklch(0.95 0.02 100);
+  --glow-accent: radial-gradient(circle, color-mix(in oklch, var(--accent) 18%, transparent), transparent 60%);
+  --glow-default: radial-gradient(circle, color-mix(in oklch, var(--foreground) 6%, transparent), transparent 60%);
+  --glow-muted: radial-gradient(circle, color-mix(in oklch, var(--muted-foreground) 6%, transparent), transparent 60%);
+  --glow-primary: radial-gradient(circle, color-mix(in oklch, var(--primary) 18%, transparent), transparent 60%);
+  --gradient-accent: linear-gradient(180deg, var(--accent) 0%, transparent 92%);
+  --gradient-primary: linear-gradient(180deg, var(--primary) 0%, transparent 92%);
+  --gradient-surface: linear-gradient(180deg, oklch(0.22 0.08 285) 0%, oklch(0.16 0.06 285) 100%);
+  --info: oklch(0.70 0.18 230);
+  --input: oklch(0.95 0.05 320 / 30%);
+  --muted: oklch(0.30 0.06 285);
+  --muted-foreground: oklch(0.72 0.04 285);
+  --popover: oklch(0.22 0.08 285);
+  --popover-foreground: oklch(0.95 0.02 100);
+  --primary: oklch(0.65 0.28 340);
+  --primary-foreground: oklch(0.14 0.03 340);
+  --ring: oklch(0.75 0.22 190 / 70%);
+  --success: oklch(0.70 0.20 145);
+  --surface-0: oklch(0.16 0.06 285);
+  --surface-1: oklch(0.22 0.08 285);
+  --surface-2: oklch(0.30 0.08 285);
+  --surface-3: oklch(0.38 0.08 285);
+  --surface-overlay: repeating-linear-gradient( 0deg, transparent 0 23px, oklch(0.65 0.28 340 / 5%) 23px 24px, transparent 24px 47px, oklch(0.75 0.22 190 / 5%) 47px 48px );
+  --surface-overlay-blend: screen;
+  --surface-overlay-opacity: 0.35;
+  --warning: oklch(0.82 0.20 95);
+  --card: oklch(0.22 0.08 285);
+  --control-lift: -2px;
+  --press-scale: 0.98;
+  --press-translate: 1px;
+  --scrollbar-thumb: oklch(0.65 0.28 340);
+  --scrollbar-thumb-hover: oklch(0.75 0.22 190);
+  --shadow-accent: 0 0 0 3px oklch(0.75 0.22 190 / 55%);
+  --shadow-card-rest: 0 4px 16px oklch(0.14 0.03 285 / 45%), 0 1px 1px oklch(0.14 0.03 285 / 20%);
+  --shadow-edge-top: 0 -8px 24px -8px oklch(0.14 0.03 285 / 40%), 0 -1px 0 oklch(0.14 0.03 285 / 25%);
+  --shadow-hover: 0 8px 24px oklch(0.14 0.03 285 / 55%), 0 2px 2px oklch(0.14 0.03 285 / 25%);
+  --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 15%);
+  --shadow-lg: 0 8px 24px oklch(0.14 0.03 285 / 45%), 0 4px 4px oklch(0.14 0.03 285 / 25%);
+  --shadow-md: 0 4px 12px oklch(0.14 0.03 285 / 40%), 0 2px 2px oklch(0.14 0.03 285 / 25%);
+  --shadow-sm: 0 2px 4px oklch(0.14 0.03 285 / 35%), 0 1px 1px oklch(0.14 0.03 285 / 25%);
+  --shadow-sticky: 0 3px 10px -2px oklch(0.14 0.03 285 / 40%), 0 -1px 0 oklch(0.14 0.03 285 / 25%);
+  --shadow-xl: 0 16px 48px oklch(0.14 0.03 285 / 50%), 0 8px 8px oklch(0.14 0.03 285 / 25%);
+  --shadow-xs: 0 1px 2px oklch(0.14 0.03 285 / 35%);
+}
+
+/* ─── theme:ship-light (themes/ship-light.json) ─── */
+/* Canonical SHIP light (base is mostly complete; personality overrides). */
+:root[data-theme='ship-light'],
+[data-theme-preview='ship-light'] {
+  --accent: oklch(0.61 0.23 303);
+  --accent-foreground: oklch(0.98 0.02 301);
+  --background: oklch(0.975 0.002 106.423);
+  --border: oklch(0.147 0.004 49.25 / 25%);
+  --card-backdrop-filter: none;
+  --card-foreground: oklch(0.147 0.004 49.25);
+  --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
+  --card-texture-blend: overlay;
+  --card-texture-opacity: 1;
+  --foreground: oklch(0.147 0.004 49.25);
+  --muted: oklch(0.95 0.003 106.424);
+  --muted-foreground: oklch(0.40 0.02 58.071);
+  --primary: oklch(0.67 0.16 58);
+  --primary-foreground: oklch(0.99 0.02 95);
+  --ring: oklch(0.67 0.16 58 / 40%);
+  --surface-overlay: none;
+  --surface-overlay-blend: normal;
+  --surface-overlay-opacity: 1;
+  --body-font: var(--font-body);
+  --font-body: var(--font-sans, system-ui, sans-serif);
+  --heading-font: var(--font-display, var(--font-body));
+  --heading-tracking: var(--tracking-tight);
+  --heading-weight: var(--font-weight-semibold);
+  --label-font: var(--font-body);
+  --label-tracking: 0.08em;
+  --label-weight: var(--font-weight-semibold);
+  --card: oklch(1 0 0);
+  --radius-md: 6px;
+  --radius-sm: 4px;
+  --shadow-accent: 0 0 0 3px oklch(0.67 0.16 58 / 18%), 0 8px 24px -6px oklch(0.67 0.16 58 / 30%);
+  --shadow-card-rest: 0 1px 2px 0 oklch(0 0 0 / 4%), 0 0 0 1px oklch(0 0 0 / 3%);
+  --shadow-hover: 0 8px 22px -4px oklch(0.55 0.10 58 / 14%), 0 2px 6px oklch(0 0 0 / 6%);
+  --shadow-lg: 0 14px 32px -6px oklch(0.55 0.10 58 / 16%), 0 4px 12px oklch(0 0 0 / 8%);
+  --shadow-md: 0 6px 18px -4px oklch(0.55 0.10 58 / 12%), 0 2px 6px oklch(0 0 0 / 6%);
+  --shadow-sm: 0 2px 4px -1px oklch(0.55 0.10 58 / 9%), 0 1px 2px oklch(0 0 0 / 4%);
+  --shadow-xs: 0 1px 2px 0 oklch(0.55 0.10 58 / 6%), 0 0 0 1px oklch(0 0 0 / 3%);
+}
+
+/*
+ * Theme structural chrome — hand-edited rules that are NOT pure token overrides.
+ * Pure per-theme token values live in model/themes/*.json and are generated
+ * into src/themes.css. This file is concatenated after theme token blocks.
+ */
+
 :root[data-theme='halo'] body,
 [data-theme-preview='halo'].tc-bg {
   background-image: radial-gradient(
@@ -245,367 +870,10 @@
   );
   background-attachment: fixed;
 }
-
-/* Pressed CTA collapses outset → inset, preserving shadow as the
- * tactile signal. Skip transform under reduced motion via :active. */
 :root[data-theme='halo'] button:active,
 :root[data-theme='halo'] .dash-link-btn:active {
   box-shadow: var(--shadow-inset-soft);
 }
-
-/* ───────────────────────────────────────────────────────────────────
- * console — terminal mode. Phosphor-green-on-near-black, mono
- * everywhere (the --font-body remap propagates through every
- * component that reads it), sharp 2px corners, low-spread shadows
- * with green glow tint. This is a different machine, not a tint.
- * ─────────────────────────────────────────────────────────────────── */
-:root[data-theme='console'],
-[data-theme-preview='console'] {
-  --background: oklch(0.13 0.008 220);
-  --foreground: oklch(0.92 0.06 145);
-  --card: oklch(0.16 0.010 220);
-  --card-foreground: oklch(0.92 0.06 145);
-  --popover: oklch(0.18 0.012 220);
-  --popover-foreground: oklch(0.92 0.06 145);
-  --muted: oklch(0.20 0.012 220);
-  --muted-foreground: oklch(0.62 0.05 145);
-  --border: oklch(0.30 0.04 145 / 40%);
-  --input: oklch(0.30 0.04 145 / 40%);
-  --primary: oklch(0.78 0.20 var(--brand-hue, 145));
-  --primary-foreground: oklch(0.13 0.008 220);
-  --accent: oklch(0.78 0.16 var(--brand-hue, 195));
-  --accent-foreground: oklch(0.13 0.008 220);
-  --destructive: oklch(0.70 0.22 25);
-  --success: oklch(0.78 0.20 145);
-  --warning: oklch(0.85 0.18 90);
-  --info: oklch(0.78 0.16 195);
-  --ring: oklch(0.78 0.20 var(--brand-hue, 145)/ 50%);
-
-  /* Surface ladder — faint cool drift up from the near-black base. */
-  --surface-0: oklch(0.13 0.008 220);
-  --surface-1: oklch(0.16 0.010 220);
-  --surface-2: oklch(0.18 0.012 220);
-  --surface-3: oklch(0.20 0.014 220);
-  --border-subtle: oklch(0.30 0.04 145 / 20%);
-  --border-strong: oklch(0.78 0.20 145 / 60%);
-
-  /* Sharp hardware edges. */
-  --radius: 2px;
-  --radius-sm: 2px;
-  --radius-md: 2px;
-  --radius-lg: 3px;
-  --radius-xl: 4px;
-
-  /* Phosphor-tinted shadows — low spread, glow rather than blur. */
-  --shadow-card-rest: 0 0 0 1px oklch(0.78 0.20 145 / 14%);
-  --shadow-hover:     0 0 0 1px oklch(0.78 0.20 145 / 40%), 0 0 16px oklch(0.78 0.20 145 / 12%);
-  --shadow-xs: 0 0 0 1px oklch(0.78 0.20 145 / 10%);
-  --shadow-sm: 0 1px 2px oklch(0 0 0 / 50%), 0 0 0 1px oklch(0.78 0.20 145 / 12%);
-  --shadow-md: 0 4px 12px oklch(0 0 0 / 50%), 0 0 0 1px oklch(0.78 0.20 145 / 16%);
-  --shadow-lg: 0 12px 32px oklch(0 0 0 / 60%), 0 0 0 1px oklch(0.78 0.20 145 / 20%);
-  --shadow-xl: 0 24px 64px oklch(0 0 0 / 70%);
-  --shadow-edge-top: 0 -1px 0 oklch(0.78 0.20 145 / 30%);
-  --shadow-sticky: 0 1px 0 oklch(0.78 0.20 145 / 24%);
-  --shadow-accent: 0 0 0 2px oklch(0.78 0.20 145 / 55%), 0 0 18px oklch(0.78 0.20 145 / 18%);
-
-  /* Chrome surfaces — phosphor on near-black so the topbar / rail /
-   * statusbar feel like the same machine as the views, not a stray
-   * generic-dark sidebar from the canonical .dark block. */
-  --sidebar: oklch(0.13 0.008 220);
-  --sidebar-foreground: oklch(0.92 0.06 145);
-  --sidebar-accent: oklch(0.18 0.012 220);
-  --sidebar-accent-foreground: oklch(0.92 0.06 145);
-  --sidebar-border: oklch(0.30 0.04 145 / 30%);
-  --sidebar-primary: oklch(0.78 0.20 var(--brand-hue, 145));
-  --sidebar-primary-foreground: oklch(0.13 0.008 220);
-  --sidebar-ring: oklch(0.78 0.20 145 / 50%);
-
-  /* Mono everywhere. The body remap propagates to every component
-   * that reads var(--font-body) — chips, inputs, labels, headings. */
-  --font-body: var(--font-mono);
-  --body-font: var(--font-mono);
-  --heading-font: var(--font-mono);
-  --label-font: var(--font-mono);
-  --heading-weight: var(--font-weight-bold);
-  --heading-tracking: var(--tracking-normal);
-  --label-weight: var(--font-weight-bold);
-  --label-tracking: var(--tracking-wide);
-
-  /* Crisp interaction — every press registers. */
-  --hover-strength: 12%;
-  --active-strength: 18%;
-  --selected-strength: 22%;
-
-  /* Phosphor-green scrollbar. */
-  --scrollbar-radius: 2px;
-  --scrollbar-width: 12px;
-  --scrollbar-width-thin: 8px;
-  --scrollbar-thumb: oklch(0.78 0.20 145 / 30%);
-  --scrollbar-thumb-hover: oklch(0.78 0.20 145 / 60%);
-}
-
-/* CRT scanline overlay — every other pixel row darkened by a hair to
- * evoke phosphor lines without sacrificing legibility. Multiply-blended
- * over the page so highlights stay green and lows go dark. Tuned for
- * 1× zoom: 8% black on 1px stripes is barely perceptible at body size
- * but unmistakable on solid surfaces. Reduced motion skips overlays
- * entirely (tokens.css). */
-:root[data-theme='console'],
-[data-theme-preview='console'] {
-  --surface-overlay: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 1px,
-    oklch(0 0 0 / 8%) 1px,
-    oklch(0 0 0 / 8%) 2px
-  );
-  --surface-overlay-blend: multiply;
-  --surface-overlay-opacity: 0.55;
-}
-
-/* Bevel-style elevation — terminal apps don't blur, they stack 1px
- * phosphor borders + hard offset shadows. Override the shadow stack so
- * elevated surfaces read as outset hardware pixels, not soft cards. */
-:root[data-theme='console'],
-[data-theme-preview='console'] {
-  --shadow-card-rest: 0 0 0 1px oklch(0.78 0.20 145 / 30%);
-  --shadow-hover:
-    0 0 0 1px oklch(0.78 0.20 145 / 60%),
-    0 0 0 3px oklch(0.78 0.20 145 / 10%);
-  --shadow-md:
-    0 0 0 1px oklch(0.78 0.20 145 / 30%),
-    0 4px 0 -1px oklch(0 0 0 / 60%);
-  --shadow-lg:
-    0 0 0 1px oklch(0.78 0.20 145 / 40%),
-    0 8px 0 -2px oklch(0 0 0 / 70%);
-}
-
-/* ───────────────────────────────────────────────────────────────────
- * contrast — accessibility-hero. Near-black background, amber
- * primary/accent fused into one high-chroma signal, pure white
- * foreground. Flat 1–2px border "shadows" in lieu of blurs. Tiny
- * blocky radii. Bold weights. Amped interaction tints so every
- * focus/active state is impossible to miss.
- * ─────────────────────────────────────────────────────────────────── */
-:root[data-theme='contrast'],
-[data-theme-preview='contrast'] {
-  --background: oklch(0.09 0 0);
-  --foreground: oklch(0.99 0 0);
-  --card: oklch(0.15 0 0);
-  --card-foreground: oklch(0.99 0 0);
-  --popover: oklch(0.15 0 0);
-  --popover-foreground: oklch(0.99 0 0);
-  --muted: oklch(0.20 0 0);
-  --muted-foreground: oklch(0.85 0 0);
-  --border: oklch(0.75 0 0);
-  --input: oklch(0.75 0 0);
-  --primary: oklch(0.87 0.18 var(--brand-hue, 85));
-  --primary-foreground: oklch(0.08 0 0);
-  --accent: oklch(0.87 0.18 var(--brand-hue, 85));
-  --accent-foreground: oklch(0.08 0 0);
-  --destructive: oklch(0.65 0.24 25);
-  --success: oklch(0.80 0.22 150);
-  --warning: oklch(0.87 0.18 85);
-  --info: oklch(0.75 0.22 260);
-  --ring: oklch(0.87 0.18 var(--brand-hue, 85)/ 60%);
-
-  --surface-2: oklch(0.20 0 0);
-  --border-subtle: oklch(0.50 0 0);
-  --border-strong: oklch(0.99 0 0);
-
-  --radius-sm: 2px;
-  --radius-md: 3px;
-  --radius-lg: 4px;
-  --radius-xl: 6px;
-
-  --shadow-xs: 0 0 0 1px oklch(1 0 0 / 60%);
-  --shadow-sm: 0 0 0 1px oklch(1 0 0 / 65%);
-  --shadow-md: 0 0 0 1px oklch(1 0 0 / 75%);
-  --shadow-lg: 0 0 0 2px oklch(1 0 0 / 80%);
-  --shadow-xl: 0 0 0 2px oklch(1 0 0 / 90%);
-  --shadow-hover: 0 0 0 2px oklch(0.87 0.18 85 / 70%);
-  --shadow-sticky: 0 0 0 1px oklch(1 0 0 / 60%);
-  --shadow-accent: 0 0 0 3px oklch(0.87 0.18 85 / 60%);
-
-  --heading-weight: var(--font-weight-bold);
-  --label-weight: var(--font-weight-bold);
-
-  --hover-strength: 14%;
-  --active-strength: 22%;
-  --selected-strength: 30%;
-
-  --scrollbar-thumb: color-mix(in oklab, var(--foreground) 50%, transparent);
-  --scrollbar-thumb-hover: var(--foreground);
-  --scrollbar-radius: 4px;
-
-  /* Chrome surfaces — solid near-black with white edges so the topbar
-   * / rail / statusbar mirror the high-contrast view ground. */
-  --sidebar: oklch(0.09 0 0);
-  --sidebar-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.20 0 0);
-  --sidebar-accent-foreground: oklch(0.99 0 0);
-  --sidebar-border: oklch(0.99 0 0);
-  --sidebar-primary: oklch(0.87 0.18 var(--brand-hue, 85));
-  --sidebar-primary-foreground: oklch(0.08 0 0);
-  --sidebar-ring: oklch(0.87 0.18 85 / 60%);
-}
-
-/* ───────────────────────────────────────────────────────────────────
- * neutral-light — brand-free default. The agnostic baseline a customer
- * gets when building on SAIL without adopting any product identity:
- * neutral cool-slate surfaces, a deep-slate "ink" primary, and one
- * restrained slate-blue accent. Standard semantic colors. The display
- * face is demoted to the body sans so no distinctive heading typography
- * leaks through. Standard radii and motion — neutral is unopinionated,
- * not bent. Carries zero brand: every brand-bearing token is restated
- * here so nothing falls through to the SHIP palette in tokens.css.
- * ─────────────────────────────────────────────────────────────────── */
-:root[data-theme='neutral-light'],
-[data-theme-preview='neutral-light'] {
-  --background: oklch(0.985 0.002 264);
-  --foreground: oklch(0.21 0.015 264);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.015 264);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.015 264);
-  --primary: oklch(0.27 0.020 var(--brand-hue, 264));
-  --primary-foreground: oklch(0.985 0.002 264);
-  --secondary: oklch(0.96 0.004 264);
-  --secondary-foreground: oklch(0.27 0.020 264);
-  --muted: oklch(0.96 0.004 264);
-  --muted-foreground: oklch(0.50 0.015 264);
-  --accent: oklch(0.55 0.090 var(--brand-hue, 255));
-  --accent-foreground: oklch(0.985 0.005 255);
-  --destructive: oklch(0.58 0.220 27);
-  --success: oklch(0.62 0.150 150);
-  --warning: oklch(0.72 0.150 75);
-  --info: oklch(0.58 0.150 245);
-  --border: oklch(0.21 0.015 264 / 14%);
-  --input: oklch(0.21 0.015 264 / 14%);
-  --ring: oklch(0.55 0.090 var(--brand-hue, 255)/ 40%);
-  /* Focus reads as the slate-blue accent, not the near-black primary. */
-  --ring-color: var(--accent);
-
-  /* Surfaces: light-mode plateau at white — depth is shadow + border. */
-  --surface-0: oklch(0.985 0.002 264);
-  --surface-1: oklch(1 0 0);
-  --surface-2: oklch(1 0 0);
-  --surface-3: oklch(1 0 0);
-  --border-subtle: oklch(0.21 0.015 264 / 8%);
-  --border-strong: oklch(0.21 0.015 264 / 30%);
-
-  /* Neutral grey elevation — no warm brand tint. The accent glow is the
-   * only color in the shadow vocabulary. */
-  --shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 5%);
-  --shadow-sm: 0 1px 3px 0 oklch(0 0 0 / 7%), 0 1px 2px -1px oklch(0 0 0 / 5%);
-  --shadow-md: 0 4px 12px -2px oklch(0 0 0 / 9%), 0 2px 4px -2px oklch(0 0 0 / 6%);
-  --shadow-lg: 0 12px 32px -6px oklch(0 0 0 / 13%), 0 4px 12px -4px oklch(0 0 0 / 8%);
-  --shadow-xl: 0 24px 64px -12px oklch(0 0 0 / 18%), 0 8px 24px -8px oklch(0 0 0 / 10%);
-  --shadow-card-rest: 0 1px 2px 0 oklch(0 0 0 / 4%), 0 0 0 1px oklch(0 0 0 / 5%);
-  --shadow-hover: 0 8px 20px oklch(0 0 0 / 10%), 0 0 0 1px oklch(0 0 0 / 6%);
-  --shadow-sticky: 0 2px 6px -2px oklch(0 0 0 / 8%), 0 1px 2px oklch(0 0 0 / 4%);
-  --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 5%);
-  --shadow-edge-top: 0 -8px 24px -8px oklch(0 0 0 / 8%), 0 -1px 0 oklch(0 0 0 / 4%);
-  --shadow-accent: 0 0 0 3px oklch(0.55 0.090 255 / 22%), 0 8px 24px -6px oklch(0.55 0.090 255 / 28%);
-  --backdrop: oklch(0 0 0 / 40%);
-  --scrim: oklch(0 0 0 / 20%);
-
-  /* Chrome surfaces match the neutral views, not the SHIP defaults. */
-  --sidebar: oklch(0.985 0.002 264);
-  --sidebar-foreground: oklch(0.21 0.015 264);
-  --sidebar-primary: oklch(0.27 0.020 var(--brand-hue, 264));
-  --sidebar-primary-foreground: oklch(0.985 0.002 264);
-  --sidebar-accent: oklch(0.96 0.004 264);
-  --sidebar-accent-foreground: oklch(0.21 0.015 264);
-  --sidebar-border: oklch(0.21 0.015 264 / 12%);
-  --sidebar-ring: oklch(0.55 0.090 255 / 30%);
-
-  /* Brand-free typography: demote the display face to the body sans. */
-  --heading-font: var(--font-body);
-  --heading-weight: var(--font-weight-semibold);
-  --heading-tracking: var(--tracking-tight);
-}
-
-/* ───────────────────────────────────────────────────────────────────
- * neutral-dark — sibling to neutral-light. The same brand-free slate
- * design system after dark: cool deep-slate surfaces, a near-white
- * "ink" primary, the same slate-blue accent lifted for legibility on
- * dark. Standard semantics, standard radii + motion. Carries
- * `dark: true` so the canonical .dark elevation flips; this block
- * re-states the full palette, surfaces, and shadow stack so nothing
- * from the SHIP-dark base bleeds through.
- * ─────────────────────────────────────────────────────────────────── */
-:root[data-theme='neutral-dark'],
-[data-theme-preview='neutral-dark'] {
-  --background: oklch(0.18 0.008 264);
-  --foreground: oklch(0.96 0.003 264);
-  --card: oklch(0.22 0.010 264);
-  --card-foreground: oklch(0.96 0.003 264);
-  --popover: oklch(0.24 0.012 264);
-  --popover-foreground: oklch(0.96 0.003 264);
-  --primary: oklch(0.92 0.008 var(--brand-hue, 264));
-  --primary-foreground: oklch(0.21 0.015 264);
-  --secondary: oklch(0.27 0.012 264);
-  --secondary-foreground: oklch(0.96 0.003 264);
-  --muted: oklch(0.27 0.012 264);
-  --muted-foreground: oklch(0.70 0.012 264);
-  --accent: oklch(0.70 0.100 var(--brand-hue, 255));
-  --accent-foreground: oklch(0.18 0.020 255);
-  --destructive: oklch(0.62 0.210 25);
-  --success: oklch(0.70 0.150 150);
-  --warning: oklch(0.78 0.150 80);
-  --info: oklch(0.68 0.140 240);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.70 0.100 var(--brand-hue, 255)/ 40%);
-  --ring-color: var(--accent);
-
-  /* Cool-slate surface ladder — ~+4% L per step lifts elevated panels. */
-  --surface-0: oklch(0.18 0.008 264);
-  --surface-1: oklch(0.22 0.010 264);
-  --surface-2: oklch(0.25 0.012 264);
-  --surface-3: oklch(0.28 0.014 264);
-  --border-subtle: oklch(1 0 0 / 8%);
-  --border-strong: oklch(1 0 0 / 22%);
-
-  /* Cool-neutral elevation — tinted just enough to read on dark slate. */
-  --shadow-xs: 0 1px 2px 0 oklch(0.05 0.010 264 / 40%);
-  --shadow-sm: 0 1px 3px 0 oklch(0.05 0.010 264 / 45%), 0 1px 2px -1px oklch(0.05 0.010 264 / 30%);
-  --shadow-md: 0 4px 14px -2px oklch(0.05 0.010 264 / 50%), 0 2px 6px -2px oklch(0.05 0.010 264 / 35%);
-  --shadow-lg: 0 14px 32px -6px oklch(0.05 0.010 264 / 60%), 0 4px 12px -4px oklch(0.05 0.010 264 / 40%);
-  --shadow-xl: 0 28px 64px -12px oklch(0.05 0.010 264 / 65%), 0 8px 24px -8px oklch(0.05 0.010 264 / 45%);
-  --shadow-card-rest: 0 1px 3px oklch(0 0 0 / 30%), 0 0 0 1px oklch(0.5 0.010 264 / 12%);
-  --shadow-hover: 0 8px 20px oklch(0 0 0 / 40%), 0 0 0 1px oklch(0.5 0.010 264 / 18%);
-  --shadow-sticky: 0 2px 6px -2px oklch(0.05 0.010 264 / 45%), 0 1px 2px oklch(0.05 0.010 264 / 30%);
-  --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 25%);
-  --shadow-edge-top: 0 -8px 24px -8px oklch(0.05 0.010 264 / 45%), 0 -1px 0 oklch(1 0 0 / 4%);
-  --shadow-accent: 0 0 0 3px oklch(0.70 0.100 255 / 22%), 0 8px 24px -6px oklch(0.70 0.100 255 / 30%);
-  --backdrop: oklch(0 0 0 / 55%);
-  --scrim: oklch(0 0 0 / 30%);
-
-  /* Chrome surfaces — a hair darker than the page so the rail seats. */
-  --sidebar: oklch(0.16 0.008 264);
-  --sidebar-foreground: oklch(0.96 0.003 264);
-  --sidebar-primary: oklch(0.92 0.008 var(--brand-hue, 264));
-  --sidebar-primary-foreground: oklch(0.21 0.015 264);
-  --sidebar-accent: oklch(0.25 0.012 264);
-  --sidebar-accent-foreground: oklch(0.96 0.003 264);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.70 0.100 255 / 30%);
-
-  /* Brand-free typography: demote the display face to the body sans. */
-  --heading-font: var(--font-body);
-  --heading-weight: var(--font-weight-semibold);
-  --heading-tracking: var(--tracking-tight);
-}
-
-/* ───────────────────────────────────────────────────────────────────
- * Daily-driver depth — ship-light & ship-dark get a barely-there
- * noise grain so the page surface isn't a perfect flat color, plus a
- * subtle vertical lift on --surface-0. Both stay invisible until you
- * look for them; together they make the daily themes feel alive
- * without competing with content.
- * ─────────────────────────────────────────────────────────────────── */
 :root[data-theme='ship-light'] body,
 :root[data-theme='ship-dark'] body,
 [data-theme-preview='ship-light'].tc-bg,
@@ -618,134 +886,6 @@
   );
   background-attachment: fixed;
 }
-
-:root[data-theme='ship-light'],
-:root[data-theme='ship-dark'],
-[data-theme-preview='ship-light'],
-[data-theme-preview='ship-dark'] {
-  --surface-overlay: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
-  --surface-overlay-blend: overlay;
-  /* Card-level texture wash — higher frequency than the body grain so
-   * cards and the page bg read as different surfaces even when the
-   * lightness delta is small. Held under 3% alpha — barely perceptible,
-   * its job is to break flat fills, not to be visible noise. */
-  --card-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
-  --card-texture-blend: overlay;
-  --card-texture-opacity: 1;
-}
-
-/* Themes with their own card aesthetic opt out of the default card grain.
- * paper has its own multiply-blend grain; console has scanlines; halo is
- * monochromatic neumorph; glass is frosted via backdrop-filter; contrast
- * is flat-on-purpose. Adding the texture would muddy each. */
-:root[data-theme='paper'],
-:root[data-theme='halo'],
-:root[data-theme='glass'],
-:root[data-theme='console'],
-:root[data-theme='contrast'],
-[data-theme-preview='paper'],
-[data-theme-preview='halo'],
-[data-theme-preview='glass'],
-[data-theme-preview='console'],
-[data-theme-preview='contrast'] {
-  --card-texture: none;
-}
-
-/* ───────────────────────────────────────────────────────────────────
- * glass — frosted aero. A soft tinted gradient mesh on the page, then
- * every elevated surface is translucent + backdrop-filter:blur, so
- * cards, popovers, and dialogs literally see through to whatever's
- * behind them. Edge-highlight inset shadow + cool drop shadow give the
- * "glass on glass" lift. Brand orange survives at lower chroma to
- * integrate with the cool ground; an iridescent violet accent picks up
- * the glass-prism feel without screaming.
- *
- * Performance: backdrop-filter only paints on elevated surfaces (cards,
- * popovers, dialogs, card-variant tiles via --card-backdrop-filter). The
- * page background is a flat gradient — no full-page blur cost.
- * ─────────────────────────────────────────────────────────────────── */
-:root[data-theme='glass'],
-[data-theme-preview='glass'] {
-  --background: oklch(0.97 0.005 240);
-  --foreground: oklch(0.22 0.02 250);
-  --card: oklch(1 0 0 / 55%);
-  --card-foreground: oklch(0.22 0.02 250);
-  --popover: oklch(1 0 0 / 78%);
-  --popover-foreground: oklch(0.22 0.02 250);
-  --muted: oklch(0.94 0.008 240);
-  --muted-foreground: oklch(0.42 0.02 250);
-  --primary: oklch(0.62 0.16 var(--brand-hue, 50));
-  --primary-foreground: oklch(0.99 0.005 240);
-  --accent: oklch(0.62 0.14 var(--brand-hue, 280));
-  --accent-foreground: oklch(0.99 0.005 240);
-  --destructive: oklch(0.60 0.22 27);
-  --success: oklch(0.62 0.14 152);
-  --warning: oklch(0.72 0.15 75);
-  --info: oklch(0.62 0.14 230);
-  --border: oklch(1 0 0 / 22%);
-  --input: oklch(1 0 0 / 28%);
-  --ring: oklch(0.62 0.16 var(--brand-hue, 50)/ 45%);
-
-  /* Frosted surfaces — nested layers gain opacity as they climb. */
-  --surface-0: oklch(0.97 0.005 240);
-  --surface-1: oklch(1 0 0 / 55%);
-  --surface-2: oklch(1 0 0 / 65%);
-  --surface-3: oklch(1 0 0 / 75%);
-  --border-subtle: oklch(1 0 0 / 14%);
-  --border-strong: oklch(1 0 0 / 36%);
-
-  /* The hook — every component that opted into the channel renders
-   * frosted automatically. */
-  --card-backdrop-filter: blur(24px) saturate(180%);
-
-  /* Larger radii — glass leans soft and modern. */
-  --radius: 14px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-
-  /* Inset top highlight (the glass edge) + cool drop shadow for lift. */
-  --shadow-xs: 0 1px 0 oklch(1 0 0 / 40%) inset, 0 2px 8px oklch(0.30 0.04 240 / 6%);
-  --shadow-sm: 0 1px 0 oklch(1 0 0 / 50%) inset, 0 4px 12px oklch(0.30 0.04 240 / 8%);
-  --shadow-card-rest: 0 1px 0 oklch(1 0 0 / 50%) inset, 0 6px 16px oklch(0.30 0.04 240 / 8%);
-  --shadow-hover: 0 1px 0 oklch(1 0 0 / 60%) inset, 0 12px 32px oklch(0.30 0.04 240 / 14%);
-  --shadow-md: 0 1px 0 oklch(1 0 0 / 50%) inset, 0 8px 24px oklch(0.30 0.04 240 / 10%);
-  --shadow-lg: 0 1px 0 oklch(1 0 0 / 60%) inset, 0 16px 48px oklch(0.30 0.04 240 / 16%);
-  --shadow-xl: 0 1px 0 oklch(1 0 0 / 60%) inset, 0 28px 72px oklch(0.30 0.04 240 / 22%);
-  --shadow-edge-top: 0 -1px 0 oklch(1 0 0 / 36%) inset;
-  --shadow-sticky: 0 1px 0 oklch(1 0 0 / 50%) inset, 0 2px 8px oklch(0.30 0.04 240 / 8%);
-  --shadow-accent: 0 1px 0 oklch(1 0 0 / 60%) inset, 0 8px 24px oklch(0.62 0.16 50 / 28%);
-
-  /* Calm motion — glass should glide. */
-  --duration-fast: 160ms;
-  --duration-medium: 240ms;
-  --ease-out: var(--ease-out-soft);
-
-  /* Calm interaction tints — translucent surfaces magnify color. */
-  --hover-strength: 5%;
-  --active-strength: 9%;
-  --selected-strength: 12%;
-
-  /* Chrome surfaces — frosted topbar / rail / statusbar over the mesh. */
-  --sidebar: oklch(1 0 0 / 55%);
-  --sidebar-foreground: oklch(0.22 0.02 250);
-  --sidebar-accent: oklch(1 0 0 / 70%);
-  --sidebar-accent-foreground: oklch(0.22 0.02 250);
-  --sidebar-border: oklch(1 0 0 / 22%);
-  --sidebar-primary: oklch(0.62 0.16 var(--brand-hue, 50));
-  --sidebar-primary-foreground: oklch(0.99 0.005 240);
-  --sidebar-ring: oklch(0.62 0.16 50 / 40%);
-}
-
-/* Tinted gradient mesh — a hint of cool/warm in the corners that
- * sets the "glass over color" mood without dominating any surface.
- * Earlier iteration painted a hard blue wash in the top-left that
- * read as a UI accent rather than ambient. Pulled chroma + opacity
- * way down (≤22%) and expanded the falloff (75-80%) so the mesh
- * sits ~5% above the base background and trails off well before
- * reaching any content panel. Fixed attachment so scrolling
- * doesn't drag the mesh. */
 :root[data-theme='glass'] body,
 [data-theme-preview='glass'].tc-bg {
   background-color: oklch(0.97 0.005 240);
@@ -755,222 +895,6 @@
     radial-gradient(ellipse 60% 45% at 100% 0%, oklch(0.93 0.04 300 / 10%), transparent 80%);
   background-attachment: fixed;
 }
-
-/* ───────────────────────────────────────────────────────────────────
- * Theme-preview palette resets. The picker mounts each tile under
- * [data-theme-preview='X'] so components inside read the X theme's
- * tokens without flipping the whole document. ship-light is canonical
- * in tokens.css under :root; ship-dark inherits .dark — but neither
- * of those selectors apply to a descendant when the document root
- * already carries a different theme. Mirror the relevant palette
- * blocks here so a preview tile of any theme renders correctly
- * regardless of the live theme.
- * ─────────────────────────────────────────────────────────────────── */
-[data-theme-preview='ship-light'] {
-  --background: oklch(0.975 0.002 106.423);
-  --foreground: oklch(0.147 0.004 49.25);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(0.67 0.16 58);
-  --primary-foreground: oklch(0.99 0.02 95);
-  --accent: oklch(0.61 0.23 303);
-  --accent-foreground: oklch(0.98 0.02 301);
-  --muted: oklch(0.95 0.003 106.424);
-  --muted-foreground: oklch(0.40 0.02 58.071);
-  --border: oklch(0.147 0.004 49.25 / 25%);
-  --ring: oklch(0.67 0.16 58 / 40%);
-  --heading-font: var(--font-display, var(--font-body));
-  --heading-weight: var(--font-weight-semibold);
-  --heading-tracking: var(--tracking-tight);
-  --label-font: var(--font-body);
-  --label-weight: var(--font-weight-semibold);
-  --body-font: var(--font-body);
-  --shadow-card-rest: 0 1px 2px 0 oklch(0 0 0 / 4%), 0 0 0 1px oklch(0 0 0 / 3%);
-  --radius-md: 6px;
-  --radius-sm: 4px;
-  --card-backdrop-filter: none;
-}
-
-[data-theme-preview='ship-dark'] {
-  --background: oklch(0.158 0.012 250);
-  --foreground: oklch(0.98 0.001 106);
-  --card: oklch(0.205 0.012 250);
-  --card-foreground: oklch(0.98 0.001 106);
-  --primary: oklch(0.77 0.16 70);
-  --primary-foreground: oklch(0.2 0.01 50);
-  --accent: oklch(0.3 0.05 300);
-  --accent-foreground: oklch(0.9 0.02 300);
-  --muted: oklch(0.2 0.01 50);
-  --muted-foreground: oklch(0.75 0.015 50);
-  --border: oklch(1 0 0 / 12%);
-  --ring: oklch(0.77 0.16 70 / 30%);
-  --heading-font: var(--font-display, var(--font-body));
-  --heading-weight: var(--font-weight-semibold);
-  --heading-tracking: var(--tracking-tight);
-  --label-font: var(--font-body);
-  --label-weight: var(--font-weight-semibold);
-  --body-font: var(--font-body);
-  --shadow-card-rest: 0 1px 2px 0 oklch(0.05 0.02 250 / 35%), 0 0 0 1px oklch(1 0 0 / 4%);
-  --radius-md: 6px;
-  --radius-sm: 4px;
-  --card-backdrop-filter: none;
-}
-
-/* ───────────────────────────────────────────────────────────────────
- * Preview-tile isolation. The picker tile carries [data-theme-preview]
- * and reads a small set of tokens to render a mini card. Without these
- * resets, a live theme that remaps cross-cutting tokens (paper / console
- * fonts, console / paper overlays, glass backdrop-filter, halo / glass /
- * console radii) would bleed into every preview tile. Each block below
- * fills the gap so a tile renders its own theme regardless of the
- * document root.
- *
- * Order: appears AFTER every theme block, so within the same selector
- * specificity (0,1,0) these declarations win. Each block only overrides
- * the cross-cutting tokens; palette/shadow/etc are already set in the
- * theme's own mirror block earlier in this file.
- * ─────────────────────────────────────────────────────────────────── */
-[data-theme-preview='ship-light'],
-[data-theme-preview='ship-dark'] {
-  --font-body: var(--font-sans, system-ui, sans-serif);
-  --body-font: var(--font-body);
-  --heading-font: var(--font-display, var(--font-body));
-  --label-font: var(--font-body);
-  --heading-weight: var(--font-weight-semibold);
-  --heading-tracking: var(--tracking-tight);
-  --label-weight: var(--font-weight-semibold);
-  --label-tracking: var(--tracking-normal);
-  --card-backdrop-filter: none;
-  --surface-overlay: none;
-  --surface-overlay-blend: normal;
-  --surface-overlay-opacity: 1;
-}
-
-[data-theme-preview='paper'] {
-  --font-body: var(--font-sans, system-ui, sans-serif);
-  --body-font: var(--font-body);
-  --card-backdrop-filter: none;
-  --radius-md: 6px;
-  --radius-sm: 4px;
-}
-
-[data-theme-preview='halo'] {
-  --font-body: var(--font-sans, system-ui, sans-serif);
-  --body-font: var(--font-body);
-  --heading-font: var(--font-display, var(--font-body));
-  --label-font: var(--font-body);
-  --heading-weight: var(--font-weight-semibold);
-  --heading-tracking: var(--tracking-tight);
-  --label-weight: var(--font-weight-semibold);
-  --label-tracking: var(--tracking-normal);
-  --card-backdrop-filter: none;
-  --surface-overlay: none;
-  --surface-overlay-blend: normal;
-  --surface-overlay-opacity: 1;
-  --radius-md: 12px;
-  --radius-sm: 8px;
-}
-
-[data-theme-preview='glass'] {
-  --font-body: var(--font-sans, system-ui, sans-serif);
-  --body-font: var(--font-body);
-  --heading-font: var(--font-display, var(--font-body));
-  --label-font: var(--font-body);
-  --heading-weight: var(--font-weight-semibold);
-  --heading-tracking: var(--tracking-tight);
-  --label-weight: var(--font-weight-semibold);
-  --label-tracking: var(--tracking-normal);
-  --surface-overlay: none;
-  --surface-overlay-blend: normal;
-  --surface-overlay-opacity: 1;
-  --radius-md: 12px;
-  --radius-sm: 8px;
-  --card-backdrop-filter: blur(24px) saturate(180%);
-}
-
-[data-theme-preview='console'] {
-  --font-body: var(--font-mono);
-  --body-font: var(--font-mono);
-  --heading-font: var(--font-mono);
-  --label-font: var(--font-mono);
-  --heading-weight: var(--font-weight-bold);
-  --heading-tracking: var(--tracking-normal);
-  --label-weight: var(--font-weight-bold);
-  --label-tracking: var(--tracking-wide);
-  --card-backdrop-filter: none;
-  --radius-md: 2px;
-  --radius-sm: 2px;
-  --surface-overlay: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 1px,
-    oklch(0 0 0 / 8%) 1px,
-    oklch(0 0 0 / 8%) 2px
-  );
-  --surface-overlay-blend: multiply;
-  --surface-overlay-opacity: 0.55;
-}
-
-[data-theme-preview='contrast'] {
-  --font-body: var(--font-sans, system-ui, sans-serif);
-  --body-font: var(--font-body);
-  --heading-font: var(--font-display, var(--font-body));
-  --label-font: var(--font-body);
-  --heading-weight: var(--font-weight-bold);
-  --heading-tracking: var(--tracking-tight);
-  --label-weight: var(--font-weight-bold);
-  --label-tracking: var(--tracking-normal);
-  --card-backdrop-filter: none;
-  --surface-overlay: none;
-  --surface-overlay-blend: normal;
-  --surface-overlay-opacity: 1;
-  --radius-md: 3px;
-  --radius-sm: 2px;
-}
-
-/* Neutral themes demote the display face to the body sans (brand-free)
- * and use standard radii. These resets keep a preview tile rendering
- * its own neutral look regardless of which theme the document carries. */
-[data-theme-preview='neutral-light'],
-[data-theme-preview='neutral-dark'] {
-  --font-body: var(--font-sans, system-ui, sans-serif);
-  --body-font: var(--font-body);
-  --heading-font: var(--font-body);
-  --label-font: var(--font-body);
-  --heading-weight: var(--font-weight-semibold);
-  --heading-tracking: var(--tracking-tight);
-  --label-weight: var(--font-weight-semibold);
-  --label-tracking: var(--tracking-normal);
-  --card-backdrop-filter: none;
-  --surface-overlay: none;
-  --surface-overlay-blend: normal;
-  --surface-overlay-opacity: 1;
-  --radius-md: 6px;
-  --radius-sm: 4px;
-}
-
-/* ───────────────────────────────────────────────────────────────────
- * Per-theme personality bends. Each block layers small but distinctive
- * moves on top of the palette/shadow/radius baseline above. These are
- * the moves that make each theme feel like its own thing — not just a
- * recolor — and are the answer to "console is my fave; give the others
- * the same effort."
- * ─────────────────────────────────────────────────────────────────── */
-
-/* ship-light — brand-tinted shadows, primary focus halo, subtle vertical
- * page gradient (already wired above), and a confident eyebrow tracking. */
-:root[data-theme='ship-light'] {
-  --shadow-xs: 0 1px 2px 0 oklch(0.55 0.10 58 / 6%), 0 0 0 1px oklch(0 0 0 / 3%);
-  --shadow-sm: 0 2px 4px -1px oklch(0.55 0.10 58 / 9%), 0 1px 2px oklch(0 0 0 / 4%);
-  --shadow-md: 0 6px 18px -4px oklch(0.55 0.10 58 / 12%), 0 2px 6px oklch(0 0 0 / 6%);
-  --shadow-lg: 0 14px 32px -6px oklch(0.55 0.10 58 / 16%), 0 4px 12px oklch(0 0 0 / 8%);
-  --shadow-hover: 0 8px 22px -4px oklch(0.55 0.10 58 / 14%), 0 2px 6px oklch(0 0 0 / 6%);
-  --shadow-accent: 0 0 0 3px oklch(0.67 0.16 58 / 18%), 0 8px 24px -6px oklch(0.67 0.16 58 / 30%);
-  --label-tracking: 0.08em;
-}
-
-/* ship-dark — cool-blue tinted shadows, top-left radial highlight, and
- * a stronger selected-state pop against the deep navy. */
 :root[data-theme='ship-dark'] body {
   background-image:
     radial-gradient(ellipse 60% 40% at 0% 0%, oklch(1 0 0 / 4%), transparent 60%),
@@ -981,25 +905,6 @@
       color-mix(in oklch, var(--surface-0) 100%, black 1.5%) 100%
     );
   background-attachment: fixed;
-}
-:root[data-theme='ship-dark'] {
-  --shadow-sm: 0 2px 6px -1px oklch(0.10 0.04 250 / 50%), 0 0 0 1px oklch(1 0 0 / 4%);
-  --shadow-md: 0 6px 18px -4px oklch(0.10 0.04 250 / 55%), 0 2px 6px oklch(0 0 0 / 35%);
-  --shadow-lg: 0 14px 32px -6px oklch(0.10 0.04 250 / 60%), 0 4px 12px oklch(0 0 0 / 40%);
-  --shadow-hover: 0 8px 22px -4px oklch(0.10 0.04 250 / 50%), 0 2px 6px oklch(0 0 0 / 35%);
-  --shadow-accent: 0 0 0 3px oklch(0.77 0.16 70 / 22%), 0 8px 24px -6px oklch(0.77 0.16 70 / 38%);
-  --selected-strength: 18%;
-}
-
-/* paper — give cards a subtle deckle-edge feel via a doubled border-image
- * and add a mono fine-print eyebrow. The clip-path is gentle so cards
- * still align on a grid. */
-:root[data-theme='paper'] {
-  /* Mono fine-print eyebrow — the editorial fine print at the top of a
-   * column. Affects tiles + page eyebrows that read --label-font. */
-  --label-font: var(--font-mono);
-  --label-tracking: 0.14em;
-  --label-weight: 500;
 }
 :root[data-theme='paper'] sail-card,
 :root[data-theme='paper'] .sail-card,
@@ -1012,16 +917,6 @@
     oklch(0.30 0.04 60 / 4%) 0%,
     transparent 12px
   );
-}
-
-/* halo — wider radii, a subtle dawn radial at the body top, and a soft
- * primary-tinted hover halo on interactive elements. */
-:root[data-theme='halo'] {
-  --radius: 16px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
 }
 :root[data-theme='halo'] body {
   background-image:
@@ -1037,9 +932,6 @@
       0 0 0 4px oklch(0.62 0.14 50 / 12%);
   }
 }
-
-/* glass — slow-rotating background mesh under no-preference, iridescent
- * card edge highlight, and a refractive heading text-shadow. */
 @media (prefers-reduced-motion: no-preference) {
   :root[data-theme='glass'] body {
     animation: ship-glass-mesh 36s ease-in-out infinite alternate;
@@ -1070,9 +962,6 @@
 :root[data-theme='glass'] .sail-card:hover {
   --card-backdrop-filter: blur(32px) saturate(220%);
 }
-
-/* console — a single flourish: blinking caret on the focus ring so a
- * focused control reads like a terminal cursor. Honours reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
   :root[data-theme='console'] :focus-visible {
     animation: ship-console-blink 1.05s steps(2, end) infinite;
@@ -1082,36 +971,6 @@
   0%, 49%   { box-shadow: var(--shadow-accent); }
   50%, 100% { box-shadow: 0 0 0 2px oklch(0.78 0.20 145 / 20%); }
 }
-
-/* ─── Syntax-highlighting per theme ───────────────────────────────────
- * Subdued themes (halo, paper) keep --primary / --accent low-chroma for
- * the visual aesthetic, but code blocks need higher contrast to stay
- * legible. Dark themes (ship-dark, console, contrast) need lighter
- * lightness levels against their dark --card backgrounds. */
-
-:root[data-theme='paper'],
-:root[data-theme='halo'] {
-  --syntax-keyword:  oklch(0.42 0.22 285);
-  --syntax-string:   oklch(0.40 0.18 152);
-  --syntax-number:   oklch(0.42 0.20 245);
-  --syntax-function: oklch(0.42 0.24 305);
-  --syntax-type:     oklch(0.42 0.20 195);
-  --syntax-tag:      oklch(0.45 0.22 20);
-  --syntax-attr:     oklch(0.48 0.20 55);
-  --syntax-comment:  oklch(0.50 0.04 250);
-}
-
-:root[data-theme='glass'] {
-  --syntax-keyword:  oklch(0.42 0.22 285);
-  --syntax-string:   oklch(0.40 0.18 152);
-  --syntax-number:   oklch(0.42 0.20 245);
-  --syntax-function: oklch(0.42 0.24 305);
-  --syntax-type:     oklch(0.42 0.20 195);
-  --syntax-tag:      oklch(0.45 0.22 20);
-  --syntax-attr:     oklch(0.48 0.20 55);
-  --syntax-comment:  oklch(0.45 0.04 250);
-}
-
 .dark,
 :root[data-theme='ship-dark'],
 :root[data-theme='console'],
@@ -1125,343 +984,4 @@
   --syntax-attr:     oklch(0.82 0.14 90);
   --syntax-comment:  oklch(0.62 0.03 250);
   --syntax-variable: var(--foreground);
-}
-
-:root[data-theme='console'] {
-  --syntax-keyword:  oklch(0.82 0.20 145);
-  --syntax-string:   oklch(0.85 0.16 100);
-  --syntax-number:   oklch(0.78 0.16 60);
-  --syntax-function: oklch(0.85 0.18 145);
-  --syntax-type:     oklch(0.78 0.14 180);
-  --syntax-tag:      oklch(0.78 0.18 145);
-  --syntax-attr:     oklch(0.82 0.16 90);
-  --syntax-comment:  oklch(0.55 0.06 145);
-}
-
-:root[data-theme='contrast'] {
-  --syntax-keyword:  oklch(0.92 0.18 90);
-  --syntax-string:   oklch(0.92 0.18 145);
-  --syntax-number:   oklch(0.92 0.18 230);
-  --syntax-function: oklch(0.95 0.16 300);
-  --syntax-type:     oklch(0.92 0.16 195);
-  --syntax-tag:      oklch(0.95 0.18 25);
-  --syntax-attr:     oklch(0.95 0.18 90);
-  --syntax-comment:  oklch(0.75 0.05 250);
-  --syntax-variable: oklch(0.98 0 0);
-}
-
-/* ═══════════════════════════════════════════════════════════════════
- * THE CHANNEL PROOF
- *
- * The three themes below are the argument for the Tier-2 expression
- * channels. None of them edits a component. `brut` is pure tokens with
- * zero structural rules — the thesis in its strongest form. `8bit` and
- * `synthwave` push further into their own aesthetics; every structural
- * rule they still need is logged with the channel that would retire it,
- * because an honest ceiling is more useful than a hidden one. Today the
- * channels cover everything these two themes ask for, so the log is
- * empty.
- * ═══════════════════════════════════════════════════════════════════ */
-
-/* ───────────────────────────────────────────────────────────────────
- * brut — brutalist. Hard black ink on paper-white, no radius, no
- * shadow, thick stroke, no interaction motion. Every one of those is a
- * TOKEN, which is the point: this theme is a block, not a patch. It
- * ships zero structural rules.
- * ─────────────────────────────────────────────────────────────────── */
-:root[data-theme='brut'],
-[data-theme-preview='brut'] {
-  --background: oklch(0.97 0 0);
-  --foreground: oklch(0.14 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.14 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.14 0 0);
-  --muted: oklch(0.92 0 0);
-  --muted-foreground: oklch(0.38 0 0);
-  --border: oklch(0.14 0 0);
-  --input: oklch(0.14 0 0);
-  --primary: oklch(0.14 0 0);
-  --primary-foreground: oklch(0.97 0 0);
-  --accent: oklch(0.62 0.24 28);
-  --accent-foreground: oklch(0.97 0 0);
-  --destructive: oklch(0.52 0.26 28);
-  --success: oklch(0.48 0.18 145);
-  --warning: oklch(0.72 0.19 85);
-  --info: oklch(0.45 0.18 250);
-  --ring: oklch(0.14 0 0 / 60%);
-
-  /* Surface ladder — paper, not depth. The steps barely move because
-     brutalism separates with RULES, not elevation. */
-  --surface-0: oklch(0.97 0 0);
-  --surface-1: oklch(1 0 0);
-  --surface-2: oklch(0.94 0 0);
-  --surface-3: oklch(0.92 0 0);
-  --border-subtle: oklch(0.14 0 0 / 45%);
-  --border-strong: oklch(0.14 0 0);
-
-  /* No corners. */
-  --radius: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  /* …but round things stay round. This is exactly the split that
-     --shape-pill exists for: squaring the radius SCALE used to also
-     square the status dot, because both spent --radius-full. */
-  --shape-pill: 9999px;
-
-  /* Thick stroke, everywhere at once — the --border-width channel. */
-  --border-width: 2px;
-
-  /* No elevation. Brutalism does not float. */
-  --shadow-xs: none;
-  --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-lg: none;
-  --shadow-xl: none;
-  --shadow-card-rest: none;
-  --shadow-hover: none;
-  --shadow-sticky: none;
-  --shadow-inset-soft: none;
-  --shadow-edge-top: none;
-  --shadow-accent: 0 0 0 3px oklch(0.62 0.24 28 / 40%);
-
-  /* Stillness. The lift/press channels take the personality out of the
-     contract and put it here, where a theme can decline it. */
-  --control-lift: 0px;
-  --press-translate: 0px;
-  --press-scale: 1;
-
-  /* Type: heavy, tight, shouted. */
-  --heading-font: var(--font-mono);
-  --body-font: var(--font-mono);
-  --label-font: var(--font-mono);
-  --font-body: var(--font-mono);
-  --display-font: var(--font-mono);
-  --heading-weight: var(--font-weight-bold);
-  --heading-tracking: var(--tracking-tighter);
-  --heading-transform: uppercase;
-  --label-weight: var(--font-weight-bold);
-  --label-tracking: var(--tracking-wider);
-
-  /* Blunt interaction — a flat ink wash, no easing into it. */
-  --hover-strength: 14%;
-  --active-strength: 22%;
-  --selected-strength: 28%;
-
-  /* No texture, no wash. */
-  --surface-overlay: none;
-  --card-texture: none;
-  --card-backdrop-filter: none;
-  --gradient-surface: none;
-
-  --scrollbar-radius: 0px;
-  --scrollbar-thumb: oklch(0.14 0 0 / 55%);
-  --scrollbar-thumb-hover: oklch(0.14 0 0);
-}
-
-/* ───────────────────────────────────────────────────────────────────
- * 8bit — arcade/NES. Chunky strokes, zero radius, hard offset shadows
- * that collapse on press, a dither wash over the page, and shouted
- * pixel type. This is the theme that tests the ceiling: it wants
- * things the token layer was never asked to express before.
- *
- * The block below is pure tokens. The structural-rule list is empty:
- * the channel set landed far enough that 8bit needs zero component
- * patches today. If that changes, any future rule is logged here with
- * the channel that would retire it.
- * ─────────────────────────────────────────────────────────────────── */
-:root[data-theme='8bit'],
-[data-theme-preview='8bit'] {
-  --background: oklch(0.18 0.05 265);
-  --foreground: oklch(0.95 0.02 265);
-  --card: oklch(0.24 0.06 265);
-  --card-foreground: oklch(0.95 0.02 265);
-  --popover: oklch(0.24 0.06 265);
-  --popover-foreground: oklch(0.95 0.02 265);
-  --muted: oklch(0.30 0.05 265);
-  --muted-foreground: oklch(0.72 0.04 265);
-  --border: oklch(0.95 0.02 265);
-  --input: oklch(0.95 0.02 265);
-  --primary: oklch(0.72 0.21 25);
-  --primary-foreground: oklch(0.14 0.03 265);
-  --accent: oklch(0.82 0.20 95);
-  --accent-foreground: oklch(0.14 0.03 265);
-  --destructive: oklch(0.62 0.25 25);
-  --success: oklch(0.78 0.22 140);
-  --warning: oklch(0.85 0.20 95);
-  --info: oklch(0.72 0.18 230);
-  --ring: oklch(0.82 0.20 95 / 70%);
-
-  /* Flat colour blocks — an NES has no gradient ramp. */
-  --surface-0: oklch(0.18 0.05 265);
-  --surface-1: oklch(0.24 0.06 265);
-  --surface-2: oklch(0.30 0.05 265);
-  --surface-3: oklch(0.36 0.05 265);
-  --border-subtle: oklch(0.95 0.02 265 / 55%);
-  --border-strong: oklch(0.95 0.02 265);
-
-  /* Square everything — including the round things. A pixel grid has no
-     circles, so unlike brut this theme squares --shape-pill too. */
-  --radius: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --shape-pill: 0px;
-
-  /* Chunky stroke. */
-  --border-width: 3px;
-
-  /* Hard offset shadows — no blur, no spread. The arcade look is a
-     solid block of ink offset down-right, not an elevation gradient. */
-  --shadow-xs: 2px 2px 0 0 oklch(0.14 0.03 265);
-  --shadow-sm: 3px 3px 0 0 oklch(0.14 0.03 265);
-  --shadow-md: 4px 4px 0 0 oklch(0.14 0.03 265);
-  --shadow-lg: 6px 6px 0 0 oklch(0.14 0.03 265);
-  --shadow-xl: 8px 8px 0 0 oklch(0.14 0.03 265);
-  --shadow-card-rest: 4px 4px 0 0 oklch(0.14 0.03 265);
-  --shadow-hover: 6px 6px 0 0 oklch(0.14 0.03 265);
-  --shadow-sticky: 0 3px 0 0 oklch(0.14 0.03 265);
-  --shadow-edge-top: 0 -3px 0 0 oklch(0.14 0.03 265);
-  --shadow-accent: 0 0 0 3px oklch(0.82 0.20 95 / 70%);
-  --shadow-inset-soft: none;
-
-  /* The press: no lift at all, then a hard 2px shove down-right with a
-     collapsed shadow — the button physically moves INTO its own shadow,
-     which is the whole tactile signature of the era. This is exactly
-     what --press-shadow was added for. */
-  --control-lift: 0px;
-  --press-translate: 2px;
-  --press-scale: 1;
-  --press-shadow: -2px -2px 0 0 oklch(0.14 0.03 265);
-
-  /* Type: pixel stack, shouted, wide-tracked. */
-  --heading-font: var(--font-press-start);
-  --display-font: var(--font-press-start);
-  --body-font: var(--font-mono);
-  --label-font: var(--font-mono);
-  --font-body: var(--font-mono);
-  --heading-weight: var(--font-weight-bold);
-  --heading-tracking: var(--tracking-wide);
-  --heading-transform: uppercase;
-  --label-weight: var(--font-weight-bold);
-  --label-tracking: var(--tracking-wider);
-  --label-transform: uppercase;
-
-  /* Every input registers hard. */
-  --hover-strength: 18%;
-  --active-strength: 26%;
-  --selected-strength: 32%;
-
-  /* Dither wash — an ordered 2x2 checker at low alpha, scaled to read as
-     pixel grain rather than noise. Rides --surface-overlay, so it now
-     paints in a [data-theme] SUBTREE too (the docs preview) and not only
-     on <body>. */
-  --surface-overlay: repeating-conic-gradient(
-    oklch(1 0 0 / 4%) 0% 25%,
-    transparent 0% 50%
-  );
-  --surface-overlay-blend: overlay;
-  --surface-overlay-opacity: 0.6;
-  --card-texture: none;
-  --card-backdrop-filter: none;
-
-  /* Neon arcade glow on toned surfaces. */
-  --glow-primary: radial-gradient(circle, oklch(0.72 0.21 25 / 22%), transparent 60%);
-  --glow-accent: radial-gradient(circle, oklch(0.82 0.20 95 / 22%), transparent 60%);
-
-  --scrollbar-radius: 0px;
-  --scrollbar-width: 16px;
-  --scrollbar-thumb: oklch(0.82 0.20 95);
-  --scrollbar-thumb-hover: oklch(0.72 0.21 25);
-}
-
-/* ───────────────────────────────────────────────────────────────────
- * synthwave — sunset grid. Deep purple-black ground, neon pink primary
- * and cyan accent, gradient-washed headings, and a glow channel that
- * makes toned surfaces read like backlit acrylic. The gradient/glow
- * channels were the blocker; now that they exist, this theme is pure
- * tokens too.
- * ─────────────────────────────────────────────────────────────────── */
-:root[data-theme='synthwave'],
-[data-theme-preview='synthwave'] {
-  --background: oklch(0.16 0.06 285);
-  --foreground: oklch(0.95 0.02 100);
-  --card: oklch(0.22 0.08 285);
-  --card-foreground: oklch(0.95 0.02 100);
-  --popover: oklch(0.22 0.08 285);
-  --popover-foreground: oklch(0.95 0.02 100);
-  --muted: oklch(0.30 0.06 285);
-  --muted-foreground: oklch(0.72 0.04 285);
-  --border: oklch(0.95 0.05 320 / 30%);
-  --input: oklch(0.95 0.05 320 / 30%);
-  --primary: oklch(0.65 0.28 340);
-  --primary-foreground: oklch(0.14 0.03 340);
-  --accent: oklch(0.75 0.22 190);
-  --accent-foreground: oklch(0.14 0.03 190);
-  --destructive: oklch(0.60 0.26 25);
-  --success: oklch(0.70 0.20 145);
-  --warning: oklch(0.82 0.20 95);
-  --info: oklch(0.70 0.18 230);
-  --ring: oklch(0.75 0.22 190 / 70%);
-
-  /* Surface ladder — deep purple, lifted by chroma rather than lightness. */
-  --surface-0: oklch(0.16 0.06 285);
-  --surface-1: oklch(0.22 0.08 285);
-  --surface-2: oklch(0.30 0.08 285);
-  --surface-3: oklch(0.38 0.08 285);
-  --border-subtle: oklch(0.95 0.05 320 / 18%);
-  --border-strong: oklch(0.95 0.05 320 / 45%);
-
-  /* Soft neon shadows — purple-tinted, wider spread so elevation reads as
-     a glow behind the card rather than a neutral drop. */
-  --shadow-xs: 0 1px 2px oklch(0.14 0.03 285 / 35%);
-  --shadow-sm: 0 2px 4px oklch(0.14 0.03 285 / 35%), 0 1px 1px oklch(0.14 0.03 285 / 25%);
-  --shadow-md: 0 4px 12px oklch(0.14 0.03 285 / 40%), 0 2px 2px oklch(0.14 0.03 285 / 25%);
-  --shadow-lg: 0 8px 24px oklch(0.14 0.03 285 / 45%), 0 4px 4px oklch(0.14 0.03 285 / 25%);
-  --shadow-xl: 0 16px 48px oklch(0.14 0.03 285 / 50%), 0 8px 8px oklch(0.14 0.03 285 / 25%);
-  --shadow-card-rest: 0 4px 16px oklch(0.14 0.03 285 / 45%), 0 1px 1px oklch(0.14 0.03 285 / 20%);
-  --shadow-hover: 0 8px 24px oklch(0.14 0.03 285 / 55%), 0 2px 2px oklch(0.14 0.03 285 / 25%);
-  --shadow-sticky: 0 3px 10px -2px oklch(0.14 0.03 285 / 40%), 0 -1px 0 oklch(0.14 0.03 285 / 25%);
-  --shadow-edge-top: 0 -8px 24px -8px oklch(0.14 0.03 285 / 40%), 0 -1px 0 oklch(0.14 0.03 285 / 25%);
-  --shadow-accent: 0 0 0 3px oklch(0.75 0.22 190 / 55%);
-  --shadow-inset-soft: inset 0 1px 2px oklch(0 0 0 / 15%);
-
-  /* A little more lift than the default, but not arcade-exaggerated. */
-  --control-lift: -2px;
-  --press-translate: 1px;
-  --press-scale: 0.98;
-
-  /* Gradient channels — the reason this theme could not land until the
-     readers existed. Primary runs sunset pink→transparent down; the page
-     gets a subtle purple horizon wash. */
-  --gradient-primary: linear-gradient(180deg, var(--primary) 0%, transparent 92%);
-  --gradient-accent: linear-gradient(180deg, var(--accent) 0%, transparent 92%);
-  --gradient-surface: linear-gradient(180deg, oklch(0.22 0.08 285) 0%, oklch(0.16 0.06 285) 100%);
-
-  /* Glow channels — toned surfaces emit a soft neon wash. */
-  --glow-primary: radial-gradient(circle, color-mix(in oklch, var(--primary) 18%, transparent), transparent 60%);
-  --glow-accent: radial-gradient(circle, color-mix(in oklch, var(--accent) 18%, transparent), transparent 60%);
-  --glow-default: radial-gradient(circle, color-mix(in oklch, var(--foreground) 6%, transparent), transparent 60%);
-  --glow-muted: radial-gradient(circle, color-mix(in oklch, var(--muted-foreground) 6%, transparent), transparent 60%);
-
-  /* Horizon grid overlay — faint horizontal lines that read as the
-     retro-future ground plane. Rides --surface-overlay so it paints in
-     a [data-theme] subtree too. */
-  --surface-overlay: repeating-linear-gradient(
-    0deg,
-    transparent 0 23px,
-    oklch(0.65 0.28 340 / 5%) 23px 24px,
-    transparent 24px 47px,
-    oklch(0.75 0.22 190 / 5%) 47px 48px
-  );
-  --surface-overlay-blend: screen;
-  --surface-overlay-opacity: 0.35;
-  --card-texture: none;
-  --card-backdrop-filter: none;
-
-  --scrollbar-thumb: oklch(0.65 0.28 340);
-  --scrollbar-thumb-hover: oklch(0.75 0.22 190);
 }

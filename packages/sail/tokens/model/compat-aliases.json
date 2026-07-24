@@ -1,0 +1,20 @@
+{
+  "$description": "Legacy CSS names → current cssName (dual-emit aliases for PE stability)",
+  "aliases": {
+    "app-accent-dashboard": "accent-dashboard",
+    "app-accent-pipelines": "accent-pipelines",
+    "app-accent-agents": "accent-agents",
+    "app-accent-skills": "accent-skills",
+    "app-accent-git": "accent-git",
+    "app-accent-collections": "accent-collections",
+    "app-accent-canvas": "accent-canvas",
+    "app-accent-settings": "accent-settings",
+    "app-accent-chat": "accent-chat",
+    "app-accent-events": "accent-events",
+    "app-accent-specs": "accent-specs",
+    "app-accent-theme": "accent-theme",
+    "app-accent-setup": "accent-setup",
+    "app-accent-overview": "accent-overview",
+    "app-accent-mesh": "accent-mesh"
+  }
+}

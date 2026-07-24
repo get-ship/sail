@@ -1,0 +1,57 @@
+{
+  "$description": "Density overrides for data-density=spacious.",
+  "density": {
+    "row-py": {
+      "$value": "{space-3}",
+      "$type": "dimension",
+      "$extensions": {
+        "ship": {
+          "cssName": "density-row-py"
+        }
+      }
+    },
+    "row-px": {
+      "$value": "{space-4}",
+      "$type": "dimension",
+      "$extensions": {
+        "ship": {
+          "cssName": "density-row-px"
+        }
+      }
+    },
+    "row-gap": {
+      "$value": "{space-3}",
+      "$type": "dimension",
+      "$extensions": {
+        "ship": {
+          "cssName": "density-row-gap"
+        }
+      }
+    },
+    "text": {
+      "$value": "{text-md}",
+      "$type": "dimension",
+      "$extensions": {
+        "ship": {
+          "cssName": "density-text"
+        }
+      }
+    },
+    "icon": {
+      "$value": "18px",
+      "$type": "dimension",
+      "$extensions": {
+        "ship": {
+          "cssName": "density-icon"
+        }
+      }
+    },
+    "$type": "dimension"
+  },
+  "$extensions": {
+    "ship": {
+      "selector": ":root[data-density='spacious']",
+      "layer": "density-spacious"
+    }
+  }
+}

@@ -41,7 +41,8 @@ function extractVarDecls(css: string): Set<string> {
   const out = new Set<string>()
   // Match `--name:` followed by anything to the end of the line OR a
   // semicolon. The CSS uses single-line declarations exclusively.
-  const re = /--([a-z0-9-]+)\s*:/gi
+  // Underscores appear in fine-step space names (space-0_75, space-1_5, …).
+  const re = /--([a-z0-9_-]+)\s*:/gi
   let m: RegExpExecArray | null
   while ((m = re.exec(css)) !== null) {
     out.add(m[1]!)
@@ -270,6 +271,235 @@ describe('@ship/tokens — public surface footprint', () => {
   it('exports a non-trivial set of theme overrides in themes.css', () => {
     const decls = extractVarDecls(loadSrc('../src/themes.css'))
     expect(decls.size).toBeGreaterThan(0)
+  })
+})
+
+describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
+  type RegistryToken = {
+    type: string
+    value: string
+    path?: string
+    cssName?: string
+    aliasOf?: string
+  }
+  type Registry = {
+    version?: number
+    names: string[]
+    colors: string[]
+    tokens: Record<string, RegistryToken>
+    paths?: Record<string, string>
+    aliases?: Record<string, string>
+  }
+
+  const loadRegistry = (): Registry =>
+    JSON.parse(loadSrc('../src/token-registry.json')) as Registry
+
+  /** Walk grouped DTCG base.json → public cssNames (via $extensions.ship.cssName or path join). */
+  function modelBaseCssNames(): Set<string> {
+    const doc = JSON.parse(loadSrc('../model/base.json')) as Record<string, unknown>
+    const names = new Set<string>()
+    const walk = (node: unknown, path: string[]) => {
+      if (!node || typeof node !== 'object' || Array.isArray(node)) return
+      const obj = node as Record<string, unknown>
+      if (Object.prototype.hasOwnProperty.call(obj, '$value')) {
+        const ext = obj.$extensions as { ship?: { cssName?: string } } | undefined
+        const cssName = ext?.ship?.cssName ?? path.join('-')
+        names.add(cssName)
+        return
+      }
+      for (const [k, v] of Object.entries(obj)) {
+        if (k.startsWith('$')) continue
+        walk(v, [...path, k])
+      }
+    }
+    walk(doc, [])
+    return names
+  }
+
+  it('tokens.css carries the GENERATED header (not hand SSOT)', () => {
+    const css = loadSrc('../src/tokens.css')
+    expect(css).toMatch(/GENERATED FILE/)
+    expect(css).toMatch(/packages\/sail\/tokens\/model/)
+  })
+
+  it('themes.css carries the GENERATED header (theme overrides from model/themes)', () => {
+    const css = loadSrc('../src/themes.css')
+    expect(css).toMatch(/GENERATED FILE/)
+    expect(css).toMatch(/model\/themes/)
+  })
+
+  it('token-registry.json canonical names equal model/base.json cssNames', () => {
+    const reg = loadRegistry()
+    const model = modelBaseCssNames()
+    expect(model.size).toBeGreaterThan(100)
+    // Canonical tokens (non-alias) match model
+    const canonical = reg.names.filter((n) => !reg.tokens[n]?.aliasOf)
+    expect(canonical.length).toBe(model.size)
+    for (const n of model) {
+      expect(canonical.includes(n)).toBe(true)
+    }
+    for (const n of canonical) {
+      expect(model.has(n)).toBe(true)
+    }
+  })
+
+  it('registry entries expose path + cssName for sx/J2', () => {
+    const reg = loadRegistry()
+    expect(reg.version ?? 1).toBeGreaterThanOrEqual(2)
+    expect(reg.tokens['space-4']?.path).toBe('space.4')
+    expect(reg.tokens['space-4']?.cssName).toBe('space-4')
+    expect(reg.tokens['primary']?.path).toMatch(/^color\./)
+    expect(reg.paths?.['space.4']).toBe('space-4')
+    // Accents: path color.accent.* → cssName accent-* (no load-bearing app- prefix)
+    expect(reg.tokens['accent-dashboard']?.path).toBe('color.accent.dashboard')
+    expect(reg.names.includes('accent-dashboard')).toBe(true)
+  })
+
+  it('every registry leaf is studio-ready (path + cssName on all names)', () => {
+    // Studio / J2 / sx resolve tokens via path ↔ cssName. A leaf missing
+    // either field is unusable in the design-system editor.
+    const reg = loadRegistry()
+    expect(reg.names.length).toBeGreaterThan(100)
+    expect(Object.keys(reg.tokens).length).toBe(reg.names.length)
+    const paths = reg.paths ?? {}
+    for (const name of reg.names) {
+      const leaf = reg.tokens[name]
+      expect(leaf, `missing tokens[${name}]`).toBeTruthy()
+      expect(typeof leaf.path).toBe('string')
+      expect(leaf.path!.length).toBeGreaterThan(0)
+      expect(leaf.path).toMatch(/^[a-z0-9]+(?:[._-][a-z0-9]+)*$/i)
+      expect(typeof leaf.cssName).toBe('string')
+      expect(leaf.cssName).toBe(name)
+      if (leaf.aliasOf) {
+        // Dual-emit aliases share the target's DTCG path; not listed in paths.
+        expect(reg.tokens[leaf.aliasOf]).toBeTruthy()
+        expect(paths[leaf.path!]).toBe(leaf.aliasOf)
+      } else {
+        expect(paths[leaf.path!]).toBe(name)
+      }
+    }
+    // paths index covers exactly the canonical (non-alias) set
+    const canonical = reg.names.filter((n) => !reg.tokens[n]?.aliasOf)
+    expect(Object.keys(paths).length).toBe(canonical.length)
+  })
+
+  it('emits ≥2 theme override blocks from model/themes', () => {
+    const selectors = extractThemeSelectors(loadSrc('../src/themes.css'))
+    expect(selectors.size).toBeGreaterThanOrEqual(2)
+    expect(selectors.has('paper')).toBe(true)
+    expect(selectors.has('console') || selectors.has('ship-dark')).toBe(true)
+    // Theme JSON files exist for the catalog
+    const paper = JSON.parse(loadSrc('../model/themes/paper.json')) as {
+      $extensions?: { ship?: { themeId?: string } }
+    }
+    expect(paper.$extensions?.ship?.themeId).toBe('paper')
+  })
+
+  it('theme override blocks redeclare public cssNames only (registry-known vars)', () => {
+    // themes.css must override --primary / --surface-1 etc. — the same public
+    // surface Layout, Fx, and contracts consume — never invent parallel names.
+    // Match only generate.mjs theme layers:
+    //   :root[data-theme='id'],
+    //   [data-theme-preview='id'] { … }
+    // (not themes-chrome structural flourishes on body/card selectors).
+    const reg = loadRegistry()
+    const known = new Set(reg.names)
+    const themesCss = loadSrc('../src/themes.css')
+    const selectors = extractThemeSelectors(themesCss)
+    expect(selectors.size).toBeGreaterThanOrEqual(2)
+
+    const blockRe =
+      /:root\[data-theme=['"]([^'"]+)['"]\]\s*,\s*\[data-theme-preview=['"]\1['"]\]\s*\{([^}]+)\}/g
+    let m: RegExpExecArray | null
+    let blocks = 0
+    const overrideNames = new Set<string>()
+    while ((m = blockRe.exec(themesCss)) !== null) {
+      blocks++
+      const body = m[2]!
+      const declRe = /--([a-z0-9_-]+)\s*:/gi
+      let d: RegExpExecArray | null
+      while ((d = declRe.exec(body)) !== null) {
+        overrideNames.add(d[1]!)
+      }
+    }
+    expect(blocks).toBeGreaterThanOrEqual(2)
+    expect(overrideNames.size).toBeGreaterThan(10)
+    for (const n of overrideNames) {
+      expect(known.has(n), `theme override --${n} not in token-registry names`).toBe(true)
+    }
+    // Public brand + surface tokens still overridden somewhere
+    for (const n of ['primary', 'foreground', 'background', 'surface-0', 'surface-1']) {
+      expect(overrideNames.has(n)).toBe(true)
+    }
+  })
+
+  it('generated tokens.css preserves protected consumer CSS names', () => {
+    const protectedDoc = JSON.parse(loadSrc('./protected-css-names.json')) as { names: string[] }
+    const cssNames = extractVarDecls(loadSrc('../src/tokens.css'))
+    expect(protectedDoc.names.length).toBeGreaterThan(100)
+    for (const n of protectedDoc.names) {
+      expect(cssNames.has(n)).toBe(true)
+    }
+  })
+
+  it('dual-emit compat aliases remain (registry + tokens.css)', () => {
+    // Do not drop PE dual-emit: app-accent-* → var(--accent-*).
+    const reg = loadRegistry()
+    const css = loadSrc('../src/tokens.css')
+    const compat = JSON.parse(loadSrc('../model/compat-aliases.json')) as {
+      aliases: Record<string, string>
+    }
+    const aliases = compat.aliases
+    expect(Object.keys(aliases).length).toBeGreaterThan(0)
+    for (const [oldName, newName] of Object.entries(aliases)) {
+      expect(reg.aliases?.[oldName]).toBe(newName)
+      expect(reg.tokens[oldName]?.aliasOf).toBe(newName)
+      expect(reg.tokens[oldName]?.cssName).toBe(oldName)
+      expect(reg.tokens[oldName]?.path).toBe(reg.tokens[newName]?.path)
+      const re = new RegExp(`--${oldName}\\s*:\\s*var\\(--${newName}\\)`)
+      expect(css).toMatch(re)
+    }
+  })
+
+  it('tokens.css :root name set equals registry names (emit parity)', () => {
+    const reg = loadRegistry()
+    const cssNames = extractVarDecls(loadSrc('../src/tokens.css'))
+    // CSS also redeclares names under .dark / density — set equality on unique names
+    for (const n of reg.names) {
+      expect(cssNames.has(n)).toBe(true)
+    }
+    // Every CSS custom property must be a known token (no orphan decls)
+    for (const n of cssNames) {
+      expect(reg.names.includes(n)).toBe(true)
+    }
+  })
+
+  it('registry values for Tailwind space ramp match emitted CSS', () => {
+    const reg = loadRegistry()
+    const css = loadSrc('../src/tokens.css')
+    const ramp: Array<[string, string]> = [
+      ['space-1', '4px'],
+      ['space-7', '28px'],
+      ['space-8', '32px'],
+      ['space-64', '256px'],
+    ]
+    for (const [name, want] of ramp) {
+      expect(reg.tokens[name]?.value).toBe(want)
+      const re = new RegExp(`--${name}\\s*:\\s*${want}\\s*;`)
+      expect(css).toMatch(re)
+    }
+  })
+
+  it('color surface includes brand + tone tokens and excludes space/text', () => {
+    const reg = loadRegistry()
+    const colors = new Set(reg.colors)
+    for (const n of ['primary', 'foreground', 'surface-1', 'tone-success-bg', 'accent-foreground']) {
+      expect(colors.has(n)).toBe(true)
+    }
+    for (const n of ['space-4', 'text-2xl', 'radius-lg']) {
+      expect(colors.has(n)).toBe(false)
+    }
+    expect(reg.colors.length).toBeGreaterThan(40)
   })
 })
 

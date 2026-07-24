@@ -1,10 +1,11 @@
 /* GENERATED from @ship/sail-runtime styles — do not hand-edit.
  * Regenerate: bun packages/sail/runtime/scripts/emit-contracts-css.ts
- * The light-DOM framework contracts: tone/size channels (attribute-
- * keyed), interactive-surface baseline, focus/disabled, L1 element
- * skins ride separately via the stdlib registry. Framework webfonts
- * are listed at the top of the file and resolved as hashed assets
- * by the deck bundler at build time. */
+ * The light-DOM framework contracts: tone/size as attribute-keyed
+ * props (CSS custom properties on the element), interactive-surface
+ * baseline, focus/disabled. L1 element skins ride separately via the
+ * stdlib registry. Not a product "channels" API — ordinary props +
+ * CVA. Framework webfonts are listed at the top of the file and
+ * resolved as hashed assets by the deck bundler at build time. */
 /* Framework webfonts — self-hosted, referenced as relative `url('./fonts/<file>')`.
  * The deck bundler (`ShipAssetCssPlugin`, crates/deck/deck-bundler/src/ship_asset_css.rs)
  * emits each woff2 as a hashed asset and rewrites the URL to the bundled path at
@@ -51,8 +52,8 @@
 
 @layer sail {
 @keyframes sail-spin { to { transform: rotate(360deg); } }
-:root, :host { --animate-spin: sail-spin 0.7s linear infinite; }
-@media (prefers-reduced-motion: reduce) { :root, :host { --animate-spin: sail-spin 1.5s linear infinite; } }
+:root { --animate-spin: sail-spin 0.7s linear infinite; }
+@media (prefers-reduced-motion: reduce) { :root { --animate-spin: sail-spin 1.5s linear infinite; } }
 *, *::before, *::after { box-sizing: border-box; }
 :where(html) { font-family: var(--font-body); color: var(--foreground); line-height: var(--leading-normal); }
 [tone='default']     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-contrast: var(--background);              --tone-bg: var(--hover-bg);            --tone-border: var(--border);                 --tone-ring: var(--ring);                     --tone-glow: var(--glow-default); }
@@ -63,21 +64,11 @@
 [tone='destructive'] { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring);    --tone-glow: var(--glow-destructive); }
 [tone='accent']      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring);         --tone-glow: var(--glow-accent); }
 [tone='muted']       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring);          --tone-glow: var(--glow-muted); }
-:where(input, select, textarea)[tone='primary']     { --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring); }
-:where(input, select, textarea)[tone='info']        { --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring); }
-:where(input, select, textarea)[tone='success']     { --tone-border: var(--tone-success-border);     --tone-ring: var(--tone-success-ring); }
-:where(input, select, textarea)[tone='warning']     { --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring); }
-:where(input, select, textarea)[tone='accent']      { --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring); }
-:where(input, select, textarea)[tone='muted']       { --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring); }
 :where(input[invalid], input[aria-invalid='true'], select[invalid], select[aria-invalid='true'], textarea[invalid], textarea[aria-invalid='true']) { --tone-border: var(--destructive); --tone-ring: var(--tone-destructive-ring); }
 [size='xs'] { --size-h: var(--control-h-2xs); --size-px: var(--space-2);   --size-fs: var(--text-xs);   --size-gap: var(--space-1); }
 [size='sm'] { --size-h: var(--control-h-sm);  --size-px: var(--space-2_5); --size-fs: var(--text-sm);   --size-gap: var(--space-1_5); }
 [size='md'] { --size-h: var(--control-h-md);  --size-px: var(--space-3);   --size-fs: var(--text-base); --size-gap: var(--space-2); }
 [size='lg'] { --size-h: var(--control-h-lg);  --size-px: var(--space-4);   --size-fs: var(--text-md);   --size-gap: var(--space-2); }
-:where(input, select, textarea, button)[size='xs'] { --size-h: var(--control-h-2xs); --size-px: var(--space-2);   --size-fs: var(--text-xs);   --size-gap: var(--space-1); }
-:where(input, select, textarea, button)[size='sm'] { --size-h: var(--control-h-sm);  --size-px: var(--space-2_5); --size-fs: var(--text-sm);   --size-gap: var(--space-1_5); }
-:where(input, select, textarea, button)[size='md'] { --size-h: var(--control-h-md);  --size-px: var(--space-3);   --size-fs: var(--text-base); --size-gap: var(--space-2); }
-:where(input, select, textarea, button)[size='lg'] { --size-h: var(--control-h-lg);  --size-px: var(--space-4);   --size-fs: var(--text-md);   --size-gap: var(--space-2); }
 h1,h2,h3,h4,h5,h6 { margin: 0; font-family: var(--heading-font, inherit); font-weight: var(--heading-weight, 700); line-height: var(--leading-tight, 1.15); color: var(--foreground); text-transform: var(--heading-transform); }
 label, .sail-label { text-transform: var(--label-transform); }
 h1 { font-size: var(--text-4xl); }

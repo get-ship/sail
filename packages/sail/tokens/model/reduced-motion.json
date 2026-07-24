@@ -1,0 +1,69 @@
+{
+  "$description": "Reduced-motion duration overrides.",
+  "motion": {
+    "duration": {
+      "instant": {
+        "$value": "0.01ms",
+        "$type": "duration",
+        "$extensions": {
+          "ship": {
+            "cssName": "duration-instant"
+          }
+        }
+      },
+      "fast": {
+        "$value": "0.01ms",
+        "$type": "duration",
+        "$extensions": {
+          "ship": {
+            "cssName": "duration-fast"
+          }
+        }
+      },
+      "medium": {
+        "$value": "0.01ms",
+        "$type": "duration",
+        "$extensions": {
+          "ship": {
+            "cssName": "duration-medium"
+          }
+        }
+      },
+      "slow": {
+        "$value": "0.01ms",
+        "$type": "duration",
+        "$extensions": {
+          "ship": {
+            "cssName": "duration-slow"
+          }
+        }
+      },
+      "deliberate": {
+        "$value": "0.01ms",
+        "$type": "duration",
+        "$extensions": {
+          "ship": {
+            "cssName": "duration-deliberate"
+          }
+        }
+      },
+      "glacial": {
+        "$value": "0.01ms",
+        "$type": "duration",
+        "$extensions": {
+          "ship": {
+            "cssName": "duration-glacial"
+          }
+        }
+      }
+    },
+    "$type": "duration"
+  },
+  "$extensions": {
+    "ship": {
+      "selector": ":root",
+      "media": "(prefers-reduced-motion: reduce)",
+      "layer": "reduced-motion"
+    }
+  }
+}

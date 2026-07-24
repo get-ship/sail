@@ -9,13 +9,18 @@
     "./themes": "./src/themes.ts",
     "./themes.css": "./src/themes.css",
     "./tokens.css": "./src/tokens.css",
+    "./token-registry.json": "./src/token-registry.json",
     "./contracts.css": "./src/contracts.css",
     "./element-skins.css": "./src/element-skins.css"
   },
   "files": [
-    "src"
+    "src",
+    "model",
+    "scripts"
   ],
   "scripts": {
+    "generate": "node ./scripts/generate.mjs",
+    "tokens:build": "node ./scripts/generate.mjs",
     "test": "vitest run"
   },
   "devDependencies": {
