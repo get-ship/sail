@@ -15,12 +15,11 @@
   },
   "files": [
     "src",
-    "model",
-    "scripts"
+    "model"
   ],
   "scripts": {
-    "generate": "node ./scripts/generate.mjs",
-    "tokens:build": "node ./scripts/generate.mjs",
+    "generate": "cargo run -p sail-compiler -- tokens",
+    "tokens:build": "cargo run -p sail-compiler -- tokens",
     "test": "vitest run"
   },
   "devDependencies": {

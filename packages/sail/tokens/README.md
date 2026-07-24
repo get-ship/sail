@@ -48,10 +48,16 @@ dual-emitted as `var(--accent-*)` for PE compatibility.
 
 ## Generate
 
+Authoritative generate is **in-process Rust** via `sail-compiler` (no Node):
+
 ```bash
+cargo run -p sail-compiler -- tokens
+# optional path overrides:
+#   --model packages/sail/tokens/model
+#   --out   packages/sail/tokens/src
+
+# package script (same binary):
 pnpm --filter @ship/tokens generate
-# or
-node packages/sail/tokens/scripts/generate.mjs
 ```
 
 Aliases in DTCG use `{css-name}` or `{group.path}` and emit as
@@ -85,8 +91,8 @@ After model edits, regenerate before running lint tests.
 $EDITOR packages/sail/tokens/model/base.json
 $EDITOR packages/sail/tokens/model/themes/paper.json
 
-# 2. Emit CSS + registry
-node packages/sail/tokens/scripts/generate.mjs
+# 2. Emit CSS + registry (Rust / sail-compiler)
+cargo run -p sail-compiler -- tokens
 
 # 3. Verify
 cd packages/sail/tokens && ./node_modules/.bin/vitest run

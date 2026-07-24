@@ -398,7 +398,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
   it('theme override blocks redeclare public cssNames only (registry-known vars)', () => {
     // themes.css must override --primary / --surface-1 etc. — the same public
     // surface Layout, Fx, and contracts consume — never invent parallel names.
-    // Match only generate.mjs theme layers:
+    // Match only sail-compiler theme layers:
     //   :root[data-theme='id'],
     //   [data-theme-preview='id'] { … }
     // (not themes-chrome structural flourishes on body/card selectors).

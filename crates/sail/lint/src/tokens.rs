@@ -9,8 +9,9 @@
 //!   - `packages/sail/tokens/src/token-registry.json` (this registry)
 //!
 //! Lint reads the **generated registry**, not a CSS scrape. Hand-edit of
-//! generated CSS is not SSOT; edit the model and re-run `pnpm --filter
-//! @ship/tokens generate`.
+//! generated CSS is not SSOT; edit the model and re-run
+//! `cargo run -p sail-compiler -- tokens` (or `pnpm --filter @ship/tokens
+//! generate`).
 //!
 //! Token **css names** are stored WITHOUT the `--` prefix (e.g. `"space-4"`,
 //! `"text-3xl"`). Grouped DTCG paths (e.g. `space.4`) are recorded on each

@@ -2,8 +2,8 @@
  * GENERATED FILE — do not edit by hand.
  *
  * Source of truth: packages/sail/tokens/model/** (DTCG groups + themes).
- * Regenerate: pnpm --filter @ship/tokens generate
- *            (or: node packages/sail/tokens/scripts/generate.mjs)
+ * Regenerate: cargo run -p sail-compiler -- tokens
+ *            (or: pnpm --filter @ship/tokens generate)
  *
  * Token layers, in order of abstraction (highest first):
  *   1. Semantic surfaces  — --surface-0..3, --backdrop

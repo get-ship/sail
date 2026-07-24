@@ -2662,47 +2662,12 @@
       "type": "dimension",
       "value": "999px"
     },
-    "app-accent-dashboard": {
-      "path": "color.accent.dashboard",
-      "cssName": "app-accent-dashboard",
-      "type": "color",
-      "value": "var(--accent-dashboard)",
-      "aliasOf": "accent-dashboard"
-    },
-    "app-accent-pipelines": {
-      "path": "color.accent.pipelines",
-      "cssName": "app-accent-pipelines",
-      "type": "color",
-      "value": "var(--accent-pipelines)",
-      "aliasOf": "accent-pipelines"
-    },
     "app-accent-agents": {
       "path": "color.accent.agents",
       "cssName": "app-accent-agents",
       "type": "color",
       "value": "var(--accent-agents)",
       "aliasOf": "accent-agents"
-    },
-    "app-accent-skills": {
-      "path": "color.accent.skills",
-      "cssName": "app-accent-skills",
-      "type": "color",
-      "value": "var(--accent-skills)",
-      "aliasOf": "accent-skills"
-    },
-    "app-accent-git": {
-      "path": "color.accent.git",
-      "cssName": "app-accent-git",
-      "type": "color",
-      "value": "var(--accent-git)",
-      "aliasOf": "accent-git"
-    },
-    "app-accent-collections": {
-      "path": "color.accent.collections",
-      "cssName": "app-accent-collections",
-      "type": "color",
-      "value": "var(--accent-collections)",
-      "aliasOf": "accent-collections"
     },
     "app-accent-canvas": {
       "path": "color.accent.canvas",
@@ -2711,13 +2676,6 @@
       "value": "var(--accent-canvas)",
       "aliasOf": "accent-canvas"
     },
-    "app-accent-settings": {
-      "path": "color.accent.settings",
-      "cssName": "app-accent-settings",
-      "type": "color",
-      "value": "var(--accent-settings)",
-      "aliasOf": "accent-settings"
-    },
     "app-accent-chat": {
       "path": "color.accent.chat",
       "cssName": "app-accent-chat",
@@ -2725,12 +2683,75 @@
       "value": "var(--accent-chat)",
       "aliasOf": "accent-chat"
     },
+    "app-accent-collections": {
+      "path": "color.accent.collections",
+      "cssName": "app-accent-collections",
+      "type": "color",
+      "value": "var(--accent-collections)",
+      "aliasOf": "accent-collections"
+    },
+    "app-accent-dashboard": {
+      "path": "color.accent.dashboard",
+      "cssName": "app-accent-dashboard",
+      "type": "color",
+      "value": "var(--accent-dashboard)",
+      "aliasOf": "accent-dashboard"
+    },
     "app-accent-events": {
       "path": "color.accent.events",
       "cssName": "app-accent-events",
       "type": "color",
       "value": "var(--accent-events)",
       "aliasOf": "accent-events"
+    },
+    "app-accent-git": {
+      "path": "color.accent.git",
+      "cssName": "app-accent-git",
+      "type": "color",
+      "value": "var(--accent-git)",
+      "aliasOf": "accent-git"
+    },
+    "app-accent-mesh": {
+      "path": "color.accent.mesh",
+      "cssName": "app-accent-mesh",
+      "type": "color",
+      "value": "var(--accent-mesh)",
+      "aliasOf": "accent-mesh"
+    },
+    "app-accent-overview": {
+      "path": "color.accent.overview",
+      "cssName": "app-accent-overview",
+      "type": "color",
+      "value": "var(--accent-overview)",
+      "aliasOf": "accent-overview"
+    },
+    "app-accent-pipelines": {
+      "path": "color.accent.pipelines",
+      "cssName": "app-accent-pipelines",
+      "type": "color",
+      "value": "var(--accent-pipelines)",
+      "aliasOf": "accent-pipelines"
+    },
+    "app-accent-settings": {
+      "path": "color.accent.settings",
+      "cssName": "app-accent-settings",
+      "type": "color",
+      "value": "var(--accent-settings)",
+      "aliasOf": "accent-settings"
+    },
+    "app-accent-setup": {
+      "path": "color.accent.setup",
+      "cssName": "app-accent-setup",
+      "type": "color",
+      "value": "var(--accent-setup)",
+      "aliasOf": "accent-setup"
+    },
+    "app-accent-skills": {
+      "path": "color.accent.skills",
+      "cssName": "app-accent-skills",
+      "type": "color",
+      "value": "var(--accent-skills)",
+      "aliasOf": "accent-skills"
     },
     "app-accent-specs": {
       "path": "color.accent.specs",
@@ -2745,27 +2766,6 @@
       "type": "color",
       "value": "var(--accent-theme)",
       "aliasOf": "accent-theme"
-    },
-    "app-accent-setup": {
-      "path": "color.accent.setup",
-      "cssName": "app-accent-setup",
-      "type": "color",
-      "value": "var(--accent-setup)",
-      "aliasOf": "accent-setup"
-    },
-    "app-accent-overview": {
-      "path": "color.accent.overview",
-      "cssName": "app-accent-overview",
-      "type": "color",
-      "value": "var(--accent-overview)",
-      "aliasOf": "accent-overview"
-    },
-    "app-accent-mesh": {
-      "path": "color.accent.mesh",
-      "cssName": "app-accent-mesh",
-      "type": "color",
-      "value": "var(--accent-mesh)",
-      "aliasOf": "accent-mesh"
     }
   },
   "paths": {
@@ -3126,20 +3126,20 @@
     "z.toast": "z-toast"
   },
   "aliases": {
-    "app-accent-dashboard": "accent-dashboard",
-    "app-accent-pipelines": "accent-pipelines",
     "app-accent-agents": "accent-agents",
-    "app-accent-skills": "accent-skills",
-    "app-accent-git": "accent-git",
-    "app-accent-collections": "accent-collections",
     "app-accent-canvas": "accent-canvas",
-    "app-accent-settings": "accent-settings",
     "app-accent-chat": "accent-chat",
+    "app-accent-collections": "accent-collections",
+    "app-accent-dashboard": "accent-dashboard",
     "app-accent-events": "accent-events",
-    "app-accent-specs": "accent-specs",
-    "app-accent-theme": "accent-theme",
-    "app-accent-setup": "accent-setup",
+    "app-accent-git": "accent-git",
+    "app-accent-mesh": "accent-mesh",
     "app-accent-overview": "accent-overview",
-    "app-accent-mesh": "accent-mesh"
+    "app-accent-pipelines": "accent-pipelines",
+    "app-accent-settings": "accent-settings",
+    "app-accent-setup": "accent-setup",
+    "app-accent-skills": "accent-skills",
+    "app-accent-specs": "accent-specs",
+    "app-accent-theme": "accent-theme"
   }
 }

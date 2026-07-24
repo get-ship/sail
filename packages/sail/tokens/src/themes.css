@@ -3,7 +3,7 @@
  *
  * Theme token overrides from packages/sail/tokens/model/themes/*.json.
  * Structural flourishes: packages/sail/tokens/model/themes-chrome.css
- * Regenerate: pnpm --filter @ship/tokens generate
+ * Regenerate: cargo run -p sail-compiler -- tokens
  */
 
 /* ─── theme:ship-dark (themes/ship-dark.json) ─── */
