@@ -346,10 +346,6 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
             meta.name
         )));
     }
-    // (--styles is gone — complete cutover: the pre-floor external-CSS
-    // injection path had zero producers. Element skins are the sanctioned
-    // toolchain-CSS home now.)
-    //
     // SFC: strip an inline `<controller>` block before parsing so its body
     // isn't misread as a template expression. This makes SFC first-class in
     // core `compile()` — every caller (bin, deck, tests) handles it uniformly,
@@ -371,13 +367,13 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     // `<scope>` member sets are POSITION-SCOPED: the same input that names a
     // file (a tag = component; tagless = route/page) decides which members
     // are addable. A route receives params from the router, never props from
-    // a parent — `props:`/`variants:` there is a modeling error, told now.
+    // a parent — `props:` there is a modeling error, told now.
     if opts.component_meta.is_none() && !program.props.is_empty() {
         return Err(attach_path(
             CompileError::new(
-                "`props:`/`variants:` declared in a route/page `<scope>` — a route has no \
-                 parent to fill props; it receives route params from the router. Props and \
-                 variants are component members."
+                "`props:` declared in a route/page `<scope>` — a route has no \
+                 parent to fill props; it receives route params from the router. \
+                 Props are component members."
                     .to_string(),
             ),
             &opts,

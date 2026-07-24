@@ -6,6 +6,8 @@ import type { Action } from '../action'
  * of a page sets `value` + emits `sail-page-change`. Prev/next are just pages
  * whose value is the target page. Structure (which pages/ellipsis to show) is
  * authored; this owns the state contract.
+ *
+ * Size is an ordinary prop on each `<page>` (CVA on the child).
  */
 export const pagination: Action<void> = (node) => {
   const root = node as HTMLElement
@@ -18,11 +20,7 @@ export const pagination: Action<void> = (node) => {
 
   const sync = (): void => {
     const cur = current()
-    // Size lives on the pagination host; stamp onto each page so page.sail
-    // size CVA owns cell geometry (no parent --pg-* channel PE).
-    const size = root.getAttribute('size') || 'md'
     for (const p of pagesOf()) {
-      if (p.getAttribute('size') !== size) p.setAttribute('size', size)
       if (valueOf(p) === cur) p.setAttribute('aria-current', 'page')
       else p.removeAttribute('aria-current')
     }
@@ -49,7 +47,7 @@ export const pagination: Action<void> = (node) => {
 
   root.addEventListener('click', onClick)
   const mo = new MutationObserver(() => sync())
-  mo.observe(root, { childList: true, subtree: true })
+  mo.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] })
   sync()
 
   return {

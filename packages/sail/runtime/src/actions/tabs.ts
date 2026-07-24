@@ -1,9 +1,8 @@
 import type { Action } from '../action'
 
 /**
- * `use:tabs` — the L1 `<tabs>` element's behavior, in light DOM. The current
- * `<sail-tabs>` shadow component queried `assignedElements()`; here we own the
- * whole subtree, so we query descendant `.sail-tab` / `.sail-tab-panel` directly.
+ * `use:tabs` — the L1 `<tabs>` element's behavior, in light DOM. Owns the
+ * whole subtree and queries descendant `.sail-tab` / `.sail-tab-panel` directly.
  *
  * Wires the ARIA tablist contract (role, aria-selected, aria-controls /
  * aria-labelledby), roving tabindex, keyboard nav (Arrow per orientation,
@@ -11,9 +10,9 @@ import type { Action } from '../action'
  * active tab is the element's `active` attribute (the name of the active tab);
  * unset defaults to the first tab.
  *
- * Also stamps `orientation` onto `.sail-tab-list` / `.sail-tab-panel` and
- * `variant` from the list onto each `.sail-tab` so child CVA owns chrome
- * without parent→child PE matrices in contracts.css.
+ * Orientation is structural (list/panel layout CVA); it is stamped onto
+ * `.sail-tab-list` / `.sail-tab-panel` so child orientation axes resolve.
+ * Size/variant paint is authored on children (or host CVA).
  */
 export const tabs: Action<void> = (node) => {
   const root = node as HTMLElement
@@ -31,23 +30,18 @@ export const tabs: Action<void> = (node) => {
   const orientationOf = (): 'horizontal' | 'vertical' =>
     root.getAttribute('orientation') === 'vertical' ? 'vertical' : 'horizontal'
 
-  const stampChrome = (): void => {
+  // Structural layout only — not paint chrome (size/variant/tone).
+  const stampOrientation = (): void => {
     const orientation = orientationOf()
     const list = listOf()
-    if (list) {
-      list.setAttribute('orientation', orientation)
-    }
-    const variant = list?.getAttribute('variant') || 'line'
-    for (const t of tabsOf()) {
-      t.setAttribute('variant', variant)
-    }
+    if (list) list.setAttribute('orientation', orientation)
     for (const p of panelsOf()) {
       p.setAttribute('orientation', orientation)
     }
   }
 
   const sync = (): void => {
-    stampChrome()
+    stampOrientation()
     const tabs = tabsOf()
     let active = activeName()
     if (!active && tabs.length) {
@@ -140,7 +134,7 @@ export const tabs: Action<void> = (node) => {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['orientation', 'variant', 'active'],
+    attributeFilter: ['orientation', 'active'],
   })
   sync()
 

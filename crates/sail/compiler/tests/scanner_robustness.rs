@@ -45,17 +45,6 @@ fn multibyte_in_cva_axis_position_is_a_diagnostic_not_a_panic() {
 }
 
 #[test]
-fn scope_variants_field_is_rejected() {
-    let src = "<scope>\n  variants: {\n    tone: { solid: 'bg' }\n  }\n</scope>\n<div>hi</div>";
-    let err = compile_src(src).expect_err("variants: dual path killed");
-    assert!(
-        err.message.contains("variants:") && err.message.contains("CVA-in-props"),
-        "must reject variants: and name CVA-in-props: {}",
-        err.message
-    );
-}
-
-#[test]
 fn multibyte_in_type_alias_and_string_values_compiles() {
     // Multibyte content in legal positions — doc comments, string literal
     // defaults, type alias RHS strings — must simply work.

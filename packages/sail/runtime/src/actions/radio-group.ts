@@ -9,10 +9,11 @@ let _seq = 0
  *  - give every child <radio>'s inner <input> the shared group name + its own
  *    value + disabled (group [disabled] OR the radio's own), and check the one
  *    matching the group's `value`;
- *  - propagate tone/size onto the radios (API parity with the twin);
  *  - on a radio `change`, reflect the new value to the group's `value` attribute
  *    + a hidden <input> (form) and dispatch sail-change {value};
  *  - aria-label / aria-required from the group.
+ * Tone/size are ordinary props: put them on the group (CSS custom properties
+ * inherit) and/or on each radio.
  * Re-syncs when the group's attributes or its children change. Written once —
  * no per-instance controller.
  */
@@ -32,8 +33,6 @@ export const radioGroup: Action<void> = (node) => {
     const val = el.getAttribute('value') ?? ''
     const groupDisabled = el.hasAttribute('disabled')
     const name = el.getAttribute('name') || fallbackName
-    const tone = el.getAttribute('tone')
-    const size = el.getAttribute('size')
     for (const r of radios()) {
       const input = inputOf(r)
       if (!input) continue
@@ -42,8 +41,6 @@ export const radioGroup: Action<void> = (node) => {
       input.value = rval
       input.checked = rval === val
       input.disabled = groupDisabled || r.hasAttribute('disabled')
-      if (tone && !r.hasAttribute('tone')) r.setAttribute('tone', tone)
-      if (size && !r.hasAttribute('size')) r.setAttribute('size', size)
     }
     hidden.name = el.getAttribute('name') ?? ''
     hidden.value = val
@@ -69,7 +66,7 @@ export const radioGroup: Action<void> = (node) => {
   const obs = new MutationObserver(sync)
   obs.observe(el, {
     attributes: true,
-    attributeFilter: ['value', 'disabled', 'name', 'label', 'required', 'tone', 'size'],
+    attributeFilter: ['value', 'disabled', 'name', 'label', 'required'],
     childList: true,
   })
 

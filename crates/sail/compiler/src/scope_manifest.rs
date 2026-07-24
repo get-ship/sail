@@ -1,6 +1,10 @@
 //! The `<scope>` grammar — one source of truth for every construct a
 //! `<scope>` block accepts: the prop declaration forms (incl. CVA-in-props),
-//! type aliases, compound/channels, and the members the parser refuses.
+//! type aliases, and `compound:`.
+//!
+//! **Variance pattern (locked):** CVA-in-props axes + optional `compound:`
+//! only. Shared `tone` / `size` bare defaults expand to stdlib convention
+//! unions — ordinary reflected props.
 //!
 //! A sibling of `block_manifest` / `directive_manifest`: the closed grammar
 //! is data, not a hand-listed paragraph on the docs page. The parser
@@ -59,9 +63,9 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
         example: "<scope>\n  props: { variant: 'solid' | 'soft' = 'solid' }\n</scope>\n<p>{variant}</p>",
     },
     ScopeEntry {
-        form: "framework channel",
+        form: "shared tone/size prop",
         syntax: "tone = 'primary'  ·  size = 'md'",
-        summary: "a bare tone/size default types as the full framework channel union (tone: default·primary·info·success·warning·destructive·accent·muted; size: xs·sm·md·lg), reflected",
+        summary: "Bare tone/size defaults type as the shared stdlib unions (tone: default·primary·info·success·warning·destructive·accent·muted; size: xs·sm·md·lg) and reflect as ordinary props — CVA axes by convention",
         example: "<scope>\n  props: { tone = 'primary', size = 'md' }\n</scope>\n<p>{tone}</p>",
     },
     ScopeEntry {
@@ -103,7 +107,7 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
     ScopeEntry {
         form: "compound variant",
         syntax: "compound: [ { when: { variant: 'solid', size: 'lg' }, sx: '…' } ]",
-        summary: "rows keyed on several axes at once; they contribute CSS only and never declare a prop. Sibling of props:, not nested in a variants: block",
+        summary: "rows keyed on several axes at once; they contribute CSS only and never declare a prop. Sibling of props:",
         example: "<scope>\n  props: {\n    variant: { solid: 'font-semibold', soft: 'font-normal' }\n    size: { sm: 'p-1', lg: 'p-4' }\n  }\n  compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'tracking-wide' } ]\n</scope>\n<p>ok</p>",
     },
 ];
@@ -129,11 +133,6 @@ pub const SCOPE_REFUSALS: &[ScopeRefusal] = &[
         syntax: "const / let / var",
         instead: "a literal default on a prop, or state in the <controller>",
         example: "<scope>\n  const n = 1\n  props: { open = false }\n</scope>\n<p>ok</p>",
-    },
-    ScopeRefusal {
-        syntax: "variants: { … }",
-        instead: "CVA-in-props — put key→sx maps on props: (and compound: for combinations)",
-        example: "<scope>\n  variants: { size: { sm: 'p-1' } }\n</scope>\n<p>ok</p>",
     },
 ];
 

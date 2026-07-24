@@ -7,8 +7,8 @@ import type { Action } from '../action'
  * = `single` (one value, deselectable) or `multiple` (space-separated set).
  * Each `.sail-toggle` gets `aria-pressed`. Emits `sail-toggle-change`.
  *
- * Stamps group `variant` + `orientation` onto each cell so join radii /
- * ghost/segmented chrome live as child CVA + first:/last: (no parent→child PE).
+ * Orientation is structural (join/axis CVA); stamped onto cells. Size/variant
+ * paint is authored on each toggle.
  */
 export const toggleGroup: Action<void> = (node) => {
   const root = node as HTMLElement
@@ -20,21 +20,19 @@ export const toggleGroup: Action<void> = (node) => {
     new Set((root.getAttribute('value') ?? '').split(/\s+/).filter(Boolean))
   const orientationOf = (): 'horizontal' | 'vertical' =>
     root.getAttribute('orientation') === 'vertical' ? 'vertical' : 'horizontal'
-  const variantOf = (): string => root.getAttribute('variant') || 'outline'
 
   if (!root.hasAttribute('role')) root.setAttribute('role', 'group')
 
-  const stampChrome = (): void => {
+  // Structural layout only — not paint chrome (size/variant/tone).
+  const stampOrientation = (): void => {
     const orientation = orientationOf()
-    const variant = variantOf()
     for (const t of togglesOf()) {
       t.setAttribute('orientation', orientation)
-      t.setAttribute('variant', variant)
     }
   }
 
   const sync = (): void => {
-    stampChrome()
+    stampOrientation()
     root.setAttribute('aria-orientation', orientationOf())
     const active = activeSet()
     const toggles = togglesOf()
@@ -104,7 +102,7 @@ export const toggleGroup: Action<void> = (node) => {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['orientation', 'variant', 'value', 'type'],
+    attributeFilter: ['orientation', 'value', 'type'],
   })
   sync()
 

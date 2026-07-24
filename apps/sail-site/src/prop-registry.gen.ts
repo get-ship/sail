@@ -15,7 +15,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "alert": [
     {
       "name": "tone",
-      "type": "default · info · success · warning · destructive · muted",
+      "type": "default · muted · info · success · warning · destructive",
       "default": "default"
     },
     {
@@ -323,6 +323,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "bordered",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "offset",
+      "type": "string",
+      "default": ""
     }
   ],
   "page": [
@@ -335,6 +340,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "disabled",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "size",
+      "type": "md · sm · lg",
+      "default": "md"
     }
   ],
   "pagination": [
@@ -506,7 +516,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     },
     {
       "name": "size",
-      "type": "sm · md · lg",
+      "type": "md · sm · lg",
       "default": "md"
     }
   ],
@@ -520,6 +530,16 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "disabled",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "variant",
+      "type": "line · pill · enclosed",
+      "default": "line"
+    },
+    {
+      "name": "size",
+      "type": "md · sm · lg",
+      "default": "md"
     }
   ],
   "tab-list": [
@@ -527,6 +547,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "sticky",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "orientation",
+      "type": "horizontal · vertical",
+      "default": "horizontal"
     },
     {
       "name": "variant",
@@ -539,6 +564,11 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "name",
       "type": "string",
       "default": ""
+    },
+    {
+      "name": "orientation",
+      "type": "horizontal · vertical",
+      "default": "horizontal"
     }
   ],
   "tabs": [
@@ -616,6 +646,21 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "disabled",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "variant",
+      "type": "outline · ghost · segmented",
+      "default": "outline"
+    },
+    {
+      "name": "orientation",
+      "type": "horizontal · vertical",
+      "default": "horizontal"
+    },
+    {
+      "name": "size",
+      "type": "md · sm · lg",
+      "default": "md"
     }
   ],
   "toggle-group": [

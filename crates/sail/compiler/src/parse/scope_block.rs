@@ -3,7 +3,7 @@
 //! where every value is a LITERAL. Nothing in the block executes — no imports,
 //! no `const`, no calls. If it computes, it belongs in `<controller>`.
 //!
-//! Members:
+//! Members (author grammar — also [`crate::scope_manifest::SCOPE_GRAMMAR`]):
 //!   - `type X = …` / `export type X = …` — aliases, threaded into the
 //!     compiled module so the controller can reuse them.
 //!   - `props: { … }` — the component's typed inputs (field declarations).
@@ -14,27 +14,25 @@
 //!     `sx=`. Host `sx=` remains base paint.
 //!   - `compound: [ { when: { … }, sx: '…' }, … ]` — combination rules over
 //!     prop axes (sibling of `props`).
-//!   - `channels: { … }` — attr-keyed custom-property writes (+ closed layout
-//!     axes / descendant anatomy). Framework/stdlib paint path.
-//!   - `variants: { … }` — **rejected**. CVA-in-props is the only variance matrix.
+//!
+//! Bare `tone` / `size` defaults type as the shared stdlib unions and reflect
+//! as ordinary props.
 //!
 //! Field grammar (props): `name = literal` (type inferred), `name: Type`
 //! (parent must fill), `name: Type = literal`, or CVA map `name: { k: 'sx…' }`.
 //! Unions require an explicit default — there is no first-member magic in
-//! ordinary props (CVA maps use first key as default). `tone` / `size` are
-//! the framework channels: declared with a bare vocabulary default they type
-//! as the full channel union.
+//! ordinary props (CVA maps use first key as default).
 
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::directive::{PropDecl, PropKind};
 
-use super::preprocess::{channels_object_to_css, parse_object_fields, unquote, variants_object_to_css};
+use super::preprocess::{parse_object_fields, unquote, variants_object_to_css};
 
 /// Everything a `<scope>` block contributes to the Program.
 #[derive(Debug)]
 pub(crate) struct ScopeBlock {
     pub props: Vec<PropDecl>,
-    /// CSS lowered from the `variants:` table (empty when absent).
+    /// CSS lowered from CVA-in-props axes and `compound:` rules (empty when absent).
     pub variants_css: String,
     /// Raw `type` / `export type` alias text, appended to the controller
     /// module (aliases hoist, so appending preserves controller spans).
@@ -45,8 +43,7 @@ const TONE_VOCAB: &str = "default|primary|info|success|warning|destructive|accen
 const SIZE_VOCAB: &str = "xs|sm|md|lg";
 
 const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, `props:` (incl. CVA key→sx maps), \
-     optional `compound:` / `channels:` — types and literal values only; logic goes in `<controller>`. \
-     There is no `variants:` block — put key→sx maps on props";
+     optional `compound:` — types and literal values only; logic goes in `<controller>`";
 
 pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, CompileError> {
     let bytes = body.as_bytes();
@@ -87,22 +84,6 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
                 let css = variants_object_to_css(&format!("{{ compound: {inner} }}"));
                 out.variants_css.push_str(&css);
                 i = arr_span.1 + 1;
-            }
-            "channels" => {
-                let obj_span = expect_member_object(body, after, "channels", span)?;
-                let css = channels_object_to_css(&body[obj_span.0..=obj_span.1]);
-                out.variants_css.push_str(&css);
-                i = obj_span.1 + 1;
-            }
-            "variants" => {
-                // Dual path killed: CVA-in-props is the only variance matrix.
-                return Err(CompileError::new(
-                    "`variants:` is not a `<scope>` member — put key→sx maps on props \
-                     (CVA-in-props: `variant: { solid: 'bg-tone …', … }`) and combination \
-                     rules on sibling `compound: [ { when, sx } ]`."
-                        .to_string(),
-                )
-                .with_span(span));
             }
             "" => {
                 return Err(CompileError::new(format!(
@@ -514,14 +495,14 @@ fn classify_field(
         ))
         .with_span(span));
     };
-    // tone/size are the framework channels: a bare vocabulary default types
-    // as the full channel union.
+    // Shared stdlib tone/size convention: a bare vocabulary default types as
+    // the full shared union (ordinary reflected props / CVA axes).
     if name == "tone" || name == "size" {
         let vocab = if name == "tone" { TONE_VOCAB } else { SIZE_VOCAB };
         let d = unquote(v);
         if !vocab.split('|').any(|m| m == d) {
             return Err(CompileError::new(format!(
-                "`{name}` is the framework {name} channel — its default must be one of \
+                "`{name}` uses the shared {name} vocabulary — its default must be one of \
                  `{vocab}` (got {v}). For a custom union, annotate it: \
                  `{name}: 'a' | 'b' = 'a'`."
             ))
@@ -1010,20 +991,24 @@ mod tests {
     }
 
     #[test]
-    fn tone_and_size_are_framework_channels() {
+    fn tone_and_size_bare_defaults_expand_shared_unions() {
         let b = block("props: {\n  tone = 'primary'\n  size = 'md'\n}");
         match &prop(&b, "tone").kind {
             PropKind::Union(v) => assert_eq!(v.len(), 8),
-            k => panic!("tone must be the channel union, got {k:?}"),
+            k => panic!("tone must be the shared union, got {k:?}"),
         }
         assert_eq!(prop(&b, "tone").default.as_deref(), Some("primary"));
         assert_eq!(prop(&b, "size").default.as_deref(), Some("md"));
     }
 
     #[test]
-    fn channel_default_outside_vocab_is_refused() {
+    fn tone_default_outside_vocab_is_refused() {
         let e = err("props: {\n  tone = 'sparkly'\n}");
-        assert!(e.message.contains("channel"), "{}", e.message);
+        assert!(
+            e.message.contains("vocabulary") || e.message.contains("shared tone"),
+            "{}",
+            e.message
+        );
     }
 
     #[test]
@@ -1055,20 +1040,6 @@ mod tests {
         );
         assert!(b.types.contains("export type Point"));
         assert!(b.types.contains("type Kind"));
-    }
-
-    #[test]
-    fn variants_field_is_rejected() {
-        let err = parse_scope_block(
-            "variants: {\n  variant: { solid: 'bg-muted' }\n}",
-            Span::new(0, 0),
-        )
-        .expect_err("variants: dual path killed");
-        assert!(
-            err.message.contains("variants:") && err.message.contains("CVA-in-props"),
-            "must reject variants: and name CVA-in-props: {}",
-            err.message
-        );
     }
 
     #[test]

@@ -15,6 +15,12 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "accent",
     "values": [
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -83,6 +89,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -180,6 +187,10 @@ export const SX_ATOMS: SxAtom[] = [
     ]
   },
   {
+    "prop": "animate-spin",
+    "values": []
+  },
+  {
     "prop": "antialiased",
     "values": [
       "false",
@@ -202,22 +213,8 @@ export const SX_ATOMS: SxAtom[] = [
     ]
   },
   {
-    "prop": "backdrop",
-    "values": [
-      "none"
-    ]
-  },
-  {
-    "prop": "backdrop-blur",
-    "values": [
-      "2xl",
-      "3xl",
-      "lg",
-      "md",
-      "none",
-      "sm",
-      "xl"
-    ]
+    "prop": "avatar-media",
+    "values": []
   },
   {
     "prop": "basis",
@@ -299,6 +296,7 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-max-w-xs",
       "panel-min-h-cell",
       "panel-min-h-daycol",
       "panel-min-w-lg",
@@ -308,7 +306,9 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-vh-md",
       "panel-vh-sm",
       "panel-w-side",
+      "panel-w-toast",
       "px",
+      "rail-fill",
       "screen",
       "size-fs",
       "size-h",
@@ -318,6 +318,12 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "bg",
     "values": [
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -371,7 +377,6 @@ export const SX_ATOMS: SxAtom[] = [
       "input",
       "muted",
       "muted-foreground",
-      "none",
       "popover",
       "popover-foreground",
       "primary",
@@ -386,6 +391,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -470,6 +476,15 @@ export const SX_ATOMS: SxAtom[] = [
     ]
   },
   {
+    "prop": "bg-clip",
+    "values": [
+      "border",
+      "content",
+      "padding",
+      "text"
+    ]
+  },
+  {
     "prop": "bg-glow",
     "values": []
   },
@@ -480,19 +495,6 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "bg-glow-primary",
     "values": []
-  },
-  {
-    "prop": "bg-gradient-to",
-    "values": [
-      "b",
-      "bl",
-      "br",
-      "l",
-      "r",
-      "t",
-      "tl",
-      "tr"
-    ]
   },
   {
     "prop": "block",
@@ -507,6 +509,12 @@ export const SX_ATOMS: SxAtom[] = [
       "3",
       "4",
       "8",
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -579,6 +587,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -676,6 +685,12 @@ export const SX_ATOMS: SxAtom[] = [
       "3",
       "4",
       "8",
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -743,6 +758,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -839,6 +855,12 @@ export const SX_ATOMS: SxAtom[] = [
       "3",
       "4",
       "8",
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -906,6 +928,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -1002,6 +1025,12 @@ export const SX_ATOMS: SxAtom[] = [
       "3",
       "4",
       "8",
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -1069,6 +1098,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -1165,6 +1195,12 @@ export const SX_ATOMS: SxAtom[] = [
       "3",
       "4",
       "8",
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -1232,6 +1268,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -1328,6 +1365,12 @@ export const SX_ATOMS: SxAtom[] = [
       "3",
       "4",
       "8",
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -1395,6 +1438,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -1491,6 +1535,12 @@ export const SX_ATOMS: SxAtom[] = [
       "3",
       "4",
       "8",
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -1558,6 +1608,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -1717,6 +1768,12 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "caret",
     "values": [
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -1784,6 +1841,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -1885,8 +1943,7 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "content",
     "values": [
-      "empty",
-      "none"
+      "empty"
     ]
   },
   {
@@ -1931,6 +1988,12 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "decoration",
     "values": [
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -1998,6 +2061,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -2093,6 +2157,10 @@ export const SX_ATOMS: SxAtom[] = [
     ]
   },
   {
+    "prop": "dir-column",
+    "values": []
+  },
+  {
     "prop": "duration",
     "values": [
       "deliberate",
@@ -2116,6 +2184,12 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "fill",
     "values": [
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -2184,6 +2258,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -2289,157 +2364,8 @@ export const SX_ATOMS: SxAtom[] = [
     ]
   },
   {
-    "prop": "from",
-    "values": [
-      "accent",
-      "accent-foreground",
-      "active-bg",
-      "app-accent-agents",
-      "app-accent-canvas",
-      "app-accent-chat",
-      "app-accent-collections",
-      "app-accent-dashboard",
-      "app-accent-events",
-      "app-accent-git",
-      "app-accent-mesh",
-      "app-accent-overview",
-      "app-accent-pipelines",
-      "app-accent-settings",
-      "app-accent-setup",
-      "app-accent-skills",
-      "app-accent-specs",
-      "app-accent-theme",
-      "backdrop",
-      "background",
-      "border",
-      "border-strong",
-      "border-subtle",
-      "card",
-      "card-foreground",
-      "currentColor",
-      "destructive",
-      "destructive-foreground",
-      "divider",
-      "foreground",
-      "hover-bg",
-      "hue-amber",
-      "hue-blue",
-      "hue-cyan",
-      "hue-fuchsia",
-      "hue-green",
-      "hue-indigo",
-      "hue-lime",
-      "hue-orange",
-      "hue-pink",
-      "hue-purple",
-      "hue-red",
-      "hue-rose",
-      "hue-sky",
-      "hue-teal",
-      "hue-violet",
-      "hue-yellow",
-      "info",
-      "info-foreground",
-      "inherit",
-      "input",
-      "muted",
-      "muted-foreground",
-      "popover",
-      "popover-foreground",
-      "primary",
-      "primary-foreground",
-      "primary-hover",
-      "ring",
-      "ring-color",
-      "scrim",
-      "scrollbar-thumb",
-      "scrollbar-thumb-hover",
-      "secondary",
-      "secondary-foreground",
-      "selected-bg",
-      "selected-border",
-      "sidebar",
-      "sidebar-accent",
-      "sidebar-accent-foreground",
-      "sidebar-border",
-      "sidebar-foreground",
-      "sidebar-primary",
-      "sidebar-primary-foreground",
-      "sidebar-ring",
-      "status-amber",
-      "status-blue",
-      "status-gray",
-      "status-green",
-      "status-orange",
-      "status-purple",
-      "status-red",
-      "status-yellow",
-      "success",
-      "success-foreground",
-      "surface-0",
-      "surface-1",
-      "surface-2",
-      "surface-3",
-      "surface-inverse",
-      "syntax-attr",
-      "syntax-comment",
-      "syntax-function",
-      "syntax-keyword",
-      "syntax-number",
-      "syntax-string",
-      "syntax-tag",
-      "syntax-type",
-      "syntax-variable",
-      "tone",
-      "tone-accent-bg",
-      "tone-accent-bg-solid",
-      "tone-accent-border",
-      "tone-accent-fg",
-      "tone-accent-ring",
-      "tone-bg",
-      "tone-border",
-      "tone-contrast",
-      "tone-default-bg",
-      "tone-default-bg-solid",
-      "tone-default-border",
-      "tone-default-fg",
-      "tone-default-ring",
-      "tone-destructive-bg",
-      "tone-destructive-bg-solid",
-      "tone-destructive-border",
-      "tone-destructive-fg",
-      "tone-destructive-ring",
-      "tone-fg",
-      "tone-info-bg",
-      "tone-info-bg-solid",
-      "tone-info-border",
-      "tone-info-fg",
-      "tone-info-ring",
-      "tone-muted-bg",
-      "tone-muted-bg-solid",
-      "tone-muted-border",
-      "tone-muted-fg",
-      "tone-muted-ring",
-      "tone-primary-bg",
-      "tone-primary-bg-solid",
-      "tone-primary-border",
-      "tone-primary-fg",
-      "tone-primary-ring",
-      "tone-ring",
-      "tone-success-bg",
-      "tone-success-bg-solid",
-      "tone-success-border",
-      "tone-success-fg",
-      "tone-success-ring",
-      "tone-warning-bg",
-      "tone-warning-bg-solid",
-      "tone-warning-border",
-      "tone-warning-fg",
-      "tone-warning-ring",
-      "transparent",
-      "warning",
-      "warning-foreground"
-    ]
+    "prop": "glyph-fill",
+    "values": []
   },
   {
     "prop": "grow",
@@ -2528,6 +2454,7 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-max-w-xs",
       "panel-min-h-cell",
       "panel-min-h-daycol",
       "panel-min-w-lg",
@@ -2537,7 +2464,9 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-vh-md",
       "panel-vh-sm",
       "panel-w-side",
+      "panel-w-toast",
       "px",
+      "rail-fill",
       "screen",
       "size-fs",
       "size-h",
@@ -2992,6 +2921,7 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-max-w-xs",
       "panel-min-h-cell",
       "panel-min-h-daycol",
       "panel-min-w-lg",
@@ -3001,7 +2931,9 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-vh-md",
       "panel-vh-sm",
       "panel-w-side",
+      "panel-w-toast",
       "px",
+      "rail-fill",
       "screen",
       "size-fs",
       "size-h",
@@ -3088,6 +3020,7 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-max-w-xs",
       "panel-min-h-cell",
       "panel-min-h-daycol",
       "panel-min-w-lg",
@@ -3097,7 +3030,9 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-vh-md",
       "panel-vh-sm",
       "panel-w-side",
+      "panel-w-toast",
       "px",
+      "rail-fill",
       "screen",
       "size-fs",
       "size-h",
@@ -3282,6 +3217,7 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-max-w-xs",
       "panel-min-h-cell",
       "panel-min-h-daycol",
       "panel-min-w-lg",
@@ -3291,7 +3227,9 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-vh-md",
       "panel-vh-sm",
       "panel-w-side",
+      "panel-w-toast",
       "px",
+      "rail-fill",
       "screen",
       "size-fs",
       "size-h",
@@ -3378,6 +3316,7 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-max-w-xs",
       "panel-min-h-cell",
       "panel-min-h-daycol",
       "panel-min-w-lg",
@@ -3387,7 +3326,9 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-vh-md",
       "panel-vh-sm",
       "panel-w-side",
+      "panel-w-toast",
       "px",
+      "rail-fill",
       "screen",
       "size-fs",
       "size-h",
@@ -3796,6 +3737,12 @@ export const SX_ATOMS: SxAtom[] = [
       "3",
       "4",
       "8",
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -3860,7 +3807,6 @@ export const SX_ATOMS: SxAtom[] = [
       "primary-hover",
       "ring",
       "ring-color",
-      "ring-width",
       "scrim",
       "scrollbar-thumb",
       "scrollbar-thumb-hover",
@@ -3868,6 +3814,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -3995,8 +3942,6 @@ export const SX_ATOMS: SxAtom[] = [
       "density-text",
       "half",
       "px",
-      "ring-inset",
-      "ring-offset",
       "size-fs",
       "size-h",
       "size-px"
@@ -4552,6 +4497,12 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "ring",
     "values": [
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -4620,6 +4571,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -4779,7 +4731,6 @@ export const SX_ATOMS: SxAtom[] = [
       "0",
       "100",
       "50",
-      "60",
       "65",
       "75"
     ]
@@ -4813,324 +4764,6 @@ export const SX_ATOMS: SxAtom[] = [
     "values": [
       "auto",
       "smooth"
-    ]
-  },
-  {
-    "prop": "scrollbar-auto",
-    "values": []
-  },
-  {
-    "prop": "scrollbar-none",
-    "values": []
-  },
-  {
-    "prop": "scrollbar-thin",
-    "values": []
-  },
-  {
-    "prop": "scrollbar-thumb",
-    "values": [
-      "accent",
-      "accent-foreground",
-      "active-bg",
-      "app-accent-agents",
-      "app-accent-canvas",
-      "app-accent-chat",
-      "app-accent-collections",
-      "app-accent-dashboard",
-      "app-accent-events",
-      "app-accent-git",
-      "app-accent-mesh",
-      "app-accent-overview",
-      "app-accent-pipelines",
-      "app-accent-settings",
-      "app-accent-setup",
-      "app-accent-skills",
-      "app-accent-specs",
-      "app-accent-theme",
-      "backdrop",
-      "background",
-      "border",
-      "border-strong",
-      "border-subtle",
-      "card",
-      "card-foreground",
-      "currentColor",
-      "destructive",
-      "destructive-foreground",
-      "divider",
-      "foreground",
-      "hover-bg",
-      "hue-amber",
-      "hue-blue",
-      "hue-cyan",
-      "hue-fuchsia",
-      "hue-green",
-      "hue-indigo",
-      "hue-lime",
-      "hue-orange",
-      "hue-pink",
-      "hue-purple",
-      "hue-red",
-      "hue-rose",
-      "hue-sky",
-      "hue-teal",
-      "hue-violet",
-      "hue-yellow",
-      "info",
-      "info-foreground",
-      "inherit",
-      "input",
-      "muted",
-      "muted-foreground",
-      "popover",
-      "popover-foreground",
-      "primary",
-      "primary-foreground",
-      "primary-hover",
-      "ring",
-      "ring-color",
-      "scrim",
-      "scrollbar-thumb",
-      "scrollbar-thumb-hover",
-      "secondary",
-      "secondary-foreground",
-      "selected-bg",
-      "selected-border",
-      "sidebar",
-      "sidebar-accent",
-      "sidebar-accent-foreground",
-      "sidebar-border",
-      "sidebar-foreground",
-      "sidebar-primary",
-      "sidebar-primary-foreground",
-      "sidebar-ring",
-      "status-amber",
-      "status-blue",
-      "status-gray",
-      "status-green",
-      "status-orange",
-      "status-purple",
-      "status-red",
-      "status-yellow",
-      "success",
-      "success-foreground",
-      "surface-0",
-      "surface-1",
-      "surface-2",
-      "surface-3",
-      "surface-inverse",
-      "syntax-attr",
-      "syntax-comment",
-      "syntax-function",
-      "syntax-keyword",
-      "syntax-number",
-      "syntax-string",
-      "syntax-tag",
-      "syntax-type",
-      "syntax-variable",
-      "tone",
-      "tone-accent-bg",
-      "tone-accent-bg-solid",
-      "tone-accent-border",
-      "tone-accent-fg",
-      "tone-accent-ring",
-      "tone-bg",
-      "tone-border",
-      "tone-contrast",
-      "tone-default-bg",
-      "tone-default-bg-solid",
-      "tone-default-border",
-      "tone-default-fg",
-      "tone-default-ring",
-      "tone-destructive-bg",
-      "tone-destructive-bg-solid",
-      "tone-destructive-border",
-      "tone-destructive-fg",
-      "tone-destructive-ring",
-      "tone-fg",
-      "tone-info-bg",
-      "tone-info-bg-solid",
-      "tone-info-border",
-      "tone-info-fg",
-      "tone-info-ring",
-      "tone-muted-bg",
-      "tone-muted-bg-solid",
-      "tone-muted-border",
-      "tone-muted-fg",
-      "tone-muted-ring",
-      "tone-primary-bg",
-      "tone-primary-bg-solid",
-      "tone-primary-border",
-      "tone-primary-fg",
-      "tone-primary-ring",
-      "tone-ring",
-      "tone-success-bg",
-      "tone-success-bg-solid",
-      "tone-success-border",
-      "tone-success-fg",
-      "tone-success-ring",
-      "tone-warning-bg",
-      "tone-warning-bg-solid",
-      "tone-warning-border",
-      "tone-warning-fg",
-      "tone-warning-ring",
-      "transparent",
-      "warning",
-      "warning-foreground"
-    ]
-  },
-  {
-    "prop": "scrollbar-track",
-    "values": [
-      "accent",
-      "accent-foreground",
-      "active-bg",
-      "app-accent-agents",
-      "app-accent-canvas",
-      "app-accent-chat",
-      "app-accent-collections",
-      "app-accent-dashboard",
-      "app-accent-events",
-      "app-accent-git",
-      "app-accent-mesh",
-      "app-accent-overview",
-      "app-accent-pipelines",
-      "app-accent-settings",
-      "app-accent-setup",
-      "app-accent-skills",
-      "app-accent-specs",
-      "app-accent-theme",
-      "backdrop",
-      "background",
-      "border",
-      "border-strong",
-      "border-subtle",
-      "card",
-      "card-foreground",
-      "currentColor",
-      "destructive",
-      "destructive-foreground",
-      "divider",
-      "foreground",
-      "hover-bg",
-      "hue-amber",
-      "hue-blue",
-      "hue-cyan",
-      "hue-fuchsia",
-      "hue-green",
-      "hue-indigo",
-      "hue-lime",
-      "hue-orange",
-      "hue-pink",
-      "hue-purple",
-      "hue-red",
-      "hue-rose",
-      "hue-sky",
-      "hue-teal",
-      "hue-violet",
-      "hue-yellow",
-      "info",
-      "info-foreground",
-      "inherit",
-      "input",
-      "muted",
-      "muted-foreground",
-      "popover",
-      "popover-foreground",
-      "primary",
-      "primary-foreground",
-      "primary-hover",
-      "ring",
-      "ring-color",
-      "scrim",
-      "scrollbar-thumb",
-      "scrollbar-thumb-hover",
-      "secondary",
-      "secondary-foreground",
-      "selected-bg",
-      "selected-border",
-      "sidebar",
-      "sidebar-accent",
-      "sidebar-accent-foreground",
-      "sidebar-border",
-      "sidebar-foreground",
-      "sidebar-primary",
-      "sidebar-primary-foreground",
-      "sidebar-ring",
-      "status-amber",
-      "status-blue",
-      "status-gray",
-      "status-green",
-      "status-orange",
-      "status-purple",
-      "status-red",
-      "status-yellow",
-      "success",
-      "success-foreground",
-      "surface-0",
-      "surface-1",
-      "surface-2",
-      "surface-3",
-      "surface-inverse",
-      "syntax-attr",
-      "syntax-comment",
-      "syntax-function",
-      "syntax-keyword",
-      "syntax-number",
-      "syntax-string",
-      "syntax-tag",
-      "syntax-type",
-      "syntax-variable",
-      "tone",
-      "tone-accent-bg",
-      "tone-accent-bg-solid",
-      "tone-accent-border",
-      "tone-accent-fg",
-      "tone-accent-ring",
-      "tone-bg",
-      "tone-border",
-      "tone-contrast",
-      "tone-default-bg",
-      "tone-default-bg-solid",
-      "tone-default-border",
-      "tone-default-fg",
-      "tone-default-ring",
-      "tone-destructive-bg",
-      "tone-destructive-bg-solid",
-      "tone-destructive-border",
-      "tone-destructive-fg",
-      "tone-destructive-ring",
-      "tone-fg",
-      "tone-info-bg",
-      "tone-info-bg-solid",
-      "tone-info-border",
-      "tone-info-fg",
-      "tone-info-ring",
-      "tone-muted-bg",
-      "tone-muted-bg-solid",
-      "tone-muted-border",
-      "tone-muted-fg",
-      "tone-muted-ring",
-      "tone-primary-bg",
-      "tone-primary-bg-solid",
-      "tone-primary-border",
-      "tone-primary-fg",
-      "tone-primary-ring",
-      "tone-ring",
-      "tone-success-bg",
-      "tone-success-bg-solid",
-      "tone-success-border",
-      "tone-success-fg",
-      "tone-success-ring",
-      "tone-warning-bg",
-      "tone-warning-bg-solid",
-      "tone-warning-border",
-      "tone-warning-fg",
-      "tone-warning-ring",
-      "transparent",
-      "warning",
-      "warning-foreground"
     ]
   },
   {
@@ -5258,6 +4891,7 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-max-w-xs",
       "panel-min-h-cell",
       "panel-min-h-daycol",
       "panel-min-w-lg",
@@ -5267,7 +4901,9 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-vh-md",
       "panel-vh-sm",
       "panel-w-side",
+      "panel-w-toast",
       "px",
+      "rail-fill",
       "screen",
       "size-fs",
       "size-h",
@@ -5293,6 +4929,12 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "stroke",
     "values": [
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -5361,6 +5003,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -5445,14 +5088,6 @@ export const SX_ATOMS: SxAtom[] = [
     ]
   },
   {
-    "prop": "tab",
-    "values": [
-      "2",
-      "4",
-      "8"
-    ]
-  },
-  {
     "prop": "tabular-nums",
     "values": []
   },
@@ -5469,6 +5104,12 @@ export const SX_ATOMS: SxAtom[] = [
       "2xl",
       "3xl",
       "4xl",
+      "ButtonFace",
+      "ButtonText",
+      "Canvas",
+      "CanvasText",
+      "Highlight",
+      "HighlightText",
       "accent",
       "accent-foreground",
       "active-bg",
@@ -5551,6 +5192,7 @@ export const SX_ATOMS: SxAtom[] = [
       "secondary-foreground",
       "selected-bg",
       "selected-border",
+      "separator-line",
       "sidebar",
       "sidebar-accent",
       "sidebar-accent-foreground",
@@ -5648,159 +5290,6 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "text-gradient-primary",
     "values": []
-  },
-  {
-    "prop": "to",
-    "values": [
-      "accent",
-      "accent-foreground",
-      "active-bg",
-      "app-accent-agents",
-      "app-accent-canvas",
-      "app-accent-chat",
-      "app-accent-collections",
-      "app-accent-dashboard",
-      "app-accent-events",
-      "app-accent-git",
-      "app-accent-mesh",
-      "app-accent-overview",
-      "app-accent-pipelines",
-      "app-accent-settings",
-      "app-accent-setup",
-      "app-accent-skills",
-      "app-accent-specs",
-      "app-accent-theme",
-      "backdrop",
-      "background",
-      "border",
-      "border-strong",
-      "border-subtle",
-      "card",
-      "card-foreground",
-      "currentColor",
-      "destructive",
-      "destructive-foreground",
-      "divider",
-      "foreground",
-      "hover-bg",
-      "hue-amber",
-      "hue-blue",
-      "hue-cyan",
-      "hue-fuchsia",
-      "hue-green",
-      "hue-indigo",
-      "hue-lime",
-      "hue-orange",
-      "hue-pink",
-      "hue-purple",
-      "hue-red",
-      "hue-rose",
-      "hue-sky",
-      "hue-teal",
-      "hue-violet",
-      "hue-yellow",
-      "info",
-      "info-foreground",
-      "inherit",
-      "input",
-      "muted",
-      "muted-foreground",
-      "popover",
-      "popover-foreground",
-      "primary",
-      "primary-foreground",
-      "primary-hover",
-      "ring",
-      "ring-color",
-      "scrim",
-      "scrollbar-thumb",
-      "scrollbar-thumb-hover",
-      "secondary",
-      "secondary-foreground",
-      "selected-bg",
-      "selected-border",
-      "sidebar",
-      "sidebar-accent",
-      "sidebar-accent-foreground",
-      "sidebar-border",
-      "sidebar-foreground",
-      "sidebar-primary",
-      "sidebar-primary-foreground",
-      "sidebar-ring",
-      "status-amber",
-      "status-blue",
-      "status-gray",
-      "status-green",
-      "status-orange",
-      "status-purple",
-      "status-red",
-      "status-yellow",
-      "success",
-      "success-foreground",
-      "surface-0",
-      "surface-1",
-      "surface-2",
-      "surface-3",
-      "surface-inverse",
-      "syntax-attr",
-      "syntax-comment",
-      "syntax-function",
-      "syntax-keyword",
-      "syntax-number",
-      "syntax-string",
-      "syntax-tag",
-      "syntax-type",
-      "syntax-variable",
-      "tone",
-      "tone-accent-bg",
-      "tone-accent-bg-solid",
-      "tone-accent-border",
-      "tone-accent-fg",
-      "tone-accent-ring",
-      "tone-bg",
-      "tone-border",
-      "tone-contrast",
-      "tone-default-bg",
-      "tone-default-bg-solid",
-      "tone-default-border",
-      "tone-default-fg",
-      "tone-default-ring",
-      "tone-destructive-bg",
-      "tone-destructive-bg-solid",
-      "tone-destructive-border",
-      "tone-destructive-fg",
-      "tone-destructive-ring",
-      "tone-fg",
-      "tone-info-bg",
-      "tone-info-bg-solid",
-      "tone-info-border",
-      "tone-info-fg",
-      "tone-info-ring",
-      "tone-muted-bg",
-      "tone-muted-bg-solid",
-      "tone-muted-border",
-      "tone-muted-fg",
-      "tone-muted-ring",
-      "tone-primary-bg",
-      "tone-primary-bg-solid",
-      "tone-primary-border",
-      "tone-primary-fg",
-      "tone-primary-ring",
-      "tone-ring",
-      "tone-success-bg",
-      "tone-success-bg-solid",
-      "tone-success-border",
-      "tone-success-fg",
-      "tone-success-ring",
-      "tone-warning-bg",
-      "tone-warning-bg-solid",
-      "tone-warning-border",
-      "tone-warning-fg",
-      "tone-warning-ring",
-      "transparent",
-      "warning",
-      "warning-foreground"
-    ]
   },
   {
     "prop": "top",
@@ -6138,6 +5627,7 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-max-w-lg",
       "panel-max-w-md",
       "panel-max-w-sm",
+      "panel-max-w-xs",
       "panel-min-h-cell",
       "panel-min-h-daycol",
       "panel-min-w-lg",
@@ -6147,7 +5637,9 @@ export const SX_ATOMS: SxAtom[] = [
       "panel-vh-md",
       "panel-vh-sm",
       "panel-w-side",
+      "panel-w-toast",
       "px",
+      "rail-fill",
       "screen",
       "size-fs",
       "size-h",
@@ -6177,14 +5669,6 @@ export const SX_ATOMS: SxAtom[] = [
   {
     "prop": "z",
     "values": [
-      "0",
-      "1",
-      "10",
-      "2",
-      "20",
-      "30",
-      "40",
-      "50",
       "auto",
       "base",
       "dialog",
@@ -6238,7 +5722,7 @@ export const SX_STATE_PREFIXES: Array<{ prefix: string; selector: string }> = [
   },
   {
     "prefix": "checked",
-    "selector": ":is(:checked, [aria-checked='true'])"
+    "selector": "[aria-checked='true']"
   },
   {
     "prefix": "pressed",
@@ -6251,29 +5735,6 @@ export const SX_STATE_PREFIXES: Array<{ prefix: string; selector: string }> = [
   {
     "prefix": "sortable",
     "selector": "[aria-sort]"
-  },
-  {
-    "prefix": "empty",
-    "selector": ":empty"
-  },
-  {
-    "prefix": "required",
-    "selector": "[required]"
-  },
-  {
-    "prefix": "invalid",
-    "selector": "[invalid]"
-  }
-]
-
-export const SX_PSEUDO_ELEMENT_PREFIXES: Array<{ prefix: string; selector: string }> = [
-  {
-    "prefix": "before",
-    "selector": "::before"
-  },
-  {
-    "prefix": "after",
-    "selector": "::after"
   }
 ]
 
@@ -6572,7 +6033,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "avatar",
-      "description": "identity frame (image/icon/initials). use:mediaFallback owns render/fallback."
+      "description": "layout row centers; avatar-media img pack; gradient host sx/CVA."
     },
     {
       "tag": "badge",
@@ -6580,7 +6041,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "breadcrumb",
-      "description": "nav > ol trail. Author crumbs as <li><a>. Separators are"
+      "description": "list-trail on ol; author li/a anatomy in element-skins."
     },
     {
       "tag": "card",
@@ -6616,7 +6077,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "error-boundary",
-      "description": "L1 language element (element mode). RENDER-FAULT ISOLATION."
+      "description": "group-caught: swap on structure sx. forced-colors in skins anatomy."
     },
     {
       "tag": "error-state",
@@ -6624,7 +6085,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "field",
-      "description": "vertical form-field stack. Layout owns stack+gap; typeface is sx."
+      "description": "stack+gap layout; hint/error gates via structure sx."
     },
     {
       "tag": "hover-card",
@@ -6632,11 +6093,11 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "icon",
-      "description": "sizes/inks one glyph. use:icon fetches named/src glyphs and owns"
+      "description": "glyph-fill child pack for svg box; use:icon owns spin."
     },
     {
       "tag": "label",
-      "description": "native label root. Size via CVA (PE md on host sx); weight via"
+      "description": "size CVA; weight channel; .req gate in element-skins anatomy."
     },
     {
       "tag": "menu-item",
@@ -6648,11 +6109,11 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "page",
-      "description": "pagination cell. Size channels --pg-h/--pg-size set by parent"
+      "description": "size CVA owns cell geometry (stamped from pagination)."
     },
     {
       "tag": "pagination",
-      "description": "nav of <page>s. Size channels (--pg-h/--pg-size) for child"
+      "description": "stamps size onto child pages via use:pagination."
     },
     {
       "tag": "popover",
@@ -6672,7 +6133,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "scroll-area",
-      "description": "themed overlay scrollbars. Constrain via sx (h-*/max-h-*)."
+      "description": "standard + webkit scrollbar packs on host sx."
     },
     {
       "tag": "separator",
@@ -6684,7 +6145,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "spinner",
-      "description": "loading indicator. Host align + PE size + PE muted ink on sx;"
+      "description": "size/tone CVA on host; .ring child sx for two-tone border + animate-spin."
     },
     {
       "tag": "switch",
@@ -6692,23 +6153,23 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "tab",
-      "description": "tab button inside <tab-list>. use:tabs on parent wires a11y."
+      "description": "paint + stamped variant/size CVA for pill/enclosed and pad scale."
     },
     {
       "tag": "tab-list",
-      "description": "tab strip inside <tabs>. Layout owns row+gap+align; sx owns"
+      "description": "strip chrome. Sticky + variant CVA. Orientation stamped by use:tabs."
     },
     {
       "tag": "tab-panel",
-      "description": "content panel for the matching <tab>. Host sx owns"
+      "description": "orientation CVA (stamped by use:tabs)."
     },
     {
       "tag": "tabs",
-      "description": "tab strip + panels. use:tabs owns behavior."
+      "description": "tab strip + panels. use:tabs owns behavior + stamps orientation/size"
     },
     {
       "tag": "theme-picker",
-      "description": "the theme switcher: a trigger that opens a panel of theme"
+      "description": "layout keywords + structure sx for swatch mini-cards → skins."
     },
     {
       "tag": "ticker",
@@ -6716,23 +6177,23 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "toast",
-      "description": "L1 toast: auto-dismiss + close control via stacked use: behaviors"
+      "description": "L1 toast: auto-dismiss + close via use:autoDismiss/use:dismissControl."
     },
     {
       "tag": "toast-region",
-      "description": "fixed stacking region for <toast>s."
+      "description": "fixed stacking region. Width/reverse/insets via sx+CVA."
     },
     {
       "tag": "toggle",
-      "description": "cell inside <toggle-group>. use:toggleGroup wires a11y."
+      "description": "first:/last: join + variant/orientation/size CVA (stamped by group)."
     },
     {
       "tag": "toggle-group",
-      "description": "segmented toggle group. use:toggleGroup owns behavior."
+      "description": "segmented CVA; stamps variant/orientation/size on cells."
     },
     {
       "tag": "tooltip",
-      "description": "hover/focus text bubble via CSS Anchor Positioning. use:tipDescribe"
+      "description": "hover/focus text bubble. use:tipDescribe supplies per-instance"
     }
   ],
   "reskins": [
@@ -6859,238 +6320,355 @@ export interface ActionDoc {
   name: string
   param: string
   summary: string
+  public: boolean
 }
 
 export const ACTIONS: ActionDoc[] = [
   {
     "name": "anchor",
     "param": "AnchorPlacement | undefined",
-    "summary": "Position a popper-like surface against an anchor element."
+    "summary": "Position a popper-like surface against an anchor element.",
+    "public": true
   },
   {
     "name": "autoDismiss",
     "param": "void",
-    "summary": "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; emits a dismiss event then removes the host."
+    "summary": "Timed self-dismiss from a `duration` attr (ms; default 5000; ≤0 sticky); pauses while hovered/focused; emits a dismiss event then removes the host.",
+    "public": false
   },
   {
     "name": "autosize",
     "param": "void",
-    "summary": "Autosize a textarea to its content as the user types."
-  },
-  {
-    "name": "mediaFallback",
-    "param": "void",
-    "summary": "Image-with-fallback behavior for an <avatar> element."
-  },
-  {
-    "name": "cellPad",
-    "param": "number | null | undefined",
-    "summary": "Track the current cell's left/right padding for a virtualized grid."
-  },
-  {
-    "name": "chromeOffset",
-    "param": "void",
-    "summary": "Publish the attached element's measured height as --chrome-offset on :root (pairs with the h:fill scale)."
-  },
-  {
-    "name": "clickOutside",
-    "param": "(() => void) | undefined",
-    "summary": "Fire a callback when a click lands outside the element."
-  },
-  {
-    "name": "syntaxHighlight",
-    "param": "void",
-    "summary": "Syntax-highlight + copy-button behavior for a <code-block>."
-  },
-  {
-    "name": "combobox",
-    "param": "void",
-    "summary": "Combobox keyboard/ARIA behavior for an input + list pairing."
-  },
-  {
-    "name": "contextMenu",
-    "param": "void",
-    "summary": "Right-click menu: open on contextmenu, close on outside-click / ESC."
-  },
-  {
-    "name": "describedControl",
-    "param": "void",
-    "summary": "Form control ↔ hint/error association (aria-describedby + aria-invalid) for any host with `.hint`/`.error`/`.control` anatomy."
-  },
-  {
-    "name": "detailsDisabled",
-    "param": "void",
-    "summary": "Suppress click + Enter/Space activation on a disclosure host while it carries `[disabled]`."
-  },
-  {
-    "name": "detailsToggle",
-    "param": "void",
-    "summary": "Re-emit a native <details> `toggle` as composed `sail-toggle` with `{open}`."
-  },
-  {
-    "name": "dismissControl",
-    "param": "void",
-    "summary": "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button.close`) dismisses the host (event + remove); toast → sail-toast-dismiss, else sail-dismiss gated on [dismissible]."
-  },
-  {
-    "name": "dismissible",
-    "param": "void",
-    "summary": "Emit `sail-remove` from a `[removable]` host on Backspace/Delete or `.remove` click — the attr-gated dismiss mix-in."
-  },
-  {
-    "name": "dropzone",
-    "param": "undefined",
-    "summary": "Drag-and-drop file receiver; reads files into a controller-side handler."
+    "summary": "Autosize a textarea to its content as the user types.",
+    "public": true
   },
   {
     "name": "catchRender",
     "param": "void",
-    "summary": "Catch render errors thrown by descendants; show a fallback UI."
+    "summary": "Catch render errors thrown by descendants; show a fallback UI.",
+    "public": false
   },
   {
-    "name": "recoverySurface",
+    "name": "cellPad",
+    "param": "number | null | undefined",
+    "summary": "Track the current cell's left/right padding for a virtualized grid.",
+    "public": false
+  },
+  {
+    "name": "chromeOffset",
     "param": "void",
-    "summary": "Error-state element behavior; arms a retry action for the call-to-action slot."
+    "summary": "Publish the attached element's measured height as --chrome-offset on :root (pairs with the h:fill scale).",
+    "public": false
+  },
+  {
+    "name": "clickOutside",
+    "param": "(() => void) | undefined",
+    "summary": "Fire a callback when a click lands outside the element.",
+    "public": true
+  },
+  {
+    "name": "combobox",
+    "param": "void",
+    "summary": "Combobox keyboard/ARIA behavior for an input + list pairing.",
+    "public": false
+  },
+  {
+    "name": "contextMenu",
+    "param": "void",
+    "summary": "Right-click menu: open on contextmenu, close on outside-click / ESC.",
+    "public": true
+  },
+  {
+    "name": "describedControl",
+    "param": "void",
+    "summary": "Form control ↔ hint/error association (aria-describedby + aria-invalid) for any host with `.hint`/`.error`/`.control` anatomy.",
+    "public": false
+  },
+  {
+    "name": "detailsDisabled",
+    "param": "void",
+    "summary": "Suppress click + Enter/Space activation on a disclosure host while it carries `[disabled]`.",
+    "public": false
+  },
+  {
+    "name": "detailsToggle",
+    "param": "void",
+    "summary": "Re-emit a native <details> `toggle` as composed `sail-toggle` with `{open}`.",
+    "public": false
+  },
+  {
+    "name": "dismissControl",
+    "param": "void",
+    "summary": "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button.close`) dismisses the host (event + remove); toast → sail-toast-dismiss, else sail-dismiss gated on [dismissible].",
+    "public": false
+  },
+  {
+    "name": "dismissible",
+    "param": "void",
+    "summary": "Emit `sail-remove` from a `[removable]` host on Backspace/Delete or `.remove` click — the attr-gated dismiss mix-in.",
+    "public": false
+  },
+  {
+    "name": "dropzone",
+    "param": "undefined",
+    "summary": "Drag-and-drop file receiver; reads files into a controller-side handler.",
+    "public": true
   },
   {
     "name": "eventSpan",
     "param": "RectSpan | null | undefined",
-    "summary": "Track the bounding rect of a pointer event target across the screen."
+    "summary": "Track the bounding rect of a pointer event target across the screen.",
+    "public": false
   },
   {
     "name": "gridTracks",
     "param": "string | null | undefined",
-    "summary": "Measure a CSS grid's resolved track widths/positions for layout math."
+    "summary": "Measure a CSS grid's resolved track widths/positions for layout math.",
+    "public": false
   },
   {
     "name": "hoverSurface",
     "param": "void",
-    "summary": "Hover-triggered card; open on pointer-in, close on pointer-out with delay."
+    "summary": "Hover-triggered card; open on pointer-in, close on pointer-out with delay.",
+    "public": false
   },
   {
     "name": "icon",
     "param": "void",
-    "summary": "Resolve a glyph from the icon cache and stamp the matching <use href>."
+    "summary": "Resolve a glyph from the icon cache and stamp the matching <use href>.",
+    "public": true
   },
   {
     "name": "liveRegion",
     "param": "void",
-    "summary": "Sync role/aria-live from tone: warning|destructive → assertive alert; else polite status."
-  },
-  {
-    "name": "marquee",
-    "param": "void",
-    "summary": "Infinite seamless track scroll for <ticker>; reads host duration/reverse attrs and attaches motion:loop translate-x."
+    "summary": "Sync role/aria-live from tone: warning|destructive → assertive alert; else polite status.",
+    "public": false
   },
   {
     "name": "maxWidth",
     "param": "number | string | null | undefined",
-    "summary": "Cap the element's content width to a max (px or CSS length)."
+    "summary": "Cap the element's content width to a max (px or CSS length).",
+    "public": false
+  },
+  {
+    "name": "mediaFallback",
+    "param": "void",
+    "summary": "Image-with-fallback behavior for an <avatar> element.",
+    "public": false
   },
   {
     "name": "menu",
     "param": "void",
-    "summary": "Dropdown menu: keyboard nav, roving tabindex, ARIA menu role."
+    "summary": "Dropdown menu: keyboard nav, roving tabindex, ARIA menu role.",
+    "public": true
   },
   {
     "name": "pagination",
     "param": "void",
-    "summary": "Pagination controls; page number + prev/next wired to the controller."
+    "summary": "Pagination controls; page number + prev/next wired to the controller.",
+    "public": false
   },
   {
     "name": "pin",
     "param": "PinPoint | null | undefined",
-    "summary": "Pin one corner of an element to a fixed viewport coordinate."
+    "summary": "Pin one corner of an element to a fixed viewport coordinate.",
+    "public": false
   },
   {
     "name": "portEdge",
     "param": "PortSide",
-    "summary": "Anchor a fixed-size port to the midpoint of one of its parent's four edges."
+    "summary": "Anchor a fixed-size port to the midpoint of one of its parent's four edges.",
+    "public": false
   },
   {
     "name": "pressable",
     "param": "void",
-    "summary": "Button semantics (role, aria-disabled/tabindex sync, Enter/Space activation) for a non-button host — the pressable mix-in."
+    "summary": "Button semantics (role, aria-disabled/tabindex sync, Enter/Space activation) for a non-button host — the pressable mix-in.",
+    "public": false
   },
   {
     "name": "pressed",
     "param": "void",
-    "summary": "Reflect `[selected]` to `aria-pressed` on a toggle host — the pressed-state mix-in (pairs with pressable)."
+    "summary": "Reflect `[selected]` to `aria-pressed` on a toggle host — the pressed-state mix-in (pairs with pressable).",
+    "public": false
   },
   {
     "name": "radioGroup",
     "param": "void",
-    "summary": "Radio-group keyboard nav: arrow keys move the checked item."
+    "summary": "Radio-group keyboard nav: arrow keys move the checked item.",
+    "public": false
   },
   {
     "name": "rangeFill",
     "param": "void",
-    "summary": "Paint the filled portion of a <input type=range> on a custom track."
+    "summary": "Paint the filled portion of a <input type=range> on a custom track.",
+    "public": false
+  },
+  {
+    "name": "recoverySurface",
+    "param": "void",
+    "summary": "Error-state element behavior; arms a retry action for the call-to-action slot.",
+    "public": false
   },
   {
     "name": "rect",
     "param": "BoxRect | null | undefined",
-    "summary": "Track the element's bounding rect via ResizeObserver."
+    "summary": "Track the element's bounding rect via ResizeObserver.",
+    "public": true
   },
   {
     "name": "spotlight",
     "param": "void",
-    "summary": "Soft spotlight following the pointer; visual highlight for surfaces under it."
+    "summary": "Soft spotlight following the pointer; visual highlight for surfaces under it.",
+    "public": false
   },
   {
     "name": "swatch",
     "param": "string | null | undefined",
-    "summary": "Render a color swatch keyed by a token name from the active theme."
+    "summary": "Render a color swatch keyed by a token name from the active theme.",
+    "public": false
+  },
+  {
+    "name": "syntaxHighlight",
+    "param": "void",
+    "summary": "Syntax-highlight + copy-button behavior for a <code-block>.",
+    "public": false
   },
   {
     "name": "tabs",
     "param": "void",
-    "summary": "Tabs keyboard nav: left/right arrows move the active tab, ARIA tablist role."
+    "summary": "Tabs keyboard nav: left/right arrows move the active tab, ARIA tablist role.",
+    "public": true
   },
   {
     "name": "targetCursor",
     "param": "void",
-    "summary": "Switch the cursor to a custom 'target' style while over the element."
+    "summary": "Switch the cursor to a custom 'target' style while over the element.",
+    "public": false
   },
   {
     "name": "themeSelect",
     "param": "void",
-    "summary": "Theme switcher: click to write the picked theme to the host context."
-  },
-  {
-    "name": "toggleGroup",
-    "param": "void",
-    "summary": "Toggle-group keyboard nav: arrow keys move focus, space toggles."
+    "summary": "Theme switcher: click to write the picked theme to the host context.",
+    "public": false
   },
   {
     "name": "tipDescribe",
     "param": "void",
-    "summary": "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay."
+    "summary": "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
+    "public": true
+  },
+  {
+    "name": "toggleGroup",
+    "param": "void",
+    "summary": "Toggle-group keyboard nav: arrow keys move focus, space toggles.",
+    "public": false
   },
   {
     "name": "variantLive",
     "param": "void",
-    "summary": "Variant-gated live region: variant=connecting → role=status/aria-live=polite; else role=note/aria-live=off. Re-syncs on variant mutation."
+    "summary": "Variant-gated live region: variant=connecting → role=status/aria-live=polite; else role=note/aria-live=off. Re-syncs on variant mutation.",
+    "public": false
   },
   {
     "name": "virtualRow",
     "param": "number | null | undefined",
-    "summary": "Register a virtualized row; tells the parent scroller its measured height."
+    "summary": "Register a virtualized row; tells the parent scroller its measured height.",
+    "public": true
   },
   {
     "name": "virtualSpacer",
     "param": "number | null | undefined",
-    "summary": "Spacer row in a virtualized list; the engine reads its measured height."
+    "summary": "Spacer row in a virtualized list; the engine reads its measured height.",
+    "public": false
   },
   {
     "name": "worldTransform",
     "param": "string | null | undefined",
-    "summary": "Track the cumulative CSS transform up the parent chain (for canvas positioning)."
+    "summary": "Track the cumulative CSS transform up the parent chain (for canvas positioning).",
+    "public": false
   },
   {
     "name": "zoomPan",
     "param": "ZoomPanState | null | undefined",
-    "summary": "Pinch/wheel zoom + drag pan on a surface; emits state changes to the controller."
+    "summary": "Pinch/wheel zoom + drag pan on a surface; emits state changes to the controller.",
+    "public": true
+  }
+]
+
+/** Curated app-author `use:` surface (subset of ACTIONS). */
+export const PUBLIC_ACTIONS: ActionDoc[] = [
+  {
+    "name": "anchor",
+    "param": "AnchorPlacement | undefined",
+    "summary": "Position a popper-like surface against an anchor element.",
+    "public": true
+  },
+  {
+    "name": "autosize",
+    "param": "void",
+    "summary": "Autosize a textarea to its content as the user types.",
+    "public": true
+  },
+  {
+    "name": "clickOutside",
+    "param": "(() => void) | undefined",
+    "summary": "Fire a callback when a click lands outside the element.",
+    "public": true
+  },
+  {
+    "name": "contextMenu",
+    "param": "void",
+    "summary": "Right-click menu: open on contextmenu, close on outside-click / ESC.",
+    "public": true
+  },
+  {
+    "name": "dropzone",
+    "param": "undefined",
+    "summary": "Drag-and-drop file receiver; reads files into a controller-side handler.",
+    "public": true
+  },
+  {
+    "name": "icon",
+    "param": "void",
+    "summary": "Resolve a glyph from the icon cache and stamp the matching <use href>.",
+    "public": true
+  },
+  {
+    "name": "menu",
+    "param": "void",
+    "summary": "Dropdown menu: keyboard nav, roving tabindex, ARIA menu role.",
+    "public": true
+  },
+  {
+    "name": "rect",
+    "param": "BoxRect | null | undefined",
+    "summary": "Track the element's bounding rect via ResizeObserver.",
+    "public": true
+  },
+  {
+    "name": "tabs",
+    "param": "void",
+    "summary": "Tabs keyboard nav: left/right arrows move the active tab, ARIA tablist role.",
+    "public": true
+  },
+  {
+    "name": "tipDescribe",
+    "param": "void",
+    "summary": "Hover/focus-triggered tooltip; open on pointer-in, close on pointer-out with delay.",
+    "public": true
+  },
+  {
+    "name": "virtualRow",
+    "param": "number | null | undefined",
+    "summary": "Register a virtualized row; tells the parent scroller its measured height.",
+    "public": true
+  },
+  {
+    "name": "zoomPan",
+    "param": "ZoomPanState | null | undefined",
+    "summary": "Pinch/wheel zoom + drag pan on a surface; emits state changes to the controller.",
+    "public": true
   }
 ]
 
@@ -7976,9 +7554,9 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
     "example": "<scope>\n  props: { variant: 'solid' | 'soft' = 'solid' }\n</scope>\n<p>{variant}</p>"
   },
   {
-    "form": "framework channel",
+    "form": "shared tone/size prop",
     "syntax": "tone = 'primary'  ·  size = 'md'",
-    "summary": "a bare tone/size default types as the full framework channel union (tone: default·primary·info·success·warning·destructive·accent·muted; size: xs·sm·md·lg), reflected",
+    "summary": "Bare tone/size defaults type as the shared stdlib unions (tone: default·primary·info·success·warning·destructive·accent·muted; size: xs·sm·md·lg) and reflect as ordinary props — CVA axes by convention",
     "example": "<scope>\n  props: { tone = 'primary', size = 'md' }\n</scope>\n<p>{tone}</p>"
   },
   {
@@ -8013,14 +7591,14 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
   },
   {
     "form": "CVA-in-props axis",
-    "syntax": "props: { density: { cozy: 'p-2', compact: 'p-1' } }",
-    "summary": "a prop value that is a key→sx map; types as the key union (first key = default), reflects as an attribute, and lowers through the same sx atom pipeline as host sx=",
+    "syntax": "size: { sm: 'px-2', lg: 'px-4' }",
+    "summary": "a prop whose value is a key→sx map; keys become the union type (first = default), reflected, and each value lowers through the same sx pipeline as host sx=",
     "example": "<scope>\n  props: {\n    density: { cozy: 'p-2', compact: 'p-1' }\n  }\n</scope>\n<p>ok</p>"
   },
   {
     "form": "compound variant",
     "syntax": "compound: [ { when: { variant: 'solid', size: 'lg' }, sx: '…' } ]",
-    "summary": "rows keyed on several axes at once; sibling of props; contribute CSS only and never declare a prop",
+    "summary": "rows keyed on several axes at once; they contribute CSS only and never declare a prop. Sibling of props:",
     "example": "<scope>\n  props: {\n    variant: { solid: 'font-semibold', soft: 'font-normal' }\n    size: { sm: 'p-1', lg: 'p-4' }\n  }\n  compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'tracking-wide' } ]\n</scope>\n<p>ok</p>"
   }
 ]
@@ -8068,7 +7646,7 @@ export const CONFIG_KEYS: ConfigKeyDoc[] = [
     "key": "variants",
     "type": "boolean",
     "default": "off",
-    "doc": "capability override: allow CVA-in-props variance maps (key→sx in props:) and compound: in <scope>"
+    "doc": "capability override: allow CVA-in-props variance matrices (key→sx maps on props) and compound:"
   },
   {
     "key": "raw_containers",

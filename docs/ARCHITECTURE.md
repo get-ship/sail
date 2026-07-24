@@ -114,7 +114,7 @@ And the styling analogue:
 | ------------------------------------------------- | ----------------- | ------------- |
 | Authored CSS (style blocks, pseudo-elements, keyframes) | yes         | **never**     |
 | Define new elements / tags                        | yes               | no (FFI only) |
-| Extend vocabularies (sx props, token families, motion presets, theme channels) | yes | no |
+| Extend vocabularies (sx props, token families, motion presets, shared tone/size prop unions) | yes | no |
 | Interaction machinery (focus, anchoring, virtualization, form internals) | yes | no |
 | Compose elements, typed props                     | yes               | yes           |
 | Theming (all token tiers)                         | yes               | yes           |
@@ -158,7 +158,7 @@ interaction patterns.
 | sail-spinner | `<spinner>` | T2 | one spin keyframe, language-owned |
 | sail-separator | `<separator>` | T2 | |
 | sail-avatar | `<img>` reset + stdlib avatar | T2 | image baseline L1; initials-fallback logic L2 |
-| sail-badge | bare `<span>` + sx | dissolved | JS-free, static; no L1 element registered — dissolves to a semantic tag styled by the closed sx vocabulary + the global tone contract, not a stdlib skin |
+| sail-badge | `<badge>` L1 element | done | live in `stdlib/badge.sail` (element mode); not dissolved |
 | sail-link | bare `<a>` + sx | dissolved | JS-free; decoration/hover styling (no sx `decoration` prop) and the external-link sr-only text dropped as cosmetic — zero usages in-repo |
 | sail-code | bare `<code>` (inline) / `<div>`+`<header>`+`<separator>`+`<pre>` (block) + sx | dissolved | JS-free; the block-mode header's border-bottom (sx has no per-edge border) is composed with the L1 `<separator>` element instead, and its uppercase transform (sx has no `text-transform`) moves into the template expression (`{lang().toUpperCase()}`) — both losslessly, no stdlib skin needed |
 | sail-scroll-area | `<scroll>` | T3 | scrollbar chrome is deliberately inexpressible elsewhere |
@@ -180,24 +180,27 @@ sail-diff, sail-markdown, sail-timeline (+item).
 Status/display: sail-alert, sail-chip, sail-card, sail-status-dot,
 sail-skeleton, sail-error-boundary (runtime-backed).
 
-These keep custom-element identity (behavior, shadow DOM, anatomy manifest)
-but move **into the toolchain** and stop being a published userspace package.
-Design-vocabulary components (chip, card, alert) are deliberately L2, not L1:
-they're design semantics, not platform behavior — but they are still stdlib,
-because the stdlib is where taste lives. sail-badge is the exception that
-proves the rule: unlike chip (keyboard/ARIA/remove-event behavior) it carries
-no runtime behavior at all, so per the north-star ruling ("L1 grows bigger
-than the ~10 — promote everything universal + JS-free") it dissolved straight
-to a bare tag instead of staying L2.
+Historical destiny rows above are incomplete. Many of these are already
+bare L1 tags in `stdlib.rs` (chip, alert, card, tabs, tooltip, …) with
+light DOM as the author surface. Treat the registry as truth; rewrite
+this section when absorption inventory is a feature doc, not a blog table.
 
-### → L3 userland (move out of primitives; the permanent dogfood canary)
+### → L1 inventory note (live stdlib, not destiny table)
 
-sail-account-chip, sail-account-menu, sail-brand-mark, sail-empty-state,
-sail-error-state, sail-nav-top, sail-project-switcher, sail-theme-picker.
+Compiler `stdlib.rs` currently registers ~42 bare L1 tags including
+`badge`, `empty-state`, `error-state`, `theme-picker`, `navbar`, tabs family,
+etc. **That registry is the truth**, not the historical feat/next destiny
+rows above.
 
-These encode product decisions. They are the proof the seam works: the day
-one of them needs an L1/L2 privilege, the stdlib has a gap — and we find out
-in our own code first.
+L1 admission bar: domain-neutral, atomic, useful to any app. Product/domain
+nouns (account, project, billing, brand) stay out of the language and live
+in consumer packs. `theme-picker` / empty / error in stdlib are domain-neutral
+UI patterns under that bar (revisit if they grow product semantics).
+
+### → Product / domain packs (userland; not language)
+
+account-menu, nav-top, project-switcher, brand-mark, account-chip, and any
+composition that encodes org product nouns.
 
 ## The seams in detail
 
@@ -237,10 +240,11 @@ implementation detail the author must never be able to observe.** Concretely:
   behave identically on `<button>` (L1) and `<sail-dialog>` (L2) — same
   syntax, same dynamics, same reflection semantics.
 - Contract styling is keyed on ATTRIBUTES, not compile-time classes
-  (`button[tone='primary']`, `:host([tone='primary'])`), so a dynamic
-  `tone={expr}` restyles at runtime on BOTH layers. A contract prop that
-  lowers to a static class is a bug — that prop just went static-only on L1
-  while staying dynamic on L2.
+  (`button[tone='primary']`, `[tone='primary']` on light components), so a
+  dynamic `tone={expr}` restyles at runtime on BOTH layers. A contract prop
+  that lowers to a static class is a bug — that prop just went static-only
+  on L1 while staying dynamic on L2. L1 paint is attribute-keyed on the
+  element itself (light DOM); `:host` is not an L1 author or paint path.
 - Events: the author writes `on:change` everywhere; the compiler wires it to
   whatever the layer emits (native event on L1, CustomEvent on L2). Event
   payload shapes are part of the published contract.
@@ -271,12 +275,15 @@ might want different goes in the component tier; every skin decision that
 defines what the element *is* stays in the skin. The six existing themes must
 stay expressible as pure token vectors at all times.
 
-**Vocabulary closure (the sx seam).** sx validates against framework
-contracts only (`tone-*`, `size-*` channels + the token registry). A
-`<theme>` declaration must NOT widen what validates — the `source_channels`
-back door closes in Phase 1, and the 72 ad-hoc channels it admitted become
-compile errors (that error list = the re-port work list). Userland never
-gains vocabulary by authoring; it gains vocabulary when the stdlib grows.
+**Vocabulary closure (the sx seam).** sx validates against the closed token
+registry and sx property set only. **One variance pattern:** CVA-in-props
+axes (`variant` / `size` / `tone` as ordinary key→sx maps) + optional
+`compound:`. Shared `tone`/`size` unions are stdlib convention (ordinary
+props). `<theme>` is hard-refused (unknown element; never widens what
+validates). Userland never gains vocabulary by authoring; it gains
+vocabulary when the stdlib grows. See mission plan
+`m-deck-standalone/scratch/FANOUT-design-system-poc.md` (locked product
+rules).
 
 **Fidelity gate (the absorption seam).** A component is absorbed into L1/L2
 only at computed-style equivalence with the `feat/next` baseline across
@@ -356,33 +363,28 @@ seeded at mount and kept live on every write
 `registerCustomProperties`). `el.style` stays closed — actions gain no
 styling powers beyond the one property they own.
 
-## Complete cutover — no shims, ever
+## No shims
 
-The migration doctrine: **either we want the code or we remove it.** Dual
-paths exist only inside the migration window, and every one has a named
-death: a transitional construct dies per-component at re-port, and its
-lowering code is DELETED — not deprecated, not shimmed, not aliased — the
-same day its last user converts. No compatibility layers survive a
-cutover; no "legacy mode" ships; nothing is kept "just in case" (git
-history is the just-in-case). A trim pass runs at every milestone: code
-that no longer earns its place is removed in the same breath that adds
-its successor.
+The migration doctrine: **either we want the code or we remove it.**
+Transitional constructs die when their last user converts; lowering code is
+deleted the same day — not deprecated, not shimmed, not aliased. No
+compatibility layers; no "legacy mode"; git history is the just-in-case. A
+trim pass runs at every milestone: code that no longer earns its place is
+removed in the same breath that adds its successor.
 
-## Transitional constructs (compiled today, dying by design)
+## Refused constructs (not author surface)
 
-These still compile so the un-migrated tree keeps building; each dies
-per-component at re-port, and its lowering code is deleted after the last
-user. None are part of the taggable authoring surface:
-
-| Construct | Successor |
+| Construct | Status |
 | --- | --- |
-| `<prop …/>` XML tags | `<component>{ props }` typed block |
-| `<theme prop channels>` | framework contracts + component-token families |
-| `<variants part="…">` | `<variants class="…">` / dotted keys (v2) |
-| line-DSL `<variants>` bodies | the TS-object form |
-| `<host>` directive | the element is the host (light DOM) |
-| `part=` attributes | anatomy classes (CEM-published) |
-| shadow-by-default emission | `--light` (flips to default at absorption end) |
+| `<theme>` | **refused** — unknown element; never widens sx; tone/size are ordinary props / CVA axes |
+| author `:host` / `::part` / `part=` | **refused** as author surface (light DOM: host is the element; anatomy is classes/attrs) |
+| `<prop …/>` tags, `prop:` / `attr:` directives | **refused** — plain `name={expr}` field binding |
+| `<variants>` tags under strict policy | **refused** — CVA-in-props on `props:` (gating policy is config surface) |
+| `<host>` | **refused** — element is the host (light DOM) |
+
+Unknown `<scope>` members fail generically (not a memorial list of former fields).
+
+Emit may still dual-target some CSS selectors internally; that is not author surface.
 
 ## Enforcement map
 
@@ -391,8 +393,8 @@ user. None are part of the taggable authoring surface:
 | No authored CSS in userland | policy floor (`sail-no-style-block`, `sail-no-inline-style`) | exists (spike) |
 | No class/style in Action bodies | `sail-action-no-style` on `runtime/src/actions/**` (`--*` setProperty only); `tests/perf/**` exempt | exists |
 | No raw containers | `sail-no-raw-container` → layout keywords | exists (spike) |
-| sx closed vocabulary | `sail-sx` lint + token registry single-sourced from tokens.css | exists; channel back door **to close** |
-| `<theme>` retirement from userland | compile error outside toolchain | planned (Phase 1) |
+| sx closed vocabulary | `sail-sx` lint + token registry single-sourced from tokens.css; variance = CVA-in-props + compound only | exists |
+| `<theme>` hard-refuse | unknown element (preprocess does not revive it); never widens sx | exists |
 | Knobs are marked declarations | manifest key + build-output banner + guarantee flag | planned |
 | Anatomy as public API | compiler-emitted anatomy manifest | planned (Phase 2) |
 | Naming seam | bare tag = lowered L1; hyphenated = custom element | by construction |

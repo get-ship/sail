@@ -1,14 +1,8 @@
 //! EVERY EXAMPLE IN THE AGENT SKILL MUST COMPILE.
 //!
 //! The skill is generated from the compiler's own vocabulary tables, which is what
-//! is supposed to stop it drifting. But two of its sections were hardcoded PROSE
-//! rather than generated, and prose rots: the skill was teaching
-//!
-//!     <component>{ variants: { variant: { solid: 'bg:tone' } } }</component>
-//!
-//! long after that field was retired — i.e. it was instructing agents to write code
-//! that cannot compile, in a file whose entire purpose is to tell them what compiles.
-//! It also listed four motion triggers when there are eight.
+//! is supposed to stop it drifting. Hardcoded prose sections can still rot, so
+//! every fenced SAIL example is compiled against the live grammar.
 //!
 //! Generating from tables fixes the vocabulary lists. It does NOT fix the examples,
 //! because an example is prose too. So the examples get a compiler.
@@ -95,7 +89,7 @@ fn every_sui_example_in_the_agent_skill_compiles() {
     for (i, ex) in examples.iter().enumerate() {
         // A fragment (`<card motion:reveal={…}>`) is a valid template on its own; a
         // full example carries its own `<scope>` block. Both compile as-is.
-        // `component_meta` is required: `<scope>` props/variants are component
+        // `component_meta` is required: `<scope>` props are component
         // members, and the props check keys on the meta, not the mode.
         let opts = CompileOpts {
             mode: CompileMode::Component,
