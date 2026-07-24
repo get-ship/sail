@@ -1,5 +1,8 @@
 <!--
   <page> — size CVA owns cell geometry (stamped from pagination).
+
+  Paint: fg / hover / current from component.page tokens (cssNames
+  page-foreground, page-hover-bg, page-current-bg, page-current-foreground).
 -->
 <scope>
   props: {
@@ -12,6 +15,6 @@
     }
   }
 </scope>
-<button type="button" sx="font-family: body font-weight: medium font-size: sm color: foreground bg: transparent rounded: md cursor: pointer select: none min-w: control-h-md h: control-h-md px: 2 border border: transparent transition: colors duration: fast ease: out hover:bg: muted current:bg: primary current:color: primary-foreground current:border: primary disabled:opacity: 50 disabled:cursor: not-allowed focus:outline: solid focus:outline: 2 focus:outline: ring">
+<button type="button" sx="font-family: body font-weight: medium font-size: sm color: page-foreground bg: transparent rounded: md cursor: pointer select: none min-w: control-h-md h: control-h-md px: 2 border border: transparent transition: colors duration: fast ease: out hover:bg: page-hover-bg current:bg: page-current-bg current:color: page-current-foreground current:border: page-current-bg disabled:opacity: 50 disabled:cursor: not-allowed focus:outline: solid focus:outline: 2 focus:outline: ring">
   <slot></slot>
 </button>

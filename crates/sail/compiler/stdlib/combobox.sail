@@ -25,7 +25,8 @@
 
   Paint (one path):
     host sx=         — block relative + typeface
-    child sx=        — input full width; listbox chrome + anchor geometry
+    child sx=        — input full width; listbox bg/fg from component.combobox
+                       tokens (cssNames combobox, combobox-foreground) + anchor
     POPOVER_SKIN     — [role=listbox] option anatomy (author children; same
                        shape as [role=menu] menuitem chrome)
   No residual combobox matrix.
@@ -45,7 +46,7 @@
     popover
     use:anchor
     placement="bottom-start"
-    sx="fixed inset: auto m: 0 left: (--anchor-left) top: (--anchor-top) min-w: (--anchor-width) max-h: panel-max-h-sm overflow-y: auto overscroll: contain p: 1 color: popover-foreground bg: popover border border: border rounded: md shadow: lg z: (--z-popover)"
+    sx="fixed inset: auto m: 0 left: (--anchor-left) top: (--anchor-top) min-w: (--anchor-width) max-h: panel-max-h-sm overflow-y: auto overscroll: contain p: 1 color: combobox-foreground bg: combobox border border: border rounded: md shadow: lg z: (--z-popover)"
   >
     <slot></slot>
   </div>

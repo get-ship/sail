@@ -1,6 +1,11 @@
 <!--
   <theme-picker> — layout keywords + structure sx for swatch mini-cards → skins.
   CVA/group-inline: hide trigger + static cols=4 panel; panel geometry on sx; forced-colors on option.
+
+  Paint: panel/trigger/option from component.theme-picker tokens (cssNames
+  theme-picker, theme-picker-foreground, theme-picker-trigger-foreground,
+  theme-picker-option-foreground, theme-picker-option-hover-bg). Swatch mini-cards
+  still read card/background globals intentionally (theme previews).
 -->
 <scope>
   props: {
@@ -9,7 +14,7 @@
   }
 </scope>
 <row inline use:themeSelect sx="group">
-  <button class="sail-theme-trigger" type="button" popovertarget="sail-theme-panel" aria-label="Choose theme" sx="size: control-h-sm p: 0 color: foreground bg: transparent border border: border rounded: full cursor: pointer hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset group-inline:hidden">
+  <button class="sail-theme-trigger" type="button" popovertarget="sail-theme-panel" aria-label="Choose theme" sx="size: control-h-sm p: 0 color: theme-picker-trigger-foreground bg: transparent border border: border rounded: full cursor: pointer hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset group-inline:hidden">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" sx="size: icon-size-md shrink: 0 block">
       <circle cx="13.5" cy="6.5" r="1.5"></circle>
       <circle cx="17.5" cy="10.5" r="1.5"></circle>
@@ -18,8 +23,8 @@
       <path d="M12 2a10 10 0 0 0 0 20 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 10 10 0 0 0-9-11Z"></path>
     </svg>
   </button>
-  <grid cols="2" gap="2" class="sail-theme-panel" id="sail-theme-panel" popover use:anchor placement="bottom-end" role="listbox" aria-label="Theme" sx="fixed left: (--anchor-left) top: (--anchor-top) m: 0 p: 1_5 w: panel-max-w-md max-w: panel-max-w-md color: popover-foreground bg: popover border border: border rounded: md shadow: lg group-inline:static group-inline:w: full group-inline:max-w: none group-inline:shadow: none group-inline:bg: transparent group-inline:border: 0 group-inline:p: 0">
-    <button class="sail-theme-option" type="button" role="option" value="ship-light" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+  <grid cols="2" gap="2" class="sail-theme-panel" id="sail-theme-panel" popover use:anchor placement="bottom-end" role="listbox" aria-label="Theme" sx="fixed left: (--anchor-left) top: (--anchor-top) m: 0 p: 1_5 w: panel-max-w-md max-w: panel-max-w-md color: theme-picker-foreground bg: theme-picker border border: border rounded: md shadow: lg group-inline:static group-inline:w: full group-inline:max-w: none group-inline:shadow: none group-inline:bg: transparent group-inline:border: 0 group-inline:p: 0">
+    <button class="sail-theme-option" type="button" role="option" value="ship-light" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="ship-light" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>
@@ -40,7 +45,7 @@
         <span>SHIP Light</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="ship-dark" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+    <button class="sail-theme-option" type="button" role="option" value="ship-dark" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="ship-dark" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>
@@ -61,7 +66,7 @@
         <span>SHIP Dark</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="paper" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+    <button class="sail-theme-option" type="button" role="option" value="paper" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="paper" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>
@@ -82,7 +87,7 @@
         <span>Paper</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="halo" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+    <button class="sail-theme-option" type="button" role="option" value="halo" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="halo" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>
@@ -103,7 +108,7 @@
         <span>Halo</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="console" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+    <button class="sail-theme-option" type="button" role="option" value="console" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="console" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>
@@ -124,7 +129,7 @@
         <span>Console</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="contrast" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+    <button class="sail-theme-option" type="button" role="option" value="contrast" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="contrast" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>
@@ -145,7 +150,7 @@
         <span>High Contrast</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="glass" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+    <button class="sail-theme-option" type="button" role="option" value="glass" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="glass" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>
@@ -166,7 +171,7 @@
         <span>Glass</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="neutral-light" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+    <button class="sail-theme-option" type="button" role="option" value="neutral-light" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="neutral-light" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>
@@ -187,7 +192,7 @@
         <span>Neutral Light</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="neutral-dark" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+    <button class="sail-theme-option" type="button" role="option" value="neutral-dark" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="neutral-dark" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>
@@ -208,7 +213,7 @@
         <span>Neutral Dark</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="brut" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+    <button class="sail-theme-option" type="button" role="option" value="brut" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="brut" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>
@@ -229,7 +234,7 @@
         <span>Brutalist</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="8bit" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+    <button class="sail-theme-option" type="button" role="option" value="8bit" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="8bit" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>
@@ -250,7 +255,7 @@
         <span>8-Bit</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="synthwave" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: muted-foreground text: start hover:bg: hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
+    <button class="sail-theme-option" type="button" role="option" value="synthwave" sx="min-w: 0 p: 1_5 bg: transparent border border: transparent rounded: md cursor: pointer font-family: body font-size: xs color: theme-picker-option-foreground text: start hover:bg: theme-picker-option-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: ring-offset selected:border: primary selected:color: theme-picker-foreground selected:font-weight: medium forced-colors:selected:border: CanvasText">
       <column gap="1" sx="min-w: 0 w: full">
         <center class="sail-theme-swatch" data-theme-preview="synthwave" aria-hidden="true" sx="relative w: full h: 24 rounded: md overflow: hidden isolate bg: background shadow: inset-ring">
           <span class="tc-overlay" sx="absolute inset: 0 z: 1 pointer-events: none opacity: (--surface-overlay-opacity) mix-blend: (--surface-overlay-blend) bg: (--surface-overlay)"></span>

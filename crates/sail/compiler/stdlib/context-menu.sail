@@ -1,7 +1,9 @@
 <!--
   <context-menu for="…"> — L1 right-click menu. Native [popover] + use:contextMenu
-  + use:menu. Host paint: chrome + anchor geometry on sx. Backdrop transparent is
-  global :where([popover])::backdrop. min-width from role=menu contract.
+  + use:menu. Host paint: bg/fg from component.context-menu tokens (cssNames
+  context-menu, context-menu-foreground) + anchor geometry on sx. Backdrop
+  transparent is global :where([popover])::backdrop. min-width from role=menu
+  contract.
 -->
 
 <scope>
@@ -10,4 +12,4 @@
   }
 </scope>
 
-<div popover use:contextMenu use:menu sx="fixed inset: auto m: 0 left: (--anchor-left) top: (--anchor-top) p: 1 color: foreground bg: background border border: border rounded: md shadow: md z: (--z-popover)"><slot></slot></div>
+<div popover use:contextMenu use:menu sx="fixed inset: auto m: 0 left: (--anchor-left) top: (--anchor-top) p: 1 color: context-menu-foreground bg: context-menu border border: border rounded: md shadow: md z: (--z-popover)"><slot></slot></div>

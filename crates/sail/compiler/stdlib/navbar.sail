@@ -5,8 +5,8 @@
     layout keywords  — host row (nowrap, align center, gap 4); brand/actions
                        inline rows; links as contents so slot kids share the
                        host flex axis (row top / column rail); center row grows
-    host sx=         — PE top-bar base (bg/fg/pad/min-h; attr-absent defaults)
-                       + no-underline (inherits onto slot anchors) + w-full
+    host sx=         — bg/fg from component.navbar tokens (cssNames navbar,
+                       navbar-foreground) + pad/min-h + no-underline + w-full
     CVA-in-props     — placement pad/min-h + rail min-w-(--panel-rail-w) +
                        dir-column (rail flips host flex axis)
     compound         — sticky/bordered + bottom/rail border + sticky rail
@@ -48,7 +48,7 @@
   align="center"
   gap="4"
   role="navigation"
-  sx="w: full bg: background color: foreground min-h: 14 py: 2 px: 4 no-underline"
+  sx="w: full bg: navbar color: navbar-foreground min-h: 14 py: 2 px: 4 no-underline"
 >
   <row inline nowrap align="center" gap="2" class="sail-nav-brand" sx="font-weight: semibold shrink: 0">
     <slot name="brand"></slot>
