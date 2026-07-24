@@ -1,0 +1,25 @@
+{
+  "$description": "Popover component tokens. Defaults alias surface-1/foreground; public cssNames popover/popover-foreground preserved.",
+  "component": {
+    "popover": {
+      "bg": {
+        "$value": "{color.surface.1}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "popover"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "popover-foreground"
+          }
+        }
+      }
+    }
+  }
+}

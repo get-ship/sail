@@ -22,8 +22,8 @@
   props: {
     // first key = default = PE muted stripe (attr-absent host sx matches)
     tone: {
-      default: 'before:bg: muted-foreground',
-      muted: 'before:bg: muted-foreground',
+      default: 'before:bg: alert-stripe',
+      muted: 'before:bg: alert-stripe',
       info: 'before:bg: tone',
       success: 'before:bg: tone',
       warning: 'before:bg: tone',
@@ -42,7 +42,7 @@
   role="status"
   aria-live="polite"
   aria-atomic="true"
-  sx="group relative overflow: hidden p: 3 border border: border rounded: md bg: surface-1 color: foreground font-family: body font-size: base leading: normal shadow: xs before:content: empty before:absolute before:left: 0 before:top: 0 before:bottom: 0 before:w: 1 before:bg: muted-foreground forced-colors:border: CanvasText forced-colors:before:bg: CanvasText"
+  sx="group relative overflow: hidden p: 3 border border: border rounded: md bg: alert color: alert-foreground font-family: body font-size: base leading: normal shadow: xs before:content: empty before:absolute before:left: 0 before:top: 0 before:bottom: 0 before:w: 1 before:bg: alert-stripe forced-colors:border: CanvasText forced-colors:before:bg: CanvasText"
 >
   <row inline nowrap align="center" justify="center" class="ico" sx="shrink: 0 size: control-h-xs rounded: md bg: tone-bg color: tone-fg empty:hidden">
     <slot name="icon"></slot>

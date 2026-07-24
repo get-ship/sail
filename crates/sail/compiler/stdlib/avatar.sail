@@ -11,14 +11,14 @@
     initials = ''
     tone: {
       // Token PE gradient (primary→accent); not TW gradient utility pack.
-      default: 'bg-gradient-primary-accent color: foreground',
+      default: 'bg-gradient-primary-accent color: avatar-foreground',
       primary: 'bg-none bg: tone color: tone-contrast',
       accent: 'bg-none bg: tone color: tone-contrast',
       info: 'bg-none bg: tone-bg color: tone-fg',
       success: 'bg-none bg: tone-success-bg color: success',
       warning: 'bg-none bg: tone-warning-bg color: warning',
       destructive: 'bg-none bg: tone-bg color: tone-fg',
-      muted: 'bg-none bg: tone-bg color: tone-fg',
+      muted: 'bg-none bg: avatar color: avatar-foreground',
     }
     size: {
       md: 'size: 7 font-size: base',
@@ -33,4 +33,4 @@
     }
   }
 </scope>
-<row inline nowrap align="center" justify="center" use:mediaFallback sx="relative shrink: 0 font-family: body font-weight: bold leading: none tracking: wide color: foreground overflow: hidden select: none align: middle size: 7 font-size: base rounded: full shadow: inset-ring bg-gradient-primary-accent avatar-media"></row>
+<row inline nowrap align="center" justify="center" use:mediaFallback sx="relative shrink: 0 font-family: body font-weight: bold leading: none tracking: wide color: avatar-foreground overflow: hidden select: none align: middle size: 7 font-size: base rounded: full shadow: inset-ring bg-gradient-primary-accent avatar-media"></row>

@@ -1,0 +1,25 @@
+{
+  "$description": "Avatar component tokens. Defaults alias foreground + muted for solid fallbacks.",
+  "component": {
+    "avatar": {
+      "bg": {
+        "$value": "{color.muted.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "avatar"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "avatar-foreground"
+          }
+        }
+      }
+    }
+  }
+}

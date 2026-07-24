@@ -22,6 +22,9 @@
     "accent-theme",
     "active-bg",
     "active-strength",
+    "alert",
+    "alert-foreground",
+    "alert-stripe",
     "app-accent-agents",
     "app-accent-canvas",
     "app-accent-chat",
@@ -37,8 +40,13 @@
     "app-accent-skills",
     "app-accent-specs",
     "app-accent-theme",
+    "avatar",
+    "avatar-foreground",
     "backdrop",
     "background",
+    "badge",
+    "badge-border",
+    "badge-foreground",
     "body-font",
     "body-tracking",
     "body-weight",
@@ -55,6 +63,9 @@
     "card-texture",
     "card-texture-blend",
     "card-texture-opacity",
+    "chip",
+    "chip-border",
+    "chip-foreground",
     "code-block",
     "code-block-foreground",
     "combobox",
@@ -94,6 +105,9 @@
     "ease-out-soft",
     "ease-spring",
     "edge-highlight",
+    "empty-state",
+    "empty-state-border",
+    "empty-state-foreground",
     "error-boundary",
     "error-boundary-border",
     "error-boundary-foreground",
@@ -101,6 +115,9 @@
     "error-boundary-message-foreground",
     "error-boundary-retry-bg",
     "error-boundary-retry-foreground",
+    "error-state",
+    "error-state-border",
+    "error-state-foreground",
     "focus-ring",
     "focus-ring-offset",
     "font-body",
@@ -132,6 +149,8 @@
     "heading-transform",
     "heading-weight",
     "hover-bg",
+    "hover-card",
+    "hover-card-foreground",
     "hover-strength",
     "hue-amber",
     "hue-blue",
@@ -300,6 +319,8 @@
     "space-9",
     "space-half",
     "space-px",
+    "spinner-foreground",
+    "spinner-track",
     "status-amber",
     "status-blue",
     "status-gray",
@@ -342,6 +363,11 @@
     "theme-picker-option-foreground",
     "theme-picker-option-hover-bg",
     "theme-picker-trigger-foreground",
+    "toast",
+    "toast-border",
+    "toast-foreground",
+    "toast-region-width",
+    "toast-region-z",
     "tone-accent-bg",
     "tone-accent-bg-solid",
     "tone-accent-border",
@@ -385,6 +411,8 @@
     "tone-warning-border",
     "tone-warning-fg",
     "tone-warning-ring",
+    "tooltip",
+    "tooltip-foreground",
     "tooltip-hide-delay",
     "tooltip-show-delay",
     "tracking-normal",
@@ -422,6 +450,9 @@
     "accent-specs",
     "accent-theme",
     "active-bg",
+    "alert",
+    "alert-foreground",
+    "alert-stripe",
     "app-accent-agents",
     "app-accent-canvas",
     "app-accent-chat",
@@ -437,13 +468,21 @@
     "app-accent-skills",
     "app-accent-specs",
     "app-accent-theme",
+    "avatar",
+    "avatar-foreground",
     "backdrop",
     "background",
+    "badge",
+    "badge-border",
+    "badge-foreground",
     "border",
     "border-strong",
     "border-subtle",
     "card",
     "card-foreground",
+    "chip",
+    "chip-border",
+    "chip-foreground",
     "code-block",
     "code-block-foreground",
     "combobox",
@@ -455,6 +494,9 @@
     "divider",
     "dropdown",
     "dropdown-foreground",
+    "empty-state",
+    "empty-state-border",
+    "empty-state-foreground",
     "error-boundary",
     "error-boundary-border",
     "error-boundary-foreground",
@@ -462,8 +504,13 @@
     "error-boundary-message-foreground",
     "error-boundary-retry-bg",
     "error-boundary-retry-foreground",
+    "error-state",
+    "error-state-border",
+    "error-state-foreground",
     "foreground",
     "hover-bg",
+    "hover-card",
+    "hover-card-foreground",
     "hue-amber",
     "hue-blue",
     "hue-cyan",
@@ -517,6 +564,8 @@
     "sidebar-primary",
     "sidebar-primary-foreground",
     "sidebar-ring",
+    "spinner-foreground",
+    "spinner-track",
     "status-amber",
     "status-blue",
     "status-gray",
@@ -546,6 +595,9 @@
     "theme-picker-option-foreground",
     "theme-picker-option-hover-bg",
     "theme-picker-trigger-foreground",
+    "toast",
+    "toast-border",
+    "toast-foreground",
     "tone-accent-bg",
     "tone-accent-bg-solid",
     "tone-accent-border",
@@ -586,6 +638,8 @@
     "tone-warning-border",
     "tone-warning-fg",
     "tone-warning-ring",
+    "tooltip",
+    "tooltip-foreground",
     "warning",
     "warning-foreground"
   ],
@@ -1526,12 +1580,6 @@
       "type": "string",
       "value": "none"
     },
-    "separator-line": {
-      "path": "color.separatorLine",
-      "cssName": "separator-line",
-      "type": "color",
-      "value": "var(--border)"
-    },
     "gradient-primary": {
       "path": "color.gradient.primary",
       "cssName": "gradient-primary",
@@ -1613,18 +1661,6 @@
     "foreground": {
       "path": "color.foreground",
       "cssName": "foreground",
-      "type": "color",
-      "value": "oklch(0.147 0.004 49.25)"
-    },
-    "popover": {
-      "path": "color.popover.default",
-      "cssName": "popover",
-      "type": "color",
-      "value": "oklch(1 0 0)"
-    },
-    "popover-foreground": {
-      "path": "color.popover.foreground",
-      "cssName": "popover-foreground",
       "type": "color",
       "value": "oklch(0.147 0.004 49.25)"
     },
@@ -2684,6 +2720,54 @@
       "type": "dimension",
       "value": "999px"
     },
+    "alert": {
+      "path": "component.alert.bg",
+      "cssName": "alert",
+      "type": "color",
+      "value": "var(--surface-1)"
+    },
+    "alert-foreground": {
+      "path": "component.alert.fg",
+      "cssName": "alert-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "alert-stripe": {
+      "path": "component.alert.stripe",
+      "cssName": "alert-stripe",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
+    "avatar": {
+      "path": "component.avatar.bg",
+      "cssName": "avatar",
+      "type": "color",
+      "value": "var(--muted)"
+    },
+    "avatar-foreground": {
+      "path": "component.avatar.fg",
+      "cssName": "avatar-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "badge": {
+      "path": "component.badge.bg",
+      "cssName": "badge",
+      "type": "color",
+      "value": "var(--tone-muted-bg)"
+    },
+    "badge-foreground": {
+      "path": "component.badge.fg",
+      "cssName": "badge-foreground",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
+    "badge-border": {
+      "path": "component.badge.border",
+      "cssName": "badge-border",
+      "type": "color",
+      "value": "var(--tone-muted-border)"
+    },
     "card": {
       "path": "component.card.bg",
       "cssName": "card",
@@ -2719,6 +2803,24 @@
       "cssName": "card-texture-opacity",
       "type": "number",
       "value": "1"
+    },
+    "chip": {
+      "path": "component.chip.bg",
+      "cssName": "chip",
+      "type": "color",
+      "value": "var(--primary)"
+    },
+    "chip-foreground": {
+      "path": "component.chip.fg",
+      "cssName": "chip-foreground",
+      "type": "color",
+      "value": "var(--primary-foreground)"
+    },
+    "chip-border": {
+      "path": "component.chip.border",
+      "cssName": "chip-border",
+      "type": "color",
+      "value": "var(--primary)"
     },
     "code-block": {
       "path": "component.code-block.bg",
@@ -2768,6 +2870,24 @@
       "type": "color",
       "value": "var(--foreground)"
     },
+    "empty-state": {
+      "path": "component.empty-state.bg",
+      "cssName": "empty-state",
+      "type": "color",
+      "value": "var(--tone-muted-bg)"
+    },
+    "empty-state-foreground": {
+      "path": "component.empty-state.fg",
+      "cssName": "empty-state-foreground",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
+    "empty-state-border": {
+      "path": "component.empty-state.border",
+      "cssName": "empty-state-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
     "error-boundary": {
       "path": "component.error-boundary.bg",
       "cssName": "error-boundary",
@@ -2809,6 +2929,36 @@
       "cssName": "error-boundary-retry-foreground",
       "type": "color",
       "value": "var(--foreground)"
+    },
+    "error-state": {
+      "path": "component.error-state.bg",
+      "cssName": "error-state",
+      "type": "color",
+      "value": "var(--tone-muted-bg)"
+    },
+    "error-state-foreground": {
+      "path": "component.error-state.fg",
+      "cssName": "error-state-foreground",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
+    "error-state-border": {
+      "path": "component.error-state.border",
+      "cssName": "error-state-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "hover-card": {
+      "path": "component.hover-card.bg",
+      "cssName": "hover-card",
+      "type": "color",
+      "value": "var(--popover)"
+    },
+    "hover-card-foreground": {
+      "path": "component.hover-card.fg",
+      "cssName": "hover-card-foreground",
+      "type": "color",
+      "value": "var(--popover-foreground)"
     },
     "menu-item-foreground": {
       "path": "component.menu-item.fg",
@@ -2858,11 +3008,41 @@
       "type": "color",
       "value": "var(--primary-foreground)"
     },
+    "popover": {
+      "path": "component.popover.bg",
+      "cssName": "popover",
+      "type": "color",
+      "value": "var(--surface-1)"
+    },
+    "popover-foreground": {
+      "path": "component.popover.fg",
+      "cssName": "popover-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
     "prose-foreground": {
       "path": "component.prose.fg",
       "cssName": "prose-foreground",
       "type": "color",
       "value": "var(--foreground)"
+    },
+    "separator-line": {
+      "path": "component.separator.line",
+      "cssName": "separator-line",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "spinner-foreground": {
+      "path": "component.spinner.fg",
+      "cssName": "spinner-foreground",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
+    "spinner-track": {
+      "path": "component.spinner.track",
+      "cssName": "spinner-track",
+      "type": "color",
+      "value": "var(--border-subtle)"
     },
     "theme-picker": {
       "path": "component.theme-picker.bg",
@@ -2893,6 +3073,48 @@
       "cssName": "theme-picker-option-hover-bg",
       "type": "color",
       "value": "var(--hover-bg)"
+    },
+    "toast-region-width": {
+      "path": "component.toast-region.width",
+      "cssName": "toast-region-width",
+      "type": "dimension",
+      "value": "var(--panel-w-toast)"
+    },
+    "toast-region-z": {
+      "path": "component.toast-region.z",
+      "cssName": "toast-region-z",
+      "type": "number",
+      "value": "var(--z-toast)"
+    },
+    "toast": {
+      "path": "component.toast.bg",
+      "cssName": "toast",
+      "type": "color",
+      "value": "var(--background)"
+    },
+    "toast-foreground": {
+      "path": "component.toast.fg",
+      "cssName": "toast-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "toast-border": {
+      "path": "component.toast.border",
+      "cssName": "toast-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "tooltip": {
+      "path": "component.tooltip.bg",
+      "cssName": "tooltip",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "tooltip-foreground": {
+      "path": "component.tooltip.fg",
+      "cssName": "tooltip-foreground",
+      "type": "color",
+      "value": "var(--background)"
     },
     "app-accent-agents": {
       "path": "color.accent.agents",
@@ -3020,8 +3242,16 @@
     "color.accent.theme": "accent-theme",
     "interaction.active.bg": "active-bg",
     "interaction.active.strength": "active-strength",
+    "component.alert.bg": "alert",
+    "component.alert.fg": "alert-foreground",
+    "component.alert.stripe": "alert-stripe",
+    "component.avatar.bg": "avatar",
+    "component.avatar.fg": "avatar-foreground",
     "color.backdrop": "backdrop",
     "color.background": "background",
+    "component.badge.bg": "badge",
+    "component.badge.border": "badge-border",
+    "component.badge.fg": "badge-foreground",
     "typography.body.font": "body-font",
     "typography.body.tracking": "body-tracking",
     "typography.body.weight": "body-weight",
@@ -3038,6 +3268,9 @@
     "component.card.texture": "card-texture",
     "component.card.texture-blend": "card-texture-blend",
     "component.card.texture-opacity": "card-texture-opacity",
+    "component.chip.bg": "chip",
+    "component.chip.border": "chip-border",
+    "component.chip.fg": "chip-foreground",
     "component.code-block.bg": "code-block",
     "component.code-block.fg": "code-block-foreground",
     "component.combobox.bg": "combobox",
@@ -3077,6 +3310,9 @@
     "motion.ease.out-soft": "ease-out-soft",
     "motion.ease.spring": "ease-spring",
     "color.edgeHighlight": "edge-highlight",
+    "component.empty-state.bg": "empty-state",
+    "component.empty-state.border": "empty-state-border",
+    "component.empty-state.fg": "empty-state-foreground",
     "component.error-boundary.bg": "error-boundary",
     "component.error-boundary.border": "error-boundary-border",
     "component.error-boundary.fg": "error-boundary-foreground",
@@ -3084,6 +3320,9 @@
     "component.error-boundary.message-fg": "error-boundary-message-foreground",
     "component.error-boundary.retry-bg": "error-boundary-retry-bg",
     "component.error-boundary.retry-fg": "error-boundary-retry-foreground",
+    "component.error-state.bg": "error-state",
+    "component.error-state.border": "error-state-border",
+    "component.error-state.fg": "error-state-foreground",
     "interaction.focus.ring": "focus-ring",
     "interaction.focus.ring-offset": "focus-ring-offset",
     "typography.font.body": "font-body",
@@ -3115,6 +3354,8 @@
     "typography.heading.transform": "heading-transform",
     "typography.heading.weight": "heading-weight",
     "interaction.hover.bg": "hover-bg",
+    "component.hover-card.bg": "hover-card",
+    "component.hover-card.fg": "hover-card-foreground",
     "interaction.hover.strength": "hover-strength",
     "color.hue.amber": "hue-amber",
     "color.hue.blue": "hue-blue",
@@ -3195,8 +3436,8 @@
     "panel.vh-sm": "panel-vh-sm",
     "panel.w-side": "panel-w-side",
     "panel.w-toast": "panel-w-toast",
-    "color.popover.default": "popover",
-    "color.popover.foreground": "popover-foreground",
+    "component.popover.bg": "popover",
+    "component.popover.fg": "popover-foreground",
     "control.press.scale": "press-scale",
     "control.press.shadow": "press-shadow",
     "control.press.translate": "press-translate",
@@ -3227,7 +3468,7 @@
     "interaction.selected.bg": "selected-bg",
     "interaction.selected.border": "selected-border",
     "interaction.selected.strength": "selected-strength",
-    "color.separatorLine": "separator-line",
+    "component.separator.line": "separator-line",
     "shadow.accent": "shadow-accent",
     "shadow.card-rest": "shadow-card-rest",
     "shadow.edge-top": "shadow-edge-top",
@@ -3283,6 +3524,8 @@
     "space.9": "space-9",
     "space.half": "space-half",
     "space.px": "space-px",
+    "component.spinner.fg": "spinner-foreground",
+    "component.spinner.track": "spinner-track",
     "color.status.amber": "status-amber",
     "color.status.blue": "status-blue",
     "color.status.gray": "status-gray",
@@ -3325,6 +3568,11 @@
     "component.theme-picker.option-fg": "theme-picker-option-foreground",
     "component.theme-picker.option-hover-bg": "theme-picker-option-hover-bg",
     "component.theme-picker.trigger-fg": "theme-picker-trigger-foreground",
+    "component.toast.bg": "toast",
+    "component.toast.border": "toast-border",
+    "component.toast.fg": "toast-foreground",
+    "component.toast-region.width": "toast-region-width",
+    "component.toast-region.z": "toast-region-z",
     "color.tone.accent.bg": "tone-accent-bg",
     "color.tone.accent.bgSolid": "tone-accent-bg-solid",
     "color.tone.accent.border": "tone-accent-border",
@@ -3368,6 +3616,8 @@
     "color.tone.warning.border": "tone-warning-border",
     "color.tone.warning.fg": "tone-warning-fg",
     "color.tone.warning.ring": "tone-warning-ring",
+    "component.tooltip.bg": "tooltip",
+    "component.tooltip.fg": "tooltip-foreground",
     "motion.tooltip.hide-delay": "tooltip-hide-delay",
     "motion.tooltip.show-delay": "tooltip-show-delay",
     "typography.tracking.normal": "tracking-normal",

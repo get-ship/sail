@@ -1445,15 +1445,6 @@
         }
       }
     },
-    "separatorLine": {
-      "$value": "{border}",
-      "$type": "color",
-      "$extensions": {
-        "ship": {
-          "cssName": "separator-line"
-        }
-      }
-    },
     "gradient": {
       "primary": {
         "$value": "linear-gradient(180deg, var(--primary) 0%, transparent 92%)",
@@ -1581,26 +1572,6 @@
       "$extensions": {
         "ship": {
           "cssName": "foreground"
-        }
-      }
-    },
-    "popover": {
-      "default": {
-        "$value": "oklch(1 0 0)",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "popover"
-          }
-        }
-      },
-      "foreground": {
-        "$value": "oklch(0.147 0.004 49.25)",
-        "$type": "color",
-        "$extensions": {
-          "ship": {
-            "cssName": "popover-foreground"
-          }
         }
       }
     },

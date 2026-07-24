@@ -19,8 +19,8 @@
 <scope>
   props: {
     variant: {
-      default: 'text: center border border: border rounded: lg bg: tone-muted-bg shadow: xs',
-      inline: 'text: start border border: dashed border: border rounded: md bg: tone-muted-border shadow: none py: 3 px: 4',
+      default: 'text: center border border: empty-state-border rounded: lg bg: empty-state shadow: xs',
+      inline: 'text: start border border: dashed border: empty-state-border rounded: md bg: tone-muted-border shadow: none py: 3 px: 4',
       placeholder: 'text: center border: 0 bg: transparent rounded: none shadow: none py: 6',
       connecting: 'text: center border: 0 bg: transparent rounded: none shadow: none py: 6',
     }
@@ -40,7 +40,7 @@
   use:variantLive
   role="note"
   aria-live="off"
-  sx="font-family: body color: muted-foreground text: center border border: border rounded: lg bg: tone-muted-bg shadow: xs py: 16 px: 4 forced-colors:border: CanvasText"
+  sx="font-family: body color: empty-state-foreground text: center border border: empty-state-border rounded: lg bg: empty-state shadow: xs py: 16 px: 4 forced-colors:border: CanvasText"
 >
   <row
     inline

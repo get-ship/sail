@@ -31,10 +31,10 @@
   }
   compound: [
     { when: { pill: true }, sx: 'rounded: full' },
-    { when: { variant: 'soft', tone: 'default' }, sx: 'bg: tone-muted-bg color: muted-foreground border: tone-muted-border' },
+    { when: { variant: 'soft', tone: 'default' }, sx: 'bg: badge color: badge-foreground border: badge-border' },
   ]
 </scope>
 
-<span sx="font-family: body font-weight: semibold leading: none whitespace: nowrap align: middle tabular-nums antialiased border rounded: sm bg: tone-bg color: tone-fg border: tone-border min-h: control-h-2xs px: 2 font-size: xs">
+<span sx="font-family: body font-weight: semibold leading: none whitespace: nowrap align: middle tabular-nums antialiased border rounded: sm bg: badge color: badge-foreground border: badge-border min-h: control-h-2xs px: 2 font-size: xs">
   <slot></slot>
 </span>

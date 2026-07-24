@@ -1,0 +1,34 @@
+{
+  "$description": "Toast component tokens. Defaults alias globals; themes may override component.toast.* only.",
+  "component": {
+    "toast": {
+      "bg": {
+        "$value": "{color.background}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "toast"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "toast-foreground"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "toast-border"
+          }
+        }
+      }
+    }
+  }
+}

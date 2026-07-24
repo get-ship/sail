@@ -1,0 +1,34 @@
+{
+  "$description": "Empty-state component tokens. Defaults alias muted surface ramp.",
+  "component": {
+    "empty-state": {
+      "bg": {
+        "$value": "{color.tone.muted.bg}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "empty-state"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.muted.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "empty-state-foreground"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "empty-state-border"
+          }
+        }
+      }
+    }
+  }
+}

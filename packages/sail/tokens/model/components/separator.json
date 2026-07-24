@@ -1,0 +1,16 @@
+{
+  "$description": "Separator component tokens. Public cssName separator-line preserved.",
+  "component": {
+    "separator": {
+      "line": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "separator-line"
+          }
+        }
+      }
+    }
+  }
+}

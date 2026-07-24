@@ -11,6 +11,6 @@
     }
   }
 </scope>
-<column gap="2" sx="fixed z: (--z-toast) p: 4 pointer-events: none top: 0 right: auto bottom: auto left: 0 w: panel-w-toast">
+<column gap="2" sx="fixed z: (--toast-region-z) p: 4 pointer-events: none top: 0 right: auto bottom: auto left: 0 w: (--toast-region-width)">
   <slot></slot>
 </column>

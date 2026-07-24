@@ -12,7 +12,7 @@
       lg: 'size: icon-size-xl',
     }
     tone: {
-      default: 'color: muted-foreground',
+      default: 'color: spinner-foreground',
       primary: 'color: tone-fg',
       info: 'color: tone-fg',
       success: 'color: tone-fg',
@@ -26,6 +26,6 @@
     { when: { centered: true }, sx: 'block my: 8 mx: auto' },
   ]
 </scope>
-<span class="spin" role="status" aria-label="Loading" sx="inline-block align: middle size: icon-size-md color: muted-foreground">
-  <span class="ring" aria-hidden="true" sx="block size: full border: (--control-stroke) border: solid border: border-subtle border-r: currentColor rounded: full animate-spin"></span>
+<span class="spin" role="status" aria-label="Loading" sx="inline-block align: middle size: icon-size-md color: spinner-foreground">
+  <span class="ring" aria-hidden="true" sx="block size: full border: (--control-stroke) border: solid border: spinner-track border-r: currentColor rounded: full animate-spin"></span>
 </span>

@@ -1,0 +1,25 @@
+{
+  "$description": "Spinner component tokens. Default color aliases muted-foreground.",
+  "component": {
+    "spinner": {
+      "fg": {
+        "$value": "{color.muted.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "spinner-foreground"
+          }
+        }
+      },
+      "track": {
+        "$value": "{color.border.subtle}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "spinner-track"
+          }
+        }
+      }
+    }
+  }
+}

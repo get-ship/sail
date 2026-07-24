@@ -1,0 +1,25 @@
+{
+  "$description": "Toast-region component tokens. Layout knobs alias panel/z globals.",
+  "component": {
+    "toast-region": {
+      "width": {
+        "$value": "{panel.w-toast}",
+        "$type": "dimension",
+        "$extensions": {
+          "ship": {
+            "cssName": "toast-region-width"
+          }
+        }
+      },
+      "z": {
+        "$value": "{z.toast}",
+        "$type": "number",
+        "$extensions": {
+          "ship": {
+            "cssName": "toast-region-z"
+          }
+        }
+      }
+    }
+  }
+}

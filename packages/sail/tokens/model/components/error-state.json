@@ -1,0 +1,34 @@
+{
+  "$description": "Error-state component tokens. Defaults alias muted surface ramp.",
+  "component": {
+    "error-state": {
+      "bg": {
+        "$value": "{color.tone.muted.bg}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "error-state"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.muted.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "error-state-foreground"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "error-state-border"
+          }
+        }
+      }
+    }
+  }
+}

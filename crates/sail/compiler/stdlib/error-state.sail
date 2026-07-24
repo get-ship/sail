@@ -10,7 +10,7 @@
 <scope>
   props: {
     variant: {
-      default: 'text: center border border: border rounded: lg bg: tone-muted-bg shadow: xs',
+      default: 'text: center border border: error-state-border rounded: lg bg: error-state shadow: xs',
       inline: 'text: start border border: tone-destructive-border rounded: md bg: tone-destructive-bg shadow: none py: 3 px: 4',
     }
     size: {
@@ -28,7 +28,7 @@
   gap="3"
   use:recoverySurface
   role="alert"
-  sx="font-family: body color: muted-foreground text: center border border: border rounded: lg bg: tone-muted-bg shadow: xs py: 8 px: 4 group forced-colors:border: CanvasText"
+  sx="font-family: body color: error-state-foreground text: center border border: error-state-border rounded: lg bg: error-state shadow: xs py: 8 px: 4 group forced-colors:border: CanvasText"
 >
   <row
     inline

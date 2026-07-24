@@ -127,26 +127,6 @@
         "$type": "color"
       }
     },
-    "popover": {
-      "default": {
-        "$value": "oklch(1 0 0 / 78%)",
-        "$extensions": {
-          "ship": {
-            "cssName": "popover"
-          }
-        },
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.22 0.02 250)",
-        "$extensions": {
-          "ship": {
-            "cssName": "popover-foreground"
-          }
-        },
-        "$type": "color"
-      }
-    },
     "primary": {
       "default": {
         "$value": "oklch(0.62 0.16 var(--brand-hue, 50))",
@@ -737,6 +717,26 @@
         "$extensions": {
           "ship": {
             "cssName": "card"
+          }
+        },
+        "$type": "color"
+      }
+    },
+    "popover": {
+      "bg": {
+        "$value": "oklch(1 0 0 / 78%)",
+        "$extensions": {
+          "ship": {
+            "cssName": "popover"
+          }
+        },
+        "$type": "color"
+      },
+      "fg": {
+        "$value": "oklch(0.22 0.02 250)",
+        "$extensions": {
+          "ship": {
+            "cssName": "popover-foreground"
           }
         },
         "$type": "color"

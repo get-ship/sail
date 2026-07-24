@@ -1,0 +1,25 @@
+{
+  "$description": "Hover-card component tokens. Defaults alias popover panel.",
+  "component": {
+    "hover-card": {
+      "bg": {
+        "$value": "{component.popover.bg}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "hover-card"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{component.popover.fg}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "hover-card-foreground"
+          }
+        }
+      }
+    }
+  }
+}

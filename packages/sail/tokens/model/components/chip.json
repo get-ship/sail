@@ -1,0 +1,34 @@
+{
+  "$description": "Chip component tokens. Default solid aliases primary; host paint stays on tone channels for multi-tone solid.",
+  "component": {
+    "chip": {
+      "bg": {
+        "$value": "{color.primary.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "chip"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.primary.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "chip-foreground"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.primary.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "chip-border"
+          }
+        }
+      }
+    }
+  }
+}

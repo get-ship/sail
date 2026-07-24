@@ -174,7 +174,6 @@
   --border-subtle: color-mix(in oklch, var(--border) 60%, transparent);
   --border-strong: color-mix(in oklch, var(--foreground) 55%, transparent);
   --corner-image: none;
-  --separator-line: var(--border);
   --gradient-primary: linear-gradient(180deg, var(--primary) 0%, transparent 92%);
   --gradient-accent: linear-gradient(180deg, var(--accent) 0%, transparent 92%);
   --gradient-surface: none;
@@ -189,8 +188,6 @@
   --shape-pill: 9999px;
   --background: oklch(0.975 0.002 106.423);
   --foreground: oklch(0.147 0.004 49.25);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.147 0.004 49.25);
   --primary: oklch(0.67 0.16 var(--brand-hue, 58));
   --primary-foreground: oklch(0.99 0.02 95);
   --primary-hover: color-mix(in oklch, var(--primary) 88%, var(--foreground));
@@ -367,12 +364,23 @@
   --scrollbar-width: 10px;
   --scrollbar-width-thin: 6px;
   --scrollbar-radius: 999px;
+  --alert: var(--surface-1);
+  --alert-foreground: var(--foreground);
+  --alert-stripe: var(--muted-foreground);
+  --avatar: var(--muted);
+  --avatar-foreground: var(--foreground);
+  --badge: var(--tone-muted-bg);
+  --badge-foreground: var(--muted-foreground);
+  --badge-border: var(--tone-muted-border);
   --card: var(--surface-1);
   --card-foreground: var(--foreground);
   --card-backdrop-filter: none;
   --card-texture: none;
   --card-texture-blend: overlay;
   --card-texture-opacity: 1;
+  --chip: var(--primary);
+  --chip-foreground: var(--primary-foreground);
+  --chip-border: var(--primary);
   --code-block: var(--surface-1);
   --code-block-foreground: var(--foreground);
   --combobox: var(--popover);
@@ -381,6 +389,9 @@
   --context-menu-foreground: var(--foreground);
   --dropdown: var(--background);
   --dropdown-foreground: var(--foreground);
+  --empty-state: var(--tone-muted-bg);
+  --empty-state-foreground: var(--muted-foreground);
+  --empty-state-border: var(--border);
   --error-boundary: var(--tone-destructive-bg);
   --error-boundary-border: var(--tone-destructive-border);
   --error-boundary-foreground: var(--foreground);
@@ -388,6 +399,11 @@
   --error-boundary-icon: var(--destructive);
   --error-boundary-retry-bg: var(--surface-1);
   --error-boundary-retry-foreground: var(--foreground);
+  --error-state: var(--tone-muted-bg);
+  --error-state-foreground: var(--muted-foreground);
+  --error-state-border: var(--border);
+  --hover-card: var(--popover);
+  --hover-card-foreground: var(--popover-foreground);
   --menu-item-foreground: var(--foreground);
   --menu-item-hover-bg: var(--muted);
   --navbar: var(--background);
@@ -396,12 +412,24 @@
   --page-hover-bg: var(--muted);
   --page-current-bg: var(--primary);
   --page-current-foreground: var(--primary-foreground);
+  --popover: var(--surface-1);
+  --popover-foreground: var(--foreground);
   --prose-foreground: var(--foreground);
+  --separator-line: var(--border);
+  --spinner-foreground: var(--muted-foreground);
+  --spinner-track: var(--border-subtle);
   --theme-picker: var(--popover);
   --theme-picker-foreground: var(--popover-foreground);
   --theme-picker-trigger-foreground: var(--foreground);
   --theme-picker-option-foreground: var(--muted-foreground);
   --theme-picker-option-hover-bg: var(--hover-bg);
+  --toast-region-width: var(--panel-w-toast);
+  --toast-region-z: var(--z-toast);
+  --toast: var(--background);
+  --toast-foreground: var(--foreground);
+  --toast-border: var(--border);
+  --tooltip: var(--foreground);
+  --tooltip-foreground: var(--background);
 }
 
 /* ─── compat aliases (legacy CSS names) ─── */
@@ -606,8 +634,6 @@ body::after {
 .dark {
   --background: oklch(0.16 0.012 250);
   --foreground: oklch(0.98 0.001 106);
-  --popover: oklch(0.28 0.020 250);
-  --popover-foreground: oklch(0.985 0.001 106.423);
   --surface-0: oklch(0.16 0.012 250);
   --surface-1: oklch(0.22 0.016 250);
   --surface-2: oklch(0.25 0.018 250);
@@ -666,6 +692,8 @@ body::after {
   --shadow-edge-top: 0 -8px 24px -8px oklch(0.05 0.03 250 / 45%), 0 -1px 0 oklch(1 0 0 / 4%);
   --card-foreground: oklch(0.98 0.001 106);
   --card: oklch(0.22 0.016 250);
+  --popover: oklch(0.28 0.020 250);
+  --popover-foreground: oklch(0.985 0.001 106.423);
 }
 
 /* ─── compat aliases under .dark ─── */

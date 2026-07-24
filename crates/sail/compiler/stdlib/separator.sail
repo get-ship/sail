@@ -15,6 +15,7 @@
     tone: 'default' | 'muted' | 'primary' | 'destructive' = 'default'
     // first key = default = PE solid
     variant: {
+      // line paint from component.separator.line (--separator-line)
       solid: 'bg: (--separator-line) border: 0 p: 0',
       dashed: 'bg: transparent border: 0 p: 0',
     }

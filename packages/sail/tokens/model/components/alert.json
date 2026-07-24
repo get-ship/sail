@@ -1,0 +1,34 @@
+{
+  "$description": "Alert component tokens. Defaults alias globals; themes may override component.alert.* only.",
+  "component": {
+    "alert": {
+      "bg": {
+        "$value": "{color.surface.1}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "alert"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "alert-foreground"
+          }
+        }
+      },
+      "stripe": {
+        "$value": "{color.muted.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "alert-stripe"
+          }
+        }
+      }
+    }
+  }
+}
