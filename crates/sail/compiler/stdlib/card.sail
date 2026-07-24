@@ -2,26 +2,19 @@
   <card> — L1 language element (element mode). Generic surface: header/body/footer
   composition, tone-tinted border, accent bar, status rail, interactive lift.
 
-  Paint (one path):
-    host sx=         — base surface + PE padding md (attr-absent; defaults not stamped)
-                       + token backdrop-filter via backdrop-(--card-backdrop-filter)
-                       + corner treatment via border-image-(--corner-image)
-    structure        — named header/footer slots with chrome sx (bleed to host pad edges);
-                       empty:hidden collapses unfilled regions (no parent→child PE)
-    CVA-in-props     — variant + padding maps (first key = default = PE)
-    compound         — interactive (lift + chrome + forced-colors focus) / fill /
-                       status-rail (border-s + pad-adjust) / branded tone border /
-                       accent-bar (before: stripe + hover:before: opacity)
-    global [tone]    — tone prop → --tone-* custom properties
-  No card PE in contracts.css. No residual card matrix in _residues.css.
+  Paint:
+    host sx — bg/fg from component.card tokens (cssNames card, card-foreground),
+              backdrop-(--card-backdrop-filter), shadow card-rest, padding on host
+    structure — header/footer slots; empty:hidden collapses unfilled regions
+    CVA-in-props — variant + padding; compound for interactive / fill / rails / accent-bar
 -->
 
 <scope>
   props: {
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
-    // first key = default = PE surface fill
+    // first key = default fill from component.card.bg (--card)
     variant: {
-      default: 'bg: surface-1',
+      default: 'bg: card',
       outline: 'bg: transparent',
     }
     // first key = default = PE md
@@ -66,7 +59,7 @@
   ]
 </scope>
 
-<div sx="relative isolate overflow: clip rounded: lg border border: border color: card-foreground shadow: card-rest transition: colors duration: fast ease: out bg: surface-1 py: 4 px: 5 backdrop-(--card-backdrop-filter) border-image-(--corner-image)">
+<div sx="relative isolate overflow: clip rounded: lg border border: border color: card-foreground shadow: card-rest transition: colors duration: fast ease: out bg: card py: 4 px: 5 backdrop-(--card-backdrop-filter) border-image-(--corner-image)">
   <div class="header" sx="empty:hidden block -mt: 4 -mx: 5 mb: 3 px: 5 py: 4 border-b border: border-subtle font-family: heading font-weight: (--heading-weight)">
     <slot name="header"></slot>
   </div>
