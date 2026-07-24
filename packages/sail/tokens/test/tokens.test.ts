@@ -544,6 +544,45 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(css).toMatch(/--error-boundary\s*:\s*var\(--tone-destructive-bg\)/)
   })
 
+  it('CONTROL component packs register path → cssName', () => {
+    const reg = loadRegistry()
+    const expected: Array<[path: string, cssName: string]> = [
+      ['component.field.hint', 'field-hint'],
+      ['component.field.error', 'field-error'],
+      ['component.label.fg', 'label-foreground'],
+      ['component.label.required', 'label-required'],
+      ['component.switch.track', 'switch'],
+      ['component.switch.border', 'switch-border'],
+      ['component.switch.thumb', 'switch-thumb'],
+      ['component.toggle.bg', 'toggle'],
+      ['component.toggle.fg', 'toggle-foreground'],
+      ['component.toggle.border', 'toggle-border'],
+      ['component.toggle-group.bg', 'toggle-group'],
+      ['component.toggle-group.border', 'toggle-group-border'],
+      ['component.radio.fg', 'radio-foreground'],
+      ['component.tab.fg', 'tab-foreground'],
+      ['component.tab.selected-fg', 'tab-selected-foreground'],
+      ['component.tab.selected-bg', 'tab-selected'],
+      ['component.tab-list.bg', 'tab-list'],
+      ['component.tab-list.border', 'tab-list-border'],
+      ['component.tab-list.rail', 'tab-list-rail'],
+      ['component.scroll-area.thumb', 'scroll-area-thumb'],
+      ['component.scroll-area.thumb-hover', 'scroll-area-thumb-hover'],
+    ]
+    for (const [path, cssName] of expected) {
+      expect(reg.paths?.[path], path).toBe(cssName)
+      expect(reg.tokens[cssName]?.path).toBe(path)
+      expect(reg.tokens[cssName]?.cssName).toBe(cssName)
+    }
+    const css = loadSrc('../src/tokens.css')
+    expect(css).toMatch(/--switch\s*:\s*var\(--muted\)/)
+    expect(css).toMatch(/--label-foreground\s*:\s*var\(--foreground\)/)
+    expect(css).toMatch(/--field-hint\s*:\s*var\(--muted-foreground\)/)
+    expect(css).toMatch(/--toggle\s*:\s*var\(--background\)/)
+    expect(css).toMatch(/--tab-list\s*:\s*var\(--background\)/)
+    expect(css).toMatch(/--scroll-area-thumb\s*:\s*var\(--border\)/)
+  })
+
   it('color surface includes brand + tone tokens and excludes space/text', () => {
     const reg = loadRegistry()
     const colors = new Set(reg.colors)

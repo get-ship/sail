@@ -118,6 +118,8 @@
     "error-state",
     "error-state-border",
     "error-state-foreground",
+    "field-error",
+    "field-hint",
     "focus-ring",
     "focus-ring-offset",
     "font-body",
@@ -181,6 +183,8 @@
     "info-foreground",
     "input",
     "label-font",
+    "label-foreground",
+    "label-required",
     "label-tracking",
     "label-transform",
     "label-weight",
@@ -240,6 +244,7 @@
     "primary-foreground",
     "primary-hover",
     "prose-foreground",
+    "radio-foreground",
     "radius",
     "radius-full",
     "radius-lg",
@@ -252,6 +257,8 @@
     "ring-opacity",
     "ring-width",
     "scrim",
+    "scroll-area-thumb",
+    "scroll-area-thumb-hover",
     "scrollbar-radius",
     "scrollbar-thumb",
     "scrollbar-thumb-hover",
@@ -339,6 +346,9 @@
     "surface-overlay",
     "surface-overlay-blend",
     "surface-overlay-opacity",
+    "switch",
+    "switch-border",
+    "switch-thumb",
     "syntax-attr",
     "syntax-comment",
     "syntax-function",
@@ -348,6 +358,12 @@
     "syntax-tag",
     "syntax-type",
     "syntax-variable",
+    "tab-foreground",
+    "tab-list",
+    "tab-list-border",
+    "tab-list-rail",
+    "tab-selected",
+    "tab-selected-foreground",
     "text-2xl",
     "text-3xl",
     "text-4xl",
@@ -368,6 +384,11 @@
     "toast-foreground",
     "toast-region-width",
     "toast-region-z",
+    "toggle",
+    "toggle-border",
+    "toggle-foreground",
+    "toggle-group",
+    "toggle-group-border",
     "tone-accent-bg",
     "tone-accent-bg-solid",
     "tone-accent-border",
@@ -507,6 +528,8 @@
     "error-state",
     "error-state-border",
     "error-state-foreground",
+    "field-error",
+    "field-hint",
     "foreground",
     "hover-bg",
     "hover-card",
@@ -530,6 +553,8 @@
     "info",
     "info-foreground",
     "input",
+    "label-foreground",
+    "label-required",
     "menu-item-foreground",
     "menu-item-hover-bg",
     "muted",
@@ -546,9 +571,12 @@
     "primary-foreground",
     "primary-hover",
     "prose-foreground",
+    "radio-foreground",
     "ring",
     "ring-color",
     "scrim",
+    "scroll-area-thumb",
+    "scroll-area-thumb-hover",
     "scrollbar-thumb",
     "scrollbar-thumb-hover",
     "secondary",
@@ -581,6 +609,9 @@
     "surface-2",
     "surface-3",
     "surface-inverse",
+    "switch",
+    "switch-border",
+    "switch-thumb",
     "syntax-attr",
     "syntax-comment",
     "syntax-function",
@@ -590,6 +621,12 @@
     "syntax-tag",
     "syntax-type",
     "syntax-variable",
+    "tab-foreground",
+    "tab-list",
+    "tab-list-border",
+    "tab-list-rail",
+    "tab-selected",
+    "tab-selected-foreground",
     "theme-picker",
     "theme-picker-foreground",
     "theme-picker-option-foreground",
@@ -598,6 +635,11 @@
     "toast",
     "toast-border",
     "toast-foreground",
+    "toggle",
+    "toggle-border",
+    "toggle-foreground",
+    "toggle-group",
+    "toggle-group-border",
     "tone-accent-bg",
     "tone-accent-bg-solid",
     "tone-accent-border",
@@ -2948,6 +2990,18 @@
       "type": "color",
       "value": "var(--border)"
     },
+    "field-hint": {
+      "path": "component.field.hint",
+      "cssName": "field-hint",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
+    "field-error": {
+      "path": "component.field.error",
+      "cssName": "field-error",
+      "type": "color",
+      "value": "var(--destructive)"
+    },
     "hover-card": {
       "path": "component.hover-card.bg",
       "cssName": "hover-card",
@@ -2959,6 +3013,18 @@
       "cssName": "hover-card-foreground",
       "type": "color",
       "value": "var(--popover-foreground)"
+    },
+    "label-foreground": {
+      "path": "component.label.fg",
+      "cssName": "label-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "label-required": {
+      "path": "component.label.required",
+      "cssName": "label-required",
+      "type": "color",
+      "value": "var(--destructive)"
     },
     "menu-item-foreground": {
       "path": "component.menu-item.fg",
@@ -3026,6 +3092,24 @@
       "type": "color",
       "value": "var(--foreground)"
     },
+    "radio-foreground": {
+      "path": "component.radio.fg",
+      "cssName": "radio-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "scroll-area-thumb": {
+      "path": "component.scroll-area.thumb",
+      "cssName": "scroll-area-thumb",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "scroll-area-thumb-hover": {
+      "path": "component.scroll-area.thumb-hover",
+      "cssName": "scroll-area-thumb-hover",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
     "separator-line": {
       "path": "component.separator.line",
       "cssName": "separator-line",
@@ -3043,6 +3127,60 @@
       "cssName": "spinner-track",
       "type": "color",
       "value": "var(--border-subtle)"
+    },
+    "switch": {
+      "path": "component.switch.track",
+      "cssName": "switch",
+      "type": "color",
+      "value": "var(--muted)"
+    },
+    "switch-border": {
+      "path": "component.switch.border",
+      "cssName": "switch-border",
+      "type": "color",
+      "value": "var(--border-strong)"
+    },
+    "switch-thumb": {
+      "path": "component.switch.thumb",
+      "cssName": "switch-thumb",
+      "type": "color",
+      "value": "var(--surface-1)"
+    },
+    "tab-list": {
+      "path": "component.tab-list.bg",
+      "cssName": "tab-list",
+      "type": "color",
+      "value": "var(--background)"
+    },
+    "tab-list-border": {
+      "path": "component.tab-list.border",
+      "cssName": "tab-list-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "tab-list-rail": {
+      "path": "component.tab-list.rail",
+      "cssName": "tab-list-rail",
+      "type": "color",
+      "value": "var(--muted)"
+    },
+    "tab-foreground": {
+      "path": "component.tab.fg",
+      "cssName": "tab-foreground",
+      "type": "color",
+      "value": "var(--muted-foreground)"
+    },
+    "tab-selected-foreground": {
+      "path": "component.tab.selected-fg",
+      "cssName": "tab-selected-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "tab-selected": {
+      "path": "component.tab.selected-bg",
+      "cssName": "tab-selected",
+      "type": "color",
+      "value": "var(--background)"
     },
     "theme-picker": {
       "path": "component.theme-picker.bg",
@@ -3101,6 +3239,36 @@
     "toast-border": {
       "path": "component.toast.border",
       "cssName": "toast-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "toggle-group": {
+      "path": "component.toggle-group.bg",
+      "cssName": "toggle-group",
+      "type": "color",
+      "value": "var(--muted)"
+    },
+    "toggle-group-border": {
+      "path": "component.toggle-group.border",
+      "cssName": "toggle-group-border",
+      "type": "color",
+      "value": "var(--border)"
+    },
+    "toggle": {
+      "path": "component.toggle.bg",
+      "cssName": "toggle",
+      "type": "color",
+      "value": "var(--background)"
+    },
+    "toggle-foreground": {
+      "path": "component.toggle.fg",
+      "cssName": "toggle-foreground",
+      "type": "color",
+      "value": "var(--foreground)"
+    },
+    "toggle-border": {
+      "path": "component.toggle.border",
+      "cssName": "toggle-border",
       "type": "color",
       "value": "var(--border)"
     },
@@ -3323,6 +3491,8 @@
     "component.error-state.bg": "error-state",
     "component.error-state.border": "error-state-border",
     "component.error-state.fg": "error-state-foreground",
+    "component.field.error": "field-error",
+    "component.field.hint": "field-hint",
     "interaction.focus.ring": "focus-ring",
     "interaction.focus.ring-offset": "focus-ring-offset",
     "typography.font.body": "font-body",
@@ -3386,6 +3556,8 @@
     "color.info.foreground": "info-foreground",
     "color.input": "input",
     "typography.label.font": "label-font",
+    "component.label.fg": "label-foreground",
+    "component.label.required": "label-required",
     "typography.label.tracking": "label-tracking",
     "typography.label.transform": "label-transform",
     "typography.label.weight": "label-weight",
@@ -3445,6 +3617,7 @@
     "color.primary.foreground": "primary-foreground",
     "color.primary.hover": "primary-hover",
     "component.prose.fg": "prose-foreground",
+    "component.radio.fg": "radio-foreground",
     "radius.default": "radius",
     "radius.full": "radius-full",
     "radius.lg": "radius-lg",
@@ -3457,6 +3630,8 @@
     "color.ring.opacity": "ring-opacity",
     "color.ring.width": "ring-width",
     "color.scrim": "scrim",
+    "component.scroll-area.thumb": "scroll-area-thumb",
+    "component.scroll-area.thumb-hover": "scroll-area-thumb-hover",
     "scrollbar.radius": "scrollbar-radius",
     "scrollbar.thumb": "scrollbar-thumb",
     "scrollbar.thumb-hover": "scrollbar-thumb-hover",
@@ -3544,6 +3719,9 @@
     "color.surface.overlay": "surface-overlay",
     "color.surface.overlay-blend": "surface-overlay-blend",
     "color.surface.overlay-opacity": "surface-overlay-opacity",
+    "component.switch.track": "switch",
+    "component.switch.border": "switch-border",
+    "component.switch.thumb": "switch-thumb",
     "color.syntax.attr": "syntax-attr",
     "color.syntax.comment": "syntax-comment",
     "color.syntax.function": "syntax-function",
@@ -3553,6 +3731,12 @@
     "color.syntax.tag": "syntax-tag",
     "color.syntax.type": "syntax-type",
     "color.syntax.variable": "syntax-variable",
+    "component.tab.fg": "tab-foreground",
+    "component.tab-list.bg": "tab-list",
+    "component.tab-list.border": "tab-list-border",
+    "component.tab-list.rail": "tab-list-rail",
+    "component.tab.selected-bg": "tab-selected",
+    "component.tab.selected-fg": "tab-selected-foreground",
     "typography.text.2xl": "text-2xl",
     "typography.text.3xl": "text-3xl",
     "typography.text.4xl": "text-4xl",
@@ -3573,6 +3757,11 @@
     "component.toast.fg": "toast-foreground",
     "component.toast-region.width": "toast-region-width",
     "component.toast-region.z": "toast-region-z",
+    "component.toggle.bg": "toggle",
+    "component.toggle.border": "toggle-border",
+    "component.toggle.fg": "toggle-foreground",
+    "component.toggle-group.bg": "toggle-group",
+    "component.toggle-group.border": "toggle-group-border",
     "color.tone.accent.bg": "tone-accent-bg",
     "color.tone.accent.bgSolid": "tone-accent-bg-solid",
     "color.tone.accent.border": "tone-accent-border",

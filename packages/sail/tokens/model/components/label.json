@@ -1,0 +1,25 @@
+{
+  "$description": "Label component tokens. Defaults alias global design values; themes may override component.label.* only.",
+  "component": {
+    "label": {
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "label-foreground"
+          }
+        }
+      },
+      "required": {
+        "$value": "{color.destructive.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "label-required"
+          }
+        }
+      }
+    }
+  }
+}

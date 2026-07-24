@@ -1,0 +1,34 @@
+{
+  "$description": "Tab-list component tokens (strip chrome). Defaults alias globals; themes may override component.tab-list.* only.",
+  "component": {
+    "tab-list": {
+      "bg": {
+        "$value": "{color.background}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "tab-list"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "tab-list-border"
+          }
+        }
+      },
+      "rail": {
+        "$value": "{color.muted.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "tab-list-rail"
+          }
+        }
+      }
+    }
+  }
+}

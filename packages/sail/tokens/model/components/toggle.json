@@ -1,0 +1,34 @@
+{
+  "$description": "Toggle component tokens (rest paint). Defaults alias globals; themes may override component.toggle.* only.",
+  "component": {
+    "toggle": {
+      "bg": {
+        "$value": "{color.background}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "toggle"
+          }
+        }
+      },
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "toggle-foreground"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "toggle-border"
+          }
+        }
+      }
+    }
+  }
+}

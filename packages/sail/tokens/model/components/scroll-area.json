@@ -1,0 +1,25 @@
+{
+  "$description": "Scroll-area component tokens (scrollbar paint). Defaults alias globals; themes may override component.scroll-area.* only.",
+  "component": {
+    "scroll-area": {
+      "thumb": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "scroll-area-thumb"
+          }
+        }
+      },
+      "thumb-hover": {
+        "$value": "{color.muted.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "scroll-area-thumb-hover"
+          }
+        }
+      }
+    }
+  }
+}

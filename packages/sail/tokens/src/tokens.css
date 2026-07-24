@@ -402,8 +402,12 @@
   --error-state: var(--tone-muted-bg);
   --error-state-foreground: var(--muted-foreground);
   --error-state-border: var(--border);
+  --field-hint: var(--muted-foreground);
+  --field-error: var(--destructive);
   --hover-card: var(--popover);
   --hover-card-foreground: var(--popover-foreground);
+  --label-foreground: var(--foreground);
+  --label-required: var(--destructive);
   --menu-item-foreground: var(--foreground);
   --menu-item-hover-bg: var(--muted);
   --navbar: var(--background);
@@ -415,9 +419,21 @@
   --popover: var(--surface-1);
   --popover-foreground: var(--foreground);
   --prose-foreground: var(--foreground);
+  --radio-foreground: var(--foreground);
+  --scroll-area-thumb: var(--border);
+  --scroll-area-thumb-hover: var(--muted-foreground);
   --separator-line: var(--border);
   --spinner-foreground: var(--muted-foreground);
   --spinner-track: var(--border-subtle);
+  --switch: var(--muted);
+  --switch-border: var(--border-strong);
+  --switch-thumb: var(--surface-1);
+  --tab-list: var(--background);
+  --tab-list-border: var(--border);
+  --tab-list-rail: var(--muted);
+  --tab-foreground: var(--muted-foreground);
+  --tab-selected-foreground: var(--foreground);
+  --tab-selected: var(--background);
   --theme-picker: var(--popover);
   --theme-picker-foreground: var(--popover-foreground);
   --theme-picker-trigger-foreground: var(--foreground);
@@ -428,6 +444,11 @@
   --toast: var(--background);
   --toast-foreground: var(--foreground);
   --toast-border: var(--border);
+  --toggle-group: var(--muted);
+  --toggle-group-border: var(--border);
+  --toggle: var(--background);
+  --toggle-foreground: var(--foreground);
+  --toggle-border: var(--border);
   --tooltip: var(--foreground);
   --tooltip-foreground: var(--background);
 }

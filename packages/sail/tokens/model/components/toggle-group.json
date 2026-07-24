@@ -1,0 +1,25 @@
+{
+  "$description": "Toggle-group component tokens (segmented rail chrome). Defaults alias globals; themes may override component.toggle-group.* only.",
+  "component": {
+    "toggle-group": {
+      "bg": {
+        "$value": "{color.muted.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "toggle-group"
+          }
+        }
+      },
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "toggle-group-border"
+          }
+        }
+      }
+    }
+  }
+}
