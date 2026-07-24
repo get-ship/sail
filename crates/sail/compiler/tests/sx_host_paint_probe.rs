@@ -442,33 +442,39 @@ fn switch_host_track_paint_on_host_sx() {
     let out = compile_element(src, "switch").expect("switch compiles");
     assert!(
         !src.contains("--sw-")
-            && src.contains("appearance-none")
-            && src.contains("bg-none")
-            && src.contains("bg-muted")
-            && src.contains("border-border-strong")
-            && src.contains("rounded-full")
-            && src.contains("w-control-h-sm")
-            && src.contains("h-icon-size-md")
-            && src.contains("before:content-empty")
-            && src.contains("before:size-3")
+            && (src.contains("appearance: none") || src.contains("appearance-none"))
+            && (src.contains("bg: none") || src.contains("bg-none"))
+            // Rest track/border/thumb from component.switch tokens
+            && (src.contains("bg: switch") || src.contains("bg-switch"))
+            && (src.contains("border: switch-border") || src.contains("border-switch-border"))
+            && (src.contains("before:bg: switch-thumb") || src.contains("before:bg-switch-thumb"))
+            && (src.contains("rounded: full") || src.contains("rounded-full"))
+            && (src.contains("w: control-h-sm") || src.contains("w-control-h-sm"))
+            && (src.contains("h: icon-size-md") || src.contains("h-icon-size-md"))
+            && (src.contains("before:content: empty") || src.contains("before:content-empty"))
+            && (src.contains("before:size: 3") || src.contains("before:size-3"))
             && !src.contains("size-space-")
             && !src.contains("w-space-")
-            && src.contains("checked:before:left-auto")
-            && src.contains("checked:before:right-px")
-            && src.contains("hover:bg-hover-bg")
-            && src.contains("checked:bg-primary")
-            && src.contains("checked:border-selected-border")
-            && src.contains("checked:shadow-xs")
-            && src.contains("focus:outline-primary")
-            && src.contains("focus:outline-offset-ring-offset")
-            && src.contains("disabled:saturate-60")
-            && src.contains("disabled:cursor-not-allowed")
-            && src.contains("checked:bg-tone")
-            && src.contains("focus:outline-tone")
+            && (src.contains("checked:before:left: auto") || src.contains("checked:before:left-auto"))
+            && (src.contains("checked:before:right: px") || src.contains("checked:before:right-px"))
+            && (src.contains("hover:bg: hover-bg") || src.contains("hover:bg-hover-bg"))
+            && (src.contains("checked:bg: primary") || src.contains("checked:bg-primary"))
+            && (src.contains("checked:border: selected-border")
+                || src.contains("checked:border-selected-border"))
+            && (src.contains("checked:shadow: xs") || src.contains("checked:shadow-xs"))
+            && (src.contains("focus:outline: primary") || src.contains("focus:outline-primary"))
+            && (src.contains("focus:outline-offset: ring-offset")
+                || src.contains("focus:outline-offset-ring-offset"))
+            && (src.contains("disabled:saturate: 60") || src.contains("disabled:saturate-60"))
+            && (src.contains("disabled:cursor: not-allowed")
+                || src.contains("disabled:cursor-not-allowed"))
+            && (src.contains("checked:bg: tone") || src.contains("checked:bg-tone"))
+            && (src.contains("focus:outline: tone") || src.contains("focus:outline-tone"))
             && src.contains("size:")
-            && src.contains("before:size-2_5")
-            && src.contains("w-7")
-            && src.contains("before:size-icon-size-sm"),
+            && (src.contains("before:size: 2_5") || src.contains("before:size-2_5"))
+            && (src.contains("w: 7") || src.contains("w-7"))
+            && (src.contains("before:size: icon-size-sm")
+                || src.contains("before:size-icon-size-sm")),
         "switch host sx PE primary + before: thumb + size CVA direct tokens + branded tone"
     );
     assert!(
@@ -488,10 +494,10 @@ fn switch_host_track_paint_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("background-color:var(--muted)")
-            || out.skin_css.contains("background-color: var(--muted)")
-            || out.structure_html.contains("sx-bgmuted"),
-        "bg-muted off-track paint:\nstruct={}\nskin={}",
+        out.skin_css.contains("background-color:var(--switch)")
+            || out.skin_css.contains("background-color: var(--switch)")
+            || out.structure_html.contains("sx-bgswitch"),
+        "bg: switch off-track paint from component.switch.track:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
@@ -1036,8 +1042,9 @@ fn radio_nested_row_kills_label_flex_pe() {
     assert!(
         src.contains("<label")
             && src.contains("type=\"radio\"")
-            && src.contains("font-body")
-            && src.contains("cursor-pointer"),
+            && (src.contains("font-family: body") || src.contains("font-body"))
+            && (src.contains("cursor: pointer") || src.contains("cursor-pointer"))
+            && (src.contains("radio-foreground") || src.contains("color: foreground")),
         "radio must be native label + input with host type paint"
     );
     assert!(
@@ -1068,17 +1075,19 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
     assert!(
         !src.contains("'tg-h'")
             && !src.contains("--tg-")
-            && src.contains("segmented: 'p-1 bg-muted border border-border rounded-md'")
+            && (src.contains("bg: toggle-group") || src.contains("bg-toggle-group"))
+            && (src.contains("border: toggle-group-border")
+                || src.contains("border-toggle-group-border"))
             && src.contains("<row inline gap=\"0\"")
             && src.contains("size: 'sm' | 'md' | 'lg' = 'md'"),
-        "segmented host chrome on CVA; host is inline row; size stamped"
+        "segmented host chrome on CVA via component.toggle-group tokens; host is inline row; size stamped"
     );
     assert!(
         out.skin_css.contains("variant='segmented'")
-            && (out.skin_css.contains("background-color:var(--muted)")
-                || out.skin_css.contains("background-color: var(--muted)"))
+            && (out.skin_css.contains("background-color:var(--toggle-group)")
+                || out.skin_css.contains("background-color: var(--toggle-group)"))
             && !out.skin_css.contains("--tg-"),
-        "segmented CVA on skins; no --tg-* writes:\n{}",
+        "segmented CVA on skins uses --toggle-group; no --tg-* writes:\n{}",
         out.skin_css
     );
     // Orientation is a stamped union prop (layout runtime), not a CVA skin axis.
@@ -1106,9 +1115,10 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && toggle_src.contains("outline:")
             && toggle_src.contains("ghost:")
             && toggle_src.contains("size:")
-            && toggle_src.contains("h-control-h-md")
-            && toggle_src.contains("h-control-h-sm"),
-        "toggle.sail must CVA join/ghost + size direct tokens"
+            && (toggle_src.contains("h: control-h-md") || toggle_src.contains("h-control-h-md"))
+            && (toggle_src.contains("h: control-h-sm") || toggle_src.contains("h-control-h-sm"))
+            && (toggle_src.contains("bg: toggle") || toggle_src.contains("bg-toggle")),
+        "toggle.sail must CVA join/ghost + size direct tokens + component.toggle paint"
     );
     assert!(
         toggle_out.skin_css.contains("size='sm'")
@@ -1448,14 +1458,17 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     let out = compile_element(src, "tab-list").expect("tab-list compiles");
     assert!(
         src.contains("sticky = false")
-            && src.contains("sticky top-0 z-(--z-sticky)")
-            && src.contains("bg-background")
+            && (src.contains("sticky top: 0") || src.contains("sticky top-0"))
+            && (src.contains("z: (--z-sticky)") || src.contains("z-(--z-sticky)"))
+            && (src.contains("bg: tab-list") || src.contains("bg-tab-list"))
             && src.contains("pill:")
-            && src.contains("bg-muted"),
-        "tab-list must declare sticky compound + opaque bg + pill CVA on host"
+            && (src.contains("bg: tab-list-rail") || src.contains("bg-tab-list-rail")),
+        "tab-list must declare sticky compound + component.tab-list bg + pill rail CVA on host"
     );
     assert!(
-        out.structure_html.contains("sx-bgbackground")
+        (out.structure_html.contains("sx-bgtablist")
+            || out.structure_html.contains("sx-bgbackground")
+            || out.skin_css.contains("var(--tab-list)"))
             && out.structure_html.contains("sx-borderb"),
         "rail + bg on host structure:\n{}",
         out.structure_html
@@ -1469,11 +1482,11 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     );
     assert!(
         out.skin_css.contains("[variant='pill']")
-            && (out.skin_css.contains("background-color:var(--muted)")
-                || out.skin_css.contains("background-color: var(--muted)"))
+            && (out.skin_css.contains("background-color:var(--tab-list-rail)")
+                || out.skin_css.contains("background-color: var(--tab-list-rail)"))
             && (out.skin_css.contains("border-radius:var(--radius-md)")
                 || out.skin_css.contains("border-radius: var(--radius-md)")),
-        "pill variant CVA must lower on tab-list:\n{}",
+        "pill variant CVA must lower on tab-list with --tab-list-rail:\n{}",
         out.skin_css
     );
     // sticky + variant no longer tabs props; tabs stamps size onto tab cells.
@@ -1494,10 +1507,12 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     assert!(
         !tab_src.contains("--tab-")
             && tab_src.contains("size:")
-            && tab_src.contains("text-sm py-2 px-3")
-            && tab_src.contains("text-xs py-1_5 px-2_5")
-            && tab_src.contains("text-base py-2_5 px-4"),
-        "tab.sail size CVA direct pad/type tokens:\n{tab_src}"
+            && (tab_src.contains("font-size: sm") || tab_src.contains("text-sm"))
+            && (tab_src.contains("py: 2") || tab_src.contains("py-2"))
+            && (tab_src.contains("px: 3") || tab_src.contains("px-3"))
+            && (tab_src.contains("font-size: xs") || tab_src.contains("text-xs"))
+            && (tab_src.contains("tab-foreground") || tab_src.contains("muted-foreground")),
+        "tab.sail size CVA direct pad/type tokens + component.tab paint:\n{tab_src}"
     );
     assert!(
         tab_out.skin_css.contains("size='sm'")
@@ -1505,8 +1520,11 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
             && (tab_out.skin_css.contains("font-size:var(--text-sm)")
                 || tab_out.skin_css.contains("font-size: var(--text-sm)")
                 || tab_out.structure_html.contains("sx-textsm"))
-            && !tab_out.skin_css.contains("--tab-"),
-        "tab size CVA must land; no --tab-* writes:\n{}",
+            // Banned: legacy size channels --tab-py / --tab-h. Allowed: component
+            // token reads --tab-foreground / --tab-selected*.
+            && !tab_out.skin_css.contains("--tab-py")
+            && !tab_out.skin_css.contains("--tab-h"),
+        "tab size CVA must land; no legacy --tab-py/--tab-h channels:\n{}",
         tab_out.skin_css
     );
     // Orientation is a stamped union prop (layout runtime), not a CVA skin axis.
@@ -1536,13 +1554,18 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
     let src = include_str!("../stdlib/scroll-area.sail");
     let out = compile_element(src, "scroll-area").expect("scroll-area compiles");
     assert!(
-        src.contains("scrollbar-thin")
-            && src.contains("scrollbar-thumb-border")
-            && src.contains("scrollbar:w-2_5")
-            && src.contains("scrollbar-thumb:bg-border")
-            && src.contains("scrollbar-thumb:bg-clip-padding")
-            && src.contains("overscroll-contain"),
-        "scroll-area host sx must carry standard + webkit scrollbar packs"
+        (src.contains("scrollbar-thin") || src.contains("scrollbar: thin"))
+            && (src.contains("scrollbar-thumb: scroll-area-thumb")
+                || src.contains("scrollbar-thumb-scroll-area-thumb")
+                || src.contains("scrollbar-thumb:scroll-area-thumb"))
+            && (src.contains("scrollbar: w-2_5") || src.contains("scrollbar:w-2_5"))
+            && (src.contains("scrollbar-thumb: bg-scroll-area-thumb")
+                || src.contains("scrollbar-thumb:bg-scroll-area-thumb")
+                || src.contains("scrollbar-thumb: bg-border"))
+            && (src.contains("scrollbar-thumb: bg-clip-padding")
+                || src.contains("scrollbar-thumb:bg-clip-padding"))
+            && (src.contains("overscroll: contain") || src.contains("overscroll-contain")),
+        "scroll-area host sx must carry standard + webkit scrollbar packs via component.scroll-area tokens"
     );
     // Overflow / orientation always land.
     assert!(

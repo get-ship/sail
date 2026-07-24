@@ -1,6 +1,8 @@
 <!--
   <toggle> — first:/last: join + variant/orientation/size CVA. Orientation may be
   structural-stamped by the group; size/variant are author props on each toggle.
+  Paint: rest bg/fg/border from component.toggle tokens
+         (cssNames toggle, toggle-foreground, toggle-border).
 -->
 <scope>
   props: {
@@ -29,6 +31,6 @@
     { when: { orientation: 'vertical', variant: 'segmented' }, sx: 'border: transparent rounded: sm ms: 0 mt: 0 me: 0 mb: 1 last:mb: 0' },
   ]
 </scope>
-<button type="button" sx="relative font-family: body font-weight: medium leading: none color: foreground bg: background cursor: pointer whitespace: nowrap select: none font-size: sm h: control-h-md px: 3 border border: border rounded: none -ms: px first:ms: 0 first:rounded-l: md last:rounded-r: md tap-highlight: none transition: colors duration: fast ease: out hover:bg: muted pressed:bg: foreground pressed:color: background pressed:border: foreground pressed:z: 1 disabled:opacity: 50 disabled:cursor: not-allowed focus:outline: solid focus:outline: 2 focus:outline: ring focus:z: 2">
+<button type="button" sx="relative font-family: body font-weight: medium leading: none color: toggle-foreground bg: toggle cursor: pointer whitespace: nowrap select: none font-size: sm h: control-h-md px: 3 border border: toggle-border rounded: none -ms: px first:ms: 0 first:rounded-l: md last:rounded-r: md tap-highlight: none transition: colors duration: fast ease: out hover:bg: muted pressed:bg: foreground pressed:color: background pressed:border: foreground pressed:z: 1 disabled:opacity: 50 disabled:cursor: not-allowed focus:outline: solid focus:outline: 2 focus:outline: ring focus:z: 2">
   <slot></slot>
 </button>
