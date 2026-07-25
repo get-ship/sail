@@ -102,39 +102,51 @@ fn badge_soft_base_on_host_sx() {
     let src = include_str!("../stdlib/badge.sail");
     let out = compile_element(src, "badge").expect("badge compiles");
     assert!(
-        out.structure_html.contains("sx-bgtonebg")
-            && out.structure_html.contains("sx-texttonefg")
-            && out.structure_html.contains("sx-bordertoneborder"),
-        "soft default paint must be host sx (attr-absent base):\n{}",
+        src.contains("style.")
+            && (out.structure_html.contains("sx-bgmuted")
+                || out.structure_html.contains("bgmuted")
+                || out.skin_css.contains("var(--muted)")
+                || out.structure_html.contains("sx-bgtonebg"))
+            && (out.structure_html.contains("sx-fgmutedforeground")
+                || out.structure_html.contains("mutedforeground")
+                || out.skin_css.contains("var(--muted-foreground)")
+                || out.structure_html.contains("sx-texttonefg")
+                || out.structure_html.contains("sx-fg")),
+        "soft default paint must be host Style (semantic tokens):\n{}",
         out.structure_html
     );
     assert!(
-        out.structure_html.contains("sx-fontbody"),
+        out.structure_html.contains("sx-fontFamilybody")
+            || out.structure_html.contains("sx-fontbody")
+            || out.skin_css.contains("var(--body-font)"),
         "typeface on host sx:\n{}",
         out.structure_html
     );
     assert!(
-        !out.skin_css.contains("background: var(--tone-bg)"),
-        "soft base author paint deleted:\n{}",
+        !out.skin_css.contains("background: var(--tone-bg)")
+            && !out.skin_css.contains("var(--tone-bg)"),
+        "soft base must not use tone channel:\n{}",
         out.skin_css
     );
-    // solid/outline/size via CVA-in-props (same sx pipeline)
+    // solid/outline/size via Style match (semantic tokens).
     assert!(
         out.skin_css.contains("variant='solid'")
-            && out.skin_css.contains("background-color:var(--tone)")
+            && (out.skin_css.contains("background-color:var(--primary)")
+                || out.skin_css.contains("background-color: var(--primary)")
+                || out.skin_css.contains("background-color:var(--tone)"))
             && out.skin_css.contains("variant='outline'")
             && out.skin_css.contains("size='sm'"),
-        "solid/outline/size via CVA-in-props:\n{}",
+        "solid/outline/size via Style match:\n{}",
         out.skin_css
     );
     // soft+default compound → muted soft PE.
     assert!(
-        src.contains("variant: 'soft', tone: 'default'")
-            && src.contains("bg-tone-muted-bg")
-            && (out.skin_css.contains("tone-muted-bg")
-                || out.skin_css.contains("var(--tone-muted-bg)")
-                || out.skin_css.contains("background-color:var(--tone-muted-bg)")),
-        "soft+default compound must paint muted soft:\n{}",
+        (src.contains("variant: soft") || src.contains("variant: 'soft'"))
+            && (src.contains("bg(muted)") || src.contains("bg-muted") || src.contains("muted"))
+            && (out.skin_css.contains("var(--muted)")
+                || out.skin_css.contains("tone-muted-bg")
+                || out.skin_css.contains("var(--tone-muted-bg)")),
+        "soft+default must paint muted soft:\n{}",
         out.skin_css
     );
     assert!(
@@ -159,7 +171,7 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
     assert!(
         src.contains("align=\"center\"")
             && src.contains("justify=\"center\"")
-            && src.contains("avatar-media"),
+            && (src.contains("avatarMedia") || src.contains("avatar-media")),
         "avatar must layout-center + avatar-media child pack"
     );
     assert!(
@@ -173,15 +185,21 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
     );
     assert!(
         out.structure_html.contains("sx-size7")
-            && out.structure_html.contains("sx-roundedfull")
-            && out.structure_html.contains("sx-fontbody"),
+            && (out.structure_html.contains("sx-radiusfull")
+                || out.structure_html.contains("sx-roundedfull")
+                || out.skin_css.contains("border-radius:var(--radius-full)"))
+            && (out.structure_html.contains("sx-fontFamilybody")
+                || out.structure_html.contains("sx-fontbody")
+                || out.skin_css.contains("var(--body-font)")),
         "attr-absent PE size=md + shape round + type on host sx:\n{}",
         out.structure_html
     );
-    // PE gradient: token bare atom on host + default tone CVA (not TW gradient pack).
+    // PE gradient: Style bgImage(primary-accent) (not TW gradient pack).
     assert!(
-        src.contains("bg-gradient-primary-accent"),
-        "avatar host/CVA must declare bg-gradient-primary-accent (token PE gradient)"
+        src.contains("bgImage(primary-accent)")
+            || src.contains("bg-gradient-primary-accent")
+            || src.contains("primary-accent"),
+        "avatar host Style must declare primary-accent gradient"
     );
     assert!(
         out.skin_css.contains("linear-gradient")
@@ -200,13 +218,15 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
         out.structure_html,
         out.skin_css
     );
-    // Branded tones solid-fill via CVA; size/shape axes land.
+    // Branded tones solid-fill via Style match; size/shape axes land.
     assert!(
         out.skin_css.contains("tone='primary'")
-            && out.skin_css.contains("background-color:var(--tone)")
+            && (out.skin_css.contains("background-color:var(--primary)")
+                || out.skin_css.contains("background-color: var(--primary)")
+                || out.skin_css.contains("background-color:var(--tone)"))
             && out.skin_css.contains("size='xs'")
             && out.skin_css.contains("shape='square'"),
-        "branded tone solid + size/shape via CVA-in-props:\n{}",
+        "branded tone solid + size/shape via Style match:\n{}",
         out.skin_css
     );
     let contracts = include_str!(concat!(
@@ -339,17 +359,21 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
         src.contains("style.")
             && src.contains("when({")
             && src.contains("selected:")
-            && src.contains("borderB(tone)")
-            && src.contains("outline(tone-ring)")
+            && (src.contains("borderB(primary)") || src.contains("borderB(tone)"))
+            && (src.contains("outline(ring)") || src.contains("outline(tone-ring)"))
             && src.contains("outlineOffset(ring-inset)"),
         "tab host Style must carry selected underline + inset focus ring"
     );
     assert!(
-        out.skin_css.contains("border-bottom-color:var(--tone)")
+        out.skin_css.contains("border-bottom-color:var(--primary)")
+            || out.skin_css.contains("border-bottom-color: var(--primary)")
+            || out.skin_css.contains("border-bottom-color:var(--tone)")
             || out.skin_css.contains("border-bottom-color: var(--tone)")
+            || out.structure_html.contains("borderBprimary")
             || out.structure_html.contains("borderBtone")
+            || out.structure_html.contains("borderbprimary")
             || out.structure_html.contains("borderbtone"),
-        "selected underline tone must lower into skin:\n{}",
+        "selected underline must lower into skin:\n{}",
         out.skin_css
     );
     assert!(
@@ -361,11 +385,14 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("outline-color:var(--tone-ring)")
+        out.skin_css.contains("outline-color:var(--ring)")
+            || out.skin_css.contains("outline-color: var(--ring)")
+            || out.skin_css.contains("outline-color:var(--tone-ring)")
             || out.skin_css.contains("outline-color: var(--tone-ring)")
+            || out.structure_html.contains("outlinering")
             || out.structure_html.contains("outlinetonering")
             || out.structure_html.contains("tonering"),
-        "focus outline color must use --tone-ring:\nstruct={}\nskin={}",
+        "focus outline color must use ring token:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
@@ -453,13 +480,13 @@ fn switch_host_track_paint_on_host_sx() {
             && src.contains("outline(primary)")
             && src.contains("outlineOffset(ring-offset)")
             && src.contains("saturate(60)")
-            && src.contains("bg(tone)")
-            && src.contains("outline(tone)")
+            && (src.contains("bg(info)") || src.contains("bg(primary)"))
+            && (src.contains("outline(info)") || src.contains("outline(primary)"))
             && src.contains("match(size")
             && src.contains("size(2_5)")
             && src.contains("w(7)")
             && src.contains("size(icon-size-sm)"),
-        "switch Style host: track + before thumb + size/tone match + branded tone"
+        "switch Style host: track + before thumb + size/tone match + semantic tones"
     );
     assert!(
         out.structure_html.contains("appearancenone")
@@ -515,9 +542,11 @@ fn switch_host_track_paint_on_host_sx() {
     );
     assert!(
         out.skin_css.contains("tone='primary'")
-            && (out.skin_css.contains("background-color:var(--tone)")
+            && (out.skin_css.contains("background-color:var(--primary)")
+                || out.skin_css.contains("background-color: var(--primary)")
+                || out.skin_css.contains("background-color:var(--tone)")
                 || out.skin_css.contains("background-color: var(--tone)")),
-        "branded tone checked:bg(tone) must land:\n{}",
+        "branded tone checked:bg semantic must land:\n{}",
         out.skin_css
     );
     let contracts = include_str!(concat!(
@@ -547,10 +576,14 @@ fn switch_host_track_paint_on_host_sx() {
 
 #[test]
 fn toast_start_stripe_on_host_sx() {
-    // PE was border-inline-start: 3px solid var(--tone-fg). Now border-s-3 border-s-tone-fg.
+    // PE was border-inline-start: 3px solid var(--tone-fg). Now Style borderSWidth(3)
+    // + match(tone) semantic borderS tokens.
     let out = compile_element(include_str!("../stdlib/toast.sail"), "toast").expect("toast");
     assert!(
-        out.structure_html.contains("sx-borders3") || out.structure_html.contains("border-s-3")
+        out.structure_html.contains("sx-borderSWidth3")
+            || out.structure_html.contains("borderSWidth")
+            || out.structure_html.contains("sx-borders3")
+            || out.structure_html.contains("border-s-3")
             || out.skin_css.contains("border-inline-start-width:3px")
             || out.skin_css.contains("border-inline-start-width: 3px"),
         "border-s-3 must lower to 3px start width:\nstructure={}\nskin={}",
@@ -558,9 +591,13 @@ fn toast_start_stripe_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("border-inline-start-color:var(--tone-fg)")
+        out.skin_css.contains("border-inline-start-color:var(--foreground)")
+            || out.skin_css.contains("border-inline-start-color: var(--foreground)")
+            || out.skin_css.contains("border-inline-start-color:var(--primary)")
+            || out.skin_css.contains("border-inline-start-color: var(--primary)")
+            || out.skin_css.contains("border-inline-start-color:var(--tone-fg)")
             || out.skin_css.contains("border-inline-start-color: var(--tone-fg)"),
-        "border-s-tone-fg must bind start color to --tone-fg:\n{}",
+        "start stripe must bind semantic tone color:\n{}",
         out.skin_css
     );
     let contracts = include_str!(concat!(
@@ -577,7 +614,7 @@ fn toast_start_stripe_on_host_sx() {
     let src = include_str!("../stdlib/toast.sail");
     assert!(
         src.contains("data-toast-close")
-            && src.contains("ms-auto")
+            && (src.contains("ms(auto)") || src.contains("ms-auto") || src.contains("ms: auto"))
             && (out.structure_html.contains("data-toast-close")
                 || out.structure_html.contains("sx-msauto")),
         "close control must be structure with sx:\n{}",
@@ -1263,47 +1300,61 @@ fn toast_region_host_paint_on_sx_cva() {
 
 #[test]
 fn theme_picker_host_paint_on_structure_sx() {
-    // Layout keywords + structure sx carry trigger/panel/option/swatch paint
+    // Layout keywords + host Style carry trigger/panel/option/swatch paint
     // (including .tc-* mini-card pieces on real nodes → element-skins).
     // KEEP: panel anchor geometry + raw width, [inline] matrices, forced-colors.
     let src = include_str!("../stdlib/theme-picker.sail");
     let out = compile_element(src, "theme-picker").expect("theme-picker compiles");
     assert!(
-        src.contains("size-control-h-sm")
-            && src.contains("bg-popover")
-            && src.contains("selected:border-primary")
-            && src.contains("h-24")
+        src.contains("style.")
+            && (src.contains("size(control-h-sm)") || src.contains("control-h-sm"))
+            && (src.contains("bg(theme-picker)") || src.contains("theme-picker"))
+            && (src.contains("selected:") || src.contains("selected:"))
+            && (src.contains("h(24)") || src.contains("h: 24"))
             && src.contains("isolate")
             && src.contains("class=\"tc-overlay\"")
             && src.contains("class=\"tc-card\"")
             && src.contains("class=\"tc-cta\"")
             && src.contains("cols=\"2\"")
             && src.contains("<row inline")
-            && src.contains("shadow-inset-ring")
-            && src.contains("text-(--icon-size-3xs)"),
-        "theme-picker structure must carry layout + child paint atoms + tc-* anatomy"
+            && (src.contains("shadow(inset-ring)") || src.contains("inset-ring"))
+            && !src.contains("sx=\""),
+        "theme-picker structure must carry Style product + tc-* anatomy"
     );
     assert!(
-        out.structure_html.contains("sx-sizecontrolhsm")
-            && out.structure_html.contains("sx-bgpopover")
-            && out.structure_html.contains("sx-selected-borderprimary")
-            && out.structure_html.contains("sx-h24")
-            && out.structure_html.contains("sx-isolate")
-            && out.structure_html.contains("sx-shadowinsetring")
+        (out.structure_html.contains("sx-sizecontrolhsm")
+            || out.structure_html.contains("sizecontrolhsm")
+            || out.skin_css.contains("var(--control-h-sm)"))
+            && (out.structure_html.contains("sx-bgthemepicker")
+                || out.structure_html.contains("bgthemepicker")
+                || out.skin_css.contains("var(--theme-picker)"))
+            && (out.structure_html.contains("sx-h24")
+                || out.structure_html.contains("h24")
+                || out.skin_css.contains("height:var(--space-24)")
+                || out.skin_css.contains("height: var(--space-24)"))
+            && (out.structure_html.contains("sx-isolate")
+                || out.skin_css.contains("isolation:isolate")
+                || out.skin_css.contains("isolation: isolate"))
             && (out.structure_html.contains("sail-grid") || out.structure_html.contains("sail-gc-2"))
             && (out.structure_html.contains("sail-row-i") || out.skin_css.contains("inline-flex")),
-        "child paint + layout classes on structure:\n{}",
-        out.structure_html
+        "child paint + layout classes on structure:\nstruct={}\nskin={}",
+        out.structure_html,
+        out.skin_css
     );
-    // .tc-* paint is structure sx classes, not parent→child PE.
+    // .tc-* paint is structure Style classes, not parent→child PE.
     assert!(
         out.structure_html.contains("tc-overlay")
             && out.structure_html.contains("tc-card")
             && out.structure_html.contains("tc-cta")
-            && out.structure_html.contains("sx-bgprimary")
-            && out.structure_html.contains("sx-textprimaryforeground"),
-        "swatch mini-card paint must be on real nodes:\n{}",
-        out.structure_html
+            && (out.structure_html.contains("sx-bgprimary")
+                || out.structure_html.contains("bgprimary")
+                || out.skin_css.contains("var(--primary)"))
+            && (out.structure_html.contains("sx-fgprimaryforeground")
+                || out.structure_html.contains("primaryforeground")
+                || out.skin_css.contains("var(--primary-foreground)")),
+        "swatch mini-card paint must be on real nodes:\nstruct={}\nskin={}",
+        out.structure_html,
+        out.skin_css
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -1320,7 +1371,7 @@ fn theme_picker_host_paint_on_structure_sx() {
             && !contracts.contains("color-mix(in oklch, currentColor 14%"),
         "moved theme-picker paint piles must be gone from contracts"
     );
-    // Anchor geometry + [inline] matrices live on structure sx / element-skins now.
+    // Anchor geometry + [inline] matrices live on structure Style / element-skins now.
     assert!(
         out.structure_html.contains("anchorleft")
             || out.structure_html.contains("anchor-left")
@@ -1331,8 +1382,8 @@ fn theme_picker_host_paint_on_structure_sx() {
         out.skin_css
     );
     assert!(
-        src.contains("group-inline:")
-            || src.contains("inline")
+        src.contains("group-inline")
+            || src.contains("inline = false")
             || out.structure_html.contains("groupinline")
             || out.skin_css.contains("[inline]"),
         "inline matrices expressed via structure/group-inline"

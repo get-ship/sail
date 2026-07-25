@@ -331,4 +331,73 @@ fn batch_d_chrome_menus_compile_on_style_path() {
     }
 }
 
+#[test]
+fn batch_e_residuals_compile_on_style_path() {
+    // Structure-only (no host paint): pagination, slider — excluded from paint asserts.
+    for (tag, src) in [
+        ("breadcrumb", include_str!("../stdlib/breadcrumb.sail")),
+        ("collapsible", include_str!("../stdlib/collapsible.sail")),
+        ("error-boundary", include_str!("../stdlib/error-boundary.sail")),
+        ("icon", include_str!("../stdlib/icon.sail")),
+        ("tab-panel", include_str!("../stdlib/tab-panel.sail")),
+        ("tabs", include_str!("../stdlib/tabs.sail")),
+        ("theme-picker", include_str!("../stdlib/theme-picker.sail")),
+        ("ticker", include_str!("../stdlib/ticker.sail")),
+    ] {
+        assert!(
+            !src.contains("md: '")
+                && !src.contains("compound: [")
+                && !src.contains("sx=\"")
+                && !src.contains("tone-bg")
+                && !src.contains("tone-fg")
+                && src.contains("style."),
+            "{tag} must use Style product (no CVA string maps / string sx / tone-*):\n{src}"
+        );
+        let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
+        let paint = format!("{}{}", out.structure_html, out.skin_css);
+        assert!(
+            paint.contains("var(--") || paint.contains("sx-") || paint.contains("sail-grp"),
+            "{tag} must emit token/class paint:\nstruct={}\nskin={}",
+            out.structure_html,
+            out.skin_css
+        );
+        assert!(
+            !out.skin_css.contains("var(--tone-bg)")
+                && !out.skin_css.contains("var(--tone-fg)")
+                && !out.skin_css.contains("var(--tone-border)"),
+            "{tag} must not emit tone channel vars:\n{}",
+            out.skin_css
+        );
+    }
+    // Pure structure residuals: no host Style paint required.
+    for (tag, src) in [
+        ("pagination", include_str!("../stdlib/pagination.sail")),
+        ("slider", include_str!("../stdlib/slider.sail")),
+    ] {
+        assert!(
+            !src.contains("sx=\"") && !src.contains("md: '") && !src.contains("compound: ["),
+            "{tag} residual structure must not carry utility-string sx / CVA maps:\n{src}"
+        );
+        let _ = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

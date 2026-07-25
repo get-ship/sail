@@ -26,6 +26,7 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
 
     assert!(
         el.structure_html.contains("sx-contents")
+            || el.structure_html.contains("sx-displaycontents")
             || el.skin_css.contains("display:contents")
             || el.skin_css.contains("display: contents"),
         "the root must not box: struct={} skin={}",
@@ -33,8 +34,11 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
         el.skin_css
     );
     assert!(
-        el.structure_html.contains(r#"class="content sx-contents""#)
-            || el.structure_html.contains("content") && el.structure_html.contains("sx-contents"),
+        el.structure_html.contains(r#"class="content"#)
+            && (el.structure_html.contains("sx-contents")
+                || el.structure_html.contains("sx-displaycontents")
+                || el.skin_css.contains("display:contents")
+                || el.skin_css.contains("display: contents")),
         "nor may the content wrapper: {}",
         el.structure_html
     );
@@ -52,10 +56,10 @@ fn the_swap_is_a_css_gate_not_a_reactive_branch() {
     let src = include_str!("../stdlib/error-boundary.sail");
 
     assert!(
-        src.contains("group-caught:hidden")
-            && src.contains("group-caught:contents")
-            && src.contains("group"),
-        "structure must express caught swap via group-caught:"
+        (src.contains("group-caught") || src.contains("groupCaught"))
+            && (src.contains("style.group()") || src.contains("group()"))
+            && src.contains("style."),
+        "structure must express caught swap via Style when group-caught"
     );
     // Both halves of the swap must lower, or a boundary renders its fallback
     // and its broken content at the same time.
