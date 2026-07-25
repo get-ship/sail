@@ -118,6 +118,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // ── Run pipeline ──────────────────────────────────────────────────────
     let tagSeq = 0
     let iframeReady = false
+    let lastSourceSlug = ''
+    let lastPushedKey = ''
     const schedule = createDebouncer(200)
 
     const runNow = (): void => {
@@ -152,8 +154,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
     /** Push source into the signal AND the upgraded editor host (when ready). */
     const applyCode = (source: string): void => {
       srcValue.set(source)
+      lastPushedKey = ''
       const e = editorEl()
-      if (e) e.value = source
+      if (e && typeof e.setDiagnostics === 'function') {
+        e.value = source
+        lastPushedKey = lastSourceSlug + '\0' + source.length + '\0' + source.slice(0, 32)
+      }
       runNow()
     }
 
@@ -204,8 +210,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
     // Do NOT read `ed.value` inside this effect: the host getter falls through
     // to the editor's valSig, which would subscribe this effect to the editor
     // and re-enter on every programmatic write (main-thread hang).
-    let lastSourceSlug = ''
-    let lastPushedKey = ''
     effect(() => {
       const l = lesson()
       if (!l) return
@@ -224,8 +228,20 @@ export default controller((ctx: ControllerScope<Scope>) => {
       // when the editor's own valSig ticks (user typing / CM internal sync).
       const key = lastSourceSlug + '\0' + source.length + '\0' + source.slice(0, 32)
       if (key === lastPushedKey) return
-      lastPushedKey = key
-      ed.value = source
+      // bind:this can fire before the CE's connectedCallback publishes host.value
+      // (defineProperty). Writing then is a dead expando that mount overwrites with
+      // ''. Wait until setDiagnostics exists — that runs in the same mount() as the
+      // value property — then assign and mark pushed.
+      const push = (): void => {
+        if (editorEl() !== ed) return
+        if (typeof ed.setDiagnostics !== 'function') {
+          requestAnimationFrame(push)
+          return
+        }
+        ed.value = source
+        lastPushedKey = key
+      }
+      push()
     })
 
     let lastPreviewSlug = ''

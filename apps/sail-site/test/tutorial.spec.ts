@@ -18,8 +18,10 @@ const editorValue = (page: Page): Promise<string> =>
     return (el as unknown as { value?: string })?.value ?? ''
   })
 
+// L1 badge/tab paint as `.sail-badge` / `.sail-tab` hosts (display:contents
+// custom elements are not the interactive leaf Playwright should query).
 const statusText = (page: Page): Promise<string> =>
-  page.locator('badge').first().innerText()
+  page.locator('.sail-badge').first().innerText()
 
 async function openLesson(page: Page, slug: string): Promise<void> {
   await page.goto(`/sail/tutorial/${slug}`, { waitUntil: 'domcontentloaded' })
@@ -39,8 +41,8 @@ test('the editor holds the whole .sail — controller block and template', async
   expect(src).toContain('<controller>')
   expect(src).toContain('</controller>')
   // The tab names the file, not a "template.sail" / "controller.ts" pair.
-  await expect(page.locator('tab[name="source"]')).toContainText('.sail')
-  expect(await page.locator('tab').count()).toBe(2)
+  await expect(page.locator('.sail-tab[name="source"]')).toContainText('.sail')
+  expect(await page.locator('.sail-tab').count()).toBe(2)
 })
 
 test('the lesson compiles and the preview runs it', async ({ page }) => {
