@@ -14,22 +14,17 @@
   the panel is a native [popover] wired by popovertarget, so the tile stays
   honest: what you see closed is what a page shows closed.
 
-  All 25 pack components are un-gated (their `sail.config.json` now grants
-  the design-system capabilities — sx / raw_containers / variants — their
-  sources use). Three components are still counted here but not mounted
-  anywhere in the compiled app: the 7 canvas-pack tiles (sail-canvas /
-  sail-board / sail-draw / sail-graph-canvas / sail-annotation-*) trip their
-  world-layer actions when instantiated inside this page's already-large
-  component tree (renders fine via direct /components/<slug> nav);
-  sail-message-list and sail-media-csv both transitively import
-  `@ship/sail-runtime/virtual` (message-list directly, media-csv via
-  `createTable` from the `@ship/sail-primitives` barrel, which side-effect-
-  imports sail-tree/sail-tree-grid) — a framework-singleton subpath with no
-  deck-bundler importmap entry (see apps/sail-site/src/register-all.ts).
-  That is a pre-existing bundler gap, not a floor issue; closing it is a
-  separate job. Until then neither tag may be referenced by ANY compiled
-  route, canvas tiles included, or the app build fails outright — so
-  sail-message-list and sail-media-csv have no live route at all right now.
+  Pack tiles on THIS page are catalog links only — never a live <sail-*>
+  mount. Deck's bundler auto-imports every custom-element tag that appears
+  in a route's template into that route's module graph; putting
+  sail-code-editor / sail-mermaid / charts / chat CEs here pulled
+  CodeMirror + Mermaid into the /components chunk and OOM'd the browser
+  even when packSel defaulted to `lang` (filter only gates DOM mount, not
+  the static import). Live pack demos stay on /components/<slug>.
+
+  Still not cataloged/mounted anywhere: the 7 canvas-pack tiles (world-layer
+  actions) and sail-message-list / sail-media-csv (need
+  `@ship/sail-runtime/virtual` — bundler importmap gap; see register-all.ts).
 -->
 
 <controller>
@@ -40,13 +35,10 @@
 // gates itself on `show.<key>()`, so the markup for each live component
 // stays hand-written while the filtering stays data-driven.
 //
-// Every rendered tile is the REAL component. The 6 packs (charts, media,
-// canvas, chat, mermaid, code-editor) are un-gated (granted the design-
-// system capabilities via their `sail.config.json`); every pack component
-// is in the catalog and counts. The canvas tiles are skipped in THIS grid
-// (see the file banner) but still render via their own
-// /components/<slug> route. sail-message-list and sail-media-csv are
-// skipped everywhere (see the file banner) — no live route yet.
+// L1 tiles render the REAL component. Pack catalog rows stay listed and
+// filterable, but their grid previews are link-only (see file banner) so
+// this route never imports CodeMirror/Mermaid/chart modules. Canvas tiles
+// and sail-message-list / sail-media-csv remain skipped (banner).
 
 import { controller, signal, derived, filteredList, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
@@ -57,9 +49,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       () => CATALOG,
       (c: CatalogEntry, q: string) => (c.tag + ' ' + c.cat + ' ' + c.pack).toLowerCase().includes(q),
     )
-    // Default to L1 only — mounting charts+mermaid+code-editor+chat+all L1
-    // at once OOMs tabs after Style cutover (each tile is a live component).
-    // User still can pick "All packs" or a pack rail entry.
+    // Default to L1 only. Pack tiles on THIS page are link-only (no live
+    // <sail-*> mounts) so deck does not eagerly import CodeMirror / Mermaid /
+    // chart modules into the /components bundle — that was crashing the tab.
+    // Live pack demos stay on /components/<slug>. User can still filter packs.
     const packSel = signal<string>('lang')
     const catSel = signal<string>('all')
     const pickPack = (id: string): void => packSel.set(id)
@@ -1129,12 +1122,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
 
-        <!-- ══ @ship/sail-charts ═════════════════════════════════════════ -->
+        <!-- ══ Packs — catalog tiles only (no live pack CE mounts) ════════
+             Deck auto-imports every custom element tag in this route into the
+             page graph. Mounting charts / mermaid / code-editor / chat here
+             pulled CodeMirror + Mermaid into /components and OOM'd the tab
+             even when packSel defaulted to lang (modules still load; only
+             DOM mount was gated). Live demos: /components/<slug>. -->
         {#if show.sailSparkline()}
           <card padding="none" data-tile="sail-sparkline" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-sparkline data="2,5,3,8,4,6,7" width="120" height="40"></sail-sparkline>
+                <p sx={mutedXs}>Open detail for live chart.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-sparkline" sx={tileName}>sail-sparkline</a>
@@ -1150,7 +1148,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-area-chart" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-area-chart>
+                <p sx={mutedXs}>Open detail for live chart.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-area-chart" sx={tileName}>sail-area-chart</a>
@@ -1166,7 +1164,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-bar-chart" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="160" height="60"></sail-bar-chart>
+                <p sx={mutedXs}>Open detail for live chart.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-bar-chart" sx={tileName}>sail-bar-chart</a>
@@ -1182,7 +1180,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-donut" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="80" thickness="10"></sail-donut>
+                <p sx={mutedXs}>Open detail for live chart.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-donut" sx={tileName}>sail-donut</a>
@@ -1198,7 +1196,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-gauge" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-gauge value="72" diameter="80" thickness="10"></sail-gauge>
+                <p sx={mutedXs}>Open detail for live chart.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-gauge" sx={tileName}>sail-gauge</a>
@@ -1214,7 +1212,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-heatmap" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-heatmap rows="3" cols="5" values="1,2,3,4,3,4,5,6,5,4,3,2,1,2,3" width="160" height="60"></sail-heatmap>
+                <p sx={mutedXs}>Open detail for live chart.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-heatmap" sx={tileName}>sail-heatmap</a>
@@ -1230,7 +1228,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-line-chart" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-line-chart>
+                <p sx={mutedXs}>Open detail for live chart.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-line-chart" sx={tileName}>sail-line-chart</a>
@@ -1248,7 +1246,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-media-image" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-media-image src="/sail-oss/sail-mark.svg" alt="Sail mark"></sail-media-image>
+                <p sx={mutedXs}>Open detail for live media.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-media-image" sx={tileName}>sail-media-image</a>
@@ -1264,7 +1262,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-media-av" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-media-av></sail-media-av>
+                <p sx={mutedXs}>Open detail for live media.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-media-av" sx={tileName}>sail-media-av</a>
@@ -1282,7 +1280,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-code-editor" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-code-editor value="const greeting = 'hi';" language="js" line-numbers size="sm"></sail-code-editor>
+                <p sx={mutedXs}>Open detail for live editor (CodeMirror).</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-code-editor" sx={tileName}>sail-code-editor</a>
@@ -1298,7 +1296,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-mermaid" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>
+                <p sx={mutedXs}>Open detail for live diagram.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-mermaid" sx={tileName}>sail-mermaid</a>
@@ -1316,7 +1314,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-message" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-message role="user" state="user">Hello — the live chat message primitive.</sail-message>
+                <p sx={mutedXs}>Open detail for live chat element.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-message" sx={tileName}>sail-message</a>
@@ -1332,7 +1330,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-citation" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-citation source="docs.sail.dev" href="https://docs.sail.dev">A citation from the docs</sail-citation>
+                <p sx={mutedXs}>Open detail for live chat element.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-citation" sx={tileName}>sail-citation</a>
@@ -1348,7 +1346,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-composer" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-composer placeholder="Ask anything…"></sail-composer>
+                <p sx={mutedXs}>Open detail for live chat element.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-composer" sx={tileName}>sail-composer</a>
@@ -1364,7 +1362,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-thinking-dots" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-thinking-dots></sail-thinking-dots>
+                <p sx={mutedXs}>Open detail for live chat element.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-thinking-dots" sx={tileName}>sail-thinking-dots</a>
@@ -1380,7 +1378,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <card padding="none" data-tile="sail-tool-call" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <sail-tool-call name="search" status="running">query: search</sail-tool-call>
+                <p sx={mutedXs}>Open detail for live chat element.</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/sail-tool-call" sx={tileName}>sail-tool-call</a>
