@@ -74,11 +74,6 @@
   --control-h-lg: 40px;
   --control-h-xl: 44px;
   --control-stroke: 2px;
-  --control-frame: 0 0 0 0 transparent;
-  --control-lift: -1px;
-  --press-translate: 1px;
-  --press-scale: 0.98;
-  --press-shadow: 0 0 0 0 transparent;
   --panel-max-w-sm: 320px;
   --panel-max-w-md: 480px;
   --panel-max-w-lg: 720px;
@@ -145,7 +140,6 @@
   --heading-font: var(--font-display);
   --heading-weight: var(--font-weight-semibold);
   --heading-tracking: var(--tracking-tight);
-  --heading-transform: none;
   --body-font: var(--font-body);
   --body-weight: var(--font-weight-normal);
   --body-tracking: var(--tracking-normal);
@@ -153,8 +147,6 @@
   --label-font: var(--font-body);
   --label-weight: var(--font-weight-semibold);
   --label-tracking: var(--tracking-wide);
-  --label-transform: uppercase;
-  --display-font: var(--font-display);
   --edge-highlight: inset 0 1px 0 0 var(--hover-bg);
   --ring-width: 3px;
   --ring-offset: 2px;
@@ -169,23 +161,9 @@
   --surface-overlay-blend: overlay;
   --surface-overlay-opacity: 1;
   --surface-inverse: var(--foreground);
-  --border-width: 1px;
   --border: oklch(0.147 0.004 49.25 / 25%);
   --border-subtle: color-mix(in oklch, var(--border) 60%, transparent);
   --border-strong: color-mix(in oklch, var(--foreground) 55%, transparent);
-  --corner-image: none;
-  --gradient-primary: linear-gradient(180deg, var(--primary) 0%, transparent 92%);
-  --gradient-accent: linear-gradient(180deg, var(--accent) 0%, transparent 92%);
-  --gradient-surface: none;
-  --glow-primary: radial-gradient(circle, color-mix(in oklch, var(--primary) 8%, transparent), transparent 60%);
-  --glow-accent: radial-gradient(circle, color-mix(in oklch, var(--accent) 8%, transparent), transparent 60%);
-  --glow-default: none;
-  --glow-muted: none;
-  --glow-info: none;
-  --glow-success: none;
-  --glow-warning: none;
-  --glow-destructive: none;
-  --shape-pill: 9999px;
   --background: oklch(0.975 0.002 106.423);
   --foreground: oklch(0.147 0.004 49.25);
   --primary: oklch(0.67 0.16 var(--brand-hue, 58));
@@ -422,7 +400,6 @@
   --radio-foreground: var(--foreground);
   --scroll-area-thumb: var(--border);
   --scroll-area-thumb-hover: var(--muted-foreground);
-  --separator-line: var(--border);
   --spinner-foreground: var(--muted-foreground);
   --spinner-track: var(--border-subtle);
   --switch: var(--muted);
@@ -451,6 +428,113 @@
   --toggle-border: var(--border);
   --tooltip: var(--foreground);
   --tooltip-foreground: var(--background);
+}
+
+/* ─── Expression channels (Tier 2) ──────────────────────────────────
+ *
+ * Design-token "theme-bending" channels: the properties a theme most
+ * often wants to bend but otherwise cannot — stroke weight, control
+ * framing, interaction motion, corner treatment, display type, casing,
+ * gradient and glow.
+ *
+ * The contract for every name in this block is enforced by the tests in
+ * `crates/sail/compiler/tests/channel_integrity.rs` and
+ * `channel_discipline.rs`:
+ *   1. The default is a NO-OP — it reproduces today's rendering
+ *      exactly, so declaring the channel changes nothing on its own.
+ *      channel_integrity additionally rejects hard literals that would
+ *      break composition (e.g. `none` inside a `box-shadow` list).
+ *   2. A generated reader consumes it. A channel nothing reads is a
+ *      variable in a costume; the `channel-readers` generator check
+ *      fails the build if any name here goes unread.
+ *   3. Where a channel governs a single CSS property, the skin lints in
+ *      channel_discipline stop a skin writing that property literally
+ *      instead of through the channel. Today that coverage is
+ *      `text-transform` and `border-image`; `border-width` is tracked as a
+ *      ratchet rather than an outright ban. Other channels are held
+ *      honest by checks (1) and (2) above.
+ *
+ * Themes opt in; components never change. That is the whole thesis —
+ * a theme should be a token block, not a patch.
+ *
+ * SSOT: `$extensions.ship.channel` + `$description` on the token in
+ * packages/sail/tokens/model/**. Do not hand-edit this block.
+ */
+:root {
+  /* Control framing — an extra box-shadow "frame" drawn around controls, stacked BEFORE the variant's own shadow so it reads as chrome rather than elevation.
+   * The no-op is a fully transparent shadow, NOT `none`: this value is composed into a comma-separated box-shadow list, and `none` is not a legal list member — `box-shadow: none, var(--shadow-xs)` drops the whole declaration. A zero-size transparent layer paints nothing and composes cleanly. Same reasoning for --press-shadow and the --glow-* family.
+   */
+  --control-frame: 0 0 0 0 transparent;
+
+  /* Interaction motion. The baseline button lift/press was decided once, globally, in the contract (`translateY(-1px)` / `translateY(1px) scale(0.98)`) — the whole product's personality in two literals. Routed through channels so a calm theme sets 0 and an arcade theme exaggerates. Defaults reproduce the historical values. */
+  --control-lift: -1px;
+
+  /* Interaction motion — see control.lift. Default reproduces the historical :active translate. */
+  --press-translate: 1px;
+
+  /* Interaction motion — see control.lift. Default reproduces the historical :active scale. */
+  --press-scale: 0.98;
+
+  /* Shadow applied on :active, composed on top of the control's resting shadow. Transparent no-op (see control.frame); an 8-bit theme gives it a hard offset that collapses on press. */
+  --press-shadow: 0 0 0 0 transparent;
+
+  /* Casing channel. The default is what the system ALREADY does, not a uniform `none`: headings render as authored. Governed property: `text-transform`. */
+  --heading-transform: none;
+
+  /* Casing channel. The label role has always been upper-cased (hand-written `text-transform: uppercase` in every skin that carries a label), so the default is `uppercase` — defaulting to `none` would have quietly lower-cased every eyebrow and rail heading in the product. A channel is a seam, not a restyle. Governed property: `text-transform`. */
+  --label-transform: uppercase;
+
+  /* Display type — the hero/wordmark role, themable independently of --heading-font. Default aliases the existing display stack so nothing moves. */
+  --display-font: var(--font-display);
+
+  /* Stroke weight. Every hairline in the system lowers to this instead of a literal 1px, so a brutalist or 8-bit theme can thicken every control edge at once. Governed property: `border-width`. */
+  --border-width: 1px;
+
+  /* Corner treatment — a `border-image` value for controls and cards. Default `none` leaves `border-radius` in charge. A pixel-art theme supplies a slice so corners are drawn, not rounded. Governed property: `border-image`. */
+  --corner-image: none;
+
+  /* Gradient channel. This lived as a literal INSIDE the sx vocabulary's atom (text-gradient-primary), so a theme could restyle every colour in the system and still not touch its own wordmark. Lifted here; the atom now reads the channel. Default is the exact former literal, so this is a pure refactor until a theme opts in. */
+  --gradient-primary: linear-gradient(180deg, var(--primary) 0%, transparent 92%);
+
+  /* Gradient channel — a PROMOTION, not a new idea: two atoms wanted the same shape with a different base, so both now reference named globals instead of one being implicitly derived from the other. */
+  --gradient-accent: linear-gradient(180deg, var(--accent) 0%, transparent 92%);
+
+  /* A page-level gradient wash, painted under content by the surface reader. Nothing gradient-washes the page today, so `none` is both the no-op and the honest default. */
+  --gradient-surface: none;
+
+  /* Per-tone glow — a radial background wash keyed to the tone ramp names (see the tone ramps), so `--glow-{tone}` is addressable wherever `--tone-*` is. Defaults to the former bg-glow-primary literal.
+   * NOTE: this is a BACKGROUND channel. A neon box-shadow rim (what a synthwave theme reaches for on controls) is --control-frame's job — one token, one meaning.
+   */
+  --glow-primary: radial-gradient(circle, color-mix(in oklch, var(--primary) 8%, transparent), transparent 60%);
+
+  /* Per-tone glow (see glow.primary). Defaults to the former bg-glow-accent literal. */
+  --glow-accent: radial-gradient(circle, color-mix(in oklch, var(--accent) 8%, transparent), transparent 60%);
+
+  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
+  --glow-default: none;
+
+  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
+  --glow-muted: none;
+
+  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
+  --glow-info: none;
+
+  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
+  --glow-success: none;
+
+  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
+  --glow-warning: none;
+
+  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
+  --glow-destructive: none;
+
+  /* Pill sentinel — SPLIT from --radius-full.
+   * --radius-full (9999px) was doing double duty: a shape token meaning "this element is a circle/pill" AND the top of the radius scale. A theme that squared off its radius scale had no way to say "…but the status dot is still round", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.
+   */
+  --shape-pill: 9999px;
+
+  /* Separator stroke — themable line colour for <separator>. */
+  --separator-line: var(--border);
 }
 
 /* ─── compat aliases (legacy CSS names) ─── */

@@ -5,9 +5,11 @@
       "line": {
         "$value": "{color.border.default}",
         "$type": "color",
+        "$description": "Separator stroke — themable line colour for <separator>.",
         "$extensions": {
           "ship": {
-            "cssName": "separator-line"
+            "cssName": "separator-line",
+            "channel": true
           }
         }
       }

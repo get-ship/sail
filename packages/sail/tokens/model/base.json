@@ -517,18 +517,22 @@
     "frame": {
       "$value": "0 0 0 0 transparent",
       "$type": "shadow",
+      "$description": "Control framing — an extra box-shadow \"frame\" drawn around controls, stacked BEFORE the variant's own shadow so it reads as chrome rather than elevation.\nThe no-op is a fully transparent shadow, NOT `none`: this value is composed into a comma-separated box-shadow list, and `none` is not a legal list member — `box-shadow: none, var(--shadow-xs)` drops the whole declaration. A zero-size transparent layer paints nothing and composes cleanly. Same reasoning for --press-shadow and the --glow-* family.",
       "$extensions": {
         "ship": {
-          "cssName": "control-frame"
+          "cssName": "control-frame",
+          "channel": true
         }
       }
     },
     "lift": {
       "$value": "-1px",
       "$type": "dimension",
+      "$description": "Interaction motion. The baseline button lift/press was decided once, globally, in the contract (`translateY(-1px)` / `translateY(1px) scale(0.98)`) — the whole product's personality in two literals. Routed through channels so a calm theme sets 0 and an arcade theme exaggerates. Defaults reproduce the historical values.",
       "$extensions": {
         "ship": {
-          "cssName": "control-lift"
+          "cssName": "control-lift",
+          "channel": true
         }
       }
     },
@@ -536,27 +540,33 @@
       "translate": {
         "$value": "1px",
         "$type": "dimension",
+        "$description": "Interaction motion — see control.lift. Default reproduces the historical :active translate.",
         "$extensions": {
           "ship": {
-            "cssName": "press-translate"
+            "cssName": "press-translate",
+            "channel": true
           }
         }
       },
       "scale": {
         "$value": "0.98",
         "$type": "number",
+        "$description": "Interaction motion — see control.lift. Default reproduces the historical :active scale.",
         "$extensions": {
           "ship": {
-            "cssName": "press-scale"
+            "cssName": "press-scale",
+            "channel": true
           }
         }
       },
       "shadow": {
         "$value": "0 0 0 0 transparent",
         "$type": "shadow",
+        "$description": "Shadow applied on :active, composed on top of the control's resting shadow. Transparent no-op (see control.frame); an 8-bit theme gives it a hard offset that collapses on press.",
         "$extensions": {
           "ship": {
-            "cssName": "press-shadow"
+            "cssName": "press-shadow",
+            "channel": true
           }
         }
       }
@@ -1173,9 +1183,11 @@
       "transform": {
         "$value": "none",
         "$type": "string",
+        "$description": "Casing channel. The default is what the system ALREADY does, not a uniform `none`: headings render as authored. Governed property: `text-transform`.",
         "$extensions": {
           "ship": {
-            "cssName": "heading-transform"
+            "cssName": "heading-transform",
+            "channel": true
           }
         }
       }
@@ -1249,9 +1261,11 @@
       "transform": {
         "$value": "uppercase",
         "$type": "string",
+        "$description": "Casing channel. The label role has always been upper-cased (hand-written `text-transform: uppercase` in every skin that carries a label), so the default is `uppercase` — defaulting to `none` would have quietly lower-cased every eyebrow and rail heading in the product. A channel is a seam, not a restyle. Governed property: `text-transform`.",
         "$extensions": {
           "ship": {
-            "cssName": "label-transform"
+            "cssName": "label-transform",
+            "channel": true
           }
         }
       }
@@ -1259,9 +1273,11 @@
     "displayFont": {
       "$value": "{font-display}",
       "$type": "fontFamily",
+      "$description": "Display type — the hero/wordmark role, themable independently of --heading-font. Default aliases the existing display stack so nothing moves.",
       "$extensions": {
         "ship": {
-          "cssName": "display-font"
+          "cssName": "display-font",
+          "channel": true
         }
       }
     },
@@ -1402,9 +1418,11 @@
       "width": {
         "$value": "1px",
         "$type": "dimension",
+        "$description": "Stroke weight. Every hairline in the system lowers to this instead of a literal 1px, so a brutalist or 8-bit theme can thicken every control edge at once. Governed property: `border-width`.",
         "$extensions": {
           "ship": {
-            "cssName": "border-width"
+            "cssName": "border-width",
+            "channel": true
           }
         }
       },
@@ -1439,9 +1457,11 @@
     "cornerImage": {
       "$value": "none",
       "$type": "string",
+      "$description": "Corner treatment — a `border-image` value for controls and cards. Default `none` leaves `border-radius` in charge. A pixel-art theme supplies a slice so corners are drawn, not rounded. Governed property: `border-image`.",
       "$extensions": {
         "ship": {
-          "cssName": "corner-image"
+          "cssName": "corner-image",
+          "channel": true
         }
       }
     },
@@ -1449,27 +1469,33 @@
       "primary": {
         "$value": "linear-gradient(180deg, var(--primary) 0%, transparent 92%)",
         "$type": "dimension",
+        "$description": "Gradient channel. This lived as a literal INSIDE the sx vocabulary's atom (text-gradient-primary), so a theme could restyle every colour in the system and still not touch its own wordmark. Lifted here; the atom now reads the channel. Default is the exact former literal, so this is a pure refactor until a theme opts in.",
         "$extensions": {
           "ship": {
-            "cssName": "gradient-primary"
+            "cssName": "gradient-primary",
+            "channel": true
           }
         }
       },
       "accent": {
         "$value": "linear-gradient(180deg, var(--accent) 0%, transparent 92%)",
         "$type": "dimension",
+        "$description": "Gradient channel — a PROMOTION, not a new idea: two atoms wanted the same shape with a different base, so both now reference named globals instead of one being implicitly derived from the other.",
         "$extensions": {
           "ship": {
-            "cssName": "gradient-accent"
+            "cssName": "gradient-accent",
+            "channel": true
           }
         }
       },
       "surface": {
         "$value": "none",
         "$type": "string",
+        "$description": "A page-level gradient wash, painted under content by the surface reader. Nothing gradient-washes the page today, so `none` is both the no-op and the honest default.",
         "$extensions": {
           "ship": {
-            "cssName": "gradient-surface"
+            "cssName": "gradient-surface",
+            "channel": true
           }
         }
       }
@@ -1478,72 +1504,88 @@
       "primary": {
         "$value": "radial-gradient(circle, color-mix(in oklch, var(--primary) 8%, transparent), transparent 60%)",
         "$type": "dimension",
+        "$description": "Per-tone glow — a radial background wash keyed to the tone ramp names (see the tone ramps), so `--glow-{tone}` is addressable wherever `--tone-*` is. Defaults to the former bg-glow-primary literal.\nNOTE: this is a BACKGROUND channel. A neon box-shadow rim (what a synthwave theme reaches for on controls) is --control-frame's job — one token, one meaning.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-primary"
+            "cssName": "glow-primary",
+            "channel": true
           }
         }
       },
       "accent": {
         "$value": "radial-gradient(circle, color-mix(in oklch, var(--accent) 8%, transparent), transparent 60%)",
         "$type": "dimension",
+        "$description": "Per-tone glow (see glow.primary). Defaults to the former bg-glow-accent literal.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-accent"
+            "cssName": "glow-accent",
+            "channel": true
           }
         }
       },
       "default": {
         "$value": "none",
         "$type": "string",
+        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-default"
+            "cssName": "glow-default",
+            "channel": true
           }
         }
       },
       "muted": {
         "$value": "none",
         "$type": "string",
+        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-muted"
+            "cssName": "glow-muted",
+            "channel": true
           }
         }
       },
       "info": {
         "$value": "none",
         "$type": "string",
+        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-info"
+            "cssName": "glow-info",
+            "channel": true
           }
         }
       },
       "success": {
         "$value": "none",
         "$type": "string",
+        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-success"
+            "cssName": "glow-success",
+            "channel": true
           }
         }
       },
       "warning": {
         "$value": "none",
         "$type": "string",
+        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-warning"
+            "cssName": "glow-warning",
+            "channel": true
           }
         }
       },
       "destructive": {
         "$value": "none",
         "$type": "string",
+        "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-destructive"
+            "cssName": "glow-destructive",
+            "channel": true
           }
         }
       }
@@ -1551,9 +1593,11 @@
     "shapePill": {
       "$value": "9999px",
       "$type": "dimension",
+      "$description": "Pill sentinel — SPLIT from --radius-full.\n--radius-full (9999px) was doing double duty: a shape token meaning \"this element is a circle/pill\" AND the top of the radius scale. A theme that squared off its radius scale had no way to say \"…but the status dot is still round\", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.",
       "$extensions": {
         "ship": {
-          "cssName": "shape-pill"
+          "cssName": "shape-pill",
+          "channel": true
         }
       }
     },
