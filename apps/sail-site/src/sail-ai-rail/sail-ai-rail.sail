@@ -6,8 +6,12 @@
 -->
 
 <controller>
-export default controller(() => {
-  const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
+export default controller((ctx) => {
+  const path = derived(() => {
+    const r = (ctx as { route?: { pathname?: () => string } }).route
+    if (r?.pathname) return r.pathname()
+    return typeof location !== 'undefined' ? location.pathname : '/'
+  })
   return { path }
 })
 </controller>

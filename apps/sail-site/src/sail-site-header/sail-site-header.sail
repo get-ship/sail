@@ -53,11 +53,19 @@ function productAttr(product: string): string {
   }
 }
 
-export default controller(() => {
+export default controller((ctx) => {
     const root = document.documentElement
-    const path = signal<string>(typeof location !== 'undefined' ? location.pathname : '/')
+    // Live pathname from the router when chrome is reused across leaf
+    // navigations; fall back to location for first paint / non-router mounts.
+    const path = derived(() => {
+      const r = (ctx as { route?: { pathname?: () => string } }).route
+      if (r?.pathname) return r.pathname()
+      return typeof location !== 'undefined' ? location.pathname : '/'
+    })
     const product = derived(() => productFor(path()))
-    root.setAttribute('data-product', productAttr(product()))
+    effect(() => {
+      root.setAttribute('data-product', productAttr(product()))
+    })
 
     // Theme application. applyTheme is the ONLY writer of data-theme/.dark and
     // does NOT persist (the picker owns localStorage) — so re-running per

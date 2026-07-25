@@ -322,6 +322,62 @@ describe('layout module rendering', () => {
     const slot = chrome!.querySelector('div[slot="route"]')
     expect(slot).not.toBeNull()
   })
+
+  it('reuses chrome on same-chain leaf navigations (no remount of layout modules)', async () => {
+    // Rebuilding header/rails/theme-picker on every click froze sail-site.
+    // Same pathPrefix chain must keep the chrome MountHandles and only swap
+    // the leaf route. Crossing a chain boundary still rebuilds chrome.
+    const LAYOUT_A = {
+      __mount(target: Element) {
+        target.appendChild(document.createElement('x-chrome-a'))
+      },
+    }
+    const LAYOUT_B = {
+      __mount(target: Element) {
+        target.appendChild(document.createElement('x-chrome-b'))
+      },
+    }
+    const MOD_A = { __id: 'leaf-a' }
+    const MOD_B = { __id: 'leaf-b' }
+    const MOD_OTHER = { __id: 'other' }
+    history.replaceState({}, '', '/a/one')
+    router = mountRouter({
+      root: '#root',
+      routes: [
+        { pattern: '/a/one' },
+        { pattern: '/a/two' },
+        { pattern: '/b' },
+      ],
+      layouts: [
+        { pathPrefix: '/a', tag: 'x-chrome-a' },
+        { pathPrefix: '/b', tag: 'x-chrome-b' },
+      ],
+      modules: { '/a/one': MOD_A, '/a/two': MOD_B, '/b': MOD_OTHER },
+      layoutModules: { '/a': LAYOUT_A, '/b': LAYOUT_B },
+    })
+    const root = document.getElementById('root')!
+    await vi.waitFor(() => expect(root.querySelector('x-chrome-a')).not.toBeNull())
+    const chromeEl = root.querySelector('x-chrome-a')!
+    expect(mountCalls.filter((c) => c.opts?.module === LAYOUT_A)).toHaveLength(1)
+
+    navigate('/a/two')
+    await vi.waitFor(() =>
+      expect(mountCalls.some((c) => c.opts?.module === MOD_B)).toBe(true),
+    )
+    // Same chain → layout module must NOT remount; chrome node identity stable.
+    expect(mountCalls.filter((c) => c.opts?.module === LAYOUT_A)).toHaveLength(1)
+    expect(root.querySelector('x-chrome-a')).toBe(chromeEl)
+    expect(root.querySelectorAll('x-chrome-a')).toHaveLength(1)
+
+    // Different chain rebuilds chrome with the other layout.
+    navigate('/b')
+    await vi.waitFor(() =>
+      expect(mountCalls.some((c) => c.opts?.module === MOD_OTHER)).toBe(true),
+    )
+    expect(root.querySelector('x-chrome-a')).toBeNull()
+    expect(root.querySelector('x-chrome-b')).not.toBeNull()
+    expect(mountCalls.filter((c) => c.opts?.module === LAYOUT_B)).toHaveLength(1)
+  })
 })
 
 // ---------------------------------------------------------------------------
