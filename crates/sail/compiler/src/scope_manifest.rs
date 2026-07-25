@@ -1,9 +1,10 @@
 //! The `<scope>` grammar — one source of truth for every construct a
-//! `<scope>` block accepts: the prop declaration forms (incl. CVA-in-props),
-//! type aliases, and `compound:`.
+//! `<scope>` block accepts: the prop declaration forms, type aliases,
+//! Style consts (`const name = style.…`), and residual `compound:`.
 //!
-//! **Variance pattern (locked):** CVA-in-props axes + optional `compound:`
-//! only. Shared `tone` / `size` bare defaults expand to stdlib convention
+//! **Paint (Style product):** host `sx=` with chain / match / when / compound
+//! and scope Style consts. Residual CVA key→sx maps type as unions without
+//! paint. Shared `tone` / `size` bare defaults expand to stdlib convention
 //! unions — ordinary reflected props.
 //!
 //! A sibling of `block_manifest` / `directive_manifest`: the closed grammar
@@ -99,15 +100,21 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
         example: "<scope>\n  export type Item = { id: string, label: string }\n  props: { selected: Item | null = null }\n</scope>\n<p>ok</p>",
     },
     ScopeEntry {
-        form: "CVA-in-props axis",
+        form: "Style const",
+        syntax: "const filled = style.bg(primary).padX(2)",
+        summary: "compile-time Style value (chain / match / when / compound / list / ref); resolved when host sx= refs the name — not a runtime binding",
+        example: "<scope>\n  const filled = style.bg(primary)\n  props: { open = false }\n</scope>\n<div sx={filled}>ok</div>",
+    },
+    ScopeEntry {
+        form: "CVA-in-props axis (residual)",
         syntax: "size: { sm: 'px-2', lg: 'px-4' }",
-        summary: "a prop whose value is a key→sx map; keys become the union type (first = default), reflected, and each value lowers through the same sx pipeline as host sx=",
+        summary: "residual key→string map: keys become the reflected union type (first = default); values do not emit paint — use host match / Style",
         example: "<scope>\n  props: {\n    density: { cozy: 'p-2', compact: 'p-1' }\n  }\n</scope>\n<p>ok</p>",
     },
     ScopeEntry {
-        form: "compound variant",
+        form: "compound variant (residual)",
         syntax: "compound: [ { when: { variant: 'solid', size: 'lg' }, sx: '…' } ]",
-        summary: "rows keyed on several axes at once; they contribute CSS only and never declare a prop. Sibling of props:",
+        summary: "residual combination rows — accepted so unmigrated files parse, but no CSS is emitted; product form is host compound({…}, style.…)",
         example: "<scope>\n  props: {\n    variant: { solid: 'font-semibold', soft: 'font-normal' }\n    size: { sm: 'p-1', lg: 'p-4' }\n  }\n  compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'tracking-wide' } ]\n</scope>\n<p>ok</p>",
     },
 ];
@@ -130,8 +137,8 @@ pub const SCOPE_REFUSALS: &[ScopeRefusal] = &[
         example: "<scope>\n  import type { X } from './x'\n  props: { open = false }\n</scope>\n<p>ok</p>",
     },
     ScopeRefusal {
-        syntax: "const / let / var",
-        instead: "a literal default on a prop, or state in the <controller>",
+        syntax: "const/let/var computation",
+        instead: "Style const (`const name = style.…`), a literal prop default, or state in <controller>",
         example: "<scope>\n  const n = 1\n  props: { open = false }\n</scope>\n<p>ok</p>",
     },
 ];

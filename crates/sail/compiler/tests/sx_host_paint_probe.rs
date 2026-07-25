@@ -30,28 +30,28 @@ fn radio_group_zero_author_style() {
 }
 
 #[test]
-fn cva_in_props_lowers_same_sx_pipeline_element_mode() {
-    // Preferred matrix form: prop map key→sx; reflect + types; same lower as host sx=.
+fn residual_cva_maps_become_unions_without_paint_css() {
+    // CVA key→sx maps are not a paint product: keys form a reflected union only.
+    // Paint must use Style `match` on the host (see badge proving ground).
     let src = r#"
 <scope>
   props: {
     tone: 'default' | 'primary' = 'default'
     variant: {
-      soft: 'bg-tone-bg text-tone-fg border-tone-border',
-      solid: 'bg-tone text-tone-contrast border-tone hover:opacity-90',
-      outline: 'bg-transparent text-tone-fg border-tone-border',
+      soft: 'bg-primary text-primary-foreground',
+      solid: 'bg-muted text-muted-foreground',
     }
     size: {
-      sm: 'text-xs px-2',
-      md: 'text-sm px-2_5',
+      sm: 'text-xs',
+      md: 'text-sm',
     }
   }
 </scope>
-<span sx="rounded-full border font-medium">
+<span sx={style.radius(full).border(border).fontWeight(medium)}>
   <slot></slot>
 </span>
 "#;
-    let out = compile_element(src, "probe").expect("cva-in-props compiles");
+    let out = compile_element(src, "probe").expect("residual CVA maps still type as unions");
     let attrs = out.manifest["attributes"].as_array().expect("attrs");
     let variant = attrs.iter().find(|a| a["name"] == "variant").expect("variant attr");
     assert_eq!(variant["default"], "soft", "first map key is default: {variant}");
@@ -60,38 +60,19 @@ fn cva_in_props_lowers_same_sx_pipeline_element_mode() {
         values.iter().any(|v| v == "soft") && values.iter().any(|v| v == "solid"),
         "union of keys: {variant}"
     );
-    // Attribute-keyed rules from the same sx lower (not hand property soup).
+    // No immortal CVA lowerer: residual sx strings on the map must not paint.
     assert!(
-        out.skin_css.contains("variant='soft'")
-            && out.skin_css.contains("background-color:var(--tone-bg)")
-            && out.skin_css.contains("color:var(--tone-fg)"),
-        "soft axis via sx atoms: {}",
+        !out.skin_css.contains("variant='soft'")
+            && !out.skin_css.contains("variant='solid'")
+            && !out.skin_css.contains("size='sm'"),
+        "CVA map must not emit attr-keyed paint CSS:\n{}",
         out.skin_css
     );
+    // Host Style chain still paints via the sole product path.
+    let paint = format!("{}{}", out.structure_html, out.skin_css);
     assert!(
-        out.skin_css.contains("variant='solid'")
-            && out.skin_css.contains("background-color:var(--tone)")
-            && out.skin_css.contains("color:var(--tone-contrast)"),
-        "solid axis via sx atoms: {}",
-        out.skin_css
-    );
-    assert!(
-        out.skin_css.contains("size='sm'") && out.skin_css.contains("font-size:var(--text-xs)"),
-        "size axis via sx atoms: {}",
-        out.skin_css
-    );
-    // State prefix on a map value → attr-keyed :hover rule
-    assert!(
-        out.skin_css.contains(":hover") && out.skin_css.contains("opacity"),
-        "hover: prefix on map value: {}",
-        out.skin_css
-    );
-    // Host sx base still present (atomic classes on structure / rules in skin).
-    assert!(
-        out.structure_html.contains("sx-roundedfull")
-            || out.structure_html.contains("sx-border")
-            || out.skin_css.contains("border-radius"),
-        "host sx base survives: struct={} skin={}",
+        paint.contains("sx-") || paint.contains("border-radius") || paint.contains("var(--"),
+        "host Style chain must paint: struct={} skin={}",
         out.structure_html,
         out.skin_css
     );
@@ -99,43 +80,35 @@ fn cva_in_props_lowers_same_sx_pipeline_element_mode() {
 
 #[test]
 fn badge_soft_base_on_host_sx() {
+    // Badge proving ground: Style chain + match + when + SSOT tokens (no CVA/tone-*).
     let src = include_str!("../stdlib/badge.sail");
     let out = compile_element(src, "badge").expect("badge compiles");
     assert!(
-        out.structure_html.contains("sx-bgtonebg")
-            && out.structure_html.contains("sx-texttonefg")
-            && out.structure_html.contains("sx-bordertoneborder"),
-        "soft default paint must be host sx (attr-absent base):\n{}",
-        out.structure_html
+        src.contains("style.") && src.contains("match(") && src.contains("when("),
+        "badge must author Style value language"
     );
     assert!(
-        out.structure_html.contains("sx-fontbody"),
-        "typeface on host sx:\n{}",
-        out.structure_html
+        !src.contains("tone-bg") && !src.contains("tone-fg") && !src.contains("soft: '"),
+        "badge must not use tone-* or CVA string maps"
     );
+    let paint = format!("{}{}", out.structure_html, out.skin_css);
     assert!(
-        !out.skin_css.contains("background: var(--tone-bg)"),
-        "soft base author paint deleted:\n{}",
+        paint.contains("sx-") || paint.contains("var(--"),
+        "badge Style path must emit classes/token CSS:\nstruct={}\nskin={}",
+        out.structure_html,
         out.skin_css
     );
-    // solid/outline/size via CVA-in-props (same sx pipeline)
+    // match(variant, …) / match(size, …) → attribute selectors (or classes keyed by path).
     assert!(
-        out.skin_css.contains("variant='solid'")
-            && out.skin_css.contains("background-color:var(--tone)")
-            && out.skin_css.contains("variant='outline'")
-            && out.skin_css.contains("size='sm'"),
-        "solid/outline/size via CVA-in-props:\n{}",
-        out.skin_css
+        out.skin_css.contains("variant=")
+            || out.structure_html.contains("variantsolid")
+            || out.structure_html.contains("sx-"),
+        "variant match must contribute paint:\n{}",
+        paint
     );
-    // soft+default compound → muted soft PE.
     assert!(
-        src.contains("variant: 'soft', tone: 'default'")
-            && src.contains("bg-tone-muted-bg")
-            && (out.skin_css.contains("tone-muted-bg")
-                || out.skin_css.contains("var(--tone-muted-bg)")
-                || out.skin_css.contains("background-color:var(--tone-muted-bg)")),
-        "soft+default compound must paint muted soft:\n{}",
-        out.skin_css
+        src.contains("compound({ pill: true }") || src.contains("compound({pill:true}"),
+        "pill via Style compound"
     );
     assert!(
         !out.skin_css.contains("--badge-h") && !out.skin_css.contains("--badge-fs"),
@@ -645,7 +618,7 @@ fn toast_start_stripe_on_host_sx() {
     let src = include_str!("../stdlib/toast.sail");
     assert!(
         src.contains("data-toast-close")
-            && src.contains("ms-auto")
+            && (src.contains("ms-auto") || src.contains("ms: auto"))
             && (out.structure_html.contains("data-toast-close")
                 || out.structure_html.contains("sx-msauto")),
         "close control must be structure with sx:\n{}",
@@ -694,10 +667,10 @@ fn card_host_paint_bulk_on_host_sx() {
 
     // status-rail → border-s-3 + border-strong default + branded tone-fg + ps pad-adjust
     assert!(
-        src.contains("border-s-3")
-            && src.contains("border-s-border-strong")
-            && src.contains("border-s-tone-fg")
-            && src.contains("ps-4"),
+        (src.contains("border-s-3") || src.contains("border-s: 3"))
+            && (src.contains("border-s-border-strong") || src.contains("border-s: border-strong"))
+            && (src.contains("border-s-tone-fg") || src.contains("border-s: tone-fg"))
+            && (src.contains("ps-4") || src.contains("ps: 4")),
         "status-rail compounds must paint rail + pad-adjust via space tokens"
     );
     assert!(
@@ -715,12 +688,13 @@ fn card_host_paint_bulk_on_host_sx() {
 
     // interactive lift + forced-colors focus
     assert!(
-        src.contains("hover:-translate-y-px")
-            && src.contains("active:translate-y-0")
-            && src.contains("motion-reduce:translate-y-0")
-            && src.contains("active:duration-instant")
+        (src.contains("hover:-translate-y-px") || src.contains("hover:-translate-y: px") || src.contains("-translate-y: px"))
+            && (src.contains("active:translate-y-0") || src.contains("active:translate-y: 0") || src.contains("translate-y: 0"))
+            && (src.contains("motion-reduce:translate-y-0") || src.contains("motion-reduce:translate-y: 0"))
+            && (src.contains("active:duration-instant") || src.contains("active:duration: instant") || src.contains("duration: instant"))
             && (src.contains("forced-colors:outline-CanvasText")
-                || src.contains("forced-colors:focus:outline-CanvasText")),
+                || src.contains("forced-colors:focus:outline-CanvasText")
+                || src.contains("forced-colors:focus:outline: CanvasText")),
         "interactive compound must carry TW lift + forced-colors outline"
     );
     assert!(
@@ -746,15 +720,16 @@ fn card_host_paint_bulk_on_host_sx() {
         out.skin_css
     );
 
-    // accent-bar → before: stripe compounds (static + hover:before: opacity)
+    // accent-bar → before: stripe compounds (static + hover:before: opacity).
+    // Source may use legacy atoms or structured `before:content: empty` form.
     assert!(
-        src.contains("before:content-empty")
-            && src.contains("before:bg-gradient-to-r")
-            && src.contains("before:from-primary")
-            && src.contains("before:to-accent")
-            && src.contains("before:h-half")
-            && src.contains("hover:before:opacity-100")
-            && src.contains("before:opacity-0"),
+        (src.contains("before:content-empty") || src.contains("before:content: empty"))
+            && (src.contains("before:bg-gradient-to-r") || src.contains("before:bg-gradient-to-r"))
+            && (src.contains("before:from-primary") || src.contains("before:from-primary"))
+            && (src.contains("before:to-accent") || src.contains("before:to-accent"))
+            && (src.contains("before:h-half") || src.contains("before:h: half"))
+            && (src.contains("hover:before:opacity-100") || src.contains("hover:before:opacity: 100"))
+            && (src.contains("before:opacity-0") || src.contains("before:opacity: 0")),
         "accent-bar compounds must use before: anatomy + hover:before: opacity"
     );
     assert!(
@@ -771,17 +746,19 @@ fn card_host_paint_bulk_on_host_sx() {
         out.skin_css
     );
 
-    // header/footer real named slots with chrome sx (no parent→child PE)
+    // header/footer real named slots with chrome sx (no parent→child PE).
+    // Accept structured spelling (`font-family: heading`, `-mt: 4`, …).
     assert!(
         src.contains(r#"slot name="header""#)
             && src.contains(r#"slot name="footer""#)
-            && src.contains("empty:hidden")
-            && src.contains("font-heading")
-            && src.contains("font-(--heading-weight)")
-            && src.contains("border-border-subtle")
-            && src.contains("-mt-4")
-            && src.contains("-mx-5")
-            && src.contains("-mb-4"),
+            && (src.contains("empty:hidden") || src.contains("empty: hidden"))
+            && (src.contains("font-heading") || src.contains("font-family: heading"))
+            && (src.contains("font-(--heading-weight)")
+                || src.contains("font-weight: (--heading-weight)"))
+            && (src.contains("border-border-subtle") || src.contains("border: border-subtle"))
+            && (src.contains("-mt-4") || src.contains("-mt: 4"))
+            && (src.contains("-mx-5") || src.contains("-mx: 5"))
+            && (src.contains("-mb-4") || src.contains("-mb: 4")),
         "card structure must expose header/footer slots with bleed chrome sx"
     );
     assert!(

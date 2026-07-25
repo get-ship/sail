@@ -57,7 +57,9 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     // The `<host>` tag is retired — root styling is `sx` on the component's root
     // element (which lowers to a class), not a magic host declaration. A stale
     // `<host>` now survives to `parse` and is rejected as an unknown element.
-    let (s, sx_css) = lower_sx(&s);
+    // Scope Style consts (`const filled = style.…`) resolve Refs in host `sx=`.
+    let style_env = super::scope_block::style_env_from_source(&s);
+    let (s, sx_css) = lower_sx(&s, &style_env);
     // An element that already carried `class="…"` now has a SECOND class attr
     // from the sx lowering; downstream the DOM emitter would issue two
     // `setAttribute("class", …)` calls and the sx one clobbers the author's.
@@ -128,11 +130,16 @@ pub(crate) fn find_sx_attr_values(source: &str) -> Vec<(usize, &str)> {
     out
 }
 
-/// Lower every static `sx="…"` attribute to `class="sx-…"`, returning the
-/// rewritten body and the deduped atomic CSS (the caller injects it into the
-/// shared `<style>`). The prop→CSS mapping is `sail_lint::rules::sx::lower` — the
-/// same vocabulary the lint validates.
-fn lower_sx(source: &str) -> (String, String) {
+/// Lower Style product attributes to `class="sx-…"` + atomic CSS.
+///
+/// Accepts:
+/// - `sx={ style.bg(primary)… }` / `sx={[ match(…), when(…) ]}`  (product)
+/// - `sx="style.bg(primary)…"`  (same Style grammar in quotes)
+/// - `sx={ filled }` when `filled` is a scope Style const (via `env`)
+///
+/// Utility-string product (`bg-primary`, `bg: primary px: 2`) lowers to **empty**
+/// class (fail closed at lint/compile — not a second architecture).
+fn lower_sx(source: &str, env: &sail_lint::style::StyleEnv) -> (String, String) {
     let bytes = source.as_bytes();
     let mut out = String::with_capacity(source.len() + 256);
     let mut css = String::new();
@@ -152,30 +159,44 @@ fn lower_sx(source: &str) -> (String, String) {
         if i > 0
             && bytes[i - 1].is_ascii_whitespace()
             && source[i..].starts_with("sx")
-            && is_eq_quote(&bytes[i + 2..])
+            && is_eq_after_sx(&bytes[i + 2..])
         {
             let mut j = i + 2;
-            while j < bytes.len() && bytes[j] != b'"' && bytes[j] != b'{' {
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
                 j += 1;
             }
-            if j < bytes.len() && bytes[j] == b'"' {
-                let vstart = j + 1;
-                if let Some(rel) = source[vstart..].find('"') {
-                    let val = &source[vstart..vstart + rel];
-                    out.push_str(&source[last..i]);
-                    out.push_str("class=\"");
-                    out.push_str(&lower_sx_value(val, &mut css, &mut seen));
-                    out.push('"');
-                    i = vstart + rel + 1;
-                    last = i;
-                    continue;
+            if j < bytes.len() && bytes[j] == b'=' {
+                j += 1;
+                while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                    j += 1;
+                }
+                if j < bytes.len() && bytes[j] == b'"' {
+                    let vstart = j + 1;
+                    if let Some(rel) = source[vstart..].find('"') {
+                        let val = &source[vstart..vstart + rel];
+                        out.push_str(&source[last..i]);
+                        out.push_str("class=\"");
+                        out.push_str(&lower_sx_value(val, env, &mut css, &mut seen));
+                        out.push('"');
+                        i = vstart + rel + 1;
+                        last = i;
+                        continue;
+                    }
+                }
+                if j < bytes.len() && bytes[j] == b'{' {
+                    if let Some(end) = balanced_brace(source.as_bytes(), j) {
+                        let val = &source[j + 1..end];
+                        out.push_str(&source[last..i]);
+                        out.push_str("class=\"");
+                        out.push_str(&lower_sx_value(val, env, &mut css, &mut seen));
+                        out.push('"');
+                        i = end + 1;
+                        last = i;
+                        continue;
+                    }
                 }
             }
         }
-        // Advance one FULL UTF-8 char. A bare `i += 1` lands mid-codepoint on
-        // any multi-byte char (…, emoji, accents) and the next `source[i..]`
-        // slice panics — the crash the async golden fixtures hit. Mirrors the
-        // char-safe stepping in `quote_brace_attrs` / `expand_self_close`.
         let mut n = i + 1;
         while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
             n += 1;
@@ -186,14 +207,79 @@ fn lower_sx(source: &str) -> (String, String) {
     (out, css)
 }
 
+fn is_eq_after_sx(bytes: &[u8]) -> bool {
+    let mut i = 0;
+    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+        i += 1;
+    }
+    i < bytes.len() && bytes[i] == b'='
+}
+
+fn balanced_brace(bytes: &[u8], open: usize) -> Option<usize> {
+    if bytes.get(open) != Some(&b'{') {
+        return None;
+    }
+    let mut depth = 0i32;
+    let mut i = open;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'{' => depth += 1,
+            b'}' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(i);
+                }
+            }
+            b'"' | b'\'' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                        i += 1;
+                    }
+                    i += 1;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    None
+}
+
 fn lower_sx_value(
     val: &str,
+    env: &sail_lint::style::StyleEnv,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
 ) -> String {
-    // sx IR v0: dual-parse structured (`bg: primary`) and legacy (`bg-primary`)
-    // into one IR, then lower through the same vocab/scales emit path.
-    sail_lint::sx_ir::lower_sx_string(val, css, seen)
+    // `quote_brace_attrs` rewrites `sx={…}` → `sx="{…}"` (braces preserved inside).
+    let val = strip_outer_braces(val.trim());
+    // Sole product path: Style value language (chain + match/when/compound/bind).
+    sail_lint::sx_ir::lower_sx_string(val, env, css, seen)
+}
+
+fn strip_outer_braces(val: &str) -> &str {
+    let t = val.trim();
+    if t.starts_with('{') && t.ends_with('}') && t.len() >= 2 {
+        // Only strip one layer when balanced as a whole expression wrapper.
+        let inner = &t[1..t.len() - 1];
+        // If outer braces wrap the whole Style expr (from sx={…}), strip them.
+        // Keep map literals that aren't the whole expression — Style lists start
+        // with `[` or `style`/`match`/`when`/`compound`/ident, not bare `{k:`.
+        let inn = inner.trim();
+        if inn.starts_with("style.")
+            || inn.starts_with("match(")
+            || inn.starts_with("condition(")
+            || inn.starts_with("when(")
+            || inn.starts_with("compound(")
+            || inn.starts_with('[')
+            || inn.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_' || b.is_ascii_whitespace())
+        {
+            return inn;
+        }
+    }
+    t
 }
 
 /// Split `hover:before:bg-muted` → prefixes `["hover","before"]`, atom `bg-muted`.
