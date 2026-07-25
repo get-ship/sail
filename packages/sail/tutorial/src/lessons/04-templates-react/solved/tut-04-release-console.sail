@@ -58,6 +58,12 @@ export default controller(() => {
   })
 </controller>
 
+<scope>
+  const envRow = style.padX(3).padY(2).bg(surface-1).radius(md)
+  const envName = style.grow(1).fontSize(sm)
+  const envRegion = style.fg(muted-foreground)
+</scope>
+
 <column gap="4">
   <row align="center" justify="between">
     <h3>Release console</h3>
@@ -84,10 +90,10 @@ export default controller(() => {
 
   <column gap="1">
     {#for env of filtered() key={env.id}}
-      <row gap="3" align="center" sx="px-3 py-2 bg-surface-1 rounded-md">
+      <row gap="3" align="center" sx={envRow}>
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
-        <strong sx="grow-1 text-sm">{env.name}</strong>
-        <small sx="text-muted-foreground">{env.region}</small>
+        <strong sx={envName}>{env.name}</strong>
+        <small sx={envRegion}>{env.region}</small>
         <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
       </row>
     {/for}

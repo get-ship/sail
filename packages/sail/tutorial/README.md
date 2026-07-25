@@ -15,7 +15,7 @@ loop the language exists for:
 | # | lesson | decision surface |
 |---|--------|------------------|
 | 01 | a-page-is-markup | structure = layout keywords + component props (zero JS) |
-| 02 | styling-is-sx | the one styling attribute; closed token vocabulary; states as prefixes |
+| 02 | styling-is-sx | Style product on sx; style.* chains, when({…}); closed token vocabulary |
 | 03 | state-is-a-controller | signal / derived / effect; one owner for state |
 | 04 | templates-react | zero-arg reads, modifiers, `{#if}` / `{#for key}` / `{#match}` |
 | 05 | data-and-forms | `query()`'s three explicit states; `bind:`; refetch = bump a tracked signal |

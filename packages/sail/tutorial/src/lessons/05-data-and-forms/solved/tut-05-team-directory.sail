@@ -46,11 +46,19 @@ export default controller(() => {
   })
 </controller>
 
+<scope>
+  const muteLabel = style.fontSize(sm).fg(muted-foreground)
+  const loadingRow = style.pad(4).bg(surface-1).radius(md)
+  const muted = style.fg(muted-foreground)
+  const memberRow = style.padX(3).padY(2).bg(surface-1).radius(md)
+  const memberName = style.grow(1).fontSize(sm)
+</scope>
+
 <column gap="4">
   <row align="center" justify="between">
     <h3>Team</h3>
     <row gap="3" align="center">
-      <label sx="text-sm text-muted-foreground">
+      <label sx={muteLabel}>
         <input type="checkbox" bind:checked={breakApi} /> break the API
       </label>
       <button size="sm" variant="outline" on:click={() => reload()}>Reload</button>
@@ -58,9 +66,9 @@ export default controller(() => {
   </row>
 
   {#while-loading of team}
-    <row gap="2" align="center" sx="p-4 bg-surface-1 rounded-md">
+    <row gap="2" align="center" sx={loadingRow}>
       <spinner size="sm"></spinner>
-      <small sx="text-muted-foreground">loading the roster…</small>
+      <small sx={muted}>loading the roster…</small>
     </row>
   {/while-loading}
 
@@ -71,8 +79,8 @@ export default controller(() => {
   {#if team().kind === 'ok'}
     <column gap="1">
       {#for m of team().value key={m.id}}
-        <row gap="3" align="center" sx="px-3 py-2 bg-surface-1 rounded-md">
-          <strong sx="grow-1 text-sm">{m.name}</strong>
+        <row gap="3" align="center" sx={memberRow}>
+          <strong sx={memberName}>{m.name}</strong>
           {#if m.role === 'admin'}<badge tone="primary" variant="soft" size="sm">admin</badge>{/if}
         </row>
       {/for}

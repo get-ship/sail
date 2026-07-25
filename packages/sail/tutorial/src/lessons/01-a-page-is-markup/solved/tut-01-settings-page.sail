@@ -5,11 +5,18 @@
   prop. There is no controller file for this lesson: structure comes from
   the layout keywords, appearance from the tone/variant/size contracts.
 -->
+<scope>
+  const title = style.tracking(tight)
+  const muted = style.fg(muted-foreground).fontSize(sm)
+  const email = style.fg(muted-foreground)
+  const rowLabel = style.fontSize(sm)
+</scope>
+
 <column gap="5">
   <row align="center" justify="between" gap="4">
     <column gap="1">
-      <h2 sx="tracking-tight">Workspace settings</h2>
-      <p sx="text-muted-foreground text-sm">Profile, notifications, and the scary stuff.</p>
+      <h2 sx={title}>Workspace settings</h2>
+      <p sx={muted}>Profile, notifications, and the scary stuff.</p>
     </column>
     <button variant="solid" tone="primary">Save changes</button>
   </row>
@@ -25,7 +32,7 @@
           <avatar initials="AV" tone="primary" size="lg"></avatar>
           <column gap="1">
             <strong>Avery Vale</strong>
-            <small sx="text-muted-foreground">avery@example.dev</small>
+            <small sx={email}>avery@example.dev</small>
           </column>
         </row>
         <separator></separator>
@@ -41,22 +48,22 @@
         <h3>Notifications</h3>
         <row align="center" justify="between" gap="3">
           <column gap="1">
-            <strong sx="text-sm">Weekly digest</strong>
-            <small sx="text-muted-foreground">One summary email, Monday morning.</small>
+            <strong sx={rowLabel}>Weekly digest</strong>
+            <small sx={email}>One summary email, Monday morning.</small>
           </column>
           <switch checked tone="primary"></switch>
         </row>
         <row align="center" justify="between" gap="3">
           <column gap="1">
-            <strong sx="text-sm">Mentions</strong>
-            <small sx="text-muted-foreground">When someone @-mentions you.</small>
+            <strong sx={rowLabel}>Mentions</strong>
+            <small sx={email}>When someone @-mentions you.</small>
           </column>
           <switch checked tone="primary"></switch>
         </row>
         <row align="center" justify="between" gap="3">
           <column gap="1">
-            <strong sx="text-sm">Marketing</strong>
-            <small sx="text-muted-foreground">Product news and tips.</small>
+            <strong sx={rowLabel}>Marketing</strong>
+            <small sx={email}>Product news and tips.</small>
           </column>
           <switch tone="primary"></switch>
         </row>
@@ -68,7 +75,7 @@
     <row align="center" justify="between" gap="4">
       <column gap="1">
         <h3>Danger zone</h3>
-        <p sx="text-muted-foreground text-sm">Deleting the workspace removes every project in it.</p>
+        <p sx={muted}>Deleting the workspace removes every project in it.</p>
       </column>
       <button variant="outline" tone="destructive">Delete workspace</button>
     </row>

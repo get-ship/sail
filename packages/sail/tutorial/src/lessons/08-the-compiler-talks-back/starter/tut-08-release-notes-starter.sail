@@ -38,19 +38,19 @@ export default controller(() => {
   })
 </controller>
 
-<column gap="4" sx="p-12px">
+<column gap="4" sx={style.pad(12px)}>
   <row align="center" justify="between">
     <h3>Release notes</h3>
     <badge tone="primary" variant="soft" motion:enter={{ opacity: 'whoosh' }}>v2.4.0</badge>
   </row>
 
-  <p sx="text-sm text-muted-foreground">published {formatDate(publishedAt())}</p>
+  <p sx={style.fontSize(sm).fg(muted-foreground)}>published {formatDate(publishedAt())}</p>
 
   <column gap="1">
     {#for note of notes() key={note.id}}
-      <row gap="3" align="center" sx="px-3 py-2 bg-surface-1 rounded-md">
+      <row gap="3" align="center" sx={style.padX(3).padY(2).bg(surface-1).radius(md)}>
         <badge tone="muted" variant="outline" size="sm">{note.tag}</badge>
-        <p sx="text-sm">{note.text}</p>
+        <p sx={style.fontSize(sm)}>{note.text}</p>
       </row>
     {/for}
   </column>

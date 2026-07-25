@@ -10,6 +10,13 @@
   props: {
     title = 'Support inbox'
   }
+
+  const messageRow = style.padX(3).padY(2).bg(surface-1).borderWidth(1).border(border-subtle).radius(md)
+  const unreadDot = style.display(inline-block).w(1_5).h(1_5).radius(full).bg(primary)
+  const body = style.grow(1)
+  const from = style.fontSize(sm)
+  const muted = style.fg(muted-foreground)
+  const emptyImprovised = style.pad(4).fontSize(sm).fg(muted-foreground)
 </scope>
 <controller>
 import { controller, signal, derived, query } from '@ship/sail-runtime'
@@ -57,19 +64,19 @@ export default controller(() => {
   {#if inbox().kind === 'ok'}
     <column gap="1">
       {#for m of visible() key={m.topic}}
-        <row gap="3" align="center" sx="px-3 py-2 bg-surface-1 border border-border-subtle rounded-md"
+        <row gap="3" align="center" sx={messageRow}
              motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }}>
-          {#if !m.read}<span sx="inline-block w-1_5 h-1_5 rounded-full bg-primary"></span>{/if}
-          <column gap="0" sx="grow-1">
-            <strong sx="text-sm">{m.from}</strong>
-            <small sx="text-muted-foreground">{m.subject}</small>
+          {#if !m.read}<span sx={unreadDot}></span>{/if}
+          <column gap="0" sx={body}>
+            <strong sx={from}>{m.from}</strong>
+            <small sx={muted}>{m.subject}</small>
           </column>
           <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>
           <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>
         </row>
       {/for}
       {#if visible().length === 0}
-        <div sx="p-4 text-sm text-muted-foreground">Nothing matches this filter.</div>
+        <div sx={emptyImprovised}>Nothing matches this filter.</div>
       {/if}
     </column>
   {/if}

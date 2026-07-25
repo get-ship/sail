@@ -1,9 +1,10 @@
 <!--
   Lesson 08 solved — every rejection answered on the compiler's terms.
 
-  p:12px became the token p:4; the motion preset is 'fade' (the closed
-  set); the date is a zero-arg derived read; the <style> block is gone —
-  the row surface it hand-painted is sx now. No fix fought the language.
+  style.pad(12px) became the token pad(4); the motion preset is 'fade'
+  (the closed set); the date is a zero-arg derived read; the <style>
+  block is gone — the row surface it hand-painted is Style on sx now.
+  No fix fought the language.
 -->
 
 <controller>
@@ -34,19 +35,26 @@ export default controller(() => {
   })
 </controller>
 
-<column gap="4" sx="p-4">
+<scope>
+  const page = style.pad(4)
+  const meta = style.fontSize(sm).fg(muted-foreground)
+  const noteRow = style.padX(3).padY(2).bg(surface-1).radius(md)
+  const noteText = style.fontSize(sm)
+</scope>
+
+<column gap="4" sx={page}>
   <row align="center" justify="between">
     <h3>Release notes</h3>
     <badge tone="primary" variant="soft" motion:enter={{ opacity: 'fade' }}>v2.4.0</badge>
   </row>
 
-  <p sx="text-sm text-muted-foreground">published {published()}</p>
+  <p sx={meta}>published {published()}</p>
 
   <column gap="1">
     {#for note of notes() key={note.id}}
-      <row gap="3" align="center" sx="px-3 py-2 bg-surface-1 rounded-md">
+      <row gap="3" align="center" sx={noteRow}>
         <badge tone="muted" variant="outline" size="sm">{note.tag}</badge>
-        <p sx="text-sm">{note.text}</p>
+        <p sx={noteText}>{note.text}</p>
       </row>
     {/for}
   </column>

@@ -43,9 +43,14 @@ export default controller(() => {
   })
 </controller>
 
+<scope>
+  const face = style.pad(6).bg(surface-1).borderWidth(1).border(border).radius(lg)
+  const clockFace = style.fontSize(4xl).tracking(tight)
+</scope>
+
 <column gap="4">
-  <center sx="p-6 bg-surface-1 border border-border rounded-lg">
-    <strong sx="text-4xl tracking-tight">{clock()}</strong>
+  <center sx={face}>
+    <strong sx={clockFace}>{clock()}</strong>
   </center>
 
   <row gap="2" justify="center">

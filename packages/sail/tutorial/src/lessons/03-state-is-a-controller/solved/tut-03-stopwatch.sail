@@ -55,9 +55,17 @@ export default controller(() => {
   })
 </controller>
 
+<scope>
+  const face = style.pad(6).bg(surface-1).borderWidth(1).border(border).radius(lg)
+  const clockFace = style.fontSize(4xl).tracking(tight)
+  const lapRow = style.padX(3).padY(1).bg(surface-1).radius(md)
+  const lapMeta = style.fg(muted-foreground)
+  const lapAt = style.fontSize(sm)
+</scope>
+
 <column gap="4">
-  <center sx="p-6 bg-surface-1 border border-border rounded-lg">
-    <strong sx="text-4xl tracking-tight">{clock()}</strong>
+  <center sx={face}>
+    <strong sx={clockFace}>{clock()}</strong>
   </center>
 
   <row gap="2" justify="center">
@@ -71,9 +79,9 @@ export default controller(() => {
   {#if laps().length > 0}
     <column gap="1">
       {#for lap of laps() key={lap.id}}
-        <row align="center" justify="between" sx="px-3 py-1 bg-surface-1 rounded-md">
-          <small sx="text-muted-foreground">lap {lap.id}</small>
-          <strong sx="text-sm">{lap.at}</strong>
+        <row align="center" justify="between" sx={lapRow}>
+          <small sx={lapMeta}>lap {lap.id}</small>
+          <strong sx={lapAt}>{lap.at}</strong>
         </row>
       {/for}
     </column>

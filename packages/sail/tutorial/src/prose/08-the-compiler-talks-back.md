@@ -46,24 +46,18 @@ The fix is lesson 04's move: do the work in the controller, expose a
 zero-arg read. `formatDate(publishedAt())` becomes a `published`
 derived, and the template reads `{published()}`.
 
-Run 2. Now it reaches the sx lint:
+Run 2. Now it reaches the Style lint:
 
 ```
-Error: tut-08-release-notes-starter.sail: line 45 col 21: [sail-sx] sx `p-12px` —
-`12px` is not a token (a value is a design decision; spend a token). `p-` accepts:
-0, 0_75, 1, 10, 11, 12, 14, 16, 1_25, 1_5, 2, 20, 24, 28, 2_5, 3, 32, 36, 3_5, 4,
-40, 44, 48, 4_5, 5, 52, 56, 6, 60, 64, 7, 8, 9, density-icon, density-row-gap,
-density-row-px, density-row-py, density-text, half, size-fs, size-h, size-px; did
-you mean `p-12`?
+Error: tut-08-release-notes-starter.sail: line 41 col 21: [sail-sx] style `pad(12px)` —
+value is not a token on this setter's scale
   suggest: sx is surface-only: spacing (p/m…, the Tailwind-aligned space ramp
   1..64 plus half-steps), colors (bg/fg), radius, text. Layout is the primitives'
   job (<row>/<column>/<grid>). Raw px/hex are not expressible.
 ```
 
-The message *is* the spacing scale. Its guess is textual — `p-12` is
-one character from `p-12px` — so read past it to the intent: `p-12px`
-was aiming at comfortable padding, and `p-4` is the token that means
-that.
+The message *is* the spacing scale rule. `12px` is not a token —
+comfortable padding on this ramp is `pad(4)`.
 
 Run 3. The motion system holds its vocabulary the same way:
 
@@ -104,9 +98,11 @@ primitives use it too.
 
 That order is the point. Tokenising the colour was a real improvement
 and still not enough — the block was never a legal surface. Delete it.
-Whatever it was painting, the answer is sx or a component; and if the
-vocabulary genuinely cannot express the design, that is a **language
-gap to report**, never a reason to smuggle CSS.
+Whatever it was painting, the answer is Style on `sx` or a component;
+and if the vocabulary genuinely cannot express the design, that is a
+**language gap to report**, never a reason to smuggle CSS. (The floor
+message still mentions legacy utility atoms; the product form you write
+is `sx={style.pad(4).bg(surface-2)}`.)
 
 Run 5: `compiled 1 file(s)`.
 
@@ -122,7 +118,7 @@ mechanically. The compiler is the review that never gets tired. What it
 
 1. Work the loop until the starter compiles. Resist fixing ahead of the
    errors — the order the compiler chooses is part of the exercise.
-2. Compare your result with the solved version. If you picked `p-3` or
+2. Compare your result with the solved version. If you picked `pad(3)` or
    a spring instead of `fade`, fine: you stayed inside the vocabulary,
    which is the only thing the compiler was defending.
 3. Plant a defect of your own — an unknown tone, a `style=` attribute,
