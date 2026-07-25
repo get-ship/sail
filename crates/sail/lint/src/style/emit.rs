@@ -125,9 +125,9 @@ fn emit_inner(
             for (key, body) in entries {
                 if let Some(target) = when_target(key) {
                     let next = match target {
-                        WhenTarget::Pseudo(sel) => ctx.with_pseudo(key, sel),
-                        WhenTarget::Ancestor(anc) => ctx.with_ancestor(key, anc),
-                        WhenTarget::Media(m) => ctx.with_media(key, m),
+                        WhenTarget::Pseudo(sel) => ctx.with_pseudo(key, sel.as_ref()),
+                        WhenTarget::Ancestor(anc) => ctx.with_ancestor(key, anc.as_ref()),
+                        WhenTarget::Media(m) => ctx.with_media(key, m.as_ref()),
                     };
                     emit_inner(body, env, &next, out, seen, resolving);
                 }

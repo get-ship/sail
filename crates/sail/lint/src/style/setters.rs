@@ -1,5 +1,8 @@
 //! Table-driven Style setters → sx vocab atoms / CSS scales.
 
+use std::borrow::Cow;
+
+use crate::rules::sx as sx_rules;
 use crate::scales;
 use crate::sx_ir::{self, SxDecl, SxValue};
 use crate::sx_vocab::{self, Resolved};
@@ -70,6 +73,8 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "mb", vocab: "mb", scale: Some("space"), keywords: &["0", "auto"], negatable: true },
         SetterSpec { name: "ms", vocab: "ms", scale: Some("space"), keywords: &["0", "auto"], negatable: true },
         SetterSpec { name: "me", vocab: "me", scale: Some("space"), keywords: &["0", "auto"], negatable: true },
+        SetterSpec { name: "ml", vocab: "ml", scale: Some("space"), keywords: &["0", "auto"], negatable: true },
+        SetterSpec { name: "mr", vocab: "mr", scale: Some("space"), keywords: &["0", "auto"], negatable: true },
         SetterSpec { name: "minH", vocab: "min-h", scale: Some("size"), keywords: &["0", "full", "screen"], negatable: false },
         SetterSpec { name: "minW", vocab: "min-w", scale: Some("size"), keywords: &["0", "full", "menu-min-w", "panel-rail-w"], negatable: false },
         SetterSpec { name: "maxH", vocab: "max-h", scale: Some("size"), keywords: &["0", "full", "screen"], negatable: false },
@@ -133,7 +138,31 @@ pub fn setters() -> &'static [SetterSpec] {
             keywords: &["0", "1", "2", "auto", "toast-region-z"],
             negatable: false,
         },
-        SetterSpec { name: "cursor", vocab: "cursor", scale: None, keywords: &["auto", "default", "pointer", "not-allowed", "text"], negatable: false },
+        SetterSpec {
+            name: "cursor",
+            vocab: "cursor",
+            scale: None,
+            keywords: &[
+                "auto",
+                "default",
+                "pointer",
+                "not-allowed",
+                "text",
+                "crosshair",
+                "grab",
+                "grabbing",
+                "move",
+                "wait",
+                "help",
+                "none",
+                "cell",
+                "col-resize",
+                "row-resize",
+                "ew-resize",
+                "ns-resize",
+            ],
+            negatable: false,
+        },
         SetterSpec { name: "select", vocab: "select", scale: None, keywords: &["none", "text", "all", "auto"], negatable: false },
         SetterSpec { name: "pointerEvents", vocab: "pointer-events", scale: None, keywords: &["none", "auto"], negatable: false },
         SetterSpec { name: "overflow", vocab: "overflow", scale: None, keywords: &["auto", "hidden", "clip", "visible", "scroll"], negatable: false },
@@ -274,6 +303,48 @@ pub fn setters() -> &'static [SetterSpec] {
             keywords: &["primary", "accent"],
             negatable: false,
         },
+        // a11y clip pack (position absolute + 1px box + overflow clip).
+        SetterSpec { name: "srOnly", vocab: "sr-only", scale: None, keywords: &[], negatable: false },
+        // visibility: hidden | visible | collapse
+        SetterSpec {
+            name: "visibility",
+            vocab: "visibility",
+            scale: None,
+            keywords: &["hidden", "visible", "collapse"],
+            negatable: false,
+        },
+        // aspect-ratio map (square / video / auto)
+        SetterSpec {
+            name: "aspect",
+            vocab: "aspect",
+            scale: None,
+            keywords: &["square", "video", "auto"],
+            negatable: false,
+        },
+        // object-fit
+        SetterSpec {
+            name: "objectFit",
+            vocab: "object",
+            scale: None,
+            keywords: &["contain", "cover", "fill", "none", "scale-down"],
+            negatable: false,
+        },
+        // CSS transform full value (canvas pan/zoom via bind)
+        SetterSpec {
+            name: "transform",
+            vocab: "transform",
+            scale: None,
+            keywords: &["none"],
+            negatable: false,
+        },
+        // font-style
+        SetterSpec {
+            name: "italic",
+            vocab: "italic",
+            scale: None,
+            keywords: &["true", "false", "on", "off"],
+            negatable: false,
+        },
     ]
 }
 
@@ -282,14 +353,27 @@ pub fn find_setter(name: &str) -> Option<&'static SetterSpec> {
 }
 
 /// Resolved `when({ key })` target: pseudo/attr on self, or ancestor prefix.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+///
+/// `Cow` so closed static keys stay zero-alloc while dynamic `state-*` /
+/// `group-*` families (same grammar as string-sx prefixes) can own selectors.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WhenTarget {
     /// Appended to the element selector (`:hover`, `[aria-selected='true']`, …).
-    Pseudo(&'static str),
+    Pseudo(Cow<'static, str>),
     /// Prepended ancestor context (`.sail-grp[required] `).
-    Ancestor(&'static str),
+    Ancestor(Cow<'static, str>),
     /// Media condition wrapping the rule.
-    Media(&'static str),
+    Media(Cow<'static, str>),
+}
+
+fn pseudo_static(s: &'static str) -> WhenTarget {
+    WhenTarget::Pseudo(Cow::Borrowed(s))
+}
+fn ancestor_static(s: &'static str) -> WhenTarget {
+    WhenTarget::Ancestor(Cow::Borrowed(s))
+}
+fn media_static(s: &'static str) -> WhenTarget {
+    WhenTarget::Media(Cow::Borrowed(s))
 }
 
 /// Normalize camelCase `when` keys to the kebab names used by string-sx
@@ -313,68 +397,102 @@ fn when_key_kebab(key: &str) -> String {
 ///
 /// Breakpoints and preference media come from [`super::conditions`] — the
 /// Style product table, locked to design-token `breakpoint-*` lengths.
+///
+/// Dynamic families mirror string-sx prefixes: `state-<value>`, `group-<state>`,
+/// plus ARIA keys (`busy`, `sortable`) and camelCase product spellings.
 pub fn when_target(key: &str) -> Option<WhenTarget> {
     match key {
-        "hover" => Some(WhenTarget::Pseudo(":hover")),
-        "focus" => Some(WhenTarget::Pseudo(":focus-visible")),
-        "focusWithin" | "focus-within" => Some(WhenTarget::Pseudo(":focus-within")),
-        "active" => Some(WhenTarget::Pseudo(":active")),
-        "disabled" => Some(WhenTarget::Pseudo(":is(:disabled,[aria-disabled='true'])")),
-        "empty" => Some(WhenTarget::Pseudo(":empty")),
-        "before" => Some(WhenTarget::Pseudo("::before")),
-        "after" => Some(WhenTarget::Pseudo("::after")),
-        "first" | "first-child" => Some(WhenTarget::Pseudo(":first-child")),
-        "last" | "last-child" => Some(WhenTarget::Pseudo(":last-child")),
-        "selected" => Some(WhenTarget::Pseudo("[aria-selected='true']")),
-        "expanded" => Some(WhenTarget::Pseudo("[aria-expanded='true']")),
+        "hover" => Some(pseudo_static(":hover")),
+        "focus" => Some(pseudo_static(":focus-visible")),
+        "focusWithin" | "focus-within" => Some(pseudo_static(":focus-within")),
+        "active" => Some(pseudo_static(":active")),
+        "disabled" => Some(pseudo_static(":is(:disabled,[aria-disabled='true'])")),
+        "empty" => Some(pseudo_static(":empty")),
+        "before" => Some(pseudo_static("::before")),
+        "after" => Some(pseudo_static("::after")),
+        "first" | "first-child" => Some(pseudo_static(":first-child")),
+        "last" | "last-child" => Some(pseudo_static(":last-child")),
+        "selected" => Some(pseudo_static("[aria-selected='true']")),
+        "expanded" => Some(pseudo_static("[aria-expanded='true']")),
         // Native checkbox/switch + ARIA — both forms appear in host skins.
-        "checked" => Some(WhenTarget::Pseudo(":is(:checked,[aria-checked='true'])")),
-        "pressed" => Some(WhenTarget::Pseudo("[aria-pressed='true']")),
-        "open" => Some(WhenTarget::Pseudo("[open]")),
-        "current" => Some(WhenTarget::Pseudo("[aria-current]:not([aria-current='false'])")),
+        "checked" => Some(pseudo_static(":is(:checked,[aria-checked='true'])")),
+        "pressed" => Some(pseudo_static("[aria-pressed='true']")),
+        "open" => Some(pseudo_static("[open]")),
+        "current" => Some(pseudo_static("[aria-current]:not([aria-current='false'])")),
+        "busy" => Some(pseudo_static("[aria-busy='true']")),
+        "sortable" => Some(pseudo_static("[aria-sort]")),
         // Component data-state tokens (`data-state="live"`) — self, not group host.
-        "state-live" | "stateLive" => Some(WhenTarget::Pseudo("[data-state~='live']")),
-        "group-current" | "groupCurrent" => Some(WhenTarget::Ancestor(
+        "state-live" | "stateLive" => Some(pseudo_static("[data-state~='live']")),
+        "group-current" | "groupCurrent" => Some(ancestor_static(
             ".sail-grp[aria-current]:not([aria-current='false']) ",
         )),
-        "group-required" | "groupRequired" => Some(WhenTarget::Ancestor(".sail-grp[required] ")),
-        "group-invalid" | "groupInvalid" => Some(WhenTarget::Ancestor(".sail-grp[invalid] ")),
+        "group-required" | "groupRequired" => Some(ancestor_static(".sail-grp[required] ")),
+        "group-invalid" | "groupInvalid" => Some(ancestor_static(".sail-grp[invalid] ")),
         "group-disabled" | "groupDisabled" => {
-            Some(WhenTarget::Ancestor(".sail-grp:is(:disabled,[aria-disabled='true'],[disabled]) "))
+            Some(ancestor_static(".sail-grp:is(:disabled,[aria-disabled='true'],[disabled]) "))
         }
-        "group-hover" | "groupHover" => Some(WhenTarget::Ancestor(".sail-grp:hover ")),
+        "group-hover" | "groupHover" => Some(ancestor_static(".sail-grp:hover ")),
         "group-focus-within" | "groupFocusWithin" => {
-            Some(WhenTarget::Ancestor(".sail-grp:focus-within "))
+            Some(ancestor_static(".sail-grp:focus-within "))
         }
         "group-dismissible" | "groupDismissible" => {
-            Some(WhenTarget::Ancestor(".sail-grp[dismissible] "))
+            Some(ancestor_static(".sail-grp[dismissible] "))
         }
-        "group-open" | "groupOpen" => Some(WhenTarget::Ancestor(".sail-grp[open] ")),
+        "group-open" | "groupOpen" => Some(ancestor_static(".sail-grp[open] ")),
         "group-state-has-details" | "groupStateHasDetails" => {
-            Some(WhenTarget::Ancestor(".sail-grp[data-state~='has-details'] "))
+            Some(ancestor_static(".sail-grp[data-state~='has-details'] "))
         }
         "group-state-open" | "groupStateOpen" => {
-            Some(WhenTarget::Ancestor(".sail-grp[data-state~='open'] "))
+            Some(ancestor_static(".sail-grp[data-state~='open'] "))
         }
         // error-boundary catchRender stamps data-caught on the group host.
         "group-caught" | "groupCaught" => {
-            Some(WhenTarget::Ancestor(".sail-grp[data-caught] "))
+            Some(ancestor_static(".sail-grp[data-caught] "))
         }
         // theme-picker `inline` presence attr on the group host.
-        "group-inline" | "groupInline" => Some(WhenTarget::Ancestor(".sail-grp[inline] ")),
+        "group-inline" | "groupInline" => Some(ancestor_static(".sail-grp[inline] ")),
         other => {
             let kebab = when_key_kebab(other);
-            super::conditions::condition_media(other)
+            if let Some(m) = super::conditions::condition_media(other)
                 .or_else(|| super::conditions::condition_media(&kebab))
-                .map(WhenTarget::Media)
+            {
+                return Some(media_static(m));
+            }
+            // ARIA / pseudo from the closed string-sx STATE_PREFIXES table.
+            if let Some(p) = sx_rules::state_pseudo(other).or_else(|| sx_rules::state_pseudo(&kebab))
+            {
+                return Some(WhenTarget::Pseudo(Cow::Borrowed(p)));
+            }
+            // Component data-state: state-weekend / stateWeekend → [data-state~='weekend']
+            if let Some(sel) = sx_rules::state_data(other).or_else(|| sx_rules::state_data(&kebab)) {
+                return Some(WhenTarget::Pseudo(Cow::Owned(sel)));
+            }
+            // group-* ancestor family (group-selected, group-state-user, groupSelected, …)
+            let kebab_full = when_key_kebab(other);
+            if let Some(base) = kebab_full.strip_prefix("group-") {
+                if let Some(p) = sx_rules::state_pseudo(base) {
+                    return Some(WhenTarget::Ancestor(Cow::Owned(format!(".sail-grp{p} "))));
+                }
+                if let Some(p) = sx_rules::state_data(base) {
+                    return Some(WhenTarget::Ancestor(Cow::Owned(format!(".sail-grp{p} "))));
+                }
+                // bare data-state value on group host: group-user → data-state~=user
+                if let Some(p) = sx_rules::state_data(&format!("state-{base}")) {
+                    return Some(WhenTarget::Ancestor(Cow::Owned(format!(".sail-grp{p} "))));
+                }
+                if let Some(n) = sx_rules::group_attr_presence(base) {
+                    return Some(WhenTarget::Ancestor(Cow::Owned(format!(".sail-grp[{n}] "))));
+                }
+            }
+            None
         }
     }
 }
 
 /// Back-compat helper used by emit for simple pseudo append.
-pub fn when_selector(key: &str) -> Option<&'static str> {
+pub fn when_selector(key: &str) -> Option<String> {
     match when_target(key)? {
-        WhenTarget::Pseudo(s) => Some(s),
+        WhenTarget::Pseudo(s) => Some(s.into_owned()),
         _ => None,
     }
 }
@@ -387,8 +505,11 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
             source: op.source.clone(),
         });
     };
-    // Marker setters with empty arg (group, scrollbarThin, isolate, truncate).
-    if matches!(spec.name, "group" | "scrollbarThin" | "isolate" | "truncate") {
+    // Marker setters with empty arg (group, scrollbarThin, isolate, truncate, srOnly).
+    if matches!(
+        spec.name,
+        "group" | "scrollbarThin" | "isolate" | "truncate" | "srOnly"
+    ) {
         return Ok(());
     }
     match &op.arg {
@@ -473,6 +594,121 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             ("text-overflow".into(), "ellipsis".into()),
             ("white-space".into(), "nowrap".into()),
         ]);
+    }
+    // sr-only a11y clip pack.
+    if spec.name == "srOnly" {
+        if let Resolved::Ok(pairs) = sx_vocab::resolve("sr-only") {
+            return Ok(pairs);
+        }
+        return Ok(vec![
+            ("position".into(), "absolute".into()),
+            ("width".into(), "1px".into()),
+            ("height".into(), "1px".into()),
+            ("padding".into(), "0".into()),
+            ("margin".into(), "-1px".into()),
+            ("overflow".into(), "hidden".into()),
+            ("clip-path".into(), "inset(50%)".into()),
+            ("white-space".into(), "nowrap".into()),
+            ("border-width".into(), "0".into()),
+        ]);
+    }
+    // visibility keywords.
+    if spec.name == "visibility" {
+        if let PaintArg::Token(t) = &op.arg {
+            let bare_t = strip_neg(t).1;
+            let css = match bare_t {
+                "hidden" => "hidden",
+                "visible" => "visible",
+                "collapse" => "collapse",
+                _ => {
+                    return Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare_t.into(),
+                        source: op.source.clone(),
+                    })
+                }
+            };
+            return Ok(vec![("visibility".into(), css.into())]);
+        }
+    }
+    // aspect-ratio map.
+    if spec.name == "aspect" {
+        if let PaintArg::Token(t) = &op.arg {
+            let bare_t = strip_neg(t).1;
+            let atom = format!("aspect-{bare_t}");
+            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+                return Ok(pairs);
+            }
+            let css = match bare_t {
+                "square" => "1 / 1",
+                "video" => "16 / 9",
+                "auto" => "auto",
+                _ => {
+                    return Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare_t.into(),
+                        source: op.source.clone(),
+                    })
+                }
+            };
+            return Ok(vec![("aspect-ratio".into(), css.into())]);
+        }
+    }
+    // object-fit.
+    if spec.name == "objectFit" {
+        if let PaintArg::Token(t) = &op.arg {
+            let bare_t = strip_neg(t).1;
+            if !spec.keywords.iter().any(|k| *k == bare_t) {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: bare_t.into(),
+                    source: op.source.clone(),
+                });
+            }
+            let atom = format!("object-{bare_t}");
+            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+                return Ok(pairs);
+            }
+            return Ok(vec![("object-fit".into(), bare_t.into())]);
+        }
+    }
+    // transform full value (token none or bind → var).
+    if spec.name == "transform" {
+        match &op.arg {
+            PaintArg::Token(t) => {
+                let bare_t = strip_neg(t).1;
+                if bare_t == "none" {
+                    return Ok(vec![("transform".into(), "none".into())]);
+                }
+                return Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: bare_t.into(),
+                    source: op.source.clone(),
+                });
+            }
+            PaintArg::Bind(name) => {
+                let css = css_name_for_bind(name);
+                return Ok(vec![("transform".into(), format!("var(--{css})"))]);
+            }
+        }
+    }
+    // italic / not-italic.
+    if spec.name == "italic" {
+        if let PaintArg::Token(t) = &op.arg {
+            let bare_t = strip_neg(t).1;
+            let css = match bare_t {
+                "true" | "on" => "italic",
+                "false" | "off" => "normal",
+                _ => {
+                    return Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare_t.into(),
+                        source: op.source.clone(),
+                    })
+                }
+            };
+            return Ok(vec![("font-style".into(), css.into())]);
+        }
     }
     // text-transform via textCase(uppercase|…)
     if spec.name == "textCase" {
@@ -994,8 +1230,19 @@ fn bind_css_props(spec: &SetterSpec, css_name: &str) -> Vec<(String, String)> {
         "inset" => return vec![("inset".into(), var)],
         "ms" => return vec![("margin-inline-start".into(), var)],
         "me" => return vec![("margin-inline-end".into(), var)],
+        "ml" => return vec![("margin-left".into(), var)],
+        "mr" => return vec![("margin-right".into(), var)],
         "mt" => return vec![("margin-top".into(), var)],
         "mb" => return vec![("margin-bottom".into(), var)],
+        "pad" => return vec![("padding".into(), var)],
+        "padX" => return vec![("padding-inline".into(), var)],
+        "padY" => return vec![("padding-block".into(), var)],
+        "padT" => return vec![("padding-top".into(), var)],
+        "padB" => return vec![("padding-bottom".into(), var)],
+        "padL" => return vec![("padding-left".into(), var)],
+        "padR" => return vec![("padding-right".into(), var)],
+        "padS" => return vec![("padding-inline-start".into(), var)],
+        "padE" => return vec![("padding-inline-end".into(), var)],
         "w" => return vec![("width".into(), var)],
         "h" => return vec![("height".into(), var)],
         "minW" => return vec![("min-width".into(), var)],
@@ -1011,6 +1258,7 @@ fn bind_css_props(spec: &SetterSpec, css_name: &str) -> Vec<(String, String)> {
         "tracking" => return vec![("letter-spacing".into(), var)],
         "bg" => return vec![("background-color".into(), var)],
         "fg" | "color" => return vec![("color".into(), var)],
+        "transform" => return vec![("transform".into(), var)],
         "translateY" => {
             return vec![("translate".into(), format!("var(--sx-translate-x, 0) {var}"))];
         }

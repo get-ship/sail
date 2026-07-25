@@ -57,7 +57,7 @@ mod tests {
             let query = conditions::condition_media(name).expect("Style condition table");
             assert_eq!(
                 setters::when_target(name),
-                Some(setters::WhenTarget::Media(query)),
+                Some(setters::WhenTarget::Media(std::borrow::Cow::Borrowed(query))),
                 "when({{{name}:…}}) must resolve via Style conditions"
             );
             let value = crate::tokens::token_value(&format!("breakpoint-{name}"))
@@ -71,7 +71,7 @@ mod tests {
         for (name, query) in conditions::CONDITION_PREFIXES {
             assert_eq!(
                 setters::when_target(name),
-                Some(setters::WhenTarget::Media(*query)),
+                Some(setters::WhenTarget::Media(std::borrow::Cow::Borrowed(*query))),
                 "missing when key for Style condition `{name}`"
             );
         }
@@ -347,6 +347,77 @@ mod tests {
             css.contains("var(--tile-rotate)") || css.contains("rotate"),
             "rotate bind must lower: {css}"
         );
+    }
+
+    #[test]
+    fn packages_wave_setters_and_dynamic_when() {
+        let (style, diags) = parse(
+            "style.srOnly().visibility(hidden).aspect(square).objectFit(cover).cursor(crosshair).italic(true).ml(auto).transform(bind(worldTx))",
+        );
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains("clip-path") || css.contains("1px"), "srOnly: {css}");
+        assert!(css.contains("visibility") || css.contains("hidden"), "visibility: {css}");
+        assert!(css.contains("aspect-ratio") || css.contains("1 / 1") || css.contains("1/1"), "aspect: {css}");
+        assert!(css.contains("object-fit") || css.contains("cover"), "objectFit: {css}");
+        assert!(css.contains("crosshair") || css.contains("cursor"), "cursor: {css}");
+        assert!(css.contains("font-style") || css.contains("italic"), "italic: {css}");
+        assert!(css.contains("margin-left") || css.contains("auto"), "ml: {css}");
+        assert!(
+            css.contains("var(--world-tx)") || css.contains("transform"),
+            "transform bind: {css}"
+        );
+
+        // Dynamic state-* / group-* when keys (host component data-state families).
+        for (key, needle) in [
+            ("stateWeekend", "weekend"),
+            ("stateOut", "out"),
+            ("groupSelected", "aria-selected"),
+            ("groupStateUser", "user"),
+            ("busy", "aria-busy"),
+            ("sortable", "aria-sort"),
+        ] {
+            let expr = format!("when({{ {key}: style.bg(muted) }})");
+            let (st, diags) = parse(&expr);
+            assert!(
+                diags.is_empty(),
+                "{key}: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+            let (_, css) = lower_style(&st, &HashMap::new());
+            assert!(
+                css.contains(needle),
+                "when key {key} must emit selector with {needle}: {css}"
+            );
+        }
+
+        // Representative host-component paint from the packages Style conversion wave.
+        let packages_exprs = [
+            "style.group().maxW(full).fontFamily(body).fg(foreground)",
+            "style.padY(2).padX(3).radius(lg).fontSize(base).leading(normal).bg(card).borderWidth(1).border(border).fg(foreground).when({ groupStateUser: style.bg(tone-primary-bg).borderWidth(1).border(tone-primary-border), groupStateSystem: style.bg(tone-muted-bg).fg(muted-foreground), groupStateError: style.borderWidth(1).border(tone-destructive-border), groupStateSending: style.opacity(75) })",
+            "style.group().padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell).borderRWidth(1).borderR(border).borderBWidth(1).borderB(border).when({ stateOut: style.fg(muted-foreground).bg(muted), stateWeekend: style.bg(tone-muted-bg), stateRange: style.bg(selected-bg) })",
+            "style.position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).cursor(pointer).textAlign(start).fontSize(density).fg(tone-primary-fg).bg(tone-primary-bg).radius(sm).padY(half).padX(1).overflow(hidden).when({ selected: style.outline(ring) })",
+            "style.group().padY(6).padX(4).borderWidth(1).border(border).border(dashed).radius(lg).cursor(pointer).fg(muted-foreground).select(none).textAlign(center).when({ focus: style.outline(ring), stateOver: style.borderWidth(1).border(ring).bg(muted) })",
+            "style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).bg(tone-primary-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto)",
+            "style.w(bind(boxW)).padY(2).padX(3).bg(card).fg(foreground).fontFamily(body).fontSize(sm).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer).when({ hover: style.shadow(sm), focus: style.outline(ring), current: style.borderWidth(1).border(ring).shadow(sm), stateAgent: style.borderLWidth(1).borderL(tone-primary-fg) })",
+            "style.fontFamily(body).padY(4).padX(5).borderWidth(1).border(error-boundary-border).radius(md).bg(error-boundary).fg(error-boundary-foreground).fontSize(sm).shadow(xs)",
+            "style.h(control-h-sm).radius(sm).textAlign(center).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(primary).fg(primary-foreground), disabled: style.fg(muted-foreground).opacity(50).cursor(not-allowed), stateEmpty: style.visibility(hidden), stateToday: style.outline(border-strong), focus: style.outline(ring) })",
+            "style.cursor(cell)",
+            "style.borderWidth(1).border(border-subtle).radius(sm).pad(0).aspect(square).cursor(pointer).bg(bind(swatchColor)).when({ selected: style.outline(primary) })",
+            "style.position(absolute).left(0).w(full).translateY(bind(rowY)).cursor(pointer).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg), focus: style.outline(ring) })",
+        ];
+        for e in packages_exprs {
+            let (_, diags) = parse(e);
+            assert!(
+                diags.is_empty(),
+                "packages expr failed: {e}\n{:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+        }
     }
 
 
