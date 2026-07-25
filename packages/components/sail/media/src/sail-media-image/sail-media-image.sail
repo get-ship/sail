@@ -259,15 +259,15 @@ export default controller((_ctx: Scope) => {
 
 </controller>
 {#if isSvg()}
-  <center role="img" aria-label={alt()} use:svgInline sx="relative overflow-hidden bg-surface-1 rounded-md"></center>
+  <center role="img" aria-label={alt()} use:svgInline sx={style.position(relative).overflow(hidden).bg(surface-1).radius(md)}></center>
 {:else}
-  <center tabindex="0" use:zoomStage sx="relative overflow-hidden bg-surface-1 rounded-md">
-    <img alt={alt()} use:rasterImg use:zoomPan={zoomPanSig()} sx="block max-h-full transform-(--zoom-tx)" />
+  <center tabindex="0" use:zoomStage sx={style.position(relative).overflow(hidden).bg(surface-1).radius(md)}>
+    <img alt={alt()} use:rasterImg use:zoomPan={zoomPanSig()} sx={style.display(block).maxH(full).transform(bind(zoomTx))} />
   </center>
   {#if isGallery()}
-    <row role="listbox" aria-label="Image gallery" gap="2" use:galleryStrip sx="p-2 overflow-x-auto">
+    <row role="listbox" aria-label="Image gallery" gap="2" use:galleryStrip sx={style.pad(2).overflowX(auto)}>
       {#for item of galleryItems() key={item.id}}
-        <row role="option" gap="0" aria-selected={item.selected ? 'true' : 'false'} sx="grow-0 p-0 overflow-hidden bg-surface-1 border border-border rounded-sm cursor-pointer selected:border selected:border-primary selected:shadow-accent">
+        <row role="option" gap="0" aria-selected={item.selected ? 'true' : 'false'} sx={style.grow(0).pad(0).overflow(hidden).bg(surface-1).borderWidth(1).border(border).radius(sm).cursor(pointer).when({ selected: style.borderWidth(1).border(primary).shadow(accent) })}>
           <img src={item.url} alt="" />
         </row>
       {/for}

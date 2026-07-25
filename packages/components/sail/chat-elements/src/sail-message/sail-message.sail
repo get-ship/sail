@@ -35,31 +35,44 @@
     timestamp = ''
     status: 'sent' | 'sending' | 'error' = 'sent'
   }
+
+  const host = style.group().maxW(full).fontFamily(body).fg(foreground)
+  const meta = style.padX(half).fontSize(xs).fg(muted-foreground)
+  const roleLabel = style.fontWeight(medium)
+  const bubble = style.padY(2).padX(3).radius(lg).fontSize(base).leading(normal).bg(card).borderWidth(1).border(border).fg(foreground).when({
+    groupStateUser: style.bg(tone-primary-bg).borderWidth(1).border(tone-primary-border),
+    groupStateSystem: style.bg(tone-muted-bg).fg(muted-foreground),
+    groupStateTool: style.bg(tone-accent-bg).borderWidth(1).border(tone-accent-border),
+    groupStateError: style.borderWidth(1).border(tone-destructive-border),
+    groupStateSending: style.opacity(75),
+    groupStateCode: style.fontFamily(mono).fontSize(sm).whitespace(pre-wrap),
+    groupStateToolCall: style.fontFamily(mono).fontSize(sm).whitespace(pre-wrap),
+    groupStateTerminalSnapshot: style.fontFamily(mono).fontSize(sm).whitespace(pre-wrap).bg(surface-inverse).fg(background).borderWidth(1).border(border-subtle),
+  })
+  const trailing = style.display(contents)
 </scope>
 
 <column
   gap="1"
   align={role() === 'user' ? 'end' : 'stretch'}
   data-state={role() + ' ' + contentType() + ' ' + status()}
-  sx="group max-w-full font-body text-foreground"
+  sx={host}
 >
-  <row gap="2" align="baseline" sx="px-half text-xs text-muted-foreground">
-    <span sx="font-medium">{role()}</span>
+  <row gap="2" align="baseline" sx={meta}>
+    <span sx={roleLabel}>{role()}</span>
     {#if timestamp()}
       <time datetime={timestamp()}>{timestamp()}</time>
     {/if}
   </row>
 
-  <div
-    sx="py-2 px-3 rounded-lg text-base leading-normal bg-card border border-border text-foreground group-state-user:bg-tone-primary-bg group-state-user:border group-state-user:border-tone-primary-border group-state-system:bg-tone-muted-bg group-state-system:text-muted-foreground group-state-tool:bg-tone-accent-bg group-state-tool:border group-state-tool:border-tone-accent-border group-state-error:border group-state-error:border-tone-destructive-border group-state-sending:opacity-75 group-state-code:font-mono group-state-code:text-sm group-state-code:whitespace-pre-wrap group-state-tool-call:font-mono group-state-tool-call:text-sm group-state-tool-call:whitespace-pre-wrap group-state-terminal-snapshot:font-mono group-state-terminal-snapshot:text-sm group-state-terminal-snapshot:whitespace-pre-wrap group-state-terminal-snapshot:bg-surface-inverse group-state-terminal-snapshot:text-background group-state-terminal-snapshot:border group-state-terminal-snapshot:border-border-subtle"
-  >
+  <div sx={bubble}>
     <slot></slot>
   </div>
 
   <!-- display:contents so a message with no actions has no trailing box (the
        column's gap never opens under it) and slotted actions become items of
        the message column, following its alignment. -->
-  <div sx="contents">
+  <div sx={trailing}>
     <slot name="trailing"></slot>
   </div>
 </column>

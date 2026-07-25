@@ -143,13 +143,13 @@ export default controller(({ data, rows, cols, tone, cellSize, gap, label, loadi
     role="img"
     aria-label={ariaLabel()}
     aria-describedby="chart-data"
-    sx="inline-block overflow-visible font-body">
+    sx={style.display(inline-block).overflow(visible).fontFamily(body)}>
     {#for cell of cells() key={cell.id}}
       <rect x={cell.x} y={cell.y} width={cell.w} height={cell.h} rx="2" fill={cell.color} fill-opacity={cell.intensity}>
       </rect>
     {/for}
   </svg>
-  <column id="chart-data" sx="sr-only">
+  <column id="chart-data" sx={style.srOnly()}>
     <slot name="description">
       <table>
         {#for row of chart.ariaTable() key={row[0].id}}

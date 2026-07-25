@@ -63,8 +63,8 @@ export default controller(() => {
         <rect x="7" y="4" width="13" height="17" rx="3" fill="var(--primary)" opacity="0.75" />
         <rect x="10.5" y="1.5" width="13" height="17" rx="3" fill="var(--primary)" />
       </svg>
-      <strong sx="text-lg tracking-tight"><b sx="text-primary">deck</b> docs</strong>
-      <small sx="font-mono text-xs text-muted-foreground border border-border rounded-full px-2">0.2.0</small>
+      <strong sx={style.fontSize(lg).tracking(tight)}><b sx={style.fg(primary)}>deck</b> docs</strong>
+      <small sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground).borderWidth(1).border(border).radius(full).padX(2)}>0.2.0</small>
     </row>
   </a>
 
@@ -94,7 +94,7 @@ export default controller(() => {
     <a href="/build" aria-current={path() === '/build' ? 'page' : null}>Build &amp; deploy</a>
   </navbar>
 
-  <main sx="p-7 grow-1 min-w-0 max-w-breakpoint-tablet">
+  <main sx={style.pad(7).grow(1).minW(0).maxW(breakpoint-tablet)}>
     <slot name="route"></slot>
   </main>
 </row>

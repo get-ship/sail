@@ -109,9 +109,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <column
   gap="2"
   data-state={disabled() ? 'disabled' : ''}
-  sx="p-2 font-body text-foreground bg-background border border-border rounded-lg focus-within:border focus-within:border-primary focus-within:ring-tone-primary-ring state-disabled:bg-muted state-disabled:opacity-75"
+  sx={style.pad(2).fontFamily(body).fg(foreground).bg(background).borderWidth(1).border(border).radius(lg).when({ focusWithin: style.borderWidth(1).border(primary).outline(ring), stateDisabled: style.bg(muted).opacity(75) })}
 >
-  <div sx="contents">
+  <div sx={style.display(contents)}>
     <slot name="attachments"></slot>
   </div>
   <row gap="2" align="end">
@@ -122,7 +122,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         disabled={disabled()}
         bind:value={text}
         use:fieldKeys
-        sx="grow-1 min-w-0 min-h-0 py-1 px-half font-body text-base leading-normal text-foreground bg-transparent border-0 rounded-none shadow-none overflow-y-auto"
+        sx={style.grow(1).minW(0).minH(0).padY(1).padX(half).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none).overflowY(auto)}
       ></textarea>
     {/if}
     {#if !multiline()}
@@ -132,10 +132,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         disabled={disabled()}
         bind:value={text}
         use:fieldKeys
-        sx="grow-1 min-w-0 min-h-0 py-1 px-half font-body text-base leading-normal text-foreground bg-transparent border-0 rounded-none shadow-none"
+        sx={style.grow(1).minW(0).minH(0).padY(1).padX(half).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none)}
       />
     {/if}
-    <row gap="1" align="center" sx="grow-0">
+    <row gap="1" align="center" sx={style.grow(0)}>
       <slot name="trailing"></slot>
       <button
         use:sendClick

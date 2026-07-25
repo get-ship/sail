@@ -250,7 +250,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
         if (!a || !b) return
         const kind = e.kind ?? 'default'
         out.push({
-          key: `${e.from} ${e.to} ${i}`,
+          key: `${e.from}${e.to}${i}`,
           d: bezierPath(a, b),
           kind,
           stroke: EDGE_STROKE[kind] ?? EDGE_DEFAULT,
@@ -298,12 +298,12 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
 })
 
 </controller>
-<div sx="relative w-full bg-card border border-border rounded-md overflow-hidden">
+<div sx={style.position(relative).w(full).bg(card).borderWidth(1).border(border).radius(md).overflow(hidden)}>
   <svg
     viewBox={`0 0 ${width() || 1000} ${height() || 600}`}
     preserveAspectRatio="none"
     aria-hidden="true"
-    sx="block w-full h-auto pointer-events-none"
+    sx={style.display(block).w(full).h(auto).pointerEvents(none)}
   >
     {#for e of edgeViews() key={e.key}}
       <path
@@ -320,8 +320,8 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
   </svg>
 
   {#for n of nodeViews() key={n.id}}
-    <div use:rect={{left: n.left, top: n.top}} sx="absolute w-0 h-0 left-(--box-left) top-(--box-top)">
-      <center sx="h-0">
+    <div use:rect={{left: n.left, top: n.top}} sx={style.position(absolute).w(0).h(0).left(bind(boxLeft)).top(bind(boxTop))}>
+      <center sx={style.h(0)}>
         <column
           gap="0"
           role="button"
@@ -334,17 +334,17 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
           on:click={() => select(n)}
           on:keydown={(e) => activate(n, e)}
           on:mouseover={() => hover(n)}
-          sx="w-(--box-w) py-2 px-3 bg-card text-foreground font-body text-sm border border-border rounded-md shadow-xs cursor-pointer hover:shadow-sm focus:ring-ring current:border current:border-ring current:shadow-sm state-agent:border-l state-agent:border-l-tone-primary-fg state-skill:border-l state-skill:border-l-tone-success-fg state-mcp:border-l state-mcp:border-l-tone-info-fg state-rule:border-l state-rule:border-l-tone-warning-fg state-perm:border-l state-perm:border-l-tone-destructive-fg state-harness:border-l state-harness:border-l-tone-accent-fg"
+          sx={style.w(bind(boxW)).padY(2).padX(3).bg(card).fg(foreground).fontFamily(body).fontSize(sm).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer).when({ hover: style.shadow(sm), focus: style.outline(ring), current: style.borderWidth(1).border(ring).shadow(sm), stateAgent: style.borderLWidth(1).borderL(tone-primary-fg), stateSkill: style.borderLWidth(1).borderL(tone-success-fg), stateMcp: style.borderLWidth(1).borderL(tone-info-fg), stateRule: style.borderLWidth(1).borderL(tone-warning-fg), statePerm: style.borderLWidth(1).borderL(tone-destructive-fg), stateHarness: style.borderLWidth(1).borderL(tone-accent-fg) })}
         >
           {#if n.body !== ''}
             <div use:nodeBody={n.body}></div>
           {:else}
-            <row gap="2" align="center" sx="mb-1">
-              <span sx="text-xs font-semibold tracking-wide uppercase text-muted-foreground">{n.kind}</span>
+            <row gap="2" align="center" sx={style.mb(1)}>
+              <span sx={style.fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase).fg(muted-foreground)}>{n.kind}</span>
             </row>
-            <div sx="font-semibold text-foreground">{n.title}</div>
+            <div sx={style.fontWeight(semibold).fg(foreground)}>{n.title}</div>
             {#if n.sub !== ''}
-              <div sx="text-xs text-muted-foreground">{n.sub}</div>
+              <div sx={style.fontSize(xs).fg(muted-foreground)}>{n.sub}</div>
             {/if}
           {/if}
         </column>

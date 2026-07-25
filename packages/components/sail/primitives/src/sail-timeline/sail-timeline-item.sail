@@ -73,27 +73,27 @@ export default controller((ctx) => {
   })
 
 </controller>
-<row gap="2" align="stretch" sx="relative">
-  <column align="center" gap="0" sx="w-5">
+<row gap="2" align="stretch" sx={style.position(relative)}>
+  <column align="center" gap="0" sx={style.w(5)}>
     {#if first()}
-      <span sx="w-half h-3 invisible"></span>
+      <span sx={style.w(half).h(3).visibility(hidden)}></span>
     {:else}
-      <span sx="w-half h-3 bg-border-subtle"></span>
+      <span sx={style.w(half).h(3).bg(border-subtle)}></span>
     {/if}
-    <span sx="w-2_5 h-2_5 rounded-full bg-tone-fg"></span>
+    <span sx={style.w(2_5).h(2_5).radius(full).bg(foreground)}></span>
     {#if last()}
-      <span sx="w-half grow-1 invisible"></span>
+      <span sx={style.w(half).grow(1).visibility(hidden)}></span>
     {:else}
-      <span sx="w-half grow-1 bg-border-subtle"></span>
+      <span sx={style.w(half).grow(1).bg(border-subtle)}></span>
     {/if}
   </column>
-  <column gap="0" sx="grow-1 min-w-0 py-2">
-    <row align="baseline" justify="between" gap="2" sx="text-sm font-medium text-foreground font-body">
+  <column gap="0" sx={style.grow(1).minW(0).padY(2)}>
+    <row align="baseline" justify="between" gap="2" sx={style.fontSize(sm).fontWeight(medium).fg(foreground).fontFamily(body)}>
       <slot name="title"></slot>
       {#if at()}
-        <time sx="text-muted-foreground text-xs tracking-wide font-mono">{at()}</time>
+        <time sx={style.fg(muted-foreground).fontSize(xs).tracking(wide).fontFamily(mono)}>{at()}</time>
       {/if}
     </row>
-    <div sx="text-sm text-muted-foreground leading-normal mt-1"><slot></slot></div>
+    <div sx={style.fontSize(sm).fg(muted-foreground).leading(normal).mt(1)}><slot></slot></div>
   </column>
 </row>

@@ -158,11 +158,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <scroll-area
   orientation="vertical"
   bind:this={scrollEl}
-  sx="relative h-full min-h-0 p-3 font-body"
+  sx={style.position(relative).h(full).minH(0).pad(3).fontFamily(body)}
 >
-  <div use:virtualSpacer={totalSize()} sx="relative w-full h-(--rows-h)">
+  <div use:virtualSpacer={totalSize()} sx={style.position(relative).w(full).h(bind(rowsH))}>
     {#for w of windowItems() key={w.key}}
-      <column gap="0" use:virtualRow={w.start} sx="absolute left-3 right-3 translate-y-(--row-y)">
+      <column gap="0" use:virtualRow={w.start} sx={style.position(absolute).left(3).right(3).translateY(bind(rowY))}>
         <sail-message
           role={w.item.role || 'assistant'}
           content-type={w.item.contentType || 'text'}

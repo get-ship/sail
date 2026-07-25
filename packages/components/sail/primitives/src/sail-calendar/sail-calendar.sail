@@ -359,14 +359,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
   })
 
 </controller>
-<div sx="block font-body text-density bg-background text-foreground border border-border rounded-lg shadow-xs overflow-hidden">
-  <row align="center" gap="density" sx="py-density-row-py px-density-row-px border-b border-b-border">
+<div sx={style.display(block).fontFamily(body).fontSize(density).bg(background).fg(foreground).borderWidth(1).border(border).radius(lg).shadow(xs).overflow(hidden)}>
+  <row align="center" gap="density" sx={style.padY(density-row-py).padX(density-row-px).borderBWidth(1).borderB(border)}>
     <row gap="1" align="center">
       <button type="button" variant="outline" size="sm" data-nav="prev" aria-label="Previous">‹</button>
       <button type="button" variant="outline" size="sm" data-nav="today">Today</button>
       <button type="button" variant="outline" size="sm" data-nav="next" aria-label="Next">›</button>
     </row>
-    <h2 sx="grow-1 font-semibold text-base">{title()}</h2>
+    <h2 sx={style.grow(1).fontWeight(semibold).fontSize(base)}>{title()}</h2>
     <row role="group" aria-label="Calendar view" gap="1" align="center">
       <button type="button" variant="outline" size="sm" data-view="month" aria-pressed={isMonth() ? 'true' : 'false'}>Month</button>
       <button type="button" variant="outline" size="sm" data-view="week" aria-pressed={isWeek() ? 'true' : 'false'}>Week</button>
@@ -375,7 +375,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </row>
 
   {#if isEmpty()}
-    <div role="status" sx="text-muted-foreground py-6 px-density-row-px text-center">
+    <div role="status" sx={style.fg(muted-foreground).padY(6).padX(density-row-px).textAlign(center)}>
       <slot name="empty">No events</slot>
     </div>
   {/if}
@@ -384,7 +384,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <div role="grid" aria-label={label() || 'Calendar month'}>
     <grid cols="7" gap="0" role="presentation">
       {#for d of weekdays() key={d.key}}
-        <span role="columnheader" sx="text-muted-foreground font-medium py-density-row-py text-center text-density border-b border-b-border">{d.label}</span>
+        <span role="columnheader" sx={style.fg(muted-foreground).fontWeight(medium).padY(density-row-py).textAlign(center).fontSize(density).borderBWidth(1).borderB(border)}>{d.label}</span>
       {/for}
     </grid>
     {#for wk of weekRows() key={wk.key}}
@@ -398,9 +398,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
             aria-current={cr.cell.today ? 'date' : null}
             aria-label={cr.cell.iso}
             gap="1"
-            sx="group py-density-row-py px-density-row-px min-h-panel-min-h-cell border-r border-r-border border-b border-b-border state-out:text-muted-foreground state-out:bg-muted state-weekend:bg-tone-muted-bg state-range:bg-selected-bg"
+            sx={style.group().padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell).borderRWidth(1).borderR(border).borderBWidth(1).borderB(border).when({ stateOut: style.fg(muted-foreground).bg(muted), stateWeekend: style.bg(tone-muted-bg), stateRange: style.bg(selected-bg) })}
           >
-            <row align="center" justify="center" gap="0" sx="text-density min-w-control-h-2xs h-control-h-2xs rounded-full group-state-today:text-primary group-state-today:font-semibold group-state-today:ring-primary">{cr.cell.day}</row>
+            <row align="center" justify="center" gap="0" sx={style.fontSize(density).minW(control-h-2xs).h(control-h-2xs).radius(full).when({ groupStateToday: style.fg(primary).fontWeight(semibold).outline(primary) })}>{cr.cell.day}</row>
             {#for ev of cr.cell.events key={ev.id}}
               <button
                 type="button"
@@ -408,14 +408,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 data-state={ev.allDay ? 'allday' : ''}
                 aria-selected={selectedIds().includes(ev.id) ? 'true' : 'false'}
                 title={ev.title}
-                sx="relative text-start cursor-pointer text-density text-foreground bg-tone-primary-bg rounded-sm py-half px-1_5 pl-3 truncate state-allday:bg-tone-accent-bg selected:ring-ring"
+                sx={style.position(relative).textAlign(start).cursor(pointer).fontSize(density).fg(foreground).bg(tone-primary-bg).radius(sm).padY(half).padX(1_5).padL(3).truncate().when({ stateAllday: style.bg(tone-accent-bg), selected: style.outline(ring) })}
               >
-                <span aria-hidden="true" sx="absolute left-half top-1 bottom-1 w-half rounded-sm bg-primary group-state-allday:bg-accent"></span>
+                <span aria-hidden="true" sx={style.position(absolute).left(half).top(1).bottom(1).w(half).radius(sm).bg(primary).when({ groupStateAllday: style.bg(accent) })}></span>
                 {ev.title}
               </button>
             {/for}
             {#if cr.cell.overflowCount > 0}
-              <span sx="text-xs font-semibold text-muted-foreground px-1">+{cr.cell.overflowCount} more</span>
+              <span sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).padX(1)}>+{cr.cell.overflowCount} more</span>
             {/if}
           </column>
         {/for}
@@ -426,20 +426,20 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
 {#if isWeek() || isDay()}
   <grid use:gridTracks={timeGridTracks()} tracks="--cal-time-tracks" gap="0" role="grid" aria-label={label() || 'Calendar time grid'}>
-    <column role="rowgroup" gap="0" sx="border-r border-r-border">
+    <column role="rowgroup" gap="0" sx={style.borderRWidth(1).borderR(border)}>
       {#for slot of timeSlots() key={slot.key}}
-        <div data-slot={slot.minutes} role="rowheader" sx="h-control-h-md text-muted-foreground px-density-row-px text-density border-b border-b-border">{slot.label}</div>
+        <div data-slot={slot.minutes} role="rowheader" sx={style.h(control-h-md).fg(muted-foreground).padX(density-row-px).fontSize(density).borderBWidth(1).borderB(border)}>{slot.label}</div>
       {/for}
     </column>
-    <row gap="0" sx="grow-1">
+    <row gap="0" sx={style.grow(1)}>
       {#for dc of dayColumns() key={dc.key}}
-        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} sx="relative grow-1 min-h-panel-min-h-daycol border-r border-r-border state-today:bg-selected-bg">
-          <column gap="0" sx="absolute top-0 right-0 bottom-0 left-0">
+        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} sx={style.position(relative).grow(1).minH(panel-min-h-daycol).borderRWidth(1).borderR(border).when({ stateToday: style.bg(selected-bg) })}>
+          <column gap="0" sx={style.position(absolute).top(0).right(0).bottom(0).left(0)}>
             {#for slot of timeSlots() key={slot.key}}
-              <div data-iso={dc.col.iso} data-minutes={slot.minutes} sx="grow-1 min-h-control-h-md cursor-cell border-b border-b-border hover:bg-hover-bg"></div>
+              <div data-iso={dc.col.iso} data-minutes={slot.minutes} sx={style.grow(1).minH(control-h-md).cursor(cell).borderBWidth(1).borderB(border).when({ hover: style.bg(hover-bg) })}></div>
             {/for}
           </column>
-          <column gap="1" sx="relative z-elevated p-half">
+          <column gap="1" sx={style.position(relative).z(elevated).pad(half)}>
             {#for ev of dc.col.allDayEvents key={ev.id}}
               <button
                 type="button"
@@ -447,7 +447,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 data-state="allday"
                 aria-selected={selectedIds().includes(ev.id) ? 'true' : 'false'}
                 title={ev.title}
-                sx="relative text-start cursor-pointer text-density text-foreground bg-tone-accent-bg rounded-sm py-half px-1_5 truncate selected:ring-ring"
+                sx={style.position(relative).textAlign(start).cursor(pointer).fontSize(density).fg(foreground).bg(tone-accent-bg).radius(sm).padY(half).padX(1_5).truncate().when({ selected: style.outline(ring) })}
               >{ev.title}</button>
             {/for}
           </column>
@@ -458,7 +458,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               aria-selected={selectedIds().includes(pe.event.id) ? 'true' : 'false'}
               use:eventSpan={eventRect(pe)}
               title={pe.event.title}
-              sx="absolute top-(--evt-top) h-(--evt-h) left-(--evt-left) w-(--evt-w) cursor-pointer text-start text-density text-tone-primary-fg bg-tone-primary-bg rounded-sm py-half px-1 overflow-hidden selected:ring-ring"
+              sx={style.position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).cursor(pointer).textAlign(start).fontSize(density).fg(tone-primary-fg).bg(tone-primary-bg).radius(sm).padY(half).padX(1).overflow(hidden).when({ selected: style.outline(ring) })}
             >{pe.event.title}</button>
           {/for}
         </div>

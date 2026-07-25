@@ -33,28 +33,28 @@
   role="status"
   aria-live="polite"
   aria-label={label()}
-  sx=""
+  sx={style}
 >
   <row
     gap={size() === 'lg' ? '2' : '1'}
     align="center"
     data-state={tone() + ' ' + size()}
-    sx="group"
+    sx={style.group()}
   >
     <span
       aria-hidden="true"
       motion:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
-      sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
+      sx={style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) })}
     ></span>
     <span
       aria-hidden="true"
       motion:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
-      sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
+      sx={style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) })}
     ></span>
     <span
       aria-hidden="true"
       motion:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
-      sx="rounded-full w-2 h-2 bg-muted-foreground group-state-sm:w-1_25 group-state-sm:h-1_25 group-state-lg:w-2_5 group-state-lg:h-2_5 group-state-primary:bg-primary group-state-info:bg-info group-state-success:bg-success group-state-warning:bg-warning group-state-destructive:bg-destructive group-state-accent:bg-accent"
+      sx={style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) })}
     ></span>
   </row>
 </span>

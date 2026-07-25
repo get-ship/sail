@@ -214,7 +214,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 </controller>
 {#if error() !== ''}
-<div sx="block w-full text-foreground" role="alert">
+<div sx={style.display(block).w(full).fg(foreground)} role="alert">
   <error-state>{error()}</error-state>
 </div>
 {:else if isEmptyInitial()}
@@ -230,44 +230,44 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </slot>
 </div>
 {:else}
-<column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} sx="w-full overflow-hidden bg-surface-1 border border-border rounded-lg font-body text-density">
-  <grid tracks="--sail-grid-template" gap="0" role="row" sx="sticky top-0 z-sticky bg-surface-2 border-b border-b-border">
+<column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} sx={style.w(full).overflow(hidden).bg(surface-1).borderWidth(1).border(border).radius(lg).fontFamily(body).fontSize(density)}>
+  <grid tracks="--sail-grid-template" gap="0" role="row" sx={style.position(sticky).top(0).z(sticky).bg(surface-2).borderBWidth(1).borderB(border)}>
     {#for h of headers() key={h.id}}
-      <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} sx="relative py-density-row-py px-density-row-px font-semibold text-xs uppercase tracking-wide text-foreground border-b border-b-border-subtle whitespace-nowrap sortable:cursor-pointer">
-        <span sx="grow-1 min-w-0 truncate">{h.label}</span>
+      <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} sx={style.position(relative).padY(density-row-py).padX(density-row-px).fontWeight(semibold).fontSize(xs).textCase(uppercase).tracking(wide).fg(foreground).borderBWidth(1).borderB(border-subtle).whitespace(nowrap).when({ sortable: style.cursor(pointer) })}>
+        <span sx={style.grow(1).minW(0).truncate()}>{h.label}</span>
         {#if h.sorted === 'asc'}
-          <span aria-hidden="true" sx="text-primary"><icon name="chevron-up" size="xs"></icon></span>
+          <span aria-hidden="true" sx={style.fg(primary)}><icon name="chevron-up" size="xs"></icon></span>
         {:else if h.sorted === 'desc'}
-          <span aria-hidden="true" sx="text-primary"><icon name="chevron-down" size="xs"></icon></span>
+          <span aria-hidden="true" sx={style.fg(primary)}><icon name="chevron-down" size="xs"></icon></span>
         {/if}
         {#if h.canHide}
-          <button variant="ghost" size="xs" type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options" sx="w-density-icon h-density-icon p-0 rounded-sm">
+          <button variant="ghost" size="xs" type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options" sx={style.w(density-icon).h(density-icon).pad(0).radius(sm)}>
             <icon name="more-vertical" size="xs"></icon>
           </button>
         {/if}
         {#if h.canResize}
-          <span data-action="resize" data-col-id={h.id} aria-hidden="true" sx="absolute top-0 bottom-0 right-0 w-1 cursor-col-resize hover:bg-primary"></span>
+          <span data-action="resize" data-col-id={h.id} aria-hidden="true" sx={style.position(absolute).top(0).bottom(0).right(0).w(1).cursor(col-resize).when({ hover: style.bg(primary) })}></span>
         {/if}
       </row>
     {/for}
   </grid>
-  <div bind:this={viewportEl} sx="relative w-full overflow-y-auto max-h-panel-max-h-md">
+  <div bind:this={viewportEl} sx={style.position(relative).w(full).overflowY(auto).maxH(panel-max-h-md)}>
       {#for w of windowItems() key={`${w.key}|${w.cellsKey}`}}
-        <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} sx="group absolute left-0 w-full translate-y-(--row-y) cursor-pointer hover:bg-hover-bg selected:bg-selected-bg focus:ring-ring">
-          <span aria-hidden="true" sx="absolute left-0 top-1 bottom-1 w-half rounded-full bg-primary invisible group-selected:visible"></span>
+        <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} sx={style.group().position(absolute).left(0).w(full).translateY(bind(rowY)).cursor(pointer).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg), focus: style.outline(ring) })}>
+          <span aria-hidden="true" sx={style.position(absolute).left(0).top(1).bottom(1).w(half).radius(full).bg(primary).visibility(hidden).when({ groupSelected: style.visibility(visible) })}></span>
           {#for c of w.cells key={c.columnId}}
             {#if c.first}
-              <row role="gridcell" use:cellPad={w.indent} sx="py-density-row-py px-density-row-px border-b border-b-border-subtle text-foreground min-w-0 ps-(--cell-ps)">
+              <row role="gridcell" use:cellPad={w.indent} sx={style.padY(density-row-py).padX(density-row-px).borderBWidth(1).borderB(border-subtle).fg(foreground).minW(0).padS(bind(cellPs))}>
                 {#if w.canExpand}
-                  <span data-action="toggle" aria-hidden="true" sx="w-density-icon h-density-icon min-w-density-icon text-muted-foreground group-expanded:rotate-90">
+                  <span data-action="toggle" aria-hidden="true" sx={style.w(density-icon).h(density-icon).minW(density-icon).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
                     <icon name="chevron-right" size="xs"></icon>
                   </span>
                 {/if}
-                <span sx="grow-1 min-w-0 truncate">{c.value}</span>
+                <span sx={style.grow(1).minW(0).truncate()}>{c.value}</span>
               </row>
             {:else}
-              <row role="gridcell" sx="py-density-row-py px-density-row-px border-b border-b-border-subtle text-foreground min-w-0">
-                <span sx="grow-1 min-w-0 truncate">{c.value}</span>
+              <row role="gridcell" sx={style.padY(density-row-py).padX(density-row-px).borderBWidth(1).borderB(border-subtle).fg(foreground).minW(0)}>
+                <span sx={style.grow(1).minW(0).truncate()}>{c.value}</span>
               </row>
             {/if}
           {/for}

@@ -239,7 +239,7 @@ export default controller(() => {
 
   <section>
     <h2>Kanban — bindFor + DnD + transitions</h2>
-    <div data-row="true" sx="mb-3">
+    <div data-row="true" sx={style.mb(3)}>
       <div>{totalCards()} cards</div>
       <button on:click={() => addRandom()}>+ add</button>
       <button on:click={() => chaos()}>chaos × 20</button>
@@ -249,7 +249,7 @@ export default controller(() => {
       {#for col of columns() key={col.id}}
         <section data-col={col.id}>
           <div>
-            <span data-tone="plain" use:swatch={col.tone} sx="bg-(--swatch-color)"></span>
+            <span data-tone="plain" use:swatch={col.tone} sx={style.bg(bind(swatchColor))}></span>
             <span>{col.title}</span>
             <span>({col.cards.length})</span>
           </div>

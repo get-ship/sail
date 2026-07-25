@@ -337,14 +337,14 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
   })
 
 </controller>
-<div sx="relative w-full h-full font-body">
+<div sx={style.position(relative).w(full).h(full).fontFamily(body)}>
   <slot></slot>
-  <div use:overlayAction data-state={captureState()} sx="absolute top-0 right-0 bottom-0 left-0 z-dropdown pointer-events-none state-capture:pointer-events-auto">
+  <div use:overlayAction data-state={captureState()} sx={style.position(absolute).top(0).right(0).bottom(0).left(0).z(dropdown).pointerEvents(none).when({ stateCapture: style.pointerEvents(auto) })}>
     {#if dragVisible()}
       <div
         aria-hidden="true"
         use:rect={dragRect()}
-        sx="absolute left-(--box-left) top-(--box-top) w-(--box-w) h-(--box-h) pointer-events-none bg-tone-primary-bg border border-primary border-dashed rounded-sm"
+        sx={style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).pointerEvents(none).bg(tone-primary-bg).borderWidth(1).border(primary).border(dashed).radius(sm)}
       ></div>
     {/if}
     {#for m of markers() key={m.id}}
@@ -362,12 +362,12 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
         gap="2"
         use:rect={popoverPos()}
         on:pointerdown={(e) => e.stopPropagation()}
-        sx="absolute left-(--box-left) top-(--box-top) z-sticky min-w-panel-min-w-md p-2 bg-popover text-popover-foreground border border-border rounded-md shadow-lg pointer-events-auto"
+        sx={style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).z(sticky).minW(panel-min-w-md).pad(2).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(lg).pointerEvents(auto)}
       >
-        <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} sx="w-full rounded-sm"></textarea>
+        <textarea placeholder="Add a note…" bind:value={noteText} on:keydown={onNoteKeydown} sx={style.w(full).radius(sm)}></textarea>
         <row gap="2" justify="end">
-          <button type="button" on:click={cancelPending} sx="text-sm px-2_5 rounded-sm cursor-pointer">Cancel</button>
-          <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote} sx="text-sm px-2_5 rounded-sm cursor-pointer">Send</button>
+          <button type="button" on:click={cancelPending} sx={style.fontSize(sm).padX(2_5).radius(sm).cursor(pointer)}>Cancel</button>
+          <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote} sx={style.fontSize(sm).padX(2_5).radius(sm).cursor(pointer)}>Send</button>
         </row>
       </column>
     {/if}

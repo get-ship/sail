@@ -24,7 +24,7 @@
   - The row + its caret are the L1 layout keyword `row` (align/justify
     attributes), not a hand-styled flex `<div>`/`<span>` — display:flex,
     align-items and gap for both now come from the keyword, not authored CSS.
-    The row's cursor/radius/ink/hover-bg are sx (`sx="rounded-sm cursor-pointer text-foreground hover:bg-hover-bg"` / `sx="text-muted-foreground"` on the
+    The row's cursor/radius/ink/hover-bg are sx (`sx={style.radius(sm).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg) })}` / `sx={style.fg(muted-foreground)}` on the
     caret) instead of raw `.row`/`.caret` declarations.
   - L1 controls were already framework-composed pre-gate (sail-checkbox,
     sail-icon, sail-empty-state, sail-error-state) — nothing hand-skinned.
@@ -216,21 +216,21 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </slot>
 </div>
 {:else}
-<div role="tree" sx="w-full font-body text-density text-foreground" aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
-  <div bind:this={viewportEl} sx="relative w-full overflow-y-auto max-h-panel-max-h-md">
-    <div use:virtualSpacer={totalSize()} sx="h-(--rows-h) relative w-full">
+<div role="tree" sx={style.w(full).fontFamily(body).fontSize(density).fg(foreground)} aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
+  <div bind:this={viewportEl} sx={style.position(relative).w(full).overflowY(auto).maxH(panel-max-h-md)}>
+    <div use:virtualSpacer={totalSize()} sx={style.h(bind(rowsH)).position(relative).w(full)}>
       {#for w of windowItems() key={w.key}}
-        <row align="center" gap="density" role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} use:cellPad={w.indent} sx="group absolute left-0 w-full py-density-row-py pr-density-row-px rounded-sm cursor-pointer text-foreground hover:bg-hover-bg selected:bg-selected-bg selected:font-medium busy:text-muted-foreground busy:italic busy:cursor-default focus:ring-ring">
+        <row align="center" gap="density" role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} use:cellPad={w.indent} sx={style.group().position(absolute).left(0).w(full).padY(density-row-py).padR(density-row-px).radius(sm).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).fontWeight(medium), busy: style.fg(muted-foreground).italic(true).cursor(default), focus: style.outline(ring) })}>
           {#if w.canExpand}
-            <row data-action="toggle" aria-hidden="true" align="center" justify="center" sx="w-density-icon h-density-icon min-w-density-icon text-muted-foreground group-expanded:rotate-90">
+            <row data-action="toggle" aria-hidden="true" align="center" justify="center" sx={style.w(density-icon).h(density-icon).minW(density-icon).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
               <icon name="chevron-right" size="xs"></icon>
             </row>
           {:else}
-            <span aria-hidden="true" sx="w-density-icon min-w-density-icon"></span>
+            <span aria-hidden="true" sx={style.w(density-icon).minW(density-icon)}></span>
           {/if}
 
           {#if selectable() === 'multi'}
-            <span sx="">
+            <span sx={style}>
               <input
                 type="checkbox"
                 size="sm"
@@ -241,12 +241,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             </span>
           {/if}
           {#if w.icon !== ''}
-            <icon name={w.icon} size="sm" sx="text-muted-foreground group-selected:text-foreground"></icon>
+            <icon name={w.icon} size="sm" sx={style.fg(muted-foreground).when({ groupSelected: style.fg(foreground) })}></icon>
           {:else}
             <slot name="node-icon"></slot>
           {/if}
-          <span sx="grow-1 min-w-0 truncate">{w.label}</span>
-          <span sx="ml-auto text-muted-foreground text-xs"><slot name="node-trailing"></slot></span>
+          <span sx={style.grow(1).minW(0).truncate()}>{w.label}</span>
+          <span sx={style.ml(auto).fg(muted-foreground).fontSize(xs)}><slot name="node-trailing"></slot></span>
         </row>
       {/for}
     </div>

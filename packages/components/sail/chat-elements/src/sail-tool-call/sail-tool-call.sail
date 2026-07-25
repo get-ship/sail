@@ -8,15 +8,15 @@
   Args arrive via the default slot; the result via the `result` slot.
   Both render monospace. Pure framework primitive — no SDK, no runtime.
 
-  Status is a TONE: the frame maps status → tone, and the tone channel
-  (`--tone`) carries the status color to the rail, the dot, and the status
-  text. The dot is the L1 `<span dot>` — its `pulse` attribute (set only
-  while running) owns the animation.
+  Status paint is Style match/when on semantic tokens (info / success /
+  destructive) — no tone channel. The host stamps data-state={status} so
+  rail, dot, and status text share one group-state-* when map. The L1
+  `<span dot>` pulse attr (running only) owns the animation.
 
   Props
   ─────────────────────────────────────────────────────────────────────
   name    (string)  Tool name shown in the header.
-  status  (union)   running | ok | error — colors the status dot.
+  status  (union)   running | ok | error — colors the status chrome.
   open    (bool)    Whether the body starts expanded.
   ─────────────────────────────────────────────────────────────────────
   Slots
@@ -31,41 +31,56 @@
     status: 'running' | 'ok' | 'error' = 'running'
     open = false
   }
+
+  const host = style.group().position(relative).borderWidth(1).border(border).radius(md).bg(card).overflow(hidden)
+  const statusBg = when({
+    groupStateRunning: style.bg(info),
+    groupStateOk: style.bg(success),
+    groupStateError: style.bg(destructive),
+  })
+  const statusFg = when({
+    groupStateRunning: style.fg(info),
+    groupStateOk: style.fg(success),
+    groupStateError: style.fg(destructive),
+  })
+  const rail = style.position(absolute).left(0).top(0).bottom(0).w(0_75)
+  const dot = style.shadow(none)
+  const statusLabel = style.ml(auto).fontSize(xs).textCase(uppercase).tracking(wide)
+  const trigger = style.padY(2).padX(3)
+  const nameText = style.fontFamily(mono).fontSize(sm).fontWeight(medium).fg(foreground).truncate()
+  const chevron = style.grow(0).fg(muted-foreground).when({ groupOpen: style.rotate(90) })
+  const body = style.borderTWidth(1).borderT(border).padY(2).padX(3).fontFamily(mono).fontSize(sm).leading(normal)
+  const sectionLabel = style.display(block).fontFamily(body).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(1)
+  const pre = style.whitespace(pre-wrap)
+  const resultBlock = style.mt(2)
 </scope>
 
-<div
-  tone={status() === 'ok' ? 'success' : status() === 'error' ? 'destructive' : 'info'}
-  sx="relative border border-border rounded-md bg-card overflow-hidden"
->
-  <!-- The state-colored rail: at-a-glance status, echoing the dot + status text. -->
-  <span
-    aria-hidden="true"
-    sx="absolute left-0 top-0 bottom-0 w-0_75 bg-tone"
-  ></span>
+<div data-state={status()} sx={host}>
+  <span aria-hidden="true" sx={[rail, statusBg]}></span>
 
-  <collapsible open={open()} sx="group">
-    <row slot="trigger" gap="2" align="center" sx="py-2 px-3">
+  <collapsible open={open()} sx={style.group()}>
+    <row slot="trigger" gap="2" align="center" sx={trigger}>
       <span
         dot
         aria-hidden="true"
         pulse={status() === 'running'}
-        sx="bg-tone shadow-none"
+        sx={[dot, statusBg]}
       ></span>
-      <span sx="font-mono text-sm font-medium text-foreground truncate">{name()}</span>
-      <span sx="ml-auto text-xs uppercase tracking-wide text-tone">{status()}</span>
+      <span sx={nameText}>{name()}</span>
+      <span sx={[statusLabel, statusFg]}>{status()}</span>
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
         stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
         stroke-linejoin="round" aria-hidden="true"
-        sx="grow-0 text-muted-foreground group-open:rotate-90">
+        sx={chevron}>
         <path d="M4 2l4 4-4 4" />
       </svg>
     </row>
-    <div sx="border-t border-t-border py-2 px-3 font-mono text-sm leading-normal">
-      <span sx="block font-body text-xs uppercase tracking-wide text-muted-foreground mb-1">Arguments</span>
-      <div sx="whitespace-pre-wrap"><slot></slot></div>
-      <div sx="mt-2">
-        <span sx="block font-body text-xs uppercase tracking-wide text-muted-foreground mb-1">Result</span>
-        <div sx="whitespace-pre-wrap"><slot name="result"></slot></div>
+    <div sx={body}>
+      <span sx={sectionLabel}>Arguments</span>
+      <div sx={pre}><slot></slot></div>
+      <div sx={resultBlock}>
+        <span sx={sectionLabel}>Result</span>
+        <div sx={pre}><slot name="result"></slot></div>
       </div>
     </div>
   </collapsible>

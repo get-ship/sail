@@ -113,7 +113,7 @@ export default controller(({ data, labels, tone, orientation, max, width, height
     role="img"
     aria-label={ariaLabel()}
     aria-describedby="chart-data"
-    sx="block w-full overflow-hidden"
+    sx={style.display(block).w(full).overflow(hidden)}
     use:observeViewport>
     {#for b of bars() key={b.id}}
       <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={b.rx} ry={b.ry} fill={b.color} fill-opacity="0.85">
@@ -121,7 +121,7 @@ export default controller(({ data, labels, tone, orientation, max, width, height
       </rect>
     {/for}
   </svg>
-  <column id="chart-data" sx="sr-only">
+  <column id="chart-data" sx={style.srOnly()}>
     <slot name="description">
       <table>
         {#for row of chart.ariaTable() key={row[0].id}}

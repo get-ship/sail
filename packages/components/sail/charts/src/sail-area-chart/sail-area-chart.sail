@@ -98,7 +98,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
   })
 
 </controller>
-<column gap="0" sx="w-full">
+<column gap="0" sx={style.w(full)}>
   {#if loading()}
     <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
   {:else if chart.error()}
@@ -112,7 +112,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       role="img"
       aria-label={ariaLabel()}
       aria-describedby="chart-data"
-      sx="block w-full overflow-hidden"
+      sx={style.display(block).w(full).overflow(hidden)}
       use:observeViewport>
       {#for g of gridLines() key={g.id}}
         <line x1="0" x2={viewport.width()} y1={g.y} y2={g.y} stroke="var(--border)" stroke-width="1" stroke-dasharray="2 3"></line>
@@ -127,7 +127,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
         {/if}
       {/for}
     </svg>
-    <column id="chart-data" sx="sr-only">
+    <column id="chart-data" sx={style.srOnly()}>
       <slot name="description">
         <table>
           {#for row of chart.ariaTable() key={row[0].id}}
@@ -141,5 +141,5 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       </slot>
     </column>
   {/if}
-  <row gap="3" align="stretch" sx="mt-1_5 font-body text-xs text-muted-foreground"><slot></slot></row>
+  <row gap="3" align="stretch" sx={style.mt(1_5).fontFamily(body).fontSize(xs).fg(muted-foreground)}><slot></slot></row>
 </column>

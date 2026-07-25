@@ -435,4 +435,4 @@ function makeCompletionSource(src: SuiCompletionSource) {
 }
 
 </controller>
-<div use:editorMount sx="relative overflow-hidden font-mono w-full h-full min-h-0 focus-within:ring-ring"></div>
+<div use:editorMount sx={style.position(relative).overflow(hidden).fontFamily(mono).w(full).h(full).minH(0).when({ focusWithin: style.outline(ring) })}></div>

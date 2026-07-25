@@ -82,7 +82,7 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
 {:else if chart.isEmpty()}
   <empty-state></empty-state>
 {:else}
-  <stack sx="w-fit">
+  <stack sx={style.w(fit)}>
     <svg
       viewBox={'0 0 ' + diameter() + ' ' + diameter()}
       width={diameter()}
@@ -90,7 +90,7 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
       role="img"
       aria-label={ariaLabel()}
       aria-describedby="chart-data"
-      sx="block">
+      sx={style.display(block)}>
       <circle cx={diameter() / 2} cy={diameter() / 2} r={(diameter() - thickness()) / 2} fill="none" stroke="var(--muted)" stroke-width={thickness()}>
       </circle>
       {#for seg of segments() key={seg.id}}
@@ -99,8 +99,8 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
         </path>
       {/for}
     </svg>
-    <center sx="font-heading font-semibold text-lg leading-tight text-foreground pointer-events-none"><slot></slot></center>
-    <column id="chart-data" sx="sr-only">
+    <center sx={style.fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight).fg(foreground).pointerEvents(none)}><slot></slot></center>
+    <column id="chart-data" sx={style.srOnly()}>
       <slot name="description">
         <table>
           {#for row of chart.ariaTable() key={row[0].id}}

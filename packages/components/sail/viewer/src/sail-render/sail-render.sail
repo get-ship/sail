@@ -292,9 +292,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
 </controller>
 <error-boundary fallback-text="The specimen threw while rendering.">
-  <column gap="2" sx="relative min-h-8 font-body text-foreground">
+  <column gap="2" sx={style.position(relative).minH(8).fontFamily(body).fg(foreground)}>
     {#if compiling()}
-      <row align="center" justify="center" sx="p-4">
+      <row align="center" justify="center" sx={style.pad(4)}>
         <sail-spinner size="sm" label="Compiling"></sail-spinner>
       </row>
     {/if}
@@ -302,10 +302,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
     {#if compileError() !== null}
       <column gap="2" data-test="compile-error">
         <alert tone="destructive">{compileErrorSummary()}</alert>
-        <div role="region" aria-label="text code block" sx="bg-surface-2 text-foreground border border-border-subtle rounded-md overflow-hidden">
-          <header sx="p-2 px-3 text-xs text-muted-foreground bg-muted font-medium tracking-wide">TEXT</header>
-          <separator sx="m-0"></separator>
-          <pre sx="py-3 px-4 overflow-x-auto leading-normal-plus">{compileErrorBody()}</pre>
+        <div role="region" aria-label="text code block" sx={style.bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md).overflow(hidden)}>
+          <header sx={style.pad(2).padX(3).fontSize(xs).fg(muted-foreground).bg(muted).fontWeight(medium).tracking(wide)}>TEXT</header>
+          <separator sx={style.m(0)}></separator>
+          <pre sx={style.padY(3).padX(4).overflowX(auto).leading(normal-plus)}>{compileErrorBody()}</pre>
         </div>
       </column>
     {/if}
@@ -313,14 +313,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
     {#if runtimeError() !== null}
       <column gap="2" data-test="runtime-error">
         <alert tone="destructive">The specimen threw at runtime.</alert>
-        <div role="region" aria-label="text code block" sx="bg-surface-2 text-foreground border border-border-subtle rounded-md overflow-hidden">
-          <header sx="p-2 px-3 text-xs text-muted-foreground bg-muted font-medium tracking-wide">TEXT</header>
-          <separator sx="m-0"></separator>
-          <pre sx="py-3 px-4 overflow-x-auto leading-normal-plus">{runtimeError()}</pre>
+        <div role="region" aria-label="text code block" sx={style.bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md).overflow(hidden)}>
+          <header sx={style.pad(2).padX(3).fontSize(xs).fg(muted-foreground).bg(muted).fontWeight(medium).tracking(wide)}>TEXT</header>
+          <separator sx={style.m(0)}></separator>
+          <pre sx={style.padY(3).padX(4).overflowX(auto).leading(normal-plus)}>{runtimeError()}</pre>
         </div>
       </column>
     {/if}
 
-    <div use:captureStage use:maxWidth={stageMaxWidth()} sx="w-full ml-auto mr-auto max-w-(--max-w)"></div>
+    <div use:captureStage use:maxWidth={stageMaxWidth()} sx={style.w(full).ml(auto).mr(auto).maxW(bind(maxW))}></div>
   </column>
 </error-boundary>

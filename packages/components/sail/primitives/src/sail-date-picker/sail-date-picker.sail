@@ -367,24 +367,24 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
   })
 
 </controller>
-<column gap="0" sx="relative w-full">
-<row gap="2" align="center" sx="w-full h-control-h-md px-2_5 bg-background text-foreground border border-tone-border rounded-md focus-within:ring-tone-ring">
-  <input type="text" flush sx="grow-1 min-w-0 font-body disabled:cursor-not-allowed" name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
-  <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" sx="w-icon-size-sm h-icon-size-sm min-w-icon-size-sm text-muted-foreground pointer-events-none">
+<column gap="0" sx={style.position(relative).w(full)}>
+<row gap="2" align="center" sx={style.w(full).h(control-h-md).padX(2_5).bg(background).fg(foreground).borderWidth(1).border(border).radius(md).when({ focusWithin: style.outline(ring) })}>
+  <input type="text" flush sx={style.grow(1).minW(0).fontFamily(body).when({ disabled: style.cursor(not-allowed) })} name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
+  <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" sx={style.w(icon-size-sm).h(icon-size-sm).minW(icon-size-sm).fg(muted-foreground).pointerEvents(none)}>
     <rect x="2" y="3" width="12" height="11" rx="1.5"></rect>
     <path d="M2 6h12 M5 1.5v3 M11 1.5v3"></path>
   </svg>
 </row>
 {#if open() && !disabled()}
-  <div role="dialog" aria-label="Choose date" sx="absolute left-0 z-popover w-panel-max-w-sm p-2 mt-1 bg-popover text-popover-foreground border border-border rounded-md shadow-md font-body">
-    <row align="center" justify="between" sx="mb-1">
-      <button type="button" data-act="prev" aria-label="Previous month" sx="w-icon-size-2xl h-icon-size-2xl rounded-sm text-muted-foreground cursor-pointer hover:bg-muted hover:text-foreground">‹</button>
-      <span sx="grow-1 font-semibold text-center">{monthLabel()}</span>
-      <button type="button" data-act="next" aria-label="Next month" sx="w-icon-size-2xl h-icon-size-2xl rounded-sm text-muted-foreground cursor-pointer hover:bg-muted hover:text-foreground">›</button>
+  <div role="dialog" aria-label="Choose date" sx={style.position(absolute).left(0).z(popover).w(panel-max-w-sm).pad(2).mt(1).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontFamily(body)}>
+    <row align="center" justify="between" sx={style.mb(1)}>
+      <button type="button" data-act="prev" aria-label="Previous month" sx={style.w(icon-size-2xl).h(icon-size-2xl).radius(sm).fg(muted-foreground).cursor(pointer).when({ hover: style.bg(muted).fg(foreground) })}>‹</button>
+      <span sx={style.grow(1).fontWeight(semibold).textAlign(center)}>{monthLabel()}</span>
+      <button type="button" data-act="next" aria-label="Next month" sx={style.w(icon-size-2xl).h(icon-size-2xl).radius(sm).fg(muted-foreground).cursor(pointer).when({ hover: style.bg(muted).fg(foreground) })}>›</button>
     </row>
     <grid role="grid" cols="7" gap="1">
       {#for d of dayHeaders() key={d.key}}
-        <span role="columnheader" sx="text-sm text-muted-foreground py-1 font-medium text-center">{d.label}</span>
+        <span role="columnheader" sx={style.fontSize(sm).fg(muted-foreground).padY(1).fontWeight(medium).textAlign(center)}>{d.label}</span>
       {/for}
       {#for cell of monthCells() key={cell.key}}
         <button
@@ -395,7 +395,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
           tabindex={cell.focused ? '0' : '-1'}
           data-state={cell.state || null}
           data-iso={cell.iso}
-          sx="h-control-h-sm rounded-sm text-center cursor-pointer text-foreground hover:bg-hover-bg selected:bg-primary selected:text-primary-foreground disabled:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed state-empty:invisible state-today:ring-border-strong focus:ring-ring"
+          sx={style.h(control-h-sm).radius(sm).textAlign(center).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(primary).fg(primary-foreground), disabled: style.fg(muted-foreground).opacity(50).cursor(not-allowed), stateEmpty: style.visibility(hidden), stateToday: style.outline(border-strong), focus: style.outline(ring) })}
         >{cell.empty ? '' : cell.day}</button>
       {/for}
     </grid>

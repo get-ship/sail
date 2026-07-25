@@ -67,15 +67,15 @@ export default controller(({ kind, rect, index, active }: Scope) => ({
 
 </controller>
 {#if isPoint()}
-  <div use:pin={{x: x(), y: y()}} sx="absolute w-0 h-0 left-(--pin-x) top-(--pin-y)">
-    <center sx="h-0">
+  <div use:pin={{x: x(), y: y()}} sx={style.position(absolute).w(0).h(0).left(bind(pinX)).top(bind(pinY))}>
+    <center sx={style.h(0)}>
       <row
         role="button"
         tabindex="0"
         gap="0"
         justify="center"
         data-state={state()}
-        sx="w-5 h-5 rounded-full bg-primary text-primary-foreground border border-background text-xs font-medium shadow-sm cursor-pointer pointer-events-auto font-body state-active:ring-ring-color"
+        sx={style.w(5).h(5).radius(full).bg(primary).fg(primary-foreground).borderWidth(1).border(background).fontSize(xs).fontWeight(medium).shadow(sm).cursor(pointer).pointerEvents(auto).fontFamily(body).when({ stateActive: style.outline(ring-color) })}
       >{badge()}</row>
     </center>
   </div>
@@ -84,6 +84,6 @@ export default controller(({ kind, rect, index, active }: Scope) => ({
     role="button"
     tabindex="0"
     use:rect={box()}
-    sx="absolute left-(--box-left) top-(--box-top) w-(--box-w) h-(--box-h) bg-tone-primary-bg border border-primary border-dashed rounded-sm cursor-pointer pointer-events-auto"
+    sx={style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).bg(tone-primary-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto)}
   ></div>
 {/if}

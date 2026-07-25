@@ -76,18 +76,18 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
 
 </controller>
 {#if staged().length === 0}
-  <p sx="font-body text-sm text-muted-foreground py-1 px-2">No staged annotations.</p>
+  <p sx={style.fontFamily(body).fontSize(sm).fg(muted-foreground).padY(1).padX(2)}>No staged annotations.</p>
 {:else}
-  <column role="list" gap="1" sx="font-body text-sm text-foreground">
+  <column role="list" gap="1" sx={style.fontFamily(body).fontSize(sm).fg(foreground)}>
     {#for a of staged() key={a.id}}
-      <row role="listitem" data-id={a.id} gap="2" align="center" sx="py-1 px-2 bg-background border border-border rounded-sm">
-        <span sx="text-xs uppercase tracking-wide text-muted-foreground">{a.kind}</span>
-        <span title={a.note ?? ''} sx="grow-1 truncate">{a.note ?? '(no note)'}</span>
+      <row role="listitem" data-id={a.id} gap="2" align="center" sx={style.padY(1).padX(2).bg(background).borderWidth(1).border(border).radius(sm)}>
+        <span sx={style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>{a.kind}</span>
+        <span title={a.note ?? ''} sx={style.grow(1).truncate()}>{a.note ?? '(no note)'}</span>
         <button
           type="button"
           aria-label="Remove annotation"
           on:click={() => emitRemove(a.id)}
-          sx="min-h-0 px-1_5 py-half text-xs rounded-sm bg-transparent border border-border text-muted-foreground cursor-pointer hover:text-destructive hover:border hover:border-destructive"
+          sx={style.minH(0).padX(1_5).padY(half).fontSize(xs).radius(sm).bg(transparent).borderWidth(1).border(border).fg(muted-foreground).cursor(pointer).when({ hover: style.fg(destructive).borderWidth(1).border(destructive) })}
         >Remove</button>
       </row>
     {/for}
