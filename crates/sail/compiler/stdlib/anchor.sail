@@ -3,13 +3,12 @@
   button link. Style value language only.
 
   Paint (Style product only): variant×tone via flat match + compound, semantic
-  + tone-ramp tokens (no --tone* attribute channel). Base geometry, Tier-2
-  chrome (corner-image / control-frame / lift / press), the global focus ring,
-  and disabled cursor/opacity stay in contracts.css.
-  Hover deepen: the solid compounds use bgMix(token, 15) to reproduce the
-  prior color-mix(ton, foreground 15%) shift; soft/outline/ghost and the
-  untoned default variant use the badge/chip opacity(90) idiom because bgMix
-  only mixes toward foreground.
+  hues only (no --tone* attribute channel, no tone-* design tokens). Base
+  geometry, Tier-2 chrome (corner-image / control-frame / lift / press), the
+  global focus ring, and disabled cursor/opacity stay in contracts.css.
+  Hover deepen: solid compounds use bgMix(token, 15) to reproduce the prior
+  color-mix(ton, foreground 15%) shift; soft compounds use bgWash(hue, pct)
+  for a transparent hue wash (rest + deeper hover).
 -->
 
 <scope>
@@ -48,13 +47,13 @@
   const solidAccent = style.bg(accent).border(accent).fg(accent-foreground).shadow(xs).when({ hover: style.bgMix(accent, 15).shadow(sm) })
   const solidMuted = style.bg(muted-foreground).border(muted-foreground).fg(background).shadow(xs).when({ hover: style.bgMix(muted-foreground, 15).shadow(sm) })
 
-  // Tone-aware compounds for variant=soft.
-  const softPrimary = style.bg(hover-bg).border(primary).fg(primary).when({ hover: style.opacity(90) })
-  const softInfo = style.bg(hover-bg).border(info).fg(info).when({ hover: style.opacity(90) })
-  const softSuccess = style.bg(hover-bg).border(success).fg(success).when({ hover: style.opacity(90) })
-  const softWarning = style.bg(hover-bg).border(warning).fg(warning).when({ hover: style.opacity(90) })
-  const softDestructive = style.bg(hover-bg).border(destructive).fg(destructive).when({ hover: style.opacity(90) })
-  const softAccent = style.bg(hover-bg).border(accent).fg(accent).when({ hover: style.opacity(90) })
+  // Tone-aware compounds for variant=soft — hue wash, not neutral hover-bg.
+  const softPrimary = style.bgWash(primary, 15).border(primary).fg(primary).when({ hover: style.bgWash(primary, 25) })
+  const softInfo = style.bgWash(info, 15).border(info).fg(info).when({ hover: style.bgWash(info, 25) })
+  const softSuccess = style.bgWash(success, 15).border(success).fg(success).when({ hover: style.bgWash(success, 25) })
+  const softWarning = style.bgWash(warning, 15).border(warning).fg(warning).when({ hover: style.bgWash(warning, 25) })
+  const softDestructive = style.bgWash(destructive, 15).border(destructive).fg(destructive).when({ hover: style.bgWash(destructive, 25) })
+  const softAccent = style.bgWash(accent, 15).border(accent).fg(accent).when({ hover: style.bgWash(accent, 25) })
   const softMuted = style.bg(muted).border(border).fg(muted-foreground).when({ hover: style.opacity(90) })
 
   // Tone-aware compounds for variant=outline.

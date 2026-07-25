@@ -399,6 +399,9 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "gapY", vocab: "gap-y", scale: Some("space"), keywords: &["0"], negatable: false, slots: &["row-gap"] },
         // Hover-deepen primitive: color-mix toward foreground by percent.
         SetterSpec { name: "bgMix", vocab: "bg-mix", scale: None, keywords: &[], negatable: false, slots: &["background-color"] },
+        // Soft wash primitive: color-mix hue into transparent by percent
+        // (restores the deleted tone-*-bg ramp without minting design tokens).
+        SetterSpec { name: "bgWash", vocab: "bg-wash", scale: None, keywords: &[], negatable: false, slots: &["background-color"] },
         // Tier-2 control chrome channels.
         SetterSpec { name: "controlFrame", vocab: "control-frame", scale: None, keywords: &[], negatable: false, slots: &["box-shadow"] },
         SetterSpec { name: "controlLift", vocab: "control-lift", scale: None, keywords: &[], negatable: false, slots: &["translate"] },
@@ -765,6 +768,9 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
         }
         if spec.name == "bgMix" {
             return lower_bg_mix_arg(spec, op, &op.args[0], &op.args[1]);
+        }
+        if spec.name == "bgWash" {
+            return lower_bg_wash_arg(spec, op, &op.args[0], &op.args[1]);
         }
         return Err(StyleDiagnostic::BadArity {
             setter: op.setter.clone(),
@@ -1430,7 +1436,8 @@ fn validate_composite_op(spec: &SetterSpec, op: &PaintOp) -> Result<(), StyleDia
         validate_border_color_arg(spec, op, &op.args[1])?;
         return Ok(());
     }
-    if spec.name == "bgMix" {
+    if spec.name == "bgMix" || spec.name == "bgWash" {
+        // Same arity/token rules: color token + closed percent ramp.
         return validate_bg_mix_args(spec, op);
     }
     Err(StyleDiagnostic::BadArity {
@@ -1654,6 +1661,35 @@ fn lower_bg_mix_arg(
     Ok(vec![(
         "background-color".into(),
         format!("color-mix(in oklch, {token}, var(--foreground) {pct}%)"),
+    )])
+}
+
+/// Lower `bgWash(token, pct)` to a transparent hue wash background-color.
+/// Emits `color-mix(in oklch, {token} {pct}%, transparent)` — the former
+/// tone-*-bg shape, without reintroducing tone-* design tokens.
+fn lower_bg_wash_arg(
+    _spec: &SetterSpec,
+    _op: &PaintOp,
+    token_arg: &PaintArg,
+    pct_arg: &PaintArg,
+) -> Result<Vec<(String, String)>, StyleDiagnostic> {
+    let token = match token_arg {
+        PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
+        PaintArg::Token(t) => {
+            let bare = strip_neg(t).1;
+            match bare {
+                "transparent" | "current" | "currentColor" => bare.into(),
+                _ => format!("var(--{bare})"),
+            }
+        }
+    };
+    let pct = match pct_arg {
+        PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
+        PaintArg::Token(t) => t.clone(),
+    };
+    Ok(vec![(
+        "background-color".into(),
+        format!("color-mix(in oklch, {token} {pct}%, transparent)"),
     )])
 }
 

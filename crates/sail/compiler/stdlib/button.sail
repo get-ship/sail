@@ -3,15 +3,14 @@
 
   Paint (Style product only): variant×tone via flat match + compound (the
   card/badge pattern — nested match currently drops host paint), semantic
-  + tone-ramp tokens (no --tone* attribute channel). Base geometry, Tier-2
-  chrome (corner-image / control-frame / lift / press), the global focus
-  ring, and disabled cursor/opacity stay in contracts.css — the Style
-  product has no setter for those channels yet. Hover deepen uses the
-  badge/chip idiom (opacity) — no color-mix setter exists (model gap).
+  hues only (no --tone* attribute channel, no tone-* design tokens). Base
+  geometry, Tier-2 chrome (corner-image / control-frame / lift / press), the
+  global focus ring, and disabled cursor/opacity stay in contracts.css — the
+  Style product has no setter for those channels yet.
 
-  Replaces the contracts BUTTON_SKIN_CSS variant rules that read the
-  [tone=] → --tone* channel (the 3e8d3ac5 restoration). tone is an
-  ordinary prop with a closed union; paint is Style match/compound.
+  Soft fill uses bgWash(hue, pct) — color-mix(hue pct%, transparent) — so
+  soft primary is a real primary tint, not neutral hover-bg. Soft hover
+  deepens the wash; solid hover uses opacity.
 -->
 
 <scope>
@@ -32,7 +31,7 @@
   // NOTE: `//` comments inside the sx list silently drop compound entries
   // (parser gap) — group notes live here instead. Compound groups:
   //   solid   — the tone fill, contrast text on top
-  //   soft    — the tinted surface, tone-fg text
+  //   soft    — hue wash surface (bgWash), tone-fg text
   //   outline — tone border + tone-fg text on the page surface
   //   ghost   — tone-fg text only
 
@@ -79,12 +78,12 @@
   compound({ variant: solid, tone: destructive }, style.bg(destructive).border(destructive).fg(destructive-foreground)),
   compound({ variant: solid, tone: accent }, style.bg(accent).border(accent).fg(accent-foreground)),
   compound({ variant: solid, tone: muted }, style.bg(muted-foreground).border(muted-foreground).fg(background)),
-  compound({ variant: soft, tone: primary }, style.bg(hover-bg).border(primary).fg(primary)),
-  compound({ variant: soft, tone: info }, style.bg(hover-bg).border(info).fg(info)),
-  compound({ variant: soft, tone: success }, style.bg(hover-bg).border(success).fg(success)),
-  compound({ variant: soft, tone: warning }, style.bg(hover-bg).border(warning).fg(warning)),
-  compound({ variant: soft, tone: destructive }, style.bg(hover-bg).border(destructive).fg(destructive)),
-  compound({ variant: soft, tone: accent }, style.bg(hover-bg).border(accent).fg(accent)),
+  compound({ variant: soft, tone: primary }, style.bgWash(primary, 15).border(primary).fg(primary).when({ hover: style.bgWash(primary, 25) })),
+  compound({ variant: soft, tone: info }, style.bgWash(info, 15).border(info).fg(info).when({ hover: style.bgWash(info, 25) })),
+  compound({ variant: soft, tone: success }, style.bgWash(success, 15).border(success).fg(success).when({ hover: style.bgWash(success, 25) })),
+  compound({ variant: soft, tone: warning }, style.bgWash(warning, 15).border(warning).fg(warning).when({ hover: style.bgWash(warning, 25) })),
+  compound({ variant: soft, tone: destructive }, style.bgWash(destructive, 15).border(destructive).fg(destructive).when({ hover: style.bgWash(destructive, 25) })),
+  compound({ variant: soft, tone: accent }, style.bgWash(accent, 15).border(accent).fg(accent).when({ hover: style.bgWash(accent, 25) })),
   compound({ variant: soft, tone: muted }, style.bg(muted).border(border).fg(muted-foreground)),
   compound({ variant: outline, tone: primary }, style.border(primary).fg(primary)),
   compound({ variant: outline, tone: info }, style.border(info).fg(info)),

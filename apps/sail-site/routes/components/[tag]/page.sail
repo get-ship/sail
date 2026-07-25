@@ -200,7 +200,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         tag().startsWith('sail-message') || tag() === 'sail-citation' || tag() === 'sail-composer' || tag() === 'sail-thinking-dots' || tag() === 'sail-tool-call' ? 'Pack: chat' :
         tag() === 'sail-mermaid' ? 'Pack: mermaid' :
         tag() === 'sail-code-editor' ? 'Pack: code-editor' : 'Pack'
-      ) : 'In the language'}
+      ) : 'Component primitives'}
       variant-attr={variantAttr()}
       usage={usageCode()}
       variants={variants()}

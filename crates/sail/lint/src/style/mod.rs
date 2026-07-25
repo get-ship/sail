@@ -595,6 +595,26 @@ mod tests {
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
 
+        // bgWash(token, pct) — transparent hue wash (soft fill).
+        let (style, diags) = parse("style.bgWash(primary, 15)");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("color-mix(in oklch, var(--primary) 15%, transparent)"),
+            "{css}"
+        );
+        // bgWash fail-closed: off-ramp percent.
+        let (_, diags) = parse("style.bgWash(primary, 14)");
+        assert!(
+            diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
+            "bgWash must reject 14: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+
         // Host-paint gap props for flex/grid containers outside layout keywords.
         for (expr, prop, value) in [
             ("style.gap(2)", "gap", "var(--space-2)"),
