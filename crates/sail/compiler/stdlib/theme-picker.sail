@@ -19,12 +19,16 @@
   const panelGrid = style.w(full)
   const option = style.minW(0).pad(1_5).bg(transparent).borderWidth(1).border(transparent).radius(md).cursor(pointer).fontFamily(body).fontSize(xs).fg(theme-picker-option-foreground).textAlign(start)
   const optionCol = style.minW(0).w(full)
-  const swatch = style.position(relative).w(full).h(24).radius(md).overflow(hidden).isolate().bg(background).shadow(inset-ring)
-  const overlay = style.position(absolute).inset(0).z(1).pointerEvents(none).opacity(bind(surfaceOverlayOpacity)).mixBlend(bind(surfaceOverlayBlend)).bg(bind(surfaceOverlay))
+  // Swatch mini-cards: paint MUST use theme CSS vars (background/card/…) so
+  // [data-theme-preview='…'] scopes from themes.css re-skin the preview.
+  // h(24)=space-24 (96px) is the intentional swatch height.
+  // opacity only accepts token steps (…80,90…) — not bare 85.
+  const swatch = style.position(relative).w(full).h(24).minH(24).radius(md).overflow(hidden).isolate().bg(background).shadow(inset-ring)
+  const overlay = style.position(absolute).inset(0).z(1).pointerEvents(none).opacity(bind(surface-overlay-opacity)).mixBlend(bind(surface-overlay-blend)).bg(bind(surface-overlay))
   const card = style.position(relative).z(2).w(full).mx(2).padY(2).padX(2_5).bg(card).fg(card-foreground).borderWidth(1).border(border).radius(md).shadow(card-rest)
-  const eyebrow = style.fontFamily(bind(labelFont)).fontWeight(bind(labelWeight)).tracking(bind(labelTracking)).fontSize(xs).leading(none).fg(muted-foreground)
-  const heading = style.fontFamily(heading).fontWeight(bind(headingWeight)).fontSize(sm).leading(none).fg(card-foreground)
-  const bodySample = style.fontFamily(body).fontSize(xs).leading(none).fg(card-foreground).opacity(85)
+  const eyebrow = style.fontFamily(bind(label-font)).fontWeight(bind(label-weight)).tracking(bind(label-tracking)).fontSize(xs).leading(none).fg(muted-foreground)
+  const heading = style.fontFamily(heading).fontWeight(bind(heading-weight)).fontSize(sm).leading(none).fg(card-foreground)
+  const bodySample = style.fontFamily(body).fontSize(xs).leading(none).fg(card-foreground).opacity(80)
   const monoSample = style.fontFamily(mono).fontSize(xs).padX(1).padY(px).radius(sm).bg(hover-bg).fg(muted-foreground)
   const cta = style.fontWeight(medium).fontSize(xs).leading(none).padY(px).padX(1_5).radius(sm).bg(primary).fg(primary-foreground)
   const ghost = style.fontWeight(medium).fontSize(xs).leading(none).padY(px).padX(1_5).radius(sm).bg(transparent).fg(muted-foreground).borderWidth(1).border(border)

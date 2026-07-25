@@ -57,7 +57,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       () => CATALOG,
       (c: CatalogEntry, q: string) => (c.tag + ' ' + c.cat + ' ' + c.pack).toLowerCase().includes(q),
     )
-    const packSel = signal<string>('all')
+    // Default to L1 only — mounting charts+mermaid+code-editor+chat+all L1
+    // at once OOMs tabs after Style cutover (each tile is a live component).
+    // User still can pick "All packs" or a pack rail entry.
+    const packSel = signal<string>('lang')
     const catSel = signal<string>('all')
     const pickPack = (id: string): void => packSel.set(id)
     const pickCat = (id: string): void => catSel.set(id)
@@ -180,7 +183,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <grid cols="4" gap="3">
         <!-- ══ Inputs ═══════════════════════════════════════════════════ -->
         {#if show.button()}
-          <card padding="none" data-tile="button" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="button" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <row gap="2" align="center">
@@ -199,7 +202,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.input()}
-          <card padding="none" data-tile="input" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="input" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <input placeholder="Type — it's real" bind:value={name} />
@@ -215,7 +218,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.textarea()}
-          <card padding="none" data-tile="textarea" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="textarea" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <textarea placeholder="A few lines…"></textarea>
@@ -231,7 +234,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.select()}
-          <card padding="none" data-tile="select" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="select" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <select>
@@ -251,7 +254,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.combobox()}
-          <card padding="none" data-tile="combobox" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="combobox" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <combobox placeholder="Search fruit — type">
@@ -272,7 +275,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.checkbox()}
-          <card padding="none" data-tile="checkbox" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="checkbox" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <label><input type="checkbox" bind:checked={agreed} /> I agree</label>
@@ -288,7 +291,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.radioGroup()}
-          <card padding="none" data-tile="radio-group" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="radio-group" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <radio-group>
@@ -307,7 +310,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.switchToggle()}
-          <card padding="none" data-tile="switch" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="switch" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <row gap="2" align="center">
@@ -326,7 +329,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.slider()}
-          <card padding="none" data-tile="slider" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="slider" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <row gap="2" align="center" sx={style.w(full)}>
@@ -345,7 +348,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.toggleGroup()}
-          <card padding="none" data-tile="toggle-group" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="toggle-group" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <toggle-group>
@@ -365,7 +368,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.field()}
-          <card padding="none" data-tile="field" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="field" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <field>
@@ -384,7 +387,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.label()}
-          <card padding="none" data-tile="label" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="label" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview gap="1" sx={preview}>
                 <label for="tile-email" required>Email</label>
@@ -401,7 +404,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.fieldset()}
-          <card padding="none" data-tile="fieldset" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="fieldset" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <fieldset>
@@ -420,7 +423,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.dropzone()}
-          <card padding="none" data-tile="dropzone" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="dropzone" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <card dropzone sx={style.pad(3)}>Drop a file, or click</card>
@@ -436,7 +439,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.themePicker()}
-          <card padding="none" data-tile="theme-picker" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="theme-picker" sx={tile}>
             <column gap="0" sx={tileCol}>
               <!-- Do NOT mount a second live <theme-picker> here: hard-coded
                    panel id + full 9-theme previews next to the header instance
@@ -457,7 +460,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ Feedback ═════════════════════════════════════════════════ -->
         {#if show.alert()}
-          <card padding="none" data-tile="alert" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="alert" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <alert tone="success"><strong>Saved.</strong> Changes are live.</alert>
@@ -473,7 +476,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.progressBar()}
-          <card padding="none" data-tile="progress" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="progress" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview gap="1" sx={preview}>
                 <progress value={volume()} max="100"></progress>
@@ -490,7 +493,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.meter()}
-          <card padding="none" data-tile="meter" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="meter" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <meter value="0.7"></meter>
@@ -506,7 +509,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.spinner()}
-          <card padding="none" data-tile="spinner" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="spinner" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <row gap="3" align="center">
@@ -526,7 +529,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.skeleton()}
-          <card padding="none" data-tile="skeleton" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="skeleton" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <row gap="2" align="center" sx={style.w(full)}>
@@ -548,7 +551,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.emptyState()}
-          <card padding="none" data-tile="empty-state" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="empty-state" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <empty-state variant="inline" size="sm">
@@ -567,7 +570,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.errorState()}
-          <card padding="none" data-tile="error-state" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="error-state" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <error-state variant="inline" size="sm" code="ERR_TIMEOUT">The request timed out.</error-state>
@@ -583,7 +586,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.errorBoundary()}
-          <card padding="none" data-tile="error-boundary" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="error-boundary" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview gap="1" sx={preview}>
                 <error-boundary message="This panel could not load.">
@@ -603,7 +606,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.toast()}
-          <card padding="none" data-tile="toast" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="toast" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <toast tone="success" duration="0">
@@ -624,7 +627,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ Display ══════════════════════════════════════════════════ -->
         {#if show.badge()}
-          <card padding="none" data-tile="badge" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="badge" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <row gap="2" align="center">
@@ -644,7 +647,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.chip()}
-          <card padding="none" data-tile="chip" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="chip" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <row gap="2" align="center">
@@ -663,7 +666,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.statusDot()}
-          <card padding="none" data-tile="status-dot" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="status-dot" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <row gap="2" align="center">
@@ -682,7 +685,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.card()}
-          <card padding="none" data-tile="card" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="card" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <card interactive sx={style.pad(3)}>
@@ -701,7 +704,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.avatar()}
-          <card padding="none" data-tile="avatar" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="avatar" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <row gap="2" align="center">
@@ -721,7 +724,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.icon()}
-          <card padding="none" data-tile="icon" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="icon" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <row gap="3" align="center">
@@ -747,7 +750,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.separator()}
-          <card padding="none" data-tile="separator" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="separator" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview gap="1" sx={preview}>
                 <p sx={mutedXs}>above</p>
@@ -765,7 +768,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.hrRule()}
-          <card padding="none" data-tile="hr" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="hr" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview gap="2" sx={preview}>
                 <hr />
@@ -783,7 +786,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.detailsEl()}
-          <card padding="none" data-tile="details" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="details" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <details>
@@ -802,7 +805,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.collapsible()}
-          <card padding="none" data-tile="collapsible" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="collapsible" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <collapsible>
@@ -821,7 +824,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.prose()}
-          <card padding="none" data-tile="prose" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="prose" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <p sx={style.fontSize(xs)}>
@@ -843,7 +846,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <!-- ══ Overlay — the tile shows the TRIGGER; the panel rides the
              top layer via popovertarget, so a closed tile is honest ═════ -->
         {#if show.tooltip()}
-          <card padding="none" data-tile="tooltip" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="tooltip" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <tooltip content="Deletes the branch — cannot be undone">
@@ -861,7 +864,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.hoverCard()}
-          <card padding="none" data-tile="hover-card" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="hover-card" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <button variant="outline" popovertarget="tile-hc">@ada</button>
@@ -880,7 +883,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.popover()}
-          <card padding="none" data-tile="popover" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="popover" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <button popovertarget="tile-pop">Open popover</button>
@@ -899,7 +902,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.dropdown()}
-          <card padding="none" data-tile="dropdown" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="dropdown" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <button popovertarget="tile-menu">Menu ▾</button>
@@ -920,7 +923,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.contextMenu()}
-          <card padding="none" data-tile="context-menu" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="context-menu" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <card id="tile-ctx" variant="outline" sx={style.pad(3)}>
@@ -943,7 +946,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.dialog()}
-          <card padding="none" data-tile="dialog" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="dialog" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <button command="show-modal" commandfor="tile-dialog" motion:press={{ scale: 'press' }}>Open modal</button>
@@ -966,7 +969,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ Navigation ═══════════════════════════════════════════════ -->
         {#if show.tabs()}
-          <card padding="none" data-tile="tabs" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="tabs" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <tabs size="sm">
@@ -989,7 +992,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.breadcrumb()}
-          <card padding="none" data-tile="breadcrumb" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="breadcrumb" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <breadcrumb>
@@ -1009,7 +1012,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.pagination()}
-          <card padding="none" data-tile="pagination" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="pagination" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <pagination value="2" size="sm">
@@ -1031,7 +1034,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.navbar()}
-          <card padding="none" data-tile="navbar" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="navbar" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <navbar bordered>
@@ -1053,7 +1056,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ Data ═════════════════════════════════════════════════════ -->
         {#if show.table()}
-          <card padding="none" data-tile="table" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="table" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={style.pad(3).minH(9).grow(1).borderBWidth(1).borderB(border-subtle).bg(surface-0).overflowX(auto)}>
                 <table>
@@ -1079,7 +1082,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ Layout ═══════════════════════════════════════════════════ -->
         {#if show.layout()}
-          <card padding="none" data-tile="layout" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="layout" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview gap="2" sx={preview}>
                 <row gap="2">
@@ -1104,7 +1107,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.scrollArea()}
-          <card padding="none" data-tile="scroll-area" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="scroll-area" sx={tile}>
             <column gap="0" sx={tileCol}>
               <column data-preview sx={preview}>
                 <scroll-area sx={style.h(9).w(full).padR(2)}>
@@ -1128,7 +1131,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ @ship/sail-charts ═════════════════════════════════════════ -->
         {#if show.sailSparkline()}
-          <card padding="none" data-tile="sail-sparkline" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-sparkline" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-sparkline data="2,5,3,8,4,6,7" width="120" height="40"></sail-sparkline>
@@ -1144,7 +1147,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailAreaChart()}
-          <card padding="none" data-tile="sail-area-chart" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-area-chart" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-area-chart>
@@ -1160,7 +1163,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailBarChart()}
-          <card padding="none" data-tile="sail-bar-chart" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-bar-chart" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="160" height="60"></sail-bar-chart>
@@ -1176,7 +1179,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailDonut()}
-          <card padding="none" data-tile="sail-donut" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-donut" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="80" thickness="10"></sail-donut>
@@ -1192,7 +1195,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailGauge()}
-          <card padding="none" data-tile="sail-gauge" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-gauge" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-gauge value="72" diameter="80" thickness="10"></sail-gauge>
@@ -1208,7 +1211,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailHeatmap()}
-          <card padding="none" data-tile="sail-heatmap" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-heatmap" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-heatmap rows="3" cols="5" values="1,2,3,4,3,4,5,6,5,4,3,2,1,2,3" width="160" height="60"></sail-heatmap>
@@ -1224,7 +1227,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailLineChart()}
-          <card padding="none" data-tile="sail-line-chart" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-line-chart" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-line-chart>
@@ -1242,7 +1245,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ @ship/sail-media ══════════════════════════════════════════ -->
         {#if show.sailMediaImage()}
-          <card padding="none" data-tile="sail-media-image" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-media-image" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-media-image src="/sail-oss/sail-mark.svg" alt="Sail mark"></sail-media-image>
@@ -1258,7 +1261,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailMediaAv()}
-          <card padding="none" data-tile="sail-media-av" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-media-av" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-media-av></sail-media-av>
@@ -1276,7 +1279,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ @ship/sail-code-editor + @ship/sail-mermaid ═══════════════════ -->
         {#if show.sailCodeEditor()}
-          <card padding="none" data-tile="sail-code-editor" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-code-editor" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-code-editor value="const greeting = 'hi';" language="js" line-numbers size="sm"></sail-code-editor>
@@ -1292,7 +1295,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailMermaid()}
-          <card padding="none" data-tile="sail-mermaid" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-mermaid" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>
@@ -1310,7 +1313,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ @ship/sail-chat-elements — sail-message-list deferred (see banner) ═ -->
         {#if show.sailMessage()}
-          <card padding="none" data-tile="sail-message" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-message" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-message role="user" state="user">Hello — the live chat message primitive.</sail-message>
@@ -1326,7 +1329,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailCitation()}
-          <card padding="none" data-tile="sail-citation" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-citation" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-citation source="docs.sail.dev" href="https://docs.sail.dev">A citation from the docs</sail-citation>
@@ -1342,7 +1345,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailComposer()}
-          <card padding="none" data-tile="sail-composer" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-composer" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-composer placeholder="Ask anything…"></sail-composer>
@@ -1358,7 +1361,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailThinkingDots()}
-          <card padding="none" data-tile="sail-thinking-dots" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-thinking-dots" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-thinking-dots></sail-thinking-dots>
@@ -1374,7 +1377,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </card>
         {/if}
         {#if show.sailToolCall()}
-          <card padding="none" data-tile="sail-tool-call" sx={tile} motion:enter={{ opacity: 'fade' }}>
+          <card padding="none" data-tile="sail-tool-call" sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
                 <sail-tool-call name="search" status="running">query: search</sail-tool-call>
@@ -1392,7 +1395,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </grid>
 
       {#if none()}
-        <empty-state motion:enter={{ opacity: 'fade' }}>
+        <empty-state>
           <strong slot="title">Nothing matches</strong>
           Clear a filter or two — or search for less.
         </empty-state>
