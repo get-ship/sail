@@ -1,36 +1,70 @@
 <!--
-  <toggle> — first:/last: join + variant/orientation/size CVA. Orientation may be
-  structural-stamped by the group; size/variant are author props on each toggle.
+  <toggle> — first/last join + variant/orientation/size Style.
   Paint: rest bg/fg/border from component.toggle tokens
          (cssNames toggle, toggle-foreground, toggle-border).
 -->
+
 <scope>
   props: {
     value = ''
     disabled = false
-    variant: {
-      outline: 'rounded: none -ms: px first:ms: 0 first:rounded-l: md last:rounded-r: md',
-      ghost: 'border: transparent rounded: md ms: 0 me: 1 last:me: 0',
-      segmented: 'border: transparent rounded: sm ms: 0 me: 1 last:me: 0',
-    }
-    orientation: {
-      horizontal: '',
-      vertical: '',
-    }
-    size: {
-      md: 'font-size: sm h: control-h-md px: 3',
-      sm: 'font-size: xs h: control-h-sm px: 2_5',
-      lg: 'font-size: base h: control-h-lg px: 4',
-    }
+    variant: 'outline' | 'ghost' | 'segmented' = 'outline'
+    orientation: 'horizontal' | 'vertical' = 'horizontal'
+    size: 'md' | 'sm' | 'lg' = 'md'
   }
-  compound: [
-    { when: { orientation: 'vertical', variant: 'outline' }, sx: 'rounded: none first:rounded-t: md last:rounded-b: md -mt: px first:mt: 0 ms: 0 me: 0' },
-    { when: { variant: 'ghost' }, sx: 'border: transparent rounded: md ms: 0 mt: 0 me: 1 last:me: 0' },
-    { when: { variant: 'segmented' }, sx: 'border: transparent rounded: sm ms: 0 mt: 0 me: 1 last:me: 0' },
-    { when: { orientation: 'vertical', variant: 'ghost' }, sx: 'border: transparent rounded: md ms: 0 mt: 0 me: 0 mb: 1 last:mb: 0' },
-    { when: { orientation: 'vertical', variant: 'segmented' }, sx: 'border: transparent rounded: sm ms: 0 mt: 0 me: 0 mb: 1 last:mb: 0' },
-  ]
+
+  const base = style.position(relative).fontFamily(body).fontWeight(medium).leading(none).fg(toggle-foreground).bg(toggle).cursor(pointer).whitespace(nowrap).select(none).fontSize(sm).h(control-h-md).padX(3).borderWidth(1).border(toggle-border).radius(none).ms(-px).tapHighlight(none).transition(colors).duration(fast).ease(out)
+  const sizeMd = style.fontSize(sm).h(control-h-md).padX(3)
+  const sizeSm = style.fontSize(xs).h(control-h-sm).padX(2_5)
+  const sizeLg = style.fontSize(base).h(control-h-lg).padX(4)
+  const outline = style.radius(none).ms(-px)
+  const ghost = style.border(transparent).radius(md).ms(0).me(1)
+  const segmented = style.border(transparent).radius(sm).ms(0).me(1)
 </scope>
-<button type="button" sx="relative font-family: body font-weight: medium leading: none color: toggle-foreground bg: toggle cursor: pointer whitespace: nowrap select: none font-size: sm h: control-h-md px: 3 border border: toggle-border rounded: none -ms: px first:ms: 0 first:rounded-l: md last:rounded-r: md tap-highlight: none transition: colors duration: fast ease: out hover:bg: muted pressed:bg: foreground pressed:color: background pressed:border: foreground pressed:z: 1 disabled:opacity: 50 disabled:cursor: not-allowed focus:outline: solid focus:outline: 2 focus:outline: ring focus:z: 2">
+
+<button type="button" sx={[
+  base,
+  match(size, {
+    md: sizeMd,
+    sm: sizeSm,
+    lg: sizeLg,
+  }),
+  match(variant, {
+    outline: outline,
+    ghost: ghost,
+    segmented: segmented,
+  }),
+  compound({ orientation: vertical, variant: outline }, style.radius(none).mt(-px).ms(0).me(0)),
+  compound({ variant: ghost }, style.border(transparent).radius(md).ms(0).mt(0).me(1)),
+  compound({ variant: segmented }, style.border(transparent).radius(sm).ms(0).mt(0).me(1)),
+  compound({ orientation: vertical, variant: ghost }, style.border(transparent).radius(md).ms(0).mt(0).me(0).mb(1)),
+  compound({ orientation: vertical, variant: segmented }, style.border(transparent).radius(sm).ms(0).mt(0).me(0).mb(1)),
+  when({
+    hover: style.bg(muted),
+    pressed: style.bg(foreground).fg(background).border(foreground).z(1),
+    disabled: style.opacity(50).cursor(not-allowed),
+    focus: style.outline(solid).outline(2).outline(ring).z(2),
+  }),
+  compound({ orientation: horizontal, variant: outline }, when({
+    first: style.ms(0).radiusL(md),
+    last: style.radiusR(md),
+  })),
+  compound({ orientation: vertical, variant: outline }, when({
+    first: style.mt(0).radiusT(md),
+    last: style.radiusB(md),
+  })),
+  compound({ variant: ghost }, when({
+    last: style.me(0),
+  })),
+  compound({ variant: segmented }, when({
+    last: style.me(0),
+  })),
+  compound({ orientation: vertical, variant: ghost }, when({
+    last: style.mb(0),
+  })),
+  compound({ orientation: vertical, variant: segmented }, when({
+    last: style.mb(0),
+  })),
+]}>
   <slot></slot>
 </button>

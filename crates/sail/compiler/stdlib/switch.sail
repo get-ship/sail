@@ -1,31 +1,138 @@
 <!--
   <switch> — native checkbox restyled as sliding toggle. No controller.
-  Host sx: track paint + before: thumb PE md; size CVA overrides track/thumb.
-  CVA tone thumb contrast.
-  Variance = CVA-in-props axes + optional compound only. tone/size are ordinary
-  props/axes, not language channels.
-  Paint: rest track/border/thumb from component.switch tokens
-         (cssNames switch, switch-border, switch-thumb); checked/tone stay global/tone.
+  Paint (Style product): track + ::before thumb; size/tone via match.
+  Rest track/border/thumb from component.switch tokens
+  (cssNames switch, switch-border, switch-thumb); checked/tone stay global/tone.
 -->
+
 <scope>
   props: {
     checked = false
     disabled = false
-    tone: {
-      default: 'checked:bg: primary focus:outline: primary checked:before:bg: primary-foreground',
-      primary: 'checked:bg: tone focus:outline: tone checked:before:bg: primary-foreground',
-      info: 'checked:bg: tone focus:outline: tone checked:before:bg: info-foreground',
-      success: 'checked:bg: tone focus:outline: tone checked:before:bg: success-foreground',
-      warning: 'checked:bg: tone focus:outline: tone checked:before:bg: warning-foreground',
-      destructive: 'checked:bg: tone focus:outline: tone checked:before:bg: destructive-foreground',
-      accent: 'checked:bg: tone focus:outline: tone checked:before:bg: accent-foreground',
-      muted: 'checked:bg: tone focus:outline: tone checked:before:bg: background',
-    }
-    size: {
-      md: 'w: control-h-sm h: icon-size-md before:size: 3',
-      sm: 'w: control-h-xs h: icon-size-sm before:size: 2_5',
-      lg: 'w: 7 h: icon-size-lg before:size: icon-size-sm',
-    }
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
+    size: 'md' | 'sm' | 'lg' = 'md'
   }
+
+  const base = style.appearance(none).position(relative).shrink(0).box(border).display(inline-block).align(middle).m(0).cursor(pointer).bg(none).bg(switch).borderWidth(1).border(switch-border).radius(full).w(control-h-sm).h(icon-size-md).tapHighlight(none).transition(colors).duration(fast).ease(out)
+  const sizeMd = style.w(control-h-sm).h(icon-size-md)
+  const sizeSm = style.w(control-h-xs).h(icon-size-sm)
+  const sizeLg = style.w(7).h(icon-size-lg)
+  const thumbMd = style.size(3)
+  const thumbSm = style.size(2_5)
+  const thumbLg = style.size(icon-size-sm)
 </scope>
-<input type="checkbox" role="switch" sx="appearance: none relative shrink: 0 box: border inline-block align: middle m: 0 cursor: pointer bg: none bg: switch border border: switch-border rounded: full w: control-h-sm h: icon-size-md before:size: 3 tap-highlight: none transition: colors duration: fast ease: out hover:bg: hover-bg checked:bg: primary checked:border: selected-border checked:shadow: xs focus:outline: solid focus:outline: 2 focus:outline: primary focus:outline-offset: ring-offset disabled:cursor: not-allowed disabled:bg: switch disabled:border: border disabled:saturate: 60 disabled:shadow: none before:content: empty before:absolute before:top: 0 before:bottom: 0 before:my: auto before:left: px before:bg: switch-thumb before:rounded: full before:shadow: sm before:transition: all before:duration: fast before:ease: out checked:before:left: auto checked:before:right: px checked:before:bg: primary-foreground disabled:before:shadow: xs motion-reduce:before:transition: none forced-colors:border: CanvasText forced-colors:checked:bg: Highlight forced-colors:focus:outline: CanvasText" />
+
+<input type="checkbox" role="switch" sx={[
+  base,
+  match(size, {
+    md: sizeMd,
+    sm: sizeSm,
+    lg: sizeLg,
+  }),
+  match(tone, {
+    default: style.bg(switch),
+    primary: style.bg(switch),
+    info: style.bg(switch),
+    success: style.bg(switch),
+    warning: style.bg(switch),
+    destructive: style.bg(switch),
+    accent: style.bg(switch),
+    muted: style.bg(switch),
+  }),
+  when({
+    hover: style.bg(hover-bg),
+    checked: style.bg(primary).border(selected-border).shadow(xs),
+    focus: style.outline(solid).outline(2).outline(primary).outlineOffset(ring-offset),
+    disabled: style.cursor(not-allowed).bg(switch).border(border).saturate(60).shadow(none),
+    before: style.content(empty).position(absolute).top(0).bottom(0).my(auto).left(px).bg(switch-thumb).radius(full).shadow(sm).size(3).transition(all).duration(fast).ease(out),
+  }),
+  match(size, {
+    md: when({ before: thumbMd }),
+    sm: when({ before: thumbSm }),
+    lg: when({ before: thumbLg }),
+  }),
+  when({
+    checked: when({
+      before: style.left(auto).right(px).bg(primary-foreground),
+    }),
+  }),
+  when({
+    disabled: when({
+      before: style.shadow(xs),
+    }),
+  }),
+  match(tone, {
+    default: when({
+      checked: style.bg(primary),
+      focus: style.outline(primary),
+    }),
+    primary: when({
+      checked: style.bg(tone),
+      focus: style.outline(tone),
+    }),
+    info: when({
+      checked: style.bg(tone),
+      focus: style.outline(tone),
+    }),
+    success: when({
+      checked: style.bg(tone),
+      focus: style.outline(tone),
+    }),
+    warning: when({
+      checked: style.bg(tone),
+      focus: style.outline(tone),
+    }),
+    destructive: when({
+      checked: style.bg(tone),
+      focus: style.outline(tone),
+    }),
+    accent: when({
+      checked: style.bg(tone),
+      focus: style.outline(tone),
+    }),
+    muted: when({
+      checked: style.bg(tone),
+      focus: style.outline(tone),
+    }),
+  }),
+  match(tone, {
+    default: when({
+      checked: when({ before: style.bg(primary-foreground) }),
+    }),
+    primary: when({
+      checked: when({ before: style.bg(primary-foreground) }),
+    }),
+    info: when({
+      checked: when({ before: style.bg(info-foreground) }),
+    }),
+    success: when({
+      checked: when({ before: style.bg(success-foreground) }),
+    }),
+    warning: when({
+      checked: when({ before: style.bg(warning-foreground) }),
+    }),
+    destructive: when({
+      checked: when({ before: style.bg(destructive-foreground) }),
+    }),
+    accent: when({
+      checked: when({ before: style.bg(accent-foreground) }),
+    }),
+    muted: when({
+      checked: when({ before: style.bg(background) }),
+    }),
+  }),
+  when({
+    motion-reduce: when({
+      before: style.transition(none),
+    }),
+  }),
+  when({
+    forced-colors: style.border(CanvasText),
+  }),
+  when({
+    forced-colors: when({
+      checked: style.bg(Highlight),
+      focus: style.outline(CanvasText),
+    }),
+  }),
+]} />

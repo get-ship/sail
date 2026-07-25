@@ -1,20 +1,35 @@
 <!--
-  <label> — size CVA; weight token; .req gate in element-skins anatomy.
-  Variance = CVA-in-props axes + optional compound only. size is an ordinary
-  prop/axis, not a language channel.
-  Paint: host/req from component.label tokens (cssNames label-foreground, label-required).
+  <label> — size match; weight token; .req gate via group-required when.
+  Paint (Style product only): host + .req via style chains / match / when.
+  Tokens: component.label (cssNames label-foreground, label-required) + label-weight.
 -->
+
 <scope>
   props: {
-    size: {
-      md: 'font-size: base',
-      sm: 'font-size: sm',
-      lg: 'font-size: sm',
-    }
+    size: 'md' | 'sm' | 'lg' = 'md'
     required = false
   }
+
+  const base = style.fontFamily(body).fontWeight(bind(labelWeight)).tracking(normal).fg(label-foreground).cursor(pointer).fontSize(base).group()
+  const sizeMd = style.fontSize(base)
+  const sizeSm = style.fontSize(sm)
+  const sizeLg = style.fontSize(sm)
+  const req = style.display(none).fg(label-required).fontWeight(bold).ms(1)
 </scope>
-<label sx="font-family: body font: (--label-weight) tracking: normal color: label-foreground cursor: pointer font-size: base group">
+
+<label sx={[
+  base,
+  match(size, {
+    md: sizeMd,
+    sm: sizeSm,
+    lg: sizeLg,
+  }),
+]}>
   <slot></slot>
-  <span class="req" aria-hidden="true" sx="hidden group-required:inline color: label-required font-weight: bold ms: 1">*</span>
+  <span class="req" aria-hidden="true" sx={[
+    req,
+    when({
+      group-required: style.display(inline),
+    }),
+  ]}>*</span>
 </label>
