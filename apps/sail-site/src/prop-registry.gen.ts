@@ -83,6 +83,28 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "false"
     }
   ],
+  "button": [
+    {
+      "name": "variant",
+      "type": "default · solid · soft · outline · ghost",
+      "default": "default"
+    },
+    {
+      "name": "tone",
+      "type": "default · primary · info · success · warning · destructive · accent · muted",
+      "default": "default"
+    },
+    {
+      "name": "size",
+      "type": "xs · sm · md · lg",
+      "default": "md"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    }
+  ],
   "card": [
     {
       "name": "tone",

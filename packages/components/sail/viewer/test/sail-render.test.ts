@@ -114,7 +114,7 @@ describe('<sail-render> — registration + shell', () => {
 
   it('wraps the fault-prone subtree in a sail-error-boundary', () => {
     const c = mountRender({ mode: 'source' }, { compile: makeBoundCompile(), source: GOOD_VIEW })
-    expect(stageRoot(c.el).querySelector('error-boundary')).not.toBeNull()
+    expect(stageRoot(c.el).querySelector('.sail-error-boundary')).not.toBeNull()
   })
 })
 
@@ -192,12 +192,12 @@ describe('<sail-render> — VIEW-mode (prop:source raw .sail)', () => {
 })
 
 describe('<sail-render> — COMPONENT-mode (component-name + prop:prop-values)', () => {
-  // A component-mode target: declares a scalar `<prop>` (string) reflected as an
-  // attribute, plus reads a structured prop set as a JS property.
+  // A component-mode target: declares scalar props (string / bool) reflected as
+  // attributes, plus reads a structured prop set as a JS property.
   const SPECIMEN_TAG = 'sail-render-specimen'
 
   it('define-once + createElement: mounts the named tag into the stage', async () => {
-    const SPECIMEN_SRC = `<prop name="label" type="string" reflect />\n<button data-test="probe">{label}</button>`
+    const SPECIMEN_SRC = `<scope>\n  props: { label = '' }\n</scope>\n<button data-test="probe">{label}</button>`
     const c = mountRender(
       { mode: 'tag', 'component-name': SPECIMEN_TAG },
       { compile: makeBoundCompile(), source: SPECIMEN_SRC, propValues: { label: 'click-me' } },
@@ -210,7 +210,7 @@ describe('<sail-render> — COMPONENT-mode (component-name + prop:prop-values)',
 
   it('a component-name already in the registry is NOT redefined (no NotSupportedError)', async () => {
     const REDEF_TAG = 'sail-render-redef'
-    const SPECIMEN_SRC = `<prop name="label" type="string" reflect />\n<span>{label}</span>`
+    const SPECIMEN_SRC = `<scope>\n  props: { label = '' }\n</scope>\n<span>{label}</span>`
     const a = mountRender(
       { mode: 'tag', 'component-name': REDEF_TAG },
       { compile: makeBoundCompile(), source: SPECIMEN_SRC, propValues: { label: 'one' } },
@@ -229,7 +229,7 @@ describe('<sail-render> — COMPONENT-mode (component-name + prop:prop-values)',
 
   it('SCALAR props apply as reflected ATTRIBUTES (bool presence, no disabled="false")', async () => {
     const SPECIMEN_SRC =
-      `<prop name="label" type="string" reflect />\n<prop name="disabled" type="bool" reflect />\n<button>{label}</button>`
+      `<scope>\n  props: { label = ''; disabled = false }\n</scope>\n<button>{label}</button>`
     const c = mountRender(
       { mode: 'tag', 'component-name': 'sail-render-scalar' },
       {
@@ -249,7 +249,7 @@ describe('<sail-render> — COMPONENT-mode (component-name + prop:prop-values)',
   })
 
   it('STRUCTURED props apply as a JS PROPERTY (el[camelName]), not a JSON attribute', async () => {
-    const SPECIMEN_SRC = `<prop name="label" type="string" reflect />\n<div>{label}</div>`
+    const SPECIMEN_SRC = `<scope>\n  type Dataset = { rows: { id: number }[] }\n  props: { label = ''; dataset: Dataset = { rows: [] } }\n</scope>\n<div>{label}</div>`
     const structured = { rows: [{ id: 1 }, { id: 2 }] }
     const c = mountRender(
       { mode: 'tag', 'component-name': 'sail-render-structured' },
@@ -272,7 +272,7 @@ describe('<sail-render> — COMPONENT-mode (component-name + prop:prop-values)',
   })
 
   it('injects composed slot content into the createElement host', async () => {
-    const SPECIMEN_SRC = `<prop name="label" type="string" reflect />\n<slot></slot>`
+    const SPECIMEN_SRC = `<scope>\n  props: { label = '' }\n</scope>\n<slot></slot>`
     const c = mountRender(
       { mode: 'tag', 'component-name': 'sail-render-slotted' },
       {
@@ -290,7 +290,7 @@ describe('<sail-render> — COMPONENT-mode (component-name + prop:prop-values)',
   })
 
   it('emits sail-render:mounted {tag} for the named component', async () => {
-    const SPECIMEN_SRC = `<prop name="label" type="string" reflect />\n<i>{label}</i>`
+    const SPECIMEN_SRC = `<scope>\n  props: { label = '' }\n</scope>\n<i>{label}</i>`
     const c = mountRender({ mode: 'tag', 'component-name': 'sail-render-evt' }, { compile: makeBoundCompile() })
     let detail: { tag?: string } | null = null
     c.el.addEventListener('sail-render:mounted', (e) => {
@@ -376,7 +376,7 @@ describe('<sail-render> — error surface (caught, never a white screen)', () =>
     // Simulate the inner boundary catching a render/effect throw: the composed
     // sail-error-boundary:caught crosses the shadow boundary and the engine
     // re-surfaces it as a runtime sail-render:error.
-    const boundary = stageRoot(c.el).querySelector('error-boundary') as HTMLElement
+    const boundary = stageRoot(c.el).querySelector('.sail-error-boundary') as HTMLElement
     expect(boundary).not.toBeNull()
     boundary.dispatchEvent(
       new CustomEvent('sail-error-boundary:caught', {
@@ -432,7 +432,7 @@ describe('<sail-render> — reactive re-mount on source/tag change', () => {
   })
 
   it('component-mode source-change re-uses the prior versioned tag for IDENTICAL source (hash-dedup, registry does not grow)', async () => {
-    const SPECIMEN_SRC = `<prop name="label" type="string" reflect />\n<b>{label}</b>`
+    const SPECIMEN_SRC = `<scope>\n  props: { label = '' }\n</scope>\n<b>{label}</b>`
     const c = mountRender(
       { mode: 'tag', 'component-name': 'sail-render-hash' },
       { compile: makeBoundCompile(), source: SPECIMEN_SRC, propValues: { label: 'a' } },
@@ -465,8 +465,8 @@ describe('<sail-render> — COMPONENT-mode source-change (#258 correctness + reg
 
   it('a component-mode source CHANGE re-renders the NEW source (not the stale prior definition)', async () => {
     const TAG = 'sail-render-stale'
-    const SRC_A = `<prop name="label" type="string" reflect />\n<b data-test="render-a">{label}</b>`
-    const SRC_B = `<prop name="label" type="string" reflect />\n<i data-test="render-b">{label}</i>`
+    const SRC_A = `<scope>\n  props: { label = '' }\n</scope>\n<b data-test="render-a">{label}</b>`
+    const SRC_B = `<scope>\n  props: { label = '' }\n</scope>\n<i data-test="render-b">{label}</i>`
     const c = mountRender(
       { mode: 'tag', 'component-name': TAG },
       { compile: makeBoundCompile(), source: SRC_A, propValues: { label: 'x' } },
@@ -488,7 +488,7 @@ describe('<sail-render> — COMPONENT-mode source-change (#258 correctness + reg
 
   it('repeated IDENTICAL-source re-mounts do NOT grow the customElements registry (define-once guard)', async () => {
     const TAG = 'sail-render-bound'
-    const SRC = `<prop name="label" type="string" reflect />\n<u data-test="render-bound">{label}</u>`
+    const SRC = `<scope>\n  props: { label = '' }\n</scope>\n<u data-test="render-bound">{label}</u>`
     const c = mountRender(
       { mode: 'tag', 'component-name': TAG },
       { compile: makeBoundCompile(), source: SRC, propValues: { label: 'x' } },
@@ -547,7 +547,7 @@ describe('<sail-render> — COMPONENT-mode source-change (#258 correctness + reg
 
 describe('<sail-render> — prop change patches in place (NO remount)', () => {
   it('a prop-values change patches the existing node — the live element identity survives', async () => {
-    const SPECIMEN_SRC = `<prop name="label" type="string" reflect />\n<input data-test="focusable" />`
+    const SPECIMEN_SRC = `<scope>\n  props: { label = '' }\n</scope>\n<input data-test="focusable" />`
     const c = mountRender(
       { mode: 'tag', 'component-name': 'sail-render-patch' },
       { compile: makeBoundCompile(), source: SPECIMEN_SRC, propValues: { label: 'first' } },

@@ -17,6 +17,13 @@ export default defineConfig({
         find: '@ship/sail-runtime/route',
         replacement: resolve(__dirname, '../runtime/src/route/index.ts'),
       },
+      // The compiler emits `use:` action imports from this subpath (emit/js/
+      // imports.rs) and compile-sail.ts imports it for the eval harness —
+      // without the entry it falls through to the bare-name alias below.
+      {
+        find: '@ship/sail-runtime/actions',
+        replacement: resolve(__dirname, '../runtime/src/actions/index.ts'),
+      },
       {
         find: '@ship/sail-runtime',
         replacement: resolve(__dirname, '../runtime/src/index.ts'),

@@ -223,6 +223,7 @@ const SUI_ALIAS_SPECS = [
   '@ship/sail-runtime/route',
   '@ship/sail-runtime/virtual',
   '@ship/sail-runtime/internal',
+  '@ship/sail-runtime/actions',
   '@ship/sail-runtime',
   '@ship/sail-dom',
 ] as const

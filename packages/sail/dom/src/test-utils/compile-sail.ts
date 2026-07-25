@@ -19,6 +19,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import * as sailRuntime from '@ship/sail-runtime'
+import * as sailActions from '@ship/sail-runtime/actions'
 import * as sailDom from '@ship/sail-dom'
 // The runtime's `/route` subpath provides a passive `RouteSignals` reader
 // built from a URL — exactly the shape the compiled route's
@@ -224,6 +225,13 @@ function stripImports(js: string): string {
       /^\s*import\s*\{\s*([^}]+)\s*\}\s*from\s*["']@ship\/sail-runtime["']\s*;?\s*$/gm,
       'const { $1 } = __runtime;',
     )
+    // import { …names… } from "@ship/sail-runtime/actions" (the compiler's
+    // split specifier for `use:` action symbols — internal stamps resolve
+    // exclusively here, so this needs its own dep, not __runtime)
+    .replace(
+      /^\s*import\s*\{\s*([^}]+)\s*\}\s*from\s*["']@ship\/sail-runtime\/actions["']\s*;?\s*$/gm,
+      'const { $1 } = __actions;',
+    )
     // import { …names… } from "@ship/sail-dom"
     .replace(
       /^\s*import\s*\{\s*([^}]+)\s*\}\s*from\s*["']@ship\/sail-dom["']\s*;?\s*$/gm,
@@ -254,8 +262,8 @@ export function nativeCompileJson(source: string, optsJson: string): string {
  *  (the controller definition the compiled template imports as `setup`). */
 export function evalInlineController(body: string): { setup: (ctx: unknown) => unknown } {
   const src = stripImports(body).replace(/\bexport\s+default\s+/g, 'return ')
-  const fn = new Function('__runtime', '__dom', '__route', '__setup', src)
-  return fn(sailRuntime, sailDom, routeModule, undefined) as { setup: (ctx: unknown) => unknown }
+  const fn = new Function('__runtime', '__dom', '__route', '__setup', '__actions', src)
+  return fn(sailRuntime, sailDom, routeModule, undefined, sailActions) as { setup: (ctx: unknown) => unknown }
 }
 
 /** Evaluate a compiled JS module body and return its default export. */
@@ -265,14 +273,14 @@ export function evalCompiledJs(
 ): { setup: (ctx: unknown) => Record<string, unknown> & { __mount: (c: HTMLElement) => () => void } } {
   const body = stripImports(js).replace(/\bexport\s+default\s+/g, 'return ')
   const setupObj = wrapSetup(setup)
-  const fn = new Function('__runtime', '__dom', '__route', '__setup', body)
+  const fn = new Function('__runtime', '__dom', '__route', '__setup', '__actions', body)
   const deps: EvalDeps = {
     __runtime: sailRuntime,
     __dom: sailDom,
     __route: routeModule,
     __setup: setupObj,
   }
-  return fn(deps.__runtime, deps.__dom, deps.__route, deps.__setup) as ReturnType<typeof evalCompiledJs>
+  return fn(deps.__runtime, deps.__dom, deps.__route, deps.__setup, sailActions) as ReturnType<typeof evalCompiledJs>
 }
 
 function wrapSetup(setup: UserSetup): { setup: (ctx: unknown) => unknown } | null {

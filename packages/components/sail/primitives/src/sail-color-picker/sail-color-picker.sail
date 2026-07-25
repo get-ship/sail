@@ -214,7 +214,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <input type="text" flush sx={style.grow(1).minW(0).fontFamily(mono).textCase(lowercase)} name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
 </row>
 {#if open() && !disabled()}
-  <column gap="2" role="dialog" aria-label="Choose color" sx={style.position(absolute).left(0).z(popover).w(panel-max-w-md).pad(3).mt(1).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fg(size-fs)}>
+  <column gap="2" role="dialog" aria-label="Choose color" sx={style.position(absolute).left(0).z(popover).w(panel-max-w-md).pad(3).mt(1).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontSize(size-fs)}>
     <grid cols="6" gap="2">
       {#for sw of swatches() key={sw.hex}}
         <button

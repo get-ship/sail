@@ -109,6 +109,53 @@ fn clash_detection_flags_duplicate_setter() {
 }
 
 #[test]
+fn list_shadows_duplicate_setter_without_clash() {
+    // Chain = unordered conjunction (clash); List = ordered composition
+    // (later shadows earlier, no diagnostic).
+    let (style, _) = parse("[ style.bg(primary), style.bg(muted) ]");
+    let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
+    assert!(
+        !diags.iter().any(|d| d.message().contains("clash")),
+        "list items must shadow silently: {diags:?}"
+    );
+}
+
+#[test]
+fn chain_inside_list_item_still_clashes() {
+    let (style, _) = parse("[ style.bg(primary).bg(muted) ]");
+    let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
+    assert!(
+        diags.iter().any(|d| d.message().contains("clash")),
+        "chain duplicates inside a list item must clash"
+    );
+}
+
+#[test]
+fn cross_setter_chain_clash_on_shared_slot() {
+    // Clash detection keys on per-call paint slots (op_slots), so different
+    // setters touching one slot clash under Chain: `border(1)` narrows to
+    // `border-width`, the same slot `borderWidth(2)` writes.
+    let (style, _) = parse("style.border(1).borderWidth(2)");
+    let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
+    assert!(
+        diags.iter().any(|d| d.message().contains("border-width")),
+        "border(1) vs borderWidth must clash on the shared border-width slot: {diags:?}"
+    );
+}
+
+#[test]
+fn cross_setter_disjoint_slots_do_not_clash() {
+    // Per-call narrowing: a color-token `border` writes only border-color,
+    // so it composes with `borderWidth` without a clash.
+    let (style, _) = parse("style.borderWidth(1).border(primary)");
+    let diags = sail_lint::style::clash::detect_clashes(&style, &std::collections::HashMap::new());
+    assert!(
+        !diags.iter().any(|d| d.message().contains("clash")),
+        "disjoint per-call slots must not clash: {diags:?}"
+    );
+}
+
+#[test]
 fn style_list_lowers_through_ir() {
     let src = r#"<div sx={[style.bg(primary), match(variant, { filled: style.bg(primary) })]}></div>"#;
     let js = compile_component(src).expect("compiles");

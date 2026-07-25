@@ -58,11 +58,14 @@ function mount(attrs: Record<string, string | boolean> = {}): LiveMount {
   return m
 }
 
-const shadow = (m: LiveMount): ShadowRoot => m.el.shadowRoot as ShadowRoot
+// Sail components are LIGHT DOM: the template (and the CodeMirror view the
+// `use:editorMount` action builds inside it) renders into the host element
+// itself — `el.shadowRoot` is null by design, so queries run against `el`.
+const editorRoot = (m: LiveMount): HTMLElement => m.el
 const cmContent = (m: LiveMount): Element | null =>
-  shadow(m).querySelector('.cm-content')
+  editorRoot(m).querySelector('.cm-content')
 const cmEditor = (m: LiveMount): Element | null =>
-  shadow(m).querySelector('.cm-editor')
+  editorRoot(m).querySelector('.cm-editor')
 
 /** Public host surface for the consumer (sail-tutorial, sail-site). */
 interface SuiCodeEditorHost {
@@ -75,10 +78,12 @@ const hostApi = (m: LiveMount): SuiCodeEditorHost =>
   m.el as unknown as SuiCodeEditorHost
 
 describe('<sail-code-editor> — render', () => {
-  it('registers the custom element and produces a shadow root with a CodeMirror editor', () => {
+  it('registers the custom element and mounts a CodeMirror editor in its light DOM', () => {
     const m = mount()
     expect(customElements.get('sail-code-editor')).toBeDefined()
-    expect(shadow(m)).not.toBeNull()
+    // Light DOM is the product model — no shadow root; the editor is a
+    // descendant of the host.
+    expect(m.el.shadowRoot).toBeNull()
     expect(cmEditor(m)).not.toBeNull()
     expect(cmContent(m)).not.toBeNull()
   })

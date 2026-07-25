@@ -104,11 +104,11 @@ fn sui_canvas_shape_self_call_collision_refuses_at_compile() {
 const SCOPE_IMPORT_COLLISION_OUTSIDE_USE: &str = r#"<controller>
 import { controller, signal } from '@ship/sail-runtime'
 export default controller((ctx) => {
-  const tooltip = signal('hello')
-  return { tooltip }
+  const tipDescribe = signal('hello')
+  return { tipDescribe }
 })
 </controller>
-<p>{tooltip()}</p>
+<p>{tipDescribe()}</p>
 "#;
 
 #[test]
@@ -116,7 +116,7 @@ fn scope_import_collision_outside_use_directive_refuses() {
     let err = compile(SCOPE_IMPORT_COLLISION_OUTSIDE_USE, opts("collision-outside-use"))
         .expect_err("a scope member named identically to a built-in action must refuse anywhere in the template, not only inside its own `use:` value");
     assert!(
-        err.message.contains("tooltip"),
+        err.message.contains("tipDescribe"),
         "diagnostic must name the colliding identifier: {}",
         err.message
     );
@@ -134,9 +134,9 @@ fn scope_import_collision_outside_use_directive_refuses() {
 const SAME_NAME_NEVER_USED_IN_TEMPLATE: &str = r#"<controller>
 import { controller, signal } from '@ship/sail-runtime'
 export default controller((ctx) => {
-  const tooltip = signal('hello')
+  const tipDescribe = signal('hello')
   const label = signal('shown')
-  return { tooltip, label }
+  return { tipDescribe, label }
 })
 </controller>
 <p>{label()}</p>

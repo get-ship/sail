@@ -17,6 +17,7 @@
 // (the deck importmap externalizes the same specifiers to the same chunks).
 
 import * as sailRuntime from '@ship/sail-runtime'
+import * as sailActions from '@ship/sail-runtime/actions'
 import * as sailDom from '@ship/sail-dom'
 import * as sailRoute from '@ship/sail-runtime/route'
 import '@ship/sail-runtime/template-hooks'
@@ -41,7 +42,14 @@ function rewriteImports(js: string): string {
         /^\s*import\s*\{\s*([^}]+?)\s*\}\s*from\s*["']@ship\/sail-runtime["']\s*;?\s*$/gm,
         'const { $1 } = __runtime;',
       )
-      // import { …names… } from "@ship/sail-dom"
+      // import { …names… } from "@ship/sail-runtime/actions" (the compiler's
+    // split specifier for `use:` action symbols — internal stamps resolve
+    // exclusively here, so this needs its own dep, not __runtime)
+    .replace(
+      /^\s*import\s*\{\s*([^}]+?)\s*\}\s*from\s*["']@ship\/sail-runtime\/actions["']\s*;?\s*$/gm,
+      'const { $1 } = __actions;',
+    )
+    // import { …names… } from "@ship/sail-dom"
       .replace(
         /^\s*import\s*\{\s*([^}]+?)\s*\}\s*from\s*["']@ship\/sail-dom["']\s*;?\s*$/gm,
         'const { $1 } = __dom;',
@@ -73,13 +81,14 @@ function normalizeSetup(setup: InjectedSetup | undefined): { setup: (ctx: unknow
 export function evalViewModule(js: string, setup?: InjectedSetup): MountModule {
   const body = rewriteImports(js).replace(/\bexport\s+default\s+/g, 'return ')
   // eslint-disable-next-line @typescript-eslint/no-implied-eval
-  const fn = new Function('__runtime', '__dom', '__route', '__setup', body) as (
+  const fn = new Function('__runtime', '__dom', '__route', '__setup', '__actions', body) as (
     r: typeof sailRuntime,
     d: typeof sailDom,
     rt: typeof sailRoute,
     s: { setup: (ctx: unknown) => unknown } | null,
+    a: typeof sailActions,
   ) => MountModule
-  return fn(sailRuntime, sailDom, sailRoute, normalizeSetup(setup))
+  return fn(sailRuntime, sailDom, sailRoute, normalizeSetup(setup), sailActions)
 }
 
 /**
@@ -92,11 +101,12 @@ export function evalViewModule(js: string, setup?: InjectedSetup): MountModule {
 export function evalComponentModule(js: string): void {
   const body = rewriteImports(js).replace(/\bexport\s+default\s+/g, '')
   // eslint-disable-next-line @typescript-eslint/no-implied-eval
-  const fn = new Function('__runtime', '__dom', '__route', '__setup', body) as (
+  const fn = new Function('__runtime', '__dom', '__route', '__setup', '__actions', body) as (
     r: typeof sailRuntime,
     d: typeof sailDom,
     rt: typeof sailRoute,
     s: null,
+    a: typeof sailActions,
   ) => void
-  fn(sailRuntime, sailDom, sailRoute, null)
+  fn(sailRuntime, sailDom, sailRoute, null, sailActions)
 }

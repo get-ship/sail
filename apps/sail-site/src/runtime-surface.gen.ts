@@ -67,7 +67,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:165"
+    "loc": "src/styles/index.ts:181"
   },
   {
     "subpath": ".",
@@ -2338,8 +2338,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "themeSelect",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:themeSelect` — the `<theme-picker>` behavior: a trigger that opens a panel of theme cards.",
-    "loc": "src/actions/theme-select.ts:16"
+    "doc": "",
+    "loc": "src/actions/theme-select.ts:23"
   },
   {
     "subpath": "./actions",
@@ -2475,7 +2475,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:165"
+    "loc": "src/styles/index.ts:181"
   },
   {
     "subpath": "./framework",
@@ -4458,8 +4458,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "themeSelect",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:themeSelect` — the `<theme-picker>` behavior: a trigger that opens a panel of theme cards.",
-    "loc": "src/actions/theme-select.ts:16"
+    "doc": "",
+    "loc": "src/actions/theme-select.ts:23"
   },
   {
     "subpath": "./framework",
@@ -4795,7 +4795,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:165"
+    "loc": "src/styles/index.ts:181"
   },
   {
     "subpath": "./server",

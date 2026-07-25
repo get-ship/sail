@@ -715,11 +715,12 @@ fn card_host_paint_bulk_on_host_sx() {
         out.skin_css
     );
 
-    // branded tone border via compound (not PE)
+    // branded tone border via compound({tone}) + style.border(token) —
+    // match/compound mechanism, not the retired --tone* attribute channel.
     assert!(
         out.skin_css.contains("tone='primary'")
-            && (out.skin_css.contains("border-color:var(--tone-border)")
-                || out.skin_css.contains("border-color: var(--tone-border)")),
+            && (out.skin_css.contains("border-color:var(--primary)")
+                || out.skin_css.contains("border-color: var(--primary)")),
         "branded tone border via CVA:\n{}",
         out.skin_css
     );
@@ -1252,11 +1253,12 @@ fn toast_region_host_paint_on_sx_cva() {
             && src.contains("'bottom-end':"),
         "toast-region host sx/CVA must carry fixed/z/pad/width + position insets + reverse"
     );
+    // Style-minted class names (sx-{setter}{args}, case-preserving).
     assert!(
-        out.structure_html.contains("sx-fixed")
+        out.structure_html.contains("sx-positionfixed")
             && out.structure_html.contains("sx-zztoast")
-            && out.structure_html.contains("sx-p4")
-            && out.structure_html.contains("sx-pointereventsnone")
+            && out.structure_html.contains("sx-pad4")
+            && out.structure_html.contains("sx-pointerEventsnone")
             && out.structure_html.contains("sx-top0")
             && (out.structure_html.contains("sx-wpanelwtoast")
                 || out.skin_css.contains("var(--panel-w-toast)")),
@@ -1998,11 +2000,12 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
             && src.contains("after:rotate-45"),
         "tooltip host/bubble sx must carry geometry + show + arrow"
     );
+    // Style-minted class names (bind args mint as `<setter>bind<Name>`).
     assert!(
         out.structure_html.contains("sail-grp")
-            && out.structure_html.contains("sx-relative")
-            && out.structure_html.contains("sx-absolute")
-            && out.structure_html.contains("sx-toptttop")
+            && out.structure_html.contains("sx-positionrelative")
+            && out.structure_html.contains("sx-positionabsolute")
+            && out.structure_html.contains("sx-topbindttTop")
             && out.structure_html.contains("sx-grouphover-opacity100")
             && out.structure_html.contains("sx-after-rotate45"),
         "tooltip structure atoms:\n{}",

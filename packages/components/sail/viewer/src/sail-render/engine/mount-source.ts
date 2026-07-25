@@ -147,7 +147,6 @@ export function mountBySource(
   opts.preDispose?.()
 
   const root = prepareStage(stageEl)
-  console.log('mountBySource stageEl', stageEl.nodeName, stageEl.parentNode?.nodeName, 'root instanceof ShadowRoot', root instanceof ShadowRoot, 'stageEl.childNodes.length', stageEl.childNodes.length)
   const before = new Set(Array.from(stageEl.childNodes))
   const cleanup = scope.__mount(stageEl)
   const disposeCss = root ? adoptCompiledCss(root, compiled.css) : () => {}

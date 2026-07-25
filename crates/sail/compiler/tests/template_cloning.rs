@@ -40,9 +40,12 @@ fn js(src: &str) -> String {
 fn a_static_subtree_is_hoisted_and_cloned() {
     let out = js(r#"<div data-actions><button data-test="go">go</button></div>"#);
     assert!(out.contains("__tpl("), "the markup is hoisted as a template:\n{out}");
+    // <button> is a native stdlib tag: stamping bakes sail-button + sx-* classes
+    // into the hoisted markup alongside the use-site data-test attribute.
     assert!(
-        out.contains(r#"<button data-test=\"go\">go</button>"#),
-        "static attributes bake into the markup — which also deletes the setAttribute call:\n{out}"
+        out.contains(r#"<button data-test=\"go\" class=\"sail-button "#)
+            && out.contains(r#"\">go</button>"#),
+        "static attributes and the native stamp bake into the markup — which also deletes the setAttribute call:\n{out}"
     );
     assert!(!out.contains("createElement"), "nothing is built by hand:\n{out}");
     assert!(!out.contains("setAttribute"), "no attribute is replayed at runtime:\n{out}");

@@ -59,6 +59,57 @@ fn clash_fail_closed() {
 }
 
 #[test]
+fn cross_setter_chain_clash_on_shared_slot() {
+    // Slot-keyed detection narrows per call (op_slots): `border(1)` writes
+    // the `border-width` paint slot, the same slot `borderWidth(2)` writes —
+    // a cross-setter Chain clash, detected without any lowering.
+    let (style, _) = parse("style.border(1).borderWidth(2)");
+    let diags = clash::detect_clashes(&style, &HashMap::new());
+    assert!(
+        diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { slot, .. } if slot.starts_with("border-width@"))),
+        "border(1) vs borderWidth must clash on border-width: {diags:?}"
+    );
+}
+
+#[test]
+fn cross_setter_disjoint_slots_do_not_clash() {
+    // A color-token `border` narrows to border-color only, so it composes
+    // with `borderWidth` — the stdlib focus/border idiom stays clash-free.
+    let (style, _) = parse("style.borderWidth(1).border(primary)");
+    let diags = clash::detect_clashes(&style, &HashMap::new());
+    assert!(
+        !diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+        "disjoint per-call slots must not clash: {diags:?}"
+    );
+}
+
+#[test]
+fn list_shadows_silently_no_clash() {
+    // List = ordered composition: later items shadow earlier ones.
+    let (style, _) = parse("[ style.bg(primary), style.bg(muted) ]");
+    let diags = clash::detect_clashes(&style, &HashMap::new());
+    assert!(
+        !diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+        "list items must shadow, not clash: {diags:?}"
+    );
+}
+
+#[test]
+fn list_shadowed_rule_emitted_after_earlier_rule() {
+    // Stylesheet order implements the precedence: the shadowing (later) rule
+    // lands after the shadowed (earlier) rule in the emitted CSS text.
+    let (style, diags) = parse("[ style.bg(primary), style.bg(muted) ]");
+    assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+    let (_, css) = lower_style(&style, &HashMap::new());
+    let first = css.find("var(--primary)").expect("earlier bg rule emitted");
+    let second = css.find("var(--muted)").expect("later bg rule emitted");
+    assert!(
+        second > first,
+        "later list item must be emitted after the earlier one:\n{css}"
+    );
+}
+
+#[test]
 fn token_fail_closed() {
     let (_, diags) = parse("style.bg(notARealTokenZzz999)");
     assert!(diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })));

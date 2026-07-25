@@ -137,7 +137,17 @@ fn every_native_tag_in_styles_has_a_reskin_entry() {
     // split on commas, collect the bare tags, and assert each is in the
     // manifest. This catches both directions of the drift.
     let styles = strip_comments(&read_styles_source());
-    let declared: HashSet<&'static str> = reskin_selectors().iter().map(|(t, _)| *t).collect();
+    // A styled native tag is covered two ways: a NativeReskin row in the
+    // manifest, OR a native-KIND stdlib element whose root IS that tag
+    // (`native = root.tag == name` in emit_element — e.g. `<button>` is the
+    // button.sail element, stamped at use sites, no reskin row needed).
+    let mut declared: HashSet<&'static str> =
+        reskin_selectors().iter().map(|(t, _)| *t).collect();
+    for el in stdlib::elements() {
+        if el.out.native {
+            declared.insert(el.tag);
+        }
+    }
     let mut orphans: Vec<String> = Vec::new();
     let mut seen: HashSet<String> = HashSet::new();
     let bytes = styles.as_bytes();
@@ -186,7 +196,8 @@ fn every_native_tag_in_styles_has_a_reskin_entry() {
         panic!(
             "`packages/sail/runtime/src/styles/index.ts` styles the following \
              native HTML tags with no entry in \
-             crates/sail/compiler/src/l1_manifest.rs::RESKINS — add the row \
+             crates/sail/compiler/src/l1_manifest.rs::RESKINS and no native-kind \
+             stdlib element whose root is the tag — add the row (or the element) \
              to make the L1 surface enumerable:\n  - {}",
             orphans.join("\n  - ")
         );
@@ -221,14 +232,14 @@ fn l1_surface_count_is_documented() {
     let (stdlib, reskins) = l1_by_kind();
     assert_eq!(
         stdlib.len(),
-        42,
-        "stdlib L1 count drifted from 42 — update the spec's count claim \
+        43,
+        "stdlib L1 count drifted from 43 — update the spec's count claim \
          and run `cargo run -p sail-compiler -- skill` to refresh the agent surface"
     );
     assert_eq!(
         reskins.len(),
-        29,
-        "native reskin count drifted from 29 — same as above"
+        28,
+        "native reskin count drifted from 28 — same as above"
     );
     assert_eq!(
         l1_entries().len(),
