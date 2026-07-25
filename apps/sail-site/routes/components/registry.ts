@@ -1,11 +1,10 @@
 // /components — the catalog the browser filters over.
 //
-// The `lang` rows are the FULL L1 surface — the same 48 elements the
-// conformance gate (packages/sail/l1-conformance/specs, minus the motion spec)
-// renders on every commit. Each row names a tile that page.sail renders LIVE
-// (the tile markup is the component, not a picture of it). The pack rail and
-// the category chips both key off this list, so a new tile is one row here
-// plus its markup in page.sail — and the counts stay honest by construction.
+// The `lang` rows are the FULL L1 component-primitives surface — the same 48
+// elements the conformance gate (packages/sail/l1-conformance/specs, minus
+// the motion spec) renders on every commit. Featured tiles on page.sail
+// render LIVE; catalog tiles mix static (takumi/l1) previews with a detail
+// link. The pack rail and category chips both key off this list.
 
 export type PackId =
   | 'lang'
@@ -46,7 +45,9 @@ export interface CatalogEntry {
 
 export const PACKS: Pack[] = [
   { id: 'all', label: 'All packs', sub: '' },
-  { id: 'lang', label: 'In the language', sub: 'no import — it compiles in' },
+  // L1 surface — bare language tags that compile in (button, input, …).
+  // Product name: "Component primitives" (was "In the language" / stdlib).
+  { id: 'lang', label: 'Component primitives', sub: 'no import — it compiles in' },
   { id: 'charts', label: 'Charts', sub: '@ship/sail-charts' },
   { id: 'media', label: 'Media', sub: '@ship/sail-media' },
   // Canvas is deliberately absent from the rail: its pack has zero
@@ -56,8 +57,8 @@ export const PACKS: Pack[] = [
   { id: 'mermaid', label: 'Mermaid', sub: '@ship/sail-mermaid' },
   { id: 'code-editor', label: 'Code editor', sub: '@ship/sail-code-editor' },
   // The fx pack is gone: the actions it shipped (`spotlight`,
-  // `targetCursor`) are stdlib and live in the action table; they
-  // are not in this catalog because actions are not elements.
+  // `targetCursor`) are component-primitive actions in the action table;
+  // they are not in this catalog because actions are not elements.
 ]
 
 const L = (tag: string, key: string, cat: CatalogEntry['cat']): CatalogEntry => ({
@@ -86,7 +87,7 @@ const P = (
 })
 
 export const CATALOG: CatalogEntry[] = [
-  // ── In the language: the 48-element L1 surface ─────────────────────
+  // ── Component primitives: the 48-element L1 surface ────────────────
   L('button', 'button', 'inputs'),
   L('input', 'input', 'inputs'),
   L('textarea', 'textarea', 'inputs'),

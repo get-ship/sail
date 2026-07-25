@@ -71,6 +71,7 @@ GEMINI.md
 .codex/
 .cursor/
 .gemini/
+.grok/
 .agents/
 skills-lock.json
 

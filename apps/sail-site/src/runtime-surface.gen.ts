@@ -67,7 +67,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:231"
+    "loc": "src/styles/index.ts:165"
   },
   {
     "subpath": ".",
@@ -124,14 +124,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(host: HTMLElement): void",
     "doc": "Wire `host.emit` and `host.expose` onto a host element. Idempotent — called from `defineComponent`'s `connectedCallback` once per connect.",
     "loc": "src/host-api.ts:103"
-  },
-  {
-    "subpath": ".",
-    "name": "autoDismiss",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "Auto-dismiss after `duration` ms (attr). 0 / negative = sticky (no timer). Pause while hovered or focused so a reader is never cut off mid-read.",
-    "loc": "src/actions/auto-dismiss.ts:24"
   },
   {
     "subpath": ".",
@@ -203,7 +195,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(host: Element, name: string, get: () => unknown): void",
     "doc": "Reactive reflect of a value to a host attribute. Returning `null`, `undefined`, `false`, or `''` from `get` removes the attribute; `true` writes a presence-only attribute; anything else is stringified and assigned. Cleanup auto-registers with the active effect-scope.",
-    "loc": "src/host-api.ts:187"
+    "loc": "src/host-api.ts:181"
   },
   {
     "subpath": ".",
@@ -363,7 +355,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(attr: string): string",
     "doc": "Convert a kebab-case HTML attribute name to its camelCase prop name. Single-word attributes pass through unchanged.",
-    "loc": "src/component.ts:526"
+    "loc": "src/component.ts:530"
   },
   {
     "subpath": ".",
@@ -372,30 +364,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(node: Node): void",
     "doc": "",
     "loc": "src/transition-runner.ts:29"
-  },
-  {
-    "subpath": ".",
-    "name": "catchRender",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:catchRender` — the `<error-boundary>` element's behavior.",
-    "loc": "src/actions/catch-render.ts:21"
-  },
-  {
-    "subpath": ".",
-    "name": "cellPad",
-    "kind": "function",
-    "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
-    "doc": "`use:cellPad={indent}` — a first-column cell's `padding-inline-start`.",
-    "loc": "src/actions/virtual-row.ts:75"
-  },
-  {
-    "subpath": ".",
-    "name": "chromeOffset",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:chromeOffset` — publish the attached element's measured height as `--chrome-offset` on `:root`, kept fresh as the element reflows and on window resize. No parameter. Pairs with the `h:fill` size scale (`calc(100dvh - var(--chrome-offset, 0px))`).",
-    "loc": "src/actions/chrome-offset.ts:24"
   },
   {
     "subpath": ".",
@@ -471,19 +439,11 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "combobox",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "",
-    "loc": "src/actions/combobox.ts:25"
-  },
-  {
-    "subpath": ".",
     "name": "component",
     "kind": "function",
     "signature": "<Bindings>(setup: MountSetup<Bindings>): MountModule<Bindings> | <Bindings>(tag: string, def: ComponentDef<Bindings>, module: MountModule<Bindings>): void",
     "doc": "`component(...)` — the one factory a compiled `.sail` exports. Two shapes, disjoint on the first argument so the compiler (and the rare direct caller) can never confuse them:",
-    "loc": "src/component-factory.ts:241"
+    "loc": "src/component-factory.ts:244"
   },
   {
     "subpath": ".",
@@ -491,7 +451,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ComponentDef<Bindings = unknown> { styles?: string shadow?: boolean formAssociated?: boolean formValue?: string formDisabled?: string props: Record<string, PropDef<unknown>> setup?: (",
     "doc": "Declarative shape passed to `component()`.",
-    "loc": "src/component-factory.ts:105"
+    "loc": "src/component-factory.ts:106"
   },
   {
     "subpath": ".",
@@ -531,7 +491,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ComponentSetupContext { props: Record<string, Signal<unknown>> host: HTMLElement cleanups: Array<() => void> internals?: ElementInternals }",
     "doc": "The setup callback's context. Mirrors `ComponentFactory` in shape.",
-    "loc": "src/component-factory.ts:90"
+    "loc": "src/component-factory.ts:91"
   },
   {
     "subpath": ".",
@@ -751,14 +711,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "describedControl",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:describedControl` — form control ↔ hint/error association for any host with `.hint` / `.error` / `.control` anatomy. The hint↔error visibility swap is pure CSS; this action wires accessibility: give the hint and error regions stable ids, then point the first slotted control's aria-describedby at the active region (hint when valid, error when [invalid]) and set aria-invalid to match. Re-wires when [invalid] toggles or the control changes. Written once — no per-instance controller, compiles away. The L1 `<field>` stamps this.",
-    "loc": "src/actions/described-control.ts:15"
-  },
-  {
-    "subpath": ".",
     "name": "detachBoundary",
     "kind": "function",
     "signature": "(host: HTMLElement): void",
@@ -767,43 +719,11 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "detailsDisabled",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "While the host has `[disabled]`, suppress activation paths native <details>/<summary> would otherwise honor: click + Enter/Space, both in capture so the default toggle never runs.",
-    "loc": "src/actions/details-disabled.ts:14"
-  },
-  {
-    "subpath": ".",
-    "name": "detailsToggle",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "Re-emit the native `toggle` event as a composed `sail-toggle` with `{ open: el.open }` so hosts can sync a bound signal. The browser owns open/close, keyboard, focus, and ARIA — this only bridges the event.",
-    "loc": "src/actions/details-toggle.ts:14"
-  },
-  {
-    "subpath": ".",
     "name": "DialogOptions",
     "kind": "interface",
     "signature": "export interface DialogOptions { dismissible?: boolean }",
     "doc": "Options for {@link bindOpen}.",
     "loc": "src/enhance-dialog.ts:15"
-  },
-  {
-    "subpath": ".",
-    "name": "dismissControl",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "Click on a descendant close control dismisses the host: composed dismiss event, then `el.remove()`. Toast → `sail-toast-dismiss` (no dismissible gate). Alert / other → `sail-dismiss`, only while `[dismissible]`.",
-    "loc": "src/actions/dismiss-control.ts:27"
-  },
-  {
-    "subpath": ".",
-    "name": "dismissible",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "Emit `sail-remove` (bubbles, composed) from a removable host:",
-    "loc": "src/actions/dismissible.ts:23"
   },
   {
     "subpath": ".",
@@ -863,14 +783,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "eventSpan",
-    "kind": "function",
-    "signature": "(node: Element, param: RectSpan | null | undefined): void | ActionResult<RectSpan | null | undefined>",
-    "doc": "",
-    "loc": "src/actions/event-span.ts:41"
-  },
-  {
-    "subpath": ".",
     "name": "expose",
     "kind": "function",
     "signature": "(host: HTMLElement, methods: Record<string, (...args: never[]) => unknown>): void",
@@ -890,7 +802,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "findNearestBoundary",
     "kind": "function",
     "signature": "(node: Node | null): BoundaryHandle | null",
-    "doc": "Walk up the DOM from `node` until the nearest element carrying a `BoundaryHandle` is found, or the root is reached. Traverses shadow roots: when the walk reaches a `ShadowRoot`, it continues from the host element so a `<sail-error-boundary>` outside the shadow tree still catches inner throws.",
+    "doc": "Walk up the DOM from `node` until the nearest element carrying a `BoundaryHandle` is found, or the root is reached. L1 is light DOM. Residual: when the walk hits a `ShadowRoot` (foreign-content wrapper), continues from the host so a boundary outside that tree still catches inner throws.",
     "loc": "src/error-boundary.ts:78"
   },
   {
@@ -935,14 +847,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "gridTracks",
-    "kind": "function",
-    "signature": "(node: Element, param: string | null | undefined): void | ActionResult<string | null | undefined>",
-    "doc": "`use:gridTracks={tracks}` — runtime grid-template-columns/rows string.",
-    "loc": "src/actions/grid-tracks.ts:18"
-  },
-  {
-    "subpath": ".",
     "name": "hostContext",
     "kind": "function",
     "signature": "(): HostContext",
@@ -956,14 +860,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "export interface HostContext { spaceId?: string sessionId?: string editModeTransport?: (name: string, action: 'enter' | 'exit') => void | Promise<void> }",
     "doc": "Ambient host facts the runtime may read. All optional — a host that doesn't know a value omits it, and the runtime falls back.",
     "loc": "src/host-context.ts:19"
-  },
-  {
-    "subpath": ".",
-    "name": "hoverSurface",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:hoverSurface` — opens the L1 `<hover-card>` (a native `[popover]`) on hover or focus of its trigger (the element whose `popovertarget` names it), with open/close delays so it doesn't flicker. Positioning is `use:anchor`'s job; top-layer + light-dismiss are the native popover's.",
-    "loc": "src/actions/hover-surface.ts:9"
   },
   {
     "subpath": ".",
@@ -987,7 +883,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element): { destroy: () => void; }",
     "doc": "",
-    "loc": "src/actions/icon.ts:43"
+    "loc": "src/actions/icon.ts:50"
   },
   {
     "subpath": ".",
@@ -1028,14 +924,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "export type ListSource<T> = T[] | (() => unknown)",
     "doc": "A list source: a plain array, a `Signal<T[]>`, a `derived(() => T[])`, or any tracked callable returning one — including a live envelope around one, which is what a live `query()` hands you.",
     "loc": "src/compositions/filtered-list.ts:9"
-  },
-  {
-    "subpath": ".",
-    "name": "liveRegion",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "Sync host `role` / `aria-live` from the `tone` attribute. Urgent tones (`warning`, `destructive`) become an assertive alert; everything else stays status/polite. Observes `tone` so flips re-evaluate immediately.",
-    "loc": "src/actions/live-region.ts:15"
   },
   {
     "subpath": ".",
@@ -1108,22 +996,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(e: KeyboardEvent, spec: string): boolean",
     "doc": "Match a keyboard event against a `key:` modifier spec. Used inside `on` to gate `keydown`/`keyup` handlers; exposed for components that need the same matching semantics outside of declarative bindings.",
     "loc": "src/on.ts:176"
-  },
-  {
-    "subpath": ".",
-    "name": "maxWidth",
-    "kind": "function",
-    "signature": "(node: Element, param: string | number | null | undefined): void | ActionResult<string | number | null | undefined>",
-    "doc": "`use:maxWidth={px}` — runtime max-width (e.g. a viewer stage sized to the host viewport minus chrome). A value the user resized to, not a design decision. Writes `--max-w`; the consuming template uses sx=\"max-w-(--max-w)\"",
-    "loc": "src/actions/zoom-pan.ts:49"
-  },
-  {
-    "subpath": ".",
-    "name": "mediaFallback",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:mediaFallback` — the L1 `<avatar>` element's behavior, written once in the toolchain (no per-instance controller). It reads `src` / `icon-slug` / `name` / `initials` off the element's OWN attributes (which merge onto the compiles-away root) and renders either an `<img>` — falling back to initials when the image is absent or fails to load — or the initials directly. The frame (circle/square, tone, size) is the skin; this is the behavior layer.",
-    "loc": "src/actions/media-fallback.ts:14"
   },
   {
     "subpath": ".",
@@ -1303,14 +1175,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "pagination",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:pagination` — the L1 `<pagination>` behavior. Marks the `.sail-page` whose value matches the element's `value` with `aria-current=\"page\"`, and on click of a page sets `value` + emits `sail-page-change`. Prev/next are just pages whose value is the target page. Structure (which pages/ellipsis to show) is authored; this owns the state contract.",
-    "loc": "src/actions/pagination.ts:10"
-  },
-  {
-    "subpath": ".",
     "name": "Patch",
     "kind": "interface",
     "signature": "export interface Patch { op: PatchOp path?: string value?: unknown index?: number from?: number to?: number count?: number by?: number v?: number }",
@@ -1351,14 +1215,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "pin",
-    "kind": "function",
-    "signature": "(node: Element, param: PinPoint | null | undefined): void | ActionResult<PinPoint | null | undefined>",
-    "doc": "",
-    "loc": "src/actions/rect-box.ts:71"
-  },
-  {
-    "subpath": ".",
     "name": "PopoverOptions",
     "kind": "interface",
     "signature": "export interface PopoverOptions { manual?: boolean }",
@@ -1367,43 +1223,11 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "portEdge",
-    "kind": "function",
-    "signature": "(node: Element, param: PortSide): void | ActionResult<PortSide>",
-    "doc": "",
-    "loc": "src/actions/port-edge.ts:97"
-  },
-  {
-    "subpath": ".",
-    "name": "PortSide",
-    "kind": "type",
-    "signature": "export type PortSide = 'left' | 'right' | 'top' | 'bottom' | null | undefined",
-    "doc": "`use:portEdge={side}` — anchor a fixed-size port element to the MIDPOINT of one of its parent's four edges.",
-    "loc": "src/actions/port-edge.ts:44"
-  },
-  {
-    "subpath": ".",
-    "name": "pressable",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "Make a non-button host behave like a button:",
-    "loc": "src/actions/pressable.ts:24"
-  },
-  {
-    "subpath": ".",
-    "name": "pressed",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "Reflect the host's `[selected]` attribute to `aria-pressed` (`\"true\"` / `\"false\"`), kept in sync by a MutationObserver.",
-    "loc": "src/actions/pressed.ts:18"
-  },
-  {
-    "subpath": ".",
     "name": "primeIconCache",
     "kind": "function",
     "signature": "(glyphs: Record<string, string>): void",
     "doc": "",
-    "loc": "src/actions/icon.ts:17"
+    "loc": "src/actions/icon.ts:24"
   },
   {
     "subpath": ".",
@@ -1411,7 +1235,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "const",
     "signature": "{ string(opts?: PropOpts<string>): PropDef<string>; bool(opts?: PropOpts<boolean>): PropDef<boolean>; number(opts?: PropOpts<number>): PropDef<number>; union<V extends readonly string[]>(values: V, opts?: PropOpts<V[number]>): PropDef<V[number]>; property<T>(opts?: PropOpts<T>): PropDef<T>; }",
     "doc": "Builders for declarative `PropDef` entries used by `component()`.",
-    "loc": "src/component-factory.ts:55"
+    "loc": "src/component-factory.ts:56"
   },
   {
     "subpath": ".",
@@ -1419,7 +1243,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface PropDef<T> { type: 'string' | 'bool' | 'number' | 'union' | 'property' default?: T reflect?: boolean bindable?: boolean values?: readonly string[] }",
     "doc": "Declarative description of a component prop.",
-    "loc": "src/component-factory.ts:23"
+    "loc": "src/component-factory.ts:24"
   },
   {
     "subpath": ".",
@@ -1471,27 +1295,11 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "radioGroup",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:radioGroup` — the L1 `<radio-group>` element's behavior. Native radios that share a `name` already give single selection, arrow-key roving, focus, and form submission for free; this action supplies the wiring CSS can't: - give every child <radio>'s inner <input> the shared group name + its own value + disabled (group [disabled] OR the radio's own), and check the one matching the group's `value`; - propagate tone/size onto the radios (API parity with the twin); - on a radio `change`, reflect the new value to the group's `value` attribute + a hidden <input> (form) and dispatch sail-change {value}; - aria-label / aria-required from the group. Re-syncs when the group's attributes or its children change. Written once — no per-instance controller.",
-    "loc": "src/actions/radio-group.ts:19"
-  },
-  {
-    "subpath": ".",
     "name": "RailMeta",
     "kind": "type",
     "signature": "export type RailMeta = { label: string; icon: string }",
     "doc": "Per-route shell display metadata. Maps to `<ship-rail>` / `<ship-launcher>`.",
     "loc": "src/generated.d.ts:34"
-  },
-  {
-    "subpath": ".",
-    "name": "rangeFill",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:rangeFill` — the ONE thing a native `<input type=\"range\">` can't draw on Chrome/WebKit: the filled portion of the track. Everything else (value, step, drag, keyboard, role=slider + aria-valuenow, form submission) is the platform's. This action mirrors the value into a `--rng-pct` custom property so RANGE_SKIN_CSS's webkit-track gradient fills to the thumb (Firefox already fills via ::-moz-range-progress). ~10 lines, no controller, compiles away.",
-    "loc": "src/actions/range-fill.ts:11"
   },
   {
     "subpath": ".",
@@ -1516,14 +1324,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(id: string): Record<string, unknown> | null",
     "doc": "Read the seed values for `id`. Client-side only — on the server the payload is consumed by the snapshot writer, not by `useStore`. Returns `null` if no payload is installed or the id has no entry. Does NOT mutate the payload; the seed pass is idempotent.",
     "loc": "src/store.ts:141"
-  },
-  {
-    "subpath": ".",
-    "name": "recoverySurface",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:recoverySurface` — the L1 `<error-state>` element's behavior. Surface, icon tile, and the details/toggle visibility are PURE CSS (gated on the `data-has-details` / `data-details-open` attributes). This action supplies what CSS can't: - fill the code chip from the `code` attribute (re-synced on change); - detect whether the details region has content → mark [data-has-details] so the Show/Hide toggle appears, and wire the toggle (label, aria-expanded, [data-details-open]); - auto-focus the first action so the recovery control is reachable at once. Written once in the toolchain — no per-instance controller, compiles away.",
-    "loc": "src/actions/recovery-surface.ts:15"
   },
   {
     "subpath": ".",
@@ -1834,8 +1634,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "slotted",
     "kind": "function",
     "signature": "(slot: () => HTMLSlotElement | null, render: (els: Element[]) => void): void",
-    "doc": "Subscribe to a `<slot>`'s assigned-elements list. `render` runs once on initial mount AND on every `slotchange`. The returned elements are whatever `assignedElements()` reports — already- filtered to nodes the consumer actually slotted.",
-    "loc": "src/host-api.ts:158"
+    "doc": "Subscribe to a native `<slot>`'s assigned-elements list (shadow slot API). Residual helper for opt-in foreign-content shadow wrappers — Sail L1 uses light-DOM projection (`projectSlots`), not `assignedElements()`.",
+    "loc": "src/host-api.ts:152"
   },
   {
     "subpath": ".",
@@ -1860,14 +1660,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "<Shape>(instance: Shape): Record<string, unknown>",
     "doc": "Build a `{ [signalName]: value }` snapshot of every Signal in `instance`. Used by the SSR entry to serialize the request's store state into the HTML payload. Only top-level signals are captured; derived and actions are skipped (derived re-derive from signals, actions don't carry state). Nested stores — an instance whose shape contains another store's instance — are NOT recursively walked; the outer store's owner is responsible for serializing sub-stores it embeds.",
     "loc": "src/store.ts:338"
-  },
-  {
-    "subpath": ".",
-    "name": "spotlight",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "",
-    "loc": "src/actions/spotlight.ts:50"
   },
   {
     "subpath": ".",
@@ -1927,35 +1719,11 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "swatch",
-    "kind": "function",
-    "signature": "(node: Element, param: string | null | undefined): void | ActionResult<string | null | undefined>",
-    "doc": "`use:swatch={hex}` — runtime swatch background for sail-color-picker. The colour is user input (#3366ff or `oklch(...)`, whatever they typed); it is not a token. The action writes the value to `--swatch-color` verbatim. The consuming template reads it via sx=\"bg-(--swatch-color)\"",
-    "loc": "src/actions/zoom-pan.ts:77"
-  },
-  {
-    "subpath": ".",
-    "name": "syntaxHighlight",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:syntaxHighlight` — the `<code-block>` element's behavior.",
-    "loc": "src/actions/syntax-highlight.ts:18"
-  },
-  {
-    "subpath": ".",
     "name": "tabs",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:tabs` — the L1 `<tabs>` element's behavior, in light DOM. The current `<sail-tabs>` shadow component queried `assignedElements()`; here we own the whole subtree, so we query descendant `.sail-tab` / `.sail-tab-panel` directly.",
-    "loc": "src/actions/tabs.ts:14"
-  },
-  {
-    "subpath": ".",
-    "name": "targetCursor",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "",
-    "loc": "src/actions/target-cursor.ts:89"
+    "doc": "`use:tabs` — the L1 `<tabs>` element's behavior, in light DOM. Owns the whole subtree and queries descendant `.sail-tab` / `.sail-tab-panel` directly.",
+    "loc": "src/actions/tabs.ts:17"
   },
   {
     "subpath": ".",
@@ -2012,14 +1780,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "export type ThemePersist = (patch: ThemePatch) => void | Promise<void>",
     "doc": "Host persistence hook. Registered once at host startup via `setThemePersist`. - dev: serialize the patch into the app's theme data file (the `themes.ts` fork) so HMR re-themes and it round-trips in source. - live: write-through to a host-configured backend. Omitted ⇒ persistence is localStorage-only (the default, owner-recommended). Fire-and-forget; a rejected promise is swallowed (the local cache is still correct).",
     "loc": "src/theme.ts:51"
-  },
-  {
-    "subpath": ".",
-    "name": "themeSelect",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:themeSelect` — the `<theme-picker>` behavior: a trigger that opens a panel of theme cards.",
-    "loc": "src/actions/theme-select.ts:16"
   },
   {
     "subpath": ".",
@@ -2122,8 +1882,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "tipDescribe",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:tipDescribe` — the L1 `<tooltip>` element's behavior. Show/hide and positioning are PURE CSS (hover/focus-within opacity + CSS Anchor Positioning in the skin); this action supplies only what CSS can't: - a per-instance anchor name (`--sail-tooltip-N`) so multiple tooltips on a page don't collide on one shared anchor, - the bubble text (from the `content` attribute) + `aria-describedby` wiring from the trigger to the bubble, - Escape blurs the host to dismiss. Written once in the toolchain — no per-instance controller, compiles away.",
-    "loc": "src/actions/tip-describe.ts:16"
+    "doc": "`use:tipDescribe` — the L1 `<tooltip>` element's behavior. Show/hide is pure CSS (group-hover / group-focus-within opacity on the bubble). This action supplies only what CSS can't alone: - placement geometry vars the bubble sx reads (box + arrow insets), - the bubble text (from the `content` attribute) + `aria-describedby` wiring from the trigger to the bubble, - Escape blurs the host to dismiss. Written once in the toolchain — no per-instance controller, compiles away.",
+    "loc": "src/actions/tip-describe.ts:71"
   },
   {
     "subpath": ".",
@@ -2140,14 +1900,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(name: string): boolean",
     "doc": "Flip edit-mode on/off for `name`. Persists locally, fires the lifecycle POST, and dispatches `sail:edit-mode:change` on document so shell chrome (which doesn't run inside a tracked effect) can react.",
     "loc": "src/edit-mode.ts:83"
-  },
-  {
-    "subpath": ".",
-    "name": "toggleGroup",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:toggleGroup` — the L1 `<toggle-group>` element's behavior, light DOM. Owns the group ARIA (role=group + aria-orientation), roving tabindex, arrow nav (per orientation) + Home/End, click selection, and `value` sync. `type` = `single` (one value, deselectable) or `multiple` (space-separated set). Each `.sail-toggle` gets `aria-pressed`. Emits `sail-toggle-change`.",
-    "loc": "src/actions/toggle-group.ts:10"
   },
   {
     "subpath": ".",
@@ -2191,27 +1943,11 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
-    "name": "variantLive",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "Observe `variant` and flip role/aria-live for connecting placeholders. Static defaults on the template (`role=note`, `aria-live=off`) keep the host inert before hydrate; this action only upgrades `connecting` and re-evaluates when the attribute changes.",
-    "loc": "src/actions/variant-live.ts:17"
-  },
-  {
-    "subpath": ".",
     "name": "virtualRow",
     "kind": "function",
     "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
     "doc": "`use:virtualRow={start}` — the runtime geometry of a virtualized row.",
     "loc": "src/actions/virtual-row.ts:22"
-  },
-  {
-    "subpath": ".",
-    "name": "virtualSpacer",
-    "kind": "function",
-    "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
-    "doc": "`use:virtualSpacer={totalSize}` — the total-height spacer that gives the windowed list a scrollbar correct for its full size. The property it writes is the spacer's `--rows-h`, the size axis `height-(--rows-h)` reads.",
-    "loc": "src/actions/virtual-row.ts:42"
   },
   {
     "subpath": ".",
@@ -2239,6 +1975,414 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   },
   {
     "subpath": ".",
+    "name": "zoomPan",
+    "kind": "function",
+    "signature": "(node: Element, param: ZoomPanState | null | undefined): void | ActionResult<ZoomPanState | null | undefined>",
+    "doc": "",
+    "loc": "src/actions/zoom-pan.ts:22"
+  },
+  {
+    "subpath": "./actions",
+    "name": "anchor",
+    "kind": "function",
+    "signature": "(node: Element, param: AnchorPlacement | undefined): void | ActionResult<AnchorPlacement | undefined>",
+    "doc": "Position a native popover next to its trigger. Repositions on open, scroll, and resize. `use:anchor` or `use:anchor={\"bottom-end\"}`.",
+    "loc": "src/actions/anchor.ts:44"
+  },
+  {
+    "subpath": "./actions",
+    "name": "AnchorPlacement",
+    "kind": "type",
+    "signature": "export type AnchorPlacement = | 'top' | 'top-end' | 'bottom' | 'bottom-end' | 'left' | 'left-end' | 'right' | 'right-end'",
+    "doc": "Placement of the floating element relative to its trigger.",
+    "loc": "src/actions/anchor.ts:26"
+  },
+  {
+    "subpath": "./actions",
+    "name": "autoDismiss",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Auto-dismiss after `duration` ms (attr). 0 / negative = sticky (no timer). Pause while hovered or focused so a reader is never cut off mid-read.",
+    "loc": "src/actions/auto-dismiss.ts:24"
+  },
+  {
+    "subpath": "./actions",
+    "name": "autosize",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Make a `<textarea>` grow to fit its content. Reflows on input and once on mount. `use:autosize` — no parameter.",
+    "loc": "src/actions/autosize.ts:19"
+  },
+  {
+    "subpath": "./actions",
+    "name": "BoxRect",
+    "kind": "interface",
+    "signature": "export interface BoxRect { top?: number | string | null left?: number | string | null width?: number | string | null height?: number | string | null }",
+    "doc": "`use:rect={box}` — a positioned element's box (left/top/width/height).",
+    "loc": "src/actions/rect-box.ts:22"
+  },
+  {
+    "subpath": "./actions",
+    "name": "catchRender",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:catchRender` — the `<error-boundary>` element's behavior.",
+    "loc": "src/actions/catch-render.ts:21"
+  },
+  {
+    "subpath": "./actions",
+    "name": "cellPad",
+    "kind": "function",
+    "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
+    "doc": "`use:cellPad={indent}` — a first-column cell's `padding-inline-start`.",
+    "loc": "src/actions/virtual-row.ts:75"
+  },
+  {
+    "subpath": "./actions",
+    "name": "chromeOffset",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:chromeOffset` — publish the attached element's measured height as `--chrome-offset` on `:root`, kept fresh as the element reflows and on window resize. No parameter. Pairs with the `h:fill` size scale (`calc(100dvh - var(--chrome-offset, 0px))`).",
+    "loc": "src/actions/chrome-offset.ts:24"
+  },
+  {
+    "subpath": "./actions",
+    "name": "clickOutside",
+    "kind": "function",
+    "signature": "(node: Element, param: (() => void) | undefined): void | ActionResult<(() => void) | undefined>",
+    "doc": "Call `onOutside` when a `pointerdown` occurs outside `node` (capture phase, so it beats inner handlers). The listener is added on the next microtask so the same press that opened the surface doesn't immediately dismiss it.",
+    "loc": "src/actions/click-outside.ts:18"
+  },
+  {
+    "subpath": "./actions",
+    "name": "combobox",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "",
+    "loc": "src/actions/combobox.ts:25"
+  },
+  {
+    "subpath": "./actions",
+    "name": "contextMenu",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:contextMenu` — opens the L1 `<context-menu>` (a native `[popover]`) at the pointer on right-click. The menu's `for` attribute names the target element (or it defaults to the menu's parent); we suppress the native context menu, place the popover at the pointer, and show it. Item semantics/keyboard come from `use:menu`; light-dismiss + top-layer come from the native popover.",
+    "loc": "src/actions/context-menu.ts:10"
+  },
+  {
+    "subpath": "./actions",
+    "name": "describedControl",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:describedControl` — form control ↔ hint/error association for any host with `.hint` / `.error` / `.control` anatomy. The hint↔error visibility swap is pure CSS; this action wires accessibility: give the hint and error regions stable ids, then point the first slotted control's aria-describedby at the active region (hint when valid, error when [invalid]) and set aria-invalid to match. Re-wires when [invalid] toggles or the control changes. Written once — no per-instance controller, compiles away. The L1 `<field>` stamps this.",
+    "loc": "src/actions/described-control.ts:15"
+  },
+  {
+    "subpath": "./actions",
+    "name": "detailsDisabled",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "While the host has `[disabled]`, suppress activation paths native <details>/<summary> would otherwise honor: click + Enter/Space, both in capture so the default toggle never runs.",
+    "loc": "src/actions/details-disabled.ts:14"
+  },
+  {
+    "subpath": "./actions",
+    "name": "detailsToggle",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Re-emit the native `toggle` event as a composed `sail-toggle` with `{ open: el.open }` so hosts can sync a bound signal. The browser owns open/close, keyboard, focus, and ARIA — this only bridges the event.",
+    "loc": "src/actions/details-toggle.ts:14"
+  },
+  {
+    "subpath": "./actions",
+    "name": "dismissControl",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Click on a descendant close control dismisses the host: composed dismiss event, then `el.remove()`. Toast → `sail-toast-dismiss` (no dismissible gate). Alert / other → `sail-dismiss`, only while `[dismissible]`.",
+    "loc": "src/actions/dismiss-control.ts:27"
+  },
+  {
+    "subpath": "./actions",
+    "name": "dismissible",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Emit `sail-remove` (bubbles, composed) from a removable host:",
+    "loc": "src/actions/dismissible.ts:23"
+  },
+  {
+    "subpath": "./actions",
+    "name": "dropzone",
+    "kind": "function",
+    "signature": "(node: Element, param: undefined): void | ActionResult<undefined>",
+    "doc": "Wire click-to-browse + drag-and-drop onto a container holding an `<input type=\"file\">`.",
+    "loc": "src/actions/dropzone.ts:24"
+  },
+  {
+    "subpath": "./actions",
+    "name": "eventSpan",
+    "kind": "function",
+    "signature": "(node: Element, param: RectSpan | null | undefined): void | ActionResult<RectSpan | null | undefined>",
+    "doc": "",
+    "loc": "src/actions/event-span.ts:41"
+  },
+  {
+    "subpath": "./actions",
+    "name": "gridTracks",
+    "kind": "function",
+    "signature": "(node: Element, param: string | null | undefined): void | ActionResult<string | null | undefined>",
+    "doc": "`use:gridTracks={tracks}` — runtime grid-template-columns/rows string.",
+    "loc": "src/actions/grid-tracks.ts:18"
+  },
+  {
+    "subpath": "./actions",
+    "name": "hoverSurface",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:hoverSurface` — opens the L1 `<hover-card>` (a native `[popover]`) on hover or focus of its trigger (the element whose `popovertarget` names it), with open/close delays so it doesn't flicker. Positioning is `use:anchor`'s job; top-layer + light-dismiss are the native popover's.",
+    "loc": "src/actions/hover-surface.ts:9"
+  },
+  {
+    "subpath": "./actions",
+    "name": "icon",
+    "kind": "function",
+    "signature": "(node: Element): { destroy: () => void; }",
+    "doc": "",
+    "loc": "src/actions/icon.ts:50"
+  },
+  {
+    "subpath": "./actions",
+    "name": "liveRegion",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Sync host `role` / `aria-live` from the `tone` attribute. Urgent tones (`warning`, `destructive`) become an assertive alert; everything else stays status/polite. Observes `tone` so flips re-evaluate immediately.",
+    "loc": "src/actions/live-region.ts:15"
+  },
+  {
+    "subpath": "./actions",
+    "name": "marquee",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "",
+    "loc": "src/actions/marquee.ts:44"
+  },
+  {
+    "subpath": "./actions",
+    "name": "maxWidth",
+    "kind": "function",
+    "signature": "(node: Element, param: string | number | null | undefined): void | ActionResult<string | number | null | undefined>",
+    "doc": "`use:maxWidth={px}` — runtime max-width (e.g. a viewer stage sized to the host viewport minus chrome). A value the user resized to, not a design decision. Writes `--max-w`; the consuming template uses sx=\"max-w-(--max-w)\"",
+    "loc": "src/actions/zoom-pan.ts:49"
+  },
+  {
+    "subpath": "./actions",
+    "name": "mediaFallback",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:mediaFallback` — the L1 `<avatar>` element's behavior, written once in the toolchain (no per-instance controller). It reads `src` / `icon-slug` / `name` / `initials` off the element's OWN attributes (which merge onto the compiles-away root) and renders either an `<img>` — falling back to initials when the image is absent or fails to load — or the initials directly. The frame (circle/square, tone, size) is the skin; this is the behavior layer.",
+    "loc": "src/actions/media-fallback.ts:14"
+  },
+  {
+    "subpath": "./actions",
+    "name": "menu",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:menu` — menu semantics + keyboard for the L1 `<dropdown>` / `<context-menu>` content (a native `[popover]`). Wires role=menu / menuitem, roving focus (ArrowUp/Down, Home/End), Escape to close, focuses the first item on open, and closes after activating an item. Positioning is `use:anchor`'s job; open/close and light-dismiss are the native popover's.",
+    "loc": "src/actions/menu.ts:20"
+  },
+  {
+    "subpath": "./actions",
+    "name": "pagination",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:pagination` — the L1 `<pagination>` behavior. Marks the `.sail-page` whose value matches the element's `value` with `aria-current=\"page\"`, and on click of a page sets `value` + emits `sail-page-change`. Prev/next are just pages whose value is the target page. Structure (which pages/ellipsis to show) is authored; this owns the state contract.",
+    "loc": "src/actions/pagination.ts:12"
+  },
+  {
+    "subpath": "./actions",
+    "name": "pin",
+    "kind": "function",
+    "signature": "(node: Element, param: PinPoint | null | undefined): void | ActionResult<PinPoint | null | undefined>",
+    "doc": "",
+    "loc": "src/actions/rect-box.ts:71"
+  },
+  {
+    "subpath": "./actions",
+    "name": "PinPoint",
+    "kind": "interface",
+    "signature": "export interface PinPoint { x: number y: number }",
+    "doc": "`use:pin={point}` — a 0×0 positioned element (an annotation pin). Distinct from `rect` only because the values are unambiguously a POINT (no width or height) — the naming is the intent the lint recovers in review.",
+    "loc": "src/actions/rect-box.ts:66"
+  },
+  {
+    "subpath": "./actions",
+    "name": "portEdge",
+    "kind": "function",
+    "signature": "(node: Element, param: PortSide): void | ActionResult<PortSide>",
+    "doc": "",
+    "loc": "src/actions/port-edge.ts:97"
+  },
+  {
+    "subpath": "./actions",
+    "name": "PortSide",
+    "kind": "type",
+    "signature": "export type PortSide = 'left' | 'right' | 'top' | 'bottom' | null | undefined",
+    "doc": "`use:portEdge={side}` — anchor a fixed-size port element to the MIDPOINT of one of its parent's four edges.",
+    "loc": "src/actions/port-edge.ts:44"
+  },
+  {
+    "subpath": "./actions",
+    "name": "pressable",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Make a non-button host behave like a button:",
+    "loc": "src/actions/pressable.ts:24"
+  },
+  {
+    "subpath": "./actions",
+    "name": "pressed",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Reflect the host's `[selected]` attribute to `aria-pressed` (`\"true\"` / `\"false\"`), kept in sync by a MutationObserver.",
+    "loc": "src/actions/pressed.ts:18"
+  },
+  {
+    "subpath": "./actions",
+    "name": "primeIconCache",
+    "kind": "function",
+    "signature": "(glyphs: Record<string, string>): void",
+    "doc": "",
+    "loc": "src/actions/icon.ts:24"
+  },
+  {
+    "subpath": "./actions",
+    "name": "radioGroup",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:radioGroup` — the L1 `<radio-group>` element's behavior. Native radios that share a `name` already give single selection, arrow-key roving, focus, and form submission for free; this action supplies the wiring CSS can't: - give every child <radio>'s inner <input> the shared group name + its own value + disabled (group [disabled] OR the radio's own), and check the one matching the group's `value`; - on a radio `change`, reflect the new value to the group's `value` attribute + a hidden <input> (form) and dispatch sail-change {value}; - aria-label / aria-required from the group. Tone/size are ordinary props: put them on the group (CSS custom properties inherit) and/or on each radio. Re-syncs when the group's attributes or its children change. Written once — no per-instance controller.",
+    "loc": "src/actions/radio-group.ts:20"
+  },
+  {
+    "subpath": "./actions",
+    "name": "rangeFill",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:rangeFill` — the ONE thing a native `<input type=\"range\">` can't draw on Chrome/WebKit: the filled portion of the track. Everything else (value, step, drag, keyboard, role=slider + aria-valuenow, form submission) is the platform's. This action mirrors the value into a `--rng-pct` custom property so RANGE_SKIN_CSS's webkit-track gradient fills to the thumb (Firefox already fills via ::-moz-range-progress). ~10 lines, no controller, compiles away.",
+    "loc": "src/actions/range-fill.ts:11"
+  },
+  {
+    "subpath": "./actions",
+    "name": "recoverySurface",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:recoverySurface` — the L1 `<error-state>` element's behavior. Surface, icon tile, and the details/toggle visibility are PURE CSS gated on the reserved `data-state` attribute (`has-details` / `open` tokens — group-state-*: in structure sx). This action supplies what CSS can't: - fill the code chip from the `code` attribute (re-synced on change); - detect whether the details region has content → stamp `data-state=\"has-details\"` so the Show/Hide toggle appears, and wire the toggle (label, aria-expanded, `open` token on data-state); - auto-focus the first action so the recovery control is reachable at once. Written once in the toolchain — no per-instance controller, compiles away.",
+    "loc": "src/actions/recovery-surface.ts:15"
+  },
+  {
+    "subpath": "./actions",
+    "name": "rect",
+    "kind": "function",
+    "signature": "(node: Element, param: BoxRect | null | undefined): void | ActionResult<BoxRect | null | undefined>",
+    "doc": "",
+    "loc": "src/actions/rect-box.ts:35"
+  },
+  {
+    "subpath": "./actions",
+    "name": "RectSpan",
+    "kind": "interface",
+    "signature": "export interface RectSpan { top: number | string | null height: number | string | null left: number | string | null width: number | string | null }",
+    "doc": "Rect-as-data — a positioned element's top/height/left/width. Concrete runtime geometry from time math (calendar) or coordinates (canvas / annotation / graph). All four are NUMBERS in px (or %); none of them are tokens (there is no token for \"3pm to 4pm\", no token for \"node at (200, 300)\"). The action writes each as a custom property; the consuming template reads them through the matching sx atoms:",
+    "loc": "src/actions/event-span.ts:22"
+  },
+  {
+    "subpath": "./actions",
+    "name": "spotlight",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "",
+    "loc": "src/actions/spotlight.ts:50"
+  },
+  {
+    "subpath": "./actions",
+    "name": "swatch",
+    "kind": "function",
+    "signature": "(node: Element, param: string | null | undefined): void | ActionResult<string | null | undefined>",
+    "doc": "`use:swatch={hex}` — runtime swatch background for sail-color-picker. The colour is user input (#3366ff or `oklch(...)`, whatever they typed); it is not a token. The action writes the value to `--swatch-color` verbatim. The consuming template reads it via sx=\"bg-(--swatch-color)\"",
+    "loc": "src/actions/zoom-pan.ts:77"
+  },
+  {
+    "subpath": "./actions",
+    "name": "syntaxHighlight",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:syntaxHighlight` — the `<code-block>` element's behavior.",
+    "loc": "src/actions/syntax-highlight.ts:18"
+  },
+  {
+    "subpath": "./actions",
+    "name": "tabs",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:tabs` — the L1 `<tabs>` element's behavior, in light DOM. Owns the whole subtree and queries descendant `.sail-tab` / `.sail-tab-panel` directly.",
+    "loc": "src/actions/tabs.ts:17"
+  },
+  {
+    "subpath": "./actions",
+    "name": "targetCursor",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "",
+    "loc": "src/actions/target-cursor.ts:89"
+  },
+  {
+    "subpath": "./actions",
+    "name": "themeSelect",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:themeSelect` — the `<theme-picker>` behavior: a trigger that opens a panel of theme cards.",
+    "loc": "src/actions/theme-select.ts:16"
+  },
+  {
+    "subpath": "./actions",
+    "name": "tipDescribe",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:tipDescribe` — the L1 `<tooltip>` element's behavior. Show/hide is pure CSS (group-hover / group-focus-within opacity on the bubble). This action supplies only what CSS can't alone: - placement geometry vars the bubble sx reads (box + arrow insets), - the bubble text (from the `content` attribute) + `aria-describedby` wiring from the trigger to the bubble, - Escape blurs the host to dismiss. Written once in the toolchain — no per-instance controller, compiles away.",
+    "loc": "src/actions/tip-describe.ts:71"
+  },
+  {
+    "subpath": "./actions",
+    "name": "toggleGroup",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:toggleGroup` — the L1 `<toggle-group>` element's behavior, light DOM. Owns the group ARIA (role=group + aria-orientation), roving tabindex, arrow nav (per orientation) + Home/End, click selection, and `value` sync. `type` = `single` (one value, deselectable) or `multiple` (space-separated set). Each `.sail-toggle` gets `aria-pressed`. Emits `sail-toggle-change`.",
+    "loc": "src/actions/toggle-group.ts:13"
+  },
+  {
+    "subpath": "./actions",
+    "name": "variantLive",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Observe `variant` and flip role/aria-live for connecting placeholders. Static defaults on the template (`role=note`, `aria-live=off`) keep the host inert before hydrate; this action only upgrades `connecting` and re-evaluates when the attribute changes.",
+    "loc": "src/actions/variant-live.ts:17"
+  },
+  {
+    "subpath": "./actions",
+    "name": "virtualRow",
+    "kind": "function",
+    "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
+    "doc": "`use:virtualRow={start}` — the runtime geometry of a virtualized row.",
+    "loc": "src/actions/virtual-row.ts:22"
+  },
+  {
+    "subpath": "./actions",
+    "name": "virtualSpacer",
+    "kind": "function",
+    "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
+    "doc": "`use:virtualSpacer={totalSize}` — the total-height spacer that gives the windowed list a scrollbar correct for its full size. The property it writes is the spacer's `--rows-h`, the size axis `height-(--rows-h)` reads.",
+    "loc": "src/actions/virtual-row.ts:42"
+  },
+  {
+    "subpath": "./actions",
     "name": "worldTransform",
     "kind": "function",
     "signature": "(node: Element, param: string | null | undefined): void | ActionResult<string | null | undefined>",
@@ -2246,12 +2390,20 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "loc": "src/actions/world-transform.ts:24"
   },
   {
-    "subpath": ".",
+    "subpath": "./actions",
     "name": "zoomPan",
     "kind": "function",
     "signature": "(node: Element, param: ZoomPanState | null | undefined): void | ActionResult<ZoomPanState | null | undefined>",
     "doc": "",
     "loc": "src/actions/zoom-pan.ts:22"
+  },
+  {
+    "subpath": "./actions",
+    "name": "ZoomPanState",
+    "kind": "interface",
+    "signature": "export interface ZoomPanState { x: number y: number scale: number }",
+    "doc": "`use:zoomPan={state}` — the live transform of a zoomed+panned image (sail-media-image). `state` carries the cursor-relative translate and scale; the action composes the CSS `transform` string and writes it as a custom property. The consuming element reads it via sx=\"transform-(--zoom-tx)\"",
+    "loc": "src/actions/zoom-pan.ts:16"
   },
   {
     "subpath": "./dev",
@@ -2268,6 +2420,2286 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(): void",
     "doc": "Bridge for callers that want to enable leak warnings inside a specific scope (e.g. tests). Calls `enableLeakWarn`; registers the disposer via `onCleanup` so the wrappers come down when the scope ends.",
     "loc": "src/scope-resource-warn.ts:224"
+  },
+  {
+    "subpath": "./framework",
+    "name": "__invalidate",
+    "kind": "function",
+    "signature": "(prefix: QueryKey): void",
+    "doc": "The compiler's lowering target for author-facing `invalidate(ref)` (see `invalidate-design-proposal.md`). Author source:",
+    "loc": "src/query.ts:317"
+  },
+  {
+    "subpath": "./framework",
+    "name": "__sui_motion_attach",
+    "kind": "function",
+    "signature": "(el: Element, config: MotionAttachConfig | (() => MotionAttachConfig)): Disposer",
+    "doc": "Attach a `motion:` directive.",
+    "loc": "src/motion.ts:790"
+  },
+  {
+    "subpath": "./framework",
+    "name": "__tpl",
+    "kind": "function",
+    "signature": "(html: string): () => Element",
+    "doc": "Compile an HTML string into a cloner. The compiler hoists one of these per static subtree to module scope, so the parse happens once per program — not once per component instance, and certainly not once per row.",
+    "loc": "src/tpl.ts:29"
+  },
+  {
+    "subpath": "./framework",
+    "name": "acquireScrollLock",
+    "kind": "function",
+    "signature": "(): void",
+    "doc": "",
+    "loc": "src/scroll-lock.ts:46"
+  },
+  {
+    "subpath": "./framework",
+    "name": "Action",
+    "kind": "type",
+    "signature": "export type Action<P = unknown> = ( node: Element, param: P, ) => ActionResult<P> | void",
+    "doc": "A reusable element behavior. Receives the node + optional param on mount.",
+    "loc": "src/action.ts:25"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ActionResult",
+    "kind": "interface",
+    "signature": "export interface ActionResult<P = unknown> { update?(param: P): void destroy?(): void }",
+    "doc": "What an action may return to hook into param changes and teardown.",
+    "loc": "src/action.ts:17"
+  },
+  {
+    "subpath": "./framework",
+    "name": "adoptSuiSheets",
+    "kind": "function",
+    "signature": "(root: unknown): void",
+    "doc": "",
+    "loc": "src/styles/index.ts:165"
+  },
+  {
+    "subpath": "./framework",
+    "name": "anchor",
+    "kind": "function",
+    "signature": "(node: Element, param: AnchorPlacement | undefined): void | ActionResult<AnchorPlacement | undefined>",
+    "doc": "Position a native popover next to its trigger. Repositions on open, scroll, and resize. `use:anchor` or `use:anchor={\"bottom-end\"}`.",
+    "loc": "src/actions/anchor.ts:44"
+  },
+  {
+    "subpath": "./framework",
+    "name": "AnchorPlacement",
+    "kind": "type",
+    "signature": "export type AnchorPlacement = | 'top' | 'top-end' | 'bottom' | 'bottom-end' | 'left' | 'left-end' | 'right' | 'right-end'",
+    "doc": "Placement of the floating element relative to its trigger.",
+    "loc": "src/actions/anchor.ts:26"
+  },
+  {
+    "subpath": "./framework",
+    "name": "annotationModeForRoute",
+    "kind": "function",
+    "signature": "(name: string): Signal<boolean>",
+    "doc": "",
+    "loc": "src/edit-mode.ts:118"
+  },
+  {
+    "subpath": "./framework",
+    "name": "applyPatch",
+    "kind": "function",
+    "signature": "<T>(sig: Signal<T>, patch: Patch): void",
+    "doc": "Apply one patch to `sig`. Reads the current value, walks the path, applies the op immutably (copy-on-write — unchanged subtrees keep reference equality), and writes the new root back via `sig.set`.",
+    "loc": "src/patch.ts:69"
+  },
+  {
+    "subpath": "./framework",
+    "name": "applyPatches",
+    "kind": "function",
+    "signature": "<T>(sig: Signal<T>, patches: Patch[]): void",
+    "doc": "Apply many patches as one atomic update. Patches run in order inside a `batch`, so subscribers fire exactly once at the end regardless of how many patches the array contains. No-op for empty arrays.",
+    "loc": "src/patch.ts:92"
+  },
+  {
+    "subpath": "./framework",
+    "name": "attachBoundary",
+    "kind": "function",
+    "signature": "(host: HTMLElement, handle: BoundaryHandle): void",
+    "doc": "Attach a boundary handle to its host element. Called from the boundary controller's `mount`.",
+    "loc": "src/error-boundary.ts:56"
+  },
+  {
+    "subpath": "./framework",
+    "name": "attachHostApi",
+    "kind": "function",
+    "signature": "(host: HTMLElement): void",
+    "doc": "Wire `host.emit` and `host.expose` onto a host element. Idempotent — called from `defineComponent`'s `connectedCallback` once per connect.",
+    "loc": "src/host-api.ts:103"
+  },
+  {
+    "subpath": "./framework",
+    "name": "autoDismiss",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Auto-dismiss after `duration` ms (attr). 0 / negative = sticky (no timer). Pause while hovered or focused so a reader is never cut off mid-read.",
+    "loc": "src/actions/auto-dismiss.ts:24"
+  },
+  {
+    "subpath": "./framework",
+    "name": "autosize",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Make a `<textarea>` grow to fit its content. Reflows on input and once on mount. `use:autosize` — no parameter.",
+    "loc": "src/actions/autosize.ts:19"
+  },
+  {
+    "subpath": "./framework",
+    "name": "batch",
+    "kind": "function",
+    "signature": "(fn: () => void): void",
+    "doc": "Group multiple signal writes into one notification cycle. Dependent effects are marked during `fn` and flushed exactly once when the outermost `batch` returns.",
+    "loc": "src/signal.ts:674"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindAttr",
+    "kind": "function",
+    "signature": "(el: Element, name: string, get: () => unknown): Disposer",
+    "doc": "Bind a reactive value to a DOM attribute, with attribute-presence semantics built in.",
+    "loc": "src/bind.ts:115"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindChecked",
+    "kind": "function",
+    "signature": "(el: HTMLInputElement, sig: Signal<boolean>): Disposer",
+    "doc": "Two-way bind a boolean signal to a checkbox or radio input. Signal writes set `el.checked`; the `change` event writes back into the signal.",
+    "loc": "src/bind.ts:268"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindDynamic",
+    "kind": "function",
+    "signature": "(el: Element, name: string, get: () => unknown): Disposer",
+    "doc": "Route a dynamic binding to the right channel so the AUTHOR never has to. This is the toolchain owning the DOM's attribute/property split: for a custom element, a value that can't be an attribute (object / array / function), or a name the element exposes as a property (a declared prop → accessor), is assigned as a PROPERTY — identity preserved; the component reflects it to an attribute itself if it wants (e.g. `variant`, `tone`). Everything else is a plain HTML attribute (aria-*, data-*, native).",
+    "loc": "src/bind.ts:185"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindFor",
+    "kind": "function",
+    "signature": "<T>(opts: BindForOptions<T>): Disposer",
+    "doc": "Bind a keyed list to the DOM after `opts.anchor`. The renderer is called once per new key; rows whose keys persist across renders keep their original nodes (and any focus / scroll / animation state).",
+    "loc": "src/for.ts:122"
+  },
+  {
+    "subpath": "./framework",
+    "name": "BindForOptions",
+    "kind": "interface",
+    "signature": "export interface BindForOptions<T> { anchor: Comment items: () => readonly T[] key: (item: T, index: number) => unknown render: (item: T, index: number) => RenderedItem }",
+    "doc": "Inputs to `bindFor` — what to iterate, how to identify items, and how to render them.",
+    "loc": "src/for.ts:20"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindForSignal",
+    "kind": "function",
+    "signature": "<T>(anchor: Comment, sig: Signal<readonly T[]>, key: (item: T, index: number) => unknown, render: (item: T, index: number) => RenderedItem): Disposer",
+    "doc": "Convenience wrapper around `bindFor` for the common case where the items source is a signal. Equivalent to `bindFor({ anchor, items: () => sig(), key, render })`.",
+    "loc": "src/for.ts:446"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindHostAttr",
+    "kind": "function",
+    "signature": "(host: Element, name: string, get: () => unknown): void",
+    "doc": "Reactive reflect of a value to a host attribute. Returning `null`, `undefined`, `false`, or `''` from `get` removes the attribute; `true` writes a presence-only attribute; anything else is stringified and assigned. Cleanup auto-registers with the active effect-scope.",
+    "loc": "src/host-api.ts:181"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindHtml",
+    "kind": "function",
+    "signature": "(el: Element, get: () => string): Disposer",
+    "doc": "Bind a reactive HTML/SVG string to an element's contents. The string is parsed once and morphed into `el` via `morph()` — DOM identity preserved where possible, so focus/scroll/selection survive updates.",
+    "loc": "src/bind.ts:311"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindIf",
+    "kind": "function",
+    "signature": "(opts: BindIfOptions): Disposer",
+    "doc": "Conditionally render one of N branches at `opts.anchor`. Branches are rendered lazily — only the selected branch's renderer is invoked. The previous branch's `cleanup` runs on swap, freeing its bindings.",
+    "loc": "src/if.ts:98"
+  },
+  {
+    "subpath": "./framework",
+    "name": "BindIfOptions",
+    "kind": "type",
+    "signature": "export type BindIfOptions = BindIfTwoBranchOptions | BindIfMultiBranchOptions",
+    "doc": "Public union — `bindIf` accepts either shape.",
+    "loc": "src/if.ts:62"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindNativeEvent",
+    "kind": "function",
+    "signature": "(target: EventTarget, event: string, handler: (event: Event) => void, opts?: AddEventListenerOptions | boolean): void",
+    "doc": "Add an event listener to `target` and register the matching removeEventListener as a cleanup with the active effect-scope.",
+    "loc": "src/host-api.ts:129"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindOpen",
+    "kind": "function",
+    "signature": "(el: HTMLDialogElement, sig: Signal<boolean>, opts?: DialogOptions): Disposer",
+    "doc": "Two-way bind a boolean signal to a native `<dialog>`'s MODAL state.",
+    "loc": "src/enhance-dialog.ts:46"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindPopover",
+    "kind": "function",
+    "signature": "(el: HTMLElement, sig: Signal<boolean>, opts?: PopoverOptions): Disposer",
+    "doc": "Two-way bind a boolean signal to a native popover's shown state.",
+    "loc": "src/enhance-popover.ts:36"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindProp",
+    "kind": "function",
+    "signature": "<T extends Element>(el: T, prop: string, get: () => unknown): Disposer",
+    "doc": "Bind a value to a JS property of an element (not an attribute). Use this when the target is a typed property — arrays, objects, instances — so the value flows through without an `attribute → string → parse` round-trip.",
+    "loc": "src/bind.ts:155"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindRawHtml",
+    "kind": "function",
+    "signature": "(el: Element, get: () => string, deps?: Signal<unknown>[]): Disposer",
+    "doc": "Replace `el.innerHTML` with the value of `get()` on every dependency change. **Author is responsible for sanitization** — this binding never escapes the value and is the only intended XSS surface in the runtime.",
+    "loc": "src/raw-html.ts:52"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindShow",
+    "kind": "function",
+    "signature": "(el: HTMLElement, get: () => unknown): Disposer",
+    "doc": "Toggle visibility based on a truthiness check. Falsy → `display:none`; truthy → restores the previous `display` value (preserving any inline value that was there before the binding hid the element).",
+    "loc": "src/bind.ts:72"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindSlotEmpty",
+    "kind": "function",
+    "signature": "(slot: HTMLSlotElement, host: HTMLElement, attrName: string): () => void",
+    "doc": "Wire `<slot>` emptiness to a host attribute.",
+    "loc": "src/slot-empty.ts:28"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindText",
+    "kind": "function",
+    "signature": "(node: Node, get: () => unknown): Disposer",
+    "doc": "Bind reactive text content to a node. Reads `get()` once eagerly and again on every tracked-dependency change; the result is coerced to a string and written to `node.textContent`. `null` and `undefined` become `''` so missing values don't leak the literal text.",
+    "loc": "src/bind.ts:36"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindValue",
+    "kind": "function",
+    "signature": "(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, sig: Signal<string>, onWrite?: (value: string) => void): Disposer",
+    "doc": "Two-way bind a string signal to an `<input>` / `<textarea>` / `<select>` element. Initial render and signal-driven updates flow signal → element; user edits flow element → signal via the `input` event. Setting the same value re-checks identity to avoid moving the caret.",
+    "loc": "src/bind.ts:227"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindWhileError",
+    "kind": "function",
+    "signature": "<E = Error>(opts: BindWhileErrorOptions<E>): Disposer",
+    "doc": "Mount `render(error)` while `signal().kind === 'error'`; unmount on transition to ok or loading. The error value is passed to `render` each time the branch is mounted.",
+    "loc": "src/while.ts:117"
+  },
+  {
+    "subpath": "./framework",
+    "name": "BindWhileErrorOptions",
+    "kind": "interface",
+    "signature": "export interface BindWhileErrorOptions<E = Error> { anchor: Comment signal: LiveSignal<unknown> render: (error: E) => BranchRender }",
+    "doc": "Inputs to `bindWhileError`.",
+    "loc": "src/while.ts:25"
+  },
+  {
+    "subpath": "./framework",
+    "name": "bindWhileLoading",
+    "kind": "function",
+    "signature": "(opts: BindWhileLoadingOptions): Disposer",
+    "doc": "Mount `render()` while `signal().kind === 'loading'`; unmount on transition to ok or error. The branch re-mounts if the signal returns to loading later (e.g. the source re-fires after a tracked dep change).",
+    "loc": "src/while.ts:73"
+  },
+  {
+    "subpath": "./framework",
+    "name": "BindWhileLoadingOptions",
+    "kind": "interface",
+    "signature": "export interface BindWhileLoadingOptions { anchor: Comment signal: LiveSignal<unknown> render: () => BranchRender }",
+    "doc": "Inputs to `bindWhileLoading`.",
+    "loc": "src/while.ts:15"
+  },
+  {
+    "subpath": "./framework",
+    "name": "BoundaryHandle",
+    "kind": "interface",
+    "signature": "export interface BoundaryHandle { catch(err: unknown, source: BoundarySource): void reset(): void }",
+    "doc": "The contract a `<sail-error-boundary>` element installs on its host via `attachBoundary`. The runtime consumes it via `.catch` when an inner throw is caught; authors may call `.reset()` programmatically to re-render the protected subtree.",
+    "loc": "src/error-boundary.ts:35"
+  },
+  {
+    "subpath": "./framework",
+    "name": "BoundarySource",
+    "kind": "type",
+    "signature": "export type BoundarySource = 'effect' | 'mount' | 'render' | 'unknown'",
+    "doc": "Origin of a caught error — surfaced via the boundary's `sail-error-boundary:caught` event so listeners can branch on whether the throw came from a re-run effect, a controller mount callback, or a render-time expression. `'unknown'` is the safety fallback when the call site couldn't classify the source.",
+    "loc": "src/error-boundary.ts:29"
+  },
+  {
+    "subpath": "./framework",
+    "name": "BoxRect",
+    "kind": "interface",
+    "signature": "export interface BoxRect { top?: number | string | null left?: number | string | null width?: number | string | null height?: number | string | null }",
+    "doc": "`use:rect={box}` — a positioned element's box (left/top/width/height).",
+    "loc": "src/actions/rect-box.ts:22"
+  },
+  {
+    "subpath": "./framework",
+    "name": "BranchRender",
+    "kind": "interface",
+    "signature": "export interface BranchRender { nodes: Node[] cleanup?: () => void }",
+    "doc": "One branch's rendered nodes plus an optional teardown. Returned by the `then_` / `else_` / `loading` / branch-render callbacks of every branching binding (`bindIf`).",
+    "loc": "src/if.ts:35"
+  },
+  {
+    "subpath": "./framework",
+    "name": "camelOf",
+    "kind": "function",
+    "signature": "(attr: string): string",
+    "doc": "Convert a kebab-case HTML attribute name to its camelCase prop name. Single-word attributes pass through unchanged.",
+    "loc": "src/component.ts:530"
+  },
+  {
+    "subpath": "./framework",
+    "name": "cancelTransitions",
+    "kind": "function",
+    "signature": "(node: Node): void",
+    "doc": "",
+    "loc": "src/transition-runner.ts:29"
+  },
+  {
+    "subpath": "./framework",
+    "name": "catchRender",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:catchRender` — the `<error-boundary>` element's behavior.",
+    "loc": "src/actions/catch-render.ts:21"
+  },
+  {
+    "subpath": "./framework",
+    "name": "cellPad",
+    "kind": "function",
+    "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
+    "doc": "`use:cellPad={indent}` — a first-column cell's `padding-inline-start`.",
+    "loc": "src/actions/virtual-row.ts:75"
+  },
+  {
+    "subpath": "./framework",
+    "name": "chromeOffset",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:chromeOffset` — publish the attached element's measured height as `--chrome-offset` on `:root`, kept fresh as the element reflows and on window resize. No parameter. Pairs with the `h:fill` size scale (`calc(100dvh - var(--chrome-offset, 0px))`).",
+    "loc": "src/actions/chrome-offset.ts:24"
+  },
+  {
+    "subpath": "./framework",
+    "name": "clearRegistry",
+    "kind": "function",
+    "signature": "(): void",
+    "doc": "Drop every registered hook. Test-only; production code should never call this. Built-in hook registration is module-load-time, so a `clearRegistry()` call in production strands `<use-*>` elements with no factory.",
+    "loc": "src/template-hooks/registry.ts:48"
+  },
+  {
+    "subpath": "./framework",
+    "name": "clearStoreSSRPayload",
+    "kind": "function",
+    "signature": "(): void",
+    "doc": "Server-side: drop the SSR payload — call at the END of a request, after the rendered HTML has been emitted. Defends against a slow request leaving its state in the next one's payload slot. Idempotent.",
+    "loc": "src/store.ts:130"
+  },
+  {
+    "subpath": "./framework",
+    "name": "clearThemeOverrides",
+    "kind": "function",
+    "signature": "(): void",
+    "doc": "Wipe ALL runtime theme overrides — both this session's previews and the committed overrides held in memory — and remove them from `:root`. Does NOT touch localStorage or the host backend (a full \"forget the persisted theme\" is `theme.commit({})` semantics plus a storage clear the host owns). Useful for a host tearing down / switching workspaces, and for test isolation.",
+    "loc": "src/theme.ts:217"
+  },
+  {
+    "subpath": "./framework",
+    "name": "clickOutside",
+    "kind": "function",
+    "signature": "(node: Element, param: (() => void) | undefined): void | ActionResult<(() => void) | undefined>",
+    "doc": "Call `onOutside` when a `pointerdown` occurs outside `node` (capture phase, so it beats inner handlers). The listener is added on the next microtask so the same press that opened the surface doesn't immediately dismiss it.",
+    "loc": "src/actions/click-outside.ts:18"
+  },
+  {
+    "subpath": "./framework",
+    "name": "clientRootScope",
+    "kind": "function",
+    "signature": "(): EffectScope",
+    "doc": "The shared per-document client root. Exposed so tests (and future bootstrap code that wants module-level `useStore` calls to share the element tree's root) can reach it.",
+    "loc": "src/element-scope.ts:57"
+  },
+  {
+    "subpath": "./framework",
+    "name": "Clients",
+    "kind": "interface",
+    "signature": "export interface Clients {}",
+    "doc": "",
+    "loc": "src/clients.ts:45"
+  },
+  {
+    "subpath": "./framework",
+    "name": "clock",
+    "kind": "function",
+    "signature": "(durationMs: number, options?: ClockOptions): ClockSignal",
+    "doc": "Drive progress from wall-clock time.",
+    "loc": "src/drivers.ts:115"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ClockOptions",
+    "kind": "interface",
+    "signature": "export interface ClockOptions { loop?: boolean | number direction?: 'normal' | 'reverse' | 'alternate' autoplay?: boolean reducedMotion?: 'end' | 'start' | 'play' }",
+    "doc": "",
+    "loc": "src/drivers.ts:45"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ClockSignal",
+    "kind": "interface",
+    "signature": "export interface ClockSignal extends Signal<number> { play(): void pause(): void stop(): void running(): boolean }",
+    "doc": "A progress signal with transport controls. It reads exactly like any other signal — `clock(3600)()` is a number in `0..1` — so it drops into `timeline()` and into `(--name)` reflection with no special-casing.",
+    "loc": "src/drivers.ts:72"
+  },
+  {
+    "subpath": "./framework",
+    "name": "combobox",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "",
+    "loc": "src/actions/combobox.ts:25"
+  },
+  {
+    "subpath": "./framework",
+    "name": "component",
+    "kind": "function",
+    "signature": "<Bindings>(setup: MountSetup<Bindings>): MountModule<Bindings> | <Bindings>(tag: string, def: ComponentDef<Bindings>, module: MountModule<Bindings>): void",
+    "doc": "`component(...)` — the one factory a compiled `.sail` exports. Two shapes, disjoint on the first argument so the compiler (and the rare direct caller) can never confuse them:",
+    "loc": "src/component-factory.ts:244"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ComponentDef",
+    "kind": "interface",
+    "signature": "export interface ComponentDef<Bindings = unknown> { styles?: string shadow?: boolean formAssociated?: boolean formValue?: string formDisabled?: string props: Record<string, PropDef<unknown>> setup?: (",
+    "doc": "Declarative shape passed to `component()`.",
+    "loc": "src/component-factory.ts:106"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ComponentExample",
+    "kind": "interface",
+    "signature": "export interface ComponentExample { name: string description?: string props?: Record<string, string | boolean | number> slots?: string }",
+    "doc": "",
+    "loc": "src/component-example.ts:13"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ComponentFactory",
+    "kind": "type",
+    "signature": "export type ComponentFactory = ( host: HTMLElement, propSignals: Record<string, Signal<unknown>>, internals?: ElementInternals, ) => Disposer",
+    "doc": "The factory the compiler emits per component. Receives the host element, a place to attach prop signals, and (for form-associated components) the ElementInternals instance attached at construction time. Returns a cleanup function that runs on disconnect.",
+    "loc": "src/component.ts:34"
+  },
+  {
+    "subpath": "./framework",
+    "name": "componentMountState",
+    "kind": "function",
+    "signature": "(scope: Record<string, unknown>): Record<string, unknown>",
+    "doc": "Component-mount state. The compiler emits `componentMountState($scope)` in place of a hand-rolled proxy. Behavior matches route-mount — one shape, one builder, no flag.",
+    "loc": "src/state-proxy.ts:113"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ComponentSchema",
+    "kind": "interface",
+    "signature": "export interface ComponentSchema { observedAttrs: string[] props: Record< string, { camel: string decode: (raw: string | null) => unknown } > formAssociated?: boolean }",
+    "doc": "Schema the compiler emits alongside the factory — drives prop decode + observed-attributes registration.",
+    "loc": "src/component.ts:61"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ComponentSetupContext",
+    "kind": "interface",
+    "signature": "export interface ComponentSetupContext { props: Record<string, Signal<unknown>> host: HTMLElement cleanups: Array<() => void> internals?: ElementInternals }",
+    "doc": "The setup callback's context. Mirrors `ComponentFactory` in shape.",
+    "loc": "src/component-factory.ts:91"
+  },
+  {
+    "subpath": "./framework",
+    "name": "contextKey",
+    "kind": "function",
+    "signature": "<T>(description: string): ContextKey<T>",
+    "doc": "Mint a typed context key. The phantom `__ctx` is for type inference only — it carries through `provideContext` / `injectContext` so the read site doesn't need an annotation.",
+    "loc": "src/effect-scope.ts:335"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ContextKey",
+    "kind": "type",
+    "signature": "export type ContextKey<T> = symbol & { readonly __ctx?: T }",
+    "doc": "Key for an arbitrary value held in a scope's `contexts` map. Use a `Symbol(...)` so the key can't collide with anything an author names. The non-store context API (`provideContext` / `injectContext`) is a thin layer over the same map stores use — reach for it when you need to share a value that ISN'T a setup-style store (a single ref, a logger handle, an ad-hoc client). For stateful shared logic, `defineStore` is the answer.",
+    "loc": "src/effect-scope.ts:330"
+  },
+  {
+    "subpath": "./framework",
+    "name": "contextMenu",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:contextMenu` — opens the L1 `<context-menu>` (a native `[popover]`) at the pointer on right-click. The menu's `for` attribute names the target element (or it defaults to the menu's parent); we suppress the native context menu, place the popover at the pointer, and show it. Item semantics/keyboard come from `use:menu`; light-dismiss + top-layer come from the native popover.",
+    "loc": "src/actions/context-menu.ts:10"
+  },
+  {
+    "subpath": "./framework",
+    "name": "controller",
+    "kind": "function",
+    "signature": "<Ctx, SC extends Record<string, unknown>>(fn: (init: ControllerScope<Ctx>, host?: Element) => SC): ControllerExport<Ctx & SC> & { __def: (init: ControllerScope<Ctx>, host?: Element) => SC; }",
+    "doc": "Author-facing helper. Wrap a setup function with `controller(fn)` to get a `{ setup, __def }` export the daemon's hydrate path can call directly, with `Ctx`/`SC` inferred from `fn` — no explicit type argument, no currying.",
+    "loc": "src/controller-resolver.ts:125"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ControllerDef",
+    "kind": "type",
+    "signature": "export type ControllerDef<Scope = object> = ( init: ControllerScope<Scope>, host?: Element, ) => Record<string, unknown>",
+    "doc": "A controller def as the resolver sees it: the setup function, untyped (the precise `Ctx`/`SC` inference lives on the `controller()` overload in `controller-resolver.ts`, not here).",
+    "loc": "src/controller.ts:183"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ControllerExport",
+    "kind": "interface",
+    "signature": "export interface ControllerExport<Scope = object> { setup: (ctx: ResolverContext) => ResolvedBindings __def: ControllerDef<Scope> }",
+    "doc": "The shape `controller(setup)` returns — a setup-shaped export the daemon's hydrate path consumes verbatim. The daemon extracts `.setup` and calls it with a `ResolverContext` (built from the hydrate flow); `setup` runs the resolver and returns flat bindings the template merges into scope.",
+    "loc": "src/controller-resolver.ts:84"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ControllerScope",
+    "kind": "type",
+    "signature": "export type ControllerScope<Scope = object> = Scope",
+    "doc": "The controller's scope — now IDENTICAL to the generated `Scope`.",
+    "loc": "src/controller.ts:137"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ControllerSetup",
+    "kind": "type",
+    "signature": "export type ControllerSetup<Ctx, SC extends Record<string, unknown>> = ( init: Ctx, host?: Element, ) => SC",
+    "doc": "The controller def: ONE setup function. It receives the route scope (`clients`, `route`, `navigate`, plus template-declared live envelope signals) and, optionally, the host element; it returns the surface the template merges into scope — signals, `derived()` values, plain helpers, and event handlers alike, all as ordinary object properties.",
+    "loc": "src/controller.ts:175"
+  },
+  {
+    "subpath": "./framework",
+    "name": "createChildScope",
+    "kind": "function",
+    "signature": "(parent?: EffectScope): EffectScope",
+    "doc": "Create a child scope owned by `parent` (or the current scope if `parent` is omitted). The child auto-disposes when its owner disposes — registered as a cleanup at creation. Use when you need a sub-lifecycle inside a mount: e.g. a hook that tears down its own resources independently of the outer route but should still clean up if the route unmounts first.",
+    "loc": "src/effect-scope.ts:232"
+  },
+  {
+    "subpath": "./framework",
+    "name": "createMountState",
+    "kind": "function",
+    "signature": "(scope: Record<string, unknown>, signals: Record<string, Signal<unknown>>): Record<string, unknown>",
+    "doc": "Build the canonical writable-state proxy over `scope`. `signals` is the writable-signal subset of `scope` (drives `$signals`, set-routing, and key enumeration). Reads of signal keys return the unwrapped value; writes route through `signal.set`.",
+    "loc": "src/state-proxy.ts:40"
+  },
+  {
+    "subpath": "./framework",
+    "name": "createScope",
+    "kind": "function",
+    "signature": "(): EffectScope",
+    "doc": "Create a fresh, top-level scope. Most allocators don't need this — they call `onCleanup` to enroll on whatever scope `mount()` set up. Reach for `createScope` only when you're authoring a HOST (`mount.ts` is the canonical example) that owns a scope.",
+    "loc": "src/effect-scope.ts:148"
+  },
+  {
+    "subpath": "./framework",
+    "name": "currentScope",
+    "kind": "function",
+    "signature": "(): EffectScope | null",
+    "doc": "The active scope, or `null` if no `withScope` is currently on the stack. Diagnostic / advanced use only — most callers should use `onCleanup` directly.",
+    "loc": "src/effect-scope.ts:140"
+  },
+  {
+    "subpath": "./framework",
+    "name": "data",
+    "kind": "function",
+    "signature": "<T>(opts: DataOpts<T>): DataHandle<T>",
+    "doc": "Create a server-owned reactive signal that can subscribe to SSE patches. If `subscribe` is provided and an `EventSource` impl is available, opens the stream and routes `patch` events through `applyPatch` (or `onPatch` when supplied) into the signal.",
+    "loc": "src/data.ts:66"
+  },
+  {
+    "subpath": "./framework",
+    "name": "DataHandle",
+    "kind": "interface",
+    "signature": "export interface DataHandle<T> { signal: Signal<T> dispose: () => void }",
+    "doc": "The handle returned by `data()`: the live signal plus a disposer.",
+    "loc": "src/data.ts:33"
+  },
+  {
+    "subpath": "./framework",
+    "name": "DataOpts",
+    "kind": "interface",
+    "signature": "export interface DataOpts<T> { initial: T subscribe?: string onPatch?: (patch: Patch, sig: Signal<T>) => void onError?: (err: unknown) => void EventSource?: typeof globalThis.EventSource }",
+    "doc": "Options for `data()` — initial value plus SSE/patch wiring.",
+    "loc": "src/data.ts:16"
+  },
+  {
+    "subpath": "./framework",
+    "name": "debounce",
+    "kind": "function",
+    "signature": "<T>(input: Signal<T>, ms: number): Signal<T>",
+    "doc": "A signal that lags `input` by `ms` milliseconds. Each write to `input` restarts the timer; the returned signal only updates after `ms` have elapsed without further writes.",
+    "loc": "src/signal.ts:730"
+  },
+  {
+    "subpath": "./framework",
+    "name": "decodeBoolean",
+    "kind": "function",
+    "signature": "(raw: string | null): boolean",
+    "doc": "Boolean decoder using HTML attribute-presence semantics.",
+    "loc": "src/decode.ts:67"
+  },
+  {
+    "subpath": "./framework",
+    "name": "decodeEnum",
+    "kind": "function",
+    "signature": "<T extends string>(allowed: readonly T[], fallback: T): Decoder<T>",
+    "doc": "Build a decoder that allows only a fixed set of string literals. Anything outside the allowed list (including `null`) decodes to `fallback` — useful for variant props like `size` or `tone`.",
+    "loc": "src/decode.ts:118"
+  },
+  {
+    "subpath": "./framework",
+    "name": "decodeJson",
+    "kind": "function",
+    "signature": "<T>(fallback: T): Decoder<T>",
+    "doc": "Build a decoder that parses JSON from an attribute. Empty / missing attributes and parse errors both yield `fallback`, so prop signals never carry `undefined` and never throw on bad input.",
+    "loc": "src/decode.ts:91"
+  },
+  {
+    "subpath": "./framework",
+    "name": "decodeNumber",
+    "kind": "function",
+    "signature": "(raw: string | null): number",
+    "doc": "Number decoder. Empty or missing attributes decode to `NaN` — let the author guard with `Number.isNaN` rather than silently choosing `0`.",
+    "loc": "src/decode.ts:43"
+  },
+  {
+    "subpath": "./framework",
+    "name": "Decoder",
+    "kind": "type",
+    "signature": "export type Decoder<T> = (raw: string | null) => T",
+    "doc": "Function that turns a raw HTML attribute string (or `null` for an absent attribute) into the typed value the script block expects. Each `Decoder<T>` is a pure function — no side effects, no DOM reads.",
+    "loc": "src/decode.ts:12"
+  },
+  {
+    "subpath": "./framework",
+    "name": "decodeString",
+    "kind": "function",
+    "signature": "(raw: string | null): string",
+    "doc": "Identity-style decoder. `null` (missing attribute) decodes to `''` so prop signals never carry `null` for string-typed props.",
+    "loc": "src/decode.ts:27"
+  },
+  {
+    "subpath": "./framework",
+    "name": "defineComponent",
+    "kind": "function",
+    "signature": "(tag: string, schema: ComponentSchema, factory: ComponentFactory): void",
+    "doc": "",
+    "loc": "src/component.ts:132"
+  },
+  {
+    "subpath": "./framework",
+    "name": "defineStore",
+    "kind": "function",
+    "signature": "<Shape>(id: string, setup: () => Shape): StoreDef<Shape>",
+    "doc": "Define a store. Pure registration: returns a `StoreDef`; no instance is created until something calls `useStore(def)`.",
+    "loc": "src/store.ts:98"
+  },
+  {
+    "subpath": "./framework",
+    "name": "delegateEvents",
+    "kind": "function",
+    "signature": "(names: readonly string[]): void",
+    "doc": "Ensure a root-level listener exists for each named event. Idempotent — the compiler emits one call per module and repeated names are ignored.",
+    "loc": "src/delegate.ts:39"
+  },
+  {
+    "subpath": "./framework",
+    "name": "derived",
+    "kind": "function",
+    "signature": "<T>(fn: () => T): Derived<T>",
+    "doc": "Create a memoized computed value. `fn` runs on first read to seed the cache, then recomputes on demand when a tracked dependency changes.",
+    "loc": "src/signal.ts:458"
+  },
+  {
+    "subpath": "./framework",
+    "name": "Derived",
+    "kind": "interface",
+    "signature": "export interface Derived<T> extends Signal<T> {}",
+    "doc": "A memoized computed — reads its dependencies on first access and recomputes lazily when any of them change. Behaves as a read-only signal: callable getter, callable from inside other reactive scopes. Calling `.set` on a derived throws.",
+    "loc": "src/signal.ts:429"
+  },
+  {
+    "subpath": "./framework",
+    "name": "describedControl",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:describedControl` — form control ↔ hint/error association for any host with `.hint` / `.error` / `.control` anatomy. The hint↔error visibility swap is pure CSS; this action wires accessibility: give the hint and error regions stable ids, then point the first slotted control's aria-describedby at the active region (hint when valid, error when [invalid]) and set aria-invalid to match. Re-wires when [invalid] toggles or the control changes. Written once — no per-instance controller, compiles away. The L1 `<field>` stamps this.",
+    "loc": "src/actions/described-control.ts:15"
+  },
+  {
+    "subpath": "./framework",
+    "name": "detachBoundary",
+    "kind": "function",
+    "signature": "(host: HTMLElement): void",
+    "doc": "Remove the boundary handle from its host. Called on `unmount`.",
+    "loc": "src/error-boundary.ts:61"
+  },
+  {
+    "subpath": "./framework",
+    "name": "detailsDisabled",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "While the host has `[disabled]`, suppress activation paths native <details>/<summary> would otherwise honor: click + Enter/Space, both in capture so the default toggle never runs.",
+    "loc": "src/actions/details-disabled.ts:14"
+  },
+  {
+    "subpath": "./framework",
+    "name": "detailsToggle",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Re-emit the native `toggle` event as a composed `sail-toggle` with `{ open: el.open }` so hosts can sync a bound signal. The browser owns open/close, keyboard, focus, and ARIA — this only bridges the event.",
+    "loc": "src/actions/details-toggle.ts:14"
+  },
+  {
+    "subpath": "./framework",
+    "name": "DialogOptions",
+    "kind": "interface",
+    "signature": "export interface DialogOptions { dismissible?: boolean }",
+    "doc": "Options for {@link bindOpen}.",
+    "loc": "src/enhance-dialog.ts:15"
+  },
+  {
+    "subpath": "./framework",
+    "name": "dismissControl",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Click on a descendant close control dismisses the host: composed dismiss event, then `el.remove()`. Toast → `sail-toast-dismiss` (no dismissible gate). Alert / other → `sail-dismiss`, only while `[dismissible]`.",
+    "loc": "src/actions/dismiss-control.ts:27"
+  },
+  {
+    "subpath": "./framework",
+    "name": "dismissible",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Emit `sail-remove` (bubbles, composed) from a removable host:",
+    "loc": "src/actions/dismissible.ts:23"
+  },
+  {
+    "subpath": "./framework",
+    "name": "Disposer",
+    "kind": "type",
+    "signature": "export type Disposer = () => void",
+    "doc": "Cleanup function returned by every `bind*` helper and `effect`. Calling it detaches the binding's listeners and stops further updates.",
+    "loc": "src/bind.ts:14"
+  },
+  {
+    "subpath": "./framework",
+    "name": "dropzone",
+    "kind": "function",
+    "signature": "(node: Element, param: undefined): void | ActionResult<undefined>",
+    "doc": "Wire click-to-browse + drag-and-drop onto a container holding an `<input type=\"file\">`.",
+    "loc": "src/actions/dropzone.ts:24"
+  },
+  {
+    "subpath": "./framework",
+    "name": "editModeForRoute",
+    "kind": "function",
+    "signature": "(name: string): Signal<boolean>",
+    "doc": "Return the (memoized) Signal<boolean> for whether edit-mode is on for `name`. Subsequent calls with the same name return the same signal instance. Always starts OFF on first access; a hard reload resets every route to off.",
+    "loc": "src/edit-mode.ts:70"
+  },
+  {
+    "subpath": "./framework",
+    "name": "effect",
+    "kind": "function",
+    "signature": "(fn: () => void | (() => void)): () => void",
+    "doc": "Run `fn` once eagerly, then re-run on every tracked dependency change. Returns a disposer that unsubscribes and stops further runs.",
+    "loc": "src/signal.ts:521"
+  },
+  {
+    "subpath": "./framework",
+    "name": "EffectScope",
+    "kind": "interface",
+    "signature": "export interface EffectScope { cleanup(fn: () => void): void registerMount(fn: (el: HTMLElement) => (() => void) | void): void runMounts(el: HTMLElement): void dispose(): void readonly disposed: boole",
+    "doc": "A unit of resource ownership. Cleanups registered while the scope is the current scope (via `withScope`) run when the scope is disposed.",
+    "loc": "src/effect-scope.ts:48"
+  },
+  {
+    "subpath": "./framework",
+    "name": "elementScopeOf",
+    "kind": "function",
+    "signature": "(el: Element): EffectScope | null",
+    "doc": "The live element scope stamped on `el`, or `null` when `el` is not a connected sail host (or its scope already disposed).",
+    "loc": "src/element-scope.ts:74"
+  },
+  {
+    "subpath": "./framework",
+    "name": "emit",
+    "kind": "function",
+    "signature": "<T = unknown>(host: EventTarget, name: string, detail?: T): void",
+    "doc": "Dispatch a `CustomEvent` from `host` with `bubbles+composed` defaulted true. Free-function form of `host.emit` — useful when the host reference isn't typed as `HTMLElement` (e.g. `Element` from a generic ref).",
+    "loc": "src/host-api.ts:60"
+  },
+  {
+    "subpath": "./framework",
+    "name": "eventSpan",
+    "kind": "function",
+    "signature": "(node: Element, param: RectSpan | null | undefined): void | ActionResult<RectSpan | null | undefined>",
+    "doc": "",
+    "loc": "src/actions/event-span.ts:41"
+  },
+  {
+    "subpath": "./framework",
+    "name": "expose",
+    "kind": "function",
+    "signature": "(host: HTMLElement, methods: Record<string, (...args: never[]) => unknown>): void",
+    "doc": "Attach `methods` to `host` and register a cleanup to delete them on the next scope disposal. Free-function form of `host.expose`.",
+    "loc": "src/host-api.ts:66"
+  },
+  {
+    "subpath": "./framework",
+    "name": "filteredList",
+    "kind": "function",
+    "signature": "<T>(source: ListSource<T>, matches?: (item: T, query: string) => boolean): { query: Signal<string>; filtered: () => T[]; setQuery: (q: string) => void; clear: () => void; }",
+    "doc": "`filteredList(source, matches)` — a query signal over a list.",
+    "loc": "src/compositions/filtered-list.ts:49"
+  },
+  {
+    "subpath": "./framework",
+    "name": "findNearestBoundary",
+    "kind": "function",
+    "signature": "(node: Node | null): BoundaryHandle | null",
+    "doc": "Walk up the DOM from `node` until the nearest element carrying a `BoundaryHandle` is found, or the root is reached. L1 is light DOM. Residual: when the walk hits a `ShadowRoot` (foreign-content wrapper), continues from the host so a boundary outside that tree still catches inner throws.",
+    "loc": "src/error-boundary.ts:78"
+  },
+  {
+    "subpath": "./framework",
+    "name": "focusableWithin",
+    "kind": "function",
+    "signature": "(root: ParentNode): HTMLElement[]",
+    "doc": "",
+    "loc": "src/scroll-lock.ts:13"
+  },
+  {
+    "subpath": "./framework",
+    "name": "FocusReturn",
+    "kind": "class",
+    "signature": "typeof FocusReturn",
+    "doc": "",
+    "loc": "src/scroll-lock.ts:30"
+  },
+  {
+    "subpath": "./framework",
+    "name": "form",
+    "kind": "function",
+    "signature": "<T extends Record<string, unknown>>(opts: FormOptions<T>): { fields: { [K in keyof T]: Signal<T[K]>; }; values: () => T; errors: () => Partial<Record<keyof T, string | null>>; valid: () => boolean; dirty: () => boolean; pending: () => boolean; lastError: () => Error | null; reset: () => void; submit: (e?: Event) => Promise<void>; }",
+    "doc": "`form({ initial, validate, submit })` — field signals, validation, submit state.",
+    "loc": "src/compositions/form.ts:35"
+  },
+  {
+    "subpath": "./framework",
+    "name": "FormOptions",
+    "kind": "interface",
+    "signature": "export interface FormOptions<T extends Record<string, unknown>> { initial: T | (() => T) validate?: (values: T) => Partial<Record<keyof T, string | null>> submit?: (values: T) => unknown | Promise<unk",
+    "doc": "",
+    "loc": "src/compositions/form.ts:4"
+  },
+  {
+    "subpath": "./framework",
+    "name": "getTemplateHook",
+    "kind": "function",
+    "signature": "(name: string): TemplateHook<Record<string, unknown>, unknown> | undefined",
+    "doc": "Look up a template hook by `<use-<name>>` tag suffix. Returns `undefined` if no hook is registered under that name.",
+    "loc": "src/template-hooks/registry.ts:36"
+  },
+  {
+    "subpath": "./framework",
+    "name": "gridTracks",
+    "kind": "function",
+    "signature": "(node: Element, param: string | null | undefined): void | ActionResult<string | null | undefined>",
+    "doc": "`use:gridTracks={tracks}` — runtime grid-template-columns/rows string.",
+    "loc": "src/actions/grid-tracks.ts:18"
+  },
+  {
+    "subpath": "./framework",
+    "name": "hostContext",
+    "kind": "function",
+    "signature": "(): HostContext",
+    "doc": "Read the current host context. Empty object when no host registered one (a non-shell host, or tests) — callers supply their own fallback.",
+    "loc": "src/host-context.ts:40"
+  },
+  {
+    "subpath": "./framework",
+    "name": "HostContext",
+    "kind": "interface",
+    "signature": "export interface HostContext { spaceId?: string sessionId?: string editModeTransport?: (name: string, action: 'enter' | 'exit') => void | Promise<void> }",
+    "doc": "Ambient host facts the runtime may read. All optional — a host that doesn't know a value omits it, and the runtime falls back.",
+    "loc": "src/host-context.ts:19"
+  },
+  {
+    "subpath": "./framework",
+    "name": "hoverSurface",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:hoverSurface` — opens the L1 `<hover-card>` (a native `[popover]`) on hover or focus of its trigger (the element whose `popovertarget` names it), with open/close delays so it doesn't flicker. Positioning is `use:anchor`'s job; top-layer + light-dismiss are the native popover's.",
+    "loc": "src/actions/hover-surface.ts:9"
+  },
+  {
+    "subpath": "./framework",
+    "name": "hydrateStoreSSRPayload",
+    "kind": "function",
+    "signature": "(): void",
+    "doc": "Ingest the SSR payload from the global. Client-side: call once at app bootstrap (BEFORE the first `useStore`). Idempotent — safe to call more than once; the second call replaces the current payload (a no-op if no global exists).",
+    "loc": "src/store.ts:380"
+  },
+  {
+    "subpath": "./framework",
+    "name": "hydrateTheme",
+    "kind": "function",
+    "signature": "(): void",
+    "doc": "Rehydrate committed overrides from localStorage and apply them to `:root`. The live-persistence boot step: a host's pre-paint script calls this so a committed live-preview survives a reload (the dev path needs no boot — the theme data file IS the source, and HMR re-themes). Safe to call server-side (no-op) and idempotent.",
+    "loc": "src/theme.ts:234"
+  },
+  {
+    "subpath": "./framework",
+    "name": "icon",
+    "kind": "function",
+    "signature": "(node: Element): { destroy: () => void; }",
+    "doc": "",
+    "loc": "src/actions/icon.ts:50"
+  },
+  {
+    "subpath": "./framework",
+    "name": "injectContext",
+    "kind": "function",
+    "signature": "<T>(key: ContextKey<T>, scope?: EffectScope): T | null",
+    "doc": "Look up a value published via `provideContext`. Walks the parent chain, returning the nearest match. Returns `null` when no scope on the chain has a value under `key` — same null-vs- throw choice the old `useShared` made (callers guard with `if (v)` / controller-side null checks). The TS narrowing comes from the `ContextKey<T>` phantom, so the result IS `T`, not `T | null` — the null collapses only at the call site where it matters.",
+    "loc": "src/effect-scope.ts:357"
+  },
+  {
+    "subpath": "./framework",
+    "name": "isSignal",
+    "kind": "function",
+    "signature": "(v: unknown): v is Signal<unknown>",
+    "doc": "The one signal type-guard. A signal is a callable getter carrying a `.set` writer. This is the single source of truth — controller-resolver, mount, ref, and the mount-state proxy all import it rather than re-deriving the shape (which had drifted into 2-check and 3-check copies).",
+    "loc": "src/signal.ts:172"
+  },
+  {
+    "subpath": "./framework",
+    "name": "KbdShortcut",
+    "kind": "interface",
+    "signature": "export interface KbdShortcut { key: string action: string }",
+    "doc": "A single `<on key=\"...\" action=\"...\" />` record inside `<use-kbd>`.",
+    "loc": "src/template-hooks/kbd.ts:23"
+  },
+  {
+    "subpath": "./framework",
+    "name": "listRegisteredHooks",
+    "kind": "function",
+    "signature": "(): string[]",
+    "doc": "Iterate registered hooks (for diagnostics / introspection).",
+    "loc": "src/template-hooks/registry.ts:55"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ListSource",
+    "kind": "type",
+    "signature": "export type ListSource<T> = T[] | (() => unknown)",
+    "doc": "A list source: a plain array, a `Signal<T[]>`, a `derived(() => T[])`, or any tracked callable returning one — including a live envelope around one, which is what a live `query()` hands you.",
+    "loc": "src/compositions/filtered-list.ts:9"
+  },
+  {
+    "subpath": "./framework",
+    "name": "liveRegion",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Sync host `role` / `aria-live` from the `tone` attribute. Urgent tones (`warning`, `destructive`) become an assertive alert; everything else stays status/polite. Observes `tone` so flips re-evaluate immediately.",
+    "loc": "src/actions/live-region.ts:15"
+  },
+  {
+    "subpath": "./framework",
+    "name": "LiveSignal",
+    "kind": "type",
+    "signature": "export type LiveSignal<T> = Signal<LiveState<T>>",
+    "doc": "A signal that carries the `LiveState<T>` lifecycle.",
+    "loc": "src/live-state.ts:29"
+  },
+  {
+    "subpath": "./framework",
+    "name": "LiveSource",
+    "kind": "interface",
+    "signature": "export interface LiveSource<T> { subscribe: (sig: LiveSignal<T>) => () => void }",
+    "doc": "Source shape for a PUSH data source (SSE / wss / an SDK live store). `subscribe` takes ownership of the live signal: it transitions to `ok` on the first push, applies subsequent pushes, and may transition to `error` on transport failure. The returned disposer closes the connection.",
+    "loc": "src/live-state.ts:44"
+  },
+  {
+    "subpath": "./framework",
+    "name": "LiveState",
+    "kind": "type",
+    "signature": "export type LiveState<T> = | { kind: 'loading' } | { kind: 'error'; error: Error } | { kind: 'ok'; value: T }",
+    "doc": "The lifecycle of a live/queried value — the frozen three-state union `query()` reads out, whether the entry is fed by a one-shot pull or a streaming push. Never a fourth shape.",
+    "loc": "src/live-state.ts:23"
+  },
+  {
+    "subpath": "./framework",
+    "name": "LiveValueOf",
+    "kind": "type",
+    "signature": "export type LiveValueOf<R> = R extends LiveSource<infer U> ? U : Awaited<R>",
+    "doc": "The value a client method call yields, unwrapping the push/pull union: a `LiveSource<U>` yields `U`, a `Promise<U>` yields `U`, else the value itself. The compiler-generated `Scope` uses this to type a `query()` signal's payload from its client method's declared return — e.g. `feed.clock(): LiveSource<Tick>` ⇒ `LiveValueOf<ReturnType<…>> = Tick`.",
+    "loc": "src/live-state.ts:55"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ManifestRail",
+    "kind": "type",
+    "signature": "export type ManifestRail = { label: string | null; icon: string | null }",
+    "doc": "Route identity for the shell rail / launcher.",
+    "loc": "src/generated.d.ts:29"
+  },
+  {
+    "subpath": "./framework",
+    "name": "markHydrateAttr",
+    "kind": "function",
+    "signature": "(el: Element, name: string, key: string): void",
+    "doc": "Tag an element with a hydration marker attribute. Names are the SSR wire format (`on:event`, `attr:name`, `prop:name`, `bind:value`, `bind:checked`, `bind:this`, `attr-dynamic`, `mutation`) — backend mechanism strings, not author directives. Server-DOM serialization sets the attribute on the element; browser DOM ignores.",
+    "loc": "src/hydrate-mark.ts:70"
+  },
+  {
+    "subpath": "./framework",
+    "name": "markHydrateBoundary",
+    "kind": "function",
+    "signature": "(el: Element, key: string): void",
+    "doc": "Tag a control-flow boundary wrapper element. The synthetic render inserts `<sail-{if,for,match,await,while-loading,while-error}>` comment or element wrappers around each branch's children; this stamps the key onto the wrapper so the client's `collectElementMarkers` picks it up via the `key=\"bN\"` attribute (matches the walker contract).",
+    "loc": "src/hydrate-mark.ts:84"
+  },
+  {
+    "subpath": "./framework",
+    "name": "markHydrateText",
+    "kind": "function",
+    "signature": "(node: Text, key: string): void",
+    "doc": "Tag a text node with its hydration key. Server-DOM serialization wraps the node in `<!--sail:text:bN-->...<!--/sail-->`; browser DOM ignores. `key` is the `b<N>` string the synthetic emitter's binding registry allocated for this dynamic text position.",
+    "loc": "src/hydrate-mark.ts:54"
+  },
+  {
+    "subpath": "./framework",
+    "name": "marquee",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "",
+    "loc": "src/actions/marquee.ts:44"
+  },
+  {
+    "subpath": "./framework",
+    "name": "matchesKey",
+    "kind": "function",
+    "signature": "(e: KeyboardEvent, spec: string): boolean",
+    "doc": "Match a keyboard event against a `key:` modifier spec. Used inside `on` to gate `keydown`/`keyup` handlers; exposed for components that need the same matching semantics outside of declarative bindings.",
+    "loc": "src/on.ts:176"
+  },
+  {
+    "subpath": "./framework",
+    "name": "maxWidth",
+    "kind": "function",
+    "signature": "(node: Element, param: string | number | null | undefined): void | ActionResult<string | number | null | undefined>",
+    "doc": "`use:maxWidth={px}` — runtime max-width (e.g. a viewer stage sized to the host viewport minus chrome). A value the user resized to, not a design decision. Writes `--max-w`; the consuming template uses sx=\"max-w-(--max-w)\"",
+    "loc": "src/actions/zoom-pan.ts:49"
+  },
+  {
+    "subpath": "./framework",
+    "name": "mediaFallback",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:mediaFallback` — the L1 `<avatar>` element's behavior, written once in the toolchain (no per-instance controller). It reads `src` / `icon-slug` / `name` / `initials` off the element's OWN attributes (which merge onto the compiles-away root) and renders either an `<img>` — falling back to initials when the image is absent or fails to load — or the initials directly. The frame (circle/square, tone, size) is the skin; this is the behavior layer.",
+    "loc": "src/actions/media-fallback.ts:14"
+  },
+  {
+    "subpath": "./framework",
+    "name": "menu",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:menu` — menu semantics + keyboard for the L1 `<dropdown>` / `<context-menu>` content (a native `[popover]`). Wires role=menu / menuitem, roving focus (ArrowUp/Down, Home/End), Escape to close, focuses the first item on open, and closes after activating an item. Positioning is `use:anchor`'s job; open/close and light-dismiss are the native popover's.",
+    "loc": "src/actions/menu.ts:20"
+  },
+  {
+    "subpath": "./framework",
+    "name": "Modifier",
+    "kind": "interface",
+    "signature": "export interface Modifier { kind: | 'preventDefault' | 'stopPropagation' | 'stopImmediatePropagation' | 'self' | 'trusted' | 'key' | 'debounce' | 'throttle' arg?: string }",
+    "doc": "One pre-handler effect: filter, transform, or rate-limit. Modifiers compose in order; the parsed list is what `on` receives via `OnOptions.modifiers`.",
+    "loc": "src/on.ts:28"
+  },
+  {
+    "subpath": "./framework",
+    "name": "morph",
+    "kind": "function",
+    "signature": "(target: Element, source: string | Element, opts?: MorphOptions): void",
+    "doc": "Reconcile the contents of `target` to match `source` in-place, preserving DOM identity where possible (focus, scroll, selection, custom-element state, animations).",
+    "loc": "src/morph.ts:50"
+  },
+  {
+    "subpath": "./framework",
+    "name": "MorphOptions",
+    "kind": "interface",
+    "signature": "export interface MorphOptions { skip?: (el: Element) => boolean }",
+    "doc": "Options that control which subtrees `morph` will descend into.",
+    "loc": "src/morph.ts:18"
+  },
+  {
+    "subpath": "./framework",
+    "name": "MotionAttachConfig",
+    "kind": "interface",
+    "signature": "export interface MotionAttachConfig { trigger: string motions: MotionConfig[] stagger?: number }",
+    "doc": "Per-call attach config the compiler emits.",
+    "loc": "src/motion.ts:84"
+  },
+  {
+    "subpath": "./framework",
+    "name": "MotionConfig",
+    "kind": "interface",
+    "signature": "export interface MotionConfig { property: 'scale' | 'scale-x' | 'scale-y' | 'opacity' | 'translate-y' | 'translate-x' | 'rotate' preset: string kind: 'spring' | 'tween' stiffness?: number damping?: nu",
+    "doc": "Per-property motion config the compiler emits.",
+    "loc": "src/motion.ts:58"
+  },
+  {
+    "subpath": "./framework",
+    "name": "mount",
+    "kind": "function",
+    "signature": "<Scope = Record<string, unknown>>(target: HTMLElement, payloadOrName: RoutePayload<Scope> | string, opts?: MountOptions): Promise<MountHandle<Scope>>",
+    "doc": "Mount a route into a DOM target.",
+    "loc": "src/mount.ts:113"
+  },
+  {
+    "subpath": "./framework",
+    "name": "mountAmbient",
+    "kind": "function",
+    "signature": "(fn: (el: HTMLElement) => (() => void) | void): void",
+    "doc": "Ambient lifecycle: register `fn` to run once the current instance's DOM is connected. `fn` receives the host element and may return a cleanup — sync, or a promise resolving to one — that disposes with the instance (its owning scope).",
+    "loc": "src/effect-scope.ts:131"
+  },
+  {
+    "subpath": "./framework",
+    "name": "mountComponent",
+    "kind": "function",
+    "signature": "(module: MountModule, host: HTMLElement, ctx: unknown): () => void",
+    "doc": "Mount a component module into `host`, returning a disposer.",
+    "loc": "src/compose.ts:33"
+  },
+  {
+    "subpath": "./framework",
+    "name": "MountContext",
+    "kind": "interface",
+    "signature": "export interface MountContext { ship: ShipHost clients: Clients route: RouteSignals navigate: (path: string) => void }",
+    "doc": "",
+    "loc": "src/component-mount.ts:27"
+  },
+  {
+    "subpath": "./framework",
+    "name": "MountHandle",
+    "kind": "interface",
+    "signature": "export interface MountHandle<Scope = Record<string, unknown>> { dispose(): void scope: Scope element: HTMLElement reload(next: RoutePayload): Promise<void> }",
+    "doc": "",
+    "loc": "src/mount.ts:76"
+  },
+  {
+    "subpath": "./framework",
+    "name": "MountModule",
+    "kind": "interface",
+    "signature": "export interface MountModule<Bindings = Record<string, unknown>> { setup: MountSetup<Bindings> }",
+    "doc": "",
+    "loc": "src/component-mount.ts:43"
+  },
+  {
+    "subpath": "./framework",
+    "name": "MountOptions",
+    "kind": "interface",
+    "signature": "export interface MountOptions { ship?: unknown clients?: Record<string, unknown> route?: RouteSignals navigate?: (path: string) => void loader?: SuiLoader restoreScope?: Record<string, unknown> cssSco",
+    "doc": "",
+    "loc": "src/mount.ts:50"
+  },
+  {
+    "subpath": "./framework",
+    "name": "MountSetup",
+    "kind": "type",
+    "signature": "export type MountSetup<Bindings = Record<string, unknown>> = ( ctx: any, ) => Bindings",
+    "doc": "",
+    "loc": "src/component-mount.ts:34"
+  },
+  {
+    "subpath": "./framework",
+    "name": "MutableState",
+    "kind": "type",
+    "signature": "export type MutableState<Scope> = { [K in StateKeys<Scope>]: SignalValueAt<Scope, K> } & { readonly [K in Exclude<keyof Scope, StateKeys<Scope>>]: Scope[K] } & { readonly clients: Clients readonly rou",
+    "doc": "The \"this route's state, as seen from imperative contexts\" (handlers, `mount`, `unmount`).",
+    "loc": "src/controller.ts:93"
+  },
+  {
+    "subpath": "./framework",
+    "name": "mutation",
+    "kind": "function",
+    "signature": "<T>(fn: (signal: AbortSignal) => Promise<T>, opts?: MutationOpts, __compilerAutoInvalidate?: QueryKey, __compilerInvalidates?: QueryKey[]): Mutation<T>",
+    "doc": "The public write primitive. Author-facing source:",
+    "loc": "src/query.ts:251"
+  },
+  {
+    "subpath": "./framework",
+    "name": "Mutation",
+    "kind": "interface",
+    "signature": "export interface Mutation<T> { state: Signal<MutationState<T>> mutate: () => Promise<T> reset: () => void }",
+    "doc": "",
+    "loc": "src/query.ts:214"
+  },
+  {
+    "subpath": "./framework",
+    "name": "MutationOpts",
+    "kind": "interface",
+    "signature": "export interface MutationOpts { invalidates?: unknown[] }",
+    "doc": "Author-facing options. `invalidates` is method REFERENCES, resolved by the compiler's static pass to key prefixes — never strings. The compiler erases this field from the runtime call entirely, passing the resolved prefixes via the hidden `__compilerInvalidates` argument (see module header for the analogous `query()` lowering).",
+    "loc": "src/query.ts:210"
+  },
+  {
+    "subpath": "./framework",
+    "name": "MutationState",
+    "kind": "type",
+    "signature": "export type MutationState<T> = | { kind: 'idle' } | { kind: 'loading' } | { kind: 'ok'; value: T } | { kind: 'error'; error: Error }",
+    "doc": "PROPOSED resting-state union for `mutation()` — NOT frozen, NOT the same union `LiveState<T>` governs for reads. Flagged in query-rename-slice-spec.md for explicit owner sign-off before this is documented as final. The frozen three-state `LiveState<T>` governs READS; a mutation additionally needs a resting state before its first call (`idle`), which a read never has (a read starts fetching immediately, a mutation waits to be triggered) — so folding `idle` into `loading` would make \"about to run\" and \"running\" indistinguishable, which callers gating a submit button on `state().kind !== 'loading'` need to tell apart.",
+    "loc": "src/query.ts:199"
+  },
+  {
+    "subpath": "./framework",
+    "name": "on",
+    "kind": "function",
+    "signature": "(el: EventTarget, event: string, handler: (event: Event) => unknown, opts?: OnOptions): Disposer",
+    "doc": "Attach an event listener with Sail's modifier semantics.",
+    "loc": "src/on.ts:77"
+  },
+  {
+    "subpath": "./framework",
+    "name": "onCleanup",
+    "kind": "function",
+    "signature": "(fn: () => void): void",
+    "doc": "Register a teardown function with the current scope. No-op when there is no current scope (i.e. called outside any `withScope`).",
+    "loc": "src/effect-scope.ts:97"
+  },
+  {
+    "subpath": "./framework",
+    "name": "OnOptions",
+    "kind": "interface",
+    "signature": "export interface OnOptions { modifiers?: Modifier[] capture?: boolean passive?: boolean once?: boolean }",
+    "doc": "Options for `on` — modifiers + standard `addEventListener` flags.",
+    "loc": "src/on.ts:12"
+  },
+  {
+    "subpath": "./framework",
+    "name": "pagination",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:pagination` — the L1 `<pagination>` behavior. Marks the `.sail-page` whose value matches the element's `value` with `aria-current=\"page\"`, and on click of a page sets `value` + emits `sail-page-change`. Prev/next are just pages whose value is the target page. Structure (which pages/ellipsis to show) is authored; this owns the state contract.",
+    "loc": "src/actions/pagination.ts:12"
+  },
+  {
+    "subpath": "./framework",
+    "name": "Patch",
+    "kind": "interface",
+    "signature": "export interface Patch { op: PatchOp path?: string value?: unknown index?: number from?: number to?: number count?: number by?: number v?: number }",
+    "doc": "One patch envelope. Path-addressed; only the fields relevant to `op` are populated. `path` defaults to the root.",
+    "loc": "src/patch.ts:31"
+  },
+  {
+    "subpath": "./framework",
+    "name": "PatchOp",
+    "kind": "type",
+    "signature": "export type PatchOp = | 'set' | 'merge' | 'append' | 'prepend' | 'insert' | 'remove' | 'move' | 'splice' | 'inc'",
+    "doc": "Wire-protocol op tag. See `.artifacts/specs/ship-set/04-patch-protocol.md` for full per-op semantics.",
+    "loc": "src/patch.ts:16"
+  },
+  {
+    "subpath": "./framework",
+    "name": "PathToken",
+    "kind": "type",
+    "signature": "export type PathToken = | { kind: 'field'; name: string } | { kind: 'index'; i: number }",
+    "doc": "One segment of a parsed patch path: an object field or an array index.",
+    "loc": "src/patch.ts:143"
+  },
+  {
+    "subpath": "./framework",
+    "name": "peekStore",
+    "kind": "function",
+    "signature": "<Shape>(def: StoreDef<Shape>): Shape | null",
+    "doc": "Returns the instance if one is already on the chain, or `null` if not. Does NOT create. Use when code wants to react to \"is a store mounted yet?\" without forcing it.",
+    "loc": "src/store.ts:315"
+  },
+  {
+    "subpath": "./framework",
+    "name": "pickSignals",
+    "kind": "function",
+    "signature": "(scope: Record<string, unknown>): Record<string, Signal<unknown>>",
+    "doc": "The writable-signal subset of a scope object.",
+    "loc": "src/state-proxy.ts:100"
+  },
+  {
+    "subpath": "./framework",
+    "name": "pin",
+    "kind": "function",
+    "signature": "(node: Element, param: PinPoint | null | undefined): void | ActionResult<PinPoint | null | undefined>",
+    "doc": "",
+    "loc": "src/actions/rect-box.ts:71"
+  },
+  {
+    "subpath": "./framework",
+    "name": "PinPoint",
+    "kind": "interface",
+    "signature": "export interface PinPoint { x: number y: number }",
+    "doc": "`use:pin={point}` — a 0×0 positioned element (an annotation pin). Distinct from `rect` only because the values are unambiguously a POINT (no width or height) — the naming is the intent the lint recovers in review.",
+    "loc": "src/actions/rect-box.ts:66"
+  },
+  {
+    "subpath": "./framework",
+    "name": "PopoverOptions",
+    "kind": "interface",
+    "signature": "export interface PopoverOptions { manual?: boolean }",
+    "doc": "Options for {@link bindPopover}.",
+    "loc": "src/enhance-popover.ts:14"
+  },
+  {
+    "subpath": "./framework",
+    "name": "portEdge",
+    "kind": "function",
+    "signature": "(node: Element, param: PortSide): void | ActionResult<PortSide>",
+    "doc": "",
+    "loc": "src/actions/port-edge.ts:97"
+  },
+  {
+    "subpath": "./framework",
+    "name": "PortSide",
+    "kind": "type",
+    "signature": "export type PortSide = 'left' | 'right' | 'top' | 'bottom' | null | undefined",
+    "doc": "`use:portEdge={side}` — anchor a fixed-size port element to the MIDPOINT of one of its parent's four edges.",
+    "loc": "src/actions/port-edge.ts:44"
+  },
+  {
+    "subpath": "./framework",
+    "name": "pressable",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Make a non-button host behave like a button:",
+    "loc": "src/actions/pressable.ts:24"
+  },
+  {
+    "subpath": "./framework",
+    "name": "pressed",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Reflect the host's `[selected]` attribute to `aria-pressed` (`\"true\"` / `\"false\"`), kept in sync by a MutationObserver.",
+    "loc": "src/actions/pressed.ts:18"
+  },
+  {
+    "subpath": "./framework",
+    "name": "primeIconCache",
+    "kind": "function",
+    "signature": "(glyphs: Record<string, string>): void",
+    "doc": "",
+    "loc": "src/actions/icon.ts:24"
+  },
+  {
+    "subpath": "./framework",
+    "name": "prop",
+    "kind": "const",
+    "signature": "{ string(opts?: PropOpts<string>): PropDef<string>; bool(opts?: PropOpts<boolean>): PropDef<boolean>; number(opts?: PropOpts<number>): PropDef<number>; union<V extends readonly string[]>(values: V, opts?: PropOpts<V[number]>): PropDef<V[number]>; property<T>(opts?: PropOpts<T>): PropDef<T>; }",
+    "doc": "Builders for declarative `PropDef` entries used by `component()`.",
+    "loc": "src/component-factory.ts:56"
+  },
+  {
+    "subpath": "./framework",
+    "name": "PropDef",
+    "kind": "interface",
+    "signature": "export interface PropDef<T> { type: 'string' | 'bool' | 'number' | 'union' | 'property' default?: T reflect?: boolean bindable?: boolean values?: readonly string[] }",
+    "doc": "Declarative description of a component prop.",
+    "loc": "src/component-factory.ts:24"
+  },
+  {
+    "subpath": "./framework",
+    "name": "provideContext",
+    "kind": "function",
+    "signature": "<T>(key: ContextKey<T>, value: T, scope?: EffectScope): void",
+    "doc": "Put `value` on `scope` under `key`. Any descendant that calls `injectContext(key)` and walks the chain will find it. No-op when called without a current scope; tests / module-level helpers can call it explicitly with a scope.",
+    "loc": "src/effect-scope.ts:343"
+  },
+  {
+    "subpath": "./framework",
+    "name": "provideStore",
+    "kind": "function",
+    "signature": "<Shape>(def: StoreDef<Shape>): Shape",
+    "doc": "Force a SCOPED instance on the current scope. Use when a subtree needs to override the root instance — e.g. an editor's preview mode wants a separate cart from the header's. Descendants of THIS scope see the override; sibling subtrees keep the root. Disposing the current scope drops the override and reverts the subtree to the next-up ancestor (the root, in the common case).",
+    "loc": "src/store.ts:284"
+  },
+  {
+    "subpath": "./framework",
+    "name": "query",
+    "kind": "function",
+    "signature": "<T>(fn: (signal: AbortSignal) => Promise<T> | LiveSource<T>, opts?: QueryOpts, __compilerKeyFn?: () => QueryKey): Signal<LiveState<T>>",
+    "doc": "The public read primitive. Author-facing source calls this with TWO arguments — `query(fn, opts?)` — and the compiler appends the derived key-fn as a hidden third argument during compilation (see module header). Calling `query()` directly with no compiler-derived key REFUSES loudly rather than guessing one: identity must be statically derivable, never runtime-inferred.",
+    "loc": "src/query.ts:166"
+  },
+  {
+    "subpath": "./framework",
+    "name": "QueryKey",
+    "kind": "type",
+    "signature": "export type QueryKey = readonly unknown[]",
+    "doc": "A cache identity: client-root + static member-path segments + (optionally) a tail of call-arg values. Compiler-derived, never handwritten by an author — see query.ts's module header. Owned here rather than imported from `@tanstack/query-core` so the real engine has zero dependency on that package; only the retired differential-test twin (`queried-querycore.ts`) still imports query-core's own `QueryKey`, which is structurally the same shape (`readonly unknown[]`).",
+    "loc": "src/native-cache.ts:48"
+  },
+  {
+    "subpath": "./framework",
+    "name": "queryKeyed",
+    "kind": "function",
+    "signature": "<T>(keyFn: () => QueryKey, fn: (signal: AbortSignal) => Promise<T> | LiveSource<T>, opts?: QueryOpts): Signal<LiveState<T>>",
+    "doc": "Explicit-key read primitive — the compiler's lowering target for `query()` (see module header) and the supported entry point for direct/uncompiled callers (tests, tooling, Storybook).",
+    "loc": "src/query.ts:126"
+  },
+  {
+    "subpath": "./framework",
+    "name": "QueryOpts",
+    "kind": "type",
+    "signature": "export type QueryOpts = NativeCacheOpts",
+    "doc": "Options accepted by `query()`/`queryKeyed()` — identical knobs to the cache engine (`staleTime`/`gcTime`/`retry`), nothing more.",
+    "loc": "src/query.ts:105"
+  },
+  {
+    "subpath": "./framework",
+    "name": "radioGroup",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:radioGroup` — the L1 `<radio-group>` element's behavior. Native radios that share a `name` already give single selection, arrow-key roving, focus, and form submission for free; this action supplies the wiring CSS can't: - give every child <radio>'s inner <input> the shared group name + its own value + disabled (group [disabled] OR the radio's own), and check the one matching the group's `value`; - on a radio `change`, reflect the new value to the group's `value` attribute + a hidden <input> (form) and dispatch sail-change {value}; - aria-label / aria-required from the group. Tone/size are ordinary props: put them on the group (CSS custom properties inherit) and/or on each radio. Re-syncs when the group's attributes or its children change. Written once — no per-instance controller.",
+    "loc": "src/actions/radio-group.ts:20"
+  },
+  {
+    "subpath": "./framework",
+    "name": "RailMeta",
+    "kind": "type",
+    "signature": "export type RailMeta = { label: string; icon: string }",
+    "doc": "Per-route shell display metadata. Maps to `<ship-rail>` / `<ship-launcher>`.",
+    "loc": "src/generated.d.ts:34"
+  },
+  {
+    "subpath": "./framework",
+    "name": "rangeFill",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:rangeFill` — the ONE thing a native `<input type=\"range\">` can't draw on Chrome/WebKit: the filled portion of the track. Everything else (value, step, drag, keyboard, role=slider + aria-valuenow, form submission) is the platform's. This action mirrors the value into a `--rng-pct` custom property so RANGE_SKIN_CSS's webkit-track gradient fills to the thumb (Firefox already fills via ::-moz-range-progress). ~10 lines, no controller, compiles away.",
+    "loc": "src/actions/range-fill.ts:11"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ReadonlyState",
+    "kind": "type",
+    "signature": "export type ReadonlyState<Scope> = { readonly [K in StateKeys<Scope>]: ReadonlyView<SignalValueAt<Scope, K>> }",
+    "doc": "The \"this route's state, as seen from declarative contexts.\"",
+    "loc": "src/controller.ts:81"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ReadonlyView",
+    "kind": "interface",
+    "signature": "export interface ReadonlyView<T> { (): T }",
+    "doc": "Read-only access to a state key from declarative contexts (templates, `derived` sections, controller hooks). Callable to read; no `.set`.",
+    "loc": "src/controller.ts:68"
+  },
+  {
+    "subpath": "./framework",
+    "name": "readStoreSSRSeed",
+    "kind": "function",
+    "signature": "(id: string): Record<string, unknown> | null",
+    "doc": "Read the seed values for `id`. Client-side only — on the server the payload is consumed by the snapshot writer, not by `useStore`. Returns `null` if no payload is installed or the id has no entry. Does NOT mutate the payload; the seed pass is idempotent.",
+    "loc": "src/store.ts:141"
+  },
+  {
+    "subpath": "./framework",
+    "name": "recoverySurface",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:recoverySurface` — the L1 `<error-state>` element's behavior. Surface, icon tile, and the details/toggle visibility are PURE CSS gated on the reserved `data-state` attribute (`has-details` / `open` tokens — group-state-*: in structure sx). This action supplies what CSS can't: - fill the code chip from the `code` attribute (re-synced on change); - detect whether the details region has content → stamp `data-state=\"has-details\"` so the Show/Hide toggle appears, and wire the toggle (label, aria-expanded, `open` token on data-state); - auto-focus the first action so the recovery control is reachable at once. Written once in the toolchain — no per-instance controller, compiles away.",
+    "loc": "src/actions/recovery-surface.ts:15"
+  },
+  {
+    "subpath": "./framework",
+    "name": "rect",
+    "kind": "function",
+    "signature": "(node: Element, param: BoxRect | null | undefined): void | ActionResult<BoxRect | null | undefined>",
+    "doc": "",
+    "loc": "src/actions/rect-box.ts:35"
+  },
+  {
+    "subpath": "./framework",
+    "name": "RectSpan",
+    "kind": "interface",
+    "signature": "export interface RectSpan { top: number | string | null height: number | string | null left: number | string | null width: number | string | null }",
+    "doc": "Rect-as-data — a positioned element's top/height/left/width. Concrete runtime geometry from time math (calendar) or coordinates (canvas / annotation / graph). All four are NUMBERS in px (or %); none of them are tokens (there is no token for \"3pm to 4pm\", no token for \"node at (200, 300)\"). The action writes each as a custom property; the consuming template reads them through the matching sx atoms:",
+    "loc": "src/actions/event-span.ts:22"
+  },
+  {
+    "subpath": "./framework",
+    "name": "registerTemplateHook",
+    "kind": "function",
+    "signature": "<Attrs extends Record<string, unknown>, Contributes>(hook: TemplateHook<Attrs, Contributes>): void",
+    "doc": "Register a template hook so `<use-<name>>` elements in `.sail` templates resolve to its factory at hydrate time.",
+    "loc": "src/template-hooks/registry.ts:22"
+  },
+  {
+    "subpath": "./framework",
+    "name": "releaseScrollLock",
+    "kind": "function",
+    "signature": "(): void",
+    "doc": "",
+    "loc": "src/scroll-lock.ts:64"
+  },
+  {
+    "subpath": "./framework",
+    "name": "RenderedItem",
+    "kind": "interface",
+    "signature": "export interface RenderedItem { nodes: Node[] cleanup?: () => void update?: (item: unknown, index: number) => void }",
+    "doc": "The shape returned by a `BindForOptions.render` call — DOM nodes for one row plus optional cleanup and update hooks.",
+    "loc": "src/for.ts:35"
+  },
+  {
+    "subpath": "./framework",
+    "name": "resolveController",
+    "kind": "function",
+    "signature": "(def: ControllerDef<object>, ctx: ResolverContext): ResolvedBindings",
+    "doc": "Resolve a controller def into the flat bindings shape `hydrate` can merge into the template scope.",
+    "loc": "src/controller-resolver.ts:37"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ResolvedBindings",
+    "kind": "type",
+    "signature": "export type ResolvedBindings = Record<string, unknown>",
+    "doc": "The flat bindings record returned by `resolveController`. Each entry is something the template scope can consume directly:",
+    "loc": "src/controller-resolver-types.ts:65"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ResolvedRoute",
+    "kind": "type",
+    "signature": "export type ResolvedRoute = { source: string params: Partial<{ [key in string]: string }> source_path: string | null }",
+    "doc": "",
+    "loc": "src/generated.d.ts:38"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ResolveError",
+    "kind": "type",
+    "signature": "export type ResolveError = { message: string }",
+    "doc": "",
+    "loc": "src/generated.d.ts:36"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ResolverContext",
+    "kind": "interface",
+    "signature": "export interface ResolverContext { ship: ShipHost clients?: Clients route?: RouteSignals | Record<string, string> navigate?: (path: string) => void scope?: Record<string, unknown> stateKeys?: Readonly",
+    "doc": "Setup-time context passed to the resolver. Mirrors what `hydrate` passes to a setup function, plus a `scope` field carrying any signals already declared in the view scope by the time setup runs.",
+    "loc": "src/controller-resolver-types.ts:17"
+  },
+  {
+    "subpath": "./framework",
+    "name": "resolveSlots",
+    "kind": "function",
+    "signature": "(host: Element, slots: SlotDecl[], originalChildren: Node[]): void",
+    "doc": "Distribute a component's pre-existing children into its slot anchors, matching native `<slot>` distribution semantics. Elements with `slot=\"X\"` route to the named anchor; everything else (un-named elements, Text, Comment) routes to the default slot. The `slot` attribute is stripped during routing.",
+    "loc": "src/slot.ts:51"
+  },
+  {
+    "subpath": "./framework",
+    "name": "route",
+    "kind": "function",
+    "signature": "(opts?: { url?: URL; }): RouteSignals",
+    "doc": "Construct a `RouteSignals` from a URL. Lazy `params` / `query` proxies materialise a signal on first access; `pathname` and `hash` are seeded eagerly. `params.<name>` returns `undefined` here — the runtime has no route table; the deck router's `route()` factory wraps this and seeds params from the registered shapes.",
+    "loc": "src/route/index.ts:36"
+  },
+  {
+    "subpath": "./framework",
+    "name": "RouteHandle",
+    "kind": "interface",
+    "signature": "export interface RouteHandle extends RouteSignals { update(): void readonly url: URL }",
+    "doc": "Internal: a live `RouteSignals` paired with the hooks a host uses to re-seed the instance on every navigation.",
+    "loc": "src/route/index.ts:22"
+  },
+  {
+    "subpath": "./framework",
+    "name": "RouteListEntry",
+    "kind": "type",
+    "signature": "export type RouteListEntry = { name: string type: string source: string rail?: RailMeta | null }",
+    "doc": "",
+    "loc": "src/generated.d.ts:44"
+  },
+  {
+    "subpath": "./framework",
+    "name": "RouteManifest",
+    "kind": "type",
+    "signature": "export type RouteManifest = { name: string type: string elementName?: string | null bundleUrl?: string | null claims?: string[] | null entry?: string | null }",
+    "doc": "",
+    "loc": "src/generated.d.ts:51"
+  },
+  {
+    "subpath": "./framework",
+    "name": "RoutePayload",
+    "kind": "type",
+    "signature": "export type RoutePayload<Scope = Record<string, unknown>> = Omit<GeneratedRoutePayload, 'scope'> & { scope: Scope }",
+    "doc": "Wire shape returned by `GET /_deck/views/<name>[/<sub>]`. The base type is committed at `./generated.d.ts` (a hand-maintained mirror of `crates/deck/deck-host/src/route_payload.rs::RoutePayload`; `./generated.ts` is gitignored and no `gen-types` task exists in this repo). The local generic specializes `scope` — Rust ships it as untyped JSON; per-route modules narrow it here.",
+    "loc": "src/mount.ts:36"
+  },
+  {
+    "subpath": "./framework",
+    "name": "RouteSignals",
+    "kind": "interface",
+    "signature": "export interface RouteSignals { params: Record<string, Signal<string | undefined>> query: Record<string, Signal<string | undefined>> pathname: Signal<string> hash: Signal<string> }",
+    "doc": "The reactive URL handle exposed to route scope as `route`. SAIL's structural view of the deck-side `RouteSignals` — every property is a `Signal` (already a SAIL primitive) so the route's typed scope can read `scope.route.params.<name>()` and subscribe to changes.",
+    "loc": "src/route-signals.ts:26"
+  },
+  {
+    "subpath": "./framework",
+    "name": "routeWithUpdate",
+    "kind": "function",
+    "signature": "(opts?: { url?: URL; }): RouteHandle",
+    "doc": "Construct a `RouteSignals` plus the host-facing `update` / `url` hooks. Hosts that own navigation register the returned handle with their global updater and call `update()` on every popstate. The deck router consumes this shape; the test harness uses {@link route} directly because it wants a frozen URL.",
+    "loc": "src/route/index.ts:46"
+  },
+  {
+    "subpath": "./framework",
+    "name": "runAction",
+    "kind": "function",
+    "signature": "<P>(node: Element, action: Action<P> | null | undefined, paramThunk?: () => P): void",
+    "doc": "Attach an action to an element with full lifecycle. Compiler target for `use:action` (no param) and `use:action={param}` (reactive param).",
+    "loc": "src/action.ts:47"
+  },
+  {
+    "subpath": "./framework",
+    "name": "runEnter",
+    "kind": "function",
+    "signature": "(nodes: Iterable<Node>): void",
+    "doc": "Re-exported by for.ts / if.ts. Stable references — they capture the live impl via closure so the swap takes effect immediately when transition.ts loads.",
+    "loc": "src/transition-runner.ts:27"
+  },
+  {
+    "subpath": "./framework",
+    "name": "runLeave",
+    "kind": "function",
+    "signature": "(nodes: Iterable<Node>): Promise<void> | null",
+    "doc": "",
+    "loc": "src/transition-runner.ts:28"
+  },
+  {
+    "subpath": "./framework",
+    "name": "runProtected",
+    "kind": "function",
+    "signature": "<T>(node: Node | null, source: BoundarySource, fn: () => T): T | undefined",
+    "doc": "Run `fn` inside try/catch. On throw, find the nearest boundary above `node` and route the error there; if none exists, log via `console.error` so the previously-uncaught behaviour is preserved.",
+    "loc": "src/error-boundary.ts:115"
+  },
+  {
+    "subpath": "./framework",
+    "name": "SailTimelineError",
+    "kind": "class",
+    "signature": "typeof SailTimelineError",
+    "doc": "Thrown for malformed track data. Timeline data is validated eagerly.",
+    "loc": "src/timeline.ts:124"
+  },
+  {
+    "subpath": "./framework",
+    "name": "scrollProgress",
+    "kind": "function",
+    "signature": "(target?: Element | (() => Element | null | undefined) | null, options?: ScrollProgressOptions): Signal<number>",
+    "doc": "Drive progress from scroll position.",
+    "loc": "src/drivers.ts:233"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ScrollProgressOptions",
+    "kind": "interface",
+    "signature": "export interface ScrollProgressOptions { axis?: 'x' | 'y' }",
+    "doc": "",
+    "loc": "src/drivers.ts:200"
+  },
+  {
+    "subpath": "./framework",
+    "name": "selection",
+    "kind": "function",
+    "signature": "<T, K extends string | number = string>(source: ListSource<T>, keyOf: (item: T) => K): { selectedId: Signal<K | null>; selected: () => T | null; select: (id: K) => void; clear: () => void; toggle: (id: K) => void; isSelected: (id: K) => boolean; }",
+    "doc": "`selection(source, keyOf)` — single-select over a list.",
+    "loc": "src/compositions/selection.ts:25"
+  },
+  {
+    "subpath": "./framework",
+    "name": "selector",
+    "kind": "function",
+    "signature": "<T>(source: Signal<T>): (key: T) => boolean",
+    "doc": "Membership selector — a derived-shaped accessor returning whether `key` matches `source()`'s current value. The point: when the source changes, only the two affected buckets (the OLD value and the NEW value) re-notify their subscribers. Other keys are left alone — no re-evaluation, no DOM thrash.",
+    "loc": "src/signal.ts:611"
+  },
+  {
+    "subpath": "./framework",
+    "name": "setAnnotationMode",
+    "kind": "function",
+    "signature": "(name: string, on: boolean): void",
+    "doc": "",
+    "loc": "src/edit-mode.ts:134"
+  },
+  {
+    "subpath": "./framework",
+    "name": "setEditMode",
+    "kind": "function",
+    "signature": "(name: string, on: boolean): void",
+    "doc": "Set edit-mode explicitly. No-op when already at the target value.",
+    "loc": "src/edit-mode.ts:91"
+  },
+  {
+    "subpath": "./framework",
+    "name": "setHostContext",
+    "kind": "function",
+    "signature": "(ctx: HostContext): void",
+    "doc": "Register the host context. Call at host startup and whenever a value changes (e.g. project switch). Merges over any previously-set values.",
+    "loc": "src/host-context.ts:33"
+  },
+  {
+    "subpath": "./framework",
+    "name": "setStoreSSRPayload",
+    "kind": "function",
+    "signature": "(payload: Record<string, Record<string, unknown>>): void",
+    "doc": "Server-side: install the per-request SSR payload. Replaces any previous payload (a previous request's). The SSR entry calls this once at the top of every request, before mounting.",
+    "loc": "src/store.ts:122"
+  },
+  {
+    "subpath": "./framework",
+    "name": "setThemePersist",
+    "kind": "function",
+    "signature": "(hook: ThemePersist | null): void",
+    "doc": "Register (or clear) the host persistence hook. Call once at host startup. Same seam shape as `@ship/tokens`' `setThemeTransport` — the runtime names no daemon URL; the host plugs one in.",
+    "loc": "src/theme.ts:58"
+  },
+  {
+    "subpath": "./framework",
+    "name": "setTransitionRunner",
+    "kind": "function",
+    "signature": "(impl: { runEnter: RunEnter; runLeave: RunLeave; cancelTransitions: CancelTransitions; }): void",
+    "doc": "Called by transition.ts at module-init time to swap stubs for the real impl. Idempotent — re-importing transition.ts is a no-op (last writer wins, but the impls are the same).",
+    "loc": "src/transition-runner.ts:35"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ShipHost",
+    "kind": "interface",
+    "signature": "export interface ShipHost {}",
+    "doc": "",
+    "loc": "src/ship.ts:23"
+  },
+  {
+    "subpath": "./framework",
+    "name": "signal",
+    "kind": "function",
+    "signature": "<T>(initial: T): Signal<T>",
+    "doc": "Create a fine-grained reactive signal.",
+    "loc": "src/signal.ts:396"
+  },
+  {
+    "subpath": "./framework",
+    "name": "Signal",
+    "kind": "interface",
+    "signature": "export interface Signal<T> { (): T set(value: T | ((prev: T) => T)): void __subs: Set<Subscriber> __peek(): T }",
+    "doc": "A reactive signal — a callable getter paired with a setter and a subscribe handle.",
+    "loc": "src/signal.ts:152"
+  },
+  {
+    "subpath": "./framework",
+    "name": "SIGNALS_KEY",
+    "kind": "const",
+    "signature": "\"$signals\"",
+    "doc": "The read-only accessor key exposing the raw signal map: `state.$signals.x`.",
+    "loc": "src/state-proxy.ts:32"
+  },
+  {
+    "subpath": "./framework",
+    "name": "SlotDecl",
+    "kind": "interface",
+    "signature": "export interface SlotDecl { name: string anchor: Comment fallback?: () => Node[] }",
+    "doc": "Declaration of one slot: name, anchor placeholder, and optional fallback. The compiler emits an array of these for each component that exposes slots; the runtime consumes the array via `resolveSlots`.",
+    "loc": "src/slot.ts:14"
+  },
+  {
+    "subpath": "./framework",
+    "name": "slotFilled",
+    "kind": "function",
+    "signature": "(host: Element, name: string): boolean",
+    "doc": "Was the named slot filled with author-provided content at mount, or did it fall back? Lets templates gate styling / aux content on slot presence without manual DOM probing. Pure-whitespace text fills count as \"not filled\" so leading whitespace doesn't pollute the answer.",
+    "loc": "src/slot.ts:126"
+  },
+  {
+    "subpath": "./framework",
+    "name": "slotted",
+    "kind": "function",
+    "signature": "(slot: () => HTMLSlotElement | null, render: (els: Element[]) => void): void",
+    "doc": "Subscribe to a native `<slot>`'s assigned-elements list (shadow slot API). Residual helper for opt-in foreign-content shadow wrappers — Sail L1 uses light-DOM projection (`projectSlots`), not `assignedElements()`.",
+    "loc": "src/host-api.ts:152"
+  },
+  {
+    "subpath": "./framework",
+    "name": "snapshotChildren",
+    "kind": "function",
+    "signature": "(host: Element): Node[]",
+    "doc": "Snapshot the host's current child nodes (Elements, Text, and Comment) before its innerHTML is replaced by the component template. Text and comment children survive the round-trip so native-slot semantics are preserved — `<my-component>Hi</my-component>` keeps the `Hi` text.",
+    "loc": "src/slot.ts:149"
+  },
+  {
+    "subpath": "./framework",
+    "name": "snapshotScopeStores",
+    "kind": "function",
+    "signature": "(scope: EffectScope): Record<string, Record<string, unknown>>",
+    "doc": "Server-side: walk `scope`'s contexts map, find every store instance (key description starts with `sail.store.`), snapshot each, and return the full per-request payload. The SSR entry calls this at end-of-request and passes the result to `setStoreSSRPayload` / renders it into the HTML.",
+    "loc": "src/store.ts:398"
+  },
+  {
+    "subpath": "./framework",
+    "name": "snapshotStore",
+    "kind": "function",
+    "signature": "<Shape>(instance: Shape): Record<string, unknown>",
+    "doc": "Build a `{ [signalName]: value }` snapshot of every Signal in `instance`. Used by the SSR entry to serialize the request's store state into the HTML payload. Only top-level signals are captured; derived and actions are skipped (derived re-derive from signals, actions don't carry state). Nested stores — an instance whose shape contains another store's instance — are NOT recursively walked; the outer store's owner is responsible for serializing sub-stores it embeds.",
+    "loc": "src/store.ts:338"
+  },
+  {
+    "subpath": "./framework",
+    "name": "spotlight",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "",
+    "loc": "src/actions/spotlight.ts:50"
+  },
+  {
+    "subpath": "./framework",
+    "name": "SpringOptions",
+    "kind": "interface",
+    "signature": "interface SpringOptions extends DurationSpringOptions, VelocityOptions { stiffness?: number; damping?: number; mass?: number; }",
+    "doc": "",
+    "loc": "(from motion-dom)"
+  },
+  {
+    "subpath": "./framework",
+    "name": "springValue",
+    "kind": "function",
+    "signature": "(source: () => number, options?: SpringOptions): Signal<number>",
+    "doc": "Follow another signal with real spring physics.",
+    "loc": "src/drivers.ts:331"
+  },
+  {
+    "subpath": "./framework",
+    "name": "SSR_PAYLOAD_GLOBAL",
+    "kind": "const",
+    "signature": "\"__SUI_STORES__\"",
+    "doc": "Name of the global the SSR entry writes the per-request store payload to. The client entry reads it via `hydrateStoreSSRPayload`. The `<script>` tag with this payload is emitted into the HTML BEFORE the route bundle, so by the time any `useStore` runs the payload is available.",
+    "loc": "src/store.ts:372"
+  },
+  {
+    "subpath": "./framework",
+    "name": "StoreDef",
+    "kind": "interface",
+    "signature": "export interface StoreDef<Shape> { readonly id: string setup: () => Shape }",
+    "doc": "A store definition. Stable identity across the app — call `defineStore(...)` once, at module top-level, and import the resulting `StoreDef` anywhere you need `useStore(def)`. The runtime never mutates the `id`; it is the cache key on every scope.",
+    "loc": "src/store.ts:56"
+  },
+  {
+    "subpath": "./framework",
+    "name": "StoreInstance",
+    "kind": "type",
+    "signature": "export type StoreInstance<Shape> = Shape & { readonly __scope: EffectScope }",
+    "doc": "Author-facing instance type — the shape `setup` returns, augmented with the read-side handle to the underlying EffectScope. Authors ignore the augmented field.",
+    "loc": "src/store.ts:74"
+  },
+  {
+    "subpath": "./framework",
+    "name": "SuiLoader",
+    "kind": "interface",
+    "signature": "export interface SuiLoader { fetchRoute(nameOrPath: string): Promise<RoutePayload> }",
+    "doc": "Host-provided loader. The runtime is host-agnostic — it does NOT know the URL scheme for fetching route payloads or component bundles. The host (deck view-host, shell) injects this adapter so the `/_deck/...` (or any) scheme lives at the boundary, not in the framework.",
+    "loc": "src/mount.ts:45"
+  },
+  {
+    "subpath": "./framework",
+    "name": "SuiMountOutsideSetupError",
+    "kind": "class",
+    "signature": "typeof SuiMountOutsideSetupError",
+    "doc": "Thrown by `mount()` when called outside a setup window — no scope is current. Named so authoring tooling and tests can match on it (`error.name === 'SuiMountOutsideSetupError'`), unlike `onCleanup`, which silently no-ops outside a scope.",
+    "loc": "src/effect-scope.ts:107"
+  },
+  {
+    "subpath": "./framework",
+    "name": "swatch",
+    "kind": "function",
+    "signature": "(node: Element, param: string | null | undefined): void | ActionResult<string | null | undefined>",
+    "doc": "`use:swatch={hex}` — runtime swatch background for sail-color-picker. The colour is user input (#3366ff or `oklch(...)`, whatever they typed); it is not a token. The action writes the value to `--swatch-color` verbatim. The consuming template reads it via sx=\"bg-(--swatch-color)\"",
+    "loc": "src/actions/zoom-pan.ts:77"
+  },
+  {
+    "subpath": "./framework",
+    "name": "syntaxHighlight",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:syntaxHighlight` — the `<code-block>` element's behavior.",
+    "loc": "src/actions/syntax-highlight.ts:18"
+  },
+  {
+    "subpath": "./framework",
+    "name": "tabs",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:tabs` — the L1 `<tabs>` element's behavior, in light DOM. Owns the whole subtree and queries descendant `.sail-tab` / `.sail-tab-panel` directly.",
+    "loc": "src/actions/tabs.ts:17"
+  },
+  {
+    "subpath": "./framework",
+    "name": "targetCursor",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "",
+    "loc": "src/actions/target-cursor.ts:89"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TemplateHook",
+    "kind": "interface",
+    "signature": "export interface TemplateHook<Attrs = object, Contributes = unknown> { name: string attrs?: { [K in keyof Attrs]: TemplateHookAttrKind } children?: boolean factory: (ctx: TemplateHookContext<Attrs>) =",
+    "doc": "Authoring contract for a template hook (`<use-*>` element).",
+    "loc": "src/template-hook.ts:57"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TemplateHookAttrKind",
+    "kind": "type",
+    "signature": "export type TemplateHookAttrKind = 'literal' | 'identifier' | 'binding'",
+    "doc": "Per-attribute binding shape for a template hook. Three kinds:",
+    "loc": "src/template-hook.ts:20"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TemplateHookContext",
+    "kind": "interface",
+    "signature": "export interface TemplateHookContext<Attrs> { attrs: Attrs el: HTMLElement cleanup: (fn: () => void) => void }",
+    "doc": "Mount-time context passed to a template hook's factory. The factory may register cleanups (run on unmount) and may return a value that the runtime exposes under the hook's `as=` name.",
+    "loc": "src/template-hook.ts:27"
+  },
+  {
+    "subpath": "./framework",
+    "name": "theme",
+    "kind": "const",
+    "signature": "{ readonly preview: (patch: ThemePatch) => void; readonly commit: (patch: ThemePatch) => void; readonly reset: () => void; readonly current: () => ThemeState; }",
+    "doc": "`theme` — the sanctioned runtime theme-write hatch. A plain ambient API (`import { theme } from '@ship/sail-runtime'`), NOT `ctx`-scoped: a theme write is a GLOBAL `:root` write, so it needs no route scope.",
+    "loc": "src/theme.ts:262"
+  },
+  {
+    "subpath": "./framework",
+    "name": "Theme",
+    "kind": "type",
+    "signature": "export type Theme = typeof theme",
+    "doc": "",
+    "loc": "src/theme.ts:269"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ThemePatch",
+    "kind": "type",
+    "signature": "export type ThemePatch = Record<ThemeTokenName, string>",
+    "doc": "",
+    "loc": "src/theme.ts:31"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ThemePersist",
+    "kind": "type",
+    "signature": "export type ThemePersist = (patch: ThemePatch) => void | Promise<void>",
+    "doc": "Host persistence hook. Registered once at host startup via `setThemePersist`. - dev: serialize the patch into the app's theme data file (the `themes.ts` fork) so HMR re-themes and it round-trips in source. - live: write-through to a host-configured backend. Omitted ⇒ persistence is localStorage-only (the default, owner-recommended). Fire-and-forget; a rejected promise is swallowed (the local cache is still correct).",
+    "loc": "src/theme.ts:51"
+  },
+  {
+    "subpath": "./framework",
+    "name": "themeSelect",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:themeSelect` — the `<theme-picker>` behavior: a trigger that opens a panel of theme cards.",
+    "loc": "src/actions/theme-select.ts:16"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ThemeState",
+    "kind": "interface",
+    "signature": "export interface ThemeState { id: string tokens: Record<string, string> }",
+    "doc": "What `theme.current()` reports.",
+    "loc": "src/theme.ts:34"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ThemeTokenName",
+    "kind": "type",
+    "signature": "export type ThemeTokenName = string",
+    "doc": "A patch maps token names (`--foo`) to CSS values. TokenName is validated at write time against the registered `@property` tokens (or a declared `:root` var); a non-token key is refused.",
+    "loc": "src/theme.ts:30"
+  },
+  {
+    "subpath": "./framework",
+    "name": "timeline",
+    "kind": "function",
+    "signature": "<const T extends TimelineTracks>(progress: () => number, tracks: T, options?: TimelineOptions): TimelineSignals<T>",
+    "doc": "Turn a progress reader and a map of keyframe tracks into a map of signals.",
+    "loc": "src/timeline.ts:298"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TimelineEasing",
+    "kind": "type",
+    "signature": "export type TimelineEasing = | readonly [number, number, number, number] | TimelineEasingName | ((t: number) => number)",
+    "doc": "An easing, in any of the three shapes real keyframe data comes in: a cubic-bezier control-point tuple (what `cubic-bezier(a, b, c, d)` and every design tool exports), a CSS easing name, or a raw `0..1 → 0..1` function for the cases neither covers.",
+    "loc": "src/timeline.ts:52"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TimelineEasingName",
+    "kind": "type",
+    "signature": "export type TimelineEasingName = keyof typeof NAMED_EASINGS",
+    "doc": "A named CSS easing accepted anywhere an easing is accepted.",
+    "loc": "src/timeline.ts:44"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TimelineOptions",
+    "kind": "interface",
+    "signature": "export interface TimelineOptions { easing?: TimelineEasing }",
+    "doc": "",
+    "loc": "src/timeline.ts:114"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TimelineSignals",
+    "kind": "type",
+    "signature": "export type TimelineSignals<T extends TimelineTracks> = { readonly [K in keyof T]: Derived<TrackValue<T[K]>> }",
+    "doc": "What `timeline()` returns: one read-only signal per track, same keys.",
+    "loc": "src/timeline.ts:110"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TimelineStop",
+    "kind": "type",
+    "signature": "export type TimelineStop<V extends TimelineValue = TimelineValue> = | readonly [offset: number, value: V] | readonly [offset: number, value: V, options: TimelineStopOptions]",
+    "doc": "One keyframe: an offset in `0..1`, the value at that offset, and optionally the easing for the segment that STARTS here.",
+    "loc": "src/timeline.ts:96"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TimelineStopOptions",
+    "kind": "interface",
+    "signature": "export interface TimelineStopOptions { easing?: TimelineEasing }",
+    "doc": "Per-stop options. `easing` governs the segment STARTING at this stop.",
+    "loc": "src/timeline.ts:88"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TimelineTrack",
+    "kind": "type",
+    "signature": "export type TimelineTrack<V extends TimelineValue = TimelineValue> = readonly TimelineStop<V>[]",
+    "doc": "A named channel: an ascending list of stops.",
+    "loc": "src/timeline.ts:101"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TimelineTracks",
+    "kind": "type",
+    "signature": "export type TimelineTracks = Record<string, TimelineTrack>",
+    "doc": "The data a `timeline()` call is built from: channel name → stops.",
+    "loc": "src/timeline.ts:104"
+  },
+  {
+    "subpath": "./framework",
+    "name": "TimelineValue",
+    "kind": "type",
+    "signature": "export type TimelineValue = number | string",
+    "doc": "A value a track interpolates. Numbers interpolate numerically; unit strings (`'120px'`, `'-12%'`, `'15deg'`) interpolate their numeric part and keep their unit. See {@link timeline} for the unit rules.",
+    "loc": "src/timeline.ts:85"
+  },
+  {
+    "subpath": "./framework",
+    "name": "tipDescribe",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:tipDescribe` — the L1 `<tooltip>` element's behavior. Show/hide is pure CSS (group-hover / group-focus-within opacity on the bubble). This action supplies only what CSS can't alone: - placement geometry vars the bubble sx reads (box + arrow insets), - the bubble text (from the `content` attribute) + `aria-describedby` wiring from the trigger to the bubble, - Escape blurs the host to dismiss. Written once in the toolchain — no per-instance controller, compiles away.",
+    "loc": "src/actions/tip-describe.ts:71"
+  },
+  {
+    "subpath": "./framework",
+    "name": "toggleAnnotationMode",
+    "kind": "function",
+    "signature": "(name: string): boolean",
+    "doc": "",
+    "loc": "src/edit-mode.ts:127"
+  },
+  {
+    "subpath": "./framework",
+    "name": "toggleEditMode",
+    "kind": "function",
+    "signature": "(name: string): boolean",
+    "doc": "Flip edit-mode on/off for `name`. Persists locally, fires the lifecycle POST, and dispatches `sail:edit-mode:change` on document so shell chrome (which doesn't run inside a tracked effect) can react.",
+    "loc": "src/edit-mode.ts:83"
+  },
+  {
+    "subpath": "./framework",
+    "name": "toggleGroup",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "`use:toggleGroup` — the L1 `<toggle-group>` element's behavior, light DOM. Owns the group ARIA (role=group + aria-orientation), roving tabindex, arrow nav (per orientation) + Home/End, click selection, and `value` sync. `type` = `single` (one value, deselectable) or `multiple` (space-separated set). Each `.sail-toggle` gets `aria-pressed`. Emits `sail-toggle-change`.",
+    "loc": "src/actions/toggle-group.ts:13"
+  },
+  {
+    "subpath": "./framework",
+    "name": "tokenizePath",
+    "kind": "function",
+    "signature": "(path: string): PathToken[]",
+    "doc": "Parse a path string (`field`, `[i]`, chains like `a.b[3].c`) into a list of tokens. The empty string returns an empty list and addresses the root.",
+    "loc": "src/patch.ts:120"
+  },
+  {
+    "subpath": "./framework",
+    "name": "untrack",
+    "kind": "function",
+    "signature": "<T>(fn: () => T): T",
+    "doc": "Read signals without subscribing the current observer to them. Useful inside effects/derived when a value is consulted but shouldn't trigger re-runs (timestamps, RNG seeds, peeking at peers).",
+    "loc": "src/signal.ts:703"
+  },
+  {
+    "subpath": "./framework",
+    "name": "unwrap",
+    "kind": "function",
+    "signature": "<T>(sig: LiveSignal<T>): T | undefined",
+    "doc": "Read a `LiveSignal<T>` and return its value or `undefined`.",
+    "loc": "src/query.ts:344"
+  },
+  {
+    "subpath": "./framework",
+    "name": "unwrapOr",
+    "kind": "function",
+    "signature": "<T>(sig: LiveSignal<T>, fallback: T): T",
+    "doc": "Read a `LiveSignal<T>` and return its value or `fallback`. The fallback applies for both `loading` and `error` states — callers that need to discriminate should keep using the explicit `kind` check or `<while-loading>`/`<while-error>` boundaries.",
+    "loc": "src/query.ts:361"
+  },
+  {
+    "subpath": "./framework",
+    "name": "useStore",
+    "kind": "function",
+    "signature": "<Shape>(def: StoreDef<Shape>): Shape",
+    "doc": "Resolve a store instance. Walks the current scope's parent chain; returns the first instance found. If none is found on the chain, allocates a fresh one on the CHAIN ROOT (so all sibling subtrees see the same root instance — the unit of sharing is the request / mount root, not the local scope).",
+    "loc": "src/store.ts:262"
+  },
+  {
+    "subpath": "./framework",
+    "name": "variantLive",
+    "kind": "function",
+    "signature": "(node: Element, param: void): void | ActionResult<void>",
+    "doc": "Observe `variant` and flip role/aria-live for connecting placeholders. Static defaults on the template (`role=note`, `aria-live=off`) keep the host inert before hydrate; this action only upgrades `connecting` and re-evaluates when the attribute changes.",
+    "loc": "src/actions/variant-live.ts:17"
+  },
+  {
+    "subpath": "./framework",
+    "name": "virtualRow",
+    "kind": "function",
+    "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
+    "doc": "`use:virtualRow={start}` — the runtime geometry of a virtualized row.",
+    "loc": "src/actions/virtual-row.ts:22"
+  },
+  {
+    "subpath": "./framework",
+    "name": "virtualSpacer",
+    "kind": "function",
+    "signature": "(node: Element, param: number | null | undefined): void | ActionResult<number | null | undefined>",
+    "doc": "`use:virtualSpacer={totalSize}` — the total-height spacer that gives the windowed list a scrollbar correct for its full size. The property it writes is the spacer's `--rows-h`, the size axis `height-(--rows-h)` reads.",
+    "loc": "src/actions/virtual-row.ts:42"
+  },
+  {
+    "subpath": "./framework",
+    "name": "walkScope",
+    "kind": "function",
+    "signature": "<R>(start: EffectScope | null, visit: (scope: EffectScope) => R | undefined, fallback: R): R",
+    "doc": "Walk the scope chain from `start` toward the root, calling `visit` at each node (including `start`). Stops when `visit` returns something other than `undefined` — that value is returned — or the chain runs out, in which case the `fallback` is returned.",
+    "loc": "src/effect-scope.ts:307"
+  },
+  {
+    "subpath": "./framework",
+    "name": "wireFormMutation",
+    "kind": "function",
+    "signature": "(el: Element, chain: string, scope: Record<string, unknown>): () => void",
+    "doc": "Wire a `<form mutation=\"...\">` element in the compiled module context.",
+    "loc": "src/mutation.ts:40"
+  },
+  {
+    "subpath": "./framework",
+    "name": "withScope",
+    "kind": "function",
+    "signature": "<R>(scope: EffectScope, body: () => R): R",
+    "doc": "Run `body` with `scope` as the current scope. Cleanups registered inside `body` enroll on `scope`. Restores the prior scope on return, including on throw. Nestable.",
+    "loc": "src/effect-scope.ts:85"
+  },
+  {
+    "subpath": "./framework",
+    "name": "worldTransform",
+    "kind": "function",
+    "signature": "(node: Element, param: string | null | undefined): void | ActionResult<string | null | undefined>",
+    "doc": "`use:worldTransform={cssTransform}` — apply the WORLD layer's compile-time- composed transform string verbatim. The world layer's pan/zoom is CSS (`matrix(...)` or `translate(...) scale(...)`), the authoring gate is \"is this a runtime measurement, or could a token express it?\"",
+    "loc": "src/actions/world-transform.ts:24"
+  },
+  {
+    "subpath": "./framework",
+    "name": "zoomPan",
+    "kind": "function",
+    "signature": "(node: Element, param: ZoomPanState | null | undefined): void | ActionResult<ZoomPanState | null | undefined>",
+    "doc": "",
+    "loc": "src/actions/zoom-pan.ts:22"
+  },
+  {
+    "subpath": "./framework",
+    "name": "ZoomPanState",
+    "kind": "interface",
+    "signature": "export interface ZoomPanState { x: number y: number scale: number }",
+    "doc": "`use:zoomPan={state}` — the live transform of a zoomed+panned image (sail-media-image). `state` carries the cursor-relative translate and scale; the action composes the CSS `transform` string and writes it as a custom property. The consuming element reads it via sx=\"transform-(--zoom-tx)\"",
+    "loc": "src/actions/zoom-pan.ts:16"
   },
   {
     "subpath": "./patch",
@@ -2363,7 +4795,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:231"
+    "loc": "src/styles/index.ts:165"
   },
   {
     "subpath": "./server",
