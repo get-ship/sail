@@ -1,16 +1,18 @@
 <!--
-  /components — the component browser.
+  /components — component browser.
 
-  Pack rail + category chips + search filter one catalog (registry.ts).
-  Each tile is a catalog card that links to /components/<slug>, where the
-  REAL component mounts on its detail page.
+  Two layers:
+    1. FEATURED LIVE demos — a fixed, small set of real L1 hosts (button,
+       inputs, badge, alert, …). Enough to prove the language without
+       freezing the tab.
+    2. FULL CATALOG — every registry entry as a link card to
+       /components/<slug>, where the detail page mounts the real component.
 
-  Why the index is NOT a wall of live demos: after the Style cutover each
-  L1 host carries a large class list + actions; mounting ~48 live tiles
-  (and pack CEs like CodeMirror/Mermaid) freezes/OOMs the tab. Deck also
-  eagerly imports every custom-element tag that appears in this route's
-  template into the page graph — so pack tags here pulled multi‑MB modules
-  even when filtered out of the DOM. Index = catalog; detail = live.
+  Why not every tile live: after the Style cutover each L1 host carries a
+  large class list + actions. Mounting ~15–48 at once still blocks the main
+  thread (measured). Deck also eager-imports any <sail-*> pack tag that
+  appears in this route's template (CodeMirror/Mermaid OOM). Packs and the
+  long tail stay on detail pages.
 -->
 
 <controller>
@@ -23,13 +25,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       () => CATALOG,
       (c: CatalogEntry, q: string) => (c.tag + ' ' + c.cat + ' ' + c.pack).toLowerCase().includes(q),
     )
-    // Default to L1 — packs are still filterable; tiles are always link cards.
     const packSel = signal<string>('lang')
     const catSel = signal<string>('all')
     const pickPack = (id: string): void => packSel.set(id)
     const pickCat = (id: string): void => catSel.set(id)
 
-    // Not cataloged with working routes yet (banner history / bundler gaps).
     const SKIP_TAGS = new Set([
       'sail-canvas', 'sail-board', 'sail-draw', 'sail-graph-canvas',
       'sail-annotation-layer', 'sail-annotation-list', 'sail-annotation-marker',
@@ -55,8 +55,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       }
     }
 
-    // Flatten badge fields on each row — render expressions may only call
-    // zero-arg signal reads (no packBadgeTone(e.pack) in the template).
     const visibleList = derived(() => {
       const p = packSel()
       const c = catSel()
@@ -78,13 +76,20 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const cats = () => CATEGORIES.map((c) => c as string)
     const countLabel = derived(() => {
       const n = visibleList().length
-      return n > 0 ? `${n} element${n === 1 ? '' : 's'} — open for live demo` : ''
+      return n > 0 ? `${n} in catalog` : ''
     })
     const none = derived(() => visibleList().length === 0)
+
+    // Featured live demos — small fixed set.
+    const name = signal('')
+    const agreed = signal(true)
+    const notify = signal(true)
+    const volume = signal(60)
 
     return {
       query, packSel, catSel, pickPack, pickCat,
       packs, cats, visibleList, countLabel, none,
+      name, agreed, notify, volume,
     }
 })
 </controller>
@@ -99,6 +104,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const cat = style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
   const mutedSm = style.fontSize(sm).fg(muted-foreground)
   const eyebrow = style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+  const sectionTitle = style.fontSize(sm).fontWeight(semibold).mt(2)
   const gridCol = style.grow(1).minW(0).basis(0)
   const rail = style.w(panel-min-w-md).shrink(0)
   const packBtn = style.radius(md).cursor(pointer).borderWidth(1).border(border).pad(0).overflow(hidden).bg(transparent).textAlign(start).when({
@@ -116,8 +122,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <column gap="1">
     <p sx={eyebrow}>Components</p>
     <p sx={mutedSm}>
-      Catalog of the language surface and packs. Open a tile for the live demo —
-      the index stays light so it always loads.
+      Live demos below — real language elements. The full catalog under that
+      links to each detail page (also live). Packs open on their own routes so
+      this page stays fast.
     </p>
   </column>
 
@@ -138,50 +145,228 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </button>
       {/for}
       <p sx={railNote}>
-        Packs read the same tokens as the language — install one and it
-        already matches your theme. Live demos open on each detail page.
+        Language tiles live here. Charts, mermaid, and the code editor open
+        on their detail pages so CodeMirror/Mermaid never load on the index.
       </p>
     </column>
 
-    <column gap="3" sx={gridCol}>
-      <row gap="2" align="center" justify="between">
-        <row gap="2">
-          {#for c of cats() key={c}}
-            <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)}>{c}</button>
-          {/for}
-        </row>
-        <input placeholder="Search — try 'tab' or 'overlay'" bind:value={query} sx={search} />
-      </row>
-
-      {#if countLabel()}
-        <p sx={count}>{countLabel()}</p>
-      {/if}
-
-      <grid cols="4" gap="3">
-        {#for e of visibleList() key={e.key}}
-          <card padding="none" data-tile={e.tag} sx={tile}>
+    <column gap="4" sx={gridCol}>
+      <!-- ══ Featured live demos ═══════════════════════════════════════ -->
+      <column gap="2">
+        <p sx={sectionTitle}>Live — language surface</p>
+        <grid cols="4" gap="3">
+          <card padding="none" data-tile="button" data-live sx={tile}>
             <column gap="0" sx={tileCol}>
               <center data-preview sx={preview}>
-                <p sx={mutedXs}>Open for live demo</p>
+                <row gap="2" align="center">
+                  <button variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Solid</button>
+                  <button variant="outline" tone="primary">Outline</button>
+                </row>
               </center>
               <column gap="1" sx={tileMeta}>
-                <a href={`/components/${e.slug}`} sx={tileName}>{e.tag}</a>
-                <row gap="2" align="center" justify="between">
-                  <badge size="sm" tone={e.badgeTone} variant="soft">{e.badgeLabel}</badge>
-                  <span sx={cat}>{e.cat}</span>
-                </row>
+                <a href="/components/button" sx={tileName}>button</a>
+                <span sx={cat}>inputs · live</span>
               </column>
             </column>
           </card>
-        {/for}
-      </grid>
 
-      {#if none()}
-        <empty-state>
-          <strong slot="title">Nothing matches</strong>
-          Clear a filter or two — or search for less.
-        </empty-state>
-      {/if}
+          <card padding="none" data-tile="input" data-live sx={tile}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
+                <input placeholder="Type — it's real" bind:value={name} />
+              </center>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/input" sx={tileName}>input</a>
+                <span sx={cat}>inputs · live</span>
+              </column>
+            </column>
+          </card>
+
+          <card padding="none" data-tile="checkbox" data-live sx={tile}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
+                <label><input type="checkbox" bind:checked={agreed} /> I agree</label>
+              </center>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/checkbox" sx={tileName}>checkbox</a>
+                <span sx={cat}>inputs · live</span>
+              </column>
+            </column>
+          </card>
+
+          <card padding="none" data-tile="switch" data-live sx={tile}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
+                <row gap="2" align="center">
+                  <switch bind:checked={notify}></switch>
+                  <p sx={mutedXs}>{notify() ? 'notifying' : 'muted'}</p>
+                </row>
+              </center>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/switch" sx={tileName}>switch</a>
+                <span sx={cat}>inputs · live</span>
+              </column>
+            </column>
+          </card>
+
+          <card padding="none" data-tile="slider" data-live sx={tile}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
+                <row gap="2" align="center" sx={style.w(full)}>
+                  <slider bind:value={volume} tone="primary" sx={style.grow(1)}></slider>
+                  <span sx={cat}>{volume()}</span>
+                </row>
+              </center>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/slider" sx={tileName}>slider</a>
+                <span sx={cat}>inputs · live</span>
+              </column>
+            </column>
+          </card>
+
+          <card padding="none" data-tile="badge" data-live sx={tile}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
+                <row gap="2" align="center">
+                  <badge tone="primary">Primary</badge>
+                  <badge tone="success" variant="soft">OK</badge>
+                  <badge tone="destructive" variant="outline">Hot</badge>
+                </row>
+              </center>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/badge" sx={tileName}>badge</a>
+                <span sx={cat}>display · live</span>
+              </column>
+            </column>
+          </card>
+
+          <card padding="none" data-tile="chip" data-live sx={tile}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
+                <row gap="2">
+                  <chip>Alpha</chip>
+                  <chip tone="primary">Beta</chip>
+                </row>
+              </center>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/chip" sx={tileName}>chip</a>
+                <span sx={cat}>display · live</span>
+              </column>
+            </column>
+          </card>
+
+          <card padding="none" data-tile="alert" data-live sx={tile}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
+                <alert tone="success"><strong>Saved.</strong> Changes are live.</alert>
+              </column>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/alert" sx={tileName}>alert</a>
+                <span sx={cat}>feedback · live</span>
+              </column>
+            </column>
+          </card>
+
+          <card padding="none" data-tile="spinner" data-live sx={tile}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
+                <spinner></spinner>
+              </center>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/spinner" sx={tileName}>spinner</a>
+                <span sx={cat}>feedback · live</span>
+              </column>
+            </column>
+          </card>
+
+          <card padding="none" data-tile="progress" data-live sx={tile}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
+                <progress value="0.62" sx={style.w(full)}></progress>
+              </center>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/progress" sx={tileName}>progress</a>
+                <span sx={cat}>feedback · live</span>
+              </column>
+            </column>
+          </card>
+
+          <card padding="none" data-tile="card" data-live sx={tile}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
+                <card interactive sx={style.pad(3)}>
+                  <strong>A surface</strong>
+                  <p sx={mutedXs}>hover lift is one attribute</p>
+                </card>
+              </column>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/card" sx={tileName}>card</a>
+                <span sx={cat}>display · live</span>
+              </column>
+            </column>
+          </card>
+
+          <card padding="none" data-tile="icon" data-live sx={tile}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
+                <row gap="3" align="center">
+                  <icon name="check"></icon>
+                  <icon name="search"></icon>
+                  <icon name="settings"></icon>
+                </row>
+              </center>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/icon" sx={tileName}>icon</a>
+                <span sx={cat}>display · live</span>
+              </column>
+            </column>
+          </card>
+        </grid>
+      </column>
+
+      <!-- ══ Catalog ═══════════════════════════════════════════════════ -->
+      <column gap="2">
+        <row gap="2" align="center" justify="between">
+          <p sx={sectionTitle}>Catalog</p>
+          <row gap="2">
+            {#for c of cats() key={c}}
+              <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)}>{c}</button>
+            {/for}
+          </row>
+        </row>
+        <row gap="2" align="center" justify="between">
+          {#if countLabel()}
+            <p sx={count}>{countLabel()}</p>
+          {/if}
+          <input placeholder="Search — try 'tab' or 'overlay'" bind:value={query} sx={search} />
+        </row>
+
+        <grid cols="4" gap="3">
+          {#for e of visibleList() key={e.key}}
+            <card padding="none" data-tile={e.tag} sx={tile}>
+              <column gap="0" sx={tileCol}>
+                <center data-preview sx={preview}>
+                  <p sx={mutedXs}>Open for full live demo</p>
+                </center>
+                <column gap="1" sx={tileMeta}>
+                  <a href={`/components/${e.slug}`} sx={tileName}>{e.tag}</a>
+                  <row gap="2" align="center" justify="between">
+                    <badge size="sm" tone={e.badgeTone} variant="soft">{e.badgeLabel}</badge>
+                    <span sx={cat}>{e.cat}</span>
+                  </row>
+                </column>
+              </column>
+            </card>
+          {/for}
+        </grid>
+
+        {#if none()}
+          <empty-state>
+            <strong slot="title">Nothing matches</strong>
+            Clear a filter or two — or search for less.
+          </empty-state>
+        {/if}
+      </column>
     </column>
   </row>
 
