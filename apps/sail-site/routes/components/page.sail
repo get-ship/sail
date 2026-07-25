@@ -5,14 +5,13 @@
     1. FEATURED LIVE demos — a fixed, small set of real L1 hosts (button,
        inputs, badge, alert, …). Enough to prove the language without
        freezing the tab.
-    2. FULL CATALOG — every registry entry as a link card to
-       /components/<slug>, where the detail page mounts the real component.
+    2. FULL CATALOG — every registry entry as a card. Pack tiles render
+       their real <sail-*> preview when that pack is selected; language
+       entries and unselected packs show a link placeholder.
 
-  Why not every tile live: after the Style cutover each L1 host carries a
-  large class list + actions. Mounting ~15–48 at once still blocks the main
-  thread (measured). Deck also eager-imports any <sail-*> pack tag that
-  appears in this route's template (CodeMirror/Mermaid OOM). Packs and the
-  long tail stay on detail pages.
+  The OOM that originally forced static pack tiles was traced to batched
+  style reflections (fixed). Mount gating remains: packSel defaults to
+  `lang`, so pack CEs only mount when the user picks a pack.
 -->
 
 <controller>
@@ -145,8 +144,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </button>
       {/for}
       <p sx={railNote}>
-        Language tiles live here. Charts, mermaid, and the code editor open
-        on their detail pages so CodeMirror/Mermaid never load on the index.
+        Language tiles live here. Pack previews mount only when you select a
+        pack — the default stays light so the index always loads fast.
       </p>
     </column>
 
@@ -346,7 +345,45 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <card padding="none" data-tile={e.tag} sx={tile}>
               <column gap="0" sx={tileCol}>
                 <center data-preview sx={preview}>
-                  <p sx={mutedXs}>Open for full live demo</p>
+                  {#if e.pack !== 'lang' && (packSel() === 'all' || packSel() === e.pack)}
+                    {#if e.tag === 'sail-sparkline'}
+                      <sail-sparkline data="2,5,3,8,4,6,7" width="120" height="40"></sail-sparkline>
+                    {:else if e.tag === 'sail-area-chart'}
+                      <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-area-chart>
+                    {:else if e.tag === 'sail-bar-chart'}
+                      <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="160" height="60"></sail-bar-chart>
+                    {:else if e.tag === 'sail-donut'}
+                      <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="80" thickness="10"></sail-donut>
+                    {:else if e.tag === 'sail-gauge'}
+                      <sail-gauge value="72" diameter="80" thickness="10"></sail-gauge>
+                    {:else if e.tag === 'sail-heatmap'}
+                      <sail-heatmap rows="3" cols="5" values="1,2,3,4,3,4,5,6,5,4,3,2,1,2,3" width="160" height="60"></sail-heatmap>
+                    {:else if e.tag === 'sail-line-chart'}
+                      <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-line-chart>
+                    {:else if e.tag === 'sail-media-image'}
+                      <sail-media-image src="/sail-oss/sail-mark.svg" alt="Sail mark"></sail-media-image>
+                    {:else if e.tag === 'sail-media-av'}
+                      <sail-media-av></sail-media-av>
+                    {:else if e.tag === 'sail-code-editor'}
+                      <sail-code-editor value="const greeting = 'hi';" language="js" line-numbers size="sm"></sail-code-editor>
+                    {:else if e.tag === 'sail-mermaid'}
+                      <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>
+                    {:else if e.tag === 'sail-message'}
+                      <sail-message role="user" state="user">Hello — the live chat message primitive.</sail-message>
+                    {:else if e.tag === 'sail-citation'}
+                      <sail-citation source="docs.sail.dev" href="https://docs.sail.dev">A citation from the docs</sail-citation>
+                    {:else if e.tag === 'sail-composer'}
+                      <sail-composer placeholder="Ask anything…"></sail-composer>
+                    {:else if e.tag === 'sail-thinking-dots'}
+                      <sail-thinking-dots></sail-thinking-dots>
+                    {:else if e.tag === 'sail-tool-call'}
+                      <sail-tool-call name="search" status="running">query: search</sail-tool-call>
+                    {:else}
+                      <p sx={mutedXs}>Open for full live demo</p>
+                    {/if}
+                  {:else}
+                    <p sx={mutedXs}>Open for full live demo</p>
+                  {/if}
                 </center>
                 <column gap="1" sx={tileMeta}>
                   <a href={`/components/${e.slug}`} sx={tileName}>{e.tag}</a>

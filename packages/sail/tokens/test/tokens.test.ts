@@ -217,11 +217,12 @@ describe('@ship/tokens — representative token in every theme (reskin-by-token 
 
 describe('@ship/tokens — contracts.css layer (host baseline + platform tone)', () => {
   const contracts = loadSrc('../src/contracts.css')
-  it('ships [tone=] for platform controls; no --size-h channel', () => {
-    // Native <button tone> paints via contracts --tone*, not Style hosts.
-    // Removing this without migrating button paint is an atomic visual regression.
-    expect(contracts).toMatch(/\[tone=['"]primary['"]\]\s*\{/)
-    expect(contracts).toContain('var(--tone, var(--foreground))')
+  it('has no [tone=] universal channel; no --size-h channel', () => {
+    // Tone is now an ordinary element prop on native <button> / <a> (via the
+    // stdlib button.sail / anchor.sail Style products). No global --tone*
+    // attribute channel remains in the contracts layer.
+    expect(contracts).not.toMatch(/\[tone=['"]/)
+    expect(contracts).not.toMatch(/--tone\s*:/)
     // --size-h channel stays gone; size maps to control-h/text tokens directly.
     expect(contracts).not.toMatch(/\[size=['"]sm['"]\]\s*\{[^}]*--size-h/)
   })

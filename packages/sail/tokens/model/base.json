@@ -1529,8 +1529,7 @@
         "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-default",
-            "channel": true
+            "cssName": "glow-default"
           }
         }
       },
@@ -1540,8 +1539,7 @@
         "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-muted",
-            "channel": true
+            "cssName": "glow-muted"
           }
         }
       },
@@ -1551,8 +1549,7 @@
         "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-info",
-            "channel": true
+            "cssName": "glow-info"
           }
         }
       },
@@ -1562,8 +1559,7 @@
         "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-success",
-            "channel": true
+            "cssName": "glow-success"
           }
         }
       },
@@ -1573,8 +1569,7 @@
         "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-warning",
-            "channel": true
+            "cssName": "glow-warning"
           }
         }
       },
@@ -1584,8 +1579,7 @@
         "$description": "Per-tone glow (see glow.primary). `none` until a theme lights it up.",
         "$extensions": {
           "ship": {
-            "cssName": "glow-destructive",
-            "channel": true
+            "cssName": "glow-destructive"
           }
         }
       }

@@ -393,6 +393,16 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "scroll", vocab: "scroll", scale: None, keywords: &["auto", "smooth"], negatable: false, slots: &["scroll-behavior"] },
         SetterSpec { name: "willChange", vocab: "will-change", scale: None, keywords: &["auto", "scroll-position", "contents", "transform"], negatable: false, slots: &["will-change"] },
         SetterSpec { name: "contain", vocab: "contain", scale: None, keywords: &["none", "content", "strict", "size", "layout", "paint"], negatable: false, slots: &["contain"] },
+        // Host-paint gap for flex/grid containers outside layout keywords (button base box, etc.).
+        SetterSpec { name: "gap", vocab: "gap", scale: Some("space"), keywords: &["0"], negatable: false, slots: &["gap"] },
+        SetterSpec { name: "gapX", vocab: "gap-x", scale: Some("space"), keywords: &["0"], negatable: false, slots: &["column-gap"] },
+        SetterSpec { name: "gapY", vocab: "gap-y", scale: Some("space"), keywords: &["0"], negatable: false, slots: &["row-gap"] },
+        // Hover-deepen primitive: color-mix toward foreground by percent.
+        SetterSpec { name: "bgMix", vocab: "bg-mix", scale: None, keywords: &[], negatable: false, slots: &["background-color"] },
+        // Tier-2 control chrome channels.
+        SetterSpec { name: "controlFrame", vocab: "control-frame", scale: None, keywords: &[], negatable: false, slots: &["box-shadow"] },
+        SetterSpec { name: "controlLift", vocab: "control-lift", scale: None, keywords: &[], negatable: false, slots: &["translate"] },
+        SetterSpec { name: "press", vocab: "press", scale: None, keywords: &[], negatable: false, slots: &["translate", "scale", "box-shadow"] },
     ]
 }
 
@@ -627,10 +637,11 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
             source: op.source.clone(),
         });
     };
-    // Marker setters with empty arg (group, scrollbarThin, isolate, truncate, srOnly).
+    // Marker setters with empty arg (group, scrollbarThin, isolate, truncate, srOnly,
+    // control chrome, press).
     if matches!(
         spec.name,
-        "group" | "scrollbarThin" | "isolate" | "truncate" | "srOnly"
+        "group" | "scrollbarThin" | "isolate" | "truncate" | "srOnly" | "controlFrame" | "controlLift" | "press"
     ) {
         return Ok(());
     }
@@ -740,16 +751,26 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     }
     // Composite border: width + color in one call (style.border(1, border)).
     if op.args.len() > 1 {
-        if !is_border_composite(spec.name) || op.args.len() != 2 {
+        if op.args.len() != 2 {
             return Err(StyleDiagnostic::BadArity {
                 setter: op.setter.clone(),
                 got: op.args.len(),
                 source: op.source.clone(),
             });
         }
-        let mut out = lower_border_width_arg(spec, op, &op.args[0])?;
-        out.extend(lower_border_color_arg(spec, op, &op.args[1])?);
-        return Ok(out);
+        if is_border_composite(spec.name) {
+            let mut out = lower_border_width_arg(spec, op, &op.args[0])?;
+            out.extend(lower_border_color_arg(spec, op, &op.args[1])?);
+            return Ok(out);
+        }
+        if spec.name == "bgMix" {
+            return lower_bg_mix_arg(spec, op, &op.args[0], &op.args[1]);
+        }
+        return Err(StyleDiagnostic::BadArity {
+            setter: op.setter.clone(),
+            got: op.args.len(),
+            source: op.source.clone(),
+        });
     }
     let arg = op.first_arg();
     // visibility keywords.
@@ -953,6 +974,45 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 ]);
             }
         }
+    }
+    // Host-paint gap props for flex/grid containers outside layout keywords.
+    if matches!(spec.name, "gap" | "gapX" | "gapY") {
+        let value = match arg {
+            PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
+            PaintArg::Token(t) => {
+                let bare = strip_neg(t).1;
+                if bare == "0" {
+                    "0".into()
+                } else {
+                    scales::lower("space", bare).ok_or_else(|| StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: t.clone(),
+                        source: op.source.clone(),
+                    })?
+                }
+            }
+        };
+        let prop = match spec.name {
+            "gap" => "gap",
+            "gapX" => "column-gap",
+            "gapY" => "row-gap",
+            _ => unreachable!(),
+        };
+        return Ok(vec![(prop.into(), value)]);
+    }
+    // Tier-2 control chrome / press marker channels.
+    if spec.name == "controlFrame" {
+        return Ok(vec![("box-shadow".into(), "var(--control-frame)".into())]);
+    }
+    if spec.name == "controlLift" {
+        return Ok(vec![("translate".into(), "var(--control-lift)".into())]);
+    }
+    if spec.name == "press" {
+        return Ok(vec![
+            ("translate".into(), "var(--press-translate)".into()),
+            ("scale".into(), "var(--press-scale)".into()),
+            ("box-shadow".into(), "var(--press-shadow)".into()),
+        ]);
     }
     let (value, bare, negative) = match arg {
         PaintArg::Token(t) => {
@@ -1358,16 +1418,26 @@ fn is_border_composite(name: &str) -> bool {
 
 /// Validate a composite (two-arg) paint op positionally.
 fn validate_composite_op(spec: &SetterSpec, op: &PaintOp) -> Result<(), StyleDiagnostic> {
-    if !is_border_composite(spec.name) || op.args.len() != 2 {
+    if op.args.len() != 2 {
         return Err(StyleDiagnostic::BadArity {
             setter: op.setter.clone(),
             got: op.args.len(),
             source: op.source.clone(),
         });
     }
-    validate_border_width_arg(spec, op, &op.args[0])?;
-    validate_border_color_arg(spec, op, &op.args[1])?;
-    Ok(())
+    if is_border_composite(spec.name) {
+        validate_border_width_arg(spec, op, &op.args[0])?;
+        validate_border_color_arg(spec, op, &op.args[1])?;
+        return Ok(());
+    }
+    if spec.name == "bgMix" {
+        return validate_bg_mix_args(spec, op);
+    }
+    Err(StyleDiagnostic::BadArity {
+        setter: op.setter.clone(),
+        got: op.args.len(),
+        source: op.source.clone(),
+    })
 }
 
 /// Position 0 of a composite border call: a width token on the closed
@@ -1516,6 +1586,77 @@ fn lower_border_color_arg(
     }
 }
 
+/// Validate `bgMix(token, pct)`: token on color scale, pct in 5..95 step 5.
+fn validate_bg_mix_args(_spec: &SetterSpec, op: &PaintOp) -> Result<(), StyleDiagnostic> {
+    // Position 0: color token or bind.
+    match &op.args[0] {
+        PaintArg::Bind(_) => {}
+        PaintArg::Token(tok) => {
+            let (neg, bare) = strip_neg(tok);
+            if neg
+                || (!scales::contains("color", bare)
+                    && !matches!(bare, "transparent" | "current" | "currentColor"))
+            {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: tok.clone(),
+                    source: op.source.clone(),
+                });
+            }
+        }
+    }
+    // Position 1: closed percent ramp 5..95 step 5, or bind.
+    match &op.args[1] {
+        PaintArg::Bind(_) => {}
+        PaintArg::Token(tok) => {
+            let (neg, bare) = strip_neg(tok);
+            if neg {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: tok.clone(),
+                    source: op.source.clone(),
+                });
+            }
+            let ok = bare.parse::<i32>().map_or(false, |n| n >= 5 && n <= 95 && n % 5 == 0);
+            if !ok {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: tok.clone(),
+                    source: op.source.clone(),
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Lower `bgMix(token, pct)` to a color-mix background-color.
+fn lower_bg_mix_arg(
+    _spec: &SetterSpec,
+    _op: &PaintOp,
+    token_arg: &PaintArg,
+    pct_arg: &PaintArg,
+) -> Result<Vec<(String, String)>, StyleDiagnostic> {
+    let token = match token_arg {
+        PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
+        PaintArg::Token(t) => {
+            let bare = strip_neg(t).1;
+            match bare {
+                "transparent" | "current" | "currentColor" => bare.into(),
+                _ => format!("var(--{bare})"),
+            }
+        }
+    };
+    let pct = match pct_arg {
+        PaintArg::Bind(name) => format!("var(--{})", css_name_for_bind(name)),
+        PaintArg::Token(t) => t.clone(),
+    };
+    Ok(vec![(
+        "background-color".into(),
+        format!("color-mix(in oklch, {token}, var(--foreground) {pct}%)"),
+    )])
+}
+
 fn strip_neg(tok: &str) -> (bool, &str) {
     if let Some(rest) = tok.strip_prefix('-') {
         if !rest.is_empty() {
@@ -1624,6 +1765,9 @@ fn bind_css_props(spec: &SetterSpec, css_name: &str) -> Vec<(String, String)> {
         "scroll" => return vec![("scroll-behavior".into(), var)],
         "willChange" => return vec![("will-change".into(), var)],
         "contain" => return vec![("contain".into(), var)],
+        "gap" => return vec![("gap".into(), var)],
+        "gapX" => return vec![("column-gap".into(), var)],
+        "gapY" => return vec![("row-gap".into(), var)],
         "borderImage" => return vec![("border-image".into(), var)],
         "backdrop" => {
             return vec![

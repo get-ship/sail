@@ -8,7 +8,7 @@
 use sail_compiler::parse::preprocess::preprocess as preprocess_src;
 
 fn pp(src: &str) -> String {
-    preprocess_src(src)
+    preprocess_src(src).expect("preprocess")
 }
 
 #[test]
@@ -97,28 +97,24 @@ fn style_bind_var_ref() {
 }
 
 #[test]
-fn utility_string_product_emits_no_classes() {
-    let out = pp(r#"<div sx="p-4 bg-surface-1">x</div>"#);
-    // Residual: lower returns empty — no sx-* paint classes from utility soup.
+fn utility_string_product_is_a_compile_error() {
+    let err = preprocess_src(r#"<div sx="p-4 bg-surface-1">x</div>"#)
+        .expect_err("utility-string sx must fail loudly");
+    let msg = format!("{err:?}");
     assert!(
-        !out.contains("sx-p4") && !out.contains("sx-bgsurface"),
-        "utility-string must not emit product classes:\n{out}"
+        msg.contains("Style error") || msg.contains("utility-string sx"),
+        "error must name the Style diagnostic: {msg}"
     );
 }
 
 #[test]
-fn structured_string_product_also_residual() {
-    let out = pp(r#"<div sx="bg: primary px: 2">x</div>"#);
+fn structured_string_product_is_a_compile_error() {
+    let err = preprocess_src(r#"<div sx="bg: primary px: 2">x</div>"#)
+        .expect_err("structured utility-string sx must fail loudly");
+    let msg = format!("{err:?}");
     assert!(
-        !out.contains("sx-bg") || out.contains("utility") || !out.contains("var(--primary)"),
-        "structured utility string is residual, not product:\n{out}"
-    );
-    // Prefer: empty sx classes (may leave attribute stripped or empty class).
-    let classes_from_util = out.contains(r#"class="sx-"#)
-        && (out.contains("primary") || out.contains("padding"));
-    assert!(
-        !classes_from_util,
-        "must not lower structured string as product:\n{out}"
+        msg.contains("Style error") || msg.contains("utility-string sx"),
+        "error must name the Style diagnostic: {msg}"
     );
 }
 

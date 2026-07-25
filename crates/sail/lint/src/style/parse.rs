@@ -395,7 +395,15 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
             p.force_progress();
             continue;
         }
-        let source = format!("style.{method}(…)");
+        let arg_text = args
+            .iter()
+            .map(|a| match a {
+                PaintArg::Token(t) => t.clone(),
+                PaintArg::Bind(n) => format!("bind({n})"),
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        let source = format!("style.{method}({arg_text})");
         if find_setter(method).is_none() {
             diags.push(StyleDiagnostic::UnknownSetter {
                 setter: method.to_string(),

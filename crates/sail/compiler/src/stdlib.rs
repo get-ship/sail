@@ -27,6 +27,7 @@ pub struct StdlibElement {
 const SOURCES: &[(&str, &str)] = &[
     ("spinner", include_str!("../stdlib/spinner.sail")),
     ("button", include_str!("../stdlib/button.sail")),
+    ("a", include_str!("../stdlib/anchor.sail")),
     ("separator", include_str!("../stdlib/separator.sail")),
     ("icon", include_str!("../stdlib/icon.sail")),
     ("label", include_str!("../stdlib/label.sail")),
@@ -151,7 +152,7 @@ fn descendant_map(tag: &str) -> Option<&'static [DescRule]> {
 const BREADCRUMB_MAP: &[DescRule] = &[
     DescRule {
         sel: "ol",
-        paint: DescPaint::Decls(&[
+        paint: DescPaint(&[
             ("display", "flex"),
             ("align-items", "center"),
             ("flex-wrap", "wrap"),
@@ -160,7 +161,7 @@ const BREADCRUMB_MAP: &[DescRule] = &[
     },
     DescRule {
         sel: "li",
-        paint: DescPaint::Decls(&[
+        paint: DescPaint(&[
             ("display", "inline-flex"),
             ("align-items", "center"),
             ("gap", "var(--space-2)"),
@@ -168,7 +169,7 @@ const BREADCRUMB_MAP: &[DescRule] = &[
     },
     DescRule {
         sel: "li:not(:first-child)::before",
-        paint: DescPaint::Decls(&[
+        paint: DescPaint(&[
             ("content", "'/'"),
             ("color", "var(--muted-foreground)"),
             ("user-select", "none"),
@@ -176,7 +177,7 @@ const BREADCRUMB_MAP: &[DescRule] = &[
     },
     DescRule {
         sel: "a",
-        paint: DescPaint::Decls(&[
+        paint: DescPaint(&[
             ("color", "var(--muted-foreground)"),
             ("text-decoration", "none"),
             ("border-radius", "var(--radius-sm)"),
@@ -188,18 +189,18 @@ const BREADCRUMB_MAP: &[DescRule] = &[
     },
     DescRule {
         sel: "a:hover",
-        paint: DescPaint::Decls(&[("color", "var(--foreground)")]),
+        paint: DescPaint(&[("color", "var(--foreground)")]),
     },
     DescRule {
         sel: "a:focus-visible",
-        paint: DescPaint::Decls(&[
+        paint: DescPaint(&[
             ("outline", "var(--ring-width) solid var(--ring)"),
             ("outline-offset", "var(--ring-offset)"),
         ]),
     },
     DescRule {
         sel: "[aria-current='page']",
-        paint: DescPaint::Decls(&[
+        paint: DescPaint(&[
             ("color", "var(--foreground)"),
             ("font-weight", "var(--font-weight-medium)"),
         ]),
@@ -209,7 +210,7 @@ const BREADCRUMB_MAP: &[DescRule] = &[
 const SPINNER_MAP: &[DescRule] = &[
     DescRule {
         sel: ".ring",
-        paint: DescPaint::Decls(&[
+        paint: DescPaint(&[
             ("display", "block"),
             ("box-sizing", "border-box"),
             ("width", "100%"),
@@ -230,56 +231,128 @@ struct DescRule {
     paint: DescPaint,
 }
 
-enum DescPaint {
-    Sx(&'static str),
-    Decls(&'static [(&'static str, &'static str)]),
-}
+struct DescPaint(&'static [(&'static str, &'static str)]);
 
 const PROSE_MAP: &[DescRule] = &[
     DescRule {
         sel: "h1, h2, h3, h4, h5, h6",
-        paint: DescPaint::Sx(
-            "font-heading font-(--heading-weight) tracking-(--heading-tracking) leading-tight mt-5 mb-2",
-        ),
+        paint: DescPaint(&[
+            ("font-family", "var(--heading-font)"),
+            ("font-weight", "var(--heading-weight)"),
+            ("letter-spacing", "var(--heading-tracking)"),
+            ("line-height", "var(--leading-tight)"),
+            ("margin-top", "var(--space-5)"),
+            ("margin-bottom", "var(--space-2)"),
+        ]),
     },
-    DescRule { sel: "h1", paint: DescPaint::Sx("text-2xl mt-6 mb-3") },
-    DescRule { sel: "h2", paint: DescPaint::Sx("text-xl mt-6 mb-3") },
-    DescRule { sel: "h3", paint: DescPaint::Sx("text-lg") },
-    DescRule { sel: "h4, h5, h6", paint: DescPaint::Sx("text-md") },
-    DescRule { sel: "p", paint: DescPaint::Sx("my-3") },
+    DescRule {
+        sel: "h1",
+        paint: DescPaint(&[
+            ("font-size", "var(--text-2xl)"),
+            ("margin-top", "var(--space-6)"),
+            ("margin-bottom", "var(--space-3)"),
+        ]),
+    },
+    DescRule {
+        sel: "h2",
+        paint: DescPaint(&[
+            ("font-size", "var(--text-xl)"),
+            ("margin-top", "var(--space-6)"),
+            ("margin-bottom", "var(--space-3)"),
+        ]),
+    },
+    DescRule { sel: "h3", paint: DescPaint(&[("font-size", "var(--text-lg)")]) },
+    DescRule { sel: "h4, h5, h6", paint: DescPaint(&[("font-size", "var(--text-md)")]) },
+    DescRule { sel: "p", paint: DescPaint(&[("margin-block", "var(--space-3)")]) },
     DescRule {
         sel: "a",
-        paint: DescPaint::Sx(
-            "text-primary underline decoration-selected-border underline-offset-(--ring-offset)",
-        ),
+        paint: DescPaint(&[
+            ("color", "var(--primary)"),
+            ("text-decoration-line", "underline"),
+            ("text-decoration-color", "var(--selected-border)"),
+            ("text-underline-offset", "var(--ring-offset)"),
+        ]),
     },
-    DescRule { sel: "a:hover", paint: DescPaint::Sx("decoration-primary") },
+    DescRule {
+        sel: "a:hover",
+        paint: DescPaint(&[("text-decoration-color", "var(--primary)")]),
+    },
     DescRule {
         sel: "code",
-        paint: DescPaint::Sx(
-            "font-mono text-sm tabular-nums py-1 px-2 rounded-sm bg-surface-1 border border-border-subtle",
-        ),
+        paint: DescPaint(&[
+            ("font-family", "var(--mono-font)"),
+            ("font-size", "var(--text-sm)"),
+            ("font-variant-numeric", "tabular-nums"),
+            ("padding-block", "var(--space-1)"),
+            ("padding-inline", "var(--space-2)"),
+            ("border-radius", "var(--radius-sm)"),
+            ("background-color", "var(--surface-1)"),
+            ("border-width", "1px"),
+            ("border-style", "solid"),
+            ("border-color", "var(--border-subtle)"),
+        ]),
     },
     DescRule {
         sel: "pre",
-        paint: DescPaint::Sx(
-            "font-mono text-sm bg-surface-2 border border-border-subtle rounded-md py-3 px-4 leading-normal-plus whitespace-pre-wrap break-words",
-        ),
+        paint: DescPaint(&[
+            ("font-family", "var(--mono-font)"),
+            ("font-size", "var(--text-sm)"),
+            ("background-color", "var(--surface-2)"),
+            ("border-width", "1px"),
+            ("border-style", "solid"),
+            ("border-color", "var(--border-subtle)"),
+            ("border-radius", "var(--radius-md)"),
+            ("padding-block", "var(--space-3)"),
+            ("padding-inline", "var(--space-4)"),
+            ("line-height", "var(--leading-normal-plus)"),
+            ("white-space", "pre-wrap"),
+            ("overflow-wrap", "anywhere"),
+            ("word-break", "anywhere"),
+        ]),
     },
-    DescRule { sel: "pre code", paint: DescPaint::Sx("bg-transparent border-0 p-0") },
+    DescRule {
+        sel: "pre code",
+        paint: DescPaint(&[
+            ("background-color", "transparent"),
+            ("border-width", "0px"),
+            ("padding", "0"),
+        ]),
+    },
     DescRule {
         sel: "blockquote",
-        paint: DescPaint::Sx(
-            "my-4 py-2 px-4 border-l border-l-3 border-l-primary text-muted-foreground bg-tone-primary-bg rounded-r-sm",
-        ),
+        paint: DescPaint(&[
+            ("margin-block", "var(--space-4)"),
+            ("padding-block", "var(--space-2)"),
+            ("padding-inline", "var(--space-4)"),
+            ("border-left-width", "1px"),
+            ("border-left-style", "solid"),
+            ("border-left-width", "3px"),
+            ("border-left-color", "var(--primary)"),
+            ("color", "var(--muted-foreground)"),
+            ("background-color", "var(--tone-primary-bg)"),
+            ("border-start-end-radius", "var(--radius-sm)"),
+            ("border-end-end-radius", "var(--radius-sm)"),
+        ]),
     },
-    DescRule { sel: "ul, ol", paint: DescPaint::Sx("my-3 ps-5") },
-    DescRule { sel: "li", paint: DescPaint::Sx("my-1") },
-    DescRule { sel: "li::marker", paint: DescPaint::Sx("text-muted-foreground") },
-    DescRule { sel: "strong", paint: DescPaint::Sx("font-semibold") },
+    DescRule {
+        sel: "ul, ol",
+        paint: DescPaint(&[
+            ("margin-block", "var(--space-3)"),
+            ("padding-inline-start", "var(--space-5)"),
+        ]),
+    },
+    DescRule { sel: "li", paint: DescPaint(&[("margin-block", "var(--space-1)")]) },
+    DescRule {
+        sel: "li::marker",
+        paint: DescPaint(&[("color", "var(--muted-foreground)")]),
+    },
+    DescRule {
+        sel: "strong",
+        paint: DescPaint(&[("font-weight", "var(--font-weight-semibold)")]),
+    },
     DescRule {
         sel: "table",
-        paint: DescPaint::Decls(&[
+        paint: DescPaint(&[
             ("border-collapse", "collapse"),
             ("width", "100%"),
             ("margin", "var(--space-3) 0"),
@@ -291,39 +364,59 @@ const PROSE_MAP: &[DescRule] = &[
     },
     DescRule {
         sel: "thead th",
-        paint: DescPaint::Sx("bg-muted text-foreground font-semibold"),
+        paint: DescPaint(&[
+            ("background-color", "var(--muted)"),
+            ("color", "var(--foreground)"),
+            ("font-weight", "var(--font-weight-semibold)"),
+        ]),
     },
     DescRule {
         sel: "th, td",
-        paint: DescPaint::Sx("border-b border-b-border-subtle py-2 px-3 text-start tabular-nums"),
+        paint: DescPaint(&[
+            ("border-bottom-width", "1px"),
+            ("border-bottom-style", "solid"),
+            ("border-bottom-color", "var(--border-subtle)"),
+            ("padding-block", "var(--space-2)"),
+            ("padding-inline", "var(--space-3)"),
+            ("text-align", "start"),
+            ("font-variant-numeric", "tabular-nums"),
+        ]),
     },
     DescRule {
         sel: "tbody tr:last-child td",
-        paint: DescPaint::Decls(&[("border-bottom", "0")]),
+        paint: DescPaint(&[("border-bottom", "0")]),
     },
 ];
 
 const CODE_BLOCK_MAP: &[DescRule] = &[
-    DescRule { sel: ".tok-tag", paint: DescPaint::Sx("text-(--syntax-tag)") },
-    DescRule { sel: ".tok-attr", paint: DescPaint::Sx("text-(--syntax-attr)") },
-    DescRule { sel: ".tok-string", paint: DescPaint::Sx("text-(--syntax-string)") },
-    DescRule { sel: ".tok-comment", paint: DescPaint::Sx("text-(--syntax-comment) italic") },
-    DescRule { sel: ".tok-keyword", paint: DescPaint::Sx("text-(--syntax-keyword)") },
-    DescRule { sel: ".tok-fn", paint: DescPaint::Sx("text-(--syntax-function)") },
-    DescRule { sel: ".tok-number", paint: DescPaint::Sx("text-(--syntax-number)") },
-    DescRule { sel: ".tok-bind", paint: DescPaint::Sx("text-(--syntax-function)") },
+    DescRule { sel: ".tok-tag", paint: DescPaint(&[("color", "var(--syntax-tag)")]) },
+    DescRule { sel: ".tok-attr", paint: DescPaint(&[("color", "var(--syntax-attr)")]) },
+    DescRule { sel: ".tok-string", paint: DescPaint(&[("color", "var(--syntax-string)")]) },
+    DescRule {
+        sel: ".tok-comment",
+        paint: DescPaint(&[("color", "var(--syntax-comment)"), ("font-style", "italic")]),
+    },
+    DescRule {
+        sel: ".tok-keyword",
+        paint: DescPaint(&[("color", "var(--syntax-keyword)")]),
+    },
+    DescRule { sel: ".tok-fn", paint: DescPaint(&[("color", "var(--syntax-function)")]) },
+    DescRule {
+        sel: ".tok-number",
+        paint: DescPaint(&[("color", "var(--syntax-number)")]),
+    },
+    DescRule { sel: ".tok-bind", paint: DescPaint(&[("color", "var(--syntax-function)")]) },
 ];
 
 fn lower_descendant_map(host: &str, rules: &[DescRule]) -> String {
     let mut out = String::new();
     for rule in rules {
-        let body = match rule.paint {
-            DescPaint::Sx(list) => lower_sx_list(list),
-            DescPaint::Decls(decls) => decls
-                .iter()
-                .map(|(p, v)| format!("{p}:{v};"))
-                .collect::<String>(),
-        };
+        let body: String = rule
+            .paint
+            .0
+            .iter()
+            .map(|(p, v)| format!("{p}:{v};"))
+            .collect();
         if body.is_empty() {
             panic!("descendant skin for {host} selector `{}` lowered empty", rule.sel);
         }
@@ -338,29 +431,5 @@ fn lower_descendant_map(host: &str, rules: &[DescRule]) -> String {
         out.push_str(" }\n");
     }
     out
-}
-
-fn lower_sx_list(list: &str) -> String {
-    use sail_lint::rules::sx;
-    let mut body = String::new();
-    for atom in list.split_whitespace() {
-        if let Some((head, rest)) = atom.split_once(':') {
-            if !rest.starts_with('(') && sx::is_prefix(head) {
-                panic!(
-                    "descendant sx map must put state on the selector, not as a prefix: `{atom}`"
-                );
-            }
-        }
-        let decls = sx::lower_atom(atom).unwrap_or_else(|| {
-            panic!("descendant sx map has unknown atom `{atom}` in `{list}`")
-        });
-        for (p, v) in decls {
-            body.push_str(&p);
-            body.push(':');
-            body.push_str(&v);
-            body.push(';');
-        }
-    }
-    body
 }
 

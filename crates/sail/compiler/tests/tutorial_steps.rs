@@ -153,8 +153,10 @@ fn lesson_08_starter_fails_by_design() {
     );
 
     // The prose quotes the first rejection verbatim. Keep them in step.
+    // Style paint errors are hard compile errors and surface before later
+    // expression/motion checks — pad(12px) is the planted first defect.
     assert!(
-        err.contains("only zero-arg signal reads are permitted"),
+        err.contains("pad(12px)") && err.contains("not a token on this setter's scale"),
         "lesson 08's first rejection changed shape. The prose in \
          packages/sail/tutorial/src/prose/08-the-compiler-talks-back.md quotes it verbatim \
          and must be refreshed. Got:\n{err}",

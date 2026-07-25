@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 #[test]
 fn chain_emits_token_vars_on_product_path() {
-    let out = preprocess(r#"<div sx={style.bg(primary).padX(2)}>x</div>"#);
+    let out = preprocess(r#"<div sx={style.bg(primary).padX(2)}>x</div>"#).expect("preprocess");
     assert!(
         out.contains("var(--primary)") || out.contains("sx-bgprimary"),
         "chain must emit token paint:\n{out}"
@@ -22,21 +22,22 @@ fn chain_emits_token_vars_on_product_path() {
 fn match_emits_attribute_selectors() {
     let out = preprocess(
         r#"<div sx={match(variant, { solid: style.bg(primary), soft: style.bg(muted) })}>x</div>"#,
-    );
+    )
+    .expect("preprocess");
     assert!(out.contains("[variant='solid']"), "{out}");
     assert!(out.contains("[variant='soft']"), "{out}");
 }
 
 #[test]
 fn when_emits_hover_not_events() {
-    let out = preprocess(r#"<div sx={when({ hover: style.bg(muted) })}>x</div>"#);
+    let out = preprocess(r#"<div sx={when({ hover: style.bg(muted) })}>x</div>"#).expect("preprocess");
     assert!(out.contains(":hover"), "{out}");
     assert!(!out.contains("onclick"), "{out}");
 }
 
 #[test]
 fn compound_emits_intersection() {
-    let out = preprocess(r#"<div sx={compound({ pill: true }, style.radius(full))}>x</div>"#);
+    let out = preprocess(r#"<div sx={compound({ pill: true }, style.radius(full))}>x</div>"#).expect("preprocess");
     assert!(out.contains("[pill]"), "{out}");
 }
 
@@ -205,7 +206,8 @@ fn scope_style_const_resolves_in_host_sx() {
 </scope>
 <div sx={filled}>x</div>
 "#,
-    );
+    )
+    .expect("preprocess");
     assert!(
         out.contains("var(--primary)") || out.contains("sx-bgprimary"),
         "scope Style const must resolve via StyleEnv:\n{out}"
@@ -226,7 +228,8 @@ fn scope_style_const_in_match_arms() {
 </scope>
 <div sx={match(variant, { solid: solid, soft: soft })}>x</div>
 "#,
-    );
+    )
+    .expect("preprocess");
     assert!(out.contains("[variant='solid']"), "{out}");
     assert!(out.contains("[variant='soft']"), "{out}");
     assert!(

@@ -232,14 +232,14 @@ fn l1_surface_count_is_documented() {
     let (stdlib, reskins) = l1_by_kind();
     assert_eq!(
         stdlib.len(),
-        43,
-        "stdlib L1 count drifted from 43 — update the spec's count claim \
+        44,
+        "stdlib L1 count drifted from 44 — update the spec's count claim \
          and run `cargo run -p sail-compiler -- skill` to refresh the agent surface"
     );
     assert_eq!(
         reskins.len(),
-        28,
-        "native reskin count drifted from 28 — same as above"
+        27,
+        "native reskin count drifted from 27 — same as above"
     );
     assert_eq!(
         l1_entries().len(),

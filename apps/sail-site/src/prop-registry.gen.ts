@@ -12,6 +12,23 @@ export interface GenProp {
 }
 
 export const PROP_REGISTRY: Record<string, GenProp[]> = {
+  "a": [
+    {
+      "name": "variant",
+      "type": "default · solid · soft · outline · ghost",
+      "default": "default"
+    },
+    {
+      "name": "tone",
+      "type": "default · primary · info · success · warning · destructive · accent · muted",
+      "default": "default"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    }
+  ],
   "alert": [
     {
       "name": "tone",
@@ -654,8 +671,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
   "toast-region": [
     {
       "name": "position",
-      "type": "top-start · top-end · bottom-start · bottom-end",
-      "default": "top-start"
+      "type": "{\n      'top-start': 'top-0 right-auto bottom-auto left-0',\n      'top-end': 'top-0 right-0 bottom-auto left-auto',\n      'bottom-start': 'top-auto right-auto bottom-0 left-0 col-reverse',\n      'bottom-end': 'top-auto right-0 bottom-0 left-auto col-reverse',\n    }"
     }
   ],
   "toggle": [

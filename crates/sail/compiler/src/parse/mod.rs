@@ -42,7 +42,7 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
     // internal dual-target plumbing). Only author `<style>` is inspected.
     reject_retired_host_selector(source)?;
     reject_part_selector(source)?;
-    let prepared = preprocess::preprocess_impl(source, expand_elements);
+    let prepared = preprocess::preprocess_impl(source, expand_elements)?;
     let nodes = html::parse_fragment(&prepared)?;
 
     let mut props: Vec<PropDecl> = Vec::new();
@@ -66,11 +66,10 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
                 }
                 "scope" => {
                     // The component's static surface: `type` aliases +
-                    // `props:` (incl. CVA key→sx maps) + optional `compound:`,
+                    // `props:` (union props only) + optional `compound:`,
                     // in TypeScript field syntax with literal values only
-                    // (see parse::scope_block). Types thread to the controller
-                    // module; CVA maps lower through the sx atom pipeline to
-                    // attribute-keyed CSS + reflected union props.
+                    // (see parse::scope_block). Paint lives in host `sx=`
+                    // via the Style product (`match`, `when`, `compound`).
                     let body: String = el
                         .children
                         .iter()
@@ -81,9 +80,6 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
                         .collect();
                     let block = scope_block::parse_scope_block(&body, el.span)?;
                     props.extend(block.props);
-                    if !block.variants_css.is_empty() {
-                        style_parts.push(block.variants_css);
-                    }
                     scope_types.push_str(&block.types);
                     continue;
                 }

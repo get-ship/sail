@@ -30,7 +30,18 @@ sail-compiler build --mode component tut-08-release-notes-starter.sail
 ## The loop, played out
 
 Run 1. The compiler reports one costed rejection at a time — first, a
-call shape the render path forbids:
+Style paint value that is not on the closed scale:
+
+```
+Error: Style error in `sx=`: style `pad(12px)` — value is not a token on this setter's scale
+```
+
+The message *is* the spacing scale rule. `12px` is not a token —
+comfortable padding on this ramp is `pad(4)`. Style failures are now
+hard compile errors (not silently empty paint), so they surface before
+later expression and motion checks.
+
+Run 2. After the Style fix, a call shape the render path forbids:
 
 ```
 Error: tut-08-release-notes-starter.sail: line 62 col 1: [expr `formatDate(publishedAt())`]
@@ -45,19 +56,6 @@ line. The bracketed source is exact, and it is the part you search for.
 The fix is lesson 04's move: do the work in the controller, expose a
 zero-arg read. `formatDate(publishedAt())` becomes a `published`
 derived, and the template reads `{published()}`.
-
-Run 2. Now it reaches the Style lint:
-
-```
-Error: tut-08-release-notes-starter.sail: line 41 col 21: [sail-sx] style `pad(12px)` —
-value is not a token on this setter's scale
-  suggest: sx is surface-only: spacing (p/m…, the Tailwind-aligned space ramp
-  1..64 plus half-steps), colors (bg/fg), radius, text. Layout is the primitives'
-  job (<row>/<column>/<grid>). Raw px/hex are not expressible.
-```
-
-The message *is* the spacing scale rule. `12px` is not a token —
-comfortable padding on this ramp is `pad(4)`.
 
 Run 3. The motion system holds its vocabulary the same way:
 

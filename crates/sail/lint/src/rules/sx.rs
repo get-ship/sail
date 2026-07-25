@@ -110,15 +110,6 @@ pub fn vocabulary() -> Vec<(String, Vec<String>)> {
     crate::sx_vocab::vocabulary()
 }
 
-/// The CSS declarations one atom lowers to. `None` when the atom is not
-/// vocabulary — the caller has already reported it.
-pub fn lower_atom(atom: &str) -> Option<Vec<(String, String)>> {
-    match crate::sx_vocab::resolve(atom) {
-        crate::sx_vocab::Resolved::Ok(decls) => Some(decls),
-        _ => None,
-    }
-}
-
 /// Split an sx pair into its prefixes and its atom. `hover:bg-surface-2` is one
 /// prefix and one atom; `bg-surface-2` is none and one.
 /// Kept for callers outside the IR path (tests / diagnostics helpers).

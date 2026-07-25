@@ -28,18 +28,16 @@ use sail_lint::style::{Style, StyleDiagnostic, StyleEnv};
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::directive::{PropDecl, PropKind};
 
-use super::preprocess::{parse_object_fields, unquote, variants_object_to_css};
+use super::preprocess::{parse_object_fields, unquote};
 
 /// Everything a `<scope>` block contributes to the Program.
 #[derive(Debug)]
 pub(crate) struct ScopeBlock {
     pub props: Vec<PropDecl>,
-    /// CSS lowered from residual CVA/compound (always empty on Style product path).
-    pub variants_css: String,
     /// Raw `type` / `export type` alias text, appended to the controller
     /// module (aliases hoist, so appending preserves controller spans).
     pub types: String,
-    /// Scope Style consts (`const filled = style.bg(primary)` → env for `sx` Ref).
+    /// Scope Style consts (`const name = style.…` → env for `sx` Ref).
     pub style_env: StyleEnv,
 }
 
@@ -55,7 +53,6 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
     let mut i = 0usize;
     let mut out = ScopeBlock {
         props: Vec::new(),
-        variants_css: String::new(),
         types: String::new(),
         style_env: HashMap::new(),
     };
@@ -81,10 +78,9 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
             }
             "props" => {
                 let obj_span = expect_member_object(body, after, "props", span)?;
-                let (props, cva_css) =
+                let props =
                     parse_props_fields(&body[obj_span.0 + 1..obj_span.1], span)?;
                 out.props.extend(props);
-                out.variants_css.push_str(&cva_css);
                 i = obj_span.1 + 1;
             }
             "compound" => {
@@ -458,13 +454,10 @@ fn find_balanced_bracket(s: &str, open: usize) -> Result<usize, CompileError> {
 
 // ── props fields ─────────────────────────────────────────────────────────────
 
-/// Parse `props:` fields. Returns declared props plus CSS lowered from any
-/// CVA-in-props axes (key → sx string maps) through the same pipeline as
-/// host `sx=`.
-fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String), CompileError> {
+/// Parse `props:` fields. Returns declared props.
+fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileError> {
     let bytes = body.as_bytes();
     let mut out = Vec::new();
-    let cva_axes: Vec<String> = Vec::new();
     let mut i = 0usize;
     loop {
         let mut doc: Option<String> = None;
@@ -488,7 +481,7 @@ fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String),
         if name.is_empty() {
             return Err(CompileError::new(format!(
                 "unexpected `{}` in `props:` — fields are `name: Type = literal`, \
-                 or a CVA map `name: {{ key: 'sx…', … }}`.",
+                 or a union `name: 'a' | 'b' = 'a'`.",
                 char_at(body, i)
             ))
             .with_span(span));
@@ -509,47 +502,6 @@ fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String),
             }
             annotation = Some(text.to_string());
             i = end;
-        }
-
-        // CVA key→sx maps no longer emit paint (Style product is host `match`).
-        // Keys still form a reflected union so unmigrated stdlib boots; sx
-        // string values are discarded (not a second paint architecture).
-        if let Some(ann) = annotation.as_deref() {
-            if is_sx_cva_table(ann) {
-                let keys: Vec<String> = parse_object_fields(
-                    ann.trim().trim_start_matches('{').trim_end_matches('}'),
-                )
-                .into_iter()
-                .map(|(k, _)| k)
-                .collect();
-                if keys.is_empty() {
-                    return Err(CompileError::new(format!(
-                        "variant prop `{name}` has no keys — write `{name}: 'a' | 'b' = 'a'` \
-                         and paint with `match({name}, {{ … }})`."
-                    ))
-                    .with_span(span));
-                }
-                i = skip_trivia(body, i, None);
-                if i < bytes.len()
-                    && bytes[i] == b'='
-                    && (i + 1 >= bytes.len() || bytes[i + 1] != b'>')
-                {
-                    // skip erroneous `= default` for map form
-                    let end = scan_value_end(body, skip_trivia(body, i + 1, None));
-                    i = end;
-                }
-                out.push(PropDecl {
-                    name: name.to_string(),
-                    kind: PropKind::Union(keys.clone()),
-                    default: keys.first().cloned(),
-                    reflect: true,
-                    bindable: false,
-                    description: doc,
-                    span: Span::new(0, 0),
-                });
-                // Do NOT push to cva_axes — no CSS from residual CVA strings.
-                continue;
-            }
         }
 
         // Optional `= literal` — up to a terminator at depth 0.
@@ -586,52 +538,7 @@ fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String),
 
         out.push(classify_field(name, annotation.as_deref(), value.as_deref(), doc, span)?);
     }
-    let cva_css = if cva_axes.is_empty() {
-        String::new()
-    } else {
-        variants_object_to_css(&format!("{{ {} }}", cva_axes.join(", ")))
-    };
-    Ok((out, cva_css))
-}
-
-/// True when `ann` is a CVA key→sx table: a `{ … }` object whose every value
-/// is a **single** string literal (sx list). Distinguishes from TS object
-/// types like `{ id: string }` or `{ a: 'x' | 'y' }` (union types end with a
-/// quote but are not one literal).
-fn is_sx_cva_table(ann: &str) -> bool {
-    let t = ann.trim();
-    if !(t.starts_with('{') && t.ends_with('}')) {
-        return false;
-    }
-    let fields = parse_object_fields(&t[1..t.len() - 1]);
-    if fields.is_empty() {
-        return false;
-    }
-    fields.iter().all(|(_, v)| is_single_string_literal(v.trim()))
-}
-
-/// A complete `'…'` / `"…"` literal and nothing else (so `'x' | 'y'` is false).
-fn is_single_string_literal(v: &str) -> bool {
-    let bytes = v.as_bytes();
-    if bytes.len() < 2 {
-        return false;
-    }
-    let q = bytes[0];
-    if q != b'\'' && q != b'"' {
-        return false;
-    }
-    let mut i = 1usize;
-    while i < bytes.len() {
-        if bytes[i] == b'\\' {
-            i = i.saturating_add(2);
-            continue;
-        }
-        if bytes[i] == q {
-            return i + 1 == bytes.len();
-        }
-        i += 1;
-    }
-    false
+    Ok(out)
 }
 
 /// Map one parsed field onto a `PropDecl` — the kind/default/reflect rules.
@@ -1266,28 +1173,21 @@ mod tests {
     }
 
     #[test]
-    fn residual_cva_maps_type_as_unions_without_paint() {
-        // Residual CVA key→sx tables type as key unions (stdlib boot) but emit
-        // no CSS — Style product paint is host match / when / compound.
+    fn cva_map_annotation_is_identity_not_reflected_union() {
+        // CVA key→sx tables are no longer special-cased. They parse as ordinary
+        // authored TypeScript object-type annotations (Identity), not reflected unions.
         let b = block(
-            "props: {\n  variant: {\n    solid: 'bg-tone text-tone-contrast',\n    soft: 'bg-tone-bg text-tone-fg hover:bg-muted',\n  }\n  size: { sm: 'text-xs px-2', md: 'text-sm px-2_5' }\n  tone: 'default' | 'primary' = 'default'\n}",
+            "props: {\n  variant: {\n    solid: 'bg-tone text-tone-contrast',\n    soft: 'bg-tone-bg text-tone-fg hover:bg-muted',\n  }\n  tone: 'default' | 'primary' = 'default'\n}",
         );
-        assert_eq!(
-            prop(&b, "variant").kind,
-            PropKind::Union(vec!["solid".into(), "soft".into()])
+        assert!(
+            matches!(prop(&b, "variant").kind, PropKind::Identity(_)),
+            "CVA map annotation must be treated as Identity, not a reflected union"
         );
-        assert_eq!(prop(&b, "variant").default.as_deref(), Some("solid"));
-        assert!(prop(&b, "variant").reflect, "residual CVA keys still reflect");
-        assert_eq!(prop(&b, "size").default.as_deref(), Some("sm"));
         assert_eq!(
             prop(&b, "tone").kind,
             PropKind::Union(vec!["default".into(), "primary".into()])
         );
-        assert!(
-            b.variants_css.is_empty(),
-            "residual CVA must not emit paint CSS: {}",
-            b.variants_css
-        );
+        assert_eq!(prop(&b, "tone").default.as_deref(), Some("default"));
     }
 
     #[test]
@@ -1306,10 +1206,7 @@ mod tests {
     fn empty_scope_is_valid() {
         let b = block("");
         assert!(
-            b.props.is_empty()
-                && b.types.is_empty()
-                && b.variants_css.is_empty()
-                && b.style_env.is_empty()
+            b.props.is_empty() && b.types.is_empty() && b.style_env.is_empty()
         );
     }
 }

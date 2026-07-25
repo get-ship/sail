@@ -29,7 +29,7 @@ fn split_html_css(preprocessed: &str) -> (&str, &str) {
 }
 
 fn preprocessed_layout() -> (Vec<sail_layout::html::Element>, sail_layout::Layout) {
-    let preprocessed = sail_compiler::parse::preprocess::preprocess(&source());
+    let preprocessed = sail_compiler::parse::preprocess::preprocess(&source()).expect("preprocess");
     let (html, _css) = split_html_css(&preprocessed);
     let elements = sail_layout::html::parse_source(html);
     let layout =

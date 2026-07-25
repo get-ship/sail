@@ -8,7 +8,7 @@
 use std::collections::HashMap;
 
 fn preprocess(src: &str) -> String {
-    sail_compiler::parse::preprocess::preprocess(src)
+    sail_compiler::parse::preprocess::preprocess(src).expect("preprocess")
 }
 
 fn split_html_css(preprocessed: &str) -> (&str, &str) {

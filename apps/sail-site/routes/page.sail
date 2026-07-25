@@ -56,7 +56,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   // left/right negative inset; without a hard clip the document grows sideways.
   const page = style.w(full).maxW(full).minW(0).overflowX(hidden).overflowY(visible).bg(surface-0)
   const hero = style.position(relative).padX(8).padT(20).padB(16).minW(0).overflowX(hidden)
-  const glow = style.bgGlow(accent).left(0).right(0).top(0).h(64).pointerEvents(none).z(base)
+  const glow = style.bgGlow(accent).left(0).right(0).top(0).h(64).z(base)
   const heroInner = style.position(relative).w(full).maxW(breakpoint-desktop).mx(auto).minW(0)
   const eyebrow = style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)
   // minW(0) keeps the display word from forcing the page wider than the viewport.

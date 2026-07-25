@@ -1,20 +1,3 @@
-// Tone as attribute-keyed CSS custom properties on the element. RESIDUAL:
-// only <a variant> still paints from --tone* — native <button> migrated to
-// the Style product (stdlib button.sail: match(variant) + compound({variant,
-// tone}) with direct semantic/tone-ramp tokens, element-skins.css). Removing
-// this channel without that migration made tone="primary" a no-op and turned
-// solid buttons into ink-on-paper (var(--foreground)) — atomic regression.
-// The channel dies when an anchor element lands the same way.
-const TONES_CSS =
-  "[tone='default']     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-contrast: var(--background);              --tone-bg: var(--hover-bg);            --tone-border: var(--border);                 --tone-ring: var(--ring);                     --tone-glow: var(--glow-default); }\n" +
-  "[tone='primary']     { --tone: var(--primary);          --tone-fg: var(--primary);          --tone-contrast: var(--primary-foreground);     --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring);        --tone-glow: var(--glow-primary); }\n" +
-  "[tone='info']        { --tone: var(--info);             --tone-fg: var(--info);             --tone-contrast: var(--info-foreground);        --tone-bg: var(--tone-info-bg);        --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring);           --tone-glow: var(--glow-info); }\n" +
-  "[tone='success']     { --tone: var(--success);          --tone-fg: var(--tone-success-fg);  --tone-contrast: var(--success-foreground);     --tone-bg: var(--tone-success-bg);     --tone-border: var(--tone-success-border);     --tone-ring: var(--tone-success-ring);        --tone-glow: var(--glow-success); }\n" +
-  "[tone='warning']     { --tone: var(--warning);          --tone-fg: var(--tone-warning-fg);  --tone-contrast: var(--warning-foreground);     --tone-bg: var(--tone-warning-bg);     --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring);        --tone-glow: var(--glow-warning); }\n" +
-  "[tone='destructive'] { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring);    --tone-glow: var(--glow-destructive); }\n" +
-  "[tone='accent']      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring);         --tone-glow: var(--glow-accent); }\n" +
-  "[tone='muted']       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring);          --tone-glow: var(--glow-muted); }\n"
-
 // --size-* channel removed (geometry is direct [size] → control-h/text tokens).
 // Empty sheet kept so shadow adoptSuiSheets still has a sizes slot.
 const SIZES_CSS = ''
@@ -150,7 +133,6 @@ function makeSheet(css: string): CSSStyleSheet | null {
 /// invisible to the author-override story, which is pure layer order.)
 export const layered = (css: string): string => `@layer sail {\n${css}}\n`
 
-export const sailTonesSheet: CSSStyleSheet | null = makeSheet(layered(TONES_CSS))
 export const sailSizesSheet: CSSStyleSheet | null = makeSheet(layered(SIZES_CSS))
 export const sailBaseSheet: CSSStyleSheet | null = makeSheet(layered(BASE_CSS))
 export const sailTypographySheet: CSSStyleSheet | null = makeSheet(
@@ -162,9 +144,10 @@ export const sailTypographySheet: CSSStyleSheet | null = makeSheet(
  * containment wrappers — not the Sail L1 product model). No-op for light DOM
  * / environments without `CSSStyleSheet`. L1 paint does not require this.
  *
- * Tone/size/control sheets are attribute-keyed (`[tone=…]`), so nested
- * framework controls inside a rare shadow wrapper still resolve tone/size props.
- * Host defaults remain `:host` only inside BASE (shadow host box).
+ * Size/control sheets are attribute-keyed, so nested framework controls inside
+ * a rare shadow wrapper still resolve size props. Tone is an ordinary element
+ * prop (no universal shadow channel). Host defaults remain `:host` only inside
+ * BASE (shadow host box).
  */
 // Control skins for residual shadow roots that nest framework-styled controls
 // (a `<button ghost>` dismiss). Document contracts do not cross a shadow
@@ -183,7 +166,6 @@ export function adoptSuiSheets(root: unknown): void {
   if (!(root instanceof ShadowRoot)) return
   const sheets = [
     sailBaseSheet,
-    sailTonesSheet,
     sailSizesSheet,
     sailTypographySheet,
     sailControlsSheet(),
@@ -197,10 +179,10 @@ export function adoptSuiSheets(root: unknown): void {
 }
 
 // ── LIGHT-DOM contracts ─────────────────────────────────────────────────────
-// The document-level framework contracts. Sail L1 is light DOM: tone/size are
-// ordinary attribute-keyed props (`[tone='primary']`) so one sheet styles an L1
-// <button> and a light L2 <sail-chip> identically, and dynamic `tone={x()}`
-// restyles both.
+// The document-level framework contracts. Sail L1 is light DOM: size is an
+// attribute-keyed prop; tone is an ordinary element prop (no universal
+// channel), so one sheet styles an L1 <button> and a light L2 <sail-chip>
+// identically, and dynamic tone values restyles both.
 
 // The INTERACTIVE-SURFACE contracts — the framework decisions no component
 // re-makes (the audit's control-baseline + focus + disabled clusters:
@@ -269,10 +251,10 @@ const INPUT_SKIN_CSS =
   ":where(optgroup) { font-weight: var(--font-weight-semibold); color: var(--muted-foreground); }\n"
 
 // L1 checkbox / radio — appearance:none native inputs the framework renders.
-// Square (checkbox) or round (radio); checked fills with the tone. The
-// checkmark is a background SVG (baked white — reads on every tone fill, the
-// same contrast --tone-contrast resolves to); the radio dot is an inset
-// box-shadow ring. Theme-reactive via --tone/--border/--background.
+// Square (checkbox) or round (radio); checked fills with the primary/success/
+// destructive tokens below. The checkmark is a background SVG (baked white —
+// reads on every fill); the radio dot is an inset box-shadow ring.
+// Theme-reactive via semantic color tokens and --border/--background.
 // (SWITCH is intentionally not here: a sliding thumb needs a pseudo-element,
 // which doesn't render on a replaced <input> — it wants a wrapper, so it
 // lands as a structural element / L2, not a bare-input contract. LANG-GAP.)
@@ -304,13 +286,13 @@ const TOGGLE_CONTROLS_CSS =
   ":where(input[type='checkbox'][invalid], input[type='radio'][invalid], input[type='checkbox'][aria-invalid='true'], input[type='radio'][aria-invalid='true']) { border-color: var(--destructive); }\n" +
   ":where(input[type='checkbox'][invalid]:checked, input[type='radio'][invalid]:checked, input[type='checkbox'][aria-invalid='true']:checked, input[type='radio'][aria-invalid='true']:checked) { background-color: var(--destructive); border-color: var(--destructive); }\n"
 
-// L1 <button> — the first language element skin. A bare <button> anywhere in
-// a SAIL document IS the design system's button ("the web with default styles"):
-// tone/size arrive through the attribute-keyed contracts above (ordinary
-// props → CSS custom properties), variant surfaces mirror the hand-polished
-// baseline, and every rule sits at :where() zero specificity so sx atomics
-// and component variants win ties. Fallbacks carry the no-attribute defaults
-// (tone=default, size=md).
+// L1 <button> / <a variant> — the first language element skins. A bare
+// <button> or <a variant> in a SAIL document IS the design-system control
+// ("the web with default styles"): size is an attribute-keyed contract,
+// variant paint is now the Style product (stdlib button.sail / anchor.sail),
+// and every rule sits at :where() zero specificity so sx atomics and
+// component variants win ties. Fallbacks carry the no-attribute defaults
+// (variant=default, size=md).
 //
 // ANATOMY CONTAINMENT. `button:not([variant])` matched every bare <button>
 // in the document — including the ones a SKIN renders as its own internal
@@ -327,40 +309,41 @@ const TOGGLE_CONTROLS_CSS =
 const NOT_ANATOMY = ':not([anatomy])'
 const BUTTON_SKIN_CSS =
   ':where(a[variant]) { text-decoration: none; }\n' +
-  // Base control box. Stroke weight and corner treatment lower to the Tier-2
-  // channels (--border-width / --corner-image) rather than literals, so a
-  // theme can thicken every hairline or draw pixel-art corners without a
-  // single component edit. `--button-shadow` is the variant's own resting
-  // elevation, held in a variable so the frame/press channels can COMPOSE
-  // with it instead of clobbering it (see the box-shadow list below).
-  `:where(button${NOT_ANATOMY}, a[variant]) { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control-h-md); padding: 0 var(--space-3); font-size: var(--text-base); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: var(--border-width) solid transparent; border-image: var(--corner-image); background: transparent; isolation: isolate; position: relative; box-shadow: var(--control-frame), var(--button-shadow, 0 0 0 0 transparent); }\n` +
+  // Base control box. Split into button and anchor halves so each half is
+  // independently gated; the shared declaration is factored by the runtime.
+  // Stroke weight and corner treatment lower to the Tier-2 channels
+  // (--border-width / --corner-image) rather than literals, so a theme can
+  // thicken every hairline or draw pixel-art corners without a single
+  // component edit. `--button-shadow` is the variant's own resting elevation,
+  // held in a variable so the frame/press channels can COMPOSE with it
+  // instead of clobbering it (see the box-shadow list below).
+  `:where(button${NOT_ANATOMY}) { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control-h-md); padding: 0 var(--space-3); font-size: var(--text-base); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: var(--border-width) solid transparent; border-image: var(--corner-image); background: transparent; isolation: isolate; position: relative; box-shadow: var(--control-frame), var(--button-shadow, 0 0 0 0 transparent); }\n` +
+  `:where(a[variant]) { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control-h-md); padding: 0 var(--space-3); font-size: var(--text-base); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: var(--border-width) solid transparent; border-image: var(--corner-image); background: transparent; isolation: isolate; position: relative; box-shadow: var(--control-frame), var(--button-shadow, 0 0 0 0 transparent); }\n` +
   // default / no-variant: neutral bordered surface.
-  `:where(button:not([variant])${NOT_ANATOMY}, button[variant='default'], a[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); --button-shadow: var(--shadow-xs); }\n` +
-  `:where(button:not([variant])${NOT_ANATOMY}, button[variant='default'], a[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n` +
+  `:where(button:not([variant])${NOT_ANATOMY}, button[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); --button-shadow: var(--shadow-xs); }\n` +
+  `:where(button:not([variant])${NOT_ANATOMY}, button[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n` +
+  `:where(a[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); --button-shadow: var(--shadow-xs); }\n` +
+  `:where(a[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n` +
   // solid: the tone fill. Hover shifts the fill TOWARD the foreground —
-  // color-mix makes this mode-aware for free (foreground is dark in light
-  // mode → darker; light in dark mode → lighter), so the button stays its
-  // own tone instead of collapsing to a neutral grey, and --tone-contrast
-  // text stays readable.
-  // BUTTON halves are the untoned 9940b8c5 fallbacks — tone-aware button
-  // paint is the Style product now (stdlib button.sail → element-skins.css,
-  // whose class-guarded attribute rules override these :where() rules).
-  // ANCHOR halves still read --tone* from the [tone=] channel until an
-  // anchor element lands the same migration.
+  // color-mix makes this mode-aware for free. The button and anchor halves
+  // here are the untoned 9940b8c5 fallbacks; tone-aware paint for both is
+  // emitted from the Style product (button.sail / anchor.sail) into
+  // element-skins.css, whose class-guarded attribute rules override these
+  // :where() rules.
   ":where(button[variant='solid']) { background: var(--foreground); border-color: var(--foreground); color: var(--background); --button-shadow: var(--shadow-xs); }\n" +
-  ":where(a[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); --button-shadow: var(--shadow-xs); }\n" +
+  ":where(a[variant='solid']) { background: var(--foreground); border-color: var(--foreground); color: var(--background); --button-shadow: var(--shadow-xs); }\n" +
   ":where(button[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--foreground), var(--foreground) 15%); border-color: color-mix(in oklch, var(--foreground), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }\n" +
-  ":where(a[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }\n" +
+  ":where(a[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--foreground), var(--foreground) 15%); border-color: color-mix(in oklch, var(--foreground), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }\n" +
   ":where(button[variant='soft']) { background: var(--hover-bg); border-color: var(--border); color: var(--foreground); }\n" +
-  ":where(a[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(a[variant='soft']) { background: var(--hover-bg); border-color: var(--border); color: var(--foreground); }\n" +
   ":where(button[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--hover-bg), var(--foreground) 18%); border-color: var(--border); }\n" +
-  ":where(a[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }\n" +
+  ":where(a[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--hover-bg), var(--foreground) 18%); border-color: var(--border); }\n" +
   ":where(button[variant='outline']) { border-color: var(--foreground); color: var(--foreground); }\n" +
-  ":where(a[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(a[variant='outline']) { border-color: var(--foreground); color: var(--foreground); }\n" +
   ":where(button[variant='outline'], button[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--foreground) 10%, transparent); }\n" +
-  ":where(a[variant='outline'], a[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }\n" +
+  ":where(a[variant='outline'], a[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--foreground) 10%, transparent); }\n" +
   ":where(button[variant='ghost']) { color: var(--foreground); }\n" +
-  ":where(a[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(a[variant='ghost']) { color: var(--foreground); }\n" +
   // Interaction motion (reduced-motion kills it via the global media rule).
   //
   // These two literals used to decide the whole product's tactile
@@ -370,16 +353,17 @@ const BUTTON_SKIN_CSS =
   // defaults are exactly the former numbers. A calm theme sets lift to 0; an
   // arcade theme exaggerates it. --press-shadow composes over the resting
   // elevation so a press can gain a hard offset instead of only moving.
-  `:where(button${NOT_ANATOMY}, a[variant]):hover:not(:disabled) { transform: translateY(var(--control-lift)); }\n` +
-  `:where(button${NOT_ANATOMY}, a[variant]):active:not(:disabled) { transform: translateY(var(--press-translate)) scale(var(--press-scale)); box-shadow: var(--control-frame), var(--press-shadow), var(--button-shadow, 0 0 0 0 transparent); }\n` +
+  `:where(button${NOT_ANATOMY}):hover:not(:disabled) { transform: translateY(var(--control-lift)); }\n` +
+  `:where(button${NOT_ANATOMY}):active:not(:disabled) { transform: translateY(var(--press-translate)) scale(var(--press-scale)); box-shadow: var(--control-frame), var(--press-shadow), var(--button-shadow, 0 0 0 0 transparent); }\n` +
+  `:where(a[variant]):hover:not(:disabled) { transform: translateY(var(--control-lift)); }\n` +
+  `:where(a[variant]):active:not(:disabled) { transform: translateY(var(--press-translate)) scale(var(--press-scale)); box-shadow: var(--control-frame), var(--press-shadow), var(--button-shadow, 0 0 0 0 transparent); }\n` +
   // Disabled surface (the contract handles cursor/opacity; ghost/outline go
   // transparent like the baseline).
   ":where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }\n"
 
 // L1 <hr> — the separator surface. Horizontal by default (a thin tone-tinted
 // rule); `orientation="vertical"` and `variant="dashed"` are attribute-keyed
-// like every other contract here. tone arrives for free via the generic
-// `[tone=...]` prop above (--tone-bg), so `<hr tone="primary">` just works.
+// like every other contract here.
 const HR_SKIN_CSS =
   ":where(hr) { border: 0; margin: var(--space-2) 0; padding: 0; flex: 0 0 auto; display: block; width: 100%; height: 1px; background: var(--border-subtle); }\n" +
   ":where(hr[variant='dashed']) { background: transparent; border-top: 1px dashed var(--border-subtle); height: 0; }\n" +
@@ -388,8 +372,7 @@ const HR_SKIN_CSS =
 
 // L1 <span dot> — the status-dot surface. `dot` scopes the skin so a plain
 // <span size="..."> elsewhere isn't affected (its size scale means something
-// different than the control size contract above). tone arrives for free via
-// the generic `[tone=...]` prop (--tone-fg/--tone-border/--tone-ring).
+// different than the control size contract above).
 const STATUS_DOT_SKIN_CSS =
   ":where(span[dot]) { display: inline-block; vertical-align: middle; width: var(--icon-size-3xs); height: var(--icon-size-3xs); border-radius: var(--shape-pill); background: var(--primary); box-shadow: 0 0 0 1.5px var(--border), 0 0 0 4.5px var(--ring); }\n" +
   ":where(span[dot][size='sm']) { width: var(--space-1_5); height: var(--space-1_5); box-shadow: 0 0 0 1px var(--border), 0 0 0 3.5px var(--ring); }\n" +
@@ -478,10 +461,9 @@ const RANGE_SKIN_CSS =
 // L1 <progress> — the determinate/indeterminate progress bar. A bare native
 // <progress value=.6> IS the design system's progress: the platform gives the
 // value semantics + a11y for free; this skin just replaces the OS chrome with
-// the token vocabulary. tone arrives via the generic `[tone=...]` prop
-// (--tone-fg), so `<progress tone=success>` tints the fill. WebKit and Firefox
-// expose the fill through DIFFERENT pseudo-elements, and a rule that groups
-// both selectors is dropped whole by either engine — so they're separate.
+// the token vocabulary. WebKit and Firefox expose the fill through DIFFERENT
+// pseudo-elements, and a rule that groups both selectors is dropped whole by
+// either engine — so they're separate.
 const PROGRESS_SKIN_CSS =
   ":where(progress) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--progress-h, var(--space-2)); border: 0; border-radius: var(--shape-pill); overflow: hidden; background: var(--muted); color: var(--primary); }\n" +
   ":where(progress[size='sm']) { height: var(--space-1_5); }\n" +
@@ -668,12 +650,13 @@ const POPOVER_SKIN_CSS =
   ":where([popover][role='listbox'] option[disabled]) { opacity: 0.5; cursor: not-allowed; }\n" +
   ":where([popover])::backdrop { background: transparent; }\n"
 
-// The CONTROL half of the contracts — attribute-keyed tone/size props + control
-// baseline + button/input/toggle skins, WITHOUT the light host rules
-// (display:block, slot, [hidden]) which are the light-DOM component's job.
-// Residual shadow roots adopt this via adoptSuiSheets so nested controls are
-// skinned. Exported so a unit test guards the invariant (adoptedStyleSheets
-// isn't constructable under jsdom, so the effect itself is browser-only).
+// The CONTROL half of the contracts — attribute-keyed size props + control
+// baseline + button/input/toggle skins, WITH tone as an element prop,
+// WITHOUT the light host rules (display:block, slot, [hidden]) which are the
+// light-DOM component's job. Residual shadow roots adopt this via adoptSuiSheets
+// so nested controls are skinned. Exported so a unit test guards the invariant
+// (adoptedStyleSheets isn't constructable under jsdom, so the effect itself is
+// browser-only).
 export const CONTROL_SKINS_CSS =
   AMBIENT_FX_CSS +
   NATIVE_SIZE_CSS +
@@ -698,9 +681,7 @@ export const LIGHT_CONTRACTS_CSS =
   // family and ink from here. The type scale sizes <p>/<h1> but never declares
   // a family, so without this anchor the page root falls to the UA serif.
   // Specificity 0 — an author :root/body rule wins.
-  ':where(html) { font-family: var(--font-body); color: var(--foreground); line-height: var(--leading-normal); }\n' +
-  TONES_CSS +
-  NATIVE_SIZE_CSS +
+
   // Semantic-element + typography defaults — a bare <table>/<ul>/<img>/<h1>
   // on a page is styled by the framework, no wrapper needed.
   TYPOGRAPHY_CSS +

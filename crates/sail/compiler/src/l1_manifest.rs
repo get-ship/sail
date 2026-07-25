@@ -245,13 +245,9 @@ const LISTBOX: [&str; 1] = ["listbox"];
 
 // holds references to them by name.
 const EMPTY: [&str; 0] = [];
-const VARIANT_BTN: [&str; 6] = ["", "default", "solid", "soft", "outline", "ghost"];
 const SIZE_XS_SM_MD_LG: [&str; 4] = ["xs", "sm", "md", "lg"];
 const SIZE_SM_MD_LG: [&str; 3] = ["sm", "md", "lg"];
 const SIZE_SM_MD_LG_FULL: [&str; 4] = ["sm", "md", "lg", "full"];
-const TONE_8: [&str; 8] = [
-    "default", "primary", "info", "success", "warning", "destructive", "accent", "muted",
-];
 const TONE_7_NO_MUTED: [&str; 7] = [
     "default", "primary", "info", "success", "warning", "destructive", "accent",
 ];
@@ -275,12 +271,6 @@ const METER_SIZES: [&str; 3] = ["sm", "md", "lg"];
 /// inverse too — any native tag the runtime styles but this table does
 /// not list is a failure.
 const RESKINS: &[ReskinRow] = &[
-    ReskinRow {
-        tag: "a",
-        selectors: &[":where(a[variant])"],
-        attributes: &[("variant", &VARIANT_BTN), ("tone", &TONE_8)],
-        description: "Anchor — when `variant` is set, becomes a button link. Tone is an ordinary [tone] prop (attribute-keyed contract tokens); hover shifts the fill toward the tone.",
-    },
     ReskinRow {
         tag: "details",
         selectors: &[":where(details)", ":where(summary)"],

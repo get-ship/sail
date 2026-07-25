@@ -11,7 +11,7 @@ const DEFAULT_VIEWPORT: (f32, f32) = (1440.0, 900.0);
 /// Collect layout diagnostics as compiler `Diagnostic`s. Always returns
 /// warnings — layout findings never block the build.
 pub fn collect(source: &str) -> Vec<Diagnostic> {
-    let preprocessed = crate::parse::preprocess::preprocess(source);
+    let preprocessed = crate::parse::preprocess::preprocess(source).expect("preprocess");
     let viewport = sail_layout::source_viewport(&preprocessed).unwrap_or(DEFAULT_VIEWPORT);
 
     let Ok(result) = sail_layout::check_preprocessed(&preprocessed, viewport) else {

@@ -10,7 +10,7 @@ use sail_compiler::parse::preprocess::preprocess as preprocess_src;
 use sail_compiler::{compile, CompileMode, CompileOpts};
 
 fn pp(src: &str) -> String {
-    preprocess_src(src)
+    preprocess_src(src).expect("preprocess")
 }
 
 fn component_opts() -> CompileOpts {

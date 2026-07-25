@@ -100,9 +100,11 @@ describe('light-DOM component registration', () => {
     const sheets = document.querySelectorAll('#sail-light-contracts')
     expect(sheets.length).toBe(1)
     const css = sheets[0]!.textContent ?? ''
-    // Platform button still uses [tone=] → --tone* (not a Style host).
-    expect(css).toContain("[tone='primary']")
-    expect(css).toContain('var(--tone, var(--foreground))')
+    // Native <button> and <a> variant paint are now Style product skins
+    // (element-skins.css); no universal [tone=] → --tone* channel remains in
+    // the light-DOM contracts layer.
+    expect(css).not.toContain("[tone='primary']")
+    expect(css).not.toContain('var(--tone, var(--foreground))')
     expect(css).toContain("[size='sm']") // native geometry via control-h tokens
     expect(css).not.toContain(':host')
     expect(css).toContain('slot { display: contents; }')

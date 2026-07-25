@@ -106,10 +106,10 @@ pub const SCOPE_GRAMMAR: &[ScopeEntry] = &[
         example: "<scope>\n  const filled = style.bg(primary).padX(2)\n  props: { label = '' }\n</scope>\n<span sx={filled}>{label}</span>",
     },
     ScopeEntry {
-        form: "residual CVA key map",
-        syntax: "size: { sm: 'px-2', lg: 'px-4' }",
-        summary: "residual key→string map types as a reflected key union (first = default); sx string values are discarded — paint with host match / Style",
-        example: "<scope>\n  props: {\n    density: { cozy: 'p-2', compact: 'p-1' }\n  }\n</scope>\n<p>ok</p>",
+        form: "Identity type annotation",
+        syntax: "name: { /* arbitrary TypeScript type */ }",
+        summary: "object type annotations are passed through verbatim as Identity; CVA key→sx maps are no longer special-cased — declare a string union and paint with host match / Style",
+        example: "<scope>\n  props: {\n    density: { cozy: string, compact: string }\n  }\n</scope>\n<p>ok</p>",
     },
     ScopeEntry {
         form: "residual compound array",

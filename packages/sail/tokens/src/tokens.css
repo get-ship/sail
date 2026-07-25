@@ -164,6 +164,12 @@
   --border: oklch(0.147 0.004 49.25 / 25%);
   --border-subtle: color-mix(in oklch, var(--border) 60%, transparent);
   --border-strong: color-mix(in oklch, var(--foreground) 55%, transparent);
+  --glow-default: none;
+  --glow-muted: none;
+  --glow-info: none;
+  --glow-success: none;
+  --glow-warning: none;
+  --glow-destructive: none;
   --background: oklch(0.975 0.002 106.423);
   --foreground: oklch(0.147 0.004 49.25);
   --primary: oklch(0.67 0.16 var(--brand-hue, 58));
@@ -509,24 +515,6 @@
 
   /* Per-tone glow (see glow.primary). Defaults to the former bg-glow-accent literal. */
   --glow-accent: radial-gradient(circle, color-mix(in oklch, var(--accent) 8%, transparent), transparent 60%);
-
-  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
-  --glow-default: none;
-
-  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
-  --glow-muted: none;
-
-  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
-  --glow-info: none;
-
-  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
-  --glow-success: none;
-
-  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
-  --glow-warning: none;
-
-  /* Per-tone glow (see glow.primary). `none` until a theme lights it up. */
-  --glow-destructive: none;
 
   /* Pill sentinel — SPLIT from --radius-full.
    * --radius-full (9999px) was doing double duty: a shape token meaning "this element is a circle/pill" AND the top of the radius scale. A theme that squared off its radius scale had no way to say "…but the status dot is still round", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.

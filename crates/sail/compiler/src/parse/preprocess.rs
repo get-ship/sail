@@ -11,20 +11,22 @@
 //!  4. Lower the layout keywords (`<column>`/`<row>`/…) → `<div>` + atomic classes.
 //! Steps 3–4 emit deduped CSS that `preprocess` injects as one `<style>`.
 
+use crate::diagnostics::{CompileError, Span};
+
 
 const VOID_TAGS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
     "source", "track", "wbr",
 ];
 
-pub fn preprocess(source: &str) -> String {
+pub fn preprocess(source: &str) -> Result<String, CompileError> {
     preprocess_impl(source, true)
 }
 
 /// The full pipeline with the stdlib-element pass switchable — element
 /// sources compile WITHOUT it (no element-in-element; no recursion when the
 /// registry compiles the stdlib with this same crate).
-pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
+pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<String, CompileError> {
     // Brace-quoting + self-close expansion normalize the raw source first. Then
     // the two compile-time lowerings run on that HTML: `sx=` attributes → atomic
     // surface classes, then the layout keywords (`<column>`/`<row>`/…) → `<div>`
@@ -32,8 +34,8 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     // it as ONE `<style>` at the very end so the brace-attr quoter never sees its
     // `{…}`-bearing rules. sx runs before layout so a layout element's own `sx=`
     // is already a `class` that the layout rewrite folds into the div's classes.
-    // Off-vocab values are rejected earlier by the lints (`sail-sx` / `sail-layout`)
-    // reading the raw source; here we only lower valid ones.
+    // Style errors in host `sx=` are returned as CompileErrors here, so they fail
+    // loudly in component AND element mode instead of producing inert empty paint.
     let s = expand_self_close(&quote_brace_attrs(source));
     // Bare framework-enum shorthand: `<button primary solid sm>` →
     // tone/variant/size attributes. Framework vocabulary on framework tags
@@ -47,8 +49,6 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     } else {
         (s, String::new())
     };
-    // The `<component>` block is parsed directly in `parse` — props → PropDecl,
-    // `variant` props → CSS. No desugar to `<prop>`/`<variants>` (both retired).
     // Framework-owned host display: the component presents as its root element
     // naturally would (inheriting the standard, not a per-component knob). Block
     // is the default, so this only emits an override for inline-natured roots.
@@ -59,7 +59,7 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     // `<host>` now survives to `parse` and is rejected as an unknown element.
     // Scope Style consts (`const filled = style.…`) resolve Refs in host `sx=`.
     let style_env = super::scope_block::style_env_from_source(&s);
-    let (s, sx_css) = lower_sx(&s, &style_env);
+    let (s, sx_css) = lower_sx(&s, &style_env)?;
     // An element that already carried `class="…"` now has a SECOND class attr
     // from the sx lowering; downstream the DOM emitter would issue two
     // `setAttribute("class", …)` calls and the sx one clobbers the author's.
@@ -67,20 +67,20 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     let s = merge_duplicate_class_attrs(&s);
     let (s, layout_css) = lower_layout(&s);
     // The `<theme>` tag is retired — tone/size are ordinary props (shared
-    // unions / CVA axes, reflected to attributes, mapped to tokens by the
-    // skin), not a per-component channel declaration. A stale `<theme>` now
-    // survives to `parse` and is rejected as an unknown element.
+    // unions, reflected to attributes, mapped to tokens by the skin), not a
+    // per-component channel declaration. A stale `<theme>` now survives to `parse`
+    // and is rejected as an unknown element.
     // NOTE elements_css rides the per-component injected style for now —
     // duplicated across components that use the same element. It moves to
     // the framework sheet with the deck style-delivery work.
     let css = format!(
         "{host_display_css}{sx_css}{layout_css}{elements_css}"
     );
-    if css.is_empty() {
+    Ok(if css.is_empty() {
         s
     } else {
         format!("<style>{css}</style>\n{s}")
-    }
+    })
 }
 
 /// Find every `sx` attribute VALUE in raw `.sail` source, with its byte
@@ -165,9 +165,13 @@ pub(crate) fn find_sx_attr_values(source: &str) -> Vec<(usize, &str)> {
 /// - `sx="style.bg(primary)…"`  (same Style grammar in quotes)
 /// - `sx={ filled }` when `filled` is a scope Style const (via `env`)
 ///
-/// Utility-string product (`bg-primary`, `bg: primary px: 2`) lowers to **empty**
-/// class (fail closed at lint/compile — not a second architecture).
-fn lower_sx(source: &str, env: &sail_lint::style::StyleEnv) -> (String, String) {
+/// A Style error in any `sx=` value is returned as a `CompileError` pointing
+/// at the offending value, so component/element compiles fail loudly instead
+/// of emitting inert empty paint.
+fn lower_sx(
+    source: &str,
+    env: &sail_lint::style::StyleEnv,
+) -> Result<(String, String), CompileError> {
     let bytes = source.as_bytes();
     let mut out = String::with_capacity(source.len() + 256);
     let mut css = String::new();
@@ -202,9 +206,11 @@ fn lower_sx(source: &str, env: &sail_lint::style::StyleEnv) -> (String, String) 
                     let vstart = j + 1;
                     if let Some(rel) = source[vstart..].find('"') {
                         let val = &source[vstart..vstart + rel];
+                        let classes = lower_sx_value(val, env, &mut css, &mut seen)
+                            .map_err(|diags| style_error(diags, vstart, vstart + rel))?;
                         out.push_str(&source[last..i]);
                         out.push_str("class=\"");
-                        out.push_str(&lower_sx_value(val, env, &mut css, &mut seen));
+                        out.push_str(&classes);
                         out.push('"');
                         i = vstart + rel + 1;
                         last = i;
@@ -214,9 +220,11 @@ fn lower_sx(source: &str, env: &sail_lint::style::StyleEnv) -> (String, String) 
                 if j < bytes.len() && bytes[j] == b'{' {
                     if let Some(end) = balanced_brace(source.as_bytes(), j) {
                         let val = &source[j + 1..end];
+                        let classes = lower_sx_value(val, env, &mut css, &mut seen)
+                            .map_err(|diags| style_error(diags, j + 1, end))?;
                         out.push_str(&source[last..i]);
                         out.push_str("class=\"");
-                        out.push_str(&lower_sx_value(val, env, &mut css, &mut seen));
+                        out.push_str(&classes);
                         out.push('"');
                         i = end + 1;
                         last = i;
@@ -236,7 +244,20 @@ fn lower_sx(source: &str, env: &sail_lint::style::StyleEnv) -> (String, String) 
         i = n;
     }
     out.push_str(&source[last..]);
-    (out, css)
+    Ok((out, css))
+}
+
+fn style_error(
+    diags: Vec<sail_lint::style::StyleDiagnostic>,
+    start: usize,
+    end: usize,
+) -> CompileError {
+    let message = diags
+        .into_iter()
+        .map(|d| d.message())
+        .collect::<Vec<_>>()
+        .join("; ");
+    CompileError::new(format!("Style error in `sx=`: {message}")).with_span(Span::new(start, end))
 }
 
 fn is_eq_after_sx(bytes: &[u8]) -> bool {
@@ -284,7 +305,7 @@ fn lower_sx_value(
     env: &sail_lint::style::StyleEnv,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
-) -> String {
+) -> Result<String, Vec<sail_lint::style::StyleDiagnostic>> {
     // `quote_brace_attrs` rewrites `sx={…}` → `sx="{…}"` (braces preserved inside).
     let val = strip_outer_braces(val.trim());
     // Sole product path: Style value language (chain + match/when/compound/bind).
@@ -1426,88 +1447,6 @@ fn lower_layout(source: &str) -> (String, String) {
     (out, css)
 }
 
-/// Split `s` on top-level `delim`, ignoring delimiters nested inside `{}`/`[]`
-/// or string literals. The primitive under the `<variants>` object parser.
-fn split_top_level(s: &str, delim: char) -> Vec<String> {
-    let mut parts = Vec::new();
-    let mut depth = 0i32;
-    let mut in_str: Option<char> = None;
-    // COMMENTS ARE OPAQUE to the split. A delimiter inside one is not a delimiter:
-    //
-    //     /** The tone, e.g. primary */
-    //     tone: 'default' | 'primary',
-    //
-    // Without this, that comma split the field mid-comment and everything after it
-    // became the prop's NAME — a perfectly ordinary JSDoc silently destroyed the prop
-    // it was documenting. (Found by a test written for the OTHER half of this bug.)
-    let mut in_line_comment = false;
-    let mut in_block_comment = false;
-    let mut prev = '\0';
-    let mut cur = String::new();
-    for c in s.chars() {
-        if in_line_comment {
-            cur.push(c);
-            if c == '\n' {
-                in_line_comment = false;
-            }
-            prev = c;
-            continue;
-        }
-        if in_block_comment {
-            cur.push(c);
-            if prev == '*' && c == '/' {
-                in_block_comment = false;
-                prev = '\0';
-                continue;
-            }
-            prev = c;
-            continue;
-        }
-        if in_str.is_none() && prev == '/' && (c == '/' || c == '*') {
-            if c == '/' {
-                in_line_comment = true;
-            } else {
-                in_block_comment = true;
-            }
-            cur.push(c);
-            prev = c;
-            continue;
-        }
-        prev = c;
-        match in_str {
-            Some(q) => {
-                cur.push(c);
-                if c == q {
-                    in_str = None;
-                }
-            }
-            None => match c {
-                '\'' | '"' => {
-                    in_str = Some(c);
-                    cur.push(c);
-                }
-                '{' | '[' => {
-                    depth += 1;
-                    cur.push(c);
-                }
-                '}' | ']' => {
-                    depth -= 1;
-                    cur.push(c);
-                }
-                d if d == delim && depth == 0 => {
-                    parts.push(cur.trim().to_string());
-                    cur.clear();
-                }
-                _ => cur.push(c),
-            },
-        }
-    }
-    if !cur.trim().is_empty() {
-        parts.push(cur.trim().to_string());
-    }
-    parts
-}
-
 /// Index of the first top-level `:` in `s` (skips `:` inside `{}`/`[]`/strings —
 /// e.g. the `:` in an sx value `'bg:tone'`).
 fn top_level_colon(s: &str) -> Option<usize> {
@@ -1711,38 +1650,6 @@ fn split_top_level_fields(s: &str) -> Vec<String> {
         parts.push(cur.trim().to_string());
     }
     parts
-}
-
-/// Lower the TS-object form of a `<variants>` body to the same `(selector-dsl,
-/// sx)` pairs the line DSL produces. CVA-shaped:
-///   `{ variant: { solid: 'sx…' }, size: { sm: 'sx…' },`
-///   `  compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'sx…' } ] }`
-/// A prop group `variant: { solid: 'x' }` → `("variant=solid", "x")`; a compound
-/// `{ when: { a:'1', b:'2' }, sx: 'x' }` → `("(a=1, b=2)", "x")`.
-fn parse_variants_object(body: &str) -> Vec<(String, String)> {
-    let mut pairs = Vec::new();
-    for (key, val) in parse_object_fields(body) {
-        if key == "compound" {
-            let arr = val.trim().trim_start_matches('[').trim_end_matches(']');
-            for obj in split_top_level(arr, ',') {
-                let fields = parse_object_fields(&obj);
-                let when = fields.iter().find(|(k, _)| k == "when").map(|(_, v)| v.clone());
-                let sx = fields.iter().find(|(k, _)| k == "sx").map(|(_, v)| unquote(v));
-                if let (Some(when), Some(sx)) = (when, sx) {
-                    let conds: Vec<String> = parse_object_fields(&when)
-                        .into_iter()
-                        .map(|(k, v)| format!("{k}={}", unquote(&v)))
-                        .collect();
-                    pairs.push((format!("({})", conds.join(", ")), sx));
-                }
-            }
-        } else {
-            for (value, sx) in parse_object_fields(&val) {
-                pairs.push((format!("{key}={value}"), unquote(&sx)));
-            }
-        }
-    }
-    pairs
 }
 
 /// Prepare a `<controller>` body for tsc/emit: inject the ambient runtime
@@ -2011,144 +1918,8 @@ fn first_template_tag(source: &str) -> Option<String> {
 /// Return the raw body of the `<component>` block (the `{ props, variants, meta }`
 /// consumes, then lower it. No `<variants>` block, no desugar.
 /// Emit CSS from `(selector-dsl, sx)` variant pairs — the one variant→CSS core.
-fn variant_pairs_to_css(pairs: &[(String, String)]) -> String {
-    let mut css = String::new();
-    for (sel, sx) in pairs {
-        let Some(selector) = variant_selector(sel) else { continue };
-        for (state, decls) in lower_variant_sx(sx) {
-            if decls.is_empty() {
-                continue;
-            }
-            let (media, host_pseudo, target_pseudo) = classify_variant_state(&state, true);
-            let rule =
-                format!(":host({selector}{host_pseudo}){target_pseudo}{{{decls}}}");
-            match media {
-                Some(q) => css.push_str(&format!("@media {q}{{{rule}}}")),
-                None => css.push_str(&rule),
-            }
-        }
-    }
-    css
-}
 
-/// Lower a CVA-shaped variants-object body into `:host([prop='value'])` CSS.
-pub(crate) fn variants_object_to_css(body: &str) -> String {
-    variant_pairs_to_css(&parse_variants_object(body))
-}
 
-/// Where a variants-v2 state prefix attaches. Returns
-/// `(media_query, host_pseudo, target_pseudo)`:
-/// - base (`""`) → nowhere
-/// - a condition (`motion-reduce`, `dark`, …) → an `@media` wrapper
-/// - `group-<s>` → pseudo on the HOST (host state drives the targeted
-///   descendant — the `label:hover .box` pattern); without a target it
-///   degrades to a plain host state
-/// - a plain state → pseudo on the target when one exists, else on the host
-fn classify_variant_state(
-    state: &str,
-    _has_target: bool,
-) -> (Option<&'static str>, String, String) {
-    if state.is_empty() {
-        return (None, String::new(), String::new());
-    }
-    // Multi-prefix chains: `checked:before`, `forced-colors:before`, `hover`.
-    // Pseudo-elements attach as target (`::before`); everything else that is a
-    // host state/condition attaches on the host selector.
-    let mut media: Option<&'static str> = None;
-    let mut host_pseudo = String::new();
-    let mut target_pseudo = String::new();
-    for part in state.split(':').filter(|p| !p.is_empty()) {
-        if let Some(q) = sail_lint::rules::sx::condition_media(part) {
-            media = Some(q);
-        } else if let Some(pe) = sail_lint::rules::sx::pseudo_element_prefix(part) {
-            target_pseudo.push_str(pe);
-        } else if let Some(base) = part.strip_prefix("group-") {
-            if let Some(p) = sail_lint::rules::sx::state_pseudo(base)
-                .map(str::to_string)
-                .or_else(|| sail_lint::rules::sx::state_data(base))
-                .or_else(|| {
-                    sail_lint::rules::sx::group_attr_presence(base).map(|n| format!("[{n}]"))
-                })
-            {
-                host_pseudo.push_str(&p);
-            }
-        } else if let Some(p) = sail_lint::rules::sx::state_pseudo(part) {
-            host_pseudo.push_str(p);
-        } else if let Some(p) = sail_lint::rules::sx::state_data(part) {
-            host_pseudo.push_str(&p);
-        }
-    }
-    (media, host_pseudo, target_pseudo)
-}
-
-/// One `name=value` condition → an attribute match. Bool props reflect as
-/// presence attributes, so `x=true` → `[x]` and `x=false` → `:not([x])`.
-fn attr_condition(k: &str, v: &str) -> String {
-    match v {
-        "true" => format!("[{k}]"),
-        "false" => format!(":not([{k}])"),
-        _ => format!("[{k}='{v}']"),
-    }
-}
-
-fn variant_selector(sel: &str) -> Option<String> {
-    let sel = sel.trim();
-    if let Some(inner) = sel.strip_prefix('(').and_then(|s| s.strip_suffix(')')) {
-        let mut out = String::new();
-        for part in inner.split(',') {
-            out.push_str(&attr_match(part.trim())?);
-        }
-        Some(out)
-    } else {
-        attr_match(sel)
-    }
-}
-
-fn attr_match(s: &str) -> Option<String> {
-    let s = s.trim();
-    if s.starts_with('[') && s.ends_with(']') && s.len() > 2 {
-        Some(s.to_string())
-    } else if let Some((prop, val)) = s.split_once('=') {
-        Some(attr_condition(prop.trim(), val.trim()))
-    } else if !s.is_empty() && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') {
-        // A bare identifier is a boolean attribute: `invalid` → `[invalid]`.
-        Some(format!("[{s}]"))
-    } else {
-        None
-    }
-}
-
-/// Lower a space-separated sx list to per-state declaration groups via the
-/// shared sx IR (variants v2). Accepts structured (`bg: tone hover:bg: muted`)
-/// and legacy atoms (`bg-tone hover:bg-muted`) — same dual-parse as host `sx=`.
-/// Returns `(state, "prop:value;…")` groups in first-appearance order; `state`
-/// is `""` for the base group, a pseudo state (`hover`, `focus`, …), a
-/// `group-<state>` propagation (host state → descendant target), or a
-/// condition (`motion-reduce`, …). This is what lets a variants table express
-/// `solid: 'bg: tone hover:bg: tone-bg-hover'` — the per-variant hover that
-/// translation waves had to drop.
-fn lower_variant_sx(list: &str) -> Vec<(String, String)> {
-    let mut groups: Vec<(String, String)> = Vec::new();
-    let mut push = |state: &str, decls: Vec<(String, String)>| {
-        let body: String = decls.iter().map(|(p, v)| format!("{p}:{v};")).collect();
-        if let Some((_, existing)) = groups.iter_mut().find(|(s, _)| s == state) {
-            existing.push_str(&body);
-        } else {
-            groups.push((state.to_string(), body));
-        }
-    };
-    // Dual-parse structured + legacy through sx IR (same path as host sx=).
-    let (prog, _errors) = sail_lint::sx_ir::parse_lenient(list);
-    for decl in &prog.decls {
-        if let Some(decls) = sail_lint::sx_ir::lower_decl(decl) {
-            // Join multi-prefix chain so classify_variant_state can peel group-/media;
-            // pseudo-elements (before/after) are handled in variant_pairs_to_css.
-            let state = decl.prefixes.join(":");
-            push(&state, decls);
-        }
-    }
-    groups
-}
 
 fn quote_brace_attrs(source: &str) -> String {
     let bytes = source.as_bytes();
@@ -2452,7 +2223,7 @@ mod tests {
     fn sx_merges_into_existing_class_attr() {
         // Regression: `<span class="badge" sx={…}>` must merge author class +
         // Style classes into one attribute (not two setAttribute("class") writes).
-        let out = preprocess(r#"<span class="badge" sx={style.pad(4)}>x</span>"#);
+        let out = preprocess(r#"<span class="badge" sx={style.pad(4)}>x</span>"#).expect("preprocess");
         assert!(
             out.contains(r#"class="badge "#) && out.contains("sx-"),
             "author class + Style classes must merge into one attribute, got:\n{out}"
@@ -2462,7 +2233,7 @@ mod tests {
 
     #[test]
     fn sx_before_class_also_merges() {
-        let out = preprocess(r#"<span sx={style.pad(4)} class="badge">x</span>"#);
+        let out = preprocess(r#"<span sx={style.pad(4)} class="badge">x</span>"#).expect("preprocess");
         assert!(
             out.contains("sx-") && out.contains("badge"),
             "merge must work regardless of attribute order, got:\n{out}"
@@ -2474,7 +2245,7 @@ mod tests {
     fn dynamic_class_with_sx_is_left_alone() {
         // A `{…}` class binding is the emitter's business — the merge pass
         // must not fold static Style classes into an expression it can't evaluate.
-        let out = preprocess(r#"<span class={cls()} sx={style.pad(4)}>x</span>"#);
+        let out = preprocess(r#"<span class={cls()} sx={style.pad(4)}>x</span>"#).expect("preprocess");
         assert_eq!(
             out.matches("class=").count(),
             2,
@@ -2484,13 +2255,13 @@ mod tests {
 
     #[test]
     fn quoted_gt_inside_attr_does_not_break_class_merge() {
-        let out = preprocess(r#"<span title="a > b" class="x" sx={style.pad(4)}>y</span>"#);
+        let out = preprocess(r#"<span title="a > b" class="x" sx={style.pad(4)}>y</span>"#).expect("preprocess");
         assert!(out.contains(r#"class="x "#) && out.contains("sx-"), "got:\n{out}");
     }
 
     #[test]
     fn stdlib_spinner_lowers_at_use_site() {
-        let out = preprocess(r#"<div class="page"><spinner size="sm" aria-label="Saving"></spinner></div>"#);
+        let out = preprocess(r#"<div class="page"><spinner size="sm" aria-label="Saving"></spinner></div>"#).expect("preprocess");
         // Root class stamped, use-site attrs merged, use-site wins the
         // aria-label collision with the snippet default.
         assert!(out.contains("sail-spinner spin"), "{out}");
@@ -2512,7 +2283,7 @@ mod tests {
 
     #[test]
     fn stdlib_separator_lowers_and_dedupes_skin() {
-        let out = preprocess("<separator orientation=\"vertical\"></separator><separator></separator>");
+        let out = preprocess("<separator orientation=\"vertical\"></separator><separator></separator>").expect("preprocess");
         assert_eq!(out.matches("<hr").count(), 2, "{out}");
         assert!(out.contains("sail-separator"), "{out}");
         assert!(out.contains(r#"orientation="vertical""#), "{out}");
@@ -2531,7 +2302,7 @@ mod tests {
     #[test]
     fn stdlib_element_children_fill_default_slot_or_drop() {
         // spinner has no default slot — children drop (shadow parity).
-        let out = preprocess("<spinner><b>x</b></spinner>");
+        let out = preprocess("<spinner><b>x</b></spinner>").expect("preprocess");
         assert!(!out.contains("<b>x</b>"), "slotless children drop: {out}");
     }
 
@@ -2542,7 +2313,8 @@ mod tests {
         // regions (icon / title / actions) and the un-slotted node into body.
         let out = preprocess(
             r#"<alert tone="success" dismissible><svg slot="icon" class="i"></svg><span slot="title">Saved</span>All changes saved.<button slot="actions">Undo</button></alert>"#,
-        );
+        )
+        .expect("preprocess");
         // root merges use-site attrs
         assert!(out.contains("sail-alert"), "root class stamped: {out}");
         assert!(out.contains(r#"tone="success""#), "tone merged: {out}");
@@ -2581,7 +2353,8 @@ mod tests {
         // away) plus named-slot projection through it.
         let out = preprocess(
             r#"<empty-state variant="placeholder"><svg slot="icon"></svg><span slot="title">No results</span>Try a different search.<button slot="action">Reset</button></empty-state>"#,
-        );
+        )
+        .expect("preprocess");
         assert!(out.contains("sail-empty-state"), "root class stamped: {out}");
         assert!(out.contains(r#"variant="placeholder""#), "attr merged: {out}");
         assert!(out.contains("use:variantLive"), "action rides the splice: {out}");
@@ -2651,7 +2424,7 @@ mod tests {
 
     #[test]
     fn stdlib_icon_lowers_at_use_site() {
-        let out = preprocess(r#"<icon size="lg"><svg viewBox="0 0 24 24"></svg></icon>"#);
+        let out = preprocess(r#"<icon size="lg"><svg viewBox="0 0 24 24"></svg></icon>"#).expect("preprocess");
         // Root class stamped, use-site attr forwarded, slotted svg spliced in.
         assert!(out.contains("sail-icon"), "{out}");
         assert!(out.contains(r#"size="lg""#), "{out}");
@@ -2672,7 +2445,7 @@ mod tests {
         // component templates — the sonnet-agent find). But the host paint
         // (root class + atomic sx classes) reaches real labels only by being
         // STAMPED onto the use-site tag — nothing else ever adds it.
-        let out = preprocess(r#"<label for="email" required>Email</label>"#);
+        let out = preprocess(r#"<label for="email" required>Email</label>"#).expect("preprocess");
         assert!(
             out.contains("sail-label"),
             "native kind stamps its host classes: {out}"
@@ -2702,7 +2475,7 @@ mod tests {
         // (a /* comment */ or selector containing `<label>`-ish text) must
         // pass through untouched — <style> blocks are opaque to the pass.
         let src = "<style>\n/* the <spinner> and <label> here are prose */\n.x { color: red; }\n</style>\n<div class=\"y\">z</div>";
-        let out = preprocess(src);
+        let out = preprocess(src).expect("preprocess");
         assert!(out.contains("/* the <spinner> and <label> here are prose */"), "{out}");
         assert!(out.contains(".x { color: red; }"), "{out}");
         assert!(!out.contains("sail-spinner"), "no splice inside style: {out}");
@@ -2710,7 +2483,7 @@ mod tests {
 
     #[test]
     fn bare_enum_shorthand_desugars_on_framework_tags() {
-        let out = preprocess(r#"<button primary solid sm on:click={f}>Go</button>"#);
+        let out = preprocess(r#"<button primary solid sm on:click={f}>Go</button>"#).expect("preprocess");
         assert!(out.contains(r#"tone="primary""#), "{out}");
         assert!(out.contains(r#"variant="solid""#), "{out}");
         assert!(out.contains(r#"size="sm""#), "{out}");
@@ -2725,7 +2498,7 @@ mod tests {
         // untouched (and likely a compile error downstream if there is no
         // matching custom element). This test is the boundary: the bare
         // words remain literal attributes, not desugared prop values.
-        let out = preprocess(r#"<sail-chip accent outline>x</sail-chip>"#);
+        let out = preprocess(r#"<sail-chip accent outline>x</sail-chip>"#).expect("preprocess");
         assert!(!out.contains(r#"tone="accent""#), "no tone desugar: {out}");
         assert!(
             !out.contains(r#"variant="outline""#),
@@ -2738,16 +2511,16 @@ mod tests {
     #[test]
     fn bare_enum_shorthand_respects_explicit_and_scope() {
         // Explicit attribute wins — no double tone.
-        let out = preprocess(r#"<button tone="info" primary>x</button>"#);
+        let out = preprocess(r#"<button tone="info" primary>x</button>"#).expect("preprocess");
         assert!(out.contains(r#"tone="info""#), "{out}");
         assert!(!out.contains(r#"tone="primary""#), "explicit wins: {out}");
         assert!(out.contains(" primary"), "bare word passes through: {out}");
         // Userland/HTML tags are untouched.
-        let out = preprocess(r#"<my-card primary>x</my-card><p sm>y</p>"#);
+        let out = preprocess(r#"<my-card primary>x</my-card><p sm>y</p>"#).expect("preprocess");
         assert!(out.contains("<my-card primary>"), "{out}");
         assert!(out.contains("<p sm>"), "{out}");
         // Boolean props and quoted values never collide.
-        let out = preprocess(r#"<button disabled data-x="sm primary">x</button>"#);
+        let out = preprocess(r#"<button disabled data-x="sm primary">x</button>"#).expect("preprocess");
         assert!(out.contains(" disabled"), "{out}");
         assert!(out.contains(r#"data-x="sm primary""#), "quoted values untouched: {out}");
     }
@@ -2769,7 +2542,7 @@ mod tests {
         // Regression: the merge pass sliced `source[i + 1..]` while `i` sat on
         // a multi-byte char (sail-date-picker's `‹`/`›` in a comment) — panic.
         let src = "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" sx={style.pad(4)}>é…‹›</span>";
-        let out = preprocess(src);
+        let out = preprocess(src).expect("preprocess");
         assert!(out.contains(r#"class="x "#) && out.contains("sx-"), "got:\n{out}");
         assert!(out.contains("é…‹›"), "text content preserved:\n{out}");
     }
@@ -2778,7 +2551,7 @@ mod tests {
     fn full_pipeline() {
         let src = r#"<time datetime="2026-07-19" />
 <button on:click={() => x()}>hi</button>"#;
-        let out = preprocess(src);
+        let out = preprocess(src).expect("preprocess");
         assert!(out.contains("</time>"));
         assert!(out.contains(r#"on:click="{() =&gt; x()}""#) || out.contains(r#"on:click="{() => x()}""#));
     }
@@ -2795,7 +2568,7 @@ mod tests {
   Note: the renderable subset doesn't admit `.items({…})` here.
 -->
 <article data-passed={c ? 'true' : 'false'}></article>"#;
-        let out = preprocess(src);
+        let out = preprocess(src).expect("preprocess");
         assert!(
             out.contains(r#"data-passed="{c ? 'true' : 'false'}""#),
             "brace-attr after a comment containing an apostrophe must \
@@ -2811,7 +2584,7 @@ mod tests {
         // misclassified. With the comment-aware skip, the body is
         // copied verbatim and the real `<button>` is parsed correctly.
         let src = r#"<!-- see <time> usage --><button on:click={() => f()}>x</button>"#;
-        let out = preprocess(src);
+        let out = preprocess(src).expect("preprocess");
         assert!(out.contains("</time>") || out.contains("<time>"));
         assert!(
             out.contains(r#"on:click="{() => f()}""#)
@@ -2826,14 +2599,14 @@ mod tests {
         // `source[i..]`, panicking mid-codepoint on any multi-byte char — the
         // crash the async golden fixtures hit (an em-dash / ellipsis in copy).
         let src = "<p>Failed — retry…</p>\n<sail-card sx={style.pad(4)}>café ☕</sail-card>";
-        let out = preprocess(src);
+        let out = preprocess(src).expect("preprocess");
         assert!(out.contains("café ☕"), "multibyte content preserved: {out}");
         assert!(out.contains("sx-") && out.contains("class="), "Style still lowered: {out}");
     }
 
     #[test]
     fn lowers_column_to_div_with_classes_and_style() {
-        let out = preprocess(r#"<column gap="4"><p>hi</p></column>"#);
+        let out = preprocess(r#"<column gap="4"><p>hi</p></column>"#).expect("preprocess");
         assert!(out.contains(r#"<div class="sail-col sail-g-4 sail-ai-stretch">"#), "col lowered: {out}");
         assert!(out.contains("</div>"), "close tag lowered: {out}");
         assert!(!out.contains("<column"), "no column tag remains: {out}");
@@ -2844,7 +2617,7 @@ mod tests {
     #[test]
     fn layout_element_sx_merges_into_one_class() {
         // Style lowers first (→ class), then layout folds it into the div's classes.
-        let out = preprocess(r#"<column gap="2" sx={style.pad(4)}>x</column>"#);
+        let out = preprocess(r#"<column gap="2" sx={style.pad(4)}>x</column>"#).expect("preprocess");
         assert!(
             out.contains("sail-col") && out.contains("sail-g-2") && out.contains("sx-"),
             "merged: {out}"
@@ -2854,14 +2627,14 @@ mod tests {
 
     #[test]
     fn passes_through_id_and_merges_static_class() {
-        let out = preprocess(r#"<row id="bar" class="mine">x</row>"#);
+        let out = preprocess(r#"<row id="bar" class="mine">x</row>"#).expect("preprocess");
         assert!(out.contains(r#"id="bar""#), "id preserved: {out}");
         assert!(out.contains("sail-row") && out.contains("mine"), "class merged: {out}");
     }
 
     #[test]
     fn nested_layout_lowers_every_box() {
-        let out = preprocess(r#"<column><row><center>x</center></row></column>"#);
+        let out = preprocess(r#"<column><row><center>x</center></row></column>"#).expect("preprocess");
         assert_eq!(out.matches("<div").count(), 3, "three divs: {out}");
         assert_eq!(out.matches("</div>").count(), 3, "three closes: {out}");
     }
@@ -2880,7 +2653,7 @@ mod tests {
 
     #[test]
     fn grid_cols_emits_repeat_minmax_track_list() {
-        let out = preprocess(r#"<grid cols="7" gap="4">x</grid>"#);
+        let out = preprocess(r#"<grid cols="7" gap="4">x</grid>"#).expect("preprocess");
         assert!(
             out.contains(".sail-gc-7{grid-template-columns:repeat(7,minmax(0,1fr))}"),
             "cols lowering produced the repeat(minmax) track: {out}"
@@ -2896,7 +2669,7 @@ mod tests {
         // `cols` and `min` both own `grid-template-columns`; the fixed count
         // wins. With both present the responsive axis is dropped so the
         // class list doesn't double the property.
-        let out = preprocess(r#"<grid cols="5" min="lg">x</grid>"#);
+        let out = preprocess(r#"<grid cols="5" min="lg">x</grid>"#).expect("preprocess");
         assert!(out.contains("sail-gc-5"), "cols class applied: {out}");
         assert!(!out.contains("sail-gm-"), "min class suppressed: {out}");
         assert!(
@@ -2910,7 +2683,7 @@ mod tests {
         // Same dynamic-axis shape as `<row align={pick()}>`: an inline
         // expression concatenated with the prefix, and EVERY rule for the
         // axis injected so any runtime value matches.
-        let out = preprocess(r#"<grid cols={n()}>x</grid>"#);
+        let out = preprocess(r#"<grid cols={n()}>x</grid>"#).expect("preprocess");
         assert!(out.contains("'sail-gc-' + (n())"), "dynamic cols fragment: {out}");
         for n in 1..=12 {
             assert!(
@@ -2924,7 +2697,7 @@ mod tests {
 
     #[test]
     fn row_nowrap_emits_flex_wrap_override() {
-        let out = preprocess(r#"<row nowrap gap="2">x</row>"#);
+        let out = preprocess(r#"<row nowrap gap="2">x</row>"#).expect("preprocess");
         assert!(out.contains("sail-nowrap"), "nowrap class present: {out}");
         assert!(
             out.contains(".sail-nowrap{flex-wrap:nowrap}"),
@@ -2940,7 +2713,7 @@ mod tests {
 
     #[test]
     fn row_inline_nowrap_composes() {
-        let out = preprocess(r#"<row inline nowrap>x</row>"#);
+        let out = preprocess(r#"<row inline nowrap>x</row>"#).expect("preprocess");
         assert!(out.contains("sail-row-i"), "inline base: {out}");
         assert!(out.contains("sail-nowrap"), "nowrap override: {out}");
         assert!(out.contains(".sail-row-i{display:inline-flex"), "inline base rule: {out}");
@@ -2949,7 +2722,7 @@ mod tests {
 
     #[test]
     fn grid_rows_emits_repeat_minmax_track_list() {
-        let out = preprocess(r#"<grid rows="3" gap="4">x</grid>"#);
+        let out = preprocess(r#"<grid rows="3" gap="4">x</grid>"#).expect("preprocess");
         assert!(
             out.contains(".sail-gr-3{grid-template-rows:repeat(3,minmax(0,1fr))}"),
             "rows lowering produced the repeat(minmax) track: {out}"
@@ -2963,7 +2736,7 @@ mod tests {
     fn grid_cols_and_rows_compose_into_a_fixed_matrix() {
         // `cols` owns the column track, `rows` the row track — different CSS
         // properties, so both survive (no precedence, unlike cols/min).
-        let out = preprocess(r#"<grid cols="4" rows="3">x</grid>"#);
+        let out = preprocess(r#"<grid cols="4" rows="3">x</grid>"#).expect("preprocess");
         assert!(out.contains("sail-gc-4"), "cols class: {out}");
         assert!(out.contains("sail-gr-3"), "rows class: {out}");
         assert!(out.contains("grid-template-columns:repeat(4,minmax(0,1fr))"), "{out}");
@@ -2972,7 +2745,7 @@ mod tests {
 
     #[test]
     fn grid_rows_dynamic_lowers_to_a_class_binding_with_all_rules() {
-        let out = preprocess(r#"<grid rows={n()}>x</grid>"#);
+        let out = preprocess(r#"<grid rows={n()}>x</grid>"#).expect("preprocess");
         assert!(out.contains("'sail-gr-' + (n())"), "dynamic rows fragment: {out}");
         for n in 1..=12 {
             assert!(
@@ -2984,14 +2757,14 @@ mod tests {
 
     #[test]
     fn column_justify_and_evenly_emit() {
-        let out = preprocess(r#"<column justify="between">x</column>"#);
+        let out = preprocess(r#"<column justify="between">x</column>"#).expect("preprocess");
         assert!(out.contains("sail-jc-between"), "column justify class: {out}");
         assert!(out.contains(".sail-jc-between{justify-content:space-between}"), "{out}");
         // A plain column emits no justify class (no default).
-        let plain = preprocess(r#"<column>x</column>"#);
+        let plain = preprocess(r#"<column>x</column>"#).expect("preprocess");
         assert!(!plain.contains("sail-jc-"), "no implicit column justify: {plain}");
 
-        let evenly = preprocess(r#"<row justify="evenly">x</row>"#);
+        let evenly = preprocess(r#"<row justify="evenly">x</row>"#).expect("preprocess");
         assert!(evenly.contains(".sail-jc-evenly{justify-content:space-evenly}"), "{evenly}");
     }
 
@@ -3000,7 +2773,7 @@ mod tests {
         // Defensive: even if the lint weren't running, an unknown attr on a
         // layout keyword must not silently flow through to the lowered div.
         // The compile-emitted output must not carry a dead `bogus="x"`.
-        let out = preprocess(r#"<grid bogus="x">x</grid>"#);
+        let out = preprocess(r#"<grid bogus="x">x</grid>"#).expect("preprocess");
         assert!(!out.contains("bogus="), "unknown attr dropped from emit: {out}");
         assert!(out.contains("sail-grid"), "the base layout class still there: {out}");
     }
@@ -3012,7 +2785,8 @@ mod tests {
         // pass-through survives on the lowered div.
         let out = preprocess(
             r#"<grid id="hero" title="t" data-x="1" aria-label="x" role="region">x</grid>"#,
-        );
+        )
+        .expect("preprocess");
         assert!(out.contains(r#"id="hero""#), "id survived: {out}");
         assert!(out.contains(r#"title="t""#), "title survived: {out}");
         assert!(out.contains(r#"data-x="1""#), "data-* survived: {out}");
@@ -3033,7 +2807,8 @@ mod tests {
         // each form with a hint at the replacement.
         let out = preprocess(
             r#"<row bind:this={panelEl} hidden={!cr.cell.inMonth}>x</row>"#,
-        );
+        )
+        .expect("preprocess");
         assert!(out.contains("bind:this="), "bind:this survives: {out}");
         assert!(out.contains("hidden="), "plain hidden survives: {out}");
         assert!(!out.contains("class:"), "the deleted `class:` directive is not allowed through: {out}");
@@ -3046,7 +2821,7 @@ mod tests {
         // `<sail-stack direction="row">` idiom — the keyword lowering
         // needs to honor it as an explicit flex-direction override so
         // legacy components keep their visual layout.
-        let out = preprocess(r#"<column gap="2" direction="row">x</column>"#);
+        let out = preprocess(r#"<column gap="2" direction="row">x</column>"#).expect("preprocess");
         assert!(out.contains("sail-dir-row"), "direction class emitted: {out}");
         assert!(
             out.contains(".sail-dir-row{flex-direction:row}"),
@@ -3059,7 +2834,7 @@ mod tests {
     #[test]
     fn dynamic_axis_lowers_to_a_class_binding_with_full_rules() {
         // a component parameterizing its layout: `align={pick()}`
-        let out = preprocess(r#"<column align={pick()}>x</column>"#);
+        let out = preprocess(r#"<column align={pick()}>x</column>"#).expect("preprocess");
         assert!(out.contains(r#"class="{"#), "emits a dynamic class binding: {out}");
         assert!(out.contains("'sail-ai-' + (pick())"), "dynamic align fragment: {out}");
         // EVERY align rule injected, so whatever `pick()` returns has a match.
@@ -3074,7 +2849,7 @@ mod tests {
         // Utility-string condition prefixes are residual product (hard error /
         // empty lower). Style product uses when({…}) for browser state;
         // media-condition guards remain a follow-up on the Style path.
-        let out = preprocess(r#"<div sx={when({ hover: style.shadow(none) })}>x</div>"#);
+        let out = preprocess(r#"<div sx={when({ hover: style.shadow(none) })}>x</div>"#).expect("preprocess");
         assert!(out.contains(":hover"), "when hover emits pseudo:\n{out}");
         assert!(out.contains("box-shadow") || out.contains("shadow") || out.contains("sx-"), "{out}");
     }
@@ -3085,7 +2860,7 @@ mod tests {
         // panic or read past end-of-file. Copy the rest verbatim and
         // let the downstream parser produce its own diagnostic.
         let src = "<!-- never closed";
-        let out = preprocess(src);
+        let out = preprocess(src).expect("preprocess");
         assert_eq!(out, src);
     }
 
@@ -3144,7 +2919,7 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     fn lower_sx_var_ref_binds_an_atomic_class() {
         // Product form: `style.translateY(bind(rowY))` — reactive paint via
         // CSS custom property. JS writes `--row-y`; Style declares the read.
-        let out = preprocess(r#"<grid sx={style.translateY(bind(rowY))}>row</grid>"#);
+        let out = preprocess(r#"<grid sx={style.translateY(bind(rowY))}>row</grid>"#).expect("preprocess");
         assert!(
             out.contains("var(--row-y)") || out.contains("translate"),
             "bind translateY emits var/read:\n{out}"
@@ -3155,13 +2930,15 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     #[test]
     fn lower_sx_var_ref_rejects_garbage_identifier() {
         // An invalid identifier (here `(--row.y)` — the `.` is not
-        // a CSS ident character) drops through `is_var_ref` to the
-        // scale lookup, which fails. The lowering then emits no CSS
-        // rule for the garbage var-ref — the diag surface is the lint.
-        let out = preprocess(r#"<div sx="top-(--row.y)">x</div>"#);
+        // a CSS ident character) in a utility-string sx form is now a
+        // hard Style/compile error, not silently inert paint.
+        let err = preprocess(r#"<div sx="top-(--row.y)">x</div>"#).expect_err(
+            "garbage var-ref in utility-string sx must fail loudly",
+        );
+        let msg = format!("{err:?}");
         assert!(
-            !out.contains("var(--row.y)"),
-            "an invalid var-ref never reaches CSS:\n{out}"
+            msg.contains("Style error") || msg.contains("utility-string sx"),
+            "error must name the Style diagnostic: {msg}"
         );
     }
 

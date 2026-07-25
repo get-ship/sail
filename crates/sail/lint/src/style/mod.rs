@@ -547,5 +547,91 @@ mod tests {
         }
     }
 
+    #[test]
+    fn setter_wave_control_and_gap_and_bg_mix() {
+        // bgMix(token, pct) — two-arg color-mix toward foreground.
+        let (style, diags) = parse("style.bgMix(primary, 15)");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("color-mix(in oklch, var(--primary), var(--foreground) 15%)"),
+            "{css}"
+        );
+
+        // bgMix bind arm for the color token.
+        let (style, diags) = parse("style.bgMix(bind(swatch), 25)");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains("var(--swatch)"), "{css}");
+        assert!(css.contains("color-mix(in oklch"), "{css}");
+
+        // bgMix fail-closed: third arg is BadArity.
+        let (_, diags) = parse("style.bgMix(primary, 15, extra)");
+        assert!(
+            diags.iter().any(|d| matches!(d, StyleDiagnostic::BadArity { .. })),
+            "bgMix must reject third arg: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+
+        // bgMix fail-closed: percent off the 5..95 step-5 ramp.
+        let (_, diags) = parse("style.bgMix(primary, 100)");
+        assert!(
+            diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
+            "bgMix must reject 100: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, diags) = parse("style.bgMix(primary, 3)");
+        assert!(
+            diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
+            "bgMix must reject 3: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+
+        // Host-paint gap props for flex/grid containers outside layout keywords.
+        for (expr, prop, value) in [
+            ("style.gap(2)", "gap", "var(--space-2)"),
+            ("style.gap(0)", "gap", "0"),
+            ("style.gapX(3)", "column-gap", "var(--space-3)"),
+            ("style.gapY(1)", "row-gap", "var(--space-1)"),
+            ("style.gap(bind(hostGap))", "gap", "var(--host-gap)"),
+        ] {
+            let (style, diags) = parse(expr);
+            assert!(
+                diags.is_empty(),
+                "{expr}: {:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+            let (_, css) = lower_style(&style, &HashMap::new());
+            let norm = css.replace(' ', "");
+            assert!(
+                norm.contains(&format!("{prop}:{value}")),
+                "{expr} expected {prop}:{value} in {css}"
+            );
+        }
+
+        // Tier-2 control chrome / press marker setters.
+        let (style, diags) = parse("style.controlFrame().controlLift().press()");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        let norm = css.replace(' ', "");
+        assert!(norm.contains("box-shadow:var(--control-frame)"), "{css}");
+        assert!(norm.contains("translate:var(--control-lift)"), "{css}");
+        assert!(norm.contains("translate:var(--press-translate)"), "{css}");
+        assert!(norm.contains("scale:var(--press-scale)"), "{css}");
+        assert!(norm.contains("box-shadow:var(--press-shadow)"), "{css}");
+    }
+
 
 }

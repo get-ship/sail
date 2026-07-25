@@ -7,13 +7,15 @@ import { describe, expect, it } from 'vitest'
 import { CONTROL_SKINS_CSS } from '../src/styles/index'
 
 describe('control skins (residual shadow adoption + light contracts share form)', () => {
-  it('carries button/input/toggle skins; tone channel lives on LIGHT_CONTRACTS', () => {
+  it('carries button/input/toggle skins; tone channel is gone from contracts', () => {
     expect(CONTROL_SKINS_CSS).toContain("button[variant='solid']")
     expect(CONTROL_SKINS_CSS).toContain("button[variant='ghost']")
     expect(CONTROL_SKINS_CSS).toContain("input[type='checkbox']")
-    // Tone attr mapping is on LIGHT_CONTRACTS_CSS, not the residual control skins blob.
+    // Tone attr channel removed — button/anchor paint is Style/element-skins.
+    // Untoned solid fallback stays on residual control skins as ink-on-paper.
     expect(CONTROL_SKINS_CSS).not.toMatch(/\[tone='primary'\]/)
-    expect(CONTROL_SKINS_CSS).toContain('var(--tone, var(--foreground))')
+    expect(CONTROL_SKINS_CSS).not.toContain('var(--tone,')
+    expect(CONTROL_SKINS_CSS).toContain('var(--foreground)')
     expect(CONTROL_SKINS_CSS).not.toContain(':host')
   })
 

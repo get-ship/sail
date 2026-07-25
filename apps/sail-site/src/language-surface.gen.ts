@@ -8250,15 +8250,15 @@ export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   },
   {
     "atom": "gap",
-    "instead": "the layout element's gap prop — <row gap=\"2\">"
+    "instead": "host paint via style.gap(2) — or the layout element's gap prop: <row gap=\"2\">"
   },
   {
     "atom": "gap-x",
-    "instead": "<row gap=\"2\">"
+    "instead": "host paint via style.gapX(2) — or <row gap=\"2\">"
   },
   {
     "atom": "gap-y",
-    "instead": "<column gap=\"2\">"
+    "instead": "host paint via style.gapY(2) — or <column gap=\"2\">"
   },
   {
     "atom": "grid",
@@ -8426,6 +8426,10 @@ export interface ElementDoc {
 
 export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
   "stdlib": [
+    {
+      "tag": "a",
+      "description": "native <a>. L1 platform link; when `variant` is set, becomes a"
+    },
     {
       "tag": "alert",
       "description": "L1 inline status banner. Style value language only."
@@ -8600,10 +8604,6 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     }
   ],
   "reskins": [
-    {
-      "tag": "a",
-      "description": "Anchor — when `variant` is set, becomes a button link. Tone is an ordinary [tone] prop (attribute-keyed contract tokens); hover shifts the fill toward the tone."
-    },
     {
       "tag": "details",
       "description": "Disclosure / accordion — bare `<details>`/`<summary>` is the design-system disclosure. Stacked adjacents merge into an accordion. Open/close animates natively."
@@ -9995,10 +9995,10 @@ export const SCOPE_GRAMMAR: ScopeGrammarDoc[] = [
     "example": "<scope>\n  const filled = style.bg(primary).padX(2)\n  props: { label = '' }\n</scope>\n<span sx={filled}>{label}</span>"
   },
   {
-    "form": "residual CVA key map",
-    "syntax": "size: { sm: 'px-2', lg: 'px-4' }",
-    "summary": "residual key→string map types as a reflected key union (first = default); sx string values are discarded — paint with host match / Style",
-    "example": "<scope>\n  props: {\n    density: { cozy: 'p-2', compact: 'p-1' }\n  }\n</scope>\n<p>ok</p>"
+    "form": "Identity type annotation",
+    "syntax": "name: { /* arbitrary TypeScript type */ }",
+    "summary": "object type annotations are passed through verbatim as Identity; CVA key→sx maps are no longer special-cased — declare a string union and paint with host match / Style",
+    "example": "<scope>\n  props: {\n    density: { cozy: string, compact: string }\n  }\n</scope>\n<p>ok</p>"
   },
   {
     "form": "residual compound array",

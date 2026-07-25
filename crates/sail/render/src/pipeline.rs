@@ -13,7 +13,8 @@ use crate::placeholder;
 /// Render `.sail` source text to a `takumi::Bitmap`.
 pub fn render(source: &str, viewport: (u32, u32), fonts_dir: &Path) -> Result<Bitmap> {
     // 1. Preprocess: sx + layout lowering, emits HTML with embedded <style>.
-    let preprocessed = sail_compiler::parse::preprocess::preprocess(source);
+    let preprocessed = sail_compiler::parse::preprocess::preprocess(source)
+        .context("preprocessing sail source")?;
 
     // 2. Split the emitted CSS from the lowered HTML.
     let (html, _css) = split_html_css(&preprocessed);
