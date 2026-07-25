@@ -127,7 +127,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     the same loop — one at 500&nbsp;ms, one at 2500&nbsp;ms:
   </p>
   <row gap="5" align="center" sx={style.minH(9)}>
-    <div sx={style.w(8).h(8).radius(md).bg(primary)} motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 500 }}></div>
+    <div data-testid="inline-demo" sx={style.w(8).h(8).radius(md).bg(primary)} motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 500 }}></div>
     <div sx={style.w(8).h(8).radius(md).bg(primary).opacity(75)} motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 2500 }}></div>
   </row>
   <code-block code={code.express}></code-block>
@@ -162,13 +162,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     offsets siblings so a row reads as a wave. A user whose system asks for
     reduced motion gets none of this, automatically.
   </p>
-  <row gap="3" align="center" sx={style.minH(9)}>
-    <div sx={style.w(4).h(4).radius(full).bg(primary)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+  <row gap="3" align="center" sx={style.minH(9)} data-testid="loop-row">
+    <div data-testid="ambient-dot" sx={style.w(4).h(4).radius(full).bg(primary)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
     <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
     <div sx={style.w(4).h(4).radius(full).bg(primary)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
     <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
     <row sx={style.grow(1)}></row>
-    <div sx={style.w(8).h(8).radius(md).bg(primary)} motion:loop={{ rotate: 'spin' }}></div>
+    <div data-testid="spin-demo" sx={style.w(8).h(8).radius(md).bg(primary)} motion:loop={{ rotate: 'spin' }}></div>
   </row>
   <code-block code={code.loop}></code-block>
 

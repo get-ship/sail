@@ -149,8 +149,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <p sx={eyebrow}>Motion</p>
               <strong sx={cardTitle}>Real physics. Zero choreography code.</strong>
             </column>
-            <row gap="2" align="end" sx={bars}>
-              <div sx={[bar, style.h(8)]} motion:loop={{ translate-y: 'spring:bouncy' }}></div>
+            <row gap="2" align="end" sx={bars} data-testid="landing-motion-bars">
+              <div data-testid="landing-motion-bar" sx={[bar, style.h(8)]} motion:loop={{ translate-y: 'spring:bouncy' }}></div>
               <div sx={[bar, style.h(14).opacity(60)]} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
               <div sx={[bar, style.h(11)]} motion:loop={{ translate-y: 'spring:bouncy', stagger: '0.12s' }}></div>
               <div sx={[bar, style.h(16).opacity(60)]} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>

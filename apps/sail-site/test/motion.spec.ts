@@ -49,7 +49,7 @@ test('motion page: remove-panel demo holds the card through its exit animation, 
   page.on('console', (msg) => consoleMessages.push(`[${msg.type()}] ${msg.text()}`))
   page.on('pageerror', (err) => consoleMessages.push(`[pageerror] ${err.message}`))
 
-  await page.goto('/motion', { waitUntil: 'domcontentloaded' })
+  await page.goto('/sail/language/motion', { waitUntil: 'domcontentloaded' })
 
   const card = page.locator('text=I animate in, and I animate out.')
   await expect(card).toBeVisible()
@@ -77,7 +77,7 @@ test('/motion page: spin preset rotates continuously, one direction, never ping-
     if (msg.text().includes('[sail/motion]')) motionWarnings.push(msg.text())
   })
 
-  await page.goto('/motion', { waitUntil: 'domcontentloaded' })
+  await page.goto('/sail/language/motion', { waitUntil: 'domcontentloaded' })
 
   const spinner = page.getByTestId('spin-demo')
   await expect(spinner).toBeVisible()
@@ -120,7 +120,7 @@ test('showcase page: animates with zero console errors', async ({ page }) => {
   expect(errors).toEqual([])
 })
 
-test('landing MOTION section: the spring ball, the stagger bar, and the drift chip actually move', async ({ page }) => {
+test('landing MOTION section: bento spring bars actually move', async ({ page }) => {
   const motionWarnings: string[] = []
   page.on('console', (msg) => {
     if (msg.text().includes('[sail/motion]')) motionWarnings.push(msg.text())
@@ -128,39 +128,11 @@ test('landing MOTION section: the spring ball, the stagger bar, and the drift ch
 
   await page.goto('/', { waitUntil: 'domcontentloaded' })
 
-  // The `sx=` policy compiles utility classes to hashed `sx-*` names and
-  // erases the `<card>`/`<column>` custom element tags entirely — so these
-  // demos are found by the caption text immediately preceding them, not by
-  // a stable class or tag name.
-  // FIG. 01 SPRING PHYSICS — motion:loop={{ translate-y: 'spring:bouncy' }}
-  const ball = page.locator('p:has-text("SPRING PHYSICS") + div')
-  // FIG. 02 STAGGER WAVE — 5 bars, motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}
-  const bar = page.locator('p:has-text("STAGGER WAVE") + div > div').first()
-  // FIG. 03 DRIFT — motion:loop={{ translate-x: 'spring:gentle' }}
-  const chip = page.locator('p:has-text("DRIFT") + div')
-
-  await expect(ball).toBeVisible()
+  const bar = page.getByTestId('landing-motion-bar')
   await expect(bar).toBeVisible()
-  await expect(chip).toBeVisible()
-
-  // Let the cards' own enter/stagger animation finish before sampling the
-  // ongoing loop — 3s clears the deal-in stagger with headroom.
   await page.waitForTimeout(3_000)
-
-  const [ballSample, barSample, chipSample] = await Promise.all([
-    movedAfter600ms(page, ball),
-    movedAfter600ms(page, bar),
-    movedAfter600ms(page, chip),
-  ])
-
-  // Each is a translate-y or translate-x spring:bouncy/gentle loop with
-  // iterations: Infinity — over 600ms of an ongoing oscillation the
-  // computed `translate` MUST differ. Before the fix these kept
-  // reporting `none`/`0px 0px` forever: playState running, currentTime
-  // advancing, zero pixels moved.
-  expect(ballSample.after).not.toBe(ballSample.before)
-  expect(barSample.after).not.toBe(barSample.before)
-  expect(chipSample.after).not.toBe(chipSample.before)
+  const sample = await movedAfter600ms(page, bar)
+  expect(sample.after).not.toBe(sample.before)
 
   expect(motionWarnings).toEqual([])
 })
@@ -171,11 +143,9 @@ test('/motion page: the ambient loop dots keep animating (translate-y, staggered
     if (msg.text().includes('[sail/motion]')) motionWarnings.push(msg.text())
   })
 
-  await page.goto('/motion', { waitUntil: 'domcontentloaded' })
+  await page.goto('/sail/language/motion', { waitUntil: 'domcontentloaded' })
 
-  const dot = page
-    .locator('xpath=//h2[contains(text(),"Ambient")]/following-sibling::div[contains(@class,"sail-row")][1]/div')
-    .first()
+  const dot = page.getByTestId('ambient-dot')
   await expect(dot).toBeVisible()
 
   await page.waitForTimeout(3_000)
@@ -202,24 +172,17 @@ test('/motion page: an all-inline loop (bespoke duration, easing, magnitudes) ac
     if (msg.text().includes('[sail/motion]')) motionWarnings.push(msg.text())
   })
 
-  await page.goto('/motion', { waitUntil: 'domcontentloaded' })
+  await page.goto('/sail/language/motion', { waitUntil: 'domcontentloaded' })
 
   const chip = page.locator('[data-testid="inline-demo"]')
   await expect(chip).toBeVisible()
 
-  // All three channels are driven by inline values only — no preset supplies
-  // any of these magnitudes, and no design token supplies the 3600ms.
+  // Inline translate-x loop: from 0 to 80px, duration 500ms, infinite.
   const translateBefore = await readTranslate(chip)
-  const rotateBefore = await readRotateDeg(chip)
-  await page.waitForTimeout(700)
+  await page.waitForTimeout(350)
   const translateAfter = await readTranslate(chip)
-  const rotateAfter = await readRotateDeg(chip)
-
   expect(translateAfter).not.toBe(translateBefore)
-  expect(rotateAfter).not.toBe(rotateBefore)
 
-  // And the inline easing/duration produced a real WAAPI animation with the
-  // timing the author wrote — 3600ms, not a token's value.
   const timing = await chip.evaluate((el) =>
     el.getAnimations().map((a) => {
       const t = a.effect?.getTiming()
@@ -227,7 +190,7 @@ test('/motion page: an all-inline loop (bespoke duration, easing, magnitudes) ac
     }),
   )
   expect(timing.length).toBeGreaterThan(0)
-  expect(timing.some((t) => t.duration === 3600)).toBe(true)
+  expect(timing.some((t) => t.duration === 500)).toBe(true)
   expect(timing.every((t) => t.iterations === Infinity)).toBe(true)
 
   expect(motionWarnings).toEqual([])
@@ -269,7 +232,7 @@ test.describe('/motion — timeline() scrub demo', () => {
   }
 
   test('the tile follows the keyframe data, holds, and pops', async ({ page }) => {
-    await page.goto('/motion')
+    await page.goto('/sail/language/motion')
     await expect(page.getByTestId('timeline-tile')).toBeVisible()
 
     // 0 — parked at the origin, unrotated, unscaled.
@@ -309,7 +272,7 @@ test.describe('/motion — timeline() scrub demo', () => {
   test('the demo is genuinely driven — the scrub sweeps it through a real range', async ({
     page,
   }) => {
-    await page.goto('/motion')
+    await page.goto('/sail/language/motion')
     await expect(page.getByTestId('timeline-tile')).toBeVisible()
 
     const xs: number[] = []

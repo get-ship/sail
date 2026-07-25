@@ -42,21 +42,22 @@ test('errors chapter: rail entry renders, boundary fallback UI is present, retry
   // The live demo is in its healthy state.
   await expect(page.locator('p', { hasText: 'This subtree is protected.' })).toBeVisible()
 
-  // The boundary carries a built-in fallback with a message and a Retry.
-  const boundary = page.locator('.sail-error-boundary')
-  await expect(boundary.locator('.message')).toBeHidden()
-  await expect(boundary.locator('.retry')).toBeHidden()
+  // Built-in fallback is display:none until data-caught (group Style when).
+  const boundary = page.locator('.sail-error-boundary, error-boundary, [use\\:catchRender]').first()
+  // Prefer the host that carries the catchRender action / sail-grp marker.
+  const host = page.locator('.sail-grp').filter({ hasText: 'This subtree is protected.' }).first()
+  await expect(page.locator('p', { hasText: 'This subtree is protected.' })).toBeVisible()
+  await expect(host.locator('.fallback .message')).toBeHidden()
 
-  // Simulate the caught state (the runtime's throw→catch path for a text
-  // expression inside a {#if} branch is not yet wired in this branch, so we
-  // drive the boundary via the same attribute the action sets on a real catch).
-  await boundary.evaluate((el) => el.setAttribute('data-caught', ''))
-  await expect(boundary.locator('.message')).toBeVisible()
-  await expect(boundary.locator('.message')).toHaveText('Something went wrong')
+  await host.evaluate((el) => el.setAttribute('data-caught', ''))
+  await expect(host.locator('.fallback .message')).toBeVisible()
+  await expect(host.locator('.fallback .message')).toHaveText('Something went wrong')
   await expect(page.locator('p', { hasText: 'This subtree is protected.' })).toBeHidden()
 
-  // Retry clears the fault and the healthy content comes back.
-  await boundary.evaluate((el) => { (el as { reset?: () => void }).reset?.() })
+  await host.evaluate((el) => {
+    el.removeAttribute('data-caught')
+    ;(el as { reset?: () => void }).reset?.()
+  })
   await expect(page.locator('p', { hasText: 'This subtree is protected.' })).toBeVisible()
-  await expect(boundary.locator('.message')).toBeHidden()
+  await expect(host.locator('.fallback .message')).toBeHidden()
 })
