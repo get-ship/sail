@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
-use super::setters::{find_setter, validate_op, when_selector};
+use super::setters::{find_setter, validate_op, when_target};
 
 /// Parse a Style expression. Returns Style + diagnostics (fail-closed flags in diags).
 pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
@@ -99,7 +99,8 @@ fn tokenize(input: &str) -> Vec<Tok<'_>> {
             ',' => out.push(Tok::Comma),
             ':' => out.push(Tok::Colon),
             '=' => out.push(Tok::Eq),
-            _ if c.is_ascii_alphanumeric() || c == '_' => {
+            // Words: identifiers, tokens, and leading-minus tokens (`-px`).
+            _ if c.is_ascii_alphanumeric() || c == '_' || c == '-' => {
                 let start = i;
                 let mut j = i + 1;
                 while j < b.len() {
@@ -109,6 +110,11 @@ fn tokenize(input: &str) -> Vec<Tok<'_>> {
                     } else {
                         break;
                     }
+                }
+                // Bare `-` is not a word — leave it for the skip path.
+                if &input[start..j] == "-" {
+                    i = j;
+                    continue;
                 }
                 out.push(Tok::Word(&input[start..j]));
                 i = j;
@@ -325,7 +331,12 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
             break;
         }
         p.expect(Tok::LParen, diags);
-        let arg = parse_paint_arg(p, diags);
+        // Empty-arg markers (style.group()) or normal paint args.
+        let arg = if p.peek() == Some(&Tok::RParen) {
+            PaintArg::Token(String::new())
+        } else {
+            parse_paint_arg(p, diags)
+        };
         p.expect(Tok::RParen, diags);
         if p.pos == before {
             p.force_progress();
@@ -337,6 +348,15 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
                 setter: method.to_string(),
                 source: source.clone(),
             });
+        } else {
+            let op = PaintOp {
+                setter: method.to_string(),
+                arg: arg.clone(),
+                source: source.clone(),
+            };
+            if let Err(d) = validate_op(&op) {
+                diags.push(d);
+            }
         }
         ops.push(Style::Set(PaintOp {
             setter: method.to_string(),
@@ -373,6 +393,7 @@ fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Pain
             p.expect(Tok::RParen, diags);
             PaintArg::Bind(name)
         }
+        // Negatable token: style.ms(-px) tokenizes as Word("-px") after we allow leading '-'.
         Some(Tok::Word(w)) => PaintArg::Token(w.to_string()),
         _ => {
             diags.push(StyleDiagnostic::ParseError {
@@ -527,7 +548,7 @@ fn parse_when_map_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
                 break;
             }
         };
-        if when_selector(&key).is_none() {
+        if when_target(&key).is_none() {
             diags.push(StyleDiagnostic::UnknownWhenKey {
                 key: key.clone(),
                 source: key.clone(),

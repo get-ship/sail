@@ -158,4 +158,30 @@ mod tests {
         assert!(start.elapsed().as_millis() < 500);
         let _ = diags;
     }
+
+    #[test]
+    fn negative_ms_and_first_when() {
+        let (style, diags) = parse(
+            "style.ms(-px).when({ first: style.ms(0).radiusL(md), last: style.radiusR(md) })",
+        );
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains(":first-child") || css.contains("margin"), "{css}");
+    }
+
+    #[test]
+    fn group_required_when_emits_ancestor() {
+        let (style, diags) = parse("when({ group-required: style.display(inline) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains(".sail-grp[required]"), "{css}");
+    }
 }
