@@ -77,9 +77,8 @@ struct TokenMeta {
 /// Public so the LSP shares the exact same list (it completes these too) —
 /// one definition, no cross-crate drift.
 pub const CONVENTION_TOKENS: &[&str] = &[
-    // Tone channel — set by the `tone` prop on a parent, read by descendants.
-    "tone", "tone-bg", "tone-border", "tone-contrast", "tone-fg", "tone-on-fg", "tone-ring",
-    "tone-glow",
+    // tone-* channel names removed (no contracts attr channel). Semantic
+    // ramp tokens (tone-primary-bg, …) live in the registry, not here.
     // Floating-primitive positioning channels (dropdown / hovercard / popover / tooltip).
     "sail-dd-anchor", "sail-dd-default",
     "sail-hc-anchor", "sail-hc-default",
@@ -192,20 +191,6 @@ pub fn color_values() -> &'static [&'static str] {
             {
                 colors.insert(Box::leak(name.clone().into_boxed_str()));
             }
-        }
-        // The universal framework tone channels. sailTonesSheet sets these on
-        // every shadow component from the `tone` prop, so they are valid sx
-        // color values everywhere — no per-component <theme channels="…">
-        // declaration needed (that ceremony is gone in the collapsed shape).
-        for ch in [
-            "tone",
-            "tone-fg",
-            "tone-contrast",
-            "tone-bg",
-            "tone-border",
-            "tone-ring",
-        ] {
-            colors.insert(ch);
         }
         // Sanctioned CSS-wide keyword colors — "named zeros", not raw values.
         // `bg:transparent` (outline/ghost surfaces) and `fg:currentColor` /
@@ -410,7 +395,7 @@ mod tests {
         assert!(reg.contains("surface-1"), "semantic surface from registry");
         assert!(reg.contains("space-4") && reg.contains("text-2xl"));
         // curated convention allowlist (no global value, must still be accepted)
-        assert!(reg.contains("tone-bg") && reg.contains("sail-tooltip-anchor"));
+        assert!(reg.contains("sail-tooltip-anchor"));
         // a var() *usage* inside a value must never be mistaken for a declaration
         assert!(!reg.contains("foreground)"), "var() usages must not leak in");
     }

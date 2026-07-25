@@ -100,8 +100,8 @@ describe('light-DOM component registration', () => {
     const sheets = document.querySelectorAll('#sail-light-contracts')
     expect(sheets.length).toBe(1)
     const css = sheets[0]!.textContent ?? ''
-    expect(css).toContain("[tone='primary']")
-    expect(css).toContain("[size='sm']")
+    expect(css).not.toContain("[tone='primary']")
+    expect(css).toContain("[size='sm']") // native geometry only via control-h tokens
     expect(css).not.toContain(':host')
     expect(css).toContain('slot { display: contents; }')
     // The interactive-surface contracts: baseline, focus, disabled,
@@ -110,13 +110,11 @@ describe('light-DOM component registration', () => {
     expect(css).toContain(':disabled')
     expect(css).toContain('forced-colors: active')
     expect(css).toMatch(/:where\(button[^)]*\)[^}]*user-select: none/)
-    // The L1 <button> skin: variant surfaces at zero specificity, tone/size
-    // props with no-attribute fallbacks. Layer invisibility: the same
-    // [tone]/[size] contracts drive a bare <button> and a light L2 component
-    // identically.
+    // The L1 <button> skin: variant surfaces at zero specificity; geometry from
+    // control-h tokens (optional [size] maps to those tokens).
     expect(css).toContain("button[variant='solid']")
     expect(css).toContain("button[variant='soft']")
-    expect(css).toMatch(/min-height: var\(--size-h, var\(--control-h-md\)\)/)
+    expect(css).toMatch(/min-height: var\(--control-h-md\)/)
     expect(css).toContain('translateY(var(--control-lift))')
   })
 

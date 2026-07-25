@@ -7,12 +7,11 @@ import { describe, expect, it } from 'vitest'
 import { CONTROL_SKINS_CSS } from '../src/styles/index'
 
 describe('control skins (residual shadow adoption + light contracts share form)', () => {
-  it('carries button/input/toggle skins and attribute-keyed tone props', () => {
+  it('carries button/input/toggle skins without tone attr channels', () => {
     expect(CONTROL_SKINS_CSS).toContain("button[variant='solid']")
     expect(CONTROL_SKINS_CSS).toContain("button[variant='ghost']")
     expect(CONTROL_SKINS_CSS).toContain("input[type='checkbox']")
-    // Attribute-keyed: the element with tone=primary resolves --tone on itself.
-    expect(CONTROL_SKINS_CSS).toMatch(/\[tone='primary'\]/)
+    expect(CONTROL_SKINS_CSS).not.toMatch(/\[tone='primary'\]/)
     expect(CONTROL_SKINS_CSS).not.toContain(':host')
   })
 

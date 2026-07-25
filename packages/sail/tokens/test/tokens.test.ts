@@ -215,20 +215,11 @@ describe('@ship/tokens — representative token in every theme (reskin-by-token 
   }
 })
 
-describe('@ship/tokens — contracts.css layer (light-DOM framework contracts)', () => {
+describe('@ship/tokens — contracts.css layer (host baseline, no attr channels)', () => {
   const contracts = loadSrc('../src/contracts.css')
-  it('ships a tone-channel contract for every standard tone', () => {
-    for (const tone of ['default', 'primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted']) {
-      const re = new RegExp(`\\[tone=['"]${tone}['"]\\]\\s*\\{`, 'm')
-      expect(contracts).toMatch(re)
-    }
-  })
-
-  it('ships a size-channel contract for every size variant', () => {
-    for (const size of ['xs', 'sm', 'md', 'lg']) {
-      const re = new RegExp(`\\[size=['"]${size}['"]\\]\\s*\\{`, 'm')
-      expect(contracts).toMatch(re)
-    }
+  it('does not ship tone/size attribute channels', () => {
+    expect(contracts).not.toMatch(/\[tone=['"]primary['"]\]\s*\{/)
+    expect(contracts).not.toMatch(/\[size=['"]sm['"]\]\s*\{[^}]*--size-h/)
   })
 
   it('declares a reduced-motion media query in the contracts layer', () => {

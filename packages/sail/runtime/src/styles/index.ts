@@ -1,45 +1,15 @@
-const TONES_CSS =
-  // The FULL tone contract, framework-owned, LIGHT DOM. A component or L1
-  // control that carries a `tone` attribute gets the `--tone-*` custom
-  // properties for free — no per-component <theme prop="tone"> block.
-  // Attribute-keyed on the element itself: Sail L1/L2 are light DOM, so the
-  // host IS the element; `:host` is not an L1 paint path.
-  //
-  // --tone-glow is the seventh: it routes the per-tone --glow-{tone} token
-  // into the same `--tone-*` namespace everything else reads from, so a glow
-  // is addressable exactly where a tint is.
-  "[tone='default']     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-contrast: var(--background);              --tone-bg: var(--hover-bg);            --tone-border: var(--border);                 --tone-ring: var(--ring);                     --tone-glow: var(--glow-default); }\n" +
-  "[tone='primary']     { --tone: var(--primary);          --tone-fg: var(--primary);          --tone-contrast: var(--primary-foreground);     --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring);        --tone-glow: var(--glow-primary); }\n" +
-  "[tone='info']        { --tone: var(--info);             --tone-fg: var(--info);             --tone-contrast: var(--info-foreground);        --tone-bg: var(--tone-info-bg);        --tone-border: var(--tone-info-border);        --tone-ring: var(--tone-info-ring);           --tone-glow: var(--glow-info); }\n" +
-  "[tone='success']     { --tone: var(--success);          --tone-fg: var(--tone-success-fg);  --tone-contrast: var(--success-foreground);     --tone-bg: var(--tone-success-bg);     --tone-border: var(--tone-success-border);     --tone-ring: var(--tone-success-ring);        --tone-glow: var(--glow-success); }\n" +
-  "[tone='warning']     { --tone: var(--warning);          --tone-fg: var(--tone-warning-fg);  --tone-contrast: var(--warning-foreground);     --tone-bg: var(--tone-warning-bg);     --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring);        --tone-glow: var(--glow-warning); }\n" +
-  "[tone='destructive'] { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring);    --tone-glow: var(--glow-destructive); }\n" +
-  "[tone='accent']      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring);         --tone-glow: var(--glow-accent); }\n" +
-  "[tone='muted']       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring);          --tone-glow: var(--glow-muted); }\n" +
-  // Invalid fields always paint destructive border+ring (overrides a tone attr).
-  ":where(input[invalid], input[aria-invalid='true'], select[invalid], select[aria-invalid='true'], textarea[invalid], textarea[aria-invalid='true']) { --tone-border: var(--destructive); --tone-ring: var(--tone-destructive-ring); }\n"
+const TONES_CSS = '' // tone attr channel removed — L1 uses Style match + semantic tokens
 
-const SIZES_CSS =
-  // The FULL size contract, framework-owned, LIGHT DOM — the exact analogue of
-  // tone. Attribute-keyed on the element itself (`[size='md']`), so a bare L1
-  // <input size=sm> and a light L2 component share one scale. A component that
-  // declares a `size` prop gets the dimensional custom properties for free
-  // (`--size-h` control height, `--size-px` inline padding, `--size-fs` font
-  // size, `--size-gap` inner gap). No per-component <theme prop="size"> block.
-  "[size='xs'] { --size-h: var(--control-h-2xs); --size-px: var(--space-2);   --size-fs: var(--text-xs);   --size-gap: var(--space-1); }\n" +
-  "[size='sm'] { --size-h: var(--control-h-sm);  --size-px: var(--space-2_5); --size-fs: var(--text-sm);   --size-gap: var(--space-1_5); }\n" +
-  "[size='md'] { --size-h: var(--control-h-md);  --size-px: var(--space-3);   --size-fs: var(--text-base); --size-gap: var(--space-2); }\n" +
-  "[size='lg'] { --size-h: var(--control-h-lg);  --size-px: var(--space-4);   --size-fs: var(--text-md);   --size-gap: var(--space-2); }\n"
+const SIZES_CSS = '' // size attr channel removed — L1 uses Style match + control-h / text tokens
 
-// Box model EVERYTHING in this file is authored against. Every --control-h-*
-// token, every min-height, every padding measures the BORDER box: the size you
-// ask for is the size you get. Without it the framework silently inherits
-// whatever box model the host page happens to have — a [size=md] input stops
-// being --control-h-md, and a <textarea rows=4> stops honoring `rows` (the
-// min-height floor swallows the rows whole). Specificity 0 and inside @layer sail,
-// so an author still wins. Light-DOM pages get it via LIGHT_CONTRACTS_CSS.
-// Residual: `adoptSuiSheets` also ships it for opt-in shadow containment roots
-// (foreign-content wrappers — not the L1 product model).
+
+// Residual native control geometry by [size] → design tokens (no --size-* channel).
+const NATIVE_SIZE_CSS =
+  ":where(button, a[variant], input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, select)[size='xs'] { min-height: var(--control-h-2xs); padding-inline: var(--space-2); font-size: var(--text-xs); gap: var(--space-1); }\n" +
+  ":where(button, a[variant], input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, select)[size='sm'] { min-height: var(--control-h-sm); padding-inline: var(--space-2_5); font-size: var(--text-sm); gap: var(--space-1_5); }\n" +
+  ":where(button, a[variant], input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, select)[size='md'] { min-height: var(--control-h-md); padding-inline: var(--space-3); font-size: var(--text-base); gap: var(--space-2); }\n" +
+  ":where(button, a[variant], input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, select)[size='lg'] { min-height: var(--control-h-lg); padding-inline: var(--space-4); font-size: var(--text-md); gap: var(--space-2); }\n"
+
 const BOX_MODEL_CSS = '*, *::before, *::after { box-sizing: border-box; }\n'
 
 // Residual BASE for opt-in shadow containment only (`adoptSuiSheets`). Sail L1
@@ -247,7 +217,7 @@ const CONTROL_CONTRACTS_CSS =
 const TEXT_FIELD =
   "input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'])"
 const INPUT_SKIN_CSS =
-  `:where(${TEXT_FIELD}, textarea, select) { display: block; min-height: var(--size-h, var(--control-h-md)); padding: var(--space-1_5) var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); color: var(--foreground); background: var(--background); border: 1px solid var(--tone-border, var(--border)); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }\n` +
+  `:where(${TEXT_FIELD}, textarea, select) { display: block; min-height: var(--control-h-md); padding: var(--space-1_5) var(--space-3); font-size: var(--text-base); color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }\n` +
   // Hover strengthens the border only when the field is NOT toned/invalid
   // (a toned border already reads); otherwise it keeps its tone.
   `:where(${TEXT_FIELD}, textarea, select):hover:not(:disabled):not([tone]):not([invalid]):not([aria-invalid='true']) { border-color: var(--border-strong); }\n` +
@@ -300,17 +270,17 @@ const TOGGLE_CONTROLS_CSS =
   // Shared box: sized to the font, bordered, on the background. The box is
   // 1.15em square, so the `[size=...]` contract's --size-fs (shared with
   // button/input) scales it too — same prop contract, same fallback (md/text-base).
-  ":where(input[type='checkbox'], input[type='radio']) { appearance: none; flex: none; width: 1.15em; height: 1.15em; min-height: 0; padding: 0; font-size: var(--size-fs, var(--text-base)); border: 1.5px solid var(--border-strong); background: var(--background); box-shadow: var(--shadow-xs); cursor: pointer; vertical-align: -0.2em; }\n" +
+  ":where(input[type='checkbox'], input[type='radio']) { appearance: none; flex: none; width: 1.15em; height: 1.15em; min-height: 0; padding: 0; font-size: var(--text-base); border: 1.5px solid var(--border-strong); background: var(--background); box-shadow: var(--shadow-xs); cursor: pointer; vertical-align: -0.2em; }\n" +
   ":where(input[type='checkbox']) { border-radius: var(--radius-sm); }\n" +
   ":where(input[type='radio']) { border-radius: 50%; }\n" +
   // Checked: fill with the tone (default → primary), stamp the mark.
-  ":where(input[type='checkbox']:checked, input[type='radio']:checked) { background-color: var(--tone, var(--primary)); border-color: var(--tone, var(--primary)); }\n" +
+  ":where(input[type='checkbox']:checked, input[type='radio']:checked) { background-color: var(--primary); border-color: var(--primary); }\n" +
   `:where(input[type='checkbox']:checked) { background-image: ${CHECK_MARK}; background-position: center; background-size: 0.9em; background-repeat: no-repeat; }\n` +
   ":where(input[type='radio']:checked) { box-shadow: inset 0 0 0 0.22em var(--background); }\n" +
   // Indeterminate (tri-state) checkbox — tone fill + dash. `:indeterminate`
   // is a live DOM state (set in JS), not an attribute, so it only reaches
   // here; tree/table select-all glyphs rely on it.
-  ":where(input[type='checkbox']:indeterminate) { background-color: var(--tone, var(--primary)); border-color: var(--tone, var(--primary)); }\n" +
+  ":where(input[type='checkbox']:indeterminate) { background-color: var(--primary); border-color: var(--primary); }\n" +
   `:where(input[type='checkbox']:indeterminate) { background-image: ${DASH_MARK}; background-position: center; background-size: 0.9em; background-repeat: no-repeat; }\n` +
   // Invalid: destructive border override (an [invalid] attribute, mirroring
   // the field/select convention elsewhere in the framework — native
@@ -347,7 +317,7 @@ const BUTTON_SKIN_CSS =
   // single component edit. `--button-shadow` is the variant's own resting
   // elevation, held in a variable so the frame/press channels can COMPOSE
   // with it instead of clobbering it (see the box-shadow list below).
-  `:where(button${NOT_ANATOMY}, a[variant]) { display: inline-flex; align-items: center; justify-content: center; gap: var(--size-gap, var(--space-2)); min-height: var(--size-h, var(--control-h-md)); padding: 0 var(--size-px, var(--space-3)); font-size: var(--size-fs, var(--text-base)); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: var(--border-width) solid transparent; border-image: var(--corner-image); background: transparent; isolation: isolate; position: relative; box-shadow: var(--control-frame), var(--button-shadow, 0 0 0 0 transparent); }\n` +
+  `:where(button${NOT_ANATOMY}, a[variant]) { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control-h-md); padding: 0 var(--space-3); font-size: var(--text-base); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: var(--border-width) solid transparent; border-image: var(--corner-image); background: transparent; isolation: isolate; position: relative; box-shadow: var(--control-frame), var(--button-shadow, 0 0 0 0 transparent); }\n` +
   // default / no-variant: neutral bordered surface.
   `:where(button:not([variant])${NOT_ANATOMY}, button[variant='default'], a[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); --button-shadow: var(--shadow-xs); }\n` +
   `:where(button:not([variant])${NOT_ANATOMY}, button[variant='default'], a[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }\n` +
@@ -356,17 +326,17 @@ const BUTTON_SKIN_CSS =
   // mode → darker; light in dark mode → lighter), so the button stays its
   // own tone instead of collapsing to a neutral grey, and --tone-contrast
   // text stays readable.
-  ":where(button[variant='solid'], a[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); --button-shadow: var(--shadow-xs); }\n" +
-  ":where(button[variant='solid'], a[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }\n" +
+  ":where(button[variant='solid'], a[variant='solid']) { background: var(--foreground); border-color: var(--foreground); color: var(--background); --button-shadow: var(--shadow-xs); }\n" +
+  ":where(button[variant='solid'], a[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--foreground), var(--foreground) 15%); border-color: color-mix(in oklch, var(--foreground), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }\n" +
   // soft: the tinted surface. Hover deepens the tint by mixing in more of
   // the pure tone (stays in the tone family; --tone-fg text stays readable).
-  ":where(button[variant='soft'], a[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }\n" +
-  ":where(button[variant='soft'], a[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }\n" +
+  ":where(button[variant='soft'], a[variant='soft']) { background: var(--hover-bg); border-color: var(--border); color: var(--foreground); }\n" +
+  ":where(button[variant='soft'], a[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--hover-bg), var(--foreground) 18%); border-color: var(--border); }\n" +
   // outline / ghost. Hover is a low-alpha wash of the TONE (not a neutral
   // grey), so it reads as the control's own colour in both modes.
-  ":where(button[variant='outline'], a[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }\n" +
-  ":where(button[variant='outline'], button[variant='ghost'], a[variant='outline'], a[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }\n" +
-  ":where(button[variant='ghost'], a[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(button[variant='outline'], a[variant='outline']) { border-color: var(--foreground); color: var(--foreground); }\n" +
+  ":where(button[variant='outline'], button[variant='ghost'], a[variant='outline'], a[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--foreground) 10%, transparent); }\n" +
+  ":where(button[variant='ghost'], a[variant='ghost']) { color: var(--foreground); }\n" +
   // Interaction motion (reduced-motion kills it via the global media rule).
   //
   // These two literals used to decide the whole product's tactile
@@ -387,8 +357,8 @@ const BUTTON_SKIN_CSS =
 // like every other contract here. tone arrives for free via the generic
 // `[tone=...]` prop above (--tone-bg), so `<hr tone="primary">` just works.
 const HR_SKIN_CSS =
-  ":where(hr) { border: 0; margin: var(--space-2) 0; padding: 0; flex: 0 0 auto; display: block; width: 100%; height: 1px; background: var(--tone-bg, var(--border-subtle)); }\n" +
-  ":where(hr[variant='dashed']) { background: transparent; border-top: 1px dashed var(--tone-bg, var(--border-subtle)); height: 0; }\n" +
+  ":where(hr) { border: 0; margin: var(--space-2) 0; padding: 0; flex: 0 0 auto; display: block; width: 100%; height: 1px; background: var(--border-subtle); }\n" +
+  ":where(hr[variant='dashed']) { background: transparent; border-top: 1px dashed var(--border-subtle); height: 0; }\n" +
   ":where(hr[orientation='vertical']) { display: inline-block; align-self: stretch; vertical-align: middle; width: 1px; height: auto; min-height: 1em; margin: 0 var(--space-2); background: var(--border); }\n" +
   ":where(hr[orientation='vertical'][variant='dashed']) { background: transparent; border-left: 1px dashed var(--border); width: 0; }\n"
 
@@ -397,8 +367,8 @@ const HR_SKIN_CSS =
 // different than the control size contract above). tone arrives for free via
 // the generic `[tone=...]` prop (--tone-fg/--tone-border/--tone-ring).
 const STATUS_DOT_SKIN_CSS =
-  ":where(span[dot]) { display: inline-block; vertical-align: middle; width: var(--icon-size-3xs); height: var(--icon-size-3xs); border-radius: var(--shape-pill); background: var(--tone-fg); box-shadow: 0 0 0 1.5px var(--tone-border), 0 0 0 4.5px var(--tone-ring); }\n" +
-  ":where(span[dot][size='sm']) { width: var(--space-1_5); height: var(--space-1_5); box-shadow: 0 0 0 1px var(--tone-border), 0 0 0 3.5px var(--tone-ring); }\n" +
+  ":where(span[dot]) { display: inline-block; vertical-align: middle; width: var(--icon-size-3xs); height: var(--icon-size-3xs); border-radius: var(--shape-pill); background: var(--primary); box-shadow: 0 0 0 1.5px var(--border), 0 0 0 4.5px var(--ring); }\n" +
+  ":where(span[dot][size='sm']) { width: var(--space-1_5); height: var(--space-1_5); box-shadow: 0 0 0 1px var(--border), 0 0 0 3.5px var(--ring); }\n" +
   ":where(span[dot][pulse]) { animation: sail-status-dot-pulse 2.5s var(--ease-out) infinite; }\n" +
   '@keyframes sail-status-dot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.82; transform: scale(0.92); } }\n'
 
@@ -462,13 +432,13 @@ const RANGE_SKIN_CSS =
   ":where(input[type='range'][size='sm']) { --rng-track: var(--space-1); --rng-thumb: var(--space-3); }\n" +
   ":where(input[type='range'][size='lg']) { --rng-track: var(--space-2); --rng-thumb: var(--space-5); }\n" +
   // Track — muted rail with a subtle inset border (matches sail-slider .track).
-  ":where(input[type='range'])::-webkit-slider-runnable-track { height: var(--rng-track); border-radius: var(--shape-pill); background: linear-gradient(to right, var(--tone-fg, var(--primary)) 0 var(--rng-pct, 0%), var(--muted) var(--rng-pct, 0%) 100%); box-shadow: inset 0 0 0 1px var(--border); }\n" +
+  ":where(input[type='range'])::-webkit-slider-runnable-track { height: var(--rng-track); border-radius: var(--shape-pill); background: linear-gradient(to right, var(--primary) 0 var(--rng-pct, 0%), var(--muted) var(--rng-pct, 0%) 100%); box-shadow: inset 0 0 0 1px var(--border); }\n" +
   ":where(input[type='range'])::-moz-range-track { height: var(--rng-track); border-radius: var(--shape-pill); background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }\n" +
   // Fill (Firefox) — tone with a top highlight (matches sail-slider .fill).
-  ":where(input[type='range'])::-moz-range-progress { height: var(--rng-track); border-radius: var(--shape-pill); background: var(--tone-fg, var(--primary)); box-shadow: inset 0 1px 0 var(--surface-2); }\n" +
+  ":where(input[type='range'])::-moz-range-progress { height: var(--rng-track); border-radius: var(--shape-pill); background: var(--primary); box-shadow: inset 0 1px 0 var(--surface-2); }\n" +
   // Thumb — white surface disc, tone ring, shadow; centered on the thinner track.
-  ":where(input[type='range'])::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; box-sizing: border-box; width: var(--rng-thumb); height: var(--rng-thumb); margin-top: calc((var(--rng-track) - var(--rng-thumb)) / 2); border-radius: 50%; background: var(--surface-1); border: 2px solid var(--tone-fg, var(--primary)); box-shadow: var(--shadow-sm); transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }\n" +
-  ":where(input[type='range'])::-moz-range-thumb { box-sizing: border-box; width: var(--rng-thumb); height: var(--rng-thumb); border-radius: 50%; background: var(--surface-1); border: 2px solid var(--tone-fg, var(--primary)); box-shadow: var(--shadow-sm); transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }\n" +
+  ":where(input[type='range'])::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; box-sizing: border-box; width: var(--rng-thumb); height: var(--rng-thumb); margin-top: calc((var(--rng-track) - var(--rng-thumb)) / 2); border-radius: 50%; background: var(--surface-1); border: 2px solid var(--primary); box-shadow: var(--shadow-sm); transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }\n" +
+  ":where(input[type='range'])::-moz-range-thumb { box-sizing: border-box; width: var(--rng-thumb); height: var(--rng-thumb); border-radius: 50%; background: var(--surface-1); border: 2px solid var(--primary); box-shadow: var(--shadow-sm); transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }\n" +
   // Hover lift + press scale (matches sail-slider .thumb:hover/:active).
   ":where(input[type='range']:hover)::-webkit-slider-thumb { box-shadow: var(--shadow-md); transform: scale(1.05); }\n" +
   ":where(input[type='range']:hover)::-moz-range-thumb { box-shadow: var(--shadow-md); transform: scale(1.05); }\n" +
@@ -489,19 +459,19 @@ const RANGE_SKIN_CSS =
 // expose the fill through DIFFERENT pseudo-elements, and a rule that groups
 // both selectors is dropped whole by either engine — so they're separate.
 const PROGRESS_SKIN_CSS =
-  ":where(progress) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--progress-h, var(--space-2)); border: 0; border-radius: var(--shape-pill); overflow: hidden; background: var(--muted); color: var(--tone-fg, var(--primary)); }\n" +
+  ":where(progress) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--progress-h, var(--space-2)); border: 0; border-radius: var(--shape-pill); overflow: hidden; background: var(--muted); color: var(--primary); }\n" +
   ":where(progress[size='sm']) { height: var(--space-1_5); }\n" +
   ":where(progress[size='lg']) { height: var(--space-3); }\n" +
   // Track (WebKit) — Firefox uses the element background set above.
   ":where(progress)::-webkit-progress-bar { background: var(--muted); border-radius: var(--shape-pill); }\n" +
   // Determinate fill — one rule per engine (a shared selector is invalid to both).
-  ":where(progress)::-webkit-progress-value { background: var(--tone-fg, var(--primary)); border-radius: var(--shape-pill); transition: width var(--duration-medium) var(--ease-out); }\n" +
-  ":where(progress)::-moz-progress-bar { background: var(--tone-fg, var(--primary)); border-radius: var(--shape-pill); }\n" +
+  ":where(progress)::-webkit-progress-value { background: var(--primary); border-radius: var(--shape-pill); transition: width var(--duration-medium) var(--ease-out); }\n" +
+  ":where(progress)::-moz-progress-bar { background: var(--primary); border-radius: var(--shape-pill); }\n" +
   // Indeterminate (no [value]) — a sliding sheen, since appearance:none drops
   // the native barber-pole. Animate the WebKit track and the element itself
   // (the Firefox path) so both engines show motion.
-  ":where(progress:not([value]))::-webkit-progress-bar { background-image: linear-gradient(90deg, transparent 0%, var(--tone-fg, var(--primary)) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sail-progress-indeterminate 1.2s ease-in-out infinite; }\n" +
-  ":where(progress:not([value])) { background-image: linear-gradient(90deg, transparent 0%, var(--tone-fg, var(--primary)) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sail-progress-indeterminate 1.2s ease-in-out infinite; }\n" +
+  ":where(progress:not([value]))::-webkit-progress-bar { background-image: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sail-progress-indeterminate 1.2s ease-in-out infinite; }\n" +
+  ":where(progress:not([value])) { background-image: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sail-progress-indeterminate 1.2s ease-in-out infinite; }\n" +
   "@keyframes sail-progress-indeterminate { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }\n" +
   "@media (prefers-reduced-motion: reduce) { :where(progress), :where(progress)::-webkit-progress-value { animation: none !important; transition: none !important; } }\n"
 
@@ -604,7 +574,7 @@ const DIALOG_SKIN_CSS =
   ":where([data-component][disabled]) { color: var(--muted-foreground); filter: saturate(0.6); pointer-events: none; }\n" +
   // Native range/checkbox/radio take the platform's own theming hook — the
   // tone prop fills it, so a toned control paints without author CSS.
-  ":where(input[type='range'], input[type='checkbox'], input[type='radio']) { accent-color: var(--tone, var(--primary)); }\n" +
+  ":where(input[type='range'], input[type='checkbox'], input[type='radio']) { accent-color: var(--primary); }\n" +
   '@media (prefers-reduced-motion: reduce) { :where(dialog)::backdrop { transition: none; } }\n' +
   // Scroll-lock — pure CSS, no JS. showModal() sets the [open] attribute, so an
   // open modal anywhere freezes the page behind it.
@@ -682,8 +652,7 @@ const POPOVER_SKIN_CSS =
 // isn't constructable under jsdom, so the effect itself is browser-only).
 export const CONTROL_SKINS_CSS =
   AMBIENT_FX_CSS +
-  TONES_CSS +
-  SIZES_CSS +
+  NATIVE_SIZE_CSS +
   CONTROL_CONTRACTS_CSS +
   BUTTON_SKIN_CSS +
   INPUT_SKIN_CSS +
@@ -706,8 +675,7 @@ export const LIGHT_CONTRACTS_CSS =
   // a family, so without this anchor the page root falls to the UA serif.
   // Specificity 0 — an author :root/body rule wins.
   ':where(html) { font-family: var(--font-body); color: var(--foreground); line-height: var(--leading-normal); }\n' +
-  TONES_CSS +
-  SIZES_CSS +
+  NATIVE_SIZE_CSS +
   // Semantic-element + typography defaults — a bare <table>/<ul>/<img>/<h1>
   // on a page is styled by the framework, no wrapper needed.
   TYPOGRAPHY_CSS +
