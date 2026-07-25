@@ -102,7 +102,7 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
         });
     };
     match &op.arg {
-        PaintArg::Bind(_) => Ok(()), // name resolution is compiler/scope concern
+        PaintArg::Bind(_) => Ok(()),
         PaintArg::Token(tok) => {
             if spec.keywords.iter().any(|k| *k == tok.as_str()) {
                 return Ok(());

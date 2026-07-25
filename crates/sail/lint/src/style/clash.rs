@@ -51,7 +51,6 @@ fn walk(
                 let p = format!("{path}/match:{scrutinee}={k}");
                 let mut local = HashMap::new();
                 walk(body, env, &p, &mut local, diags, resolving);
-                // Don't merge arm writes into parent path as conflicts with each other.
             }
         }
         Style::Compound { when, body } => {
@@ -69,7 +68,6 @@ fn walk(
                 // Separate path per when key — no clash across hover vs focus.
                 let mut local = writes.clone();
                 walk(body, env, &p, &mut local, diags, resolving);
-                // Merge only non-conflicting? For when branches, paths differ so parent writes stay.
                 for (k2, v) in local {
                     if k2.1.starts_with(&format!("{path}/when:")) {
                         writes.insert(k2, v);

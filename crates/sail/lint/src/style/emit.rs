@@ -17,7 +17,6 @@ pub struct CssRule {
 /// Fragment/const environment for resolving Style::Ref.
 pub type StyleEnv = HashMap<String, Style>;
 
-/// Emit Style to CSS rules. Unknown refs skipped (caller should resolve first).
 pub fn emit_style(style: &Style, env: &StyleEnv) -> Vec<CssRule> {
     let mut out = Vec::new();
     let mut seen = HashSet::new();

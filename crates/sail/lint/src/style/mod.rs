@@ -127,19 +127,35 @@ mod tests {
     }
 
     #[test]
-    fn malformed_when_map_does_not_hang() {
-        // Regression: parse loops that fail to advance OOMed WSL on sail-lint.
+    fn malformed_when_map_finishes_quickly() {
         let start = std::time::Instant::now();
         let (_style, diags) = parse("when({ hover: ( })");
-        assert!(start.elapsed().as_secs() < 2, "parse hung on malformed when");
+        assert!(start.elapsed().as_millis() < 200);
         assert!(!diags.is_empty());
     }
 
     #[test]
-    fn malformed_list_does_not_hang() {
+    fn malformed_list_finishes_quickly() {
         let start = std::time::Instant::now();
         let (_style, diags) = parse("[ ( , style.bg(primary) ]");
-        assert!(start.elapsed().as_secs() < 2, "parse hung on malformed list");
-        assert!(!diags.is_empty() || true);
+        assert!(start.elapsed().as_millis() < 200);
+        let _ = diags;
+    }
+
+    #[test]
+    fn malformed_chain_finishes_quickly() {
+        let start = std::time::Instant::now();
+        let (_style, diags) = parse("style.bg(primary).(");
+        assert!(start.elapsed().as_millis() < 200);
+        let _ = diags;
+    }
+
+    #[test]
+    fn nested_garbage_finishes_quickly() {
+        let start = std::time::Instant::now();
+        let input = format!("{}{}", "[[[[", "match(x, {".repeat(40) + "style.bg(primary)");
+        let (_style, diags) = parse(&input);
+        assert!(start.elapsed().as_millis() < 500);
+        let _ = diags;
     }
 }

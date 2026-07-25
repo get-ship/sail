@@ -187,7 +187,6 @@ impl<'a> Parser<'a> {
             .join("")
     }
 
-    /// Guarantee forward progress (prevents infinite parse loops / OOM).
     fn force_progress(&mut self) {
         if !self.at_end() {
             self.pos += 1;
@@ -195,7 +194,7 @@ impl<'a> Parser<'a> {
     }
 }
 
-/// Hard cap on map/list iterations (tokens × 2 is plenty; stop runaway parse).
+/// Cap map/list/chain iterations so a stuck parser cannot run unbounded.
 const MAX_PARSE_ITERS: usize = 10_000;
 
 fn tok_str<'a>(t: &'a Tok<'a>) -> &'a str {
@@ -273,7 +272,7 @@ fn parse_list(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
         iters += 1;
         if iters > MAX_PARSE_ITERS {
             diags.push(StyleDiagnostic::ParseError {
-                message: "style list exceeded parse iteration cap (possible hang)".into(),
+                message: "style list too many entries".into(),
                 source: p.remainder(),
             });
             break;
@@ -297,10 +296,20 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
     p.expect(Tok::Word("style"), diags);
     let mut ops = Vec::new();
     let mut when_entries = None;
+    let mut iters = 0usize;
     loop {
+        iters += 1;
+        if iters > MAX_PARSE_ITERS {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "style chain too many setters".into(),
+                source: p.remainder(),
+            });
+            break;
+        }
         if !p.eat(&Tok::Dot) {
             break;
         }
+        let before = p.pos;
         let method = match p.bump() {
             Some(Tok::Word(w)) => w,
             _ => {
@@ -318,6 +327,10 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
         p.expect(Tok::LParen, diags);
         let arg = parse_paint_arg(p, diags);
         p.expect(Tok::RParen, diags);
+        if p.pos == before {
+            p.force_progress();
+            continue;
+        }
         let source = format!("style.{method}(…)");
         if find_setter(method).is_none() {
             diags.push(StyleDiagnostic::UnknownSetter {
@@ -384,7 +397,7 @@ fn parse_match(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
         iters += 1;
         if iters > MAX_PARSE_ITERS {
             diags.push(StyleDiagnostic::ParseError {
-                message: "match arms exceeded parse iteration cap (possible hang)".into(),
+                message: "match arms too many entries".into(),
                 source: p.remainder(),
             });
             break;
@@ -501,7 +514,7 @@ fn parse_when_map_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
         iters += 1;
         if iters > MAX_PARSE_ITERS {
             diags.push(StyleDiagnostic::ParseError {
-                message: "when map exceeded parse iteration cap (possible hang)".into(),
+                message: "when map too many entries".into(),
                 source: p.remainder(),
             });
             break;
@@ -543,7 +556,7 @@ fn parse_compound(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style
         iters += 1;
         if iters > MAX_PARSE_ITERS {
             diags.push(StyleDiagnostic::ParseError {
-                message: "compound map exceeded parse iteration cap (possible hang)".into(),
+                message: "compound map too many entries".into(),
                 source: p.remainder(),
             });
             break;
