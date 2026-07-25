@@ -91,6 +91,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const srcValue = signal('')
 
     const compile = signal<CompileFn | null>(null)
+    // signal.set treats a bare function as an updater — wrap so the CompileFn
+    // itself (also a function) is stored as the value, not invoked as the updater.
     ensureWasm('/sail_compiler_bg.wasm')
       .then(() => compile.set(() => makeCompile() as unknown as CompileFn))
       .catch((err) => console.error('[sail-site] wasm compile seam failed:', err))
@@ -147,6 +149,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       log('▶ ran ' + fileName(), 'success')
     }
 
+    /** Push source into the signal AND the upgraded editor host (when ready). */
     const applyCode = (source: string): void => {
       srcValue.set(source)
       const e = editorEl()
@@ -192,19 +195,46 @@ export default controller((ctx: ControllerScope<Scope>) => {
     }
 
     // ── Lesson lifecycle ─────────────────────────────────────────────────
-    let lastSlug = ''
+    // Source seed is independent of wasm / preview iframe. The e2e contract is
+    // that sail-code-editor[data-pane=source].value holds the lesson `.sail` as
+    // soon as the editor upgrades — gating that on compile/iframe left the
+    // editor empty whenever the host ref raced the one-shot write, or when
+    // wasm was still loading.
+    //
+    // Do NOT read `ed.value` inside this effect: the host getter falls through
+    // to the editor's valSig, which would subscribe this effect to the editor
+    // and re-enter on every programmatic write (main-thread hang).
+    let lastSourceSlug = ''
+    let lastPushedKey = ''
+    effect(() => {
+      const l = lesson()
+      if (!l) return
+      if (l.slug !== lastSourceSlug) {
+        lastSourceSlug = l.slug
+        solutionShown.set(false)
+        srcValue.set(l.starterSource)
+        lastPushedKey = ''
+        logs.set([])
+        log(`loaded ${l.slug}`, 'info')
+      }
+      const ed = editorEl()
+      const source = srcValue()
+      if (!ed || !source) return
+      // Re-push when the host ref appears or the lesson source changes — never
+      // when the editor's own valSig ticks (user typing / CM internal sync).
+      const key = lastSourceSlug + '\0' + source.length + '\0' + source.slice(0, 32)
+      if (key === lastPushedKey) return
+      lastPushedKey = key
+      ed.value = source
+    })
+
+    let lastPreviewSlug = ''
     effect(() => {
       const l = lesson()
       const iframe = iframeEl()
       if (!l || !iframe || !compile()) return
-      if (l.slug === lastSlug) return
-      lastSlug = l.slug
-      solutionShown.set(false)
-      srcValue.set(l.starterSource)
-      const ed = editorEl()
-      if (ed) ed.value = l.starterSource
-      logs.set([])
-      log(`loaded ${l.slug}`, 'info')
+      if (l.slug === lastPreviewSlug) return
+      lastPreviewSlug = l.slug
       iframeReady = false
       reloadPreview(iframe)
     })
@@ -345,6 +375,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             language="sail"
             size="md"
             chrome="flush"
+            wasm-url="/sail_compiler_bg.wasm"
             bind:this={editorEl}
             on:sail-change={onSourceChange}
           ></sail-code-editor>

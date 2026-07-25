@@ -10,7 +10,7 @@ export default controller(() => {
 })
 </controller>
 
-<row nowrap align="stretch">
+<row nowrap align="stretch" sx={style.grow(1).minW(0).minH(0).w(full)}>
   <navbar placement="rail" bordered sticky offset="14">
     <label>AI</label>
     <a href="/ai" aria-current={path() === '/ai' ? 'page' : null}>Overview</a>
@@ -19,7 +19,7 @@ export default controller(() => {
     <a href="/ai/eval" aria-current={path() === '/ai/eval' ? 'page' : null}>Eval</a>
   </navbar>
 
-  <main sx={style.pad(6).grow(1).minW(0)}>
+  <main sx={style.pad(6).grow(1).basis(0).minW(0).minH(0).overflowX(hidden)}>
     <slot name="route"></slot>
   </main>
 </row>

@@ -105,7 +105,7 @@ export default controller(() => {
     hover: style.fg(foreground),
     current: style.bg(primary).fg(primary-foreground),
   })
-  const landingMain = style.grow(1).minW(0)
+  const landingMain = style.grow(1).basis(0).minW(0).minH(0).w(full).overflowX(hidden)
 </scope>
 
 <navbar sticky bordered use:chromeOffset>

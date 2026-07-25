@@ -30,46 +30,61 @@ export const tabs: Action<void> = (node) => {
   const orientationOf = (): 'horizontal' | 'vertical' =>
     root.getAttribute('orientation') === 'vertical' ? 'vertical' : 'horizontal'
 
+  const setAttr = (el: Element, name: string, value: string): void => {
+    if (el.getAttribute(name) !== value) el.setAttribute(name, value)
+  }
+
   // Structural layout only — not paint chrome (size/variant/tone).
   const stampOrientation = (): void => {
     const orientation = orientationOf()
     const list = listOf()
-    if (list) list.setAttribute('orientation', orientation)
-    for (const p of panelsOf()) {
-      p.setAttribute('orientation', orientation)
-    }
+    if (list) setAttr(list, 'orientation', orientation)
+    for (const p of panelsOf()) setAttr(p, 'orientation', orientation)
   }
 
+  // MutationObserver below watches `active` / `orientation` under subtree while
+  // sync writes those same attributes. Skip no-op writes and disconnect during
+  // apply so a PE/skin rebuild cannot re-enter sync forever (tutorial freeze).
   const sync = (): void => {
-    stampOrientation()
-    const tabs = tabsOf()
-    let active = activeName()
-    if (!active && tabs.length) {
-      active = keyOf(tabs[0]!, 0)
-      root.setAttribute('active', active)
-    }
-    for (const [i, t] of tabs.entries()) {
-      const name = keyOf(t, i)
-      const on = name === active
-      t.setAttribute('role', 'tab')
-      t.setAttribute('aria-selected', on ? 'true' : 'false')
-      t.setAttribute('tabindex', on ? '0' : '-1')
-      t.toggleAttribute('active', on)
-      if (name) {
-        if (!t.id) t.id = `sail-tab-${name}`
-        t.setAttribute('aria-controls', `sail-tabpanel-${name}`)
+    mo.disconnect()
+    try {
+      stampOrientation()
+      const tabs = tabsOf()
+      let active = activeName()
+      if (!active && tabs.length) {
+        active = keyOf(tabs[0]!, 0)
+        setAttr(root, 'active', active)
       }
-    }
-    for (const [i, p] of panelsOf().entries()) {
-      const name = keyOf(p, i)
-      const on = name === active
-      p.setAttribute('role', 'tabpanel')
-      p.hidden = !on
-      p.setAttribute('tabindex', on ? '0' : '-1')
-      if (name) {
-        if (!p.id) p.id = `sail-tabpanel-${name}`
-        p.setAttribute('aria-labelledby', `sail-tab-${name}`)
+      for (const [i, t] of tabs.entries()) {
+        const name = keyOf(t, i)
+        const on = name === active
+        setAttr(t, 'role', 'tab')
+        setAttr(t, 'aria-selected', on ? 'true' : 'false')
+        setAttr(t, 'tabindex', on ? '0' : '-1')
+        t.toggleAttribute('active', on)
+        if (name) {
+          if (!t.id) t.id = `sail-tab-${name}`
+          setAttr(t, 'aria-controls', `sail-tabpanel-${name}`)
+        }
       }
+      for (const [i, p] of panelsOf().entries()) {
+        const name = keyOf(p, i)
+        const on = name === active
+        setAttr(p, 'role', 'tabpanel')
+        p.hidden = !on
+        setAttr(p, 'tabindex', on ? '0' : '-1')
+        if (name) {
+          if (!p.id) p.id = `sail-tabpanel-${name}`
+          setAttr(p, 'aria-labelledby', `sail-tab-${name}`)
+        }
+      }
+    } finally {
+      mo.observe(root, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['orientation', 'active'],
+      })
     }
   }
 
@@ -130,12 +145,7 @@ export const tabs: Action<void> = (node) => {
   root.addEventListener('click', onClick)
   root.addEventListener('keydown', onKeydown)
   const mo = new MutationObserver(() => sync())
-  mo.observe(root, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['orientation', 'active'],
-  })
+  // Initial observe happens inside sync()'s finally (after first apply).
   sync()
 
   return {

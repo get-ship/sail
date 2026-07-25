@@ -9,6 +9,9 @@
 
 import { test, expect, type Page } from '@playwright/test'
 
+// Editor boot + wasm compile can exceed the default 30s under a cold deck dev.
+test.setTimeout(90_000)
+
 const editorValue = (page: Page): Promise<string> =>
   page.evaluate(() => {
     const el = document.querySelector('sail-code-editor[data-pane="source"]')
