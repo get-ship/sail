@@ -1,6 +1,6 @@
 <!--
   <collapsible> — native disclosure. Behavior: use:detailsToggle + use:detailsDisabled.
-  Paint: host sx; disabled host dims via compound ([disabled] attr — not :disabled).
+  Style product: host type + content pad; disabled dims via compound.
 -->
 
 <scope>
@@ -8,12 +8,15 @@
     open = false
     disabled = false
   }
-  compound: [
-    { when: { disabled: true }, sx: 'opacity: 50 cursor: not-allowed' },
-  ]
+
+  const host = style.display(block).fontFamily(body)
+  const content = style.padX(4).padY(3)
 </scope>
 
-<details use:detailsToggle use:detailsDisabled sx="block font-family: body">
+<details use:detailsToggle use:detailsDisabled sx={[
+  host,
+  compound({ disabled: true }, style.opacity(50).cursor(not-allowed)),
+]}>
   <summary class="trigger-wrap"><slot name="trigger"></slot></summary>
-  <div class="content-wrap"><div class="content-inner" sx="px: 4 py: 3"><slot></slot></div></div>
+  <div class="content-wrap"><div class="content-inner" sx={content}><slot></slot></div></div>
 </details>

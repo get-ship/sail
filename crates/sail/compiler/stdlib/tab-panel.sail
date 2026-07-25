@@ -1,13 +1,20 @@
 <!--
-  <tab-panel> — orientation CVA (stamped by use:tabs).
+  <tab-panel> — orientation Style match (stamped by use:tabs).
 -->
 <scope>
   props: {
     name = ''
-    orientation: {
-      horizontal: 'pt: 4 min-w: 0',
-      vertical: 'pt: 0 ps: 4 min-w: 0',
-    }
+    orientation: 'horizontal' | 'vertical' = 'horizontal'
   }
+
+  const base = style.minW(0)
+  const horizontal = style.padT(4).minW(0)
+  const vertical = style.padT(0).padS(4).minW(0)
 </scope>
-<div sx="pt: 4 min-w: 0"><slot></slot></div>
+<div sx={[
+  base,
+  match(orientation, {
+    horizontal: horizontal,
+    vertical: vertical,
+  }),
+]}><slot></slot></div>

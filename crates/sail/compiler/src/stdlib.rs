@@ -130,9 +130,69 @@ fn descendant_map(tag: &str) -> Option<&'static [DescRule]> {
         "code-block" => Some(CODE_BLOCK_MAP),
         // Ring PE must live in element-skins (host CVA only sizes/tones the host).
         "spinner" => Some(SPINNER_MAP),
+        // list-trail anatomy for author-supplied li/a crumbs.
+        "breadcrumb" => Some(BREADCRUMB_MAP),
         _ => None,
     }
 }
+
+const BREADCRUMB_MAP: &[DescRule] = &[
+    DescRule {
+        sel: "ol",
+        paint: DescPaint::Decls(&[
+            ("display", "flex"),
+            ("align-items", "center"),
+            ("flex-wrap", "wrap"),
+            ("gap", "var(--space-2)"),
+        ]),
+    },
+    DescRule {
+        sel: "li",
+        paint: DescPaint::Decls(&[
+            ("display", "inline-flex"),
+            ("align-items", "center"),
+            ("gap", "var(--space-2)"),
+        ]),
+    },
+    DescRule {
+        sel: "li:not(:first-child)::before",
+        paint: DescPaint::Decls(&[
+            ("content", "'/'"),
+            ("color", "var(--muted-foreground)"),
+            ("user-select", "none"),
+        ]),
+    },
+    DescRule {
+        sel: "a",
+        paint: DescPaint::Decls(&[
+            ("color", "var(--muted-foreground)"),
+            ("text-decoration", "none"),
+            ("border-radius", "var(--radius-sm)"),
+            (
+                "transition",
+                "color var(--duration-fast) var(--ease-out)",
+            ),
+        ]),
+    },
+    DescRule {
+        sel: "a:hover",
+        paint: DescPaint::Decls(&[("color", "var(--foreground)")]),
+    },
+    DescRule {
+        sel: "a:focus-visible",
+        paint: DescPaint::Decls(&[
+            ("outline", "var(--ring-width) solid var(--ring)"),
+            ("outline-offset", "var(--ring-offset)"),
+        ]),
+    },
+    DescRule {
+        sel: "[aria-current='page']",
+        paint: DescPaint::Decls(&[
+            ("color", "var(--foreground)"),
+            ("font-weight", "var(--font-weight-medium)"),
+        ]),
+    },
+];
 
 const SPINNER_MAP: &[DescRule] = &[
     DescRule {

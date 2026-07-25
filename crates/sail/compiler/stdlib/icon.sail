@@ -1,21 +1,31 @@
 <!--
-  <icon> — glyph-fill child pack for svg box; use:icon owns spin.
+  <icon> — glyph box + size match. use:icon owns spin. glyphFill packs child svg.
 -->
 <scope>
   props: {
     name = ''
     src = ''
     label = ''
-    size: {
-      md: 'size: icon-size-md',
-      xs: 'size: icon-size-2xs',
-      sm: 'size: icon-size-sm',
-      lg: 'size: icon-size-xl',
-      xl: 'size: icon-size-2xl',
-    }
+    size: 'md' | 'xs' | 'sm' | 'lg' | 'xl' = 'md'
     spin = false
   }
+
+  const base = style.display(inline-block).align(middle).fg(currentColor).size(icon-size-md).shrink(0).glyphFill(true)
+  const sizeMd = style.size(icon-size-md)
+  const sizeXs = style.size(icon-size-2xs)
+  const sizeSm = style.size(icon-size-sm)
+  const sizeLg = style.size(icon-size-xl)
+  const sizeXl = style.size(icon-size-2xl)
 </scope>
-<span use:icon sx="inline-block align: middle color: currentColor size: icon-size-md shrink: 0 glyph-fill">
+<span use:icon sx={[
+  base,
+  match(size, {
+    md: sizeMd,
+    xs: sizeXs,
+    sm: sizeSm,
+    lg: sizeLg,
+    xl: sizeXl,
+  }),
+]}>
   <slot></slot>
 </span>

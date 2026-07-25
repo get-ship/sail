@@ -1,6 +1,6 @@
 <!--
   <pagination> — nav state via use:pagination (ARIA current). Size is an ordinary
-  prop on each <page> (child CVA).
+  prop stamped onto each <page> (child Style match). Host is layout-only.
 -->
 <scope>
   props: {
