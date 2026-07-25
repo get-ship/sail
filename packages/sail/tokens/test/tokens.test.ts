@@ -585,5 +585,30 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     }
     expect(reg.colors.length).toBeGreaterThan(40)
   })
+
+  it('generated/unions.ts carries GENERATED header and closed-set exports', () => {
+    const unions = loadSrc('../src/generated/unions.ts')
+    expect(unions).toMatch(/GENERATED FILE/)
+    expect(unions).toMatch(/export type CssTokenName =/)
+    expect(unions).toMatch(/export type ColorTokenName =/)
+    expect(unions).toMatch(/export type ToneName =/)
+    expect(unions).toMatch(/export type ThemeId =/)
+    expect(unions).toMatch(/export const TONE_NAMES/)
+    expect(unions).toMatch(/TONE_NAMES_SOURCE/)
+    expect(unions).toMatch(/export const THEME_IDS/)
+    expect(unions).toMatch(/export type ControlHeight =/)
+    expect(unions).toMatch(/export type SpaceToken =/)
+    expect(unions).toMatch(/export type SemanticColorName =/)
+    // Tone membership from DTCG color.tone ramps
+    for (const tone of ['default', 'primary', 'info', 'success', 'warning', 'destructive', 'accent', 'muted']) {
+      expect(unions).toContain(`'${tone}'`)
+    }
+    // Registry names appear in CssTokenName
+    expect(unions).toContain("'space-4'")
+    expect(unions).toContain("'primary'")
+    // Theme ids from model/themes
+    expect(unions).toContain("'ship-light'")
+    expect(unions).toContain("'paper'")
+  })
 })
 

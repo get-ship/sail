@@ -184,14 +184,15 @@ enum Command {
         out: Option<PathBuf>,
     },
     /// Emit design tokens from the DTCG model (`packages/sail/tokens/model/**`)
-    /// into `tokens.css`, `themes.css`, and `token-registry.json`. Authoritative
-    /// token generate — edit the model, then run this (no Node).
+    /// into `tokens.css`, `themes.css`, `token-registry.json`, and
+    /// `generated/unions.ts`. Authoritative token generate — edit the model,
+    /// then run this (no Node).
     Tokens {
         /// Model directory (DTCG JSON + themes/). Default:
         /// `packages/sail/tokens/model` relative to the workspace root.
         #[arg(long)]
         model: Option<PathBuf>,
-        /// Output directory for the three artifacts. Default:
+        /// Output directory for generated artifacts. Default:
         /// `packages/sail/tokens/src` relative to the workspace root.
         #[arg(long)]
         out: Option<PathBuf>,
@@ -243,7 +244,7 @@ fn main() -> Result<()> {
     }
 }
 
-/// DTCG model → tokens.css + themes.css + token-registry.json.
+/// DTCG model → tokens.css + themes.css + token-registry.json + generated/unions.ts.
 fn gen_tokens(model: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let root = workspace_root()?;
     let model_dir = match model {
@@ -271,6 +272,7 @@ fn gen_tokens(model: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         report.color_count,
         report.path_count
     );
+    println!("  unions: {}", report.unions_ts.display());
     println!("  layers: {}", report.layers.join(", "));
     Ok(())
 }

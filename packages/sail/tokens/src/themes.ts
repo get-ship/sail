@@ -13,19 +13,9 @@
  * `.dark` class.
  */
 
-export type ThemeId =
-  | 'ship-light'
-  | 'ship-dark'
-  | 'paper'
-  | 'halo'
-  | 'console'
-  | 'contrast'
-  | 'glass'
-  | 'neutral-light'
-  | 'neutral-dark'
-  | 'brut'
-  | '8bit'
-  | 'synthwave'
+// ThemeId is generated from model/themes via `sail-compiler tokens`.
+import type { ThemeId } from './generated/unions'
+export type { ThemeId }
 
 export interface Theme {
   id: ThemeId

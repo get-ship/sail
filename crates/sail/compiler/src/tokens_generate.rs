@@ -1,11 +1,12 @@
-//! DTCG model → `tokens.css` + `themes.css` + `token-registry.json`.
+//! DTCG model → `tokens.css` + `themes.css` + `token-registry.json` +
+//! `generated/unions.ts`.
 //!
 //! SSOT is `packages/sail/tokens/model/**` (Design Tokens Format groups + themes).
 //! Port of the former Node `generate.mjs` — pure Rust, no Node in the path.
 //!
 //! Invoke: `cargo run -p sail-compiler -- tokens`
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -41,6 +42,22 @@ const THEMES_HEADER: &str = "\
  */
 ";
 
+const UNIONS_HEADER: &str = "\
+/**
+ * GENERATED FILE — do not edit by hand.
+ *
+ * Closed-set TypeScript unions derived from the DTCG model + token registry.
+ * Source of truth: packages/sail/tokens/model/** (groups + themes).
+ * Regenerate: cargo run -p sail-compiler -- tokens
+ *            (or: pnpm --filter @ship/tokens generate)
+ *
+ * L1 / app props import these instead of hand-maintaining literal unions:
+ *   import type { ToneName, CssTokenName, ThemeId } from '@ship/tokens'
+ *   // or: import type { ToneName } from '@ship/tokens/unions'
+ */
+
+";
+
 /// Stable theme catalog order (matches former generate.mjs).
 const THEME_ORDER: &[&str] = &[
     "ship-dark",
@@ -57,12 +74,50 @@ const THEME_ORDER: &[&str] = &[
     "ship-light",
 ];
 
+/// Preferred L1 tone axis order. Membership itself comes from DTCG
+/// `color.tone.<name>.{fg,bg,...}` ramps when present; this only sorts the set.
+const TONE_ORDER: &[&str] = &[
+    "default",
+    "primary",
+    "info",
+    "success",
+    "warning",
+    "destructive",
+    "accent",
+    "muted",
+];
+
+/// Fallback tone membership when the model has no `color.tone.*` ramps.
+/// SOURCE string in generated unions documents the intended DTCG path for later.
+const TONE_FALLBACK: &[&str] = TONE_ORDER;
+
 const SPECIAL_LAYERS: &[&str] = &[
     "base",
     "reduced-motion",
     "dark",
     "density-compact",
     "density-spacious",
+];
+
+/// Semantic brand / surface paint groups under `color.*` (not product accents,
+/// tone ramps, gradients, or component packs).
+const SEMANTIC_COLOR_GROUPS: &[&str] = &[
+    "background",
+    "foreground",
+    "primary",
+    "secondary",
+    "muted",
+    "brandAccent",
+    "destructive",
+    "info",
+    "success",
+    "warning",
+    "input",
+    "ring",
+    "backdrop",
+    "divider",
+    "scrim",
+    "edgeHighlight",
 ];
 
 #[derive(Debug, Clone)]
@@ -109,6 +164,7 @@ pub struct GenerateReport {
     pub tokens_css: PathBuf,
     pub themes_css: PathBuf,
     pub registry_json: PathBuf,
+    pub unions_ts: PathBuf,
 }
 
 /// Read DTCG under `model_dir` and write the three artifacts into `out_dir`.
@@ -224,6 +280,17 @@ pub fn generate(model_dir: &Path, out_dir: &Path) -> Result<GenerateReport> {
     fs::write(&registry_json, reg_text)
         .with_context(|| format!("write {}", registry_json.display()))?;
 
+    let theme_ids: Vec<String> = ordered_themes
+        .iter()
+        .filter_map(|t| t.meta.theme_id.clone())
+        .collect();
+    let unions_body = build_unions_ts(&base_tokens, &registry, &theme_ids);
+    let unions_dir = out_dir.join("generated");
+    fs::create_dir_all(&unions_dir)
+        .with_context(|| format!("create {}", unions_dir.display()))?;
+    let unions_ts = unions_dir.join("unions.ts");
+    write_with_trailing_newline(&unions_ts, &unions_body)?;
+
     Ok(GenerateReport {
         token_count,
         theme_count: ordered_themes.len(),
@@ -233,6 +300,7 @@ pub fn generate(model_dir: &Path, out_dir: &Path) -> Result<GenerateReport> {
         tokens_css,
         themes_css,
         registry_json,
+        unions_ts,
     })
 }
 
@@ -787,6 +855,306 @@ fn parse_var_ref(value: &str) -> Option<String> {
     Some(name.to_string())
 }
 
+/// Registry `names` / `colors` arrays as sorted `String`s.
+fn registry_string_list(registry: &Value, key: &str) -> Vec<String> {
+    registry
+        .get(key)
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// Tone axis names from DTCG `color.tone.<name>.{fg,bg,bgSolid,border,ring}`.
+/// Falls back to [`TONE_FALLBACK`] when the model has no tone ramps.
+fn tone_names_from_tokens(tokens: &[Token]) -> (Vec<String>, &'static str) {
+    let mut found = BTreeSet::new();
+    for t in tokens {
+        let Some(rest) = t.path.strip_prefix("color.tone.") else {
+            continue;
+        };
+        let mut parts = rest.split('.');
+        let Some(name) = parts.next() else {
+            continue;
+        };
+        let Some(channel) = parts.next() else {
+            continue;
+        };
+        if matches!(channel, "fg" | "bg" | "bgSolid" | "border" | "ring") {
+            found.insert(name.to_string());
+        }
+    }
+    if found.is_empty() {
+        return (
+            TONE_FALLBACK.iter().map(|s| (*s).to_string()).collect(),
+            "fallback:TONE_FALLBACK (no color.tone.* ramps in model)",
+        );
+    }
+    (
+        order_with_preferred(&found, TONE_ORDER),
+        "dtcg:color.tone.<name>.{fg,bg,bgSolid,border,ring}",
+    )
+}
+
+/// Prefer `preferred` order for known members; append unknowns sorted.
+fn order_with_preferred(set: &BTreeSet<String>, preferred: &[&str]) -> Vec<String> {
+    let mut out = Vec::with_capacity(set.len());
+    let mut remaining = set.clone();
+    for p in preferred {
+        if remaining.remove(*p) {
+            out.push((*p).to_string());
+        }
+    }
+    out.extend(remaining);
+    out
+}
+
+/// Strip a stable prefix from cssNames. Returns (full token names ordered by
+/// step, step suffixes ordered by `preferred_steps` then remaining sorted).
+fn scale_from_prefix(
+    names: &[String],
+    prefix: &str,
+    preferred_steps: &[&str],
+) -> (Vec<String>, Vec<String>) {
+    let mut steps = BTreeSet::new();
+    for n in names {
+        if let Some(step) = n.strip_prefix(prefix) {
+            if !step.is_empty() {
+                steps.insert(step.to_string());
+            }
+        }
+    }
+    let step_list = if preferred_steps.is_empty() {
+        steps.into_iter().collect()
+    } else {
+        order_with_preferred(&steps, preferred_steps)
+    };
+    let full: Vec<String> = step_list.iter().map(|s| format!("{prefix}{s}")).collect();
+    (full, step_list)
+}
+
+/// Semantic brand/surface paint cssNames under documented color groups.
+fn semantic_color_names(tokens: &[Token]) -> Vec<String> {
+    let mut set = BTreeSet::new();
+    for t in tokens {
+        let Some(rest) = t.path.strip_prefix("color.") else {
+            continue;
+        };
+        if t.r#type != "color" {
+            // Still include ring width etc.? No — paint only.
+            continue;
+        }
+        let group = rest.split('.').next().unwrap_or("");
+        if SEMANTIC_COLOR_GROUPS.contains(&group) {
+            set.insert(t.css_name.clone());
+        }
+    }
+    set.into_iter().collect()
+}
+
+fn ts_quote(s: &str) -> String {
+    // Token / theme ids are ascii [A-Za-z0-9_-]; still escape for safety.
+    let mut out = String::with_capacity(s.len() + 2);
+    out.push('\'');
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '\'' => out.push_str("\\'"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            _ => out.push(c),
+        }
+    }
+    out.push('\'');
+    out
+}
+
+fn emit_const_and_type(
+    out: &mut String,
+    const_name: &str,
+    type_name: &str,
+    members: &[String],
+    doc: &str,
+) {
+    if !doc.is_empty() {
+        out.push_str("/** ");
+        out.push_str(doc);
+        out.push_str(" */\n");
+    }
+    out.push_str("export const ");
+    out.push_str(const_name);
+    out.push_str(" = [\n");
+    for m in members {
+        out.push_str("  ");
+        out.push_str(&ts_quote(m));
+        out.push_str(",\n");
+    }
+    out.push_str("] as const\n");
+    out.push_str("export type ");
+    out.push_str(type_name);
+    out.push_str(" = (typeof ");
+    out.push_str(const_name);
+    out.push_str(")[number]\n\n");
+}
+
+fn emit_type_union(out: &mut String, type_name: &str, members: &[String], doc: &str) {
+    if !doc.is_empty() {
+        out.push_str("/** ");
+        out.push_str(doc);
+        out.push_str(" */\n");
+    }
+    out.push_str("export type ");
+    out.push_str(type_name);
+    out.push_str(" =\n");
+    if members.is_empty() {
+        out.push_str("  never\n\n");
+        return;
+    }
+    for m in members {
+        out.push_str("  | ");
+        out.push_str(&ts_quote(m));
+        out.push('\n');
+    }
+    out.push('\n');
+}
+
+/// Emit `generated/unions.ts` body (closed-set types for L1 / app props).
+fn build_unions_ts(base_tokens: &[Token], registry: &Value, theme_ids: &[String]) -> String {
+    let names = registry_string_list(registry, "names");
+    let colors = registry_string_list(registry, "colors");
+    let (tone_names, tone_source) = tone_names_from_tokens(base_tokens);
+    let semantic = semantic_color_names(base_tokens);
+
+    let (control_h_tokens, control_h_steps) = scale_from_prefix(
+        &names,
+        "control-h-",
+        &["2xs", "xs", "sm", "md", "lg", "xl"],
+    );
+    let (text_tokens, text_steps) = scale_from_prefix(
+        &names,
+        "text-",
+        &[
+            "xs", "sm", "md", "base", "lg", "xl", "2xl", "3xl", "4xl", "display",
+        ],
+    );
+    let (space_tokens, _space_steps) = scale_from_prefix(&names, "space-", &[]);
+    let radius_tokens: Vec<String> = names
+        .iter()
+        .filter(|n| n.as_str() == "radius" || n.starts_with("radius-"))
+        .cloned()
+        .collect();
+    let duration_tokens: Vec<String> = names
+        .iter()
+        .filter(|n| n.starts_with("duration-"))
+        .cloned()
+        .collect();
+
+    let mut out = String::new();
+    out.push_str(UNIONS_HEADER);
+
+    // Tone — data set (not a language feature); membership from DTCG or fallback.
+    out.push_str("/** Where {@link TONE_NAMES} membership is sourced from. */\n");
+    out.push_str("export const TONE_NAMES_SOURCE = ");
+    out.push_str(&ts_quote(tone_source));
+    out.push_str(" as const\n\n");
+    emit_const_and_type(
+        &mut out,
+        "TONE_NAMES",
+        "ToneName",
+        &tone_names,
+        "Standard L1 tone axis — derived from DTCG color.tone ramps when present.",
+    );
+
+    emit_const_and_type(
+        &mut out,
+        "THEME_IDS",
+        "ThemeId",
+        theme_ids,
+        "Theme catalog ids from packages/sail/tokens/model/themes/*.json.",
+    );
+
+    emit_const_and_type(
+        &mut out,
+        "CONTROL_HEIGHT_STEPS",
+        "ControlHeight",
+        &control_h_steps,
+        "Control height scale steps (suffix of control-h-*).",
+    );
+    emit_const_and_type(
+        &mut out,
+        "CONTROL_HEIGHT_TOKENS",
+        "ControlHeightToken",
+        &control_h_tokens,
+        "Control height token cssNames (control-h-*).",
+    );
+
+    emit_const_and_type(
+        &mut out,
+        "TEXT_SIZE_STEPS",
+        "TextSize",
+        &text_steps,
+        "Typography size scale steps (suffix of text-*).",
+    );
+    emit_const_and_type(
+        &mut out,
+        "TEXT_SIZE_TOKENS",
+        "TextSizeToken",
+        &text_tokens,
+        "Typography size token cssNames (text-*).",
+    );
+
+    emit_const_and_type(
+        &mut out,
+        "SPACE_TOKENS",
+        "SpaceToken",
+        &space_tokens,
+        "Spacing scale token cssNames (space-*).",
+    );
+
+    emit_const_and_type(
+        &mut out,
+        "RADIUS_TOKENS",
+        "RadiusToken",
+        &radius_tokens,
+        "Radius scale token cssNames.",
+    );
+
+    emit_const_and_type(
+        &mut out,
+        "DURATION_TOKENS",
+        "DurationToken",
+        &duration_tokens,
+        "Motion duration token cssNames (duration-*).",
+    );
+
+    emit_const_and_type(
+        &mut out,
+        "SEMANTIC_COLOR_TOKENS",
+        "SemanticColorName",
+        &semantic,
+        "Brand / semantic surface paint tokens under color.* (excl. tone ramps & product accents).",
+    );
+
+    // Large closed sets: type unions only (no multi-hundred runtime arrays).
+    emit_type_union(
+        &mut out,
+        "ColorTokenName",
+        &colors,
+        "Every color-typed token cssName in the registry (paint tokens).",
+    );
+    emit_type_union(
+        &mut out,
+        "CssTokenName",
+        &names,
+        "Every public token cssName in the registry (without the -- prefix).",
+    );
+
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -838,7 +1206,7 @@ mod tests {
     }
 
     #[test]
-    fn generate_writes_three_artifacts_and_theme_block() {
+    fn generate_writes_artifacts_and_theme_block() {
         let dir = tempfile::tempdir().unwrap();
         let model = dir.path().join("model");
         let out = dir.path().join("src");
@@ -854,11 +1222,49 @@ mod tests {
       "$extensions": { "ship": { "cssName": "space-4" } }
     }
   },
+  "control": {
+    "h-sm": {
+      "$value": "28px",
+      "$type": "dimension",
+      "$extensions": { "ship": { "cssName": "control-h-sm" } }
+    },
+    "h-md": {
+      "$value": "34px",
+      "$type": "dimension",
+      "$extensions": { "ship": { "cssName": "control-h-md" } }
+    }
+  },
   "color": {
     "primary": {
       "$value": "oklch(0.5 0.1 250)",
       "$type": "color",
       "$extensions": { "ship": { "cssName": "primary" } }
+    },
+    "tone": {
+      "default": {
+        "fg": {
+          "$value": "oklch(0.2 0 0)",
+          "$type": "color",
+          "$extensions": { "ship": { "cssName": "tone-default-fg" } }
+        },
+        "bg": {
+          "$value": "oklch(0.9 0 0)",
+          "$type": "color",
+          "$extensions": { "ship": { "cssName": "tone-default-bg" } }
+        }
+      },
+      "primary": {
+        "fg": {
+          "$value": "{primary}",
+          "$type": "color",
+          "$extensions": { "ship": { "cssName": "tone-primary-fg" } }
+        },
+        "bg": {
+          "$value": "{primary}",
+          "$type": "color",
+          "$extensions": { "ship": { "cssName": "tone-primary-bg" } }
+        }
+      }
     }
   }
 }
@@ -914,6 +1320,7 @@ mod tests {
         assert!(report.tokens_css.is_file());
         assert!(report.themes_css.is_file());
         assert!(report.registry_json.is_file());
+        assert!(report.unions_ts.is_file());
         assert_eq!(report.theme_count, 1);
 
         let tokens_css = fs::read_to_string(&report.tokens_css).unwrap();
@@ -949,6 +1356,22 @@ mod tests {
             .iter()
             .any(|v| v.as_str() == Some("primary")));
 
+        let unions = fs::read_to_string(&report.unions_ts).unwrap();
+        assert!(unions.contains("GENERATED FILE"));
+        assert!(unions.contains("export type CssTokenName ="));
+        assert!(unions.contains("export type ColorTokenName ="));
+        assert!(unions.contains("export type ToneName ="));
+        assert!(unions.contains("export type ThemeId ="));
+        assert!(unions.contains("export const TONE_NAMES"));
+        assert!(unions.contains("TONE_NAMES_SOURCE"));
+        assert!(unions.contains("'default'"));
+        assert!(unions.contains("'primary'"));
+        assert!(unions.contains("'paper'"));
+        assert!(unions.contains("'control-h-md'"));
+        assert!(unions.contains("'sm'"));
+        assert!(unions.contains("export type SpaceToken ="));
+        assert!(unions.contains("export type SemanticColorName ="));
+
         // Re-run is stable.
         let again = generate(&model, &out).unwrap();
         assert_eq!(
@@ -959,6 +1382,24 @@ mod tests {
             fs::read_to_string(&report.registry_json).unwrap(),
             fs::read_to_string(&again.registry_json).unwrap()
         );
+        assert_eq!(
+            fs::read_to_string(&report.unions_ts).unwrap(),
+            fs::read_to_string(&again.unions_ts).unwrap()
+        );
+    }
+
+    #[test]
+    fn tone_names_fall_back_when_model_has_no_ramps() {
+        let tokens = vec![Token {
+            path: "color.primary".into(),
+            css_name: "primary".into(),
+            r#type: "color".into(),
+            value: "oklch(0.5 0.1 250)".into(),
+            css_value: "oklch(0.5 0.1 250)".into(),
+        }];
+        let (names, source) = tone_names_from_tokens(&tokens);
+        assert_eq!(names, TONE_FALLBACK.iter().map(|s| (*s).to_string()).collect::<Vec<_>>());
+        assert!(source.contains("fallback"));
     }
 
     #[test]
