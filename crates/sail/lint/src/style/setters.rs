@@ -276,7 +276,28 @@ pub enum WhenTarget {
     Media(&'static str),
 }
 
+/// Normalize camelCase `when` keys to the kebab names used by string-sx
+/// condition prefixes (`motionReduce` → `motion-reduce`).
+fn when_key_kebab(key: &str) -> String {
+    let mut out = String::with_capacity(key.len() + 4);
+    for (i, c) in key.chars().enumerate() {
+        if c.is_ascii_uppercase() {
+            if i > 0 {
+                out.push('-');
+            }
+            out.push(c.to_ascii_lowercase());
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
 /// Closed `when({ key: Style })` browser/framework-state keys.
+///
+/// Media / condition keys (breakpoints, dark, motion-reduce, …) are **not**
+/// re-listed here: they share [`crate::rules::sx::CONDITION_PREFIXES`] with
+/// string-sx so Style cannot lag the design-system table.
 pub fn when_target(key: &str) -> Option<WhenTarget> {
     match key {
         "hover" => Some(WhenTarget::Pseudo(":hover")),
@@ -323,11 +344,14 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
         }
         // theme-picker `inline` presence attr on the group host.
         "group-inline" | "groupInline" => Some(WhenTarget::Ancestor(".sail-grp[inline] ")),
-        "motion-reduce" | "motionReduce" => {
-            Some(WhenTarget::Media("(prefers-reduced-motion: reduce)"))
+        other => {
+            // Design-system conditions: mobile/tablet/desktop + motion/dark/…
+            // Same table as string-sx `tablet:` prefixes — single source of truth.
+            let kebab = when_key_kebab(other);
+            crate::rules::sx::condition_media(other)
+                .or_else(|| crate::rules::sx::condition_media(&kebab))
+                .map(WhenTarget::Media)
         }
-        "forced-colors" | "forcedColors" => Some(WhenTarget::Media("(forced-colors: active)")),
-        _ => None,
     }
 }
 
