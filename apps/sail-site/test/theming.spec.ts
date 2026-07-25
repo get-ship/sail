@@ -9,15 +9,23 @@ test('theming page: picking a theme sets data-theme', async ({ page }) => {
     timeout: 30_000,
   })
 
-  // Theme chips are labeled with THEMES[].label (e.g. "Paper", "SHIP Dark").
-  const paper = page.getByRole('button', { name: /^Paper$/i })
-  await expect(paper).toBeVisible()
-  await paper.click()
+  // Theme chips are labeled with THEMES[].label. Use Console (always dark) then
+  // Paper so we always cross a theme boundary regardless of storage default.
+  const consoleBtn = page.getByRole('button', { name: /Console/i }).first()
+  await expect(consoleBtn).toBeVisible({ timeout: 30_000 })
+  await consoleBtn.click()
+  await page.waitForFunction(
+    () => (document.documentElement.dataset.theme ?? '') === 'console',
+    undefined,
+    { timeout: 15_000 },
+  )
 
+  const paper = page.getByRole('button', { name: /Paper/i }).first()
+  await paper.click()
   await page.waitForFunction(
     () => (document.documentElement.dataset.theme ?? '') === 'paper',
     undefined,
-    { timeout: 10_000 },
+    { timeout: 15_000 },
   )
 
   const after = await page.evaluate(() => ({

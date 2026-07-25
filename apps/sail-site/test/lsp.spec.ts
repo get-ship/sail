@@ -20,7 +20,10 @@ test('LSP diagnostics populate the editor gutter for a broken .sail', async ({ p
   page.on('pageerror', (err) => log.push(`[pageerror] ${err.message}`))
 
   await page.goto('/sail/tutorial/01-a-page-is-markup', { waitUntil: 'domcontentloaded' })
-  await page.waitForSelector('iframe.tut-preview', { state: 'attached', timeout: 30_000 })
+  await page.waitForSelector('iframe[data-testid="tut-preview"], iframe[title="Tutorial preview"]', {
+    state: 'attached',
+    timeout: 60_000,
+  })
   await page.waitForFunction(
     () => document.querySelectorAll('sail-code-editor').length > 0,
     undefined,

@@ -368,6 +368,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </row>
       <column sx={style.grow(1).minH(0)}>
         <iframe
+          data-testid="tut-preview"
           data-base-src="/tut-host.html"
           title="Tutorial preview"
           sandbox="allow-scripts allow-same-origin"
