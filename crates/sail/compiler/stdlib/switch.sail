@@ -67,32 +67,32 @@
       focus: style.outline(primary),
     }),
     primary: when({
-      checked: style.bg(tone),
-      focus: style.outline(tone),
+      checked: style.bg(primary),
+      focus: style.outline(primary),
     }),
     info: when({
-      checked: style.bg(tone),
-      focus: style.outline(tone),
+      checked: style.bg(info),
+      focus: style.outline(info),
     }),
     success: when({
-      checked: style.bg(tone),
-      focus: style.outline(tone),
+      checked: style.bg(success),
+      focus: style.outline(success),
     }),
     warning: when({
-      checked: style.bg(tone),
-      focus: style.outline(tone),
+      checked: style.bg(warning),
+      focus: style.outline(warning),
     }),
     destructive: when({
-      checked: style.bg(tone),
-      focus: style.outline(tone),
+      checked: style.bg(destructive),
+      focus: style.outline(destructive),
     }),
     accent: when({
-      checked: style.bg(tone),
-      focus: style.outline(tone),
+      checked: style.bg(accent),
+      focus: style.outline(accent),
     }),
     muted: when({
-      checked: style.bg(tone),
-      focus: style.outline(tone),
+      checked: style.bg(muted-foreground),
+      focus: style.outline(muted-foreground),
     }),
   }),
   match(tone, {

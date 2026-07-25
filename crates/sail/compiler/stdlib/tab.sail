@@ -36,8 +36,8 @@
   compound({ variant: enclosed }, style.borderWidth(1).border(transparent).borderBWidth(0).radiusT(md)),
   when({
     hover: style.fg(foreground),
-    selected: style.fg(tab-selected-foreground).fontWeight(semibold).borderB(tone),
-    focus: style.outline(solid).outline(ring-width).outline(tone-ring).outlineOffset(ring-inset),
+    selected: style.fg(tab-selected-foreground).fontWeight(semibold).borderB(primary),
+    focus: style.outline(solid).outline(ring-width).outline(ring).outlineOffset(ring-inset),
     disabled: style.opacity(50).cursor(not-allowed),
   }),
   compound({ variant: pill }, when({
