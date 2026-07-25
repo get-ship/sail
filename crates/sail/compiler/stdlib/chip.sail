@@ -1,57 +1,25 @@
 <!--
-  <chip> — L1 language element (element mode). An interactive filter/selection
-  pill: the element IS the interactive surface (role=button + keyboard). A
-  leading slot + the default label slot, an optional remove button (× shown
-  under [removable]), and selected/disabled states. Bare tag lowers to a
-  layout row + capability mix-ins.
-
-  Behavior rides stacked use: behaviors, each a reusable mix-in the normal
-  use: pipeline lowers to runAction at the use site:
-    use:pressable   — role=button + tabindex, aria-disabled from [disabled],
-                      Enter/Space activate
-    use:pressed     — aria-pressed reflects [selected]
-    use:dismissible — under [removable]: Backspace/Delete and the remove
-                      button's click fire sail-remove
-  PE: without JS the static structure + skin still ship; with JS the
-  behaviors enhance ARIA/keyboard through the standard use: machinery — no
-  element-private runtime, no discovery walk.
-
-  Paint (one path — same as L2+/app code):
-    layout keywords  — inline row, gap, align
-    host sx=         — base type/border/cursor + PE defaults (solid, size md)
-                       for attr-absent (defaults are not stamped on structure)
-    CVA-in-props     — variant + size maps (first key = default = PE)
-    compound         — selected+muted combination
-    contracts        — shared removable anatomy dismiss control
-  Variance = CVA-in-props axes + optional compound only. tone/size/variant are
-  ordinary props (axes or unions), not language channels.
-  No residual chip matrix. No L1 controller.
+  <chip> — L1 interactive filter/selection pill.
+  Style value language only. tone/size/variant ordinary props.
 -->
 
 <scope>
   props: {
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
-    // first key = default = PE solid
-    variant: {
-      solid: 'bg: tone color: tone-contrast border: tone shadow: xs',
-      // shadow-none: host PE solid base carries shadow-xs — non-solid must clear it
-      soft: 'bg: tone-bg color: tone-fg border: tone-border shadow: none hover:bg: muted hover:border: tone',
-      outline: 'bg: transparent color: tone-fg border: tone shadow: none hover:bg: tone-bg',
-      ghost: 'bg: transparent color: tone-fg border: transparent shadow: none hover:bg: tone-bg',
-    }
-    // first key = default = PE md
-    size: {
-      md: 'min-h: control-h-xs px: 2_5 font-size: sm',
-      sm: 'min-h: control-h-2xs px: 2 font-size: xs',
-      lg: 'min-h: control-h-md px: 3 font-size: base',
-    }
+    variant: 'solid' | 'soft' | 'outline' | 'ghost' = 'solid'
+    size: 'md' | 'sm' | 'lg' = 'md'
     selected = false
     removable = false
     disabled = false
   }
-  compound: [
-    { when: { selected: true, tone: 'muted' }, sx: 'bg: primary color: primary-foreground border: primary' },
-  ]
+
+  const base = style.fontFamily(body).fontWeight(medium).leading(none).align(middle).whitespace(nowrap).cursor(pointer).select(none).tapHighlight(none).radius(full).borderWidth(1).minH(control-h-xs).padX(2_5).fontSize(sm).bg(chip).fg(chip-foreground).border(chip-border).shadow(xs).transition(colors).duration(fast).ease(out)
+  const sizeMd = style.minH(control-h-xs).padX(2_5).fontSize(sm)
+  const sizeSm = style.minH(control-h-2xs).padX(2).fontSize(xs)
+  const sizeLg = style.minH(control-h-md).padX(3).fontSize(base)
+  const remove = style.size(icon-size-md).shrink(0).pad(0).borderWidth(0).bg(transparent).fg(currentColor).cursor(pointer).radius(full).transition(colors).duration(fast).ease(out)
+  const leading = style.display(contents)
+  const xmark = style.display(block).size(full).stroke(currentColor).fill(none)
 </scope>
 
 <row
@@ -62,9 +30,74 @@
   use:pressable
   use:pressed
   use:dismissible
-  sx="font-family: body font-weight: medium leading: none align: middle whitespace: nowrap cursor: pointer select: none tap-highlight: none rounded: full border min-h: control-h-xs px: 2_5 font-size: sm bg: tone color: tone-contrast border: tone shadow: xs transition: colors duration: fast ease: out pressed:bg: tone pressed:color: tone-contrast pressed:border: tone pressed:font-weight: semibold pressed:shadow: xs disabled:cursor: not-allowed disabled:bg: muted disabled:border: border-subtle disabled:color: muted-foreground disabled:saturate: 65 disabled:shadow: none focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: 2"
+  sx={[
+    base,
+    match(size, {
+      md: sizeMd,
+      sm: sizeSm,
+      lg: sizeLg,
+    }),
+    match(variant, {
+      solid: match(tone, {
+        default: style.bg(chip).fg(chip-foreground).border(chip-border).shadow(xs),
+        primary: style.bg(primary).fg(primary-foreground).border(primary).shadow(xs),
+        info: style.bg(info).fg(info-foreground).border(info).shadow(xs),
+        success: style.bg(success).fg(success-foreground).border(success).shadow(xs),
+        warning: style.bg(warning).fg(warning-foreground).border(warning).shadow(xs),
+        destructive: style.bg(destructive).fg(destructive-foreground).border(destructive).shadow(xs),
+        accent: style.bg(accent).fg(accent-foreground).border(accent).shadow(xs),
+        muted: style.bg(muted).fg(muted-foreground).border(border).shadow(xs),
+      }),
+      soft: match(tone, {
+        default: style.bg(muted).fg(muted-foreground).border(border).shadow(none),
+        primary: style.bg(muted).fg(primary).border(border).shadow(none),
+        info: style.bg(muted).fg(info).border(border).shadow(none),
+        success: style.bg(muted).fg(success).border(border).shadow(none),
+        warning: style.bg(muted).fg(warning).border(border).shadow(none),
+        destructive: style.bg(muted).fg(destructive).border(border).shadow(none),
+        accent: style.bg(muted).fg(accent).border(border).shadow(none),
+        muted: style.bg(muted).fg(muted-foreground).border(border).shadow(none),
+      }),
+      outline: match(tone, {
+        default: style.bg(transparent).fg(foreground).border(border).shadow(none),
+        primary: style.bg(transparent).fg(primary).border(primary).shadow(none),
+        info: style.bg(transparent).fg(info).border(info).shadow(none),
+        success: style.bg(transparent).fg(success).border(success).shadow(none),
+        warning: style.bg(transparent).fg(warning).border(warning).shadow(none),
+        destructive: style.bg(transparent).fg(destructive).border(destructive).shadow(none),
+        accent: style.bg(transparent).fg(accent).border(accent).shadow(none),
+        muted: style.bg(transparent).fg(muted-foreground).border(border).shadow(none),
+      }),
+      ghost: match(tone, {
+        default: style.bg(transparent).fg(foreground).border(transparent).shadow(none),
+        primary: style.bg(transparent).fg(primary).border(transparent).shadow(none),
+        info: style.bg(transparent).fg(info).border(transparent).shadow(none),
+        success: style.bg(transparent).fg(success).border(transparent).shadow(none),
+        warning: style.bg(transparent).fg(warning).border(transparent).shadow(none),
+        destructive: style.bg(transparent).fg(destructive).border(transparent).shadow(none),
+        accent: style.bg(transparent).fg(accent).border(transparent).shadow(none),
+        muted: style.bg(transparent).fg(muted-foreground).border(transparent).shadow(none),
+      }),
+    }),
+    compound({ selected: true, tone: muted }, style.bg(primary).fg(primary-foreground).border(primary)),
+    when({
+      hover: style.bg(muted),
+      pressed: style.bg(primary).fg(primary-foreground).border(primary).fontWeight(semibold).shadow(xs),
+      disabled: style.cursor(not-allowed).bg(muted).border(border-subtle).fg(muted-foreground).saturate(65).shadow(none),
+      focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2),
+    }),
+    compound({ variant: soft }, when({
+      hover: style.bg(muted).border(foreground),
+    })),
+    compound({ variant: outline }, when({
+      hover: style.bg(muted),
+    })),
+    compound({ variant: ghost }, when({
+      hover: style.bg(muted),
+    })),
+  ]}
 >
-  <span class="leading" sx="contents">
+  <span class="leading" sx={leading}>
     <slot name="leading"></slot>
   </span>
   <slot></slot>
@@ -74,9 +107,9 @@
     anatomy
     aria-label="Remove"
     tabindex="-1"
-    sx="size: icon-size-md shrink: 0 p: 0 border: 0 bg: transparent color: currentColor cursor: pointer rounded: full transition: colors duration: fast ease: out"
+    sx={remove}
   >
-    <svg viewBox="0 0 10 10" aria-hidden="true" sx="block size: full stroke: currentColor fill: none" stroke-width="1.75" stroke-linecap="round">
+    <svg viewBox="0 0 10 10" aria-hidden="true" sx={xmark} stroke-width="1.75" stroke-linecap="round">
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>

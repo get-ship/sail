@@ -1,14 +1,13 @@
 <!--
-  <hover-card id="…" placement="top"> — L1 hover-preview overlay. Native
-  [popover] + use:anchor + use:hoverSurface. Host paint: chrome + anchor
-  geometry + panel min/max on sx. Backdrop transparent is global
-  :where([popover])::backdrop.
+  <hover-card> — L1 hover-preview overlay. Style value language only.
 -->
 
 <scope>
   props: {
     placement = ''
   }
+
+  const panel = style.position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).minW(panel-rail-w).maxW(panel-max-w-sm).pad(3).fg(hover-card-foreground).bg(hover-card).borderWidth(1).border(border).radius(md).shadow(md).z(popover)
 </scope>
 
-<div popover use:anchor use:hoverSurface sx="fixed inset: auto m: 0 left: (--anchor-left) top: (--anchor-top) min-w: (--panel-rail-w) max-w: panel-max-w-sm p: 3 color: hover-card-foreground bg: hover-card border border: border rounded: md shadow: md z: (--z-popover)"><slot></slot></div>
+<div popover use:anchor use:hoverSurface sx={panel}><slot></slot></div>

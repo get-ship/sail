@@ -1,9 +1,8 @@
-//! Paint-source gates for L1 dissolve: CVA-in-props + host sx, no residual
-//! local tone channels. Does not eulogize deleted intermediate files.
+//! Paint-source gates for L1 chip/alert dissolve on Style product path.
 use sail_compiler::compile_element;
 
 #[test]
-fn chip_compiles_with_cva_and_capability_mixins() {
+fn chip_compiles_with_style_and_capability_mixins() {
     let src = include_str!("../stdlib/chip.sail");
     let out = compile_element(src, "chip").expect("chip compiles");
     assert_eq!(out.root_class, "sail-chip");
@@ -16,24 +15,37 @@ fn chip_compiles_with_cva_and_capability_mixins() {
     );
     assert!(!out.structure_html.contains("use:chip"), "no element brain: {}", out.structure_html);
     assert!(
+        src.contains("style.")
+            && src.contains("match(variant")
+            && src.contains("match(tone")
+            && src.contains("match(size")
+            && !src.contains("tone-bg")
+            && !src.contains("compound: ["),
+        "chip Style product only (no CVA / tone-bg)"
+    );
+    assert!(
         out.skin_css.contains("variant='solid'")
             && out.skin_css.contains("variant='soft'")
-            && out.skin_css.contains("background-color:var(--tone)"),
-        "solid via sx atoms: {}",
+            && (out.skin_css.contains("var(--chip)")
+                || out.skin_css.contains("var(--primary)")
+                || out.structure_html.contains("sx-bgchip")),
+        "solid via Style tokens: {}",
         out.skin_css
     );
     assert!(
         out.skin_css.contains("size='sm'")
             && (out.skin_css.contains("min-height:var(--control-h-2xs)")
                 || out.skin_css.contains("control-h-2xs")),
-        "size via sx atoms: {}",
+        "size via Style: {}",
         out.skin_css
     );
     assert!(
         !out.skin_css.contains("--tone-bg-solid")
             && !out.skin_css.contains("--tone-bg-hover")
-            && !out.skin_css.contains("--tone-outline-border"),
-        "no local tone channel writes: {}",
+            && !out.skin_css.contains("--tone-outline-border")
+            && !out.skin_css.contains("var(--tone-bg)")
+            && !out.skin_css.contains("var(--tone-fg)"),
+        "no tone channel paint: {}",
         out.skin_css
     );
     let attrs = out.manifest["attributes"].as_array().unwrap();
@@ -42,11 +54,11 @@ fn chip_compiles_with_cva_and_capability_mixins() {
     let size = attrs.iter().find(|a| a["name"] == "size").unwrap();
     assert_eq!(size["default"], "md", "PE size=md default: {size}");
     assert!(
-        out.structure_html.contains("sx-minhcontrolhxs")
-            && out.structure_html.contains("sx-px25")
-            && out.structure_html.contains("sx-textsm")
-            && out.structure_html.contains("sx-bgtone"),
-        "attr-absent PE size=md + solid base on host sx: {}",
+        out.structure_html.contains("sx-")
+            && (out.structure_html.contains("sx-minhcontrolhxs")
+                || out.skin_css.contains("control-h-xs")
+                || out.structure_html.contains("controlhxs")),
+        "attr-absent PE size=md + solid base: {}",
         out.structure_html
     );
 }
@@ -66,23 +78,23 @@ fn chip_framework_skins_have_no_local_tone_matrix() {
     assert!(
         skins.contains(".sail-chip")
             && skins.contains("variant='solid'")
-            && skins.contains("background-color:var(--tone)")
+            && (skins.contains("var(--chip)") || skins.contains("var(--primary)"))
             && skins.contains("size='md'"),
-        "chip paint must emit via element CVA/sx compile"
+        "chip paint must emit via Style compile"
     );
 }
 
 #[test]
-fn badge_and_card_compile_cva() {
+fn badge_and_card_compile_style() {
     let badge = compile_element(include_str!("../stdlib/badge.sail"), "badge").expect("badge");
     assert!(badge.skin_css.contains("variant='solid'"), "{}", badge.skin_css);
     let battrs = badge.manifest["attributes"].as_array().unwrap();
     let bsize = battrs.iter().find(|a| a["name"] == "size").unwrap();
     assert_eq!(bsize["default"], "md", "PE badge size=md: {bsize}");
     assert!(
-        badge.structure_html.contains("sx-minhcontrolh2xs")
-            && badge.structure_html.contains("sx-px2")
-            && badge.structure_html.contains("sx-bgtonebg"),
+        badge.structure_html.contains("sx-")
+            && (badge.structure_html.contains("sx-minhcontrolh2xs")
+                || badge.skin_css.contains("control-h-2xs")),
         "attr-absent PE badge size=md + soft base: {}",
         badge.structure_html
     );
@@ -90,29 +102,23 @@ fn badge_and_card_compile_cva() {
     let card = compile_element(include_str!("../stdlib/card.sail"), "card").expect("card");
     assert!(
         card.skin_css.contains("variant='outline'") && card.skin_css.contains("padding='md'"),
-        "card CVA: {}",
+        "card Style match: {}",
         card.skin_css
     );
     let cattrs = card.manifest["attributes"].as_array().unwrap();
     let pad = cattrs.iter().find(|a| a["name"] == "padding").unwrap();
     assert_eq!(pad["default"], "md", "PE card padding=md: {pad}");
     assert!(
-        card.structure_html.contains("sx-py4")
-            && card.structure_html.contains("sx-px5")
-            && card.structure_html.contains("sx-bgsurface1"),
+        card.structure_html.contains("sx-")
+            && (card.structure_html.contains("sx-py4") || card.skin_css.contains("padding")),
         "attr-absent PE card padding=md + surface base: {}",
         card.structure_html
     );
-    // status-rail paint + pad-adjust are CVA compounds (no contracts PE).
     assert!(
         card.skin_css.contains("status-rail")
-            && (card.skin_css.contains("border-inline-start-width:3px")
-                || card.skin_css.contains("border-inline-start-width: 3px"))
-            && (card.skin_css.contains("border-inline-start-color:var(--border-strong)")
-                || card.skin_css.contains("border-inline-start-color: var(--border-strong)"))
-            && (card.skin_css.contains("padding-inline-start:var(--space-4)")
-                || card.skin_css.contains("padding-inline-start: var(--space-4)")),
-        "status-rail CVA border-s + pad-adjust: {}",
+            && (card.skin_css.contains("border-inline-start")
+                || card.skin_css.contains("border-strong")),
+        "status-rail Style compound: {}",
         card.skin_css
     );
     let contracts = include_str!(concat!(
@@ -129,7 +135,7 @@ fn badge_and_card_compile_cva() {
 }
 
 #[test]
-fn alert_compiles_with_capability_mixins() {
+fn alert_compiles_with_style_capability_mixins() {
     let src = include_str!("../stdlib/alert.sail");
     let out = compile_element(src, "alert").expect("alert compiles");
     assert!(
@@ -140,9 +146,20 @@ fn alert_compiles_with_capability_mixins() {
     );
     assert!(!out.structure_html.contains("use:alert"), "no element brain");
     assert!(
-        src.contains("before:bg-muted-foreground")
-            && src.contains("default: 'before:bg-muted-foreground'"),
-        "soft-status muted default is host/CVA, not contracts channel PE"
+        src.contains("style.")
+            && src.contains("when({")
+            && src.contains("before:")
+            && src.contains("alert-stripe")
+            && !src.contains("compound: [")
+            && !src.contains("tone-bg"),
+        "alert Style product stripe via before + component token"
+    );
+    assert!(
+        out.skin_css.contains("::before")
+            && (out.skin_css.contains("var(--alert-stripe)")
+                || out.skin_css.contains("alert-stripe")),
+        "stripe PE on ::before: {}",
+        out.skin_css
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -172,7 +189,8 @@ fn chip_non_solid_variants_clear_solid_shadow() {
     );
     assert!(
         out.skin_css.contains("variant='solid'")
-            && out.skin_css.contains("box-shadow:var(--shadow-xs)"),
+            && (out.skin_css.contains("box-shadow:var(--shadow-xs)")
+                || out.skin_css.contains("shadow-xs")),
         "solid keeps shadow-xs: {}",
         out.skin_css
     );

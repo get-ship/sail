@@ -1,36 +1,28 @@
 <!--
-  <empty-state> — L1 language element (element mode). A centered placeholder for
-  empty lists / missing content: an icon tile, a title, description copy, and an
-  action row. Named slots (icon / title / action + the default description slot)
-  project at compile time; bare tag lowers to <div class="sail-empty-state">.
-
-  Paint (one path):
-    layout keywords  — host column (stretch + self-center kids); icon row tile;
-                       copy column stretch/grow; actions row
-    host sx=         — type + PE default surface; forced-colors border
-    child sx=        — icon/title/desc PE tokens; empty:hidden; forced-colors on icon
-    CVA-in-props     — size + variant maps (first key = default = PE)
-    use:variantLive  — connecting live-region upgrade
-  Variance = CVA-in-props axes + optional compound only. tone/size/variant are
-  ordinary props (axes or unions), not language channels.
-  Zero contracts PE.
+  <empty-state> — L1 centered empty placeholder.
+  Style value language only. size/variant/tone ordinary props.
 -->
 
 <scope>
   props: {
-    variant: {
-      default: 'text: center border border: empty-state-border rounded: lg bg: empty-state shadow: xs',
-      inline: 'text: start border border: dashed border: empty-state-border rounded: md bg: tone-muted-border shadow: none py: 3 px: 4',
-      placeholder: 'text: center border: 0 bg: transparent rounded: none shadow: none py: 6',
-      connecting: 'text: center border: 0 bg: transparent rounded: none shadow: none py: 6',
-    }
-    size: {
-      md: 'py: 16 px: 4',
-      sm: 'py: 7 px: 4',
-      lg: 'py: 24 px: 6',
-    }
+    variant: 'default' | 'inline' | 'placeholder' | 'connecting' = 'default'
+    size: 'md' | 'sm' | 'lg' = 'md'
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
   }
+
+  const base = style.fontFamily(body).fg(empty-state-foreground).textAlign(center).borderWidth(1).border(empty-state-border).radius(lg).bg(empty-state).shadow(xs).padY(16).padX(4)
+  const sizeMd = style.padY(16).padX(4)
+  const sizeSm = style.padY(7).padX(4)
+  const sizeLg = style.padY(24).padX(6)
+  const variantDefault = style.textAlign(center).borderWidth(1).border(empty-state-border).radius(lg).bg(empty-state).shadow(xs)
+  const variantInline = style.textAlign(start).borderWidth(1).border(dashed).border(empty-state-border).radius(md).bg(muted).shadow(none).padY(3).padX(4)
+  const variantPlaceholder = style.textAlign(center).borderWidth(0).bg(transparent).radius(none).shadow(none).padY(6)
+  const variantConnecting = style.textAlign(center).borderWidth(0).bg(transparent).radius(none).shadow(none).padY(6)
+  const icon = style.shrink(0).self(center).radius(lg).bg(muted).fg(muted-foreground).size(12)
+  const copy = style.minW(0).self(stretch).grow(1)
+  const title = style.fontFamily(heading).fontWeight(semibold).fg(foreground).leading(tight).fontSize(md)
+  const desc = style.leading(loose).fg(muted-foreground).fontSize(sm).maxW(panel-ch-w-md)
+  const actions = style.self(center)
 </scope>
 
 <column
@@ -40,7 +32,23 @@
   use:variantLive
   role="note"
   aria-live="off"
-  sx="font-family: body color: empty-state-foreground text: center border border: empty-state-border rounded: lg bg: empty-state shadow: xs py: 16 px: 4 forced-colors:border: CanvasText"
+  sx={[
+    base,
+    match(size, {
+      md: sizeMd,
+      sm: sizeSm,
+      lg: sizeLg,
+    }),
+    match(variant, {
+      default: variantDefault,
+      inline: variantInline,
+      placeholder: variantPlaceholder,
+      connecting: variantConnecting,
+    }),
+    when({
+      forced-colors: style.border(CanvasText),
+    }),
+  ]}
 >
   <row
     inline
@@ -49,19 +57,50 @@
     justify="center"
     class="icon"
     aria-hidden="true"
-    sx="shrink: 0 self: center rounded: lg bg: tone-bg color: tone-fg size: 12 empty:hidden forced-colors:bg: Canvas forced-colors:color: CanvasText"
+    sx={[
+      icon,
+      match(tone, {
+        default: style.bg(muted).fg(muted-foreground),
+        primary: style.bg(muted).fg(primary),
+        info: style.bg(muted).fg(info),
+        success: style.bg(muted).fg(success),
+        warning: style.bg(muted).fg(warning),
+        destructive: style.bg(muted).fg(destructive),
+        accent: style.bg(muted).fg(accent),
+        muted: style.bg(muted).fg(muted-foreground),
+      }),
+      when({
+        empty: style.display(none),
+        forced-colors: style.bg(Canvas).fg(CanvasText),
+      }),
+    ]}
   >
     <slot name="icon"></slot>
   </row>
-  <column align="stretch" gap="1" class="copy" sx="min-w: 0 self: stretch grow: 1">
-    <div class="title" sx="font-family: heading font-weight: semibold color: foreground leading: tight font-size: md empty:hidden">
+  <column align="stretch" gap="1" class="copy" sx={copy}>
+    <div class="title" sx={[
+      title,
+      when({
+        empty: style.display(none),
+      }),
+    ]}>
       <slot name="title"></slot>
     </div>
-    <div class="desc" sx="leading: loose color: muted-foreground font-size: sm max-w: panel-ch-w-md empty:hidden">
+    <div class="desc" sx={[
+      desc,
+      when({
+        empty: style.display(none),
+      }),
+    ]}>
       <slot></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2" class="actions" sx="self: center empty:hidden">
+  <row align="center" justify="center" gap="2" class="actions" sx={[
+    actions,
+    when({
+      empty: style.display(none),
+    }),
+  ]}>
     <slot name="action"></slot>
   </row>
 </column>

@@ -1,36 +1,23 @@
 <!--
-  <alert> — L1 language element (element mode). Inline status banner: tone
-  stripe, optional icon, title, body, actions, dismiss control.
-
-  Behavior: use:liveRegion + use:dismissControl (capability mix-ins).
-
-  Paint (one path):
-    layout keywords  — host <row nowrap align=start gap=3> owns ico | content |
-                       close (layout system; no free grid-template PE)
-    host sx=         — surface + tone stripe via before: (TW-shaped pseudo);
-                       PE default stripe is muted (attr-absent); CVA brands;
-                       forced-colors:border/before CanvasText
-    child sx=        — empty:hidden on ico/title/actions; dismiss close via
-                       host group + group-dismissible:
-    CVA-in-props     — tone stripe (first key = default = PE muted)
-  Variance = CVA-in-props axes + optional compound only. tone is an ordinary
-  prop/axis, not a language channel.
-  No residual alert matrix.
+  <alert> — L1 inline status banner. Style value language only.
+  Stripe via when(before) + match(tone) semantic tokens.
 -->
 
 <scope>
   props: {
-    // first key = default = PE muted stripe (attr-absent host sx matches)
-    tone: {
-      default: 'before:bg: alert-stripe',
-      muted: 'before:bg: alert-stripe',
-      info: 'before:bg: tone',
-      success: 'before:bg: tone',
-      warning: 'before:bg: tone',
-      destructive: 'before:bg: tone',
-    }
+    tone: 'default' | 'muted' | 'info' | 'success' | 'warning' | 'destructive' = 'default'
     dismissible = false
   }
+
+  const base = style.group().position(relative).overflow(hidden).pad(3).borderWidth(1).border(border).radius(md).bg(alert).fg(alert-foreground).fontFamily(body).fontSize(base).leading(normal).shadow(xs)
+  const stripe = style.content(empty).position(absolute).left(0).top(0).bottom(0).w(1).bg(alert-stripe)
+  const ico = style.shrink(0).size(control-h-xs).radius(md).bg(muted).fg(muted-foreground)
+  const content = style.minW(0).grow(1)
+  const title = style.fontWeight(semibold)
+  const body = style.fg(muted-foreground)
+  const actions = style.mt(2)
+  const close = style.display(none).size(control-h-xs).shrink(0).self(start).pad(0).borderWidth(0).radius(sm).bg(transparent).fg(muted-foreground).cursor(pointer).transition(colors).duration(fast).ease(out)
+  const xmark = style.display(block).size(icon-size-sm).stroke(currentColor).fill(none)
 </scope>
 
 <row
@@ -42,19 +29,61 @@
   role="status"
   aria-live="polite"
   aria-atomic="true"
-  sx="group relative overflow: hidden p: 3 border border: border rounded: md bg: alert color: alert-foreground font-family: body font-size: base leading: normal shadow: xs before:content: empty before:absolute before:left: 0 before:top: 0 before:bottom: 0 before:w: 1 before:bg: alert-stripe forced-colors:border: CanvasText forced-colors:before:bg: CanvasText"
+  sx={[
+    base,
+    when({
+      before: stripe,
+      forced-colors: style.border(CanvasText),
+    }),
+    match(tone, {
+      default: when({ before: style.bg(alert-stripe) }),
+      muted: when({ before: style.bg(alert-stripe) }),
+      info: when({ before: style.bg(info) }),
+      success: when({ before: style.bg(success) }),
+      warning: when({ before: style.bg(warning) }),
+      destructive: when({ before: style.bg(destructive) }),
+    }),
+    when({
+      forced-colors: when({
+        before: style.bg(CanvasText),
+      }),
+    }),
+  ]}
 >
-  <row inline nowrap align="center" justify="center" class="ico" sx="shrink: 0 size: control-h-xs rounded: md bg: tone-bg color: tone-fg empty:hidden">
+  <row inline nowrap align="center" justify="center" class="ico" sx={[
+    ico,
+    match(tone, {
+      default: style.bg(muted).fg(muted-foreground),
+      muted: style.bg(muted).fg(muted-foreground),
+      info: style.bg(muted).fg(info),
+      success: style.bg(muted).fg(success),
+      warning: style.bg(muted).fg(warning),
+      destructive: style.bg(muted).fg(destructive),
+    }),
+    when({
+      empty: style.display(none),
+    }),
+  ]}>
     <slot name="icon"></slot>
   </row>
-  <column gap="1" class="content" sx="min-w: 0 grow: 1">
-    <div class="title" sx="font-weight: semibold empty:hidden">
+  <column gap="1" class="content" sx={content}>
+    <div class="title" sx={[
+      title,
+      when({
+        empty: style.display(none),
+      }),
+    ]}>
       <slot name="title"></slot>
     </div>
-    <div class="body" sx="color: muted-foreground">
+    <div class="body" sx={body}>
       <slot></slot>
     </div>
-    <row align="center" gap="2" class="actions" sx="mt: 2 empty:hidden">
+    <row align="center" gap="2" class="actions" sx={[
+      actions,
+      when({
+        empty: style.display(none),
+      }),
+    ]}>
       <slot name="actions"></slot>
     </row>
   </column>
@@ -63,9 +92,16 @@
     type="button"
     anatomy
     aria-label="Dismiss"
-    sx="hidden group-dismissible:inline-block size: control-h-xs shrink: 0 self: start p: 0 border: 0 rounded: sm bg: transparent color: muted-foreground cursor: pointer transition: colors duration: fast ease: out hover:bg: muted hover:color: foreground focus:outline: solid focus:outline: 2 focus:outline: ring focus:outline-offset: 2"
+    sx={[
+      close,
+      when({
+        group-dismissible: style.display(inline-block),
+        hover: style.bg(muted).fg(foreground),
+        focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2),
+      }),
+    ]}
   >
-    <svg viewBox="0 0 10 10" aria-hidden="true" sx="block size: icon-size-sm stroke: currentColor fill: none" stroke-width="1.75" stroke-linecap="round">
+    <svg viewBox="0 0 10 10" aria-hidden="true" sx={xmark} stroke-width="1.75" stroke-linecap="round">
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>

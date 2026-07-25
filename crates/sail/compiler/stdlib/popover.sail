@@ -1,15 +1,13 @@
 <!--
-  <popover id="…" placement="bottom"> — L1 anchored overlay on the native
-  popover API + use:anchor.
-
-  Host paint: chrome + anchor geometry on sx. Backdrop transparent is global
-  :where([popover])::backdrop. Global popover max-width still applies.
+  <popover> — L1 anchored overlay. Style value language only.
 -->
 
 <scope>
   props: {
     placement = ''
   }
+
+  const panel = style.position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).minW(menu-min-w).pad(3).fg(popover-foreground).bg(popover).borderWidth(1).border(border).radius(md).shadow(md).z(popover)
 </scope>
 
-<div popover use:anchor sx="fixed inset: auto m: 0 left: (--anchor-left) top: (--anchor-top) min-w: (--menu-min-w) p: 3 color: popover-foreground bg: popover border border: border rounded: md shadow: md z: (--z-popover)"><slot></slot></div>
+<div popover use:anchor sx={panel}><slot></slot></div>
