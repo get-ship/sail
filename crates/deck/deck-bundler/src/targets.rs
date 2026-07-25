@@ -42,7 +42,11 @@ pub(crate) struct FrameworkSingleton {
 pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
     FrameworkSingleton {
         name: "sail-runtime",
-        spec: "@ship/sail-runtime",
+        // Full singleton surface (front door + all `use:` actions) so the
+        // importmap can map `@ship/sail-runtime` and `/actions` to one URL
+        // without losing auto-imported action names. Author TS still resolves
+        // bare `@ship/sail-runtime` → curated `./src/index.ts`.
+        spec: "@ship/sail-runtime/framework",
         out_file: "sail-runtime.js",
         externals: &[],
         co_assets: &[],

@@ -22,9 +22,10 @@
 
 import { test, expect, type ConsoleMessage, type Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const OUT = join(__dirname, 'viewer-polish-screenshots')
+const OUT = join(dirname(fileURLToPath(import.meta.url)), 'viewer-polish-screenshots')
 mkdirSync(OUT, { recursive: true })
 
 interface Failure { url: string; type: string; text: string }

@@ -231,6 +231,8 @@ test('/motion page: an all-inline loop (bespoke duration, easing, magnitudes) ac
   expect(timing.every((t) => t.iterations === Infinity)).toBe(true)
 
   expect(motionWarnings).toEqual([])
+})
+
 // ── The choreography lane, live on the page ──────────────────────────────────
 //
 // The /motion page's `timeline()` demo is the teaching surface for the second

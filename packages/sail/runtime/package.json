@@ -16,7 +16,8 @@
     "./virtual": "./src/virtual.ts",
     "./internal": "./src/internal.ts",
     "./contracts": "./src/contracts.ts",
-    "./actions": "./src/actions/index.ts"
+    "./actions": "./src/actions/index.ts",
+    "./framework": "./src/framework-bundle.ts"
   },
   "files": [
     "src",

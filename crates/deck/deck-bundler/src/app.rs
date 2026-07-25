@@ -70,6 +70,10 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
     // to anything. The resolve guard below makes this class of miss a
     // build error instead of a silent fork.
     ("@ship/sail-runtime/internal", "sail-runtime.js", "_deck/runtime.js"),
+    // Compiler auto-imports `use:` actions from this subpath (see
+    // sail-compiler emit/js/imports.rs). Shares the framework-bundle
+    // singleton (full action surface + runtime) — must not be inlined.
+    ("@ship/sail-runtime/actions", "sail-runtime.js", "_deck/runtime.js"),
     ("@ship/sail-dom", "sail-dom.js", "_deck/dom.js"),
     // `@ship/deck/router` lives in the framework because the bundler
     // generates an entry that imports it. The runtime exports
