@@ -78,13 +78,24 @@ pub(super) fn emit_setup_body(
     // subtree's `var(--x)` reads.
     if !sx_var_bindings.is_empty() {
         mount_w.push_str(&crate::emit::styles::register_properties_install_js(sx_var_bindings));
+        // ONE effect per instance writes ALL bound custom properties: N
+        // instances x M dynamic style props must not cost N x M effects
+        // (each with its own scheduling + DOM write). The single effect
+        // reads every bound signal, so any one firing re-runs it and
+        // rewrites all — the same batching fine-grained systems accept;
+        // no per-var dirty tracking. Each statement is block-scoped so the
+        // `__v` temporaries don't collide.
+        mount_w.line("__cleanups.push(effect(() => {");
+        mount_w.enter();
         for b in sx_var_bindings {
             let css_prop = js_string(&format!("--{}", b.css_name));
             let scope_ident = js_ident(&b.scope_name);
             mount_w.line(&format!(
-                "__cleanups.push(effect(() => {{ const __v = ($scope.{scope_ident}()); if (__v == null) __root.style.removeProperty({css_prop}); else __root.style.setProperty({css_prop}, String(__v)); }}));"
+                "{{ const __v = ($scope.{scope_ident}()); if (__v == null) __root.style.removeProperty({css_prop}); else __root.style.setProperty({css_prop}, String(__v)); }}"
             ));
         }
+        mount_w.leave();
+        mount_w.line("}));");
     }
     // Pages install their lifted top-level `<style>` into the container.
     // Registered components install styles via the custom-element adapter

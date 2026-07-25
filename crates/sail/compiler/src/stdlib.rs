@@ -4,6 +4,17 @@
 //! codegen, no drift). Element sources compile through
 //! `parse_element_source` — the pipeline minus the stdlib pass — so there is
 //! no recursion and no element-in-element.
+//!
+//! AUTHORING NOTE — the `empty:hidden` gate. Optional-region wrappers (card
+//! header/footer, alert icon/title/actions, empty-state / error-state
+//! sections, field hint) collapse when unfilled via
+//! `when({ empty: style.display(none) })` on the wrapper's sx. The gate is
+//! spelled out per element, per wrapper, because stdlib sources compile
+//! STANDALONE (one `compile_element` per file below; the Style const env is
+//! built from that file's own `<scope>`) and there is no include/import
+//! between stdlib `.sail` files — a shared `emptyGate` Style const has no
+//! home a second file could reference. If a cross-stdlib Style module
+//! mechanism ever lands, this gate is the first candidate to hoist.
 
 use crate::emit::element::ElementOutput;
 use std::sync::LazyLock;
@@ -15,6 +26,7 @@ pub struct StdlibElement {
 
 const SOURCES: &[(&str, &str)] = &[
     ("spinner", include_str!("../stdlib/spinner.sail")),
+    ("button", include_str!("../stdlib/button.sail")),
     ("separator", include_str!("../stdlib/separator.sail")),
     ("icon", include_str!("../stdlib/icon.sail")),
     ("label", include_str!("../stdlib/label.sail")),

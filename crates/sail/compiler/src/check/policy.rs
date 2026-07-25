@@ -397,7 +397,8 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
                 "sx" => p.sx = b,
                 "variants" => p.variants = b,
                 "raw_containers" => p.raw_containers = b,
-                _ => unreachable!(),
+                // Loop list above is exhaustive; stay total without panicking.
+                _ => {}
             }
             signal.push(format!("{key}: {b}"));
         }

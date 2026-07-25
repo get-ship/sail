@@ -278,19 +278,8 @@ const RESKINS: &[ReskinRow] = &[
     ReskinRow {
         tag: "a",
         selectors: &[":where(a[variant])"],
-        attributes: &[("variant", &VARIANT_BTN)],
+        attributes: &[("variant", &VARIANT_BTN), ("tone", &TONE_8)],
         description: "Anchor — when `variant` is set, becomes a button link. Tone is an ordinary [tone] prop (attribute-keyed contract tokens); hover shifts the fill toward the tone.",
-    },
-    ReskinRow {
-        tag: "button",
-        selectors: &[":where(button, a[variant])"],
-        attributes: &[
-            ("variant", &VARIANT_BTN),
-            ("size", &SIZE_XS_SM_MD_LG),
-            ("tone", &TONE_8),
-            ("disabled", &EMPTY),
-        ],
-        description: "Button — bare `<button>` IS the design system's button. tone/size are ordinary props (attribute-keyed contract tokens); variant chooses default/solid/soft/outline/ghost.",
     },
     ReskinRow {
         tag: "details",

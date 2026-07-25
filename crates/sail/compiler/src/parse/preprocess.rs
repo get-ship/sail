@@ -417,8 +417,59 @@ fn lower_into(
                 // NATIVE-KIND elements (root tag == element tag, e.g. label
                 // → <label>) are skin + manifest only — the tag already IS
                 // the element; splicing would rewrite every real HTML use.
+                // But the element's HOST paint (root class + the atomic sx
+                // classes its Style lowered to, the same string a spliced
+                // root carries) reaches real tags only if the use site
+                // carries those classes — nothing else ever stamps them.
+                // Stamp them onto the open tag here, merging any author
+                // `class`; use-site props stay ordinary attributes, so the
+                // skin's `[attr=value]` selectors keep matching.
                 if el.out.native {
-                    continue;
+                    if !source[i + 1..].starts_with(tag) {
+                        continue;
+                    }
+                    let after = i + 1 + tag.len();
+                    let boundary = bytes
+                        .get(after)
+                        .is_some_and(|&b| b.is_ascii_whitespace() || b == b'>');
+                    if !boundary {
+                        continue;
+                    }
+                    // Open-tag end, quote-aware.
+                    let mut k = after;
+                    let mut quote: Option<u8> = None;
+                    while k < bytes.len() {
+                        match (quote, bytes[k]) {
+                            (Some(q), b) if b == q => quote = None,
+                            (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
+                            (None, b'>') => break,
+                            _ => {}
+                        }
+                        k += 1;
+                    }
+                    if k >= bytes.len() {
+                        break;
+                    }
+                    let open_tag = &source[i..=k];
+                    // `[anatomy]` marks an element INTERNAL (a part rendered
+                    // elsewhere whose paint already rides its own classes) —
+                    // host paint on top would apply twice. Copy the whole
+                    // subtree through untouched.
+                    if open_tag_attr(open_tag, "anatomy").is_some() {
+                        let end = if crate::emit::element::is_void_element(tag) {
+                            k + 1
+                        } else {
+                            matching_close(source, k + 1, tag).unwrap_or(k + 1)
+                        };
+                        out.push_str(&source[i..end]);
+                        i = end;
+                        continue 'outer;
+                    }
+                    out.push_str(&stamp_native_host(open_tag, &el.out.host_classes));
+                    // Same bookkeeping as the spliced path: the tag was seen.
+                    css_done.insert(tag);
+                    i = k + 1;
+                    continue 'outer;
                 }
                 if source[i + 1..].starts_with(tag) {
                     let after = i + 1 + tag.len();
@@ -501,6 +552,115 @@ fn lower_into(
         out.push_str(&source[i..next]);
         i = next;
     }
+}
+
+/// Byte offset just past the close tag matching the `<tag …>` open whose
+/// open tag ends at `from` — depth-aware over nested same-tag opens, byte
+/// compares so a multibyte char is never sliced mid-codepoint (mirrors the
+/// close scan in `lower_into`). None when the source runs out first.
+fn matching_close(source: &str, from: usize, tag: &str) -> Option<usize> {
+    let bytes = source.as_bytes();
+    let open_prefix = format!("<{tag}");
+    let close = format!("</{tag}>");
+    let mut depth = 1usize;
+    let mut scan = from;
+    while scan < bytes.len() {
+        if bytes[scan..].starts_with(close.as_bytes()) {
+            depth -= 1;
+            scan += close.len();
+            if depth == 0 {
+                return Some(scan);
+            }
+        } else if bytes[scan..].starts_with(open_prefix.as_bytes())
+            && bytes
+                .get(scan + open_prefix.len())
+                .is_some_and(|&b| b.is_ascii_whitespace() || b == b'>')
+        {
+            depth += 1;
+            scan += open_prefix.len();
+        } else {
+            scan += 1;
+        }
+    }
+    None
+}
+
+/// Stamp a native-kind element's host classes (`sail-<name>` + the atomic
+/// sx classes its host Style lowered to — `ElementOutput::host_classes`,
+/// the same string `serialize_static` bakes into a spliced root) onto a
+/// use-site open tag: `<label size="sm">` → `<label class="sail-label sx-…"
+/// size="sm">`. Rules:
+///   - an author `class` merges — host classes first, author classes after,
+///     deduped by token, so re-scanning an already-stamped tag is a NO-OP
+///     (idempotent: the second stamp produces the identical string);
+///   - a dynamic `class={…}` becomes a concat expression — a dynamic class
+///     binding REPLACES the attribute at runtime, so the stamped classes
+///     must ride inside the expression to survive;
+///   - every other attribute (use-site props like `size=`/`required`) is
+///     preserved untouched — the skin's `[attr=value]` selectors match on
+///     them.
+fn stamp_native_host(open_tag: &str, host_classes: &str) -> String {
+    if host_classes.trim().is_empty() {
+        return open_tag.to_string();
+    }
+    let self_closing = open_tag.ends_with("/>");
+    let inner = &open_tag[..open_tag.len() - if self_closing { 2 } else { 1 }];
+    let name_end = inner.find(char::is_whitespace).unwrap_or(inner.len());
+    let tag_name = &inner[1..name_end];
+    let attrs = parse_attr_list(&inner[name_end..]);
+    let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    let mut merged: Vec<&str> = Vec::new();
+    for c in host_classes.split_whitespace() {
+        if seen.insert(c) {
+            merged.push(c);
+        }
+    }
+    let mut static_classes: Vec<&str> = Vec::new();
+    let mut dynamic_class: Option<&str> = None;
+    let mut rest_attrs: Vec<(&str, &str)> = Vec::new();
+    for (name, value) in &attrs {
+        if name == "class" {
+            let v = value.trim_matches(['"', '\'']);
+            let t = v.trim();
+            if t.starts_with('{') && t.ends_with('}') && t.len() > 1 {
+                dynamic_class = Some(v);
+            } else {
+                static_classes.push(v);
+            }
+        } else {
+            rest_attrs.push((name, value));
+        }
+    }
+    for v in static_classes {
+        for c in v.split_whitespace() {
+            if seen.insert(c) {
+                merged.push(c);
+            }
+        }
+    }
+    let merged = merged.join(" ");
+    let mut outb = format!("<{tag_name}");
+    match dynamic_class {
+        Some(expr) => {
+            let t = expr.trim();
+            let body = t[1..t.len() - 1].trim();
+            outb.push_str(&format!(" class=\"{{\"{merged} \" + ({body})}}\""));
+        }
+        None => outb.push_str(&format!(" class=\"{merged}\"")),
+    }
+    for (n, v) in rest_attrs {
+        outb.push(' ');
+        outb.push_str(n);
+        if !v.is_empty() {
+            outb.push('=');
+            outb.push_str(v);
+        }
+    }
+    if self_closing {
+        outb.push('/');
+    }
+    outb.push('>');
+    outb
 }
 
 /// Merge use-site attrs onto the snippet root and place children.
@@ -2404,8 +2564,12 @@ mod tests {
             out.contains("body") && out.contains("All changes saved."),
             "un-slotted → body: {out}"
         );
+        // The slotted <button> is a native stdlib tag — stamping adds its
+        // sail-button + sx-* classes ahead of the slot= attribute.
         assert!(
-            out.contains("actions") && out.contains(r#"<button slot="actions">Undo</button>"#),
+            out.contains("actions")
+                && out.contains("sail-button")
+                && out.contains(r#"slot="actions">Undo</button>"#),
             "actions → .actions: {out}"
         );
     }
@@ -2437,8 +2601,12 @@ mod tests {
             out.contains("desc") && out.contains("Try a different search."),
             "default → desc: {out}"
         );
+        // Same native stamping as alert: the slotted <button> carries its
+        // sail-button + sx-* classes ahead of the slot= attribute.
         assert!(
-            out.contains("actions") && out.contains(r#"<button slot="action">Reset</button>"#),
+            out.contains("actions")
+                && out.contains("sail-button")
+                && out.contains(r#"slot="action">Reset</button>"#),
             "action slot: {out}"
         );
         assert!(
@@ -2498,14 +2666,24 @@ mod tests {
     }
 
     #[test]
-    fn stdlib_label_is_native_kind_skin_only() {
+    fn stdlib_label_is_native_kind_stamped_not_spliced() {
         // label's template root IS <label> — NATIVE KIND: the tag is never
         // spliced (splicing would rewrite every real HTML label inside
-        // component templates — the sonnet-agent find), the skin keys on the
-        // bare tag selector and joins once when the tag is used.
+        // component templates — the sonnet-agent find). But the host paint
+        // (root class + atomic sx classes) reaches real labels only by being
+        // STAMPED onto the use-site tag — nothing else ever adds it.
         let out = preprocess(r#"<label for="email" required>Email</label>"#);
-        assert!(!out.contains("sail-label"), "native kind never splices: {out}");
-        assert!(out.contains(r#"<label for="email" required>Email</label>"#), "{out}");
+        assert!(
+            out.contains("sail-label"),
+            "native kind stamps its host classes: {out}"
+        );
+        assert!(
+            out.contains(r#"for="email""#) && out.contains("required>Email</label>"),
+            "use-site attributes survive stamping: {out}"
+        );
+        // No splice: the element's internals (the .req marker span) do NOT
+        // appear at the use site.
+        assert!(!out.contains(r#"class="req""#), "native kind never splices: {out}");
         // The SKIN is not here. Stdlib element skins ship in the framework stylesheet
         // (`element-skins.css`), not spliced into every component's emitted <style> —
         // inlining duplicated the same rules into every chunk that used the element

@@ -10,6 +10,7 @@ pub mod controller_parse;
 mod controller_parse_tests;
 pub mod controller_purity;
 pub mod layout;
+pub mod match_exhaustiveness;
 pub mod light_shadow_root;
 pub mod paired_controller;
 pub mod mount_ambient_shadow;
@@ -304,6 +305,11 @@ pub fn collect(
     // the preprocessed source so class tokens line up with the CSS the compiler
     // emits, then spans are mapped back to the author's original source.
     diags.extend(layout::collect(source));
+
+    // Style match exhaustiveness — a `match` on a closed-union scope prop
+    // that leaves members arm-less warns (never gates; partial matches are a
+    // legitimate way to leave a variant unstyled).
+    diags.extend(match_exhaustiveness::collect(program, source));
 
     diags.sort_by(|a, b| a.line.cmp(&b.line).then(a.col.cmp(&b.col)));
     diags.dedup_by(|a, b| a.line == b.line && a.col == b.col && a.message == b.message);

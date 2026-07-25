@@ -127,6 +127,14 @@ struct Token {
     r#type: String,
     value: String,
     css_value: String,
+    /// `$extensions.ship.channel` — a Tier-2 expression channel. Channel
+    /// tokens are partitioned out of the base `:root` block at emission and
+    /// re-emitted under the `Expression channels (Tier 2)` banner so the
+    /// channel-integrity tests can find (and police) the full set.
+    channel: bool,
+    /// `$description` — emitted as a doc comment above the declaration in
+    /// the channel block (the old hand-authored block's prose, now SSOT).
+    description: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -201,7 +209,26 @@ pub fn generate(model_dir: &Path, out_dir: &Path) -> Result<GenerateReport> {
 
     let mut css_parts: Vec<String> = vec![GENERATED_HEADER.to_string()];
     for l in &ordered {
-        css_parts.push(emit_layer(l));
+        if l.meta.layer == "base" {
+            // Tier-2 expression channels are partitioned out of the base
+            // `:root` block and re-emitted under their own banner so the
+            // channel-integrity tests can parse (and police) the full set.
+            // Declarations are NOT duplicated: each channel token leaves the
+            // base block exactly once.
+            let (channels, regular): (Vec<Token>, Vec<Token>) =
+                l.tokens.iter().cloned().partition(|t| t.channel);
+            let base_regular = Layer {
+                meta: l.meta.clone(),
+                tokens: regular,
+            };
+            css_parts.push(emit_layer(&base_regular));
+            css_parts.push(String::new());
+            if !channels.is_empty() {
+                css_parts.push(emit_channel_block(&channels));
+            }
+        } else {
+            css_parts.push(emit_layer(l));
+        }
         css_parts.push(String::new());
     }
     if !aliases.is_empty() {
@@ -383,12 +410,22 @@ fn flatten_tokens(doc: &Value, path_prefix: &[String], inherited_type: Option<&s
                 Some(other) => other.to_string(),
                 None => continue,
             };
+            let channel = node
+                .pointer("/$extensions/ship/channel")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            let description = node
+                .get("$description")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
             out.push(Token {
                 path,
                 css_name,
                 r#type: ty,
                 value,
                 css_value: String::new(),
+                channel,
+                description,
             });
         } else if is_group(node) {
             let group_type = node
@@ -686,6 +723,71 @@ fn emit_compat_aliases(selector: &str, aliases: &BTreeMap<String, String>) -> St
     // BTreeMap iterates sorted — matches localeCompare for ASCII names.
     for (old_name, new_name) in aliases {
         lines.push(format!("  --{old_name}: var(--{new_name});"));
+    }
+    lines.push("}".into());
+    lines.join("\n")
+}
+
+/// Banner for the Tier-2 expression-channel block. The tests in
+/// `tests/channel_integrity.rs` locate this block BY THIS BANNER STRING and
+/// then require every declaration inside it to have a generated reader —
+/// keep the heading verbatim.
+const CHANNELS_BANNER: &str = "\
+/* ─── Expression channels (Tier 2) ──────────────────────────────────
+ *
+ * Design-token \"theme-bending\" channels: the properties a theme most
+ * often wants to bend but otherwise cannot — stroke weight, control
+ * framing, interaction motion, corner treatment, display type, casing,
+ * gradient and glow.
+ *
+ * The contract for every name in this block is enforced by the tests in
+ * `crates/sail/compiler/tests/channel_integrity.rs` and
+ * `channel_discipline.rs`:
+ *   1. The default is a NO-OP — it reproduces today's rendering
+ *      exactly, so declaring the channel changes nothing on its own.
+ *      channel_integrity additionally rejects hard literals that would
+ *      break composition (e.g. `none` inside a `box-shadow` list).
+ *   2. A generated reader consumes it. A channel nothing reads is a
+ *      variable in a costume; the `channel-readers` generator check
+ *      fails the build if any name here goes unread.
+ *   3. Where a channel governs a single CSS property, the skin lints in
+ *      channel_discipline stop a skin writing that property literally
+ *      instead of through the channel. Today that coverage is
+ *      `text-transform` and `border-image`; `border-width` is tracked as a
+ *      ratchet rather than an outright ban. Other channels are held
+ *      honest by checks (1) and (2) above.
+ *
+ * Themes opt in; components never change. That is the whole thesis —
+ * a theme should be a token block, not a patch.
+ *
+ * SSOT: `$extensions.ship.channel` + `$description` on the token in
+ * packages/sail/tokens/model/**. Do not hand-edit this block.
+ */";
+
+/// Emit the Tier-2 expression-channel `:root` block: banner, then each
+/// channel token with its `$description` as a doc comment.
+fn emit_channel_block(tokens: &[Token]) -> String {
+    let mut lines = vec![CHANNELS_BANNER.to_string(), ":root {".into()];
+    for (i, t) in tokens.iter().enumerate() {
+        if let Some(desc) = &t.description {
+            if i > 0 {
+                lines.push(String::new());
+            }
+            let mut desc_lines = desc.lines();
+            if let Some(first) = desc_lines.next() {
+                let rest: Vec<&str> = desc_lines.collect();
+                if rest.is_empty() {
+                    lines.push(format!("  /* {first} */"));
+                } else {
+                    lines.push(format!("  /* {first}"));
+                    for line in rest {
+                        lines.push(format!("   * {line}"));
+                    }
+                    lines.push("   */".into());
+                }
+            }
+        }
+        lines.push(format!("  --{}: {};", t.css_name, t.css_value));
     }
     lines.push("}".into());
     lines.join("\n")
@@ -1396,6 +1498,8 @@ mod tests {
             r#type: "color".into(),
             value: "oklch(0.5 0.1 250)".into(),
             css_value: "oklch(0.5 0.1 250)".into(),
+            channel: false,
+            description: None,
         }];
         let (names, source) = tone_names_from_tokens(&tokens);
         assert_eq!(names, TONE_FALLBACK.iter().map(|s| (*s).to_string()).collect::<Vec<_>>());
@@ -1491,5 +1595,49 @@ mod tests {
         assert_eq!(reg["paths"]["component.card.fg"], "card-foreground");
         assert!(reg["paths"].get("color.card.foreground").is_none());
         assert!(reg["paths"].get("misc.card").is_none());
+    }
+
+    #[test]
+    fn channel_tokens_are_partitioned_under_the_tier_2_banner() {
+        let dir = tempfile::tempdir().unwrap();
+        let model = dir.path().join("model");
+        let out = dir.path().join("src");
+        write_file(
+            &model.join("base.json"),
+            r#"{
+  "$extensions": { "ship": { "selector": ":root", "layer": "base" } },
+  "color": {
+    "foreground": {
+      "$value": "oklch(0.2 0 0)",
+      "$type": "color",
+      "$extensions": { "ship": { "cssName": "foreground" } }
+    }
+  },
+  "control": {
+    "frame": {
+      "$value": "0 0 0 0 transparent",
+      "$type": "string",
+      "$description": "Control framing — transparent-shadow no-op.",
+      "$extensions": { "ship": { "cssName": "control-frame", "channel": true } }
+    }
+  }
+}
+"#,
+        );
+
+        let report = generate(&model, &out).unwrap();
+        let css = fs::read_to_string(&report.tokens_css).unwrap();
+
+        // Banner present, declaration inside the banner's :root block …
+        let banner = css.find("Expression channels (Tier 2)").expect("banner");
+        let block_end = css[banner..].find("\n}").map(|e| banner + e).unwrap();
+        let block = &css[banner..block_end];
+        assert!(block.contains("--control-frame: 0 0 0 0 transparent;"), "{css}");
+        assert!(block.contains("Control framing — transparent-shadow no-op."));
+        // … and NOT duplicated in the base block.
+        assert_eq!(css.matches("--control-frame:").count(), 1, "{css}");
+        // Non-channel tokens stay in the base block, before the banner.
+        let fg = css.find("--foreground:").unwrap();
+        assert!(fg < banner, "{css}");
     }
 }

@@ -101,6 +101,44 @@
         "default": "soft"
       }
     },
+    "button": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "size": {
+        "values": [
+          "xs",
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "tone": {
+        "values": [
+          "default",
+          "primary",
+          "info",
+          "success",
+          "warning",
+          "destructive",
+          "accent",
+          "muted"
+        ],
+        "default": "default"
+      },
+      "variant": {
+        "values": [
+          "default",
+          "solid",
+          "soft",
+          "outline",
+          "ghost"
+        ],
+        "default": "default"
+      }
+    },
     "card": {
       "accent-bar": {
         "values": [

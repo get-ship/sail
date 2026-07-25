@@ -338,7 +338,7 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
         std::collections::BTreeMap::new();
     for (tag, source) in sail_compiler::stdlib::sources() {
         let program = sail_compiler::parse::parse(source)
-            .unwrap_or_else(|e| panic!("stdlib {tag} failed to parse: {e:?}"));
+            .map_err(|e| anyhow!("stdlib {tag} failed to parse: {e:?}"))?;
         let mut props = std::collections::BTreeMap::new();
         let mut ts_props: Vec<serde_json::Value> = Vec::new();
         for p in &program.props {
@@ -774,16 +774,15 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
              not paint channels. `compound` (sibling of `props`) keys rules on combinations.\n\n\
              ```\n\
              <scope>\n\
-             {{\n\
                props: {{\n\
-                 variant: 'solid' | 'soft' | 'outline' = 'solid',\n\
-                 tone: 'default' | 'primary' | 'destructive',\n\
-               }},\n\
-             }}\n\
-             const solid = style.bg(tone-bg-solid).fg(tone-fg)\n\
-             const soft = style.bg(tone-bg).fg(tone-fg)\n\
+                 variant: 'solid' | 'soft' | 'outline' = 'solid'\n\
+                 tone: 'default' | 'primary' | 'destructive' = 'default'\n\
+               }}\n\
+             \n\
+               const solid = style.bg(primary).fg(primary-foreground)\n\
+               const soft = style.bg(muted).fg(muted-foreground)\n\
              </scope>\n\
-             <div sx={{match(variant, {{ solid, soft, outline: style.borderWidth(1).border(tone-border) }})}} />\n\
+             <div sx={{match(variant, {{ solid: solid, soft: soft, outline: style.bg(transparent).fg(foreground).border(border) }})}} />\n\
              ```\n"
         );
     }

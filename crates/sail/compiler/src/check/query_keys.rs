@@ -195,7 +195,11 @@ fn find_calls(source: &str) -> Vec<Call> {
                         out.push(Call { kind, name_start: s, open: after, close });
                     }
                 }
-                prev_significant = Some(*word.as_bytes().last().unwrap());
+                // `word` is non-empty by construction (is_ident_start matched);
+                // stay total anyway.
+                if let Some(&last) = word.as_bytes().last() {
+                    prev_significant = Some(last);
+                }
                 continue;
             }
             _ => {

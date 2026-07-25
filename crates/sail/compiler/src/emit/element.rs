@@ -155,6 +155,13 @@ pub struct ElementOutput {
     pub native: bool,
     /// Static structure snippet (single root element, slots preserved).
     pub structure_html: String,
+    /// The class string `serialize_static` stamped on the structure root:
+    /// `sail-<name>` + the atomic sx classes the host `sx` lowered to.
+    /// Spliced elements carry it on the snippet root; NATIVE-kind elements
+    /// have no splice, so the use-site lowering stamps this same string onto
+    /// the real tag (preprocess `lower_into`) — otherwise the host paint
+    /// keyed on those classes never reaches a single element.
+    pub host_classes: String,
     /// Skin CSS — keyed on `.sail-<name>` for spliced elements, on the bare
     /// tag selector for native-kind (from the source's `:host` idioms).
     pub skin_css: String,
@@ -262,10 +269,13 @@ pub fn emit_element(
         "anatomy": { "dom": "light", "classes": classes, "slots": slots },
     });
 
+    let host_classes = root_class_attr(&structure);
+
     Ok(ElementOutput {
         root_class,
         native,
         structure_html: structure,
+        host_classes,
         skin_css,
         manifest,
     })
@@ -362,6 +372,25 @@ fn serialize_static(
     }
     out.push_str(&format!("</{}>", el.tag));
     Ok(())
+}
+
+/// The root element's `class` value out of a serialized structure snippet —
+/// the exact string `serialize_static` stamped there (`sail-<name>` first,
+/// then the author's/sx classes, in order). `serialize_static` always writes
+/// the attribute as ` class="…"` on the root open tag.
+fn root_class_attr(structure_html: &str) -> String {
+    let Some(gt) = structure_html.find('>') else {
+        return String::new();
+    };
+    let open = &structure_html[..gt];
+    let Some(p) = open.find(" class=\"") else {
+        return String::new();
+    };
+    let rest = &open[p + " class=\"".len()..];
+    let Some(end) = rest.find('"') else {
+        return String::new();
+    };
+    rest[..end].to_string()
 }
 
 /// Rewrite the source's `:host`-keyed skin for the element's root class:

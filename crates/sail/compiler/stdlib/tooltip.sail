@@ -1,6 +1,22 @@
 <!--
-  <tooltip> — hover/focus text bubble. use:tipDescribe supplies geometry vars.
-  Style value language only.
+  <tooltip> — hover/focus text bubble. use:tipDescribe supplies per-instance
+  anchor geometry vars (placement offsets + arrow insets), content text, and
+  Escape. Style value language only.
+
+  Paint (Style product only):
+    host sx   — style.group() (sail-grp ancestor for the bubble show) +
+                position(relative) positioning context
+    bubble sx — absolute + (--tt-*) geometry via bind (the vars tipDescribe
+                publishes, same bridge as use:anchor) + opacity show under
+                group hover/focus-within + after: arrow
+  No contracts PE matrix.
+
+  Legacy utility-atom spellings this Style paint replaces (pinned by
+  sx_host_paint_probe::tooltip_geometry_and_show_on_sx_no_contracts_pe):
+    host   group relative
+    bubble top-(--tt-top) translate-x-(--tt-tx)
+           group-hover:opacity-100 group-focus-within:opacity-100
+    arrow  after:content-empty after:rotate-45
 -->
 
 <scope>
