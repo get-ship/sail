@@ -117,10 +117,16 @@ fn base_css(tag: &str) -> Vec<String> {
         "column" => vec![
             ".sail-col{display:flex;flex-direction:column;min-width:0}".into(),
             ".sail-col>*{min-width:0}".into(),
+            // Defense: layout display must not override UA closed popover none.
+            // Prefer a plain div[popover] host with layout nested inside.
+            ".sail-col[popover]:not(:popover-open){display:none!important}".into(),
+            ".sail-col[popover]:popover-open{display:flex;flex-direction:column;min-width:0}".into(),
         ],
         "row" => vec![
             ".sail-row{display:flex;flex-wrap:wrap;min-width:0}".into(),
             ".sail-row>*{min-width:0}".into(),
+            ".sail-row[popover]:not(:popover-open){display:none!important}".into(),
+            ".sail-row[popover]:popover-open{display:flex;flex-wrap:wrap;min-width:0}".into(),
         ],
         "grid" => vec![
             ".sail-grid{display:grid;min-width:0}".into(),
@@ -504,6 +510,23 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         let (line, col) = offset_to_line_col(source, t.start);
         let valid = tag_props(&t.tag);
         for (name, value) in &t.attrs {
+            // Layout keywords emit display:flex/grid; that overrides the UA
+            // closed-popover display:none and leaves the panel always open.
+            // Style product: never host [popover] on a layout keyword.
+            if name == "popover" {
+                findings.push(mk(
+                    path,
+                    line,
+                    col,
+                    format!(
+                        "<{} popover> — layout keywords must not be popover hosts \
+                         (display:flex/grid overrides UA closed display:none). \
+                         Use a plain <div popover> (or L1 overlay) and nest layout inside.",
+                        t.tag
+                    ),
+                ));
+                continue;
+            }
             if is_passthrough_attr(name) {
                 // Non-axis attrs (id, class, sx, on:click, data-*, a11y, …)
                 // pass straight through to the div — nothing to validate.
@@ -667,7 +690,7 @@ pub fn is_passthrough_attr(name: &str) -> bool {
             | "itemref"
             | "itemid"
             | "inert"
-            | "popover"
+            // `popover` is refused above (layout must not host native popovers).
             | "placement"
             | "popovertarget"
             | "autofocus"
@@ -1385,6 +1408,44 @@ mod tests {
             tag_props("grid").contains(&"inline"),
             "<grid> must still take `inline` so the sx refusal's suggestion compiles"
         );
+    }
+
+    // --- layout + [popover] safety (display:flex/grid vs UA closed none) ----
+
+    #[test]
+    fn refuses_popover_on_layout_keywords() {
+        for src in [
+            r#"<grid popover>x</grid>"#,
+            r#"<row popover>x</row>"#,
+            r#"<column popover="auto">x</column>"#,
+        ] {
+            let m = run(src);
+            assert_eq!(m.len(), 1, "src={src}: {m:?}");
+            assert!(
+                m[0].contains("must not be popover hosts"),
+                "src={src}: {}",
+                m[0]
+            );
+        }
+    }
+
+    #[test]
+    fn base_css_closes_popover_on_row_col_grid() {
+        for (tag, open_display) in [
+            ("grid", "display:grid"),
+            ("row", "display:flex"),
+            ("column", "display:flex"),
+        ] {
+            let css = base_css(tag);
+            assert!(
+                css.iter().any(|r| r.contains("[popover]:not(:popover-open)") && r.contains("display:none")),
+                "{tag} closed: {css:?}"
+            );
+            assert!(
+                css.iter().any(|r| r.contains("[popover]:popover-open") && r.contains(open_display)),
+                "{tag} open: {css:?}"
+            );
+        }
     }
 }
 

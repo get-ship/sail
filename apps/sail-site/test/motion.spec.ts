@@ -135,9 +135,9 @@ test('landing MOTION section: bento spring bars actually move', async ({ page })
   const sample = await movedAfter600ms(page, bar)
   expect(sample.after).not.toBe(sample.before)
 
-  // Landing also pulses theme swatches with opacity:'pulse' (known preset range
-  // warning) — ignore those; only fail on other motion warnings.
-  expect(motionWarnings.filter((m) => !m.includes('preset "pulse"'))).toEqual([])
+  // Landing theme swatches use scale:'pulse' (valid preset range) — any
+  // [sail/motion] warning is a real product regression.
+  expect(motionWarnings).toEqual([])
 })
 
 test('/motion page: the ambient loop dots keep animating (translate-y, staggered, infinite)', async ({ page }) => {

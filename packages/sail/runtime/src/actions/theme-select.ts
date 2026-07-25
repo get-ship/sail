@@ -12,11 +12,26 @@ import type { Action } from '../action'
  *
  * The panel is a native `[popover]`: top layer, Escape and outside-click close
  * for free, no positioning code.
+ *
+ * Static markup ships a shared `id="sail-theme-panel"`; this action stamps a
+ * unique id + popovertarget per instance so header + detail stages can both
+ * mount live pickers without colliding popover targets.
  */
+
+let uid = 0
+
 export const themeSelect: Action<void> = (node) => {
   const root = node as HTMLElement
   const trigger = root.querySelector<HTMLButtonElement>('.sail-theme-trigger')
   const panel = root.querySelector<HTMLElement>('.sail-theme-panel')
+
+  // Unique popover id per instance (stdlib default collides when multiple
+  // non-inline pickers mount on one page).
+  if (panel) {
+    const id = `sail-theme-panel-${++uid}`
+    panel.id = id
+    trigger?.setAttribute('popovertarget', id)
+  }
 
   const options = (): HTMLElement[] =>
     Array.from(root.querySelectorAll<HTMLElement>('.sail-theme-option'))
