@@ -30,54 +30,63 @@ fn radio_group_zero_author_style() {
 }
 
 #[test]
-fn cva_in_props_lowers_same_sx_pipeline_element_mode() {
-    // Preferred matrix form: prop map key→sx; reflect + types; same lower as host sx=.
+fn style_match_variant_lowers_attr_selectors_element_mode() {
+    // Style product: prop unions + match on host sx (not residual CVA string maps).
     let src = r#"
 <scope>
   props: {
     tone: 'default' | 'primary' = 'default'
-    variant: {
-      soft: 'bg-tone-bg text-tone-fg border-tone-border',
-      solid: 'bg-tone text-tone-contrast border-tone hover:opacity-90',
-      outline: 'bg-transparent text-tone-fg border-tone-border',
-    }
-    size: {
-      sm: 'text-xs px-2',
-      md: 'text-sm px-2_5',
-    }
+    variant: 'soft' | 'solid' | 'outline' = 'soft'
+    size: 'sm' | 'md' = 'md'
   }
+  const soft = style.bg(muted).fg(muted-foreground).borderWidth(1).border(border)
+  const solid = style.bg(primary).fg(primary-foreground).borderWidth(1).border(primary).when({ hover: style.opacity(90) })
+  const outline = style.bg(transparent).fg(foreground).borderWidth(1).border(border)
+  const sizeSm = style.fontSize(xs).padX(2)
+  const sizeMd = style.fontSize(sm).padX(2_5)
 </scope>
-<span sx="rounded-full border font-medium">
+<span sx={[
+  style.radius(full).borderWidth(1).fontWeight(medium),
+  match(variant, {
+    soft: soft,
+    solid: solid,
+    outline: outline,
+  }),
+  match(size, {
+    sm: sizeSm,
+    md: sizeMd,
+  }),
+]}>
   <slot></slot>
 </span>
 "#;
-    let out = compile_element(src, "probe").expect("cva-in-props compiles");
+    let out = compile_element(src, "probe").expect("style match product compiles");
     let attrs = out.manifest["attributes"].as_array().expect("attrs");
     let variant = attrs.iter().find(|a| a["name"] == "variant").expect("variant attr");
-    assert_eq!(variant["default"], "soft", "first map key is default: {variant}");
+    assert_eq!(variant["default"], "soft", "default from prop: {variant}");
     let values = variant["values"].as_array().expect("values");
     assert!(
         values.iter().any(|v| v == "soft") && values.iter().any(|v| v == "solid"),
         "union of keys: {variant}"
     );
-    // Attribute-keyed rules from the same sx lower (not hand property soup).
+    // Attribute-keyed rules from Style match (not residual CVA string maps).
     assert!(
         out.skin_css.contains("variant='soft'")
-            && out.skin_css.contains("background-color:var(--tone-bg)")
-            && out.skin_css.contains("color:var(--tone-fg)"),
-        "soft axis via sx atoms: {}",
+            && out.skin_css.contains("background-color:var(--muted)")
+            && out.skin_css.contains("color:var(--muted-foreground)"),
+        "soft axis via Style match: {}",
         out.skin_css
     );
     assert!(
         out.skin_css.contains("variant='solid'")
-            && out.skin_css.contains("background-color:var(--tone)")
-            && out.skin_css.contains("color:var(--tone-contrast)"),
-        "solid axis via sx atoms: {}",
+            && out.skin_css.contains("background-color:var(--primary)")
+            && out.skin_css.contains("color:var(--primary-foreground)"),
+        "solid axis via Style match: {}",
         out.skin_css
     );
     assert!(
         out.skin_css.contains("size='sm'") && out.skin_css.contains("font-size:var(--text-xs)"),
-        "size axis via sx atoms: {}",
+        "size axis via Style match: {}",
         out.skin_css
     );
     // State prefix on a map value → attr-keyed :hover rule

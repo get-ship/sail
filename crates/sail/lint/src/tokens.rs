@@ -17,7 +17,7 @@
 //! `"text-3xl"`). Grouped DTCG paths (e.g. `space.4`) are recorded on each
 //! registry entry as `path` for tooling / J2. `sx`'s allowed spacing/text/radius
 //! values are *derived* from this registry (filtered by css-name prefix), so
-//! adding a token to the DTCG model (and regenerating) makes `sx="text-3xl"`
+//! adding a token to the DTCG model (and regenerating) makes `style.fontSize(3xl)`
 //! legal automatically.
 
 use std::collections::{HashMap, HashSet};

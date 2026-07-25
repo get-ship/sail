@@ -694,32 +694,50 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(md, "## The hard rules (every policy)\n");
     let _ = writeln!(
         md,
-        "- NO `<style>` blocks, NO `style=` attributes — ever. Visuals flow through\n  tokens, props, and the surfaces listed below.\n- NO raw values anywhere (no px, no hex): spend a token.\n- Layout is elements, not CSS: `<row>`, `<column>`, `<grid>`, `<center>`,\n  `<stack>` with `gap`/`align`/`justify`/`cols` attributes. `cols` (and `rows`)\n  is a fixed track count (1..=12) on `<grid>`; `cols` takes precedence over\n  `min` when both are present. `<row nowrap>` is the single-line row (rows wrap\n  by default). Unrecognized attributes on a layout keyword are a compile error —\n  the language won't silently drop them.\n- Behavior is unrestricted TypeScript in `<controller>` — the restraint is\n  visual, never logical.\n- Components declare their static surface in `<scope>` — TypeScript field\n  syntax, types and literal values only: `props: {{ label = 'Default';\n  tone = 'default'; kind: 'a' | 'b' = 'a' }}`. `tone`/`size` are ordinary\n  props (shared stdlib unions by convention — CVA axes). Styling tables live\n  in `props` as CVA key→sx maps (`variant: {{ solid: 'bg-tone …' }}` — first\n  key = default) + optional `compound:`. If it computes, it goes in\n  `<controller>`.\n"
+        "- NO `<style>` blocks, NO `style=` attributes — ever. Visuals flow through\n  tokens, props, and the surfaces listed below.\n- NO raw values anywhere (no px, no hex): spend a token.\n- NO utility-string sx (`sx=\"p-4 bg-surface-2\"`) — residual hard error. Product is\n  Style: `sx={{style.pad(4).bg(surface-2)}}` / `when({{…}})` / `match`.\n- Layout is elements, not CSS: `<row>`, `<column>`, `<grid>`, `<center>`,\n  `<stack>` with `gap`/`align`/`justify`/`cols` attributes. `cols` (and `rows`)\n  is a fixed track count (1..=12) on `<grid>`; `cols` takes precedence over\n  `min` when both are present. `<row nowrap>` is the single-line row (rows wrap\n  by default). Unrecognized attributes on a layout keyword are a compile error —\n  the language won't silently drop them.\n- Behavior is unrestricted TypeScript in `<controller>` — the restraint is\n  visual, never logical.\n- Components declare their static surface in `<scope>` — TypeScript field\n  syntax, types and literal values only: `props: {{ label = 'Default';\n  tone = 'default'; kind: 'a' | 'b' = 'a' }}`. `tone`/`size` are ordinary\n  props (shared stdlib unions by convention — CVA axes, not paint channels).\n  Prefer Style const refs + `match`/`when`/`compound` for multi-look paint.\n  If it computes, it goes in `<controller>`.\n"
     );
     if effective.sx {
-        // LEAD WITH WHAT WE ARE NOT. The agent's Tailwind prior is right
-        // about the syntax and wrong about the scope — the most valuable
-        // section of this skill is the honest refusal list, so a refused
-        // atom names the thing to use instead. The mission is never
-        // "find another way." Sources the same table the lint consults
-        // (`sail_lint::sx_vocab::refusals()`) — the docs can never drift.
+        // LEAD WITH WHAT WE ARE NOT. Layout atoms are refused by name; the
+        // mission is never "find another way." Sources the same table the
+        // lint consults (`sail_lint::sx_vocab::refusals()`).
         let _ = writeln!(md, "## What sx is NOT\n");
         let _ = writeln!(
             md,
-            "These atoms are refused by name. Each entry below names the thing to\nuse instead — `find another way` is not the answer. The list is the closed\nrefusal table, from the same source the lint enforces (`sx_vocab::refusals()`):\n"
+            "Utility-string atoms (`sx=\"p-4 bg-muted\"`) are residual product and refuse\nat parse. Layout atoms are also refused by name — each entry names the thing\nto use instead. The list is the closed refusal table (`sx_vocab::refusals()`):\n"
         );
         for (atom, instead) in sail_lint::sx_vocab::refusals() {
-            let _ = writeln!(md, "- `sx=\"{atom}\"` — {instead}");
+            let _ = writeln!(md, "- layout atom `{atom}` — {instead}");
         }
         let _ = writeln!(md);
 
-        let _ = writeln!(md, "## sx — the surface styling attribute\n");
+        let _ = writeln!(md, "## sx — Style product surface\n");
         let _ = writeln!(
             md,
-            "`sx=\"name-value name-value …\"` — Tailwind's names, our values. An\natom is `[prefix:]name-value` (e.g. `bg-surface-2`, `hover:bg-muted`,\n`motion-reduce:shadow-none`); several utilities share a name and disambiguate\nby value (`text-sm` is a font size, `text-foreground` is a colour,\n`text-center` is an alignment). Static only (`sx={{expr}}` is a compile\nerror). State prefixes: `hover:` `focus:` `focus-within:` `active:`\n`disabled:`, ancestor propagation `group-hover:` (mark the ancestor with bare\n`group`), conditions `motion-reduce:` `motion-safe:` `forced-colors:` `dark:`\n`light:`. ALLOWED values per prop:\n"
+            "Product form is a typed Style expression on `sx={{…}}`:\n\n\
+             ```\n\
+             <div sx={{style.bg(surface-2).pad(4).radius(lg).when({{ hover: style.bg(muted) }})}} />\n\
+             <span sx={{style.fg(muted-foreground).fontSize(sm)}} />\n\
+             <button sx={{when({{ pressed: style.bg(foreground).fg(background) }})}}>…</button>\n\
+             ```\n\n\
+             Also: scope Style consts (`const filled = style.bg(…)` then `sx={{filled}}`),\n\
+             lists `[ match(…), when(…), style.… ]`, `match(prop, {{ key: style.… }})`,\n\
+             `compound(…)`, and `bind(name)` for runtime custom properties.\n\n\
+             Style is compile-time static. Runtime dynamic `sx={{jsExpr}}` (ternary, call)\n\
+             is a hard error — conditional paint uses `when` / `match` or a prop.\n\n\
+             Closed Style setters (from `style::setters`; each re-homes a vocab head):\n"
         );
-        for (prop, values) in sail_lint::rules::sx::vocabulary() {
-            let _ = writeln!(md, "- `{prop}-` {}", values.join(", "));
+        for s in sail_lint::style::setters::setters() {
+            let scale = s.scale.unwrap_or("—");
+            let kws = if s.keywords.is_empty() {
+                String::new()
+            } else {
+                format!(" keywords: {}", s.keywords.join(", "))
+            };
+            let _ = writeln!(
+                md,
+                "- `style.{}(…)` → vocab `{}` scale `{scale}`{kws}",
+                s.name, s.vocab
+            );
         }
         let _ = writeln!(md);
 
@@ -731,7 +749,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         let _ = writeln!(md, "## Token scales — spend one, never a raw value\n");
         let _ = writeln!(
             md,
-            "These are the closed value sets the scales above draw from. A\nscale-valued utility spends a token from one of these — never a raw number,\ncolour, or unit.\n"
+            "These are the closed value sets Style setters draw from. A scale-valued\nsetter spends a token from one of these — never a raw number, colour, or unit.\n"
         );
         for scale in &["space", "size", "color", "radius", "text", "weight", "leading", "tracking", "shadow", "z", "duration", "ease", "border-width", "opacity", "angle", "font"] {
             let values = sail_lint::scales::values(scale);
@@ -747,10 +765,26 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         );
     }
     if effective.variants {
-        let _ = writeln!(md, "## variants — a prop whose values are sx tables\n");
+        let _ = writeln!(md, "## variants — prop axes + Style paint\n");
         let _ = writeln!(
             md,
-            "A variant IS A PROP. Declare it inside `props`, with the value being the\nvariant->sx table; the prop's type is the union of the keys (first = default),\nand it reflects to an attribute so CSS can key on it:\n\n```\n<component>{{\n  props: {{\n    variant: {{ solid: 'bg-tone text-tone-fg', soft: 'bg-tone-bg', outline: 'border-tone' }},\n    tone: 'default' | 'primary' | 'destructive',\n  }},\n}}</component>\n```\n\nValues are sx lists and take the same state prefixes\n(`solid: 'bg-tone hover:bg-tone-bg-hover'`). `compound` (a sibling field of `props`)\nkeys rules on COMBINATIONS of variant values. One declaration surface: `props`.\n"
+            "A variant IS A PROP. Declare it inside `props`. Prefer Style product paint\n\
+             via `match` / scope Style consts keyed on the prop — not residual utility\n\
+             string maps. `tone`/`size` are ordinary props (shared unions by convention),\n\
+             not paint channels. `compound` (sibling of `props`) keys rules on combinations.\n\n\
+             ```\n\
+             <scope>\n\
+             {{\n\
+               props: {{\n\
+                 variant: 'solid' | 'soft' | 'outline' = 'solid',\n\
+                 tone: 'default' | 'primary' | 'destructive',\n\
+               }},\n\
+             }}\n\
+             const solid = style.bg(tone-bg-solid).fg(tone-fg)\n\
+             const soft = style.bg(tone-bg).fg(tone-fg)\n\
+             </scope>\n\
+             <div sx={{match(variant, {{ solid, soft, outline: style.borderWidth(1).border(tone-border) }})}} />\n\
+             ```\n"
         );
     }
     if !effective.raw_containers {
@@ -878,7 +912,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            return {{ p, tileX, tileScale }}\n\
          }})\n\
          </controller>\n\
-         <card sx=\"translate-x-(--tile-x) scale-(--tile-scale)\">choreographed</card>\n\
+         <card sx={{style.translateX(bind(tileX)).scale(bind(tileScale))}}>choreographed</card>\n\
          ```\n"
     );
     let _ = writeln!(
@@ -891,7 +925,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            the viewport (0 as it enters, 1 as it leaves).\n\
          - `springValue(source, opts)` — real physics chasing another signal;\n  \
            retargets mid-flight without losing velocity. Its output is a VALUE, not\n  \
-           necessarily 0..1 — reflect it directly (`translate-y-(--ball-y)`).\n\n\
+           necessarily 0..1 — reflect it with Style `bind` (`style.translateY(bind(ballY))`).\n\n\
          Every driver stops itself when the scope disposes. Reduced motion is handled\n\
          once, in the driver: `clock` jumps to the END and never schedules a frame\n\
          (override with `reducedMotion: 'start' | 'play'`), `springValue` mirrors its\n\
@@ -953,9 +987,9 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(md, "## Runtime CSS — the `(--x)` binding\n");
     let _ = writeln!(
         md,
-        "ONE RULE: **scope owns props, the controller owns state** — there is no state block\nin scope; state is code, not a declaration table. `style:` is gone; a `style:` use\nrefuses with a diagnostic that teaches this.\n\n\
-         `sx` reads runtime values through `(--name)` (camelCase → kebab, e.g. a prop or\nsignal named `rowY` reads as `(--row-y)`): `translate-y-(--row-y)`, `bg-(--hue)`. When\n`(--name)` matches a declared prop or a value `setup()` returns via `signal(...)`, the\ncompiler registers a typed CSS `@property` (a `number` gets `syntax: '<number>'`, so a\nCSS transition on it tweens natively, no JS) and reflects the value onto the host as an\ninline custom property, kept live automatically — no action, no manual `effect`. A name\nnever read via `(--x)` gets no wiring; an unmatched name is a compile error with a\ndid-you-mean.\n\n\
-         Runtime GEOMETRY (a virtualizer offset, a drag position — not a prop, not scope\nstate) stays on `use:` actions: a named, typed action\n(`use:virtualRow`, `use:rect`, `use:zoomPan`, …) writes\nits own fixed custom property; sx reads it the same way, `(--name)`. `el.style` stays\nclosed — actions gain no styling powers beyond the one property they own.\n"
+        "ONE RULE: **scope owns props, the controller owns state** — there is no state block\nin scope; state is code, not a declaration table. Authored `style=` is gone; it\nrefuses with a diagnostic that teaches Style on `sx`.\n\n\
+         Style reads runtime values through `bind(name)` (camelCase → kebab, e.g. a prop or\nsignal named `rowY` → `bind(rowY)` → `var(--row-y)`):\n`style.translateY(bind(rowY))`, `style.bg(bind(hue))`. When the name matches a declared\nprop or a value `setup()` returns via `signal(...)`, the compiler registers a typed CSS\n`@property` (a `number` gets `syntax: '<number>'`, so a CSS transition on it tweens\nnatively, no JS) and reflects the value onto the host as an inline custom property, kept\nlive automatically — no action, no manual `effect`. A name never read via `bind` gets no\nwiring; an unmatched name is a compile error with a did-you-mean.\n\n\
+         Runtime GEOMETRY (a virtualizer offset, a drag position — not a prop, not scope\nstate) stays on `use:` actions: a named, typed action\n(`use:virtualRow`, `use:rect`, `use:zoomPan`, …) writes\nits own fixed custom property; Style reads it with `bind(name)`. `el.style` stays\nclosed — actions gain no styling powers beyond the one property they own.\n"
     );
     // L1 ELEMENTS — the language's first-class surface. Listed
     // verbatim from the same manifest the consistency test enforces

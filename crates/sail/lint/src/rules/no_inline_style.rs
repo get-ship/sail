@@ -54,12 +54,13 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 severity: Severity::Warn,
                 message:
                     "inline style= is raw CSS and bypasses the token surface — it is not allowed \
-                     in any `.sail`. Use sx= or a primitive prop; raw values never compile."
+                     in any `.sail`. Use Style on sx= (`sx={style.…}`) or a primitive prop; raw \
+                     values never compile."
                         .to_string(),
                 suggest: Some(
                     "Text is already styled — write <h1>-<h6>/<p> plain (they take the type \
-                     scale). For everything else use sx= or a primitive prop. There is no \
-                     raw-CSS escape — that's the point of the floor."
+                     scale). For everything else use Style chains on sx= or a primitive prop. \
+                     There is no raw-CSS escape — that's the point of the floor."
                         .to_string(),
                 ),
             });

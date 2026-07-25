@@ -84,6 +84,23 @@ fn rule_for_class<'a>(
         .map(|(_, decls)| decls)
 }
 
+/// First `sx-*` class token on an element after Style preprocess.
+fn extract_first_sx_class(preprocessed: &str) -> Option<String> {
+    let (html, _) = split_html_css(preprocessed);
+    let mut search = html;
+    while let Some(i) = search.find("class=\"") {
+        let rest = &search[i + 7..];
+        let end = rest.find('"')?;
+        for tok in rest[..end].split_whitespace() {
+            if tok.starts_with("sx-") {
+                return Some(tok.to_string());
+            }
+        }
+        search = &rest[end + 1..];
+    }
+    None
+}
+
 fn resolve_element_with_class(preprocessed: &str, class: &str, viewport_width: f32) -> sail_layout::ResolvedStyle {
     let elements = sail_layout::html::parse_source(preprocessed);
     let idx = elements
@@ -252,32 +269,54 @@ fn flex_child_gets_min_width_zero() {
 
 #[test]
 fn sx_width_full_matches_css() {
-    let src = r#"<div sx="w-full">x</div>"#;
+    let src = r#"<div sx={style.w(full)}>x</div>"#;
     let preprocessed = preprocess(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);
-    let rule = rule_for_class(&rules, "sx-wfull").expect("sx-wfull rule present");
+    // Style emit mints atomic class names from paint ops (not fixed sx-wfull).
+    let class = extract_first_sx_class(&preprocessed).expect("sx class present");
+    let rule = rule_for_class(&rules, &class).expect("width rule present");
     assert_eq!(rule["width"], "100%");
 
-    let style = resolve_element_with_class(&preprocessed, "sx-wfull", 1440.0);
+    let style = resolve_element_with_class(&preprocessed, &class, 1440.0);
     use sail_layout::taffy::prelude::*;
     assert_eq!(style.style.size.width, Dimension::percent(1.0));
 }
 
 #[test]
 fn sx_hidden_matches_css() {
-    let src = r#"<div sx="hidden">x</div>"#;
+    let src = r#"<div sx={style.display(none)}>x</div>"#;
     let preprocessed = preprocess(src);
     let (_, css) = split_html_css(&preprocessed);
     let rules = parse_css(css);
-    let rule = rule_for_class(
-        &rules, "sx-hidden").expect("sx-hidden rule present");
+    // Find the atomic class that carries display:none (Style may mint hashed names).
+    let (class, rule) = rules
+        .iter()
+        .find_map(|(sel, decls)| {
+            if decls.get("display").map(|v| v.as_str()) == Some("none") {
+                let c = sel
+                    .trim()
+                    .trim_start_matches('.')
+                    .split(|ch: char| ch == ':' || ch == ' ' || ch == '[')
+                    .next()
+                    .unwrap_or("")
+                    .to_string();
+                if c.starts_with("sx-") {
+                    return Some((c, decls));
+                }
+            }
+            None
+        })
+        .expect(&format!("display:none rule present in css:\n{css}\npre:\n{preprocessed}"));
     assert_eq!(rule["display"], "none");
 
-    let style = resolve_element_with_class(
-        &preprocessed, "sx-hidden", 1440.0);
+    let style = resolve_element_with_class(&preprocessed, &class, 1440.0);
     use sail_layout::taffy::prelude::*;
-    assert_eq!(style.style.display, Display::None);
+    assert_eq!(
+        style.style.display,
+        Display::None,
+        "class={class} pre={preprocessed} css={css}"
+    );
 }
 
 #[test]

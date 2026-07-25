@@ -61,7 +61,7 @@ fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
 
     // A component that actually uses a stripped capability now fails the
     // build gate — sx is off under the fail-closed strict tier.
-    let (_tmp2, sui_sx) = write_pack(r#"{"polcy":"strict"}"#, r#"<sail-card sx="p-4">x</sail-card>"#);
+    let (_tmp2, sui_sx) = write_pack(r#"{"polcy":"strict"}"#, r#"<sail-card sx={style.pad(4)}>x</sail-card>"#);
     let err = compile(&fs::read_to_string(&sui_sx).unwrap(), opts_for(&sui_sx))
         .expect_err("sx must be refused under the fail-closed strict tier");
     assert_eq!(err.category.as_deref(), Some("sail-no-sx"));
@@ -119,7 +119,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
     // must refuse and the refusal must point at the missing grant, not
     // silently drop the sx.
     let (_tmp2, sui_sx) =
-        write_pack(r#"{"stylesheets": []}"#, r#"<sail-card sx="p-4">hi</sail-card>"#);
+        write_pack(r#"{"stylesheets": []}"#, r#"<sail-card sx={style.pad(4)}>hi</sail-card>"#);
     let err = compile(&fs::read_to_string(&sui_sx).unwrap(), opts_for(&sui_sx))
         .expect_err("sx must be refused — stylesheets-only config still fails closed to strict");
     assert_eq!(err.category.as_deref(), Some("sail-no-sx"));
@@ -137,7 +137,7 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
 
 #[test]
 fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
-    let (_tmp, sail) = write_pack(r#"{"preset":"full"}"#, r#"<sail-card sx="p-4">hi</sail-card>"#);
+    let (_tmp, sail) = write_pack(r#"{"preset":"full"}"#, r#"<sail-card sx={style.pad(4)}>hi</sail-card>"#);
     let (_config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::FULL);
     assert!(matches!(&resolution.kind, ResolutionKind::Recognized(s) if s == "preset: full"));
@@ -156,7 +156,7 @@ fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
 fn no_config_leaves_default_semantics_unchanged() {
     let tmp = tempfile::tempdir().unwrap();
     let sail = tmp.path().join("w.sail");
-    fs::write(&sail, r#"<sail-card sx="p-4">hi</sail-card>"#).unwrap();
+    fs::write(&sail, r#"<sail-card sx={style.pad(4)}>hi</sail-card>"#).unwrap();
     assert!(Policy::resolve_outcome(&sail).is_none(), "no config anywhere on the walk");
     assert!(Policy::overrides_for(&sail).is_empty(), "no config → no capability overrides");
     // sx's natural severity is Warn, not gated — an unconfigured package

@@ -19,7 +19,7 @@
 //! Where a runtime value goes instead — three intents, none through `.style`:
 //!
 //!   1. A value you own or compute → declare a signal, return it, read `(--x)`:
-//!      `const rowY = signal(0)` … `return { rowY }` … `sx="translate-y-(--row-y)"`.
+//!      `const rowY = signal(0)` … `return { rowY }` … `sx={style.translateY(bind(rowY))}`.
 //!      The compiler reflects the signal onto the host as an inline custom
 //!      property; no `.style`.
 //!   2. Measurement-driven geometry (a dragged node, a measured column) → a

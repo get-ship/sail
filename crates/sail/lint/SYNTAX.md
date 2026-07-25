@@ -1,103 +1,99 @@
-# sx syntax v0 (lead B)
+# sx / Style syntax (product)
 
-**Identity:** closed property set + token values from the registry + one IR.  
-Not “Tailwind minus delta.” Short property names are fine (`p`, `px`, `bg`, `color`, …).
+**Identity:** closed Style setter set + token values from the registry + one IR.  
+Not “Tailwind minus delta.” Not utility-string atoms.
 
-**Primary surface in `.sail`:** string attribute. JSON later is the same IR.
-
-## Forms (dual-parse)
-
-Both forms may appear in one `sx="…"` string. They lower to the same IR.
-
-### Structured (preferred for new code)
-
-```text
-prop: value
-prop:value
-hover:prop: value
-tablet:px: 4
-```
-
-Examples:
+**Primary surface in `.sail`:** Style expressions on `sx={…}`:
 
 ```sail
-<div sx="bg: primary px: 2 rounded: sm hover:bg: muted" />
-<div sx="bg: color.primary px: space.2 rounded: radius.sm" />
-<span sx="color: tone-fg font-size: xs font-weight: semibold" />
+<div sx={style.bg(primary).padX(2).radius(sm).when({ hover: style.bg(muted) })} />
+<span sx={style.fg(tone-fg).fontSize(xs).fontWeight(semibold)} />
+<button sx={when({ pressed: style.bg(foreground).fg(background) })}>…</button>
 ```
 
-### Legacy atoms (still accepted)
+Also: scope Style consts (`const filled = style.bg(…)`) referenced as `sx={filled}`,  
+lists `[ match(…), when(…), style.… ]`, `match(prop, { key: style.… })`, `compound(…)`,  
+and `bind(name)` for runtime custom properties.
+
+## Residual (refused)
+
+Utility-string product is a **hard error** at parse + lint:
 
 ```text
-prop-value
-hover:prop-value
+sx="bg-primary px-2"          ✗ residual
+sx="bg: primary px: 2"        ✗ residual
+sx={style.bg(primary).padX(2)} ✓ product
 ```
 
-```sail
-<div sx="bg-primary px-2 rounded-sm hover:bg-muted" />
-```
+Message points authors at Style chains / `match` / `when` / `compound`.
 
 ## Values
 
 | Kind | Shape | Example |
 |------|--------|---------|
-| **Token** | Registry cssName or dotted path | `primary`, `space-2`, `space.2`, `radius.sm` |
-| **Keyword** | CSS physics (display/position/…) | `center`, `solid`, `hidden` (bare) |
-| **Var ref** | `(--name)` | `w: (--box-w)` |
-| **Raw** | `raw:…` only | `bg: raw:#3366ff` |
+| **Token** | Registry cssName | `primary`, `space` ramp `2`, `radius` `sm` |
+| **Keyword** | CSS physics (display/position/…) | `center`, `solid`, `hidden` |
+| **Bind** | `bind(name)` | `style.w(bind(boxW))` → `var(--box-w)` |
+| **Raw** | only via residual diagnostics (not product) | — |
 
 Rules:
 
-- Token values only by default (registry names/paths).
-- Dual resolve: dotted path → kebab cssName, or last segment / scale suffix (`space.2` → `2` on `px`).
-- **Raw colors/lengths without `raw:` are errors** (`#fff`, `16px`, `rgb(…)`).
-- Bare legacy atoms (`hidden`, `truncate`, `italic`, `relative`) still work.
+- Token values only by default (registry names).
+- **Raw colors/lengths are errors** (`#fff`, `16px`, `rgb(…)`).
+- Bare composites via Style: `style.truncate()`, `style.position(relative)`, `style.display(none)`, `style.italic(true)`.
 
-## Properties
+## Setters
 
-Closed set = utility heads in `sx-vocabulary.json` plus lead-B aliases:
+Closed product table in `style::setters` — heads re-home the vocab utilities:
 
-| Alias | Maps to |
-|-------|---------|
-| `color` | `text` (color scale) |
-| `font-size` | `text` (type scale) |
-| `font-weight` | `font` (weight) |
-| `font-family` | `font` (family) |
+| Setter | Vocab head |
+|--------|------------|
+| `bg` | `bg` |
+| `fg` / `color` | `text` (color) |
+| `fontSize` | `text` (type scale) |
+| `fontWeight` | `font` (weight) |
+| `fontFamily` | `font` (family) |
 | `radius` | `rounded` |
+| `pad` / `padX` / … | `p` / `px` / … |
+| `border` / `borderWidth` | color / width disambiguation |
 
-Full table: agent schema (`sx_ir::agent_schema` / `sx-schema.gen.json`) and `sx_vocab::vocabulary()`.
+Full table: `style::setters::setters()` and agent skill (Style section).
 
-**Not sx properties:** `tone`, `size` (context attrs / variant axes — not paint props).
+**Not Style paint channels:** do not reintroduce tone/size as paint props — they stay ordinary props / CVA axes when used.
 
-## Prefixes (one dialect)
+## Conditions (`when`)
 
-Existing prefixes map cleanly into IR:
+```sail
+style.pad(2).when({
+  hover: style.bg(muted),
+  pressed: style.bg(primary),
+  tablet: style.pad(4),
+  motionReduce: style.shadow(none),
+  groupHover: style.fg(primary),
+  stateLeft: style.left(bind(portLeft)),
+})
+```
 
-- **State:** `hover:`, `focus:`, `active:`, `disabled:`, `checked:`, `pressed:`, …
-- **Condition / breakpoint:** `mobile:`, `tablet:`, `desktop:`, `dark:`, `motion-reduce:`, …
-- **Pseudo:** `before:`, `after:`, `empty:`
-- **Group:** bare `group`; `group-hover:`, `group-<state>:`
-
-Structured: `hover:bg: primary`  
-Legacy: `hover:bg-primary`
+Keys map to state pseudo/attrs, design-system breakpoints, motion prefs, `group-*`, and `state-*` the same way residual string prefixes did — SSOT is `style::conditions` / `when_target`.
 
 ## Compile-time only
 
-`sx` is static. Dynamic `sx={…}` is a hard error. Conditional paint → prop/variant or `{#if}` with static strings.
+`sx` is static Style. Dynamic `sx={jsExpr}` (ternary, call) is a hard error. Conditional paint → `when` / `match` / prop / `{#if}` with static Style.
 
 ## Lowering
 
 ```text
-string → IR (SxDecl*) → atom + prefixes → sx_vocab/scales → atomic class + CSS
+Style expr → style::parse → IR → style::emit → atomic class + CSS
 ```
 
-Legacy and structured share the emit path.
+Internal leaf emit still uses `sx_ir` / vocab for paint ops; authors never write utility strings.
 
 ## Agent contract (minimal)
 
 ```
-Properties: closed table only — do not invent utilities.
-Values: registry token (path or cssName) | keyword | raw:… | (--var)
-Prefixes: hover:/focus:/… / tablet:/desktop: / before: / group-*
-No tone:/size: as sx props.
+Form: sx={style.…} | when({…}) | match(…) | compound | Style const ref
+Setters: closed table only — do not invent utilities.
+Values: registry token | keyword | bind(name)
+when keys: hover/focus/… / tablet/desktop / before / group-* / state-*
+No utility-string atoms. No tone:/size: as Style paint props.
 ```

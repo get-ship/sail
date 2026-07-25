@@ -365,6 +365,11 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
         selector: Selector::Sx("hidden"),
         declarations: &[Declaration::Display(Display::None)],
     },
+    // Style product: `style.display(none)` mints `sx-displaynone` (not bare `hidden`).
+    LayoutRule {
+        selector: Selector::Sx("displaynone"),
+        declarations: &[Declaration::Display(Display::None)],
+    },
     LayoutRule {
         selector: Selector::Sx("inline"),
         declarations: &[Declaration::Display(Display::Flex)],

@@ -1,19 +1,18 @@
 //! `sail-sx` — the inline style surface.
 //!
-//! `sx="p-4 bg-surface-2 rounded-lg text-sm hover:bg-surface-3"` — Tailwind's
-//! NAMES (the prior every agent already has, and terse: an agent pays for every
-//! character) with OUR values.
+//! Product form is Style: `sx={style.pad(4).bg(surface-2).radius(lg)}`,
+//! `sx={when({ hover: style.bg(muted) })}`, `sx={[ match(…), when(…) ]}`, or a
+//! scope Style const ref. Utility-string atoms (`sx="p-4 bg-surface-2"`) are a
+//! **hard residual error** — not architecture.
 //!
 //! THE RULE: every value is a design token or a plain CSS keyword. Never a raw
 //! number, never a colour, never a unit. There is no bracket escape (cf.
 //! Tailwind's `p-[13px]`).
 //!
 //! The vocabulary is a TABLE (`sx-vocabulary.json`, read by `crate::sx_vocab`),
-//! not code. A scale-valued utility spends a token and nothing else; a
-//! keyword-valued one takes its CSS keywords, all of them, with no allowlist —
-//! because there is no design decision inside `object-fit: cover`, nothing to
-//! tokenize, and no way for two authors to diverge. The allowlist was the
-//! mistake; the value discipline is the point.
+//! not code. Style setters re-home the same closed heads (`style.bg`, `style.pad`,
+//! …). A scale-valued setter spends a token and nothing else; a keyword-valued
+//! one takes its CSS keywords. The value discipline is the point.
 //!
 //! SCOPE — sx styles ONE box. How its children sit is a layout element
 //! (`<row>`, `<column>`, `<grid>`), which carries the semantics, the a11y and
@@ -22,10 +21,9 @@
 //! mission is never "find another way".
 //!
 //! sx is compile-time and static: it lowers to atomic classes plus injected CSS.
-//! Product form is Style: `sx={style.…}`, `sx={[ match(…), when(…) ]}`, or a
-//! scope Style const ref. A **runtime** dynamic `sx={expr}` (JS ternary, call,
-//! etc.) cannot be lowered and is a hard error — conditional styling goes
-//! through a primitive prop (`tone={…}`) or a `when` / `match` Style guard.
+//! A **runtime** dynamic `sx={expr}` (JS ternary, call, etc.) cannot be lowered
+//! and is a hard error — conditional styling goes through a primitive prop
+//! (`tone={…}`) or a `when` / `match` Style guard.
 
 use std::path::Path;
 

@@ -1,18 +1,9 @@
-//! sx IR v0 — closed property set + token/keyword/raw values + one IR.
+//! **INTERNAL leaf IR** for Style paint-op emit — not an author surface.
 //!
-//! Lead B: sx is **not** "Tailwind minus delta". The identity is a closed
-//! property list, values from the token registry (or CSS keywords / `raw:`),
-//! and a single intermediate representation that both serializations share.
-//!
-//! **String form (primary in `.sail`):**
-//! ```text
-//! sx="bg: primary px: 2 hover:bg: muted"
-//! sx="bg: color.primary px: space.2"   // dotted paths when registry has them
-//! sx="bg-primary px-2 hover:bg-muted"  // legacy atom form (dual-parse)
-//! ```
-//!
-//! Both forms lower through the same IR → existing `sx_vocab` / `scales` emit
-//! path. JSON later is the same IR with a different surface.
+//! Product paint is Style (`style.…` chains, `match` / `when` / `compound`).
+//! Utility-string sx is a hard residual error at parse + lint. This module
+//! remains so Style setters can lower atoms → CSS via the closed property
+//! table + token registry.
 
 use std::collections::BTreeMap;
 use std::sync::OnceLock;

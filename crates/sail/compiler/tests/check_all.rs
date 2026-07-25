@@ -248,7 +248,7 @@ fn sx_only_source_passes_real_compile_path() {
         &[],
         r#"{"stylesheets": []}"#,
     );
-    let src = r#"<p role="listbox" aria-label="x" sx="p-4 bg-surface-2" bind:this={el}>{name}</p>"#;
+    let src = r#"<p role="listbox" aria-label="x" sx={style.pad(4).bg(surface-2)} bind:this={el}>{name}</p>"#;
     std::fs::write(&sui_path, src).unwrap();
     let overrides = Policy::overrides_for(&sui_path);
     let diags = check_all(src, Some(&sui_path), &overrides, None);

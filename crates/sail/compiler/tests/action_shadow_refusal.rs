@@ -67,8 +67,8 @@ export default controller(({ value }: Scope) => {
   return { canvas, viewportEl, worldTransform }
 })
 </controller>
-<div bind:this={viewportEl} sx="relative">
-  <div use:worldTransform={worldTransform()} sx="absolute">
+<div bind:this={viewportEl} sx={style.position(relative)}>
+  <div use:worldTransform={worldTransform()} sx={style.position(absolute)}>
     <slot></slot>
   </div>
 </div>
