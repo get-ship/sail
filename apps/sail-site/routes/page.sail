@@ -52,25 +52,28 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <scope>
-  const page = style.w(full).minW(0).overflowX(hidden).bg(surface-0)
-  const hero = style.position(relative).padX(8).padT(20).padB(16)
+  // minW(0) + overflowX clip on the page root — diagonal tickers use
+  // left/right negative inset; without a hard clip the document grows sideways.
+  const page = style.w(full).maxW(full).minW(0).overflowX(hidden).overflowY(visible).bg(surface-0)
+  const hero = style.position(relative).padX(8).padT(20).padB(16).minW(0).overflowX(hidden)
   const glow = style.bgGlow(accent).left(0).right(0).top(0).h(64).pointerEvents(none).z(base)
-  const heroInner = style.position(relative).w(full).maxW(breakpoint-desktop).mx(auto)
+  const heroInner = style.position(relative).w(full).maxW(breakpoint-desktop).mx(auto).minW(0)
   const eyebrow = style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)
-  const display = style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).fg(foreground)
-  const line = style.display(block)
-  const lead = style.fontSize(lg).fg(muted-foreground).leading(relaxed).textAlign(center).maxW(breakpoint-mobile)
-  const ctaRow = style.w(full)
+  // minW(0) keeps the display word from forcing the page wider than the viewport.
+  const display = style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).fg(foreground).minW(0).maxW(full).overflow(hidden)
+  const line = style.display(block).minW(0).overflow(hidden)
+  const lead = style.fontSize(lg).fg(muted-foreground).leading(relaxed).textAlign(center).maxW(breakpoint-mobile).minW(0)
+  const ctaRow = style.w(full).minW(0)
   const cta = style.radius(full).padX(8)
-  const tickerSection = style.position(relative).w(full).h(44).overflow(hidden).my(8).z(elevated)
+  const tickerSection = style.position(relative).w(full).maxW(full).h(44).overflow(hidden).my(8).z(elevated).minW(0)
   const tickerBand = style.position(absolute).left(-10).right(-10).top(24).rotate(2)
-  const tickerDark = style.borderTWidth(1).borderBWidth(1).borderT(border).borderB(border).bg(surface-2).padY(3)
+  const tickerDark = style.borderTWidth(1).borderBWidth(1).borderT(border).borderB(border).bg(surface-2).padY(3).overflow(hidden)
   const tickerMono = style.fontFamily(mono).fontSize(sm).fg(muted-foreground).whitespace(nowrap)
   const tickerBandTop = style.position(absolute).left(-10).right(-10).top(12).rotate(-2).z(popover)
-  const tickerPrimary = style.bg(primary).padY(3)
+  const tickerPrimary = style.bg(primary).padY(3).overflow(hidden)
   const tickerBold = style.fontWeight(bold).textCase(uppercase).tracking(wide).fontSize(md).fg(primary-foreground).whitespace(nowrap)
-  const bento = style.padX(8).padT(8).padB(12)
-  const grid = style.w(full).maxW(breakpoint-desktop).mx(auto)
+  const bento = style.padX(8).padT(8).padB(12).minW(0).overflowX(hidden)
+  const grid = style.w(full).maxW(breakpoint-desktop).mx(auto).minW(0)
   const cardLink = style.display(block).underline(none).minW(0)
   const cardFill = style.h(full).overflow(hidden)
   const cardCol = style.h(full)
@@ -92,8 +95,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const footRow = style.w(full).maxW(breakpoint-desktop).mx(auto).padB(6).borderBWidth(1).borderB(border).fontFamily(mono).fontSize(sm).fg(muted-foreground)
   const footLink = style.fg(muted-foreground).when({ hover: style.fg(primary) })
   const diamond = style.display(inline-block).w(3).h(3).rotate(45).bg(primary).radius(sm)
-  const wordmarkWrap = style.w(full).overflow(hidden)
-  const wordmark = style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).textGradient(primary).select(none).mb(-8)
+  const wordmarkWrap = style.w(full).maxW(full).minW(0).overflow(hidden)
+  const wordmark = style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).textGradient(primary).select(none).mb(-8).minW(0).maxW(full)
 </scope>
 
 <column gap="0" sx={page}>
