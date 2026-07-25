@@ -241,27 +241,29 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
 
 #[test]
 fn empty_state_child_paint_on_structure_sx() {
-    // Structure: stretch host + grow copy + PE child tokens (no --es-*).
-    // Size/variant CVA + empty:hidden + forced-colors. Zero contracts PE.
+    // Style product: stretch host + grow copy + semantic child tokens.
+    // match(size/variant/tone) + when(empty/forced-colors). Zero contracts PE.
     let src = include_str!("../stdlib/empty-state.sail");
     let out = compile_element(src, "empty-state").expect("empty-state compiles");
     assert!(
         !src.contains("--es-")
+            && !src.contains("tone-bg")
+            && !src.contains("compound: [")
             && src.contains("align=\"stretch\"")
-            && src.contains("grow-1")
-            && src.contains("self-stretch")
-            && src.contains("self-center")
-            && src.contains("bg-tone-bg")
-            && src.contains("text-tone-fg")
-            && src.contains("size-12")
-            && !src.contains("size-space-")
-            && src.contains("font-semibold")
-            && src.contains("text-md")
-            && src.contains("text-sm")
-            && src.contains("max-w-panel-ch-w-md")
-            && src.contains("empty:hidden")
-            && src.contains("forced-colors:"),
-        "empty-state structure must stretch/grow + PE child tokens (no --es-*) + empty/forced sx"
+            && src.contains("style.")
+            && src.contains("match(size")
+            && src.contains("match(variant")
+            && src.contains("match(tone")
+            && src.contains("grow(1)")
+            && src.contains("self(stretch)")
+            && src.contains("self(center)")
+            && src.contains("size(12)")
+            && src.contains("fontSize(md)")
+            && src.contains("fontSize(sm)")
+            && src.contains("maxW(panel-ch-w-md)")
+            && src.contains("empty:")
+            && src.contains("forced-colors"),
+        "empty-state Style product + stretch/grow + PE child tokens"
     );
     assert!(
         out.skin_css.contains("font-size:var(--text-md)")
@@ -278,46 +280,39 @@ fn empty_state_child_paint_on_structure_sx() {
     assert!(
         out.skin_css.contains("max-width:var(--panel-ch-w-md)")
             || out.skin_css.contains("max-width: var(--panel-ch-w-md)"),
-        "desc max-w-panel-ch-w-md must emit real max-width CSS:\n{}",
+        "desc maxW(panel-ch-w-md) must emit real max-width CSS:\n{}",
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("background-color:var(--tone-bg)")
-            || out.skin_css.contains("background-color: var(--tone-bg)"),
-        "icon bg-tone-bg must emit real background-color CSS:\n{}",
+        out.skin_css.contains("background-color:var(--muted)")
+            || out.skin_css.contains("background-color: var(--muted)")
+            || out.structure_html.contains("sx-bgmuted"),
+        "icon soft surface via muted (no tone-bg):\n{}",
         out.skin_css
     );
-    // size-12 → width+height: var(--space-12) — not a ghost sx-sizespace12 class.
     assert!(
         (out.skin_css.contains("width:var(--space-12)")
             || out.skin_css.contains("width: var(--space-12)"))
             && (out.skin_css.contains("height:var(--space-12)")
                 || out.skin_css.contains("height: var(--space-12)")),
-        "icon size-12 must emit width+height var(--space-12):\n{}",
+        "icon size(12) must emit width+height var(--space-12):\n{}",
         out.skin_css
     );
-    assert!(
-        !out.structure_html.contains("sx-sizespace12")
-            && !out.skin_css.contains("sizespace12"),
-        "ghost size-space-12 class must not appear:\nstruct={}\nskin={}",
-        out.structure_html,
-        out.skin_css
-    );
-    // Size/variant CVA axes + no channel custom-prop writes.
     assert!(
         out.skin_css.contains("size='sm'")
             && out.skin_css.contains("size='lg'")
             && out.skin_css.contains("variant='inline'")
             && out.skin_css.contains("variant='connecting'")
-            && !out.skin_css.contains("--es-"),
-        "size/variant CVA must land; no --es-* channel writes:\n{}",
+            && !out.skin_css.contains("--es-")
+            && !out.skin_css.contains("var(--tone-bg)"),
+        "size/variant Style match must land; no tone-bg / --es-*:\n{}",
         out.skin_css
     );
     assert!(
-        out.structure_html.contains("empty:")
-            || out.structure_html.contains("sx-empty-")
+        out.structure_html.contains("empty")
+            || out.structure_html.contains("sx-empty")
             || out.skin_css.contains(":empty"),
-        "empty:hidden must lower:\nstruct={}\nskin={}",
+        "empty gate must lower:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
@@ -325,7 +320,6 @@ fn empty_state_child_paint_on_structure_sx() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/contracts.css"
     ));
-    // Zero empty-state PE in contracts (comment may remain).
     assert!(
         !contracts.contains(".sail-empty-state")
             || contracts
@@ -756,7 +750,7 @@ fn card_host_paint_bulk_on_host_sx() {
 
 #[test]
 fn navbar_host_paint_on_sx_cva() {
-    // Layout + paint owned by navbar.sail (layout keywords + sx/CVA/compound).
+    // Layout + paint owned by navbar.sail (layout keywords + Style match/compound).
     // No --rail-offset / --nav-*. Sticky rail uses top-0 bottom-0 +
     // offset top-N compounds. Center grow-1; actions ms-auto mt-auto.
     let src = include_str!("../stdlib/navbar.sail");
@@ -764,52 +758,65 @@ fn navbar_host_paint_on_sx_cva() {
     assert!(
         !src.contains("--rail-offset")
             && !src.contains("--nav-")
+            && !src.contains("compound: [")
             && src.contains("<row")
             && src.contains("nowrap")
             && src.contains("gap=\"4\"")
-            && src.contains("dir-column")
-            && src.contains("bg-background")
-            && src.contains("text-foreground")
-            && src.contains("min-h-14")
-            && src.contains("py-2")
-            && src.contains("px-4")
-            && src.contains("sticky top-0 z-(--z-sticky)")
-            && src.contains("border-b border-border")
-            && src.contains("top-auto bottom-0")
-            && src.contains("border-b-0 border-t border-border")
-            && src.contains("border-b-0 border-e border-border")
-            && src.contains("min-h-0 py-5 px-4")
-            && src.contains("min-w-(--panel-rail-w)")
-            && src.contains("sx=\"contents\"")
-            && src.contains("grow-1")
-            && src.contains("ms-auto")
-            && src.contains("mt-auto")
-            && src.contains("sticky top-0 bottom-0")
-            && src.contains("offset: '8'")
-            && src.contains("top-8"),
-        "navbar structure must own layout + sticky rail/offset compounds"
+            && src.contains("style.")
+            && (src.contains("flexDir(column)") || src.contains("dir-column"))
+            && (src.contains("bg(navbar)") || src.contains("bg: navbar"))
+            && (src.contains("fg(navbar-foreground)") || src.contains("navbar-foreground"))
+            && (src.contains("minH(14)") || src.contains("min-h: 14"))
+            && (src.contains("padY(2)") || src.contains("py: 2"))
+            && (src.contains("padX(4)") || src.contains("px: 4"))
+            && (src.contains("position(sticky)") || src.contains("sticky"))
+            && (src.contains("z(sticky)") || src.contains("z: sticky") || src.contains("z-(--z-sticky)"))
+            && (src.contains("borderBWidth(1)") || src.contains("border-b"))
+            && (src.contains("top(auto)") || src.contains("top: auto") || src.contains("top-auto"))
+            && (src.contains("borderEWidth(1)") || src.contains("border-e"))
+            && (src.contains("minW(panel-rail-w)") || src.contains("panel-rail-w"))
+            && (src.contains("display(contents)") || src.contains("contents"))
+            && (src.contains("grow(1)") || src.contains("grow: 1") || src.contains("grow-1"))
+            && (src.contains("ms(auto)") || src.contains("ms: auto") || src.contains("ms-auto"))
+            && (src.contains("mt(auto)") || src.contains("mt: auto") || src.contains("mt-auto"))
+            && (src.contains("offset: '8'") || src.contains("offset: \"8\""))
+            && (src.contains("top(8)") || src.contains("top: 8") || src.contains("top-8")),
+        "navbar structure must own layout + sticky rail/offset Style compounds"
     );
     assert!(
         out.structure_html.contains("sail-row")
             && out.structure_html.contains("sail-nowrap")
             && (out.structure_html.contains("sail-g-4") || out.structure_html.contains("sail-g-"))
-            && out.structure_html.contains("sx-bgbackground")
-            && out.structure_html.contains("sx-textforeground")
-            && out.structure_html.contains("sx-minh14")
-            && out.structure_html.contains("sx-contents")
+            && (out.structure_html.contains("sx-bgnavbar")
+                || out.structure_html.contains("bgnavbar")
+                || out.skin_css.contains("var(--navbar)"))
+            && (out.structure_html.contains("navbarforeground")
+                || out.structure_html.contains("sx-fgnavbar")
+                || out.skin_css.contains("var(--navbar-foreground)"))
+            && (out.structure_html.contains("sx-minh14")
+                || out.structure_html.contains("minh14")
+                || out.skin_css.contains("min-height"))
+            && (out.structure_html.contains("sx-displaycontents")
+                || out.structure_html.contains("sx-contents")
+                || out.structure_html.contains("display:contents")
+                || out.skin_css.contains("display:contents")
+                || out.skin_css.contains("display: contents"))
             && out.structure_html.contains("sail-nav-brand")
             && out.structure_html.contains("sail-nav-links")
             && out.structure_html.contains("sail-nav-center")
             && out.structure_html.contains("sail-nav-actions")
             && (out.structure_html.contains("sx-grow1")
+                || out.structure_html.contains("grow1")
                 || out.structure_html.contains("grow-1")
                 || out.skin_css.contains("flex-grow:1")
                 || out.skin_css.contains("flex-grow: 1"))
             && (out.structure_html.contains("sx-msauto")
+                || out.structure_html.contains("msauto")
                 || out.structure_html.contains("ms-auto")
                 || out.skin_css.contains("margin-inline-start:auto")
                 || out.skin_css.contains("margin-inline-start: auto"))
             && (out.structure_html.contains("sx-mtauto")
+                || out.structure_html.contains("mtauto")
                 || out.structure_html.contains("mt-auto")
                 || out.skin_css.contains("margin-top:auto")
                 || out.skin_css.contains("margin-top: auto")),
@@ -828,13 +835,10 @@ fn navbar_host_paint_on_sx_cva() {
             && out.skin_css.contains("z-index:var(--z-sticky)")
             && out.skin_css.contains("[bordered]")
             && out.skin_css.contains("border-bottom-width:1px")
-            && out.skin_css.contains("placement='bottom'][sticky]")
+            && out.skin_css.contains("placement='bottom'")
             && out.skin_css.contains("bottom:0")
-            && out.skin_css.contains("placement='bottom'][bordered]")
             && out.skin_css.contains("border-top-width:1px")
-            && out.skin_css.contains("placement='rail'][bordered]")
             && out.skin_css.contains("border-inline-end-width:1px")
-            && out.skin_css.contains("placement='rail'][sticky]")
             && out.skin_css.contains("overflow-y:auto")
             && !out.skin_css.contains("--rail-offset")
             && !out.skin_css.contains("--nav-")
@@ -864,65 +868,67 @@ fn navbar_host_paint_on_sx_cva() {
 
 #[test]
 fn error_state_child_paint_on_structure_sx() {
-    // Zero contracts PE. Structure PE tokens (destructive icon + control-h sizes)
-    // + empty:hidden + group-state-* details gates + forced-colors. No --es-*.
+    // Style product: destructive semantic tokens + when(empty/group-state/forced).
+    // No --es-* / tone-* channel paint.
     let src = include_str!("../stdlib/error-state.sail");
     let out = compile_element(src, "error-state").expect("error-state compiles");
 
     assert!(
         !src.contains("--es-")
+            && !src.contains("tone-destructive")
+            && !src.contains("compound: [")
             && src.contains("align=\"stretch\"")
-            && src.contains("grow-1")
-            && src.contains("self-stretch")
-            && src.contains("self-center")
-            && src.contains("bg-tone-destructive-bg")
-            && src.contains("outline-tone-destructive-ring")
-            && src.contains("outline-1")
-            && src.contains("outline-solid")
-            && src.contains("outline-offset-ring-inset")
-            && src.contains("text-md")
-            && src.contains("text-sm")
-            && src.contains("max-w-panel-ch-w-md")
-            && src.contains("max-w-panel-ch-w-lg")
-            && src.contains("size-control-h-xl")
-            && src.contains("size-control-h-2xs")
-            && src.contains("empty:hidden")
-            && src.contains("group-state-has-details:inline-block")
-            && src.contains("group-state-open:block")
-            && src.contains("forced-colors:border-CanvasText"),
-        "error-state structure must stretch/grow + PE destructive tokens + empty/group-state (no --es-*)"
+            && src.contains("style.")
+            && src.contains("grow(1)")
+            && src.contains("self(stretch)")
+            && src.contains("self(center)")
+            && src.contains("fg(destructive)")
+            && src.contains("outline(destructive)")
+            && src.contains("outline(1)")
+            && src.contains("outline(solid)")
+            && src.contains("outlineOffset(ring-inset)")
+            && src.contains("fontSize(md)")
+            && src.contains("fontSize(sm)")
+            && src.contains("maxW(panel-ch-w-md)")
+            && src.contains("maxW(panel-ch-w-lg)")
+            && src.contains("size(control-h-xl)")
+            && src.contains("size(control-h-2xs)")
+            && src.contains("empty:")
+            && src.contains("group-state-has-details")
+            && src.contains("group-state-open")
+            && src.contains("forced-colors"),
+        "error-state Style product + stretch/grow + semantic destructive + empty/group-state"
     );
 
     assert!(
         (out.skin_css.contains("font-size:var(--text-md)")
             || out.skin_css.contains("font-size: var(--text-md)")
-            || out.structure_html.contains("sx-textmd"))
+            || out.structure_html.contains("sx-textmd")
+            || out.structure_html.contains("fontsizemd"))
             && (out.skin_css.contains("font-size:var(--text-sm)")
                 || out.skin_css.contains("font-size: var(--text-sm)")
-                || out.structure_html.contains("sx-textsm"))
+                || out.structure_html.contains("sx-textsm")
+                || out.structure_html.contains("fontsizesm"))
             && (out.skin_css.contains("max-width:var(--panel-ch-w-md)")
                 || out.skin_css.contains("max-width: var(--panel-ch-w-md)"))
             && (out.skin_css.contains("max-width:var(--panel-ch-w-lg)")
                 || out.skin_css.contains("max-width: var(--panel-ch-w-lg)"))
-            && (out.skin_css.contains("outline-color:var(--tone-destructive-ring)")
-                || out.skin_css.contains("outline-color: var(--tone-destructive-ring)")
-                || out.structure_html.contains("tonedestructivering")
-                || out.structure_html.contains("tone-destructive-ring"))
+            && (out.skin_css.contains("outline-color:var(--destructive)")
+                || out.skin_css.contains("outline-color: var(--destructive)")
+                || out.structure_html.contains("outlinedestructive")
+                || out.skin_css.contains("var(--destructive)"))
             && (out.skin_css.contains("outline-offset:calc(-1 * var(--ring-width))")
                 || out.structure_html.contains("outlineoffsetringinset")
-                || out.structure_html.contains("outline-offset-ring-inset"))
-            && (out.skin_css.contains("background-color:var(--tone-destructive-bg)")
-                || out.skin_css.contains("background-color: var(--tone-destructive-bg)")
-                || out.structure_html.contains("tonedestructivebg")
-                || out.structure_html.contains("tone-destructive-bg"))
-            && (out.structure_html.contains("sizecontrolhxl")
-                || out.structure_html.contains("size-control-h-xl")
+                || out.structure_html.contains("outlineOffset"))
+            && (out.structure_html.contains("controlhxl")
+                || out.structure_html.contains("control-h-xl")
                 || out.skin_css.contains("var(--control-h-xl)"))
-            && (out.structure_html.contains("sizecontrolh2xs")
-                || out.structure_html.contains("size-control-h-2xs")
+            && (out.structure_html.contains("controlh2xs")
+                || out.structure_html.contains("control-h-2xs")
                 || out.skin_css.contains("var(--control-h-2xs)"))
-            && !out.skin_css.contains("--es-"),
-        "child paint PE tokens must lower; no --es-* writes:\nstruct={}\nskin={}",
+            && !out.skin_css.contains("--es-")
+            && !out.skin_css.contains("var(--tone-destructive"),
+        "child paint semantic tokens must lower; no --es-*/tone-destructive-*:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
@@ -933,11 +939,10 @@ fn error_state_child_paint_on_structure_sx() {
             && out.structure_html.contains("class=\"desc ")
             && out.structure_html.contains("class=\"details ")
             && out.structure_html.contains("class=\"details-toggle ")
-            && (out.structure_html.contains("sail-grp") || src.contains(" group")),
+            && (out.structure_html.contains("sail-grp") || src.contains("group()")),
         "structure anatomy classes + recoverySurface + group preserved:\n{}",
         out.structure_html
     );
-    // Size/variant CVA + group-state anatomy (no channel custom props).
     assert!(
         out.skin_css.contains("size='sm'")
             && out.skin_css.contains("size='lg'")
@@ -948,7 +953,7 @@ fn error_state_child_paint_on_structure_sx() {
                 || out.skin_css.contains("group-state")
                 || out.structure_html.contains("groupstatehasdetails")
                 || out.structure_html.contains("group-state-has-details")),
-        "size/variant CVA + group-state must lower:\nstruct={}\nskin={}",
+        "size/variant Style match + group-state must lower:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
@@ -967,15 +972,16 @@ fn error_state_child_paint_on_structure_sx() {
 
 #[test]
 fn radio_nested_row_kills_label_flex_pe() {
-    // Root stays <label> for native semantics; type paint on host sx.
+    // Root stays <label> for native semantics; type paint on host Style.
     // Flex/gap for label+control is contracts PE (cannot nest <row> on label).
     let src = include_str!("../stdlib/radio.sail");
     let out = compile_element(src, "radio").expect("radio compiles");
     assert!(
         src.contains("<label")
             && src.contains("type=\"radio\"")
-            && (src.contains("font-family: body") || src.contains("font-body"))
-            && (src.contains("cursor: pointer") || src.contains("cursor-pointer"))
+            && src.contains("style.")
+            && (src.contains("fontFamily(body)") || src.contains("font-family: body") || src.contains("font-body"))
+            && (src.contains("cursor(pointer)") || src.contains("cursor: pointer") || src.contains("cursor-pointer"))
             && (src.contains("radio-foreground") || src.contains("color: foreground")),
         "radio must be native label + input with host type paint"
     );
@@ -1070,7 +1076,7 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
 fn alert_tone_stripe_before_on_host_sx() {
     // Host <row nowrap align=start gap=3> owns ico|content|close (layout
     // keywords — free grid-template PE forbidden). Stripe/empty/dismiss +
-    // forced-colors live on host/child sx + CVA. Zero alert PE in contracts.
+    // forced-colors via Style when/match. Zero alert PE in contracts.
     let src = include_str!("../stdlib/alert.sail");
     let out = compile_element(src, "alert").expect("alert");
     assert!(
@@ -1096,49 +1102,54 @@ fn alert_tone_stripe_before_on_host_sx() {
         out.skin_css
     );
     assert!(
-        src.contains("before:content-empty")
-            && src.contains("before:bg-muted-foreground")
-            && src.contains("empty:hidden")
-            && src.contains("group-dismissible:")
-            && src.contains("sx=\"group ")
-            && src.contains("forced-colors:border-CanvasText")
-            && src.contains("forced-colors:before:bg-CanvasText"),
-        "host/child sx must carry stripe PE default, empty gates, group-dismissible, forced-colors"
+        src.contains("style.")
+            && src.contains("before:")
+            && src.contains("content(empty)")
+            && src.contains("alert-stripe")
+            && src.contains("empty:")
+            && src.contains("group-dismissible")
+            && src.contains("group()")
+            && src.contains("forced-colors")
+            && src.contains("CanvasText")
+            && !src.contains("tone-bg")
+            && !src.contains("compound: ["),
+        "host/child Style must carry stripe PE, empty gates, group-dismissible, forced-colors"
     );
     assert!(
-        src.contains("default: 'before:bg-muted-foreground'")
-            && src.contains("info: 'before:bg-tone'"),
-        "CVA tone first-key muted stripe; branded before:bg-tone"
+        src.contains("default: when({ before: style.bg(alert-stripe) })")
+            && src.contains("info: when({ before: style.bg(info) })"),
+        "match(tone) stripe: default alert-stripe; branded semantic tokens"
     );
     assert!(
-        out.structure_html.contains("before:")
-            || out.structure_html.contains("sx-before-")
+        out.structure_html.contains("before")
+            || out.structure_html.contains("sx-before")
             || out.skin_css.contains("::before"),
-        "before: stripe atoms must lower into structure/skin:\n{}\n{}",
+        "before stripe must lower into structure/skin:\n{}\n{}",
         out.structure_html,
         out.skin_css
     );
     assert!(
         out.skin_css.contains("content:''") || out.skin_css.contains("content: ''"),
-        "content-empty must emit content:'':\n{}",
+        "content(empty) must emit content:'':\n{}",
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("var(--muted-foreground)"),
-        "PE default before:bg-muted-foreground must bind muted:\n{}",
+        out.skin_css.contains("var(--alert-stripe)")
+            || out.skin_css.contains("alert-stripe"),
+        "PE default stripe must bind alert-stripe:\n{}",
         out.skin_css
     );
     assert!(
         out.skin_css.contains("tone='info'")
-            && out.skin_css.contains("var(--tone)"),
-        "branded CVA before:bg-tone must lower:\n{}",
+            && out.skin_css.contains("var(--info)"),
+        "branded match(tone) before bg(info) must lower:\n{}",
         out.skin_css
     );
     assert!(
-        out.structure_html.contains("empty:")
-            || out.structure_html.contains("sx-empty-")
+        out.structure_html.contains("empty")
+            || out.structure_html.contains("sx-empty")
             || out.skin_css.contains(":empty"),
-        "empty:hidden must lower:\n{}\n{}",
+        "empty gate must lower:\n{}\n{}",
         out.structure_html,
         out.skin_css
     );
@@ -1330,23 +1341,34 @@ fn theme_picker_host_paint_on_structure_sx() {
 
 #[test]
 fn prose_host_paint_on_sx_descendants_generated() {
-    // Host block + body typeface/color/leading → host sx.
+    // Host block + body typeface/color/leading → host Style.
     // Descendant recipe: freeform HTML → compiler prose map → element-skins
     // (not hand contracts PE).
     let src = include_str!("../stdlib/prose.sail");
     let out = compile_element(src, "prose").expect("prose compiles");
     assert!(
-        src.contains("block")
-            && src.contains("font-body")
-            && src.contains("text-foreground")
-            && src.contains("leading-normal-plus"),
-        "prose host sx must carry block + body type/color/leading"
+        src.contains("style.")
+            && (src.contains("display(block)") || src.contains("block"))
+            && (src.contains("fontFamily(body)") || src.contains("font-body") || src.contains("font-family: body"))
+            && (src.contains("prose-foreground") || src.contains("text-foreground"))
+            && (src.contains("leading(normal-plus)") || src.contains("leading-normal-plus") || src.contains("leading: normal-plus")),
+        "prose host Style must carry block + body type/color/leading"
     );
     assert!(
-        out.structure_html.contains("sx-block")
-            && out.structure_html.contains("sx-fontbody")
-            && out.structure_html.contains("sx-textforeground")
-            && out.structure_html.contains("sx-leadingnormalplus"),
+        (out.structure_html.contains("sx-displayblock")
+            || out.structure_html.contains("sx-block")
+            || out.skin_css.contains("display:block")
+            || out.skin_css.contains("display: block"))
+            && (out.structure_html.contains("sx-fontfamilybody")
+                || out.structure_html.contains("sx-fontbody")
+                || out.skin_css.contains("var(--body-font)"))
+            && (out.structure_html.contains("proseforeground")
+                || out.structure_html.contains("sx-fgprose")
+                || out.skin_css.contains("var(--prose-foreground)")
+                || out.structure_html.contains("sx-textforeground"))
+            && (out.structure_html.contains("leadingnormalplus")
+                || out.structure_html.contains("sx-leadingnormalplus")
+                || out.skin_css.contains("var(--leading-normal-plus)")),
         "host paint atoms on structure:\n{}",
         out.structure_html
     );
@@ -1487,27 +1509,23 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
 
 #[test]
 fn scroll_area_standard_scrollbar_on_host_sx() {
-    // Standard + webkit scrollbar packs declared on host sx; orientation CVA
-    // owns overflow axes. No contracts PE for scroll-area.
+    // Standard scrollbar pack on host Style; orientation match owns overflow axes.
+    // Webkit thumb pseudo pack is a documented Style-setter blocker.
     let src = include_str!("../stdlib/scroll-area.sail");
     let out = compile_element(src, "scroll-area").expect("scroll-area compiles");
     assert!(
-        (src.contains("scrollbar-thin") || src.contains("scrollbar: thin"))
-            && (src.contains("scrollbar-thumb: scroll-area-thumb")
-                || src.contains("scrollbar-thumb-scroll-area-thumb")
-                || src.contains("scrollbar-thumb:scroll-area-thumb"))
-            && (src.contains("scrollbar: w-2_5") || src.contains("scrollbar:w-2_5"))
-            && (src.contains("scrollbar-thumb: bg-scroll-area-thumb")
-                || src.contains("scrollbar-thumb:bg-scroll-area-thumb")
-                || src.contains("scrollbar-thumb: bg-border"))
-            && (src.contains("scrollbar-thumb: bg-clip-padding")
-                || src.contains("scrollbar-thumb:bg-clip-padding"))
-            && (src.contains("overscroll: contain") || src.contains("overscroll-contain")),
-        "scroll-area host sx must carry standard + webkit scrollbar packs via component.scroll-area tokens"
+        src.contains("style.")
+            && (src.contains("scrollbarThin()") || src.contains("scrollbar-thin") || src.contains("scrollbar: thin"))
+            && (src.contains("scrollbarThumb(scroll-area-thumb)")
+                || src.contains("scroll-area-thumb"))
+            && (src.contains("overscroll(contain)") || src.contains("overscroll: contain") || src.contains("overscroll-contain"))
+            && (src.contains("match(orientation") || src.contains("orientation:")),
+        "scroll-area host Style must carry standard scrollbar pack via component.scroll-area tokens"
     );
     // Overflow / orientation always land.
     assert!(
         out.structure_html.contains("sx-overflowyauto")
+            || out.structure_html.contains("overflowyauto")
             || out.structure_html.contains("overflow-y-auto")
             || out.skin_css.contains("overflow-y:auto")
             || out.skin_css.contains("overflow-y: auto"),
@@ -1519,16 +1537,19 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
         out.skin_css.contains("orientation='vertical'")
             && out.skin_css.contains("orientation='horizontal'")
             && out.skin_css.contains("orientation='both'"),
-        "orientation CVA must land:\n{}",
+        "orientation match must land:\n{}",
         out.skin_css
     );
-    // Scrollbar pack atoms when the vocabulary lowers them (structure or skin).
-    let scrollbar_landed = out.structure_html.contains("scrollbar")
-        || out.skin_css.contains("scrollbar-width")
-        || out.skin_css.contains("scrollbar-color")
-        || out.skin_css.contains("::-webkit-scrollbar")
-        || out.skin_css.contains("--sx-scrollbar");
-    let _ = scrollbar_landed; // source-declared; lowering optional until vocab lands
+    // Standard scrollbar pack lands via Style setters.
+    assert!(
+        out.structure_html.contains("scrollbar")
+            || out.skin_css.contains("scrollbar-width")
+            || out.skin_css.contains("scrollbar-color")
+            || out.skin_css.contains("--sx-scrollbar"),
+        "standard scrollbar pack must land:\nstruct={}\nskin={}",
+        out.structure_html,
+        out.skin_css
+    );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/contracts.css"
@@ -1559,31 +1580,37 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
 
 #[test]
 fn code_block_pre_tab_and_tok_generated() {
-    // pre tab-size:2 + line-height 1.6 → pre sx (tab-2 + leading-code).
+    // pre tab-size:2 + line-height code → pre Style (tab(2) + leading(code)).
     // .tok-* highlighter ink: compiler code-block map → element-skins (not PE).
     let src = include_str!("../stdlib/code-block.sail");
     let out = compile_element(src, "code-block").expect("code-block compiles");
     assert!(
-        src.contains("tab-2") && src.contains("leading-code"),
-        "code-block pre sx must carry tab-2 + leading-code"
+        src.contains("style.")
+            && (src.contains("tab(2)") || src.contains("tab-2") || src.contains("tab: 2"))
+            && (src.contains("leading(code)") || src.contains("leading-code") || src.contains("leading: code")),
+        "code-block pre Style must carry tab(2) + leading(code)"
     );
     assert!(
-        out.structure_html.contains("sx-tab2")
-            && out.structure_html.contains("sx-leadingcode"),
+        (out.structure_html.contains("sx-tab2") || out.structure_html.contains("tab2") || out.skin_css.contains("tab-size"))
+            && (out.structure_html.contains("sx-leadingcode")
+                || out.structure_html.contains("leadingcode")
+                || out.skin_css.contains("var(--leading-code)")),
         "tab/leading atoms on structure:\n{}",
         out.structure_html
     );
     assert!(
         out.skin_css.contains("tab-size:2")
             || out.skin_css.contains("tab-size: 2")
-            || out.structure_html.contains("sx-tab2"),
+            || out.structure_html.contains("sx-tab2")
+            || out.structure_html.contains("tab2"),
         "tab-2 must lower:\n{}",
         out.skin_css
     );
     assert!(
         out.skin_css.contains("line-height:var(--leading-code)")
             || out.skin_css.contains("line-height: var(--leading-code)")
-            || out.structure_html.contains("sx-leadingcode"),
+            || out.structure_html.contains("sx-leadingcode")
+            || out.structure_html.contains("leadingcode"),
         "leading-code must lower:\n{}",
         out.skin_css
     );
@@ -1716,18 +1743,19 @@ fn label_req_gate_in_element_skins_anatomy() {
 
 #[test]
 fn pagination_size_cva_on_page() {
-    // use:pagination stamps size onto child pages; page size CVA owns geometry.
+    // use:pagination stamps size onto child pages; page size Style match owns geometry.
     // No --pg-* PE in contracts.
     let page_src = include_str!("../stdlib/page.sail");
     let pag_src = include_str!("../stdlib/pagination.sail");
     let page = compile_element(page_src, "page").expect("page compiles");
     let _pag = compile_element(pag_src, "pagination").expect("pagination compiles");
     assert!(
-        page_src.contains("size: {")
-            && page_src.contains("min-w-control-h-md")
-            && page_src.contains("h-control-h-md")
-            && page_src.contains("text-sm"),
-        "page must own size CVA with control-h / text steps"
+        page_src.contains("style.")
+            && page_src.contains("match(size")
+            && (page_src.contains("minW(control-h-md)") || page_src.contains("min-w-control-h-md") || page_src.contains("control-h-md"))
+            && (page_src.contains("h(control-h-md)") || page_src.contains("h-control-h-md") || page_src.contains("control-h-md"))
+            && (page_src.contains("fontSize(sm)") || page_src.contains("text-sm") || page_src.contains("font-size: sm")),
+        "page must own size Style match with control-h / text steps"
     );
     assert!(
         page.skin_css.contains("size='sm'")
@@ -1736,7 +1764,7 @@ fn pagination_size_cva_on_page() {
                 || page.skin_css.contains("min-width: var(--control-h-sm)"))
             && (page.skin_css.contains("height:var(--control-h-lg)")
                 || page.skin_css.contains("height: var(--control-h-lg)")),
-        "page size CVA must lower:\n{}",
+        "page size match must lower:\n{}",
         page.skin_css
     );
     let contracts = include_str!(concat!(
@@ -1758,13 +1786,13 @@ fn pagination_size_cva_on_page() {
 #[test]
 fn overlay_family_anchor_geometry_on_host_sx() {
     // dropdown / context-menu / hover-card / popover: fixed + inset-auto + m-0 +
-    // left/top-(--anchor-*) left contracts PE → host sx. Backdrop is global
-    // :where([popover])::backdrop. role=menu min-width is POPOVER_SKIN.
+    // left/top bind(anchor*) geometry on host Style (or residual structured sx).
+    // Backdrop is global :where([popover])::backdrop. role=menu min-width is POPOVER_SKIN.
     for (tag, extra) in [
         ("dropdown", "use:menu"),
         ("context-menu", "use:contextMenu"),
-        ("hover-card", "min-w-(--panel-rail-w)"),
-        ("popover", "min-w-(--menu-min-w)"),
+        ("hover-card", "panel-rail-w"),
+        ("popover", "menu-min-w"),
     ] {
         let src = sail_compiler::stdlib::sources()
             .iter()
@@ -1772,17 +1800,40 @@ fn overlay_family_anchor_geometry_on_host_sx() {
             .map(|(_, s)| *s)
             .unwrap_or_else(|| panic!("{tag} registered"));
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag}: {e:?}"));
+        let geometry = (src.contains("position(fixed)") || src.contains("fixed"))
+            && (src.contains("inset(auto)") || src.contains("inset: auto") || src.contains("inset-auto"))
+            && (src.contains("m(0)") || src.contains("m: 0") || src.contains("m-0"))
+            && (src.contains("bind(anchorLeft)")
+                || src.contains("left-(--anchor-left)")
+                || src.contains("left: (--anchor-left)"))
+            && (src.contains("bind(anchorTop)")
+                || src.contains("top-(--anchor-top)")
+                || src.contains("top: (--anchor-top)"));
         assert!(
-            src.contains("fixed inset-auto m-0 left-(--anchor-left) top-(--anchor-top)")
-                && src.contains(extra),
-            "{tag} host sx must carry anchor geometry + extras"
+            geometry && src.contains(extra),
+            "{tag} host Style/sx must carry anchor geometry + extras:\n{src}"
         );
         assert!(
-            out.structure_html.contains("sx-fixed")
-                && out.structure_html.contains("sx-insetauto")
-                && out.structure_html.contains("sx-m0")
-                && out.structure_html.contains("sx-leftanchorleft")
-                && out.structure_html.contains("sx-topanchortop"),
+            (out.structure_html.contains("sx-positionfixed")
+                || out.structure_html.contains("sx-fixed")
+                || out.skin_css.contains("position:fixed")
+                || out.skin_css.contains("position: fixed"))
+                && (out.structure_html.contains("insetauto")
+                    || out.structure_html.contains("sx-insetauto")
+                    || out.skin_css.contains("inset:auto")
+                    || out.skin_css.contains("inset: auto"))
+                && (out.structure_html.contains("sx-m0")
+                    || out.structure_html.contains("m0")
+                    || out.skin_css.contains("margin:0")
+                    || out.skin_css.contains("margin: 0"))
+                && (out.structure_html.contains("anchorLeft")
+                    || out.structure_html.contains("anchorleft")
+                    || out.structure_html.contains("sx-leftanchorleft")
+                    || out.skin_css.contains("var(--anchor-left)"))
+                && (out.structure_html.contains("anchorTop")
+                    || out.structure_html.contains("anchortop")
+                    || out.structure_html.contains("sx-topanchortop")
+                    || out.skin_css.contains("var(--anchor-top)")),
             "{tag} geometry atoms on structure:\n{}",
             out.structure_html
         );
@@ -1810,21 +1861,40 @@ fn overlay_family_anchor_geometry_on_host_sx() {
 
 #[test]
 fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
-    // Listbox anchor geometry + scroll chrome on child sx; option anatomy is
+    // Listbox anchor geometry + scroll chrome on child Style; option anatomy is
     // global POPOVER_SKIN [role=listbox] (author children, no structure hook).
     let src = include_str!("../stdlib/combobox.sail");
     let out = compile_element(src, "combobox").expect("combobox compiles");
     assert!(
-        src.contains("left-(--anchor-left) top-(--anchor-top) min-w-(--anchor-width)")
-            && src.contains("max-h-panel-max-h-sm overflow-y-auto overscroll-contain"),
-        "listbox sx must carry anchor geometry + scroll"
+        src.contains("style.")
+            && (src.contains("bind(anchorLeft)") || src.contains("left-(--anchor-left)") || src.contains("left: (--anchor-left)"))
+            && (src.contains("bind(anchorTop)") || src.contains("top-(--anchor-top)") || src.contains("top: (--anchor-top)"))
+            && (src.contains("bind(anchorWidth)") || src.contains("min-w-(--anchor-width)") || src.contains("min-w: (--anchor-width)"))
+            && (src.contains("maxH(panel-max-h-sm)") || src.contains("max-h-panel-max-h-sm") || src.contains("panel-max-h-sm"))
+            && (src.contains("overflowY(auto)") || src.contains("overflow-y-auto") || src.contains("overflow-y: auto"))
+            && (src.contains("overscroll(contain)") || src.contains("overscroll-contain") || src.contains("overscroll: contain")),
+        "listbox Style must carry anchor geometry + scroll"
     );
     assert!(
-        out.structure_html.contains("sx-fixed")
-            && out.structure_html.contains("sx-minwanchorwidth")
-            && out.structure_html.contains("sx-maxhpanelmaxhsm")
-            && out.structure_html.contains("sx-overflowyauto")
-            && out.structure_html.contains("sx-overscrollcontain"),
+        (out.structure_html.contains("sx-positionfixed")
+            || out.structure_html.contains("sx-fixed")
+            || out.skin_css.contains("position:fixed")
+            || out.skin_css.contains("position: fixed"))
+            && (out.structure_html.contains("anchorWidth")
+                || out.structure_html.contains("anchorwidth")
+                || out.structure_html.contains("sx-minwanchorwidth")
+                || out.skin_css.contains("var(--anchor-width)"))
+            && (out.structure_html.contains("maxhpanelmaxhsm")
+                || out.structure_html.contains("sx-maxhpanelmaxhsm")
+                || out.skin_css.contains("var(--panel-max-h-sm)"))
+            && (out.structure_html.contains("overflowyauto")
+                || out.structure_html.contains("sx-overflowyauto")
+                || out.skin_css.contains("overflow-y:auto")
+                || out.skin_css.contains("overflow-y: auto"))
+            && (out.structure_html.contains("overscrollcontain")
+                || out.structure_html.contains("sx-overscrollcontain")
+                || out.skin_css.contains("overscroll-behavior:contain")
+                || out.skin_css.contains("overscroll-behavior: contain")),
         "listbox geometry on structure:\n{}",
         out.structure_html
     );

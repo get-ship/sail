@@ -255,4 +255,80 @@ fn batch_b_controls_compile_on_style_path() {
     }
 }
 
+#[test]
+fn batch_c_surfaces_compile_on_style_path() {
+    for (tag, src) in [
+        ("alert", include_str!("../stdlib/alert.sail")),
+        ("chip", include_str!("../stdlib/chip.sail")),
+        ("empty-state", include_str!("../stdlib/empty-state.sail")),
+        ("error-state", include_str!("../stdlib/error-state.sail")),
+        ("hover-card", include_str!("../stdlib/hover-card.sail")),
+        ("popover", include_str!("../stdlib/popover.sail")),
+    ] {
+        assert!(
+            !src.contains("md: '")
+                && !src.contains("compound: [")
+                && !src.contains("tone-bg")
+                && !src.contains("tone-fg")
+                && !src.contains("tone-border")
+                && !src.contains("tone-contrast")
+                && src.contains("style.")
+                && (src.contains("match(")
+                    || src.contains("when(")
+                    || src.contains("compound(")
+                    || src.contains("sx={")),
+            "{tag} must use Style product (no CVA string maps / tone-* paint):\n{src}"
+        );
+        let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
+        let paint = format!("{}{}", out.structure_html, out.skin_css);
+        assert!(
+            paint.contains("var(--") || paint.contains("sx-") || paint.contains("sail-grp"),
+            "{tag} must emit token/class paint:\nstruct={}\nskin={}",
+            out.structure_html,
+            out.skin_css
+        );
+        assert!(
+            !out.skin_css.contains("var(--tone-bg)")
+                && !out.skin_css.contains("var(--tone-fg)")
+                && !out.skin_css.contains("var(--tone-border)")
+                && !out.skin_css.contains("var(--tone-contrast)"),
+            "{tag} must not emit tone channel vars:\n{}",
+            out.skin_css
+        );
+    }
+}
+
+#[test]
+fn batch_d_chrome_menus_compile_on_style_path() {
+    for (tag, src) in [
+        ("dropdown", include_str!("../stdlib/dropdown.sail")),
+        ("context-menu", include_str!("../stdlib/context-menu.sail")),
+        ("menu-item", include_str!("../stdlib/menu-item.sail")),
+        ("combobox", include_str!("../stdlib/combobox.sail")),
+        ("navbar", include_str!("../stdlib/navbar.sail")),
+        ("page", include_str!("../stdlib/page.sail")),
+        ("prose", include_str!("../stdlib/prose.sail")),
+        ("code-block", include_str!("../stdlib/code-block.sail")),
+        ("radio", include_str!("../stdlib/radio.sail")),
+        ("radio-group", include_str!("../stdlib/radio-group.sail")),
+        ("scroll-area", include_str!("../stdlib/scroll-area.sail")),
+    ] {
+        assert!(
+            !src.contains("md: '")
+                && !src.contains("compound: [")
+                && !src.contains("sx=\"")
+                && src.contains("style."),
+            "{tag} must use Style product (no CVA string maps / string sx):\n{src}"
+        );
+        let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
+        let paint = format!("{}{}", out.structure_html, out.skin_css);
+        assert!(
+            paint.contains("var(--") || paint.contains("sx-") || paint.contains("sail-grp"),
+            "{tag} must emit token/class paint:\nstruct={}\nskin={}",
+            out.structure_html,
+            out.skin_css
+        );
+    }
+}
+
 
