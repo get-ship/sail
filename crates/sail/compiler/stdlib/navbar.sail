@@ -1,46 +1,32 @@
 <!--
   <navbar> — application nav bar. Placements top/rail/bottom; sticky; bordered.
 
-  Paint/layout (one path — no contracts PE matrix):
+  Paint/layout (Style product):
     layout keywords  — host row (nowrap, align center, gap 4); brand/actions
                        inline rows; links as contents so slot kids share the
                        host flex axis (row top / column rail); center row grows
-    host sx=         — bg/fg from component.navbar tokens (cssNames navbar,
-                       navbar-foreground) + pad/min-h + no-underline + w-full
-    CVA-in-props     — placement pad/min-h + rail min-w-(--panel-rail-w) +
-                       dir-column (rail flips host flex axis)
-    compound         — sticky/bordered + bottom/rail border + sticky rail
-                       geometry (top-0 bottom-0 overflow-y-auto; offset overrides top)
-    child sx         — center grow-1; actions ms-auto mt-auto (row push / rail push)
+    host sx={[…]}    — component.navbar tokens + match(placement) + compound
+                       sticky/bordered/rail geometry (no CVA string maps)
+    child sx         — center grow-1; actions ms-auto mt-auto
   Slotted link/label chrome is author sx on the projected nodes (current:/hover:).
 -->
 
 <scope>
   props: {
-    placement: {
-      top: 'min-h: 14 py: 2 px: 4',
-      bottom: 'min-h: 14 py: 2 px: 4',
-      rail: 'min-h: 0 py: 5 px: 4 min-w: (--panel-rail-w) dir-column',
-    }
+    placement: 'top' | 'bottom' | 'rail' = 'top'
     sticky = false
     bordered = false
     offset = ''
   }
-  compound: [
-    { when: { sticky: true }, sx: 'sticky top: 0 z: (--z-sticky)' },
-    { when: { bordered: true }, sx: 'border-b border: border' },
-    { when: { placement: 'bottom', sticky: true }, sx: 'top: auto bottom: 0' },
-    { when: { placement: 'bottom', bordered: true }, sx: 'border-b: 0 border-t border: border' },
-    { when: { placement: 'rail', bordered: true }, sx: 'border-b: 0 border-e border: border' },
-    { when: { placement: 'rail', sticky: true }, sx: 'sticky top: 0 bottom: 0 self: start overflow-y: auto z: dropdown' },
-    { when: { placement: 'rail', sticky: true, offset: '8' }, sx: 'top: 8' },
-    { when: { placement: 'rail', sticky: true, offset: '10' }, sx: 'top: 10' },
-    { when: { placement: 'rail', sticky: true, offset: '12' }, sx: 'top: 12' },
-    { when: { placement: 'rail', sticky: true, offset: '14' }, sx: 'top: 14' },
-    { when: { placement: 'rail', sticky: true, offset: '16' }, sx: 'top: 16' },
-    { when: { placement: 'rail', sticky: true, offset: '20' }, sx: 'top: 20' },
-    { when: { placement: 'rail', sticky: true, offset: '24' }, sx: 'top: 24' },
-  ]
+
+  const base = style.w(full).bg(navbar).fg(navbar-foreground).minH(14).padY(2).padX(4).underline(none)
+  const placeTop = style.minH(14).padY(2).padX(4)
+  const placeBottom = style.minH(14).padY(2).padX(4)
+  const placeRail = style.minH(0).padY(5).padX(4).minW(panel-rail-w).flexDir(column)
+  const brand = style.fontWeight(semibold).shrink(0)
+  const links = style.display(contents)
+  const center = style.minW(0).grow(1)
+  const actions = style.shrink(0).ms(auto).mt(auto)
 </scope>
 
 <row
@@ -48,12 +34,32 @@
   align="center"
   gap="4"
   role="navigation"
-  sx="w: full bg: navbar color: navbar-foreground min-h: 14 py: 2 px: 4 no-underline"
+  sx={[
+    base,
+    match(placement, {
+      top: placeTop,
+      bottom: placeBottom,
+      rail: placeRail,
+    }),
+    compound({ sticky: true }, style.position(sticky).top(0).z(sticky)),
+    compound({ bordered: true }, style.borderBWidth(1).border(border)),
+    compound({ placement: bottom, sticky: true }, style.top(auto).bottom(0)),
+    compound({ placement: bottom, bordered: true }, style.borderBWidth(0).borderTWidth(1).border(border)),
+    compound({ placement: rail, bordered: true }, style.borderBWidth(0).borderEWidth(1).border(border)),
+    compound({ placement: rail, sticky: true }, style.position(sticky).top(0).bottom(0).self(start).overflowY(auto).z(dropdown)),
+    compound({ placement: rail, sticky: true, offset: '8' }, style.top(8)),
+    compound({ placement: rail, sticky: true, offset: '10' }, style.top(10)),
+    compound({ placement: rail, sticky: true, offset: '12' }, style.top(12)),
+    compound({ placement: rail, sticky: true, offset: '14' }, style.top(14)),
+    compound({ placement: rail, sticky: true, offset: '16' }, style.top(16)),
+    compound({ placement: rail, sticky: true, offset: '20' }, style.top(20)),
+    compound({ placement: rail, sticky: true, offset: '24' }, style.top(24)),
+  ]}
 >
-  <row inline nowrap align="center" gap="2" class="sail-nav-brand" sx="font-weight: semibold shrink: 0">
+  <row inline nowrap align="center" gap="2" class="sail-nav-brand" sx={brand}>
     <slot name="brand"></slot>
   </row>
-  <div class="sail-nav-links" sx="contents">
+  <div class="sail-nav-links" sx={links}>
     <slot></slot>
   </div>
   <row
@@ -61,7 +67,7 @@
     align="center"
     justify="center"
     class="sail-nav-center"
-    sx="min-w: 0 grow: 1"
+    sx={center}
   >
     <slot name="center"></slot>
   </row>
@@ -71,7 +77,7 @@
     align="center"
     gap="2"
     class="sail-nav-actions"
-    sx="shrink: 0 ms: auto mt: auto"
+    sx={actions}
   >
     <slot name="actions"></slot>
   </row>

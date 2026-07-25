@@ -1,6 +1,6 @@
 <!--
   <code-block> — syntax-highlighted source.
-  pre sx (leading-code + tab-2); .tok-* via compiler descendant map → skins.
+  pre Style (leading-code + tab-2); .tok-* via compiler descendant map → skins.
 
   Paint: bg/fg from component.code-block tokens (cssNames code-block,
   code-block-foreground).
@@ -10,7 +10,10 @@
     code = ''
     lang = 'sail'
   }
+
+  const host = style.display(block)
+  const pre = style.m(0).fontFamily(mono).fontSize(sm).leading(code).tab(2).bg(code-block).fg(code-block-foreground).borderWidth(1).border(border).radius(lg).padY(4).padX(5).overflowX(auto).whitespace(pre)
 </scope>
-<div use:syntaxHighlight sx="block">
-  <pre sx="m: 0 font-family: mono font-size: sm leading: code tab: 2 bg: code-block color: code-block-foreground border border: border rounded: lg py: 4 px: 5 overflow-x: auto whitespace: pre"></pre>
+<div use:syntaxHighlight sx={host}>
+  <pre sx={pre}></pre>
 </div>

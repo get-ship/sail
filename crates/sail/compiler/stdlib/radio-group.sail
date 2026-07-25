@@ -5,11 +5,10 @@
   use:radioGroup gives every child radio's <input> the shared name (so native
   single-select + arrow navigation kick in), reflects the group's `value` to the
   checked radio, writes a hidden <input> for the form, and dispatches sail-change.
-  disabled / aria-label / required propagate from the group. Faithful to the
-  sail-radio-group twin, rebuilt on native radios.
+  disabled / aria-label / required propagate from the group.
 
-  Host paint: layout owns stack+gap (`<column gap="2">`); typeface is sx
-  (`font-body`). No author `<style>` — first stdlib element at zero raw skin.
+  Paint (Style product): layout owns stack+gap (`<column gap="2">`); typeface is Style.
+  tone/size remain ordinary props (stamped / behavior); no CVA paint maps.
 -->
 
 <scope>
@@ -22,6 +21,8 @@
     label = ''
     required = false
   }
+
+  const host = style.fontFamily(body)
 </scope>
 
-<column gap="2" sx="font-family: body" use:radioGroup role="radiogroup"><slot></slot></column>
+<column gap="2" sx={host} use:radioGroup role="radiogroup"><slot></slot></column>

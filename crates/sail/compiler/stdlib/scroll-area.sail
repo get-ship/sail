@@ -1,15 +1,29 @@
 <!--
-  <scroll-area> — standard + webkit scrollbar packs on host sx.
+  <scroll-area> — overflow axes + standard scrollbar pack on host Style.
   Paint: thumb from component.scroll-area tokens
          (cssNames scroll-area-thumb, scroll-area-thumb-hover).
+
+  Blocker: webkit scrollbar pseudo pack (scrollbar:w/h, thumb rounded/border/
+  bg-clip) has no Style setters yet — standard scrollbar-width/color only.
 -->
 <scope>
   props: {
-    orientation: {
-      vertical: 'overflow-x: hidden overflow-y: auto',
-      horizontal: 'overflow-x: auto overflow-y: hidden',
-      both: 'overflow: auto',
-    }
+    orientation: 'vertical' | 'horizontal' | 'both' = 'vertical'
   }
+
+  const base = style.overscroll(contain).scrollbarThin().scrollbarThumb(scroll-area-thumb).scrollbarTrack(transparent)
+  const vertical = style.overflowX(hidden).overflowY(auto)
+  const horizontal = style.overflowX(auto).overflowY(hidden)
+  const both = style.overflow(auto)
 </scope>
-<div sx="overflow-x: hidden overflow-y: auto overscroll: contain scrollbar-thin scrollbar-thumb: scroll-area-thumb scrollbar: w-2_5 scrollbar: h-2_5 scrollbar-track: bg-transparent scrollbar-thumb: bg-scroll-area-thumb scrollbar-thumb: rounded-full scrollbar-thumb: border-3 scrollbar-thumb: border-transparent scrollbar-thumb: bg-clip-padding hover:scrollbar-thumb: bg-scroll-area-thumb-hover"><slot></slot></div>
+<div sx={[
+  base,
+  match(orientation, {
+    vertical: vertical,
+    horizontal: horizontal,
+    both: both,
+  }),
+  when({
+    hover: style.scrollbarThumb(scroll-area-thumb-hover),
+  }),
+]}><slot></slot></div>

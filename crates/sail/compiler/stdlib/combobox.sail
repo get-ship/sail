@@ -18,18 +18,11 @@
   it rides through to the lowered root as an attribute and use:combobox forwards
   it to the inner input — the same way use:anchor reads `placement`.
 
-    <combobox placeholder="Pick a fruit">
-      <option value="apple">Apple</option>
-      <option value="banana">Banana</option>
-    </combobox>
-
-  Paint (one path):
-    host sx=         — block relative + typeface
-    child sx=        — input full width; listbox bg/fg from component.combobox
-                       tokens (cssNames combobox, combobox-foreground) + anchor
-    POPOVER_SKIN     — [role=listbox] option anatomy (author children; same
-                       shape as [role=menu] menuitem chrome)
-  No residual combobox matrix.
+  Paint (Style product):
+    host    — block relative + typeface
+    input   — full width
+    listbox — component.combobox tokens + anchor geometry + scroll chrome
+  POPOVER_SKIN [role=listbox] option anatomy (author children).
 -->
 
 <scope>
@@ -37,16 +30,20 @@
     placeholder = ''
     value = ''
   }
+
+  const host = style.display(block).position(relative).fontFamily(body)
+  const input = style.w(full)
+  const listbox = style.position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).minW(bind(anchorWidth)).maxH(panel-max-h-sm).overflowY(auto).overscroll(contain).pad(1).fg(combobox-foreground).bg(combobox).borderWidth(1).border(border).radius(md).shadow(lg).z(popover)
 </scope>
 
-<div use:combobox sx="block relative font-family: body">
-  <input class="input" type="text" sx="w: full">
+<div use:combobox sx={host}>
+  <input class="input" type="text" sx={input}>
   <div
     class="listbox"
     popover
     use:anchor
     placement="bottom-start"
-    sx="fixed inset: auto m: 0 left: (--anchor-left) top: (--anchor-top) min-w: (--anchor-width) max-h: panel-max-h-sm overflow-y: auto overscroll: contain p: 1 color: combobox-foreground bg: combobox border border: border rounded: md shadow: lg z: (--z-popover)"
+    sx={listbox}
   >
     <slot></slot>
   </div>

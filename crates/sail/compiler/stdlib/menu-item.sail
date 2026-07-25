@@ -1,5 +1,5 @@
 <!--
-  <menu-item> — item inside dropdown/context-menu. Host sx owns paint; no residue.
+  <menu-item> — item inside dropdown/context-menu. Style product host paint.
   Button L1 contract supplies inline-flex/align/gap chrome.
 
   Paint: fg / hover-bg from component.menu-item tokens (cssNames
@@ -11,11 +11,20 @@
     value = ''
     disabled = false
   }
+
+  const base = style.w(full).pad(2).padX(2_5).borderWidth(0).textAlign(start).fontFamily(body).fontSize(sm).leading(tight).fg(menu-item-foreground).bg(transparent).radius(sm).cursor(pointer).whitespace(nowrap)
 </scope>
 
 <button
   type="button"
-  sx="w: full p: 2 px: 2_5 border: 0 text: start font-family: body font-size: sm leading: tight color: menu-item-foreground bg: transparent rounded: sm cursor: pointer whitespace: nowrap hover:bg: menu-item-hover-bg focus:bg: menu-item-hover-bg focus:outline: solid focus:outline: 2 focus:outline: ring disabled:opacity: 50 disabled:cursor: not-allowed"
+  sx={[
+    base,
+    when({
+      hover: style.bg(menu-item-hover-bg),
+      focus: style.bg(menu-item-hover-bg).outline(solid).outline(2).outline(ring),
+      disabled: style.opacity(50).cursor(not-allowed),
+    }),
+  ]}
 >
   <slot></slot>
 </button>
