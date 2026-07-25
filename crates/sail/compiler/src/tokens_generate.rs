@@ -1470,7 +1470,8 @@ mod tests {
     }
 
     #[test]
-    fn tone_names_fall_back_when_model_has_no_ramps() {
+    fn tone_names_are_l1_host_convention_not_token_ramps() {
+        // color.tone.* ramps are gone — ToneName is the fixed L1 host prop list.
         let tokens = vec![Token {
             path: "color.primary".into(),
             css_name: "primary".into(),
@@ -1481,8 +1482,29 @@ mod tests {
             description: None,
         }];
         let (names, source) = tone_names_from_tokens(&tokens);
-        assert_eq!(names, TONE_FALLBACK.iter().map(|s| (*s).to_string()).collect::<Vec<_>>());
-        assert!(source.contains("fallback"));
+        assert_eq!(
+            names,
+            TONE_FALLBACK
+                .iter()
+                .map(|s| (*s).to_string())
+                .collect::<Vec<_>>()
+        );
+        assert!(source.contains("l1-convention"), "source={source}");
+        assert!(source.contains("not design-token"), "source={source}");
+        // Even if a caller stuffed tone paths into the token list, membership
+        // stays the fixed convention (no dual-path derivation from ramps).
+        let with_stale_ramp = vec![Token {
+            path: "color.tone.primary.bg".into(),
+            css_name: "tone-primary-bg".into(),
+            r#type: "color".into(),
+            value: "oklch(0.9 0.05 250)".into(),
+            css_value: "oklch(0.9 0.05 250)".into(),
+            channel: false,
+            description: None,
+        }];
+        let (names2, source2) = tone_names_from_tokens(&with_stale_ramp);
+        assert_eq!(names2, names);
+        assert_eq!(source2, source);
     }
 
     #[test]

@@ -2415,8 +2415,8 @@
     "var-ref"
   ],
   "tokens": {
-    "count": 496,
-    "colors_count": 240,
+    "count": 456,
+    "colors_count": 200,
     "sample_names": [
       "accent",
       "accent-agents",
