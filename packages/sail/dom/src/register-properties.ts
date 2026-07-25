@@ -15,20 +15,40 @@
  * `<head>` is the correct home, not a per-component donut.
  *
  * `id` is content-addressed (an FNV-1a hash of `css`, computed by the
- * compiler) so re-mounting the same component, or two different components
- * that happen to register the same set of properties, both no-op after the
- * first install.
+ * compiler) so re-mounting the same component no-ops after the first install.
+ * Two components with OVERLAPPING-but-not-identical property sets hash
+ * differently, so installs additionally dedupe per property NAME against the
+ * global registry: rules for already-registered names are dropped and only
+ * the fresh ones are installed (the CSSOM allows one registration per name
+ * spec-wide — a duplicate rule buys nothing).
  */
 export function registerCustomProperties(id: string, css: string): void {
-  // Record the token names this install declares BEFORE the dedupe early-return,
-  // so the registry is populated even when the `<style>` is already present
-  // (a re-mount, or two components that register the same set). Set adds are
-  // idempotent, so this is cheap and safe to run every time.
-  recordRegisteredTokens(css)
-  if (document.getElementById(id)) return
+  const reg = registry()
+  // Whole-block fast path: an identical block (same content hash → same id)
+  // is already installed. Still record the token names this block declares
+  // BEFORE returning, so the registry is populated even when the `<style>`
+  // is already present (a re-mount, or two components that register the same
+  // set — the registry may have been reset independently of the DOM).
+  if (document.getElementById(id)) {
+    recordRegisteredTokens(css)
+    return
+  }
+  // Property-level dedup: the CSSOM allows ONE `@property` registration per
+  // custom-property name spec-wide, so once a name is registered any later
+  // rule for it adds nothing but another global `<style>` tag. Keep only the
+  // rules whose names this session has not registered yet, recording them as
+  // we go (a name skipped here is by definition already in the registry).
+  let fresh = ''
+  for (const m of css.matchAll(PROPERTY_BLOCK)) {
+    const name = m[1]!
+    if (reg.has(name)) continue
+    reg.add(name)
+    fresh += m[0]
+  }
+  if (!fresh) return
   const style = document.createElement('style')
   style.id = id
-  style.textContent = css
+  style.textContent = fresh
   document.head.appendChild(style)
 }
 
@@ -56,6 +76,12 @@ function registry(): Set<string> {
 // shape (see `emit::styles::register_properties_install_js`); a permissive
 // matcher keeps the registry honest even if the block formatting drifts.
 const PROPERTY_RULE = /@property\s+(--[\w-]+)/g
+
+// A full `@property --foo { ... }` rule → capture the name plus the whole
+// block. The compiler emits exactly this shape, concatenated with no
+// separator (see `emit::styles::register_properties_install_js`), and the
+// descriptor bodies never contain `}`, so `[^}]*` is a sound terminator.
+const PROPERTY_BLOCK = /@property\s+(--[\w-]+)\s*\{[^}]*\}/g
 
 function recordRegisteredTokens(css: string): void {
   const reg = registry()

@@ -1,9 +1,10 @@
-// Tone as attribute-keyed CSS custom properties on the element. Platform
-// controls (native <button>, <a variant>, range, progress, …) paint from
-// --tone* in contracts — they are NOT Style hosts. Removing this channel
-// without a full Style migration made tone="primary" a no-op and turned
+// Tone as attribute-keyed CSS custom properties on the element. RESIDUAL:
+// only <a variant> still paints from --tone* — native <button> migrated to
+// the Style product (stdlib button.sail: match(variant) + compound({variant,
+// tone}) with direct semantic/tone-ramp tokens, element-skins.css). Removing
+// this channel without that migration made tone="primary" a no-op and turned
 // solid buttons into ink-on-paper (var(--foreground)) — atomic regression.
-// Keep the channel until those skins truly live on Style product paint.
+// The channel dies when an anchor element lands the same way.
 const TONES_CSS =
   "[tone='default']     { --tone: var(--foreground);       --tone-fg: var(--foreground);       --tone-contrast: var(--background);              --tone-bg: var(--hover-bg);            --tone-border: var(--border);                 --tone-ring: var(--ring);                     --tone-glow: var(--glow-default); }\n" +
   "[tone='primary']     { --tone: var(--primary);          --tone-fg: var(--primary);          --tone-contrast: var(--primary-foreground);     --tone-bg: var(--tone-primary-bg);     --tone-border: var(--tone-primary-border);     --tone-ring: var(--tone-primary-ring);        --tone-glow: var(--glow-primary); }\n" +
@@ -12,8 +13,7 @@ const TONES_CSS =
   "[tone='warning']     { --tone: var(--warning);          --tone-fg: var(--tone-warning-fg);  --tone-contrast: var(--warning-foreground);     --tone-bg: var(--tone-warning-bg);     --tone-border: var(--tone-warning-border);     --tone-ring: var(--tone-warning-ring);        --tone-glow: var(--glow-warning); }\n" +
   "[tone='destructive'] { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring);    --tone-glow: var(--glow-destructive); }\n" +
   "[tone='accent']      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring);         --tone-glow: var(--glow-accent); }\n" +
-  "[tone='muted']       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring);          --tone-glow: var(--glow-muted); }\n" +
-  ":where(input[invalid], input[aria-invalid='true'], select[invalid], select[aria-invalid='true'], textarea[invalid], textarea[aria-invalid='true']) { --tone-border: var(--destructive); --tone-ring: var(--tone-destructive-ring); }\n"
+  "[tone='muted']       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring);          --tone-glow: var(--glow-muted); }\n"
 
 // --size-* channel removed (geometry is direct [size] → control-h/text tokens).
 // Empty sheet kept so shadow adoptSuiSheets still has a sizes slot.
@@ -342,15 +342,25 @@ const BUTTON_SKIN_CSS =
   // mode → darker; light in dark mode → lighter), so the button stays its
   // own tone instead of collapsing to a neutral grey, and --tone-contrast
   // text stays readable.
-  // solid / soft / outline / ghost read --tone* from the [tone=] channel.
-  // Fallbacks keep untoned buttons as ink-on-paper (foreground/background).
-  ":where(button[variant='solid'], a[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); --button-shadow: var(--shadow-xs); }\n" +
-  ":where(button[variant='solid'], a[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }\n" +
-  ":where(button[variant='soft'], a[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }\n" +
-  ":where(button[variant='soft'], a[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }\n" +
-  ":where(button[variant='outline'], a[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }\n" +
-  ":where(button[variant='outline'], button[variant='ghost'], a[variant='outline'], a[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }\n" +
-  ":where(button[variant='ghost'], a[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }\n" +
+  // BUTTON halves are the untoned 9940b8c5 fallbacks — tone-aware button
+  // paint is the Style product now (stdlib button.sail → element-skins.css,
+  // whose class-guarded attribute rules override these :where() rules).
+  // ANCHOR halves still read --tone* from the [tone=] channel until an
+  // anchor element lands the same migration.
+  ":where(button[variant='solid']) { background: var(--foreground); border-color: var(--foreground); color: var(--background); --button-shadow: var(--shadow-xs); }\n" +
+  ":where(a[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); --button-shadow: var(--shadow-xs); }\n" +
+  ":where(button[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--foreground), var(--foreground) 15%); border-color: color-mix(in oklch, var(--foreground), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }\n" +
+  ":where(a[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }\n" +
+  ":where(button[variant='soft']) { background: var(--hover-bg); border-color: var(--border); color: var(--foreground); }\n" +
+  ":where(a[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(button[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--hover-bg), var(--foreground) 18%); border-color: var(--border); }\n" +
+  ":where(a[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }\n" +
+  ":where(button[variant='outline']) { border-color: var(--foreground); color: var(--foreground); }\n" +
+  ":where(a[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }\n" +
+  ":where(button[variant='outline'], button[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--foreground) 10%, transparent); }\n" +
+  ":where(a[variant='outline'], a[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }\n" +
+  ":where(button[variant='ghost']) { color: var(--foreground); }\n" +
+  ":where(a[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }\n" +
   // Interaction motion (reduced-motion kills it via the global media rule).
   //
   // These two literals used to decide the whole product's tactile

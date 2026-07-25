@@ -39,4 +39,32 @@ describe('token registry', () => {
     registerCustomProperties('sail-props-install', "@property --x { syntax: '*'; inherits: true; }")
     expect(document.getElementById('sail-props-install')?.textContent).toContain('@property --x')
   })
+
+  it('dedupes per property NAME across overlapping blocks', () => {
+    registerCustomProperties(
+      'sail-props-one',
+      "@property --a { syntax: '*'; inherits: true; }@property --b { syntax: '*'; inherits: true; }",
+    )
+    registerCustomProperties(
+      'sail-props-two',
+      "@property --b { syntax: '<number>'; inherits: true; initial-value: 0; }" +
+        "@property --c { syntax: '*'; inherits: true; }",
+    )
+    const two = document.getElementById('sail-props-two')
+    // --b was already registered by block one: only the fresh --c rule lands.
+    expect(two?.textContent).not.toContain('@property --b')
+    expect(two?.textContent).toContain('@property --c')
+    expect(isRegisteredThemeToken('--b')).toBe(true)
+    expect(isRegisteredThemeToken('--c')).toBe(true)
+  })
+
+  it('installs no <style> when every property in the block is already registered', () => {
+    registerCustomProperties('sail-props-first', "@property --seen { syntax: '*'; inherits: true; }")
+    registerCustomProperties(
+      'sail-props-second',
+      "@property --seen { syntax: '<number>'; inherits: true; initial-value: 0; }",
+    )
+    expect(document.getElementById('sail-props-second')).toBeNull()
+    expect(document.querySelectorAll('style')).toHaveLength(1)
+  })
 })

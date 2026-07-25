@@ -64,7 +64,6 @@
 [tone='destructive'] { --tone: var(--destructive);      --tone-fg: var(--destructive);      --tone-contrast: var(--destructive-foreground); --tone-bg: var(--tone-destructive-bg); --tone-border: var(--tone-destructive-border); --tone-ring: var(--tone-destructive-ring);    --tone-glow: var(--glow-destructive); }
 [tone='accent']      { --tone: var(--accent);           --tone-fg: var(--accent);           --tone-contrast: var(--accent-foreground);      --tone-bg: var(--tone-accent-bg);      --tone-border: var(--tone-accent-border);      --tone-ring: var(--tone-accent-ring);         --tone-glow: var(--glow-accent); }
 [tone='muted']       { --tone: var(--muted-foreground); --tone-fg: var(--muted-foreground); --tone-contrast: var(--background);              --tone-bg: var(--tone-muted-bg);       --tone-border: var(--tone-muted-border);       --tone-ring: var(--tone-muted-ring);          --tone-glow: var(--glow-muted); }
-:where(input[invalid], input[aria-invalid='true'], select[invalid], select[aria-invalid='true'], textarea[invalid], textarea[aria-invalid='true']) { --tone-border: var(--destructive); --tone-ring: var(--tone-destructive-ring); }
 :where(button, a[variant], input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, select)[size='xs'] { min-height: var(--control-h-2xs); padding-inline: var(--space-2); font-size: var(--text-xs); gap: var(--space-1); }
 :where(button, a[variant], input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, select)[size='sm'] { min-height: var(--control-h-sm); padding-inline: var(--space-2_5); font-size: var(--text-sm); gap: var(--space-1_5); }
 :where(button, a[variant], input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, select)[size='md'] { min-height: var(--control-h-md); padding-inline: var(--space-3); font-size: var(--text-base); gap: var(--space-2); }
@@ -113,13 +112,20 @@ iframe { max-width: 100%; border: 0; }
 :where(button:not([anatomy]), a[variant]) { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control-h-md); padding: 0 var(--space-3); font-size: var(--text-base); font-weight: var(--font-weight-medium); border-radius: var(--radius-md); border: var(--border-width) solid transparent; border-image: var(--corner-image); background: transparent; isolation: isolate; position: relative; box-shadow: var(--control-frame), var(--button-shadow, 0 0 0 0 transparent); }
 :where(button:not([variant]):not([anatomy]), button[variant='default'], a[variant='default']) { background: var(--background); border-color: var(--border); color: var(--foreground); --button-shadow: var(--shadow-xs); }
 :where(button:not([variant]):not([anatomy]), button[variant='default'], a[variant='default']):hover:not(:disabled) { background: var(--muted); border-color: var(--border-strong); }
-:where(button[variant='solid'], a[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); --button-shadow: var(--shadow-xs); }
-:where(button[variant='solid'], a[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }
-:where(button[variant='soft'], a[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }
-:where(button[variant='soft'], a[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }
-:where(button[variant='outline'], a[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }
-:where(button[variant='outline'], button[variant='ghost'], a[variant='outline'], a[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }
-:where(button[variant='ghost'], a[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }
+:where(button[variant='solid']) { background: var(--foreground); border-color: var(--foreground); color: var(--background); --button-shadow: var(--shadow-xs); }
+:where(a[variant='solid']) { background: var(--tone, var(--foreground)); border-color: var(--tone, var(--foreground)); color: var(--tone-contrast, var(--background)); --button-shadow: var(--shadow-xs); }
+:where(button[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--foreground), var(--foreground) 15%); border-color: color-mix(in oklch, var(--foreground), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }
+:where(a[variant='solid']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); border-color: color-mix(in oklch, var(--tone, var(--foreground)), var(--foreground) 15%); --button-shadow: var(--shadow-sm); }
+:where(button[variant='soft']) { background: var(--hover-bg); border-color: var(--border); color: var(--foreground); }
+:where(a[variant='soft']) { background: var(--tone-bg, var(--hover-bg)); border-color: var(--tone-border, var(--border)); color: var(--tone-fg, var(--foreground)); }
+:where(button[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--hover-bg), var(--foreground) 18%); border-color: var(--border); }
+:where(a[variant='soft']):hover:not(:disabled) { background: color-mix(in oklch, var(--tone-bg, var(--hover-bg)), var(--tone, var(--foreground)) 18%); border-color: var(--tone, var(--tone-border)); }
+:where(button[variant='outline']) { border-color: var(--foreground); color: var(--foreground); }
+:where(a[variant='outline']) { border-color: var(--tone, var(--foreground)); color: var(--tone-fg, var(--foreground)); }
+:where(button[variant='outline'], button[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--foreground) 10%, transparent); }
+:where(a[variant='outline'], a[variant='ghost']):hover:not(:disabled) { background: color-mix(in srgb, var(--tone, var(--foreground)) 10%, transparent); }
+:where(button[variant='ghost']) { color: var(--foreground); }
+:where(a[variant='ghost']) { color: var(--tone-fg, var(--foreground)); }
 :where(button:not([anatomy]), a[variant]):hover:not(:disabled) { transform: translateY(var(--control-lift)); }
 :where(button:not([anatomy]), a[variant]):active:not(:disabled) { transform: translateY(var(--press-translate)) scale(var(--press-scale)); box-shadow: var(--control-frame), var(--press-shadow), var(--button-shadow, 0 0 0 0 transparent); }
 :where(button[variant='ghost'], button[variant='outline']):disabled { background: transparent; }
