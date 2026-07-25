@@ -25,42 +25,42 @@ export default controller(() => {
 })
 </controller>
 
-<column gap="6" sx="p-6 max-w-breakpoint-tablet mx-auto">
+<column gap="6" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
   <header>
-    <h1 sx="text-2xl font-bold text-foreground">SUI Component Gallery</h1>
-    <p sx="text-muted-foreground text-sm leading-relaxed mt-2">
-      Primitives marked <strong sx="text-foreground">sui/*</strong> are real, fully implemented SUI
-      components. Sections marked <strong sx="text-foreground">ship/*</strong> are domain stubs
+    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground)}>SUI Component Gallery</h1>
+    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed).mt(2)}>
+      Primitives marked <strong sx={style.fg(foreground)}>sui/*</strong> are real, fully implemented SUI
+      components. Sections marked <strong sx={style.fg(foreground)}>ship/*</strong> are domain stubs
       backed by the deck-conformance in-memory store — they exercise the live-data
       wire but carry no production Ship logic.
     </p>
   </header>
 
-  <column gap="3" sx="border border-border rounded-lg bg-surface-1 p-5">
-    <h2 sx="text-lg font-semibold text-foreground">Theme</h2>
+  <column gap="3" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
+    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}>Theme</h2>
     <row gap="2">
-      <button aria-pressed={activeTheme() === 'ship-light'} on:click={() => activeTheme.set('ship-light')} sx="pressed:bg-foreground pressed:text-background rounded-md px-3 py-1">SHIP Light</button>
-      <button aria-pressed={activeTheme() === 'ship-dark'} on:click={() => activeTheme.set('ship-dark')} sx="pressed:bg-foreground pressed:text-background rounded-md px-3 py-1">SHIP Dark</button>
-      <button aria-pressed={activeTheme() === 'paper'} on:click={() => activeTheme.set('paper')} sx="pressed:bg-foreground pressed:text-background rounded-md px-3 py-1">Paper</button>
-      <button aria-pressed={activeTheme() === 'halo'} on:click={() => activeTheme.set('halo')} sx="pressed:bg-foreground pressed:text-background rounded-md px-3 py-1">Halo</button>
-      <button aria-pressed={activeTheme() === 'console'} on:click={() => activeTheme.set('console')} sx="pressed:bg-foreground pressed:text-background rounded-md px-3 py-1">Console</button>
-      <button aria-pressed={activeTheme() === 'contrast'} on:click={() => activeTheme.set('contrast')} sx="pressed:bg-foreground pressed:text-background rounded-md px-3 py-1">Contrast</button>
+      <button aria-pressed={activeTheme() === 'ship-light'} on:click={() => activeTheme.set('ship-light')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>SHIP Light</button>
+      <button aria-pressed={activeTheme() === 'ship-dark'} on:click={() => activeTheme.set('ship-dark')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>SHIP Dark</button>
+      <button aria-pressed={activeTheme() === 'paper'} on:click={() => activeTheme.set('paper')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>Paper</button>
+      <button aria-pressed={activeTheme() === 'halo'} on:click={() => activeTheme.set('halo')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>Halo</button>
+      <button aria-pressed={activeTheme() === 'console'} on:click={() => activeTheme.set('console')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>Console</button>
+      <button aria-pressed={activeTheme() === 'contrast'} on:click={() => activeTheme.set('contrast')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>Contrast</button>
     </row>
-    <p sx="text-muted-foreground text-sm font-mono">Active: {activeTheme()}</p>
+    <p sx={style.fg(muted-foreground).fontSize(sm).fontFamily(mono)}>Active: {activeTheme()}</p>
   </column>
 
-  <column gap="2" sx="border border-border rounded-lg bg-surface-1 p-5">
-    <h2 sx="text-lg font-semibold text-foreground">Shared components</h2>
-    <p sx="text-muted-foreground text-sm">
+  <column gap="2" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
+    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}>Shared components</h2>
+    <p sx={style.fg(muted-foreground).fontSize(sm)}>
       demo-chip resolves from the app's component workspace; widgets uses the
       same tag, so the multi-entry build hoists it into one shared chunk.
     </p>
     <demo-chip>gallery-alpha</demo-chip>
   </column>
 
-  <column gap="2" sx="border border-border rounded-lg bg-surface-1 p-5">
-     <h2 sx="text-lg font-semibold text-foreground">Pack sections</h2>
-    <column gap="1" sx="list-none p-0 m-0">
+  <column gap="2" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
+     <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}>Pack sections</h2>
+    <column gap="1" sx={style.list(none).pad(0).m(0)}>
        <li><a href="/_deck/view/counter">counter — signal basics (sui/*)</a></li>
        <li><a href="/_deck/view/clock">clock — live data tick (&lt;client name="api"&gt;, api/demo.*)</a></li>
        <li><a href="/_deck/view/todos">todos — live list + mutation (ship/demo.*)</a></li>

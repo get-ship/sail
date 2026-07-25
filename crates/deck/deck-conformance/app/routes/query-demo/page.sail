@@ -34,9 +34,9 @@ export default controller(() => {
 })
 </controller>
 
-<column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">
-  <h1 sx="text-2xl font-bold text-foreground">query() demo</h1>
-  <p sx="text-muted-foreground text-sm">A real query()/mutation() round-trip against crm-demo.ts.</p>
+<column gap="3" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
+  <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground)}>query() demo</h1>
+  <p sx={style.fg(muted-foreground).fontSize(sm)}>A real query()/mutation() round-trip against crm-demo.ts.</p>
 
   <row gap="2">
     <button on:click={() => stage.set('open')} aria-pressed={stage() === 'open'}>open</button>
@@ -44,13 +44,13 @@ export default controller(() => {
   </row>
 
   {#if deals().kind === 'loading'}
-  <p sx="text-muted-foreground text-sm" data-testid="deals-loading">Loading…</p>
+  <p sx={style.fg(muted-foreground).fontSize(sm)} data-testid="deals-loading">Loading…</p>
   {/if}
   {#if deals().kind === 'error'}
-  <p sx="text-destructive text-sm" data-testid="deals-error">Error</p>
+  <p sx={style.fg(destructive).fontSize(sm)} data-testid="deals-error">Error</p>
   {/if}
   {#if deals().kind === 'ok'}
-  <column gap="1" sx="list-none p-0 m-0" data-testid="deals-list">
+  <column gap="1" sx={style.list(none).pad(0).m(0)} data-testid="deals-list">
     {#for deal of deals().value.items key={deal.id}}
     <li>{deal.id} — {deal.stage} — {deal.amount}</li>
     {/for}

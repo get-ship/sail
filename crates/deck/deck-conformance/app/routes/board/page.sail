@@ -32,19 +32,19 @@ export default controller(() => {
   })
 </controller>
 
-<column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">
-  <h1 sx="text-2xl font-bold text-foreground">Board</h1>
+<column gap="3" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
+  <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground)}>Board</h1>
   {#if items().length > 0}
-  <column gap="2" sx="list-none p-0 m-0">
+  <column gap="2" sx={style.list(none).pad(0).m(0)}>
     {#for item of items() key={item.id}}
-    <row gap="2" align="center" sx="pressed:bg-tone-warning-bg pressed:border-tone-warning-border rounded-md p-2 border border-transparent" aria-pressed={item.flagged}>
+    <row gap="2" align="center" sx={style.radius(md).pad(2).borderWidth(1).border(transparent).when({ pressed: style.bg(tone-warning-bg).border(tone-warning-border) })} aria-pressed={item.flagged}>
       <demo-chip>{item.label}</demo-chip>
       <button on:click={() => remove(item.id)}>remove</button>
     </row>
     {/for}
   </column>
   {:else}
-  <p sx="text-muted-foreground text-sm italic">Nothing on the board.</p>
+  <p sx={style.fg(muted-foreground).fontSize(sm).italic(true)}>Nothing on the board.</p>
   {/if}
   <button on:click={() => add()}>add</button>
 </column>

@@ -1,7 +1,7 @@
-<column gap="8" sx="p-6 max-w-breakpoint-tablet mx-auto">
-  <header sx="border-b border-b-border pb-4">
-    <h1 sx="text-2xl font-bold text-foreground mb-2">sui/media — Domain Stubs</h1>
-    <p sx="text-muted-foreground text-sm">
+<column gap="8" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
+  <header sx={style.borderBWidth(1).borderB(border).padB(4)}>
+    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)}>sui/media — Domain Stubs</h1>
+    <p sx={style.fg(muted-foreground).fontSize(sm)}>
       Pack <strong>sui/media</strong>. Each card renders the real custom element
       tag with static mock attribute values so the shell registers and paints.
       A visible badge marks each card as a domain stub — no <code>ship.*</code>
@@ -13,12 +13,12 @@
   </header>
 
   <!-- ── sail-media-av ──────────────────────────────────────────────── -->
-  <column gap="4" sx="border border-border rounded-lg bg-surface-1 p-5">
-    <h2 sx="text-lg font-semibold text-foreground font-mono">
+  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
+    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground).fontFamily(mono)}>
       <code>sail-media-av</code>
-      <span sx="text-xs font-medium font-body text-warning-foreground bg-warning rounded-sm px-2 py-1 tracking-wide ms-3">domain-stub — awaits backend spec</span>
+      <span sx={style.fontSize(xs).fontWeight(medium).fontFamily(body).fg(warning-foreground).bg(warning).radius(sm).padX(2).padY(1).tracking(wide).ms(3)}>domain-stub — awaits backend spec</span>
     </h2>
-    <p sx="text-muted-foreground text-sm leading-relaxed">
+    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
       Props: <code>kind: video|audio|auto</code> (reflect),
       <code>autoplay: bool</code> (reflect, default false),
       <code>controls: bool</code> (reflect, default true),
@@ -29,32 +29,32 @@
       default empty state.
     </p>
     <column gap="4">
-      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
-        <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">kind=video controls</span>
+      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
+        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=video controls</span>
         <sail-media-av kind="video" controls></sail-media-av>
       </column>
-      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
-        <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">kind=audio controls</span>
+      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
+        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=audio controls</span>
         <sail-media-av kind="audio" controls></sail-media-av>
       </column>
-      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
-        <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">kind=audio controls waveform</span>
+      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
+        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=audio controls waveform</span>
         <sail-media-av kind="audio" controls waveform></sail-media-av>
       </column>
-      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
-        <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">kind=auto controls (default)</span>
+      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
+        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=auto controls (default)</span>
         <sail-media-av kind="auto" controls></sail-media-av>
       </column>
     </column>
   </column>
 
   <!-- ── sail-media-csv ─────────────────────────────────────────────── -->
-  <column gap="4" sx="border border-border rounded-lg bg-surface-1 p-5">
-    <h2 sx="text-lg font-semibold text-foreground font-mono">
+  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
+    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground).fontFamily(mono)}>
       <code>sail-media-csv</code>
-      <span sx="text-xs font-medium font-body text-warning-foreground bg-warning rounded-sm px-2 py-1 tracking-wide ms-3">domain-stub — awaits backend spec</span>
+      <span sx={style.fontSize(xs).fontWeight(medium).fontFamily(body).fg(warning-foreground).bg(warning).radius(sm).padX(2).padY(1).tracking(wide).ms(3)}>domain-stub — awaits backend spec</span>
     </h2>
-    <p sx="text-muted-foreground text-sm leading-relaxed">
+    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
       Props: <code>delimiter: comma|tab|auto</code> (reflect, default auto),
       <code>header: bool</code> (reflect, default true),
       <code>text: string</code> (SSR/declarative fallback — inline CSV text).
@@ -63,22 +63,22 @@
       Composes <code>sail-table variant="data"</code> internally.
     </p>
     <column gap="4">
-      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
-        <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">delimiter=comma header text (inline CSV)</span>
+      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
+        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>delimiter=comma header text (inline CSV)</span>
         <sail-media-csv delimiter="comma" header text="Name,Role,Status
 Alice,Engineer,active
 Bob,Designer,active
 Carol,PM,inactive"></sail-media-csv>
       </column>
-      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
-        <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">delimiter=tab header text (inline TSV)</span>
+      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
+        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>delimiter=tab header text (inline TSV)</span>
         <sail-media-csv delimiter="tab" header text="File	Size	Modified
 readme.md	1.2 KB	2026-06-01
 main.ts	4.8 KB	2026-06-04
 style.css	2.1 KB	2026-05-30"></sail-media-csv>
       </column>
-      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
-        <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">delimiter=auto no-header</span>
+      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
+        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>delimiter=auto no-header</span>
         <sail-media-csv delimiter="auto" text="alpha,1,true
 beta,2,false
 gamma,3,true"></sail-media-csv>
@@ -87,12 +87,12 @@ gamma,3,true"></sail-media-csv>
   </column>
 
   <!-- ── sail-media-image ───────────────────────────────────────────── -->
-  <column gap="4" sx="border border-border rounded-lg bg-surface-1 p-5">
-    <h2 sx="text-lg font-semibold text-foreground font-mono">
+  <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
+    <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground).fontFamily(mono)}>
       <code>sail-media-image</code>
-      <span sx="text-xs font-medium font-body text-warning-foreground bg-warning rounded-sm px-2 py-1 tracking-wide ms-3">domain-stub — awaits backend spec</span>
+      <span sx={style.fontSize(xs).fontWeight(medium).fontFamily(body).fg(warning-foreground).bg(warning).radius(sm).padX(2).padY(1).tracking(wide).ms(3)}>domain-stub — awaits backend spec</span>
     </h2>
-    <p sx="text-muted-foreground text-sm leading-relaxed">
+    <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
       Props: <code>alt: string</code> (reflect),
       <code>fit: contain|cover|actual</code> (reflect, default contain),
       <code>zoomable: bool</code> (reflect, default true),
@@ -102,20 +102,20 @@ gamma,3,true"></sail-media-csv>
       <code>src</code> array drives the thumbnail strip.
     </p>
     <column gap="4">
-      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
-        <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">fit=contain zoomable (default)</span>
+      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
+        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>fit=contain zoomable (default)</span>
         <sail-media-image alt="Sample image — contain fit" fit="contain" zoomable></sail-media-image>
       </column>
-      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
-        <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">fit=cover zoomable</span>
+      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
+        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>fit=cover zoomable</span>
         <sail-media-image alt="Sample image — cover fit" fit="cover" zoomable></sail-media-image>
       </column>
-      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
-        <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">fit=actual (no zoom)</span>
+      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
+        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>fit=actual (no zoom)</span>
         <sail-media-image alt="Sample image — actual size" fit="actual"></sail-media-image>
       </column>
-      <column gap="2" sx="border border-divider rounded-md p-3 bg-surface-2">
-        <span sx="text-xs font-medium text-muted-foreground lowercase tracking-wide font-mono">gallery mode (strip, no src array wired)</span>
+      <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
+        <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>gallery mode (strip, no src array wired)</span>
         <sail-media-image alt="Gallery demo" fit="contain" gallery></sail-media-image>
       </column>
     </column>
