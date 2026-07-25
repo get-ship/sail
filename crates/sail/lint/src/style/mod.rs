@@ -607,6 +607,29 @@ mod tests {
             css.contains("color-mix(in oklch, var(--primary) 15%, transparent)"),
             "{css}"
         );
+
+        // bgWash bind arm for the color token.
+        let (style, diags) = parse("style.bgWash(bind(swatch), 25)");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains("var(--swatch)"), "{css}");
+        assert!(
+            css.contains("color-mix(in oklch, var(--swatch) 25%, transparent)"),
+            "{css}"
+        );
+
+        // bgWash fail-closed: third arg is BadArity.
+        let (_, diags) = parse("style.bgWash(primary, 15, extra)");
+        assert!(
+            diags.iter().any(|d| matches!(d, StyleDiagnostic::BadArity { .. })),
+            "bgWash must reject third arg: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+
         // bgWash fail-closed: off-ramp percent.
         let (_, diags) = parse("style.bgWash(primary, 14)");
         assert!(

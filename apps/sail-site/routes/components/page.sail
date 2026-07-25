@@ -152,7 +152,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <column gap="4" sx={gridCol}>
       <!-- ══ Featured live demos ═══════════════════════════════════════ -->
       <column gap="2">
-        <p sx={sectionTitle}>Live — language surface</p>
+        <p sx={sectionTitle}>Live — Component primitives</p>
         <grid cols="4" gap="3">
           <card padding="none" data-tile="button" data-live sx={tile}>
             <column gap="0" sx={tileCol}>
