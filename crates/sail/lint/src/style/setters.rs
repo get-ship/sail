@@ -69,7 +69,9 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "ms", vocab: "ms", scale: Some("space"), keywords: &["0", "auto"], negatable: true },
         SetterSpec { name: "me", vocab: "me", scale: Some("space"), keywords: &["0", "auto"], negatable: true },
         SetterSpec { name: "minH", vocab: "min-h", scale: Some("size"), keywords: &["0", "full", "screen"], negatable: false },
-        SetterSpec { name: "minW", vocab: "min-w", scale: Some("size"), keywords: &["0", "full"], negatable: false },
+        SetterSpec { name: "minW", vocab: "min-w", scale: Some("size"), keywords: &["0", "full", "menu-min-w", "panel-rail-w"], negatable: false },
+        SetterSpec { name: "maxH", vocab: "max-h", scale: Some("size"), keywords: &["0", "full", "screen"], negatable: false },
+        SetterSpec { name: "maxW", vocab: "max-w", scale: Some("size"), keywords: &["0", "full", "screen", "none"], negatable: false },
         SetterSpec {
             name: "w",
             vocab: "w",
@@ -92,8 +94,18 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "tracking", vocab: "tracking", scale: Some("tracking"), keywords: &[], negatable: false },
         SetterSpec { name: "shadow", vocab: "shadow", scale: Some("shadow"), keywords: &["none"], negatable: false },
         SetterSpec { name: "opacity", vocab: "opacity", scale: None, keywords: &["0", "5", "10", "20", "25", "30", "40", "50", "60", "70", "75", "80", "90", "95", "100"], negatable: false },
-        SetterSpec { name: "whitespace", vocab: "whitespace", scale: None, keywords: &["normal", "nowrap", "pre", "pre-line", "pre-wrap"], negatable: false },
+        SetterSpec { name: "whitespace", vocab: "whitespace", scale: None, keywords: &["normal", "nowrap", "pre", "pre-line", "pre-wrap", "break-spaces"], negatable: false },
         SetterSpec { name: "align", vocab: "align", scale: None, keywords: &["baseline", "top", "middle", "bottom", "text-top", "text-bottom"], negatable: false },
+        SetterSpec {
+            name: "textAlign",
+            vocab: "text",
+            scale: None,
+            keywords: &["left", "center", "right", "justify", "start", "end"],
+            negatable: false,
+        },
+        SetterSpec { name: "break", vocab: "break", scale: None, keywords: &["normal", "words", "all", "keep"], negatable: false },
+        SetterSpec { name: "stroke", vocab: "stroke", scale: Some("color"), keywords: &["none", "current", "currentColor"], negatable: false },
+        SetterSpec { name: "fill", vocab: "fill", scale: Some("color"), keywords: &["none", "current", "currentColor"], negatable: false },
         SetterSpec { name: "ring", vocab: "outline", scale: Some("color"), keywords: &["none"], negatable: false },
         SetterSpec { name: "outline", vocab: "outline", scale: None, keywords: &["none", "solid", "dashed", "1", "2", "4", "ring-width", "ring"], negatable: false },
         SetterSpec { name: "outlineOffset", vocab: "outline-offset", scale: Some("space"), keywords: &["0", "ring-offset", "ring-inset"], negatable: false },
@@ -110,6 +122,19 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "select", vocab: "select", scale: None, keywords: &["none", "text", "all", "auto"], negatable: false },
         SetterSpec { name: "pointerEvents", vocab: "pointer-events", scale: None, keywords: &["none", "auto"], negatable: false },
         SetterSpec { name: "overflow", vocab: "overflow", scale: None, keywords: &["auto", "hidden", "clip", "visible", "scroll"], negatable: false },
+        SetterSpec { name: "overflowX", vocab: "overflow-x", scale: None, keywords: &["auto", "hidden", "clip", "visible", "scroll"], negatable: false },
+        SetterSpec { name: "overflowY", vocab: "overflow-y", scale: None, keywords: &["auto", "hidden", "clip", "visible", "scroll"], negatable: false },
+        SetterSpec { name: "overscroll", vocab: "overscroll", scale: None, keywords: &["auto", "contain", "none"], negatable: false },
+        SetterSpec { name: "tab", vocab: "tab", scale: None, keywords: &["1", "2", "4", "8"], negatable: false },
+        SetterSpec {
+            name: "underline",
+            vocab: "underline",
+            scale: None,
+            keywords: &["true", "none", "line-through"],
+            negatable: false,
+        },
+        SetterSpec { name: "scrollbarThumb", vocab: "scrollbar-thumb", scale: Some("color"), keywords: &["transparent"], negatable: false },
+        SetterSpec { name: "scrollbarTrack", vocab: "scrollbar-track", scale: Some("color"), keywords: &["transparent"], negatable: false },
         SetterSpec { name: "display", vocab: "hidden", scale: None, keywords: &["none", "block", "inline", "inline-block", "flex", "inline-flex", "contents"], negatable: false },
         SetterSpec { name: "position", vocab: "relative", scale: None, keywords: &["relative", "absolute", "sticky", "fixed", "static"], negatable: false },
         SetterSpec { name: "top", vocab: "top", scale: Some("space"), keywords: &["0", "auto"], negatable: true },
@@ -141,6 +166,8 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "animate", vocab: "animate", scale: None, keywords: &["spin"], negatable: false },
         SetterSpec { name: "bgImage", vocab: "bg-image", scale: None, keywords: &["none", "primary-accent"], negatable: false },
         SetterSpec { name: "avatarMedia", vocab: "avatar-media", scale: None, keywords: &["true", "on"], negatable: false },
+        // Standard scrollbar pack (width thin + color vars); webkit thumb chrome not on Style yet.
+        SetterSpec { name: "scrollbarThin", vocab: "scrollbar-thin", scale: None, keywords: &[], negatable: false },
         SetterSpec {
             name: "flexDir",
             vocab: "flex-dir",
@@ -195,6 +222,16 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
         "group-focus-within" | "groupFocusWithin" => {
             Some(WhenTarget::Ancestor(".sail-grp:focus-within "))
         }
+        "group-dismissible" | "groupDismissible" => {
+            Some(WhenTarget::Ancestor(".sail-grp[dismissible] "))
+        }
+        "group-open" | "groupOpen" => Some(WhenTarget::Ancestor(".sail-grp[open] ")),
+        "group-state-has-details" | "groupStateHasDetails" => {
+            Some(WhenTarget::Ancestor(".sail-grp[data-state~='has-details'] "))
+        }
+        "group-state-open" | "groupStateOpen" => {
+            Some(WhenTarget::Ancestor(".sail-grp[data-state~='open'] "))
+        }
         "motion-reduce" | "motionReduce" => {
             Some(WhenTarget::Media("(prefers-reduced-motion: reduce)"))
         }
@@ -219,8 +256,8 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
             source: op.source.clone(),
         });
     };
-    // Marker setters with empty arg (group).
-    if spec.name == "group" {
+    // Marker setters with empty arg (group, scrollbarThin).
+    if matches!(spec.name, "group" | "scrollbarThin") {
         return Ok(());
     }
     match &op.arg {
@@ -277,6 +314,20 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     if spec.name == "group" {
         return Ok(Vec::new());
     }
+    // scrollbar-thin bare composite (width + color vars).
+    if spec.name == "scrollbarThin" {
+        if let Resolved::Ok(pairs) = sx_vocab::resolve("scrollbar-thin") {
+            return Ok(pairs);
+        }
+        return Ok(vec![
+            ("scrollbar-width".into(), "thin".into()),
+            (
+                "scrollbar-color".into(),
+                "var(--sx-scrollbar-thumb, var(--border)) var(--sx-scrollbar-track, transparent)"
+                    .into(),
+            ),
+        ]);
+    }
     let (value, bare, negative) = match &op.arg {
         PaintArg::Token(t) => {
             let (neg, bare) = strip_neg(t);
@@ -287,6 +338,53 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             return Ok(bind_css_props(spec, &css));
         }
     };
+    // Axis overflow / overscroll / text-align / tab-size / underline keywords
+    if matches!(
+        spec.name,
+        "overflowX" | "overflowY" | "overscroll" | "textAlign" | "tab" | "underline"
+    ) {
+        if let PaintArg::Token(t) = &op.arg {
+            let bare_t = strip_neg(t).1;
+            if !spec.keywords.iter().any(|k| *k == bare_t) {
+                return Err(StyleDiagnostic::BadToken {
+                    setter: op.setter.clone(),
+                    value: bare_t.into(),
+                    source: op.source.clone(),
+                });
+            }
+            let atom = format!("{}-{}", spec.vocab, bare_t);
+            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+                return Ok(pairs);
+            }
+            // tab map is numeric; underline map may use bare prop+value.
+            if let Some(pairs) = sx_ir::lower_decl(&SxDecl {
+                prefixes: Vec::new(),
+                prop: spec.vocab.to_string(),
+                value: Some(SxValue::Token(bare_t.into())),
+                negative: false,
+                bare: false,
+                source: op.source.clone(),
+            }) {
+                return Ok(pairs);
+            }
+            let css_prop = match spec.name {
+                "overflowX" => "overflow-x",
+                "overflowY" => "overflow-y",
+                "overscroll" => "overscroll-behavior",
+                "textAlign" => "text-align",
+                "tab" => "tab-size",
+                "underline" => "text-decoration-line",
+                _ => spec.vocab,
+            };
+            let css_val = match (spec.name, bare_t) {
+                ("underline", "true") => "underline",
+                ("underline", "none") => "none",
+                ("underline", "line-through") => "line-through",
+                _ => bare_t,
+            };
+            return Ok(vec![(css_prop.into(), css_val.into())]);
+        }
+    }
     // Special-case display
     if spec.name == "display" {
         let tok = match &op.arg {
@@ -420,6 +518,51 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             }
             ("flexDir", dir @ ("row" | "column" | "row-reverse" | "column-reverse")) => {
                 return Ok(vec![("flex-direction".into(), dir.into())]);
+            }
+            ("minW", "menu-min-w") => {
+                return Ok(vec![("min-width".into(), "var(--menu-min-w)".into())]);
+            }
+            ("minW", "panel-rail-w") => {
+                return Ok(vec![("min-width".into(), "var(--panel-rail-w)".into())]);
+            }
+            ("textAlign", align @ ("left" | "center" | "right" | "justify" | "start" | "end")) => {
+                return Ok(vec![("text-align".into(), align.into())]);
+            }
+            ("break", "words") => {
+                return Ok(vec![
+                    ("overflow-wrap".into(), "anywhere".into()),
+                    ("word-break".into(), "normal".into()),
+                ]);
+            }
+            ("break", "all") => {
+                return Ok(vec![
+                    ("overflow-wrap".into(), "normal".into()),
+                    ("word-break".into(), "break-all".into()),
+                ]);
+            }
+            ("break", "keep") => {
+                return Ok(vec![
+                    ("overflow-wrap".into(), "normal".into()),
+                    ("word-break".into(), "keep-all".into()),
+                ]);
+            }
+            ("break", "normal") => {
+                return Ok(vec![
+                    ("overflow-wrap".into(), "normal".into()),
+                    ("word-break".into(), "normal".into()),
+                ]);
+            }
+            ("stroke", "current" | "currentColor") => {
+                return Ok(vec![("stroke".into(), "currentColor".into())]);
+            }
+            ("stroke", "none") => {
+                return Ok(vec![("stroke".into(), "none".into())]);
+            }
+            ("fill", "current" | "currentColor") => {
+                return Ok(vec![("fill".into(), "currentColor".into())]);
+            }
+            ("fill", "none") => {
+                return Ok(vec![("fill".into(), "none".into())]);
             }
             _ => {}
         }
@@ -563,6 +706,10 @@ fn bind_css_props(spec: &SetterSpec, css_name: &str) -> Vec<(String, String)> {
         "mb" => return vec![("margin-bottom".into(), var)],
         "w" => return vec![("width".into(), var)],
         "h" => return vec![("height".into(), var)],
+        "minW" => return vec![("min-width".into(), var)],
+        "minH" => return vec![("min-height".into(), var)],
+        "maxW" => return vec![("max-width".into(), var)],
+        "maxH" => return vec![("max-height".into(), var)],
         "z" => return vec![("z-index".into(), var)],
         "translateY" => {
             return vec![("translate".into(), format!("var(--sx-translate-x, 0) {var}"))];
