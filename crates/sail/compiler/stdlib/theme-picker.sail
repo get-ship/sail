@@ -12,7 +12,11 @@
   const host = style.group()
   const trigger = style.size(control-h-sm).pad(0).fg(theme-picker-trigger-foreground).bg(transparent).borderWidth(1).border(border).radius(full).cursor(pointer)
   const triggerIcon = style.size(icon-size-md).shrink(0).display(block)
-  const panel = style.position(fixed).left(bind(anchorLeft)).top(bind(anchorTop)).m(0).pad(1_5).w(panel-max-w-md).maxW(panel-max-w-md).fg(theme-picker-foreground).bg(theme-picker).borderWidth(1).border(border).radius(md).shadow(lg)
+  // Popover HOST must not set `display` (layout keywords do). UA closed state is
+  // display:none; author display:grid forces the panel always-visible and can
+  // crash heavy pages (header picker + /components tile = two full panels).
+  const panel = style.position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).pad(1_5).w(panel-max-w-md).maxW(panel-max-w-md).fg(theme-picker-foreground).bg(theme-picker).borderWidth(1).border(border).radius(md).shadow(lg).z(popover)
+  const panelGrid = style.w(full)
   const option = style.minW(0).pad(1_5).bg(transparent).borderWidth(1).border(transparent).radius(md).cursor(pointer).fontFamily(body).fontSize(xs).fg(theme-picker-option-foreground).textAlign(start)
   const optionCol = style.minW(0).w(full)
   const swatch = style.position(relative).w(full).h(24).radius(md).overflow(hidden).isolate().bg(background).shadow(inset-ring)
@@ -43,12 +47,13 @@
       <path d="M12 2a10 10 0 0 0 0 20 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 10 10 0 0 0-9-11Z"></path>
     </svg>
   </button>
-  <grid cols="2" gap="2" class="sail-theme-panel" id="sail-theme-panel" popover use:anchor placement="bottom-end" role="listbox" aria-label="Theme" sx={[
+  <div class="sail-theme-panel" id="sail-theme-panel" popover use:anchor placement="bottom-end" role="listbox" aria-label="Theme" sx={[
     panel,
     when({
       group-inline: style.position(static).w(full).maxW(none).shadow(none).bg(transparent).borderWidth(0).pad(0),
     }),
   ]}>
+    <grid cols="2" gap="2" sx={panelGrid}>
     <button class="sail-theme-option" type="button" role="option" value="ship-light" sx={[
       option,
       when({
@@ -421,5 +426,6 @@
         <span>Synthwave</span>
       </column>
     </button>
-  </grid>
+    </grid>
+  </div>
 </row>

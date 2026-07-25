@@ -438,11 +438,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         {#if show.themePicker()}
           <card padding="none" data-tile="theme-picker" sx={tile} motion:enter={{ opacity: 'fade' }}>
             <column gap="0" sx={tileCol}>
+              <!-- Do NOT mount a second live <theme-picker> here: hard-coded
+                   panel id + full 9-theme previews next to the header instance
+                   duplicates popover targets and was crashing this page. -->
               <center data-preview sx={preview}>
-                <row gap="2" align="center">
-                  <theme-picker></theme-picker>
-                  <p sx={mutedXs}>the real one — it themes this site</p>
-                </row>
+                <p sx={mutedXs}>Live control is in the site header (top-right).</p>
               </center>
               <column gap="1" sx={tileMeta}>
                 <a href="/components/theme-picker" sx={tileName}>theme-picker</a>

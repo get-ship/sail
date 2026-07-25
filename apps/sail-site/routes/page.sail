@@ -168,10 +168,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <strong sx={cardTitle}>Press a button. The whole site repaints.</strong>
             </column>
             <row gap="2" sx={swatchRow}>
-              <div sx={[swatch, style.bg(primary)]} motion:loop={{ opacity: 'pulse' }}></div>
-              <div sx={[swatch, style.bg(success)]} motion:loop={{ opacity: 'pulse', stagger: '0.15s' }}></div>
-              <div sx={[swatch, style.bg(warning)]} motion:loop={{ opacity: 'pulse', stagger: '0.15s' }}></div>
-              <div sx={[swatch, style.bg(info)]} motion:loop={{ opacity: 'pulse', stagger: '0.15s' }}></div>
+              <div sx={[swatch, style.bg(primary)]} motion:loop={{ scale: 'pulse' }}></div>
+              <div sx={[swatch, style.bg(success)]} motion:loop={{ scale: 'pulse', stagger: '0.15s' }}></div>
+              <div sx={[swatch, style.bg(warning)]} motion:loop={{ scale: 'pulse', stagger: '0.15s' }}></div>
+              <div sx={[swatch, style.bg(info)]} motion:loop={{ scale: 'pulse', stagger: '0.15s' }}></div>
             </row>
           </column>
         </card>
@@ -237,7 +237,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <row gap="2" align="center"><span sx={style.fg(muted-foreground)}>$</span><span sx={style.fg(foreground)}>agent → sail compile</span></row>
               <row gap="1" align="center">
                 <span sx={style.fg(primary)}>✓ 0 errors · themed · a11y</span>
-                <span sx={cursor} motion:loop={{ opacity: 'pulse' }}></span>
+                <span sx={cursor} motion:loop={{ scale: 'pulse' }}></span>
               </row>
             </column>
           </column>

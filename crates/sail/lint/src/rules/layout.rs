@@ -124,6 +124,10 @@ fn base_css(tag: &str) -> Vec<String> {
         ],
         "grid" => vec![
             ".sail-grid{display:grid;min-width:0}".into(),
+            // Native [popover] closed state is display:none. Author display:grid
+            // on the same node overrides it and leaves the panel always open.
+            ".sail-grid[popover]:not(:popover-open){display:none!important}".into(),
+            ".sail-grid[popover]:popover-open{display:grid;min-width:0}".into(),
             ".sail-grid>*{grid-column:span 1;grid-row:span 1;min-width:0}".into(),
             ".sail-grid>*[data-col-span='2']{grid-column:span 2}".into(),
             ".sail-grid>*[data-col-span='3']{grid-column:span 3}".into(),
