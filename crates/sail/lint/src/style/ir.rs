@@ -16,8 +16,20 @@ pub enum PaintArg {
 pub struct PaintOp {
     /// Setter name (`bg`, `fg`, `padX`, `radius`, …).
     pub setter: String,
-    pub arg: PaintArg,
+    /// Positional args. Almost always one (`style.bg(primary)`); composite
+    /// setters take two (`style.border(1, border)` = width + color in one
+    /// call). Empty-arg markers (`style.group()`) carry a single empty
+    /// `Token("")`.
+    pub args: Vec<PaintArg>,
     pub source: String,
+}
+
+impl PaintOp {
+    /// First positional arg (`Token("")` when the call was `setter()`).
+    pub fn first_arg(&self) -> &PaintArg {
+        static EMPTY: PaintArg = PaintArg::Token(String::new());
+        self.args.first().unwrap_or(&EMPTY)
+    }
 }
 
 /// Style value.
@@ -71,7 +83,7 @@ impl Style {
         }
         match flat.len() {
             0 => Style::Empty,
-            1 => flat.pop().unwrap(),
+            1 => flat.swap_remove(0),
             _ => Style::Chain(flat),
         }
     }
@@ -83,6 +95,9 @@ pub enum StyleDiagnostic {
     ParseError { message: String, source: String },
     UnknownSetter { setter: String, source: String },
     BadToken { setter: String, value: String, source: String },
+    /// Setter called with more positional args than it takes (only border
+    /// composites accept two).
+    BadArity { setter: String, got: usize, source: String },
     UnknownWhenKey { key: String, source: String },
     UnknownRef { name: String, source: String },
     ResidualProduct { message: String, source: String },
@@ -99,6 +114,9 @@ impl StyleDiagnostic {
             }
             StyleDiagnostic::BadToken { setter, value, .. } => {
                 format!("style `{setter}({value})` — value is not a token on this setter's scale")
+            }
+            StyleDiagnostic::BadArity { setter, got, .. } => {
+                format!("style `{setter}` does not accept {got} positional arguments")
             }
             StyleDiagnostic::UnknownWhenKey { key, .. } => {
                 format!("style when key `{key}` is not in the closed browser-state table")
@@ -121,6 +139,7 @@ impl StyleDiagnostic {
             StyleDiagnostic::ParseError { source, .. }
             | StyleDiagnostic::UnknownSetter { source, .. }
             | StyleDiagnostic::BadToken { source, .. }
+            | StyleDiagnostic::BadArity { source, .. }
             | StyleDiagnostic::UnknownWhenKey { source, .. }
             | StyleDiagnostic::UnknownRef { source, .. }
             | StyleDiagnostic::ResidualProduct { source, .. }

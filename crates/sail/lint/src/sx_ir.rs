@@ -620,7 +620,10 @@ pub fn decl_atom(decl: &SxDecl) -> String {
         a.push_str(&decl.prop);
         return a;
     }
-    let value = decl.value.as_ref().unwrap();
+    let Some(value) = decl.value.as_ref() else {
+        // Guarded above; keep the impossible path total instead of panicking.
+        return alias_prop(&decl.prop).to_string();
+    };
     match value {
         SxValue::Raw(_) => {
             // Raw does not go through atom resolve; atom key is synthetic.

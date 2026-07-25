@@ -228,6 +228,14 @@
       "values_sample": []
     },
     {
+      "name": "border-x",
+      "values_sample": []
+    },
+    {
+      "name": "border-y",
+      "values_sample": []
+    },
+    {
       "name": "bottom",
       "values_sample": [
         "0",
@@ -2407,8 +2415,8 @@
     "var-ref"
   ],
   "tokens": {
-    "count": 504,
-    "colors_count": 246,
+    "count": 496,
+    "colors_count": 240,
     "sample_names": [
       "accent",
       "accent-agents",

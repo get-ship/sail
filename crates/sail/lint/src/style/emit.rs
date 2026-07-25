@@ -192,17 +192,20 @@ fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
     if op.setter == "glyphFill" {
         return "sx-glyphfill".into();
     }
-    let arg = match &op.arg {
-        super::ir::PaintArg::Token(t) => t
-            .chars()
-            .filter(|c| c.is_ascii_alphanumeric())
-            .collect::<String>(),
-        super::ir::PaintArg::Bind(n) => {
-            let mut s = String::from("bind");
-            s.extend(n.chars().filter(|c| c.is_ascii_alphanumeric()));
-            s
+    // All args feed the class name — composites like border(1, border) vs
+    // border(1, primary) must not share an atomic class.
+    let mut arg = String::new();
+    for a in &op.args {
+        match a {
+            super::ir::PaintArg::Token(t) => {
+                arg.extend(t.chars().filter(|c| c.is_ascii_alphanumeric()))
+            }
+            super::ir::PaintArg::Bind(n) => {
+                arg.push_str("bind");
+                arg.extend(n.chars().filter(|c| c.is_ascii_alphanumeric()));
+            }
         }
-    };
+    }
     let setter: String = op
         .setter
         .chars()
@@ -268,6 +271,7 @@ pub fn lower_style_source(
             super::ir::StyleDiagnostic::BadToken { .. }
                 | super::ir::StyleDiagnostic::UnknownSetter { .. }
                 | super::ir::StyleDiagnostic::UnknownWhenKey { .. }
+                | super::ir::StyleDiagnostic::BadArity { .. }
         )
     }) {
         return Err(diags);

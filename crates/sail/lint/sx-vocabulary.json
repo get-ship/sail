@@ -378,6 +378,22 @@
       "scale": "color"
     },
     {
+      "name": "border-x",
+      "css": [
+        "border-left-color",
+        "border-right-color"
+      ],
+      "scale": "color"
+    },
+    {
+      "name": "border-y",
+      "css": [
+        "border-top-color",
+        "border-bottom-color"
+      ],
+      "scale": "color"
+    },
+    {
       "name": "outline",
       "css": [
         "outline-color"
@@ -877,6 +893,50 @@
     },
     {
       "bare": true,
+      "atom": "border-x",
+      "decls": [
+        [
+          "border-left-width",
+          "1px"
+        ],
+        [
+          "border-left-style",
+          "solid"
+        ],
+        [
+          "border-right-width",
+          "1px"
+        ],
+        [
+          "border-right-style",
+          "solid"
+        ]
+      ]
+    },
+    {
+      "bare": true,
+      "atom": "border-y",
+      "decls": [
+        [
+          "border-top-width",
+          "1px"
+        ],
+        [
+          "border-top-style",
+          "solid"
+        ],
+        [
+          "border-bottom-width",
+          "1px"
+        ],
+        [
+          "border-bottom-style",
+          "solid"
+        ]
+      ]
+    },
+    {
+      "bare": true,
       "atom": "dir-column",
       "decls": [
         [
@@ -977,6 +1037,22 @@
       "name": "border-l",
       "css": [
         "border-left-width"
+      ],
+      "scale": "border-width"
+    },
+    {
+      "name": "border-x",
+      "css": [
+        "border-left-width",
+        "border-right-width"
+      ],
+      "scale": "border-width"
+    },
+    {
+      "name": "border-y",
+      "css": [
+        "border-top-width",
+        "border-bottom-width"
       ],
       "scale": "border-width"
     },

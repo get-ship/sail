@@ -1,5 +1,6 @@
 //! Parser for the Style value language (chain + match / when / compound / bind).
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
@@ -8,7 +9,13 @@ use super::setters::{find_setter, validate_op, when_target};
 /// Parse a Style expression. Returns Style + diagnostics (fail-closed flags in diags).
 pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     let mut diags = Vec::new();
-    let trimmed = input.trim();
+    // Authors reasonably write `//` / `/* */` comments inside long sx lists.
+    // Strip them before tokenizing: the grammar has no division and no string
+    // literals, so `/` can only start a comment. Without this, comment text
+    // tokenizes into Words — silently injecting spurious Refs and truncating
+    // list entries after the comment.
+    let stripped = strip_comments(input);
+    let trimmed = stripped.trim();
     if trimmed.is_empty() {
         return (Style::Empty, diags);
     }
@@ -53,6 +60,47 @@ pub fn looks_like_utility_string_product(input: &str) -> bool {
     }
     // Space-separated utility soup or legacy atoms
     t.contains(':') || t.split_whitespace().any(|w| w.contains('-') && !w.starts_with("style"))
+}
+
+/// Remove `//` line and `/* */` block comments, replacing each with a single
+/// space so words on either side can never merge. Unterminated block comments
+/// consume to end of input (the truncated expression then fails loudly with a
+/// normal parse diagnostic instead of silently dropping entries).
+fn strip_comments(input: &str) -> Cow<'_, str> {
+    let b = input.as_bytes();
+    let mut out: Option<String> = None;
+    let mut copied = 0; // input[..copied] already flushed into out
+    let mut i = 0;
+    while i + 1 < b.len() {
+        if b[i] == b'/' && (b[i + 1] == b'/' || b[i + 1] == b'*') {
+            let s = out.get_or_insert_with(|| String::with_capacity(input.len()));
+            s.push_str(&input[copied..i]);
+            s.push(' ');
+            if b[i + 1] == b'/' {
+                let mut j = i + 2;
+                while j < b.len() && b[j] != b'\n' {
+                    j += 1;
+                }
+                i = j;
+            } else {
+                let mut j = i + 2;
+                while j + 1 < b.len() && !(b[j] == b'*' && b[j + 1] == b'/') {
+                    j += 1;
+                }
+                i = if j + 1 < b.len() { j + 2 } else { b.len() };
+            }
+            copied = i;
+        } else {
+            i += 1;
+        }
+    }
+    match out {
+        Some(mut s) => {
+            s.push_str(&input[copied..]);
+            Cow::Owned(s)
+        }
+        None => Cow::Borrowed(input),
+    }
 }
 
 // ─── tokenize ───────────────────────────────────────────────────────────────
@@ -331,12 +379,17 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
             break;
         }
         p.expect(Tok::LParen, diags);
-        // Empty-arg markers (style.group()) or normal paint args.
-        let arg = if p.peek() == Some(&Tok::RParen) {
-            PaintArg::Token(String::new())
+        // Empty-arg markers (style.group()) or comma-separated paint args
+        // (`style.border(1, border)` — width + color in one call).
+        let mut args = Vec::new();
+        if p.peek() == Some(&Tok::RParen) {
+            args.push(PaintArg::Token(String::new()));
         } else {
-            parse_paint_arg(p, diags)
-        };
+            args.push(parse_paint_arg(p, diags));
+            while p.eat(&Tok::Comma) {
+                args.push(parse_paint_arg(p, diags));
+            }
+        }
         p.expect(Tok::RParen, diags);
         if p.pos == before {
             p.force_progress();
@@ -351,7 +404,7 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
         } else {
             let op = PaintOp {
                 setter: method.to_string(),
-                arg: arg.clone(),
+                args: args.clone(),
                 source: source.clone(),
             };
             if let Err(d) = validate_op(&op) {
@@ -360,7 +413,7 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
         }
         ops.push(Style::Set(PaintOp {
             setter: method.to_string(),
-            arg,
+            args,
             source,
         }));
     }

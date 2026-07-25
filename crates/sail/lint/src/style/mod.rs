@@ -111,6 +111,55 @@ mod tests {
         assert!(css.contains("[pill]"), "{css}");
     }
 
+    /// Comments inside Style expressions are stripped structurally — they must
+    /// never tokenize into Words that inject spurious Refs or truncate lists.
+    #[test]
+    fn line_comment_between_list_items_keeps_entries() {
+        let (style, diags) =
+            parse("[ style.bg(primary), // soften the surface\n style.padX(2) ]");
+        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        let Style::List(items) = &style else {
+            panic!("expected List, got {style:?}");
+        };
+        assert_eq!(items.len(), 2, "comment must not drop or inject entries: {items:?}");
+    }
+
+    #[test]
+    fn block_comment_and_trailing_comment_before_bracket_keep_entries() {
+        let (style, diags) =
+            parse("[ style.bg(primary) /* block */, style.padX(2) // trailing note\n ]");
+        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        let Style::List(items) = &style else {
+            panic!("expected List, got {style:?}");
+        };
+        assert_eq!(items.len(), 2, "trailing comment must not eat the list tail: {items:?}");
+    }
+
+    #[test]
+    fn comment_inside_compound_arg_map_keeps_conditions() {
+        let (style, diags) = parse(
+            "compound({ pill: true, // emphasis keys\n tone: primary }, style.radius(full))",
+        );
+        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        let Style::Compound { when, .. } = &style else {
+            panic!("expected Compound, got {style:?}");
+        };
+        assert_eq!(when.len(), 2, "comment must not drop compound conditions: {when:?}");
+        assert_eq!(when.get("tone").map(String::as_str), Some("primary"));
+    }
+
+    #[test]
+    fn comment_text_never_reaches_utility_string_gate() {
+        // Colons / dashed words inside a comment must not trip the
+        // residual-product gate or leak into the token stream.
+        let (style, diags) = parse("/* fixme: switch to tone-primary */ style.bg(primary)");
+        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        assert!(
+            matches!(style, Style::Set(_) | Style::Chain(_)),
+            "chain must survive the leading comment: {style:?}"
+        );
+    }
+
     #[test]
     fn chain_when_method() {
         let (style, diags) = parse("style.bg(primary).when({ hover: style.bg(muted) })");
@@ -151,6 +200,84 @@ mod tests {
             diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
             "{:?}",
             diags
+        );
+    }
+
+    #[test]
+    fn list_shadows_duplicate_slot_silently() {
+        // Ordered composition: later items shadow earlier ones — no Clash.
+        let (style, diags) = parse("[ style.bg(primary), style.bg(muted) ]");
+        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        let diags = clash::detect_clashes(&style, &HashMap::new());
+        assert!(
+            !diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            "list items must shadow, not clash: {:?}",
+            diags
+        );
+    }
+
+    #[test]
+    fn list_shadowing_resolves_through_ref_env() {
+        // Duplicates across list items from nested Refs resolve through the
+        // env walk and shadow silently.
+        let mut env = HashMap::new();
+        env.insert("base".into(), parse("style.bg(primary)").0);
+        let (style, _) = parse("[ base, style.bg(muted) ]");
+        let diags = clash::detect_clashes(&style, &env);
+        assert!(
+            !diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            "ref-resolved shadowing must not clash: {:?}",
+            diags
+        );
+    }
+
+    #[test]
+    fn cross_setter_chain_clash_on_shared_slot() {
+        // Different setters writing the same paint slot clash under Chain:
+        // `border(1)` writes border-width, same slot as `borderWidth(2)`.
+        let (style, _) = parse("style.border(1).borderWidth(2)");
+        let diags = clash::detect_clashes(&style, &HashMap::new());
+        assert!(
+            diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { slot, .. } if slot.starts_with("border-width@"))),
+            "border(1) vs borderWidth must clash on border-width: {:?}",
+            diags
+        );
+        // Per-arg precision: a color-token `border` writes only border-color,
+        // so `borderWidth(1).border(chip-border)` (the stdlib focus-ring
+        // idiom) is two disjoint writes, not a clash.
+        let (style, _) = parse("style.borderWidth(1).border(border)");
+        let diags = clash::detect_clashes(&style, &HashMap::new());
+        assert!(
+            !diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            "borderWidth(1).border(border) must not clash: {:?}",
+            diags
+        );
+    }
+
+    #[test]
+    fn chain_inside_list_still_clashes() {
+        // A Chain inside a List keeps unordered conjunction semantics.
+        let (style, _) = parse("[ style.bg(primary).bg(muted) ]");
+        let diags = clash::detect_clashes(&style, &HashMap::new());
+        assert!(
+            diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            "chain duplicates inside a list item must clash: {:?}",
+            diags
+        );
+    }
+
+    #[test]
+    fn list_emits_later_rule_after_earlier() {
+        // Stylesheet-order precedence: emit walks items in source order, so
+        // the shadowing (later) rule lands after the shadowed one in the CSS.
+        let (style, diags) = parse("[ style.bg(primary), style.bg(muted) ]");
+        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        let (_, css) = lower_style(&style, &HashMap::new());
+        let first = css.find("var(--primary)").expect("earlier rule emitted");
+        let second = css.find("var(--muted)").expect("later rule emitted");
+        assert!(
+            second > first,
+            "later list item must be emitted after the earlier one:\n{css}"
         );
     }
 
