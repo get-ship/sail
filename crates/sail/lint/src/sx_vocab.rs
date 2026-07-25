@@ -1,3 +1,12 @@
+//! **INTERNAL LEGACY MACHINERY — NOT THE PRODUCT PAINT SURFACE.**
+//!
+//! The legacy string-sx authoring form (`sx="p-4 bg-surface-2"`) is deleted
+//! as product: the `sail-sx` lint hard-errors it and directs authors to the
+//! new Style chain syntax (`style.bg(primary).padX(2)` in `sx={…}` /
+//! `sx={[…]}`). This vocabulary table remains only as internal machinery
+//! behind that lowering and the surface documentation; it is not a supported
+//! authoring surface.
+//!
 //! The sx vocabulary — one table, read from `sx-vocabulary.json`.
 //!
 //! The lint validates against it and the lowering emits from it. Adding a

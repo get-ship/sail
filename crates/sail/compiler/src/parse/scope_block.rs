@@ -7,13 +7,11 @@
 //!   - `type X = …` / `export type X = …` — aliases, threaded into the
 //!     compiled module so the controller can reuse them.
 //!   - `props: { … }` — the component's typed inputs (field declarations).
-//!     **CVA-in-props (the only prop→paint matrix form):** an axis whose
-//!     value is a map of key → sx string (`variant: { solid: 'bg-tone', … }`)
-//!     types as the key union (first key = default), reflects as an
-//!     attribute, and lowers through the **same sx atom pipeline** as host
-//!     `sx=`. Host `sx=` remains base paint.
-//!   - `compound: [ { when: { … }, sx: '…' }, … ]` — combination rules over
-//!     prop axes (sibling of `props`).
+//!     **CVA-in-props is DELETED:** an axis written as a map of key → sx
+//!     string (`variant: { solid: 'bg-tone', … }`) is a hard error directing
+//!     to `match(variant, { solid: style.… })` in the new Style syntax.
+//!   - `compound: [ { when: { … }, sx: '…' }, … ]` is DELETED — a hard error
+//!     directing to `compound({…}, style.…)` in the new Style syntax.
 //!
 //! Bare `tone` / `size` defaults type as the shared stdlib unions and reflect
 //! as ordinary props.
@@ -26,7 +24,7 @@
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::directive::{PropDecl, PropKind};
 
-use super::preprocess::{parse_object_fields, unquote, variants_object_to_css};
+use super::preprocess::{parse_object_fields, unquote};
 
 /// Everything a `<scope>` block contributes to the Program.
 #[derive(Debug)]
@@ -42,8 +40,9 @@ pub(crate) struct ScopeBlock {
 const TONE_VOCAB: &str = "default|primary|info|success|warning|destructive|accent|muted";
 const SIZE_VOCAB: &str = "xs|sm|md|lg";
 
-const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, `props:` (incl. CVA key→sx maps), \
-     optional `compound:` — types and literal values only; logic goes in `<controller>`";
+const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations and `props:` field declarations \
+     (types and literal values only; logic goes in `<controller>`). Paint matrices write \
+     `match(axis, { k: style.… })` / `compound({…}, style.…)` in the new Style syntax";
 
 pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, CompileError> {
     let bytes = body.as_bytes();
@@ -78,12 +77,15 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
                 i = obj_span.1 + 1;
             }
             "compound" => {
-                // Sibling of `props`: combination rules over axes.
-                let arr_span = expect_member_array(body, after, "compound", span)?;
-                let inner = &body[arr_span.0..arr_span.1 + 1]; // include brackets
-                let css = variants_object_to_css(&format!("{{ compound: {inner} }}"));
-                out.variants_css.push_str(&css);
-                i = arr_span.1 + 1;
+                // `compound: [ { when, sx } ]` is deleted as product —
+                // combination rules write `compound({…}, style.…)` in the new
+                // Style syntax.
+                return Err(CompileError::new(
+                    "`<scope>` `compound: [ { when: {…}, sx: '…' } ]` is deleted as product — \
+                     use `compound({…}, style.…)` in the new Style syntax."
+                        .to_string(),
+                )
+                .with_span(span));
             }
             "" => {
                 return Err(CompileError::new(format!(
@@ -199,68 +201,13 @@ fn expect_member_object(
     Ok((i, close))
 }
 
-/// `compound: [ … ]` — array body. Returns `(open_bracket, close_bracket)`.
-fn expect_member_array(
-    s: &str,
-    after_kw: usize,
-    member: &str,
-    span: Span,
-) -> Result<(usize, usize), CompileError> {
-    let bytes = s.as_bytes();
-    let mut i = skip_trivia(s, after_kw, None);
-    if i >= bytes.len() || bytes[i] != b':' {
-        return Err(CompileError::new(format!(
-            "`{member}` in `<scope>` is a member — write `{member}: [ … ]`."
-        ))
-        .with_span(span));
-    }
-    i = skip_trivia(s, i + 1, None);
-    if i >= bytes.len() || bytes[i] != b'[' {
-        return Err(CompileError::new(format!(
-            "`{member}:` expects an array body — write `{member}: [ {{ when: {{…}}, sx: '…' }}, … ]`."
-        ))
-        .with_span(span));
-    }
-    let close = find_balanced_bracket(s, i)?;
-    Ok((i, close))
-}
-
-/// Offset of the `]` matching the `[` at `open`.
-fn find_balanced_bracket(s: &str, open: usize) -> Result<usize, CompileError> {
-    let bytes = s.as_bytes();
-    let mut depth = 0i32;
-    let mut i = open;
-    while i < bytes.len() {
-        let j = skip_strings_and_comments(s, i);
-        if j != i {
-            i = j;
-            continue;
-        }
-        match bytes[i] {
-            b'[' | b'{' | b'(' => depth += 1,
-            b']' => {
-                depth -= 1;
-                if depth == 0 {
-                    return Ok(i);
-                }
-            }
-            b'}' | b')' => depth -= 1,
-            _ => {}
-        }
-        i += 1;
-    }
-    Err(CompileError::new("unclosed `[` in `<scope>` member."))
-}
-
 // ── props fields ─────────────────────────────────────────────────────────────
 
-/// Parse `props:` fields. Returns declared props plus CSS lowered from any
-/// CVA-in-props axes (key → sx string maps) through the same pipeline as
-/// host `sx=`.
+/// Parse `props:` fields. CVA-in-props axes (`name: { key: 'sx…', … }`) are
+/// deleted as product and hard-error here, directing to `match(name, {…})`.
 fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String), CompileError> {
     let bytes = body.as_bytes();
     let mut out = Vec::new();
-    let mut cva_axes: Vec<String> = Vec::new();
     let mut i = 0usize;
     loop {
         let mut doc: Option<String> = None;
@@ -307,47 +254,16 @@ fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String),
             i = end;
         }
 
-        // CVA-in-props: `name: { key: 'sx…', … }` — object of string-literal
-        // sx lists. Keys become the union type (first = default); values lower
-        // via the same sx atom pipeline as host `sx=`. No separate `= default`.
+        // CVA-in-props (`name: { key: 'sx…', … }`) is deleted as product —
+        // the paint matrix now writes `match(name, { k: style.… })` in the new
+        // Style syntax. Detect the old shape and refuse it by name.
         if let Some(ann) = annotation.as_deref() {
             if is_sx_cva_table(ann) {
-                let keys: Vec<String> = parse_object_fields(
-                    ann.trim().trim_start_matches('{').trim_end_matches('}'),
-                )
-                .into_iter()
-                .map(|(k, _)| k)
-                .collect();
-                if keys.is_empty() {
-                    return Err(CompileError::new(format!(
-                        "CVA prop `{name}` has no values — write `{name}: {{ key: 'sx…', … }}`."
-                    ))
-                    .with_span(span));
-                }
-                // Reject a following `= default` — first key is the default.
-                i = skip_trivia(body, i, None);
-                if i < bytes.len()
-                    && bytes[i] == b'='
-                    && (i + 1 >= bytes.len() || bytes[i + 1] != b'>')
-                {
-                    return Err(CompileError::new(format!(
-                        "CVA prop `{name}` takes its default from the first map key — \
-                         drop the `= …` (first key is `{}`).",
-                        keys[0]
-                    ))
-                    .with_span(span));
-                }
-                out.push(PropDecl {
-                    name: name.to_string(),
-                    kind: PropKind::Union(keys.clone()),
-                    default: keys.first().cloned(),
-                    reflect: true,
-                    bindable: false,
-                    description: doc,
-                    span: Span::new(0, 0),
-                });
-                cva_axes.push(format!("{name}: {ann}"));
-                continue;
+                return Err(CompileError::new(format!(
+                    "CVA-in-props `{name}: {ann}` is deleted as product — \
+                     use `match({name}, {{ k: style.… }})` in the new Style syntax."
+                ))
+                .with_span(span));
             }
         }
 
@@ -385,12 +301,7 @@ fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String),
 
         out.push(classify_field(name, annotation.as_deref(), value.as_deref(), doc, span)?);
     }
-    let cva_css = if cva_axes.is_empty() {
-        String::new()
-    } else {
-        variants_object_to_css(&format!("{{ {} }}", cva_axes.join(", ")))
-    };
-    Ok((out, cva_css))
+    Ok((out, String::new()))
 }
 
 /// True when `ann` is a CVA key→sx table: a `{ … }` object whose every value

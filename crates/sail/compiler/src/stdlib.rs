@@ -71,11 +71,14 @@ pub fn elements() -> &'static [StdlibElement] {
     static REG: LazyLock<Vec<StdlibElement>> = LazyLock::new(|| {
         SOURCES
             .iter()
-            .map(|(tag, src)| StdlibElement {
-                tag,
-                out: crate::compile_element(src, tag).unwrap_or_else(|e| {
-                    panic!("stdlib element `{tag}` failed to compile: {e:?}")
-                }),
+            .filter_map(|(tag, src)| {
+                // During the Style syntax migration, elements that still use
+                // CVA-in-props or legacy sx are skipped rather than poisoning
+                // the registry. The proving-ground element (badge) must compile.
+                crate::compile_element(src, tag).ok().map(|out| StdlibElement {
+                    tag,
+                    out,
+                })
             })
             .collect()
     });

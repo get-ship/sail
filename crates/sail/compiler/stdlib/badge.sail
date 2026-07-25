@@ -1,40 +1,43 @@
 <!--
   <badge> — L1 language element (element mode). A small, static, tone-colored
-  status label. No behavior, no control flow — pure surface. Bare tag: lowers
-  to <span class="sail-badge">.
+  status label. No behavior, no control flow — pure surface.
 
   Paint (one path):
-    host sx=         — soft base + PE size md (attr-absent; defaults not stamped)
-    CVA-in-props     — variant + size maps (first key = default = PE)
-    compound         — pill → rounded-full; soft+default tone → muted soft PE
-  Variance = CVA-in-props axes + optional compound only. tone/size/variant are
-  ordinary props (axes or unions), not language channels.
-  Zero contracts PE.
+    host sx={…}    — soft base + size md + match(variant) + compound(pill)
+    match          — variant prop branch (replaces CVA-in-props)
+    compound       — pill → rounded-full; soft+default → muted soft
+    when           — hover/focus states via CSS pseudo
+    SSOT tokens    — all paint values are token names from the registry
+  Zero CVA-in-props. Zero tone-* happy-path paint. Zero legacy string sx.
 -->
 
 <scope>
   props: {
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
-    // first key = soft (PE soft host base); solid/outline override
-    variant: {
-      soft: 'bg: tone-bg color: tone-fg border: tone-border',
-      solid: 'bg: tone color: tone-contrast border: tone shadow: xs',
-      outline: 'bg: transparent color: tone-fg border: tone-border',
-    }
-    // first key = default = PE md
-    size: {
-      md: 'min-h: control-h-2xs px: 2 font-size: xs',
-      sm: 'min-h: 4 px: 1_5 font-size: xs',
-      lg: 'min-h: control-h-xs px: 2_5 font-size: xs',
-    }
+    variant: 'soft' | 'solid' | 'outline' = 'soft'
+    size: 'sm' | 'md' | 'lg' = 'md'
     pill = false
   }
-  compound: [
-    { when: { pill: true }, sx: 'rounded: full' },
-    { when: { variant: 'soft', tone: 'default' }, sx: 'bg: tone-muted-bg color: muted-foreground border: tone-muted-border' },
-  ]
 </scope>
 
-<span sx="font-family: body font-weight: semibold leading: none whitespace: nowrap align: middle tabular-nums antialiased border rounded: sm bg: tone-bg color: tone-fg border: tone-border min-h: control-h-2xs px: 2 font-size: xs">
+<span sx={[
+  style.fontFamily(body).fontWeight(semibold).leading(none).whitespace(nowrap).align(middle).tabularNums().antialiased().border().radius(sm).bg(toneBg).color(toneFg).borderColor(toneBorder).minH(controlH2xs).padX(2).fontSize(xs),
+  match(variant, {
+    soft: style.bg(toneBg).color(toneFg).borderColor(toneBorder),
+    solid: style.bg(tone).color(toneContrast).borderColor(tone).shadow(xs),
+    outline: style.bg(transparent).color(toneFg).borderColor(toneBorder),
+  }),
+  match(size, {
+    md: style.minH(controlH2xs).padX(2).fontSize(xs),
+    sm: style.minH(4).padX(1_5).fontSize(xs),
+    lg: style.minH(controlHXs).padX(2_5).fontSize(xs),
+  }),
+  compound({ pill: true }, style.radius(full)),
+  compound({ variant: 'soft', tone: 'default' }, style.bg(toneMutedBg).color(mutedForeground).borderColor(toneMutedBorder)),
+  when({
+    hover: style.bg(toneBgHover),
+    focus: style.ring(focusRing),
+  }),
+]}>
   <slot></slot>
 </span>

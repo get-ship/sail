@@ -7,7 +7,9 @@
 //!  1. Quote unquoted brace attributes — `disabled={x || y}` becomes
 //!     `disabled="{x || y}"` with `"` inside the expression escaped to `&quot;`.
 //!  2. Expand non-void self-closing tags — `<time … />` becomes `<time …></time>`.
-//!  3. Lower `sx="…"` surface attributes → atomic `class`es.
+//!  3. Lower new-Style `sx="…"` surface attributes → atomic `class`es
+//!     (legacy utility strings are deleted as product — the `sail-sx` lint
+//!     hard-errors them and this pass leaves them untouched).
 //!  4. Lower the layout keywords (`<column>`/`<row>`/…) → `<div>` + atomic classes.
 //! Steps 3–4 emit deduped CSS that `preprocess` injects as one `<style>`.
 
@@ -162,11 +164,42 @@ fn lower_sx(source: &str) -> (String, String) {
                 let vstart = j + 1;
                 if let Some(rel) = source[vstart..].find('"') {
                     let val = &source[vstart..vstart + rel];
+                    // Legacy utility strings (`bg: primary`, `bg-primary`) are
+                    // deleted as product: the `sail-sx` lint hard-errors them
+                    // before this pass runs. Only the Style syntax
+                    // (match/compound/phase/media guards, fragment refs)
+                    // still lowers here — a legacy attribute is left untouched
+                    // rather than silently emitted.
+                    if sail_lint::style::parse::uses_style_syntax(val) {
+                        out.push_str(&source[last..i]);
+                        out.push_str("class=\"");
+                        out.push_str(&lower_style_value(val, &mut css, &mut seen));
+                        out.push('"');
+                        i = vstart + rel + 1;
+                        last = i;
+                        continue;
+                    }
+                }
+            } else if j < bytes.len() && bytes[j] == b'{' {
+                // New Style expression: `sx={…}` or `sx={[…]}`.
+                let vstart = j + 1;
+                let mut depth = 1;
+                let mut k = vstart;
+                while k < bytes.len() && depth > 0 {
+                    match bytes[k] {
+                        b'{' => depth += 1,
+                        b'}' => depth -= 1,
+                        _ => {}
+                    }
+                    k += 1;
+                }
+                if depth == 0 {
+                    let val = &source[vstart..k - 1];
                     out.push_str(&source[last..i]);
                     out.push_str("class=\"");
-                    out.push_str(&lower_sx_value(val, &mut css, &mut seen));
+                    out.push_str(&lower_style_expr(val, &mut css, &mut seen));
                     out.push('"');
-                    i = vstart + rel + 1;
+                    i = k;
                     last = i;
                     continue;
                 }
@@ -186,14 +219,67 @@ fn lower_sx(source: &str) -> (String, String) {
     (out, css)
 }
 
-fn lower_sx_value(
+/// Lower a Style expression into atomic classes and CSS rules.
+fn lower_style_value(
     val: &str,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
 ) -> String {
-    // sx IR v0: dual-parse structured (`bg: primary`) and legacy (`bg-primary`)
-    // into one IR, then lower through the same vocab/scales emit path.
-    sail_lint::sx_ir::lower_sx_string(val, css, seen)
+    use sail_lint::style::emit::{emit_style, render_rules};
+    use sail_lint::style::parse::parse;
+
+    // quote_brace_attrs converts sx={…} to sx="{…}" — strip the braces.
+    let val = val.trim();
+    let val = if val.starts_with('{') && val.ends_with('}') {
+        &val[1..val.len() - 1]
+    } else {
+        val
+    };
+    let (style, _diags) = parse(val);
+    let rules = emit_style(&style, &std::collections::HashMap::new());
+    let mut classes = Vec::new();
+    for rule in &rules {
+        if seen.insert(rule.class.clone()) {
+            css.push_str(&render_rules(std::slice::from_ref(rule)));
+        }
+        classes.push(rule.class.clone());
+    }
+    classes.join(" ")
+}
+
+/// Lower a `sx={…}` or `sx={[…]}` attribute value into classes and CSS.
+fn lower_style_expr(
+    val: &str,
+    css: &mut String,
+    seen: &mut std::collections::HashSet<String>,
+) -> String {
+    use sail_lint::style::emit::{emit_style, render_rules};
+    use sail_lint::style::parse::{parse, parse_style_list};
+    use sail_lint::style::Style;
+
+    // quote_brace_attrs converts sx={…} to sx="{…}" — strip the braces.
+    let val = val.trim();
+    let val = if val.starts_with('{') && val.ends_with('}') {
+        &val[1..val.len() - 1]
+    } else {
+        val
+    };
+    let style = if val.trim_start().starts_with('[') {
+        let (items, _diags) = parse_style_list(val);
+        Style::chain(items)
+    } else {
+        let (style, _diags) = parse(val);
+        style
+    };
+    let rules = emit_style(&style, &std::collections::HashMap::new());
+    let mut classes = Vec::new();
+    for rule in &rules {
+        if seen.insert(rule.class.clone()) {
+            css.push_str(&render_rules(std::slice::from_ref(rule)));
+        }
+        classes.push(rule.class.clone());
+    }
+    classes.join(" ")
 }
 
 /// Split `hover:before:bg-muted` → prefixes `["hover","before"]`, atom `bg-muted`.
@@ -951,7 +1037,7 @@ fn is_eq_quote(rest: &[u8]) -> bool {
     while k < rest.len() && rest[k].is_ascii_whitespace() {
         k += 1;
     }
-    k < rest.len() && rest[k] == b'"'
+    k < rest.len() && (rest[k] == b'"' || rest[k] == b'{')
 }
 
 /// Lower each layout keyword (`<column>`, `<row>`, `<grid>`, `<center>`,
@@ -1146,88 +1232,6 @@ fn lower_layout(source: &str) -> (String, String) {
     (out, css)
 }
 
-/// Split `s` on top-level `delim`, ignoring delimiters nested inside `{}`/`[]`
-/// or string literals. The primitive under the `<variants>` object parser.
-fn split_top_level(s: &str, delim: char) -> Vec<String> {
-    let mut parts = Vec::new();
-    let mut depth = 0i32;
-    let mut in_str: Option<char> = None;
-    // COMMENTS ARE OPAQUE to the split. A delimiter inside one is not a delimiter:
-    //
-    //     /** The tone, e.g. primary */
-    //     tone: 'default' | 'primary',
-    //
-    // Without this, that comma split the field mid-comment and everything after it
-    // became the prop's NAME — a perfectly ordinary JSDoc silently destroyed the prop
-    // it was documenting. (Found by a test written for the OTHER half of this bug.)
-    let mut in_line_comment = false;
-    let mut in_block_comment = false;
-    let mut prev = '\0';
-    let mut cur = String::new();
-    for c in s.chars() {
-        if in_line_comment {
-            cur.push(c);
-            if c == '\n' {
-                in_line_comment = false;
-            }
-            prev = c;
-            continue;
-        }
-        if in_block_comment {
-            cur.push(c);
-            if prev == '*' && c == '/' {
-                in_block_comment = false;
-                prev = '\0';
-                continue;
-            }
-            prev = c;
-            continue;
-        }
-        if in_str.is_none() && prev == '/' && (c == '/' || c == '*') {
-            if c == '/' {
-                in_line_comment = true;
-            } else {
-                in_block_comment = true;
-            }
-            cur.push(c);
-            prev = c;
-            continue;
-        }
-        prev = c;
-        match in_str {
-            Some(q) => {
-                cur.push(c);
-                if c == q {
-                    in_str = None;
-                }
-            }
-            None => match c {
-                '\'' | '"' => {
-                    in_str = Some(c);
-                    cur.push(c);
-                }
-                '{' | '[' => {
-                    depth += 1;
-                    cur.push(c);
-                }
-                '}' | ']' => {
-                    depth -= 1;
-                    cur.push(c);
-                }
-                d if d == delim && depth == 0 => {
-                    parts.push(cur.trim().to_string());
-                    cur.clear();
-                }
-                _ => cur.push(c),
-            },
-        }
-    }
-    if !cur.trim().is_empty() {
-        parts.push(cur.trim().to_string());
-    }
-    parts
-}
-
 /// Index of the first top-level `:` in `s` (skips `:` inside `{}`/`[]`/strings —
 /// e.g. the `:` in an sx value `'bg:tone'`).
 fn top_level_colon(s: &str) -> Option<usize> {
@@ -1268,7 +1272,7 @@ pub(crate) fn unquote(s: &str) -> String {
 /// Strip a leading comment run (`/** … */`, `/* … */`, `// …`) off an object-field
 /// entry, returning `(doc, rest)` where `doc` is the JSDoc text if there was one.
 ///
-/// WHY THIS EXISTS. `split_top_level(inner, ',')` splits on commas, and a comment has
+/// WHY THIS EXISTS. `split_top_level_fields(inner)` splits on commas, and a comment has
 /// none — so a documented prop arrived here as
 ///
 /// ```text
@@ -1348,7 +1352,7 @@ pub(crate) fn parse_object_fields(obj: &str) -> Vec<(String, String)> {
 }
 
 /// Split object-field text on top-level `,` **or** newline. Nested `{}`/`[]`,
-/// strings, and comments are opaque — same discipline as [`split_top_level`].
+/// strings, and comments are opaque — same discipline as the other top-level scanners.
 fn split_top_level_fields(s: &str) -> Vec<String> {
     let mut parts = Vec::new();
     let mut depth = 0i32;
@@ -1431,38 +1435,6 @@ fn split_top_level_fields(s: &str) -> Vec<String> {
         parts.push(cur.trim().to_string());
     }
     parts
-}
-
-/// Lower the TS-object form of a `<variants>` body to the same `(selector-dsl,
-/// sx)` pairs the line DSL produces. CVA-shaped:
-///   `{ variant: { solid: 'sx…' }, size: { sm: 'sx…' },`
-///   `  compound: [ { when: { variant: 'solid', size: 'lg' }, sx: 'sx…' } ] }`
-/// A prop group `variant: { solid: 'x' }` → `("variant=solid", "x")`; a compound
-/// `{ when: { a:'1', b:'2' }, sx: 'x' }` → `("(a=1, b=2)", "x")`.
-fn parse_variants_object(body: &str) -> Vec<(String, String)> {
-    let mut pairs = Vec::new();
-    for (key, val) in parse_object_fields(body) {
-        if key == "compound" {
-            let arr = val.trim().trim_start_matches('[').trim_end_matches(']');
-            for obj in split_top_level(arr, ',') {
-                let fields = parse_object_fields(&obj);
-                let when = fields.iter().find(|(k, _)| k == "when").map(|(_, v)| v.clone());
-                let sx = fields.iter().find(|(k, _)| k == "sx").map(|(_, v)| unquote(v));
-                if let (Some(when), Some(sx)) = (when, sx) {
-                    let conds: Vec<String> = parse_object_fields(&when)
-                        .into_iter()
-                        .map(|(k, v)| format!("{k}={}", unquote(&v)))
-                        .collect();
-                    pairs.push((format!("({})", conds.join(", ")), sx));
-                }
-            }
-        } else {
-            for (value, sx) in parse_object_fields(&val) {
-                pairs.push((format!("{key}={value}"), unquote(&sx)));
-            }
-        }
-    }
-    pairs
 }
 
 /// Prepare a `<controller>` body for tsc/emit: inject the ambient runtime
@@ -1726,148 +1698,6 @@ fn first_template_tag(source: &str) -> Option<String> {
         return Some(name);
     }
     None
-}
-
-/// Return the raw body of the `<component>` block (the `{ props, variants, meta }`
-/// consumes, then lower it. No `<variants>` block, no desugar.
-/// Emit CSS from `(selector-dsl, sx)` variant pairs — the one variant→CSS core.
-fn variant_pairs_to_css(pairs: &[(String, String)]) -> String {
-    let mut css = String::new();
-    for (sel, sx) in pairs {
-        let Some(selector) = variant_selector(sel) else { continue };
-        for (state, decls) in lower_variant_sx(sx) {
-            if decls.is_empty() {
-                continue;
-            }
-            let (media, host_pseudo, target_pseudo) = classify_variant_state(&state, true);
-            let rule =
-                format!(":host({selector}{host_pseudo}){target_pseudo}{{{decls}}}");
-            match media {
-                Some(q) => css.push_str(&format!("@media {q}{{{rule}}}")),
-                None => css.push_str(&rule),
-            }
-        }
-    }
-    css
-}
-
-/// Lower a CVA-shaped variants-object body into `:host([prop='value'])` CSS.
-pub(crate) fn variants_object_to_css(body: &str) -> String {
-    variant_pairs_to_css(&parse_variants_object(body))
-}
-
-/// Where a variants-v2 state prefix attaches. Returns
-/// `(media_query, host_pseudo, target_pseudo)`:
-/// - base (`""`) → nowhere
-/// - a condition (`motion-reduce`, `dark`, …) → an `@media` wrapper
-/// - `group-<s>` → pseudo on the HOST (host state drives the targeted
-///   descendant — the `label:hover .box` pattern); without a target it
-///   degrades to a plain host state
-/// - a plain state → pseudo on the target when one exists, else on the host
-fn classify_variant_state(
-    state: &str,
-    _has_target: bool,
-) -> (Option<&'static str>, String, String) {
-    if state.is_empty() {
-        return (None, String::new(), String::new());
-    }
-    // Multi-prefix chains: `checked:before`, `forced-colors:before`, `hover`.
-    // Pseudo-elements attach as target (`::before`); everything else that is a
-    // host state/condition attaches on the host selector.
-    let mut media: Option<&'static str> = None;
-    let mut host_pseudo = String::new();
-    let mut target_pseudo = String::new();
-    for part in state.split(':').filter(|p| !p.is_empty()) {
-        if let Some(q) = sail_lint::rules::sx::condition_media(part) {
-            media = Some(q);
-        } else if let Some(pe) = sail_lint::rules::sx::pseudo_element_prefix(part) {
-            target_pseudo.push_str(pe);
-        } else if let Some(base) = part.strip_prefix("group-") {
-            if let Some(p) = sail_lint::rules::sx::state_pseudo(base)
-                .map(str::to_string)
-                .or_else(|| sail_lint::rules::sx::state_data(base))
-                .or_else(|| {
-                    sail_lint::rules::sx::group_attr_presence(base).map(|n| format!("[{n}]"))
-                })
-            {
-                host_pseudo.push_str(&p);
-            }
-        } else if let Some(p) = sail_lint::rules::sx::state_pseudo(part) {
-            host_pseudo.push_str(p);
-        } else if let Some(p) = sail_lint::rules::sx::state_data(part) {
-            host_pseudo.push_str(&p);
-        }
-    }
-    (media, host_pseudo, target_pseudo)
-}
-
-/// One `name=value` condition → an attribute match. Bool props reflect as
-/// presence attributes, so `x=true` → `[x]` and `x=false` → `:not([x])`.
-fn attr_condition(k: &str, v: &str) -> String {
-    match v {
-        "true" => format!("[{k}]"),
-        "false" => format!(":not([{k}])"),
-        _ => format!("[{k}='{v}']"),
-    }
-}
-
-fn variant_selector(sel: &str) -> Option<String> {
-    let sel = sel.trim();
-    if let Some(inner) = sel.strip_prefix('(').and_then(|s| s.strip_suffix(')')) {
-        let mut out = String::new();
-        for part in inner.split(',') {
-            out.push_str(&attr_match(part.trim())?);
-        }
-        Some(out)
-    } else {
-        attr_match(sel)
-    }
-}
-
-fn attr_match(s: &str) -> Option<String> {
-    let s = s.trim();
-    if s.starts_with('[') && s.ends_with(']') && s.len() > 2 {
-        Some(s.to_string())
-    } else if let Some((prop, val)) = s.split_once('=') {
-        Some(attr_condition(prop.trim(), val.trim()))
-    } else if !s.is_empty() && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') {
-        // A bare identifier is a boolean attribute: `invalid` → `[invalid]`.
-        Some(format!("[{s}]"))
-    } else {
-        None
-    }
-}
-
-/// Lower a space-separated sx list to per-state declaration groups via the
-/// shared sx IR (variants v2). Accepts structured (`bg: tone hover:bg: muted`)
-/// and legacy atoms (`bg-tone hover:bg-muted`) — same dual-parse as host `sx=`.
-/// Returns `(state, "prop:value;…")` groups in first-appearance order; `state`
-/// is `""` for the base group, a pseudo state (`hover`, `focus`, …), a
-/// `group-<state>` propagation (host state → descendant target), or a
-/// condition (`motion-reduce`, …). This is what lets a variants table express
-/// `solid: 'bg: tone hover:bg: tone-bg-hover'` — the per-variant hover that
-/// translation waves had to drop.
-fn lower_variant_sx(list: &str) -> Vec<(String, String)> {
-    let mut groups: Vec<(String, String)> = Vec::new();
-    let mut push = |state: &str, decls: Vec<(String, String)>| {
-        let body: String = decls.iter().map(|(p, v)| format!("{p}:{v};")).collect();
-        if let Some((_, existing)) = groups.iter_mut().find(|(s, _)| s == state) {
-            existing.push_str(&body);
-        } else {
-            groups.push((state.to_string(), body));
-        }
-    };
-    // Dual-parse structured + legacy through sx IR (same path as host sx=).
-    let (prog, _errors) = sail_lint::sx_ir::parse_lenient(list);
-    for decl in &prog.decls {
-        if let Some(decls) = sail_lint::sx_ir::lower_decl(decl) {
-            // Join multi-prefix chain so classify_variant_state can peel group-/media;
-            // pseudo-elements (before/after) are handled in variant_pairs_to_css.
-            let state = decl.prefixes.join(":");
-            push(&state, decls);
-        }
-    }
-    groups
 }
 
 fn quote_brace_attrs(source: &str) -> String {

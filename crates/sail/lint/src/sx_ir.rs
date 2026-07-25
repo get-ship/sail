@@ -1,3 +1,12 @@
+//! **INTERNAL LEGACY MACHINERY — NOT THE PRODUCT PAINT SURFACE.**
+//!
+//! The legacy string-sx authoring forms (`sx="bg: primary"`, `sx="bg-primary"`)
+//! are deleted as product: the `sail-sx` lint hard-errors them and directs
+//! authors to the new Style chain syntax (`style.bg(primary).padX(2)` in
+//! `sx={…}` / `sx={[…]}`). This IR remains only as shared internal lowering
+//! machinery for transitional emit paths; it is not a supported authoring
+//! surface.
+//!
 //! sx IR v0 — closed property set + token/keyword/raw values + one IR.
 //!
 //! Lead B: sx is **not** "Tailwind minus delta". The identity is a closed
