@@ -11,6 +11,7 @@ pub mod scales;
 pub mod report;
 pub mod rules;
 pub mod source;
+pub mod style;
 pub mod sx_ir;
 pub mod sx_vocab;
 pub mod tokens;
