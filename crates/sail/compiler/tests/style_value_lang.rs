@@ -255,10 +255,4 @@ fn batch_b_controls_compile_on_style_path() {
     }
 }
 
-#[test]
-fn diag_toggle_compile_detail() {
-    let src = include_str!("../stdlib/toggle.sail");
-    // Parse host sx with style env harvested like preprocess
-    let env = sail_compiler::parse::scope_block::style_env_from_source_public(src);
-    eprintln!("env keys: {:?}", env.keys().collect::<Vec<_>>());
-}
+

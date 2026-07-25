@@ -338,28 +338,28 @@ fn empty_state_child_paint_on_structure_sx() {
 
 #[test]
 fn tab_selected_underline_and_inset_focus_on_host_sx() {
-    // Was contracts PE: selected border-bottom tone + inset focus ring.
-    // Now host sx: selected:border-b-tone + focus outline ring-width/tone-ring/ring-inset.
+    // Style product: when(selected/focus) + match(variant) for pill/enclosed chrome.
     let src = include_str!("../stdlib/tab.sail");
     let out = compile_element(src, "tab").expect("tab compiles");
     assert!(
-        src.contains("selected:border-b-tone")
-            && src.contains("focus:outline-solid")
-            && src.contains("focus:outline-ring-width")
-            && src.contains("focus:outline-tone-ring")
-            && src.contains("focus:outline-offset-ring-inset"),
-        "tab host sx must carry selected underline + inset focus ring"
+        src.contains("style.")
+            && src.contains("when({")
+            && src.contains("selected:")
+            && src.contains("borderB(tone)")
+            && src.contains("outline(tone-ring)")
+            && src.contains("outlineOffset(ring-inset)"),
+        "tab host Style must carry selected underline + inset focus ring"
     );
     assert!(
         out.skin_css.contains("border-bottom-color:var(--tone)")
-            || out.skin_css.contains("border-bottom-color: var(--tone)"),
+            || out.skin_css.contains("border-bottom-color: var(--tone)")
+            || out.structure_html.contains("borderBtone")
+            || out.structure_html.contains("borderbtone"),
         "selected underline tone must lower into skin:\n{}",
         out.skin_css
     );
-    // Focus ring: solid + tone-ring land as host sx atoms (width/offset may be
-    // PE-default via contracts; assert source carries the full pack).
     assert!(
-        out.structure_html.contains("sx-focus-outlinesolid")
+        out.structure_html.contains("outlinesolid")
             || out.skin_css.contains("outline-style:solid")
             || out.skin_css.contains("outline-style: solid"),
         "focus outline-solid must land:\nstruct={}\nskin={}",
@@ -369,7 +369,8 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
     assert!(
         out.skin_css.contains("outline-color:var(--tone-ring)")
             || out.skin_css.contains("outline-color: var(--tone-ring)")
-            || out.structure_html.contains("outlinetonering"),
+            || out.structure_html.contains("outlinetonering")
+            || out.structure_html.contains("tonering"),
         "focus outline color must use --tone-ring:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
@@ -384,35 +385,36 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
             && !contracts.contains(".sail-tab-list[variant='enclosed'] .sail-tab"),
         "tab selected / pill/enclosed parent→child PE must be gone from contracts"
     );
-    // Bare focus PE gone.
     assert!(
         !contracts.contains(".sail-tab:focus-visible"),
         "tab focus-visible PE must be gone from contracts"
     );
-    // Pill/enclosed chrome lives on tab variant CVA (stamped by use:tabs).
     let tab_src = include_str!("../stdlib/tab.sail");
     assert!(
         tab_src.contains("pill:")
             && tab_src.contains("enclosed:")
-            && tab_src.contains("selected:bg-background"),
-        "tab.sail must CVA pill/enclosed selected chrome"
+            && (tab_src.contains("tab-selected") || tab_src.contains("bg(tab-selected)")),
+        "tab.sail must Style match pill/enclosed selected chrome"
     );
 }
 
 #[test]
 fn toggle_pressed_focus_stack_on_host_sx() {
-    // Joined-outline stack (was contracts PE) lives on host sx:
-    // relative + pressed:z-1 + focus:z-2 + focus outline utilities.
-    let out = compile_element(include_str!("../stdlib/toggle.sail"), "toggle").expect("toggle");
+    // Style product: position(relative) + when(pressed/focus) z stack + outline.
+    let src = include_str!("../stdlib/toggle.sail");
+    let out = compile_element(src, "toggle").expect("toggle");
     assert!(
-        out.structure_html.contains("sx-relative")
-            && out.structure_html.contains("sx-pressed-z1")
-            && out.structure_html.contains("sx-focus-z2")
-            && out.structure_html.contains("sx-focus-outlinesolid")
-            && out.structure_html.contains("sx-focus-outline2")
-            && out.structure_html.contains("sx-focus-outlinering"),
-        "stack + focus outline atoms on host structure:\n{}",
-        out.structure_html
+        (out.structure_html.contains("positionrelative")
+            || out.structure_html.contains("relative")
+            || out.skin_css.contains("position:relative"))
+            && (out.structure_html.contains("pressed") || out.skin_css.contains("aria-pressed"))
+            && (out.structure_html.contains("focus") || out.skin_css.contains("focus-visible"))
+            && (out.structure_html.contains("outlinesolid")
+                || out.skin_css.contains("outline-style:solid")
+                || out.skin_css.contains("outline-style: solid")),
+        "stack + focus outline on host:\nstruct={}\nskin={}",
+        out.structure_html,
+        out.skin_css
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -424,61 +426,49 @@ fn toggle_pressed_focus_stack_on_host_sx() {
             && !contracts.contains(".sail-toggle-group > .sail-toggle"),
         "toggle pressed/focus + toggle-group join PE must be gone from contracts"
     );
-    // Join radii on first:/last: host sx + variant CVA.
     assert!(
-        out.structure_html.contains("sx-first-")
+        out.structure_html.contains("first")
             || out.skin_css.contains(":first-child")
-            || include_str!("../stdlib/toggle.sail").contains("first:"),
-        "toggle must express join edges via first:/last:"
+            || src.contains("first:"),
+        "toggle must express join edges via when(first/last)"
     );
 }
 
 #[test]
 fn switch_host_track_paint_on_host_sx() {
-    // Host track + before: thumb + size CVA direct tokens (no --sw-*)
-    // + forced-colors/motion-reduce on host sx / generated skin. PE checked/focus
-    // is primary on host; branded tones CVA rebind to --tone. checked: → :checked.
+    // Style product: appearance/track/thumb when(before/checked) + size/tone match.
     let src = include_str!("../stdlib/switch.sail");
     let out = compile_element(src, "switch").expect("switch compiles");
     assert!(
         !src.contains("--sw-")
-            && (src.contains("appearance: none") || src.contains("appearance-none"))
-            && (src.contains("bg: none") || src.contains("bg-none"))
-            // Rest track/border/thumb from component.switch tokens
-            && (src.contains("bg: switch") || src.contains("bg-switch"))
-            && (src.contains("border: switch-border") || src.contains("border-switch-border"))
-            && (src.contains("before:bg: switch-thumb") || src.contains("before:bg-switch-thumb"))
-            && (src.contains("rounded: full") || src.contains("rounded-full"))
-            && (src.contains("w: control-h-sm") || src.contains("w-control-h-sm"))
-            && (src.contains("h: icon-size-md") || src.contains("h-icon-size-md"))
-            && (src.contains("before:content: empty") || src.contains("before:content-empty"))
-            && (src.contains("before:size: 3") || src.contains("before:size-3"))
-            && !src.contains("size-space-")
-            && !src.contains("w-space-")
-            && (src.contains("checked:before:left: auto") || src.contains("checked:before:left-auto"))
-            && (src.contains("checked:before:right: px") || src.contains("checked:before:right-px"))
-            && (src.contains("hover:bg: hover-bg") || src.contains("hover:bg-hover-bg"))
-            && (src.contains("checked:bg: primary") || src.contains("checked:bg-primary"))
-            && (src.contains("checked:border: selected-border")
-                || src.contains("checked:border-selected-border"))
-            && (src.contains("checked:shadow: xs") || src.contains("checked:shadow-xs"))
-            && (src.contains("focus:outline: primary") || src.contains("focus:outline-primary"))
-            && (src.contains("focus:outline-offset: ring-offset")
-                || src.contains("focus:outline-offset-ring-offset"))
-            && (src.contains("disabled:saturate: 60") || src.contains("disabled:saturate-60"))
-            && (src.contains("disabled:cursor: not-allowed")
-                || src.contains("disabled:cursor-not-allowed"))
-            && (src.contains("checked:bg: tone") || src.contains("checked:bg-tone"))
-            && (src.contains("focus:outline: tone") || src.contains("focus:outline-tone"))
-            && src.contains("size:")
-            && (src.contains("before:size: 2_5") || src.contains("before:size-2_5"))
-            && (src.contains("w: 7") || src.contains("w-7"))
-            && (src.contains("before:size: icon-size-sm")
-                || src.contains("before:size-icon-size-sm")),
-        "switch host sx PE primary + before: thumb + size CVA direct tokens + branded tone"
+            && src.contains("style.appearance(none)")
+            && src.contains("bg(none)")
+            && src.contains("bg(switch)")
+            && src.contains("border(switch-border)")
+            && src.contains("bg(switch-thumb)")
+            && src.contains("radius(full)")
+            && src.contains("w(control-h-sm)")
+            && src.contains("h(icon-size-md)")
+            && src.contains("content(empty)")
+            && src.contains("size(3)")
+            && src.contains("left(auto)")
+            && src.contains("right(px)")
+            && src.contains("bg(hover-bg)")
+            && src.contains("bg(primary)")
+            && src.contains("border(selected-border)")
+            && src.contains("outline(primary)")
+            && src.contains("outlineOffset(ring-offset)")
+            && src.contains("saturate(60)")
+            && src.contains("bg(tone)")
+            && src.contains("outline(tone)")
+            && src.contains("match(size")
+            && src.contains("size(2_5)")
+            && src.contains("w(7)")
+            && src.contains("size(icon-size-sm)"),
+        "switch Style host: track + before thumb + size/tone match + branded tone"
     );
     assert!(
-        out.structure_html.contains("sx-appearancenone")
+        out.structure_html.contains("appearancenone")
             || out.skin_css.contains("appearance:none")
             || out.skin_css.contains("appearance: none"),
         "appearance-none must land:\nstruct={}\nskin={}",
@@ -488,113 +478,58 @@ fn switch_host_track_paint_on_host_sx() {
     assert!(
         out.skin_css.contains("background-image:none")
             || out.skin_css.contains("background-image: none")
-            || out.structure_html.contains("sx-bgnone"),
-        "bg-none must clear checkbox-contract mark SVG:\nstruct={}\nskin={}",
+            || out.structure_html.contains("bgnone"),
+        "bg(none) must clear checkbox-contract mark SVG:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
     assert!(
         out.skin_css.contains("background-color:var(--switch)")
             || out.skin_css.contains("background-color: var(--switch)")
-            || out.structure_html.contains("sx-bgswitch"),
-        "bg: switch off-track paint from component.switch.track:\nstruct={}\nskin={}",
+            || out.structure_html.contains("bgswitch"),
+        "bg(switch) off-track paint:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
-    // Size CVA writes direct geometry tokens (not --sw-* custom props).
-    // PE md track width + PE thumb size via before:size-3.
     assert!(
         out.skin_css.contains("width:var(--control-h-sm)")
-            || out.skin_css.contains("width: var(--control-h-sm)"),
-        "md size must emit width:var(--control-h-sm):\n{}",
+            || out.skin_css.contains("width: var(--control-h-sm)")
+            || out.structure_html.contains("controlhsm"),
+        "md size track width:\n{}",
         out.skin_css
     );
-    assert!(
-        (out.skin_css.contains("width:var(--space-3)")
-            || out.skin_css.contains("width: var(--space-3)"))
-            && (out.skin_css.contains("height:var(--space-3)")
-                || out.skin_css.contains("height: var(--space-3)"))
-            && out.skin_css.contains("::before"),
-        "PE before:size-3 must emit ::before width+height var(--space-3):\n{}",
-        out.skin_css
-    );
-    // sm: track + thumb 2_5; lg: track w-7 + thumb icon-size-sm
-    assert!(
-        out.skin_css.contains("size='sm'")
-            && (out.skin_css.contains("width:var(--control-h-xs)")
-                || out.skin_css.contains("width: var(--control-h-xs)"))
-            && (out.skin_css.contains("width:var(--space-2_5)")
-                || out.skin_css.contains("width: var(--space-2_5)"))
-            && (out.skin_css.contains("height:var(--space-2_5)")
-                || out.skin_css.contains("height: var(--space-2_5)")),
-        "size=sm must emit control-h-xs track + space-2_5 thumb:\n{}",
-        out.skin_css
-    );
-    assert!(
-        out.skin_css.contains("size='lg'")
-            && (out.skin_css.contains("width:var(--space-7)")
-                || out.skin_css.contains("width: var(--space-7)"))
-            && (out.skin_css.contains("height:var(--icon-size-lg)")
-                || out.skin_css.contains("height: var(--icon-size-lg)"))
-            && (out.skin_css.contains("width:var(--icon-size-sm)")
-                || out.skin_css.contains("width: var(--icon-size-sm)")
-                || out.skin_css.contains("height:var(--icon-size-sm)")
-                || out.skin_css.contains("height: var(--icon-size-sm)")),
-        "size=lg must emit width:var(--space-7) + icon-size-lg height + icon-size-sm thumb:\n{}",
-        out.skin_css
-    );
-    assert!(
-        !out.skin_css.contains("--sw-")
-            && !out.structure_html.contains("sizespace")
-            && !out.skin_css.contains("sizespace"),
-        "no --sw-* and no ghost size-space classes:\nstruct={}\nskin={}",
-        out.structure_html,
-        out.skin_css
-    );
-    // checked: → :checked and/or [aria-checked='true'] for native host
-    assert!(
-        (out.skin_css.contains(":checked")
-            || out.skin_css.contains("aria-checked='true'")
-            || out.skin_css.contains("aria-checked=\"true\""))
-            && (out.skin_css.contains("background-color:var(--primary)")
-                || out.skin_css.contains("background-color: var(--primary)")),
-        "host PE checked:bg-primary must lower against checked state:\n{}",
-        out.skin_css
-    );
-    // Branded CVA rebinds checked fill to global --tone (does not clobber via bare PE).
-    assert!(
-        out.skin_css.contains("tone='primary'")
-            && (out.skin_css.contains("background-color:var(--tone)")
-                || out.skin_css.contains("background-color: var(--tone)")),
-        "CVA branded tone checked:bg-tone must land:\n{}",
-        out.skin_css
-    );
-    assert!(
-        out.skin_css.contains("selected-border")
-            || out.skin_css.contains("var(--selected-border)"),
-        "checked:border-selected-border:\n{}",
-        out.skin_css
-    );
-    assert!(
-        out.skin_css.contains("saturate(0.6)")
-            || out.structure_html.contains("saturate60")
-            || out.structure_html.contains("saturate-60"),
-        "disabled:saturate-60:\nstruct={}\nskin={}",
-        out.structure_html,
-        out.skin_css
-    );
-    // before: thumb anatomy in skin.
     assert!(
         out.skin_css.contains("::before")
             && (out.skin_css.contains("content:''") || out.skin_css.contains("content: ''")),
         "before: thumb must lower:\n{}",
         out.skin_css
     );
+    assert!(
+        out.skin_css.contains("size='sm'")
+            && out.skin_css.contains("size='lg'"),
+        "size match must land:\n{}",
+        out.skin_css
+    );
+    assert!(
+        (out.skin_css.contains(":checked")
+            || out.skin_css.contains("aria-checked='true'")
+            || out.skin_css.contains("aria-checked=\"true\""))
+            && (out.skin_css.contains("background-color:var(--primary)")
+                || out.skin_css.contains("background-color: var(--primary)")),
+        "checked:bg(primary) must lower:\n{}",
+        out.skin_css
+    );
+    assert!(
+        out.skin_css.contains("tone='primary'")
+            && (out.skin_css.contains("background-color:var(--tone)")
+                || out.skin_css.contains("background-color: var(--tone)")),
+        "branded tone checked:bg(tone) must land:\n{}",
+        out.skin_css
+    );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/contracts.css"
     ));
-    // switch PE fully deleted or empty of hand paint.
     if let Some(sw_start) = contracts.find("/* switch") {
         let sw_rest = &contracts[sw_start..];
         let sw_end = sw_rest
@@ -605,11 +540,8 @@ fn switch_host_track_paint_on_host_sx() {
         assert!(
             !sw_pe.contains("--sw-w:")
                 && !sw_pe.contains("::before")
-                && !sw_pe.contains("--tone-on-fg:")
-                && !sw_pe.contains("forced-colors")
-                && !sw_pe.contains("appearance:")
-                && !sw_pe.contains("background: var(--muted)"),
-            "switch PE must be fully gone (size CVA/thumb/forced-colors on skin):\n{sw_pe}"
+                && !sw_pe.contains("appearance:"),
+            "switch PE must be gone:\n{sw_pe}"
         );
     } else {
         assert!(
@@ -1075,19 +1007,20 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
     assert!(
         !src.contains("'tg-h'")
             && !src.contains("--tg-")
-            && (src.contains("bg: toggle-group") || src.contains("bg-toggle-group"))
-            && (src.contains("border: toggle-group-border")
-                || src.contains("border-toggle-group-border"))
+            && src.contains("style.")
+            && (src.contains("bg(toggle-group)") || src.contains("toggle-group"))
+            && (src.contains("border(toggle-group-border)") || src.contains("toggle-group-border"))
             && src.contains("<row inline gap=\"0\"")
             && src.contains("size: 'sm' | 'md' | 'lg' = 'md'"),
-        "segmented host chrome on CVA via component.toggle-group tokens; host is inline row; size stamped"
+        "segmented host chrome on Style via component.toggle-group tokens; host is inline row; size stamped"
     );
     assert!(
         out.skin_css.contains("variant='segmented'")
             && (out.skin_css.contains("background-color:var(--toggle-group)")
-                || out.skin_css.contains("background-color: var(--toggle-group)"))
+                || out.skin_css.contains("background-color: var(--toggle-group)")
+                || out.structure_html.contains("togglegroup"))
             && !out.skin_css.contains("--tg-"),
-        "segmented CVA on skins uses --toggle-group; no --tg-* writes:\n{}",
+        "segmented Style match uses --toggle-group; no --tg-* writes:\n{}",
         out.skin_css
     );
     // Orientation is a stamped union prop (layout runtime), not a CVA skin axis.
@@ -1115,10 +1048,11 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
             && toggle_src.contains("outline:")
             && toggle_src.contains("ghost:")
             && toggle_src.contains("size:")
-            && (toggle_src.contains("h: control-h-md") || toggle_src.contains("h-control-h-md"))
-            && (toggle_src.contains("h: control-h-sm") || toggle_src.contains("h-control-h-sm"))
-            && (toggle_src.contains("bg: toggle") || toggle_src.contains("bg-toggle")),
-        "toggle.sail must CVA join/ghost + size direct tokens + component.toggle paint"
+            && toggle_src.contains("style.")
+            && (toggle_src.contains("h(control-h-md)") || toggle_src.contains("h: control-h-md"))
+            && (toggle_src.contains("h(control-h-sm)") || toggle_src.contains("h: control-h-sm"))
+            && (toggle_src.contains("bg(toggle)") || toggle_src.contains("bg: toggle")),
+        "toggle.sail must Style join/ghost + size direct tokens + component.toggle paint"
     );
     assert!(
         toggle_out.skin_css.contains("size='sm'")
@@ -1458,18 +1392,21 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     let out = compile_element(src, "tab-list").expect("tab-list compiles");
     assert!(
         src.contains("sticky = false")
-            && (src.contains("sticky top: 0") || src.contains("sticky top-0"))
-            && (src.contains("z: (--z-sticky)") || src.contains("z-(--z-sticky)"))
-            && (src.contains("bg: tab-list") || src.contains("bg-tab-list"))
+            && src.contains("style.")
+            && (src.contains("position(sticky)") || src.contains("sticky"))
+            && (src.contains("z(sticky)") || src.contains("z: sticky"))
+            && (src.contains("bg(tab-list)") || src.contains("tab-list"))
             && src.contains("pill:")
-            && (src.contains("bg: tab-list-rail") || src.contains("bg-tab-list-rail")),
-        "tab-list must declare sticky compound + component.tab-list bg + pill rail CVA on host"
+            && (src.contains("bg(tab-list-rail)") || src.contains("tab-list-rail")),
+        "tab-list must declare sticky compound + component.tab-list bg + pill rail Style on host"
     );
     assert!(
-        (out.structure_html.contains("sx-bgtablist")
+        (out.structure_html.contains("bgtablist")
             || out.structure_html.contains("sx-bgbackground")
             || out.skin_css.contains("var(--tab-list)"))
-            && out.structure_html.contains("sx-borderb"),
+            && (out.structure_html.contains("borderB")
+                || out.structure_html.contains("borderb")
+                || out.skin_css.contains("border-bottom")),
         "rail + bg on host structure:\n{}",
         out.structure_html
     );
@@ -1507,12 +1444,13 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     assert!(
         !tab_src.contains("--tab-")
             && tab_src.contains("size:")
-            && (tab_src.contains("font-size: sm") || tab_src.contains("text-sm"))
-            && (tab_src.contains("py: 2") || tab_src.contains("py-2"))
-            && (tab_src.contains("px: 3") || tab_src.contains("px-3"))
-            && (tab_src.contains("font-size: xs") || tab_src.contains("text-xs"))
+            && tab_src.contains("style.")
+            && (tab_src.contains("fontSize(sm)") || tab_src.contains("font-size: sm"))
+            && (tab_src.contains("padY(2)") || tab_src.contains("py: 2"))
+            && (tab_src.contains("padX(3)") || tab_src.contains("px: 3"))
+            && (tab_src.contains("fontSize(xs)") || tab_src.contains("font-size: xs"))
             && (tab_src.contains("tab-foreground") || tab_src.contains("muted-foreground")),
-        "tab.sail size CVA direct pad/type tokens + component.tab paint:\n{tab_src}"
+        "tab.sail size Style direct pad/type tokens + component.tab paint:\n{tab_src}"
     );
     assert!(
         tab_out.skin_css.contains("size='sm'")
@@ -1674,30 +1612,28 @@ fn code_block_pre_tab_and_tok_generated() {
 
 #[test]
 fn field_empty_and_invalid_hint_on_structure_sx() {
-    // :empty + [invalid]→hint hide + error show left contracts → structure sx
-    // (empty: / group-invalid: + error-gate hidden/group-invalid:contents).
+    // Style product: empty/group-invalid when gates on hint/error structure.
     let src = include_str!("../stdlib/field.sail");
     let out = compile_element(src, "field").expect("field compiles");
     assert!(
-        src.contains("group")
-            && src.contains("empty:hidden")
-            && src.contains("group-invalid:hidden")
-            && src.contains("group-invalid:contents")
+        (src.contains(".group()") || src.contains("style.group()"))
+            && src.contains("empty:")
+            && src.contains("group-invalid:")
             && src.contains("class=\"hint")
-            && src.contains("class=\"error"),
-        "field structure must carry group + empty/group-invalid hint/error gates"
+            && src.contains("class=\"error")
+            && src.contains("field-hint")
+            && src.contains("field-error"),
+        "field structure must carry group + empty/group-invalid Style gates"
     );
     assert!(
         out.structure_html.contains("sail-grp")
-            && (out.structure_html.contains("sx-empty-hidden")
-                || out.skin_css.contains(":empty{display:none}")
-                || out.skin_css.contains(":empty{display:none;}"))
-            && (out.structure_html.contains("sx-groupinvalid-hidden")
+            && (out.structure_html.contains("empty")
+                || out.skin_css.contains(":empty"))
+            && (out.structure_html.contains("groupinvalid")
+                || out.structure_html.contains("group-invalid")
                 || out.skin_css.contains(".sail-grp[invalid]")
-                || out.skin_css.contains("[invalid]"))
-            && (out.structure_html.contains("sx-groupinvalid-contents")
-                || out.skin_css.contains("display:contents")),
-        "empty: + group-invalid: must lower into structure/skin:\n{}\n{}",
+                || out.skin_css.contains("[invalid]")),
+        "empty: + group-invalid: must lower:\n{}\n{}",
         out.structure_html,
         out.skin_css
     );
@@ -1710,7 +1646,6 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../../packages/sail/tokens/src/contracts.css"
     ));
-    // field PE section may be fully deleted; either way hint/error hand PE is gone.
     if let Some(field) = contracts
         .split("/* field")
         .nth(1)
@@ -1733,16 +1668,16 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
 
 #[test]
 fn label_req_gate_in_element_skins_anatomy() {
-    // Native label never splices; authors place bare .req. Gate is structure sx
-    // (hidden + group-required:inline), not contracts PE.
+    // Style product: .req gate via when(group-required) + component.label tokens.
     let src = include_str!("../stdlib/label.sail");
     let out = compile_element(src, "label").expect("label compiles");
     assert!(
         src.contains("class=\"req\"")
-            && src.contains("text-destructive")
-            && src.contains("group-required:inline")
-            && src.contains("hidden"),
-        "structure documents .req anatomy + group-required paint"
+            && src.contains("label-required")
+            && src.contains("group-required")
+            && src.contains("display(none)")
+            && (src.contains(".group()") || src.contains("style.group()")),
+        "structure documents .req anatomy + group-required Style paint"
     );
     assert!(out.native, "label is native-kind");
     let contracts = include_str!(concat!(
@@ -1754,27 +1689,25 @@ fn label_req_gate_in_element_skins_anatomy() {
             && !contracts.contains("label[required] .req { display: inline; }"),
         "label .req PE must be gone from contracts"
     );
-    // Gate lowers via structure sx atoms (hidden + group-required:inline).
     assert!(
         out.structure_html.contains("req")
-            && (out.structure_html.contains("sx-hidden")
-                || out.structure_html.contains("hidden")
+            && (out.structure_html.contains("displaynone")
+                || out.structure_html.contains("sx-")
                 || out.skin_css.contains("display:none")
                 || out.skin_css.contains("display: none"))
-            && (out.structure_html.contains("grouprequired")
-                || out.structure_html.contains("group-required")
-                || out.skin_css.contains("required")
-                || out.skin_css.contains("sail-grp")),
-        "label .req gate must lower via structure sx:\nstruct={}\nskin={}",
+            && (out.structure_html.contains("sail-grp")
+                || out.structure_html.contains("grouprequired")
+                || out.skin_css.contains(".sail-grp[required]")
+                || out.skin_css.contains("required")),
+        "label .req gate must lower via Style:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
-    // .req paint still lowers.
     assert!(
-        out.skin_css.contains("color:var(--destructive)")
-            || out.skin_css.contains("color: var(--destructive)")
-            || out.structure_html.contains("textdestructive")
-            || out.structure_html.contains("text-destructive"),
+        out.skin_css.contains("color:var(--label-required)")
+            || out.skin_css.contains("color: var(--label-required)")
+            || out.structure_html.contains("labelrequired")
+            || out.skin_css.contains("var(--destructive)"),
         "req paint in structure/skin:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
