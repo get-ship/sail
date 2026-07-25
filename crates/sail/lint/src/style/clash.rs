@@ -25,6 +25,11 @@ fn walk(
     match style {
         Style::Empty => {}
         Style::Set(op) => {
+            // Child-pack setters paint a descendant selector (`img` / `svg`), not
+            // the host box — their width/height/display must not clash with host size.
+            if matches!(op.setter.as_str(), "avatarMedia" | "glyphFill") {
+                return;
+            }
             if let Ok(decls) = lower_op_css(op) {
                 for (css_prop, _) in decls {
                     let key = (css_prop.clone(), path.to_string());

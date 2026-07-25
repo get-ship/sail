@@ -184,4 +184,34 @@ mod tests {
         let (_, css) = lower_style(&style, &HashMap::new());
         assert!(css.contains(".sail-grp[required]"), "{css}");
     }
+
+    #[test]
+    fn group_caught_and_group_inline_when_emit_ancestors() {
+        let (style, diags) = parse(
+            "style.group().when({ group-caught: style.display(none), group-inline: style.display(none) })",
+        );
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (classes, css) = lower_style(&style, &HashMap::new());
+        assert!(classes.contains("sail-grp"), "{classes}");
+        assert!(css.contains(".sail-grp[data-caught]"), "{css}");
+        assert!(css.contains(".sail-grp[inline]"), "{css}");
+    }
+
+    #[test]
+    fn glyph_fill_and_list_setters_lower() {
+        let (style, diags) = parse("style.list(none).glyphFill(true).isolate()");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains("list-style-type:none") || css.contains("list-style-type: none"), "{css}");
+        assert!(css.contains(" svg") || css.contains("width:100%"), "{css}");
+        assert!(css.contains("isolation:isolate") || css.contains("isolation: isolate"), "{css}");
+    }
 }

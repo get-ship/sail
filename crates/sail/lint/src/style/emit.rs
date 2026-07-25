@@ -170,6 +170,8 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
     let mut child = "";
     if op.setter == "avatarMedia" {
         child = " img";
+    } else if op.setter == "glyphFill" {
+        child = " svg";
     }
     let selector = build_selector(&class, ctx, child);
     let key = format!("{selector}|{decls:?}|{:?}", ctx.media);
@@ -186,6 +188,9 @@ fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<S
 fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
     if op.setter == "avatarMedia" {
         return "sx-avatarmedia".into();
+    }
+    if op.setter == "glyphFill" {
+        return "sx-glyphfill".into();
     }
     let arg = match &op.arg {
         super::ir::PaintArg::Token(t) => t

@@ -61,6 +61,8 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "padB", vocab: "pb", scale: Some("space"), keywords: &["0"], negatable: false },
         SetterSpec { name: "padL", vocab: "pl", scale: Some("space"), keywords: &["0"], negatable: false },
         SetterSpec { name: "padR", vocab: "pr", scale: Some("space"), keywords: &["0"], negatable: false },
+        SetterSpec { name: "padS", vocab: "ps", scale: Some("space"), keywords: &["0"], negatable: false },
+        SetterSpec { name: "padE", vocab: "pe", scale: Some("space"), keywords: &["0"], negatable: false },
         SetterSpec { name: "m", vocab: "m", scale: Some("space"), keywords: &["0", "auto"], negatable: true },
         SetterSpec { name: "mx", vocab: "mx", scale: Some("space"), keywords: &["0", "auto"], negatable: true },
         SetterSpec { name: "my", vocab: "my", scale: Some("space"), keywords: &["0", "auto"], negatable: true },
@@ -71,12 +73,18 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "minH", vocab: "min-h", scale: Some("size"), keywords: &["0", "full", "screen"], negatable: false },
         SetterSpec { name: "minW", vocab: "min-w", scale: Some("size"), keywords: &["0", "full", "menu-min-w", "panel-rail-w"], negatable: false },
         SetterSpec { name: "maxH", vocab: "max-h", scale: Some("size"), keywords: &["0", "full", "screen"], negatable: false },
-        SetterSpec { name: "maxW", vocab: "max-w", scale: Some("size"), keywords: &["0", "full", "screen", "none"], negatable: false },
+        SetterSpec {
+            name: "maxW",
+            vocab: "max-w",
+            scale: Some("size"),
+            keywords: &["0", "full", "screen", "none", "panel-max-w-md", "panel-max-w-sm", "panel-max-w-lg", "panel-max-w-xs", "panel-ch-w-md", "panel-ch-w-lg"],
+            negatable: false,
+        },
         SetterSpec {
             name: "w",
             vocab: "w",
             scale: Some("size"),
-            keywords: &["0", "full", "auto", "border-width", "toast-region-width"],
+            keywords: &["0", "full", "auto", "max", "border-width", "toast-region-width", "panel-max-w-md", "panel-max-w-sm", "panel-max-w-lg", "panel-max-w-xs"],
             negatable: false,
         },
         SetterSpec {
@@ -87,6 +95,13 @@ pub fn setters() -> &'static [SetterSpec] {
             negatable: false,
         },
         SetterSpec { name: "size", vocab: "size", scale: Some("size"), keywords: &["0", "full"], negatable: false },
+        SetterSpec {
+            name: "list",
+            vocab: "list",
+            scale: None,
+            keywords: &["none", "disc", "decimal"],
+            negatable: false,
+        },
         SetterSpec { name: "fontSize", vocab: "text", scale: Some("text"), keywords: &[], negatable: false },
         SetterSpec { name: "fontWeight", vocab: "font", scale: Some("weight"), keywords: &[], negatable: false },
         SetterSpec { name: "fontFamily", vocab: "font", scale: Some("font"), keywords: &["body", "heading", "mono", "display"], negatable: false },
@@ -166,8 +181,29 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "animate", vocab: "animate", scale: None, keywords: &["spin"], negatable: false },
         SetterSpec { name: "bgImage", vocab: "bg-image", scale: None, keywords: &["none", "primary-accent"], negatable: false },
         SetterSpec { name: "avatarMedia", vocab: "avatar-media", scale: None, keywords: &["true", "on"], negatable: false },
+        // SVG child pack: display/block + fill host size (icon glyph box).
+        SetterSpec { name: "glyphFill", vocab: "glyph-fill", scale: None, keywords: &["true", "on"], negatable: false },
         // Standard scrollbar pack (width thin + color vars); webkit thumb chrome not on Style yet.
         SetterSpec { name: "scrollbarThin", vocab: "scrollbar-thin", scale: None, keywords: &[], negatable: false },
+        // isolation: isolate (stacking root for overlays / theme swatches).
+        SetterSpec { name: "isolate", vocab: "isolate", scale: None, keywords: &[], negatable: false },
+        SetterSpec {
+            name: "mixBlend",
+            vocab: "mix-blend",
+            scale: None,
+            keywords: &[
+                "normal",
+                "multiply",
+                "screen",
+                "overlay",
+                "darken",
+                "lighten",
+                "difference",
+                "exclusion",
+                "luminosity",
+            ],
+            negatable: false,
+        },
         SetterSpec {
             name: "flexDir",
             vocab: "flex-dir",
@@ -232,6 +268,12 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
         "group-state-open" | "groupStateOpen" => {
             Some(WhenTarget::Ancestor(".sail-grp[data-state~='open'] "))
         }
+        // error-boundary catchRender stamps data-caught on the group host.
+        "group-caught" | "groupCaught" => {
+            Some(WhenTarget::Ancestor(".sail-grp[data-caught] "))
+        }
+        // theme-picker `inline` presence attr on the group host.
+        "group-inline" | "groupInline" => Some(WhenTarget::Ancestor(".sail-grp[inline] ")),
         "motion-reduce" | "motionReduce" => {
             Some(WhenTarget::Media("(prefers-reduced-motion: reduce)"))
         }
@@ -256,8 +298,8 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
             source: op.source.clone(),
         });
     };
-    // Marker setters with empty arg (group, scrollbarThin).
-    if matches!(spec.name, "group" | "scrollbarThin") {
+    // Marker setters with empty arg (group, scrollbarThin, isolate).
+    if matches!(spec.name, "group" | "scrollbarThin" | "isolate") {
         return Ok(());
     }
     match &op.arg {
@@ -314,6 +356,10 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
     if spec.name == "group" {
         return Ok(Vec::new());
     }
+    // isolation stacking root.
+    if spec.name == "isolate" {
+        return Ok(vec![("isolation".into(), "isolate".into())]);
+    }
     // scrollbar-thin bare composite (width + color vars).
     if spec.name == "scrollbarThin" {
         if let Resolved::Ok(pairs) = sx_vocab::resolve("scrollbar-thin") {
@@ -338,10 +384,10 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             return Ok(bind_css_props(spec, &css));
         }
     };
-    // Axis overflow / overscroll / text-align / tab-size / underline keywords
+    // Axis overflow / overscroll / text-align / tab-size / underline / list keywords
     if matches!(
         spec.name,
-        "overflowX" | "overflowY" | "overscroll" | "textAlign" | "tab" | "underline"
+        "overflowX" | "overflowY" | "overscroll" | "textAlign" | "tab" | "underline" | "list" | "mixBlend"
     ) {
         if let PaintArg::Token(t) = &op.arg {
             let bare_t = strip_neg(t).1;
@@ -374,6 +420,8 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                 "textAlign" => "text-align",
                 "tab" => "tab-size",
                 "underline" => "text-decoration-line",
+                "list" => "list-style-type",
+                "mixBlend" => "mix-blend-mode",
                 _ => spec.vocab,
             };
             let css_val = match (spec.name, bare_t) {
@@ -515,6 +563,46 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                     ("padding".into(), "10%".into()),
                     ("box-sizing".into(), "border-box".into()),
                 ]);
+            }
+            ("glyphFill", "true" | "on") => {
+                return Ok(vec![
+                    ("display".into(), "block".into()),
+                    ("width".into(), "100%".into()),
+                    ("height".into(), "100%".into()),
+                ]);
+            }
+            ("w", "max") => {
+                return Ok(vec![("width".into(), "max-content".into())]);
+            }
+            ("w", "panel-max-w-md") => {
+                return Ok(vec![("width".into(), "var(--panel-max-w-md)".into())]);
+            }
+            ("w", "panel-max-w-sm") => {
+                return Ok(vec![("width".into(), "var(--panel-max-w-sm)".into())]);
+            }
+            ("w", "panel-max-w-lg") => {
+                return Ok(vec![("width".into(), "var(--panel-max-w-lg)".into())]);
+            }
+            ("w", "panel-max-w-xs") => {
+                return Ok(vec![("width".into(), "var(--panel-max-w-xs)".into())]);
+            }
+            ("maxW", "panel-max-w-md") => {
+                return Ok(vec![("max-width".into(), "var(--panel-max-w-md)".into())]);
+            }
+            ("maxW", "panel-max-w-sm") => {
+                return Ok(vec![("max-width".into(), "var(--panel-max-w-sm)".into())]);
+            }
+            ("maxW", "panel-max-w-lg") => {
+                return Ok(vec![("max-width".into(), "var(--panel-max-w-lg)".into())]);
+            }
+            ("maxW", "panel-max-w-xs") => {
+                return Ok(vec![("max-width".into(), "var(--panel-max-w-xs)".into())]);
+            }
+            ("maxW", "panel-ch-w-md") => {
+                return Ok(vec![("max-width".into(), "var(--panel-ch-w-md)".into())]);
+            }
+            ("maxW", "panel-ch-w-lg") => {
+                return Ok(vec![("max-width".into(), "var(--panel-ch-w-lg)".into())]);
             }
             ("flexDir", dir @ ("row" | "column" | "row-reverse" | "column-reverse")) => {
                 return Ok(vec![("flex-direction".into(), dir.into())]);
@@ -711,6 +799,14 @@ fn bind_css_props(spec: &SetterSpec, css_name: &str) -> Vec<(String, String)> {
         "maxW" => return vec![("max-width".into(), var)],
         "maxH" => return vec![("max-height".into(), var)],
         "z" => return vec![("z-index".into(), var)],
+        "opacity" => return vec![("opacity".into(), var)],
+        "mixBlend" => return vec![("mix-blend-mode".into(), var)],
+        "fontSize" => return vec![("font-size".into(), var)],
+        "fontWeight" => return vec![("font-weight".into(), var)],
+        "fontFamily" => return vec![("font-family".into(), var)],
+        "tracking" => return vec![("letter-spacing".into(), var)],
+        "bg" => return vec![("background-color".into(), var)],
+        "fg" | "color" => return vec![("color".into(), var)],
         "translateY" => {
             return vec![("translate".into(), format!("var(--sx-translate-x, 0) {var}"))];
         }
