@@ -100,8 +100,10 @@ describe('light-DOM component registration', () => {
     const sheets = document.querySelectorAll('#sail-light-contracts')
     expect(sheets.length).toBe(1)
     const css = sheets[0]!.textContent ?? ''
-    expect(css).not.toContain("[tone='primary']")
-    expect(css).toContain("[size='sm']") // native geometry only via control-h tokens
+    // Platform button still uses [tone=] → --tone* (not a Style host).
+    expect(css).toContain("[tone='primary']")
+    expect(css).toContain('var(--tone, var(--foreground))')
+    expect(css).toContain("[size='sm']") // native geometry via control-h tokens
     expect(css).not.toContain(':host')
     expect(css).toContain('slot { display: contents; }')
     // The interactive-surface contracts: baseline, focus, disabled,

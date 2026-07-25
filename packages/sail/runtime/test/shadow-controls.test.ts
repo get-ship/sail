@@ -7,11 +7,13 @@ import { describe, expect, it } from 'vitest'
 import { CONTROL_SKINS_CSS } from '../src/styles/index'
 
 describe('control skins (residual shadow adoption + light contracts share form)', () => {
-  it('carries button/input/toggle skins without tone attr channels', () => {
+  it('carries button/input/toggle skins; tone channel lives on LIGHT_CONTRACTS', () => {
     expect(CONTROL_SKINS_CSS).toContain("button[variant='solid']")
     expect(CONTROL_SKINS_CSS).toContain("button[variant='ghost']")
     expect(CONTROL_SKINS_CSS).toContain("input[type='checkbox']")
+    // Tone attr mapping is on LIGHT_CONTRACTS_CSS, not the residual control skins blob.
     expect(CONTROL_SKINS_CSS).not.toMatch(/\[tone='primary'\]/)
+    expect(CONTROL_SKINS_CSS).toContain('var(--tone, var(--foreground))')
     expect(CONTROL_SKINS_CSS).not.toContain(':host')
   })
 
