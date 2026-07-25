@@ -22,9 +22,10 @@
 //! mission is never "find another way".
 //!
 //! sx is compile-time and static: it lowers to atomic classes plus injected CSS.
-//! A dynamic `sx={…}` cannot be lowered and used to silently vanish
-//! (`class=""`), so it is a hard error — conditional styling goes through a
-//! primitive prop (`tone={…}`) or a state prefix keyed on ARIA.
+//! Product form is Style: `sx={style.…}`, `sx={[ match(…), when(…) ]}`, or a
+//! scope Style const ref. A **runtime** dynamic `sx={expr}` (JS ternary, call,
+//! etc.) cannot be lowered and is a hard error — conditional styling goes
+//! through a primitive prop (`tone={…}`) or a `when` / `match` Style guard.
 
 use std::path::Path;
 
@@ -317,8 +318,22 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         };
         let (line, col) = offset_to_line_col(source, offset);
 
-        // IR path (structured `bg: primary` + legacy `bg-primary`). Layout
-        // refusals are still absorbed into one compound redirect.
+        // Sole Style product path: chain + match/when/compound/bind.
+        // Utility-string sx and other residual forms are hard errors.
+        {
+            let (style, style_diags) = crate::style::parse::parse(val);
+            for d in &style_diags {
+                findings.push(mk(path, line, col, d.message()));
+            }
+            for d in crate::style::clash::detect_clashes(&style, &std::collections::HashMap::new())
+            {
+                findings.push(mk(path, line, col, d.message()));
+            }
+            // Always Style path — do not walk legacy atoms as a second product.
+            continue;
+        }
+
+        #[allow(unreachable_code)]
         let (prog, parse_errs) = crate::sx_ir::parse_lenient(val);
         for e in &parse_errs {
             findings.push(mk(path, line, col, e.message()));
@@ -480,15 +495,15 @@ fn mk_dynamic(path: &Path, line: usize, col: usize) -> Finding {
     }
 }
 
-/// One `sx` attribute occurrence: a static literal (value + offset) to validate,
-/// or a dynamic `sx={…}` binding (offset of the `sx`) to reject.
+/// One `sx` attribute occurrence: a static Style value (value + offset) to
+/// validate, or a runtime dynamic `sx={…}` binding (offset of the `sx`) to reject.
 enum SxHit<'a> {
     Static(&'a str, usize),
     Dynamic(usize),
 }
 
-/// Find every `sx=` attribute — static `sx="…"` or dynamic `sx={…}`. Skips HTML
-/// comments.
+/// Find every `sx=` attribute — static `sx="…"` / Style `sx={…}`, or runtime
+/// dynamic `sx={jsExpr}`. Skips HTML comments.
 fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
     let bytes = source.as_bytes();
     let mut out = Vec::new();
@@ -513,13 +528,20 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
                         i = vstart + q + 1;
                         continue;
                     }
-                } else {
-                    // dynamic `sx={…}` — flag at the `sx`, skip past the brace.
-                    out.push(SxHit::Dynamic(i));
-                    if let Some(close) = source[dpos..].find('}') {
-                        i = dpos + close + 1;
+                } else if bytes[dpos] == b'{' {
+                    if let Some(close) = balanced_brace_end(bytes, dpos) {
+                        let val = &source[dpos + 1..close];
+                        if is_style_product_value(val) {
+                            // Compile-time Style: chain / match / when / compound / list / const ref.
+                            out.push(SxHit::Static(val, dpos + 1));
+                        } else {
+                            // Runtime JS expression — cannot lower.
+                            out.push(SxHit::Dynamic(i));
+                        }
+                        i = close + 1;
                         continue;
                     }
+                    out.push(SxHit::Dynamic(i));
                 }
             }
         }
@@ -531,6 +553,66 @@ fn scan_sx(source: &str) -> Vec<SxHit<'_>> {
         }
     }
     out
+}
+
+/// Offset of the `}` matching `{` at `open`, or None if unbalanced.
+fn balanced_brace_end(bytes: &[u8], open: usize) -> Option<usize> {
+    if bytes.get(open) != Some(&b'{') {
+        return None;
+    }
+    let mut depth = 0i32;
+    let mut i = open;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'{' => depth += 1,
+            b'}' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(i);
+                }
+            }
+            b'"' | b'\'' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                        i += 1;
+                    }
+                    i += 1;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    None
+}
+
+/// True when brace contents are a compile-time Style expression (not JS).
+fn is_style_product_value(val: &str) -> bool {
+    let t = val.trim();
+    // Outer braces from nested quote forms: `{ style.… }` already stripped by scan.
+    let t = t
+        .strip_prefix('{')
+        .and_then(|s| s.strip_suffix('}'))
+        .map(str::trim)
+        .unwrap_or(t);
+    t.starts_with("style.")
+        || t.starts_with("match(")
+        
+        || t.starts_with("when(")
+        || t.starts_with("compound(")
+        || t.starts_with('[')
+        || {
+            // bare Style const ref
+            let mut chars = t.chars();
+            match chars.next() {
+                Some(c) if c.is_ascii_alphabetic() || c == '_' => {
+                    t.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+                }
+                _ => false,
+            }
+        }
 }
 
 /// After `sx`: `(ws)* = (ws)*` then `"` (static) or `{` (dynamic). Returns the
@@ -605,117 +687,67 @@ mod tests {
     }
 
     #[test]
-    fn tokens_pass_and_raw_values_do_not() {
-        assert!(run(r#"<card sx="p-4 bg-surface-2 rounded-lg text-sm text-muted-foreground">x</card>"#).is_empty());
-        assert_eq!(run(r#"<card sx="p-16px">x</card>"#).len(), 1);
-        assert_eq!(run(r#"<card sx="bg-#3366ff">x</card>"#).len(), 1);
-    }
-
-    #[test]
-    fn structured_form_passes_and_rejects_raw_without_escape() {
-        // IR v0: `prop: value` dual-parsed with legacy.
+    fn style_chain_product_passes() {
         assert!(
-            run(r#"<div sx="bg: primary px: 2 rounded: sm hover:bg: muted">x</div>"#).is_empty(),
-            "structured tokens must pass"
+            run(r#"<div sx={style.bg(primary).padX(2)}>x</div>"#).is_empty(),
+            "{:?}",
+            run(r#"<div sx={style.bg(primary).padX(2)}>x</div>"#)
         );
+    }
+
+    #[test]
+    fn style_list_match_when_product_passes() {
+        let src = r#"<div sx={[ match(variant, { solid: style.bg(primary) }), when({ hover: style.opacity(90) }) ]}>x</div>"#;
+        assert!(run(src).is_empty(), "{:?}", run(src));
+    }
+
+    #[test]
+    fn style_const_ref_is_static_product_not_dynamic() {
+        // Bare ref is compile-time Style (scope const); not runtime `sx={cls()}`.
+        assert!(run(r#"<div sx={filled}>x</div>"#).is_empty(), "{:?}", run(r#"<div sx={filled}>x</div>"#));
+    }
+
+    #[test]
+    fn utility_string_product_is_residual_error() {
+        let ms = run(r#"<card sx="p-4 bg-surface-2">x</card>"#);
+        assert!(!ms.is_empty(), "utility-string sx must fail closed");
         assert!(
-            run(r#"<div sx="bg: primary px-2">x</div>"#).is_empty(),
-            "mixed structured+legacy must pass"
+            ms.iter().any(|m| m.contains("utility-string") || m.contains("Style product")),
+            "{ms:?}"
         );
-        let raw = run(r#"<div sx="bg: #3366ff">x</div>"#);
-        assert_eq!(raw.len(), 1, "{raw:?}");
-        assert!(raw[0].contains("raw:"), "must demand raw: escape: {}", raw[0]);
-        let px = run(r#"<div sx="p: 16px">x</div>"#);
-        assert_eq!(px.len(), 1, "{px:?}");
-        assert!(px[0].contains("raw:"), "length needs raw:: {}", px[0]);
     }
 
     #[test]
-    fn a_bad_value_prints_the_scale_so_the_author_knows_what_to_spend() {
-        let m = &run(r#"<card sx="p-99">x</card>"#)[0];
-        assert!(m.contains("accepts:"), "{m}");
-        assert!(m.contains('4'), "the space scale must be printed: {m}");
+    fn structured_colon_soup_is_residual_error() {
+        let ms = run(r#"<div sx="bg: primary px: 2">x</div>"#);
+        assert!(!ms.is_empty(), "{ms:?}");
     }
 
     #[test]
-    fn the_layout_prior_gets_one_redirect_not_three_refusals() {
-        // `flex items-center gap-2` is ONE breath of Tailwind muscle memory. Three
-        // separate rejections is where "puzzle, not toolkit" comes back — and the
-        // author writes it again on the next element regardless.
-        let ms = run(r#"<div sx="flex items-center gap-2 p-4 bg-surface-2">x</div>"#);
-        assert_eq!(ms.len(), 1, "one message, not three: {ms:?}");
-        let m = &ms[0];
-        assert!(m.contains(r#"<row gap="2" align="center" sx="p-4 bg-surface-2">"#), "{m}");
+    fn bad_token_fail_closed() {
+        let ms = run(r#"<div sx={style.bg(notARealTokenZzz999)}>x</div>"#);
+        assert!(!ms.is_empty(), "{ms:?}");
+        assert!(
+            ms.iter().any(|m| m.contains("token") || m.contains("not a token")),
+            "{ms:?}"
+        );
     }
 
     #[test]
-    fn the_surviving_sx_comes_along_so_it_can_be_pasted_whole() {
-        let m = &run(r#"<div sx="flex-col justify-between p-6">x</div>"#)[0];
-        assert!(m.contains(r#"<column justify="between" sx="p-6">"#), "{m}");
+    fn unknown_setter_fail_closed() {
+        let ms = run(r#"<div sx={style.notASetter(primary)}>x</div>"#);
+        assert!(!ms.is_empty(), "{ms:?}");
     }
 
     #[test]
-    fn a_grid_is_inferred_from_its_own_props() {
-        // No `grid` atom, but `grid-cols-3` can only mean one thing.
-        let m = &run(r#"<div sx="grid-cols-3 gap-4">x</div>"#)[0];
-        assert!(m.contains(r#"<grid cols="3" gap="4">"#), "{m}");
-    }
-
-    #[test]
-    fn flex_nowrap_redirects_to_a_buildable_row_nowrap() {
-        // job/layout-pass: the redirect used to say "no layout keyword yet".
-        // Now the whole breath collapses into a single buildable element.
-        let m = &run(r#"<div sx="flex-nowrap items-center gap-2">x</div>"#)[0];
-        assert!(m.contains(r#"<row nowrap gap="2" align="center">"#), "{m}");
-        // And alone, it still names the built form.
-        let m = &run(r#"<div sx="flex-nowrap">x</div>"#)[0];
-        assert!(m.contains("<row nowrap"), "{m}");
-    }
-
-    #[test]
-    fn grid_rows_redirects_to_a_buildable_rows_axis() {
-        let m = &run(r#"<div sx="grid-rows-3 gap-4">x</div>"#)[0];
-        assert!(m.contains(r#"<grid rows="3" gap="4">"#), "{m}");
-    }
-
-    #[test]
-    fn a_refusal_names_the_element_to_use_instead() {
-        // THE mission: never "not allowed, find another way".
-        let m = &run(r#"<div sx="flex">x</div>"#)[0];
-        assert!(m.contains("<row>"), "{m}");
-        let m = &run(r#"<div sx="items-center">x</div>"#)[0];
-        assert!(m.contains(r#"align="center""#), "{m}");
-        let m = &run(r#"<div sx="gap-4">x</div>"#)[0];
-        assert!(m.contains(r#"gap="4""#), "{m}");
-    }
-
-    #[test]
-    fn the_mechanics_that_cost_components_their_designs_are_vocabulary_now() {
-        assert!(run(r#"<img sx="object-cover">"#).is_empty(), "media's fit prop");
-        assert!(run(r#"<div sx="touch-none origin-top-left">x</div>"#).is_empty(), "the canvas");
-        assert!(run(r#"<div sx="border-l-3">x</div>"#).is_empty(), "the tool-call rail");
-        assert!(run(r#"<div sx="opacity-85">x</div>"#).is_empty(), "the bar chart's rest state");
-        assert!(run(r#"<div sx="rotate-1">x</div>"#).is_empty(), "sail-band's tilt");
-        assert!(run(r#"<div sx="tabular-nums">x</div>"#).is_empty(), "chat timestamps");
-        assert!(run(r#"<div sx="transition-colors duration-fast ease-out">x</div>"#).is_empty(), "change-driven motion");
-        assert!(run(r#"<table sx="sr-only"><tr><td>1</td></tr></table>"#).is_empty(), "a chart's data table");
-        assert!(run(r#"<p sx="text-gradient-primary">SHIP</p>"#).is_empty(), "the wordmark's gradient clip");
-        assert!(run(r#"<p sx="text-gradient-accent">SHIP</p>"#).is_empty(), "gradient clip, accent tone");
-        assert!(run(r#"<div sx="bg-glow-primary"></div>"#).is_empty(), "the hero's radial glow");
-        assert!(run(r#"<div sx="bg-glow-accent"></div>"#).is_empty(), "radial glow, accent tone");
-    }
-
-    #[test]
-    fn state_prefixes_are_closed_and_keyed_on_semantics() {
-        assert!(run(r#"<a sx="hover:bg-surface-2 current:text-primary group-selected:text-foreground">x</a>"#).is_empty());
-        assert_eq!(run(r#"<a sx="wobble:bg-surface-2">x</a>"#).len(), 1);
+    fn runtime_dynamic_sx_is_an_error() {
+        assert_eq!(run(r#"<card sx={cls()}>x</card>"#).len(), 1);
+        assert_eq!(run(r#"<card sx={ok ? 'a' : 'b'}>x</card>"#).len(), 1);
     }
 
     #[test]
     fn breakpoints_match_the_tokens() {
-        // A media query cannot read a custom property, so the widths are literal
-        // here. That is the one place sx can drift from the theme — so it can't.
-        // Values come from the generated token registry (DTCG emit).
+        // Media query widths are literal; must stay locked to the token registry.
         for (name, query) in CONDITION_PREFIXES.iter().filter(|(n, _)| {
             matches!(*n, "mobile" | "tablet" | "desktop")
         }) {
@@ -726,26 +758,5 @@ mod tests {
                 "`{name}:` is {query} but --breakpoint-{name} is {value} — sx has drifted from the theme"
             );
         }
-    }
-
-    #[test]
-    fn conditions_are_closed() {
-        assert!(run(r#"<div sx="p-2 tablet:p-4 motion-reduce:transition-none">x</div>"#).is_empty());
-    }
-
-    #[test]
-    fn a_dynamic_sx_cannot_lower_so_it_is_an_error() {
-        assert_eq!(run(r#"<card sx={cls()}>x</card>"#).len(), 1);
-    }
-
-    #[test]
-    fn theme_declarations_never_widen_the_vocabulary() {
-        // THE CLOSED BACK DOOR: a `<theme channels="…">` declaration must not make
-        // its channel a legal sx value — ad-hoc channels were how translation snuck
-        // past the design system. Rejected DECLARED OR NOT.
-        let themed = "<theme prop=\"size\" channels=\"cb-size\">\n  default: icon-size-md\n</theme>\n<card sx=\"w-cb-size\">x</card>";
-        assert_eq!(run(themed).len(), 1, "a declared ad-hoc channel is still rejected");
-        // The FRAMEWORK channels come from the token registry and need no declaration.
-        assert!(run(r#"<card sx="bg-tone text-tone-contrast border-tone-border">x</card>"#).is_empty());
     }
 }

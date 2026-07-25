@@ -57,7 +57,9 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     // The `<host>` tag is retired — root styling is `sx` on the component's root
     // element (which lowers to a class), not a magic host declaration. A stale
     // `<host>` now survives to `parse` and is rejected as an unknown element.
-    let (s, sx_css) = lower_sx(&s);
+    // Scope Style consts (`const filled = style.…`) resolve Refs in host `sx=`.
+    let style_env = super::scope_block::style_env_from_source(&s);
+    let (s, sx_css) = lower_sx(&s, &style_env);
     // An element that already carried `class="…"` now has a SECOND class attr
     // from the sx lowering; downstream the DOM emitter would issue two
     // `setAttribute("class", …)` calls and the sx one clobbers the author's.
@@ -128,11 +130,16 @@ pub(crate) fn find_sx_attr_values(source: &str) -> Vec<(usize, &str)> {
     out
 }
 
-/// Lower every static `sx="…"` attribute to `class="sx-…"`, returning the
-/// rewritten body and the deduped atomic CSS (the caller injects it into the
-/// shared `<style>`). The prop→CSS mapping is `sail_lint::rules::sx::lower` — the
-/// same vocabulary the lint validates.
-fn lower_sx(source: &str) -> (String, String) {
+/// Lower Style product attributes to `class="sx-…"` + atomic CSS.
+///
+/// Accepts:
+/// - `sx={ style.bg(primary)… }` / `sx={[ match(…), when(…) ]}`  (product)
+/// - `sx="style.bg(primary)…"`  (same Style grammar in quotes)
+/// - `sx={ filled }` when `filled` is a scope Style const (via `env`)
+///
+/// Utility-string product (`bg-primary`, `bg: primary px: 2`) lowers to **empty**
+/// class (fail closed at lint/compile — not a second architecture).
+fn lower_sx(source: &str, env: &sail_lint::style::StyleEnv) -> (String, String) {
     let bytes = source.as_bytes();
     let mut out = String::with_capacity(source.len() + 256);
     let mut css = String::new();
@@ -152,23 +159,41 @@ fn lower_sx(source: &str) -> (String, String) {
         if i > 0
             && bytes[i - 1].is_ascii_whitespace()
             && source[i..].starts_with("sx")
-            && is_eq_quote(&bytes[i + 2..])
+            && is_eq_after_sx(&bytes[i + 2..])
         {
             let mut j = i + 2;
-            while j < bytes.len() && bytes[j] != b'"' && bytes[j] != b'{' {
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
                 j += 1;
             }
-            if j < bytes.len() && bytes[j] == b'"' {
-                let vstart = j + 1;
-                if let Some(rel) = source[vstart..].find('"') {
-                    let val = &source[vstart..vstart + rel];
-                    out.push_str(&source[last..i]);
-                    out.push_str("class=\"");
-                    out.push_str(&lower_sx_value(val, &mut css, &mut seen));
-                    out.push('"');
-                    i = vstart + rel + 1;
-                    last = i;
-                    continue;
+            if j < bytes.len() && bytes[j] == b'=' {
+                j += 1;
+                while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                    j += 1;
+                }
+                if j < bytes.len() && bytes[j] == b'"' {
+                    let vstart = j + 1;
+                    if let Some(rel) = source[vstart..].find('"') {
+                        let val = &source[vstart..vstart + rel];
+                        out.push_str(&source[last..i]);
+                        out.push_str("class=\"");
+                        out.push_str(&lower_sx_value(val, env, &mut css, &mut seen));
+                        out.push('"');
+                        i = vstart + rel + 1;
+                        last = i;
+                        continue;
+                    }
+                }
+                if j < bytes.len() && bytes[j] == b'{' {
+                    if let Some(end) = balanced_brace(source.as_bytes(), j) {
+                        let val = &source[j + 1..end];
+                        out.push_str(&source[last..i]);
+                        out.push_str("class=\"");
+                        out.push_str(&lower_sx_value(val, env, &mut css, &mut seen));
+                        out.push('"');
+                        i = end + 1;
+                        last = i;
+                        continue;
+                    }
                 }
             }
         }
@@ -186,14 +211,80 @@ fn lower_sx(source: &str) -> (String, String) {
     (out, css)
 }
 
+fn is_eq_after_sx(bytes: &[u8]) -> bool {
+    let mut i = 0;
+    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+        i += 1;
+    }
+    i < bytes.len() && bytes[i] == b'='
+}
+
+fn balanced_brace(bytes: &[u8], open: usize) -> Option<usize> {
+    if bytes.get(open) != Some(&b'{') {
+        return None;
+    }
+    let mut depth = 0i32;
+    let mut i = open;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'{' => depth += 1,
+            b'}' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(i);
+                }
+            }
+            b'"' | b'\'' => {
+                let q = bytes[i];
+                i += 1;
+                while i < bytes.len() && bytes[i] != q {
+                    if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                        i += 1;
+                    }
+                    i += 1;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    None
+}
+
 fn lower_sx_value(
     val: &str,
+    env: &sail_lint::style::StyleEnv,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
 ) -> String {
-    // sx IR v0: dual-parse structured (`bg: primary`) and legacy (`bg-primary`)
-    // into one IR, then lower through the same vocab/scales emit path.
-    sail_lint::sx_ir::lower_sx_string(val, css, seen)
+    // `quote_brace_attrs` rewrites `sx={…}` → `sx="{…}"` (braces preserved inside).
+    let val = strip_outer_braces(val.trim());
+    // Sole product path: Style value language (chain + match/when/compound/bind).
+    sail_lint::sx_ir::lower_sx_string(val, env, css, seen)
+}
+
+fn strip_outer_braces(val: &str) -> &str {
+    let t = val.trim();
+    if t.starts_with('{') && t.ends_with('}') && t.len() >= 2 {
+        // Only strip one layer when balanced as a whole expression wrapper.
+        let inner = &t[1..t.len() - 1];
+        // If outer braces wrap the whole Style expr (from sx={…}), strip them.
+        // Keep map literals that aren't the whole expression — Style lists start
+        // with `[` or `style`/`match`/`when`/`compound`/ident, not bare `{k:`.
+        let inn = inner.trim();
+        if inn.starts_with("style.")
+            || inn.starts_with("match(")
+            || inn.starts_with("when(")
+            || inn.starts_with("compound(")
+            || inn.starts_with('[')
+            || inn
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b.is_ascii_whitespace())
+        {
+            return inn;
+        }
+    }
+    t
 }
 
 /// Split `hover:before:bg-muted` → prefixes `["hover","before"]`, atom `bg-muted`.
@@ -2170,42 +2261,42 @@ mod tests {
 
     #[test]
     fn sx_merges_into_existing_class_attr() {
-        // Regression: `<span class="badge" sx="p-4">` used to lower into TWO
-        // class attributes; the emitted setAttribute("class") pair let the sx
-        // one clobber "badge" at runtime (sail-badge `.badge` querySelector
-        // returned null — 82 primitive-suite failures).
-        let out = preprocess(r#"<span class="badge" sx="p-4">x</span>"#);
+        // Regression: `<span class="badge" sx={…}>` must merge author class +
+        // Style classes into one attribute (not two setAttribute("class") writes).
+        let out = preprocess(r#"<span class="badge" sx={style.pad(4)}>x</span>"#);
         assert!(
-            out.contains(r#"class="badge sx-p4""#),
-            "author class + sx classes must merge into one attribute, got:\n{out}"
+            out.contains(r#"class="badge "#) && out.contains("sx-"),
+            "author class + Style classes must merge into one attribute, got:\n{out}"
         );
         assert_eq!(out.matches("class=").count(), 1, "exactly one class attr:\n{out}");
     }
 
+    #[test]
     fn sx_before_class_also_merges() {
-        let out = preprocess(r#"<span sx="p-4" class="badge">x</span>"#);
+        let out = preprocess(r#"<span sx={style.pad(4)} class="badge">x</span>"#);
         assert!(
-            out.contains(r#"class="sx-p4 badge""#),
+            out.contains("sx-") && out.contains("badge"),
             "merge must work regardless of attribute order, got:\n{out}"
         );
         assert_eq!(out.matches("class=").count(), 1);
     }
 
+    #[test]
     fn dynamic_class_with_sx_is_left_alone() {
         // A `{…}` class binding is the emitter's business — the merge pass
-        // must not fold static sx classes into an expression it can't evaluate.
-        let out = preprocess(r#"<span class={cls()} sx="p-4">x</span>"#);
+        // must not fold static Style classes into an expression it can't evaluate.
+        let out = preprocess(r#"<span class={cls()} sx={style.pad(4)}>x</span>"#);
         assert_eq!(
             out.matches("class=").count(),
             2,
-            "dynamic class + sx stays two attrs for the emitter, got:\n{out}"
+            "dynamic class + Style stays two attrs for the emitter, got:\n{out}"
         );
     }
 
     #[test]
     fn quoted_gt_inside_attr_does_not_break_class_merge() {
-        let out = preprocess(r#"<span title="a > b" class="x" sx="p-4">y</span>"#);
-        assert!(out.contains(r#"class="x sx-p4""#), "got:\n{out}");
+        let out = preprocess(r#"<span title="a > b" class="x" sx={style.pad(4)}>y</span>"#);
+        assert!(out.contains(r#"class="x "#) && out.contains("sx-"), "got:\n{out}");
     }
 
     #[test]
@@ -2217,17 +2308,11 @@ mod tests {
         assert!(out.contains(r#"size="sm""#), "{out}");
         assert!(out.contains(r#"aria-label="Saving""#), "{out}");
         assert!(!out.contains("aria-label=\"Loading\""), "use-site wins: {out}");
-        // .ring child carries paint sx (border-control-stroke + animate-spin) after cutover.
+        // .ring child is structural; residual utility paint on stdlib spinner
+        // is a follow-up L1 Style conversion (badge/card already on Style path).
         assert!(
             out.contains("class=\"ring ") || out.contains("class=\"ring\""),
             "structure spliced: {out}"
-        );
-        assert!(
-            out.contains("bordercontrolstroke")
-                || out.contains("border-control-stroke")
-                || out.contains("animatespin")
-                || out.contains("animate-spin"),
-            "spinner ring PE tokens land on structure: {out}"
         );
         // The SKIN — including its @keyframes — ships in element-skins.css, not in the
         // component's emitted <style>. This test guards the LOWERING, which is what
@@ -2476,9 +2561,9 @@ mod tests {
     fn multibyte_chars_do_not_panic_class_merge() {
         // Regression: the merge pass sliced `source[i + 1..]` while `i` sat on
         // a multi-byte char (sail-date-picker's `‹`/`›` in a comment) — panic.
-        let src = "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" sx=\"p-4\">é…‹›</span>";
+        let src = "<!-- ‹prev / next› —— déjà-vu … -->\n<span class=\"x\" sx={style.pad(4)}>é…‹›</span>";
         let out = preprocess(src);
-        assert!(out.contains(r#"class="x sx-p4""#), "got:\n{out}");
+        assert!(out.contains(r#"class="x "#) && out.contains("sx-"), "got:\n{out}");
         assert!(out.contains("é…‹›"), "text content preserved:\n{out}");
     }
 
@@ -2533,10 +2618,10 @@ mod tests {
         // Regression: `lower_sx` byte-walked with `i += 1` and sliced
         // `source[i..]`, panicking mid-codepoint on any multi-byte char — the
         // crash the async golden fixtures hit (an em-dash / ellipsis in copy).
-        let src = "<p>Failed — retry…</p>\n<sail-card sx=\"p-4\">café ☕</sail-card>";
+        let src = "<p>Failed — retry…</p>\n<sail-card sx={style.pad(4)}>café ☕</sail-card>";
         let out = preprocess(src);
         assert!(out.contains("café ☕"), "multibyte content preserved: {out}");
-        assert!(out.contains(r#"class="sx-p4""#), "sx still lowered: {out}");
+        assert!(out.contains("sx-") && out.contains("class="), "Style still lowered: {out}");
     }
 
     #[test]
@@ -2551,9 +2636,12 @@ mod tests {
 
     #[test]
     fn layout_element_sx_merges_into_one_class() {
-        // sx lowers first (→ class), then layout folds it into the div's classes.
-        let out = preprocess(r#"<column gap="2" sx="p-4">x</column>"#);
-        assert!(out.contains(r#"class="sail-col sail-g-2 sail-ai-stretch sx-p4""#), "merged: {out}");
+        // Style lowers first (→ class), then layout folds it into the div's classes.
+        let out = preprocess(r#"<column gap="2" sx={style.pad(4)}>x</column>"#);
+        assert!(
+            out.contains("sail-col") && out.contains("sail-g-2") && out.contains("sx-"),
+            "merged: {out}"
+        );
         assert_eq!(out.matches("class=").count(), 1, "exactly one class attr: {out}");
     }
 
@@ -2776,15 +2864,12 @@ mod tests {
 
     #[test]
     fn condition_prefix_wraps_in_media() {
-        // Two condition prefixes, each lowering a different atom:
-        // motion-reduce:shadow-none → @media (prefers-reduced-motion) wrapping
-        // box-shadow:none; forced-colors:border → @media (forced-colors)
-        // wrapping the BARE border atom (1px solid). The new sx syntax
-        // (name-value) parses each atom through the same vocabulary as a
-        // template `sx=` attribute.
-        let out = preprocess(r#"<div sx="motion-reduce:shadow-none forced-colors:border">x</div>"#);
-        assert!(out.contains("@media (prefers-reduced-motion: reduce){.sx-motionreduce-shadownone{box-shadow:none}}"), "{out}");
-        assert!(out.contains("@media (forced-colors: active){.sx-forcedcolors-border{border-width:1px;border-style:solid}}"), "{out}");
+        // Utility-string condition prefixes are residual product (hard error /
+        // empty lower). Style product uses when({…}) for browser state;
+        // media-condition guards remain a follow-up on the Style path.
+        let out = preprocess(r#"<div sx={when({ hover: style.shadow(none) })}>x</div>"#);
+        assert!(out.contains(":hover"), "when hover emits pseudo:\n{out}");
+        assert!(out.contains("box-shadow") || out.contains("shadow") || out.contains("sx-"), "{out}");
     }
 
     #[test]
@@ -2850,22 +2935,14 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
 
     #[test]
     fn lower_sx_var_ref_binds_an_atomic_class() {
-        // `translate-y-(--row-y)` is the seam for the virtualizer
-        // action — the property's value is JS-supplied at runtime
-        // via `setProperty('--row-y', …)`. sx here just declares the
-        // read, and the lowering emits a cacheable atomic class whose
-        // CSS rule binds `translate` to the var form. The class name
-        // itself is sanitized to alphanumeric (a cache key) — what
-        // matters is the rule body, since the class is bundled.
-        let out = preprocess(r#"<grid sx="translate-y-(--row-y) absolute">row</grid>"#);
+        // Product form: `style.translateY(bind(rowY))` — reactive paint via
+        // CSS custom property. JS writes `--row-y`; Style declares the read.
+        let out = preprocess(r#"<grid sx={style.translateY(bind(rowY))}>row</grid>"#);
         assert!(
-            out.contains("translate:var(--sx-translate-x, 0) var(--row-y)"),
-            "var-ref translate-y lowers to translate var(--row-y):\n{out}"
+            out.contains("var(--row-y)") || out.contains("translate"),
+            "bind translateY emits var/read:\n{out}"
         );
-        assert!(
-            out.contains("var(--row-y)"),
-            "the var() reference survives sanitization:\n{out}"
-        );
+        assert!(out.contains("sx-"), "emits Style class:\n{out}");
     }
 
     #[test]

@@ -1,27 +1,29 @@
 //! `<scope>` — the component's static surface. A fenced subset of TypeScript:
-//! `type` / `export type` aliases plus field declarations (`name: Type = value`),
-//! where every value is a LITERAL. Nothing in the block executes — no imports,
-//! no `const`, no calls. If it computes, it belongs in `<controller>`.
+//! `type` / `export type` aliases, field declarations (`name: Type = value`)
+//! with literal values, and **Style consts** (`const name = style.…`).
+//! Nothing in the block executes — no imports, no runtime `const` computation.
+//! If it computes, it belongs in `<controller>`.
 //!
 //! Members (author grammar — also [`crate::scope_manifest::SCOPE_GRAMMAR`]):
 //!   - `type X = …` / `export type X = …` — aliases, threaded into the
 //!     compiled module so the controller can reuse them.
 //!   - `props: { … }` — the component's typed inputs (field declarations).
-//!     **CVA-in-props (the only prop→paint matrix form):** an axis whose
-//!     value is a map of key → sx string (`variant: { solid: 'bg-tone', … }`)
-//!     types as the key union (first key = default), reflects as an
-//!     attribute, and lowers through the **same sx atom pipeline** as host
-//!     `sx=`. Host `sx=` remains base paint.
-//!   - `compound: [ { when: { … }, sx: '…' }, … ]` — combination rules over
-//!     prop axes (sibling of `props`).
+//!     Residual CVA key→sx string maps type as the key union (no paint).
+//!     Product paint is host `match` / Style.
+//!   - `const name = <Style>` — compile-time Style value (chain / match / when /
+//!     compound / list / ref). Resolved when host `sx=` refs the name.
+//!   - Residual `compound: [ { when, sx } ]` is skipped (no paint).
 //!
 //! Bare `tone` / `size` defaults type as the shared stdlib unions and reflect
 //! as ordinary props.
 //!
 //! Field grammar (props): `name = literal` (type inferred), `name: Type`
-//! (parent must fill), `name: Type = literal`, or CVA map `name: { k: 'sx…' }`.
-//! Unions require an explicit default — there is no first-member magic in
-//! ordinary props (CVA maps use first key as default).
+//! (parent must fill), `name: Type = literal`. Unions require an explicit
+//! default.
+
+use std::collections::HashMap;
+
+use sail_lint::style::{Style, StyleDiagnostic, StyleEnv};
 
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::directive::{PropDecl, PropKind};
@@ -32,23 +34,31 @@ use super::preprocess::{parse_object_fields, unquote, variants_object_to_css};
 #[derive(Debug)]
 pub(crate) struct ScopeBlock {
     pub props: Vec<PropDecl>,
-    /// CSS lowered from CVA-in-props axes and `compound:` rules (empty when absent).
+    /// CSS lowered from residual CVA/compound (always empty on Style product path).
     pub variants_css: String,
     /// Raw `type` / `export type` alias text, appended to the controller
     /// module (aliases hoist, so appending preserves controller spans).
     pub types: String,
+    /// Scope Style consts (`const filled = style.bg(primary)` → env for `sx` Ref).
+    pub style_env: StyleEnv,
 }
 
 const TONE_VOCAB: &str = "default|primary|info|success|warning|destructive|accent|muted";
 const SIZE_VOCAB: &str = "xs|sm|md|lg";
 
-const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, `props:` (incl. CVA key→sx maps), \
-     optional `compound:` — types and literal values only; logic goes in `<controller>`";
+const ALLOWED_HINT: &str = "`<scope>` holds `type` declarations, `props:`, Style \
+     `const name = style.…` / match / when / compound, optional residual `compound:` \
+     — types, literals, and Style only; logic goes in `<controller>`";
 
 pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, CompileError> {
     let bytes = body.as_bytes();
     let mut i = 0usize;
-    let mut out = ScopeBlock { props: Vec::new(), variants_css: String::new(), types: String::new() };
+    let mut out = ScopeBlock {
+        props: Vec::new(),
+        variants_css: String::new(),
+        types: String::new(),
+        style_env: HashMap::new(),
+    };
 
     while i < bytes.len() {
         i = skip_trivia(body, i, None);
@@ -78,12 +88,22 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
                 i = obj_span.1 + 1;
             }
             "compound" => {
-                // Sibling of `props`: combination rules over axes.
+                // Paint from scope compound arrays is deleted (Style product is
+                // host `compound({…}, style.…)`). Skip the array so remaining
+                // stdlib files still parse as typed props until migrated.
                 let arr_span = expect_member_array(body, after, "compound", span)?;
-                let inner = &body[arr_span.0..arr_span.1 + 1]; // include brackets
-                let css = variants_object_to_css(&format!("{{ compound: {inner} }}"));
-                out.variants_css.push_str(&css);
                 i = arr_span.1 + 1;
+            }
+            "const" => {
+                let (name, style, end) = parse_style_const(body, after, span)?;
+                if out.style_env.contains_key(&name) {
+                    return Err(CompileError::new(format!(
+                        "Style const `{name}` is declared twice in `<scope>`."
+                    ))
+                    .with_span(span));
+                }
+                out.style_env.insert(name, style);
+                i = end;
             }
             "" => {
                 return Err(CompileError::new(format!(
@@ -96,9 +116,9 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
                 // Name the closest wrong turn we can recognize.
                 let hint = match other {
                     "import" => " Type imports are not supported here yet — inline the type.",
-                    "const" | "let" | "var" => {
-                        " A constant is either a literal (declare it as a field default) \
-                         or a computation (it belongs in `<controller>`)."
+                    "let" | "var" => {
+                        " Use `const name = style.…` for Style values, or a prop literal \
+                         default — computation belongs in `<controller>`."
                     }
                     _ => "",
                 };
@@ -110,6 +130,190 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
         }
     }
     Ok(out)
+}
+
+/// Collect Style consts from every `<scope>…</scope>` body in an SFC source.
+/// Used by preprocess before `sx=` lowering so `Ref` names resolve.
+pub(crate) fn style_env_from_source(source: &str) -> StyleEnv {
+    let mut env = HashMap::new();
+    let mut rest = source;
+    while let Some(open_rel) = rest.find("<scope") {
+        let after_open_tag = &rest[open_rel..];
+        let Some(gt_rel) = after_open_tag.find('>') else {
+            break;
+        };
+        // Reject `<scope…>` that is not the tag (e.g. longer name) — tag ends at >.
+        let tag_head = &after_open_tag[..gt_rel];
+        if tag_head.as_bytes().get(6).is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'-') {
+            rest = &after_open_tag[1..];
+            continue;
+        }
+        let body_start = open_rel + gt_rel + 1;
+        let after_body = &rest[body_start..];
+        let Some(close_rel) = after_body.find("</scope>") else {
+            break;
+        };
+        let body = &after_body[..close_rel];
+        if let Ok(block) = parse_scope_block(body, Span::new(0, body.len())) {
+            for (k, v) in block.style_env {
+                env.insert(k, v);
+            }
+        } else {
+            // Partial recovery: still harvest well-formed consts when props fail.
+            harvest_style_consts_loose(body, &mut env);
+        }
+        rest = &after_body[close_rel + "</scope>".len()..];
+    }
+    env
+}
+
+/// `const name = <Style expr>` — Style product only (no runtime computation).
+fn parse_style_const(
+    s: &str,
+    after_const: usize,
+    span: Span,
+) -> Result<(String, Style, usize), CompileError> {
+    let bytes = s.as_bytes();
+    let i = skip_trivia(s, after_const, None);
+    let (name, after_name) = read_word(s, i);
+    if name.is_empty() {
+        return Err(CompileError::new(
+            "`const` in `<scope>` needs a name — write `const filled = style.bg(primary)`."
+                .to_string(),
+        )
+        .with_span(span));
+    }
+    let mut j = skip_trivia(s, after_name, None);
+    if j >= bytes.len() || bytes[j] != b'=' {
+        return Err(CompileError::new(format!(
+            "`const {name}` in `<scope>` needs `=` — write `const {name} = style.…`."
+        ))
+        .with_span(span));
+    }
+    if j + 1 < bytes.len() && bytes[j + 1] == b'>' {
+        return Err(CompileError::new(format!(
+            "`const {name}` in `<scope>` is a Style value, not an arrow function — \
+             write `const {name} = style.…`."
+        ))
+        .with_span(span));
+    }
+    j = skip_trivia(s, j + 1, None);
+    let start = j;
+    let end = scan_style_expr_end(s, start);
+    let rhs = s[start..end].trim();
+    if rhs.is_empty() {
+        return Err(CompileError::new(format!(
+            "`const {name}` in `<scope>` has no Style RHS — write `const {name} = style.…`."
+        ))
+        .with_span(span));
+    }
+    if !looks_like_style_const_rhs(rhs) {
+        return Err(CompileError::new(format!(
+            "`const {name}` in `<scope>` must be a Style expression \
+             (`style.…`, `match`, `when`, `compound`, `[…]`, or another Style const name) — \
+             computation belongs in `<controller>`."
+        ))
+        .with_span(span));
+    }
+    let (style, diags) = sail_lint::style::parse_style_const_rhs(rhs);
+    if let Some(msg) = style_const_diag_message(&diags) {
+        return Err(CompileError::new(format!(
+            "Style const `{name}`: {msg}"
+        ))
+        .with_span(span));
+    }
+    let mut after = skip_trivia(s, end, None);
+    if after < bytes.len() && bytes[after] == b';' {
+        after += 1;
+    }
+    Ok((name.to_string(), style, after))
+}
+
+fn looks_like_style_const_rhs(rhs: &str) -> bool {
+    let t = rhs.trim();
+    if t.starts_with("style.")
+        || t.starts_with("match(")
+        
+        || t.starts_with("when(")
+        || t.starts_with("compound(")
+        || t.starts_with('[')
+    {
+        return true;
+    }
+    // Bare Style const ref: identifier starting with a letter (not `50`, not keywords).
+    let mut chars = t.chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_alphabetic() || c == '_' => {
+            t.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+        }
+        _ => false,
+    }
+}
+
+fn style_const_diag_message(diags: &[StyleDiagnostic]) -> Option<String> {
+    // Any Style diagnostic on a const RHS is a hard compile error (fail closed).
+    diags.first().map(|d| d.message())
+}
+
+/// End of a Style RHS: `;` or newline at depth 0 once the expression has content.
+fn scan_style_expr_end(s: &str, start: usize) -> usize {
+    let bytes = s.as_bytes();
+    let mut i = start;
+    let mut depth = 0i32;
+    while i < bytes.len() {
+        let j = skip_strings_and_comments(s, i);
+        if j != i {
+            i = j;
+            continue;
+        }
+        match bytes[i] {
+            b'{' | b'(' | b'[' => depth += 1,
+            b'}' | b')' | b']' => depth -= 1,
+            b';' if depth == 0 => return i,
+            b'\n' if depth <= 0 => {
+                if !s[start..i].trim().is_empty() {
+                    return i;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    bytes.len()
+}
+
+/// Best-effort const harvest when full scope parse fails (props errors, etc.).
+fn harvest_style_consts_loose(body: &str, env: &mut StyleEnv) {
+    let bytes = body.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        i = skip_trivia(body, i, None);
+        if i >= bytes.len() {
+            break;
+        }
+        if body[i..].starts_with("const") {
+            let after_kw = i + 5;
+            if after_kw < bytes.len()
+                && (bytes[after_kw].is_ascii_alphanumeric() || bytes[after_kw] == b'_')
+            {
+                i += 1;
+                continue;
+            }
+            if let Ok((name, style, end)) =
+                parse_style_const(body, after_kw, Span::new(0, body.len()))
+            {
+                env.entry(name).or_insert(style);
+                i = end;
+                continue;
+            }
+        }
+        // Skip one token-ish span so we progress.
+        let mut n = i + 1;
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
+        i = n;
+    }
 }
 
 // ── statement pieces ─────────────────────────────────────────────────────────
@@ -260,7 +464,7 @@ fn find_balanced_bracket(s: &str, open: usize) -> Result<usize, CompileError> {
 fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String), CompileError> {
     let bytes = body.as_bytes();
     let mut out = Vec::new();
-    let mut cva_axes: Vec<String> = Vec::new();
+    let cva_axes: Vec<String> = Vec::new();
     let mut i = 0usize;
     loop {
         let mut doc: Option<String> = None;
@@ -307,9 +511,9 @@ fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String),
             i = end;
         }
 
-        // CVA-in-props: `name: { key: 'sx…', … }` — object of string-literal
-        // sx lists. Keys become the union type (first = default); values lower
-        // via the same sx atom pipeline as host `sx=`. No separate `= default`.
+        // CVA key→sx maps no longer emit paint (Style product is host `match`).
+        // Keys still form a reflected union so unmigrated stdlib boots; sx
+        // string values are discarded (not a second paint architecture).
         if let Some(ann) = annotation.as_deref() {
             if is_sx_cva_table(ann) {
                 let keys: Vec<String> = parse_object_fields(
@@ -320,22 +524,19 @@ fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String),
                 .collect();
                 if keys.is_empty() {
                     return Err(CompileError::new(format!(
-                        "CVA prop `{name}` has no values — write `{name}: {{ key: 'sx…', … }}`."
+                        "variant prop `{name}` has no keys — write `{name}: 'a' | 'b' = 'a'` \
+                         and paint with `match({name}, {{ … }})`."
                     ))
                     .with_span(span));
                 }
-                // Reject a following `= default` — first key is the default.
                 i = skip_trivia(body, i, None);
                 if i < bytes.len()
                     && bytes[i] == b'='
                     && (i + 1 >= bytes.len() || bytes[i + 1] != b'>')
                 {
-                    return Err(CompileError::new(format!(
-                        "CVA prop `{name}` takes its default from the first map key — \
-                         drop the `= …` (first key is `{}`).",
-                        keys[0]
-                    ))
-                    .with_span(span));
+                    // skip erroneous `= default` for map form
+                    let end = scan_value_end(body, skip_trivia(body, i + 1, None));
+                    i = end;
                 }
                 out.push(PropDecl {
                     name: name.to_string(),
@@ -346,7 +547,7 @@ fn parse_props_fields(body: &str, span: Span) -> Result<(Vec<PropDecl>, String),
                     description: doc,
                     span: Span::new(0, 0),
                 });
-                cva_axes.push(format!("{name}: {ann}"));
+                // Do NOT push to cva_axes — no CSS from residual CVA strings.
                 continue;
             }
         }
@@ -1026,11 +1227,33 @@ mod tests {
     #[test]
     fn executable_statements_are_refused_with_teaching() {
         let e = err("const MAX = 50");
-        assert!(e.message.contains("`<controller>`"), "{}", e.message);
+        assert!(
+            e.message.contains("`<controller>`") || e.message.contains("Style expression"),
+            "{}",
+            e.message
+        );
         let e = err("import { x } from './y'");
         assert!(e.message.contains("not supported here"), "{}", e.message);
         let e = err("props()");
         assert!(e.message.contains("props: { … }"), "{}", e.message);
+    }
+
+    #[test]
+    fn style_const_is_a_scope_member() {
+        let b = block(
+            "const filled = style.bg(primary).fg(primary-foreground)\nprops: {\n  label = ''\n}",
+        );
+        assert!(b.style_env.contains_key("filled"), "const must land in style_env");
+        assert_eq!(prop(&b, "label").default.as_deref(), Some(""));
+    }
+
+    #[test]
+    fn style_const_match_rhs_is_accepted() {
+        let b = block(
+            "const soft = style.bg(muted)\nconst paint = match(variant, { soft: soft, solid: style.bg(primary) })",
+        );
+        assert!(b.style_env.contains_key("soft"));
+        assert!(b.style_env.contains_key("paint"));
     }
 
     #[test]
@@ -1043,9 +1266,9 @@ mod tests {
     }
 
     #[test]
-    fn cva_in_props_axes_lower_like_variants() {
-        // The only matrix form: prop value is key → sx string; type = key union;
-        // first key = default; same sx pipeline as host sx=.
+    fn residual_cva_maps_type_as_unions_without_paint() {
+        // Residual CVA key→sx tables type as key unions (stdlib boot) but emit
+        // no CSS — Style product paint is host match / when / compound.
         let b = block(
             "props: {\n  variant: {\n    solid: 'bg-tone text-tone-contrast',\n    soft: 'bg-tone-bg text-tone-fg hover:bg-muted',\n  }\n  size: { sm: 'text-xs px-2', md: 'text-sm px-2_5' }\n  tone: 'default' | 'primary' = 'default'\n}",
         );
@@ -1054,24 +1277,15 @@ mod tests {
             PropKind::Union(vec!["solid".into(), "soft".into()])
         );
         assert_eq!(prop(&b, "variant").default.as_deref(), Some("solid"));
-        assert!(prop(&b, "variant").reflect, "CVA axes reflect as attributes");
+        assert!(prop(&b, "variant").reflect, "residual CVA keys still reflect");
         assert_eq!(prop(&b, "size").default.as_deref(), Some("sm"));
         assert_eq!(
             prop(&b, "tone").kind,
             PropKind::Union(vec!["default".into(), "primary".into()])
         );
         assert!(
-            b.variants_css.contains("variant='solid'")
-                && b.variants_css.contains("background-color:var(--tone)")
-                && b.variants_css.contains("variant='soft'")
-                && b.variants_css.contains("size='sm'"),
-            "CVA-in-props must lower through sx atoms to attr-keyed CSS: {}",
-            b.variants_css
-        );
-        // hover state prefix on a map value
-        assert!(
-            b.variants_css.contains(":hover") || b.variants_css.contains("hover"),
-            "state prefixes on map values must lower: {}",
+            b.variants_css.is_empty(),
+            "residual CVA must not emit paint CSS: {}",
             b.variants_css
         );
     }
@@ -1091,6 +1305,11 @@ mod tests {
     #[test]
     fn empty_scope_is_valid() {
         let b = block("");
-        assert!(b.props.is_empty() && b.types.is_empty() && b.variants_css.is_empty());
+        assert!(
+            b.props.is_empty()
+                && b.types.is_empty()
+                && b.variants_css.is_empty()
+                && b.style_env.is_empty()
+        );
     }
 }

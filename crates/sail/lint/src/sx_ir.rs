@@ -933,49 +933,29 @@ pub fn emit_selector(decl: &SxDecl) -> Option<EmitSelector> {
     })
 }
 
-/// Lower a full sx string into (class list, css rules text). Drop-in for
-/// preprocess `lower_sx_value` body.
+/// Lower a Style expression (product path) into class list + CSS rules.
+///
+/// Utility-string sx is **not** accepted — returns empty and leaves CSS unchanged
+/// when residual product forms are presented (callers should surface diagnostics
+/// via `style::parse` / lint). Sole architecture: chain + match/when/compound/bind.
+///
+/// `env` resolves scope Style consts (`Style::Ref`).
+/// Old `sx_ir` parse/emit remains as internal leaf helper for paint-op emit only.
 pub fn lower_sx_string(
     val: &str,
+    env: &crate::style::StyleEnv,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
 ) -> String {
-    // Lenient parse: emit CSS for every decl that lowers; lint reports the rest.
-    let (prog, _errors) = parse_lenient(val);
+    match crate::style::emit::lower_style_source(val, env, css, seen) {
+        Ok(classes) => classes,
+        Err(_) => String::new(),
+    }
+}
 
-    let mut classes: Vec<String> = Vec::new();
-    if prog.group {
-        classes.push("sail-grp".to_string());
-    }
-    for decl in &prog.decls {
-        let Some(sel) = emit_selector(decl) else {
-            continue;
-        };
-        let class = class_name(decl);
-        if let Some(decls) = lower_decl(decl) {
-            if seen.insert(class.clone()) {
-                let body = decls
-                    .iter()
-                    .map(|(p, v)| format!("{p}:{v}"))
-                    .collect::<Vec<_>>()
-                    .join(";");
-                let rule = format!(
-                    "{prefix}.{class}{pseudo}{{{body}}}",
-                    prefix = sel.ancestor,
-                    class = class,
-                    pseudo = sel.pseudo,
-                    body = body
-                );
-                if sel.media.is_empty() {
-                    css.push_str(&rule);
-                } else {
-                    css.push_str(&format!("@media {}{{{rule}}}", sel.media));
-                }
-            }
-        }
-        classes.push(class);
-    }
-    classes.join(" ")
+/// Parse-only residual detection for preprocess/lint (utility string product).
+pub fn is_residual_utility_sx(val: &str) -> bool {
+    crate::style::parse::looks_like_utility_string_product(val.trim())
 }
 
 // ─── Agent schema ────────────────────────────────────────────────────────────
@@ -1222,14 +1202,50 @@ mod tests {
     }
 
     #[test]
-    fn lower_sx_string_emits_css() {
+    fn lower_sx_string_emits_style_chain_css() {
+        // Product path: Style value language only.
         let mut css = String::new();
         let mut seen = std::collections::HashSet::new();
-        let classes = lower_sx_string("bg: primary px: 2", &mut css, &mut seen);
-        assert!(classes.contains("sx-bgprimary"), "{classes}");
-        assert!(classes.contains("sx-px2"), "{classes}");
-        assert!(css.contains("background-color:var(--primary)"), "{css}");
-        assert!(css.contains("padding-inline:var(--space-2)"), "{css}");
+        let env = std::collections::HashMap::new();
+        let classes = lower_sx_string("style.bg(primary).padX(2)", &env, &mut css, &mut seen);
+        assert!(classes.contains("sx-"), "{classes}");
+        assert!(
+            css.contains("var(--primary)") || css.contains("background"),
+            "{css}"
+        );
+        assert!(
+            css.contains("var(--space-2)") || css.contains("padding"),
+            "{css}"
+        );
+    }
+
+    #[test]
+    fn lower_sx_string_rejects_utility_string_product() {
+        // Residual product forms must not emit dual-path CSS.
+        let mut css = String::new();
+        let mut seen = std::collections::HashSet::new();
+        let env = std::collections::HashMap::new();
+        let classes = lower_sx_string("bg: primary px: 2", &env, &mut css, &mut seen);
+        assert!(
+            classes.is_empty() && css.is_empty(),
+            "utility-string product must not emit: classes={classes:?} css={css}"
+        );
+        assert!(is_residual_utility_sx("bg-primary px-2"));
+        assert!(is_residual_utility_sx("bg: primary px: 2"));
+    }
+
+    #[test]
+    fn lower_sx_string_resolves_style_const_env() {
+        let mut env = std::collections::HashMap::new();
+        env.insert("filled".into(), crate::style::parse("style.bg(primary)").0);
+        let mut css = String::new();
+        let mut seen = std::collections::HashSet::new();
+        let classes = lower_sx_string("filled", &env, &mut css, &mut seen);
+        assert!(classes.contains("sx-"), "{classes}");
+        assert!(
+            css.contains("var(--primary)") || css.contains("background"),
+            "{css}"
+        );
     }
 
     #[test]

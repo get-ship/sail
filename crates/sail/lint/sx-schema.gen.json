@@ -2407,8 +2407,8 @@
     "var-ref"
   ],
   "tokens": {
-    "count": 426,
-    "colors_count": 170,
+    "count": 504,
+    "colors_count": 246,
     "sample_names": [
       "accent",
       "accent-agents",
@@ -2429,6 +2429,9 @@
       "accent-theme",
       "active-bg",
       "active-strength",
+      "alert",
+      "alert-foreground",
+      "alert-stripe",
       "anchor-left",
       "anchor-top",
       "app-accent-agents",
@@ -2446,10 +2449,7 @@
       "app-accent-skills",
       "app-accent-specs",
       "app-accent-theme",
-      "autosize-h",
-      "backdrop",
-      "background",
-      "body-font"
+      "autosize-h"
     ],
     "resolve": "path (dotted → kebab) or cssName (flat registry name); dual resolve"
   },

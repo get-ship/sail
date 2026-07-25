@@ -1,4 +1,8 @@
-//! The sx vocabulary — one table, read from `sx-vocabulary.json`.
+//! **INTERNAL leaf machinery** behind Style paint-op emit — not an author surface.
+//!
+//! Product paint is Style (`style.…` chains, `match` / `when` / `compound`).
+//! Utility-string sx is a hard error at lint + parse. This vocabulary table
+//! remains so Style setters can lower to CSS declarations via `sx_ir`.
 //!
 //! The lint validates against it and the lowering emits from it. Adding a
 //! property is one row of data, not a code change in four places (which is why
