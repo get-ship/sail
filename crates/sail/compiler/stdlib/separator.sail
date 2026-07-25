@@ -1,29 +1,42 @@
 <!--
-  <separator> — native <hr>. Solid horizontal PE on host sx; orientation +
-  dashed via CVA/compound. --separator-line channel writes live in contracts
-  (PE default + branded tone overrides).
+  <separator> — native <hr>. Style value language only.
+  Line paint via separator-line + semantic tones (no tone channel).
 -->
 
 <scope>
   props: {
-    // first key = default = PE horizontal
-    orientation: {
-      // h/w 1px via --border-width (no h-px token on size scale)
-      horizontal: 'block w: full h: (--border-width) my: 2',
-      vertical: 'inline-block self: stretch w: (--border-width) h: full mx: 2 my: 0',
-    }
+    orientation: 'horizontal' | 'vertical' = 'horizontal'
     tone: 'default' | 'muted' | 'primary' | 'destructive' = 'default'
-    // first key = default = PE solid
-    variant: {
-      // line paint from component.separator.line (--separator-line)
-      solid: 'bg: (--separator-line) border: 0 p: 0',
-      dashed: 'bg: transparent border: 0 p: 0',
-    }
+    variant: 'solid' | 'dashed' = 'solid'
   }
-  compound: [
-    { when: { variant: 'dashed', orientation: 'horizontal' }, sx: 'h: 0 border-t border: dashed border-t: (--separator-line)' },
-    { when: { variant: 'dashed', orientation: 'vertical' }, sx: 'w: 0 border-l border: dashed border-l: (--separator-line)' },
-  ]
+
+  const base = style.display(block).w(full).h(border-width).my(2).borderWidth(0).pad(0).bg(separator-line)
+  const orientH = style.display(block).w(full).h(border-width).my(2).mx(0)
+  const orientV = style.display(inline-block).self(stretch).w(border-width).h(full).mx(2).my(0)
+  const solid = style.bg(separator-line).borderWidth(0).pad(0)
+  const dashed = style.bg(transparent).borderWidth(0).pad(0)
 </scope>
 
-<hr sx="block w: full h: (--border-width) my: 2 border: 0 p: 0 bg: (--separator-line)">
+<hr sx={[
+  base,
+  match(orientation, {
+    horizontal: orientH,
+    vertical: orientV,
+  }),
+  match(variant, {
+    solid: solid,
+    dashed: dashed,
+  }),
+  compound({ variant: solid, tone: default }, style.bg(separator-line)),
+  compound({ variant: solid, tone: muted }, style.bg(border-subtle)),
+  compound({ variant: solid, tone: primary }, style.bg(primary)),
+  compound({ variant: solid, tone: destructive }, style.bg(destructive)),
+  compound({ variant: dashed, orientation: horizontal, tone: default }, style.h(0).borderTWidth(1).border(dashed).borderT(separator-line)),
+  compound({ variant: dashed, orientation: horizontal, tone: muted }, style.h(0).borderTWidth(1).border(dashed).borderT(border-subtle)),
+  compound({ variant: dashed, orientation: horizontal, tone: primary }, style.h(0).borderTWidth(1).border(dashed).borderT(primary)),
+  compound({ variant: dashed, orientation: horizontal, tone: destructive }, style.h(0).borderTWidth(1).border(dashed).borderT(destructive)),
+  compound({ variant: dashed, orientation: vertical, tone: default }, style.w(0).borderLWidth(1).border(dashed).borderL(separator-line)),
+  compound({ variant: dashed, orientation: vertical, tone: muted }, style.w(0).borderLWidth(1).border(dashed).borderL(border-subtle)),
+  compound({ variant: dashed, orientation: vertical, tone: primary }, style.w(0).borderLWidth(1).border(dashed).borderL(primary)),
+  compound({ variant: dashed, orientation: vertical, tone: destructive }, style.w(0).borderLWidth(1).border(dashed).borderL(destructive)),
+]}>

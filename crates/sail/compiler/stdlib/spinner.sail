@@ -1,31 +1,41 @@
 <!--
-  <spinner> — size/tone CVA on host; .ring child sx for two-tone border + animate-spin.
-  Variance = CVA-in-props axes + optional compound only. tone/size are ordinary
-  props/axes, not language channels.
+  <spinner> — L1 language element. Style value language only:
+  style.* chain + match + compound + scope Style consts.
 -->
+
 <scope>
   props: {
-    size: {
-      md: 'size: icon-size-md',
-      xs: 'size: icon-size-2xs',
-      sm: 'size: icon-size-sm',
-      lg: 'size: icon-size-xl',
-    }
-    tone: {
-      default: 'color: spinner-foreground',
-      primary: 'color: tone-fg',
-      info: 'color: tone-fg',
-      success: 'color: tone-fg',
-      warning: 'color: tone-fg',
-      destructive: 'color: tone-fg',
-      accent: 'color: tone-fg',
-    }
+    size: 'md' | 'xs' | 'sm' | 'lg' = 'md'
+    tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' = 'default'
     centered = false
   }
-  compound: [
-    { when: { centered: true }, sx: 'block my: 8 mx: auto' },
-  ]
+
+  const base = style.display(inline-block).align(middle).size(icon-size-md).fg(spinner-foreground)
+  const sizeMd = style.size(icon-size-md)
+  const sizeXs = style.size(icon-size-2xs)
+  const sizeSm = style.size(icon-size-sm)
+  const sizeLg = style.size(icon-size-xl)
+  const ring = style.display(block).size(full).borderWidth(control-stroke).border(solid).border(spinner-track).borderR(currentColor).radius(full).animate(spin)
 </scope>
-<span class="spin" role="status" aria-label="Loading" sx="inline-block align: middle size: icon-size-md color: spinner-foreground">
-  <span class="ring" aria-hidden="true" sx="block size: full border: (--control-stroke) border: solid border: spinner-track border-r: currentColor rounded: full animate-spin"></span>
+
+<span class="spin" role="status" aria-label="Loading" sx={[
+  base,
+  match(size, {
+    md: sizeMd,
+    xs: sizeXs,
+    sm: sizeSm,
+    lg: sizeLg,
+  }),
+  match(tone, {
+    default: style.fg(spinner-foreground),
+    primary: style.fg(primary),
+    info: style.fg(info),
+    success: style.fg(success),
+    warning: style.fg(warning),
+    destructive: style.fg(destructive),
+    accent: style.fg(accent),
+  }),
+  compound({ centered: true }, style.display(block).my(8).mx(auto)),
+]}>
+  <span class="ring" aria-hidden="true" sx={ring}></span>
 </span>

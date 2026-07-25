@@ -196,3 +196,69 @@ fn badge_uses_scope_style_consts() {
         "badge match arms should ref Style consts"
     );
 }
+
+#[test]
+fn batch_a_chrome_compile_on_style_path() {
+    for (tag, src) in [
+        ("spinner", include_str!("../stdlib/spinner.sail")),
+        ("separator", include_str!("../stdlib/separator.sail")),
+        ("avatar", include_str!("../stdlib/avatar.sail")),
+        ("tooltip", include_str!("../stdlib/tooltip.sail")),
+        ("toast", include_str!("../stdlib/toast.sail")),
+        ("toast-region", include_str!("../stdlib/toast-region.sail")),
+    ] {
+        assert!(
+            !src.contains("md: '")
+                && !src.contains("compound: [")
+                && !src.contains("tone-fg")
+                && !src.contains("tone-bg")
+                && src.contains("style.")
+                && (src.contains("match(") || src.contains("when(") || src.contains("compound(")),
+            "{tag} must use Style product (no CVA string maps / tone-* paint):\n{src}"
+        );
+        let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
+        let paint = format!("{}{}", out.structure_html, out.skin_css);
+        assert!(
+            paint.contains("var(--") || paint.contains("sx-") || paint.contains("sail-grp"),
+            "{tag} must emit token/class paint:\nstruct={}\nskin={}",
+            out.structure_html,
+            out.skin_css
+        );
+    }
+}
+
+#[test]
+fn batch_b_controls_compile_on_style_path() {
+    for (tag, src) in [
+        ("label", include_str!("../stdlib/label.sail")),
+        ("field", include_str!("../stdlib/field.sail")),
+        ("switch", include_str!("../stdlib/switch.sail")),
+        ("toggle", include_str!("../stdlib/toggle.sail")),
+        ("tab", include_str!("../stdlib/tab.sail")),
+        ("tab-list", include_str!("../stdlib/tab-list.sail")),
+    ] {
+        assert!(
+            !src.contains("md: '")
+                && !src.contains("compound: [")
+                && src.contains("style.")
+                && (src.contains("match(") || src.contains("when(")),
+            "{tag} must use Style product (no CVA string maps):\n{src}"
+        );
+        let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
+        let paint = format!("{}{}", out.structure_html, out.skin_css);
+        assert!(
+            paint.contains("var(--") || paint.contains("sx-") || paint.contains("sail-grp"),
+            "{tag} must emit token/class paint:\nstruct={}\nskin={}",
+            out.structure_html,
+            out.skin_css
+        );
+    }
+}
+
+#[test]
+fn diag_toggle_compile_detail() {
+    let src = include_str!("../stdlib/toggle.sail");
+    // Parse host sx with style env harvested like preprocess
+    let env = sail_compiler::parse::scope_block::style_env_from_source_public(src);
+    eprintln!("env keys: {:?}", env.keys().collect::<Vec<_>>());
+}

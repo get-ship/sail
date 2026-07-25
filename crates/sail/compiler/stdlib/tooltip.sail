@@ -1,11 +1,6 @@
 <!--
-  <tooltip> — hover/focus text bubble. use:tipDescribe supplies per-instance
-  anchor geometry vars (placement offsets + arrow insets), content text, and Escape.
-
-  Paint (one path):
-    host sx=         — group (hover/focus-within → bubble) + relative positioning context
-    child sx=        — bubble chrome + absolute geometry via (--tt-*) vars + arrow ::after
-  No contracts PE matrix.
+  <tooltip> — hover/focus text bubble. use:tipDescribe supplies geometry vars.
+  Style value language only.
 -->
 
 <scope>
@@ -13,13 +8,24 @@
     placement: 'top' | 'bottom' | 'left' | 'right' = 'top'
     content = ''
   }
+
+  const host = style.group().position(relative)
+  const bubble = style.position(absolute).top(bind(ttTop)).bottom(bind(ttBottom)).left(bind(ttLeft)).right(bind(ttRight)).translateX(bind(ttTx)).z(popover).opacity(0).transition(opacity).duration(fast).ease(out).padY(1).padX(2).bg(tooltip).fg(tooltip-foreground).fontFamily(body).fontSize(xs).fontWeight(medium).radius(md).shadow(md).whitespace(nowrap).pointerEvents(none)
+  const arrow = style.content(empty).position(absolute).w(2).h(2).bg(tooltip).rotate(45).top(bind(ttArrowTop)).bottom(bind(ttArrowBottom)).left(bind(ttArrowLeft)).right(bind(ttArrowRight)).ms(bind(ttArrowMl)).mt(bind(ttArrowMt))
 </scope>
 
-<span use:tipDescribe sx="group relative">
+<span use:tipDescribe sx={host}>
   <slot></slot>
   <span
     class="bubble"
     role="tooltip"
-    sx="absolute top: (--tt-top) bottom: (--tt-bottom) left: (--tt-left) right: (--tt-right) translate-x: (--tt-tx) z: (--z-popover) opacity: 0 transition: opacity duration: fast ease: out group-hover:opacity: 100 group-focus-within:opacity: 100 py: 1 px: 2 bg: tooltip color: tooltip-foreground font-family: body font-size: xs font-weight: medium rounded: md shadow: md whitespace: nowrap pointer-events: none after:content: empty after:absolute after:w: 2 after:h: 2 after:bg: tooltip after:rotate: 45 after:top: (--tt-arrow-top) after:bottom: (--tt-arrow-bottom) after:left: (--tt-arrow-left) after:right: (--tt-arrow-right) after:ml: (--tt-arrow-ml) after:mt: (--tt-arrow-mt)"
+    sx={[
+      bubble,
+      when({
+        group-hover: style.opacity(100),
+        group-focus-within: style.opacity(100),
+        after: arrow,
+      }),
+    ]}
   ></span>
 </span>

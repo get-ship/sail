@@ -3,7 +3,7 @@
 use std::collections::{HashMap, HashSet};
 
 use super::ir::{PaintOp, Style};
-use super::setters::{lower_op_css, when_selector};
+use super::setters::{lower_op_css, when_target, WhenTarget};
 
 /// One emitted CSS rule.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -40,6 +40,9 @@ pub fn lower_style(style: &Style, env: &StyleEnv) -> (String, String) {
 }
 
 pub fn render_rule(r: &CssRule) -> String {
+    if r.selector.is_empty() || r.declarations.is_empty() {
+        return String::new();
+    }
     let body = r
         .declarations
         .iter()
@@ -57,6 +60,8 @@ pub fn render_rule(r: &CssRule) -> String {
 struct Ctx {
     attrs: Vec<(String, String)>,
     pseudo: String,
+    ancestor: String,
+    media: Option<String>,
     path_tags: Vec<String>,
 }
 
@@ -70,6 +75,18 @@ impl Ctx {
     fn with_pseudo(&self, key: &str, sel: &str) -> Self {
         let mut n = self.clone();
         n.pseudo.push_str(sel);
+        n.path_tags.push(key.into());
+        n
+    }
+    fn with_ancestor(&self, key: &str, anc: &str) -> Self {
+        let mut n = self.clone();
+        n.ancestor = format!("{}{anc}", n.ancestor);
+        n.path_tags.push(key.into());
+        n
+    }
+    fn with_media(&self, key: &str, media: &str) -> Self {
+        let mut n = self.clone();
+        n.media = Some(media.into());
         n.path_tags.push(key.into());
         n
     }
@@ -106,8 +123,12 @@ fn emit_inner(
         }
         Style::When { entries } => {
             for (key, body) in entries {
-                if let Some(sel) = when_selector(key) {
-                    let next = ctx.with_pseudo(key, sel);
+                if let Some(target) = when_target(key) {
+                    let next = match target {
+                        WhenTarget::Pseudo(sel) => ctx.with_pseudo(key, sel),
+                        WhenTarget::Ancestor(anc) => ctx.with_ancestor(key, anc),
+                        WhenTarget::Media(m) => ctx.with_media(key, m),
+                    };
                     emit_inner(body, env, &next, out, seen, resolving);
                 }
             }
@@ -125,32 +146,63 @@ fn emit_inner(
 }
 
 fn emit_op(op: &PaintOp, ctx: &Ctx, out: &mut Vec<CssRule>, seen: &mut HashSet<String>) {
+    // group marker: sail-grp class, no CSS rule body required.
+    if op.setter == "group" {
+        let class = "sail-grp".to_string();
+        let key = format!("marker|{class}");
+        if seen.insert(key) {
+            out.push(CssRule {
+                class,
+                selector: String::new(),
+                declarations: Vec::new(),
+                media: None,
+            });
+        }
+        return;
+    }
     let Ok(decls) = lower_op_css(op) else {
         return;
     };
+    if decls.is_empty() {
+        return;
+    }
     let class = class_name(op, ctx);
-    let selector = build_selector(&class, ctx);
-    let key = format!("{selector}|{decls:?}");
+    let mut child = "";
+    if op.setter == "avatarMedia" {
+        child = " img";
+    }
+    let selector = build_selector(&class, ctx, child);
+    let key = format!("{selector}|{decls:?}|{:?}", ctx.media);
     if seen.insert(key) {
         out.push(CssRule {
             class,
             selector,
             declarations: decls,
-            media: None,
+            media: ctx.media.clone(),
         });
     }
 }
 
 fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
+    if op.setter == "avatarMedia" {
+        return "sx-avatarmedia".into();
+    }
     let arg = match &op.arg {
-        super::ir::PaintArg::Token(t) => t.chars().filter(|c| c.is_ascii_alphanumeric()).collect::<String>(),
+        super::ir::PaintArg::Token(t) => t
+            .chars()
+            .filter(|c| c.is_ascii_alphanumeric())
+            .collect::<String>(),
         super::ir::PaintArg::Bind(n) => {
             let mut s = String::from("bind");
             s.extend(n.chars().filter(|c| c.is_ascii_alphanumeric()));
             s
         }
     };
-    let setter: String = op.setter.chars().filter(|c| c.is_ascii_alphanumeric()).collect();
+    let setter: String = op
+        .setter
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .collect();
     let path: String = ctx
         .path_tags
         .iter()
@@ -164,7 +216,7 @@ fn class_name(op: &PaintOp, ctx: &Ctx) -> String {
     }
 }
 
-fn build_selector(class: &str, ctx: &Ctx) -> String {
+fn build_selector(class: &str, ctx: &Ctx, child: &str) -> String {
     let mut attrs = String::new();
     for (k, v) in &ctx.attrs {
         if v == "true" {
@@ -175,7 +227,12 @@ fn build_selector(class: &str, ctx: &Ctx) -> String {
             attrs.push_str(&format!("[{k}='{v}']"));
         }
     }
-    format!("{attrs}.{class}{}", ctx.pseudo)
+    format!(
+        "{ancestor}{attrs}.{class}{pseudo}{child}",
+        ancestor = ctx.ancestor,
+        pseudo = ctx.pseudo,
+        child = child
+    )
 }
 
 /// Product entry: parse Style expression → classes + CSS.
@@ -187,7 +244,10 @@ pub fn lower_style_source(
     seen: &mut HashSet<String>,
 ) -> Result<String, Vec<super::ir::StyleDiagnostic>> {
     let (style, diags) = super::parse::parse(src);
-    if diags.iter().any(|d| matches!(d, super::ir::StyleDiagnostic::ResidualProduct { .. })) {
+    if diags
+        .iter()
+        .any(|d| matches!(d, super::ir::StyleDiagnostic::ResidualProduct { .. }))
+    {
         return Err(diags);
     }
     // Clash
@@ -210,6 +270,13 @@ pub fn lower_style_source(
     let rules = emit_style(&style, env);
     let mut classes = Vec::new();
     for r in &rules {
+        // Marker-only rules (group) contribute a class with empty selector.
+        if r.selector.is_empty() && r.declarations.is_empty() {
+            if !classes.iter().any(|c| c == &r.class) {
+                classes.push(r.class.clone());
+            }
+            continue;
+        }
         if seen.insert(r.class.clone()) {
             css.push_str(&render_rule(r));
         }

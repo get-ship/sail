@@ -1,36 +1,48 @@
 <!--
-  <avatar> — layout row centers; avatar-media img pack; gradient host sx/CVA.
-  Variance = CVA-in-props axes + optional compound only. tone/size/shape are
-  ordinary props/axes, not language channels.
+  <avatar> — L1 language element. Style value language only.
+  avatarMedia child pack sizes injected img.
 -->
+
 <scope>
   props: {
     src = ''
     'icon-slug' = ''
     name = ''
     initials = ''
-    tone: {
-      // Token PE gradient (primary→accent); not TW gradient utility pack.
-      default: 'bg-gradient-primary-accent color: avatar-foreground',
-      primary: 'bg-none bg: tone color: tone-contrast',
-      accent: 'bg-none bg: tone color: tone-contrast',
-      info: 'bg-none bg: tone-bg color: tone-fg',
-      success: 'bg-none bg: tone-success-bg color: success',
-      warning: 'bg-none bg: tone-warning-bg color: warning',
-      destructive: 'bg-none bg: tone-bg color: tone-fg',
-      muted: 'bg-none bg: avatar color: avatar-foreground',
-    }
-    size: {
-      md: 'size: 7 font-size: base',
-      xs: 'size: 5 font-size: xs',
-      sm: 'size: control-h-sm font-size: xs',
-      lg: 'size: control-h-lg font-size: lg',
-      xl: 'size: control-h-xl font-size: 2xl',
-    }
-    shape: {
-      round: 'rounded: full',
-      square: 'rounded: sm',
-    }
+    tone: 'default' | 'primary' | 'accent' | 'info' | 'success' | 'warning' | 'destructive' | 'muted' = 'default'
+    size: 'md' | 'xs' | 'sm' | 'lg' | 'xl' = 'md'
+    shape: 'round' | 'square' = 'round'
   }
+
+  const base = style.position(relative).shrink(0).fontFamily(body).fontWeight(bold).leading(none).tracking(wide).fg(avatar-foreground).overflow(hidden).select(none).align(middle).size(7).fontSize(base).radius(full).shadow(inset-ring).bgImage(primary-accent).avatarMedia(true)
+  const sizeMd = style.size(7).fontSize(base)
+  const sizeXs = style.size(5).fontSize(xs)
+  const sizeSm = style.size(control-h-sm).fontSize(xs)
+  const sizeLg = style.size(control-h-lg).fontSize(lg)
+  const sizeXl = style.size(control-h-xl).fontSize(2xl)
 </scope>
-<row inline nowrap align="center" justify="center" use:mediaFallback sx="relative shrink: 0 font-family: body font-weight: bold leading: none tracking: wide color: avatar-foreground overflow: hidden select: none align: middle size: 7 font-size: base rounded: full shadow: inset-ring bg-gradient-primary-accent avatar-media"></row>
+
+<row inline nowrap align="center" justify="center" use:mediaFallback sx={[
+  base,
+  match(size, {
+    md: sizeMd,
+    xs: sizeXs,
+    sm: sizeSm,
+    lg: sizeLg,
+    xl: sizeXl,
+  }),
+  match(shape, {
+    round: style.radius(full),
+    square: style.radius(sm),
+  }),
+  match(tone, {
+    default: style.bgImage(primary-accent).fg(avatar-foreground),
+    primary: style.bgImage(none).bg(primary).fg(primary-foreground),
+    accent: style.bgImage(none).bg(accent).fg(accent-foreground),
+    info: style.bgImage(none).bg(info).fg(info-foreground),
+    success: style.bgImage(none).bg(success).fg(success-foreground),
+    warning: style.bgImage(none).bg(warning).fg(warning-foreground),
+    destructive: style.bgImage(none).bg(destructive).fg(destructive-foreground),
+    muted: style.bgImage(none).bg(avatar).fg(avatar-foreground),
+  }),
+]}></row>
