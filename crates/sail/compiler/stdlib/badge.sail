@@ -1,40 +1,65 @@
 <!--
-  <badge> — L1 language element (element mode). A small, static, tone-colored
-  status label. No behavior, no control flow — pure surface. Bare tag: lowers
-  to <span class="sail-badge">.
-
-  Paint (one path):
-    host sx=         — soft base + PE size md (attr-absent; defaults not stamped)
-    CVA-in-props     — variant + size maps (first key = default = PE)
-    compound         — pill → rounded-full; soft+default tone → muted soft PE
-  Variance = CVA-in-props axes + optional compound only. tone/size/variant are
-  ordinary props (axes or unions), not language channels.
-  Zero contracts PE.
+  <badge> — L1 language element. Style value language only:
+  style.* chain + match + when + compound + scope Style consts.
+  SSOT tokens (no tone-*, no CVA maps).
 -->
 
 <scope>
   props: {
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
-    // first key = soft (PE soft host base); solid/outline override
-    variant: {
-      soft: 'bg: tone-bg color: tone-fg border: tone-border',
-      solid: 'bg: tone color: tone-contrast border: tone shadow: xs',
-      outline: 'bg: transparent color: tone-fg border: tone-border',
-    }
-    // first key = default = PE md
-    size: {
-      md: 'min-h: control-h-2xs px: 2 font-size: xs',
-      sm: 'min-h: 4 px: 1_5 font-size: xs',
-      lg: 'min-h: control-h-xs px: 2_5 font-size: xs',
-    }
+    variant: 'soft' | 'solid' | 'outline' = 'soft'
+    size: 'md' | 'sm' | 'lg' = 'md'
     pill = false
   }
-  compound: [
-    { when: { pill: true }, sx: 'rounded: full' },
-    { when: { variant: 'soft', tone: 'default' }, sx: 'bg: badge color: badge-foreground border: badge-border' },
-  ]
+
+  const base = style.fontFamily(body).fontWeight(semibold).leading(none).whitespace(nowrap).align(middle).borderWidth(1).radius(sm).minH(control-h-2xs).padX(2).fontSize(xs)
+
+  const soft = style.bg(muted).fg(muted-foreground).border(border)
+  const solid = style.bg(primary).fg(primary-foreground).border(primary).shadow(xs)
+  const outline = style.bg(transparent).fg(foreground).border(border)
+
+  const sizeMd = style.minH(control-h-2xs).padX(2).fontSize(xs)
+  const sizeSm = style.minH(4).padX(1_5).fontSize(xs)
+  const sizeLg = style.minH(control-h-xs).padX(2_5).fontSize(xs)
+
+  const toneDefault = style.bg(muted).fg(muted-foreground).border(border)
+  const tonePrimary = style.bg(primary).fg(primary-foreground).border(primary)
+  const toneInfo = style.bg(info).fg(info-foreground).border(info)
+  const toneSuccess = style.bg(success).fg(success-foreground).border(success)
+  const toneWarning = style.bg(warning).fg(warning-foreground).border(warning)
+  const toneDestructive = style.bg(destructive).fg(destructive-foreground).border(destructive)
+  const toneAccent = style.bg(accent).fg(accent-foreground).border(accent)
+  const toneMuted = style.bg(muted).fg(muted-foreground).border(border)
 </scope>
 
-<span sx="font-family: body font-weight: semibold leading: none whitespace: nowrap align: middle tabular-nums antialiased border rounded: sm bg: badge color: badge-foreground border: badge-border min-h: control-h-2xs px: 2 font-size: xs">
+<span sx={[
+  base,
+  match(variant, {
+    soft: soft,
+    solid: solid,
+    outline: outline,
+  }),
+  match(size, {
+    md: sizeMd,
+    sm: sizeSm,
+    lg: sizeLg,
+  }),
+  match(tone, {
+    default: toneDefault,
+    primary: tonePrimary,
+    info: toneInfo,
+    success: toneSuccess,
+    warning: toneWarning,
+    destructive: toneDestructive,
+    accent: toneAccent,
+    muted: toneMuted,
+  }),
+  compound({ pill: true }, style.radius(full)),
+  compound({ variant: soft, tone: default }, style.bg(muted).fg(muted-foreground).border(border)),
+  when({
+    hover: style.opacity(90),
+    focus: style.outline(2),
+  }),
+]}>
   <slot></slot>
 </span>
