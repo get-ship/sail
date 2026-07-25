@@ -33,29 +33,10 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-sx";
 
-/// A condition prefix (`motion-reduce:`/`forced-colors:`/…) → its `@media` query.
-/// A CLOSED set of the standard user-preference / environment queries — never an
-/// arbitrary `@media` (that would be a raw-CSS escape). An sx pair carrying a
-/// condition lowers into that media block.
-/// Condition prefixes (name → media query) — table form so surface
-/// documentation renders the same list the lowering consults.
-pub const CONDITION_PREFIXES: &[(&str, &str)] = &[
-    // Responsive, mobile-first (min-width), as Tailwind's `md:` is — the widths ARE
-    // the breakpoint tokens. They are written literally because a media query cannot
-    // read a custom property; `breakpoints_match_the_tokens` keeps them honest.
-    ("mobile", "(min-width: 390px)"),
-    ("tablet", "(min-width: 768px)"),
-    ("desktop", "(min-width: 1280px)"),
-    ("motion-reduce", "(prefers-reduced-motion: reduce)"),
-    ("motion-safe", "(prefers-reduced-motion: no-preference)"),
-    ("forced-colors", "(forced-colors: active)"),
-    ("dark", "(prefers-color-scheme: dark)"),
-    ("light", "(prefers-color-scheme: light)"),
-];
-
-pub fn condition_media(name: &str) -> Option<&'static str> {
-    CONDITION_PREFIXES.iter().find(|(n, _)| *n == name).map(|(_, m)| *m)
-}
+// Residual string lowerers still call these names. SSOT is Style product:
+// `crate::style::conditions` (`when({ tablet: … })`). Delete the re-exports
+// when string product is removed.
+pub use crate::style::conditions::{condition_media, CONDITION_PREFIXES};
 
 /// The sx prefix/value forms that are grammar rather than named tables —
 /// the `group` ancestor marker, the `group-<state>:` and `state-<value>:`
@@ -747,7 +728,7 @@ mod tests {
 
     #[test]
     fn breakpoints_match_the_tokens() {
-        // Media query widths are literal; must stay locked to the token registry.
+        // Residual path must not diverge from Style conditions / design tokens.
         for (name, query) in CONDITION_PREFIXES.iter().filter(|(n, _)| {
             matches!(*n, "mobile" | "tablet" | "desktop")
         }) {
@@ -755,7 +736,7 @@ mod tests {
                 .expect("the breakpoint token exists in the registry");
             assert!(
                 query.contains(value),
-                "`{name}:` is {query} but --breakpoint-{name} is {value} — sx has drifted from the theme"
+                "Style condition `{name}` is {query} but --breakpoint-{name} is {value}"
             );
         }
     }

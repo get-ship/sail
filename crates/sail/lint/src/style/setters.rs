@@ -293,11 +293,10 @@ fn when_key_kebab(key: &str) -> String {
     out
 }
 
-/// Closed `when({ key: Style })` browser/framework-state keys.
+/// Closed `when({ key: Style })` browser/framework-state and media keys.
 ///
-/// Media / condition keys (breakpoints, dark, motion-reduce, …) are **not**
-/// re-listed here: they share [`crate::rules::sx::CONDITION_PREFIXES`] with
-/// string-sx so Style cannot lag the design-system table.
+/// Breakpoints and preference media come from [`super::conditions`] — the
+/// Style product table, locked to design-token `breakpoint-*` lengths.
 pub fn when_target(key: &str) -> Option<WhenTarget> {
     match key {
         "hover" => Some(WhenTarget::Pseudo(":hover")),
@@ -345,11 +344,9 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
         // theme-picker `inline` presence attr on the group host.
         "group-inline" | "groupInline" => Some(WhenTarget::Ancestor(".sail-grp[inline] ")),
         other => {
-            // Design-system conditions: mobile/tablet/desktop + motion/dark/…
-            // Same table as string-sx `tablet:` prefixes — single source of truth.
             let kebab = when_key_kebab(other);
-            crate::rules::sx::condition_media(other)
-                .or_else(|| crate::rules::sx::condition_media(&kebab))
+            super::conditions::condition_media(other)
+                .or_else(|| super::conditions::condition_media(&kebab))
                 .map(WhenTarget::Media)
         }
     }

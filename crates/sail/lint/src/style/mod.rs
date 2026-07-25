@@ -3,11 +3,13 @@
 //! Sole paint architecture: chain + match / when / compound / bind.
 
 pub mod clash;
+pub mod conditions;
 pub mod emit;
 pub mod ir;
 pub mod parse;
 pub mod setters;
 
+pub use conditions::{condition_media, CONDITION_PREFIXES};
 pub use emit::{emit_style, lower_style, lower_style_source, CssRule, StyleEnv};
 pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 pub use parse::{looks_like_utility_string_product, parse, parse_style_const_rhs};
@@ -48,17 +50,15 @@ mod tests {
         assert!(!css.contains("onclick") && !css.contains("addEventListener"), "{css}");
     }
 
-    /// Style `when` media keys share string-sx CONDITION_PREFIXES (breakpoints).
+    /// Style `when` breakpoints are design-token locked (not a legacy string path).
     #[test]
-    fn when_breakpoints_match_string_sx_and_tokens() {
-        use crate::rules::sx::{condition_media, CONDITION_PREFIXES};
-
+    fn when_breakpoints_match_design_tokens() {
         for name in ["mobile", "tablet", "desktop"] {
-            let query = condition_media(name).expect("string-sx condition exists");
+            let query = conditions::condition_media(name).expect("Style condition table");
             assert_eq!(
                 setters::when_target(name),
                 Some(setters::WhenTarget::Media(query)),
-                "Style when({{{name}:…}}) must match string-sx `{name}:`"
+                "when({{{name}:…}}) must resolve via Style conditions"
             );
             let value = crate::tokens::token_value(&format!("breakpoint-{name}"))
                 .unwrap_or_else(|| panic!("breakpoint-{name} token missing from registry"));
@@ -68,12 +68,11 @@ mod tests {
             );
         }
 
-        // Full condition table — Style must accept every string-sx condition key.
-        for (name, query) in CONDITION_PREFIXES {
+        for (name, query) in conditions::CONDITION_PREFIXES {
             assert_eq!(
                 setters::when_target(name),
                 Some(setters::WhenTarget::Media(*query)),
-                "missing Style when parity for condition `{name}`"
+                "missing when key for Style condition `{name}`"
             );
         }
 
@@ -94,7 +93,6 @@ mod tests {
             css.contains("@media (min-width: 1280px)") || css.contains("@media(min-width: 1280px)"),
             "desktop when must emit desktop media: {css}"
         );
-        // CamelCase alias for multi-word conditions.
         let (style2, diags2) = parse("when({ motionReduce: style.opacity(100) })");
         assert!(diags2.is_empty(), "{:?}", diags2);
         let (_, css2) = lower_style(&style2, &HashMap::new());
