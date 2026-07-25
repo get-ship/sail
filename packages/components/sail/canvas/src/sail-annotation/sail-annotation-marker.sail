@@ -84,6 +84,6 @@ export default controller(({ kind, rect, index, active }: Scope) => ({
     role="button"
     tabindex="0"
     use:rect={box()}
-    sx={style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).bg(tone-primary-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto)}
+    sx={style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto)}
   ></div>
 {/if}

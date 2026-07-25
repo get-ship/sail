@@ -487,7 +487,7 @@ mod tests {
     #[test]
     fn status_block_using_tone_ramp_does_not_fire() {
         // Status block using a tone ramp — correct.
-        let src = "<style>:host([tone='warning']) { background: var(--tone-warning-bg); }</style>";
+        let src = "<style>:host([tone='warning']) { background: var(--hover-bg); }</style>";
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
@@ -532,7 +532,7 @@ mod tests {
                 border: 1px solid var(--border);
             }
             :host([tone='primary']) { background: var(--primary); }
-            :host([tone='destructive']) { background: var(--tone-destructive-bg); }
+            :host([tone='destructive']) { background: var(--hover-bg); }
         </style>"#;
         assert!(run(src).is_empty(), "{:?}", run(src));
     }

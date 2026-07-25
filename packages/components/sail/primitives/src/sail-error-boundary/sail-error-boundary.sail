@@ -25,7 +25,7 @@
   NEW SURFACE (re-port from the feat/next baseline, parity-gate pass)
   ─────────────────────────────────────────────────────────────────────────────
   - No tone/theme block: this component has no tone prop, and never had one
-    in feat/next — the destructive fallback tokens (tone-destructive-bg/
+    in feat/next — the destructive fallback tokens (hover-bg/
     -border, destructive) are read directly, unconditionally.
   - Controller is BYTE-IDENTICAL to feat/next.
   - sail-stack → column, a bare flex row → the row layout keyword (gap/

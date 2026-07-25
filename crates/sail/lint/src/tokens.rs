@@ -78,7 +78,7 @@ struct TokenMeta {
 /// one definition, no cross-crate drift.
 pub const CONVENTION_TOKENS: &[&str] = &[
     // tone-* channel names removed (no contracts attr channel). Semantic
-    // ramp tokens (tone-primary-bg, …) live in the registry, not here.
+    // ramp tokens (hover-bg, …) live in the registry, not here.
     // Floating-primitive positioning channels (dropdown / hovercard / popover / tooltip).
     "sail-dd-anchor", "sail-dd-default",
     "sail-hc-anchor", "sail-hc-default",
@@ -376,8 +376,8 @@ mod tests {
             "success",
             "surface-1",
             "muted-foreground",
-            "tone-success-bg",
-            "tone-primary-fg",
+            "hover-bg",
+            "primary",
             "accent-foreground",
         ] {
             assert!(c.contains(&want), "color surface missing `{want}`");

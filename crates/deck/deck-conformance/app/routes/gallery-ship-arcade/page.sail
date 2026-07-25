@@ -30,7 +30,7 @@
         <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>renderer=auto bounds=open (default)</span>
         <sail-stage width="320" height="200" renderer="auto" bounds="open" background="surface">
           <sail-shape kind="rect" x="60" y="80" width="40" height="40" fill="accent"></sail-shape>
-          <sail-shape kind="circle" x="200" y="80" radius="28" fill="tone-success-bg"></sail-shape>
+          <sail-shape kind="circle" x="200" y="80" radius="28" fill="hover-bg"></sail-shape>
         </sail-stage>
       </column>
 
@@ -62,7 +62,7 @@
         <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=rect + kind=circle</span>
         <sail-stage width="320" height="200" background="surface">
           <sail-shape kind="rect" x="40" y="60" width="80" height="60" fill="accent" rotation="15"></sail-shape>
-          <sail-shape kind="circle" x="220" y="100" radius="45" fill="tone-success-bg" alpha="0.85"></sail-shape>
+          <sail-shape kind="circle" x="220" y="100" radius="45" fill="hover-bg" alpha="0.85"></sail-shape>
         </sail-stage>
       </column>
 
@@ -70,7 +70,7 @@
         <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=polygon (triangle) + kind=line</span>
         <sail-stage width="320" height="200" background="surface">
           <sail-shape kind="polygon" x="90" y="110" points="0,-55 50,40 -50,40" fill="accent" stroke="foreground" stroke-width="2"></sail-shape>
-          <sail-shape kind="line" x="180" y="50" points="0,0 100,120" stroke="tone-warning-bg" stroke-width="4"></sail-shape>
+          <sail-shape kind="line" x="180" y="50" points="0,0 100,120" stroke="hover-bg" stroke-width="4"></sail-shape>
         </sail-stage>
       </column>
 
@@ -104,7 +104,7 @@
         <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>tint + alpha + rotation</span>
         <sail-stage width="320" height="200" background="surface" paused>
           <sail-sprite src="" x="80" y="100" tint="accent" alpha="0.8" rotation="30" scale="2" tag="tinted-a"></sail-sprite>
-          <sail-sprite src="" x="220" y="100" tint="tone-success-bg" alpha="0.5" rotation="-20" scale="1.8" tag="tinted-b"></sail-sprite>
+          <sail-sprite src="" x="220" y="100" tint="hover-bg" alpha="0.5" rotation="-20" scale="1.8" tag="tinted-b"></sail-sprite>
         </sail-stage>
       </column>
 
@@ -142,7 +142,7 @@
           <sail-shape kind="circle" x="100" y="100" radius="40" fill="accent" group="pickup">
             <sail-collider kind="circle" radius="40" group="pickup" collides-with="player" trigger></sail-collider>
           </sail-shape>
-          <sail-shape kind="circle" x="230" y="100" radius="28" fill="tone-success-bg" group="player">
+          <sail-shape kind="circle" x="230" y="100" radius="28" fill="hover-bg" group="player">
             <sail-collider kind="circle" radius="28" group="player" collides-with="pickup" trigger></sail-collider>
           </sail-shape>
         </sail-stage>
@@ -182,14 +182,14 @@
       <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
         <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=cone direction=-90 (upward fountain)</span>
         <sail-stage width="320" height="200" background="surface">
-          <sail-emitter kind="cone" x="160" y="170" rate="15" burst="12" lifetime="1000" spread="40" direction="-90" speed="140" speed-jitter="0.3" gravity="60" color="tone-success-bg" size="5..0" max="64"></sail-emitter>
+          <sail-emitter kind="cone" x="160" y="170" rate="15" burst="12" lifetime="1000" spread="40" direction="-90" speed="140" speed-jitter="0.3" gravity="60" color="hover-bg" size="5..0" max="64"></sail-emitter>
         </sail-stage>
       </column>
 
       <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
         <span sx={style.fontSize(xs).fontWeight(medium).fg(muted-foreground).textCase(lowercase).tracking(wide).fontFamily(mono)}>kind=explosion on=fire (burst on action)</span>
         <sail-stage width="320" height="200" background="surface">
-          <sail-emitter kind="explosion" x="160" y="100" rate="0" burst="32" lifetime="500" spread="360" speed="160" speed-jitter="0.5" gravity="80" color="tone-warning-bg" size="6..0" max="64" on="fire"></sail-emitter>
+          <sail-emitter kind="explosion" x="160" y="100" rate="0" burst="32" lifetime="500" spread="360" speed="160" speed-jitter="0.5" gravity="80" color="hover-bg" size="6..0" max="64" on="fire"></sail-emitter>
           <input map="Space" action="fire">
         </sail-stage>
       </column>
@@ -354,7 +354,7 @@
           </sail-shape>
 
           <!-- pickup circle -->
-          <sail-shape kind="circle" x="340" y="140" radius="18" fill="tone-success-bg" tag="pickup" group="pickups">
+          <sail-shape kind="circle" x="340" y="140" radius="18" fill="hover-bg" tag="pickup" group="pickups">
             <sail-collider kind="circle" radius="18" group="pickups" collides-with="player" trigger></sail-collider>
           </sail-shape>
 

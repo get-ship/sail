@@ -5,7 +5,7 @@
 //! What this rule flags (each maps to a `ship-design-system` anti-smell):
 //! - **Inline `color-mix(...)`** (anti-smell #2). A `color-mix(in oklch,
 //!   var(--success) 14%, transparent)` formula hand-rolled in a
-//!   component should be a pre-computed ramp token (`var(--tone-success-bg)`).
+//!   component should be a pre-computed ramp token (`var(--hover-bg)`).
 //!   The formula belongs in `tokens.css` once, not scattered across
 //!   primitives where the percentages drift.
 //! - **`oklch(...)` / `oklab(...)` color literals** (anti-smells #1, #3).
@@ -672,7 +672,7 @@ mod tests {
         let src = r#"<style>
             :host {
                 color: var(--foreground);
-                background: var(--tone-success-bg);
+                background: var(--hover-bg);
                 border: 1px solid var(--border);
                 border-radius: var(--radius-md);
             }

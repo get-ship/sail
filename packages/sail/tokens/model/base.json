@@ -517,7 +517,7 @@
     "frame": {
       "$value": "0 0 0 0 transparent",
       "$type": "shadow",
-      "$description": "Control framing — an extra box-shadow \"frame\" drawn around controls, stacked BEFORE the variant's own shadow so it reads as chrome rather than elevation.\nThe no-op is a fully transparent shadow, NOT `none`: this value is composed into a comma-separated box-shadow list, and `none` is not a legal list member — `box-shadow: none, var(--shadow-xs)` drops the whole declaration. A zero-size transparent layer paints nothing and composes cleanly. Same reasoning for --press-shadow and the --glow-* family.",
+      "$description": "Control framing \u2014 an extra box-shadow \"frame\" drawn around controls, stacked BEFORE the variant's own shadow so it reads as chrome rather than elevation.\nThe no-op is a fully transparent shadow, NOT `none`: this value is composed into a comma-separated box-shadow list, and `none` is not a legal list member \u2014 `box-shadow: none, var(--shadow-xs)` drops the whole declaration. A zero-size transparent layer paints nothing and composes cleanly. Same reasoning for --press-shadow and the --glow-* family.",
       "$extensions": {
         "ship": {
           "cssName": "control-frame",
@@ -528,7 +528,7 @@
     "lift": {
       "$value": "-1px",
       "$type": "dimension",
-      "$description": "Interaction motion. The baseline button lift/press was decided once, globally, in the contract (`translateY(-1px)` / `translateY(1px) scale(0.98)`) — the whole product's personality in two literals. Routed through channels so a calm theme sets 0 and an arcade theme exaggerates. Defaults reproduce the historical values.",
+      "$description": "Interaction motion. The baseline button lift/press was decided once, globally, in the contract (`translateY(-1px)` / `translateY(1px) scale(0.98)`) \u2014 the whole product's personality in two literals. Routed through channels so a calm theme sets 0 and an arcade theme exaggerates. Defaults reproduce the historical values.",
       "$extensions": {
         "ship": {
           "cssName": "control-lift",
@@ -540,7 +540,7 @@
       "translate": {
         "$value": "1px",
         "$type": "dimension",
-        "$description": "Interaction motion — see control.lift. Default reproduces the historical :active translate.",
+        "$description": "Interaction motion \u2014 see control.lift. Default reproduces the historical :active translate.",
         "$extensions": {
           "ship": {
             "cssName": "press-translate",
@@ -551,7 +551,7 @@
       "scale": {
         "$value": "0.98",
         "$type": "number",
-        "$description": "Interaction motion — see control.lift. Default reproduces the historical :active scale.",
+        "$description": "Interaction motion \u2014 see control.lift. Default reproduces the historical :active scale.",
         "$extensions": {
           "ship": {
             "cssName": "press-scale",
@@ -1261,7 +1261,7 @@
       "transform": {
         "$value": "uppercase",
         "$type": "string",
-        "$description": "Casing channel. The label role has always been upper-cased (hand-written `text-transform: uppercase` in every skin that carries a label), so the default is `uppercase` — defaulting to `none` would have quietly lower-cased every eyebrow and rail heading in the product. A channel is a seam, not a restyle. Governed property: `text-transform`.",
+        "$description": "Casing channel. The label role has always been upper-cased (hand-written `text-transform: uppercase` in every skin that carries a label), so the default is `uppercase` \u2014 defaulting to `none` would have quietly lower-cased every eyebrow and rail heading in the product. A channel is a seam, not a restyle. Governed property: `text-transform`.",
         "$extensions": {
           "ship": {
             "cssName": "label-transform",
@@ -1273,7 +1273,7 @@
     "displayFont": {
       "$value": "{font-display}",
       "$type": "fontFamily",
-      "$description": "Display type — the hero/wordmark role, themable independently of --heading-font. Default aliases the existing display stack so nothing moves.",
+      "$description": "Display type \u2014 the hero/wordmark role, themable independently of --heading-font. Default aliases the existing display stack so nothing moves.",
       "$extensions": {
         "ship": {
           "cssName": "display-font",
@@ -1457,7 +1457,7 @@
     "cornerImage": {
       "$value": "none",
       "$type": "string",
-      "$description": "Corner treatment — a `border-image` value for controls and cards. Default `none` leaves `border-radius` in charge. A pixel-art theme supplies a slice so corners are drawn, not rounded. Governed property: `border-image`.",
+      "$description": "Corner treatment \u2014 a `border-image` value for controls and cards. Default `none` leaves `border-radius` in charge. A pixel-art theme supplies a slice so corners are drawn, not rounded. Governed property: `border-image`.",
       "$extensions": {
         "ship": {
           "cssName": "corner-image",
@@ -1480,7 +1480,7 @@
       "accent": {
         "$value": "linear-gradient(180deg, var(--accent) 0%, transparent 92%)",
         "$type": "dimension",
-        "$description": "Gradient channel — a PROMOTION, not a new idea: two atoms wanted the same shape with a different base, so both now reference named globals instead of one being implicitly derived from the other.",
+        "$description": "Gradient channel \u2014 a PROMOTION, not a new idea: two atoms wanted the same shape with a different base, so both now reference named globals instead of one being implicitly derived from the other.",
         "$extensions": {
           "ship": {
             "cssName": "gradient-accent",
@@ -1504,7 +1504,7 @@
       "primary": {
         "$value": "radial-gradient(circle, color-mix(in oklch, var(--primary) 8%, transparent), transparent 60%)",
         "$type": "dimension",
-        "$description": "Per-tone glow — a radial background wash keyed to the tone ramp names (see the tone ramps), so `--glow-{tone}` is addressable wherever `--tone-*` is. Defaults to the former bg-glow-primary literal.\nNOTE: this is a BACKGROUND channel. A neon box-shadow rim (what a synthwave theme reaches for on controls) is --control-frame's job — one token, one meaning.",
+        "$description": "Per-tone glow \u2014 a radial background wash keyed to the tone ramp names (see the tone ramps), so `--glow-{tone}` is addressable wherever `--tone-*` is. Defaults to the former bg-glow-primary literal.\nNOTE: this is a BACKGROUND channel. A neon box-shadow rim (what a synthwave theme reaches for on controls) is --control-frame's job \u2014 one token, one meaning.",
         "$extensions": {
           "ship": {
             "cssName": "glow-primary",
@@ -1587,7 +1587,7 @@
     "shapePill": {
       "$value": "9999px",
       "$type": "dimension",
-      "$description": "Pill sentinel — SPLIT from --radius-full.\n--radius-full (9999px) was doing double duty: a shape token meaning \"this element is a circle/pill\" AND the top of the radius scale. A theme that squared off its radius scale had no way to say \"…but the status dot is still round\", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.",
+      "$description": "Pill sentinel \u2014 SPLIT from --radius-full.\n--radius-full (9999px) was doing double duty: a shape token meaning \"this element is a circle/pill\" AND the top of the radius scale. A theme that squared off its radius scale had no way to say \"\u2026but the status dot is still round\", because both meanings lowered to the same name. --shape-pill carries the SHAPE meaning; --radius-full stays in the scale. Elements that are intrinsically round (dots, avatars, spinners, switch thumbs) read --shape-pill.",
       "$extensions": {
         "ship": {
           "cssName": "shape-pill",
@@ -2195,411 +2195,6 @@
         }
       }
     },
-    "tone": {
-      "default": {
-        "fg": {
-          "$value": "{foreground}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-default-fg"
-            }
-          }
-        },
-        "bg": {
-          "$value": "{muted}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-default-bg"
-            }
-          }
-        },
-        "bgSolid": {
-          "$value": "{muted}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-default-bg-solid"
-            }
-          }
-        },
-        "border": {
-          "$value": "{border}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-default-border"
-            }
-          }
-        },
-        "ring": {
-          "$value": "{ring}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-default-ring"
-            }
-          }
-        }
-      },
-      "muted": {
-        "fg": {
-          "$value": "{muted-foreground}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-muted-fg"
-            }
-          }
-        },
-        "bg": {
-          "$value": "color-mix(in oklch, var(--muted) 60%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-muted-bg"
-            }
-          }
-        },
-        "bgSolid": {
-          "$value": "{muted}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-muted-bg-solid"
-            }
-          }
-        },
-        "border": {
-          "$value": "{border-subtle}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-muted-border"
-            }
-          }
-        },
-        "ring": {
-          "$value": "color-mix(in oklch, var(--muted-foreground) 20%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-muted-ring"
-            }
-          }
-        }
-      },
-      "info": {
-        "fg": {
-          "$value": "{info}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-info-fg"
-            }
-          }
-        },
-        "bg": {
-          "$value": "color-mix(in oklch, var(--info) 14%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-info-bg"
-            }
-          }
-        },
-        "bgSolid": {
-          "$value": "{info}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-info-bg-solid"
-            }
-          }
-        },
-        "border": {
-          "$value": "color-mix(in oklch, var(--info) 30%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-info-border"
-            }
-          }
-        },
-        "ring": {
-          "$value": "color-mix(in oklch, var(--info) 22%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-info-ring"
-            }
-          }
-        }
-      },
-      "success": {
-        "fg": {
-          "$value": "color-mix(in oklch, var(--success) 66%, black)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-success-fg"
-            }
-          }
-        },
-        "bg": {
-          "$value": "color-mix(in oklch, var(--success) 14%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-success-bg"
-            }
-          }
-        },
-        "bgSolid": {
-          "$value": "{success}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-success-bg-solid"
-            }
-          }
-        },
-        "border": {
-          "$value": "color-mix(in oklch, var(--success) 30%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-success-border"
-            }
-          }
-        },
-        "ring": {
-          "$value": "color-mix(in oklch, var(--success) 22%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-success-ring"
-            }
-          }
-        }
-      },
-      "warning": {
-        "fg": {
-          "$value": "color-mix(in oklch, var(--warning), var(--warning-foreground))",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-warning-fg"
-            }
-          }
-        },
-        "bg": {
-          "$value": "color-mix(in oklch, var(--warning) 14%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-warning-bg"
-            }
-          }
-        },
-        "bgSolid": {
-          "$value": "{warning}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-warning-bg-solid"
-            }
-          }
-        },
-        "border": {
-          "$value": "color-mix(in oklch, var(--warning) 30%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-warning-border"
-            }
-          }
-        },
-        "ring": {
-          "$value": "color-mix(in oklch, var(--warning) 22%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-warning-ring"
-            }
-          }
-        }
-      },
-      "destructive": {
-        "fg": {
-          "$value": "{destructive}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-destructive-fg"
-            }
-          }
-        },
-        "bg": {
-          "$value": "color-mix(in oklch, var(--destructive) 14%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-destructive-bg"
-            }
-          }
-        },
-        "bgSolid": {
-          "$value": "{destructive}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-destructive-bg-solid"
-            }
-          }
-        },
-        "border": {
-          "$value": "color-mix(in oklch, var(--destructive) 30%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-destructive-border"
-            }
-          }
-        },
-        "ring": {
-          "$value": "color-mix(in oklch, var(--destructive) 22%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-destructive-ring"
-            }
-          }
-        }
-      },
-      "accent": {
-        "fg": {
-          "$value": "{accent}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-accent-fg"
-            }
-          }
-        },
-        "bg": {
-          "$value": "color-mix(in oklch, var(--accent) 14%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-accent-bg"
-            }
-          }
-        },
-        "bgSolid": {
-          "$value": "{accent}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-accent-bg-solid"
-            }
-          }
-        },
-        "border": {
-          "$value": "color-mix(in oklch, var(--accent) 30%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-accent-border"
-            }
-          }
-        },
-        "ring": {
-          "$value": "color-mix(in oklch, var(--accent) 22%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-accent-ring"
-            }
-          }
-        }
-      },
-      "primary": {
-        "fg": {
-          "$value": "{primary}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-primary-fg"
-            }
-          }
-        },
-        "bg": {
-          "$value": "color-mix(in oklch, var(--primary) 14%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-primary-bg"
-            }
-          }
-        },
-        "bgSolid": {
-          "$value": "{primary}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-primary-bg-solid"
-            }
-          }
-        },
-        "border": {
-          "$value": "color-mix(in oklch, var(--primary) 30%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-primary-border"
-            }
-          }
-        },
-        "ring": {
-          "$value": "{ring}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-primary-ring"
-            }
-          }
-        }
-      },
-      "bgMix": {
-        "$value": "18%",
-        "$type": "number",
-        "$extensions": {
-          "ship": {
-            "cssName": "tone-bg-mix"
-          }
-        }
-      },
-      "borderMix": {
-        "$value": "35%",
-        "$type": "number",
-        "$extensions": {
-          "ship": {
-            "cssName": "tone-border-mix"
-          }
-        }
-      },
-      "hoverMix": {
-        "$value": "24%",
-        "$type": "number",
-        "$extensions": {
-          "ship": {
-            "cssName": "tone-hover-mix"
-          }
-        }
-      }
-    },
     "accent": {
       "dashboard": {
         "$value": "oklch(0.62 0.18 260)",
@@ -2737,7 +2332,36 @@
         }
       }
     },
-    "$type": "color"
+    "$type": "color",
+    "mix": {
+      "bgMix": {
+        "$value": "18%",
+        "$type": "number",
+        "$extensions": {
+          "ship": {
+            "cssName": "mix-bg"
+          }
+        }
+      },
+      "borderMix": {
+        "$value": "35%",
+        "$type": "number",
+        "$extensions": {
+          "ship": {
+            "cssName": "mix-border"
+          }
+        }
+      },
+      "hoverMix": {
+        "$value": "24%",
+        "$type": "number",
+        "$extensions": {
+          "ship": {
+            "cssName": "mix-hover"
+          }
+        }
+      }
+    }
   },
   "z": {
     "base": {

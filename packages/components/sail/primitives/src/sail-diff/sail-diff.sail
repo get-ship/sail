@@ -107,17 +107,17 @@ export default controller(({ from, to, value }: Scope) => {
   {#for line of lines() key={line.key}}
     {#match line.kind}
       {:case 'add'}
-        <row role="listitem" data-line-kind="add" aria-label={line.label} gap="0" sx={style.padX(2).bg(tone-success-bg)}>
+        <row role="listitem" data-line-kind="add" aria-label={line.label} gap="0" sx={style.padX(2).bg(hover-bg)}>
           <small aria-hidden="true" sx={style.w(4).fg(success)}>{line.sign}</small>
           <pre sx={style.grow(1).fontSize(sm)}>{line.text}</pre>
         </row>
       {:case 'del'}
-        <row role="listitem" data-line-kind="del" aria-label={line.label} gap="0" sx={style.padX(2).bg(tone-destructive-bg)}>
+        <row role="listitem" data-line-kind="del" aria-label={line.label} gap="0" sx={style.padX(2).bg(hover-bg)}>
           <small aria-hidden="true" sx={style.w(4).fg(destructive)}>{line.sign}</small>
           <pre sx={style.grow(1).fontSize(sm)}>{line.text}</pre>
         </row>
       {:case 'hunk'}
-        <row role="listitem" data-line-kind="hunk" aria-label={line.label} gap="0" sx={style.padX(2).bg(tone-info-bg)}>
+        <row role="listitem" data-line-kind="hunk" aria-label={line.label} gap="0" sx={style.padX(2).bg(hover-bg)}>
           <small aria-hidden="true" sx={style.w(4).fg(info)}>{line.sign}</small>
           <pre sx={style.grow(1).fontSize(sm).fg(info)}>{line.text}</pre>
         </row>

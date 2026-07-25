@@ -100,7 +100,7 @@ const SEMANTIC_ELEMENTS_CSS =
   'blockquote { margin: 0; padding-left: var(--space-4); border-left: 2px solid var(--border-strong); color: var(--muted-foreground); }\n' +
   // Tables live in TABLE_SKIN_CSS — they're a control surface, not prose.
   // Inline emphasis.
-  'mark { background: var(--tone-warning-bg, var(--hover-bg)); color: inherit; padding: 0 0.2em; border-radius: var(--radius-sm); }\n' +
+  'mark { background: var(--hover-bg, var(--hover-bg)); color: inherit; padding: 0 0.2em; border-radius: var(--radius-sm); }\n' +
   // kbd's keycap edge lowers to --border-width (the bottom stays twice the
   // stroke, which is what gives it the pressed-key look at any weight).
   'kbd { font-family: var(--mono-font, monospace); font-size: 0.85em; padding: 0.1em 0.4em; border: var(--border-width) solid var(--border); border-bottom-width: calc(var(--border-width) * 2); border-radius: var(--radius-sm); background: var(--muted); color: var(--foreground); }\n' +
@@ -386,7 +386,7 @@ const STATUS_DOT_SKIN_CSS =
 // no 48px token — see the former wrapper's own LANG-GAP note), so they land
 // here instead.
 const SKELETON_SKIN_CSS =
-  ":where(span[skeleton]) { display: inline-block; vertical-align: middle; background: linear-gradient(90deg, var(--muted) 0%, var(--tone-muted-bg) 50%, var(--muted) 100%); background-size: 200% 100%; animation: sail-skeleton-shimmer 1.5s ease-in-out infinite; border-radius: var(--radius-sm); }\n" +
+  ":where(span[skeleton]) { display: inline-block; vertical-align: middle; background: linear-gradient(90deg, var(--muted) 0%, var(--muted) 50%, var(--muted) 100%); background-size: 200% 100%; animation: sail-skeleton-shimmer 1.5s ease-in-out infinite; border-radius: var(--radius-sm); }\n" +
   ":where(span[skeleton][shape='block']) { display: block; width: 100%; min-height: 80px; }\n" +
   ":where(span[skeleton][shape='circle']) { border-radius: var(--shape-pill); }\n" +
   ":where(span[skeleton][shape='text'], span[skeleton][shape='line']) { width: 100%; }\n" +
@@ -407,7 +407,7 @@ const SKELETON_SKIN_CSS =
 const DROPZONE_SKIN_CSS =
   ":where([dropzone]) { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-1); min-height: calc(var(--control-h-lg) * 2); padding: var(--space-6); text-align: center; border: 1.5px dashed var(--border-strong); border-radius: var(--radius-lg); background: var(--muted); color: var(--muted-foreground); font-size: var(--text-sm); cursor: pointer; transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }\n" +
   ":where([dropzone]:hover) { border-color: var(--primary); color: var(--foreground); }\n" +
-  ":where([dropzone][data-drag]) { border-color: var(--primary); border-style: solid; background: var(--tone-primary-bg, var(--hover-bg)); color: var(--foreground); }\n" +
+  ":where([dropzone][data-drag]) { border-color: var(--primary); border-style: solid; background: var(--hover-bg, var(--hover-bg)); color: var(--foreground); }\n" +
   // Prompt line (medium) vs the hint / reflected filename (small, muted).
   ":where([dropzone] > span:first-of-type) { font-weight: var(--font-weight-medium); color: inherit; }\n" +
   ":where([dropzone] strong) { color: var(--primary); font-weight: var(--font-weight-medium); }\n" +
@@ -568,7 +568,7 @@ const DIALOG_SKIN_CSS =
   // the panel's own max-height.
   ':where(dialog) > header { flex: 0 0 auto; padding: var(--space-4_5) var(--space-6); border-bottom: 1px solid var(--border-subtle); font-size: var(--text-lg); font-weight: var(--font-weight-semibold); color: var(--foreground); }\n' +
   ':where(dialog) > section { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-4) var(--space-6); font-size: var(--text-base); line-height: var(--leading-normal); }\n' +
-  ':where(dialog) > footer { flex: 0 0 auto; display: flex; gap: var(--space-2); align-items: center; justify-content: flex-end; padding: var(--space-4) var(--space-6); border-top: 1px solid var(--border-subtle); background: var(--tone-muted-border); }\n' +
+  ':where(dialog) > footer { flex: 0 0 auto; display: flex; gap: var(--space-2); align-items: center; justify-content: flex-end; padding: var(--space-4) var(--space-6); border-top: 1px solid var(--border-subtle); background: var(--border); }\n' +
   // A bare entry inside owning chrome (command palettes, inline editors): the
   // wrapper draws the surface, the input contributes none.
   ":where(input[flush]) { border: 0; outline: 0; background: transparent; padding: 0; margin: 0; font: inherit; color: var(--foreground); }\n" +

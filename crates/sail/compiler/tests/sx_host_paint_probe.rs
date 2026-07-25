@@ -153,8 +153,8 @@ fn badge_soft_base_on_host_sx() {
         (src.contains("variant: soft") || src.contains("variant: 'soft'"))
             && (src.contains("bg(muted)") || src.contains("bg-muted") || src.contains("muted"))
             && (out.skin_css.contains("var(--muted)")
-                || out.skin_css.contains("tone-muted-bg")
-                || out.skin_css.contains("var(--tone-muted-bg)")),
+                || out.skin_css.contains("muted")
+                || out.skin_css.contains("var(--muted)")),
         "soft+default must paint muted soft:\n{}",
         out.skin_css
     );

@@ -3,7 +3,7 @@
   "component": {
     "error-boundary": {
       "bg": {
-        "$value": "{color.tone.destructive.bg}",
+        "$value": "{muted}",
         "$type": "color",
         "$extensions": {
           "ship": {
@@ -12,7 +12,7 @@
         }
       },
       "border": {
-        "$value": "{color.tone.destructive.border}",
+        "$value": "{destructive}",
         "$type": "color",
         "$extensions": {
           "ship": {

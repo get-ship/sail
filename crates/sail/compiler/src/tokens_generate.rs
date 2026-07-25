@@ -970,34 +970,13 @@ fn registry_string_list(registry: &Value, key: &str) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// Tone axis names from DTCG `color.tone.<name>.{fg,bg,bgSolid,border,ring}`.
-/// Falls back to [`TONE_FALLBACK`] when the model has no tone ramps.
-fn tone_names_from_tokens(tokens: &[Token]) -> (Vec<String>, &'static str) {
-    let mut found = BTreeSet::new();
-    for t in tokens {
-        let Some(rest) = t.path.strip_prefix("color.tone.") else {
-            continue;
-        };
-        let mut parts = rest.split('.');
-        let Some(name) = parts.next() else {
-            continue;
-        };
-        let Some(channel) = parts.next() else {
-            continue;
-        };
-        if matches!(channel, "fg" | "bg" | "bgSolid" | "border" | "ring") {
-            found.insert(name.to_string());
-        }
-    }
-    if found.is_empty() {
-        return (
-            TONE_FALLBACK.iter().map(|s| (*s).to_string()).collect(),
-            "fallback:TONE_FALLBACK (no color.tone.* ramps in model)",
-        );
-    }
+/// L1 host `tone` prop axis (component-library convention — not a token family).
+/// Historically derived from removed `color.tone.*` ramp tokens; membership is
+/// the fixed [`TONE_FALLBACK`] list so props/docs stay aligned without ramp tokens.
+fn tone_names_from_tokens(_tokens: &[Token]) -> (Vec<String>, &'static str) {
     (
-        order_with_preferred(&found, TONE_ORDER),
-        "dtcg:color.tone.<name>.{fg,bg,bgSolid,border,ring}",
+        TONE_FALLBACK.iter().map(|s| (*s).to_string()).collect(),
+        "l1-convention:TONE_FALLBACK (host prop axis; not design-token ramps)",
     )
 }
 
@@ -1167,7 +1146,7 @@ fn build_unions_ts(base_tokens: &[Token], registry: &Value, theme_ids: &[String]
         "TONE_NAMES",
         "ToneName",
         &tone_names,
-        "Standard L1 tone axis — derived from DTCG color.tone ramps when present.",
+        "L1 host tone prop axis (component convention). Not design-token ramps.",
     );
 
     emit_const_and_type(
@@ -1347,24 +1326,24 @@ mod tests {
         "fg": {
           "$value": "oklch(0.2 0 0)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "tone-default-fg" } }
+          "$extensions": { "ship": { "cssName": "foreground" } }
         },
         "bg": {
           "$value": "oklch(0.9 0 0)",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "tone-default-bg" } }
+          "$extensions": { "ship": { "cssName": "muted" } }
         }
       },
       "primary": {
         "fg": {
           "$value": "{primary}",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "tone-primary-fg" } }
+          "$extensions": { "ship": { "cssName": "primary" } }
         },
         "bg": {
           "$value": "{primary}",
           "$type": "color",
-          "$extensions": { "ship": { "cssName": "tone-primary-bg" } }
+          "$extensions": { "ship": { "cssName": "hover-bg" } }
         }
       }
     }

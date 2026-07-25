@@ -199,6 +199,9 @@
     "menu-item-foreground",
     "menu-item-hover-bg",
     "menu-min-w",
+    "mix-bg",
+    "mix-border",
+    "mix-hover",
     "mono-font",
     "muted",
     "muted-foreground",
@@ -389,49 +392,6 @@
     "toggle-foreground",
     "toggle-group",
     "toggle-group-border",
-    "tone-accent-bg",
-    "tone-accent-bg-solid",
-    "tone-accent-border",
-    "tone-accent-fg",
-    "tone-accent-ring",
-    "tone-bg-mix",
-    "tone-border-mix",
-    "tone-default-bg",
-    "tone-default-bg-solid",
-    "tone-default-border",
-    "tone-default-fg",
-    "tone-default-ring",
-    "tone-destructive-bg",
-    "tone-destructive-bg-solid",
-    "tone-destructive-border",
-    "tone-destructive-fg",
-    "tone-destructive-ring",
-    "tone-hover-mix",
-    "tone-info-bg",
-    "tone-info-bg-solid",
-    "tone-info-border",
-    "tone-info-fg",
-    "tone-info-ring",
-    "tone-muted-bg",
-    "tone-muted-bg-solid",
-    "tone-muted-border",
-    "tone-muted-fg",
-    "tone-muted-ring",
-    "tone-primary-bg",
-    "tone-primary-bg-solid",
-    "tone-primary-border",
-    "tone-primary-fg",
-    "tone-primary-ring",
-    "tone-success-bg",
-    "tone-success-bg-solid",
-    "tone-success-border",
-    "tone-success-fg",
-    "tone-success-ring",
-    "tone-warning-bg",
-    "tone-warning-bg-solid",
-    "tone-warning-border",
-    "tone-warning-fg",
-    "tone-warning-ring",
     "tooltip",
     "tooltip-foreground",
     "tooltip-hide-delay",
@@ -640,46 +600,6 @@
     "toggle-foreground",
     "toggle-group",
     "toggle-group-border",
-    "tone-accent-bg",
-    "tone-accent-bg-solid",
-    "tone-accent-border",
-    "tone-accent-fg",
-    "tone-accent-ring",
-    "tone-default-bg",
-    "tone-default-bg-solid",
-    "tone-default-border",
-    "tone-default-fg",
-    "tone-default-ring",
-    "tone-destructive-bg",
-    "tone-destructive-bg-solid",
-    "tone-destructive-border",
-    "tone-destructive-fg",
-    "tone-destructive-ring",
-    "tone-info-bg",
-    "tone-info-bg-solid",
-    "tone-info-border",
-    "tone-info-fg",
-    "tone-info-ring",
-    "tone-muted-bg",
-    "tone-muted-bg-solid",
-    "tone-muted-border",
-    "tone-muted-fg",
-    "tone-muted-ring",
-    "tone-primary-bg",
-    "tone-primary-bg-solid",
-    "tone-primary-border",
-    "tone-primary-fg",
-    "tone-primary-ring",
-    "tone-success-bg",
-    "tone-success-bg-solid",
-    "tone-success-border",
-    "tone-success-fg",
-    "tone-success-ring",
-    "tone-warning-bg",
-    "tone-warning-bg-solid",
-    "tone-warning-border",
-    "tone-warning-fg",
-    "tone-warning-ring",
     "tooltip",
     "tooltip-foreground",
     "warning",
@@ -2078,264 +1998,6 @@
       "type": "color",
       "value": "var(--border-subtle)"
     },
-    "tone-default-fg": {
-      "path": "color.tone.default.fg",
-      "cssName": "tone-default-fg",
-      "type": "color",
-      "value": "var(--foreground)"
-    },
-    "tone-default-bg": {
-      "path": "color.tone.default.bg",
-      "cssName": "tone-default-bg",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "tone-default-bg-solid": {
-      "path": "color.tone.default.bgSolid",
-      "cssName": "tone-default-bg-solid",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "tone-default-border": {
-      "path": "color.tone.default.border",
-      "cssName": "tone-default-border",
-      "type": "color",
-      "value": "var(--border)"
-    },
-    "tone-default-ring": {
-      "path": "color.tone.default.ring",
-      "cssName": "tone-default-ring",
-      "type": "color",
-      "value": "var(--ring)"
-    },
-    "tone-muted-fg": {
-      "path": "color.tone.muted.fg",
-      "cssName": "tone-muted-fg",
-      "type": "color",
-      "value": "var(--muted-foreground)"
-    },
-    "tone-muted-bg": {
-      "path": "color.tone.muted.bg",
-      "cssName": "tone-muted-bg",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--muted) 60%, transparent)"
-    },
-    "tone-muted-bg-solid": {
-      "path": "color.tone.muted.bgSolid",
-      "cssName": "tone-muted-bg-solid",
-      "type": "color",
-      "value": "var(--muted)"
-    },
-    "tone-muted-border": {
-      "path": "color.tone.muted.border",
-      "cssName": "tone-muted-border",
-      "type": "color",
-      "value": "var(--border-subtle)"
-    },
-    "tone-muted-ring": {
-      "path": "color.tone.muted.ring",
-      "cssName": "tone-muted-ring",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--muted-foreground) 20%, transparent)"
-    },
-    "tone-info-fg": {
-      "path": "color.tone.info.fg",
-      "cssName": "tone-info-fg",
-      "type": "color",
-      "value": "var(--info)"
-    },
-    "tone-info-bg": {
-      "path": "color.tone.info.bg",
-      "cssName": "tone-info-bg",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--info) 14%, transparent)"
-    },
-    "tone-info-bg-solid": {
-      "path": "color.tone.info.bgSolid",
-      "cssName": "tone-info-bg-solid",
-      "type": "color",
-      "value": "var(--info)"
-    },
-    "tone-info-border": {
-      "path": "color.tone.info.border",
-      "cssName": "tone-info-border",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--info) 30%, transparent)"
-    },
-    "tone-info-ring": {
-      "path": "color.tone.info.ring",
-      "cssName": "tone-info-ring",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--info) 22%, transparent)"
-    },
-    "tone-success-fg": {
-      "path": "color.tone.success.fg",
-      "cssName": "tone-success-fg",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--success) 66%, black)"
-    },
-    "tone-success-bg": {
-      "path": "color.tone.success.bg",
-      "cssName": "tone-success-bg",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--success) 14%, transparent)"
-    },
-    "tone-success-bg-solid": {
-      "path": "color.tone.success.bgSolid",
-      "cssName": "tone-success-bg-solid",
-      "type": "color",
-      "value": "var(--success)"
-    },
-    "tone-success-border": {
-      "path": "color.tone.success.border",
-      "cssName": "tone-success-border",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--success) 30%, transparent)"
-    },
-    "tone-success-ring": {
-      "path": "color.tone.success.ring",
-      "cssName": "tone-success-ring",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--success) 22%, transparent)"
-    },
-    "tone-warning-fg": {
-      "path": "color.tone.warning.fg",
-      "cssName": "tone-warning-fg",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--warning), var(--warning-foreground))"
-    },
-    "tone-warning-bg": {
-      "path": "color.tone.warning.bg",
-      "cssName": "tone-warning-bg",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--warning) 14%, transparent)"
-    },
-    "tone-warning-bg-solid": {
-      "path": "color.tone.warning.bgSolid",
-      "cssName": "tone-warning-bg-solid",
-      "type": "color",
-      "value": "var(--warning)"
-    },
-    "tone-warning-border": {
-      "path": "color.tone.warning.border",
-      "cssName": "tone-warning-border",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--warning) 30%, transparent)"
-    },
-    "tone-warning-ring": {
-      "path": "color.tone.warning.ring",
-      "cssName": "tone-warning-ring",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--warning) 22%, transparent)"
-    },
-    "tone-destructive-fg": {
-      "path": "color.tone.destructive.fg",
-      "cssName": "tone-destructive-fg",
-      "type": "color",
-      "value": "var(--destructive)"
-    },
-    "tone-destructive-bg": {
-      "path": "color.tone.destructive.bg",
-      "cssName": "tone-destructive-bg",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--destructive) 14%, transparent)"
-    },
-    "tone-destructive-bg-solid": {
-      "path": "color.tone.destructive.bgSolid",
-      "cssName": "tone-destructive-bg-solid",
-      "type": "color",
-      "value": "var(--destructive)"
-    },
-    "tone-destructive-border": {
-      "path": "color.tone.destructive.border",
-      "cssName": "tone-destructive-border",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--destructive) 30%, transparent)"
-    },
-    "tone-destructive-ring": {
-      "path": "color.tone.destructive.ring",
-      "cssName": "tone-destructive-ring",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--destructive) 22%, transparent)"
-    },
-    "tone-accent-fg": {
-      "path": "color.tone.accent.fg",
-      "cssName": "tone-accent-fg",
-      "type": "color",
-      "value": "var(--accent)"
-    },
-    "tone-accent-bg": {
-      "path": "color.tone.accent.bg",
-      "cssName": "tone-accent-bg",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--accent) 14%, transparent)"
-    },
-    "tone-accent-bg-solid": {
-      "path": "color.tone.accent.bgSolid",
-      "cssName": "tone-accent-bg-solid",
-      "type": "color",
-      "value": "var(--accent)"
-    },
-    "tone-accent-border": {
-      "path": "color.tone.accent.border",
-      "cssName": "tone-accent-border",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--accent) 30%, transparent)"
-    },
-    "tone-accent-ring": {
-      "path": "color.tone.accent.ring",
-      "cssName": "tone-accent-ring",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--accent) 22%, transparent)"
-    },
-    "tone-primary-fg": {
-      "path": "color.tone.primary.fg",
-      "cssName": "tone-primary-fg",
-      "type": "color",
-      "value": "var(--primary)"
-    },
-    "tone-primary-bg": {
-      "path": "color.tone.primary.bg",
-      "cssName": "tone-primary-bg",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--primary) 14%, transparent)"
-    },
-    "tone-primary-bg-solid": {
-      "path": "color.tone.primary.bgSolid",
-      "cssName": "tone-primary-bg-solid",
-      "type": "color",
-      "value": "var(--primary)"
-    },
-    "tone-primary-border": {
-      "path": "color.tone.primary.border",
-      "cssName": "tone-primary-border",
-      "type": "color",
-      "value": "color-mix(in oklch, var(--primary) 30%, transparent)"
-    },
-    "tone-primary-ring": {
-      "path": "color.tone.primary.ring",
-      "cssName": "tone-primary-ring",
-      "type": "color",
-      "value": "var(--ring)"
-    },
-    "tone-bg-mix": {
-      "path": "color.tone.bgMix",
-      "cssName": "tone-bg-mix",
-      "type": "number",
-      "value": "18%"
-    },
-    "tone-border-mix": {
-      "path": "color.tone.borderMix",
-      "cssName": "tone-border-mix",
-      "type": "number",
-      "value": "35%"
-    },
-    "tone-hover-mix": {
-      "path": "color.tone.hoverMix",
-      "cssName": "tone-hover-mix",
-      "type": "number",
-      "value": "24%"
-    },
     "accent-dashboard": {
       "path": "color.accent.dashboard",
       "cssName": "accent-dashboard",
@@ -2425,6 +2087,24 @@
       "cssName": "accent-mesh",
       "type": "color",
       "value": "oklch(0.64 0.14 195)"
+    },
+    "mix-bg": {
+      "path": "color.mix.bgMix",
+      "cssName": "mix-bg",
+      "type": "number",
+      "value": "18%"
+    },
+    "mix-border": {
+      "path": "color.mix.borderMix",
+      "cssName": "mix-border",
+      "type": "number",
+      "value": "35%"
+    },
+    "mix-hover": {
+      "path": "color.mix.hoverMix",
+      "cssName": "mix-hover",
+      "type": "number",
+      "value": "24%"
     },
     "z-base": {
       "path": "z.base",
@@ -2796,7 +2476,7 @@
       "path": "component.badge.bg",
       "cssName": "badge",
       "type": "color",
-      "value": "var(--tone-muted-bg)"
+      "value": "var(--muted)"
     },
     "badge-foreground": {
       "path": "component.badge.fg",
@@ -2808,7 +2488,7 @@
       "path": "component.badge.border",
       "cssName": "badge-border",
       "type": "color",
-      "value": "var(--tone-muted-border)"
+      "value": "var(--border)"
     },
     "card": {
       "path": "component.card.bg",
@@ -2916,7 +2596,7 @@
       "path": "component.empty-state.bg",
       "cssName": "empty-state",
       "type": "color",
-      "value": "var(--tone-muted-bg)"
+      "value": "var(--muted)"
     },
     "empty-state-foreground": {
       "path": "component.empty-state.fg",
@@ -2934,13 +2614,13 @@
       "path": "component.error-boundary.bg",
       "cssName": "error-boundary",
       "type": "color",
-      "value": "var(--tone-destructive-bg)"
+      "value": "var(--muted)"
     },
     "error-boundary-border": {
       "path": "component.error-boundary.border",
       "cssName": "error-boundary-border",
       "type": "color",
-      "value": "var(--tone-destructive-border)"
+      "value": "var(--destructive)"
     },
     "error-boundary-foreground": {
       "path": "component.error-boundary.fg",
@@ -2976,7 +2656,7 @@
       "path": "component.error-state.bg",
       "cssName": "error-state",
       "type": "color",
-      "value": "var(--tone-muted-bg)"
+      "value": "var(--muted)"
     },
     "error-state-foreground": {
       "path": "component.error-state.fg",
@@ -3572,6 +3252,9 @@
     "component.menu-item.fg": "menu-item-foreground",
     "component.menu-item.hover-bg": "menu-item-hover-bg",
     "panel.menuMinW": "menu-min-w",
+    "color.mix.bgMix": "mix-bg",
+    "color.mix.borderMix": "mix-border",
+    "color.mix.hoverMix": "mix-hover",
     "typography.monoFont": "mono-font",
     "color.muted.default": "muted",
     "color.muted.foreground": "muted-foreground",
@@ -3762,49 +3445,6 @@
     "component.toggle.fg": "toggle-foreground",
     "component.toggle-group.bg": "toggle-group",
     "component.toggle-group.border": "toggle-group-border",
-    "color.tone.accent.bg": "tone-accent-bg",
-    "color.tone.accent.bgSolid": "tone-accent-bg-solid",
-    "color.tone.accent.border": "tone-accent-border",
-    "color.tone.accent.fg": "tone-accent-fg",
-    "color.tone.accent.ring": "tone-accent-ring",
-    "color.tone.bgMix": "tone-bg-mix",
-    "color.tone.borderMix": "tone-border-mix",
-    "color.tone.default.bg": "tone-default-bg",
-    "color.tone.default.bgSolid": "tone-default-bg-solid",
-    "color.tone.default.border": "tone-default-border",
-    "color.tone.default.fg": "tone-default-fg",
-    "color.tone.default.ring": "tone-default-ring",
-    "color.tone.destructive.bg": "tone-destructive-bg",
-    "color.tone.destructive.bgSolid": "tone-destructive-bg-solid",
-    "color.tone.destructive.border": "tone-destructive-border",
-    "color.tone.destructive.fg": "tone-destructive-fg",
-    "color.tone.destructive.ring": "tone-destructive-ring",
-    "color.tone.hoverMix": "tone-hover-mix",
-    "color.tone.info.bg": "tone-info-bg",
-    "color.tone.info.bgSolid": "tone-info-bg-solid",
-    "color.tone.info.border": "tone-info-border",
-    "color.tone.info.fg": "tone-info-fg",
-    "color.tone.info.ring": "tone-info-ring",
-    "color.tone.muted.bg": "tone-muted-bg",
-    "color.tone.muted.bgSolid": "tone-muted-bg-solid",
-    "color.tone.muted.border": "tone-muted-border",
-    "color.tone.muted.fg": "tone-muted-fg",
-    "color.tone.muted.ring": "tone-muted-ring",
-    "color.tone.primary.bg": "tone-primary-bg",
-    "color.tone.primary.bgSolid": "tone-primary-bg-solid",
-    "color.tone.primary.border": "tone-primary-border",
-    "color.tone.primary.fg": "tone-primary-fg",
-    "color.tone.primary.ring": "tone-primary-ring",
-    "color.tone.success.bg": "tone-success-bg",
-    "color.tone.success.bgSolid": "tone-success-bg-solid",
-    "color.tone.success.border": "tone-success-border",
-    "color.tone.success.fg": "tone-success-fg",
-    "color.tone.success.ring": "tone-success-ring",
-    "color.tone.warning.bg": "tone-warning-bg",
-    "color.tone.warning.bgSolid": "tone-warning-bg-solid",
-    "color.tone.warning.border": "tone-warning-border",
-    "color.tone.warning.fg": "tone-warning-fg",
-    "color.tone.warning.ring": "tone-warning-ring",
     "component.tooltip.bg": "tooltip",
     "component.tooltip.fg": "tooltip-foreground",
     "motion.tooltip.hide-delay": "tooltip-hide-delay",

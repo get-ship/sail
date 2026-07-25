@@ -344,7 +344,7 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
       <div
         aria-hidden="true"
         use:rect={dragRect()}
-        sx={style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).pointerEvents(none).bg(tone-primary-bg).borderWidth(1).border(primary).border(dashed).radius(sm)}
+        sx={style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).pointerEvents(none).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm)}
       ></div>
     {/if}
     {#for m of markers() key={m.id}}

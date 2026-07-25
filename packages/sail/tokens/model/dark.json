@@ -117,57 +117,6 @@
         }
       }
     },
-    "tone": {
-      "default": {
-        "bg": {
-          "$value": "{muted}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-default-bg"
-            }
-          }
-        },
-        "bgSolid": {
-          "$value": "{muted}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-default-bg-solid"
-            }
-          }
-        }
-      },
-      "muted": {
-        "bg": {
-          "$value": "color-mix(in oklch, var(--muted) 60%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-muted-bg"
-            }
-          }
-        },
-        "bgSolid": {
-          "$value": "{muted}",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-muted-bg-solid"
-            }
-          }
-        },
-        "ring": {
-          "$value": "color-mix(in oklch, var(--muted-foreground) 20%, transparent)",
-          "$type": "color",
-          "$extensions": {
-            "ship": {
-              "cssName": "tone-muted-ring"
-            }
-          }
-        }
-      }
-    },
     "brandAccent": {
       "default": {
         "$value": "oklch(0.74 0.13 var(--brand-hue, 295))",

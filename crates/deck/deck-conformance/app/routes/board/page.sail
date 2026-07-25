@@ -37,7 +37,7 @@ export default controller(() => {
   {#if items().length > 0}
   <column gap="2" sx={style.list(none).pad(0).m(0)}>
     {#for item of items() key={item.id}}
-    <row gap="2" align="center" sx={style.radius(md).pad(2).borderWidth(1).border(transparent).when({ pressed: style.bg(tone-warning-bg).border(tone-warning-border) })} aria-pressed={item.flagged}>
+    <row gap="2" align="center" sx={style.radius(md).pad(2).borderWidth(1).border(transparent).when({ pressed: style.bg(hover-bg).border(warning) })} aria-pressed={item.flagged}>
       <demo-chip>{item.label}</demo-chip>
       <button on:click={() => remove(item.id)}>remove</button>
     </row>

@@ -170,12 +170,12 @@ function bezierPath(
 // The per-kind edge palette. Each kind reads its host knob first, so a consumer
 // can restyle one relation type without touching the rest.
 const EDGE_STROKE: Record<string, string> = {
-  agent: 'var(--edge-agent, var(--tone-primary-fg))',
-  skill: 'var(--edge-skill, var(--tone-success-fg))',
-  mcp: 'var(--edge-mcp, var(--tone-info-fg))',
-  rule: 'var(--edge-rule, var(--tone-warning-fg))',
-  perm: 'var(--edge-perm, var(--tone-destructive-fg))',
-  harness: 'var(--edge-harness, var(--tone-accent-fg))',
+  agent: 'var(--edge-agent, var(--primary))',
+  skill: 'var(--edge-skill, var(--success))',
+  mcp: 'var(--edge-mcp, var(--info))',
+  rule: 'var(--edge-rule, var(--warning))',
+  perm: 'var(--edge-perm, var(--destructive))',
+  harness: 'var(--edge-harness, var(--accent))',
 }
 const EDGE_DEFAULT = 'var(--edge-default, var(--border))'
 
@@ -334,7 +334,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
           on:click={() => select(n)}
           on:keydown={(e) => activate(n, e)}
           on:mouseover={() => hover(n)}
-          sx={style.w(bind(boxW)).padY(2).padX(3).bg(card).fg(foreground).fontFamily(body).fontSize(sm).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer).when({ hover: style.shadow(sm), focus: style.outline(ring), current: style.borderWidth(1).border(ring).shadow(sm), stateAgent: style.borderLWidth(1).borderL(tone-primary-fg), stateSkill: style.borderLWidth(1).borderL(tone-success-fg), stateMcp: style.borderLWidth(1).borderL(tone-info-fg), stateRule: style.borderLWidth(1).borderL(tone-warning-fg), statePerm: style.borderLWidth(1).borderL(tone-destructive-fg), stateHarness: style.borderLWidth(1).borderL(tone-accent-fg) })}
+          sx={style.w(bind(boxW)).padY(2).padX(3).bg(card).fg(foreground).fontFamily(body).fontSize(sm).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer).when({ hover: style.shadow(sm), focus: style.outline(ring), current: style.borderWidth(1).border(ring).shadow(sm), stateAgent: style.borderLWidth(1).borderL(primary), stateSkill: style.borderLWidth(1).borderL(success), stateMcp: style.borderLWidth(1).borderL(info), stateRule: style.borderLWidth(1).borderL(warning), statePerm: style.borderLWidth(1).borderL(destructive), stateHarness: style.borderLWidth(1).borderL(accent) })}
         >
           {#if n.body !== ''}
             <div use:nodeBody={n.body}></div>

@@ -6,7 +6,7 @@
 // shadow-rendered and styled in `sail-table.sail`'s `<style>` instead.
 //
 // Tokens only: density via the platform `--density-*` channel, selection via
-// the prebuilt `--selected-bg`/`--tone-primary-bg` ramps, surfaces via
+// the prebuilt `--selected-bg`/`--hover-bg` ramps, surfaces via
 // `--surface-2`, dividers via `--divider`, mono via `--mono-font`, motion via
 // the role-token easings — no `color-mix`/`oklch`/hex/`var(--x, fallback)`/
 // hardcoded-font literals (design-system anti-smells, review-enforced).
@@ -92,7 +92,7 @@ export const SUI_TABLE_LIGHT_DOM_CSS = `
 
   sail-table[striped] > tr:not([slot='head']):nth-of-type(even) > *,
   sail-table[striped] tbody tr:nth-child(even) > * {
-    background: var(--tone-muted-bg);
+    background: var(--muted);
   }
   sail-table[striped]:not([hoverable='false']) > tr:not([slot='head']):hover > *,
   sail-table[striped]:not([hoverable='false']) tbody tr:hover > * {
@@ -188,9 +188,9 @@ export const SUI_TABLE_LIGHT_DOM_CSS = `
     background: var(--muted-foreground);
   }
   sail-table .st .lbl { color: var(--foreground); }
-  sail-table .st.ok .dot { background: var(--success); box-shadow: 0 0 0 3px var(--tone-success-bg); }
-  sail-table .st.warn .dot { background: var(--warning); box-shadow: 0 0 0 3px var(--tone-warning-bg); }
-  sail-table .st.err .dot { background: var(--destructive); box-shadow: 0 0 0 3px var(--tone-destructive-bg); }
+  sail-table .st.ok .dot { background: var(--success); box-shadow: 0 0 0 3px var(--hover-bg); }
+  sail-table .st.warn .dot { background: var(--warning); box-shadow: 0 0 0 3px var(--hover-bg); }
+  sail-table .st.err .dot { background: var(--destructive); box-shadow: 0 0 0 3px var(--hover-bg); }
 
   @media (forced-colors: active) {
     sail-table th, sail-table td { border-bottom-color: CanvasText; }

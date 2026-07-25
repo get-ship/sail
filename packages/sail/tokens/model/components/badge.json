@@ -3,7 +3,7 @@
   "component": {
     "badge": {
       "bg": {
-        "$value": "{color.tone.muted.bg}",
+        "$value": "{muted}",
         "$type": "color",
         "$extensions": {
           "ship": {
@@ -21,7 +21,7 @@
         }
       },
       "border": {
-        "$value": "{color.tone.muted.border}",
+        "$value": "{border}",
         "$type": "color",
         "$extensions": {
           "ship": {

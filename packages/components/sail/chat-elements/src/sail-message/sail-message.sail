@@ -40,10 +40,10 @@
   const meta = style.padX(half).fontSize(xs).fg(muted-foreground)
   const roleLabel = style.fontWeight(medium)
   const bubble = style.padY(2).padX(3).radius(lg).fontSize(base).leading(normal).bg(card).borderWidth(1).border(border).fg(foreground).when({
-    groupStateUser: style.bg(tone-primary-bg).borderWidth(1).border(tone-primary-border),
-    groupStateSystem: style.bg(tone-muted-bg).fg(muted-foreground),
-    groupStateTool: style.bg(tone-accent-bg).borderWidth(1).border(tone-accent-border),
-    groupStateError: style.borderWidth(1).border(tone-destructive-border),
+    groupStateUser: style.bg(hover-bg).borderWidth(1).border(primary),
+    groupStateSystem: style.bg(muted).fg(muted-foreground),
+    groupStateTool: style.bg(hover-bg).borderWidth(1).border(accent),
+    groupStateError: style.borderWidth(1).border(destructive),
     groupStateSending: style.opacity(75),
     groupStateCode: style.fontFamily(mono).fontSize(sm).whitespace(pre-wrap),
     groupStateToolCall: style.fontFamily(mono).fontSize(sm).whitespace(pre-wrap),

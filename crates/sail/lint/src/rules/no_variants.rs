@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn flags_the_variants_block() {
-        assert_eq!(run("<variants>\n  tone=success: bg:tone-success-bg\n</variants>"), 1);
+        assert_eq!(run("<variants>\n  tone=success: bg:hover-bg\n</variants>"), 1);
         assert_eq!(run(r#"<variants class="x">"#), 1);
     }
 

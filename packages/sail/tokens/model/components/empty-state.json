@@ -3,7 +3,7 @@
   "component": {
     "empty-state": {
       "bg": {
-        "$value": "{color.tone.muted.bg}",
+        "$value": "{muted}",
         "$type": "color",
         "$extensions": {
           "ship": {

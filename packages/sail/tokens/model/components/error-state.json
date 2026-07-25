@@ -3,7 +3,7 @@
   "component": {
     "error-state": {
       "bg": {
-        "$value": "{color.tone.muted.bg}",
+        "$value": "{muted}",
         "$type": "color",
         "$extensions": {
           "ship": {

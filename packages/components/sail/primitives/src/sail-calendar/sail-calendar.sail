@@ -398,7 +398,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             aria-current={cr.cell.today ? 'date' : null}
             aria-label={cr.cell.iso}
             gap="1"
-            sx={style.group().padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell).borderRWidth(1).borderR(border).borderBWidth(1).borderB(border).when({ stateOut: style.fg(muted-foreground).bg(muted), stateWeekend: style.bg(tone-muted-bg), stateRange: style.bg(selected-bg) })}
+            sx={style.group().padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell).borderRWidth(1).borderR(border).borderBWidth(1).borderB(border).when({ stateOut: style.fg(muted-foreground).bg(muted), stateWeekend: style.bg(muted), stateRange: style.bg(selected-bg) })}
           >
             <row align="center" justify="center" gap="0" sx={style.fontSize(density).minW(control-h-2xs).h(control-h-2xs).radius(full).when({ groupStateToday: style.fg(primary).fontWeight(semibold).outline(primary) })}>{cr.cell.day}</row>
             {#for ev of cr.cell.events key={ev.id}}
@@ -408,7 +408,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 data-state={ev.allDay ? 'allday' : ''}
                 aria-selected={selectedIds().includes(ev.id) ? 'true' : 'false'}
                 title={ev.title}
-                sx={style.position(relative).textAlign(start).cursor(pointer).fontSize(density).fg(foreground).bg(tone-primary-bg).radius(sm).padY(half).padX(1_5).padL(3).truncate().when({ stateAllday: style.bg(tone-accent-bg), selected: style.outline(ring) })}
+                sx={style.position(relative).textAlign(start).cursor(pointer).fontSize(density).fg(foreground).bg(hover-bg).radius(sm).padY(half).padX(1_5).padL(3).truncate().when({ stateAllday: style.bg(hover-bg), selected: style.outline(ring) })}
               >
                 <span aria-hidden="true" sx={style.position(absolute).left(half).top(1).bottom(1).w(half).radius(sm).bg(primary).when({ groupStateAllday: style.bg(accent) })}></span>
                 {ev.title}
@@ -447,7 +447,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 data-state="allday"
                 aria-selected={selectedIds().includes(ev.id) ? 'true' : 'false'}
                 title={ev.title}
-                sx={style.position(relative).textAlign(start).cursor(pointer).fontSize(density).fg(foreground).bg(tone-accent-bg).radius(sm).padY(half).padX(1_5).truncate().when({ selected: style.outline(ring) })}
+                sx={style.position(relative).textAlign(start).cursor(pointer).fontSize(density).fg(foreground).bg(hover-bg).radius(sm).padY(half).padX(1_5).truncate().when({ selected: style.outline(ring) })}
               >{ev.title}</button>
             {/for}
           </column>
@@ -458,7 +458,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               aria-selected={selectedIds().includes(pe.event.id) ? 'true' : 'false'}
               use:eventSpan={eventRect(pe)}
               title={pe.event.title}
-              sx={style.position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).cursor(pointer).textAlign(start).fontSize(density).fg(tone-primary-fg).bg(tone-primary-bg).radius(sm).padY(half).padX(1).overflow(hidden).when({ selected: style.outline(ring) })}
+              sx={style.position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).cursor(pointer).textAlign(start).fontSize(density).fg(primary).bg(hover-bg).radius(sm).padY(half).padX(1).overflow(hidden).when({ selected: style.outline(ring) })}
             >{pe.event.title}</button>
           {/for}
         </div>

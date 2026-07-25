@@ -329,7 +329,7 @@ const PROSE_MAP: &[DescRule] = &[
             ("border-left-width", "3px"),
             ("border-left-color", "var(--primary)"),
             ("color", "var(--muted-foreground)"),
-            ("background-color", "var(--tone-primary-bg)"),
+            ("background-color", "var(--hover-bg)"),
             ("border-start-end-radius", "var(--radius-sm)"),
             ("border-end-end-radius", "var(--radius-sm)"),
         ]),

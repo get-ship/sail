@@ -185,9 +185,9 @@ function buildBareCard(
     'gap:var(--space-2,8px)',
     'align-items:flex-start',
     'padding:var(--space-5,20px)',
-    'border:1px solid var(--tone-destructive-border,#7f1d1d)',
+    'border:1px solid var(--destructive,#7f1d1d)',
     'border-radius:var(--radius-md,8px)',
-    'background:var(--tone-destructive-bg,rgba(127,29,29,0.08))',
+    'background:var(--hover-bg,rgba(127,29,29,0.08))',
     'color:var(--foreground,inherit)',
     'font:14px/1.5 var(--font-body,system-ui,sans-serif)',
   ].join(';')

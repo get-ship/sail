@@ -947,7 +947,7 @@ export default controller(() => ({
     <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>Blocked by #263 — production-compile gap</h2>
     <column gap="3">
 
-      <column gap="2" sx={style.pad(4).radius(md).borderWidth(1).border(tone-destructive-border).bg(tone-destructive-bg)}>
+      <column gap="2" sx={style.pad(4).radius(md).borderWidth(1).border(destructive).bg(hover-bg)}>
         <row gap="3">
           <code>sail-board</code>
           <span tone="destructive" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(medium).radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg).whitespace(nowrap)}>blocked by #263 — production-compile gap</span>
@@ -959,7 +959,7 @@ export default controller(() => ({
         </p>
       </column>
 
-      <column gap="2" sx={style.pad(4).radius(md).borderWidth(1).border(tone-destructive-border).bg(tone-destructive-bg)}>
+      <column gap="2" sx={style.pad(4).radius(md).borderWidth(1).border(destructive).bg(hover-bg)}>
         <row gap="3">
           <code>sail-draw</code>
           <span tone="destructive" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(medium).radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg).whitespace(nowrap)}>blocked by #263 — production-compile gap</span>
@@ -971,7 +971,7 @@ export default controller(() => ({
         </p>
       </column>
 
-      <column gap="2" sx={style.pad(4).radius(md).borderWidth(1).border(tone-destructive-border).bg(tone-destructive-bg)}>
+      <column gap="2" sx={style.pad(4).radius(md).borderWidth(1).border(destructive).bg(hover-bg)}>
         <row gap="3">
           <code>sail-media-av</code> / <code>sail-media-image</code> / <code>sail-media-csv</code>
           <span tone="destructive" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(medium).radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg).whitespace(nowrap)}>blocked by #263 — production-compile gap</span>

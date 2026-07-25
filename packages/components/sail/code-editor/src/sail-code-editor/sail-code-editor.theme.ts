@@ -30,7 +30,7 @@ export const sailEditorTheme = EditorView.theme({
     borderLeftWidth: '2px',
   },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': {
-    background: 'var(--tone-primary-bg)',
+    background: 'var(--hover-bg)',
   },
   '.cm-activeLine': {
     backgroundColor: 'color-mix(in oklch, var(--muted) 30%, transparent)',
@@ -63,10 +63,10 @@ export const sailEditorTheme = EditorView.theme({
     },
   },
   '.cm-searchMatch': {
-    backgroundColor: 'var(--tone-info-border)',
+    backgroundColor: 'var(--info)',
   },
   '.cm-searchMatch.cm-searchMatch-selected': {
-    backgroundColor: 'var(--tone-primary-border)',
+    backgroundColor: 'var(--primary)',
   },
   '.cm-placeholder': {
     color: 'var(--muted-foreground)',

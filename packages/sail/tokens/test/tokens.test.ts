@@ -94,14 +94,12 @@ const SEMANTIC_TIER: ReadonlyArray<[name: string, sample: RegExp]> = [
   // Overlay channel (semantic — the spec's "an --overlay-*")
   ['--surface-overlay', /--surface-overlay\s*:/i],
   ['--backdrop', /--backdrop\s*:/i],
-  // Tone ramps (semantic: per-tone fg/bg/border/ring families)
-  ['--tone-primary-fg', /--tone-primary-fg\s*:/i],
-  ['--tone-primary-bg', /--tone-primary-bg\s*:/i],
-  ['--tone-primary-border', /--tone-primary-border\s*:/i],
-  ['--tone-info-bg', /--tone-info-bg\s*:/i],
-  ['--tone-success-fg', /--tone-success-fg\s*:/i],
-  ['--tone-warning-border', /--tone-warning-border\s*:/i],
-  ['--tone-destructive-ring', /--tone-destructive-ring\s*:/i],
+  // Semantic hues + soft surfaces (no tone-* ramp tokens)
+  ['--primary', /--primary\s*:/i],
+  ['--hover-bg', /--hover-bg\s*:/i],
+  ['--success', /--success\s*:/i],
+  ['--warning', /--warning\s*:/i],
+  ['--destructive', /--destructive\s*:/i],
   // Brand palette
   ['--primary', /--primary\s*:/i],
   ['--foreground', /--foreground\s*:/i],
@@ -537,7 +535,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     expect(css).toMatch(/--navbar\s*:\s*var\(--background\)/)
     expect(css).toMatch(/--combobox\s*:\s*var\(--popover\)/)
     expect(css).toMatch(/--code-block\s*:\s*var\(--surface-1\)/)
-    expect(css).toMatch(/--error-boundary\s*:\s*var\(--tone-destructive-bg\)/)
+    expect(css).toMatch(/--error-boundary\s*:\s*var\(--muted\)/)
   })
 
   it('CONTROL component packs register path → cssName', () => {
@@ -582,7 +580,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
   it('color surface includes brand + tone tokens and excludes space/text', () => {
     const reg = loadRegistry()
     const colors = new Set(reg.colors)
-    for (const n of ['primary', 'foreground', 'surface-1', 'tone-success-bg', 'accent-foreground']) {
+    for (const n of ['primary', 'foreground', 'surface-1', 'hover-bg', 'accent-foreground']) {
       expect(colors.has(n)).toBe(true)
     }
     for (const n of ['space-4', 'text-2xl', 'radius-lg']) {
