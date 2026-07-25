@@ -8,7 +8,7 @@ export const code = {
 
   nowrap: `<row nowrap gap="4" align="stretch">
   <navbar>…</navbar>
-  <main sx="grow-1 min-w-0">…</main>
+  <main sx={style.grow(1).minW(0)}>…</main>
 </row>`,
 
   column: `<column gap="2" align="start">
@@ -28,11 +28,11 @@ export const code = {
 </grid>`,
 
   stack: `<stack align="start" justify="end">
-  <card sx="w-24 h-12 bg-muted rounded-md"></card>
-  <div sx="w-4 h-4 rounded-full bg-primary"></div>
+  <card sx={style.w(24).h(12).bg(muted).radius(md)}></card>
+  <div sx={style.w(4).h(4).radius(full).bg(primary)}></div>
 </stack>`,
 
-  center: `<center sx="min-h-11">
+  center: `<center sx={style.minH(11)}>
   <badge tone="primary">centered</badge>
 </center>`,
 

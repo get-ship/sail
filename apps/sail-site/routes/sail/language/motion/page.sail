@@ -60,10 +60,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   }
 })
 </controller>
-<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">The language</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>The language</p>
   <h1>Motion</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     Animation is declared on the element. <code>motion:</code> names a
     <strong>trigger</strong> — <code>enter</code>, <code>exit</code>,
     <code>reveal</code>, <code>press</code>, <code>loop</code> — and a
@@ -75,18 +75,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <row gap="3" align="center">
     <button on:click={replay} motion:press={{ scale: 'press' }}>Replay</button>
-    <p sx="text-sm text-muted-foreground">
+    <p sx={style.fontSize(sm).fg(muted-foreground)}>
       Five tiles, one <code>motion:enter</code> each; <code>stagger</code>
       is the delay between siblings.
     </p>
   </row>
   {#if dealt()}
-    <row gap="3" align="center" sx="min-h-9">
-      <div sx="w-9 h-9 rounded-md bg-primary" motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
-      <div sx="w-9 h-9 rounded-md bg-primary opacity-75" motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
-      <div sx="w-9 h-9 rounded-md bg-primary" motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
-      <div sx="w-9 h-9 rounded-md bg-primary opacity-75" motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
-      <div sx="w-9 h-9 rounded-md bg-primary" motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+    <row gap="3" align="center" sx={style.minH(9)}>
+      <div sx={style.w(9).h(9).radius(md).bg(primary)} motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx={style.w(9).h(9).radius(md).bg(primary).opacity(75)} motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx={style.w(9).h(9).radius(md).bg(primary)} motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx={style.w(9).h(9).radius(md).bg(primary).opacity(75)} motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx={style.w(9).h(9).radius(md).bg(primary)} motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
     </row>
   {/if}
   <code-block code={code.stagger}></code-block>
@@ -99,7 +99,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     to play, so the runtime keeps the element mounted until the exit
     finishes.
   </p>
-  <column sx="p-6 border border-border rounded-lg min-h-8 bg-surface-1" gap="3">
+  <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)} gap="3">
     <row>
       <button on:click={() => open.set(!open())} motion:press={{ scale: 'press' }}>
         {open() ? 'Remove' : 'Add'} the panel
@@ -109,10 +109,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <card
         motion:enter={{ opacity: 'fade', scale: 'spring:snappy' }}
         motion:exit={{ opacity: 'fade-out' }}
-        sx="p-4"
+        sx={style.pad(4)}
       >
         <strong>I animate in, and I animate out.</strong>
-        <p sx="text-sm text-muted-foreground">Watch me leave before I go.</p>
+        <p sx={style.fontSize(sm).fg(muted-foreground)}>Watch me leave before I go.</p>
       </card>
     {/if}
   </column>
@@ -126,9 +126,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>from</code>/<code>to</code> per property. The two tiles below run
     the same loop — one at 500&nbsp;ms, one at 2500&nbsp;ms:
   </p>
-  <row gap="5" align="center" sx="min-h-9">
-    <div sx="w-8 h-8 rounded-md bg-primary" motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 500 }}></div>
-    <div sx="w-8 h-8 rounded-md bg-primary opacity-75" motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 2500 }}></div>
+  <row gap="5" align="center" sx={style.minH(9)}>
+    <div sx={style.w(8).h(8).radius(md).bg(primary)} motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 500 }}></div>
+    <div sx={style.w(8).h(8).radius(md).bg(primary).opacity(75)} motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 2500 }}></div>
   </row>
   <code-block code={code.express}></code-block>
   <p>
@@ -146,10 +146,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     viewport. Same configs as everything else:
   </p>
   <column gap="4">
-    <card motion:reveal={{ opacity: 'fade', translate-y: 'spring:gentle' }} sx="p-6">
+    <card motion:reveal={{ opacity: 'fade', translate-y: 'spring:gentle' }} sx={style.pad(6)}>
       <h3>This one fades up as it enters the viewport.</h3>
     </card>
-    <card motion:reveal={{ scale: 'spring:bouncy', opacity: 'fade' }} sx="p-6">
+    <card motion:reveal={{ scale: 'spring:bouncy', opacity: 'fade' }} sx={style.pad(6)}>
       <h3>And this one springs in.</h3>
     </card>
   </column>
@@ -162,13 +162,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     offsets siblings so a row reads as a wave. A user whose system asks for
     reduced motion gets none of this, automatically.
   </p>
-  <row gap="3" align="center" sx="min-h-9">
-    <div sx="w-4 h-4 rounded-full bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
-    <div sx="w-4 h-4 rounded-full bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
-    <div sx="w-4 h-4 rounded-full bg-primary" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
-    <div sx="w-4 h-4 rounded-full bg-primary opacity-75" motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
-    <row sx="grow-1"></row>
-    <div sx="w-8 h-8 rounded-md bg-primary" motion:loop={{ rotate: 'spin' }}></div>
+  <row gap="3" align="center" sx={style.minH(9)}>
+    <div sx={style.w(4).h(4).radius(full).bg(primary)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx={style.w(4).h(4).radius(full).bg(primary)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <row sx={style.grow(1)}></row>
+    <div sx={style.w(8).h(8).radius(md).bg(primary)} motion:loop={{ rotate: 'spin' }}></div>
   </row>
   <code-block code={code.loop}></code-block>
 
@@ -192,7 +192,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     tile moves through a seven-stop sequence, holds where the keyframes
     hold, and pops in place between 54 and 64.
   </p>
-  <column sx="p-6 border border-border rounded-lg bg-surface-1 min-h-11" gap="4">
+  <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).bg(surface-1).minH(11)} gap="4">
     <row align="center" gap="3">
       <input
         type="range"
@@ -201,14 +201,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         step="1"
         bind:value={scrubText}
         data-testid="timeline-scrub"
-        sx="grow-1 min-w-0"
+        sx={style.grow(1).minW(0)}
       />
-      <span sx="w-8 text-end font-mono text-sm text-muted-foreground">{scrubText()}</span>
+      <span sx={style.w(8).textAlign(end).fontFamily(mono).fontSize(sm).fg(muted-foreground)}>{scrubText()}</span>
     </row>
-    <row sx="min-h-9" align="center">
+    <row sx={style.minH(9)} align="center">
       <card
         data-testid="timeline-tile"
-        sx="w-9 h-9 bg-primary rounded-md translate-x-(--tile-x) rotate-(--tile-rotate) scale-(--tile-scale)"
+        sx={style.w(9).h(9).bg(primary).radius(md).translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale))}
       ></card>
     </row>
   </column>
@@ -216,8 +216,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     The program behind it is <code>timeline()</code>: it takes a progress
     reader — here, the slider's value scaled to 0…1 — and a set of
     keyframes per property, and returns one signal per property. Those
-    signals reach the style layer the way any signal does, through
-    <code>(--name)</code>:
+    signals reach Style the way any signal does, through
+    <code>bind(name)</code> on a setter
+    (<code>style.translateX(bind(tileX))</code>):
   </p>
   <code-block code={code.choreography}></code-block>
   <p>
@@ -244,33 +245,33 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <grid cols="2" gap="4">
     <column gap="1">
       <label>Triggers</label>
-      <p sx="text-sm text-muted-foreground">enter · exit · reveal · scroll · press · focus · focus-visible · loop</p>
+      <p sx={style.fontSize(sm).fg(muted-foreground)}>enter · exit · reveal · scroll · press · focus · focus-visible · loop</p>
     </column>
     <column gap="1">
       <label>Properties</label>
-      <p sx="text-sm text-muted-foreground">opacity · scale · scale-x · scale-y · translate-x · translate-y · rotate</p>
+      <p sx={style.fontSize(sm).fg(muted-foreground)}>opacity · scale · scale-x · scale-y · translate-x · translate-y · rotate</p>
     </column>
     <column gap="1">
       <label>Springs</label>
-      <p sx="text-sm text-muted-foreground">spring:snappy · spring:gentle · spring:bouncy · spring:deliberate</p>
+      <p sx={style.fontSize(sm).fg(muted-foreground)}>spring:snappy · spring:gentle · spring:bouncy · spring:deliberate</p>
     </column>
     <column gap="1">
       <label>Tweens</label>
-      <p sx="text-sm text-muted-foreground">fade · fade-out · press · release · pulse · spin</p>
+      <p sx={style.fontSize(sm).fg(muted-foreground)}>fade · fade-out · press · release · pulse · spin</p>
     </column>
   </grid>
-  <p sx="text-sm text-muted-foreground">
+  <p sx={style.fontSize(sm).fg(muted-foreground)}>
     Config fields: <code>duration</code> · <code>delay</code> ·
     <code>easing</code> · <code>from</code>/<code>to</code> ·
     <code>stagger</code>. Every name above is compiler-checked; every value
     is yours.
   </p>
 
-  <p sx="mt-4 text-sm text-muted-foreground">
+  <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>
     For the full surface: <a href="/sail/reference/motion">reference → Motion</a>.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
     <a variant="default" href="/sail/language/layout">← Layout</a>
     <a variant="solid" tone="primary" href="/sail/language/actions">Actions →</a>
   </row>

@@ -16,10 +16,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Guide</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Guide</p>
   <h1>Embedding third-party code</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     Sooner or later a component needs something the language does not hand
     it: a library loaded on demand, or a call to a server. Both are
     available, and both are refused until a file next to your component says
@@ -82,7 +82,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>connect-src</code> Content-Security-Policy header from the same
     list, so the browser refuses the connection too.
   </p>
-  <p sx="text-sm text-muted-foreground">
+  <p sx={style.fontSize(sm).fg(muted-foreground)}>
     A URL built at runtime rather than written as a literal is allowed only
     when the allowlist is non-empty; the compiler cannot check a value it
     cannot see, so it defers to the runtime and the CSP.
@@ -138,7 +138,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>unconfined</code>.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
     <a variant="default" href="/sail/guide/making-a-theme">← Making a theme</a>
     <a variant="solid" tone="primary" href="/sail/reference">Reference →</a>
   </row>

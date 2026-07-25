@@ -311,6 +311,10 @@ mod tests {
             "style.fg(muted-foreground).when({ hover: style.fg(primary) })",
             "style.grow(1).minW(0).truncate()",
             "style.pad(6).grow(1).minW(0)",
+            "style.grow(1).basis(0).minW(0)",
+            "style.grow(1).basis(breakpoint-mobile).minW(0)",
+            "style.translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale))",
+            "style.when({ groupCurrent: style.fg(primary), desktop: style.display(block) })",
         ];
         for e in exprs {
             let (_, diags) = parse(e);
@@ -321,4 +325,29 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn basis_and_scale_setters_lower() {
+        let (style, diags) = parse("style.basis(0).scale(100).rotate(bind(tileRotate))");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            css.contains("flex-basis") || css.contains("0"),
+            "basis must lower: {css}"
+        );
+        assert!(
+            css.contains("scale") || css.contains("1") || css.contains("100"),
+            "scale must lower: {css}"
+        );
+        assert!(
+            css.contains("var(--tile-rotate)") || css.contains("rotate"),
+            "rotate bind must lower: {css}"
+        );
+    }
+
+
 }

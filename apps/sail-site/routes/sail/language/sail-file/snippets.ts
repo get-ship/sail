@@ -15,16 +15,16 @@ export default controller(() => ({}))
 
 <card>{title()}</card>`,
 
-  template: `<card sx="p-4 w-full">
+  template: `<card sx={style.pad(4).w(full)}>
   <row align="center" justify="between" nowrap>
-    <strong sx="uppercase tracking-wide text-sm">{title()}</strong>
-    <span sx="text-xs text-muted-foreground font-mono">{departed()} departed</span>
+    <strong sx={style.textCase(uppercase).tracking(wide).fontSize(sm)}>{title()}</strong>
+    <span sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{departed()} departed</span>
   </row>
-  <column gap="1" sx="mt-3 font-mono text-sm">
+  <column gap="1" sx={style.mt(3).fontFamily(mono).fontSize(sm)}>
     {#for f of flights() key={f.id}}
       <row align="center" gap="3" nowrap>
-        <span sx="grow-1 min-w-0 truncate">{f.city}</span>
-        <span sx="text-muted-foreground">{f.gate}</span>
+        <span sx={style.grow(1).minW(0).truncate()}>{f.city}</span>
+        <span sx={style.fg(muted-foreground)}>{f.gate}</span>
         {#match f.status}
           {:case 'boarding'} <badge tone="success">Boarding</badge>
           {:case 'delayed'}  <badge tone="destructive">Delayed</badge>
@@ -74,13 +74,13 @@ export default controller((ctx) => {
 
   usage: `<departures-board title="Departures — SFO"></departures-board>`,
 
-  slotDef: `<card sx="p-4 w-full">
+  slotDef: `<card sx={style.pad(4).w(full)}>
   ...the board...
   <slot name="footer"></slot>
 </card>`,
 
   slotUse: `<departures-board title="Departures — SFO">
-  <p slot="footer" sx="mt-3 text-xs text-muted-foreground">
+  <p slot="footer" sx={style.mt(3).fontSize(xs).fg(muted-foreground)}>
     Gate changes are announced. Allegedly.
   </p>
 </departures-board>`,

@@ -19,11 +19,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="6">
-  <column sx="max-w-breakpoint-tablet" gap="3">
-    <p sx="font-mono text-xs uppercase tracking-wide text-accent">Introduction</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="6">
+  <column sx={style.maxW(breakpoint-tablet)} gap="3">
+    <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)}>Introduction</p>
     <h1>Sail</h1>
-    <p sx="text-lg text-muted-foreground leading-relaxed">
+    <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
       Sail is a compiled language that includes everything you need to build
       beautiful, consistent, and performant websites. It is optimized for AI
       agents: the language provides the APIs an interface needs — signals for
@@ -45,10 +45,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       component — and the same lines running:
     </p>
     <row gap="6" align="start">
-      <column gap="2" sx="grow-1 basis-breakpoint-mobile min-w-0">
+      <column gap="2" sx={style.grow(1).basis(breakpoint-mobile).minW(0)}>
         <code-block code={code.hello}></code-block>
       </column>
-      <column gap="2" sx="grow-1 basis-64 min-w-0 p-4 bg-muted border border-border rounded-lg" justify="center">
+      <column gap="2" sx={style.grow(1).basis(64).minW(0).pad(4).bg(muted).borderWidth(1).border(border).radius(lg)} justify="center">
         <demo-player playing={playing()}></demo-player>
         <row gap="2" align="center">
           <switch bind:checked={playing}></switch>
@@ -70,10 +70,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <theme-picker inline></theme-picker>
   </column>
 
-  <column sx="max-w-breakpoint-tablet" gap="3">
+  <column sx={style.maxW(breakpoint-tablet)} gap="3">
     <h2>The compiler pushes back</h2>
     <row gap="6" align="start">
-      <column gap="3" sx="grow-1 basis-breakpoint-mobile min-w-0">
+      <column gap="3" sx={style.grow(1).basis(breakpoint-mobile).minW(0)}>
         <p>
           The compiler checks more than syntax: a colour that isn't a token, a
           stylesheet beside a component, an animation outside the motion
@@ -91,8 +91,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           isn't granted doesn't compile.
         </p>
       </column>
-      <column gap="2" sx="grow-1 basis-breakpoint-mobile min-w-0">
-        <p sx="font-mono text-xs text-muted-foreground">apps/sail-site/routes/sail.config.json</p>
+      <column gap="2" sx={style.grow(1).basis(breakpoint-mobile).minW(0)}>
+        <p sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>apps/sail-site/routes/sail.config.json</p>
         <sail-json-view data={code.configJson} expanded depth={2}></sail-json-view>
       </column>
     </row>
@@ -124,12 +124,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       as their own runtime on top of the framework's.
     </p>
 
-    <p sx="text-sm text-muted-foreground">
+    <p sx={style.fontSize(sm).fg(muted-foreground)}>
       Sail is in alpha. It builds real websites today — this site is one —
       and the language is still settling.
     </p>
 
-    <row sx="mt-4 pt-4 border-t border-t-border" gap="2">
+    <row sx={style.mt(4).padT(4).borderTWidth(1).borderT(border)} gap="2">
       <a variant="solid" tone="primary" href="/sail/getting-started">Installation →</a>
       <a variant="default" href="/sail/tutorial">Tutorial</a>
       <a variant="default" href="/showcase">Showcase</a>

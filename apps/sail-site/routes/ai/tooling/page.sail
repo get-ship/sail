@@ -16,10 +16,10 @@ import { lintCmd, lintOutput, compileCmd, lspJson } from './snippets'
 export default controller((_ctx: ControllerScope<Scope>) => ({ lintCmd, lintOutput, compileCmd, lspJson }))
 </controller>
 
-<article sx="max-w-breakpoint-tablet mx-auto">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">AI</p>
+<article sx={style.maxW(breakpoint-tablet).mx(auto)}>
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>AI</p>
   <h1>The LSP — diagnostics on tap</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     Sail's language intelligence is the Rust compiler —
     <code>sail_compiler::analyze</code> (diagnostics + scope symbols + dependencies)
     and <code>check_all</code> (every diagnostic, not just the first). It's the
@@ -82,7 +82,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ lintCmd, lintOutp
     sync.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)}>
     <a href="/ai/authoring">← Authoring</a>
     <a href="/ai/eval">Eval →</a>
   </row>

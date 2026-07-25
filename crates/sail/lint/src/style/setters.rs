@@ -161,6 +161,14 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "content", vocab: "content", scale: None, keywords: &["empty"], negatable: false },
         SetterSpec { name: "shrink", vocab: "shrink", scale: None, keywords: &["0", "1"], negatable: false },
         SetterSpec { name: "grow", vocab: "grow", scale: None, keywords: &["0", "1"], negatable: false },
+        // flex-basis — size scale (0 / full / breakpoint-* / panel-* / space ramp).
+        SetterSpec {
+            name: "basis",
+            vocab: "basis",
+            scale: Some("size"),
+            keywords: &["0", "auto", "full"],
+            negatable: false,
+        },
         SetterSpec {
             name: "self",
             vocab: "self",
@@ -173,6 +181,14 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "duration", vocab: "duration", scale: Some("duration"), keywords: &["fast", "medium", "slow", "instant", "deliberate", "glacial"], negatable: false },
         SetterSpec { name: "ease", vocab: "ease", scale: Some("ease"), keywords: &["in", "out", "in-out", "out-soft", "spring"], negatable: false },
         SetterSpec { name: "rotate", vocab: "rotate", scale: Some("angle"), keywords: &["0"], negatable: true },
+        // Transform scale (CSS `scale`) — percent steps + bind for timeline tracks.
+        SetterSpec {
+            name: "scale",
+            vocab: "scale",
+            scale: Some("percent"),
+            keywords: &["0", "50", "75", "90", "95", "100", "105", "110", "125", "150"],
+            negatable: false,
+        },
         SetterSpec { name: "tapHighlight", vocab: "tap-highlight", scale: None, keywords: &["none", "auto"], negatable: false },
         SetterSpec { name: "saturate", vocab: "saturate", scale: None, keywords: &["0", "50", "60", "65", "75", "100"], negatable: false },
         // Host marker for group-* descendant PE — class `sail-grp`, no CSS decls.
@@ -318,6 +334,9 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
         "current" => Some(WhenTarget::Pseudo("[aria-current]:not([aria-current='false'])")),
         // Component data-state tokens (`data-state="live"`) — self, not group host.
         "state-live" | "stateLive" => Some(WhenTarget::Pseudo("[data-state~='live']")),
+        "group-current" | "groupCurrent" => Some(WhenTarget::Ancestor(
+            ".sail-grp[aria-current]:not([aria-current='false']) ",
+        )),
         "group-required" | "groupRequired" => Some(WhenTarget::Ancestor(".sail-grp[required] ")),
         "group-invalid" | "groupInvalid" => Some(WhenTarget::Ancestor(".sail-grp[invalid] ")),
         "group-disabled" | "groupDisabled" => {
@@ -998,6 +1017,9 @@ fn bind_css_props(spec: &SetterSpec, css_name: &str) -> Vec<(String, String)> {
         "translateX" => {
             return vec![("translate".into(), format!("{var} var(--sx-translate-y, 0)"))];
         }
+        "rotate" => return vec![("rotate".into(), var)],
+        "scale" => return vec![("scale".into(), var)],
+        "basis" => return vec![("flex-basis".into(), var)],
         _ => {}
     }
     let probe = SxDecl {

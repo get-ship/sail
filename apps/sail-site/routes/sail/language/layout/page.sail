@@ -16,10 +16,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">The language</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>The language</p>
   <h1>Layout</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     The web has accumulated half a dozen ways to lay things out — floats,
     positioning, flexbox, grid, and the properties that tune them. Sail
     ships <strong>one</strong> mechanism: five layout elements —
@@ -43,7 +43,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     (spacing-scale steps), <code>align</code> positions them on the cross
     axis, <code>justify</code> distributes them along the row:
   </p>
-  <row gap="3" align="center" justify="between" sx="p-4 bg-surface-1 border border-border rounded-md">
+  <row gap="3" align="center" justify="between" sx={style.pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)}>
     <strong>Ada Lovelace</strong>
     <badge tone="success">Active</badge>
   </row>
@@ -53,7 +53,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     rows <strong>wrap by default</strong>, like text does. Watch this one
     as the window narrows:
   </p>
-  <row gap="2" sx="p-4 bg-surface-1 border border-border rounded-md">
+  <row gap="2" sx={style.pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)}>
     <chip>signals</chip>
     <chip>derived</chip>
     <chip>effects</chip>
@@ -77,7 +77,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     and input below are <code>align="start"</code>, so they hug the left
     edge instead of stretching:
   </p>
-  <column gap="2" align="start" sx="p-4 bg-surface-1 border border-border rounded-md">
+  <column gap="2" align="start" sx={style.pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)}>
     <label>Email</label>
     <input type="email" placeholder="ada@example.com" />
     <button>Subscribe</button>
@@ -91,9 +91,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     needed:
   </p>
   <grid cols="3" gap="3">
-    <card sx="p-4"><strong>One</strong></card>
-    <card sx="p-4"><strong>Two</strong></card>
-    <card sx="p-4"><strong>Three</strong></card>
+    <card sx={style.pad(4)}><strong>One</strong></card>
+    <card sx={style.pad(4)}><strong>Two</strong></card>
+    <card sx={style.pad(4)}><strong>Three</strong></card>
   </grid>
   <code-block code={code.grid}></code-block>
   <p>
@@ -109,9 +109,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     sideways:
   </p>
   <grid cols="4" gap="3">
-    <card sx="p-3" data-col-span="2">wide — spans 2</card>
-    <card sx="p-3">one</card>
-    <card sx="p-3">two</card>
+    <card sx={style.pad(3)} data-col-span="2">wide — spans 2</card>
+    <card sx={style.pad(3)}>one</card>
+    <card sx={style.pad(3)}>two</card>
   </grid>
   <code-block code={code.spans}></code-block>
 
@@ -121,10 +121,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     overlay cases: a badge on an avatar, a caption on an image, a dot on an
     icon.
   </p>
-  <row sx="p-4 bg-surface-1 border border-border rounded-md">
+  <row sx={style.pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)}>
     <stack align="start" justify="end">
-      <card sx="w-24 h-12 bg-muted rounded-md"></card>
-      <div sx="w-4 h-4 rounded-full bg-primary"></div>
+      <card sx={style.w(24).h(12).bg(muted).radius(md)}></card>
+      <div sx={style.w(4).h(4).radius(full).bg(primary)}></div>
     </stack>
   </row>
   <code-block code={code.stack}></code-block>
@@ -134,7 +134,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Centers its child, horizontally and vertically, in whatever space the
     element has:
   </p>
-  <center sx="min-h-11 p-4 bg-surface-1 border border-border rounded-md">
+  <center sx={style.minH(11).pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)}>
     <badge tone="primary">centered</badge>
   </center>
   <code-block code={code.center}></code-block>
@@ -142,21 +142,21 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>How children size themselves</h2>
   <p>
     The parent decides how children sit; a child decides only how it fills
-    the space it was given, with <code>sx</code>: <code>grow-1</code>
-    claims a share of the leftover space, <code>basis-*</code> sets a
-    starting size, and width/height atoms fix one. Every child of a layout
+    the space it was given, with Style: <code>style.grow(1)</code>
+    claims a share of the leftover space, <code>style.basis(…)</code> sets a
+    starting size, and <code>w</code>/<code>h</code> fix one. Every child of a layout
     element is also born with <code>min-width: 0</code> — the browser
     default where an item refuses to shrink below its content is the reason
     truncation "doesn't work" in most flex codebases, and it is corrected
-    here at the language level, so <code>truncate</code> works the first
+    here at the language level, so <code>style.truncate()</code> works the first
     time.
   </p>
 
-  <p sx="mt-4 text-sm text-muted-foreground">
+  <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>
     For the full surface: <a href="/sail/reference/layout">reference → Layout keywords</a>.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
     <a variant="default" href="/sail/language/styling">← Styling</a>
     <a variant="solid" tone="primary" href="/sail/language/motion">Motion →</a>
   </row>

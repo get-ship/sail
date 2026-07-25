@@ -15,10 +15,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Guide</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Guide</p>
   <h1>Using components</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     The component library is part of the language: buttons, dialogs, tables,
     comboboxes and the rest are tags, written the way you write HTML. Nothing
     to install or import — put the tag on the page and it works, themed and
@@ -28,10 +28,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>Write them like HTML</h2>
   <code-block code={code.useThem}></code-block>
   <p>Which is exactly this:</p>
-  <card sx="p-4">
+  <card sx={style.pad(4)}>
     <row gap="3" align="center">
       <avatar></avatar>
-      <strong sx="grow-1">Ada Lovelace</strong>
+      <strong sx={style.grow(1)}>Ada Lovelace</strong>
       <badge tone="success">Active</badge>
     </row>
   </card>
@@ -46,42 +46,42 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <column gap="2">
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx="shrink-0">Inputs</badge>
-      <p sx="text-sm text-muted-foreground">button, input, textarea, select,
+      <badge variant="outline" sx={style.shrink(0)}>Inputs</badge>
+      <p sx={style.fontSize(sm).fg(muted-foreground)}>button, input, textarea, select,
       combobox, checkbox, radio-group, switch, slider, toggle-group, field,
       label, fieldset, dropzone, theme-picker</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx="shrink-0">Display</badge>
-      <p sx="text-sm text-muted-foreground">badge, chip, status-dot, card,
+      <badge variant="outline" sx={style.shrink(0)}>Display</badge>
+      <p sx={style.fontSize(sm).fg(muted-foreground)}>badge, chip, status-dot, card,
       avatar, icon, separator, hr, details, collapsible, prose</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx="shrink-0">Feedback</badge>
-      <p sx="text-sm text-muted-foreground">alert, progress, meter, spinner,
+      <badge variant="outline" sx={style.shrink(0)}>Feedback</badge>
+      <p sx={style.fontSize(sm).fg(muted-foreground)}>alert, progress, meter, spinner,
       skeleton, empty-state, error-state, error-boundary, toast</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx="shrink-0">Overlay</badge>
-      <p sx="text-sm text-muted-foreground">tooltip, hover-card, popover,
+      <badge variant="outline" sx={style.shrink(0)}>Overlay</badge>
+      <p sx={style.fontSize(sm).fg(muted-foreground)}>tooltip, hover-card, popover,
       dropdown, context-menu, dialog</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx="shrink-0">Navigation</badge>
-      <p sx="text-sm text-muted-foreground">tabs, breadcrumb, pagination,
+      <badge variant="outline" sx={style.shrink(0)}>Navigation</badge>
+      <p sx={style.fontSize(sm).fg(muted-foreground)}>tabs, breadcrumb, pagination,
       navbar</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx="shrink-0">Data</badge>
-      <p sx="text-sm text-muted-foreground">table</p>
+      <badge variant="outline" sx={style.shrink(0)}>Data</badge>
+      <p sx={style.fontSize(sm).fg(muted-foreground)}>table</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx="shrink-0">Layout</badge>
-      <p sx="text-sm text-muted-foreground">row, column, grid, center,
+      <badge variant="outline" sx={style.shrink(0)}>Layout</badge>
+      <p sx={style.fontSize(sm).fg(muted-foreground)}>row, column, grid, center,
       scroll-area</p>
     </row>
   </column>
-  <p sx="text-sm text-muted-foreground">
+  <p sx={style.fontSize(sm).fg(muted-foreground)}>
     A few tags only make sense inside a parent — <code>&lt;tab&gt;</code>
     inside <code>&lt;tabs&gt;</code>, <code>&lt;menu-item&gt;</code> inside
     <code>&lt;dropdown&gt;</code>, <code>&lt;page&gt;</code> inside
@@ -136,7 +136,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.compose}></code-block>
   <collapsible>
     <strong slot="trigger">Advanced options (click me)</strong>
-    <p sx="pt-2">Hidden until asked for — and this one is running.</p>
+    <p sx={style.padT(2)}>Hidden until asked for — and this one is running.</p>
   </collapsible>
   <p>
     Bigger components are small vocabularies of tags rather than
@@ -164,7 +164,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     component does the rest. Try it:
   </p>
   <code-block code={code.behavior}></code-block>
-  <combobox placeholder="Pick a framework" sx="max-w-panel-max-w-sm">
+  <combobox placeholder="Pick a framework" sx={style.maxW(panel-max-w-sm)}>
     <option value="sail">Sail</option>
     <option value="svelte">Svelte</option>
     <option value="solid">Solid</option>
@@ -201,7 +201,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <icon name="trash-2"></icon> Delete
     </button>
   </row>
-  <p sx="text-sm text-muted-foreground">
+  <p sx={style.fontSize(sm).fg(muted-foreground)}>
     Accessibility is the <code>label</code> field — with it the icon is
     <code>role="img"</code> with an <code>aria-label</code>; without it the
     icon is marked <code>aria-hidden</code> — decoration, invisible to a
@@ -222,7 +222,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     chips, table borders:
   </p>
   <code-block code={code.prose}></code-block>
-  <card sx="p-4">
+  <card sx={style.pad(4)}>
     <prose>
       <h3>Release notes</h3>
       <p>The build went <strong>green</strong> at noon — see
@@ -234,7 +234,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </ul>
     </prose>
   </card>
-  <p sx="text-sm text-muted-foreground">
+  <p sx={style.fontSize(sm).fg(muted-foreground)}>
     It takes no props. This site used to carry 515 lines of hand-written
     reading-column CSS; the framework stylesheet and
     <code>&lt;prose&gt;</code> replaced all of it.
@@ -248,7 +248,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     declarations the compiler checks, so they cannot drift from the source.
   </p>
 
-  <p sx="text-sm text-muted-foreground">
+  <p sx={style.fontSize(sm).fg(muted-foreground)}>
     For the curious: most of these tags don't exist at runtime — the compiler
     lowers them to native markup with the behavior attached, which is why the
     library adds almost nothing to a page. A dialog ships as a real
@@ -256,7 +256,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <a href="/sail/reference">reference</a> covers the mechanics.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
     <a variant="default" href="/sail/language/theming">← Theming</a>
     <a variant="solid" tone="primary" href="/sail/guide/building-a-component">Building a component →</a>
   </row>

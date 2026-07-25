@@ -36,8 +36,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" sx="min-w-0">
-  <column sx="max-w-breakpoint-tablet" gap="5">
+<column gap="6" sx={style.minW(0)}>
+  <column sx={style.maxW(breakpoint-tablet)} gap="5">
     <p role="doc-eyebrow">Reference</p>
     <h1>Elements — {stdlibCount()} stdlib + {reskinCount()} reskins</h1>
     <p role="doc-lead">
@@ -49,10 +49,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <grid cols="3" gap="2">
       {#for e of stdlibElements() key={e.tag}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
-            <a href={e.href}><code>{e.tag}</code> <small sx="text-muted-foreground">{e.propCount}</small></a>
-            <small sx="text-muted-foreground max-w-panel-max-w-sm">{e.description}</small>
+            <a href={e.href}><code>{e.tag}</code> <small sx={style.fg(muted-foreground)}>{e.propCount}</small></a>
+            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{e.description}</small>
           </column>
         </card>
       {/for}
@@ -62,10 +62,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p>Bare HTML tags the framework styles — the tag is still the API.</p>
     <grid cols="3" gap="2">
       {#for e of reskinElements() key={e.tag}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <a href={e.href}><code>{e.tag}</code></a>
-            <small sx="text-muted-foreground max-w-panel-max-w-sm">{e.description}</small>
+            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{e.description}</small>
           </column>
         </card>
       {/for}

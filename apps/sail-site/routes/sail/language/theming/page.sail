@@ -31,10 +31,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Concepts</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)}>
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Concepts</p>
   <h1>Theming</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     A theme is a complete aesthetic — palette, surfaces, radii, shadows,
     typography, motion — applied as one attribute. Nine ship with the
     framework. There is no light/dark switch; dark is a property a theme
@@ -80,7 +80,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     layer that captures intent; reach for primitives only when no semantic
     token fits.
   </p>
-  <ol sx="list-decimal pl-6">
+  <ol sx={style.list(decimal).padL(6)}>
     <li>
       <strong>Semantic surfaces</strong> — <code>--surface-0..3</code>,
       <code>--card</code>, <code>--popover</code>, <code>--backdrop</code>.
@@ -123,11 +123,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     few brand tokens, and every component keeps reading the same names.
   </p>
 
-  <p sx="mt-4 text-sm text-muted-foreground">
+  <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>
     For the full surface: <a href="/sail/reference/config">reference → Config</a>.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
     <a variant="default" href="/sail/language/errors">← Errors</a>
     <a variant="solid" tone="primary" href="/sail/reference">Reference →</a>
   </row>

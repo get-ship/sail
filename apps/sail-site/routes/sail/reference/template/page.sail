@@ -38,8 +38,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" sx="min-w-0">
-  <column sx="max-w-breakpoint-tablet" gap="5">
+<column gap="6" sx={style.minW(0)}>
+  <column sx={style.maxW(breakpoint-tablet)} gap="5">
     <p role="doc-eyebrow">Reference</p>
     <h1>Template directives</h1>
     <p role="doc-lead">
@@ -50,10 +50,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <grid cols="1" gap="2">
       {#for d of directives() key={d.syntax}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <row gap="3" align="center">
-            <code sx="min-w-40">{d.syntax}</code>
-            <small sx="text-muted-foreground">{d.summary}</small>
+            <code sx={style.minW(40)}>{d.syntax}</code>
+            <small sx={style.fg(muted-foreground)}>{d.summary}</small>
           </row>
         </card>
       {/for}
@@ -62,17 +62,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>on: events</h3>
-    <p sx="max-w-breakpoint-tablet">
+    <p sx={style.maxW(breakpoint-tablet)}>
       Web DOM event names plus framework custom events the runtime fires.
       <code>sail-*</code> / <code>ship-*</code> prefixes and namespaced
       <code>tag:event</code> names stay open without a row here.
     </p>
     <grid cols="2" gap="2">
       {#for e of eventNames() key={e.name}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>on:{e.name}</code>
-            <small sx="text-muted-foreground max-w-panel-max-w-sm">{e.summary}</small>
+            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{e.summary}</small>
           </column>
         </card>
       {/for}
@@ -81,13 +81,13 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>on: modifiers</h3>
-    <p sx="max-w-breakpoint-tablet">Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
+    <p sx={style.maxW(breakpoint-tablet)}>Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
     <grid cols="2" gap="2">
       {#for m of modifierRows() key={m.key}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{m.written}{m.arg}</code>
-            <small sx="text-muted-foreground max-w-panel-max-w-sm">{m.summary}</small>
+            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{m.summary}</small>
           </column>
         </card>
       {/for}
@@ -98,10 +98,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <h3>bind: targets</h3>
     <grid cols="3" gap="2">
       {#for b of bindTargets() key={b.target}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>bind:{b.target}</code>
-            <small sx="text-muted-foreground max-w-panel-max-w-sm">{b.summary}</small>
+            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{b.summary}</small>
           </column>
         </card>
       {/for}
@@ -112,13 +112,13 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <h3>Blocks</h3>
     <grid cols="2" gap="2">
       {#for b of blockRows() key={b.open}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <row gap="2" align="center">
               <code>{b.open}</code>
-              <small sx="text-muted-foreground">{b.clauses}</small>
+              <small sx={style.fg(muted-foreground)}>{b.clauses}</small>
             </row>
-            <small sx="text-muted-foreground max-w-panel-max-w-sm">{b.summary}</small>
+            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{b.summary}</small>
           </column>
         </card>
       {/for}
@@ -127,13 +127,13 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h3>Retired</h3>
-    <p sx="max-w-breakpoint-tablet">Directives the parser refuses by name, with what to use instead.</p>
+    <p sx={style.maxW(breakpoint-tablet)}>Directives the parser refuses by name, with what to use instead.</p>
     <grid cols="1" gap="2">
       {#for r of retired() key={r.syntax}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
-            <code sx="text-destructive">{r.syntax}</code>
-            <small sx="text-muted-foreground max-w-panel-max-w-sm">→ {r.instead}</small>
+            <code sx={style.fg(destructive)}>{r.syntax}</code>
+            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>→ {r.instead}</small>
           </column>
         </card>
       {/for}

@@ -115,29 +115,49 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     }
 })
 </controller>
-  <p sx="text-sm text-muted-foreground">
+
+<scope>
+  const tile = style.overflow(hidden)
+  const tileCol = style.h(full)
+  const preview = style.pad(3).minH(9).grow(1).borderBWidth(1).borderB(border-subtle).bg(surface-0)
+  const tileMeta = style.padX(3).padY(2)
+  const tileName = style.fontSize(sm).fontWeight(semibold).fontFamily(mono)
+  const cat = style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+  const mutedSm = style.fontSize(sm).fg(muted-foreground)
+  const eyebrow = style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
+  const gridCol = style.grow(1).minW(0).basis(0)
+  const rail = style.w(panel-min-w-md)
+  const packBtn = style.radius(md).cursor(pointer).borderWidth(1).border(border).pad(0).overflow(hidden).bg(transparent).textAlign(start)
+  const packLabel = style.fontSize(sm).grow(1)
+  const packCount = style.fontSize(xs).fg(primary).fontFamily(mono)
+  const railNote = style.fontSize(xs).fg(muted-foreground).leading(relaxed).padT(2)
+  const search = style.maxW(panel-max-w-sm)
+  const mutedXs = style.fontSize(xs).fg(muted-foreground)
+</scope>
+
+  <p sx={mutedSm}>
     Every tile is the running component, not a screenshot.
     The language's own elements need no import; the packs read the same tokens.
   </p>
 
   <row align="stretch" gap="4">
     <!-- ── Pack rail — a filter, not a hero ──────────────────────────── -->
-    <column gap="1" sx="w-panel-min-w-md">
-      <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Packs</p>
+    <column gap="1" sx={rail}>
+      <p sx={eyebrow}>Packs</p>
       {#for p of packs() key={p.id}}
-        <button sx="rounded-md cursor-pointer border border-border p-0 overflow-hidden bg-transparent text-start" on:click={() => pickPack(p.id)} aria-pressed={packSel() === p.id ? 'true' : 'false'}>
-          <column gap="0" sx="px-3 py-2">
+        <button sx={packBtn} on:click={() => pickPack(p.id)} aria-pressed={packSel() === p.id ? 'true' : 'false'}>
+          <column gap="0" sx={tileMeta}>
             <row gap="2" align="center">
-              <strong sx="text-sm grow-1">{p.label}</strong>
-              <span sx="text-xs text-primary font-mono">{p.count}</span>
+              <strong sx={packLabel}>{p.label}</strong>
+              <span sx={packCount}>{p.count}</span>
             </row>
             {#if p.sub}
-              <p sx="text-xs text-muted-foreground font-mono">{p.sub}</p>
+              <p sx={cat}>{p.sub}</p>
             {/if}
           </column>
         </button>
       {/for}
-      <p sx="text-xs text-muted-foreground leading-relaxed pt-2">
+      <p sx={railNote}>
         Packs read the same tokens as the language — install one and it
         already matches your theme.
       </p>
@@ -147,93 +167,93 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <!-- basis-0 keeps the fluid column from demanding its (large) content
          width, so the wrapping <row> floor keeps rail + grid on one line
          instead of stacking the grid below the rail. -->
-    <column gap="3" sx="grow-1 min-w-0 basis-0">
+    <column gap="3" sx={gridCol}>
       <row gap="2" align="center" justify="between">
         <row gap="2">
           {#for c of cats() key={c}}
             <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)}>{c}</button>
           {/for}
         </row>
-        <input placeholder="Search — try 'tab' or 'overlay'" bind:value={query} sx="max-w-panel-max-w-sm" />
+        <input placeholder="Search — try 'tab' or 'overlay'" bind:value={query} sx={search} />
       </row>
 
       <grid cols="4" gap="3">
         <!-- ══ Inputs ═══════════════════════════════════════════════════ -->
         {#if show.button()}
-          <card padding="none" data-tile="button" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="button" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <row gap="2" align="center">
                   <button variant="solid" tone="primary" motion:press={{ scale: 'press' }}>Solid</button>
                   <button variant="outline" tone="primary">Outline</button>
                 </row>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/button" sx="text-sm font-semibold font-mono">button</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/button" sx={tileName}>button</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.input()}
-          <card padding="none" data-tile="input" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="input" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <input placeholder="Type — it's real" bind:value={name} />
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/input" sx="text-sm font-semibold font-mono">input</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/input" sx={tileName}>input</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.textarea()}
-          <card padding="none" data-tile="textarea" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="textarea" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <textarea placeholder="A few lines…"></textarea>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/textarea" sx="text-sm font-semibold font-mono">textarea</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/textarea" sx={tileName}>textarea</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.select()}
-          <card padding="none" data-tile="select" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="select" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <select>
                   <option>Engineering</option>
                   <option>Design</option>
                   <option>Research</option>
                 </select>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/select" sx="text-sm font-semibold font-mono">select</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/select" sx={tileName}>select</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.combobox()}
-          <card padding="none" data-tile="combobox" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="combobox" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <combobox placeholder="Search fruit — type">
                   <option value="apple">Apple</option>
                   <option value="banana">Banana</option>
@@ -241,194 +261,194 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   <option value="kiwi">Kiwi</option>
                 </combobox>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/combobox" sx="text-sm font-semibold font-mono">combobox</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/combobox" sx={tileName}>combobox</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.checkbox()}
-          <card padding="none" data-tile="checkbox" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="checkbox" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <label><input type="checkbox" bind:checked={agreed} /> I agree</label>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/checkbox" sx="text-sm font-semibold font-mono">checkbox</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/checkbox" sx={tileName}>checkbox</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.radioGroup()}
-          <card padding="none" data-tile="radio-group" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="radio-group" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <radio-group>
                   <label><input type="radio" name="plan" checked /> Monthly</label>
                   <label><input type="radio" name="plan" /> Yearly</label>
                 </radio-group>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/radio-group" sx="text-sm font-semibold font-mono">radio-group</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/radio-group" sx={tileName}>radio-group</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.switchToggle()}
-          <card padding="none" data-tile="switch" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="switch" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <row gap="2" align="center">
                   <switch bind:checked={notify}></switch>
-                  <p sx="text-xs text-muted-foreground">{notify() ? 'notifying' : 'muted'}</p>
+                  <p sx={mutedXs}>{notify() ? 'notifying' : 'muted'}</p>
                 </row>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/switch" sx="text-sm font-semibold font-mono">switch</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/switch" sx={tileName}>switch</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.slider()}
-          <card padding="none" data-tile="slider" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <row gap="2" align="center" sx="w-full">
-                  <slider bind:value={volume} tone="primary" sx="grow-1"></slider>
-                  <span sx="text-xs text-muted-foreground font-mono">{volume()}</span>
+          <card padding="none" data-tile="slider" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
+                <row gap="2" align="center" sx={style.w(full)}>
+                  <slider bind:value={volume} tone="primary" sx={style.grow(1)}></slider>
+                  <span sx={cat}>{volume()}</span>
                 </row>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/slider" sx="text-sm font-semibold font-mono">slider</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/slider" sx={tileName}>slider</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.toggleGroup()}
-          <card padding="none" data-tile="toggle-group" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="toggle-group" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <toggle-group>
                   <toggle value="left">Left</toggle>
                   <toggle value="center">Center</toggle>
                   <toggle value="right">Right</toggle>
                 </toggle-group>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/toggle-group" sx="text-sm font-semibold font-mono">toggle-group</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/toggle-group" sx={tileName}>toggle-group</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.field()}
-          <card padding="none" data-tile="field" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="field" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <field>
                   <label for="tile-name">Name</label>
                   <input id="tile-name" placeholder="Ada Lovelace" />
                 </field>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/field" sx="text-sm font-semibold font-mono">field</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/field" sx={tileName}>field</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.label()}
-          <card padding="none" data-tile="label" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview gap="1" sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="label" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview gap="1" sx={preview}>
                 <label for="tile-email" required>Email</label>
                 <input id="tile-email" placeholder="ada@lovelace.dev" />
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/label" sx="text-sm font-semibold font-mono">label</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/label" sx={tileName}>label</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.fieldset()}
-          <card padding="none" data-tile="fieldset" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="fieldset" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <fieldset>
                   <legend>Account</legend>
-                  <input placeholder="Name" sx="w-full" />
+                  <input placeholder="Name" sx={style.w(full)} />
                 </fieldset>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/fieldset" sx="text-sm font-semibold font-mono">fieldset</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/fieldset" sx={tileName}>fieldset</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.dropzone()}
-          <card padding="none" data-tile="dropzone" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <card dropzone sx="p-3">Drop a file, or click</card>
+          <card padding="none" data-tile="dropzone" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
+                <card dropzone sx={style.pad(3)}>Drop a file, or click</card>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/dropzone" sx="text-sm font-semibold font-mono">dropzone</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/dropzone" sx={tileName}>dropzone</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.themePicker()}
-          <card padding="none" data-tile="theme-picker" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="theme-picker" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <row gap="2" align="center">
                   <theme-picker></theme-picker>
-                  <p sx="text-xs text-muted-foreground">the real one — it themes this site</p>
+                  <p sx={mutedXs}>the real one — it themes this site</p>
                 </row>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/theme-picker" sx="text-sm font-semibold font-mono">theme-picker</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/theme-picker" sx={tileName}>theme-picker</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
@@ -437,165 +457,165 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ Feedback ═════════════════════════════════════════════════ -->
         {#if show.alert()}
-          <card padding="none" data-tile="alert" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="alert" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <alert tone="success"><strong>Saved.</strong> Changes are live.</alert>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/alert" sx="text-sm font-semibold font-mono">alert</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/alert" sx={tileName}>alert</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
+                  <span sx={cat}>feedback</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.progressBar()}
-          <card padding="none" data-tile="progress" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview gap="1" sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="progress" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview gap="1" sx={preview}>
                 <progress value={volume()} max="100"></progress>
-                <p sx="text-xs text-muted-foreground">driven by the slider tile — one signal</p>
+                <p sx={mutedXs}>driven by the slider tile — one signal</p>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/progress" sx="text-sm font-semibold font-mono">progress</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/progress" sx={tileName}>progress</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
+                  <span sx={cat}>feedback</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.meter()}
-          <card padding="none" data-tile="meter" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="meter" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <meter value="0.7"></meter>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/meter" sx="text-sm font-semibold font-mono">meter</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/meter" sx={tileName}>meter</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
+                  <span sx={cat}>feedback</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.spinner()}
-          <card padding="none" data-tile="spinner" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="spinner" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <row gap="3" align="center">
                   <spinner></spinner>
                   <spinner tone="primary"></spinner>
                   <spinner size="lg"></spinner>
                 </row>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/spinner" sx="text-sm font-semibold font-mono">spinner</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/spinner" sx={tileName}>spinner</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
+                  <span sx={cat}>feedback</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.skeleton()}
-          <card padding="none" data-tile="skeleton" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <row gap="2" align="center" sx="w-full">
-                  <span skeleton shape="circle" sx="w-7 h-7"></span>
-                  <column gap="1" sx="grow-1">
+          <card padding="none" data-tile="skeleton" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
+                <row gap="2" align="center" sx={style.w(full)}>
+                  <span skeleton shape="circle" sx={style.w(7).h(7)}></span>
+                  <column gap="1" sx={style.grow(1)}>
                     <span skeleton shape="text" size="sm"></span>
                     <span skeleton shape="text" size="sm"></span>
                   </column>
                 </row>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/skeleton" sx="text-sm font-semibold font-mono">skeleton</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/skeleton" sx={tileName}>skeleton</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
+                  <span sx={cat}>feedback</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.emptyState()}
-          <card padding="none" data-tile="empty-state" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="empty-state" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <empty-state variant="inline" size="sm">
                   <strong slot="title">No results</strong>
                   Try a different search.
                 </empty-state>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/empty-state" sx="text-sm font-semibold font-mono">empty-state</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/empty-state" sx={tileName}>empty-state</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
+                  <span sx={cat}>feedback</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.errorState()}
-          <card padding="none" data-tile="error-state" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="error-state" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <error-state variant="inline" size="sm" code="ERR_TIMEOUT">The request timed out.</error-state>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/error-state" sx="text-sm font-semibold font-mono">error-state</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/error-state" sx={tileName}>error-state</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
+                  <span sx={cat}>feedback</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.errorBoundary()}
-          <card padding="none" data-tile="error-boundary" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview gap="1" sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="error-boundary" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview gap="1" sx={preview}>
                 <error-boundary message="This panel could not load.">
-                  <card variant="outline" sx="p-2">
-                    <p sx="text-xs text-muted-foreground">wrapped subtree — healthy, so the boundary is invisible</p>
+                  <card variant="outline" sx={style.pad(2)}>
+                    <p sx={mutedXs}>wrapped subtree — healthy, so the boundary is invisible</p>
                   </card>
                 </error-boundary>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/error-boundary" sx="text-sm font-semibold font-mono">error-boundary</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/error-boundary" sx={tileName}>error-boundary</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
+                  <span sx={cat}>feedback</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.toast()}
-          <card padding="none" data-tile="toast" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="toast" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <toast tone="success" duration="0">
                   <strong>Saved.</strong>
                   <button data-toast-close variant="ghost" size="sm">×</button>
                 </toast>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/toast" sx="text-sm font-semibold font-mono">toast</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/toast" sx={tileName}>toast</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
+                  <span sx={cat}>feedback</span>
                 </row>
               </column>
             </column>
@@ -604,106 +624,106 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ Display ══════════════════════════════════════════════════ -->
         {#if show.badge()}
-          <card padding="none" data-tile="badge" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="badge" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <row gap="2" align="center">
                   <badge tone="primary">Primary</badge>
                   <badge tone="success">Active</badge>
                   <badge tone="warning" variant="outline">Pending</badge>
                 </row>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/badge" sx="text-sm font-semibold font-mono">badge</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/badge" sx={tileName}>badge</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.chip()}
-          <card padding="none" data-tile="chip" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="chip" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <row gap="2" align="center">
                   <chip selected>Selected</chip>
                   <chip removable>Removable</chip>
                 </row>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/chip" sx="text-sm font-semibold font-mono">chip</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/chip" sx={tileName}>chip</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.statusDot()}
-          <card padding="none" data-tile="status-dot" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="status-dot" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <row gap="2" align="center">
                   <status-dot tone="success"></status-dot>
-                  <p sx="text-xs text-muted-foreground">all systems live</p>
+                  <p sx={mutedXs}>all systems live</p>
                 </row>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/status-dot" sx="text-sm font-semibold font-mono">status-dot</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/status-dot" sx={tileName}>status-dot</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.card()}
-          <card padding="none" data-tile="card" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <card interactive sx="p-3">
+          <card padding="none" data-tile="card" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
+                <card interactive sx={style.pad(3)}>
                   <strong>A surface</strong>
-                  <p sx="text-xs text-muted-foreground">the hover lift is one attribute</p>
+                  <p sx={mutedXs}>the hover lift is one attribute</p>
                 </card>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/card" sx="text-sm font-semibold font-mono">card</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/card" sx={tileName}>card</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.avatar()}
-          <card padding="none" data-tile="avatar" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="avatar" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <row gap="2" align="center">
                   <avatar name="Ada Lovelace"></avatar>
                   <avatar initials="GH" tone="primary"></avatar>
                   <avatar name="Alan Turing" size="lg" shape="square"></avatar>
                 </row>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/avatar" sx="text-sm font-semibold font-mono">avatar</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/avatar" sx={tileName}>avatar</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.icon()}
-          <card padding="none" data-tile="icon" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="icon" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <row gap="3" align="center">
                   <icon>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
@@ -716,104 +736,104 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </icon>
                 </row>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/icon" sx="text-sm font-semibold font-mono">icon</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/icon" sx={tileName}>icon</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.separator()}
-          <card padding="none" data-tile="separator" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview gap="1" sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <p sx="text-xs text-muted-foreground">above</p>
+          <card padding="none" data-tile="separator" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview gap="1" sx={preview}>
+                <p sx={mutedXs}>above</p>
                 <separator></separator>
-                <p sx="text-xs text-muted-foreground">below</p>
+                <p sx={mutedXs}>below</p>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/separator" sx="text-sm font-semibold font-mono">separator</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/separator" sx={tileName}>separator</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.hrRule()}
-          <card padding="none" data-tile="hr" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview gap="2" sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="hr" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview gap="2" sx={preview}>
                 <hr />
                 <hr tone="primary" />
                 <hr variant="dashed" />
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/hr" sx="text-sm font-semibold font-mono">hr</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/hr" sx={tileName}>hr</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.detailsEl()}
-          <card padding="none" data-tile="details" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="details" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <details>
                   <summary>Advanced options</summary>
-                  <p sx="text-xs">Native disclosure. Zero JavaScript.</p>
+                  <p sx={style.fontSize(xs)}>Native disclosure. Zero JavaScript.</p>
                 </details>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/details" sx="text-sm font-semibold font-mono">details</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/details" sx={tileName}>details</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.collapsible()}
-          <card padding="none" data-tile="collapsible" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="collapsible" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <collapsible>
                   <strong slot="trigger">Collapsible</strong>
-                  <p sx="text-xs">Animated, and it remembers.</p>
+                  <p sx={style.fontSize(xs)}>Animated, and it remembers.</p>
                 </collapsible>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/collapsible" sx="text-sm font-semibold font-mono">collapsible</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/collapsible" sx={tileName}>collapsible</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.prose()}
-          <card padding="none" data-tile="prose" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <p sx="text-xs">
+          <card padding="none" data-tile="prose" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
+                <p sx={style.fontSize(xs)}>
                   <strong>strong</strong>, <em>emphasis</em>, <code>inline_code()</code>,
                   <mark>a highlight</mark> — plain tags, already styled.
                 </p>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/prose" sx="text-sm font-semibold font-mono">prose</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/prose" sx={tileName}>prose</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
@@ -823,65 +843,65 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <!-- ══ Overlay — the tile shows the TRIGGER; the panel rides the
              top layer via popovertarget, so a closed tile is honest ═════ -->
         {#if show.tooltip()}
-          <card padding="none" data-tile="tooltip" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="tooltip" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <tooltip content="Deletes the branch — cannot be undone">
                   <button variant="outline" tone="destructive">Delete branch</button>
                 </tooltip>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/tooltip" sx="text-sm font-semibold font-mono">tooltip</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/tooltip" sx={tileName}>tooltip</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
+                  <span sx={cat}>overlay</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.hoverCard()}
-          <card padding="none" data-tile="hover-card" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="hover-card" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <button variant="outline" popovertarget="tile-hc">@ada</button>
                 <hover-card id="tile-hc">
-                  <card sx="p-3">Richer content on a native popover.</card>
+                  <card sx={style.pad(3)}>Richer content on a native popover.</card>
                 </hover-card>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/hover-card" sx="text-sm font-semibold font-mono">hover-card</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/hover-card" sx={tileName}>hover-card</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
+                  <span sx={cat}>overlay</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.popover()}
-          <card padding="none" data-tile="popover" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="popover" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <button popovertarget="tile-pop">Open popover</button>
                 <popover id="tile-pop">
-                  <card sx="p-3">Rides the top layer — no z-index war.</card>
+                  <card sx={style.pad(3)}>Rides the top layer — no z-index war.</card>
                 </popover>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/popover" sx="text-sm font-semibold font-mono">popover</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/popover" sx={tileName}>popover</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
+                  <span sx={cat}>overlay</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.dropdown()}
-          <card padding="none" data-tile="dropdown" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="dropdown" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <button popovertarget="tile-menu">Menu ▾</button>
                 <dropdown id="tile-menu">
                   <menu-item>Edit</menu-item>
@@ -889,22 +909,22 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   <menu-item tone="destructive">Delete</menu-item>
                 </dropdown>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/dropdown" sx="text-sm font-semibold font-mono">dropdown</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/dropdown" sx={tileName}>dropdown</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
+                  <span sx={cat}>overlay</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.contextMenu()}
-          <card padding="none" data-tile="context-menu" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <card id="tile-ctx" variant="outline" sx="p-3">
-                  <p sx="text-xs text-muted-foreground">right-click target</p>
+          <card padding="none" data-tile="context-menu" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
+                <card id="tile-ctx" variant="outline" sx={style.pad(3)}>
+                  <p sx={mutedXs}>right-click target</p>
                 </card>
                 <context-menu for="tile-ctx">
                   <menu-item>Cut</menu-item>
@@ -912,20 +932,20 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   <menu-item>Paste</menu-item>
                 </context-menu>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/context-menu" sx="text-sm font-semibold font-mono">context-menu</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/context-menu" sx={tileName}>context-menu</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
+                  <span sx={cat}>overlay</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.dialog()}
-          <card padding="none" data-tile="dialog" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="dialog" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <button command="show-modal" commandfor="tile-dialog" motion:press={{ scale: 'press' }}>Open modal</button>
                 <dialog id="tile-dialog">
                   <header>A real dialog</header>
@@ -933,11 +953,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   <footer><button command="close" commandfor="tile-dialog">Close</button></footer>
                 </dialog>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/dialog" sx="text-sm font-semibold font-mono">dialog</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/dialog" sx={tileName}>dialog</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">overlay</span>
+                  <span sx={cat}>overlay</span>
                 </row>
               </column>
             </column>
@@ -946,52 +966,52 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ Navigation ═══════════════════════════════════════════════ -->
         {#if show.tabs()}
-          <card padding="none" data-tile="tabs" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="tabs" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <tabs size="sm">
                   <tab-list>
                     <tab>Profile</tab>
                     <tab>Billing</tab>
                   </tab-list>
-                  <tab-panel><p sx="text-xs text-muted-foreground">Profile settings.</p></tab-panel>
-                  <tab-panel><p sx="text-xs text-muted-foreground">Billing settings.</p></tab-panel>
+                  <tab-panel><p sx={mutedXs}>Profile settings.</p></tab-panel>
+                  <tab-panel><p sx={mutedXs}>Billing settings.</p></tab-panel>
                 </tabs>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/tabs" sx="text-sm font-semibold font-mono">tabs</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/tabs" sx={tileName}>tabs</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">navigation</span>
+                  <span sx={cat}>navigation</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.breadcrumb()}
-          <card padding="none" data-tile="breadcrumb" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="breadcrumb" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <breadcrumb>
                   <a href="/">Home</a>
                   <a href="/components">Components</a>
                   <small>Here</small>
                 </breadcrumb>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/breadcrumb" sx="text-sm font-semibold font-mono">breadcrumb</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/breadcrumb" sx={tileName}>breadcrumb</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">navigation</span>
+                  <span sx={cat}>navigation</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.pagination()}
-          <card padding="none" data-tile="pagination" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="pagination" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <pagination value="2" size="sm">
                   <page value="1" aria-label="Previous">‹</page>
                   <page value="1">1</page>
@@ -1000,31 +1020,31 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   <page value="3" aria-label="Next">›</page>
                 </pagination>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/pagination" sx="text-sm font-semibold font-mono">pagination</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/pagination" sx={tileName}>pagination</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">navigation</span>
+                  <span sx={cat}>navigation</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.navbar()}
-          <card padding="none" data-tile="navbar" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="navbar" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
                 <navbar bordered>
-                  <strong slot="brand" sx="text-sm">SHIP</strong>
-                  <a href="/components" sx="text-xs">Docs</a>
-                  <a href="/components" sx="text-xs">API</a>
+                  <strong slot="brand" sx={style.fontSize(sm)}>SHIP</strong>
+                  <a href="/components" sx={style.fontSize(xs)}>Docs</a>
+                  <a href="/components" sx={style.fontSize(xs)}>API</a>
                 </navbar>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/navbar" sx="text-sm font-semibold font-mono">navbar</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/navbar" sx={tileName}>navbar</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">navigation</span>
+                  <span sx={cat}>navigation</span>
                 </row>
               </column>
             </column>
@@ -1033,9 +1053,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ Data ═════════════════════════════════════════════════════ -->
         {#if show.table()}
-          <card padding="none" data-tile="table" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0 overflow-x-auto">
+          <card padding="none" data-tile="table" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={style.pad(3).minH(9).grow(1).borderBWidth(1).borderB(border-subtle).bg(surface-0).overflowX(auto)}>
                 <table>
                   <thead>
                     <tr><th>Name</th><th>Status</th></tr>
@@ -1046,11 +1066,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </tbody>
                 </table>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/table" sx="text-sm font-semibold font-mono">table</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/table" sx={tileName}>table</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                  <span sx={cat}>data</span>
                 </row>
               </column>
             </column>
@@ -1059,47 +1079,47 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ Layout ═══════════════════════════════════════════════════ -->
         {#if show.layout()}
-          <card padding="none" data-tile="layout" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview gap="2" sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="layout" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview gap="2" sx={preview}>
                 <row gap="2">
-                  <div sx="grow-1 h-5 bg-muted rounded-sm"></div>
-                  <div sx="grow-1 h-5 bg-muted rounded-sm"></div>
-                  <div sx="grow-1 h-5 bg-muted rounded-sm"></div>
+                  <div sx={style.grow(1).h(5).bg(muted).radius(sm)}></div>
+                  <div sx={style.grow(1).h(5).bg(muted).radius(sm)}></div>
+                  <div sx={style.grow(1).h(5).bg(muted).radius(sm)}></div>
                 </row>
                 <grid cols="2" gap="2">
-                  <div sx="h-5 bg-muted rounded-sm"></div>
-                  <div sx="h-5 bg-muted rounded-sm"></div>
+                  <div sx={style.h(5).bg(muted).radius(sm)}></div>
+                  <div sx={style.h(5).bg(muted).radius(sm)}></div>
                 </grid>
-                <p sx="text-xs text-muted-foreground">row · column · grid · center — keywords, not components</p>
+                <p sx={mutedXs}>row · column · grid · center — keywords, not components</p>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/layout" sx="text-sm font-semibold font-mono">layout</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/layout" sx={tileName}>layout</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">layout</span>
+                  <span sx={cat}>layout</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.scrollArea()}
-          <card padding="none" data-tile="scroll-area" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <column data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
-                <scroll-area sx="h-9 w-full pr-2">
-                  <p sx="text-xs text-muted-foreground">line one</p>
-                  <p sx="text-xs text-muted-foreground">line two</p>
-                  <p sx="text-xs text-muted-foreground">line three</p>
-                  <p sx="text-xs text-muted-foreground">line four</p>
-                  <p sx="text-xs text-muted-foreground">line five</p>
+          <card padding="none" data-tile="scroll-area" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <column data-preview sx={preview}>
+                <scroll-area sx={style.h(9).w(full).padR(2)}>
+                  <p sx={mutedXs}>line one</p>
+                  <p sx={mutedXs}>line two</p>
+                  <p sx={mutedXs}>line three</p>
+                  <p sx={mutedXs}>line four</p>
+                  <p sx={mutedXs}>line five</p>
                 </scroll-area>
               </column>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/scroll-area" sx="text-sm font-semibold font-mono">scroll-area</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/scroll-area" sx={tileName}>scroll-area</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">language</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">layout</span>
+                  <span sx={cat}>layout</span>
                 </row>
               </column>
             </column>
@@ -1108,112 +1128,112 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ @ship/sail-charts ═════════════════════════════════════════ -->
         {#if show.sailSparkline()}
-          <card padding="none" data-tile="sail-sparkline" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-sparkline" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-sparkline data="2,5,3,8,4,6,7" width="120" height="40"></sail-sparkline>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-sparkline" sx="text-sm font-semibold font-mono">sail-sparkline</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-sparkline" sx={tileName}>sail-sparkline</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="accent" variant="soft">charts</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                  <span sx={cat}>data</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailAreaChart()}
-          <card padding="none" data-tile="sail-area-chart" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-area-chart" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-area-chart>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-area-chart" sx="text-sm font-semibold font-mono">sail-area-chart</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-area-chart" sx={tileName}>sail-area-chart</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="accent" variant="soft">charts</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                  <span sx={cat}>data</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailBarChart()}
-          <card padding="none" data-tile="sail-bar-chart" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-bar-chart" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="160" height="60"></sail-bar-chart>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-bar-chart" sx="text-sm font-semibold font-mono">sail-bar-chart</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-bar-chart" sx={tileName}>sail-bar-chart</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="accent" variant="soft">charts</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                  <span sx={cat}>data</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailDonut()}
-          <card padding="none" data-tile="sail-donut" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-donut" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="80" thickness="10"></sail-donut>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-donut" sx="text-sm font-semibold font-mono">sail-donut</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-donut" sx={tileName}>sail-donut</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="accent" variant="soft">charts</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                  <span sx={cat}>data</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailGauge()}
-          <card padding="none" data-tile="sail-gauge" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-gauge" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-gauge value="72" diameter="80" thickness="10"></sail-gauge>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-gauge" sx="text-sm font-semibold font-mono">sail-gauge</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-gauge" sx={tileName}>sail-gauge</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="accent" variant="soft">charts</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                  <span sx={cat}>data</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailHeatmap()}
-          <card padding="none" data-tile="sail-heatmap" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-heatmap" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-heatmap rows="3" cols="5" values="1,2,3,4,3,4,5,6,5,4,3,2,1,2,3" width="160" height="60"></sail-heatmap>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-heatmap" sx="text-sm font-semibold font-mono">sail-heatmap</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-heatmap" sx={tileName}>sail-heatmap</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="accent" variant="soft">charts</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                  <span sx={cat}>data</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailLineChart()}
-          <card padding="none" data-tile="sail-line-chart" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-line-chart" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-line-chart>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-line-chart" sx="text-sm font-semibold font-mono">sail-line-chart</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-line-chart" sx={tileName}>sail-line-chart</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="accent" variant="soft">charts</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                  <span sx={cat}>data</span>
                 </row>
               </column>
             </column>
@@ -1222,32 +1242,32 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ @ship/sail-media ══════════════════════════════════════════ -->
         {#if show.sailMediaImage()}
-          <card padding="none" data-tile="sail-media-image" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-media-image" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-media-image src="/sail-oss/sail-mark.svg" alt="Sail mark"></sail-media-image>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-media-image" sx="text-sm font-semibold font-mono">sail-media-image</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-media-image" sx={tileName}>sail-media-image</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="info" variant="soft">media</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                  <span sx={cat}>data</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailMediaAv()}
-          <card padding="none" data-tile="sail-media-av" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-media-av" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-media-av></sail-media-av>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-media-av" sx="text-sm font-semibold font-mono">sail-media-av</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-media-av" sx={tileName}>sail-media-av</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="info" variant="soft">media</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                  <span sx={cat}>data</span>
                 </row>
               </column>
             </column>
@@ -1256,32 +1276,32 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ @ship/sail-code-editor + @ship/sail-mermaid ═══════════════════ -->
         {#if show.sailCodeEditor()}
-          <card padding="none" data-tile="sail-code-editor" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-code-editor" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-code-editor value="const greeting = 'hi';" language="js" line-numbers size="sm"></sail-code-editor>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-code-editor" sx="text-sm font-semibold font-mono">sail-code-editor</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-code-editor" sx={tileName}>sail-code-editor</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="muted" variant="soft">code-editor</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailMermaid()}
-          <card padding="none" data-tile="sail-mermaid" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-mermaid" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-mermaid" sx="text-sm font-semibold font-mono">sail-mermaid</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-mermaid" sx={tileName}>sail-mermaid</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="success" variant="soft">mermaid</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">data</span>
+                  <span sx={cat}>data</span>
                 </row>
               </column>
             </column>
@@ -1290,80 +1310,80 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
         <!-- ══ @ship/sail-chat-elements — sail-message-list deferred (see banner) ═ -->
         {#if show.sailMessage()}
-          <card padding="none" data-tile="sail-message" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-message" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-message role="user" state="user">Hello — the live chat message primitive.</sail-message>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-message" sx="text-sm font-semibold font-mono">sail-message</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-message" sx={tileName}>sail-message</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">chat</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailCitation()}
-          <card padding="none" data-tile="sail-citation" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-citation" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-citation source="docs.sail.dev" href="https://docs.sail.dev">A citation from the docs</sail-citation>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-citation" sx="text-sm font-semibold font-mono">sail-citation</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-citation" sx={tileName}>sail-citation</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">chat</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailComposer()}
-          <card padding="none" data-tile="sail-composer" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-composer" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-composer placeholder="Ask anything…"></sail-composer>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-composer" sx="text-sm font-semibold font-mono">sail-composer</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-composer" sx={tileName}>sail-composer</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">chat</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">inputs</span>
+                  <span sx={cat}>inputs</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailThinkingDots()}
-          <card padding="none" data-tile="sail-thinking-dots" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-thinking-dots" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-thinking-dots></sail-thinking-dots>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-thinking-dots" sx="text-sm font-semibold font-mono">sail-thinking-dots</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-thinking-dots" sx={tileName}>sail-thinking-dots</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">chat</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">feedback</span>
+                  <span sx={cat}>feedback</span>
                 </row>
               </column>
             </column>
           </card>
         {/if}
         {#if show.sailToolCall()}
-          <card padding="none" data-tile="sail-tool-call" sx="overflow-hidden" motion:enter={{ opacity: 'fade' }}>
-            <column gap="0" sx="h-full">
-              <center data-preview sx="p-3 min-h-9 grow-1 border-b border-b-border-subtle bg-surface-0">
+          <card padding="none" data-tile="sail-tool-call" sx={tile} motion:enter={{ opacity: 'fade' }}>
+            <column gap="0" sx={tileCol}>
+              <center data-preview sx={preview}>
                 <sail-tool-call name="search" status="running">query: search</sail-tool-call>
               </center>
-              <column gap="1" sx="px-3 py-2">
-                <a href="/components/sail-tool-call" sx="text-sm font-semibold font-mono">sail-tool-call</a>
+              <column gap="1" sx={tileMeta}>
+                <a href="/components/sail-tool-call" sx={tileName}>sail-tool-call</a>
                 <row gap="2" align="center" justify="between">
                   <badge size="sm" tone="primary" variant="soft">chat</badge>
-                  <span sx="text-xs text-muted-foreground font-mono">display</span>
+                  <span sx={cat}>display</span>
                 </row>
               </column>
             </column>
@@ -1380,7 +1400,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </column>
   </row>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} gap="2">
     <a variant="default" href="/sail/overview">← Introduction</a>
     <a variant="solid" tone="primary" href="/sail/language/layout">Layout →</a>
   </row>

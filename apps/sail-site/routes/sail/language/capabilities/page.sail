@@ -13,10 +13,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Concepts</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Concepts</p>
   <h1>Capabilities</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     A <strong>capability</strong> is a named, typed value that whatever runs your
     app puts on your scope. Props come from the parent that renders you;
     capabilities come from the <strong>host</strong> that mounts you. You read
@@ -33,14 +33,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </p>
   <grid cols="2" gap="4">
     <column>
-      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Live — read from the real host</p>
-      <column sx="p-6 border border-border rounded-lg bg-surface-1" gap="2">
-        <p sx="text-sm text-muted-foreground">ctx.route.pathname() says:</p>
-        <p sx="font-mono text-lg text-accent">{here()}</p>
+      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Live — read from the real host</p>
+      <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).bg(surface-1)} gap="2">
+        <p sx={style.fontSize(sm).fg(muted-foreground)}>ctx.route.pathname() says:</p>
+        <p sx={style.fontFamily(mono).fontSize(lg).fg(accent)}>{here()}</p>
       </column>
     </column>
     <column>
-      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Source</p>
+      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Source</p>
       <code-block code={code.read}></code-block>
     </column>
   </grid>
@@ -120,13 +120,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
     five clients and using one costs you one import.
   </p>
 
-  <p sx="border border-border border-l-3 border-l-primary rounded-md p-3 px-4 text-sm text-muted-foreground">
+  <p sx={style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)}>
     Today, a name your own controller or template declares takes precedence over
     a host capability of the same name — the author's value shadows the granted
     one, silently.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
     <a variant="default" href="/sail/language/data">← Data</a>
     <a variant="solid" tone="primary" href="/sail/language/theming">Theming →</a>
   </row>

@@ -1,10 +1,8 @@
 <!--
-  /sail/language/styling — chapter 4, round 2 per owner review: say what it
-  IS first (Tailwind-shaped utilities, Rust-compiled, closed), THEN the
-  restraint. Every section renders its styles LIVE above the code. One
-  refusal shown, not two. ARIA framed as default-not-extra. Tones get a real
-  introduction. Dynamic styles framed positively. The disallowed material is
-  one section. Reference linked in the first paragraph.
+  /sail/language/styling — Style product chapter: style.* chains, match, when,
+  compound, scope Style consts. Every live demo paints with Style; code samples
+  match. Responsive paint uses when({ tablet|desktop|… }) locked to breakpoint
+  tokens — never tablet: utility prefixes.
 -->
 
 <controller>
@@ -13,9 +11,7 @@ import type { Scope } from './page.sail'
 import { code } from './snippets'
 
 export default controller((_ctx: ControllerScope<Scope>) => {
-  // The dynamic-styles demo: a range input writes `shift` (strings, as
-  // form values are); the effect mirrors it into `px`, which the template
-  // reads through (--px).
+  // Range writes shift; effect mirrors into px for style.translateX(bind(px)).
   const shift = signal('0')
   const px = signal('0px')
   effect(() => px.set(`${shift()}px`))
@@ -23,31 +19,27 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">The language</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>The language</p>
   <h1>Styling</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
-    Styling is the <code>sx</code> attribute: utility classes, written the
-    way Tailwind writes them — <code>p-4</code>, <code>bg-surface-1</code>,
-    <code>rounded-lg</code>, <code>hover:bg-muted</code>. The full
-    vocabulary is on the <a href="/sail/reference">reference page</a>,
-    generated from the same table the compiler enforces. The difference
-    from Tailwind is what the vocabulary is made of: a closed set, and
-    every atom resolves to a design token.
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
+    Paint is the <strong>Style</strong> value language on <code>sx</code>:
+    <code>style.bg(token)</code> chains, <code>match</code>, <code>when</code>,
+    <code>compound</code>, and scope Style consts. Values are design tokens —
+    never raw hex. The compiler and the
+    <a href="/sail/reference/sx">sx reference</a> share one table.
   </p>
   <p>
-    The syntax is deliberately familiar — an agent or a person who knows
-    Tailwind already knows how to write <code>sx</code>. It exists as its
-    own system for two reasons: the toolchain is Rust with no Node in it,
-    and a design system needs values that can be constrained. Closed and
-    token-backed is what makes the theme switch in this site's header work
-    at all — swap the theme and everything repaints, because nothing ever
-    held a raw hex value.
+    Familiar spacing and color ideas still apply
+    (<code>pad(4)</code>, <code>bg(surface-1)</code>, <code>radius(lg)</code>),
+    but the product form is a typed chain, not a utility string. Closed and
+    token-backed is what makes the theme switch in this site's header work —
+    swap the theme and everything repaints, because nothing held a raw color.
   </p>
 
-  <h2>The atoms</h2>
-  <card sx="p-5 bg-surface-1 border border-border rounded-lg shadow-sm">
-    <p sx="text-muted-foreground text-sm">This card is styled by the code below it.</p>
+  <h2>The chain</h2>
+  <card sx={style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg).shadow(sm)}>
+    <p sx={style.fg(muted-foreground).fontSize(sm)}>This card is styled by the code below it.</p>
   </card>
   <code-block code={code.sx}></code-block>
   <p>
@@ -55,60 +47,60 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     scale holds:
   </p>
   <code-block code={code.sxError}></code-block>
-
-  <h2>States</h2>
   <p>
-    A state is a prefix on an atom. Hover these:
+    Prefer a scope const when the same paint repeats:
+    <code>const card = style.pad(5).bg(surface-1)…</code> then
+    <code>sx=&#123;card&#125;</code> or <code>sx=&#123;[base, emphasis]&#125;</code>.
   </p>
-  <row gap="3" sx="p-5 bg-surface-1 border border-border rounded-lg">
-    <button sx="hover:bg-muted">hover:bg-muted</button>
-    <button sx="hover:text-primary">hover:text-primary</button>
-    <button sx="active:bg-primary active:text-primary-foreground">active:…</button>
+
+  <h2>States with when</h2>
+  <p>
+    Browser and ARIA state are a map, not string prefixes. Hover these:
+  </p>
+  <row gap="3" sx={style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)}>
+    <button sx={when({ hover: style.bg(muted) })}>hover → bg(muted)</button>
+    <button sx={when({ hover: style.fg(primary) })}>hover → fg(primary)</button>
+    <button sx={when({ active: style.bg(primary).fg(primary-foreground) })}>active:…</button>
   </row>
   <code-block code={code.states}></code-block>
   <p>
-    <code>hover:</code>, <code>focus:</code>, <code>focus-within:</code>,
-    <code>active:</code>, and <code>disabled:</code> cover the pointer and
-    keyboard states — <code>focus:</code> lowers to
-    <code>:focus-visible</code>, so the ring appears for keyboard users and
-    not on mouse clicks. The rest key on ARIA attributes that Sail
-    components set by default: <code>current:</code>,
-    <code>selected:</code>, <code>expanded:</code>, <code>checked:</code>,
-    <code>pressed:</code>. The attribute is already there for assistive
-    tech; the prefix just styles off it. This site's product switcher:
+    Keys include <code>hover</code>, <code>focus</code> (→
+    <code>:focus-visible</code>), <code>focusWithin</code>, <code>active</code>,
+    <code>disabled</code>, and ARIA-backed states components already stamp:
+    <code>current</code>, <code>selected</code>, <code>expanded</code>,
+    <code>checked</code>, <code>pressed</code>. This site's product switcher:
   </p>
   <code-block code={code.current}></code-block>
 
-  <h2>Responsive and preference prefixes</h2>
+  <h2>Responsive and preference with when</h2>
   <p>
-    Responsive styling is the same prefix shape. Three breakpoints —
-    <code>mobile:</code> (390px), <code>tablet:</code> (768px),
-    <code>desktop:</code> (1280px) — apply their atom from that width up,
-    so the unprefixed atom is the phone style and prefixes layer on top.
-    This panel pads tighter below 768px; resize the window to see it:
+    Breakpoints are Style product conditions locked to
+    <code>breakpoint-*</code> tokens — not <code>tablet:</code> string
+    prefixes. Unprefixed paint is the phone baseline; layer larger steps with
+    <code>when(&#123; tablet: …, desktop: … &#125;)</code>. Resize to see this panel
+    pad more from 768px up:
   </p>
-  <column gap="2" sx="p-3 tablet:p-6 bg-surface-1 border border-border rounded-lg">
-    <p sx="text-sm">p-3 on a phone, tablet:p-6 from 768px up.</p>
+  <column gap="2" sx={style.pad(3).bg(surface-1).borderWidth(1).border(border).radius(lg).when({ tablet: style.pad(6) })}>
+    <p sx={style.fontSize(sm)}>pad(3) on a phone; when tablet → pad(6).</p>
   </column>
   <code-block code={code.conditions}></code-block>
   <p>
-    Preference queries use the same shape — <code>dark:</code>,
-    <code>light:</code>, <code>motion-reduce:</code>,
-    <code>motion-safe:</code>, <code>forced-colors:</code> — and the set is
-    closed: those prefixes are the media queries there are.
+    Preference media uses the same map:
+    <code>dark</code>, <code>light</code>, <code>motionReduce</code>,
+    <code>motionSafe</code>, <code>forced-colors</code> — closed set.
   </p>
 
   <h2>Tones</h2>
   <p>
     A <strong>tone</strong> is a named intent — <code>primary</code>,
     <code>success</code>, <code>warning</code>, <code>destructive</code>,
-    <code>muted</code> — that stands in for a color. Declaring
-    <code>tone="destructive"</code> on an element resolves a coordinated
-    set of tokens for its subtree: a background, a foreground, a border, a
-    focus ring, chosen by the theme to work together. Components then read
-    those tokens instead of picking colors:
+    <code>muted</code> — as a <strong>prop</strong>, not as
+    <code>--tone-bg</code> channel paint. Declaring
+    <code>tone="destructive"</code> resolves a coordinated token set for the
+    subtree. Components read those tokens via Style setters
+    (<code>style.bg(destructive)</code>, …):
   </p>
-  <row gap="2" sx="p-5 bg-surface-1 border border-border rounded-lg" align="center">
+  <row gap="2" sx={style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)} align="center">
     <badge tone="primary">primary</badge>
     <badge tone="success">success</badge>
     <badge tone="warning">warning</badge>
@@ -117,22 +109,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </row>
   <code-block code={code.tones}></code-block>
   <p>
-    This is why a destructive button and a destructive alert match without
-    coordinating, and why a theme can re-decide what "destructive" looks
-    like for every component at once.
+    A destructive button and a destructive alert match without coordinating,
+    and a theme can re-decide what "destructive" looks like for every component
+    at once.
   </p>
 
-  <h2>Variants</h2>
+  <h2>Variants with match and compound</h2>
   <p>
-    When a component has named looks, the looks are data: a prop whose value
-    is a key→sx map inside <code>props:</code> (CVA-in-props). Each axis
-    becomes a typed prop — the first key is the default — and each value is
-    ordinary <code>sx</code>, lowered through the same pipeline as host
-    <code>sx=</code>. There is no separate <code>variants:</code> block.
-    Variance authoring is a per-directory compiler permit
-    (<code>"variants": true</code> in that directory's
-    <code>sail.config.json</code>) — component libraries turn them on;
-    plain pages usually don't need them.
+    Named looks are data: typed props plus Style fragments composed with
+    <code>match</code> and <code>compound</code> — not CVA string maps. Each
+    arm is ordinary Style, same pipeline as host <code>sx</code>. Variance
+    authoring for libraries may still need a directory permit; plain pages
+    usually paint with consts + match only.
   </p>
   <code-block code={code.variants}></code-block>
   <p>Callers pick a look the way they set any field:</p>
@@ -140,41 +128,39 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>Styles can be dynamic too</h2>
   <p>
-    Computed style flows through signals. Read a custom property in
-    <code>sx</code> with <code>(--name)</code>; when the name matches a
-    signal the controller returned, the compiler registers the property and
-    reflects the signal's value onto the element. Drag:
+    Computed paint flows through signals. Style product reads them with
+    <code>bind(name)</code> — the compiler registers the CSS custom property
+    and reflects the signal onto the host. Drag:
   </p>
-  <column gap="3" sx="p-5 bg-surface-1 border border-border rounded-lg">
-    <input type="range" min="0" max="200" step="1" bind:value={shift} sx="min-w-0" />
-    <card sx="w-9 h-9 bg-primary rounded-md translate-x-(--px)"></card>
+  <column gap="3" sx={style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)}>
+    <input type="range" min="0" max="200" step="1" bind:value={shift} sx={style.minW(0)} />
+    <card sx={style.w(9).h(9).bg(primary).radius(md).translateX(bind(px))}></card>
   </column>
   <code-block code={code.dynamic}></code-block>
   <p>
-    State stays in the controller and the style layer reads it — the
+    State stays in the controller and Style reads it — the
     <a href="/sail/language/motion">motion chapter</a> drives whole
-    choreographies through this one channel.
+    choreographies through this channel.
   </p>
 
-  <h2>What sx does not do</h2>
+  <h2>What Style does not do</h2>
   <p>
-    Two things are outside the vocabulary on purpose. <strong>Layout</strong>
-    — there is no <code>flex-direction</code> or
-    <code>grid-template-columns</code>; the parent decides how children sit,
-    with the <a href="/sail/language/layout">layout elements</a>. And
-    <strong>authored CSS</strong> — <code>&lt;style&gt;</code> blocks and
-    <code>style=</code> attributes are compile errors in application code,
-    because one raw rule becomes ten, and then the system is a suggestion.
-    When the vocabulary genuinely can't express something you need, that is
-    a gap to file — the system grows a token, not a hole; per-side borders
-    were added exactly that way.
+    Two things sit outside paint on purpose. <strong>Layout</strong> — parent
+    elements decide how children sit (<a href="/sail/language/layout">layout
+    elements</a>). And <strong>authored CSS</strong> —
+    <code>&lt;style&gt;</code> blocks and <code>style=</code> attributes are
+    compile errors in application code. Utility-string
+    <code>sx="p-4 bg-muted"</code> is not the product either — use
+    <code>style.pad(4).bg(muted)</code>. When the vocabulary can't express
+    something you need, file a gap: the system grows a setter or token, not a
+    hole.
   </p>
 
-  <p sx="mt-4 text-sm text-muted-foreground">
+  <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>
     For the full surface: <a href="/sail/reference/sx">reference → sx</a>.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
     <a variant="default" href="/sail/language/templates">← Templates</a>
     <a variant="solid" tone="primary" href="/sail/language/layout">Layout →</a>
   </row>

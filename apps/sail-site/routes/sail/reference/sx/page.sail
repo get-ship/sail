@@ -1,7 +1,7 @@
 <!--
-  /sail/reference/sx — the complete sx vocabulary: atoms, refusals, state/
-  condition prefixes, and the group-/state-<value>:/(--var) extras. Rendered
-  from src/language-surface.gen.ts (emitted by `sail-compiler prop-registry`).
+  /sail/reference/sx — Style product surface: setters (via residual atom table
+  for value lists), when keys, refusals. Prose teaches style.* / match / when /
+  compound; the generated tables still list scale values the setters spend.
 -->
 <controller>
 import { controller, type ControllerScope } from '@ship/sail-runtime'
@@ -43,24 +43,39 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" sx="min-w-0">
-  <column sx="max-w-breakpoint-tablet" gap="5">
+<column gap="6" sx={style.minW(0)}>
+  <column sx={style.maxW(breakpoint-tablet)} gap="5">
     <p role="doc-eyebrow">Reference</p>
-    <h1>sx — {sxCount()} atoms</h1>
+    <h1>Style — paint on sx</h1>
     <p role="doc-lead">
-      <code>sx="name-value name-value …"</code>, static only. Every value is
-      a token from a closed list — the rows below are the complete surface,
-      and an off-list value is a compile error that names this same list.
+      Paint is Style only: <code>sx=&#123;style.bg(primary).padX(2)&#125;</code>,
+      <code>sx=&#123;[base, match(…), when(…)]&#125;</code>, or a scope const.
+      Every setter argument is a design token from a closed scale — the rows
+      below list those values. An off-list token is a compile error that names
+      the same list.
+    </p>
+    <p sx={style.fontSize(sm).fg(muted-foreground)}>
+      Utility-string <code>sx="…"</code> is not product. Responsive and state
+      paint use <code>when(&#123; tablet: style…, hover: style… &#125;)</code>, not
+      <code>tablet:</code> / <code>hover:</code> prefixes on atoms.
+      {sxCount()} scale entries feed the setters.
     </p>
   </column>
 
   <column gap="3">
+    <h3>Setter value scales</h3>
+    <p sx={style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)}>
+      Rows are named by historical atom heads (<code>bg</code>, <code>p</code>,
+      <code>rounded</code>, …). In product form you call the Style setter:
+      <code>style.bg(…)</code>, <code>style.pad(…)</code>,
+      <code>style.radius(…)</code>, <code>style.fg(…)</code>, and so on.
+    </p>
     <grid cols="2" gap="2">
       {#for a of sxRows() key={a.prop}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
-            <code>{a.prop}:</code>
-            <small sx="text-muted-foreground max-w-panel-max-w-sm">{a.values}</small>
+            <code>{a.prop}</code>
+            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{a.values}</small>
           </column>
         </card>
       {/for}
@@ -68,19 +83,18 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <column gap="3">
-    <h3>Not sx — use this ({refusalCount()})</h3>
-    <p sx="max-w-breakpoint-tablet">
-      The refused table is the OTHER half of the vocabulary. Every entry
-      below is an atom a Tailwind prior will reach for and sx refuses by
-      name; each names the element or attribute to use instead. The mission
-      is never "find another way" — it is "use this."
+    <h3>Not Style — use this ({refusalCount()})</h3>
+    <p sx={style.maxW(breakpoint-tablet)}>
+      The refused table is the other half of the vocabulary. Every entry below
+      is something a Tailwind prior will reach for and Sail refuses by name;
+      each names the element or attribute to use instead.
     </p>
     <grid cols="2" gap="2">
       {#for r of refusals() key={r.atom}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
-            <code sx="text-destructive">sx={r.atom}</code>
-            <small sx="text-muted-foreground max-w-panel-max-w-sm">→ {r.instead}</small>
+            <code sx={style.fg(destructive)}>{r.atom}</code>
+            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>→ {r.instead}</small>
           </column>
         </card>
       {/for}
@@ -88,45 +102,55 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <column gap="3">
-    <h3>State prefixes</h3>
+    <h3>when keys — interaction &amp; ARIA</h3>
+    <p sx={style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)}>
+      Product form: <code>when(&#123; hover: style.bg(muted), current: style.fg(primary) &#125;)</code>.
+      Historical prefix names below map 1:1 to those keys.
+    </p>
     <grid cols="3" gap="2">
       {#for s of statePrefixes() key={s.prefix}}
-        <row gap="3" sx="px-3 py-1 rounded-md" align="center">
-          <code sx="min-w-9">{s.prefix}:</code>
-          <small sx="text-muted-foreground font-mono max-w-ch-24">{s.selector}</small>
+        <row gap="3" sx={style.padX(3).padY(1).radius(md)} align="center">
+          <code sx={style.minW(9)}>{s.prefix}</code>
+          <small sx={style.fg(muted-foreground).fontFamily(mono).maxW(ch-24)}>{s.selector}</small>
         </row>
       {/for}
     </grid>
-    <p sx="max-w-breakpoint-tablet">
-      Ancestor propagation: mark the ancestor with bare <code>group</code>,
-      then <code>group-hover:</code> (any state prefix) on the descendant.
+    <p sx={style.maxW(breakpoint-tablet)}>
+      Ancestor propagation: mark the ancestor with <code>style.group()</code>,
+      then <code>when(&#123; groupHover: … &#125;)</code> on the descendant.
     </p>
   </column>
 
   <column gap="3">
-    <h3>Condition prefixes</h3>
+    <h3>when keys — media conditions</h3>
+    <p sx={style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)}>
+      Breakpoints are locked to design-token <code>breakpoint-*</code> lengths.
+      Use <code>when(&#123; tablet: style.fontSize(lg), desktop: style.fontSize(xl) &#125;)</code>.
+    </p>
     <grid cols="3" gap="2">
       {#for c of conditionPrefixes() key={c.prefix}}
-        <row gap="3" sx="px-3 py-1 rounded-md" align="center">
-          <code sx="min-w-9">{c.prefix}:</code>
-          <small sx="text-muted-foreground font-mono max-w-ch-24">{c.media}</small>
+        <row gap="3" sx={style.padX(3).padY(1).radius(md)} align="center">
+          <code sx={style.minW(9)}>{c.prefix}</code>
+          <small sx={style.fg(muted-foreground).fontFamily(mono).maxW(ch-24)}>{c.media}</small>
         </row>
       {/for}
     </grid>
   </column>
 
   <column gap="3">
-    <h3>Extra forms</h3>
-    <p sx="max-w-breakpoint-tablet">
-      Grammar rather than a closed name table: the ancestor marker, the
-      component-state prefix, and the custom-property value read.
+    <h3>Composition &amp; bind</h3>
+    <p sx={style.maxW(breakpoint-tablet)}>
+      <code>match(prop, &#123; … &#125;)</code> branches on a prop value;
+      <code>compound(&#123; … &#125;, style…)</code> intersects prop arms;
+      <code>bind(signalName)</code> reads a controller signal as a CSS custom
+      property (timeline tracks, range-driven paint).
     </p>
     <grid cols="2" gap="2">
       {#for f of extraForms() key={f.form}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{f.form}</code>
-            <small sx="text-muted-foreground max-w-panel-max-w-sm">{f.doc}</small>
+            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{f.doc}</small>
           </column>
         </card>
       {/for}

@@ -1,9 +1,10 @@
-//! `(--x)` resolution law — the seam sx reads use for runtime state.
+//! `(--x)` / `bind(name)` resolution law — the seam sx reads use for runtime state.
 //!
-//! Resolution order, checked once per distinct `(--name)` read found inside a
-//! `sx="…"` attribute value: global token vars → declared props →
-//! setup-returned signals → refusal (with a did-you-mean). A name that never
-//! appears as a `(--x)` read gets no CSS wiring at all — this pass only ever
+//! Resolution order, checked once per distinct custom-property read found inside
+//! an `sx` attribute value (`sx="…"` utility form or `sx={…}` Style product with
+//! `bind(camelName)` / residual `(--kebab-name)`): global token vars → declared
+//! props → setup-returned signals → refusal (with a did-you-mean). A name that
+//! never appears as a read gets no CSS wiring at all — this pass only ever
 //! looks at names actually read, never at everything a component happens to
 //! own.
 //!
@@ -66,7 +67,7 @@ pub struct SxVarBinding {
     pub numeric: bool,
 }
 
-/// Resolve every `(--x)` read in this source's `sx="…"` attributes. `Ok`
+/// Resolve every custom-property read in this source's `sx` attributes. `Ok`
 /// carries the prop/signal matches to wire at emit time (token matches are
 /// dropped — they need no component-local emission). `Err` is the first
 /// refusal encountered, in source order.
@@ -79,19 +80,19 @@ pub fn resolve(
     let mut out: Vec<SxVarBinding> = Vec::new();
 
     for (val_start, val) in crate::parse::preprocess::find_sx_attr_values(source) {
-        for (rel, name) in find_var_refs(val) {
-            if !seen.insert(name.to_string()) {
+        for (rel, css_name, span_len) in find_var_refs(val) {
+            if !seen.insert(css_name.clone()) {
                 continue;
             }
-            if sail_lint::tokens::registry().contains(name) {
+            if sail_lint::tokens::registry().contains(css_name.as_str()) {
                 continue;
             }
 
-            let scope_name = camel_of(name);
+            let scope_name = camel_of(&css_name);
 
             if let Some(p) = program.props.iter().find(|p| camel_of(&p.name) == scope_name) {
                 out.push(SxVarBinding {
-                    css_name: name.to_string(),
+                    css_name,
                     scope_name,
                     source: SxVarSource::Prop,
                     numeric: matches!(p.kind, PropKind::Number),
@@ -110,7 +111,7 @@ pub fn resolve(
                         .get(m.value_span.start..m.value_span.end)
                         .unwrap_or("");
                     out.push(SxVarBinding {
-                        css_name: name.to_string(),
+                        css_name,
                         scope_name,
                         source: SxVarSource::Signal,
                         // A timeline track's values live in the track
@@ -125,41 +126,82 @@ pub fn resolve(
             }
 
             let offset = val_start + rel;
-            let span = Span::new(offset, offset + name.len() + 5); // "(--" + name + ")"
-            return Err(refusal(name, program, controller, span));
+            let span = Span::new(offset, offset + span_len);
+            return Err(refusal(&css_name, program, controller, span));
         }
     }
     Ok(out)
 }
 
-/// Find every `(--name)` occurrence in an sx attribute value, returning the
-/// name (without `--`) and its byte offset relative to the start of `val`.
-/// Deliberately permissive about WHERE inside the value it appears — an atom
-/// like `translate-y-(--row-y)` embeds it as a suffix; this only extracts the
-/// reference, leaving atom/utility shape validation to `sail-sx`'s own lint.
-fn find_var_refs(val: &str) -> Vec<(usize, &str)> {
+/// Find every custom-property read in an sx attribute value.
+///
+/// Returns `(byte_offset, css_kebab_name, span_len)` for:
+/// - residual utility form `translate-y-(--row-y)` → `row-y`
+/// - Style product `style.translateY(bind(rowY))` → `row-y`
+fn find_var_refs(val: &str) -> Vec<(usize, String, usize)> {
     let mut out = Vec::new();
     let mut i = 0;
     let bytes = val.as_bytes();
-    while let Some(rel) = val[i..].find("(--") {
-        let start = i + rel;
-        let name_start = start + 3;
-        if let Some(close_rel) = val[name_start..].find(')') {
-            let name = &val[name_start..name_start + close_rel];
-            if !name.is_empty()
-                && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
-            {
-                out.push((start, name));
+    while i < bytes.len() {
+        // `(--kebab-name)`
+        if val[i..].starts_with("(--") {
+            let name_start = i + 3;
+            if let Some(close_rel) = val[name_start..].find(')') {
+                let name = &val[name_start..name_start + close_rel];
+                if !name.is_empty()
+                    && name
+                        .chars()
+                        .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+                {
+                    let span_len = 3 + name.len() + 1; // (-- + name + )
+                    out.push((i, name.to_string(), span_len));
+                }
+                i = name_start + close_rel + 1;
+                continue;
             }
-            i = name_start + close_rel + 1;
-        } else {
             break;
         }
-        if i > bytes.len() {
+        // `bind(camelName)` — Style product reactive paint
+        if val[i..].starts_with("bind(") {
+            let name_start = i + 5;
+            if let Some(close_rel) = val[name_start..].find(')') {
+                let name = &val[name_start..name_start + close_rel];
+                if !name.is_empty()
+                    && name
+                        .chars()
+                        .all(|c| c.is_ascii_alphanumeric() || c == '_')
+                {
+                    let css = camel_to_kebab(name);
+                    let span_len = 5 + name.len() + 1; // bind( + name + )
+                    out.push((i, css, span_len));
+                }
+                i = name_start + close_rel + 1;
+                continue;
+            }
             break;
         }
+        let mut n = i + 1;
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
+        i = n;
     }
     out
+}
+
+fn camel_to_kebab(name: &str) -> String {
+    let mut kebab = String::with_capacity(name.len() + 4);
+    for (i, c) in name.chars().enumerate() {
+        if c.is_uppercase() {
+            if i > 0 {
+                kebab.push('-');
+            }
+            kebab.extend(c.to_lowercase());
+        } else {
+            kebab.push(c);
+        }
+    }
+    kebab
 }
 
 /// A `signal(<literal>)` initializer whose first argument is a bare numeric
@@ -321,6 +363,22 @@ mod tests {
         assert_eq!(out[0].scope_name, "hue");
         assert_eq!(out[0].source, SxVarSource::Signal);
         assert!(out[0].numeric);
+    }
+
+    #[test]
+    fn style_bind_form_returns_a_binding() {
+        let program = program_with_props(vec![]);
+        let controller = crate::check::controller_parse::parse(
+            Default::default(),
+            "controller((ctx) => { const tileX = signal('0px'); return { tileX }; })".to_string(),
+        )
+        .unwrap();
+        let source = r#"<div sx={style.translateX(bind(tileX))}></div>"#;
+        let out = resolve(source, &program, Some(&controller)).unwrap();
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].css_name, "tile-x");
+        assert_eq!(out[0].scope_name, "tileX");
+        assert_eq!(out[0].source, SxVarSource::Signal);
     }
 
     #[test]

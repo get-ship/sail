@@ -16,17 +16,17 @@ import { loopDiagram } from './snippets'
 export default controller((_ctx: ControllerScope<Scope>) => ({ loopDiagram }))
 </controller>
 
-<article sx="max-w-breakpoint-tablet mx-auto">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">AI</p>
+<article sx={style.maxW(breakpoint-tablet).mx(auto)}>
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>AI</p>
   <h1>The agent authoring loop</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     An agent authoring a Sail route produces a <code>.sail</code> +
     <code>controller.ts</code> pair that compiles, stays in scope, and behaves
     to spec — all in one turn. Ship gives the agent six surfaces to make that
     one-turn target reachable.
   </p>
 
-  <pre sx="font-mono text-sm leading-relaxed bg-surface-1 border border-border rounded-lg p-4 px-5 whitespace-pre-wrap break-words">{loopDiagram}</pre>
+  <pre sx={style.fontFamily(mono).fontSize(sm).leading(relaxed).bg(surface-1).borderWidth(1).border(border).radius(lg).pad(4).padX(5).whitespace(pre-wrap).break(words)}>{loopDiagram}</pre>
 
   <p>
     The example to the right is a route with <strong>four deliberate
@@ -73,7 +73,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ loopDiagram }))
     shape, the right places to put <code>&lt;style&gt;</code>).
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)}>
     <a href="/ai">← Overview</a>
     <a href="/ai/tooling">Tooling →</a>
   </row>

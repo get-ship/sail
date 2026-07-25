@@ -280,57 +280,57 @@ export default controller((ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<row sx="h-fill min-h-0 overflow-hidden" align="stretch">
+<row sx={style.h(fill).minH(0).overflow(hidden)} align="stretch">
   <!-- basis-0 on both panes: the wrapping <row> floor would otherwise stack
        the playground BELOW the lesson (each pane demanding its content width);
        a 0 main-basis keeps them side by side, grow distributes the width. -->
-  <column sx="grow-1 basis-0 min-w-0 max-w-panel-max-w-md h-fill min-h-0 bg-surface-1 border-r border-r-border">
-    <column sx="grow-1 min-h-0 overflow-y-auto p-6" gap="4">
+  <column sx={style.grow(1).basis(0).minW(0).maxW(panel-max-w-md).h(fill).minH(0).bg(surface-1).borderRWidth(1).borderR(border)}>
+    <column sx={style.grow(1).minH(0).overflowY(auto).pad(6)} gap="4">
       <row align="center" justify="between" gap="3">
-        <p sx="font-mono text-xs font-medium tracking-wide text-primary">— TUTORIAL</p>
-        <small sx="font-mono text-xs tracking-wide text-muted-foreground">Lesson {lessonNumLabel()} / {totalLessons()}</small>
+        <p sx={style.fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide).fg(primary)}>— TUTORIAL</p>
+        <small sx={style.fontFamily(mono).fontSize(xs).tracking(wide).fg(muted-foreground)}>Lesson {lessonNumLabel()} / {totalLessons()}</small>
       </row>
 
       <row gap="1" aria-label="Lesson progress">
         {#for step of steps() key={step.slug}}
           {#match step.state}
             {:case 'done'}
-              <a href={step.href} title={step.title} sx="grow-1 h-1 rounded-full bg-primary"></a>
+              <a href={step.href} title={step.title} sx={style.grow(1).h(1).radius(full).bg(primary)}></a>
             {:case 'current'}
-              <a href={step.href} title={step.title} aria-current="step" sx="grow-1 h-1 rounded-full bg-primary opacity-50"></a>
+              <a href={step.href} title={step.title} aria-current="step" sx={style.grow(1).h(1).radius(full).bg(primary).opacity(50)}></a>
             {:default}
-              <a href={step.href} title={step.title} sx="grow-1 h-1 rounded-full bg-surface-2"></a>
+              <a href={step.href} title={step.title} sx={style.grow(1).h(1).radius(full).bg(surface-2)}></a>
           {/match}
         {/for}
       </row>
 
       <column gap="2">
         <h1>{title()}</h1>
-        <p sx="text-lg text-muted-foreground">{description()}</p>
+        <p sx={style.fontSize(lg).fg(muted-foreground)}>{description()}</p>
       </column>
 
-      <div sx="max-w-breakpoint-tablet mx-auto" use:prose={proseHtml()}></div>
+      <div sx={style.maxW(breakpoint-tablet).mx(auto)} use:prose={proseHtml()}></div>
     </column>
 
-    <row align="center" justify="between" gap="3" sx="p-3 px-6 border-t border-t-border bg-surface-1">
-      <a href="/sail/tutorial" sx="p-2 px-4 rounded-md text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-2">← All lessons</a>
+    <row align="center" justify="between" gap="3" sx={style.pad(3).padX(6).borderTWidth(1).borderT(border).bg(surface-1)}>
+      <a href="/sail/tutorial" sx={style.pad(2).padX(4).radius(md).fontSize(sm).fontWeight(semibold).fg(muted-foreground).when({ hover: style.fg(foreground).bg(surface-2) })}>← All lessons</a>
       {#if hasNext()}
-        <a href={nextHref()} sx="p-2 px-4 rounded-md text-sm font-semibold bg-primary text-primary-foreground overflow-hidden">{nextTitle()}</a>
+        <a href={nextHref()} sx={style.pad(2).padX(4).radius(md).fontSize(sm).fontWeight(semibold).bg(primary).fg(primary-foreground).overflow(hidden)}>{nextTitle()}</a>
       {/if}
     </row>
   </column>
 
-  <column sx="grow-1 basis-0 min-w-0 h-fill min-h-0 p-4 bg-surface-0" gap="3">
+  <column sx={style.grow(1).basis(0).minW(0).h(fill).minH(0).pad(4).bg(surface-0)} gap="3">
     <row align="center" justify="between" gap="3">
-      <p sx="font-mono text-xs font-medium tracking-wide text-muted-foreground">— PLAYGROUND</p>
+      <p sx={style.fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide).fg(muted-foreground)}>— PLAYGROUND</p>
       <row gap="2" align="center">
         <button variant="ghost" size="sm" on:click={reset}>↺ Reset</button>
         <button variant="outline" tone="primary" size="sm" on:click={toggleSolution}>{solutionLabel()}</button>
       </row>
     </row>
 
-    <column sx="grow-1 min-h-0 border border-border rounded-lg bg-surface-1 overflow-hidden">
-      <row align="center" justify="between" gap="2" sx="p-2 px-3 border-b border-b-border">
+    <column sx={style.grow(1).minH(0).borderWidth(1).border(border).radius(lg).bg(surface-1).overflow(hidden)}>
+      <row align="center" justify="between" gap="2" sx={style.pad(2).padX(3).borderBWidth(1).borderB(border)}>
         <tabs active="source" size="sm" on:sail-tab-change={onTabChange}>
           <tab-list variant="pill">
             <tab name="source">{fileName()}</tab>
@@ -338,8 +338,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
           </tab-list>
         </tabs>
       </row>
-      <column sx="grow-1 min-h-0 relative">
-        <tab-panel name="source" hidden={tab() !== 'source'} sx="grow-1 min-h-0">
+      <column sx={style.grow(1).minH(0).position(relative)}>
+        <tab-panel name="source" hidden={tab() !== 'source'} sx={style.grow(1).minH(0)}>
           <sail-code-editor
             data-pane="source"
             language="sail"
@@ -349,44 +349,44 @@ export default controller((ctx: ControllerScope<Scope>) => {
             on:sail-change={onSourceChange}
           ></sail-code-editor>
         </tab-panel>
-        <tab-panel name="diff" hidden={tab() !== 'diff'} sx="grow-1 min-h-0 overflow-y-auto">
-          <column gap="3" sx="p-3">
-            <small sx="font-mono text-xs tracking-wide text-muted-foreground">{fileName()}</small>
+        <tab-panel name="diff" hidden={tab() !== 'diff'} sx={style.grow(1).minH(0).overflowY(auto)}>
+          <column gap="3" sx={style.pad(3)}>
+            <small sx={style.fontFamily(mono).fontSize(xs).tracking(wide).fg(muted-foreground)}>{fileName()}</small>
             <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>
           </column>
         </tab-panel>
       </column>
     </column>
 
-    <column sx="grow-1 min-h-0 border border-border rounded-lg bg-surface-1 overflow-hidden">
-      <row align="center" justify="between" gap="2" sx="p-2 px-3 border-b border-b-border">
+    <column sx={style.grow(1).minH(0).borderWidth(1).border(border).radius(lg).bg(surface-1).overflow(hidden)}>
+      <row align="center" justify="between" gap="2" sx={style.pad(2).padX(3).borderBWidth(1).borderB(border)}>
         <row gap="2" align="center">
           <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
-          <small sx="font-mono text-xs tracking-wide text-muted-foreground">PREVIEW · LIVE</small>
+          <small sx={style.fontFamily(mono).fontSize(xs).tracking(wide).fg(muted-foreground)}>PREVIEW · LIVE</small>
         </row>
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
-      <column sx="grow-1 min-h-0">
+      <column sx={style.grow(1).minH(0)}>
         <iframe
           data-base-src="/tut-host.html"
           title="Tutorial preview"
           sandbox="allow-scripts allow-same-origin"
           bind:this={iframeEl}
-          sx="w-full h-full border-0 bg-surface-0"
+          sx={style.w(full).h(full).borderWidth(0).bg(surface-0)}
         ></iframe>
       </column>
       <column role="log" aria-live="polite" aria-label="Preview console" gap="0"
-              sx="border-t border-t-border bg-surface-0 p-2 px-3 overflow-y-auto max-h-9 font-mono text-sm">
+              sx={style.borderTWidth(1).borderT(border).bg(surface-0).pad(2).padX(3).overflowY(auto).maxH(9).fontFamily(mono).fontSize(sm)}>
         {#for line of logs() key={line.id}}
           {#match line.kind}
             {:case 'success'}
-              <row gap="2"><small sx="text-muted-foreground opacity-50">{line.ts}</small><small sx="text-success">{line.msg}</small></row>
+              <row gap="2"><small sx={style.fg(muted-foreground).opacity(50)}>{line.ts}</small><small sx={style.fg(success)}>{line.msg}</small></row>
             {:case 'warn'}
-              <row gap="2"><small sx="text-muted-foreground opacity-50">{line.ts}</small><small sx="text-warning">{line.msg}</small></row>
+              <row gap="2"><small sx={style.fg(muted-foreground).opacity(50)}>{line.ts}</small><small sx={style.fg(warning)}>{line.msg}</small></row>
             {:case 'error'}
-              <row gap="2" sx="bg-tone-destructive-bg rounded-sm p-1 px-2"><small sx="text-muted-foreground opacity-50">{line.ts}</small><small sx="text-destructive">{line.msg}</small></row>
+              <row gap="2" sx={style.bg(muted).radius(sm).pad(1).padX(2)}><small sx={style.fg(muted-foreground).opacity(50)}>{line.ts}</small><small sx={style.fg(destructive)}>{line.msg}</small></row>
             {:default}
-              <row gap="2"><small sx="text-muted-foreground opacity-50">{line.ts}</small><small sx="text-muted-foreground">{line.msg}</small></row>
+              <row gap="2"><small sx={style.fg(muted-foreground).opacity(50)}>{line.ts}</small><small sx={style.fg(muted-foreground)}>{line.msg}</small></row>
           {/match}
         {/for}
       </column>

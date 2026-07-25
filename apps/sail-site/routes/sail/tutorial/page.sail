@@ -18,10 +18,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Tutorial</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Tutorial</p>
   <h1>Learn Sail</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     Nine hands-on lessons — one per decision surface the language kept, then
     the loop it exists for: agents author, humans review. Each lesson pairs a
     starter to edit with a solved screen running live.
@@ -33,12 +33,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <column gap="2">
         {#for lesson of group.lessons key={lesson.slug}}
           <a href={lesson.href}
-             sx="p-4 rounded-lg border border-border bg-surface-1 hover:bg-surface-2 hover:border hover:border-border-strong">
+             sx={style.pad(4).radius(lg).borderWidth(1).border(border).bg(surface-1).when({ hover: style.bg(surface-2).borderWidth(1).border(border-strong) })}>
             <row gap="3" align="center">
               <badge tone="primary" variant="soft">{lesson.order}</badge>
-              <column gap="1" sx="grow-1">
+              <column gap="1" sx={style.grow(1)}>
                 <strong>{lesson.title}</strong>
-                <small sx="text-muted-foreground">{lesson.description}</small>
+                <small sx={style.fg(muted-foreground)}>{lesson.description}</small>
               </column>
             </row>
           </a>
@@ -47,7 +47,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </column>
   {/for}
 
-  <row sx="mt-8 pt-4 border-t border-t-border">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)}>
     <a variant="default" href="/sail/language/state">← State</a>
     <a variant="solid" tone="primary" href="/sail/tutorial/01-a-page-is-markup">Start lesson 1 →</a>
   </row>

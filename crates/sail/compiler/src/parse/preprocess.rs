@@ -83,12 +83,16 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> String {
     }
 }
 
-/// Find every static `sx="…"` attribute VALUE in raw `.sail` source, with its
-/// byte offset (pointing at the first character inside the quotes). Read-only
-/// twin of [`lower_sx`]'s attribute-recognition walk — used by the `(--x)`
-/// resolution check (`check::sx_vars`), which runs on the pre-preprocess
-/// source (before `sx=` is rewritten to `class=`) so it can still see the
-/// literal attribute text and report spans against the author's source.
+/// Find every `sx` attribute VALUE in raw `.sail` source, with its byte
+/// offset (pointing at the first character of the value). Covers:
+/// - `sx="…"` utility / quoted Style forms
+/// - `sx={…}` Style product forms (`bind(name)`, chains, lists)
+///
+/// Read-only twin of [`lower_sx`]'s attribute-recognition walk — used by the
+/// `(--x)` / `bind(name)` resolution check (`check::sx_vars`), which runs on
+/// the pre-preprocess source (before `sx=` is rewritten to `class=`) so it
+/// can still see the literal attribute text and report spans against the
+/// author's source.
 pub(crate) fn find_sx_attr_values(source: &str) -> Vec<(usize, &str)> {
     let bytes = source.as_bytes();
     let mut out = Vec::new();
@@ -109,15 +113,39 @@ pub(crate) fn find_sx_attr_values(source: &str) -> Vec<(usize, &str)> {
             && is_eq_quote(&bytes[i + 2..])
         {
             let mut j = i + 2;
-            while j < bytes.len() && bytes[j] != b'"' && bytes[j] != b'{' {
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
                 j += 1;
             }
-            if j < bytes.len() && bytes[j] == b'"' {
-                let vstart = j + 1;
-                if let Some(rel) = source[vstart..].find('"') {
-                    out.push((vstart, &source[vstart..vstart + rel]));
-                    i = vstart + rel + 1;
-                    continue;
+            if j < bytes.len() && bytes[j] == b'=' {
+                j += 1;
+                while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                    j += 1;
+                }
+                if j < bytes.len() && bytes[j] == b'"' {
+                    let vstart = j + 1;
+                    if let Some(rel) = source[vstart..].find('"') {
+                        out.push((vstart, &source[vstart..vstart + rel]));
+                        i = vstart + rel + 1;
+                        continue;
+                    }
+                } else if j < bytes.len() && bytes[j] == b'{' {
+                    let vstart = j + 1;
+                    let mut depth = 1usize;
+                    let mut k = vstart;
+                    while k < bytes.len() && depth > 0 {
+                        match bytes[k] {
+                            b'{' => depth += 1,
+                            b'}' => depth -= 1,
+                            _ => {}
+                        }
+                        k += 1;
+                    }
+                    if depth == 0 {
+                        // value is inside braces; k points past closing `}`
+                        out.push((vstart, &source[vstart..k - 1]));
+                        i = k;
+                        continue;
+                    }
                 }
             }
         }
@@ -1042,7 +1070,8 @@ fn is_eq_quote(rest: &[u8]) -> bool {
     while k < rest.len() && rest[k].is_ascii_whitespace() {
         k += 1;
     }
-    k < rest.len() && rest[k] == b'"'
+    // Quoted utility / Style form, or brace Style product form.
+    k < rest.len() && (rest[k] == b'"' || rest[k] == b'{')
 }
 
 /// Lower each layout keyword (`<column>`, `<row>`, `<grid>`, `<center>`,

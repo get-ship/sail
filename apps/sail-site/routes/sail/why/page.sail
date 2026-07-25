@@ -7,11 +7,11 @@
   ecosystem. Prior page mined as input only; absorbed the thesis (/thesis is
   gone). Voice: plain, confident, zero showmanship, no unverified numbers.
 -->
-<column sx="max-w-breakpoint-tablet mx-auto" gap="4">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Why Sail</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="4">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Why Sail</p>
   <h1>Why build another framework?</h1>
 
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     Because the author changed. Every mainstream web framework is an
     ergonomics project — built to fit a
     professional's hands. Hooks, hot reload, clever DX: all of it optimizes
@@ -101,7 +101,7 @@
     turns "an agent built this" from a warning into a guarantee.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} gap="2">
     <a variant="solid" tone="primary" href="/sail/getting-started">Installation →</a>
     <a variant="default" href="/sail/overview">Introduction</a>
     <a variant="default" href="/sail/tutorial">Tutorial</a>

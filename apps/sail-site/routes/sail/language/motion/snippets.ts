@@ -4,7 +4,7 @@
 export const code = {
   stagger: `{#if dealt()}
   <row gap="3">
-    <div sx="w-9 h-9 rounded-md bg-primary"
+    <div sx={style.w(9).h(9).radius(md).bg(primary)}
          motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
     <!-- ×5 — each waits 0.07s after its previous sibling -->
   </row>
@@ -52,7 +52,7 @@ export default controller(() => {
 </controller>
 
 <input type="range" min="0" max="100" bind:value={scrubText} />
-<card sx="translate-x-(--tile-x) rotate-(--tile-rotate) scale-(--tile-scale)"></card>`,
+<card sx={style.translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale))}></card>`,
 
   drivers: `const p = () => Number(scrubText()) / 100  // the slider above
 const p = clock(3600, { loop: true })       // a wall clock: plays itself

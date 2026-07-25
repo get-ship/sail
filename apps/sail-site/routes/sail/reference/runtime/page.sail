@@ -41,8 +41,8 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 }))
 </controller>
 
-<column gap="6" sx="min-w-0">
-  <column sx="max-w-breakpoint-tablet" gap="5">
+<column gap="6" sx={style.minW(0)}>
+  <column sx={style.maxW(breakpoint-tablet)} gap="5">
     <p role="doc-eyebrow">Reference</p>
     <h1>Runtime — {totalCount()} exports</h1>
     <p role="doc-lead">
@@ -55,17 +55,17 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <h2>Controller — the ambient vocabulary</h2>
-    <p sx="max-w-breakpoint-tablet">
+    <p sx={style.maxW(breakpoint-tablet)}>
       A <code>&lt;controller&gt;</code> block may reference these without
       importing them — the compiler injects the import for exactly the
       idents referenced.
     </p>
     <grid cols="3" gap="2">
       {#for c of controllerRows() key={c.name}}
-        <card padding="sm" sx="min-w-0">
+        <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{c.name}</code>
-            <small sx="text-muted-foreground max-w-panel-max-w-sm">{c.doc}</small>
+            <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{c.doc}</small>
           </column>
         </card>
       {/for}
@@ -77,13 +77,13 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <h2><code>{group.subpath}</code> — {group.count} exports</h2>
       <column gap="1">
         {#for e of group.exports key={e.name}}
-          <row gap="3" sx="px-3 py-2 rounded-md border border-border" align="start">
-            <code sx="min-w-32">{e.name}</code>
+          <row gap="3" sx={style.padX(3).padY(2).radius(md).borderWidth(1).border(border)} align="start">
+            <code sx={style.minW(32)}>{e.name}</code>
             <badge size="sm">{e.kind}</badge>
-            <column gap="1" sx="min-w-0">
-              <code sx="text-muted-foreground font-mono">{e.signature}</code>
+            <column gap="1" sx={style.minW(0)}>
+              <code sx={style.fg(muted-foreground).fontFamily(mono)}>{e.signature}</code>
               {#if e.doc}
-                <small sx="text-muted-foreground">{e.doc}</small>
+                <small sx={style.fg(muted-foreground)}>{e.doc}</small>
               {/if}
             </column>
           </row>

@@ -14,21 +14,21 @@ export default controller(() => {
 })
 </controller>
 
-<column gap="3" sx="p-6 max-w-breakpoint-tablet mx-auto">
-  <h1 sx="text-2xl font-bold text-foreground">push() demo</h1>
-  <p sx="text-muted-foreground text-sm">
+<column gap="3" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
+  <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground)}>push() demo</h1>
+  <p sx={style.fg(muted-foreground).fontSize(sm)}>
     A client method returning <code>LiveSource&lt;T&gt;</code> makes
     <code>query()</code> subscribe — one <code>ok</code> per push.
   </p>
 
   {#if tick().kind === 'loading'}
-  <p sx="text-muted-foreground text-sm" data-testid="push-loading">waiting for first push…</p>
+  <p sx={style.fg(muted-foreground).fontSize(sm)} data-testid="push-loading">waiting for first push…</p>
   {/if}
   {#if tick().kind === 'error'}
-  <p sx="text-destructive text-sm" data-testid="push-error">Error</p>
+  <p sx={style.fg(destructive).fontSize(sm)} data-testid="push-error">Error</p>
   {/if}
   {#if tick().kind === 'ok'}
-  <p sx="text-foreground font-mono" data-testid="push-tick">tick #{tick().value.n}</p>
-  <p sx="text-muted-foreground text-xs font-mono" data-testid="push-at">{tick().value.at}</p>
+  <p sx={style.fg(foreground).fontFamily(mono)} data-testid="push-tick">tick #{tick().value.n}</p>
+  <p sx={style.fg(muted-foreground).fontSize(xs).fontFamily(mono)} data-testid="push-at">{tick().value.at}</p>
   {/if}
 </column>

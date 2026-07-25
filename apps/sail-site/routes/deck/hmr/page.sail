@@ -11,10 +11,10 @@ import { devCmd } from './snippets'
 export default controller((_ctx: ControllerScope<Scope>) => ({ devCmd }))
 </controller>
 
-<article sx="max-w-breakpoint-tablet mx-auto">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Rendering &amp; build</p>
+<article sx={style.maxW(breakpoint-tablet).mx(auto)}>
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Rendering &amp; build</p>
   <h1>HMR</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">In dev, editing a route soft-reloads it with signal state preserved — no full document reload.</p>
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>In dev, editing a route soft-reloads it with signal state preserved — no full document reload.</p>
 
   <h2>Routes reload with state intact</h2>
   <p>Save a route's <code>.sail</code> and deck swaps the freshly-bundled module into the already-running router — via a <code>globalThis.__deckHmr</code> handle — then re-mounts. Signal state survives the swap, so counters, inputs, and scroll stay put.</p>
@@ -26,7 +26,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ devCmd }))
   <h2>Pushed over SSE</h2>
   <p>The dev server pushes changes to the browser over an <code>SSE</code> stream. HMR is a dev-only convenience; it ships in no build.</p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)}>
     <a href="/deck/rendering">← Rendering modes</a>
     <a href="/deck/build">Build &amp; deploy →</a>
   </row>

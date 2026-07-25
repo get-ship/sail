@@ -15,10 +15,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Guide</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Guide</p>
   <h1>Building a component</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     We are going to write one component from an empty file: a bill splitter
     that divides a total between however many people are at the table. Six
     steps, each one a small change to the step before it. At the end it runs
@@ -131,11 +131,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.usage} lang="sail"></code-block>
   <p>And that is the component, running here:</p>
   <bill-split label="Dinner" total="96">
-    <p slot="note" sx="text-xs text-muted-foreground">
+    <p slot="note" sx={style.fontSize(xs).fg(muted-foreground)}>
       Tip included. Arguments not.
     </p>
   </bill-split>
-  <p sx="text-sm text-muted-foreground">
+  <p sx={style.fontSize(sm).fg(muted-foreground)}>
     Press the buttons. The share is a <code>derived</code> value, so it
     follows the headcount without anything being wired between them.
   </p>
@@ -149,7 +149,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <a href="/sail/language/motion">Motion</a>.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
     <a variant="default" href="/sail/elements">← Using components</a>
     <a variant="solid" tone="primary" href="/sail/guide/forms">Forms →</a>
   </row>

@@ -131,7 +131,7 @@ export default controller(() => ({ load: signal(62) }))
   </column>
 </fieldset>`,
 
-  dropzone: `<card dropzone sx="p-6" motion:enter={{ opacity: 'fade' }}>
+  dropzone: `<card dropzone sx={style.pad(6)} motion:enter={{ opacity: 'fade' }}>
   Drop a file, or click to browse
 </card>`,
 
@@ -183,8 +183,8 @@ export default controller(() => ({ loading: signal(true) }))
 {/if}`,
 
   skeleton: `<row gap="3" align="center" motion:enter={{ opacity: 'fade' }}>
-  <span skeleton shape="circle" sx="w-7 h-7"></span>
-  <column gap="2" sx="grow-1">
+  <span skeleton shape="circle" sx={style.w(7).h(7)}></span>
+  <column gap="2" sx={style.grow(1)}>
     <span skeleton shape="text" size="sm"></span>
     <span skeleton shape="text" size="sm"></span>
   </column>
@@ -200,7 +200,7 @@ export default controller(() => ({ loading: signal(true) }))
 </error-state>`,
 
   'error-boundary': `<error-boundary message="This panel could not load.">
-  <card sx="p-4" motion:enter={{ opacity: 'fade' }}>
+  <card sx={style.pad(4)} motion:enter={{ opacity: 'fade' }}>
     <p>A risky subtree. If a render throw happens inside,
        the fallback takes this card's place — Retry resets it.</p>
   </card>
@@ -241,9 +241,9 @@ export default controller(() => {
   <p>all systems live</p>
 </row>`,
 
-  card: `<card interactive sx="p-5">
+  card: `<card interactive sx={style.pad(5)}>
   <strong>A surface</strong>
-  <p sx="text-sm text-muted-foreground">
+  <p sx={style.fontSize(sm).fg(muted-foreground)}>
     Tone, padding and the hover lift are attributes.
   </p>
 </card>`,
@@ -308,16 +308,16 @@ export default controller(() => {
   'hover-card': `<button variant="ghost" popovertarget="profile">@ada</button>
 
 <hover-card id="profile" motion:enter={{ opacity: 'fade' }}>
-  <card sx="p-4">
+  <card sx={style.pad(4)}>
     <strong>Ada Lovelace</strong>
-    <p sx="text-sm text-muted-foreground">wrote the first program.</p>
+    <p sx={style.fontSize(sm).fg(muted-foreground)}>wrote the first program.</p>
   </card>
 </hover-card>`,
 
   popover: `<button popovertarget="pop">Open popover</button>
 
 <popover id="pop" placement="bottom" motion:enter={{ opacity: 'fade' }}>
-  <card sx="p-4">Rides the platform top layer — no z-index war.</card>
+  <card sx={style.pad(4)}>Rides the platform top layer — no z-index war.</card>
 </popover>`,
 
   dropdown: `<button popovertarget="menu">Actions ▾</button>
@@ -328,7 +328,7 @@ export default controller(() => {
   <menu-item tone="destructive">Delete</menu-item>
 </dropdown>`,
 
-  'context-menu': `<card id="canvas" sx="p-6" motion:enter={{ opacity: 'fade' }}>
+  'context-menu': `<card id="canvas" sx={style.pad(6)} motion:enter={{ opacity: 'fade' }}>
   right-click target
 </card>
 
@@ -434,16 +434,16 @@ export default controller(() => ({
     <badge tone="primary">end</badge>
   </row>
   <grid cols="3" gap="2">
-    <card sx="p-3">1</card>
-    <card sx="p-3">2</card>
-    <card sx="p-3">3</card>
+    <card sx={style.pad(3)}>1</card>
+    <card sx={style.pad(3)}>2</card>
+    <card sx={style.pad(3)}>3</card>
   </grid>
-  <center sx="p-4 border border-border-subtle rounded-md">
+  <center sx={style.pad(4).borderWidth(1).border(border-subtle).radius(md)}>
     <p>center — both axes</p>
   </center>
 </column>`,
 
-  'scroll-area': `<scroll-area sx="max-h-panel-max-h-sm p-3 border border-border-subtle rounded-md"
+  'scroll-area': `<scroll-area sx={style.maxH(panel-max-h-sm).pad(3).borderWidth(1).border(border-subtle).radius(md)}
              motion:enter={{ opacity: 'fade' }}>
   <p>Constrain it, and the overflow scrolls behind thin,
      themed scrollbars…</p>

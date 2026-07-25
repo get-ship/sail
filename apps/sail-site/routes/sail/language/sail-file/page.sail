@@ -16,17 +16,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">The language</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>The language</p>
   <h1>Components</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     A component is one <code>.sail</code> file. This chapter builds this one —
     a departures board that runs itself: the boarding flight leaves, the next
     one starts boarding, a new city rolls onto the bottom.
   </p>
 
   <departures-board title="Departures — SFO">
-    <p slot="footer" sx="mt-3 text-xs text-muted-foreground">
+    <p slot="footer" sx={style.mt(3).fontSize(xs).fg(muted-foreground)}>
       Gate changes are announced. Allegedly.
     </p>
   </departures-board>
@@ -147,11 +147,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     component</a>.
   </p>
 
-  <p sx="mt-4 text-sm text-muted-foreground">
+  <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>
     For the full surface: <a href="/sail/reference/scope">reference → Scope grammar</a>.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" justify="end" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="end" gap="2">
     <a variant="solid" tone="primary" href="/sail/language/state">State →</a>
   </row>
 </column>

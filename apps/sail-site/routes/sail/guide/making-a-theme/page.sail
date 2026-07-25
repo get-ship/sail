@@ -23,10 +23,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Guide</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Guide</p>
   <h1>Making a theme</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     Nine themes ship with the framework. Making a tenth is a copy-and-edit
     job: take the block of token values closest to what you want, rename it,
     change the numbers, and register it so the framework will apply it. This
@@ -45,7 +45,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Concretely, a theme is two things in
     <code>packages/sail/tokens</code>, and nothing else:
   </p>
-  <ol sx="list-decimal pl-6">
+  <ol sx={style.list(decimal).padL(6)}>
     <li>
       a block in <code>src/themes.css</code> that assigns the tokens, keyed
       on <code>[data-theme='…']</code>;
@@ -126,7 +126,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>.dark</code> class goes on the document, which a number of
     component skins key on. Set it to match the theme you actually built.
   </p>
-  <p sx="text-sm text-muted-foreground">
+  <p sx={style.fontSize(sm).fg(muted-foreground)}>
     The two files are kept in step by the token package's own tests: for
     every id in <code>THEMES</code>, one asserts a matching
     <code>:root[data-theme]</code> block exists in
@@ -195,7 +195,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>--sidebar-primary</code> follow it; surfaces and ink stay put.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
     <a variant="default" href="/sail/guide/forms">← Forms</a>
     <a variant="solid" tone="primary" href="/sail/guide/embedding-third-party-code">Embedding third-party code →</a>
   </row>

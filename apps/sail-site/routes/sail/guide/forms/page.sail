@@ -38,10 +38,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column sx="max-w-breakpoint-tablet mx-auto" gap="5">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Guide</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Guide</p>
   <h1>Forms</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     Forms are how an app writes. <code>query()</code> turns reading async data
     into a signal with explicit loading and error states; a form is the same
     idea pointed the other way — user input, validated, sent somewhere, with
@@ -52,8 +52,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>A real form, live</h2>
   <grid cols="2" gap="4">
     <column>
-      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Live — saves to a 900 ms fake API</p>
-      <column sx="p-6 border border-border rounded-lg bg-surface-1" gap="3">
+      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Live — saves to a 900 ms fake API</p>
+      <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).bg(surface-1)} gap="3">
         <form on:submit={onSubmit} data-testid="forms-demo">
           <column gap="3">
             <field invalid={tried() && !!profile.errors().name}>
@@ -79,7 +79,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             </row>
 
             {#if profile.pending()}
-              <row gap="2" align="center"><spinner></spinner> <p sx="text-sm text-muted-foreground">saving…</p></row>
+              <row gap="2" align="center"><spinner></spinner> <p sx={style.fontSize(sm).fg(muted-foreground)}>saving…</p></row>
             {/if}
             {#if profile.lastError()}
               <alert tone="destructive" data-testid="forms-error">{profile.lastError().message}</alert>
@@ -90,14 +90,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           </column>
         </form>
       </column>
-      <p sx="text-sm text-muted-foreground mt-2">
+      <p sx={style.fontSize(sm).fg(muted-foreground).mt(2)}>
         Try it: save while empty to see the errors, fill it in and save to
         watch the pending state, and use "Fail the next save" to see the
         failure path.
       </p>
     </column>
     <column>
-      <p sx="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-2">Source</p>
+      <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Source</p>
       <code-block code={code.demo}></code-block>
     </column>
   </grid>
@@ -194,14 +194,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.mutation}></code-block>
 
-  <p sx="border border-border border-l-3 border-l-primary rounded-md p-3 px-4 text-sm text-muted-foreground">
+  <p sx={style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)}>
     A Sail page renders its markup before JavaScript arrives, so a form is
     visible and focusable immediately — but submitting needs the runtime
     attached. The server-rendered <code>action</code> a deck app injects
     marks the seam; it is not a working no-JS submit target.
   </p>
 
-  <row sx="mt-8 pt-4 border-t border-t-border" justify="between" gap="2">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
     <a variant="default" href="/sail/guide/building-a-component">← Building a component</a>
     <a variant="solid" tone="primary" href="/sail/guide/making-a-theme">Making a theme →</a>
   </row>

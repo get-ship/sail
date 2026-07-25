@@ -5,10 +5,10 @@
   `route` is ambient in every route; route.params.name() reads the segment
   as a signal, so the heading tracks the URL.
 -->
-<article sx="max-w-breakpoint-tablet mx-auto">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Live example</p>
+<article sx={style.maxW(breakpoint-tablet).mx(auto)}>
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Live example</p>
   <h1>Hello, {route.params.name()}.</h1>
-  <p sx="text-lg text-muted-foreground leading-relaxed">
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     This page is <code>routes/examples/greet/[name]/page.sail</code>. The
     <code>[name]</code> directory is a route parameter, and
     <code>route.params.name()</code> reads it as a signal.
@@ -18,7 +18,7 @@
     <a href="/deck/examples/greet/ada">/deck/examples/greet/ada</a> or
     <a href="/deck/examples/greet/deck">/deck/examples/greet/deck</a>.
   </p>
-  <row sx="mt-8 pt-4 border-t border-t-border">
+  <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)}>
     <a href="/deck/dynamic-routes">← Dynamic routes</a>
   </row>
 </article>

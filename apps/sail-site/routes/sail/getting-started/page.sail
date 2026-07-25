@@ -7,11 +7,11 @@
   actual one-command install. Authoring content lives in the language section
   and the Tutorial — never inline here.
 -->
-<column sx="max-w-breakpoint-tablet mx-auto" gap="4">
-  <p sx="font-mono text-xs uppercase tracking-wide text-accent mb-2">Start here</p>
+<column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="4">
+  <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Start here</p>
   <h1>Installation</h1>
 
-  <card sx="p-5 border border-border bg-surface-1">
+  <card sx={style.pad(5).borderWidth(1).border(border).bg(surface-1)}>
     <column gap="2">
       <row gap="2" align="center">
         <badge tone="warning">Under construction</badge>
@@ -24,12 +24,12 @@
     </column>
   </card>
 
-  <p sx="text-sm text-muted-foreground">
+  <p sx={style.fontSize(sm).fg(muted-foreground)}>
     In the meantime, the <a href="/sail/tutorial">Tutorial</a> runs entirely in
     your browser — no install required.
   </p>
 
-  <row sx="mt-4 pt-4 border-t border-t-border" gap="2">
+  <row sx={style.mt(4).padT(4).borderTWidth(1).borderT(border)} gap="2">
     <a variant="solid" tone="primary" href="/sail/tutorial">Tutorial →</a>
     <a variant="default" href="/sail/overview">Introduction</a>
     <a variant="default" href="/sail/why">Why Sail</a>
