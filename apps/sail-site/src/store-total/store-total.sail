@@ -13,7 +13,7 @@ export default controller(() => {
 })
 </controller>
 
-<p sx="text-sm text-muted-foreground">
+<p sx={style.fontSize(sm).fg(muted-foreground)}>
   …and this line is a third component reading the same store:
-  <strong sx="text-foreground">{clicks()} clicks</strong> total.
+  <strong sx={style.fg(foreground)}>{clicks()} clicks</strong> total.
 </p>

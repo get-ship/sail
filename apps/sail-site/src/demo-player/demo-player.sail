@@ -9,6 +9,14 @@
   props: {
     playing = true
   }
+
+  const card = style.pad(3).w(full)
+  const meta = style.grow(1).minW(0)
+  const title = style.fontSize(sm).truncate()
+  const artist = style.fontSize(xs).fg(muted-foreground).truncate()
+  const eq = style.minH(6)
+  const bar = style.w(1).radius(sm).bg(primary).origin(bottom)
+  const rest = style.w(1).h(2).radius(full).bg(muted-foreground).opacity(50)
 </scope>
 
 <controller>
@@ -26,26 +34,26 @@ export default controller((ctx: Scope) => {
 })
 </controller>
 
-<card sx="p-3 w-full">
+<card sx={card}>
   <row gap="3" align="center" nowrap>
-    <column gap="1" sx="grow-1 min-w-0">
-      <strong sx="text-sm truncate">Signals in the Rain</strong>
-      <p sx="text-xs text-muted-foreground truncate">The Reactive Quartet</p>
+    <column gap="1" sx={meta}>
+      <strong sx={title}>Signals in the Rain</strong>
+      <p sx={artist}>The Reactive Quartet</p>
       <progress value={position()} max="100"></progress>
     </column>
     {#if playing()}
-      <row gap="1" align="end" sx="min-h-6">
-        <div sx="w-1 h-4 rounded-sm bg-primary origin-bottom" motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
-        <div sx="w-1 h-6 rounded-sm bg-primary opacity-75 origin-bottom" motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
-        <div sx="w-1 h-3 rounded-sm bg-primary origin-bottom" motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
-        <div sx="w-1 h-5 rounded-sm bg-primary opacity-75 origin-bottom" motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
+      <row gap="1" align="end" sx={eq}>
+        <div sx={[bar, style.h(4)]} motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
+        <div sx={[bar, style.h(6).opacity(75)]} motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
+        <div sx={[bar, style.h(3)]} motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
+        <div sx={[bar, style.h(5).opacity(75)]} motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
       </row>
     {:else}
-      <row gap="1" align="center" sx="min-h-6">
-        <div sx="w-1 h-2 rounded-full bg-muted-foreground opacity-50"></div>
-        <div sx="w-1 h-2 rounded-full bg-muted-foreground opacity-50"></div>
-        <div sx="w-1 h-2 rounded-full bg-muted-foreground opacity-50"></div>
-        <div sx="w-1 h-2 rounded-full bg-muted-foreground opacity-50"></div>
+      <row gap="1" align="center" sx={eq}>
+        <div sx={rest}></div>
+        <div sx={rest}></div>
+        <div sx={rest}></div>
+        <div sx={rest}></div>
       </row>
     {/if}
   </row>

@@ -27,7 +27,7 @@ export default controller(() => {
     <a href="/deck/build" aria-current={path() === '/deck/build' ? 'page' : null}>Build</a>
   </navbar>
 
-  <main sx="p-6 grow-1 min-w-0">
+  <main sx={style.pad(6).grow(1).minW(0)}>
     <slot name="route"></slot>
   </main>
 </row>

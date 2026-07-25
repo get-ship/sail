@@ -9,6 +9,12 @@
     label = 'Dinner'
     total = 96
   }
+
+  const card = style.pad(4).w(full).maxW(panel-max-w-sm)
+  const title = style.textCase(uppercase).tracking(wide).fontSize(sm)
+  const totalText = style.fontFamily(mono).fontSize(sm).fg(muted-foreground)
+  const peopleCount = style.fontFamily(mono).fontSize(sm).nums(tabular).w(8).textAlign(center)
+  const shareText = style.fontFamily(mono).fontSize(2xl).nums(tabular)
 </scope>
 
 <controller>
@@ -28,20 +34,20 @@ export default controller((ctx) => {
 })
 </controller>
 
-<card sx="p-4 w-full max-w-panel-max-w-sm">
+<card sx={card}>
   <column gap="3">
     <row align="center" justify="between" nowrap>
-      <strong sx="uppercase tracking-wide text-sm">{label()}</strong>
-      <span sx="font-mono text-sm text-muted-foreground">{totalLabel()}</span>
+      <strong sx={title}>{label()}</strong>
+      <span sx={totalText}>{totalLabel()}</span>
     </row>
 
     <row align="center" justify="between" nowrap gap="3">
       <row align="center" gap="2" nowrap>
         <button size="sm" variant="outline" on:click={() => remove()} aria-label="One fewer person">−</button>
-        <span sx="font-mono text-sm tabular-nums w-8 text-center">{people()}</span>
+        <span sx={peopleCount}>{people()}</span>
         <button size="sm" variant="outline" on:click={() => add()} aria-label="One more person">+</button>
       </row>
-      <span sx="font-mono text-2xl tabular-nums">{share()}</span>
+      <span sx={shareText}>{share()}</span>
     </row>
 
     <slot name="note"></slot>

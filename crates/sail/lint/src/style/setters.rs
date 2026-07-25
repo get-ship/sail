@@ -211,6 +211,53 @@ pub fn setters() -> &'static [SetterSpec] {
             keywords: &["row", "column", "row-reverse", "column-reverse"],
             negatable: false,
         },
+        // Bare text/layout composites (utility-string product is dead; Style owns these).
+        SetterSpec { name: "truncate", vocab: "truncate", scale: None, keywords: &[], negatable: false },
+        SetterSpec {
+            name: "textCase",
+            vocab: "uppercase",
+            scale: None,
+            keywords: &["uppercase", "lowercase", "capitalize", "normal"],
+            negatable: false,
+        },
+        SetterSpec {
+            name: "nums",
+            vocab: "tabular-nums",
+            scale: None,
+            keywords: &["tabular", "lining", "oldstyle", "proportional", "ordinal", "slashed-zero", "normal"],
+            negatable: false,
+        },
+        SetterSpec {
+            name: "origin",
+            vocab: "origin",
+            scale: None,
+            keywords: &[
+                "center",
+                "top",
+                "top-right",
+                "right",
+                "bottom-right",
+                "bottom",
+                "bottom-left",
+                "left",
+                "top-left",
+            ],
+            negatable: false,
+        },
+        SetterSpec {
+            name: "textGradient",
+            vocab: "text-gradient",
+            scale: None,
+            keywords: &["primary", "accent"],
+            negatable: false,
+        },
+        SetterSpec {
+            name: "bgGlow",
+            vocab: "bg-glow",
+            scale: None,
+            keywords: &["primary", "accent"],
+            negatable: false,
+        },
     ]
 }
 
@@ -249,6 +296,8 @@ pub fn when_target(key: &str) -> Option<WhenTarget> {
         "pressed" => Some(WhenTarget::Pseudo("[aria-pressed='true']")),
         "open" => Some(WhenTarget::Pseudo("[open]")),
         "current" => Some(WhenTarget::Pseudo("[aria-current]:not([aria-current='false'])")),
+        // Component data-state tokens (`data-state="live"`) — self, not group host.
+        "state-live" | "stateLive" => Some(WhenTarget::Pseudo("[data-state~='live']")),
         "group-required" | "groupRequired" => Some(WhenTarget::Ancestor(".sail-grp[required] ")),
         "group-invalid" | "groupInvalid" => Some(WhenTarget::Ancestor(".sail-grp[invalid] ")),
         "group-disabled" | "groupDisabled" => {
@@ -298,8 +347,8 @@ pub fn validate_op(op: &PaintOp) -> Result<(), StyleDiagnostic> {
             source: op.source.clone(),
         });
     };
-    // Marker setters with empty arg (group, scrollbarThin, isolate).
-    if matches!(spec.name, "group" | "scrollbarThin" | "isolate") {
+    // Marker setters with empty arg (group, scrollbarThin, isolate, truncate).
+    if matches!(spec.name, "group" | "scrollbarThin" | "isolate" | "truncate") {
         return Ok(());
     }
     match &op.arg {
@@ -373,6 +422,121 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
                     .into(),
             ),
         ]);
+    }
+    // truncate bare composite.
+    if spec.name == "truncate" {
+        if let Resolved::Ok(pairs) = sx_vocab::resolve("truncate") {
+            return Ok(pairs);
+        }
+        return Ok(vec![
+            ("overflow".into(), "hidden".into()),
+            ("text-overflow".into(), "ellipsis".into()),
+            ("white-space".into(), "nowrap".into()),
+        ]);
+    }
+    // text-transform via textCase(uppercase|…)
+    if spec.name == "textCase" {
+        if let PaintArg::Token(t) = &op.arg {
+            let bare_t = strip_neg(t).1;
+            let css = match bare_t {
+                "uppercase" => "uppercase",
+                "lowercase" => "lowercase",
+                "capitalize" => "capitalize",
+                "normal" => "none",
+                _ => {
+                    return Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare_t.into(),
+                        source: op.source.clone(),
+                    })
+                }
+            };
+            return Ok(vec![("text-transform".into(), css.into())]);
+        }
+    }
+    // font-variant-numeric via nums(tabular|…)
+    if spec.name == "nums" {
+        if let PaintArg::Token(t) = &op.arg {
+            let bare_t = strip_neg(t).1;
+            let atom = match bare_t {
+                "tabular" => "tabular-nums",
+                "lining" => "lining-nums",
+                "oldstyle" => "oldstyle-nums",
+                "proportional" => "proportional-nums",
+                "ordinal" => "ordinal",
+                "slashed-zero" => "slashed-zero",
+                "normal" => "normal-nums",
+                _ => {
+                    return Err(StyleDiagnostic::BadToken {
+                        setter: op.setter.clone(),
+                        value: bare_t.into(),
+                        source: op.source.clone(),
+                    })
+                }
+            };
+            if let Resolved::Ok(pairs) = sx_vocab::resolve(atom) {
+                return Ok(pairs);
+            }
+            let css_val = match bare_t {
+                "tabular" => "tabular-nums",
+                "lining" => "lining-nums",
+                "oldstyle" => "oldstyle-nums",
+                "proportional" => "proportional-nums",
+                "ordinal" => "ordinal",
+                "slashed-zero" => "slashed-zero",
+                "normal" => "normal",
+                _ => bare_t,
+            };
+            return Ok(vec![("font-variant-numeric".into(), css_val.into())]);
+        }
+    }
+    // transform-origin via origin(bottom|…)
+    if spec.name == "origin" {
+        if let PaintArg::Token(t) = &op.arg {
+            let bare_t = strip_neg(t).1;
+            let atom = format!("origin-{bare_t}");
+            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+                return Ok(pairs);
+            }
+            let css_val = bare_t.replace('-', " ");
+            return Ok(vec![("transform-origin".into(), css_val.into())]);
+        }
+    }
+    // text-gradient-* composite
+    if spec.name == "textGradient" {
+        if let PaintArg::Token(t) = &op.arg {
+            let bare_t = strip_neg(t).1;
+            let atom = format!("text-gradient-{bare_t}");
+            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+                return Ok(pairs);
+            }
+            if matches!(bare_t, "primary" | "accent") {
+                return Ok(vec![
+                    ("background".into(), format!("var(--gradient-{bare_t})")),
+                    ("-webkit-background-clip".into(), "text".into()),
+                    ("background-clip".into(), "text".into()),
+                    ("color".into(), "transparent".into()),
+                ]);
+            }
+        }
+    }
+    // bg-glow-* composite
+    if spec.name == "bgGlow" {
+        if let PaintArg::Token(t) = &op.arg {
+            let bare_t = strip_neg(t).1;
+            let atom = format!("bg-glow-{bare_t}");
+            if let Resolved::Ok(pairs) = sx_vocab::resolve(&atom) {
+                return Ok(pairs);
+            }
+            if matches!(bare_t, "primary" | "accent") {
+                return Ok(vec![
+                    ("position".into(), "absolute".into()),
+                    ("inset".into(), "-4rem 0 0".into()),
+                    ("background".into(), format!("var(--glow-{bare_t})")),
+                    ("pointer-events".into(), "none".into()),
+                ]);
+            }
+        }
     }
     let (value, bare, negative) = match &op.arg {
         PaintArg::Token(t) => {

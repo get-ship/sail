@@ -5,6 +5,6 @@
   sidebar, never stacked, and Components has none.
 -->
 
-<main sx="grow-1 min-w-0">
+<main sx={style.grow(1).minW(0)}>
   <slot name="route"></slot>
 </main>

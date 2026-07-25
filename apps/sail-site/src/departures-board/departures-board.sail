@@ -15,6 +15,13 @@
     title = 'Departures'
     seed: Flight[] = []
   }
+
+  const card = style.pad(4).w(full)
+  const titleText = style.textCase(uppercase).tracking(wide).fontSize(sm)
+  const meta = style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
+  const list = style.mt(3).fontFamily(mono).fontSize(sm)
+  const city = style.grow(1).minW(0).truncate()
+  const gate = style.fg(muted-foreground)
 </scope>
 
 <controller>
@@ -69,16 +76,16 @@ export default controller((ctx) => {
 })
 </controller>
 
-<card sx="p-4 w-full">
+<card sx={card}>
   <row align="center" justify="between" nowrap>
-    <strong sx="uppercase tracking-wide text-sm">{title()}</strong>
-    <span sx="text-xs text-muted-foreground font-mono">{departed()} departed</span>
+    <strong sx={titleText}>{title()}</strong>
+    <span sx={meta}>{departed()} departed</span>
   </row>
-  <column gap="1" sx="mt-3 font-mono text-sm">
+  <column gap="1" sx={list}>
     {#for f of flights() key={f.id}}
       <row align="center" gap="3" nowrap motion:enter={{ opacity: 'fade' }}>
-        <span sx="grow-1 min-w-0 truncate">{f.city}</span>
-        <span sx="text-muted-foreground">{f.gate}</span>
+        <span sx={city}>{f.city}</span>
+        <span sx={gate}>{f.gate}</span>
         {#match f.status}
           {:case 'boarding'} <badge tone="success">Boarding</badge>
           {:case 'delayed'}  <badge tone="destructive">Delayed</badge>

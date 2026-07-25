@@ -97,6 +97,16 @@ export default controller(() => {
 })
 </controller>
 
+<scope>
+  const brand = style.fontSize(lg).tracking(tight)
+  const brandMark = style.fg(primary)
+  const productSwitch = style.pad(1).bg(surface-2).borderWidth(1).border(border).radius(full)
+  const productLink = style.padX(3).padY(1).radius(full).fontSize(sm).fontWeight(semibold).fg(muted-foreground).when({
+    hover: style.fg(foreground),
+    current: style.bg(primary).fg(primary-foreground),
+  })
+  const landingMain = style.grow(1).minW(0)
+</scope>
 
 <navbar sticky bordered use:chromeOffset>
   <a slot="brand" href="/" aria-label="Ship UI home">
@@ -108,22 +118,22 @@ export default controller(() => {
         <circle cx="20" cy="20" r="3.4" fill="var(--primary)" opacity="0.7" />
         <path d="M6 6 L20 20 M6 6 L20 6 M6 6 L6 20" stroke="var(--primary)" stroke-width="1.4" opacity="0.5" stroke-linecap="round" />
       </svg>
-      <strong sx="text-lg tracking-tight"><b sx="text-primary">SHIP</b> UI</strong>
+      <strong sx={brand}><b sx={brandMark}>SHIP</b> UI</strong>
     </row>
   </a>
 
-  <row slot="center" gap="1" align="center" sx="p-1 bg-surface-2 border border-border rounded-full" aria-label="Products">
-    <a href="/sail/overview" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'sail' ? 'page' : null}>Sail</a>
-    <a href="/deck" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'deck' ? 'page' : null}>Deck</a>
-    <a href="/components" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'components' ? 'page' : null}>Components</a>
-    <a href="/ai" sx="px-3 py-1 rounded-full text-sm font-semibold text-muted-foreground hover:text-foreground current:bg-primary current:text-primary-foreground" aria-current={product() === 'ai' ? 'page' : null}>AI</a>
+  <row slot="center" gap="1" align="center" sx={productSwitch} aria-label="Products">
+    <a href="/sail/overview" sx={productLink} aria-current={product() === 'sail' ? 'page' : null}>Sail</a>
+    <a href="/deck" sx={productLink} aria-current={product() === 'deck' ? 'page' : null}>Deck</a>
+    <a href="/components" sx={productLink} aria-current={product() === 'components' ? 'page' : null}>Components</a>
+    <a href="/ai" sx={productLink} aria-current={product() === 'ai' ? 'page' : null}>AI</a>
   </row>
 
   <theme-picker slot="actions"></theme-picker>
 </navbar>
 
 {#if landing()}
-  <main sx="grow-1 min-w-0">
+  <main sx={landingMain}>
     <slot name="route"></slot>
   </main>
 {:else}

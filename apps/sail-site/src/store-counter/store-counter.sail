@@ -7,6 +7,10 @@
   props: {
     label = 'Counter'
   }
+
+  const card = style.pad(4)
+  const labelText = style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+  const count = style.fontSize(lg)
 </scope>
 
 <controller>
@@ -19,12 +23,12 @@ export default controller(() => {
 })
 </controller>
 
-<card sx="p-4">
+<card sx={card}>
   <column gap="2" align="start">
-    <small sx="text-xs uppercase tracking-wide text-muted-foreground">{label()}</small>
+    <small sx={labelText}>{label()}</small>
     <row gap="3" align="center" nowrap>
       <button on:click={() => add()}>+1</button>
-      <strong sx="text-lg">{clicks()}</strong>
+      <strong sx={count}>{clicks()}</strong>
     </row>
   </column>
 </card>

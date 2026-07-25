@@ -214,4 +214,57 @@ mod tests {
         assert!(css.contains(" svg") || css.contains("width:100%"), "{css}");
         assert!(css.contains("isolation:isolate") || css.contains("isolation: isolate"), "{css}");
     }
+
+    #[test]
+    fn site_shell_setters_and_state_live() {
+        let (style, diags) = parse(
+            "style.truncate().textCase(uppercase).nums(tabular).origin(bottom).textGradient(primary).bgGlow(accent).when({ stateLive: style.bg(primary), current: style.fg(primary-foreground) })",
+        );
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains("text-overflow") || css.contains("ellipsis"), "{css}");
+        assert!(css.contains("text-transform") || css.contains("uppercase"), "{css}");
+        assert!(css.contains("font-variant-numeric") || css.contains("tabular"), "{css}");
+        assert!(css.contains("transform-origin") || css.contains("bottom"), "{css}");
+        assert!(css.contains("data-state") || css.contains("live"), "{css}");
+        assert!(css.contains("aria-current") || css.contains("primary"), "{css}");
+    }
+
+    #[test]
+    fn site_shell_wave_exprs_parse() {
+        let exprs = [
+            "style.w(full).minW(0).overflowX(hidden).bg(surface-0)",
+            "style.bgGlow(accent).left(0).right(0).top(0).h(64).pointerEvents(none).z(base)",
+            "style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)",
+            "style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).fg(foreground)",
+            "style.position(absolute).left(-10).right(-10).top(12).rotate(-2).z(popover)",
+            "style.borderTWidth(1).borderBWidth(1).borderT(border).borderB(border).bg(surface-2).padY(3)",
+            "style.h(full).overflow(hidden).bg(muted).borderWidth(1).border(primary)",
+            "style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).textGradient(primary).select(none).mb(-8)",
+            "style.padX(3).padY(1).radius(full).fontSize(sm).fontWeight(semibold).fg(muted-foreground).when({ hover: style.fg(foreground), current: style.bg(primary).fg(primary-foreground) })",
+            "style.pad(3).borderWidth(1).border(border).opacity(50).when({ stateLive: style.opacity(100).border(primary).bg(muted) })",
+            "style.w(1).radius(sm).bg(primary).origin(bottom)",
+            "style.fontFamily(mono).fontSize(sm).nums(tabular).w(8).textAlign(center)",
+            "style.fontFamily(mono).fontSize(2xl).nums(tabular)",
+            "style.pad(4).w(full).maxW(panel-max-w-sm)",
+            "style.w(full).maxW(breakpoint-desktop).mx(auto)",
+            "style.fontSize(lg).fg(muted-foreground).leading(relaxed).textAlign(center).maxW(breakpoint-mobile)",
+            "style.display(block).underline(none).minW(0)",
+            "style.fg(muted-foreground).when({ hover: style.fg(primary) })",
+            "style.grow(1).minW(0).truncate()",
+            "style.pad(6).grow(1).minW(0)",
+        ];
+        for e in exprs {
+            let (_, diags) = parse(e);
+            assert!(
+                diags.is_empty(),
+                "expr failed: {e}\n{:?}",
+                diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+            );
+        }
+    }
 }

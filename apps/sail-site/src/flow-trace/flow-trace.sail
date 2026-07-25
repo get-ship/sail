@@ -11,6 +11,19 @@
     id: string
     city: string
   }
+
+  const board = style.pad(4)
+  const boardTitle = style.fontSize(sm).textCase(uppercase).tracking(wide)
+  const departedBadge = style.fontSize(xs).fontFamily(mono).fg(muted-foreground).padX(1).radius(sm).when({
+    stateLive: style.bg(primary).fg(primary-foreground),
+  })
+  const list = style.mt(3).fontFamily(mono).fontSize(sm)
+  const city = style.truncate()
+  const stage = style.pad(3).borderWidth(1).border(border).opacity(50).when({
+    stateLive: style.opacity(100).border(primary).bg(muted),
+  })
+  const stageTitle = style.fontSize(sm)
+  const stageBody = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
 </scope>
 
 <controller>
@@ -57,34 +70,34 @@ export default controller(() => {
 </controller>
 
 <grid cols="2" gap="4">
-  <card sx="p-4">
+  <card sx={board}>
     <row align="center" justify="between" nowrap>
-      <strong sx="text-sm uppercase tracking-wide">Board</strong>
+      <strong sx={boardTitle}>Board</strong>
       <span
         data-state={step() === 'paint' ? 'live' : null}
-        sx="text-xs font-mono text-muted-foreground px-1 rounded-sm state-live:bg-primary state-live:text-primary-foreground"
+        sx={departedBadge}
       >{departed()} departed</span>
     </row>
-    <column gap="1" sx="mt-3 font-mono text-sm">
+    <column gap="1" sx={list}>
       {#for r of rows() key={r.id}}
         <row nowrap motion:enter={{ opacity: 'fade', duration: 600 }} motion:exit={{ opacity: 'fade-out', duration: 600 }}>
-          <span sx="truncate">{r.city}</span>
+          <span sx={city}>{r.city}</span>
         </row>
       {/for}
     </column>
   </card>
   <column gap="2">
-    <card data-state={step() === 'write' ? 'live' : null} sx="p-3 border border-border opacity-50 state-live:opacity-100 state-live:border-primary state-live:bg-muted">
-      <strong sx="text-sm">1 · the write</strong>
-      <p sx="text-xs font-mono text-muted-foreground">the interval fires: flights.set(rows =&gt; ...)</p>
+    <card data-state={step() === 'write' ? 'live' : null} sx={stage}>
+      <strong sx={stageTitle}>1 · the write</strong>
+      <p sx={stageBody}>the interval fires: flights.set(rows =&gt; ...)</p>
     </card>
-    <card data-state={step() === 'reconcile' ? 'live' : null} sx="p-3 border border-border opacity-50 state-live:opacity-100 state-live:border-primary state-live:bg-muted">
-      <strong sx="text-sm">2 · the reconcile</strong>
-      <p sx="text-xs font-mono text-muted-foreground">watch the board: one row leaves, one enters</p>
+    <card data-state={step() === 'reconcile' ? 'live' : null} sx={stage}>
+      <strong sx={stageTitle}>2 · the reconcile</strong>
+      <p sx={stageBody}>watch the board: one row leaves, one enters</p>
     </card>
-    <card data-state={step() === 'paint' ? 'live' : null} sx="p-3 border border-border opacity-50 state-live:opacity-100 state-live:border-primary state-live:bg-muted">
-      <strong sx="text-sm">3 · the repaint</strong>
-      <p sx="text-xs font-mono text-muted-foreground">one text node: the counter, top right</p>
+    <card data-state={step() === 'paint' ? 'live' : null} sx={stage}>
+      <strong sx={stageTitle}>3 · the repaint</strong>
+      <p sx={stageBody}>one text node: the counter, top right</p>
     </card>
   </column>
 </grid>
