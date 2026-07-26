@@ -161,7 +161,7 @@ fn collect_matches<'a>(style: &'a Style, out: &mut Vec<(&'a str, &'a [(String, S
                 collect_matches(body, out);
             }
         }
-        Style::Empty | Style::Set(_) | Style::Ref(_) => {}
+        Style::Empty | Style::Set(_) | Style::Ref(_) | Style::MotionAttach { .. } => {}
     }
 }
 
