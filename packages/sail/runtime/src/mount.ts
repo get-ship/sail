@@ -47,17 +47,24 @@ export interface SuiLoader {
   fetchRoute(nameOrPath: string): Promise<RoutePayload>
 }
 
+/** Framework-reserved mount option keys — not treated as named providers. */
+const RESERVED_MOUNT_KEYS = new Set([
+  'route',
+  'navigate',
+  'loader',
+  'restoreScope',
+  'cssScope',
+  'module',
+  'providers',
+])
+
 export interface MountOptions {
-  /** Legacy single-client alias. Mirrored into `clients.ship` so a route
-   *  reading bare `ship` resolves the same object; prefer `clients: { ship }`
-   *  going forward. */
-  ship?: unknown
-  /** Host-injected named data/ops clients, spread into scope so a route's
-   *  expressions and handlers resolve bare `X`. The names come from the app
-   *  manifest (see `./clients`); the host supplies the values here. `ship` is
-   *  just a key on this map (aliased from `opts.ship` when only the legacy
-   *  option is passed). */
-  clients?: Record<string, unknown>
+  /**
+   * Optional bag of named providers. Flattened onto setup ctx / scope the
+   * same way top-level keys are. Prefer top-level
+   * `mount(el, payload, { api, demo, route, navigate })`.
+   */
+  providers?: Record<string, unknown>
   route?: RouteSignals
   navigate?: (path: string) => void
   /** Host loader for by-name payload fetch + component-island loading. */
@@ -71,6 +78,11 @@ export interface MountOptions {
    *  Useful for tests, prefetching, and code-splitting decisions where
    *  the host already has the module in hand. */
   module?: { default: { setup: (ctx: unknown) => Record<string, unknown> } }
+  /**
+   * Top-level named providers (anything not a reserved mount key) are
+   * collected and flattened onto setup ctx / scope.
+   */
+  [provider: string]: unknown
 }
 
 export interface MountHandle<Scope = Record<string, unknown>> {
@@ -86,12 +98,25 @@ export interface MountHandle<Scope = Record<string, unknown>> {
 }
 
 interface SetupContext {
-  ship?: unknown
-  clients?: Record<string, unknown> | undefined
+  providers?: Record<string, unknown> | undefined
   route?: RouteSignals | undefined
   navigate?: ((path: string) => void) | undefined
   scope?: Record<string, unknown>
   stateKeys?: ReadonlySet<string>
+  [provider: string]: unknown
+}
+
+/** Collect flat providers from mount opts (top-level + `providers` bag). */
+function collectMountProviders(opts: MountOptions): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  if (opts.providers && typeof opts.providers === 'object') {
+    Object.assign(out, opts.providers)
+  }
+  for (const [k, v] of Object.entries(opts)) {
+    if (RESERVED_MOUNT_KEYS.has(k)) continue
+    if (v !== undefined) out[k] = v
+  }
+  return out
 }
 
 interface CompiledModule {
@@ -107,7 +132,7 @@ interface CompiledModule {
  *               node identity. Otherwise children are built fresh.
  * @param payloadOrName  A fetched RoutePayload, or a `name[/sub]`
  *               string the runtime fetches from `/_deck/views/...`.
- * @param opts   ship / route / navigate / restoreScope / cssScope.
+ * @param opts   providers (flat or bag) / route / navigate / restoreScope / cssScope.
  * @returns      MountHandle — call `dispose()` when done.
  */
 export async function mount<Scope = Record<string, unknown>>(
@@ -167,32 +192,22 @@ export async function mount<Scope = Record<string, unknown>>(
   // `controller-resolver`'s `ctx.route ?? {}` guard — the guard only protects
   // callers that pass no `ctx.scope` at all.
   //
-  // Clients ↔ ship aliasing: the keyed `clients` map is the injection
-  // surface; `ship` is one key on it plus the legacy ctx alias. A host
-  // passing only `opts.ship` still populates `clients.ship`, and a host
-  // passing only `clients: { ship }` still feeds `ctx.ship` — both styles
-  // reach a route reading bare `ship`.
-  // An explicit `opts.clients.ship` wins over `opts.ship` in the map.
-  const ship = opts.ship ?? opts.clients?.['ship']
-  const clients: Record<string, unknown> | undefined =
-    opts.clients !== undefined || opts.ship !== undefined
-      ? { ...(ship !== undefined ? { ship } : {}), ...opts.clients }
-      : undefined
+  // Flat host inject: named providers are top-level on opts (and/or under
+  // `providers`, which flattens). No nested `clients` bag, no `ship` alias.
+  // Spread each provider by name so an expression reading bare `X` resolves.
+  // Before `...built.scope` so author scope still shadows.
+  const providers = collectMountProviders(opts)
   const route = opts.route
   const navigate = opts.navigate ?? noop
   const baseScope: Record<string, unknown> = {
-    ship,
-    clients,
-    // Spread each supplied client by name so an expression reading bare `X`
-    // resolves. Before `...built.scope` so author scope still shadows.
-    ...(clients ?? {}),
+    ...providers,
     route,
     navigate,
     ...built.scope,
   }
   const setupCtx: SetupContext = {
-    ship,
-    clients,
+    ...providers,
+    ...(Object.keys(providers).length > 0 ? { providers } : {}),
     route,
     navigate,
     scope: { ...baseScope },

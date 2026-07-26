@@ -165,7 +165,7 @@ fine" used to hide:
 7. **`on:event` callable** — non-arrow handlers must reference an
    `on:` action, a `setup:` action, or a callable in scope. See
    `check/on_callable.rs`.
-8. **Mutation chain** — `mutation="ship.X.Y"` is `ship.<ns>.<method>`
+8. **Mutation chain** — `mutation="client.method"` is a host-injected client path
    shape only. See `check/mod.rs::validate_mutation_expr`.
 
 ## LSP intelligence

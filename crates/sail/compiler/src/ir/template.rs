@@ -69,7 +69,7 @@ pub enum AttrInstr {
     SlotReflectEmpty { attr: String, span: Span },
     /// `on:event|mod[:arg]…={handler}`.
     On { event: String, handler: Expr, modifiers: Vec<Modifier>, span: Span },
-    /// `mutation="ship.X.Y"` on a `<form>` — the SDK call chain.
+    /// `mutation="client.method"` on a `<form>` — host-injected client chain.
     Mutation { expr: Expr, span: Span },
     /// `fx:trigger={...}` — declarative state-triggered animation.
     /// The config is a static object literal mapping CSS-style property

@@ -24,7 +24,7 @@ use crate::ir::{Instr, Program, PropDecl, PropKind};
 pub struct ScopeCapability {
     /// The scope member name, e.g. `route` or `api`.
     pub name: String,
-    /// The member's TypeScript type, verbatim, e.g. `Clients['api']`.
+    /// The member's TypeScript type, verbatim, e.g. `Host['api']`.
     pub ts_type: String,
     /// Module specifier to import `ts_type`'s root name from, when the type
     /// is not self-contained. `None` for inline types like `(p: string) => void`.
@@ -37,8 +37,8 @@ impl ScopeCapability {
     pub fn client(name: impl Into<String>) -> Self {
         let name = name.into();
         Self {
-            ts_type: format!("Clients['{name}']"),
-            ts_import: Some(("Clients".to_string(), RUNTIME_SPECIFIER.to_string())),
+            ts_type: format!("Host['{name}']"),
+            ts_import: Some(("Host".to_string(), RUNTIME_SPECIFIER.to_string())),
             name,
         }
     }
@@ -108,11 +108,6 @@ pub fn emit_dts(
     let granted: Vec<&ScopeCapability> =
         capabilities.iter().filter(|c| !declared.contains(c.name.as_str())).collect();
     let mut ambient: Vec<(String, String)> = Vec::new();
-    if !capabilities.is_empty() && !declared.contains("clients") {
-        // The map itself, as the runtime provides it (`ctx.clients.api`), next
-        // to the spread-in per-name members (`ctx.api`). Both paths are real.
-        ambient.push(("clients".to_string(), "Clients".to_string()));
-    }
     for c in &granted {
         ambient.push((c.name.clone(), c.ts_type.clone()));
     }
@@ -133,7 +128,7 @@ pub fn emit_dts(
         imports.push(("Signal".to_string(), RUNTIME_SPECIFIER.to_string()));
     }
     if members.iter().any(|(n, _)| n == "clients") {
-        imports.push(("Clients".to_string(), RUNTIME_SPECIFIER.to_string()));
+        imports.push(("Host".to_string(), RUNTIME_SPECIFIER.to_string()));
     }
     for c in &granted {
         if let Some(imp) = &c.ts_import {

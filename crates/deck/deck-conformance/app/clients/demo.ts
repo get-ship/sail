@@ -1,10 +1,9 @@
 // The conformance app's demo data clients, as REAL typed ESM modules.
 //
-// In the ambient/`BUILTINS` path these are injected at runtime via
-// `ctx.clients` (the `<client name="…">` seam). The synthetic path replaces
-// that with a real import named by the app manifest: `ship` → `makeShip`,
-// `api` → `makeApi`. tsgo/tsc then type-checks every `query(() => ship.…)`
-// and template read against THESE types — there is no ambient passthrough.
+// Injected at mount as flat host providers (`ctx.ship`, `ctx.api`). The
+// synthetic path uses a real import named by the app manifest: `ship` →
+// `makeShip`, `api` → `makeApi`. tsgo/tsc then type-checks every
+// `query(() => ship.…)` and template read against THESE types.
 //
 // The SSR build aliases `./clients/demo` to a host-dispatch-backed server
 // entry (see the deck route-host SSR path), so server-side these methods

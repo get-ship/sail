@@ -4,7 +4,7 @@
 // returned bindings.
 //
 // `resolveController` no longer walks sections or builds a writable
-// proxy: it builds the ambient route scope (ship/clients/route/navigate
+// proxy: it builds the ambient route scope (flat providers + route/navigate
 // + template state) and calls `def` with it. Whatever `def` returns —
 // signals, `derived()`, handlers — IS the bindings record, verbatim.
 // Handlers close over the scope's signals directly and mutate them via
@@ -24,7 +24,6 @@ function withState(
   state: Record<string, unknown>,
   extra: Record<string, unknown> = {},
 ): {
-  ship: undefined
   scope: Record<string, unknown>
   stateKeys: Set<string>
   stateSignals: Record<string, Signal<unknown>>
@@ -34,7 +33,6 @@ function withState(
     stateSignals[k] = signal(v) as Signal<unknown>
   }
   return {
-    ship: undefined,
     scope: { ...stateSignals, ...extra },
     stateKeys: new Set(Object.keys(state)),
     stateSignals,

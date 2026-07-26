@@ -1,11 +1,10 @@
-// wireFormMutation — compile-target helper for `<form mutation="ship.X.Y">`.
+// wireFormMutation — compile-target helper for `<form mutation="client.method">`.
 //
 // Emitted by the SAIL compiler into compiled route modules as:
-//   cleanups.push(wireFormMutation(formEl, "ship.agents.create", $scope))
+//   cleanups.push(wireFormMutation(formEl, "demo.addTodo", $scope))
 //
-// Behavior mirrors the attach-time wirer in ui-dom, but runs in the
-// compiled module context where `$scope` is the reactive scope object.
-// Intercepts the native submit, resolves the SDK chain, calls it with
+// Intercepts the native submit, resolves the provider chain off scope
+// (first segment is a host-injected client name), calls it with
 // FormData, and exposes `$mutation: LiveSignal<unknown>` on `$scope`.
 
 import { signal } from './signal'
@@ -31,7 +30,7 @@ function resolveChain(
  * Wire a `<form mutation="...">` element in the compiled module context.
  *
  * Injects `$mutation` into `scope`, intercepts submit events, calls the
- * resolved SDK chain with `FormData`, and updates `$mutation` through
+ * resolved client method with `FormData`, and updates `$mutation` through
  * the `loading → ok | error` lifecycle. Fires `success` / `error`
  * `CustomEvent`s on the form for `on:success` / `on:error` handlers.
  *

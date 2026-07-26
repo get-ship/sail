@@ -171,7 +171,7 @@ impl AmbientVisitor<'_> {
                  through the `ship` SDK — the only sanctioned, policy-gated path. Raw \
                  network/eval is denied at runtime by the Deck secure-execution Compartment."
             ),
-            suggest: Some("use a ship.<domain>.<op>() call".to_string()),
+            suggest: Some("use an injected client method".to_string()),
         });
     }
 
@@ -186,10 +186,10 @@ impl AmbientVisitor<'_> {
             message: format!(
                 "controllers must not use ambient authority (`{what}` to `{target}`) — \
                  its origin is not in this package's `sail.config.json` \"network\" allowlist. \
-                 All I/O goes through the `ship` SDK, or grant the origin explicitly."
+                 All I/O goes through an injected client, or grant the origin explicitly."
             ),
             suggest: Some(
-                "add the origin to \"network\" in sail.config.json, or use a ship.<domain>.<op>() call"
+                "add the origin to \"network\" in sail.config.json, or use an injected client method"
                     .to_string(),
             ),
         });

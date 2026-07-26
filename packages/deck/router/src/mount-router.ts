@@ -6,8 +6,8 @@
 // means the framework must provide the router so no app re-hand-rolls it.
 //
 // Invariants this file holds to:
-//   - deck ⊥ ship: there is no `ship` here — clients are a generic name→client
-//     map; the client name belongs to the app, not the framework.
+//   - deck ⊥ product SDK: named providers are a generic name→value map the app
+//     owns; the framework injects only route/navigate.
 //   - no hardcoding: the root element, route table, and layouts are injected
 //     by the bundler-emitted entry (from config); nothing is baked in.
 //   - deck → sail only: this imports the runtime's `mount()`; the runtime never
@@ -41,9 +41,10 @@ export interface MountRouterOptions {
   /** Pattern → statically-imported route module. The emitted entry imports each
    *  route's `page.sail` and builds this map. */
   modules: Record<string, unknown>
-  /** Host-injected named clients, spread into route scope. Generic — the client
-   *  name is the app's (e.g. `ship`), not a framework constant. */
-  clients?: Record<string, unknown>
+  /** Host-injected named providers, flattened into route scope as bare names.
+   *  Generic — the name is the app's (e.g. `api`, `demo`), not a framework
+   *  constant. Prefer this bag on the router; mount also accepts top-level keys. */
+  providers?: Record<string, unknown>
   /** Optional host loader (by-name/by-path payload fetch). Per-app bundles
    *  co-bundle their routes, so this is usually unset. */
   loader?: unknown
@@ -208,9 +209,9 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
       opts.loader ? pathname : coBundledPayload(pathname),
       {
         module: mod as never,
-        // `clients` is an exactOptionalPropertyType — present-but-undefined is
-        // rejected, so omit the key entirely when the host passed no clients.
-        ...(opts.clients ? { clients: opts.clients } : {}),
+        // `providers` is an exactOptionalPropertyType — present-but-undefined is
+        // rejected, so omit the key entirely when the host passed none.
+        ...(opts.providers ? { providers: opts.providers } : {}),
         // Same exactOptional discipline for the HMR/reload scope snapshot.
         ...(restore ? { restoreScope: restore } : {}),
         loader: opts.loader as never,

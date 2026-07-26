@@ -19,7 +19,6 @@ import {
 
 /** Build a `ResolverContext`-shaped harness with template state seeded. */
 function withState(state: Record<string, unknown>): {
-  ship: undefined
   scope: Record<string, unknown>
   stateKeys: Set<string>
   stateSignals: Record<string, Signal<unknown>>
@@ -29,7 +28,6 @@ function withState(state: Record<string, unknown>): {
     stateSignals[k] = signal(v) as Signal<unknown>
   }
   return {
-    ship: undefined,
     scope: { ...stateSignals },
     stateKeys: new Set(Object.keys(state)),
     stateSignals,

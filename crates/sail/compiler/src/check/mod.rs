@@ -388,19 +388,20 @@ fn check_mutations_instrs(instrs: &[Instr]) -> Result<(), CompileError> {
     Ok(())
 }
 
-/// `ship.X.Y` — must have ≥3 dot-separated segments, first is `ship`,
-/// each segment is a non-empty ASCII identifier. No parens or args.
+/// `<client>.<method>` (optionally nested) — ≥2 dot-separated segments,
+/// first segment is a host-injected client name, each segment a non-empty
+/// ASCII identifier. No `ship.` framework prefix; no parens or args.
 fn validate_mutation_expr(expr: &str, span: crate::diagnostics::Span) -> Result<(), CompileError> {
     let parts: Vec<&str> = expr.split('.').collect();
-    let valid = parts.len() >= 3
-        && parts[0] == "ship"
+    let valid = parts.len() >= 2
         && parts.iter().all(|p| {
             !p.is_empty()
+                && p.chars().next().is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
                 && p.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
         });
     if !valid {
         return Err(CompileError::new(format!(
-            "mutation= must be ship.<namespace>.<method> (got `{expr}`)"
+            "mutation= must be <client>.<method> (got `{expr}`)"
         ))
         .with_span(span));
     }

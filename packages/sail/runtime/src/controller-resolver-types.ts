@@ -6,21 +6,16 @@
 // Slice 2 — SAIL-local `RouteSignals` (see ./route-signals for the
 // decoupling rationale). Replaces the `@ship/deck-router` import.
 import type { RouteSignals } from './route-signals'
-import type { ShipHost, Clients } from './ship'
+import type { Host } from './host'
 
 /**
- * Setup-time context passed to the resolver. Mirrors what `hydrate`
- * passes to a setup function, plus a `scope` field carrying any
- * signals already declared in the view scope
- * by the time setup runs.
+ * Setup-time context passed to the resolver. Framework injects
+ * (`route` / `navigate`) plus flat named providers (Host members).
+ * There is no nested `clients` bag and no `ship` alias — providers
+ * sit top-level on this object (and/or under optional `providers`,
+ * which the resolver flattens).
  */
-export interface ResolverContext {
-  ship: ShipHost
-  /** Host-injected named data/ops clients — the map whose keys the app
-   *  manifest names (see `./clients`; there is no `<client>` declaration).
-   *  Optional through the migration; spread into scope so bare `<name>.foo()`
-   *  resolves. */
-  clients?: Clients
+export type ResolverContext = {
   /**
    * Reactive URL proxy. Accepts `RouteSignals` (the new shape) or the
    * legacy `Record<string,string>` shape; the latter is retained as a
@@ -29,6 +24,12 @@ export interface ResolverContext {
    */
   route?: RouteSignals | Record<string, string>
   navigate?: (path: string) => void
+  /**
+   * Optional bag of named providers — flattened onto scope the same way
+   * top-level Host keys are. Prefer top-level `{ api, demo }` at the
+   * mount call; this bag exists for hosts that already group them.
+   */
+  providers?: Host & Record<string, unknown>
   /**
    * Template-declared signals (and any other ambient bindings) that
    * are in scope by the time the controller resolver runs. State
@@ -52,7 +53,7 @@ export interface ResolverContext {
    * (see `./store` / `./effect-scope`).
    */
   host?: Element
-}
+} & Host
 
 /**
  * The flat bindings record returned by `resolveController`. Each entry

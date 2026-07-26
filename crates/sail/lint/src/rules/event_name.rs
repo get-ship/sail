@@ -300,9 +300,9 @@ mod tests {
     fn form_mutation_success_event_passes() {
         // `<form mutation=…>` emits `success`/`failure` — bare framework
         // custom events, not DOM events. Both must be accepted.
-        let src = r#"<form mutation="ship.x.update" on:success={() => ok()}></form>"#;
+        let src = r#"<form mutation="demo.update" on:success={() => ok()}></form>"#;
         assert_eq!(lint(src).len(), 0, "{:?}", lint(src));
-        let f = r#"<form mutation="ship.x.update" on:failure={() => bad()}></form>"#;
+        let f = r#"<form mutation="demo.update" on:failure={() => bad()}></form>"#;
         assert_eq!(lint(f).len(), 0, "{:?}", lint(f));
     }
 

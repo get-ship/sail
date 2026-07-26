@@ -149,7 +149,7 @@ pub(crate) fn used_clients(program: &Program, manifest: &AppManifest) -> Vec<Str
 
 /// The manifest's clients as SCOPE CAPABILITIES — the typed members
 /// `emit_dts` writes into the generated `Scope`. Every declared client is typed
-/// through the SAIL-local `Clients` port (`Clients['api']`), which is the only
+/// through the SAIL-local `Host` port (`Host['api']`), which is the only
 /// type SAIL owns here; a host whose injected context carries a different type
 /// (deck's `route`, say) overrides its own entries after this call. The
 /// compiler still names no provider.
@@ -326,7 +326,7 @@ fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest
     // into `clients` (spread into scope by the resolver, as in production).
     let mut route: Option<&str> = None;
     let mut navigate: Option<&str> = None;
-    let mut client_entries: Vec<&str> = Vec::new();
+    let mut provider_entries: Vec<&str> = Vec::new();
     for name in used {
         // `navigate` is a plain value-import (construct:false); route is a
         // constructed handle. Either way the const is named `<name>`.
@@ -340,12 +340,14 @@ fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest
         match name.as_str() {
             "route" => route = Some("route"),
             "navigate" => navigate = Some("navigate"),
-            other => client_entries.push(other),
+            other => provider_entries.push(other),
         }
     }
     let _ = manifest; // naming map is the manifest's contract; values are the consts above.
     w.line("const __ctx = {");
-    w.line(&format!("  clients: {{ {} }},", client_entries.join(", ")));
+    for p in &provider_entries {
+        w.line(&format!("  {p},"));
+    }
     if let Some(r) = route {
         w.line(&format!("  route: {r},"));
     }

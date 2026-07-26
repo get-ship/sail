@@ -213,6 +213,8 @@ export { debounce } from './signal'
 // kept here so `/internal`'s re-export of the root still carries it for
 // ambient inject; authors never type it.
 export { query, queryKeyed, mutation, __invalidate, unwrap, unwrapOr } from './query'
+
+export { wireFormMutation } from './mutation'
 export type {
   QueryOpts,
   QueryKey,
@@ -225,12 +227,7 @@ export type {
   LiveValueOf,
 } from './query'
 
-// The framework exports only the host seam. The concrete `ShipSDK` + its
-// data types live in `@ship/sdk-client` — the runtime names no host shape.
-// `ShipHost` types the MOUNT seam only (see ./ship); `Clients` is the
-// SAIL-local data port the controller scope is typed against (see ./clients).
-export type { ShipHost } from './ship'
-export type { Clients } from './clients'
+// Flat host-inject port — empty by default; apps augment named providers.
 
 export { component, prop } from './component'
 export type { PropDef, ComponentDef, ComponentSetupContext } from './component'

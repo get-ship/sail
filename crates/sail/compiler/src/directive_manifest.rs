@@ -74,8 +74,8 @@ pub const DIRECTIVES: &[DirectiveEntry] = &[
         summary: "mirror the slot's emptiness onto a static data attribute, live — slot elements only",
     },
     DirectiveEntry {
-        syntax: "mutation=\"ship.X.Y\" (on <form>)",
-        summary: "wire a form's submit to a typed mutation",
+        syntax: "mutation=\"client.method\" (on <form>)",
+        summary: "wire a form's submit to a injected client method",
     },
     DirectiveEntry {
         syntax: "&#123; and &#125; in text",

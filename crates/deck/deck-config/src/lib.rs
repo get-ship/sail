@@ -208,7 +208,7 @@ pub struct EntryBootstrap {
     pub clients_module: String,
     /// Names the bundler reads off the factory's exports and spreads into
     /// the `clients` map. Each name becomes a key on the `clients` object
-    /// `mountRouter({ clients })` receives; routes read it via `ctx.clients.<name>`
+    /// `mountRouter({ providers })` receives; routes read each as a bare `ctx.<name>`
     /// (and the legacy `ctx.<name>` alias, so pre-migration route code still
     /// resolves during the cutover).
     #[serde(rename = "exposeNames")]

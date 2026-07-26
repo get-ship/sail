@@ -24,10 +24,6 @@ import type { Signal } from './signal'
 // Slice 2 — SAIL-local `RouteSignals` (see ./route-signals for the
 // decoupling rationale). Replaces the `@ship/deck-router` import.
 import type { RouteSignals } from './route-signals'
-// #105 — SAIL-local `Clients` PORT (see ./clients), mirroring the route
-// precedent. This file imports NO host module: `./ship` and the host type it
-// declares are gone from the controller scope entirely.
-import type { Clients } from './clients'
 
 // ---------------------------------------------------------------------------
 // State-shape extraction over Scope
@@ -103,11 +99,9 @@ export type MutableState<Scope> =
     // state keys.
     readonly [K in Exclude<keyof Scope, StateKeys<Scope>>]: Scope[K]
   } & {
-    // The ambient route context the proxy also exposes, matching the runtime
-    // (`baseScope` carries `clients` / `route` / `navigate`). No `ship`: the
-    // generic runtime names no host product (#105). A Ship host's SDK reaches
-    // scope as a `clients` key it augments, like any other provider.
-    readonly clients: Clients
+    // Framework injects the proxy also exposes, matching the runtime
+    // `baseScope` (`route` / `navigate`). Named providers are flat Scope
+    // members (Host augmentations), not a nested bag.
     readonly route: RouteSignals
     readonly navigate: (path: string) => void
     // Explicit signal access for the escape-hatch cases the assignment style
@@ -122,15 +116,8 @@ export type MutableState<Scope> =
  * existing corpus (`controller((ctx: ControllerScope<Scope>) => …)`) keeps
  * compiling verbatim while call sites are swept; it will be deleted.
  *
- * It used to bolt `clients` + `route` onto the generated `Scope` by hand,
- * because `emit_dts` built `Scope` from `<prop>` / `<use-* as=>` / `<ref>`
- * declarations only and never saw the app manifest. That hand-maintenance was
- * visible as drift: `navigate` rode the runtime `baseScope` and `MutableState`
- * but was missing here, and a route that declared no clients still got `clients`
- * typed.
- *
- * The compiler now emits the resolved capability list into `Scope` itself
- * (`clients`, `route`, `navigate`, and one member per declared client — see
+ * The compiler emits the resolved capability list into `Scope` itself
+ * (`route`, `navigate`, and one member per declared provider — see
  * `emit::dts::emit_dts`), so the wrapper has nothing left to add. A name a route
  * never declared is a type error, which is the point.
  */

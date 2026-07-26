@@ -84,7 +84,7 @@ pub enum BindingKind {
     For,
     /// `{#match}` boundary.
     Match,
-    /// `<form mutation="ship.X.Y">` — form mutation directive.
+    /// `<form mutation="client.method">` — form mutation directive.
     Mutation,
     /// `{#while-loading of <signal>}` boundary.
     WhileLoading,

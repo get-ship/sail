@@ -1,7 +1,7 @@
 // controller-resolver.ts — runtime backing for the typed controller contract.
 //
 // Takes a `ControllerDef` (the ONE setup function) and the resolver
-// context, builds the ambient route scope (clients/route/navigate
+// context, builds the ambient route scope (flat providers + route/navigate
 // + template-declared signals), and calls it. Whatever the function
 // returns IS the flat bindings record `hydrate()` merges into the
 // template scope — signals, `derived()` values, plain helpers, and
@@ -17,7 +17,6 @@
 // connected.
 
 import type { ControllerDef, ControllerScope } from './controller'
-import type { Clients } from './clients'
 import type {
   ResolverContext,
   ResolvedBindings,
@@ -25,37 +24,54 @@ import type {
 
 export type { ResolverContext, ResolvedBindings } from './controller-resolver-types'
 
+/** Framework-owned keys on ResolverContext — not host providers. */
+const RESERVED_CTX_KEYS = new Set([
+  'route',
+  'navigate',
+  'providers',
+  'scope',
+  'stateKeys',
+  'host',
+  'props',
+])
+
+/**
+ * Collect flat named providers from a resolver / mount context:
+ * top-level non-reserved keys plus an optional `providers` bag.
+ */
+export function collectProviders(
+  ctx: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  const bag = ctx['providers']
+  if (bag && typeof bag === 'object') {
+    Object.assign(out, bag as Record<string, unknown>)
+  }
+  for (const [k, v] of Object.entries(ctx)) {
+    if (RESERVED_CTX_KEYS.has(k)) continue
+    if (v !== undefined) out[k] = v
+  }
+  return out
+}
+
 /**
  * Resolve a controller def into the flat bindings shape `hydrate` can
  * merge into the template scope.
  *
  * @param def The controller's setup function.
- * @param ctx The setup-time context (`clients`, `route`, `navigate`, `scope`,
- *            `stateKeys`; plus the legacy single-client `ship` alias).
+ * @param ctx The setup-time context (flat providers, `route`, `navigate`,
+ *            `scope`, `stateKeys`).
  * @returns A flat record of bindings keyed by name — the def's return, verbatim.
  */
 export function resolveController(
   def: ControllerDef<object>,
   ctx: ResolverContext,
 ): ResolvedBindings {
-  // #105 — `ship` is no longer injected as its own scope member. It is one
-  // KEY on the `clients` port (mount.ts does the same aliasing on the mount
-  // path): a caller passing the legacy `ctx.ship` gets it folded into the map,
-  // an explicit `ctx.clients.ship` wins. Spreading the map still resolves a
-  // bare `ship.foo()` in a template, so this is an injection/type cleanup,
-  // not a behavior change.
-  //
-  // Typed as `Clients`, NOT `Record<string, unknown>`: once a provider
-  // augments the port (`interface Clients { api: … }`) the two are no longer
-  // comparable, and the `as ControllerScope<object>` below stops compiling.
-  // (`controller_scope_port_tsc` is the regression guard.)
-  const clients = {
-    ...(ctx.ship !== undefined ? { ship: ctx.ship } : {}),
-    ...(ctx.clients ?? {}),
-  } as Clients
+  // Flat host inject: named providers are top-level on ctx (and/or under
+  // `providers`, which flattens). No nested `clients` bag, no `ship` alias.
+  const providers = collectProviders(ctx as unknown as Record<string, unknown>)
   const baseScope: ControllerScope<object> = {
-    clients,
-    ...(clients as unknown as Record<string, unknown>),
+    ...providers,
     // `?? {}` is a WEAK guard, not a safety net. It is cast to `RouteSignals`
     // but has none of its members, so `route.params.id()` still throws — and
     // on the real mount path it never even applies: the compiled module writes
@@ -95,42 +111,12 @@ export interface ControllerExport<Scope = object> {
  * get a `{ setup, __def }` export the daemon's hydrate path can call
  * directly, with `Ctx`/`SC` inferred from `fn` — no explicit type
  * argument, no currying.
- *
- * @example
- * ```ts
- * <controller>
- * export default controller((ctx) => {
- *   const items = signal<Item[]>([])
- *   mount((el) => { ... })
- *   onCleanup(() => { ... })
- *   return { items, add: () => items.set([...items(), newItem()]) }
- * })
- * </controller>
- * ```
  */
-// CANONICAL and ONLY form: `controller(fn)` with no explicit type argument.
-// Both `Ctx` (from `fn`'s param annotation) and `SC` (from its return) are
-// inferred → precise, cast-free handler state over `Ctx & SC`, single call,
-// no currying. `__def` is added to the return so the synthetic controller
-// can recover the setup function's return type via `typeof __authored.__def`
-// (slice 2 G4, updated for the function-form def). Typing `fn` DIRECTLY as
-// `(init: Ctx, host?: Element) => SC` (not a generic `D extends (...) => SC`)
-// is load-bearing: it gives `Ctx`/`SC` real inference positions — `fn`'s
-// param annotation drives `Ctx`, its return drives `SC` — so handler state
-// over `Ctx & SC` is precise. A `D`-generic param erased those positions
-// (nothing infers `Ctx`/`SC` from a bare `def: D`), so `Ctx` fell to
-// `unknown`, the contravariant param check failed, and EVERY call silently
-// widened — the framework-wide "factory signals untyped in handlers, must
-// cast" bug this shape exists to prevent from coming back.
 export function controller<Ctx, SC extends Record<string, unknown>>(
   fn: (init: ControllerScope<Ctx>, host?: Element) => SC,
 ): ControllerExport<Ctx & SC> & { __def: (init: ControllerScope<Ctx>, host?: Element) => SC } {
   return {
     setup: (ctx) => resolveController(fn as ControllerDef<object>, ctx),
-    // `__def` carries the precise literal type of `fn` (via the generic
-    // params above) so the synthetic controller can recover the setup
-    // function's return type through `typeof __authored.__def extends
-    // (...a: never[]) => infer R` (slice 2 G4).
     __def: fn,
   }
 }

@@ -12,12 +12,9 @@ import { describe, expect, it } from 'vitest'
 import { signal, derived, defineStore, useStore } from '../src/index'
 import { resolveController } from '../src/controller-resolver'
 import type { ResolverContext } from '../src/controller-resolver-types'
-import type { ShipSDK } from '../src/ship'
-
-const fakeShip = {} as ShipSDK
 
 function ctx(host?: Element): ResolverContext {
-  return { ship: fakeShip, host }
+  return { host }
 }
 
 describe('setup() — the whole controller surface', () => {
@@ -108,7 +105,7 @@ describe('setup() — the whole controller surface', () => {
       }
       return { items, loading, load }
     }
-    const bindings = resolveController(def, { ship: fakeShip, stateKeys: new Set() })
+    const bindings = resolveController(def, { stateKeys: new Set() })
     ;(bindings.load as () => void)()
     expect((bindings.items as () => string[])()).toEqual(['a', 'b'])
     expect((bindings.loading as () => boolean)()).toBe(false)
@@ -118,5 +115,14 @@ describe('setup() — the whole controller surface', () => {
     const def = () => ({ fn: () => {} })
     const bindings = resolveController(def, ctx())
     expect(typeof bindings.fn).toBe('function')
+  })
+
+  it('flat providers reach the controller as bare names', () => {
+    const api = { list: () => ['a'] }
+    const def = (s: Record<string, unknown>) => {
+      expect(s.api).toBe(api)
+      return {}
+    }
+    resolveController(def, { api } as ResolverContext)
   })
 })

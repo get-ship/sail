@@ -28,11 +28,15 @@ pub(super) fn emit_setup_body(
     // for a registered component, which never reads them). Routing is deck's —
     // SAIL vends no router or factory fallback. Props come from `ctx.props`
     // (registered components have them, pages don't).
-    w.line("const { ship, route, navigate } = ctx;");
+    w.line("const { route, navigate, providers } = ctx;");
     w.line("const $scope = Object.create(null);");
-    w.line("$scope.ship = ship;");
     w.line("$scope.route = route;");
     w.line("$scope.navigate = navigate;");
+    w.line("for (const __k of Object.keys(ctx)) {");
+    w.line("  if (__k === \"route\" || __k === \"navigate\" || __k === \"scope\" || __k === \"stateKeys\" || __k === \"host\" || __k === \"providers\" || __k === \"props\") continue;");
+    w.line("  $scope[__k] = ctx[__k];");
+    w.line("}");
+    w.line("if (providers && typeof providers === \"object\") Object.assign($scope, providers);");
     // Props (registered components) → seed from `ctx.props` (the prop signals
     // the custom-element adapter passes). Pages declare none.
     if !program.props.is_empty() {

@@ -132,8 +132,8 @@ describe('mount()', () => {
     handle.dispose()
   })
 
-  it('runs setup() with the provided ship/route/navigate', async () => {
-    let captured: { ship?: unknown; navigate?: string } = {}
+  it('runs setup() with the provided route/navigate', async () => {
+    let captured: { navigate?: string } = {}
     const payload: RoutePayload = {
       name: 'demo',
       html: '<div></div>',
@@ -143,18 +143,17 @@ describe('mount()', () => {
     }
     const navigate = (_p: string) => {}
     const handle = await mount(target, payload, {
-      ship: { id: 'sdk' },
       navigate,
       module: {
         default: {
           setup: (ctx) => {
-            captured = { ship: ctx.ship, navigate: typeof ctx.navigate }
+            captured = { navigate: typeof (ctx as { navigate?: unknown }).navigate }
             return {}
           },
         },
       },
     })
-    expect(captured).toEqual({ ship: { id: 'sdk' }, navigate: 'function' })
+    expect(captured).toEqual({ navigate: 'function' })
     handle.dispose()
   })
 
@@ -452,15 +451,12 @@ describe('openLiveChannel (via mount)', () => {
   })
 })
 
-// ── keyed clients injection (the mount half of the data/ops port) ──
+// ── flat host inject (the mount half of the data/ops port) ──
 //
-// `opts.clients` is THE injection surface at mount: each key resolves from
-// `ctx.clients.X` and is spread into scope as bare `X`. The NAMES come from
-// the app manifest (there is no `<client>` declaration — see
-// `src/clients.ts`); the host supplies the VALUES here. `ship` is just a
-// key — aliased both ways with the legacy `opts.ship` so hosts and routes
-// on either side of the migration interoperate.
-describe('mount() keyed clients', () => {
+// Named providers are top-level on mount opts (or nested under `providers`,
+// which flattens). Each key lands on setup ctx and scope as bare `X`.
+// No nested `clients` bag, no `ship` alias.
+describe('mount() flat host inject', () => {
   let target: HTMLElement
 
   beforeEach(() => {
@@ -470,7 +466,7 @@ describe('mount() keyed clients', () => {
   })
 
   const payload = (): RoutePayload => ({
-    name: 'clients-demo',
+    name: 'providers-demo',
     html: '<div></div>',
     css: '',
     scope: {},
@@ -478,25 +474,22 @@ describe('mount() keyed clients', () => {
   })
 
   type Ctx = {
-    ship?: unknown
-    clients?: Record<string, unknown>
+    api?: unknown
+    demo?: unknown
+    providers?: Record<string, unknown>
     scope?: Record<string, unknown>
   }
 
-  it('a non-ship client key resolves a live data source end-to-end', async () => {
-    // Fake `api` client — what a non-Ship host injects. The module body
-    // mirrors compiled output for a controller declaring a live
-    // `queryKeyed` entry over the injected `api` client.
+  it('a top-level provider resolves a live data source end-to-end', async () => {
     const api = {
       demo: { clock: async () => ({ now: 42 }) },
     }
     let t: (() => { kind: string; value?: { now: number } }) | undefined
     const mod = {
       default: {
-        clients: ['api'],
         setup: (ctx: unknown) => {
-          const { api } = (ctx as Ctx).clients as {
-            api: { demo: { clock: () => Promise<{ now: number }> } }
+          const api = (ctx as Ctx).api as {
+            demo: { clock: () => Promise<{ now: number }> }
           }
           const $scope: Record<string, unknown> = {}
           $scope['t'] = queryKeyed(() => ['api', 'demo', 'clock'], () => api.demo.clock())
@@ -506,7 +499,7 @@ describe('mount() keyed clients', () => {
       },
     }
     const handle = await mount(target, payload(), {
-      clients: { api },
+      api,
       module: mod as never,
     })
     // query() resolves the thunk's promise on a microtask.
@@ -516,11 +509,11 @@ describe('mount() keyed clients', () => {
     handle.dispose()
   })
 
-  it('clients are spread into setup scope so bare keys resolve', async () => {
+  it('providers are flat on setup ctx so bare keys resolve', async () => {
     const api = { ping: () => 'pong' }
     let captured: Ctx = {}
     const handle = await mount(target, payload(), {
-      clients: { api },
+      api,
       module: {
         default: {
           setup: (ctx: unknown) => {
@@ -530,16 +523,16 @@ describe('mount() keyed clients', () => {
         },
       } as never,
     })
-    expect(captured.clients).toEqual({ api })
+    expect(captured.api).toBe(api)
     expect((captured.scope as Record<string, unknown>)['api']).toBe(api)
     handle.dispose()
   })
 
-  it('opts.ship is aliased into clients.ship (legacy host, new route)', async () => {
-    const ship = { id: 'sdk' }
+  it('opts.providers bag flattens onto ctx and scope', async () => {
+    const demo = { addTodo: () => 'ok' }
     let captured: Ctx = {}
     const handle = await mount(target, payload(), {
-      ship,
+      providers: { demo },
       module: {
         default: {
           setup: (ctx: unknown) => {
@@ -549,16 +542,18 @@ describe('mount() keyed clients', () => {
         },
       } as never,
     })
-    expect(captured.clients).toEqual({ ship })
-    expect(captured.ship).toBe(ship)
+    expect(captured.demo).toBe(demo)
+    expect((captured.scope as Record<string, unknown>)['demo']).toBe(demo)
     handle.dispose()
   })
 
-  it('clients.ship feeds the legacy ctx.ship alias (new host, old route)', async () => {
-    const ship = { id: 'sdk' }
+  it('top-level providers win over the providers bag for the same key', async () => {
+    const fromBag = { id: 'bag' }
+    const fromTop = { id: 'top' }
     let captured: Ctx = {}
     const handle = await mount(target, payload(), {
-      clients: { ship },
+      providers: { api: fromBag },
+      api: fromTop,
       module: {
         default: {
           setup: (ctx: unknown) => {
@@ -568,28 +563,7 @@ describe('mount() keyed clients', () => {
         },
       } as never,
     })
-    expect(captured.ship).toBe(ship)
-    expect(captured.clients).toEqual({ ship })
-    handle.dispose()
-  })
-
-  it('an explicit clients.ship wins over opts.ship in the map', async () => {
-    const legacy = { id: 'legacy' }
-    const keyed = { id: 'keyed' }
-    let captured: Ctx = {}
-    const handle = await mount(target, payload(), {
-      ship: legacy,
-      clients: { ship: keyed },
-      module: {
-        default: {
-          setup: (ctx: unknown) => {
-            captured = ctx as Ctx
-            return {}
-          },
-        },
-      } as never,
-    })
-    expect((captured.clients as Record<string, unknown>)['ship']).toBe(keyed)
+    expect(captured.api).toBe(fromTop)
     handle.dispose()
   })
 

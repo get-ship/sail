@@ -57,12 +57,12 @@ export default controller(() => {
     <button type="button" variant="ghost" on:click={onReset}>Reset</button>
   </row>
 
-  {#if profile.lastError()}
+  <if cond={profile.lastError()}>
     <alert tone="destructive">{profile.lastError().message}</alert>
-  {/if}
-  {#if saved()}
+  </if>
+  <if cond={saved()}>
     <alert tone="success">Saved — {saved().name} ({saved().email}).</alert>
-  {/if}
+  </if>
 </form>`,
 
   // form is not ambient; controller is.
@@ -101,28 +101,28 @@ export default controller(() => {
     {profile.pending() ? 'Saving…' : 'Save'}
   </button>
 
-  {#if profile.lastError()}
+  <if cond={profile.lastError()}>
     <alert tone="destructive">{profile.lastError().message}</alert>
-  {/if}
-  {#if saved()}
+  </if>
+  <if cond={saved()}>
     <alert tone="success">Saved — {saved().name} ({saved().email}).</alert>
-  {/if}
+  </if>
 </form>`,
 
   reset: `<button type="button" on:click={onReset}>Reset</button>
 <!-- profile.dirty() is true whenever any field differs from the baseline -->
-{#if profile.dirty()}
+<if cond={profile.dirty()}>
   <p>Unsaved changes.</p>
-{/if}`,
+</if>`,
 
   mutation: `<!-- In a deck app with a typed ship client in scope: -->
 <form mutation="projects.create" on:success={() => close()}>
   <input name="title" />
   <button type="submit">Create</button>
 
-  {#if $mutation().kind === 'loading'}<spinner></spinner>{/if}
-  {#if $mutation().kind === 'error'}
+  <if cond={$mutation().kind === 'loading'}><spinner></spinner></if>
+  <if cond={$mutation().kind === 'error'}>
     <alert tone="destructive">{$mutation().error.message}</alert>
-  {/if}
+  </if>
 </form>`,
 }

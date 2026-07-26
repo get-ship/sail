@@ -17,19 +17,19 @@
 // tag (a hyphenated name) is the only thing that turns a component into a
 // registered custom element. With no tag, a component is mounted, not defined.
 
-import type { ShipHost, Clients } from './ship'
+import type { Host } from './host'
 // SAIL-local structural `RouteSignals` (the deck-side `RouteSignals` is
 // structurally compatible — both import the same `Signal` from
 // `@ship/sail-runtime`; deck's `route` factory return satisfies this type at the
-// assignment site). SAIL names no host: route/navigate arrive via the seam.
+// assignment site). SAIL names no host product: route/navigate arrive via the
+// framework inject; named providers are flat Host members.
 import type { RouteSignals } from './route-signals'
 
-export interface MountContext {
-  ship: ShipHost
-  clients: Clients
+/** Mount-time context: framework injects + flat named providers. */
+export type MountContext = {
   route: RouteSignals
   navigate: (path: string) => void
-}
+} & Host
 
 export type MountSetup<Bindings = Record<string, unknown>> = (
   // The mount-form accepts an untyped context so the synthetic emitter can pass
@@ -37,6 +37,7 @@ export type MountSetup<Bindings = Record<string, unknown>> = (
   // field the setup reads before calling the scope factory). The browser-mount
   // path constructs a real `MountContext` and casts back inside `mount.ts`
   // where it has the typed values.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ctx: any,
 ) => Bindings
 

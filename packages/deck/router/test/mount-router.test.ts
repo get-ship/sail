@@ -189,16 +189,16 @@ describe('mountRouter', () => {
     expect(slot!.querySelector('.deck-not-found, ship-error-state')).not.toBeNull()
   })
 
-  it('passes arbitrary named clients through (no client name baked into the router)', async () => {
-    const clients = { api: { tag: 'some-client' } }
+  it('passes arbitrary named providers through (no name baked into the router)', async () => {
+    const providers = { api: { tag: 'some-client' } }
     router = mountRouter({
       root: '#root',
       routes: [{ pattern: '/' }],
       modules: { '/': MOD_INDEX },
-      clients,
+      providers,
     })
     await flush()
-    expect(mountCalls[0].opts.clients).toBe(clients)
+    expect(mountCalls[0].opts.providers).toBe(providers)
   })
 })
 

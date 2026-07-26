@@ -194,7 +194,10 @@ fn empty_scope_factory_leaves_scope_unchanged() {
     let sail = r#"<p>x</p>"#;
     let controller = r#"
         import { controller } from '@ship/sail-runtime'
-        export default controller((ctx) => ({}))
+        export default controller((ctx) => {
+          mount((_host) => {})
+          return {}
+        })
     "#;
     let dts = compile_dts_with_controller("page", sail, controller);
     assert!(
@@ -297,21 +300,17 @@ fn base_opts() -> CompileOpts {
 #[test]
 fn granted_capabilities_are_typed_members_of_scope() {
     let dts = compile_dts_with_capabilities("<p>hi</p>");
-    // The `clients` map itself, plus one member per declared client — exactly
-    // what the runtime `baseScope` provides (`{ clients, ...clients, … }`).
-    assert!(dts.contains("clients: Clients"), "got: {dts}");
-    assert!(dts.contains("api: Clients['api']"), "got: {dts}");
-    // Deck's router, typed through the SAIL-local ports. `navigate` is the
-    // member the hand-maintained wrapper never had (the drift this kills).
+    // Flat Host members — no nested clients bag.
+    assert!(dts.contains("api: Host['api']"), "got: {dts}");
+    assert!(!dts.contains("clients:"), "got: {dts}");
     assert!(dts.contains("route: RouteSignals"), "got: {dts}");
     assert!(dts.contains("navigate: (path: string) => void"), "got: {dts}");
-    // One import line, both runtime types, no duplicate specifier.
     assert_eq!(
         dts.matches("from '@ship/sail-runtime'").count(),
         1,
         "capability imports must collapse to one line per module; got: {dts}"
     );
-    assert!(dts.contains("import type { Clients, RouteSignals }"), "got: {dts}");
+    assert!(dts.contains("import type { Host, RouteSignals }"), "got: {dts}");
 }
 
 #[test]
