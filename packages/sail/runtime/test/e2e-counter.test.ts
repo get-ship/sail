@@ -1,8 +1,7 @@
-// End-to-end: hand-crafted module mirroring the shape the ship-set
-// compiler emits for a counter component (see
-// crates/ship-set-compiler/tests/fixtures/counter.set (TODO Phase 4)). Proves the
-// runtime contract — defineComponent + signal + derived + bindText +
-// on — composes into a working custom element.
+// End-to-end: hand-crafted module mirroring the shape the sail
+// compiler emits for a counter component. Proves the runtime contract
+// — defineComponent + signal + derived + bindText + on — composes
+// into a working custom element.
 
 import { describe, expect, it } from 'vitest'
 import {
@@ -15,7 +14,7 @@ import {
 
 describe('e2e: compiled counter', () => {
   it('mounts, updates on click, runs cleanup', () => {
-    const tag = 'ship-set-e2e-counter'
+    const tag = 'sail-e2e-counter'
     const HTML = `<div class="counter"><p>Count: <span data-st="0"></span></p><p>Doubled: <span data-st="1"></span></p><button data-sa="0">+1</button><button data-sa="1">reset</button></div>`
 
     defineComponent(

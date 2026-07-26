@@ -1,10 +1,9 @@
 // Event handler wiring with modifier support.
 //
-// The ship-set compiler turns `on:click|preventDefault={fn}` into a call
+// The sail compiler turns `on:click|preventDefault={fn}` into a call
 // to this `on()` helper at hydrate time. Authors don't import this
 // directly — they write the declarative form in templates.
 //
-// See .artifacts/specs/ship-set/01-language-spec.md § Event handlers.
 
 import type { Disposer } from './bind'
 

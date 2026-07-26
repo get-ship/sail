@@ -134,7 +134,7 @@ export function defineRoutes(shapes: RouteShape[]): void {
     const incoming = shapes.map((s) => s.pattern).sort().join('|')
     if (!incoming.startsWith(STATIC_HASH)) {
       throw new Error(
-        '[ship-set] defineRoutes: runtime route additions are forbidden outside edit mode. ' +
+        '[sail] defineRoutes: runtime route additions are forbidden outside edit mode. ' +
           'Call setEditMode(true) at boot to allow dynamic patterns.',
       )
     }
@@ -212,7 +212,7 @@ export function route(opts?: { url?: URL; routes?: RouteShape[] }): RouteSignals
  * the *policy* — history, path→route matching, and mounting. `navigate()`
  * delegates here so a single call from any bundle actually navigates.
  *
- * Registered via {@link setRouterPort}. Mirrors `SuiLoader` / `ShipHost`:
+ * Registered via {@link setRouterPort}. Mirrors `SuiLoader`:
  * the runtime names no host concept, the host plugs one in.
  */
 export interface RouterPort {
@@ -334,13 +334,13 @@ export function mergeRoutes(
     if (staticPatterns.has(r.pattern)) {
       if (onCollision === 'error') {
         throw new Error(
-          `[ship-set] mergeRoutes: runtime pattern '${r.pattern}' collides with a static pattern`,
+          `[sail] mergeRoutes: runtime pattern '${r.pattern}' collides with a static pattern`,
         )
       }
       if (onCollision === 'log') {
         collisions.push(r.pattern)
         console.warn(
-          `[ship-set] mergeRoutes: dropped runtime pattern '${r.pattern}' (collides with a static pattern)`,
+          `[sail] mergeRoutes: dropped runtime pattern '${r.pattern}' (collides with a static pattern)`,
         )
       }
       continue
@@ -457,12 +457,12 @@ function makeProxy(
     },
     set(_t, key) {
       throw new Error(
-        `[ship-set] route.${label}.${String(key)} is read-only — call navigate(path) to change the URL`,
+        `[sail] route.${label}.${String(key)} is read-only — call navigate(path) to change the URL`,
       )
     },
     deleteProperty(_t, key) {
       throw new Error(
-        `[ship-set] cannot delete route.${label}.${String(key)} — call navigate(path) to change the URL`,
+        `[sail] cannot delete route.${label}.${String(key)} — call navigate(path) to change the URL`,
       )
     },
     has(_t, key) {

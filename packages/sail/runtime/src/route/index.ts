@@ -106,10 +106,10 @@ function lazyProxy(
       return s
     },
     set() {
-      throw new Error('[ship-set] route record is read-only — call navigate(path) to change the URL')
+      throw new Error('[sail] route record is read-only — call navigate(path) to change the URL')
     },
     deleteProperty() {
-      throw new Error('[ship-set] route record is read-only — call navigate(path) to change the URL')
+      throw new Error('[sail] route record is read-only — call navigate(path) to change the URL')
     },
     has(_t, key) {
       return typeof key === 'string' && store.has(key)

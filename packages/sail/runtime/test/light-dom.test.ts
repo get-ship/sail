@@ -85,7 +85,7 @@ describe('light-DOM component registration', () => {
     const tag = freshTag()
     component(tag, { styles: ':scope { color: red; }' }, moduleWithTemplate('<i>s</i>'))
     document.body.appendChild(document.createElement(tag))
-    const style = document.getElementById(`ship-set-style-${tag}`)!
+    const style = document.getElementById(`sail-style-${tag}`)!
     expect(style.textContent).toContain(`@scope ([data-component="${tag}"]) to ([data-component])`)
     expect(style.textContent).toContain(':scope { color: red; }')
   })

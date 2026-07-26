@@ -1,18 +1,14 @@
-// ship-set patch protocol — the wire format for SSE-driven signal updates.
+// sail patch protocol — the wire format for SSE-driven signal updates.
 //
 // Patches arrive as JSON over SSE; the runtime parses + applies via
 // applyPatch. Every reactive value is path-addressable; ops mutate at
 // a JSON path within the signal's value, returning a new value with
 // reference equality preserved for unchanged subtrees.
 //
-// See .artifacts/specs/ship-set/04-patch-protocol.md for the wire spec.
 
 import { batch, type Signal } from './signal'
 
-/**
- * Wire-protocol op tag. See
- * `.artifacts/specs/ship-set/04-patch-protocol.md` for full per-op semantics.
- */
+/** Wire-protocol op tag for SSE-driven signal updates. */
 export type PatchOp =
   | 'set'
   | 'merge'

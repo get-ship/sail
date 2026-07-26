@@ -52,7 +52,7 @@ export function createMountState(
     set(_t, k: string | symbol, value: unknown) {
       if (k === SIGNALS_KEY) {
         console.warn(
-          `[ship-set] ${SIGNALS_KEY} is the read-only signal-map accessor; the assignment was ignored.`,
+          `[sail] ${SIGNALS_KEY} is the read-only signal-map accessor; the assignment was ignored.`,
         )
         return true
       }
@@ -66,7 +66,7 @@ export function createMountState(
         return true
       }
       console.warn(
-        `[ship-set] s.${String(k)} = … was ignored — ${String(k)} is not a ` +
+        `[sail] s.${String(k)} = … was ignored — ${String(k)} is not a ` +
           `writable signal. Declare it as a signal in the controller's ` +
           `setup: factory and return it (\`${String(k)}: signal(…)\`).`,
       )

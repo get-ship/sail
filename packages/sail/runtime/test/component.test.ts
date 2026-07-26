@@ -4,7 +4,7 @@ import { signal } from '../src/signal'
 import type { Signal } from '../src/signal'
 
 let tagCounter = 0
-const nextTag = () => `ship-set-test-${++tagCounter}`
+const nextTag = () => `sail-test-${++tagCounter}`
 
 describe('camelOf', () => {
   it('single word', () => expect(camelOf('count')).toBe('count'))

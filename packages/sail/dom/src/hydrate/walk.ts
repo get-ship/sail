@@ -11,7 +11,7 @@ export function walk(root: Node, path: readonly number[]): Node {
     const next = n.childNodes[path[i]!]
     if (!next) {
       throw new Error(
-        `[ship-set/hydrate] walk: path ${JSON.stringify(path)} fell off at step ${i} ` +
+        `[sail/hydrate] walk: path ${JSON.stringify(path)} fell off at step ${i} ` +
           `(parent <${(n as Element).tagName?.toLowerCase?.() ?? n.nodeName}> has ${n.childNodes.length} children)`,
       )
     }

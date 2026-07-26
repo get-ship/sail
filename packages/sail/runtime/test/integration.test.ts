@@ -37,7 +37,7 @@ function compileFixture(file: string): string {
     ['build', '--mode', 'component', join(FIXTURES, file), '--out', COMPILE_OUT],
     { stdio: 'pipe' },
   )
-  // Output filename = input stem (e.g. ship-set-counter.sail → ship-set-counter.js).
+  // Output filename = input stem (e.g. sail-counter.sail → sail-counter.js).
   // The component tag registered by the runtime is also the stem.
   const stem = file.replace(/\.sail$/, '')
   const jsPath = join(COMPILE_OUT, `${stem}.js`)
@@ -83,7 +83,7 @@ describe('integration: real compile → run', () => {
   }, 120_000)
 
   it('counter compiles and ticks', async () => {
-    const tag = await loadCompiled('ship-set-counter.sail')
+    const tag = await loadCompiled('sail-counter.sail')
     const el = document.createElement(tag)
     document.body.appendChild(el)
 
@@ -109,7 +109,7 @@ describe('integration: real compile → run', () => {
   }, 60_000)
 
   it('search filters with derived + if/else', async () => {
-    const tag = await loadCompiled('ship-set-search.sail')
+    const tag = await loadCompiled('sail-search.sail')
     const el = document.createElement(tag)
     document.body.appendChild(el)
 
@@ -173,7 +173,7 @@ describe('integration: real compile → run', () => {
   }, 60_000)
 
   it('modal: visibility, prop-driven open/close, backdrop close', async () => {
-    const tag = await loadCompiled('ship-set-modal.sail')
+    const tag = await loadCompiled('sail-modal.sail')
     const el = document.createElement(tag)
     document.body.appendChild(el)
 
@@ -194,7 +194,7 @@ describe('integration: real compile → run', () => {
   }, 60_000)
 
   it('todo list adds, toggles, removes', async () => {
-    const tag = await loadCompiled('ship-set-todo.sail')
+    const tag = await loadCompiled('sail-todo.sail')
     const el = document.createElement(tag)
     document.body.appendChild(el)
 

@@ -2,10 +2,9 @@
 // of DOM nodes, preserving identity (focus, scroll, animation state)
 // across reorders, inserts, removes, and updates.
 //
-// The ship-set compiler turns `{#for item of list key={item.id}}…{/for}` into
+// The sail compiler turns `{#for item of list key={item.id}}…{/for}` into
 // a call to bindFor at hydrate time. Authors don't import this directly.
 //
-// See .artifacts/specs/ship-set/03-runtime-architecture.md § Keyed list reconciliation.
 
 import { effect, type Signal } from './signal'
 import { createScope, withScopeArgs, type EffectScope } from './effect-scope'

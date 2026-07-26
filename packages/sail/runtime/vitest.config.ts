@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [sailSourceLoaderPlugin()],
   resolve: {
     alias: {
-      // The integration test compiles real .set files; the emitted
+      // The integration test compiles real .sail files; the emitted
       // JS imports `@ship/sail-runtime`. Point it at the local source so
       // dynamic-imported compiled modules can find the runtime.
       '@ship/sail-runtime/internal': resolve(__dirname, 'src/internal.ts'),

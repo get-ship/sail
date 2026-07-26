@@ -1,4 +1,4 @@
-// Conditional render. The ship-set compiler turns
+// Conditional render. The sail compiler turns
 // `{#if cond}then{:elif …}{:else}else{/if}` (and `{#match}`) into a
 // call to bindIf.
 //
@@ -19,7 +19,6 @@
 //     match's `default`) is appended to `branches` so the test
 //     function can return its index instead of a sentinel.
 //
-// See docs/ship-set/03-runtime-architecture.md § Conditional render.
 
 import { effect } from './signal'
 import { renderInScope } from './effect-scope'

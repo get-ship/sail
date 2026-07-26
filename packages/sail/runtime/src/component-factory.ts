@@ -155,7 +155,7 @@ const encodeAttr = (def: PropDef<unknown>, value: unknown): string | null => {
 }
 
 const injectScopedStyles = (tag: string, css: string): void => {
-  const id = `ship-set-style-${tag}`
+  const id = `sail-style-${tag}`
   if (document.getElementById(id)) return
   const style = document.createElement('style')
   style.id = id
@@ -401,7 +401,7 @@ export function component<Bindings>(
     return () => {
       clearFormHooks(host)
       for (const c of cleanups.splice(0)) {
-        try { c() } catch (e) { console.error(`[ship-set:${tag}] cleanup threw:`, e) }
+        try { c() } catch (e) { console.error(`[sail:${tag}] cleanup threw:`, e) }
       }
     }
   })

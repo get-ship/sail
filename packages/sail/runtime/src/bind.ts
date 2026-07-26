@@ -1,8 +1,7 @@
 // Reactive DOM bindings. Each binding subscribes to its dependency
 // signals and applies updates to one DOM node. Disposers returned
-// for cleanup wiring (ship-set's component wrapper chains them).
+// for cleanup wiring (sail's component wrapper chains them).
 //
-// See .artifacts/specs/ship-set/03-runtime-architecture.md § Bindings.
 
 import { effect, type Signal } from './signal'
 import { morph } from './morph'

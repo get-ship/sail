@@ -51,7 +51,7 @@ export function wireFormMutation(
 
     const fn = resolveChain(scope, chain)
     if (!fn) {
-      const error = new Error(`[ship-set] mutation chain "${chain}" not found in scope`)
+      const error = new Error(`[sail] mutation chain "${chain}" not found in scope`)
       console.error(error)
       mut.set({ kind: 'error', error })
       el.dispatchEvent(new CustomEvent('error', { detail: { error }, bubbles: true }))

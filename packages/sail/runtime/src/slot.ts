@@ -4,7 +4,6 @@
 // so the runtime walks the host's children and places them at slot anchors
 // at hydrate time.
 //
-// See .artifacts/specs/ship-set/03-runtime-architecture.md § Slots.
 
 /**
  * Declaration of one slot: name, anchor placeholder, and optional

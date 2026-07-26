@@ -7,7 +7,7 @@ import { defineComponent } from '../src/component'
 import { signal } from '../src/signal'
 
 let tagCounter = 0
-const nextTag = () => `ship-set-form-${++tagCounter}`
+const nextTag = () => `sail-form-${++tagCounter}`
 
 describe('defineComponent (formAssociated)', () => {
   it('sets static formAssociated = true on the class', () => {
@@ -59,7 +59,7 @@ describe('defineComponent (formAssociated)', () => {
     el.remove()
   })
 
-  it('formResetCallback dispatches ship-set:form-reset on the host', () => {
+  it('formResetCallback dispatches sail:form-reset on the host', () => {
     const tag = nextTag()
     defineComponent(
       tag,
@@ -69,7 +69,7 @@ describe('defineComponent (formAssociated)', () => {
     const el = document.createElement(tag)
     document.body.appendChild(el)
     const onReset = vi.fn()
-    el.addEventListener('ship-set:form-reset', onReset)
+    el.addEventListener('sail:form-reset', onReset)
     // Invoke manually — jsdom doesn't auto-fire on form reset.
     ;(el as any).formResetCallback()
     expect(onReset).toHaveBeenCalledTimes(1)

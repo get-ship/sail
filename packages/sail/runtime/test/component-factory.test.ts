@@ -4,7 +4,7 @@ import { onCleanup } from '../src/effect-scope'
 import type { Signal } from '../src/signal'
 
 let tagCounter = 0
-const nextTag = () => `ship-set-cf-${++tagCounter}`
+const nextTag = () => `sail-cf-${++tagCounter}`
 const flushMicrotasks = () => new Promise((r) => setTimeout(r, 0))
 
 // A no-op module — for registration tests that don't inspect the mount ctx.
@@ -213,7 +213,7 @@ describe('component() — styles', () => {
     component(tag, { props: {}, styles: 'color: red;' }, noopModule())
     const el = document.createElement(tag)
     document.body.appendChild(el)
-    const style = document.getElementById(`ship-set-style-${tag}`)
+    const style = document.getElementById(`sail-style-${tag}`)
     expect(style).toBeTruthy()
     expect(style!.textContent).toContain(`[data-component="${tag}"]`)
     expect(style!.textContent).toContain('color: red;')

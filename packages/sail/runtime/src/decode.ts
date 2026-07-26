@@ -2,7 +2,6 @@
 // on its declared type. Strings come off the DOM as `string | null`;
 // these turn that into the typed value the script expects.
 //
-// See docs/ship-set/01-language-spec.md § Prop types.
 
 /**
  * Function that turns a raw HTML attribute string (or `null` for an
