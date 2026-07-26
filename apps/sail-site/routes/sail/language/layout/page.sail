@@ -174,6 +174,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
     <a variant="default" href="/sail/language/styling">← Styling</a>
-    <a variant="solid" tone="primary" href="/sail/language/motion">Motion →</a>
+    <a variant="solid" tone="primary" href="/sail/language/animation">Animation →</a>
   </row>
 </column>

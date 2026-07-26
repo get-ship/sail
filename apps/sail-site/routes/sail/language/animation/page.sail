@@ -1,5 +1,5 @@
 <!--
-  /sail/language/motion — chapter 6, rebuilt per owner review: say what motion
+  /sail/language/animation — chapter 6, rebuilt per owner review: say what animation
   IS first; hero is tiles (no clipping text); full expression leads and
   presets are one paragraph; scroll/loop prose in plain English; choreography
   demo full-width with the code below it; compositor talk and the 30 kB jab
@@ -62,9 +62,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 <column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="5">
   <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>The language</p>
-  <h1>Motion</h1>
+  <h1>Animation</h1>
   <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
-    Animation is declared on the element. <code>fx:</code> names a
+    Animation is declared on the element. The API is <code>fx:</code> — it names a
     <strong>trigger</strong> — <code>enter</code>, <code>exit</code>,
     <code>reveal</code>, <code>press</code>, <code>loop</code> — and a
     <strong>config</strong>: which properties move, how far, how fast. When

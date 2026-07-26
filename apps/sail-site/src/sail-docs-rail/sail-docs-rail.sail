@@ -48,7 +48,7 @@ export default controller((ctx) => {
       <a href="/sail/language/templates" sx={railLink} aria-current={path() === '/sail/language/templates' ? 'page' : null}>Templates</a>
       <a href="/sail/language/styling" sx={railLink} aria-current={path() === '/sail/language/styling' ? 'page' : null}>Styling</a>
       <a href="/sail/language/layout" sx={railLink} aria-current={path() === '/sail/language/layout' ? 'page' : null}>Layout</a>
-      <a href="/sail/language/motion" sx={railLink} aria-current={path() === '/sail/language/motion' ? 'page' : null}>Motion</a>
+      <a href="/sail/language/animation" sx={railLink} aria-current={path() === '/sail/language/animation' ? 'page' : null}>Animation</a>
       <a href="/sail/language/actions" sx={railLink} aria-current={path() === '/sail/language/actions' ? 'page' : null}>Actions</a>
       <a href="/sail/language/data" sx={railLink} aria-current={path() === '/sail/language/data' ? 'page' : null}>Data</a>
       <a href="/sail/language/capabilities" sx={railLink} aria-current={path() === '/sail/language/capabilities' ? 'page' : null}>Capabilities</a>

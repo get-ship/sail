@@ -74,6 +74,39 @@ fn sui_examples(md: &str) -> Vec<String> {
     out
 }
 
+/// Drift lock: skill generator progressive disclosure + product bans.
+/// Fails if the generator re-teaches Style grow/shrink or loses two-arg color helpers.
+#[test]
+fn skill_generator_matches_product_surface() {
+    let Some(md) = generate_skill() else { return };
+
+    assert!(
+        md.contains("### Core Style setters"),
+        "skill must lead with a core setter section for progressive disclosure"
+    );
+    assert!(
+        md.contains("colorMix") && md.contains("(colorToken, pct)"),
+        "skill must document colorMix arity for agents"
+    );
+    assert!(
+        md.contains("colorDeepen") && md.contains("foreground"),
+        "skill must document colorDeepen (solid deepen toward foreground)"
+    );
+    // Product-banned participation must not appear as teachable style.grow(…)
+    assert!(
+        !md.contains("`style.grow(…)`"),
+        "skill must not teach style.grow — use layout attrs (sail-participation-style)"
+    );
+    assert!(
+        !md.contains("`style.shrink(…)`"),
+        "skill must not teach style.shrink — use layout attrs"
+    );
+    assert!(
+        md.contains("sail-participation-style") || md.contains("grow") && md.contains("attrs"),
+        "skill hard rules must still mention participation attrs"
+    );
+}
+
 #[test]
 fn every_sui_example_in_the_agent_skill_compiles() {
     let Some(md) = generate_skill() else { return };

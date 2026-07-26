@@ -1,4 +1,4 @@
-// Snippets for /sail/language/motion. Kept OUT of the controller so the
+// Snippets for /sail/language/animation. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled. Every SAIL sample is compiled by the
 // build; each one is the code of the live demo beside it.
 export const code = {

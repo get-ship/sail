@@ -49,7 +49,7 @@ test('motion page: remove-panel demo holds the card through its exit animation, 
   page.on('console', (msg) => consoleMessages.push(`[${msg.type()}] ${msg.text()}`))
   page.on('pageerror', (err) => consoleMessages.push(`[pageerror] ${err.message}`))
 
-  await page.goto('/sail/language/motion', { waitUntil: 'domcontentloaded' })
+  await page.goto('/sail/language/animation', { waitUntil: 'domcontentloaded' })
 
   // Prefer the live card <strong>, not the same sentence inside a code-block.
   const card = page.locator('strong').filter({ hasText: 'I animate in, and I animate out.' }).first()
@@ -78,7 +78,7 @@ test('/motion page: spin preset rotates continuously, one direction, never ping-
     if (msg.text().includes('[sail/motion]')) motionWarnings.push(msg.text())
   })
 
-  await page.goto('/sail/language/motion', { waitUntil: 'domcontentloaded' })
+  await page.goto('/sail/language/animation', { waitUntil: 'domcontentloaded' })
 
   const spinner = page.getByTestId('spin-demo')
   await expect(spinner).toBeVisible()
@@ -146,7 +146,7 @@ test('/motion page: the ambient loop dots keep animating (translate-y, staggered
     if (msg.text().includes('[sail/motion]')) motionWarnings.push(msg.text())
   })
 
-  await page.goto('/sail/language/motion', { waitUntil: 'domcontentloaded' })
+  await page.goto('/sail/language/animation', { waitUntil: 'domcontentloaded' })
 
   const dot = page.getByTestId('ambient-dot')
   await expect(dot).toBeVisible()
@@ -175,7 +175,7 @@ test('/motion page: an all-inline loop (bespoke duration, easing, magnitudes) ac
     if (msg.text().includes('[sail/motion]')) motionWarnings.push(msg.text())
   })
 
-  await page.goto('/sail/language/motion', { waitUntil: 'domcontentloaded' })
+  await page.goto('/sail/language/animation', { waitUntil: 'domcontentloaded' })
 
   const chip = page.locator('[data-testid="inline-demo"]')
   await expect(chip).toBeVisible()
@@ -235,7 +235,7 @@ test.describe('/motion — timeline() scrub demo', () => {
   }
 
   test('the tile follows the keyframe data, holds, and pops', async ({ page }) => {
-    await page.goto('/sail/language/motion')
+    await page.goto('/sail/language/animation')
     await expect(page.getByTestId('timeline-tile')).toBeVisible()
 
     // 0 — parked at the origin, unrotated, unscaled.
@@ -275,7 +275,7 @@ test.describe('/motion — timeline() scrub demo', () => {
   test('the demo is genuinely driven — the scrub sweeps it through a real range', async ({
     page,
   }) => {
-    await page.goto('/sail/language/motion')
+    await page.goto('/sail/language/animation')
     await expect(page.getByTestId('timeline-tile')).toBeVisible()
 
     const xs: number[] = []

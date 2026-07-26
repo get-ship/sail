@@ -96,7 +96,7 @@ pub enum StyleDiagnostic {
     UnknownSetter { setter: String, source: String },
     BadToken { setter: String, value: String, source: String },
     /// Setter called with more positional args than it takes. Border composites
-    /// plus two-arg paint composites (`bgMix` / `bgWash`) accept two.
+    /// plus two-arg paint composites (`colorDeepen` / `colorMix`) accept two.
     BadArity { setter: String, got: usize, source: String },
     UnknownWhenKey { key: String, source: String },
     UnknownRef { name: String, source: String },

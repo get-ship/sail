@@ -6,8 +6,8 @@
   hues only (no --tone* attribute channel, no tone-* design tokens). Base
   geometry, Tier-2 chrome (corner-image / control-frame / lift / press), the
   global focus ring, and disabled cursor/opacity stay in contracts.css.
-  Hover deepen: solid compounds use bgMix(token, 15) to reproduce the prior
-  color-mix(ton, foreground 15%) shift; soft compounds use bgWash(hue, pct)
+  Hover deepen: solid compounds use colorDeepen(token, 15) to reproduce the prior
+  color-mix(ton, foreground 15%) shift; soft compounds use colorMix(hue, pct)
   for a transparent hue wash (rest + deeper hover).
 -->
 
@@ -39,21 +39,21 @@
   })
 
   // Tone-aware compounds for variant=solid.
-  const solidPrimary = style.bg(primary).border(primary).fg(primary-foreground).shadow(xs).when({ hover: style.bgMix(primary, 15).shadow(sm) })
-  const solidInfo = style.bg(info).border(info).fg(info-foreground).shadow(xs).when({ hover: style.bgMix(info, 15).shadow(sm) })
-  const solidSuccess = style.bg(success).border(success).fg(success-foreground).shadow(xs).when({ hover: style.bgMix(success, 15).shadow(sm) })
-  const solidWarning = style.bg(warning).border(warning).fg(warning-foreground).shadow(xs).when({ hover: style.bgMix(warning, 15).shadow(sm) })
-  const solidDestructive = style.bg(destructive).border(destructive).fg(destructive-foreground).shadow(xs).when({ hover: style.bgMix(destructive, 15).shadow(sm) })
-  const solidAccent = style.bg(accent).border(accent).fg(accent-foreground).shadow(xs).when({ hover: style.bgMix(accent, 15).shadow(sm) })
-  const solidMuted = style.bg(muted-foreground).border(muted-foreground).fg(background).shadow(xs).when({ hover: style.bgMix(muted-foreground, 15).shadow(sm) })
+  const solidPrimary = style.bg(primary).border(primary).fg(primary-foreground).shadow(xs).when({ hover: style.colorDeepen(primary, 15).shadow(sm) })
+  const solidInfo = style.bg(info).border(info).fg(info-foreground).shadow(xs).when({ hover: style.colorDeepen(info, 15).shadow(sm) })
+  const solidSuccess = style.bg(success).border(success).fg(success-foreground).shadow(xs).when({ hover: style.colorDeepen(success, 15).shadow(sm) })
+  const solidWarning = style.bg(warning).border(warning).fg(warning-foreground).shadow(xs).when({ hover: style.colorDeepen(warning, 15).shadow(sm) })
+  const solidDestructive = style.bg(destructive).border(destructive).fg(destructive-foreground).shadow(xs).when({ hover: style.colorDeepen(destructive, 15).shadow(sm) })
+  const solidAccent = style.bg(accent).border(accent).fg(accent-foreground).shadow(xs).when({ hover: style.colorDeepen(accent, 15).shadow(sm) })
+  const solidMuted = style.bg(muted-foreground).border(muted-foreground).fg(background).shadow(xs).when({ hover: style.colorDeepen(muted-foreground, 15).shadow(sm) })
 
   // Tone-aware compounds for variant=soft — hue wash, not neutral hover-bg.
-  const softPrimary = style.bgWash(primary, 15).border(primary).fg(primary).when({ hover: style.bgWash(primary, 25) })
-  const softInfo = style.bgWash(info, 15).border(info).fg(info).when({ hover: style.bgWash(info, 25) })
-  const softSuccess = style.bgWash(success, 15).border(success).fg(success).when({ hover: style.bgWash(success, 25) })
-  const softWarning = style.bgWash(warning, 15).border(warning).fg(warning).when({ hover: style.bgWash(warning, 25) })
-  const softDestructive = style.bgWash(destructive, 15).border(destructive).fg(destructive).when({ hover: style.bgWash(destructive, 25) })
-  const softAccent = style.bgWash(accent, 15).border(accent).fg(accent).when({ hover: style.bgWash(accent, 25) })
+  const softPrimary = style.colorMix(primary, 15).border(primary).fg(primary).when({ hover: style.colorMix(primary, 25) })
+  const softInfo = style.colorMix(info, 15).border(info).fg(info).when({ hover: style.colorMix(info, 25) })
+  const softSuccess = style.colorMix(success, 15).border(success).fg(success).when({ hover: style.colorMix(success, 25) })
+  const softWarning = style.colorMix(warning, 15).border(warning).fg(warning).when({ hover: style.colorMix(warning, 25) })
+  const softDestructive = style.colorMix(destructive, 15).border(destructive).fg(destructive).when({ hover: style.colorMix(destructive, 25) })
+  const softAccent = style.colorMix(accent, 15).border(accent).fg(accent).when({ hover: style.colorMix(accent, 25) })
   const softMuted = style.bg(muted).border(border).fg(muted-foreground).when({ hover: style.opacity(90) })
 
   // Tone-aware compounds for variant=outline.

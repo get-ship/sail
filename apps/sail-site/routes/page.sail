@@ -28,7 +28,7 @@
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
-const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Motion', 'Themes']
+const WORDS = ['Batteries', 'Components', 'Styling', 'State', 'Animation', 'Themes']
 
 export default controller((_ctx: ControllerScope<Scope>) => {
     const i = signal(0)
@@ -145,11 +145,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <section sx={bento}>
     <grid cols="3" gap="4" sx={grid}>
 
-      <a href="/sail/language/motion" sx={cardLink}>
+      <a href="/sail/language/animation" sx={cardLink}>
         <card interactive sx={cardFill}>
           <column gap="4" sx={cardCol}>
             <column gap="1">
-              <p sx={eyebrow}>Motion</p>
+              <p sx={eyebrow}>Animation</p>
               <strong sx={cardTitle}>Real physics. Zero choreography code.</strong>
             </column>
             <row gap="2" align="end" sx={bars} data-testid="landing-motion-bars">

@@ -8,7 +8,7 @@
   global focus ring, and disabled cursor/opacity stay in contracts.css — the
   Style product has no setter for those channels yet.
 
-  Soft fill uses bgWash(hue, pct) — color-mix(hue pct%, transparent) — so
+  Soft fill uses colorMix(hue, pct) — color-mix(hue pct%, transparent) — so
   soft primary is a real primary tint, not neutral hover-bg. Soft hover
   deepens the wash; solid hover uses opacity.
 -->
@@ -31,7 +31,7 @@
   // NOTE: `//` comments inside the sx list silently drop compound entries
   // (parser gap) — group notes live here instead. Compound groups:
   //   solid   — the tone fill, contrast text on top
-  //   soft    — hue wash surface (bgWash), tone-fg text
+  //   soft    — hue wash surface (colorMix), tone-fg text
   //   outline — tone border + tone-fg text on the page surface
   //   ghost   — tone-fg text only
 
@@ -78,12 +78,12 @@
   compound({ variant: solid, tone: destructive }, style.bg(destructive).border(destructive).fg(destructive-foreground)),
   compound({ variant: solid, tone: accent }, style.bg(accent).border(accent).fg(accent-foreground)),
   compound({ variant: solid, tone: muted }, style.bg(muted-foreground).border(muted-foreground).fg(background)),
-  compound({ variant: soft, tone: primary }, style.bgWash(primary, 15).border(primary).fg(primary).when({ hover: style.bgWash(primary, 25) })),
-  compound({ variant: soft, tone: info }, style.bgWash(info, 15).border(info).fg(info).when({ hover: style.bgWash(info, 25) })),
-  compound({ variant: soft, tone: success }, style.bgWash(success, 15).border(success).fg(success).when({ hover: style.bgWash(success, 25) })),
-  compound({ variant: soft, tone: warning }, style.bgWash(warning, 15).border(warning).fg(warning).when({ hover: style.bgWash(warning, 25) })),
-  compound({ variant: soft, tone: destructive }, style.bgWash(destructive, 15).border(destructive).fg(destructive).when({ hover: style.bgWash(destructive, 25) })),
-  compound({ variant: soft, tone: accent }, style.bgWash(accent, 15).border(accent).fg(accent).when({ hover: style.bgWash(accent, 25) })),
+  compound({ variant: soft, tone: primary }, style.colorMix(primary, 15).border(primary).fg(primary).when({ hover: style.colorMix(primary, 25) })),
+  compound({ variant: soft, tone: info }, style.colorMix(info, 15).border(info).fg(info).when({ hover: style.colorMix(info, 25) })),
+  compound({ variant: soft, tone: success }, style.colorMix(success, 15).border(success).fg(success).when({ hover: style.colorMix(success, 25) })),
+  compound({ variant: soft, tone: warning }, style.colorMix(warning, 15).border(warning).fg(warning).when({ hover: style.colorMix(warning, 25) })),
+  compound({ variant: soft, tone: destructive }, style.colorMix(destructive, 15).border(destructive).fg(destructive).when({ hover: style.colorMix(destructive, 25) })),
+  compound({ variant: soft, tone: accent }, style.colorMix(accent, 15).border(accent).fg(accent).when({ hover: style.colorMix(accent, 25) })),
   compound({ variant: soft, tone: muted }, style.bg(muted).border(border).fg(muted-foreground)),
   compound({ variant: outline, tone: primary }, style.border(primary).fg(primary)),
   compound({ variant: outline, tone: info }, style.border(info).fg(info)),

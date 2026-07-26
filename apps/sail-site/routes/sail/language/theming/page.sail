@@ -94,7 +94,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <code>--destructive</code>, <code>--info</code>, <code>--accent</code>,
       <code>--muted</code> (and their <code>-foreground</code> partners).
       Status UI spends these directly via Style
-      (<code>style.bg(destructive)</code>, <code>style.bgWash(primary, 15)</code>).
+      (<code>style.bg(destructive)</code>, <code>style.colorMix(primary, 15)</code>).
       The L1 <code>tone</code> prop selects which hue a component paints —
       it is not a CSS channel and there is no <code>tone-*-bg/fg</code> ramp.
     </li>

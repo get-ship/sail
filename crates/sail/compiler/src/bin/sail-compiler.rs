@@ -661,6 +661,30 @@ fn workspace_root() -> Result<PathBuf> {
     }
 }
 
+/// One skill bullet for a Style setter. Two-arg color helpers document arity
+/// so agents do not invent single-arg calls that fail closed at lint.
+fn skill_setter_line(s: &sail_lint::style::setters::SetterSpec) -> String {
+    let scale = s.scale.unwrap_or("—");
+    let kws = if s.keywords.is_empty() {
+        String::new()
+    } else {
+        format!(" keywords: {}", s.keywords.join(", "))
+    };
+    let arity = match s.name {
+        "colorMix" => {
+            " **`(colorToken, pct)`** — soft fill: color-mix toward transparent; pct 5..95 step 5"
+        }
+        "colorDeepen" => {
+            " **`(colorToken, pct)`** — solid deepen: color-mix toward foreground; pct 5..95 step 5"
+        }
+        _ => "",
+    };
+    format!(
+        "`style.{}(…)` → vocab `{}` scale `{scale}`{kws}{arity}",
+        s.name, s.vocab
+    )
+}
+
 /// Generate the agent-authoring skill for `dir` — the compiler's surface,
 /// rendered for agents. Sections are conditional on the resolved policy so
 /// the skill describes exactly what THIS directory may author.
@@ -723,21 +747,43 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
              lists `[ match(…), when(…), style.… ]`, `match(prop, {{ key: style.… }})`,\n\
              `compound(…)`, and `bind(name)` for runtime custom properties.\n\n\
              Style is compile-time static. Runtime dynamic `sx={{jsExpr}}` (ternary, call)\n\
-             is a hard error — conditional paint uses `when` / `match` or a prop.\n\n\
-             Closed Style setters (from `style::setters`; each re-homes a vocab head):\n"
+             is a hard error — conditional paint uses `when` / `match` or a prop.\n"
+        );
+
+        // Progressive disclosure: lead with everyday paint, then full closed table.
+        // Omit product-banned participation setters (grow/shrink) — attrs only.
+        // Two-arg color helpers get explicit arity (lint rejects wrong arity).
+        const CORE_SETTERS: &[&str] = &[
+            "bg", "fg", "border", "borderWidth", "radius", "pad", "padX", "padY",
+            "fontSize", "fontWeight", "fontFamily", "leading", "tracking",
+            "shadow", "opacity", "overflow", "display", "h", "size", "minH",
+            "colorMix", "colorDeepen",
+        ];
+        let _ = writeln!(md, "### Core Style setters (start here)\n");
+        let _ = writeln!(
+            md,
+            "Everyday paint. Prefer these before scanning the full table.\n"
         );
         for s in sail_lint::style::setters::setters() {
-            let scale = s.scale.unwrap_or("—");
-            let kws = if s.keywords.is_empty() {
-                String::new()
-            } else {
-                format!(" keywords: {}", s.keywords.join(", "))
-            };
-            let _ = writeln!(
-                md,
-                "- `style.{}(…)` → vocab `{}` scale `{scale}`{kws}",
-                s.name, s.vocab
-            );
+            if !CORE_SETTERS.contains(&s.name) {
+                continue;
+            }
+            let _ = writeln!(md, "- {}", skill_setter_line(s));
+        }
+        let _ = writeln!(md);
+        let _ = writeln!(md, "### Full closed Style setters\n");
+        let _ = writeln!(
+            md,
+            "Complete product table (from `style::setters`). Every name here is a\n\
+             compile-time setter. **Not listed:** `grow` / `shrink` — use layout\n\
+             attrs (`grow`, `shrink`, `w`, `min-w`, `max-w`); product Style grow/shrink\n\
+             is a hard lint error.\n"
+        );
+        for s in sail_lint::style::setters::setters() {
+            if matches!(s.name, "grow" | "shrink") {
+                continue;
+            }
+            let _ = writeln!(md, "- {}", skill_setter_line(s));
         }
         let _ = writeln!(md);
 

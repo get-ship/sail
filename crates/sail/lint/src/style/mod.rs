@@ -549,8 +549,8 @@ mod tests {
 
     #[test]
     fn setter_wave_control_and_gap_and_bg_mix() {
-        // bgMix(token, pct) — two-arg color-mix toward foreground.
-        let (style, diags) = parse("style.bgMix(primary, 15)");
+        // colorDeepen(token, pct) — two-arg color-mix toward foreground.
+        let (style, diags) = parse("style.colorDeepen(primary, 15)");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -562,8 +562,8 @@ mod tests {
             "{css}"
         );
 
-        // bgMix bind arm for the color token.
-        let (style, diags) = parse("style.bgMix(bind(swatch), 25)");
+        // colorDeepen bind arm for the color token.
+        let (style, diags) = parse("style.colorDeepen(bind(swatch), 25)");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -573,30 +573,30 @@ mod tests {
         assert!(css.contains("var(--swatch)"), "{css}");
         assert!(css.contains("color-mix(in oklch"), "{css}");
 
-        // bgMix fail-closed: third arg is BadArity.
-        let (_, diags) = parse("style.bgMix(primary, 15, extra)");
+        // colorDeepen fail-closed: third arg is BadArity.
+        let (_, diags) = parse("style.colorDeepen(primary, 15, extra)");
         assert!(
             diags.iter().any(|d| matches!(d, StyleDiagnostic::BadArity { .. })),
-            "bgMix must reject third arg: {:?}",
+            "colorDeepen must reject third arg: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
 
-        // bgMix fail-closed: percent off the 5..95 step-5 ramp.
-        let (_, diags) = parse("style.bgMix(primary, 100)");
+        // colorDeepen fail-closed: percent off the 5..95 step-5 ramp.
+        let (_, diags) = parse("style.colorDeepen(primary, 100)");
         assert!(
             diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
-            "bgMix must reject 100: {:?}",
+            "colorDeepen must reject 100: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        let (_, diags) = parse("style.bgMix(primary, 3)");
+        let (_, diags) = parse("style.colorDeepen(primary, 3)");
         assert!(
             diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
-            "bgMix must reject 3: {:?}",
+            "colorDeepen must reject 3: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
 
-        // bgWash(token, pct) — transparent hue wash (soft fill).
-        let (style, diags) = parse("style.bgWash(primary, 15)");
+        // colorMix(token, pct) — transparent hue wash (soft fill).
+        let (style, diags) = parse("style.colorMix(primary, 15)");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -608,8 +608,8 @@ mod tests {
             "{css}"
         );
 
-        // bgWash bind arm for the color token.
-        let (style, diags) = parse("style.bgWash(bind(swatch), 25)");
+        // colorMix bind arm for the color token.
+        let (style, diags) = parse("style.colorMix(bind(swatch), 25)");
         assert!(
             diags.is_empty(),
             "{:?}",
@@ -622,19 +622,19 @@ mod tests {
             "{css}"
         );
 
-        // bgWash fail-closed: third arg is BadArity.
-        let (_, diags) = parse("style.bgWash(primary, 15, extra)");
+        // colorMix fail-closed: third arg is BadArity.
+        let (_, diags) = parse("style.colorMix(primary, 15, extra)");
         assert!(
             diags.iter().any(|d| matches!(d, StyleDiagnostic::BadArity { .. })),
-            "bgWash must reject third arg: {:?}",
+            "colorMix must reject third arg: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
 
-        // bgWash fail-closed: off-ramp percent.
-        let (_, diags) = parse("style.bgWash(primary, 14)");
+        // colorMix fail-closed: off-ramp percent.
+        let (_, diags) = parse("style.colorMix(primary, 14)");
         assert!(
             diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
-            "bgWash must reject 14: {:?}",
+            "colorMix must reject 14: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
 

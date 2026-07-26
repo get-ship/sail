@@ -398,10 +398,10 @@ pub fn setters() -> &'static [SetterSpec] {
         SetterSpec { name: "gapX", vocab: "gap-x", scale: Some("space"), keywords: &["0"], negatable: false, slots: &["column-gap"] },
         SetterSpec { name: "gapY", vocab: "gap-y", scale: Some("space"), keywords: &["0"], negatable: false, slots: &["row-gap"] },
         // Hover-deepen primitive: color-mix toward foreground by percent.
-        SetterSpec { name: "bgMix", vocab: "bg-mix", scale: None, keywords: &[], negatable: false, slots: &["background-color"] },
+        SetterSpec { name: "colorDeepen", vocab: "color-deepen", scale: None, keywords: &[], negatable: false, slots: &["background-color"] },
         // Soft wash primitive: color-mix hue into transparent by percent
         // (restores the deleted tone-*-bg ramp without minting design tokens).
-        SetterSpec { name: "bgWash", vocab: "bg-wash", scale: None, keywords: &[], negatable: false, slots: &["background-color"] },
+        SetterSpec { name: "colorMix", vocab: "color-mix", scale: None, keywords: &[], negatable: false, slots: &["background-color"] },
         // Tier-2 control chrome channels.
         SetterSpec { name: "controlFrame", vocab: "control-frame", scale: None, keywords: &[], negatable: false, slots: &["box-shadow"] },
         SetterSpec { name: "controlLift", vocab: "control-lift", scale: None, keywords: &[], negatable: false, slots: &["translate"] },
@@ -766,11 +766,11 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             out.extend(lower_border_color_arg(spec, op, &op.args[1])?);
             return Ok(out);
         }
-        if spec.name == "bgMix" {
-            return lower_bg_mix_arg(spec, op, &op.args[0], &op.args[1]);
+        if spec.name == "colorDeepen" {
+            return lower_color_deepen_arg(spec, op, &op.args[0], &op.args[1]);
         }
-        if spec.name == "bgWash" {
-            return lower_bg_wash_arg(spec, op, &op.args[0], &op.args[1]);
+        if spec.name == "colorMix" {
+            return lower_color_mix_wash_arg(spec, op, &op.args[0], &op.args[1]);
         }
         return Err(StyleDiagnostic::BadArity {
             setter: op.setter.clone(),
@@ -1444,9 +1444,9 @@ fn validate_composite_op(spec: &SetterSpec, op: &PaintOp) -> Result<(), StyleDia
         validate_border_color_arg(spec, op, &op.args[1])?;
         return Ok(());
     }
-    if spec.name == "bgMix" || spec.name == "bgWash" {
+    if spec.name == "colorDeepen" || spec.name == "colorMix" {
         // Same arity/token rules: color token + closed percent ramp.
-        return validate_bg_mix_args(spec, op);
+        return validate_color_deepen_args(spec, op);
     }
     Err(StyleDiagnostic::BadArity {
         setter: op.setter.clone(),
@@ -1601,8 +1601,8 @@ fn lower_border_color_arg(
     }
 }
 
-/// Validate `bgMix(token, pct)`: token on color scale, pct in 5..95 step 5.
-fn validate_bg_mix_args(_spec: &SetterSpec, op: &PaintOp) -> Result<(), StyleDiagnostic> {
+/// Validate `colorDeepen(token, pct)`: token on color scale, pct in 5..95 step 5.
+fn validate_color_deepen_args(_spec: &SetterSpec, op: &PaintOp) -> Result<(), StyleDiagnostic> {
     // Position 0: color token or bind.
     match &op.args[0] {
         PaintArg::Bind(_) => {}
@@ -1645,8 +1645,8 @@ fn validate_bg_mix_args(_spec: &SetterSpec, op: &PaintOp) -> Result<(), StyleDia
     Ok(())
 }
 
-/// Lower `bgMix(token, pct)` to a color-mix background-color.
-fn lower_bg_mix_arg(
+/// Lower `colorDeepen(token, pct)` to a color-mix background-color.
+fn lower_color_deepen_arg(
     _spec: &SetterSpec,
     _op: &PaintOp,
     token_arg: &PaintArg,
@@ -1672,10 +1672,10 @@ fn lower_bg_mix_arg(
     )])
 }
 
-/// Lower `bgWash(token, pct)` to a transparent hue wash background-color.
+/// Lower `colorMix(token, pct)` to a transparent hue wash background-color.
 /// Emits `color-mix(in oklch, {token} {pct}%, transparent)` — the former
 /// tone-*-bg shape, without reintroducing tone-* design tokens.
-fn lower_bg_wash_arg(
+fn lower_color_mix_wash_arg(
     _spec: &SetterSpec,
     _op: &PaintOp,
     token_arg: &PaintArg,

@@ -98,7 +98,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     CSS channel and not a design-token ramp. Components paint it with
     <code>match(tone, …)</code> / <code>compound</code> against real registry
     hues (<code>style.bg(destructive)</code>,
-    <code>style.bgWash(primary, 15)</code>, …):
+    <code>style.colorMix(primary, 15)</code>, …):
   </p>
   <row gap="2" sx={style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)} align="center">
     <badge tone="primary">primary</badge>
@@ -139,7 +139,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.dynamic}></code-block>
   <p>
     State stays in the controller and Style reads it — the
-    <a href="/sail/language/motion">motion chapter</a> drives whole
+    <a href="/sail/language/animation">animation chapter</a> drives whole
     choreographies through this channel.
   </p>
 

@@ -146,7 +146,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>&#123;#for&#125;</code>, covered in
     <a href="/sail/language/templates">Templates</a>; state shared between
     components is in <a href="/sail/language/state">State</a>; movement is in
-    <a href="/sail/language/motion">Motion</a>.
+    <a href="/sail/language/animation">Animation</a>.
   </p>
 
   <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">
