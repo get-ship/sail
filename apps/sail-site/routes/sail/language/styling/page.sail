@@ -90,30 +90,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <code>motionSafe</code>, <code>forced-colors</code> — closed set.
   </p>
 
-  <h2>Tones</h2>
-  <p>
-    A <strong>tone</strong> is a named intent — <code>primary</code>,
-    <code>success</code>, <code>warning</code>, <code>destructive</code>,
-    <code>muted</code> — as an L1 <strong>prop</strong> (ToneName), not a
-    CSS channel and not a design-token ramp. Components paint it with
-    <code>match(tone, …)</code> / <code>compound</code> against real registry
-    hues (<code>style.bg(destructive)</code>,
-    <code>style.colorMix(primary, 15)</code>, …):
-  </p>
-  <row gap="2" sx={style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)} align="center">
-    <badge tone="primary">primary</badge>
-    <badge tone="success">success</badge>
-    <badge tone="warning">warning</badge>
-    <badge tone="destructive">destructive</badge>
-    <badge tone="muted">muted</badge>
-  </row>
-  <code-block code={code.tones}></code-block>
-  <p>
-    A destructive button and a destructive alert match without coordinating,
-    and a theme can re-decide what "destructive" looks like for every component
-    at once.
-  </p>
-
   <h2>Variants with match and compound</h2>
   <p>
     Named looks are data: typed props plus Style fragments composed with

@@ -22,10 +22,6 @@ export const code = {
 <button sx={when({ hover: style.fg(primary) })}>hover → fg(primary)</button>
 <button sx={when({ active: style.bg(primary).fg(primary-foreground) })}>active:…</button>`,
 
-  tones: `<alert tone="destructive">
-  <p>Could not save.</p>
-</alert>`,
-
   variants: `<scope>
   props: {
     label = ''
