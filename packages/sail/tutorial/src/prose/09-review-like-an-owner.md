@@ -37,7 +37,7 @@ is intent:
   recycle each other's DOM on any reorder or archive. *Check: could two
   live items ever share this key? Then it is not a key.*
 - **Does removal have an exit?** Rows arrive with a staggered
-  `motion:enter` — and vanish with a snap, because `motion:exit` is
+  `fx:enter` — and vanish with a snap, because `fx:exit` is
   missing. Arrival was designed; departure was forgotten. *Check: every
   list that animates in should say what leaving looks like.*
 - **Is that div a component the system already has?** The empty case

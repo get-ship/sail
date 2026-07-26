@@ -4,7 +4,7 @@
 
     · a GIANT rotating headline — one teal word cycles ("Batteries · Components ·
       Styling · State · Motion · Themes") in front of the fixed "included. All of
-      them." The cycle is the previous landing's proven WORDS + {#for}+motion:enter
+      them." The cycle is the previous landing's proven WORDS + {#for}+fx:enter
       fade word-cycler, blown up to display size.
     · the signature TWO CROSSING DIAGONAL TICKER BANDS — a bright teal band tilted
       one way OVER a dark mono band tilted the other, overlapping so they visually
@@ -110,7 +110,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <h1 sx={display}>
         <span sx={line}>
           {#for w of word() key={w}}
-            <b sx={style.fg(primary)} motion:enter={{ opacity: 'fade' }}>{w}</b>
+            <b sx={style.fg(primary)} fx:enter={{ opacity: 'fade' }}>{w}</b>
           {/for}
         </span>
         <span sx={line}>included.</span>
@@ -123,8 +123,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </p>
 
       <row gap="4" justify="center" align="center" sx={ctaRow}>
-        <a variant="solid" tone="primary" href="/sail/getting-started" sx={cta} motion:press={{ scale: 'press' }}>Get started</a>
-        <a variant="outline" href="/sail/why" sx={cta} motion:press={{ scale: 'press' }}>Why Sail</a>
+        <a variant="solid" tone="primary" href="/sail/getting-started" sx={cta} fx:press={{ scale: 'press' }}>Get started</a>
+        <a variant="outline" href="/sail/why" sx={cta} fx:press={{ scale: 'press' }}>Why Sail</a>
       </row>
     </column>
   </section>
@@ -153,11 +153,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <strong sx={cardTitle}>Real physics. Zero choreography code.</strong>
             </column>
             <row gap="2" align="end" sx={bars} data-testid="landing-motion-bars">
-              <div data-testid="landing-motion-bar" sx={[bar, style.h(8)]} motion:loop={{ translate-y: 'spring:bouncy' }}></div>
-              <div sx={[bar, style.h(14).opacity(60)]} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx={[bar, style.h(11)]} motion:loop={{ translate-y: 'spring:bouncy', stagger: '0.12s' }}></div>
-              <div sx={[bar, style.h(16).opacity(60)]} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
-              <div sx={[bar, style.h(10)]} motion:loop={{ translate-y: 'spring:bouncy', stagger: '0.12s' }}></div>
+              <div data-testid="landing-motion-bar" sx={[bar, style.h(8)]} fx:loop={{ translate-y: 'spring:bouncy' }}></div>
+              <div sx={[bar, style.h(14).opacity(60)]} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx={[bar, style.h(11)]} fx:loop={{ translate-y: 'spring:bouncy', stagger: '0.12s' }}></div>
+              <div sx={[bar, style.h(16).opacity(60)]} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.12s' }}></div>
+              <div sx={[bar, style.h(10)]} fx:loop={{ translate-y: 'spring:bouncy', stagger: '0.12s' }}></div>
             </row>
           </column>
         </card>
@@ -171,10 +171,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <strong sx={cardTitle}>Press a button. The whole site repaints.</strong>
             </column>
             <row gap="2" sx={swatchRow}>
-              <div sx={[swatch, style.bg(primary)]} motion:loop={{ scale: 'pulse' }}></div>
-              <div sx={[swatch, style.bg(success)]} motion:loop={{ scale: 'pulse', stagger: '0.15s' }}></div>
-              <div sx={[swatch, style.bg(warning)]} motion:loop={{ scale: 'pulse', stagger: '0.15s' }}></div>
-              <div sx={[swatch, style.bg(info)]} motion:loop={{ scale: 'pulse', stagger: '0.15s' }}></div>
+              <div sx={[swatch, style.bg(primary)]} fx:loop={{ scale: 'pulse' }}></div>
+              <div sx={[swatch, style.bg(success)]} fx:loop={{ scale: 'pulse', stagger: '0.15s' }}></div>
+              <div sx={[swatch, style.bg(warning)]} fx:loop={{ scale: 'pulse', stagger: '0.15s' }}></div>
+              <div sx={[swatch, style.bg(info)]} fx:loop={{ scale: 'pulse', stagger: '0.15s' }}></div>
             </row>
           </column>
         </card>
@@ -240,7 +240,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <row gap="2" align="center"><span sx={style.fg(muted-foreground)}>$</span><span sx={style.fg(foreground)}>agent → sail compile</span></row>
               <row gap="1" align="center">
                 <span sx={style.fg(primary)}>✓ 0 errors · themed · a11y</span>
-                <span sx={cursor} motion:loop={{ scale: 'pulse' }}></span>
+                <span sx={cursor} fx:loop={{ scale: 'pulse' }}></span>
               </row>
             </column>
           </column>
@@ -265,6 +265,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </section>
 
   <div sx={wordmarkWrap}>
-    <p sx={wordmark} motion:scroll={{ scale: 'spring:deliberate' }}>SHIP</p>
+    <p sx={wordmark} fx:scroll={{ scale: 'spring:deliberate' }}>SHIP</p>
   </div>
 </column>

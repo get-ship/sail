@@ -26,7 +26,7 @@
 //!
 //! # Public surface
 //!
-//! The compiler-side IR lowers a `motion:` directive into an
+//! The compiler-side IR lowers a `fx:` directive into an
 //! [`AnimationConfig`] (after token resolution). Callers invoke
 //! [`bake`] and embed the resulting [`BakedAnimation`] in the emitted
 //! JS so the runtime can pass it straight to `element.animate()`.
@@ -93,7 +93,7 @@ impl Default for AnimationTiming {
     }
 }
 
-/// What the compiler produces for a single `motion:` directive.
+/// What the compiler produces for a single `fx:` directive.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BakedAnimation {
     pub keyframes: Vec<Keyframe>,
@@ -109,7 +109,7 @@ pub use spring::SpringConfig;
 pub use keyframes::TweenConfig;
 
 /// Discriminated union of all animation configs the compiler
-/// accepts. The `motion:` IR lowers into this enum after token
+/// accepts. The `fx:` IR lowers into this enum after token
 /// resolution; [`bake`] dispatches on the variant.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnimationConfig {
@@ -119,7 +119,7 @@ pub enum AnimationConfig {
 
 /// Errors that [`bake`] can produce. All variants are recoverable —
 /// callers should surface them as `CompileError` with a span pointing
-/// at the `motion:` directive in the user's `.sail` source.
+/// at the `fx:` directive in the user's `.sail` source.
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum AnimationError {
     /// A numeric input was NaN (e.g. a token that didn't resolve to a

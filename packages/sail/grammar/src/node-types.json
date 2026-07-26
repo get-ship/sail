@@ -274,6 +274,10 @@
           "named": true
         },
         {
+          "type": "fx_attr",
+          "named": true
+        },
+        {
           "type": "html_comment",
           "named": true
         },
@@ -287,10 +291,6 @@
         },
         {
           "type": "match_block",
-          "named": true
-        },
-        {
-          "type": "motion_attr",
           "named": true
         },
         {
@@ -603,6 +603,32 @@
     }
   },
   {
+    "type": "fx_attr",
+    "named": true,
+    "fields": {
+      "config": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "brace_expression",
+            "named": true
+          }
+        ]
+      },
+      "trigger": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "attr_local",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "if_block",
     "named": true,
     "fields": {
@@ -759,32 +785,6 @@
           "named": true
         }
       ]
-    }
-  },
-  {
-    "type": "motion_attr",
-    "named": true,
-    "fields": {
-      "config": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "brace_expression",
-            "named": true
-          }
-        ]
-      },
-      "trigger": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "attr_local",
-            "named": true
-          }
-        ]
-      }
     }
   },
   {
@@ -1063,6 +1063,10 @@
     "named": false
   },
   {
+    "type": "fx:",
+    "named": false
+  },
+  {
     "type": "html_comment",
     "named": true
   },
@@ -1072,10 +1076,6 @@
   },
   {
     "type": "key",
-    "named": false
-  },
-  {
-    "type": "motion:",
     "named": false
   },
   {

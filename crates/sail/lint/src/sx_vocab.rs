@@ -256,7 +256,7 @@ pub fn resolve(atom: &str) -> Resolved {
     }
 
     // Bare exact allowlist BEFORE head refusal so `animate-spin` (bare) is not
-    // killed by refused head `animate` (which means motion:, not CSS animation).
+    // killed by refused head `animate` (which means fx:, not CSS animation).
     if let Some(u) = v.bare.get(body) {
         return match u.lower(body, false) {
             Some(decls) => Resolved::Ok(decls),
@@ -511,7 +511,7 @@ mod tests {
 
     #[test]
     fn animate_spin_bare_not_killed_by_refused_animate_head() {
-        // `animate` is refused (use motion:) but `animate-spin` is a bare CSS PE atom.
+        // `animate` is refused (use fx:) but `animate-spin` is a bare CSS PE atom.
         let d = decls("animate-spin");
         assert!(
             d.iter()

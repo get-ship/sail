@@ -1,9 +1,9 @@
-//! `motion:` directive integration tests.
+//! `fx:` directive integration tests.
 //!
 //! Verifies the AOT-baked `el.animate(...)` + `__sui_motion_attach(...)`
-//! shape the compiler emits for various `motion:` directive forms.
+//! shape the compiler emits for various `fx:` directive forms.
 //!
-//! `motion:<trigger>={{ <property>: '<preset>' }}` — the property is one
+//! `fx:<trigger>={{ <property>: '<preset>' }}` — the property is one
 //! of the closed `MOTION_PROPERTIES` (scale, opacity, translate-y, ...);
 //! the preset is a name resolved against `animation-presets.json`
 //! (e.g. `spring:snappy`, `spring:gentle`, `fade`, `press`).
@@ -30,7 +30,7 @@ fn compile_motion(source: &str) -> Result<String, String> {
 #[test]
 fn static_hover_scale_emits_runtime_dispatch() {
     let js = compile_motion(
-        r#"<button motion:hover={{ scale: 'spring:snappy' }}>x</button>"#,
+        r#"<button fx:hover={{ scale: 'spring:snappy' }}>x</button>"#,
     )
     .expect("compile");
     // Runtime dispatch: the per-property `MotionConfig` is embedded as
@@ -51,7 +51,7 @@ fn static_hover_scale_emits_runtime_dispatch() {
 #[test]
 fn unknown_preset_is_a_compile_error() {
     let err = compile_motion(
-        r#"<button motion:hover={{ scale: 'does-not-exist' }}>x</button>"#,
+        r#"<button fx:hover={{ scale: 'does-not-exist' }}>x</button>"#,
     )
     .expect_err("expected compile error");
     assert!(
@@ -71,7 +71,7 @@ fn unknown_preset_is_a_compile_error() {
 /// error says so rather than the old blanket "dynamic configs".
 #[test]
 fn whole_config_as_one_expression_is_rejected_and_names_the_fix() {
-    let err = compile_motion(r#"<button motion:hover={someExpr}>x</button>"#)
+    let err = compile_motion(r#"<button fx:hover={someExpr}>x</button>"#)
         .expect_err("expected compile error");
     assert!(
         err.contains("must be a config object"),
@@ -86,7 +86,7 @@ fn whole_config_as_one_expression_is_rejected_and_names_the_fix() {
 #[test]
 fn multiple_props_share_one_attach_call() {
     let js = compile_motion(
-        r#"<button motion:hover={{ scale: 'spring:snappy', opacity: 'fade' }}>x</button>"#,
+        r#"<button fx:hover={{ scale: 'spring:snappy', opacity: 'fade' }}>x</button>"#,
     )
     .expect("compile");
     let attach_idx = js
@@ -107,7 +107,7 @@ fn multiple_props_share_one_attach_call() {
 #[test]
 fn loop_rotate_spin_emits_infinite_one_direction() {
     let js = compile_motion(
-        r#"<img motion:loop={{ rotate: 'spin' }}>x</img>"#,
+        r#"<img fx:loop={{ rotate: 'spin' }}>x</img>"#,
     )
     .expect("compile");
     assert!(js.contains("__sui_motion_attach("), "expected runtime attach call:\n{js}");
@@ -127,7 +127,7 @@ fn loop_rotate_spin_emits_infinite_one_direction() {
 #[test]
 fn unknown_property_alias_is_rejected() {
     let err = compile_motion(
-        r#"<button motion:hover={{ foo: 'spring:snappy' }}>x</button>"#,
+        r#"<button fx:hover={{ foo: 'spring:snappy' }}>x</button>"#,
     )
     .expect_err("expected compile error");
     assert!(err.contains("foo"), "expected error to mention 'foo': {err}");

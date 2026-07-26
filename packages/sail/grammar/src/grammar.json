@@ -290,7 +290,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "motion_attr"
+          "name": "fx_attr"
         },
         {
           "type": "SYMBOL",
@@ -426,12 +426,12 @@
         }
       ]
     },
-    "motion_attr": {
+    "fx_attr": {
       "type": "SEQ",
       "members": [
         {
           "type": "STRING",
-          "value": "motion:"
+          "value": "fx:"
         },
         {
           "type": "FIELD",

@@ -10,26 +10,26 @@ suite is green and the build is warning-free.
 
 ## Language / compiler
 
-### `motion:` accepts only a static object literal
-- **What:** `motion:<trigger>={{ ... }}` must be a static object literal.
+### `fx:` accepts only a static object literal
+- **What:** `fx:<trigger>={{ ... }}` must be a static object literal.
   A dynamic/computed config is rejected at parse time.
-- **Repro:** `<button motion:press={cfg()}>` → compile error
+- **Repro:** `<button fx:press={cfg()}>` → compile error
   "dynamic configs are not yet supported".
 - **Where:** `src/parse/template/attrs.rs:583` (`parse_motion_static_config`).
 - **Status:** planned — a dynamic form needs a runtime bridge; static baking
   is milestone 1.
 
-### `motion:` properties are an allow-list
+### `fx:` properties are an allow-list
 - **What:** Only the supported motion properties bake; anything else errors.
-- **Repro:** `<div motion:press={{ blur: 'sm' }}>` → "motion property `blur`
+- **Repro:** `<div fx:press={{ blur: 'sm' }}>` → "fx property `blur`
   is not supported".
 - **Where:** `src/parse/template/attrs.rs:676`.
 - **Status:** by-design today; new properties are added deliberately as presets.
 
-### `motion:` size aliases (`sm`/`md`/`lg`) are not yet distinct
-- **What:** `motion:scale:sm` and `motion:scale:md` currently animate to the
+### `fx:` size aliases (`sm`/`md`/`lg`) are not yet distinct
+- **What:** `fx:scale:sm` and `fx:scale:md` currently animate to the
   same identity end-state; the size alias does not change the curve/magnitude.
-- **Repro:** `motion:scale:sm` vs `motion:scale:md` produce identical output.
+- **Repro:** `fx:scale:sm` vs `fx:scale:md` produce identical output.
 - **Where:** `src/emit/template_emit/dom_emit.rs:416`.
 - **Status:** planned (future milestone) — aliases parse but are equivalent.
 

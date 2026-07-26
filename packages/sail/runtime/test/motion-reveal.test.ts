@@ -1,9 +1,9 @@
 // motion runtime — the view/scroll trigger contract.
 //
-// Regression guard for the second silent death of `motion:view` (the first
+// Regression guard for the second silent death of `fx:view` (the first
 // was #69's `x`/`y` keyframe defect). The motion.dev migration rewrote the
 // view/scroll branch as a bare `createAnimations()` — identical to `enter`
-// — so every `motion:view` reveal played ONCE at mount, below the fold,
+// — so every `fx:view` reveal played ONCE at mount, below the fold,
 // invisibly, and the element sat at its final pose forever. No error, no
 // warning: a finished animation is indistinguishable from a correct one.
 //
@@ -138,7 +138,7 @@ function attachConnected(config: MotionAttachConfig): { el: HTMLElement; dispose
   return { el, dispose }
 }
 
-describe('motion:reveal — re-timed onto a ViewTimeline when the platform has one', () => {
+describe('fx:reveal — re-timed onto a ViewTimeline when the platform has one', () => {
   it('hands every created animation a ViewTimeline scoped to the entry range', () => {
     globals.ViewTimeline = FakeViewTimeline
     const { el, dispose } = attachConnected(viewFade)
@@ -155,7 +155,7 @@ describe('motion:reveal — re-timed onto a ViewTimeline when the platform has o
     dispose()
   })
 
-  it('motion:scroll gets a ScrollTimeline on the document scroller, unranged', () => {
+  it('fx:scroll gets a ScrollTimeline on the document scroller, unranged', () => {
     globals.ScrollTimeline = FakeScrollTimeline
     const { dispose } = attachConnected({ ...viewFade, trigger: 'scroll' })
     const call = controlsMade[0]!.attachTimeline.mock.calls[0]![0] as {
@@ -168,7 +168,7 @@ describe('motion:reveal — re-timed onto a ViewTimeline when the platform has o
   })
 })
 
-describe('motion:reveal — no timeline support degrades to play-on-first-reveal', () => {
+describe('fx:reveal — no timeline support degrades to play-on-first-reveal', () => {
   it('pauses at creation and plays on the first intersection, then stops observing', () => {
     globals.IntersectionObserver = FakeIntersectionObserver
     const { el, dispose } = attachConnected(viewFade)
@@ -198,7 +198,7 @@ describe('motion:reveal — no timeline support degrades to play-on-first-reveal
     const c = controlsMade[0]!
     expect(c.complete).toHaveBeenCalledTimes(1) // visible, not invisible-forever
     expect(warn).toHaveBeenCalledTimes(1)
-    expect(String(warn.mock.calls[0]![0])).toContain('motion:reveal')
+    expect(String(warn.mock.calls[0]![0])).toContain('fx:reveal')
     dispose()
   })
 })

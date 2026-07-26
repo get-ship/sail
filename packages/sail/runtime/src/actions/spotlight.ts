@@ -1,5 +1,5 @@
 // `use:spotlight` — a token-lit glow that follows the pointer across the
-// decorated element. The effect is INPUT FEEDBACK, not autonomous motion:
+// decorated element. The effect is INPUT FEEDBACK, not autonomous fx:
 // it moves only when the pointer does, so prefers-reduced-motion keeps it
 // (the soft transition is dropped there). Touch/keyboard sessions get a
 // static ambient glow instead of nothing.

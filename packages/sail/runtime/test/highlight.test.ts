@@ -60,7 +60,7 @@ describe('highlight — directive headers and bindings', () => {
   })
 
   it('handles double-brace attribute values (motion props)', () => {
-    const out = highlight(`<div motion:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>`)
+    const out = highlight(`<div fx:loop={{ translate-y: 'spring:gentle', stagger: '0.1s' }}></div>`)
     expect(tokens(out, 'bind')).toEqual([`{{ translate-y: 'spring:gentle', stagger: '0.1s' }}`])
   })
 })

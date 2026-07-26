@@ -1,4 +1,4 @@
-// use:marquee — stamps motion:loop translate-x from host duration/reverse.
+// use:marquee — stamps fx:loop translate-x from host duration/reverse.
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { marquee } from '../src/actions/marquee'

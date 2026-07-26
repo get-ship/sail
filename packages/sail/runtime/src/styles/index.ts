@@ -32,7 +32,7 @@ const AMBIENT_FX_CSS =
   // Ambient / platform loops (CSS-fx). Framework-owned infinite animations
   // for L1 surfaces that still need decorative CSS motion (the spinner
   // ring, status-dot pulse, skeleton shimmer, progress barber-pole).
-  // Ticker/icon spin dissolved to motion: via use:marquee / use:icon —
+  // Ticker/icon spin dissolved to fx: via use:marquee / use:icon —
   // no --animate-ticker catalog entry remains. Tailwind-shaped
   // `--animate-*` name for the shorthand value (consistent with neighbors
   // in the fx catalog). Reduced-motion: 1.5s slow (spinner semantics),
@@ -679,8 +679,18 @@ export const LIGHT_CONTRACTS_CSS =
   BOX_MODEL_CSS +
   // Root typography anchor for light-DOM pages: bare text inherits the body
   // family and ink from here. The type scale sizes <p>/<h1> but never declares
-  // a family, so without this anchor the page root falls to the UA serif.
+  // a family, so without this anchor the page root falls to the UA serif
+  // (Times New Roman) while mono/display stacks load only where Style sets
+  // them — landing "has fonts", docs/components look unthemed.
   // Specificity 0 — an author :root/body rule wins.
+  'html, body { font-family: var(--font-body); color: var(--foreground); background: var(--background); }\n' +
+  'body { margin: 0; min-height: 100vh; font-size: var(--text-base); line-height: var(--leading-normal, 1.5); }\n' +
+  // Native checkbox/radio + adjacent label text — inline-flex so the control
+  // and copy share a center line. Not wrapped in :where(): element-skins
+  // ships `label { display: inline-block }` at (0,0,1), and a zero-specificity
+  // :where rule loses, leaving the control/text misaligned.
+  'label:has(> input[type="checkbox"], > input[type="radio"]), .sail-label:has(> input[type="checkbox"], > input[type="radio"]) { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; font-family: var(--font-body); font-size: var(--text-base); color: var(--foreground); text-transform: none; }\n' +
+  'label:has(> input[type="checkbox"], > input[type="radio"]) > input, .sail-label:has(> input[type="checkbox"], > input[type="radio"]) > input { margin: 0; flex-shrink: 0; }\n' +
 
   // Semantic-element + typography defaults — a bare <table>/<ul>/<img>/<h1>
   // on a page is styled by the framework, no wrapper needed.
@@ -715,7 +725,7 @@ export const LIGHT_CONTRACTS_CSS =
   // component that owns its own reduced-motion behavior (e.g. spinner's
   // CSS-fx slowdown) has real specificity in its own skin and wins the
   // cascade unforced — this rule is only the floor default for anything
-  // that has not opted in. Ticker/icon spin use motion: and settle in the
+  // that has not opted in. Ticker/icon spin use fx: and settle in the
   // runtime, not via CSS PE.
   '@media (prefers-reduced-motion: reduce) { :where([data-component], [data-component] *, button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none; } }\n'
 

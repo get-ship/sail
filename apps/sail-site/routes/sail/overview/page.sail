@@ -1,7 +1,7 @@
 <!--
   /overview — the Introduction (pairing draft v3).
   v3 rulings applied: query added to the opener's API list; hover feedback is
-  CSS (sx hover: + transition atoms), NOT motion: — motion:hover ran a full
+  CSS (sx hover: + transition atoms), NOT fx: — fx:hover ran a full
   WAAPI pass on enter AND leave (jitter on mouse sweep); prose and demos sit
   side by side; the bundle widget is GONE (bundle story ≠ compiler tunability
   — separate artifact, built when we're ready to compare honestly); tuning

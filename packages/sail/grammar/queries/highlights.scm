@@ -38,10 +38,10 @@
 ; ── binding attribute prefixes ───────────────────────────────────────
 ; `style:` and `let:` are deliberately absent: the compiler hard-refuses
 ; `style:` and never implemented `let:` — neither is live syntax.
-"bind:"     @keyword.directive
-"on:"       @keyword.directive
-"use:"      @keyword.directive
-"motion:"   @keyword.directive
+"bind:"   @keyword.directive
+"on:"     @keyword.directive
+"use:"    @keyword.directive
+"fx:"     @keyword.directive
 "|"       @punctuation.delimiter
 
 ; ── template control flow markers ────────────────────────────────────

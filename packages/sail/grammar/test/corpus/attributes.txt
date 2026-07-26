@@ -89,14 +89,14 @@ use action without param
 motion attribute with static preset object
 ==================
 
-<badge motion:enter={{ opacity: 'fade', stagger: '150ms' }}>live</badge>
+<badge fx:enter={{ opacity: 'fade', stagger: '150ms' }}>live</badge>
 
 ---
 
 (source_file
   (element
     tag: (tag_name)
-    (motion_attr
+    (fx_attr
       trigger: (attr_local)
       config: (brace_expression))
     (text)

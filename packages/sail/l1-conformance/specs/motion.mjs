@@ -1,4 +1,4 @@
-// L1 conformance spec: the `motion:` directive runtime. Motion cannot be
+// L1 conformance spec: the `fx:` directive runtime. Motion cannot be
 // asserted from stills or from animation bookkeeping — playState/play()
 // accounting can all read "success" while every pixel sits frozen at the
 // first keyframe (a zombie animation is "running", just on a timeline that
@@ -8,7 +8,7 @@
 // The runtime is a thin wrapper over motion.dev's vanilla `motion` package.
 // The compiler validates a closed preset catalogue and emits a per-property
 // `MotionConfig`; the runtime maps each to an `animate()` call. Reduced
-// motion: the runtime is the single authority — when the matchMedia reports
+// fx: the runtime is the single authority — when the matchMedia reports
 // `reduce`, the runtime settles on the FINAL pose and never animates.
 const BUILD = `
   globalThis.buildMotionEl = function buildMotionEl(id, keyframeSets, config) {

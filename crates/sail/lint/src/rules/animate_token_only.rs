@@ -1,8 +1,8 @@
-//! `sail-animate-token-only` — the `motion:` animation directive accepts
+//! `sail-animate-token-only` — the `fx:` animation directive accepts
 //! only the closed property/preset vocabulary that maps cleanly to the
 //! design system.
 //!
-//! `motion:<trigger>={{ <prop>: '<preset>' }}` — the property must be one
+//! `fx:<trigger>={{ <prop>: '<preset>' }}` — the property must be one
 //! of [`MOTION_PROPERTIES`] (the same closed set the parser enforces),
 //! and the preset must be a name known to `animation-presets.json`.
 
@@ -34,7 +34,7 @@ pub const MOTION_STAGGER_KEY: &str = "stagger";
 /// THE timing vocabulary — the config-level (and per-channel) keys that are not
 /// animated properties. Same one-list-two-readers contract as the properties above.
 ///
-/// These take INLINE VALUES, and that is the point. `motion:` is the animation
+/// These take INLINE VALUES, and that is the point. `fx:` is the animation
 /// library's surface: a duration is a number of milliseconds and an easing is a
 /// curve, not a global design token. `sx` stays closed because colour and spacing
 /// are theming integrity; a 3600ms decorative loop never was.
@@ -45,7 +45,7 @@ pub const MOTION_TIMING_KEYS: &[&str] =
 /// `translate-x: { from: 0, to: '120px' }`.
 pub const MOTION_CHANNEL_KEYS: &[&str] = &["from", "to", "preset"];
 
-/// THE trigger vocabulary — what can drive a `motion:` directive. One list, read by
+/// THE trigger vocabulary — what can drive a `fx:` directive. One list, read by
 /// the parser (which rejects anything off it), by the runtime (which dispatches on
 /// it), and by the generated agent skill (which teaches it).
 ///
@@ -93,7 +93,7 @@ fn known_presets() -> Vec<String> {
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
-    // Walk by line so the byte index we hand to `find("motion:")`
+    // Walk by line so the byte index we hand to `find("fx:")`
     // is always on a char boundary — no multi-byte trap.
     for (line_no, line) in source.lines().enumerate() {
         // Skip lines that are entirely inside an HTML comment. This
@@ -105,19 +105,19 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         let bytes = line.as_bytes();
         let mut i = 0;
         while i < bytes.len() {
-            // Find next `motion:` in this line.
+            // Find next `fx:` in this line.
             let rest = &line[i..];
-            let Some(colon_rel) = rest.find("motion:") else {
+            let Some(colon_rel) = rest.find("fx:") else {
                 break;
             };
             let attr_start = i + colon_rel;
             if attr_start > i && is_attr_name_continuation(bytes[attr_start - 1]) {
-                i = attr_start + "motion:".len();
+                i = attr_start + "fx:".len();
                 continue;
             }
-            let after_prefix = attr_start + "motion:".len();
+            let after_prefix = attr_start + "fx:".len();
             let Some(trigger_len) = scan_ident(&line[after_prefix..]) else {
-                i = attr_start + "motion:".len();
+                i = attr_start + "fx:".len();
                 continue;
             };
             let trigger_end = after_prefix + trigger_len;
@@ -136,7 +136,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             if k >= bytes.len() {
                 break;
             }
-            // String form `motion:trigger="..."`.
+            // String form `fx:trigger="..."`.
             if bytes[k] == b'"' {
                 let value_start = k + 1;
                 let mut v = value_start;
@@ -152,7 +152,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 i = v + 1;
                 continue;
             }
-            // Brace-attr form `motion:trigger={{...}}`. The compiler
+            // Brace-attr form `fx:trigger={{...}}`. The compiler
             // pre-pass leaves the literal `{{ ... }}` sequence in the
             // source. Strip the outer pair.
             if bytes[k] == b'{' {
@@ -189,7 +189,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 i = v;
                 continue;
             }
-            // Dynamic form `motion:hover={expr}` — skip silently.
+            // Dynamic form `fx:hover={expr}` — skip silently.
             i = k + 1;
         }
     }
@@ -262,7 +262,7 @@ fn validate_static_body(
                 rule: RULE_ID,
                 severity: Severity::Error,
                 message: format!(
-                    "motion property `{}` is not supported. Supported properties: {}",
+                    "fx property `{}` is not supported. Supported properties: {}",
                     key,
                     MOTION_PROPERTIES.join(", ")
                 ),
@@ -383,13 +383,13 @@ mod tests {
 
     #[test]
     fn accepts_static_hover_with_known_preset_and_prop() {
-        let f = findings(r#"<button motion:hover={{ scale: 'spring:snappy' }}>x</button>"#);
+        let f = findings(r#"<button fx:hover={{ scale: 'spring:snappy' }}>x</button>"#);
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 
     #[test]
     fn flags_unknown_property() {
-        let f = findings(r#"<button motion:hover={{ foo: 'spring:snappy' }}>x</button>"#);
+        let f = findings(r#"<button fx:hover={{ foo: 'spring:snappy' }}>x</button>"#);
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
         assert!(f[0].message.contains("foo"));
         assert!(f[0].message.contains("scale"));
@@ -397,7 +397,7 @@ mod tests {
 
     #[test]
     fn flags_unknown_preset() {
-        let f = findings(r#"<button motion:hover={{ scale: 'mystery' }}>x</button>"#);
+        let f = findings(r#"<button fx:hover={{ scale: 'mystery' }}>x</button>"#);
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
         assert!(f[0].message.contains("mystery"));
         assert!(f[0].message.contains("spring:snappy"));
@@ -406,14 +406,14 @@ mod tests {
     #[test]
     fn flags_multiple_in_one_config() {
         let f = findings(
-            r#"<button motion:hover={{ scale: 'mystery', opacity: 'also-bad' }}>x</button>"#,
+            r#"<button fx:hover={{ scale: 'mystery', opacity: 'also-bad' }}>x</button>"#,
         );
         assert_eq!(f.len(), 2, "expected 2 findings, got {f:?}");
     }
 
     #[test]
     fn ignores_dynamic_form() {
-        let f = findings(r#"<button motion:hover={someExpr}>x</button>"#);
+        let f = findings(r#"<button fx:hover={someExpr}>x</button>"#);
         assert!(f.is_empty(), "expected no findings for dynamic form, got {f:?}");
     }
 
@@ -426,7 +426,7 @@ mod tests {
     #[test]
     fn skips_lines_that_are_pure_comment() {
         let f =
-            findings("<!-- motion:hover={{ foo: 'mystery' }} -->\n<button>x</button>");
+            findings("<!-- fx:hover={{ foo: 'mystery' }} -->\n<button>x</button>");
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 
@@ -435,7 +435,7 @@ mod tests {
         // Regression: source with a multi-byte char (`…` is 3 bytes)
         // would have panicked the rule on a byte-vs-char boundary.
         let f = findings(
-            "<!-- Loading… -->\n<button motion:hover={{ foo: 'mystery' }}>x</button>",
+            "<!-- Loading… -->\n<button fx:hover={{ foo: 'mystery' }}>x</button>",
         );
         // ONE finding, not two: once `foo` is not a property, its value is
         // not a preset reference and reporting it as an unknown preset is a

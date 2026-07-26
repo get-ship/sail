@@ -229,14 +229,14 @@ export type { BindIfOptions, BranchRender } from './if'
 // loads + its top-level setTransitionRunner() swaps the stubs for
 // the real Web-Animations-API runner.
 // The `transition:` catalog (registerTransition / fade / slide / scale) is GONE —
-// it was a second animation system beside `motion:`, with its own presets, its own
-// registry and its own runtime. One system now: `motion:enter` / `motion:exit` bake
+// it was a second animation system beside `fx:`, with its own presets, its own
+// registry and its own runtime. One system now: `fx:enter` / `fx:exit` bake
 // to `el.animate()` from the same spring catalog as every other motion trigger.
 //
 // The lifecycle SEAM survives, because the capability is real: `if.ts` / `for.ts`
 // await `runLeave` before removing nodes, which is how an element stays in the DOM
 // long enough to animate out — the one thing CSS cannot do alone. It is backed by
-// motion.ts now (installed lazily, the first time a `motion:exit` attaches), so an
+// motion.ts now (installed lazily, the first time a `fx:exit` attaches), so an
 // app with no exit animations still tree-shakes the whole thing away.
 // Template cloning — the compiler hoists one `__tpl(html)` per static subtree.
 export { __tpl } from './tpl'
@@ -374,15 +374,15 @@ export {
 } from './error-boundary'
 export type { BoundaryHandle, BoundarySource } from './error-boundary'
 
-// `motion:` directive runtime — AOT-baked `el.animate(...)` + a tiny
+// `fx:` directive runtime — AOT-baked `el.animate(...)` + a tiny
 // attach helper that wires the animations to a DOM event per
-// trigger. Apps that don't use `motion:` directives don't import
+// trigger. Apps that don't use `fx:` directives don't import
 // `__sui_motion_attach` from the emitted code, so this export is
 // tree-shaken when unused.
 export { __sui_motion_attach } from './motion'
 export type { MotionAttachConfig, MotionConfig } from './motion'
 
-// The choreography lane. `motion:` (above) owns ambient, fire-and-forget
+// The choreography lane. `fx:` (above) owns ambient, fire-and-forget
 // animation and hands it to the compositor; `timeline()` owns motion whose
 // clock something ELSE holds — a scrub, a scroll, a sequence of stops that
 // must land on exact offsets. Keyframes go in as data, signals come out, and

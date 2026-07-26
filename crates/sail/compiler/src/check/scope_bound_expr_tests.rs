@@ -25,7 +25,7 @@ fn run(src: &str) -> Visitor {
 #[test]
 fn object_literal_key_is_not_a_free_identifier() {
     // Regression: the keys of a directive opts object literal
-    // (e.g. `motion:exit={{ duration: 180 }}`) must not be treated
+    // (e.g. `fx:exit={{ duration: 180 }}`) must not be treated
     // as references to outer bindings. With an empty scope, the
     // check must pass.
     let v = run("{ duration: 180 }");

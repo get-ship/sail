@@ -19,9 +19,9 @@
 // math re-wrote every channel every frame.
 //
 // Two lanes, one story (see also `motion.ts`):
-//   - ambient, fire-and-forget loops  → `motion:` (WAAPI, compositor-driven)
+//   - ambient, fire-and-forget loops  → `fx:` (WAAPI, compositor-driven)
 //   - scrubbed / choreographed timing → `timeline()` (signals, main thread)
-// `motion:` cannot express a 7-stop compound curve driven by a scroll
+// `fx:` cannot express a 7-stop compound curve driven by a scroll
 // position; `timeline()` cannot hand work to the compositor. Pick by whether
 // something outside the animation owns its clock.
 

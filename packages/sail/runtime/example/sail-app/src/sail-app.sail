@@ -13,7 +13,7 @@
     - data-*: per-card priority + selected highlight
     - on: handlers, including async one (chrome.modal not used —
       standalone build has no daemon)
-    - motion: enter/exit on card add/remove (fade + scale)
+    - fx: enter/exit on card add/remove (fade + scale)
     - update() callback exercise: the chaos button mutates the row
       list, which forces bindFor through the diff path the per-field
       gating + monotone fast-path optimize.
@@ -260,8 +260,8 @@ export default controller(() => {
               <li data-card="true"
                   data-card={card.id}
                   draggable="true"
-                  motion:enter={{ scale: 'spring:snappy', opacity: 'fade' }}
-                  motion:exit={{ opacity: 'fade-out' }}
+                  fx:enter={{ scale: 'spring:snappy', opacity: 'fade' }}
+                  fx:exit={{ opacity: 'fade-out' }}
                   on:dragstart={(e) => onDragStart(e, card.id)}
                   on:dragend={onDragEnd}
                   on:dragover|preventDefault|stopPropagation={(e) => onDragOver(e)}

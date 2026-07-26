@@ -40,7 +40,7 @@ Debouncing, key filtering, and preventDefault are part of the
 - `{#match expr}` with `{:case 'x'}` / `{:default}` — a state machine
   rendered as one construct. The example's deploy phase walks
   idle → building → live/failed, and each branch's badge carries its own
-  `motion:enter`, so the swapped-in state announces itself.
+  `fx:enter`, so the swapped-in state announces itself.
 - `{#for item of items() key={item.id}}` — `key=` is **required**; the
   compiler rejects a bare `{#for}`. The key is identity: on reorder the
   reconciler *moves* the existing DOM node instead of rebuilding it, so
@@ -52,7 +52,7 @@ Debouncing, key filtering, and preventDefault are part of the
    settle it with a `setTimeout` — `'live'` usually, `'failed'`
    sometimes. Click until you have seen every `{#match}` branch.
 2. **Finish the match** (TODO 4). Add the `building` and `live` cases
-   with different `motion:enter` bodies — a translate for building, a
+   with different `fx:enter` bodies — a translate for building, a
    scale for live.
 3. **Prove identity** (TODO 3 + 5). Implement `promote()` to move an
    environment to the front. With `key={env.id}` the row glides to its

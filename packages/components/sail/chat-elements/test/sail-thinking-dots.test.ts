@@ -1,7 +1,7 @@
 // Behavioral suite for <sail-thinking-dots>. AOT registration: importing the
 // compiled output calls customElements.define() at module load.
 //
-// Animation gate: the dots are wired through `motion:loop` with the
+// Animation gate: the dots are wired through `fx:loop` with the
 // `bounce` preset (translateY 0→-100% + opacity 0.4→1, infinite, alternate,
 // 150ms stagger step). The `pulse` preset that the migration originally
 // picked was a 1.04× scale, sub-pixel on a 7-12px dot — invisible. The

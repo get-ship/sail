@@ -9,7 +9,7 @@
   The root span is the inline box (the indicator sits in a line of text);
   the track row inside it owns the dot rhythm. The track carries `tone` +
   `size` as a `data-state` token list, and each dot reads it through
-  `group-state-<value>:` sx. The pulse is `motion:loop` with a 150ms
+  `group-state-<value>:` sx. The pulse is `fx:loop` with a 150ms
   stagger step — the dots arrive together, so the step lands as a per-dot
   phase offset (dot 1: 0ms, dot 2: 150ms, dot 3: 300ms).
 
@@ -43,17 +43,17 @@
   >
     <span
       aria-hidden="true"
-      motion:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
+      fx:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
       sx={style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) })}
     ></span>
     <span
       aria-hidden="true"
-      motion:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
+      fx:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
       sx={style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) })}
     ></span>
     <span
       aria-hidden="true"
-      motion:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
+      fx:loop={{ translate-y: 'bounce', opacity: 'bounce', stagger: '150ms' }}
       sx={style.radius(full).w(2).h(2).bg(muted-foreground).when({ groupStateSm: style.w(1_25).h(1_25), groupStateLg: style.w(2_5).h(2_5), groupStatePrimary: style.bg(primary), groupStateInfo: style.bg(info), groupStateSuccess: style.bg(success), groupStateWarning: style.bg(warning), groupStateDestructive: style.bg(destructive), groupStateAccent: style.bg(accent) })}
     ></span>
   </row>

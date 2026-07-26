@@ -71,7 +71,7 @@ pub enum AttrInstr {
     On { event: String, handler: Expr, modifiers: Vec<Modifier>, span: Span },
     /// `mutation="ship.X.Y"` on a `<form>` — the SDK call chain.
     Mutation { expr: Expr, span: Span },
-    /// `motion:trigger={...}` — declarative state-triggered animation.
+    /// `fx:trigger={...}` — declarative state-triggered animation.
     /// The config is a static object literal mapping CSS-style property
     /// names to animation preset names. Compiles to a pre-baked
     /// `element.animate(...)` call wired to the trigger's DOM events.
@@ -107,9 +107,9 @@ pub enum AttrInstr {
     },
  }
 
-/// One animated property within a `motion:` config. The optional preset
+/// One animated property within a `fx:` config. The optional preset
 /// name resolves against `crates/sail/lint/animation-presets.json` at emit
-/// time. Multiple `MotionProp`s in the same `motion:` directive share a
+/// time. Multiple `MotionProp`s in the same `fx:` directive share a
 /// trigger and fire from the same DOM event pair, but each becomes its own
 /// `animate(...)` call.
 ///
@@ -185,7 +185,7 @@ impl MotionProp {
     }
 }
 
-/// A single value inside a `motion:` config.
+/// A single value inside a `fx:` config.
 ///
 /// The animation surface is where numbers are NATIVE — we bundled a real
 /// animation library to build real animation, and a duration is a number of

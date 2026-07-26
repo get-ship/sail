@@ -111,7 +111,7 @@ pub fn collect_attr_imports(
             }
         }
         AttrInstr::Motion { trigger, props, stagger_ms: _, timing: _, span } => {
-            // `motion:` directives bake to literal `el.animate(...)`
+            // `fx:` directives bake to literal `el.animate(...)`
             // calls plus a `__sui_motion_attach(...)` wrapper. The
             // attach wrapper and any animation-side runtime helpers
             // come from `@ship/sail-runtime/motion` (separate from
@@ -126,7 +126,7 @@ pub fn collect_attr_imports(
             // arm and uses `.expect("validated in lower")`.
             let db = presets::load().map_err(|e| {
                 CompileError::new(format!(
-                    "motion:{} — failed to load animation presets: {e}",
+                    "fx:{} — failed to load animation presets: {e}",
                     trigger
                 ))
                 .with_span(*span)
@@ -140,7 +140,7 @@ pub fn collect_attr_imports(
                     let Some(spec) = db.preset(name) else {
                         let known = db.known_preset_names();
                         return Err(CompileError::new(format!(
-                            "motion:{} uses unknown preset '{}'. Known presets: {}. \
+                            "fx:{} uses unknown preset '{}'. Known presets: {}. \
                              Or drop the preset and write the values inline: \
                              `{}: {{ from: 0, to: 1 }}`.",
                             trigger,

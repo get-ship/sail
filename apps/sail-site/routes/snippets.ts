@@ -13,11 +13,11 @@ export const code = {
 <column gap="3">
   <input placeholder="Filter people" bind:value={query} />
   {#for p of filtered() key={p.id}}
-    <card interactive motion:enter={{ opacity: 'fade' }}>
+    <card interactive fx:enter={{ opacity: 'fade' }}>
       <avatar name={p.name} tone="primary" /> {p.name} · {p.team}
       <badge tone={p.status}>{p.status}</badge>
     </card>
   {/for}
-  <button on:click={invite} motion:press={{ scale: 'press' }}>Invite</button>
+  <button on:click={invite} fx:press={{ scale: 'press' }}>Invite</button>
 </column>`,
 }

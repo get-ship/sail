@@ -43,12 +43,12 @@ pub struct Lowered {
     /// "@ship/sail-runtime/route"` so routeless modules don't pull in the
     /// route module.
     pub uses_route: bool,
-    /// Runtime attacher symbols referenced by `motion:` directives.
+    /// Runtime attacher symbols referenced by `fx:` directives.
     /// The emitter folds these into
-    /// the `@ship/sail-runtime` import list so routes using `motion:`
+    /// the `@ship/sail-runtime` import list so routes using `fx:`
     /// pull in the spring_attach / tween_attach helpers transparently.
     /// In milestone 1 the only entries are `"spring_attach"` (when any
-    /// `motion:` preset resolves to a spring) and `"tween_attach"`
+    /// `fx:` preset resolves to a spring) and `"tween_attach"`
     /// (when any resolves to a tween). Inserted by
     /// [`crate::lower::bindings::collect_attr_imports`] when an
     /// `AttrInstr::Motion` is lowered.
@@ -64,7 +64,7 @@ pub struct Lowered {
 /// Walk the program, build a `Lowered` summary.
 ///
 /// Returns `Err` for hard validation failures discovered during the
-/// walk (currently: `motion:` directives that reference an unknown
+/// walk (currently: `fx:` directives that reference an unknown
 /// preset). Soft signals (`uses_setup`, `uses_route`, …) stay on the
 /// [`Lowered`] value.
 pub fn lower(program: &Program, is_route: bool) -> Result<Lowered, CompileError> {

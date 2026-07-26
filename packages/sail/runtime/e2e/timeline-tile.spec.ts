@@ -285,7 +285,7 @@ test.describe('timeline() vs real WAAPI — motion.dev tile', () => {
 // ── Perf: the two-lane guidance, measured ────────────────────────────────────
 //
 // `timeline()` writes custom properties from JS every frame, which means
-// main-thread style recalc — the cost `motion:` avoids by handing WAAPI
+// main-thread style recalc — the cost `fx:` avoids by handing WAAPI
 // animations to the compositor. That trade is the whole reason the two lanes
 // exist, so the number that matters is: how many choreographed elements
 // before the main thread stops keeping up? These measure it rather than

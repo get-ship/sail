@@ -52,15 +52,15 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Notifications</h3>
     <row gap="2" align="center">
-      <button variant="ghost" size="sm" motion:hover={{ rotate: 'spring:bouncy' }} on:click={() => restock()}>Restock</button>
+      <button variant="ghost" size="sm" fx:hover={{ rotate: 'spring:bouncy' }} on:click={() => restock()}>Restock</button>
       <button variant="outline" tone="primary" size="sm"
-              motion:hover={{ scale: 'spring:gentle' }}
-              motion:press={{ scale: 'press' }}
+              fx:hover={{ scale: 'spring:gentle' }}
+              fx:press={{ scale: 'press' }}
               on:click={() => toggle()}>
         {open() ? 'Close tray' : 'Open tray'}
         {#if unread() > 0}
           <span sx={unreadDot}
-                motion:loop={{ scale: 'pulse' }}></span>
+                fx:loop={{ scale: 'pulse' }}></span>
         {/if}
       </button>
     </row>
@@ -68,19 +68,19 @@ export default controller(() => {
 
   {#if open()}
     <column gap="2"
-            motion:enter={{ opacity: 'fade', translate-x: 'spring:snappy' }}
-            motion:exit={{ opacity: 'fade-out' }}>
+            fx:enter={{ opacity: 'fade', translate-x: 'spring:snappy' }}
+            fx:exit={{ opacity: 'fade-out' }}>
       {#for n of notes() key={n.id}}
         <row gap="3" align="center" sx={noteRow}
-             motion:enter={{ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }}
-             motion:exit={{ opacity: 'fade-out' }}>
+             fx:enter={{ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }}
+             fx:exit={{ opacity: 'fade-out' }}>
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
           <p sx={noteText}>{n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>
       {/for}
       {#if notes().length === 0}
-        <p sx={empty} motion:enter={{ opacity: 'fade' }}>All clear.</p>
+        <p sx={empty} fx:enter={{ opacity: 'fade' }}>All clear.</p>
       {/if}
     </column>
   {/if}

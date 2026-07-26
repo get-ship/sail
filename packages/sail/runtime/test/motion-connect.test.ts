@@ -1,7 +1,7 @@
 // motion runtime — the connection + loop-repeat contract.
 //
 // Regression guard for the silent-freeze bug: the compiler wires
-// `motion:` during DETACHED subtree construction
+// `fx:` during DETACHED subtree construction
 // (`el = __tpl(...); __sui_motion_attach(el, ...)`), so on first mount the
 // element is not yet in the document. A WAAPI animation created on a
 // detached element never resolves its play task — it stays `pending` with
@@ -15,7 +15,7 @@
 // (mocked) so a future refactor that re-attaches synchronously on a
 // detached node fails here instead of in production.
 //
-// Second contract: `motion:loop` must actually loop. A physics preset
+// Second contract: `fx:loop` must actually loop. A physics preset
 // (`spring:bouncy`) is reused for one-shot triggers too, so it carries no
 // iteration count of its own — the `loop` trigger supplies the repeat
 // (infinite, alternating). Without it the "loop" plays once and settles.

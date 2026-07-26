@@ -1,7 +1,7 @@
 // motion runtime — focused tests for the prefers-reduced-motion guard and
 // the runtime-dispatched `__sui_motion_attach` seam.
 //
-// `motion:` directives compile to a single `__sui_motion_attach(el, config)`
+// `fx:` directives compile to a single `__sui_motion_attach(el, config)`
 // call. The runtime creates the animations through motion.dev and consults
 // `prefers-reduced-motion: reduce` once per attach (so a mid-session
 // preference flip is honored). The behavior gates below assert:
@@ -672,7 +672,7 @@ describe('motion runtime — SILENCE IS THE BUG: dev-mode warn on an out-of-rang
   // preset whose `from`/`to` were authored for a different property
   // (`pulse`: 1.0 → 1.04, meant for `scale`) produces an `opacity`
   // motion that genuinely runs and visibly moves nothing. The /motion
-  // page's own "hover · pulse" badge shipped exactly this: `motion:
+  // page's own "hover · pulse" badge shipped exactly this: `fx:
   // hover={{ opacity: 'pulse' }}`.
   it('warns when an opacity keyframe value falls outside 0..1 (a preset authored for the wrong property)', () => {
     setReducedMotion(false)

@@ -94,6 +94,6 @@ export default controller((ctx) => {
 
 <button on:click={() => open.set(!open())}>Toggle</button>
 {#if open()}
-  <card motion:enter={{ opacity: 'fade' }} sx={style.pad(4)}>Hello.</card>
+  <card fx:enter={{ opacity: 'fade' }} sx={style.pad(4)}>Hello.</card>
 {/if}`,
 }

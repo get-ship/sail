@@ -116,30 +116,30 @@ fn compile_attr(
     }
     // `transition:` / `in:` / `out:` are RETIRED. They were a second animation
     // system — a second preset catalog (fade/slide/scale), a second registry
-    // (`registerTransition`), a second runtime — sitting beside `motion:`, which
+    // (`registerTransition`), a second runtime — sitting beside `fx:`, which
     // already bakes to `el.animate()` with compile-time-validated spring presets and
     // no runtime library at all. Two systems meant two vocabularies to learn, two
     // things to teach an agent, and two places for a bug to live.
     //
     // The CAPABILITY survives intact: holding an element in the DOM until its exit
-    // animation finishes is real, and CSS cannot do it alone. It is `motion:exit`
+    // animation finishes is real, and CSS cannot do it alone. It is `fx:exit`
     // now, running on the same lifecycle seam, from the one catalog.
     for (retired, hint) in [
-        ("transition:", "motion:enter + motion:exit"),
-        ("in:", "motion:enter"),
-        ("out:", "motion:exit"),
+        ("transition:", "fx:enter + fx:exit"),
+        ("in:", "fx:enter"),
+        ("out:", "fx:exit"),
     ] {
         if let Some(rest) = name.strip_prefix(retired) {
             return Err(CompileError::new(format!(
                 "`{retired}{rest}` is retired — there is one animation system. \
-                 Use `{hint}` with a preset from the motion catalog \
-                 (e.g. `motion:exit={{ opacity: 'fade-out' }}`)."
+                 Use `{hint}` with a preset from the fx catalog \
+                 (e.g. `fx:exit={{ opacity: 'fade-out' }}`)."
             ))
             .with_span(value_span)
             .with_category(loc.to_string()));
         }
     }
-    if let Some(rest) = name.strip_prefix("motion:") {
+    if let Some(rest) = name.strip_prefix("fx:") {
         return compile_motion(rest, value, value_span, loc);
     }
     if let Some(rest) = name.strip_prefix("use:") {
@@ -562,9 +562,9 @@ fn compile_use(
     };
     Ok(AttrInstr::Use { action: name.to_string(), param, span: value_span })
 }
-/// Compile a `motion:<trigger>=…` directive. Milestone 1 accepts only a
-/// static object literal (`motion:hover={{ scale: 'sm' }}`); dynamic
-/// expressions (`motion:hover={someExpr}`) are explicitly rejected so
+/// Compile a `fx:<trigger>=…` directive. Milestone 1 accepts only a
+/// static object literal (`fx:hover={{ scale: 'sm' }}`); dynamic
+/// expressions (`fx:hover={someExpr}`) are explicitly rejected so
 /// the runtime never has to evaluate an animation config.
 ///
 /// Returns an [`AttrInstr::Motion`] carrying the resolved property ->
@@ -581,7 +581,7 @@ fn compile_motion(
     };
     if trigger.is_empty() {
         return Err(err(
-            "motion: requires a trigger name (hover, press, focus, focus-visible, …)".into(),
+            "fx: requires a trigger name (hover, press, focus, focus-visible, …)".into(),
         ));
     }
     // The allowlist IS the validation — no shape check ahead of it. A trigger is a
@@ -589,23 +589,23 @@ fn compile_motion(
     // identifier, and an allowlist is strictly stronger than any shape test anyway.
     //
     // An unknown trigger must be an error, not a silent no-op: the runtime has no
-    // dispatch for `motion:hovr={…}`, so it would do nothing and ship.
+    // dispatch for `fx:hovr={…}`, so it would do nothing and ship.
     if !MOTION_TRIGGERS.contains(&trigger) {
         return Err(err(format!(
-            "motion trigger `{trigger}` is not supported. Triggers: {}.",
+            "fx trigger `{trigger}` is not supported. Triggers: {}.",
             MOTION_TRIGGERS.join(", ")
         )));
     }
     if value.is_empty() {
-        return Err(err("motion: requires a config object".into()));
+        return Err(err("fx: requires a config object".into()));
     }
 
-    // Disambiguate `motion:hover={{...}}` (static) from
+    // Disambiguate `fx:hover={{...}}` (static) from
     // first; only reject as dynamic when the body is not a static
     // key/value list AND looks like an expression. This keeps the
     // common author form working while still flagging actual
-    // Disambiguate `motion:hover={{ prop: 'value' }}` (static) from
-    // `motion:hover={someExpr}` (dynamic). The pre-pass delivers the
+    // Disambiguate `fx:hover={{ prop: 'value' }}` (static) from
+    // `fx:hover={someExpr}` (dynamic). The pre-pass delivers the
     // value with both outer and inner braces intact for brace-attrs;
     // strip the outermost pair before the static parser. Treat as
     // dynamic ONLY when the body has no `:` separator (a key/value
@@ -635,8 +635,8 @@ fn compile_motion(
             Ok(parsed) => parsed,
             Err(_) if !has_static_shape(value) => {
                 return Err(err(format!(
-                    "motion:{trigger}={{...}} — the value must be a config object like \
-                     `motion:{trigger}={{ scale: 'pop' }}`. Fields may be inline values \
+                    "fx:{trigger}={{...}} — the value must be a config object like \
+                     `fx:{trigger}={{ scale: 'pop' }}`. Fields may be inline values \
                      (`duration: 3600`) or signals (`duration: speed()`), but the config \
                      itself is written out, not passed in."
                 )));
@@ -658,7 +658,7 @@ use sail_lint::rules::animate_token_only::{
     MOTION_CHANNEL_KEYS, MOTION_PROPERTIES, MOTION_STAGGER_KEY, MOTION_TIMING_KEYS, MOTION_TRIGGERS,
 };
 
-/// Parse the static object body of a `motion:trigger={{…}}` directive.
+/// Parse the static object body of a `fx:trigger={{…}}` directive.
 ///
 /// The grammar, in one sentence: **quoted is a literal, unquoted is code.**
 ///
@@ -783,7 +783,7 @@ fn parse_motion_static_config(
                     }),
                     other => {
                         return Err(err(format!(
-                            "motion property `{key}` takes a preset name (`{key}: 'fade'`) or an \
+                            "fx property `{key}` takes a preset name (`{key}: 'fade'`) or an \
                              inline object (`{key}: {{ from: 0, to: 1 }}`), got `{}`. \
                              A bare number is a timing value, not a magnitude — put it in \
                              `from`/`to`.",

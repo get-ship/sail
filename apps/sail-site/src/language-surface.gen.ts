@@ -7426,7 +7426,7 @@ export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = [
 export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   {
     "atom": "animate",
-    "instead": "motion: — springs, scroll, stagger, FLIP"
+    "instead": "fx: — springs, scroll, stagger, FLIP"
   },
   {
     "atom": "flex",
@@ -8379,7 +8379,7 @@ export const DIRECTIVES: DirectiveDoc[] = [
     "summary": "static styling atoms from the closed sx vocabulary; sx={expr} is a compile error"
   },
   {
-    "syntax": "motion:<trigger>={…}",
+    "syntax": "fx:<trigger>={…}",
     "summary": "the one animation directive — triggers, properties, and config in the motion reference"
   },
   {
@@ -9082,7 +9082,7 @@ export const RETIRED_DIRECTIVES: RetiredDoc[] = [
   },
   {
     "syntax": "transition: / in: / out:",
-    "instead": "motion:enter / motion:exit"
+    "instead": "fx:enter / fx:exit"
   }
 ]
 

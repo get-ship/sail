@@ -389,7 +389,7 @@ fn parse_tokens(src: &str) -> TokenTable {
     // of the larger count you'd get reading every `--name: value;` in the file
     // (each `.dark`/media override redeclares names already collected).
     // Comments are skipped BEFORE anything else: prose in tokens.css quotes
-    // code (`motion:loop={{ … }}`), and counting those braces once knocked
+    // code (`fx:loop={{ … }}`), and counting those braces once knocked
     // the walker out of `:root` mid-block, silently dropping every token
     // after the comment.
     let mut block_depth: i32 = 0;

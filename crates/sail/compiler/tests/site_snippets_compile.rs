@@ -107,7 +107,7 @@ fn is_sui(s: &str) -> bool {
         || s.contains("{#if")
         || s.contains("{#each")
         || s.contains("{#await")
-        || s.contains("motion:")
+        || s.contains("fx:")
         || s.contains("use:")
         || s.contains("bind:")
         || (s.contains("on:") && s.contains("={"))

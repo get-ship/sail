@@ -1,4 +1,4 @@
-//! `transition:` is RETIRED — there is one animation system (`motion:*`).
+//! `transition:` is RETIRED — there is one animation system (`fx:*`).
 //! The directive must fail compile with a message that names the replacement,
 //! so an author (or agent) migrating old sources gets steered, not stranded.
 
@@ -23,7 +23,7 @@ fn transition_directive_is_a_compile_error_pointing_at_motion() {
     let err = compile(r#"<div transition:fade>x</div>"#, opts())
         .expect_err("retired directive must not compile");
     assert!(
-        err.message.contains("retired") && err.message.contains("motion:enter"),
+        err.message.contains("retired") && err.message.contains("fx:enter"),
         "error must name the motion replacement: {}",
         err.message
     );

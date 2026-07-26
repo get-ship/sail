@@ -26,7 +26,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "__sui_motion_attach",
     "kind": "function",
     "signature": "(el: Element, config: MotionAttachConfig | (() => MotionAttachConfig)): Disposer",
-    "doc": "Attach a `motion:` directive.",
+    "doc": "Attach a `fx:` directive.",
     "loc": "src/motion.ts:790"
   },
   {
@@ -2434,7 +2434,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "__sui_motion_attach",
     "kind": "function",
     "signature": "(el: Element, config: MotionAttachConfig | (() => MotionAttachConfig)): Disposer",
-    "doc": "Attach a `motion:` directive.",
+    "doc": "Attach a `fx:` directive.",
     "loc": "src/motion.ts:790"
   },
   {

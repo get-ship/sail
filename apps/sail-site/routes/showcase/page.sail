@@ -149,7 +149,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     <!-- ── playlist main ──────────────────────────────────────────────── -->
     <column sx={style.grow(1).minW(0)} gap="0">
-      <column sx={style.pad(6).padB(4)} gap="1" motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
+      <column sx={style.pad(6).padB(4)} gap="1" fx:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
         <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)}>Playlist</p>
         <h1 sx={style.fontSize(3xl)}>{activePlaylist() === '__liked' ? 'Liked Tracks' : playlist().name}</h1>
         <p sx={style.fontSize(sm).fg(muted-foreground)}>
@@ -163,13 +163,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                  aria-current={currentId() === t.id ? 'true' : null}
                  sx={style.pad(2).padX(3).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })}
                  align="center" gap="3"
-                 motion:enter={{ opacity: 'fade', stagger: '0.03s' }}>
+                 fx:enter={{ opacity: 'fade', stagger: '0.03s' }}>
               <row justify="center" sx={style.w(6).shrink(0).fontFamily(mono).fontSize(sm).fg(muted-foreground)}>
                 {#if currentId() === t.id && playing()}
                   <row gap="1" align="end" justify="center" sx={style.minH(4)}>
-                    <i sx={style.w(1).h(3).radius(full).bg(primary)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.08s' }}></i>
-                    <i sx={style.w(1).h(4).radius(full).bg(primary)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.08s' }}></i>
-                    <i sx={style.w(1).h(2).radius(full).bg(primary)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.08s' }}></i>
+                    <i sx={style.w(1).h(3).radius(full).bg(primary)} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.08s' }}></i>
+                    <i sx={style.w(1).h(4).radius(full).bg(primary)} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.08s' }}></i>
+                    <i sx={style.w(1).h(2).radius(full).bg(primary)} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.08s' }}></i>
                   </row>
                 {:else}
                   {t.id}
@@ -208,7 +208,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <row gap="2" align="center">
           <button on:click={() => shuffle.set(!shuffle())} variant={shuffle() ? 'solid' : 'ghost'} size="sm">shuffle</button>
           <button on:click={() => advance(-1)} variant="ghost">⏮</button>
-          <button on:click={togglePlay} variant="solid" tone="primary" motion:press={{ scale: 'press' }}>
+          <button on:click={togglePlay} variant="solid" tone="primary" fx:press={{ scale: 'press' }}>
             {playing() ? '⏸' : '▶'}
           </button>
           <button on:click={() => advance(1)} variant="ghost">⏭</button>

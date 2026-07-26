@@ -30,7 +30,7 @@
 //!   - `use:action={p}` — the action receives the reactive param.
 //!   - `on:click={handler}` — a handler is called by the event, not by the
 //!     template (`on_callable` polices that position).
-//!   - `motion:` config fields — read inside the runtime's own effect.
+//!   - `fx:` config fields — read inside the runtime's own effect.
 //!
 //! An arrow body is skipped too: its params shadow the scope, and its
 //! contents run at call time, not render time.

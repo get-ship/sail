@@ -1,5 +1,5 @@
 {
-  "$comment": "Sail motion preset vocabulary — a CLOSED, design-system-owned set of spring + tween configs. The compiler resolves a `motion: { scale: 'sm' }` reference against this file at build time. Adding a preset = adding a row here + (optionally) extending the sx token surface. Mirrors the `sail-sx` rule's design: token-only, no raw values, no bracket escape.",
+  "$comment": "Sail motion preset vocabulary — a CLOSED, design-system-owned set of spring + tween configs. The compiler resolves a `fx: { scale: 'sm' }` reference against this file at build time. Adding a preset = adding a row here + (optionally) extending the sx token surface. Mirrors the `sail-sx` rule's design: token-only, no raw values, no bracket escape.",
 
   "presets": {
     "spring:snappy": {
@@ -144,6 +144,6 @@
     "md": 1.06,
     "lg": 1.10,
     "xl": 1.18,
-    "$doc": "Property values for `motion: { scale: 'sm' }` — the agent picks a scale alias, the compiler resolves to (0.96/1.02/1.06/...). Mirrors how `sx=\u0022text:sm\u0022` resolves to `var(--text-sm)`."
+    "$doc": "Property values for `fx: { scale: 'sm' }` — the agent picks a scale alias, the compiler resolves to (0.96/1.02/1.06/...). Mirrors how `sx=\u0022text:sm\u0022` resolves to `var(--text-sm)`."
   }
 }

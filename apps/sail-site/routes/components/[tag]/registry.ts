@@ -40,7 +40,7 @@ const TONES = 'default · primary · info · success · warning · destructive �
 // stdlib. The curated rows below serve two narrower jobs:
 //   * a hand description for a generated prop the stdlib hasn't documented
 //     yet (matched by name; the stdlib JSDoc wins once it exists),
-//   * language-surface rows the registry can't know — bind:/on:/motion:
+//   * language-surface rows the registry can't know — bind:/on:/fx:
 //     directives, children contracts, announced events — appended after.
 const genProps = (tag: string, curated: PropRow[]): PropRow[] => {
   const gen = PROP_REGISTRY[tag] ?? []
@@ -85,7 +85,7 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'tone', desc: 'semantic colour token', type: TONES },
       { name: 'size', desc: 'control height', type: 'sm · md · lg' },
       { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
-      { name: 'motion:press', desc: 'the press animation, one attribute', type: 'preset' },
+      { name: 'fx:press', desc: 'the press animation, one attribute', type: 'preset' },
     ],
   }),
   input: lang('input', 'input', {
@@ -260,7 +260,7 @@ export const DETAILS: Record<string, DetailEntry> = {
     props: [
       { name: 'tone', desc: 'semantic colour + icon', type: 'default · info · success · warning · destructive · muted' },
       { name: 'dismissible', desc: 'adds the close button', type: 'bool' },
-      { name: 'motion:exit', desc: 'held in the DOM until the exit ends', type: 'preset' },
+      { name: 'fx:exit', desc: 'held in the DOM until the exit ends', type: 'preset' },
     ],
   }),
   progress: lang('progress', 'progressBar', {

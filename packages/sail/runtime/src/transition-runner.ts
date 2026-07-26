@@ -3,11 +3,11 @@
 // through this indirection when removing/inserting nodes, instead of
 // depending on a concrete animation implementation directly.
 //
-// The seam is backed by `motion.ts`'s `motion:enter` / `motion:exit`
-// lifecycle animations. Apps that don't use `motion:` directives never call
+// The seam is backed by `motion.ts`'s `fx:enter` / `fx:exit`
+// lifecycle animations. Apps that don't use `fx:` directives never call
 // `installLifecycleRunner()`, so the stub runners here (no-ops) stay in
 // place and esbuild's tree-shaker drops `motion.ts` from the app bundle
-// entirely. Apps that do use `motion:` have their compiled output call
+// entirely. Apps that do use `fx:` have their compiled output call
 // `installLifecycleRunner()`, which swaps the stubs out for the real
 // lifecycle-animation runner — from then on bindFor/bindIf drive real
 // enter/exit animations through this same seam.

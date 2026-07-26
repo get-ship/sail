@@ -1,10 +1,17 @@
-//! `sail-layout` — the language-level layout elements.
+//! `sail-layout` — the language-level layout elements + child participation attrs.
 //!
 //! `row`, `column`, `grid`, `center`, `stack` are compile-time keywords, not
 //! web components. The preprocess pass lowers each to a plain `<div>` + atomic
 //! classes, and injects the deduped CSS those classes need into the component's
 //! `<style>` — the same "class + injected stylesheet" mechanism `sx` uses. No
 //! shadow DOM, no custom-element upgrade: layout disappears into the language.
+//!
+//! **Participation attrs** (`grow`, `shrink`, `w`, `min-w`, `max-w`) are the
+//! product home for a child's box-model role inside a flex/grid parent. They
+//! are legal on **any** element (layout keywords included), and lower to the
+//! same atomic classes Style's `style.grow(1)` / `style.w(full)` / … emit so
+//! cascade stays one system. Paint (pad, color, type, chrome) stays on Style;
+//! grow/shrink/width-as-layout-participation prefer these attrs.
 //!
 //! Faithful successor to the `<sail-stack>` / `<sail-cluster>` / `<sail-grid>` /
 //! `<sail-center>` primitives — the hard-won opinions ride along in the lowering:
@@ -504,8 +511,32 @@ pub fn lower(tag: &str, attrs: &[(String, String)]) -> Option<(Vec<String>, Vec<
 /// keyword that ISN'T a known axis prop on the tag AND ISN'T an HTML pass-
 /// through is a compile error. A mistyped layout attribute would otherwise
 /// flow through to the lowered `<div>` as a dead HTML attr with no signal.
+///
+/// Participation attrs (`grow` / `shrink` / `w` / `min-w` / `max-w`) are
+/// validated on **every** open tag — they lower on non-layout hosts too.
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
+    // Participation attrs on any host (layout keywords re-checked below with
+    // a richer message that names the tag).
+    for t in scan_any_open_tags(source) {
+        if is_layout_tag(&t.tag) {
+            continue;
+        }
+        let (line, col) = offset_to_line_col(source, t.start);
+        for (name, value) in &t.attrs {
+            if !is_participation_attr(name) {
+                continue;
+            }
+            if let Some(msg) = participation_error(name, value) {
+                findings.push(mk(
+                    path,
+                    line,
+                    col,
+                    format!("<{} {}=\"{}\"> — {msg}", t.tag, name, value),
+                ));
+            }
+        }
+    }
     for t in scan_open_tags(source) {
         let (line, col) = offset_to_line_col(source, t.start);
         let valid = tag_props(&t.tag);
@@ -530,6 +561,20 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             if is_passthrough_attr(name) {
                 // Non-axis attrs (id, class, sx, on:click, data-*, a11y, …)
                 // pass straight through to the div — nothing to validate.
+                continue;
+            }
+            // Child participation (grow/shrink/w/min-w/max-w) is legal on every
+            // layout keyword — it's how the box itself fills a parent layout.
+            // Validated against Style's closed size/grow vocab, not tag_props.
+            if is_participation_attr(name) {
+                if let Some(msg) = participation_error(name, value) {
+                    findings.push(mk(
+                        path,
+                        line,
+                        col,
+                        format!("<{} {}=\"{}\"> — {msg}", t.tag, name, value),
+                    ));
+                }
                 continue;
             }
             if !is_known_axis_prop(name) {
@@ -645,7 +690,112 @@ fn is_known_axis_prop(name: &str) -> bool {
         name,
         "gap" | "align" | "justify" | "min" | "flow" | "cols" | "rows" | "direction" | "tracks"
             | "inline" | "nowrap"
-    )
+    ) || is_participation_attr(name)
+}
+
+/// Child participation attrs — legal on **any** element, not only layout
+/// keywords. They express how a box participates in a flex/grid parent
+/// (grow/shrink) or its layout-sized width bounds (`w` / `min-w` / `max-w`).
+///
+/// Boolean `grow` / `shrink` mean value `1`. Explicit `grow="0"|"1"` /
+/// `shrink="0"|"1"` are allowed. Width attrs take the same size-scale tokens
+/// Style's `w` / `minW` / `maxW` setters accept.
+pub const PARTICIPATION_ATTRS: &[&str] = &["grow", "shrink", "w", "min-w", "max-w"];
+
+pub fn is_participation_attr(name: &str) -> bool {
+    PARTICIPATION_ATTRS.contains(&name)
+}
+
+/// Map a participation attr name to the Style setter that owns the same CSS
+/// (`min-w` → `minW`).
+fn participation_setter(name: &str) -> Option<&'static str> {
+    Some(match name {
+        "grow" => "grow",
+        "shrink" => "shrink",
+        "w" => "w",
+        "min-w" => "minW",
+        "max-w" => "maxW",
+        _ => return None,
+    })
+}
+
+/// Resolve the token a participation attr lowers with. Boolean `grow` /
+/// `shrink` (empty value) → `"1"`. Width attrs require an explicit token.
+fn participation_token(name: &str, value: &str) -> Result<String, String> {
+    match name {
+        "grow" | "shrink" => {
+            if value.is_empty() {
+                return Ok("1".into());
+            }
+            if value == "0" || value == "1" {
+                return Ok(value.to_string());
+            }
+            if value.starts_with('{') {
+                return Err(format!(
+                    "`{name}={{…}}` — participation attrs are static. Use `{name}` or `{name}=\"0\"|\"1\"`."
+                ));
+            }
+            Err(format!(
+                "`{name}=\"{value}\"` — allowed values: boolean presence, or \"0\" / \"1\"."
+            ))
+        }
+        "w" | "min-w" | "max-w" => {
+            if value.is_empty() {
+                return Err(format!(
+                    "`{name}` needs a size token (e.g. `{name}=\"full\"`, `{name}=\"0\"`)."
+                ));
+            }
+            if value.starts_with('{') {
+                return Err(format!(
+                    "`{name}={{…}}` — participation width attrs are static size tokens."
+                ));
+            }
+            Ok(value.to_string())
+        }
+        _ => Err(format!("unknown participation attr `{name}`")),
+    }
+}
+
+/// Lower one participation attr to the same atomic class + CSS Style would
+/// emit for the matching setter (`style.grow(1)` → `sx-grow1{flex-grow:1}`,
+/// `style.w(full)` → `sx-wfull{width:100%}`, …). `None` when the value is
+/// off-vocab (lint reports it; preprocess skips).
+pub fn lower_participation(name: &str, value: &str) -> Option<(String, String)> {
+    let setter = participation_setter(name)?;
+    let token = participation_token(name, value).ok()?;
+    let style = crate::style::Style::Set(crate::style::PaintOp {
+        setter: setter.into(),
+        args: vec![crate::style::PaintArg::Token(token)],
+        source: format!("{name}"),
+    });
+    let (classes, css) = crate::style::lower_style(&style, &std::collections::HashMap::new());
+    if classes.is_empty() || css.is_empty() {
+        return None;
+    }
+    Some((classes, css))
+}
+
+/// Lint message if a participation attr is invalid; `None` when OK.
+pub fn participation_error(name: &str, value: &str) -> Option<String> {
+    if !is_participation_attr(name) {
+        return None;
+    }
+    match participation_token(name, value) {
+        Err(msg) => Some(msg),
+        Ok(token) => {
+            // Reuse Style resolution so allowed tokens stay in lockstep with
+            // `style.w` / `style.minW` / `style.maxW` / grow / shrink.
+            if lower_participation(name, value).is_none() {
+                Some(format!(
+                    "`{name}=\"{token}\"` — not a valid size token for layout participation \
+                     (same closed set as style.{}(…)).",
+                    participation_setter(name).unwrap_or(name)
+                ))
+            } else {
+                None
+            }
+        }
+    }
 }
 
 pub fn is_passthrough_attr(name: &str) -> bool {
@@ -658,7 +808,7 @@ pub fn is_passthrough_attr(name: &str) -> bool {
             && name.as_bytes().get(2) == Some(&b':')
         // SAIL directive prefixes — framework bindings that the compiler
         // understands (see `crates/sail/compiler/src/parse/template/attrs.rs`).
-        // `bind:`, `use:`, `attr:`, `prop:`, `motion:`. Each is fully
+        // `bind:`, `use:`, `attr:`, `prop:`, `fx:`. Each is fully
         // validated downstream; the layout keyword lowering passes them
         // through to the div unchanged. `class:` / `style:` are retired
         // and intentionally absent here.
@@ -666,7 +816,7 @@ pub fn is_passthrough_attr(name: &str) -> bool {
         || name.starts_with("use:")
         || name.starts_with("attr:")
         || name.starts_with("prop:")
-        || name.starts_with("motion:")
+        || name.starts_with("fx:")
     {
         return true;
     }
@@ -739,7 +889,7 @@ fn unknown_attr_hint(tag: &str) -> String {
         format!("<{tag}> takes no axis props; only pass-through attrs are allowed.")
     } else {
         format!(
-            "<{tag}> takes these axis props: {} — or any HTML/global pass-through (id, sx, data-*, aria-*, on:*, bind:*, attr:*, prop:*, motion:*).",
+            "<{tag}> takes these axis props: {} — or any HTML/global pass-through (id, sx, data-*, aria-*, on:*, bind:*, attr:*, prop:*, fx:*).",
             axes.join(", ")
         )
     }
@@ -787,6 +937,66 @@ pub fn scan_open_tags(source: &str) -> Vec<OpenTag> {
                     i = end;
                     continue;
                 }
+            }
+        }
+        i += 1;
+        while i < bytes.len() && (bytes[i] & 0xC0) == 0x80 {
+            i += 1;
+        }
+    }
+    out
+}
+
+/// Scan every open tag in the source (layout keywords + plain/HTML/L1 hosts).
+/// Used to lower and lint participation attrs on non-layout elements.
+/// Skips close tags, comments, doctype/processing instructions.
+pub fn scan_any_open_tags(source: &str) -> Vec<OpenTag> {
+    let bytes = source.as_bytes();
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < bytes.len() {
+        if source[i..].starts_with("<!--") {
+            match source[i..].find("-->") {
+                Some(end) => {
+                    i += end + 3;
+                    continue;
+                }
+                None => break,
+            }
+        }
+        if bytes[i] == b'<' {
+            let next = bytes.get(i + 1).copied();
+            // Skip close tags, doctype, comments (handled above), PI.
+            if matches!(next, Some(b'/') | Some(b'!') | Some(b'?') | None) {
+                i += 1;
+                continue;
+            }
+            // Tag name: letters, digits, hyphen (custom elements / L1).
+            let name_start = i + 1;
+            let mut j = name_start;
+            while j < bytes.len()
+                && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'-' || bytes[j] == b'_')
+            {
+                j += 1;
+            }
+            if j == name_start {
+                i += 1;
+                continue;
+            }
+            // Word boundary: whitespace, `>`, or `/` (self-close).
+            if !matches!(
+                bytes.get(j),
+                Some(b) if b.is_ascii_whitespace() || *b == b'>' || *b == b'/'
+            ) {
+                i += 1;
+                continue;
+            }
+            let tag = &source[name_start..j];
+            if let Some(parsed) = parse_open_tag(source, i, tag) {
+                let end = parsed.end;
+                out.push(parsed);
+                i = end;
+                continue;
             }
         }
         i += 1;

@@ -52,7 +52,7 @@ fn sui_examples(md: &str) -> Vec<String> {
             if in_fence {
                 let looks_like_sui = buf.contains("<scope>")
                     || buf.contains("<controller>")
-                    || buf.contains("motion:")
+                    || buf.contains("fx:")
                     || buf.contains("use:");
                 if looks_like_sui {
                     out.push(std::mem::take(&mut buf));
@@ -87,7 +87,7 @@ fn every_sui_example_in_the_agent_skill_compiles() {
 
     let mut broken = Vec::new();
     for (i, ex) in examples.iter().enumerate() {
-        // A fragment (`<card motion:reveal={…}>`) is a valid template on its own; a
+        // A fragment (`<card fx:reveal={…}>`) is a valid template on its own; a
         // full example carries its own `<scope>` block. Both compile as-is.
         // `component_meta` is required: `<scope>` props are component
         // members, and the props check keys on the meta, not the mode.

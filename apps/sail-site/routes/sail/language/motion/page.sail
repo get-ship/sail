@@ -4,7 +4,7 @@
   presets are one paragraph; scroll/loop prose in plain English; choreography
   demo full-width with the code below it; compositor talk and the 30 kB jab
   cut; Under the hood answers where Sail ends and the embedded Motion library
-  begins. The motion:reveal demos are correct as written — the reveal trigger
+  begins. The fx:reveal demos are correct as written — the reveal trigger
   currently attaches nothing at runtime (regression, job/motion-view-regression
   dispatched with this page as the gate).
 -->
@@ -64,7 +64,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>The language</p>
   <h1>Motion</h1>
   <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
-    Animation is declared on the element. <code>motion:</code> names a
+    Animation is declared on the element. <code>fx:</code> names a
     <strong>trigger</strong> — <code>enter</code>, <code>exit</code>,
     <code>reveal</code>, <code>press</code>, <code>loop</code> — and a
     <strong>config</strong>: which properties move, how far, how fast. When
@@ -74,19 +74,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
 
   <row gap="3" align="center">
-    <button on:click={replay} motion:press={{ scale: 'press' }}>Replay</button>
+    <button on:click={replay} fx:press={{ scale: 'press' }}>Replay</button>
     <p sx={style.fontSize(sm).fg(muted-foreground)}>
-      Five tiles, one <code>motion:enter</code> each; <code>stagger</code>
+      Five tiles, one <code>fx:enter</code> each; <code>stagger</code>
       is the delay between siblings.
     </p>
   </row>
   {#if dealt()}
     <row gap="3" align="center" sx={style.minH(9)}>
-      <div sx={style.w(9).h(9).radius(md).bg(primary)} motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
-      <div sx={style.w(9).h(9).radius(md).bg(primary).opacity(75)} motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
-      <div sx={style.w(9).h(9).radius(md).bg(primary)} motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
-      <div sx={style.w(9).h(9).radius(md).bg(primary).opacity(75)} motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
-      <div sx={style.w(9).h(9).radius(md).bg(primary)} motion:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx={style.w(9).h(9).radius(md).bg(primary)} fx:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx={style.w(9).h(9).radius(md).bg(primary).opacity(75)} fx:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx={style.w(9).h(9).radius(md).bg(primary)} fx:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx={style.w(9).h(9).radius(md).bg(primary).opacity(75)} fx:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+      <div sx={style.w(9).h(9).radius(md).bg(primary)} fx:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
     </row>
   {/if}
   <code-block code={code.stagger}></code-block>
@@ -101,14 +101,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)} gap="3">
     <row>
-      <button on:click={() => open.set(!open())} motion:press={{ scale: 'press' }}>
+      <button on:click={() => open.set(!open())} fx:press={{ scale: 'press' }}>
         {open() ? 'Remove' : 'Add'} the panel
       </button>
     </row>
     {#if open()}
       <card
-        motion:enter={{ opacity: 'fade', scale: 'spring:snappy' }}
-        motion:exit={{ opacity: 'fade-out' }}
+        fx:enter={{ opacity: 'fade', scale: 'spring:snappy' }}
+        fx:exit={{ opacity: 'fade-out' }}
         sx={style.pad(4)}
       >
         <strong>I animate in, and I animate out.</strong>
@@ -127,8 +127,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     the same loop — one at 500&nbsp;ms, one at 2500&nbsp;ms:
   </p>
   <row gap="5" align="center" sx={style.minH(9)}>
-    <div data-testid="inline-demo" sx={style.w(8).h(8).radius(md).bg(primary)} motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 500 }}></div>
-    <div sx={style.w(8).h(8).radius(md).bg(primary).opacity(75)} motion:loop={{ translate-x: { from: 0, to: '80px' }, duration: 2500 }}></div>
+    <div data-testid="inline-demo" sx={style.w(8).h(8).radius(md).bg(primary)} fx:loop={{ translate-x: { from: 0, to: '80px' }, duration: 500 }}></div>
+    <div sx={style.w(8).h(8).radius(md).bg(primary).opacity(75)} fx:loop={{ translate-x: { from: 0, to: '80px' }, duration: 2500 }}></div>
   </row>
   <code-block code={code.express}></code-block>
   <p>
@@ -146,10 +146,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     viewport. Same configs as everything else:
   </p>
   <column gap="4">
-    <card motion:reveal={{ opacity: 'fade', translate-y: 'spring:gentle' }} sx={style.pad(6)}>
+    <card fx:reveal={{ opacity: 'fade', translate-y: 'spring:gentle' }} sx={style.pad(6)}>
       <h3>This one fades up as it enters the viewport.</h3>
     </card>
-    <card motion:reveal={{ scale: 'spring:bouncy', opacity: 'fade' }} sx={style.pad(6)}>
+    <card fx:reveal={{ scale: 'spring:bouncy', opacity: 'fade' }} sx={style.pad(6)}>
       <h3>And this one springs in.</h3>
     </card>
   </column>
@@ -163,12 +163,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     reduced motion gets none of this, automatically.
   </p>
   <row gap="3" align="center" sx={style.minH(9)} data-testid="loop-row">
-    <div data-testid="ambient-dot" sx={style.w(4).h(4).radius(full).bg(primary)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
-    <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
-    <div sx={style.w(4).h(4).radius(full).bg(primary)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
-    <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75)} motion:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div data-testid="ambient-dot" sx={style.w(4).h(4).radius(full).bg(primary)} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75)} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx={style.w(4).h(4).radius(full).bg(primary)} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+    <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75)} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
     <row sx={style.grow(1)}></row>
-    <div data-testid="spin-demo" sx={style.w(8).h(8).radius(md).bg(primary)} motion:loop={{ rotate: 'spin' }}></div>
+    <div data-testid="spin-demo" sx={style.w(8).h(8).radius(md).bg(primary)} fx:loop={{ rotate: 'spin' }}></div>
   </row>
   <code-block code={code.loop}></code-block>
 
@@ -180,8 +180,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <a href="/sail/language/styling">styling chapter</a>.
   </p>
   <row gap="3" align="center">
-    <button motion:press={{ scale: 'press' }}>press me</button>
-    <button motion:focus-visible={{ scale: 'spring:snappy' }}>tab to me</button>
+    <button fx:press={{ scale: 'press' }}>press me</button>
+    <button fx:focus-visible={{ scale: 'spring:snappy' }}>tab to me</button>
   </row>
   <code-block code={code.gestures}></code-block>
 
@@ -232,7 +232,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     Sail does not reimplement animation. The runtime embeds the
     <a href="https://motion.dev">Motion</a> library and compiles your
-    declarations onto it — <code>motion:</code> attributes become Motion
+    declarations onto it — <code>fx:</code> attributes become Motion
     animations, springs use Motion's spring generator. What Sail adds is the
     declaration layer: the compiler checks every trigger, property, and
     preset name at build, so a typo is a compile error rather than an

@@ -131,7 +131,7 @@ impl Builder {
                 // Actions register on element construction, same as
                 // transitions — no SSR marker, no key, no manifest entry.
             }
-            // `motion:` produces pre-baked `element.animate(...)` calls
+            // `fx:` produces pre-baked `element.animate(...)` calls
             // — no binding-key allocation, no SSR marker, no manifest
             // entry. Same shape as transitions: registration happens at
             // element construction in `template_emit/dom_emit.rs`.

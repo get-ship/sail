@@ -368,7 +368,7 @@ impl TemplateEmitter {
                 ));
             }
             AttrInstr::Motion { trigger, props, stagger_ms, timing, span: _ } => {
-                // `motion:` is a thin runtime directive. The compiler resolves the
+                // `fx:` is a thin runtime directive. The compiler resolves the
                 // config — preset defaults, then config-level timing, then per-channel
                 // overrides — and emits it; motion.dev creates and orchestrates every
                 // animation after the node is live. This avoids inert-document WAAPI

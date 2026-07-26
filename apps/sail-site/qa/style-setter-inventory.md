@@ -4,7 +4,7 @@
 **Branch:** `job/style-synthesis`  
 **SSOT:** [`crates/sail/lint/src/style/setters.rs`](../../../crates/sail/lint/src/style/setters.rs) — `SetterSpec` table via `setters()`  
 **Corpus:** 273 `*.sail` files (excluding `node_modules` / `target` / build artifacts)  
-**Method:** walk every `style.…` chain in `.sail` sources; count each known setter method on the chain; nested `style.…` inside `when` / `match` / `compound` args counted separately (so `style.bgWash(…).when({ hover: style.bgWash(…) })` = 2).
+**Method:** walk every `style.…` chain in `.sail` sources; count each known setter method on the chain; nested `style.…` inside `when` / `match` / `compound` args counted separately (so `style.colorMix(…).when({ hover: style.colorMix(…) })` = 2).
 
 ---
 
@@ -21,7 +21,7 @@
 - **28 setters have zero product call sites** (including brand-new Tier-2 chrome: `controlFrame` / `controlLift` / `press`, and layout host-paint `gap` / `gapX` / `gapY`).
 - Style is overwhelmingly paint: ~86% of calls are pure-paint.
 - Composites are rare in absolute counts but high-leverage in stdlib (soft/solid tone recipes).
-- Generated skill **SKILL.md is stale by one setter**: `bgWash` is missing (see § Documentation coverage).
+- Generated skill **SKILL.md is stale by one setter**: `colorMix` is missing (see § Documentation coverage).
 
 ---
 
@@ -34,7 +34,7 @@ Each setter is in **exactly one** bucket:
 | **pure-paint** | Color, type, border, radius, shadow, opacity, padding/margin, overflow, cursor, a11y chrome, single-concern CSS longhands, host markers (`group`) |
 | **layout-ish** | Size (`w`/`h`/`min*`/`max*`/`size`), flex item (`grow`/`shrink`/`basis`/`self`/`order`/`justifySelf`), container flex/gap (`flexDir`/`gap*`), `display`, `position`, inset axes |
 | **motion-adjacent** | `transition` / `duration` / `ease` / `translate*` / `rotate` / `scale` / `animate` / `transform` / `willChange` / `origin` |
-| **composite-recipe** | Multi-slot packs, two-arg color recipes, or component-specific chrome (`bgWash`, `bgMix`, control chrome, `textGradient`, `bgGlow`, media packs, `truncate`, `srOnly`, card `backdrop`/`borderImage`) |
+| **composite-recipe** | Multi-slot packs, two-arg color recipes, or component-specific chrome (`colorMix`, `bgMix`, control chrome, `textGradient`, `bgGlow`, media packs, `truncate`, `srOnly`, card `backdrop`/`borderImage`) |
 
 Padding/margin stay **pure-paint** (box chrome), not layout-ish — layout policy already steers axis/gap to layout elements; pad is the dominant Style spacing channel.
 
@@ -85,7 +85,7 @@ Gallery/demo pages dominate volume; stdlib + sail-site marketing pages are the s
 
 | Rank | Setter | Calls | Files | Primary homes |
 |-----:|--------|------:|------:|---------------|
-| 1 | **`bgWash`** | **26** | 4 | `stdlib/button.sail` (12), `stdlib/anchor.sail` (12), docs pages (2) |
+| 1 | **`colorMix`** | **26** | 4 | `stdlib/button.sail` (12), `stdlib/anchor.sail` (12), docs pages (2) |
 | 2 | **`truncate`** | **16** | 12 | primitives (tree-grid, calendar, cmdk, …), chat-elements, demos |
 | 3 | **`bgMix`** | **7** | 1 | `stdlib/anchor.sail` solid hover only |
 | 4 | **`srOnly`** | **5** | 5 | chart components (line/area/bar/donut/heatmap) |
@@ -100,14 +100,14 @@ Honorable mentions (tied at 1 or zero): `textGradient` (1, hero page); **`contro
 
 ---
 
-## Deep dive: `bgWash`
+## Deep dive: `colorMix`
 
 ### What it is
 
 Two-arg paint composite (not a scale token):
 
 ```text
-style.bgWash(token, pct)   // pct ∈ 5..95 step 5, or bind
+style.colorMix(token, pct)   // pct ∈ 5..95 step 5, or bind
 ```
 
 SSOT comment in `setters.rs`:
@@ -117,7 +117,7 @@ SSOT comment in `setters.rs`:
 
 ### Lowering
 
-From `lower_bg_wash_arg` in `setters.rs`:
+From `lower_color_mix_arg` in `setters.rs`:
 
 ```css
 background-color: color-mix(in oklch, {token} {pct}%, transparent);
@@ -129,7 +129,7 @@ Compare siblings:
 
 | Setter | CSS shape | Intent |
 |--------|-----------|--------|
-| `bgWash(token, pct)` | `color-mix(in oklch, token pct%, transparent)` | Soft tinted fill |
+| `colorMix(token, pct)` | `color-mix(in oklch, token pct%, transparent)` | Soft tinted fill |
 | `bgMix(token, pct)` | `color-mix(in oklch, token, var(--foreground) pct%)` | Solid hover deepen toward foreground |
 | legacy `tone-*-bg` | e.g. `color-mix(…, var(--primary) 14%, transparent)` in theme CSS | Fixed percent per tone channel (deleted as design tokens for Style) |
 
@@ -137,26 +137,26 @@ Compare siblings:
 
 | Location | Pattern |
 |----------|---------|
-| `crates/sail/compiler/stdlib/button.sail` | `compound({ variant: soft, tone: T }, style.bgWash(T, 15)….when({ hover: style.bgWash(T, 25) }))` for primary/info/success/warning/destructive/accent |
+| `crates/sail/compiler/stdlib/button.sail` | `compound({ variant: soft, tone: T }, style.colorMix(T, 15)….when({ hover: style.colorMix(T, 25) }))` for primary/info/success/warning/destructive/accent |
 | `crates/sail/compiler/stdlib/anchor.sail` | Same soft recipe as named consts (`softPrimary`, …) |
 | `apps/sail-site/routes/sail/language/theming/page.sail` | Doc example in prose |
 | `apps/sail-site/routes/sail/language/styling/page.sail` | Doc example in prose |
 
-Note: button **default soft** (no tone) still uses `style.bg(hover-bg)`, not `bgWash`. Washes are the **toned soft** path only.
+Note: button **default soft** (no tone) still uses `style.bg(hover-bg)`, not `colorMix`. Washes are the **toned soft** path only.
 
 ### Would a `soft-*` token replace it?
 
-**Recommendation: no — keep parametric `bgWash`.**
+**Recommendation: no — keep parametric `colorMix`.**
 
 | Option | Pros | Cons |
 |--------|------|------|
-| **`style.bgWash(hue, pct)` (current)** | One primitive covers rest(15) + hover(25) + any bind; no token explosion; matches “no tone-\* design tokens” direction | Two-arg API; agents must know the pct ramp |
+| **`style.colorMix(hue, pct)` (current)** | One primitive covers rest(15) + hover(25) + any bind; no token explosion; matches “no tone-\* design tokens” direction | Two-arg API; agents must know the pct ramp |
 | **`soft-primary` / `soft-primary-hover` tokens** | `style.bg(soft-primary)` ergonomics | Re-mints the deleted tone-\*-bg family; rest vs hover needs two tokens × N hues; binds lose flexibility |
-| **Fixed `tone-primary-bg` only** | Matches existing theme CSS vars still present in site skins (`--tone-primary-bg` ≈ 14%) | Style product deliberately left these; percent locked; hover deepen still needs a second token or `bgMix`/`bgWash` |
+| **Fixed `tone-primary-bg` only** | Matches existing theme CSS vars still present in site skins (`--tone-primary-bg` ≈ 14%) | Style product deliberately left these; percent locked; hover deepen still needs a second token or `bgMix`/`colorMix` |
 
 Theme CSS still ships `--tone-*-bg` for non-Style chrome (prose, dropzone, mark). Style’s soft path intentionally **does not** spend those tokens — it recomputes via `color-mix` so soft fills track live hue tokens (`primary`, `info`, …).
 
-**Demotion home for `bgWash`:** **stay Style** (composite paint recipe). Not layout, not motion, not contracts. Optional future: L1 soft-variant default could bake wash into platform CSS, but product authors still need the primitive for custom soft surfaces.
+**Demotion home for `colorMix`:** **stay Style** (composite paint recipe). Not layout, not motion, not contracts. Optional future: L1 soft-variant default could bake wash into platform CSS, but product authors still need the primitive for custom soft surfaces.
 
 ---
 
@@ -166,7 +166,7 @@ Homes:
 
 - **stay Style** — product paint surface
 - **layout element attrs / `box=`** — row/column/grid axis & child placement
-- **`motion:` / fx** — enter/exit/loop and intentional motion
+- **`fx:` / fx** — enter/exit/loop and intentional motion
 - **token / L1 default** — design token or platform control default
 - **contracts (platform only)** — `contracts.css` L1 chrome not authored per instance
 
@@ -174,7 +174,7 @@ Homes:
 
 | Setter | Calls | Proposed home | Rationale |
 |--------|------:|---------------|-----------|
-| `bgWash` | 26 | **stay Style** | Parametric soft fill; replaces tone-\*-bg without tokens |
+| `colorMix` | 26 | **stay Style** | Parametric soft fill; replaces tone-\*-bg without tokens |
 | `truncate` | 16 | **stay Style** (or text utility pack) | Multi-slot text pack; ubiquitous in data UIs |
 | `bgMix` | 7 | **stay Style** | Solid hover deepen; stdlib-only today |
 | `srOnly` | 5 | **stay Style** or a11y helper | Multi-slot clip pack; charts-only today |
@@ -187,20 +187,20 @@ Homes:
 | `backdrop` | 1 | **token / contracts** for card | `--card-backdrop-filter` |
 | `controlFrame` | 0 | **contracts (platform)** primary; Style bridge OK | Lowers to `var(--control-frame)`; button still contracts-owned |
 | `controlLift` | 0 | **contracts** + motion-ish | `var(--control-lift)` translate |
-| `press` | 0 | **contracts** / **motion:** | Multi-slot press chrome (`--press-translate/scale/shadow`) |
+| `press` | 0 | **contracts** / **fx:** | Multi-slot press chrome (`--press-translate/scale/shadow`) |
 
 ### Motion-adjacent
 
 | Setter | Calls | Proposed home | Rationale |
 |--------|------:|---------------|-----------|
-| `transition` | 13 | **stay Style** for micro-PE; prefer **`motion:`** for enter/exit/loop | CSS transition property still valid host paint |
-| `duration` | 13 | same | Pairs with transition; motion: has own duration |
+| `transition` | 13 | **stay Style** for micro-PE; prefer **`fx:`** for enter/exit/loop | CSS transition property still valid host paint |
+| `duration` | 13 | same | Pairs with transition; fx: has own duration |
 | `ease` | 12 | same | |
-| `rotate` | 9 | **stay Style** for static pose; **`motion:`** for animated | Icons/chevrons use static rotate |
+| `rotate` | 9 | **stay Style** for static pose; **`fx:`** for animated | Icons/chevrons use static rotate |
 | `translateX` / `translateY` | 5+5 | **stay Style** micro-nudge; avoid for layout | Layout should not fake offset with translate |
 | `transform` | 2 | **stay Style** (bind/canvas) | Full transform value / bind tracks |
-| `animate` | 1 | Prefer **`motion:`**; keep `animate(spin)` CSS PE | Lint already treats bare `animate` as motion domain |
-| `scale` | 1 | **stay Style** static; **`motion:`** animated | |
+| `animate` | 1 | Prefer **`fx:`**; keep `animate(spin)` CSS PE | Lint already treats bare `animate` as motion domain |
+| `scale` | 1 | **stay Style** static; **`fx:`** animated | |
 | `origin` | 1 | **stay Style** | transform-origin |
 | `willChange` | 0 | **stay Style** (escape hatch) or drop | Zero use; performance hint |
 
@@ -280,7 +280,7 @@ Homes:
 
 | Setter | Calls | Slots / lowering sketch |
 |--------|------:|-------------------------|
-| `bgWash` | 26 | `background-color: color-mix(… token pct%, transparent)` |
+| `colorMix` | 26 | `background-color: color-mix(… token pct%, transparent)` |
 | `truncate` | 16 | overflow + text-overflow + white-space |
 | `bgMix` | 7 | `color-mix(… token, foreground pct%)` |
 | `srOnly` | 5 | a11y absolute clip pack |
@@ -306,12 +306,12 @@ Homes:
 |-------|--------|
 | Setters in table | 147 |
 | `style.NAME(…)` lines in SKILL.md | 146 |
-| **Missing from SKILL** | **`bgWash` only** |
+| **Missing from SKILL** | **`colorMix` only** |
 | Extra in SKILL not in table | none |
 
-`bgMix`, `controlFrame`, `controlLift`, and `press` are listed; **`bgWash` was inserted into the table after the skill was last regenerated** (order in SSOT is `bgMix` → `bgWash` → control chrome; skill jumps from `bgMix` to `controlFrame`).
+`bgMix`, `controlFrame`, `controlLift`, and `press` are listed; **`colorMix` was inserted into the table after the skill was last regenerated** (order in SSOT is `bgMix` → `colorMix` → control chrome; skill jumps from `bgMix` to `controlFrame`).
 
-**Action:** regenerate skill (`sail-compiler skill`) so `bgWash` appears with arity notes. Optional improvement: skill generator should call out two-arg composites (`bgMix` / `bgWash`) explicitly — today it only prints vocab/scale/keywords, so arity is invisible to agents.
+**Action:** regenerate skill (`sail-compiler skill`) so `colorMix` appears with arity notes. Optional improvement: skill generator should call out two-arg composites (`bgMix` / `colorMix`) explicitly — today it only prints vocab/scale/keywords, so arity is invisible to agents.
 
 ---
 
@@ -336,11 +336,11 @@ Clusters:
 ## Synthesis notes (for style-synthesis job)
 
 1. **Do not demote pure-paint volume** — Style is working as the paint SSOT; top 10 are all paint/type.
-2. **Composites to keep as Style primitives:** `bgWash`, `bgMix`, `truncate`, `srOnly`.
+2. **Composites to keep as Style primitives:** `colorMix`, `bgMix`, `truncate`, `srOnly`.
 3. **Composites that can stay private to one component:** `avatarMedia`, `glyphFill`, `scrollbarThin`, card `backdrop`/`borderImage`.
 4. **Wire or drop control chrome:** either migrate button contracts → `controlFrame`/`controlLift`/`press` Style calls, or stop advertising them until used.
-5. **Motion boundary is soft:** ~62 Style motion calls vs growing `motion:` usage — document “static pose on Style / temporal motion on motion:”.
-6. **Regenerate SKILL.md** — single known doc gap (`bgWash`).
+5. **Motion boundary is soft:** ~62 Style motion calls vs growing `fx:` usage — document “static pose on Style / temporal motion on fx:”.
+6. **Regenerate SKILL.md** — single known doc gap (`colorMix`).
 
 ---
 

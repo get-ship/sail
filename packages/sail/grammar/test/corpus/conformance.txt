@@ -11,7 +11,7 @@ conformance smoke: full live surface in one document
     <p class="agents-sub">{total()} agent{total() === 1 ? '' : 's'}</p>
     <ship-button tone="primary" variant="solid"
                  on:click={() => navigate('/agents/create')}
-                 motion:enter={{ opacity: 'fade' }}>
+                 fx:enter={{ opacity: 'fade' }}>
       <ship-icon slot="leading" name="plus"></ship-icon>
       New agent
     </ship-button>
@@ -110,7 +110,7 @@ conformance smoke: full live surface in one document
           event: (attr_local)
           handler: (brace_expression
             (identifier)))
-        (motion_attr
+        (fx_attr
           trigger: (attr_local)
           config: (brace_expression))
         (element

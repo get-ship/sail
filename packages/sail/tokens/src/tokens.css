@@ -578,7 +578,7 @@ body::after {
    * !important — so a component that OWNS its reduced-motion behaviour
    * (spinner's CSS-fx slowdown via `.sail-spinner .ring`) has real rule
    * specificity and wins this default on the cascade, unforced. Ticker/icon
-   * spin ride motion: (use:marquee / use:icon) and settle under reduced
+   * spin ride fx: (use:marquee / use:icon) and settle under reduced
    * motion in the runtime, not via CSS PE. Anything that has NOT opted in
    * still gets stopped here — this is the floor, not a universal override.
    * transition-duration/scroll-behavior stay a blanket !important kill:

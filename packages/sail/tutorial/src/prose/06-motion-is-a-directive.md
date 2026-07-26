@@ -11,7 +11,7 @@ chapter: "system"
 There is exactly one animation surface in the language:
 
 ```
-motion:TRIGGER={{ property: 'preset' }}
+fx:TRIGGER={{ property: 'preset' }}
 ```
 
 The **trigger** says when: `hover`, `press`, `focus`, `focus-visible`
@@ -35,7 +35,7 @@ A preset is the teachable starting point. When you need a specific
 animation, write it:
 
 ```
-motion:loop={{ translate-x: { from: 0, to: '120px' },
+fx:loop={{ translate-x: { from: 0, to: '120px' },
                rotate: { to: '15deg' },
                duration: 3600, easing: [0.6, 0, 0.2, 1] }}
 ```
@@ -48,7 +48,7 @@ for scale and opacity). A quoted string carries its own unit — `'-12%'`,
 inline cubic-bezier. You can also start from a preset and override one
 field: `scale: { preset: 'pulse', to: 1.9 }`.
 
-This is where `motion:` differs from `sx` on purpose. sx is closed
+This is where `fx:` differs from `sx` on purpose. sx is closed
 because colour and spacing are theming integrity — an off-system colour
 is a bug. A 3600ms decorative loop is not a theming decision, so it does
 not need a token to exist before you can write it.
@@ -58,7 +58,7 @@ not need a token to exist before you can write it.
 Any field can be an expression, which is how a signal gets in:
 
 ```
-motion:loop={{ translate-x: { to: dist() }, duration: speed() }}
+fx:loop={{ translate-x: { to: dist() }, duration: speed() }}
 ```
 
 When the signal changes, the animation is re-created with the new
@@ -66,12 +66,12 @@ values, and it is cleaned up when the element goes away. Note what this
 is: reactive **config** — the signal says what the animation *is*. A
 signal that drives a value every *frame* is the other lane: derive it in
 the `<controller>` and reflect it through sx with `(--name)`. Reach for
-that one to scrub; each change on `motion:` costs an animation teardown.
+that one to scrub; each change on `fx:` costs an animation teardown.
 
 ## exit is why the framework is involved
 
 CSS can animate an element in; it cannot animate one *out*, because by
-then the node is gone. `motion:exit` is the exception the framework
+then the node is gone. `fx:exit` is the exception the framework
 owns: it **holds the element in the tree** until the exit animation
 finishes, then removes it. Dismiss a notification in the solved example
 — the row fades, then leaves. That is exit-hold.
@@ -100,15 +100,15 @@ prefixes.)
 The starter works perfectly and moves not at all. Add only directives —
 the controller does not change:
 
-1. **Make dismiss graceful** (TODO 5). `motion:exit={{ opacity:
+1. **Make dismiss graceful** (TODO 5). `fx:exit={{ opacity:
    'fade-out' }}` on the row. Before you add it, dismiss one and watch
    it snap; after, watch exit-hold do its job.
-2. **Make arrival a cascade** (TODO 5). `motion:enter` with a spring on
+2. **Make arrival a cascade** (TODO 5). `fx:enter` with a spring on
    `translate-x` and `stagger: '50ms'`, then hit Restock.
 3. **Panel lifecycle** (TODO 4). Enter and exit on the `{#if open()}`
    panel — toggle the tray both ways.
 4. **The small stuff** (TODO 1–3). Rotate the restock hint on hover,
-   press-scale the trigger, pulse the unread dot with `motion:loop`.
+   press-scale the trigger, pulse the unread dot with `fx:loop`.
 5. **Try to cheat.** Set a preset to `'whoosh'` and read the rejection —
    it lists the entire legal set, and points at the inline form.
 6. **Then stop cheating and just write it.** Replace one preset with an

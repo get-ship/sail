@@ -1,5 +1,5 @@
 // Motion runtime — the single authority for every animation the framework
-// owns. `motion:` directives compile to a single `__sui_motion_attach(el, cfg)`
+// owns. `fx:` directives compile to a single `__sui_motion_attach(el, cfg)`
 // call; the runtime creates the animations and decides whether to honor
 // `prefers-reduced-motion`. No CSS kill switch owns this path — the CSS rule
 // covers transitions the runtime doesn't (button hover lift, range thumb,
@@ -24,7 +24,7 @@
 //
 // Animation lifecycle: the runtime creates an `AnimationPlaybackControls`
 // per motion, parks them on the element, and the disposer cancels them.
-// Reduced motion: when the matchMedia reports `reduce`, the runtime
+// Reduced fx: when the matchMedia reports `reduce`, the runtime
 // computes the FINAL keyframe value and writes it as inline style — same
 // behavior motion.dev's `reduceMotion: true` would produce, but the
 // option is inert on the vanilla `animate(element, ...)` path, so we
@@ -572,7 +572,7 @@ function createAnimations(
  *  and the animation never surfaces in `getAnimations()` — a silent,
  *  permanent freeze with no console error.
  *
- *  The compiler wires `motion:` during detached subtree construction
+ *  The compiler wires `fx:` during detached subtree construction
  *  (`el = __tpl(...); __sui_motion_attach(el, ...)`), so on first mount
  *  the element is not yet in the document. We pin it to its rest pose
  *  immediately (so it does not flash its final value for a frame) and
@@ -615,7 +615,7 @@ function createAnimationsWhenConnected(
   }
 }
 
-// ── Timeline triggers — motion:view / motion:scroll ─────────────────────────
+// ── Timeline triggers — fx:view / fx:scroll ─────────────────────────
 //
 // PROGRESS-driven, not time-driven: the animation's position is a function
 // of scroll, not of the clock. Where the platform has scroll timelines
@@ -631,7 +631,7 @@ function createAnimationsWhenConnected(
 // runtime carried exactly this wiring (`a.timeline = new ViewTimeline(...)`
 // + the IO fallback). The motion.dev migration (8bb03de9) rewrote the
 // branch as a bare `createAnimations()` — identical to `enter` — so every
-// `motion:reveal` element played its reveal ONCE at mount, below the fold,
+// `fx:reveal` element played its reveal ONCE at mount, below the fold,
 // invisibly, and sat at its final pose forever. No error surfaces because
 // a finished animation is indistinguishable from a correct one. If you are
 // editing this branch: the contract is "hidden until the viewport says
@@ -678,7 +678,7 @@ function observeProgressFallback(el: Element, kind: 'reveal' | 'scroll', c: Anim
     return () => io.disconnect()
   }
   console.warn(
-    `[sail/motion] motion:${kind} needs ${kind === 'reveal' ? 'ViewTimeline or IntersectionObserver' : 'ScrollTimeline'}, ` +
+    `[sail/motion] fx:${kind} needs ${kind === 'reveal' ? 'ViewTimeline or IntersectionObserver' : 'ScrollTimeline'}, ` +
     `and this environment has neither — settling at the final pose instead of animating. ` +
     `The trigger is degraded, not silently dropped.`,
     el,
@@ -752,13 +752,13 @@ function classifyTrigger(trigger: string): Branch {
   return 'noop'
 }
 
-/** Attach a `motion:` directive.
+/** Attach a `fx:` directive.
  *
  *  The compiler emits a PLAIN OBJECT when every field of the config is a
  *  literal, and a THUNK when any field holds a signal. The thunk form is
  *  the reactive lane:
  *
- *      motion:loop={{ translate-x: { to: dist() }, duration: speed() }}
+ *      fx:loop={{ translate-x: { to: dist() }, duration: speed() }}
  *
  *  ## Reactive semantics (one rule, deliberately)
  *
@@ -785,7 +785,7 @@ function classifyTrigger(trigger: string): Branch {
  *  A signal here is reactive CONFIG — it says what the animation IS, and
  *  changing it makes a new animation. A signal driving a CONTINUOUS,
  *  per-frame value is the other lane: `timeline()` + `(--x)` reflection
- *  (job/motion-timeline). Do not reach for `motion:` to scrub a value every
+ *  (job/motion-timeline). Do not reach for `fx:` to scrub a value every
  *  frame; each change here costs an animation teardown. */
 export function __sui_motion_attach(
   el: Element,
@@ -913,7 +913,7 @@ function attachOnce(
   // interaction's animations here interrupts any OTHER motion that shares a
   // property on this element: `animate()` takes over the shared property, and
   // the cancel then drops it back to the element's inline base — clobbering,
-  // e.g., a `motion:enter`/`motion:exit` opacity reveal so the element sticks
+  // e.g., a `fx:enter`/`fx:exit` opacity reveal so the element sticks
   // at opacity:0. The animations are created fresh on the first event, so the
   // priming was pure side effect. Start empty; `playForward` fills `live`.
   let live: Array<{ stop: () => void; cancel: () => void }> = []

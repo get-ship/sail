@@ -62,7 +62,7 @@ export default controller(() => {
     {#match phase()}
       {:case 'idle'} <badge tone="muted">idle</badge>
       <!-- TODO 4: {:case 'building'} and {:case 'live'} branches, each
-           with a motion:enter so the swapped-in badge announces itself. -->
+           with a fx:enter so the swapped-in badge announces itself. -->
       {:default} <badge tone="destructive">failed</badge>
     {/match}
   </row>

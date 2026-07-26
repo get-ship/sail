@@ -9,7 +9,7 @@
 // fallback shows.
 //
 // `spin` is owned here (not contracts PE): the glyph is injected with no
-// structure slot, so the action attaches a motion:loop rotate on the host
+// structure slot, so the action attaches a fx:loop rotate on the host
 // when `[spin]` is present. Duration matches the ambient `--animate-spin`
 // 0.7s; reduced motion settles via the motion runtime (no spin).
 

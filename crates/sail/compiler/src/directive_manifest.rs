@@ -1,6 +1,6 @@
 //! The template-directive vocabulary — one source of truth for every
 //! attribute-position directive the parser accepts (`on:`, `bind:`, `use:`,
-//! `motion:`, slots, `mutation`), every `on:` event name, every `on:`
+//! `fx:`, slots, `mutation`), every `on:` event name, every `on:`
 //! event modifier, every `bind:` target, and every retired directive with
 //! the thing to use instead.
 //!
@@ -27,7 +27,7 @@ pub struct DirectiveEntry {
 /// each prefix so `bind:value`, `on:click`, etc. parse as directives
 /// rather than as ordinary `attr_name` tokens. Keep this in sync with
 /// the `DIRECTIVES` entries whose syntax starts with `<prefix>:`.
-pub const DIRECTIVE_PREFIXES: &[&str] = &["bind", "on", "use", "motion"];
+pub const DIRECTIVE_PREFIXES: &[&str] = &["bind", "on", "use", "fx"];
 
 /// Element names that are directive-like in the grammar: the parser treats
 /// them as ordinary HTML elements, but the highlight query gives them a
@@ -54,7 +54,7 @@ pub const DIRECTIVES: &[DirectiveEntry] = &[
         summary: "static styling atoms from the closed sx vocabulary; sx={expr} is a compile error",
     },
     DirectiveEntry {
-        syntax: "motion:<trigger>={…}",
+        syntax: "fx:<trigger>={…}",
         summary: "the one animation directive — triggers, properties, and config in the motion reference",
     },
     DirectiveEntry {
@@ -450,18 +450,18 @@ pub const RETIRED_DIRECTIVES: &[RetiredEntry] = &[
     },
     RetiredEntry {
         syntax: "transition: / in: / out:",
-        instead: "motion:enter / motion:exit",
+        instead: "fx:enter / fx:exit",
     },
 ];
 
-/// One value form the `motion:` config grammar accepts.
+/// One value form the `fx:` config grammar accepts.
 #[derive(Debug, Clone, Serialize)]
 pub struct MotionValueForm {
     pub form: &'static str,
     pub summary: &'static str,
 }
 
-/// The value grammar inside a `motion:` config object — what each shape of
+/// The value grammar inside a `fx:` config object — what each shape of
 /// value means. Enforced by `parse::template::attrs::parse_motion_value`.
 pub const MOTION_VALUE_FORMS: &[MotionValueForm] = &[
     MotionValueForm {

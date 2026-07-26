@@ -42,10 +42,10 @@ export default controller((ctx: Scope) => {
     </column>
     {#if playing()}
       <row gap="1" align="end" sx={eq}>
-        <div sx={[bar, style.h(4)]} motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
-        <div sx={[bar, style.h(6).opacity(75)]} motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
-        <div sx={[bar, style.h(3)]} motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
-        <div sx={[bar, style.h(5).opacity(75)]} motion:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
+        <div sx={[bar, style.h(4)]} fx:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
+        <div sx={[bar, style.h(6).opacity(75)]} fx:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
+        <div sx={[bar, style.h(3)]} fx:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
+        <div sx={[bar, style.h(5).opacity(75)]} fx:loop={{ scale-y: 'spring:gentle', stagger: '0.1s' }}></div>
       </row>
     {:else}
       <row gap="1" align="center" sx={eq}>

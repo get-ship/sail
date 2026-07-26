@@ -231,10 +231,10 @@ ${clauses}
       optional(seq('=', field('param', $.brace_expression))),
     ),`;
       }
-      if (prefix === 'motion') {
-        return `    // \`motion:trigger={{ prop: 'preset' }}\` — animation config.
+      if (prefix === 'fx') {
+        return `    // \`fx:trigger={{ prop: 'preset' }}\` — animation config.
     ${rule}: $ => seq(
-      'motion:',
+      'fx:',
       field('trigger', $.attr_local),
       '=',
       field('config', $.brace_expression),

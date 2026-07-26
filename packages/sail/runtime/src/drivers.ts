@@ -84,14 +84,14 @@ export interface ClockSignal extends Signal<number> {
  * Drive progress from wall-clock time.
  *
  * The returned signal advances `0 → 1` across `durationMs`, on motion.dev's
- * frame loop (the same loop `motion:` animations are scheduled on, so a
+ * frame loop (the same loop `fx:` animations are scheduled on, so a
  * page mixing both lanes still has exactly one rAF).
  *
  * ### Reduced motion
  * Under `prefers-reduced-motion: reduce` the default is `'end'`: the signal
  * is set to the value the animation would have FINISHED at (`1`, or `0` for
  * `direction: 'reverse'`) and the frame loop never starts. This mirrors what
- * `motion.ts` does for `motion:` directives — the reduced-motion user sees
+ * `motion.ts` does for `fx:` directives — the reduced-motion user sees
  * the settled, intended layout rather than a first frame frozen mid-flight.
  * `'start'` holds at the beginning instead; `'play'` opts out and animates
  * anyway, which is only correct when the motion IS the content (a progress

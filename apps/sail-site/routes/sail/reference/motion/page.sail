@@ -22,7 +22,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p role="doc-eyebrow">Reference</p>
     <h1>Motion — one system</h1>
     <p role="doc-lead">
-      <code>motion:&lt;trigger&gt;</code> is the only animation directive;
+      <code>fx:&lt;trigger&gt;</code> is the only animation directive;
       <code>transition:</code> / <code>in:</code> / <code>out:</code> are
       retired.
     </p>
@@ -48,7 +48,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>Config value grammar</h3>
     <p sx={style.maxW(breakpoint-tablet)}>
-      Inside a <code>motion:&lt;trigger&gt;</code> config object, every value
+      Inside a <code>fx:&lt;trigger&gt;</code> config object, every value
       takes one of these forms.
     </p>
     <grid cols="1" gap="2">

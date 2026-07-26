@@ -131,10 +131,10 @@ fn ticker_loops_via_two_slots_and_marquee_action() {
         "two independently-filled slots build the seamless-loop duplicate track: {}",
         el.structure_html
     );
-    // Track animation is use:marquee (motion:loop), not contracts PE.
+    // Track animation is use:marquee (fx:loop), not contracts PE.
     assert!(
         el.structure_html.contains("use:marquee"),
-        "track stamps use:marquee for duration/reverse-driven motion: {}",
+        "track stamps use:marquee for duration/reverse-driven fx: {}",
         el.structure_html
     );
     let contracts = include_str!(concat!(

@@ -72,8 +72,8 @@ export default controller(() => {
     <column gap="1">
       {#for m of visible() key={m.id}}
         <row gap="3" align="center" sx={messageRow}
-             motion:enter={{ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }}
-             motion:exit={{ opacity: 'fade-out' }}>
+             fx:enter={{ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }}
+             fx:exit={{ opacity: 'fade-out' }}>
           {#if !m.read}<span sx={unreadDot}></span>{/if}
           <column gap="0" sx={body}>
             <strong sx={from}>{m.from}</strong>
