@@ -13,7 +13,6 @@
 
   const messageRow = style.padX(3).padY(2).bg(surface-1).borderWidth(1).border(border-subtle).radius(md)
   const unreadDot = style.display(inline-block).w(1_5).h(1_5).radius(full).bg(primary)
-  const body = style.grow(1)
   const from = style.fontSize(sm)
   const muted = style.fg(muted-foreground)
   const emptyImprovised = style.pad(4).fontSize(sm).fg(muted-foreground)
@@ -67,7 +66,7 @@ export default controller(() => {
         <row gap="3" align="center" sx={messageRow}
              fx:enter={{ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }}>
           {#if !m.read}<span sx={unreadDot}></span>{/if}
-          <column gap="0" sx={body}>
+          <column gap="0" grow>
             <strong sx={from}>{m.from}</strong>
             <small sx={muted}>{m.subject}</small>
           </column>

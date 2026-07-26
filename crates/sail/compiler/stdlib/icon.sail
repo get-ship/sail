@@ -10,14 +10,14 @@
     spin = false
   }
 
-  const base = style.display(inline-block).align(middle).fg(currentColor).size(icon-size-md).shrink(0).glyphFill(true)
+  const base = style.display(inline-block).align(middle).fg(currentColor).size(icon-size-md).glyphFill(true)
   const sizeMd = style.size(icon-size-md)
   const sizeXs = style.size(icon-size-2xs)
   const sizeSm = style.size(icon-size-sm)
   const sizeLg = style.size(icon-size-xl)
   const sizeXl = style.size(icon-size-2xl)
 </scope>
-<span use:icon sx={[
+<span use:icon shrink="0" sx={[
   base,
   match(size, {
     md: sizeMd,

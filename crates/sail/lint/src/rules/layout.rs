@@ -9,9 +9,9 @@
 //! **Participation attrs** (`grow`, `shrink`, `w`, `min-w`, `max-w`) are the
 //! product home for a child's box-model role inside a flex/grid parent. They
 //! are legal on **any** element (layout keywords included), and lower to the
-//! same atomic classes Style's `style.grow(1)` / `style.w(full)` / … emit so
-//! cascade stays one system. Paint (pad, color, type, chrome) stays on Style;
-//! grow/shrink/width-as-layout-participation prefer these attrs.
+//! same atomic classes Style's grow/w setters emit so cascade stays one system.
+//! Paint (pad, color, type, chrome) stays on Style; grow/shrink participation
+//! is attrs-only in product (`sail-participation-style` errors on Style).
 //!
 //! Faithful successor to the `<sail-stack>` / `<sail-cluster>` / `<sail-grid>` /
 //! `<sail-center>` primitives — the hard-won opinions ride along in the lowering:

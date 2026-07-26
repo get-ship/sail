@@ -381,22 +381,22 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 <dialog use:dialogBridge size={size()} backdrop="blur">
   <column gap="0" sx={style.minH(0).fg(foreground).fontFamily(body)}>
-    <row align="center" gap="2" sx={style.pad(3).padX(4).grow(0).borderBWidth(1).borderB(border-subtle)}>
-      <icon name="search" size="sm" sx={style.grow(0)}></icon>
-      <input type="text" flush sx={style.grow(1).minW(0).fontFamily(body).fontSize(base).leading(normal)} autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} bind:this={inputEl} />
+    <row align="center" gap="2" grow="0" sx={style.pad(3).padX(4).borderBWidth(1).borderB(border-subtle)}>
+      <icon name="search" size="sm" grow="0"></icon>
+      <input type="text" flush grow min-w="0" sx={style.fontFamily(body).fontSize(base).leading(normal)} autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} bind:this={inputEl} />
     </row>
-    <ul sx={style.maxH(panel-vh-sm).pad(1).overflowY(auto).minH(0).grow(1)} role="listbox" id={listId()} aria-label={label()} bind:this={listEl}>
+    <ul grow sx={style.maxH(panel-vh-sm).pad(1).overflowY(auto).minH(0)} role="listbox" id={listId()} aria-label={label()} bind:this={listEl}>
       {#for row of rows() key={row.key}}
         {#if row.isHeading}
           <li role="presentation" sx={style.padY(2).padB(1).fontSize(xs).fontWeight(semibold).tracking(wide).fg(muted-foreground).textCase(uppercase).select(none)}>{row.heading}</li>
         {:else}
           <li sx={style.group().pad(2).radius(sm).fontSize(sm).fg(foreground).cursor(pointer).select(none).when({ selected: style.bg(selected-bg), disabled: style.fg(muted-foreground).cursor(default).opacity(50) })} role="option" id={row.optId} data-id={row.id} data-value={row.value} aria-selected={!row.disabled && row.id === highlightId() ? 'true' : 'false'} aria-disabled={row.disabled ? 'true' : 'false'}>
             {#if row.icon !== ''}
-              <icon name={row.icon} size="sm" sx={style.grow(0).fg(muted-foreground).when({ groupSelected: style.fg(foreground) })}></icon>
+              <icon name={row.icon} size="sm" grow="0" sx={style.fg(muted-foreground).when({ groupSelected: style.fg(foreground) })}></icon>
             {/if}
-            <span sx={style.grow(1).minW(0).truncate()}>{row.label}</span>
+            <span grow min-w="0" sx={style.truncate()}>{row.label}</span>
             {#if row.hint !== ''}
-              <span sx={style.fontSize(xs).fg(muted-foreground).ml(auto).fontFamily(mono).grow(0)}>{row.hint}</span>
+              <span grow="0" sx={style.fontSize(xs).fg(muted-foreground).ml(auto).fontFamily(mono)}>{row.hint}</span>
             {/if}
           </li>
         {/if}

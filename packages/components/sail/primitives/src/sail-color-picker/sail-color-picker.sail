@@ -211,7 +211,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <column gap="0" sx={style.position(relative).w(full)}>
 <row align="center" gap="2" sx={style.w(full).minH(size-h).padY(0).padX(size-px).bg(background).fg(foreground).borderWidth(1).border(border).radius(md).when({ focusWithin: style.outline(ring) })}>
   <span aria-hidden="true" use:swatch={value() || '#000000'} sx={style.w(4).h(4).minW(4).radius(sm).borderWidth(1).border(border-subtle).bg(bind(swatchColor))}></span>
-  <input type="text" flush sx={style.grow(1).minW(0).fontFamily(mono).textCase(lowercase)} name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
+  <input type="text" flush grow min-w="0" sx={style.fontFamily(mono).textCase(lowercase)} name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
 </row>
 {#if open() && !disabled()}
   <column gap="2" role="dialog" aria-label="Choose color" sx={style.position(absolute).left(0).z(popover).w(panel-max-w-md).pad(3).mt(1).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontSize(size-fs)}>
@@ -231,19 +231,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <row align="center" gap="2">
         <label for={hueId()} sx={style.w(4).fg(muted-foreground)}>H</label>
         <input id={hueId()} type="range" min="0" max="360" step="1"
-               bind:value={hueText} data-axis="h" sx={style.grow(1).minW(0)} />
+               bind:value={hueText} data-axis="h" grow min-w="0" />
         <span sx={style.w(8).textAlign(end).fg(muted-foreground)}>{hue()}°</span>
       </row>
       <row align="center" gap="2">
         <label for={satId()} sx={style.w(4).fg(muted-foreground)}>S</label>
         <input id={satId()} type="range" min="0" max="100" step="1"
-               bind:value={satText} data-axis="s" sx={style.grow(1).minW(0)} />
+               bind:value={satText} data-axis="s" grow min-w="0" />
         <span sx={style.w(8).textAlign(end).fg(muted-foreground)}>{sat()}%</span>
       </row>
       <row align="center" gap="2">
         <label for={lightId()} sx={style.w(4).fg(muted-foreground)}>L</label>
         <input id={lightId()} type="range" min="0" max="100" step="1"
-               bind:value={lightText} data-axis="l" sx={style.grow(1).minW(0)} />
+               bind:value={lightText} data-axis="l" grow min-w="0" />
         <span sx={style.w(8).textAlign(end).fg(muted-foreground)}>{light()}%</span>
       </row>
     </column>
@@ -255,7 +255,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         spellcheck="false"
         autocomplete="off"
         aria-label="Hex color"
-        sx={style.grow(1).minW(0).fontFamily(mono).textCase(lowercase)}
+        grow min-w="0"
+        sx={style.fontFamily(mono).textCase(lowercase)}
       />
     </row>
   </column>

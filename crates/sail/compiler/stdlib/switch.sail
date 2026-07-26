@@ -13,7 +13,7 @@
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 
-  const base = style.appearance(none).position(relative).shrink(0).box(border).display(inline-block).align(middle).m(0).cursor(pointer).bg(none).bg(switch).borderWidth(1).border(switch-border).radius(full).w(control-h-sm).h(icon-size-md).tapHighlight(none).transition(colors).duration(fast).ease(out)
+  const base = style.appearance(none).position(relative).box(border).display(inline-block).align(middle).m(0).cursor(pointer).bg(none).bg(switch).borderWidth(1).border(switch-border).radius(full).w(control-h-sm).h(icon-size-md).tapHighlight(none).transition(colors).duration(fast).ease(out)
   const sizeMd = style.w(control-h-sm).h(icon-size-md)
   const sizeSm = style.w(control-h-xs).h(icon-size-sm)
   const sizeLg = style.w(7).h(icon-size-lg)
@@ -22,7 +22,7 @@
   const thumbLg = style.size(icon-size-sm)
 </scope>
 
-<input type="checkbox" role="switch" sx={[
+<input type="checkbox" role="switch" shrink="0" sx={[
   base,
   match(size, {
     md: sizeMd,

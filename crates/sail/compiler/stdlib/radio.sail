@@ -12,9 +12,9 @@
   }
 
   const host = style.fontFamily(body).fontSize(sm).fg(radio-foreground).cursor(pointer).select(none)
-  const input = style.shrink(0).m(0)
+  const input = style.m(0)
 </scope>
 
 <label sx={host}>
-  <input type="radio" sx={input} /><span class="rlabel"><slot></slot></span>
+  <input type="radio" shrink="0" sx={input} /><span class="rlabel"><slot></slot></span>
 </label>

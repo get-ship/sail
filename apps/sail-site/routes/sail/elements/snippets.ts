@@ -6,7 +6,7 @@ export const code = {
 <card sx={style.pad(4)}>
   <row gap="3" align="center">
     <avatar></avatar>
-    <strong sx={style.grow(1)}>Ada Lovelace</strong>
+    <strong grow>Ada Lovelace</strong>
     <badge tone="success">Active</badge>
   </row>
 </card>`,

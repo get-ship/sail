@@ -33,6 +33,7 @@ pub mod for_key;
 pub mod layout;
 pub mod layout_primitive;
 pub mod legacy_layout;
+pub mod participation_style;
 pub mod prefer_primitive;
 pub mod prop_value;
 pub mod space_literal;
@@ -97,6 +98,7 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (sx::RULE_ID, sx::check),
     (layout::RULE_ID, layout::check),
     (legacy_layout::RULE_ID, legacy_layout::check),
+    (participation_style::RULE_ID, participation_style::check),
     (no_raw_container::RULE_ID, no_raw_container::check),
     (no_script::RULE_ID, no_script::check),
     (no_style_block::RULE_ID, no_style_block::check),

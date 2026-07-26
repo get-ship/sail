@@ -20,7 +20,7 @@ export const code = {
   <column gap="1" sx={style.mt(3).fontFamily(mono).fontSize(sm)}>
     {#for f of flights() key={f.id}}
       <row align="center" gap="3" nowrap>
-        <span sx={style.grow(1).minW(0).truncate()}>{f.city}</span>
+        <span grow min-w="0" sx={style.truncate()}>{f.city}</span>
         <span sx={style.fg(muted-foreground)}>{f.gate}</span>
         {#match f.status}
           {:case 'boarding'} <badge tone="success">Boarding</badge>

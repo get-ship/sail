@@ -46,7 +46,7 @@ export default controller(() => {
   <card sx={style.pad(4)} fx:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
     <row gap="3" align="center">
       <avatar></avatar>
-      <strong sx={style.grow(1)}>{p.name}</strong>
+      <strong grow>{p.name}</strong>
       <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
     </row>
   </card>

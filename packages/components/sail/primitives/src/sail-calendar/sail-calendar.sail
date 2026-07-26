@@ -366,7 +366,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <button type="button" variant="outline" size="sm" data-nav="today">Today</button>
       <button type="button" variant="outline" size="sm" data-nav="next" aria-label="Next">›</button>
     </row>
-    <h2 sx={style.grow(1).fontWeight(semibold).fontSize(base)}>{title()}</h2>
+    <h2 grow sx={style.fontWeight(semibold).fontSize(base)}>{title()}</h2>
     <row role="group" aria-label="Calendar view" gap="1" align="center">
       <button type="button" variant="outline" size="sm" data-view="month" aria-pressed={isMonth() ? 'true' : 'false'}>Month</button>
       <button type="button" variant="outline" size="sm" data-view="week" aria-pressed={isWeek() ? 'true' : 'false'}>Week</button>
@@ -431,12 +431,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
         <div data-slot={slot.minutes} role="rowheader" sx={style.h(control-h-md).fg(muted-foreground).padX(density-row-px).fontSize(density).borderBWidth(1).borderB(border)}>{slot.label}</div>
       {/for}
     </column>
-    <row gap="0" sx={style.grow(1)}>
+    <row gap="0" grow>
       {#for dc of dayColumns() key={dc.key}}
-        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} sx={style.position(relative).grow(1).minH(panel-min-h-daycol).borderRWidth(1).borderR(border).when({ stateToday: style.bg(selected-bg) })}>
+        <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} grow sx={style.position(relative).minH(panel-min-h-daycol).borderRWidth(1).borderR(border).when({ stateToday: style.bg(selected-bg) })}>
           <column gap="0" sx={style.position(absolute).top(0).right(0).bottom(0).left(0)}>
             {#for slot of timeSlots() key={slot.key}}
-              <div data-iso={dc.col.iso} data-minutes={slot.minutes} sx={style.grow(1).minH(control-h-md).cursor(cell).borderBWidth(1).borderB(border).when({ hover: style.bg(hover-bg) })}></div>
+              <div data-iso={dc.col.iso} data-minutes={slot.minutes} grow sx={style.minH(control-h-md).cursor(cell).borderBWidth(1).borderB(border).when({ hover: style.bg(hover-bg) })}></div>
             {/for}
           </column>
           <column gap="1" sx={style.position(relative).z(elevated).pad(half)}>

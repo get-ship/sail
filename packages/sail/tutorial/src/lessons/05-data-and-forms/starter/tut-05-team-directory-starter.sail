@@ -39,7 +39,7 @@ export default controller(() => {
 <scope>
   const muteLabel = style.fontSize(sm).fg(muted-foreground)
   const memberRow = style.padX(3).padY(2).bg(surface-1).radius(md)
-  const memberName = style.grow(1).fontSize(sm)
+  const memberName = style.fontSize(sm)
 </scope>
 
 <column gap="4">
@@ -63,7 +63,7 @@ export default controller(() => {
     <column gap="1">
       {#for m of team().value key={m.id}}
         <row gap="3" align="center" sx={memberRow}>
-          <strong sx={memberName}>{m.name}</strong>
+          <strong grow sx={memberName}>{m.name}</strong>
           {#if m.role === 'admin'}<badge tone="primary" variant="soft" size="sm">admin</badge>{/if}
         </row>
       {/for}

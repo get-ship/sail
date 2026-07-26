@@ -14,7 +14,7 @@
     shape: 'round' | 'square' = 'round'
   }
 
-  const base = style.position(relative).shrink(0).fontFamily(body).fontWeight(bold).leading(none).tracking(wide).fg(avatar-foreground).overflow(hidden).select(none).align(middle).size(7).fontSize(base).radius(full).shadow(inset-ring).bgImage(primary-accent).avatarMedia(true)
+  const base = style.position(relative).fontFamily(body).fontWeight(bold).leading(none).tracking(wide).fg(avatar-foreground).overflow(hidden).select(none).align(middle).size(7).fontSize(base).radius(full).shadow(inset-ring).bgImage(primary-accent).avatarMedia(true)
   const sizeMd = style.size(7).fontSize(base)
   const sizeXs = style.size(5).fontSize(xs)
   const sizeSm = style.size(control-h-sm).fontSize(xs)
@@ -22,7 +22,7 @@
   const sizeXl = style.size(control-h-xl).fontSize(2xl)
 </scope>
 
-<row inline nowrap align="center" justify="center" use:mediaFallback sx={[
+<row inline nowrap align="center" justify="center" shrink="0" use:mediaFallback sx={[
   base,
   match(size, {
     md: sizeMd,

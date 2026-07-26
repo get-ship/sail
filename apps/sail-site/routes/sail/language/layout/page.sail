@@ -154,17 +154,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Boolean <code>grow</code> / <code>shrink</code> mean flex-grow/shrink 1;
     <code>grow="0"</code> / <code>shrink="0"</code> pin the other end.
     <code>w="full"</code>, <code>min-w</code>, and <code>max-w</code> take the
-    same size tokens Style does. These lower to the same atomic classes as
-    <code>style.grow(1)</code> / <code>style.w(full)</code> — one cascade.
+    same size tokens Style does. One spelling for participation — attrs, not
+    Style setters — so tools and agents see the same words in every file.
   </p>
   <p>
     Layout attrs are the product home for participation in a flex/grid parent.
     Style still owns paint (pad, color, type, chrome), intrinsic box size
     (<code>h</code>, icon <code>w</code>/<code>size</code>), and chrome like
-    <code>minH</code> on badges. Every child of a layout element is also born
-    with <code>min-width: 0</code> — the browser default where an item refuses
-    to shrink below its content is corrected at the language level, so
-    <code>style.truncate()</code> works the first time.
+    <code>minH</code> on badges. When a child needs both, split: attrs for
+    participation, <code>sx=&#123;…&#125;</code> for paint only. Every child of
+    a layout element is also born with <code>min-width: 0</code> — the browser
+    default where an item refuses to shrink below its content is corrected at
+    the language level, so <code>style.truncate()</code> works the first time.
   </p>
 
   <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>

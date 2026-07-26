@@ -162,7 +162,7 @@ export default controller(() => ({ loading: signal(true) }))
 
   skeleton: `<row gap="3" align="center" fx:enter={{ opacity: 'fade' }}>
   <span skeleton shape="circle" sx={style.w(7).h(7)}></span>
-  <column gap="2" sx={style.grow(1)}>
+  <column gap="2" grow>
     <span skeleton shape="text" size="sm"></span>
     <span skeleton shape="text" size="sm"></span>
   </column>

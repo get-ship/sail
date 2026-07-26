@@ -94,7 +94,7 @@ export default controller(() => {
     <a href="/build" aria-current={path() === '/build' ? 'page' : null}>Build &amp; deploy</a>
   </navbar>
 
-  <main sx={style.pad(7).grow(1).minW(0).maxW(breakpoint-tablet)}>
+  <main grow min-w="0" sx={style.pad(7).maxW(breakpoint-tablet)}>
     <slot name="route"></slot>
   </main>
 </row>

@@ -245,7 +245,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           {:else}
             <slot name="node-icon"></slot>
           {/if}
-          <span sx={style.grow(1).minW(0).truncate()}>{w.label}</span>
+          <span grow min-w="0" sx={style.truncate()}>{w.label}</span>
           <span sx={style.ml(auto).fg(muted-foreground).fontSize(xs)}><slot name="node-trailing"></slot></span>
         </row>
       {/for}

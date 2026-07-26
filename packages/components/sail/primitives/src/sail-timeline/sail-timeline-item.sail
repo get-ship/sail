@@ -82,12 +82,12 @@ export default controller((ctx) => {
     {/if}
     <span sx={style.w(2_5).h(2_5).radius(full).bg(foreground)}></span>
     {#if last()}
-      <span sx={style.w(half).grow(1).visibility(hidden)}></span>
+      <span grow sx={style.w(half).visibility(hidden)}></span>
     {:else}
-      <span sx={style.w(half).grow(1).bg(border-subtle)}></span>
+      <span grow sx={style.w(half).bg(border-subtle)}></span>
     {/if}
   </column>
-  <column gap="0" sx={style.grow(1).minW(0).padY(2)}>
+  <column gap="0" grow min-w="0" sx={style.padY(2)}>
     <row align="baseline" justify="between" gap="2" sx={style.fontSize(sm).fontWeight(medium).fg(foreground).fontFamily(body)}>
       <slot name="title"></slot>
       {#if at()}

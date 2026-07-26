@@ -122,7 +122,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         disabled={disabled()}
         bind:value={text}
         use:fieldKeys
-        sx={style.grow(1).minW(0).minH(0).padY(1).padX(half).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none).overflowY(auto)}
+        grow min-w="0"
+        sx={style.minH(0).padY(1).padX(half).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none).overflowY(auto)}
       ></textarea>
     {/if}
     {#if !multiline()}
@@ -132,10 +133,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         disabled={disabled()}
         bind:value={text}
         use:fieldKeys
-        sx={style.grow(1).minW(0).minH(0).padY(1).padX(half).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none)}
+        grow min-w="0"
+        sx={style.minH(0).padY(1).padX(half).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none)}
       />
     {/if}
-    <row gap="1" align="center" sx={style.grow(0)}>
+    <row gap="1" align="center" grow="0">
       <slot name="trailing"></slot>
       <button
         use:sendClick

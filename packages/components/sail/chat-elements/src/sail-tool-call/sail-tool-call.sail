@@ -48,7 +48,7 @@
   const statusLabel = style.ml(auto).fontSize(xs).textCase(uppercase).tracking(wide)
   const trigger = style.padY(2).padX(3)
   const nameText = style.fontFamily(mono).fontSize(sm).fontWeight(medium).fg(foreground).truncate()
-  const chevron = style.grow(0).fg(muted-foreground).when({ groupOpen: style.rotate(90) })
+  const chevron = style.fg(muted-foreground).when({ groupOpen: style.rotate(90) })
   const body = style.borderTWidth(1).borderT(border).padY(2).padX(3).fontFamily(mono).fontSize(sm).leading(normal)
   const sectionLabel = style.display(block).fontFamily(body).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(1)
   const pre = style.whitespace(pre-wrap)
@@ -71,7 +71,7 @@
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
         stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
         stroke-linejoin="round" aria-hidden="true"
-        sx={chevron}>
+        grow="0" sx={chevron}>
         <path d="M4 2l4 4-4 4" />
       </svg>
     </row>

@@ -82,7 +82,7 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
     {#for a of staged() key={a.id}}
       <row role="listitem" data-id={a.id} gap="2" align="center" sx={style.padY(1).padX(2).bg(background).borderWidth(1).border(border).radius(sm)}>
         <span sx={style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>{a.kind}</span>
-        <span title={a.note ?? ''} sx={style.grow(1).truncate()}>{a.note ?? '(no note)'}</span>
+        <span title={a.note ?? ''} grow sx={style.truncate()}>{a.note ?? '(no note)'}</span>
         <button
           type="button"
           aria-label="Remove annotation"

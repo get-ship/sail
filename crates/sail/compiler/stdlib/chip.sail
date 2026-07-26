@@ -17,7 +17,7 @@
   const sizeMd = style.minH(control-h-xs).padX(2_5).fontSize(sm)
   const sizeSm = style.minH(control-h-2xs).padX(2).fontSize(xs)
   const sizeLg = style.minH(control-h-md).padX(3).fontSize(base)
-  const remove = style.size(icon-size-md).shrink(0).pad(0).borderWidth(0).bg(transparent).fg(currentColor).cursor(pointer).radius(full).transition(colors).duration(fast).ease(out)
+  const remove = style.size(icon-size-md).pad(0).borderWidth(0).bg(transparent).fg(currentColor).cursor(pointer).radius(full).transition(colors).duration(fast).ease(out)
   const leading = style.display(contents)
   const xmark = style.display(block).size(full).stroke(currentColor).fill(none)
 </scope>
@@ -107,6 +107,7 @@
     anatomy
     aria-label="Remove"
     tabindex="-1"
+    shrink="0"
     sx={remove}
   >
     <svg viewBox="0 0 10 10" aria-hidden="true" sx={xmark} stroke-width="1.75" stroke-linecap="round">

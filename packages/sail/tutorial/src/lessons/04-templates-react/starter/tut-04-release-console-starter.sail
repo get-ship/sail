@@ -52,7 +52,7 @@ export default controller(() => {
 
 <scope>
   const envRow = style.padX(3).padY(2).bg(surface-1).radius(md)
-  const envName = style.grow(1).fontSize(sm)
+  const envName = style.fontSize(sm)
   const envRegion = style.fg(muted-foreground)
 </scope>
 
@@ -86,7 +86,7 @@ export default controller(() => {
     {#for env of filtered() key={env.id}}
       <row gap="3" align="center" sx={envRow}>
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
-        <strong sx={envName}>{env.name}</strong>
+        <strong grow sx={envName}>{env.name}</strong>
         <small sx={envRegion}>{env.region}</small>
         <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
       </row>

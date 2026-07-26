@@ -11,7 +11,7 @@
 
   const host = style.group()
   const trigger = style.size(control-h-sm).pad(0).fg(theme-picker-trigger-foreground).bg(transparent).borderWidth(1).border(border).radius(full).cursor(pointer)
-  const triggerIcon = style.size(icon-size-md).shrink(0).display(block)
+  const triggerIcon = style.size(icon-size-md).display(block)
   // Popover HOST must not set `display` (layout keywords do). UA closed state is
   // display:none; author display:grid forces the panel always-visible and can
   // crash heavy pages (header picker + /components tile = two full panels).
@@ -43,7 +43,7 @@
       group-inline: style.display(none),
     }),
   ]}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" sx={triggerIcon}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" shrink="0" sx={triggerIcon}>
       <circle cx="13.5" cy="6.5" r="1.5"></circle>
       <circle cx="17.5" cy="10.5" r="1.5"></circle>
       <circle cx="8.5" cy="7.5" r="1.5"></circle>

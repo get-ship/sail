@@ -234,7 +234,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <grid tracks="--sail-grid-template" gap="0" role="row" sx={style.position(sticky).top(0).z(sticky).bg(surface-2).borderBWidth(1).borderB(border)}>
     {#for h of headers() key={h.id}}
       <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} sx={style.position(relative).padY(density-row-py).padX(density-row-px).fontWeight(semibold).fontSize(xs).textCase(uppercase).tracking(wide).fg(foreground).borderBWidth(1).borderB(border-subtle).whitespace(nowrap).when({ sortable: style.cursor(pointer) })}>
-        <span sx={style.grow(1).minW(0).truncate()}>{h.label}</span>
+        <span grow min-w="0" sx={style.truncate()}>{h.label}</span>
         {#if h.sorted === 'asc'}
           <span aria-hidden="true" sx={style.fg(primary)}><icon name="chevron-up" size="xs"></icon></span>
         {:else if h.sorted === 'desc'}
@@ -263,11 +263,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <icon name="chevron-right" size="xs"></icon>
                   </span>
                 {/if}
-                <span sx={style.grow(1).minW(0).truncate()}>{c.value}</span>
+                <span grow min-w="0" sx={style.truncate()}>{c.value}</span>
               </row>
             {:else}
               <row role="gridcell" sx={style.padY(density-row-py).padX(density-row-px).borderBWidth(1).borderB(border-subtle).fg(foreground).minW(0)}>
-                <span sx={style.grow(1).minW(0).truncate()}>{c.value}</span>
+                <span grow min-w="0" sx={style.truncate()}>{c.value}</span>
               </row>
             {/if}
           {/for}

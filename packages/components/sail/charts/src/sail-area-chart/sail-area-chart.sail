@@ -98,7 +98,7 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
   })
 
 </controller>
-<column gap="0" sx={style.w(full)}>
+<column gap="0" w="full">
   {#if loading()}
     <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
   {:else if chart.error()}

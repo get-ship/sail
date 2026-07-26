@@ -96,7 +96,7 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
   })
 </controller>
 
-<column gap="4" sx={style.w(full)}>
+<column gap="4" w="full">
   <row gap="3" align="center">
     <h2 sx={style.fontFamily(mono).tracking(tight)}>{name()}</h2>
     {#if pack() !== ''}
@@ -126,7 +126,7 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
       </row>
     </row>
 
-    <center data-stage sx={style.pad(6).minH(9).grow(1)}>
+    <center data-stage grow sx={style.pad(6).minH(9)}>
       <slot name="stage"></slot>
     </center>
   </column>
@@ -146,7 +146,7 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
           <column gap="1">
             <row gap="3" align="baseline">
               <code>{r.name}</code>
-              <span sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground).grow(1)}>{r.type}</span>
+              <span grow sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{r.type}</span>
             </row>
             {#if r.desc !== ''}
               <p sx={style.fontSize(sm).fg(muted-foreground)}>{r.desc}</p>
