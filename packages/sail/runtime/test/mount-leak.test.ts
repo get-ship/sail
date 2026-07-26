@@ -4,8 +4,8 @@ import { mount, type RoutePayload } from '../src/mount'
 import { onCleanup, mount as ambientMount } from '../src/effect-scope'
 
 // Regression for the navigation OOM: a subscription opened inside a
-// controller's ambient mount() callback (the common `live()`/`data()`
-// shape) must be torn down when the route is disposed. Before the fix,
+// controller's ambient mount() callback (the common `query()` /
+// effect-scope shape) must be torn down when the route is disposed. Before the fix,
 // the (then section-based) mount callback ran AFTER setup's withScope
 // closed (CURRENT_SCOPE = null), so onCleanup() was a no-op and the
 // subscription leaked one open handle per navigation — the
@@ -24,7 +24,7 @@ describe('mount — live-subscription teardown (navigation-OOM regression)', () 
     const mod = {
       default: {
         setup: () => {
-          // This is exactly what live()/data() do inside a controller mount().
+          // This is exactly what query() does inside a controller mount().
           ambientMount(() => {
             onCleanup(() => {
               cleaned++

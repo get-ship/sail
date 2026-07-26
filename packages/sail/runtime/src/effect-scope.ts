@@ -1,12 +1,11 @@
 // effect-scope — mount-time cleanup ownership.
 //
 // Pieces of the runtime that allocate long-lived resources during a
-// route's `setup()` — `live()` opens an EventSource, `data()` opens an
-// SSE subscription, custom hooks may install global listeners — need
-// a way to register a cleanup that fires when the enclosing route
-// unmounts. Without this, every `mount()` call leaks the resources
-// allocated by its setup body. Tabs OOM'd from exactly this class of
-// leak before commit `87cf3223`.
+// route's `setup()` — `query()` with a LiveSource opens an EventSource,
+// custom hooks may install global listeners — need a way to register a
+// cleanup that fires when the enclosing route unmounts. Without this,
+// every `mount()` call leaks the resources allocated by its setup body.
+// Tabs OOM'd from exactly this class of leak before commit `87cf3223`.
 //
 // Pattern: `mount.ts` wraps the call to the route module's `setup()`
 // in `withScope(scope, () => setup(ctx))`. Allocators inside that
@@ -23,7 +22,7 @@
 // Solid's `createRoot` / Vue's `effectScope` semantics.
 //
 // Stays free of any DOM / runtime concerns so it can be imported
-// from `live.ts`, `data.ts`, hooks, etc. without circular deps.
+// from `query.ts`, hooks, etc. without circular deps.
 //
 // Owner graph: every EffectScope (except the synthetic one returned
 // from `createRootScope()`) has a `parent` pointer, set at creation

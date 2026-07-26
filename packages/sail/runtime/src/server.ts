@@ -52,7 +52,6 @@ export type {
   LiveState,
   LiveValueOf,
 } from './query'
-export { data } from './data'
 export { createMountState, componentMountState, pickSignals, SIGNALS_KEY } from './state-proxy'
 
 // ── scope + store (scope-homed shared state) ────────────────────────────────

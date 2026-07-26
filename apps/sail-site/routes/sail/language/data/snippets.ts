@@ -1,8 +1,7 @@
-// Code snippets for the Live data page. Kept OUT of the controller so the
+// Code snippets for the Data page. Kept OUT of the controller so the
 // compiler's scope scan isn't fooled by patterns inside these strings.
 // The query() controller + the while-loading/while-error/if-ok template are
-// compile-checked against the in-repo sail-compiler; data() matches the real
-// @ship/sail-runtime DataOpts signature.
+// compile-checked against the in-repo sail-compiler.
 export const code = {
   demo: `<controller>
 import { query } from '@ship/sail-runtime'
@@ -55,14 +54,4 @@ export default controller(() => {
 {#if users().kind === 'ok'}
   <ul>{#for u of users().value key={u.id}}<li>{u.name}</li>{/for}</ul>
 {/if}`,
-
-  server: `// A live SERVER signal: SSR'd initial value + SSE patches.
-import { data } from '@ship/sail-runtime'
-
-const feed = data({
-  initial: [],                   // server-rendered at request time
-  subscribe: '/api/feed/stream', // SSE endpoint; patches merge in live
-})
-// feed.signal — read it like any signal
-// feed.dispose() — close the stream`,
 }

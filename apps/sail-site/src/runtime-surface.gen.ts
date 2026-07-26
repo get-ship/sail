@@ -67,7 +67,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:164"
+    "loc": "src/styles/index.ts:163"
   },
   {
     "subpath": ".",
@@ -99,7 +99,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(sig: Signal<T>, patch: Patch): void",
     "doc": "Apply one patch to `sig`. Reads the current value, walks the path, applies the op immutably (copy-on-write — unchanged subtrees keep reference equality), and writes the new root back via `sig.set`.",
-    "loc": "src/patch.ts:69"
+    "loc": "src/patch.ts:65"
   },
   {
     "subpath": ".",
@@ -107,7 +107,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(sig: Signal<T>, patches: Patch[]): void",
     "doc": "Apply many patches as one atomic update. Patches run in order inside a `batch`, so subscribers fire exactly once at the end regardless of how many patches the array contains. No-op for empty arrays.",
-    "loc": "src/patch.ts:92"
+    "loc": "src/patch.ts:88"
   },
   {
     "subpath": ".",
@@ -147,7 +147,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, name: string, get: () => unknown): Disposer",
     "doc": "Bind a reactive value to a DOM attribute, with attribute-presence semantics built in.",
-    "loc": "src/bind.ts:115"
+    "loc": "src/bind.ts:114"
   },
   {
     "subpath": ".",
@@ -155,7 +155,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLInputElement, sig: Signal<boolean>): Disposer",
     "doc": "Two-way bind a boolean signal to a checkbox or radio input. Signal writes set `el.checked`; the `change` event writes back into the signal.",
-    "loc": "src/bind.ts:268"
+    "loc": "src/bind.ts:267"
   },
   {
     "subpath": ".",
@@ -163,7 +163,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, name: string, get: () => unknown): Disposer",
     "doc": "Route a dynamic binding to the right channel so the AUTHOR never has to. This is the toolchain owning the DOM's attribute/property split: for a custom element, a value that can't be an attribute (object / array / function), or a name the element exposes as a property (a declared prop → accessor), is assigned as a PROPERTY — identity preserved; the component reflects it to an attribute itself if it wants (e.g. `variant`, `tone`). Everything else is a plain HTML attribute (aria-*, data-*, native).",
-    "loc": "src/bind.ts:185"
+    "loc": "src/bind.ts:184"
   },
   {
     "subpath": ".",
@@ -171,7 +171,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(opts: BindForOptions<T>): Disposer",
     "doc": "Bind a keyed list to the DOM after `opts.anchor`. The renderer is called once per new key; rows whose keys persist across renders keep their original nodes (and any focus / scroll / animation state).",
-    "loc": "src/for.ts:122"
+    "loc": "src/for.ts:121"
   },
   {
     "subpath": ".",
@@ -179,7 +179,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface BindForOptions<T> { anchor: Comment items: () => readonly T[] key: (item: T, index: number) => unknown render: (item: T, index: number) => RenderedItem }",
     "doc": "Inputs to `bindFor` — what to iterate, how to identify items, and how to render them.",
-    "loc": "src/for.ts:20"
+    "loc": "src/for.ts:19"
   },
   {
     "subpath": ".",
@@ -187,7 +187,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(anchor: Comment, sig: Signal<readonly T[]>, key: (item: T, index: number) => unknown, render: (item: T, index: number) => RenderedItem): Disposer",
     "doc": "Convenience wrapper around `bindFor` for the common case where the items source is a signal. Equivalent to `bindFor({ anchor, items: () => sig(), key, render })`.",
-    "loc": "src/for.ts:446"
+    "loc": "src/for.ts:445"
   },
   {
     "subpath": ".",
@@ -203,7 +203,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, get: () => string): Disposer",
     "doc": "Bind a reactive HTML/SVG string to an element's contents. The string is parsed once and morphed into `el` via `morph()` — DOM identity preserved where possible, so focus/scroll/selection survive updates.",
-    "loc": "src/bind.ts:311"
+    "loc": "src/bind.ts:310"
   },
   {
     "subpath": ".",
@@ -211,7 +211,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(opts: BindIfOptions): Disposer",
     "doc": "Conditionally render one of N branches at `opts.anchor`. Branches are rendered lazily — only the selected branch's renderer is invoked. The previous branch's `cleanup` runs on swap, freeing its bindings.",
-    "loc": "src/if.ts:98"
+    "loc": "src/if.ts:97"
   },
   {
     "subpath": ".",
@@ -219,7 +219,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type BindIfOptions = BindIfTwoBranchOptions | BindIfMultiBranchOptions",
     "doc": "Public union — `bindIf` accepts either shape.",
-    "loc": "src/if.ts:62"
+    "loc": "src/if.ts:61"
   },
   {
     "subpath": ".",
@@ -251,7 +251,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T extends Element>(el: T, prop: string, get: () => unknown): Disposer",
     "doc": "Bind a value to a JS property of an element (not an attribute). Use this when the target is a typed property — arrays, objects, instances — so the value flows through without an `attribute → string → parse` round-trip.",
-    "loc": "src/bind.ts:155"
+    "loc": "src/bind.ts:154"
   },
   {
     "subpath": ".",
@@ -267,7 +267,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLElement, get: () => unknown): Disposer",
     "doc": "Toggle visibility based on a truthiness check. Falsy → `display:none`; truthy → restores the previous `display` value (preserving any inline value that was there before the binding hid the element).",
-    "loc": "src/bind.ts:72"
+    "loc": "src/bind.ts:71"
   },
   {
     "subpath": ".",
@@ -283,7 +283,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Node, get: () => unknown): Disposer",
     "doc": "Bind reactive text content to a node. Reads `get()` once eagerly and again on every tracked-dependency change; the result is coerced to a string and written to `node.textContent`. `null` and `undefined` become `''` so missing values don't leak the literal text.",
-    "loc": "src/bind.ts:36"
+    "loc": "src/bind.ts:35"
   },
   {
     "subpath": ".",
@@ -291,7 +291,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, sig: Signal<string>, onWrite?: (value: string) => void): Disposer",
     "doc": "Two-way bind a string signal to an `<input>` / `<textarea>` / `<select>` element. Initial render and signal-driven updates flow signal → element; user edits flow element → signal via the `input` event. Setting the same value re-checks identity to avoid moving the caret.",
-    "loc": "src/bind.ts:227"
+    "loc": "src/bind.ts:226"
   },
   {
     "subpath": ".",
@@ -347,7 +347,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface BranchRender { nodes: Node[] cleanup?: () => void }",
     "doc": "One branch's rendered nodes plus an optional teardown. Returned by the `then_` / `else_` / `loading` / branch-render callbacks of every branching binding (`bindIf`).",
-    "loc": "src/if.ts:35"
+    "loc": "src/if.ts:34"
   },
   {
     "subpath": ".",
@@ -355,7 +355,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(attr: string): string",
     "doc": "Convert a kebab-case HTML attribute name to its camelCase prop name. Single-word attributes pass through unchanged.",
-    "loc": "src/component.ts:530"
+    "loc": "src/component.ts:528"
   },
   {
     "subpath": ".",
@@ -467,7 +467,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ComponentFactory = ( host: HTMLElement, propSignals: Record<string, Signal<unknown>>, internals?: ElementInternals, ) => Disposer",
     "doc": "The factory the compiler emits per component. Receives the host element, a place to attach prop signals, and (for form-associated components) the ElementInternals instance attached at construction time. Returns a cleanup function that runs on disconnect.",
-    "loc": "src/component.ts:34"
+    "loc": "src/component.ts:32"
   },
   {
     "subpath": ".",
@@ -483,7 +483,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ComponentSchema { observedAttrs: string[] props: Record< string, { camel: string decode: (raw: string | null) => unknown } > formAssociated?: boolean }",
     "doc": "Schema the compiler emits alongside the factory — drives prop decode + observed-attributes registration.",
-    "loc": "src/component.ts:61"
+    "loc": "src/component.ts:59"
   },
   {
     "subpath": ".",
@@ -499,7 +499,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(description: string): ContextKey<T>",
     "doc": "Mint a typed context key. The phantom `__ctx` is for type inference only — it carries through `provideContext` / `injectContext` so the read site doesn't need an annotation.",
-    "loc": "src/effect-scope.ts:335"
+    "loc": "src/effect-scope.ts:334"
   },
   {
     "subpath": ".",
@@ -507,7 +507,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ContextKey<T> = symbol & { readonly __ctx?: T }",
     "doc": "Key for an arbitrary value held in a scope's `contexts` map. Use a `Symbol(...)` so the key can't collide with anything an author names. The non-store context API (`provideContext` / `injectContext`) is a thin layer over the same map stores use — reach for it when you need to share a value that ISN'T a setup-style store (a single ref, a logger handle, an ad-hoc client). For stateful shared logic, `defineStore` is the answer.",
-    "loc": "src/effect-scope.ts:330"
+    "loc": "src/effect-scope.ts:329"
   },
   {
     "subpath": ".",
@@ -563,7 +563,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(parent?: EffectScope): EffectScope",
     "doc": "Create a child scope owned by `parent` (or the current scope if `parent` is omitted). The child auto-disposes when its owner disposes — registered as a cleanup at creation. Use when you need a sub-lifecycle inside a mount: e.g. a hook that tears down its own resources independently of the outer route but should still clean up if the route unmounts first.",
-    "loc": "src/effect-scope.ts:232"
+    "loc": "src/effect-scope.ts:231"
   },
   {
     "subpath": ".",
@@ -579,7 +579,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): EffectScope",
     "doc": "Create a fresh, top-level scope. Most allocators don't need this — they call `onCleanup` to enroll on whatever scope `mount()` set up. Reach for `createScope` only when you're authoring a HOST (`mount.ts` is the canonical example) that owns a scope.",
-    "loc": "src/effect-scope.ts:148"
+    "loc": "src/effect-scope.ts:147"
   },
   {
     "subpath": ".",
@@ -587,31 +587,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): EffectScope | null",
     "doc": "The active scope, or `null` if no `withScope` is currently on the stack. Diagnostic / advanced use only — most callers should use `onCleanup` directly.",
-    "loc": "src/effect-scope.ts:140"
-  },
-  {
-    "subpath": ".",
-    "name": "data",
-    "kind": "function",
-    "signature": "<T>(opts: DataOpts<T>): DataHandle<T>",
-    "doc": "Create a server-owned reactive signal that can subscribe to SSE patches. If `subscribe` is provided and an `EventSource` impl is available, opens the stream and routes `patch` events through `applyPatch` (or `onPatch` when supplied) into the signal.",
-    "loc": "src/data.ts:66"
-  },
-  {
-    "subpath": ".",
-    "name": "DataHandle",
-    "kind": "interface",
-    "signature": "export interface DataHandle<T> { signal: Signal<T> dispose: () => void }",
-    "doc": "The handle returned by `data()`: the live signal plus a disposer.",
-    "loc": "src/data.ts:33"
-  },
-  {
-    "subpath": ".",
-    "name": "DataOpts",
-    "kind": "interface",
-    "signature": "export interface DataOpts<T> { initial: T subscribe?: string onPatch?: (patch: Patch, sig: Signal<T>) => void onError?: (err: unknown) => void EventSource?: typeof globalThis.EventSource }",
-    "doc": "Options for `data()` — initial value plus SSE/patch wiring.",
-    "loc": "src/data.ts:16"
+    "loc": "src/effect-scope.ts:139"
   },
   {
     "subpath": ".",
@@ -627,7 +603,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(raw: string | null): boolean",
     "doc": "Boolean decoder using HTML attribute-presence semantics.",
-    "loc": "src/decode.ts:67"
+    "loc": "src/decode.ts:66"
   },
   {
     "subpath": ".",
@@ -635,7 +611,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T extends string>(allowed: readonly T[], fallback: T): Decoder<T>",
     "doc": "Build a decoder that allows only a fixed set of string literals. Anything outside the allowed list (including `null`) decodes to `fallback` — useful for variant props like `size` or `tone`.",
-    "loc": "src/decode.ts:118"
+    "loc": "src/decode.ts:117"
   },
   {
     "subpath": ".",
@@ -643,7 +619,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(fallback: T): Decoder<T>",
     "doc": "Build a decoder that parses JSON from an attribute. Empty / missing attributes and parse errors both yield `fallback`, so prop signals never carry `undefined` and never throw on bad input.",
-    "loc": "src/decode.ts:91"
+    "loc": "src/decode.ts:90"
   },
   {
     "subpath": ".",
@@ -651,7 +627,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(raw: string | null): number",
     "doc": "Number decoder. Empty or missing attributes decode to `NaN` — let the author guard with `Number.isNaN` rather than silently choosing `0`.",
-    "loc": "src/decode.ts:43"
+    "loc": "src/decode.ts:42"
   },
   {
     "subpath": ".",
@@ -659,7 +635,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type Decoder<T> = (raw: string | null) => T",
     "doc": "Function that turns a raw HTML attribute string (or `null` for an absent attribute) into the typed value the script block expects. Each `Decoder<T>` is a pure function — no side effects, no DOM reads.",
-    "loc": "src/decode.ts:12"
+    "loc": "src/decode.ts:11"
   },
   {
     "subpath": ".",
@@ -667,7 +643,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(raw: string | null): string",
     "doc": "Identity-style decoder. `null` (missing attribute) decodes to `''` so prop signals never carry `null` for string-typed props.",
-    "loc": "src/decode.ts:27"
+    "loc": "src/decode.ts:26"
   },
   {
     "subpath": ".",
@@ -675,7 +651,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(tag: string, schema: ComponentSchema, factory: ComponentFactory): void",
     "doc": "",
-    "loc": "src/component.ts:132"
+    "loc": "src/component.ts:130"
   },
   {
     "subpath": ".",
@@ -731,7 +707,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type Disposer = () => void",
     "doc": "Cleanup function returned by every `bind*` helper and `effect`. Calling it detaches the binding's listeners and stops further updates.",
-    "loc": "src/bind.ts:14"
+    "loc": "src/bind.ts:13"
   },
   {
     "subpath": ".",
@@ -763,7 +739,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface EffectScope { cleanup(fn: () => void): void registerMount(fn: (el: HTMLElement) => (() => void) | void): void runMounts(el: HTMLElement): void dispose(): void readonly disposed: boole",
     "doc": "A unit of resource ownership. Cleanups registered while the scope is the current scope (via `withScope`) run when the scope is disposed.",
-    "loc": "src/effect-scope.ts:48"
+    "loc": "src/effect-scope.ts:47"
   },
   {
     "subpath": ".",
@@ -891,7 +867,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(key: ContextKey<T>, scope?: EffectScope): T | null",
     "doc": "Look up a value published via `provideContext`. Walks the parent chain, returning the nearest match. Returns `null` when no scope on the chain has a value under `key` — same null-vs- throw choice the old `useShared` made (callers guard with `if (v)` / controller-side null checks). The TS narrowing comes from the `ContextKey<T>` phantom, so the result IS `T`, not `T | null` — the null collapses only at the call site where it matters.",
-    "loc": "src/effect-scope.ts:357"
+    "loc": "src/effect-scope.ts:356"
   },
   {
     "subpath": ".",
@@ -995,7 +971,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(e: KeyboardEvent, spec: string): boolean",
     "doc": "Match a keyboard event against a `key:` modifier spec. Used inside `on` to gate `keydown`/`keyup` handlers; exposed for components that need the same matching semantics outside of declarative bindings.",
-    "loc": "src/on.ts:176"
+    "loc": "src/on.ts:175"
   },
   {
     "subpath": ".",
@@ -1003,7 +979,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "`use:menu` — menu semantics + keyboard for the L1 `<dropdown>` / `<context-menu>` content (a native `[popover]`). Wires role=menu / menuitem, roving focus (ArrowUp/Down, Home/End), Escape to close, focuses the first item on open, and closes after activating an item. Positioning is `use:anchor`'s job; open/close and light-dismiss are the native popover's.",
-    "loc": "src/actions/menu.ts:20"
+    "loc": "src/actions/menu.ts:22"
   },
   {
     "subpath": ".",
@@ -1011,7 +987,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface Modifier { kind: | 'preventDefault' | 'stopPropagation' | 'stopImmediatePropagation' | 'self' | 'trusted' | 'key' | 'debounce' | 'throttle' arg?: string }",
     "doc": "One pre-handler effect: filter, transform, or rate-limit. Modifiers compose in order; the parsed list is what `on` receives via `OnOptions.modifiers`.",
-    "loc": "src/on.ts:28"
+    "loc": "src/on.ts:27"
   },
   {
     "subpath": ".",
@@ -1059,7 +1035,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(fn: (el: HTMLElement) => (() => void) | void): void",
     "doc": "Ambient lifecycle: register `fn` to run once the current instance's DOM is connected. `fn` receives the host element and may return a cleanup — sync, or a promise resolving to one — that disposes with the instance (its owning scope).",
-    "loc": "src/effect-scope.ts:131"
+    "loc": "src/effect-scope.ts:130"
   },
   {
     "subpath": ".",
@@ -1155,7 +1131,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: EventTarget, event: string, handler: (event: Event) => unknown, opts?: OnOptions): Disposer",
     "doc": "Attach an event listener with Sail's modifier semantics.",
-    "loc": "src/on.ts:77"
+    "loc": "src/on.ts:76"
   },
   {
     "subpath": ".",
@@ -1163,7 +1139,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(fn: () => void): void",
     "doc": "Register a teardown function with the current scope. No-op when there is no current scope (i.e. called outside any `withScope`).",
-    "loc": "src/effect-scope.ts:97"
+    "loc": "src/effect-scope.ts:96"
   },
   {
     "subpath": ".",
@@ -1171,7 +1147,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface OnOptions { modifiers?: Modifier[] capture?: boolean passive?: boolean once?: boolean }",
     "doc": "Options for `on` — modifiers + standard `addEventListener` flags.",
-    "loc": "src/on.ts:12"
+    "loc": "src/on.ts:11"
   },
   {
     "subpath": ".",
@@ -1179,15 +1155,15 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface Patch { op: PatchOp path?: string value?: unknown index?: number from?: number to?: number count?: number by?: number v?: number }",
     "doc": "One patch envelope. Path-addressed; only the fields relevant to `op` are populated. `path` defaults to the root.",
-    "loc": "src/patch.ts:31"
+    "loc": "src/patch.ts:27"
   },
   {
     "subpath": ".",
     "name": "PatchOp",
     "kind": "type",
     "signature": "export type PatchOp = | 'set' | 'merge' | 'append' | 'prepend' | 'insert' | 'remove' | 'move' | 'splice' | 'inc'",
-    "doc": "Wire-protocol op tag. See `.artifacts/specs/ship-set/04-patch-protocol.md` for full per-op semantics.",
-    "loc": "src/patch.ts:16"
+    "doc": "Wire-protocol op tag for SSE-driven signal updates.",
+    "loc": "src/patch.ts:12"
   },
   {
     "subpath": ".",
@@ -1195,7 +1171,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type PathToken = | { kind: 'field'; name: string } | { kind: 'index'; i: number }",
     "doc": "One segment of a parsed patch path: an object field or an array index.",
-    "loc": "src/patch.ts:143"
+    "loc": "src/patch.ts:139"
   },
   {
     "subpath": ".",
@@ -1251,7 +1227,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(key: ContextKey<T>, value: T, scope?: EffectScope): void",
     "doc": "Put `value` on `scope` under `key`. Any descendant that calls `injectContext(key)` and walks the chain will find it. No-op when called without a current scope; tests / module-level helpers can call it explicitly with a scope.",
-    "loc": "src/effect-scope.ts:343"
+    "loc": "src/effect-scope.ts:342"
   },
   {
     "subpath": ".",
@@ -1355,7 +1331,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface RenderedItem { nodes: Node[] cleanup?: () => void update?: (item: unknown, index: number) => void }",
     "doc": "The shape returned by a `BindForOptions.render` call — DOM nodes for one row plus optional cleanup and update hooks.",
-    "loc": "src/for.ts:35"
+    "loc": "src/for.ts:34"
   },
   {
     "subpath": ".",
@@ -1403,7 +1379,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(host: Element, slots: SlotDecl[], originalChildren: Node[]): void",
     "doc": "Distribute a component's pre-existing children into its slot anchors, matching native `<slot>` distribution semantics. Elements with `slot=\"X\"` route to the named anchor; everything else (un-named elements, Text, Comment) routes to the default slot. The `slot` attribute is stripped during routing.",
-    "loc": "src/slot.ts:51"
+    "loc": "src/slot.ts:50"
   },
   {
     "subpath": ".",
@@ -1619,7 +1595,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface SlotDecl { name: string anchor: Comment fallback?: () => Node[] }",
     "doc": "Declaration of one slot: name, anchor placeholder, and optional fallback. The compiler emits an array of these for each component that exposes slots; the runtime consumes the array via `resolveSlots`.",
-    "loc": "src/slot.ts:14"
+    "loc": "src/slot.ts:13"
   },
   {
     "subpath": ".",
@@ -1627,7 +1603,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(host: Element, name: string): boolean",
     "doc": "Was the named slot filled with author-provided content at mount, or did it fall back? Lets templates gate styling / aux content on slot presence without manual DOM probing. Pure-whitespace text fills count as \"not filled\" so leading whitespace doesn't pollute the answer.",
-    "loc": "src/slot.ts:126"
+    "loc": "src/slot.ts:125"
   },
   {
     "subpath": ".",
@@ -1643,7 +1619,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(host: Element): Node[]",
     "doc": "Snapshot the host's current child nodes (Elements, Text, and Comment) before its innerHTML is replaced by the component template. Text and comment children survive the round-trip so native-slot semantics are preserved — `<my-component>Hi</my-component>` keeps the `Hi` text.",
-    "loc": "src/slot.ts:149"
+    "loc": "src/slot.ts:148"
   },
   {
     "subpath": ".",
@@ -1715,15 +1691,15 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "class",
     "signature": "typeof SuiMountOutsideSetupError",
     "doc": "Thrown by `mount()` when called outside a setup window — no scope is current. Named so authoring tooling and tests can match on it (`error.name === 'SuiMountOutsideSetupError'`), unlike `onCleanup`, which silently no-ops outside a scope.",
-    "loc": "src/effect-scope.ts:107"
+    "loc": "src/effect-scope.ts:106"
   },
   {
     "subpath": ".",
     "name": "tabs",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:tabs` — the L1 `<tabs>` element's behavior, in light DOM. Owns the whole subtree and queries descendant `.sail-tab` / `.sail-tab-panel` directly.",
-    "loc": "src/actions/tabs.ts:17"
+    "doc": "`use:tabs` — L1 `<tabs>` behavior in light DOM. Finds tab / tab-panel / tab-list hosts via compiler `data-sail-host` stamps.",
+    "loc": "src/actions/tabs.ts:18"
   },
   {
     "subpath": ".",
@@ -1907,7 +1883,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(path: string): PathToken[]",
     "doc": "Parse a path string (`field`, `[i]`, chains like `a.b[3].c`) into a list of tokens. The empty string returns an empty list and addresses the root.",
-    "loc": "src/patch.ts:120"
+    "loc": "src/patch.ts:116"
   },
   {
     "subpath": ".",
@@ -1955,7 +1931,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<R>(start: EffectScope | null, visit: (scope: EffectScope) => R | undefined, fallback: R): R",
     "doc": "Walk the scope chain from `start` toward the root, calling `visit` at each node (including `start`). Stops when `visit` returns something other than `undefined` — that value is returned — or the chain runs out, in which case the `fallback` is returned.",
-    "loc": "src/effect-scope.ts:307"
+    "loc": "src/effect-scope.ts:306"
   },
   {
     "subpath": ".",
@@ -1971,7 +1947,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<R>(scope: EffectScope, body: () => R): R",
     "doc": "Run `body` with `scope` as the current scope. Cleanups registered inside `body` enroll on `scope`. Restores the prior scope on return, including on throw. Nestable.",
-    "loc": "src/effect-scope.ts:85"
+    "loc": "src/effect-scope.ts:84"
   },
   {
     "subpath": ".",
@@ -2027,7 +2003,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "`use:catchRender` — the `<error-boundary>` element's behavior.",
-    "loc": "src/actions/catch-render.ts:21"
+    "loc": "src/actions/catch-render.ts:25"
   },
   {
     "subpath": "./actions",
@@ -2074,8 +2050,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "describedControl",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:describedControl` — form control ↔ hint/error association for any host with `.hint` / `.error` / `.control` anatomy. The hint↔error visibility swap is pure CSS; this action wires accessibility: give the hint and error regions stable ids, then point the first slotted control's aria-describedby at the active region (hint when valid, error when [invalid]) and set aria-invalid to match. Re-wires when [invalid] toggles or the control changes. Written once — no per-instance controller, compiles away. The L1 `<field>` stamps this.",
-    "loc": "src/actions/described-control.ts:15"
+    "doc": "`use:describedControl` — form control ↔ hint/error association for the L1 `<field>` host anatomy (structure under host, not class names): children[0] label, [1] control, [2] hint, [3] error-gate → [role=alert]",
+    "loc": "src/actions/described-control.ts:16"
   },
   {
     "subpath": "./actions",
@@ -2107,7 +2083,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "Emit `sail-remove` (bubbles, composed) from a removable host:",
-    "loc": "src/actions/dismissible.ts:23"
+    "loc": "src/actions/dismissible.ts:24"
   },
   {
     "subpath": "./actions",
@@ -2163,7 +2139,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "",
-    "loc": "src/actions/marquee.ts:44"
+    "loc": "src/actions/marquee.ts:47"
   },
   {
     "subpath": "./actions",
@@ -2187,15 +2163,15 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "`use:menu` — menu semantics + keyboard for the L1 `<dropdown>` / `<context-menu>` content (a native `[popover]`). Wires role=menu / menuitem, roving focus (ArrowUp/Down, Home/End), Escape to close, focuses the first item on open, and closes after activating an item. Positioning is `use:anchor`'s job; open/close and light-dismiss are the native popover's.",
-    "loc": "src/actions/menu.ts:20"
+    "loc": "src/actions/menu.ts:22"
   },
   {
     "subpath": "./actions",
     "name": "pagination",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:pagination` — the L1 `<pagination>` behavior. Marks the `.sail-page` whose value matches the element's `value` with `aria-current=\"page\"`, and on click of a page sets `value` + emits `sail-page-change`. Prev/next are just pages whose value is the target page. Structure (which pages/ellipsis to show) is authored; this owns the state contract.",
-    "loc": "src/actions/pagination.ts:12"
+    "doc": "`use:pagination` — the L1 `<pagination>` behavior. Marks the page host whose value matches the element's `value` with `aria-current=\"page\"`, and on click of a page sets `value` + emits `sail-page-change`. Prev/next are just pages whose value is the target page. Structure (which pages/ellipsis to show) is authored; this owns the state contract.",
+    "loc": "src/actions/pagination.ts:14"
   },
   {
     "subpath": "./actions",
@@ -2274,8 +2250,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "recoverySurface",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:recoverySurface` — the L1 `<error-state>` element's behavior. Surface, icon tile, and the details/toggle visibility are PURE CSS gated on the reserved `data-state` attribute (`has-details` / `open` tokens — group-state-*: in structure sx). This action supplies what CSS can't: - fill the code chip from the `code` attribute (re-synced on change); - detect whether the details region has content → stamp `data-state=\"has-details\"` so the Show/Hide toggle appears, and wire the toggle (label, aria-expanded, `open` token on data-state); - auto-focus the first action so the recovery control is reachable at once. Written once in the toolchain — no per-instance controller, compiles away.",
-    "loc": "src/actions/recovery-surface.ts:15"
+    "doc": "`use:recoverySurface` — the L1 `<error-state>` element's behavior. Surface, icon tile, and the details/toggle visibility are PURE CSS gated on the reserved `data-state` attribute (`has-details` / `open` tokens — group-state-*: in structure sx). This action supplies what CSS can't: - fill the code chip from the `code` attribute (re-synced on change); - detect whether the details region has content → stamp `data-state=\"has-details\"` so the Show/Hide toggle appears, and wire the toggle (label, aria-expanded, `open` token on data-state); - auto-focus the first action so the recovery control is reachable at once.",
+    "loc": "src/actions/recovery-surface.ts:18"
   },
   {
     "subpath": "./actions",
@@ -2322,8 +2298,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "tabs",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:tabs` — the L1 `<tabs>` element's behavior, in light DOM. Owns the whole subtree and queries descendant `.sail-tab` / `.sail-tab-panel` directly.",
-    "loc": "src/actions/tabs.ts:17"
+    "doc": "`use:tabs` — L1 `<tabs>` behavior in light DOM. Finds tab / tab-panel / tab-list hosts via compiler `data-sail-host` stamps.",
+    "loc": "src/actions/tabs.ts:18"
   },
   {
     "subpath": "./actions",
@@ -2354,8 +2330,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "toggleGroup",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:toggleGroup` — the L1 `<toggle-group>` element's behavior, light DOM. Owns the group ARIA (role=group + aria-orientation), roving tabindex, arrow nav (per orientation) + Home/End, click selection, and `value` sync. `type` = `single` (one value, deselectable) or `multiple` (space-separated set). Each `.sail-toggle` gets `aria-pressed`. Emits `sail-toggle-change`.",
-    "loc": "src/actions/toggle-group.ts:13"
+    "doc": "`use:toggleGroup` — the L1 `<toggle-group>` element's behavior, light DOM. Owns the group ARIA (role=group + aria-orientation), roving tabindex, arrow nav (per orientation) + Home/End, click selection, and `value` sync. `type` = `single` (one value, deselectable) or `multiple` (space-separated set). Each toggle host gets `aria-pressed`. Emits `sail-toggle-change`.",
+    "loc": "src/actions/toggle-group.ts:15"
   },
   {
     "subpath": "./actions",
@@ -2475,7 +2451,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:164"
+    "loc": "src/styles/index.ts:163"
   },
   {
     "subpath": "./framework",
@@ -2507,7 +2483,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(sig: Signal<T>, patch: Patch): void",
     "doc": "Apply one patch to `sig`. Reads the current value, walks the path, applies the op immutably (copy-on-write — unchanged subtrees keep reference equality), and writes the new root back via `sig.set`.",
-    "loc": "src/patch.ts:69"
+    "loc": "src/patch.ts:65"
   },
   {
     "subpath": "./framework",
@@ -2515,7 +2491,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(sig: Signal<T>, patches: Patch[]): void",
     "doc": "Apply many patches as one atomic update. Patches run in order inside a `batch`, so subscribers fire exactly once at the end regardless of how many patches the array contains. No-op for empty arrays.",
-    "loc": "src/patch.ts:92"
+    "loc": "src/patch.ts:88"
   },
   {
     "subpath": "./framework",
@@ -2563,7 +2539,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, name: string, get: () => unknown): Disposer",
     "doc": "Bind a reactive value to a DOM attribute, with attribute-presence semantics built in.",
-    "loc": "src/bind.ts:115"
+    "loc": "src/bind.ts:114"
   },
   {
     "subpath": "./framework",
@@ -2571,7 +2547,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLInputElement, sig: Signal<boolean>): Disposer",
     "doc": "Two-way bind a boolean signal to a checkbox or radio input. Signal writes set `el.checked`; the `change` event writes back into the signal.",
-    "loc": "src/bind.ts:268"
+    "loc": "src/bind.ts:267"
   },
   {
     "subpath": "./framework",
@@ -2579,7 +2555,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, name: string, get: () => unknown): Disposer",
     "doc": "Route a dynamic binding to the right channel so the AUTHOR never has to. This is the toolchain owning the DOM's attribute/property split: for a custom element, a value that can't be an attribute (object / array / function), or a name the element exposes as a property (a declared prop → accessor), is assigned as a PROPERTY — identity preserved; the component reflects it to an attribute itself if it wants (e.g. `variant`, `tone`). Everything else is a plain HTML attribute (aria-*, data-*, native).",
-    "loc": "src/bind.ts:185"
+    "loc": "src/bind.ts:184"
   },
   {
     "subpath": "./framework",
@@ -2587,7 +2563,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(opts: BindForOptions<T>): Disposer",
     "doc": "Bind a keyed list to the DOM after `opts.anchor`. The renderer is called once per new key; rows whose keys persist across renders keep their original nodes (and any focus / scroll / animation state).",
-    "loc": "src/for.ts:122"
+    "loc": "src/for.ts:121"
   },
   {
     "subpath": "./framework",
@@ -2595,7 +2571,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface BindForOptions<T> { anchor: Comment items: () => readonly T[] key: (item: T, index: number) => unknown render: (item: T, index: number) => RenderedItem }",
     "doc": "Inputs to `bindFor` — what to iterate, how to identify items, and how to render them.",
-    "loc": "src/for.ts:20"
+    "loc": "src/for.ts:19"
   },
   {
     "subpath": "./framework",
@@ -2603,7 +2579,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(anchor: Comment, sig: Signal<readonly T[]>, key: (item: T, index: number) => unknown, render: (item: T, index: number) => RenderedItem): Disposer",
     "doc": "Convenience wrapper around `bindFor` for the common case where the items source is a signal. Equivalent to `bindFor({ anchor, items: () => sig(), key, render })`.",
-    "loc": "src/for.ts:446"
+    "loc": "src/for.ts:445"
   },
   {
     "subpath": "./framework",
@@ -2619,7 +2595,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, get: () => string): Disposer",
     "doc": "Bind a reactive HTML/SVG string to an element's contents. The string is parsed once and morphed into `el` via `morph()` — DOM identity preserved where possible, so focus/scroll/selection survive updates.",
-    "loc": "src/bind.ts:311"
+    "loc": "src/bind.ts:310"
   },
   {
     "subpath": "./framework",
@@ -2627,7 +2603,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(opts: BindIfOptions): Disposer",
     "doc": "Conditionally render one of N branches at `opts.anchor`. Branches are rendered lazily — only the selected branch's renderer is invoked. The previous branch's `cleanup` runs on swap, freeing its bindings.",
-    "loc": "src/if.ts:98"
+    "loc": "src/if.ts:97"
   },
   {
     "subpath": "./framework",
@@ -2635,7 +2611,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type BindIfOptions = BindIfTwoBranchOptions | BindIfMultiBranchOptions",
     "doc": "Public union — `bindIf` accepts either shape.",
-    "loc": "src/if.ts:62"
+    "loc": "src/if.ts:61"
   },
   {
     "subpath": "./framework",
@@ -2667,7 +2643,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T extends Element>(el: T, prop: string, get: () => unknown): Disposer",
     "doc": "Bind a value to a JS property of an element (not an attribute). Use this when the target is a typed property — arrays, objects, instances — so the value flows through without an `attribute → string → parse` round-trip.",
-    "loc": "src/bind.ts:155"
+    "loc": "src/bind.ts:154"
   },
   {
     "subpath": "./framework",
@@ -2683,7 +2659,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLElement, get: () => unknown): Disposer",
     "doc": "Toggle visibility based on a truthiness check. Falsy → `display:none`; truthy → restores the previous `display` value (preserving any inline value that was there before the binding hid the element).",
-    "loc": "src/bind.ts:72"
+    "loc": "src/bind.ts:71"
   },
   {
     "subpath": "./framework",
@@ -2699,7 +2675,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Node, get: () => unknown): Disposer",
     "doc": "Bind reactive text content to a node. Reads `get()` once eagerly and again on every tracked-dependency change; the result is coerced to a string and written to `node.textContent`. `null` and `undefined` become `''` so missing values don't leak the literal text.",
-    "loc": "src/bind.ts:36"
+    "loc": "src/bind.ts:35"
   },
   {
     "subpath": "./framework",
@@ -2707,7 +2683,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, sig: Signal<string>, onWrite?: (value: string) => void): Disposer",
     "doc": "Two-way bind a string signal to an `<input>` / `<textarea>` / `<select>` element. Initial render and signal-driven updates flow signal → element; user edits flow element → signal via the `input` event. Setting the same value re-checks identity to avoid moving the caret.",
-    "loc": "src/bind.ts:227"
+    "loc": "src/bind.ts:226"
   },
   {
     "subpath": "./framework",
@@ -2771,7 +2747,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface BranchRender { nodes: Node[] cleanup?: () => void }",
     "doc": "One branch's rendered nodes plus an optional teardown. Returned by the `then_` / `else_` / `loading` / branch-render callbacks of every branching binding (`bindIf`).",
-    "loc": "src/if.ts:35"
+    "loc": "src/if.ts:34"
   },
   {
     "subpath": "./framework",
@@ -2779,7 +2755,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(attr: string): string",
     "doc": "Convert a kebab-case HTML attribute name to its camelCase prop name. Single-word attributes pass through unchanged.",
-    "loc": "src/component.ts:530"
+    "loc": "src/component.ts:528"
   },
   {
     "subpath": "./framework",
@@ -2795,7 +2771,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "`use:catchRender` — the `<error-boundary>` element's behavior.",
-    "loc": "src/actions/catch-render.ts:21"
+    "loc": "src/actions/catch-render.ts:25"
   },
   {
     "subpath": "./framework",
@@ -2923,7 +2899,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ComponentFactory = ( host: HTMLElement, propSignals: Record<string, Signal<unknown>>, internals?: ElementInternals, ) => Disposer",
     "doc": "The factory the compiler emits per component. Receives the host element, a place to attach prop signals, and (for form-associated components) the ElementInternals instance attached at construction time. Returns a cleanup function that runs on disconnect.",
-    "loc": "src/component.ts:34"
+    "loc": "src/component.ts:32"
   },
   {
     "subpath": "./framework",
@@ -2939,7 +2915,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface ComponentSchema { observedAttrs: string[] props: Record< string, { camel: string decode: (raw: string | null) => unknown } > formAssociated?: boolean }",
     "doc": "Schema the compiler emits alongside the factory — drives prop decode + observed-attributes registration.",
-    "loc": "src/component.ts:61"
+    "loc": "src/component.ts:59"
   },
   {
     "subpath": "./framework",
@@ -2955,7 +2931,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(description: string): ContextKey<T>",
     "doc": "Mint a typed context key. The phantom `__ctx` is for type inference only — it carries through `provideContext` / `injectContext` so the read site doesn't need an annotation.",
-    "loc": "src/effect-scope.ts:335"
+    "loc": "src/effect-scope.ts:334"
   },
   {
     "subpath": "./framework",
@@ -2963,7 +2939,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ContextKey<T> = symbol & { readonly __ctx?: T }",
     "doc": "Key for an arbitrary value held in a scope's `contexts` map. Use a `Symbol(...)` so the key can't collide with anything an author names. The non-store context API (`provideContext` / `injectContext`) is a thin layer over the same map stores use — reach for it when you need to share a value that ISN'T a setup-style store (a single ref, a logger handle, an ad-hoc client). For stateful shared logic, `defineStore` is the answer.",
-    "loc": "src/effect-scope.ts:330"
+    "loc": "src/effect-scope.ts:329"
   },
   {
     "subpath": "./framework",
@@ -3019,7 +2995,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(parent?: EffectScope): EffectScope",
     "doc": "Create a child scope owned by `parent` (or the current scope if `parent` is omitted). The child auto-disposes when its owner disposes — registered as a cleanup at creation. Use when you need a sub-lifecycle inside a mount: e.g. a hook that tears down its own resources independently of the outer route but should still clean up if the route unmounts first.",
-    "loc": "src/effect-scope.ts:232"
+    "loc": "src/effect-scope.ts:231"
   },
   {
     "subpath": "./framework",
@@ -3035,7 +3011,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): EffectScope",
     "doc": "Create a fresh, top-level scope. Most allocators don't need this — they call `onCleanup` to enroll on whatever scope `mount()` set up. Reach for `createScope` only when you're authoring a HOST (`mount.ts` is the canonical example) that owns a scope.",
-    "loc": "src/effect-scope.ts:148"
+    "loc": "src/effect-scope.ts:147"
   },
   {
     "subpath": "./framework",
@@ -3043,31 +3019,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): EffectScope | null",
     "doc": "The active scope, or `null` if no `withScope` is currently on the stack. Diagnostic / advanced use only — most callers should use `onCleanup` directly.",
-    "loc": "src/effect-scope.ts:140"
-  },
-  {
-    "subpath": "./framework",
-    "name": "data",
-    "kind": "function",
-    "signature": "<T>(opts: DataOpts<T>): DataHandle<T>",
-    "doc": "Create a server-owned reactive signal that can subscribe to SSE patches. If `subscribe` is provided and an `EventSource` impl is available, opens the stream and routes `patch` events through `applyPatch` (or `onPatch` when supplied) into the signal.",
-    "loc": "src/data.ts:66"
-  },
-  {
-    "subpath": "./framework",
-    "name": "DataHandle",
-    "kind": "interface",
-    "signature": "export interface DataHandle<T> { signal: Signal<T> dispose: () => void }",
-    "doc": "The handle returned by `data()`: the live signal plus a disposer.",
-    "loc": "src/data.ts:33"
-  },
-  {
-    "subpath": "./framework",
-    "name": "DataOpts",
-    "kind": "interface",
-    "signature": "export interface DataOpts<T> { initial: T subscribe?: string onPatch?: (patch: Patch, sig: Signal<T>) => void onError?: (err: unknown) => void EventSource?: typeof globalThis.EventSource }",
-    "doc": "Options for `data()` — initial value plus SSE/patch wiring.",
-    "loc": "src/data.ts:16"
+    "loc": "src/effect-scope.ts:139"
   },
   {
     "subpath": "./framework",
@@ -3083,7 +3035,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(raw: string | null): boolean",
     "doc": "Boolean decoder using HTML attribute-presence semantics.",
-    "loc": "src/decode.ts:67"
+    "loc": "src/decode.ts:66"
   },
   {
     "subpath": "./framework",
@@ -3091,7 +3043,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T extends string>(allowed: readonly T[], fallback: T): Decoder<T>",
     "doc": "Build a decoder that allows only a fixed set of string literals. Anything outside the allowed list (including `null`) decodes to `fallback` — useful for variant props like `size` or `tone`.",
-    "loc": "src/decode.ts:118"
+    "loc": "src/decode.ts:117"
   },
   {
     "subpath": "./framework",
@@ -3099,7 +3051,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(fallback: T): Decoder<T>",
     "doc": "Build a decoder that parses JSON from an attribute. Empty / missing attributes and parse errors both yield `fallback`, so prop signals never carry `undefined` and never throw on bad input.",
-    "loc": "src/decode.ts:91"
+    "loc": "src/decode.ts:90"
   },
   {
     "subpath": "./framework",
@@ -3107,7 +3059,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(raw: string | null): number",
     "doc": "Number decoder. Empty or missing attributes decode to `NaN` — let the author guard with `Number.isNaN` rather than silently choosing `0`.",
-    "loc": "src/decode.ts:43"
+    "loc": "src/decode.ts:42"
   },
   {
     "subpath": "./framework",
@@ -3115,7 +3067,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type Decoder<T> = (raw: string | null) => T",
     "doc": "Function that turns a raw HTML attribute string (or `null` for an absent attribute) into the typed value the script block expects. Each `Decoder<T>` is a pure function — no side effects, no DOM reads.",
-    "loc": "src/decode.ts:12"
+    "loc": "src/decode.ts:11"
   },
   {
     "subpath": "./framework",
@@ -3123,7 +3075,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(raw: string | null): string",
     "doc": "Identity-style decoder. `null` (missing attribute) decodes to `''` so prop signals never carry `null` for string-typed props.",
-    "loc": "src/decode.ts:27"
+    "loc": "src/decode.ts:26"
   },
   {
     "subpath": "./framework",
@@ -3131,7 +3083,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(tag: string, schema: ComponentSchema, factory: ComponentFactory): void",
     "doc": "",
-    "loc": "src/component.ts:132"
+    "loc": "src/component.ts:130"
   },
   {
     "subpath": "./framework",
@@ -3170,8 +3122,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "describedControl",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:describedControl` — form control ↔ hint/error association for any host with `.hint` / `.error` / `.control` anatomy. The hint↔error visibility swap is pure CSS; this action wires accessibility: give the hint and error regions stable ids, then point the first slotted control's aria-describedby at the active region (hint when valid, error when [invalid]) and set aria-invalid to match. Re-wires when [invalid] toggles or the control changes. Written once — no per-instance controller, compiles away. The L1 `<field>` stamps this.",
-    "loc": "src/actions/described-control.ts:15"
+    "doc": "`use:describedControl` — form control ↔ hint/error association for the L1 `<field>` host anatomy (structure under host, not class names): children[0] label, [1] control, [2] hint, [3] error-gate → [role=alert]",
+    "loc": "src/actions/described-control.ts:16"
   },
   {
     "subpath": "./framework",
@@ -3219,7 +3171,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "Emit `sail-remove` (bubbles, composed) from a removable host:",
-    "loc": "src/actions/dismissible.ts:23"
+    "loc": "src/actions/dismissible.ts:24"
   },
   {
     "subpath": "./framework",
@@ -3227,7 +3179,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type Disposer = () => void",
     "doc": "Cleanup function returned by every `bind*` helper and `effect`. Calling it detaches the binding's listeners and stops further updates.",
-    "loc": "src/bind.ts:14"
+    "loc": "src/bind.ts:13"
   },
   {
     "subpath": "./framework",
@@ -3259,7 +3211,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface EffectScope { cleanup(fn: () => void): void registerMount(fn: (el: HTMLElement) => (() => void) | void): void runMounts(el: HTMLElement): void dispose(): void readonly disposed: boole",
     "doc": "A unit of resource ownership. Cleanups registered while the scope is the current scope (via `withScope`) run when the scope is disposed.",
-    "loc": "src/effect-scope.ts:48"
+    "loc": "src/effect-scope.ts:47"
   },
   {
     "subpath": "./framework",
@@ -3411,7 +3363,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(key: ContextKey<T>, scope?: EffectScope): T | null",
     "doc": "Look up a value published via `provideContext`. Walks the parent chain, returning the nearest match. Returns `null` when no scope on the chain has a value under `key` — same null-vs- throw choice the old `useShared` made (callers guard with `if (v)` / controller-side null checks). The TS narrowing comes from the `ContextKey<T>` phantom, so the result IS `T`, not `T | null` — the null collapses only at the call site where it matters.",
-    "loc": "src/effect-scope.ts:357"
+    "loc": "src/effect-scope.ts:356"
   },
   {
     "subpath": "./framework",
@@ -3523,7 +3475,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "",
-    "loc": "src/actions/marquee.ts:44"
+    "loc": "src/actions/marquee.ts:47"
   },
   {
     "subpath": "./framework",
@@ -3531,7 +3483,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(e: KeyboardEvent, spec: string): boolean",
     "doc": "Match a keyboard event against a `key:` modifier spec. Used inside `on` to gate `keydown`/`keyup` handlers; exposed for components that need the same matching semantics outside of declarative bindings.",
-    "loc": "src/on.ts:176"
+    "loc": "src/on.ts:175"
   },
   {
     "subpath": "./framework",
@@ -3555,7 +3507,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
     "doc": "`use:menu` — menu semantics + keyboard for the L1 `<dropdown>` / `<context-menu>` content (a native `[popover]`). Wires role=menu / menuitem, roving focus (ArrowUp/Down, Home/End), Escape to close, focuses the first item on open, and closes after activating an item. Positioning is `use:anchor`'s job; open/close and light-dismiss are the native popover's.",
-    "loc": "src/actions/menu.ts:20"
+    "loc": "src/actions/menu.ts:22"
   },
   {
     "subpath": "./framework",
@@ -3563,7 +3515,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface Modifier { kind: | 'preventDefault' | 'stopPropagation' | 'stopImmediatePropagation' | 'self' | 'trusted' | 'key' | 'debounce' | 'throttle' arg?: string }",
     "doc": "One pre-handler effect: filter, transform, or rate-limit. Modifiers compose in order; the parsed list is what `on` receives via `OnOptions.modifiers`.",
-    "loc": "src/on.ts:28"
+    "loc": "src/on.ts:27"
   },
   {
     "subpath": "./framework",
@@ -3611,7 +3563,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(fn: (el: HTMLElement) => (() => void) | void): void",
     "doc": "Ambient lifecycle: register `fn` to run once the current instance's DOM is connected. `fn` receives the host element and may return a cleanup — sync, or a promise resolving to one — that disposes with the instance (its owning scope).",
-    "loc": "src/effect-scope.ts:131"
+    "loc": "src/effect-scope.ts:130"
   },
   {
     "subpath": "./framework",
@@ -3707,7 +3659,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: EventTarget, event: string, handler: (event: Event) => unknown, opts?: OnOptions): Disposer",
     "doc": "Attach an event listener with Sail's modifier semantics.",
-    "loc": "src/on.ts:77"
+    "loc": "src/on.ts:76"
   },
   {
     "subpath": "./framework",
@@ -3715,7 +3667,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(fn: () => void): void",
     "doc": "Register a teardown function with the current scope. No-op when there is no current scope (i.e. called outside any `withScope`).",
-    "loc": "src/effect-scope.ts:97"
+    "loc": "src/effect-scope.ts:96"
   },
   {
     "subpath": "./framework",
@@ -3723,15 +3675,15 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface OnOptions { modifiers?: Modifier[] capture?: boolean passive?: boolean once?: boolean }",
     "doc": "Options for `on` — modifiers + standard `addEventListener` flags.",
-    "loc": "src/on.ts:12"
+    "loc": "src/on.ts:11"
   },
   {
     "subpath": "./framework",
     "name": "pagination",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:pagination` — the L1 `<pagination>` behavior. Marks the `.sail-page` whose value matches the element's `value` with `aria-current=\"page\"`, and on click of a page sets `value` + emits `sail-page-change`. Prev/next are just pages whose value is the target page. Structure (which pages/ellipsis to show) is authored; this owns the state contract.",
-    "loc": "src/actions/pagination.ts:12"
+    "doc": "`use:pagination` — the L1 `<pagination>` behavior. Marks the page host whose value matches the element's `value` with `aria-current=\"page\"`, and on click of a page sets `value` + emits `sail-page-change`. Prev/next are just pages whose value is the target page. Structure (which pages/ellipsis to show) is authored; this owns the state contract.",
+    "loc": "src/actions/pagination.ts:14"
   },
   {
     "subpath": "./framework",
@@ -3739,15 +3691,15 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface Patch { op: PatchOp path?: string value?: unknown index?: number from?: number to?: number count?: number by?: number v?: number }",
     "doc": "One patch envelope. Path-addressed; only the fields relevant to `op` are populated. `path` defaults to the root.",
-    "loc": "src/patch.ts:31"
+    "loc": "src/patch.ts:27"
   },
   {
     "subpath": "./framework",
     "name": "PatchOp",
     "kind": "type",
     "signature": "export type PatchOp = | 'set' | 'merge' | 'append' | 'prepend' | 'insert' | 'remove' | 'move' | 'splice' | 'inc'",
-    "doc": "Wire-protocol op tag. See `.artifacts/specs/ship-set/04-patch-protocol.md` for full per-op semantics.",
-    "loc": "src/patch.ts:16"
+    "doc": "Wire-protocol op tag for SSE-driven signal updates.",
+    "loc": "src/patch.ts:12"
   },
   {
     "subpath": "./framework",
@@ -3755,7 +3707,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type PathToken = | { kind: 'field'; name: string } | { kind: 'index'; i: number }",
     "doc": "One segment of a parsed patch path: an object field or an array index.",
-    "loc": "src/patch.ts:143"
+    "loc": "src/patch.ts:139"
   },
   {
     "subpath": "./framework",
@@ -3859,7 +3811,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(key: ContextKey<T>, value: T, scope?: EffectScope): void",
     "doc": "Put `value` on `scope` under `key`. Any descendant that calls `injectContext(key)` and walks the chain will find it. No-op when called without a current scope; tests / module-level helpers can call it explicitly with a scope.",
-    "loc": "src/effect-scope.ts:343"
+    "loc": "src/effect-scope.ts:342"
   },
   {
     "subpath": "./framework",
@@ -3954,8 +3906,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "recoverySurface",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:recoverySurface` — the L1 `<error-state>` element's behavior. Surface, icon tile, and the details/toggle visibility are PURE CSS gated on the reserved `data-state` attribute (`has-details` / `open` tokens — group-state-*: in structure sx). This action supplies what CSS can't: - fill the code chip from the `code` attribute (re-synced on change); - detect whether the details region has content → stamp `data-state=\"has-details\"` so the Show/Hide toggle appears, and wire the toggle (label, aria-expanded, `open` token on data-state); - auto-focus the first action so the recovery control is reachable at once. Written once in the toolchain — no per-instance controller, compiles away.",
-    "loc": "src/actions/recovery-surface.ts:15"
+    "doc": "`use:recoverySurface` — the L1 `<error-state>` element's behavior. Surface, icon tile, and the details/toggle visibility are PURE CSS gated on the reserved `data-state` attribute (`has-details` / `open` tokens — group-state-*: in structure sx). This action supplies what CSS can't: - fill the code chip from the `code` attribute (re-synced on change); - detect whether the details region has content → stamp `data-state=\"has-details\"` so the Show/Hide toggle appears, and wire the toggle (label, aria-expanded, `open` token on data-state); - auto-focus the first action so the recovery control is reachable at once.",
+    "loc": "src/actions/recovery-surface.ts:18"
   },
   {
     "subpath": "./framework",
@@ -3995,7 +3947,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface RenderedItem { nodes: Node[] cleanup?: () => void update?: (item: unknown, index: number) => void }",
     "doc": "The shape returned by a `BindForOptions.render` call — DOM nodes for one row plus optional cleanup and update hooks.",
-    "loc": "src/for.ts:35"
+    "loc": "src/for.ts:34"
   },
   {
     "subpath": "./framework",
@@ -4043,7 +3995,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(host: Element, slots: SlotDecl[], originalChildren: Node[]): void",
     "doc": "Distribute a component's pre-existing children into its slot anchors, matching native `<slot>` distribution semantics. Elements with `slot=\"X\"` route to the named anchor; everything else (un-named elements, Text, Comment) routes to the default slot. The `slot` attribute is stripped during routing.",
-    "loc": "src/slot.ts:51"
+    "loc": "src/slot.ts:50"
   },
   {
     "subpath": "./framework",
@@ -4259,7 +4211,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface SlotDecl { name: string anchor: Comment fallback?: () => Node[] }",
     "doc": "Declaration of one slot: name, anchor placeholder, and optional fallback. The compiler emits an array of these for each component that exposes slots; the runtime consumes the array via `resolveSlots`.",
-    "loc": "src/slot.ts:14"
+    "loc": "src/slot.ts:13"
   },
   {
     "subpath": "./framework",
@@ -4267,7 +4219,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(host: Element, name: string): boolean",
     "doc": "Was the named slot filled with author-provided content at mount, or did it fall back? Lets templates gate styling / aux content on slot presence without manual DOM probing. Pure-whitespace text fills count as \"not filled\" so leading whitespace doesn't pollute the answer.",
-    "loc": "src/slot.ts:126"
+    "loc": "src/slot.ts:125"
   },
   {
     "subpath": "./framework",
@@ -4283,7 +4235,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(host: Element): Node[]",
     "doc": "Snapshot the host's current child nodes (Elements, Text, and Comment) before its innerHTML is replaced by the component template. Text and comment children survive the round-trip so native-slot semantics are preserved — `<my-component>Hi</my-component>` keeps the `Hi` text.",
-    "loc": "src/slot.ts:149"
+    "loc": "src/slot.ts:148"
   },
   {
     "subpath": "./framework",
@@ -4363,7 +4315,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "class",
     "signature": "typeof SuiMountOutsideSetupError",
     "doc": "Thrown by `mount()` when called outside a setup window — no scope is current. Named so authoring tooling and tests can match on it (`error.name === 'SuiMountOutsideSetupError'`), unlike `onCleanup`, which silently no-ops outside a scope.",
-    "loc": "src/effect-scope.ts:107"
+    "loc": "src/effect-scope.ts:106"
   },
   {
     "subpath": "./framework",
@@ -4386,8 +4338,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "tabs",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:tabs` — the L1 `<tabs>` element's behavior, in light DOM. Owns the whole subtree and queries descendant `.sail-tab` / `.sail-tab-panel` directly.",
-    "loc": "src/actions/tabs.ts:17"
+    "doc": "`use:tabs` — L1 `<tabs>` behavior in light DOM. Finds tab / tab-panel / tab-list hosts via compiler `data-sail-host` stamps.",
+    "loc": "src/actions/tabs.ts:18"
   },
   {
     "subpath": "./framework",
@@ -4586,8 +4538,8 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "toggleGroup",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:toggleGroup` — the L1 `<toggle-group>` element's behavior, light DOM. Owns the group ARIA (role=group + aria-orientation), roving tabindex, arrow nav (per orientation) + Home/End, click selection, and `value` sync. `type` = `single` (one value, deselectable) or `multiple` (space-separated set). Each `.sail-toggle` gets `aria-pressed`. Emits `sail-toggle-change`.",
-    "loc": "src/actions/toggle-group.ts:13"
+    "doc": "`use:toggleGroup` — the L1 `<toggle-group>` element's behavior, light DOM. Owns the group ARIA (role=group + aria-orientation), roving tabindex, arrow nav (per orientation) + Home/End, click selection, and `value` sync. `type` = `single` (one value, deselectable) or `multiple` (space-separated set). Each toggle host gets `aria-pressed`. Emits `sail-toggle-change`.",
+    "loc": "src/actions/toggle-group.ts:15"
   },
   {
     "subpath": "./framework",
@@ -4595,7 +4547,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(path: string): PathToken[]",
     "doc": "Parse a path string (`field`, `[i]`, chains like `a.b[3].c`) into a list of tokens. The empty string returns an empty list and addresses the root.",
-    "loc": "src/patch.ts:120"
+    "loc": "src/patch.ts:116"
   },
   {
     "subpath": "./framework",
@@ -4659,7 +4611,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<R>(start: EffectScope | null, visit: (scope: EffectScope) => R | undefined, fallback: R): R",
     "doc": "Walk the scope chain from `start` toward the root, calling `visit` at each node (including `start`). Stops when `visit` returns something other than `undefined` — that value is returned — or the chain runs out, in which case the `fallback` is returned.",
-    "loc": "src/effect-scope.ts:307"
+    "loc": "src/effect-scope.ts:306"
   },
   {
     "subpath": "./framework",
@@ -4675,7 +4627,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<R>(scope: EffectScope, body: () => R): R",
     "doc": "Run `body` with `scope` as the current scope. Cleanups registered inside `body` enroll on `scope`. Restores the prior scope on return, including on throw. Nestable.",
-    "loc": "src/effect-scope.ts:85"
+    "loc": "src/effect-scope.ts:84"
   },
   {
     "subpath": "./framework",
@@ -4707,7 +4659,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(sig: Signal<T>, patch: Patch): void",
     "doc": "Apply one patch to `sig`. Reads the current value, walks the path, applies the op immutably (copy-on-write — unchanged subtrees keep reference equality), and writes the new root back via `sig.set`.",
-    "loc": "src/patch.ts:69"
+    "loc": "src/patch.ts:65"
   },
   {
     "subpath": "./patch",
@@ -4715,7 +4667,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(sig: Signal<T>, patches: Patch[]): void",
     "doc": "Apply many patches as one atomic update. Patches run in order inside a `batch`, so subscribers fire exactly once at the end regardless of how many patches the array contains. No-op for empty arrays.",
-    "loc": "src/patch.ts:92"
+    "loc": "src/patch.ts:88"
   },
   {
     "subpath": "./patch",
@@ -4723,15 +4675,15 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface Patch { op: PatchOp path?: string value?: unknown index?: number from?: number to?: number count?: number by?: number v?: number }",
     "doc": "One patch envelope. Path-addressed; only the fields relevant to `op` are populated. `path` defaults to the root.",
-    "loc": "src/patch.ts:31"
+    "loc": "src/patch.ts:27"
   },
   {
     "subpath": "./patch",
     "name": "PatchOp",
     "kind": "type",
     "signature": "export type PatchOp = | 'set' | 'merge' | 'append' | 'prepend' | 'insert' | 'remove' | 'move' | 'splice' | 'inc'",
-    "doc": "Wire-protocol op tag. See `.artifacts/specs/ship-set/04-patch-protocol.md` for full per-op semantics.",
-    "loc": "src/patch.ts:16"
+    "doc": "Wire-protocol op tag for SSE-driven signal updates.",
+    "loc": "src/patch.ts:12"
   },
   {
     "subpath": "./patch",
@@ -4739,7 +4691,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type PathToken = | { kind: 'field'; name: string } | { kind: 'index'; i: number }",
     "doc": "One segment of a parsed patch path: an object field or an array index.",
-    "loc": "src/patch.ts:143"
+    "loc": "src/patch.ts:139"
   },
   {
     "subpath": "./patch",
@@ -4747,7 +4699,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(path: string): PathToken[]",
     "doc": "Parse a path string (`field`, `[i]`, chains like `a.b[3].c`) into a list of tokens. The empty string returns an empty list and addresses the root.",
-    "loc": "src/patch.ts:120"
+    "loc": "src/patch.ts:116"
   },
   {
     "subpath": "./route",
@@ -4795,7 +4747,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(root: unknown): void",
     "doc": "",
-    "loc": "src/styles/index.ts:164"
+    "loc": "src/styles/index.ts:163"
   },
   {
     "subpath": "./server",
@@ -4811,7 +4763,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, name: string, get: () => unknown): Disposer",
     "doc": "Bind a reactive value to a DOM attribute, with attribute-presence semantics built in.",
-    "loc": "src/bind.ts:115"
+    "loc": "src/bind.ts:114"
   },
   {
     "subpath": "./server",
@@ -4819,7 +4771,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLInputElement, sig: Signal<boolean>): Disposer",
     "doc": "Two-way bind a boolean signal to a checkbox or radio input. Signal writes set `el.checked`; the `change` event writes back into the signal.",
-    "loc": "src/bind.ts:268"
+    "loc": "src/bind.ts:267"
   },
   {
     "subpath": "./server",
@@ -4827,7 +4779,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(opts: BindForOptions<T>): Disposer",
     "doc": "Bind a keyed list to the DOM after `opts.anchor`. The renderer is called once per new key; rows whose keys persist across renders keep their original nodes (and any focus / scroll / animation state).",
-    "loc": "src/for.ts:122"
+    "loc": "src/for.ts:121"
   },
   {
     "subpath": "./server",
@@ -4835,7 +4787,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(anchor: Comment, sig: Signal<readonly T[]>, key: (item: T, index: number) => unknown, render: (item: T, index: number) => RenderedItem): Disposer",
     "doc": "Convenience wrapper around `bindFor` for the common case where the items source is a signal. Equivalent to `bindFor({ anchor, items: () => sig(), key, render })`.",
-    "loc": "src/for.ts:446"
+    "loc": "src/for.ts:445"
   },
   {
     "subpath": "./server",
@@ -4843,7 +4795,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: Element, get: () => string): Disposer",
     "doc": "Bind a reactive HTML/SVG string to an element's contents. The string is parsed once and morphed into `el` via `morph()` — DOM identity preserved where possible, so focus/scroll/selection survive updates.",
-    "loc": "src/bind.ts:311"
+    "loc": "src/bind.ts:310"
   },
   {
     "subpath": "./server",
@@ -4851,7 +4803,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(opts: BindIfOptions): Disposer",
     "doc": "Conditionally render one of N branches at `opts.anchor`. Branches are rendered lazily — only the selected branch's renderer is invoked. The previous branch's `cleanup` runs on swap, freeing its bindings.",
-    "loc": "src/if.ts:98"
+    "loc": "src/if.ts:97"
   },
   {
     "subpath": "./server",
@@ -4859,7 +4811,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T extends Element>(el: T, prop: string, get: () => unknown): Disposer",
     "doc": "Bind a value to a JS property of an element (not an attribute). Use this when the target is a typed property — arrays, objects, instances — so the value flows through without an `attribute → string → parse` round-trip.",
-    "loc": "src/bind.ts:155"
+    "loc": "src/bind.ts:154"
   },
   {
     "subpath": "./server",
@@ -4867,7 +4819,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLElement, get: () => unknown): Disposer",
     "doc": "Toggle visibility based on a truthiness check. Falsy → `display:none`; truthy → restores the previous `display` value (preserving any inline value that was there before the binding hid the element).",
-    "loc": "src/bind.ts:72"
+    "loc": "src/bind.ts:71"
   },
   {
     "subpath": "./server",
@@ -4883,7 +4835,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(node: Node, get: () => unknown): Disposer",
     "doc": "Bind reactive text content to a node. Reads `get()` once eagerly and again on every tracked-dependency change; the result is coerced to a string and written to `node.textContent`. `null` and `undefined` become `''` so missing values don't leak the literal text.",
-    "loc": "src/bind.ts:36"
+    "loc": "src/bind.ts:35"
   },
   {
     "subpath": "./server",
@@ -4891,7 +4843,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, sig: Signal<string>, onWrite?: (value: string) => void): Disposer",
     "doc": "Two-way bind a string signal to an `<input>` / `<textarea>` / `<select>` element. Initial render and signal-driven updates flow signal → element; user edits flow element → signal via the `input` event. Setting the same value re-checks identity to avoid moving the caret.",
-    "loc": "src/bind.ts:227"
+    "loc": "src/bind.ts:226"
   },
   {
     "subpath": "./server",
@@ -4931,7 +4883,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(description: string): ContextKey<T>",
     "doc": "Mint a typed context key. The phantom `__ctx` is for type inference only — it carries through `provideContext` / `injectContext` so the read site doesn't need an annotation.",
-    "loc": "src/effect-scope.ts:335"
+    "loc": "src/effect-scope.ts:334"
   },
   {
     "subpath": "./server",
@@ -4939,7 +4891,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type ContextKey<T> = symbol & { readonly __ctx?: T }",
     "doc": "Key for an arbitrary value held in a scope's `contexts` map. Use a `Symbol(...)` so the key can't collide with anything an author names. The non-store context API (`provideContext` / `injectContext`) is a thin layer over the same map stores use — reach for it when you need to share a value that ISN'T a setup-style store (a single ref, a logger handle, an ad-hoc client). For stateful shared logic, `defineStore` is the answer.",
-    "loc": "src/effect-scope.ts:330"
+    "loc": "src/effect-scope.ts:329"
   },
   {
     "subpath": "./server",
@@ -4963,7 +4915,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(parent?: EffectScope): EffectScope",
     "doc": "Create a child scope owned by `parent` (or the current scope if `parent` is omitted). The child auto-disposes when its owner disposes — registered as a cleanup at creation. Use when you need a sub-lifecycle inside a mount: e.g. a hook that tears down its own resources independently of the outer route but should still clean up if the route unmounts first.",
-    "loc": "src/effect-scope.ts:232"
+    "loc": "src/effect-scope.ts:231"
   },
   {
     "subpath": "./server",
@@ -4979,7 +4931,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): EffectScope",
     "doc": "Create a fresh, top-level scope. Most allocators don't need this — they call `onCleanup` to enroll on whatever scope `mount()` set up. Reach for `createScope` only when you're authoring a HOST (`mount.ts` is the canonical example) that owns a scope.",
-    "loc": "src/effect-scope.ts:148"
+    "loc": "src/effect-scope.ts:147"
   },
   {
     "subpath": "./server",
@@ -4987,15 +4939,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(): EffectScope | null",
     "doc": "The active scope, or `null` if no `withScope` is currently on the stack. Diagnostic / advanced use only — most callers should use `onCleanup` directly.",
-    "loc": "src/effect-scope.ts:140"
-  },
-  {
-    "subpath": "./server",
-    "name": "data",
-    "kind": "function",
-    "signature": "<T>(opts: DataOpts<T>): DataHandle<T>",
-    "doc": "Create a server-owned reactive signal that can subscribe to SSE patches. If `subscribe` is provided and an `EventSource` impl is available, opens the stream and routes `patch` events through `applyPatch` (or `onPatch` when supplied) into the signal.",
-    "loc": "src/data.ts:66"
+    "loc": "src/effect-scope.ts:139"
   },
   {
     "subpath": "./server",
@@ -5027,7 +4971,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "type",
     "signature": "export type Disposer = () => void",
     "doc": "Cleanup function returned by every `bind*` helper and `effect`. Calling it detaches the binding's listeners and stops further updates.",
-    "loc": "src/bind.ts:14"
+    "loc": "src/bind.ts:13"
   },
   {
     "subpath": "./server",
@@ -5043,7 +4987,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "interface",
     "signature": "export interface EffectScope { cleanup(fn: () => void): void registerMount(fn: (el: HTMLElement) => (() => void) | void): void runMounts(el: HTMLElement): void dispose(): void readonly disposed: boole",
     "doc": "A unit of resource ownership. Cleanups registered while the scope is the current scope (via `withScope`) run when the scope is disposed.",
-    "loc": "src/effect-scope.ts:48"
+    "loc": "src/effect-scope.ts:47"
   },
   {
     "subpath": "./server",
@@ -5059,7 +5003,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(key: ContextKey<T>, scope?: EffectScope): T | null",
     "doc": "Look up a value published via `provideContext`. Walks the parent chain, returning the nearest match. Returns `null` when no scope on the chain has a value under `key` — same null-vs- throw choice the old `useShared` made (callers guard with `if (v)` / controller-side null checks). The TS narrowing comes from the `ContextKey<T>` phantom, so the result IS `T`, not `T | null` — the null collapses only at the call site where it matters.",
-    "loc": "src/effect-scope.ts:357"
+    "loc": "src/effect-scope.ts:356"
   },
   {
     "subpath": "./server",
@@ -5139,7 +5083,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(e: KeyboardEvent, spec: string): boolean",
     "doc": "Match a keyboard event against a `key:` modifier spec. Used inside `on` to gate `keydown`/`keyup` handlers; exposed for components that need the same matching semantics outside of declarative bindings.",
-    "loc": "src/on.ts:176"
+    "loc": "src/on.ts:175"
   },
   {
     "subpath": "./server",
@@ -5147,7 +5091,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(fn: (el: HTMLElement) => (() => void) | void): void",
     "doc": "Ambient lifecycle: register `fn` to run once the current instance's DOM is connected. `fn` receives the host element and may return a cleanup — sync, or a promise resolving to one — that disposes with the instance (its owning scope).",
-    "loc": "src/effect-scope.ts:131"
+    "loc": "src/effect-scope.ts:130"
   },
   {
     "subpath": "./server",
@@ -5187,7 +5131,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(el: EventTarget, event: string, handler: (event: Event) => unknown, opts?: OnOptions): Disposer",
     "doc": "Attach an event listener with Sail's modifier semantics.",
-    "loc": "src/on.ts:77"
+    "loc": "src/on.ts:76"
   },
   {
     "subpath": "./server",
@@ -5195,7 +5139,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(fn: () => void): void",
     "doc": "Register a teardown function with the current scope. No-op when there is no current scope (i.e. called outside any `withScope`).",
-    "loc": "src/effect-scope.ts:97"
+    "loc": "src/effect-scope.ts:96"
   },
   {
     "subpath": "./server",
@@ -5219,7 +5163,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<T>(key: ContextKey<T>, value: T, scope?: EffectScope): void",
     "doc": "Put `value` on `scope` under `key`. Any descendant that calls `injectContext(key)` and walks the chain will find it. No-op when called without a current scope; tests / module-level helpers can call it explicitly with a scope.",
-    "loc": "src/effect-scope.ts:343"
+    "loc": "src/effect-scope.ts:342"
   },
   {
     "subpath": "./server",
@@ -5307,7 +5251,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(host: Element, slots: SlotDecl[], originalChildren: Node[]): void",
     "doc": "Distribute a component's pre-existing children into its slot anchors, matching native `<slot>` distribution semantics. Elements with `slot=\"X\"` route to the named anchor; everything else (un-named elements, Text, Comment) routes to the default slot. The `slot` attribute is stripped during routing.",
-    "loc": "src/slot.ts:51"
+    "loc": "src/slot.ts:50"
   },
   {
     "subpath": "./server",
@@ -5363,7 +5307,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(host: Element, name: string): boolean",
     "doc": "Was the named slot filled with author-provided content at mount, or did it fall back? Lets templates gate styling / aux content on slot presence without manual DOM probing. Pure-whitespace text fills count as \"not filled\" so leading whitespace doesn't pollute the answer.",
-    "loc": "src/slot.ts:126"
+    "loc": "src/slot.ts:125"
   },
   {
     "subpath": "./server",
@@ -5371,7 +5315,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "(host: Element): Node[]",
     "doc": "Snapshot the host's current child nodes (Elements, Text, and Comment) before its innerHTML is replaced by the component template. Text and comment children survive the round-trip so native-slot semantics are preserved — `<my-component>Hi</my-component>` keeps the `Hi` text.",
-    "loc": "src/slot.ts:149"
+    "loc": "src/slot.ts:148"
   },
   {
     "subpath": "./server",
@@ -5419,7 +5363,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "class",
     "signature": "typeof SuiMountOutsideSetupError",
     "doc": "Thrown by `mount()` when called outside a setup window — no scope is current. Named so authoring tooling and tests can match on it (`error.name === 'SuiMountOutsideSetupError'`), unlike `onCleanup`, which silently no-ops outside a scope.",
-    "loc": "src/effect-scope.ts:107"
+    "loc": "src/effect-scope.ts:106"
   },
   {
     "subpath": "./server",
@@ -5459,7 +5403,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<R>(start: EffectScope | null, visit: (scope: EffectScope) => R | undefined, fallback: R): R",
     "doc": "Walk the scope chain from `start` toward the root, calling `visit` at each node (including `start`). Stops when `visit` returns something other than `undefined` — that value is returned — or the chain runs out, in which case the `fallback` is returned.",
-    "loc": "src/effect-scope.ts:307"
+    "loc": "src/effect-scope.ts:306"
   },
   {
     "subpath": "./server",
@@ -5483,7 +5427,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "kind": "function",
     "signature": "<R>(scope: EffectScope, body: () => R): R",
     "doc": "Run `body` with `scope` as the current scope. Cleanups registered inside `body` enroll on `scope`. Restores the prior scope on return, including on throw. Nestable.",
-    "loc": "src/effect-scope.ts:85"
+    "loc": "src/effect-scope.ts:84"
   },
   {
     "subpath": "./template-hooks",

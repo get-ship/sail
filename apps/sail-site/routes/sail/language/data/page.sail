@@ -91,16 +91,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.states}></code-block>
 
-  <h2>Live server data</h2>
-  <p>
-    For data that lives on the server and changes over time,
-    <code>data()</code> gives you a signal that's server-rendered at request
-    time and then patched over a stream — no polling, no manual wiring. The
-    server half — the endpoint, the patch feed, SSR — is <a href="/deck">deck</a>'s
-    job; the route just reads the signal.
-  </p>
-  <code-block code={code.server}></code-block>
-
   <p sx={style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)}>
     The loaded value is only reachable through <code>kind === 'ok'</code>,
     so a template cannot render data it hasn't confirmed has arrived —

@@ -19,7 +19,7 @@
 //      `_willUpdate()` whenever the element identity changes (null until mount).
 //   5. A viewport ResizeObserver re-windows on viewport resize.
 //   6. Every effect/observer registers teardown via `onCleanup` (mirrors
-//      `live()` / `data()`); `dispose()` is also returned for manual teardown.
+//      `query()` / effect-scope); `dispose()` is also returned for manual teardown.
 //
 // Identity short-circuit (build-spec §"Identity short-circuit — corrected"):
 //   `virtualItems` shallow-compares key + start + size, NOT key alone. A pure

@@ -198,11 +198,11 @@ export async function mount<Scope = Record<string, unknown>>(
     scope: { ...baseScope },
     stateKeys: built.stateKeys,
   }
-  // Run setup() inside an effect scope so any `live()` / `data()` /
-  // hook subscriptions allocated during setup register their
-  // cleanup with this mount. The scope is disposed by `dispose()`
-  // below — without it, EventSource subscriptions opened by
-  // live-querying routes leaked across every navigation and tabs
+  // Run setup() inside an effect scope so any `query()` (LiveSource
+  // push) / effect-scope / hook subscriptions allocated during setup
+  // register their cleanup with this mount. The scope is disposed by
+  // `dispose()` below — without it, EventSource subscriptions opened
+  // by live-querying routes leaked across every navigation and tabs
   // eventually OOM'd.
   const scope = createScope()
   const setupRet = withScope(scope, () =>
@@ -283,9 +283,9 @@ export async function mount<Scope = Record<string, unknown>>(
   // have called `mount(fn)` any number of times (directly, or from a
   // composition it called) — each registered on `scope` via
   // `EffectScope.registerMount`. Run them now, INSIDE the same effect
-  // scope as setup (line 206): a live()/data()/hook subscription opened
-  // in a `mount()` callback needs CURRENT_SCOPE still set to enroll its
-  // own `onCleanup`, or it leaks (the OOM `87cf3223` fixed). Disposers
+  // scope as setup (line 206): a query()/effect-scope/hook subscription
+  // opened in a `mount()` callback needs CURRENT_SCOPE still set to enroll
+  // its own `onCleanup`, or it leaks (the OOM `87cf3223` fixed). Disposers
   // (sync or resolved from a promise) are enrolled on `scope` itself by
   // `runMounts`, so they tear down with `scope.dispose()` below.
   withScope(scope, () => scope.runMounts(target))

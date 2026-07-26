@@ -1,9 +1,7 @@
-// Custom-element wrapper. The ship-set compiler emits one
-// `defineComponent('my-tag', factory)` call per .set file. The factory
+// Custom-element wrapper. The sail compiler emits one
+// `defineComponent('my-tag', factory)` call per .sail file. The factory
 // is the user's script + binding wiring; defineComponent registers
 // the wrapper class with `customElements.define`.
-//
-// See .artifacts/specs/ship-set/03-runtime-architecture.md § Component wrapper.
 
 import type { Disposer } from './bind'
 import type { Signal } from './signal'
@@ -41,7 +39,7 @@ export type ComponentFactory = (
  * Form-association lifecycle hooks the factory may install on the host
  * via `host.__shipSetFormHooks = {...}`. The form-associated class
  * shape invokes them from the matching browser callbacks, runs them
- * BEFORE dispatching the `ship-set:form-*` event so listeners observe
+ * BEFORE dispatching the `sail:form-*` event so listeners observe
  * the post-hook state.
  */
 export interface FormHooks {
@@ -80,7 +78,7 @@ export interface ComponentSchema {
 }
 
 /**
- * Register a ship-set component as a custom element. The wrapper class
+ * Register a sail component as a custom element. The wrapper class
  * observes the schema's attributes, decodes incoming changes into prop
  * signals, runs `factory` on connect, and runs the returned cleanup on
  * disconnect.
@@ -92,7 +90,7 @@ export interface ComponentSchema {
  * FOREIGN collision — a tag registered OUTSIDE defineComponent — still warns
  * once and no-ops, since that's a real bug, not an HMR cycle.
  *
- * The ship-set compiler emits exactly one call per `.set` file. Authors
+ * The sail compiler emits exactly one call per `.sail` file. Authors
  * shouldn't need to reach for this directly.
  *
  * @param tag Custom element tag name (must contain a hyphen).
@@ -147,7 +145,7 @@ export function defineComponent(
       try {
         el.__suiReRun()
       } catch (err) {
-        console.error(`[ship-set:${tag}] HMR re-run threw:`, err)
+        console.error(`[sail:${tag}] HMR re-run threw:`, err)
       }
     }
     return
@@ -225,7 +223,7 @@ export function defineComponent(
           // Ambient mount() callbacks the factory (or a composition it called)
           // registered on this.scope — the element is already connected by the
           // time connectedCallback runs, so "after connect" IS now. Run inside
-          // withScope so a mount() callback's own onCleanup()/live()/data()
+          // withScope so a mount() callback's own onCleanup()/query()
           // calls still enroll on this.scope, not a dangling one.
           withScope(scope, () => scope.runMounts(this))
         } catch (err) {
@@ -233,7 +231,7 @@ export function defineComponent(
           if (boundary) {
             boundary.catch(err, 'mount')
           } else {
-            console.error(`[ship-set:${tag}] setup threw:`, err)
+            console.error(`[sail:${tag}] setup threw:`, err)
             dispatchSuiError(this, err, 'setup')
           }
         }
@@ -250,7 +248,7 @@ export function defineComponent(
         try {
           this.cleanup?.()
         } catch (e) {
-          console.error(`[ship-set:${tag}] cleanup threw:`, e)
+          console.error(`[sail:${tag}] cleanup threw:`, e)
         }
         this.cleanup = undefined
         const scope = this.scope
@@ -261,7 +259,7 @@ export function defineComponent(
           try {
             scope.dispose()
           } catch (e) {
-            console.error(`[ship-set:${tag}] scope dispose threw:`, e)
+            console.error(`[sail:${tag}] scope dispose threw:`, e)
           }
         }
         this.scope = undefined
@@ -300,7 +298,7 @@ export function defineComponent(
 
       // Form-association lifecycle hooks. The browser dispatches these
       // on the host. The runtime fans them out two ways:
-      //   1. Element-level events (`ship-set:form-*`) for ad-hoc
+      //   1. Element-level events (`sail:form-*`) for ad-hoc
       //      listeners attached by author code or tests.
       //   2. Factory-installed handlers stored under
       //      `__shipSetFormHooks` (set by component-factory.ts when the
@@ -310,26 +308,26 @@ export function defineComponent(
       formResetCallback() {
         const hooks = (this as unknown as FormHookHolder).__shipSetFormHooks
         try { hooks?.reset?.() } catch (e) {
-          console.error(`[ship-set:${tag}] formResetCallback threw:`, e)
+          console.error(`[sail:${tag}] formResetCallback threw:`, e)
         }
-        this.dispatchEvent(new CustomEvent('ship-set:form-reset'))
+        this.dispatchEvent(new CustomEvent('sail:form-reset'))
       }
       formStateRestoreCallback(state: string | null, mode: string) {
         const hooks = (this as unknown as FormHookHolder).__shipSetFormHooks
         try { hooks?.restore?.(state) } catch (e) {
-          console.error(`[ship-set:${tag}] formStateRestoreCallback threw:`, e)
+          console.error(`[sail:${tag}] formStateRestoreCallback threw:`, e)
         }
         this.dispatchEvent(
-          new CustomEvent('ship-set:form-restore', { detail: { state, mode } }),
+          new CustomEvent('sail:form-restore', { detail: { state, mode } }),
         )
       }
       formDisabledCallback(disabled: boolean) {
         const hooks = (this as unknown as FormHookHolder).__shipSetFormHooks
         try { hooks?.disabled?.(disabled) } catch (e) {
-          console.error(`[ship-set:${tag}] formDisabledCallback threw:`, e)
+          console.error(`[sail:${tag}] formDisabledCallback threw:`, e)
         }
         this.dispatchEvent(
-          new CustomEvent('ship-set:form-disabled', { detail: { disabled } }),
+          new CustomEvent('sail:form-disabled', { detail: { disabled } }),
         )
       }
     }
@@ -380,7 +378,7 @@ export function defineComponent(
         // Ambient mount() callbacks the factory (or a composition it called)
         // registered on this.scope — the element is already connected by the
         // time connectedCallback runs, so "after connect" IS now. Run inside
-        // withScope so a mount() callback's own onCleanup()/live()/data()
+        // withScope so a mount() callback's own onCleanup()/query()
         // calls still enroll on this.scope, not a dangling one.
         withScope(scope, () => scope.runMounts(this))
         // Apply any prop set via JS property before connection created the
@@ -394,7 +392,7 @@ export function defineComponent(
         if (boundary) {
           boundary.catch(err, 'mount')
         } else {
-          console.error(`[ship-set:${tag}] setup threw:`, err)
+          console.error(`[sail:${tag}] setup threw:`, err)
           dispatchSuiError(this, err, 'setup')
         }
       }
@@ -404,7 +402,7 @@ export function defineComponent(
       try {
         this.cleanup?.()
       } catch (e) {
-        console.error(`[ship-set:${tag}] cleanup threw:`, e)
+        console.error(`[sail:${tag}] cleanup threw:`, e)
       }
       this.cleanup = undefined
       const scope = this.scope
@@ -415,7 +413,7 @@ export function defineComponent(
         try {
           scope.dispose()
         } catch (e) {
-          console.error(`[ship-set:${tag}] scope dispose threw:`, e)
+          console.error(`[sail:${tag}] scope dispose threw:`, e)
         }
       }
       this.scope = undefined

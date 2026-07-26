@@ -1,15 +1,15 @@
-# @ship/ui-runtime
+# @ship/sail-runtime
 
-The browser-side runtime for the ship-set framework. Layer 1 of the stack.
+The browser-side runtime for the sail framework. Layer 1 of the stack.
 
-Fine-grained reactive signals, custom-element wrapper, patch-protocol applicator. Compiled `.set` modules import from this package.
+Fine-grained reactive signals, custom-element wrapper, patch-protocol applicator. Compiled `.sail` modules import from this package.
 
-**Status:** under construction. v0.1 has the signal engine; v1.0 ships when [03-runtime-architecture.md](../../.artifacts/specs/ship-set/03-runtime-architecture.md) is implementation-complete.
+**Status:** under construction. v0.1 has the signal engine.
 
 ## API
 
 ```ts
-import { signal, derived, effect, batch, untrack } from '@ship/ui-runtime'
+import { signal, derived, effect, batch, untrack } from '@ship/sail-runtime'
 
 const $count = signal(0)
 const $double = derived(() => $count() * 2)
@@ -30,7 +30,7 @@ batch(() => {
 
 ## Public API surface
 
-Every symbol below is re-exported from `@ship/ui-runtime` and is part of
+Every symbol below is re-exported from `@ship/sail-runtime` and is part of
 the package's stable contract. Hover any of them in your editor to read
 the full JSDoc — examples, parameter docs, and `@see` cross-references.
 
@@ -67,7 +67,7 @@ semver bump. Treat the absence of an export from `src/index.ts` as a
 
 | Symbol       | Summary                                                  |
 | ------------ | -------------------------------------------------------- |
-| `on`         | Attach a listener with ship-set's modifier semantics.        |
+| `on`         | Attach a listener with sail's modifier semantics.        |
 | `matchesKey` | Match a `KeyboardEvent` against a `key:` modifier spec.  |
 | `OnOptions`  | Modifier list + `addEventListener` flags.                |
 | `Modifier`   | One pre-handler effect (`preventDefault`, `key:`, etc.). |
@@ -99,7 +99,7 @@ semver bump. Treat the absence of an export from `src/index.ts` as a
 
 | Symbol             | Summary                                              |
 | ------------------ | ---------------------------------------------------- |
-| `defineComponent`  | Register a ship-set component as a custom element.       |
+| `defineComponent`  | Register a sail component as a custom element.       |
 | `camelOf`          | Kebab-case attribute → camelCase prop name.          |
 | `ComponentFactory` | Per-instance setup function.                         |
 | `ComponentSchema`  | Observed-attrs + decoders + form-association flag.   |
@@ -124,13 +124,13 @@ semver bump. Treat the absence of an export from `src/index.ts` as a
 | `slotFilled`       | Did the named slot get author-provided content?               |
 | `SlotDecl`         | One slot's name + anchor + optional fallback renderer.        |
 
-### Data (`data.ts`)
+### Data (`query.ts`)
 
 | Symbol        | Summary                                                          |
 | ------------- | ---------------------------------------------------------------- |
-| `data`        | Server-owned signal with optional SSE patch subscription.        |
-| `DataOpts`    | Initial value + SSE URL + patch / error hooks.                   |
-| `DataHandle`  | `{ signal, dispose }` — the value plus a teardown.               |
+| `query`       | Read primitive — Promise pull or LiveSource push, three states.  |
+| `mutation`    | Write primitive with pending/ok/error state.                     |
+| `LiveState`   | Tagged `{ kind: 'loading' \| 'ok' \| 'error' }` signal value.    |
 
 ### HMR / hydration (`morph.ts`)
 
@@ -138,10 +138,6 @@ semver bump. Treat the absence of an export from `src/index.ts` as a
 | -------------- | ------------------------------------------------------ |
 | `morph`        | In-place DOM reconciler that preserves node identity.  |
 | `MorphOptions` | `skip` predicate to leave subtrees untouched.          |
-
-## Spec
-
-See `.artifacts/specs/ship-set/03-runtime-architecture.md` for the full design.
 
 ## Tests
 

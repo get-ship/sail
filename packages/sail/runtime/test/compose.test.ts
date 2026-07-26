@@ -28,7 +28,7 @@ describe('mountComponent — child composition (mount-form)', () => {
     let cleaned = 0
     const mod = component(() => {
       // `onCleanup` enrolls on whatever scope is current during setup — inside
-      // mountComponent that is the CHILD scope. This is what live()/data()/hooks
+      // mountComponent that is the CHILD scope. This is what query()/hooks
       // register, so it's the real ownership contract being tested.
       onCleanup(() => {
         cleaned++

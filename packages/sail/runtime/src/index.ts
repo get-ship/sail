@@ -1,7 +1,7 @@
 /**
  * @ship/sail-runtime — public API surface.
  *
- * Everything re-exported from this module is part of ship-set's stable
+ * Everything re-exported from this module is part of sail's stable
  * runtime contract. Anything not re-exported here is internal and may
  * change without notice.
  *
@@ -24,9 +24,8 @@
  *                    (+ types `ComponentFactory`, `ComponentSchema`)
  *   - Prop decoders: `decodeString`, `decodeNumber`, `decodeBoolean`,
  *                    `decodeJson`, `decodeEnum` (+ type `Decoder`)
- *   - Data:          `data` (+ types `DataOpts`, `DataHandle`)
- *
- * See .artifacts/specs/ship-set/03-runtime-architecture.md § Public API.
+ *   - Data:          `query`, `mutation` (+ types `QueryOpts`, `Mutation`,
+ *                    `LiveState`, …) — query is the read primitive
  *
  * @packageDocumentation
  */
@@ -266,9 +265,6 @@ export {
   decodeEnum,
 } from './decode'
 export type { Decoder } from './decode'
-
-export { data } from './data'
-export type { DataOpts, DataHandle } from './data'
 
 export { debounce } from './signal'
 
