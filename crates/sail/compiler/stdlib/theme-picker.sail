@@ -35,7 +35,7 @@
   const chip = style.fontWeight(semibold).fontSize(xs).leading(none).padY(px).padX(1).radius(full).bg(muted).fg(accent).shadow(inset-ring)
 </scope>
 <row inline use:themeSelect sx={host}>
-  <button class="sail-theme-trigger" type="button" popovertarget="sail-theme-panel" aria-label="Choose theme" sx={[
+  <button type="button" popovertarget="sail-theme-panel" aria-label="Choose theme" sx={[
     trigger,
     when({
       hover: style.bg(theme-picker-option-hover-bg),
@@ -51,14 +51,14 @@
       <path d="M12 2a10 10 0 0 0 0 20 2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 10 10 0 0 0-9-11Z"></path>
     </svg>
   </button>
-  <div class="sail-theme-panel" id="sail-theme-panel" popover use:anchor placement="bottom-end" role="listbox" aria-label="Theme" sx={[
+  <div id="sail-theme-panel" popover use:anchor placement="bottom-end" role="listbox" aria-label="Theme" sx={[
     panel,
     when({
       group-inline: style.position(static).w(full).maxW(none).shadow(none).bg(transparent).borderWidth(0).pad(0),
     }),
   ]}>
     <grid cols="2" gap="2" sx={panelGrid}>
-    <button class="sail-theme-option" type="button" role="option" value="ship-light" sx={[
+    <button type="button" role="option" value="ship-light" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -70,26 +70,26 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="ship-light" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>SHIP Light</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="ship-light" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>SHIP Light</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>
         <span>SHIP Light</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="ship-dark" sx={[
+    <button type="button" role="option" value="ship-dark" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -101,26 +101,26 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="ship-dark" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>SHIP Dark</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="ship-dark" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>SHIP Dark</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>
         <span>SHIP Dark</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="paper" sx={[
+    <button type="button" role="option" value="paper" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -132,26 +132,26 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="paper" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>Paper</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="paper" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>Paper</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>
         <span>Paper</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="halo" sx={[
+    <button type="button" role="option" value="halo" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -163,26 +163,26 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="halo" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>Halo</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="halo" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>Halo</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>
         <span>Halo</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="console" sx={[
+    <button type="button" role="option" value="console" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -194,26 +194,26 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="console" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>Console</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="console" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>Console</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>
         <span>Console</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="contrast" sx={[
+    <button type="button" role="option" value="contrast" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -225,26 +225,26 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="contrast" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>High Contrast</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="contrast" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>High Contrast</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>
         <span>High Contrast</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="glass" sx={[
+    <button type="button" role="option" value="glass" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -256,26 +256,26 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="glass" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>Glass</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="glass" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>Glass</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>
         <span>Glass</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="neutral-light" sx={[
+    <button type="button" role="option" value="neutral-light" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -287,26 +287,26 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="neutral-light" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>Neutral Light</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="neutral-light" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>Neutral Light</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>
         <span>Neutral Light</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="neutral-dark" sx={[
+    <button type="button" role="option" value="neutral-dark" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -318,26 +318,26 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="neutral-dark" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>Neutral Dark</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="neutral-dark" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>Neutral Dark</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>
         <span>Neutral Dark</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="brut" sx={[
+    <button type="button" role="option" value="brut" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -349,26 +349,26 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="brut" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>Brutalist</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="brut" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>Brutalist</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>
         <span>Brutalist</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="8bit" sx={[
+    <button type="button" role="option" value="8bit" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -380,26 +380,26 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="8bit" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>8-Bit</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="8bit" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>8-Bit</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>
         <span>8-Bit</span>
       </column>
     </button>
-    <button class="sail-theme-option" type="button" role="option" value="synthwave" sx={[
+    <button type="button" role="option" value="synthwave" sx={[
       option,
       when({
         hover: style.bg(theme-picker-option-hover-bg),
@@ -411,19 +411,19 @@
       }),
     ]}>
       <column gap="1" sx={optionCol}>
-        <center class="sail-theme-swatch" data-theme-preview="synthwave" aria-hidden="true" sx={swatch}>
-          <span class="tc-overlay" sx={overlay}></span>
-          <column class="tc-card" gap="1" sx={card}>
-            <span class="tc-eyebrow" sx={eyebrow}>Theme</span>
-            <span class="tc-heading" sx={heading}>Synthwave</span>
-            <row class="tc-typo" align="baseline" gap="1">
-              <span class="tc-body" sx={bodySample}>The quick brown fox</span>
-              <span class="tc-mono" sx={monoSample}>build: ok</span>
+        <center data-theme-preview="synthwave" aria-hidden="true" sx={swatch}>
+          <span sx={overlay}></span>
+          <column gap="1" sx={card}>
+            <span sx={eyebrow}>Theme</span>
+            <span sx={heading}>Synthwave</span>
+            <row align="baseline" gap="1">
+              <span sx={bodySample}>The quick brown fox</span>
+              <span sx={monoSample}>build: ok</span>
             </row>
-            <row class="tc-controls" align="center" gap="1">
-              <row inline nowrap class="tc-cta" sx={cta}>Action</row>
-              <row inline nowrap class="tc-ghost" sx={ghost}>Cancel</row>
-              <row inline nowrap class="tc-chip" sx={chip}>New</row>
+            <row align="center" gap="1">
+              <row inline nowrap sx={cta}>Action</row>
+              <row inline nowrap sx={ghost}>Cancel</row>
+              <row inline nowrap sx={chip}>New</row>
             </row>
           </column>
         </center>

@@ -18,7 +18,7 @@
   const ring = style.display(block).size(full).borderWidth(control-stroke).border(solid).border(spinner-track).borderR(currentColor).radius(full).animate(spin)
 </scope>
 
-<span class="spin" role="status" aria-label="Loading" sx={[
+<span role="status" aria-label="Loading" sx={[
   base,
   match(size, {
     md: sizeMd,
@@ -37,5 +37,5 @@
   }),
   compound({ centered: true }, style.display(block).my(8).mx(auto)),
 ]}>
-  <span class="ring" aria-hidden="true" sx={ring}></span>
+  <span aria-hidden="true" sx={ring}></span>
 </span>

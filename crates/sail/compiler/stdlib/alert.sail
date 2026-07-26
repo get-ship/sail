@@ -49,7 +49,7 @@
     }),
   ]}
 >
-  <row inline nowrap align="center" justify="center" class="ico" shrink sx={[
+  <row inline nowrap align="center" justify="center" shrink sx={[
     ico,
     match(tone, {
       default: style.bg(muted).fg(muted-foreground),
@@ -65,8 +65,8 @@
   ]}>
     <slot name="icon"></slot>
   </row>
-  <column gap="1" class="content" grow min-w="0">
-    <div class="title" sx={[
+  <column gap="1" grow min-w="0">
+    <div sx={[
       title,
       when({
         empty: style.display(none),
@@ -74,10 +74,10 @@
     ]}>
       <slot name="title"></slot>
     </div>
-    <div class="body" sx={body}>
+    <div sx={body}>
       <slot></slot>
     </div>
-    <row align="center" gap="2" class="actions" sx={[
+    <row align="center" gap="2" sx={[
       actions,
       when({
         empty: style.display(none),
@@ -87,7 +87,7 @@
     </row>
   </column>
   <button
-    class="close"
+    data-dismiss
     type="button"
     anatomy
     aria-label="Dismiss"

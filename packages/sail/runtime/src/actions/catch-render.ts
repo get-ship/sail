@@ -17,13 +17,18 @@ interface HostWithReset extends HTMLElement {
  * The branch swap is pure CSS, gated on `[data-caught]` — no signal, no `{#if}`.
  * This supplies what CSS cannot: the handle, the caught mark, the error published
  * out of band, and Retry.
+ *
+ * Default fallback anatomy (structure under [role=alert], not classes):
+ * message div immediately before the Retry button. Author `slot="fallback"`
+ * replaces the default and then we touch neither.
  */
 export const catchRender: Action<void> = (node) => {
   const el = node as HostWithReset
   // Present only when the default fallback is in play — an author-supplied
   // `slot="fallback"` replaces it wholesale, and then we touch neither.
-  const message = el.querySelector('.message') as HTMLElement | null
-  const retry = el.querySelector('.retry') as HTMLButtonElement | null
+  const alert = el.querySelector('[role="alert"]')
+  const retry = alert?.querySelector('button[type="button"]') as HTMLButtonElement | null
+  const message = (retry?.previousElementSibling as HTMLElement | null) ?? null
 
   const reset = (): void => {
     if (!el.hasAttribute('data-caught')) return

@@ -141,8 +141,7 @@ fn descendant_map(tag: &str) -> Option<&'static [DescRule]> {
     match tag {
         "prose" => Some(PROSE_MAP),
         "code-block" => Some(CODE_BLOCK_MAP),
-        // Ring PE must live in element-skins (host CVA only sizes/tones the host).
-        "spinner" => Some(SPINNER_MAP),
+        // Spinner ring paint is structure Style on the child (no class anatomy).
         // list-trail anatomy for author-supplied li/a crumbs.
         "breadcrumb" => Some(BREADCRUMB_MAP),
         _ => None,
@@ -203,25 +202,6 @@ const BREADCRUMB_MAP: &[DescRule] = &[
         paint: DescPaint(&[
             ("color", "var(--foreground)"),
             ("font-weight", "var(--font-weight-medium)"),
-        ]),
-    },
-];
-
-const SPINNER_MAP: &[DescRule] = &[
-    DescRule {
-        sel: ".ring",
-        paint: DescPaint(&[
-            ("display", "block"),
-            ("box-sizing", "border-box"),
-            ("width", "100%"),
-            ("height", "100%"),
-            (
-                "border",
-                "var(--control-stroke) solid var(--border-subtle)",
-            ),
-            ("border-right-color", "currentColor"),
-            ("border-radius", "var(--radius-full)"),
-            ("animation", "var(--animate-spin)"),
         ]),
     },
 ];

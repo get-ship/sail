@@ -1,7 +1,7 @@
 // L1 conformance spec: <label> (mechanism-1, compiles-away). Wraps text + a
-// required asterisk (.req). Probe: renders non-empty; the required marker gates
-// on [required] if the skin gates it (else just present).
-const lb = (a = '', txt = 'Email address') => `<label class="sail-label" ${a}>${txt}<span class="req" aria-hidden="true">*</span></label>`
+// required asterisk (aria-hidden span). Probe: renders non-empty; the required
+// marker is present as the last child span.
+const lb = (a = '', txt = 'Email address') => `<label class="sail-label" ${a}>${txt}<span aria-hidden="true">*</span></label>`
 export default {
   tag: 'label',
   width: 640,
@@ -12,7 +12,7 @@ export default {
     const bad = []
     document.querySelectorAll('.sail-label').forEach((el) => {
       if ((el.textContent || '').replace('*', '').trim().length === 0) bad.push({ why: 'empty-label' })
-      if (!el.querySelector('.req')) bad.push({ why: 'no-req-marker' })
+      if (!el.querySelector('span[aria-hidden="true"]')) bad.push({ why: 'no-req-marker' })
     })
     return { count: document.querySelectorAll('.sail-label').length, bad: bad.slice(0, 8) }
   },

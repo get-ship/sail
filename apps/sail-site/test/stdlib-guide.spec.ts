@@ -55,7 +55,7 @@ test('errors chapter: rail entry renders, boundary fallback UI is present, retry
     host.setAttribute('data-caught', '')
   })
   // Fallback message may still be display:contents subtree; assert text + content hidden.
-  await expect(page.locator('.message', { hasText: 'Something went wrong' })).toBeAttached()
+  await expect(page.getByRole('alert').getByText('Something went wrong')).toBeAttached()
   await expect(protectedP).toBeHidden({ timeout: 10_000 })
 
   await page.evaluate(() => {

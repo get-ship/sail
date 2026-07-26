@@ -2416,15 +2416,15 @@ mod tests {
         let out = preprocess(r#"<div class="page"><spinner size="sm" aria-label="Saving"></spinner></div>"#).expect("preprocess");
         // Root class stamped, use-site attrs merged, use-site wins the
         // aria-label collision with the snippet default.
-        assert!(out.contains("sail-spinner spin"), "{out}");
+        assert!(out.contains("sail-spinner"), "{out}");
+        assert!(!out.contains("sail-spinner spin"), "no residual part class: {out}");
         assert!(out.contains(r#"size="sm""#), "{out}");
         assert!(out.contains(r#"aria-label="Saving""#), "{out}");
         assert!(!out.contains("aria-label=\"Loading\""), "use-site wins: {out}");
-        // .ring child is structural; residual utility paint on stdlib spinner
-        // is a follow-up L1 Style conversion (badge/card already on Style path).
+        // Ring child is structure + Style atoms (sx-animatespin etc.), not a part class.
         assert!(
-            out.contains("class=\"ring ") || out.contains("class=\"ring\""),
-            "structure spliced: {out}"
+            out.contains("aria-hidden=\"true\"") && out.contains("sx-animatespin"),
+            "structure spliced with Style ring paint: {out}"
         );
         // The SKIN — including its @keyframes — ships in element-skins.css, not in the
         // component's emitted <style>. This test guards the LOWERING, which is what
@@ -2475,26 +2475,25 @@ mod tests {
         assert!(out.contains("use:dismissControl"), "dismissControl rides the splice: {out}");
         // each slot region receives its projected child, none survive as <slot>
         assert!(!out.contains("<slot"), "no slot tags survive projection: {out}");
-        // Region class names may share the class attr with layout/sx tokens.
+        // Structure projection (no residual part classes).
         assert!(
-            out.contains("ico") && out.contains(r#"<svg slot="icon" class="i"></svg>"#),
-            "icon → .ico: {out}"
+            out.contains(r#"<svg slot="icon" class="i"></svg>"#),
+            "icon slot projected: {out}"
         );
         assert!(
-            out.contains("title") && out.contains(r#"<span slot="title">Saved</span>"#),
-            "title → .title: {out}"
+            out.contains(r#"<span slot="title">Saved</span>"#),
+            "title slot projected: {out}"
         );
         assert!(
-            out.contains("body") && out.contains("All changes saved."),
-            "un-slotted → body: {out}"
+            out.contains("All changes saved."),
+            "un-slotted body projected: {out}"
         );
         // The slotted <button> is a native stdlib tag — stamping adds its
         // sail-button + sx-* classes ahead of the slot= attribute.
         assert!(
-            out.contains("actions")
-                && out.contains("sail-button")
+            out.contains("sail-button")
                 && out.contains(r#"slot="actions">Undo</button>"#),
-            "actions → .actions: {out}"
+            "actions slot projected: {out}"
         );
     }
 
@@ -2511,26 +2510,24 @@ mod tests {
         assert!(out.contains(r#"variant="placeholder""#), "attr merged: {out}");
         assert!(out.contains("use:variantLive"), "action rides the splice: {out}");
         assert!(!out.contains("<slot"), "no slot survives: {out}");
-        // Region class names share the class attr with PE child sx tokens (no --es-*).
+        // Named slots project into structure regions (no residual part classes).
         assert!(
-            out.contains("icon")
-                && out.contains(r#"aria-hidden="true""#)
+            out.contains(r#"aria-hidden="true""#)
                 && out.contains(r#"<svg slot="icon"></svg>"#),
             "icon slot: {out}"
         );
         assert!(
-            out.contains("title") && out.contains(r#"<span slot="title">No results</span>"#),
+            out.contains(r#"<span slot="title">No results</span>"#),
             "title slot: {out}"
         );
         assert!(
-            out.contains("desc") && out.contains("Try a different search."),
-            "default → desc: {out}"
+            out.contains("Try a different search."),
+            "default slot copy: {out}"
         );
         // Same native stamping as alert: the slotted <button> carries its
         // sail-button + sx-* classes ahead of the slot= attribute.
         assert!(
-            out.contains("actions")
-                && out.contains("sail-button")
+            out.contains("sail-button")
                 && out.contains(r#"slot="action">Reset</button>"#),
             "action slot: {out}"
         );

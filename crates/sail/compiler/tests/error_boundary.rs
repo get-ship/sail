@@ -33,13 +33,15 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
         el.structure_html,
         el.skin_css
     );
+    // Content half is the first structure child of the host (no part class).
+    // It carries display:contents + group-caught hide so a healthy boundary
+    // does not box.
     assert!(
-        el.structure_html.contains(r#"class="content"#)
-            && (el.structure_html.contains("sx-contents")
-                || el.structure_html.contains("sx-displaycontents")
-                || el.skin_css.contains("display:contents")
-                || el.skin_css.contains("display: contents")),
-        "nor may the content wrapper: {}",
+        el.structure_html.contains("sx-displaycontents")
+            || el.structure_html.contains("sx-contents")
+            || el.skin_css.contains("display:contents")
+            || el.skin_css.contains("display: contents"),
+        "nor may the content wrapper box: {}",
         el.structure_html
     );
 }
@@ -97,8 +99,8 @@ fn the_fallback_is_a_slot_with_a_built_in_default() {
         el.structure_html
     );
     assert!(
-        el.structure_html.contains("class=\"retry\"")
-            || el.structure_html.contains("retry "),
+        el.structure_html.contains("Retry")
+            && el.structure_html.contains("type=\"button\""),
         "and it ships a default with a recovery control: {}",
         el.structure_html
     );

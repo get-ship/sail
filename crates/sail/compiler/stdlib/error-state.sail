@@ -54,7 +54,6 @@
     nowrap
     align="center"
     justify="center"
-    class="icon"
     aria-hidden="true"
     shrink
     sx={[
@@ -70,11 +69,11 @@
       <path d="M12 16h.01"></path>
     </svg>
   </row>
-  <column align="stretch" gap="1" class="copy" grow min-w="0" sx={copy}>
-    <div class="title" sx={title}>
+  <column align="stretch" gap="1" grow min-w="0" sx={copy}>
+    <div sx={title}>
       <slot name="title">Something went wrong</slot>
     </div>
-    <div class="desc" sx={[
+    <div sx={[
       desc,
       when({
         empty: style.display(none),
@@ -82,14 +81,13 @@
     ]}>
       <slot></slot>
     </div>
-    <div class="code" sx={[
+    <div sx={[
       codeBox,
       when({
         empty: style.display(none),
       }),
     ]}></div>
     <button
-      class="details-toggle"
       type="button"
       anatomy
       aria-expanded="false"
@@ -102,7 +100,7 @@
         }),
       ]}
     >Show details</button>
-    <div class="details" sx={[
+    <div sx={[
       details,
       when({
         group-state-open: style.display(block),
@@ -111,7 +109,7 @@
       <slot name="details"></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2" class="actions" sx={[
+  <row align="center" justify="center" gap="2" sx={[
     actions,
     when({
       empty: style.display(none),

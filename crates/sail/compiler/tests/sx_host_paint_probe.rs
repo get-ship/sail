@@ -853,10 +853,9 @@ fn navbar_host_paint_on_sx_cva() {
                 || out.structure_html.contains("display:contents")
                 || out.skin_css.contains("display:contents")
                 || out.skin_css.contains("display: contents"))
-            && out.structure_html.contains("sail-nav-brand")
-            && out.structure_html.contains("sail-nav-links")
-            && out.structure_html.contains("sail-nav-center")
-            && out.structure_html.contains("sail-nav-actions")
+            && out.structure_html.contains("slot name=\"brand\"")
+            && out.structure_html.contains("slot name=\"center\"")
+            && out.structure_html.contains("slot name=\"actions\"")
             && (out.structure_html.contains("sx-grow1")
                 || out.structure_html.contains("grow1")
                 || out.structure_html.contains("grow-1")
@@ -986,13 +985,12 @@ fn error_state_child_paint_on_structure_sx() {
     );
     assert!(
         out.structure_html.contains("use:recoverySurface")
-            && out.structure_html.contains(" icon ")
-            && out.structure_html.contains("class=\"title ")
-            && out.structure_html.contains("class=\"desc ")
-            && out.structure_html.contains("class=\"details ")
-            && out.structure_html.contains("class=\"details-toggle ")
+            && out.structure_html.contains("aria-expanded")
+            && out.structure_html.contains("Show details")
+            && out.structure_html.contains("slot name=\"details\"")
+            && out.structure_html.contains("slot name=\"action\"")
             && (out.structure_html.contains("sail-grp") || src.contains("group()")),
-        "structure anatomy classes + recoverySurface + group preserved:\n{}",
+        "structure + recoverySurface + group preserved (no part classes):\n{}",
         out.structure_html
     );
     assert!(
@@ -1317,8 +1315,8 @@ fn toast_region_host_paint_on_sx_cva() {
 #[test]
 fn theme_picker_host_paint_on_structure_sx() {
     // Layout keywords + host Style carry trigger/panel/option/swatch paint
-    // (including .tc-* mini-card pieces on real nodes → element-skins).
-    // KEEP: panel anchor geometry + raw width, [inline] matrices, forced-colors.
+    // on real nodes (no residual part classes). KEEP: panel anchor geometry,
+    // [inline] matrices, forced-colors.
     let src = include_str!("../stdlib/theme-picker.sail");
     let out = compile_element(src, "theme-picker").expect("theme-picker compiles");
     assert!(
@@ -1328,14 +1326,12 @@ fn theme_picker_host_paint_on_structure_sx() {
             && (src.contains("selected:") || src.contains("selected:"))
             && (src.contains("h(24)") || src.contains("h: 24"))
             && src.contains("isolate")
-            && src.contains("class=\"tc-overlay\"")
-            && src.contains("class=\"tc-card\"")
-            && src.contains("class=\"tc-cta\"")
+            && !src.contains("class=")
             && src.contains("cols=\"2\"")
             && src.contains("<row inline")
             && (src.contains("shadow(inset-ring)") || src.contains("inset-ring"))
             && !src.contains("sx=\""),
-        "theme-picker structure must carry Style product + tc-* anatomy"
+        "theme-picker structure must carry Style product without class anatomy"
     );
     assert!(
         (out.structure_html.contains("sx-sizecontrolhsm")
@@ -1357,18 +1353,17 @@ fn theme_picker_host_paint_on_structure_sx() {
         out.structure_html,
         out.skin_css
     );
-    // .tc-* paint is structure Style classes, not parent→child PE.
+    // Swatch mini-card paint is structure Style atoms, not parent→child PE / part classes.
     assert!(
-        out.structure_html.contains("tc-overlay")
-            && out.structure_html.contains("tc-card")
-            && out.structure_html.contains("tc-cta")
+        !out.structure_html.contains("tc-overlay")
+            && !out.structure_html.contains("class=\"tc-")
             && (out.structure_html.contains("sx-bgprimary")
                 || out.structure_html.contains("bgprimary")
                 || out.skin_css.contains("var(--primary)"))
             && (out.structure_html.contains("sx-fgprimaryforeground")
                 || out.structure_html.contains("primaryforeground")
                 || out.skin_css.contains("var(--primary-foreground)")),
-        "swatch mini-card paint must be on real nodes:\nstruct={}\nskin={}",
+        "swatch mini-card paint must be on real nodes without tc-* classes:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
@@ -1713,11 +1708,11 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
         (src.contains(".group()") || src.contains("style.group()"))
             && src.contains("empty:")
             && src.contains("group-invalid:")
-            && src.contains("class=\"hint")
-            && src.contains("class=\"error")
+            && !src.contains("class=")
+            && src.contains("role=\"alert\"")
             && src.contains("field-hint")
             && src.contains("field-error"),
-        "field structure must carry group + empty/group-invalid Style gates"
+        "field structure must carry group + empty/group-invalid Style gates without part classes"
     );
     assert!(
         out.structure_html.contains("sail-grp")
@@ -1766,12 +1761,12 @@ fn label_req_gate_in_element_skins_anatomy() {
     let src = include_str!("../stdlib/label.sail");
     let out = compile_element(src, "label").expect("label compiles");
     assert!(
-        src.contains("class=\"req\"")
+        !src.contains("class=")
             && src.contains("label-required")
             && src.contains("group-required")
             && src.contains("display(none)")
             && (src.contains(".group()") || src.contains("style.group()")),
-        "structure documents .req anatomy + group-required Style paint"
+        "structure documents required marker via Style (no part class)"
     );
     assert!(out.native, "label is native-kind");
     let contracts = include_str!(concat!(
@@ -1784,7 +1779,7 @@ fn label_req_gate_in_element_skins_anatomy() {
         "label .req PE must be gone from contracts"
     );
     assert!(
-        out.structure_html.contains("req")
+        out.structure_html.contains("aria-hidden")
             && (out.structure_html.contains("displaynone")
                 || out.structure_html.contains("sx-")
                 || out.skin_css.contains("display:none")

@@ -94,11 +94,11 @@
     hover: when({ before: style.opacity(100) }),
   })),
 ]}>
-  <div class="header" sx={[ headerChrome, when({ empty: style.display(none) }) ]}>
+  <div sx={[ headerChrome, when({ empty: style.display(none) }) ]}>
     <slot name="header"></slot>
   </div>
   <slot></slot>
-  <div class="footer" sx={[ footerChrome, when({ empty: style.display(none) }) ]}>
+  <div sx={[ footerChrome, when({ empty: style.display(none) }) ]}>
     <slot name="footer"></slot>
   </div>
 </div>

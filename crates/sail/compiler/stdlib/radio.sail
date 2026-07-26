@@ -16,5 +16,5 @@
 </scope>
 
 <label sx={host}>
-  <input type="radio" shrink="0" sx={input} /><span class="rlabel"><slot></slot></span>
+  <input type="radio" shrink="0" sx={input} /><span><slot></slot></span>
 </label>

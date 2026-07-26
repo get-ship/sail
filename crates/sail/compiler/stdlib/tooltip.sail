@@ -33,7 +33,6 @@
 <span use:tipDescribe sx={host}>
   <slot></slot>
   <span
-    class="bubble"
     role="tooltip"
     sx={[
       bubble,

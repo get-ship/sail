@@ -97,12 +97,11 @@
     })),
   ]}
 >
-  <span class="leading" sx={leading}>
+  <span sx={leading}>
     <slot name="leading"></slot>
   </span>
   <slot></slot>
   <button
-    class="remove"
     type="button"
     anatomy
     aria-label="Remove"

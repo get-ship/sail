@@ -73,7 +73,8 @@ export const tipDescribe: Action<void> = (node) => {
   const n = ++_seq
   const bubbleId = `sail-tooltip-${n}`
 
-  const bubble = el.querySelector('.bubble') as HTMLElement | null
+  // Bubble is the host's [role=tooltip] child (structure, not a part class).
+  const bubble = el.querySelector('[role="tooltip"]') as HTMLElement | null
 
   const sync = (): void => {
     applyPlacement(el, el.getAttribute('placement'))

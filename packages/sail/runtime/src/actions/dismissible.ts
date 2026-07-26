@@ -14,8 +14,9 @@ import type { Action } from '../action'
  *   `[removable]` — the attribute is the gate because L1 templates are
  *   static: stamps are unconditional, so the condition lives here. The key
  *   is `preventDefault()`ed so it doesn't navigate history or delete text.
- * - A click on a `.remove` descendant fires it too, with `stopPropagation()`
- *   so the remove gesture isn't also treated as host activation.
+ * - A click on the remove control (`button[aria-label="Remove"]`) fires it
+ *   too, with `stopPropagation()` so the remove gesture isn't also treated as
+ *   host activation.
  *
  * Both paths are suppressed while the host is `[disabled]`. Consumers listen
  * for `sail-remove` and own the actual removal — the action only signals.
@@ -37,7 +38,7 @@ export const dismissible: Action<void> = (node) => {
   }
   el.addEventListener('keydown', onKeydown)
 
-  const remove = el.querySelector('.remove') as HTMLElement | null
+  const remove = el.querySelector('button[aria-label="Remove"]') as HTMLElement | null
   const onRemoveClick = (e: MouseEvent): void => {
     e.stopPropagation()
     if (el.hasAttribute('disabled')) return

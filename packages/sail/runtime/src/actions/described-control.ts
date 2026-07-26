@@ -3,27 +3,31 @@ import type { Action } from '../action'
 let _seq = 0
 
 /**
- * `use:describedControl` — form control ↔ hint/error association for any host
- * with `.hint` / `.error` / `.control` anatomy. The hint↔error visibility swap
- * is pure CSS; this action wires accessibility: give the hint and error regions
- * stable ids, then point the first slotted control's aria-describedby at the
- * active region (hint when valid, error when [invalid]) and set aria-invalid
- * to match. Re-wires when [invalid] toggles or the control changes. Written
- * once — no per-instance controller, compiles away. The L1 `<field>` stamps
- * this.
+ * `use:describedControl` — form control ↔ hint/error association for the L1
+ * `<field>` host anatomy (structure under host, not class names):
+ *   children[0] label, [1] control, [2] hint, [3] error-gate → [role=alert]
+ *
+ * The hint↔error visibility swap is pure CSS; this action wires accessibility:
+ * give the hint and error regions stable ids, then point the first slotted
+ * control's aria-describedby at the active region (hint when valid, error when
+ * [invalid]) and set aria-invalid to match. Re-wires when [invalid] toggles or
+ * the control changes. Written once — no per-instance controller, compiles away.
  */
 export const describedControl: Action<void> = (node) => {
   const el = node as HTMLElement
   const n = ++_seq
-  const hint = el.querySelector('.hint') as HTMLElement | null
-  const error = el.querySelector('.error') as HTMLElement | null
-  const control = el.querySelector('.control') as HTMLElement | null
+  // Structure order matches field.sail; error is the alert inside the gate.
+  const control = (el.children[1] as HTMLElement | undefined) ?? null
+  const hint = (el.children[2] as HTMLElement | undefined) ?? null
+  const error = el.querySelector('[role="alert"]') as HTMLElement | null
   const hintId = `sail-field-hint-${n}`
   const errorId = `sail-field-error-${n}`
   if (hint) hint.id = hintId
   if (error) error.id = errorId
 
-  const CONTROL_SEL = 'input, textarea, select, [contenteditable], [role="textbox"], [role="combobox"], [role="spinbutton"], .sail-switch'
+  // `.sail-switch` is a compiler host stamp on <switch>, not author anatomy.
+  const CONTROL_SEL =
+    'input, textarea, select, [contenteditable], [role="textbox"], [role="combobox"], [role="spinbutton"], .sail-switch'
 
   const wire = (): void => {
     const first = control?.querySelector(CONTROL_SEL) as HTMLElement | null

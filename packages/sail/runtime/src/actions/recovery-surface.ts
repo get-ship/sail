@@ -10,13 +10,19 @@ import type { Action } from '../action'
  *    `data-state="has-details"` so the Show/Hide toggle appears, and wire the
  *    toggle (label, aria-expanded, `open` token on data-state);
  *  - auto-focus the first action so the recovery control is reachable at once.
- * Written once in the toolchain — no per-instance controller, compiles away.
+ *
+ * Anatomy is host-relative structure (not class names):
+ *   children[0] icon, [1] copy column, [2] actions row
+ *   copy: title, desc, code, details-toggle button, details
  */
 export const recoverySurface: Action<void> = (node) => {
   const el = node as HTMLElement
-  const code = el.querySelector('.code') as HTMLElement | null
-  const details = el.querySelector('.details') as HTMLElement | null
-  const toggle = el.querySelector('.details-toggle') as HTMLButtonElement | null
+  const copy = el.children[1] as HTMLElement | undefined
+  // title, desc, code, button, details
+  const code = (copy?.children[2] as HTMLElement | undefined) ?? null
+  const toggle = (copy?.querySelector('button[type="button"]') as HTMLButtonElement | null) ?? null
+  const details = (toggle?.nextElementSibling as HTMLElement | null) ?? null
+  const actions = el.children[2] as HTMLElement | undefined
 
   const syncCode = (): void => {
     if (code) code.textContent = el.getAttribute('code') ?? ''
@@ -71,7 +77,9 @@ export const recoverySurface: Action<void> = (node) => {
   obs.observe(el, { attributes: true, attributeFilter: ['code'], childList: true, subtree: true, characterData: true })
 
   // Auto-focus the first action control (the retry) so recovery is reachable.
-  const firstAction = el.querySelector('.actions button, .actions [tabindex], .actions a') as HTMLElement | null
+  const firstAction = actions?.querySelector(
+    'button, [tabindex], a',
+  ) as HTMLElement | null
   if (firstAction) requestAnimationFrame(() => firstAction.focus?.())
 
   return {

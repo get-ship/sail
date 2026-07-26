@@ -37,9 +37,8 @@
 </scope>
 
 <div use:combobox sx={host}>
-  <input class="input" type="text" sx={input}>
+  <input type="text" sx={input}>
   <div
-    class="listbox"
     popover
     use:anchor
     placement="bottom-start"

@@ -1,21 +1,23 @@
 // dismissControl — click on a close control dismisses the host.
 //
 // Capability mix-in: a click on a descendant matching `[data-toast-close]`,
-// `[data-dismiss]`, or `button.close` runs the shared dismiss-self path
-// (event + remove). Stacked with `use:autoDismiss` on L1 <toast> and with
-// `use:liveRegion` on L1 <alert>. Idempotent with the timer path via
-// dismiss-self.
+// `[data-dismiss]`, or `button[aria-label="Dismiss"]` runs the shared
+// dismiss-self path (event + remove). Stacked with `use:autoDismiss` on L1
+// <toast> and with `use:liveRegion` on L1 <alert>. Idempotent with the timer
+// path via dismiss-self.
 //
-// Event name: toast hosts (`duration` attr or `.sail-toast`) emit
-// `sail-toast-dismiss`; everything else emits `sail-dismiss`. Gate: non-toast
-// hosts require `[dismissible]` (alert); toast close always works.
+// Event name: toast hosts (`duration` attr or compiler host stamp
+// `.sail-toast`) emit `sail-toast-dismiss`; everything else emits
+// `sail-dismiss`. Gate: non-toast hosts require `[dismissible]` (alert);
+// toast close always works.
 
 import type { Action } from '../action'
 import { dismissSelf, isDismissed } from './dismiss-self'
 
-const CLOSE_SEL = '[data-toast-close], [data-dismiss], button.close'
+const CLOSE_SEL = '[data-toast-close], [data-dismiss], button[aria-label="Dismiss"]'
 
 function isToastHost(el: HTMLElement): boolean {
+  // duration attr is the toast prop; .sail-toast is the compiler host stamp.
   return el.hasAttribute('duration') || el.classList.contains('sail-toast')
 }
 

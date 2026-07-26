@@ -3,7 +3,8 @@
 // (spin), on itself or a descendant.
 
 const TONES = ['primary', 'info', 'success', 'warning', 'destructive', 'accent']
-const sp = (a) => `<span class="sail-spinner" ${a}><span class="ring" aria-hidden="true"></span></span>`
+const RING = 'sx-displayblock sx-sizefull sx-borderWidthcontrolstroke sx-bordersolid sx-borderspinnertrack sx-borderRcurrentColor sx-radiusfull sx-animatespin'
+const sp = (a) => `<span class="sail-spinner" ${a}><span aria-hidden="true" class="${RING}"></span></span>`
 
 export default {
   tag: 'spinner',

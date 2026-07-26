@@ -56,17 +56,16 @@
     compound({ placement: rail, sticky: true, offset: '24' }, style.top(24)),
   ]}
 >
-  <row inline nowrap align="center" gap="2" class="sail-nav-brand" shrink sx={brand}>
+  <row inline nowrap align="center" gap="2" shrink sx={brand}>
     <slot name="brand"></slot>
   </row>
-  <div class="sail-nav-links" sx={links}>
+  <div sx={links}>
     <slot></slot>
   </div>
   <row
     nowrap
     align="center"
     justify="center"
-    class="sail-nav-center"
     grow
     min-w="0"
   >
@@ -77,7 +76,6 @@
     nowrap
     align="center"
     gap="2"
-    class="sail-nav-actions"
     shrink
     sx={actions}
   >

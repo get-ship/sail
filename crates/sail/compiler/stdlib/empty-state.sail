@@ -55,7 +55,6 @@
     nowrap
     align="center"
     justify="center"
-    class="icon"
     aria-hidden="true"
     shrink
     sx={[
@@ -78,8 +77,8 @@
   >
     <slot name="icon"></slot>
   </row>
-  <column align="stretch" gap="1" class="copy" grow min-w="0" sx={copy}>
-    <div class="title" sx={[
+  <column align="stretch" gap="1" grow min-w="0" sx={copy}>
+    <div sx={[
       title,
       when({
         empty: style.display(none),
@@ -87,7 +86,7 @@
     ]}>
       <slot name="title"></slot>
     </div>
-    <div class="desc" sx={[
+    <div sx={[
       desc,
       when({
         empty: style.display(none),
@@ -96,7 +95,7 @@
       <slot></slot>
     </div>
   </column>
-  <row align="center" justify="center" gap="2" class="actions" sx={[
+  <row align="center" justify="center" gap="2" sx={[
     actions,
     when({
       empty: style.display(none),

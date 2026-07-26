@@ -17,6 +17,6 @@
   host,
   compound({ disabled: true }, style.opacity(50).cursor(not-allowed)),
 ]}>
-  <summary class="trigger-wrap"><slot name="trigger"></slot></summary>
-  <div class="content-wrap"><div class="content-inner" sx={content}><slot></slot></div></div>
+  <summary><slot name="trigger"></slot></summary>
+  <div><div sx={content}><slot></slot></div></div>
 </details>

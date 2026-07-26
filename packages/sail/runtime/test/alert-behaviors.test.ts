@@ -20,12 +20,11 @@ function makeAlert(attrs: Record<string, string | boolean> = {}): HTMLElement {
     else el.setAttribute(k, v)
   }
   const content = document.createElement('div')
-  content.className = 'content'
   content.textContent = 'Message'
   el.append(content)
   const close = document.createElement('button')
-  close.className = 'close'
   close.type = 'button'
+  close.setAttribute('data-dismiss', '')
   close.setAttribute('aria-label', 'Dismiss')
   close.textContent = '×'
   el.append(close)
@@ -80,7 +79,7 @@ describe('liveRegion / dismissControl (alert use: stack)', () => {
     expect(el.getAttribute('aria-live')).toBe('assertive')
   })
 
-  it('dismissControl: dismissible + button.close → sail-dismiss + removed', () => {
+  it('dismissControl: dismissible + dismiss control → sail-dismiss + removed', () => {
     const el = makeAlert({ dismissible: true, tone: 'info' })
     dismissControl(el)
 
@@ -89,7 +88,7 @@ describe('liveRegion / dismissControl (alert use: stack)', () => {
       dismissed++
     })
 
-    const close = el.querySelector('button.close') as HTMLElement
+    const close = el.querySelector('[data-dismiss]') as HTMLElement
     close.click()
     expect(dismissed).toBe(1)
     expect(document.body.contains(el)).toBe(false)
@@ -104,7 +103,7 @@ describe('liveRegion / dismissControl (alert use: stack)', () => {
       dismissed++
     })
 
-    const close = el.querySelector('button.close') as HTMLElement
+    const close = el.querySelector('[data-dismiss]') as HTMLElement
     close.click()
     expect(dismissed).toBe(0)
     expect(document.body.contains(el)).toBe(true)
@@ -122,7 +121,7 @@ describe('liveRegion / dismissControl (alert use: stack)', () => {
     el.addEventListener('sail-dismiss', () => {
       dismissed++
     })
-    ;(el.querySelector('button.close') as HTMLElement).click()
+    ;(el.querySelector('[data-dismiss]') as HTMLElement).click()
     expect(dismissed).toBe(1)
     expect(document.body.contains(el)).toBe(false)
   })

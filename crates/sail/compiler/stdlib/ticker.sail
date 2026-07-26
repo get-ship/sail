@@ -14,8 +14,8 @@
 </scope>
 
 <div sx={host}>
-  <row nowrap class="track" use:marquee sx={track}>
-    <span class="segment"><slot></slot></span>
-    <span class="segment" aria-hidden="true"><slot></slot></span>
+  <row nowrap use:marquee sx={track}>
+    <span><slot></slot></span>
+    <span aria-hidden="true"><slot></slot></span>
   </row>
 </div>

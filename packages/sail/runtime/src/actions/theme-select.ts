@@ -22,8 +22,10 @@ let uid = 0
 
 export const themeSelect: Action<void> = (node) => {
   const root = node as HTMLElement
-  const trigger = root.querySelector<HTMLButtonElement>('.sail-theme-trigger')
-  const panel = root.querySelector<HTMLElement>('.sail-theme-panel')
+  // Structure under host: trigger button[popovertarget], panel [popover]/[role=listbox],
+  // options [role=option] — no anatomy class names.
+  const trigger = root.querySelector<HTMLButtonElement>('button[popovertarget], button[type="button"]')
+  const panel = root.querySelector<HTMLElement>('[popover], [role="listbox"]')
 
   // Unique popover id per instance (stdlib default collides when multiple
   // non-inline pickers mount on one page).
@@ -34,7 +36,7 @@ export const themeSelect: Action<void> = (node) => {
   }
 
   const options = (): HTMLElement[] =>
-    Array.from(root.querySelectorAll<HTMLElement>('.sail-theme-option'))
+    Array.from(root.querySelectorAll<HTMLElement>('[role="option"]'))
   const valueOf = (el: Element): string => el.getAttribute('value') ?? ''
 
   const current = (): ThemeId => {
@@ -72,7 +74,7 @@ export const themeSelect: Action<void> = (node) => {
   }
 
   const optionFrom = (e: Event): HTMLElement | null => {
-    const o = (e.target as Element | null)?.closest<HTMLElement>('.sail-theme-option') ?? null
+    const o = (e.target as Element | null)?.closest<HTMLElement>('[role="option"]') ?? null
     return o && root.contains(o) ? o : null
   }
 

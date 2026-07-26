@@ -17,12 +17,11 @@ function makeHost(opts: { invalid?: boolean; withControl?: boolean } = {}): {
   el.className = 'sail-field'
   if (opts.invalid) el.setAttribute('invalid', '')
 
+  // Structure mirrors field.sail: label, control, hint, error-gate → [role=alert]
   const label = document.createElement('div')
-  label.className = 'label'
   label.textContent = 'Email'
 
   const control = document.createElement('div')
-  control.className = 'control'
   let input: HTMLInputElement | null = null
   if (opts.withControl !== false) {
     input = document.createElement('input')
@@ -31,15 +30,15 @@ function makeHost(opts: { invalid?: boolean; withControl?: boolean } = {}): {
   }
 
   const hint = document.createElement('div')
-  hint.className = 'hint msg'
   hint.textContent = 'We will never share your email.'
 
+  const errorGate = document.createElement('div')
   const error = document.createElement('div')
-  error.className = 'error msg'
   error.setAttribute('role', 'alert')
   error.textContent = 'Enter a valid email address.'
+  errorGate.append(error)
 
-  el.append(label, control, hint, error)
+  el.append(label, control, hint, errorGate)
   document.body.append(el)
   return { el, hint, error, control, input }
 }
@@ -49,7 +48,7 @@ describe('describedControl (use: action)', () => {
     document.body.replaceChildren()
   })
 
-  it('assigns stable ids to .hint and .error', () => {
+  it('assigns stable ids to hint and error regions', () => {
     const { hint, error } = makeHost()
     describedControl(document.querySelector('.sail-field')!)
     expect(hint.id).toMatch(/^sail-field-hint-\d+$/)

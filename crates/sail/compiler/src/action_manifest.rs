@@ -153,7 +153,7 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "dismissControl",
         param: "void",
-        summary: "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button.close`) dismisses the host (event + remove); toast → sail-toast-dismiss, else sail-dismiss gated on [dismissible].",
+        summary: "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button[aria-label=\"Dismiss\"]`) dismisses the host (event + remove); toast → sail-toast-dismiss, else sail-dismiss gated on [dismissible].",
         auto_import: true,
     },
     ActionEntry {
