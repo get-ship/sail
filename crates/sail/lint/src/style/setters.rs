@@ -1188,8 +1188,16 @@ pub fn lower_op_css(op: &PaintOp) -> Result<Vec<(String, String)>, StyleDiagnost
             ("z", "toast-region-z") => {
                 return Ok(vec![("z-index".into(), "var(--toast-region-z)".into())]);
             }
-            ("animate", "spin") => {
-                return Ok(vec![("animation".into(), "var(--animate-spin)".into())]);
+            // Closed product keyframe catalog (packages/sail/runtime
+            // keyframes-catalog.ts). Style.animate(name) → CSS PE var;
+            // ambient @keyframes live in the generated contracts sheet,
+            // not free CSS and not fx:loop. Keywords on the animate
+            // SetterSpec must stay in lockstep with styleAnimate:true rows.
+            ("animate", name) if matches!(name, "spin") => {
+                return Ok(vec![(
+                    "animation".into(),
+                    format!("var(--animate-{name})"),
+                )]);
             }
             ("bgImage", "none") => {
                 return Ok(vec![("background-image".into(), "none".into())]);

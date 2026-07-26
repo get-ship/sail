@@ -1,3 +1,8 @@
+// Ambient keyframe catalog emit (closed product loops: spin / pulse /
+// shimmer / progress-indeterminate). Must be first — LIGHT_CONTRACTS and
+// skins reference --animate-* vars from this sheet.
+import { AMBIENT_KEYFRAMES_CSS } from './keyframes-catalog'
+
 // --size-* channel removed (geometry is direct [size] → control-h/text tokens).
 // Empty sheet kept so shadow adoptSuiSheets still has a sizes slot.
 const SIZES_CSS = ''
@@ -28,20 +33,14 @@ const BASE_CSS =
   // in still gets stopped here — this is the floor, not a universal override.
   '@media (prefers-reduced-motion: reduce) { :where(*) { transition: none !important; animation: none; } }\n'
 
-const AMBIENT_FX_CSS =
-  // Ambient / platform loops (CSS-fx). Framework-owned infinite animations
-  // for L1 surfaces that still need decorative CSS motion (the spinner
-  // ring, status-dot pulse, skeleton shimmer, progress barber-pole).
-  // Ticker/icon spin dissolved to fx: via use:marquee / use:icon —
-  // no --animate-ticker catalog entry remains. Tailwind-shaped
-  // `--animate-*` name for the shorthand value (consistent with neighbors
-  // in the fx catalog). Reduced-motion: 1.5s slow (spinner semantics),
-  // expressed here via var override so the media rule is in the shared
-  // place, not left in spinner. `:root` only — light DOM inherits from the
-  // document.
-  '@keyframes sail-spin { to { transform: rotate(360deg); } }\n' +
-  ':root { --animate-spin: sail-spin 0.7s linear infinite; }\n' +
-  '@media (prefers-reduced-motion: reduce) { :root { --animate-spin: sail-spin 1.5s linear infinite; } }\n'
+// Ambient / platform loops (CSS-fx). Framework-owned infinite animations
+// for L1 surfaces that still need decorative CSS motion (spinner ring,
+// status-dot pulse, skeleton shimmer, progress barber-pole). Generated
+// from the closed keyframes catalog (keyframes-catalog.ts) — not hand
+// strings. Ticker/icon spin dissolved to fx: via use:marquee / use:icon.
+// Style.animate(spin) → animation: var(--animate-spin); skins use the
+// same --animate-* vars. Do NOT route these through fx:loop.
+const AMBIENT_FX_CSS = AMBIENT_KEYFRAMES_CSS
 
 // LANGUAGE-LAYER TYPOGRAPHY. Semantic content tags are styled from the type
 // scale automatically — the author writes `<h1>`/`<p>` plain and gets taste,
@@ -376,8 +375,8 @@ const HR_SKIN_CSS =
 const STATUS_DOT_SKIN_CSS =
   ":where(span[dot]) { display: inline-block; vertical-align: middle; width: var(--icon-size-3xs); height: var(--icon-size-3xs); border-radius: var(--shape-pill); background: var(--primary); box-shadow: 0 0 0 1.5px var(--border), 0 0 0 4.5px var(--ring); }\n" +
   ":where(span[dot][size='sm']) { width: var(--space-1_5); height: var(--space-1_5); box-shadow: 0 0 0 1px var(--border), 0 0 0 3.5px var(--ring); }\n" +
-  ":where(span[dot][pulse]) { animation: sail-status-dot-pulse 2.5s var(--ease-out) infinite; }\n" +
-  '@keyframes sail-status-dot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.82; transform: scale(0.92); } }\n'
+  // Keyframes + --animate-pulse: keyframes-catalog (AMBIENT_FX_CSS).
+  ":where(span[dot][pulse]) { animation: var(--animate-pulse); }\n"
 
 // L1 <span skeleton> — the shimmer-placeholder surface. `skeleton` scopes
 // the skin the same way `dot` does above. shape/size drive width/height/
@@ -386,7 +385,9 @@ const STATUS_DOT_SKIN_CSS =
 // no 48px token — see the former wrapper's own LANG-GAP note), so they land
 // here instead.
 const SKELETON_SKIN_CSS =
-  ":where(span[skeleton]) { display: inline-block; vertical-align: middle; background: linear-gradient(90deg, var(--muted) 0%, var(--muted) 50%, var(--muted) 100%); background-size: 200% 100%; animation: sail-skeleton-shimmer 1.5s ease-in-out infinite; border-radius: var(--radius-sm); }\n" +
+  // Shimmer gradient stays here (off-vocabulary for sx); motion rides
+  // --animate-shimmer from the closed keyframes catalog (AMBIENT_FX_CSS).
+  ":where(span[skeleton]) { display: inline-block; vertical-align: middle; background: linear-gradient(90deg, var(--muted) 0%, var(--muted) 50%, var(--muted) 100%); background-size: 200% 100%; animation: var(--animate-shimmer); border-radius: var(--radius-sm); }\n" +
   ":where(span[skeleton][shape='block']) { display: block; width: 100%; min-height: 80px; }\n" +
   ":where(span[skeleton][shape='circle']) { border-radius: var(--shape-pill); }\n" +
   ":where(span[skeleton][shape='text'], span[skeleton][shape='line']) { width: 100%; }\n" +
@@ -395,8 +396,7 @@ const SKELETON_SKIN_CSS =
   ":where(span[skeleton][shape='text'][size='lg'], span[skeleton][shape='line'][size='lg']) { height: var(--space-4); }\n" +
   ":where(span[skeleton][shape='circle'][size='sm']) { width: var(--icon-size-2xl); height: var(--icon-size-2xl); }\n" +
   ":where(span[skeleton][shape='circle'][size='md']) { width: var(--space-7); height: var(--space-7); }\n" +
-  ":where(span[skeleton][shape='circle'][size='lg']) { width: 48px; height: 48px; }\n" +
-  '@keyframes sail-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }\n'
+  ":where(span[skeleton][shape='circle'][size='lg']) { width: 48px; height: 48px; }\n"
 
 // L1 drop zone — `<div dropzone use:dropzone>` around a native file input.
 // The div is the drop surface + click-to-browse trigger (wired by the action);
@@ -474,11 +474,11 @@ const PROGRESS_SKIN_CSS =
   ":where(progress)::-webkit-progress-value { background: var(--primary); border-radius: var(--shape-pill); transition: width var(--duration-medium) var(--ease-out); }\n" +
   ":where(progress)::-moz-progress-bar { background: var(--primary); border-radius: var(--shape-pill); }\n" +
   // Indeterminate (no [value]) — a sliding sheen, since appearance:none drops
-  // the native barber-pole. Animate the WebKit track and the element itself
-  // (the Firefox path) so both engines show motion.
-  ":where(progress:not([value]))::-webkit-progress-bar { background-image: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sail-progress-indeterminate 1.2s ease-in-out infinite; }\n" +
-  ":where(progress:not([value])) { background-image: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sail-progress-indeterminate 1.2s ease-in-out infinite; }\n" +
-  "@keyframes sail-progress-indeterminate { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }\n" +
+  // the native barber-pole. Motion rides --animate-progress-indeterminate
+  // from the closed keyframes catalog (AMBIENT_FX_CSS). WebKit track + the
+  // element itself (Firefox path) so both engines show motion.
+  ":where(progress:not([value]))::-webkit-progress-bar { background-image: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: var(--animate-progress-indeterminate); }\n" +
+  ":where(progress:not([value])) { background-image: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: var(--animate-progress-indeterminate); }\n" +
   "@media (prefers-reduced-motion: reduce) { :where(progress), :where(progress)::-webkit-progress-value { animation: none !important; transition: none !important; } }\n"
 
 // L1 <meter> — the gauge (a value inside a range: disk usage, score, load).

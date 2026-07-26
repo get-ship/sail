@@ -51,9 +51,16 @@
 
 @layer sail {
 @keyframes sail-spin { to { transform: rotate(360deg); } }
-:root { --animate-spin: sail-spin 0.7s linear infinite; }
+@keyframes sail-status-dot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.82; transform: scale(0.92); } }
+@keyframes sail-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes sail-progress-indeterminate { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }
+:root { --animate-spin: sail-spin 0.7s linear infinite; --animate-pulse: sail-status-dot-pulse 2.5s var(--ease-out) infinite; --animate-shimmer: sail-skeleton-shimmer 1.5s ease-in-out infinite; --animate-progress-indeterminate: sail-progress-indeterminate 1.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { :root { --animate-spin: sail-spin 1.5s linear infinite; } }
 *, *::before, *::after { box-sizing: border-box; }
+html, body { font-family: var(--font-body); color: var(--foreground); background: var(--background); }
+body { margin: 0; min-height: 100vh; font-size: var(--text-base); line-height: var(--leading-normal, 1.5); }
+label:has(> input[type="checkbox"], > input[type="radio"]), .sail-label:has(> input[type="checkbox"], > input[type="radio"]) { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; font-family: var(--font-body); font-size: var(--text-base); color: var(--foreground); text-transform: none; }
+label:has(> input[type="checkbox"], > input[type="radio"]) > input, .sail-label:has(> input[type="checkbox"], > input[type="radio"]) > input { margin: 0; flex-shrink: 0; }
 h1,h2,h3,h4,h5,h6 { margin: 0; font-family: var(--heading-font, inherit); font-weight: var(--heading-weight, 700); line-height: var(--leading-tight, 1.15); color: var(--foreground); text-transform: var(--heading-transform); }
 label, .sail-label { text-transform: var(--label-transform); }
 h1 { font-size: var(--text-4xl); }
@@ -155,9 +162,8 @@ iframe { max-width: 100%; border: 0; }
 :where(hr[orientation='vertical'][variant='dashed']) { background: transparent; border-left: 1px dashed var(--border); width: 0; }
 :where(span[dot]) { display: inline-block; vertical-align: middle; width: var(--icon-size-3xs); height: var(--icon-size-3xs); border-radius: var(--shape-pill); background: var(--primary); box-shadow: 0 0 0 1.5px var(--border), 0 0 0 4.5px var(--ring); }
 :where(span[dot][size='sm']) { width: var(--space-1_5); height: var(--space-1_5); box-shadow: 0 0 0 1px var(--border), 0 0 0 3.5px var(--ring); }
-:where(span[dot][pulse]) { animation: sail-status-dot-pulse 2.5s var(--ease-out) infinite; }
-@keyframes sail-status-dot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.82; transform: scale(0.92); } }
-:where(span[skeleton]) { display: inline-block; vertical-align: middle; background: linear-gradient(90deg, var(--muted) 0%, var(--muted) 50%, var(--muted) 100%); background-size: 200% 100%; animation: sail-skeleton-shimmer 1.5s ease-in-out infinite; border-radius: var(--radius-sm); }
+:where(span[dot][pulse]) { animation: var(--animate-pulse); }
+:where(span[skeleton]) { display: inline-block; vertical-align: middle; background: linear-gradient(90deg, var(--muted) 0%, var(--muted) 50%, var(--muted) 100%); background-size: 200% 100%; animation: var(--animate-shimmer); border-radius: var(--radius-sm); }
 :where(span[skeleton][shape='block']) { display: block; width: 100%; min-height: 80px; }
 :where(span[skeleton][shape='circle']) { border-radius: var(--shape-pill); }
 :where(span[skeleton][shape='text'], span[skeleton][shape='line']) { width: 100%; }
@@ -167,16 +173,14 @@ iframe { max-width: 100%; border: 0; }
 :where(span[skeleton][shape='circle'][size='sm']) { width: var(--icon-size-2xl); height: var(--icon-size-2xl); }
 :where(span[skeleton][shape='circle'][size='md']) { width: var(--space-7); height: var(--space-7); }
 :where(span[skeleton][shape='circle'][size='lg']) { width: 48px; height: 48px; }
-@keyframes sail-skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 :where(progress) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--progress-h, var(--space-2)); border: 0; border-radius: var(--shape-pill); overflow: hidden; background: var(--muted); color: var(--primary); }
 :where(progress[size='sm']) { height: var(--space-1_5); }
 :where(progress[size='lg']) { height: var(--space-3); }
 :where(progress)::-webkit-progress-bar { background: var(--muted); border-radius: var(--shape-pill); }
 :where(progress)::-webkit-progress-value { background: var(--primary); border-radius: var(--shape-pill); transition: width var(--duration-medium) var(--ease-out); }
 :where(progress)::-moz-progress-bar { background: var(--primary); border-radius: var(--shape-pill); }
-:where(progress:not([value]))::-webkit-progress-bar { background-image: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sail-progress-indeterminate 1.2s ease-in-out infinite; }
-:where(progress:not([value])) { background-image: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: sail-progress-indeterminate 1.2s ease-in-out infinite; }
-@keyframes sail-progress-indeterminate { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }
+:where(progress:not([value]))::-webkit-progress-bar { background-image: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: var(--animate-progress-indeterminate); }
+:where(progress:not([value])) { background-image: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%); background-repeat: no-repeat; background-size: 40% 100%; animation: var(--animate-progress-indeterminate); }
 @media (prefers-reduced-motion: reduce) { :where(progress), :where(progress)::-webkit-progress-value { animation: none !important; transition: none !important; } }
 :where(meter) { appearance: none; -webkit-appearance: none; -moz-appearance: none; display: inline-block; vertical-align: middle; width: 100%; height: var(--meter-h, var(--space-2)); border: 0; border-radius: var(--shape-pill); overflow: hidden; background: var(--muted); }
 :where(meter[size='sm']) { height: var(--space-1_5); }
