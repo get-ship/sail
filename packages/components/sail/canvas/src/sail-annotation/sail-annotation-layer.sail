@@ -340,14 +340,14 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
 <div sx={style.position(relative).w(full).h(full).fontFamily(body)}>
   <slot></slot>
   <div use:overlayAction data-state={captureState()} sx={style.position(absolute).top(0).right(0).bottom(0).left(0).z(dropdown).pointerEvents(none).when({ stateCapture: style.pointerEvents(auto) })}>
-    {#if dragVisible()}
+    <if cond={dragVisible()}>
       <div
         aria-hidden="true"
         use:rect={dragRect()}
         sx={style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).pointerEvents(none).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm)}
       ></div>
-    {/if}
-    {#for m of markers() key={m.id}}
+    </if>
+    <for as="m" of={markers()} key={m.id}>
       <sail-annotation-marker
         kind={m.kind}
         index={m.index}
@@ -355,8 +355,8 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
         x={m.pos.x}
         y={m.pos.y}
       ></sail-annotation-marker>
-    {/for}
-    {#if pending()}
+    </for>
+    <if cond={pending()}>
       <column
         data-annotation-popover
         gap="2"
@@ -370,6 +370,6 @@ export default controller((props: ControllerScope<Scope>, _host?: Element) => {
           <button type="button" data-primary variant="solid" tone="primary" on:click={sendNote} sx={style.fontSize(sm).padX(2_5).radius(sm).cursor(pointer)}>Send</button>
         </row>
       </column>
-    {/if}
+    </if>
   </div>
 </div>

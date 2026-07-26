@@ -16,7 +16,8 @@
 // bundler keeps, so this is the production evaluator a standalone SPA ships
 // (the deck importmap externalizes the same specifiers to the same chunks).
 
-import * as sailRuntime from '@ship/sail-runtime'
+// `/internal` carries language + ABI so rewritten compiled imports resolve.
+import * as sailRuntime from '@ship/sail-runtime/internal'
 import * as sailActions from '@ship/sail-runtime/actions'
 import * as sailDom from '@ship/sail-dom'
 import * as sailRoute from '@ship/sail-runtime/route'

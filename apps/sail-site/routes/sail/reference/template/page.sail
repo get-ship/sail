@@ -49,14 +49,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <grid cols="1" gap="2">
-      {#for d of directives() key={d.syntax}}
+      <for as="d" of={directives()} key={d.syntax}>
         <card padding="sm" sx={style.minW(0)}>
           <row gap="3" align="center">
             <code sx={style.minW(40)}>{d.syntax}</code>
             <small sx={style.fg(muted-foreground)}>{d.summary}</small>
           </row>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 
@@ -68,14 +68,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <code>tag:event</code> names stay open without a row here.
     </p>
     <grid cols="2" gap="2">
-      {#for e of eventNames() key={e.name}}
+      <for as="e" of={eventNames()} key={e.name}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>on:{e.name}</code>
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{e.summary}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 
@@ -83,35 +83,35 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <h3>on: modifiers</h3>
     <p sx={style.maxW(breakpoint-tablet)}>Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
     <grid cols="2" gap="2">
-      {#for m of modifierRows() key={m.key}}
+      <for as="m" of={modifierRows()} key={m.key}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{m.written}{m.arg}</code>
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{m.summary}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 
   <column gap="3">
     <h3>bind: targets</h3>
     <grid cols="3" gap="2">
-      {#for b of bindTargets() key={b.target}}
+      <for as="b" of={bindTargets()} key={b.target}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>bind:{b.target}</code>
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{b.summary}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 
   <column gap="3">
     <h3>Blocks</h3>
     <grid cols="2" gap="2">
-      {#for b of blockRows() key={b.open}}
+      <for as="b" of={blockRows()} key={b.open}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <row gap="2" align="center">
@@ -121,7 +121,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{b.summary}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 
@@ -129,14 +129,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <h3>Retired</h3>
     <p sx={style.maxW(breakpoint-tablet)}>Directives the parser refuses by name, with what to use instead.</p>
     <grid cols="1" gap="2">
-      {#for r of retired() key={r.syntax}}
+      <for as="r" of={retired()} key={r.syntax}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code sx={style.fg(destructive)}>{r.syntax}</code>
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>→ {r.instead}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 

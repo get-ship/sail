@@ -49,19 +49,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <button on:click={reload}>Reload</button>
           <button on:click={breakIt} tone="destructive" variant="outline">Fail the next one</button>
         </row>
-        {#while-loading of users}
+        <while-loading of="users">
           <row gap="2" align="center"><spinner></spinner> <p sx={style.fontSize(sm).fg(muted-foreground)}>loading…</p></row>
-        {/while-loading}
-        {#while-error err of users}
+        </while-loading>
+        <while-error as="err" of="users">
           <alert tone="destructive">{err.message}</alert>
-        {/while-error}
-        {#if users().kind === 'ok'}
+        </while-error>
+        <if cond={users().kind === 'ok'}>
           <row gap="2">
-            {#for name of users().value key={name}}
+            <for as="name" of={users().value} key={name}>
               <badge>{name}</badge>
-            {/for}
+            </for>
           </row>
-        {/if}
+        </if>
       </column>
     </column>
     <column>

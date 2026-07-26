@@ -6,7 +6,7 @@ export default controller((ctx) => ({
 </controller>
 
 <ul>
-  {#for row of rows() key={row.id}}
+  <for as="row" of={rows()} key={row.id}>
     <li>static text only</li>
-  {/for}
+  </for>
 </ul>

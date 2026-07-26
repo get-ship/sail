@@ -213,15 +213,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   })
 
 </controller>
-{#if error() !== ''}
+<if cond={error() !== ''}>
 <div sx={style.display(block).w(full).fg(foreground)} role="alert">
   <error-state>{error()}</error-state>
 </div>
-{:else if isEmptyInitial()}
+<else-if cond={isEmptyInitial()}>
 <div role="status">
   <slot name="empty"><empty-state></empty-state></slot>
 </div>
-{:else if isEmptyFiltered()}
+</else-if><else-if cond={isEmptyFiltered()}>
 <div role="status">
   <slot name="empty">
     <empty-state>
@@ -229,51 +229,51 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </empty-state>
   </slot>
 </div>
-{:else}
+</else-if><else>
 <column role="treegrid" gap="0" use:gridTracks={gridTemplate()} aria-label={label() || null} aria-rowcount={rowCount()} aria-multiselectable={selectable() === 'multi' ? 'true' : null} sx={style.w(full).overflow(hidden).bg(surface-1).borderWidth(1).border(border).radius(lg).fontFamily(body).fontSize(density)}>
   <grid tracks="--sail-grid-template" gap="0" role="row" sx={style.position(sticky).top(0).z(sticky).bg(surface-2).borderBWidth(1).borderB(border)}>
-    {#for h of headers() key={h.id}}
+    <for as="h" of={headers()} key={h.id}>
       <row gap="1" align="center" role="columnheader" data-col-id={h.id} data-sortable={h.canSort ? 'true' : null} data-sorted={h.sorted || null} aria-sort={h.canSort ? h.ariaSort : null} sx={style.position(relative).padY(density-row-py).padX(density-row-px).fontWeight(semibold).fontSize(xs).textCase(uppercase).tracking(wide).fg(foreground).borderBWidth(1).borderB(border-subtle).whitespace(nowrap).when({ sortable: style.cursor(pointer) })}>
         <span grow min-w="0" sx={style.truncate()}>{h.label}</span>
-        {#if h.sorted === 'asc'}
+        <if cond={h.sorted === 'asc'}>
           <span aria-hidden="true" sx={style.fg(primary)}><icon name="chevron-up" size="xs"></icon></span>
-        {:else if h.sorted === 'desc'}
+        <else-if cond={h.sorted === 'desc'}>
           <span aria-hidden="true" sx={style.fg(primary)}><icon name="chevron-down" size="xs"></icon></span>
-        {/if}
-        {#if h.canHide}
+        </else-if></if>
+        <if cond={h.canHide}>
           <button variant="ghost" size="xs" type="button" data-action="column-menu" data-col-id={h.id} aria-label="Column options" sx={style.w(density-icon).h(density-icon).pad(0).radius(sm)}>
             <icon name="more-vertical" size="xs"></icon>
           </button>
-        {/if}
-        {#if h.canResize}
+        </if>
+        <if cond={h.canResize}>
           <span data-action="resize" data-col-id={h.id} aria-hidden="true" sx={style.position(absolute).top(0).bottom(0).right(0).w(1).cursor(col-resize).when({ hover: style.bg(primary) })}></span>
-        {/if}
+        </if>
       </row>
-    {/for}
+    </for>
   </grid>
   <div bind:this={viewportEl} sx={style.position(relative).w(full).overflowY(auto).maxH(panel-max-h-md)}>
-      {#for w of windowItems() key={`${w.key}|${w.cellsKey}`}}
+      <for as="w" of={windowItems() key={`${w.key}>|${w.cellsKey}`}}
         <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} sx={style.group().position(absolute).left(0).w(full).translateY(bind(rowY)).cursor(pointer).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg), focus: style.outline(ring) })}>
           <span aria-hidden="true" sx={style.position(absolute).left(0).top(1).bottom(1).w(half).radius(full).bg(primary).visibility(hidden).when({ groupSelected: style.visibility(visible) })}></span>
-          {#for c of w.cells key={c.columnId}}
-            {#if c.first}
+          <for as="c" of={w.cells} key={c.columnId}>
+            <if cond={c.first}>
               <row role="gridcell" use:cellPad={w.indent} sx={style.padY(density-row-py).padX(density-row-px).borderBWidth(1).borderB(border-subtle).fg(foreground).minW(0).padS(bind(cellPs))}>
-                {#if w.canExpand}
+                <if cond={w.canExpand}>
                   <span data-action="toggle" aria-hidden="true" sx={style.w(density-icon).h(density-icon).minW(density-icon).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
                     <icon name="chevron-right" size="xs"></icon>
                   </span>
-                {/if}
+                </if>
                 <span grow min-w="0" sx={style.truncate()}>{c.value}</span>
               </row>
-            {:else}
+            <else>
               <row role="gridcell" sx={style.padY(density-row-py).padX(density-row-px).borderBWidth(1).borderB(border-subtle).fg(foreground).minW(0)}>
                 <span grow min-w="0" sx={style.truncate()}>{c.value}</span>
               </row>
-            {/if}
-          {/for}
+            </else></if>
+          </for>
         </grid>
-      {/for}
+      </for>
     </div>
   </div>
 </column>
-{/if}
+</else></if>

@@ -68,14 +68,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     between them here to find it — every button repaints this page:
   </p>
   <row gap="2">
-    {#for t of themes() key={t.id}}
+    <for as="t" of={themes()} key={t.id}>
       <button
         on:click={() => pick(t.id)}
         variant={active() === t.id ? 'solid' : 'outline'}
         tone={active() === t.id ? 'primary' : 'default'}
         aria-pressed={active() === t.id ? 'true' : 'false'}
       >{t.label}</button>
-    {/for}
+    </for>
   </row>
   <p>
     Say the target is a warmer, squarer version of Paper. Here is Paper's

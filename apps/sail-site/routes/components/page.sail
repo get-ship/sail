@@ -136,19 +136,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <row align="stretch" gap="5">
     <column gap="1" shrink sx={rail}>
       <p sx={eyebrow}>Packs</p>
-      {#for p of packs() key={p.id}}
+      <for as="p" of={packs()} key={p.id}>
         <button sx={packBtn} on:click={() => pickPack(p.id)} aria-pressed={packSel() === p.id ? 'true' : 'false'}>
           <column gap="0" sx={tileMeta}>
             <row gap="2" align="center">
               <strong grow sx={packLabel}>{p.label}</strong>
               <span sx={packCount}>{p.count}</span>
             </row>
-            {#if p.sub}
+            <if cond={p.sub}>
               <p sx={cat}>{p.sub}</p>
-            {/if}
+            </if>
           </column>
         </button>
-      {/for}
+      </for>
       <p sx={railNote}>
         Component primitives always live. Select Charts, Media, Chat, Mermaid, or Code editor to mount those packs.
       </p>
@@ -157,14 +157,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <column gap="4" grow min-w="0" sx={gridCol}>
       <row gap="2" align="center" justify="between">
         <row gap="2" align="center">
-          {#if countLabel()}
+          <if cond={countLabel()}>
             <p sx={count}>{countLabel()}</p>
-          {/if}
+          </if>
         </row>
         <row gap="2">
-          {#for c of cats() key={c}}
+          <for as="c" of={cats()} key={c}>
             <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)}>{c}</button>
-          {/for}
+          </for>
         </row>
       </row>
       <row gap="2" align="center" justify="end">
@@ -172,180 +172,180 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </row>
 
       <grid cols="4" gap="3">
-        {#for e of visibleList() key={e.key}}
+        <for as="e" of={visibleList()} key={e.key}>
           <card padding="none" data-tile={e.tag} data-live={e.live ? 'true' : null} sx={tile}>
             <column gap="0" sx={tileCol}>
               <row data-preview align="center" justify="center" grow w="full" sx={preview}>
-                {#if !e.live}
+                <if cond={!e.live}>
                   <p sx={dormant}>Select pack to load</p>
-                {:else if e.tag === 'button'}
+                <else-if cond={e.tag === 'button'}>
                   <row gap="2" align="center">
                     <button variant="solid" tone="primary" sx={style.press({ scale: 'press' })}>Solid</button>
                     <button variant="outline" tone="primary">Outline</button>
                   </row>
-                {:else if e.tag === 'input'}
+                </else-if><else-if cond={e.tag === 'input'}>
                   <input placeholder="Type — it's real" bind:value={name} />
-                {:else if e.tag === 'textarea'}
+                </else-if><else-if cond={e.tag === 'textarea'}>
                   <textarea placeholder="Notes" rows="2"></textarea>
-                {:else if e.tag === 'select'}
+                </else-if><else-if cond={e.tag === 'select'}>
                   <select bind:value={team}>
                     <option>Engineering</option>
                     <option>Design</option>
                     <option>Research</option>
                   </select>
-                {:else if e.tag === 'combobox'}
+                </else-if><else-if cond={e.tag === 'combobox'}>
                   <combobox placeholder="Filter frameworks…">
                     <option value="sail">Sail</option>
                     <option value="react">React</option>
                   </combobox>
-                {:else if e.tag === 'checkbox'}
+                </else-if><else-if cond={e.tag === 'checkbox'}>
                   <label><input type="checkbox" bind:checked={agreed} /> I agree</label>
-                {:else if e.tag === 'radio-group'}
+                </else-if><else-if cond={e.tag === 'radio-group'}>
                   <radio-group name="plan">
                     <label><input type="radio" name="plan" value="a" /> Free</label>
                     <label><input type="radio" name="plan" value="b" checked /> Pro</label>
                   </radio-group>
-                {:else if e.tag === 'switch'}
+                </else-if><else-if cond={e.tag === 'switch'}>
                   <row gap="2" align="center">
                     <switch bind:checked={notify}></switch>
                     <p sx={mutedXs}>{notify() ? 'on' : 'off'}</p>
                   </row>
-                {:else if e.tag === 'slider'}
+                </else-if><else-if cond={e.tag === 'slider'}>
                   <row gap="2" align="center" w="full">
                     <slider bind:value={volume} tone="primary" grow></slider>
                     <span sx={cat}>{volume()}</span>
                   </row>
-                {:else if e.tag === 'toggle-group'}
+                </else-if><else-if cond={e.tag === 'toggle-group'}>
                   <toggle-group>
                     <button>Day</button>
                     <button>Week</button>
                     <button>Month</button>
                   </toggle-group>
-                {:else if e.tag === 'field'}
+                </else-if><else-if cond={e.tag === 'field'}>
                   <field>
                     <label slot="label">Email</label>
                     <input type="email" placeholder="you@ship.dev" />
                   </field>
-                {:else if e.tag === 'label'}
+                </else-if><else-if cond={e.tag === 'label'}>
                   <label>Label</label>
-                {:else if e.tag === 'fieldset'}
+                </else-if><else-if cond={e.tag === 'fieldset'}>
                   <fieldset>
                     <legend>Plan</legend>
                     <label><input type="checkbox" /> Include trials</label>
                   </fieldset>
-                {:else if e.tag === 'dropzone'}
+                </else-if><else-if cond={e.tag === 'dropzone'}>
                   <div dropzone>Drop files</div>
-                {:else if e.tag === 'theme-picker'}
+                </else-if><else-if cond={e.tag === 'theme-picker'}>
                   <theme-picker></theme-picker>
-                {:else if e.tag === 'alert'}
+                </else-if><else-if cond={e.tag === 'alert'}>
                   <alert tone="success"><strong>Saved.</strong> Changes are live.</alert>
-                {:else if e.tag === 'progress'}
+                </else-if><else-if cond={e.tag === 'progress'}>
                   <progress value="0.62" w="full"></progress>
-                {:else if e.tag === 'meter'}
+                </else-if><else-if cond={e.tag === 'meter'}>
                   <meter value="0.7" min="0" max="1" w="full"></meter>
-                {:else if e.tag === 'spinner'}
+                </else-if><else-if cond={e.tag === 'spinner'}>
                   <spinner></spinner>
-                {:else if e.tag === 'skeleton'}
+                </else-if><else-if cond={e.tag === 'skeleton'}>
                   <span skeleton size="md" sx={style.w(full).h(3)}></span>
-                {:else if e.tag === 'empty-state'}
+                </else-if><else-if cond={e.tag === 'empty-state'}>
                   <empty-state>
                     <strong slot="title">Nothing here</strong>
                     Try another filter.
                   </empty-state>
-                {:else if e.tag === 'error-state'}
+                </else-if><else-if cond={e.tag === 'error-state'}>
                   <error-state code="ERR_TIMEOUT">
                     <strong slot="title">Something went wrong</strong>
                     No route matches.
                   </error-state>
-                {:else if e.tag === 'error-boundary'}
+                </else-if><else-if cond={e.tag === 'error-boundary'}>
                   <error-boundary>
                     <p sx={mutedXs}>Wrapped safely</p>
                   </error-boundary>
-                {:else if e.tag === 'toast'}
+                </else-if><else-if cond={e.tag === 'toast'}>
                   <toast tone="primary" duration="0">
                     Toast body
                     <button data-toast-close variant="ghost" size="sm">×</button>
                   </toast>
-                {:else if e.tag === 'badge'}
+                </else-if><else-if cond={e.tag === 'badge'}>
                   <row gap="2" align="center">
                     <badge tone="primary">Primary</badge>
                     <badge tone="success" variant="soft">OK</badge>
                     <badge tone="destructive" variant="outline">Hot</badge>
                   </row>
-                {:else if e.tag === 'chip'}
+                </else-if><else-if cond={e.tag === 'chip'}>
                   <row gap="2">
-                    {#if kept()}
+                    <if cond={kept()}>
                       <chip tone="primary" removable on:sail-dismiss={dropChip}>Alpha</chip>
-                    {/if}
+                    </if>
                     <chip>Beta</chip>
                   </row>
-                {:else if e.tag === 'status-dot'}
+                </else-if><else-if cond={e.tag === 'status-dot'}>
                   <row gap="2" align="center">
                     <span dot tone="success"></span>
                     <span dot tone="warning" pulse></span>
                     <span dot tone="destructive"></span>
                   </row>
-                {:else if e.tag === 'card'}
+                </else-if><else-if cond={e.tag === 'card'}>
                   <card interactive sx={style.pad(3)}>
                     <strong>A surface</strong>
                     <p sx={mutedXs}>hover lift is one attribute</p>
                   </card>
-                {:else if e.tag === 'avatar'}
+                </else-if><else-if cond={e.tag === 'avatar'}>
                   <avatar name="Ada Lovelace"></avatar>
-                {:else if e.tag === 'icon'}
+                </else-if><else-if cond={e.tag === 'icon'}>
                   <row gap="3" align="center">
                     <icon name="check"></icon>
                     <icon name="search"></icon>
                     <icon name="settings"></icon>
                   </row>
-                {:else if e.tag === 'separator' || e.tag === 'hr'}
+                </else-if><else-if cond={e.tag === 'separator' || e.tag === 'hr'}>
                   <hr w="full" />
-                {:else if e.tag === 'details'}
+                </else-if><else-if cond={e.tag === 'details'}>
                   <details>
                     <summary>Details</summary>
                     Hidden until open.
                   </details>
-                {:else if e.tag === 'collapsible'}
+                </else-if><else-if cond={e.tag === 'collapsible'}>
                   <collapsible>
                     <button slot="trigger">Toggle</button>
                     Collapsed body.
                   </collapsible>
-                {:else if e.tag === 'prose'}
+                </else-if><else-if cond={e.tag === 'prose'}>
                   <prose><p>Prose surface — body type, links, lists.</p></prose>
-                {:else if e.tag === 'tooltip'}
+                </else-if><else-if cond={e.tag === 'tooltip'}>
                   <tooltip>
                     <button slot="trigger" size="sm">Hover</button>
                     Tooltip copy
                   </tooltip>
-                {:else if e.tag === 'hover-card'}
+                </else-if><else-if cond={e.tag === 'hover-card'}>
                   <hover-card>
                     <button slot="trigger" size="sm" variant="ghost">Card</button>
                     Hover card body
                   </hover-card>
-                {:else if e.tag === 'popover'}
+                </else-if><else-if cond={e.tag === 'popover'}>
                   <popover>
                     <button slot="trigger" size="sm">Open</button>
                     Popover body
                   </popover>
-                {:else if e.tag === 'dropdown'}
+                </else-if><else-if cond={e.tag === 'dropdown'}>
                   <dropdown>
                     <button slot="trigger" size="sm">Menu</button>
                     <button>Item A</button>
                     <button>Item B</button>
                   </dropdown>
-                {:else if e.tag === 'context-menu'}
+                </else-if><else-if cond={e.tag === 'context-menu'}>
                   <context-menu>
                     <button slot="trigger" size="sm">Right-click</button>
                     <button>Copy</button>
                     <button>Paste</button>
                   </context-menu>
-                {:else if e.tag === 'dialog'}
+                </else-if><else-if cond={e.tag === 'dialog'}>
                   <dialog>
                     <button slot="trigger" size="sm" tone="primary">Open dialog</button>
                     <strong slot="title">Dialog</strong>
                     Live dialog surface.
                   </dialog>
-                {:else if e.tag === 'tabs'}
+                </else-if><else-if cond={e.tag === 'tabs'}>
                   <tabs>
                     <tab-list>
                       <tab>One</tab>
@@ -354,70 +354,70 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <tab-panel>Panel one</tab-panel>
                     <tab-panel>Panel two</tab-panel>
                   </tabs>
-                {:else if e.tag === 'breadcrumb'}
+                </else-if><else-if cond={e.tag === 'breadcrumb'}>
                   <breadcrumb>
                     <a href="/components">components</a>
                     <small>badge</small>
                   </breadcrumb>
-                {:else if e.tag === 'pagination'}
+                </else-if><else-if cond={e.tag === 'pagination'}>
                   <pagination value="2">
                     <button data-page="1">1</button>
                     <button data-page="2">2</button>
                     <button data-page="3">3</button>
                   </pagination>
-                {:else if e.tag === 'navbar'}
+                </else-if><else-if cond={e.tag === 'navbar'}>
                   <navbar>
                     <a href="/components">Brand</a>
                     <a href="/components/button">Docs</a>
                   </navbar>
-                {:else if e.tag === 'table'}
+                </else-if><else-if cond={e.tag === 'table'}>
                   <table>
                     <thead><tr><th>Name</th><th>Role</th></tr></thead>
                     <tbody><tr><td>Ada</td><td>Eng</td></tr></tbody>
                   </table>
-                {:else if e.tag === 'layout'}
+                </else-if><else-if cond={e.tag === 'layout'}>
                   <row gap="2"><div sx={style.pad(2).bg(muted).radius(sm)}>A</div><div sx={style.pad(2).bg(muted).radius(sm)}>B</div></row>
-                {:else if e.tag === 'scroll-area'}
+                </else-if><else-if cond={e.tag === 'scroll-area'}>
                   <scroll-area sx={style.h(8).w(full)}>
                     <p sx={mutedXs}>Scrollable region — more content than fits.</p>
                     <p sx={mutedXs}>Line two.</p>
                     <p sx={mutedXs}>Line three.</p>
                   </scroll-area>
-                {:else if e.tag === 'sail-sparkline'}
+                </else-if><else-if cond={e.tag === 'sail-sparkline'}>
                   <sail-sparkline data="2,5,3,8,4,6,7" width="120" height="40"></sail-sparkline>
-                {:else if e.tag === 'sail-area-chart'}
+                </else-if><else-if cond={e.tag === 'sail-area-chart'}>
                   <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-area-chart>
-                {:else if e.tag === 'sail-bar-chart'}
+                </else-if><else-if cond={e.tag === 'sail-bar-chart'}>
                   <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="160" height="60"></sail-bar-chart>
-                {:else if e.tag === 'sail-donut'}
+                </else-if><else-if cond={e.tag === 'sail-donut'}>
                   <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="80" thickness="10"></sail-donut>
-                {:else if e.tag === 'sail-gauge'}
+                </else-if><else-if cond={e.tag === 'sail-gauge'}>
                   <sail-gauge value="72" diameter="80" thickness="10"></sail-gauge>
-                {:else if e.tag === 'sail-heatmap'}
+                </else-if><else-if cond={e.tag === 'sail-heatmap'}>
                   <sail-heatmap rows="3" cols="5" values="1,2,3,4,3,4,5,6,5,4,3,2,1,2,3" width="160" height="60"></sail-heatmap>
-                {:else if e.tag === 'sail-line-chart'}
+                </else-if><else-if cond={e.tag === 'sail-line-chart'}>
                   <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="160" height="60"></sail-line-chart>
-                {:else if e.tag === 'sail-media-image'}
+                </else-if><else-if cond={e.tag === 'sail-media-image'}>
                   <sail-media-image src="/favicon.svg" alt="Sail mark"></sail-media-image>
-                {:else if e.tag === 'sail-media-av'}
+                </else-if><else-if cond={e.tag === 'sail-media-av'}>
                   <sail-media-av></sail-media-av>
-                {:else if e.tag === 'sail-code-editor'}
+                </else-if><else-if cond={e.tag === 'sail-code-editor'}>
                   <sail-code-editor value="const greeting = 'hi';" language="js" line-numbers size="sm"></sail-code-editor>
-                {:else if e.tag === 'sail-mermaid'}
+                </else-if><else-if cond={e.tag === 'sail-mermaid'}>
                   <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>
-                {:else if e.tag === 'sail-message'}
+                </else-if><else-if cond={e.tag === 'sail-message'}>
                   <sail-message role="user" state="user">Hello — live chat message.</sail-message>
-                {:else if e.tag === 'sail-citation'}
+                </else-if><else-if cond={e.tag === 'sail-citation'}>
                   <sail-citation source="docs.sail.dev" href="https://docs.sail.dev">Citation</sail-citation>
-                {:else if e.tag === 'sail-composer'}
+                </else-if><else-if cond={e.tag === 'sail-composer'}>
                   <sail-composer placeholder="Ask anything…"></sail-composer>
-                {:else if e.tag === 'sail-thinking-dots'}
+                </else-if><else-if cond={e.tag === 'sail-thinking-dots'}>
                   <sail-thinking-dots></sail-thinking-dots>
-                {:else if e.tag === 'sail-tool-call'}
+                </else-if><else-if cond={e.tag === 'sail-tool-call'}>
                   <sail-tool-call name="search" status="running">query: search</sail-tool-call>
-                {:else}
+                </else-if><else>
                   <p sx={dormant}>{e.tag}</p>
-                {/if}
+                </else></if>
               </row>
               <column gap="1" sx={tileMeta}>
                 <a href={`/components/${e.slug}`} sx={tileName}>{e.tag}</a>
@@ -428,15 +428,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               </column>
             </column>
           </card>
-        {/for}
+        </for>
       </grid>
 
-      {#if none()}
+      <if cond={none()}>
         <empty-state>
           <strong slot="title">Nothing matches</strong>
           Clear a filter or two — or search for less.
         </empty-state>
-      {/if}
+      </if>
     </column>
   </row>
 

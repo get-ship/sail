@@ -27,7 +27,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <column gap="2">
-    {#for k of keys() key={k.key}}
+    <for as="k" of={keys()} key={k.key}>
       <card padding="sm" sx={style.minW(0)}>
         <column gap="1">
           <row gap="3" align="center">
@@ -38,7 +38,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
           <small sx={style.fg(muted-foreground)}>default: {k.default}</small>
         </column>
       </card>
-    {/for}
+    </for>
   </column>
 
   <row role="navigation">

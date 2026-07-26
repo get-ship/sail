@@ -15,7 +15,7 @@
 //   import gitRoute from '../controller'
 //   const TEMPLATE = readFileSync(new URL('./page.sail', import.meta.url), 'utf8')
 //
-//   const v = renderRoute(TEMPLATE, { controller: gitRoute, ship: fakeShip })
+//   const v = renderRoute(TEMPLATE, { controller: gitRoute, providers: { api } })
 //   expect(v.html()).toContain('main')
 //   v.fire('button.refresh', 'click')
 //   await v.flush()
@@ -37,8 +37,8 @@ export interface RenderOpts {
   /** The route's controller — its default export, or a raw setup function.
    *  Omit for templates with no controller. */
   controller?: ControllerInput
-  /** Fake `ship` SDK. Provide only the domains/ops the route reads. */
-  ship?: unknown
+  /** Flat named providers the route reads (same surface as mount inject). */
+  providers?: Record<string, unknown>
   /** Initial URL backing the `route` signal. Defaults to `http://localhost/`. */
   url?: string
   /** Navigation sink — called when the route navigates. Defaults to a no-op. */
@@ -88,7 +88,8 @@ export function renderRoute(source: string, opts: RenderOpts = {}): Rendered {
   document.body.appendChild(root)
 
   const ctx = {
-    ship: opts.ship ?? {},
+    ...(opts.providers ?? {}),
+    ...(opts.providers ? { providers: opts.providers } : {}),
     // Base the URL so relative paths ("/authority") from given.url resolve.
     route: makeRoute({ url: new URL(opts.url ?? '/', 'http://localhost') }),
     navigate: opts.navigate ?? (() => {}),

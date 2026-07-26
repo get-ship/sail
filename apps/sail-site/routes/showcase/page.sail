@@ -117,9 +117,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <strong sx={style.fontFamily(mono).fontSize(lg).fg(primary)}>shanty</strong>
     <p grow sx={style.fontSize(sm).fg(muted-foreground)}>a full app in one .sail file</p>
     <row gap="1">
-      {#for t of THEMES key={t}}
+      <for as="t" of={THEMES} key={t}>
         <button on:click={() => theme.set(t)} variant={theme() === t ? 'solid' : 'outline'} size="sm">{t}</button>
-      {/for}
+      </for>
     </row>
   </row>
 
@@ -129,14 +129,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <input placeholder="Filter playlists" bind:value={query} />
       <column gap="1">
         <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>Playlists</p>
-        {#for p of filteredPlaylists() key={p.id}}
+        <for as="p" of={filteredPlaylists()} key={p.id}>
           <row on:click={() => activePlaylist.set(p.id)}
                aria-current={activePlaylist() === p.id ? 'true' : null}
                sx={style.pad(2).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })} align="center" justify="between">
             <span>{p.name}</span>
             <badge tone="muted">{p.tracks.length}</badge>
           </row>
-        {/for}
+        </for>
       </column>
       <separator></separator>
       <row on:click={() => activePlaylist.set('__liked')}
@@ -158,21 +158,21 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </column>
       <scroll-area grow sx={style.minH(0).padX(6).padB(4)}>
         <column gap="1">
-          {#for t of visibleTracks() key={t.id}}
+          <for as="t" of={visibleTracks()} key={t.id}>
             <row on:click={() => playTrack(t.id)}
 aria-current={currentId() === t.id ? 'true' : null}
 sx={style.pad(2).padX(3).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) }).enter({ opacity: 'fade', stagger: '0.03s' })}
 align="center" gap="3">
               <row justify="center" shrink sx={style.w(6).fontFamily(mono).fontSize(sm).fg(muted-foreground)}>
-                {#if currentId() === t.id && playing()}
+                <if cond={currentId() === t.id && playing()}>
                   <row gap="1" align="end" justify="center" sx={style.minH(4)}>
                     <i sx={style.w(1).h(3).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
                     <i sx={style.w(1).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
                     <i sx={style.w(1).h(2).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
                   </row>
-                {:else}
+                <else>
                   {t.id}
-                {/if}
+                </else></if>
               </row>
               <column gap="0" grow min-w="0">
                 <strong sx={when({ groupCurrent: style.fg(primary) })}>{t.title}</strong>
@@ -185,7 +185,7 @@ align="center" gap="3">
               </button>
               <span sx={style.fontFamily(mono).fontSize(sm).fg(muted-foreground)}>{t.len}</span>
             </row>
-          {/for}
+          </for>
         </column>
       </scroll-area>
     </column>

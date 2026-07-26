@@ -48,27 +48,27 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <grid cols="3" gap="2">
-      {#for e of stdlibElements() key={e.tag}}
+      <for as="e" of={stdlibElements()} key={e.tag}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <a href={e.href}><code>{e.tag}</code> <small sx={style.fg(muted-foreground)}>{e.propCount}</small></a>
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{e.description}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
 
     <h3>Native reskins</h3>
     <p>Bare HTML tags the framework styles — the tag is still the API.</p>
     <grid cols="3" gap="2">
-      {#for e of reskinElements() key={e.tag}}
+      <for as="e" of={reskinElements()} key={e.tag}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <a href={e.href}><code>{e.tag}</code></a>
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{e.description}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 

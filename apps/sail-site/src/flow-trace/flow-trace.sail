@@ -77,11 +77,11 @@ export default controller(() => {
       >{departed()} departed</span>
     </row>
     <column gap="1" sx={list}>
-      {#for r of rows() key={r.id}}
+      <for as="r" of={rows()} key={r.id}>
         <row nowrap sx={style.enter({ opacity: 'fade', duration: 600 }).exit({ opacity: 'fade-out', duration: 600 })}>
           <span sx={city}>{r.city}</span>
         </row>
-      {/for}
+      </for>
     </column>
   </card>
   <column gap="2">

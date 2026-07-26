@@ -66,7 +66,7 @@ export default controller(({ kind, rect, index, active }: Scope) => ({
   }))
 
 </controller>
-{#if isPoint()}
+<if cond={isPoint()}>
   <div use:pin={{x: x(), y: y()}} sx={style.position(absolute).w(0).h(0).left(bind(pinX)).top(bind(pinY))}>
     <center sx={style.h(0)}>
       <row
@@ -79,11 +79,11 @@ export default controller(({ kind, rect, index, active }: Scope) => ({
       >{badge()}</row>
     </center>
   </div>
-{:else if hasBox()}
+<else-if cond={hasBox()}>
   <div
     role="button"
     tabindex="0"
     use:rect={box()}
     sx={style.position(absolute).left(bind(boxLeft)).top(bind(boxTop)).w(bind(boxW)).h(bind(boxH)).bg(hover-bg).borderWidth(1).border(primary).border(dashed).radius(sm).cursor(pointer).pointerEvents(auto)}
   ></div>
-{/if}
+</else-if></if>

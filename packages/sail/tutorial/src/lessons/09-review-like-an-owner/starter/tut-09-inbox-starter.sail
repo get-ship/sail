@@ -56,15 +56,15 @@ export default controller(() => {
     </row>
   </row>
 
-  {#while-error err of inbox}
+  <while-error as="err" of="inbox">
     <alert tone="destructive">{err.message}</alert>
-  {/while-error}
+  </while-error>
 
-  {#if inbox().kind === 'ok'}
+  <if cond={inbox().kind === 'ok'}>
     <column gap="1">
-      {#for m of visible() key={m.topic}}
+      <for as="m" of={visible()} key={m.topic}>
         <row gap="3" align="center" sx={messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' })}>
-          {#if !m.read}<span sx={unreadDot}></span>{/if}
+          <if cond={!m.read}><span sx={unreadDot}></span></if>
           <column gap="0" grow>
             <strong sx={from}>{m.from}</strong>
             <small sx={muted}>{m.subject}</small>
@@ -72,10 +72,10 @@ export default controller(() => {
           <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>
           <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>
         </row>
-      {/for}
-      {#if visible().length === 0}
+      </for>
+      <if cond={visible().length === 0}>
         <div sx={emptyImprovised}>Nothing matches this filter.</div>
-      {/if}
+      </if>
     </column>
-  {/if}
+  </if>
 </column>

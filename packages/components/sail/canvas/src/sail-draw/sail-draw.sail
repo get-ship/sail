@@ -255,8 +255,8 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
   sx={style.display(block).position(relative).w(full).h(full).fg(foreground)}
 >
   <svg role="group" aria-label={statusLabel()} sx={style.position(absolute).top(0).left(0).overflow(visible).pointerEvents(none)}>
-    {#for el of rendered() key={el.id}}
-      {#if el.kind === 'text'}
+    <for as="el" of={rendered()} key={el.id}>
+      <if cond={el.kind === 'text'}>
         <text
           x={el.at.x}
           y={el.at.y}
@@ -267,7 +267,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
           pointer-events="fill"
           sx={style.fontFamily(body).fontSize(base).stroke(none).when({ selected: style.fill(primary) })}
         >{el.text}</text>
-      {:else}
+      <else>
         <path
           d={el.path}
           data-el-id={el.id}
@@ -280,9 +280,9 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
           stroke-width="2"
           sx={style.fill(none).cursor(pointer).when({ selected: style.stroke(primary), statePen: style.fill(currentColor).stroke(none) })}
         ></path>
-      {/if}
-    {/for}
-    {#if draftPath()}
+      </else></if>
+    </for>
+    <if cond={draftPath()}>
       <path
         d={draftPath()}
         use:swatch={draftColor()}
@@ -291,9 +291,9 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         stroke-width="2"
         sx={style.fill(none).opacity(85)}
       ></path>
-    {/if}
+    </if>
 
-    {#if selectionRect()}
+    <if cond={selectionRect()}>
       <rect
         x={selectionRect().x}
         y={selectionRect().y}
@@ -303,7 +303,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         stroke-width="1"
         stroke-dasharray="4 3"
       ></rect>
-    {/if}
+    </if>
   </svg>
 </sail-canvas>
 

@@ -232,15 +232,15 @@ export default controller(({ value, layout }: Scope) => {
   sx={style.display(block).position(relative).w(full).h(full)}
 >
   <svg aria-hidden="true" sx={style.position(absolute).top(0).left(0).overflow(visible).pointerEvents(none)}>
-    {#for r of routes() key={r.id}}
+    <for as="r" of={routes()} key={r.id}>
       <path d={r.path} data-edge-id={r.id} data-state={incidentSet().has(r.id) ? 'incident' : null} sx={style.fill(none).stroke(border).when({ stateIncident: style.stroke(primary) })} stroke-width="2"></path>
-    {/for}
-    {#if pendingPath()}
+    </for>
+    <if cond={pendingPath()}>
       <path d={pendingPath()} sx={style.fill(none).stroke(primary)} stroke-width="2" stroke-dasharray="6 4"></path>
-    {/if}
+    </if>
   </svg>
 
-  {#for n of nodes() key={n.id}}
+  <for as="n" of={nodes()} key={n.id}>
     <div
       role="group"
       tabindex="0"
@@ -252,7 +252,7 @@ export default controller(({ value, layout }: Scope) => {
       sx={style.box(border).bg(card).fg(card-foreground).borderWidth(1).border(border).radius(md).pad(2).cursor(grab).select(none).outline(none).when({ focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2), selected: style.border(primary).outline(primary) })}
     >
       <slot name={n.id}></slot>
-      {#for p of n.ports key={p.id}}
+      <for as="p" of={n.ports} key={p.id}>
         <span
           data-port-id={p.id}
           data-state={p.side}
@@ -260,7 +260,7 @@ export default controller(({ value, layout }: Scope) => {
           on:pointerdown={portPointerDown}
           sx={style.position(absolute).w(3).h(3).radius(full).bg(background).borderWidth(1).border(primary).cursor(crosshair).when({ stateLeft: style.left(bind(portLeft)).top(bind(portTop)), stateRight: style.right(bind(portRight)).top(bind(portTop)), stateTop: style.top(bind(portTop)).left(bind(portLeft)), stateBottom: style.bottom(bind(portBottom)).left(bind(portLeft)) })}
         ></span>
-      {/for}
+      </for>
     </div>
-  {/for}
+  </for>
 </sail-canvas>

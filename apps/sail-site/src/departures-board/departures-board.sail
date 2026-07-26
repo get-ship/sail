@@ -80,17 +80,17 @@ export default controller((ctx) => {
     <span sx={meta}>{departed()} departed</span>
   </row>
   <column gap="1" sx={list}>
-    {#for f of flights() key={f.id}}
+    <for as="f" of={flights()} key={f.id}>
       <row align="center" gap="3" nowrap sx={style.enter({ opacity: 'fade' })}>
         <span grow min-w="0" sx={city}>{f.city}</span>
         <span sx={gate}>{f.gate}</span>
-        {#match f.status}
-          {:case 'boarding'} <badge tone="success">Boarding</badge>
-          {:case 'delayed'}  <badge tone="destructive">Delayed</badge>
-          {:default}         <badge tone="muted">On time</badge>
-        {/match}
+        <match on={f.status}>
+          <case of={'boarding'}> <badge tone="success">Boarding</badge>
+          </case><case of={'delayed'}>  <badge tone="destructive">Delayed</badge>
+          </case><default>         <badge tone="muted">On time</badge>
+        </default></match>
       </row>
-    {/for}
+    </for>
   </column>
   <slot name="footer"></slot>
 </card>

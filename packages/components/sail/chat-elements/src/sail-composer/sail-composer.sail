@@ -115,7 +115,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <slot name="attachments"></slot>
   </div>
   <row gap="2" align="end">
-    {#if multiline()}
+    <if cond={multiline()}>
       <textarea
         rows="1"
         placeholder={placeholder()}
@@ -125,8 +125,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         grow min-w="0"
         sx={style.minH(0).padY(1).padX(half).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none).overflowY(auto)}
       ></textarea>
-    {/if}
-    {#if !multiline()}
+    </if>
+    <if cond={!multiline()}>
       <input
         type="text"
         placeholder={placeholder()}
@@ -136,7 +136,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         grow min-w="0"
         sx={style.minH(0).padY(1).padX(half).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none)}
       />
-    {/if}
+    </if>
     <row gap="1" align="center" grow="0">
       <slot name="trailing"></slot>
       <button

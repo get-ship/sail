@@ -131,52 +131,52 @@ export default controller(({ data, expanded, depth }: Scope) => {
 </controller>
 
 <column gap="0" sx={style.fontFamily(mono).fontSize(sm).leading(normal-plus)}>
-  {#if parseError() !== ''}
+  <if cond={parseError() !== ''}>
     <span role="alert" sx={style.fg(destructive)}>Invalid JSON: {parseError()}</span>
-  {/if}
-  {#for row of rows() key={row.k}}
-    {#match row.kind}
-      {:case 'branch'}
+  </if>
+  <for as="row" of={rows()} key={row.k}>
+    <match on={row.kind}>
+      <case of={'branch'}>
         <row role="treeitem" aria-level={row.ariaLevel} aria-expanded={row.open ? 'true' : 'false'} tabindex="0" gap="0" align="center"
              on:click={() => toggle(row.path, row.open)}
              on:keydown|key:Enter={() => toggle(row.path, row.open)}
              sx={style.group().radius(sm).cursor(pointer).when({ hover: style.bg(hover-bg) })}>
-          {#for pad of row.pads key={pad.i}}
+          <for as="pad" of={row.pads} key={pad.i}>
             <span sx={style.w(3).borderLWidth(1).borderL(border-subtle)}></span>
-          {/for}
+          </for>
           <span aria-hidden="true" sx={style.fg(muted-foreground).fontSize(xs).padX(1).when({ groupExpanded: style.rotate(90) })}>▶</span>
-          {#if row.label !== ''}
+          <if cond={row.label !== ''}>
             <span sx={style.fontWeight(medium)}>"{row.label}"</span><span sx={style.fg(muted-foreground)}>:&nbsp;</span>
-          {/if}
+          </if>
           <span sx={style.fg(muted-foreground)}>{row.openBracket}</span>
           <span sx={style.fg(muted-foreground).fontSize(xs).bg(muted).radius(full).padX(1).ml(1)}>{row.meta}</span>
-          {#if !row.open}
+          <if cond={!row.open}>
             <span sx={style.fg(muted-foreground)}>…{row.closeBracket}</span>
-          {/if}
+          </if>
         </row>
-      {:case 'close'}
+      </case><case of={'close'}>
         <row gap="0" align="center">
-          {#for pad of row.pads key={pad.i}}
+          <for as="pad" of={row.pads} key={pad.i}>
             <span sx={style.w(3).borderLWidth(1).borderL(border-subtle)}></span>
-          {/for}
+          </for>
           <span sx={style.fg(muted-foreground).padX(1)}>{row.text}</span>
         </row>
-      {:default}
+      </case><default>
         <row role="treeitem" aria-level={row.ariaLevel} gap="0" align="center" sx={style.radius(sm).when({ hover: style.bg(hover-bg) })}>
-          {#for pad of row.pads key={pad.i}}
+          <for as="pad" of={row.pads} key={pad.i}>
             <span sx={style.w(3).borderLWidth(1).borderL(border-subtle)}></span>
-          {/for}
-          {#if row.label !== ''}
+          </for>
+          <if cond={row.label !== ''}>
             <span sx={style.fontWeight(medium).padX(1)}>"{row.label}"</span><span sx={style.fg(muted-foreground)}>:&nbsp;</span>
-          {/if}
-          {#match row.kind}
-            {:case 'str'} <span sx={style.fg(success)}>{row.text}</span>
-            {:case 'num'} <span sx={style.fg(info)}>{row.text}</span>
-            {:case 'bool'} <span sx={style.fg(accent).fontWeight(medium)}>{row.text}</span>
-            {:case 'null'} <span sx={style.fg(muted-foreground)}>{row.text}</span>
-            {:default} <span sx={style.fg(muted-foreground)}>{row.text}</span>
-          {/match}
+          </if>
+          <match on={row.kind}>
+            <case of={'str'}> <span sx={style.fg(success)}>{row.text}</span>
+            </case><case of={'num'}> <span sx={style.fg(info)}>{row.text}</span>
+            </case><case of={'bool'}> <span sx={style.fg(accent).fontWeight(medium)}>{row.text}</span>
+            </case><case of={'null'}> <span sx={style.fg(muted-foreground)}>{row.text}</span>
+            </case><default> <span sx={style.fg(muted-foreground)}>{row.text}</span>
+          </default></match>
         </row>
-    {/match}
-  {/for}
+    </default></match>
+  </for>
 </column>

@@ -57,22 +57,22 @@ export default controller(() => {
            'press') — tactile feedback belongs on the trigger. -->
       <button variant="outline" tone="primary" size="sm" on:click={() => toggle()}>
         {open() ? 'Close tray' : 'Open tray'}
-        {#if unread() > 0}
+        <if cond={unread() > 0}>
           <!-- TODO 3: sx={… .loop({ scale: 'pulse' })} — ambient, and it
                stops under prefers-reduced-motion for free. -->
           <span sx={unreadDot}></span>
-        {/if}
+        </if>
       </button>
     </row>
   </row>
 
-  {#if open()}
+  <if cond={open()}>
     <!-- TODO 4: the panel should arrive (style.enter — opacity fade +
          translate-x spring:snappy) and leave (style.exit — fade-out).
          exit is the one thing CSS can't do alone: the framework holds the
          node in the tree until the animation finishes. -->
     <column gap="2">
-      {#for n of notes() key={n.id}}
+      <for as="n" of={notes()} key={n.id}>
         <!-- TODO 5: rows should cascade in (style.enter with a stagger
              duration) and fade out on dismiss (style.exit). -->
         <row gap="3" align="center" sx={noteRow}>
@@ -80,10 +80,10 @@ export default controller(() => {
           <p grow sx={noteText}>{n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>
-      {/for}
-      {#if notes().length === 0}
+      </for>
+      <if cond={notes().length === 0}>
         <p sx={empty}>All clear.</p>
-      {/if}
+      </if>
     </column>
-  {/if}
+  </if>
 </column>

@@ -214,12 +214,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <span>Drag &amp; drop or <span sx={style.fg(primary)}>browse</span></span>
 </center>
 <input type="file" sx={style.display(none)} accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" bind:this={inputEl} />
-{#if errorMsg()}
+<if cond={errorMsg()}>
   <div role="alert" sx={style.fontSize(sm).fg(destructive)}>{errorMsg()}</div>
-{/if}
-{#if displayFiles().length > 0}
+</if>
+<if cond={displayFiles().length > 0}>
   <column gap="1" aria-live="polite" sx={style.mt(2)}>
-    {#for f of displayFiles() key={f.key}}
+    <for as="f" of={displayFiles()} key={f.key}>
       <row align="center" gap="3">
         <span aria-hidden="true" sx={style.fg(muted-foreground)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" sx={style.w(icon-size-sm).h(icon-size-sm)}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>
@@ -230,6 +230,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </column>
         <button variant="ghost" size="sm" type="button" data-idx={f.idx} aria-label={'Remove ' + f.name}>×</button>
       </row>
-    {/for}
+    </for>
   </column>
-{/if}
+</if>

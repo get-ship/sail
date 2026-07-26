@@ -61,36 +61,36 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       idents referenced.
     </p>
     <grid cols="3" gap="2">
-      {#for c of controllerRows() key={c.name}}
+      <for as="c" of={controllerRows()} key={c.name}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{c.name}</code>
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{c.doc}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 
-  {#for group of groups() key={group.subpath}}
+  <for as="group" of={groups()} key={group.subpath}>
     <column gap="3">
       <h2><code>{group.subpath}</code> — {group.count} exports</h2>
       <column gap="1">
-        {#for e of group.exports key={e.name}}
+        <for as="e" of={group.exports} key={e.name}>
           <row gap="3" sx={style.padX(3).padY(2).radius(md).borderWidth(1).border(border)} align="start">
             <code sx={style.minW(32)}>{e.name}</code>
             <badge size="sm">{e.kind}</badge>
             <column gap="1" sx={style.minW(0)}>
               <code sx={style.fg(muted-foreground).fontFamily(mono)}>{e.signature}</code>
-              {#if e.doc}
+              <if cond={e.doc}>
                 <small sx={style.fg(muted-foreground)}>{e.doc}</small>
-              {/if}
+              </if>
             </column>
           </row>
-        {/for}
+        </for>
       </column>
     </column>
-  {/for}
+  </for>
 
   <row role="navigation">
     <a variant="default" href="/sail/reference/scope">← Scope grammar</a>

@@ -27,7 +27,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <column gap="4">
-    {#for g of grammar() key={g.form}}
+    <for as="g" of={grammar()} key={g.form}>
       <column gap="2">
         <row gap="3" align="center">
           <h3>{g.form}</h3>
@@ -36,7 +36,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
         <p sx={style.maxW(breakpoint-tablet)}>{g.summary}</p>
         <code-block code={g.example} lang="sail"></code-block>
       </column>
-    {/for}
+    </for>
   </column>
 
   <column gap="3">
@@ -46,12 +46,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       kinds are refused with an error naming the alternative.
     </p>
     <column gap="3">
-      {#for r of refusals() key={r.syntax}}
+      <for as="r" of={refusals()} key={r.syntax}>
         <column gap="1">
           <code sx={style.fg(destructive)}>{r.syntax}</code>
           <small sx={style.fg(muted-foreground)}>→ {r.instead}</small>
         </column>
-      {/for}
+      </for>
     </column>
   </column>
 

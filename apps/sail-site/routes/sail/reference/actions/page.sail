@@ -25,7 +25,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <grid cols="3" gap="2">
-    {#for a of actions() key={a.name}}
+    <for as="a" of={actions()} key={a.name}>
       <card padding="sm" sx={style.minW(0)}>
         <column gap="1">
           <row gap="2" align="center">
@@ -35,7 +35,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
           <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{a.summary}</small>
         </column>
       </card>
-    {/for}
+    </for>
   </grid>
 
   <row role="navigation">

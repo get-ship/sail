@@ -27,11 +27,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     starter to edit with a solved screen running live.
   </p>
 
-  {#for group of groups() key={group.chapter}}
+  <for as="group" of={groups()} key={group.chapter}>
     <column gap="3">
       <h2>{group.title}</h2>
       <column gap="2">
-        {#for lesson of group.lessons key={lesson.slug}}
+        <for as="lesson" of={group.lessons} key={lesson.slug}>
           <a href={lesson.href}
              sx={style.pad(4).radius(lg).borderWidth(1).border(border).bg(surface-1).when({ hover: style.bg(surface-2).borderWidth(1).border(border-strong) })}>
             <row gap="3" align="center">
@@ -42,10 +42,10 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
               </column>
             </row>
           </a>
-        {/for}
+        </for>
       </column>
     </column>
-  {/for}
+  </for>
 
   <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)}>
     <a variant="default" href="/sail/language/state">← State</a>

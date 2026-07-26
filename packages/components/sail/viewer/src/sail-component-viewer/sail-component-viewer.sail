@@ -99,26 +99,26 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
 <column gap="4" w="full">
   <row gap="3" align="center">
     <h2 sx={style.fontFamily(mono).tracking(tight)}>{name()}</h2>
-    {#if pack() !== ''}
+    <if cond={pack() !== ''}>
       <badge tone="primary" variant="soft">{pack()}</badge>
-    {/if}
-    {#if !noA11yChip()}
+    </if>
+    <if cond={!noA11yChip()}>
       <badge tone="muted" variant="outline">a11y ✓ · keyboard ✓</badge>
-    {/if}
+    </if>
   </row>
-  {#if blurb() !== ''}
+  <if cond={blurb() !== ''}>
     <p sx={style.fg(muted-foreground)}>{blurb()}</p>
-  {/if}
+  </if>
 
   <column gap="4" sx={style.pad(5).radius(lg).borderWidth(1).border(border).bg(surface-0)}>
     <row gap="2" align="center" justify="between">
       <row gap="2" align="center">
-        {#if hasVariants()}
+        <if cond={hasVariants()}>
           <span sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{variantAttr()}:</span>
-          {#for c of chips() key={c.v}}
+          <for as="c" of={chips()} key={c.v}>
             <button size="sm" tone="primary" variant={c.variant} data-variant={c.v}>{c.v}</button>
-          {/for}
-        {/if}
+          </for>
+        </if>
       </row>
       <row gap="2" align="center">
         <status-dot tone="success"></status-dot>
@@ -131,31 +131,31 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
     </center>
   </column>
 
-  {#if hasUsage()}
+  <if cond={hasUsage()}>
     <column gap="2">
       <p sx={style.fontSize(xs).fg(muted-foreground).textCase(uppercase).tracking(wide)}>Usage — a complete program</p>
       <code-block code={usage()}></code-block>
     </column>
-  {/if}
+  </if>
 
-  {#if hasProps()}
+  <if cond={hasProps()}>
     <card sx={style.pad(4)}>
       <column gap="3">
         <p sx={style.fontSize(xs).fg(muted-foreground).textCase(uppercase).tracking(wide)}>Props</p>
-        {#for r of propRows() key={r.name}}
+        <for as="r" of={propRows()} key={r.name}>
           <column gap="1">
             <row gap="3" align="baseline">
               <code>{r.name}</code>
               <span grow sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{r.type}</span>
             </row>
-            {#if r.desc !== ''}
+            <if cond={r.desc !== ''}>
               <p sx={style.fontSize(sm).fg(muted-foreground)}>{r.desc}</p>
-            {/if}
+            </if>
           </column>
-        {/for}
+        </for>
       </column>
     </card>
-  {/if}
+  </if>
 
   <slot></slot>
 </column>

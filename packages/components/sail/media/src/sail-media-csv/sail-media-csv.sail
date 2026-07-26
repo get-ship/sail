@@ -168,25 +168,25 @@ export default controller((_ctx: Scope) => {
   })
 
 </controller>
-{#if errorMsg()}
+<if cond={errorMsg()}>
   <column role="alert" gap="0" sx={style.padY(3).padX(4).fg(destructive).fontFamily(mono).fontSize(sm)}>{errorMsg()}</column>
-{:else}
+<else>
   <table hoverable>
     <thead>
       <tr>
-        {#for col of columns() key={col.id}}
+        <for as="col" of={columns()} key={col.id}>
           <th>{col.label}</th>
-        {/for}
+        </for>
       </tr>
     </thead>
     <tbody>
-      {#for row of rows() key={row.id}}
+      <for as="row" of={rows()} key={row.id}>
         <tr data-row-id={row.id}>
-          {#for cell of row.cells key={cell.id}}
+          <for as="cell" of={row.cells} key={cell.id}>
             <td>{cell.value}</td>
-          {/for}
+          </for>
         </tr>
-      {/for}
+      </for>
     </tbody>
   </table>
-{/if}
+</else></if>

@@ -116,7 +116,7 @@ export default controller(() => {
 {/if}`,
 
   mutation: `<!-- In a deck app with a typed ship client in scope: -->
-<form mutation="ship.projects.create" on:success={() => close()}>
+<form mutation="projects.create" on:success={() => close()}>
   <input name="title" />
   <button type="submit">Create</button>
 

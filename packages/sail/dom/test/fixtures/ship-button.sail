@@ -8,7 +8,7 @@
 </scope>
 <button data-test="root" disabled={disabled() || loading()} aria-busy={loading() ? 'true' : 'false'} aria-label={label()}>
   <span data-test="label">{label()}</span>
-  {#if loading()}
+  <if cond={loading()}>
     <span data-spinner="true" data-test="spinner" aria-hidden="true"></span>
-  {/if}
+  </if>
 </button>

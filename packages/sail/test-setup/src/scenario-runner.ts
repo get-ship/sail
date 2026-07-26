@@ -186,10 +186,17 @@ export async function runScenarios(
   const results: ScenarioResult[] = []
   for (const scenario of spec.scenarios) {
     // Build the RenderOpts object conditionally so undefined
-    // controller / url / ship don't trip exactOptionalPropertyTypes.
-    const opts: { controller?: ControllerInput; ship?: unknown; url?: string } = {}
+    // controller / url / providers don't trip exactOptionalPropertyTypes.
+    const opts: {
+      controller?: ControllerInput
+      providers?: Record<string, unknown>
+      url?: string
+    } = {}
     if (controller !== undefined) opts.controller = controller
-    opts.ship = buildShip(scenario.given?.ship)
+    // Scenario specs may still key a fake under `given.ship` — treat it as
+    // a flat provider named by the scenario (or a no-op empty bag).
+    const fake = buildShip(scenario.given?.ship)
+    if (fake !== undefined) opts.providers = { ship: fake }
     if (scenario.given?.url !== undefined) opts.url = scenario.given.url
     const v = renderRoute(source, opts)
     let result: ScenarioResult = { name: scenario.name, passed: true }

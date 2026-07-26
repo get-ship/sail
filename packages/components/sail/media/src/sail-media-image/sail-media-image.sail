@@ -56,7 +56,8 @@
 // Authority: build-spec Slice 6, §"Backbone #2 — ViewerRenderer contract",
 // §"Props" (sail-media-image), §Accessibility, behavioral spec #4.
 
-import { bindHtml, controller, derived, effect, emit, signal } from '@ship/sail-runtime'
+import { controller, derived, effect, emit, signal } from '@ship/sail-runtime'
+import { bindHtml } from '@ship/sail-runtime/internal'
 import type { Action } from '@ship/sail-runtime'
 import type { ViewerSource } from '../engine/types'
 import { emitViewerError, emitViewerLoad } from '../engine/renderer-contract'
@@ -258,19 +259,19 @@ export default controller((_ctx: Scope) => {
   })
 
 </controller>
-{#if isSvg()}
+<if cond={isSvg()}>
   <center role="img" aria-label={alt()} use:svgInline sx={style.position(relative).overflow(hidden).bg(surface-1).radius(md)}></center>
-{:else}
+<else>
   <center tabindex="0" use:zoomStage sx={style.position(relative).overflow(hidden).bg(surface-1).radius(md)}>
     <img alt={alt()} use:rasterImg use:zoomPan={zoomPanSig()} sx={style.display(block).maxH(full).transform(bind(zoomTx))} />
   </center>
-  {#if isGallery()}
+  <if cond={isGallery()}>
     <row role="listbox" aria-label="Image gallery" gap="2" use:galleryStrip sx={style.pad(2).overflowX(auto)}>
-      {#for item of galleryItems() key={item.id}}
+      <for as="item" of={galleryItems()} key={item.id}>
         <row role="option" gap="0" grow="0" aria-selected={item.selected ? 'true' : 'false'} sx={style.pad(0).overflow(hidden).bg(surface-1).borderWidth(1).border(border).radius(sm).cursor(pointer).when({ selected: style.borderWidth(1).border(primary).shadow(accent) })}>
           <img src={item.url} alt="" />
         </row>
-      {/for}
+      </for>
     </row>
-  {/if}
-{/if}
+  </if>
+</else></if>

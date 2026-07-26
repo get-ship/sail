@@ -27,7 +27,8 @@ export interface MountSourceOpts {
   setup?: InjectedSetup
   /** Marker the compiler stamps as the setup import, rewritten to `setup`. */
   setupUrl?: string
-  ship?: unknown
+  /** Flat named providers (same surface as mount inject). */
+  providers?: Record<string, unknown>
   route?: RouteSignals
   navigate?: (path: string) => void
   /** Disposer for the prior mount, run AFTER a clean compile but BEFORE the
@@ -135,8 +136,10 @@ export function mountBySource(
   }
 
   const def = evalViewModule(compiled.js, opts.setup)
+  const providers = opts.providers ?? {}
   const ctx = {
-    ship: opts.ship ?? {},
+    ...providers,
+    ...(Object.keys(providers).length > 0 ? { providers } : {}),
     route: opts.route ?? makeRoute({ url: new URL('http://localhost/') }),
     navigate: opts.navigate ?? (() => {}),
   } as unknown as Parameters<typeof def.setup>[0]

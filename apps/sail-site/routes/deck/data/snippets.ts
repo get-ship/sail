@@ -10,6 +10,6 @@ export const configExample = `// deck.jsonc
 
 export const usageExample = `// any controller
 export default controller((ctx) => {
-  const visits = ctx.clients.store.visits
+  const visits = ctx.store.visits
   return { visits }
 })`

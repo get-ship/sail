@@ -928,13 +928,13 @@ export default controller(() => ({
           <label><switch name="demo-eb-trigger" checked={triggerError()} on:change={(e) => triggerError.set(e.target.checked)}></switch> Trigger subtree error</label>
         </row>
         <error-boundary fallback-text="The widget threw an error — click Retry to recover.">
-          {#if triggerError()}
+          <if cond={triggerError()}>
             <column sx={style.display(none)}>This subtree is broken (error boundary will catch)</column>
-          {:else}
+          <else>
             <column sx={style.pad(4).fontSize(sm).bg(surface-2).radius(md).fg(success-foreground)}>
               Subtree is healthy. Toggle the switch above to simulate a fault.
             </column>
-          {/if}
+          </else></if>
         </error-boundary>
       </column>
     </column>

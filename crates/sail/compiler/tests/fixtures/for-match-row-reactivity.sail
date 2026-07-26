@@ -27,16 +27,16 @@ export default controller(() => {
 </controller>
 
 <column gap="2">
-  {#for task of tasks() key={task.id}}
+  <for as="task" of={tasks()} key={task.id}>
   <row gap="2" data-test="row" data-id={task.id}>
     <span>{task.label}</span>
-    {#match task.status}
-      {:case 'todo'}
+    <match on={task.status}>
+      <case of={'todo'}>
         <em data-test="status">todo</em>
-      {:case 'done'}
+      </case><case of={'done'}>
         <strong data-test="status">done</strong>
-    {/match}
+    </case></match>
     <button data-test="toggle" on:click={() => toggle(task.id)}>toggle</button>
   </row>
-  {/for}
+  </for>
 </column>

@@ -56,22 +56,22 @@ export default controller(() => {
     </row>
   </row>
 
-  {#while-loading of inbox}
+  <while-loading of="inbox">
     <row gap="2" align="center" sx={loadingRow}>
       <spinner size="sm"></spinner>
       <small sx={muted}>loading messages…</small>
     </row>
-  {/while-loading}
+  </while-loading>
 
-  {#while-error err of inbox}
+  <while-error as="err" of="inbox">
     <alert tone="destructive">{err.message}</alert>
-  {/while-error}
+  </while-error>
 
-  {#if inbox().kind === 'ok'}
+  <if cond={inbox().kind === 'ok'}>
     <column gap="1">
-      {#for m of visible() key={m.id}}
+      <for as="m" of={visible()} key={m.id}>
         <row gap="3" align="center" sx={messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }).exit({ opacity: 'fade-out' })}>
-          {#if !m.read}<span sx={unreadDot}></span>{/if}
+          <if cond={!m.read}><span sx={unreadDot}></span></if>
           <column gap="0" grow>
             <strong sx={from}>{m.from}</strong>
             <small sx={muted}>{m.subject}</small>
@@ -79,13 +79,13 @@ export default controller(() => {
           <badge tone={m.tone} variant="soft" size="sm">{m.topic}</badge>
           <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>
         </row>
-      {/for}
-      {#if visible().length === 0}
+      </for>
+      <if cond={visible().length === 0}>
         <empty-state variant="inline" tone="muted">
           <span slot="title">Inbox zero</span>
           Nothing matches this filter.
         </empty-state>
-      {/if}
+      </if>
     </column>
-  {/if}
+  </if>
 </column>

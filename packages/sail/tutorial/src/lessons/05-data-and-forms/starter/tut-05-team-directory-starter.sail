@@ -53,22 +53,22 @@ export default controller(() => {
     </row>
   </row>
 
-  <!-- TODO 4: {#while-loading of team} — a spinner row, so the first
+  <!-- TODO 4: <while-loading of="team"> — a spinner row, so the first
        paint isn't blank. -->
 
-  <!-- TODO 5: {#while-error err of team} — an <alert tone="destructive">
+  <!-- TODO 5: <while-error as="err" of="team"> — an <alert tone="destructive">
        showing err.message. -->
 
-  {#if team().kind === 'ok'}
+  <if cond={team().kind === 'ok'}>
     <column gap="1">
-      {#for m of team().value key={m.id}}
+      <for as="m" of={team().value} key={m.id}>
         <row gap="3" align="center" sx={memberRow}>
           <strong grow sx={memberName}>{m.name}</strong>
-          {#if m.role === 'admin'}<badge tone="primary" variant="soft" size="sm">admin</badge>{/if}
+          <if cond={m.role === 'admin'}><badge tone="primary" variant="soft" size="sm">admin</badge></if>
         </row>
-      {/for}
+      </for>
     </column>
-  {/if}
+  </if>
 
   <form on:submit|prevent={add}>
     <row gap="2" align="center">

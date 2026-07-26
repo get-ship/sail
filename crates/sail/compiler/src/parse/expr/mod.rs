@@ -35,6 +35,15 @@ pub fn validate(expr: &str, allow_arrow: bool, location: &str) -> Result<(), Com
         return Err(CompileError::new("empty expression")
             .with_category(location.to_string()));
     }
+    if trimmed.contains("__sail_retired_block__") {
+        return Err(CompileError::new(
+            "brace control-flow is retired — use element blocks: \
+             <if cond={…}>…</if>, <for as=\"item\" of={…} key={…}>…</for>, \
+             <match on={…}>…</match>, <while-loading of=\"sig\">…</while-loading>. \
+             Clauses are <else-if>, <else>, <case of={…}>, <default> as children.",
+        )
+        .with_category(location.to_string()));
+    }
     let bytes = trimmed.as_bytes();
     let mut in_string: Option<u8> = None;
     let mut template_depth = 0i32;

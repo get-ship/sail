@@ -33,7 +33,7 @@ export default controller((ctx) => {
 </scope>
 
 <row nowrap align="stretch" w="full" grow min-w="0" sx={shell}>
-  {#if !workbench()}
+  <if cond={!workbench()}>
     <column gap="0" shrink min-w="panel-rail-w" sx={rail} role="navigation" aria-label="Sail docs">
       <p sx={railLabel}>Getting started</p>
       <a href="/sail/overview" sx={railLink} aria-current={path() === '/sail/overview' ? 'page' : null}>Introduction</a>
@@ -65,15 +65,15 @@ export default controller((ctx) => {
       <p sx={railLabel}>Reference</p>
       <a href="/sail/reference" sx={railLink} aria-current={path() === '/sail/reference' ? 'page' : null}>API reference</a>
     </column>
-  {/if}
+  </if>
 
-  {#if workbench()}
+  <if cond={workbench()}>
     <main grow min-w="0" sx={mainWorkbench}>
       <slot name="route"></slot>
     </main>
-  {:else}
+  <else>
     <main grow min-w="0" sx={mainDocs}>
       <slot name="route"></slot>
     </main>
-  {/if}
+  </else></if>
 </row>

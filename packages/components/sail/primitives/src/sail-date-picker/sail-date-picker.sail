@@ -375,7 +375,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
     <path d="M2 6h12 M5 1.5v3 M11 1.5v3"></path>
   </svg>
 </row>
-{#if open() && !disabled()}
+<if cond={open() && !disabled()}>
   <div role="dialog" aria-label="Choose date" sx={style.position(absolute).left(0).z(popover).w(panel-max-w-sm).pad(2).mt(1).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontFamily(body)}>
     <row align="center" justify="between" sx={style.mb(1)}>
       <button type="button" data-act="prev" aria-label="Previous month" sx={style.w(icon-size-2xl).h(icon-size-2xl).radius(sm).fg(muted-foreground).cursor(pointer).when({ hover: style.bg(muted).fg(foreground) })}>‹</button>
@@ -383,10 +383,10 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
       <button type="button" data-act="next" aria-label="Next month" sx={style.w(icon-size-2xl).h(icon-size-2xl).radius(sm).fg(muted-foreground).cursor(pointer).when({ hover: style.bg(muted).fg(foreground) })}>›</button>
     </row>
     <grid role="grid" cols="7" gap="1">
-      {#for d of dayHeaders() key={d.key}}
+      <for as="d" of={dayHeaders()} key={d.key}>
         <span role="columnheader" sx={style.fontSize(sm).fg(muted-foreground).padY(1).fontWeight(medium).textAlign(center)}>{d.label}</span>
-      {/for}
-      {#for cell of monthCells() key={cell.key}}
+      </for>
+      <for as="cell" of={monthCells()} key={cell.key}>
         <button
           type="button"
           disabled={cell.disabled}
@@ -397,8 +397,8 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
           data-iso={cell.iso}
           sx={style.h(control-h-sm).radius(sm).textAlign(center).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(primary).fg(primary-foreground), disabled: style.fg(muted-foreground).opacity(50).cursor(not-allowed), stateEmpty: style.visibility(hidden), stateToday: style.outline(border-strong), focus: style.outline(ring) })}
         >{cell.empty ? '' : cell.day}</button>
-      {/for}
+      </for>
     </grid>
   </div>
-{/if}
+</if>
 </column>

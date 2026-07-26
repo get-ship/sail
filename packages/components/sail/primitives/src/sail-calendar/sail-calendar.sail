@@ -374,22 +374,22 @@ export default controller((ctx: ControllerScope<Scope>) => {
     </row>
   </row>
 
-  {#if isEmpty()}
+  <if cond={isEmpty()}>
     <div role="status" sx={style.fg(muted-foreground).padY(6).padX(density-row-px).textAlign(center)}>
       <slot name="empty">No events</slot>
     </div>
-  {/if}
+  </if>
 
-  {#if isMonth()}
+  <if cond={isMonth()}>
   <div role="grid" aria-label={label() || 'Calendar month'}>
     <grid cols="7" gap="0" role="presentation">
-      {#for d of weekdays() key={d.key}}
+      <for as="d" of={weekdays()} key={d.key}>
         <span role="columnheader" sx={style.fg(muted-foreground).fontWeight(medium).padY(density-row-py).textAlign(center).fontSize(density).borderBWidth(1).borderB(border)}>{d.label}</span>
-      {/for}
+      </for>
     </grid>
-    {#for wk of weekRows() key={wk.key}}
+    <for as="wk" of={weekRows()} key={wk.key}>
       <grid cols="7" gap="0" role="row">
-        {#for cr of wk.cells key={cr.key}}
+        <for as="cr" of={wk.cells} key={cr.key}>
           <column
             role="gridcell"
             data-iso={cr.cell.iso}
@@ -401,7 +401,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             sx={style.group().padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell).borderRWidth(1).borderR(border).borderBWidth(1).borderB(border).when({ stateOut: style.fg(muted-foreground).bg(muted), stateWeekend: style.bg(muted), stateRange: style.bg(selected-bg) })}
           >
             <row align="center" justify="center" gap="0" sx={style.fontSize(density).minW(control-h-2xs).h(control-h-2xs).radius(full).when({ groupStateToday: style.fg(primary).fontWeight(semibold).outline(primary) })}>{cr.cell.day}</row>
-            {#for ev of cr.cell.events key={ev.id}}
+            <for as="ev" of={cr.cell.events} key={ev.id}>
               <button
                 type="button"
                 data-event-id={ev.id}
@@ -413,34 +413,34 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <span aria-hidden="true" sx={style.position(absolute).left(half).top(1).bottom(1).w(half).radius(sm).bg(primary).when({ groupStateAllday: style.bg(accent) })}></span>
                 {ev.title}
               </button>
-            {/for}
-            {#if cr.cell.overflowCount > 0}
+            </for>
+            <if cond={cr.cell.overflowCount > 0}>
               <span sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).padX(1)}>+{cr.cell.overflowCount} more</span>
-            {/if}
+            </if>
           </column>
-        {/for}
+        </for>
       </grid>
-    {/for}
+    </for>
   </div>
-{/if}
+</if>
 
-{#if isWeek() || isDay()}
+<if cond={isWeek() || isDay()}>
   <grid use:gridTracks={timeGridTracks()} tracks="--cal-time-tracks" gap="0" role="grid" aria-label={label() || 'Calendar time grid'}>
     <column role="rowgroup" gap="0" sx={style.borderRWidth(1).borderR(border)}>
-      {#for slot of timeSlots() key={slot.key}}
+      <for as="slot" of={timeSlots()} key={slot.key}>
         <div data-slot={slot.minutes} role="rowheader" sx={style.h(control-h-md).fg(muted-foreground).padX(density-row-px).fontSize(density).borderBWidth(1).borderB(border)}>{slot.label}</div>
-      {/for}
+      </for>
     </column>
     <row gap="0" grow>
-      {#for dc of dayColumns() key={dc.key}}
+      <for as="dc" of={dayColumns()} key={dc.key}>
         <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} grow sx={style.position(relative).minH(panel-min-h-daycol).borderRWidth(1).borderR(border).when({ stateToday: style.bg(selected-bg) })}>
           <column gap="0" sx={style.position(absolute).top(0).right(0).bottom(0).left(0)}>
-            {#for slot of timeSlots() key={slot.key}}
+            <for as="slot" of={timeSlots()} key={slot.key}>
               <div data-iso={dc.col.iso} data-minutes={slot.minutes} grow sx={style.minH(control-h-md).cursor(cell).borderBWidth(1).borderB(border).when({ hover: style.bg(hover-bg) })}></div>
-            {/for}
+            </for>
           </column>
           <column gap="1" sx={style.position(relative).z(elevated).pad(half)}>
-            {#for ev of dc.col.allDayEvents key={ev.id}}
+            <for as="ev" of={dc.col.allDayEvents} key={ev.id}>
               <button
                 type="button"
                 data-event-id={ev.id}
@@ -449,9 +449,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 title={ev.title}
                 sx={style.position(relative).textAlign(start).cursor(pointer).fontSize(density).fg(foreground).bg(hover-bg).radius(sm).padY(half).padX(1_5).truncate().when({ selected: style.outline(ring) })}
               >{ev.title}</button>
-            {/for}
+            </for>
           </column>
-          {#for pe of dc.col.laidOut key={pe.event.id}}
+          <for as="pe" of={dc.col.laidOut} key={pe.event.id}>
             <button
               type="button"
               data-event-id={pe.event.id}
@@ -460,10 +460,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
               title={pe.event.title}
               sx={style.position(absolute).top(bind(evtTop)).h(bind(evtH)).left(bind(evtLeft)).w(bind(evtW)).cursor(pointer).textAlign(start).fontSize(density).fg(primary).bg(hover-bg).radius(sm).padY(half).padX(1).overflow(hidden).when({ selected: style.outline(ring) })}
             >{pe.event.title}</button>
-          {/for}
+          </for>
         </div>
-      {/for}
+      </for>
     </row>
   </grid>
-{/if}
+</if>
 </div>

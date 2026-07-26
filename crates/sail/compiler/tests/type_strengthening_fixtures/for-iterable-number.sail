@@ -1,5 +1,5 @@
 <ul>
-  {#for x of 3 key={x}}
+  <for as="x" of={3} key={x}>
     <li>x</li>
-  {/for}
+  </for>
 </ul>

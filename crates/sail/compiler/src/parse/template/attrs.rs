@@ -44,7 +44,7 @@ fn compile_attr(
     }
     if name == "mutation" {
         if value.is_empty() {
-            return Err(CompileError::new("mutation= requires a value (e.g. \"ship.agents.create\")")
+            return Err(CompileError::new("mutation= requires a value (e.g. \"demo.addTodo\")")
                 .with_span(value_span)
                 .with_category(loc.to_string()));
         }

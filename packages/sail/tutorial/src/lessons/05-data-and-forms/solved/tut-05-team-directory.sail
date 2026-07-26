@@ -65,27 +65,27 @@ export default controller(() => {
     </row>
   </row>
 
-  {#while-loading of team}
+  <while-loading of="team">
     <row gap="2" align="center" sx={loadingRow}>
       <spinner size="sm"></spinner>
       <small sx={muted}>loading the roster…</small>
     </row>
-  {/while-loading}
+  </while-loading>
 
-  {#while-error err of team}
+  <while-error as="err" of="team">
     <alert tone="destructive">{err.message}</alert>
-  {/while-error}
+  </while-error>
 
-  {#if team().kind === 'ok'}
+  <if cond={team().kind === 'ok'}>
     <column gap="1">
-      {#for m of team().value key={m.id}}
+      <for as="m" of={team().value} key={m.id}>
         <row gap="3" align="center" sx={memberRow}>
           <strong grow sx={memberName}>{m.name}</strong>
-          {#if m.role === 'admin'}<badge tone="primary" variant="soft" size="sm">admin</badge>{/if}
+          <if cond={m.role === 'admin'}><badge tone="primary" variant="soft" size="sm">admin</badge></if>
         </row>
-      {/for}
+      </for>
     </column>
-  {/if}
+  </if>
 
   <form on:submit|prevent={add}>
     <row gap="2" align="center">

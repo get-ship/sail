@@ -25,14 +25,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <grid cols="3" gap="2">
-    {#for k of layoutRows() key={k.tag}}
+    <for as="k" of={layoutRows()} key={k.tag}>
       <card padding="sm" sx={style.minW(0)}>
         <column gap="1">
           <code>&lt;{k.tag}&gt;</code>
           <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{k.props}</small>
         </column>
       </card>
-    {/for}
+    </for>
   </grid>
 
   <row role="navigation">

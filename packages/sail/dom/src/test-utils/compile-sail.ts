@@ -18,7 +18,8 @@ import { existsSync, readdirSync, statSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import * as sailRuntime from '@ship/sail-runtime'
+// `/internal` carries language + ABI so rewritten compiled imports resolve.
+import * as sailRuntime from '@ship/sail-runtime/internal'
 import * as sailActions from '@ship/sail-runtime/actions'
 import * as sailDom from '@ship/sail-dom'
 // The runtime's `/route` subpath provides a passive `RouteSignals` reader
@@ -295,7 +296,8 @@ function wrapSetup(setup: UserSetup): { setup: (ctx: unknown) => unknown } | nul
 
 export interface MountOpts {
   container: HTMLElement
-  ship?: unknown
+  /** Flat named providers (same surface as mount inject). */
+  providers?: Record<string, unknown>
   route?: RouteSignals
   navigate?: (path: string) => void
   /** When the source declares `<prop>`s, compile as a custom element
@@ -329,8 +331,10 @@ export function compileAndMount(source: string, setup: UserSetup, opts: MountOpt
   }
 
   const def = evalCompiledJs(compiled.js, setup)
+  const providers = opts.providers ?? {}
   const ctx = {
-    ship: (opts.ship ?? {}) as sailRuntime.ShipHost,
+    ...providers,
+    ...(Object.keys(providers).length > 0 ? { providers } : {}),
     route: opts.route ?? makeRoute({ url: new URL('http://localhost/') }),
     navigate: opts.navigate ?? (() => {}),
   }

@@ -57,13 +57,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Live — throw, catch, retry</p>
       <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)} gap="3">
         <error-boundary on:sail-error-reset={disarm}>
-          {#if armed()}<p>{boom()}</p>{/if}
-          {#if !armed()}
+          <if cond={armed()}><p>{boom()}</p></if>
+          <if cond={!armed()}>
             <p>This subtree is protected.</p>
             <button on:click={arm} tone="destructive" variant="outline">
               Throw during render
             </button>
-          {/if}
+          </if>
         </error-boundary>
       </column>
     </column>

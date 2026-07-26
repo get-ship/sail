@@ -50,11 +50,11 @@ export default controller(() => {
   </row>
 
   <row gap="1" align="center">
-    {#for t of themes() key={t.id}}
+    <for as="t" of={themes()} key={t.id}>
       <button size="sm" tone="primary" variant={active() === t.id ? 'solid' : 'ghost'} on:click={() => pick(t.id)}>
         {t.label}
       </button>
-    {/for}
+    </for>
   </row>
 
   <grid cols="2" gap="4">

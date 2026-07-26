@@ -293,13 +293,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
 </controller>
 <error-boundary fallback-text="The specimen threw while rendering.">
   <column gap="2" sx={style.position(relative).minH(8).fontFamily(body).fg(foreground)}>
-    {#if compiling()}
+    <if cond={compiling()}>
       <row align="center" justify="center" sx={style.pad(4)}>
         <sail-spinner size="sm" label="Compiling"></sail-spinner>
       </row>
-    {/if}
+    </if>
 
-    {#if compileError() !== null}
+    <if cond={compileError() !== null}>
       <column gap="2" data-test="compile-error">
         <alert tone="destructive">{compileErrorSummary()}</alert>
         <div role="region" aria-label="text code block" sx={style.bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md).overflow(hidden)}>
@@ -308,9 +308,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
           <pre sx={style.padY(3).padX(4).overflowX(auto).leading(normal-plus)}>{compileErrorBody()}</pre>
         </div>
       </column>
-    {/if}
+    </if>
 
-    {#if runtimeError() !== null}
+    <if cond={runtimeError() !== null}>
       <column gap="2" data-test="runtime-error">
         <alert tone="destructive">The specimen threw at runtime.</alert>
         <div role="region" aria-label="text code block" sx={style.bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md).overflow(hidden)}>
@@ -319,7 +319,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
           <pre sx={style.padY(3).padX(4).overflowX(auto).leading(normal-plus)}>{runtimeError()}</pre>
         </div>
       </column>
-    {/if}
+    </if>
 
     <div use:captureStage use:maxWidth={stageMaxWidth()} sx={style.w(full).ml(auto).mr(auto).maxW(bind(maxW))}></div>
   </column>

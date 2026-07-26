@@ -60,9 +60,9 @@
 >
   <row gap="2" align="baseline" sx={meta}>
     <span sx={roleLabel}>{role()}</span>
-    {#if timestamp()}
+    <if cond={timestamp()}>
       <time datetime={timestamp()}>{timestamp()}</time>
-    {/if}
+    </if>
   </row>
 
   <div sx={bubble}>

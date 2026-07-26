@@ -141,10 +141,10 @@ export default controller((ctx) => {
   <theme-picker slot="actions"></theme-picker>
 </navbar>
 
-{#if landing()}
+<if cond={landing()}>
   <main grow min-w="0" w="full" sx={landingMain}>
     <slot name="route"></slot>
   </main>
-{:else}
+<else>
   <slot name="route"></slot>
-{/if}
+</else></if>

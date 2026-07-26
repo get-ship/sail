@@ -109,9 +109,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
       <h1 sx={display}>
         <span sx={line}>
-          {#for w of word() key={w}}
+          <for as="w" of={word()} key={w}>
             <b sx={style.fg(primary).enter({ opacity: 'fade' })}>{w}</b>
-          {/for}
+          </for>
         </span>
         <span sx={line}>included.</span>
         <span sx={line}>All of them.</span>

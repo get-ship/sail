@@ -30,19 +30,19 @@ export default controller(() => {
     <button on:click={() => stage.set('closed')} data-testid="stage-closed">closed</button>
   </row>
 
-  {#if deals().kind === 'loading'}
+  <if cond={deals().kind === 'loading'}>
   <p sx={style.fg(muted-foreground).fontSize(sm)} data-testid="deals-loading">Loading…</p>
-  {/if}
-  {#if deals().kind === 'error'}
+  </if>
+  <if cond={deals().kind === 'error'}>
   <p sx={style.fg(destructive).fontSize(sm)} data-testid="deals-error">Error</p>
-  {/if}
-  {#if deals().kind === 'ok'}
+  </if>
+  <if cond={deals().kind === 'ok'}>
   <column gap="1" sx={style.list(none).pad(0).m(0)} data-testid="deals-list">
-    {#for deal of deals().value.items key={deal.id}}
+    <for as="deal" of={deals().value.items} key={deal.id}>
     <li data-testid="deal-row">{deal.id} — {deal.stage} — {deal.amount}</li>
-    {/for}
+    </for>
   </column>
-  {/if}
+  </if>
 
   <button on:click={() => close.mutate()} data-testid="close-deal">close d1 (auto-invalidates crm.deals.*)</button>
   <p data-testid="close-state">mutation: {close.state().kind}</p>

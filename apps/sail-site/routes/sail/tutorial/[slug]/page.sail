@@ -18,7 +18,8 @@
     preview tint, and uppercase-via-CSS (labels are written uppercase in text).
 -->
 <controller>
-import { bindHtml, type Action, type ControllerScope } from '@ship/sail-runtime'
+import type { Action, ControllerScope } from '@ship/sail-runtime'
+import { bindHtml } from '@ship/sail-runtime/internal'
 import { ensureWasm, makeCompile } from '@ship/sail-viewer/wasm-bootstrap'
 import type { Scope } from './page.sail'
 import { TUTORIAL_LESSONS, type TutorialLesson } from '../../../../src/tutorial-data'
@@ -330,16 +331,16 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </row>
 
       <row gap="1" aria-label="Lesson progress">
-        {#for step of steps() key={step.slug}}
-          {#match step.state}
-            {:case 'done'}
+        <for as="step" of={steps()} key={step.slug}>
+          <match on={step.state}>
+            <case of={'done'}>
               <a href={step.href} title={step.title}  grow sx={style.h(1).radius(full).bg(primary)}></a>
-            {:case 'current'}
+            </case><case of={'current'}>
               <a href={step.href} title={step.title} aria-current="step"  grow sx={style.h(1).radius(full).bg(primary).opacity(50)}></a>
-            {:default}
+            </case><default>
               <a href={step.href} title={step.title}  grow sx={style.h(1).radius(full).bg(surface-2)}></a>
-          {/match}
-        {/for}
+          </default></match>
+        </for>
       </row>
 
       <column gap="2">
@@ -352,9 +353,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
     <row align="center" justify="between" gap="3" sx={style.pad(3).padX(6).borderTWidth(1).borderT(border).bg(surface-1)}>
       <a href="/sail/tutorial" sx={style.pad(2).padX(4).radius(md).fontSize(sm).fontWeight(semibold).fg(muted-foreground).when({ hover: style.fg(foreground).bg(surface-2) })}>← All lessons</a>
-      {#if hasNext()}
+      <if cond={hasNext()}>
         <a href={nextHref()} sx={style.pad(2).padX(4).radius(md).fontSize(sm).fontWeight(semibold).bg(primary).fg(primary-foreground).overflow(hidden)}>{nextTitle()}</a>
-      {/if}
+      </if>
     </row>
   </column>
 
@@ -417,18 +418,18 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </column>
       <column role="log" aria-live="polite" aria-label="Preview console" gap="0"
               sx={style.borderTWidth(1).borderT(border).bg(surface-0).pad(2).padX(3).overflowY(auto).maxH(9).fontFamily(mono).fontSize(sm)}>
-        {#for line of logs() key={line.id}}
-          {#match line.kind}
-            {:case 'success'}
+        <for as="line" of={logs()} key={line.id}>
+          <match on={line.kind}>
+            <case of={'success'}>
               <row gap="2"><small sx={style.fg(muted-foreground).opacity(50)}>{line.ts}</small><small sx={style.fg(success)}>{line.msg}</small></row>
-            {:case 'warn'}
+            </case><case of={'warn'}>
               <row gap="2"><small sx={style.fg(muted-foreground).opacity(50)}>{line.ts}</small><small sx={style.fg(warning)}>{line.msg}</small></row>
-            {:case 'error'}
+            </case><case of={'error'}>
               <row gap="2" sx={style.bg(muted).radius(sm).pad(1).padX(2)}><small sx={style.fg(muted-foreground).opacity(50)}>{line.ts}</small><small sx={style.fg(destructive)}>{line.msg}</small></row>
-            {:default}
+            </case><default>
               <row gap="2"><small sx={style.fg(muted-foreground).opacity(50)}>{line.ts}</small><small sx={style.fg(muted-foreground)}>{line.msg}</small></row>
-          {/match}
-        {/for}
+          </default></match>
+        </for>
       </column>
     </column>
   </column>

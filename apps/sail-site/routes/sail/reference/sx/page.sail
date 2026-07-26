@@ -71,14 +71,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <code>style.radius(…)</code>, <code>style.fg(…)</code>, and so on.
     </p>
     <grid cols="2" gap="2">
-      {#for a of sxRows() key={a.prop}}
+      <for as="a" of={sxRows()} key={a.prop}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{a.prop}</code>
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{a.values}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 
@@ -90,14 +90,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       each names the element or attribute to use instead.
     </p>
     <grid cols="2" gap="2">
-      {#for r of refusals() key={r.atom}}
+      <for as="r" of={refusals()} key={r.atom}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code sx={style.fg(destructive)}>{r.atom}</code>
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>→ {r.instead}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 
@@ -108,12 +108,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       Historical prefix names below map 1:1 to those keys.
     </p>
     <grid cols="3" gap="2">
-      {#for s of statePrefixes() key={s.prefix}}
+      <for as="s" of={statePrefixes()} key={s.prefix}>
         <row gap="3" sx={style.padX(3).padY(1).radius(md)} align="center">
           <code sx={style.minW(9)}>{s.prefix}</code>
           <small sx={style.fg(muted-foreground).fontFamily(mono).maxW(ch-24)}>{s.selector}</small>
         </row>
-      {/for}
+      </for>
     </grid>
     <p sx={style.maxW(breakpoint-tablet)}>
       Ancestor propagation: mark the ancestor with <code>style.group()</code>,
@@ -128,12 +128,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       Use <code>when(&#123; tablet: style.fontSize(lg), desktop: style.fontSize(xl) &#125;)</code>.
     </p>
     <grid cols="3" gap="2">
-      {#for c of conditionPrefixes() key={c.prefix}}
+      <for as="c" of={conditionPrefixes()} key={c.prefix}>
         <row gap="3" sx={style.padX(3).padY(1).radius(md)} align="center">
           <code sx={style.minW(9)}>{c.prefix}</code>
           <small sx={style.fg(muted-foreground).fontFamily(mono).maxW(ch-24)}>{c.media}</small>
         </row>
-      {/for}
+      </for>
     </grid>
   </column>
 
@@ -146,14 +146,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       property (timeline tracks, range-driven paint).
     </p>
     <grid cols="2" gap="2">
-      {#for f of extraForms() key={f.form}}
+      <for as="f" of={extraForms()} key={f.form}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{f.form}</code>
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>{f.doc}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 

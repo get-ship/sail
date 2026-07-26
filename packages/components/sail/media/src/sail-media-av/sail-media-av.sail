@@ -215,11 +215,11 @@ export default controller((_ctx: Scope) => {
   })
 
 </controller>
-{#if isVideo()}
+<if cond={isVideo()}>
   <video use:mediaWire sx={style.display(block).w(full).radius(md).bg(surface-1).borderWidth(1).border(border).shadow(xs)}></video>
-{:else}
+<else>
   <audio use:mediaWire sx={style.display(block).w(full).radius(md).bg(surface-1).borderWidth(1).border(border).shadow(xs)}></audio>
-  {#if showWaveform()}
+  <if cond={showWaveform()}>
     <canvas aria-hidden="true" use:waveform sx={style.display(block).w(full).mt(2)}></canvas>
-  {/if}
-{/if}
+  </if>
+</else></if>

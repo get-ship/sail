@@ -110,7 +110,7 @@ pub fn tokenize_children(nodes: &[Node]) -> Vec<Token> {
         match n {
             Node::Text(t) => {
                 // Indentation/newline whitespace between elements is invisible in
-                // Shadow DOM. Drop it when the parent has element children; keep it
+                // light DOM. Drop it when the parent has element children; keep it
                 // when all siblings are text (e.g. <span> </span>) so intentional
                 // inline whitespace is preserved.
                 if has_element_sibling && t.data.chars().all(|c| c.is_ascii_whitespace()) {
@@ -118,14 +118,10 @@ pub fn tokenize_children(nodes: &[Node]) -> Vec<Token> {
                 }
                 let before = out.len();
                 tokenize_text(&t.data, t.span, &mut out);
-                // If this text node produced control-flow tokens (e.g. the raw source
-                // is "\n  {#if ...}\n    "), strip the surrounding whitespace-only
-                // text sub-tokens — they're structural indentation around the markers,
-                // not content.
-                let has_control = out[before..].iter().any(|tok| {
-                    !matches!(tok.kind, TokenKind::Text(_))
-                });
-                if has_control {
+                // Strip indentation whitespace around control markers / retired-block errors.
+                let has_non_text =
+                    out[before..].iter().any(|tok| !matches!(tok.kind, TokenKind::Text(_)));
+                if has_non_text {
                     let slice: Vec<Token> = out.drain(before..).collect();
                     for tok in slice {
                         if let TokenKind::Text(ref s) = tok.kind
@@ -138,6 +134,9 @@ pub fn tokenize_children(nodes: &[Node]) -> Vec<Token> {
                 }
             }
             Node::Comment(_) => {}
+            Node::Element(e) if super::control_elements::is_control_tag(&e.tag) => {
+                super::control_elements::expand_control_element(e, &mut out);
+            }
             Node::Element(e) => out.push(Token {
                 kind: TokenKind::Element(e.clone()),
                 span: e.span,
@@ -145,6 +144,11 @@ pub fn tokenize_children(nodes: &[Node]) -> Vec<Token> {
         }
     }
     out
+}
+
+/// Public for control-element expansion of nested text.
+pub(super) fn tokenize_text_public(text: &str, base_span: Span, out: &mut Vec<Token>) {
+    tokenize_text(text, base_span, out);
 }
 
 fn tokenize_text(text: &str, base_span: Span, out: &mut Vec<Token>) {
@@ -226,47 +230,46 @@ fn find_matching_close(text: &str, start: usize) -> Option<usize> {
 }
 
 fn classify_brace(inner: &str) -> TokenKind {
-    if let Some(rest) = inner.strip_prefix("#if") {
-        return TokenKind::OpenIf { src: rest.trim().to_string() };
+    // Brace control-flow is retired. Emit a DynamicText expr that the
+    // expression validator will reject with a migration message — or we
+    // hard-error at Open* if anything still produces those tokens.
+    // Prefer an immediate Expr with a sentinel the validate step catches.
+    let retired = |kind: &str| -> TokenKind {
+        TokenKind::Expr {
+            src: format!(
+                "__sail_retired_block__(\"{kind}\") /* use <{kind}>…</{kind}> elements */"
+            ),
+        }
+    };
+    if inner.starts_with("#if") {
+        return retired("if");
     }
-    if let Some(rest) = inner.strip_prefix("#for") {
-        return TokenKind::OpenFor { src: rest.trim().to_string() };
+    if inner.starts_with("#for") {
+        return retired("for");
     }
-    if let Some(rest) = inner.strip_prefix("#match") {
-        return TokenKind::OpenMatch { src: rest.trim().to_string() };
+    if inner.starts_with("#match") {
+        return retired("match");
     }
-    if let Some(rest) = inner.strip_prefix("#while-loading") {
-        return TokenKind::OpenWhileLoading { src: rest.trim().to_string() };
+    if inner.starts_with("#while-loading") {
+        return retired("while-loading");
     }
-    if let Some(rest) = inner.strip_prefix("#while-error") {
-        return TokenKind::OpenWhileError { src: rest.trim().to_string() };
+    if inner.starts_with("#while-error") {
+        return retired("while-error");
     }
-    if let Some(rest) = inner.strip_prefix(":else if") {
-        return TokenKind::ElseIf { src: rest.trim().to_string() };
-    }
-    if inner == ":else" {
-        return TokenKind::Else;
-    }
-    if let Some(rest) = inner.strip_prefix(":case") {
-        return TokenKind::Case { src: rest.trim().to_string() };
-    }
-    if inner == ":default" {
-        return TokenKind::Default;
-    }
-    if inner == "/if" {
-        return TokenKind::CloseIf;
-    }
-    if inner == "/for" {
-        return TokenKind::CloseFor;
-    }
-    if inner == "/match" {
-        return TokenKind::CloseMatch;
-    }
-    if inner == "/while-loading" {
-        return TokenKind::CloseWhileLoading;
-    }
-    if inner == "/while-error" {
-        return TokenKind::CloseWhileError;
+    if inner.starts_with(":else if")
+        || inner == ":else"
+        || inner.starts_with(":case")
+        || inner == ":default"
+        || inner == "/if"
+        || inner == "/for"
+        || inner == "/match"
+        || inner == "/while-loading"
+        || inner == "/while-error"
+    {
+        return TokenKind::Expr {
+            src: "__sail_retired_block__(\"clause\") /* use <else-if>/<else>/<case>/<default> inside <if>/<for>/<match> */"
+                .into(),
+        };
     }
     TokenKind::Expr { src: inner.to_string() }
 }
@@ -284,10 +287,9 @@ mod tests {
     }
 
     #[test]
-    fn classify_block_markers() {
+    fn brace_blocks_are_retired_not_open_if() {
         let mut out = Vec::new();
         tokenize_text("{#if a}b{/if}", Span::new(0, 13), &mut out);
-        assert!(matches!(out[0].kind, TokenKind::OpenIf { .. }));
-        assert!(matches!(out[2].kind, TokenKind::CloseIf));
+        assert!(matches!(&out[0].kind, TokenKind::Expr { src } if src.contains("retired")));
     }
 }

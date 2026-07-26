@@ -1,5 +1,5 @@
 <ul>
-  {#for x of [1, 2] key={[1, 2]}}
+  <for as="x" of={[1, 2]} key={[1, 2]}>
     <li>x</li>
-  {/for}
+  </for>
 </ul>

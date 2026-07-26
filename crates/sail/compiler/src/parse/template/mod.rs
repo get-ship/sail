@@ -14,6 +14,7 @@ use crate::parse::{expr, html, html::Node};
 
 mod attrs;
 mod blocks;
+mod control_elements;
 mod tokenize;
 
 pub use attrs::compile_attrs;

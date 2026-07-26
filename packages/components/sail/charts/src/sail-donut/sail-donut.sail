@@ -75,13 +75,13 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
   })
 
 </controller>
-{#if loading()}
+<if cond={loading()}>
   <span skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
-{:else if chart.error()}
+<else-if cond={chart.error()}>
   <error-state></error-state>
-{:else if chart.isEmpty()}
+</else-if><else-if cond={chart.isEmpty()}>
   <empty-state></empty-state>
-{:else}
+</else-if><else>
   <stack sx={style.w(fit)}>
     <svg
       viewBox={'0 0 ' + diameter() + ' ' + diameter()}
@@ -93,25 +93,25 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
       sx={style.display(block)}>
       <circle cx={diameter() / 2} cy={diameter() / 2} r={(diameter() - thickness()) / 2} fill="none" stroke="var(--muted)" stroke-width={thickness()}>
       </circle>
-      {#for seg of segments() key={seg.id}}
+      <for as="seg" of={segments()} key={seg.id}>
         <path d={seg.d} fill="none" stroke={seg.color} stroke-width={thickness()} stroke-linecap="butt">
           <title>{seg.title}</title>
         </path>
-      {/for}
+      </for>
     </svg>
     <center sx={style.fontFamily(heading).fontWeight(semibold).fontSize(lg).leading(tight).fg(foreground).pointerEvents(none)}><slot></slot></center>
     <column id="chart-data" sx={style.srOnly()}>
       <slot name="description">
         <table>
-          {#for row of chart.ariaTable() key={row[0].id}}
+          <for as="row" of={chart.ariaTable()} key={row[0].id}>
             <tr>
-              {#for cell of row key={cell.id}}
+              <for as="cell" of={row} key={cell.id}>
                 <td>{cell.text}</td>
-              {/for}
+              </for>
             </tr>
-          {/for}
+          </for>
         </table>
       </slot>
     </column>
   </stack>
-{/if}
+</else></if>

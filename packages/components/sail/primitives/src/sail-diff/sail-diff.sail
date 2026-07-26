@@ -104,28 +104,28 @@ export default controller(({ from, to, value }: Scope) => {
 </controller>
 
 <column role="list" gap="0" sx={style.bg(muted).borderWidth(1).border(border).radius(md).overflow(hidden).fontFamily(mono).fontSize(sm).leading(normal)}>
-  {#for line of lines() key={line.key}}
-    {#match line.kind}
-      {:case 'add'}
+  <for as="line" of={lines()} key={line.key}>
+    <match on={line.kind}>
+      <case of={'add'}>
         <row role="listitem" data-line-kind="add" aria-label={line.label} gap="0" sx={style.padX(2).bg(hover-bg)}>
           <small aria-hidden="true" sx={style.w(4).fg(success)}>{line.sign}</small>
           <pre grow sx={style.fontSize(sm)}>{line.text}</pre>
         </row>
-      {:case 'del'}
+      </case><case of={'del'}>
         <row role="listitem" data-line-kind="del" aria-label={line.label} gap="0" sx={style.padX(2).bg(hover-bg)}>
           <small aria-hidden="true" sx={style.w(4).fg(destructive)}>{line.sign}</small>
           <pre grow sx={style.fontSize(sm)}>{line.text}</pre>
         </row>
-      {:case 'hunk'}
+      </case><case of={'hunk'}>
         <row role="listitem" data-line-kind="hunk" aria-label={line.label} gap="0" sx={style.padX(2).bg(hover-bg)}>
           <small aria-hidden="true" sx={style.w(4).fg(info)}>{line.sign}</small>
           <pre grow sx={style.fontSize(sm).fg(info)}>{line.text}</pre>
         </row>
-      {:default}
+      </case><default>
         <row role="listitem" data-line-kind="ctx" aria-label={line.label} gap="0" sx={style.padX(2)}>
           <small aria-hidden="true" sx={style.w(4).fg(muted-foreground)}>{line.sign}</small>
           <pre grow sx={style.fontSize(sm)}>{line.text}</pre>
         </row>
-    {/match}
-  {/for}
+    </default></match>
+  </for>
 </column>

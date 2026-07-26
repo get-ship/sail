@@ -213,10 +213,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <span aria-hidden="true" use:swatch={value() || '#000000'} sx={style.w(4).h(4).minW(4).radius(sm).borderWidth(1).border(border-subtle).bg(bind(swatchColor))}></span>
   <input type="text" flush grow min-w="0" sx={style.fontFamily(mono).textCase(lowercase)} name={name()} placeholder="#000000" disabled={disabled()} autocomplete="off" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
 </row>
-{#if open() && !disabled()}
+<if cond={open() && !disabled()}>
   <column gap="2" role="dialog" aria-label="Choose color" sx={style.position(absolute).left(0).z(popover).w(panel-max-w-md).pad(3).mt(1).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontSize(size-fs)}>
     <grid cols="6" gap="2">
-      {#for sw of swatches() key={sw.hex}}
+      <for as="sw" of={swatches()} key={sw.hex}>
         <button
           type="button"
           aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
@@ -225,7 +225,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           use:swatch={sw.hex}
           sx={style.borderWidth(1).border(border-subtle).radius(sm).pad(0).aspect(square).cursor(pointer).bg(bind(swatchColor)).when({ selected: style.outline(primary) })}
         ></button>
-      {/for}
+      </for>
     </grid>
     <column gap="1">
       <row align="center" gap="2">
@@ -260,5 +260,5 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       />
     </row>
   </column>
-{/if}
+</if>
 </column>

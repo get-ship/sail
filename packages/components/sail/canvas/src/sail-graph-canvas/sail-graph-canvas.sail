@@ -52,7 +52,8 @@
 </scope>
 
 <controller>
-import { controller, signal, derived, bindHtml } from '@ship/sail-runtime'
+import { controller, signal, derived } from '@ship/sail-runtime'
+import { bindHtml } from '@ship/sail-runtime/internal'
 import type { Action } from '@ship/sail-runtime'
 import type { Scope } from './sail-graph-canvas.sail'
 
@@ -305,7 +306,7 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
     aria-hidden="true"
     sx={style.display(block).w(full).h(auto).pointerEvents(none)}
   >
-    {#for e of edgeViews() key={e.key}}
+    <for as="e" of={edgeViews()} key={e.key}>
       <path
         d={e.d}
         data-kind={e.kind}
@@ -316,10 +317,10 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
         stroke-dasharray={e.dash}
         opacity="0.85"
       ></path>
-    {/for}
+    </for>
   </svg>
 
-  {#for n of nodeViews() key={n.id}}
+  <for as="n" of={nodeViews()} key={n.id}>
     <div use:rect={{left: n.left, top: n.top}} sx={style.position(absolute).w(0).h(0).left(bind(boxLeft)).top(bind(boxTop))}>
       <center sx={style.h(0)}>
         <column
@@ -336,20 +337,20 @@ export default controller(({ nodes, edges, width, height, layout, selectedId }: 
           on:mouseover={() => hover(n)}
           sx={style.w(bind(boxW)).padY(2).padX(3).bg(card).fg(foreground).fontFamily(body).fontSize(sm).borderWidth(1).border(border).radius(md).shadow(xs).cursor(pointer).when({ hover: style.shadow(sm), focus: style.outline(ring), current: style.borderWidth(1).border(ring).shadow(sm), stateAgent: style.borderLWidth(1).borderL(primary), stateSkill: style.borderLWidth(1).borderL(success), stateMcp: style.borderLWidth(1).borderL(info), stateRule: style.borderLWidth(1).borderL(warning), statePerm: style.borderLWidth(1).borderL(destructive), stateHarness: style.borderLWidth(1).borderL(accent) })}
         >
-          {#if n.body !== ''}
+          <if cond={n.body !== ''}>
             <div use:nodeBody={n.body}></div>
-          {:else}
+          <else>
             <row gap="2" align="center" sx={style.mb(1)}>
               <span sx={style.fontSize(xs).fontWeight(semibold).tracking(wide).textCase(uppercase).fg(muted-foreground)}>{n.kind}</span>
             </row>
             <div sx={style.fontWeight(semibold).fg(foreground)}>{n.title}</div>
-            {#if n.sub !== ''}
+            <if cond={n.sub !== ''}>
               <div sx={style.fontSize(xs).fg(muted-foreground)}>{n.sub}</div>
-            {/if}
-          {/if}
+            </if>
+          </else></if>
         </column>
       </center>
     </div>
-  {/for}
+  </for>
 </div>
 <slot name="node" hidden></slot>

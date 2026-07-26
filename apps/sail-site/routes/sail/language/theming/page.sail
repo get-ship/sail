@@ -48,14 +48,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     themselves — is the preview.
   </p>
   <row gap="2">
-    {#for t of themes() key={t.id}}
+    <for as="t" of={themes()} key={t.id}>
       <button
         on:click={() => pick(t.id)}
         variant={active() === t.id ? 'solid' : 'outline'}
         tone={active() === t.id ? 'primary' : 'default'}
         aria-pressed={active() === t.id ? 'true' : 'false'}
       >{t.label}</button>
-    {/for}
+    </for>
   </row>
   <code-block code={code.apply}></code-block>
   <p>

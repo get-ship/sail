@@ -97,11 +97,11 @@ export default controller(({
   })
 
 </controller>
-{#if loading()}
+<if cond={loading()}>
   <span skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
-{:else if chart.error()}
+<else-if cond={chart.error()}>
   <error-state></error-state>
-{:else}
+</else-if><else>
   <stack sx={style.w(fit)}>
     <svg
       viewBox={'0 0 ' + diameter() + ' ' + diameter()}
@@ -112,11 +112,11 @@ export default controller(({
       sx={style.display(block)}>
       <path d={arc().trackD} fill="none" stroke="var(--muted)" stroke-width={thickness()} stroke-linecap="round">
       </path>
-      {#if arc().fillD}
+      <if cond={arc().fillD}>
         <path d={arc().fillD} fill="none" stroke={arc().color} stroke-width={thickness()} stroke-linecap="round">
         </path>
-      {/if}
+      </if>
     </svg>
     <center sx={style.fontFamily(heading).fontWeight(semibold).fontSize(xl).fg(foreground)}><slot></slot></center>
   </stack>
-{/if}
+</else></if>

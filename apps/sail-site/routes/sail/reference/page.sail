@@ -105,7 +105,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <grid cols="3" gap="3">
-    {#for s of sections() key={s.href}}
+    <for as="s" of={sections()} key={s.href}>
       <a href={s.href}>
         <card padding="md" sx={style.minW(0).h(full)}>
           <column gap="2">
@@ -117,7 +117,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
           </column>
         </card>
       </a>
-    {/for}
+    </for>
   </grid>
 
   <row role="navigation">

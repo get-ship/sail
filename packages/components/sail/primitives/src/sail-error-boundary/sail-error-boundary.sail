@@ -129,12 +129,12 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
   })
 
 </controller>
-{#if caughtError() === null}
+<if cond={caughtError() === null}>
   <slot></slot>
-{:else}
-  {#if hasFallbackSlot()}
+<else>
+  <if cond={hasFallbackSlot()}>
     <slot name="fallback"></slot>
-  {:else}
+  <else>
     <row role="alert" gap="3" align="start" sx={style.fontFamily(body).padY(4).padX(5).borderWidth(1).border(error-boundary-border).radius(md).bg(error-boundary).fg(error-boundary-foreground).fontSize(sm).shadow(xs)}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
         sx={style.w(icon-size-lg).h(icon-size-lg).minW(icon-size-lg).fg(destructive).mt(1)}>
@@ -147,5 +147,5 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
         <button type="button" variant="outline" size="xs" on:click={reset}>Retry</button>
       </column>
     </row>
-  {/if}
-{/if}
+  </else></if>
+</else></if>

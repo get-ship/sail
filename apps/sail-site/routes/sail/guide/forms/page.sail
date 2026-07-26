@@ -78,15 +78,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <button type="button" variant="outline" tone="destructive" on:click={breakIt}>Fail the next save</button>
             </row>
 
-            {#if profile.pending()}
+            <if cond={profile.pending()}>
               <row gap="2" align="center"><spinner></spinner> <p sx={style.fontSize(sm).fg(muted-foreground)}>saving…</p></row>
-            {/if}
-            {#if profile.lastError()}
+            </if>
+            <if cond={profile.lastError()}>
               <alert tone="destructive" data-testid="forms-error">{profile.lastError().message}</alert>
-            {/if}
-            {#if saved()}
+            </if>
+            <if cond={saved()}>
               <alert tone="success" data-testid="forms-success">Saved — {saved().name} ({saved().email}).</alert>
-            {/if}
+            </if>
           </column>
         </form>
       </column>
@@ -182,7 +182,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     In a deck app with a typed <code>ship</code> client, a plain form post
     doesn't need a controller at all: put
-    <code>mutation="ship.&lt;domain&gt;.&lt;op&gt;"</code> on the
+    <code>mutation="&lt;client&gt;.&lt;method&gt;"</code> on the
     <code>&lt;form&gt;</code> and the runtime intercepts submit, calls that
     client method with the form's <code>FormData</code>, and injects a
     <code>$mutation</code> signal that walks <code>loading → ok | error</code>

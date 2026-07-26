@@ -80,7 +80,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       is the delay between siblings.
     </p>
   </row>
-  {#if dealt()}
+  <if cond={dealt()}>
     <row gap="3" align="center" sx={style.minH(9)}>
       <div sx={style.w(9).h(9).radius(md).bg(primary).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })}></div>
       <div sx={style.w(9).h(9).radius(md).bg(primary).opacity(75).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })}></div>
@@ -88,7 +88,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <div sx={style.w(9).h(9).radius(md).bg(primary).opacity(75).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })}></div>
       <div sx={style.w(9).h(9).radius(md).bg(primary).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })}></div>
     </row>
-  {/if}
+  </if>
   <code-block code={code.stagger}></code-block>
 
   <h2>Enter and exit</h2>
@@ -105,14 +105,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         {open() ? 'Remove' : 'Add'} the panel
       </button>
     </row>
-    {#if open()}
+    <if cond={open()}>
       <card
 sx={style.pad(4).enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' })}
 >
         <strong>I animate in, and I animate out.</strong>
         <p sx={style.fontSize(sm).fg(muted-foreground)}>Watch me leave before I go.</p>
       </card>
-    {/if}
+    </if>
   </column>
   <code-block code={code.lifecycle}></code-block>
 

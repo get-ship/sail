@@ -4,9 +4,9 @@
   }
 </scope>
 <button>
-  {#if busy()}
+  <if cond={busy()}>
     <span aria-hidden="true"></span>
-  {:else}
+  <else>
     <slot reflect-empty="data-icon-only"></slot>
-  {/if}
+  </else></if>
 </button>

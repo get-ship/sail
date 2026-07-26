@@ -54,9 +54,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </row>
         <column gap="1">
           <small sx={style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>effect output</small>
-          {#for line of log() key={line}}
+          <for as="line" of={log()} key={line}>
             <p sx={style.fontSize(sm).fg(muted-foreground).fontFamily(mono)}>{line}</p>
-          {/for}
+          </for>
         </column>
       </column>
     </column>

@@ -34,14 +34,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>Presets</h3>
     <grid cols="3" gap="2">
-      {#for p of motionPresets() key={p.name}}
+      <for as="p" of={motionPresets()} key={p.name}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{p.name}</code>
             <small sx={style.fg(muted-foreground).maxW(panel-max-w-sm)}>({p.kind}) {p.doc}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 
@@ -52,14 +52,14 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       takes one of these forms.
     </p>
     <grid cols="1" gap="2">
-      {#for f of valueForms() key={f.form}}
+      <for as="f" of={valueForms()} key={f.form}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{f.form}</code>
             <small sx={style.fg(muted-foreground)}>{f.summary}</small>
           </column>
         </card>
-      {/for}
+      </for>
     </grid>
   </column>
 

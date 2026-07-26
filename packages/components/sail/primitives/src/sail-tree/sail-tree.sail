@@ -199,15 +199,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   })
 
 </controller>
-{#if error() !== ''}
+<if cond={error() !== ''}>
 <div role="alert">
   <error-state>{error()}</error-state>
 </div>
-{:else if isEmptyInitial()}
+<else-if cond={isEmptyInitial()}>
 <div role="status">
   <slot name="empty"><empty-state></empty-state></slot>
 </div>
-{:else if isEmptyFiltered()}
+</else-if><else-if cond={isEmptyFiltered()}>
 <div role="status">
   <slot name="empty">
     <empty-state>
@@ -215,21 +215,21 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </empty-state>
   </slot>
 </div>
-{:else}
+</else-if><else>
 <div role="tree" sx={style.w(full).fontFamily(body).fontSize(density).fg(foreground)} aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
   <div bind:this={viewportEl} sx={style.position(relative).w(full).overflowY(auto).maxH(panel-max-h-md)}>
     <div use:virtualSpacer={totalSize()} sx={style.h(bind(rowsH)).position(relative).w(full)}>
-      {#for w of windowItems() key={w.key}}
+      <for as="w" of={windowItems()} key={w.key}>
         <row align="center" gap="density" role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} use:cellPad={w.indent} sx={style.group().position(absolute).left(0).w(full).padY(density-row-py).padR(density-row-px).radius(sm).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).fontWeight(medium), busy: style.fg(muted-foreground).italic(true).cursor(default), focus: style.outline(ring) })}>
-          {#if w.canExpand}
+          <if cond={w.canExpand}>
             <row data-action="toggle" aria-hidden="true" align="center" justify="center" sx={style.w(density-icon).h(density-icon).minW(density-icon).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
               <icon name="chevron-right" size="xs"></icon>
             </row>
-          {:else}
+          <else>
             <span aria-hidden="true" sx={style.w(density-icon).minW(density-icon)}></span>
-          {/if}
+          </else></if>
 
-          {#if selectable() === 'multi'}
+          <if cond={selectable() === 'multi'}>
             <span sx={style}>
               <input
                 type="checkbox"
@@ -239,17 +239,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 indeterminate={w.someSelected}
               />
             </span>
-          {/if}
-          {#if w.icon !== ''}
+          </if>
+          <if cond={w.icon !== ''}>
             <icon name={w.icon} size="sm" sx={style.fg(muted-foreground).when({ groupSelected: style.fg(foreground) })}></icon>
-          {:else}
+          <else>
             <slot name="node-icon"></slot>
-          {/if}
+          </else></if>
           <span grow min-w="0" sx={style.truncate()}>{w.label}</span>
           <span sx={style.ml(auto).fg(muted-foreground).fontSize(xs)}><slot name="node-trailing"></slot></span>
         </row>
-      {/for}
+      </for>
     </div>
   </div>
 </div>
-{/if}
+</else></if>

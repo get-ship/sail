@@ -59,12 +59,12 @@ export default controller(() => {
 <column gap="4">
   <row align="center" justify="between">
     <h3>Release console</h3>
-    {#match phase()}
-      {:case 'idle'} <badge tone="muted">idle</badge>
-      <!-- TODO 4: {:case 'building'} and {:case 'live'} branches, each
+    <match on={phase()}>
+      <case of={'idle'}> <badge tone="muted">idle</badge>
+      <!-- TODO 4: </case><case of={'building'}> and </case><case of={'live'}> branches, each
            with a style.enter so the swapped-in badge announces itself. -->
-      {:default} <badge tone="destructive">failed</badge>
-    {/match}
+      </case><default> <badge tone="destructive">failed</badge>
+    </default></match>
   </row>
 
   <row gap="2">
@@ -83,13 +83,13 @@ export default controller(() => {
   <column gap="1">
     <!-- TODO 5: this {#for} has no key. Add key={env.id} and compare what
          promote() does to the DOM with and without it. -->
-    {#for env of filtered() key={env.id}}
+    <for as="env" of={filtered()} key={env.id}>
       <row gap="3" align="center" sx={envRow}>
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
         <strong grow sx={envName}>{env.name}</strong>
         <small sx={envRegion}>{env.region}</small>
         <button size="sm" variant="ghost" on:click={() => promote(env.id)}>Promote</button>
       </row>
-    {/for}
+    </for>
   </column>
 </column>

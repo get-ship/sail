@@ -53,7 +53,8 @@
 // author time; the lazy-load boundary is the deck bundle, not the import
 // expression.
 
-import { controller, signal, derived, effect, bindHtml } from "@ship/sail-runtime";
+import { controller, signal, derived, effect } from "@ship/sail-runtime";
+import { bindHtml } from "@ship/sail-runtime/internal";
 import type { Action } from "@ship/sail-runtime";
 import mermaid from "mermaid";
 
@@ -177,7 +178,7 @@ export default controller((ctx) => {
 </controller>
 <center use:paintDiagram sx={style.w(full).minH(8)} hidden={hasError()}></center>
 
-{#if error()}
+<if cond={error()}>
   <column gap="2" sx={style.w(full).pad(3).padX(4).borderWidth(1).border(destructive).radius(md).bg(muted).fontSize(sm)}>
     <row gap="2" align="center" sx={style.fontWeight(semibold).fg(destructive)}>
       <icon name="alert-triangle" label="" size="sm"></icon>
@@ -189,4 +190,4 @@ export default controller((ctx) => {
       <pre sx={style.mt(2).pad(2).padX(3).bg(surface-2).borderWidth(1).border(border-subtle).radius(sm).fontFamily(mono).fontSize(xs).whitespace(pre-wrap).overflowX(auto)}>{value()}</pre>
     </details>
   </column>
-{/if}
+</if>
