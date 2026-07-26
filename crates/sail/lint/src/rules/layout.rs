@@ -886,10 +886,14 @@ pub fn is_passthrough_attr(name: &str) -> bool {
 fn unknown_attr_hint(tag: &str) -> String {
     let axes = tag_props(tag);
     if axes.is_empty() {
-        format!("<{tag}> takes no axis props; only pass-through attrs are allowed.")
+        format!(
+            "<{tag}> takes no axis props; participation attrs (grow, shrink, w, min-w, max-w) \
+             and HTML/global pass-throughs are allowed."
+        )
     } else {
         format!(
-            "<{tag}> takes these axis props: {} — or any HTML/global pass-through (id, sx, data-*, aria-*, on:*, bind:*, attr:*, prop:*, fx:*).",
+            "<{tag}> takes these axis props: {} — plus participation attrs (grow, shrink, w, min-w, max-w) \
+             or any HTML/global pass-through (id, sx, data-*, aria-*, on:*, bind:*, attr:*, prop:*, fx:*).",
             axes.join(", ")
         )
     }
@@ -1090,9 +1094,13 @@ fn parse_open_tag(source: &str, start: usize, tag: &str) -> Option<OpenTag> {
                 value = source[vstart..i].to_string();
             }
         }
-        if !name.is_empty() {
-            attrs.push((name, value));
+        if name.is_empty() {
+            // Stray punctuation (e.g. a bare `/` not part of `/>`) would
+            // otherwise re-enter the attr loop at the same index forever.
+            i += 1;
+            continue;
         }
+        attrs.push((name, value));
     }
     Some(OpenTag { tag: tag.to_string(), attrs, start, end: i, self_closing })
 }
@@ -1656,6 +1664,71 @@ mod tests {
                 "{tag} open: {css:?}"
             );
         }
+    }
+
+    // --- participation attrs (grow / shrink / w / min-w / max-w) -------------
+
+    #[test]
+    fn accepts_boolean_grow_on_layout_and_host() {
+        assert!(run(r#"<column grow>x</column>"#).is_empty());
+        assert!(run(r#"<div grow>x</div>"#).is_empty());
+        assert!(run(r#"<slider grow>x</slider>"#).is_empty());
+    }
+
+    #[test]
+    fn accepts_grow_shrink_zero_one() {
+        assert!(run(r#"<row grow="1" shrink="0">x</row>"#).is_empty());
+        assert!(run(r#"<div grow="0" shrink="1">x</div>"#).is_empty());
+    }
+
+    #[test]
+    fn accepts_w_full_and_min_w_zero() {
+        assert!(run(r#"<column w="full" min-w="0">x</column>"#).is_empty());
+        assert!(run(r#"<main w="full" max-w="panel-max-w-sm">x</main>"#).is_empty());
+    }
+
+    #[test]
+    fn rejects_bad_grow_value() {
+        let m = run(r#"<div grow="2">x</div>"#);
+        assert_eq!(m.len(), 1, "{m:?}");
+        assert!(m[0].contains("grow"), "got: {}", m[0]);
+    }
+
+    #[test]
+    fn rejects_boolean_w() {
+        let m = run(r#"<div w>x</div>"#);
+        assert_eq!(m.len(), 1, "{m:?}");
+        assert!(m[0].contains("size token") || m[0].contains("w"), "got: {}", m[0]);
+    }
+
+    #[test]
+    fn lowers_participation_to_style_classes() {
+        let (classes, css) = lower_participation("grow", "").unwrap();
+        assert!(classes.contains("sx-grow1"), "{classes}");
+        assert!(css.contains("flex-grow:1"), "{css}");
+
+        let (classes, css) = lower_participation("shrink", "0").unwrap();
+        assert!(classes.contains("sx-shrink0"), "{classes}");
+        assert!(css.contains("flex-shrink:0"), "{css}");
+
+        let (classes, css) = lower_participation("w", "full").unwrap();
+        assert!(classes.contains("sx-wfull"), "{classes}");
+        assert!(css.contains("width:100%"), "{css}");
+
+        let (classes, css) = lower_participation("min-w", "0").unwrap();
+        assert!(classes.contains("sx-minW0"), "{classes}");
+        assert!(css.contains("min-width:0"), "{css}");
+    }
+
+    #[test]
+    fn participation_attrs_are_not_passthrough() {
+        assert!(!is_passthrough_attr("grow"));
+        assert!(!is_passthrough_attr("shrink"));
+        assert!(!is_passthrough_attr("w"));
+        assert!(!is_passthrough_attr("min-w"));
+        assert!(!is_passthrough_attr("max-w"));
+        assert!(is_participation_attr("grow"));
+        assert!(is_known_axis_prop("grow"));
     }
 }
 

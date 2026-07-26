@@ -11,8 +11,7 @@
   }
 
   const card = style.pad(3).w(full)
-  const meta = style.grow(1).minW(0)
-  const title = style.fontSize(sm).truncate()
+    const title = style.fontSize(sm).truncate()
   const artist = style.fontSize(xs).fg(muted-foreground).truncate()
   const eq = style.minH(6)
   const bar = style.w(1).radius(sm).bg(primary).origin(bottom)
@@ -35,7 +34,7 @@ export default controller((ctx: Scope) => {
 
 <card sx={card}>
   <row gap="3" align="center" nowrap>
-    <column gap="1" sx={meta}>
+    <column gap="1" grow min-w="0">
       <strong sx={title}>Signals in the Rain</strong>
       <p sx={artist}>The Reactive Quartet</p>
       <progress value={position()} max="100"></progress>

@@ -97,25 +97,25 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </controller>
 
 <scope>
-  const page = style.w(full).minW(0).maxW(breakpoint-desktop).mx(auto)
+  const page = style.maxW(breakpoint-desktop).mx(auto)
   const tile = style.overflow(hidden)
   const tileCol = style.h(full)
   // Flex via <row> (not <center>/grid place-items:center): auto grid tracks
   // collapse to max-content, so width:100% bars (progress/meter) measure 0.
-  // Flex parent has a definite tile width, so w(full) children get a real track.
-  const preview = style.pad(4).minH(11).grow(1).w(full).borderBWidth(1).borderB(border-subtle).bg(surface-0)
+  // Flex parent has a definite tile width, so w="full" children get a real track.
+  const preview = style.pad(4).minH(11).borderBWidth(1).borderB(border-subtle).bg(surface-0)
   const tileMeta = style.padX(3).padY(2)
   const tileName = style.fontSize(sm).fontWeight(semibold).fontFamily(mono)
   const cat = style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
   const mutedSm = style.fontSize(sm).fg(muted-foreground)
   const eyebrow = style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)
   const sectionTitle = style.fontSize(sm).fontWeight(semibold).mt(2)
-  const gridCol = style.grow(1).minW(0).basis(0)
-  const rail = style.w(panel-min-w-md).shrink(0)
+  const gridCol = style.basis(0)
+  const rail = style.w(panel-min-w-md)
   const packBtn = style.radius(md).cursor(pointer).borderWidth(1).border(border).pad(0).overflow(hidden).bg(transparent).textAlign(start).when({
     hover: style.bg(hover-bg),
   })
-  const packLabel = style.fontSize(sm).grow(1)
+  const packLabel = style.fontSize(sm)
   const packCount = style.fontSize(xs).fg(primary).fontFamily(mono)
   const railNote = style.fontSize(xs).fg(muted-foreground).leading(relaxed).padT(2)
   const search = style.maxW(panel-max-w-sm)
@@ -124,7 +124,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const dormant = style.fontSize(xs).fg(muted-foreground).fontFamily(mono).textAlign(center)
 </scope>
 
-<column gap="5" sx={page}>
+<column gap="5" w="full" min-w="0" sx={page}>
   <column gap="1">
     <p sx={eyebrow}>Components</p>
     <p sx={mutedSm}>
@@ -134,13 +134,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </column>
 
   <row align="stretch" gap="5">
-    <column gap="1" sx={rail}>
+    <column gap="1" shrink sx={rail}>
       <p sx={eyebrow}>Packs</p>
       {#for p of packs() key={p.id}}
         <button sx={packBtn} on:click={() => pickPack(p.id)} aria-pressed={packSel() === p.id ? 'true' : 'false'}>
           <column gap="0" sx={tileMeta}>
             <row gap="2" align="center">
-              <strong sx={packLabel}>{p.label}</strong>
+              <strong grow sx={packLabel}>{p.label}</strong>
               <span sx={packCount}>{p.count}</span>
             </row>
             {#if p.sub}
@@ -154,7 +154,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </p>
     </column>
 
-    <column gap="4" sx={gridCol}>
+    <column gap="4" grow min-w="0" sx={gridCol}>
       <row gap="2" align="center" justify="between">
         <row gap="2" align="center">
           {#if countLabel()}
@@ -175,7 +175,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         {#for e of visibleList() key={e.key}}
           <card padding="none" data-tile={e.tag} data-live={e.live ? 'true' : null} sx={tile}>
             <column gap="0" sx={tileCol}>
-              <row data-preview align="center" justify="center" sx={preview}>
+              <row data-preview align="center" justify="center" grow w="full" sx={preview}>
                 {#if !e.live}
                   <p sx={dormant}>Select pack to load</p>
                 {:else if e.tag === 'button'}
@@ -211,8 +211,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <p sx={mutedXs}>{notify() ? 'on' : 'off'}</p>
                   </row>
                 {:else if e.tag === 'slider'}
-                  <row gap="2" align="center" sx={style.w(full)}>
-                    <slider bind:value={volume} tone="primary" sx={style.grow(1)}></slider>
+                  <row gap="2" align="center" w="full">
+                    <slider bind:value={volume} tone="primary" grow></slider>
                     <span sx={cat}>{volume()}</span>
                   </row>
                 {:else if e.tag === 'toggle-group'}
@@ -240,9 +240,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                 {:else if e.tag === 'alert'}
                   <alert tone="success"><strong>Saved.</strong> Changes are live.</alert>
                 {:else if e.tag === 'progress'}
-                  <progress value="0.62" sx={style.w(full)}></progress>
+                  <progress value="0.62" w="full"></progress>
                 {:else if e.tag === 'meter'}
-                  <meter value="0.7" min="0" max="1" sx={style.w(full)}></meter>
+                  <meter value="0.7" min="0" max="1" w="full"></meter>
                 {:else if e.tag === 'spinner'}
                   <spinner></spinner>
                 {:else if e.tag === 'skeleton'}
@@ -299,7 +299,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <icon name="settings"></icon>
                   </row>
                 {:else if e.tag === 'separator' || e.tag === 'hr'}
-                  <hr sx={style.w(full)} />
+                  <hr w="full" />
                 {:else if e.tag === 'details'}
                   <details>
                     <summary>Details</summary>

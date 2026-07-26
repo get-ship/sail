@@ -31,7 +31,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <card sx={style.pad(4)}>
     <row gap="3" align="center">
       <avatar></avatar>
-      <strong sx={style.grow(1)}>Ada Lovelace</strong>
+      <strong grow>Ada Lovelace</strong>
       <badge tone="success">Active</badge>
     </row>
   </card>
@@ -46,37 +46,37 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <column gap="2">
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx={style.shrink(0)}>Inputs</badge>
+      <badge variant="outline"  shrink="0">Inputs</badge>
       <p sx={style.fontSize(sm).fg(muted-foreground)}>button, input, textarea, select,
       combobox, checkbox, radio-group, switch, slider, toggle-group, field,
       label, fieldset, dropzone, theme-picker</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx={style.shrink(0)}>Display</badge>
+      <badge variant="outline"  shrink="0">Display</badge>
       <p sx={style.fontSize(sm).fg(muted-foreground)}>badge, chip, status-dot, card,
       avatar, icon, separator, hr, details, collapsible, prose</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx={style.shrink(0)}>Feedback</badge>
+      <badge variant="outline"  shrink="0">Feedback</badge>
       <p sx={style.fontSize(sm).fg(muted-foreground)}>alert, progress, meter, spinner,
       skeleton, empty-state, error-state, error-boundary, toast</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx={style.shrink(0)}>Overlay</badge>
+      <badge variant="outline"  shrink="0">Overlay</badge>
       <p sx={style.fontSize(sm).fg(muted-foreground)}>tooltip, hover-card, popover,
       dropdown, context-menu, dialog</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx={style.shrink(0)}>Navigation</badge>
+      <badge variant="outline"  shrink="0">Navigation</badge>
       <p sx={style.fontSize(sm).fg(muted-foreground)}>tabs, breadcrumb, pagination,
       navbar</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx={style.shrink(0)}>Data</badge>
+      <badge variant="outline"  shrink="0">Data</badge>
       <p sx={style.fontSize(sm).fg(muted-foreground)}>table</p>
     </row>
     <row gap="3" align="start" nowrap>
-      <badge variant="outline" sx={style.shrink(0)}>Layout</badge>
+      <badge variant="outline"  shrink="0">Layout</badge>
       <p sx={style.fontSize(sm).fg(muted-foreground)}>row, column, grid, center,
       scroll-area</p>
     </row>

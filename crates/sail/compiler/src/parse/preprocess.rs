@@ -65,6 +65,13 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     // `setAttribute("class", …)` calls and the sx one clobbers the author's.
     // Merge them into one attribute here, while the tag text is still flat.
     let s = merge_duplicate_class_attrs(&s);
+    // Child participation attrs (`grow` / `shrink` / `w` / `min-w` / `max-w`)
+    // lower on ANY host to the same atomic classes Style would emit
+    // (`style.grow(1)` → `sx-grow1`, …). Run before `lower_layout` so a
+    // layout keyword carrying `grow` already has a class the layout rewrite
+    // folds into the div.
+    let (s, participation_css) = lower_participation_attrs(&s);
+    let s = merge_duplicate_class_attrs(&s);
     let (s, layout_css) = lower_layout(&s);
     // The `<theme>` tag is retired — tone/size are ordinary props (shared
     // unions, reflected to attributes, mapped to tokens by the skin), not a
@@ -74,7 +81,7 @@ pub(crate) fn preprocess_impl(source: &str, expand_elements: bool) -> Result<Str
     // duplicated across components that use the same element. It moves to
     // the framework sheet with the deck style-delivery work.
     let css = format!(
-        "{host_display_css}{sx_css}{layout_css}{elements_css}"
+        "{host_display_css}{sx_css}{participation_css}{layout_css}{elements_css}"
     );
     Ok(if css.is_empty() {
         s
@@ -1262,6 +1269,151 @@ fn is_eq_quote(rest: &[u8]) -> bool {
 /// `class` (static or dynamic) is merged into the computed classes. Close tags
 /// become `</div>`. The class/CSS mapping is `sail_lint::rules::layout` — the same
 /// vocabulary the `sail-layout` lint validates against the raw source.
+/// Lower `grow` / `shrink` / `w` / `min-w` / `max-w` on any open tag to the
+/// same Style atomic classes (`sx-grow1`, `sx-wfull`, …) + injected CSS.
+/// Attrs are consumed (not left as dead HTML). Invalid values are left alone
+/// so the lint can surface them; the build gate refuses before emit.
+fn lower_participation_attrs(source: &str) -> (String, String) {
+    use sail_lint::rules::layout;
+    let opens = layout::scan_any_open_tags(source);
+    let mut targets: Vec<&layout::OpenTag> = opens
+        .iter()
+        .filter(|t| t.attrs.iter().any(|(n, _)| layout::is_participation_attr(n)))
+        .collect();
+    if targets.is_empty() {
+        return (source.to_string(), String::new());
+    }
+    // Splice high-to-low so earlier offsets stay valid.
+    targets.sort_by_key(|t| std::cmp::Reverse(t.start));
+
+    let mut out = source.to_string();
+    let mut css = String::new();
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+
+    for t in targets {
+        let mut classes: Vec<String> = Vec::new();
+        let mut rest_attrs: Vec<(String, String)> = Vec::new();
+        let mut had_participation = false;
+        for (name, value) in &t.attrs {
+            if layout::is_participation_attr(name) {
+                match layout::lower_participation(name, value) {
+                    Some((cls, rule_css)) => {
+                        had_participation = true;
+                        for c in cls.split_whitespace() {
+                            if !c.is_empty() && !classes.iter().any(|x| x == c) {
+                                classes.push(c.to_string());
+                            }
+                        }
+                        // `lower_style` may emit multiple rules; each is a full
+                        // selector body. Dedup by exact CSS text.
+                        for rule in split_css_rules(&rule_css) {
+                            if seen.insert(rule.clone()) {
+                                css.push_str(&rule);
+                            }
+                        }
+                    }
+                    None => {
+                        // Invalid — leave the attr for lint / defensive drop.
+                        rest_attrs.push((name.clone(), value.clone()));
+                    }
+                }
+            } else {
+                rest_attrs.push((name.clone(), value.clone()));
+            }
+        }
+        if !had_participation {
+            continue;
+        }
+        // Merge into existing class= if present.
+        let mut static_class = classes;
+        let mut dyn_class: Option<String> = None;
+        rest_attrs.retain(|(n, v)| {
+            if n == "class" {
+                if v.starts_with('{') {
+                    dyn_class = Some(v.clone());
+                } else if !v.is_empty() {
+                    for c in v.split_whitespace() {
+                        if !c.is_empty() && !static_class.iter().any(|x| x == c) {
+                            static_class.push(c.to_string());
+                        }
+                    }
+                }
+                false
+            } else {
+                true
+            }
+        });
+
+        let mut open = String::new();
+        open.push('<');
+        open.push_str(&t.tag);
+        if dyn_class.is_some() {
+            let static_str = static_class.join(" ");
+            let dyn_v = dyn_class.as_ref().unwrap();
+            // dyn_v is `{expr}` or already a full binding; fold as class binding.
+            if dyn_v.starts_with('{') && dyn_v.ends_with('}') {
+                let inner = &dyn_v[1..dyn_v.len() - 1];
+                if static_str.is_empty() {
+                    open.push_str(&format!(" class=\"{{{inner}}}\""));
+                } else {
+                    open.push_str(&format!(" class=\"{{'{static_str} ' + ({inner})}}\""));
+                }
+            } else {
+                open.push_str(&format!(" class=\"{static_str} {dyn_v}\""));
+            }
+        } else if !static_class.is_empty() {
+            open.push_str(&format!(" class=\"{}\"", static_class.join(" ")));
+        }
+        for (name, value) in &rest_attrs {
+            open.push(' ');
+            open.push_str(name);
+            if !value.is_empty() {
+                open.push_str("=\"");
+                open.push_str(value);
+                open.push('"');
+            }
+        }
+        if t.self_closing {
+            open.push_str(" />");
+        } else {
+            open.push('>');
+        }
+        out.replace_range(t.start..t.end, &open);
+    }
+    (out, css)
+}
+
+/// Split a concatenated CSS stylesheet (from `lower_style`) into individual
+/// rule strings. Handles nested `@media { … }` by tracking brace depth.
+fn split_css_rules(css: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let bytes = css.as_bytes();
+    let mut i = 0;
+    let mut start = 0;
+    let mut depth = 0i32;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'{' => depth += 1,
+            b'}' => {
+                depth -= 1;
+                if depth == 0 {
+                    out.push(css[start..=i].to_string());
+                    start = i + 1;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    if start < css.len() {
+        let tail = css[start..].trim();
+        if !tail.is_empty() {
+            out.push(tail.to_string());
+        }
+    }
+    out
+}
+
 fn lower_layout(source: &str) -> (String, String) {
     use sail_lint::rules::layout;
     let opens = layout::scan_open_tags(source);
@@ -2612,6 +2764,44 @@ mod tests {
         assert!(!out.contains("<column"), "no column tag remains: {out}");
         assert!(out.contains(".sail-col{display:flex;flex-direction:column"), "base css: {out}");
         assert!(out.contains(".sail-g-4{gap:var(--space-4)}"), "gap css: {out}");
+    }
+
+    #[test]
+    fn lowers_boolean_grow_on_any_host_to_style_class() {
+        // Participation attrs are legal on every element and mint the same
+        // atomic class Style would (`style.grow(1)` → `sx-grow1`).
+        let out = preprocess(r#"<div grow>x</div>"#).expect("preprocess");
+        assert!(out.contains("sx-grow1"), "grow class: {out}");
+        assert!(out.contains(".sx-grow1{flex-grow:1}"), "grow css: {out}");
+        assert!(!out.contains(" grow") && !out.contains("grow="), "attr consumed: {out}");
+    }
+
+    #[test]
+    fn lowers_grow_on_layout_keyword_merges_into_div() {
+        let out = preprocess(r#"<column grow gap="2">x</column>"#).expect("preprocess");
+        assert!(out.contains("sail-col"), "layout base: {out}");
+        assert!(out.contains("sx-grow1"), "grow class folded: {out}");
+        assert!(out.contains(".sx-grow1{flex-grow:1}"), "grow css: {out}");
+        assert!(!out.contains("grow="), "grow not raw attr: {out}");
+        assert_eq!(out.matches("class=").count(), 1, "one class attr: {out}");
+    }
+
+    #[test]
+    fn lowers_w_full_and_shrink_zero() {
+        let out = preprocess(r#"<main w="full" shrink="0">x</main>"#).expect("preprocess");
+        assert!(out.contains("sx-wfull"), "w full: {out}");
+        assert!(out.contains("sx-shrink0"), "shrink 0: {out}");
+        assert!(out.contains(".sx-wfull{width:100%}"), "w css: {out}");
+        assert!(out.contains(".sx-shrink0{flex-shrink:0}"), "shrink css: {out}");
+    }
+
+    #[test]
+    fn participation_matches_style_grow_class() {
+        // Same class names as Style so cascade stays one system.
+        let via_attr = preprocess(r#"<div grow>x</div>"#).expect("attr");
+        let via_style = preprocess(r#"<div sx={style.grow(1)}>x</div>"#).expect("style");
+        assert!(via_attr.contains("sx-grow1") && via_style.contains("sx-grow1"));
+        assert!(via_attr.contains("flex-grow:1") && via_style.contains("flex-grow:1"));
     }
 
     #[test]

@@ -19,14 +19,13 @@
     offset = ''
   }
 
-  const base = style.w(full).bg(navbar).fg(navbar-foreground).minH(14).padY(2).padX(4).underline(none)
+  const base = style.bg(navbar).fg(navbar-foreground).minH(14).padY(2).padX(4).underline(none)
   const placeTop = style.minH(14).padY(2).padX(4)
   const placeBottom = style.minH(14).padY(2).padX(4)
   const placeRail = style.minH(0).padY(5).padX(4).minW(panel-rail-w).flexDir(column)
-  const brand = style.fontWeight(semibold).shrink(0)
+  const brand = style.fontWeight(semibold)
   const links = style.display(contents)
-  const center = style.minW(0).grow(1)
-  const actions = style.shrink(0).ms(auto).mt(auto)
+  const actions = style.ms(auto).mt(auto)
 </scope>
 
 <row
@@ -34,6 +33,7 @@
   align="center"
   gap="4"
   role="navigation"
+  w="full"
   sx={[
     base,
     match(placement, {
@@ -56,7 +56,7 @@
     compound({ placement: rail, sticky: true, offset: '24' }, style.top(24)),
   ]}
 >
-  <row inline nowrap align="center" gap="2" class="sail-nav-brand" sx={brand}>
+  <row inline nowrap align="center" gap="2" class="sail-nav-brand" shrink sx={brand}>
     <slot name="brand"></slot>
   </row>
   <div class="sail-nav-links" sx={links}>
@@ -67,7 +67,8 @@
     align="center"
     justify="center"
     class="sail-nav-center"
-    sx={center}
+    grow
+    min-w="0"
   >
     <slot name="center"></slot>
   </row>
@@ -77,6 +78,7 @@
     align="center"
     gap="2"
     class="sail-nav-actions"
+    shrink
     sx={actions}
   >
     <slot name="actions"></slot>

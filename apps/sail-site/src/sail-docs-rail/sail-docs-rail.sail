@@ -21,20 +21,20 @@ export default controller((ctx) => {
 </controller>
 
 <scope>
-  const shell = style.w(full).grow(1).minW(0).minH(0)
-  const rail = style.shrink(0).minW(panel-rail-w).minH(0).padY(5).padX(4).borderEWidth(1).border(border).overflowY(auto).bg(navbar).fg(navbar-foreground)
+  const shell = style.minH(0)
+  const rail = style.minH(0).padY(5).padX(4).borderEWidth(1).border(border).overflowY(auto).bg(navbar).fg(navbar-foreground)
   const railLabel = style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground).mt(4).mb(1)
   const railLink = style.display(block).fontSize(sm).padY(1).fg(muted-foreground).when({
     hover: style.fg(foreground),
     current: style.fg(primary).fontWeight(semibold),
   })
-  const mainDocs = style.pad(6).grow(1).basis(0).minW(0).minH(0).overflowX(hidden)
-  const mainWorkbench = style.grow(1).basis(0).minW(0).minH(0).h(fill).overflow(hidden)
+  const mainDocs = style.pad(6).basis(0).minH(0).overflowX(hidden)
+  const mainWorkbench = style.basis(0).minH(0).h(fill).overflow(hidden)
 </scope>
 
-<row nowrap align="stretch" sx={shell}>
+<row nowrap align="stretch" w="full" grow min-w="0" sx={shell}>
   {#if !workbench()}
-    <column gap="0" sx={rail} role="navigation" aria-label="Sail docs">
+    <column gap="0" shrink min-w="panel-rail-w" sx={rail} role="navigation" aria-label="Sail docs">
       <p sx={railLabel}>Getting started</p>
       <a href="/sail/overview" sx={railLink} aria-current={path() === '/sail/overview' ? 'page' : null}>Introduction</a>
       <a href="/sail/getting-started" sx={railLink} aria-current={path() === '/sail/getting-started' ? 'page' : null}>Installation</a>
@@ -68,11 +68,11 @@ export default controller((ctx) => {
   {/if}
 
   {#if workbench()}
-    <main sx={mainWorkbench}>
+    <main grow min-w="0" sx={mainWorkbench}>
       <slot name="route"></slot>
     </main>
   {:else}
-    <main sx={mainDocs}>
+    <main grow min-w="0" sx={mainDocs}>
       <slot name="route"></slot>
     </main>
   {/if}

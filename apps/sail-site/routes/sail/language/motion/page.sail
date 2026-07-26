@@ -167,7 +167,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75)} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
     <div sx={style.w(4).h(4).radius(full).bg(primary)} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
     <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75)} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
-    <row sx={style.grow(1)}></row>
+    <row grow></row>
     <div data-testid="spin-demo" sx={style.w(8).h(8).radius(md).bg(primary)} fx:loop={{ rotate: 'spin' }}></div>
   </row>
   <code-block code={code.loop}></code-block>
@@ -201,7 +201,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         step="1"
         bind:value={scrubText}
         data-testid="timeline-scrub"
-        sx={style.grow(1).minW(0)}
+        grow min-w="0"
       />
       <span sx={style.w(8).textAlign(end).fontFamily(mono).fontSize(sm).fg(muted-foreground)}>{scrubText()}</span>
     </row>

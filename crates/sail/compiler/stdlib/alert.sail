@@ -11,12 +11,11 @@
 
   const base = style.group().position(relative).overflow(hidden).pad(3).borderWidth(1).border(border).radius(md).bg(alert).fg(alert-foreground).fontFamily(body).fontSize(base).leading(normal).shadow(xs)
   const stripe = style.content(empty).position(absolute).left(0).top(0).bottom(0).w(1).bg(alert-stripe)
-  const ico = style.shrink(0).size(control-h-xs).radius(md).bg(muted).fg(muted-foreground)
-  const content = style.minW(0).grow(1)
+  const ico = style.size(control-h-xs).radius(md).bg(muted).fg(muted-foreground)
   const title = style.fontWeight(semibold)
   const body = style.fg(muted-foreground)
   const actions = style.mt(2)
-  const close = style.display(none).size(control-h-xs).shrink(0).self(start).pad(0).borderWidth(0).radius(sm).bg(transparent).fg(muted-foreground).cursor(pointer).transition(colors).duration(fast).ease(out)
+  const close = style.display(none).size(control-h-xs).self(start).pad(0).borderWidth(0).radius(sm).bg(transparent).fg(muted-foreground).cursor(pointer).transition(colors).duration(fast).ease(out)
   const xmark = style.display(block).size(icon-size-sm).stroke(currentColor).fill(none)
 </scope>
 
@@ -50,7 +49,7 @@
     }),
   ]}
 >
-  <row inline nowrap align="center" justify="center" class="ico" sx={[
+  <row inline nowrap align="center" justify="center" class="ico" shrink sx={[
     ico,
     match(tone, {
       default: style.bg(muted).fg(muted-foreground),
@@ -66,7 +65,7 @@
   ]}>
     <slot name="icon"></slot>
   </row>
-  <column gap="1" class="content" sx={content}>
+  <column gap="1" class="content" grow min-w="0">
     <div class="title" sx={[
       title,
       when({
@@ -92,6 +91,7 @@
     type="button"
     anatomy
     aria-label="Dismiss"
+    shrink
     sx={[
       close,
       when({

@@ -115,7 +115,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <!-- ── app chrome: brand + theme picker ─────────────────────────────── -->
   <row sx={style.pad(3).padX(5).borderBWidth(1).border(border)} align="center" gap="3">
     <strong sx={style.fontFamily(mono).fontSize(lg).fg(primary)}>shanty</strong>
-    <p sx={style.fontSize(sm).fg(muted-foreground).grow(1)}>a full app in one .sail file</p>
+    <p grow sx={style.fontSize(sm).fg(muted-foreground)}>a full app in one .sail file</p>
     <row gap="1">
       {#for t of THEMES key={t}}
         <button on:click={() => theme.set(t)} variant={theme() === t ? 'solid' : 'outline'} size="sm">{t}</button>
@@ -123,7 +123,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </row>
   </row>
 
-  <row sx={style.grow(1).minH(0)} gap="0">
+  <row grow sx={style.minH(0)} gap="0">
     <!-- ── library rail ───────────────────────────────────────────────── -->
     <column sx={style.w(64).pad(4).borderRWidth(1).border(border)} gap="3">
       <input placeholder="Filter playlists" bind:value={query} />
@@ -148,7 +148,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </column>
 
     <!-- ── playlist main ──────────────────────────────────────────────── -->
-    <column sx={style.grow(1).minW(0)} gap="0">
+    <column grow min-w="0" gap="0">
       <column sx={style.pad(6).padB(4)} gap="1" fx:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
         <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)}>Playlist</p>
         <h1 sx={style.fontSize(3xl)}>{activePlaylist() === '__liked' ? 'Liked Tracks' : playlist().name}</h1>
@@ -156,7 +156,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           {trackCount()} tracks · click a row to play
         </p>
       </column>
-      <scroll-area sx={style.grow(1).minH(0).padX(6).padB(4)}>
+      <scroll-area grow sx={style.minH(0).padX(6).padB(4)}>
         <column gap="1">
           {#for t of visibleTracks() key={t.id}}
             <row on:click={() => playTrack(t.id)}
@@ -164,7 +164,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                  sx={style.pad(2).padX(3).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })}
                  align="center" gap="3"
                  fx:enter={{ opacity: 'fade', stagger: '0.03s' }}>
-              <row justify="center" sx={style.w(6).shrink(0).fontFamily(mono).fontSize(sm).fg(muted-foreground)}>
+              <row justify="center" shrink sx={style.w(6).fontFamily(mono).fontSize(sm).fg(muted-foreground)}>
                 {#if currentId() === t.id && playing()}
                   <row gap="1" align="end" justify="center" sx={style.minH(4)}>
                     <i sx={style.w(1).h(3).radius(full).bg(primary)} fx:loop={{ translate-y: 'spring:gentle', stagger: '0.08s' }}></i>
@@ -175,7 +175,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   {t.id}
                 {/if}
               </row>
-              <column gap="0" sx={style.grow(1).minW(0)}>
+              <column gap="0" grow min-w="0">
                 <strong sx={when({ groupCurrent: style.fg(primary) })}>{t.title}</strong>
                 <p sx={style.fontSize(sm).fg(muted-foreground)}>{t.artist}</p>
               </column>
@@ -195,8 +195,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <!-- ── now-playing bar ──────────────────────────────────────────────── -->
   <column sx={style.borderTWidth(1).border(border).pad(3).padX(5)} gap="2">
     <row align="center" gap="4">
-      <row align="center" gap="3" sx={style.minW(0).grow(1)}>
-        <div sx={style.w(11).h(11).radius(md).bg(muted).borderWidth(1).border(primary).shrink(0)}>
+      <row align="center" gap="3" grow min-w="0">
+        <div shrink sx={style.w(11).h(11).radius(md).bg(muted).borderWidth(1).border(primary)}>
           <center sx={style.h(full)}><strong sx={style.fontSize(lg).fg(primary)}>♪</strong></center>
         </div>
         <column gap="0" sx={style.minW(0)}>
@@ -204,7 +204,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <p sx={style.fontSize(sm).fg(muted-foreground)}>{current().artist}</p>
         </column>
       </row>
-      <column align="center" gap="1" sx={style.grow(1)}>
+      <column align="center" gap="1" grow>
         <row gap="2" align="center">
           <button on:click={() => shuffle.set(!shuffle())} variant={shuffle() ? 'solid' : 'ghost'} size="sm">shuffle</button>
           <button on:click={() => advance(-1)} variant="ghost">⏮</button>
@@ -214,13 +214,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <button on:click={() => advance(1)} variant="ghost">⏭</button>
           <button on:click={() => repeat.set(!repeat())} variant={repeat() ? 'solid' : 'ghost'} size="sm">repeat</button>
         </row>
-        <row gap="2" align="center" sx={style.w(full).maxW(panel-max-w-md)}>
+        <row gap="2" align="center" w="full" max-w="panel-max-w-md">
           <span sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{positionLabel()}</span>
-          <progress value={position()} max={current().secs} sx={style.grow(1)}></progress>
+          <progress value={position()} max={current().secs} grow></progress>
           <span sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{totalLabel()}</span>
         </row>
       </column>
-      <row gap="2" align="center" justify="end" sx={style.grow(1)}>
+      <row gap="2" align="center" justify="end" grow>
         <button on:click={() => volume.set(Math.max(0, volume() - 10))} variant="ghost" size="sm">−</button>
         <progress value={volume()} max="100" sx={style.w(20)}></progress>
         <button on:click={() => volume.set(Math.min(100, volume() + 10))} variant="ghost" size="sm">+</button>

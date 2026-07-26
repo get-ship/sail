@@ -18,8 +18,8 @@
   const variantInline = style.textAlign(start).borderWidth(1).border(dashed).border(empty-state-border).radius(md).bg(muted).shadow(none).padY(3).padX(4)
   const variantPlaceholder = style.textAlign(center).borderWidth(0).bg(transparent).radius(none).shadow(none).padY(6)
   const variantConnecting = style.textAlign(center).borderWidth(0).bg(transparent).radius(none).shadow(none).padY(6)
-  const icon = style.shrink(0).self(center).radius(lg).bg(muted).fg(muted-foreground).size(12)
-  const copy = style.minW(0).self(stretch).grow(1)
+  const icon = style.self(center).radius(lg).bg(muted).fg(muted-foreground).size(12)
+  const copy = style.self(stretch)
   const title = style.fontFamily(heading).fontWeight(semibold).fg(foreground).leading(tight).fontSize(md)
   const desc = style.leading(loose).fg(muted-foreground).fontSize(sm).maxW(panel-ch-w-md)
   const actions = style.self(center)
@@ -57,6 +57,7 @@
     justify="center"
     class="icon"
     aria-hidden="true"
+    shrink
     sx={[
       icon,
       match(tone, {
@@ -77,7 +78,7 @@
   >
     <slot name="icon"></slot>
   </row>
-  <column align="stretch" gap="1" class="copy" sx={copy}>
+  <column align="stretch" gap="1" class="copy" grow min-w="0" sx={copy}>
     <div class="title" sx={[
       title,
       when({

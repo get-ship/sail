@@ -16,9 +16,9 @@
   const sizeLg = style.padY(8).padX(6)
   const variantDefault = style.textAlign(center).borderWidth(1).border(error-state-border).radius(lg).bg(error-state).shadow(xs)
   const variantInline = style.textAlign(start).borderWidth(1).border(destructive).radius(md).bg(muted).shadow(none).padY(3).padX(4)
-  const icon = style.shrink(0).self(center).radius(lg).bg(muted).fg(destructive).size(control-h-xl).outline(1).outline(solid).outline(destructive).outlineOffset(ring-inset)
+  const icon = style.self(center).radius(lg).bg(muted).fg(destructive).size(control-h-xl).outline(1).outline(solid).outline(destructive).outlineOffset(ring-inset)
   const glyph = style.size(control-h-2xs)
-  const copy = style.minW(0).self(stretch).grow(1)
+  const copy = style.self(stretch)
   const title = style.fontFamily(heading).fontWeight(semibold).fg(foreground).leading(tight).fontSize(md)
   const desc = style.leading(loose).fg(muted-foreground).fontSize(sm).maxW(panel-ch-w-md)
   const codeBox = style.fontFamily(mono).fontSize(xs).fg(muted-foreground).bg(muted).borderWidth(1).border(border-subtle).radius(sm).padY(1).padX(2).mt(1)
@@ -56,6 +56,7 @@
     justify="center"
     class="icon"
     aria-hidden="true"
+    shrink
     sx={[
       icon,
       when({
@@ -69,7 +70,7 @@
       <path d="M12 16h.01"></path>
     </svg>
   </row>
-  <column align="stretch" gap="1" class="copy" sx={copy}>
+  <column align="stretch" gap="1" class="copy" grow min-w="0" sx={copy}>
     <div class="title" sx={title}>
       <slot name="title">Something went wrong</slot>
     </div>

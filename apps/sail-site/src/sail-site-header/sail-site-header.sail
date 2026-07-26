@@ -114,7 +114,7 @@ export default controller((ctx) => {
     current: style.bg(primary).fg(primary-foreground),
   })
   // Clip marketing full-bleed content (tickers use negative inset) at the shell.
-  const landingMain = style.grow(1).basis(0).minW(0).minH(0).w(full).maxW(full).overflowX(hidden).overflowY(visible)
+  const landingMain = style.basis(0).minH(0).maxW(full).overflowX(hidden).overflowY(visible)
 </scope>
 
 <navbar sticky bordered use:chromeOffset>
@@ -142,7 +142,7 @@ export default controller((ctx) => {
 </navbar>
 
 {#if landing()}
-  <main sx={landingMain}>
+  <main grow min-w="0" w="full" sx={landingMain}>
     <slot name="route"></slot>
   </main>
 {:else}

@@ -38,7 +38,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>The graph, live</h2>
   <row gap="4" align="start">
-    <column sx={style.grow(1).basis(breakpoint-mobile).minW(0)}>
+    <column  grow sx={style.basis(breakpoint-mobile).minW(0)}>
       <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Live</p>
       <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)} gap="4">
         <row gap="5" align="center">
@@ -60,7 +60,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </column>
       </column>
     </column>
-    <column sx={style.grow(1).basis(breakpoint-mobile).minW(0)}>
+    <column  grow sx={style.basis(breakpoint-mobile).minW(0)}>
       <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Source</p>
       <code-block code={code.graph}></code-block>
     </column>
@@ -169,7 +169,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     component can reach by name.
   </p>
   <row gap="4" align="start">
-    <column sx={style.grow(1).basis(breakpoint-mobile).minW(0)}>
+    <column  grow sx={style.basis(breakpoint-mobile).minW(0)}>
       <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Live — click either card</p>
       <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).bg(surface-1)} gap="3">
         <grid cols="2" gap="3">
@@ -179,7 +179,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <store-total></store-total>
       </column>
     </column>
-    <column sx={style.grow(1).basis(breakpoint-mobile).minW(0)}>
+    <column  grow sx={style.basis(breakpoint-mobile).minW(0)}>
       <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>The store</p>
       <code-block code={code.storeDef}></code-block>
     </column>

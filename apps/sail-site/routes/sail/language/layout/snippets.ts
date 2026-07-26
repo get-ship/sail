@@ -8,7 +8,7 @@ export const code = {
 
   nowrap: `<row nowrap gap="4" align="stretch">
   <navbar>…</navbar>
-  <main sx={style.grow(1).minW(0)}>…</main>
+  <main grow min-w="0">…</main>
 </row>`,
 
   column: `<column gap="2" align="start">
@@ -35,5 +35,10 @@ export const code = {
   center: `<center sx={style.minH(11)}>
   <badge tone="primary">centered</badge>
 </center>`,
+
+  grow: `<row gap="3" align="center">
+  <strong grow min-w="0">Ada Lovelace</strong>
+  <badge tone="success" shrink>Active</badge>
+</row>`,
 
 }

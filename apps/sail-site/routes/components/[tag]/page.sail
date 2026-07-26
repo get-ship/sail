@@ -218,19 +218,19 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             {/if}
             {#if stage.input()}
-              <column gap="3" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <column gap="3" w="full" max-w="panel-max-w-sm">
                 <input placeholder="Ada Lovelace" bind:value={name} />
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>hello, {name() || 'stranger'}</p>
               </column>
             {/if}
             {#if stage.textarea()}
-              <column gap="3" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <column gap="3" w="full" max-w="panel-max-w-sm">
                 <textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{bio().length} characters</p>
               </column>
             {/if}
             {#if stage.select()}
-              <column gap="3" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <column gap="3" w="full" max-w="panel-max-w-sm">
                 <select bind:value={team}>
                   <option>Engineering</option>
                   <option>Design</option>
@@ -240,7 +240,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             {/if}
             {#if stage.combobox()}
-              <column gap="3" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <column gap="3" w="full" max-w="panel-max-w-sm">
                 <combobox placeholder="Pick a framework — type to filter" on:sail-combobox-select={(e) => pickFw(e)}>
                   <option value="sail">Sail</option>
                   <option value="react">React</option>
@@ -271,7 +271,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </row>
             {/if}
             {#if stage.slider()}
-              <column gap="3" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <column gap="3" w="full" max-w="panel-max-w-sm">
                 <slider bind:value={load} min="0" max="100" tone={variant()}></slider>
                 <progress value={load()} max="100"></progress>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>one signal, two components — {load()}%</p>
@@ -285,7 +285,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </toggle-group>
             {/if}
             {#if stage.field()}
-              <column gap="4" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <column gap="4" w="full" max-w="panel-max-w-sm">
                 <field>
                   <label for="stage-name">Name</label>
                   <input id="stage-name" placeholder="Ada Lovelace" />
@@ -297,13 +297,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             {/if}
             {#if stage.label()}
-              <column gap="1" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <column gap="1" w="full" max-w="panel-max-w-sm">
                 <label for="stage-email" required size={variant()}>Email</label>
                 <input id="stage-email" placeholder="ada@lovelace.dev" />
               </column>
             {/if}
             {#if stage.fieldset()}
-              <fieldset sx={style.w(full).maxW(panel-max-w-sm)}>
+              <fieldset w="full" max-w="panel-max-w-sm">
                 <legend>Account details</legend>
                 <column gap="2">
                   <input placeholder="Name" />
@@ -323,12 +323,12 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Feedback ════════════════════════════════════════════ -->
             {#if stage.alert()}
-              <alert tone={variant()} sx={style.w(full)}>
+              <alert tone={variant()} w="full">
                 <strong>Heads up.</strong> The tone chips above restyle me — colour and icon both.
               </alert>
             {/if}
             {#if stage.progressBar()}
-              <column gap="3" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <column gap="3" w="full" max-w="panel-max-w-sm">
                 <slider bind:value={load} min="0" max="100" tone="primary"></slider>
                 <progress value={load()} max="100"></progress>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>one signal drives both — {load()}%</p>
@@ -351,27 +351,27 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </row>
             {/if}
             {#if stage.skeleton()}
-              <row gap="3" align="center" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <row gap="3" align="center" w="full" max-w="panel-max-w-sm">
                 <span skeleton shape={variant()} sx={style.w(7).h(7)}></span>
-                <column gap="2" sx={style.grow(1)}>
+                <column gap="2" grow>
                   <span skeleton shape={variant()} size="sm"></span>
                   <span skeleton shape={variant()} size="sm"></span>
                 </column>
               </row>
             {/if}
             {#if stage.emptyState()}
-              <empty-state variant={variant()} sx={style.w(full)}>
+              <empty-state variant={variant()} w="full">
                 <strong slot="title">No results</strong>
                 Try a different search, or clear a filter.
               </empty-state>
             {/if}
             {#if stage.errorState()}
-              <error-state variant={variant()} code="ERR_TIMEOUT" sx={style.w(full)}>
+              <error-state variant={variant()} code="ERR_TIMEOUT" w="full">
                 The request timed out. Retry, or check the connection.
               </error-state>
             {/if}
             {#if stage.errorBoundary()}
-              <column gap="3" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <column gap="3" w="full" max-w="panel-max-w-sm">
                 <error-boundary message="This panel could not load.">
                   <card variant="outline" sx={style.pad(4)}>
                     <p sx={style.fontSize(sm).fg(muted-foreground)}>
@@ -383,7 +383,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             {/if}
             {#if stage.toast()}
-              <toast tone={variant()} duration="0" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <toast tone={variant()} duration="0" w="full" max-w="panel-max-w-sm">
                 <strong>Saved.</strong> Sticky at duration 0 — hover pauses real ones.
                 <button data-toast-close variant="ghost" size="sm">×</button>
               </toast>
@@ -446,7 +446,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </row>
             {/if}
             {#if stage.separator()}
-              <column gap="2" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <column gap="2" w="full" max-w="panel-max-w-sm">
                 <p sx={style.fontSize(sm).fg(muted-foreground)}>above</p>
                 <separator variant={variant()}></separator>
                 <p sx={style.fontSize(sm).fg(muted-foreground)}>below — and vertical:</p>
@@ -465,19 +465,19 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             {/if}
             {#if stage.detailsEl()}
-              <details sx={style.w(full).maxW(panel-max-w-sm)}>
+              <details w="full" max-w="panel-max-w-sm">
                 <summary>Advanced options</summary>
                 <p>Native disclosure. Zero JavaScript — open/close is the platform.</p>
               </details>
             {/if}
             {#if stage.collapsible()}
-              <collapsible sx={style.w(full).maxW(panel-max-w-sm)}>
+              <collapsible w="full" max-w="panel-max-w-sm">
                 <strong slot="trigger">Show the details</strong>
                 <p>Animated open and close — and it remembers its state.</p>
               </collapsible>
             {/if}
             {#if stage.prose()}
-              <column gap="2" sx={style.w(full).maxW(panel-max-w-md)}>
+              <column gap="2" w="full" max-w="panel-max-w-md">
                 <h3>Plain tags, already styled</h3>
                 <p>Body copy sets the baseline — <strong>strong</strong>, <em>emphasis</em>,
                    <code>inline_code()</code> and <mark>a highlight</mark> need no classes.</p>
@@ -524,7 +524,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             {/if}
             {#if stage.contextMenu()}
-              <column gap="3" align="center" sx={style.w(full).maxW(panel-max-w-sm)}>
+              <column gap="3" align="center" w="full" max-w="panel-max-w-sm">
                 <card id="stage-ctx" variant="outline" sx={style.pad(6).w(full)}>
                   <center><p sx={style.fontSize(sm).fg(muted-foreground)}>right-click target</p></center>
                 </card>
@@ -554,7 +554,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Navigation ══════════════════════════════════════════ -->
             {#if stage.tabs()}
-              <tabs tone="primary" sx={style.w(full)}>
+              <tabs tone="primary" w="full">
                 <tab-list variant={variant()}>
                   <tab>Overview</tab>
                   <tab>Activity</tab>
@@ -584,7 +584,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             {/if}
             {#if stage.navbar()}
-              <navbar bordered sx={style.w(full)}>
+              <navbar bordered w="full">
                 <strong slot="brand">SHIP</strong>
                 <a href="/components">Docs</a>
                 <a href="/components">Components</a>
@@ -594,7 +594,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Data ════════════════════════════════════════════════ -->
             {#if stage.table()}
-              <table sx={style.w(full)}>
+              <table w="full">
                 <thead>
                   <tr><th>Name</th><th>Team</th><th>Status</th></tr>
                 </thead>
@@ -612,7 +612,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Layout ══════════════════════════════════════════════ -->
             {#if stage.layout()}
-              <column gap="3" sx={style.w(full).maxW(panel-max-w-md)}>
+              <column gap="3" w="full" max-w="panel-max-w-md">
                 <row gap="2" align="center" justify="between">
                   <strong>row — the x axis</strong>
                   <badge tone="primary">end</badge>

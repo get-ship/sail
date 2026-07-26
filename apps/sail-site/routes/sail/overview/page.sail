@@ -45,10 +45,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       component — and the same lines running:
     </p>
     <row gap="6" align="start">
-      <column gap="2" sx={style.grow(1).basis(breakpoint-mobile).minW(0)}>
+      <column gap="2"  grow sx={style.basis(breakpoint-mobile).minW(0)}>
         <code-block code={code.hello}></code-block>
       </column>
-      <column gap="2" sx={style.grow(1).basis(64).minW(0).pad(4).bg(muted).borderWidth(1).border(border).radius(lg)} justify="center">
+      <column gap="2"  grow sx={style.basis(64).minW(0).pad(4).bg(muted).borderWidth(1).border(border).radius(lg)} justify="center">
         <demo-player playing={playing()}></demo-player>
         <row gap="2" align="center">
           <switch bind:checked={playing}></switch>
@@ -73,7 +73,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <column sx={style.maxW(breakpoint-tablet)} gap="3">
     <h2>The compiler pushes back</h2>
     <row gap="6" align="start">
-      <column gap="3" sx={style.grow(1).basis(breakpoint-mobile).minW(0)}>
+      <column gap="3"  grow sx={style.basis(breakpoint-mobile).minW(0)}>
         <p>
           The compiler checks more than syntax: a colour that isn't a token, a
           stylesheet beside a component, an animation outside the motion
@@ -91,7 +91,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           isn't granted doesn't compile.
         </p>
       </column>
-      <column gap="2" sx={style.grow(1).basis(breakpoint-mobile).minW(0)}>
+      <column gap="2"  grow sx={style.basis(breakpoint-mobile).minW(0)}>
         <p sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>apps/sail-site/routes/sail.config.json</p>
         <sail-json-view data={code.configJson} expanded depth={2}></sail-json-view>
       </column>

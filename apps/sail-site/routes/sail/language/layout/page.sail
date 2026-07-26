@@ -141,15 +141,30 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>How children size themselves</h2>
   <p>
-    The parent decides how children sit; a child decides only how it fills
-    the space it was given, with Style: <code>style.grow(1)</code>
-    claims a share of the leftover space, <code>style.basis(…)</code> sets a
-    starting size, and <code>w</code>/<code>h</code> fix one. Every child of a layout
-    element is also born with <code>min-width: 0</code> — the browser
-    default where an item refuses to shrink below its content is the reason
-    truncation "doesn't work" in most flex codebases, and it is corrected
-    here at the language level, so <code>style.truncate()</code> works the first
-    time.
+    The parent decides how children sit; a child decides how it fills the
+    space it was given with <strong>layout attributes</strong> — legal on any
+    element, not only layout keywords:
+  </p>
+  <row gap="3" align="center" sx={style.pad(4).bg(surface-1).borderWidth(1).border(border).radius(md)}>
+    <strong grow min-w="0">Ada Lovelace</strong>
+    <badge tone="success" shrink>Active</badge>
+  </row>
+  <code-block code={code.grow}></code-block>
+  <p>
+    Boolean <code>grow</code> / <code>shrink</code> mean flex-grow/shrink 1;
+    <code>grow="0"</code> / <code>shrink="0"</code> pin the other end.
+    <code>w="full"</code>, <code>min-w</code>, and <code>max-w</code> take the
+    same size tokens Style does. These lower to the same atomic classes as
+    <code>style.grow(1)</code> / <code>style.w(full)</code> — one cascade.
+  </p>
+  <p>
+    Layout attrs are the product home for participation in a flex/grid parent.
+    Style still owns paint (pad, color, type, chrome), intrinsic box size
+    (<code>h</code>, icon <code>w</code>/<code>size</code>), and chrome like
+    <code>minH</code> on badges. Every child of a layout element is also born
+    with <code>min-width: 0</code> — the browser default where an item refuses
+    to shrink below its content is corrected at the language level, so
+    <code>style.truncate()</code> works the first time.
   </p>
 
   <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>

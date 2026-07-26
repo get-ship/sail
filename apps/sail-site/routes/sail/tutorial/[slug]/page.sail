@@ -322,8 +322,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <!-- basis-0 on both panes: the wrapping <row> floor would otherwise stack
        the playground BELOW the lesson (each pane demanding its content width);
        a 0 main-basis keeps them side by side, grow distributes the width. -->
-  <column sx={style.grow(1).basis(0).minW(0).maxW(panel-max-w-md).h(fill).minH(0).bg(surface-1).borderRWidth(1).borderR(border)}>
-    <column sx={style.grow(1).minH(0).overflowY(auto).pad(6)} gap="4">
+  <column  grow sx={style.basis(0).minW(0).maxW(panel-max-w-md).h(fill).minH(0).bg(surface-1).borderRWidth(1).borderR(border)}>
+    <column  grow sx={style.minH(0).overflowY(auto).pad(6)} gap="4">
       <row align="center" justify="between" gap="3">
         <p sx={style.fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide).fg(primary)}>— TUTORIAL</p>
         <small sx={style.fontFamily(mono).fontSize(xs).tracking(wide).fg(muted-foreground)}>Lesson {lessonNumLabel()} / {totalLessons()}</small>
@@ -333,11 +333,11 @@ export default controller((ctx: ControllerScope<Scope>) => {
         {#for step of steps() key={step.slug}}
           {#match step.state}
             {:case 'done'}
-              <a href={step.href} title={step.title} sx={style.grow(1).h(1).radius(full).bg(primary)}></a>
+              <a href={step.href} title={step.title}  grow sx={style.h(1).radius(full).bg(primary)}></a>
             {:case 'current'}
-              <a href={step.href} title={step.title} aria-current="step" sx={style.grow(1).h(1).radius(full).bg(primary).opacity(50)}></a>
+              <a href={step.href} title={step.title} aria-current="step"  grow sx={style.h(1).radius(full).bg(primary).opacity(50)}></a>
             {:default}
-              <a href={step.href} title={step.title} sx={style.grow(1).h(1).radius(full).bg(surface-2)}></a>
+              <a href={step.href} title={step.title}  grow sx={style.h(1).radius(full).bg(surface-2)}></a>
           {/match}
         {/for}
       </row>
@@ -358,7 +358,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     </row>
   </column>
 
-  <column sx={style.grow(1).basis(0).minW(0).h(fill).minH(0).pad(4).bg(surface-0)} gap="3">
+  <column  grow sx={style.basis(0).minW(0).h(fill).minH(0).pad(4).bg(surface-0)} gap="3">
     <row align="center" justify="between" gap="3">
       <p sx={style.fontFamily(mono).fontSize(xs).fontWeight(medium).tracking(wide).fg(muted-foreground)}>— PLAYGROUND</p>
       <row gap="2" align="center">
@@ -367,7 +367,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </row>
     </row>
 
-    <column sx={style.grow(1).minH(0).borderWidth(1).border(border).radius(lg).bg(surface-1).overflow(hidden)}>
+    <column  grow sx={style.minH(0).borderWidth(1).border(border).radius(lg).bg(surface-1).overflow(hidden)}>
       <row align="center" justify="between" gap="2" sx={style.pad(2).padX(3).borderBWidth(1).borderB(border)}>
         <tabs active="source" size="sm" on:sail-tab-change={onTabChange}>
           <tab-list variant="pill">
@@ -376,8 +376,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
           </tab-list>
         </tabs>
       </row>
-      <column sx={style.grow(1).minH(0).position(relative)}>
-        <tab-panel name="source" hidden={tab() !== 'source'} sx={style.grow(1).minH(0)}>
+      <column  grow sx={style.minH(0).position(relative)}>
+        <tab-panel name="source" hidden={tab() !== 'source'} grow sx={style.minH(0)}>
           <sail-code-editor
             data-pane="source"
             language="sail"
@@ -388,7 +388,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             on:sail-change={onSourceChange}
           ></sail-code-editor>
         </tab-panel>
-        <tab-panel name="diff" hidden={tab() !== 'diff'} sx={style.grow(1).minH(0).overflowY(auto)}>
+        <tab-panel name="diff" hidden={tab() !== 'diff'}  grow sx={style.minH(0).overflowY(auto)}>
           <column gap="3" sx={style.pad(3)}>
             <small sx={style.fontFamily(mono).fontSize(xs).tracking(wide).fg(muted-foreground)}>{fileName()}</small>
             <sail-diff from={srcValue()} to={solvedSource()}></sail-diff>
@@ -397,7 +397,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </column>
     </column>
 
-    <column sx={style.grow(1).minH(0).borderWidth(1).border(border).radius(lg).bg(surface-1).overflow(hidden)}>
+    <column  grow sx={style.minH(0).borderWidth(1).border(border).radius(lg).bg(surface-1).overflow(hidden)}>
       <row align="center" justify="between" gap="2" sx={style.pad(2).padX(3).borderBWidth(1).borderB(border)}>
         <row gap="2" align="center">
           <badge tone={statusTone()} variant="soft" size="sm">{statusText()}</badge>
@@ -405,7 +405,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         </row>
         <button variant="outline" tone="primary" size="sm" on:click={run}>▶ Run</button>
       </row>
-      <column sx={style.grow(1).minH(0)}>
+      <column grow sx={style.minH(0)}>
         <iframe
           data-testid="tut-preview"
           data-base-src="/tut-host.html"

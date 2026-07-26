@@ -36,7 +36,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
              sx={style.pad(4).radius(lg).borderWidth(1).border(border).bg(surface-1).when({ hover: style.bg(surface-2).borderWidth(1).border(border-strong) })}>
             <row gap="3" align="center">
               <badge tone="primary" variant="soft">{lesson.order}</badge>
-              <column gap="1" sx={style.grow(1)}>
+              <column gap="1" grow>
                 <strong>{lesson.title}</strong>
                 <small sx={style.fg(muted-foreground)}>{lesson.description}</small>
               </column>

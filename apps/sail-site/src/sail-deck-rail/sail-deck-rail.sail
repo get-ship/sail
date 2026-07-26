@@ -19,18 +19,18 @@ export default controller((ctx) => {
 </controller>
 
 <scope>
-  const shell = style.w(full).grow(1).minW(0).minH(0)
-  const rail = style.shrink(0).minW(panel-rail-w).minH(0).padY(5).padX(4).borderEWidth(1).border(border).overflowY(auto).bg(navbar).fg(navbar-foreground)
+  const shell = style.minH(0)
+  const rail = style.minH(0).padY(5).padX(4).borderEWidth(1).border(border).overflowY(auto).bg(navbar).fg(navbar-foreground)
   const railLabel = style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground).mt(4).mb(1)
   const railLink = style.display(block).fontSize(sm).padY(1).fg(muted-foreground).when({
     hover: style.fg(foreground),
     current: style.fg(primary).fontWeight(semibold),
   })
-  const mainDocs = style.pad(6).grow(1).basis(0).minW(0).minH(0).overflowX(hidden)
+  const mainDocs = style.pad(6).basis(0).minH(0).overflowX(hidden)
 </scope>
 
-<row nowrap align="stretch" sx={shell}>
-  <column gap="0" sx={rail} role="navigation" aria-label="Deck docs">
+<row nowrap align="stretch" w="full" grow min-w="0" sx={shell}>
+  <column gap="0" shrink min-w="panel-rail-w" sx={rail} role="navigation" aria-label="Deck docs">
     <p sx={railLabel}>Introduction</p>
     <a href="/deck" sx={railLink} aria-current={path() === '/deck' ? 'page' : null}>Overview</a>
     <a href="/deck/getting-started" sx={railLink} aria-current={path() === '/deck/getting-started' ? 'page' : null}>Getting started</a>
@@ -48,7 +48,7 @@ export default controller((ctx) => {
     <a href="/deck/build" sx={railLink} aria-current={path() === '/deck/build' ? 'page' : null}>Build</a>
   </column>
 
-  <main sx={mainDocs}>
+  <main grow min-w="0" sx={mainDocs}>
     <slot name="route"></slot>
   </main>
 </row>

@@ -20,7 +20,7 @@
   const titleText = style.textCase(uppercase).tracking(wide).fontSize(sm)
   const meta = style.fontSize(xs).fg(muted-foreground).fontFamily(mono)
   const list = style.mt(3).fontFamily(mono).fontSize(sm)
-  const city = style.grow(1).minW(0).truncate()
+  const city = style.truncate()
   const gate = style.fg(muted-foreground)
 </scope>
 
@@ -82,7 +82,7 @@ export default controller((ctx) => {
   <column gap="1" sx={list}>
     {#for f of flights() key={f.id}}
       <row align="center" gap="3" nowrap fx:enter={{ opacity: 'fade' }}>
-        <span sx={city}>{f.city}</span>
+        <span grow min-w="0" sx={city}>{f.city}</span>
         <span sx={gate}>{f.gate}</span>
         {#match f.status}
           {:case 'boarding'} <badge tone="success">Boarding</badge>
