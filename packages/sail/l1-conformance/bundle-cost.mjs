@@ -166,19 +166,18 @@ console.log('  The div page has no keyboard navigation, no ARIA, and no focus')
 console.log('  management. That delta is what those cost.\n')
 
 if (process.argv.includes('--check')) {
-  // Historical site claim was ~1.3 kB gz delta. Print current; fail only on
-  // catastrophic drift (>5 kB) so the harness stays a reproducible number,
-  // not a marketing freeze from a prior runtime shape.
-  const CLAIM_GZ_DELTA_KB = 1.3
+  // Measured 2026-07-26 (post virtual-controller materialize + modern ambient
+  // controller shape): ~14.4 / 7.1 / 7.3 kB gz. Older site copy said 1.3 kB —
+  // that was a prior runtime shape; this harness is the source of truth.
+  const CLAIM_GZ_DELTA_KB = 7.3
   const drift = Math.abs(deltaGz / 1024 - CLAIM_GZ_DELTA_KB)
-  if (drift > 5) {
+  if (drift > 1.5) {
     console.error(
-      `  FAIL: library cost jumped to ${kb(deltaGz)} kB gz (was ~${CLAIM_GZ_DELTA_KB} kB). ` +
-        `Investigate a real regression before updating claims.\n`,
+      `  FAIL: the harness expects the library cost ~${CLAIM_GZ_DELTA_KB} kB gz; it now costs ` +
+        `${kb(deltaGz)} kB. Update the CLAIM_GZ_DELTA_KB in this file (and any site copy), ` +
+        `or find out what regressed.\n`,
     )
     process.exit(1)
   }
-  console.log(
-    `  measured delta ${kb(deltaGz)} kB gz (historical claim ~${CLAIM_GZ_DELTA_KB} kB; drift ${drift.toFixed(2)} kB).\n`,
-  )
+  console.log(`  OK: within ${drift.toFixed(2)} kB of the measured baseline (${CLAIM_GZ_DELTA_KB} kB gz).\n`)
 }
