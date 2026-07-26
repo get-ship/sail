@@ -1,4 +1,4 @@
-// The exit-hold contract: `{#if}`/`{#match}` branch removal with a
+// The exit-hold contract: `<if>`/`<match>` branch removal with a
 // registered `fx:exit` must hold the node in the DOM until the exit
 // animation finishes, must never wedge removal forever if the animation
 // gets stuck, and an interrupted exit (branch flips back mid-exit) must

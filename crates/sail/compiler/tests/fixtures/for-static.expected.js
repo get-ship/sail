@@ -4,11 +4,15 @@ import { collectElementMarkers } from "@ship/sail-dom";
 
 const __tpl0 = /*@__PURE__*/ __tpl("<li>static text only</li>");
 export default Object.assign(component((ctx) => {
-  const { ship, route, navigate } = ctx;
+  const { route, navigate, providers } = ctx;
   const $scope = Object.create(null);
-  $scope.ship = ship;
   $scope.route = route;
   $scope.navigate = navigate;
+  for (const __k of Object.keys(ctx)) {
+    if (__k === "route" || __k === "navigate" || __k === "scope" || __k === "stateKeys" || __k === "host" || __k === "providers" || __k === "props") continue;
+    $scope[__k] = ctx[__k];
+  }
+  if (providers && typeof providers === "object") Object.assign($scope, providers);
 const __wireBoundary_b0 = (anchor) => bindFor({
   anchor,
   items: () => ($scope.rows()),
@@ -18,9 +22,15 @@ const __wireBoundary_b0 = (anchor) => bindFor({
     __childScope2.row = row;
     __childScope2.__i = __i;
     return (($scope) => {
+const __frag3 = document.createDocumentFragment();
 const __c4 = [];
-const __e5 = __tpl0();
-      return { nodes: [__e5], cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} } };
+const __t5 = document.createTextNode("\n    ");
+__frag3.appendChild(__t5);
+const __e6 = __tpl0();
+__frag3.appendChild(__e6);
+const __t7 = document.createTextNode("\n  ");
+__frag3.appendChild(__t7);
+      return { nodes: Array.from(__frag3.childNodes), cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} } };
     })(__childScope2);
   },
 });

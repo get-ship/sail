@@ -68,52 +68,53 @@
   {
     "type": "case_clause",
     "named": true,
-    "fields": {
-      "value": {
-        "multiple": true,
-        "required": false,
-        "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
-          {
-            "type": "[",
-            "named": false
-          },
-          {
-            "type": "]",
-            "named": false
-          },
-          {
-            "type": "identifier",
-            "named": true
-          },
-          {
-            "type": "{",
-            "named": false
-          },
-          {
-            "type": "}",
-            "named": false
-          }
-        ]
-      }
-    },
+    "fields": {},
     "children": {
       "multiple": true,
       "required": false,
       "types": [
         {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "case_clause",
+          "named": true
+        },
+        {
+          "type": "default_clause",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
+        {
           "type": "element",
           "named": true
         },
         {
+          "type": "else_clause",
+          "named": true
+        },
+        {
+          "type": "else_if_clause",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
           "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "fx_attr",
           "named": true
         },
         {
@@ -133,7 +134,15 @@
           "named": true
         },
         {
+          "type": "static_attr",
+          "named": true
+        },
+        {
           "type": "text",
+          "named": true
+        },
+        {
+          "type": "use_attr",
           "named": true
         },
         {
@@ -156,11 +165,47 @@
       "required": false,
       "types": [
         {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "case_clause",
+          "named": true
+        },
+        {
+          "type": "default_clause",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
+        {
           "type": "element",
           "named": true
         },
         {
+          "type": "else_clause",
+          "named": true
+        },
+        {
+          "type": "else_if_clause",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
           "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "fx_attr",
           "named": true
         },
         {
@@ -180,7 +225,15 @@
           "named": true
         },
         {
+          "type": "static_attr",
+          "named": true
+        },
+        {
           "type": "text",
+          "named": true
+        },
+        {
+          "type": "use_attr",
           "named": true
         },
         {
@@ -258,11 +311,27 @@
           "named": true
         },
         {
+          "type": "case_clause",
+          "named": true
+        },
+        {
+          "type": "default_clause",
+          "named": true
+        },
+        {
           "type": "dynamic_attr",
           "named": true
         },
         {
           "type": "element",
+          "named": true
+        },
+        {
+          "type": "else_clause",
+          "named": true
+        },
+        {
+          "type": "else_if_clause",
           "named": true
         },
         {
@@ -325,11 +394,47 @@
       "required": false,
       "types": [
         {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "case_clause",
+          "named": true
+        },
+        {
+          "type": "default_clause",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
+        {
           "type": "element",
           "named": true
         },
         {
+          "type": "else_clause",
+          "named": true
+        },
+        {
+          "type": "else_if_clause",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
           "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "fx_attr",
           "named": true
         },
         {
@@ -349,7 +454,15 @@
           "named": true
         },
         {
+          "type": "static_attr",
+          "named": true
+        },
+        {
           "type": "text",
+          "named": true
+        },
+        {
+          "type": "use_attr",
           "named": true
         },
         {
@@ -366,52 +479,53 @@
   {
     "type": "else_if_clause",
     "named": true,
-    "fields": {
-      "cond": {
-        "multiple": true,
-        "required": false,
-        "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
-          {
-            "type": "[",
-            "named": false
-          },
-          {
-            "type": "]",
-            "named": false
-          },
-          {
-            "type": "identifier",
-            "named": true
-          },
-          {
-            "type": "{",
-            "named": false
-          },
-          {
-            "type": "}",
-            "named": false
-          }
-        ]
-      }
-    },
+    "fields": {},
     "children": {
       "multiple": true,
       "required": false,
       "types": [
         {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "case_clause",
+          "named": true
+        },
+        {
+          "type": "default_clause",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
+        {
           "type": "element",
           "named": true
         },
         {
+          "type": "else_clause",
+          "named": true
+        },
+        {
+          "type": "else_if_clause",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
           "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "fx_attr",
           "named": true
         },
         {
@@ -431,7 +545,15 @@
           "named": true
         },
         {
+          "type": "static_attr",
+          "named": true
+        },
+        {
           "type": "text",
+          "named": true
+        },
+        {
+          "type": "use_attr",
           "named": true
         },
         {
@@ -484,66 +606,31 @@
   {
     "type": "for_block",
     "named": true,
-    "fields": {
-      "item": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "for_pattern",
-            "named": true
-          }
-        ]
-      },
-      "iter": {
-        "multiple": true,
-        "required": false,
-        "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
-          {
-            "type": "[",
-            "named": false
-          },
-          {
-            "type": "]",
-            "named": false
-          },
-          {
-            "type": "identifier",
-            "named": true
-          },
-          {
-            "type": "{",
-            "named": false
-          },
-          {
-            "type": "}",
-            "named": false
-          }
-        ]
-      },
-      "key": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "brace_expression",
-            "named": true
-          }
-        ]
-      }
-    },
+    "fields": {},
     "children": {
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "case_clause",
+          "named": true
+        },
+        {
+          "type": "default_clause",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
         {
           "type": "element",
           "named": true
@@ -553,7 +640,19 @@
           "named": true
         },
         {
+          "type": "else_if_clause",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
           "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "fx_attr",
           "named": true
         },
         {
@@ -573,7 +672,15 @@
           "named": true
         },
         {
+          "type": "static_attr",
+          "named": true
+        },
+        {
           "type": "text",
+          "named": true
+        },
+        {
+          "type": "use_attr",
           "named": true
         },
         {
@@ -582,21 +689,6 @@
         },
         {
           "type": "while_loading_block",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "for_pattern",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "identifier",
           "named": true
         }
       ]
@@ -631,46 +723,31 @@
   {
     "type": "if_block",
     "named": true,
-    "fields": {
-      "cond": {
-        "multiple": true,
-        "required": false,
-        "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
-          {
-            "type": "[",
-            "named": false
-          },
-          {
-            "type": "]",
-            "named": false
-          },
-          {
-            "type": "identifier",
-            "named": true
-          },
-          {
-            "type": "{",
-            "named": false
-          },
-          {
-            "type": "}",
-            "named": false
-          }
-        ]
-      }
-    },
+    "fields": {},
     "children": {
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "case_clause",
+          "named": true
+        },
+        {
+          "type": "default_clause",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
         {
           "type": "element",
           "named": true
@@ -684,7 +761,15 @@
           "named": true
         },
         {
+          "type": "event_attr",
+          "named": true
+        },
+        {
           "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "fx_attr",
           "named": true
         },
         {
@@ -704,7 +789,15 @@
           "named": true
         },
         {
+          "type": "static_attr",
+          "named": true
+        },
+        {
           "type": "text",
+          "named": true
+        },
+        {
+          "type": "use_attr",
           "named": true
         },
         {
@@ -736,52 +829,89 @@
   {
     "type": "match_block",
     "named": true,
-    "fields": {
-      "value": {
-        "multiple": true,
-        "required": false,
-        "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
-          {
-            "type": "[",
-            "named": false
-          },
-          {
-            "type": "]",
-            "named": false
-          },
-          {
-            "type": "identifier",
-            "named": true
-          },
-          {
-            "type": "{",
-            "named": false
-          },
-          {
-            "type": "}",
-            "named": false
-          }
-        ]
-      }
-    },
+    "fields": {},
     "children": {
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
         {
           "type": "case_clause",
           "named": true
         },
         {
           "type": "default_clause",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
+        {
+          "type": "element",
+          "named": true
+        },
+        {
+          "type": "else_clause",
+          "named": true
+        },
+        {
+          "type": "else_if_clause",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
+          "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "fx_attr",
+          "named": true
+        },
+        {
+          "type": "html_comment",
+          "named": true
+        },
+        {
+          "type": "if_block",
+          "named": true
+        },
+        {
+          "type": "interpolation",
+          "named": true
+        },
+        {
+          "type": "match_block",
+          "named": true
+        },
+        {
+          "type": "static_attr",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "use_attr",
+          "named": true
+        },
+        {
+          "type": "while_error_block",
+          "named": true
+        },
+        {
+          "type": "while_loading_block",
           "named": true
         }
       ]
@@ -797,7 +927,23 @@
       "required": false,
       "types": [
         {
+          "type": "case_clause",
+          "named": true
+        },
+        {
+          "type": "default_clause",
+          "named": true
+        },
+        {
           "type": "element",
+          "named": true
+        },
+        {
+          "type": "else_clause",
+          "named": true
+        },
+        {
+          "type": "else_if_clause",
           "named": true
         },
         {
@@ -895,38 +1041,53 @@
   {
     "type": "while_error_block",
     "named": true,
-    "fields": {
-      "error": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "identifier",
-            "named": true
-          }
-        ]
-      },
-      "signal": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "identifier",
-            "named": true
-          }
-        ]
-      }
-    },
+    "fields": {},
     "children": {
       "multiple": true,
       "required": false,
       "types": [
         {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "case_clause",
+          "named": true
+        },
+        {
+          "type": "default_clause",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
+        {
           "type": "element",
           "named": true
         },
         {
+          "type": "else_clause",
+          "named": true
+        },
+        {
+          "type": "else_if_clause",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
           "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "fx_attr",
           "named": true
         },
         {
@@ -946,7 +1107,15 @@
           "named": true
         },
         {
+          "type": "static_attr",
+          "named": true
+        },
+        {
           "type": "text",
+          "named": true
+        },
+        {
+          "type": "use_attr",
           "named": true
         },
         {
@@ -963,28 +1132,53 @@
   {
     "type": "while_loading_block",
     "named": true,
-    "fields": {
-      "signal": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "identifier",
-            "named": true
-          }
-        ]
-      }
-    },
+    "fields": {},
     "children": {
       "multiple": true,
       "required": false,
       "types": [
         {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "case_clause",
+          "named": true
+        },
+        {
+          "type": "default_clause",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
+        {
           "type": "element",
           "named": true
         },
         {
+          "type": "else_clause",
+          "named": true
+        },
+        {
+          "type": "else_if_clause",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
           "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "fx_attr",
           "named": true
         },
         {
@@ -1004,7 +1198,15 @@
           "named": true
         },
         {
+          "type": "static_attr",
+          "named": true
+        },
+        {
           "type": "text",
+          "named": true
+        },
+        {
+          "type": "use_attr",
           "named": true
         },
         {
@@ -1027,10 +1229,6 @@
     "named": false
   },
   {
-    "type": ",",
-    "named": false
-  },
-  {
     "type": "/>",
     "named": false
   },
@@ -1040,6 +1238,78 @@
   },
   {
     "type": "</",
+    "named": false
+  },
+  {
+    "type": "</case>",
+    "named": false
+  },
+  {
+    "type": "</default>",
+    "named": false
+  },
+  {
+    "type": "</else-if>",
+    "named": false
+  },
+  {
+    "type": "</else>",
+    "named": false
+  },
+  {
+    "type": "</for>",
+    "named": false
+  },
+  {
+    "type": "</if>",
+    "named": false
+  },
+  {
+    "type": "</match>",
+    "named": false
+  },
+  {
+    "type": "</while-error>",
+    "named": false
+  },
+  {
+    "type": "</while-loading>",
+    "named": false
+  },
+  {
+    "type": "<case",
+    "named": false
+  },
+  {
+    "type": "<default",
+    "named": false
+  },
+  {
+    "type": "<else",
+    "named": false
+  },
+  {
+    "type": "<else-if",
+    "named": false
+  },
+  {
+    "type": "<for",
+    "named": false
+  },
+  {
+    "type": "<if",
+    "named": false
+  },
+  {
+    "type": "<match",
+    "named": false
+  },
+  {
+    "type": "<while-error",
+    "named": false
+  },
+  {
+    "type": "<while-loading",
     "named": false
   },
   {
@@ -1075,14 +1345,6 @@
     "named": true
   },
   {
-    "type": "key",
-    "named": false
-  },
-  {
-    "type": "of",
-    "named": false
-  },
-  {
     "type": "on:",
     "named": false
   },
@@ -1100,62 +1362,6 @@
   },
   {
     "type": "{",
-    "named": false
-  },
-  {
-    "type": "{#for",
-    "named": false
-  },
-  {
-    "type": "{#if",
-    "named": false
-  },
-  {
-    "type": "{#match",
-    "named": false
-  },
-  {
-    "type": "{#while-error",
-    "named": false
-  },
-  {
-    "type": "{#while-loading",
-    "named": false
-  },
-  {
-    "type": "{/for}",
-    "named": false
-  },
-  {
-    "type": "{/if}",
-    "named": false
-  },
-  {
-    "type": "{/match}",
-    "named": false
-  },
-  {
-    "type": "{/while-error}",
-    "named": false
-  },
-  {
-    "type": "{/while-loading}",
-    "named": false
-  },
-  {
-    "type": "{:case",
-    "named": false
-  },
-  {
-    "type": "{:default}",
-    "named": false
-  },
-  {
-    "type": "{:else if",
-    "named": false
-  },
-  {
-    "type": "{:else}",
     "named": false
   },
   {

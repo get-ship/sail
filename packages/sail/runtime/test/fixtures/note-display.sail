@@ -25,12 +25,12 @@ export default controller(({ title, body, tags }: { title: () => string; body: (
 <div>
   <span data-testid="title">{title()}</span>
   <button data-testid="toggle" on:click={() => expanded.set(!expanded())}>toggle</button>
-  {#if expanded()}
+  <if cond={expanded()}>
     <div data-testid="body">{body()}</div>
     <ul data-testid="tags">
-      {#for tag of parsedTags() key={tag}}
+      <for as="tag" of={parsedTags()} key={tag}>
         <li>{tag}</li>
-      {/for}
+      </for>
     </ul>
-  {/if}
+  </if>
 </div>

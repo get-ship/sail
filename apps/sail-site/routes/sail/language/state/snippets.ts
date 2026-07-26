@@ -68,9 +68,9 @@ effect(() => {
   template: `<button on:click={() => count.set(count() + 1)}>+1</button>
 <strong>{count()}</strong>
 <strong>{doubled()}</strong>
-{#for line of log() key={line}}
+<for as="line" of={log()} key={line}>
   <p>{line}</p>
-{/for}`,
+</for>`,
 
   // Inside <controller>, controller/signal/mount are ambient — no import.
   lifecycle: `export default controller(() => {

@@ -1027,7 +1027,13 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          Mutation is ALWAYS `signal.set(newValue)` (or `signal.set(prev => next)`). Lifecycle\nis ambient, not a section — call `mount(fn)` (fires once after this instance's DOM\nconnects; a returned function is cleanup run on dispose) or `onCleanup(fn)` (runs on\ndispose) from anywhere in the setup call graph, including a composition function\ncalled from setup. Both are auto-injected — no import needed.\n\n\
          Import primitives from `@ship/sail-runtime` — the front door. Never from\n`@ship/sail-runtime/internal`: that is the COMPILER's ABI (`bindFor`,\n`runAction`, …). If you are typing a symbol from there, you are hand-writing something\nthe compiler emits.\n\n\
          Reactivity: `signal` `derived` `effect` `batch` `untrack` `shared`. Reach for\n`effect` rarely — it is the escape hatch, not the pattern. Cleanup is automatic: an\neffect created during setup dies with the component.\n\n\
-         Control flow: `{{#if cond}}…{{/if}}`, `{{#for item of items key={{item.id}}}}…{{/for}}`\n(the `key=` is required — without it the reconciler falls back to positional matching\nand loses DOM identity on reorder).\n"
+         Control flow is element blocks (brace `{{#if}}` / `{{#for}}` are retired):\n\
+         `<if cond={{open()}}>…<else-if cond={{x()}}>…</else-if><else>…</else></if>`,\n\
+         `<for as=\"item\" of={{items()}} key={{item.id}}>…</for>` (key= required — without it\n\
+         the reconciler falls back to positional matching and loses DOM identity on reorder),\n\
+         `<match on={{status()}}><case of={{'ok'}}>…</case><default>…</default></match>`,\n\
+         `<while-loading of=\"sig\">…</while-loading>`,\n\
+         `<while-error as=\"err\" of=\"sig\">…</while-error>`.\n"
     );
     let _ = writeln!(md, "## Runtime CSS — the `(--x)` binding\n");
     let _ = writeln!(

@@ -1,5 +1,5 @@
-//! Task #34 regression (RED→GREEN pinned): a keyed `{#for}` row reuse must
-//! re-select a nested `{#match}` branch when the row's underlying field
+//! Task #34 regression (RED→GREEN pinned): a keyed `<for>` row reuse must
+//! re-select a nested `<match>` branch when the row's underlying field
 //! changes via a signal write — not just when the row's identity/index
 //! changes.
 //!
@@ -7,7 +7,7 @@
 //! template_emit/control_emit.rs) build their `bindIf` `test()` discriminant
 //! via plain `self.rw(...)` calls, never routing through
 //! `for_version_comma`/`for_version_stmt` (template_emit.rs) the way every
-//! other binding kind inside a `{#for}` row does. Keyed row reuse
+//! other binding kind inside a `<for>` row does. Keyed row reuse
 //! (`packages/sail/runtime/src/for.ts` `bindFor`) reassigns `$scope.<var>` and
 //! bumps the row's `__v_<field>` signals — it does NOT re-run the row's
 //! render — so a `test()` closure that never reads a `__v_<field>` signal
@@ -82,7 +82,7 @@ fn keyed_for_row_reuse_reselects_nested_match_branch() {
         .expect("run vitest");
     assert!(
         status.success(),
-        "a keyed {{#for}} row reuse must re-select the nested {{#match}} branch on a row-field signal write"
+        "a keyed <for> row reuse must re-select the nested <match> branch on a row-field signal write"
     );
 }
 
@@ -115,7 +115,7 @@ export default defineConfig({{
     let test = r#"import { describe, it, expect } from 'vitest'
 import { mount } from './fm.render.ts'
 
-describe('task #34 — keyed {#for} row reuse re-tests nested {#match}', () => {
+describe('task #34 — keyed <for> row reuse re-tests nested <match>', () => {
   it('toggling a row field (same key) flips the matched branch, not just on reorder', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
@@ -135,7 +135,7 @@ describe('task #34 — keyed {#for} row reuse re-tests nested {#match}', () => {
     toggleA.click()
 
     // The DOM node identity for row "a" must be preserved (keyed reuse —
-    // no remount), but its nested {#match} must re-select the 'done' arm.
+    // no remount), but its nested <match> must re-select the 'done' arm.
     const rowsAfter = rows()
     expect(rowsAfter.length).toBe(2)
     const rowAAfter = rowsAfter.find((r) => r.getAttribute('data-id') === 'a')!

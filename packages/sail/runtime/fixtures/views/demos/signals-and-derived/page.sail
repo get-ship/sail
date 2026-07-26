@@ -47,14 +47,14 @@ export default controller(() => {
 
   <section>
     <h2>history</h2>
-    {#if history().length === 0}
+    <if cond={history().length === 0}>
       <p data-muted="true" data-test="empty">No history yet.</p>
-    {:else}
+    <else>
       <ol data-test="history">
-        {#for v of history() key={v.k}}
+        <for as="v" of={history()} key={v.k}>
           <li>{v.value}</li>
-        {/for}
+        </for>
       </ol>
-    {/if}
+    </else></if>
   </section>
 </div>

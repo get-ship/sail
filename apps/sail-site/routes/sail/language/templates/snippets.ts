@@ -4,23 +4,23 @@ export const code = {
   read: `<p>Signed in as {user().name}.</p>
 <button disabled={saving()}>Save</button>`,
 
-  ifBlock: `{#if user()}
+  ifBlock: `<if cond={user()}>
   <p>Welcome back.</p>
-{:else if pending()}
+<else-if cond={pending()}>
   <spinner></spinner>
-{:else}
+</else-if><else>
   <a href="/login">Sign in</a>
-{/if}`,
+</else></if>`,
 
-  matchBlock: `{#match status()}
-  {:case 'draft'} <badge tone="muted">Draft</badge>
-  {:case 'live'}  <badge tone="success">Live</badge>
-  {:default}      <badge>Unknown</badge>
-{/match}`,
+  matchBlock: `<match on={status()}>
+  <case of={'draft'}> <badge tone="muted">Draft</badge>
+  </case><case of={'live'}>  <badge tone="success">Live</badge>
+  </case><default>      <badge>Unknown</badge>
+</default></match>`,
 
-  forBlock: `{#for row of rows() key={row.id}}
+  forBlock: `<for as="row" of={rows()} key={row.id}>
   <tr><td>{row.name}</td></tr>
-{/for}`,
+</for>`,
 
   events: `<button on:click={() => count.set((n) => n + 1)}>
   clicked {count()} times

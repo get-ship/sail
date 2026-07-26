@@ -26,7 +26,7 @@ import { call } from 'ship'
 export default controller((_ctx) => ({ t: query(() => call('api.demo.clock', {})) }))
 </controller>
 
-{#while-loading of t}<p>Connecting…</p>{/while-loading}
-{#while-error err of t}<p>Lost: {err.message}</p>{/while-error}
+<while-loading of="t"><p>Connecting…</p></while-loading>
+<while-error as="err" of="t"><p>Lost: {err.message}</p></while-error>
 <p>state: {t().kind}</p>`,
 }

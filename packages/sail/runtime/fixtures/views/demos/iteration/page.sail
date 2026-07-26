@@ -45,16 +45,16 @@ export default controller(() => {
     <button type="submit" data-test="todo-add">add</button>
   </form>
 
-  {#if items().length === 0}
+  <if cond={items().length === 0}>
     <p data-muted="true" data-test="empty">List is empty.</p>
-  {:else}
+  <else>
     <ul data-test="todos">
-      {#for t of items() key={t.id}}
+      <for as="t" of={items()} key={t.id}>
         <li>
           <span>{t.text}</span>
           <button data-test="remove" on:click={() => remove(t.id)}>×</button>
         </li>
-      {/for}
+      </for>
     </ul>
-  {/if}
+  </else></if>
 </div>

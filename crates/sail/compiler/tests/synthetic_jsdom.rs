@@ -3,7 +3,7 @@
 //! The SAME synthesized render that server-renders through ship-js must also
 //! client-mount and stay reactive in a browser DOM. This synthesizes the
 //! control-flow `board` surface, then drives the workspace `vitest` in a jsdom
-//! environment to `mount()` it and assert: the {#if}/{#for} DOM builds, the
+//! environment to `mount()` it and assert: the <if>/<for> DOM builds, the
 //! nested component render, and an on:click handler mutates
 //! the controller signal so the list re-renders (proving live reactivity, not
 //! just first paint).
@@ -122,7 +122,7 @@ describe('synthesized board — client mount + reactivity', () => {
     document.body.appendChild(container)
     const dispose = mount(container)
 
-    // {#if items().length > 0} → true → the list renders both {#for} rows.
+    // <if cond={items().length > 0}> → true → the list renders both <for> rows.
     // The canonical fixture authors <row>, which lowers to div.sail-row —
     // the old <ul>/<li> markup died with the corpus codemod.
     expect(container.querySelectorAll('.sail-row').length).toBe(2)
@@ -134,7 +134,7 @@ describe('synthesized board — client mount + reactivity', () => {
     // the attribute; true sets it).
     expect(container.querySelectorAll('.sail-row[aria-pressed]').length).toBe(1)
 
-    // on:click={() => add()} mutates the controller signal → the {#for}
+    // on:click={() => add()} mutates the controller signal → the <for>
     // re-renders with a third row. Proves live reactivity, not just paint.
     const buttons = [...container.querySelectorAll('button')] as HTMLButtonElement[]
     const addBtn = buttons.find((b) => b.textContent === 'add')

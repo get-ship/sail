@@ -46,22 +46,28 @@
 
 ; ── template control flow markers ────────────────────────────────────
 ; `{:elif}` is deliberately absent — the compiler's tokenizer only
-; recognises `{:else if}`.
-"{#if"               @keyword.directive
-"{:else if"          @keyword.directive
-"{:else}"            @keyword.directive
-"{/if}"              @keyword.directive
-"{#for"              @keyword.directive
-"{:else}"            @keyword.directive
-"{/for}"             @keyword.directive
-"{#match"            @keyword.directive
-"{:case"             @keyword.directive
-"{:default}"         @keyword.directive
-"{/match}"           @keyword.directive
-"{#while-loading"    @keyword.directive
-"{/while-loading}"   @keyword.directive
-"{#while-error"      @keyword.directive
-"{/while-error}"     @keyword.directive
+; brace form is retired.
+; control-flow element tags
+((tag_name) @keyword.directive
+  (#match? @keyword.directive "^(if|else-if|else|for|match|case|default|while-loading|while-error)$"))
+"<if"                @keyword.directive
+"</if>"              @keyword.directive
+"<else-if"           @keyword.directive
+"</else-if>"         @keyword.directive
+"<else"              @keyword.directive
+"</else>"            @keyword.directive
+"<for"               @keyword.directive
+"</for>"             @keyword.directive
+"<match"             @keyword.directive
+"</match>"           @keyword.directive
+"<case"              @keyword.directive
+"</case>"            @keyword.directive
+"<default"           @keyword.directive
+"</default>"         @keyword.directive
+"<while-loading"     @keyword.directive
+"</while-loading>"   @keyword.directive
+"<while-error"       @keyword.directive
+"</while-error>"     @keyword.directive
 
 ; Brace boundaries.
 "{" @punctuation.special
@@ -72,20 +78,11 @@
 ; access shows up as a single `.foo` token (the `_member` rule).
 (interpolation (identifier) @variable)
 (brace_expression (identifier) @variable)
-(if_block cond: (identifier) @variable)
-(for_block iter: (identifier) @variable)
-(match_block value: (identifier) @variable)
-(while_loading_block signal: (identifier) @variable)
-(while_error_block signal: (identifier) @variable)
-(else_if_clause cond: (identifier) @variable)
-(case_clause value: (identifier) @variable)
 
 ; For-loop binding pattern names are locals introduced by the loop.
-(for_pattern (identifier) @variable.parameter)
 
 ; `{#while-error <errVar> of <signal>}` — the error binding is a local
 ; introduced by the block, scoped to its body.
-(while_error_block error: (identifier) @variable.parameter)
 
 ; ── comments ─────────────────────────────────────────────────────────
 (html_comment) @comment

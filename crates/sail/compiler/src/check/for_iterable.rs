@@ -1,6 +1,6 @@
-//! Type-strengthening #5: `{#for x of EXPR}` iterable shape.
+//! Type-strengthening #5: `<for as="x" of={EXPR}>` iterable shape.
 //!
-//! `{#for}` walks an iterable. Number, boolean, null, and undefined
+//! `<for>` walks an iterable. Number, boolean, null, and undefined
 //! literals can never satisfy that contract; the runtime currently
 //! either renders zero items (silent) or throws on first iteration.
 //! Object literals at the top of the iterable expression don't iterate
@@ -53,7 +53,7 @@ fn check_for(f: &ForInstr) -> Result<(), CompileError> {
         && let Some(reason) = non_iterable_reason(&ast.kind)
     {
         return Err(CompileError::new(format!(
-            "{{#for}} iterable: {reason}"
+            "<for> iterable: {reason}"
         ))
         .with_span(it.span)
         .with_category("for-iterable".to_string()));

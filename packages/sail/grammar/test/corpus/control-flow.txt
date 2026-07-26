@@ -2,19 +2,25 @@
 if / else if / else
 ==================
 
-{#if a > 0}<p>pos</p>{:else if a == 0}<p>zero</p>{:else}<p>neg</p>{/if}
+<if cond={a > 0}><p>pos</p><else-if cond={a == 0}><p>zero</p></else-if><else><p>neg</p></else></if>
 
 ---
 
 (source_file
   (if_block
-    cond: (identifier)
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
     (element
       tag: (tag_name)
       (text)
       close_tag: (tag_name))
     (else_if_clause
-      cond: (identifier)
+      (dynamic_attr
+        name: (attr_name)
+        value: (brace_expression
+          (identifier)))
       (element
         tag: (tag_name)
         (text)
@@ -26,43 +32,26 @@ if / else if / else
         close_tag: (tag_name)))))
 
 ==================
-{:elif} is NOT compiler-recognized syntax — must not parse as else-if
-==================
-
-{#if a}<p>pos</p>{:elif b}<p>neg</p>{/if}
-
----
-
-(source_file
-  (if_block
-    cond: (identifier)
-    (element
-      tag: (tag_name)
-      (text)
-      close_tag: (tag_name))
-    (interpolation
-      (identifier)
-      (identifier))
-    (element
-      tag: (tag_name)
-      (text)
-      close_tag: (tag_name))))
-
-==================
 for / key / else
 ==================
 
-{#for item of items() key={item.id}}<li>{item.name}</li>{:else}<em>empty</em>{/for}
+<for as="item" of={items()} key={item.id}><li>{item.name}</li><else><em>empty</em></else></for>
 
 ---
 
 (source_file
   (for_block
-    item: (for_pattern
-      (identifier))
-    iter: (identifier)
-    key: (brace_expression
-      (identifier))
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
     (element
       tag: (tag_name)
       (interpolation
@@ -75,21 +64,29 @@ for / key / else
         close_tag: (tag_name)))))
 
 ==================
-for / parenthesized (item, index) tuple binding
+for / index binding
 ==================
 
-{#for (item, idx) of items() key={item.id}}<li>{idx}: {item.name}</li>{/for}
+<for as="item" index="idx" of={items()} key={item.id}><li>{idx}: {item.name}</li></for>
 
 ---
 
 (source_file
   (for_block
-    item: (for_pattern
-      (identifier)
-      (identifier))
-    iter: (identifier)
-    key: (brace_expression
-      (identifier))
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
     (element
       tag: (tag_name)
       (interpolation
@@ -103,19 +100,28 @@ for / parenthesized (item, index) tuple binding
 match / case / default
 ==================
 
-{#match status}{:case 'ok'}<p>ok</p>{:case 'err'}<p>err</p>{:default}<p>x</p>{/match}
+<match on={status}><case of={'ok'}><p>ok</p></case><case of={'err'}><p>err</p></case><default><p>x</p></default></match>
 
 ---
 
 (source_file
   (match_block
-    value: (identifier)
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
     (case_clause
+      (dynamic_attr
+        name: (attr_name)
+        value: (brace_expression))
       (element
         tag: (tag_name)
         (text)
         close_tag: (tag_name)))
     (case_clause
+      (dynamic_attr
+        name: (attr_name)
+        value: (brace_expression))
       (element
         tag: (tag_name)
         (text)
@@ -130,17 +136,24 @@ match / case / default
 nested for inside if
 ==================
 
-{#if items}{#for x of items}<p>{x}</p>{/for}{/if}
+<if cond={items}><for as="x" of={items}><p>{x}</p></for></if>
 
 ---
 
 (source_file
   (if_block
-    cond: (identifier)
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
     (for_block
-      item: (for_pattern
-        (identifier))
-      iter: (identifier)
+      (static_attr
+        name: (attr_name)
+        value: (string_literal))
+      (dynamic_attr
+        name: (attr_name)
+        value: (brace_expression
+          (identifier)))
       (element
         tag: (tag_name)
         (interpolation
@@ -151,18 +164,20 @@ nested for inside if
 while-loading / while-error blocks
 ==================
 
-{#while-loading of agents}
+<while-loading of="agents">
   <p data-test="loading">Loading agents&hellip;</p>
-{/while-loading}
-{#while-error err of agents}
+</while-loading>
+<while-error as="err" of="agents">
   <p data-test="error">Error: {err.message}</p>
-{/while-error}
+</while-error>
 
 ---
 
 (source_file
   (while_loading_block
-    signal: (identifier)
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
     (element
       tag: (tag_name)
       (static_attr
@@ -171,8 +186,12 @@ while-loading / while-error blocks
       (text)
       close_tag: (tag_name)))
   (while_error_block
-    error: (identifier)
-    signal: (identifier)
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
     (element
       tag: (tag_name)
       (static_attr

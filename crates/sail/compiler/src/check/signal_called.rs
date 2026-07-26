@@ -15,7 +15,7 @@
 //! ## Where it applies
 //!
 //! Every RENDERING position — text holes, attribute values, dynamic attribute
-//! names, attribute conditions, and the `{#if}` / `{#each}` / `{#match}`
+//! names, attribute conditions, and the `<if>` / `{#each}` / `<match>`
 //! control-flow expressions. In each, the value is consumed, so a bare
 //! reference is always the mistake.
 //!

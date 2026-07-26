@@ -126,7 +126,7 @@ fn board_control_flow_first_paint_via_ship_js() {
     let dispatch = Arc::new(SsrDispatch::for_request("/board", json!({}), json!({})));
     let out = render(&bundle, dispatch).expect("render board");
 
-    // {#if items().length > 0} → true → the list renders both rows. The
+    // <if cond={items().length > 0}> → true → the list renders both rows. The
     // post-floor layout primitive is `<column gap="2">` — the suite confirms
     // the if-branch serializes regardless of which element the lowered column
     // becomes (the suite asserts the row payload, not the wrapper).

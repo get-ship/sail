@@ -18,17 +18,17 @@ export const code = {
     <span sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{departed()} departed</span>
   </row>
   <column gap="1" sx={style.mt(3).fontFamily(mono).fontSize(sm)}>
-    {#for f of flights() key={f.id}}
+    <for as="f" of={flights()} key={f.id}>
       <row align="center" gap="3" nowrap>
         <span grow min-w="0" sx={style.truncate()}>{f.city}</span>
         <span sx={style.fg(muted-foreground)}>{f.gate}</span>
-        {#match f.status}
-          {:case 'boarding'} <badge tone="success">Boarding</badge>
-          {:case 'delayed'}  <badge tone="destructive">Delayed</badge>
-          {:default}         <badge tone="muted">On time</badge>
-        {/match}
+        <match on={f.status}>
+          <case of={'boarding'}> <badge tone="success">Boarding</badge>
+          </case><case of={'delayed'}>  <badge tone="destructive">Delayed</badge>
+          </case><default>         <badge tone="muted">On time</badge>
+        </default></match>
       </row>
-    {/for}
+    </for>
   </column>
 </card>`,
 

@@ -17,17 +17,17 @@ export default controller(() => {
 
 <button on:click={reload}>Reload</button>
 
-{#while-loading of users}
+<while-loading of="users">
   <spinner></spinner>
-{/while-loading}
-{#while-error err of users}
+</while-loading>
+<while-error as="err" of="users">
   <alert tone="destructive">{err.message}</alert>
-{/while-error}
-{#if users().kind === 'ok'}
-  {#for name of users().value key={name}}
+</while-error>
+<if cond={users().kind === 'ok'}>
+  <for as="name" of={users().value} key={name}>
     <badge>{name}</badge>
-  {/for}
-{/if}`,
+  </for>
+</if>`,
 
   source: `// the <controller> block body (inline in users.sail)
 import { query } from '@ship/sail-runtime'
@@ -43,15 +43,15 @@ export default controller(() => {
 })`,
 
   states: `<!-- users.sail — the three states are explicit, never forgotten -->
-{#while-loading of users}
+<while-loading of="users">
   <p role="status">Loading…</p>
-{/while-loading}
+</while-loading>
 
-{#while-error err of users}
+<while-error as="err" of="users">
   <p role="alert">{err.message}</p>
-{/while-error}
+</while-error>
 
-{#if users().kind === 'ok'}
-  <ul>{#for u of users().value key={u.id}}<li>{u.name}</li>{/for}</ul>
-{/if}`,
+<if cond={users().kind === 'ok'}>
+  <ul><for as="u" of={users().value} key={u.id}><li>{u.name}</li></for></ul>
+</if>`,
 }

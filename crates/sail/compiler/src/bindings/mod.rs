@@ -15,14 +15,14 @@
 //!
 //! ## Branch handling
 //!
-//! Control-flow bodies (`{#if}`, `{#match}`) are walked across **every**
+//! Control-flow bodies (`<if>`, `<match>`) are walked across **every**
 //! branch (taken or not). The registry has no SSR scope, so it can't
 //! tell which branch will render at SSR time — the marker contract
 //! (`docs/ship-adrs/.../sail-marker-contract.md`) takes the position
 //! that the manifest is the union of all bindings the IR could emit;
 //! markers in the SSR'd HTML reference a subset.
 //!
-//! `{#for}` bodies are walked **once** — the walker's snapshot/restore
+//! `<for as="}` bodies are walked **once** — the walker's snapshot/restore
 //! makes every iteration share the same key range, so the registry
 //! mirrors that with a single body walk.
 
@@ -139,7 +139,7 @@ impl Builder {
         }
     }
 
-    /// `{#if}`: one binding for the boundary, then walk every branch
+    /// `<if>`: one binding for the boundary, then walk every branch
     /// body and the optional else body. The boundary's `expr` is the
     /// first branch's condition (the canonical discriminator);
     /// alternate-branch conditions live in the IR but the manifest's
@@ -159,7 +159,7 @@ impl Builder {
         }
     }
 
-    /// `{#for}`: one binding for the boundary (expr = iterable source),
+    /// `<for>`: one binding for the boundary (expr = iterable source),
     /// body walked once, else body walked once.
     fn walk_for(&mut self, instr: &ForInstr) {
         self.push(BindingKind::For, &instr.iterable.source, false);
@@ -169,7 +169,7 @@ impl Builder {
         }
     }
 
-    /// `{#match}`: one binding for the boundary (expr = discriminant),
+    /// `<match>`: one binding for the boundary (expr = discriminant),
     /// each case body walked, default walked.
     fn walk_match(&mut self, instr: &MatchInstr) {
         self.push(BindingKind::Match, &instr.discriminant.source, false);
@@ -181,7 +181,7 @@ impl Builder {
         }
     }
 
-    /// `{#while-loading of <sig>}`: one boundary entry (with `renderKey`);
+    /// `{#while-loading" of={<sig>}>`: one boundary entry (with `renderKey`);
     /// body walked under suppression so the render walker's key counter
     /// stays in sync but no flat manifest entries are emitted for body content.
     fn walk_while_loading(&mut self, instr: &WhileLoadingInstr) {

@@ -3,11 +3,15 @@ import { __tpl, component } from "@ship/sail-runtime/internal";
 
 const __tpl0 = /*@__PURE__*/ __tpl("<div><p>Status</p><span> </span></div>");
 export default Object.assign(component((ctx) => {
-  const { ship, route, navigate } = ctx;
+  const { route, navigate, providers } = ctx;
   const $scope = Object.create(null);
-  $scope.ship = ship;
   $scope.route = route;
   $scope.navigate = navigate;
+  for (const __k of Object.keys(ctx)) {
+    if (__k === "route" || __k === "navigate" || __k === "scope" || __k === "stateKeys" || __k === "host" || __k === "providers" || __k === "props") continue;
+    $scope[__k] = ctx[__k];
+  }
+  if (providers && typeof providers === "object") Object.assign($scope, providers);
   return Object.assign({}, $scope, {
     __mount(container) {
 const __cleanups = [];

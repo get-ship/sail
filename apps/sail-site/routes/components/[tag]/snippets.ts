@@ -129,11 +129,11 @@ export default controller(() => {
 })
 </controller>
 
-{#if visible()}
+<if cond={visible()}>
   <alert tone="warning" sx={style.exit({ opacity: 'fade-out' })}>
     <strong>Careful.</strong> This cannot be undone.
   </alert>
-{/if}
+</if>
 <button on:click={dismiss} variant="ghost">Dismiss</button>`,
 
   progress: `<controller>
@@ -153,12 +153,12 @@ export default controller(() => ({ done: signal(64) }))
 export default controller(() => ({ loading: signal(true) }))
 </controller>
 
-{#if loading()}
+<if cond={loading()}>
   <row gap="2" align="center">
     <spinner tone="primary"></spinner>
     <p>fetching…</p>
   </row>
-{/if}`,
+</if>`,
 
   skeleton: `<row gap="3" align="center" sx={style.enter({ opacity: 'fade' })}>
   <span skeleton shape="circle" sx={style.w(7).h(7)}></span>
@@ -205,12 +205,12 @@ export default controller(() => {
 })
 </controller>
 
-{#if kept()}
+<if cond={kept()}>
   <chip removable on:sail-remove={drop}>Design</chip>
-{/if}
-{#if !kept()}
+</if>
+<if cond={!kept()}>
   <button variant="ghost" on:click={() => kept.set(true)}>bring it back</button>
-{/if}`,
+</if>`,
 
   'status-dot': `<row gap="2" align="center" sx={style.enter({ opacity: 'fade' })}>
   <status-dot tone="success"></status-dot>
@@ -387,13 +387,13 @@ export default controller(() => ({
     <tr><th>Name</th><th>Team</th><th>Status</th></tr>
   </thead>
   <tbody>
-    {#for p of people() key={p.id}}
+    <for as="p" of={people()} key={p.id}>
       <tr>
         <td>{p.name}</td>
         <td>{p.team}</td>
         <td><badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge></td>
       </tr>
-    {/for}
+    </for>
   </tbody>
 </table>`,
 

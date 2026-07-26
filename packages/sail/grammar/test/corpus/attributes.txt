@@ -48,7 +48,7 @@ prop: attribute is refused syntax — must NOT parse as a directive
       name: (attr_name)
       (ERROR
         (UNEXPECTED ':')
-        (identifier))
+        (tag_name))
       value: (brace_expression
         (identifier)))
     close_tag: (tag_name)))
@@ -117,7 +117,7 @@ attr: attribute is refused syntax — must NOT parse as a directive
       name: (attr_name)
       (ERROR
         (UNEXPECTED ':')
-        (identifier))
+        (tag_name))
       value: (brace_expression
         (identifier)))
     close_tag: (tag_name)))

@@ -44,13 +44,18 @@ describe('highlight — markup text is prose, never keywords', () => {
 })
 
 describe('highlight — directive headers and bindings', () => {
-  it('tokenizes the {#for} header as one binding, never a comment', () => {
+  it('tokenizes element control-flow attrs as bindings, never comments', () => {
     const out = highlight(sailFileSnippets.template)
     expect(tokens(out, 'comment')).toEqual([])
-    expect(tokens(out, 'bind')).toContain('{#for f of flights() key={f.id}}')
-    expect(tokens(out, 'bind')).toContain('{#match f.status}')
-    expect(tokens(out, 'bind')).toContain("{:case 'boarding'}")
-    expect(tokens(out, 'bind')).toContain('{/for}')
+    // Element tags are markup; brace attrs on <for>/<match>/<case> are bindings.
+    expect(tokens(out, 'bind')).toEqual(expect.arrayContaining([
+      '{flights()}',
+      '{f.id}',
+      '{f.status}',
+      "{'boarding'}",
+    ]))
+    expect(out).toContain('<for as="f"')
+    expect(out).toContain('<match on=')
   })
 
   it('brace-matches bindings with quotes and nested braces', () => {

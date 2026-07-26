@@ -1,4 +1,4 @@
-//! Type-strengthening #2: `{#for}` `key={…}` stable identity.
+//! Type-strengthening #2: `<for>` `key={…}` stable identity.
 //!
 //! The for-block's keyed reuse only works when the key has stable
 //! identity per row — the same row maps to the same key every render.
@@ -61,7 +61,7 @@ fn check_for(f: &ForInstr) -> Result<(), CompileError> {
         };
         if let Some(reason) = identity_problem(&ast) {
             return Err(CompileError::new(format!(
-                "{{#for}} key={{…}} must have stable per-row identity: {reason}"
+                "<for> key={{…}} must have stable per-row identity: {reason}"
             ))
             .with_span(key_expr.span)
             .with_category("for-key".to_string()));

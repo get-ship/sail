@@ -35,7 +35,21 @@ interface Vocabulary {
   blocks: Block[];
 }
 
-const NO_ARG_CLAUSES: Record<string, true> = { '{:else}': true, '{:default}': true };
+/** Tag from element-form open like `<if cond={…}>` → `if`. */
+function tagFromOpen(open: string): string {
+  const m = open.match(/^<([a-z][a-z0-9-]*)/i);
+  if (!m) throw new Error(`block open is not element form: ${open}`);
+  return m[1]!;
+}
+
+/** Tag from clause like `<else-if cond={…}>` → `else-if`. */
+function tagFromClause(clause: string): string {
+  const m = clause.match(/^<\/?([a-z][a-z0-9-]*)/i);
+  if (!m) throw new Error(`clause is not element form: ${clause}`);
+  return m[1]!;
+}
+
+const NO_ARG_CLAUSES: Record<string, true> = { '<else>': true, '<default>': true };
 
 function parseArgs(argv: string[]) {
   let vocab: string | undefined;
@@ -69,28 +83,15 @@ async function readStdin(): Promise<string> {
 }
 
 function blockRuleName(open: string): string {
-  return `${open.replace('{#', '').replace('}', '').replace(/-/g, '_')}_block`;
+  return `${tagFromOpen(open).replace(/-/g, '_')}_block`;
 }
 
 function clauseRuleName(clause: string): string {
-  return `${clause.replace('{:', '').replace('}', '').replace(/\s/g, '_').replace(/-/g, '_')}_clause`;
+  return `${tagFromClause(clause).replace(/-/g, '_')}_clause`;
 }
 
 function attributeRuleName(prefix: string): string {
   return prefix === 'on' ? 'event_attr' : `${prefix}_attr`;
-}
-
-function blockVariableField(open: string): string {
-  if (open === '{#if}') return 'cond';
-  if (open === '{#for}') return 'iter';
-  if (open === '{#match}') return 'value';
-  if (open === '{#while-loading}') return 'signal';
-  if (open === '{#while-error}') return 'signal';
-  return 'cond';
-}
-
-function clauseVariableField(clause: string): string {
-  return clause.startsWith('{:else') ? 'cond' : 'value';
 }
 
 function jsString(s: string): string {
@@ -117,94 +118,49 @@ function generateGrammar(v: Vocabulary): string {
   })();
   const directiveElements = v.directive_elements.join('|');
 
+  // Element-form control flow: open-tag prefix + attrs + body + close-tag.
+  // Clause tags parse as nested control elements inside the body.
   const blockRules = v.blocks
     .map((b) => {
       const rule = blockRuleName(b.open);
-      const openPrefix = b.open.replace('}', '');
-      const close = b.open.replace('{#', '{/');
-      const clauses = b.clauses
-        .map((c) =>
-          c in NO_ARG_CLAUSES
-            ? `  optional($.${clauseRuleName(c)}),`
-            : `  repeat($.${clauseRuleName(c)}),`,
-        )
-        .join('\n');
-
-      let body: string;
-      if (b.open === '{#for}') {
-        body = `${rule}: $ => seq(
-  ${jsString(openPrefix)}, field('item', $.for_pattern), 'of',
-  field('iter', $._iter_expr),
-  optional(seq('key', '=', field('key', $.brace_expression))),
-  '}',
+      const tag = tagFromOpen(b.open);
+      return `${rule}: $ => seq(
+  ${jsString('<' + tag)},
+  repeat($._attribute),
+  '>',
   repeat($._template_node),
-  optional($.else_clause),
-  ${jsString(close)},
+  ${jsString('</' + tag + '>')},
 ),`;
-      } else if (b.open === '{#while-loading}') {
-        body = `${rule}: $ => seq(
-  ${jsString(openPrefix)}, 'of', field('signal', $.identifier), '}',
-  repeat($._template_node),
-  ${jsString(close)},
-),`;
-      } else if (b.open === '{#while-error}') {
-        body = `${rule}: $ => seq(
-  ${jsString(openPrefix)},
-  field('error', $.identifier), 'of',
-  field('signal', $.identifier),
-  '}',
-  repeat($._template_node),
-  ${jsString(close)},
-),`;
-      } else if (b.open === '{#if}') {
-        body = `${rule}: $ =\u003e seq(
-  ${jsString(openPrefix)}, field('cond', $._expr), '}',
-  repeat($._template_node),
-${clauses}
-  ${jsString(close)},
-),`;
-      } else if (b.open === '{#match}') {
-        body = `${rule}: $ =\u003e seq(
-  ${jsString(openPrefix)}, field('value', $._expr), '}',
-${clauses}
-  ${jsString(close)},
-),`;
-      } else {
-        body = `${rule}: $ => seq(
-  ${jsString(openPrefix)}, field('cond', $._expr), '}',
-  repeat($._template_node),
-${clauses}
-  ${jsString(close)},
-),`;
-      }
-      return body;
     })
     .join('\n\n');
 
-  const blockNodeChoices = v.blocks
-    .map((b) => `      $.${blockRuleName(b.open)},`)
+
+  const allControlRules = [
+    ...v.blocks.map((b) => blockRuleName(b.open)),
+    ...[...new Map(v.blocks.flatMap((b) => b.clauses).map((c) => [c, c])).values()]
+      .map((c) => clauseRuleName(c)),
+  ];
+  const blockNodeChoices = allControlRules
+    .map((name) => `      $.${name},`)
     .join('\n');
 
-  // Clause rules are defined once each, even if used by multiple blocks
-  // (e.g. `{:else}` appears in both `{#if}` and `{#for}`).
+
+  // Clause rules are defined once each (e.g. `<else>` in both `<if>` and `<for>`).
   const uniqueClauses = [...new Map(v.blocks.flatMap((b) => b.clauses).map((c) => [c, c])).values()];
   const clauseRules = uniqueClauses
     .map((c) => {
       const rule = clauseRuleName(c);
-      if (c in NO_ARG_CLAUSES) {
-        return `${rule}: $ => seq(
-  ${jsString(c)},
-  repeat($._template_node),
-),`;
-      }
+      const tag = tagFromClause(c);
       return `${rule}: $ => seq(
-  ${jsString(c.replace('}', ''))},
-  field('${clauseVariableField(c)}', $._expr),
-  '}',
+  ${jsString('<' + tag)},
+  repeat($._attribute),
+  '>',
   repeat($._template_node),
+  ${jsString('</' + tag + '>')},
 ),`;
     })
     .join('\n\n');
+
 
   const allBlockRules = clauseRules
     ? `${blockRules}\n\n${clauseRules}`
@@ -398,14 +354,6 @@ ${indent(allBlockRules, 4)}
 
     // \`x of items\` (bare binding) or \`(x, i) of items\` (parenthesized
     // tuple with index) — matches
-    // \`parse::template::blocks::for_header::parse_for_binding\`, which
-    // only accepts a bare identifier or a \`(item, index)\` pair; a
-    // bare comma list without parens is NOT accepted.
-    for_pattern: $ => choice(
-      $.identifier,
-      seq('(', $.identifier, ',', $.identifier, ')'),
-    ),
-
     // ── opaque expression body ────────────────────────────────────
     // Inside \`{…}\` we capture everything as a balanced atom stream so
     // the host-language injection (TypeScript) can highlight it. The
@@ -480,46 +428,33 @@ function generateHighlights(v: Vocabulary): string {
     .map((p) => `"${p}"${' '.repeat(maxPrefixLen - p.length + 3)}@keyword.directive`)
     .join('\n');
 
-  const blockMarkerLines = v.blocks.flatMap((b) => {
-    const markers: string[] = [b.open.replace('}', '')];
+  const controlTags = [
+    ...new Set(
+      v.blocks.flatMap((b) => [tagFromOpen(b.open), ...b.clauses.map(tagFromClause)]),
+    ),
+  ];
+  const controlTagAlt = controlTags.join('|');
+  const openCloseMarkers: string[] = [];
+  for (const b of v.blocks) {
+    const tag = tagFromOpen(b.open);
+    openCloseMarkers.push(`<${tag}`, `</${tag}>`);
     for (const c of b.clauses) {
-      markers.push(c in NO_ARG_CLAUSES ? c : c.replace('}', ''));
+      const ct = tagFromClause(c);
+      openCloseMarkers.push(`<${ct}`, `</${ct}>`);
     }
-    markers.push(b.open.replace('{#', '{/'));
-    return markers;
-  });
-  const maxMarkerLen = Math.max(...blockMarkerLines.map((m) => m.length));
-  const blockMarkers = v.blocks
-    .map((b) => {
-      const lines: string[] = [];
-      const pushMarker = (m: string) =>
-        lines.push(`"${m}"${' '.repeat(maxMarkerLen - m.length + 3)}@keyword.directive`);
-      pushMarker(b.open.replace('}', ''));
-      for (const c of b.clauses) {
-        pushMarker(c in NO_ARG_CLAUSES ? c : c.replace('}', ''));
-      }
-      pushMarker(b.open.replace('{#', '{/'));
-      return lines.join('\n');
-    })
-    .join('\n');
+  }
+  const uniqMarkers = [...new Set(openCloseMarkers)];
+  const maxMarkerLen = Math.max(...uniqMarkers.map((m) => m.length), 1);
+  const blockMarkers =
+    `; control-flow element tags\n((tag_name) @keyword.directive\n  (#match? @keyword.directive "^(${controlTagAlt})$"))\n` +
+    uniqMarkers
+      .map((m) => `"${m}"${' '.repeat(maxMarkerLen - m.length + 3)}@keyword.directive`)
+      .join('\n');
 
   const identifierTargets: string[] = [
     '(interpolation (identifier) @variable)',
     '(brace_expression (identifier) @variable)',
   ];
-  for (const b of v.blocks) {
-    const rule = blockRuleName(b.open);
-    const field = blockVariableField(b.open);
-    identifierTargets.push(`(${rule} ${field}: (identifier) @variable)`);
-  }
-  for (const b of v.blocks) {
-    for (const c of b.clauses) {
-      if (c in NO_ARG_CLAUSES) continue;
-      const rule = clauseRuleName(c);
-      const field = clauseVariableField(c);
-      identifierTargets.push(`(${rule} ${field}: (identifier) @variable)`);
-    }
-  }
 
   return `; Tree-sitter highlight scopes for \`.sail\` template files.
 ;
@@ -566,7 +501,7 @@ ${directivePrefixLines}
 
 ; ── template control flow markers ────────────────────────────────────
 ; \`{:elif}\` is deliberately absent — the compiler's tokenizer only
-; recognises \`{:else if}\`.
+; brace form is retired.
 ${blockMarkers}
 
 ; Brace boundaries.
@@ -579,11 +514,9 @@ ${blockMarkers}
 ${identifierTargets.join('\n')}
 
 ; For-loop binding pattern names are locals introduced by the loop.
-(for_pattern (identifier) @variable.parameter)
 
 ; \`{#while-error <errVar> of <signal>}\` — the error binding is a local
 ; introduced by the block, scoped to its body.
-(while_error_block error: (identifier) @variable.parameter)
 
 ; ── comments ─────────────────────────────────────────────────────────
 (html_comment) @comment

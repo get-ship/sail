@@ -17,14 +17,14 @@ export default controller(() => ({ enabled: signal(false) }))
     Show secret panel
   </label>
 
-  {#if enabled()}
+  <if cond={enabled()}>
     <section data-test="panel-on">
       <h2>Panel is visible.</h2>
       <p>Toggling the checkbox unmounts this branch and mounts the other.</p>
     </section>
-  {:else}
+  <else>
     <section data-test="panel-off">
       <p>Hidden — flip the box to reveal.</p>
     </section>
-  {/if}
+  </else></if>
 </div>

@@ -22,17 +22,17 @@ export default controller(() => ({ tone: signal<Tone>('info') }))
   </div>
 
   <section data-test="alert" data-tone={tone()}>
-    {#match tone()}
-      {:case 'info'}
+    <match on={tone()}>
+      <case of={'info'}>
         <strong>Heads up.</strong> Just a friendly note.
-      {:case 'success'}
+      </case><case of={'success'}>
         <strong>All good.</strong> The thing finished without errors.
-      {:case 'warning'}
+      </case><case of={'warning'}>
         <strong>Careful.</strong> This action may have side-effects.
-      {:case 'destructive'}
+      </case><case of={'destructive'}>
         <strong>Stop.</strong> This will permanently delete data.
-      {:default}
+      </case><default>
         <em>Pick a tone.</em>
-    {/match}
+    </default></match>
   </section>
 </div>

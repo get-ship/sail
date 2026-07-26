@@ -4,10 +4,9 @@
 // the --syntax-* tokens.
 //
 // Context model (the part a flat regex can't do): a snippet is either MARKUP
-// (starts with a tag or a `{#…}` directive) or CODE (TS / bash). Markup text
+// (starts with a tag or a control-flow element / `{…}` binding) or CODE (TS / bash). Markup text
 // is prose — words there are never keywords. `{…}` in markup is a binding,
-// matched with real nested-brace/quote awareness so `{#for … key={x.id}}` is
-// one span. Inside `<controller>` / `<scope>` / `<script>` the scanner drops
+// matched with real nested-brace/quote awareness so nested braces in `{…}` attrs stay one span. Inside `<controller>` / `<scope>` / `<script>` the scanner drops
 // into CODE mode until the closing tag; there, braces are plain punctuation
 // (never bindings) and keyword/verb matching applies.
 //
@@ -38,7 +37,7 @@ function span(cls: string, text: string): string {
 
 /**
  * Index of the `}` matching the `{` at `openIdx`, or -1. Honours nested
- * braces and quoted strings so `{#for f of xs key={f.id}}` and
+ * braces and quoted strings so attrs like `key={f.id}` and
  * `{playing() ? 'a' : 'b'}` close at the right brace.
  */
 function findMatchingBrace(source: string, openIdx: number): number {

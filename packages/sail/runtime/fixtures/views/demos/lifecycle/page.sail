@@ -49,8 +49,8 @@ export default controller(() => {
   </section>
 
   <ol data-test="log">
-    {#for line of log() key={line.k}}
+    <for as="line" of={log()} key={line.k}>
       <li>{line.text}</li>
-    {/for}
+    </for>
   </ol>
 </div>

@@ -1,4 +1,4 @@
-// Demo: {#match}/{:case}/{:default} — alert tone selector.
+// Demo: {#match}/{:case}/<default> — alert tone selector.
 {
   "name": "match",
   "path": "/demos/match",

@@ -4,11 +4,15 @@ import { collectElementMarkers } from "@ship/sail-dom";
 
 const __tpl0 = /*@__PURE__*/ __tpl("<tr><td>cell</td></tr>");
 export default Object.assign(component((ctx) => {
-  const { ship, route, navigate } = ctx;
+  const { route, navigate, providers } = ctx;
   const $scope = Object.create(null);
-  $scope.ship = ship;
   $scope.route = route;
   $scope.navigate = navigate;
+  for (const __k of Object.keys(ctx)) {
+    if (__k === "route" || __k === "navigate" || __k === "scope" || __k === "stateKeys" || __k === "host" || __k === "providers" || __k === "props") continue;
+    $scope[__k] = ctx[__k];
+  }
+  if (providers && typeof providers === "object") Object.assign($scope, providers);
 const __wireBoundary_b0 = (anchor) => bindFor({
   anchor,
   items: () => ($scope.rows()),
@@ -18,10 +22,16 @@ const __wireBoundary_b0 = (anchor) => bindFor({
     __childScope2.row = row;
     __childScope2.__i = __i;
     return (($scope) => {
+const __frag3 = document.createDocumentFragment();
 const __c4 = [];
-const __e5 = __tpl0();
-{ const __av6 = ($scope.row.id); if (__av6 == null || __av6 === false || __av6 === "") __e5.removeAttribute("id"); else __e5.setAttribute("id", __av6 === true ? "" : String(__av6)); }
-      return { nodes: [__e5], cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} }, update: (__new7, __newI8) => { const __old = $scope.row; $scope.row = __new7; $scope.__i = __newI8; if (__old.id !== $scope.row.id) { { const __av6 = ($scope.row.id); if (__av6 == null || __av6 === false || __av6 === "") __e5.removeAttribute("id"); else __e5.setAttribute("id", __av6 === true ? "" : String(__av6)); } } } };
+const __t5 = document.createTextNode("\n    ");
+__frag3.appendChild(__t5);
+const __e6 = __tpl0();
+{ const __av7 = ($scope.row.id); if (__av7 == null || __av7 === false || __av7 === "") __e6.removeAttribute("id"); else __e6.setAttribute("id", __av7 === true ? "" : String(__av7)); }
+__frag3.appendChild(__e6);
+const __t8 = document.createTextNode("\n  ");
+__frag3.appendChild(__t8);
+      return { nodes: Array.from(__frag3.childNodes), cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} }, update: (__new9, __newI10) => { const __old = $scope.row; $scope.row = __new9; $scope.__i = __newI10; if (__old.id !== $scope.row.id) { { const __av7 = ($scope.row.id); if (__av7 == null || __av7 === false || __av7 === "") __e6.removeAttribute("id"); else __e6.setAttribute("id", __av7 === true ? "" : String(__av7)); } } } };
     })(__childScope2);
   },
 });

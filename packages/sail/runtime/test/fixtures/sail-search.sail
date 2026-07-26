@@ -21,10 +21,10 @@ export default controller(() => {
 <div>
   <input data-testid="query" bind:value={query} />
   <input data-testid="case" type="checkbox" bind:checked={caseSensitive} />
-  {#if filtered().length === 0}
+  <if cond={filtered().length === 0}>
     <p data-testid="empty">No results for {query()}</p>
-  {/if}
-  {#for item of filtered() key={item}}
+  </if>
+  <for as="item" of={filtered()} key={item}>
     <span data-testid="result">{item}</span>
-  {/for}
+  </for>
 </div>

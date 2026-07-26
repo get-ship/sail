@@ -2,18 +2,18 @@
 // compiler's scope scan isn't fooled. Every SAIL sample is compiled by the
 // build; each one is the code of the live demo beside it.
 export const code = {
-  stagger: `{#if dealt()}
+  stagger: `<if cond={dealt()}>
   <row gap="3">
     <div sx={style.w(9).h(9).radius(md).bg(primary).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })}></div>
     <!-- ×5 — each waits 0.07s after its previous sibling -->
   </row>
-{/if}`,
+</if>`,
 
-  lifecycle: `{#if open()}
+  lifecycle: `<if cond={open()}>
   <card sx={style.enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' })}>
     I animate in, and I animate out.
   </card>
-{/if}`,
+</if>`,
 
   express: `<div sx={style.loop({ translate-x: { from: 0, to: '80px' }, duration: 500 })}></div>
 <div sx={style.loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 })}></div>`,

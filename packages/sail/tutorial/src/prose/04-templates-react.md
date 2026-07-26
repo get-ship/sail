@@ -36,12 +36,12 @@ Debouncing, key filtering, and preventDefault are part of the
 
 ## The blocks
 
-- `{#if cond}…{:else}…{/if}` — branch on a read.
-- `{#match expr}` with `{:case 'x'}` / `{:default}` — a state machine
+- `<if cond={cond}>…<else>…</else></if>` — branch on a read.
+- `<match on={expr}>` with `<case of={'x'}>` / `</case><default>` — a state machine
   rendered as one construct. The example's deploy phase walks
   idle → building → live/failed, and each branch's badge carries its own
   `style.enter`, so the swapped-in state announces itself.
-- `{#for item of items() key={item.id}}` — `key=` is **required**; the
+- `<for as="item" of={items()} key={item.id}>` — `key=` is **required**; the
   compiler rejects a bare `{#for}`. The key is identity: on reorder the
   reconciler *moves* the existing DOM node instead of rebuilding it, so
   focus, selection, and animation state survive.

@@ -293,7 +293,7 @@ pub(super) struct Visitor {
 
 // The walk no longer short-circuits on the first error — `check_expr` pushes
 // one diagnostic per offending expression and the traversal continues, so
-// `collect()` sees every out-of-scope reference. `{#for}` / `{#while-error}`
+// `collect()` sees every out-of-scope reference. `<for as="}` / `<while-error>`
 // locals are still added before the body and removed after, so the scope
 // stays balanced regardless of how many errors were found.
 fn visit_program(program: &Program, v: &mut Visitor) {
@@ -357,7 +357,7 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
         }
         Instr::WhileLoading(wl) => visit_instrs(&wl.body, v),
         Instr::WhileError(we) => {
-            // `{#while-error err of agents}` binds `err` inside the body.
+            // `{#while-error err" of={agents}>` binds `err` inside the body.
             v.scope.names.insert(we.error_var.clone());
             visit_instrs(&we.body, v);
             v.scope.names.remove(&we.error_var);

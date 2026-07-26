@@ -46,7 +46,7 @@ fn a_healthy_boundary_does_not_participate_in_layout() {
     );
 }
 
-/// The branch swap is pure CSS, gated on `[data-caught]` — no signal, no `{#if}`.
+/// The branch swap is pure CSS, gated on `[data-caught]` — no signal, no `<if>`.
 /// Lives on structure sx via group-caught: (element-skins), not contracts PE.
 #[test]
 fn the_swap_is_a_css_gate_not_a_reactive_branch() {

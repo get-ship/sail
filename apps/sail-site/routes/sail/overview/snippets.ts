@@ -42,7 +42,7 @@ export default controller(() => {
 </controller>
 
 <input placeholder="Filter people" bind:value={query} />
-{#for p of filtered() key={p.id}}
+<for as="p" of={filtered()} key={p.id}>
   <card sx={style.pad(4).enter({ opacity: 'fade', translate-y: 'spring:snappy' })}>
     <row gap="3" align="center">
       <avatar></avatar>
@@ -50,7 +50,7 @@ export default controller(() => {
       <badge tone={p.status === 'active' ? 'success' : 'muted'}>{p.status}</badge>
     </row>
   </card>
-{/for}
+</for>
 <button on:click={invite} variant="solid" tone="primary">Invite</button>`,
 
   layout: `<row gap="3" align="center">…</row>     <!-- x axis -->

@@ -48,7 +48,7 @@ fn flag_collects_tags_nested_in_control_flow() {
     let opts = CompileOpts { emit_component_imports: true,
             lint_overrides: Vec::new(), ..CompileOpts::default() };
     let out = compile(
-        "<div>{#if cond()}<sail-a></sail-a>{:else}<sail-b></sail-b>{/if}</div>",
+        "<div><if cond={cond()}><sail-a></sail-a><else><sail-b></sail-b></else></if></div>",
         opts,
     )
     .expect("compile");

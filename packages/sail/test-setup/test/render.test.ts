@@ -40,7 +40,7 @@ describe('renderRoute — reactive controller', () => {
 describe('renderRoute — conditional branch', () => {
   it('shows the branch matching the signal', async () => {
     const v = renderRoute(
-      `{#if ready()}<p data-testid="ok">ready</p>{:else}<p data-testid="wait">waiting</p>{/if}`,
+      `<if cond={ready()}><p data-testid="ok">ready</p><else><p data-testid="wait">waiting</p></else></if>`,
       { controller: () => ({ ready: signal(false) }) },
     )
     expect(v.root.querySelector('[data-testid="wait"]')).not.toBeNull()

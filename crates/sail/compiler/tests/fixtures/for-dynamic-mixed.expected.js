@@ -4,11 +4,15 @@ import { collectElementMarkers } from "@ship/sail-dom";
 
 const __tpl0 = /*@__PURE__*/ __tpl("<tr><td> </td></tr>");
 export default Object.assign(component((ctx) => {
-  const { ship, route, navigate } = ctx;
+  const { route, navigate, providers } = ctx;
   const $scope = Object.create(null);
-  $scope.ship = ship;
   $scope.route = route;
   $scope.navigate = navigate;
+  for (const __k of Object.keys(ctx)) {
+    if (__k === "route" || __k === "navigate" || __k === "scope" || __k === "stateKeys" || __k === "host" || __k === "providers" || __k === "props") continue;
+    $scope[__k] = ctx[__k];
+  }
+  if (providers && typeof providers === "object") Object.assign($scope, providers);
 const __wireBoundary_b0 = (anchor) => bindFor({
   anchor,
   items: () => ($scope.rows()),
@@ -18,14 +22,20 @@ const __wireBoundary_b0 = (anchor) => bindFor({
     __childScope2.row = row;
     __childScope2.__i = __i;
     return (($scope) => {
+const __frag3 = document.createDocumentFragment();
 const __c4 = [];
-const __e5 = __tpl0();
-__c4.push(bindAttr(__e5, "aria-selected", () => ($scope.rows().length > 0)));
-const __e6 = __e5.firstChild;
-const __t7 = __e6.firstChild;
-markHydrateText(__t7, "b2");
-__t7.textContent = ($scope.row.label);
-      return { nodes: [__e5], cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} }, update: (__new8, __newI9) => { const __old = $scope.row; $scope.row = __new8; $scope.__i = __newI9; if (__old.label !== $scope.row.label) { __t7.textContent = ($scope.row.label); } } };
+const __t5 = document.createTextNode("\n    ");
+__frag3.appendChild(__t5);
+const __e6 = __tpl0();
+__c4.push(bindAttr(__e6, "aria-selected", () => ($scope.rows().length > 0)));
+const __e7 = __e6.firstChild;
+const __t8 = __e7.firstChild;
+markHydrateText(__t8, "b2");
+__t8.textContent = ($scope.row.label);
+__frag3.appendChild(__e6);
+const __t9 = document.createTextNode("\n  ");
+__frag3.appendChild(__t9);
+      return { nodes: Array.from(__frag3.childNodes), cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} }, update: (__new10, __newI11) => { const __old = $scope.row; $scope.row = __new10; $scope.__i = __newI11; if (__old.label !== $scope.row.label) { __t8.textContent = ($scope.row.label); } } };
     })(__childScope2);
   },
 });

@@ -32,15 +32,15 @@ recognises:
   injection (`queries/injections.scm`).
 - **Control-flow blocks** (mirrors
   `crates/sail/compiler/src/block_manifest.rs`)
-  - `{#if cond}` / `{:else if cond}` / `{:else}` / `{/if}`
-  - `{#for x of items key={x.id}}` / `{:else}` / `{/for}` (key is
+  - `<if cond={cond}>` / `<else-if cond={cond}>` / `</else-if><else>` / `</else></if>`
+  - `<for as="x" of={items} key={x.id}>` / `<else>` / `</else></for>` (key is
     optional; the item binding is a bare identifier or a
     parenthesized `(item, index)` tuple — a bare comma list without
     parens is not valid)
-  - `{#match value}` / `{:case 'a'}` / `{:default}` / `{/match}`
-  - `{#while-loading of signal}` / `{/while-loading}` — pending state
+  - `<match on={value}>` / `<case of={'a'}>` / `</case><default>` / `</default></match>`
+  - `<while-loading of="signal">` / `</while-loading>` — pending state
     of an async query
-  - `{#while-error errVar of signal}` / `{/while-error}` — rejected
+  - `<while-error as="errVar" of="signal">` / `</while-error>` — rejected
     state of an async query, binding the rejection to `errVar`
 - **HTML comments** `<!-- … -->`.
 
@@ -49,10 +49,10 @@ recognises:
 - `style:` / `prop:` / `attr:` / `class:` attrs — compiler hard-refuses
   (`parse/template/attrs.rs`); plain `name={expr}` is field binding.
 - `let:` attrs — never implemented; slot/async bindings sit on the
-  block header (`{#while-error err of x}`).
+  block header (`<while-error as="err" of="x">`).
 - `<state>`, `<component>`, `<prop>` directive elements — not language.
 - Element-form `<while-loading>` / `<while-error>` — brace blocks only.
-- `{:elif}` — only `{:else if}` is compiler-recognized.
+- Brace form (`{#if}`, …) is retired; element blocks only.
 
 ## Architecture
 
@@ -116,7 +116,7 @@ Expected: no `FAIL:` lines.
   handle template literals containing `` ${`}` `` (a backtick inside
   `${…}` inside a backtick — none in the corpus today).
 - **`queries/locals.scm`.** Would expose declaration scopes
-  (`<scope>` props, `{#while-error err of x}`'s `err` binding) for
+  (`<scope>` props, `<while-error as="err" of="x">`'s `err` binding) for
   jump-to-def in editors that consume the `@local.*` family.
   Currently absent.
 - **HTML attribute namespaces.** `attr_name` excludes `:` so the

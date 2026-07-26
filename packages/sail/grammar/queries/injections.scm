@@ -13,17 +13,6 @@
   (#set! injection.language "typescript")
   (#offset! @injection.content 0 1 0 -1))
 
-(if_block cond: (_) @injection.content
-  (#set! injection.language "typescript"))
-(else_if_clause cond: (_) @injection.content
-  (#set! injection.language "typescript"))
-(for_block iter: (_) @injection.content
-  (#set! injection.language "typescript"))
-(match_block value: (_) @injection.content
-  (#set! injection.language "typescript"))
-(case_clause value: (_) @injection.content
-  (#set! injection.language "typescript"))
-
 ; ── CSS injection for inline `<style>` blocks ────────────────────────
 ; The runtime treats `<style src="…"/>` (self-closing, external) as a
 ; paired CSS file reference and inline `<style>…</style>` as embedded

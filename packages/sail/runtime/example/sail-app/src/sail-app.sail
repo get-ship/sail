@@ -229,11 +229,11 @@ export default controller(() => {
   <section>
     <h2>Live tick log (effect re-fires each tick)</h2>
     <div>
-      {#for row of recentTicks() key={row.id}}
+      <for as="row" of={recentTicks()} key={row.id}>
         <div data-ticks-row="true" aria-current={row.id === ticks() ? 'fresh' : (row.id % 7 === 0 ? 'warn' : 'false')}>
           tick {row.id} @ {row.label}
         </div>
-      {/for}
+      </for>
     </div>
   </section>
 
@@ -246,7 +246,7 @@ export default controller(() => {
       <button on:click={() => resetBoard()}>reset board</button>
     </div>
     <div>
-      {#for col of columns() key={col.id}}
+      <for as="col" of={columns()} key={col.id}>
         <section data-col={col.id}>
           <div>
             <span data-tone="plain" use:swatch={col.tone} sx={style.bg(bind(swatchColor))}></span>
@@ -256,7 +256,7 @@ export default controller(() => {
           <ol data-col-cards={col.id}
               on:dragover|preventDefault={(e) => onDragOver(e)}
               on:drop|preventDefault={(e) => onDrop(e, col.id, null)}>
-            {#for card of col.cards key={card.id}}
+            <for as="card" of={col.cards} key={card.id}>
               <li data-card="true"
 data-card={card.id}
 draggable="true"
@@ -266,23 +266,23 @@ on:dragover|preventDefault|stopPropagation={(e) => onDragOver(e)}
 on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)} sx={style.enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' })}>
                 <div>
                   {card.title}
-                  {#if card.priority === 'high'}
+                  <if cond={card.priority === 'high'}>
                     <span>high</span>
-                  {:else if card.priority === 'low'}
+                  <else-if cond={card.priority === 'low'}>
                     <span>low</span>
-                  {/if}
+                  </else-if></if>
                 </div>
                 <div>owner: {card.owner} · #{card.id}</div>
               </li>
-            {/for}
-            {#if col.cards.length === 0}
+            </for>
+            <if cond={col.cards.length === 0}>
               <li data-card="true" style="border-style:dashed;cursor:default;text-align:center;color:var(--muted)">
                 drop a card
               </li>
-            {/if}
+            </if>
           </ol>
         </section>
-      {/for}
+      </for>
     </div>
   </section>
 </div>

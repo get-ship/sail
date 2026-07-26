@@ -4,11 +4,15 @@ import { collectElementMarkers } from "@ship/sail-dom";
 
 const __tpl0 = /*@__PURE__*/ __tpl("<li> </li>");
 export default Object.assign(component((ctx) => {
-  const { ship, route, navigate } = ctx;
+  const { route, navigate, providers } = ctx;
   const $scope = Object.create(null);
-  $scope.ship = ship;
   $scope.route = route;
   $scope.navigate = navigate;
+  for (const __k of Object.keys(ctx)) {
+    if (__k === "route" || __k === "navigate" || __k === "scope" || __k === "stateKeys" || __k === "host" || __k === "providers" || __k === "props") continue;
+    $scope[__k] = ctx[__k];
+  }
+  if (providers && typeof providers === "object") Object.assign($scope, providers);
 const __wireBoundary_b0 = (anchor) => bindFor({
   anchor,
   items: () => ($scope.rows()),
@@ -19,12 +23,18 @@ const __wireBoundary_b0 = (anchor) => bindFor({
     __childScope2.__i = __i;
     return (($scope) => {
       __childScope2.__v_label = signal(0);
+const __frag3 = document.createDocumentFragment();
 const __c4 = [];
-const __e5 = __tpl0();
-const __t6 = __e5.firstChild;
-markHydrateText(__t6, "b1");
-__c4.push(bindText(__t6, () => (void $scope.__v_label(), $scope.row.label.toUpperCase())));
-      return { nodes: [__e5], cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} }, update: (__new7, __newI8) => { const __old = $scope.row; $scope.row = __new7; $scope.__i = __newI8;  if (__old.label !== $scope.row.label) { $scope.__v_label.set(c => c + 1); } } };
+const __t5 = document.createTextNode("\n    ");
+__frag3.appendChild(__t5);
+const __e6 = __tpl0();
+const __t7 = __e6.firstChild;
+markHydrateText(__t7, "b1");
+__c4.push(bindText(__t7, () => (void $scope.__v_label(), $scope.row.label.toUpperCase())));
+__frag3.appendChild(__e6);
+const __t8 = document.createTextNode("\n  ");
+__frag3.appendChild(__t8);
+      return { nodes: Array.from(__frag3.childNodes), cleanup: () => { for (const c of __c4) try { c(); } catch (e) {} }, update: (__new9, __newI10) => { const __old = $scope.row; $scope.row = __new9; $scope.__i = __newI10;  if (__old.label !== $scope.row.label) { $scope.__v_label.set(c => c + 1); } } };
     })(__childScope2);
   },
 });

@@ -1,4 +1,4 @@
-// Demo: {#if}/{:else} — checkbox toggles a panel.
+// Demo: {#if}/<else> — checkbox toggles a panel.
 {
   "name": "conditional-render",
   "path": "/demos/conditional-render",

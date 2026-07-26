@@ -33,6 +33,10 @@ export default grammar({
       $.match_block,
       $.while_loading_block,
       $.while_error_block,
+      $.else_if_clause,
+      $.else_clause,
+      $.case_clause,
+      $.default_clause,
       $.element,
       $.interpolation,
       $.text,
@@ -175,79 +179,79 @@ export default grammar({
     brace_expression: $ => seq('{', optional($._expr), '}'),
 
     if_block: $ => seq(
-      '{#if', field('cond', $._expr), '}',
+      '<if',
+      repeat($._attribute),
+      '>',
       repeat($._template_node),
-      repeat($.else_if_clause),
-      optional($.else_clause),
-      '{/if}',
+      '</if>',
     ),
 
     for_block: $ => seq(
-      '{#for', field('item', $.for_pattern), 'of',
-      field('iter', $._iter_expr),
-      optional(seq('key', '=', field('key', $.brace_expression))),
-      '}',
+      '<for',
+      repeat($._attribute),
+      '>',
       repeat($._template_node),
-      optional($.else_clause),
-      '{/for}',
+      '</for>',
     ),
 
     match_block: $ => seq(
-      '{#match', field('value', $._expr), '}',
-      repeat($.case_clause),
-      optional($.default_clause),
-      '{/match}',
+      '<match',
+      repeat($._attribute),
+      '>',
+      repeat($._template_node),
+      '</match>',
     ),
 
     while_loading_block: $ => seq(
-      '{#while-loading', 'of', field('signal', $.identifier), '}',
+      '<while-loading',
+      repeat($._attribute),
+      '>',
       repeat($._template_node),
-      '{/while-loading}',
+      '</while-loading>',
     ),
 
     while_error_block: $ => seq(
-      '{#while-error',
-      field('error', $.identifier), 'of',
-      field('signal', $.identifier),
-      '}',
+      '<while-error',
+      repeat($._attribute),
+      '>',
       repeat($._template_node),
-      '{/while-error}',
+      '</while-error>',
     ),
 
     else_if_clause: $ => seq(
-      '{:else if',
-      field('cond', $._expr),
-      '}',
+      '<else-if',
+      repeat($._attribute),
+      '>',
       repeat($._template_node),
+      '</else-if>',
     ),
 
     else_clause: $ => seq(
-      '{:else}',
+      '<else',
+      repeat($._attribute),
+      '>',
       repeat($._template_node),
+      '</else>',
     ),
 
     case_clause: $ => seq(
-      '{:case',
-      field('value', $._expr),
-      '}',
+      '<case',
+      repeat($._attribute),
+      '>',
       repeat($._template_node),
+      '</case>',
     ),
 
     default_clause: $ => seq(
-      '{:default}',
+      '<default',
+      repeat($._attribute),
+      '>',
       repeat($._template_node),
+      '</default>',
     ),
 
     // `x of items` (bare binding) or `(x, i) of items` (parenthesized
     // tuple with index) — matches
-    // `parse::template::blocks::for_header::parse_for_binding`, which
-    // only accepts a bare identifier or a `(item, index)` pair; a
-    // bare comma list without parens is NOT accepted.
-    for_pattern: $ => choice(
-      $.identifier,
-      seq('(', $.identifier, ',', $.identifier, ')'),
-    ),
-
     // ── opaque expression body ────────────────────────────────────
     // Inside `{…}` we capture everything as a balanced atom stream so
     // the host-language injection (TypeScript) can highlight it. The

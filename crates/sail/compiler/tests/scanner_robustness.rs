@@ -2,7 +2,7 @@
 //!
 //! 1. Multibyte chars (e.g. `…` U+2026) anywhere in a `<scope>` block must
 //!    produce a diagnostic or compile — never a char-boundary panic.
-//! 2. Block markers (`{#for}`, `{#if}`) inside quoted string literals in
+//! 2. Retired brace markers (`{#for}`, `{#if}`) inside quoted string literals in
 //!    template expressions are string content, not control flow.
 
 use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
@@ -70,11 +70,11 @@ fn if_marker_in_double_quoted_string_expr_is_text() {
 }
 
 #[test]
-fn close_marker_in_string_expr_does_not_close_a_real_block() {
-    // A real {#if} block whose body contains a quoted '{/if}' — the string
-    // must not terminate the block early.
-    let src = "<div>{#if true}<span>{'{/if}'}</span>{/if}</div>";
-    let out = compile_src(src).expect("quoted close marker is inert");
+fn brace_close_marker_in_string_expr_does_not_affect_element_if() {
+    // Brace-form `{/if}` is retired; a quoted remnant in an expression must
+    // not interact with element-form `<if>` / `</if>` structure.
+    let src = r#"<div><if cond={true}><span>{'{/if}'}</span></if></div>"#;
+    let out = compile_src(src).expect("quoted brace close is inert text");
     assert!(out.js.contains("{/if}"), "the literal text survives to output");
 }
 

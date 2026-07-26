@@ -4,11 +4,15 @@ import { __tpl, bindAttr, bindIf, bindProp, bindText, component, markHydrateText
 const __tpl0 = /*@__PURE__*/ __tpl("<span data-test=\"label\"> </span>");
 const __tpl1 = /*@__PURE__*/ __tpl("<span data-test=\"spinner\" aria-hidden=\"true\"></span>");
 const __default = Object.assign(component((ctx) => {
-  const { ship, route, navigate } = ctx;
+  const { route, navigate, providers } = ctx;
   const $scope = Object.create(null);
-  $scope.ship = ship;
   $scope.route = route;
   $scope.navigate = navigate;
+  for (const __k of Object.keys(ctx)) {
+    if (__k === "route" || __k === "navigate" || __k === "scope" || __k === "stateKeys" || __k === "host" || __k === "providers" || __k === "props") continue;
+    $scope[__k] = ctx[__k];
+  }
+  if (providers && typeof providers === "object") Object.assign($scope, providers);
   const __props = ctx.props ?? {};
   $scope.tone = __props.tone;
   $scope.disabled = __props.disabled;
@@ -24,8 +28,12 @@ const __wireBoundary_b4 = (anchor) => bindIf({
     () => {
       const __frag4 = document.createDocumentFragment();
       const __c5 = [];
-      const __e6 = __tpl1();
-      __frag4.appendChild(__e6);
+      const __t6 = document.createTextNode("\n    ");
+      __frag4.appendChild(__t6);
+      const __e7 = __tpl1();
+      __frag4.appendChild(__e7);
+      const __t8 = document.createTextNode("\n  ");
+      __frag4.appendChild(__t8);
       return { nodes: Array.from(__frag4.childNodes), cleanup: () => { for (const c of __c5) try { c(); } catch (e) {} } };
     },
   ],

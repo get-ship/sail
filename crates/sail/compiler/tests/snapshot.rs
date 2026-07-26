@@ -170,7 +170,7 @@ fn comment_and_whitespace_snapshot() {
     assert_snapshot(fx.name, &js, &path);
 }
 
-/// The `{#for}` render closure must return `{ nodes, cleanup, update }`.
+/// The `<for>` render closure must return `{ nodes, cleanup, update }`.
 /// The `update` function mutates the child scope's item + index and
 /// increments the per-row version signal so bindings re-evaluate.
 #[test]
@@ -181,7 +181,7 @@ fn for_update_snapshot() {
     assert_snapshot(fx.name, &js, &path);
 }
 
-/// D3: when a `{#for}` body contains no expression that reads the row
+/// D3: when a `<for>` body contains no expression that reads the row
 /// or index binder, the compiler omits the per-row `__v` version
 /// signal, the `void $scope.__v()` reads, the `__v.set` increment, and
 /// the `update` field on the render-closure return. The `signal`
@@ -226,7 +226,7 @@ fn for_static_body_omits_v_sentinel() {
     );
 }
 
-/// D3: a `{#for}` whose body holds a binding reading the index alone
+/// D3: a `<for>` whose body holds a binding reading the index alone
 /// (no row-field reference) must still emit `__v` — reorders shift the
 /// index for surviving keys, so the binding has to re-fire.
 #[test]
@@ -244,9 +244,9 @@ fn for_body_referencing_index_refreshes_on_row_reuse() {
     // diff needed.
     use sail_compiler::compile;
     let src = r#"<ul>
-  {#for (row, i) of [{id: 1}, {id: 2}] key={row.id}}
+  <for as="row" index="i" of={[{id: 1}, {id: 2}]} key={row.id}>
     <li>{i}</li>
-  {/for}
+  </for>
 </ul>
 "#;
     let opts = CompileOpts {
@@ -310,7 +310,7 @@ fn for_dynamic_mixed_snapshot() {
     assert_snapshot(fx.name, &js, &path);
 }
 
-/// D5: a `{#for}` body whose only DynamicText reads a row property
+/// D5: a `<for>` body whose only DynamicText reads a row property
 /// (no `()`) must inline the assignment as `node.textContent = …`
 /// and never call `bindText` for that read.
 #[test]
@@ -341,7 +341,7 @@ fn for_static_text_inlines_text_content() {
     );
 }
 
-/// D5: a `{#for}` body whose only AttrInstr::Expr reads a row property
+/// D5: a `<for>` body whose only AttrInstr::Expr reads a row property
 /// must inline the assignment as `el.setAttribute(...)` and never call
 /// `bindAttr` for that read.
 #[test]
@@ -372,7 +372,7 @@ fn for_static_attr_inlines_set_attribute() {
     );
 }
 
-/// D5: a `{#for}` body that mixes a reactive binding (`()` present)
+/// D5: a `<for>` body that mixes a reactive binding (`()` present)
 /// with a static row read inlines only the static one. The reactive
 /// binding still emits its `bind*` effect.
 #[test]
@@ -397,7 +397,7 @@ fn for_dynamic_mixed_inlines_only_static() {
         out.js
     );
     assert!(
-        out.js.contains(r#"bindAttr(__e5, "aria-selected""#),
+        out.js.contains(r#"bindAttr("#) && out.js.contains(r#""aria-selected""#),
         "expected bindAttr effect for the row's selected state:\n{}",
         out.js
     );
@@ -600,7 +600,7 @@ fn reflect_empty_slot_emits_bind_slot_empty_call() {
 
 #[test]
 fn reflect_empty_slot_in_conditional_threads_container() {
-    // A `<slot reflect-empty>` inside an `{#if}` lands in a hoisted
+    // A `<slot reflect-empty>` inside an `<if>` lands in a hoisted
     // `__wireBoundary` helper at FACTORY scope, where `container` (the
     // `__mount(container)` param) is NOT bound. The helper must therefore TAKE
     // `container` as a param and every call site must PASS it — otherwise

@@ -77,8 +77,8 @@ export function resolveSlots(host: Element, slots: SlotDecl[], originalChildren:
   ;(host as unknown as { __shipSetSlotFilled: Set<string> }).__shipSetSlotFilled = filledNames
 
   for (const slot of slots) {
-    // Slot anchors inside conditional branches (e.g. `{#if x}<slot
-    // name="y"/>{/if}`) aren't in the DOM at mount time. Tolerate
+    // Slot anchors inside conditional branches (e.g. `<if cond={x}><slot
+    // name="y"/></if>`) aren't in the DOM at mount time. Tolerate
     // undefined anchors here so the rest of the slot wiring still
     // resolves; the missing slot becomes effectively hidden until
     // its branch renders.

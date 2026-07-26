@@ -93,7 +93,7 @@ export default controller((ctx) => {
 </controller>
 
 <button on:click={() => open.set(!open())}>Toggle</button>
-{#if open()}
+<if cond={open()}>
   <card sx={style.pad(4).enter({ opacity: 'fade' })}>Hello.</card>
-{/if}`,
+</if>`,
 }

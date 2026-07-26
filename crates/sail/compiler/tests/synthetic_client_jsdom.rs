@@ -186,7 +186,7 @@ describe('synthetic CLIENT contract — CSR (__mount via mount.ts)', () => {{
     const el = document.createElement('div')
     document.body.appendChild(el)
     const handle = await mount(el, payload('board', ''), {{ module: mod as any }})
-    // The `{{#for}}` row is a `<row>` primitive (compiles to `.sail-row`), not
+    // The `<for>` row is a `<row>` primitive (compiles to `.sail-row`), not
     // an `<li>` — the fixture migrated off `<ul>`/`<li class:flagged>` to
     // `<column>`/`<row>` + `aria-pressed` (see 22fd23f); these selectors
     // track the current, correct markup.

@@ -12,12 +12,12 @@ export const code = {
 
 <column gap="3">
   <input placeholder="Filter people" bind:value={query} />
-  {#for p of filtered() key={p.id}}
+  <for as="p" of={filtered()} key={p.id}>
     <card interactive sx={style.enter({ opacity: 'fade' })}>
       <avatar name={p.name} tone="primary" /> {p.name} · {p.team}
       <badge tone={p.status}>{p.status}</badge>
     </card>
-  {/for}
+  </for>
   <button on:click={invite} sx={style.press({ scale: 'press' })}>Invite</button>
 </column>`,
 }

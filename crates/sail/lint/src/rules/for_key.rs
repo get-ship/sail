@@ -1,4 +1,4 @@
-//! `sail-for-key` — `{#for item of items}` blocks should declare a `key=`
+//! `sail-for-key` — `<for as="item" of={items}>` blocks should declare a `key=`
 //! expression so the reconciler can preserve DOM identity across
 //! reorder / insert / delete.
 //!
@@ -7,21 +7,19 @@
 //! is common because the failure is invisible until the user reorders
 //! a list with focus / selection / animation state on a row.
 //!
-//! Acts on the literal block header. Doesn't reach into the iter
-//! expression — we only check that `key=` is present somewhere in the
-//! header before the closing `}`. HTML comments (`<!-- ... -->`) are
-//! skipped, so a `{#for` mentioned in a primitive's leading docblock is
-//! not a false hit — same comment-skipping `prop_value` does for its
-//! `<sail-*>` example tags. This matters at `Error` severity: a docblock
-//! `{#for}` must not hard-fail a compile.
+//! Acts on the open tag of an element-form `<for …>`. Doesn't reach into
+//! the `of=` expression — we only check that `key=` is present somewhere
+//! in the open tag. HTML comments (`<!-- ... -->`) are skipped, so a
+//! `<for` mentioned in a primitive's leading docblock is not a false hit.
+//! This matters at `Error` severity: a docblock mention must not hard-fail
+//! a compile.
 //!
 //! Suggest text points at the runtime warning that fires when keys
 //! collide — same diagnostic source. See
 //! `packages/sail/runtime/src/for.ts` for the runtime side.
 //!
-//! **Severity: Error.** Every real `{#for}` across the components/views
-//! tree carries a `key=` (verified by the repo-wide scan — the only
-//! pre-skip hits were docblock prose). Error hard-fails any regression.
+//! **Severity: Error.** Every real `<for>` across the components/views
+//! tree carries a `key=`. Error hard-fails any regression.
 
 use std::path::Path;
 
@@ -31,9 +29,6 @@ pub const RULE_ID: &str = "sail-for-key";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
-    // Walk char boundaries so multi-byte chars (em-dashes in comments,
-    // entity-decoded `°`/`§`, etc.) don't trip a str-slice panic at
-    // `source[i..]` when `i` lands mid-char.
     let boundaries: Vec<usize> = source
         .char_indices()
         .map(|(i, _)| i)
@@ -46,9 +41,6 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         if i >= source.len() {
             break;
         }
-        // Skip HTML comments wholesale — primitives quote `{#for}` in their
-        // leading docblock, and those are prose, not call sites. At Error
-        // severity a docblock mention must not hard-fail the compile.
         if source[i..].starts_with("<!--") {
             let after = i + 4;
             match source[after..].find("-->") {
@@ -59,37 +51,27 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     }
                     continue;
                 }
-                // Unterminated comment — stop scanning rather than run to EOF.
                 None => break,
             }
         }
-        if !source[i..].starts_with("{#for") {
-            // Any other `{` opens a balanced group — an expression
-            // (`{'{#for}'}` in template text), another marker's header, an
-            // attribute value. Skip it whole with the same string-aware
-            // matcher, so a block marker quoted inside a string literal is
-            // never mistaken for a call site. Real `{#for` markers are
-            // always top-level in the raw source (block bodies sit between
-            // brace groups, not inside them).
-            if source.as_bytes()[i] == b'{'
-                && let Some(end) = find_block_header_end(source, i)
-            {
+        // Skip `{…}` expression groups so a string like `{'<for>'}` is not
+        // treated as a call site (the marker is string content, not markup).
+        if source.as_bytes().get(i) == Some(&b'{') {
+            if let Some(end) = find_brace_group_end(source, i) {
                 while bi < boundaries.len() && boundaries[bi] <= end {
                     bi += 1;
                 }
                 continue;
             }
+        }
+        if !is_for_open_tag(source, i) {
             bi += 1;
             continue;
         }
         let header_start = i;
-        // Find the closing `}` of the block header. Skip nested braces
-        // and string literals so an iter expression like
-        // `{#for x of items.filter(y => y.k === "}" )}` doesn't confuse us.
-        let header_end = match find_block_header_end(source, i) {
+        let header_end = match find_open_tag_end(source, i) {
             Some(end) => end,
             None => {
-                // Malformed — let the parser surface that error.
                 bi += 1;
                 continue;
             }
@@ -104,23 +86,21 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 col,
                 rule: RULE_ID,
                 severity: Severity::Error,
-                message: "{#for} block has no `key=` — the reconciler will \
+                message: "<for> block has no `key=` — the reconciler will \
                      fall back to positional matching and DOM identity \
                      (focus, selection, in-place edits) will be lost on \
                      reorder. Add `key={item.id}` (or whatever uniquely \
                      identifies each row)."
                     .to_string(),
                 suggest: Some(
-                    "Add `key={EXPR}` to the for-block header, where \
+                    "Add `key={EXPR}` to the <for> open tag, where \
                      EXPR returns a stable unique value per item — e.g. \
-                     `{#for item of items key={item.id}}`."
+                     `<for as=\"item\" of={items} key={item.id}>`."
                         .to_string(),
                 ),
             });
         }
 
-        // Advance `bi` past the header. Find the smallest boundary index
-        // whose byte-offset is > header_end.
         while bi < boundaries.len() && boundaries[bi] <= header_end {
             bi += 1;
         }
@@ -129,14 +109,15 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     findings
 }
 
-/// Scan from `start` (which must be `{`) to the matching `}` that
-/// closes the block header. Returns the byte index of that `}`.
-fn find_block_header_end(source: &str, start: usize) -> Option<usize> {
+/// Scan from `start` (`{`) to the matching `}`. Honours nested braces and strings.
+fn find_brace_group_end(source: &str, start: usize) -> Option<usize> {
     let bytes = source.as_bytes();
+    if start >= bytes.len() || bytes[start] != b'{' {
+        return None;
+    }
     let mut depth = 0i32;
     let mut i = start;
     let mut in_str: Option<u8> = None;
-
     while i < bytes.len() {
         let c = bytes[i];
         if let Some(q) = in_str {
@@ -166,15 +147,58 @@ fn find_block_header_end(source: &str, start: usize) -> Option<usize> {
     None
 }
 
-/// True when the for-block header contains a `key=` attribute. We look
-/// for the whitespace-prefixed string ` key=` to avoid false matches
-/// inside an iter expression that happens to use a `key` identifier
-/// (e.g. `items.sortBy(i => i.key)`).
+fn is_for_open_tag(source: &str, start: usize) -> bool {
+    if !source[start..].starts_with("<for") {
+        return false;
+    }
+    let after = start + 4;
+    if after >= source.len() {
+        return false;
+    }
+    let next = source.as_bytes()[after];
+    next.is_ascii_whitespace() || next == b'>' || next == b'/'
+}
+
+fn find_open_tag_end(source: &str, start: usize) -> Option<usize> {
+    let bytes = source.as_bytes();
+    let mut i = start;
+    let mut in_str: Option<u8> = None;
+    let mut brace_depth = 0i32;
+
+    while i < bytes.len() {
+        let c = bytes[i];
+        if let Some(q) = in_str {
+            if c == b'\\' && i + 1 < bytes.len() {
+                i += 2;
+                continue;
+            }
+            if c == q {
+                in_str = None;
+            }
+            i += 1;
+            continue;
+        }
+        match c {
+            b'"' | b'\'' | b'`' => in_str = Some(c),
+            b'{' => brace_depth += 1,
+            b'}' => {
+                if brace_depth > 0 {
+                    brace_depth -= 1;
+                }
+            }
+            b'>' if brace_depth == 0 => return Some(i),
+            _ => {}
+        }
+        i += 1;
+    }
+    None
+}
+
 fn has_key_attribute(header: &str) -> bool {
-    // Find `key=` preceded by whitespace; not inside a string literal.
     let bytes = header.as_bytes();
     let mut i = 0;
     let mut in_str: Option<u8> = None;
+    let mut brace_depth = 0i32;
     while i + 4 < bytes.len() {
         let c = bytes[i];
         if let Some(q) = in_str {
@@ -193,8 +217,22 @@ fn has_key_attribute(header: &str) -> bool {
             i += 1;
             continue;
         }
-        if c.is_ascii_whitespace() && &bytes[i + 1..i + 5] == b"key=" {
-            return true;
+        if c == b'{' {
+            brace_depth += 1;
+            i += 1;
+            continue;
+        }
+        if c == b'}' {
+            if brace_depth > 0 {
+                brace_depth -= 1;
+            }
+            i += 1;
+            continue;
+        }
+        if brace_depth == 0 && &bytes[i..i + 4] == b"key=" {
+            if i == 0 || bytes[i - 1].is_ascii_whitespace() {
+                return true;
+            }
         }
         i += 1;
     }
@@ -228,14 +266,13 @@ mod tests {
 
     #[test]
     fn for_with_key_attribute_passes() {
-        let src = r#"<ul>{#for item of items key={item.id}}<li>{item.name}</li>{/for}</ul>"#;
-        let findings = lint(src);
-        assert_eq!(findings.len(), 0, "{:?}", findings);
+        let src = r#"<ul><for as="item" of={items} key={item.id}><li>{item.name}</li></for></ul>"#;
+        assert_eq!(lint(src).len(), 0);
     }
 
     #[test]
     fn for_without_key_warns() {
-        let src = r#"<ul>{#for item of items}<li>{item.name}</li>{/for}</ul>"#;
+        let src = r#"<ul><for as="item" of={items}><li>{item.name}</li></for></ul>"#;
         let findings = lint(src);
         assert_eq!(findings.len(), 1);
         assert!(findings[0].message.contains("`key=`"));
@@ -244,79 +281,60 @@ mod tests {
 
     #[test]
     fn iter_expression_using_key_identifier_does_not_count() {
-        // `items.sortBy(i => i.key)` mentions "key" but not as an attribute.
-        let src = r#"{#for item of items.sortBy(i => i.key)}<li>x</li>{/for}"#;
-        let findings = lint(src);
-        assert_eq!(findings.len(), 1, "should warn — no key= ATTRIBUTE");
+        let src = r#"<for as="item" of={items.sortBy(i => i.key)}><li>x</li></for>"#;
+        assert_eq!(lint(src).len(), 1);
     }
 
     #[test]
     fn two_for_blocks_each_evaluated_separately() {
         let src = r#"
-            {#for a of as key={a.id}}<li>{a.name}</li>{/for}
-            {#for b of bs}<li>{b.name}</li>{/for}
+            <for as="a" of={as} key={a.id}><li>{a.name}</li></for>
+            <for as="b" of={bs}><li>{b.name}</li></for>
         "#;
-        let findings = lint(src);
-        assert_eq!(findings.len(), 1, "only the second block should warn");
+        assert_eq!(lint(src).len(), 1);
     }
 
     #[test]
-    fn iter_with_close_brace_in_string_does_not_break_scan() {
-        let src = r#"{#for x of items.filter(i => i.s === "}" ) key={x.id}}<li>x</li>{/for}"#;
-        let findings = lint(src);
-        assert_eq!(findings.len(), 0);
+    fn iter_with_gt_in_string_does_not_break_scan() {
+        let src = r#"<for as="x" of={items.filter(i => i.s === ">")} key={x.id}><li>x</li></for>"#;
+        assert_eq!(lint(src).len(), 0);
     }
 
     #[test]
     fn malformed_for_block_does_not_panic() {
-        let src = r#"{#for item of items"#;
+        let src = r#"<for as="item" of={items"#;
         let _ = lint(src);
     }
 
     #[test]
     fn for_in_html_comment_is_not_a_violation() {
-        // Primitives quote `{#for}` in their leading docblock — prose, not a
-        // call site. At Error severity this must NOT hard-fail compile.
-        let src = "<!--\n  a single `{#for}` over tabs()\n-->\n\
-                   <ul>{#for t of tabs() key={t.id}}<li>{t.label}</li>{/for}</ul>";
-        let findings = lint(src);
-        assert_eq!(findings.len(), 0, "{:?}", findings);
+        let src = "<!--\n  a single `<for>` over tabs()\n-->\n\
+                   <ul><for as=\"t\" of={tabs()} key={t.id}><li>{t.label}</li></for></ul>";
+        assert_eq!(lint(src).len(), 0);
     }
 
     #[test]
     fn real_for_after_comment_still_flagged() {
-        // The comment is skipped, but the real keyless block after it fires.
-        let src = "<!-- {#for x of xs} -->\n{#for y of ys}<li>{y}</li>{/for}";
-        let findings = lint(src);
-        assert_eq!(findings.len(), 1, "{:?}", findings);
+        let src = "<!-- <for as=\"x\" of={xs}> -->\n\
+                   <for as=\"y\" of={ys}><li>{y}</li></for>";
+        assert_eq!(lint(src).len(), 1);
     }
 
     #[test]
-    fn for_marker_quoted_in_a_string_expression_is_not_a_call_site() {
-        // `{'{#for}'}` in template text is a string expression whose VALUE
-        // is the marker text — content, not control flow.
-        let src = r#"<p>{'{#for}'}</p>"#;
-        let findings = lint(src);
-        assert_eq!(findings.len(), 0, "{:?}", findings);
-    }
-
-    #[test]
-    fn for_marker_in_double_quoted_string_expression_is_not_a_call_site() {
-        let src = r#"<p>{"{#for x of xs}"}</p>"#;
-        let findings = lint(src);
-        assert_eq!(findings.len(), 0, "{:?}", findings);
+    fn form_tag_is_not_mistaken_for_for() {
+        let src = r#"<form on:submit={go}><button>ok</button></form>"#;
+        assert_eq!(lint(src).len(), 0);
     }
 
     #[test]
     fn real_keyless_for_after_a_string_expression_still_flagged() {
-        let src = r#"<p>{'{#for}'}</p>{#for y of ys}<li>{y}</li>{/for}"#;
-        let findings = lint(src);
-        assert_eq!(findings.len(), 1, "{:?}", findings);
+        let src = r#"<p>{'<for>'}</p><for as="y" of={ys}><li>{y}</li></for>"#;
+        assert_eq!(lint(src).len(), 1);
     }
 
     #[test]
     fn severity_is_error() {
-        let src = r#"{#for item of items}<li>x</li>{/for}"#;
+        let src = r#"<for as="item" of={items}><li>x</li></for>"#;
         let findings = lint(src);
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].severity, Severity::Error);

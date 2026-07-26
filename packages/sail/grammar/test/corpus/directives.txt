@@ -44,15 +44,17 @@ scope directive with declared props
 while-loading boundary (brace block, not an element)
 ==================
 
-{#while-loading of agents}
+<while-loading of="agents">
   <p>loading</p>
-{/while-loading}
+</while-loading>
 
 ---
 
 (source_file
   (while_loading_block
-    signal: (identifier)
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
     (element
       tag: (tag_name)
       (text)
@@ -62,16 +64,20 @@ while-loading boundary (brace block, not an element)
 while-error boundary with bound error var (brace block, not an element)
 ==================
 
-{#while-error err of agents}
+<while-error as="err" of="agents">
   <p>err: {err.message}</p>
-{/while-error}
+</while-error>
 
 ---
 
 (source_file
   (while_error_block
-    error: (identifier)
-    signal: (identifier)
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
+    (static_attr
+      name: (attr_name)
+      value: (string_literal))
     (element
       tag: (tag_name)
       (text)
@@ -94,7 +100,7 @@ style: attribute is refused syntax — must NOT parse as a directive
       name: (attr_name)
       (ERROR
         (UNEXPECTED ':')
-        (identifier))
+        (tag_name))
       value: (brace_expression
         (identifier)))
     close_tag: (tag_name)))

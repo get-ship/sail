@@ -272,7 +272,7 @@ mod tests {
     fn surfaces_compile_errors_with_rendered_diagnostic() {
         let src = tempdir().unwrap();
         let sail = src.path().join("broken.sail");
-        std::fs::write(&sail, "<div>{#if cond()}oops</div>\n").unwrap();
+        std::fs::write(&sail, "<div><if cond={cond()}>oops</if></div>\n").unwrap();
         let err = compile_sui(&sail, CompileMode::Route, "broken", false).unwrap_err();
         assert!(matches!(err, CompileError::Compile(_)));
     }

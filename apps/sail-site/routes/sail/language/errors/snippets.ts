@@ -17,13 +17,13 @@ export default controller(() => {
 </controller>
 
 <error-boundary on:sail-error-reset={disarm}>
-  {#if armed()}<p>{boom()}</p>{/if}
-  {#if !armed()}
+  <if cond={armed()}><p>{boom()}</p></if>
+  <if cond={!armed()}>
     <p>This subtree is protected.</p>
     <button on:click={arm} tone="destructive" variant="outline">
       Throw during render
     </button>
-  {/if}
+  </if>
 </error-boundary>`,
 
   fallback: `<!-- message= sets the built-in fallback's text; slot="fallback"
@@ -36,7 +36,7 @@ export default controller(() => {
 </error-boundary>`,
 
   async: `<!-- async failure is a STATE, not a throw — render it -->
-{#while-error err of users}
+<while-error as="err" of="users">
   <alert tone="destructive">{err.message}</alert>
-{/while-error}`,
+</while-error>`,
 }
