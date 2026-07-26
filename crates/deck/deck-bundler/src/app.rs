@@ -1586,12 +1586,14 @@ export default controller(() => ({ id: signal('demo') }))\n\
         // A minimal route so the entry isn't empty. The CSS import goes
         // on the sibling controller so it reaches the entry graph (the
         // entry is `routes.gen.ts`, which statically imports this).
+        // Controller is only here so the CSS import reaches the entry graph
+        // (routes.gen.ts imports the virtual controller module). Not empty:
+        // sail-controller-empty rejects `() => ({})`.
         write(
             &r.join("routes/page.sail"),
             "<controller>\n\
 import './styles.css';\n\
-import { controller } from '@ship/sail-runtime'\n\
-export default controller(() => ({}))\n\
+export default controller(() => ({ ok: true }))\n\
 </controller>\n\
 <div>css</div>\n",
         );

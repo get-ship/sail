@@ -11,8 +11,6 @@
 -->
 
 <controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 interface Note {
   id: number
   tag: string

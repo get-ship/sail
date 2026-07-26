@@ -13,10 +13,12 @@ use crate::report::Finding;
 pub mod attr_bool_prop;
 pub mod attr_presence;
 pub mod controller_context;
+pub mod controller_empty;
 pub mod controller_navigation;
 pub mod controller_no_ambient_authority;
 pub mod controller_no_load_state;
 pub mod controller_purity;
+pub mod controller_redundant_ambient_import;
 pub mod controller_set_value;
 pub mod controller_state_cast;
 pub mod controller_state_set_call;
@@ -56,6 +58,8 @@ pub type RuleFn = fn(&Path, &str) -> Vec<Finding>;
 pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
     (no_imperative_style::RULE_ID, no_imperative_style::check),
     (controller_purity::RULE_ID, controller_purity::check),
+    (controller_empty::RULE_ID, controller_empty::check),
+    (controller_redundant_ambient_import::RULE_ID, controller_redundant_ambient_import::check),
     (controller_set_value::RULE_ID, controller_set_value::check),
     (controller_state_cast::RULE_ID, controller_state_cast::check),
     (controller_state_set_call::RULE_ID, controller_state_set_call::check),

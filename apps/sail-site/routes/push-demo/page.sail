@@ -5,7 +5,7 @@
 // query() call, routed by the method's return-value shape. Each interval
 // tick re-renders the tick count below with zero console errors.
 
-import { controller, query } from '@ship/sail-runtime'
+import { query } from '@ship/sail-runtime'
 import { feed } from './push-clock'
 
 export default controller(() => {

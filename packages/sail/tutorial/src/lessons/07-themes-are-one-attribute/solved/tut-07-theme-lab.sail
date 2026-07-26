@@ -8,7 +8,6 @@
 -->
 
 <controller>
-import { controller, signal } from '@ship/sail-runtime'
 import {
   THEMES,
   applyTheme,

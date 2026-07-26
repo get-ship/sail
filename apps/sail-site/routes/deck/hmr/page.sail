@@ -4,7 +4,7 @@
 
 <controller>
 // /deck/hmr — adapted from packages/deck/docs/routes/hmr.
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { devCmd } from './snippets'
 

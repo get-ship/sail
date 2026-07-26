@@ -7,7 +7,6 @@
 -->
 
 <controller>
-import { controller, signal } from '@ship/sail-runtime'
 import { THEMES, readStoredTheme, type Theme, type ThemeId } from '@ship/tokens/themes'
 
 export default controller(() => {

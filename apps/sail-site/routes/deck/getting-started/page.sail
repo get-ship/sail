@@ -3,7 +3,7 @@
   Snippets live in ./snippets so literal braces in example code never get scope-scanned.
 -->
 <controller>
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { pageExample, controllerExample, devCmd } from './snippets'
 

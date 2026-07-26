@@ -4,8 +4,6 @@
 // as written — checked by crates/sail/compiler/tests/site_snippets_compile.rs.
 export const usage: Record<string, string> = {
   button: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => {
   const saved = signal(false)
   return { saved, save: () => saved.set(true) }
@@ -18,8 +16,6 @@ export default controller(() => {
 </button>`,
 
   input: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => ({ name: signal('') }))
 </controller>
 
@@ -27,8 +23,6 @@ export default controller(() => ({ name: signal('') }))
 <p>hello, {name() || 'stranger'}</p>`,
 
   textarea: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => ({ bio: signal('') }))
 </controller>
 
@@ -36,8 +30,6 @@ export default controller(() => ({ bio: signal('') }))
 <p>{bio().length} characters</p>`,
 
   select: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => ({ team: signal('Design') }))
 </controller>
 
@@ -49,8 +41,6 @@ export default controller(() => ({ team: signal('Design') }))
 <p>team: {team()}</p>`,
 
   combobox: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => {
   const fw = signal('')
   return { fw, pick: (e) => fw.set(e.detail.value) }
@@ -68,8 +58,6 @@ export default controller(() => {
 <p>picked: {fw() || 'nothing yet'}</p>`,
 
   checkbox: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => ({ agreed: signal(false) }))
 </controller>
 
@@ -82,8 +70,6 @@ export default controller(() => ({ agreed: signal(false) }))
 </radio-group>`,
 
   switch: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => ({ notify: signal(true) }))
 </controller>
 
@@ -93,8 +79,6 @@ export default controller(() => ({ notify: signal(true) }))
 </row>`,
 
   slider: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => ({ load: signal(62) }))
 </controller>
 
@@ -139,8 +123,6 @@ export default controller(() => ({ load: signal(62) }))
 <theme-picker motion:enter={{ opacity: 'fade' }}></theme-picker>`,
 
   alert: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => {
   const visible = signal(true)
   return { visible, dismiss: () => visible.set(false) }
@@ -155,8 +137,6 @@ export default controller(() => {
 <button on:click={dismiss} variant="ghost">Dismiss</button>`,
 
   progress: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => ({ done: signal(64) }))
 </controller>
 
@@ -170,8 +150,6 @@ export default controller(() => ({ done: signal(64) }))
 </column>`,
 
   spinner: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => ({ loading: signal(true) }))
 </controller>
 
@@ -221,8 +199,6 @@ export default controller(() => ({ loading: signal(true) }))
 </row>`,
 
   chip: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => {
   const kept = signal(true)
   return { kept, drop: () => kept.set(false) }
@@ -339,8 +315,6 @@ export default controller(() => {
 </context-menu>`,
 
   dialog: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => {
   const gone = signal(false)
   return { gone, confirm: () => gone.set(true) }
@@ -380,8 +354,6 @@ export default controller(() => {
 </breadcrumb>`,
 
   pagination: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => {
   const page = signal('2')
   return { page, go: (e) => page.set(e.detail.value) }
@@ -403,8 +375,6 @@ export default controller(() => {
 </navbar>`,
 
   table: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => ({
   people: signal([
     { id: 1, name: 'Ada Lovelace', team: 'Engines', status: 'active' },

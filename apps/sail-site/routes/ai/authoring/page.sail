@@ -9,7 +9,7 @@
 // /ai/authoring — the agent authoring loop, adapted from the
 // 09-agent-loop tutorial lesson. Snippets live in ./snippets so the literal
 // loop-diagram ASCII never leaks into the inferred scope.
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { loopDiagram } from './snippets'
 

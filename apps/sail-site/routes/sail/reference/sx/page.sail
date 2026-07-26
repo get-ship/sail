@@ -4,7 +4,7 @@
   compound; the generated tables still list scale values the setters spend.
 -->
 <controller>
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import {
   SX_ATOMS,

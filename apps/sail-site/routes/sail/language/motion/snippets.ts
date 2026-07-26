@@ -34,7 +34,7 @@ export const code = {
 <button motion:focus-visible={{ scale: 'spring:snappy' }}>tab to me</button>`,
 
   choreography: `<controller>
-import { controller, signal, timeline } from '@ship/sail-runtime'
+import { timeline } from '@ship/sail-runtime'
 export default controller(() => {
   const scrubText = signal('0')
   const p = () => Number(scrubText()) / 100   // slider value → progress 0…1

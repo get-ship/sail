@@ -4,7 +4,7 @@
 
 <controller>
 // /deck/build — adapted from packages/deck/docs/routes/build.
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { buildCmd, buildOut, baseCmd } from './snippets'
 

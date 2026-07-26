@@ -4,7 +4,7 @@
   `sail-compiler prop-registry`). Nothing here is hand-listed.
 -->
 <controller>
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { PROP_REGISTRY } from '../../../../src/prop-registry.gen'
 import { ELEMENTS } from '../../../../src/language-surface.gen'

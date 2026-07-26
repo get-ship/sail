@@ -4,7 +4,7 @@
   point is that sharing needs no wiring between them.
 -->
 <controller>
-import { controller, useStore } from '@ship/sail-runtime'
+import { useStore } from '@ship/sail-runtime'
 import { tally } from '../store-counter/counter-store'
 
 export default controller(() => {

@@ -10,7 +10,7 @@
 // /ai/eval — scoring with sail-eval, adapted from the 11-sail-eval tutorial
 // lesson. Snippets live in ./snippets so literal braces in the example block
 // and the sniffEscapeHatches output never leak into the inferred scope.
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { evalExample, hatchExample } from './snippets'
 

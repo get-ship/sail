@@ -7,7 +7,7 @@
 // query() pull demo (visible delay, a reload/toggle affordance) so the two
 // are directly comparable in the browser.
 
-import { controller, query, mutation, signal } from '@ship/sail-runtime'
+import { query, mutation } from '@ship/sail-runtime'
 import { crm } from './crm-demo'
 
 export default controller(() => {

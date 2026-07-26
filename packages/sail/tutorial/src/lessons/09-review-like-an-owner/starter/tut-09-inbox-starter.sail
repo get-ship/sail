@@ -19,7 +19,7 @@
   const emptyImprovised = style.pad(4).fontSize(sm).fg(muted-foreground)
 </scope>
 <controller>
-import { controller, signal, derived, query } from '@ship/sail-runtime'
+import { query } from '@ship/sail-runtime'
 import { inboxClient } from './tut-09-inbox-client'
 
 // This controller is sound. Every flaw in this lesson lives in the

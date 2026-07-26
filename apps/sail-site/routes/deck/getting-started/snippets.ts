@@ -6,10 +6,9 @@ export const pageExample = `<!-- routes/page.sail -->
   <h1>Hello, deck.</h1>
 </main>`
 
-export const controllerExample = `<!-- routes/page.sail — one file: state + template -->
+export const controllerExample = `<!-- routes/page.sail — one file: state + template.
+     controller/signal are ambient inside <controller> — no import. -->
 <controller>
-  import { controller, signal } from '@ship/sail-runtime'
-
   export default controller(() => {
     const count = signal(0)
     return { count }

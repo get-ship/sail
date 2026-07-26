@@ -6,7 +6,7 @@
 -->
 
 <controller>
-import { controller, signal, effect, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
 
@@ -94,11 +94,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     A <strong>tone</strong> is a named intent — <code>primary</code>,
     <code>success</code>, <code>warning</code>, <code>destructive</code>,
-    <code>muted</code> — as a <strong>prop</strong>, not as
-    <code>--tone-bg</code> channel paint. Declaring
-    <code>tone="destructive"</code> resolves a coordinated token set for the
-    subtree. Components read those tokens via Style setters
-    (<code>style.bg(destructive)</code>, …):
+    <code>muted</code> — as an L1 <strong>prop</strong> (ToneName), not a
+    CSS channel and not a design-token ramp. Components paint it with
+    <code>match(tone, …)</code> / <code>compound</code> against real registry
+    hues (<code>style.bg(destructive)</code>,
+    <code>style.bgWash(primary, 15)</code>, …):
   </p>
   <row gap="2" sx={style.pad(5).bg(surface-1).borderWidth(1).border(border).radius(lg)} align="center">
     <badge tone="primary">primary</badge>

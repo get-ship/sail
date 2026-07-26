@@ -4,7 +4,7 @@
 
 <controller>
 // /deck/layouts — adapted from packages/deck/docs/routes/layouts.
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { layoutFile, layoutChain } from './snippets'
 

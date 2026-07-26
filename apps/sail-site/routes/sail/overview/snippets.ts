@@ -28,8 +28,7 @@ export const code = {
 { "sx": true, "raw_containers": true,
   "stylesheets": [], "network": ["self"] }`,
   page: `<controller>
-import { controller, signal, filteredList } from '@ship/sail-runtime'
-
+import { filteredList } from '@ship/sail-runtime'
 export default controller(() => {
   const people = signal([
     { id: 1, name: 'Ada Lovelace', status: 'active' },

@@ -5,7 +5,7 @@
 // @ship/sail-runtime DataOpts signature.
 export const code = {
   demo: `<controller>
-import { controller, query, signal } from '@ship/sail-runtime'
+import { query } from '@ship/sail-runtime'
 import { api } from './api'
 export default controller(() => {
   const attempt = signal(1)
@@ -31,7 +31,7 @@ export default controller(() => {
 {/if}`,
 
   source: `// the <controller> block body (inline in users.sail)
-import { controller, query } from '@ship/sail-runtime'
+import { query } from '@ship/sail-runtime'
 import { api } from './api' // an imported client — query() derives the key from it
 
 export default controller(() => {

@@ -9,8 +9,6 @@
 -->
 
 <controller>
-import { controller, signal, derived } from '@ship/sail-runtime'
-
 interface Note {
   id: number
   kind: string

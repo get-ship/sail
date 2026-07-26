@@ -155,13 +155,22 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
          <scope>\n  props: {{ tone = 'default' }}\n</scope>\n\n"
     );
     if want_controller {
-        sail.push_str("<controller>\nimport { controller, type ControllerScope } from '@ship/sail-runtime'\n");
+        // Ambient idents (controller, signal, …) need no import; types do.
+        // Never scaffold `() => ({})` — that is a compile error
+        // (`sail-controller-empty`). Seed a trivial signal so the stub is a
+        // real controller the author can grow, or delete the whole block.
+        sail.push_str("<controller>\nimport type { ControllerScope } from '@ship/sail-runtime'\n");
         sail.push_str(&format!("import type {{ Scope }} from './{tag}.sail'\n\n"));
         sail.push_str(
-            "export default controller((_ctx: ControllerScope<Scope>) => ({}))\n</controller>\n\n",
+            "export default controller((_ctx: ControllerScope<Scope>) => {\n  \
+             const ready = signal(true)\n  \
+             return { ready }\n\
+             })\n</controller>\n\n",
         );
     }
-    sail.push_str("<row align=\"center\" gap=\"1\" sx=\"text-tone-fg\">\n  <slot></slot>\n</row>\n");
+    sail.push_str(
+        "<row align=\"center\" gap=\"1\" sx={style.fg(foreground)}>\n  <slot></slot>\n</row>\n",
+    );
     fs::write(base.join(format!("{tag}.sail")), sail)?;
 
     println!("[scaffold] created packages/components/sail/primitives/src/{tag}/");

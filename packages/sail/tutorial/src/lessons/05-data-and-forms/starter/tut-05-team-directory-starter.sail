@@ -6,7 +6,7 @@
 -->
 
 <controller>
-import { controller, signal, query } from '@ship/sail-runtime'
+import { query } from '@ship/sail-runtime'
 import { directory } from './tut-05-directory-client'
 
 export default controller(() => {

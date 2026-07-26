@@ -7,7 +7,7 @@
 <controller>
 // /deck — the Deck overview. The shell owns the deck (violet) theme via
 // data-theme; this controller only supplies the page's code snippets.
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { quickstart, layers } from './snippets'
 

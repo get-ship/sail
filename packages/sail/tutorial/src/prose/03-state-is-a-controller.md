@@ -53,7 +53,7 @@ the template:
 
 ```
 <controller>
-import { controller, signal } from '@ship/sail-runtime'
+// controller, signal, derived, effect, mount, … are ambient — no import.
 export default controller(() => {
   const elapsed = signal(0)
   return { elapsed }
@@ -74,7 +74,6 @@ by the block.
 
 ```
 <controller>
-import { controller } from '@ship/sail-runtime'
 import { createStopwatch } from './stopwatch'   // plain TS, plain functions
 
 export default controller(() => createStopwatch())

@@ -12,7 +12,7 @@
 // demo is omitted here because the sail-site doesn't expose a `store` client
 // (its clients seam is intentionally empty). The config + usage snippets
 // still document the seam.
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { configExample, usageExample } from './snippets'
 

@@ -17,5 +17,4 @@ persistTheme('console')   // survives reload
 import { readStoredTheme } from '@ship/tokens/themes'
 applyTheme(readStoredTheme())`,
 
-
 }

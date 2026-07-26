@@ -4,7 +4,6 @@
 // source beside the live demo matches what the demo runs.
 export const code = {
   graph: `<controller>
-import { controller, signal, derived, effect } from '@ship/sail-runtime'
 export default controller(() => {
   const count = signal(0)
   const doubled = derived(() => count() * 2)
@@ -73,9 +72,8 @@ effect(() => {
   <p>{line}</p>
 {/for}`,
 
-  lifecycle: `import { controller, signal, mount } from '@ship/sail-runtime'
-
-export default controller(() => {
+  // Inside <controller>, controller/signal/mount are ambient — no import.
+  lifecycle: `export default controller(() => {
   const size = signal({ w: 0, h: 0 })
 
   // mount runs once, after the element is on the page. el IS the element.
@@ -90,6 +88,7 @@ export default controller(() => {
   return { size }
 })`,
 
+  // Plain modules are NOT ambient — import signal/defineStore as usual.
   storeDef: `// counter-store.ts — outside any component
 import { defineStore, signal } from '@ship/sail-runtime'
 
@@ -99,7 +98,8 @@ export const tally = defineStore('docs.tally', () => {
   return { clicks, add }
 })`,
 
-  storeUse: `import { controller, useStore } from '@ship/sail-runtime'
+  // useStore is not ambient; controller/signal are.
+  storeUse: `import { useStore } from '@ship/sail-runtime'
 import { tally } from './counter-store'
 
 export default controller(() => {

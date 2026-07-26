@@ -4,8 +4,6 @@
 // the demo snippet is the source of the live demo beside it.
 export const code = {
   demo: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller(() => {
   const armed = signal(false)
   return {

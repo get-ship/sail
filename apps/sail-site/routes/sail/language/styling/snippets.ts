@@ -50,7 +50,6 @@ export const code = {
   variantUse: `<my-button label="Save" emphasis="outline"></my-button>`,
 
   dynamic: `<controller>
-import { controller, signal, effect } from "@ship/sail-runtime"
 export default controller(() => {
   const shift = signal("0")
   const px = signal("0px")

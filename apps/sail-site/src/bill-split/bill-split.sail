@@ -18,8 +18,6 @@
 </scope>
 
 <controller>
-import { controller, signal, derived } from '@ship/sail-runtime'
-
 const money = (n: number): string => '$' + n.toFixed(2)
 
 export default controller((ctx) => {

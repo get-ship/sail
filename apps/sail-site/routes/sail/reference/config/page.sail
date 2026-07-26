@@ -4,7 +4,7 @@
   sourced from sail_lint::config::CONFIG_KEY_DOCS).
 -->
 <controller>
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { CONFIG_KEYS } from '../../../../src/language-surface.gen'
 

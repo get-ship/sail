@@ -3,7 +3,7 @@
 // view's scope. The live demo is honest: this page is a deck route, deck grants
 // `route`, so `ctx.route.pathname()` is a real capability read, not a mock.
 
-import { controller, derived, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
 

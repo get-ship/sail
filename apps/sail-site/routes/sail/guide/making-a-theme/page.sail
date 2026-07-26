@@ -7,7 +7,7 @@
 -->
 
 <controller>
-import { controller, signal, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import { applyTheme, persistTheme, readStoredTheme, THEMES, type ThemeId } from '@ship/tokens/themes'
 import type { Scope } from './page.sail'
 import { code } from './snippets'

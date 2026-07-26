@@ -5,7 +5,7 @@
 -->
 
 <controller>
-import { controller, form, signal, type ControllerScope } from '@ship/sail-runtime'
+import { form, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { profileApi, type Profile } from './profile-api'
 import { code } from './snippets'

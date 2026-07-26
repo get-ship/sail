@@ -6,8 +6,6 @@
 -->
 
 <controller>
-import { controller, signal, derived } from '@ship/sail-runtime'
-
 // The controller owns ALL state. The template can bind only what this
 // function returns — nothing else exists on the other side of the boundary.
 export default controller(() => {

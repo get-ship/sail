@@ -8,8 +8,6 @@
 -->
 
 <controller>
-import { controller, signal, derived } from '@ship/sail-runtime'
-
 type Phase = 'idle' | 'building' | 'live' | 'failed'
 
 interface Env {

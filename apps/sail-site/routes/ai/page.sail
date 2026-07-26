@@ -1,11 +1,7 @@
-<controller>
-// /ai — the AI product section of the Ship UI site. The headline section for an
-// agent-first framework. Theme owned by the shell.
-import { controller } from '@ship/sail-runtime'
-import type { Scope } from './page.sail'
-
-export default controller(() => ({}))
-</controller>
+<!--
+  /ai — the AI product section of the Ship UI site. The headline section for an
+  agent-first framework. Theme owned by the shell. No controller: static markup only.
+-->
 
 <column sx={style.pad(0).maxW(breakpoint-tablet).mx(auto)}>
   <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>AI</p>

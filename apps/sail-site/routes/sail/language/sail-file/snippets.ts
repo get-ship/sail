@@ -2,16 +2,13 @@
 // (apps/sail-site/src/departures-board/departures-board.sail, the board at the
 // top of the page), walked part by part. Never the whole file at once.
 export const code = {
+  // Only the template is required. Scope is optional; a controller is only
+  // needed when the component has state or handlers — never an empty one.
   shape: `<scope>
   props: {
     title = 'Departures'
   }
 </scope>
-
-<controller>
-import { controller } from '@ship/sail-runtime'
-export default controller(() => ({}))
-</controller>
 
 <card>{title()}</card>`,
 
@@ -48,9 +45,9 @@ export default controller(() => ({}))
   }
 </scope>`,
 
+  // Ambient runtime idents (controller, signal, effect, …) need no import —
+  // the compiler injects them for the idents the block actually references.
   controller: `<controller>
-import { controller, signal, effect } from '@ship/sail-runtime'
-
 export default controller((ctx) => {
   const flights = signal<Flight[]>(
     ctx.seed().length > 0 ? ctx.seed() : defaultBoard(),

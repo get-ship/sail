@@ -21,7 +21,7 @@ export const code = {
   // patches \`t\` as values arrive; only the bindings reading it re-render.
   liveData: `<!-- routes/feed/page.sail — subscribe a route to live server data -->
 <controller>
-import { controller, query } from '@ship/sail-runtime'
+import { query } from '@ship/sail-runtime'
 import { call } from 'ship'
 export default controller((_ctx) => ({ t: query(() => call('api.demo.clock', {})) }))
 </controller>

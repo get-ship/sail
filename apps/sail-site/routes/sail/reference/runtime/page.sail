@@ -7,7 +7,7 @@
   src/language-surface.gen.ts (CONTROLLER_AMBIENT, from the compiler).
 -->
 <controller>
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { RUNTIME_EXPORTS } from '../../../../src/runtime-surface.gen'
 import { CONTROLLER_AMBIENT } from '../../../../src/language-surface.gen'

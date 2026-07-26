@@ -20,7 +20,6 @@
 </scope>
 
 <controller>
-import { controller, signal, effect } from '@ship/sail-runtime'
 import type { Scope } from './demo-player.sail'
 
 export default controller((ctx: Scope) => {

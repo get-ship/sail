@@ -22,7 +22,7 @@
 // because that is the only call shape a renderable expression allows — the
 // stage map mirrors the browser page's `show` map.
 
-import { controller, signal, derived, effect, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { DETAILS, type DetailEntry } from './registry'
 export default controller((ctx: ControllerScope<Scope>) => {

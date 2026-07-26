@@ -19,7 +19,7 @@
   const from = style.fontSize(sm)
 </scope>
 <controller>
-import { controller, signal, derived, query } from '@ship/sail-runtime'
+import { query } from '@ship/sail-runtime'
 import { inboxClient } from './tut-09-inbox-client'
 
 export default controller(() => {

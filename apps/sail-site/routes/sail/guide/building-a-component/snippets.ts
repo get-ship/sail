@@ -35,9 +35,8 @@ export const code = {
   usageProps: `<bill-split label="Tapas" total="120"></bill-split>`,
 
   // Step 3 — state and derived values arrive in the controller.
+  // controller/signal/derived are ambient — no import.
   controller: `<controller>
-import { controller, signal, derived } from '@ship/sail-runtime'
-
 const money = (n: number): string => '$' + n.toFixed(2)
 
 export default controller((ctx) => {

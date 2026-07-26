@@ -14,7 +14,7 @@
 </scope>
 
 <controller>
-import { controller, useStore } from '@ship/sail-runtime'
+import { useStore } from '@ship/sail-runtime'
 import { tally } from './counter-store'
 
 export default controller(() => {

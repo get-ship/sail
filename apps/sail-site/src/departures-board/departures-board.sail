@@ -25,8 +25,6 @@
 </scope>
 
 <controller>
-import { controller, signal, effect } from '@ship/sail-runtime'
-
 const POOL: Array<[string, string]> = [
   ['Reykjavík', 'A2'],
   ['Osaka', 'B7'],

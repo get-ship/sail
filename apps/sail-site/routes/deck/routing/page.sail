@@ -2,7 +2,7 @@
   /deck/routing — adapted from packages/deck/docs/routes/routing/page.sail.
 -->
 <controller>
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { routeTree, colocated } from './snippets'
 

@@ -27,8 +27,6 @@
 </scope>
 
 <controller>
-import { controller, signal, effect } from '@ship/sail-runtime'
-
 const CITIES = ['Osaka', 'Nairobi', 'Tbilisi', 'Porto', 'Auckland', 'Reykjavík']
 
 export default controller(() => {

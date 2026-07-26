@@ -40,10 +40,9 @@ Error: routes/page.sail: line 4 col 13: [sail-sx]
   radius, text. Raw px/hex are not expressible.`,
 
   state: `<!-- routes/page.sail — state lives in a <controller> block in the
-     same file. The template binds ONLY what the controller function returns. -->
+     same file. Ambient idents (controller, signal, …) need no import.
+     The template binds ONLY what the controller function returns. -->
 <controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller((ctx) => {
   const count = signal(0)
   return { count }
@@ -87,8 +86,6 @@ sail-compiler build greeting/greeting.sail`,
 <my-greeting name="Ada"></my-greeting>`,
 
   interactive: `<controller>
-import { controller, signal } from '@ship/sail-runtime'
-
 export default controller((ctx) => {
   const open = signal(false)
   return { open }

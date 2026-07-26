@@ -11,8 +11,6 @@
 export const code = {
   // How this very page reads the capability deck grants it.
   read: `<controller>
-import { controller, derived } from '@ship/sail-runtime'
-
 export default controller((ctx) => {
   // \`route\` is not imported and not declared here. The host put it on the
   // scope; the generated Scope types it as RouteSignals.

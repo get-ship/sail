@@ -9,7 +9,7 @@
 // /ai/tooling — the LSP / CLI surface, adapted from the 10-lsp-cli tutorial
 // lesson. Snippets live in ./snippets so literal braces (e.g. the
 // `.lsp.json` payload) never leak into the inferred scope.
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { lintCmd, lintOutput, compileCmd, lspJson } from './snippets'
 

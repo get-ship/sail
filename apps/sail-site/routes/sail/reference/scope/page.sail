@@ -5,7 +5,7 @@
   src/language-surface.gen.ts (emitted by `sail-compiler prop-registry`).
 -->
 <controller>
-import { controller, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { SCOPE_GRAMMAR, SCOPE_REFUSALS } from '../../../../src/language-surface.gen'
 

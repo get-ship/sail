@@ -14,7 +14,7 @@
 // re-deals after the exits finish, so the stagger arrival can be watched
 // again without a reload. No interval: one deal on arrival, replay on demand.
 
-import { controller, signal, timeline, type ControllerScope } from '@ship/sail-runtime'
+import { timeline, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
 

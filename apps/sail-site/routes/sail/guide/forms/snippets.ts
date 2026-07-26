@@ -4,7 +4,7 @@
 // the Sail-shaped ones are compile-checked by site_snippets_compile.rs.
 export const code = {
   demo: `<controller>
-import { controller, form, signal } from '@ship/sail-runtime'
+import { form } from '@ship/sail-runtime'
 import { profileApi } from './profile-api'
 
 export default controller(() => {
@@ -65,7 +65,8 @@ export default controller(() => {
   {/if}
 </form>`,
 
-  call: `import { controller, form } from '@ship/sail-runtime'
+  // form is not ambient; controller is.
+  call: `import { form } from '@ship/sail-runtime'
 
 export default controller(() => {
   const profile = form({

@@ -10,7 +10,7 @@
 -->
 
 <controller>
-import { controller, signal, derived, effect, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
 interface Track { id: number; title: string; artist: string; album: string; secs: number; len: string }

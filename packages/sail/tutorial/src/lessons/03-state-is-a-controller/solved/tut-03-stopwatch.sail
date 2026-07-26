@@ -6,8 +6,6 @@
 -->
 
 <controller>
-import { controller, signal, derived, effect } from '@ship/sail-runtime'
-
 interface Lap {
   id: number
   at: string

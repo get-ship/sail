@@ -18,15 +18,7 @@
     preview tint, and uppercase-via-CSS (labels are written uppercase in text).
 -->
 <controller>
-import {
-  controller,
-  derived,
-  effect,
-  signal,
-  bindHtml,
-  type Action,
-  type ControllerScope,
-} from '@ship/sail-runtime'
+import { bindHtml, type Action, type ControllerScope } from '@ship/sail-runtime'
 import { ensureWasm, makeCompile } from '@ship/sail-viewer/wasm-bootstrap'
 import type { Scope } from './page.sail'
 import { TUTORIAL_LESSONS, type TutorialLesson } from '../../../../src/tutorial-data'

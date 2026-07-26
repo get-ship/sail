@@ -10,7 +10,7 @@
 // class) and persistTheme (survives reload). The page IS the preview — every
 // component on it reads tokens, so the pick repaints the reader's world.
 
-import { controller, signal, type ControllerScope } from '@ship/sail-runtime'
+import type { ControllerScope } from '@ship/sail-runtime'
 import { applyTheme, persistTheme, readStoredTheme, THEMES, type ThemeId } from '@ship/tokens/themes'
 import type { Scope } from './page.sail'
 import { code } from './snippets'
@@ -68,10 +68,11 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     No component in the framework names a color. A card reads
     <code>--surface-1</code>; a primary button reads <code>--primary</code>;
-    a destructive alert reads its tone tokens. A theme is the set of values
-    behind those names, so applying one restyles every component at once —
-    including components written long before the theme existed. Components
-    read tokens, themes define them, and neither knows the other's name.
+    a destructive alert reads <code>--destructive</code>. A theme is the set
+    of values behind those names, so applying one restyles every component at
+    once — including components written long before the theme existed.
+    Components read tokens, themes define them, and neither knows the other's
+    name.
   </p>
 
   <h2>The token ladder</h2>
@@ -88,16 +89,20 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <code>--surface-1</code>.
     </li>
     <li>
-      <strong>Tone ramps</strong> —
-      <code>--tone-fg</code>, <code>--tone-bg</code>, <code>--tone-border</code>,
-      <code>--tone-ring</code>, resolved per subtree by
-      <code>tone="…"</code>. Status UI reads the ramp; nothing composes a
-      red by hand.
+      <strong>Semantic hues</strong> —
+      <code>--primary</code>, <code>--success</code>, <code>--warning</code>,
+      <code>--destructive</code>, <code>--info</code>, <code>--accent</code>,
+      <code>--muted</code> (and their <code>-foreground</code> partners).
+      Status UI spends these directly via Style
+      (<code>style.bg(destructive)</code>, <code>style.bgWash(primary, 15)</code>).
+      The L1 <code>tone</code> prop selects which hue a component paints —
+      it is not a CSS channel and there is no <code>tone-*-bg/fg</code> ramp.
     </li>
     <li>
-      <strong>Brand</strong> — <code>--primary</code>, <code>--accent</code>,
-      <code>--foreground</code>, <code>--background</code>,
-      <code>--muted-foreground</code>. The handful that define a voice.
+      <strong>Brand / role paint</strong> — <code>--foreground</code>,
+      <code>--background</code>, <code>--border</code>,
+      <code>--muted-foreground</code>, component slots
+      (<code>--card</code>, <code>--button-*</code>). The handful that define a voice.
     </li>
     <li>
       <strong>Primitives</strong> — the spacing, radius, type, shadow and
