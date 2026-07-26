@@ -1,31 +1,28 @@
 /**
- * @ship/sail-runtime — public API surface.
+ * @ship/sail-runtime — public LANGUAGE surface.
  *
- * Everything re-exported from this module is part of sail's stable
- * runtime contract. Anything not re-exported here is internal and may
- * change without notice.
+ * This is the front door for humans and agents. The compiler's ABI
+ * (`bindFor`, `runAction`, `__tpl`, `__sui_motion_attach`, …) lives on
+ * `@ship/sail-runtime/internal` — if you are typing a symbol from there,
+ * you are hand-writing something the emitter writes.
  *
- * Re-exports keep their original JSDoc — hover any symbol in your
- * editor to see the full docs.
- *
- * Surface map:
+ * Surface map (author-facing):
  *   - Reactivity:    `signal`, `derived`, `effect`, `batch`, `untrack`
  *                    (+ types `Signal`, `Derived`)
- *   - DOM bindings:  `bindText`, `bindShow`, `bindAttr`,
- *                    `bindProp`, `bindValue`, `bindChecked`, `bindRawHtml`
- *                    (+ type `Disposer`)
- *   - Events:        `on`, `matchesKey` (+ types `OnOptions`, `Modifier`)
- *   - Control flow:  `bindFor`, `bindForSignal`, `bindIf`
- *                    (+ types `BindForOptions`, `RenderedItem`,
- *                    `BindIfOptions`, `BranchRender`, `BindAwaitOptions`)
- *   - Slots:         `resolveSlots`, `snapshotChildren`, `slotFilled`
- *                    (+ type `SlotDecl`)
- *   - Components:    `defineComponent`, `camelOf`
- *                    (+ types `ComponentFactory`, `ComponentSchema`)
- *   - Prop decoders: `decodeString`, `decodeNumber`, `decodeBoolean`,
- *                    `decodeJson`, `decodeEnum` (+ type `Decoder`)
- *   - Data:          `query`, `mutation` (+ types `QueryOpts`, `Mutation`,
- *                    `LiveState`, …) — query is the read primitive
+ *   - Controller:    `controller`, `resolveController`, lifecycle
+ *                    (`onCleanup`, ambient `mount` → `mountAmbient`)
+ *   - Data:          `query`, `mutation`, compositions (`form`, …)
+ *   - Theme:         `theme`, `setThemePersist`, `hydrateTheme`
+ *   - Actions:       the 12 public `use:` names (full set on `/actions`)
+ *   - Motion:        `timeline`, drivers (`clock`, `scrollProgress`, …)
+ *   - Host:          `mount` (route into DOM), types authors need
+ *
+ * ABI / DOM binders / emit plumbing: `@ship/sail-runtime/internal`.
+ *
+ * Remainder still on this barrel (host/advanced; not yet moved):
+ *   host-api helpers, defineComponent/camelOf, slot projection, decode*,
+ *   error-boundary, template-hook registry, route/patch/edit-mode re-exports
+ *   (importmap singleton reachability), adoptSuiSheets.
  *
  * @packageDocumentation
  */
@@ -60,22 +57,14 @@
 export { signal, derived, effect, batch, untrack, selector, isSignal } from './signal'
 export type { Signal, Derived } from './signal'
 
-// The one MutableState proxy builder. `componentMountState` is emitted by the
-// compiler for component-mount; `createMountState` backs both mount paths.
-// One read shape: `state.x` is the value (signal keys unwrapped); writes route
-// through signal.set via the proxy's set trap.
-export { createMountState, componentMountState, pickSignals, SIGNALS_KEY } from './state-proxy'
-
+// Author lifecycle. Scope plumbing the synthetic emit needs
+// (`createScope`/`withScope`/`walkScope`) lives on `/internal` only —
+// humans write `onCleanup` / ambient `mount(fn)`, never build scopes by hand.
 export {
-  createScope,
-  createChildScope,
-  withScope,
   onCleanup,
-  currentScope,
   provideContext,
   injectContext,
   contextKey,
-  walkScope,
   SuiMountOutsideSetupError,
 } from './effect-scope'
 export type { EffectScope, ContextKey } from './effect-scope'
@@ -111,9 +100,10 @@ export {
 export type { StoreDef, StoreInstance } from './store'
 
 // Host→runtime context seam (active project / session). Host-provided,
-// like RouterPort/ShipHost — replaces the old window.__ship* globals.
+// like RouterPort — replaces the old window.__ship* globals.
 export { setHostContext, hostContext } from './host-context'
 export type { HostContext } from './host-context'
+export type { Host } from './host'
 
 // The sanctioned runtime theme-write hatch — `theme.preview/commit/reset/
 // current`. A plain ambient API (NOT ctx-scoped): a theme write is a GLOBAL
@@ -124,34 +114,16 @@ export type { HostContext } from './host-context'
 export { theme, setThemePersist, hydrateTheme, clearThemeOverrides } from './theme'
 export type { Theme, ThemePatch, ThemeTokenName, ThemeState, ThemePersist } from './theme'
 
-export { bindSlotEmpty } from './slot-empty'
-
-export {
-  bindText,
-  bindShow,
-  bindAttr,
-  bindProp,
-  bindDynamic,
-  bindValue,
-  bindChecked,
-  bindHtml,
-} from './bind'
-export type { Disposer } from './bind'
-
-export { on, matchesKey } from './on'
-export type { OnOptions, Modifier } from './on'
-
-// The `use:` directive runtime — attaches a reusable "action" (element →
-// behavior + teardown) to an element. The compiler emits `runAction` for
-// `use:action` / `use:action={param}`. The primitive that removes
-// author-facing ref + effect for element behavior.
 // Compositions — plain functions over the primitives. Part of the LANGUAGE, not a
 // package you install: `form()` is no more optional than `signal()`.
 export { form, selection, filteredList } from './compositions'
 export type { FormOptions, ListSource } from './compositions'
 
-export { runAction } from './action'
+// `Action` is the author type for custom `use:` functions. The runner
+// (`runAction`) is ABI — on `/internal` only.
 export type { Action, ActionResult } from './action'
+// Disposer is the cleanup shape actions / effects return — author-facing type.
+export type { Disposer } from './bind'
 
 // Public `use:` surface — the 12 app-author actions taught in the skill/docs.
 // The full set (stdlib-internal stamps included) lives on
@@ -188,14 +160,10 @@ export {
   releaseScrollLock,
 } from './scroll-lock'
 
-// Native <dialog> behavior — the compiler emits bindOpen for
-// `<dialog bind:open={state}>`. Thin sugar over showModal()/close(); the
-// platform keeps the focus trap, top layer, ESC, and focus-return.
-export { bindOpen } from './enhance-dialog'
-export type { DialogOptions } from './enhance-dialog'
-
 export type { ComponentExample } from './component-example'
 
+// Host-element helpers for hand-written custom elements (rare; most
+// authors use `component()`). ABI DOM binders stay on `/internal`.
 export {
   emit,
   expose,
@@ -205,9 +173,6 @@ export {
   bindHostAttr,
 } from './host-api'
 
-export { bindFor, bindForSignal } from './for'
-export type { BindForOptions, RenderedItem } from './for'
-
 // Backbone #2 — virtualization — lives on the `@ship/sail-runtime/virtual`
 // subpath, NOT this barrel (#297): re-exporting it here dragged
 // `@tanstack/virtual-core` (~21KB minified, a third of the bundle) into the
@@ -216,38 +181,8 @@ export type { BindForOptions, RenderedItem } from './for'
 // bundles inline the adapter + engine while the reactive core stays the
 // external singleton (see src/virtual.ts).
 
-export { bindIf } from './if'
-export type { BindIfOptions, BranchRender } from './if'
-
-// runEnter / runLeave / cancelTransitions go through the tiny
-// transition-runner indirection (stubs by default). Apps that don't
-// use `transition:` directives nor import the named transition
-// helpers (`registerTransition`, `fade`, `slide`, `scale`) tree-shake
-// `./transition` out entirely — saving ~870 bytes on the Krausest
-// bench bundle. When ANY transition export is consumed, transition.ts
-// loads + its top-level setTransitionRunner() swaps the stubs for
-// the real Web-Animations-API runner.
-// The `transition:` catalog (registerTransition / fade / slide / scale) is GONE —
-// it was a second animation system beside `fx:`, with its own presets, its own
-// registry and its own runtime. One system now: `fx:enter` / `fx:exit` bake
-// to `el.animate()` from the same spring catalog as every other motion trigger.
-//
-// The lifecycle SEAM survives, because the capability is real: `if.ts` / `for.ts`
-// await `runLeave` before removing nodes, which is how an element stays in the DOM
-// long enough to animate out — the one thing CSS cannot do alone. It is backed by
-// motion.ts now (installed lazily, the first time a `fx:exit` attaches), so an
-// app with no exit animations still tree-shakes the whole thing away.
-// Template cloning — the compiler hoists one `__tpl(html)` per static subtree.
-export { __tpl } from './tpl'
-// Event delegation — one root listener per event type; handlers live on the node.
-export { delegateEvents } from './delegate'
-export { runEnter, runLeave, cancelTransitions, setTransitionRunner } from './transition-runner'
-
-export { bindRawHtml } from './raw-html'
-
-export { morph } from './morph'
-export type { MorphOptions } from './morph'
-
+// Slot helpers for advanced component authors (projection). List/control-
+// flow binders (`bindFor`/`bindIf`/…) are ABI on `/internal`.
 export { resolveSlots, snapshotChildren, slotFilled } from './slot'
 export type { SlotDecl } from './slot'
 
@@ -274,6 +209,9 @@ export { debounce } from './signal'
 // type-directed routing at the runtime seam (LiveSource fetcher). The
 // loading/ok/error + push-source types, and `unwrap`/`unwrapOr`, are
 // owned by query.ts now.
+// `__invalidate` is compiler-only ambient (rewrite of `invalidate(ref)`) —
+// kept here so `/internal`'s re-export of the root still carries it for
+// ambient inject; authors never type it.
 export { query, queryKeyed, mutation, __invalidate, unwrap, unwrapOr } from './query'
 export type {
   QueryOpts,
@@ -287,14 +225,6 @@ export type {
   LiveValueOf,
 } from './query'
 
-export { wireFormMutation } from './mutation'
-
-export { bindWhileLoading, bindWhileError } from './while'
-export type {
-  BindWhileLoadingOptions,
-  BindWhileErrorOptions,
-} from './while'
-
 // The framework exports only the host seam. The concrete `ShipSDK` + its
 // data types live in `@ship/sdk-client` — the runtime names no host shape.
 // `ShipHost` types the MOUNT seam only (see ./ship); `Clients` is the
@@ -303,10 +233,6 @@ export type { ShipHost } from './ship'
 export type { Clients } from './clients'
 
 export { component, prop } from './component'
-// Child composition: mount an (internal, unregistered) component module into a
-// host node within a parent's render. The compiler emits a call to this for an
-// underscore-named component reference; registration stays the export path.
-export { mountComponent } from './compose'
 export type { PropDef, ComponentDef, ComponentSetupContext } from './component'
 
 export type {
@@ -329,25 +255,12 @@ export type {
 } from './controller-resolver'
 
 // The tagless mount-form of `component()` (the function-arg overload) + its
-// context/setup/module types. `component` itself is exported above (line 203);
+// context/setup/module types. `component` itself is exported above;
 // these are the types the mount-form's setup + default export carry.
 export type { MountContext, MountSetup, MountModule } from './component-mount'
 
-// Slice 2 — hydration-marker recording helpers. The synthetic emit calls
-// these next to `bindText` / `bindOn` / `bindFor` / etc. so the ship-js
-// SSR path emits the marker contract the client `hydrate()` reads. On
-// the browser DOM the helpers are no-ops (production walker + ship-js
-// SSR already emit markers; CSR doesn't need them).
-export {
-  markHydrateText,
-  markHydrateAttr,
-  markHydrateBoundary,
-} from './hydrate-mark'
-
-
-export { bindPopover } from './enhance-popover'
-export type { PopoverOptions } from './enhance-popover'
-
+// Template-hook registry — author extension point for `<use-*>`.
+// Lookup used by the emitter (`getTemplateHook`) is also on `/internal`.
 export {
   registerTemplateHook,
   getTemplateHook,
@@ -370,19 +283,8 @@ export {
 } from './error-boundary'
 export type { BoundaryHandle, BoundarySource } from './error-boundary'
 
-// `fx:` directive runtime — AOT-baked `el.animate(...)` + a tiny
-// attach helper that wires the animations to a DOM event per
-// trigger. Apps that don't use `fx:` directives don't import
-// `__sui_motion_attach` from the emitted code, so this export is
-// tree-shaken when unused.
-export { __sui_motion_attach } from './motion'
-export type { MotionAttachConfig, MotionConfig } from './motion'
-
-// The choreography lane. `fx:` (above) owns ambient, fire-and-forget
-// animation and hands it to the compositor; `timeline()` owns motion whose
-// clock something ELSE holds — a scrub, a scroll, a sequence of stops that
-// must land on exact offsets. Keyframes go in as data, signals come out, and
-// the existing `(--name)` reflection carries them to the style layer.
+// The choreography lane. Ambient `fx:` attaches via `__sui_motion_attach`
+// (ABI on `/internal`); `timeline()` is the author-facing scrub/sequence API.
 export { timeline, SailTimelineError } from './timeline'
 export type {
   TimelineValue,

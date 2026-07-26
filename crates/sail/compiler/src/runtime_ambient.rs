@@ -13,10 +13,10 @@
 //! manifest, and the action manifest: the closed vocabulary is data, not
 //! scattered string literals.
 
-/// Specifier every ambient runtime ident is imported from. `/internal` is a
-/// total re-export of the public runtime API (`packages/sail/runtime/src/internal.ts`
-/// is `export * from './index'`), and it is what the compiled render module
-/// already imports its helpers from — so bundle externalization treats a
+/// Specifier every ambient runtime ident is imported from. `/internal` is the
+/// compiler ABI barrel (`packages/sail/runtime/src/internal.ts`): curated emit
+/// symbols plus a re-export of the public language surface so ambient inject
+/// and render modules share one specifier — bundle externalization treats a
 /// controller module's imports identically to a render module's.
 pub const RUNTIME_SPECIFIER: &str = "@ship/sail-runtime/internal";
 

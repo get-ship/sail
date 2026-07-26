@@ -66,6 +66,98 @@ fn the_abi_import_carries_emitter_symbols() {
     }
 }
 
+/// The author front door must not re-export the worst ABI symbols. Those live
+/// on `/internal` only — an agent reading the root index should not see
+/// `bindFor` / `runAction` / `__tpl` offered as language.
+#[test]
+fn root_barrel_does_not_export_abi_plumbing() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
+    let index = root.join("packages/sail/runtime/src/index.ts");
+    let internal = root.join("packages/sail/runtime/src/internal.ts");
+    let Ok(index_src) = std::fs::read_to_string(&index) else { return };
+    let Ok(internal_src) = std::fs::read_to_string(&internal) else { return };
+
+    // Must be more than a lone `export * from './index'` — curated ABI blocks
+    // must follow the language re-export.
+    let only_total_reexport = internal_src
+        .lines()
+        .filter(|l| {
+            let t = l.trim();
+            !t.is_empty() && !t.starts_with("//")
+        })
+        .all(|l| l.trim() == "export * from './index'");
+    assert!(
+        !only_total_reexport,
+        "`internal.ts` must be a curated ABI list (not only `export * from './index'`)"
+    );
+    // Curated ABI list must name the emitters' worst symbols.
+    for sym in [
+        "bindFor",
+        "bindIf",
+        "bindText",
+        "runAction",
+        "__tpl",
+        "__sui_motion_attach",
+        "delegateEvents",
+        "mountComponent",
+        "markHydrateText",
+        "wireFormMutation",
+        "createScope",
+        "withScope",
+    ] {
+        assert!(
+            internal_src.contains(sym),
+            "internal ABI barrel must export/mention `{sym}`:\n(check packages/sail/runtime/src/internal.ts)"
+        );
+    }
+
+    // Root must not value-export these (comments may still mention the names).
+    let mut leaked = Vec::new();
+    for name in [
+        "bindFor",
+        "bindIf",
+        "bindText",
+        "runAction",
+        "__tpl",
+        "__sui_motion_attach",
+        "delegateEvents",
+        "mountComponent",
+        "wireFormMutation",
+        "createMountState",
+        "componentMountState",
+        "createScope",
+        "withScope",
+        "bindOpen",
+        "bindPopover",
+        "morph",
+        "bindRawHtml",
+        "markHydrateText",
+    ] {
+        let leaked_here = index_src.lines().any(|l| {
+            let t = l.trim_start();
+            t.starts_with("export ")
+                && !t.starts_with("export type ")
+                && (t.contains(&format!(" {name}"))
+                    || t.contains(&format!("{{{name}"))
+                    || t.contains(&format!(", {name}"))
+                    || t.contains(&format!("{name},"))
+                    || t.contains(&format!("{name} }}"))
+                    || t.contains(&format!("{{ {name} }}"))
+                    || t.contains(&format!("{{ {name},"))
+                    || t.contains(&format!(", {name} }}"))
+                    || t.contains(&format!("{name} as ")))
+        });
+        if leaked_here {
+            leaked.push(name);
+        }
+    }
+    assert!(
+        leaked.is_empty(),
+        "root index.ts still value-exports ABI symbols (move to /internal):\n  {}",
+        leaked.join("\n  ")
+    );
+}
+
 /// `@ship/sail-runtime/template-hooks` is a legitimate subpath and must not be
 /// mistaken for the root by a naive prefix rewrite. Guards the rewrite itself.
 #[test]
