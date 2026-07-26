@@ -293,6 +293,7 @@ fn serialize_static(
     out.push('<');
     out.push_str(&el.tag);
     let mut class_written = false;
+    let mut host_attr_written = false;
     for a in &el.attrs {
         match a {
             AttrInstr::Static { name, value, .. } => {
@@ -300,6 +301,9 @@ fn serialize_static(
                 if is_root && name == "class" {
                     class_written = true;
                     value = format!("{root_class} {value}");
+                }
+                if is_root && name == "data-sail-host" {
+                    host_attr_written = true;
                 }
                 out.push(' ');
                 out.push_str(name);
@@ -341,6 +345,11 @@ fn serialize_static(
     }
     if is_root && !class_written {
         out.push_str(&format!(" class=\"{root_class}\""));
+    }
+    // Compiler-owned host identity for runtime part discovery (not CSS).
+    if is_root && !host_attr_written {
+        let host = root_class.strip_prefix("sail-").unwrap_or(root_class);
+        out.push_str(&format!(" data-sail-host=\"{host}\""));
     }
     out.push('>');
     // Void elements (hr, br, img, input, …) take NO closing tag — emitting

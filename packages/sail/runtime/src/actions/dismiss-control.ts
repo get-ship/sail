@@ -6,10 +6,9 @@
 // <toast> and with `use:liveRegion` on L1 <alert>. Idempotent with the timer
 // path via dismiss-self.
 //
-// Event name: toast hosts (`duration` attr or compiler host stamp
-// `.sail-toast`) emit `sail-toast-dismiss`; everything else emits
-// `sail-dismiss`. Gate: non-toast hosts require `[dismissible]` (alert);
-// toast close always works.
+// Event name: toast hosts (`duration` attr or `data-sail-host="toast"`)
+// emit `sail-toast-dismiss`; everything else emits `sail-dismiss`. Gate:
+// non-toast hosts require `[dismissible]` (alert); toast close always works.
 
 import type { Action } from '../action'
 import { dismissSelf, isDismissed } from './dismiss-self'
@@ -17,8 +16,7 @@ import { dismissSelf, isDismissed } from './dismiss-self'
 const CLOSE_SEL = '[data-toast-close], [data-dismiss], button[aria-label="Dismiss"]'
 
 function isToastHost(el: HTMLElement): boolean {
-  // duration attr is the toast prop; .sail-toast is the compiler host stamp.
-  return el.hasAttribute('duration') || el.classList.contains('sail-toast')
+  return el.hasAttribute('duration') || el.getAttribute('data-sail-host') === 'toast'
 }
 
 /**

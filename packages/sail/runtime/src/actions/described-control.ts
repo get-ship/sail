@@ -25,9 +25,9 @@ export const describedControl: Action<void> = (node) => {
   if (hint) hint.id = hintId
   if (error) error.id = errorId
 
-  // `.sail-switch` is a compiler host stamp on <switch>, not author anatomy.
+  // switch host stamp covers non-native control shells if present.
   const CONTROL_SEL =
-    'input, textarea, select, [contenteditable], [role="textbox"], [role="combobox"], [role="spinbutton"], .sail-switch'
+    'input, textarea, select, [contenteditable], [role="textbox"], [role="combobox"], [role="spinbutton"], [data-sail-host="switch"]'
 
   const wire = (): void => {
     const first = control?.querySelector(CONTROL_SEL) as HTMLElement | null

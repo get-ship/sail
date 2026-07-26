@@ -14,7 +14,7 @@ describe('use:marquee', () => {
     const attach = vi.spyOn(motion, '__sui_motion_attach').mockReturnValue(() => {})
 
     const host = document.createElement('div')
-    host.className = 'sail-ticker'
+    host.setAttribute('data-sail-host', 'ticker')
     host.setAttribute('duration', 'fast')
     host.setAttribute('reverse', '')
     const track = document.createElement('div')
@@ -44,7 +44,7 @@ describe('use:marquee', () => {
     const attach = vi.spyOn(motion, '__sui_motion_attach').mockReturnValue(dispose)
 
     const host = document.createElement('div')
-    host.className = 'sail-ticker'
+    host.setAttribute('data-sail-host', 'ticker')
     const track = document.createElement('div')
     host.appendChild(track)
     document.body.appendChild(host)

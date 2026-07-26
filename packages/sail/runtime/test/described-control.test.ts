@@ -14,7 +14,7 @@ function makeHost(opts: { invalid?: boolean; withControl?: boolean } = {}): {
   input: HTMLInputElement | null
 } {
   const el = document.createElement('div')
-  el.className = 'sail-field'
+  el.setAttribute('data-sail-host', 'field')
   if (opts.invalid) el.setAttribute('invalid', '')
 
   // Structure mirrors field.sail: label, control, hint, error-gate → [role=alert]
@@ -50,7 +50,7 @@ describe('describedControl (use: action)', () => {
 
   it('assigns stable ids to hint and error regions', () => {
     const { hint, error } = makeHost()
-    describedControl(document.querySelector('.sail-field')!)
+    describedControl(document.querySelector('[data-sail-host="field"]')!)
     expect(hint.id).toMatch(/^sail-field-hint-\d+$/)
     expect(error.id).toMatch(/^sail-field-error-\d+$/)
     expect(hint.id).not.toBe(error.id)

@@ -34,6 +34,10 @@ fn native_label_stamps_host_classes_at_use_site() {
         out.contains("<label class=\"sail-label "),
         "root class stamped onto the real tag:\n{out}"
     );
+    assert!(
+        out.contains(r#"data-sail-host="label""#),
+        "host identity attr stamped:\n{out}"
+    );
     // The element's atomic host sx classes ride along (label.sail authors
     // cursor(pointer) + fg(label-foreground) on the host).
     assert!(
@@ -81,7 +85,7 @@ fn native_label_keeps_props_as_attributes() {
 fn native_label_stamping_is_idempotent() {
     // An already-stamped tag (author wrote the classes, or a re-scan) must
     // not accumulate duplicates.
-    let out = pp(r#"<label class="sail-label sx-cursorpointer">Email</label>"#);
+    let out = pp(r#"<label class="sail-label sx-cursorpointer" data-sail-host="label">Email</label>"#);
     assert_eq!(
         out.matches("sail-label").count(),
         1,
@@ -91,6 +95,11 @@ fn native_label_stamping_is_idempotent() {
         out.matches("sx-cursorpointer").count(),
         1,
         "atomic class not duplicated:\n{out}"
+    );
+    assert_eq!(
+        out.matches(r#"data-sail-host="label""#).count(),
+        1,
+        "host identity not duplicated:\n{out}"
     );
 }
 
@@ -134,8 +143,26 @@ fn spliced_element_behavior_unchanged() {
         "spliced element still stamps its snippet root:\n{out}"
     );
     assert!(
+        out.contains(r#"data-sail-host="badge""#),
+        "spliced element stamps host identity:\n{out}"
+    );
+    assert!(
         out.contains(">New<"),
         "children still project into the slot:\n{out}"
+    );
+}
+
+#[test]
+fn spliced_tab_stamps_host_identity() {
+    // Action discovery keys off data-sail-host, not the CSS class stamp.
+    let out = pp(r#"<tab name="a">Profile</tab>"#);
+    assert!(
+        out.contains(r#"data-sail-host="tab""#),
+        "tab host identity for actions:\n{out}"
+    );
+    assert!(
+        out.contains("sail-tab"),
+        "CSS host class still present:\n{out}"
     );
 }
 
@@ -151,6 +178,11 @@ fn native_label_stamps_end_to_end_through_compile() {
     assert!(
         r.js.contains("sail-label"),
         "stamped classes reach the emitted DOM:\n{}",
+        r.js
+    );
+    assert!(
+        r.js.contains("data-sail-host") && r.js.contains("label"),
+        "host identity reaches the emitted DOM:\n{}",
         r.js
     );
     assert!(

@@ -26,7 +26,8 @@ export const radioGroup: Action<void> = (node) => {
   hidden.type = 'hidden'
   el.appendChild(hidden)
 
-  const radios = (): HTMLElement[] => Array.from(el.querySelectorAll('.sail-radio'))
+  const radios = (): HTMLElement[] =>
+    Array.from(el.querySelectorAll('[data-sail-host="radio"]'))
   const inputOf = (r: HTMLElement): HTMLInputElement | null => r.querySelector('input[type="radio"]')
 
   const sync = (): void => {

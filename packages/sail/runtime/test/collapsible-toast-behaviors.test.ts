@@ -30,7 +30,7 @@ function makeDetails(attrs: Record<string, string | boolean> = {}): HTMLDetailsE
 
 function makeToast(attrs: Record<string, string | boolean> = {}): HTMLElement {
   const el = document.createElement('div')
-  el.className = 'sail-toast'
+  el.setAttribute('data-sail-host', 'toast')
   el.setAttribute('role', 'status')
   el.setAttribute('aria-live', 'polite')
   for (const [k, v] of Object.entries(attrs)) {

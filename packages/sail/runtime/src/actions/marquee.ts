@@ -1,8 +1,8 @@
 // `use:marquee` — seamless infinite track scroll for L1 <ticker>.
 //
 // Stamps a fx:loop translate-x animation on the attached node (the
-// track). Reads `duration` / `reverse` from the nearest `.sail-ticker`
-// host so prop axes stay attribute-driven without contracts PE. Duration
+// track). Reads `duration` / `reverse` from the nearest ticker host
+// (`data-sail-host="ticker"`) so prop axes stay attribute-driven. Duration
 // map matches the retired PE (fast 16s / normal 24s / slow 32s). Reduced
 // motion settles the track at rest via the motion runtime (no scroll).
 
@@ -16,7 +16,10 @@ const DURATION_S: Record<string, number> = {
 }
 
 function hostOf(node: Element): HTMLElement | null {
-  return (node.closest('.sail-ticker') as HTMLElement | null) ?? (node.parentElement as HTMLElement | null)
+  return (
+    (node.closest('[data-sail-host="ticker"]') as HTMLElement | null) ??
+    (node.parentElement as HTMLElement | null)
+  )
 }
 
 function configFor(host: HTMLElement | null): MotionAttachConfig {

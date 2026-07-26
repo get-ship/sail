@@ -1,11 +1,13 @@
 import type { Action } from '../action'
 
+const host = (name: string) => `[data-sail-host="${name}"]`
+
 /**
  * `use:toggleGroup` — the L1 `<toggle-group>` element's behavior, light DOM.
  * Owns the group ARIA (role=group + aria-orientation), roving tabindex, arrow
  * nav (per orientation) + Home/End, click selection, and `value` sync. `type`
  * = `single` (one value, deselectable) or `multiple` (space-separated set).
- * Each `.sail-toggle` gets `aria-pressed`. Emits `sail-toggle-change`.
+ * Each toggle host gets `aria-pressed`. Emits `sail-toggle-change`.
  *
  * Orientation is structural (join/axis CVA); stamped onto cells. Size/variant
  * paint is authored on each toggle.
@@ -15,7 +17,7 @@ export const toggleGroup: Action<void> = (node) => {
   const isMulti = (): boolean => root.getAttribute('type') === 'multiple'
   const valueOf = (el: Element): string => el.getAttribute('value') ?? ''
   const togglesOf = (): HTMLElement[] =>
-    Array.from(root.querySelectorAll<HTMLElement>('.sail-toggle'))
+    Array.from(root.querySelectorAll<HTMLElement>(host('toggle')))
   const activeSet = (): Set<string> =>
     new Set((root.getAttribute('value') ?? '').split(/\s+/).filter(Boolean))
   const orientationOf = (): 'horizontal' | 'vertical' =>
@@ -54,7 +56,7 @@ export const toggleGroup: Action<void> = (node) => {
   }
 
   const toggleFrom = (e: Event): HTMLElement | null => {
-    const t = (e.target as Element | null)?.closest<HTMLElement>('.sail-toggle') ?? null
+    const t = (e.target as Element | null)?.closest<HTMLElement>(host('toggle')) ?? null
     return t && root.contains(t) ? t : null
   }
 

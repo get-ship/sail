@@ -617,13 +617,14 @@ fn matching_close(source: &str, from: usize, tag: &str) -> Option<usize> {
 /// sx classes its host Style lowered to — `ElementOutput::host_classes`,
 /// the same string `serialize_static` bakes into a spliced root) onto a
 /// use-site open tag: `<label size="sm">` → `<label class="sail-label sx-…"
-/// size="sm">`. Rules:
+/// data-sail-host="label" size="sm">`. Rules:
 ///   - an author `class` merges — host classes first, author classes after,
 ///     deduped by token, so re-scanning an already-stamped tag is a NO-OP
 ///     (idempotent: the second stamp produces the identical string);
 ///   - a dynamic `class={…}` becomes a concat expression — a dynamic class
 ///     binding REPLACES the attribute at runtime, so the stamped classes
 ///     must ride inside the expression to survive;
+///   - `data-sail-host` is always set to the L1 name (compiler identity IR);
 ///   - every other attribute (use-site props like `size=`/`required`) is
 ///     preserved untouched — the skin's `[attr=value]` selectors match on
 ///     them.
@@ -635,6 +636,11 @@ fn stamp_native_host(open_tag: &str, host_classes: &str) -> String {
     let inner = &open_tag[..open_tag.len() - if self_closing { 2 } else { 1 }];
     let name_end = inner.find(char::is_whitespace).unwrap_or(inner.len());
     let tag_name = &inner[1..name_end];
+    let host_name = host_classes
+        .split_whitespace()
+        .next()
+        .and_then(|c| c.strip_prefix("sail-"))
+        .unwrap_or(tag_name);
     let attrs = parse_attr_list(&inner[name_end..]);
     let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
     let mut merged: Vec<&str> = Vec::new();
@@ -655,7 +661,8 @@ fn stamp_native_host(open_tag: &str, host_classes: &str) -> String {
             } else {
                 static_classes.push(v);
             }
-        } else {
+        } else if name != "data-sail-host" {
+            // Always re-stamp host identity below (idempotent).
             rest_attrs.push((name, value));
         }
     }
@@ -676,6 +683,7 @@ fn stamp_native_host(open_tag: &str, host_classes: &str) -> String {
         }
         None => outb.push_str(&format!(" class=\"{merged}\"")),
     }
+    outb.push_str(&format!(" data-sail-host=\"{host_name}\""));
     for (n, v) in rest_attrs {
         outb.push(' ');
         outb.push_str(n);

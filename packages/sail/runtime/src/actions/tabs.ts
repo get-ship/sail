@@ -1,8 +1,10 @@
 import type { Action } from '../action'
 
+const host = (name: string) => `[data-sail-host="${name}"]`
+
 /**
- * `use:tabs` — the L1 `<tabs>` element's behavior, in light DOM. Owns the
- * whole subtree and queries descendant `.sail-tab` / `.sail-tab-panel` directly.
+ * `use:tabs` — L1 `<tabs>` behavior in light DOM. Finds tab / tab-panel /
+ * tab-list hosts via compiler `data-sail-host` stamps.
  *
  * Wires the ARIA tablist contract (role, aria-selected, aria-controls /
  * aria-labelledby), roving tabindex, keyboard nav (Arrow per orientation,
@@ -10,9 +12,8 @@ import type { Action } from '../action'
  * active tab is the element's `active` attribute (the name of the active tab);
  * unset defaults to the first tab.
  *
- * Orientation is structural (list/panel layout CVA); it is stamped onto
- * `.sail-tab-list` / `.sail-tab-panel` so child orientation axes resolve.
- * Size/variant paint is authored on children (or host CVA).
+ * Orientation is structural; stamped onto tab-list / tab-panel so child axes
+ * resolve. Size/variant paint is authored on children (or host CVA).
  */
 export const tabs: Action<void> = (node) => {
   const root = node as HTMLElement
@@ -21,11 +22,11 @@ export const tabs: Action<void> = (node) => {
   // (empty) active name, so every tab was selected and no panel ever hid.
   const keyOf = (el: Element, i: number): string => el.getAttribute('name') || String(i)
   const tabsOf = (): HTMLElement[] =>
-    Array.from(root.querySelectorAll<HTMLElement>('.sail-tab'))
+    Array.from(root.querySelectorAll<HTMLElement>(host('tab')))
   const panelsOf = (): HTMLElement[] =>
-    Array.from(root.querySelectorAll<HTMLElement>('.sail-tab-panel'))
+    Array.from(root.querySelectorAll<HTMLElement>(host('tab-panel')))
   const listOf = (): HTMLElement | null =>
-    root.querySelector<HTMLElement>('.sail-tab-list')
+    root.querySelector<HTMLElement>(host('tab-list'))
   const activeName = (): string => root.getAttribute('active') ?? ''
   const orientationOf = (): 'horizontal' | 'vertical' =>
     root.getAttribute('orientation') === 'vertical' ? 'vertical' : 'horizontal'
@@ -109,7 +110,7 @@ export const tabs: Action<void> = (node) => {
   }
 
   const tabFrom = (e: Event): HTMLElement | null => {
-    const t = (e.target as Element | null)?.closest<HTMLElement>('.sail-tab') ?? null
+    const t = (e.target as Element | null)?.closest<HTMLElement>(host('tab')) ?? null
     return t && root.contains(t) ? t : null
   }
 

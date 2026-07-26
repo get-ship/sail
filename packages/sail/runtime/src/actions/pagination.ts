@@ -1,7 +1,9 @@
 import type { Action } from '../action'
 
+const host = (name: string) => `[data-sail-host="${name}"]`
+
 /**
- * `use:pagination` — the L1 `<pagination>` behavior. Marks the `.sail-page` whose
+ * `use:pagination` — the L1 `<pagination>` behavior. Marks the page host whose
  * value matches the element's `value` with `aria-current="page"`, and on click
  * of a page sets `value` + emits `sail-page-change`. Prev/next are just pages
  * whose value is the target page. Structure (which pages/ellipsis to show) is
@@ -13,7 +15,7 @@ export const pagination: Action<void> = (node) => {
   const root = node as HTMLElement
   const valueOf = (el: Element): string => el.getAttribute('value') ?? ''
   const pagesOf = (): HTMLElement[] =>
-    Array.from(root.querySelectorAll<HTMLElement>('.sail-page'))
+    Array.from(root.querySelectorAll<HTMLElement>(host('page')))
   const current = (): string => root.getAttribute('value') ?? ''
 
   if (!root.hasAttribute('aria-label')) root.setAttribute('aria-label', 'Pagination')
@@ -36,7 +38,7 @@ export const pagination: Action<void> = (node) => {
   }
 
   const pageFrom = (e: Event): HTMLElement | null => {
-    const p = (e.target as Element | null)?.closest<HTMLElement>('.sail-page') ?? null
+    const p = (e.target as Element | null)?.closest<HTMLElement>(host('page')) ?? null
     return p && root.contains(p) ? p : null
   }
 

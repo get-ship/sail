@@ -1,5 +1,7 @@
 import type { Action } from '../action'
 
+const host = (name: string) => `[data-sail-host="${name}"]`
+
 const isOpen = (el: HTMLElement): boolean => {
   // `:popover-open` throws in engines without popover support — never let a
   // feature probe take the page down.
@@ -19,15 +21,16 @@ const isOpen = (el: HTMLElement): boolean => {
  */
 export const menu: Action<void> = (node) => {
   const root = node as HTMLElement
+  const itemSel = host('menu-item')
   const itemsOf = (): HTMLElement[] =>
-    Array.from(root.querySelectorAll<HTMLElement>('.sail-menu-item')).filter(
+    Array.from(root.querySelectorAll<HTMLElement>(itemSel)).filter(
       (i) => !i.hasAttribute('disabled'),
     )
 
   if (!root.hasAttribute('role')) root.setAttribute('role', 'menu')
 
   const sync = (): void => {
-    for (const i of root.querySelectorAll<HTMLElement>('.sail-menu-item')) {
+    for (const i of root.querySelectorAll<HTMLElement>(itemSel)) {
       i.setAttribute('role', 'menuitem')
       if (!i.hasAttribute('tabindex')) i.setAttribute('tabindex', '-1')
       if (i.hasAttribute('disabled')) i.setAttribute('aria-disabled', 'true')
@@ -62,7 +65,7 @@ export const menu: Action<void> = (node) => {
   }
 
   const onClick = (e: MouseEvent): void => {
-    const item = (e.target as Element | null)?.closest<HTMLElement>('.sail-menu-item')
+    const item = (e.target as Element | null)?.closest<HTMLElement>(itemSel)
     if (!item || !root.contains(item)) return
     if (item.hasAttribute('disabled')) {
       e.preventDefault()
