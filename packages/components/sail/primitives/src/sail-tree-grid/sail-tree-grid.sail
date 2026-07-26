@@ -252,7 +252,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </for>
   </grid>
   <div bind:this={viewportEl} sx={style.position(relative).w(full).overflowY(auto).maxH(panel-max-h-md)}>
-      <for as="w" of={windowItems() key={`${w.key}>|${w.cellsKey}`}}
+      <for as="w" of={windowItems()} key={`${w.key}|${w.cellsKey}`}>
         <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} sx={style.group().position(absolute).left(0).w(full).translateY(bind(rowY)).cursor(pointer).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg), focus: style.outline(ring) })}>
           <span aria-hidden="true" sx={style.position(absolute).left(0).top(1).bottom(1).w(half).radius(full).bg(primary).visibility(hidden).when({ groupSelected: style.visibility(visible) })}></span>
           <for as="c" of={w.cells} key={c.columnId}>
@@ -274,6 +274,5 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </grid>
       </for>
     </div>
-  </div>
 </column>
 </else></if>

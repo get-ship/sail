@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0 — Verdaccio stamp (2026-07-26)
+
+Internal registry cut for `job/style-synthesis`.
+
+**Published to** `http://localhost:4873` as `@ship/sail-*@0.3.0` and related packs:
+
+- `@ship/tokens@0.3.0`
+- `@ship/sail-compiler-wasm`, `sail-runtime`, `sail-dom`, `sail-lsp-browser`, `sail-tutorial`
+- `@ship/sail-primitives`, `sail-canvas`, `sail-charts`, `sail-mermaid`, `sail-chat-elements`, `sail-media`, `sail-code-editor`, `sail-viewer`
+- `@ship/deck-router@0.3.0`, `@ship/deck-host@0.3.0`
+
+**Not republished:** legacy `@ship/sui-*` (marketing/helm/ship-apps stay on sui until explicit cutover — visual safety).
+
+**Language gaps / non-language surface:** see `apps/sail-site/qa/language-gaps.md`.
+
 ## Unreleased — `job/style-synthesis` (2026-07-26)
 
 Authoring and host-surface freeze for Sail. Apps still on SUI (`.sui`, `@ship/sui-*`, brace control-flow, `ctx.clients` / `ship`) need the migrations below when pointing at this tip.

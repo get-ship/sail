@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-primitives",
-  "version": "0.2.0",
-  "description": "Ship Primitives pack — generic `<sail-*>` UI elements (button, input, dialog, popover, etc.).",
+  "version": "0.3.0",
+  "description": "Ship Primitives pack \u2014 generic `<sail-*>` UI elements (button, input, dialog, popover, etc.).",
   "type": "module",
   "license": "MIT",
   "files": [

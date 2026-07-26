@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-tutorial",
-  "version": "0.2.0",
-  "description": "SAIL tutorial — 9 lessons (paired starter + solved, template + controller, plus prose). Droppable into the docs site or any host.",
+  "version": "0.3.0",
+  "description": "SAIL tutorial \u2014 9 lessons (paired starter + solved, template + controller, plus prose). Droppable into the docs site or any host.",
   "private": false,
   "type": "module",
   "license": "MIT",
@@ -13,7 +13,7 @@
   "files": [
     "src"
   ],
-  "//publishConfig": "publishes to public npm — no registry override (previously pointed at a local Verdaccio instance)",
+  "//publishConfig": "publishes to public npm \u2014 no registry override (previously pointed at a local Verdaccio instance)",
   "publishConfig": {
     "access": "public"
   },

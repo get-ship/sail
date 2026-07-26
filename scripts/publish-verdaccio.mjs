@@ -45,8 +45,27 @@ if (!dryRun && !confirmed) {
   process.exit(1);
 }
 
-const hasNpm = spawnSync("npm", ["--version"], { stdio: "ignore" }).status === 0;
-const packManager = hasNpm ? "npm" : "bun";
+// Prefer a real npm CLI. On this host `npm` is often missing from PATH; fall
+// back to a locally-installed npm from the public registry (used to talk to
+// Verdaccio with proper auth).
+const npmCandidates = [
+  "npm",
+  path.join(os.tmpdir(), "npm-cli/node_modules/npm/bin/npm-cli.js"),
+  path.join(repoRoot, "node_modules/npm/bin/npm-cli.js"),
+];
+let npmCmd = null;
+for (const c of npmCandidates) {
+  if (c === "npm") {
+    if (spawnSync("npm", ["--version"], { stdio: "ignore" }).status === 0) {
+      npmCmd = ["npm"];
+      break;
+    }
+  } else if (existsSync(c)) {
+    npmCmd = ["node", c];
+    break;
+  }
+}
+const packManager = npmCmd ? "npm" : "bun";
 
 // Dependency-ordered @ship/sail-* packages (tree-sitter-sail excluded: private).
 // deps lists only in-scope @ship/sail-* / @ship/tokens workspace deps (the
@@ -62,11 +81,13 @@ const PACKAGES = [
   { name: "@ship/sail-canvas", dir: "packages/components/sail/canvas", deps: ["@ship/sail-dom", "@ship/sail-runtime"], build: buildCems },
   { name: "@ship/sail-charts", dir: "packages/components/sail/charts", deps: ["@ship/sail-dom", "@ship/sail-runtime"], build: buildCems },
   { name: "@ship/sail-mermaid", dir: "packages/components/sail/mermaid", deps: ["@ship/sail-runtime", "@ship/sail-dom"], build: buildCems },
-  { name: "@ship/sail-eval", dir: "packages/deck/eval", deps: ["@ship/sail-dom", "@ship/sail-runtime"] },
   { name: "@ship/sail-chat-elements", dir: "packages/components/sail/chat-elements", deps: ["@ship/sail-runtime", "@ship/sail-dom", "@ship/sail-primitives"], build: buildCems },
   { name: "@ship/sail-media", dir: "packages/components/sail/media", deps: ["@ship/sail-dom", "@ship/sail-primitives", "@ship/sail-runtime"], build: buildCems },
   { name: "@ship/sail-code-editor", dir: "packages/components/sail/code-editor", deps: ["@ship/sail-runtime", "@ship/sail-dom", "@ship/sail-lsp-browser", "@ship/sail-primitives"], build: buildCems },
   { name: "@ship/sail-viewer", dir: "packages/components/sail/viewer", deps: ["@ship/sail-compiler-wasm", "@ship/sail-dom", "@ship/sail-primitives", "@ship/sail-runtime"], build: buildCems },
+  // Deck host packages apps need to mount routes against this tip.
+  { name: "@ship/deck-router", dir: "packages/deck/router", deps: ["@ship/sail-runtime"] },
+  { name: "@ship/deck-host", dir: "packages/deck/host", deps: ["@ship/sail-runtime", "@ship/deck-router"] },
 ];
 
 const versionOf = new Map();
@@ -126,20 +147,45 @@ for (const pkg of PACKAGES) {
   try {
     rewriteWorkspaceDeps(pkgJsonPath, pkg.deps);
 
+    // Ensure Verdaccio auth is visible inside the package dir (npm reads
+    // ./.npmrc; do not rely on home .npmrc which may be unavailable).
+    const pubNpmrc = path.join(repoRoot, ".npmrc.publish");
+    const localNpmrc = path.join(dir, ".npmrc");
+    let localNpmrcBackup = null;
+    if (!dryRun && existsSync(pubNpmrc)) {
+      if (existsSync(localNpmrc)) {
+        localNpmrcBackup = path.join(tmpRoot, `${pkg.name.replace(/[/@]/g, "_")}.npmrc`);
+        copyFileSync(localNpmrc, localNpmrcBackup);
+      }
+      copyFileSync(pubNpmrc, localNpmrc);
+    }
+
     let cmd;
     if (dryRun) {
       cmd =
         packManager === "npm"
-          ? ["npm", ["publish", "--dry-run", "--registry", registry]]
+          ? [npmCmd[0], [...npmCmd.slice(1), "publish", "--dry-run", "--registry", registry]]
           : ["bun", ["pm", "pack", "--dry-run"]];
     } else {
       cmd =
         packManager === "npm"
-          ? ["npm", ["publish", "--registry", registry]]
+          ? [npmCmd[0], [...npmCmd.slice(1), "publish", "--registry", registry]]
           : ["bun", ["publish", "--registry", registry]];
     }
 
-    const res = spawnSync(cmd[0], cmd[1], { cwd: dir, encoding: "utf8" });
+    let res;
+    try {
+      res = spawnSync(cmd[0], cmd[1], { cwd: dir, encoding: "utf8" });
+    } finally {
+      if (!dryRun && existsSync(pubNpmrc)) {
+        if (localNpmrcBackup && existsSync(localNpmrcBackup)) {
+          copyFileSync(localNpmrcBackup, localNpmrc);
+          unlinkSync(localNpmrcBackup);
+        } else if (existsSync(localNpmrc)) {
+          unlinkSync(localNpmrc);
+        }
+      }
+    }
     const output = (res.stdout ?? "") + (res.stderr ?? "");
     console.log(output.trim());
     results.push({ name: pkg.name, ok: res.status === 0, output });
