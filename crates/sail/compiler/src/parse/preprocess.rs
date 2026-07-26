@@ -213,12 +213,13 @@ fn lower_sx(
                     let vstart = j + 1;
                     if let Some(rel) = source[vstart..].find('"') {
                         let val = &source[vstart..vstart + rel];
-                        let classes = lower_sx_value(val, env, &mut css, &mut seen)
+                        let (classes, motions) = lower_sx_value(val, env, &mut css, &mut seen)
                             .map_err(|diags| style_error(diags, vstart, vstart + rel))?;
                         out.push_str(&source[last..i]);
                         out.push_str("class=\"");
                         out.push_str(&classes);
                         out.push('"');
+                        push_motion_attrs(&mut out, &motions);
                         i = vstart + rel + 1;
                         last = i;
                         continue;
@@ -227,12 +228,13 @@ fn lower_sx(
                 if j < bytes.len() && bytes[j] == b'{' {
                     if let Some(end) = balanced_brace(source.as_bytes(), j) {
                         let val = &source[j + 1..end];
-                        let classes = lower_sx_value(val, env, &mut css, &mut seen)
+                        let (classes, motions) = lower_sx_value(val, env, &mut css, &mut seen)
                             .map_err(|diags| style_error(diags, j + 1, end))?;
                         out.push_str(&source[last..i]);
                         out.push_str("class=\"");
                         out.push_str(&classes);
                         out.push('"');
+                        push_motion_attrs(&mut out, &motions);
                         i = end + 1;
                         last = i;
                         continue;
@@ -312,11 +314,31 @@ fn lower_sx_value(
     env: &sail_lint::style::StyleEnv,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
-) -> Result<String, Vec<sail_lint::style::StyleDiagnostic>> {
+) -> Result<(String, Vec<(String, String)>), Vec<sail_lint::style::StyleDiagnostic>> {
     // `quote_brace_attrs` rewrites `sx={…}` → `sx="{…}"` (braces preserved inside).
     let val = strip_outer_braces(val.trim());
     // Sole product path: Style value language (chain + match/when/compound/bind).
-    sail_lint::sx_ir::lower_sx_string(val, env, css, seen)
+    // Motion chain methods (`.enter` / `.exit` / …) return alongside classes.
+    sail_lint::sx_ir::lower_sx_string_with_motion(val, env, css, seen)
+}
+
+/// Inject private `motion:<trigger>="{{…}}"` attrs produced by Style `.enter` etc.
+///
+/// The attribute value mirrors the retired author form `fx:enter={{…}}` after
+/// brace-quoting (`"{{…}}"`), so `compile_motion` can parse it unchanged.
+fn push_motion_attrs(out: &mut String, motions: &[(String, String)]) {
+    for (trigger, config) in motions {
+        // config includes braces: `{ opacity: 'fade' }`
+        // attribute value: `{{ opacity: 'fade' }}` (outer pair is the expr wrapper)
+        let value = format!("{{{config}}}");
+        let escaped = value.replace('"', "&quot;");
+        out.push(' ');
+        out.push_str("motion:");
+        out.push_str(trigger);
+        out.push_str("=\"");
+        out.push_str(&escaped);
+        out.push('"');
+    }
 }
 
 fn strip_outer_braces(val: &str) -> &str {

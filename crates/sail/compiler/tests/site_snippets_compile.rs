@@ -107,7 +107,7 @@ fn is_sui(s: &str) -> bool {
         || s.contains("{#if")
         || s.contains("{#each")
         || s.contains("{#await")
-        || s.contains("fx:")
+        || s.contains("fx:") || s.contains(".enter(") || s.contains(".loop(") || s.contains("style.enter")
         || s.contains("use:")
         || s.contains("bind:")
         || (s.contains("on:") && s.contains("={"))

@@ -85,7 +85,7 @@ export const DETAILS: Record<string, DetailEntry> = {
       { name: 'tone', desc: 'semantic colour token', type: TONES },
       { name: 'size', desc: 'control height', type: 'sm · md · lg' },
       { name: 'disabled', desc: 'the platform state, styled', type: 'bool' },
-      { name: 'fx:press', desc: 'the press animation, one attribute', type: 'preset' },
+      { name: 'style.press / when({ active })', desc: 'press feedback on Style', type: 'preset' },
     ],
   }),
   input: lang('input', 'input', {
@@ -260,7 +260,7 @@ export const DETAILS: Record<string, DetailEntry> = {
     props: [
       { name: 'tone', desc: 'semantic colour + icon', type: 'default · info · success · warning · destructive · muted' },
       { name: 'dismissible', desc: 'adds the close button', type: 'bool' },
-      { name: 'fx:exit', desc: 'held in the DOM until the exit ends', type: 'preset' },
+      { name: 'style.exit', desc: 'held in the DOM until the exit ends', type: 'preset' },
     ],
   }),
   progress: lang('progress', 'progressBar', {

@@ -13,7 +13,7 @@
     - data-*: per-card priority + selected highlight
     - on: handlers, including async one (chrome.modal not used —
       standalone build has no daemon)
-    - fx: enter/exit on card add/remove (fade + scale)
+    - style.enter/exit on card add/remove (fade + scale)
     - update() callback exercise: the chaos button mutates the row
       list, which forces bindFor through the diff path the per-field
       gating + monotone fast-path optimize.
@@ -258,14 +258,12 @@ export default controller(() => {
               on:drop|preventDefault={(e) => onDrop(e, col.id, null)}>
             {#for card of col.cards key={card.id}}
               <li data-card="true"
-                  data-card={card.id}
-                  draggable="true"
-                  fx:enter={{ scale: 'spring:snappy', opacity: 'fade' }}
-                  fx:exit={{ opacity: 'fade-out' }}
-                  on:dragstart={(e) => onDragStart(e, card.id)}
-                  on:dragend={onDragEnd}
-                  on:dragover|preventDefault|stopPropagation={(e) => onDragOver(e)}
-                  on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)}>
+data-card={card.id}
+draggable="true"
+on:dragstart={(e) => onDragStart(e, card.id)}
+on:dragend={onDragEnd}
+on:dragover|preventDefault|stopPropagation={(e) => onDragOver(e)}
+on:drop|preventDefault|stopPropagation={(e) => onDrop(e, col.id, card.id)} sx={style.enter({ scale: 'spring:snappy', opacity: 'fade' }).exit({ opacity: 'fade-out' })}>
                 <div>
                   {card.title}
                   {#if card.priority === 'high'}

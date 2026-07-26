@@ -116,30 +116,43 @@ fn compile_attr(
     }
     // `transition:` / `in:` / `out:` are RETIRED. They were a second animation
     // system — a second preset catalog (fade/slide/scale), a second registry
-    // (`registerTransition`), a second runtime — sitting beside `fx:`, which
-    // already bakes to `el.animate()` with compile-time-validated spring presets and
-    // no runtime library at all. Two systems meant two vocabularies to learn, two
-    // things to teach an agent, and two places for a bug to live.
+    // (`registerTransition`), a second runtime — sitting beside motion attach,
+    // which already bakes to `el.animate()` with compile-time-validated spring
+    // presets. Two systems meant two vocabularies to learn.
     //
     // The CAPABILITY survives intact: holding an element in the DOM until its exit
-    // animation finishes is real, and CSS cannot do it alone. It is `fx:exit`
-    // now, running on the same lifecycle seam, from the one catalog.
+    // animation finishes is real, and CSS cannot do it alone. It is Style
+    // `.exit({…})` now, running on the same lifecycle seam, from the one catalog.
     for (retired, hint) in [
-        ("transition:", "fx:enter + fx:exit"),
-        ("in:", "fx:enter"),
-        ("out:", "fx:exit"),
+        ("transition:", "style.… .enter({…}).exit({…})"),
+        ("in:", "style.enter({…})"),
+        ("out:", "style.exit({…})"),
     ] {
         if let Some(rest) = name.strip_prefix(retired) {
             return Err(CompileError::new(format!(
                 "`{retired}{rest}` is retired — there is one animation system. \
-                 Use `{hint}` with a preset from the fx catalog \
-                 (e.g. `fx:exit={{ opacity: 'fade-out' }}`)."
+                 Use `{hint}` with a preset from the motion catalog \
+                 (e.g. `sx={{style.exit({{ opacity: 'fade-out' }})}}`)."
             ))
             .with_span(value_span)
             .with_category(loc.to_string()));
         }
     }
+    // Public `fx:` is retired — Style chain methods are the product surface.
+    // Private `motion:` is the preprocess-injected form from `.enter` / `.exit` /
+    // `.loop` / `.reveal` / `.scroll({…})` and still lowers via compile_motion.
     if let Some(rest) = name.strip_prefix("fx:") {
+        return Err(CompileError::new(format!(
+            "`fx:{rest}` is retired — attach motion on Style: \
+             `sx={{style.… .enter({{…}}).exit({{…}})}}` (or `.loop` / `.reveal` / \
+             `.scroll({{…}})`). Interaction press/hover: prefer \
+             `when({{ active: style.scale(96) }})` + transition tokens. \
+             Config body grammar is unchanged from the old `fx:{rest}={{{{…}}}}`."
+        ))
+        .with_span(value_span)
+        .with_category(loc.to_string()));
+    }
+    if let Some(rest) = name.strip_prefix("motion:") {
         return compile_motion(rest, value, value_span, loc);
     }
     if let Some(rest) = name.strip_prefix("use:") {
@@ -562,10 +575,12 @@ fn compile_use(
     };
     Ok(AttrInstr::Use { action: name.to_string(), param, span: value_span })
 }
-/// Compile a `fx:<trigger>=…` directive. Milestone 1 accepts only a
-/// static object literal (`fx:hover={{ scale: 'sm' }}`); dynamic
-/// expressions (`fx:hover={someExpr}`) are explicitly rejected so
-/// the runtime never has to evaluate an animation config.
+/// Compile a motion attach config (private `motion:<trigger>=…` from Style
+/// `.enter` / `.exit` / `.loop` / `.reveal` / `.scroll({…})` lowering).
+///
+/// Accepts only a static object literal (`motion:enter="{{ scale: 'sm' }}"`);
+/// dynamic expressions are rejected so the runtime never has to evaluate an
+/// animation config.
 ///
 /// Returns an [`AttrInstr::Motion`] carrying the resolved property ->
 /// preset pairs (validated in the lower layer against
@@ -581,7 +596,7 @@ fn compile_motion(
     };
     if trigger.is_empty() {
         return Err(err(
-            "fx: requires a trigger name (hover, press, focus, focus-visible, …)".into(),
+            "motion attach requires a trigger name (enter, exit, loop, hover, press, …)".into(),
         ));
     }
     // The allowlist IS the validation — no shape check ahead of it. A trigger is a
@@ -589,23 +604,19 @@ fn compile_motion(
     // identifier, and an allowlist is strictly stronger than any shape test anyway.
     //
     // An unknown trigger must be an error, not a silent no-op: the runtime has no
-    // dispatch for `fx:hovr={…}`, so it would do nothing and ship.
+    // dispatch for `motion:hovr={…}`, so it would do nothing and ship.
     if !MOTION_TRIGGERS.contains(&trigger) {
         return Err(err(format!(
-            "fx trigger `{trigger}` is not supported. Triggers: {}.",
+            "motion trigger `{trigger}` is not supported. Triggers: {}.",
             MOTION_TRIGGERS.join(", ")
         )));
     }
     if value.is_empty() {
-        return Err(err("fx: requires a config object".into()));
+        return Err(err("motion attach requires a config object".into()));
     }
 
-    // Disambiguate `fx:hover={{...}}` (static) from
-    // first; only reject as dynamic when the body is not a static
-    // key/value list AND looks like an expression. This keeps the
-    // common author form working while still flagging actual
-    // Disambiguate `fx:hover={{ prop: 'value' }}` (static) from
-    // `fx:hover={someExpr}` (dynamic). The pre-pass delivers the
+    // Disambiguate `motion:enter={{ prop: 'value' }}` (static) from
+    // `motion:enter={someExpr}` (dynamic). The pre-pass delivers the
     // value with both outer and inner braces intact for brace-attrs;
     // strip the outermost pair before the static parser. Treat as
     // dynamic ONLY when the body has no `:` separator (a key/value
@@ -635,8 +646,8 @@ fn compile_motion(
             Ok(parsed) => parsed,
             Err(_) if !has_static_shape(value) => {
                 return Err(err(format!(
-                    "fx:{trigger}={{...}} — the value must be a config object like \
-                     `fx:{trigger}={{ scale: 'pop' }}`. Fields may be inline values \
+                    "style.{trigger}({{...}}) — the value must be a config object like \
+                     `style.{trigger}({{ scale: 'pop' }})`. Fields may be inline values \
                      (`duration: 3600`) or signals (`duration: speed()`), but the config \
                      itself is written out, not passed in."
                 )));

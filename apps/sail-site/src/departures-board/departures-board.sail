@@ -81,7 +81,7 @@ export default controller((ctx) => {
   </row>
   <column gap="1" sx={list}>
     {#for f of flights() key={f.id}}
-      <row align="center" gap="3" nowrap fx:enter={{ opacity: 'fade' }}>
+      <row align="center" gap="3" nowrap sx={style.enter({ opacity: 'fade' })}>
         <span grow min-w="0" sx={city}>{f.city}</span>
         <span sx={gate}>{f.gate}</span>
         {#match f.status}

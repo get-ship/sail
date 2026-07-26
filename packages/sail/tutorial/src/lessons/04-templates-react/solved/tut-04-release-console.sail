@@ -66,10 +66,10 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Release console</h3>
     {#match phase()}
-      {:case 'idle'} <badge tone="muted" fx:enter={{ opacity: 'fade' }}>idle</badge>
-      {:case 'building'} <badge tone="warning" fx:enter={{ translate-x: 'spring:snappy' }}>building</badge>
-      {:case 'live'} <badge tone="success" fx:enter={{ scale: 'spring:bouncy' }}>live</badge>
-      {:default} <badge tone="destructive" fx:enter={{ opacity: 'fade' }}>failed</badge>
+      {:case 'idle'} <badge tone="muted" sx={style.enter({ opacity: 'fade' })}>idle</badge>
+      {:case 'building'} <badge tone="warning" sx={style.enter({ translate-x: 'spring:snappy' })}>building</badge>
+      {:case 'live'} <badge tone="success" sx={style.enter({ scale: 'spring:bouncy' })}>live</badge>
+      {:default} <badge tone="destructive" sx={style.enter({ opacity: 'fade' })}>failed</badge>
     {/match}
   </row>
 

@@ -1,12 +1,9 @@
-//! `fx:` directive integration tests.
+//! Style motion chain methods → `__sui_motion_attach(...)` integration tests.
 //!
-//! Verifies the AOT-baked `el.animate(...)` + `__sui_motion_attach(...)`
-//! shape the compiler emits for various `fx:` directive forms.
-//!
-//! `fx:<trigger>={{ <property>: '<preset>' }}` — the property is one
-//! of the closed `MOTION_PROPERTIES` (scale, opacity, translate-y, ...);
-//! the preset is a name resolved against `animation-presets.json`
-//! (e.g. `spring:snappy`, `spring:gentle`, `fade`, `press`).
+//! Author form: `sx={style.… .enter({…}) / .hover({…}) / .loop({…}) …}`.
+//! Config body grammar is identical to the retired `fx:<trigger>={{…}}`.
+//! Property is one of the closed `MOTION_PROPERTIES`; preset resolves against
+//! `animation-presets.json` (e.g. `spring:snappy`, `fade`, `press`).
 
 use sail_compiler::{compile, CompileMode, CompileOpts};
 
@@ -30,7 +27,7 @@ fn compile_motion(source: &str) -> Result<String, String> {
 #[test]
 fn static_hover_scale_emits_runtime_dispatch() {
     let js = compile_motion(
-        r#"<button fx:hover={{ scale: 'spring:snappy' }}>x</button>"#,
+        r#"<button sx={style.hover({ scale: 'spring:snappy' })}>x</button>"#,
     )
     .expect("compile");
     // Runtime dispatch: the per-property `MotionConfig` is embedded as
@@ -51,7 +48,7 @@ fn static_hover_scale_emits_runtime_dispatch() {
 #[test]
 fn unknown_preset_is_a_compile_error() {
     let err = compile_motion(
-        r#"<button fx:hover={{ scale: 'does-not-exist' }}>x</button>"#,
+        r#"<button sx={style.hover({ scale: 'does-not-exist' })}>x</button>"#,
     )
     .expect_err("expected compile error");
     assert!(
@@ -71,22 +68,19 @@ fn unknown_preset_is_a_compile_error() {
 /// error says so rather than the old blanket "dynamic configs".
 #[test]
 fn whole_config_as_one_expression_is_rejected_and_names_the_fix() {
+    // Public fx: is retired with a migration error (not the old dynamic-config wording).
     let err = compile_motion(r#"<button fx:hover={someExpr}>x</button>"#)
         .expect_err("expected compile error");
     assert!(
-        err.contains("must be a config object"),
-        "expected the config-object wording in error: {err}"
-    );
-    assert!(
-        err.contains("signals"),
-        "the rejection should point at the field-level signal form: {err}"
+        err.contains("retired") || err.contains("style."),
+        "expected fx: retirement / Style migration wording: {err}"
     );
 }
 
 #[test]
 fn multiple_props_share_one_attach_call() {
     let js = compile_motion(
-        r#"<button fx:hover={{ scale: 'spring:snappy', opacity: 'fade' }}>x</button>"#,
+        r#"<button sx={style.hover({ scale: 'spring:snappy', opacity: 'fade' })}>x</button>"#,
     )
     .expect("compile");
     let attach_idx = js
@@ -107,7 +101,7 @@ fn multiple_props_share_one_attach_call() {
 #[test]
 fn loop_rotate_spin_emits_infinite_one_direction() {
     let js = compile_motion(
-        r#"<img fx:loop={{ rotate: 'spin' }}>x</img>"#,
+        r#"<img sx={style.loop({ rotate: 'spin' })}>x</img>"#,
     )
     .expect("compile");
     assert!(js.contains("__sui_motion_attach("), "expected runtime attach call:\n{js}");
@@ -127,7 +121,7 @@ fn loop_rotate_spin_emits_infinite_one_direction() {
 #[test]
 fn unknown_property_alias_is_rejected() {
     let err = compile_motion(
-        r#"<button fx:hover={{ foo: 'spring:snappy' }}>x</button>"#,
+        r#"<button sx={style.hover({ foo: 'spring:snappy' })}>x</button>"#,
     )
     .expect_err("expected compile error");
     assert!(err.contains("foo"), "expected error to mention 'foo': {err}");
@@ -139,4 +133,23 @@ fn unknown_property_alias_is_rejected() {
             || err.contains("rotate"),
         "expected error to list supported properties: {err}"
     );
+}
+
+#[test]
+fn enter_exit_on_style_chain_with_paint() {
+    let js = compile_motion(
+        r#"<card sx={style.pad(4).enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' })}>x</card>"#,
+    )
+    .expect("compile");
+    assert!(js.contains(r#"trigger: "enter""#), "{js}");
+    assert!(js.contains(r#"trigger: "exit""#), "{js}");
+    assert!(js.contains("__sui_motion_attach"), "{js}");
+}
+
+#[test]
+fn fx_directive_is_a_compile_error_naming_style_methods() {
+    let err = compile_motion(r#"<card fx:enter={{ opacity: 'fade' }}>x</card>"#)
+        .expect_err("fx: must error");
+    assert!(err.contains("retired"), "{err}");
+    assert!(err.contains(".enter") || err.contains("style."), "{err}");
 }

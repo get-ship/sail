@@ -52,7 +52,7 @@ fn sui_examples(md: &str) -> Vec<String> {
             if in_fence {
                 let looks_like_sui = buf.contains("<scope>")
                     || buf.contains("<controller>")
-                    || buf.contains("fx:")
+                    || buf.contains("fx:") || buf.contains(".enter(") || buf.contains(".loop(") || buf.contains("style.enter")
                     || buf.contains("use:");
                 if looks_like_sui {
                     out.push(std::mem::take(&mut buf));

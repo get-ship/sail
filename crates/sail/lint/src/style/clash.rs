@@ -49,7 +49,7 @@ fn walk(
     resolving: &mut HashSet<String>,
 ) {
     match style {
-        Style::Empty => {}
+        Style::Empty | Style::MotionAttach { .. } => {}
         Style::Set(op) => {
             // Child-pack setters paint a descendant selector (`img` / `svg`), not
             // the host box — their width/height/display must not clash with host size.

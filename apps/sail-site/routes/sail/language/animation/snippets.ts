@@ -4,34 +4,30 @@
 export const code = {
   stagger: `{#if dealt()}
   <row gap="3">
-    <div sx={style.w(9).h(9).radius(md).bg(primary)}
-         fx:enter={{ translate-y: 'spring:snappy', stagger: '0.07s' }}></div>
+    <div sx={style.w(9).h(9).radius(md).bg(primary).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })}></div>
     <!-- ×5 — each waits 0.07s after its previous sibling -->
   </row>
 {/if}`,
 
   lifecycle: `{#if open()}
-  <card
-    fx:enter={{ opacity: 'fade', scale: 'spring:snappy' }}
-    fx:exit={{ opacity: 'fade-out' }}
-  >
+  <card sx={style.enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' })}>
     I animate in, and I animate out.
   </card>
 {/if}`,
 
-  express: `<div fx:loop={{ translate-x: { from: 0, to: '80px' }, duration: 500 }}></div>
-<div fx:loop={{ translate-x: { from: 0, to: '80px' }, duration: 2500 }}></div>`,
+  express: `<div sx={style.loop({ translate-x: { from: 0, to: '80px' }, duration: 500 })}></div>
+<div sx={style.loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 })}></div>`,
 
-  reveal: `<card fx:reveal={{ opacity: 'fade', translate-y: 'spring:gentle' }}>
+  reveal: `<card sx={style.reveal({ opacity: 'fade', translate-y: 'spring:gentle' })}>
   This one fades up as it enters the viewport.
 </card>`,
 
-  loop: `<div fx:loop={{ translate-y: 'spring:gentle', stagger: '0.15s' }}></div>
+  loop: `<div sx={style.loop({ translate-y: 'spring:gentle', stagger: '0.15s' })}></div>
 
-<div fx:loop={{ rotate: 'spin' }}></div>`,
+<div sx={style.loop({ rotate: 'spin' })}></div>`,
 
-  gestures: `<button fx:press={{ scale: 'press' }}>press me</button>
-<button fx:focus-visible={{ scale: 'spring:snappy' }}>tab to me</button>`,
+  gestures: `<button sx={style.press({ scale: 'press' })}>press me</button>
+<button sx={style.focus-visible({ scale: 'spring:snappy' })}>tab to me</button>`,
 
   choreography: `<controller>
 import { timeline } from '@ship/sail-runtime'

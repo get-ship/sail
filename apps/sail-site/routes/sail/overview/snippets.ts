@@ -43,7 +43,7 @@ export default controller(() => {
 
 <input placeholder="Filter people" bind:value={query} />
 {#for p of filtered() key={p.id}}
-  <card sx={style.pad(4)} fx:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+  <card sx={style.pad(4).enter({ opacity: 'fade', translate-y: 'spring:snappy' })}>
     <row gap="3" align="center">
       <avatar></avatar>
       <strong grow>{p.name}</strong>
@@ -73,7 +73,7 @@ effect(() => console.log(count()))   // re-runs on change`,
   data: `const users = query(() => api.users.list())
 // users() is { kind: 'loading' } | { kind: 'ok', value } | { kind: 'error', error }`,
 
-  fx: `<card fx:enter={{ opacity: 'fade', translate-y: 'spring:gentle' }}>…</card>`,
+  fx: `<card sx={style.enter({ opacity: 'fade', translate-y: 'spring:gentle' })}>…</card>`,
 
   theming: `import { applyTheme } from '@ship/tokens/themes'
 applyTheme('console')   // one attribute; every component follows`,

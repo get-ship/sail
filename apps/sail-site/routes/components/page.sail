@@ -180,7 +180,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   <p sx={dormant}>Select pack to load</p>
                 {:else if e.tag === 'button'}
                   <row gap="2" align="center">
-                    <button variant="solid" tone="primary" fx:press={{ scale: 'press' }}>Solid</button>
+                    <button variant="solid" tone="primary" sx={style.press({ scale: 'press' })}>Solid</button>
                     <button variant="outline" tone="primary">Outline</button>
                   </row>
                 {:else if e.tag === 'input'}

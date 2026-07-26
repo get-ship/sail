@@ -6,7 +6,7 @@
 // animate-heavy surface checked for zero console errors.
 //
 // The tests below this point pin the translate-x/y-loop-dead bug: a
-// `fx:loop` animation can be `playState: 'running'` with
+// `style.loop` animation can be `playState: 'running'` with
 // `iterations: Infinity` and STILL move nothing, because its keyframes
 // spoke `x`/`y` (motion/mini's internal value names) instead of the CSS
 // `translate` property. Object-existence assertions (dispose is a
@@ -83,7 +83,7 @@ test('/motion page: spin preset rotates continuously, one direction, never ping-
   const spinner = page.getByTestId('spin-demo')
   await expect(spinner).toBeVisible()
 
-  // Sample every 500ms across 2.5s. `fx:loop={{ rotate: 'spin' }}`
+  // Sample every 500ms across 2.5s. `style.loop={{ rotate: 'spin' }}`
   // is a 14s-ish linear spin, so within this window the raw degree
   // readings never wrap past 360 — no need to unwrap the samples.
   const samples: number[] = []
@@ -211,7 +211,7 @@ test('/motion page: an all-inline loop (bespoke duration, easing, magnitudes) ac
 // Sampling the tile's computed values at specific slider positions is the only
 // assertion that proves all three links at once — `toBeVisible()` passes on a
 // tile that never moves, which is precisely the failure this file already
-// exists to catch for `fx:loop`.
+// exists to catch for `style.loop`.
 
 test.describe('/motion — timeline() scrub demo', () => {
   /** Set the range input and let the reflection effect flush. */

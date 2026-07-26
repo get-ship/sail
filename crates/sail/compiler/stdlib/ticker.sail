@@ -1,6 +1,6 @@
 <!--
   <ticker> — infinite linear marquee. Host overflow Style; track is a nowrap
-  row. Duration/reverse drive use:marquee (fx:loop) — not contracts PE.
+  row. Duration/reverse drive use:marquee (motion loop) — not contracts PE.
 -->
 
 <scope>

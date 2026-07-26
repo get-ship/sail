@@ -38,7 +38,7 @@ const SECTIONS: SectionCard[] = [
     href: '/sail/reference/template',
     title: 'Template',
     count: `${DIRECTIVES.length} directives`,
-    description: 'Every attribute-position directive: on:, bind:, use:, fx:, slots, and the block vocabulary.',
+    description: 'Every attribute-position directive: on:, bind:, use:, Style motion (.enter/.exit/…), slots, and the block vocabulary.',
   },
   {
     href: '/sail/reference/scope',

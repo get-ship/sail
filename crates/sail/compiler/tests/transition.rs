@@ -23,8 +23,11 @@ fn transition_directive_is_a_compile_error_pointing_at_motion() {
     let err = compile(r#"<div transition:fade>x</div>"#, opts())
         .expect_err("retired directive must not compile");
     assert!(
-        err.message.contains("retired") && err.message.contains("fx:enter"),
-        "error must name the motion replacement: {}",
+        err.message.contains("retired")
+            && (err.message.contains("style.enter")
+                || err.message.contains(".enter")
+                || err.message.contains("style.exit")),
+        "error must name the Style motion replacement: {}",
         err.message
     );
 }

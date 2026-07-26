@@ -848,7 +848,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(md, "## Motion — one system\n");
     let _ = writeln!(
         md,
-        "`fx:<trigger>={{{{ <property>: '<preset>' }}}}`. There is exactly one animation\ndirective; `transition:` / `in:` / `out:` are retired.\n"
+        "Style chain methods: `sx={{style.… .enter({{…}}).exit({{…}})}}` (also `.loop` / `.reveal` /\n`.scroll({{…}})` / `.hover` / `.press` / `.focus` / `.focus-visible`). Config body\ngrammar is identical to the retired `fx:<trigger>={{{{…}}}}`. Public `fx:` is a\ncompile error. `transition:` / `in:` / `out:` remain retired.\n"
     );
     let _ = writeln!(
         md,
@@ -869,7 +869,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     );
     let _ = writeln!(
         md,
-        "```\n<card fx:reveal={{{{ opacity: 'fade', translate-y: 'spring:gentle' }}}}>reveal on scroll</card>\n<row fx:enter={{{{ opacity: 'fade', stagger: '40ms' }}}}>cascades in</row>\n<button fx:press={{{{ scale: 'press' }}}}>tactile</button>\n```\n"
+        "```\n<card sx={{style.reveal({{ opacity: 'fade', translate-y: 'spring:gentle' }})}}>reveal on scroll</card>\n<row sx={{style.enter({{ opacity: 'fade', stagger: '40ms' }})}}>cascades in</row>\n<button sx={{style.press({{ scale: 'press' }})}}>tactile</button>\n```\n"
     );
     let _ = writeln!(
         md,
@@ -880,14 +880,14 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         names.sort_unstable();
         let _ = writeln!(md, "{}\n", names.join(", "));
     }
-    // The calibration, stated where an author will actually read it. sx is closed
-    // because colour and spacing are theming integrity. `fx:` is the animation
-    // library's surface and numbers are native there — the alternative (a global
+    // The calibration, stated where an author will actually read it. sx paint is
+    // closed because colour and spacing are theming integrity. Motion configs on
+    // Style (`.enter`/`.loop`/…) take real numbers — the alternative (a global
     // `--duration-cinematic` token minted so ONE hero loop could say 3600ms) is
     // the mistake this paragraph exists to prevent recurring.
     let _ = writeln!(
         md,
-        "INLINE VALUES — full control on any config. Unlike sx (closed: colour and\nspacing are theming integrity), `fx:` takes real values, because a duration\nis a number of milliseconds and an easing is a curve.\n\n\
+        "INLINE VALUES — full control on any motion config. Unlike Style paint (closed:\ncolour and spacing are theming integrity), motion configs take real values,\nbecause a duration is a number of milliseconds and an easing is a curve.\n\n\
          ONE RULE: **quoted is a literal, unquoted is code.**\n\n\
          - `duration: 3600` / `delay: 200` — a bare number is MILLISECONDS.\n\
          - `easing: [0.6, 0, 0.2, 1]` — an inline cubic-bezier. Or a keyword:\n  \
@@ -903,30 +903,30 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     );
     let _ = writeln!(
         md,
-        "```\n<card fx:loop={{{{ translate-x: {{ from: 0, to: '120px' }}, rotate: {{ to: '15deg' }},\n                     duration: 3600, easing: [0.6, 0, 0.2, 1] }}}}>the whole hero, inline</card>\n```\n"
+        "```\n<card sx={{style.loop({{ translate-x: {{ from: 0, to: '120px' }}, rotate: {{ to: '15deg' }},\n                     duration: 3600, easing: [0.6, 0, 0.2, 1] }})}}>the whole hero, inline</card>\n```\n"
     );
-    // The second motion lane. `fx:` above is the whole story for ambient
-    // animation; it is NOT the story for animation whose clock something else
-    // holds, and an agent that only knows `fx:` hand-rolls Math.min/max
-    // offset arithmetic in an effect the moment it meets a scrub or a
-    // multi-stop sequence. Teach both lanes and which one a task belongs in.
+    // The second motion lane. Style `.enter`/`.loop`/… above is the whole story
+    // for ambient animation; it is NOT the story for animation whose clock
+    // something else holds, and an agent that only knows fire-and-forget
+    // hand-rolls Math.min/max offset arithmetic in an effect the moment it
+    // meets a scrub or a multi-stop sequence. Teach both lanes.
     let _ = writeln!(md, "## Motion — the second lane: `timeline()`\n");
     let _ = writeln!(
         md,
-        "`fx:` above is FIRE-AND-FORGET: you name a preset, the browser owns the\n\
-         clock, the compositor runs it. Reach for `timeline()` when something ELSE owns\n\
-         the clock — a scrub, a scroll position, a sequence that must land on exact\n\
-         offsets and HOLD there.\n\n\
+        "Style motion methods (`.enter` / `.loop` / …) are FIRE-AND-FORGET: you name a\n\
+         preset, the browser owns the clock, the compositor runs it. Reach for\n\
+         `timeline()` when something ELSE owns the clock — a scrub, a scroll position,\n\
+         a sequence that must land on exact offsets and HOLD there.\n\n\
          | you want | lane |\n\
          | --- | --- |\n\
-         | hover/press feedback, enter/exit, reveal-on-scroll, an ambient loop | `fx:` |\n\
+         | hover/press feedback, enter/exit, reveal-on-scroll, an ambient loop | Style `.enter`/`.loop`/… |\n\
          | a slider scrubbing an animation | `timeline()` |\n\
          | many elements choreographed against ONE progress value | `timeline()` |\n\
          | keyframes with holds, or per-segment easing | `timeline()` |\n\n\
-         `fx:` is cheaper (compositor, off the main thread) — prefer it whenever it\n\
+         Style motion is cheaper (compositor, off the main thread) — prefer it whenever it\n\
          can express the motion. `timeline()` writes custom properties from JS every\n\
          frame; that is fine at real page scale (60 elements x 3 channels holds 60fps)\n\
-         but it is main-thread work `fx:` does not do.\n"
+         but it is main-thread work Style motion does not do.\n"
     );
     let _ = writeln!(
         md,

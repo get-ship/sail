@@ -142,6 +142,8 @@ fn emit_inner(
             }
             resolving.remove(name);
         }
+        // Lifecycle motion is attribute-lowered; CSS paint emit ignores these nodes.
+        Style::MotionAttach { .. } => {}
     }
 }
 
@@ -251,6 +253,20 @@ pub fn lower_style_source(
     css: &mut String,
     seen: &mut HashSet<String>,
 ) -> Result<String, Vec<super::ir::StyleDiagnostic>> {
+    lower_style_source_with_motion(src, env, css, seen).map(|(classes, _)| classes)
+}
+
+/// Like [`lower_style_source`], but also returns motion attaches extracted from
+/// `.enter` / `.exit` / `.loop` / `.reveal` / `.scroll({…})` chain methods.
+///
+/// Preprocess injects these as private `motion:<trigger>="{{…}}"` attributes so
+/// the existing `AttrInstr::Motion` emit path handles them unchanged.
+pub fn lower_style_source_with_motion(
+    src: &str,
+    env: &StyleEnv,
+    css: &mut String,
+    seen: &mut HashSet<String>,
+) -> Result<(String, Vec<(String, String)>), Vec<super::ir::StyleDiagnostic>> {
     let (style, diags) = super::parse::parse(src);
     if diags
         .iter()
@@ -266,16 +282,21 @@ pub fn lower_style_source(
         return Err(all);
     }
     if diags.iter().any(|d| {
-        matches!(
-            d,
+        match d {
             super::ir::StyleDiagnostic::BadToken { .. }
-                | super::ir::StyleDiagnostic::UnknownSetter { .. }
-                | super::ir::StyleDiagnostic::UnknownWhenKey { .. }
-                | super::ir::StyleDiagnostic::BadArity { .. }
-        )
+            | super::ir::StyleDiagnostic::UnknownSetter { .. }
+            | super::ir::StyleDiagnostic::UnknownWhenKey { .. }
+            | super::ir::StyleDiagnostic::BadArity { .. } => true,
+            // Hard-fail lifecycle-in-when; other ParseErrors stay soft (emit what we can).
+            super::ir::StyleDiagnostic::ParseError { message, .. } => {
+                message.contains("cannot appear inside when")
+            }
+            _ => false,
+        }
     }) {
         return Err(diags);
     }
+    let motions = super::parse::collect_motion_attaches(&style);
     let rules = emit_style(&style, env);
     let mut classes = Vec::new();
     for r in &rules {
@@ -293,5 +314,5 @@ pub fn lower_style_source(
             classes.push(r.class.clone());
         }
     }
-    Ok(classes.join(" "))
+    Ok((classes.join(" "), motions))
 }

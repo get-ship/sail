@@ -22,7 +22,7 @@ interface Note {
 export default controller(() => {
     const publishedAt = signal(new Date('2026-07-01T09:00:00Z'))
     const notes = signal<Note[]>([
-      { id: 1, tag: 'feat', text: 'fx:loop — ambient animation as a directive' },
+      { id: 1, tag: 'feat', text: 'style.loop — ambient animation on Style' },
       { id: 2, tag: 'fix', text: 'exit-hold no longer races the reconciler' },
       { id: 3, tag: 'docs', text: 'the tutorial you are reading right now' },
     ])
@@ -39,7 +39,7 @@ export default controller(() => {
 <column gap="4" sx={style.pad(12px)}>
   <row align="center" justify="between">
     <h3>Release notes</h3>
-    <badge tone="primary" variant="soft" fx:enter={{ opacity: 'whoosh' }}>v2.4.0</badge>
+    <badge tone="primary" variant="soft" sx={style.enter({ opacity: 'whoosh' })}>v2.4.0</badge>
   </row>
 
   <p sx={style.fontSize(sm).fg(muted-foreground)}>published {formatDate(publishedAt())}</p>

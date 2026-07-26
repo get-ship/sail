@@ -15,6 +15,7 @@ pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     // tokenizes into Words — silently injecting spurious Refs and truncating
     // list entries after the comment.
     let stripped = strip_comments(input);
+    let trim_start = stripped.len() - stripped.trim_start().len();
     let trimmed = stripped.trim();
     if trimmed.is_empty() {
         return (Style::Empty, diags);
@@ -28,8 +29,11 @@ pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
         });
         return (Style::Empty, diags);
     }
+    // Offsets are into `trimmed`; `input_base` maps them back if needed. Motion
+    // config capture uses the trimmed slice so quotes/units survive.
     let tokens = tokenize(trimmed);
-    let mut p = Parser::new(&tokens);
+    let mut p = Parser::new(trimmed, &tokens);
+    let _ = trim_start; // kept for future span mapping into original input
     let style = parse_style_expr(&mut p, &mut diags);
     if !p.at_end() {
         diags.push(StyleDiagnostic::ParseError {
@@ -39,7 +43,108 @@ pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     }
     // Validate all paint ops.
     validate_style(&style, &mut diags);
+    // Lifecycle motion must not nest inside when() — clocks don't nest.
+    if let Err(d) = forbid_motion_inside_when(&style) {
+        diags.push(d);
+    }
     (style, diags)
+}
+
+/// Motion chain methods that lower to Motion attach IR (not CSS paint).
+/// Mirrors `MOTION_TRIGGERS` (hover/press/focus for spring bursts; enter/exit
+/// lifecycle; loop/reveal/scroll ambient). `scroll` duals with paint
+/// `style.scroll(auto|smooth)` — brace-object form is motion.
+const MOTION_CHAIN_METHODS: &[&str] = &[
+    "enter",
+    "exit",
+    "loop",
+    "reveal",
+    "scroll",
+    "hover",
+    "press",
+    "focus",
+    "focus-visible",
+];
+
+fn is_motion_chain_method(name: &str) -> bool {
+    MOTION_CHAIN_METHODS.contains(&name)
+}
+
+/// Collect `MotionAttach` nodes from a Style tree (pre-order, source order).
+/// Used by preprocess to inject private `motion:` attributes next to the
+/// lowered class list.
+pub fn collect_motion_attaches(style: &Style) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    collect_motion_attaches_inner(style, &mut out);
+    out
+}
+
+fn collect_motion_attaches_inner(style: &Style, out: &mut Vec<(String, String)>) {
+    match style {
+        Style::Empty | Style::Set(_) | Style::Ref(_) => {}
+        Style::MotionAttach { trigger, config } => {
+            out.push((trigger.clone(), config.clone()));
+        }
+        Style::Chain(items) | Style::List(items) => {
+            for i in items {
+                collect_motion_attaches_inner(i, out);
+            }
+        }
+        Style::Match { arms, .. } => {
+            for (_, body) in arms {
+                collect_motion_attaches_inner(body, out);
+            }
+        }
+        Style::Compound { body, .. } => collect_motion_attaches_inner(body, out),
+        Style::When { entries } => {
+            for (_, body) in entries {
+                collect_motion_attaches_inner(body, out);
+            }
+        }
+    }
+}
+
+fn forbid_motion_inside_when(style: &Style) -> Result<(), StyleDiagnostic> {
+    match style {
+        Style::When { entries } => {
+            for (key, body) in entries {
+                if style_contains_motion(body) {
+                    return Err(StyleDiagnostic::ParseError {
+                        message: format!(
+                            "`.enter` / `.exit` / `.loop` / `.reveal` / `.scroll` cannot appear inside when({{ {key}: … }}) — lifecycle and ambient motion are not pseudo-state. Put motion methods on the rest chain: style.…rest….enter({{…}}).when({{…}})"
+                        ),
+                        source: format!("when.{{ {key} }}"),
+                    });
+                }
+            }
+            Ok(())
+        }
+        Style::Chain(items) | Style::List(items) => {
+            for i in items {
+                forbid_motion_inside_when(i)?;
+            }
+            Ok(())
+        }
+        Style::Match { arms, .. } => {
+            for (_, body) in arms {
+                forbid_motion_inside_when(body)?;
+            }
+            Ok(())
+        }
+        Style::Compound { body, .. } => forbid_motion_inside_when(body),
+        _ => Ok(()),
+    }
+}
+
+fn style_contains_motion(style: &Style) -> bool {
+    match style {
+        Style::MotionAttach { .. } => true,
+        Style::Chain(items) | Style::List(items) => items.iter().any(style_contains_motion),
+        Style::Match { arms, .. } => arms.iter().any(|(_, b)| style_contains_motion(b)),
+        Style::Compound { body, .. } => style_contains_motion(body),
+        Style::When { entries } => entries.iter().any(|(_, b)| style_contains_motion(b)),
+        _ => false,
+    }
 }
 
 /// True if input is the killed utility-string product (atoms / prop: value soup without style./match/when).
@@ -121,7 +226,14 @@ enum Tok<'a> {
     Eq,
 }
 
-fn tokenize(input: &str) -> Vec<Tok<'_>> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct SpannedTok<'a> {
+    tok: Tok<'a>,
+    start: usize,
+    end: usize,
+}
+
+fn tokenize(input: &str) -> Vec<SpannedTok<'_>> {
     let mut out = Vec::new();
     let b = input.as_bytes();
     let mut i = 0;
@@ -132,21 +244,92 @@ fn tokenize(input: &str) -> Vec<Tok<'_>> {
             continue;
         }
         if c == '=' && i + 1 < b.len() && b[i + 1] == b'>' {
-            out.push(Tok::Arrow);
+            out.push(SpannedTok {
+                tok: Tok::Arrow,
+                start: i,
+                end: i + 2,
+            });
             i += 2;
             continue;
         }
+        // Quoted strings: keep as a single Word so motion-config brace depth
+        // is not disturbed, and raw capture still sees quotes via spans.
+        if c == '\'' || c == '"' {
+            let q = b[i];
+            let start = i;
+            i += 1;
+            while i < b.len() && b[i] != q {
+                if b[i] == b'\\' && i + 1 < b.len() {
+                    i += 1;
+                }
+                i += 1;
+            }
+            if i < b.len() {
+                i += 1; // closing quote
+            }
+            out.push(SpannedTok {
+                tok: Tok::Word(&input[start..i]),
+                start,
+                end: i,
+            });
+            continue;
+        }
+        let single = |tok: Tok<'static>, i: usize| SpannedTok {
+            tok,
+            start: i,
+            end: i + 1,
+        };
         match c {
-            '(' => out.push(Tok::LParen),
-            ')' => out.push(Tok::RParen),
-            '{' => out.push(Tok::LBrace),
-            '}' => out.push(Tok::RBrace),
-            '[' => out.push(Tok::LBrack),
-            ']' => out.push(Tok::RBrack),
-            '.' => out.push(Tok::Dot),
-            ',' => out.push(Tok::Comma),
-            ':' => out.push(Tok::Colon),
-            '=' => out.push(Tok::Eq),
+            '(' => {
+                out.push(single(Tok::LParen, i));
+                i += 1;
+                continue;
+            }
+            ')' => {
+                out.push(single(Tok::RParen, i));
+                i += 1;
+                continue;
+            }
+            '{' => {
+                out.push(single(Tok::LBrace, i));
+                i += 1;
+                continue;
+            }
+            '}' => {
+                out.push(single(Tok::RBrace, i));
+                i += 1;
+                continue;
+            }
+            '[' => {
+                out.push(single(Tok::LBrack, i));
+                i += 1;
+                continue;
+            }
+            ']' => {
+                out.push(single(Tok::RBrack, i));
+                i += 1;
+                continue;
+            }
+            '.' => {
+                out.push(single(Tok::Dot, i));
+                i += 1;
+                continue;
+            }
+            ',' => {
+                out.push(single(Tok::Comma, i));
+                i += 1;
+                continue;
+            }
+            ':' => {
+                out.push(single(Tok::Colon, i));
+                i += 1;
+                continue;
+            }
+            '=' => {
+                out.push(single(Tok::Eq, i));
+                i += 1;
+                continue;
+            }
             // Words: identifiers, tokens, and leading-minus tokens (`-px`).
             _ if c.is_ascii_alphanumeric() || c == '_' || c == '-' => {
                 let start = i;
@@ -164,33 +347,42 @@ fn tokenize(input: &str) -> Vec<Tok<'_>> {
                     i = j;
                     continue;
                 }
-                out.push(Tok::Word(&input[start..j]));
+                out.push(SpannedTok {
+                    tok: Tok::Word(&input[start..j]),
+                    start,
+                    end: j,
+                });
                 i = j;
                 continue;
             }
             _ => {
                 // skip unknown one char
+                i += 1;
             }
         }
-        i += 1;
     }
     out
 }
 
 struct Parser<'a> {
-    tokens: &'a [Tok<'a>],
+    input: &'a str,
+    tokens: &'a [SpannedTok<'a>],
     pos: usize,
 }
 
 impl<'a> Parser<'a> {
-    fn new(tokens: &'a [Tok<'a>]) -> Self {
-        Self { tokens, pos: 0 }
+    fn new(input: &'a str, tokens: &'a [SpannedTok<'a>]) -> Self {
+        Self {
+            input,
+            tokens,
+            pos: 0,
+        }
     }
     fn at_end(&self) -> bool {
         self.pos >= self.tokens.len()
     }
     fn peek(&self) -> Option<&Tok<'a>> {
-        self.tokens.get(self.pos)
+        self.tokens.get(self.pos).map(|t| &t.tok)
     }
     fn peek_str(&self) -> &str {
         match self.peek() {
@@ -210,7 +402,7 @@ impl<'a> Parser<'a> {
         }
     }
     fn bump(&mut self) -> Option<Tok<'a>> {
-        let t = self.tokens.get(self.pos)?.clone();
+        let t = self.tokens.get(self.pos)?.tok.clone();
         self.pos += 1;
         Some(t)
     }
@@ -236,7 +428,7 @@ impl<'a> Parser<'a> {
     fn remainder(&self) -> String {
         self.tokens[self.pos..]
             .iter()
-            .map(tok_str_ref)
+            .map(|s| tok_str_ref(&s.tok))
             .collect::<Vec<_>>()
             .join("")
     }
@@ -245,6 +437,43 @@ impl<'a> Parser<'a> {
         if !self.at_end() {
             self.pos += 1;
         }
+    }
+
+    /// Capture a balanced `{ … }` object as a raw source slice (quotes intact).
+    fn capture_brace_object(&mut self, diags: &mut Vec<StyleDiagnostic>) -> Option<String> {
+        if self.peek() != Some(&Tok::LBrace) {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "expected `{…}` motion config object".into(),
+                source: self.remainder(),
+            });
+            return None;
+        }
+        let start = self.tokens[self.pos].start;
+        let mut depth = 0i32;
+        while !self.at_end() {
+            match self.peek() {
+                Some(Tok::LBrace) => {
+                    depth += 1;
+                    self.pos += 1;
+                }
+                Some(Tok::RBrace) => {
+                    depth -= 1;
+                    self.pos += 1;
+                    if depth == 0 {
+                        let end = self.tokens[self.pos - 1].end;
+                        return Some(self.input[start..end].to_string());
+                    }
+                }
+                _ => {
+                    self.pos += 1;
+                }
+            }
+        }
+        diags.push(StyleDiagnostic::ParseError {
+            message: "unterminated `{…}` motion config object".into(),
+            source: self.input[start..].chars().take(80).collect(),
+        });
+        None
     }
 }
 
@@ -286,17 +515,34 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
                 Some(Tok::Word(w)) => w.to_string(),
                 _ => return Style::Empty,
             };
-            // `filled.when({…})`
+            // `filled.when({…})` / `filled.enter({…})`
             if p.peek() == Some(&Tok::Dot) {
                 let mut base = Style::Ref(name);
                 while p.eat(&Tok::Dot) {
-                    if p.peek() == Some(&Tok::Word("when")) {
-                        p.bump();
+                    let method = match p.bump() {
+                        Some(Tok::Word(w)) => w,
+                        _ => {
+                            diags.push(StyleDiagnostic::ParseError {
+                                message: "expected method after `.` on Style ref".into(),
+                                source: p.remainder(),
+                            });
+                            break;
+                        }
+                    };
+                    if method == "when" {
                         let entries = parse_when_map_body(p, diags);
                         base = Style::chain(vec![base, Style::When { entries }]);
+                    } else if is_motion_chain_method(method) {
+                        // `scroll` on a ref is motion only when the arg is `{…}`.
+                        if method == "scroll" && p.peek() == Some(&Tok::LParen) {
+                            // peek past `(` for brace — if not brace, not allowed on ref
+                        }
+                        if let Some(m) = parse_motion_call(p, method, diags) {
+                            base = Style::chain(vec![base, m]);
+                        }
                     } else {
                         diags.push(StyleDiagnostic::ParseError {
-                            message: "only `.when({…})` may follow a Style ref".into(),
+                            message: "only `.when({…})` / `.enter` / `.exit` / `.loop` / `.reveal` / `.scroll({…})` may follow a Style ref".into(),
                             source: p.remainder(),
                         });
                         break;
@@ -349,7 +595,6 @@ fn parse_list(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
 fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     p.expect(Tok::Word("style"), diags);
     let mut ops = Vec::new();
-    let mut when_entries = None;
     let mut iters = 0usize;
     loop {
         iters += 1;
@@ -374,9 +619,45 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
                 break;
             }
         };
+        // `.when({…})` — may appear anywhere in the chain (not only terminal).
         if method == "when" {
-            when_entries = Some(parse_when_map_body(p, diags));
-            break;
+            let entries = parse_when_map_body(p, diags);
+            ops.push(Style::When { entries });
+            continue;
+        }
+        // Motion chain methods: `.enter({…})` etc. Config-object form only
+        // (identical grammar to retired `fx:enter={{…}}` body).
+        // Dual paint/motion methods: only brace-object form is motion —
+        //   `style.scroll(auto)` paint vs `style.scroll({ scale: '…' })` motion
+        //   `style.press()` paint marker vs `style.press({ scale: 'press' })` motion
+        // Pure motion methods (enter/exit/loop/reveal/hover/focus/focus-visible)
+        // always take a config object.
+        let motion_object = if is_motion_chain_method(method) {
+            if p.peek() == Some(&Tok::LParen) {
+                let after_paren = p.tokens.get(p.pos + 1).map(|t| &t.tok);
+                if after_paren == Some(&Tok::LBrace) {
+                    true
+                } else if matches!(method, "scroll" | "press") {
+                    // paint form
+                    false
+                } else {
+                    // enter/exit/loop/reveal/hover/focus require a config object
+                    true
+                }
+            } else {
+                true
+            }
+        } else {
+            false
+        };
+        if motion_object {
+            if let Some(m) = parse_motion_call(p, method, diags) {
+                ops.push(m);
+            }
+            if p.pos == before {
+                p.force_progress();
+            }
+            continue;
         }
         p.expect(Tok::LParen, diags);
         // Empty-arg markers (style.group()) or comma-separated paint args
@@ -425,16 +706,26 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
             source,
         }));
     }
-    let chain = if ops.is_empty() {
+    if ops.is_empty() {
         Style::Empty
     } else {
         Style::chain(ops)
-    };
-    if let Some(entries) = when_entries {
-        Style::chain(vec![chain, Style::When { entries }])
-    } else {
-        chain
     }
+}
+
+/// Parse `( {…} )` after a motion method name has already been consumed.
+fn parse_motion_call(
+    p: &mut Parser<'_>,
+    trigger: &str,
+    diags: &mut Vec<StyleDiagnostic>,
+) -> Option<Style> {
+    p.expect(Tok::LParen, diags);
+    let config = p.capture_brace_object(diags)?;
+    p.expect(Tok::RParen, diags);
+    Some(Style::MotionAttach {
+        trigger: trigger.to_string(),
+        config,
+    })
 }
 
 fn parse_paint_arg(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> PaintArg {
@@ -680,7 +971,7 @@ fn parse_compound(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style
 
 fn validate_style(style: &Style, diags: &mut Vec<StyleDiagnostic>) {
     match style {
-        Style::Empty | Style::Ref(_) => {}
+        Style::Empty | Style::Ref(_) | Style::MotionAttach { .. } => {}
         Style::Set(op) => {
             if let Err(e) = validate_op(op) {
                 diags.push(e);

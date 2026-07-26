@@ -52,6 +52,19 @@ pub enum Style {
     When {
         entries: Vec<(String, Style)>,
     },
+    /// Lifecycle / ambient motion attach — lowers to `AttrInstr::Motion`.
+    ///
+    /// Author form: `style.… .enter({…})` / `.exit({…})` / `.loop({…})` /
+    /// `.reveal({…})` / `.scroll({…})`. The `config` is the raw object body
+    /// (including braces), identical grammar to the retired `fx:<trigger>={{…}}`.
+    /// Paint emit ignores these nodes; preprocess injects a private `motion:`
+    /// attribute that the compiler lowers via the existing motion path.
+    MotionAttach {
+        /// enter | exit | loop | reveal | scroll
+        trigger: String,
+        /// Raw `{ prop: 'preset', … }` including braces.
+        config: String,
+    },
     /// Scope Style const reference.
     Ref(String),
     /// `sx={[ a, b, c ]}` composition.

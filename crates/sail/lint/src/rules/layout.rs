@@ -808,14 +808,16 @@ pub fn is_passthrough_attr(name: &str) -> bool {
             && name.as_bytes().get(2) == Some(&b':')
         // SAIL directive prefixes — framework bindings that the compiler
         // understands (see `crates/sail/compiler/src/parse/template/attrs.rs`).
-        // `bind:`, `use:`, `attr:`, `prop:`, `fx:`. Each is fully
-        // validated downstream; the layout keyword lowering passes them
-        // through to the div unchanged. `class:` / `style:` are retired
-        // and intentionally absent here.
+        // `bind:`, `use:`, `attr:`, `prop:`, `motion:` (private Style motion
+        // inject from `.enter`/`.exit`/…), legacy `fx:` (compile-error with
+        // migration message). Each is fully validated downstream; the layout
+        // keyword lowering passes them through to the div unchanged.
+        // `class:` / `style:` are retired and intentionally absent here.
         || name.starts_with("bind:")
         || name.starts_with("use:")
         || name.starts_with("attr:")
         || name.starts_with("prop:")
+        || name.starts_with("motion:")
         || name.starts_with("fx:")
     {
         return true;

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-26  
 **Branch:** `job/style-synthesis`  
-**Status:** product freeze — implement next; no dual dialects  
+**Status:** implementing/shipped (monorepo) — Style `.enter`/`.exit`/`.loop`/`.reveal`/`.scroll({…})` + interaction chain methods; public `fx:` is a compile error. Style-snapshot form of `.enter(fromStyle, motion?)` is follow-up; config-object form is the v1 cut.  
 **Audience:** engineers cutting over author surface + runtime IR
 
 This supersedes exploration in `fx-as-functions-design.md` as the taught product. That note’s dual author forms (`fx:` sugar + Style-slot timed values) are **not** the freeze. One author model. One attach IR under the hood.
@@ -76,6 +76,33 @@ MotionAttachConfig {
 ---
 
 ## 4. Frozen author shape: `.enter` / `.exit`
+
+### Pragmatic v1 (shipped monorepo cut)
+
+Config-object form is required and shipped:
+
+```
+style.…rest…
+  .enter({ opacity: 'fade', scale: 'spring:snappy', stagger: '0.07s' })
+  .exit({ opacity: 'fade-out' })
+  .when({ hover: style…, active: style… })
+```
+
+The config body is identical to the retired `fx:enter={{…}}` body — same
+`parse_motion_static_config` / preset validation, same `AttrInstr::Motion` IR.
+Style-snapshot form `.enter(fromStyle, motion?)` remains the long-term freeze
+preference and is **follow-up** (not blocking monorepo cutover).
+
+Also shipped as chain methods reusing Motion IR: `.loop({…})`, `.reveal({…})`,
+`.scroll({…})` (object form; paint `style.scroll(auto|smooth)` still exists),
+and interaction `.hover` / `.press` / `.focus` / `.focus-visible` for spring
+bursts. Prefer `when({ active|hover: … })` + transition tokens for micro UI.
+
+Public `fx:` is a **compile error** with a migration message. Preprocess injects
+private `motion:<trigger>` attrs from Style methods.
+
+## 4b. Ideal freeze shape (follow-up)
+
 
 ```
 style.…rest…

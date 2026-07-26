@@ -450,7 +450,7 @@ pub const RETIRED_DIRECTIVES: &[RetiredEntry] = &[
     },
     RetiredEntry {
         syntax: "transition: / in: / out:",
-        instead: "fx:enter / fx:exit",
+        instead: "style.enter / style.exit",
     },
 ];
 

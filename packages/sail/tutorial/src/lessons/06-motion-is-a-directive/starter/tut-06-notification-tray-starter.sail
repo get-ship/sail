@@ -1,7 +1,7 @@
 <!--
   Lesson 06 starter — everything works, nothing moves.
 
-  Add fx: directives only — the controller does not change. Dismiss
+  Add Style motion methods only (.enter/.exit/.hover/.press/.loop) — the controller does not change. Dismiss
   currently SNAPS the row away; opening the tray teleports it in; the
   unread dot just sits there. Each TODO names the trigger and property
   to reach for; the presets are a closed set the compiler enforces.
@@ -51,14 +51,14 @@ export default controller(() => {
   <row align="center" justify="between">
     <h3>Notifications</h3>
     <row gap="2" align="center">
-      <!-- TODO 1: fx:hover={{ rotate: 'spring:bouncy' }} — a playful hint. -->
+      <!-- TODO 1: sx={style.hover({ rotate: 'spring:bouncy' })} — a playful hint. -->
       <button variant="ghost" size="sm" on:click={() => restock()}>Restock</button>
-      <!-- TODO 2: fx:hover (scale, spring:gentle) + fx:press (scale,
+      <!-- TODO 2: style.hover({ scale: 'spring:gentle' }) + style.press({ scale:
            'press') — tactile feedback belongs on the trigger. -->
       <button variant="outline" tone="primary" size="sm" on:click={() => toggle()}>
         {open() ? 'Close tray' : 'Open tray'}
         {#if unread() > 0}
-          <!-- TODO 3: fx:loop={{ scale: 'pulse' }} — ambient, and it
+          <!-- TODO 3: sx={… .loop({ scale: 'pulse' })} — ambient, and it
                stops under prefers-reduced-motion for free. -->
           <span sx={unreadDot}></span>
         {/if}
@@ -67,14 +67,14 @@ export default controller(() => {
   </row>
 
   {#if open()}
-    <!-- TODO 4: the panel should arrive (fx:enter — opacity fade +
-         translate-x spring:snappy) and leave (fx:exit — fade-out).
+    <!-- TODO 4: the panel should arrive (style.enter — opacity fade +
+         translate-x spring:snappy) and leave (style.exit — fade-out).
          exit is the one thing CSS can't do alone: the framework holds the
          node in the tree until the animation finishes. -->
     <column gap="2">
       {#for n of notes() key={n.id}}
-        <!-- TODO 5: rows should cascade in (fx:enter with a stagger
-             duration) and fade out on dismiss (fx:exit). -->
+        <!-- TODO 5: rows should cascade in (style.enter with a stagger
+             duration) and fade out on dismiss (style.exit). -->
         <row gap="3" align="center" sx={noteRow}>
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
           <p grow sx={noteText}>{n.text}</p>

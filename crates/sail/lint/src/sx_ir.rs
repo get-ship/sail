@@ -944,6 +944,16 @@ pub fn lower_sx_string(
     crate::style::emit::lower_style_source(val, env, css, seen)
 }
 
+/// Product Style lower + extracted motion attaches (`.enter` / `.exit` / …).
+pub fn lower_sx_string_with_motion(
+    val: &str,
+    env: &crate::style::StyleEnv,
+    css: &mut String,
+    seen: &mut std::collections::HashSet<String>,
+) -> Result<(String, Vec<(String, String)>), Vec<crate::style::ir::StyleDiagnostic>> {
+    crate::style::emit::lower_style_source_with_motion(val, env, css, seen)
+}
+
 /// Parse-only residual detection for preprocess/lint (utility string product).
 pub fn is_residual_utility_sx(val: &str) -> bool {
     crate::style::parse::looks_like_utility_string_product(val.trim())

@@ -70,9 +70,7 @@ export default controller(() => {
   {#if inbox().kind === 'ok'}
     <column gap="1">
       {#for m of visible() key={m.id}}
-        <row gap="3" align="center" sx={messageRow}
-             fx:enter={{ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }}
-             fx:exit={{ opacity: 'fade-out' }}>
+        <row gap="3" align="center" sx={messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }).exit({ opacity: 'fade-out' })}>
           {#if !m.read}<span sx={unreadDot}></span>{/if}
           <column gap="0" grow>
             <strong sx={from}>{m.from}</strong>

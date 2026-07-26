@@ -211,10 +211,10 @@ export default controller((ctx: ControllerScope<Scope>) => {
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
             {#if stage.button()}
               <column gap="3" align="center">
-                <button variant={variant()} tone="primary" size="lg" on:click={press} fx:press={{ scale: 'press' }}>
+                <button variant={variant()} tone="primary" size="lg" on:click={press} sx={style.press({ scale: 'press' })}>
                   Save changes
                 </button>
-                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>fx:press fired ×{presses()}</p>
+                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>press fired ×{presses()}</p>
               </column>
             {/if}
             {#if stage.input()}
@@ -537,7 +537,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             {/if}
             {#if stage.dialog()}
               <column gap="3" align="center">
-                <button command="show-modal" commandfor="stage-dialog" fx:press={{ scale: 'press' }}>
+                <button command="show-modal" commandfor="stage-dialog" sx={style.press({ scale: 'press' })}>
                   Open the {variant()}
                 </button>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>Escape and the backdrop close it — that's the platform</p>
@@ -776,7 +776,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       <a href="/components">components</a>
       <small>{tag()}</small>
     </breadcrumb>
-    <empty-state fx:enter={{ opacity: 'fade', translate-y: 'spring:snappy' }}>
+    <empty-state sx={style.enter({ opacity: 'fade', translate-y: 'spring:snappy' })}>
       <strong slot="title">Nothing named “{tag()}” here</strong>
       Every element on the L1 surface has a detail page. Pack components
       (the 6 un-gated packs) render here too — this looks like a typo.

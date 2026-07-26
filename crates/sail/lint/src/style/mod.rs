@@ -10,9 +10,13 @@ pub mod parse;
 pub mod setters;
 
 pub use conditions::{condition_media, CONDITION_PREFIXES};
-pub use emit::{emit_style, lower_style, lower_style_source, CssRule, StyleEnv};
+pub use emit::{
+    emit_style, lower_style, lower_style_source, lower_style_source_with_motion, CssRule, StyleEnv,
+};
 pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
-pub use parse::{looks_like_utility_string_product, parse, parse_style_const_rhs};
+pub use parse::{
+    collect_motion_attaches, looks_like_utility_string_product, parse, parse_style_const_rhs,
+};
 
 #[cfg(test)]
 mod tests {
@@ -676,5 +680,35 @@ mod tests {
         assert!(norm.contains("box-shadow:var(--press-shadow)"), "{css}");
     }
 
+    #[test]
+    fn enter_motion_config_object_parses_and_collects() {
+        let (style, diags) = parse("style.enter({ opacity: 'fade', stagger: '450ms' })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let m = collect_motion_attaches(&style);
+        assert_eq!(m.len(), 1, "style={style:?} motions={m:?}");
+        assert_eq!(m[0].0, "enter");
+        assert!(m[0].1.contains("fade"), "{:?}", m[0]);
+    }
 
+    #[test]
+    fn enter_then_when_chain_order() {
+        let (style, diags) = parse(
+            "style.bg(primary).enter({ opacity: 'fade' }).when({ hover: style.bg(muted) })",
+        );
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let m = collect_motion_attaches(&style);
+        assert_eq!(m.len(), 1);
+        let (_, css) = lower_style(&style, &HashMap::new());
+        assert!(css.contains(":hover"), "{css}");
+        // motion must not produce CSS atoms
+        assert!(!css.contains("fade"), "{css}");
+    }
 }
