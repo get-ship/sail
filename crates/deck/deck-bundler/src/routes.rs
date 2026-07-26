@@ -425,14 +425,14 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
     // (the host-owned bootstrap). Either way the tokens ship with the
     // build — the split is which file pulls them in.
     let token_import_block = if include_token_import {
-        // Design tokens + the framework stylesheet (light-DOM contracts +
+        // Design tokens + the framework stylesheet (sail-base document floor +
         // stdlib element skins) ride the entry so a static build ships them
         // as hashed assets, styled without runtime JS injection. Each CSS
         // file is a direct JS import (Rolldown bundles JS-imported CSS; it
         // does NOT inline a wrapper's `@import`).
         format!(
             "import '@ship/tokens/tokens.css';\n\
-             import '@ship/tokens/contracts.css';\n\
+             import '@ship/tokens/sail-base.css';\n\
              import '@ship/tokens/element-skins.css';\n"
         )
     } else {
@@ -544,7 +544,7 @@ import {{ mountRouter }} from '@ship/deck/router';
   layoutModules,
 }} from './routes.gen';
 import '@ship/tokens/tokens.css';
-import '@ship/tokens/contracts.css';
+import '@ship/tokens/sail-base.css';
 import '@ship/tokens/element-skins.css';
 // On an HMR re-import the framework router is already mounted (it exposes
 // `globalThis.__deckHmr`). Swap the freshly-bundled `modules` (their thunks

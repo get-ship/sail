@@ -8,9 +8,10 @@
 //
 // Prefer linking the stylesheet. It is already materialized:
 //
-//     <link rel="stylesheet" href="…/contracts.css" data-sail-contracts>
+//     <link rel="stylesheet" href="…/sail.css" data-sail-contracts>
+//     (or import `@ship/tokens/sail-base.css`)
 //
-// (from `@ship/sail-tokens/contracts.css`). A <link> is cacheable, parses in parallel
+// (from `@ship/tokens/sail-base.css`). A <link> is cacheable, parses in parallel
 // with the JS, and costs the JS bundle nothing. Importing this module puts the whole
 // design system inside your JavaScript — which is fine if you asked for it, and was
 // NOT fine when the framework did it to you unconditionally (it was half the

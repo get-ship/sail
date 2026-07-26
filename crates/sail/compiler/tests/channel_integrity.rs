@@ -23,7 +23,7 @@ use std::collections::HashSet;
 
 const TOKENS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/tokens.css");
 const THEMES_CSS: &str = include_str!("../../../../packages/sail/tokens/src/themes.css");
-const CONTRACTS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/contracts.css");
+const CONTRACTS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/sail-base.css");
 const SKINS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/element-skins.css");
 const SX_VOCAB: &str = include_str!("../../lint/sx-vocabulary.json");
 const SCALES_RS: &str = include_str!("../../lint/src/scales.rs");
@@ -143,7 +143,7 @@ fn no_emitted_var_is_undeclared() {
         .collect();
 
     let mut dangling: Vec<String> = Vec::new();
-    for (label, css) in [("contracts.css", CONTRACTS_CSS), ("element-skins.css", SKINS_CSS)] {
+    for (label, css) in [("sail-base.css", CONTRACTS_CSS), ("element-skins.css", SKINS_CSS)] {
         for (name, has_fallback) in refs_with_fallback_flag(css) {
             if has_fallback || declared.contains(&name) || runtime_written.contains(name.as_str()) {
                 continue;

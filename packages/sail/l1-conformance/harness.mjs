@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const TOK = resolve(HERE, '../tokens/src')
-const FRAMEWORK_CSS = ['tokens.css', 'themes.css', 'contracts.css', 'element-skins.css']
+const FRAMEWORK_CSS = ['tokens.css', 'themes.css', 'sail-base.css', 'element-skins.css']
   .map((f) => readFileSync(resolve(TOK, f), 'utf8'))
   .join('\n')
 

@@ -5,7 +5,7 @@
 // `./fonts/<file>`. The generator
 // `packages/sail/runtime/scripts/emit-contracts-css.ts` reads this
 // manifest, prepends one `@font-face` block per row to the generated
-// `contracts.css` with `src: url('./fonts/<file>')`.
+// `sail-base.css` with `src: url('./fonts/<file>')`.
 //
 // The deck bundler's `ShipAssetCssPlugin` (see
 // `crates/deck/deck-bundler/src/ship_asset_css.rs`) reads each `.css`

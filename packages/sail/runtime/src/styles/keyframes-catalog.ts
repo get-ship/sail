@@ -7,7 +7,7 @@
 // shimmers stay on CSS PE, not fx:loop.
 //
 // Always-on ambient sheet is concatenated into LIGHT_CONTRACTS_CSS and
-// materialised by emit-contracts-css.ts → packages/sail/tokens/src/contracts.css.
+// materialised by emit-contracts-css.ts → packages/sail/tokens/src/sail-base.css.
 
 export type KeyframeCatalogEntry = {
   /** Closed product name (`spin`, `shimmer`, …). */

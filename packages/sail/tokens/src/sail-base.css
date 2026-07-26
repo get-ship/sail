@@ -1,10 +1,11 @@
-/* GENERATED from @ship/sail-runtime styles — do not hand-edit.
+/* GENERATED sail-base (platform document floor) — do not hand-edit.
  * Regenerate: bun packages/sail/runtime/scripts/emit-contracts-css.ts
- * The light-DOM framework contracts: size as an attribute-keyed prop;
- * tone is an ordinary element prop (no universal channel).
+ * sail-base: size as an attribute-keyed prop; tone is an ordinary
+ * element prop (no universal channel). Users theme via tokens only.
  * L1 element skins ride separately via the stdlib registry.
  * Framework webfonts are listed at the top of the file and
- * resolved as hashed assets by the deck bundler at build time. */
+ * resolved as hashed assets by the deck bundler at build time.
+ * Package export: @ship/tokens/sail-base.css (./contracts.css alias). */
 /* Framework webfonts — self-hosted, referenced as relative `url('./fonts/<file>')`.
  * The deck bundler (`ShipAssetCssPlugin`, crates/deck/deck-bundler/src/ship_asset_css.rs)
  * emits each woff2 as a hashed asset and rewrites the URL to the bundled path at

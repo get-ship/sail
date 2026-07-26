@@ -213,20 +213,20 @@ describe('@ship/tokens — representative token in every theme (reskin-by-token 
   }
 })
 
-describe('@ship/tokens — contracts.css layer (host baseline + platform tone)', () => {
-  const contracts = loadSrc('../src/contracts.css')
+describe('@ship/tokens — sail-base.css layer (host baseline + platform tone)', () => {
+  const base = loadSrc('../src/sail-base.css')
   it('has no [tone=] universal channel; no --size-h channel', () => {
     // Tone is now an ordinary element prop on native <button> / <a> (via the
     // stdlib button.sail / anchor.sail Style products). No global --tone*
-    // attribute channel remains in the contracts layer.
-    expect(contracts).not.toMatch(/\[tone=['"]/)
-    expect(contracts).not.toMatch(/--tone\s*:/)
+    // attribute channel remains in the sail-base layer.
+    expect(base).not.toMatch(/\[tone=['"]/)
+    expect(base).not.toMatch(/--tone\s*:/)
     // --size-h channel stays gone; size maps to control-h/text tokens directly.
-    expect(contracts).not.toMatch(/\[size=['"]sm['"]\]\s*\{[^}]*--size-h/)
+    expect(base).not.toMatch(/\[size=['"]sm['"]\]\s*\{[^}]*--size-h/)
   })
 
-  it('declares a reduced-motion media query in the contracts layer', () => {
-    expect(contracts).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/i)
+  it('declares a reduced-motion media query in the sail-base layer', () => {
+    expect(base).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/i)
   })
 })
 

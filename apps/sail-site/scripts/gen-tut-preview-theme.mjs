@@ -5,7 +5,7 @@
 // leaving tut-host.html's <link href="/tut-preview-theme.css"> dangling (404 →
 // unstyled preview). This restores it minimally.
 //
-// Framework `@font-face` rules in contracts.css use relative
+// Framework `@font-face` rules in sail-base.css use relative
 // `url('./fonts/<file>')` so the deck bundler can emit hashed woff2 assets.
 // This sheet is served as a static public asset (not bundled), so those
 // relatives would resolve to `/fonts/<file>` and 404. Rewrite them to the
@@ -33,7 +33,7 @@ export function rewriteFrameworkFontUrls(css) {
 
 /** Concatenate framework sheets and rewrite font URLs for public serving. */
 export function buildTutPreviewThemeCss(tokensSrc) {
-  const sheets = ['tokens.css', 'themes.css', 'contracts.css', 'element-skins.css']
+  const sheets = ['tokens.css', 'themes.css', 'sail-base.css', 'element-skins.css']
   const body = rewriteFrameworkFontUrls(
     sheets
       .map((f) => `/* ─── ${f} ─── */\n${readFileSync(resolve(tokensSrc, f), 'utf8')}`)

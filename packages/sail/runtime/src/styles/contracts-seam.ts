@@ -17,7 +17,8 @@
 //
 //   1. LINK THEM (preferred, and what a real app should do):
 //        <link rel="stylesheet" href="/sail.css" data-sail-contracts>
-//      The file is already materialized at @ship/sail-tokens/contracts.css.
+//      The file is already materialized at @ship/tokens/sail-base.css
+//      (deprecated alias: @ship/tokens/contracts.css).
 //
 //   2. IMPORT THE INSTALLER (for JS-only hosts, and convenient in dev):
 //        import '@ship/sail-runtime/contracts'
@@ -58,8 +59,8 @@ export function ensureLightContracts(): void {
   if (document.documentElement.getAttribute('data-sail-contracts') === 'none') return
   console.warn(
     '[sail] A component mounted but the framework contracts are not present. Either link ' +
-      'the stylesheet (`<link rel="stylesheet" href="…/contracts.css" data-sail-contracts>`, ' +
-      'shipped as @ship/sail-tokens/contracts.css) or `import "@ship/sail-runtime/contracts"` ' +
+      'the stylesheet (`<link rel="stylesheet" href="…/sail.css" data-sail-contracts>`, ' +
+      'shipped as @ship/tokens/sail-base.css) or `import "@ship/sail-runtime/contracts"` ' +
       'to inject it from JS. Linking is preferred: it keeps ~30KB of CSS out of your JS bundle.',
   )
 }

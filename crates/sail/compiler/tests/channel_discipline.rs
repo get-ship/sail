@@ -13,7 +13,7 @@
 use std::collections::BTreeMap;
 
 const THEMES_CSS: &str = include_str!("../../../../packages/sail/tokens/src/themes.css");
-const CONTRACTS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/contracts.css");
+const CONTRACTS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/sail-base.css");
 const SKINS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/element-skins.css");
 
 /// TIER 0 — primitives that are never themed. Spacing, icon sizes, z-index and
@@ -75,7 +75,7 @@ const GOVERNED_EXEMPTIONS: &[(&str, &str)] = &[
 fn no_skin_hardcodes_a_channel_governed_property() {
     let mut breaches: BTreeMap<String, Vec<String>> = BTreeMap::new();
 
-    for (label, css) in [("contracts.css", CONTRACTS_CSS), ("element-skins.css", SKINS_CSS)] {
+    for (label, css) in [("sail-base.css", CONTRACTS_CSS), ("element-skins.css", SKINS_CSS)] {
         // Track the nearest preceding selector so an exemption can be scoped
         // to the component it belongs to.
         let mut selector = String::new();

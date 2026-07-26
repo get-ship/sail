@@ -123,7 +123,7 @@ fn badge_and_card_compile_style() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains(".sail-card")
@@ -163,7 +163,7 @@ fn alert_compiles_with_style_capability_mixins() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains(".sail-alert:not([tone])")

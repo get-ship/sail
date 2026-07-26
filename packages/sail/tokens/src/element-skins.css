@@ -1,7 +1,7 @@
 /* GENERATED from the sail-compiler stdlib registry — do not hand-edit.
  * Regenerate: cargo run -p sail-compiler -- framework-css
  * L1 element skins: lowered host sx + CVA-in-props attr rules.
- * Framework contracts (tone/size as attribute-keyed props) ride in contracts.css. */
+ * sail-base (platform document floor) rides in sail-base.css. */
 @layer sail {
 /* spinner */
 .sail-spinner { display: inline-flex; }

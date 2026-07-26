@@ -11,7 +11,8 @@
     "./themes.css": "./src/themes.css",
     "./tokens.css": "./src/tokens.css",
     "./token-registry.json": "./src/token-registry.json",
-    "./contracts.css": "./src/contracts.css",
+    "./sail-base.css": "./src/sail-base.css",
+    "./contracts.css": "./src/sail-base.css",
     "./element-skins.css": "./src/element-skins.css"
   },
   "files": [

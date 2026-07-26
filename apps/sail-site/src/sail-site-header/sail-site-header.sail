@@ -22,11 +22,11 @@
 // The Sail theme + the framework contracts are imported HERE (not the clients
 // seam): this header is in every route's module graph, so these side-effect
 // imports can't be tree-shaken — whereas an export-less clients module gets
-// dropped. contracts.css gives every page the design-system typography
+// dropped. sail-base.css gives every page the design-system typography
 // (bare h1/p/ul/code/pre/button/anchor) without a class hook in any template.
 import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
 import '@ship/tokens/products.css' // brand hue per data-product; themes own lightness/chroma
-import '@ship/tokens/contracts.css' // framework contracts: bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a Sail document, no class hooks needed
+import '@ship/tokens/sail-base.css' // sail-base (document floor): bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a Sail document, no class hooks needed
 import { applyTheme, isValidTheme, THEME_STORAGE_KEY, DEFAULT_THEME } from '@ship/tokens/themes'
 
 // Ship UI is ONE site with a top product switcher (Sail · Deck · Components · AI).

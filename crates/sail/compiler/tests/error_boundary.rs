@@ -74,7 +74,7 @@ fn the_swap_is_a_css_gate_not_a_reactive_branch() {
         el.structure_html,
         el.skin_css
     );
-    let contracts = include_str!("../../../../packages/sail/tokens/src/contracts.css");
+    let contracts = include_str!("../../../../packages/sail/tokens/src/sail-base.css");
     assert!(
         !contracts.contains(".sail-error-boundary > .content")
             && !contracts.contains(".sail-error-boundary > .fallback")

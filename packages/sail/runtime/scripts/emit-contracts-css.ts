@@ -1,10 +1,14 @@
-// Emit the light-DOM framework contracts as a real CSS asset —
-// `packages/sail/tokens/src/contracts.css` — so build-time consumers (the
+// Emit **sail-base** (platform document floor CSS) as a real CSS asset —
+// `packages/sail/tokens/src/sail-base.css` — so build-time consumers (the
 // deck bundler's `sail.css` aggregation, any non-JS host) read the SAME
 // text the runtime injects. The runtime TS constants remain the authoring
 // source; this script materializes them, and the drift test in
 // `test/contracts-css.test.ts` fails the suite whenever the two diverge
 // (regenerate by running this script).
+//
+// Product name: sail-base. Residual "contracts" identifiers (TS constants,
+// `data-sail-contracts`, this script name) are historical — package also
+// exports `./contracts.css` as a deprecated alias of `./sail-base.css`.
 //
 //   bun packages/sail/runtime/scripts/emit-contracts-css.ts
 //
@@ -32,7 +36,7 @@ import { LIGHT_CONTRACTS_CSS, layered } from '../src/styles/index'
 import { FONTS } from '../../tokens/src/fonts'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const out = resolve(here, '../../tokens/src/contracts.css')
+const out = resolve(here, '../../tokens/src/sail-base.css')
 
 const fontFace = (f: (typeof FONTS)[number]): string =>
   `@font-face {\n` +
@@ -57,18 +61,19 @@ const fontBanner =
 const fontFaces = FONTS.map(fontFace).join('\n')
 
 const banner =
-  '/* GENERATED from @ship/sail-runtime styles — do not hand-edit.\n' +
+  '/* GENERATED sail-base (platform document floor) — do not hand-edit.\n' +
   ' * Regenerate: bun packages/sail/runtime/scripts/emit-contracts-css.ts\n' +
-  ' * The light-DOM framework contracts: size as an attribute-keyed prop;\n' +
-  ' * tone is an ordinary element prop (no universal channel).\n' +
+  ' * sail-base: size as an attribute-keyed prop; tone is an ordinary\n' +
+  ' * element prop (no universal channel). Users theme via tokens only.\n' +
   ' * L1 element skins ride separately via the stdlib registry.\n' +
   ' * Framework webfonts are listed at the top of the file and\n' +
-  ' * resolved as hashed assets by the deck bundler at build time. */\n'
+  ' * resolved as hashed assets by the deck bundler at build time.\n' +
+  ' * Package export: @ship/tokens/sail-base.css (./contracts.css alias). */\n'
 
 writeFileSync(
   out,
   banner + fontBanner + fontFaces + '\n' + layered(LIGHT_CONTRACTS_CSS),
 )
 console.log(
-  `wrote ${out} (${LIGHT_CONTRACTS_CSS.length} bytes contracts, ${FONTS.length} @font-face rule${FONTS.length === 1 ? '' : 's'} at top)`,
+  `wrote ${out} (${LIGHT_CONTRACTS_CSS.length} bytes sail-base, ${FONTS.length} @font-face rule${FONTS.length === 1 ? '' : 's'} at top)`,
 )

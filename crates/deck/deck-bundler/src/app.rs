@@ -1041,7 +1041,11 @@ pub async fn bundle_app_with_base(
         .with_plugins(vec![
             Arc::new(app_plugin),
             Arc::new(sail_plugin),
-            Arc::new(crate::ship_asset_css::ShipAssetCssPlugin),
+            Arc::new(if minify {
+                crate::ship_asset_css::ShipAssetCssPlugin::production()
+            } else {
+                crate::ship_asset_css::ShipAssetCssPlugin::development()
+            }),
         ])
         .build()
         .map_err(|e| anyhow!("rolldown build(app): {e:?}"))?;
@@ -1121,7 +1125,7 @@ pub async fn bundle_app_with_base(
             .iter()
             .zip(css_hrefs.iter())
             .map(|(name, href)| {
-                // The `@ship/tokens/contracts.css` entry import (deck-deploy-gap,
+                // The `@ship/tokens/sail-base.css` entry import (deck-deploy-gap,
                 // 2nd incident) emits as `assets/contracts-<hash>.css` — the
                 // AssetModulePlugin names each emitted CSS asset after its
                 // SOURCE file stem, so `contracts-` is a stable prefix. The
@@ -1758,7 +1762,8 @@ export default controller(() => ({ ok: true }))\n\
             &r.join("packages/sail/tokens/package.json"),
             r#"{"name":"@ship/tokens","type":"module",
                 "exports":{".":"./src/index.ts","./tokens.css":"./src/tokens.css",
-                "./contracts.css":"./src/contracts.css",
+                "./sail-base.css":"./src/sail-base.css",
+                "./contracts.css":"./src/sail-base.css",
                 "./element-skins.css":"./src/element-skins.css"}}"#,
         );
         // Bare-minimum tokens.css: a single `:root` block with the
@@ -1769,11 +1774,11 @@ export default controller(() => ({ ok: true }))\n\
             &r.join("packages/sail/tokens/src/tokens.css"),
             ":root { --background: oklch(20% 0 0); }\n",
         );
-        // The framework stylesheet the entry also imports (contracts + skins,
+        // The framework stylesheet the entry also imports (sail-base + skins,
         // each a direct JS import). Minimal but real so the bundle resolves
         // the extra entry imports.
         write(
-            &r.join("packages/sail/tokens/src/contracts.css"),
+            &r.join("packages/sail/tokens/src/sail-base.css"),
             "[tone='default'] { --tone: var(--foreground); }\n",
         );
         write(

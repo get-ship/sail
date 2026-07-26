@@ -1,16 +1,19 @@
 //! `ShipAssetCssPlugin` — rewrites `url(...)` references inside framework
 //! CSS assets to point at bundled, hashed assets (woff2 today; png/svg
 //! tomorrow — the rewrite is general, NOT a font-only special case).
+//! In production builds it also minifies CSS asset bodies via
+//! [`deck_core::minify_css`] (after URL rewrite so placeholders resolve first).
 //!
 //! # Why
 //!
-//! The framework emits `contracts.css` with relative `url('./fonts/X.woff2')`
-//! references. After Rolldown's `AssetModulePlugin` runs, the CSS lives at
-//! `assets/contracts-<hash>.css` and the woff2 should ship as siblings in
+//! The framework emits **sail-base** (`sail-base.css`; historical name
+//! `contracts.css`) with relative `url('./fonts/X.woff2')` references.
+//! After Rolldown's `AssetModulePlugin` runs, the CSS lives at
+//! `assets/sail-base-<hash>.css` and the woff2 should ship as siblings in
 //! `assets/<name>-<hash>.woff2` — but Rolldown's `AssetModulePlugin` does
 //! NOT touch the CSS BODY: it only rewrites the JS chunk's
 //! `__ROLLDOWN_ASSET__#<ref>` placeholders. The browser fetches the CSS
-//! at `assets/contracts-<hash>.css` and resolves `url('./fonts/X.woff2')`
+//! at `assets/sail-base-<hash>.css` and resolves `url('./fonts/X.woff2')`
 //! to `/sail-site/fonts/X.woff2` — 404, because the woff2 live under
 //! `/sail-site/assets/`, not `/sail-site/fonts/`.
 //!
@@ -89,8 +92,32 @@ const CSS_ASSET_PREFIX: &str = "__SHIP_CSS_ASSET__#";
 const REWRITE_EXTENSIONS: &[&str] =
     &[".woff2", ".woff", ".png", ".jpg", ".jpeg", ".svg", ".gif", ".webp"];
 
-#[derive(Debug)]
-pub struct ShipAssetCssPlugin;
+/// Rolldown plugin: rewrite local `url(...)` in CSS assets to hashed paths,
+/// and optionally minify the CSS body (production).
+#[derive(Debug, Clone, Copy)]
+pub struct ShipAssetCssPlugin {
+    /// When true, minify every emitted CSS asset after URL rewrites resolve.
+    /// Dev builds leave CSS readable.
+    pub minify: bool,
+}
+
+impl Default for ShipAssetCssPlugin {
+    fn default() -> Self {
+        Self { minify: false }
+    }
+}
+
+impl ShipAssetCssPlugin {
+    /// Production helper — minify on.
+    pub fn production() -> Self {
+        Self { minify: true }
+    }
+
+    /// Development helper — readable CSS.
+    pub fn development() -> Self {
+        Self { minify: false }
+    }
+}
 
 impl Plugin for ShipAssetCssPlugin {
     fn name(&self) -> std::borrow::Cow<'static, str> {
@@ -276,23 +303,26 @@ impl Plugin for ShipAssetCssPlugin {
         ctx: &PluginContext,
         args: &mut HookGenerateBundleArgs<'_>,
     ) -> HookNoopReturn {
-        // Walk every emitted asset. For each one whose body looks like
-        // CSS (we check for the placeholder prefix — anything else is
-        // not ours to touch), find each `__SHIP_CSS_ASSET__#<ref>`
-        // placeholder, resolve the reference id to the asset's hashed
-        // filename, compute the relative URL from this CSS asset's
-        // filename to the referenced asset's filename, and rewrite
-        // the body in place.
+        // Walk every emitted CSS asset. Resolve `__SHIP_CSS_ASSET__#`
+        // placeholders (if any), then optionally minify for production.
+        // Assets without placeholders are still minified when `self.minify`
+        // is set — pure CSS imports (tokens, skins) need the same pass.
         for output in args.bundle.iter_mut() {
             let asset = match output {
                 Output::Asset(a) => a.clone(),
                 Output::Chunk(_) => continue,
             };
+            if !asset.filename.ends_with(".css") {
+                continue;
+            }
             let src = match &asset.source {
                 StrOrBytes::Bytes(b) => b.clone(),
-                StrOrBytes::Str(_) => continue, // unlikely for CSS, defensive
+                StrOrBytes::Str(s) => s.as_bytes().to_vec(),
             };
-            if !src.windows(CSS_ASSET_PREFIX.len()).any(|w| w == CSS_ASSET_PREFIX.as_bytes()) {
+            let has_placeholder = src
+                .windows(CSS_ASSET_PREFIX.len())
+                .any(|w| w == CSS_ASSET_PREFIX.as_bytes());
+            if !has_placeholder && !self.minify {
                 continue;
             }
             // Convert to a lossy string for the rewrite (CSS is UTF-8
@@ -326,7 +356,12 @@ impl Plugin for ShipAssetCssPlugin {
                 last_end = start + ref_id.len();
             }
             rewritten.push_str(&body[last_end..]);
-            let new_bytes = rewritten.into_bytes();
+            let final_body = if self.minify {
+                deck_core::minify_css(&rewritten)
+            } else {
+                rewritten
+            };
+            let new_bytes = final_body.into_bytes();
             if new_bytes.as_slice() == src.as_slice() {
                 continue;
             }
@@ -409,7 +444,7 @@ fn url_references(body: &str) -> Vec<(usize, char, &str)> {
     // a regex dependency. The first `(` after `url` opens the URL; the
     // matching `)` closes it. CSS permits nested parens in `url()`
     // (rare, RFC 5987-style) — we don't support them here because the
-    // generated `contracts.css` doesn't use them. If a future asset
+    // generated `sail-base.css` doesn't use them. If a future asset
     // path does, the conservative skip is safer than a broken rewrite.
     let bytes = body.as_bytes();
     let mut out = Vec::new();
@@ -648,7 +683,7 @@ mod tests {
     #[test]
     fn compute_relative_url_under_assets() {
         // Both under assets/ → relative is just the basename.
-        let url = compute_relative_url("assets/contracts-HASH.css", "assets/dm-sans-OTHER.woff2");
+        let url = compute_relative_url("assets/sail-base-HASH.css", "assets/dm-sans-OTHER.woff2");
         assert_eq!(url, "./dm-sans-OTHER.woff2");
     }
 
@@ -657,7 +692,7 @@ mod tests {
         // If assets are nested, the relative math should still produce a
         // valid URL.
         let url = compute_relative_url(
-            "assets/sub/contracts-HASH.css",
+            "assets/sub/sail-base-HASH.css",
             "assets/dm-sans-OTHER.woff2",
         );
         assert_eq!(url, "../dm-sans-OTHER.woff2");
@@ -747,7 +782,7 @@ mod tests {
         };
         let mut bundler = BundlerBuilder::default()
             .with_options(options)
-            .with_plugins(vec![Arc::new(ShipAssetCssPlugin)])
+            .with_plugins(vec![Arc::new(ShipAssetCssPlugin::development())])
             .build()
             .unwrap();
         let output = bundler.generate().await.unwrap();
@@ -826,6 +861,130 @@ mod tests {
             woff2_emitted.len(),
             1,
             "the woff2 must be emitted as exactly one hashed asset, got: {woff2_emitted:?}"
+        );
+    }
+
+    /// Production path: URL rewrite still works AND body is minified
+    /// (comments stripped / smaller than the unminified sibling).
+    #[tokio::test(flavor = "multi_thread")]
+    async fn plugin_minifies_css_in_production_without_breaking_url_rewrite() {
+        use rolldown::{BundlerBuilder, BundlerOptions, InputItem, OutputFormat};
+        use rolldown_common::ChunkFilenamesOutputOption;
+        use std::sync::Arc;
+
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        let entry = root.join("entry.js");
+        let css = root.join("style.css");
+        let woff2 = root.join("fonts/x.woff2");
+        let woff2_bytes: &[u8] = b"wOF2";
+        // Deliberately verbose CSS so minify has room to shrink.
+        let css_body = r#"/* framework banner — should vanish in production */
+@font-face {
+  font-family: "X";
+  src: url('./fonts/x.woff2') format('woff2-variations');
+}
+.foo  {
+  color:  red;
+}
+"#;
+        let entry_body = "import './style.css';\nexport const _ = 1;\n";
+
+        std::fs::create_dir_all(root.join("fonts")).unwrap();
+        std::fs::write(&entry, entry_body).unwrap();
+        std::fs::write(&css, css_body).unwrap();
+        std::fs::write(&woff2, woff2_bytes).unwrap();
+
+        let out_dir = root.join("dist");
+        std::fs::create_dir_all(&out_dir).unwrap();
+
+        let mut module_types: rustc_hash::FxHashMap<String, rolldown_common::ModuleType> =
+            rustc_hash::FxHashMap::default();
+        module_types.insert(".css".to_string(), rolldown_common::ModuleType::Asset);
+
+        let make_options = |dir: &Path| BundlerOptions {
+            input: Some(vec![InputItem {
+                name: Some("entry".to_string()),
+                import: entry.to_string_lossy().to_string(),
+            }]),
+            cwd: Some(root.to_path_buf()),
+            dir: Some(dir.to_string_lossy().to_string()),
+            format: Some(OutputFormat::Esm),
+            entry_filenames: Some(ChunkFilenamesOutputOption::String(
+                "assets/[name]-[hash].js".to_string(),
+            )),
+            chunk_filenames: Some(ChunkFilenamesOutputOption::String(
+                "assets/[name]-[hash].js".to_string(),
+            )),
+            module_types: Some(module_types.clone()),
+            ..Default::default()
+        };
+
+        let mut dev_bundler = BundlerBuilder::default()
+            .with_options(make_options(&out_dir.join("dev")))
+            .with_plugins(vec![Arc::new(ShipAssetCssPlugin::development())])
+            .build()
+            .unwrap();
+        let dev_out = dev_bundler.generate().await.unwrap();
+        let dev_body = dev_out
+            .assets
+            .iter()
+            .find_map(|a| match a {
+                rolldown_common::Output::Asset(asset) => {
+                    let s = String::from_utf8_lossy(asset.source.as_bytes());
+                    if s.contains("@font-face") || s.contains("font-face") {
+                        Some(s.into_owned())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            })
+            .expect("dev CSS asset");
+
+        let mut prod_bundler = BundlerBuilder::default()
+            .with_options(make_options(&out_dir.join("prod")))
+            .with_plugins(vec![Arc::new(ShipAssetCssPlugin::production())])
+            .build()
+            .unwrap();
+        let prod_out = prod_bundler.generate().await.unwrap();
+        let prod_body = prod_out
+            .assets
+            .iter()
+            .find_map(|a| match a {
+                rolldown_common::Output::Asset(asset) => {
+                    let s = String::from_utf8_lossy(asset.source.as_bytes());
+                    if s.contains("@font-face") || s.contains("font-face") || s.contains(".woff2") {
+                        Some(s.into_owned())
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            })
+            .expect("prod CSS asset");
+
+        assert!(
+            prod_body.len() < dev_body.len(),
+            "production CSS must shrink: prod={} dev={}",
+            prod_body.len(),
+            dev_body.len()
+        );
+        assert!(
+            !prod_body.contains("/*"),
+            "production CSS strips comments: {prod_body}"
+        );
+        assert!(
+            !prod_body.contains("__SHIP_CSS_ASSET__#"),
+            "placeholders resolved before minify: {prod_body}"
+        );
+        assert!(
+            !prod_body.contains("./fonts/x.woff2"),
+            "source font path rewritten: {prod_body}"
+        );
+        assert!(
+            prod_body.contains(".woff2"),
+            "hashed woff2 url() survives minify: {prod_body}"
         );
     }
 }

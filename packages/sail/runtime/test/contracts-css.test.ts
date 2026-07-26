@@ -1,4 +1,4 @@
-// Drift lock: the materialized `packages/sail/tokens/src/contracts.css`
+// Drift lock: the materialized `packages/sail/tokens/src/sail-base.css`
 // (the asset build-time consumers read — the deck bundler's sail.css,
 // non-JS hosts) must byte-match the runtime's LIGHT_CONTRACTS_CSS after
 // its generated banner. Regenerate on mismatch:
@@ -7,7 +7,7 @@
 // The asset also carries the framework `@font-face` block(s) (prepended
 // from `@ship/tokens`'s `FONTS` manifest); the drift check strips them
 // AND the matching font banner before comparing against the runtime
-// constant — the runtime has no font data and the contracts.css script
+// constant — the runtime has no font data and the emit script
 // doesn't see fonts. The `FONTS` manifest is drift-locked separately
 // in `packages/sail/tokens/test/fonts.test.ts`.
 
@@ -17,11 +17,11 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { LIGHT_CONTRACTS_CSS } from '../src/styles/index'
 
-describe('contracts.css asset', () => {
+describe('sail-base.css asset', () => {
   it('matches the runtime constants (regenerate via emit-contracts-css.ts)', () => {
     const here = dirname(fileURLToPath(import.meta.url))
     const asset = readFileSync(
-      resolve(here, '../../tokens/src/contracts.css'),
+      resolve(here, '../../tokens/src/sail-base.css'),
       'utf8',
     )
     const body = asset.slice(asset.indexOf('*/') + 3) // strip generated banner

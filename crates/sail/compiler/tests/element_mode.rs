@@ -139,7 +139,7 @@ fn ticker_loops_via_two_slots_and_marquee_action() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains("var(--animate-ticker)")

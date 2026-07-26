@@ -86,6 +86,8 @@ Each handler logic lives in `deck-core` and returns a `DeckResponse`; the matchi
 | Live-data SSE envelopes | (SSE wire) | `crates/deck/deck-core/src/live_wire.rs::format_patch_signals` | SSE frame encoders (`patch-signals`/`patch-elements`/`patch`/keepalive) for the live-data protocol. |
 | DeckResponse model | (transport port) | `crates/deck/deck-core/src/response.rs::DeckResponse` | The framework-agnostic response (status/headers/body) every handler returns. |
 | Daemon mode | (internal) | `crates/deck/deck-core/src/lib.rs::DaemonMode` | Dev/Prod switch driving cache headers, HMR gating, and SSR caching. |
+| Framework stylesheet (sail-base + skins) | `GET /api/assets/sail.css` | `crates/deck/deck-core/src/sail_css.rs::serve_sail_css` | Concat of **sail-base** (platform document floor) + `element-skins.css`. Production bodies minified via `css_minify::minify_css` (lightningcss); dev stays readable. |
+| CSS minify helper | (internal) | `crates/deck/deck-core/src/css_minify.rs::minify_css` | Shared lightningcss minify used by sail.css serve + bundler asset CSS. |
 | Mode meta injection | (HTML rewrite) | `crates/deck/deck-core/src/mode_html.rs::inject_mode_meta` | Rewrites `<meta name="ship-mode">` so the live-reload client self-gates. |
 | Render meta injection | (HTML rewrite) | `crates/deck/deck-core/src/mode_html.rs::inject_render_meta` | Rewrites `<meta name="ship-render">` so the app's csr/ssr mode is observable client-side. |
 | App-registration port | (host seam) | `crates/deck/deck-core/src/app_port.rs::AppRegistry` | Sibling to `DataPort`: the host enumerates the apps it serves (each a per-app `deck.jsonc`-loaded `AppServeConfig`); deck names no path. |
@@ -106,6 +108,7 @@ chunks, builds apps and routes, writes the asset graph, and watches for HMR.
 | In-process compile | (JS string) | `crates/deck/deck-bundler/src/compile.rs::compile_sui` | Compiles one `.sail` to JS via `sail_compiler::compile`, auto-wiring a paired controller. |
 | Rolldown driver | per-target `.js` | `crates/deck/deck-bundler/src/rolldown_bundle.rs::bundle_target` | Drives Rolldown for one target with the SAIL plugin; trims arenas after each build. |
 | SAIL resolve/load plugin | (Rolldown plugin) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `resolve_id`/`load` hooks: compile `.sail`, externalize singletons, re-anchor `@ship/<pkg>`, resolve `@sail-tag/<tag>`. |
+| CSS asset url() rewrite + minify | (bundled `.css` assets) | `crates/deck/deck-bundler/src/ship_asset_css.rs::ShipAssetCssPlugin` | Rewrites local `url(...)` to hashed assets; production minifies CSS bodies after rewrite (preserves font `url()`). |
 | Per-route `@sail-tag` resolver | (route bundle) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `<tag>` → source `.sail` index so a route bundle carries exactly the components it uses. |
 | Shared-chunk dedup | `.deck/` shared chunks | `crates/deck/deck-bundler/src/routes_bundle.rs::bundle_routes` | Multi-entry route build: a component used by ≥2 routes lands in one shared chunk. |
 | App build | static dir | `crates/deck/deck-bundler/src/app.rs::bundle_app` | Bundles a SAIL SPA (hub/space), externalizing the document importmap; compiles its `.sail` in-process. |

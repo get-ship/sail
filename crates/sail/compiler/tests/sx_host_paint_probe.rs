@@ -240,7 +240,7 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     // Deleted paint PE only.
     assert!(
@@ -347,7 +347,7 @@ fn empty_state_child_paint_on_structure_sx() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains(".sail-empty-state")
@@ -407,7 +407,7 @@ fn tab_selected_underline_and_inset_focus_on_host_sx() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains(".sail-tab[aria-selected='true']")
@@ -448,7 +448,7 @@ fn toggle_pressed_focus_stack_on_host_sx() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains(".sail-toggle[aria-pressed='true']")
@@ -560,7 +560,7 @@ fn switch_host_track_paint_on_host_sx() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     if let Some(sw_start) = contracts.find("/* switch") {
         let sw_rest = &contracts[sw_start..];
@@ -611,7 +611,7 @@ fn toast_start_stripe_on_host_sx() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains("border-inline-start: 3px solid var(--tone-fg")
@@ -778,7 +778,7 @@ fn card_host_paint_bulk_on_host_sx() {
 
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     // Zero card PE — entire block deleted.
     assert!(
@@ -903,7 +903,7 @@ fn navbar_host_paint_on_sx_cva() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains(".sail-navbar")
@@ -1010,7 +1010,7 @@ fn error_state_child_paint_on_structure_sx() {
 
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains(".sail-error-state")
@@ -1044,7 +1044,7 @@ fn radio_nested_row_kills_label_flex_pe() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     // No hand sail-radio PE matrix (native label flex may remain in contracts).
     assert!(
@@ -1086,7 +1086,7 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains("--tg-h:")
@@ -1220,7 +1220,7 @@ fn alert_tone_stripe_before_on_host_sx() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains(".sail-alert {")
@@ -1286,7 +1286,7 @@ fn toast_region_host_paint_on_sx_cva() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     // toast-region PE section may be fully deleted.
     if let Some(tr) = contracts
@@ -1369,7 +1369,7 @@ fn theme_picker_host_paint_on_structure_sx() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     // Paint piles fully dissolved — no contracts PE for theme-picker anatomy.
     assert!(
@@ -1453,7 +1453,7 @@ fn prose_host_paint_on_sx_descendants_generated() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     // No hand PE descendant rules.
     assert!(
@@ -1556,7 +1556,7 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains(".sail-tabs[sticky]")
@@ -1614,7 +1614,7 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     // No hand scroll-area PE (section may be fully deleted).
     if let Some(sa) = contracts
@@ -1689,7 +1689,7 @@ fn code_block_pre_tab_and_tok_generated() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains(".sail-code-block .tok-tag")
@@ -1733,7 +1733,7 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     if let Some(field) = contracts
         .split("/* field")
@@ -1771,7 +1771,7 @@ fn label_req_gate_in_element_skins_anatomy() {
     assert!(out.native, "label is native-kind");
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains("label .req { display: none; }")
@@ -1831,7 +1831,7 @@ fn pagination_size_cva_on_page() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains("--pg-h:")
@@ -1902,7 +1902,7 @@ fn overlay_family_anchor_geometry_on_host_sx() {
     }
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     for needle in [
         ".sail-dropdown {",
@@ -1962,7 +1962,7 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains(".sail-combobox .listbox")
@@ -2013,7 +2013,7 @@ fn tooltip_geometry_and_show_on_sx_no_contracts_pe() {
     );
     let contracts = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../../packages/sail/tokens/src/contracts.css"
+        "/../../../packages/sail/tokens/src/sail-base.css"
     ));
     assert!(
         !contracts.contains("anchor-name: var(--sail-tooltip-anchor)")

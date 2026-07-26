@@ -1,7 +1,7 @@
 // @ship/tokens — webfont drift + structural tests.
 //
 // The woff2 sources for DM Sans Variable, Syne Variable, and JetBrains Mono
-// Variable are vendored under `./src/fonts/`. The generated `contracts.css`
+// Variable are vendored under `./src/fonts/`. The generated `sail-base.css`
 // (materialized by `packages/sail/runtime/scripts/emit-contracts-css.ts` from
 // the runtime's `LIGHT_CONTRACTS_CSS` + the `FONTS` manifest in
 // `./src/fonts.ts`) emits one `@font-face` per font with a relative
@@ -17,7 +17,7 @@
 // This file (1) asserts the structural invariants the design system relies
 // on (family names resolve to tokens.css tokens, every woff2 file is
 // vendored, every file has the woff2 magic, etc.), and (2) drift-locks the
-// emitted `contracts.css` against the FONTS manifest — a woff2 change or a
+// emitted `sail-base.css` against the FONTS manifest — a woff2 change or a
 // manifest row drift would surface as a failing test rather than a silent
 // mismatch.
 
@@ -108,9 +108,9 @@ describe('@ship/tokens — webfont manifest (FONTS export)', () => {
   })
 })
 
-describe('@ship/tokens — contracts.css webfont drift lock', () => {
-  it('every face in FONTS produces the expected @font-face block in contracts.css', () => {
-    const css = loadSrc('contracts.css')
+describe('@ship/tokens — sail-base.css webfont drift lock', () => {
+  it('every face in FONTS produces the expected @font-face block in sail-base.css', () => {
+    const css = loadSrc('sail-base.css')
     for (const face of FONTS) {
       const expected = buildExpected(face)
       expect(css).toContain(expected)
@@ -118,7 +118,7 @@ describe('@ship/tokens — contracts.css webfont drift lock', () => {
   })
 
   it('declares a woff2 `format` for every face (variable or static)', () => {
-    const css = loadSrc('contracts.css')
+    const css = loadSrc('sail-base.css')
     const formatCount = (css.match(/format\('woff2(?:-variations)?'\)/g) ?? []).length
     expect(formatCount).toBe(FONTS.length)
   })
@@ -126,7 +126,7 @@ describe('@ship/tokens — contracts.css webfont drift lock', () => {
   it('references the vendored woff2 by relative path (not data: URLs)', () => {
     // The old base64-inline approach is gone. Each woff2 is a separate
     // file the bundler will emit as a hashed asset. Zero data:font URLs.
-    const css = loadSrc('contracts.css')
+    const css = loadSrc('sail-base.css')
     expect(css).not.toMatch(/data:font\/woff2/)
     for (const face of FONTS) {
       expect(css).toContain(`url('./fonts/${face.file}')`)

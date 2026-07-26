@@ -119,7 +119,11 @@ pub async fn bundle_target(
             .with_options(options)
             .with_plugins(vec![
                 Arc::new(plugin),
-                Arc::new(crate::ship_asset_css::ShipAssetCssPlugin),
+                Arc::new(if production {
+                    crate::ship_asset_css::ShipAssetCssPlugin::production()
+                } else {
+                    crate::ship_asset_css::ShipAssetCssPlugin::development()
+                }),
             ])
             .build()
             .map_err(|e| anyhow!("rolldown build({}): {e:?}", target.name))?;

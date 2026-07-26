@@ -26,8 +26,9 @@ pub async fn serve_route_tokens(mode: Option<Extension<DaemonMode>>) -> Response
     into_axum(deck_core::serve_route_tokens(mode_from_ext(mode)))
 }
 
-/// `GET /api/assets/sail.css` — the framework stylesheet (contracts + stdlib
-/// element skins), so a page is styled without the runtime's JS injection.
+/// `GET /api/assets/sail.css` — the framework stylesheet (sail-base + stdlib
+/// element skins; production-minified), so a page is styled without the
+/// runtime's JS injection.
 pub async fn serve_sail_css(mode: Option<Extension<DaemonMode>>) -> Response {
     into_axum(deck_core::serve_sail_css(mode_from_ext(mode)))
 }
