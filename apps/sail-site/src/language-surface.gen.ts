@@ -7998,7 +7998,7 @@ export const ACTIONS: ActionDoc[] = [
   {
     "name": "dismissControl",
     "param": "void",
-    "summary": "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button.close`) dismisses the host (event + remove); toast → sail-toast-dismiss, else sail-dismiss gated on [dismissible].",
+    "summary": "Click on a close control (`[data-toast-close]` / `[data-dismiss]` / `button[aria-label=\"Dismiss\"]`) dismisses the host (event + remove); toast → sail-toast-dismiss, else sail-dismiss gated on [dismissible].",
     "public": false
   },
   {
@@ -8323,37 +8323,37 @@ export interface BlockDoc {
 
 export const BLOCKS: BlockDoc[] = [
   {
-    "open": "{#if}",
+    "open": "<if cond={…}>",
     "clauses": [
-      "{:else if}",
-      "{:else}"
+      "<else-if cond={…}>",
+      "<else>"
     ],
-    "summary": "conditional branches; any number of {:else if}, an optional trailing {:else}"
+    "summary": "conditional branches; any number of <else-if>, optional trailing <else> as direct children"
   },
   {
-    "open": "{#for}",
+    "open": "<for as=\"item\" of={…} key={…}>",
     "clauses": [
-      "{:else}"
+      "<else>"
     ],
-    "summary": "iterate a list; requires key={expr} on the opening tag; {:else} renders when the list is empty"
+    "summary": "iterate a list; `as` is the item binding, `of` the iterable, `key` required for stable DOM; optional `index`; <else> when empty"
   },
   {
-    "open": "{#match}",
+    "open": "<match on={…}>",
     "clauses": [
-      "{:case}",
-      "{:default}"
+      "<case of={…}>",
+      "<default>"
     ],
-    "summary": "pattern branches over a discriminant; any number of {:case}, an optional {:default}"
+    "summary": "pattern branches over a discriminant; any number of <case>, optional <default>"
   },
   {
-    "open": "{#while-loading}",
+    "open": "<while-loading of=\"sig\">",
     "clauses": [],
-    "summary": "renders while an async query's promise is pending"
+    "summary": "renders while an async query signal is pending"
   },
   {
-    "open": "{#while-error}",
+    "open": "<while-error as=\"err\" of=\"sig\">",
     "clauses": [],
-    "summary": "renders while an async query's promise is rejected"
+    "summary": "renders while an async query signal is rejected; `as` names the error binding"
   }
 ]
 export interface DirectiveDoc {
@@ -8399,8 +8399,8 @@ export const DIRECTIVES: DirectiveDoc[] = [
     "summary": "mirror the slot's emptiness onto a static data attribute, live — slot elements only"
   },
   {
-    "syntax": "mutation=\"ship.X.Y\" (on <form>)",
-    "summary": "wire a form's submit to a typed mutation"
+    "syntax": "mutation=\"client.method\" (on <form>)",
+    "summary": "wire a form's submit to a injected client method"
   },
   {
     "syntax": "&#123; and &#125; in text",
@@ -9082,7 +9082,7 @@ export const RETIRED_DIRECTIVES: RetiredDoc[] = [
   },
   {
     "syntax": "transition: / in: / out:",
-    "instead": "fx:enter / fx:exit"
+    "instead": "style.enter / style.exit"
   }
 ]
 
