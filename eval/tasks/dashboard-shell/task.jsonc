@@ -1,0 +1,14 @@
+// eval task: dashboard-shell
+{
+  "prompt": "Build a dashboard shell with a top navbar titled \"Dashboard\", a sidebar with nav links Home / Reports / Team, and a main content area that says \"Welcome back\" with a summary card.\n",
+  "scaffold": "blank",
+  "lanes": ["cheap", "frontier"],
+  "control_arms": ["react-tw"],
+  "grading": {
+    "compile": true,
+    "vocab_share": { "min": 0.25 },
+    "gates": true,
+    "behavior": true,
+    "beauty": true
+  }
+}

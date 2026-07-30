@@ -1,0 +1,14 @@
+// eval task: docs-article-page
+{
+  "prompt": "Build a documentation article page with title \"Getting started\", a short intro paragraph, an H2 \"Installation\", a code-ish pre or monospaced line with \"bun add @ship/sail-runtime\", and an H2 \"Next steps\" with a link \"Read the guide\".\n",
+  "scaffold": "blank",
+  "lanes": ["cheap", "frontier"],
+  "control_arms": ["react-tw"],
+  "grading": {
+    "compile": true,
+    "vocab_share": { "min": 0.25 },
+    "gates": true,
+    "behavior": true,
+    "beauty": true
+  }
+}

@@ -1,0 +1,14 @@
+// eval task: empty-state-list
+{
+  "prompt": "Build an empty-state list page titled \"Projects\" that shows an empty state message \"No projects yet\" with a supporting line and a \"Create project\" button.\n",
+  "scaffold": "blank",
+  "lanes": ["cheap", "frontier"],
+  "control_arms": ["react-tw"],
+  "grading": {
+    "compile": true,
+    "vocab_share": { "min": 0.25 },
+    "gates": true,
+    "behavior": true,
+    "beauty": true
+  }
+}

@@ -1,0 +1,17 @@
+// behavioral scenarios — query by visible text / role / label, never CSS selectors
+{
+  "view": "settings-page",
+  "scenarios": [
+    {
+      "name": "settings sections visible",
+      "steps": [
+        { "see": "Settings" },
+        { "see": "Profile" },
+        { "see": "Display name" },
+        { "see": "Notifications" },
+        { "see": "Email alerts" },
+        { "see": "role:button name:Save changes" }
+      ]
+    }
+  ]
+}

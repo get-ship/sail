@@ -1,0 +1,27 @@
+{
+  "name": "@ship/sail-eval",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "description": "Sail-owned eval harness — can an unassisted agent author good sail? Self-contained: no helm/fleet/yoke/ship-eval imports.",
+  "bin": {
+    "sail-eval": "./src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "run:cheap": "bun src/cli.ts run --lane cheap --dispatch recorded",
+    "record": "bun src/cli.ts record"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vitest": "^4.1.5"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.59.3"
+  }
+}

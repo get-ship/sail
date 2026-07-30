@@ -1,0 +1,14 @@
+// eval task: card-grid
+{
+  "prompt": "Build a card grid page titled \"Features\" with a 3-column grid of feature cards. Each card has a title and short description. Include at least cards named \"Fast\", \"Typed\", and \"Accessible\".\n",
+  "scaffold": "blank",
+  "lanes": ["cheap", "frontier"],
+  "control_arms": ["react-tw"],
+  "grading": {
+    "compile": true,
+    "vocab_share": { "min": 0.25 },
+    "gates": true,
+    "behavior": true,
+    "beauty": true
+  }
+}

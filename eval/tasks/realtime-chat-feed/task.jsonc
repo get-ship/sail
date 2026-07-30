@@ -1,0 +1,14 @@
+// eval task: realtime-chat-feed
+{
+  "prompt": "Build a real-time chat feed UI titled \"Team chat\" with a scrollable message list showing at least two messages from different authors (e.g. \"Maya\" and \"Jon\"), a composer input labeled \"Message\", and a \"Send\" button.\n",
+  "scaffold": "blank",
+  "lanes": ["cheap", "frontier"],
+  "control_arms": ["react-tw"],
+  "grading": {
+    "compile": true,
+    "vocab_share": { "min": 0.25 },
+    "gates": true,
+    "behavior": true,
+    "beauty": true
+  }
+}

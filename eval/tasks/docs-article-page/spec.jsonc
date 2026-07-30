@@ -1,0 +1,16 @@
+// behavioral scenarios — query by visible text / role / label, never CSS selectors
+{
+  "view": "docs-article-page",
+  "scenarios": [
+    {
+      "name": "article structure",
+      "steps": [
+        { "see": "Getting started" },
+        { "see": "Installation" },
+        { "see": "bun add @ship/sail-runtime" },
+        { "see": "Next steps" },
+        { "see": "Read the guide" }
+      ]
+    }
+  ]
+}

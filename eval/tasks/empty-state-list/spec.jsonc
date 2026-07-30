@@ -1,0 +1,15 @@
+// behavioral scenarios — query by visible text / role / label, never CSS selectors
+{
+  "view": "empty-state-list",
+  "scenarios": [
+    {
+      "name": "empty state copy and CTA",
+      "steps": [
+        { "see": "Projects" },
+        { "see": "No projects yet" },
+        { "see": "Create your first project" },
+        { "see": "role:button name:Create project" }
+      ]
+    }
+  ]
+}

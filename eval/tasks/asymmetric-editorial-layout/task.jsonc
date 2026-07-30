@@ -1,0 +1,14 @@
+// eval task: asymmetric-editorial-layout
+{
+  "prompt": "Build an asymmetric editorial layout: a wide hero title \"Signal\", a pull-quote \"Design is how it works\", a two-column body with a primary story column (\"The craft of interface\") and a narrow rail with \"Related\" links. Prefer intentional asymmetry over a symmetric dashboard grid.\n",
+  "scaffold": "blank",
+  "lanes": ["cheap", "frontier"],
+  "control_arms": ["react-tw"],
+  "grading": {
+    "compile": true,
+    "vocab_share": { "min": 0.25 },
+    "gates": true,
+    "behavior": true,
+    "beauty": true
+  }
+}

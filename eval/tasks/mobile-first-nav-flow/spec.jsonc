@@ -1,0 +1,17 @@
+// behavioral scenarios — query by visible text / role / label, never CSS selectors
+{
+  "view": "mobile-first-nav-flow",
+  "scenarios": [
+    {
+      "name": "mobile nav landmarks",
+      "steps": [
+        { "see": "Harbor" },
+        { "see": "role:button name:Menu" },
+        { "see": "Home" },
+        { "see": "Search" },
+        { "see": "Account" },
+        { "see": "Today" }
+      ]
+    }
+  ]
+}

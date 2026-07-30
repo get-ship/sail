@@ -1,0 +1,24 @@
+// behavioral scenarios — query by visible text / role / label, never CSS selectors
+{
+  "view": "login-form",
+  "scenarios": [
+    {
+      "name": "shows sign-in chrome",
+      "steps": [
+        { "see": "Sign in" },
+        { "see": "Email" },
+        { "see": "Password" },
+        { "see": "role:button name:Sign in" },
+        { "see": "Forgot password?" }
+      ]
+    },
+    {
+      "name": "fields accept input labels",
+      "steps": [
+        { "fill": { "field": "Email", "value": "a@b.co" } },
+        { "fill": { "field": "Password", "value": "secret" } },
+        { "see": "a@b.co" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+// behavioral scenarios — query by visible text / role / label, never CSS selectors
+{
+  "view": "dense-data-table",
+  "scenarios": [
+    {
+      "name": "table and filter",
+      "steps": [
+        { "see": "Orders" },
+        { "see": "Filter orders" },
+        { "see": "Customer" },
+        { "see": "Shipped" },
+        { "see": "Pending" },
+        { "see": "Ada Lovelace" }
+      ]
+    }
+  ]
+}

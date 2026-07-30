@@ -86,3 +86,6 @@ apps/sail-site/.bundle-cost/
 # Internal planning (not product docs)
 spike-notes/
 docs/ship-sail/
+
+# Eval harness run artifacts (trajectories may contain machine paths)
+eval/runs/

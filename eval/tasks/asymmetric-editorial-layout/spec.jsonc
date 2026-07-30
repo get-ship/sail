@@ -1,0 +1,16 @@
+// behavioral scenarios — query by visible text / role / label, never CSS selectors
+{
+  "view": "asymmetric-editorial-layout",
+  "scenarios": [
+    {
+      "name": "editorial pieces present",
+      "steps": [
+        { "see": "Signal" },
+        { "see": "Design is how it works" },
+        { "see": "The craft of interface" },
+        { "see": "Related" },
+        { "see": "On spacing" }
+      ]
+    }
+  ]
+}

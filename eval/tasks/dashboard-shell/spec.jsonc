@@ -1,0 +1,17 @@
+// behavioral scenarios — query by visible text / role / label, never CSS selectors
+{
+  "view": "dashboard-shell",
+  "scenarios": [
+    {
+      "name": "shell landmarks",
+      "steps": [
+        { "see": "Dashboard" },
+        { "see": "Home" },
+        { "see": "Reports" },
+        { "see": "Team" },
+        { "see": "Welcome back" },
+        { "see": "Summary" }
+      ]
+    }
+  ]
+}

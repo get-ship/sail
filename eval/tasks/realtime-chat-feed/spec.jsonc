@@ -1,0 +1,17 @@
+// behavioral scenarios — query by visible text / role / label, never CSS selectors
+{
+  "view": "realtime-chat-feed",
+  "scenarios": [
+    {
+      "name": "chat chrome and messages",
+      "steps": [
+        { "see": "Team chat" },
+        { "see": "Maya" },
+        { "see": "Jon" },
+        { "see": "Ship the eval harness" },
+        { "see": "Message" },
+        { "see": "role:button name:Send" }
+      ]
+    }
+  ]
+}

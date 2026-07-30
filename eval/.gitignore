@@ -1,0 +1,5 @@
+# Per-run artifacts (trajectories may contain machine paths)
+runs/
+node_modules/
+*.tsbuildinfo
+dist/
