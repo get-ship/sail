@@ -143,3 +143,9 @@ debug = "line-tables-only"
 lto = "thin"
 codegen-units = 1
 strip = "debuginfo"
+
+# RENDER-0: local patch of takumi-core 0.6.2 — avoid parley line_break assert
+# on tiny/zero content widths (viewport-as-text-max_height forced a fragile path).
+# Remove when upgrading past a takumi release that fixes this upstream.
+[patch.crates-io]
+takumi-core = { path = "third_party/takumi-core" }

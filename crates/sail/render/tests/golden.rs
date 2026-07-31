@@ -206,3 +206,29 @@ fn mid_size_golden_painted_tokens() {
     assert!(!result.html.contains('{'));
     ensure_or_compare("mid-size-800x600", &result);
 }
+
+/// RENDER-0: agent-produced dependent-form page that crashed the baseline batch.
+#[test]
+fn parley_dependent_form_agent_repro_does_not_panic() {
+    let result = render_file(
+        &fixture("parley-dependent-form-repro.sail"),
+        opts((1440, 900)),
+    )
+    .expect("dependent-form agent page must render without parley panic");
+    assert!(
+        result.image.width() > 0 && result.image.height() > 0,
+        "viewport must be non-zero"
+    );
+    let png = png_bytes(&result.image).expect("encode png");
+    assert!(png.starts_with(b"\x89PNG"), "must produce a PNG");
+    assert!(
+        !result.regions.is_empty(),
+        "agent form must produce layout regions"
+    );
+    let html = result.html.to_lowercase();
+    assert!(
+        html.contains("shipping") && (html.contains("country") || html.contains("select")),
+        "expected form chrome in static html, got a prefix: {:?}",
+        html.chars().take(200).collect::<String>()
+    );
+}
