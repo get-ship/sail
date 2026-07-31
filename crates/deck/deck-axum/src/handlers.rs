@@ -3,11 +3,7 @@
 //! `axum::response::Response` via [`into_axum`](crate::into_axum). No
 //! hosting logic lives here — it all sits in `deck-core`.
 
-use axum::{
-    Extension, Json,
-    extract::Path,
-    response::Response,
-};
+use axum::{Extension, Json, extract::Path, response::Response};
 use serde_json::Value;
 
 use deck_core::{DaemonBuildInfo, DaemonMode};
@@ -15,44 +11,43 @@ use deck_core::{DaemonBuildInfo, DaemonMode};
 use crate::{into_axum, mode_from_ext};
 // ── Framework bundle handlers ─────────────────────────────────────────────────
 
-pub async fn serve_sui_runtime(mode: Option<Extension<DaemonMode>>) -> Response {
-    into_axum(deck_core::serve_sui_runtime(mode_from_ext(mode)))
+pub async fn serve_sail_runtime(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_runtime(mode_from_ext(mode)))
 }
 
-pub async fn serve_sui_dom(mode: Option<Extension<DaemonMode>>) -> Response {
-    into_axum(deck_core::serve_sui_dom(mode_from_ext(mode)))
+pub async fn serve_sail_dom(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_dom(mode_from_ext(mode)))
 }
 
-pub async fn serve_sui_sdk_client(mode: Option<Extension<DaemonMode>>) -> Response {
-    into_axum(deck_core::serve_sui_sdk_client(mode_from_ext(mode)))
+pub async fn serve_sail_sdk_client(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_sdk_client(mode_from_ext(mode)))
 }
 
-pub async fn serve_sui_compiler_wasm(mode: Option<Extension<DaemonMode>>) -> Response {
-    into_axum(deck_core::serve_sui_compiler_wasm(mode_from_ext(mode)))
+pub async fn serve_sail_compiler_wasm(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_compiler_wasm(mode_from_ext(mode)))
 }
 
-pub async fn serve_sui_lsp_completions(mode: Option<Extension<DaemonMode>>) -> Response {
-    into_axum(deck_core::serve_sui_lsp_completions(mode_from_ext(mode)))
+pub async fn serve_sail_lsp_completions(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_lsp_completions(mode_from_ext(mode)))
 }
 
-pub async fn serve_sui_lsp_diagnostics(mode: Option<Extension<DaemonMode>>) -> Response {
-    into_axum(deck_core::serve_sui_lsp_diagnostics(mode_from_ext(mode)))
+pub async fn serve_sail_lsp_diagnostics(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_lsp_diagnostics(mode_from_ext(mode)))
 }
 
 pub async fn serve_deck_route(mode: Option<Extension<DaemonMode>>) -> Response {
     into_axum(deck_core::serve_deck_route(mode_from_ext(mode)))
 }
 
-
 /// `GET /_deck/icons/{file}` — one lucide icon. `{file}` is captured whole
 /// (e.g. `search.svg`) because axum 0.8 forbids mixing path-params with
 /// literal suffixes in the same segment; we strip `.svg` here.
-pub async fn serve_sui_icon(
+pub async fn serve_sail_icon(
     mode: Option<Extension<DaemonMode>>,
     Path(file): Path<String>,
 ) -> Response {
     let name = file.strip_suffix(".svg").unwrap_or(&file);
-    into_axum(deck_core::serve_sui_icon(mode_from_ext(mode), name))
+    into_axum(deck_core::serve_sail_icon(mode_from_ext(mode), name))
 }
 
 /// `GET /_deck/fonts/{file}` — one framework woff2 (token-package SSOT).
@@ -65,20 +60,24 @@ pub async fn serve_framework_font(
     into_axum(deck_core::serve_framework_font(mode_from_ext(mode), &file))
 }
 
-pub async fn serve_sui_live_reload(mode: Option<Extension<DaemonMode>>) -> Response {
-    into_axum(deck_core::serve_sui_live_reload(mode_from_ext(mode)))
+pub async fn serve_sail_live_reload(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_live_reload(mode_from_ext(mode)))
 }
 
-pub async fn serve_sui_error_overlay(mode: Option<Extension<DaemonMode>>) -> Response {
-    into_axum(deck_core::serve_sui_error_overlay(mode_from_ext(mode)))
+pub async fn serve_sail_error_overlay(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_error_overlay(mode_from_ext(mode)))
 }
 
-// (formerly `serve_sui_chunk` + `serve_catalog_workspace`) — purged
+pub async fn serve_sail_studio_bridge(mode: Option<Extension<DaemonMode>>) -> Response {
+    into_axum(deck_core::serve_sail_studio_bridge(mode_from_ext(mode)))
+}
+
+// (formerly `serve_sail_chunk` + `serve_catalog_workspace`) — purged
 // with the runtime `.deck/` reads. The routes are gone too (deck-axum
 // `router()`).
 
 // ── Route handlers — MOVED to the `ship-views` crate ───────────────────────────
-// `serve_sui_route_setup`, `serve_route_host`, `serve_route_payload`, and
+// `serve_sail_route_setup`, `serve_route_host`, `serve_route_payload`, and
 // `serve_view_payload_subpath` (the named-route serving surface) now live in
 // `ship-views::handlers` and are registered by `ship_views::router()`. deck-axum
 // keeps ONLY deck's own routes/ SPA + framework surface (deck ⊥ ship-views).
@@ -101,7 +100,7 @@ pub async fn serve_meta(daemon: Option<Extension<DaemonBuildInfo>>) -> Json<Valu
 /// so the route is safe to register unconditionally.
 ///
 /// The optional `Extension<CancellationToken>` (same pattern as shipd's
-/// sui_hmr.rs) terminates the stream on shutdown so the host's graceful-drain
+/// sail_hmr.rs) terminates the stream on shutdown so the host's graceful-drain
 /// can complete without waiting for every client to disconnect (#256 class).
 /// Without the extension the stream runs until client disconnect (existing
 /// behaviour; tests don't need to wire a token).
@@ -133,11 +132,21 @@ pub async fn serve_bundle_hmr(
         BroadcastStream::new(bundler.subscribe_events()),
         |res| async move {
             let (name, payload) = match res.ok()? {
-                deck_bundler::BundlerEvent::ModuleChanged { target, out_path, bytes } => (
+                deck_bundler::BundlerEvent::ModuleChanged {
+                    target,
+                    out_path,
+                    bytes,
+                } => (
                     "module-changed",
                     serde_json::json!({ "target": target, "out_path": out_path, "bytes": bytes }),
                 ),
-                deck_bundler::BundlerEvent::CompileError { target, message, line, col, file } => (
+                deck_bundler::BundlerEvent::CompileError {
+                    target,
+                    message,
+                    line,
+                    col,
+                    file,
+                } => (
                     "compile-error",
                     serde_json::json!({
                         "target": target, "message": message,
@@ -145,7 +154,9 @@ pub async fn serve_bundle_hmr(
                     }),
                 ),
             };
-            Some(Ok::<_, std::io::Error>(format!("event: {name}\ndata: {payload}\n\n")))
+            Some(Ok::<_, std::io::Error>(format!(
+                "event: {name}\ndata: {payload}\n\n"
+            )))
         },
     );
 
@@ -153,10 +164,8 @@ pub async fn serve_bundle_hmr(
     // When no token is provided the stream runs until client disconnect, which
     // is the correct behaviour for test hosts and non-shipd deployments.
     let cancel_token = cancel.map(|e| e.0).unwrap_or_default();
-    let stream = futures_util::StreamExt::take_until(
-        events,
-        async move { cancel_token.cancelled().await },
-    );
+    let stream =
+        futures_util::StreamExt::take_until(events, async move { cancel_token.cancelled().await });
 
     sse()
         .body(Body::from_stream(stream))

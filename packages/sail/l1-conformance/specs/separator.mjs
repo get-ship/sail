@@ -26,7 +26,7 @@ export default {
     })
     // Visibility is a theme aesthetic (halo/glass are deliberately borderless
     // and separate by space); assert the separator CAN show in a bordered theme.
-    document.querySelectorAll("[data-theme-preview='ship-light'] .sail-separator").forEach((el) => {
+    document.querySelectorAll("[data-theme-preview='ship'] .sail-separator").forEach((el) => {
       const cs = getComputedStyle(el)
       const visible = !clear(cs.backgroundColor) || cs.borderTopStyle === 'dashed' || cs.borderLeftStyle === 'dashed'
       if (!visible) bad.push({ why: 'not-visible-in-light', bg: cs.backgroundColor })

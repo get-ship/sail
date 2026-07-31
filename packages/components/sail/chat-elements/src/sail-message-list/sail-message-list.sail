@@ -30,12 +30,7 @@
 </scope>
 
 <controller>
-import {
-  controller,
-  derived,
-  effect,
-  signal,
-} from '@ship/sail-runtime'
+
 import type { Derived, ControllerScope } from '@ship/sail-runtime'
 import {
   createVirtualizer,
@@ -54,7 +49,7 @@ interface MessageItem {
 }
 
 /** A windowed message: the virtual-item geometry zipped with its source item so
- *  the template renders `<for as="w" of={windowItems()} key={w.key}>` with no index
+ *  the template renders `<for {windowItems()} as="w" key={w.key}>` with no index
  *  arithmetic — only the ~viewport+overscan slice allocates, never the whole
  *  thread. */
 interface WindowMessage {
@@ -161,7 +156,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   sx={style.position(relative).h(full).minH(0).pad(3).fontFamily(body)}
 >
   <div use:virtualSpacer={totalSize()} sx={style.position(relative).w(full).h(bind(rowsH))}>
-    <for as="w" of={windowItems()} key={w.key}>
+    <for {windowItems()} as="w" key={w.key}>
       <column gap="0" use:virtualRow={w.start} sx={style.position(absolute).left(3).right(3).translateY(bind(rowY))}>
         <sail-message
           role={w.item.role || 'assistant'}
@@ -172,7 +167,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </column>
     </for>
   </div>
-  <if cond={items().length === 0}>
+  <if {items().length === 0}>
     <center><slot name="empty"></slot></center>
   </if>
 </scroll-area>

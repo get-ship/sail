@@ -16,7 +16,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 SPA="$ROOT/crates/deck/deck-conformance/spa"
 ASSETS="$ROOT/crates/deck/deck-core/assets"
-DECK="$ROOT/target/debug/deck"
+DECK="$ROOT/target/debug/sail"
 SERVER="$ROOT/crates/deck/deck-conformance/e2e/static-server.py"
 WORK="$(mktemp -d)"
 DIST="$WORK/dist"

@@ -17,14 +17,14 @@ export default controller(() => {
 
 <button on:click={reload}>Reload</button>
 
-<while-loading of="users">
+<while-loading {users}>
   <spinner></spinner>
 </while-loading>
-<while-error as="err" of="users">
+<while-error {users} as="err">
   <alert tone="destructive">{err.message}</alert>
 </while-error>
-<if cond={users().kind === 'ok'}>
-  <for as="name" of={users().value} key={name}>
+<if {users().kind === 'ok'}>
+  <for {users().value} as="name" key={name}>
     <badge>{name}</badge>
   </for>
 </if>`,
@@ -43,15 +43,15 @@ export default controller(() => {
 })`,
 
   states: `<!-- users.sail — the three states are explicit, never forgotten -->
-<while-loading of="users">
+<while-loading {users}>
   <p role="status">Loading…</p>
 </while-loading>
 
-<while-error as="err" of="users">
+<while-error {users} as="err">
   <p role="alert">{err.message}</p>
 </while-error>
 
-<if cond={users().kind === 'ok'}>
-  <ul><for as="u" of={users().value} key={u.id}><li>{u.name}</li></for></ul>
+<if {users().kind === 'ok'}>
+  <ul><for {users().value} as="u" key={u.id}><li>{u.name}</li></for></ul>
 </if>`,
 }

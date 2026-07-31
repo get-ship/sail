@@ -12,7 +12,7 @@ import {
   type BoundaryHandle,
   type BoundarySource,
 } from '../src/error-boundary'
-import type { SuiErrorDetail } from '../src/error-overlay'
+import type { SailErrorDetail } from '../src/error-overlay'
 
 interface CapturedError {
   err: unknown
@@ -264,8 +264,8 @@ describe('sail:error — fallback event channel', () => {
     const el = document.createElement(tag)
     document.body.appendChild(el)
 
-    const events: CustomEvent<SuiErrorDetail>[] = []
-    document.addEventListener('sail:error', (e) => events.push(e as CustomEvent<SuiErrorDetail>))
+    const events: CustomEvent<SailErrorDetail>[] = []
+    document.addEventListener('sail:error', (e) => events.push(e as CustomEvent<SailErrorDetail>))
 
     const trigger = signal(0)
     const dispose = withHost(el, () =>
@@ -331,8 +331,8 @@ describe('sail:error — fallback event channel', () => {
       throw new Error('setup boom')
     })
 
-    const events: CustomEvent<SuiErrorDetail>[] = []
-    document.addEventListener('sail:error', (e) => events.push(e as CustomEvent<SuiErrorDetail>))
+    const events: CustomEvent<SailErrorDetail>[] = []
+    document.addEventListener('sail:error', (e) => events.push(e as CustomEvent<SailErrorDetail>))
 
     const el = document.createElement(tag)
     document.body.appendChild(el)

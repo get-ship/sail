@@ -1,50 +1,18 @@
-//! The FRAMEWORK STYLESHEET — **sail-base** (document floor) + stdlib element skins.
-//!
-//! Deck serves this so a page is styled WITHOUT running the runtime's JS
-//! injection (SSR / static / L1-in-page / the showcase site). Two halves,
-//! two SSOTs, concatenated at compile time:
-//!
-//!   - **sail-base** (`sail-base.css`) — platform document floor: host
-//!     baseline, interactive-surface, focus/disabled, framework `@font-face`,
-//!     keyframes catalog. Token-driven rules; users do not author these —
-//!     they theme via tokens only. Generated from the runtime's
-//!     `LIGHT_CONTRACTS_CSS` (`packages/sail/runtime/scripts/emit-contracts-css.ts`).
-//!     (Historical name "contracts"; package still exports `./contracts.css` as
-//!     a deprecated alias of `./sail-base.css`.)
-//!   - `element-skins.css` — the L1 element skins (spinner/separator/icon/
-//!     label/…). Generated from the sail-compiler stdlib registry
-//!     (`cargo run -p sail-compiler -- framework-css`). Do NOT fold L1 paint
-//!     into sail-base.
-//!
-//! Both are drift-locked by tests in their source crates, so this concat can
-//! never serve stale framework CSS. The shell links it with
-//! `data-sail-contracts`, and the runtime's `ensureLightContracts` yields to
-//! that link — injection is the JS-only-host fallback (dies at full cutover).
-//!
-//! Production responses are minified via [`crate::css_minify::minify_css`];
-//! development keeps the readable source for debugging.
+//! Framework stylesheet: sail-base.css + element-skins.css (include_str concat).
 
 use std::sync::LazyLock;
 
 use crate::css_minify::minify_css;
 use crate::{CachePolicy, DaemonMode, DeckResponse};
 
-/// sail-base + stdlib element skins, concatenated at compile time (unminified SSOT).
 const SAIL_CSS: &str = concat!(
     include_str!("../../../../packages/sail/tokens/src/sail-base.css"),
     "\n",
     include_str!("../../../../packages/sail/tokens/src/element-skins.css"),
 );
 
-/// Cached production minify of [`SAIL_CSS`].
-static SAIL_CSS_MINIFIED: LazyLock<Vec<u8>> =
-    LazyLock::new(|| minify_css(SAIL_CSS).into_bytes());
+static SAIL_CSS_MINIFIED: LazyLock<Vec<u8>> = LazyLock::new(|| minify_css(SAIL_CSS).into_bytes());
 
-/// `GET /api/assets/sail.css` — the framework stylesheet (sail-base + element-skins).
-///
-/// No-cache so contract/skin edits land on the next load without a hard
-/// refresh (mirrors `view-tokens.css`). Production bodies are minified;
-/// development bodies stay readable.
 pub fn serve_sail_css(mode: DaemonMode) -> DeckResponse {
     let body = match mode {
         DaemonMode::Development => SAIL_CSS.as_bytes().to_vec(),
@@ -119,10 +87,7 @@ mod tests {
     #[test]
     fn sail_css_dev_stays_readable() {
         let css = String::from_utf8(serve_sail_css(DaemonMode::Development).body).unwrap();
-        assert!(
-            css.contains('\n'),
-            "development path keeps multi-line CSS"
-        );
+        assert!(css.contains('\n'), "development path keeps multi-line CSS");
         assert!(
             css.contains("/*") || css.contains("  "),
             "development path keeps comments or indentation"

@@ -25,7 +25,14 @@
   const placeRail = style.minH(0).padY(5).padX(4).minW(panel-rail-w).flexDir(column)
   const brand = style.fontWeight(semibold)
   const links = style.display(contents)
-  const actions = style.ms(auto).mt(auto)
+  // Top/bottom: ms(auto) only. mt(auto) on a tall cross-axis drops actions to a
+  // second visual row (looks like the nav "wrapped"). Rail needs mt(auto) so
+  // actions pin to the foot of the column.
+  const actions = match(placement, {
+    rail: style.ms(auto).mt(auto),
+    top: style.ms(auto),
+    bottom: style.ms(auto),
+  })
 </scope>
 
 <row
@@ -56,7 +63,7 @@
     compound({ placement: rail, sticky: true, offset: '24' }, style.top(24)),
   ]}
 >
-  <row inline nowrap align="center" gap="2" shrink sx={brand}>
+  <row inline nowrap align="center" gap="2" shrink="0" sx={brand}>
     <slot name="brand"></slot>
   </row>
   <div sx={links}>
@@ -76,7 +83,7 @@
     nowrap
     align="center"
     gap="2"
-    shrink
+    shrink="0"
     sx={actions}
   >
     <slot name="actions"></slot>

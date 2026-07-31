@@ -51,9 +51,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     The board's template, in full. Braces are expressions:
     <code>&#123;departed()&#125;</code> reads a value, and when that value
     changes, only that text node updates. Lists are spelled
-    <code>&#123;#for&#125;</code> with a required <code>key</code> — as rows
+    <code>&lt;for&gt;</code> with a required <code>key</code> — as rows
     shift up the board, the key tells the renderer which row is which, so DOM
-    nodes move instead of being rewritten. <code>&#123;#match&#125;</code>
+    nodes move instead of being rewritten. <code>&lt;match&gt;</code>
     picks a badge per status. Blocks are covered in depth in
     <a href="/sail/language/templates">Templates</a>. Everything else is
     plain HTML — elements, attributes, text.

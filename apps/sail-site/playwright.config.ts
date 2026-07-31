@@ -23,11 +23,16 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: `bun run gen && (cd ../.. && cargo run -q -p deck-cli -- dev --project apps/sail-site --addr 127.0.0.1:${PORT})`,
+    // Prefer --bin sail (deck-cli has multiple binaries). Full gen is optional via
+    // SAIL_SITE_TEST_GEN=1 when wasm/routes need refresh; default is lean for smoke.
+    command:
+      process.env.SAIL_SITE_TEST_GEN === '1'
+        ? `bun run gen && (cd ../.. && cargo run -q -p deck-cli --bin sail -- dev --project apps/sail-site --addr 127.0.0.1:${PORT})`
+        : `cd ../.. && cargo run -q -p deck-cli --bin sail -- dev --project apps/sail-site --addr 127.0.0.1:${PORT}`,
     // cwd defaults to config directory (avoid bare `__dirname` under "type":"module")
     url: `http://127.0.0.1:${PORT}`,
-    reuseExistingServer: process.env.SAIL_SITE_REUSE_SERVER === '1',
-    timeout: 120_000,
+    reuseExistingServer: !process.env.CI || process.env.SAIL_SITE_REUSE_SERVER === '1',
+    timeout: 180_000,
     stdout: 'pipe',
     stderr: 'pipe',
   },

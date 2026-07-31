@@ -18,13 +18,13 @@ export const code = {
     <span sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{departed()} departed</span>
   </row>
   <column gap="1" sx={style.mt(3).fontFamily(mono).fontSize(sm)}>
-    <for as="f" of={flights()} key={f.id}>
+    <for {flights()} as="f" key={f.id}>
       <row align="center" gap="3" nowrap>
         <span grow min-w="0" sx={style.truncate()}>{f.city}</span>
         <span sx={style.fg(muted-foreground)}>{f.gate}</span>
-        <match on={f.status}>
-          <case of={'boarding'}> <badge tone="success">Boarding</badge>
-          </case><case of={'delayed'}>  <badge tone="destructive">Delayed</badge>
+        <match {f.status}>
+          <case {'boarding'}> <badge tone="success">Boarding</badge>
+          </case><case {'delayed'}>  <badge tone="destructive">Delayed</badge>
           </case><default>         <badge tone="muted">On time</badge>
         </default></match>
       </row>

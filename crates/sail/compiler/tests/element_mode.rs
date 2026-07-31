@@ -34,19 +34,33 @@ fn element_emits_structure_skin_and_manifest() {
     assert_eq!(el.root_class, "sail-spinner");
     // Structure: single static root, root class stamped, slot preserved.
     assert!(
-        el.structure_html.starts_with("<span class=\"sail-spinner spin\""),
+        el.structure_html
+            .starts_with("<span class=\"sail-spinner spin\""),
         "root class stamped: {}",
         el.structure_html
     );
-    assert!(el.structure_html.contains("<slot></slot>"), "{}", el.structure_html);
-    assert!(el.structure_html.contains("class=\"ring\""), "{}", el.structure_html);
+    assert!(
+        el.structure_html.contains("<slot></slot>"),
+        "{}",
+        el.structure_html
+    );
+    assert!(
+        el.structure_html.contains("class=\"ring\""),
+        "{}",
+        el.structure_html
+    );
     // Skin: the variant rules survive, keyed on the root class.
     assert!(
-        el.skin_css.contains(".sail-spinner[tone='primary']{color:var(--primary);}"),
+        el.skin_css
+            .contains(".sail-spinner[tone='primary']{color:var(--primary);}"),
         "skin keyed on root class: {}",
         el.skin_css
     );
-    assert!(!el.skin_css.contains(":host"), "no :host survives: {}", el.skin_css);
+    assert!(
+        !el.skin_css.contains(":host"),
+        "no :host survives: {}",
+        el.skin_css
+    );
     // Manifest: contract + anatomy.
     let m = &el.manifest;
     assert_eq!(m["kind"], "element");
@@ -55,7 +69,9 @@ fn element_emits_structure_skin_and_manifest() {
     let attrs = m["attributes"].as_array().unwrap();
     assert!(attrs.iter().any(|a| a["name"] == "tone"), "{m}");
     assert!(
-        attrs.iter().any(|a| a["name"] == "label" && a["default"] == "Loading"),
+        attrs
+            .iter()
+            .any(|a| a["name"] == "label" && a["default"] == "Loading"),
         "default literal rides the manifest: {m}"
     );
 }
@@ -78,7 +94,7 @@ fn element_rejects_dynamic_attributes() {
 }
 
 #[test]
-fn element_rejects_the_sui_component_namespace() {
+fn element_rejects_the_sail_component_namespace() {
     // Hyphens are FINE — `tab-list`, `menu-item` and `context-menu` are all L1
     // elements. What is not fine is the `sail-` prefix: that is the legacy component
     // namespace L1 replaces, and the compiler stamps its own `sail-` onto the root
@@ -157,8 +173,16 @@ fn ticker_loops_via_two_slots_and_marquee_action() {
         el.skin_css
     );
     let attrs = el.manifest["attributes"].as_array().unwrap();
-    assert!(attrs.iter().any(|a| a["name"] == "duration"), "{}", el.manifest);
-    assert!(attrs.iter().any(|a| a["name"] == "reverse"), "{}", el.manifest);
+    assert!(
+        attrs.iter().any(|a| a["name"] == "duration"),
+        "{}",
+        el.manifest
+    );
+    assert!(
+        attrs.iter().any(|a| a["name"] == "reverse"),
+        "{}",
+        el.manifest
+    );
 }
 
 #[test]
@@ -168,7 +192,11 @@ fn element_void_root_takes_no_closing_tag() {
     // structure is spliced into a page — the /language showcase find).
     let out = compile_element("<hr class=\"sep\">", "separator").unwrap();
     assert!(out.structure_html.contains("<hr"), "{}", out.structure_html);
-    assert!(!out.structure_html.contains("</hr>"), "void: {}", out.structure_html);
+    assert!(
+        !out.structure_html.contains("</hr>"),
+        "void: {}",
+        out.structure_html
+    );
 }
 
 #[test]
@@ -184,7 +212,7 @@ fn stdlib_elements_can_self_nest() {
     // the first </card>. Regression — after card was promoted to L1 the old
     // `find("</card>")` paired the inner close with the outer card and broke
     // the /components showcase (a card of cards is an essential pattern).
-    use sail_compiler::{compile, CompileMode, CompileOpts};
+    use sail_compiler::{CompileMode, CompileOpts, compile};
     let opts = CompileOpts {
         route_params: None,
         setup_url: None,
@@ -245,14 +273,20 @@ fn stdlib_chip_compiles_with_use_stamps() {
             el.structure_html
         );
     }
+    // Host identity stamp is fine; ban controller *discovery* stamps only.
     assert!(
-        !el.structure_html.contains("data-sail"),
-        "no discovery stamp: {}",
+        !el.structure_html.contains("data-sail-controller")
+            && !el.structure_html.contains("data-sail-discover"),
+        "no controller discovery stamp: {}",
         el.structure_html
     );
     assert!(
-        el.manifest.get("controller").is_none()
-            && el.manifest.get("controllerDiscovery").is_none(),
+        el.structure_html.contains("data-sail-host=\"chip\""),
+        "host identity stamp: {}",
+        el.structure_html
+    );
+    assert!(
+        el.manifest.get("controller").is_none() && el.manifest.get("controllerDiscovery").is_none(),
         "no controller keys in manifest: {}",
         el.manifest
     );
@@ -292,11 +326,8 @@ fn stdlib_element_sources_have_no_author_style_blocks() {
 fn native_label_folds_host_sx_into_tag_rule() {
     // Native <label> never stamps host classes at use sites — host sx must
     // land as tag-keyed decls so font-(--label-weight) paints every bare label.
-    let out = sail_compiler::compile_element(
-        include_str!("../stdlib/label.sail"),
-        "label",
-    )
-    .expect("label compiles");
+    let out = sail_compiler::compile_element(include_str!("../stdlib/label.sail"), "label")
+        .expect("label compiles");
     assert!(out.native, "label is native-kind");
     assert!(
         out.skin_css.contains("font-weight:var(--label-weight)")

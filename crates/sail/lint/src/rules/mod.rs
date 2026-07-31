@@ -7,9 +7,11 @@
 //!
 //! Adding a rule = create the module, add the entry to the registry below.
 
-use std::path::Path;
 use crate::report::Finding;
+use std::path::Path;
 
+pub mod action_no_style;
+pub mod animate_token_only;
 pub mod attr_bool_prop;
 pub mod attr_presence;
 pub mod controller_context;
@@ -25,33 +27,32 @@ pub mod controller_state_set_call;
 pub mod css_content_text;
 pub mod css_literal;
 pub mod css_literals;
-pub mod dimension_literal;
 pub mod css_token;
+pub mod dimension_literal;
+pub mod display_on_layout;
 pub mod event_name;
 pub mod font_literal;
 pub mod for_key;
 pub mod layout;
 pub mod layout_primitive;
 pub mod legacy_layout;
-pub mod participation_style;
-pub mod prefer_primitive;
-pub mod prop_value;
-pub mod space_literal;
-pub mod primary_for_status;
-pub mod route_inline_style;
-pub mod surface_not_card;
-pub mod sx;
+pub mod no_class;
+pub mod no_imperative_style;
+pub mod no_inline_style;
 pub mod no_raw_container;
 pub mod no_script;
 pub mod no_style_block;
 pub mod no_sx;
-pub mod no_variants;
-pub mod no_class;
-pub mod no_imperative_style;
 pub mod no_undeclared_stylesheet;
-pub mod no_inline_style;
-pub mod animate_token_only;
-pub mod action_no_style;
+pub mod no_variants;
+pub mod participation_style;
+pub mod prefer_primitive;
+pub mod primary_for_status;
+pub mod prop_value;
+pub mod route_inline_style;
+pub mod space_literal;
+pub mod surface_not_card;
+pub mod sx;
 pub type RuleFn = fn(&Path, &str) -> Vec<Finding>;
 
 /// Rules that lint a paired `<stem>.controller.ts` source. The dispatcher
@@ -60,24 +61,39 @@ pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
     (no_imperative_style::RULE_ID, no_imperative_style::check),
     (controller_purity::RULE_ID, controller_purity::check),
     (controller_empty::RULE_ID, controller_empty::check),
-    (controller_redundant_ambient_import::RULE_ID, controller_redundant_ambient_import::check),
+    (
+        controller_redundant_ambient_import::RULE_ID,
+        controller_redundant_ambient_import::check,
+    ),
     (controller_set_value::RULE_ID, controller_set_value::check),
     (controller_state_cast::RULE_ID, controller_state_cast::check),
-    (controller_state_set_call::RULE_ID, controller_state_set_call::check),
+    (
+        controller_state_set_call::RULE_ID,
+        controller_state_set_call::check,
+    ),
     (controller_navigation::RULE_ID, controller_navigation::check),
     (controller_context::RULE_ID, controller_context::check),
-    (controller_no_ambient_authority::RULE_ID, controller_no_ambient_authority::check),
-    (controller_no_load_state::RULE_ID, controller_no_load_state::check),
+    (
+        controller_no_ambient_authority::RULE_ID,
+        controller_no_ambient_authority::check,
+    ),
+    (
+        controller_no_load_state::RULE_ID,
+        controller_no_load_state::check,
+    ),
 ];
 
 /// Rules that lint a `*.sail` template source. The dispatcher in
-/// `lib.rs::lint_sui_template_source` walks this slice in order.
+/// `lib.rs::lint_sail_template_source` walks this slice in order.
 pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     // Also on the TEMPLATE path, not just when a pack happens to have a .ts file
     // linted. Enforcement that depends on the incidental presence of another file
     // is not enforcement — an undeclared stylesheet must fail the compile of any
     // source in the package that owns it.
-    (no_undeclared_stylesheet::RULE_ID, no_undeclared_stylesheet::check),
+    (
+        no_undeclared_stylesheet::RULE_ID,
+        no_undeclared_stylesheet::check,
+    ),
     (css_literal::RULE_ID, css_literal::check),
     (css_literals::RULE_ID, css_literals::check),
     (css_content_text::RULE_ID, css_content_text::check),
@@ -99,6 +115,7 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (layout::RULE_ID, layout::check),
     (legacy_layout::RULE_ID, legacy_layout::check),
     (participation_style::RULE_ID, participation_style::check),
+    (display_on_layout::RULE_ID, display_on_layout::check),
     (no_raw_container::RULE_ID, no_raw_container::check),
     (no_script::RULE_ID, no_script::check),
     (no_style_block::RULE_ID, no_style_block::check),
@@ -120,7 +137,10 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
 /// this surface today; the controller family stays scope-bound.
 pub const PACK_SOURCE_RULES: &[(&str, RuleFn)] = &[
     (no_imperative_style::RULE_ID, no_imperative_style::check),
-    (no_undeclared_stylesheet::RULE_ID, no_undeclared_stylesheet::check),
+    (
+        no_undeclared_stylesheet::RULE_ID,
+        no_undeclared_stylesheet::check,
+    ),
 ];
 
 /// Rules that lint a shipped / author `use:` Action body.
@@ -131,6 +151,4 @@ pub const PACK_SOURCE_RULES: &[(&str, RuleFn)] = &[
 ///
 /// Floor matches the template invariants: no class, no style assignment,
 /// only `setProperty`/`removeProperty` on `--*` custom properties.
-pub const ACTION_RULES: &[(&str, RuleFn)] = &[
-    (action_no_style::RULE_ID, action_no_style::check),
-];
+pub const ACTION_RULES: &[(&str, RuleFn)] = &[(action_no_style::RULE_ID, action_no_style::check)];

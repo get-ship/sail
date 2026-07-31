@@ -5,5 +5,5 @@ export const ssrConfig = `// deck.jsonc
   "render": "ssr"
 }`
 
-export const buildCmd = `$ deck build --project .
+export const buildCmd = `$ sail build --project .
   ▸ wrote a self-contained static dir`

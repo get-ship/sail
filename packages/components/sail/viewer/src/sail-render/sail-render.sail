@@ -26,8 +26,6 @@
   }
 </scope>
 
-
-
 <controller>
 // <sail-render> controller — the render-engine lifecycle (build-spec §1).
 //
@@ -38,7 +36,6 @@
 // `engine/*.ts` (the legitimate render-engine seam, outside
 // `sail-controller-purity` scope). No `innerHTML`/`outerHTML`/`insertAdjacentHTML`.
 
-import { controller, signal, effect, untrack } from '@ship/sail-runtime'
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-render.sail'
 import { attachEngineShadow, mountBySource, type ViewMount } from './engine/mount-source'
@@ -293,13 +290,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
 </controller>
 <error-boundary fallback-text="The specimen threw while rendering.">
   <column gap="2" sx={style.position(relative).minH(8).fontFamily(body).fg(foreground)}>
-    <if cond={compiling()}>
+    <if {compiling()}>
       <row align="center" justify="center" sx={style.pad(4)}>
         <sail-spinner size="sm" label="Compiling"></sail-spinner>
       </row>
     </if>
 
-    <if cond={compileError() !== null}>
+    <if {compileError() !== null}>
       <column gap="2" data-test="compile-error">
         <alert tone="destructive">{compileErrorSummary()}</alert>
         <div role="region" aria-label="text code block" sx={style.bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md).overflow(hidden)}>
@@ -310,7 +307,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </column>
     </if>
 
-    <if cond={runtimeError() !== null}>
+    <if {runtimeError() !== null}>
       <column gap="2" data-test="runtime-error">
         <alert tone="destructive">The specimen threw at runtime.</alert>
         <div role="region" aria-label="text code block" sx={style.bg(surface-2).fg(foreground).borderWidth(1).border(border-subtle).radius(md).overflow(hidden)}>

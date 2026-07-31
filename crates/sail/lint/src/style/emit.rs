@@ -3,7 +3,7 @@
 use std::collections::{HashMap, HashSet};
 
 use super::ir::{PaintOp, Style};
-use super::setters::{lower_op_css, when_target, WhenTarget};
+use super::setters::{WhenTarget, lower_op_css, when_target};
 
 /// One emitted CSS rule.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -20,7 +20,14 @@ pub type StyleEnv = HashMap<String, Style>;
 pub fn emit_style(style: &Style, env: &StyleEnv) -> Vec<CssRule> {
     let mut out = Vec::new();
     let mut seen = HashSet::new();
-    emit_inner(style, env, &Ctx::default(), &mut out, &mut seen, &mut HashSet::new());
+    emit_inner(
+        style,
+        env,
+        &Ctx::default(),
+        &mut out,
+        &mut seen,
+        &mut HashSet::new(),
+    );
     out
 }
 

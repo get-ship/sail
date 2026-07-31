@@ -61,20 +61,20 @@ fn walk(
             // the lowering pipeline. Unknown setters produce no writes (the
             // resolve pass reports them separately).
             for slot in op_slots(op) {
-                    let key = ((*slot).to_string(), path.to_string());
-                    if fresh.contains(&key) {
-                        diags.push(StyleDiagnostic::Clash {
-                            slot: format!("{slot}@{path}"),
-                            first: writes.get(&key).cloned().unwrap_or_default(),
-                            second: op.source.clone(),
-                        });
-                    } else {
-                        // First write — or a later List item shadowing an
-                        // earlier one: overwrite, emit no diagnostic.
-                        writes.insert(key.clone(), op.source.clone());
-                        fresh.insert(key);
-                    }
+                let key = ((*slot).to_string(), path.to_string());
+                if fresh.contains(&key) {
+                    diags.push(StyleDiagnostic::Clash {
+                        slot: format!("{slot}@{path}"),
+                        first: writes.get(&key).cloned().unwrap_or_default(),
+                        second: op.source.clone(),
+                    });
+                } else {
+                    // First write — or a later List item shadowing an
+                    // earlier one: overwrite, emit no diagnostic.
+                    writes.insert(key.clone(), op.source.clone());
+                    fresh.insert(key);
                 }
+            }
         }
         Style::Chain(items) => {
             // Unordered conjunction: every item shares one shadow boundary, so
@@ -101,7 +101,15 @@ fn walk(
                 // Exclusive arms: separate path per arm (no cross-arm clash).
                 let p = format!("{path}/match:{scrutinee}={k}");
                 let mut local = HashMap::new();
-                walk(body, env, &p, &mut local, &mut HashSet::new(), diags, resolving);
+                walk(
+                    body,
+                    env,
+                    &p,
+                    &mut local,
+                    &mut HashSet::new(),
+                    diags,
+                    resolving,
+                );
             }
         }
         Style::Compound { when, body } => {
@@ -120,7 +128,15 @@ fn walk(
                 let prefix = format!("{path}/when:");
                 let mut local = writes.clone();
                 let mut local_fresh = fresh.clone();
-                walk(body, env, &p, &mut local, &mut local_fresh, diags, resolving);
+                walk(
+                    body,
+                    env,
+                    &p,
+                    &mut local,
+                    &mut local_fresh,
+                    diags,
+                    resolving,
+                );
                 for (k2, v) in local {
                     if k2.1.starts_with(&prefix) {
                         writes.insert(k2, v);

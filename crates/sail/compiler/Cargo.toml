@@ -28,7 +28,7 @@ default = []
 # from JS in a browser. Enabled implicitly by wasm-pack via --features.
 # Off for native builds so the host crate doesn't pull in the bindgen
 # generators when running tests / building the CLI.
-wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen"]
+wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:console_error_panic_hook"]
 
 [dependencies]
 serde = { workspace = true }
@@ -48,6 +48,10 @@ optional = true
 
 [dependencies.serde-wasm-bindgen]
 version = "0.6"
+optional = true
+
+[dependencies.console_error_panic_hook]
+version = "0.1"
 optional = true
 
 # SAIL lint substrate — controller-purity rule and (Phase 2+) other

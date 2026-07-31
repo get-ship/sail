@@ -2,7 +2,7 @@
 //
 // Regression guard for the silent-freeze bug: the compiler wires
 // `fx:` during DETACHED subtree construction
-// (`el = __tpl(...); __sui_motion_attach(el, ...)`), so on first mount the
+// (`el = __tpl(...); __sail_motion_attach(el, ...)`), so on first mount the
 // element is not yet in the document. A WAAPI animation created on a
 // detached element never resolves its play task — it stays `pending` with
 // `startTime === null`, frozen at `currentTime` 0. Because Motion attaches
@@ -36,7 +36,7 @@ vi.mock('motion/mini', () => ({
   },
 }))
 
-import { __sui_motion_attach } from '../src/motion'
+import { __sail_motion_attach } from '../src/motion'
 import type { MotionAttachConfig } from '../src/motion'
 
 // Never reduced — exercise the animating path.
@@ -72,7 +72,7 @@ afterEach(() => {
 describe('motion runtime — a detached attach defers until the element is connected', () => {
   it('does NOT create the WAAPI animation while the element is detached', () => {
     const el = document.createElement('div') // never appended — detached
-    const dispose = __sui_motion_attach(el, fade)
+    const dispose = __sail_motion_attach(el, fade)
     expect(animateCalls.length).toBe(0) // deferred, not created on a detached node
     // Pinned to its rest pose so it does not flash the final value for a frame.
     expect(el.style.opacity).toBe('0')
@@ -81,7 +81,7 @@ describe('motion runtime — a detached attach defers until the element is conne
 
   it('creates the animation once the element joins the document', async () => {
     const el = document.createElement('div')
-    const dispose = __sui_motion_attach(el, fade)
+    const dispose = __sail_motion_attach(el, fade)
     expect(animateCalls.length).toBe(0)
     document.body.appendChild(el) // connect
     await flushFrames()
@@ -93,14 +93,14 @@ describe('motion runtime — a detached attach defers until the element is conne
   it('creates synchronously when the element is already connected at attach time', () => {
     const el = document.createElement('div')
     document.body.appendChild(el)
-    const dispose = __sui_motion_attach(el, fade)
+    const dispose = __sail_motion_attach(el, fade)
     expect(animateCalls.length).toBe(1) // no deferral needed
     dispose()
   })
 
   it('disposing before connection cancels the deferral (no orphaned animation)', async () => {
     const el = document.createElement('div')
-    const dispose = __sui_motion_attach(el, fade)
+    const dispose = __sail_motion_attach(el, fade)
     dispose() // dispose while still detached
     document.body.appendChild(el)
     await flushFrames()
@@ -112,7 +112,7 @@ describe('motion runtime — the loop trigger repeats forever', () => {
   it('injects infinite, alternating repeat so a physics preset used as a loop actually loops', () => {
     const el = document.createElement('div')
     document.body.appendChild(el)
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [{
         property: 'translate-y',
@@ -135,7 +135,7 @@ describe('motion runtime — the loop trigger repeats forever', () => {
   it('an explicit iteration count on the config is not overridden by the loop default', () => {
     const el = document.createElement('div')
     document.body.appendChild(el)
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [{
         property: 'scale',

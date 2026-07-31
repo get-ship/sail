@@ -54,7 +54,7 @@ Object.defineProperty(window, 'matchMedia', {
 
 import { bindIf } from '../src/if'
 import { signal } from '../src/signal'
-import { __sui_motion_attach, __EXIT_TIMEOUT_MS_FOR_TEST } from '../src/motion'
+import { __sail_motion_attach, __EXIT_TIMEOUT_MS_FOR_TEST } from '../src/motion'
 import type { MotionAttachConfig } from '../src/motion'
 
 const fadeOut: MotionAttachConfig = {
@@ -73,7 +73,7 @@ function setup() {
 function renderCardWithExit() {
   const el = document.createElement('div')
   el.textContent = 'card'
-  const disposeMotion = __sui_motion_attach(el, fadeOut)
+  const disposeMotion = __sail_motion_attach(el, fadeOut)
   return { nodes: [el], cleanup: disposeMotion }
 }
 

@@ -37,9 +37,7 @@ fn collect_css_files(src_dir: &Path) -> Vec<PathBuf> {
         // dir reads as a symlink and is skipped — the walk stays on pack
         // sources and never enters the isolated-linker dependency graph.
         let Ok(ft) = entry.file_type() else { continue };
-        if ft.is_file()
-            && p.extension().and_then(|e| e.to_str()) == Some("css")
-        {
+        if ft.is_file() && p.extension().and_then(|e| e.to_str()) == Some("css") {
             out.push(p);
         } else if ft.is_dir() {
             if matches!(
@@ -91,7 +89,8 @@ fn check_dir(src_dir: &Path) -> Vec<Finding> {
     if css_files.is_empty() {
         return Vec::new();
     }
-    let Some(declared) = crate::config::resolve(src_dir).map(|(_, c)| c.declared_stylesheets()) else {
+    let Some(declared) = crate::config::resolve(src_dir).map(|(_, c)| c.declared_stylesheets())
+    else {
         // No sail.config.json anywhere — every css file is undeclared.
         return css_files
             .into_iter()
@@ -211,17 +210,18 @@ mod tests {
             Some(r#"{"stylesheets": ["src/other.css"]}"#),
         );
         let findings = check_dir(tmp.path());
-        assert_eq!(findings.len(), 1, "undeclared css must be flagged: {findings:?}");
+        assert_eq!(
+            findings.len(),
+            1,
+            "undeclared css must be flagged: {findings:?}"
+        );
         assert_eq!(findings[0].rule, RULE_ID);
         assert!(findings[0].message.contains("orphan.css"));
     }
 
     #[test]
     fn no_config_at_all_reports_every_css() {
-        let tmp = write_pack(
-            &[("src/widget.css", ".x { color: red; }")],
-            None,
-        );
+        let tmp = write_pack(&[("src/widget.css", ".x { color: red; }")], None);
         let findings = check_dir(tmp.path());
         assert_eq!(
             findings.len(),
@@ -237,12 +237,13 @@ mod tests {
                 ("src/widget.css", ".x { color: red; }"),
                 ("src/inner/extra.css", ".y { color: blue; }"),
             ],
-            Some(
-                r#"{"stylesheets": ["src/widget.css", "src/inner/extra.css"]}"#,
-            ),
+            Some(r#"{"stylesheets": ["src/widget.css", "src/inner/extra.css"]}"#),
         );
         let findings = check_dir(tmp.path());
-        assert!(findings.is_empty(), "declared nested css must pass: {findings:?}");
+        assert!(
+            findings.is_empty(),
+            "declared nested css must pass: {findings:?}"
+        );
     }
 
     // The two ends of the contract on canvas's real layout: a pack with

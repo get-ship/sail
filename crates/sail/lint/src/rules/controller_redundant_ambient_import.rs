@@ -13,6 +13,12 @@
 //! (`query`, `mutation`, `form`, `useStore`, `filteredList`, `timeline`, …)
 //! still need a real import.
 //!
+//! Only the **public** runtime specifier is flagged. The compiler injects
+//! ambient imports from `@ship/sail-runtime/internal` during
+//! `extract_controller_block` / emit; linting that post-inject source would
+//! warn on every controller that uses ambient idents. Authored cargo-cult
+//! always writes the public package.
+//!
 //! Severity: Warn (surfaced by LSP / CLI; does not hard-fail compile until
 //! the teaching surface is fully clean and we promote it).
 
@@ -42,7 +48,10 @@ const AMBIENT_VALUE_IDENTS: &[&str] = &[
     "untrack",
 ];
 
-const RUNTIME_SPECIFIERS: &[&str] = &["@ship/sail-runtime", "@ship/sail-runtime/internal"];
+/// Public authoring package only. Compiler ambient inject uses
+/// `@ship/sail-runtime/internal` (`runtime_ambient::RUNTIME_SPECIFIER`);
+/// those injected lines must not trip this teaching rule.
+const RUNTIME_SPECIFIERS: &[&str] = &["@ship/sail-runtime"];
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let allocator = Allocator::default();
@@ -210,8 +219,24 @@ mod tests {
         // Only ambient names land in the hit list — query is mentioned as a
         // keep-example in the prose, not as a flagged import.
         assert!(
-            f[0].message.starts_with("redundant ambient import of `controller`"),
+            f[0].message
+                .starts_with("redundant ambient import of `controller`"),
             "{f:?}"
+        );
+    }
+
+    #[test]
+    fn ignores_compiler_injected_internal_specifier() {
+        // `extract_controller_block` / `wrap_controller_body` prepend ambient
+        // imports from `@ship/sail-runtime/internal`. The rule must not treat
+        // those as authored cargo-cult or every ambient-using controller warns.
+        let f = lint(
+            "import { controller, signal } from '@ship/sail-runtime/internal'\n\
+             export default controller(() => ({ n: signal(0) }))\n",
+        );
+        assert!(
+            f.is_empty(),
+            "injected /internal ambient must not warn: {f:?}"
         );
     }
 }

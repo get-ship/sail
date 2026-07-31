@@ -108,6 +108,9 @@ mod tests {
         assert_eq!(r.status, 200);
         assert!(r.content_type.starts_with("application/json"));
         let body = std::str::from_utf8(&r.body).unwrap();
-        assert!(body.starts_with('['), "themes list must be a JSON array; got {body}");
+        assert!(
+            body.starts_with('['),
+            "themes list must be a JSON array; got {body}"
+        );
     }
 }

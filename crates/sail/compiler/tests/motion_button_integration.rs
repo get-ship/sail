@@ -1,6 +1,6 @@
 #[test]
-fn sui_button_with_motion_compiles() {
-    use sail_compiler::{compile, CompileMode, CompileOpts};
+fn sail_button_with_motion_compiles() {
+    use sail_compiler::{CompileMode, CompileOpts, compile};
     // sail-button dissolved to the bare L1 <button> — motion is a LANGUAGE
     // feature on any element, so this integration check uses an inline
     // component with a motion directive (the old file-read target is gone).
@@ -17,11 +17,11 @@ fn sui_button_with_motion_compiles() {
         lint_overrides: Vec::new(),
     };
     let out = compile(source, opts).expect("compile button with motion");
-    // The motion directive should have produced a __sui_motion_attach
+    // The motion directive should have produced a __sail_motion_attach
     // call in the emit.
     assert!(
-        out.js.contains("__sui_motion_attach"),
-        "expected __sui_motion_attach in compiled JS:\n{}",
+        out.js.contains("__sail_motion_attach"),
+        "expected __sail_motion_attach in compiled JS:\n{}",
         out.js
     );
     assert!(

@@ -15,14 +15,24 @@ pub(super) fn next_top_separator(bytes: &[u8], start: usize, end: usize) -> usiz
     while k < end {
         let c = bytes[k];
         if let Some(q) = in_str {
-            if c == b'\\' { k = (k + 2).min(end); continue; }
-            if c == q { in_str = None; }
+            if c == b'\\' {
+                k = (k + 2).min(end);
+                continue;
+            }
+            if c == q {
+                in_str = None;
+            }
             k += 1;
             continue;
         }
         match c {
-            b'"' | b'\'' | b'`' => { in_str = Some(c); k += 1; }
-            b'(' | b'{' | b'[' => { k = skip_balanced(bytes, k, end); }
+            b'"' | b'\'' | b'`' => {
+                in_str = Some(c);
+                k += 1;
+            }
+            b'(' | b'{' | b'[' => {
+                k = skip_balanced(bytes, k, end);
+            }
             // A `<` in a generic position (`signal<Record<A, B>>(…)`) opens a
             // type-argument block whose commas are NOT entry separators. Without
             // skipping it, `signal<Record<Section, boolean>>(…)` truncated at the
@@ -54,20 +64,39 @@ pub(super) fn skip_angle(bytes: &[u8], i: usize, end: usize) -> usize {
     while k < end {
         let c = bytes[k];
         if let Some(q) = in_str {
-            if c == b'\\' { k = (k + 2).min(end); continue; }
-            if c == q { in_str = None; }
+            if c == b'\\' {
+                k = (k + 2).min(end);
+                continue;
+            }
+            if c == q {
+                in_str = None;
+            }
             k += 1;
             continue;
         }
         match c {
-            b'"' | b'\'' | b'`' => { in_str = Some(c); k += 1; }
-            b'(' | b'{' | b'[' => { k = skip_balanced(bytes, k, end); }
+            b'"' | b'\'' | b'`' => {
+                in_str = Some(c);
+                k += 1;
+            }
+            b'(' | b'{' | b'[' => {
+                k = skip_balanced(bytes, k, end);
+            }
             // `=>` is an arrow, not a closing angle.
-            b'=' if k + 1 < end && bytes[k + 1] == b'>' => { k += 2; }
+            b'=' if k + 1 < end && bytes[k + 1] == b'>' => {
+                k += 2;
+            }
             // `<=` / `>=` are comparisons, not bracket motion.
-            b'<' if k + 1 < end && bytes[k + 1] == b'=' => { k += 2; }
-            b'>' if k + 1 < end && bytes[k + 1] == b'=' => { k += 2; }
-            b'<' => { depth += 1; k += 1; }
+            b'<' if k + 1 < end && bytes[k + 1] == b'=' => {
+                k += 2;
+            }
+            b'>' if k + 1 < end && bytes[k + 1] == b'=' => {
+                k += 2;
+            }
+            b'<' => {
+                depth += 1;
+                k += 1;
+            }
             b'>' => {
                 depth -= 1;
                 k += 1;

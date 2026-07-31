@@ -51,8 +51,7 @@ mod tests {
             render: RenderMode::Csr,
             ..Default::default()
         };
-        let reg: std::sync::Arc<dyn AppRegistry> =
-            std::sync::Arc::new(StubRegistry(vec![hub]));
+        let reg: std::sync::Arc<dyn AppRegistry> = std::sync::Arc::new(StubRegistry(vec![hub]));
         let apps = reg.serve_configs();
         assert_eq!(apps.len(), 1);
         assert_eq!(apps[0].name, "hub");

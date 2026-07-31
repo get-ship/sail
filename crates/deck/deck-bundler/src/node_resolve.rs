@@ -56,7 +56,13 @@ pub fn resolve_entry(start: &Path, spec: &str) -> Option<PathBuf> {
     // Source fallbacks for the package root only — a missing subpath export has
     // no generic stand-in.
     if subpath == "." {
-        for rel in ["src/index.ts", "src/index.tsx", "src/index.js", "index.ts", "index.js"] {
+        for rel in [
+            "src/index.ts",
+            "src/index.tsx",
+            "src/index.js",
+            "index.ts",
+            "index.js",
+        ] {
             candidates.push(root.join(rel));
         }
     }
@@ -177,7 +183,10 @@ mod tests {
 
     #[test]
     fn split_spec_scoped_and_subpath() {
-        assert_eq!(split_spec("@ship/sail-runtime"), ("@ship/sail-runtime".into(), ".".into()));
+        assert_eq!(
+            split_spec("@ship/sail-runtime"),
+            ("@ship/sail-runtime".into(), ".".into())
+        );
         assert_eq!(
             split_spec("@ship/sail-runtime/route"),
             ("@ship/sail-runtime".into(), "./route".into())
@@ -198,10 +207,17 @@ mod tests {
             &root.join("node_modules/@ship/sail-runtime/package.json"),
             r#"{ "name": "@ship/sail-runtime", "exports": { ".": "./src/index.ts" } }"#,
         );
-        write(&root.join("node_modules/@ship/sail-runtime/src/index.ts"), "export const x=1;\n");
+        write(
+            &root.join("node_modules/@ship/sail-runtime/src/index.ts"),
+            "export const x=1;\n",
+        );
 
-        let entry = resolve_entry(&project, "@ship/sail-runtime").expect("resolved via ancestor walk");
-        assert_eq!(entry, root.join("node_modules/@ship/sail-runtime/src/index.ts"));
+        let entry =
+            resolve_entry(&project, "@ship/sail-runtime").expect("resolved via ancestor walk");
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/sail-runtime/src/index.ts")
+        );
     }
 
     #[test]
@@ -213,9 +229,15 @@ mod tests {
             r#"{ "name": "@ship/sail-runtime",
                 "exports": { ".": "./src/index.ts", "./route": "./src/route/index.ts" } }"#,
         );
-        write(&root.join("node_modules/@ship/sail-runtime/src/route/index.ts"), "export const r=1;\n");
+        write(
+            &root.join("node_modules/@ship/sail-runtime/src/route/index.ts"),
+            "export const r=1;\n",
+        );
         let entry = resolve_entry(root, "@ship/sail-runtime/route").unwrap();
-        assert_eq!(entry, root.join("node_modules/@ship/sail-runtime/src/route/index.ts"));
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/sail-runtime/src/route/index.ts")
+        );
     }
 
     #[test]
@@ -230,9 +252,15 @@ mod tests {
                 "main": "dist/index.js",
                 "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } } }"#,
         );
-        write(&root.join("node_modules/@ship/deck-router/dist/index.js"), "export const x=1;\n");
+        write(
+            &root.join("node_modules/@ship/deck-router/dist/index.js"),
+            "export const x=1;\n",
+        );
         let entry = resolve_entry(root, "@ship/deck-router").unwrap();
-        assert_eq!(entry, root.join("node_modules/@ship/deck-router/dist/index.js"));
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/deck-router/dist/index.js")
+        );
     }
 
     #[test]
@@ -249,9 +277,15 @@ mod tests {
                 "exports": { ".": { "import": "./dist/index.js" } } }"#,
         );
         // No dist/ shipped — only src/.
-        write(&root.join("node_modules/@ship/deck-router/src/index.ts"), "export const x=1;\n");
+        write(
+            &root.join("node_modules/@ship/deck-router/src/index.ts"),
+            "export const x=1;\n",
+        );
         let entry = resolve_entry(root, "@ship/deck-router").unwrap();
-        assert_eq!(entry, root.join("node_modules/@ship/deck-router/src/index.ts"));
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/deck-router/src/index.ts")
+        );
     }
 
     #[test]
@@ -262,9 +296,15 @@ mod tests {
             &root.join("node_modules/@ship/sdk-client/package.json"),
             r#"{ "name": "@ship/sdk-client", "main": "src/index.ts" }"#,
         );
-        write(&root.join("node_modules/@ship/sdk-client/src/index.ts"), "export const c=1;\n");
+        write(
+            &root.join("node_modules/@ship/sdk-client/src/index.ts"),
+            "export const c=1;\n",
+        );
         let entry = resolve_entry(root, "@ship/sdk-client").unwrap();
-        assert_eq!(entry, root.join("node_modules/@ship/sdk-client/src/index.ts"));
+        assert_eq!(
+            entry,
+            root.join("node_modules/@ship/sdk-client/src/index.ts")
+        );
     }
 
     #[test]
@@ -273,14 +313,21 @@ mod tests {
         // into the root node_modules), discovered via `workspaces` globs.
         let tmp = tempdir().unwrap();
         let root = tmp.path();
-        write(&root.join("package.json"), r#"{ "workspaces": ["packages/sail/*"] }"#);
+        write(
+            &root.join("package.json"),
+            r#"{ "workspaces": ["packages/sail/*"] }"#,
+        );
         write(
             &root.join("packages/sail/runtime/package.json"),
             r#"{ "name": "@ship/sail-runtime", "exports": { ".": "./src/index.ts" } }"#,
         );
-        write(&root.join("packages/sail/runtime/src/index.ts"), "export const x=1;\n");
+        write(
+            &root.join("packages/sail/runtime/src/index.ts"),
+            "export const x=1;\n",
+        );
 
-        let entry = resolve_entry(root, "@ship/sail-runtime").expect("resolved via workspace member");
+        let entry =
+            resolve_entry(root, "@ship/sail-runtime").expect("resolved via workspace member");
         assert_eq!(entry, root.join("packages/sail/runtime/src/index.ts"));
     }
 

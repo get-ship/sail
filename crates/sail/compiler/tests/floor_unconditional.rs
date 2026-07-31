@@ -19,7 +19,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use sail_compiler::{
-    check_all, compile, CompileOpts, DiagSeverity, LintOverride, OverrideSeverity,
+    CompileOpts, DiagSeverity, LintOverride, OverrideSeverity, check_all, compile,
 };
 
 /// The empty-override host shape (what `wasm.rs` and a bare napi call pass).
@@ -29,9 +29,9 @@ fn empty_host() -> CompileOpts {
 
 /// True iff `check_all` (with the given overrides) reports `rule` as an Error.
 fn reports_floor_error(src: &str, rule: &str, overrides: &[LintOverride]) -> bool {
-    check_all(src, None, overrides, None).iter().any(|d| {
-        d.severity == DiagSeverity::Error && d.rule.as_deref() == Some(rule)
-    })
+    check_all(src, None, overrides, None)
+        .iter()
+        .any(|d| d.severity == DiagSeverity::Error && d.rule.as_deref() == Some(rule))
 }
 
 // ---------------------------------------------------------------------------
@@ -111,7 +111,10 @@ fn no_override_can_soften_a_floor_rule() {
                 "override {sev:?} on floor rule {rule} must NOT let `{src}` compile"
             );
             // ...and the analysis surface still reports it as an Error.
-            let overrides = [LintOverride { rule: rule.to_string(), severity: sev }];
+            let overrides = [LintOverride {
+                rule: rule.to_string(),
+                severity: sev,
+            }];
             assert!(
                 reports_floor_error(src, rule, &overrides),
                 "override {sev:?} on floor rule {rule} must not drop/downgrade its Error"
@@ -141,12 +144,14 @@ fn non_floor_rules_remain_softenable() {
     }];
     let with_off = check_all(token_src, None, &off, None);
     assert!(
-        !with_off.iter().any(|d| d.rule.as_deref() == Some("sail-prop-value")),
+        !with_off
+            .iter()
+            .any(|d| d.rule.as_deref() == Some("sail-prop-value")),
         "a NON-floor rule (sail-prop-value) must be softenable via override: {with_off:?}"
     );
     // But turning off a FLOOR rule the same way changes nothing (proven above).
-    let floor_off = CompileOpts::default()
-        .with_lint_override("sail-no-class", OverrideSeverity::Off);
+    let floor_off =
+        CompileOpts::default().with_lint_override("sail-no-class", OverrideSeverity::Off);
     assert!(compile(r#"<p class="x">hi</p>"#, floor_off).is_err());
 }
 
@@ -170,10 +175,7 @@ fn write_pack(config: &str, css: &[(&str, &str)]) -> (tempfile::TempDir, PathBuf
 
 #[test]
 fn undeclared_stylesheet_cannot_be_softened() {
-    let (_tmp, sail) = write_pack(
-        r#"{"stylesheets": []}"#,
-        &[("orphan.css", ".x{color:red}")],
-    );
+    let (_tmp, sail) = write_pack(r#"{"stylesheets": []}"#, &[("orphan.css", ".x{color:red}")]);
     let src = fs::read_to_string(&sail).unwrap();
     let off = [LintOverride {
         rule: "sail-no-undeclared-stylesheet".to_string(),
@@ -181,8 +183,10 @@ fn undeclared_stylesheet_cannot_be_softened() {
     }];
     let diags = check_all(&src, Some(&sail), &off, None);
     assert!(
-        diags.iter().any(|d| d.rule.as_deref() == Some("sail-no-undeclared-stylesheet")
-            && d.severity == DiagSeverity::Error),
+        diags.iter().any(
+            |d| d.rule.as_deref() == Some("sail-no-undeclared-stylesheet")
+                && d.severity == DiagSeverity::Error
+        ),
         "an Off override must not soften the undeclared-stylesheet floor rule: {diags:?}"
     );
 }
@@ -213,18 +217,18 @@ fn rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
 #[test]
 fn no_source_advertises_the_drifted_policy_key() {
     // crates/sail/compiler -> crates/sail
-    let sui_root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+    let sail_root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
     let mut offenders = Vec::new();
     for sub in ["compiler/src", "lint/src"] {
         let mut files = Vec::new();
-        rs_files(&sui_root.join(sub), &mut files);
+        rs_files(&sail_root.join(sub), &mut files);
         for f in files {
             let text = fs::read_to_string(&f).unwrap_or_default();
             // Exclude test modules: they intentionally reference the drifted
             // form to assert the parser rejects it.
             let real = text.split("#[cfg(test)]").next().unwrap_or(&text);
             if real.contains("\"policy\":") {
-                offenders.push(f.strip_prefix(sui_root).unwrap().to_path_buf());
+                offenders.push(f.strip_prefix(sail_root).unwrap().to_path_buf());
             }
         }
     }

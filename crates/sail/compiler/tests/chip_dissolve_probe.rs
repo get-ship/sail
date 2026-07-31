@@ -13,7 +13,11 @@ fn chip_compiles_with_style_and_capability_mixins() {
         "capability mix-ins preserved: {}",
         out.structure_html
     );
-    assert!(!out.structure_html.contains("use:chip"), "no element brain: {}", out.structure_html);
+    assert!(
+        !out.structure_html.contains("use:chip"),
+        "no element brain: {}",
+        out.structure_html
+    );
     assert!(
         src.contains("style.")
             && src.contains("match(variant")
@@ -87,7 +91,11 @@ fn chip_framework_skins_have_no_local_tone_matrix() {
 #[test]
 fn badge_and_card_compile_style() {
     let badge = compile_element(include_str!("../stdlib/badge.sail"), "badge").expect("badge");
-    assert!(badge.skin_css.contains("variant='solid'"), "{}", badge.skin_css);
+    assert!(
+        badge.skin_css.contains("variant='solid'"),
+        "{}",
+        badge.skin_css
+    );
     let battrs = badge.manifest["attributes"].as_array().unwrap();
     let bsize = battrs.iter().find(|a| a["name"] == "size").unwrap();
     assert_eq!(bsize["default"], "md", "PE badge size=md: {bsize}");
@@ -144,7 +152,10 @@ fn alert_compiles_with_style_capability_mixins() {
         "capability mix-ins: {}",
         out.structure_html
     );
-    assert!(!out.structure_html.contains("use:alert"), "no element brain");
+    assert!(
+        !out.structure_html.contains("use:alert"),
+        "no element brain"
+    );
     assert!(
         src.contains("style.")
             && src.contains("when({")

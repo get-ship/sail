@@ -10,7 +10,6 @@
 //! rule family — purity, ambient authority, set-value, state-cast, and the
 //! imperative-styling floor — was silently dead.
 
-
 use crate::check::controller_parse::ParsedController;
 use crate::diagnostics::{CompileError, Span};
 
@@ -18,7 +17,9 @@ pub fn check(
     controller: Option<&ParsedController>,
     overrides: &[crate::check::lint_overrides::LintOverride],
 ) -> Result<(), CompileError> {
-    let Some(c) = controller else { return Ok(()); };
+    let Some(c) = controller else {
+        return Ok(());
+    };
     let controller_path = c.path.clone();
     let source = c.source.clone();
 
@@ -58,7 +59,10 @@ pub fn check(
     // through the LSP / `sail-lint` CLI (which call `lint_controller_source`
     // directly) but don't break compilation — so a rule can ship as a
     // surfaced-but-non-blocking warning before being promoted to a hard wall.
-    let Some(first) = findings.iter().find(|f| f.severity == sail_lint::Severity::Error) else {
+    let Some(first) = findings
+        .iter()
+        .find(|f| f.severity == sail_lint::Severity::Error)
+    else {
         return Ok(());
     };
 

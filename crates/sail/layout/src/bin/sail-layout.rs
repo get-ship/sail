@@ -50,11 +50,11 @@ fn parse_viewport(s: &str) -> Result<(f32, f32), String> {
 
 fn main() -> Result<()> {
     let args = Args::parse();
-    let source = read_source(&args.input)
-        .with_context(|| format!("reading {}", args.input.display()))?;
+    let source =
+        read_source(&args.input).with_context(|| format!("reading {}", args.input.display()))?;
 
-    let result = layout::check_preprocessed(&source, args.viewport)
-        .with_context(|| "compiling layout")?;
+    let result =
+        layout::check_preprocessed(&source, args.viewport).with_context(|| "compiling layout")?;
 
     if args.json {
         let json = serde_json::to_string_pretty(&result.diagnostics)
@@ -64,7 +64,10 @@ fn main() -> Result<()> {
     }
 
     if result.diagnostics.is_empty() {
-        eprintln!("ok — no layout diagnostics at viewport {}x{}", args.viewport.0 as u32, args.viewport.1 as u32);
+        eprintln!(
+            "ok — no layout diagnostics at viewport {}x{}",
+            args.viewport.0 as u32, args.viewport.1 as u32
+        );
         return Ok(());
     }
 

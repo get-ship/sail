@@ -80,7 +80,6 @@
 //
 // Authority: build-spec §"Controller shape", §"Backbone reuse", Slices 2-4.
 
-import { controller, signal, derived} from '@ship/sail-runtime'
 import type { ControllerScope } from '@ship/sail-runtime'
 import { createVirtualizer, type Virtual } from '@ship/sail-runtime/virtual'
 import { createTable, type Table } from '../sail-table/engine/create-table'
@@ -199,15 +198,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   })
 
 </controller>
-<if cond={error() !== ''}>
+<if {error() !== ''}>
 <div role="alert">
   <error-state>{error()}</error-state>
 </div>
-<else-if cond={isEmptyInitial()}>
+<else-if {isEmptyInitial()}>
 <div role="status">
   <slot name="empty"><empty-state></empty-state></slot>
 </div>
-</else-if><else-if cond={isEmptyFiltered()}>
+</else-if><else-if {isEmptyFiltered()}>
 <div role="status">
   <slot name="empty">
     <empty-state>
@@ -219,9 +218,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <div role="tree" sx={style.w(full).fontFamily(body).fontSize(density).fg(foreground)} aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
   <div bind:this={viewportEl} sx={style.position(relative).w(full).overflowY(auto).maxH(panel-max-h-md)}>
     <div use:virtualSpacer={totalSize()} sx={style.h(bind(rowsH)).position(relative).w(full)}>
-      <for as="w" of={windowItems()} key={w.key}>
+      <for {windowItems()} as="w" key={w.key}>
         <row align="center" gap="density" role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} use:cellPad={w.indent} sx={style.group().position(absolute).left(0).w(full).padY(density-row-py).padR(density-row-px).radius(sm).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).fontWeight(medium), busy: style.fg(muted-foreground).italic(true).cursor(default), focus: style.outline(ring) })}>
-          <if cond={w.canExpand}>
+          <if {w.canExpand}>
             <row data-action="toggle" aria-hidden="true" align="center" justify="center" sx={style.w(density-icon).h(density-icon).minW(density-icon).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
               <icon name="chevron-right" size="xs"></icon>
             </row>
@@ -229,7 +228,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <span aria-hidden="true" sx={style.w(density-icon).minW(density-icon)}></span>
           </else></if>
 
-          <if cond={selectable() === 'multi'}>
+          <if {selectable() === 'multi'}>
             <span sx={style}>
               <input
                 type="checkbox"
@@ -240,7 +239,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               />
             </span>
           </if>
-          <if cond={w.icon !== ''}>
+          <if {w.icon !== ''}>
             <icon name={w.icon} size="sm" sx={style.fg(muted-foreground).when({ groupSelected: style.fg(foreground) })}></icon>
           <else>
             <slot name="node-icon"></slot>

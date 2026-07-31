@@ -29,18 +29,19 @@ export type ToneName = (typeof TONE_NAMES)[number]
 
 /** Theme catalog ids from packages/sail/tokens/model/themes/*.json. */
 export const THEME_IDS = [
-  'ship-dark',
+  'ship',
+  'neutral',
   'paper',
   'halo',
   'console',
   'contrast',
-  'neutral-light',
-  'neutral-dark',
   'glass',
   'brut',
   '8bit',
   'synthwave',
-  'ship-light',
+  'sail',
+  'my-ship',
+  'studio',
 ] as const
 export type ThemeId = (typeof THEME_IDS)[number]
 

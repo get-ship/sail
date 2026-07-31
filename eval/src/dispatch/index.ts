@@ -4,7 +4,12 @@ import { RecordedDispatch } from './recorded.ts'
 import type { DispatchAdapter } from './types.ts'
 
 export type { DispatchAdapter, DispatchRequest } from './types.ts'
-export { OmpDispatch, buildOmpArgs, resolveModelLabel } from './omp.ts'
+export {
+  OmpDispatch,
+  buildOmpArgs,
+  buildDispatchPrompt,
+  resolveModelLabel,
+} from './omp.ts'
 export { RecordedDispatch, readTrajectoryJsonl } from './recorded.ts'
 
 export function createDispatch(mode: DispatchMode): DispatchAdapter {

@@ -17,10 +17,9 @@ import type { Host } from './host'
  */
 export type ResolverContext = {
   /**
-   * Reactive URL proxy. Accepts `RouteSignals` (the new shape) or the
-   * legacy `Record<string,string>` shape; the latter is retained as a
-   * migration shim for callers that haven't moved over yet and emits a
-   * `console.warn` from the attach runtime when used.
+   * Reactive URL proxy (`RouteSignals`). Plain `Record<string,string>` is
+   * accepted for host tests that pass a flat map; production mounts supply
+   * `RouteSignals`.
    */
   route?: RouteSignals | Record<string, string>
   navigate?: (path: string) => void

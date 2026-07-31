@@ -76,7 +76,7 @@ export default {
     async run(page) {
       const bad = []
       const rootTheme = () => page.evaluate(() => document.documentElement.dataset.theme)
-      const rootDark = () => page.evaluate(() => document.documentElement.classList.contains('dark'))
+      const rootMode = () => page.evaluate(() => document.documentElement.dataset.mode || '')
       const panelOpen = () =>
         page.evaluate(() => document.querySelector('.sail-theme-panel')?.matches(':popover-open') ?? false)
 
@@ -84,15 +84,15 @@ export default {
       await page.locator('.sail-theme-trigger').click()
       if (!(await panelOpen())) bad.push({ why: 'trigger-did-not-open-panel' })
 
-      // Selecting must route through applyTheme: data-theme AND the .dark class
-      // AND the panel closing. Setting the attribute by hand does the first and
-      // skips the rest, which leaves the page half-switched.
+      // Selecting must route through applyTheme: data-theme + data-mode
+      // AND the panel closing.
       await page.locator('.sail-theme-option[value="console"]').click()
 
       const t1 = await rootTheme()
       if (t1 !== 'console') bad.push({ why: 'data-theme-not-applied', got: t1 })
-      if (!(await rootDark()))
-        bad.push({ why: 'dark-class-not-toggled', note: 'console is dark; applyTheme owns this' })
+      const m1 = await rootMode()
+      if (m1 !== 'dark')
+        bad.push({ why: 'data-mode-not-dark', got: m1, note: 'console defaultMode is dark' })
       if (await panelOpen()) bad.push({ why: 'panel-did-not-close-on-select' })
 
       // The icon trigger's accessible name must track the selection.
@@ -106,12 +106,13 @@ export default {
       )
       if (checked !== 'console') bad.push({ why: 'selection-not-reflected', got: checked })
 
-      // ...and back to a light theme drops .dark again.
+      // ...and back to a light theme sets data-mode light.
       await page.locator('.sail-theme-trigger').click()
       await page.locator('.sail-theme-option[value="paper"]').click()
       const t2 = await rootTheme()
       if (t2 !== 'paper') bad.push({ why: 'second-switch-failed', got: t2 })
-      if (await rootDark()) bad.push({ why: 'dark-class-not-cleared-for-light-theme' })
+      const m2 = await rootMode()
+      if (m2 !== 'light') bad.push({ why: 'data-mode-not-light', got: m2 })
 
       return bad
     },

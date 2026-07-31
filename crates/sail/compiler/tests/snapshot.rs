@@ -5,7 +5,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 mod common;
 use common::strip_version_stamp;
@@ -19,19 +19,76 @@ struct Fixture {
 
 fn fixtures() -> Vec<Fixture> {
     vec![
-        Fixture { name: "hello",       setup_url: None,               mode: CompileMode::Component,      component_meta: None },
-        Fixture { name: "counter",     setup_url: Some("./counter.controller.ts"), mode: CompileMode::Component,     component_meta: None },
-        Fixture { name: "ship-button", setup_url: None,               mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "ship-button-test".into() }) },
-        Fixture { name: "bind-this-button", setup_url: None,           mode: CompileMode::Component,      component_meta: None },
-        Fixture { name: "reflect-empty-slot", setup_url: None,         mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "reflect-empty-slot-test".into() }) },
-        Fixture { name: "comment-and-whitespace", setup_url: None,    mode: CompileMode::Component,      component_meta: None },
-        Fixture { name: "for-update",  setup_url: None,               mode: CompileMode::Component,      component_meta: None },
-        Fixture { name: "for-static",  setup_url: None,               mode: CompileMode::Component,      component_meta: None },
-        Fixture { name: "for-static-text", setup_url: None,           mode: CompileMode::Component,      component_meta: None },
-        Fixture { name: "for-static-attr", setup_url: None,           mode: CompileMode::Component,      component_meta: None },
-        Fixture { name: "for-dynamic-mixed", setup_url: None,         mode: CompileMode::Component,      component_meta: None },
+        Fixture {
+            name: "hello",
+            setup_url: None,
+            mode: CompileMode::Component,
+            component_meta: None,
+        },
+        Fixture {
+            name: "counter",
+            setup_url: Some("./counter.controller.ts"),
+            mode: CompileMode::Component,
+            component_meta: None,
+        },
+        Fixture {
+            name: "ship-button",
+            setup_url: None,
+            mode: CompileMode::Component,
+            component_meta: Some(ComponentMeta {
+                name: "ship-button-test".into(),
+            }),
+        },
+        Fixture {
+            name: "bind-this-button",
+            setup_url: None,
+            mode: CompileMode::Component,
+            component_meta: None,
+        },
+        Fixture {
+            name: "reflect-empty-slot",
+            setup_url: None,
+            mode: CompileMode::Component,
+            component_meta: Some(ComponentMeta {
+                name: "reflect-empty-slot-test".into(),
+            }),
+        },
+        Fixture {
+            name: "comment-and-whitespace",
+            setup_url: None,
+            mode: CompileMode::Component,
+            component_meta: None,
+        },
+        Fixture {
+            name: "for-update",
+            setup_url: None,
+            mode: CompileMode::Component,
+            component_meta: None,
+        },
+        Fixture {
+            name: "for-static",
+            setup_url: None,
+            mode: CompileMode::Component,
+            component_meta: None,
+        },
+        Fixture {
+            name: "for-static-text",
+            setup_url: None,
+            mode: CompileMode::Component,
+            component_meta: None,
+        },
+        Fixture {
+            name: "for-static-attr",
+            setup_url: None,
+            mode: CompileMode::Component,
+            component_meta: None,
+        },
+        Fixture {
+            name: "for-dynamic-mixed",
+            setup_url: None,
+            mode: CompileMode::Component,
+            component_meta: None,
+        },
     ]
 }
 
@@ -71,11 +128,11 @@ fn assert_snapshot(name: &str, actual: &str, expected_path: &Path) {
         }
     };
     assert_eq!(
-        strip_version_stamp(&expected), normalized_actual,
+        strip_version_stamp(&expected),
+        normalized_actual,
         "snapshot mismatch for {name}. Set UPDATE_SNAPSHOTS=1 to refresh."
     );
 }
-
 
 fn fixture_named(name: &str) -> Fixture {
     fixtures()
@@ -160,7 +217,6 @@ fn reflect_empty_slot_snapshot() {
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
     assert_snapshot(fx.name, &js, &path);
 }
-
 
 #[test]
 fn comment_and_whitespace_snapshot() {
@@ -564,7 +620,6 @@ fn whitespace_text_nodes_dropped_between_elements() {
     );
 }
 
-
 #[test]
 fn reflect_empty_slot_emits_bind_slot_empty_call() {
     use sail_compiler::compile;
@@ -577,7 +632,6 @@ fn reflect_empty_slot_emits_bind_slot_empty_call() {
         source_path: Some(path),
         component_meta: Some(ComponentMeta {
             name: "reflect-empty-slot-test".into(),
-
         }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
@@ -617,7 +671,6 @@ fn reflect_empty_slot_in_conditional_threads_container() {
         source_path: Some(path),
         component_meta: Some(ComponentMeta {
             name: "reflect-empty-slot-conditional-test".into(),
-
         }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
@@ -655,7 +708,9 @@ fn ship_button_emits_cem() {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path),
-        component_meta: Some(ComponentMeta { name: "ship-button-test".into() }),
+        component_meta: Some(ComponentMeta {
+            name: "ship-button-test".into(),
+        }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
@@ -674,7 +729,7 @@ fn schema_emitted_for_each_fixture() {
         let path = fixtures_dir().join(format!("{}.sail", fx.name));
         let source = fs::read_to_string(&path).unwrap();
         let opts = CompileOpts {
-        route_params: None,
+            route_params: None,
             setup_url: None,
             mode: fx.mode,
             source_path: Some(path),
@@ -682,7 +737,7 @@ fn schema_emitted_for_each_fixture() {
             emit_dts: false,
             scope_capabilities: Vec::new(),
             emit_component_imports: false,
-        lint_overrides: Vec::new(),
+            lint_overrides: Vec::new(),
         };
         let out = compile(&source, opts).expect("compile");
         let schema = out.schema.expect("schema emitted");
@@ -700,7 +755,7 @@ fn meta_sidecar_emitted_for_each_fixture() {
         let path = fixtures_dir().join(format!("{}.sail", fx.name));
         let source = fs::read_to_string(&path).unwrap();
         let opts = CompileOpts {
-        route_params: None,
+            route_params: None,
             setup_url: None,
             mode: fx.mode,
             source_path: Some(path),
@@ -708,7 +763,7 @@ fn meta_sidecar_emitted_for_each_fixture() {
             emit_dts: false,
             scope_capabilities: Vec::new(),
             emit_component_imports: false,
-        lint_overrides: Vec::new(),
+            lint_overrides: Vec::new(),
         };
         let out = compile(&source, opts).expect("compile");
         let meta = out.meta.expect("meta emitted");
@@ -717,10 +772,14 @@ fn meta_sidecar_emitted_for_each_fixture() {
             .and_then(|v| v.as_array())
             .expect("bindings array");
         for entry in bindings {
-            assert!(entry.get("key").and_then(|v| v.as_str()).is_some(),
-                "binding entry missing key: {entry}");
-            assert!(entry.get("kind").and_then(|v| v.as_str()).is_some(),
-                "binding entry missing kind: {entry}");
+            assert!(
+                entry.get("key").and_then(|v| v.as_str()).is_some(),
+                "binding entry missing key: {entry}"
+            );
+            assert!(
+                entry.get("kind").and_then(|v| v.as_str()).is_some(),
+                "binding entry missing kind: {entry}"
+            );
         }
     }
 }

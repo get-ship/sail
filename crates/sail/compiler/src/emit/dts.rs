@@ -95,18 +95,25 @@ pub fn emit_dts(
     // We still drop any template-derived member of the same name that
     // clashes, so the field is SC-sourced, not a stale template type. Do NOT
     // re-add factory fields to Scope.
-    let factory_names: std::collections::HashSet<String> =
-        scope_factory_fields.iter().map(|(n, _)| n.clone()).collect();
+    let factory_names: std::collections::HashSet<String> = scope_factory_fields
+        .iter()
+        .map(|(n, _)| n.clone())
+        .collect();
     members.retain(|(n, _)| !factory_names.contains(n));
 
     // HOST-GRANTED capabilities, prepended in `baseScope` order: the `clients`
     // map, then one member per declared client. A name the template or the
     // controller factory already declares WINS — same as the runtime, where
     // `...(ctx.scope ?? {})` is spread last over the client map.
-    let declared: std::collections::HashSet<&str> =
-        members.iter().map(|(n, _)| n.as_str()).chain(factory_names.iter().map(|n| n.as_str())).collect();
-    let granted: Vec<&ScopeCapability> =
-        capabilities.iter().filter(|c| !declared.contains(c.name.as_str())).collect();
+    let declared: std::collections::HashSet<&str> = members
+        .iter()
+        .map(|(n, _)| n.as_str())
+        .chain(factory_names.iter().map(|n| n.as_str()))
+        .collect();
+    let granted: Vec<&ScopeCapability> = capabilities
+        .iter()
+        .filter(|c| !declared.contains(c.name.as_str()))
+        .collect();
     let mut ambient: Vec<(String, String)> = Vec::new();
     for c in &granted {
         ambient.push((c.name.clone(), c.ts_type.clone()));
@@ -202,7 +209,6 @@ fn prop_ts_type(p: &PropDecl) -> String {
     format!("Signal<{inner}>")
 }
 
-
 /// Walk template instructions and collect `<use-X as="Y">` bindings.
 fn collect_use_bindings(instrs: &[Instr], out: &mut Vec<(String, String)>) {
     for instr in instrs {
@@ -211,13 +217,12 @@ fn collect_use_bindings(instrs: &[Instr], out: &mut Vec<(String, String)>) {
                 // Look for an `as=` attribute that binds the hook under an alias.
                 for attr in &el.attrs {
                     if let crate::ir::AttrInstr::Static { name, value, .. } = attr
-                        && name == "as" && !value.is_empty() {
-                            let camel = to_camel(hook_name);
-                            out.push((
-                                value.clone(),
-                                format!("ReturnType<typeof use{camel}>"),
-                            ));
-                        }
+                        && name == "as"
+                        && !value.is_empty()
+                    {
+                        let camel = to_camel(hook_name);
+                        out.push((value.clone(), format!("ReturnType<typeof use{camel}>")));
+                    }
                 }
             }
             collect_use_bindings(&el.children, out);
@@ -284,10 +289,22 @@ mod tests {
              }));",
         );
         let dts = emit_dts(&empty_program(), Some(&c), &[]);
-        assert!(dts.contains("export interface Scope {}"), "expected empty Scope, got:\n{dts}");
-        assert!(!dts.contains("rail:"), "factory field must not be in Scope, got:\n{dts}");
-        assert!(!dts.contains("q:"), "factory field must not be in Scope, got:\n{dts}");
+        assert!(
+            dts.contains("export interface Scope {}"),
+            "expected empty Scope, got:\n{dts}"
+        );
+        assert!(
+            !dts.contains("rail:"),
+            "factory field must not be in Scope, got:\n{dts}"
+        );
+        assert!(
+            !dts.contains("q:"),
+            "factory field must not be in Scope, got:\n{dts}"
+        );
         // No member references a runtime type → no import line at all.
-        assert!(!dts.contains("import type"), "no imports when Scope is empty, got:\n{dts}");
+        assert!(
+            !dts.contains("import type"),
+            "no imports when Scope is empty, got:\n{dts}"
+        );
     }
 }

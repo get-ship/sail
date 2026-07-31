@@ -56,7 +56,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ code }))
   </p>
   <code-block code={code.liveData}></code-block>
   <p>
-    Standalone <code>deck dev</code> serves routing, assets, SSR and HMR, but not
+    Standalone <code>sail dev</code> serves routing, assets, SSR and HMR, but not
     live server data yet — that's the server-functions work (#32). Until then,
     use a client store for shared state; the <a href="/deck/data">data seam</a>
     covers both.

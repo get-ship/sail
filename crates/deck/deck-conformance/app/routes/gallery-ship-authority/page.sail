@@ -68,7 +68,7 @@
           <ship-capability-request
             open
             duration="once"
-            request={'{"id":"req-005","agent":"gemini-agent","space":"personal","kind":"capability","scope":"read_file","path":"/home/user/.ssh/config","why":"Reading SSH config to list available hosts","risk":"high"}'}
+            request={'{"id":"req-005","agent":"gemini-agent","space":"personal","kind":"capability","scope":"read_file","path":"~/.ssh/config","why":"Reading SSH config to list available hosts","risk":"high"}'}
           ></ship-capability-request>
         </column>
       </column>

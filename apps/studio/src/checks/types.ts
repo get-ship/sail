@@ -1,0 +1,119 @@
+
+export type AutoFixMode = 'off' | 'suggest' | 'apply'
+
+export type Severity = 'error' | 'warning' | string
+
+/** One finding — compiler/lint or layout (taffy). */
+export type Finding = {
+  id: string
+  severity: Severity
+  rule: string
+  /** One-line list message (first line of diagnostic). */
+  message: string
+  /** Verbatim diagnostic text (shown when a row expands). */
+  why: string
+  /** Extracted "suggest:" rewrite when present. */
+  suggest: string | null
+  /** Compiler provided a suggest trailer (not always machine-applicable). */
+  hasFix: boolean
+  path: string
+  line: number
+  col: number
+  endLine: number
+  endCol: number
+  /** Display "file:line" */
+  fileSpan: string
+  /** Layout finding + both viewport passes actually ran. */
+  bothViewports: boolean
+  isLayout: boolean
+  /** Span-keyed node for select-in-app when known. */
+  nodeId: string | null
+}
+
+export type FindingRow = Finding & {
+  selected: boolean
+  showBothViewports: boolean
+  showFixChip: boolean
+  /** apply fix UI — true when a machine rewrite is available */
+  showApply: boolean
+}
+
+export type RuleFilter = string | null
+export type FileFilter = string | null
+
+export type EditorSetting = {
+  /** vscode | cursor | zed | custom */
+  scheme: string
+  /** Template with {path} {line} {col}; absolute path substituted. */
+  template: string
+}
+
+/** One row in the Review fixes dialog (accept/skip). */
+export type FixReviewItem = {
+  findingId: string
+  rule: string
+  message: string
+  fileSpan: string
+  path: string
+  line: number
+  before: string
+  after: string
+  accepted: boolean
+  machine: boolean
+}
+
+export type ChecksSurfaceState = {
+  projectRoot: string
+  findings: Finding[]
+  selectedId: string | null
+  ruleFilter: RuleFilter
+  fileFilter: FileFilter
+  autoFixMode: AutoFixMode
+  editor: EditorSetting
+  /** LayoutCheck reported ≥2 successful viewport passes. */
+  layoutBothViewportsRan: boolean
+  errorCount: number
+  warningCount: number
+  statusNote: string
+  loading: boolean
+  error: string | null
+  /** Last source text loaded for why snippets. */
+  sourceByPath: Map<string, string>
+  /** Project setting attribution (e.g. "sail.jsonc"). */
+  autoFixAttributed: string
+  /** Review fixes dialog open. */
+  reviewOpen: boolean
+  /** Pending accept/skip rows for Review fixes. */
+  reviewItems: FixReviewItem[]
+  /** Last apply-review status line (user-facing). */
+  reviewNote: string
+}
+
+export type ChecksOpsClient = {
+  sailAuthoringCheck: (args: {
+    path?: string
+    source?: string
+  }) => Promise<{ count: number; diagnostics: unknown[]; ok: boolean }>
+  sailAuthoringLayoutCheck?: (args: {
+    path?: string
+    source?: string
+  }) => Promise<{
+    diagnostics?: unknown[]
+    viewports?: unknown[]
+    count?: number
+    ok?: boolean
+    [key: string]: unknown
+  }>
+  sailInspectModel?: (args: {
+    path: string
+    viewport?: { width: number; height: number }
+  }) => Promise<{
+    diagnostics?: unknown[]
+    source?: string
+    file?: string
+    [key: string]: unknown
+  }>
+  readSource?: (path: string) => Promise<string>
+}
+
+export const APPLY_FIX_READY = true

@@ -124,7 +124,7 @@ export function mountBySource(
   opts: MountSourceOpts,
 ): { mount: ViewMount; js: string; css: string | null } {
   // Pass the setup marker under BOTH keys: the production wasm `makeCompile`
-  // reads `setupUrl`; the Node harness `compileSui` reads `setupMarker`. Both
+  // reads `setupUrl`; the Node harness `compileSail` reads `setupMarker`. Both
   // become the compiler's `setup_url`, emitting `import setup from "<marker>"`.
   const compiled = compile(
     opts.source,

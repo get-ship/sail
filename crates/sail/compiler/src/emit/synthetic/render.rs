@@ -25,7 +25,7 @@
 //!     author read does — one source of truth, two reference paths.
 
 use super::super::template_emit::TemplateEmitter;
-use super::super::writer::{js_string, Writer};
+use super::super::writer::{Writer, js_string};
 use crate::bindings;
 use crate::diagnostics::CompileError;
 use crate::ir::*;
@@ -52,8 +52,15 @@ const SCOPE_PREFIX: &str = "scope.";
 /// calls `component()`/`data()`/`live()`/`prop()` — those lower into the
 /// controller's logic half. Everything else `lower` reports is a template
 /// binder the mount body uses.
-const CONTROLLER_ONLY_IMPORTS: &[&str] =
-    &["component", "prop", "data", "live", "query", "mutation", "invalidate"];
+const CONTROLLER_ONLY_IMPORTS: &[&str] = &[
+    "component",
+    "prop",
+    "data",
+    "live",
+    "query",
+    "mutation",
+    "invalidate",
+];
 
 /// The reusable template walk: drives the production [`TemplateEmitter`] with
 /// the `scope.` author prefix and returns the emitted pieces. `is_route` gates
@@ -94,7 +101,13 @@ fn walk(program: &Program, is_route: bool) -> Walked {
 
     let mut body_w = Writer::new();
     // Synthetic render is for tsgo type-checking, not runtime DOM — no root class.
-    emitter.emit_top_level(&mut body_w, &program.template, "container", "__cleanups", false);
+    emitter.emit_top_level(
+        &mut body_w,
+        &program.template,
+        "container",
+        "__cleanups",
+        false,
+    );
 
     let hoists = emitter.take_boundary_hoists();
     let mut module_hoists_w = emitter.take_module_hoists();
@@ -111,7 +124,15 @@ fn walk(program: &Program, is_route: bool) -> Walked {
     let uses_text = emitter.hydrate_uses_text();
     let uses_markers = emitter.hydrate_uses_markers();
     let hydrate_calls = emitter.take_hydrate_calls();
-    Walked { body: body_w.into_string(), hoists, hydrate_calls, module_hoists, uses_delegation, uses_text, uses_markers }
+    Walked {
+        body: body_w.into_string(),
+        hoists,
+        hydrate_calls,
+        module_hoists,
+        uses_delegation,
+        uses_text,
+        uses_markers,
+    }
 }
 
 /// Idempotent install of the program's lifted `<style>` CSS at the top of
@@ -149,9 +170,12 @@ pub(super) fn emit_render(
     if walked.uses_delegation && !imports.iter().any(|s| s == "delegateEvents") {
         imports.push("delegateEvents".to_string());
     }
-    let (action_imports, mut abi_imports): (Vec<String>, Vec<String>) = imports
-        .into_iter()
-        .partition(|name| crate::action_manifest::ACTIONS.iter().any(|a| a.name == name));
+    let (action_imports, mut abi_imports): (Vec<String>, Vec<String>) =
+        imports.into_iter().partition(|name| {
+            crate::action_manifest::ACTIONS
+                .iter()
+                .any(|a| a.name == name)
+        });
     abi_imports.sort();
     let mut action_imports = action_imports;
     action_imports.sort();
@@ -176,7 +200,10 @@ pub(super) fn emit_render(
             js_string(controller_specifier)
         ));
     } else {
-        w.line(&format!("import {{ scope }} from {};", js_string(controller_specifier)));
+        w.line(&format!(
+            "import {{ scope }} from {};",
+            js_string(controller_specifier)
+        ));
     }
     w.nl();
     if !walked.module_hoists.is_empty() {
@@ -266,9 +293,12 @@ pub(super) fn emit_render_client(
     // Split `use:` action symbols onto `@ship/sail-runtime/actions` —
     // same partition the production imports emitter uses (internal
     // stamps are not on the front door / ABI barrel).
-    let (action_imports, mut abi_imports): (Vec<String>, Vec<String>) = runtime_imports
-        .into_iter()
-        .partition(|name| crate::action_manifest::ACTIONS.iter().any(|a| a.name == name));
+    let (action_imports, mut abi_imports): (Vec<String>, Vec<String>) =
+        runtime_imports.into_iter().partition(|name| {
+            crate::action_manifest::ACTIONS
+                .iter()
+                .any(|a| a.name == name)
+        });
     abi_imports.sort();
     let mut action_imports = action_imports;
     action_imports.sort();
@@ -296,7 +326,10 @@ pub(super) fn emit_render_client(
             dom_imports.join(", ")
         ));
     }
-    w.line(&format!("import {{ scope }} from {};", js_string(controller_specifier)));
+    w.line(&format!(
+        "import {{ scope }} from {};",
+        js_string(controller_specifier)
+    ));
     w.nl();
     if !walked.module_hoists.is_empty() {
         w.push_str(&walked.module_hoists);

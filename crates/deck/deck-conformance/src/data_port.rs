@@ -220,7 +220,7 @@ async fn keepalive_loop(tx: mpsc::Sender<Result<String, std::io::Error>>, cancel
 // ── SSE per-route handler ──────────────────────────────────────────────────────
 
 /// `GET /_deck/views/{name}/sse`
-/// Mirror: `apps/shipd/src/views/sui_sse.rs` (kernel removed).
+/// Mirror: `apps/shipd/src/views/sail_sse.rs` (kernel removed).
 async fn serve_sse(
     Path(name): Path<String>,
     State(store): State<Arc<DemoStore>>,
@@ -369,7 +369,7 @@ struct DataQuery {
 }
 
 /// `GET /_deck/data?expr=` — single-expression SSE stream.
-/// Mirror: `apps/shipd/src/views/sui_data.rs` (kernel removed).
+/// Mirror: `apps/shipd/src/views/sail_data.rs` (kernel removed).
 async fn serve_data(
     Query(q): Query<DataQuery>,
     State(store): State<Arc<DemoStore>>,

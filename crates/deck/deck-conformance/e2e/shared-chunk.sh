@@ -45,7 +45,7 @@ fi
 # deck.jsonc. For the demo app there is no deck.jsonc consumer section — the
 # routes are served on-demand by the bundler. The CLI still exercises the
 # build path and must exit 0.
-DECK="$ROOT/target/debug/deck"
+DECK="$ROOT/target/debug/sail"
 if [ ! -x "$DECK" ]; then
   echo "note: building deck CLI first..."
   cargo build -p deck-cli --quiet

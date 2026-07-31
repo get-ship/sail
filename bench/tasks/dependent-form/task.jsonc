@@ -1,0 +1,13 @@
+{
+  "id": "dependent-form",
+  "prompt": "Build a multi-field form page titled \"Shipping address\" with: name (required), email (required, basic format validation), country select (US / CA / Other), state/province select that depends on country (US states vs CA provinces; disabled or hidden for Other), a submit button, and visible UI for dirty / submitting / success states. Selecting a country must cascade to reset and repopulate the state field. Prefer the signal/controller model and L1 field elements. Work in routes/page.sail. Follow AGENTS.md: read the skill first, check after every edit, stop only when the check is fully clean.",
+  "systems": ["state", "controller"],
+  "scaffold": "blank",
+  "grading": {
+    "compile": true,
+    "vocab_share": { "min": 0.25 },
+    "gates": true,
+    "beauty": true
+  },
+  "falsification": "Does the signal model handle real form complexity?"
+}

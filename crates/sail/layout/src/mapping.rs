@@ -23,8 +23,13 @@ pub enum Selector {
     /// The base class for a layout primitive, e.g. `sail-col` or `sail-row-i`.
     Base(&'static str),
     /// A modifier class with a prefix and an exact value, e.g. `sail-g-` + `4`.
-    Modifier { prefix: &'static str, value: &'static str },
-    /// A sanitized sx atomic class, e.g. `sx-p4` or `sx-grow`.
+    Modifier {
+        prefix: &'static str,
+        value: &'static str,
+    },
+    /// A sanitized sx atomic class, e.g. product `sx-pad4` / `sx-grow1`
+    /// (residual utility names like `sx-p4` / `sx-grow` still match for
+    /// fixtures and any leftover emit).
     Sx(&'static str),
     /// The element whose *parent* carries the given base class. Used for child
     /// conventions (`min-width:0`, stack layering) without re-encoding the
@@ -49,7 +54,10 @@ pub enum Declaration {
     AlignItems(AlignItems),
     JustifyContent(JustifyContent),
     Position(Position),
-    Overflow { x: Overflow, y: Overflow },
+    Overflow {
+        x: Overflow,
+        y: Overflow,
+    },
     FlexGrow(f32),
     FlexShrink(f32),
     GridColumnSpan(u16),
@@ -229,105 +237,180 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
     },
     // --- gap modifiers -------------------------------------------------------
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-g-", value: "0" },
+        selector: Selector::Modifier {
+            prefix: "sail-g-",
+            value: "0",
+        },
         declarations: &[Declaration::Gap(0.0, 0.0)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-g-", value: "density" },
+        selector: Selector::Modifier {
+            prefix: "sail-g-",
+            value: "density",
+        },
         declarations: &[Declaration::Gap(8.0, 8.0)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-g-", value: "1" },
+        selector: Selector::Modifier {
+            prefix: "sail-g-",
+            value: "1",
+        },
         declarations: &[Declaration::Gap(4.0, 4.0)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-g-", value: "2" },
+        selector: Selector::Modifier {
+            prefix: "sail-g-",
+            value: "2",
+        },
         declarations: &[Declaration::Gap(8.0, 8.0)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-g-", value: "3" },
+        selector: Selector::Modifier {
+            prefix: "sail-g-",
+            value: "3",
+        },
         declarations: &[Declaration::Gap(12.0, 12.0)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-g-", value: "4" },
+        selector: Selector::Modifier {
+            prefix: "sail-g-",
+            value: "4",
+        },
         declarations: &[Declaration::Gap(16.0, 16.0)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-g-", value: "5" },
+        selector: Selector::Modifier {
+            prefix: "sail-g-",
+            value: "5",
+        },
         declarations: &[Declaration::Gap(20.0, 20.0)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-g-", value: "6" },
+        selector: Selector::Modifier {
+            prefix: "sail-g-",
+            value: "6",
+        },
         declarations: &[Declaration::Gap(24.0, 24.0)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-g-", value: "7" },
+        selector: Selector::Modifier {
+            prefix: "sail-g-",
+            value: "7",
+        },
         declarations: &[Declaration::Gap(28.0, 28.0)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-g-", value: "8" },
+        selector: Selector::Modifier {
+            prefix: "sail-g-",
+            value: "8",
+        },
         declarations: &[Declaration::Gap(32.0, 32.0)],
     },
     // --- align / justify modifiers -------------------------------------------
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-ai-", value: "start" },
+        selector: Selector::Modifier {
+            prefix: "sail-ai-",
+            value: "start",
+        },
         declarations: &[Declaration::AlignItems(AlignItems::Start)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-ai-", value: "end" },
+        selector: Selector::Modifier {
+            prefix: "sail-ai-",
+            value: "end",
+        },
         declarations: &[Declaration::AlignItems(AlignItems::End)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-ai-", value: "center" },
+        selector: Selector::Modifier {
+            prefix: "sail-ai-",
+            value: "center",
+        },
         declarations: &[Declaration::AlignItems(AlignItems::Center)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-ai-", value: "stretch" },
+        selector: Selector::Modifier {
+            prefix: "sail-ai-",
+            value: "stretch",
+        },
         declarations: &[Declaration::AlignItems(AlignItems::Stretch)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-ai-", value: "baseline" },
+        selector: Selector::Modifier {
+            prefix: "sail-ai-",
+            value: "baseline",
+        },
         declarations: &[Declaration::AlignItems(AlignItems::Baseline)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-jc-", value: "start" },
+        selector: Selector::Modifier {
+            prefix: "sail-jc-",
+            value: "start",
+        },
         declarations: &[Declaration::JustifyContent(JustifyContent::Start)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-jc-", value: "end" },
+        selector: Selector::Modifier {
+            prefix: "sail-jc-",
+            value: "end",
+        },
         declarations: &[Declaration::JustifyContent(JustifyContent::End)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-jc-", value: "center" },
+        selector: Selector::Modifier {
+            prefix: "sail-jc-",
+            value: "center",
+        },
         declarations: &[Declaration::JustifyContent(JustifyContent::Center)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-jc-", value: "between" },
+        selector: Selector::Modifier {
+            prefix: "sail-jc-",
+            value: "between",
+        },
         declarations: &[Declaration::JustifyContent(JustifyContent::SpaceBetween)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-jc-", value: "around" },
+        selector: Selector::Modifier {
+            prefix: "sail-jc-",
+            value: "around",
+        },
         declarations: &[Declaration::JustifyContent(JustifyContent::SpaceAround)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-jc-", value: "evenly" },
+        selector: Selector::Modifier {
+            prefix: "sail-jc-",
+            value: "evenly",
+        },
         declarations: &[Declaration::JustifyContent(JustifyContent::SpaceEvenly)],
     },
     // --- flex direction modifier (legacy alias) ------------------------------
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-dir-", value: "row" },
+        selector: Selector::Modifier {
+            prefix: "sail-dir-",
+            value: "row",
+        },
         declarations: &[Declaration::FlexDirection(FlexDirection::Row)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-dir-", value: "row-reverse" },
+        selector: Selector::Modifier {
+            prefix: "sail-dir-",
+            value: "row-reverse",
+        },
         declarations: &[Declaration::FlexDirection(FlexDirection::RowReverse)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-dir-", value: "column" },
+        selector: Selector::Modifier {
+            prefix: "sail-dir-",
+            value: "column",
+        },
         declarations: &[Declaration::FlexDirection(FlexDirection::Column)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-dir-", value: "column-reverse" },
+        selector: Selector::Modifier {
+            prefix: "sail-dir-",
+            value: "column-reverse",
+        },
         declarations: &[Declaration::FlexDirection(FlexDirection::ColumnReverse)],
     },
     // --- row nowrap ----------------------------------------------------------
@@ -337,27 +420,53 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
     },
     // --- grid track modifiers ------------------------------------------------
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-gm-", value: "xs" },
-        declarations: &[Declaration::GridTemplateColumns(GridTemplate::AutoFillMin(256.0))],
+        selector: Selector::Modifier {
+            prefix: "sail-gm-",
+            value: "xs",
+        },
+        declarations: &[Declaration::GridTemplateColumns(GridTemplate::AutoFillMin(
+            256.0,
+        ))],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-gm-", value: "sm" },
-        declarations: &[Declaration::GridTemplateColumns(GridTemplate::AutoFillMin(288.0))],
+        selector: Selector::Modifier {
+            prefix: "sail-gm-",
+            value: "sm",
+        },
+        declarations: &[Declaration::GridTemplateColumns(GridTemplate::AutoFillMin(
+            288.0,
+        ))],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-gm-", value: "md" },
-        declarations: &[Declaration::GridTemplateColumns(GridTemplate::AutoFillMin(320.0))],
+        selector: Selector::Modifier {
+            prefix: "sail-gm-",
+            value: "md",
+        },
+        declarations: &[Declaration::GridTemplateColumns(GridTemplate::AutoFillMin(
+            320.0,
+        ))],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-gm-", value: "lg" },
-        declarations: &[Declaration::GridTemplateColumns(GridTemplate::AutoFillMin(384.0))],
+        selector: Selector::Modifier {
+            prefix: "sail-gm-",
+            value: "lg",
+        },
+        declarations: &[Declaration::GridTemplateColumns(GridTemplate::AutoFillMin(
+            384.0,
+        ))],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-gf-", value: "auto" },
+        selector: Selector::Modifier {
+            prefix: "sail-gf-",
+            value: "auto",
+        },
         declarations: &[Declaration::GridAutoFlow(GridAutoFlow::Row)],
     },
     LayoutRule {
-        selector: Selector::Modifier { prefix: "sail-gf-", value: "dense" },
+        selector: Selector::Modifier {
+            prefix: "sail-gf-",
+            value: "dense",
+        },
         declarations: &[Declaration::GridAutoFlow(GridAutoFlow::RowDense)],
     },
     // --- finite sx atoms -----------------------------------------------------
@@ -369,6 +478,24 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
     LayoutRule {
         selector: Selector::Sx("displaynone"),
         declarations: &[Declaration::Display(Display::None)],
+    },
+    // Product `style.display(inline-flex|flex|block|…)` → `sx-display*`.
+    // Longest / more-specific tokens first (inlineflex before inline, etc.).
+    LayoutRule {
+        selector: Selector::Sx("displayinlineflex"),
+        declarations: &[Declaration::Display(Display::Flex)],
+    },
+    LayoutRule {
+        selector: Selector::Sx("displayflex"),
+        declarations: &[Declaration::Display(Display::Flex)],
+    },
+    LayoutRule {
+        selector: Selector::Sx("displayinlineblock"),
+        declarations: &[Declaration::Display(Display::Block)],
+    },
+    LayoutRule {
+        selector: Selector::Sx("displayblock"),
+        declarations: &[Declaration::Display(Display::Block)],
     },
     LayoutRule {
         selector: Selector::Sx("inline"),
@@ -394,6 +521,12 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
         selector: Selector::Sx("sticky"),
         declarations: &[Declaration::Position(Position::Relative)],
     },
+    // Product Style / participation attrs: `style.grow(1)` / `grow` → `sx-grow1`.
+    // Residual bare `sx-grow` kept for fixtures + any leftover emit.
+    LayoutRule {
+        selector: Selector::Sx("grow1"),
+        declarations: &[Declaration::FlexGrow(1.0)],
+    },
     LayoutRule {
         selector: Selector::Sx("grow"),
         declarations: &[Declaration::FlexGrow(1.0)],
@@ -401,6 +534,10 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
     LayoutRule {
         selector: Selector::Sx("grow0"),
         declarations: &[Declaration::FlexGrow(0.0)],
+    },
+    LayoutRule {
+        selector: Selector::Sx("shrink1"),
+        declarations: &[Declaration::FlexShrink(1.0)],
     },
     LayoutRule {
         selector: Selector::Sx("shrink"),
@@ -412,55 +549,94 @@ pub static LAYOUT_RULES: &[LayoutRule] = &[
     },
     LayoutRule {
         selector: Selector::Sx("overflowhidden"),
-        declarations: &[Declaration::Overflow { x: Overflow::Hidden, y: Overflow::Hidden }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Hidden,
+            y: Overflow::Hidden,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowauto"),
-        declarations: &[Declaration::Overflow { x: Overflow::Scroll, y: Overflow::Scroll }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Scroll,
+            y: Overflow::Scroll,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowscroll"),
-        declarations: &[Declaration::Overflow { x: Overflow::Scroll, y: Overflow::Scroll }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Scroll,
+            y: Overflow::Scroll,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowclip"),
-        declarations: &[Declaration::Overflow { x: Overflow::Clip, y: Overflow::Clip }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Clip,
+            y: Overflow::Clip,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowvisible"),
-        declarations: &[Declaration::Overflow { x: Overflow::Visible, y: Overflow::Visible }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Visible,
+            y: Overflow::Visible,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowxhidden"),
-        declarations: &[Declaration::Overflow { x: Overflow::Hidden, y: Overflow::Visible }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Hidden,
+            y: Overflow::Visible,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowxauto"),
-        declarations: &[Declaration::Overflow { x: Overflow::Scroll, y: Overflow::Visible }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Scroll,
+            y: Overflow::Visible,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowxscroll"),
-        declarations: &[Declaration::Overflow { x: Overflow::Scroll, y: Overflow::Visible }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Scroll,
+            y: Overflow::Visible,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowxclip"),
-        declarations: &[Declaration::Overflow { x: Overflow::Clip, y: Overflow::Visible }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Clip,
+            y: Overflow::Visible,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowyhidden"),
-        declarations: &[Declaration::Overflow { x: Overflow::Visible, y: Overflow::Hidden }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Visible,
+            y: Overflow::Hidden,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowyauto"),
-        declarations: &[Declaration::Overflow { x: Overflow::Visible, y: Overflow::Scroll }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Visible,
+            y: Overflow::Scroll,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowyscroll"),
-        declarations: &[Declaration::Overflow { x: Overflow::Visible, y: Overflow::Scroll }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Visible,
+            y: Overflow::Scroll,
+        }],
     },
     LayoutRule {
         selector: Selector::Sx("overflowyclip"),
-        declarations: &[Declaration::Overflow { x: Overflow::Visible, y: Overflow::Clip }],
+        declarations: &[Declaration::Overflow {
+            x: Overflow::Visible,
+            y: Overflow::Clip,
+        }],
     },
     // --- child conventions ---------------------------------------------------
     LayoutRule {
@@ -557,8 +733,30 @@ pub enum SideSet {
 }
 
 /// Every `sx-*` prefix whose value lives on a closed scale. Order matters: the
-/// longest prefix must be checked first (`px` before `p`).
+/// longest prefix must be checked first.
+///
+/// **Product Style** mints classes from setter names + alphanumeric args:
+/// `style.pad(4)` → `sx-pad4`, `style.padX(2)` → `sx-padX2`,
+/// `style.minW(0)` → `sx-minW0` (camelCase preserved). Residual utility-string
+/// prefixes (`sx-p4`, `sx-minw0`, …) stay so fixtures / any leftover emit still
+/// resolve.
 pub static SX_SCALE_RULES: &[(&'static str, SxScaleRule)] = &[
+    // Product pad* (longest first: padX before pad).
+    ("sx-padX", SxScaleRule::Padding(SideSet::X)),
+    ("sx-padY", SxScaleRule::Padding(SideSet::Y)),
+    ("sx-padT", SxScaleRule::Padding(SideSet::T)),
+    ("sx-padR", SxScaleRule::Padding(SideSet::R)),
+    ("sx-padB", SxScaleRule::Padding(SideSet::B)),
+    ("sx-padL", SxScaleRule::Padding(SideSet::L)),
+    ("sx-padS", SxScaleRule::Padding(SideSet::L)), // inline-start ≈ left for taffy
+    ("sx-padE", SxScaleRule::Padding(SideSet::R)), // inline-end ≈ right for taffy
+    ("sx-pad", SxScaleRule::Padding(SideSet::All)),
+    // Product size atoms (camelCase minW / maxH).
+    ("sx-minW", SxScaleRule::MinWidth),
+    ("sx-minH", SxScaleRule::MinHeight),
+    ("sx-maxW", SxScaleRule::MaxWidth),
+    ("sx-maxH", SxScaleRule::MaxHeight),
+    // Residual utility-string prefixes (p/px/…, minw lowercase).
     ("sx-px", SxScaleRule::Padding(SideSet::X)),
     ("sx-py", SxScaleRule::Padding(SideSet::Y)),
     ("sx-pt", SxScaleRule::Padding(SideSet::T)),

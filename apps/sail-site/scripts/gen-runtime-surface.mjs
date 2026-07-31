@@ -1,13 +1,16 @@
-// Regenerate src/runtime-surface.gen.ts — the COMPLETE public export surface
-// of @ship/sail-runtime, walked mechanically off the TypeScript compiler API
-// against the package's own `exports` map (packages/sail/runtime/package.json).
-// One entry point's module symbol, `checker.getExportsOfModule`, per subpath —
-// so a new export (or a new subpath) shows up here on the next `bun run gen`
-// with no hand-editing. This is the runtime's sibling to
-// `cargo run -p sail-compiler -- prop-registry` (the compiler's own surface):
-// same law (generated-from-tables, never hand-listed), different source
-// language, because the runtime lives in TS and the compiler lives in Rust.
+// Regenerate src/runtime-surface.gen.ts — **tier B** author runtime surface
+// of @ship/sail-runtime.
 //
+// Walks the package root barrel (`.`) with the TypeScript compiler API, then
+// keeps only names listed in packages/sail/runtime/author-surface.json.
+// That JSON is the documented allowlist for intentional human imports.
+//
+// Tier A (template / ambient / compiler tables) is language-surface.gen.ts
+// from `cargo run -p sail-compiler -- prop-registry` — not this script.
+// Tier C (/internal emit ABI, host subpaths like ./framework ./server ./dev)
+// is never emitted here.
+//
+// Regen: `bun run gen` (apps/sail-site) or:
 //   node apps/sail-site/scripts/gen-runtime-surface.mjs
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -16,16 +19,22 @@ import * as ts from 'typescript'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const runtimeDir = resolve(here, '../../../packages/sail/runtime')
-const pkg = JSON.parse(readFileSync(resolve(runtimeDir, 'package.json'), 'utf8'))
-const exportsMap = pkg.exports
+const authorSurface = JSON.parse(
+  readFileSync(resolve(runtimeDir, 'author-surface.json'), 'utf8'),
+)
+const allowlist = authorSurface.exports
+const categoryDocs = authorSurface.categories ?? {}
+const categoryOrder = Object.keys(categoryDocs)
 
-const entryFiles = Object.entries(exportsMap).map(([subpath, rel]) => [
-  subpath,
-  resolve(runtimeDir, rel),
-])
+const pkg = JSON.parse(readFileSync(resolve(runtimeDir, 'package.json'), 'utf8'))
+const rootRel = pkg.exports?.['.']
+if (typeof rootRel !== 'string') {
+  throw new Error('@ship/sail-runtime package.json exports["."] must be a string path')
+}
+const rootFile = resolve(runtimeDir, rootRel)
 
 const program = ts.createProgram({
-  rootNames: entryFiles.map(([, file]) => file),
+  rootNames: [rootFile],
   options: {
     target: ts.ScriptTarget.ES2022,
     module: ts.ModuleKind.ESNext,
@@ -124,49 +133,80 @@ function fileLineOf(symbol) {
   return `${relPath}:${line + 1}`
 }
 
-// `./internal` is a total re-export of the root barrel (`export * from
-// './index'`) — the compiler's ABI door, not a distinct surface. Documenting
-// it would duplicate every root-barrel row under a second subpath for zero
-// new information; skip its rows, note its existence separately in the page.
-const entries = []
-for (const [subpath, file] of entryFiles) {
-  if (subpath === './internal') continue
-  const sourceFile = program.getSourceFile(file)
-  if (!sourceFile) continue
-  const moduleSymbol = checker.getSymbolAtLocation(sourceFile)
-  if (!moduleSymbol) continue
-  const exported = checker.getExportsOfModule(moduleSymbol)
-  for (const symbol of exported) {
-    const resolved =
-      symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
-    const kind = kindOf(resolved)
-    entries.push({
-      subpath,
-      name: symbol.getName(),
-      kind,
-      signature: signatureOf(resolved, kind),
-      doc: docOf(resolved) || docOf(symbol),
-      loc: fileLineOf(resolved),
-    })
-  }
+const sourceFile = program.getSourceFile(rootFile)
+if (!sourceFile) {
+  throw new Error(`could not load root barrel: ${rootFile}`)
+}
+const moduleSymbol = checker.getSymbolAtLocation(sourceFile)
+if (!moduleSymbol) {
+  throw new Error(`no module symbol for root barrel: ${rootFile}`)
 }
 
-entries.sort((a, b) => a.subpath.localeCompare(b.subpath) || a.name.localeCompare(b.name))
+const rootNames = new Set()
+const entries = []
+for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
+  const name = symbol.getName()
+  rootNames.add(name)
+  const category = allowlist[name]
+  if (!category) continue
+  const resolved =
+    symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
+  const kind = kindOf(resolved)
+  entries.push({
+    subpath: '.',
+    category,
+    name,
+    kind,
+    signature: signatureOf(resolved, kind),
+    doc: docOf(resolved) || docOf(symbol),
+    loc: fileLineOf(resolved),
+  })
+}
+
+const missing = Object.keys(allowlist).filter((n) => !rootNames.has(n))
+if (missing.length > 0) {
+  throw new Error(
+    `author-surface.json lists exports not on the root barrel (add to index.ts or drop from allowlist):\n  ${missing.join('\n  ')}`,
+  )
+}
+
+const catRank = (c) => {
+  const i = categoryOrder.indexOf(c)
+  return i === -1 ? 999 : i
+}
+entries.sort(
+  (a, b) => catRank(a.category) - catRank(b.category) || a.name.localeCompare(b.name),
+)
 
 let out = ''
 out += '// AUTO-GENERATED by `node scripts/gen-runtime-surface.mjs`. Do not edit.\n'
-out +=
-  '// The complete public export surface of @ship/sail-runtime, walked off the\n'
-out += '// TypeScript compiler API against the package.json `exports` map — every\n'
-out += '// subpath, every export, mechanically. See scripts/gen-runtime-surface.mjs.\n\n'
+out += '// Tier B author runtime of @ship/sail-runtime — root barrel filtered by\n'
+out += '// packages/sail/runtime/author-surface.json. Not the full package graph\n'
+out += '// (framework/server/dev/internal are tier C / host). See gen-runtime-surface.mjs.\n\n'
 out += 'export interface RuntimeExportDoc {\n'
 out += '  subpath: string\n'
-out += "  name: string\n"
+out += '  category: string\n'
+out += '  name: string\n'
 out += "  kind: 'function' | 'class' | 'interface' | 'type' | 'enum' | 'const' | 'value'\n"
 out += '  signature: string\n'
 out += '  doc: string\n'
 out += '  loc: string\n'
 out += '}\n\n'
+out += 'export interface RuntimeCategoryDoc {\n'
+out += '  id: string\n'
+out += '  summary: string\n'
+out += '  count: number\n'
+out += '}\n\n'
+out += '/** Documented tier-B allowlist size (author-surface.json). */\n'
+out += `export const AUTHOR_RUNTIME_COUNT = ${entries.length}\n\n`
+out += 'export const RUNTIME_CATEGORIES: RuntimeCategoryDoc[] = '
+const categories = categoryOrder.map((id) => ({
+  id,
+  summary: categoryDocs[id] ?? id,
+  count: entries.filter((e) => e.category === id).length,
+}))
+out += JSON.stringify(categories, null, 2)
+out += '\n\n'
 out += 'export const RUNTIME_EXPORTS: RuntimeExportDoc[] = '
 out += JSON.stringify(entries, null, 2)
 out += '\n'
@@ -174,5 +214,5 @@ out += '\n'
 const dest = resolve(here, '../src/runtime-surface.gen.ts')
 writeFileSync(dest, out)
 console.log(
-  `wrote ${dest} (${entries.length} exports across ${entryFiles.length} entry points)`,
+  `wrote ${dest} (${entries.length} tier-B exports across ${categories.length} categories; root has ${rootNames.size} total names)`,
 )

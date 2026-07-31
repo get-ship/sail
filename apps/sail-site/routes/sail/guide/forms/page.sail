@@ -78,13 +78,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <button type="button" variant="outline" tone="destructive" on:click={breakIt}>Fail the next save</button>
             </row>
 
-            <if cond={profile.pending()}>
+            <if {profile.pending()}>
               <row gap="2" align="center"><spinner></spinner> <p sx={style.fontSize(sm).fg(muted-foreground)}>saving…</p></row>
             </if>
-            <if cond={profile.lastError()}>
+            <if {profile.lastError()}>
               <alert tone="destructive" data-testid="forms-error">{profile.lastError().message}</alert>
             </if>
-            <if cond={saved()}>
+            <if {saved()}>
               <alert tone="success" data-testid="forms-success">Saved — {saved().name} ({saved().email}).</alert>
             </if>
           </column>

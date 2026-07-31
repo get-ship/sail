@@ -2,10 +2,8 @@
 // framework's self-hosted woff2 fonts. Variable-weight faces cover the
 // Latin block; static display faces (e.g. Press Start 2P) are vendored
 // the same way. Each entry's `file` lives alongside this module in
-// `./fonts/<file>`. The generator
-// `packages/sail/runtime/scripts/emit-contracts-css.ts` reads this
-// manifest, prepends one `@font-face` block per row to the generated
-// `sail-base.css` with `src: url('./fonts/<file>')`.
+// `./fonts/<file>`. Hand-authored `./sail-base.css` must include one
+// `@font-face` block per row with `src: url('./fonts/<file>')`.
 //
 // The deck bundler's `ShipAssetCssPlugin` (see
 // `crates/deck/deck-bundler/src/ship_asset_css.rs`) reads each `.css`
@@ -16,9 +14,8 @@
 // `url('./<file>-<hash>.woff2')` — same directory as the CSS asset.
 //
 // To add a font: drop the woff2 into `./fonts/`, append a row here,
-// re-run `bun packages/sail/runtime/scripts/emit-contracts-css.ts`,
-// and the drift test in `test/fonts.test.ts` will lock the result
-// against this manifest.
+// add the matching `@font-face` in `./sail-base.css`, and the drift
+// test in `test/fonts.test.ts` will lock the CSS against this manifest.
 
 export interface FontFaceSpec {
   /** CSS `font-family` value (quoted in the emitted rule). */

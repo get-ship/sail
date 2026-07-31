@@ -39,7 +39,7 @@
 </scope>
 
 <controller>
-import { controller, derived } from '@ship/sail-runtime'
+
 import type { Action } from '@ship/sail-runtime'
 import { createChartData } from '../engine/create-chart-data'
 import { createChartViewport } from '../engine/create-chart-viewport'
@@ -94,9 +94,9 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
   })
 
 </controller>
-<if cond={loading()}>
+<if {loading()}>
   <spinner></spinner>
-<else-if cond={chart.isEmpty()}>
+<else-if {chart.isEmpty()}>
   <svg
     viewBox={'0 0 ' + viewport.width() + ' ' + viewport.height()}
     width={viewport.width()}
@@ -113,8 +113,8 @@ export default controller(({ data, tone, width, height, label, loading }: Scope)
     aria-label={ariaLabel()}
     sx={style.display(inline-block).overflow(visible)}
     use:observeViewport>
-    <for as="s" of={seriesPaths()} key={s.name}>
-      <if cond={fill()}>
+    <for {seriesPaths()} as="s" key={s.name}>
+      <if {fill()}>
         <path d={s.fillD} fill={s.color} fill-opacity="0.18" stroke="none"></path>
       </if>
       <path d={s.strokeD} fill="none" stroke={s.color} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

@@ -28,10 +28,10 @@ export default controller(() => ({
   }))
 </controller>
 
-<!-- FILE_CAP_OVERRIDE: gallery instantiates all 50+ sui/primitives — one card each; cannot be split without losing the gallery contract -->
+<!-- FILE_CAP_OVERRIDE: gallery instantiates all 50+ sail/primitives — one card each; cannot be split without losing the gallery contract -->
 <column gap="8" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
   <header>
-    <h1 sx={style.fontSize(2xl).fontWeight(bold).mb(2)}>sui/primitives gallery</h1>
+    <h1 sx={style.fontSize(2xl).fontWeight(bold).mb(2)}>sail/primitives gallery</h1>
     <p sx={style.fg(muted-foreground)}>Real component instantiations — one card per primitive, representative prop combos.</p>
   </header>
 
@@ -41,8 +41,8 @@ export default controller(() => ({
     <row gap="3" align="start">
       <sail-accordion type="single" value="a1">
         <sail-accordion-item value="a1">
-          <span slot="trigger">What is SUI?</span>
-          SUI is the declarative template and reactive runtime that powers Ship views.
+          <span slot="trigger">What is Sail?</span>
+          Sail is the declarative template and reactive runtime that powers Ship views.
         </sail-accordion-item>
         <sail-accordion-item value="a2">
           <span slot="trigger">Multiple sections</span>
@@ -489,7 +489,7 @@ export default controller(() => ({
             <icon slot="icon" name="folder" size="sm"></icon>
           </sail-tree-item>
           <sail-tree-item label="views" expanded>
-            <sail-tree-item label="page.sui" leaf></sail-tree-item>
+            <sail-tree-item label="page.sail" leaf></sail-tree-item>
             <sail-tree-item label="controller.ts" leaf></sail-tree-item>
           </sail-tree-item>
         </sail-tree-item>
@@ -515,7 +515,7 @@ export default controller(() => ({
   <section>
     <h2 sx={style.fontSize(sm).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide).mb(3).padB(2).borderBWidth(1).borderB(border)}>sail-json-view</h2>
     <row gap="3" align="start">
-      <sail-json-view data={'{"name":"SUI","version":1,"stable":true}'} depth="2" expanded></sail-json-view>
+      <sail-json-view data={'{"name":"Sail","version":1,"stable":true}'} depth="2" expanded></sail-json-view>
     </row>
   </section>
 
@@ -793,7 +793,7 @@ export default controller(() => ({
           label="File system"
           selectable="single"
           show-guides
-          nodes='[{"id":"src","label":"src","children":[{"id":"comp","label":"components","children":[{"id":"btn","label":"sail-button.sui"},{"id":"card","label":"sail-card.sui"}]},{"id":"views","label":"views","children":[{"id":"pg","label":"page.sui"},{"id":"ct","label":"controller.ts"}]}]},{"id":"tests","label":"tests"}]'
+          nodes='[{"id":"src","label":"src","children":[{"id":"comp","label":"components","children":[{"id":"btn","label":"sail-button.sail"},{"id":"card","label":"sail-card.sail"}]},{"id":"views","label":"views","children":[{"id":"pg","label":"page.sail"},{"id":"ct","label":"controller.ts"}]}]},{"id":"tests","label":"tests"}]'
         ></sail-tree>
       </column>
     </row>
@@ -954,7 +954,7 @@ export default controller(() => ({
         </row>
         <p sx={style.fontSize(xs).fg(muted-foreground).leading(relaxed)}>
           <code>sail-board</code> uses <code>Set.prototype.has()</code> inside template
-          expressions, which the real (native) SUI compiler rejects. Passes jsdom tests;
+          expressions, which the real (native) Sail compiler rejects. Passes jsdom tests;
           fails <code>cargo run -p sail-compiler -- build</code>. Tracked in #263.
         </p>
       </column>
@@ -966,7 +966,7 @@ export default controller(() => ({
         </row>
         <p sx={style.fontSize(xs).fg(muted-foreground).leading(relaxed)}>
           <code>sail-draw</code> uses <code>Set.prototype.has()</code> inside template
-          expressions, which the real (native) SUI compiler rejects. Passes jsdom tests;
+          expressions, which the real (native) Sail compiler rejects. Passes jsdom tests;
           fails <code>cargo run -p sail-compiler -- build</code>. Tracked in #263.
         </p>
       </column>

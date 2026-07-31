@@ -65,11 +65,18 @@ fn workspace_globs(repo_root: &Path) -> Vec<String> {
     };
     let ws = &manifest["workspaces"];
     if let Some(arr) = ws.as_array() {
-        return arr.iter().filter_map(|v| v.as_str().map(String::from)).collect();
+        return arr
+            .iter()
+            .filter_map(|v| v.as_str().map(String::from))
+            .collect();
     }
     ws["packages"]
         .as_array()
-        .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        })
         .unwrap_or_default()
 }
 
@@ -223,9 +230,15 @@ fn discover_dependency_packages(repo_root: &Path) -> Vec<WorkspacePackage> {
         };
         for (name, spec) in deps {
             let Some(spec) = spec.as_str() else { continue };
-            let Some(dir) = resolve_dependency_dir(repo_root, name, spec) else { continue };
-            let Some(pkg) = read_json(&dir.join("package.json")) else { continue };
-            let Some(ce) = pkg["customElements"].as_str() else { continue };
+            let Some(dir) = resolve_dependency_dir(repo_root, name, spec) else {
+                continue;
+            };
+            let Some(pkg) = read_json(&dir.join("package.json")) else {
+                continue;
+            };
+            let Some(ce) = pkg["customElements"].as_str() else {
+                continue;
+            };
             let bundles = pkg
                 .get("deck")
                 .and_then(|d| d.get("bundles"))
@@ -273,7 +286,7 @@ pub fn discover_bundle_declarations(repo_root: &Path) -> Vec<(PathBuf, BundleDec
 /// `None` when the derived path doesn't look like sail's workspace (e.g. the
 /// crate was relocated, or a prod build runs from an install layout) — callers
 /// fall back to project-only resolution and never panic.
-fn sui_workspace_root() -> Option<&'static Path> {
+fn sail_workspace_root() -> Option<&'static Path> {
     static ROOT: OnceLock<Option<PathBuf>> = OnceLock::new();
     ROOT.get_or_init(|| {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -286,9 +299,7 @@ fn sui_workspace_root() -> Option<&'static Path> {
         // AND it actually declares the carved `@ship/tokens` package. The
         // tokens check is the cheap, specific guard that this is sail (not some
         // other ancestor workspace) without a full discovery walk.
-        if d.join("package.json").exists()
-            && d.join("packages/sail/tokens/package.json").exists()
-        {
+        if d.join("package.json").exists() && d.join("packages/sail/tokens/package.json").exists() {
             Some(d)
         } else {
             None
@@ -308,7 +319,7 @@ fn sui_workspace_root() -> Option<&'static Path> {
 /// The map UNIONS two workspaces:
 ///   1. the consuming project's `repo_root` (its own `@ship/*` — `@ship/sdk`,
 ///      `@ship/agents`, the `packages/components/ship/*` packs, etc.);
-///   2. sail's own workspace ([`sui_workspace_root`]) — the carved framework
+///   2. sail's own workspace ([`sail_workspace_root`]) — the carved framework
 ///      packages (`@ship/tokens`, `@ship/sail-*`, `packages/components/sail/*`).
 ///
 /// PRECEDENCE on a name collision: **sail wins**. Sail owns the framework `@ship/*`
@@ -339,8 +350,8 @@ pub fn component_package_roots(repo_root: &Path) -> Arc<HashMap<String, PathBuf>
         .map(|p| (p.name, p.root))
         .collect();
     // Overlay the ENCLOSING JS workspace (the bun/npm workspace root above the
-    // project). A pure-JS consumer (ship-apps) is built with `repo_root` set to
-    // the APP subdir (`ship-apps/apps/helm`) — not the workspace root — so the
+    // project). A pure-JS consumer monorepo is often built with `repo_root` set
+    // to the APP subdir (`apps/demo`) — not the workspace root — so the
     // project-only walk above sees only the app's own declared deps and MISSES
     // its SIBLING workspace packs (`@ship/agents`, …). Without those in the map,
     // `SailPlugin` can't re-anchor a bare `import "@ship/agents"` to source, it
@@ -357,9 +368,9 @@ pub fn component_package_roots(repo_root: &Path) -> Arc<HashMap<String, PathBuf>
     // Overlay sail's own workspace (sail wins on collision). Skip when sail IS the
     // project root — its packages are already in `roots`, and re-walking would
     // only be redundant work for an identical result.
-    if let Some(sui_root) = sui_workspace_root() {
-        if sui_root != repo_root {
-            for p in discover_workspace_packages(sui_root).unwrap_or_default() {
+    if let Some(sail_root) = sail_workspace_root() {
+        if sail_root != repo_root {
+            for p in discover_workspace_packages(sail_root).unwrap_or_default() {
                 roots.insert(p.name, p.root);
             }
         }
@@ -388,9 +399,17 @@ pub fn pack_id_for_name(npm_name: &str) -> String {
 /// §4.13.3 requires a hyphen). Routes use `page.sail` or `index.sail` and are
 /// excluded by this guard. `dist`, `node_modules`, `.git`, and `target` are
 /// skipped for speed.
-fn scan_sui_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
-    const SKIP: [&str; 5] = ["node_modules", "dist", "target", ".git", deck_config::DECK_OUT_DIRNAME];
-    let Ok(entries) = std::fs::read_dir(dir) else { return };
+fn scan_sail_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
+    const SKIP: [&str; 5] = [
+        "node_modules",
+        "dist",
+        "target",
+        ".git",
+        deck_config::DECK_OUT_DIRNAME,
+    ];
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
     for e in entries.flatten() {
         let name = e.file_name().to_string_lossy().into_owned();
         if SKIP.contains(&name.as_str()) {
@@ -398,7 +417,7 @@ fn scan_sui_components(dir: &Path, out: &mut Vec<(String, PathBuf)>) {
         }
         let p = e.path();
         if p.is_dir() {
-            scan_sui_components(&p, out);
+            scan_sail_components(&p, out);
         } else if let Some(stem) = p.file_stem().and_then(|s| s.to_str()) {
             if p.extension().and_then(|x| x.to_str()) != Some("sail") {
                 continue;
@@ -421,7 +440,7 @@ pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
         return vec![];
     }
     let mut out = Vec::new();
-    scan_sui_components(&src, &mut out);
+    scan_sail_components(&src, &mut out);
     out
 }
 
@@ -435,14 +454,16 @@ pub fn source_tags_for_package(pkg_root: &Path) -> Vec<(String, PathBuf)> {
 /// `components/<pkg.path>/<tag>/<tag>.sail`. The same custom-element hyphen rule
 /// applies (component iff hyphenated stem ∉ {page,index}), so routes never leak.
 /// First tag wins on collision (byte-stable: WalkDir is lexical).
-pub fn composed_component_index(composed_root: &Path) -> std::collections::HashMap<String, PathBuf> {
+pub fn composed_component_index(
+    composed_root: &Path,
+) -> std::collections::HashMap<String, PathBuf> {
     let mut out = std::collections::HashMap::new();
     let components = composed_root.join("components");
     if !components.is_dir() {
         return out;
     }
     let mut pairs = Vec::new();
-    scan_sui_components(&components, &mut pairs);
+    scan_sail_components(&components, &mut pairs);
     for (tag, path) in pairs {
         out.entry(tag).or_insert(path);
     }

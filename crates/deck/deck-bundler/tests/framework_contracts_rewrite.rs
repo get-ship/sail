@@ -22,8 +22,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use deck_bundler::catalog::component_package_roots;
+use deck_bundler::sail_plugin::{SailPlugin, component_index};
 use deck_bundler::ship_asset_css::ShipAssetCssPlugin;
-use deck_bundler::sail_plugin::{component_index, SailPlugin};
 
 fn write(path: &Path, body: &str) {
     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -102,6 +102,7 @@ export default () => ({})
         component_index: component_idx.index,
         shadowed_tags: component_idx.shadowed,
         component_roots: component_package_roots(&repo_root),
+        project_dir: None,
     };
     let mut bundler = BundlerBuilder::default()
         .with_options(options)
@@ -111,10 +112,7 @@ export default () => ({})
         ])
         .build()
         .expect("bundler build");
-    bundler
-        .write()
-        .await
-        .expect("bundle + plugin write");
+    bundler.write().await.expect("bundle + plugin write");
 
     // The output assets dir must contain BOTH the rewritten
     // sail-base.css AND the three woff2 (as hashed assets). We list
@@ -145,8 +143,7 @@ export default () => ({})
     // asset paths (no `./fonts/X.woff2` source paths; no base64 data
     // URLs). The placeholder prefix must be fully resolved.
     let base_path = assets_dir.join(base_css);
-    let base_body = std::fs::read_to_string(&base_path)
-        .expect("sail-base.css must be readable");
+    let base_body = std::fs::read_to_string(&base_path).expect("sail-base.css must be readable");
     assert!(
         !base_body.contains("data:font/woff2"),
         "base64 inlining is GONE — no `data:font/woff2` URLs allowed, got body:\n{}",
@@ -189,16 +186,12 @@ export default () => ({})
     );
     // The three variable faces keep `format('woff2-variations')`; the static
     // Press Start 2P face uses `format('woff2')`. Verify both shapes are present.
-    let variations_count = base_body
-        .matches("format('woff2-variations')")
-        .count();
+    let variations_count = base_body.matches("format('woff2-variations')").count();
     assert_eq!(
         variations_count, 3,
         "expected 3 woff2-variations format() decls in sail-base.css, got {variations_count}"
     );
-    let woff2_count = base_body
-        .matches("format('woff2')")
-        .count();
+    let woff2_count = base_body.matches("format('woff2')").count();
     assert_eq!(
         woff2_count, 1,
         "expected 1 woff2 format() decl in sail-base.css, got {woff2_count}"

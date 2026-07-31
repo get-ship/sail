@@ -5,10 +5,13 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use sail_compiler::emit::dts::ScopeCapability;
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn repo_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../..")
+        .canonicalize()
+        .unwrap()
 }
 
 fn tsc_path(repo: &Path) -> Option<PathBuf> {
@@ -124,8 +127,15 @@ export default controller((ctx: ControllerScope<Scope>) => {{
 }})
 "
     );
-    let (ok, out) = check(&repo, &repo.join("target/controller-scope-port-tsc/positive"), &body);
-    assert!(ok, "the dissolved controller scope MUST typecheck green:\n{out}");
+    let (ok, out) = check(
+        &repo,
+        &repo.join("target/controller-scope-port-tsc/positive"),
+        &body,
+    );
+    assert!(
+        ok,
+        "the dissolved controller scope MUST typecheck green:\n{out}"
+    );
 }
 
 #[test]
@@ -142,9 +152,19 @@ export default controller((ctx: ControllerScope<Scope>) => {{
 }})
 "
     );
-    let (ok, out) = check(&repo, &repo.join("target/controller-scope-port-tsc/no-ship"), &body);
-    assert!(!ok, "`ctx.ship` MUST be a type error; tsc was green:\n{out}");
-    assert!(out.contains("ship"), "expected failure to name `ship`; got:\n{out}");
+    let (ok, out) = check(
+        &repo,
+        &repo.join("target/controller-scope-port-tsc/no-ship"),
+        &body,
+    );
+    assert!(
+        !ok,
+        "`ctx.ship` MUST be a type error; tsc was green:\n{out}"
+    );
+    assert!(
+        out.contains("ship"),
+        "expected failure to name `ship`; got:\n{out}"
+    );
 }
 
 #[test]
@@ -161,9 +181,19 @@ export default controller((ctx: ControllerScope<Scope>) => {{
 }})
 "
     );
-    let (ok, out) = check(&repo, &repo.join("target/controller-scope-port-tsc/no-clients"), &body);
-    assert!(!ok, "`ctx.clients` MUST be a type error; tsc was green:\n{out}");
-    assert!(out.contains("clients"), "expected failure to name `clients`; got:\n{out}");
+    let (ok, out) = check(
+        &repo,
+        &repo.join("target/controller-scope-port-tsc/no-clients"),
+        &body,
+    );
+    assert!(
+        !ok,
+        "`ctx.clients` MUST be a type error; tsc was green:\n{out}"
+    );
+    assert!(
+        out.contains("clients"),
+        "expected failure to name `clients`; got:\n{out}"
+    );
 }
 
 #[test]
@@ -180,7 +210,11 @@ export default controller((ctx: ControllerScope<Scope>) => {{
 }})
 "
     );
-    let (ok, out) = check(&repo, &repo.join("target/controller-scope-port-tsc/typo"), &body);
+    let (ok, out) = check(
+        &repo,
+        &repo.join("target/controller-scope-port-tsc/typo"),
+        &body,
+    );
     assert!(!ok, "typo MUST fail; tsc was green:\n{out}");
 }
 
@@ -198,9 +232,16 @@ export default controller((ctx: ControllerScope<Scope>) => {{
 }})
 "
     );
-    let (ok, out) = check(&repo, &repo.join("target/controller-scope-port-tsc/undeclared"), &body);
+    let (ok, out) = check(
+        &repo,
+        &repo.join("target/controller-scope-port-tsc/undeclared"),
+        &body,
+    );
     assert!(!ok, "undeclared MUST fail; tsc was green:\n{out}");
-    assert!(out.contains("analytics"), "expected failure to name `analytics`; got:\n{out}");
+    assert!(
+        out.contains("analytics"),
+        "expected failure to name `analytics`; got:\n{out}"
+    );
 }
 
 #[test]
@@ -232,6 +273,13 @@ const api: Scope['api'] = null as unknown as Scope['api']
 void api
 "
     );
-    let (ok, out) = check(&repo, &repo.join("target/controller-scope-port-tsc/agreement"), &body);
-    assert!(ok, "Scope/MutableState/ResolverContext MUST agree on route/navigate:\n{out}");
+    let (ok, out) = check(
+        &repo,
+        &repo.join("target/controller-scope-port-tsc/agreement"),
+        &body,
+    );
+    assert!(
+        ok,
+        "Scope/MutableState/ResolverContext MUST agree on route/navigate:\n{out}"
+    );
 }

@@ -27,7 +27,7 @@
 
 use std::path::PathBuf;
 
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn opts(name: &str) -> CompileOpts {
     CompileOpts {
@@ -35,7 +35,9 @@ fn opts(name: &str) -> CompileOpts {
         setup_url: Some(format!("./{name}.sail.controller.ts")),
         mode: CompileMode::Component,
         source_path: Some(PathBuf::from(format!("/x/{name}.sail"))),
-        component_meta: Some(ComponentMeta { name: name.to_string() }),
+        component_meta: Some(ComponentMeta {
+            name: name.to_string(),
+        }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
@@ -75,9 +77,10 @@ export default controller(({ value }: Scope) => {
 "#;
 
 #[test]
-fn sui_canvas_shape_self_call_collision_refuses_at_compile() {
-    let err = compile(SUI_CANVAS_COLLISION_SHAPE, opts("sail-canvas"))
-        .expect_err("a scope member shadowing the `use:` action it feeds must refuse, not self-call");
+fn sail_canvas_shape_self_call_collision_refuses_at_compile() {
+    let err = compile(SUI_CANVAS_COLLISION_SHAPE, opts("sail-canvas")).expect_err(
+        "a scope member shadowing the `use:` action it feeds must refuse, not self-call",
+    );
     assert!(
         err.message.contains("worldTransform"),
         "diagnostic must name the colliding identifier: {}",

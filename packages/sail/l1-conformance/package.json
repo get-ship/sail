@@ -3,8 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Visual + probe conformance gate for the L1 language surface. Renders every L1 element's state matrix across all 7 themes, asserts invariants (gate), and commits screenshots (audit trail).",
+  "description": "Visual + probe conformance gate for the L1 language surface. Renders every L1 element's state matrix across every catalog theme, asserts invariants (gate), and commits screenshots (audit trail).",
   "scripts": {
-    "visual": "node run.mjs"
+    "visual": "node run.mjs",
+    "visual:all-themes": "node run.mjs"
   }
 }

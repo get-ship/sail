@@ -19,7 +19,8 @@ describe('<sail-color-picker>', () => {
     const { el } = mount(reg, 'sail-color-picker', { value: '#ff0000' })
     await flush()
     expect(inputOf(el)).not.toBeNull()
-    expect(shadow(el).querySelector('span')).not.toBeNull()
+    // Trigger is a button swatch (use:swatch) — always shows the color.
+    expect(shadow(el).querySelector('button[aria-label="Choose color"]')).not.toBeNull()
     expect(panelOf(el)).toBeNull()
   })
 
@@ -48,20 +49,87 @@ describe('<sail-color-picker>', () => {
   })
 
   it('clicking a swatch commits its hex and dispatches sail-change', async () => {
-    const { el } = mount(reg, 'sail-color-picker', { value: '#000000' })
+    // Start away from black so the first base-ramp swatch is a real change.
+    const { el } = mount(reg, 'sail-color-picker', { value: '#ff0000' })
     await flush()
     inputOf(el).click()
     await flush()
     const events: CustomEvent[] = []
     el.addEventListener('sail-change', (e) => { events.push(e as CustomEvent) })
-    const sw = swatches(el)[0]!
+    const sw =
+      swatches(el).find((b) => (b.dataset.hex || '').toLowerCase() !== '#ff0000') ?? swatches(el)[0]!
     const hex = sw.dataset.hex!
+    expect(hex.toLowerCase()).not.toBe('#ff0000')
     sw.click()
     await flush()
     const last = events.at(-1)!
+    expect(last).toBeTruthy()
     expect(last.detail).toEqual({ value: hex })
     expect(last.bubbles).toBe(true)
     expect(last.composed).toBe(true)
-    expect(el.getAttribute('value')).toBe(hex)
+    // Prop/event is the control SSOT (attribute reflection may lag under suppress).
+    const live = (el as HTMLElement & { value?: string }).value ?? el.getAttribute('value')
+    expect(String(live).toLowerCase()).toBe(hex.toLowerCase())
+  })
+
+  it('while open, ignores external value thrash so HSL does not jump mid-drag', async () => {
+    const { el } = mount(reg, 'sail-color-picker', { value: '#ff0000' })
+    await flush()
+    // Open panel via trigger (button or text input).
+    const trigger =
+      (shadow(el).querySelector('button[aria-label="Choose color"]') as HTMLElement | null) ??
+      inputOf(el)
+    trigger.click()
+    await flush()
+    expect(panelOf(el)).not.toBeNull()
+
+    const [h] = ranges(el)
+    expect(h).toBeTruthy()
+    // Start a drag gesture on hue.
+    h!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    h!.value = '200'
+    h!.dispatchEvent(new Event('input', { bubbles: true }))
+    await flush()
+    const hueDuring = h!.value
+
+    // Parent pushes a lossy oklch→hex rewrite (different hex, same-ish color).
+    el.setAttribute('value', '#00ff00')
+    await flush()
+
+    // Slider must keep the user's draft, not snap to the external prop.
+    expect(h!.value).toBe(hueDuring)
+    expect(Number(h!.value)).toBe(200)
+  })
+
+  it('emits zero sail-change on mount', async () => {
+    const events: CustomEvent[] = []
+    const { el } = mount(reg, 'sail-color-picker', { value: '#5194d5' })
+    el.addEventListener('sail-change', (e) => {
+      events.push(e as CustomEvent)
+    })
+    await flush()
+    await flush()
+    expect(events).toHaveLength(0)
+  })
+
+  it('emits zero sail-change on open then dismiss without edit', async () => {
+    const { el } = mount(reg, 'sail-color-picker', { value: '#5194d5' })
+    await flush()
+    const events: CustomEvent[] = []
+    el.addEventListener('sail-change', (e) => {
+      events.push(e as CustomEvent)
+    })
+    const trigger =
+      (shadow(el).querySelector('button[aria-label="Choose color"]') as HTMLElement | null) ??
+      inputOf(el)
+    trigger.click()
+    await flush()
+    expect(panelOf(el)).not.toBeNull()
+    // Outside dismiss (same path as studio: document pointerdown).
+    document.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    await flush()
+    expect(panelOf(el)).toBeNull()
+    expect(events).toHaveLength(0)
+    expect(el.getAttribute('value')).toBe('#5194d5')
   })
 })

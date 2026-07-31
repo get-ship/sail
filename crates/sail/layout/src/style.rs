@@ -1,3 +1,4 @@
+// FILE_CAP_OVERRIDE: layout resolve + mapping application + structural unit tests; scale atoms live in style_scale.rs.
 //! Resolve a parsed element's `class=` + `style:` to a `taffy::Style`.
 //!
 //! The closed vocabulary is the *whole reason this works without a browser*.
@@ -7,13 +8,13 @@
 
 use crate::html::Element;
 use crate::mapping::{
-    grid_count_template, grid_recipe_template, Declaration, Dimension as MappingDimension,
-    Display as MappingDisplay, FlexDirection as MappingFlexDirection, FlexWrap as MappingFlexWrap,
+    Declaration, Dimension as MappingDimension, Display as MappingDisplay,
+    FlexDirection as MappingFlexDirection, FlexWrap as MappingFlexWrap,
     GridAutoFlow as MappingGridAutoFlow, GridTemplate, JustifyContent as MappingJustifyContent,
-    Overflow as MappingOverflow, PaddingSide, Position as MappingPosition, Selector, SideSet,
-    SxScaleRule, TrackRecipe, LAYOUT_RULES, SX_SCALE_RULES,
+    LAYOUT_RULES, Overflow as MappingOverflow, PaddingSide, Position as MappingPosition, Selector,
+    TrackRecipe, grid_count_template, grid_recipe_template,
 };
-use sail_lint::scales;
+use crate::style_scale;
 use taffy::prelude::*;
 use taffy::style::{GridTemplateComponent, GridTemplateRepetition, Overflow, RepetitionCount};
 
@@ -40,13 +41,16 @@ pub enum Visibility {
 
 impl ResolvedStyle {
     pub fn ignored() -> Self {
-        Self { visibility: Visibility::Ignored, ..Default::default() }
+        Self {
+            visibility: Visibility::Ignored,
+            ..Default::default()
+        }
     }
 }
 
 /// Resolve one element against the mapping table and the runtime scales.
 /// `elements` is the full parsed forest (needed for parent-based child
-/// conventions). `viewport_width` decides the `data-col-span` breakpoint.
+/// conventions). `viewport_width` decides the `col-span` breakpoint.
 pub fn resolve(elem: &Element, elements: &[Element], viewport_width: f32) -> ResolvedStyle {
     if elem.tag.is_empty() {
         return ResolvedStyle::ignored();
@@ -57,16 +61,20 @@ pub fn resolve(elem: &Element, elements: &[Element], viewport_width: f32) -> Res
         .map(|p| p.class.split_whitespace().collect())
         .unwrap_or_default();
 
-    let mut style = Style::default();
+    // Lowered HTML truth: a bare element is CSS `display:block`, not taffy's
+    // default flex-row. Without this, L1 hosts (card/dialog/field chrome) that
+    // don't stamp a flex/grid class flow their children side-by-side — diverging
+    // from the browser and the skin CSS. Layout primitives (sail-col/row/grid)
+    // and sx display atoms overwrite this below.
+    let mut style = Style {
+        display: Display::Block,
+        ..Default::default()
+    };
 
     // 1. Static layout rules.
     for rule in LAYOUT_RULES {
         if rule_matches(rule.selector, &classes, &parent_classes) {
-            apply_declarations(&mut style,
-                rule.declarations,
-                elem,
-                viewport_width,
-            );
+            apply_declarations(&mut style, rule.declarations, elem, viewport_width);
         }
     }
 
@@ -81,12 +89,8 @@ pub fn resolve(elem: &Element, elements: &[Element], viewport_width: f32) -> Res
         }
     }
 
-    // 3. Scale-driven sx prefixes: padding and sizing.
-    for c in &classes {
-        if let Some((tail, rule)) = match_sx_scale_rule(c) {
-            apply_sx_scale(&mut style, rule, tail, &elem.style);
-        }
-    }
+    // 3. Scale-driven sx prefixes: padding and sizing (attr-gated compounds).
+    style_scale::apply_scale_classes(&mut style, &classes, &elem.attrs);
 
     // 4. Fallback `style:` width / height declarations (e.g. `style:w="full"`).
     apply_style_size(&mut style, &elem.style);
@@ -96,7 +100,11 @@ pub fn resolve(elem: &Element, elements: &[Element], viewport_width: f32) -> Res
         style.align_content = Some(AlignContent::STRETCH);
     }
 
-    ResolvedStyle { style, role: Role::None, visibility: Visibility::Visible }
+    ResolvedStyle {
+        style,
+        role: Role::None,
+        visibility: Visibility::Visible,
+    }
 }
 
 fn rule_matches(selector: Selector, classes: &[&str], parent_classes: &[&str]) -> bool {
@@ -130,12 +138,16 @@ fn apply_declarations(
                 };
             }
             Declaration::AlignItems(a) => style.align_items = Some(to_taffy_align_items(a)),
-            Declaration::JustifyContent(j) => style.justify_content = Some(to_taffy_justify_content(j)),
+            Declaration::JustifyContent(j) => {
+                style.justify_content = Some(to_taffy_justify_content(j))
+            }
             Declaration::Position(p) => style.position = to_taffy_position(p),
-            Declaration::Overflow { x, y } => style.overflow = taffy::Point {
-                x: to_taffy_overflow(x),
-                y: to_taffy_overflow(y),
-            },
+            Declaration::Overflow { x, y } => {
+                style.overflow = taffy::Point {
+                    x: to_taffy_overflow(x),
+                    y: to_taffy_overflow(y),
+                }
+            }
             Declaration::FlexGrow(g) => style.flex_grow = g,
             Declaration::FlexShrink(s) => style.flex_shrink = s,
             Declaration::MinWidth(d) => style.min_size.width = to_taffy_dimension(d),
@@ -170,7 +182,7 @@ fn apply_declarations(
         }
     }
 
-    // Grid span from `data-col-span` / `data-row-span` is applied after all
+    // Grid span from `col-span` / `row-span` is applied after all
     // class rules so it can be collapsed below the breakpoint.
     if viewport_width >= 720.0 {
         if let Some(n) = elem.col_span {
@@ -315,7 +327,14 @@ fn apply_grid_template(style: &mut Style, is_cols: bool, template: GridTemplate)
 fn apply_padding(style: &mut Style, side: PaddingSide, px: f32) {
     let v = LengthPercentage::length(px);
     match side {
-        PaddingSide::All => style.padding = taffy::Rect { top: v, right: v, bottom: v, left: v },
+        PaddingSide::All => {
+            style.padding = taffy::Rect {
+                top: v,
+                right: v,
+                bottom: v,
+                left: v,
+            }
+        }
         PaddingSide::X => {
             style.padding.right = v;
             style.padding.left = v;
@@ -341,137 +360,33 @@ fn grid_count_from_class(c: &str) -> Option<(bool, GridTemplate)> {
     None
 }
 
-fn match_sx_scale_rule(c: &str) -> Option<(&str, SxScaleRule)> {
-    for (prefix, rule) in SX_SCALE_RULES {
-        if let Some(tail) = c.strip_prefix(prefix) {
-            return Some((tail, *rule));
-        }
-    }
-    None
-}
-
-fn apply_sx_scale(
-    style: &mut Style,
-    rule: SxScaleRule,
-    value: &str,
-    _style_map: &std::collections::HashMap<String, String>,
-) {
-    match rule {
-        SxScaleRule::Padding(side) => {
-            let px = padding_token_to_px(value);
-            apply_padding(style, map_padding_side(side), px);
-        }
-        SxScaleRule::Width => style.size.width = size_token_to_dimension(value),
-        SxScaleRule::Height => style.size.height = size_token_to_dimension(value),
-        SxScaleRule::MinWidth => style.min_size.width = size_token_to_dimension(value),
-        SxScaleRule::MinHeight => style.min_size.height = size_token_to_dimension(value),
-        SxScaleRule::MaxWidth => style.max_size.width = size_token_to_dimension(value),
-        SxScaleRule::MaxHeight => style.max_size.height = size_token_to_dimension(value),
-    }
-}
-
-fn map_padding_side(side: SideSet) -> PaddingSide {
-    match side {
-        SideSet::All => PaddingSide::All,
-        SideSet::X => PaddingSide::X,
-        SideSet::Y => PaddingSide::Y,
-        SideSet::T => PaddingSide::T,
-        SideSet::R => PaddingSide::R,
-        SideSet::B => PaddingSide::B,
-        SideSet::L => PaddingSide::L,
-    }
-}
-
 fn apply_style_size(style: &mut Style, map: &std::collections::HashMap<String, String>) {
     if let Some(v) = map.get("w") {
-        if let Some(d) = parse_css_length(v) {
-            style.size.width = d;
+        if let Some(n) = parse_simple_px(v) {
+            style.size.width = Dimension::length(n);
+        } else if v == "full" || v.ends_with('%') {
+            if v == "full" {
+                style.size.width = Dimension::percent(1.0);
+            } else if let Some(rest) = v.strip_suffix('%') {
+                if let Ok(n) = rest.parse::<f32>() {
+                    style.size.width = Dimension::percent(n / 100.0);
+                }
+            }
         }
     }
     if let Some(v) = map.get("h") {
-        if let Some(d) = parse_css_length(v) {
-            style.size.height = d;
+        if let Some(n) = parse_simple_px(v) {
+            style.size.height = Dimension::length(n);
         }
     }
 }
 
-fn token_px_for_space(step: u32) -> f32 {
-    match step {
-        1 => 4.0,
-        2 => 8.0,
-        3 => 12.0,
-        4 => 16.0,
-        5 => 20.0,
-        6 => 24.0,
-        7 => 28.0,
-        8 => 32.0,
-        9 => 36.0,
-        10 => 40.0,
-        11 => 44.0,
-        12 => 48.0,
-        14 => 56.0,
-        16 => 64.0,
-        20 => 80.0,
-        24 => 96.0,
-        28 => 112.0,
-        32 => 128.0,
-        _ => step as f32 * 4.0,
-    }
-}
-
-fn padding_token_to_px(value: &str) -> f32 {
-    if value == "0" {
-        return 0.0;
-    }
-    if value == "density" {
-        return 8.0;
-    }
-    if let Ok(step) = value.parse::<u32>() {
-        return token_px_for_space(step);
-    }
-    0.0
-}
-
-fn size_token_to_dimension(value: &str) -> Dimension {
-    match value {
-        "0" => Dimension::length(0.0),
-        "auto" => Dimension::auto(),
-        "full" => Dimension::percent(1.0),
-        "screen" => Dimension::percent(1.0),
-        "fill" => Dimension::percent(1.0),
-        "fit" => Dimension::auto(),
-        "min" => Dimension::auto(),
-        "max" => Dimension::auto(),
-        other => match scales::lower("size", other) {
-            Some(s) => parse_css_length(&s).unwrap_or(Dimension::auto()),
-            None => Dimension::auto(),
-        },
-    }
-}
-
-fn parse_css_length(v: &str) -> Option<Dimension> {
+fn parse_simple_px(v: &str) -> Option<f32> {
     let v = v.trim();
-    if v.is_empty() {
-        return None;
-    }
     if v == "0" {
-        return Some(Dimension::length(0.0));
+        return Some(0.0);
     }
-    if let Some(rest) = v.strip_suffix("px") {
-        let n: f32 = rest.parse().ok()?;
-        return Some(Dimension::length(n));
-    }
-    if let Some(rest) = v.strip_suffix("rem") {
-        let n: f32 = rest.parse().ok()?;
-        return Some(Dimension::length(n * 16.0));
-    }
-    if v.ends_with('%') {
-        if let Some(rest) = v.strip_suffix('%') {
-            let n: f32 = rest.parse().ok()?;
-            return Some(Dimension::percent(n / 100.0));
-        }
-    }
-    None
+    v.strip_suffix("px")?.trim().parse().ok()
 }
 
 #[cfg(test)]
@@ -503,8 +418,16 @@ mod tests {
             class: "sail-row sail-nowrap".into(),
             ..Default::default()
         };
-        assert_eq!(resolve(&row, &[Element::default()], 1440.0).style.flex_wrap, FlexWrap::Wrap);
-        assert_eq!(resolve(&nowrap, &[Element::default()], 1440.0).style.flex_wrap, FlexWrap::NoWrap);
+        assert_eq!(
+            resolve(&row, &[Element::default()], 1440.0).style.flex_wrap,
+            FlexWrap::Wrap
+        );
+        assert_eq!(
+            resolve(&nowrap, &[Element::default()], 1440.0)
+                .style
+                .flex_wrap,
+            FlexWrap::NoWrap
+        );
     }
 
     #[test]

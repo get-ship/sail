@@ -4,7 +4,7 @@
 //! via `Object.assign`. Components have always done this; this test
 //! locks in the parity for routes.
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn route_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {
@@ -26,7 +26,8 @@ fn route_with_paired_controller_emits_import() {
     let out = compile(src, route_opts(Some("./index.controller.ts")))
         .expect("compile view + paired controller");
     assert!(
-        out.js.contains("import setup from \"./index.controller.ts\""),
+        out.js
+            .contains("import setup from \"./index.controller.ts\""),
         "expected sibling controller import, got:\n{}",
         out.js
     );

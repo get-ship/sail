@@ -30,33 +30,61 @@ use crate::ir::expr::Expr;
 /// (`new`, `await`, `yield`, `this`, …) are rejected on an independent path
 /// in `check_call` / `FORBIDDEN_KEYWORDS`.
 const METHOD_ALLOWLIST: &[&str] = &[
-    "slice", "map", "filter", "includes", "toString", "length", "keys", "values", "entries",
+    "slice",
+    "map",
+    "filter",
+    "includes",
+    "toString",
+    "length",
+    "keys",
+    "values",
+    "entries",
     // Read-only Set / Map membership accessors — `selected.has(id)` /
     // `map.get(id)`. Referentially transparent, no I/O, same shape as the
     // already-allowlisted `includes` / `keys` / `values` / `entries`. Without
     // these, the natural canvas idiom `selectedSet().has(n.id)` rejects as a
     // bare `expr` CompileError with no rule-id (#263-B).
-    "has", "get",
+    "has",
+    "get",
     // Deterministic formatters — referentially transparent, no I/O, no eval-shaped
     // arguments. Real agent friction: writing `count.toFixed(2)` in a template is
     // the natural shape and used to reject; documenting the workaround in SKILL is
     // strictly worse than admitting it.
     "toFixed",
     // String predicates / search — read-only, no I/O, no mutation.
-    "startsWith", "endsWith", "indexOf", "lastIndexOf",
+    "startsWith",
+    "endsWith",
+    "indexOf",
+    "lastIndexOf",
     // String formatters / shapers — pure, deterministic, no I/O.
-    "trim", "trimStart", "trimEnd", "toLowerCase", "toUpperCase",
-    "padStart", "padEnd", "repeat", "charAt", "charCodeAt", "concat",
+    "trim",
+    "trimStart",
+    "trimEnd",
+    "toLowerCase",
+    "toUpperCase",
+    "padStart",
+    "padEnd",
+    "repeat",
+    "charAt",
+    "charCodeAt",
+    "concat",
     // Array / collection read-only access — same posture as the already-allowlisted
     // `map` / `filter`: callbacks are passed through verbatim, but the call sites
     // are restricted to method calls on identifiers / chains (not bare `expr`
     // calls), so the callback body itself is checked by the surrounding rules.
-    "at", "join", "find", "findIndex", "some", "every", "flat",
+    "at",
+    "join",
+    "find",
+    "findIndex",
+    "some",
+    "every",
+    "flat",
 ];
 
 /// Forbidden keywords that may appear bare in an expression.
-const FORBIDDEN_KEYWORDS: &[&str] =
-    &["new", "await", "yield", "this", "function", "delete", "void"];
+const FORBIDDEN_KEYWORDS: &[&str] = &[
+    "new", "await", "yield", "this", "function", "delete", "void",
+];
 
 /// Run the renderable subset check on a single expression. Returns a
 /// span-bearing error on failure.
@@ -158,7 +186,11 @@ fn check_spread_position(b: &[u8], at: usize, span: Span, src: &str) -> Result<(
         if matches!(p, b'[' | b'{' | b',') {
             return Ok(());
         }
-        return Err(reject(span, "spread is only allowed inside array or object literals".into(), src));
+        return Err(reject(
+            span,
+            "spread is only allowed inside array or object literals".into(),
+            src,
+        ));
     }
     Ok(())
 }
@@ -300,8 +332,24 @@ fn looks_like_regex(bytes: &[u8], at: usize) -> bool {
         }
         return matches!(
             p,
-            b'=' | b',' | b'(' | b'?' | b':' | b'!' | b'&' | b'|' | b'<' | b'>'
-                | b'+' | b'*' | b'%' | b'^' | b'~' | b'/' | b';' | b'{' | b'['
+            b'=' | b','
+                | b'('
+                | b'?'
+                | b':'
+                | b'!'
+                | b'&'
+                | b'|'
+                | b'<'
+                | b'>'
+                | b'+'
+                | b'*'
+                | b'%'
+                | b'^'
+                | b'~'
+                | b'/'
+                | b';'
+                | b'{'
+                | b'['
         );
     }
     true

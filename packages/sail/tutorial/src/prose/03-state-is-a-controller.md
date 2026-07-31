@@ -93,7 +93,7 @@ The starter's clock never ticks:
    `clearInterval` cleanup. Flip Start/Pause and convince yourself the
    old timer dies each time the effect re-runs.
 2. **Add laps** (TODO 2 + 3). A `laps` signal of `{ id, at }` records
-   `clock()` at press time; render it with a keyed `{#for}`.
+   `clock()` at press time; render it with a keyed `<for>`.
 3. **Persist across reloads.** Add an effect that writes `elapsed()` to
    `localStorage`, and seed the signal from it. State that outlives the
    page is still just a signal plus an effect at the edge.

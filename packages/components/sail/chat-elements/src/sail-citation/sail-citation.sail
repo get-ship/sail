@@ -25,9 +25,8 @@
   }
 </scope>
 
-
 <controller>
-import { controller } from '@ship/sail-runtime'
+
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-citation.sail'
 

@@ -153,7 +153,11 @@ pub fn find_spring(duration_ms: f64, bounce: f64, velocity: f64, mass: f64) -> (
     // Clamp the damping ratio and duration. `dampingRatio = 1 - bounce`,
     // matching Motion.
     let mut damping_ratio = 1.0 - bounce;
-    damping_ratio = clamp(defaults::MIN_DAMPING_RATIO, defaults::MAX_DAMPING_RATIO, damping_ratio);
+    damping_ratio = clamp(
+        defaults::MIN_DAMPING_RATIO,
+        defaults::MAX_DAMPING_RATIO,
+        damping_ratio,
+    );
 
     let duration_s = clamp(
         defaults::MIN_DURATION_S,
@@ -173,7 +177,8 @@ pub fn find_spring(duration_ms: f64, bounce: f64, velocity: f64, mass: f64) -> (
             let exponential_decay = undamped_freq * damping_ratio;
             let delta = exponential_decay * duration_s;
             let a = exponential_decay - velocity;
-            let angular_freq = undamped_freq * (1.0 - damping_ratio * damping_ratio).max(0.0).sqrt();
+            let angular_freq =
+                undamped_freq * (1.0 - damping_ratio * damping_ratio).max(0.0).sqrt();
             let b = angular_freq;
             let c = (-delta).exp();
             safe_min - (a / b) * c
@@ -265,12 +270,14 @@ pub fn solve_spring_analytical(cfg: &SpringConfig, t_seconds: f64) -> f64 {
 
     if damping_ratio < 1.0 {
         let angular_freq = undamped_freq * (1.0 - damping_ratio * damping_ratio).max(0.0).sqrt();
-        let a_coeff = (initial_velocity_s + damping_ratio * undamped_freq * initial_delta)
-            / angular_freq;
+        let a_coeff =
+            (initial_velocity_s + damping_ratio * undamped_freq * initial_delta) / angular_freq;
 
         let envelope = (-damping_ratio * undamped_freq * t_seconds).exp();
-        target - envelope * (a_coeff * (angular_freq * t_seconds).sin()
-            + initial_delta * (angular_freq * t_seconds).cos())
+        target
+            - envelope
+                * (a_coeff * (angular_freq * t_seconds).sin()
+                    + initial_delta * (angular_freq * t_seconds).cos())
     } else if (damping_ratio - 1.0).abs() < f64::EPSILON {
         // Critically damped.
         let envelope = (-undamped_freq * t_seconds).exp();
@@ -315,14 +322,15 @@ pub fn solve_spring_velocity_analytical(cfg: &SpringConfig, t_seconds: f64) -> f
 
     if damping_ratio < 1.0 {
         let angular_freq = undamped_freq * (1.0 - damping_ratio * damping_ratio).max(0.0).sqrt();
-        let a_coeff = (initial_velocity_s + damping_ratio * undamped_freq * initial_delta)
-            / angular_freq;
+        let a_coeff =
+            (initial_velocity_s + damping_ratio * undamped_freq * initial_delta) / angular_freq;
         let sin_coeff = damping_ratio * undamped_freq * a_coeff + initial_delta * angular_freq;
         let cos_coeff = damping_ratio * undamped_freq * initial_delta - a_coeff * angular_freq;
 
         let envelope = (-damping_ratio * undamped_freq * t_seconds).exp();
-        envelope * (sin_coeff * (angular_freq * t_seconds).sin()
-            + cos_coeff * (angular_freq * t_seconds).cos())
+        envelope
+            * (sin_coeff * (angular_freq * t_seconds).sin()
+                + cos_coeff * (angular_freq * t_seconds).cos())
     } else if (damping_ratio - 1.0).abs() < f64::EPSILON {
         let envelope = (-undamped_freq * t_seconds).exp();
         let c = initial_velocity_s + undamped_freq * initial_delta;

@@ -32,7 +32,7 @@
 </scope>
 
 <controller>
-import { controller, derived } from '@ship/sail-runtime'
+
 import type { Scope } from './sail-annotation-marker.sail'
 
 interface BoxRect {
@@ -66,7 +66,7 @@ export default controller(({ kind, rect, index, active }: Scope) => ({
   }))
 
 </controller>
-<if cond={isPoint()}>
+<if {isPoint()}>
   <div use:pin={{x: x(), y: y()}} sx={style.position(absolute).w(0).h(0).left(bind(pinX)).top(bind(pinY))}>
     <center sx={style.h(0)}>
       <row
@@ -79,7 +79,7 @@ export default controller(({ kind, rect, index, active }: Scope) => ({
       >{badge()}</row>
     </center>
   </div>
-<else-if cond={hasBox()}>
+<else-if {hasBox()}>
   <div
     role="button"
     tabindex="0"

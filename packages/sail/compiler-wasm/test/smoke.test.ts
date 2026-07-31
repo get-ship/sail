@@ -107,7 +107,7 @@ describe('@ship/sail-compiler-wasm', () => {
     expect(vocab.modifiers.some((m) => m.canonical === 'preventDefault')).toBe(true)
     expect(vocab.modifiers.some((m) => m.canonical === 'preventDefault' && m.alias === 'prevent')).toBe(true)
     expect(vocab.bind_targets.map((b) => b.target)).toContain('value')
-    expect(vocab.blocks.map((b) => b.open)).toContain('<match on={…}>')
+    expect(vocab.blocks.map((b) => b.open)).toContain('<match {…}>')
     expect(vocab.directives.some((d) => d.syntax.includes('on:'))).toBe(true)
     expect(vocab.retired_directives.some((d) => d.syntax.includes('style:'))).toBe(true)
     expect(vocab.motion_value_forms.some((f) => f.form.includes('quoted'))).toBe(true)

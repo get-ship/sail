@@ -22,7 +22,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ ssrConfig, buildC
   <p>With SSR the route's markup is in the <strong>raw server bytes</strong> — good for first paint and for crawlers. (This docs site itself runs CSR; deck's SSR path is proven by the framework's own browser test harness.)</p>
 
   <h2>Either way, one static dir</h2>
-  <p>Whichever mode you pick, <code>deck build</code> produces a self-contained static directory.</p>
+  <p>Whichever mode you pick, <code>sail build</code> produces a self-contained static directory.</p>
   <pre data-code-block="true">{buildCmd}</pre>
 
   <div role="navigation">

@@ -17,7 +17,7 @@ export default controller(() => {
       active,
       // TODO 1: this only updates the label — the page never repaints.
       // applyTheme(id) is the ONLY writer of the theme state (data-theme on
-      // <html> plus the canonical .dark class); persistTheme(id) makes the
+      // <html> data-theme + data-mode); persistTheme(id) makes the
       // choice survive a reload. Import both from '@ship/tokens/themes'
       // and call them here.
       pick: (id: ThemeId): void => {
@@ -41,7 +41,7 @@ export default controller(() => {
   </row>
 
   <row gap="1" align="center">
-    <for as="t" of={themes()} key={t.id}>
+    <for {themes()} as="t" key={t.id}>
       <button size="sm" tone="primary" variant={active() === t.id ? 'solid' : 'ghost'} on:click={() => pick(t.id)}>
         {t.label}
       </button>

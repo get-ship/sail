@@ -22,6 +22,16 @@
 //! - `variants` — the `<variants>` prop→style table (`sail-no-variants`)
 //! - `raw_containers` — raw `<div>`/`<span>` (`sail-no-raw-container`)
 //!
+//! A fourth key controls the compose auto-fix tier:
+//! - `compose_rhythm` — when `true` (default), `sail-compose-rhythm` findings
+//!   are emitted at `fix` severity and may be auto-repaired; when `false`, the
+//!   rule downgrades to a warning and the compiler never rewrites spacing.
+//!
+//! Compose autofix **preset** (orthogonal to styling full/strict):
+//! - `autofix: "repair"` (default) — confluent fixes on, ambiguities warn
+//! - `autofix: "strict"` — compose findings as Error (no silent rewrite)
+//! - `autofix: "off"` — compose pass silent
+//!
 //! ## The presets
 //!
 //! - [`Policy::FULL`] — primitive-authoring: every capability on. Where the SAIL
@@ -86,8 +96,7 @@ pub const FLOOR_RULES: [&str; 5] = [
 /// declares it wants closed. [`Policy::capabilities`] and
 /// [`Policy::capability_defaults_for`] both derive from this one list, so a
 /// fourth key is added in exactly one place.
-pub const CAPABILITY_RULES: [&str; 3] =
-    ["sail-no-sx", "sail-no-variants", "sail-no-raw-container"];
+pub const CAPABILITY_RULES: [&str; 3] = ["sail-no-sx", "sail-no-variants", "sail-no-raw-container"];
 
 /// True iff `rule` is a floor rule — one the compiler promotes to `Error`
 /// unconditionally and that no `lint_override` can soften. See [`FLOOR_RULES`].
@@ -95,8 +104,31 @@ pub fn is_floor_rule(rule: &str) -> bool {
     FLOOR_RULES.contains(&rule)
 }
 
+/// Compose autofix preset (AUTOFIX-1 contract).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum AutofixPreset {
+    /// Confluent fixes on; ambiguities warn. Default.
+    #[default]
+    Repair,
+    /// All compose findings as Error (no auto-rewrite path).
+    Strict,
+    /// Compose pass off.
+    Off,
+}
+
+impl AutofixPreset {
+    pub fn parse(s: &str) -> Option<Self> {
+        match s.trim().to_ascii_lowercase().as_str() {
+            "repair" | "fix" | "on" => Some(Self::Repair),
+            "strict" | "error" => Some(Self::Strict),
+            "off" | "false" | "0" => Some(Self::Off),
+            _ => None,
+        }
+    }
+}
+
 /// A package's styling policy: the (implicit, non-overridable) floor plus the
-/// three capability keys. See the module docs.
+/// three capability keys and the compose auto-fix key. See the module docs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Policy {
     /// The `sx="…"` token styling surface.
@@ -105,22 +137,48 @@ pub struct Policy {
     pub variants: bool,
     /// Raw `<div>`/`<span>` containers.
     pub raw_containers: bool,
+    /// Auto-fix sibling rhythm violations (`sail-compose-rhythm`).
+    pub compose_rhythm: bool,
+    /// Compose autofix preset: repair | strict | off.
+    pub autofix: AutofixPreset,
 }
 
 impl Policy {
     /// `full` — primitive-authoring: every capability unlocked (the floor still
     /// holds). Where the primitives are built and dissolved.
-    pub const FULL: Policy = Policy { sx: true, variants: true, raw_containers: true };
+    pub const FULL: Policy = Policy {
+        sx: true,
+        variants: true,
+        raw_containers: true,
+        compose_rhythm: true,
+        autofix: AutofixPreset::Repair,
+    };
 
     /// `strict` — app-authoring: every capability off. Compose primitives and use
     /// their props; no `sx`, no `<variants>`, no raw boxes.
-    pub const STRICT: Policy = Policy { sx: false, variants: false, raw_containers: false };
+    pub const STRICT: Policy = Policy {
+        sx: false,
+        variants: false,
+        raw_containers: false,
+        compose_rhythm: true,
+        autofix: AutofixPreset::Repair,
+    };
 
     /// Parse a preset name. Unknown names return `None`.
     pub fn preset(name: &str) -> Option<Policy> {
         match name.trim() {
             "full" => Some(Policy::FULL),
             "strict" => Some(Policy::STRICT),
+            // Autofix-only presets keep capability defaults of FULL and set autofix.
+            "repair" => Some(Policy {
+                autofix: AutofixPreset::Repair,
+                ..Policy::FULL
+            }),
+            "off" => Some(Policy {
+                autofix: AutofixPreset::Off,
+                compose_rhythm: false,
+                ..Policy::FULL
+            }),
             _ => None,
         }
     }
@@ -147,7 +205,10 @@ impl Policy {
     pub fn floor() -> Vec<LintOverride> {
         FLOOR_RULES
             .iter()
-            .map(|rule| LintOverride { rule: rule.to_string(), severity: OverrideSeverity::Error })
+            .map(|rule| LintOverride {
+                rule: rule.to_string(),
+                severity: OverrideSeverity::Error,
+            })
             .collect()
     }
 
@@ -195,6 +256,22 @@ impl Policy {
         }
     }
 
+    /// The `sail-compose-rhythm` severity implied by this policy: `Fix` when
+    /// auto-fix is enabled (the default), `Warning` when the package opts out.
+    pub fn compose_rhythm_severity(self) -> OverrideSeverity {
+        match self.autofix {
+            AutofixPreset::Off => OverrideSeverity::Off,
+            AutofixPreset::Strict => OverrideSeverity::Error,
+            AutofixPreset::Repair => {
+                if self.compose_rhythm {
+                    OverrideSeverity::Fix
+                } else {
+                    OverrideSeverity::Warn
+                }
+            }
+        }
+    }
+
     /// The capability-rule severities that apply to `path` when the host has
     /// NOT named the rule itself — the seam that keeps `analyze()` honest
     /// about what `compile()` will do.
@@ -213,7 +290,10 @@ impl Policy {
     ///
     /// Host-supplied overrides still win: anything already named in
     /// `host_overrides` is left alone.
-    pub fn capability_defaults_for(path: &Path, host_overrides: &[LintOverride]) -> Vec<LintOverride> {
+    pub fn capability_defaults_for(
+        path: &Path,
+        host_overrides: &[LintOverride],
+    ) -> Vec<LintOverride> {
         let declared = Policy::resolve_opt(path);
         CAPABILITY_RULES
             .iter()
@@ -265,8 +345,18 @@ impl Policy {
     /// build its announce/refuse message; tests use it directly to pin the
     /// exact wording without depending on the log seam's stderr output.
     pub fn resolve_outcome(source_file: &Path) -> Option<(PathBuf, PolicyResolution)> {
-        let (config_path, cfg) = sail_lint::config::resolve(source_file.parent()?)?;
-        Some((config_path, classify(&cfg)))
+        // std::fs panics on wasm32 (unsupported platform op): no config
+        // resolution in the browser — defaults apply, same as "no config found".
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = source_file;
+            return None;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let (config_path, cfg) = sail_lint::config::resolve(source_file.parent()?)?;
+            Some((config_path, classify(&cfg)))
+        }
     }
 
     /// The resolved `"network"` per-origin allowlist for a source file's
@@ -383,7 +473,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
                 return PolicyResolution {
                     tier: Policy::STRICT,
                     kind: ResolutionKind::Rejected(format!(
-                        "unrecognized preset \"{name}\" (expected \"full\" or \"strict\")"
+                        "unrecognized preset \"{name}\" (expected \"full\", \"strict\", \"repair\", or \"off\")"
                     )),
                     network: Vec::new(),
                     unconfined: false,
@@ -391,16 +481,38 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
             }
         }
     }
-    for key in ["sx", "variants", "raw_containers"] {
+    for key in ["sx", "variants", "raw_containers", "compose_rhythm"] {
         if let Some(b) = cfg.bool_key(key) {
             match key {
                 "sx" => p.sx = b,
                 "variants" => p.variants = b,
                 "raw_containers" => p.raw_containers = b,
+                "compose_rhythm" => p.compose_rhythm = b,
                 // Loop list above is exhaustive; stay total without panicking.
                 _ => {}
             }
             signal.push(format!("{key}: {b}"));
+        }
+    }
+    if let Some(af) = cfg.string_key("autofix") {
+        match AutofixPreset::parse(&af) {
+            Some(preset) => {
+                p.autofix = preset;
+                if preset == AutofixPreset::Off {
+                    p.compose_rhythm = false;
+                }
+                signal.push(format!("autofix: {af}"));
+            }
+            None => {
+                return PolicyResolution {
+                    tier: Policy::STRICT,
+                    kind: ResolutionKind::Rejected(format!(
+                        "unrecognized autofix \"{af}\" (expected \"repair\", \"strict\", or \"off\")"
+                    )),
+                    network: Vec::new(),
+                    unconfined: false,
+                };
+            }
         }
     }
 
@@ -448,9 +560,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
             Err(()) => {
                 return PolicyResolution {
                     tier: Policy::STRICT,
-                    kind: ResolutionKind::Rejected(
-                        "\"unconfined\" must be a boolean".to_string(),
-                    ),
+                    kind: ResolutionKind::Rejected("\"unconfined\" must be a boolean".to_string()),
                     network: Vec::new(),
                     unconfined: false,
                 };
@@ -476,7 +586,12 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
             unconfined: false,
         }
     } else {
-        PolicyResolution { tier: p, kind: ResolutionKind::Recognized(signal.join(", ")), network, unconfined }
+        PolicyResolution {
+            tier: p,
+            kind: ResolutionKind::Recognized(signal.join(", ")),
+            network,
+            unconfined,
+        }
     }
 }
 
@@ -542,7 +657,11 @@ mod tests {
     use super::*;
 
     fn sev(p: Policy, rule: &str) -> OverrideSeverity {
-        p.overrides().iter().find(|o| o.rule == rule).unwrap().severity
+        p.overrides()
+            .iter()
+            .find(|o| o.rule == rule)
+            .unwrap()
+            .severity
     }
 
     /// Derive a tier from config JSON text — the tier half of the resolution,
@@ -572,14 +691,23 @@ mod tests {
     fn full_unlocks_every_capability() {
         assert_eq!(sev(Policy::FULL, "sail-no-sx"), OverrideSeverity::Off);
         assert_eq!(sev(Policy::FULL, "sail-no-variants"), OverrideSeverity::Off);
-        assert_eq!(sev(Policy::FULL, "sail-no-raw-container"), OverrideSeverity::Off);
+        assert_eq!(
+            sev(Policy::FULL, "sail-no-raw-container"),
+            OverrideSeverity::Off
+        );
     }
 
     #[test]
     fn strict_forbids_every_capability() {
         assert_eq!(sev(Policy::STRICT, "sail-no-sx"), OverrideSeverity::Error);
-        assert_eq!(sev(Policy::STRICT, "sail-no-variants"), OverrideSeverity::Error);
-        assert_eq!(sev(Policy::STRICT, "sail-no-raw-container"), OverrideSeverity::Error);
+        assert_eq!(
+            sev(Policy::STRICT, "sail-no-variants"),
+            OverrideSeverity::Error
+        );
+        assert_eq!(
+            sev(Policy::STRICT, "sail-no-raw-container"),
+            OverrideSeverity::Error
+        );
     }
 
     #[test]
@@ -614,13 +742,19 @@ mod tests {
     #[test]
     fn unknown_key_or_broken_json_is_rejected_and_fails_closed_to_strict() {
         assert_eq!(tier(r#"{"other":1}"#), Policy::STRICT);
-        assert!(matches!(kind(r#"{"other":1}"#), ResolutionKind::Rejected(r) if r.contains("other")));
+        assert!(
+            matches!(kind(r#"{"other":1}"#), ResolutionKind::Rejected(r) if r.contains("other"))
+        );
 
         assert_eq!(tier("not json"), Policy::STRICT);
-        assert!(matches!(kind("not json"), ResolutionKind::Rejected(r) if r.contains("not valid JSON")));
+        assert!(
+            matches!(kind("not json"), ResolutionKind::Rejected(r) if r.contains("not valid JSON"))
+        );
 
         assert_eq!(tier(r#"{"preset":"bogus"}"#), Policy::STRICT);
-        assert!(matches!(kind(r#"{"preset":"bogus"}"#), ResolutionKind::Rejected(r) if r.contains("bogus")));
+        assert!(
+            matches!(kind(r#"{"preset":"bogus"}"#), ResolutionKind::Rejected(r) if r.contains("bogus"))
+        );
     }
 
     #[test]
@@ -682,13 +816,22 @@ mod tests {
     fn unknown_key_config_fails_closed_to_strict() {
         // A present config with no recognized policy signal (typo'd keys) is
         // still a declaration — fail closed to STRICT, not FULL.
-        assert_eq!(resolve_config(r#"{"polcy":"strict"}"#), Some(Policy::STRICT));
-        assert_eq!(resolve_config(r#"{"preset":"strictest"}"#), Some(Policy::STRICT));
+        assert_eq!(
+            resolve_config(r#"{"polcy":"strict"}"#),
+            Some(Policy::STRICT)
+        );
+        assert_eq!(
+            resolve_config(r#"{"preset":"strictest"}"#),
+            Some(Policy::STRICT)
+        );
     }
 
     #[test]
     fn recognized_preset_resolves_to_its_tier() {
-        assert_eq!(resolve_config(r#"{"preset":"strict"}"#), Some(Policy::STRICT));
+        assert_eq!(
+            resolve_config(r#"{"preset":"strict"}"#),
+            Some(Policy::STRICT)
+        );
         assert_eq!(resolve_config(r#"{"preset":"full"}"#), Some(Policy::FULL));
     }
 
@@ -722,7 +865,10 @@ mod tests {
         // The OLD key name never carried a tier either — and being an
         // unrecognized key, it now fails closed LOUDLY (Rejected), not silently.
         assert_eq!(tier(r#"{"policy":"floor"}"#), Policy::STRICT);
-        assert!(matches!(kind(r#"{"policy":"floor"}"#), ResolutionKind::Rejected(_)));
+        assert!(matches!(
+            kind(r#"{"policy":"floor"}"#),
+            ResolutionKind::Rejected(_)
+        ));
     }
 
     // ----------------------------------------------------------------------
@@ -760,7 +906,9 @@ mod tests {
 
     #[test]
     fn absent_network_key_resolves_to_an_empty_allowlist() {
-        let r = classify(&sail_lint::config::SailConfig::from_json(r#"{"preset":"full"}"#));
+        let r = classify(&sail_lint::config::SailConfig::from_json(
+            r#"{"preset":"full"}"#,
+        ));
         assert!(r.network.is_empty());
     }
 
@@ -769,7 +917,10 @@ mod tests {
         let r = classify(&sail_lint::config::SailConfig::from_json(
             r#"{"network":["https://api.example.com","self"]}"#,
         ));
-        assert_eq!(r.network, vec!["https://api.example.com".to_string(), "self".to_string()]);
+        assert_eq!(
+            r.network,
+            vec!["https://api.example.com".to_string(), "self".to_string()]
+        );
         assert!(matches!(&r.kind, ResolutionKind::Recognized(s) if s.contains("network:")));
     }
 
@@ -777,16 +928,24 @@ mod tests {
     fn empty_network_array_is_a_well_typed_no_grant_declaration() {
         // Explicit `[]` is not a type error — it's a declared "grant nothing",
         // same bucket as `"sx": false`: Recognized, not Rejected.
-        let r = classify(&sail_lint::config::SailConfig::from_json(r#"{"network":[]}"#));
+        let r = classify(&sail_lint::config::SailConfig::from_json(
+            r#"{"network":[]}"#,
+        ));
         assert!(r.network.is_empty());
-        assert!(matches!(&r.kind, ResolutionKind::Recognized(_)), "{:?}", r.kind);
+        assert!(
+            matches!(&r.kind, ResolutionKind::Recognized(_)),
+            "{:?}",
+            r.kind
+        );
     }
 
     #[test]
     fn non_array_network_value_is_a_type_error_and_fails_closed() {
         // `{"network": "https://x.com"}` — a string, not an array — must never
         // be silently treated as granting. Rejected, empty allowlist.
-        let r = classify(&sail_lint::config::SailConfig::from_json(r#"{"network":"https://x.com"}"#));
+        let r = classify(&sail_lint::config::SailConfig::from_json(
+            r#"{"network":"https://x.com"}"#,
+        ));
         assert!(r.network.is_empty());
         assert!(
             matches!(&r.kind, ResolutionKind::Rejected(reason) if reason.contains("network")),
@@ -797,9 +956,15 @@ mod tests {
 
     #[test]
     fn non_string_element_in_network_array_is_a_type_error() {
-        let r = classify(&sail_lint::config::SailConfig::from_json(r#"{"network":[1, 2]}"#));
+        let r = classify(&sail_lint::config::SailConfig::from_json(
+            r#"{"network":[1, 2]}"#,
+        ));
         assert!(r.network.is_empty());
-        assert!(matches!(&r.kind, ResolutionKind::Rejected(_)), "{:?}", r.kind);
+        assert!(
+            matches!(&r.kind, ResolutionKind::Rejected(_)),
+            "{:?}",
+            r.kind
+        );
     }
 
     #[test]
@@ -813,7 +978,10 @@ mod tests {
         let src = tmp.path().join("src").join("w.controller.ts");
         std::fs::create_dir_all(src.parent().unwrap()).unwrap();
         std::fs::write(&src, "export default {}").unwrap();
-        assert_eq!(Policy::network_for(&src), vec!["https://api.example.com".to_string()]);
+        assert_eq!(
+            Policy::network_for(&src),
+            vec!["https://api.example.com".to_string()]
+        );
 
         // No config anywhere on the walk → empty (today's default refusal).
         let tmp2 = tempfile::tempdir().unwrap();
@@ -857,5 +1025,37 @@ mod tests {
         assert!(msg.contains("/pkg/sail.config.json"), "{msg}");
         assert!(msg.contains("full"), "{msg}");
         assert!(msg.contains("preset: full"), "{msg}");
+    }
+
+    #[test]
+    fn styling_preset_strict_is_not_autofix_strict() {
+        // `preset: "strict"` turns styling capabilities off; autofix stays Repair.
+        let p = tier(r#"{"preset":"strict"}"#);
+        assert_eq!(p, Policy::STRICT);
+        assert_eq!(p.autofix, AutofixPreset::Repair);
+        assert_eq!(p.compose_rhythm_severity(), OverrideSeverity::Fix);
+    }
+
+    #[test]
+    fn autofix_key_sets_compose_severity() {
+        let repair = tier(r#"{"preset":"full","autofix":"repair"}"#);
+        assert_eq!(repair.autofix, AutofixPreset::Repair);
+        assert_eq!(repair.compose_rhythm_severity(), OverrideSeverity::Fix);
+
+        let strict = tier(r#"{"preset":"full","autofix":"strict"}"#);
+        assert_eq!(strict.autofix, AutofixPreset::Strict);
+        assert_eq!(strict.compose_rhythm_severity(), OverrideSeverity::Error);
+
+        let off = tier(r#"{"preset":"full","autofix":"off"}"#);
+        assert_eq!(off.autofix, AutofixPreset::Off);
+        assert_eq!(off.compose_rhythm_severity(), OverrideSeverity::Off);
+    }
+
+    #[test]
+    fn autofix_preset_names_parse() {
+        assert_eq!(AutofixPreset::parse("repair"), Some(AutofixPreset::Repair));
+        assert_eq!(AutofixPreset::parse("strict"), Some(AutofixPreset::Strict));
+        assert_eq!(AutofixPreset::parse("off"), Some(AutofixPreset::Off));
+        assert_eq!(AutofixPreset::parse("nope"), None);
     }
 }

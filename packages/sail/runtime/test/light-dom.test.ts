@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { component } from '../src/component-factory'
 import type { MountModule } from '../src/mount'
 
-// The contracts sheet is OPT-IN — a host normally links contracts.css, and the
+// The contracts sheet is OPT-IN — a host normally links sail-base.css, and the
 // framework does not put 30KB of CSS in a bundle that did not ask for it. This
 // side-effect import is what a JS-only host does instead, and it is the thing
 // under test below.

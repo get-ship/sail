@@ -59,6 +59,9 @@ pub struct Lowered {
     /// route's import graph (the per-route resolver). Collected once here; the
     /// emitter decides whether to write the imports.
     pub used_component_tags: BTreeSet<String>,
+    /// Static lucide glyph names from `<icon name="…">` / `use:icon` hosts.
+    /// The bundler emits these as `/_deck/icons/{name}.svg` assets (TOOL-10).
+    pub used_icons: BTreeSet<String>,
 }
 
 /// Walk the program, build a `Lowered` summary.
@@ -82,6 +85,7 @@ pub fn lower(program: &Program, is_route: bool) -> Result<Lowered, CompileError>
     let mut depth = 0;
     walk_instrs(&program.template, &mut out, is_route, &mut depth)?;
     out.used_component_tags = crate::used_tags::collect_used_tags(&program.template);
+    out.used_icons = crate::used_icons::collect_used_icons(&program.template);
     Ok(out)
 }
 
@@ -130,7 +134,7 @@ fn check_attr_for_route(a: &AttrInstr, out: &mut Lowered) {
         | AttrInstr::BindThis { .. }
         | AttrInstr::SlotReflectEmpty { .. }
         | AttrInstr::Motion { .. } => {}
-AttrInstr::Use { param, .. } => {
+        AttrInstr::Use { param, .. } => {
             if let Some(e) = param
                 && expr_references_route(&e.source)
             {
@@ -140,13 +144,23 @@ AttrInstr::Use { param, .. } => {
     }
 }
 
-fn walk_instrs(instrs: &[Instr], out: &mut Lowered, is_route: bool, depth: &mut usize) -> Result<(), CompileError> {
+fn walk_instrs(
+    instrs: &[Instr],
+    out: &mut Lowered,
+    is_route: bool,
+    depth: &mut usize,
+) -> Result<(), CompileError> {
     for instr in instrs {
         walk_instr(instr, out, is_route, depth)?;
     }
     Ok(())
 }
-fn walk_instr(instr: &Instr, out: &mut Lowered, is_route: bool, depth: &mut usize) -> Result<(), CompileError> {
+fn walk_instr(
+    instr: &Instr,
+    out: &mut Lowered,
+    is_route: bool,
+    depth: &mut usize,
+) -> Result<(), CompileError> {
     match instr {
         Instr::StaticText { .. } | Instr::Comment { .. } => {}
         Instr::DynamicText { expr } => {
@@ -203,7 +217,11 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_route: bool, depth: &mut usiz
             walk_instrs(&we.body, out, is_route, depth)?;
             *depth -= 1;
         }
-        Instr::If(IfInstr { branches, else_body, .. }) => {
+        Instr::If(IfInstr {
+            branches,
+            else_body,
+            ..
+        }) => {
             out.runtime_imports.insert("bindIf");
             if is_route && *depth == 0 {
                 out.dom_imports.insert("collectElementMarkers");
@@ -220,15 +238,19 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_route: bool, depth: &mut usiz
             }
             *depth -= 1;
         }
-        Instr::For(ForInstr { var_name, index_name, iterable, key, body, else_body, .. }) => {
+        Instr::For(ForInstr {
+            var_name,
+            index_name,
+            iterable,
+            key,
+            body,
+            else_body,
+            ..
+        }) => {
             out.runtime_imports.insert("bindFor");
             // the per-row update (i.e. emit_for will keep the `__v`
             // version sentinel). Static row bodies skip it.
-            if for_uses_row::body_references_for_vars(
-                body,
-                var_name,
-                index_name.as_deref(),
-            ) {
+            if for_uses_row::body_references_for_vars(body, var_name, index_name.as_deref()) {
                 out.runtime_imports.insert("signal");
             }
             if is_route && *depth == 0 {
@@ -238,9 +260,10 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_route: bool, depth: &mut usiz
                 if expr_references_route(&iterable.source) {
                     out.uses_route = true;
                 } else if let Some(k) = key
-                    && expr_references_route(&k.source) {
-                        out.uses_route = true;
-                    }
+                    && expr_references_route(&k.source)
+                {
+                    out.uses_route = true;
+                }
             }
             *depth += 1;
             walk_instrs(body, out, is_route, depth)?;
@@ -249,7 +272,12 @@ fn walk_instr(instr: &Instr, out: &mut Lowered, is_route: bool, depth: &mut usiz
             }
             *depth -= 1;
         }
-        Instr::Match(MatchInstr { discriminant, cases, default, .. }) => {
+        Instr::Match(MatchInstr {
+            discriminant,
+            cases,
+            default,
+            ..
+        }) => {
             out.runtime_imports.insert("bindIf");
             if is_route && *depth == 0 {
                 out.dom_imports.insert("collectElementMarkers");

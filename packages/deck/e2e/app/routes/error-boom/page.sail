@@ -2,9 +2,8 @@
 import { controller, effect } from '@ship/sail-runtime'
 
 // Deliberately throws from an effect on mount, with no
-// <sail-error-boundary> anywhere in this route — the exact no-boundary
-// path that used to reach only console.error (task #80). Proves the
-// deck dev overlay renders in that case.
+// <sail-error-boundary> anywhere in this route — the no-boundary path that
+// used to reach only console.error. Proves the deck dev overlay renders.
 export default controller(() => {
     effect(() => {
       throw new Error('deliberate boom for overlay e2e')

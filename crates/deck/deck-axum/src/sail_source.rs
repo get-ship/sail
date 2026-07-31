@@ -62,7 +62,11 @@ fn lookup_file(components_dir: &FsPath, tag: &str, suffix: &str) -> Option<Strin
             continue;
         };
         for pack in packs.flatten() {
-            let file = pack.path().join("src").join(tag).join(format!("{tag}{suffix}"));
+            let file = pack
+                .path()
+                .join("src")
+                .join(tag)
+                .join(format!("{tag}{suffix}"));
             if let Ok(body) = std::fs::read_to_string(&file) {
                 return Some(body);
             }
@@ -84,15 +88,19 @@ pub async fn serve_sail_source(
         return (StatusCode::NOT_FOUND, "source viewer needs a project root").into_response();
     };
     let Some(components) = find_components_dir(&root) else {
-        return (StatusCode::NOT_FOUND, "no packages/components under the project root").into_response();
+        return (
+            StatusCode::NOT_FOUND,
+            "no packages/components under the project root",
+        )
+            .into_response();
     };
 
-    let Some(sui_src) = lookup_file(&components, &tag, ".sail") else {
+    let Some(sail_src) = lookup_file(&components, &tag, ".sail") else {
         return (StatusCode::NOT_FOUND, "no such component").into_response();
     };
     let ctrl_src = lookup_file(&components, &tag, ".controller.ts");
 
-    let body = render_html(&tag, &sui_src, ctrl_src.as_deref());
+    let body = render_html(&tag, &sail_src, ctrl_src.as_deref());
     let mut resp = Html(body).into_response();
     resp.headers_mut().insert(
         axum::http::header::CACHE_CONTROL,
@@ -101,7 +109,7 @@ pub async fn serve_sail_source(
     resp
 }
 
-fn render_html(tag: &str, sui_src: &str, ctrl_src: Option<&str>) -> String {
+fn render_html(tag: &str, sail_src: &str, ctrl_src: Option<&str>) -> String {
     let ctrl = ctrl_src
         .map(html_escape)
         .unwrap_or_else(|| "<em>(no controller.ts)</em>".to_string());
@@ -116,10 +124,10 @@ pre{{background:#1a1a1d;padding:1rem;border-radius:6px;overflow:auto;margin:0}}\
 </style>\
 <h1>&lt;{tag}&gt; source</h1>\
 <h2>page.sail</h2>\
-<pre>{sui_src_esc}</pre>\
+<pre>{sail_src_esc}</pre>\
 <h2>controller.ts</h2>\
 <pre>{ctrl}</pre>",
-        sui_src_esc = html_escape(sui_src),
+        sail_src_esc = html_escape(sail_src),
     )
 }
 
@@ -182,7 +190,8 @@ mod tests {
         // Derive the components dir from a DEEPLY nested project root (walk up).
         let nested = root.join("apps/demo");
         std::fs::create_dir_all(&nested).unwrap();
-        let components = super::find_components_dir(&nested).expect("finds packages/components upward");
+        let components =
+            super::find_components_dir(&nested).expect("finds packages/components upward");
         assert_eq!(components, root.join("packages").join("components"));
 
         assert_eq!(
@@ -206,7 +215,10 @@ mod tests {
         let manifest_bake = concat!("env!(\"CARGO_", "MANIFEST_DIR\")");
         let sail_bucket = concat!("components/", "sail");
         let ship_bucket = concat!("components/", "ship");
-        assert!(!src.contains(manifest_bake), "no compile-time manifest-dir bake");
+        assert!(
+            !src.contains(manifest_bake),
+            "no compile-time manifest-dir bake"
+        );
         assert!(!src.contains(sail_bucket), "no hardcoded sail bucket path");
         assert!(!src.contains(ship_bucket), "no hardcoded ship bucket path");
     }

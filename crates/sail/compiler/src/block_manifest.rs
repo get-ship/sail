@@ -28,29 +28,29 @@ pub struct BlockEntry {
 /// then async blocks).
 pub const BLOCKS: &[BlockEntry] = &[
     BlockEntry {
-        open: "<if cond={…}>",
-        clauses: &["<else-if cond={…}>", "<else>"],
-        summary: "conditional branches; any number of <else-if>, optional trailing <else> as direct children",
+        open: "<if {…}>",
+        clauses: &["<else-if {…}>", "<else>"],
+        summary: "conditional branches; brace-primary predicate (residual: cond={…}); any number of <else-if>, optional trailing <else> as direct children",
     },
     BlockEntry {
-        open: "<for as=\"item\" of={…} key={…}>",
+        open: "<for {…} as=\"item\" key={…}>",
         clauses: &["<else>"],
-        summary: "iterate a list; `as` is the item binding, `of` the iterable, `key` required for stable DOM; optional `index`; <else> when empty",
+        summary: "iterate a list; brace-primary iterable (residual: of={…}); `as` item binding, `key` required for stable DOM; optional `index`; <else> when empty",
     },
     BlockEntry {
-        open: "<match on={…}>",
-        clauses: &["<case of={…}>", "<default>"],
-        summary: "pattern branches over a discriminant; any number of <case>, optional <default>",
+        open: "<match {…}>",
+        clauses: &["<case {…}>", "<default>"],
+        summary: "pattern branches over a brace-primary discriminant (residual: on={…}); cases use brace-primary or of={…}; optional <default>",
     },
     BlockEntry {
-        open: "<while-loading of=\"sig\">",
+        open: "<while-loading {sig}>",
         clauses: &[],
-        summary: "renders while an async query signal is pending",
+        summary: "renders while an async query signal is pending; brace-primary signal name (residual: of=\"sig\")",
     },
     BlockEntry {
-        open: "<while-error as=\"err\" of=\"sig\">",
+        open: "<while-error as=\"err\" {sig}>",
         clauses: &[],
-        summary: "renders while an async query signal is rejected; `as` names the error binding",
+        summary: "renders while an async query signal is rejected; `as` names the error binding; brace-primary or of= for the signal",
     },
 ];
 
@@ -63,12 +63,19 @@ mod tests {
         // Kept in lockstep by hand with blocks.rs's IF_TERMS/FOR_TERMS/
         // MATCH_TERMS (the parser's Discriminant variants carry no prose,
         // so this table can't be derived from them — see module docs).
-        let all_clauses: Vec<&str> = BLOCKS.iter().flat_map(|b| b.clauses.iter().copied()).collect();
-        assert!(all_clauses.contains(&"<else-if cond={…}>"));
+        let all_clauses: Vec<&str> = BLOCKS
+            .iter()
+            .flat_map(|b| b.clauses.iter().copied())
+            .collect();
+        assert!(all_clauses.contains(&"<else-if {…}>"));
         assert!(all_clauses.contains(&"<else>"));
-        assert!(all_clauses.contains(&"<case of={…}>"));
+        assert!(all_clauses.contains(&"<case {…}>"));
         assert!(all_clauses.contains(&"<default>"));
-        assert_eq!(BLOCKS.len(), 5, "one row per block kind: if, for, match, while-loading, while-error");
+        assert_eq!(
+            BLOCKS.len(),
+            5,
+            "one row per block kind: if, for, match, while-loading, while-error"
+        );
     }
 
     #[test]

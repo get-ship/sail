@@ -60,7 +60,10 @@ mod tests {
             "/_deck/views/demo/view.js?sub=anything",
         );
         // Empty sub is treated as no sub.
-        assert_eq!(route_module_url("demo", Some("")), "/_deck/views/demo/view.js");
+        assert_eq!(
+            route_module_url("demo", Some("")),
+            "/_deck/views/demo/view.js"
+        );
     }
 
     #[test]
@@ -78,7 +81,10 @@ mod tests {
     #[test]
     fn subscribe_url_builds_correct_url() {
         assert_eq!(subscribe_url("clock"), "/_deck/views/clock/sse");
-        assert_eq!(subscribe_url("studio/agents"), "/_deck/views/studio/agents/sse");
+        assert_eq!(
+            subscribe_url("studio/agents"),
+            "/_deck/views/studio/agents/sse"
+        );
     }
 }
 
@@ -103,7 +109,9 @@ pub fn route_params_for(route_path: &std::path::Path) -> Option<Vec<String>> {
         .components()
         .filter_map(|c| c.as_os_str().to_str())
         .collect();
-    let anchor = comps.iter().rposition(|c| *c == "routes" || *c == "views")?;
+    let anchor = comps
+        .iter()
+        .rposition(|c| *c == "routes" || *c == "views")?;
     let params = comps[anchor + 1..]
         .iter()
         .filter_map(|seg| seg.strip_prefix('[').and_then(|s| s.strip_suffix(']')))
@@ -137,7 +145,10 @@ mod route_params_tests {
 
     #[test]
     fn non_route_files_get_no_grant() {
-        assert_eq!(route_params_for(Path::new("/x/packs/sail-badge/badge.sail")), None);
+        assert_eq!(
+            route_params_for(Path::new("/x/packs/sail-badge/badge.sail")),
+            None
+        );
         assert_eq!(
             route_params_for(Path::new("/x/routes/tutorial/[slug]/lesson.ts")),
             None

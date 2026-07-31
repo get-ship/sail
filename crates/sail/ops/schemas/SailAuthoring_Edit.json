@@ -1,0 +1,108 @@
+{
+  "service": "SailAuthoring",
+  "method": "Edit",
+  "mcp_tool": "sail_edit",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "description": "Attribution for applied auto-fixes.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "autofix": {
+        "description": "Auto-fix mode: `off` | `suggest` | `apply` (default `off`).",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "dryRun": {
+        "description": "When true, validate and return result without writing disk.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "ops": {
+        "description": "Atomic batch of structured ops (`insert`/`replace`/`wrap`/`setAttr`/ `removeAttr`/`setSx`/`move`).",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "path": {
+        "description": "Workspace-relative `.sail` path (required to write; used for node identity).",
+        "type": "string"
+      },
+      "source": {
+        "description": "Optional inline source (else file is read). Dry-run without write when combined with dryRun.",
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "ops",
+      "path"
+    ],
+    "definitions": {
+      "Json": {}
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "EditRet",
+    "type": "object",
+    "required": [
+      "applied",
+      "autoFixed",
+      "diagnostics",
+      "modelRevision"
+    ],
+    "properties": {
+      "applied": {
+        "type": "boolean"
+      },
+      "autoFixed": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "diagnostics": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "message": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "modelRevision": {
+        "type": "string"
+      },
+      "path": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "source": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

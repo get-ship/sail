@@ -14,7 +14,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 /// GENERATE the skill rather than reading the checked-in one. The shipped copy lives
 /// under `.claude/`, which is gitignored — so a test that merely READ it would
@@ -43,18 +43,21 @@ fn generate_skill() -> Option<String> {
 
 /// Fenced blocks that are SAIL source — i.e. contain a tag or a block the compiler
 /// owns. Skips prose fences and pure-TS snippets (which are not `.sail` files).
-fn sui_examples(md: &str) -> Vec<String> {
+fn sail_examples(md: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut in_fence = false;
     let mut buf = String::new();
     for line in md.lines() {
         if line.trim_start().starts_with("```") {
             if in_fence {
-                let looks_like_sui = buf.contains("<scope>")
+                let looks_like_sail = buf.contains("<scope>")
                     || buf.contains("<controller>")
-                    || buf.contains("fx:") || buf.contains(".enter(") || buf.contains(".loop(") || buf.contains("style.enter")
+                    || buf.contains("fx:")
+                    || buf.contains(".enter(")
+                    || buf.contains(".loop(")
+                    || buf.contains("style.enter")
                     || buf.contains("use:");
-                if looks_like_sui {
+                if looks_like_sail {
                     out.push(std::mem::take(&mut buf));
                 } else {
                     buf.clear();
@@ -74,8 +77,7 @@ fn sui_examples(md: &str) -> Vec<String> {
     out
 }
 
-/// Drift lock: skill generator progressive disclosure + product bans.
-/// Fails if the generator re-teaches Style grow/shrink or loses two-arg color helpers.
+/// Drift lock: progressive skill (core-only) + product bans + MCP pointers.
 #[test]
 fn skill_generator_matches_product_surface() {
     let Some(md) = generate_skill() else { return };
@@ -83,6 +85,23 @@ fn skill_generator_matches_product_surface() {
     assert!(
         md.contains("### Core Style setters"),
         "skill must lead with a core setter section for progressive disclosure"
+    );
+    assert!(
+        md.contains("sail_surface") && md.contains("sail_check"),
+        "skill must point agents at MCP sail_surface / sail_check"
+    );
+    assert!(
+        md.contains("sail_edit") && !md.contains("sail_apply"),
+        "skill must list live MCP sail_edit (sail_apply removed)"
+    );
+    // Full tables must NOT dump into the default skill.
+    assert!(
+        !md.contains("### Full closed Style setters"),
+        "default skill must not dump the full Style setter table — use MCP"
+    );
+    assert!(
+        !md.contains("## L1 elements — the language surface"),
+        "default skill must not dump the full L1 inventory — use MCP topic l1"
     );
     assert!(
         md.contains("colorMix") && md.contains("(colorToken, pct)"),
@@ -105,13 +124,21 @@ fn skill_generator_matches_product_surface() {
         md.contains("sail-participation-style") || md.contains("grow") && md.contains("attrs"),
         "skill hard rules must still mention participation attrs"
     );
+    assert!(
+        md.contains("sail-display-on-layout") || md.contains("display") && md.contains("layout"),
+        "skill must warn about display-on-layout footgun"
+    );
+    assert!(
+        md.contains("Comments are not load-bearing") || md.contains("load-bearing"),
+        "skill must state comments are not load-bearing"
+    );
 }
 
 #[test]
-fn every_sui_example_in_the_agent_skill_compiles() {
+fn every_sail_example_in_the_agent_skill_compiles() {
     let Some(md) = generate_skill() else { return };
 
-    let examples = sui_examples(&md);
+    let examples = sail_examples(&md);
     assert!(
         !examples.is_empty(),
         "the generated skill contains no SAIL examples — either it lost them or this \
@@ -126,7 +153,9 @@ fn every_sui_example_in_the_agent_skill_compiles() {
         // members, and the props check keys on the meta, not the mode.
         let opts = CompileOpts {
             mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "sail-skill-example".into() }),
+            component_meta: Some(ComponentMeta {
+                name: "sail-skill-example".into(),
+            }),
             ..Default::default()
         };
         if let Err(e) = compile(ex, opts) {

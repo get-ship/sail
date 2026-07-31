@@ -6,7 +6,7 @@ export const loopDiagram = `            ┌────────────�
             │ 2. Scaffold           scaffold_view  │
             │ 3. Write              view_write_    │
             │                       source         │
-            │ 4. Diagnose           sui_diagnostics│
+            │ 4. Diagnose           sail_check     │
             │ 5. Fix + reloop ↑                    │
             │ 6. Score              sail-eval      │
             └──────────────────────────────────────┘`

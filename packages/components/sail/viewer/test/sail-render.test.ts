@@ -7,7 +7,7 @@
 // The whole pack is framework-pure: `sail-render` never imports a wasm URL or
 // `fetch`. The host hands it a bound `compile()` via `prop:compile={fn}`
 // (identity) — here that bound compile is built from the production Rust/WASM
-// compiler the Node harness already instantiates (`compileSui`), wrapped to the
+// compiler the Node harness already instantiates (`compileSail`), wrapped to the
 // discriminated `{kind:'ok'|'err'}` shape the engine consumes. Source, tag, and
 // prop-values arrive via `prop:*` only (NO object/json attribute props), exactly
 // the `sail-table` rule (the host owns discovery; data arrives by `prop:*`).
@@ -21,7 +21,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { renderComponent } from '@ship/test-setup'
-import { compileSui } from '@ship/sail-dom/test-utils'
+import { compileSail } from '@ship/sail-dom/test-utils'
 
 // The controller reaches for the engine's own modules, which only the module
 // graph can resolve — import it as the virtual `<file>.sail.controller.ts` the
@@ -36,7 +36,7 @@ const TAG = 'sail-render'
 
 // ---------------------------------------------------------------------------
 // The bound compile() the host injects. Built over the SAME production compiler
-// (`compileSui`) the engine seam uses — wrapped to the engine's discriminated
+// (`compileSail`) the engine seam uses — wrapped to the engine's discriminated
 // result shape so a compile error returns `{kind:'err'}` instead of throwing
 // across the `prop:compile` seam. NO fetch, NO path, NO daemon — pure.
 // ---------------------------------------------------------------------------
@@ -47,7 +47,7 @@ type CompileResult =
 function makeBoundCompile(): (source: string, opts?: Record<string, unknown>) => CompileResult {
   return (source, opts = {}) => {
     try {
-      const c = compileSui(source, opts as never)
+      const c = compileSail(source, opts as never)
       return { kind: 'ok', js: c.js, css: c.css ?? null, dts: c.dts ?? null, ssrHtml: c.ssrHtml ?? null }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)

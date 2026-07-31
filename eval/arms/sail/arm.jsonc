@@ -1,0 +1,20 @@
+// Context profile: sail arm — full sail authoring surface.
+// The runner materializes a blank sail app and injects skill + MCP config.
+// Leak rule: this is the ONLY arm allowed to contain sail artifacts.
+{
+  "id": "sail",
+  "scaffold": "blank",
+  "context": {
+    "sailArtifacts": true,
+    "skillFile": true,
+    "mcp": true,
+    "sailOnPath": true
+  },
+  "grading": {
+    "compile": true,
+    "vocab_share": true,
+    "gates": true,
+    "behavior": true,
+    "beauty": true
+  }
+}

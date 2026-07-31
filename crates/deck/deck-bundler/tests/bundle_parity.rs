@@ -112,8 +112,8 @@ use std::time::Duration;
 use deck_bundler::rolldown_bundle::bundle_target;
 use deck_bundler::targets::BundleLayout;
 use deck_config::DeckConfig;
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 use serde_json::json;
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
 
 // ── Safety constants (the founder OOM'd this box twice; a runaway here is
 // unacceptable — see #256) ───────────────────────────────────────────────────
@@ -163,7 +163,8 @@ async fn gate_bundle_parity_all_targets_build() {
     let scratch = tempfile::tempdir().expect("scratch out_root");
     let staging = tempfile::tempdir().expect("staging dir");
 
-    let layout = BundleLayout::with_config(repo.clone(), None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
+    let layout = BundleLayout::with_config(repo.clone(), None, DeckConfig::defaults())
+        .with_out_root(scratch.path().to_path_buf());
 
     // The full target set: static framework singletons + discovered consumer
     // bundles (per-package `deck.bundles`) + discovered route bundles. This is
@@ -249,8 +250,9 @@ fn build_exit_is_honest_unlike_build_all() {
     // binding would fail to compile, flagging that the gate's rationale moved.
     fn _assert_build_sig(
         b: &deck_bundler::Bundler,
-    ) -> impl std::future::Future<Output = Result<deck_bundler::BundleManifest, deck_bundler::BundlerError>> + '_
-    {
+    ) -> impl std::future::Future<
+        Output = Result<deck_bundler::BundleManifest, deck_bundler::BundlerError>,
+    > + '_ {
         b.build("noop")
     }
     fn _assert_build_all_sig(
@@ -280,20 +282,90 @@ struct Fixture {
 fn fixtures() -> Vec<Fixture> {
     use CompileMode::{Component, Route};
     vec![
-        Fixture { name: "hello", mode: Route, setup_url: None, component_name: None },
-        Fixture { name: "counter", mode: Route, setup_url: Some("./counter.controller.ts"), component_name: None },
-        Fixture { name: "agents", mode: Route, setup_url: Some("./agents.controller.ts"), component_name: None },
-        Fixture { name: "comment-and-whitespace", mode: Route, setup_url: None, component_name: None },
-        Fixture { name: "for-static", mode: Route, setup_url: None, component_name: None },
-        Fixture { name: "for-static-text", mode: Route, setup_url: None, component_name: None },
-        Fixture { name: "for-static-attr", mode: Route, setup_url: None, component_name: None },
-        Fixture { name: "for-dynamic-mixed", mode: Route, setup_url: None, component_name: None },
-        Fixture { name: "for-update", mode: Route, setup_url: None, component_name: None },
-        Fixture { name: "route-module", mode: Route, setup_url: None, component_name: None },
-        Fixture { name: "ship-button", mode: Component, setup_url: None, component_name: Some("ship-button-test") },
-        Fixture { name: "reflect-empty-slot", mode: Component, setup_url: None, component_name: Some("reflect-empty-slot") },
-        Fixture { name: "shadow-tones", mode: Component, setup_url: None, component_name: Some("shadow-tones") },
-        Fixture { name: "bind-this-button", mode: Component, setup_url: None, component_name: Some("bind-this-button") },
+        Fixture {
+            name: "hello",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "counter",
+            mode: Route,
+            setup_url: Some("./counter.controller.ts"),
+            component_name: None,
+        },
+        Fixture {
+            name: "agents",
+            mode: Route,
+            setup_url: Some("./agents.controller.ts"),
+            component_name: None,
+        },
+        Fixture {
+            name: "comment-and-whitespace",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "for-static",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "for-static-text",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "for-static-attr",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "for-dynamic-mixed",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "for-update",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "route-module",
+            mode: Route,
+            setup_url: None,
+            component_name: None,
+        },
+        Fixture {
+            name: "ship-button",
+            mode: Component,
+            setup_url: None,
+            component_name: Some("ship-button-test"),
+        },
+        Fixture {
+            name: "reflect-empty-slot",
+            mode: Component,
+            setup_url: None,
+            component_name: Some("reflect-empty-slot"),
+        },
+        Fixture {
+            name: "shadow-tones",
+            mode: Component,
+            setup_url: None,
+            component_name: Some("shadow-tones"),
+        },
+        Fixture {
+            name: "bind-this-button",
+            mode: Component,
+            setup_url: None,
+            component_name: Some("bind-this-button"),
+        },
     ]
 }
 
@@ -431,7 +503,11 @@ fn wasm_compile_all(repo: &Path, fixtures: &[Fixture]) -> Vec<WasmRow> {
         );
     }
     let runner = repo.join("crates/deck/deck-bundler/tests/g3_wasm_compile.mjs");
-    assert!(runner.exists(), "g3_wasm_compile.mjs missing at {}", runner.display());
+    assert!(
+        runner.exists(),
+        "g3_wasm_compile.mjs missing at {}",
+        runner.display()
+    );
 
     let jobs: Vec<_> = fixtures
         .iter()
@@ -579,7 +655,10 @@ fn gate_bundle_parity_native_vs_wasm() {
         }
     }
 
-    eprintln!("G3 cross-producer parity: {checked}/{} fixtures agreed", fixtures.len());
+    eprintln!(
+        "G3 cross-producer parity: {checked}/{} fixtures agreed",
+        fixtures.len()
+    );
     assert!(
         diffs.is_empty(),
         "G3: {} fixture(s) diverged between native and wasm producers (#160):\n\n{}",

@@ -78,8 +78,10 @@ fn route_dirs(dir: &Path, acc: &mut Vec<std::path::PathBuf>) -> Result<()> {
 /// that contains a mountable route module is a route.
 fn to_route(routes_dir: &Path, dir: &Path) -> Option<Route> {
     let rel = dir.strip_prefix(routes_dir).ok()?;
-    let segs_raw: Vec<String> =
-        rel.components().map(|c| c.as_os_str().to_string_lossy().into_owned()).collect();
+    let segs_raw: Vec<String> = rel
+        .components()
+        .map(|c| c.as_os_str().to_string_lossy().into_owned())
+        .collect();
     let mut params = Vec::new();
     let pattern_segs: Vec<String> = segs_raw
         .iter()
@@ -112,7 +114,11 @@ fn to_route(routes_dir: &Path, dir: &Path) -> Option<Route> {
             .join("-");
         camel_case(&joined)
     };
-    Some(Route { pattern, params, builder })
+    Some(Route {
+        pattern,
+        params,
+        builder,
+    })
 }
 
 /// Reconstruct a route's module import path from its URL pattern — the
@@ -190,11 +196,14 @@ fn discover_layouts(routes_dir: &Path) -> Result<Vec<Layout>> {
     if root_layout.is_file() {
         let tag = extract_layout_tag(&root_layout)
             .with_context(|| format!("parsing `{}`", root_layout.display()))?;
-        layouts.push(Layout { path_prefix: "/".to_string(), tag });
+        layouts.push(Layout {
+            path_prefix: "/".to_string(),
+            tag,
+        });
     }
-    for entry in std::fs::read_dir(routes_dir).with_context(|| {
-        format!("reading routes dir `{}`", routes_dir.display())
-    })? {
+    for entry in std::fs::read_dir(routes_dir)
+        .with_context(|| format!("reading routes dir `{}`", routes_dir.display()))?
+    {
         let entry = entry?;
         if !entry.file_type()?.is_dir() {
             continue;
@@ -208,7 +217,10 @@ fn discover_layouts(routes_dir: &Path) -> Result<Vec<Layout>> {
         let prefix = format!("/{name}");
         let tag = extract_layout_tag(&layout_file)
             .with_context(|| format!("parsing `{}`", layout_file.display()))?;
-        layouts.push(Layout { path_prefix: prefix, tag });
+        layouts.push(Layout {
+            path_prefix: prefix,
+            tag,
+        });
     }
     layouts.sort_by(|a, b| a.path_prefix.cmp(&b.path_prefix));
     Ok(layouts)
@@ -224,9 +236,12 @@ fn extract_layout_tag(path: &Path) -> Result<String> {
     // Cap the read so a stray giant file can't pin the codegen. The tag is
     // always on the first line in practice; 4 KiB is generous.
     const HEAD_BYTES: usize = 4096;
-    let bytes = std::fs::read(path)
-        .with_context(|| format!("reading `{}`", path.display()))?;
-    let head_bytes = if bytes.len() > HEAD_BYTES { &bytes[..HEAD_BYTES] } else { &bytes[..] };
+    let bytes = std::fs::read(path).with_context(|| format!("reading `{}`", path.display()))?;
+    let head_bytes = if bytes.len() > HEAD_BYTES {
+        &bytes[..HEAD_BYTES]
+    } else {
+        &bytes[..]
+    };
     let head = std::str::from_utf8(head_bytes)
         .with_context(|| format!("non-utf8 in `{}`", path.display()))?;
     // Match the opening of the first element whose tag starts with `sail-`
@@ -264,8 +279,8 @@ fn extract_layout_tag(path: &Path) -> Result<String> {
             idx += 1;
             continue;
         }
-        let tag = std::str::from_utf8(&bytes_str[name_start..name_end])
-            .context("non-utf8 tag name")?;
+        let tag =
+            std::str::from_utf8(&bytes_str[name_start..name_end]).context("non-utf8 tag name")?;
         if tag.starts_with("sail-") || tag.starts_with("ship-") {
             return Ok(tag.to_string());
         }
@@ -302,7 +317,6 @@ pub(crate) struct RouteTree {
     pub layouts: Vec<Layout>,
 }
 
-
 // Retained as a thin wrapper over `render_routes_gen_with` for the 3 in-file
 // tests below; the `#[cfg(test)]` usages make the function unreachable in
 // non-test builds, hence the allow. Removing the wrapper would force the
@@ -335,14 +349,21 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
         .map(|r| {
             let arg = format!(
                 "p: {{ {} }}",
-                r.params.iter().map(|k| format!("{k}: string")).collect::<Vec<_>>().join("; ")
+                r.params
+                    .iter()
+                    .map(|k| format!("{k}: string"))
+                    .collect::<Vec<_>>()
+                    .join("; ")
             );
             // `/studio/agents/:id` → template `/studio/agents/${p.id}`.
             let mut path = r.pattern.clone();
             for k in &r.params {
                 path = path.replace(&format!(":{k}"), &format!("${{p.{k}}}"));
             }
-            format!("  /** {} */\n  {}: ({arg}): string => `{path}`,", r.pattern, r.builder)
+            format!(
+                "  /** {} */\n  {}: ({arg}): string => `{path}`,",
+                r.pattern, r.builder
+            )
         })
         .collect::<Vec<_>>()
         .join("\n");
@@ -375,7 +396,12 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
         .layouts
         .iter()
         .enumerate()
-        .map(|(i, l)| format!("import * as layout{i} from '{}';", layout_module_path(&l.path_prefix)))
+        .map(|(i, l)| {
+            format!(
+                "import * as layout{i} from '{}';",
+                layout_module_path(&l.path_prefix)
+            )
+        })
         .collect::<Vec<_>>()
         .join("\n");
     // Pattern → `() => import('<route>/page.sail')` thunk. The dynamic import is
@@ -432,6 +458,7 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
         // does NOT inline a wrapper's `@import`).
         format!(
             "import '@ship/tokens/tokens.css';\n\
+             import '@ship/tokens/themes.css';\n\
              import '@ship/tokens/sail-base.css';\n\
              import '@ship/tokens/element-skins.css';\n"
         )
@@ -439,7 +466,7 @@ fn render_routes_gen_with(tree: &RouteTree, include_token_import: bool) -> Strin
         String::new()
     };
     format!(
-"// @generated by `deck routes` (deck-bundler) — DO NOT EDIT.
+        "// @generated by `deck routes` (deck-bundler) — DO NOT EDIT.
 // Typed route table + route-module map for the `{label}` route tree (every
 // `[param]` dir under `routes/`). This file is DATA ONLY when the host
 import {{ type RouteShape, type LayoutShape }} from '@ship/deck/router'
@@ -469,7 +496,7 @@ export const layoutModules: Record<string, unknown> = {{
         layout_lines = layout_lines,
         module_map = module_map,
         layout_modules_map = layout_modules_map,
-     )
+    )
 }
 
 /// Render the host-owned `entry.gen.ts` — the bootstrap that imports
@@ -493,9 +520,20 @@ export const layoutModules: Record<string, unknown> = {{
 /// Design-token side-effect import (`@ship/tokens/tokens.css`) rides
 /// THIS file (not `routes.gen.ts`) so the bundle still ships the tokens
 /// before first paint — the data file is data-only.
+#[allow(dead_code)] // used by unit tests below
 pub(crate) fn render_entry_gen(
     tree: &RouteTree,
     entry_bootstrap: Option<&deck_config::EntryBootstrap>,
+) -> String {
+    render_entry_gen_at(tree, entry_bootstrap, None)
+}
+
+/// Like [`render_entry_gen`], optionally emitting a side-effect import for
+/// app-vendored `./fonts/fonts.css` when `project_dir/fonts/fonts.css` exists.
+pub(crate) fn render_entry_gen_at(
+    tree: &RouteTree,
+    entry_bootstrap: Option<&deck_config::EntryBootstrap>,
+    project_dir: Option<&std::path::Path>,
 ) -> String {
     // Host providers (when declared). A standalone deck app has none: no
     // provider import, and the `providers` field is omitted from the call
@@ -518,6 +556,10 @@ pub(crate) fn render_entry_gen(
         }
         _ => (String::new(), String::new()),
     };
+    let app_fonts_import = project_dir
+        .filter(|p| p.join("fonts/fonts.css").is_file())
+        .map(|_| "import './fonts/fonts.css';\n")
+        .unwrap_or("");
     // Even with zero routes the bootstrap still runs — it sets up the
     // mount target + the token CSS. The router displays its not-found
     // fallback.
@@ -544,9 +586,10 @@ import {{ mountRouter }} from '@ship/deck/router';
   layoutModules,
 }} from './routes.gen';
 import '@ship/tokens/tokens.css';
+import '@ship/tokens/themes.css';
 import '@ship/tokens/sail-base.css';
 import '@ship/tokens/element-skins.css';
-// On an HMR re-import the framework router is already mounted (it exposes
+{app_fonts_import}// On an HMR re-import the framework router is already mounted (it exposes
 // `globalThis.__deckHmr`). Swap the freshly-bundled `modules` (their thunks
 // point at the new chunk URLs) into the running router + re-mount preserving
 // state, instead of mounting a second time. First load: `__deckHmr` is unset,
@@ -566,6 +609,7 @@ if (__deckHmr) {{
 ",
         label = tree.label,
         root_id = crate::templates::ROOT_ID,
+        app_fonts_import = app_fonts_import,
     )
 }
 
@@ -584,24 +628,34 @@ pub(crate) fn write_if_changed(target: &Path, body: &str) -> Result<()> {
         .map(|cur| cur != body)
         .unwrap_or(true);
     if changed {
-        std::fs::write(target, body)
-            .with_context(|| format!("write {}", target.display()))?;
+        std::fs::write(target, body).with_context(|| format!("write {}", target.display()))?;
     }
     Ok(())
 }
 
 pub(crate) fn build_route_tree(routes_dir: &Path, label: &str) -> Result<RouteTree> {
     if !routes_dir.is_dir() {
-        return Ok(RouteTree { label: label.to_string(), routes: vec![], layouts: vec![] });
+        return Ok(RouteTree {
+            label: label.to_string(),
+            routes: vec![],
+            layouts: vec![],
+        });
     }
     let mut dirs = Vec::new();
     route_dirs(routes_dir, &mut dirs)
         .with_context(|| format!("walking routes tree for `{label}`"))?;
-    let mut routes: Vec<Route> = dirs.iter().filter_map(|d| to_route(routes_dir, d)).collect();
+    let mut routes: Vec<Route> = dirs
+        .iter()
+        .filter_map(|d| to_route(routes_dir, d))
+        .collect();
     routes.sort_by(|a, b| cmp_route_patterns(&a.pattern, &b.pattern));
-    let layouts = discover_layouts(routes_dir)
-        .with_context(|| format!("walking layouts for `{label}`"))?;
-    Ok(RouteTree { label: label.to_string(), routes, layouts })
+    let layouts =
+        discover_layouts(routes_dir).with_context(|| format!("walking layouts for `{label}`"))?;
+    Ok(RouteTree {
+        label: label.to_string(),
+        routes,
+        layouts,
+    })
 }
 
 /// Specificity rank of one path segment: static literal (0) before dynamic
@@ -662,12 +716,16 @@ fn generate_routes_one(spec: &RouteGenSpec) -> Result<usize> {
     // customizes the `clients` map; the router call is deck's. Without this, a
     // standalone deck app served a data-only entry that never called
     // mountRouter — `#root` stayed empty (inv-deck-standalone).
-    let entry_path = spec
+    let project_dir = spec
         .out
         .parent()
-        .unwrap_or_else(|| std::path::Path::new("."))
-        .join("entry.gen.ts");
-    let entry_body = render_entry_gen(&tree, spec.entry_bootstrap.as_ref());
+        .unwrap_or_else(|| std::path::Path::new("."));
+    let entry_path = project_dir.join("entry.gen.ts");
+    let entry_body = render_entry_gen_at(
+        &tree,
+        spec.entry_bootstrap.as_ref(),
+        Some(project_dir),
+    );
     write_if_changed(&entry_path, &entry_body)?;
     Ok(tree.routes.len())
 }
@@ -829,11 +887,7 @@ mod tests {
         // subdir layout must coexist with the root layout).
         std::fs::create_dir_all(r.join("studio/components/[name]")).unwrap();
         std::fs::write(r.join("page.sail"), "<div/>").unwrap();
-        std::fs::write(
-            r.join("studio/components/[name]/page.sail"),
-            "<div/>",
-        )
-        .unwrap();
+        std::fs::write(r.join("studio/components/[name]/page.sail"), "<div/>").unwrap();
         std::fs::write(r.join("studio/_layout.sail"), "<sail-studio-chrome/>\n").unwrap();
         std::fs::write(
             r.join("_layout.sail"),
@@ -889,7 +943,10 @@ mod tests {
         assert_eq!(module_import_path("/"), "./routes/page.sail");
         assert_eq!(module_import_path("/x"), "./routes/x/page.sail");
         assert_eq!(module_import_path("/x/:id"), "./routes/x/[id]/page.sail");
-        assert_eq!(module_import_path("/a/:b/c/:d"), "./routes/a/[b]/c/[d]/page.sail");
+        assert_eq!(
+            module_import_path("/a/:b/c/:d"),
+            "./routes/a/[b]/c/[d]/page.sail"
+        );
     }
 
     #[test]
@@ -903,11 +960,13 @@ mod tests {
         //                  of `routes/page.sail`)
         //   `/studio`  → `./routes/studio/_layout.sail` (the subdir layout)
         assert_eq!(layout_module_path("/"), "./routes/_layout.sail");
-        assert_eq!(layout_module_path("/studio"), "./routes/studio/_layout.sail");
+        assert_eq!(
+            layout_module_path("/studio"),
+            "./routes/studio/_layout.sail"
+        );
         assert_eq!(layout_module_path("/a/b"), "./routes/a/b/_layout.sail");
     }
 
-    
     /// `routes.gen.ts` is DATA ONLY after the entry-split — route table +
     /// layout table + typed path builders + the `modules` / `layoutModules`
     /// maps. The framework router call moved to `entry.gen.ts` (the
@@ -940,8 +999,14 @@ mod tests {
         let ts = render_routes_gen_with(&tree, false);
         // DATA: route table + typed path builders + modules map.
         assert!(ts.contains("DYNAMIC_ROUTE_PATTERNS"), "route table emitted");
-        assert!(ts.contains("export const routes = {"), "path-builder map emitted");
-        assert!(ts.contains("export const modules:"), "modules map exported for entry.gen");
+        assert!(
+            ts.contains("export const routes = {"),
+            "path-builder map emitted"
+        );
+        assert!(
+            ts.contains("export const modules:"),
+            "modules map exported for entry.gen"
+        );
         for r in &tree.routes {
             assert!(
                 ts.contains(&format!("'{}':", r.pattern)),
@@ -951,14 +1016,23 @@ mod tests {
         }
         // DATA-ONLY: no router call, no token CSS, no client wiring —
         // those moved to `entry.gen.ts` (the host-owned bootstrap).
-        assert!(!ts.contains("mountRouter("), "routes.gen.ts is data-only — no mountRouter");
+        assert!(
+            !ts.contains("mountRouter("),
+            "routes.gen.ts is data-only — no mountRouter"
+        );
         assert!(
             !ts.contains("@ship/tokens/tokens.css"),
             "routes.gen.ts is data-only — the token import lives in entry.gen.ts",
         );
-        assert!(!ts.contains("clients:"), "routes.gen.ts is data-only — no clients wiring");
+        assert!(
+            !ts.contains("clients:"),
+            "routes.gen.ts is data-only — no clients wiring"
+        );
         // The v0 hand-rolled index mount stays gone.
-        assert!(!ts.contains("getElementById"), "the v0 hand-rolled index mount is gone");
+        assert!(
+            !ts.contains("getElementById"),
+            "the v0 hand-rolled index mount is gone"
+        );
     }
 
     /// The data file exports `layoutModules` as a typed map for `entry.gen.ts`
@@ -970,16 +1044,20 @@ mod tests {
     fn render_emits_layout_imports_and_layout_modules_map() {
         let tree = RouteTree {
             label: "x".to_string(),
-            routes: vec![
-                Route {
-                    pattern: "/".to_string(),
-                    params: vec![],
-                    builder: "index".to_string(),
-                },
-            ],
+            routes: vec![Route {
+                pattern: "/".to_string(),
+                params: vec![],
+                builder: "index".to_string(),
+            }],
             layouts: vec![
-                Layout { path_prefix: "/".to_string(), tag: "ship-app-chrome".to_string() },
-                Layout { path_prefix: "/studio".to_string(), tag: "sail-studio-chrome".to_string() },
+                Layout {
+                    path_prefix: "/".to_string(),
+                    tag: "ship-app-chrome".to_string(),
+                },
+                Layout {
+                    path_prefix: "/studio".to_string(),
+                    tag: "sail-studio-chrome".to_string(),
+                },
             ],
         };
         let ts = render_routes_gen(&tree);
@@ -1055,16 +1133,26 @@ mod tests {
             "data layout-table import present: {ts}",
         );
         assert!(ts.contains("modules,"), "modules map imported: {ts}");
-        assert!(ts.contains("layoutModules,"), "layoutModules map imported: {ts}");
+        assert!(
+            ts.contains("layoutModules,"),
+            "layoutModules map imported: {ts}"
+        );
         // The token import rides the bootstrap so the bundle ships
         // design tokens before first paint.
         assert!(
             ts.contains("import '@ship/tokens/tokens.css';"),
             "design-token CSS side-effect import lives in entry.gen.ts: {ts}",
         );
+        assert!(
+            ts.contains("import '@ship/tokens/themes.css';"),
+            "theme overrides ride the entry too — a declared theme without themes.css is a silent light-page: {ts}",
+        );
         // Router call shape: root, routes, layouts, modules, layoutModules, providers.
         assert!(ts.contains("mountRouter("), "mountRouter called: {ts}");
-        assert!(ts.contains("providers: {"), "mountRouter receives providers: {ts}");
+        assert!(
+            ts.contains("providers: {"),
+            "mountRouter receives providers: {ts}"
+        );
     }
 
     /// The DEFAULT bootstrap (no host `entry`): deck still emits an
@@ -1084,15 +1172,29 @@ mod tests {
             layouts: vec![],
         };
         let ts = render_entry_gen(&tree, None);
-        assert!(ts.contains("import { mountRouter } from '@ship/deck/router';"), "imports mountRouter: {ts}");
-        assert!(ts.contains("mountRouter("), "calls mountRouter so the app mounts: {ts}");
+        assert!(
+            ts.contains("import { mountRouter } from '@ship/deck/router';"),
+            "imports mountRouter: {ts}"
+        );
+        assert!(
+            ts.contains("mountRouter("),
+            "calls mountRouter so the app mounts: {ts}"
+        );
         assert!(ts.contains("root: '#root'"), "mounts into #root: {ts}");
-        assert!(ts.contains("import '@ship/tokens/tokens.css';"), "ships tokens before first paint: {ts}");
+        assert!(
+            ts.contains("import '@ship/tokens/tokens.css';"),
+            "ships tokens before first paint: {ts}"
+        );
         // No host providers: neither a client-module import nor a providers field.
-        assert!(!ts.contains("providers:"), "default bootstrap wires no providers: {ts}");
-        assert!(!ts.contains("from './src/"), "default bootstrap imports no host clientsModule: {ts}");
+        assert!(
+            !ts.contains("providers:"),
+            "default bootstrap wires no providers: {ts}"
+        );
+        assert!(
+            !ts.contains("from './src/"),
+            "default bootstrap imports no host clientsModule: {ts}"
+        );
     }
-
 
     // Regression: routes.gen.ts lives under the watched `apps/...` root and
     // the app build regenerates it every rebuild. An unconditional write
@@ -1167,6 +1269,10 @@ mod tests {
         assert!(
             entry.contains("import '@ship/tokens/tokens.css';"),
             "rendered entry.gen.ts must import @ship/tokens/tokens.css (got: {entry})",
+        );
+        assert!(
+            entry.contains("import '@ship/tokens/themes.css';"),
+            "rendered entry.gen.ts must import @ship/tokens/themes.css (got: {entry})",
         );
         // And the old daemon-served link must be gone — it's a static-only
         // deploy hazard and the SSOT literal this used to pin (`<DECK_API_ASSETS>

@@ -1,7 +1,7 @@
 // Framework-pure WASM bootstrap for the browser compile path.
 //
 // `@ship/sail-dom/test-utils`'s `ensureWasm()` is Node-only — it
-// `readFileSync`s `../../../compiler-wasm/pkg/sui_compiler_bg.wasm` and
+// `readFileSync`s `../../../compiler-wasm/pkg/sail_compiler_bg.wasm` and
 // `initSync`s the bytes. That path does not exist in a browser. This module is
 // the browser analogue: it instantiates the same `@ship/sail-compiler-wasm`
 // module from a URL the HOST supplies, runs exactly ONCE (module-scope
@@ -35,7 +35,7 @@ export interface WasmCompileOpts {
   /** Marker passed as the setup_url; a host that injects a setup rewrites the
    *  resulting `import setup from "<marker>"` to its own setup module. */
   setupUrl?: string
-  /** The Node test harness (`@ship/sail-dom/test-utils` `compileSui`) reads the
+  /** The Node test harness (`@ship/sail-dom/test-utils` `compileSail`) reads the
    *  marker under `setupMarker`; the production wasm reads `setupUrl`. The
    *  engine passes both so a single opts object works across either compile. */
   setupMarker?: string
@@ -103,7 +103,7 @@ export function isWasmReady(): boolean {
 /**
  * Build the bound `compile()` the engine passes down via `prop:compile`.
  * `ensureWasm(wasmUrl)` MUST have completed first (the engine awaits it before
- * the first `compileSui` — Slice 1). Calling `compile` before init throws from
+ * the first `compileSail` — Slice 1). Calling `compile` before init throws from
  * the wasm glue, which is the correct loud failure (not a silent path).
  */
 export function makeCompile(): CompileFn {

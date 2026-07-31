@@ -105,26 +105,65 @@ impl Style {
 /// Diagnostic from parse / resolve / clash.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StyleDiagnostic {
-    ParseError { message: String, source: String },
-    UnknownSetter { setter: String, source: String },
-    BadToken { setter: String, value: String, source: String },
+    ParseError {
+        message: String,
+        source: String,
+    },
+    UnknownSetter {
+        setter: String,
+        source: String,
+        /// Unique closest valid setter when confluent (typo correction).
+        suggestion: Option<String>,
+    },
+    BadToken {
+        setter: String,
+        value: String,
+        source: String,
+    },
     /// Setter called with more positional args than it takes. Border composites
     /// plus two-arg paint composites (`colorDeepen` / `colorMix`) accept two.
-    BadArity { setter: String, got: usize, source: String },
-    UnknownWhenKey { key: String, source: String },
-    UnknownRef { name: String, source: String },
-    ResidualProduct { message: String, source: String },
-    Clash { slot: String, first: String, second: String },
-    BadScrutinee { message: String, source: String },
+    BadArity {
+        setter: String,
+        got: usize,
+        source: String,
+    },
+    UnknownWhenKey {
+        key: String,
+        source: String,
+    },
+    UnknownRef {
+        name: String,
+        source: String,
+    },
+    ResidualProduct {
+        message: String,
+        source: String,
+    },
+    Clash {
+        slot: String,
+        first: String,
+        second: String,
+    },
+    BadScrutinee {
+        message: String,
+        source: String,
+    },
 }
 
 impl StyleDiagnostic {
     pub fn message(&self) -> String {
         match self {
             StyleDiagnostic::ParseError { message, .. } => message.clone(),
-            StyleDiagnostic::UnknownSetter { setter, .. } => {
-                format!("style unknown setter `{setter}`")
-            }
+            StyleDiagnostic::UnknownSetter {
+                setter,
+                suggestion,
+                ..
+            } => match suggestion {
+                Some(s) => format!(
+                    "style unknown setter `{setter}` — did you mean `{s}`? [sail:fix:setter={s}]"
+                ),
+                None => format!("style unknown setter `{setter}`"),
+            },
             StyleDiagnostic::BadToken { setter, value, .. } => {
                 format!("style `{setter}({value})` — value is not a token on this setter's scale")
             }
@@ -138,7 +177,11 @@ impl StyleDiagnostic {
                 format!("style const `{name}` is not defined in scope")
             }
             StyleDiagnostic::ResidualProduct { message, .. } => message.clone(),
-            StyleDiagnostic::Clash { slot, first, second } => {
+            StyleDiagnostic::Clash {
+                slot,
+                first,
+                second,
+            } => {
                 format!(
                     "style paint clash on `{slot}`: `{first}` and `{second}` (fail closed; no silent merge)"
                 )

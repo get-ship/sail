@@ -2,12 +2,20 @@
 // picker IS the L1 select — it gets the platform's keyboard, typeahead, mobile
 // sheet and form participation for free. A styled listbox with arbitrary item
 // content is a <combobox>, a different primitive; this is not it.
-// Probe: it reads as a field (border or elevation), matches the input's size
-// channel, shows disabled/invalid distinctly, and groups render.
+// Markup mirrors freeform host stamp: sail-select + Style field classes.
 
-const sel = (attrs = '') =>
-  `<select ${attrs}><optgroup label="Team"><option>Ada</option><option>Grace</option></optgroup>` +
-  `<option>Alan</option></select>`
+const SEL =
+  'sail-select sx-displayblock sx-minHcontrolhmd sx-padY15 sx-padX3 sx-fontSizebase sx-fgforeground sx-bgbackground sx-borderWidth1 sx-borderborder sx-radiusmd sx-shadowxs sx-wfull sx-cursorpointer sx-hover-borderborderstrong sx-disabled-cursornotallowed sx-disabled-opacity50 sx-sizexs-minHcontrolh2xs sx-sizexs-padX2 sx-sizexs-fontSizexs sx-sizesm-minHcontrolhsm sx-sizesm-padX25 sx-sizesm-fontSizesm sx-sizemd-minHcontrolhmd sx-sizemd-padX3 sx-sizemd-fontSizebase sx-sizelg-minHcontrolhlg sx-sizelg-padX4 sx-sizelg-fontSizemd sx-invalidtrue-borderdestructive'
+
+const sel = (attrs = '') => {
+  const m = attrs.match(/class="([^"]*)"/)
+  const rest = attrs.replace(/class="[^"]*"\s*/, '').trim()
+  const cls = m ? `${SEL} ${m[1]}` : SEL
+  return (
+    `<select class="${cls}" ${rest}><optgroup label="Team"><option>Ada</option><option>Grace</option></optgroup>` +
+    `<option>Alan</option></select>`
+  )
+}
 
 export default {
   tag: 'select',
@@ -33,7 +41,7 @@ export default {
       if (el.options.length < 3) bad.push({ i, why: 'options-missing' })
     })
 
-    const scope = "[data-theme-preview='ship-light'] "
+    const scope = "[data-theme-preview='ship'] "
     const q = (s) => document.querySelector(scope + s)
     // disabled + invalid are each distinct from the resting field
     const base = q('select.l1-mark')
@@ -49,7 +57,7 @@ export default {
     if (!(sm < md && md < lg)) bad.push({ why: 'size-not-monotonic', sm, md, lg })
     // frozen-token guard
     const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .l1-mark`), 'backgroundColor')
-    if (mark('ship-light') === mark('ship-dark')) bad.push({ why: 'frozen-token', light: mark('ship-light') })
+    if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
 
     return { count: document.querySelectorAll('select').length, bad: bad.slice(0, 10) }
   },

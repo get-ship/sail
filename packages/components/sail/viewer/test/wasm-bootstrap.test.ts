@@ -55,7 +55,7 @@ describe('wasm-bootstrap init-once', () => {
       new Response(WASM_BYTES, { headers: { 'content-type': 'application/wasm' } }),
     )
 
-    const url = 'blob:test/sui_compiler_bg.wasm'
+    const url = 'blob:test/sail_compiler_bg.wasm'
     expect(isWasmReady()).toBe(false)
 
     await ensureWasm(url)
@@ -71,7 +71,7 @@ describe('wasm-bootstrap init-once', () => {
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response(WASM_BYTES, { headers: { 'content-type': 'application/wasm' } }))
 
-    const injected = 'https://cdn.example.test/assets/sui_compiler_bg-abc123.wasm'
+    const injected = 'https://cdn.example.test/assets/sail_compiler_bg-abc123.wasm'
     await ensureWasm(injected)
 
     // EXACTLY the injected URL is fetched — never a hardcoded/daemon path.
@@ -80,7 +80,7 @@ describe('wasm-bootstrap init-once', () => {
     // circuits) keeps this discriminating regardless of run order.
     const urls = fetchSpy.mock.calls.map((c) => c[0])
     expect(urls.every((u) => u === injected)).toBe(true)
-    expect(urls).not.toContain('/_deck/sui_compiler_bg.wasm')
+    expect(urls).not.toContain('/_deck/sail_compiler_bg.wasm')
   })
 
   it('coalesces concurrent first callers (shared in-flight init, no double-run)', async () => {
@@ -160,7 +160,7 @@ describe('pack boundary purity (Slice 0 / behavioral spec #14)', () => {
 
   it('names no hardcoded daemon/api/_deck path in executable code', () => {
     for (const { file, code } of bodies) {
-      expect(code, file).not.toMatch(/['"`][^'"`]*\/(api|_sui)\//)
+      expect(code, file).not.toMatch(/['"`][^'"`]*\/(api|_sail)\//)
     }
   })
 })

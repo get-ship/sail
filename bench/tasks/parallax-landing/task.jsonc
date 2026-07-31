@@ -1,0 +1,13 @@
+{
+  "id": "parallax-landing",
+  "prompt": "Build a marketing landing page with a scroll-driven parallax hero (foreground headline \"Build faster\", subtle background motion or layered depth), then three staggered reveal feature sections (Speed, Clarity, Scale) that enter as the user scrolls, and a final CTA band with a primary button \"Get started\". Prefer motion presets and L1 elements over inventing raw CSS animation. Work in routes/page.sail. Follow AGENTS.md: read the skill first, check after every edit, stop only when the check is fully clean.",
+  "systems": ["motion"],
+  "scaffold": "blank",
+  "grading": {
+    "compile": true,
+    "vocab_share": { "min": 0.25 },
+    "gates": true,
+    "beauty": true
+  },
+  "falsification": "Are motion presets sufficient for a real marketing page?"
+}

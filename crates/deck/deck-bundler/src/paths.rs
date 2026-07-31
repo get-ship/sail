@@ -53,13 +53,13 @@ fn declares_js_workspaces(dir: &Path) -> bool {
 ///
 /// A Cargo workspace wins (the sail monorepo): when an ancestor holds a
 /// `Cargo.toml` the topmost one is the root, identical to [`topmost_cargo_root`].
-/// Only when there is NO Cargo workspace (a pure-JS consumer like `ship-apps`)
+/// Only when there is NO Cargo workspace (a pure-JS consumer monorepo)
 /// do we fall back to the topmost ancestor whose `package.json` declares a
 /// `workspaces` field — the bun/npm workspace root. Without this, a build run
-/// from an app subdir (`ship-apps/apps/helm`) would resolve `@ship/<pkg>`
-/// against the app dir and MISS its sibling workspace packs (`@ship/agents`,
-/// …), externalizing them as bare specifiers the importmap never covers — a
-/// blank page at runtime.
+/// from an app subdir (`apps/demo`) would resolve `@ship/<pkg>` against the
+/// app dir and MISS its sibling workspace packs (`@ship/agents`, …),
+/// externalizing them as bare specifiers the importmap never covers — a blank
+/// page at runtime.
 ///
 /// `None` when neither marker is found within 16 ancestor levels; callers treat
 /// that as "not in a workspace" (a truly standalone app) and fall back to the
@@ -126,7 +126,7 @@ mod tests {
 
     /// A pure-JS bun/npm workspace (no `Cargo.toml`): the workspace root is the
     /// topmost ancestor whose `package.json` declares `workspaces`. Built from an
-    /// app subdir (`apps/helm`), the resolver must climb past the app's own
+    /// app subdir (`apps/demo`), the resolver must climb past the app's own
     /// `package.json` (no `workspaces`) to the root — the fix that lets sibling
     /// pack discovery (`@ship/agents`) reach the enclosing workspace.
     #[test]
@@ -138,13 +138,16 @@ mod tests {
             r#"{"name":"ws","workspaces":["apps/*","packages/*"]}"#,
         )
         .unwrap();
-        let app = r.join("apps/helm");
+        let app = r.join("apps/demo");
         std::fs::create_dir_all(&app).unwrap();
         // The app's OWN package.json declares no `workspaces` — must be skipped.
-        std::fs::write(app.join("package.json"), r#"{"name":"@ship/helm"}"#).unwrap();
+        std::fs::write(app.join("package.json"), r#"{"name":"@ship/demo"}"#).unwrap();
 
         let found = topmost_workspace_root(&app).unwrap();
-        assert_eq!(found, r, "resolves the enclosing JS workspace root, not the app dir");
+        assert_eq!(
+            found, r,
+            "resolves the enclosing JS workspace root, not the app dir"
+        );
     }
 
     /// The `{ packages: [...] }` object form of `workspaces` also counts.

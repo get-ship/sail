@@ -40,15 +40,27 @@ pub(super) fn next_top_separator(bytes: &[u8], start: usize, end: usize) -> usiz
     while k < end {
         let c = bytes[k];
         if let Some(q) = in_str {
-            if c == b'\\' { k += 2; continue; }
-            if c == q { in_str = None; }
+            if c == b'\\' {
+                k += 2;
+                continue;
+            }
+            if c == q {
+                in_str = None;
+            }
             k += 1;
             continue;
         }
         match c {
-            b'"' | b'\'' | b'`' => { in_str = Some(c); k += 1; }
-            b'/' if let Some(after) = crate::scan::try_skip_regex(bytes, k, end) => { k = after; }
-            b'(' | b'{' | b'[' => { k = skip_balanced(bytes, k, end); }
+            b'"' | b'\'' | b'`' => {
+                in_str = Some(c);
+                k += 1;
+            }
+            b'/' if let Some(after) = crate::scan::try_skip_regex(bytes, k, end) => {
+                k = after;
+            }
+            b'(' | b'{' | b'[' => {
+                k = skip_balanced(bytes, k, end);
+            }
             b',' => return k,
             _ => k += 1,
         }

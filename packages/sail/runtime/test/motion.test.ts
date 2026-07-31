@@ -1,7 +1,7 @@
 // motion runtime — focused tests for the prefers-reduced-motion guard and
-// the runtime-dispatched `__sui_motion_attach` seam.
+// the runtime-dispatched `__sail_motion_attach` seam.
 //
-// `fx:` directives compile to a single `__sui_motion_attach(el, config)`
+// `fx:` directives compile to a single `__sail_motion_attach(el, config)`
 // call. The runtime creates the animations through motion.dev and consults
 // `prefers-reduced-motion: reduce` once per attach (so a mid-session
 // preference flip is honored). The behavior gates below assert:
@@ -15,7 +15,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  __sui_motion_attach,
+  __sail_motion_attach,
   __buildTransitionForTest,
   __buildKeyframesForTest,
   __warnIfNotAnimatableForTest,
@@ -103,7 +103,7 @@ describe('motion runtime — hover trigger', () => {
   it('attaches controls and disposes cleanly', () => {
     setReducedMotion(false)
     const el = host()
-    const dispose = __sui_motion_attach(el, hover)
+    const dispose = __sail_motion_attach(el, hover)
     expect(typeof dispose).toBe('function')
     dispose()
   })
@@ -111,7 +111,7 @@ describe('motion runtime — hover trigger', () => {
   it('does not animate when prefers-reduced-motion: reduce is set (event handler is inert)', () => {
     setReducedMotion(true)
     const el = host()
-    const dispose = __sui_motion_attach(el, hover)
+    const dispose = __sail_motion_attach(el, hover)
     el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
     expect(typeof dispose).toBe('function')
     dispose()
@@ -120,11 +120,11 @@ describe('motion runtime — hover trigger', () => {
   it('still consults matchMedia per event (preference flip mid-session is honored)', () => {
     setReducedMotion(true)
     const el = host()
-    const dispose = __sui_motion_attach(el, hover)
+    const dispose = __sail_motion_attach(el, hover)
     dispose()
     setReducedMotion(false)
     const el2 = host()
-    const dispose2 = __sui_motion_attach(el2, hover)
+    const dispose2 = __sail_motion_attach(el2, hover)
     dispose2()
   })
 })
@@ -134,7 +134,7 @@ describe('motion runtime — focus-visible trigger', () => {
     setReducedMotion(false)
     const el = host()
     vi.spyOn(el, 'matches').mockImplementation((sel: string) => sel === ':focus-visible')
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'focus-visible',
       motions: [press, release],
     })
@@ -147,7 +147,7 @@ describe('motion runtime — loop trigger (the always-on ambient path)', () => {
   it('honors reduced motion by snapping translate/scale/rotate to the neutral FINAL transform (no tween)', () => {
     setReducedMotion(true)
     const el = host()
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [{
         property: 'scale',
@@ -183,7 +183,7 @@ describe('motion runtime — loop trigger (the always-on ambient path)', () => {
         return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
       },
     }))
-    const { __sui_motion_attach: attach } = await import('../src/motion')
+    const { __sail_motion_attach: attach } = await import('../src/motion')
     setReducedMotion(true)
     const el = host()
     const dispose = attach(el, {
@@ -205,7 +205,7 @@ describe('motion runtime — loop trigger (the always-on ambient path)', () => {
         return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
       },
     }))
-    const { __sui_motion_attach: attach } = await import('../src/motion')
+    const { __sail_motion_attach: attach } = await import('../src/motion')
     setReducedMotion(true)
     const el = host()
     const dispose = attach(el, {
@@ -230,7 +230,7 @@ describe('motion runtime — loop trigger (the always-on ambient path)', () => {
         return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
       },
     }))
-    const { __sui_motion_attach: attach } = await import('../src/motion')
+    const { __sail_motion_attach: attach } = await import('../src/motion')
     setReducedMotion(true)
     const el = host()
     const dispose = attach(el, {
@@ -245,7 +245,7 @@ describe('motion runtime — loop trigger (the always-on ambient path)', () => {
   it('creates the animation under normal motion (no throw, disposer is a cancel)', () => {
     setReducedMotion(false)
     const el = host()
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [{
         property: 'opacity',
@@ -267,7 +267,7 @@ describe('motion runtime — exit trigger (lifecycle integration)', () => {
   it('parks the config without animating or touching style at mount — nothing plays until leave', async () => {
     setReducedMotion(false)
     const el = host()
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'exit',
       motions: [press],
     })
@@ -280,7 +280,7 @@ describe('motion runtime — exit trigger (lifecycle integration)', () => {
   it('reduced motion skips the park so the runner tears down synchronously', () => {
     setReducedMotion(true)
     const el = host()
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'exit',
       motions: [press],
     })
@@ -295,9 +295,9 @@ describe('motion runtime — single reduced-motion authority', () => {
     const el1 = host()
     const el2 = host()
     const el3 = host()
-    const d1 = __sui_motion_attach(el1, { ...hover })
-    const d2 = __sui_motion_attach(el2, { trigger: 'loop', motions: [press] })
-    const d3 = __sui_motion_attach(el3, { trigger: 'exit', motions: [press] })
+    const d1 = __sail_motion_attach(el1, { ...hover })
+    const d2 = __sail_motion_attach(el2, { trigger: 'loop', motions: [press] })
+    const d3 = __sail_motion_attach(el3, { trigger: 'exit', motions: [press] })
     expect(typeof d1).toBe('function')
     expect(typeof d2).toBe('function')
     expect(typeof d3).toBe('function')
@@ -340,7 +340,7 @@ describe('motion runtime — spring preset reaches motion/mini as a linear strin
   it('a kind=spring preset under reduced motion never builds a transition', () => {
     setReducedMotion(true)
     const el = host()
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [snappy],
     })
@@ -407,7 +407,7 @@ describe('motion runtime — rotate preset produces WAAPI-valid keyframes', () =
         return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
       },
     }))
-    const { __sui_motion_attach: attach } = await import('../src/motion')
+    const { __sail_motion_attach: attach } = await import('../src/motion')
     setReducedMotion(false)
     const el = host()
     const dispose = attach(el, {
@@ -467,7 +467,7 @@ describe('motion runtime — translate-x/y emit the `translate` CSS property, no
         return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
       },
     }))
-    const { __sui_motion_attach: attach } = await import('../src/motion')
+    const { __sail_motion_attach: attach } = await import('../src/motion')
     setReducedMotion(false)
     const el = host()
     const dispose = attach(el, {
@@ -493,7 +493,7 @@ describe('motion runtime — translate-x/y emit the `translate` CSS property, no
           return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
         },
       }))
-      const { __sui_motion_attach: attach } = await import('../src/motion')
+      const { __sail_motion_attach: attach } = await import('../src/motion')
       setReducedMotion(false)
       const el = host()
       const dispose = attach(el, {
@@ -514,7 +514,7 @@ describe('motion runtime — translate-x/y emit the `translate` CSS property, no
     it('a single-axis motion (no partner) still animates alone, unmerged', () => {
       setReducedMotion(false)
       const el = host()
-      const dispose = __sui_motion_attach(el, {
+      const dispose = __sail_motion_attach(el, {
         trigger: 'loop',
         motions: [{ property: 'translate-y', preset: 'spring:gentle', kind: 'tween', duration: 0.3, from: 16, to: 0 }],
       })
@@ -544,7 +544,7 @@ describe('motion runtime — SILENCE IS THE BUG: dev-mode warn on a non-animatab
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     setReducedMotion(false)
     const el = host()
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [
         { property: 'translate-y', preset: 'spring:gentle', kind: 'tween', duration: 0.3, from: 16, to: 0 },
@@ -579,7 +579,7 @@ describe('motion runtime — cross-sibling stagger vs intra-element lockstep', (
         return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
       },
     }))
-    const { __sui_motion_attach: attach } = await import('../src/motion')
+    const { __sail_motion_attach: attach } = await import('../src/motion')
     setReducedMotion(false)
     const parent = document.createElement('div')
     document.body.appendChild(parent)
@@ -610,7 +610,7 @@ describe('motion runtime — cross-sibling stagger vs intra-element lockstep', (
         return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
       },
     }))
-    const { __sui_motion_attach: attach } = await import('../src/motion')
+    const { __sail_motion_attach: attach } = await import('../src/motion')
     setReducedMotion(false)
     const el = host()
     attach(el, {
@@ -636,7 +636,7 @@ describe('motion runtime — cross-sibling stagger vs intra-element lockstep', (
         return { stop: () => {}, cancel: () => {}, finished: Promise.resolve() }
       },
     }))
-    const { __sui_motion_attach: attach } = await import('../src/motion')
+    const { __sail_motion_attach: attach } = await import('../src/motion')
     setReducedMotion(false)
     const cfg = (): MotionAttachConfig => ({
       trigger: 'loop',
@@ -678,7 +678,7 @@ describe('motion runtime — SILENCE IS THE BUG: dev-mode warn on an out-of-rang
     setReducedMotion(false)
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const el = host()
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'hover',
       motions: [{ property: 'opacity', preset: 'pulse', kind: 'tween', duration: 0.28, from: 1, to: 1.04 }],
     })
@@ -695,7 +695,7 @@ describe('motion runtime — SILENCE IS THE BUG: dev-mode warn on an out-of-rang
     setReducedMotion(false)
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const el = host()
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'hover',
       motions: [{ property: 'opacity', preset: 'fade', kind: 'tween', duration: 0.12, from: 0, to: 1 }],
     })
@@ -710,7 +710,7 @@ describe('motion runtime — unknown trigger is inert', () => {
   it('returns a no-op disposer for an off-list trigger name', () => {
     setReducedMotion(false)
     const el = host()
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'bogus-trigger',
       motions: [press],
     })

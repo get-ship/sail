@@ -29,7 +29,7 @@ const BUILD = `
       ...(opts.iterations != null ? { iterations: opts.iterations } : {}),
       ...(opts.direction != null ? { direction: opts.direction } : {}),
     }))
-    globalThis.SuiMotion.attach(el, {
+    globalThis.SailMotion.attach(el, {
       trigger: config.trigger,
       motions,
       ...(config.stagger ? { stagger: config.stagger } : {})
@@ -135,7 +135,7 @@ export default {
         ], { trigger: 'exit' })
         await new Promise((r) => requestAnimationFrame(r))
         const rest = getComputedStyle(el).opacity // parked exit must not alter the pose
-        const leaving = globalThis.SuiMotion.runLeave([el])
+        const leaving = globalThis.SailMotion.runLeave([el])
         if (leaving === null) return { rest, why: 'runLeave-returned-null' }
         const series = await sampleSeries(el, 15)
         const midConnected = el.isConnected

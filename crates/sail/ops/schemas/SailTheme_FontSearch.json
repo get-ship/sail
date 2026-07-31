@@ -1,0 +1,48 @@
+{
+  "service": "SailTheme",
+  "method": "FontSearch",
+  "mcp_tool": "sail_theme_font_search",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "default": "",
+        "type": "string"
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ThemeFontSearchRet",
+    "type": "object",
+    "required": [
+      "ok"
+    ],
+    "properties": {
+      "count": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "format": "uint",
+        "minimum": 0.0
+      },
+      "families": {
+        "default": [],
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "ok": {
+        "type": "boolean"
+      },
+      "query": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}

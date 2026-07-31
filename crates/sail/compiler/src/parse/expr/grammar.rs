@@ -1,7 +1,6 @@
 //! Recursive-descent parser for the constrained `{expr}` subset.
 //!
-//! Grammar lives in `crates/sail/compiler/EXPRESSIONS.md`. This module
-//! produces an [`Ast`] tree with byte-range spans pointing into the
+//! Produces an [`Ast`] tree with byte-range spans pointing into the
 //! original `.sail` source. The caller passes a `base_offset` so spans
 //! are absolute in the file, not relative to the inner-of-brace slice.
 //!
@@ -27,10 +26,7 @@ pub fn parse_expression(inner: &str, base_offset: usize) -> Result<Ast, ParseErr
 
 /// Same as [`parse_expression`] but allows arrow-function bodies
 /// (used for `on:event` handlers).
-pub fn parse_expression_with_arrows(
-    inner: &str,
-    base_offset: usize,
-) -> Result<Ast, ParseError> {
+pub fn parse_expression_with_arrows(inner: &str, base_offset: usize) -> Result<Ast, ParseError> {
     parse_root(inner, base_offset, true)
 }
 
@@ -57,7 +53,12 @@ struct Parser<'a> {
 
 impl<'a> Parser<'a> {
     fn new(bytes: &'a [u8], base: usize, allow_arrow: bool) -> Self {
-        Self { bytes, base, i: 0, allow_arrow }
+        Self {
+            bytes,
+            base,
+            i: 0,
+            allow_arrow,
+        }
     }
 
     fn eof(&self) -> bool {
@@ -73,7 +74,8 @@ impl<'a> Parser<'a> {
     }
 
     fn starts_with(&self, s: &str) -> bool {
-        self.i + s.len() <= self.bytes.len() && &self.bytes[self.i..self.i + s.len()] == s.as_bytes()
+        self.i + s.len() <= self.bytes.len()
+            && &self.bytes[self.i..self.i + s.len()] == s.as_bytes()
     }
 
     fn skip_ws(&mut self) {
@@ -209,9 +211,17 @@ impl<'a> Parser<'a> {
             self.skip_ws();
             let rhs = next(self)?;
             let kind = if is_logical {
-                AstKind::Logical { op: op.to_string(), lhs: Box::new(lhs), rhs: Box::new(rhs) }
+                AstKind::Logical {
+                    op: op.to_string(),
+                    lhs: Box::new(lhs),
+                    rhs: Box::new(rhs),
+                }
             } else {
-                AstKind::Binary { op: op.to_string(), lhs: Box::new(lhs), rhs: Box::new(rhs) }
+                AstKind::Binary {
+                    op: op.to_string(),
+                    lhs: Box::new(lhs),
+                    rhs: Box::new(rhs),
+                }
             };
             lhs = Ast::new(kind, self.span_from(start));
         }
@@ -226,7 +236,10 @@ impl<'a> Parser<'a> {
             self.skip_ws();
             let arg = self.parse_unary()?;
             return Ok(Ast::new(
-                AstKind::Unary { op: "!".into(), arg: Box::new(arg) },
+                AstKind::Unary {
+                    op: "!".into(),
+                    arg: Box::new(arg),
+                },
                 self.span_from(start),
             ));
         }
@@ -239,7 +252,10 @@ impl<'a> Parser<'a> {
                 self.skip_ws();
                 let arg = self.parse_unary()?;
                 return Ok(Ast::new(
-                    AstKind::Unary { op: op.to_string(), arg: Box::new(arg) },
+                    AstKind::Unary {
+                        op: op.to_string(),
+                        arg: Box::new(arg),
+                    },
                     self.span_from(start),
                 ));
             }
@@ -257,7 +273,11 @@ impl<'a> Parser<'a> {
                 if self.peek() == b'(' {
                     let args = self.parse_call_args()?;
                     node = Ast::new(
-                        AstKind::Call { callee: Box::new(node), args, optional: true },
+                        AstKind::Call {
+                            callee: Box::new(node),
+                            args,
+                            optional: true,
+                        },
                         self.span_from(start),
                     );
                 } else if self.peek() == b'[' {
@@ -267,13 +287,21 @@ impl<'a> Parser<'a> {
                     self.skip_ws();
                     self.expect("]")?;
                     node = Ast::new(
-                        AstKind::Index { obj: Box::new(node), idx: Box::new(idx), optional: true },
+                        AstKind::Index {
+                            obj: Box::new(node),
+                            idx: Box::new(idx),
+                            optional: true,
+                        },
                         self.span_from(start),
                     );
                 } else {
                     let prop = self.parse_ident()?;
                     node = Ast::new(
-                        AstKind::Member { obj: Box::new(node), prop, optional: true },
+                        AstKind::Member {
+                            obj: Box::new(node),
+                            prop,
+                            optional: true,
+                        },
                         self.span_from(start),
                     );
                 }
@@ -282,7 +310,11 @@ impl<'a> Parser<'a> {
                 self.skip_ws();
                 let prop = self.parse_ident()?;
                 node = Ast::new(
-                    AstKind::Member { obj: Box::new(node), prop, optional: false },
+                    AstKind::Member {
+                        obj: Box::new(node),
+                        prop,
+                        optional: false,
+                    },
                     self.span_from(start),
                 );
             } else if self.peek() == b'[' {
@@ -292,13 +324,21 @@ impl<'a> Parser<'a> {
                 self.skip_ws();
                 self.expect("]")?;
                 node = Ast::new(
-                    AstKind::Index { obj: Box::new(node), idx: Box::new(idx), optional: false },
+                    AstKind::Index {
+                        obj: Box::new(node),
+                        idx: Box::new(idx),
+                        optional: false,
+                    },
                     self.span_from(start),
                 );
             } else if self.peek() == b'(' {
                 let args = self.parse_call_args()?;
                 node = Ast::new(
-                    AstKind::Call { callee: Box::new(node), args, optional: false },
+                    AstKind::Call {
+                        callee: Box::new(node),
+                        args,
+                        optional: false,
+                    },
                     self.span_from(start),
                 );
             } else {
@@ -402,7 +442,11 @@ impl<'a> Parser<'a> {
                 self.i += 1;
                 continue;
             }
-            if (c == b'e' || c == b'E') && (self.peek_at(1) == b'+' || self.peek_at(1) == b'-' || self.peek_at(1).is_ascii_digit()) {
+            if (c == b'e' || c == b'E')
+                && (self.peek_at(1) == b'+'
+                    || self.peek_at(1) == b'-'
+                    || self.peek_at(1).is_ascii_digit())
+            {
                 self.i += 1;
                 if self.peek() == b'+' || self.peek() == b'-' {
                     self.i += 1;
@@ -526,7 +570,11 @@ impl<'a> Parser<'a> {
                 self.skip_ws();
                 let value = self.parse_expr()?;
                 let span = self.span_from(entry_start);
-                entries.push(ObjEntry { key: ObjKey::Spread(value), value: None, span });
+                entries.push(ObjEntry {
+                    key: ObjKey::Spread(value),
+                    value: None,
+                    span,
+                });
             } else if self.peek() == b'"' || self.peek() == b'\'' {
                 let q = self.peek();
                 let s = self.parse_string(self.i, q)?;
@@ -554,7 +602,11 @@ impl<'a> Parser<'a> {
                     None
                 };
                 let span = self.span_from(entry_start);
-                entries.push(ObjEntry { key: ObjKey::Ident(name), value, span });
+                entries.push(ObjEntry {
+                    key: ObjKey::Ident(name),
+                    value,
+                    span,
+                });
             } else {
                 return Err(self.err_at(self.i, "expected object key"));
             }

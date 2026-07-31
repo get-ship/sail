@@ -97,12 +97,14 @@ impl CompileError {
 }
 
 /// Severity of a [`Diagnostic`]. `Error` blocks the build; `Warning`
-/// surfaces in LSP / agent feedback without failing compilation.
+/// surfaces in LSP / agent feedback without failing compilation;
+/// `Fix` is an auto-repair diagnostic emitted by the compose pass.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum DiagSeverity {
     Error,
     Warning,
+    Fix,
 }
 
 /// One diagnostic with a resolved **1-based** line/col range. This is the

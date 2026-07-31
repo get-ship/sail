@@ -37,8 +37,8 @@
 //! Confined to `crates/sail/compiler/tests/**` per the job spec.
 
 use sail_compiler::{
-    analyze, compile, CompileMode, CompileOpts, ComponentMeta, DiagSeverity, LintOverride,
-    OverrideSeverity,
+    CompileMode, CompileOpts, ComponentMeta, DiagSeverity, LintOverride, OverrideSeverity, analyze,
+    compile,
 };
 
 fn opts(component_name: &str) -> CompileOpts {
@@ -49,7 +49,6 @@ fn opts(component_name: &str) -> CompileOpts {
         source_path: Some(format!("components/{component_name}/{component_name}.sail").into()),
         component_meta: Some(ComponentMeta {
             name: component_name.into(),
-
         }),
         emit_dts: false,
         scope_capabilities: Vec::new(),

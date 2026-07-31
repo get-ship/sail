@@ -13,25 +13,20 @@ pub mod pages;
 pub mod render_helpers;
 pub mod sail_source;
 pub use handlers::{
-    serve_bundle_hmr,
-    serve_deck_route,
-    serve_framework_font,
-    serve_meta,
-    serve_sui_compiler_wasm, serve_sui_dom, serve_sui_icon,
-    serve_sui_error_overlay,
-    serve_sui_live_reload, serve_sui_lsp_completions, serve_sui_lsp_diagnostics,
-    serve_sui_runtime,
-    serve_sui_sdk_client,
+    serve_bundle_hmr, serve_deck_route, serve_framework_font, serve_meta, serve_sail_compiler_wasm,
+    serve_sail_dom, serve_sail_error_overlay, serve_sail_icon, serve_sail_live_reload,
+    serve_sail_lsp_completions, serve_sail_lsp_diagnostics, serve_sail_runtime,
+    serve_sail_studio_bridge, serve_sail_sdk_client,
 };
-// The named-route handlers (serve_sui_route_setup / serve_route_host /
+// The named-route handlers (serve_sail_route_setup / serve_route_host /
 // serve_route_payload[_subpath]) moved to the `ship-views` crate. deck-axum's
 // router serves ONLY deck's own framework + routes/ SPA surface.
 
 // Re-export the contract types so `deck`'s facade (and shipd through it)
 // can name them without depending on deck-core directly.
 pub use deck_core::{
-    CachePolicy, DaemonBuildInfo, DaemonMode, DeckResponse, RouteSetupQuery,
-    inject_mode_meta, mode_str,
+    CachePolicy, DaemonBuildInfo, DaemonMode, DeckResponse, RouteSetupQuery, inject_mode_meta,
+    mode_str,
 };
 
 use axum::{
@@ -107,9 +102,15 @@ mod route_ssot {
     /// coded `/api/...` that drifts, this fails fast.
     #[test]
     fn routes_match_ssot() {
-        assert_eq!(super::ROUTE_VIEW_TOKENS_CSS, format!("{DECK_API_ASSETS}/view-tokens.css"));
+        assert_eq!(
+            super::ROUTE_VIEW_TOKENS_CSS,
+            format!("{DECK_API_ASSETS}/view-tokens.css")
+        );
         assert_eq!(super::ROUTE_SAIL_CSS, format!("{DECK_API_ASSETS}/sail.css"));
-        assert_eq!(super::ROUTE_THEME_CSS, format!("{DECK_API_ASSETS}/theme.css"));
+        assert_eq!(
+            super::ROUTE_THEME_CSS,
+            format!("{DECK_API_ASSETS}/theme.css")
+        );
         assert_eq!(super::ROUTE_THEMES_LIST, "/api/v1/themes");
         // The `/_deck/*` half of the surface still uses literal strings
         // in axum route registration; spot-check a sample to prove no
@@ -119,7 +120,7 @@ mod route_ssot {
 }
 
 pub fn router() -> Router {
-    use pages::{serve_sail_css, serve_theme_css, serve_themes_list, serve_route_tokens};
+    use pages::{serve_route_tokens, serve_sail_css, serve_theme_css, serve_themes_list};
     // The root `/` and the `/{file}` SPA/public catch-all are HOST
     // concerns. The host mounts `serve_index` at `/` and the per-app
     // `serve_apps` for the app's routes + per-app `/{file}` catch-all.
@@ -139,18 +140,19 @@ pub fn router() -> Router {
         // HMR firehose — always mounted; the handler self-gates (empty SSE
         // when no bundler is wired), so no `if Development` guard is needed.
         .route("/_deck/dev/hmr", get(serve_bundle_hmr))
-        .route("/_deck/runtime.js", get(serve_sui_runtime))
-        .route("/_deck/dom.js", get(serve_sui_dom))
-        .route("/_deck/sdk-client.js", get(serve_sui_sdk_client))
-        .route("/_deck/compiler-wasm.js", get(serve_sui_compiler_wasm))
-        .route("/_deck/lsp-completions.js", get(serve_sui_lsp_completions))
-        .route("/_deck/lsp-diagnostics.js", get(serve_sui_lsp_diagnostics))
+        .route("/_deck/runtime.js", get(serve_sail_runtime))
+        .route("/_deck/dom.js", get(serve_sail_dom))
+        .route("/_deck/sdk-client.js", get(serve_sail_sdk_client))
+        .route("/_deck/compiler-wasm.js", get(serve_sail_compiler_wasm))
+        .route("/_deck/lsp-completions.js", get(serve_sail_lsp_completions))
+        .route("/_deck/lsp-diagnostics.js", get(serve_sail_lsp_diagnostics))
         .route("/_deck/route.js", get(serve_deck_route))
-        .route("/_deck/icons/{file}", get(serve_sui_icon))
+        .route("/_deck/icons/{file}", get(serve_sail_icon))
         .route("/_deck/fonts/{file}", get(serve_framework_font))
-        .route("/_deck/live-reload.js", get(serve_sui_live_reload))
-        .route("/_deck/error-overlay.js", get(serve_sui_error_overlay))
-        // (formerly `/\_deck/{file}` → `serve_sui_chunk`) — purged:
+        .route("/_deck/live-reload.js", get(serve_sail_live_reload))
+        .route("/_deck/error-overlay.js", get(serve_sail_error_overlay))
+        .route("/_deck/sail-studio-bridge.js", get(serve_sail_studio_bridge))
+        // (formerly `/\_deck/{file}` → `serve_sail_chunk`) — purged:
         // shared chunks from the multi-entry route build were served
         // from `<root>/.deck/<chunk>.js`; the framework no longer reads
         // a monorepo-root `.deck/` (deck-purge-root). Route bundles that
@@ -195,7 +197,9 @@ mod tests {
     use deck_core::DaemonMode;
 
     async fn body_string(resp: Response) -> String {
-        let bytes = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        let bytes = axum::body::to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .unwrap();
         String::from_utf8(bytes.to_vec()).unwrap()
     }
 
@@ -204,9 +208,19 @@ mod tests {
         let dr = DeckResponse::js_asset("console.log(1)", DaemonMode::Development);
         let resp = into_axum(dr);
         assert_eq!(resp.status(), StatusCode::OK);
-        let ct = resp.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap();
+        let ct = resp
+            .headers()
+            .get(header::CONTENT_TYPE)
+            .unwrap()
+            .to_str()
+            .unwrap();
         assert!(ct.contains("application/javascript"));
-        let cc = resp.headers().get(header::CACHE_CONTROL).unwrap().to_str().unwrap();
+        let cc = resp
+            .headers()
+            .get(header::CACHE_CONTROL)
+            .unwrap()
+            .to_str()
+            .unwrap();
         assert_eq!(cc, "no-cache");
         assert!(!resp.headers().contains_key(header::ETAG));
         assert_eq!(body_string(resp).await, "console.log(1)");
@@ -216,7 +230,10 @@ mod tests {
     async fn into_axum_prod_emits_etag() {
         let dr = DeckResponse::js_asset("x", DaemonMode::Production);
         let resp = into_axum(dr);
-        assert!(resp.headers().contains_key(header::ETAG), "prod must carry ETag");
+        assert!(
+            resp.headers().contains_key(header::ETAG),
+            "prod must carry ETag"
+        );
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -252,8 +269,16 @@ mod tests {
 
         let resp = serve_bundle_hmr(None, None).await;
         assert_eq!(resp.status(), StatusCode::OK);
-        let ct = resp.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap();
-        assert!(ct.contains("text/event-stream"), "must be SSE content-type; got {ct}");
+        let ct = resp
+            .headers()
+            .get(header::CONTENT_TYPE)
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert!(
+            ct.contains("text/event-stream"),
+            "must be SSE content-type; got {ct}"
+        );
     }
 
     /// serve_bundle_hmr with a CancellationToken that fires immediately must
@@ -261,8 +286,8 @@ mod tests {
     /// block the axum graceful-shutdown drain until every client disconnected.
     #[tokio::test(flavor = "multi_thread")]
     async fn serve_bundle_hmr_terminates_on_cancel_token() {
-        use axum::body::to_bytes;
         use crate::handlers::serve_bundle_hmr;
+        use axum::body::to_bytes;
         use tokio_util::sync::CancellationToken;
 
         let token = CancellationToken::new();
@@ -272,11 +297,7 @@ mod tests {
         // serve_bundle_hmr without a bundler (empty stream) — the test gates
         // that the handler accepts and honours the cancel extension without
         // panicking.
-        let resp = serve_bundle_hmr(
-            None,
-            Some(Extension(token)),
-        )
-        .await;
+        let resp = serve_bundle_hmr(None, Some(Extension(token))).await;
         assert_eq!(resp.status(), StatusCode::OK);
 
         // Consuming the body must complete (not block forever).

@@ -29,6 +29,17 @@ pub fn parse(source: &str) -> Result<Program, CompileError> {
     parse_inner(source, true)
 }
 
+/// Author-facing template IR for tooling: no stdlib splice, no sx/layout
+/// rewrite. Tags stay as authored (`column`, `ticker`, `my-widget`); spans
+/// land in a lightly normalized string — callers remap to author bytes via
+/// tag ordinal when needed (SailInspect).
+pub fn parse_author(source: &str) -> Result<Program, CompileError> {
+    reject_retired_host_selector(source)?;
+    reject_part_selector(source)?;
+    let prepared = preprocess::preprocess_author(source)?;
+    parse_prepared(source, &prepared)
+}
+
 /// Parse an ELEMENT source (element mode / the stdlib registry): identical
 /// pipeline minus the stdlib-element expansion pass — an element source may
 /// not use stdlib elements (no recursion, no element-in-element).
@@ -43,7 +54,11 @@ fn parse_inner(source: &str, expand_elements: bool) -> Result<Program, CompileEr
     reject_retired_host_selector(source)?;
     reject_part_selector(source)?;
     let prepared = preprocess::preprocess_impl(source, expand_elements)?;
-    let nodes = html::parse_fragment(&prepared)?;
+    parse_prepared(source, &prepared)
+}
+
+fn parse_prepared(source: &str, prepared: &str) -> Result<Program, CompileError> {
+    let nodes = html::parse_fragment(prepared)?;
 
     let mut props: Vec<PropDecl> = Vec::new();
     let mut style_parts: Vec<String> = Vec::new();
@@ -125,9 +140,13 @@ fn reject_retired_host_selector(source: &str) -> Result<(), CompileError> {
     let mut i = 0;
     while let Some(rel) = source[i..].find("<style") {
         let open = i + rel;
-        let Some(gt) = source[open..].find('>') else { break };
+        let Some(gt) = source[open..].find('>') else {
+            break;
+        };
         let cs = open + gt + 1;
-        let Some(close) = source[cs..].find("</style>") else { break };
+        let Some(close) = source[cs..].find("</style>") else {
+            break;
+        };
         let content = &source[cs..cs + close];
         if let Some(pos) = content.find(":host") {
             let at = cs + pos;
@@ -150,9 +169,13 @@ fn reject_part_selector(source: &str) -> Result<(), CompileError> {
     let mut i = 0;
     while let Some(rel) = source[i..].find("<style") {
         let open = i + rel;
-        let Some(gt) = source[open..].find('>') else { break };
+        let Some(gt) = source[open..].find('>') else {
+            break;
+        };
         let cs = open + gt + 1;
-        let Some(close) = source[cs..].find("</style>") else { break };
+        let Some(close) = source[cs..].find("</style>") else {
+            break;
+        };
         let content = &source[cs..cs + close];
         if let Some(pos) = content.find("::part") {
             let at = cs + pos;
@@ -192,4 +215,3 @@ fn state_directive_retired(el: &html::Element) -> CompileError {
     .with_span(el.span)
     .with_category(label)
 }
-

@@ -26,7 +26,10 @@ fn clean_controller_passes() {
         })
     "#;
     let findings = lint(src);
-    assert!(findings.is_empty(), "clean controller should pass: {findings:?}");
+    assert!(
+        findings.is_empty(),
+        "clean controller should pass: {findings:?}"
+    );
 }
 
 #[test]
@@ -42,7 +45,11 @@ fn inner_html_assignment_reports() {
     let findings = lint(src);
     assert_eq!(findings.len(), 1, "expected one finding, got {findings:?}");
     assert_eq!(findings[0].rule, controller_purity::RULE_ID);
-    assert!(findings[0].message.contains(".innerHTML"), "msg: {}", findings[0].message);
+    assert!(
+        findings[0].message.contains(".innerHTML"),
+        "msg: {}",
+        findings[0].message
+    );
     assert_eq!(findings[0].line, 4);
     assert!(findings[0].suggest.is_some(), "should suggest bindHtml");
 }
@@ -101,7 +108,10 @@ fn text_content_passes() {
         }
     "#;
     let findings = lint(src);
-    assert!(findings.is_empty(), "textContent must be allowed: {findings:?}");
+    assert!(
+        findings.is_empty(),
+        "textContent must be allowed: {findings:?}"
+    );
 }
 
 #[test]
@@ -121,7 +131,10 @@ fn computed_member_with_innerhtml_string_passes() {
     // match StaticMemberExpression). Acceptable for a hard ban now;
     // can tighten later if needed.
     let findings = lint(src);
-    assert!(findings.is_empty(), "computed access not currently inspected");
+    assert!(
+        findings.is_empty(),
+        "computed access not currently inspected"
+    );
 }
 
 #[test]
@@ -134,7 +147,9 @@ fn parse_error_returns_empty() {
 #[test]
 fn is_controller_path_recognises_suffix() {
     assert!(is_controller_path(Path::new("foo/bar.controller.ts")));
-    assert!(is_controller_path(Path::new("/abs/sail-button.controller.ts")));
+    assert!(is_controller_path(Path::new(
+        "/abs/sail-button.controller.ts"
+    )));
     assert!(!is_controller_path(Path::new("foo/bar.ts")));
     assert!(!is_controller_path(Path::new("foo/bar.controller.tsx")));
     assert!(!is_controller_path(Path::new("foo/bar.sail")));
@@ -175,10 +190,21 @@ fn state_cast_unknown_as_scope_reports() {
         })
     "#;
     let findings = lint(src);
-    assert_eq!(findings.len(), 1, "expected one state-cast finding, got {findings:?}");
+    assert_eq!(
+        findings.len(),
+        1,
+        "expected one state-cast finding, got {findings:?}"
+    );
     assert_eq!(findings[0].rule, controller_state_cast::RULE_ID);
-    assert!(findings[0].message.contains("Scope"), "msg: {}", findings[0].message);
-    assert!(findings[0].suggest.is_some(), "should suggest $signals access");
+    assert!(
+        findings[0].message.contains("Scope"),
+        "msg: {}",
+        findings[0].message
+    );
+    assert!(
+        findings[0].suggest.is_some(),
+        "should suggest $signals access"
+    );
 }
 
 #[test]
@@ -193,7 +219,11 @@ fn state_cast_scope_intersection_reports() {
         }
     "#;
     let findings = lint(src);
-    assert_eq!(findings.len(), 1, "intersection cast should report once, got {findings:?}");
+    assert_eq!(
+        findings.len(),
+        1,
+        "intersection cast should report once, got {findings:?}"
+    );
     assert_eq!(findings[0].rule, controller_state_cast::RULE_ID);
 }
 
@@ -210,7 +240,9 @@ fn state_cast_scopeview_alias_reports() {
     "#;
     let findings = lint(src);
     assert!(
-        findings.iter().any(|f| f.rule == controller_state_cast::RULE_ID),
+        findings
+            .iter()
+            .any(|f| f.rule == controller_state_cast::RULE_ID),
         "ScopeView alias cast should report, got {findings:?}"
     );
 }
@@ -231,11 +263,14 @@ fn typed_signals_access_passes_state_cast() {
         .into_iter()
         .filter(|f| f.rule == controller_state_cast::RULE_ID)
         .collect();
-    assert!(findings.is_empty(), "typed $signals access must pass: {findings:?}");
+    assert!(
+        findings.is_empty(),
+        "typed $signals access must pass: {findings:?}"
+    );
 }
 
 fn lint_tpl(source: &str) -> Vec<crate::Finding> {
-    crate::lint_sui_template_source(Path::new("/fake/page.sail"), source)
+    crate::lint_sail_template_source(Path::new("/fake/page.sail"), source)
         .into_iter()
         .filter(|f| f.rule == crate::rules::attr_bool_prop::RULE_ID)
         .collect()
@@ -256,8 +291,6 @@ fn static_bool_flag_passes() {
     let f = lint_tpl(r#"<sail-dialog open></sail-dialog>"#);
     assert!(f.is_empty(), "bare flag attr not flagged: {f:?}");
 }
-
-
 
 #[test]
 fn pack_source_path_recognises_components_dir() {

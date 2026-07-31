@@ -20,7 +20,7 @@
 
 #![cfg(target_arch = "wasm32")]
 
-use crate::{compile as native_compile, CompileMode, CompileOpts, ComponentMeta};
+use crate::{CompileMode, CompileOpts, ComponentMeta, compile as native_compile};
 use crate::{block_manifest, directive_manifest};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
@@ -68,6 +68,7 @@ enum WasmResult {
 
 #[wasm_bindgen]
 pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
+    console_error_panic_hook::set_once();
     // Best-effort: empty opts is valid (use all defaults). A JSON
     // parse error surfaces as a thrown JS Error rather than a result
     // — the playground would treat this as a wiring bug rather than
@@ -87,13 +88,14 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
         Some(other) => {
             return Err(JsValue::from_str(&format!(
                 "unknown mode {other:?} — expected view / component / auto"
-            )))
+            )));
         }
     };
 
-    let component_meta = parsed.component_name.as_ref().map(|name| ComponentMeta {
-        name: name.clone(),
-    });
+    let component_meta = parsed
+        .component_name
+        .as_ref()
+        .map(|name| ComponentMeta { name: name.clone() });
 
     let opts = CompileOpts {
         route_params: parsed.route_params.clone(),
@@ -139,6 +141,7 @@ pub fn compile(source: &str, opts_json: &str) -> Result<JsValue, JsValue> {
 /// checks + lint still run. Mirrors `sail_compiler::analyze`.
 #[wasm_bindgen]
 pub fn analyze(source: &str) -> Result<JsValue, JsValue> {
+    console_error_panic_hook::set_once();
     let analysis = crate::analyze(source, None, &[]);
     serde_wasm_bindgen::to_value(&analysis)
         .map_err(|e| JsValue::from_str(&format!("serialize analysis: {e}")))
@@ -182,7 +185,10 @@ struct CompletionVocabulary {
 #[wasm_bindgen]
 pub fn completion_vocabulary() -> Result<JsValue, JsValue> {
     let vocab = CompletionVocabulary {
-        events: crate::directive_manifest::EVENT_NAMES.iter().map(|e| e.name).collect(),
+        events: crate::directive_manifest::EVENT_NAMES
+            .iter()
+            .map(|e| e.name)
+            .collect(),
         modifiers: directive_manifest::EVENT_MODIFIERS,
         bind_targets: directive_manifest::BIND_TARGETS,
         blocks: block_manifest::BLOCKS,

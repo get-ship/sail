@@ -1,9 +1,9 @@
-use sail_compiler::{CompileOpts, compile};
 use deck_host::resolver::ResolvedRoute;
+use sail_compiler::{CompileOpts, compile};
 
-use crate::{DaemonMode, DeckResponse};
 use crate::assets::resolve_route_js;
-use crate::resolver::{resolve, Resolution};
+use crate::resolver::{Resolution, resolve};
+use crate::{DaemonMode, DeckResponse};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct RouteSetupQuery {
@@ -15,7 +15,7 @@ pub struct RouteSetupQuery {
 /// project root the built bundle + source `.sail` are resolved under, so one
 /// process serving many apps reads each app's routes from ITS own root (no
 /// process global).
-pub fn serve_sui_route_setup(
+pub fn serve_sail_route_setup(
     mode: DaemonMode,
     resolution: &Resolution,
     name: &str,
@@ -30,7 +30,10 @@ pub fn serve_sui_route_setup(
         }
     }
     let Some(root) = resolution.project_root() else {
-        return DeckResponse::not_found("route: no project root (host must carry a Resolution)", mode);
+        return DeckResponse::not_found(
+            "route: no project root (host must carry a Resolution)",
+            mode,
+        );
     };
     match resolve(root, name, sub) {
         Ok(r) => compile_route_js(name, &r, mode),
@@ -80,7 +83,7 @@ fn compile_route_js(name: &str, resolved: &ResolvedRoute, mode: DaemonMode) -> D
     // path (when wired via `Extension<Bundler>`) can produce a bundle
     // and serve it; the runtime read step is what was purged.
     let final_js = match (&ts_path, resolved.source_path.as_deref()) {
-        (Some(ts), Some(_sui)) => {
+        (Some(ts), Some(_sail)) => {
             return DeckResponse::render_error(
                 format!(
                     "route `{name}` has a paired controller ({}) but no compiled \

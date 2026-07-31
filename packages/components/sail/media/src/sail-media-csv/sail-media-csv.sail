@@ -45,7 +45,6 @@
 //
 // Authority: build-spec Slice 4, §"Backbone #2 — ViewerRenderer contract".
 
-import { controller, derived, effect, signal } from '@ship/sail-runtime'
 import { createTable, type Table } from '@ship/sail-primitives'
 import type { ViewerSource } from '../engine/types'
 import { CsvParseError, parseCsv, type CsvDelimiter } from '../engine/csv-parse'
@@ -168,21 +167,21 @@ export default controller((_ctx: Scope) => {
   })
 
 </controller>
-<if cond={errorMsg()}>
+<if {errorMsg()}>
   <column role="alert" gap="0" sx={style.padY(3).padX(4).fg(destructive).fontFamily(mono).fontSize(sm)}>{errorMsg()}</column>
 <else>
   <table hoverable>
     <thead>
       <tr>
-        <for as="col" of={columns()} key={col.id}>
+        <for {columns()} as="col" key={col.id}>
           <th>{col.label}</th>
         </for>
       </tr>
     </thead>
     <tbody>
-      <for as="row" of={rows()} key={row.id}>
+      <for {rows()} as="row" key={row.id}>
         <tr data-row-id={row.id}>
-          <for as="cell" of={row.cells} key={cell.id}>
+          <for {row.cells} as="cell" key={cell.id}>
             <td>{cell.value}</td>
           </for>
         </tr>

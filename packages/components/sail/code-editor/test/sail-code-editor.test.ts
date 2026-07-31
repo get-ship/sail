@@ -68,14 +68,14 @@ const cmEditor = (m: LiveMount): Element | null =>
   editorRoot(m).querySelector('.cm-editor')
 
 /** Public host surface for the consumer (sail-tutorial, sail-site). */
-interface SuiCodeEditorHost {
+interface SailCodeEditorHost {
   value: string
   focus(): void
   setDiagnostics(diagnostics: unknown[]): void
   setCompletions(sources: unknown[]): void
 }
-const hostApi = (m: LiveMount): SuiCodeEditorHost =>
-  m.el as unknown as SuiCodeEditorHost
+const hostApi = (m: LiveMount): SailCodeEditorHost =>
+  m.el as unknown as SailCodeEditorHost
 
 describe('<sail-code-editor> — render', () => {
   it('registers the custom element and mounts a CodeMirror editor in its light DOM', () => {

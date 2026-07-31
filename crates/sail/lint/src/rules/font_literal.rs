@@ -183,13 +183,11 @@ fn palette_sorted() -> &'static [(&'static str, &'static str)] {
     })
 }
 
-
 /// True for CSS identifier bytes: ASCII alphanumeric plus `-` and `_`.
 /// Used for boundary checks (left/right of a palette match).
 fn is_ident_byte(b: u8) -> bool {
     b.is_ascii_alphanumeric() || b == b'-' || b == b'_'
 }
-
 
 fn find_subslice(haystack: &[u8], needle: &[u8]) -> Option<usize> {
     if needle.is_empty() || haystack.len() < needle.len() {
@@ -410,10 +408,7 @@ mod tests {
         assert_eq!(f[0].severity, Severity::Warn);
         assert!(f[0].message.contains("Inter"), "{}", f[0].message);
         let suggest = f[0].suggest.as_deref().unwrap();
-        assert!(
-            suggest.contains("var(--body-font)"),
-            "suggest: {suggest}"
-        );
+        assert!(suggest.contains("var(--body-font)"), "suggest: {suggest}");
     }
 
     #[test]
@@ -434,16 +429,9 @@ mod tests {
         let src = r#"<style>:host { font-family: "JetBrains Mono"; }</style>"#;
         let f = run(src);
         assert_eq!(f.len(), 1, "{f:?}");
-        assert!(
-            f[0].message.contains("JetBrains Mono"),
-            "{}",
-            f[0].message
-        );
+        assert!(f[0].message.contains("JetBrains Mono"), "{}", f[0].message);
         let suggest = f[0].suggest.as_deref().unwrap();
-        assert!(
-            suggest.contains("var(--mono-font)"),
-            "suggest: {suggest}"
-        );
+        assert!(suggest.contains("var(--mono-font)"), "suggest: {suggest}");
     }
 
     // --- The non-firing cases the spec calls out ---
@@ -521,10 +509,7 @@ mod tests {
         let f = run(src);
         assert_eq!(f.len(), 1, "{f:?}");
         let suggest = f[0].suggest.as_deref().unwrap();
-        assert!(
-            suggest.contains("var(--body-font)"),
-            "suggest: {suggest}"
-        );
+        assert!(suggest.contains("var(--body-font)"), "suggest: {suggest}");
     }
 
     #[test]
@@ -545,10 +530,7 @@ mod tests {
         let f = run(src);
         assert_eq!(f.len(), 1, "{f:?}");
         let suggest = f[0].suggest.as_deref().unwrap();
-        assert!(
-            suggest.contains("var(--mono-font)"),
-            "suggest: {suggest}"
-        );
+        assert!(suggest.contains("var(--mono-font)"), "suggest: {suggest}");
     }
 
     #[test]

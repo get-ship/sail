@@ -22,7 +22,7 @@ export default {
       const thin = vertical ? r.width <= 3 : r.height <= 3
       if (!thin) bad.push({ why: 'not-a-line', vertical, w: Math.round(r.width), h: Math.round(r.height) })
     })
-    document.querySelectorAll("[data-theme-preview='ship-light'] hr").forEach((el) => {
+    document.querySelectorAll("[data-theme-preview='ship'] hr").forEach((el) => {
       const cs = getComputedStyle(el)
       const borderShows = (s, w) => s !== 'none' && parseFloat(w) > 0
       const visible = !clear(cs.backgroundColor) ||

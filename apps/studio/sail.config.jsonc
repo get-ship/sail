@@ -1,0 +1,22 @@
+{
+  "theme": {
+    "default": "studio",
+    "defaultMode": "dark",
+    // Project themes + catalog: studio workbench is the dogfood default.
+    "enabled": ["studio", "ship"]
+  },
+  "editor": "vscode",
+  "network": ["self"],
+  // Studio is client-rendered (SPA): the workbench is client-heavy
+  // (CodeMirror, canvas preview, bridge) and the SPA path gets
+  // state-preserving HMR. Server-owned state streams over the ops watch
+  // SSE — not SSR payloads. SSR dogfooding moves to content apps
+  // (sail-site); see .agents/plans/specs/TOOL-4-studio-shell.md.
+  "render": "csr",
+  // Ban <div>/<span> for app-local components under src/ (routes/ has its own).
+  "raw_containers": false,
+  "entry": {
+    "clientsModule": "./src/clients.ts",
+    "exposeNames": []
+  }
+}

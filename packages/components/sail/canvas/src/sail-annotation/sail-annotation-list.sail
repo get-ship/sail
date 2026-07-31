@@ -21,7 +21,7 @@
 -->
 
 <controller>
-import { controller, signal } from '@ship/sail-runtime'
+
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-annotation-list.sail'
 import type { AnnotationEvent } from './sail-annotation.internals'
@@ -75,11 +75,11 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
   })
 
 </controller>
-<if cond={staged().length === 0}>
+<if {staged().length === 0}>
   <p sx={style.fontFamily(body).fontSize(sm).fg(muted-foreground).padY(1).padX(2)}>No staged annotations.</p>
 <else>
   <column role="list" gap="1" sx={style.fontFamily(body).fontSize(sm).fg(foreground)}>
-    <for as="a" of={staged()} key={a.id}>
+    <for {staged()} as="a" key={a.id}>
       <row role="listitem" data-id={a.id} gap="2" align="center" sx={style.padY(1).padX(2).bg(background).borderWidth(1).border(border).radius(sm)}>
         <span sx={style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>{a.kind}</span>
         <span title={a.note ?? ''} grow sx={style.truncate()}>{a.note ?? '(no note)'}</span>

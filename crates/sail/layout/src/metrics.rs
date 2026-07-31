@@ -110,7 +110,12 @@ mod tests {
     #[test]
     fn table_covers_every_size_for_all_families() {
         let t = table();
-        let families = [Family::Body, Family::Mono, Family::Display, Family::PressStart];
+        let families = [
+            Family::Body,
+            Family::Mono,
+            Family::Display,
+            Family::PressStart,
+        ];
         let sizes = [
             Size::Xs,
             Size::Sm,
@@ -151,7 +156,10 @@ mod tests {
         let m = &t[&(Family::PressStart, Size::Base)];
         let first = m.ascii_widths[0];
         for w in &m.ascii_widths {
-            assert!((w - first).abs() < 0.001, "Press Start 2P should be fixed-width");
+            assert!(
+                (w - first).abs() < 0.001,
+                "Press Start 2P should be fixed-width"
+            );
         }
     }
 

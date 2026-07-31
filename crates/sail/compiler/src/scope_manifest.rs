@@ -146,12 +146,14 @@ pub const SCOPE_REFUSALS: &[ScopeRefusal] = &[
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{compile, CompileMode, CompileOpts, ComponentMeta};
+    use crate::{CompileMode, CompileOpts, ComponentMeta, compile};
 
     fn opts() -> CompileOpts {
         CompileOpts {
             mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "scope-doc-demo".into() }),
+            component_meta: Some(ComponentMeta {
+                name: "scope-doc-demo".into(),
+            }),
             ..Default::default()
         }
     }
@@ -185,6 +187,10 @@ mod tests {
         let before = forms.len();
         forms.sort_unstable();
         forms.dedup();
-        assert_eq!(forms.len(), before, "SCOPE_GRAMMAR must have unique form names");
+        assert_eq!(
+            forms.len(),
+            before,
+            "SCOPE_GRAMMAR must have unique form names"
+        );
     }
 }

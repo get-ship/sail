@@ -1,8 +1,8 @@
 use super::super::styles::{light_dom_selectors, strip_shared_rules};
-use super::super::writer::{js_string, Writer};
+use super::super::writer::{Writer, js_string};
+use crate::ComponentMeta;
 use crate::ir::*;
 use crate::lower::directives::prop_default_literal;
-use crate::ComponentMeta;
 
 /// Emit a TAGGED source: the mount-form module bound to a const, then a
 /// `component(tag, def, module)` registration. The runtime registration builds

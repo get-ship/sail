@@ -5,7 +5,7 @@
 // hook/modifier dispatch matrix; the modifier + kbd-shortcut helpers are its
 // leaves. Splitting by attr-kind fragments one mapping table.
 use super::super::util::camel_of;
-use super::super::writer::{js_string, Writer};
+use super::super::writer::{Writer, js_string};
 use super::TemplateEmitter;
 use crate::ir::*;
 
@@ -193,15 +193,27 @@ impl TemplateEmitter {
                 let key = self.next_key();
                 let rw = self.rw(&expr.source, &[]);
                 let binder = crate::lower::bindings::plain_field_binder(tag, name);
-                if self.is_static_row_expr(&expr.source) {
+                if binder == "bindOpen" {
+                    // Modal dialog: pass the signal cell (strip `()` on bare calls)
+                    // so bindOpen can showModal + write back on native close.
+                    let sig = crate::lower::bindings::dialog_open_signal_expr(&expr.source);
+                    let sig_rw = self.rw(&sig, &[]);
+                    w.line(&format!(
+                        "{cleanups_var}.push(bindOpen({el_var}, ({sig_rw})));"
+                    ));
+                    if self.is_route && self.boundary_depth == 0 {
+                        self.hydrate_uses_markers = true;
+                        self.hydrate_calls.line(&format!(
+                            "if (__m[{k}]) __cleanups.push(bindOpen(__m[{k}], ({sig_rw})));",
+                            k = js_string(&key),
+                        ));
+                    }
+                } else if self.is_static_row_expr(&expr.source) {
                     // D5: row-scope static field. IDL props assign the property;
                     // everything else matches bindAttr presence semantics.
                     let stmt = if binder == "bindProp" {
                         let prop_key = camel_of(name);
-                        format!(
-                            "{el_var}[{n}] = ({rw});",
-                            n = js_string(&prop_key)
-                        )
+                        format!("{el_var}[{n}] = ({rw});", n = js_string(&prop_key))
                     } else {
                         let v = self.fresh("av");
                         let emit_name = self.attr_name_for_emit(name);
@@ -231,7 +243,7 @@ impl TemplateEmitter {
                         ));
                     }
                 }
-                if self.is_route && self.boundary_depth == 0 {
+                if binder != "bindOpen" && self.is_route && self.boundary_depth == 0 {
                     self.hydrate_uses_markers = true;
                     if binder == "bindProp" {
                         let prop_key = camel_of(name);
@@ -301,7 +313,12 @@ impl TemplateEmitter {
                     a = js_string(attr)
                 ));
             }
-            AttrInstr::On { event, handler, modifiers, .. } => {
+            AttrInstr::On {
+                event,
+                handler,
+                modifiers,
+                ..
+            } => {
                 let key = self.next_key();
                 let rw = self.rw(&handler.source, &[]);
                 let mods_js = serialize_modifiers(modifiers);
@@ -363,11 +380,15 @@ impl TemplateEmitter {
                     .as_ref()
                     .map(|e| format!("() => ({})", self.rw(&e.source, &[])))
                     .unwrap_or_else(|| "undefined".to_string());
-                w.line(&format!(
-                    "runAction({el_var}, {action_rw}, {param_thunk});",
-                ));
+                w.line(&format!("runAction({el_var}, {action_rw}, {param_thunk});",));
             }
-            AttrInstr::Motion { trigger, props, stagger_ms, timing, span: _ } => {
+            AttrInstr::Motion {
+                trigger,
+                props,
+                stagger_ms,
+                timing,
+                span: _,
+            } => {
                 // `fx:` is a thin runtime directive. The compiler resolves the
                 // config — preset defaults, then config-level timing, then per-channel
                 // overrides — and emits it; motion.dev creates and orchestrates every
@@ -377,12 +398,10 @@ impl TemplateEmitter {
                     .expect("animation-presets.json is bundled at compile time");
                 let mut motions: Vec<String> = Vec::with_capacity(props.len());
                 for prop in props {
-                    let spec = prop
-                        .preset
-                        .as_deref()
-                        .map(|name| {
-                            db.preset(name).expect("preset already validated in lower/bindings")
-                        });
+                    let spec = prop.preset.as_deref().map(|name| {
+                        db.preset(name)
+                            .expect("preset already validated in lower/bindings")
+                    });
                     // No preset means a bare inline object, which is always a tween:
                     // springs are a physics config you name, not magnitudes you write.
                     let kind = match spec.map(|s| s.kind) {
@@ -432,7 +451,10 @@ impl TemplateEmitter {
                     } else if let Some(token) = spec.and_then(|s| s.duration_token.as_deref()) {
                         // Motion reads duration in seconds; the compiler resolves the
                         // token to ms (one source of truth) then converts at the boundary.
-                        fields.push(format!("duration: {}", duration_token_to_ms(token) / 1000.0));
+                        fields.push(format!(
+                            "duration: {}",
+                            duration_token_to_ms(token) / 1000.0
+                        ));
                     }
                     let delay = prop.timing.delay.as_ref().or(timing.delay.as_ref());
                     if let Some(js) = self.motion_seconds(delay) {
@@ -444,8 +466,11 @@ impl TemplateEmitter {
                     } else if let Some(e) = spec.and_then(|s| s.easing.as_deref()) {
                         fields.push(format!("easing: {}", js_string(e)));
                     }
-                    let iterations =
-                        prop.timing.iterations.as_ref().or(timing.iterations.as_ref());
+                    let iterations = prop
+                        .timing
+                        .iterations
+                        .as_ref()
+                        .or(timing.iterations.as_ref());
                     if let Some(js) = self.motion_iterations(iterations) {
                         fields.push(format!("iterations: {js}"));
                     } else if let Some(it) = spec.and_then(|s| s.iterations.as_deref()) {
@@ -478,18 +503,18 @@ impl TemplateEmitter {
                 // runtime can re-read it inside an effect and rebuild the animation
                 // when the signal changes. A fully-literal config stays a plain
                 // object — no effect, no overhead, byte-identical to before.
-                let reactive = props.iter().any(|p| !p.exprs().is_empty())
-                    || !timing.exprs().is_empty();
+                let reactive =
+                    props.iter().any(|p| !p.exprs().is_empty()) || !timing.exprs().is_empty();
                 // Either way the disposer is now registered. It was previously
                 // dropped on the floor, which left an ambient loop running against a
                 // node the framework had already torn down.
                 if reactive {
                     w.line(&format!(
-                        "{cleanups_var}.push(__sui_motion_attach({el_var}, () => ({config})));"
+                        "{cleanups_var}.push(__sail_motion_attach({el_var}, () => ({config})));"
                     ));
                 } else {
                     w.line(&format!(
-                        "{cleanups_var}.push(__sui_motion_attach({el_var}, {config}));"
+                        "{cleanups_var}.push(__sail_motion_attach({el_var}, {config}));"
                     ));
                 }
             }
@@ -548,7 +573,11 @@ impl TemplateEmitter {
                 fmt_num(b[3])
             ))),
             MotionValue::Str(s) => Some(js_string(
-                db.resolver.easing_tokens.get(s.as_str()).map(String::as_str).unwrap_or(s),
+                db.resolver
+                    .easing_tokens
+                    .get(s.as_str())
+                    .map(String::as_str)
+                    .unwrap_or(s),
             )),
             MotionValue::Expr(e) => Some(format!("({})", self.rw(&e.source, &[]))),
             MotionValue::Num(_) => None,
@@ -586,9 +615,7 @@ fn modifier_js(m: &Modifier) -> String {
     match m {
         Modifier::PreventDefault => "{ kind: \"preventDefault\" }".into(),
         Modifier::StopPropagation => "{ kind: \"stopPropagation\" }".into(),
-        Modifier::StopImmediatePropagation => {
-            "{ kind: \"stopImmediatePropagation\" }".into()
-        }
+        Modifier::StopImmediatePropagation => "{ kind: \"stopImmediatePropagation\" }".into(),
         Modifier::SelfMod => "{ kind: \"self\" }".into(),
         Modifier::Trusted => "{ kind: \"trusted\" }".into(),
         Modifier::Key(arg) => with_arg("key", arg.as_deref()),
@@ -780,10 +807,32 @@ fn duration_token_to_ms(token: &str) -> f64 {
 /// dispatch), falls back to `addEventListener`. The author writes `on:click` either
 /// way and never sees the seam.
 const DELEGATABLE_EVENTS: &[&str] = &[
-    "beforeinput", "click", "dblclick", "contextmenu", "focusin", "focusout", "input",
-    "change", "keydown", "keypress", "keyup", "mousedown", "mousemove", "mouseout",
-    "mouseover", "mouseup", "pointerdown", "pointermove", "pointerout", "pointerover",
-    "pointerup", "touchend", "touchmove", "touchstart", "submit", "reset",
+    "beforeinput",
+    "click",
+    "dblclick",
+    "contextmenu",
+    "focusin",
+    "focusout",
+    "input",
+    "change",
+    "keydown",
+    "keypress",
+    "keyup",
+    "mousedown",
+    "mousemove",
+    "mouseout",
+    "mouseover",
+    "mouseup",
+    "pointerdown",
+    "pointermove",
+    "pointerout",
+    "pointerover",
+    "pointerup",
+    "touchend",
+    "touchmove",
+    "touchstart",
+    "submit",
+    "reset",
 ];
 
 /// The delegatable-event list exposed to tooling (browser LSP) so completion
@@ -794,12 +843,14 @@ pub fn delegatable_events() -> &'static [&'static str] {
 
 /// HTML void elements — serialized without a closing tag.
 const VOID_ELEMENTS: &[&str] = &[
-    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
-    "param", "source", "track", "wbr",
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source",
+    "track", "wbr",
 ];
 
 fn escape_text(s: &str) -> String {
-    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 fn escape_attr(s: &str) -> String {
@@ -902,7 +953,11 @@ impl super::TemplateEmitter {
     /// subtree gets no variable at all — we clone it and never look at it again,
     /// which is the whole point.)
     fn needs_wiring(&self, el: &ElementInstr) -> bool {
-        if el.attrs.iter().any(|a| !matches!(a, AttrInstr::Static { .. })) {
+        if el
+            .attrs
+            .iter()
+            .any(|a| !matches!(a, AttrInstr::Static { .. }))
+        {
             return true;
         }
         el.children.iter().any(|c| match c {

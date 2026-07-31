@@ -8,12 +8,15 @@
 //! itself is part of the checked-in schema contract downstream tooling
 //! reads, so it isn't dropped here.
 
-use crate::ir::*;
 use crate::CompileOpts;
-use serde_json::{json, Value};
+use crate::ir::*;
+use serde_json::{Value, json};
 
 pub fn emit_schema(program: &Program, opts: &CompileOpts) -> Value {
-    let component = opts.component_meta.as_ref().map(|m| component_value(&m.name, &program.props));
+    let component = opts
+        .component_meta
+        .as_ref()
+        .map(|m| component_value(&m.name, &program.props));
 
     json!({
         "data": Value::Array(Vec::new()),

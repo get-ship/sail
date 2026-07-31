@@ -78,8 +78,7 @@ pub(crate) fn parse_scope_block(body: &str, span: Span) -> Result<ScopeBlock, Co
             }
             "props" => {
                 let obj_span = expect_member_object(body, after, "props", span)?;
-                let props =
-                    parse_props_fields(&body[obj_span.0 + 1..obj_span.1], span)?;
+                let props = parse_props_fields(&body[obj_span.0 + 1..obj_span.1], span)?;
                 out.props.extend(props);
                 i = obj_span.1 + 1;
             }
@@ -140,7 +139,11 @@ pub(crate) fn style_env_from_source(source: &str) -> StyleEnv {
         };
         // Reject `<scope…>` that is not the tag (e.g. longer name) — tag ends at >.
         let tag_head = &after_open_tag[..gt_rel];
-        if tag_head.as_bytes().get(6).is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'-') {
+        if tag_head
+            .as_bytes()
+            .get(6)
+            .is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'-')
+        {
             rest = &after_open_tag[1..];
             continue;
         }
@@ -213,10 +216,7 @@ fn parse_style_const(
     }
     let (style, diags) = sail_lint::style::parse_style_const_rhs(rhs);
     if let Some(msg) = style_const_diag_message(&diags) {
-        return Err(CompileError::new(format!(
-            "Style const `{name}`: {msg}"
-        ))
-        .with_span(span));
+        return Err(CompileError::new(format!("Style const `{name}`: {msg}")).with_span(span));
     }
     let mut after = skip_trivia(s, end, None);
     if after < bytes.len() && bytes[after] == b';' {
@@ -229,7 +229,6 @@ fn looks_like_style_const_rhs(rhs: &str) -> bool {
     let t = rhs.trim();
     if t.starts_with("style.")
         || t.starts_with("match(")
-        
         || t.starts_with("when(")
         || t.starts_with("compound(")
         || t.starts_with('[')
@@ -324,7 +323,9 @@ fn char_at(s: &str, i: usize) -> char {
 fn read_word(s: &str, i: usize) -> (&str, usize) {
     let bytes = s.as_bytes();
     let mut j = i;
-    while j < bytes.len() && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'_' || bytes[j] == b'$') {
+    while j < bytes.len()
+        && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'_' || bytes[j] == b'$')
+    {
         j += 1;
     }
     (&s[i..j], j)
@@ -356,7 +357,9 @@ fn consume_type_alias(s: &str, i: usize) -> Result<usize, CompileError> {
             b';' if depth == 0 && seen_eq => return Ok(k + 1),
             b'\n' if depth <= 0 && seen_eq => {
                 // A newline ends the alias only when the RHS has content.
-                let rhs_done = s[..k].trim_end().ends_with(|c: char| c != '=' && c != '|' && c != '&');
+                let rhs_done = s[..k]
+                    .trim_end()
+                    .ends_with(|c: char| c != '=' && c != '|' && c != '&');
                 if rhs_done {
                     return Ok(k);
                 }
@@ -529,14 +532,22 @@ fn parse_props_fields(body: &str, span: Span) -> Result<Vec<PropDecl>, CompileEr
                 ))
                 .with_span(span));
             }
-            if annotation.is_none() && let Some(ty) = cast_ty {
+            if annotation.is_none()
+                && let Some(ty) = cast_ty
+            {
                 annotation = Some(ty.to_string());
             }
             value = Some(literal_text.to_string());
             i = end;
         }
 
-        out.push(classify_field(name, annotation.as_deref(), value.as_deref(), doc, span)?);
+        out.push(classify_field(
+            name,
+            annotation.as_deref(),
+            value.as_deref(),
+            doc,
+            span,
+        )?);
     }
     Ok(out)
 }
@@ -586,12 +597,28 @@ fn classify_field(
             return Ok(decl(PropKind::Union(members), Some(default), true));
         }
         return Ok(match ann {
-            "string" => decl(PropKind::String, Some(value.map(unquote).unwrap_or_default()), false),
-            "number" => decl(PropKind::Number, Some(value.unwrap_or("0").to_string()), false),
-            "boolean" => decl(PropKind::Bool, Some(value.unwrap_or("false").to_string()), true),
+            "string" => decl(
+                PropKind::String,
+                Some(value.map(unquote).unwrap_or_default()),
+                false,
+            ),
+            "number" => decl(
+                PropKind::Number,
+                Some(value.unwrap_or("0").to_string()),
+                false,
+            ),
+            "boolean" => decl(
+                PropKind::Bool,
+                Some(value.unwrap_or("false").to_string()),
+                true,
+            ),
             // Arbitrary authored TypeScript: a plain reactive property, never
             // an attribute. The literal default (when given) is carried verbatim.
-            _ => decl(PropKind::Identity(ann.to_string()), value.map(str::to_string), false),
+            _ => decl(
+                PropKind::Identity(ann.to_string()),
+                value.map(str::to_string),
+                false,
+            ),
         });
     }
 
@@ -606,7 +633,11 @@ fn classify_field(
     // Shared stdlib tone/size convention: a bare vocabulary default types as
     // the full shared union (ordinary reflected props / CVA axes).
     if name == "tone" || name == "size" {
-        let vocab = if name == "tone" { TONE_VOCAB } else { SIZE_VOCAB };
+        let vocab = if name == "tone" {
+            TONE_VOCAB
+        } else {
+            SIZE_VOCAB
+        };
         let d = unquote(v);
         if !vocab.split('|').any(|m| m == d) {
             return Err(CompileError::new(format!(
@@ -753,7 +784,9 @@ pub(crate) fn is_literal(v: &str) -> bool {
         });
     }
     if v.starts_with('{') && v.ends_with('}') {
-        return parse_object_fields(&v[1..v.len() - 1]).iter().all(|(_, fv)| is_literal(fv));
+        return parse_object_fields(&v[1..v.len() - 1])
+            .iter()
+            .all(|(_, fv)| is_literal(fv));
     }
     false
 }
@@ -995,7 +1028,10 @@ mod tests {
         parse_scope_block(body, Span::new(0, body.len())).expect_err("must refuse")
     }
     fn prop<'a>(b: &'a ScopeBlock, n: &str) -> &'a PropDecl {
-        b.props.iter().find(|p| p.name == n).unwrap_or_else(|| panic!("no prop {n}"))
+        b.props
+            .iter()
+            .find(|p| p.name == n)
+            .unwrap_or_else(|| panic!("no prop {n}"))
     }
 
     #[test]
@@ -1012,7 +1048,10 @@ mod tests {
     #[test]
     fn union_annotation_with_explicit_default() {
         let b = block("props: {\n  kind: 'a' | 'b' = 'b'\n}");
-        assert_eq!(prop(&b, "kind").kind, PropKind::Union(vec!["a".into(), "b".into()]));
+        assert_eq!(
+            prop(&b, "kind").kind,
+            PropKind::Union(vec!["a".into(), "b".into()])
+        );
         assert_eq!(prop(&b, "kind").default.as_deref(), Some("b"));
         assert!(prop(&b, "kind").reflect);
     }
@@ -1029,9 +1068,18 @@ mod tests {
         let b = block(
             "props: {\n  config: { a: 'x' | 'y' }\n  columns: Column[]\n  data: DataPoint\n  onSelect: (id: string) => void\n}",
         );
-        assert_eq!(prop(&b, "config").kind, PropKind::Identity("{ a: 'x' | 'y' }".into()));
-        assert_eq!(prop(&b, "columns").kind, PropKind::Identity("Column[]".into()));
-        assert_eq!(prop(&b, "data").kind, PropKind::Identity("DataPoint".into()));
+        assert_eq!(
+            prop(&b, "config").kind,
+            PropKind::Identity("{ a: 'x' | 'y' }".into())
+        );
+        assert_eq!(
+            prop(&b, "columns").kind,
+            PropKind::Identity("Column[]".into())
+        );
+        assert_eq!(
+            prop(&b, "data").kind,
+            PropKind::Identity("DataPoint".into())
+        );
         assert_eq!(
             prop(&b, "onSelect").kind,
             PropKind::Identity("(id: string) => void".into())
@@ -1043,7 +1091,10 @@ mod tests {
     fn identity_with_annotated_literal_default() {
         let b = block("props: {\n  center: Point = { x: 0, y: 0 }\n}");
         assert_eq!(prop(&b, "center").kind, PropKind::Identity("Point".into()));
-        assert_eq!(prop(&b, "center").default.as_deref(), Some("{ x: 0, y: 0 }"));
+        assert_eq!(
+            prop(&b, "center").default.as_deref(),
+            Some("{ x: 0, y: 0 }")
+        );
     }
 
     #[test]
@@ -1052,9 +1103,7 @@ mod tests {
         // false-union classifier would trip on (an object type argument
         // containing its own `=>` arrow). Must land as Identity, never
         // PropKind::Union, and the annotation must be captured whole.
-        let b = block(
-            "props: {\n  items: Array<{ id: string; onClick: () => void }> = []\n}",
-        );
+        let b = block("props: {\n  items: Array<{ id: string; onClick: () => void }> = []\n}");
         assert_eq!(
             prop(&b, "items").kind,
             PropKind::Identity("Array<{ id: string; onClick: () => void }>".into())
@@ -1069,9 +1118,7 @@ mod tests {
         // `: Type` — the cast supplies the annotation. This must land as
         // Identity (verbatim TS), never PropKind::Union, with the literal
         // `[]` as the default (the cast itself is not the value).
-        let b = block(
-            "props: {\n  items = [] as Array<{ id: string; onClick: () => void }>\n}",
-        );
+        let b = block("props: {\n  items = [] as Array<{ id: string; onClick: () => void }>\n}");
         assert_eq!(
             prop(&b, "items").kind,
             PropKind::Identity("Array<{ id: string; onClick: () => void }>".into())
@@ -1081,10 +1128,11 @@ mod tests {
 
     #[test]
     fn as_cast_with_explicit_annotation_strips_the_redundant_cast() {
-        let b = block(
-            "props: {\n  items: Array<{ id: string }> = [] as Array<{ id: string }>\n}",
+        let b = block("props: {\n  items: Array<{ id: string }> = [] as Array<{ id: string }>\n}");
+        assert_eq!(
+            prop(&b, "items").kind,
+            PropKind::Identity("Array<{ id: string }>".into())
         );
-        assert_eq!(prop(&b, "items").kind, PropKind::Identity("Array<{ id: string }>".into()));
         assert_eq!(prop(&b, "items").default.as_deref(), Some("[]"));
     }
 
@@ -1094,7 +1142,10 @@ mod tests {
         // must still land as PropKind::Union, not Identity, proving the
         // `as`-cast path and the union-detection path compose correctly.
         let b = block("props: {\n  kind = 'a' as 'a' | 'b'\n}");
-        assert_eq!(prop(&b, "kind").kind, PropKind::Union(vec!["a".into(), "b".into()]));
+        assert_eq!(
+            prop(&b, "kind").kind,
+            PropKind::Union(vec!["a".into(), "b".into()])
+        );
         assert_eq!(prop(&b, "kind").default.as_deref(), Some("a"));
     }
 
@@ -1150,7 +1201,10 @@ mod tests {
         let b = block(
             "const filled = style.bg(primary).fg(primary-foreground)\nprops: {\n  label = ''\n}",
         );
-        assert!(b.style_env.contains_key("filled"), "const must land in style_env");
+        assert!(
+            b.style_env.contains_key("filled"),
+            "const must land in style_env"
+        );
         assert_eq!(prop(&b, "label").default.as_deref(), Some(""));
     }
 
@@ -1193,7 +1247,10 @@ mod tests {
     #[test]
     fn doc_comments_reach_prop_descriptions() {
         let b = block("props: {\n  /** The visible label. */\n  label = ''\n}");
-        assert_eq!(prop(&b, "label").description.as_deref(), Some("The visible label."));
+        assert_eq!(
+            prop(&b, "label").description.as_deref(),
+            Some("The visible label.")
+        );
     }
 
     #[test]
@@ -1205,8 +1262,6 @@ mod tests {
     #[test]
     fn empty_scope_is_valid() {
         let b = block("");
-        assert!(
-            b.props.is_empty() && b.types.is_empty() && b.style_env.is_empty()
-        );
+        assert!(b.props.is_empty() && b.types.is_empty() && b.style_env.is_empty());
     }
 }

@@ -22,9 +22,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController, ManifestClient};
-use sail_compiler::parse::parse;
 use sail_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{
+    AppManifest, AuthoredController, ManifestClient, emit_synthetic,
+};
+use sail_compiler::parse::parse;
 
 /// Mirror deck's host context — the `route`/`navigate` handles deck injects into
 /// every app manifest at build (`deck_core::host_context_clients`). SAIL's
@@ -33,21 +35,30 @@ use sail_compiler::CompileMode;
 /// the route-bearing surface + the route-typo gate type-check against
 /// `RouteSignals`. (sail-compiler can't depend on deck-core — that's a cycle.)
 fn inject_host_context(manifest: &mut AppManifest) {
-    manifest.clients.entry("route".to_string()).or_insert(ManifestClient {
-        from: "@ship/deck/router".to_string(),
-        import: "route".to_string(),
-        construct: true,
-    });
-    manifest.clients.entry("navigate".to_string()).or_insert(ManifestClient {
-        from: "@ship/deck/router".to_string(),
-        import: "navigate".to_string(),
-        construct: false,
-    });
+    manifest
+        .clients
+        .entry("route".to_string())
+        .or_insert(ManifestClient {
+            from: "@ship/deck/router".to_string(),
+            import: "route".to_string(),
+            construct: true,
+        });
+    manifest
+        .clients
+        .entry("navigate".to_string())
+        .or_insert(ManifestClient {
+            from: "@ship/deck/router".to_string(),
+            import: "navigate".to_string(),
+            construct: false,
+        });
 }
 
 fn repo_root() -> PathBuf {
     // crates/sail/compiler -> crates/sail -> crates -> repo root.
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../..")
+        .canonicalize()
+        .unwrap()
 }
 
 fn tsc_path(repo: &Path) -> Option<PathBuf> {
@@ -73,14 +84,19 @@ fn synth_into(repo: &Path, manifest: &AppManifest, gendir: &Path, s: &Surface) {
     // parser sees it (mirrors `deck_ssr::build`).
     let (stripped, inline_controller) =
         sail_compiler::parse::preprocess::extract_controller_block(&src);
-    let program = parse(&stripped).unwrap_or_else(|e| panic!("parse {}: {}", s.name, e.render(&stripped)));
+    let program =
+        parse(&stripped).unwrap_or_else(|e| panic!("parse {}: {}", s.name, e.render(&stripped)));
     let dir = gendir.join(s.name);
     fs::create_dir_all(&dir).unwrap();
     let authored = if let Some(a) = s.authored {
-        Some(AuthoredController { specifier: a.to_string() })
+        Some(AuthoredController {
+            specifier: a.to_string(),
+        })
     } else if let Some(body) = inline_controller {
         fs::write(dir.join("controller.ts"), body).unwrap();
-        Some(AuthoredController { specifier: "./controller.ts".to_string() })
+        Some(AuthoredController {
+            specifier: "./controller.ts".to_string(),
+        })
     } else {
         None
     };
@@ -141,7 +157,11 @@ fn write_tsconfig(repo: &Path, dir: &Path, include: &[&str], name: &str) {
   }},
   "include": [{}]
 }}"#,
-        include.iter().map(|i| format!("\"{i}\"")).collect::<Vec<_>>().join(", ")
+        include
+            .iter()
+            .map(|i| format!("\"{i}\""))
+            .collect::<Vec<_>>()
+            .join(", ")
     );
     fs::write(dir.join(name), cfg).unwrap();
 }
@@ -217,8 +237,10 @@ fn surfaces_typecheck_green_and_typo_is_caught() {
 
     // Good set: every pair must type-check clean.
     write_ship_shim(&work);
-    let mut good_includes: Vec<String> =
-        surfaces.iter().map(|s| format!("generated/{}/**/*.ts", s.name)).collect();
+    let mut good_includes: Vec<String> = surfaces
+        .iter()
+        .map(|s| format!("generated/{}/**/*.ts", s.name))
+        .collect();
     good_includes.push("ship-shim.d.ts".to_string());
     let good_refs: Vec<&str> = good_includes.iter().map(|s| s.as_str()).collect();
     write_tsconfig(&repo, &work, &good_refs, "tsconfig.json");
@@ -229,19 +251,38 @@ fn surfaces_typecheck_green_and_typo_is_caught() {
     // Typo set: greet with `route.parms` must be a hard TS2339 against RouteSignals.
     let typo_src = "<h1>Hello, {route.parms.id()}</h1>";
     let program = parse(typo_src).unwrap();
-    let out_typo =
-        emit_synthetic(&program, &manifest, None, "./greet-typo.synthetic.controller.ts", CompileMode::Component, None)
-            .unwrap();
+    let out_typo = emit_synthetic(
+        &program,
+        &manifest,
+        None,
+        "./greet-typo.synthetic.controller.ts",
+        CompileMode::Component,
+        None,
+    )
+    .unwrap();
     let typo_dir = gendir.join("greet-typo");
     fs::create_dir_all(&typo_dir).unwrap();
-    fs::write(typo_dir.join("greet-typo.synthetic.controller.ts"), out_typo.controller_ts).unwrap();
+    fs::write(
+        typo_dir.join("greet-typo.synthetic.controller.ts"),
+        out_typo.controller_ts,
+    )
+    .unwrap();
     fs::write(typo_dir.join("greet-typo.render.ts"), out_typo.render_ts).unwrap();
-    write_tsconfig(&repo, &work, &["generated/greet-typo/**/*.ts"], "tsconfig.typo.json");
+    write_tsconfig(
+        &repo,
+        &work,
+        &["generated/greet-typo/**/*.ts"],
+        "tsconfig.typo.json",
+    );
 
     let (typo_ok, typo_out) = run_tsc(&tsc, &work, "tsconfig.typo.json");
-    assert!(!typo_ok, "the `route.parms` typo MUST fail type-check; tsc was green:\n{typo_out}");
     assert!(
-        typo_out.contains("parms") && (typo_out.contains("2339") || typo_out.contains("does not exist")),
+        !typo_ok,
+        "the `route.parms` typo MUST fail type-check; tsc was green:\n{typo_out}"
+    );
+    assert!(
+        typo_out.contains("parms")
+            && (typo_out.contains("2339") || typo_out.contains("does not exist")),
         "typo must be a real member-access error against RouteSignals; got:\n{typo_out}"
     );
 }

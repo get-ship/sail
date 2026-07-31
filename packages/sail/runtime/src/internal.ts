@@ -65,7 +65,7 @@ export {
   markHydrateAttr,
   markHydrateBoundary,
 } from './hydrate-mark'
-export { __sui_motion_attach } from './motion'
+export { __sail_motion_attach } from './motion'
 export type { MotionAttachConfig, MotionConfig } from './motion'
 export { runEnter, runLeave, cancelTransitions, setTransitionRunner } from './transition-runner'
 

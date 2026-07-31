@@ -3,11 +3,11 @@ export default null
 </controller>
 
 <div>
-  <h1>SUI demos</h1>
+  <h1>Sail demos</h1>
   <p>
-    Small, single-feature views exercising one piece of the SUI surface each.
+    Small, single-feature views exercising one piece of the Sail surface each.
     Each demo lives at <code>views/demos/&lt;name&gt;/</code> and is
-    50–100 lines of <code>page.sui</code> + <code>controller.ts</code>.
+    50–100 lines of <code>page.sail</code> + <code>controller.ts</code>.
   </p>
 
   <ul>

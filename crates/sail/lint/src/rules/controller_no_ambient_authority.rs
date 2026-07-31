@@ -93,7 +93,12 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 ///   rule intentionally does not take on). So the ctor is simply no longer
 ///   flagged once ANY non-empty `network` list is granted; it stays flagged
 ///   when `network` is empty, same as before.
-pub fn check_confined(path: &Path, source: &str, network: &[String], unconfined: bool) -> Vec<Finding> {
+pub fn check_confined(
+    path: &Path,
+    source: &str,
+    network: &[String],
+    unconfined: bool,
+) -> Vec<Finding> {
     // Confined by default. Only a package that explicitly grants
     // `"unconfined": true` may use ambient authority freely.
     if unconfined {
@@ -121,7 +126,9 @@ pub fn check_confined(path: &Path, source: &str, network: &[String], unconfined:
 /// (an entry's path, if any, is ignored — the grant is per-origin).
 fn literal_target_allowed(url: &str, network: &[String]) -> bool {
     match authority_of(url) {
-        Some(authority) => network.iter().any(|entry| authority_of(entry).as_deref() == Some(&authority)),
+        Some(authority) => network
+            .iter()
+            .any(|entry| authority_of(entry).as_deref() == Some(&authority)),
         None => network.iter().any(|entry| entry == "self"),
     }
 }
@@ -141,7 +148,9 @@ fn authority_of(s: &str) -> Option<String> {
 /// dynamic (None) — a template literal with substitutions, an identifier, a
 /// call expression, etc. all count as dynamic; we cannot statically verify
 /// their target.
-fn static_string_arg<'a>(args: &'a oxc_allocator::Vec<'a, Argument<'a>>) -> Option<Option<&'a str>> {
+fn static_string_arg<'a>(
+    args: &'a oxc_allocator::Vec<'a, Argument<'a>>,
+) -> Option<Option<&'a str>> {
     let first = args.first()?;
     let expr = first.as_expression()?;
     match expr {
@@ -198,10 +207,16 @@ impl AmbientVisitor<'_> {
     /// Whether a networking call's first argument clears the `network`
     /// allowlist — the shared decision for `fetch`/`WebSocket`/`EventSource`.
     /// `None` args (e.g. bare `fetch()`) are treated as dynamic.
-    fn arg_target_allowed<'a>(&self, args: &'a oxc_allocator::Vec<'a, Argument<'a>>) -> (bool, Option<String>) {
+    fn arg_target_allowed<'a>(
+        &self,
+        args: &'a oxc_allocator::Vec<'a, Argument<'a>>,
+    ) -> (bool, Option<String>) {
         match static_string_arg(args) {
             // Static literal: verify its origin against the allowlist.
-            Some(Some(url)) => (literal_target_allowed(url, self.network), Some(url.to_string())),
+            Some(Some(url)) => (
+                literal_target_allowed(url, self.network),
+                Some(url.to_string()),
+            ),
             // Dynamic target (or missing arg): allowed only when SOME grant
             // exists — we can't statically verify it, the runtime fetch
             // wrapper is the actual wall for this case.
@@ -388,7 +403,10 @@ mod tests {
         // No path heuristic — an inline controller anywhere is confined
         // unless its package's `sail.config.json` grants `"unconfined"`.
         let chrome = "apps/shell/src/components/sail-x/sail-x.controller.ts";
-        assert_eq!(check(Path::new(chrome), "fetch('/x'); import('./y.js')").len(), 2);
+        assert_eq!(
+            check(Path::new(chrome), "fetch('/x'); import('./y.js')").len(),
+            2
+        );
         let pack = "packages/components/ui-components/src/sail-y/sail-y.controller.ts";
         assert_eq!(check(Path::new(pack), "fetch('/z')").len(), 1);
     }
@@ -426,7 +444,13 @@ mod tests {
 
     #[test]
     fn granted_origin_allows_a_matching_literal_fetch() {
-        assert_eq!(nc("fetch('https://api.example.com/x')", &["https://api.example.com"]), 0);
+        assert_eq!(
+            nc(
+                "fetch('https://api.example.com/x')",
+                &["https://api.example.com"]
+            ),
+            0
+        );
     }
 
     #[test]
@@ -470,14 +494,32 @@ mod tests {
 
     #[test]
     fn websocket_and_eventsource_follow_the_same_allowlist() {
-        assert_eq!(nc("new WebSocket('wss://api.example.com')", &["wss://api.example.com"]), 0);
-        assert_eq!(nc("new WebSocket('wss://evil.com')", &["wss://api.example.com"]), 1);
         assert_eq!(
-            nc("new EventSource('https://api.example.com/stream')", &["https://api.example.com"]),
+            nc(
+                "new WebSocket('wss://api.example.com')",
+                &["wss://api.example.com"]
+            ),
             0
         );
         assert_eq!(
-            nc("new EventSource('https://evil.com/stream')", &["https://api.example.com"]),
+            nc(
+                "new WebSocket('wss://evil.com')",
+                &["wss://api.example.com"]
+            ),
+            1
+        );
+        assert_eq!(
+            nc(
+                "new EventSource('https://api.example.com/stream')",
+                &["https://api.example.com"]
+            ),
+            0
+        );
+        assert_eq!(
+            nc(
+                "new EventSource('https://evil.com/stream')",
+                &["https://api.example.com"]
+            ),
             1
         );
     }
@@ -494,19 +536,34 @@ mod tests {
     fn eval_and_cookie_stay_banned_even_with_a_grant() {
         // Not part of the network capability — a grant never loosens these.
         assert_eq!(nc("eval('2+2')", &["https://api.example.com"]), 1);
-        assert_eq!(nc("const c = document.cookie", &["https://api.example.com"]), 1);
-        assert_eq!(nc("const m = import('./x.js')", &["https://api.example.com"]), 1);
-        assert_eq!(nc("navigator.sendBeacon('/x')", &["https://api.example.com"]), 1);
+        assert_eq!(
+            nc("const c = document.cookie", &["https://api.example.com"]),
+            1
+        );
+        assert_eq!(
+            nc("const m = import('./x.js')", &["https://api.example.com"]),
+            1
+        );
+        assert_eq!(
+            nc("navigator.sendBeacon('/x')", &["https://api.example.com"]),
+            1
+        );
     }
 
     #[test]
     fn window_fetch_follows_the_allowlist_too() {
         assert_eq!(
-            nc("window.fetch('https://api.example.com/x')", &["https://api.example.com"]),
+            nc(
+                "window.fetch('https://api.example.com/x')",
+                &["https://api.example.com"]
+            ),
             0
         );
         assert_eq!(
-            nc("globalThis.fetch('https://evil.com/x')", &["https://api.example.com"]),
+            nc(
+                "globalThis.fetch('https://evil.com/x')",
+                &["https://api.example.com"]
+            ),
             1
         );
     }

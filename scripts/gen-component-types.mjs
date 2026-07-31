@@ -1,13 +1,22 @@
 #!/usr/bin/env node
+/**
+ * scripts/gen-component-types.mjs — curated root helper (HYGIENE-0).
+ *
+ * Runs: invoked by scripts/typecheck-components.mjs (`bun run typecheck`),
+ * and pack-level pretypecheck hooks when present.
+ * Contract: emit adjacent `<stem>.sail.d.ts` companions for component packs
+ * so controllers can `import type { Scope } from './x.sail'`.
+ *
+ * Keep scripts/ ≤2 files; cross-language bake goes in `cargo xtask`.
+ */
 // Generate the `<stem>.sail.d.ts` type companions for every component pack so
 // `tsc` can resolve each controller's `import type { Scope } from './<stem>.sail'`.
 //
 // WHY THIS EXISTS: a `.sail` template's `Scope` type is generated, not authored.
 // The compiler emits `<stem>.sail.d.ts` ADJACENT to its `.sail` (a codegen
 // companion, like a CSS-modules `.d.ts`), and the build artifacts (JS/CEM/…) to
-// the pack's own `dist/` via `--out`. Nothing here touches `.ship/sail-out` —
-// that path is the Ship dynamic-views output, owned by Ship, and components must
-// stay insulated from it. Run before `typecheck` (wired as each pack's
+// the pack's own `dist/` via `--out`. Components stay insulated from host
+// dynamic-views output paths. Run before `typecheck` (wired as each pack's
 // `pretypecheck`).
 //
 // Compiler: SAIL_COMPILER env, else the repo's debug build.

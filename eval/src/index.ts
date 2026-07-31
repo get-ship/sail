@@ -7,10 +7,34 @@ export {
   evalRoot,
   repoRoot,
   tasksDir,
+  armsDir,
   runsDir,
   findSailBin,
   assertSafeSlug,
 } from './paths.ts'
+export {
+  listArms,
+  loadArm,
+  loadArms,
+  materializeArm,
+  findSailArtifactLeaks,
+  gradingForArm,
+  SAIL_ARTIFACT_PATTERNS,
+  type ArmDef,
+  type LoadedArm,
+  type ArmContext,
+} from './arm.ts'
+export {
+  runPaced,
+  parseInterval,
+  isTripleComplete,
+  findCompletedTriple,
+  modelsMatch,
+  modelSlug,
+  tripleRunDir,
+  loadNonSailHtml,
+  type PaceOptions,
+} from './pace.ts'
 export { loadTask, listTasks, loadCorpus } from './task.ts'
 export {
   realHost,
@@ -26,6 +50,7 @@ export {
   RecordedDispatch,
   OmpDispatch,
   buildOmpArgs,
+  buildDispatchPrompt,
   resolveModelLabel,
   type DispatchAdapter,
   type DispatchRequest,
@@ -43,6 +68,7 @@ export {
   DEFAULT_MIN_VOCAB_SHARE,
   STUDIO_LOW_WATER,
 } from './graders/index.ts'
-export { runCorpus, classifyRun } from './runner.ts'
+export { runCorpus } from './runner.ts'
+export { classifyRun } from './classify.ts'
 export { formatResultsMd, writeResults } from './report.ts'
 export { recordSession } from './recorder.ts'

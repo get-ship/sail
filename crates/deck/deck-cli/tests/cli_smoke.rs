@@ -1,11 +1,9 @@
-//! Behavior smoke tests for the `deck` CLI.
+//! Behavior smoke tests for the `sail` CLI (`deck-cli` package).
 //!
-//! Spec: `.artifacts/job-spec.md` (job/deck-cli-tests) — top-3 fix #3 of
-//! the 2026-06-19 deck-readiness punch-list (P2-10). `crates/deck/deck-cli/`
-//! shipped zero tests; `emit`, `scaffold {route,component,pack}`, and
-//! `build-assets` were unproven. These tests exercise each subcommand
-//! against a temp dir via `Command::new(env!("CARGO_BIN_EXE_deck"))` and
-//! assert on the PRODUCED ARTIFACTS (not internal logs).
+//! Behavior coverage for `emit`, `scaffold {route,component,pack}`, and
+//! `build-assets`. Each subcommand runs against a temp dir via
+//! `Command::new(env!("CARGO_BIN_EXE_sail"))` and asserts on the PRODUCED
+//! ARTIFACTS (not internal logs).
 //!
 //! Design notes:
 //!
@@ -16,8 +14,8 @@
 //!   picks a unique timestamped name. A `Drop` guard removes the dirs
 //!   the test wrote so reruns stay clean.
 //! - `build-assets` may exit non-zero when a consumer bundle fails on
-//!   this worktree (sail-marketing astro/tsconfigs/strict miss, see
-//!   job-spec.md Scope). Framework singletons bake independently of
+//!   this worktree (missing consumer tsconfigs / strict miss). Framework
+//!   singletons bake independently of
 //!   consumer targets — `build_all` writes each framework bundle to
 //!   `.deck/framework/` before the consumer guard runs — so the test
 //!   asserts the framework artifacts regardless of overall exit code.
@@ -35,7 +33,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use tempfile::TempDir;
 
-// Serialize tests that invoke `deck build-assets`. The command writes framework
+// Serialize tests that invoke `sail build-assets`. The command writes framework
 // bundles into the shared repo-root `.deck/framework/` directory; without this
 // lock, parallel test threads can truncate a file another thread is reading or
 // emitting. See claim c-2026-07-19T18-12-45-685Z-f499ce4b.
@@ -66,8 +64,8 @@ fn repo_root() -> PathBuf {
     topmost_cargo_root(&start)
 }
 
-fn deck_bin() -> PathBuf {
-    PathBuf::from(env!("CARGO_BIN_EXE_deck"))
+fn sail_bin() -> PathBuf {
+    PathBuf::from(env!("CARGO_BIN_EXE_sail"))
 }
 
 /// Build a unique lowercase-hyphen stem from the unix epoch nanos.
@@ -81,14 +79,14 @@ fn unique_stem(label: &str) -> String {
     format!("{label}-{nanos:x}")
 }
 
-/// Run `deck <args...>` with cwd = repo root. Returns the `Output`
+/// Run `sail <args...>` with cwd = repo root. Returns the `Output`
 /// (stdout, stderr, status) for the caller to assert on.
-fn run_deck(args: &[&str]) -> std::process::Output {
-    Command::new(deck_bin())
+fn run_sail(args: &[&str]) -> std::process::Output {
+    Command::new(sail_bin())
         .args(args)
         .current_dir(repo_root())
         .output()
-        .expect("spawn deck binary")
+        .expect("spawn sail binary")
 }
 
 // ── Scaffold cleanup guard ──────────────────────────────────────────────────
@@ -135,7 +133,7 @@ impl Drop for ScaffoldGuard {
 fn build_assets_writes_framework_bundles() {
     let _guard = BUILD_ASSETS_LOCK.lock().unwrap();
 
-    let out = run_deck(&["build-assets", "--no-stamp"]);
+    let out = run_sail(&["build-assets", "--no-stamp"]);
     let stderr = String::from_utf8_lossy(&out.stderr);
     // Don't assert status — consumer failures (sail-marketing) are a
     // known-bad on this worktree. Framework bundles are written
@@ -172,10 +170,10 @@ fn emit_places_target_in_out_dir() {
 
     // Ensure the target is baked. If the framework dir is already
     // populated, this is a fast no-op rewrite.
-    let _ = run_deck(&["build-assets", "--no-stamp"]);
+    let _ = run_sail(&["build-assets", "--no-stamp"]);
 
     let out = TempDir::new().expect("tempdir");
-    let status = run_deck(&[
+    let status = run_sail(&[
         "emit",
         "--target",
         "sail-runtime",
@@ -188,11 +186,7 @@ fn emit_places_target_in_out_dir() {
         "deck emit --target sail-runtime exited {status:?}"
     );
     let entry = out.path().join("sail-runtime.js");
-    assert!(
-        entry.exists(),
-        "emit did not write {}",
-        entry.display()
-    );
+    assert!(entry.exists(), "emit did not write {}", entry.display());
     let len = std::fs::metadata(&entry).map(|m| m.len()).unwrap_or(0);
     assert!(len > 0, "emit wrote empty {}", entry.display());
 }
@@ -211,11 +205,18 @@ fn scaffold_route_writes_page_and_no_manifest() {
     let route_dir = repo_root().join("routes").join(&name);
     guard.track(route_dir.clone());
 
-    let status = run_deck(&["scaffold", "route", &name]).status;
-    assert!(status.success(), "deck scaffold route {name} exited {status:?}");
+    let status = run_sail(&["scaffold", "route", &name]).status;
+    assert!(
+        status.success(),
+        "deck scaffold route {name} exited {status:?}"
+    );
 
     let page = route_dir.join("page.sail");
-    assert!(page.exists(), "missing {} after scaffold route", page.display());
+    assert!(
+        page.exists(),
+        "missing {} after scaffold route",
+        page.display()
+    );
     let len = std::fs::metadata(&page).map(|m| m.len()).unwrap_or(0);
     assert!(len > 0, "empty {} after scaffold route", page.display());
 
@@ -239,23 +240,24 @@ fn scaffold_route_with_component_writes_widget() {
     let widget_dir = route_dir.join("_components").join(&tag);
     guard.track(route_dir);
 
-    let status = run_deck(&[
-        "scaffold",
-        "route",
-        &name,
-        "--component",
-        &tag,
-    ])
-    .status;
+    let status = run_sail(&["scaffold", "route", &name, "--component", &tag]).status;
     assert!(
         status.success(),
         "deck scaffold route {name} --component {tag} exited {status:?}"
     );
 
     let p = widget_dir.join(format!("{tag}.sail"));
-    assert!(p.exists(), "missing {} after scaffold route --component", p.display());
+    assert!(
+        p.exists(),
+        "missing {} after scaffold route --component",
+        p.display()
+    );
     let len = std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0);
-    assert!(len > 0, "empty {} after scaffold route --component", p.display());
+    assert!(
+        len > 0,
+        "empty {} after scaffold route --component",
+        p.display()
+    );
     assert!(
         !widget_dir.join(format!("{tag}.controller.ts")).exists(),
         "retired sibling controller written by scaffold route --component"
@@ -268,7 +270,7 @@ fn scaffold_route_with_component_writes_widget() {
 /// controller) under the SAIL primitives package:
 /// `packages/components/sail/primitives/src/<tag>/<tag>.sail`.
 #[test]
-fn scaffold_component_writes_sui_under_primitives_package() {
+fn scaffold_component_writes_sail_under_primitives_package() {
     let mut guard = ScaffoldGuard::new();
     let tag = unique_stem("sail-testcomp");
     let base = repo_root()
@@ -276,14 +278,18 @@ fn scaffold_component_writes_sui_under_primitives_package() {
         .join(&tag);
     guard.track(base.clone());
 
-    let status = run_deck(&["scaffold", "component", &tag]).status;
+    let status = run_sail(&["scaffold", "component", &tag]).status;
     assert!(
         status.success(),
         "deck scaffold component {tag} exited {status:?}"
     );
 
     let sail = base.join(format!("{tag}.sail"));
-    assert!(sail.exists(), "missing {} after scaffold component", sail.display());
+    assert!(
+        sail.exists(),
+        "missing {} after scaffold component",
+        sail.display()
+    );
     let len = std::fs::metadata(&sail).map(|m| m.len()).unwrap_or(0);
     assert!(len > 0, "empty {} after scaffold component", sail.display());
 
@@ -299,7 +305,7 @@ fn scaffold_component_writes_sui_under_primitives_package() {
 /// non-zero exit; the validator runs before any directory is created,
 /// so the absence of artifacts on disk is the failure-mode proof.
 #[test]
-fn scaffold_component_rejects_non_sui_tag() {
+fn scaffold_component_rejects_non_sail_tag() {
     // `tag` must pass `validate_route_name` (lowercase ASCII + hyphens
     // + digits) but violate the `sail-` prefix requirement.
     let bad_tag = unique_stem("not-sail-widget");
@@ -310,7 +316,7 @@ fn scaffold_component_rejects_non_sui_tag() {
     let mut guard = ScaffoldGuard::new();
     guard.track(base.clone());
 
-    let output = run_deck(&["scaffold", "component", &bad_tag]);
+    let output = run_sail(&["scaffold", "component", &bad_tag]);
     assert!(
         !output.status.success(),
         "deck scaffold component accepted non-sail tag (status: {:?})",
@@ -341,8 +347,11 @@ fn scaffold_pack_writes_package_json_tsconfig_and_src() {
     let example_dir = base.join("src").join(format!("{name}-example"));
     guard.track(base.clone());
 
-    let status = run_deck(&["scaffold", "pack", &name]).status;
-    assert!(status.success(), "deck scaffold pack {name} exited {status:?}");
+    let status = run_sail(&["scaffold", "pack", &name]).status;
+    assert!(
+        status.success(),
+        "deck scaffold pack {name} exited {status:?}"
+    );
 
     for rel in ["package.json", "tsconfig.json", "src/index.ts"] {
         let p = base.join(rel);
@@ -368,6 +377,91 @@ fn scaffold_pack_writes_package_json_tsconfig_and_src() {
     assert!(
         pkg.contains(&expected),
         "package.json missing {expected:?}; contents:\n{pkg}"
+    );
+}
+
+// ── scaffold theme (C5) ─────────────────────────────────────────────────────
+
+/// `deck scaffold theme --project <tmp>` copies one catalog theme into
+/// `tokens/themes/` and writes a thin `sail.config.jsonc` theme section.
+#[test]
+fn scaffold_theme_copies_default_and_writes_config() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let project = tmp.path().join("app");
+    std::fs::create_dir_all(&project).expect("mkdir project");
+
+    let status = run_sail(&[
+        "scaffold",
+        "theme",
+        "--project",
+        project.to_str().expect("utf8 path"),
+    ])
+    .status;
+    assert!(status.success(), "deck scaffold theme exited {status:?}");
+
+    // Phase D default is modes-in-file primary `ship` (not residual twin ship-light).
+    let theme = project.join("tokens/themes/ship.json");
+    assert!(
+        theme.is_file(),
+        "missing {} after scaffold theme",
+        theme.display()
+    );
+    let len = std::fs::metadata(&theme).map(|m| m.len()).unwrap_or(0);
+    assert!(len > 0, "empty theme file after scaffold theme");
+    let theme_body = std::fs::read_to_string(&theme).expect("read theme");
+    assert!(
+        theme_body.contains("\"modes\"") || theme_body.contains("themeId"),
+        "scaffold theme should carry modes-in-file or themeId meta: {theme_body}"
+    );
+
+    let cfg = project.join("sail.config.jsonc");
+    assert!(
+        cfg.is_file(),
+        "missing sail.config.jsonc after scaffold theme"
+    );
+    let body = std::fs::read_to_string(&cfg).expect("read config");
+    assert!(
+        body.contains("\"default\": \"ship\""),
+        "config missing default theme: {body}"
+    );
+    // Thin single-id allowlist (C5) — not a full catalog list / null.
+    assert!(
+        body.contains("\"enabled\": [\"ship\"]"),
+        "config must thin-enable only ship: {body}"
+    );
+    assert!(
+        !body.contains("paper") && !body.contains("glass"),
+        "scaffold must not dump full catalog into enabled: {body}"
+    );
+
+    // S0: theme scaffold ensures gitignore + .sail/README (tasks never commit).
+    let gi = std::fs::read_to_string(project.join(".gitignore")).expect("read .gitignore");
+    for line in [
+        ".deck/",
+        ".sail/",
+        "routes.gen.ts",
+        "entry.gen.ts",
+        "components.gen.ts",
+        "node_modules/",
+        ".env",
+    ] {
+        assert!(
+            gi.lines().any(|l| {
+                let t = l.trim().trim_start_matches('/');
+                t == line.trim_start_matches('/')
+            }),
+            "gitignore missing critical {line:?}:\n{gi}"
+        );
+    }
+    assert!(
+        !gi.contains("tokens/themes") && !gi.contains("sail.config"),
+        "must not ignore theme SSOT: {gi}"
+    );
+    let readme = project.join(".sail/README.md");
+    assert!(
+        readme.is_file(),
+        "missing {} after scaffold theme",
+        readme.display()
     );
 }
 
@@ -398,7 +492,7 @@ fn builds_a_zero_ship_product_app() {
     )
     .expect("page.sail");
 
-    let out = run_deck(&["build", "--project", root.to_str().unwrap()]);
+    let out = run_sail(&["build", "--project", root.to_str().unwrap()]);
     assert!(
         out.status.success(),
         "deck build of a zero-ship-product app failed (status {:?}):\n{}",
@@ -410,8 +504,14 @@ fn builds_a_zero_ship_product_app() {
     let index = root.join(".deck").join("index.html");
     assert!(index.exists(), "deck build did not emit .deck/index.html");
     let html = std::fs::read_to_string(&index).expect("read index.html");
-    assert!(html.contains("importmap"), "built index.html missing importmap:\n{html}");
-    assert!(html.contains("root"), "built index.html missing the #root mount point:\n{html}");
+    assert!(
+        html.contains("importmap"),
+        "built index.html missing importmap:\n{html}"
+    );
+    assert!(
+        html.contains("root"),
+        "built index.html missing the #root mount point:\n{html}"
+    );
 
     // The entry chunk was bundled (the routes/ page compiled into the SPA).
     let assets = root.join(".deck").join("assets");
@@ -425,7 +525,10 @@ fn builds_a_zero_ship_product_app() {
         })
         .map(|e| e.path());
     let entry_js = entry_js.unwrap_or_else(|| {
-        panic!("deck build did not emit an entry-*.js chunk in {}", assets.display())
+        panic!(
+            "deck build did not emit an entry-*.js chunk in {}",
+            assets.display()
+        )
     });
 
     // The entry must BOOTSTRAP, not merely export data: a standalone app's
@@ -439,4 +542,50 @@ fn builds_a_zero_ship_product_app() {
         "entry chunk must call mountRouter (the SPA bootstrap), else nothing mounts:\n{}",
         &entry_src[..entry_src.len().min(600)],
     );
+}
+
+// ── sail surface (C-pack) ───────────────────────────────────────────────────
+
+#[test]
+fn sail_version_and_doctor_smoke() {
+    let out = Command::new(sail_bin())
+        .args(["version"])
+        .current_dir(repo_root())
+        .output()
+        .expect("spawn sail");
+    assert!(out.status.success(), "sail version failed: {:?}", out);
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("sail") || stdout.contains("0.1.0"),
+        "unexpected version output: {stdout}"
+    );
+
+    let doc = Command::new(sail_bin())
+        .args(["doctor"])
+        .current_dir(repo_root())
+        .output()
+        .expect("spawn sail doctor");
+    assert!(doc.status.success(), "sail doctor failed: {:?}", doc);
+    let d = String::from_utf8_lossy(&doc.stdout);
+    assert!(d.contains("status: ok"), "doctor: {d}");
+}
+
+#[test]
+fn sail_help_lists_mvp_subcommands() {
+    let out = Command::new(sail_bin())
+        .args(["--help"])
+        .current_dir(repo_root())
+        .output()
+        .expect("spawn sail --help");
+    assert!(out.status.success());
+    let help = String::from_utf8_lossy(&out.stdout);
+    for cmd in [
+        "dev", "build", "scaffold", "tokens", "compile", "check", "lsp", "mcp", "op", "layout",
+        "doctor", "version",
+    ] {
+        assert!(
+            help.contains(cmd),
+            "help missing subcommand `{cmd}`:\n{help}"
+        );
+    }
 }

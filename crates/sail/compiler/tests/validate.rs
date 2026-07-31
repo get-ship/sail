@@ -15,7 +15,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/validate/fixtures")
@@ -47,7 +47,8 @@ fn undeclared_identifier_rejected() {
     let (src, path) = read("undeclared-identifier");
     let err = compile(&src, opts(path)).expect_err("undeclared identifier must fail");
     assert!(
-        err.message.contains("Identifier 'undeclared' is not declared in scope"),
+        err.message
+            .contains("Identifier 'undeclared' is not declared in scope"),
         "msg: {}",
         err.message
     );
@@ -62,11 +63,7 @@ fn undeclared_identifier_rejected() {
 fn impure_derived_rejected() {
     let (src, path) = read("impure-derived");
     let err = compile(&src, opts(path)).expect_err("impure derived must fail");
-    assert!(
-        err.message.contains("Derived 'x'"),
-        "msg: {}",
-        err.message
-    );
+    assert!(err.message.contains("Derived 'x'"), "msg: {}", err.message);
     assert!(
         err.message.contains("Date.now"),
         "msg should name the side effect: {}",

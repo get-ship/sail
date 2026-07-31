@@ -26,12 +26,9 @@ use crate::check::controller_parse::ParsedController;
 use crate::check::symbol_table::SymbolTable;
 use crate::diagnostics::CompileError;
 use crate::ir::Program;
-use crate::parse::expr::{parse_expression, parse_expression_with_arrows, Ast, AstKind};
+use crate::parse::expr::{Ast, AstKind, parse_expression, parse_expression_with_arrows};
 
-pub fn check(
-    program: &Program,
-    controller: Option<&ParsedController>,
-) -> Result<(), CompileError> {
+pub fn check(program: &Program, controller: Option<&ParsedController>) -> Result<(), CompileError> {
     let table = SymbolTable::build(program, controller);
     let ctx_head = controller.map(|c| c.ctx_param.as_str()).unwrap_or("");
     super::visit_exprs(program, &mut |expr| check_one(expr, &table, ctx_head))
@@ -39,10 +36,7 @@ pub fn check(
 
 /// Collect EVERY invalid member access (one per expression), for the LSP /
 /// agent multi-diagnostic surface. `check()` returns only the first.
-pub fn collect(
-    program: &Program,
-    controller: Option<&ParsedController>,
-) -> Vec<CompileError> {
+pub fn collect(program: &Program, controller: Option<&ParsedController>) -> Vec<CompileError> {
     let table = SymbolTable::build(program, controller);
     let ctx_head = controller.map(|c| c.ctx_param.as_str()).unwrap_or("");
     let mut errs = Vec::new();
@@ -75,18 +69,27 @@ fn check_one(
 }
 
 fn walk(ast: &Ast, table: &SymbolTable, ctx_head: &str) -> Result<(), CompileError> {
-    if let AstKind::Member { obj, prop, optional } = &ast.kind
+    if let AstKind::Member {
+        obj,
+        prop,
+        optional,
+    } = &ast.kind
         && let AstKind::Ident(head) = &obj.kind
-        && let Some(err) = check_head_member(head, prop, *optional, table, ast, ctx_head) {
-            return Err(err);
-        }
+        && let Some(err) = check_head_member(head, prop, *optional, table, ast, ctx_head)
+    {
+        return Err(err);
+    }
     // Recurse via the AST walker.
     let mut error: Option<CompileError> = None;
     ast.walk(&mut |n| {
         if error.is_some() {
             return false;
         }
-        if let AstKind::Member { obj, prop, optional } = &n.kind
+        if let AstKind::Member {
+            obj,
+            prop,
+            optional,
+        } = &n.kind
             && let AstKind::Ident(head) = &obj.kind
             && let Some(err) = check_head_member(head, prop, *optional, table, n, ctx_head)
         {
@@ -109,21 +112,22 @@ fn check_head_member(
     node: &Ast,
     ctx_head: &str,
 ) -> Option<CompileError> {
-    let (label, exists, available): (&str, bool, Vec<String>) = if !ctx_head.is_empty() && head == ctx_head {
-        (
-            ctx_head,
-            table.scope.contains_key(prop),
-            table.scope.keys().cloned().collect(),
-        )
-    } else if head == "props" {
-        (
-            "props",
-            table.props.contains_key(prop),
-            table.props.keys().cloned().collect(),
-        )
-    } else {
-        return None;
-    };
+    let (label, exists, available): (&str, bool, Vec<String>) =
+        if !ctx_head.is_empty() && head == ctx_head {
+            (
+                ctx_head,
+                table.scope.contains_key(prop),
+                table.scope.keys().cloned().collect(),
+            )
+        } else if head == "props" {
+            (
+                "props",
+                table.props.contains_key(prop),
+                table.props.keys().cloned().collect(),
+            )
+        } else {
+            return None;
+        };
     if exists {
         return None;
     }
@@ -147,7 +151,10 @@ fn truncate(s: &str, max: usize) -> String {
     if s.chars().count() <= max {
         return s.to_string();
     }
-    s.chars().take(max - 1).chain(std::iter::once('…')).collect()
+    s.chars()
+        .take(max - 1)
+        .chain(std::iter::once('…'))
+        .collect()
 }
 
 #[cfg(test)]
@@ -194,9 +201,7 @@ mod tests {
 
     #[test]
     fn flags_derived_dot_typo() {
-        let c = ctrl(
-            "export default controller((ctx) => ({ total: derived(() => 1) }));",
-        );
+        let c = ctrl("export default controller((ctx) => ({ total: derived(() => 1) }));");
         let table = SymbolTable::build(&empty_program(), Some(&c));
         let e = expr("ctx.totl");
         let err = check_one(&e, &table, "ctx").unwrap_err();

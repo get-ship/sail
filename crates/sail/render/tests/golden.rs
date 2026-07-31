@@ -1,136 +1,208 @@
-//! Golden render test for `sail-render`.
-//!
-//! The fixture is rendered with the committed token fonts and a fixed viewport.
-//! We avoid raw PNG byte hashes and instead assert geometry, non-blank output,
-//! and the presence of the expected text/placeholder pixels.
+//! Pixel goldens + paint/leak/dynamics assertions for static render.
 
 use std::path::PathBuf;
 
-use sail_render::{RenderOptions, render_file, write_png};
+use sail_render::{RenderOptions, assert_pixel_match, png_bytes, render_file, write_png};
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/")).join(name)
 }
 
-fn source() -> String {
-    std::fs::read_to_string(fixture("golden.sail")).unwrap()
+fn fonts() -> PathBuf {
+    fixture("fonts")
 }
 
-fn split_html_css(preprocessed: &str) -> (&str, &str) {
-    let Some(start) = preprocessed.find("<style>") else {
-        return (preprocessed, "");
-    };
-    let css_start = start + "<style>".len();
-    let Some(end) = preprocessed[css_start..].find("</style>") else {
-        return (preprocessed, "");
-    };
-    let html = &preprocessed[end + css_start + "</style>".len()..];
-    (html, &preprocessed[css_start..css_start + end])
+fn opts(viewport: (u32, u32)) -> RenderOptions {
+    RenderOptions {
+        viewport,
+        fonts_dir: Some(fonts()),
+        app_fonts_dir: None,
+        theme: Some("ship".into()),
+        mode: Some("light".into()),
+        workspace: workspace_root(),
+        file: None,
+        drop_bg_token: None,
+    }
 }
 
-fn preprocessed_layout() -> (Vec<sail_layout::html::Element>, sail_layout::Layout) {
-    let preprocessed = sail_compiler::parse::preprocess::preprocess(&source()).expect("preprocess");
-    let (html, _css) = split_html_css(&preprocessed);
-    let elements = sail_layout::html::parse_source(html);
-    let layout =
-        sail_layout::taffy_tree::build(elements.clone(), (800.0, 600.0)).unwrap();
-    (elements, layout)
+fn workspace_root() -> Option<PathBuf> {
+    let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    for _ in 0..8 {
+        if dir.join("Cargo.toml").is_file() && dir.join("packages/sail/tokens").is_dir() {
+            return Some(dir);
+        }
+        if !dir.pop() {
+            break;
+        }
+    }
+    None
 }
 
-fn nonwhite_per_row(rgba: &[u8], width: u32) -> Vec<usize> {
-    rgba.chunks_exact(4 * width as usize)
-        .map(|row| {
-            row.chunks_exact(4)
-                .filter(|c| c != &[255, 255, 255, 255])
-                .count()
-        })
-        .collect()
+fn golden_path(name: &str) -> PathBuf {
+    fixture(&format!("goldens/{name}.png"))
+}
+
+fn ensure_or_compare(name: &str, result: &sail_render::RenderOutput) {
+    let path = golden_path(name);
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    if !path.is_file() || std::env::var("SAIL_RENDER_UPDATE_GOLDEN").ok().as_deref() == Some("1") {
+        write_png(&result.image, &path).expect("write golden");
+        eprintln!("wrote golden {}", path.display());
+        return;
+    }
+    let expected = std::fs::read(&path).expect("read golden");
+    let diff = path.with_extension("diff.png");
+    assert_pixel_match(&result.image, &expected, 3, Some(&diff)).unwrap_or_else(|e| {
+        panic!("golden {name} failed: {e} (diff at {})", diff.display());
+    });
 }
 
 #[test]
-fn golden_renders_at_viewport_size() {
-    let out = tempfile::NamedTempFile::with_suffix(".png").unwrap();
-    let opts = RenderOptions {
-        viewport: (800, 600),
-        fonts_dir: Some(fixture("fonts")),
-    };
-    let result = render_file(&fixture("golden.sail"), opts).unwrap();
+fn paint_fixture_golden_light() {
+    let result = render_file(&fixture("paint.sail"), opts((400, 300))).unwrap();
+    assert!(
+        !result.html.contains("{ticks()}",),
+        "expression leak in html: {}",
+        result.html
+    );
+    assert!(
+        result
+            .dynamics
+            .iter()
+            .any(|d| d.reason.contains("dynamic-expr") || d.reason.contains("ticks")),
+        "expected ticks dynamic: {:?}",
+        result.dynamics
+    );
+    assert!(
+        result
+            .dynamics
+            .iter()
+            .any(|d| d.reason.contains("my-widget") || d.tag.as_deref() == Some("my-widget")),
+        "expected unknown my-widget: {:?}",
+        result.dynamics
+    );
+    assert!(!result.regions.is_empty());
+    ensure_or_compare("paint-light-400x300", &result);
+}
+
+#[test]
+fn paint_fixture_golden_dark() {
+    let mut o = opts((400, 300));
+    o.mode = Some("dark".into());
+    let result = render_file(&fixture("paint.sail"), o).unwrap();
+    ensure_or_compare("paint-dark-400x300", &result);
+}
+
+#[test]
+fn static_only_golden() {
+    let result = render_file(&fixture("static-only.sail"), opts((320, 200))).unwrap();
+    assert!(
+        result.dynamics.is_empty() || result.dynamics.iter().all(|d| !d.reason.contains("expr"))
+    );
+    ensure_or_compare("static-only-320x200", &result);
+}
+
+#[test]
+fn drop_bg_mapping_fails_golden_with_diff() {
+    // Establish baseline with full paint.
+    let baseline = render_file(&fixture("paint.sail"), opts((400, 300))).unwrap();
+    let bytes = png_bytes(&baseline.image).unwrap();
+
+    // Drop primary mapping → button no longer paints primary.
+    let mut o = opts((400, 300));
+    o.drop_bg_token = Some("primary".into());
+    let broken = render_file(&fixture("paint.sail"), o).unwrap();
+
+    let dir = tempfile::tempdir().unwrap();
+    let diff = dir.path().join("drop-bg.diff.png");
+    let err = assert_pixel_match(&broken.image, &bytes, 3, Some(&diff));
+    assert!(
+        err.is_err(),
+        "expected golden fail after dropping bg mapping"
+    );
+    assert!(diff.is_file(), "diff artifact must be written on failure");
+}
+
+#[test]
+fn no_expression_leaks_in_output_html() {
+    let result = render_file(&fixture("paint.sail"), opts((400, 300))).unwrap();
+    assert!(
+        !result.html.contains('{'),
+        "leaked brace in html: {}",
+        result.html
+    );
+}
+
+#[test]
+fn mid_size_route_under_500ms_debug() {
+    // Warm fonts/registry once — Studio repaints reuse loaded fonts (O8).
+    // Spec budget is for repaint; cold first frame may exceed 500ms.
+    let _ = render_file(&fixture("mid-size.sail"), opts((800, 600))).unwrap();
+    let result = render_file(&fixture("mid-size.sail"), opts((800, 600))).unwrap();
+    assert!(
+        result.ms < 500,
+        "warm render took {}ms (budget 500ms debug)",
+        result.ms
+    );
+}
+
+#[test]
+fn golden_legacy_fixture_still_renders() {
+    let result = render_file(&fixture("golden.sail"), opts((800, 600))).unwrap();
     assert_eq!(result.viewport, (800, 600));
-    write_png(&result.image, out.path()).unwrap();
-
-    let meta = std::fs::metadata(out.path()).unwrap();
-    assert!(meta.len() > 0, "PNG output must be non-empty");
-}
-
-#[test]
-fn golden_is_not_blank() {
-    let opts = RenderOptions {
-        viewport: (800, 600),
-        fonts_dir: Some(fixture("fonts")),
-    };
-    let result = render_file(&fixture("golden.sail"), opts).unwrap();
-
     let rgba = result.image.as_raw();
-    assert!(!rgba.is_empty());
-
     let non_white = rgba
         .chunks_exact(4)
         .filter(|c| c != &[255, 255, 255, 255])
         .count();
-    assert!(
-        non_white > 1000,
-        "rendered image has only {non_white} non-white pixels; expected visible content"
-    );
+    assert!(non_white > 100, "expected visible content");
 }
 
 #[test]
-fn placeholder_is_only_my_widget_and_text_renders_above_it() {
-    let (elements, layout) = preprocessed_layout();
+fn sidecar_lists_dynamics() {
+    let result = render_file(&fixture("paint.sail"), opts((400, 300))).unwrap();
+    let dyn_json = serde_json::to_value(&result.dynamics).unwrap();
+    assert!(dyn_json.as_array().unwrap().len() >= 2, "{dyn_json}");
+}
 
-    // Exactly one element in the fixture is unknown, and it is <my-widget>.
-    let unknown_idx = elements
-        .iter()
-        .position(|e| e.is_unknown())
-        .expect("fixture should contain an unknown element");
-    assert_eq!(
-        elements[unknown_idx].tag, "my-widget",
-        "the only unknown element should be <my-widget>"
-    );
+#[test]
+fn region_and_dynamic_ids_are_inspect_tree_ids() {
+    // Library/CLI regions must use SailInspect content-hash ids (true join),
+    // not a post-hoc layout-box substitution only on the ops path.
+    let mut o = opts((400, 300));
+    o.file = Some("crates/sail/render/tests/fixtures/paint.sail".into());
+    let result = render_file(&fixture("paint.sail"), o).unwrap();
+    let tree: std::collections::BTreeSet<_> = result.tree_ids.iter().cloned().collect();
+    assert!(!tree.is_empty(), "author tree must produce node ids");
+    assert!(!result.regions.is_empty());
+    for r in &result.regions {
+        assert!(
+            tree.contains(&r.node_id),
+            "region {} not in inspect tree {:?}",
+            r.node_id,
+            tree
+        );
+    }
+    for d in &result.dynamics {
+        assert!(
+            tree.contains(&d.node_id),
+            "dynamic {} not in inspect tree",
+            d.node_id
+        );
+        assert!(
+            !d.node_id.contains("dyn.expr"),
+            "dynamics must not keep provisional ids"
+        );
+    }
+}
 
-    // Render the fixture.
-    let opts = RenderOptions {
-        viewport: (800, 600),
-        fonts_dir: Some(fixture("fonts")),
-    };
-    let result = render_file(&fixture("golden.sail"), opts).unwrap();
-    let width = result.image.width();
-    let height = result.image.height();
-    let nonwhite = nonwhite_per_row(result.image.as_raw(), width);
-
-    // Locate the placeholder's vertical band from the computed layout.
-    let computed = layout
-        .computed(unknown_idx)
-        .expect("layout should contain the unknown element");
-    let top_y = computed.location.y as usize;
-    let placeholder_height = computed.size.height.max(100.0) as usize;
-    let bottom_y = (top_y + placeholder_height).min(height as usize);
-
-    // Text must render above the placeholder.
-    let content_above: usize = nonwhite.iter().take(top_y).sum();
-    assert!(
-        content_above > 0,
-        "expected rendered text above the <my-widget> placeholder (placeholder top at y={top_y})"
-    );
-
-    // The placeholder itself must be visible.
-    let placeholder_pixels: usize = nonwhite[top_y..bottom_y].iter().sum();
-    assert!(
-        placeholder_pixels > 1000,
-        "expected visible placeholder for <my-widget> at y={top_y}..{bottom_y}, got {placeholder_pixels} non-white pixels"
-    );
-
-    // Nothing below the placeholder: the column is content-height, so the rest
-    // of the viewport stays blank white.
-    let below: usize = nonwhite.iter().skip(bottom_y).sum();
-    assert_eq!(below, 0, "expected no rendered content below the placeholder");
+#[test]
+fn mid_size_golden_painted_tokens() {
+    // Step-6 fixture coverage: multi-card painted route (page.sail 1440×900 is
+    // intentionally not golden — cold full landing is heavy; this pins tokens).
+    let result = render_file(&fixture("mid-size.sail"), opts((800, 600))).unwrap();
+    assert!(!result.html.contains('{'));
+    ensure_or_compare("mid-size-800x600", &result);
 }

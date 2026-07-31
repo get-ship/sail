@@ -24,7 +24,10 @@ pub fn contains(scale: &str, value: &str) -> bool {
 pub fn values(scale: &str) -> Vec<String> {
     let mut v: Vec<String> = match scale {
         "space" => {
-            let mut s: Vec<String> = tokens::space_values().iter().map(|t| t.to_string()).collect();
+            let mut s: Vec<String> = tokens::space_values()
+                .iter()
+                .map(|t| t.to_string())
+                .collect();
             s.extend(channels());
             s.push("0".into());
             s
@@ -35,13 +38,26 @@ pub fn values(scale: &str) -> Vec<String> {
             // intrinsic keywords, the dimensional families (icon-size/control-h/
             // panel/breakpoint), and the framework's own size + density channels,
             // which a component spends to sit on the platform's density axis.
-            let mut s: Vec<String> = tokens::size_values().iter().map(|t| t.to_string()).collect();
+            let mut s: Vec<String> = tokens::size_values()
+                .iter()
+                .map(|t| t.to_string())
+                .collect();
             s.extend(tokens::space_values().iter().map(|t| t.to_string()));
             s.extend(channels());
             s.extend(
-                ["auto", "full", "screen", "fill", "rail-fill", "fit", "min", "max", "0"]
-                    .iter()
-                    .map(|t| t.to_string()),
+                [
+                    "auto",
+                    "full",
+                    "screen",
+                    "fill",
+                    "rail-fill",
+                    "fit",
+                    "min",
+                    "max",
+                    "0",
+                ]
+                .iter()
+                .map(|t| t.to_string()),
             );
             // A closed, content-relative width family: a FIXED text slot (a
             // rotating-word `<strong>` that must not reflow the line around
@@ -51,24 +67,50 @@ pub fn values(scale: &str) -> Vec<String> {
             s.extend(CH.iter().map(|t| format!("ch-{t}")));
             s
         }
-        "color" => tokens::color_values().iter().map(|t| t.to_string()).collect(),
+        "color" => tokens::color_values()
+            .iter()
+            .map(|t| t.to_string())
+            .collect(),
         "radius" => {
-            let mut s: Vec<String> = tokens::suffixes("radius-").iter().map(|t| t.to_string()).collect();
+            let mut s: Vec<String> = tokens::suffixes("radius-")
+                .iter()
+                .map(|t| t.to_string())
+                .collect();
             s.push("none".into());
             s
         }
         "text" => {
-            let mut s: Vec<String> = tokens::text_values().iter().map(|t| t.to_string()).collect();
+            let mut s: Vec<String> = tokens::text_values()
+                .iter()
+                .map(|t| t.to_string())
+                .collect();
             s.push("density".into()); // the platform density axis, not a size step
             s.extend(channels());
             s
         }
-        "weight" => tokens::suffixes("font-weight-").iter().map(|t| t.to_string()).collect(),
-        "font" => vec!["body".into(), "heading".into(), "mono".into(), "display".into()],
-        "leading" => tokens::suffixes("leading-").iter().map(|t| t.to_string()).collect(),
-        "tracking" => tokens::suffixes("tracking-").iter().map(|t| t.to_string()).collect(),
+        "weight" => tokens::suffixes("font-weight-")
+            .iter()
+            .map(|t| t.to_string())
+            .collect(),
+        "font" => vec![
+            "body".into(),
+            "heading".into(),
+            "mono".into(),
+            "display".into(),
+        ],
+        "leading" => tokens::suffixes("leading-")
+            .iter()
+            .map(|t| t.to_string())
+            .collect(),
+        "tracking" => tokens::suffixes("tracking-")
+            .iter()
+            .map(|t| t.to_string())
+            .collect(),
         "shadow" => {
-            let mut s: Vec<String> = tokens::suffixes("shadow-").iter().map(|t| t.to_string()).collect();
+            let mut s: Vec<String> = tokens::suffixes("shadow-")
+                .iter()
+                .map(|t| t.to_string())
+                .collect();
             s.push("none".into());
             s
         }
@@ -76,15 +118,26 @@ pub fn values(scale: &str) -> Vec<String> {
             // Named elevation tokens (`popover`, `sticky`, …) plus a closed
             // unitless local-stack ramp (TW-shaped `z-1`/`z-2` for joined
             // toggles — not phantom `var(--z-1)`).
-            let mut s: Vec<String> =
-                tokens::suffixes("z-").iter().map(|t| t.to_string()).collect();
+            let mut s: Vec<String> = tokens::suffixes("z-")
+                .iter()
+                .map(|t| t.to_string())
+                .collect();
             s.extend(Z_INDEX.iter().map(|t| t.to_string()));
             s
         }
-        "duration" => tokens::suffixes("duration-").iter().map(|t| t.to_string()).collect(),
-        "ease" => tokens::suffixes("ease-").iter().map(|t| t.to_string()).collect(),
+        "duration" => tokens::suffixes("duration-")
+            .iter()
+            .map(|t| t.to_string())
+            .collect(),
+        "ease" => tokens::suffixes("ease-")
+            .iter()
+            .map(|t| t.to_string())
+            .collect(),
         "ring" => {
-            let mut s: Vec<String> = tokens::color_values().iter().map(|t| t.to_string()).collect();
+            let mut s: Vec<String> = tokens::color_values()
+                .iter()
+                .map(|t| t.to_string())
+                .collect();
             s.push("none".into());
             s
         }
@@ -156,7 +209,13 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
                 format!("var(--{token})")
             }
         }
-        "radius" => if token == "none" { "0".into() } else { format!("var(--radius-{token})") },
+        "radius" => {
+            if token == "none" {
+                "0".into()
+            } else {
+                format!("var(--radius-{token})")
+            }
+        }
         "text" => match token {
             // The platform's density axis (<html data-density>), not a step of the
             // type scale — a component reads it, it does not re-decide it.
@@ -168,7 +227,13 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
         "font" => format!("var(--{token}-font)"),
         "leading" => format!("var(--leading-{token})"),
         "tracking" => format!("var(--tracking-{token})"),
-        "shadow" => if token == "none" { "none".into() } else { format!("var(--shadow-{token})") },
+        "shadow" => {
+            if token == "none" {
+                "none".into()
+            } else {
+                format!("var(--shadow-{token})")
+            }
+        }
         "z" => {
             if Z_INDEX.contains(&token) {
                 token.into()
@@ -191,8 +256,15 @@ pub fn lower(scale: &str, token: &str) -> Option<String> {
 /// own var rather than a scale-prefixed one — a component SPENDS them; it never
 /// re-decides them.
 fn channels() -> Vec<String> {
-    let mut c: Vec<String> = tokens::suffixes("density-").iter().map(|t| format!("density-{t}")).collect();
-    c.extend(["size-px", "size-fs", "size-h"].iter().map(|t| t.to_string()));
+    let mut c: Vec<String> = tokens::suffixes("density-")
+        .iter()
+        .map(|t| format!("density-{t}"))
+        .collect();
+    c.extend(
+        ["size-px", "size-fs", "size-h"]
+            .iter()
+            .map(|t| t.to_string()),
+    );
     c
 }
 
@@ -227,7 +299,17 @@ const ANGLE: &[&str] = &["0", "1", "2", "3", "6", "12", "45", "90", "180", "270"
 
 /// The CSS colour keywords sx lets through unsanctioned — they name no design
 /// decision, so there is nothing to tokenize.
-pub const KEYWORD_COLORS: &[&str] = &["transparent", "currentColor", "inherit", "Canvas", "CanvasText", "Highlight", "HighlightText", "ButtonText", "ButtonFace"];
+pub const KEYWORD_COLORS: &[&str] = &[
+    "transparent",
+    "currentColor",
+    "inherit",
+    "Canvas",
+    "CanvasText",
+    "Highlight",
+    "HighlightText",
+    "ButtonText",
+    "ButtonFace",
+];
 
 pub fn is_keyword_color(token: &str) -> bool {
     KEYWORD_COLORS.contains(&token)
@@ -268,8 +350,14 @@ mod tests {
         // the landing page's word-cycler: a fixed-width slot sized to the
         // longest word ("Components", 11 chars) so the trailing text never
         // reflows mid-cycle.
-        assert!(contains("size", "ch-16"), "closed content-relative width step");
-        assert!(!contains("size", "ch-7"), "not every integer — a closed ramp");
+        assert!(
+            contains("size", "ch-16"),
+            "closed content-relative width step"
+        );
+        assert!(
+            !contains("size", "ch-7"),
+            "not every integer — a closed ramp"
+        );
         assert_eq!(lower("size", "ch-16").unwrap(), "16ch");
     }
 

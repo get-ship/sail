@@ -1,23 +1,21 @@
 // @ship/tokens — webfont drift + structural tests.
 //
 // The woff2 sources for DM Sans Variable, Syne Variable, and JetBrains Mono
-// Variable are vendored under `./src/fonts/`. The generated `sail-base.css`
-// (materialized by `packages/sail/runtime/scripts/emit-contracts-css.ts` from
-// the runtime's `LIGHT_CONTRACTS_CSS` + the `FONTS` manifest in
-// `./src/fonts.ts`) emits one `@font-face` per font with a relative
-// `url('./fonts/<file>')` reference.
+// Variable are vendored under `./src/fonts/`. Hand-authored `sail-base.css`
+// (document floor SSOT) carries one `@font-face` per font from the `FONTS`
+// manifest in `./src/fonts.ts`, each with a relative `url('./fonts/<file>')`.
 //
 // At deck build time the bundler's `ShipAssetCssPlugin`
-// (`crates/deck/deck-bundler/src/ship_asset_css.rs`) walks the generated
-// CSS, calls `ctx.emit_file_async` for each woff2 reference, and rewrites
-// the URL to the bundled hashed asset path. The woff2 ship as real
+// (`crates/deck/deck-bundler/src/ship_asset_css.rs`) walks the CSS, calls
+// `ctx.emit_file_async` for each woff2 reference, and rewrites the URL to
+// the bundled hashed asset path. The woff2 ship as real
 // `assets/<file>-<hash>.woff2` files; the browser fetches them from the
 // same `assets/` directory the CSS lives in. NO base64 inlining.
 //
 // This file (1) asserts the structural invariants the design system relies
 // on (family names resolve to tokens.css tokens, every woff2 file is
-// vendored, every file has the woff2 magic, etc.), and (2) drift-locks the
-// emitted `sail-base.css` against the FONTS manifest — a woff2 change or a
+// vendored, every file has the woff2 magic, etc.), and (2) drift-locks
+// `sail-base.css` against the FONTS manifest — a woff2 change or a
 // manifest row drift would surface as a failing test rather than a silent
 // mismatch.
 

@@ -119,8 +119,9 @@ pub fn tokenize_children(nodes: &[Node]) -> Vec<Token> {
                 let before = out.len();
                 tokenize_text(&t.data, t.span, &mut out);
                 // Strip indentation whitespace around control markers / retired-block errors.
-                let has_non_text =
-                    out[before..].iter().any(|tok| !matches!(tok.kind, TokenKind::Text(_)));
+                let has_non_text = out[before..]
+                    .iter()
+                    .any(|tok| !matches!(tok.kind, TokenKind::Text(_)));
                 if has_non_text {
                     let slice: Vec<Token> = out.drain(before..).collect();
                     for tok in slice {
@@ -158,26 +159,33 @@ fn tokenize_text(text: &str, base_span: Span, out: &mut Vec<Token>) {
     let mut buf_start = 0usize;
     while i < bytes.len() {
         if bytes[i] == b'{'
-            && let Some(close) = find_matching_close(text, i) {
-                // Expression body stays RAW — never entity-decoded. JS
-                // source goes through the expression tokenizer / checker
-                // which assumes the bytes match the source positions.
-                let inner = text[i + 1..close].trim().to_string();
-                if !buf.is_empty() {
-                    let span = Span::new(base_span.start + buf_start, base_span.start + i);
-                    // Text segment around the expression CAN be decoded —
-                    // it becomes a DOM text node and entity references like
-                    // `&deg;` are author shorthand for the resulting char.
-                    let decoded = super::super::html::decode_entities(&buf);
-                    buf.clear();
-                    out.push(Token { kind: TokenKind::Text(decoded), span });
-                }
-                let span = Span::new(base_span.start + i, base_span.start + close + 1);
-                out.push(Token { kind: classify_brace(&inner), span });
-                i = close + 1;
-                buf_start = i;
-                continue;
+            && let Some(close) = find_matching_close(text, i)
+        {
+            // Expression body stays RAW — never entity-decoded. JS
+            // source goes through the expression tokenizer / checker
+            // which assumes the bytes match the source positions.
+            let inner = text[i + 1..close].trim().to_string();
+            if !buf.is_empty() {
+                let span = Span::new(base_span.start + buf_start, base_span.start + i);
+                // Text segment around the expression CAN be decoded —
+                // it becomes a DOM text node and entity references like
+                // `&deg;` are author shorthand for the resulting char.
+                let decoded = super::super::html::decode_entities(&buf);
+                buf.clear();
+                out.push(Token {
+                    kind: TokenKind::Text(decoded),
+                    span,
+                });
             }
+            let span = Span::new(base_span.start + i, base_span.start + close + 1);
+            out.push(Token {
+                kind: classify_brace(&inner),
+                span,
+            });
+            i = close + 1;
+            buf_start = i;
+            continue;
+        }
         // Append a single UTF-8 char.
         let mut j = i + 1;
         while j < bytes.len() && (bytes[j] & 0xC0) == 0x80 {
@@ -189,7 +197,10 @@ fn tokenize_text(text: &str, base_span: Span, out: &mut Vec<Token>) {
     if !buf.is_empty() {
         let span = Span::new(base_span.start + buf_start, base_span.start + text.len());
         let decoded = super::super::html::decode_entities(&buf);
-        out.push(Token { kind: TokenKind::Text(decoded), span });
+        out.push(Token {
+            kind: TokenKind::Text(decoded),
+            span,
+        });
     }
 }
 
@@ -271,7 +282,9 @@ fn classify_brace(inner: &str) -> TokenKind {
                 .into(),
         };
     }
-    TokenKind::Expr { src: inner.to_string() }
+    TokenKind::Expr {
+        src: inner.to_string(),
+    }
 }
 
 #[cfg(test)]

@@ -19,6 +19,12 @@ mod tests {
 
     #[test]
     fn noop() {
-        assert!(check(Path::new("x.sail"), r#"<div data-active={active() ? '' : null}></div>"#).is_empty());
+        assert!(
+            check(
+                Path::new("x.sail"),
+                r#"<div data-active={active() ? '' : null}></div>"#
+            )
+            .is_empty()
+        );
     }
 }

@@ -10,7 +10,7 @@
 //! mount-form). The engine collapse moved all of that to `mountComponent`, so
 //! the proxy/lifecycle contract lives in exactly one place (the runtime).
 
-use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn component_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {
@@ -20,7 +20,6 @@ fn component_opts(setup: Option<&str>) -> CompileOpts {
         source_path: None,
         component_meta: Some(ComponentMeta {
             name: "sail-test-dock".into(),
-
         }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
@@ -37,7 +36,8 @@ fn component_emits_deferred_module_registered_via_component() {
 
     // ONE shape: the mount-form module bound to a const, then registered.
     assert!(
-        out.js.contains("const __default = Object.assign(component((ctx) =>"),
+        out.js
+            .contains("const __default = Object.assign(component((ctx) =>"),
         "component must emit the mount-form module as __default, got:\n{}",
         out.js
     );

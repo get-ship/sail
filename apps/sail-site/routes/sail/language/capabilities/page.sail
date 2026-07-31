@@ -62,9 +62,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
   <p>
     Four members, none of them written by hand. <code>route</code> and
     <code>navigate</code> come from deck. <code>api</code> comes from the app's
-    own manifest — one member per declared client, plus the
-    <code>clients</code> map itself, so both <code>ctx.api</code> and
-    <code>ctx.clients.api</code> are real paths to the same thing.
+    own manifest — one flat <code>ctx</code> member per declared client, so a
+    template reads <code>ctx.api.demo.clock()</code> directly.
   </p>
   <code-block code={code.manifest}></code-block>
 

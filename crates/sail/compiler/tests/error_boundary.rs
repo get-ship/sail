@@ -5,12 +5,18 @@
 //! protected content comes in through a `<slot>`, so it belongs to the enclosing
 //! component's scope), which is why it needs no controller and no scope of its own.
 
-use sail_compiler::{compile, compile_element, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile, compile_element};
 
 fn js(src: &str) -> String {
-    compile(src, CompileOpts { mode: CompileMode::Component, ..Default::default() })
-        .expect("compiles")
-        .js
+    compile(
+        src,
+        CompileOpts {
+            mode: CompileMode::Component,
+            ..Default::default()
+        },
+    )
+    .expect("compiles")
+    .js
 }
 
 /// A healthy boundary must be invisible to layout. You wrap one around markup you
@@ -99,8 +105,7 @@ fn the_fallback_is_a_slot_with_a_built_in_default() {
         el.structure_html
     );
     assert!(
-        el.structure_html.contains("Retry")
-            && el.structure_html.contains("type=\"button\""),
+        el.structure_html.contains("Retry") && el.structure_html.contains("type=\"button\""),
         "and it ships a default with a recovery control: {}",
         el.structure_html
     );

@@ -25,21 +25,51 @@ pub enum AstKind {
     Undefined,
     Ident(String),
     /// `obj.prop` / `obj?.prop`.
-    Member { obj: Box<Ast>, prop: String, optional: bool },
+    Member {
+        obj: Box<Ast>,
+        prop: String,
+        optional: bool,
+    },
     /// `obj[idx]` / `obj?.[idx]`.
-    Index { obj: Box<Ast>, idx: Box<Ast>, optional: bool },
+    Index {
+        obj: Box<Ast>,
+        idx: Box<Ast>,
+        optional: bool,
+    },
     /// `callee(args…)` / `callee?.(args…)`.
-    Call { callee: Box<Ast>, args: Vec<Arg>, optional: bool },
+    Call {
+        callee: Box<Ast>,
+        args: Vec<Arg>,
+        optional: bool,
+    },
     /// Prefix unary: `!`, `-`, `+`.
-    Unary { op: String, arg: Box<Ast> },
+    Unary {
+        op: String,
+        arg: Box<Ast>,
+    },
     /// Arithmetic / comparison / nullish — anything that isn't `&&` / `||`.
-    Binary { op: String, lhs: Box<Ast>, rhs: Box<Ast> },
+    Binary {
+        op: String,
+        lhs: Box<Ast>,
+        rhs: Box<Ast>,
+    },
     /// Short-circuit logical: `&&`, `||`.
-    Logical { op: String, lhs: Box<Ast>, rhs: Box<Ast> },
-    Ternary { cond: Box<Ast>, then: Box<Ast>, otherwise: Box<Ast> },
+    Logical {
+        op: String,
+        lhs: Box<Ast>,
+        rhs: Box<Ast>,
+    },
+    Ternary {
+        cond: Box<Ast>,
+        then: Box<Ast>,
+        otherwise: Box<Ast>,
+    },
     Array(Vec<Arg>),
     Object(Vec<ObjEntry>),
-    Arrow { params: Vec<String>, body: ArrowBody },
+    Arrow {
+        params: Vec<String>,
+        body: ArrowBody,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -145,9 +175,11 @@ impl Ast {
             AstKind::Binary { lhs, rhs, .. } | AstKind::Logical { lhs, rhs, .. } => {
                 lhs.walk(f) && rhs.walk(f)
             }
-            AstKind::Ternary { cond, then, otherwise } => {
-                cond.walk(f) && then.walk(f) && otherwise.walk(f)
-            }
+            AstKind::Ternary {
+                cond,
+                then,
+                otherwise,
+            } => cond.walk(f) && then.walk(f) && otherwise.walk(f),
             AstKind::Array(items) => items.iter().all(|a| match a {
                 Arg::Expr(e) | Arg::Spread(e) => e.walk(f),
             }),
@@ -187,18 +219,20 @@ impl Ast {
             AstKind::Index { obj, idx, .. } => obj
                 .innermost_at(byte_offset)
                 .or_else(|| idx.innermost_at(byte_offset)),
-            AstKind::Call { callee, args, .. } => callee
-                .innermost_at(byte_offset)
-                .or_else(|| {
-                    args.iter().find_map(|a| match a {
-                        Arg::Expr(e) | Arg::Spread(e) => e.innermost_at(byte_offset),
-                    })
-                }),
+            AstKind::Call { callee, args, .. } => callee.innermost_at(byte_offset).or_else(|| {
+                args.iter().find_map(|a| match a {
+                    Arg::Expr(e) | Arg::Spread(e) => e.innermost_at(byte_offset),
+                })
+            }),
             AstKind::Unary { arg, .. } => arg.innermost_at(byte_offset),
             AstKind::Binary { lhs, rhs, .. } | AstKind::Logical { lhs, rhs, .. } => lhs
                 .innermost_at(byte_offset)
                 .or_else(|| rhs.innermost_at(byte_offset)),
-            AstKind::Ternary { cond, then, otherwise } => cond
+            AstKind::Ternary {
+                cond,
+                then,
+                otherwise,
+            } => cond
                 .innermost_at(byte_offset)
                 .or_else(|| then.innermost_at(byte_offset))
                 .or_else(|| otherwise.innermost_at(byte_offset)),
@@ -211,7 +245,10 @@ impl Ast {
                     _ => None,
                 };
                 from_key.or_else(|| {
-                    entry.value.as_ref().and_then(|v| v.innermost_at(byte_offset))
+                    entry
+                        .value
+                        .as_ref()
+                        .and_then(|v| v.innermost_at(byte_offset))
                 })
             }),
             AstKind::Arrow { body, .. } => match body {

@@ -31,8 +31,7 @@ fn cli_builds_a_single_fixture() {
         return;
     }
     let tmp = tempfile::tempdir().unwrap();
-    let input = manifest_dir()
-        .join("tests/fixtures/hello.sail");
+    let input = manifest_dir().join("tests/fixtures/hello.sail");
     let out = tmp.path().to_path_buf();
     let status = Command::new(&bin)
         .args(["build"])
@@ -63,10 +62,12 @@ fn cli_tokens_writes_three_artifacts() {
     }
     let workspace = manifest_dir()
         .ancestors()
-        .find(|p| p.join("Cargo.toml").exists()
-            && std::fs::read_to_string(p.join("Cargo.toml"))
-                .map(|s| s.contains("[workspace]"))
-                .unwrap_or(false))
+        .find(|p| {
+            p.join("Cargo.toml").exists()
+                && std::fs::read_to_string(p.join("Cargo.toml"))
+                    .map(|s| s.contains("[workspace]"))
+                    .unwrap_or(false)
+        })
         .expect("workspace root")
         .to_path_buf();
     let model = workspace.join("packages/sail/tokens/model");

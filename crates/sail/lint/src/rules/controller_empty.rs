@@ -217,9 +217,8 @@ mod tests {
 
     #[test]
     fn allows_returned_state() {
-        let f = lint(
-            "export default controller(() => {\n  const n = signal(0)\n  return { n }\n})\n",
-        );
+        let f =
+            lint("export default controller(() => {\n  const n = signal(0)\n  return { n }\n})\n");
         assert!(f.is_empty(), "{f:?}");
     }
 
@@ -239,9 +238,7 @@ mod tests {
 
     #[test]
     fn flags_typed_ctx_empty() {
-        let f = lint(
-            "export default controller((_ctx: ControllerScope<Scope>) => ({}))\n",
-        );
+        let f = lint("export default controller((_ctx: ControllerScope<Scope>) => ({}))\n");
         assert_eq!(f.len(), 1, "{f:?}");
     }
 }

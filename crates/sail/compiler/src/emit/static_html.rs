@@ -18,8 +18,8 @@ use crate::ir::template::{AttrInstr, ElementInstr, Instr};
 
 /// HTML void elements — serialized without children or a closing tag.
 const VOID: &[&str] = &[
-    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
-    "param", "source", "track", "wbr",
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source",
+    "track", "wbr",
 ];
 
 /// Tags whose imperative emit does more than build plain DOM, so they are never
@@ -37,7 +37,9 @@ pub fn is_static_element(el: &ElementInstr) -> bool {
     if tag_blocks_clone(&el.tag.to_ascii_lowercase()) {
         return false;
     }
-    el.attrs.iter().all(|a| matches!(a, AttrInstr::Static { .. }))
+    el.attrs
+        .iter()
+        .all(|a| matches!(a, AttrInstr::Static { .. }))
         && el.children.iter().all(is_static_child)
 }
 
@@ -120,16 +122,32 @@ mod tests {
         Span::new(0, 0)
     }
     fn expr(src: &str) -> crate::ir::expr::Expr {
-        crate::ir::expr::Expr { source: src.to_string(), span: sp(), allow_arrow: false }
+        crate::ir::expr::Expr {
+            source: src.to_string(),
+            span: sp(),
+            allow_arrow: false,
+        }
     }
     fn el(tag: &str, attrs: Vec<AttrInstr>, children: Vec<Instr>) -> ElementInstr {
-        ElementInstr { tag: tag.to_string(), attrs, children, span: sp() }
+        ElementInstr {
+            tag: tag.to_string(),
+            attrs,
+            children,
+            span: sp(),
+        }
     }
     fn attr(name: &str, value: &str) -> AttrInstr {
-        AttrInstr::Static { name: name.to_string(), value: value.to_string(), span: sp() }
+        AttrInstr::Static {
+            name: name.to_string(),
+            value: value.to_string(),
+            span: sp(),
+        }
     }
     fn text(t: &str) -> Instr {
-        Instr::StaticText { text: t.to_string(), span: sp() }
+        Instr::StaticText {
+            text: t.to_string(),
+            span: sp(),
+        }
     }
 
     #[test]
@@ -137,10 +155,16 @@ mod tests {
         let tree = el(
             "div",
             vec![attr("class", "card")],
-            vec![Instr::Element(el("span", vec![], vec![text("hi")])), text(" there")],
+            vec![
+                Instr::Element(el("span", vec![], vec![text("hi")])),
+                text(" there"),
+            ],
         );
         assert!(is_static_element(&tree));
-        assert_eq!(serialize_element(&tree), r#"<div class="card"><span>hi</span> there</div>"#);
+        assert_eq!(
+            serialize_element(&tree),
+            r#"<div class="card"><span>hi</span> there</div>"#
+        );
     }
 
     #[test]
@@ -150,12 +174,19 @@ mod tests {
             vec![attr("title", r#"a "b" & c"#)],
             vec![text("x < y & z")],
         );
-        assert_eq!(serialize_element(&tree), r#"<p title="a &quot;b&quot; &amp; c">x &lt; y &amp; z</p>"#);
+        assert_eq!(
+            serialize_element(&tree),
+            r#"<p title="a &quot;b&quot; &amp; c">x &lt; y &amp; z</p>"#
+        );
     }
 
     #[test]
     fn void_elements_have_no_closing_tag() {
-        let tree = el("div", vec![], vec![Instr::Element(el("br", vec![], vec![]))]);
+        let tree = el(
+            "div",
+            vec![],
+            vec![Instr::Element(el("br", vec![], vec![]))],
+        );
         assert_eq!(serialize_element(&tree), "<div><br></div>");
     }
 
@@ -165,13 +196,25 @@ mod tests {
         let dyn_tree = el("div", vec![], vec![Instr::DynamicText { expr: expr("x") }]);
         assert!(!is_static_element(&dyn_tree));
         // A bound attr is not static.
-        let bound = el("div", vec![AttrInstr::Expr { name: "title".into(), expr: expr("y"), span: sp() }], vec![]);
+        let bound = el(
+            "div",
+            vec![AttrInstr::Expr {
+                name: "title".into(),
+                expr: expr("y"),
+                span: sp(),
+            }],
+            vec![],
+        );
         assert!(!is_static_element(&bound));
     }
 
     #[test]
     fn custom_elements_svg_and_special_tags_block_clone() {
-        assert!(!is_static_element(&el("sail-icon", vec![attr("name", "home")], vec![])));
+        assert!(!is_static_element(&el(
+            "sail-icon",
+            vec![attr("name", "home")],
+            vec![]
+        )));
         assert!(!is_static_element(&el("svg", vec![], vec![])));
         assert!(!is_static_element(&el("slot", vec![], vec![])));
         assert!(!is_static_element(&el("use-tooltip", vec![], vec![])));

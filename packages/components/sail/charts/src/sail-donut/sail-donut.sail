@@ -38,7 +38,7 @@
 </scope>
 
 <controller>
-import { controller, derived } from '@ship/sail-runtime'
+
 import { createChartData } from '../engine/create-chart-data'
 import { normalizeSeries } from '../engine/normalize'
 import { arcGeometry } from '../engine/geometry-radial'
@@ -75,11 +75,11 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
   })
 
 </controller>
-<if cond={loading()}>
+<if {loading()}>
   <span skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
-<else-if cond={chart.error()}>
+<else-if {chart.error()}>
   <error-state></error-state>
-</else-if><else-if cond={chart.isEmpty()}>
+</else-if><else-if {chart.isEmpty()}>
   <empty-state></empty-state>
 </else-if><else>
   <stack sx={style.w(fit)}>
@@ -93,7 +93,7 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
       sx={style.display(block)}>
       <circle cx={diameter() / 2} cy={diameter() / 2} r={(diameter() - thickness()) / 2} fill="none" stroke="var(--muted)" stroke-width={thickness()}>
       </circle>
-      <for as="seg" of={segments()} key={seg.id}>
+      <for {segments()} as="seg" key={seg.id}>
         <path d={seg.d} fill="none" stroke={seg.color} stroke-width={thickness()} stroke-linecap="butt">
           <title>{seg.title}</title>
         </path>
@@ -103,9 +103,9 @@ export default controller(({ data, diameter, thickness, label, loading }: Scope)
     <column id="chart-data" sx={style.srOnly()}>
       <slot name="description">
         <table>
-          <for as="row" of={chart.ariaTable()} key={row[0].id}>
+          <for {chart.ariaTable()} as="row" key={row[0].id}>
             <tr>
-              <for as="cell" of={row} key={cell.id}>
+              <for {row} as="cell" key={cell.id}>
                 <td>{cell.text}</td>
               </for>
             </tr>

@@ -13,10 +13,10 @@
 use std::collections::BTreeMap;
 
 use super::super::writer::Writer;
-use super::{emit_controller, render, AppManifest, AuthoredController};
+use super::{AppManifest, AuthoredController, emit_controller, render};
+use crate::CompileMode;
 use crate::diagnostics::CompileError;
 use crate::ir::Program;
-use crate::CompileMode;
 
 /// The `import { scope }` specifier the client render carries to reach the
 /// controller — dropped on merge (the controller's `scope` is now local).
@@ -43,11 +43,7 @@ pub fn emit_synthetic_client_module(
     // names — the bundler and the SSR build both feed through this seam.
     let used = super::used_clients(program, manifest);
     let controller_ts = emit_controller(program, manifest, &used, authored, mode)?;
-    let client_ts = render::emit_render_client(
-        program,
-        MERGED_CONTROLLER_SPEC,
-        component_tag,
-    )?;
+    let client_ts = render::emit_render_client(program, MERGED_CONTROLLER_SPEC, component_tag)?;
     let (ctrl_imports, ctrl_body) = split_module(&controller_ts);
     let (client_imports, client_body) = split_module(&client_ts);
     let merged_imports = merge_imports(&ctrl_imports, &client_imports, MERGED_CONTROLLER_SPEC);
@@ -143,7 +139,11 @@ fn parse_named_import(line: &str) -> Option<(bool, String, Vec<String>)> {
     let inner = rest.strip_prefix('{')?;
     let (names_part, after) = inner.split_once('}')?;
     let after = after.trim_start();
-    let spec = after.strip_prefix("from ")?.trim().trim_end_matches(';').trim();
+    let spec = after
+        .strip_prefix("from ")?
+        .trim()
+        .trim_end_matches(';')
+        .trim();
     let spec = spec.strip_prefix('"').and_then(|s| s.strip_suffix('"'))?;
     let names: Vec<String> = names_part
         .split(',')

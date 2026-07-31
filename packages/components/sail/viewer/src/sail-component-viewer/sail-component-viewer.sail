@@ -39,7 +39,7 @@
 </scope>
 
 <controller>
-import { controller, derived, effect, signal } from '@ship/sail-runtime'
+
 import type { Scope } from './sail-component-viewer.sail'
 
 export interface PropRow {
@@ -65,8 +65,14 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
       const apply = (): void => {
         const attr = variantAttr()
         const val = current()
-        if (!attr || !val) return
-        for (const el of host.querySelectorAll('[slot="stage"]')) el.setAttribute(attr, val)
+        // Skip fake/label-only attrs (e.g. dialog "open as") — invalid names
+        // crash setAttribute and take the whole tab with them.
+        if (!attr || !val || !/^[A-Za-z_:][\w:.-]*$/.test(attr)) return
+        // No-op when already applied — setAttribute storms re-enter effects /
+        // MutationObservers and freeze the tab.
+        for (const el of host.querySelectorAll('[slot="stage"]')) {
+          if (el.getAttribute(attr) !== val) el.setAttribute(attr, val)
+        }
       }
       const onClick = (e: Event): void => {
         const btn = (e.target as HTMLElement).closest('[data-variant]')
@@ -99,23 +105,23 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
 <column gap="4" w="full">
   <row gap="3" align="center">
     <h2 sx={style.fontFamily(mono).tracking(tight)}>{name()}</h2>
-    <if cond={pack() !== ''}>
+    <if {pack() !== ''}>
       <badge tone="primary" variant="soft">{pack()}</badge>
     </if>
-    <if cond={!noA11yChip()}>
+    <if {!noA11yChip()}>
       <badge tone="muted" variant="outline">a11y ✓ · keyboard ✓</badge>
     </if>
   </row>
-  <if cond={blurb() !== ''}>
+  <if {blurb() !== ''}>
     <p sx={style.fg(muted-foreground)}>{blurb()}</p>
   </if>
 
   <column gap="4" sx={style.pad(5).radius(lg).borderWidth(1).border(border).bg(surface-0)}>
     <row gap="2" align="center" justify="between">
       <row gap="2" align="center">
-        <if cond={hasVariants()}>
+        <if {hasVariants()}>
           <span sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{variantAttr()}:</span>
-          <for as="c" of={chips()} key={c.v}>
+          <for {chips()} as="c" key={c.v}>
             <button size="sm" tone="primary" variant={c.variant} data-variant={c.v}>{c.v}</button>
           </for>
         </if>
@@ -131,24 +137,24 @@ export default controller(({ variants, rows, usage, variantAttr }: Scope) => {
     </center>
   </column>
 
-  <if cond={hasUsage()}>
+  <if {hasUsage()}>
     <column gap="2">
       <p sx={style.fontSize(xs).fg(muted-foreground).textCase(uppercase).tracking(wide)}>Usage — a complete program</p>
       <code-block code={usage()}></code-block>
     </column>
   </if>
 
-  <if cond={hasProps()}>
+  <if {hasProps()}>
     <card sx={style.pad(4)}>
       <column gap="3">
         <p sx={style.fontSize(xs).fg(muted-foreground).textCase(uppercase).tracking(wide)}>Props</p>
-        <for as="r" of={propRows()} key={r.name}>
+        <for {propRows()} as="r" key={r.name}>
           <column gap="1">
             <row gap="3" align="baseline">
               <code>{r.name}</code>
               <span grow sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{r.type}</span>
             </row>
-            <if cond={r.desc !== ''}>
+            <if {r.desc !== ''}>
               <p sx={style.fontSize(sm).fg(muted-foreground)}>{r.desc}</p>
             </if>
           </column>

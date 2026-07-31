@@ -16,11 +16,7 @@ use crate::ir::{AttrInstr, Expr, Instr};
 /// True iff any expression reachable from `body` references `var_name`
 /// (the row binder) or `idx_name` (the optional index binder) as an
 /// identifier. Walks through nested elements and control-flow blocks.
-pub fn body_references_for_vars(
-    body: &[Instr],
-    var_name: &str,
-    idx_name: Option<&str>,
-) -> bool {
+pub fn body_references_for_vars(body: &[Instr], var_name: &str, idx_name: Option<&str>) -> bool {
     body.iter().any(|i| instr_references(i, var_name, idx_name))
 }
 

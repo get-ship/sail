@@ -88,8 +88,7 @@ fn scan_block(path: &Path, source: &str, block: &StyleBlock) -> Vec<Finding> {
         let (line, col) = byte_offset_to_line_col(source, abs);
         let (message, suggest) = match hit.kind {
             FnKind::ColorMix => (
-                "inline `color-mix(...)` — read a pre-computed ramp token instead"
-                    .to_string(),
+                "inline `color-mix(...)` — read a pre-computed ramp token instead".to_string(),
                 "Replace the hand-rolled mix with the matching ramp token \
                  (e.g. `var(--tone-{tone}-bg)` / `var(--tone-{tone}-border)`). \
                  The mix formula lives in tokens.css once; scattering it across \
@@ -359,9 +358,7 @@ fn scan_var_fallbacks(content: &str) -> Vec<FallbackHit<'_>> {
             while k < bytes.len() && bytes[k].is_ascii_whitespace() {
                 k += 1;
             }
-            if comma_at.is_some()
-                && bytes.get(k) == Some(&b'-')
-                && bytes.get(k + 1) == Some(&b'-')
+            if comma_at.is_some() && bytes.get(k) == Some(&b'-') && bytes.get(k + 1) == Some(&b'-')
             {
                 let name_start = k + 2;
                 let mut n = name_start;
@@ -561,7 +558,8 @@ mod tests {
         // sail-icon ships `color-mix(in oklab, …)`. The `in oklab` keyword
         // is NOT a function call, so only the `color-mix(` fires — one
         // finding, not two.
-        let src = "<style>:host { fill: color-mix(in oklab, var(--primary) 50%, transparent); }</style>";
+        let src =
+            "<style>:host { fill: color-mix(in oklab, var(--primary) 50%, transparent); }</style>";
         let f = run(src);
         assert_eq!(f.len(), 1, "{f:?}");
         assert!(f[0].message.contains("color-mix"));

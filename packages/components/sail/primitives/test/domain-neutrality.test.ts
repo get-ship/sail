@@ -1,19 +1,16 @@
-// JOB-LOCK: domain-neutrality static gate for the 4 product compositions.
+// Domain-neutrality static gate for product compositions.
 //
-// This is the TEST-asserted half of `inv-domain-neutral`. The job spec
-// (m-sail-stdlib / job2-domain-neutral) names 4 product compositions
-// (`sail-navbar`, `sail-theme-picker`, `sail-empty-state`, `sail-error-state`)
-// that the sux audit flagged. After this job they MUST be ship-free: zero
-// `@ship/sdk-client` imports, zero `ship.<theme|account|project|billing>.`
-// reads, zero mentions of the product domain nouns (`account`, `billing`,
-// `project`, `brand`) in code, parts, slot names, or event names.
+// Contract (`inv-domain-neutral`): named compositions (`sail-navbar`,
+// `sail-theme-picker`, `sail-empty-state`, `sail-error-state`) must stay
+// ship-free: zero `@ship/sdk-client` imports, zero
+// `ship.<theme|account|project|billing>.` reads, zero product domain nouns
+// (`account`, `billing`, `project`, `brand`) in code, parts, slot names, or
+// event names.
 //
-// The GATE regex the operator re-runs is:
+// Gate regex (manual re-check):
 //   grep -rniE "@ship/sdk-client|ship\.(account|theme|project|billing)\b" \
 //     packages/components/sail/*/src
-// and this test is the regression guard. If a future re-port of any of
-// the 4 compositions introduces a product coupling, this test fails —
-// CI doesn't ship a re-coupled primitive.
+// This test is the regression guard.
 
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -63,7 +60,7 @@ const FORBIDDEN_PRODUCT_TOKENS: { token: string; why: string }[] = [
 // forms. A "code" hit is a token outside of a <!-- … --> / // … / /* … */
 // comment block. We strip comments first, then scan — a real coupling
 // won't hide in a comment.
-function stripSuiComments(src: string): string {
+function stripSailComments(src: string): string {
   return src
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/\/\/[^\n]*/g, '')
@@ -102,7 +99,7 @@ describe('domain-neutrality (job-lock) — 4 product compositions are ship-free'
     it(`<${stem}> contains NO product coupling tokens in CODE (comments stripped)`, () => {
       for (const file of files) {
         const raw = readFileSync(file, 'utf8')
-        const code = file.endsWith('.sail') ? stripSuiComments(raw) : stripTsComments(raw)
+        const code = file.endsWith('.sail') ? stripSailComments(raw) : stripTsComments(raw)
         for (const { token, why } of FORBIDDEN_PRODUCT_TOKENS) {
           expect(
             code.includes(token),
@@ -115,7 +112,7 @@ describe('domain-neutrality (job-lock) — 4 product compositions are ship-free'
     it(`<${stem}> does not name the product domain nouns (account/billing/project) in CODE`, () => {
       for (const file of files) {
         const raw = readFileSync(file, 'utf8')
-        const code = file.endsWith('.sail') ? stripSuiComments(raw) : stripTsComments(raw)
+        const code = file.endsWith('.sail') ? stripSailComments(raw) : stripTsComments(raw)
         for (const noun of ['account', 'billing', 'project']) {
           // Word-boundary match — catches "account" but not "accountant".
           // The `brand` noun is intentionally NOT in this list — `brand`

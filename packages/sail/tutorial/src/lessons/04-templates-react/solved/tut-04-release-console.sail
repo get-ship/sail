@@ -65,10 +65,10 @@ export default controller(() => {
 <column gap="4">
   <row align="center" justify="between">
     <h3>Release console</h3>
-    <match on={phase()}>
-      <case of={'idle'}> <badge tone="muted" sx={style.enter({ opacity: 'fade' })}>idle</badge>
-      </case><case of={'building'}> <badge tone="warning" sx={style.enter({ translate-x: 'spring:snappy' })}>building</badge>
-      </case><case of={'live'}> <badge tone="success" sx={style.enter({ scale: 'spring:bouncy' })}>live</badge>
+    <match {phase()}>
+      <case {'idle'}> <badge tone="muted" sx={style.enter({ opacity: 'fade' })}>idle</badge>
+      </case><case {'building'}> <badge tone="warning" sx={style.enter({ translate-x: 'spring:snappy' })}>building</badge>
+      </case><case {'live'}> <badge tone="success" sx={style.enter({ scale: 'spring:bouncy' })}>live</badge>
       </case><default> <badge tone="destructive" sx={style.enter({ opacity: 'fade' })}>failed</badge>
     </default></match>
   </row>
@@ -87,7 +87,7 @@ export default controller(() => {
          on:keydown|key:Escape={clear} />
 
   <column gap="1">
-    <for as="env" of={filtered()} key={env.id}>
+    <for {filtered()} as="env" key={env.id}>
       <row gap="3" align="center" sx={envRow}>
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
         <strong grow sx={envName}>{env.name}</strong>

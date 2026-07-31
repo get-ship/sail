@@ -29,7 +29,7 @@ is intent:
   pass, a reuse) is broken. *Check: does every declared prop actually
   reach the markup?*
 - **Do all three states render?** The template handles `error` and
-  `ok` — there is no `{#while-loading}`. On a fast dev machine, nobody
+  `ok` — there is no `<while-loading>`. On a fast dev machine, nobody
   notices; on a real network, first paint is a blank hole. *Check: for
   every query() handle, find all three states in the template.*
 - **Is the key an identity?** `key={m.topic}` compiles — but topics

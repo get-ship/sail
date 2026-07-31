@@ -163,6 +163,13 @@ pub struct AppServeConfig {
     /// a non-conventional output location. `serde(skip)` mirrors `name`.
     #[serde(skip, default)]
     pub source: String,
+    /// Workspace-relative project the app's *tools* should target (e.g.
+    /// `apps/sail-site`). Host-set only — not read from deck.jsonc.
+    /// When set (Studio overlay at `/_studio`), `sail-project` /
+    /// `sail-project-themes` meta stamp this path instead of the studio
+    /// package root so explorer/checks/design/tasks open the real app.
+    #[serde(skip, default)]
+    pub ops_project: Option<String>,
     /// Globals injected as `<script>window.<key>=<value>;</script>` into the
     /// app's `index.html` before `</head>`. `$<param>` tokens in the value are
     /// substituted from the URL path captures declared in the host's
@@ -225,6 +232,94 @@ impl AppServeConfig {
     pub fn parse_deck_jsonc(raw: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(&strip_jsonc_comments(raw))
     }
+
+    /// Dual-read app serve config (C3).
+    ///
+    /// Preference order when files exist:
+    /// 1. `sail.config.jsonc` / `sail.config.json` — if they carry serve keys
+    ///    (`render`, `injectGlobals`, `entry`)
+    /// 2. `deck.jsonc` — legacy per-app serve file
+    ///
+    /// **Kill date for `deck.jsonc` as the *preferred* path:** after Phase F
+    /// (full sail.config migration). Until then both are accepted; when both
+    /// exist, **sail.config wins for every serve key that is present in its
+    /// JSON object** — including explicit defaults (`"render": "csr"`), empty
+    /// maps (`"injectGlobals": {}`), and null/absent entry after key presence
+    /// (`"entry": null`). Theme-only sail.config (no serve keys) leaves deck
+    /// serve values intact. Theme section (`theme`) is owned by
+    /// `sail-compiler` tokens config — not this struct.
+    ///
+    /// Returns `Default` when no file is present (fully conventional app).
+    pub fn load_from_project(project: &Path) -> Result<Self, String> {
+        let mut cfg = Self::default();
+
+        // deck.jsonc first (legacy), then sail.config overwrites by key presence.
+        let deck_path = project.join("deck.jsonc");
+        if deck_path.is_file() {
+            let raw = std::fs::read_to_string(&deck_path)
+                .map_err(|e| format!("read {}: {e}", deck_path.display()))?;
+            cfg = Self::parse_deck_jsonc(&raw)
+                .map_err(|e| format!("parse {}: {e}", deck_path.display()))?;
+        }
+
+        for name in ["sail.config.jsonc", "sail.config.json"] {
+            let path = project.join(name);
+            if !path.is_file() {
+                continue;
+            }
+            let raw = std::fs::read_to_string(&path)
+                .map_err(|e| format!("read {}: {e}", path.display()))?;
+            if let Some(overlay) = Self::parse_sail_config_serve_overlay(&raw)
+                .map_err(|e| format!("parse serve keys from {}: {e}", path.display()))?
+            {
+                if overlay.has_render {
+                    cfg.render = overlay.cfg.render;
+                }
+                if overlay.has_inject_globals {
+                    cfg.inject_globals = overlay.cfg.inject_globals;
+                }
+                if overlay.has_entry {
+                    cfg.entry = overlay.cfg.entry;
+                }
+            }
+            break; // jsonc wins when both sail configs exist
+        }
+
+        Ok(cfg)
+    }
+
+    /// Extract present serve keys from a sail.config body.
+    /// Returns `None` when the file has no serve-related keys (theme-only etc.).
+    fn parse_sail_config_serve_overlay(raw: &str) -> Result<Option<SailServeOverlay>, String> {
+        let value: serde_json::Value =
+            serde_json::from_str(&strip_jsonc_comments(raw)).map_err(|e| e.to_string())?;
+        let obj = match value.as_object() {
+            Some(o) => o,
+            None => return Ok(None),
+        };
+        let has_render = obj.contains_key("render");
+        let has_inject_globals = obj.contains_key("injectGlobals");
+        let has_entry = obj.contains_key("entry");
+        if !has_render && !has_inject_globals && !has_entry {
+            return Ok(None);
+        }
+        // Reuse the same shape as deck.jsonc for those keys only.
+        let parsed = Self::parse_deck_jsonc(raw).map_err(|e| e.to_string())?;
+        Ok(Some(SailServeOverlay {
+            has_render,
+            has_inject_globals,
+            has_entry,
+            cfg: parsed,
+        }))
+    }
+}
+
+/// Keys present in sail.config for serve dual-read overlay (C3).
+struct SailServeOverlay {
+    has_render: bool,
+    has_inject_globals: bool,
+    has_entry: bool,
+    cfg: AppServeConfig,
 }
 /// The parsed contents of the host's route-discovery `DeckConfig`.
 ///
@@ -324,12 +419,17 @@ mod tests {
 }"#;
     #[test]
     fn parse_example_jsonc() {
-        let cfg: DeckConfig =
-            serde_json::from_str(&strip_jsonc_comments(EXAMPLE_JSONC))
-                .expect("example deck.jsonc must parse");
+        let cfg: DeckConfig = serde_json::from_str(&strip_jsonc_comments(EXAMPLE_JSONC))
+            .expect("example deck.jsonc must parse");
         assert_eq!(cfg.source_roots, vec![PathBuf::from(".")]);
-        assert_eq!(cfg.watch, vec![PathBuf::from("packages"), PathBuf::from("apps/site/src")]);
-        assert_eq!(cfg.route_dirs, vec!["routes".to_string(), ".ship/views".to_string()]);
+        assert_eq!(
+            cfg.watch,
+            vec![PathBuf::from("packages"), PathBuf::from("apps/site/src")]
+        );
+        assert_eq!(
+            cfg.route_dirs,
+            vec!["routes".to_string(), ".ship/views".to_string()]
+        );
         assert_eq!(cfg.route_leaf.as_deref(), Some("page.sail"));
     }
     #[test]
@@ -341,25 +441,29 @@ mod tests {
         assert_eq!(d, d2);
         assert_eq!(d.source_roots, vec![PathBuf::from(".")]);
         assert!(d.watch.is_empty());
-        assert!(d.packs.is_empty(), "defaults declare no packs → global resolution");
+        assert!(
+            d.packs.is_empty(),
+            "defaults declare no packs → global resolution"
+        );
     }
 
     /// `packs` is optional and additive — an absent field parses to empty,
     /// which the bundler reads as "global" (every workspace pack resolvable).
     #[test]
     fn packs_absent_parses_to_empty() {
-        let cfg: DeckConfig =
-            serde_json::from_str(&strip_jsonc_comments(EXAMPLE_JSONC))
-                .expect("example deck.jsonc must parse");
-        assert!(cfg.packs.is_empty(), "no packs field ⇒ empty ⇒ global behavior");
+        let cfg: DeckConfig = serde_json::from_str(&strip_jsonc_comments(EXAMPLE_JSONC))
+            .expect("example deck.jsonc must parse");
+        assert!(
+            cfg.packs.is_empty(),
+            "no packs field ⇒ empty ⇒ global behavior"
+        );
     }
 
     /// A declared `packs` array parses into the scoped set.
     #[test]
     fn packs_present_parses_declared_set() {
         let json = r#"{ "packs": ["@ship/sail-primitives", "deck-demo-app"] }"#;
-        let cfg: DeckConfig =
-            serde_json::from_str(&strip_jsonc_comments(json)).unwrap();
+        let cfg: DeckConfig = serde_json::from_str(&strip_jsonc_comments(json)).unwrap();
         assert_eq!(cfg.packs, vec!["@ship/sail-primitives", "deck-demo-app"]);
     }
 
@@ -439,10 +543,12 @@ mod tests {
         let cfg = AppServeConfig::parse_deck_jsonc(HUB_DECK_LEGACY)
             .expect("legacy fields are dropped, not errors");
         // Everything is dropped — host fills name/source.
-        assert_eq!(cfg, AppServeConfig::default(), "legacy fields parse to default");
+        assert_eq!(
+            cfg,
+            AppServeConfig::default(),
+            "legacy fields parse to default"
+        );
     }
-
-
 
     /// `render` is optional and defaults to `csr` — the implicit posture
     /// every app had before the field existed (empty `#root`,
@@ -451,8 +557,8 @@ mod tests {
     fn parse_app_deck_render_defaults_to_csr() {
         let cfg = AppServeConfig::default();
         assert_eq!(cfg.render, RenderMode::Csr, "Default ⇒ csr");
-        let parsed = AppServeConfig::parse_deck_jsonc("{}")
-            .expect("empty deck.jsonc parses to Default");
+        let parsed =
+            AppServeConfig::parse_deck_jsonc("{}").expect("empty deck.jsonc parses to Default");
         assert_eq!(parsed, AppServeConfig::default());
         assert_eq!(parsed.render, RenderMode::Csr);
     }
@@ -475,15 +581,19 @@ mod tests {
             Some("$id")
         );
         // No name/route/source — host-supplied.
-        assert_eq!(cfg, AppServeConfig {
-            name: String::new(),
-            route: String::new(),
-            source: String::new(),
-            inject_globals: [("DECK_APP_ID".to_string(), "$id".to_string())]
-                .into_iter().collect(),
-            render: RenderMode::Ssr,
-            entry: None,
-        });
+        assert_eq!(
+            cfg,
+            AppServeConfig {
+                name: String::new(),
+                route: String::new(),
+                source: String::new(),
+                inject_globals: [("DECK_APP_ID".to_string(), "$id".to_string())]
+                    .into_iter()
+                    .collect(),
+                render: RenderMode::Ssr,
+                entry: None,
+            }
+        );
     }
 
     /// `entry` round-trips through the JSONC parser — the host-owned
@@ -491,8 +601,7 @@ mod tests {
     /// `clients` map).
     #[test]
     fn parse_app_deck_entry_bootstrap() {
-        let cfg = AppServeConfig::parse_deck_jsonc(HUB_DECK_NEW)
-            .expect("hub deck.jsonc parses");
+        let cfg = AppServeConfig::parse_deck_jsonc(HUB_DECK_NEW).expect("hub deck.jsonc parses");
         let entry = cfg.entry.as_ref().expect("entry declared");
         assert_eq!(entry.clients_module, "./src/lib/client.ts");
         assert_eq!(entry.expose_names, vec!["ship", "ops"]);
@@ -503,8 +612,7 @@ mod tests {
     /// token import rides the data file).
     #[test]
     fn parse_app_deck_no_entry_is_none() {
-        let cfg = AppServeConfig::parse_deck_jsonc("{}")
-            .expect("empty deck.jsonc parses");
+        let cfg = AppServeConfig::parse_deck_jsonc("{}").expect("empty deck.jsonc parses");
         assert!(cfg.entry.is_none(), "absent entry ⇒ None");
     }
 
@@ -512,8 +620,8 @@ mod tests {
     /// canonical "non-conventional but not full-bootstrap" config.
     #[test]
     fn parse_app_deck_spaces_inject_globals_only() {
-        let cfg = AppServeConfig::parse_deck_jsonc(SPACES_DECK_NEW)
-            .expect("spaces deck.jsonc parses");
+        let cfg =
+            AppServeConfig::parse_deck_jsonc(SPACES_DECK_NEW).expect("spaces deck.jsonc parses");
         assert_eq!(
             cfg.inject_globals.get("DECK_APP_ID").map(String::as_str),
             Some("$id")
@@ -521,7 +629,6 @@ mod tests {
         assert!(cfg.entry.is_none());
         assert_eq!(cfg.render, RenderMode::Csr);
     }
-
 
     /// `DeckConfig::load` is GONE. Constructing a host config is the host's
     /// job — `DeckConfig::defaults()` plus any overrides the host reads
@@ -557,4 +664,131 @@ mod tests {
         // The framework sees defaults() — the stray file is inert.
         assert_eq!(d, DeckConfig::defaults());
     }
+
+    // ── C3 dual-read: AppServeConfig::load_from_project ─────────────────────
+
+    #[test]
+    fn load_from_project_no_files_is_default() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
+        assert_eq!(cfg, AppServeConfig::default());
+    }
+
+    #[test]
+    fn load_from_project_deck_only() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("deck.jsonc"),
+            r#"{ "render": "ssr", "injectGlobals": { "A": "1" } }"#,
+        )
+        .unwrap();
+        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Ssr);
+        assert_eq!(cfg.inject_globals.get("A").map(String::as_str), Some("1"));
+    }
+
+    #[test]
+    fn load_from_project_sail_only_serve_keys() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "render": "ssr", "theme": { "default": "ship" } }"#,
+        )
+        .unwrap();
+        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Ssr);
+    }
+
+    #[test]
+    fn load_from_project_theme_only_sail_leaves_deck_intact() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("deck.jsonc"),
+            r#"{ "render": "ssr", "injectGlobals": { "X": "$id" } }"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "theme": { "default": "ship", "enabled": ["ship"] } }"#,
+        )
+        .unwrap();
+        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Ssr);
+        assert_eq!(cfg.inject_globals.get("X").map(String::as_str), Some("$id"));
+    }
+
+    #[test]
+    fn load_from_project_sail_csr_overrides_deck_ssr() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("deck.jsonc"), r#"{ "render": "ssr" }"#).unwrap();
+        // Explicit default CSR must win — key presence, not non-default value.
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "render": "csr" }"#,
+        )
+        .unwrap();
+        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
+        assert_eq!(
+            cfg.render,
+            RenderMode::Csr,
+            "explicit csr in sail.config must override deck ssr"
+        );
+    }
+
+    #[test]
+    fn load_from_project_sail_empty_inject_clears_deck_map() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("deck.jsonc"),
+            r#"{ "injectGlobals": { "DECK_APP_ID": "$id" } }"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "injectGlobals": {} }"#,
+        )
+        .unwrap();
+        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
+        assert!(
+            cfg.inject_globals.is_empty(),
+            "empty injectGlobals in sail.config must clear deck map"
+        );
+    }
+
+    #[test]
+    fn load_from_project_jsonc_preferred_over_json() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.json"),
+            r#"{ "render": "ssr" }"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "render": "csr" }"#,
+        )
+        .unwrap();
+        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
+        assert_eq!(cfg.render, RenderMode::Csr, "jsonc wins when both exist");
+    }
+
+    #[test]
+    fn load_from_project_sail_entry_overrides_deck_entry() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("deck.jsonc"),
+            r#"{ "entry": { "clientsModule": "./old.ts", "exposeNames": ["a"] } }"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "entry": { "clientsModule": "./new.ts", "exposeNames": ["b"] } }"#,
+        )
+        .unwrap();
+        let cfg = AppServeConfig::load_from_project(dir.path()).unwrap();
+        let entry = cfg.entry.expect("entry from sail.config");
+        assert_eq!(entry.clients_module, "./new.ts");
+        assert_eq!(entry.expose_names, vec!["b"]);
+    }
 }
+

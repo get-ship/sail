@@ -115,14 +115,20 @@ mod tests {
 
     #[test]
     fn flags_window_ship_project_id() {
-        let f = check(Path::new("x.controller.ts"), "const p = window.__shipProjectId");
+        let f = check(
+            Path::new("x.controller.ts"),
+            "const p = window.__shipProjectId",
+        );
         assert_eq!(f.len(), 1);
         assert_eq!(f[0].rule, "sail-controller-context");
     }
 
     #[test]
     fn flags_bare_ship_mode() {
-        let f = check(Path::new("x.controller.ts"), "if (__shipMode === 'Development') {}");
+        let f = check(
+            Path::new("x.controller.ts"),
+            "if (__shipMode === 'Development') {}",
+        );
         assert_eq!(f.len(), 1);
     }
 
@@ -142,7 +148,10 @@ mod tests {
 
     #[test]
     fn allows_host_context_seam() {
-        let f = check(Path::new("x.controller.ts"), "const p = hostContext().projectId");
+        let f = check(
+            Path::new("x.controller.ts"),
+            "const p = hostContext().projectId",
+        );
         assert!(f.is_empty());
     }
 }

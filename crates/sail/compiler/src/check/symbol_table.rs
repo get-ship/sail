@@ -49,7 +49,13 @@ impl SymbolTable {
         let mut t = Self::default();
         for p in &program.props {
             let cm = crate::emit::util::camel_of(&p.name);
-            t.props.insert(cm, KeyEntry { offset: 0, kind_label: "prop" });
+            t.props.insert(
+                cm,
+                KeyEntry {
+                    offset: 0,
+                    kind_label: "prop",
+                },
+            );
         }
         let Some(c) = controller else {
             return t;
@@ -57,7 +63,10 @@ impl SymbolTable {
         for member in &c.returned {
             t.scope.insert(
                 member.name.clone(),
-                ScopeEntry { offset: member.key_span.start, kind: member.kind },
+                ScopeEntry {
+                    offset: member.key_span.start,
+                    kind: member.kind,
+                },
             );
         }
         t
@@ -137,10 +146,10 @@ mod tests {
         let t = SymbolTable::build(&empty_program(), Some(&c));
         assert_eq!(t.kind_of_scope("asyncArrow"), Some(ScopeKind::Action));
         assert_eq!(t.kind_of_scope("asyncShort"), Some(ScopeKind::Action));
-        assert_eq!(t.kind_of_scope("fnExpr"),     Some(ScopeKind::Action));
-        assert_eq!(t.kind_of_scope("fnAnon"),     Some(ScopeKind::Action));
-        assert_eq!(t.kind_of_scope("asyncFn"),    Some(ScopeKind::Action));
-        assert_eq!(t.kind_of_scope("gen"),        Some(ScopeKind::Action));
+        assert_eq!(t.kind_of_scope("fnExpr"), Some(ScopeKind::Action));
+        assert_eq!(t.kind_of_scope("fnAnon"), Some(ScopeKind::Action));
+        assert_eq!(t.kind_of_scope("asyncFn"), Some(ScopeKind::Action));
+        assert_eq!(t.kind_of_scope("gen"), Some(ScopeKind::Action));
     }
 
     #[test]

@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "run:cheap": "bun src/cli.ts run --lane cheap --dispatch recorded",
+    "pace:smoke": "bun src/cli.ts pace --model smoke --interval 0 --arms sail --task login-form --no-sleep --allow-skip --lane cheap --no-report",
     "record": "bun src/cli.ts record"
   },
   "devDependencies": {

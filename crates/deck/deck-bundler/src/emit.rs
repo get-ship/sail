@@ -24,23 +24,26 @@ use crate::targets::BundleLayout;
 /// lazy chunks as same-dir relative imports, so the closure lives beside the
 /// entry file.
 fn chunk_names(src: &str) -> impl Iterator<Item = String> + '_ {
-    src.match_indices("./")
-        .filter_map(|(i, _)| {
-            // Require the `./` to be inside a quote (import/specifier), and
-            // capture up to the closing quote.
-            let before = src[..i].chars().next_back();
-            if !matches!(before, Some('"') | Some('\'') | Some('`')) {
-                return None;
-            }
-            let rest = &src[i + 2..];
-            let end = rest.find(['"', '\'', '`'])?;
-            let name = &rest[..end];
-            if name.ends_with(".js") && name.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_')) {
-                Some(name.to_string())
-            } else {
-                None
-            }
-        })
+    src.match_indices("./").filter_map(|(i, _)| {
+        // Require the `./` to be inside a quote (import/specifier), and
+        // capture up to the closing quote.
+        let before = src[..i].chars().next_back();
+        if !matches!(before, Some('"') | Some('\'') | Some('`')) {
+            return None;
+        }
+        let rest = &src[i + 2..];
+        let end = rest.find(['"', '\'', '`'])?;
+        let name = &rest[..end];
+        if name.ends_with(".js")
+            && name
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_'))
+        {
+            Some(name.to_string())
+        } else {
+            None
+        }
+    })
 }
 
 /// Copy `file` from `src_dir` into `out_dir`, then recursively copy every
@@ -56,8 +59,8 @@ fn copy_with_closure(
         return Ok(0);
     }
     let src = src_dir.join(file);
-    let body = std::fs::read_to_string(&src)
-        .with_context(|| format!("read bundle {}", src.display()))?;
+    let body =
+        std::fs::read_to_string(&src).with_context(|| format!("read bundle {}", src.display()))?;
     let dst = out_dir.join(file);
     if let Some(parent) = dst.parent() {
         std::fs::create_dir_all(parent).ok();
@@ -90,7 +93,10 @@ pub fn emit_targets(layout: &BundleLayout, names: &[String], out_dir: &Path) -> 
         let target = all.iter().find(|t| &t.name == name).ok_or_else(|| {
             anyhow::anyhow!(
                 "unknown deck target `{name}` — known targets: {}",
-                all.iter().map(|t| t.name.as_str()).collect::<Vec<_>>().join(", ")
+                all.iter()
+                    .map(|t| t.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
             )
         })?;
         let src_dir = layout.assets_dir_for(name);
@@ -111,8 +117,8 @@ pub fn emit_targets(layout: &BundleLayout, names: &[String], out_dir: &Path) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
     use crate::DeckConfig;
+    use std::path::PathBuf;
     use tempfile::tempdir;
 
     #[test]
@@ -131,11 +137,19 @@ mod tests {
         // sail-marketing is a consumer target → lands in `.deck/` (the
         // bake's staging area), not the host's assets root.
         std::fs::create_dir_all(repo.join(".deck")).unwrap();
-        std::fs::write(repo.join(".deck/sail-marketing.js"), r#"import("./Chunk-X.js");"#).unwrap();
+        std::fs::write(
+            repo.join(".deck/sail-marketing.js"),
+            r#"import("./Chunk-X.js");"#,
+        )
+        .unwrap();
         std::fs::write(repo.join(".deck/Chunk-X.js"), "export const x = 1;").unwrap();
         // Declare the consumer bundle via per-package self-declaration; the
         // bundler discovers it from the workspace (no central deck.jsonc).
-        std::fs::write(repo.join("package.json"), r#"{ "workspaces": ["packages/*"] }"#).unwrap();
+        std::fs::write(
+            repo.join("package.json"),
+            r#"{ "workspaces": ["packages/*"] }"#,
+        )
+        .unwrap();
         std::fs::create_dir_all(repo.join("packages/site")).unwrap();
         std::fs::write(
             repo.join("packages/site/package.json"),

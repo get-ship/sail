@@ -1,9 +1,9 @@
 {
-  "$description": "Chip component tokens. Default solid aliases primary; host paint stays on tone channels for multi-tone solid.",
+  "$description": "Chip component tokens. Default solid aliases muted secondary (shadcn Badge parity); tone=primary etc. still ride tone channels.",
   "component": {
     "chip": {
       "bg": {
-        "$value": "{color.primary.default}",
+        "$value": "{muted}",
         "$type": "color",
         "$extensions": {
           "ship": {
@@ -12,7 +12,7 @@
         }
       },
       "fg": {
-        "$value": "{color.primary.foreground}",
+        "$value": "{color.muted.foreground}",
         "$type": "color",
         "$extensions": {
           "ship": {
@@ -21,7 +21,7 @@
         }
       },
       "border": {
-        "$value": "{color.primary.default}",
+        "$value": "{border}",
         "$type": "color",
         "$extensions": {
           "ship": {

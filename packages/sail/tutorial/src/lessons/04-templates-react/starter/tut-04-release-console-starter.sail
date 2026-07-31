@@ -59,9 +59,9 @@ export default controller(() => {
 <column gap="4">
   <row align="center" justify="between">
     <h3>Release console</h3>
-    <match on={phase()}>
-      <case of={'idle'}> <badge tone="muted">idle</badge>
-      <!-- TODO 4: </case><case of={'building'}> and </case><case of={'live'}> branches, each
+    <match {phase()}>
+      <case {'idle'}> <badge tone="muted">idle</badge>
+      <!-- TODO 4: </case><case {'building'}> and </case><case {'live'}> branches, each
            with a style.enter so the swapped-in badge announces itself. -->
       </case><default> <badge tone="destructive">failed</badge>
     </default></match>
@@ -83,7 +83,7 @@ export default controller(() => {
   <column gap="1">
     <!-- TODO 5: this {#for} has no key. Add key={env.id} and compare what
          promote() does to the DOM with and without it. -->
-    <for as="env" of={filtered()} key={env.id}>
+    <for {filtered()} as="env" key={env.id}>
       <row gap="3" align="center" sx={envRow}>
         <badge tone={env.tier === 'prod' ? 'primary' : 'muted'} variant="outline" size="sm">{env.tier}</badge>
         <strong grow sx={envName}>{env.name}</strong>

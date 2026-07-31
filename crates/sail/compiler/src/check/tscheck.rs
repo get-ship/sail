@@ -87,10 +87,10 @@ pub fn check_synthetic_controller(
     tsgo_js: &str,
     workspace_root: &Path,
 ) -> std::io::Result<Vec<TsDiag>> {
-    use crate::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController};
+    use crate::CompileMode;
+    use crate::emit::synthetic::{AppManifest, AuthoredController, emit_synthetic};
     use crate::emit::writer::js_string;
     use crate::parse::{self, preprocess};
-    use crate::CompileMode;
 
     // SFC: strip the inline `<controller>` block. No block → nothing to check
     // here (the paired-file model is composed elsewhere); a bare fragment has no
@@ -113,8 +113,13 @@ pub fn check_synthetic_controller(
         return Ok(Vec::new());
     };
     // Materialize the inline controller, then compose it into the typed pair.
-    std::fs::write(out_dir.join("view.controller.ts"), preprocess::wrap_controller_body(&rewritten))?;
-    let authored = AuthoredController { specifier: "./view.controller.ts".to_string() };
+    std::fs::write(
+        out_dir.join("view.controller.ts"),
+        preprocess::wrap_controller_body(&rewritten),
+    )?;
+    let authored = AuthoredController {
+        specifier: "./view.controller.ts".to_string(),
+    };
     let Ok(out) = emit_synthetic(
         &program,
         &AppManifest::default(),
@@ -125,7 +130,10 @@ pub fn check_synthetic_controller(
     ) else {
         return Ok(Vec::new());
     };
-    std::fs::write(out_dir.join("view.synthetic.controller.ts"), &out.controller_ts)?;
+    std::fs::write(
+        out_dir.join("view.synthetic.controller.ts"),
+        &out.controller_ts,
+    )?;
     std::fs::write(out_dir.join("view.render.ts"), &out.render_ts)?;
 
     // Resolve the controller's sibling imports so the isolated check doesn't
@@ -152,7 +160,6 @@ pub fn check_synthetic_controller(
                         source_path: Some(p.clone()),
                         component_meta: Some(crate::ComponentMeta {
                             name: stem.to_string(),
-
                         }),
                         route_params: None,
                         emit_dts: true,
@@ -187,7 +194,11 @@ pub fn check_synthetic_controller(
     let tsconfig_path = out_dir.join("tsconfig.json");
     std::fs::write(&tsconfig_path, tsconfig)?;
 
-    let output = Command::new(node).arg(tsgo_js).arg("-p").arg(&tsconfig_path).output()?;
+    let output = Command::new(node)
+        .arg(tsgo_js)
+        .arg("-p")
+        .arg(&tsconfig_path)
+        .output()?;
     let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
     text.push_str(&String::from_utf8_lossy(&output.stderr));
     // This gate owns exactly ONE contract: does a template expression read a
@@ -241,9 +252,13 @@ mod tests {
         // Self-contained controller → a nonexistent source_dir skips the
         // sibling-resolution copy/generate step.
         let no_sibs = Path::new("/nonexistent-sail-siblings");
-        let ok = format!("{CTRL}<button on:click={{() => count.set(count() + 1)}}>{{count()}}</button>");
+        let ok =
+            format!("{CTRL}<button on:click={{() => count.set(count() + 1)}}>{{count()}}</button>");
         let diags = check_synthetic_controller(&ok, no_sibs, &dir, &node, &js, &ws).unwrap();
-        assert!(diags.is_empty(), "valid SFC must typecheck clean, got {diags:?}");
+        assert!(
+            diags.is_empty(),
+            "valid SFC must typecheck clean, got {diags:?}"
+        );
 
         // BROKEN: `countt` is not a scope member — a hard type error.
         let bad = format!("{CTRL}<button>{{countt()}}</button>");
@@ -288,15 +303,23 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
         let ok = "import { props, tone, size, bool, string } from './sail-embed-harness'\n\
                   export const p = props({ tone, size, variant: ['solid','outline'], disabled: bool, label: string })\n";
         let diags = typecheck_block(HARNESS, ok, &dir, &node, &js).unwrap();
-        assert!(diags.is_empty(), "valid block should be clean, got {diags:?}");
+        assert!(
+            diags.is_empty(),
+            "valid block should be clean, got {diags:?}"
+        );
 
         // BROKEN: a typo'd built-in shorthand → autocomplete-grade suggestion.
         // (`size` is imported so tsgo has a near name to suggest.)
         let bad = "import { props, tone, size, bool } from './sail-embed-harness'\n\
                    export const p = props({ tone, sizee, disabled: bool })\n";
         let diags = typecheck_block(HARNESS, bad, &dir, &node, &js).unwrap();
-        let hit = diags.iter().find(|d| d.code == "TS2552" || d.message.contains("sizee"));
-        assert!(hit.is_some(), "expected a 'Cannot find name sizee' diagnostic, got {diags:?}");
+        let hit = diags
+            .iter()
+            .find(|d| d.code == "TS2552" || d.message.contains("sizee"));
+        assert!(
+            hit.is_some(),
+            "expected a 'Cannot find name sizee' diagnostic, got {diags:?}"
+        );
         let hit = hit.unwrap();
         assert!(
             hit.message.contains("Did you mean 'size'"),
@@ -304,5 +327,4 @@ export function props<T extends Record<string, Prop<unknown> | readonly string[]
             hit.message
         );
     }
-
 }

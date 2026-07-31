@@ -18,7 +18,7 @@
 
 use crate::diagnostics::CompileError;
 use crate::ir::{ForInstr, Instr, Program};
-use crate::parse::expr::{parse_expression, Ast, AstKind};
+use crate::parse::expr::{Ast, AstKind, parse_expression};
 
 pub fn check(program: &Program) -> Result<(), CompileError> {
     walk_instrs(&program.template)
@@ -82,7 +82,10 @@ fn identity_problem(ast: &Ast) -> Option<&'static str> {
         AstKind::Object(_) => Some(
             "object literals are always fresh — each render produces a different object, defeating row reuse",
         ),
-        AstKind::Number(_) | AstKind::String(_) | AstKind::Bool(_) | AstKind::Null
+        AstKind::Number(_)
+        | AstKind::String(_)
+        | AstKind::Bool(_)
+        | AstKind::Null
         | AstKind::Undefined => Some(
             "literal keys collapse every row into the same bucket — use a per-row identifier (e.g. `item.id`)",
         ),

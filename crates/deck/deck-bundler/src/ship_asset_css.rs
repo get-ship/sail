@@ -68,7 +68,7 @@
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use rolldown::plugin::{
     HookGenerateBundleArgs, HookLoadArgs, HookLoadOutput, HookLoadReturn, HookNoopReturn,
     HookUsage, Plugin, PluginContext, PluginHookMeta, PluginOrder, SharedLoadPluginContext,
@@ -89,8 +89,9 @@ const CSS_ASSET_PREFIX: &str = "__SHIP_CSS_ASSET__#";
 /// with a known asset extension (woff2 today; png/jpg/svg for future
 /// generalisation). A `url(./other.css)` reference would be a different
 /// concern (a CSS importing a CSS) and is out of scope.
-const REWRITE_EXTENSIONS: &[&str] =
-    &[".woff2", ".woff", ".png", ".jpg", ".jpeg", ".svg", ".gif", ".webp"];
+const REWRITE_EXTENSIONS: &[&str] = &[
+    ".woff2", ".woff", ".png", ".jpg", ".jpeg", ".svg", ".gif", ".webp",
+];
 
 /// Rolldown plugin: rewrite local `url(...)` in CSS assets to hashed paths,
 /// and optionally minify the CSS body (production).
@@ -154,14 +155,12 @@ impl Plugin for ShipAssetCssPlugin {
         // chunk list + asset list, with the woff2 already in the file
         // emitter's map. We mutate the asset bytes in place to resolve
         // the placeholders.
-        Some(PluginHookMeta { order: Some(PluginOrder::Post) })
+        Some(PluginHookMeta {
+            order: Some(PluginOrder::Post),
+        })
     }
 
-    async fn load(
-        &self,
-        ctx: SharedLoadPluginContext,
-        args: &HookLoadArgs<'_>,
-    ) -> HookLoadReturn {
+    async fn load(&self, ctx: SharedLoadPluginContext, args: &HookLoadArgs<'_>) -> HookLoadReturn {
         // Only act on `.css` files. Anything else: defer to the chain.
         if !args.id.ends_with(".css") {
             return Ok(None);
@@ -274,11 +273,7 @@ impl Plugin for ShipAssetCssPlugin {
                 rewritten.push_str(&body[last_end..start - 1]);
                 rewritten.push('"');
             }
-            rewritten.push_str(&format!(
-                "{}{}\"",
-                CSS_ASSET_PREFIX,
-                ref_id.as_str(),
-            ));
+            rewritten.push_str(&format!("{}{}\"", CSS_ASSET_PREFIX, ref_id.as_str(),));
             // Advance past the inner text AND the source's closing
             // quote — the tail flush re-emits the rest of the URL
             // group (the `)`, surrounding whitespace, etc.) verbatim.
@@ -636,7 +631,10 @@ mod tests {
         // resolve `<file>-<hash>.woff2` as a real asset.
         let body = r#"/* illustrative: url('./<file>-<hash>.woff2') */
         @font-face { src: url('./fonts/x.woff2') format('woff2-variations'); }"#;
-        let refs: Vec<&str> = url_references(body).into_iter().map(|(_, _q, s)| s).collect();
+        let refs: Vec<&str> = url_references(body)
+            .into_iter()
+            .map(|(_, _q, s)| s)
+            .collect();
         assert_eq!(refs, vec!["./fonts/x.woff2"]);
     }
 
@@ -649,7 +647,10 @@ mod tests {
         let body = r#"@font-face { src: url('./fonts/x.woff2') format('woff2-variations'); }
         .x { background: url("img.png"); }
         .y { background: url(data:image/png;base64,XXX); }"#;
-        let refs: Vec<&str> = url_references(body).into_iter().map(|(_, _q, s)| s).collect();
+        let refs: Vec<&str> = url_references(body)
+            .into_iter()
+            .map(|(_, _q, s)| s)
+            .collect();
         assert_eq!(refs, vec!["./fonts/x.woff2", "img.png"]);
     }
 

@@ -42,19 +42,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>Control flow</h2>
   <p>
-    Flow is spelled with blocks, and blocks splice into the surrounding
-    markup without a wrapper element. <code>&#123;#if&#125;</code> takes
-    <code>&#123;:else if&#125;</code> and <code>&#123;:else&#125;</code>
-    arms:
+    Flow is spelled with element blocks, and they splice into the surrounding
+    markup without a wrapper element. <code>&lt;if &#123;…&#125;&gt;</code> takes
+    <code>&lt;else-if&#gt;</code> and <code>&lt;else&gt;</code>
+    arms (brace-primary predicate):
   </p>
   <code-block code={code.ifBlock}></code-block>
   <p>
-    When a value has more than two shapes, <code>&#123;#match&#125;</code>
+    When a value has more than two shapes, <code>&lt;match &#123;…&#125;&gt;</code>
     reads like the data it is matching on:
   </p>
   <code-block code={code.matchBlock}></code-block>
   <p>
-    <code>&#123;#for&#125;</code> renders a list. <code>key</code> identifies
+    <code>&lt;for &#123;items()&#125; as="item" key=&#123;…&#125;&gt;</code> renders a list. <code>key</code> identifies
     each row, so a reorder moves DOM nodes instead of rewriting them —
     focus, selection, and in-place edits survive. Leaving it off is a
     compile error.
@@ -102,8 +102,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.slotUse}></code-block>
 
   <p>
-    Two more blocks — <code>&#123;#while-loading&#125;</code> and
-    <code>&#123;#while-error&#125;</code> — exist for async state and belong
+    Two more blocks — <code>&lt;while-loading&#gt;</code> and
+    <code>&lt;while-error&#gt;</code> — exist for async state and belong
     to the <a href="/sail/language/data">data story</a>.
   </p>
 

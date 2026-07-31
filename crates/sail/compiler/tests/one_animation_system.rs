@@ -13,10 +13,13 @@
 //! untouched — it is simply backed by `fx:` now. So the fold is: same mechanism,
 //! one catalog, one directive.
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn opts() -> CompileOpts {
-    CompileOpts { mode: CompileMode::Component, ..Default::default() }
+    CompileOpts {
+        mode: CompileMode::Component,
+        ..Default::default()
+    }
 }
 
 fn err_for(src: &str) -> String {
@@ -28,17 +31,27 @@ fn err_for(src: &str) -> String {
 /// `transition:` used to own, now expressed in the one system.
 #[test]
 fn motion_enter_and_exit_bake_animations() {
-    let src = r#"<card sx={style.enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' })}>x</card>"#;
+    let src =
+        r#"<card sx={style.enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' })}>x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
-    assert!(js.contains(r#"trigger: "enter""#), "enter trigger emitted:\n{js}");
-    assert!(js.contains(r#"trigger: "exit""#), "exit trigger emitted:\n{js}");
+    assert!(
+        js.contains(r#"trigger: "enter""#),
+        "enter trigger emitted:\n{js}"
+    );
+    assert!(
+        js.contains(r#"trigger: "exit""#),
+        "exit trigger emitted:\n{js}"
+    );
     // Runtime dispatch: motion.dev creates the animation after the node
     // is live. No AOT `el.animate(...)` lives in the emit anymore.
     assert!(
         !js.contains("el.animate("),
         "no AOT animation — runtime owns creation:\n{js}"
     );
-    assert!(js.contains("__sui_motion_attach"), "wired through the motion attach:\n{js}");
+    assert!(
+        js.contains("__sail_motion_attach"),
+        "wired through the motion attach:\n{js}"
+    );
 }
 
 /// The interaction triggers still work — enter/exit are additions, not a rewrite.
@@ -47,7 +60,10 @@ fn the_interaction_triggers_are_untouched() {
     let src = r#"<button sx={style.hover({ scale: 'spring:snappy' })}>x</button>"#;
     let js = compile(src, opts()).expect("compiles").js;
     assert!(js.contains(r#"trigger: "hover""#), "{js}");
-    assert!(js.contains("__sui_motion_attach"), "runtime attach present:\n{js}");
+    assert!(
+        js.contains("__sail_motion_attach"),
+        "runtime attach present:\n{js}"
+    );
 }
 
 /// An unknown preset is a COMPILE error, not a silent runtime fallback. This is why
@@ -75,10 +91,12 @@ fn the_second_animation_system_is_retired_with_a_teaching_error() {
             msg.contains("retired") && msg.contains("one animation system"),
             "must say it is retired and why: {msg}"
         );
-        assert!(msg.contains(expect), "must name the replacement `{expect}`: {msg}");
+        assert!(
+            msg.contains(expect),
+            "must name the replacement `{expect}`: {msg}"
+        );
     }
 }
-
 
 // ── ORCHESTRATION ───────────────────────────────────────────────────────────
 // Stagger is the difference between a list that APPEARS and a list that ARRIVES,
@@ -92,7 +110,10 @@ fn the_second_animation_system_is_retired_with_a_teaching_error() {
 fn stagger_bakes_a_delay_step_into_the_attach_config() {
     let src = r#"<card sx={style.enter({ opacity: 'fade', stagger: '40ms' })}>x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
-    assert!(js.contains("stagger: 0.04"), "stagger step emitted in seconds:\n{js}");
+    assert!(
+        js.contains("stagger: 0.04"),
+        "stagger step emitted in seconds:\n{js}"
+    );
     assert!(js.contains(r#"trigger: "enter""#), "{js}");
 }
 
@@ -109,7 +130,10 @@ fn stagger_accepts_seconds() {
 fn no_stagger_emits_no_stagger() {
     let src = r#"<card sx={style.enter({ opacity: 'fade' })}>x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
-    assert!(!js.contains("stagger"), "unauthored stagger must not appear:\n{js}");
+    assert!(
+        !js.contains("stagger"),
+        "unauthored stagger must not appear:\n{js}"
+    );
 }
 
 /// A garbled duration fails the build rather than silently becoming zero.
@@ -136,9 +160,11 @@ fn the_animation_vocabulary_has_exactly_one_source() {
     }
     let msg = err_for(r#"<card sx={style.hover({ blur: 'spring:snappy' })}>x</card>"#);
     assert!(msg.contains("not supported"), "{msg}");
-    assert!(msg.contains("stagger"), "the error must mention the reserved key: {msg}");
+    assert!(
+        msg.contains("stagger"),
+        "the error must mention the reserved key: {msg}"
+    );
 }
-
 
 // ── TIMELINE TRIGGERS ───────────────────────────────────────────────────────
 // `fx:reveal` / `fx:scroll` are PROGRESS-driven, not time-driven: position is
@@ -148,7 +174,7 @@ fn the_animation_vocabulary_has_exactly_one_source() {
 // this way stays smooth under load and one built on a scroll handler does not.
 //
 // And they are NOT a second emit path: the compiler emits a single
-// `__sui_motion_attach(...)` call; the runtime hands Motion a different
+// `__sail_motion_attach(...)` call; the runtime hands Motion a different
 // timeline. One directive, one catalog, one code path.
 
 #[test]
@@ -157,7 +183,10 @@ fn reveal_and_scroll_are_triggers_like_any_other() {
         let src = format!(r#"<card sx={{style.{trigger}({{ opacity: 'fade' }})}}>x</card>"#);
         let js = compile(&src, opts()).expect("compiles").js;
         assert!(js.contains(&format!(r#"trigger: "{trigger}""#)), "{js}");
-        assert!(js.contains("__sui_motion_attach"), "runtime attach present:\n{js}");
+        assert!(
+            js.contains("__sail_motion_attach"),
+            "runtime attach present:\n{js}"
+        );
     }
 }
 
@@ -165,7 +194,8 @@ fn reveal_and_scroll_are_triggers_like_any_other() {
 /// the thing people reach for GSAP to do is a directive with a preset.
 #[test]
 fn parallax_is_one_directive() {
-    let src = r#"<card sx={style.reveal({ translate-y: 'spring:gentle', opacity: 'fade' })}>x</card>"#;
+    let src =
+        r#"<card sx={style.reveal({ translate-y: 'spring:gentle', opacity: 'fade' })}>x</card>"#;
     let js = compile(src, opts()).expect("compiles").js;
     assert!(js.contains(r#"trigger: "reveal""#), "{js}");
     let motion_count = js.matches("property:").count();

@@ -17,18 +17,20 @@ pub mod app;
 pub mod atomic;
 pub mod catalog;
 pub mod cem;
-pub mod emit;
-pub mod node_resolve;
-pub mod routes;
 pub mod compile;
+pub mod emit;
+pub mod fonts;
+pub mod icons;
+pub mod node_resolve;
 pub mod proto;
 pub mod publish;
 pub mod rolldown_bundle;
+pub mod routes;
+pub mod routes_bundle;
+pub mod sail_plugin;
 pub mod ship_asset_css;
 pub mod stamp;
-pub mod sail_plugin;
 pub mod targets;
-pub mod routes_bundle;
 mod watch;
 
 use std::collections::HashMap;
@@ -38,20 +40,29 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use tokio::sync::{broadcast, Notify};
+use tokio::sync::{Notify, broadcast};
 use tracing::error;
-
 
 pub use proto::BundleManifest;
 // (formerly `use asset_graph::write_asset_graph;`) — purged.
-use targets::{BundleLayout, BundleTarget};
 pub use deck_config::DeckConfig;
+use targets::{BundleLayout, BundleTarget};
 
 /// Unsolicited events emitted while watching.
 #[derive(Debug, Clone)]
 pub enum BundlerEvent {
-    ModuleChanged { target: String, out_path: String, bytes: usize },
-    CompileError { target: String, message: String, line: Option<u32>, col: Option<u32>, file: Option<String> },
+    ModuleChanged {
+        target: String,
+        out_path: String,
+        bytes: usize,
+    },
+    CompileError {
+        target: String,
+        message: String,
+        line: Option<u32>,
+        col: Option<u32>,
+        file: Option<String>,
+    },
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -115,7 +126,11 @@ impl Bundler {
     }
 
     fn layout(&self) -> BundleLayout {
-        BundleLayout::with_config(self.repo_root.clone(), self.workspace.clone(), self.cfg.clone())
+        BundleLayout::with_config(
+            self.repo_root.clone(),
+            self.workspace.clone(),
+            self.cfg.clone(),
+        )
     }
 
     /// One long-lived `all_targets()` snapshot, computed on first use and
@@ -187,17 +202,12 @@ impl Bundler {
 
         // Leader: run the one build, then clear the entry and wake all waiters.
         let layout = self.layout();
-        let result = rolldown_bundle::bundle_target(
-            &layout,
-            target,
-            &self.staging,
-            false,
-        )
-        .await
-        .map_err(|e| BundlerError::Bundle {
-            target: target_name.to_string(),
-            message: e.to_string(),
-        });
+        let result = rolldown_bundle::bundle_target(&layout, target, &self.staging, false)
+            .await
+            .map_err(|e| BundlerError::Bundle {
+                target: target_name.to_string(),
+                message: e.to_string(),
+            });
         if let Ok(ref manifest) = result {
             self.update_module_graph(&target_name, manifest.modules.iter().cloned().collect());
         }
@@ -211,7 +221,7 @@ impl Bundler {
 
     /// Build one named target.
     ///
-    /// Cold-misses from `serve_sui_route_setup` funnel through here; concurrent
+    /// Cold-misses from `serve_sail_route_setup` funnel through here; concurrent
     /// requests for the same target coalesce onto one build via
     /// `build_single_flight` (#256). A coalesced waiter doesn't get the
     /// leader's manifest, so we synthesize one pointing at the on-disk artifact
@@ -240,7 +250,10 @@ impl Bundler {
 
     /// Look up a target by name in the cached snapshot.
     fn find_target(&self, name: &str) -> Option<BundleTarget> {
-        self.targets_snapshot().iter().find(|t| t.name == name).cloned()
+        self.targets_snapshot()
+            .iter()
+            .find(|t| t.name == name)
+            .cloned()
     }
 
     /// Synthesize a manifest for a target whose artifact a concurrent leader
@@ -249,16 +262,19 @@ impl Bundler {
         use targets::TargetEntry;
         let out_dir = self.layout().assets_dir_for(&t.name);
         let out_path = out_dir.join(&t.out_file);
-        let bytes = std::fs::metadata(&out_path).map(|m| m.len() as usize).unwrap_or(0);
+        let bytes = std::fs::metadata(&out_path)
+            .map(|m| m.len() as usize)
+            .unwrap_or(0);
         BundleManifest {
             target: t.name.clone(),
             out_path: out_path.to_string_lossy().to_string(),
             bytes,
             inputs: match &t.entry {
                 TargetEntry::Real(p) => vec![p.to_string_lossy().to_string()],
-                TargetEntry::Virtual { sources } => {
-                    sources.iter().map(|p| p.to_string_lossy().to_string()).collect()
-                }
+                TargetEntry::Virtual { sources } => sources
+                    .iter()
+                    .map(|p| p.to_string_lossy().to_string())
+                    .collect(),
             },
             modules: vec![],
             dropped_side_effect_modules: vec![],
@@ -451,7 +467,8 @@ impl Bundler {
         let g = self.module_graph.lock().unwrap_or_else(|e| e.into_inner());
         let names = watch::targets_for_module(&g, path);
         let snap = self.targets_snapshot();
-        names.into_iter()
+        names
+            .into_iter()
             .filter_map(|name| snap.iter().find(|t| t.name == name).cloned())
             .collect()
     }
@@ -460,7 +477,10 @@ impl Bundler {
         self.layout().route_bucket_dirs()
     }
 
-    pub(crate) fn target_for_entry_path_for_watch(&self, path: &Path) -> Option<targets::BundleTarget> {
+    pub(crate) fn target_for_entry_path_for_watch(
+        &self,
+        path: &Path,
+    ) -> Option<targets::BundleTarget> {
         use targets::TargetEntry;
         self.targets_snapshot()
             .iter()

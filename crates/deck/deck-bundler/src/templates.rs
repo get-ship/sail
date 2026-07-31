@@ -52,6 +52,27 @@ pub const INDEX_HTML_TEMPLATE: &str = r#"<!doctype html>
     html { background: var(--background); color: var(--foreground); }
     body { margin: 0; min-height: 100vh; }
   </style>
+
+  <!-- Pre-paint theme + mode (FOUC guard, U2.1b). Preference may be
+       light|dark|system under ship-site-theme-mode; data-mode is always
+       light|dark (system resolves via prefers-color-scheme). Keys match
+       @ship/tokens THEME_STORAGE_KEY / THEME_MODE_STORAGE_KEY. -->
+  <script>
+    try {
+      var _d = document.documentElement;
+      var _t = localStorage.getItem('ship-site-theme');
+      if (_t) _d.setAttribute('data-theme', _t);
+      var _m = localStorage.getItem('ship-site-theme-mode');
+      var _paint = 'light';
+      if (_m === 'dark') _paint = 'dark';
+      else if (_m === 'light') _paint = 'light';
+      else if (_m === 'system') {
+        _paint = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          ? 'dark' : 'light';
+      }
+      _d.setAttribute('data-mode', _paint);
+    } catch (_e) {}
+  </script>
 </head>
 <body>
   <div id="{{root_id}}"></div>
@@ -66,11 +87,7 @@ pub const INDEX_HTML_TEMPLATE: &str = r#"<!doctype html>
 /// `importmap` field's value as a JSON string with two-space indent).
 /// `entry_module` is the file name (no path) of the generated entry —
 /// `routes.gen.ts` is the current convention.
-pub fn render_index_html(
-    project_name: &str,
-    importmap_json: &str,
-    entry_module: &str,
-) -> String {
+pub fn render_index_html(project_name: &str, importmap_json: &str, entry_module: &str) -> String {
     INDEX_HTML_TEMPLATE
         .replace("{{root_id}}", ROOT_ID)
         .replace("{{project_name}}", project_name)

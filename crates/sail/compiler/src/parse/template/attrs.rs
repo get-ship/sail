@@ -6,10 +6,7 @@ use crate::ir::*;
 use crate::parse::expr;
 use crate::parse::html;
 
-pub fn compile_attrs(
-    el: &html::Element,
-    loc_prefix: &str,
-) -> Result<Vec<AttrInstr>, CompileError> {
+pub fn compile_attrs(el: &html::Element, loc_prefix: &str) -> Result<Vec<AttrInstr>, CompileError> {
     let mut out = Vec::new();
     let is_slot = el.tag.eq_ignore_ascii_case("slot");
     for a in &el.attributes {
@@ -44,9 +41,11 @@ fn compile_attr(
     }
     if name == "mutation" {
         if value.is_empty() {
-            return Err(CompileError::new("mutation= requires a value (e.g. \"demo.addTodo\")")
-                .with_span(value_span)
-                .with_category(loc.to_string()));
+            return Err(
+                CompileError::new("mutation= requires a value (e.g. \"demo.addTodo\")")
+                    .with_span(value_span)
+                    .with_category(loc.to_string()),
+            );
         }
         return Ok(AttrInstr::Mutation {
             expr: Expr::new(value.to_string(), value_span, false),
@@ -70,7 +69,7 @@ fn compile_attr(
              that writes a custom property sx can read via (--name)); state is \
              aria-* attributes, closed sx state prefixes (`selected:`, `hover:`, …), \
              or layout. Bare `class=` is also banned. Do not use `class=` as a \
-             substitute."
+             substitute.",
         )
         .with_span(value_span)
         .with_category(loc.to_string()));
@@ -87,7 +86,7 @@ fn compile_attr(
              `use:zoomPan`, `use:worldTransform`, `use:maxWidth`, `use:cellPad`, \
              `use:virtualSpacer`, `use:swatch`). The action writes to a custom \
              property; sx reads it via the matching `(--name)` atom \
-             (`translate-y-(--row-y)`, `top-(--evt-top)`, …)."
+             (`translate-y-(--row-y)`, `top-(--evt-top)`, …).",
         )
         .with_span(value_span)
         .with_category(loc.to_string()));
@@ -100,7 +99,7 @@ fn compile_attr(
             "`prop:` has been removed — write plain `name={expr}`. Identity and \
              non-string fields are plain bindings; the compiler/runtime lowers \
              property vs attribute from contracts and value shape. There is no \
-             author attr/property split."
+             author attr/property split.",
         )
         .with_span(value_span)
         .with_category(loc.to_string()));
@@ -109,7 +108,7 @@ fn compile_attr(
         return Err(CompileError::new(
             "`attr:` has been removed — write plain `name={expr}`. Fixed-name \
              fields are plain bindings; dynamic attribute names are not an \
-             author directive. The web backend chooses attribute vs property."
+             author directive. The web backend chooses attribute vs property.",
         )
         .with_span(value_span)
         .with_category(loc.to_string()));
@@ -207,11 +206,9 @@ fn compile_attr(
                         e.message,
                     )
                 };
-                return Err(
-                    CompileError::new(msg)
-                        .with_span(value_span)
-                        .with_category(loc.to_string()),
-                );
+                return Err(CompileError::new(msg)
+                    .with_span(value_span)
+                    .with_category(loc.to_string()));
             }
         };
         // Object AST with an explicit `key: value` entry is the
@@ -220,12 +217,12 @@ fn compile_attr(
         // `{...spread}`, `{"hello"}`) are normal JSX-style
         // JSX-style bindings and pass through.
         if let crate::parse::expr::AstKind::Object(entries) = &ast.kind {
-            let has_key_value = entries
-                .iter()
-                .any(|e| {
-                    matches!(e.key, crate::parse::expr::ObjKey::Ident(_) | crate::parse::expr::ObjKey::String(_))
-                        && e.value.is_some()
-                });
+            let has_key_value = entries.iter().any(|e| {
+                matches!(
+                    e.key,
+                    crate::parse::expr::ObjKey::Ident(_) | crate::parse::expr::ObjKey::String(_)
+                ) && e.value.is_some()
+            });
             if has_key_value {
                 let msg = format!(
                     "attribute `{name}` value `{value}` is an object literal — \
@@ -448,9 +445,11 @@ fn compile_bind(
     loc: &str,
 ) -> Result<AttrInstr, CompileError> {
     if !is_expr_value(value) {
-        return Err(CompileError::new(format!("bind:{target} expects {{signal}}"))
-            .with_span(value_span)
-            .with_category(loc.to_string()));
+        return Err(
+            CompileError::new(format!("bind:{target} expects {{signal}}"))
+                .with_span(value_span)
+                .with_category(loc.to_string()),
+        );
     }
     let inner = strip_braces(value).to_string();
     if target == "this" {
@@ -461,22 +460,33 @@ fn compile_bind(
             .with_span(value_span)
             .with_category(loc.to_string()));
         }
-        return Ok(AttrInstr::BindThis { var: inner, span: value_span });
+        return Ok(AttrInstr::BindThis {
+            var: inner,
+            span: value_span,
+        });
     }
     expr::validate_at(&inner, false, loc, value_span)?;
     let expr = Expr::new(inner, value_span, false);
     match target {
-        "value" => Ok(AttrInstr::BindValue { expr, span: value_span }),
-        "checked" => Ok(AttrInstr::BindChecked { expr, span: value_span }),
+        "value" => Ok(AttrInstr::BindValue {
+            expr,
+            span: value_span,
+        }),
+        "checked" => Ok(AttrInstr::BindChecked {
+            expr,
+            span: value_span,
+        }),
         other => {
             let known = crate::directive_manifest::BIND_TARGETS
                 .iter()
                 .map(|b| b.target)
                 .collect::<Vec<_>>()
                 .join(", ");
-            Err(CompileError::new(format!("unknown bind:{other} — the targets are: {known}"))
-                .with_span(value_span)
-                .with_category(loc.to_string()))
+            Err(
+                CompileError::new(format!("unknown bind:{other} — the targets are: {known}"))
+                    .with_span(value_span)
+                    .with_category(loc.to_string()),
+            )
         }
     }
 }
@@ -488,11 +498,11 @@ fn compile_reflect_empty(
     on_slot: bool,
 ) -> Result<AttrInstr, CompileError> {
     if !on_slot {
-        return Err(CompileError::new(
-            "reflect-empty=\"...\" is only valid on <slot> elements",
-        )
-        .with_span(value_span)
-        .with_category(loc.to_string()));
+        return Err(
+            CompileError::new("reflect-empty=\"...\" is only valid on <slot> elements")
+                .with_span(value_span)
+                .with_category(loc.to_string()),
+        );
     }
     if is_expr_value(value) {
         return Err(CompileError::new(
@@ -502,11 +512,11 @@ fn compile_reflect_empty(
         .with_category(loc.to_string()));
     }
     if value.is_empty() {
-        return Err(CompileError::new(
-            "reflect-empty=\"<attr>\" requires a target attribute name",
-        )
-        .with_span(value_span)
-        .with_category(loc.to_string()));
+        return Err(
+            CompileError::new("reflect-empty=\"<attr>\" requires a target attribute name")
+                .with_span(value_span)
+                .with_category(loc.to_string()),
+        );
     }
     if !is_valid_attr_name(value) {
         return Err(CompileError::new(format!(
@@ -524,7 +534,9 @@ fn compile_reflect_empty(
 fn is_bare_identifier(s: &str) -> bool {
     let s = s.trim();
     let mut chars = s.chars();
-    let Some(first) = chars.next() else { return false };
+    let Some(first) = chars.next() else {
+        return false;
+    };
     if !(first.is_ascii_alphabetic() || first == '_' || first == '$') {
         return false;
     }
@@ -533,14 +545,14 @@ fn is_bare_identifier(s: &str) -> bool {
 
 fn is_valid_attr_name(s: &str) -> bool {
     let mut chars = s.chars();
-    let Some(first) = chars.next() else { return false };
+    let Some(first) = chars.next() else {
+        return false;
+    };
     if !first.is_ascii_lowercase() {
         return false;
     }
     chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
 }
-
-
 
 /// Compile a `use:action` / `use:action={param}` directive — attach a
 /// reusable behavior (an "action") to the rendered element. `action` is a
@@ -553,13 +565,17 @@ fn compile_use(
     loc: &str,
 ) -> Result<AttrInstr, CompileError> {
     let err = |msg: String| {
-        CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
+        CompileError::new(msg)
+            .with_span(value_span)
+            .with_category(loc.to_string())
     };
     if name.is_empty() {
         return Err(err("use: requires an action name".into()));
     }
     if !is_bare_identifier(name) {
-        return Err(err(format!("action name \"{name}\" must be a bare identifier")));
+        return Err(err(format!(
+            "action name \"{name}\" must be a bare identifier"
+        )));
     }
     // Allow arrows in the param: an action's parameter is frequently a callback
     // (`use:clickOutside={() => menu.close()}`), unlike a plain attribute value.
@@ -573,7 +589,11 @@ fn compile_use(
     } else {
         return Err(err("use: parameter must be an {expression}".into()));
     };
-    Ok(AttrInstr::Use { action: name.to_string(), param, span: value_span })
+    Ok(AttrInstr::Use {
+        action: name.to_string(),
+        param,
+        span: value_span,
+    })
 }
 /// Compile a motion attach config (private `motion:<trigger>=…` from Style
 /// `.enter` / `.exit` / `.loop` / `.reveal` / `.scroll({…})` lowering).
@@ -592,7 +612,9 @@ fn compile_motion(
     loc: &str,
 ) -> Result<AttrInstr, CompileError> {
     let err = |msg: String| {
-        CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
+        CompileError::new(msg)
+            .with_span(value_span)
+            .with_category(loc.to_string())
     };
     if trigger.is_empty() {
         return Err(err(
@@ -698,7 +720,9 @@ fn parse_motion_static_config(
     loc: &str,
 ) -> Result<(Vec<MotionProp>, Option<u32>, MotionTiming), CompileError> {
     let err = |msg: String| -> CompileError {
-        CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
+        CompileError::new(msg)
+            .with_span(value_span)
+            .with_category(loc.to_string())
     };
     let leading = raw.len() - raw.trim_start().len();
     let s = raw.trim();
@@ -840,7 +864,9 @@ fn parse_motion_channel(
     loc: &str,
 ) -> Result<(MotionProp, usize), CompileError> {
     let err = |msg: String| -> CompileError {
-        CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
+        CompileError::new(msg)
+            .with_span(value_span)
+            .with_category(loc.to_string())
     };
     let mut prop = MotionProp {
         property: property.to_string(),
@@ -865,7 +891,9 @@ fn parse_motion_channel(
                 i += 1;
                 break;
             }
-            return Err(err(format!("unexpected `,` in the object for `{property}`")));
+            return Err(err(format!(
+                "unexpected `,` in the object for `{property}`"
+            )));
         }
         let key_start = i;
         let key_end = scan_ident(bytes, i).ok_or_else(|| {
@@ -899,7 +927,7 @@ fn parse_motion_channel(
                         "`preset` inside `{property}` must be a quoted preset name \
                          (e.g. `preset: 'pop'`), got `{}`",
                         describe_motion_value(&other)
-                    )))
+                    )));
                 }
             },
             _ => assign_timing(&mut prop.timing, key, val, &err)?,
@@ -937,12 +965,12 @@ fn assign_timing(
     match key {
         "duration" | "delay" => match &val {
             MotionValue::Num(n) if *n < 0.0 => {
-                return Err(err(format!("`{key}` must not be negative, got {n}")))
+                return Err(err(format!("`{key}` must not be negative, got {n}")));
             }
             MotionValue::Bezier(_) => {
                 return Err(err(format!(
                     "`{key}` is a number of milliseconds (e.g. `{key}: 3600`), not a bezier"
-                )))
+                )));
             }
             _ => {}
         },
@@ -952,7 +980,7 @@ fn assign_timing(
                     "`easing` is a keyword (`'in-out'`, `'linear'`) or an inline bezier \
                      (`[0.6, 0, 0.2, 1]`), not a number"
                         .into(),
-                ))
+                ));
             }
             _ => {}
         },
@@ -967,7 +995,9 @@ fn assign_timing(
         _ => return Err(err(format!("unknown timing key `{key}`"))),
     };
     if slot.is_some() {
-        return Err(err(format!("`{key}` is set twice in the same motion config")));
+        return Err(err(format!(
+            "`{key}` is set twice in the same motion config"
+        )));
     }
     *slot = Some(val);
     Ok(())
@@ -985,10 +1015,14 @@ fn parse_motion_value(
     loc: &str,
 ) -> Result<(MotionValue, usize), CompileError> {
     let err = |msg: String| -> CompileError {
-        CompileError::new(msg).with_span(value_span).with_category(loc.to_string())
+        CompileError::new(msg)
+            .with_span(value_span)
+            .with_category(loc.to_string())
     };
     let mut i = start;
-    let c = *bytes.get(i).ok_or_else(|| err(format!("expected a value after `{key}:`")))?;
+    let c = *bytes
+        .get(i)
+        .ok_or_else(|| err(format!("expected a value after `{key}:`")))?;
 
     // 1. Quoted string — a literal.
     if c == b'"' || c == b'\'' {
@@ -1013,11 +1047,14 @@ fn parse_motion_value(
 
     // 2. Inline cubic-bezier — `[0.6, 0, 0.2, 1]`.
     if c == b'[' {
-        let close = find_matching(bytes, i, b'[', b']').ok_or_else(|| {
-            err(format!("unterminated `[` in motion config for `{key}`"))
-        })?;
+        let close = find_matching(bytes, i, b'[', b']')
+            .ok_or_else(|| err(format!("unterminated `[` in motion config for `{key}`")))?;
         let inner = &s[i + 1..close];
-        let nums: Vec<&str> = inner.split(',').map(str::trim).filter(|p| !p.is_empty()).collect();
+        let nums: Vec<&str> = inner
+            .split(',')
+            .map(str::trim)
+            .filter(|p| !p.is_empty())
+            .collect();
         if nums.len() != 4 {
             return Err(err(format!(
                 "`{key}` as an inline easing must be a cubic-bezier of exactly four numbers \
@@ -1052,9 +1089,9 @@ fn parse_motion_value(
         // mistake worth naming rather than silently reading as `3600`.
         let after = skip_ws(bytes, end);
         if after >= bytes.len() || bytes[after] == b',' || bytes[after] == b'}' {
-            let n = s[i..end].parse::<f64>().map_err(|_| {
-                err(format!("could not read `{}` as a number", &s[i..end]))
-            })?;
+            let n = s[i..end]
+                .parse::<f64>()
+                .map_err(|_| err(format!("could not read `{}` as a number", &s[i..end])))?;
             return Ok((MotionValue::Num(n), end));
         }
         if bytes[end].is_ascii_alphabetic() || bytes[end] == b'%' {
@@ -1246,16 +1283,20 @@ fn scan_ident(bytes: &[u8], mut i: usize) -> Option<usize> {
     Some(i)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
-
     #[test]
     fn prop_prefix_is_refused_with_teaching() {
-        let err = compile_attr("prop:items", "{rows()}", Span::new(0, 8), "[grid prop:items]", false)
-            .unwrap_err();
+        let err = compile_attr(
+            "prop:items",
+            "{rows()}",
+            Span::new(0, 8),
+            "[grid prop:items]",
+            false,
+        )
+        .unwrap_err();
         assert!(
             err.message.contains("`prop:`") && err.message.contains("plain"),
             "expected prop: teaching refuse, got: {}",
@@ -1265,19 +1306,20 @@ mod tests {
 
     #[test]
     fn attr_prefix_is_refused_with_teaching() {
-        let err = compile_attr("attr:hidden", "{h()}", Span::new(0, 5), "[div attr:hidden]", false)
-            .unwrap_err();
+        let err = compile_attr(
+            "attr:hidden",
+            "{h()}",
+            Span::new(0, 5),
+            "[div attr:hidden]",
+            false,
+        )
+        .unwrap_err();
         assert!(
             err.message.contains("`attr:`") && err.message.contains("plain"),
             "expected attr: teaching refuse, got: {}",
             err.message
         );
     }
-
-
-
-
-
 
     // ── Fix 1: fail-loud on malformed `{…}` attribute bodies ─────────────
     //
@@ -1349,11 +1391,18 @@ mod tests {
     fn attr_value_valid_expression_unchanged() {
         // Happy path: `attr={count}` keeps compiling as an expression
         // binding. Don't regress.
-        let instr =
-            compile_attr("disabled", "{count}", Span::new(0, 7), "[<el> disabled]", false)
-                .expect("valid expression attr should compile");
+        let instr = compile_attr(
+            "disabled",
+            "{count}",
+            Span::new(0, 7),
+            "[<el> disabled]",
+            false,
+        )
+        .expect("valid expression attr should compile");
         match instr {
-            AttrInstr::Expr { ref name, ref expr, .. } => {
+            AttrInstr::Expr {
+                ref name, ref expr, ..
+            } => {
                 assert_eq!(name, "disabled");
                 assert_eq!(expr.source, "count");
             }
@@ -1366,9 +1415,14 @@ mod tests {
         // `attr={signal(0)}` — call expression, not an object literal.
         // Must compile as expression binding (this is the intended
         // Svelte/JSX-like shape).
-        let instr =
-            compile_attr("value", "{signal(0)}", Span::new(0, 10), "[<el> value]", false)
-                .expect("call-expression attr should compile");
+        let instr = compile_attr(
+            "value",
+            "{signal(0)}",
+            Span::new(0, 10),
+            "[<el> value]",
+            false,
+        )
+        .expect("call-expression attr should compile");
         match instr {
             AttrInstr::Expr { ref expr, .. } => assert_eq!(expr.source, "signal(0)"),
             other => panic!("expected AttrInstr::Expr, got {other:?}"),

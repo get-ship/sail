@@ -39,7 +39,7 @@ export default controller((ctx: Scope) => {
       <p sx={artist}>The Reactive Quartet</p>
       <progress value={position()} max="100"></progress>
     </column>
-    <if cond={playing()}>
+    <if {playing()}>
       <row gap="1" align="end" sx={eq}>
         <div sx={[bar, style.h(4).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })]}></div>
         <div sx={[bar, style.h(6).opacity(75).loop({ scale-y: 'spring:gentle', stagger: '0.1s' })]}></div>

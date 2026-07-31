@@ -45,10 +45,10 @@
 //!  * `setup` — setup body, $scope seeding, lifecycle wiring
 
 use super::writer::Writer;
+use crate::CompileOpts;
 use crate::ir::*;
 use crate::keys::BindingRegistry;
 use crate::lower::Lowered;
-use crate::CompileOpts;
 
 mod component;
 mod imports;
@@ -91,8 +91,7 @@ pub fn emit_module(
     // import list then reflects what the body actually used, rather than guessing.
     let mut body = Writer::new();
     body.enter();
-    let module_hoists =
-        setup::emit_setup_body(&mut body, program, bindings, opts, sx_var_bindings);
+    let module_hoists = setup::emit_setup_body(&mut body, program, bindings, opts, sx_var_bindings);
     body.leave();
     let hoisted = module_hoists.into_string();
     let uses_templates = hoisted.contains("__tpl(");

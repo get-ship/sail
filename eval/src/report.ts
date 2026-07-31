@@ -2,6 +2,7 @@ import { writeFileSync } from 'node:fs'
 import type { CorpusSummary, GradeReport, RunResult } from './types.ts'
 import { resultsPath } from './paths.ts'
 import { sanitizeNote } from './sanitize.ts'
+import { classifyRun } from './classify.ts'
 
 function pct(n: number, d: number): string {
   if (d === 0) return '—'
@@ -56,6 +57,17 @@ export function formatResultsMd(summary: CorpusSummary): string {
   lines.push('')
   lines.push(`- **Lane:** \`${summary.lane}\``)
   lines.push(`- **Dispatch:** \`${summary.dispatch}\``)
+  if (summary.model) {
+    lines.push(`- **Model:** \`${summary.model}\` (operator-supplied fuzzy; resolved labels per run)`)
+  }
+  if (summary.arms?.length) {
+    lines.push(`- **Arms:** ${summary.arms.map((a) => `\`${a}\``).join(', ')}`)
+  }
+  if (summary.paced) {
+    lines.push(
+      `- **Paced:** interval ${Math.round(summary.paced.intervalMs / 1000)}s · resumed ${summary.paced.resumed} · executed ${summary.paced.executed}`,
+    )
+  }
   lines.push(`- **Started:** ${summary.startedAt}`)
   lines.push(`- **Finished:** ${summary.finishedAt}`)
   lines.push(
@@ -65,10 +77,65 @@ export function formatResultsMd(summary: CorpusSummary): string {
     `- **Pass rate:** ${pct(summary.passCount, summary.passCount + summary.failCount)}`,
   )
   lines.push('')
+
+  // Per-arm aggregate when multi-arm session — same classifyRun as top-level counts.
+  const byArm = groupByArm(summary.runs)
+  if (byArm.size > 1 || (summary.arms?.length ?? 0) > 0) {
+    lines.push('## By arm')
+    lines.push('')
+    lines.push(
+      '| Arm | Runs | Pass | Fail | Skip | Turns (mean) | Wall (mean s) | Repairs | Notes |',
+    )
+    lines.push('|---|---:|---:|---:|---:|---:|---:|---:|---|')
+    for (const [arm, armRuns] of [...byArm.entries()].sort((a, b) =>
+      a[0].localeCompare(b[0]),
+    )) {
+      let pass = 0
+      let fail = 0
+      let skip = 0
+      for (const r of armRuns) {
+        const kind = classifyRun(r, summary.lane)
+        if (kind === 'pass') pass++
+        else if (kind === 'skip') skip++
+        else fail++
+      }
+      const turns =
+        armRuns.reduce((a, r) => a + r.trajectory.turnCount, 0) /
+        Math.max(1, armRuns.length)
+      const walls = armRuns.filter((r) => r.wallMs != null)
+      const wallMean =
+        walls.length > 0
+          ? (
+              walls.reduce((a, r) => a + (r.wallMs ?? 0), 0) /
+              walls.length /
+              1000
+            ).toFixed(1)
+          : '—'
+      const repairs = armRuns.reduce(
+        (a, r) => a + (r.grades.compile?.repairCount ?? r.grades.gates?.repairCount ?? 0),
+        0,
+      )
+      const note =
+        arm === 'sail'
+          ? 'compile+vocab+gates+behavior+beauty'
+          : 'behavior+beauty+turns (no sail legs)'
+      lines.push(
+        `| ${arm} | ${armRuns.length} | ${pass} | ${fail} | ${skip} | ${turns.toFixed(1)} | ${wallMean} | ${repairs} | ${note} |`,
+      )
+    }
+    lines.push('')
+  }
+
   lines.push('## Tasks')
   lines.push('')
-  lines.push('| Task | OK | Turns | Grades | Notes |')
-  lines.push('|---|:---:|---:|---|---|')
+  const hasArm = summary.runs.some((r) => r.arm)
+  if (hasArm) {
+    lines.push('| Task | Arm | OK | Turns | Wall s | Grades | Notes |')
+    lines.push('|---|---|:---:|---:|---:|---|---|')
+  } else {
+    lines.push('| Task | OK | Turns | Grades | Notes |')
+    lines.push('|---|:---:|---:|---|---|')
+  }
   for (const r of summary.runs) {
     const ok = r.error ? 'err' : r.grades.ok ? '✓' : '✗'
     const notes = r.error
@@ -78,9 +145,17 @@ export function formatResultsMd(summary: CorpusSummary): string {
         : r.grades.vocab_share?.detail
           ? sanitizeNote(r.grades.vocab_share.detail)
           : ''
-    lines.push(
-      `| ${r.task} | ${ok} | ${turnsCell(r)} | ${gradeCell(r.grades)} | ${notes} |`,
-    )
+    const wall =
+      r.wallMs != null ? (r.wallMs / 1000).toFixed(1) : '—'
+    if (hasArm) {
+      lines.push(
+        `| ${r.task} | ${r.arm ?? '—'} | ${ok} | ${turnsCell(r)} | ${wall} | ${gradeCell(r.grades)} | ${notes} |`,
+      )
+    } else {
+      lines.push(
+        `| ${r.task} | ${ok} | ${turnsCell(r)} | ${gradeCell(r.grades)} | ${notes} |`,
+      )
+    }
   }
   lines.push('')
   lines.push('## Leg averages')
@@ -123,10 +198,34 @@ export function formatResultsMd(summary: CorpusSummary): string {
     '- Frontier adds playwright behavior + beauty (judge/operator). Missing beauty score is incomplete unless `--allow-skip-beauty`.',
   )
   lines.push(
+    '- Control arms (`react-tw`, `vanilla`): no sail-specific legs — behavior + beauty + turns/wall only.',
+  )
+  lines.push(
+    '- Control-arm behavior without `--base-url` uses **static source-text fallback** (not a running Vite/vanilla UI). Pass `--base-url` for live playwright behavior.',
+  )
+  lines.push(
+    '- Beauty screenshots are **operator-owned** under `runs/<date>/<task>/<arm>/<model>/screenshots/` (no auto-capture in EVAL-1).',
+  )
+  lines.push(
     '- Studio vocab low-water mark: **17%**. Default min share: **25%**. Strict mode: missing sail fails (not pass).',
+  )
+  lines.push(
+    '- Overnight (EVAL-1): `bun src/cli.ts pace --model <fuzzy> --interval 10m --arms sail,react-tw,vanilla`',
   )
   lines.push('')
   return lines.join('\n')
+}
+
+function groupByArm(runs: RunResult[]): Map<string, RunResult[]> {
+  const m = new Map<string, RunResult[]>()
+  for (const r of runs) {
+    // Never attribute missing arm labels to sail (mis-buckets multi-arm honesty).
+    const key = r.arm ?? 'unknown'
+    const list = m.get(key) ?? []
+    list.push(r)
+    m.set(key, list)
+  }
+  return m
 }
 
 export function writeResults(

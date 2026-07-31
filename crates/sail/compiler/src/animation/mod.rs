@@ -133,10 +133,7 @@ pub enum AnimationError {
     /// A duration or other numeric param was negative or otherwise
     /// out of the accepted range.
     #[error("value out of range: {field} = {value}")]
-    OutOfRange {
-        field: &'static str,
-        value: f64,
-    },
+    OutOfRange { field: &'static str, value: f64 },
 }
 
 /// Validate that a numeric value is finite. Returns

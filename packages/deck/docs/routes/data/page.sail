@@ -37,7 +37,7 @@ export default controller((ctx: ControllerScope<Scope>) => ({
   </div>
 
   <h2>Live server data</h2>
-  <p>A <code>&lt;data source="…" live&gt;</code> binding subscribes a route to live server data. That transport is <strong>host-wired</strong>: a host (like shipd) mounts it and supplies a resolver. Standalone <code>deck dev</code> serves routing, assets, SSR and HMR but not live server data yet — that's the server-functions work (#32). Use a client store for state until then.</p>
+  <p>A <code>&lt;data source="…" live&gt;</code> binding subscribes a route to live server data. That transport is <strong>host-wired</strong>: a host (like shipd) mounts it and supplies a resolver. Standalone <code>sail dev</code> serves routing, assets, SSR and HMR but not live server data yet — that's the server-functions work (#32). Use a client store for state until then.</p>
 
   <div role="navigation">
     <a href="/reactivity">← Reactivity</a>

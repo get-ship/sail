@@ -25,30 +25,50 @@ export const toggleGroup: Action<void> = (node) => {
 
   if (!root.hasAttribute('role')) root.setAttribute('role', 'group')
 
+  // Skip no-op writes — MutationObserver watches the same attrs we stamp.
+  const setAttr = (el: Element, name: string, value: string): void => {
+    if (el.getAttribute(name) !== value) el.setAttribute(name, value)
+  }
+
   // Structural layout only — not paint chrome (size/variant/tone).
   const stampOrientation = (): void => {
     const orientation = orientationOf()
-    for (const t of togglesOf()) {
-      t.setAttribute('orientation', orientation)
-    }
+    for (const t of togglesOf()) setAttr(t, 'orientation', orientation)
   }
 
+  // MutationObserver watches value/type/orientation under subtree while sync
+  // stamps orientation onto cells. Disconnect during apply + no-op setAttr so
+  // a PE/skin rebuild cannot re-enter sync forever (components catalog freeze
+  // when demos use real <toggle> cells).
   const sync = (): void => {
-    stampOrientation()
-    root.setAttribute('aria-orientation', orientationOf())
-    const active = activeSet()
-    const toggles = togglesOf()
-    for (const t of toggles) {
-      t.setAttribute('role', 'button')
-      t.setAttribute('aria-pressed', active.has(valueOf(t)) ? 'true' : 'false')
+    mo.disconnect()
+    try {
+      stampOrientation()
+      setAttr(root, 'aria-orientation', orientationOf())
+      const active = activeSet()
+      const toggles = togglesOf()
+      for (const t of toggles) {
+        setAttr(t, 'role', 'button')
+        setAttr(t, 'aria-pressed', active.has(valueOf(t)) ? 'true' : 'false')
+      }
+      const enabled = toggles.filter((t) => !t.hasAttribute('disabled'))
+      const focusable = enabled.find((t) => active.has(valueOf(t))) ?? enabled[0]
+      for (const t of toggles) setAttr(t, 'tabindex', t === focusable ? '0' : '-1')
+    } finally {
+      mo.observe(root, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        // Group-level only. Cell `orientation` is stamped by us — watching it
+        // re-entered sync forever when demos switched from bare buttons to
+        // real <toggle> hosts.
+        attributeFilter: ['value', 'type', 'orientation'],
+      })
     }
-    const enabled = toggles.filter((t) => !t.hasAttribute('disabled'))
-    const focusable = enabled.find((t) => active.has(valueOf(t))) ?? enabled[0]
-    for (const t of toggles) t.setAttribute('tabindex', t === focusable ? '0' : '-1')
   }
 
   const commit = (v: string): void => {
-    root.setAttribute('value', v)
+    setAttr(root, 'value', v)
     sync()
     root.dispatchEvent(
       new CustomEvent('sail-toggle-change', { detail: { value: v }, bubbles: true, composed: true }),
@@ -91,8 +111,8 @@ export const toggleGroup: Action<void> = (node) => {
     if (j >= 0) {
       e.preventDefault()
       const to = enabled[j]!
-      t.setAttribute('tabindex', '-1')
-      to.setAttribute('tabindex', '0')
+      setAttr(t, 'tabindex', '-1')
+      setAttr(to, 'tabindex', '0')
       to.focus()
     }
   }
@@ -100,12 +120,7 @@ export const toggleGroup: Action<void> = (node) => {
   root.addEventListener('click', onClick)
   root.addEventListener('keydown', onKeydown)
   const mo = new MutationObserver(() => sync())
-  mo.observe(root, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['orientation', 'value', 'type'],
-  })
+  // Initial observe happens inside sync()'s finally (after first apply).
   sync()
 
   return {

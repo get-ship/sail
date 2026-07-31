@@ -181,7 +181,10 @@ mod tests {
     fn union_semantics() {
         let a = RowUse::FieldsOnly(vec!["id".into()]);
         let b = RowUse::FieldsOnly(vec!["label".into()]);
-        assert_eq!(a.union(b), RowUse::FieldsOnly(vec!["id".into(), "label".into()]));
+        assert_eq!(
+            a.union(b),
+            RowUse::FieldsOnly(vec!["id".into(), "label".into()])
+        );
 
         assert_eq!(RowUse::None.union(RowUse::Whole), RowUse::Whole);
         let c = RowUse::FieldsOnly(vec!["id".into()]);

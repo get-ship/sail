@@ -6,11 +6,11 @@
 // re-exports the bootstrap so a host SPA shell wires init from one place, and
 // the engine's own types reference one `CompileFn` shape.
 //
-// Staleness (the task #230 prevention): the Node-only `warnIfStale` fs-mtime
-// check does not exist in a browser. The concrete browser check is a VERSION
-// compare — the running wasm's embedded `_compilerVersion` (the compiler emits
-// it as a leading `/*! _compilerVersion … */` banner on every module, and the
-// CEM/`.sail.meta.json` carry the same shape) against the catalog entries'
+// Staleness: the Node-only `warnIfStale` fs-mtime check does not exist in a
+// browser. The concrete browser check is a VERSION compare — the running
+// wasm's embedded `_compilerVersion` (the compiler emits it as a leading
+// `/*! _compilerVersion … */` banner on every module, and the CEM /
+// `.sail.meta.json` carry the same shape) against the catalog entries'
 // `_compilerVersion`. The SPA shell owns surfacing a banner on mismatch; the
 // engine exposes the parser so the host reads one canonical version off any
 // compiled module rather than re-deriving it.
@@ -31,8 +31,8 @@ const VERSION_BANNER = /\/\*!\s*_compilerVersion\s*(\{[^]*?\})\s*\*\//
 /**
  * Parse the leading `_compilerVersion` banner off a compiled module's JS. The
  * host SPA compares this running-compiler version against the catalog's
- * `_compilerVersion` to detect a stale registry (task #230). Returns `null`
- * when the banner is absent (a non-compiler-emitted string).
+ * `_compilerVersion` to detect a stale registry. Returns `null` when the
+ * banner is absent (a non-compiler-emitted string).
  */
 export function readCompilerVersion(js: string): CompilerVersion | null {
   const m = VERSION_BANNER.exec(js)

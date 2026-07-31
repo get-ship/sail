@@ -10,7 +10,9 @@ use crate::ir::Expr;
 
 fn empty_visitor() -> Visitor {
     Visitor {
-        scope: Scope { names: BTreeSet::new() },
+        scope: Scope {
+            names: BTreeSet::new(),
+        },
         errors: Vec::new(),
     }
 }
@@ -29,19 +31,31 @@ fn object_literal_key_is_not_a_free_identifier() {
     // as references to outer bindings. With an empty scope, the
     // check must pass.
     let v = run("{ duration: 180 }");
-    assert!(v.errors.is_empty(), "expected no error, got: {:?}", v.errors);
+    assert!(
+        v.errors.is_empty(),
+        "expected no error, got: {:?}",
+        v.errors
+    );
 }
 
 #[test]
 fn object_literal_multiple_keys_pass() {
     let v = run("{ duration: 100, axis: 'x', delay: 0 }");
-    assert!(v.errors.is_empty(), "expected no error, got: {:?}", v.errors);
+    assert!(
+        v.errors.is_empty(),
+        "expected no error, got: {:?}",
+        v.errors
+    );
 }
 
 #[test]
 fn nested_object_literal_keys_pass() {
     let v = run("{ duration: 120, easing: { in: 'ease-in', out: 'ease-out' } }");
-    assert!(v.errors.is_empty(), "expected no error, got: {:?}", v.errors);
+    assert!(
+        v.errors.is_empty(),
+        "expected no error, got: {:?}",
+        v.errors
+    );
 }
 
 #[test]
@@ -51,5 +65,8 @@ fn unbound_value_still_flagged() {
     let v = run("{ duration: missing }");
     assert!(!v.errors.is_empty(), "expected error for unbound `missing`");
     let msg = v.errors.into_iter().next().unwrap().message;
-    assert!(msg.contains("missing"), "diag should name the missing ident: {msg}");
+    assert!(
+        msg.contains("missing"),
+        "diag should name the missing ident: {msg}"
+    );
 }

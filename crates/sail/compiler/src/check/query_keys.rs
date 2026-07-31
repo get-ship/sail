@@ -192,7 +192,12 @@ fn find_calls(source: &str) -> Vec<Call> {
                     let after = skip_trivia(bytes, i);
                     if !is_method_call && after < end && bytes[after] == b'(' {
                         let close = skip_balanced(bytes, after, end);
-                        out.push(Call { kind, name_start: s, open: after, close });
+                        out.push(Call {
+                            kind,
+                            name_start: s,
+                            open: after,
+                            close,
+                        });
                     }
                 }
                 // `word` is non-empty by construction (is_ident_start matched);
@@ -299,7 +304,10 @@ impl MemberPath {
     fn namespace(&self) -> MemberPath {
         let mut segments = self.segments.clone();
         segments.pop();
-        MemberPath { root: self.root.clone(), segments }
+        MemberPath {
+            root: self.root.clone(),
+            segments,
+        }
     }
 }
 
@@ -332,7 +340,10 @@ fn resolve_member_path(expr: &str, imports: &BTreeSet<String>) -> Result<MemberP
     if !imports.contains(&root) {
         return Err(ResolveErr::UnknownRoot(root));
     }
-    Ok(MemberPath { root, segments: parts })
+    Ok(MemberPath {
+        root,
+        segments: parts,
+    })
 }
 
 fn is_plain_ident(s: &str) -> bool {
@@ -446,7 +457,11 @@ fn resolve_thunk<'a>(
     Ok((path, args))
 }
 
-fn lower_query(source: &str, call: &Call, imports: &BTreeSet<String>) -> Result<String, CompileError> {
+fn lower_query(
+    source: &str,
+    call: &Call,
+    imports: &BTreeSet<String>,
+) -> Result<String, CompileError> {
     let inner_start = call.open + 1;
     let inner_end = call.close.saturating_sub(1).max(inner_start);
     let args = split_args(source, inner_start, inner_end);
@@ -565,7 +580,8 @@ fn lower_invalidate(
         .first()
         .map(|(s, e)| source[*s..*e].trim())
         .ok_or_else(refuse_invalidate_no_arg)?;
-    if arg.starts_with('"') || arg.starts_with('\'') || arg.starts_with('`') || arg.starts_with('[') {
+    if arg.starts_with('"') || arg.starts_with('\'') || arg.starts_with('`') || arg.starts_with('[')
+    {
         return Err(refuse_invalidate_literal());
     }
     let path = resolve_member_path(arg, imports).map_err(|e| refuse_from(e, imports))?;
@@ -746,7 +762,10 @@ fn find_stmt_end(bytes: &[u8], start: usize, end: usize) -> usize {
 /// the same string-aware walk as [`split_args`] for safety).
 fn split_top_level_commas(s: &str) -> Vec<String> {
     let spans = split_args(s, 0, s.len());
-    spans.into_iter().map(|(a, b)| s[a..b].to_string()).collect()
+    spans
+        .into_iter()
+        .map(|(a, b)| s[a..b].to_string())
+        .collect()
 }
 
 // ---------------------------------------------------------------------
@@ -940,7 +959,9 @@ const save = mutation(() => crm.deals.update(draft()))
 "#;
         let out = rewrite(src).unwrap();
         assert!(
-            out.contains(r#"mutation(() => crm.deals.update(draft()), undefined, ["crm", "deals"])"#),
+            out.contains(
+                r#"mutation(() => crm.deals.update(draft()), undefined, ["crm", "deals"])"#
+            ),
             "{out}"
         );
     }
@@ -986,7 +1007,10 @@ import { crm } from '../clients/crm'
 invalidate(crm.deals.list)
 "#;
         let out = rewrite(src).unwrap();
-        assert!(out.contains(r#"__invalidate(["crm", "deals", "list"])"#), "{out}");
+        assert!(
+            out.contains(r#"__invalidate(["crm", "deals", "list"])"#),
+            "{out}"
+        );
     }
 
     #[test]
@@ -1020,7 +1044,11 @@ const method = 'list'
 const deals = query(() => crm.deals[method]({ stage: stage() }))
 "#;
         let err = rewrite(src).unwrap_err();
-        assert!(err.message.contains("computed member access"), "{}", err.message);
+        assert!(
+            err.message.contains("computed member access"),
+            "{}",
+            err.message
+        );
     }
 
     #[test]
@@ -1032,8 +1060,16 @@ const local = { deals: { list: () => Promise.resolve([]) } }
 const deals = query(() => crn.deals.list())
 "#;
         let err = rewrite(src).unwrap_err();
-        assert!(err.message.contains("not a client imported"), "{}", err.message);
-        assert!(err.message.contains("Did you mean `crm`?"), "{}", err.message);
+        assert!(
+            err.message.contains("not a client imported"),
+            "{}",
+            err.message
+        );
+        assert!(
+            err.message.contains("Did you mean `crm`?"),
+            "{}",
+            err.message
+        );
     }
 
     #[test]
@@ -1044,7 +1080,11 @@ import { crm } from '../clients/crm'
 const deals = query(() => crm.deals.list)
 "#;
         let err = rewrite(src).unwrap_err();
-        assert!(err.message.contains("doesn't call anything"), "{}", err.message);
+        assert!(
+            err.message.contains("doesn't call anything"),
+            "{}",
+            err.message
+        );
     }
 
     #[test]
@@ -1055,7 +1095,11 @@ import { crm } from '../clients/crm'
 invalidate('crm.deals.list')
 "#;
         let err = rewrite(src).unwrap_err();
-        assert!(err.message.contains("never a string or array literal"), "{}", err.message);
+        assert!(
+            err.message.contains("never a string or array literal"),
+            "{}",
+            err.message
+        );
     }
 
     #[test]
@@ -1066,7 +1110,11 @@ import { crm } from '../clients/crm'
 invalidate(['crm', 'deals', 'list'])
 "#;
         let err = rewrite(src).unwrap_err();
-        assert!(err.message.contains("never a string or array literal"), "{}", err.message);
+        assert!(
+            err.message.contains("never a string or array literal"),
+            "{}",
+            err.message
+        );
     }
 
     #[test]
@@ -1077,7 +1125,11 @@ const crm = { deals: { list: () => Promise.resolve([]) } }
 const deals = query(() => crm.deals.list())
 "#;
         let err = rewrite(src).unwrap_err();
-        assert!(err.message.contains("not a client imported"), "{}", err.message);
+        assert!(
+            err.message.contains("not a client imported"),
+            "{}",
+            err.message
+        );
     }
 
     #[test]
@@ -1090,7 +1142,10 @@ const query = signal('')
 const q = query().trim()
 "#;
         let out = rewrite(src).unwrap();
-        assert_eq!(out, src, "an unimported local named `query` is not our primitive");
+        assert_eq!(
+            out, src,
+            "an unimported local named `query` is not our primitive"
+        );
     }
 
     #[test]
@@ -1100,6 +1155,9 @@ import { crm } from '../clients/crm'
 const x = someObject.query(() => crm.deals.list())
 "#;
         let out = rewrite(src).unwrap();
-        assert_eq!(out, src, "a `.query(` method call on some other object is not our primitive");
+        assert_eq!(
+            out, src,
+            "a `.query(` method call on some other object is not our primitive"
+        );
     }
 }

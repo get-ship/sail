@@ -75,13 +75,14 @@ export const code = {
 
   // packages/sail/tokens/src/themes.ts:16-24 and one THEMES entry.
   themeType: `export type ThemeId =
-  | 'ship-light' | 'ship-dark' | 'paper' | 'halo' | 'console'
-  | 'contrast' | 'glass' | 'neutral-light' | 'neutral-dark'
+  | 'ship' | 'neutral' | 'paper' | 'halo' | 'console'
+  | 'contrast' | 'glass' | 'brut' | '8bit' | 'synthwave'
 
 export interface Theme {
   id: ThemeId
   label: string
-  dark: boolean
+  dark: boolean  // default mode is dark surface
+  modes: readonly string[]
   swatches: readonly [string, string, string, string]
 }`,
 
@@ -95,26 +96,25 @@ export interface Theme {
     ],
   },`,
 
-  // packages/sail/tokens/src/themes.ts:144-160, verbatim.
+  // packages/sail/tokens/src/themes.ts applyTheme — data-theme + data-mode only.
   applySource: `export function applyTheme(
   id: unknown,
   root: HTMLElement = document.documentElement,
+  mode?: string | null,
 ): ThemeId {
   const next: ThemeId = isValidTheme(id) ? id : DEFAULT_THEME
-  const dark = isDarkTheme(next)
+  const resolvedMode = resolveMode(next, mode)
   root.dataset.theme = next
-  root.classList.toggle('dark', dark)
-  if (typeof document !== 'undefined' && typeof CustomEvent !== 'undefined') {
-    document.dispatchEvent(
-      new CustomEvent('ship:theme:change', { detail: { id: next, dark } }),
-    )
-  }
+  root.dataset.mode = resolvedMode
+  root.classList.remove('dark') // no dual mechanism
+  // …announce ship:theme:change
   return next
 }`,
 
-  apply: `import { applyTheme, persistTheme } from '@ship/tokens/themes'
+  apply: `import { applyTheme, applyMode, persistTheme } from '@ship/tokens/themes'
 
-applyTheme('sandstone')     // sets data-theme, toggles .dark, announces the change
+applyTheme('sandstone')     // sets data-theme + data-mode, announces the change
+applyMode('dark')           // mode switch — not a twin theme id
 persistTheme('sandstone')   // localStorage, and the host transport if one is set`,
 
   // packages/sail/tokens/src/products.css, verbatim (the whole file body).

@@ -1,0 +1,1233 @@
+[
+  {
+    "name": "sail_surface",
+    "description": "Progressive disclosure of the Sail authoring surface from compiler SSOT. Pass topic: core | layout | style | tokens | l1 | control-flow.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "description": "core | layout | style | tokens | l1 | control-flow",
+          "type": "string"
+        }
+      },
+      "required": [
+        "topic"
+      ]
+    }
+  },
+  {
+    "name": "sail_check",
+    "description": "Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col). Optional `fix`: off|suggest|apply for machine rewrites (participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` reads any readable filesystem path (local agent trust model).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "description": "Attribution when fix=apply (e.g. `agent`, `human:name`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fix": {
+          "description": "Auto-fix: `off` | `suggest` | `apply`. Default `off` (unattended). `suggest` attaches machine fix payloads without writing; `apply` rewrites the file when `path` is set (or returns fixed `source` when inline).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_edit",
+    "description": "Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move). Atomic batch; validates before write so the file never holds an uncompilable intermediate. Response: applied, modelRevision, diagnostics, autoFixed[].",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "description": "Attribution for applied auto-fixes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autofix": {
+          "description": "Auto-fix mode: `off` | `suggest` | `apply` (default `off`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dryRun": {
+          "description": "When true, validate and return result without writing disk.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ops": {
+          "description": "Atomic batch of structured ops (`insert`/`replace`/`wrap`/`setAttr`/ `removeAttr`/`setSx`/`move`).",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Json"
+          }
+        },
+        "path": {
+          "description": "Workspace-relative `.sail` path (required to write; used for node identity).",
+          "type": "string"
+        },
+        "source": {
+          "description": "Optional inline source (else file is read). Dry-run without write when combined with dryRun.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "ops",
+        "path"
+      ],
+      "definitions": {
+        "Json": {}
+      }
+    }
+  },
+  {
+    "name": "sail_layout_check",
+    "description": "Taffy layout feedback for agents: multi-viewport diagnostics + computed box tree (x/y/w/h, collapsed flags). Run after layout edits. Prefer `source` for snippets.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_inspect_model",
+    "description": "Canonical per-file Sail model (tree, layout, state, diagnostics, data, theme). Source-derived; modelVersion 1.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "viewport": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/InspectViewport"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "definitions": {
+        "InspectViewport": {
+          "type": "object",
+          "required": [
+            "height",
+            "width"
+          ],
+          "properties": {
+            "height": {
+              "type": "number",
+              "format": "double"
+            },
+            "width": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_inspect_tree",
+    "description": "IR element tree with span-keyed node ids for a .sail file.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "sail_inspect_state",
+    "description": "Scope bindings with template readers/writers and SSR tier badges (S/I/C).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "sail_inspect_token_usage",
+    "description": "Blast radius for a design token: component count + source sites (file + span).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "token"
+      ]
+    }
+  },
+  {
+    "name": "sail_theme_graph",
+    "description": "DTCG theme graph: tiers, {alias} edges, values from theme JSON only (never CSS).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "themeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_theme_list",
+    "description": "List theme JSON files under a directory. Path must be apps/*/tokens/themes or packages/sail/tokens/model/themes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "sail_theme_read",
+    "description": "Read a project or catalog theme JSON file (workspace-relative path).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "sail_theme_write",
+    "description": "Write a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "sail_theme_fork",
+    "description": "Fork a catalog or project theme into apps/*/tokens/themes/. Optional new_id rewrites $extensions.ship.themeId.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dest_path": {
+          "type": "string"
+        },
+        "new_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "dest_path",
+        "source_path"
+      ]
+    }
+  },
+  {
+    "name": "sail_tokens_generate",
+    "description": "Run DTCG model → tokens CSS/registry generate. mode=package (full catalog) or mode=app (T0 effective set → project/.deck/themes/themes.css only).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "out": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "workspace": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_theme_effective_ids",
+    "description": "List effective theme ids for a project: project stems + catalog allowlist (T0 enabled ∩ catalog files).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "workspace": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_theme_font_search",
+    "description": "Search Google Fonts catalog (cached) by family query. Offline fallback list when network unavailable.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "default": "",
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_theme_font_add",
+    "description": "Vendor a font family: download subsetted woff2 → project/fonts + @font-face + license manifest + typography tokens. Offline after selection; no runtime CDN.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "axes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "family": {
+          "type": "string"
+        },
+        "project": {
+          "description": "App root (e.g. `apps/studio`). Defaults to ctx / first apps/* with routes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "family"
+      ]
+    }
+  },
+  {
+    "name": "sail_dev_server_start",
+    "description": "Start (or ensure) a local sail dev server for a project so HMR/studio HTTP exists. Theme ops do not require a server.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "addr": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "project": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project"
+      ]
+    }
+  },
+  {
+    "name": "sail_dev_server_status",
+    "description": "Status of the MCP-tracked dev server (running, url).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "sail_dev_server_stop",
+    "description": "Stop the MCP-started dev server only (does not kill unrelated sail dev processes).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "sail_task_list",
+    "description": "List ephemeral project tasks under <project>/.sail/tasks (gitignored). Filters: status/label/actor/drift/open. Includes anchor drift.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "description": "Filter by last comment actor: `human` | `agent` | `all`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "drift": {
+          "description": "Filter by drift: `ok` | `moved` | `lost` | `all`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "open": {
+          "description": "When true, only open statuses (backlog|todo|in_progress|review).",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_task_get",
+    "description": "Get full task JSON (title, status, anchor, events, artifacts, drift).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "sail_task_create",
+    "description": "Create a task (ULID id) under <project>/.sail/tasks. Optional anchor + body. Ephemeral — not team SSOT.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskActor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "anchor": {
+          "description": "A-anchor `{ nodeId, elementPath?, contentHash?, file?, span? }`.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "body": {
+          "description": "Optional initial comment body.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labels": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "route": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "definitions": {
+        "Json": {},
+        "TaskActor": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_task_update",
+    "description": "Update task fields. Status changes append a status event (any→any in v1).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskActor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assignee": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskActor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "labels": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "route": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "definitions": {
+        "TaskActor": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_task_comment",
+    "description": "Append a comment to the task thread.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskActor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "body": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "body",
+        "id"
+      ],
+      "definitions": {
+        "TaskActor": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_task_add_artifact",
+    "description": "Attach an artifact (≤5MB). kind file|render; render carries region metadata. content_base64+filename or path.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskActor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content_base64": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "filename": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "description": "`file` (default) | `render` (region/viewport crop).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mime": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "region": {
+          "description": "Region metadata for `kind: \"render\"` (nodeId, rect, …).",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "definitions": {
+        "Json": {},
+        "TaskActor": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_task_agent_note",
+    "description": "Append an agent progress/summary note (actor kind=agent).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskActor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "body": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "body",
+        "id"
+      ],
+      "definitions": {
+        "TaskActor": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_task_thread_create",
+    "description": "Create an A-anchored thread (required anchor { nodeId, elementPath?, contentHash? }). Same store as Create.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskActor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "anchor": {
+          "description": "Required A-anchor `{ nodeId, elementPath?, contentHash?, file?, span? }`.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Json"
+            }
+          ]
+        },
+        "body": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labels": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "route": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "anchor",
+        "title"
+      ],
+      "definitions": {
+        "Json": {},
+        "TaskActor": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_task_thread_reply",
+    "description": "Reply on a thread (comment with actor attribution).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskActor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "body": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "body",
+        "id"
+      ],
+      "definitions": {
+        "TaskActor": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_task_thread_list",
+    "description": "List threads with anchor drift (ok|moved|lost). Filters: open/actor/drift/status.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "drift": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "open": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_task_reanchor",
+    "description": "Explicitly re-anchor a thread to a new node (lost never rebinds silently).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskActor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "anchor": {
+          "$ref": "#/definitions/Json"
+        },
+        "id": {
+          "type": "string"
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "anchor",
+        "id"
+      ],
+      "definitions": {
+        "Json": {},
+        "TaskActor": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_task_commit_intent",
+    "description": "Export thread as a decision record under <project>/decisions/ (committable). .sail/tasks stays gitignored.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "actor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TaskActor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "project": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "definitions": {
+        "TaskActor": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_render",
+    "description": "Static themed screenshot from a .sail file or inline source (no browser). Returns PNG base64 + regions (node ids) + dynamics list.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "description": "`light` | `dark` (data-mode).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "theme": {
+          "description": "Theme id (e.g. `ship`). Mode may be folded as `ship-dark`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "viewport": {
+          "description": "`WxH` string or `{width,height}` object."
+        }
+      }
+    }
+  }
+]

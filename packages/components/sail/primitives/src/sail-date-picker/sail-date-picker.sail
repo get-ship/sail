@@ -87,7 +87,7 @@
   }
 </scope>
 <controller>
-import { controller, derived, signal } from '@ship/sail-runtime'
+
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-date-picker.sail'
 
@@ -375,7 +375,7 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
     <path d="M2 6h12 M5 1.5v3 M11 1.5v3"></path>
   </svg>
 </row>
-<if cond={open() && !disabled()}>
+<if {open() && !disabled()}>
   <div role="dialog" aria-label="Choose date" sx={style.position(absolute).left(0).z(popover).w(panel-max-w-sm).pad(2).mt(1).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontFamily(body)}>
     <row align="center" justify="between" sx={style.mb(1)}>
       <button type="button" data-act="prev" aria-label="Previous month" sx={style.w(icon-size-2xl).h(icon-size-2xl).radius(sm).fg(muted-foreground).cursor(pointer).when({ hover: style.bg(muted).fg(foreground) })}>‹</button>
@@ -383,10 +383,10 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
       <button type="button" data-act="next" aria-label="Next month" sx={style.w(icon-size-2xl).h(icon-size-2xl).radius(sm).fg(muted-foreground).cursor(pointer).when({ hover: style.bg(muted).fg(foreground) })}>›</button>
     </row>
     <grid role="grid" cols="7" gap="1">
-      <for as="d" of={dayHeaders()} key={d.key}>
+      <for {dayHeaders()} as="d" key={d.key}>
         <span role="columnheader" sx={style.fontSize(sm).fg(muted-foreground).padY(1).fontWeight(medium).textAlign(center)}>{d.label}</span>
       </for>
-      <for as="cell" of={monthCells()} key={cell.key}>
+      <for {monthCells()} as="cell" key={cell.key}>
         <button
           type="button"
           disabled={cell.disabled}

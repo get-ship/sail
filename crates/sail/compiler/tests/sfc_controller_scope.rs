@@ -10,7 +10,7 @@
 
 use std::path::PathBuf;
 
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 const SFC: &str = r#"<controller>
 import { controller, signal } from '@ship/sail-runtime'
@@ -30,7 +30,9 @@ fn opts(name: &str) -> CompileOpts {
         setup_url: Some(format!("./{name}.sail.controller.ts")),
         mode: CompileMode::Component,
         source_path: Some(PathBuf::from(format!("/x/{name}.sail"))),
-        component_meta: Some(ComponentMeta { name: name.to_string() }),
+        component_meta: Some(ComponentMeta {
+            name: name.to_string(),
+        }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
@@ -69,12 +71,22 @@ fn diagnostic_lines_point_at_the_authored_row() {
 fn blanking_preserves_every_offset() {
     let (template, body) = sail_compiler::parse::preprocess::extract_controller_block(SFC);
     assert!(body.is_some());
-    assert_eq!(template.len(), SFC.len(), "the template must not shift the source's bytes");
+    assert_eq!(
+        template.len(),
+        SFC.len(),
+        "the template must not shift the source's bytes"
+    );
     assert_eq!(
         template.lines().count(),
         SFC.lines().count(),
         "the template must not shift the source's lines"
     );
-    assert!(!template.contains("signal('idle')"), "the block's body must not reach the parser");
-    assert!(template.contains("<span>{phase()}</span>"), "the template survives verbatim");
+    assert!(
+        !template.contains("signal('idle')"),
+        "the block's body must not reach the parser"
+    );
+    assert!(
+        template.contains("<span>{phase()}</span>"),
+        "the template survives verbatim"
+    );
 }

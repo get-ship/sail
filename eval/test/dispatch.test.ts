@@ -7,6 +7,7 @@ import {
   readTrajectoryJsonl,
   createDispatch,
   buildOmpArgs,
+  buildDispatchPrompt,
   resolveModelLabel,
 } from '../src/dispatch/index.ts'
 import { OmpDispatch } from '../src/dispatch/omp.ts'
@@ -101,19 +102,66 @@ describe('buildOmpArgs / resolveModelLabel', () => {
     const args = buildOmpArgs({
       workdir: '/tmp/w',
       prompt: 'p',
-      model: 'opus',
+      model: 'fuzzy-test-model',
       apiKey: 'sk-test',
     })
     expect(args).toContain('--model')
-    expect(args).toContain('opus')
+    expect(args).toContain('fuzzy-test-model')
     expect(args).toContain('--api-key')
     expect(args).toContain('sk-test')
   })
 
   it('resolveModelLabel prefers requested model; never invents one', () => {
-    expect(resolveModelLabel('opus', '')).toBe('opus')
+    expect(resolveModelLabel('fuzzy-test-model', '')).toBe('fuzzy-test-model')
     expect(resolveModelLabel(undefined, '')).toBe('')
     expect(resolveModelLabel('', '{"model":"provider/x"}')).toBe('provider/x')
+  })
+})
+
+describe('buildDispatchPrompt (EVAL-1 framing)', () => {
+  it('sail framing mentions sail skill and page.sail', () => {
+    const p = buildDispatchPrompt('build a login form', {
+      scaffold: 'blank',
+      sailArtifacts: true,
+    })
+    expect(p).toMatch(/Sail UI/i)
+    expect(p).toContain('routes/page.sail')
+    expect(p).toContain('build a login form')
+  })
+
+  it('react-tw framing does not mention sail authoring surface', () => {
+    const p = buildDispatchPrompt('build a login form', {
+      scaffold: 'react-tw',
+      sailArtifacts: false,
+    })
+    expect(p).toMatch(/React and Tailwind/i)
+    expect(p).toContain('src/App.jsx')
+    expect(p).not.toMatch(/SAIL_SKILL/)
+    expect(p).not.toMatch(/page\.sail/)
+    expect(p).toContain('build a login form')
+  })
+
+  it('vanilla framing does not mention sail or react', () => {
+    const p = buildDispatchPrompt('build a login form', {
+      scaffold: 'vanilla',
+      sailArtifacts: false,
+    })
+    expect(p).toMatch(/static HTML/i)
+    expect(p).toContain('index.html')
+    expect(p).not.toMatch(/SAIL_SKILL/)
+    expect(p).not.toMatch(/page\.sail/)
+    expect(p).not.toMatch(/Tailwind/)
+    expect(p).toContain('build a login form')
+  })
+
+  it('sailArtifacts false overrides blank scaffold inference', () => {
+    const p = buildDispatchPrompt('x', {
+      scaffold: 'blank',
+      sailArtifacts: false,
+    })
+    // blank + no sail → falls through to vanilla-style non-sail framing
+    expect(p).not.toMatch(/Sail UI/i)
+    expect(p).not.toMatch(/page\.sail/)
   })
 })
 
@@ -169,14 +217,20 @@ echo "extra" > routes/note.txt
 })
 
 describe('react-tw control-arm scaffold', () => {
-  it('writes App.jsx shell without sail routes', () => {
+  it('writes Vite + React + Tailwind shell without sail routes', () => {
     const work = mkdtempSync(join(tmpdir(), 'eval-react-tw-'))
     try {
       const files = scaffoldWorkdir(work, 'react-tw')
       expect(files).toContain('src/App.jsx')
+      expect(files).toContain('vite.config.js')
+      expect(files).toContain('tailwind.config.js')
+      expect(files).toContain('src/index.css')
       expect(existsSync(join(work, 'src', 'App.jsx'))).toBe(true)
+      expect(existsSync(join(work, 'index.html'))).toBe(true)
       expect(existsSync(join(work, 'routes', 'page.sail'))).toBe(false)
       expect(readFileSync(join(work, 'src', 'App.jsx'), 'utf8')).toContain('react-tw')
+      expect(readFileSync(join(work, 'package.json'), 'utf8')).toMatch(/tailwindcss/)
+      expect(readFileSync(join(work, 'package.json'), 'utf8')).toMatch(/"vite"/)
     } finally {
       rmSync(work, { recursive: true, force: true })
     }

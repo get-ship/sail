@@ -4,9 +4,9 @@
 //! to plain divs + token CSS with no shadow-DOM cost. This rule flags a legacy
 //! layout element and names its keyword replacement.
 //!
-//! Severity `Warn` — advisory during the migration so existing builds don't
-//! break mid-sweep. Once the tree is converted it graduates to `Error` (via the
-//! floor policy) to prevent backsliding, and the primitives can be deleted.
+//! Severity `Error` — the language keywords are the only layout form. Old
+//! `<sail-*>` layout elements still parse as custom elements; this rule kills
+//! them at check time so they cannot backslide.
 
 use std::path::Path;
 
@@ -16,8 +16,16 @@ pub const RULE_ID: &str = "sail-legacy-layout";
 
 /// Legacy element → the keyword that replaces it, with a note on any prop shift.
 const MAP: &[(&str, &str, &str)] = &[
-    ("sail-stack", "column", "vertical flow; same gap/align props"),
-    ("sail-cluster", "row", "horizontal flow that wraps; same gap/align/justify props"),
+    (
+        "sail-stack",
+        "column",
+        "vertical flow; same gap/align props",
+    ),
+    (
+        "sail-cluster",
+        "row",
+        "horizontal flow that wraps; same gap/align/justify props",
+    ),
     ("sail-grid", "grid", "same gap/min/flow props"),
     ("sail-center", "center", "same gap prop"),
 ];
@@ -50,9 +58,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     line,
                     col,
                     rule: RULE_ID,
-                    severity: Severity::Warn,
+                    severity: Severity::Error,
                     message: format!(
-                        "<{legacy}> is superseded by the <{keyword}> layout keyword ({note})"
+                        "<{legacy}> is gone — use the <{keyword}> layout keyword ({note})"
                     ),
                     suggest: Some(format!(
                         "Replace <{legacy}> … </{legacy}> with <{keyword}> … </{keyword}> — the \
@@ -93,7 +101,10 @@ mod tests {
     use super::*;
 
     fn run(src: &str) -> Vec<String> {
-        check(Path::new("t.sail"), src).into_iter().map(|f| f.message).collect()
+        check(Path::new("t.sail"), src)
+            .into_iter()
+            .map(|f| f.message)
+            .collect()
     }
 
     #[test]

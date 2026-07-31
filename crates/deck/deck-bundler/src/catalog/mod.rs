@@ -16,8 +16,8 @@ use serde_json::{Value, json};
 
 pub use workspace::{
     BundleDecl, WorkspacePackage, component_package_roots, composed_component_index,
-    discover_bundle_declarations, discover_workspace_packages,
-    discover_workspace_packages_scoped, pack_id_for_name,
+    discover_bundle_declarations, discover_workspace_packages, discover_workspace_packages_scoped,
+    pack_id_for_name,
 };
 use workspace::{read_json, source_tags_for_package};
 
@@ -60,9 +60,7 @@ pub fn stringify_catalog(doc: &CatalogDocument) -> String {
 /// `` is the optional embedded host app (e.g. `apps/shell` →
 /// `app:shell` from `deck.jsonc`). When `None`, the shell-local CEM projection
 /// does not apply — suitable for zero-config hosts.
-pub fn build_catalog(
-    repo_root: &Path,
-) -> Result<CatalogDocument, String> {
+pub fn build_catalog(repo_root: &Path) -> Result<CatalogDocument, String> {
     build_catalog_scoped(repo_root, None)
 }
 
@@ -81,7 +79,7 @@ pub fn build_catalog_scoped(
             all.extend(entries_from_packaged_manifest(repo_root, pkg));
         }
     }
-    all.extend(entries_from_sui_out(repo_root, &packages));
+    all.extend(entries_from_sail_out(repo_root, &packages));
 
     all.sort_by(|a, b| a.tagName.cmp(&b.tagName));
     // Dedup by tagName, first wins (packaged entries precede sail-out ones).
@@ -114,9 +112,7 @@ pub fn build_catalog_scoped(
 ///
 /// A tag whose source can't be located (neither source scan nor CEM) is absent;
 /// the resolver then falls back to external.
-pub fn tag_source_index(
-    repo_root: &Path,
-) -> std::collections::HashMap<String, PathBuf> {
+pub fn tag_source_index(repo_root: &Path) -> std::collections::HashMap<String, PathBuf> {
     tag_source_index_scoped(repo_root, None)
 }
 
@@ -229,7 +225,11 @@ fn entry_from_decl(
     if decl["customElement"].as_bool() != Some(true) {
         return None;
     }
-    let description = decl["description"].as_str().unwrap_or("").trim().to_string();
+    let description = decl["description"]
+        .as_str()
+        .unwrap_or("")
+        .trim()
+        .to_string();
     let first_desc = description.split('\n').next().unwrap_or("").to_string();
     Some(CatalogEntry {
         tagName: tag.to_string(),
@@ -249,13 +249,19 @@ fn entry_from_decl(
 }
 
 fn entries_from_packaged_manifest(repo_root: &Path, pkg: &WorkspacePackage) -> Vec<CatalogEntry> {
-    let Some(ce) = &pkg.custom_elements else { return vec![] };
+    let Some(ce) = &pkg.custom_elements else {
+        return vec![];
+    };
     let manifest_abs = pkg.root.join(ce);
     if !manifest_abs.exists() {
         return vec![];
     }
-    let Some(cem) = read_json(&manifest_abs) else { return vec![] };
-    let Some(modules) = cem["modules"].as_array() else { return vec![] };
+    let Some(cem) = read_json(&manifest_abs) else {
+        return vec![];
+    };
+    let Some(modules) = cem["modules"].as_array() else {
+        return vec![];
+    };
     let pkg_rel_root = rel_unix(repo_root, &pkg.root);
 
     let mut out = Vec::new();
@@ -269,12 +275,9 @@ fn entries_from_packaged_manifest(repo_root: &Path, pkg: &WorkspacePackage) -> V
         };
         if let Some(decls) = m["declarations"].as_array() {
             for decl in decls {
-                if let Some(e) = entry_from_decl(
-                    decl,
-                    pkg.name.clone(),
-                    pkg.private,
-                    source_path.clone(),
-                ) {
+                if let Some(e) =
+                    entry_from_decl(decl, pkg.name.clone(), pkg.private, source_path.clone())
+                {
                     out.push(e);
                 }
             }
@@ -283,11 +286,8 @@ fn entries_from_packaged_manifest(repo_root: &Path, pkg: &WorkspacePackage) -> V
     out
 }
 
-fn entries_from_sui_out(
-    repo_root: &Path,
-    packages: &[WorkspacePackage],
-) -> Vec<CatalogEntry> {
-    let root = repo_root.join(sail_compiler::out_layout::sui_out_dir());
+fn entries_from_sail_out(repo_root: &Path, packages: &[WorkspacePackage]) -> Vec<CatalogEntry> {
+    let root = repo_root.join(sail_compiler::out_layout::sail_out_dir());
     if !root.exists() {
         return vec![];
     }
@@ -296,8 +296,10 @@ fn entries_from_sui_out(
     cem_files.sort();
 
     // Owning-package lookup, longest rel path first so nested packages win.
-    let mut packaged_roots: Vec<(String, &WorkspacePackage)> =
-        packages.iter().map(|p| (rel_unix(repo_root, &p.root), p)).collect();
+    let mut packaged_roots: Vec<(String, &WorkspacePackage)> = packages
+        .iter()
+        .map(|p| (rel_unix(repo_root, &p.root), p))
+        .collect();
     packaged_roots.sort_by_key(|(rel, _)| std::cmp::Reverse(rel.len()));
 
     // The first-party app projection was an apps/shell-specific
@@ -320,8 +322,12 @@ fn entries_from_sui_out(
                 }
             }
         }
-        let Some(cem) = read_json(cem_abs) else { continue };
-        let Some(modules) = cem["modules"].as_array() else { continue };
+        let Some(cem) = read_json(cem_abs) else {
+            continue;
+        };
+        let Some(modules) = cem["modules"].as_array() else {
+            continue;
+        };
 
         // Each component's origin is the package that owns its source —
         // the per-tag resolver walks `packages/<name>` and tags every
@@ -334,12 +340,9 @@ fn entries_from_sui_out(
         for m in modules {
             if let Some(decls) = m["declarations"].as_array() {
                 for decl in decls {
-                    if let Some(e) = entry_from_decl(
-                        decl,
-                        origin.clone(),
-                        is_private,
-                        source_path.clone(),
-                    ) {
+                    if let Some(e) =
+                        entry_from_decl(decl, origin.clone(), is_private, source_path.clone())
+                    {
                         out.push(e);
                     }
                 }
@@ -350,7 +353,9 @@ fn entries_from_sui_out(
 }
 
 fn walk_cem_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = std::fs::read_dir(dir) else { return };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
     for e in entries.flatten() {
         let name = e.file_name().to_string_lossy().into_owned();
         if SKIP_DIRS.contains(&name.as_str()) {
@@ -379,7 +384,7 @@ fn find_owning_package<'a>(
 fn source_path_for_cem(repo_root: &Path, cem_abs: &Path) -> String {
     let repo_rel = rel_unix(repo_root, cem_abs);
     let mirrored = repo_rel
-        .strip_prefix(&format!("{}/", sail_compiler::out_layout::sui_out_dir()))
+        .strip_prefix(&format!("{}/", sail_compiler::out_layout::sail_out_dir()))
         .unwrap_or(&repo_rel);
     let file = mirrored.rsplit('/').next().unwrap_or(mirrored);
     let stem = file.strip_suffix(CEM_SUFFIX).unwrap_or(file);
@@ -437,16 +442,22 @@ mod tests {
     }
 
     #[test]
-    fn aggregates_packaged_and_sui_out() {
+    fn aggregates_packaged_and_sail_out() {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
-        write(&root.join("package.json"), r#"{"workspaces":["packages/*"]}"#);
+        write(
+            &root.join("package.json"),
+            r#"{"workspaces":["packages/*"]}"#,
+        );
         // A public pack with a CEM manifest.
         write(
             &root.join("packages/charts/package.json"),
             r#"{"name":"@ship/charts","customElements":"dist/custom-elements.json"}"#,
         );
-        write(&root.join("packages/charts/dist/custom-elements.json"), &cem("sail-bar"));
+        write(
+            &root.join("packages/charts/dist/custom-elements.json"),
+            &cem("sail-bar"),
+        );
         // A shell-local component in the sail-out mirror.
         write(
             &root.join(".sail-out/apps/shell/src/sail-x/sail-x.custom-elements.json"),
@@ -457,21 +468,33 @@ mod tests {
         // own project root; the L1 framework has no per-app config.
         let workspace = build_catalog(root).unwrap();
 
-        let ws_tags: Vec<&str> = workspace.entries.iter().map(|e| e.tagName.as_str()).collect();
+        let ws_tags: Vec<&str> = workspace
+            .entries
+            .iter()
+            .map(|e| e.tagName.as_str())
+            .collect();
         assert_eq!(ws_tags, vec!["sail-bar", "sail-x"], "sorted, both present");
 
-        let bar = workspace.entries.iter().find(|e| e.tagName == "sail-bar").unwrap();
+        let bar = workspace
+            .entries
+            .iter()
+            .find(|e| e.tagName == "sail-bar")
+            .unwrap();
         assert_eq!(bar.package, "@ship/charts");
         assert!(!bar.private);
         // A sail-out CEM under apps/shell falls through to the workspace
         // origin: `workspace:apps`. The catalog has no per-app projection.
-        let x = workspace.entries.iter().find(|e| e.tagName == "sail-x").unwrap();
+        let x = workspace
+            .entries
+            .iter()
+            .find(|e| e.tagName == "sail-x")
+            .unwrap();
         assert_eq!(x.package, "workspace:apps");
         assert!(x.private);
     }
 
     #[test]
-    fn aggregates_sui_out_zero_config() {
+    fn aggregates_sail_out_zero_config() {
         // A sail-out CEM with no matching package falls through to
         // origin_for_non_packaged_source → workspace:apps.
         let tmp = tempdir().unwrap();
@@ -482,28 +505,42 @@ mod tests {
             &cem("sail-x"),
         );
         let workspace = build_catalog(root).unwrap();
-        let x = workspace.entries.iter().find(|e| e.tagName == "sail-x").unwrap();
+        let x = workspace
+            .entries
+            .iter()
+            .find(|e| e.tagName == "sail-x")
+            .unwrap();
         // No matching package — origin falls back to workspace:<first-seg>.
         assert_eq!(x.package, "workspace:apps");
     }
-
 
     #[test]
     fn index_maps_tag_to_existing_source_and_omits_missing() {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
-        write(&root.join("package.json"), r#"{"workspaces":["packages/*"]}"#);
+        write(
+            &root.join("package.json"),
+            r#"{"workspaces":["packages/*"]}"#,
+        );
         write(
             &root.join("packages/charts/package.json"),
             r#"{"name":"@ship/charts","customElements":"dist/custom-elements.json"}"#,
         );
-        write(&root.join("packages/charts/dist/custom-elements.json"), &cem("sail-bar"));
+        write(
+            &root.join("packages/charts/dist/custom-elements.json"),
+            &cem("sail-bar"),
+        );
         // The CEM implies source packages/charts/src/sail-bar/sail-bar.sail — write it.
-        write(&root.join("packages/charts/src/sail-bar/sail-bar.sail"), "<div>bar</div>\n");
+        write(
+            &root.join("packages/charts/src/sail-bar/sail-bar.sail"),
+            "<div>bar</div>\n",
+        );
 
         let idx = tag_source_index(root);
         // Invariant: an indexed tag points at an EXISTING `.sail` source.
-        let src = idx.get("sail-bar").expect("a tag with a real source is indexed");
+        let src = idx
+            .get("sail-bar")
+            .expect("a tag with a real source is indexed");
         assert!(src.is_file());
         assert_eq!(src.extension().and_then(|e| e.to_str()), Some("sail"));
         assert!(src.ends_with("packages/charts/src/sail-bar/sail-bar.sail"));
@@ -520,12 +557,20 @@ mod tests {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
         // The app does NOT list "." in workspaces (the hack is gone).
-        write(&root.join("package.json"), r#"{"name":"@ship/hub","workspaces":["packages/*"]}"#);
+        write(
+            &root.join("package.json"),
+            r#"{"name":"@ship/hub","workspaces":["packages/*"]}"#,
+        );
         // A local component in the app's OWN src.
-        write(&root.join("src/hub-widget/hub-widget.sail"), "<div>widget</div>\n");
+        write(
+            &root.join("src/hub-widget/hub-widget.sail"),
+            "<div>widget</div>\n",
+        );
 
         let idx = tag_source_index(root);
-        let src = idx.get("hub-widget").expect("app's own local component is discovered");
+        let src = idx
+            .get("hub-widget")
+            .expect("app's own local component is discovered");
         assert!(src.is_file());
         assert!(src.ends_with("src/hub-widget/hub-widget.sail"));
     }
@@ -538,7 +583,10 @@ mod tests {
     fn source_mode_resolves_tag_without_cem() {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
-        write(&root.join("package.json"), r#"{"workspaces":["packages/*"]}"#);
+        write(
+            &root.join("package.json"),
+            r#"{"workspaces":["packages/*"]}"#,
+        );
         // Package has NO customElements field — no CEM at all.
         write(
             &root.join("packages/mycomp/package.json"),
@@ -581,7 +629,10 @@ mod tests {
     fn source_mode_grouped_dir_registers_all_components() {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
-        write(&root.join("package.json"), r#"{"workspaces":["packages/*"]}"#);
+        write(
+            &root.join("package.json"),
+            r#"{"workspaces":["packages/*"]}"#,
+        );
         write(
             &root.join("packages/chrome/package.json"),
             r#"{"name":"@ship/chrome","private":true}"#,
@@ -608,8 +659,14 @@ mod tests {
         let idx = tag_source_index(root);
 
         assert!(idx.contains_key("sail-rail"), "sail-rail must be indexed");
-        assert!(idx.contains_key("sail-rail-item"), "sail-rail-item must be indexed");
-        assert!(idx.contains_key("sail-rail-section"), "sail-rail-section must be indexed");
+        assert!(
+            idx.contains_key("sail-rail-item"),
+            "sail-rail-item must be indexed"
+        );
+        assert!(
+            idx.contains_key("sail-rail-section"),
+            "sail-rail-section must be indexed"
+        );
         assert!(!idx.contains_key("page"), "page.sail must not be indexed");
     }
 
@@ -620,7 +677,10 @@ mod tests {
     fn three_pack_fixture() -> tempfile::TempDir {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
-        write(&root.join("package.json"), r#"{"workspaces":["packages/*"]}"#);
+        write(
+            &root.join("package.json"),
+            r#"{"workspaces":["packages/*"]}"#,
+        );
 
         write(
             &root.join("packages/primitives/package.json"),
@@ -666,7 +726,10 @@ mod tests {
         let global = tag_source_index(root);
         let mut global_tags: Vec<&str> = global.keys().map(String::as_str).collect();
         global_tags.sort_unstable();
-        assert_eq!(global_tags, vec!["demo-chip", "sail-button", "ship-agent-card"]);
+        assert_eq!(
+            global_tags,
+            vec!["demo-chip", "sail-button", "ship-agent-card"]
+        );
 
         // The project declares a PARTIAL pack set (deck.jsonc `packs`).
         let declared: Vec<String> = vec!["@ship/sail-primitives".into(), "deck-demo-app".into()];
@@ -678,7 +741,10 @@ mod tests {
             .expect("declared primitives tag must resolve under scope");
         assert!(btn.is_file());
         assert!(btn.ends_with("packages/primitives/src/sail-button/sail-button.sail"));
-        assert!(scoped.contains_key("demo-chip"), "the project's own tag resolves");
+        assert!(
+            scoped.contains_key("demo-chip"),
+            "the project's own tag resolves"
+        );
 
         // (b) undeclared-pack tag is ABSENT → resolver no-ops it (access denied).
         assert!(
@@ -701,8 +767,15 @@ mod tests {
         let empty: Vec<String> = Vec::new();
         let scoped = tag_source_index_scoped(root, Some(&empty));
         let global = tag_source_index(root);
-        assert_eq!(scoped.len(), global.len(), "empty packs ⇒ identical to global");
-        assert!(scoped.contains_key("ship-agent-card"), "empty scope resolves all");
+        assert_eq!(
+            scoped.len(),
+            global.len(),
+            "empty packs ⇒ identical to global"
+        );
+        assert!(
+            scoped.contains_key("ship-agent-card"),
+            "empty scope resolves all"
+        );
     }
 
     /// The author diagnostic's data: a scoped-out tag is attributed to the pack
@@ -720,11 +793,20 @@ mod tests {
             Some("@ship/agents"),
             "excluded tag must carry its providing pack for the diagnostic"
         );
-        assert!(!shadowed.contains_key("sail-button"), "declared tag is not shadowed");
-        assert!(!shadowed.contains_key("demo-chip"), "own tag is not shadowed");
+        assert!(
+            !shadowed.contains_key("sail-button"),
+            "declared tag is not shadowed"
+        );
+        assert!(
+            !shadowed.contains_key("demo-chip"),
+            "own tag is not shadowed"
+        );
 
         // Global scope shadows nothing (no diagnostic noise when unscoped).
-        assert!(shadowed_tags(root, &[]).is_empty(), "empty packs ⇒ nothing shadowed");
+        assert!(
+            shadowed_tags(root, &[]).is_empty(),
+            "empty packs ⇒ nothing shadowed"
+        );
     }
 
     /// Monorepo-decoupled discovery: scan a registry-composed root's
@@ -737,11 +819,15 @@ mod tests {
         let composed = tmp.path();
         // Mirror compose output: components/<pkg.path>/<tag>/<tag>.sail
         write(
-            &composed.join("components/github.com/acme/agents/ship-agent-card/ship-agent-card.sail"),
+            &composed
+                .join("components/github.com/acme/agents/ship-agent-card/ship-agent-card.sail"),
             "<article><slot></slot></article>\n",
         );
         // A route that happens to sit in the tree must NOT be indexed (no hyphen).
-        write(&composed.join("components/github.com/acme/agents/page.sail"), "<div>v</div>\n");
+        write(
+            &composed.join("components/github.com/acme/agents/page.sail"),
+            "<div>v</div>\n",
+        );
 
         let idx = composed_component_index(composed);
         let src = idx
@@ -749,7 +835,10 @@ mod tests {
             .expect("dep'd component resolves from the composed root");
         assert!(src.is_file());
         assert!(src.ends_with("ship-agent-card/ship-agent-card.sail"));
-        assert!(!idx.contains_key("page"), "view must not leak into the index");
+        assert!(
+            !idx.contains_key("page"),
+            "view must not leak into the index"
+        );
         assert!(!idx.contains_key("sail-nope"), "non-present tag is absent");
     }
 
@@ -770,6 +859,9 @@ mod tests {
         let root = tmp.path();
         let declared: Vec<String> = vec!["@ship/does-not-exist".into()];
         let scoped = tag_source_index_scoped(root, Some(&declared));
-        assert!(scoped.is_empty(), "unknown declared pack contributes nothing");
+        assert!(
+            scoped.is_empty(),
+            "unknown declared pack contributes nothing"
+        );
     }
 }

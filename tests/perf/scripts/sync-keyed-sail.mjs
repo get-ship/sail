@@ -3,7 +3,7 @@
 // checkout. Single source of truth: tests/perf/frameworks/keyed/sail in this
 // repo. $BENCH_HOME/frameworks/keyed/sail is a sync OUTPUT — never hand-edit it.
 //
-// Also removes the stale $BENCH_HOME/frameworks/keyed/sui tree (pre-rename
+// Also removes the stale $BENCH_HOME/frameworks/keyed/sail tree (pre-rename
 // leftover). No webdriver run; this is copy + cleanup only.
 //
 // Usage:
@@ -36,7 +36,7 @@ const BENCH_HOME = resolve(
 )
 
 const DEST = resolve(BENCH_HOME, 'frameworks/keyed/sail')
-const STALE_SUI = resolve(BENCH_HOME, 'frameworks/keyed/sui')
+const STALE_SAIL = resolve(BENCH_HOME, 'frameworks/keyed/sail')
 
 // Authored set only — never push build state into the checkout as source of truth.
 const SKIP_DIR_NAMES = new Set(['node_modules', 'dist', '.git'])
@@ -88,16 +88,16 @@ function collectOwnedFiles(dir, acc = []) {
   return acc
 }
 
-// --- remove stale keyed/sui -------------------------------------------------
-if (existsSync(STALE_SUI)) {
+// --- remove stale keyed/sail -------------------------------------------------
+if (existsSync(STALE_SAIL)) {
   if (dryRun) {
-    log(`[dry-run] would remove stale ${STALE_SUI}`)
+    log(`[dry-run] would remove stale ${STALE_SAIL}`)
   } else {
-    log(`removing stale keyed/sui → ${STALE_SUI}`)
-    rmSync(STALE_SUI, { recursive: true, force: true })
+    log(`removing stale keyed/sail → ${STALE_SAIL}`)
+    rmSync(STALE_SAIL, { recursive: true, force: true })
   }
 } else {
-  log(`no stale keyed/sui at ${STALE_SUI}`)
+  log(`no stale keyed/sail at ${STALE_SAIL}`)
 }
 
 // --- mirror owned → keyed/sail ---------------------------------------------

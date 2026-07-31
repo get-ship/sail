@@ -74,9 +74,9 @@ export default controller(() => {
     <button variant="ghost" on:click={() => reset()}>Reset</button>
   </row>
 
-  <if cond={laps().length > 0}>
+  <if {laps().length > 0}>
     <column gap="1">
-      <for as="lap" of={laps()} key={lap.id}>
+      <for {laps()} as="lap" key={lap.id}>
         <row align="center" justify="between" sx={lapRow}>
           <small sx={lapMeta}>lap {lap.id}</small>
           <strong sx={lapAt}>{lap.at}</strong>

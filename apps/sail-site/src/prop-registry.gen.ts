@@ -234,6 +234,30 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": ""
     }
   ],
+  "details": [
+    {
+      "name": "open",
+      "type": "bool",
+      "default": "false"
+    }
+  ],
+  "dialog": [
+    {
+      "name": "size",
+      "type": "sm · md · lg · full",
+      "default": "md"
+    },
+    {
+      "name": "backdrop",
+      "type": "default · blur · solid",
+      "default": "default"
+    },
+    {
+      "name": "side",
+      "type": "center · start · end · top · bottom",
+      "default": "center"
+    }
+  ],
   "dropdown": [
     {
       "name": "placement",
@@ -289,6 +313,13 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "false"
     }
   ],
+  "fieldset": [
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    }
+  ],
   "hover-card": [
     {
       "name": "placement",
@@ -323,6 +354,38 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "false"
     }
   ],
+  "input": [
+    {
+      "name": "type",
+      "type": "text · email · password · number · search · tel · url · date · time · datetime-local · month · week · file · color · checkbox · radio · range · submit · hidden",
+      "default": "text"
+    },
+    {
+      "name": "size",
+      "type": "xs · sm · md · lg",
+      "default": "md"
+    },
+    {
+      "name": "tone",
+      "type": "default · primary · info · success · warning · destructive · accent · muted",
+      "default": "default"
+    },
+    {
+      "name": "invalid",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "placeholder",
+      "type": "string",
+      "default": ""
+    }
+  ],
   "label": [
     {
       "name": "size",
@@ -345,6 +408,43 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "disabled",
       "type": "bool",
       "default": "false"
+    }
+  ],
+  "meter": [
+    {
+      "name": "value",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "name": "min",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "name": "max",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "name": "low",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "name": "high",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "name": "optimum",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "name": "size",
+      "type": "sm · md · lg",
+      "default": "md"
     }
   ],
   "navbar": [
@@ -405,6 +505,23 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": ""
     }
   ],
+  "progress": [
+    {
+      "name": "value",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "max",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "name": "size",
+      "type": "sm · md · lg",
+      "default": "md"
+    }
+  ],
   "radio": [
     {
       "name": "value",
@@ -459,6 +576,33 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "orientation",
       "type": "vertical · horizontal · both",
       "default": "vertical"
+    }
+  ],
+  "select": [
+    {
+      "name": "size",
+      "type": "xs · sm · md · lg",
+      "default": "md"
+    },
+    {
+      "name": "tone",
+      "type": "default · primary · info · success · warning · destructive · accent · muted",
+      "default": "default"
+    },
+    {
+      "name": "invalid",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "multiple",
+      "type": "bool",
+      "default": "false"
     }
   ],
   "separator": [
@@ -610,6 +754,28 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "horizontal"
     }
   ],
+  "table": [
+    {
+      "name": "dense",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "striped",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "hoverable",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "bordered",
+      "type": "bool",
+      "default": "false"
+    }
+  ],
   "tabs": [
     {
       "name": "active",
@@ -632,6 +798,38 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "default": "horizontal"
     }
   ],
+  "textarea": [
+    {
+      "name": "size",
+      "type": "xs · sm · md · lg",
+      "default": "md"
+    },
+    {
+      "name": "tone",
+      "type": "default · primary · info · success · warning · destructive · accent · muted",
+      "default": "default"
+    },
+    {
+      "name": "invalid",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "disabled",
+      "type": "bool",
+      "default": "false"
+    },
+    {
+      "name": "placeholder",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "rows",
+      "type": "number",
+      "default": "3"
+    }
+  ],
   "theme-picker": [
     {
       "name": "value",
@@ -642,6 +840,12 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
       "name": "inline",
       "type": "bool",
       "default": "false"
+    },
+    {
+      "name": "modeOnly",
+      "type": "bool",
+      "default": "false",
+      "desc": "Mode-only: sun/moon/system trigger; no theme catalog."
     }
   ],
   "ticker": [

@@ -26,7 +26,10 @@ fn validate_route_name(name: &str) -> Result<()> {
     if !first.is_ascii_lowercase() {
         bail!("route name must start with a lowercase letter — got {name:?}");
     }
-    if !name.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-') {
+    if !name
+        .chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+    {
         bail!("route name must match /^[a-z][a-z0-9-]*$/ — got {name:?}");
     }
     Ok(())
@@ -36,10 +39,15 @@ fn validate_route_name(name: &str) -> Result<()> {
 /// custom-element registry expects for primitives.
 fn validate_component_tag(tag: &str) -> Result<()> {
     let Some(rest) = deck_core::strip_sail_tag_prefix(tag) else {
-        bail!("component tag must start with `{}` — got {tag:?}", deck_core::SAIL_TAG_PREFIX);
+        bail!(
+            "component tag must start with `{}` — got {tag:?}",
+            deck_core::SAIL_TAG_PREFIX
+        );
     };
     if !rest.starts_with(|c: char| c.is_ascii_lowercase())
-        || !rest.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+        || !rest
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
     {
         bail!("component tag must match /^sail-[a-z][a-z0-9-]*$/ — got {tag:?}");
     }
@@ -64,12 +72,15 @@ fn title_case(name: &str) -> String {
 /// from any cwd inside the repo; the views/ + deck-core monorepo markers
 /// surface naturally when the scaffold tries to write into those paths.
 fn find_repo_root(start: &Path) -> Result<PathBuf> {
-    deck_bundler::paths::topmost_cargo_root(start).ok_or_else(|| {
-        anyhow!("no Cargo workspace root above {}", start.display())
-    })
+    deck_bundler::paths::topmost_cargo_root(start)
+        .ok_or_else(|| anyhow!("no Cargo workspace root above {}", start.display()))
 }
 
-pub fn run_route(name: String, route_path: Option<String>, component_tag: Option<String>) -> Result<()> {
+pub fn run_route(
+    name: String,
+    route_path: Option<String>,
+    component_tag: Option<String>,
+) -> Result<()> {
     validate_route_name(&name)?;
     let route = route_path.unwrap_or_else(|| format!("/{name}"));
     if !route.starts_with('/') {
@@ -110,7 +121,7 @@ pub fn run_route(name: String, route_path: Option<String>, component_tag: Option
     if let Some(tag) = component_tag {
         let tag_dir = base.join("_components").join(&tag);
         fs::create_dir_all(&tag_dir)?;
-        let comp_sui = format!(
+        let comp_sail = format!(
             "<!--\n  \
              {tag} — route-private widget for routes/{name}/.\n\n  \
              Tag prefix matches the parent route name so the runtime can register it\n  \
@@ -119,7 +130,7 @@ pub fn run_route(name: String, route_path: Option<String>, component_tag: Option
              <scope>\n  props: {{ tone = 'default' }}\n</scope>\n\n\
              <card tone={{tone()}}>\n  <slot></slot>\n</card>\n"
         );
-        fs::write(tag_dir.join(format!("{tag}.sail")), comp_sui)?;
+        fs::write(tag_dir.join(format!("{tag}.sail")), comp_sail)?;
     }
 
     println!("[scaffold] created routes/{name}/");
@@ -136,7 +147,9 @@ pub fn run_component(tag: String, want_controller: bool) -> Result<()> {
     let repo_root = find_repo_root(&std::env::current_dir().context("cwd")?)?;
     // Primitives live under packages/components/sail/primitives/src/ today — the
     // retired .mjs wrote to packages/ui-components/src/ which no longer exists.
-    let base = repo_root.join("packages/components/sail/primitives/src").join(&tag);
+    let base = repo_root
+        .join("packages/components/sail/primitives/src")
+        .join(&tag);
     if base.exists() {
         bail!("directory already exists: {}", base.display());
     }
@@ -191,7 +204,10 @@ fn validate_pack_name(name: &str) -> Result<()> {
     if !name.starts_with(|c: char| c.is_ascii_lowercase()) {
         bail!("pack name must start with a lowercase letter — got {name:?}");
     }
-    if !name.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-') {
+    if !name
+        .chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+    {
         bail!("pack name must match /^[a-z][a-z0-9-]*$/ — got {name:?}");
     }
     Ok(())
@@ -233,9 +249,8 @@ pub fn run_pack(name: String) -> Result<()> {
     );
     fs::write(base.join("package.json"), pkg_json)?;
 
-    let tsconfig = format!(
-        "{{\n  \
-         \"compilerOptions\": {{\n    \
+    let tsconfig = "{\n  \
+         \"compilerOptions\": {\n    \
          \"target\": \"ES2022\",\n    \
          \"module\": \"ESNext\",\n    \
          \"moduleResolution\": \"Bundler\",\n    \
@@ -251,11 +266,10 @@ pub fn run_pack(name: String) -> Result<()> {
          \"isolatedModules\": true,\n    \
          \"verbatimModuleSyntax\": true,\n    \
          \"noEmit\": false\n  \
-         }},\n  \
+         },\n  \
          \"include\": [\"src/**/*\"],\n  \
          \"exclude\": [\"test\", \"dist\"]\n\
-         }}\n"
-    );
+         }\n";
     fs::write(base.join("tsconfig.json"), tsconfig)?;
 
     let index_ts = format!(
@@ -270,7 +284,7 @@ pub fn run_pack(name: String) -> Result<()> {
     );
     fs::write(base.join("src/index.ts"), index_ts)?;
 
-    let example_sui = format!(
+    let example_sail = format!(
         "<!--\n  \
          {name}-example — placeholder primitive for the @ship/{name} pack.\n\n  \
          Replace or delete this when you author the pack's first real tag.\n\
@@ -280,7 +294,7 @@ pub fn run_pack(name: String) -> Result<()> {
     );
     fs::write(
         base.join(format!("src/{name}-example/{name}-example.sail")),
-        example_sui,
+        example_sail,
     )?;
 
     println!("[scaffold] created packages/components/{name}/");
@@ -292,5 +306,67 @@ pub fn run_pack(name: String) -> Result<()> {
     println!("  3. (When ready to consume) Add `@ship/{name}: workspace:*` to the");
     println!("     consuming app + `import '@ship/{name}'` where the tags are used —");
     println!("     deck traces the tags into that entry's chunk (no separate build).");
+    Ok(())
+}
+
+/// C5: copy one Sail catalog theme into the project's `tokens/themes/` and
+/// seed a thin `sail.config.jsonc` theme section when the project has none.
+///
+/// Thin `enabled: [id]` documents the intended allowlist for a future per-app
+/// CSS path. Monorepo `sail dev` writes shared `@ship/tokens` with **full
+/// catalog + project theme merge** so scaffold cannot poison package CSS.
+pub fn run_theme(project: PathBuf, theme_id: Option<String>) -> Result<()> {
+    let cwd = std::env::current_dir().context("cwd")?;
+    let project_dir = if project.is_absolute() {
+        project
+    } else {
+        cwd.join(project)
+    };
+    if !project_dir.is_dir() {
+        bail!("project dir does not exist: {}", project_dir.display());
+    }
+    let repo_root = find_repo_root(&project_dir).or_else(|_| find_repo_root(&cwd))?;
+    let catalog = repo_root.join("packages/sail/tokens/model/themes");
+    // Prefer --id; else existing sail.config theme.default; else ship (modes-in-file).
+    let id = match theme_id {
+        Some(id) => id,
+        None => sail_compiler::tokens_generate::load_theme_config(&project_dir)?
+            .default_theme_id()
+            .to_string(),
+    };
+    sail_compiler::tokens_generate::validate_theme_id(&id)?;
+    let dest = sail_compiler::tokens_generate::scaffold_default_project_theme(
+        &project_dir,
+        &catalog,
+        Some(&id),
+    )?;
+    println!(
+        "[scaffold] theme → {}",
+        dest.strip_prefix(&project_dir).unwrap_or(&dest).display()
+    );
+    match sail_compiler::tokens_generate::scaffold_theme_config(&project_dir, &id)? {
+        Some(cfg) => {
+            println!(
+                "[scaffold] config → {}",
+                cfg.strip_prefix(&project_dir).unwrap_or(&cfg).display()
+            );
+        }
+        None => {
+            println!(
+                "[scaffold] sail.config already present — left theme section untouched \
+                 (set theme.default / theme.enabled by hand if needed)"
+            );
+        }
+    }
+    // S0: ensure app .gitignore + short `.sail/README.md` so build/tasks never commit.
+    sail_ops::ensure_project_store(&project_dir)
+        .map_err(|e| anyhow!("ensure project store (.gitignore / .sail): {e}"))?;
+    println!("[scaffold] ensured .gitignore + .sail/README.md");
+    println!("[scaffold] next steps:");
+    println!("  1. Edit tokens/themes/{id}.json — project DTCG SSOT");
+    println!(
+        "  2. sail dev — dual generate: package full catalog + app-local \
+         .deck/themes/themes.css (thin enabled set); HMR swaps CSS"
+    );
     Ok(())
 }

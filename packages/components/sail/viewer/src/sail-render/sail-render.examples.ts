@@ -16,7 +16,7 @@ import type { ComponentExample } from '@ship/sail-runtime'
  *  attribute. Real, characterful Ship-domain content; no placeholders. */
 export const sources: Record<string, string> = {
   'Agent lane status': `<div class="lane">
-  <strong>gatekeeper</strong> · reviewing <code>job/sail-framework</code>
+  <strong>gatekeeper</strong> · reviewing <code>PR #142</code>
   <span> — 14 files, 3 findings, 41k tokens burned</span>
 </div>`,
   'Pipeline run row': `<div class="run">

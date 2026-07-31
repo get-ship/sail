@@ -42,8 +42,14 @@ pub fn check(
     // tooling); the override only affects this build-time gate. An
     // external SAIL app that wants the softer behavior sets
     // `CompileOpts::lint_overrides` and threads it through here.
+    //
+    // Invoke ONLY the css-token rule — never the whole template stream.
+    // This check runs inside `check::run` (early, so a token typo beats
+    // the floor findings to the error slot); the full stream runs once
+    // afterwards in `gate()` → `collect()`. Running the stream here too
+    // doubled every compile's lint cost.
     let findings = crate::check::lint_overrides::apply_overrides(
-        sail_lint::lint_sui_template_source(path, source),
+        sail_lint::rules::css_token::check(path, source),
         overrides,
     );
     // Only Severity::Error findings become compile errors. Warnings

@@ -66,8 +66,7 @@ pub(super) fn infer_ts_type(bytes: &[u8], start: usize, end: usize) -> String {
         }
         if after < end && bytes[after] == b'(' {
             let inner_close = skip_balanced(bytes, after, end);
-            let arg_slice = std::str::from_utf8(&bytes[after + 1..inner_close - 1])
-                .unwrap_or("");
+            let arg_slice = std::str::from_utf8(&bytes[after + 1..inner_close - 1]).unwrap_or("");
             return match word {
                 "signal" => match generic {
                     Some(t) => format!("Signal<{t}>"),
@@ -119,16 +118,28 @@ pub(super) fn infer_ts_type(bytes: &[u8], start: usize, end: usize) -> String {
             while k < end && (bytes[k].is_ascii_digit() || bytes[k] == b'.') {
                 k += 1;
             }
-            if k > i + 1 { "number".to_string() } else { "unknown".to_string() }
+            if k > i + 1 {
+                "number".to_string()
+            } else {
+                "unknown".to_string()
+            }
         }
         c if c.is_ascii_digit() => "number".to_string(),
         b't' | b'f' => {
             let word = remaining_word(bytes, i, end);
-            if word == "true" || word == "false" { "boolean".to_string() } else { "unknown".to_string() }
+            if word == "true" || word == "false" {
+                "boolean".to_string()
+            } else {
+                "unknown".to_string()
+            }
         }
         b'n' => {
             let word = remaining_word(bytes, i, end);
-            if word == "null" { "null".to_string() } else { "unknown".to_string() }
+            if word == "null" {
+                "null".to_string()
+            } else {
+                "unknown".to_string()
+            }
         }
         b'[' => "unknown[]".to_string(),
         b'{' => "Record<string, unknown>".to_string(),
@@ -148,11 +159,17 @@ pub(super) fn remaining_word(bytes: &[u8], start: usize, end: usize) -> &str {
 /// Falls back to `unknown` for anything non-trivial.
 pub(super) fn literal_ts(src: &str) -> String {
     let s = src.trim();
-    if s.is_empty() { return "unknown".to_string(); }
+    if s.is_empty() {
+        return "unknown".to_string();
+    }
     let first = s.as_bytes()[0];
     match first {
         b'"' | b'\'' | b'`' => "string".to_string(),
-        b'-' | b'+' if s.len() > 1 && (s.as_bytes()[1].is_ascii_digit() || s.as_bytes()[1] == b'.') => "number".to_string(),
+        b'-' | b'+'
+            if s.len() > 1 && (s.as_bytes()[1].is_ascii_digit() || s.as_bytes()[1] == b'.') =>
+        {
+            "number".to_string()
+        }
         c if c.is_ascii_digit() => "number".to_string(),
         b't' if s == "true" => "boolean".to_string(),
         b'f' if s == "false" => "boolean".to_string(),
@@ -188,8 +205,13 @@ pub(super) fn match_angle(bytes: &[u8], start: usize, end: usize) -> usize {
     while k < end {
         let c = bytes[k];
         if let Some(q) = in_str {
-            if c == b'\\' { k = (k + 2).min(end); continue; }
-            if c == q { in_str = None; }
+            if c == b'\\' {
+                k = (k + 2).min(end);
+                continue;
+            }
+            if c == q {
+                in_str = None;
+            }
             k += 1;
             continue;
         }

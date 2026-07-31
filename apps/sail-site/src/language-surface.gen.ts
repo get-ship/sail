@@ -7628,7 +7628,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
   "stdlib": [
     {
       "tag": "a",
-      "description": "native <a>. L1 platform link; when `variant` is set, becomes a"
+      "description": "native <a>. Bare (no variant) = text link (sail-base color). With"
     },
     {
       "tag": "alert",
@@ -7656,7 +7656,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "chip",
-      "description": "L1 interactive filter/selection pill."
+      "description": ""
     },
     {
       "tag": "code-block",
@@ -7673,6 +7673,14 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     {
       "tag": "context-menu",
       "description": "L1 right-click menu. Native [popover] + use:contextMenu"
+    },
+    {
+      "tag": "details",
+      "description": "native disclosure. Style product only."
+    },
+    {
+      "tag": "dialog",
+      "description": "native modal / sheet. Style product only."
     },
     {
       "tag": "dropdown",
@@ -7695,6 +7703,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "stack+gap layout; hint/error gates via structure Style."
     },
     {
+      "tag": "fieldset",
+      "description": "form group. Style product only."
+    },
+    {
       "tag": "hover-card",
       "description": "L1 hover-preview overlay. Style value language only."
     },
@@ -7703,12 +7715,24 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "glyph box + size match. use:icon owns spin. glyphFill packs child svg."
     },
     {
+      "tag": "input",
+      "description": "native field / toggle / range surface. Style product only."
+    },
+    {
       "tag": "label",
       "description": "size match; weight token; .req gate via group-required when."
     },
     {
+      "tag": "legend",
+      "description": "fieldset caption. Style product only."
+    },
+    {
       "tag": "menu-item",
       "description": "item inside dropdown/context-menu. Style product host paint."
+    },
+    {
+      "tag": "meter",
+      "description": "gauge (value-in-range). Style product only."
     },
     {
       "tag": "navbar",
@@ -7727,6 +7751,10 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "L1 anchored overlay. Style value language only."
     },
     {
+      "tag": "progress",
+      "description": "determinate / indeterminate bar. Style product only."
+    },
+    {
       "tag": "prose",
       "description": "typography scope for rendered content (markdown blobs etc.)."
     },
@@ -7743,16 +7771,24 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "overflow axes + standard scrollbar pack on host Style."
     },
     {
+      "tag": "select",
+      "description": "native picker. Field surface + size ladder (Style)."
+    },
+    {
       "tag": "separator",
       "description": "native <hr>. Style value language only."
     },
     {
       "tag": "slider",
-      "description": "compiles-away alias for native range input."
+      "description": "native range alias. use:rangeFill → --rng-pct (WebKit fill)."
     },
     {
       "tag": "spinner",
       "description": "L1 language element. Style value language only:"
+    },
+    {
+      "tag": "summary",
+      "description": "disclosure trigger inside <details>. Style product only."
     },
     {
       "tag": "switch",
@@ -7771,12 +7807,20 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
       "description": "orientation Style match (stamped by use:tabs)."
     },
     {
+      "tag": "table",
+      "description": "structural data table. Style product only."
+    },
+    {
       "tag": "tabs",
       "description": "tab strip + panels. use:tabs owns behavior + stamps orientation"
     },
     {
+      "tag": "textarea",
+      "description": "native multi-line field. Style product only."
+    },
+    {
       "tag": "theme-picker",
-      "description": "Style product for trigger/panel/option/swatch paint."
+      "description": "Product theme catalog + mode control (redesign)."
     },
     {
       "tag": "ticker",
@@ -7805,112 +7849,12 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
   ],
   "reskins": [
     {
-      "tag": "details",
-      "description": "Disclosure / accordion — bare `<details>`/`<summary>` is the design-system disclosure. Stacked adjacents merge into an accordion. Open/close animates natively."
-    },
-    {
-      "tag": "dialog",
-      "description": "Modal / sheet — bare `<dialog>` IS the design-system modal. `side=` docks it as a sheet; showModal() gives backdrop, ESC, focus-trap, focus-return for free."
-    },
-    {
-      "tag": "fieldset",
-      "description": "Form group — bare `<fieldset>`/`<legend>` is a bordered section with the legend riding the top edge. `disabled` dims the whole group."
-    },
-    {
       "tag": "hr",
-      "description": "Separator — horizontal by default; `orientation=vertical` and `variant=dashed` are attribute-keyed. tone tints the rule."
-    },
-    {
-      "tag": "html",
-      "description": "Document root — the `html:has(dialog[open])` scroll-lock rule freezes the page while a native modal is open. No JS scroll-lock required."
-    },
-    {
-      "tag": "input",
-      "description": "Text entry — bare `<input>` (text/email/etc.), `<textarea>`, `<select>` are the design-system field. tone/size/invalid mirror the button contract."
-    },
-    {
-      "tag": "input[type=checkbox]",
-      "description": "Checkbox — native appearance:none checkbox painted as a tone-filled square with a baked-white check. Indeterminate = tri-state."
-    },
-    {
-      "tag": "input[type=color]",
-      "description": "Color swatch — rounded swatch button (not a text field). The platform's value is the selected color; the skin themes the swatch frame."
-    },
-    {
-      "tag": "input[type=file]",
-      "description": "File picker — keeps the field box, restyles the platform's file picker as a small secondary button. Use with `<div dropzone use:dropzone>` for drag-and-drop."
-    },
-    {
-      "tag": "input[type=radio]",
-      "description": "Radio — native appearance:none radio painted as a tone-filled circle with a background-punched dot."
-    },
-    {
-      "tag": "input[type=range]",
-      "description": "Slider — native appearance:none range, rebuilt as a tone-tinted rail with a white thumb ringed in the tone. size drives track/thumb thickness."
+      "description": "Document rule divider. Prefer `<separator>` for orientation/variant/tone."
     },
     {
       "tag": "kbd",
-      "description": "Keycap — mono glyph on a muted chip with a doubled bottom edge (the pressed-key cue). Stroke rides --border-width, so a theme can thicken the cap."
-    },
-    {
-      "tag": "legend",
-      "description": "Fieldset caption — semibold text-sm riding the top edge of a `<fieldset>`. Inherits the fieldset's own paddings."
-    },
-    {
-      "tag": "meter",
-      "description": "Gauge — value-in-range; fill reflects WHICH band the value falls in (success/warning/destructive), not just how full. Distinct from `<progress>`."
-    },
-    {
-      "tag": "optgroup",
-      "description": "Option list caption — semibold muted label inside a native `<select>`'s popup. Groups options without changing the value model."
-    },
-    {
-      "tag": "output",
-      "description": "Form result — tabular figures so recomputes don't jitter. The native element for displaying a derived input value."
-    },
-    {
-      "tag": "progress",
-      "description": "Progress bar — determinate when `value` is set, indeterminate (sliding sheen) when not. tone tints the fill."
-    },
-    {
-      "tag": "select",
-      "description": "Picker — native `<select>` with the OS arrow replaced by a theme-aware chevron. option/optgroup reset so the popup is themed too."
-    },
-    {
-      "tag": "span",
-      "description": "Status dot (`<span dot>`) and skeleton placeholder (`<span skeleton>`). tone is an ordinary [tone] prop; pulse animates the dot."
-    },
-    {
-      "tag": "summary",
-      "description": "Disclosure trigger — semibold trigger header inside `<details>`. Chevron rotates 180° and brightens to --foreground on open."
-    },
-    {
-      "tag": "table",
-      "description": "Data table — STRUCTURAL primitive, zero JS. Variants ride the table itself (`[dense] [striped] [hoverable] [bordered]`); `<thead sticky>` pins the header; `[numeric]` columns right-align on tabular figures."
-    },
-    {
-      "tag": "tbody",
-      "description": "Table body — row-group container inside `<table>`. CSS resets the trailing row's bottom border so a table reads as a single sheet."
-    },
-    {
-      "tag": "td",
-      "description": "Table cell — body row cell. `[numeric]` right-aligns on tabular figures; bordered tables add a 1px cell border."
-    },
-    {
-      "tag": "textarea",
-      "description": "Multi-line text — shares the field surface with `<input>`. `rows=`/min-height scales the visible line count; vertical-only resize."
-    },
-    {
-      "tag": "th",
-      "description": "Table header cell — de-emphasized (muted-foreground) header; the body carries the data. `[numeric]` right-aligns on tabular figures."
-    },
-    {
-      "tag": "thead",
-      "description": "Table head — `[sticky]` pins the header to the scroll container top with a background to defeat bleed-through."
-    },
-    {
-      "tag": "ul",
-      "description": "Listbox — a `<ul role='listbox'>` becomes a widget surface (zero list markers, no default padding). A plain `<ul>` keeps the document-list reset; the role distinguishes widget use."
+      "description": "Keycap — mono on muted chip, doubled bottom edge."
     }
   ]
 }
@@ -8041,6 +7985,12 @@ export const ACTIONS: ActionDoc[] = [
     "name": "liveRegion",
     "param": "void",
     "summary": "Sync role/aria-live from tone: warning|destructive → assertive alert; else polite status.",
+    "public": false
+  },
+  {
+    "name": "marquee",
+    "param": "void",
+    "summary": "Infinite seamless track scroll for L1 <ticker> (duration/reverse on host).",
     "public": false
   },
   {
@@ -8323,37 +8273,37 @@ export interface BlockDoc {
 
 export const BLOCKS: BlockDoc[] = [
   {
-    "open": "<if cond={…}>",
+    "open": "<if {…}>",
     "clauses": [
-      "<else-if cond={…}>",
+      "<else-if {…}>",
       "<else>"
     ],
-    "summary": "conditional branches; any number of <else-if>, optional trailing <else> as direct children"
+    "summary": "conditional branches; brace-primary predicate (residual: cond={…}); any number of <else-if>, optional trailing <else> as direct children"
   },
   {
-    "open": "<for as=\"item\" of={…} key={…}>",
+    "open": "<for {…} as=\"item\" key={…}>",
     "clauses": [
       "<else>"
     ],
-    "summary": "iterate a list; `as` is the item binding, `of` the iterable, `key` required for stable DOM; optional `index`; <else> when empty"
+    "summary": "iterate a list; brace-primary iterable (residual: of={…}); `as` item binding, `key` required for stable DOM; optional `index`; <else> when empty"
   },
   {
-    "open": "<match on={…}>",
+    "open": "<match {…}>",
     "clauses": [
-      "<case of={…}>",
+      "<case {…}>",
       "<default>"
     ],
-    "summary": "pattern branches over a discriminant; any number of <case>, optional <default>"
+    "summary": "pattern branches over a brace-primary discriminant (residual: on={…}); cases use brace-primary or of={…}; optional <default>"
   },
   {
-    "open": "<while-loading of=\"sig\">",
+    "open": "<while-loading {sig}>",
     "clauses": [],
-    "summary": "renders while an async query signal is pending"
+    "summary": "renders while an async query signal is pending; brace-primary signal name (residual: of=\"sig\")"
   },
   {
-    "open": "<while-error as=\"err\" of=\"sig\">",
+    "open": "<while-error as=\"err\" {sig}>",
     "clauses": [],
-    "summary": "renders while an async query signal is rejected; `as` names the error binding"
+    "summary": "renders while an async query signal is rejected; `as` names the error binding; brace-primary or of= for the signal"
   }
 ]
 export interface DirectiveDoc {
@@ -9276,6 +9226,12 @@ export const CONFIG_KEYS: ConfigKeyDoc[] = [
     "type": "boolean",
     "default": "confined",
     "doc": "opt out of controller ambient-authority confinement entirely; a wrong-typed value stays confined"
+  },
+  {
+    "key": "theme",
+    "type": "{ default, defaultMode?, enabled: \"all\" | string[] }",
+    "default": "no theme section — thin app emit (no catalog); package generate still full catalog",
+    "doc": "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project tokens/themes always emit"
   }
 ]
 

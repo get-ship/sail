@@ -7,7 +7,7 @@
 //! sat in `element-skins.css` with no class ever carrying them: inert CSS.
 
 use sail_compiler::parse::preprocess::preprocess as preprocess_src;
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn pp(src: &str) -> String {
     preprocess_src(src).expect("preprocess")
@@ -71,10 +71,7 @@ fn native_label_keeps_props_as_attributes() {
     // The skin's match() rules key on `[size='sm']`-style attribute
     // selectors — use-site props must survive stamping as plain attributes.
     let out = pp(r#"<label size="sm" required>Email</label>"#);
-    assert!(
-        out.contains("sail-label"),
-        "host classes stamped:\n{out}"
-    );
+    assert!(out.contains("sail-label"), "host classes stamped:\n{out}");
     assert!(
         out.contains(r#"size="sm""#) && out.contains("required"),
         "props remain attributes for the skin's [attr=value] selectors:\n{out}"
@@ -85,7 +82,8 @@ fn native_label_keeps_props_as_attributes() {
 fn native_label_stamping_is_idempotent() {
     // An already-stamped tag (author wrote the classes, or a re-scan) must
     // not accumulate duplicates.
-    let out = pp(r#"<label class="sail-label sx-cursorpointer" data-sail-host="label">Email</label>"#);
+    let out =
+        pp(r#"<label class="sail-label sx-cursorpointer" data-sail-host="label">Email</label>"#);
     assert_eq!(
         out.matches("sail-label").count(),
         1,
@@ -170,11 +168,7 @@ fn spliced_tab_stamps_host_identity() {
 fn native_label_stamps_end_to_end_through_compile() {
     // Full pipeline: the stamped classes must survive parse + emit and land
     // on the real DOM element the component builds.
-    let r = compile(
-        r#"<label size="sm">Email</label>"#,
-        component_opts(),
-    )
-    .expect("compile");
+    let r = compile(r#"<label size="sm">Email</label>"#, component_opts()).expect("compile");
     assert!(
         r.js.contains("sail-label"),
         "stamped classes reach the emitted DOM:\n{}",

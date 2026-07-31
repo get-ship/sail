@@ -28,8 +28,12 @@ pub const RULE_ID: &str = "sail-no-raw-container";
 
 fn suggestion(tag: &str) -> &'static str {
     match tag {
-        "div" => "use <column> (vertical), <row> (horizontal), <grid>, or <sail-card> (surface) — style it with sx",
-        "span" => "use <row> for inline grouping, or a semantic inline tag (<strong>/<em>/<a>) styled with sx",
+        "div" => {
+            "use <column> (vertical), <row> (horizontal), <grid>, or <sail-card> (surface) — style it with sx"
+        }
+        "span" => {
+            "use <row> for inline grouping, or a semantic inline tag (<strong>/<em>/<a>) styled with sx"
+        }
         _ => "compose a sail-* primitive",
     }
 }
@@ -54,7 +58,8 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 if rest.starts_with(tag) {
                     // must be a real tag open: next char ends the name
                     let after = rest.as_bytes().get(tag.len()).copied();
-                    if matches!(after, Some(b) if b == b'>' || b == b'/' || b.is_ascii_whitespace()) {
+                    if matches!(after, Some(b) if b == b'>' || b == b'/' || b.is_ascii_whitespace())
+                    {
                         let (line, col) = offset_to_line_col(source, i);
                         findings.push(Finding {
                             file: path.to_path_buf(),
@@ -118,8 +123,14 @@ mod tests {
 
     #[test]
     fn allows_content_and_primitives() {
-        assert_eq!(run(r#"<column gap="3"><h2>Ingredients</h2><ul><li>x</li></ul></column>"#), 0);
-        assert_eq!(run(r#"<sail-card><p>hi</p><a href="/x">link</a></sail-card>"#), 0);
+        assert_eq!(
+            run(r#"<column gap="3"><h2>Ingredients</h2><ul><li>x</li></ul></column>"#),
+            0
+        );
+        assert_eq!(
+            run(r#"<sail-card><p>hi</p><a href="/x">link</a></sail-card>"#),
+            0
+        );
     }
 
     #[test]

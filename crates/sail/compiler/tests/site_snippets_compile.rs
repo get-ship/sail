@@ -7,14 +7,16 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn site_routes() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../apps/sail-site/routes")
 }
 
 fn snippet_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else { return };
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
     for e in entries.flatten() {
         let p = e.path();
         if p.is_dir() {
@@ -82,7 +84,7 @@ fn template_literals(src: &str) -> Vec<String> {
 /// template. It must not read as TS or shell. And a directive only counts when it
 /// binds `={`: the SSR page shows server OUTPUT, where `on:click="b1"` is a
 /// hydration marker rather than an expression.
-fn is_sui(s: &str) -> bool {
+fn is_sail(s: &str) -> bool {
     let has_tag = s
         .as_bytes()
         .windows(2)
@@ -91,7 +93,11 @@ fn is_sui(s: &str) -> bool {
         return false;
     }
 
-    let first = s.lines().map(str::trim).find(|l| !l.is_empty()).unwrap_or("");
+    let first = s
+        .lines()
+        .map(str::trim)
+        .find(|l| !l.is_empty())
+        .unwrap_or("");
     let reads_as_code_not_markup = first.starts_with("import ")
         || first.starts_with("//")
         || first.starts_with("export ")
@@ -109,14 +115,17 @@ fn is_sui(s: &str) -> bool {
         || s.contains("<match ")
         || s.contains("<while-loading")
         || s.contains("<while-error")
-        || s.contains("fx:") || s.contains(".enter(") || s.contains(".loop(") || s.contains("style.enter")
+        || s.contains("fx:")
+        || s.contains(".enter(")
+        || s.contains(".loop(")
+        || s.contains("style.enter")
         || s.contains("use:")
         || s.contains("bind:")
         || (s.contains("on:") && s.contains("={"))
 }
 
 #[test]
-fn every_sui_snippet_on_the_site_compiles() {
+fn every_sail_snippet_on_the_site_compiles() {
     let routes = site_routes();
     if !routes.exists() {
         return; // the site is not checked out beside the compiler
@@ -135,7 +144,9 @@ fn every_sui_snippet_on_the_site_compiles() {
     let mut broken = Vec::new();
 
     for f in &files {
-        let Ok(src) = fs::read_to_string(f) else { continue };
+        let Ok(src) = fs::read_to_string(f) else {
+            continue;
+        };
         let route = f
             .parent()
             .and_then(|p| p.strip_prefix(&routes).ok())
@@ -143,7 +154,7 @@ fn every_sui_snippet_on_the_site_compiles() {
             .unwrap_or_default();
 
         for snip in template_literals(&src) {
-            if !is_sui(&snip) {
+            if !is_sail(&snip) {
                 continue;
             }
             checked += 1;
@@ -152,9 +163,14 @@ fn every_sui_snippet_on_the_site_compiles() {
             // rightly refuses props in a tagless route/page compile.
             let component_meta = snip
                 .contains("<scope>")
-                .then(|| sail_compiler::ComponentMeta { name: "snippet-demo".into() });
-            let opts =
-                CompileOpts { mode: CompileMode::Component, component_meta, ..Default::default() };
+                .then(|| sail_compiler::ComponentMeta {
+                    name: "snippet-demo".into(),
+                });
+            let opts = CompileOpts {
+                mode: CompileMode::Component,
+                component_meta,
+                ..Default::default()
+            };
             if let Err(e) = compile(&snip, opts) {
                 let first = snip.lines().next().unwrap_or("").trim().to_string();
                 broken.push(format!("  {route}: {first}\n    -> {}", e.message));
@@ -162,7 +178,10 @@ fn every_sui_snippet_on_the_site_compiles() {
         }
     }
 
-    assert!(checked > 0, "no SAIL snippets recognized — the classifier is broken");
+    assert!(
+        checked > 0,
+        "no SAIL snippets recognized — the classifier is broken"
+    );
 
     assert!(
         broken.is_empty(),
@@ -194,7 +213,9 @@ fn every_snippets_file_has_balanced_template_literals() {
 
     let mut broken = Vec::new();
     for f in &files {
-        let Ok(src) = fs::read_to_string(f) else { continue };
+        let Ok(src) = fs::read_to_string(f) else {
+            continue;
+        };
         // Count backticks that are neither escaped nor inside a line comment.
         let mut ticks = 0usize;
         let mut chars = src.chars().peekable();

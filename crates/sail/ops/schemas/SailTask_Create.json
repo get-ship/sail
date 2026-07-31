@@ -1,0 +1,96 @@
+{
+  "service": "SailTask",
+  "method": "Create",
+  "mcp_tool": "sail_task_create",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/TaskActor"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "anchor": {
+        "description": "A-anchor `{ nodeId, elementPath?, contentHash?, file?, span? }`.",
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "body": {
+        "description": "Optional initial comment body.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "labels": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "string"
+        }
+      },
+      "project": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "route": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "status": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "title": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "title"
+    ],
+    "definitions": {
+      "Json": {},
+      "TaskActor": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "TaskCreateRet",
+    "type": "object"
+  }
+}

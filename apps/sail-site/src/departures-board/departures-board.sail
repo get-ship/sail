@@ -80,13 +80,13 @@ export default controller((ctx) => {
     <span sx={meta}>{departed()} departed</span>
   </row>
   <column gap="1" sx={list}>
-    <for as="f" of={flights()} key={f.id}>
+    <for {flights()} as="f" key={f.id}>
       <row align="center" gap="3" nowrap sx={style.enter({ opacity: 'fade' })}>
         <span grow min-w="0" sx={city}>{f.city}</span>
         <span sx={gate}>{f.gate}</span>
-        <match on={f.status}>
-          <case of={'boarding'}> <badge tone="success">Boarding</badge>
-          </case><case of={'delayed'}>  <badge tone="destructive">Delayed</badge>
+        <match {f.status}>
+          <case {'boarding'}> <badge tone="success">Boarding</badge>
+          </case><case {'delayed'}>  <badge tone="destructive">Delayed</badge>
           </case><default>         <badge tone="muted">On time</badge>
         </default></match>
       </row>

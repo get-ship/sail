@@ -1,23 +1,13 @@
-// RED/GREEN fixtures for job/mount-route-bug (task #90).
+// Contract: ambient `mount` vs host `mount` collision at compile time.
 //
-// RED (pre-fix behavior): a route-level page.sail controller that imports
-// `mount` explicitly from '@ship/sail-runtime' — the natural (and, before
-// this fix, silently wrong) thing to do given every other ambient primitive
-// (`signal`, `effect`, `controller`) is explicitly importable from the same
-// barrel with no ill effect. `@ship/sail-runtime`'s bare `mount` export is
-// the F1 HOST route-mounting entry point, not the ambient lifecycle hook —
-// the controller's `mount((host) => {...})` call then invokes THAT function
-// with the callback as its `target` argument, and throws deep inside
-// `mount.ts`'s `seedRouteParams` the first time the page mounts: `Cannot
-// read properties of undefined (reading 'params')`. This is now caught at
-// COMPILE TIME instead (`sail-mount-ambient-shadow`), per the mission's
-// "no silent runtime throw" requirement.
+// A route-level page controller that imports `mount` from `@ship/sail-runtime`
+// shadows the ambient lifecycle hook with the F1 host route-mounting entry.
+// That mis-call throws at runtime inside `seedRouteParams`. The compiler
+// refuses it (`sail-mount-ambient-shadow`) so authors get a hard error, not
+// a silent page failure.
 //
-// GREEN: the same host-touching mount()+cleanup pattern, authored the way
-// the skill doc actually describes it (ambient — no import at all), mounted
-// through the exact F1 `mount()` + real `route` a router hands a page.
-// Proves the callback fires with the host element, and its cleanup runs on
-// dispose (no interval survives an unmount/nav).
+// Ambient (no import) mount+cleanup: callback receives the host; cleanup
+// runs on dispose (no interval survives unmount/nav).
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync, existsSync, copyFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -57,7 +47,7 @@ function compileFixture(relFile: string): string {
   return mjsPath
 }
 
-describe('job/mount-route-bug — ambient mount() in a route-level page controller', () => {
+describe('ambient mount() in a route-level page controller', () => {
   beforeAll(() => {
     ensureBinary()
   }, 120_000)

@@ -22,6 +22,6 @@ export const controllerExample = `<!-- routes/page.sail — one file: state + te
   </button>
 </main>`
 
-export const devCmd = `$ deck dev --project .
+export const devCmd = `$ sail dev --project .
   ▸ serving http://127.0.0.1:7878
   ▸ watching routes/ for changes`

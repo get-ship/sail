@@ -148,8 +148,10 @@ mod tests {
 
     fn scratch() -> PathBuf {
         let n = SEQ.fetch_add(1, Ordering::SeqCst);
-        let dir = std::env::temp_dir()
-            .join(format!("deck-bundler-dup-version-{}-{n}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!(
+            "deck-bundler-dup-version-{}-{n}",
+            std::process::id()
+        ));
         fs::create_dir_all(&dir).unwrap();
         dir
     }
@@ -173,8 +175,7 @@ mod tests {
         write_pkg(&root_pkg, "@codemirror/state", "6.7.0");
         fs::write(root_pkg.join("index.js"), "export const x = 1;\n").unwrap();
 
-        let nested_pkg =
-            dir.join("node_modules/some-store/node_modules/@codemirror/state");
+        let nested_pkg = dir.join("node_modules/some-store/node_modules/@codemirror/state");
         write_pkg(&nested_pkg, "@codemirror/state", "6.7.1");
         fs::write(nested_pkg.join("index.js"), "export const x = 2;\n").unwrap();
 

@@ -17,19 +17,18 @@
 //!
 //! Control-flow bodies (`<if>`, `<match>`) are walked across **every**
 //! branch (taken or not). The registry has no SSR scope, so it can't
-//! tell which branch will render at SSR time — the marker contract
-//! (`docs/ship-adrs/.../sail-marker-contract.md`) takes the position
-//! that the manifest is the union of all bindings the IR could emit;
-//! markers in the SSR'd HTML reference a subset.
+//! tell which branch will render at SSR time — the manifest is the
+//! union of all bindings the IR could emit; markers in the SSR'd HTML
+//! reference a subset.
 //!
 //! `<for as="}` bodies are walked **once** — the walker's snapshot/restore
 //! makes every iteration share the same key range, so the registry
 //! mirrors that with a single body walk.
 
+use crate::escape::is_void_element;
 use crate::ir::*;
 use crate::keys::{Binding, BindingKind, BindingRegistry, KeyAllocator};
 use crate::parse::expr::collect_idents;
-use crate::escape::is_void_element;
 
 #[cfg(test)]
 mod tests;
@@ -104,7 +103,11 @@ impl Builder {
         match attr {
             AttrInstr::Static { .. } => {}
             AttrInstr::Expr { name, expr, .. } => {
-                self.push(BindingKind::Attr(name.clone()), &expr.source, expr.allow_arrow);
+                self.push(
+                    BindingKind::Attr(name.clone()),
+                    &expr.source,
+                    expr.allow_arrow,
+                );
             }
             AttrInstr::BindValue { expr, .. } => {
                 self.push(BindingKind::BindValue, &expr.source, expr.allow_arrow);
@@ -122,7 +125,11 @@ impl Builder {
                 // emits the runtime call inline; routes never see this kind.
             }
             AttrInstr::On { event, handler, .. } => {
-                self.push(BindingKind::On(event.clone()), &handler.source, handler.allow_arrow);
+                self.push(
+                    BindingKind::On(event.clone()),
+                    &handler.source,
+                    handler.allow_arrow,
+                );
             }
             AttrInstr::Mutation { expr, .. } => {
                 self.push(BindingKind::Mutation, &expr.source, expr.allow_arrow);

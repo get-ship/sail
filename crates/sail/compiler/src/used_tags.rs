@@ -64,7 +64,8 @@ mod tests {
 
     #[test]
     fn collects_custom_element_tags_only() {
-        let tags = used_tags("<div><ship-terminal></ship-terminal><span>hi</span><ship-foo /></div>");
+        let tags =
+            used_tags("<div><ship-terminal></ship-terminal><span>hi</span><ship-foo /></div>");
         assert!(tags.contains("ship-terminal"));
         assert!(tags.contains("ship-foo"));
         assert!(!tags.contains("div"), "plain HTML tags excluded");
@@ -82,7 +83,9 @@ mod tests {
             <while-error as="err" of="data"><sail-g></sail-g></while-error>
         </div>"#;
         let tags = used_tags(src);
-        for t in ["sail-a", "sail-b", "sail-c", "sail-d", "sail-e", "sail-f", "sail-g"] {
+        for t in [
+            "sail-a", "sail-b", "sail-c", "sail-d", "sail-e", "sail-f", "sail-g",
+        ] {
             assert!(tags.contains(t), "missing nested tag {t}; got {tags:?}");
         }
     }

@@ -10,15 +10,14 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use rolldown::plugin::{
     HookLoadArgs, HookLoadOutput, HookLoadReturn, HookResolveIdArgs, HookResolveIdOutput,
     HookResolveIdReturn, HookUsage, Plugin, PluginContext, SharedLoadPluginContext,
 };
 use rolldown_common::{ModuleType, ResolvedExternal, side_effects::HookSideEffects};
 
-
-use crate::compile::{compile_sui, CompileMode};
+use crate::compile::{CompileMode, compile_sail};
 
 // NOTE: `@ship/sdk-client` was here historically (deck-self-typed as a
 // framework singleton). The deck-jsonc-simplify cutover moves it to
@@ -50,7 +49,11 @@ const SAIL_TAG_NOOP: &str = "\0sail-tag-noop";
 /// `packages/components/ui-components/src`. That shortcut is now subsumed by
 /// this rule (every `.sail` in that tree has a hyphenated stem) and is removed.
 pub(crate) fn detect_mode(abs: &Path, _repo_root: &Path) -> (CompileMode, String) {
-    let stem = abs.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_string();
+    let stem = abs
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_string();
     let mode = if stem.contains('-') && stem != "page" && stem != "index" {
         CompileMode::Component
     } else {
@@ -99,6 +102,11 @@ pub struct SailPlugin {
     /// the resolver's idea of "workspace" identical to bun's. Empty when the
     /// host's importmap is the source of truth.
     pub component_roots: Arc<HashMap<String, PathBuf>>,
+    /// Active app project root (T1 B1). When set and
+    /// `<project>/.deck/themes/themes.css` exists, `@ship/tokens/themes.css`
+    /// resolves there (app-filtered emit) instead of the full package sheet.
+    /// Path lives under the foreign `.deck/themes/` dir so SPA prune keeps it.
+    pub project_dir: Option<PathBuf>,
 }
 
 /// The per-route resolver's lookup tables, built once per `(repo_root, packs)`.
@@ -115,7 +123,10 @@ impl ResolverIndex {
     /// Empty resolver — for builds that emit no `@sail-tag` imports (framework/
     /// app non-view targets).
     pub(crate) fn empty() -> Self {
-        Self { index: Arc::new(HashMap::new()), shadowed: Arc::new(HashMap::new()) }
+        Self {
+            index: Arc::new(HashMap::new()),
+            shadowed: Arc::new(HashMap::new()),
+        }
     }
 }
 
@@ -125,7 +136,7 @@ impl SailPlugin {
     /// file roundtrip, no version drift, no flag that a stale binary can reject.
     fn compile(&self, sail: &Path) -> Result<String> {
         let (mode, stem) = detect_mode(sail, &self.repo_root);
-        compile_sui(sail, mode, &stem, self.emit_component_imports).map_err(|e| {
+        compile_sail(sail, mode, &stem, self.emit_component_imports).map_err(|e| {
             // Surface the real compiler error: rolldown collapses a plugin error
             // to a generic "plugin `ship-sail` threw an error", swallowing the
             // message/line/col. Print it so a consumer can see WHY a view failed
@@ -209,7 +220,9 @@ impl Plugin for SailPlugin {
             if let Some(importer) = args.importer {
                 let dir = Path::new(importer).parent().unwrap_or(&self.repo_root);
                 let abs = normalize(&dir.join(spec));
-                return Ok(Some(HookResolveIdOutput::from_id(abs.to_string_lossy().to_string())));
+                return Ok(Some(HookResolveIdOutput::from_id(
+                    abs.to_string_lossy().to_string(),
+                )));
             }
         }
         // `*.compiled.js` → virtual id; `load` compiles the sibling `.sail`. The
@@ -230,7 +243,21 @@ impl Plugin for SailPlugin {
             {
                 let dir = Path::new(importer).parent().unwrap_or(&self.repo_root);
                 let abs = normalize(&dir.join(spec));
-                return Ok(Some(HookResolveIdOutput::from_id(abs.to_string_lossy().to_string())));
+                return Ok(Some(HookResolveIdOutput::from_id(
+                    abs.to_string_lossy().to_string(),
+                )));
+            }
+        }
+        // T1 B1: prefer app-local filtered themes.css when present.
+        // Path: <project>/.deck/themes/themes.css (foreign dir — survives prune).
+        if spec == "@ship/tokens/themes.css" {
+            if let Some(project) = &self.project_dir {
+                let app_themes = project.join(".deck").join("themes").join("themes.css");
+                if app_themes.is_file() {
+                    return Ok(Some(HookResolveIdOutput::from_id(
+                        normalize(&app_themes).to_string_lossy().to_string(),
+                    )));
+                }
             }
         }
         // `@ship/<non-singleton>` → workspace package source (not prebuilt
@@ -318,9 +345,8 @@ impl Plugin for SailPlugin {
             && base.ends_with(".sail")
         {
             let sail = Path::new(base);
-            let source = std::fs::read_to_string(sail).map_err(|e| {
-                anyhow!("read {} for its inline <controller>: {e}", sail.display())
-            })?;
+            let source = std::fs::read_to_string(sail)
+                .map_err(|e| anyhow!("read {} for its inline <controller>: {e}", sail.display()))?;
             let body = sail_compiler::parse::preprocess::extract_controller_block(&source)
                 .1
                 .ok_or_else(|| {
@@ -338,9 +364,8 @@ impl Plugin for SailPlugin {
             // self-contained without running the full ambient-import wrap
             // (which this path has never run, and which auto-imports a
             // wider set of names this hook has no reason to newly affect).
-            let body = sail_compiler::check::query_keys::rewrite(&body).map_err(|e| {
-                anyhow!("{}", e.render(&body))
-            })?;
+            let body = sail_compiler::check::query_keys::rewrite(&body)
+                .map_err(|e| anyhow!("{}", e.render(&body)))?;
             return Ok(Some(HookLoadOutput {
                 code: body.into(),
                 module_type: Some(ModuleType::Ts),
@@ -399,11 +424,7 @@ impl Plugin for SailPlugin {
         // `MissingExport` on a named-import consumer, masking
         // the real cause (a missing or unreadable file).
         let code = std::fs::read_to_string(id)
-            .map_err(|e| {
-                anyhow::anyhow!(
-                    "deck-bundler: failed to read module `{id}`: {e}"
-                )
-            })?;
+            .map_err(|e| anyhow::anyhow!("deck-bundler: failed to read module `{id}`: {e}"))?;
         Ok(Some(HookLoadOutput {
             code: code.into(),
             side_effects: Some(HookSideEffects::True),
@@ -442,7 +463,7 @@ mod tests {
 
     /// Views use page.sail (no hyphen in stem).
     #[test]
-    fn page_sui_detected_as_route() {
+    fn page_sail_detected_as_route() {
         assert_eq!(
             detect("/repo/routes/agents/page.sail"),
             CompileMode::Route,
@@ -463,7 +484,7 @@ mod tests {
     /// index.sail is a view even though it could theoretically have a hyphen
     /// (no known case, but the exclusion is correct by spec).
     #[test]
-    fn index_sui_detected_as_route() {
+    fn index_sail_detected_as_route() {
         assert_eq!(
             detect("/repo/.ship/views/component-viewer/index.sail"),
             CompileMode::Route,
@@ -490,7 +511,10 @@ mod tests {
     fn two_pack_fixture() -> tempfile::TempDir {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path();
-        write(&root.join("package.json"), r#"{"workspaces":["packages/*"]}"#);
+        write(
+            &root.join("package.json"),
+            r#"{"workspaces":["packages/*"]}"#,
+        );
         write(
             &root.join("packages/primitives/package.json"),
             r#"{"name":"@ship/sail-primitives"}"#,
@@ -499,7 +523,10 @@ mod tests {
             &root.join("packages/primitives/src/sail-button/sail-button.sail"),
             "<button><slot></slot></button>\n",
         );
-        write(&root.join("packages/agents/package.json"), r#"{"name":"@ship/agents"}"#);
+        write(
+            &root.join("packages/agents/package.json"),
+            r#"{"name":"@ship/agents"}"#,
+        );
         write(
             &root.join("packages/agents/src/ship-agent-card/ship-agent-card.sail"),
             "<article><slot></slot></article>\n",
@@ -517,7 +544,10 @@ mod tests {
         let declared: Vec<String> = vec!["@ship/sail-primitives".into()];
 
         let scoped = component_index(root, &declared);
-        assert!(scoped.index.contains_key("sail-button"), "declared tag resolves");
+        assert!(
+            scoped.index.contains_key("sail-button"),
+            "declared tag resolves"
+        );
         assert!(
             !scoped.index.contains_key("ship-agent-card"),
             "undeclared tag is excluded from the index"
@@ -555,7 +585,10 @@ mod tests {
         // First walk caches the index — sail-button present, sail-late absent.
         let first = component_index(root, &[]);
         assert!(first.index.contains_key("sail-button"));
-        assert!(!first.index.contains_key("sail-late"), "the new tag does not exist yet");
+        assert!(
+            !first.index.contains_key("sail-late"),
+            "the new tag does not exist yet"
+        );
 
         // A component appears mid-session (what an author does under `deck dev`).
         write(
@@ -577,7 +610,10 @@ mod tests {
             fresh.index.contains_key("sail-late"),
             "after invalidation the re-walk picks up the new component"
         );
-        assert!(fresh.index.contains_key("sail-button"), "and keeps the original");
+        assert!(
+            fresh.index.contains_key("sail-button"),
+            "and keeps the original"
+        );
     }
 }
 
@@ -606,10 +642,7 @@ fn component_index_cache() -> &'static Mutex<HashMap<ComponentIndexCacheKey, Res
     COMPONENT_INDEX_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-pub fn component_index(
-    repo_root: &Path,
-    packs: &[String],
-) -> ResolverIndex {
+pub fn component_index(repo_root: &Path, packs: &[String]) -> ResolverIndex {
     let cache = component_index_cache();
     let key: ComponentIndexCacheKey = (repo_root.to_path_buf(), packs.to_vec());
     let mut guard = cache.lock().unwrap_or_else(|e| e.into_inner());

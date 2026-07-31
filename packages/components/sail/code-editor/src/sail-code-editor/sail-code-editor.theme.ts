@@ -23,7 +23,9 @@ export const sailEditorTheme = EditorView.theme({
   '.cm-content': {
     caretColor: 'var(--foreground)',
     fontFamily: 'inherit',
-    padding: '8px 0',
+    // Tight vertical pad — tutorial workbench embeds this flush; large
+    // gutter padding made the file tab look like it floated in empty space.
+    padding: '4px 0',
   },
   '.cm-cursor, .cm-dropCursor': {
     borderLeftColor: 'var(--foreground)',
@@ -40,6 +42,8 @@ export const sailEditorTheme = EditorView.theme({
     color: 'var(--muted-foreground)',
     border: 'none',
     borderRight: '1px solid var(--border)',
+    // Compact so line numbers don't dominate the pane.
+    minWidth: '2.25rem',
   },
   '.cm-activeLineGutter': {
     backgroundColor: 'color-mix(in oklch, var(--muted) 60%, transparent)',

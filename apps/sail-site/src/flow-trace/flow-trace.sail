@@ -77,7 +77,7 @@ export default controller(() => {
       >{departed()} departed</span>
     </row>
     <column gap="1" sx={list}>
-      <for as="r" of={rows()} key={r.id}>
+      <for {rows()} as="r" key={r.id}>
         <row nowrap sx={style.enter({ opacity: 'fade', duration: 600 }).exit({ opacity: 'fade-out', duration: 600 })}>
           <span sx={city}>{r.city}</span>
         </row>

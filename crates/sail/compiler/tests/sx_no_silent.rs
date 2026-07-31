@@ -7,7 +7,7 @@
 //! Utility-string atoms are residual product (also refuse). This suite pins
 //! the Style product fail-closed path for bad tokens.
 
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta, OverrideSeverity};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, OverrideSeverity, compile};
 
 const TYPO_SRC: &str = r#"<scope>
   props: {
@@ -20,7 +20,9 @@ const UTILITY_STRING_SRC: &str = r#"<div sx="p-4 bg-surface-2">x</div>"#;
 
 fn opts(component_name: &str) -> CompileOpts {
     CompileOpts {
-        component_meta: Some(ComponentMeta { name: component_name.into() }),
+        component_meta: Some(ComponentMeta {
+            name: component_name.into(),
+        }),
         mode: CompileMode::Component,
         ..CompileOpts::default()
     }
@@ -32,7 +34,10 @@ fn typo_style_token_is_rejected_under_the_default_tier() {
         .expect_err("a typo'd Style token must be rejected by default");
     let msg = err.message.to_lowercase();
     assert!(
-        msg.contains("surfce") || msg.contains("token") || msg.contains("unknown") || msg.contains("style"),
+        msg.contains("surfce")
+            || msg.contains("token")
+            || msg.contains("unknown")
+            || msg.contains("style"),
         "error must name the bad token: {err:?}"
     );
 }
@@ -50,7 +55,10 @@ fn typo_style_token_is_still_rejected_under_a_softened_policy() {
         ));
         let msg = err.message.to_lowercase();
         assert!(
-            msg.contains("surfce") || msg.contains("token") || msg.contains("unknown") || msg.contains("style"),
+            msg.contains("surfce")
+                || msg.contains("token")
+                || msg.contains("unknown")
+                || msg.contains("style"),
             "even under a softened policy ({severity:?}), the typo must surface: {err:?}"
         );
     }

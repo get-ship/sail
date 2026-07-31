@@ -1,0 +1,34 @@
+{
+  "name": "@ship/studio",
+  "private": true,
+  "type": "module",
+  "description": "Sail Studio — activity rail and editor workspace. Surfaces: Edit · Checks · Design · Tasks.",
+  "exports": {
+    ".": "./src/shell/index.ts",
+    "./shell": "./src/shell/index.ts",
+    "./edit": "./src/edit/index.ts",
+    "./checks": "./src/checks/index.ts",
+    "./design": "./src/design/index.ts",
+    "./tasks": "./src/tasks/index.ts",
+    "./cm/sail-mode": "./src/cm/sail-mode.ts"
+  },
+  "scripts": {
+    "dev": "cd ../.. && cargo run -q -p deck-cli --bin sail -- dev --project apps/studio --addr ${STUDIO_ADDR:-127.0.0.1:7891}",
+    "build": "cd ../.. && cargo run -q -p deck-cli --bin sail -- build --project apps/studio --base assets",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ship/sail-runtime": "workspace:*",
+    "@ship/sail-dom": "workspace:*",
+    "@ship/sail-studio-client": "workspace:*",
+    "@ship/sail-studio-bridge": "workspace:*",
+    "@ship/sail-studio-shell": "workspace:*",
+    "@ship/sail-code-editor": "workspace:*",
+    "@ship/sail-primitives": "workspace:*",
+    "@ship/tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.9.0",
+    "vitest": "^4.1.5"
+  }
+}

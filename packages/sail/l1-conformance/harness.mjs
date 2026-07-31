@@ -1,9 +1,9 @@
 // L1 visual-conformance harness — the ONE reusable render+probe engine.
 //
 // Every L1 element gets a spec (states + probe). The harness renders the state
-// matrix across ALL 7 themes, screenshots it to a TRACKED dir (the audit trail
-// — committed, diffable over time), and runs the spec's probe in-page to ASSERT
-// invariants (the gate: non-zero `bad` fails CI). Replaces the throwaway
+// matrix across EVERY catalog theme, screenshots it to a TRACKED dir (the audit
+// trail — committed, diffable over time), and runs the spec's probe in-page to
+// ASSERT invariants (the gate: non-zero `bad` fails CI). Replaces the throwaway
 // per-component `*-proof.mjs` scripts with one home that leaves a trail.
 //
 // Render method (v1): inject the real framework CSS (tokens/themes/contracts/
@@ -18,6 +18,7 @@ import { readFileSync, mkdirSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { ALL_THEME_IDS, isDarkTheme } from '../tokens/src/qa-themes.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const TOK = resolve(HERE, '../tokens/src')
@@ -25,10 +26,8 @@ const FRAMEWORK_CSS = ['tokens.css', 'themes.css', 'sail-base.css', 'element-ski
   .map((f) => readFileSync(resolve(TOK, f), 'utf8'))
   .join('\n')
 
-// The 7 canonical themes. `.dark` is toggled for the three dark themes so the
-// `.dark`-scoped token overrides resolve (the fidelity bug earlier harnesses hit).
-export const THEMES = ['ship-light', 'ship-dark', 'paper', 'halo', 'console', 'contrast', 'glass']
-const DARK = new Set(['ship-dark', 'console', 'contrast'])
+// Every catalog theme (see @ship/tokens qa-themes). Modes via data-mode.
+export const THEMES = [...ALL_THEME_IDS]
 
 const SHELL_CSS = `
 html,body{margin:0}body{font-family:system-ui}
@@ -61,7 +60,7 @@ export async function closeBrowser() {
 export async function renderSpec(spec, outDir) {
   const rows = spec.rows().map((r) => `<div class="l1-row">${r}</div>`).join('')
   const section = (t) =>
-    `<section data-theme-preview="${t}" class="${DARK.has(t) ? 'dark' : ''}"><div class="l1-theme">${t}</div>${rows}</section>`
+    `<section data-theme-preview="${t}" data-mode="${isDarkTheme(t) ? 'dark' : 'light'}"><div class="l1-theme">${t}</div>${rows}</section>`
   const extra = spec.css ? `\n${spec.css}` : ''
   const html = `<!doctype html><html><head><meta charset="utf8"><style>${FRAMEWORK_CSS}\n${SHELL_CSS}${extra}</style></head><body>${THEMES.map(section).join('')}</body></html>`
 
@@ -129,7 +128,7 @@ export async function behaveSpec(spec) {
     await p.addScriptTag({ content: actionsBundle() })
     await p.evaluate((attach) => {
       for (const [sel, name] of attach) {
-        const fn = globalThis.SuiActions?.[name]
+        const fn = globalThis.SailActions?.[name]
         if (typeof fn !== 'function') throw new Error(`no such use: action → ${name}`)
         for (const el of document.querySelectorAll(sel)) fn(el)
       }

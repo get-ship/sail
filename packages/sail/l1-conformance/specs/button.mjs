@@ -52,8 +52,8 @@ export default {
     // light vs dark, or a token is frozen at one mode's value.
     const mark = (t) =>
       getComputedStyle(document.querySelector(`[data-theme-preview='${t}'] .l1-mark`)).backgroundColor
-    const light = mark('ship-light')
-    const dark = mark('ship-dark')
+    const light = mark('ship')
+    const dark = mark('console')
     if (light === dark)
       bad.push({ why: 'frozen-token', detail: 'neutral bg identical light vs dark', light, dark })
     return { count: document.querySelectorAll('button').length, bad: bad.slice(0, 10) }

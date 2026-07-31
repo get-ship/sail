@@ -12,7 +12,9 @@ fn compile_src(src: &str) -> Result<sail_compiler::CompileOutput, sail_compiler:
         src,
         CompileOpts {
             mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "x-probe".into() }),
+            component_meta: Some(ComponentMeta {
+                name: "x-probe".into(),
+            }),
             ..Default::default()
         },
     )
@@ -26,14 +28,22 @@ fn multibyte_bare_in_scope_is_a_diagnostic_not_a_panic() {
     // block. "end byte index 8 is not a char boundary; it is inside '…'".
     let src = "<scope>\n  …the contract…\n</scope>\n<div>hi</div>";
     let err = compile_src(src).expect_err("prose is not a scope member");
-    assert!(err.message.contains("…"), "names the offending char: {}", err.message);
+    assert!(
+        err.message.contains("…"),
+        "names the offending char: {}",
+        err.message
+    );
 }
 
 #[test]
 fn multibyte_in_props_position_is_a_diagnostic_not_a_panic() {
     let src = "<scope>\n  props: {\n    … label = 'hi'\n  }\n</scope>\n<div>hi</div>";
     let err = compile_src(src).expect_err("… is not a field name");
-    assert!(err.message.contains("…"), "names the offending char: {}", err.message);
+    assert!(
+        err.message.contains("…"),
+        "names the offending char: {}",
+        err.message
+    );
 }
 
 #[test]
@@ -41,7 +51,11 @@ fn multibyte_in_cva_axis_position_is_a_diagnostic_not_a_panic() {
     // Multibyte junk as a props field name must diagnose, not panic.
     let src = "<scope>\n  props: {\n    …: { solid: 'bg' }\n  }\n</scope>\n<div>hi</div>";
     let err = compile_src(src).expect_err("… is not a field name");
-    assert!(err.message.contains("…"), "names the offending char: {}", err.message);
+    assert!(
+        err.message.contains("…"),
+        "names the offending char: {}",
+        err.message
+    );
 }
 
 #[test]
@@ -59,14 +73,20 @@ fn multibyte_in_type_alias_and_string_values_compiles() {
 fn for_marker_in_single_quoted_string_expr_is_text() {
     let src = "<div>{'{#for}'}</div>";
     let out = compile_src(src).expect("a quoted {#for} is string content, not a for-block");
-    assert!(out.js.contains("{#for}"), "the literal text survives to output");
+    assert!(
+        out.js.contains("{#for}"),
+        "the literal text survives to output"
+    );
 }
 
 #[test]
 fn if_marker_in_double_quoted_string_expr_is_text() {
     let src = "<div>{\"{#if}\"}</div>";
     let out = compile_src(src).expect("a quoted {#if} is string content, not an if-block");
-    assert!(out.js.contains("{#if}"), "the literal text survives to output");
+    assert!(
+        out.js.contains("{#if}"),
+        "the literal text survives to output"
+    );
 }
 
 #[test]
@@ -75,6 +95,8 @@ fn brace_close_marker_in_string_expr_does_not_affect_element_if() {
     // not interact with element-form `<if>` / `</if>` structure.
     let src = r#"<div><if cond={true}><span>{'{/if}'}</span></if></div>"#;
     let out = compile_src(src).expect("quoted brace close is inert text");
-    assert!(out.js.contains("{/if}"), "the literal text survives to output");
+    assert!(
+        out.js.contains("{/if}"),
+        "the literal text survives to output"
+    );
 }
-

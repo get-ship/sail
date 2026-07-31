@@ -16,10 +16,7 @@ use crate::report::{Finding, Severity};
 pub const RULE_ID: &str = "sail-participation-style";
 
 /// Style method names that are layout participation, not paint.
-const SETTERS: &[(&str, &str)] = &[
-    ("grow", "grow"),
-    ("shrink", "shrink"),
-];
+const SETTERS: &[(&str, &str)] = &[("grow", "grow"), ("shrink", "shrink")];
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let bytes = source.as_bytes();
@@ -38,8 +35,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         // Mid-chain or leading: `.grow(` / `.shrink(` — the Style product API.
         if bytes[i] == b'.' {
             if let Some(&(method, attr)) = SETTERS.iter().find(|&&(m, _)| {
-                source[i + 1..].starts_with(m)
-                    && bytes.get(i + 1 + m.len()) == Some(&b'(')
+                source[i + 1..].starts_with(m) && bytes.get(i + 1 + m.len()) == Some(&b'(')
             }) {
                 let (line, col) = offset_to_line_col(source, i);
                 findings.push(Finding {

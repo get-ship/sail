@@ -7,16 +7,16 @@
 //! for the directive declarations bundle.
 
 pub mod cem;
-pub mod element;
 pub mod dts;
+pub mod element;
 pub mod expr_rewrite;
 pub mod js;
 pub mod meta;
 pub mod schema;
 pub mod scope_factory;
 pub mod static_html;
-pub mod synthetic;
 pub mod styles;
+pub mod synthetic;
 pub mod template_emit;
 pub mod util;
 pub mod writer;

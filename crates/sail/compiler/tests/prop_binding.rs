@@ -1,7 +1,7 @@
 //! Plain `name={expr}` on custom elements emits `bindDynamic`; on native
 //! IDL props emits `bindProp`. Author `prop:` / `attr:` prefixes are refused.
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn route_opts() -> CompileOpts {
     CompileOpts {
@@ -80,9 +80,95 @@ fn native_non_idl_emits_bind_attr() {
 }
 
 #[test]
+fn dialog_open_emits_bind_open_not_prop() {
+    // Modal open must use showModal via bindOpen — IDL open prop is non-modal.
+    let src = r#"<dialog open={open()}>hi</dialog>"#;
+    let r = compile(src, route_opts()).expect("compile");
+    assert!(
+        r.js.contains("bindOpen(") && !r.js.contains(r#"bindProp(__e0, "open""#),
+        "expected bindOpen for dialog open, got:\n{}",
+        r.js
+    );
+    // Bare `open()` call → signal cell for write-back on native close (not a getter thunk).
+    assert!(
+        r.js.contains("bindOpen(__e0, ($scope.open))") || r.js.contains("bindOpen(__e0, (open))"),
+        "expected signal cell stripped of (), got:\n{}",
+        r.js
+    );
+    assert!(
+        !r.js.contains("bindOpen(__e0, () =>"),
+        "must not wrap open in a getter thunk:\n{}",
+        r.js
+    );
+}
+
+#[test]
+fn details_open_still_bind_prop() {
+    let src = r#"<details open={o()}><summary>x</summary></details>"#;
+    let r = compile(src, route_opts()).expect("compile");
+    assert!(
+        r.js.contains(r#"bindProp(__e0, "open""#),
+        "details open stays IDL prop, got:\n{}",
+        r.js
+    );
+}
+
+#[test]
+fn selected_on_div_is_attr_not_idl_prop() {
+    let src = r#"<div selected={on()}></div>"#;
+    let r = compile(src, route_opts()).expect("compile");
+    assert!(
+        r.js.contains(r#"bindAttr(__e0, "selected""#),
+        "div.selected is not IDL — need attribute for CSS [selected], got:\n{}",
+        r.js
+    );
+    assert!(!r.js.contains(r#"bindProp(__e0, "selected""#));
+}
+
+#[test]
+fn selected_on_option_is_idl_prop() {
+    let src = r#"<option selected={on()}></option>"#;
+    let r = compile(src, route_opts()).expect("compile");
+    assert!(
+        r.js.contains(r#"bindProp(__e0, "selected""#),
+        "option.selected is IDL, got:\n{}",
+        r.js
+    );
+}
+
+#[test]
 fn multiple_ce_fields_each_emit_bind_dynamic() {
     let src = r#"<my-grid rows={rows()} label={title()}></my-grid>"#;
     let r = compile(src, route_opts()).expect("compile");
     let count = r.js.matches("bindDynamic(").count();
-    assert_eq!(count, 2, "expected 2 bindDynamic calls, got {count}\n{}", r.js);
+    assert_eq!(
+        count, 2,
+        "expected 2 bindDynamic calls, got {count}\n{}",
+        r.js
+    );
+}
+
+#[test]
+fn freeform_chip_stamps_prop_defaults() {
+    let src = r#"
+<div>
+  <chip size="sm">x</chip>
+</div>
+"#;
+    let r = compile(src, route_opts()).expect("compile");
+    assert!(
+        r.js.contains(r#"tone="default""#) || r.js.contains(r#"tone=\"default\""#),
+        "expected default tone stamped:\n{}",
+        r.js
+    );
+    assert!(
+        r.js.contains(r#"variant="solid""#) || r.js.contains(r#"variant=\"solid\""#),
+        "expected default variant stamped:\n{}",
+        r.js
+    );
+    assert!(
+        r.js.contains(r#"size="sm""#) || r.js.contains(r#"size=\"sm\""#),
+        "size=sm preserved:\n{}",
+        r.js
+    );
 }

@@ -2530,19 +2530,19 @@
       "path": "component.chip.bg",
       "cssName": "chip",
       "type": "color",
-      "value": "var(--primary)"
+      "value": "var(--muted)"
     },
     "chip-foreground": {
       "path": "component.chip.fg",
       "cssName": "chip-foreground",
       "type": "color",
-      "value": "var(--primary-foreground)"
+      "value": "var(--muted-foreground)"
     },
     "chip-border": {
       "path": "component.chip.border",
       "cssName": "chip-border",
       "type": "color",
-      "value": "var(--primary)"
+      "value": "var(--border)"
     },
     "code-block": {
       "path": "component.code-block.bg",

@@ -13,7 +13,7 @@
 //! at the floor — the same regression shape is what matters, and any
 //! static attribute pins it. The test now exercises `data-static`.)
 
-use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 // `part=` was RETIRED with shadow parts (light DOM has none — anatomy is
 // classes + attributes, and `class` is the published styling hook — and
@@ -21,8 +21,7 @@ use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
 // still real: a static attribute on an element that also carries
 // `bind:this` must survive every emit path — the ref binding must not
 // claim or suppress the element's static attribute slot.
-const REF_WITH_STATIC: &str =
-    r#"<controller>
+const REF_WITH_STATIC: &str = r#"<controller>
 import { controller, signal } from '@ship/sail-runtime'
 export default controller((ctx) => {
   const rowsEl = signal<HTMLElement | null>(null)
@@ -37,7 +36,9 @@ fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOp
         setup_url: setup_url.map(Into::into),
         mode: CompileMode::Component,
         source_path: None,
-        component_meta: Some(ComponentMeta { name: "probe-test".into() }),
+        component_meta: Some(ComponentMeta {
+            name: "probe-test".into(),
+        }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: component_imports,
@@ -56,11 +57,16 @@ fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOp
 fn static_attrs_survive_bind_this_in_component_csr() {
     let out = compile(REF_WITH_STATIC, component_opts(None, false)).expect("compile");
     assert!(
-        out.js.contains(r#"data-static=\"rows\""#) || out.js.contains(r#"setAttribute("data-static", "rows")"#),
+        out.js.contains(r#"data-static=\"rows\""#)
+            || out.js.contains(r#"setAttribute("data-static", "rows")"#),
         "data-static must reach the DOM alongside bind:this — baked into the template or set at runtime:\n{}",
         out.js
     );
-    assert!(out.js.contains("runAction"), "bind:this still wires via an action:\n{}", out.js);
+    assert!(
+        out.js.contains("runAction"),
+        "bind:this still wires via an action:\n{}",
+        out.js
+    );
 }
 
 #[test]
@@ -79,9 +85,14 @@ export default controller((ctx) => {
     let out = compile(src, component_opts(Some("./x.controller.ts"), true)).expect("compile");
     // The static attribute rides alongside bind:this into the DOM.
     assert!(
-        out.js.contains(r#"data-static=\"dag\""#) || out.js.contains(r#"setAttribute("data-static", "dag")"#),
+        out.js.contains(r#"data-static=\"dag\""#)
+            || out.js.contains(r#"setAttribute("data-static", "dag")"#),
         "data-static must survive in production component compile:\n{}",
         out.js
     );
-    assert!(out.js.contains("runAction"), "bind:this still wires via an action:\n{}", out.js);
+    assert!(
+        out.js.contains("runAction"),
+        "bind:this still wires via an action:\n{}",
+        out.js
+    );
 }

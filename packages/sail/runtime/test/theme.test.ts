@@ -1,6 +1,6 @@
 // theme.test.ts — the sanctioned runtime theme-write hatch.
 //
-// Contract (m-deck-standalone/scratch/theme-api-spec.md):
+// Contract:
 //   - preview writes a DECLARED token to `:root`; a non-token key refuses.
 //   - reset drops session previews, keeps committed overrides.
 //   - commit persists (localStorage default + host hook) and applies live.

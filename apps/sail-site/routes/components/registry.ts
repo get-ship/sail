@@ -118,8 +118,8 @@ export const CATALOG: CatalogEntry[] = [
   L('card', 'card', 'display'),
   L('avatar', 'avatar', 'display'),
   L('icon', 'icon', 'display'),
+  // separator IS the themed <hr> (stdlib lowers to native hr). Do not catalog bare `hr`.
   L('separator', 'separator', 'display'),
-  L('hr', 'hrRule', 'display'),
   L('details', 'detailsEl', 'display'),
   L('collapsible', 'collapsible', 'display'),
   L('prose', 'prose', 'display'),
@@ -136,6 +136,7 @@ export const CATALOG: CatalogEntry[] = [
   L('table', 'table', 'data'),
   L('layout', 'layout', 'layout'),
   L('scroll-area', 'scrollArea', 'layout'),
+  L('ticker', 'ticker', 'effects'),
   // Actions (`spotlight`, `targetCursor`, etc.) are stdlib and live in
   // the action table. They are not elements; this catalog is
   // elements only.
@@ -158,12 +159,10 @@ export const CATALOG: CatalogEntry[] = [
   P('media', 'sail-media-av', 'sailMediaAv', 'data'),
 
   // ── @ship/sail-canvas — NOT CATALOGED YET ─────────────────────────────
-  // The pack ships 7 drawing/annotation surfaces (sail-canvas, sail-board,
+  // The pack ships drawing/annotation surfaces (sail-canvas, sail-board,
   // sail-draw, sail-graph-canvas, sail-annotation-*), floor-migrated and
-  // CEM-green — but none has a live demo tile in page.sail, so listing
-  // them made the Canvas filter an empty lie (owner-reported 2026-07-16).
-  // They enter this catalog with the pack-consolidation wave (task #53),
-  // each entry landing together with its tile.
+  // CEM-green — but none has a live demo tile in page.sail, so listing them
+  // would make the Canvas filter empty. Enter the catalog only with a tile.
 
   // ── @ship/sail-chat-elements — chat-message UI primitives ─────────────
   // sail-message-list: pack component without a live tile — same rule as

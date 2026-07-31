@@ -1,6 +1,6 @@
 <column gap="8" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
   <header sx={style.borderBWidth(1).borderB(border).padB(4)}>
-    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)}>sui/viewer</h1>
+    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)}>sail/viewer</h1>
     <p sx={style.fg(muted-foreground).fontSize(sm)}>
       The five viewing primitives: <strong>sail-component-viewer</strong>,
       <strong>sail-prop-knobs</strong>, <strong>sail-prop-matrix</strong>,
@@ -15,7 +15,7 @@
     <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground).fontFamily(mono)}>sail-component-viewer</h2>
     <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
       The composition primitive — one tag a host drops in to get a live,
-      reactive preview of a SUI component (stage + knobs + matrix + source).
+      reactive preview of a Sail component (stage + knobs + matrix + source).
     </p>
     <column gap="4">
       <column gap="2" sx={style.borderWidth(1).border(divider).radius(md).pad(3).bg(surface-2)}>
@@ -110,7 +110,7 @@
   <column gap="4" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
     <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground).fontFamily(mono)}>sail-source-panel</h2>
     <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed)}>
-      Source + paste-able snippet — shows the raw <code>.sui</code> source and
+      Source + paste-able snippet — shows the raw <code>.sail</code> source and
       a recomputed snippet that default-diffs the current prop values. The Copy
       button writes the snippet to the clipboard.
     </p>

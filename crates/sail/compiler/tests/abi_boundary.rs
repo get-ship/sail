@@ -2,7 +2,7 @@
 //! HUMANS import from `@ship/sail-runtime`.
 //!
 //! The runtime's front door used to advertise ~80 symbols — `bindFor`, `bindIf`,
-//! `attachRef`, `runAction`, `applyPatch`, `__sui_motion_attach` — sitting in the
+//! `attachRef`, `runAction`, `applyPatch`, `__sail_motion_attach` — sitting in the
 //! same export as `signal` and `effect`. No human types those; the emitter writes
 //! them. But an agent reading that index cannot tell the language from the
 //! plumbing, and the language is about ten symbols, not eighty.
@@ -10,7 +10,7 @@
 //! Nothing enforced the split, so these pin it. Without them the boundary is a
 //! convention, and a convention that no test asserts is a comment.
 
-use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 const ABI: &str = "@ship/sail-runtime/internal";
 const AUTHOR: &str = "@ship/sail-runtime";
@@ -26,7 +26,9 @@ fn opts() -> CompileOpts {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,
-        component_meta: Some(ComponentMeta { name: "abi-probe".into() }),
+        component_meta: Some(ComponentMeta {
+            name: "abi-probe".into(),
+        }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
@@ -74,8 +76,12 @@ fn root_barrel_does_not_export_abi_plumbing() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let index = root.join("packages/sail/runtime/src/index.ts");
     let internal = root.join("packages/sail/runtime/src/internal.ts");
-    let Ok(index_src) = std::fs::read_to_string(&index) else { return };
-    let Ok(internal_src) = std::fs::read_to_string(&internal) else { return };
+    let Ok(index_src) = std::fs::read_to_string(&index) else {
+        return;
+    };
+    let Ok(internal_src) = std::fs::read_to_string(&internal) else {
+        return;
+    };
 
     // Must be more than a lone `export * from './index'` — curated ABI blocks
     // must follow the language re-export.
@@ -97,7 +103,7 @@ fn root_barrel_does_not_export_abi_plumbing() {
         "bindText",
         "runAction",
         "__tpl",
-        "__sui_motion_attach",
+        "__sail_motion_attach",
         "delegateEvents",
         "mountComponent",
         "markHydrateText",
@@ -119,7 +125,7 @@ fn root_barrel_does_not_export_abi_plumbing() {
         "bindText",
         "runAction",
         "__tpl",
-        "__sui_motion_attach",
+        "__sail_motion_attach",
         "delegateEvents",
         "mountComponent",
         "wireFormMutation",
@@ -164,7 +170,8 @@ fn root_barrel_does_not_export_abi_plumbing() {
 fn sibling_subpaths_are_not_rewritten_into_the_abi_path() {
     let out = compile(SRC, opts()).expect("compile");
     assert!(
-        !out.js.contains("@ship/sail-runtime/internal/template-hooks"),
+        !out.js
+            .contains("@ship/sail-runtime/internal/template-hooks"),
         "the ABI rewrite corrupted a sibling subpath:\n{}",
         out.js
     );
@@ -188,10 +195,12 @@ fn sibling_subpaths_are_not_rewritten_into_the_abi_path() {
 /// the runtime barrel is checked against the public subset here.
 #[test]
 fn action_table_is_exported_by_the_runtime() {
-    use sail_compiler::action_manifest::{is_public_action, ACTIONS, PUBLIC_ACTION_COUNT};
+    use sail_compiler::action_manifest::{ACTIONS, PUBLIC_ACTION_COUNT, is_public_action};
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let index = root.join("packages/sail/runtime/src/index.ts");
-    let Ok(src) = std::fs::read_to_string(&index) else { return };
+    let Ok(src) = std::fs::read_to_string(&index) else {
+        return;
+    };
 
     assert_eq!(PUBLIC_ACTION_COUNT, 12);
 
@@ -227,12 +236,16 @@ fn action_table_is_exported_by_the_runtime() {
 ///   `export { … } from './actions'` block
 #[test]
 fn action_table_has_no_phantom_consumers() {
-    use sail_compiler::action_manifest::{is_public_action, ACTIONS, PUBLIC_ACTION_COUNT};
+    use sail_compiler::action_manifest::{ACTIONS, PUBLIC_ACTION_COUNT, is_public_action};
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let runtime_actions_barrel = root.join("packages/sail/runtime/src/actions/index.ts");
     let runtime_top_barrel = root.join("packages/sail/runtime/src/index.ts");
-    let Ok(actions_src) = std::fs::read_to_string(&runtime_actions_barrel) else { return };
-    let Ok(top_src) = std::fs::read_to_string(&runtime_top_barrel) else { return };
+    let Ok(actions_src) = std::fs::read_to_string(&runtime_actions_barrel) else {
+        return;
+    };
+    let Ok(top_src) = std::fs::read_to_string(&runtime_top_barrel) else {
+        return;
+    };
 
     assert_eq!(PUBLIC_ACTION_COUNT, 12);
 
@@ -290,7 +303,7 @@ fn action_table_has_no_phantom_consumers() {
 #[test]
 fn public_action_surface_is_curated() {
     use sail_compiler::action_manifest::{
-        is_public_action, public_actions, ACTIONS, PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES,
+        ACTIONS, PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES, is_public_action, public_actions,
     };
 
     assert_eq!(PUBLIC_ACTION_COUNT, 12);

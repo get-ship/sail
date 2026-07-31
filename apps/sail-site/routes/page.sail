@@ -17,7 +17,7 @@
 
   Everything is tokens + L1 primitives + motion — no <style>, no style=, no raw
   px/hex. The shell renders `/` full-bleed (fullscreen, no rail, no gutter) and
-  defaults it to ship-dark.
+  defaults it to ship (dark mode).
 -->
 
 <controller>
@@ -44,9 +44,23 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       return () => clearInterval(t)
     })
 
+    // grid cols is not responsive in the language — swap 1 vs 3 tracks via matchMedia.
+    const isWide = signal(
+      typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches,
+    )
+    mount(() => {
+      if (typeof window === 'undefined') return
+      const mq = window.matchMedia('(min-width: 768px)')
+      const onChange = (): void => isWide.set(mq.matches)
+      onChange()
+      mq.addEventListener('change', onChange)
+      return () => mq.removeEventListener('change', onChange)
+    })
+
     return {
       word: () => [WORDS[i()]],
       ticks,
+      isWide,
     }
 })
 </controller>
@@ -55,7 +69,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   // minW(0) + overflowX clip on the page root — diagonal tickers use
   // left/right negative inset; without a hard clip the document grows sideways.
   const page = style.w(full).maxW(full).minW(0).overflowX(hidden).overflowY(visible).bg(surface-0)
-  const hero = style.position(relative).padX(8).padT(20).padB(16).minW(0).overflowX(hidden)
+  const hero = style.position(relative).padX(4).padT(12).padB(10).minW(0).overflowX(hidden).when({
+    tablet: style.padX(8).padT(20).padB(16),
+  })
   const glow = style.bgGlow(accent).left(0).right(0).top(0).h(64).z(base)
   const heroInner = style.position(relative).w(full).maxW(breakpoint-desktop).mx(auto).minW(0)
   const eyebrow = style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)
@@ -72,29 +88,29 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   const tickerBandTop = style.position(absolute).left(-10).right(-10).top(12).rotate(-2).z(popover)
   const tickerPrimary = style.bg(primary).padY(3).overflow(hidden)
   const tickerBold = style.fontWeight(bold).textCase(uppercase).tracking(wide).fontSize(md).fg(primary-foreground).whitespace(nowrap)
-  const bento = style.padX(8).padT(8).padB(12).minW(0).overflowX(hidden)
+  const bento = style.padX(4).padT(6).padB(10).minW(0).overflowX(hidden).when({
+    tablet: style.padX(8).padT(8).padB(12),
+  })
   const grid = style.w(full).maxW(breakpoint-desktop).mx(auto).minW(0)
-  const cardLink = style.display(block).underline(none).minW(0)
-  const cardFill = style.h(full).overflow(hidden)
-  const cardCol = style.h(full)
-  const cardTitle = style.fontSize(lg).fg(foreground).leading(snug)
-  const bars = style.h(16).mt(auto)
-  const bar = style.w(4).radius(sm).bg(primary)
-  const swatchRow = style.mt(auto)
-  const swatch = style.w(10).h(10).radius(md)
-  const counterRow = style.mt(auto)
-  const counter = style.fontFamily(mono).fontSize(display).fg(primary).nums(tabular).leading(none)
-  const live = style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
-  const deckStatus = style.mt(auto).fontFamily(mono).fontSize(xs).fg(muted-foreground)
-  const cardRel = style.h(full).overflow(hidden).position(relative)
-  const packBadge = style.position(absolute).bottom(4).right(4).fontFamily(mono).fontSize(xs).fg(muted-foreground)
-  const aiCard = style.h(full).overflow(hidden).bg(muted).borderWidth(1).border(primary)
-  const term = style.mt(auto).fontFamily(mono).fontSize(sm).bg(surface-0).borderWidth(1).border(border).radius(lg).padX(4).padY(3)
-  const cursor = style.display(inline-block).w(1).h(4).bg(primary)
-  const foot = style.padX(8).padT(12)
-  const footRow = style.w(full).maxW(breakpoint-desktop).mx(auto).padB(6).borderBWidth(1).borderB(border).fontFamily(mono).fontSize(sm).fg(muted-foreground)
-  const footLink = style.fg(muted-foreground).when({ hover: style.fg(primary) })
-  const diamond = style.display(inline-block).w(3).h(3).rotate(45).bg(primary).radius(sm)
+  const cardLink = style.display(block).underline(none).minW(0).w(full).fg(foreground).when({ hover: style.fg(foreground) })
+  // Equal-height bento cells — quiet surface, real pad. minH only from tablet up
+  // so phone cards don't become full-viewport towers.
+  const cardFill = style.h(full).overflow(hidden).when({ tablet: style.minH(52) })
+  const cardCol = style.h(full).pad(4).when({ tablet: style.pad(5) })
+  const cardEyebrow = style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)
+  const cardTitle = style.fontSize(md).fontWeight(semibold).fg(foreground).leading(snug).mt(1)
+  const cardBody = style.fontSize(sm).fg(muted-foreground).leading(relaxed).mt(2)
+  const cardFoot = style.mt(auto).padT(5)
+  const metric = style.fontFamily(mono).fontSize(2xl).fontWeight(semibold).fg(foreground).nums(tabular).leading(none)
+  const metricUnit = style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+  const swatch = style.w(6).h(6).radius(sm).borderWidth(1).border(border)
+  const statusLine = style.fontFamily(mono).fontSize(xs).fg(muted-foreground)
+  const term = style.fontFamily(mono).fontSize(xs).bg(surface-0).borderWidth(1).border(border).radius(md).padX(3).padY(2_5).fg(muted-foreground)
+  const termAccent = style.fg(primary)
+  const foot = style.padX(4).padT(8).when({ tablet: style.padX(8).padT(12) })
+  const footRow = style.w(full).maxW(breakpoint-desktop).mx(auto).padB(6).borderBWidth(1).borderB(border).fontFamily(mono).fontSize(sm).fg(muted-foreground).gap(3)
+  const footLink = style.fg(muted-foreground).underline(none).when({ hover: style.fg(primary) })
+  const diamond = style.display(inline-block).w(2).h(2).rotate(45).bg(primary).radius(sm)
   const wordmarkWrap = style.w(full).maxW(full).minW(0).overflow(hidden)
   const wordmark = style.fontSize(display).fontFamily(display).fontWeight(bold).tracking(tighter).leading(none).textAlign(center).textGradient(primary).select(none).mb(-8).minW(0).maxW(full)
 </scope>
@@ -109,8 +125,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
       <h1 sx={display}>
         <span sx={line}>
-          <for as="w" of={word()} key={w}>
-            <b sx={style.fg(primary).enter({ opacity: 'fade' })}>{w}</b>
+          <for {word()} as="w" key={w}>
+            <b sx={style.fg(primary)}>{w}</b>
           </for>
         </span>
         <span sx={line}>included.</span>
@@ -123,8 +139,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </p>
 
       <row gap="4" justify="center" align="center" sx={ctaRow}>
-        <a variant="solid" tone="primary" href="/sail/getting-started" sx={cta.press({ scale: 'press' })}>Get started</a>
-        <a variant="outline" href="/sail/why" sx={cta.press({ scale: 'press' })}>Why Sail</a>
+        <a variant="solid" tone="primary" href="/sail/getting-started" sx={cta}>Get started</a>
+        <a variant="outline" href="/sail/why" sx={cta}>Why Sail</a>
       </row>
     </column>
   </section>
@@ -143,119 +159,202 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </section>
 
   <section sx={bento}>
-    <grid cols="3" gap="4" sx={grid}>
-
-      <a href="/sail/language/animation" sx={cardLink}>
-        <card interactive sx={cardFill}>
-          <column gap="4" sx={cardCol}>
-            <column gap="1">
-              <p sx={eyebrow}>Animation</p>
-              <strong sx={cardTitle}>Real physics. Zero choreography code.</strong>
-            </column>
-            <row gap="2" align="end" sx={bars} data-testid="landing-motion-bars">
-              <div data-testid="landing-motion-bar" sx={[bar, style.h(8).loop({ translate-y: 'spring:bouncy' })]}></div>
-              <div sx={[bar, style.h(14).opacity(60).loop({ translate-y: 'spring:gentle', stagger: '0.12s' })]}></div>
-              <div sx={[bar, style.h(11).loop({ translate-y: 'spring:bouncy', stagger: '0.12s' })]}></div>
-              <div sx={[bar, style.h(16).opacity(60).loop({ translate-y: 'spring:gentle', stagger: '0.12s' })]}></div>
-              <div sx={[bar, style.h(10).loop({ translate-y: 'spring:bouncy', stagger: '0.12s' })]}></div>
-            </row>
-          </column>
-        </card>
-      </a>
-
-      <a href="/sail/language/theming" sx={cardLink}>
-        <card interactive sx={cardFill}>
-          <column gap="4" sx={cardCol}>
-            <column gap="1">
-              <p sx={eyebrow}>Theming</p>
-              <strong sx={cardTitle}>Press a button. The whole site repaints.</strong>
-            </column>
-            <row gap="2" sx={swatchRow}>
-              <div sx={[swatch, style.bg(primary).loop({ scale: 'pulse' })]}></div>
-              <div sx={[swatch, style.bg(success).loop({ scale: 'pulse', stagger: '0.15s' })]}></div>
-              <div sx={[swatch, style.bg(warning).loop({ scale: 'pulse', stagger: '0.15s' })]}></div>
-              <div sx={[swatch, style.bg(info).loop({ scale: 'pulse', stagger: '0.15s' })]}></div>
-            </row>
-          </column>
-        </card>
-      </a>
-
-      <a href="/sail/language/state" sx={cardLink}>
-        <card interactive sx={cardFill}>
-          <column gap="4" sx={cardCol}>
-            <column gap="1">
-              <p sx={eyebrow}>Reactivity</p>
-              <strong sx={cardTitle}>State you can watch think.</strong>
-            </column>
-            <row gap="3" align="baseline" sx={counterRow}>
-              <strong sx={counter}>{ticks()}</strong>
-              <span sx={live}>signal · live</span>
-            </row>
-          </column>
-        </card>
-      </a>
-
-      <a href="/deck" sx={cardLink}>
-        <card interactive sx={cardFill}>
-          <column gap="4" sx={cardCol}>
-            <column gap="1">
-              <p sx={eyebrow}>Deck</p>
-              <strong sx={cardTitle}>The app layer is already wired.</strong>
-            </column>
-            <column gap="2" sx={deckStatus}>
-              <row gap="2" align="center"><span dot tone="primary" size="sm" pulse></span><span>build 214</span></row>
-              <row gap="2" align="center"><span dot tone="success" size="sm" pulse></span><span>deployed</span></row>
-              <row gap="2" align="center"><span dot tone="info" size="sm" pulse></span><span>live · ssr</span></row>
-            </column>
-          </column>
-        </card>
-      </a>
-
-      <a href="/components" sx={cardLink}>
-        <card interactive sx={cardRel}>
-          <column gap="4" sx={cardCol}>
-            <column gap="1">
-              <p sx={eyebrow}>Components</p>
-              <strong sx={cardTitle}>The hard parts are already correct.</strong>
-            </column>
-            <row gap="3" align="center" sx={swatchRow}>
-              <switch checked tone="primary"></switch>
-              <spinner></spinner>
-              <badge tone="success">live</badge>
-              <chip>chip</chip>
-            </row>
-          </column>
-          <span sx={packBadge}>48 + packs</span>
-        </card>
-      </a>
-
-      <a href="/ai" sx={cardLink}>
-        <card interactive sx={aiCard}>
-          <column gap="4" sx={cardCol}>
-            <column gap="1">
-              <p sx={eyebrow}>AI</p>
-              <strong sx={cardTitle}>Agents can't break what the language won't allow.</strong>
-            </column>
-            <column gap="1" sx={term}>
-              <row gap="2" align="center"><span sx={style.fg(muted-foreground)}>$</span><span sx={style.fg(foreground)}>agent → sail compile</span></row>
-              <row gap="1" align="center">
-                <span sx={style.fg(primary)}>✓ 0 errors · themed · a11y</span>
-                <span sx={cursor.loop({ scale: 'pulse' })}></span>
+    <!--
+      <grid cols> is not breakpoint-aware. Duplicate the six cards only to
+      swap track count — language gap, not content gap.
+    -->
+    <if {isWide()}>
+      <grid cols="3" gap="4" sx={grid}>
+        <a href="/sail/language/animation" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>Animation</p>
+              <strong sx={cardTitle}>Motion as a language surface</strong>
+              <p sx={cardBody}>Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
+              <row gap="1" align="end" sx={cardFoot} data-testid="landing-motion-bars">
+                <div data-testid="landing-motion-bar" sx={style.w(1_5).h(6).radius(sm).bg(primary).opacity(40)}></div>
+                <div sx={style.w(1_5).h(10).radius(sm).bg(primary).opacity(60)}></div>
+                <div sx={style.w(1_5).h(8).radius(sm).bg(primary).opacity(70)}></div>
+                <div sx={style.w(1_5).h(14).radius(sm).bg(primary)}></div>
+                <div sx={style.w(1_5).h(9).radius(sm).bg(primary).opacity(60)}></div>
+                <div sx={style.w(1_5).h(11).radius(sm).bg(primary).opacity(40)}></div>
               </row>
             </column>
-          </column>
-        </card>
-      </a>
-
-    </grid>
+          </card>
+        </a>
+        <a href="/sail/language/theming" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>Theming</p>
+              <strong sx={cardTitle}>Nine themes. One token graph.</strong>
+              <p sx={cardBody}>Swap data-theme and every surface, ink, and control re-resolves.</p>
+              <row gap="2" sx={cardFoot}>
+                <div sx={[swatch, style.bg(primary)]}></div>
+                <div sx={[swatch, style.bg(accent)]}></div>
+                <div sx={[swatch, style.bg(success)]}></div>
+                <div sx={[swatch, style.bg(warning)]}></div>
+                <div sx={[swatch, style.bg(info)]}></div>
+                <div sx={[swatch, style.bg(muted)]}></div>
+              </row>
+            </column>
+          </card>
+        </a>
+        <a href="/sail/language/state" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>Reactivity</p>
+              <strong sx={cardTitle}>Signals you can inspect</strong>
+              <p sx={cardBody}>Derived state and effects are first-class — no store glue layer.</p>
+              <row gap="3" align="baseline" sx={cardFoot}>
+                <strong sx={metric}>{ticks()}</strong>
+                <span sx={metricUnit}>ticks · live signal</span>
+              </row>
+            </column>
+          </card>
+        </a>
+        <a href="/deck" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>Deck</p>
+              <strong sx={cardTitle}>SSR, routes, and HMR</strong>
+              <p sx={cardBody}>The app host is already wired — layouts, data, and hot reload included.</p>
+              <column gap="2" sx={cardFoot}>
+                <row gap="2" align="center"><span dot tone="success"></span><span sx={statusLine}>ssr · streaming</span></row>
+                <row gap="2" align="center"><span dot tone="primary"></span><span sx={statusLine}>file-based routes</span></row>
+                <row gap="2" align="center"><span dot tone="info"></span><span sx={statusLine}>hmr · sub-second</span></row>
+              </column>
+            </column>
+          </card>
+        </a>
+        <a href="/components" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>Components</p>
+              <strong sx={cardTitle}>48 primitives, plus packs</strong>
+              <p sx={cardBody}>Forms, overlays, and feedback — themed and accessible by construction.</p>
+              <row gap="2" align="center" sx={cardFoot}>
+                <badge tone="primary" size="sm">48 L1</badge>
+                <badge tone="muted" size="sm" variant="soft">charts</badge>
+                <badge tone="muted" size="sm" variant="soft">chat</badge>
+                <badge tone="muted" size="sm" variant="soft">editor</badge>
+              </row>
+            </column>
+          </card>
+        </a>
+        <a href="/ai" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>AI</p>
+              <strong sx={cardTitle}>Agents stay inside the language</strong>
+              <p sx={cardBody}>The compiler refuses invalid UI — so generated markup cannot drift the system.</p>
+              <div sx={[term, cardFoot]}>
+                <p><span sx={termAccent}>$</span> sail check app/</p>
+                <p>ok · 0 refusals · 214 modules</p>
+              </div>
+            </column>
+          </card>
+        </a>
+      </grid>
+    <else>
+      <grid cols="1" gap="3" sx={grid}>
+        <a href="/sail/language/animation" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>Animation</p>
+              <strong sx={cardTitle}>Motion as a language surface</strong>
+              <p sx={cardBody}>Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
+              <row gap="1" align="end" sx={cardFoot} data-testid="landing-motion-bars">
+                <div data-testid="landing-motion-bar" sx={style.w(1_5).h(6).radius(sm).bg(primary).opacity(40)}></div>
+                <div sx={style.w(1_5).h(10).radius(sm).bg(primary).opacity(60)}></div>
+                <div sx={style.w(1_5).h(8).radius(sm).bg(primary).opacity(70)}></div>
+                <div sx={style.w(1_5).h(14).radius(sm).bg(primary)}></div>
+                <div sx={style.w(1_5).h(9).radius(sm).bg(primary).opacity(60)}></div>
+                <div sx={style.w(1_5).h(11).radius(sm).bg(primary).opacity(40)}></div>
+              </row>
+            </column>
+          </card>
+        </a>
+        <a href="/sail/language/theming" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>Theming</p>
+              <strong sx={cardTitle}>Nine themes. One token graph.</strong>
+              <p sx={cardBody}>Swap data-theme and every surface, ink, and control re-resolves.</p>
+              <row gap="2" sx={cardFoot}>
+                <div sx={[swatch, style.bg(primary)]}></div>
+                <div sx={[swatch, style.bg(accent)]}></div>
+                <div sx={[swatch, style.bg(success)]}></div>
+                <div sx={[swatch, style.bg(warning)]}></div>
+                <div sx={[swatch, style.bg(info)]}></div>
+                <div sx={[swatch, style.bg(muted)]}></div>
+              </row>
+            </column>
+          </card>
+        </a>
+        <a href="/sail/language/state" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>Reactivity</p>
+              <strong sx={cardTitle}>Signals you can inspect</strong>
+              <p sx={cardBody}>Derived state and effects are first-class — no store glue layer.</p>
+              <row gap="3" align="baseline" sx={cardFoot}>
+                <strong sx={metric}>{ticks()}</strong>
+                <span sx={metricUnit}>ticks · live signal</span>
+              </row>
+            </column>
+          </card>
+        </a>
+        <a href="/deck" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>Deck</p>
+              <strong sx={cardTitle}>SSR, routes, and HMR</strong>
+              <p sx={cardBody}>The app host is already wired — layouts, data, and hot reload included.</p>
+              <column gap="2" sx={cardFoot}>
+                <row gap="2" align="center"><span dot tone="success"></span><span sx={statusLine}>ssr · streaming</span></row>
+                <row gap="2" align="center"><span dot tone="primary"></span><span sx={statusLine}>file-based routes</span></row>
+                <row gap="2" align="center"><span dot tone="info"></span><span sx={statusLine}>hmr · sub-second</span></row>
+              </column>
+            </column>
+          </card>
+        </a>
+        <a href="/components" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>Components</p>
+              <strong sx={cardTitle}>48 primitives, plus packs</strong>
+              <p sx={cardBody}>Forms, overlays, and feedback — themed and accessible by construction.</p>
+              <row gap="2" align="center" sx={cardFoot}>
+                <badge tone="primary" size="sm">48 L1</badge>
+                <badge tone="muted" size="sm" variant="soft">charts</badge>
+                <badge tone="muted" size="sm" variant="soft">chat</badge>
+                <badge tone="muted" size="sm" variant="soft">editor</badge>
+              </row>
+            </column>
+          </card>
+        </a>
+        <a href="/ai" sx={cardLink}>
+          <card interactive sx={cardFill}>
+            <column gap="0" sx={cardCol}>
+              <p sx={cardEyebrow}>AI</p>
+              <strong sx={cardTitle}>Agents stay inside the language</strong>
+              <p sx={cardBody}>The compiler refuses invalid UI — so generated markup cannot drift the system.</p>
+              <div sx={[term, cardFoot]}>
+                <p><span sx={termAccent}>$</span> sail check app/</p>
+                <p>ok · 0 refusals · 214 modules</p>
+              </div>
+            </column>
+          </card>
+        </a>
+      </grid>
+    </else></if>
   </section>
 
   <section sx={foot}>
     <row justify="between" align="center" sx={footRow}>
       <row gap="6" align="center">
         <a href="/sail/overview" sx={footLink}>Docs</a>
-        <a href="https://github.com" sx={footLink}>GitHub</a>
-        <a href="https://discord.com" sx={footLink}>Discord</a>
+        <a href="https://github.com/get-ship/sail" sx={footLink}>GitHub</a>
       </row>
       <row gap="3" align="center">
         <span sx={diamond}></span>
@@ -265,6 +364,6 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </section>
 
   <div sx={wordmarkWrap}>
-    <p sx={wordmark.scroll({ scale: 'spring:deliberate' })}>SHIP</p>
+    <p sx={wordmark}>SHIP</p>
   </div>
 </column>

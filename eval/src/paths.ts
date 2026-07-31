@@ -18,6 +18,11 @@ export function tasksDir(): string {
   return join(evalRoot(), 'tasks')
 }
 
+/** Context-profile arms (EVAL-1): eval/arms/<name>/arm.jsonc */
+export function armsDir(): string {
+  return join(evalRoot(), 'arms')
+}
+
 export function runsDir(): string {
   return join(evalRoot(), 'runs')
 }

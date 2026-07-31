@@ -65,6 +65,20 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const onVariantChange = (e: CustomEvent<{ variant: string }>): void =>
       variant.set(e.detail?.variant ?? '')
 
+    // Pack media: `src` is a JS identity property (not a reflect attr).
+    // Real Unsplash photo — deck CSP must allow https: for img-src.
+    const DEMO_PHOTO =
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&h=640&fit=crop&auto=format&q=80'
+    effect(() => {
+      void tag()
+      requestAnimationFrame(() => {
+        document.querySelectorAll('sail-media-image').forEach((el) => {
+          const host = el as HTMLElement & { src?: string }
+          if (host.src !== DEMO_PHOTO) host.src = DEMO_PHOTO
+        })
+      })
+    })
+
     const variants = () => entry()?.variants ?? []
     const hasVariants = derived(() => (entry()?.variants.length ?? 0) > 0)
     const variantAttr = () => entry()?.variantAttr ?? ''
@@ -123,7 +137,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       'sail-bar-chart':   [{ name: 'data',   type: 'string (CSV)', desc: 'Bar values, e.g. "2,5,3,8,4".' }, { name: 'labels', type: 'string (CSV)', desc: 'Bar labels.' }],
       'sail-donut':       [{ name: 'data',   type: 'string (JSON)', desc: '[{label,value,tone?}] segments.' }, { name: 'diameter', type: 'number', desc: 'Outer diameter in px.' }],
       'sail-gauge':       [{ name: 'value',  type: 'number', desc: 'Indicator position (0..max).' }, { name: 'diameter', type: 'number', desc: 'Outer diameter in px.' }],
-      'sail-heatmap':     [{ name: 'rows',  type: 'number', desc: 'Cell rows.' }, { name: 'cols', type: 'number', desc: 'Cell columns.' }, { name: 'values', type: 'string (CSV)', desc: 'Row-major cell values.' }],
+      'sail-heatmap':     [{ name: 'rows',  type: 'count or labels', desc: 'Row count ("4") or comma labels.' }, { name: 'cols', type: 'count or labels', desc: 'Column count or comma labels.' }, { name: 'values', type: 'string (CSV)', desc: 'Row-major cell values (alias of data).' }, { name: 'data', type: 'string', desc: 'Same as values; 1D CSV or 2D JSON.' }],
       'sail-line-chart':  [{ name: 'series', type: 'string (JSON)', desc: '[{name, data, tone?}].' }, { name: 'labels', type: 'string (CSV)', desc: 'X-axis labels.' }],
       'sail-media-image': [{ name: 'src',   type: 'string', desc: 'Image URL.' }, { name: 'alt',  type: 'string', desc: 'Alt text.' }],
       'sail-media-av':    [{ name: 'src',   type: 'string', desc: 'Audio/video URL.' }, { name: 'mime', type: 'string', desc: 'Override mime type.' }],
@@ -184,7 +198,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 </controller>
 
 <column sx={style.maxW(breakpoint-tablet).mx(auto)} gap="4">
-  <if cond={showViewer()}>
+  <if {showViewer()}>
     <breadcrumb>
       <a href="/components">components</a>
       <small>{tag()}</small>
@@ -209,7 +223,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
     >
       <column slot="stage" gap="4" align="center">
             <!-- ══ Inputs ══════════════════════════════════════════════ -->
-            <if cond={stage.button()}>
+            <if {stage.button()}>
               <column gap="3" align="center">
                 <button variant={variant()} tone="primary" size="lg" on:click={press} sx={style.press({ scale: 'press' })}>
                   Save changes
@@ -217,19 +231,19 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>press fired ×{presses()}</p>
               </column>
             </if>
-            <if cond={stage.input()}>
+            <if {stage.input()}>
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <input placeholder="Ada Lovelace" bind:value={name} />
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>hello, {name() || 'stranger'}</p>
               </column>
             </if>
-            <if cond={stage.textarea()}>
+            <if {stage.textarea()}>
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <textarea placeholder="Tell us about yourself" bind:value={bio}></textarea>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{bio().length} characters</p>
               </column>
             </if>
-            <if cond={stage.select()}>
+            <if {stage.select()}>
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <select bind:value={team}>
                   <option>Engineering</option>
@@ -239,7 +253,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>team: {team()}</p>
               </column>
             </if>
-            <if cond={stage.combobox()}>
+            <if {stage.combobox()}>
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <combobox placeholder="Pick a framework — type to filter" on:sail-combobox-select={(e) => pickFw(e)}>
                   <option value="sail">Sail</option>
@@ -252,39 +266,39 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>picked: {fw() || 'nothing yet'}</p>
               </column>
             </if>
-            <if cond={stage.checkbox()}>
+            <if {stage.checkbox()}>
               <column gap="3" align="center">
                 <label><input type="checkbox" bind:checked={agreed} /> I agree to the terms</label>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{agreed() ? 'thank you' : 'the platform checkbox, skinned'}</p>
               </column>
             </if>
-            <if cond={stage.radioGroup()}>
+            <if {stage.radioGroup()}>
               <radio-group label="Billing period">
                 <label><input type="radio" name="stage-plan" checked /> Monthly</label>
                 <label><input type="radio" name="stage-plan" /> Yearly</label>
               </radio-group>
             </if>
-            <if cond={stage.switchToggle()}>
+            <if {stage.switchToggle()}>
               <row gap="3" align="center">
                 <switch bind:checked={notify} size={variant()} tone="primary"></switch>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{notify() ? 'on' : 'off'} · size {variant()}</p>
               </row>
             </if>
-            <if cond={stage.slider()}>
+            <if {stage.slider()}>
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <slider bind:value={load} min="0" max="100" tone={variant()}></slider>
                 <progress value={load()} max="100"></progress>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>one signal, two components — {load()}%</p>
               </column>
             </if>
-            <if cond={stage.toggleGroup()}>
+            <if {stage.toggleGroup()}>
               <toggle-group variant={variant()}>
                 <toggle value="left">Left</toggle>
                 <toggle value="center">Center</toggle>
                 <toggle value="right">Right</toggle>
               </toggle-group>
             </if>
-            <if cond={stage.field()}>
+            <if {stage.field()}>
               <column gap="4" w="full" max-w="panel-max-w-sm">
                 <field>
                   <label for="stage-name">Name</label>
@@ -296,13 +310,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 </field>
               </column>
             </if>
-            <if cond={stage.label()}>
+            <if {stage.label()}>
               <column gap="1" w="full" max-w="panel-max-w-sm">
                 <label for="stage-email" required size={variant()}>Email</label>
                 <input id="stage-email" placeholder="ada@lovelace.dev" />
               </column>
             </if>
-            <if cond={stage.fieldset()}>
+            <if {stage.fieldset()}>
               <fieldset w="full" max-w="panel-max-w-sm">
                 <legend>Account details</legend>
                 <column gap="2">
@@ -311,30 +325,37 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 </column>
               </fieldset>
             </if>
-            <if cond={stage.dropzone()}>
+            <if {stage.dropzone()}>
               <card dropzone sx={style.pad(6).w(full).maxW(panel-max-w-sm)}>Drop a file, or click to browse</card>
             </if>
-            <if cond={stage.themePicker()}>
-              <column gap="3" align="center">
-                <theme-picker></theme-picker>
+            <if {stage.themePicker()}>
+              <column gap="4" align="center">
+                <column gap="1" align="center">
+                  <span sx={style.fontSize(xs).fg(muted-foreground)}>Full catalog</span>
+                  <theme-picker></theme-picker>
+                </column>
+                <column gap="1" align="center">
+                  <span sx={style.fontSize(xs).fg(muted-foreground)}>Mode only</span>
+                  <theme-picker mode-only></theme-picker>
+                </column>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>themes this whole site, no reload</p>
               </column>
             </if>
 
             <!-- ══ Feedback ════════════════════════════════════════════ -->
-            <if cond={stage.alert()}>
+            <if {stage.alert()}>
               <alert tone={variant()} w="full">
                 <strong>Heads up.</strong> The tone chips above restyle me — colour and icon both.
               </alert>
             </if>
-            <if cond={stage.progressBar()}>
+            <if {stage.progressBar()}>
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <slider bind:value={load} min="0" max="100" tone="primary"></slider>
                 <progress value={load()} max="100"></progress>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>one signal drives both — {load()}%</p>
               </column>
             </if>
-            <if cond={stage.meter()}>
+            <if {stage.meter()}>
               <!-- Fixed width: meter has no intrinsic width, and a percentage
                    can't resolve inside the content-sized <center> stage. -->
               <column gap="2" sx={style.w(panel-max-w-sm)}>
@@ -343,14 +364,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <meter value="0.95"></meter>
               </column>
             </if>
-            <if cond={stage.spinner()}>
+            <if {stage.spinner()}>
               <row gap="4" align="center">
                 <spinner size={variant()}></spinner>
                 <spinner size={variant()} tone="primary"></spinner>
                 <spinner size={variant()} tone="destructive"></spinner>
               </row>
             </if>
-            <if cond={stage.skeleton()}>
+            <if {stage.skeleton()}>
               <row gap="3" align="center" w="full" max-w="panel-max-w-sm">
                 <span skeleton shape={variant()} sx={style.w(7).h(7)}></span>
                 <column gap="2" grow>
@@ -359,18 +380,18 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 </column>
               </row>
             </if>
-            <if cond={stage.emptyState()}>
+            <if {stage.emptyState()}>
               <empty-state variant={variant()} w="full">
                 <strong slot="title">No results</strong>
                 Try a different search, or clear a filter.
               </empty-state>
             </if>
-            <if cond={stage.errorState()}>
+            <if {stage.errorState()}>
               <error-state variant={variant()} code="ERR_TIMEOUT" w="full">
                 The request timed out. Retry, or check the connection.
               </error-state>
             </if>
-            <if cond={stage.errorBoundary()}>
+            <if {stage.errorBoundary()}>
               <column gap="3" w="full" max-w="panel-max-w-sm">
                 <error-boundary message="This panel could not load.">
                   <card variant="outline" sx={style.pad(4)}>
@@ -382,7 +403,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 </error-boundary>
               </column>
             </if>
-            <if cond={stage.toast()}>
+            <if {stage.toast()}>
               <toast tone={variant()} duration="0" w="full" max-w="panel-max-w-sm">
                 <strong>Saved.</strong> Sticky at duration 0 — hover pauses real ones.
                 <button data-toast-close variant="ghost" size="sm">×</button>
@@ -390,7 +411,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
 
             <!-- ══ Display ═════════════════════════════════════════════ -->
-            <if cond={stage.badge()}>
+            <if {stage.badge()}>
               <row gap="2" align="center">
                 <badge variant={variant()} tone="primary">primary</badge>
                 <badge variant={variant()} tone="success">success</badge>
@@ -399,40 +420,40 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <badge variant={variant()} tone="muted">muted</badge>
               </row>
             </if>
-            <if cond={stage.chip()}>
+            <if {stage.chip()}>
               <column gap="3" align="center">
                 <row gap="2" align="center">
                   <chip variant={variant()} selected>Selected</chip>
-                  <if cond={kept()}>
+                  <if {kept()}>
                     <chip variant={variant()} removable on:sail-remove={dropChip}>Removable</chip>
                   </if>
-                  <if cond={!kept()}>
+                  <if {!kept()}>
                     <button variant="ghost" size="sm" on:click={restoreChip}>bring it back</button>
                   </if>
                 </row>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>× or Backspace fires sail-remove</p>
               </column>
             </if>
-            <if cond={stage.statusDot()}>
+            <if {stage.statusDot()}>
               <row gap="2" align="center">
                 <status-dot tone={variant()}></status-dot>
                 <p sx={style.fontSize(sm).fg(muted-foreground)}>the tone is the message</p>
               </row>
             </if>
-            <if cond={stage.card()}>
+            <if {stage.card()}>
               <card variant={variant()} interactive sx={style.pad(5)}>
                 <strong>A surface</strong>
                 <p sx={style.fontSize(sm).fg(muted-foreground)}>the hover lift is one attribute</p>
               </card>
             </if>
-            <if cond={stage.avatar()}>
+            <if {stage.avatar()}>
               <row gap="3" align="center">
-                <avatar name="Ada Lovelace" size={variant()}></avatar>
+                <avatar name="Ada Lovelace" size={variant()} src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=128&h=128&fit=crop&auto=format&q=80"></avatar>
                 <avatar initials="GH" tone="primary" size={variant()}></avatar>
-                <avatar name="Alan Turing" size={variant()} shape="square"></avatar>
+                <avatar name="Alan Turing" size={variant()} shape="square" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop&auto=format&q=80"></avatar>
               </row>
             </if>
-            <if cond={stage.icon()}>
+            <if {stage.icon()}>
               <row gap="4" align="center">
                 <icon size={variant()}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
@@ -445,7 +466,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 </icon>
               </row>
             </if>
-            <if cond={stage.separator()}>
+            <if {stage.separator()}>
               <column gap="2" w="full" max-w="panel-max-w-sm">
                 <p sx={style.fontSize(sm).fg(muted-foreground)}>above</p>
                 <separator variant={variant()}></separator>
@@ -457,26 +478,19 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 </row>
               </column>
             </if>
-            <if cond={stage.hrRule()}>
-              <!-- Fixed width: an <hr> is a 1px line with no intrinsic width. -->
-              <column gap="3" sx={style.w(panel-max-w-sm)}>
-                <hr tone={variant()} />
-                <hr tone={variant()} variant="dashed" />
-              </column>
-            </if>
-            <if cond={stage.detailsEl()}>
+            <if {stage.detailsEl()}>
               <details w="full" max-w="panel-max-w-sm">
                 <summary>Advanced options</summary>
                 <p>Native disclosure. Zero JavaScript — open/close is the platform.</p>
               </details>
             </if>
-            <if cond={stage.collapsible()}>
+            <if {stage.collapsible()}>
               <collapsible w="full" max-w="panel-max-w-sm">
                 <strong slot="trigger">Show the details</strong>
                 <p>Animated open and close — and it remembers its state.</p>
               </collapsible>
             </if>
-            <if cond={stage.prose()}>
+            <if {stage.prose()}>
               <column gap="2" w="full" max-w="panel-max-w-md">
                 <h3>Plain tags, already styled</h3>
                 <p>Body copy sets the baseline — <strong>strong</strong>, <em>emphasis</em>,
@@ -486,12 +500,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
 
             <!-- ══ Overlay ═════════════════════════════════════════════ -->
-            <if cond={stage.tooltip()}>
+            <if {stage.tooltip()}>
+              <!-- Stage is tall enough for top/bottom; long copy is fine here -->
               <tooltip content="Deletes the branch — cannot be undone" placement={variant()}>
                 <button tone="destructive" variant="outline">Delete branch</button>
               </tooltip>
             </if>
-            <if cond={stage.hoverCard()}>
+            <if {stage.hoverCard()}>
               <column gap="3" align="center">
                 <button variant="ghost" popovertarget="stage-hc">@ada</button>
                 <hover-card id="stage-hc">
@@ -503,7 +518,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>focus-triggerable, not just mouse-only</p>
               </column>
             </if>
-            <if cond={stage.popover()}>
+            <if {stage.popover()}>
               <column gap="3" align="center">
                 <button popovertarget="stage-pop">Open popover</button>
                 <popover id="stage-pop">
@@ -512,7 +527,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>top layer · light dismiss · zero z-index</p>
               </column>
             </if>
-            <if cond={stage.dropdown()}>
+            <if {stage.dropdown()}>
               <column gap="3" align="center">
                 <button popovertarget="stage-menu">Actions ▾</button>
                 <dropdown id="stage-menu">
@@ -523,7 +538,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>arrows rove · type-ahead · Escape closes</p>
               </column>
             </if>
-            <if cond={stage.contextMenu()}>
+            <if {stage.contextMenu()}>
               <column gap="3" align="center" w="full" max-w="panel-max-w-sm">
                 <card id="stage-ctx" variant="outline" sx={style.pad(6).w(full)}>
                   <center><p sx={style.fontSize(sm).fg(muted-foreground)}>right-click target</p></center>
@@ -535,25 +550,27 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 </context-menu>
               </column>
             </if>
-            <if cond={stage.dialog()}>
+            <if {stage.dialog()}>
               <column gap="3" align="center">
                 <button command="show-modal" commandfor="stage-dialog" sx={style.press({ scale: 'press' })}>
                   Open the {variant()}
                 </button>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>Escape and the backdrop close it — that's the platform</p>
-                <dialog id="stage-dialog" side={sheetSide()}>
+                <dialog id="stage-dialog" side={sheetSide()} size="md">
                   <header>Delete project</header>
-                  <section>This cannot be undone. Top layer, focus trap, Escape — zero JavaScript.</section>
+                  <section>
+                    This cannot be undone. The platform owns the top layer, focus trap, Escape, and backdrop — zero custom JS.
+                  </section>
                   <footer>
-                    <button command="close" commandfor="stage-dialog" variant="ghost">Cancel</button>
-                    <button command="close" commandfor="stage-dialog" tone="destructive" variant="solid">Delete</button>
+                    <button command="close" commandfor="stage-dialog" variant="ghost" size="sm">Cancel</button>
+                    <button command="close" commandfor="stage-dialog" tone="destructive" variant="solid" size="sm">Delete</button>
                   </footer>
                 </dialog>
               </column>
             </if>
 
             <!-- ══ Navigation ══════════════════════════════════════════ -->
-            <if cond={stage.tabs()}>
+            <if {stage.tabs()}>
               <tabs tone="primary" w="full">
                 <tab-list variant={variant()}>
                   <tab>Overview</tab>
@@ -565,14 +582,14 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <tab-panel><p sx={style.fontSize(sm).fg(muted-foreground)}>The settings panel.</p></tab-panel>
               </tabs>
             </if>
-            <if cond={stage.breadcrumb()}>
+            <if {stage.breadcrumb()}>
               <breadcrumb>
                 <a href="/">Home</a>
                 <a href="/components">Components</a>
                 <small>breadcrumb</small>
               </breadcrumb>
             </if>
-            <if cond={stage.pagination()}>
+            <if {stage.pagination()}>
               <column gap="3" align="center">
                 <pagination value={pageNo()} size={variant()} on:sail-page-change={(e) => goPage(e)}>
                   <page value="1">1</page>
@@ -583,7 +600,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>on page {pageNo()}</p>
               </column>
             </if>
-            <if cond={stage.navbar()}>
+            <if {stage.navbar()}>
               <navbar bordered w="full">
                 <strong slot="brand">SHIP</strong>
                 <a href="/components">Docs</a>
@@ -593,13 +610,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
 
             <!-- ══ Data ════════════════════════════════════════════════ -->
-            <if cond={stage.table()}>
+            <if {stage.table()}>
               <table w="full">
                 <thead>
                   <tr><th>Name</th><th>Team</th><th>Status</th></tr>
                 </thead>
                 <tbody>
-                  <for as="p" of={people()} key={p.id}>
+                  <for {people()} as="p" key={p.id}>
                     <tr>
                       <td>{p.name}</td>
                       <td>{p.team}</td>
@@ -611,7 +628,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             </if>
 
             <!-- ══ Layout ══════════════════════════════════════════════ -->
-            <if cond={stage.layout()}>
+            <if {stage.layout()}>
               <column gap="3" w="full" max-w="panel-max-w-md">
                 <row gap="2" align="center" justify="between">
                   <strong>row — the x axis</strong>
@@ -627,7 +644,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 </center>
               </column>
             </if>
-            <if cond={stage.scrollArea()}>
+            <if {stage.scrollArea()}>
               <scroll-area sx={style.maxH(panel-max-h-sm).w(full).maxW(panel-max-w-sm).pad(3).borderWidth(1).border(border-subtle).radius(md)}>
                 <p>Constrain it, and the overflow scrolls behind thin, themed scrollbars.</p>
                 <p>Line two.</p>
@@ -641,128 +658,139 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 <p>Line ten — still scrolling.</p>
               </scroll-area>
             </if>
+            <if {stage.ticker()}>
+              <ticker duration="normal" sx={style.w(full).maxW(panel-max-w-md).overflow(hidden).bg(muted).padY(3).radius(md)}>
+                <p sx={style.fontSize(sm).fontFamily(mono).fg(muted-foreground).whitespace(nowrap).padX(4)}>
+                  tokens · signals · a11y · hot reload · forms ·&nbsp;
+                </p>
+              </ticker>
+            </if>
 
             <!-- ══ Pack components ═══════════════════════════════════════ -->
-            <if cond={stage.sailSparkline()}>
+            <if {stage.sailSparkline()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-sparkline">
                 <sail-sparkline data="2,5,3,8,4,6,7" width="200" height="60"></sail-sparkline>
               </column>
             </if>
-            <if cond={stage.sailAreaChart()}>
+            <if {stage.sailAreaChart()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-area-chart">
                 <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="200" height="120"></sail-area-chart>
               </column>
             </if>
-            <if cond={stage.sailBarChart()}>
+            <if {stage.sailBarChart()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-bar-chart">
                 <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="200" height="120"></sail-bar-chart>
               </column>
             </if>
-            <if cond={stage.sailDonut()}>
+            <if {stage.sailDonut()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-donut">
                 <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="120" thickness="12"></sail-donut>
               </column>
             </if>
-            <if cond={stage.sailGauge()}>
+            <if {stage.sailGauge()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-gauge">
                 <sail-gauge value="72" diameter="120" thickness="12"></sail-gauge>
               </column>
             </if>
-            <if cond={stage.sailHeatmap()}>
+            <if {stage.sailHeatmap()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-heatmap">
-                <sail-heatmap rows="4" cols="6" values="1,2,3,4,3,2,4,5,6,5,4,3,2,1,2,3,4,3,2,1,2,3,4,5" width="200" height="120"></sail-heatmap>
+                <sail-heatmap rows="4" cols="6" values="1,2,3,4,3,2,4,5,6,5,4,3,2,1,2,3,4,3,2,1,2,3,4,5" cell-size="22" gap="3"></sail-heatmap>
               </column>
             </if>
-            <if cond={stage.sailLineChart()}>
+            <if {stage.sailLineChart()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-line-chart">
                 <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="200" height="120"></sail-line-chart>
               </column>
             </if>
-            <if cond={stage.sailMediaImage()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-media-image">
-                <sail-media-image src="/sail-oss/sail-mark.svg" alt="Sail mark"></sail-media-image>
+            <if {stage.sailMediaImage()}>
+              <column gap="3" align="center" data-tile-stage="sail-pack-media-image" sx={style.w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden).radius(md)}>
+                <sail-media-image alt="Harbor at dusk" fit="cover" zoomable={false} sx={style.w(full).h(full)}></sail-media-image>
               </column>
             </if>
-            <if cond={stage.sailMediaAv()}>
+            <if {stage.sailMediaAv()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-media-av">
                 <sail-media-av></sail-media-av>
               </column>
             </if>
-            <if cond={stage.sailCodeEditor()}>
+            <if {stage.sailCodeEditor()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-code-editor">
                 <sail-code-editor value="const greeting = 'hi';" language="js" line-numbers size="md"></sail-code-editor>
               </column>
             </if>
-            <if cond={stage.sailMermaid()}>
+            <if {stage.sailMermaid()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-mermaid">
                 <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>
               </column>
             </if>
-            <if cond={stage.sailMessage()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-message">
-                <sail-message role="user" state="user">Hello — the live chat message primitive.</sail-message>
+            <if {stage.sailMessage()}>
+              <column gap="3" w="full" max-w="panel-max-w-md" data-tile-stage="sail-pack-message">
+                <sail-message role="user" status="sent">Can you summarize yesterday's deploy?</sail-message>
+                <sail-message role="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
               </column>
             </if>
-            <if cond={stage.sailCitation()}>
+            <if {stage.sailCitation()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-citation">
-                <sail-citation source="docs.sail.dev" href="https://docs.sail.dev">A citation from the docs</sail-citation>
+                <sail-citation source="docs.ship.dev" href="https://docs.ship.dev">Deploy pipeline overview</sail-citation>
               </column>
             </if>
-            <if cond={stage.sailComposer()}>
+            <if {stage.sailComposer()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-composer">
-                <sail-composer placeholder="Ask anything…"></sail-composer>
+                <sail-composer placeholder="Message the agent…"></sail-composer>
               </column>
             </if>
-            <if cond={stage.sailThinkingDots()}>
+            <if {stage.sailThinkingDots()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-thinking-dots">
                 <sail-thinking-dots></sail-thinking-dots>
               </column>
             </if>
-            <if cond={stage.sailToolCall()}>
+            <if {stage.sailToolCall()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-tool-call">
-                <sail-tool-call name="search" status="running">query: search</sail-tool-call>
+                <sail-tool-call name="list_deploys" status="ok" open>
+                  {`{ "env": "prod", "limit": 5 }`}
+                  <span slot="result">{`[{ "id": "d-1842", "status": "healthy" }]`}</span>
+                </sail-tool-call>
               </column>
             </if>
-            <if cond={stage.sailCanvas()}>
+            <if {stage.sailCanvas()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-canvas">
                 <sail-canvas width="200" height="120"></sail-canvas>
               </column>
             </if>
-            <if cond={stage.sailBoard()}>
+            <if {stage.sailBoard()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-board">
                 <sail-board width="200" height="120">
                   <sail-canvas width="200" height="120"></sail-canvas>
                 </sail-board>
               </column>
             </if>
-            <if cond={stage.sailDraw()}>
+            <if {stage.sailDraw()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-draw">
                 <sail-draw width="200" height="120"></sail-draw>
               </column>
             </if>
-            <if cond={stage.sailGraphCanvas()}>
+            <if {stage.sailGraphCanvas()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-graph-canvas">
                 <sail-graph-canvas width="200" height="120" nodes='[{"id":"a","kind":"agent","title":"A","x":80,"y":60},{"id":"b","kind":"skill","title":"B","x":120,"y":60}]' edges="[]"></sail-graph-canvas>
               </column>
             </if>
-            <if cond={stage.sailAnnotationLayer()}>
+            <if {stage.sailAnnotationLayer()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-annotation-layer">
                 <sail-annotation-layer></sail-annotation-layer>
               </column>
             </if>
-            <if cond={stage.sailAnnotationList()}>
+            <if {stage.sailAnnotationList()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-annotation-list">
                 <sail-annotation-list></sail-annotation-list>
               </column>
             </if>
-            <if cond={stage.sailAnnotationMarker()}>
+            <if {stage.sailAnnotationMarker()}>
               <column gap="3" align="center" data-tile-stage="sail-pack-annotation-marker">
                 <sail-annotation-marker x="50" y="30"></sail-annotation-marker>
               </column>
             </if>
 
       </column>
-      <if cond={slotCopy}>
+      <if {slotCopy}>
         <p slot="stage" sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{slotCopy}</p>
       </if>
     </sail-component-viewer>

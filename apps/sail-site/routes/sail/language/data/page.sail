@@ -49,15 +49,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           <button on:click={reload}>Reload</button>
           <button on:click={breakIt} tone="destructive" variant="outline">Fail the next one</button>
         </row>
-        <while-loading of="users">
+        <while-loading {users}>
           <row gap="2" align="center"><spinner></spinner> <p sx={style.fontSize(sm).fg(muted-foreground)}>loading…</p></row>
         </while-loading>
-        <while-error as="err" of="users">
+        <while-error {users} as="err">
           <alert tone="destructive">{err.message}</alert>
         </while-error>
-        <if cond={users().kind === 'ok'}>
+        <if {users().kind === 'ok'}>
           <row gap="2">
-            <for as="name" of={users().value} key={name}>
+            <for {users().value} as="name" key={name}>
               <badge>{name}</badge>
             </for>
           </row>
@@ -83,9 +83,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <h2>Render the three states</h2>
   <p>
-    <code>&#123;#while-loading of x&#125;</code> and
-    <code>&#123;#while-error err of x&#125;</code> render the pending and failed
-    states; <code>&#123;#if x().kind === 'ok'&#125;</code> guards the loaded one,
+    <code>&lt;while-loading &#123;x&#125;&gt;</code> and
+    <code>&lt;while-error &#123;x&#125; as="err"&gt;</code> render the pending and failed
+    states; <code>&lt;if &#123;x().kind === 'ok'&#125;&gt;</code> guards the loaded one,
     where <code>x().value</code> holds the data. The three cases are structural —
     you can't render the list without having handled loading and error first.
   </p>
@@ -104,7 +104,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     states — is the <a href="/sail/guide/forms">Forms guide</a>.
   </p>
   <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>
-    For the full surface: <a href="/sail/reference/runtime">reference → Runtime</a>.
+    For the author runtime (tier B): <a href="/sail/reference/runtime">reference → Author runtime</a>.
   </p>
 
   <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">

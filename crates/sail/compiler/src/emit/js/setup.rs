@@ -1,9 +1,9 @@
 use super::super::template_emit::TemplateEmitter;
 use super::super::util::{camel_of, js_ident};
-use super::super::writer::{js_string, Writer};
+use super::super::writer::{Writer, js_string};
+use crate::CompileOpts;
 use crate::ir::*;
 use crate::keys::BindingRegistry;
-use crate::CompileOpts;
 
 /// Returns the MODULE-scope hoists (the `__tpl(...)` cloners). They cannot live in
 /// the setup body: a template parsed there would be re-parsed for every component
@@ -81,7 +81,9 @@ pub(super) fn emit_setup_body(
     // which plays the same "inline custom property host" role for its
     // subtree's `var(--x)` reads.
     if !sx_var_bindings.is_empty() {
-        mount_w.push_str(&crate::emit::styles::register_properties_install_js(sx_var_bindings));
+        mount_w.push_str(&crate::emit::styles::register_properties_install_js(
+            sx_var_bindings,
+        ));
         // ONE effect per instance writes ALL bound custom properties: N
         // instances x M dynamic style props must not cost N x M effects
         // (each with its own scheduling + DOM write). The single effect
@@ -158,12 +160,7 @@ pub(super) fn emit_setup_body(
 /// return. Wires every binding kind the compiler now direct-emits
 /// (Phase 3b.3+) — runs after `wireBoundaries` so SSR'd markers inside
 /// boundary subtrees are already detached and won't be matched.
-fn emit_route_hydrate(
-    w: &mut Writer,
-    hydrate_calls: &str,
-    uses_text: bool,
-    uses_markers: bool,
-) {
+fn emit_route_hydrate(w: &mut Writer, hydrate_calls: &str, uses_text: bool, uses_markers: bool) {
     w.line("hydrate(root, ctx) {");
     w.enter();
     w.line("const __cleanups = [];");
@@ -204,4 +201,3 @@ fn emit_setup_call(w: &mut Writer) {
     w.leave();
     w.line("}");
 }
-

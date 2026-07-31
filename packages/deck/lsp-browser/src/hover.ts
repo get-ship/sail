@@ -7,7 +7,7 @@
 
 import initWasm, { completion_vocabulary } from '@ship/sail-compiler-wasm'
 
-export interface SuiHoverInfo {
+export interface SailHoverInfo {
   /** Markdown — rendered in the editor's hover tooltip. */
   contents: string
   /** Optional 1-based range to highlight in the editor when the
@@ -68,7 +68,7 @@ function directivePrefix(syntax: string): string {
  * static doc if the cursor is over a recognized directive, modifier,
  * or block keyword; null otherwise.
  */
-export function hoverAt(source: string, offset: number): SuiHoverInfo | null {
+export function hoverAt(source: string, offset: number): SailHoverInfo | null {
   if (!vocab) throw new Error('sail-lsp-browser hover: WASM not initialized')
   if (offset < 0 || offset > source.length) return null
 
@@ -137,6 +137,6 @@ export function hoverAt(source: string, offset: number): SuiHoverInfo | null {
   return null
 }
 
-function renderEntry(signature: string, doc: string): SuiHoverInfo {
+function renderEntry(signature: string, doc: string): SailHoverInfo {
   return { contents: `${signature}\n\n${doc}` }
 }

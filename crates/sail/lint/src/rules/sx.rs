@@ -34,7 +34,7 @@ pub const RULE_ID: &str = "sail-sx";
 // Residual string lowerers still call these names. SSOT is Style product:
 // `crate::style::conditions` (`when({ tablet: … })`). Delete the re-exports
 // when string product is removed.
-pub use crate::style::conditions::{condition_media, CONDITION_PREFIXES};
+pub use crate::style::conditions::{CONDITION_PREFIXES, condition_media};
 
 /// The sx prefix/value forms that are grammar rather than named tables —
 /// the `group` ancestor marker, the `group-<state>:` and `state-<value>:`
@@ -92,14 +92,21 @@ pub const STATE_PREFIXES: &[(&str, &str)] = &[
 /// namespace: `data-*` at large stays closed.
 pub fn state_data(state: &str) -> Option<String> {
     let v = state.strip_prefix("state-")?;
-    if v.is_empty() || !v.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-') {
+    if v.is_empty()
+        || !v
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+    {
         return None;
     }
     Some(format!("[data-state~='{v}']"))
 }
 
 pub fn state_pseudo(state: &str) -> Option<&'static str> {
-    STATE_PREFIXES.iter().find(|(n, _)| *n == state).map(|(_, p)| *p)
+    STATE_PREFIXES
+        .iter()
+        .find(|(n, _)| *n == state)
+        .map(|(_, p)| *p)
 }
 
 /// The complete sx vocabulary — every name with everything it accepts. THE single
@@ -126,6 +133,7 @@ fn split_prefix(pair: &str) -> (Option<&str>, &str) {
 pub fn group_attr_presence(name: &str) -> Option<&'static str> {
     const PRESENCE: &[&str] = &[
         "dismissible",
+        "removable",
         "inline",
         "sticky",
         "interactive",
@@ -161,12 +169,9 @@ pub fn is_prefix(p: &str) -> bool {
         || state_data(p).is_some()
         || pseudo_element_prefix(p).is_some()
         || p.strip_prefix("group-").is_some_and(|b| {
-            state_pseudo(b).is_some()
-                || state_data(b).is_some()
-                || group_attr_presence(b).is_some()
+            state_pseudo(b).is_some() || state_data(b).is_some() || group_attr_presence(b).is_some()
         })
 }
-
 
 /// The layout element an sx attribute was TRYING to be.
 ///
@@ -209,10 +214,9 @@ impl LayoutIntent {
             // A `<row>` wraps by default (it absorbed `sail-cluster`), so
             // `flex-wrap`'s intent IS a plain row — absorb it as one.
             "flex-wrap" => self.tag = Some("row"),
-            // `flex-nowrap` is the single-line row — `<row nowrap>` (built in
-            // job/layout-pass). Absorb it into the redirect so the whole
-            // Tailwind breath (`flex nowrap items-center`) becomes one
-            // buildable element.
+            // `flex-nowrap` is the single-line row — `<row nowrap>`. Absorb
+            // it into the redirect so the whole Tailwind breath
+            // (`flex nowrap items-center`) becomes one buildable element.
             "flex-nowrap" => {
                 self.tag = Some("row");
                 self.nowrap = true;
@@ -226,8 +230,8 @@ impl LayoutIntent {
                     self.gap = Some(v.to_string());
                 } else if let Some(v) = atom.strip_prefix("grid-cols-") {
                     self.cols = Some(v.to_string());
-                // `grid-rows-N` is an explicit row count — `<grid rows="N">`
-                // (built in job/layout-pass). Absorb it the same way `cols` is.
+                // `grid-rows-N` is an explicit row count — `<grid rows="N">`.
+                // Absorb it the same way `cols` is.
                 } else if let Some(v) = atom.strip_prefix("grid-rows-") {
                     self.rows = Some(v.to_string());
                 } else {
@@ -248,7 +252,11 @@ impl LayoutIntent {
         // row — that is what those props are FOR.
         let tag = self
             .tag
-            .unwrap_or(if self.cols.is_some() || self.rows.is_some() { "grid" } else { "row" });
+            .unwrap_or(if self.cols.is_some() || self.rows.is_some() {
+                "grid"
+            } else {
+                "row"
+            });
         let mut el = format!("<{tag}");
         if self.inline {
             el.push_str(" inline");
@@ -359,16 +367,10 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                                     || value.ends_with('%');
                                 let mut m = format!("sx `{atom}` — `{value}` is not a token");
                                 if raw {
-                                    m.push_str(
-                                        " (a value is a design decision; spend a token)",
-                                    );
+                                    m.push_str(" (a value is a design decision; spend a token)");
                                 }
-                                m.push_str(&format!(
-                                    ". `{name}-` accepts: {}",
-                                    options.join(", ")
-                                ));
-                                let opts: Vec<&str> =
-                                    options.iter().map(String::as_str).collect();
+                                m.push_str(&format!(". `{name}-` accepts: {}", options.join(", ")));
+                                let opts: Vec<&str> = options.iter().map(String::as_str).collect();
                                 if let Some(s) = nearest(value, &opts) {
                                     m.push_str(&format!("; did you mean `{name}-{s}`?"));
                                 }
@@ -425,7 +427,6 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     }
     findings
 }
-
 
 fn mk(path: &Path, line: usize, col: usize, message: String) -> Finding {
     Finding {
@@ -569,10 +570,13 @@ fn is_style_product_value(val: &str) -> bool {
         .unwrap_or(t);
     t.starts_with("style.")
         || t.starts_with("match(")
-        
         || t.starts_with("when(")
         || t.starts_with("compound(")
         || t.starts_with('[')
+        // Style const ref with a motion chain: `row.enter({…}).exit({…})` —
+        // the dot/parens fail the bare-word check below but the value is a
+        // compile-time Style product (the parser lowers the chain).
+        || crate::style::parse::is_const_ref_motion_chain_pub(t)
         || {
             // bare Style const ref
             let mut chars = t.chars();
@@ -641,7 +645,11 @@ fn lev(a: &str, b: &str) -> usize {
         d[0] = i + 1;
         for (j, cb) in b.iter().enumerate() {
             let tmp = d[j + 1];
-            d[j + 1] = if ca == cb { prev } else { 1 + prev.min(d[j]).min(d[j + 1]) };
+            d[j + 1] = if ca == cb {
+                prev
+            } else {
+                1 + prev.min(d[j]).min(d[j + 1])
+            };
             prev = tmp;
         }
     }
@@ -653,7 +661,10 @@ mod tests {
     use super::*;
 
     fn run(src: &str) -> Vec<String> {
-        check(Path::new("t.sail"), src).into_iter().map(|f| f.message).collect()
+        check(Path::new("t.sail"), src)
+            .into_iter()
+            .map(|f| f.message)
+            .collect()
     }
 
     #[test]
@@ -674,7 +685,11 @@ mod tests {
     #[test]
     fn style_const_ref_is_static_product_not_dynamic() {
         // Bare ref is compile-time Style (scope const); not runtime `sx={cls()}`.
-        assert!(run(r#"<div sx={filled}>x</div>"#).is_empty(), "{:?}", run(r#"<div sx={filled}>x</div>"#));
+        assert!(
+            run(r#"<div sx={filled}>x</div>"#).is_empty(),
+            "{:?}",
+            run(r#"<div sx={filled}>x</div>"#)
+        );
     }
 
     #[test]
@@ -682,7 +697,8 @@ mod tests {
         let ms = run(r#"<card sx="p-4 bg-surface-2">x</card>"#);
         assert!(!ms.is_empty(), "utility-string sx must fail closed");
         assert!(
-            ms.iter().any(|m| m.contains("utility-string") || m.contains("Style product")),
+            ms.iter()
+                .any(|m| m.contains("utility-string") || m.contains("Style product")),
             "{ms:?}"
         );
     }
@@ -698,7 +714,8 @@ mod tests {
         let ms = run(r#"<div sx={style.bg(notARealTokenZzz999)}>x</div>"#);
         assert!(!ms.is_empty(), "{ms:?}");
         assert!(
-            ms.iter().any(|m| m.contains("token") || m.contains("not a token")),
+            ms.iter()
+                .any(|m| m.contains("token") || m.contains("not a token")),
             "{ms:?}"
         );
     }
@@ -718,9 +735,10 @@ mod tests {
     #[test]
     fn breakpoints_match_the_tokens() {
         // Residual path must not diverge from Style conditions / design tokens.
-        for (name, query) in CONDITION_PREFIXES.iter().filter(|(n, _)| {
-            matches!(*n, "mobile" | "tablet" | "desktop")
-        }) {
+        for (name, query) in CONDITION_PREFIXES
+            .iter()
+            .filter(|(n, _)| matches!(*n, "mobile" | "tablet" | "desktop"))
+        {
             let value = crate::tokens::token_value(&format!("breakpoint-{name}"))
                 .expect("the breakpoint token exists in the registry");
             assert!(

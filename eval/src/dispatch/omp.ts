@@ -8,7 +8,7 @@
 import { spawn } from 'node:child_process'
 import { readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
-import type { Trajectory, TrajectoryTurn } from '../types.ts'
+import type { ScaffoldKind, Trajectory, TrajectoryTurn } from '../types.ts'
 import type { DispatchAdapter, DispatchRequest } from './types.ts'
 
 export interface OmpDispatchOpts {
@@ -33,7 +33,10 @@ export class OmpDispatch implements DispatchAdapter {
     const before = snapshotFiles(req.workdir)
     const timeoutMs = req.timeoutMs ?? 10 * 60 * 1000
 
-    const prompt = buildPrompt(req.prompt)
+    const prompt = buildDispatchPrompt(req.prompt, {
+      scaffold: req.scaffold ?? 'blank',
+      sailArtifacts: req.sailArtifacts,
+    })
     const args = buildOmpArgs({
       workdir: req.workdir,
       prompt,
@@ -115,11 +118,48 @@ export function buildOmpArgs(opts: {
   return args
 }
 
-function buildPrompt(taskPrompt: string): string {
+/**
+ * Frame the task prompt for the arm's stack.
+ * Control arms (react-tw / vanilla) must not receive sail authoring instructions —
+ * that would be a context leak defeating the EVAL-1 experiment.
+ */
+export function buildDispatchPrompt(
+  taskPrompt: string,
+  opts: { scaffold: ScaffoldKind; sailArtifacts?: boolean },
+): string {
+  const sail =
+    opts.sailArtifacts ??
+    (opts.scaffold === 'blank' || opts.scaffold === 'kitchen-sink')
+
+  if (sail) {
+    return [
+      'You are authoring a Sail UI application in this working directory.',
+      'Read SAIL_SKILL.md for the authoring surface.',
+      'Write your solution primarily in routes/page.sail.',
+      'Do not invent CSS-selector-based tests; use visible text and labels.',
+      '',
+      '## Task',
+      taskPrompt,
+    ].join('\n')
+  }
+
+  if (opts.scaffold === 'react-tw') {
+    return [
+      'You are implementing a UI in this working directory using React and Tailwind.',
+      'Implement the solution primarily in src/App.jsx (add files only if needed).',
+      'There is no Sail toolchain in this workspace — do not create .sail files or sail config.',
+      'Do not invent CSS-selector-based tests; use visible text and labels.',
+      '',
+      '## Task',
+      taskPrompt,
+    ].join('\n')
+  }
+
+  // vanilla (and any other non-sail scaffold)
   return [
-    'You are authoring a Sail UI application in this working directory.',
-    'Read SAIL_SKILL.md for the authoring surface.',
-    'Write your solution primarily in routes/page.sail.',
+    'You are implementing a UI with static HTML, CSS, and JavaScript in this working directory.',
+    'Implement the solution in index.html, styles.css, and main.js (add files only if needed).',
+    'There is no Sail toolchain and no React framework in this workspace.',
     'Do not invent CSS-selector-based tests; use visible text and labels.',
     '',
     '## Task',

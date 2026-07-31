@@ -122,6 +122,12 @@ export default controller(() => ({ load: signal(62) }))
   'theme-picker': `<!-- the whole switcher: trigger, panel, live previews -->
 <theme-picker sx={style.enter({ opacity: 'fade' })}></theme-picker>`,
 
+  ticker: `<ticker duration="normal" sx={style.w(full).overflow(hidden).bg(muted).padY(2).radius(md)}>
+  <p sx={style.fontSize(sm).fontFamily(mono).fg(muted-foreground).whitespace(nowrap).padX(3)}>
+    tokens · signals · a11y · hot reload ·&nbsp;
+  </p>
+</ticker>`,
+
   alert: `<controller>
 export default controller(() => {
   const visible = signal(true)
@@ -129,7 +135,7 @@ export default controller(() => {
 })
 </controller>
 
-<if cond={visible()}>
+<if {visible()}>
   <alert tone="warning" sx={style.exit({ opacity: 'fade-out' })}>
     <strong>Careful.</strong> This cannot be undone.
   </alert>
@@ -153,7 +159,7 @@ export default controller(() => ({ done: signal(64) }))
 export default controller(() => ({ loading: signal(true) }))
 </controller>
 
-<if cond={loading()}>
+<if {loading()}>
   <row gap="2" align="center">
     <spinner tone="primary"></spinner>
     <p>fetching…</p>
@@ -205,10 +211,10 @@ export default controller(() => {
 })
 </controller>
 
-<if cond={kept()}>
+<if {kept()}>
   <chip removable on:sail-remove={drop}>Design</chip>
 </if>
-<if cond={!kept()}>
+<if {!kept()}>
   <button variant="ghost" on:click={() => kept.set(true)}>bring it back</button>
 </if>`,
 
@@ -250,12 +256,6 @@ export default controller(() => {
     <separator orientation="vertical"></separator>
     <span>B</span>
   </row>
-</column>`,
-
-  hr: `<column gap="3" sx={style.enter({ opacity: 'fade' })}>
-  <hr />
-  <hr tone="primary" />
-  <hr variant="dashed" />
 </column>`,
 
   details: `<details sx={style.enter({ opacity: 'fade' })}>
@@ -387,7 +387,7 @@ export default controller(() => ({
     <tr><th>Name</th><th>Team</th><th>Status</th></tr>
   </thead>
   <tbody>
-    <for as="p" of={people()} key={p.id}>
+    <for {people()} as="p" key={p.id}>
       <tr>
         <td>{p.name}</td>
         <td>{p.team}</td>

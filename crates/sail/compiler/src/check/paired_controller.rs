@@ -34,7 +34,9 @@ pub fn check(source: &str, source_path: Option<&Path>) -> Result<(), CompileErro
     if !sibling.is_file() {
         return Ok(());
     }
-    let has_inline = crate::parse::preprocess::extract_controller_block(source).1.is_some();
+    let has_inline = crate::parse::preprocess::extract_controller_block(source)
+        .1
+        .is_some();
     let detail = if has_inline {
         "this source already declares a `<controller>` block, so the sibling is dead code"
     } else {
@@ -76,7 +78,8 @@ mod tests {
     fn inline_block_alone_passes() {
         let dir = tempfile::tempdir().unwrap();
         let sail = dir.path().join("sail-x.sail");
-        let src = "<controller>export default controller((ctx) => ({}))</controller>\n<span></span>";
+        let src =
+            "<controller>export default controller((ctx) => ({}))</controller>\n<span></span>";
         std::fs::write(&sail, src).unwrap();
         check(src, Some(&sail)).unwrap();
     }

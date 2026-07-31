@@ -1,12 +1,13 @@
 // Committed fallback declarations for `./generated`.
 //
-// The real `./generated.ts` is an auto-generated artifact (produced by
-// `cargo xtask gen-types` from the Rust wire types) and is gitignored
-// (`**/src/generated.ts`). When that file is present it wins module
+// The real `./generated.ts` is an auto-generated artifact (from the Rust wire
+// types; no committed gen-types xtask — regenerate via the runtime package
+// typecheck path when present) and is gitignored (`**/src/generated.ts`).
+// When that file is present it wins module
 // resolution over this `.d.ts` (`.ts` is resolved before `.d.ts`), so the
 // deck build is never affected by this stub. When it is ABSENT — a fresh
-// checkout, CI typechecking sail standalone, or a consumer (e.g. helm web)
-// pointing `@ship/*` at sail source instead of hand-mirrored shims — these
+// checkout, CI typechecking sail standalone, or a consumer pointing
+// `@ship/*` at sail source instead of hand-mirrored shims — these
 // declarations let the runtime typecheck without the codegen step.
 //
 // Keep in sync with the generated output. This is a faithful mirror of the

@@ -1,0 +1,17 @@
+<!--
+  <details> — native disclosure. Style product only.
+  Platform owns open/close + a11y. summary paint is the summary element.
+  Stacked accordion merge + open body spacing via descendant map.
+-->
+
+<scope>
+  props: {
+    open = false
+  }
+
+  const base = style.borderWidth(1).border(border).radius(lg).bg(surface-1)
+</scope>
+
+<details sx={base}>
+  <slot></slot>
+</details>

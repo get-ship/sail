@@ -56,22 +56,22 @@ export default controller(() => {
     </row>
   </row>
 
-  <while-loading of="inbox">
+  <while-loading {inbox}>
     <row gap="2" align="center" sx={loadingRow}>
       <spinner size="sm"></spinner>
       <small sx={muted}>loading messages…</small>
     </row>
   </while-loading>
 
-  <while-error as="err" of="inbox">
+  <while-error {inbox} as="err">
     <alert tone="destructive">{err.message}</alert>
   </while-error>
 
-  <if cond={inbox().kind === 'ok'}>
+  <if {inbox().kind === 'ok'}>
     <column gap="1">
-      <for as="m" of={visible()} key={m.id}>
+      <for {visible()} as="m" key={m.id}>
         <row gap="3" align="center" sx={messageRow.enter({ opacity: 'fade', translate-y: 'spring:gentle', stagger: '40ms' }).exit({ opacity: 'fade-out' })}>
-          <if cond={!m.read}><span sx={unreadDot}></span></if>
+          <if {!m.read}><span sx={unreadDot}></span></if>
           <column gap="0" grow>
             <strong sx={from}>{m.from}</strong>
             <small sx={muted}>{m.subject}</small>
@@ -80,7 +80,7 @@ export default controller(() => {
           <button size="sm" variant="ghost" on:click={() => archive(m.id)}>Archive</button>
         </row>
       </for>
-      <if cond={visible().length === 0}>
+      <if {visible().length === 0}>
         <empty-state variant="inline" tone="muted">
           <span slot="title">Inbox zero</span>
           Nothing matches this filter.

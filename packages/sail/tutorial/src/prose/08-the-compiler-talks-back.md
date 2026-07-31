@@ -119,4 +119,4 @@ mechanically. The compiler is the review that never gets tired. What it
    a spring instead of `fade`, fine: you stayed inside the vocabulary,
    which is the only thing the compiler was defending.
 3. Plant a defect of your own — an unknown tone, a `style=` attribute,
-   a keyless `{#for}` — and read what comes back.
+   a keyless `<for>` — and read what comes back.

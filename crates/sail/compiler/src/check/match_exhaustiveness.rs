@@ -14,7 +14,7 @@ use std::collections::HashSet;
 
 use sail_lint::style::Style;
 
-use crate::diagnostics::{line_col, DiagSeverity, Diagnostic};
+use crate::diagnostics::{DiagSeverity, Diagnostic, line_col};
 use crate::ir::{Program, PropKind};
 
 /// Lint-style rule id carried on every diagnostic this pass emits.

@@ -17,15 +17,15 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use sail_compiler::check::policy::{Policy, ResolutionKind};
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
-fn write_pack(config: &str, sui_body: &str) -> (tempfile::TempDir, PathBuf) {
+fn write_pack(config: &str, sail_body: &str) -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
     fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
     fs::create_dir_all(&src_dir).unwrap();
     let sail = src_dir.join("w.sail");
-    fs::write(&sail, sui_body).unwrap();
+    fs::write(&sail, sail_body).unwrap();
     (tmp, sail)
 }
 
@@ -52,17 +52,30 @@ fn opts_for(path: &Path) -> CompileOpts {
 fn unknown_key_fails_closed_and_the_refusal_names_file_key_and_tier() {
     let (_tmp, sail) = write_pack(r#"{"polcy":"strict"}"#, "<p>hi</p>");
     let (config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
-    assert_eq!(resolution.tier, Policy::STRICT, "unknown key fails closed to strict");
+    assert_eq!(
+        resolution.tier,
+        Policy::STRICT,
+        "unknown key fails closed to strict"
+    );
     let ResolutionKind::Rejected(reason) = &resolution.kind else {
         panic!("expected Rejected, got {:?}", resolution.kind);
     };
-    assert!(reason.contains("polcy"), "must name the offending key: {reason}");
-    assert!(config_path.ends_with("sail.config.json"), "must name the file: {config_path:?}");
+    assert!(
+        reason.contains("polcy"),
+        "must name the offending key: {reason}"
+    );
+    assert!(
+        config_path.ends_with("sail.config.json"),
+        "must name the file: {config_path:?}"
+    );
 
     // A component that actually uses a stripped capability now fails the
     // build gate — sx is off under the fail-closed strict tier.
-    let (_tmp2, sui_sx) = write_pack(r#"{"polcy":"strict"}"#, r#"<sail-card sx={style.pad(4)}>x</sail-card>"#);
-    let err = compile(&fs::read_to_string(&sui_sx).unwrap(), opts_for(&sui_sx))
+    let (_tmp2, sail_sx) = write_pack(
+        r#"{"polcy":"strict"}"#,
+        r#"<sail-card sx={style.pad(4)}>x</sail-card>"#,
+    );
+    let err = compile(&fs::read_to_string(&sail_sx).unwrap(), opts_for(&sail_sx))
         .expect_err("sx must be refused under the fail-closed strict tier");
     assert_eq!(err.category.as_deref(), Some("sail-no-sx"));
 }
@@ -111,16 +124,21 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
     let ResolutionKind::NoSignal(hint) = &resolution.kind else {
         panic!("expected NoSignal (announced), got {:?}", resolution.kind);
     };
-    assert!(hint.contains("stylesheets"), "must name which key produced no signal: {hint}");
+    assert!(
+        hint.contains("stylesheets"),
+        "must name which key produced no signal: {hint}"
+    );
     assert!(config_path.ends_with("sail.config.json"));
 
     // The build-time reproduction of the original bug report: a package with
     // only `stylesheets` declared, and an sx-using component. The compile
     // must refuse and the refusal must point at the missing grant, not
     // silently drop the sx.
-    let (_tmp2, sui_sx) =
-        write_pack(r#"{"stylesheets": []}"#, r#"<sail-card sx={style.pad(4)}>hi</sail-card>"#);
-    let err = compile(&fs::read_to_string(&sui_sx).unwrap(), opts_for(&sui_sx))
+    let (_tmp2, sail_sx) = write_pack(
+        r#"{"stylesheets": []}"#,
+        r#"<sail-card sx={style.pad(4)}>hi</sail-card>"#,
+    );
+    let err = compile(&fs::read_to_string(&sail_sx).unwrap(), opts_for(&sail_sx))
         .expect_err("sx must be refused — stylesheets-only config still fails closed to strict");
     assert_eq!(err.category.as_deref(), Some("sail-no-sx"));
     assert!(
@@ -137,7 +155,10 @@ fn stylesheets_only_config_is_announced_not_silently_rejected() {
 
 #[test]
 fn granted_full_preset_compiles_clean_with_one_recognized_announcement() {
-    let (_tmp, sail) = write_pack(r#"{"preset":"full"}"#, r#"<sail-card sx={style.pad(4)}>hi</sail-card>"#);
+    let (_tmp, sail) = write_pack(
+        r#"{"preset":"full"}"#,
+        r#"<sail-card sx={style.pad(4)}>hi</sail-card>"#,
+    );
     let (_config_path, resolution) = Policy::resolve_outcome(&sail).expect("config resolves");
     assert_eq!(resolution.tier, Policy::FULL);
     assert!(matches!(&resolution.kind, ResolutionKind::Recognized(s) if s == "preset: full"));
@@ -157,8 +178,14 @@ fn no_config_leaves_default_semantics_unchanged() {
     let tmp = tempfile::tempdir().unwrap();
     let sail = tmp.path().join("w.sail");
     fs::write(&sail, r#"<sail-card sx={style.pad(4)}>hi</sail-card>"#).unwrap();
-    assert!(Policy::resolve_outcome(&sail).is_none(), "no config anywhere on the walk");
-    assert!(Policy::overrides_for(&sail).is_empty(), "no config → no capability overrides");
+    assert!(
+        Policy::resolve_outcome(&sail).is_none(),
+        "no config anywhere on the walk"
+    );
+    assert!(
+        Policy::overrides_for(&sail).is_empty(),
+        "no config → no capability overrides"
+    );
     // sx's natural severity is Warn, not gated — an unconfigured package
     // keeps compiling exactly as before.
     compile(&fs::read_to_string(&sail).unwrap(), opts_for(&sail))

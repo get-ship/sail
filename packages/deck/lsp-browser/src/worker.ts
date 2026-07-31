@@ -4,9 +4,9 @@
 // bundle is loaded on first `preload` or first hover that needs
 // identifier resolution.
 
-import { diagnose, type SuiDiagnostic } from './diagnostics'
-import { completionsAt, allSources, type SuiCompletionSource } from './completions'
-import { hoverAt, type SuiHoverInfo } from './hover'
+import { diagnose, type SailDiagnostic } from './diagnostics'
+import { completionsAt, allSources, type SailCompletionSource } from './completions'
+import { hoverAt, type SailHoverInfo } from './hover'
 
 interface DiagnoseRequest   { id: number; kind: 'diagnose';   text: string }
 interface CompleteAtRequest { id: number; kind: 'completeAt'; text: string; offset: number }
@@ -56,18 +56,18 @@ addEventListener('message', (event: MessageEvent<Request>) => {
       case 'diagnose': {
         // WASM-backed now → async (lazy one-time module init in diagnose()).
         diagnose(req.text).then(
-          (diags) => reply<SuiDiagnostic[]>(req.id, diags),
+          (diags) => reply<SailDiagnostic[]>(req.id, diags),
           (e) => fail(req.id, e),
         )
         break
       }
       case 'completeAt': {
         const src = completionsAt(req.text, req.offset)
-        reply<SuiCompletionSource | null>(req.id, src)
+        reply<SailCompletionSource | null>(req.id, src)
         break
       }
       case 'allSources': {
-        reply<SuiCompletionSource[]>(req.id, allSources())
+        reply<SailCompletionSource[]>(req.id, allSources())
         break
       }
       case 'hoverAt': {
@@ -75,7 +75,7 @@ addEventListener('message', (event: MessageEvent<Request>) => {
         // v2b adds identifier resolution via oxc once preload lands;
         // for now we return whatever the static dict knows.
         const info = hoverAt(req.text, req.offset)
-        reply<SuiHoverInfo | null>(req.id, info)
+        reply<SailHoverInfo | null>(req.id, info)
         break
       }
       case 'preload': {

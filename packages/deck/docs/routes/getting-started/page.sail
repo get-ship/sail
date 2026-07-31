@@ -11,7 +11,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ pageExample, cont
 <article data-doc="true">
   <p role="doc-eyebrow">Introduction</p>
   <h1>Getting started</h1>
-  <p role="doc-lead">You need the <code>deck</code> CLI and a folder. No project scaffold, no install, no config to start.</p>
+  <p role="doc-lead">You need the <code>sail</code> CLI and a folder. No project scaffold, no install, no config to start.</p>
 
   <h2>1. A page is a file</h2>
   <p>Create <code>routes/page.sail</code>. Whatever markup it holds is your page.</p>

@@ -17,7 +17,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 DEMO="$ROOT/crates/deck/deck-conformance"
 SPA="$DEMO/spa"
-DECK="$ROOT/target/debug/deck"
+DECK="$ROOT/target/debug/sail"
 ASSETS="$ROOT/crates/deck/deck-core/assets"
 WORK="$(mktemp -d)"
 
@@ -27,8 +27,8 @@ fail() { echo "CLI E2E FAIL: $*" >&2; exit 1; }
 ok()   { echo "ok: $*"; }
 
 if [ ! -x "$DECK" ]; then
-  echo "building deck CLI..."
-  cargo build -p deck-cli --quiet || fail "cargo build -p deck-cli failed"
+  echo "building sail CLI..."
+  cargo build -p deck-cli --quiet || fail "cargo build -p deck-cli (sail) failed"
 fi
 
 # ── 1. routes ─────────────────────────────────────────────────────────────────
@@ -36,7 +36,7 @@ fi
 echo "--- deck routes ---"
 OUT=$("$DECK" routes --shell-root "$SPA" 2>&1) \
   || fail "deck routes exited non-zero: $OUT"
-echo "$OUT" | grep -q "deck routes" || fail "deck routes: unexpected output: $OUT"
+echo "$OUT" | grep -q "sail routes" || fail "sail routes: unexpected output: $OUT"
 ok "deck routes --shell-root spa/ → exit 0: $OUT"
 
 # ── 2. deck build ─────────────────────────────────────────────────────────────

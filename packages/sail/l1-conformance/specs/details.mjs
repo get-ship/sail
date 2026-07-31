@@ -5,8 +5,16 @@
 // BEHAVIOR: no `use:` action to attach — clicking the summary toggles it, and that
 // the assertion passes with an EMPTY attach list is the point: this costs no JS.
 
-const d = (attrs = '', label = 'Details') =>
-  `<details ${attrs} style="width:280px"><summary>${label}</summary><p>Panel content.</p></details>`
+const DT = 'sail-details sx-borderWidth1 sx-borderborder sx-radiuslg sx-bgsurface1'
+const SM =
+  'sail-summary sx-displayflex sx-padY3 sx-padX4 sx-fontSizesm sx-fontWeightsemibold sx-fgforeground sx-cursorpointer sx-listnone sx-selectnone sx-radiuslg sx-transitioncolors sx-durationfast sx-easeout sx-hover-bghoverbg sx-after-contentempty sx-after-msauto sx-after-size4 sx-after-bgmutedforeground'
+
+const d = (attrs = '', label = 'Details') => {
+  const m = attrs.match(/class="([^"]*)"/)
+  const rest = attrs.replace(/class="[^"]*"\s*/, '').trim()
+  const cls = m ? `${DT} ${m[1]}` : DT
+  return `<details class="${cls}" ${rest} style="width:280px"><summary class="${SM}">${label}</summary><p>Panel content.</p></details>`
+}
 
 export default {
   tag: 'details',
@@ -32,7 +40,7 @@ export default {
       if (grew !== el.open) bad.push({ i, why: 'panel-out-of-sync', open: el.open, grew })
     })
 
-    const scope = "[data-theme-preview='ship-light'] "
+    const scope = "[data-theme-preview='ship'] "
     const q = (s) => document.querySelector(scope + s)
     // The chevron must turn when open — the affordance that says which way the
     // disclosure goes. The skin hides the UA ::marker and draws its own on
@@ -41,7 +49,7 @@ export default {
     if (arrow('details.l1-mark summary') === arrow('details[open] summary'))
       bad.push({ why: 'no-open-affordance', shut: arrow('details.l1-mark summary') })
     const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .l1-mark summary`), 'color')
-    if (mark('ship-light') === mark('ship-dark')) bad.push({ why: 'frozen-token', light: mark('ship-light') })
+    if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
 
     return { count: document.querySelectorAll('details').length, bad: bad.slice(0, 10) }
   },

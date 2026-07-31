@@ -80,15 +80,25 @@ pub const CONVENTION_TOKENS: &[&str] = &[
     // tone-* channel names removed (no contracts attr channel). Semantic
     // ramp tokens (hover-bg, …) live in the registry, not here.
     // Floating-primitive positioning channels (dropdown / hovercard / popover / tooltip).
-    "sail-dd-anchor", "sail-dd-default",
-    "sail-hc-anchor", "sail-hc-default",
-    "sail-popover-anchor", "sail-popover-default",
-    "sail-tooltip-anchor", "sail-tooltip-default",
-    // App-shell layout channels (Ship/helm rail + top bar).
-    "rail-item-justify", "rail-label-display",
-    "ship-rail-w", "ship-rail-w-collapsed", "ship-top-bar-h",
+    "sail-dd-anchor",
+    "sail-dd-default",
+    "sail-hc-anchor",
+    "sail-hc-default",
+    "sail-popover-anchor",
+    "sail-popover-default",
+    "sail-tooltip-anchor",
+    "sail-tooltip-default",
+    // App-shell layout channels (rail + top bar).
+    "rail-item-justify",
+    "rail-label-display",
+    "ship-rail-w",
+    "ship-rail-w-collapsed",
+    "ship-top-bar-h",
     // Misc component-local channels.
-    "card-shadow-style", "font-sans", "toast-duration", "z-overlay",
+    "card-shadow-style",
+    "font-sans",
+    "toast-duration",
+    "z-overlay",
     // Runtime-geometry channels — a `use:<action>` action (see
     // `packages/sail/runtime/src/actions/`) writes these; sx reads them via
     // the matching `(--name)` atom. Not tokens (a measurement, not a design
@@ -96,23 +106,37 @@ pub const CONVENTION_TOKENS: &[&str] = &[
     // the name, same as a token owns its name, which is why this allowlist
     // (rather than `check::sx_vars`'s prop/signal resolution) is where they
     // belong.
-    "box-top", "box-left", "box-w", "box-h",           // use:rect
-    "evt-top", "evt-h", "evt-left", "evt-w",           // use:eventSpan
-    "row-y",                                            // use:virtualRow
-    "rows-h",                                           // use:virtualSpacer
-    "cell-ps",                                          // use:cellPad
-    "pin-x", "pin-y",                                   // use:pin
-    "port-top", "port-left", "port-right", "port-bottom", // use:portEdge
-    "world-tx",                                          // use:worldTransform
-    "zoom-tx",                                           // use:zoomPan
-    "max-w",                                             // use:maxWidth
-    "swatch-color",                                      // use:swatch
-    "tc-x", "tc-y",                                      // use:targetCursor
-    "spot-x", "spot-y", "spot-strength",                 // use:spotlight
-    "sail-grid-template",                                 // use:gridTracks
-    "rng-pct",                                           // use:rangeFill
-    "anchor-left", "anchor-top",                         // use:anchor / use:contextMenu
-    "autosize-h",                                        // use:autosize
+    "box-top",
+    "box-left",
+    "box-w",
+    "box-h", // use:rect
+    "evt-top",
+    "evt-h",
+    "evt-left",
+    "evt-w",   // use:eventSpan
+    "row-y",   // use:virtualRow
+    "rows-h",  // use:virtualSpacer
+    "cell-ps", // use:cellPad
+    "pin-x",
+    "pin-y", // use:pin
+    "port-top",
+    "port-left",
+    "port-right",
+    "port-bottom",  // use:portEdge
+    "world-tx",     // use:worldTransform
+    "zoom-tx",      // use:zoomPan
+    "max-w",        // use:maxWidth
+    "swatch-color", // use:swatch
+    "tc-x",
+    "tc-y", // use:targetCursor
+    "spot-x",
+    "spot-y",
+    "spot-strength",      // use:spotlight
+    "sail-grid-template", // use:gridTracks
+    "rng-pct",            // use:rangeFill
+    "anchor-left",
+    "anchor-top", // use:anchor / use:contextMenu
+    "autosize-h", // use:autosize
 ];
 
 fn registry_file() -> &'static RegistryFile {
@@ -354,7 +378,10 @@ mod tests {
             ("64", "256px"),
         ] {
             let got = token_value(&format!("space-{n}")).unwrap_or("");
-            assert_eq!(got, want_px, "--space-{n} drifted from Tailwind ({want_px})");
+            assert_eq!(
+                got, want_px,
+                "--space-{n} drifted from Tailwind ({want_px})"
+            );
         }
     }
 
@@ -363,7 +390,10 @@ mod tests {
         let r = radius_values();
         assert!(r.contains(&"none"));
         assert!(r.contains(&"full") && r.contains(&"lg"));
-        assert!(!r.contains(&"xs"), "radius `xs` was a phantom — not in token registry");
+        assert!(
+            !r.contains(&"xs"),
+            "radius `xs` was a phantom — not in token registry"
+        );
     }
 
     #[test]
@@ -384,7 +414,11 @@ mod tests {
         }
         // non-colors must NOT leak into the color surface
         assert!(!c.contains(&"space-4") && !c.contains(&"text-2xl") && !c.contains(&"radius-lg"));
-        assert!(c.len() > 40, "expected the real ~85-token surface, got {}", c.len());
+        assert!(
+            c.len() > 40,
+            "expected the real ~85-token surface, got {}",
+            c.len()
+        );
     }
 
     #[test]
@@ -397,13 +431,20 @@ mod tests {
         // curated convention allowlist (no global value, must still be accepted)
         assert!(reg.contains("sail-tooltip-anchor"));
         // a var() *usage* inside a value must never be mistaken for a declaration
-        assert!(!reg.contains("foreground)"), "var() usages must not leak in");
+        assert!(
+            !reg.contains("foreground)"),
+            "var() usages must not leak in"
+        );
     }
 
     #[test]
     fn registry_json_is_non_empty_and_matches_name_set() {
         let file = registry_file();
-        assert!(file.names.len() > 100, "expected full token set, got {}", file.names.len());
+        assert!(
+            file.names.len() > 100,
+            "expected full token set, got {}",
+            file.names.len()
+        );
         assert!(!file.colors.is_empty());
         let reg = registry();
         for name in &file.names {
@@ -415,10 +456,7 @@ mod tests {
     fn registry_entries_carry_dtcg_paths() {
         let file = registry_file();
         // Canonical space/primary tokens must expose path + cssName for J2.
-        let space = file
-            .tokens
-            .get("space-4")
-            .expect("space-4 in tokens map");
+        let space = file.tokens.get("space-4").expect("space-4 in tokens map");
         assert_eq!(space.path, "space.4", "space-4 path");
         assert!(
             space.css_name.is_empty() || space.css_name == "space-4",
@@ -433,7 +471,10 @@ mod tests {
         );
         // path index (v2) maps path → cssName
         if !file.paths.is_empty() {
-            assert_eq!(file.paths.get("space.4").map(String::as_str), Some("space-4"));
+            assert_eq!(
+                file.paths.get("space.4").map(String::as_str),
+                Some("space-4")
+            );
         }
     }
 }

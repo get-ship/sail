@@ -3,13 +3,13 @@
 //! arrows where not allowed) with a message and span pointing at
 //! the user's source.
 
-use sail_compiler::{compile, compile_element, CompileMode, CompileOpts, Diagnostic};
+use sail_compiler::{CompileMode, CompileOpts, Diagnostic, compile, compile_element};
 
 fn compile_route(source: &str) -> sail_compiler::CompileError {
     compile(
         source,
         CompileOpts {
-        route_params: None,
+            route_params: None,
             setup_url: None,
             mode: CompileMode::Component,
             source_path: None,
@@ -65,7 +65,7 @@ fn arrow_in_on_handler_is_allowed() {
     compile(
         src,
         CompileOpts {
-        route_params: None,
+            route_params: None,
             setup_url: None,
             mode: CompileMode::Component,
             source_path: None,
@@ -115,11 +115,7 @@ fn bind_this_with_call_expression_is_rejected() {
 fn reflect_empty_on_non_slot_is_rejected() {
     let src = r#"<div reflect-empty="data-x">x</div>"#;
     let err = compile_route(src);
-    assert!(
-        err.message.contains("slot"),
-        "msg: {}",
-        err.message
-    );
+    assert!(err.message.contains("slot"), "msg: {}", err.message);
 }
 
 #[test]
@@ -189,9 +185,9 @@ fn the_retired_prop_tag_is_rejected() {
 }
 
 // ---------------------------------------------------------------------
-// Task #38 — element mode's "exactly one root element" diagnostics must
-// point at a REAL, in-bounds location in the AUTHOR'S source, not past
-// end-of-file and not a meaningless (1,1) fallback.
+// Element mode's "exactly one root element" diagnostics must point at a
+// REAL, in-bounds location in the AUTHOR'S source, not past end-of-file and
+// not a meaningless (1,1) fallback.
 //
 // `emit_element`'s root-count checks used `CompileError::new(...)` with no
 // `.with_span(...)` at all, so `Diagnostic::from_compile_error`'s `None`

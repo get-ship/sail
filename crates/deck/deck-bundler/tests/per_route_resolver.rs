@@ -20,7 +20,10 @@ fn write(path: &Path, body: &str) {
 /// A workspace with one component package (`sail-widget`, marker text
 /// `sail-widget-marker`) and one view that uses the tag.
 fn fixture(root: &Path) {
-    write(&root.join("package.json"), r#"{"workspaces":["packages/*"]}"#);
+    write(
+        &root.join("package.json"),
+        r#"{"workspaces":["packages/*"]}"#,
+    );
     write(
         &root.join("packages/demo/package.json"),
         r#"{"name":"@ship/demo","customElements":"dist/custom-elements.json"}"#,
@@ -34,9 +37,15 @@ fn fixture(root: &Path) {
         &root.join("packages/demo/src/sail-widget/sail-widget.sail"),
         "<div>sail-widget-marker</div>\n",
     );
-    write(&root.join("routes/usewidget/page.sail"), "<div><sail-widget></sail-widget></div>\n");
+    write(
+        &root.join("routes/usewidget/page.sail"),
+        "<div><sail-widget></sail-widget></div>\n",
+    );
     // A second view that also uses the tag — for the shared-chunk dedup test.
-    write(&root.join("routes/usewidget2/page.sail"), "<div><sail-widget></sail-widget></div>\n");
+    write(
+        &root.join("routes/usewidget2/page.sail"),
+        "<div><sail-widget></sail-widget></div>\n",
+    );
 }
 
 fn route_target(root: &Path) -> BundleTarget {
@@ -62,7 +71,9 @@ fn second_route_target(root: &Path) -> BundleTarget {
 /// All `.js` files under `dir`, recursively (view chunks nest under `.deck/`).
 fn js_files(dir: &Path) -> Vec<std::path::PathBuf> {
     let mut out = Vec::new();
-    let Ok(entries) = std::fs::read_dir(dir) else { return out };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return out;
+    };
     for e in entries.flatten() {
         let p = e.path();
         if p.is_dir() {
@@ -75,8 +86,8 @@ fn js_files(dir: &Path) -> Vec<std::path::PathBuf> {
 }
 
 async fn bundle(root: &Path, out_root: &Path) -> String {
-    let layout =
-        BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults()).with_out_root(out_root.to_path_buf());
+    let layout = BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
+        .with_out_root(out_root.to_path_buf());
     let staging = out_root.join("_staging");
     std::fs::create_dir_all(&staging).unwrap();
     bundle_target(&layout, &route_target(root), &staging, false)
@@ -116,7 +127,8 @@ async fn shared_component_dedups_into_one_chunk_across_routes() {
 
     // Both views import <sail-widget>; the multi-entry build must hoist it.
     deck_bundler::routes_bundle::bundle_routes(
-        &BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults()).with_out_root(out.path().to_path_buf()),
+        &BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
+            .with_out_root(out.path().to_path_buf()),
         &[route_target(root), second_route_target(root)],
         &out.path().join("_staging"),
         false,
@@ -127,7 +139,9 @@ async fn shared_component_dedups_into_one_chunk_across_routes() {
     let chunks_with_component = js_files(&out.path().join(".deck"))
         .into_iter()
         .filter(|p| {
-            std::fs::read_to_string(p).map(|s| s.contains("sail-widget-marker")).unwrap_or(false)
+            std::fs::read_to_string(p)
+                .map(|s| s.contains("sail-widget-marker"))
+                .unwrap_or(false)
         })
         .count();
     assert_eq!(

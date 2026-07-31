@@ -47,6 +47,19 @@ describe('<sail-heatmap>', () => {
     expect(root(el).querySelectorAll('rect').length).toBe(6)
   })
 
+  it('values is an alias of data; numeric rows/cols expand to counts', async () => {
+    // Catalog demos used values= + rows="3" cols="5" — must paint, not empty-state.
+    const { el } = mount(reg, 'sail-heatmap', {
+      rows: '2',
+      cols: '3',
+      values: '0.1,0.5,0.9,0.2,0.6,1.0',
+    })
+    await flush()
+    expect(root(el).querySelector('svg[role="img"]')).not.toBeNull()
+    expect(root(el).querySelectorAll('rect').length).toBe(6)
+    expect(root(el).querySelector('.sail-empty-state')).toBeNull()
+  })
+
   it('2D JSON data renders rows × cols rects', async () => {
     const { el } = mount(reg, 'sail-heatmap', {
       rows: 'a,b',

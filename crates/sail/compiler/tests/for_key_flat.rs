@@ -10,7 +10,7 @@
 //! Keys that read outer scope (`$scope.…` after rewriting) keep the
 //! child-scope fallback so shadowing semantics are untouched.
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn route_opts() -> CompileOpts {
     CompileOpts {
@@ -62,8 +62,7 @@ fn index_binding_key_emits_flat_closure() {
 
 #[test]
 fn template_literal_key_over_loop_bindings_is_flat() {
-    let src =
-        r#"<ul><for as="row" index="i" of={rows()} key={`${row.id}-${i}`}><li>{row.label}</li></for></ul>"#;
+    let src = r#"<ul><for as="row" index="i" of={rows()} key={`${row.id}-${i}`}><li>{row.label}</li></for></ul>"#;
     let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(
@@ -79,7 +78,8 @@ fn builtin_ident_key_is_flat() {
     // the key is still scope-free. (Calls with arguments like
     // `String(row.id)` are rejected upstream by the renderable-expr
     // subset and never reach the emitter.)
-    let src = r#"<ul><for as="row" of={rows()} key={row.id ?? Infinity}><li>{row.label}</li></for></ul>"#;
+    let src =
+        r#"<ul><for as="row" of={rows()} key={row.id ?? Infinity}><li>{row.label}</li></for></ul>"#;
     let r = compile(src, route_opts()).expect("compile");
     let line = key_line(&r.js);
     assert!(

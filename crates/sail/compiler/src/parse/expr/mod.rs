@@ -10,11 +10,10 @@
 //!    so the runtime sees the same shape the validator approved.
 //!
 //! 2. [`grammar`] — a recursive-descent parser that produces an AST
-//!    for the subset documented in `crates/sail/compiler/EXPRESSIONS.md`.
-//!    Downstream type-strengthening checks (`check::scope_member`,
-//!    `check::key_identity`, ...) and LSP intelligence walk the AST
-//!    rather than re-implementing the byte-level scan five more
-//!    times.
+//!    for the constrained `{expr}` subset. Downstream type-strengthening
+//!    checks (`check::scope_member`, `check::key_identity`, ...) and LSP
+//!    intelligence walk the AST rather than re-implementing the
+//!    byte-level scan five more times.
 //!
 //! Both flavours share span semantics — diagnostics surface byte
 //! ranges into the original `.sail` source.
@@ -24,7 +23,7 @@ pub mod grammar;
 pub mod idents;
 
 pub use ast::{Arg, Ast, AstKind, ObjEntry, ObjKey, TemplatePart};
-pub use grammar::{parse_expression, parse_expression_with_arrows, ParseError};
+pub use grammar::{ParseError, parse_expression, parse_expression_with_arrows};
 pub use idents::collect_idents;
 
 use crate::diagnostics::{CompileError, Span};
@@ -32,15 +31,15 @@ use crate::diagnostics::{CompileError, Span};
 pub fn validate(expr: &str, allow_arrow: bool, location: &str) -> Result<(), CompileError> {
     let trimmed = expr.trim();
     if trimmed.is_empty() {
-        return Err(CompileError::new("empty expression")
-            .with_category(location.to_string()));
+        return Err(CompileError::new("empty expression").with_category(location.to_string()));
     }
     if trimmed.contains("__sail_retired_block__") {
         return Err(CompileError::new(
             "brace control-flow is retired — use element blocks: \
-             <if cond={…}>…</if>, <for as=\"item\" of={…} key={…}>…</for>, \
-             <match on={…}>…</match>, <while-loading of=\"sig\">…</while-loading>. \
-             Clauses are <else-if>, <else>, <case of={…}>, <default> as children.",
+             <if {…}>…</if>, <for {…} as=\"item\" key={…}>…</for>, \
+             <match {…}>…</match>, <while-loading {sig}>…</while-loading>. \
+             Clauses are <else-if>, <else>, <case {…}>, <default> as children \
+             (residual named attrs cond=/on=/of= still accepted).",
         )
         .with_category(location.to_string()));
     }
@@ -129,10 +128,10 @@ pub fn validate(expr: &str, allow_arrow: bool, location: &str) -> Result<(), Com
         i += 1;
     }
     if in_string.is_some() {
-        return Err(CompileError::new(format!(
-            "unterminated string in expression: `{trimmed}`"
-        ))
-        .with_category(location.to_string()));
+        return Err(
+            CompileError::new(format!("unterminated string in expression: `{trimmed}`"))
+                .with_category(location.to_string()),
+        );
     }
     let _ = paren_depth;
     Ok(())

@@ -106,7 +106,11 @@ fn is_exported_rust_item(contents: &str, sym: &str) -> bool {
         )
         .expect("is_exported_rust_item regex is valid")
     });
-    re.captures_iter(contents).any(|cap| cap.name("sym1").or_else(|| cap.name("sym2")).map_or(false, |m| m.as_str() == sym))
+    re.captures_iter(contents).any(|cap| {
+        cap.name("sym1")
+            .or_else(|| cap.name("sym2"))
+            .map_or(false, |m| m.as_str() == sym)
+    })
 }
 /// itself is captured up to the `.rs` or directory token). We only assert on
 /// refs whose captured path ends in `.rs`, which is every Implementation cell.
@@ -150,7 +154,10 @@ fn extract_refs(text: &str) -> BTreeSet<Ref> {
             } else {
                 None
             };
-            out.insert(Ref { path: path.to_string(), symbol });
+            out.insert(Ref {
+                path: path.to_string(),
+                symbol,
+            });
         }
         i = j.max(start + 1);
     }
@@ -221,11 +228,12 @@ mod extractor_tests {
 
     #[test]
     fn extracts_path_and_symbol() {
-        let refs = extract_refs("see `crates/deck/deck-core/src/view.rs::serve_sui_route_setup` here");
+        let refs =
+            extract_refs("see `crates/deck/deck-core/src/view.rs::serve_sail_route_setup` here");
         assert_eq!(refs.len(), 1);
         let r = refs.iter().next().unwrap();
         assert_eq!(r.path, "crates/deck/deck-core/src/view.rs");
-        assert_eq!(r.symbol.as_deref(), Some("serve_sui_route_setup"));
+        assert_eq!(r.symbol.as_deref(), Some("serve_sail_route_setup"));
     }
 
     #[test]
@@ -241,7 +249,10 @@ mod extractor_tests {
     fn ignores_non_rs_directory_mentions() {
         // A `crates/...` mention that is not a `.rs` file ref is not asserted.
         let refs = extract_refs("output lands in `crates/deck/deck-core/assets/`");
-        assert!(refs.is_empty(), "directory mention must not be captured: {refs:?}");
+        assert!(
+            refs.is_empty(),
+            "directory mention must not be captured: {refs:?}"
+        );
     }
 
     #[test]

@@ -14,7 +14,7 @@ const quickstart = `my-app/
 └─ routes/
    └─ page.sail        <h1>Hello, deck.</h1>
 
-$ deck dev
+$ sail dev
   ▸ serving http://127.0.0.1:7878`
 
 const layers = `SAIL    :  deck   :  your app

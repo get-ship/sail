@@ -11,7 +11,7 @@
 import initWasm, { analyze as wasmAnalyze } from '@ship/sail-compiler-wasm'
 
 /** Shape consumed by `<sail-code-editor>.setDiagnostics()`. */
-export interface SuiDiagnostic {
+export interface SailDiagnostic {
   line: number
   column?: number
   endLine?: number
@@ -55,7 +55,7 @@ function ensureWasm(wasmUrl: string): Promise<unknown> {
 export async function diagnose(
   source: string,
   wasmUrl: string = '/sail_compiler_bg.wasm',
-): Promise<SuiDiagnostic[]> {
+): Promise<SailDiagnostic[]> {
   await ensureWasm(wasmUrl)
   const analysis = wasmAnalyze(source) as WasmAnalysis
   return (analysis.diagnostics ?? []).map((d) => ({

@@ -68,6 +68,29 @@ export interface RouterHandle {
   dispose(): void
 }
 
+/** Multi-app base from `<meta name="deck-app-route" content="/_studio">`. */
+function appRouteBase(): string {
+  if (typeof document === 'undefined') return ''
+  const raw = document
+    .querySelector('meta[name="deck-app-route"]')
+    ?.getAttribute('content')
+    ?.trim()
+  if (!raw || raw === '/') return ''
+  return raw.replace(/\/$/, '')
+}
+
+/** Pathname relative to multi-app mount (e.g. `/_studio` → `/`). */
+function pathForMatch(pathname: string): string {
+  const base = appRouteBase()
+  if (!base) return pathname
+  if (pathname === base) return '/'
+  if (pathname.startsWith(base + '/')) {
+    const rest = pathname.slice(base.length)
+    return rest.startsWith('/') ? rest : `/${rest}`
+  }
+  return pathname
+}
+
 export function mountRouter(opts: MountRouterOptions): RouterHandle {
   const rootEl =
     typeof opts.root === 'string' ? document.querySelector(opts.root) : opts.root
@@ -109,7 +132,9 @@ export function mountRouter(opts: MountRouterOptions): RouterHandle {
   // seed from the old values — state survives a re-mount. Undefined for a normal
   // navigation (fresh scope).
   async function mountCurrent(restore?: Record<string, unknown>): Promise<void> {
-    const pathname = location.pathname
+    // Multi-app hosts (Studio at `/_studio`) inject `deck-app-route`; strip it
+    // so generated patterns (`/`) still match.
+    const pathname = pathForMatch(location.pathname)
     const myToken = ++token
     const chain = resolveLayoutChain(pathname, layouts)
     const chainKey = chainKeyOf(chain)
@@ -429,6 +454,10 @@ async function buildMountTarget(
 
   const routeSlot = document.createElement('div')
   routeSlot.setAttribute('slot', 'route')
+  // Fill the layout's route column. A bare block auto-height host collapses
+  // flex children (studio/workbench panes only paint the top chrome strip).
+  routeSlot.style.cssText =
+    'display:flex;flex-direction:column;flex:1 1 0%;min-height:0;min-width:0;height:100%;overflow:hidden'
   let parent: HTMLElement = routeSlot
   const layoutHandles: MountHandle[] = []
 

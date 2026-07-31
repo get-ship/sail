@@ -79,6 +79,15 @@ skills-lock.json
 scratch/
 .l1cost/
 
+# Agent / browser-debug screenshots dumped at repo root (never product)
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+# Mis-scaffolds if deck/cli is run from monorepo root by mistake
+/routes/
+/app/
+
 # bundle-cost.mjs scratch
 apps/sail-site/.bundle-cost/
 .archive/
@@ -89,3 +98,10 @@ docs/ship-sail/
 
 # Eval harness run artifacts (trajectories may contain machine paths)
 eval/runs/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Hygiene prove+clean probes (tests/hygiene may write then delete these)
+**/.__hygiene_*

@@ -123,11 +123,47 @@ export const computedColorToHex = (s: string): string => {
   return ''
 }
 
+/** OKLCH string → `#rrggbb` for picker internals (invisible conversion). */
+export const oklchToHex = (s: string): string => computedColorToHex(s)
+
+const lin = (c: number): number => {
+  const x = c / 255
+  return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
+}
+
+/**
+ * `#rrggbb` → approximate `oklch(L C H)` for token write-back.
+ * Users never see hex; SSOT remains oklch.
+ */
+export const hexToOklch = (hex: string, alpha?: number): string => {
+  const rgb = hexToRgb(normHex(hex) || hex)
+  if (!rgb) return 'oklch(0 0 0)'
+  const r = lin(rgb.r)
+  const g = lin(rgb.g)
+  const b = lin(rgb.b)
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
+  const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s
+  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s
+  const C = Math.sqrt(a * a + bb * bb)
+  let H = (Math.atan2(bb, a) * 180) / Math.PI
+  if (H < 0) H += 360
+  const fmt = (n: number) => String(Math.round(n * 1000) / 1000)
+  if (alpha != null && alpha < 1) {
+    return `oklch(${fmt(L)} ${fmt(C)} ${fmt(H)} / ${fmt(alpha)})`
+  }
+  return `oklch(${fmt(L)} ${fmt(C)} ${fmt(H)})`
+}
+
+export const isOklch = (s: string): boolean => /^oklch\(/i.test(String(s ?? '').trim())
+
 // --- swatch palette derivation ----------------------------------------------
 
 // Design-system tone tokens the swatches pull from — never a hardcoded brand
 // hex. Resolved through computed style against the host so the palette tracks
-// the active theme (ship-light/dark/paper/halo/console/contrast).
+// the active theme (ship/paper/halo/console/contrast — modes via data-mode).
 const TONE_TOKENS: { token: string; label: string }[] = [
   { token: '--primary', label: 'Primary' },
   { token: '--accent', label: 'Accent' },

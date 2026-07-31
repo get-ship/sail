@@ -70,12 +70,11 @@ impl LoadStateVisitor<'_> {
             col,
             rule: RULE_ID,
             severity: Severity::Warn,
-            message:
-                "controllers must not branch on a live source's `.kind` — loading/error/ok \
+            message: "controllers must not branch on a live source's `.kind` — loading/error/ok \
                  are render states. Expose the live source and let the template own them via \
                  `{#while-loading of src}` / `{#while-error err of src}` / `{#if src().kind === \
                  'ok'}`. Use `unwrap`/`unwrapOr` for the value in the controller."
-                    .to_string(),
+                .to_string(),
             suggest: Some(
                 "return the live source from `scope`; branch states in the `.sail` with \
                  {#while-loading}/{#while-error}"
@@ -104,7 +103,7 @@ impl<'a> Visit<'a> for LoadStateVisitor<'_> {
                 | BinaryOperator::StrictEquality
                 | BinaryOperator::StrictInequality
         ) && ((is_kind_access(&expr.left) && is_kind_literal(&expr.right))
-                || (is_kind_literal(&expr.left) && is_kind_access(&expr.right)))
+            || (is_kind_literal(&expr.left) && is_kind_access(&expr.right)))
         {
             self.report(expr.span);
         }
@@ -143,8 +142,14 @@ mod tests {
     #[test]
     fn flags_kind_loading_and_error() {
         assert_eq!(n("const l = derived(() => src().kind === 'loading')"), 1);
-        assert_eq!(n("const e = derived(() => s().kind === 'error' ? x : '')"), 1);
-        assert_eq!(n("function f() { if (src().kind !== 'ok') return 1; return 0 }"), 1);
+        assert_eq!(
+            n("const e = derived(() => s().kind === 'error' ? x : '')"),
+            1
+        );
+        assert_eq!(
+            n("function f() { if (src().kind !== 'ok') return 1; return 0 }"),
+            1
+        );
     }
 
     #[test]
@@ -157,7 +162,13 @@ mod tests {
     #[test]
     fn ignores_non_controller_files() {
         // Templates compile their own `.kind` branches — only controllers are governed.
-        assert_eq!(check(Path::new("page.sail"), "src().kind === 'loading'").len(), 0);
-        assert_eq!(check(Path::new("views/x/decorate.ts"), "x.kind === 'ok'").len(), 0);
+        assert_eq!(
+            check(Path::new("page.sail"), "src().kind === 'loading'").len(),
+            0
+        );
+        assert_eq!(
+            check(Path::new("views/x/decorate.ts"), "x.kind === 'ok'").len(),
+            0
+        );
     }
 }

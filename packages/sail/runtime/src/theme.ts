@@ -7,7 +7,7 @@
 // kill. This module can ONLY write declared token names to `:root`; an
 // arbitrary property, or any target other than `:root`, is refused. That shape
 // constraint is the entire sanction — there is NO capability gate and NO
-// `sail.config` flag (owner ruling 2026-07-18).
+// `sail.config` flag.
 //
 // Mechanistically this is the `:root`-targeting sibling of the compiler's
 // signal→`(--x)` reflection: that reflection writes a token onto the host via
@@ -17,7 +17,7 @@
 // so this is the ONLY door; framework runtime code (this file) is exempt at the
 // dispatch level, so the `root.style.setProperty` below is not a violation.
 //
-// Surface (see m-deck-standalone/scratch/theme-api-spec.md):
+// Surface:
 //   theme.preview(patch)  — live :root write (session): the live-preview mechanism
 //   theme.commit(patch)   — persist: dev → theme data file (→HMR) via host hook;
 //                           live → localStorage (default) or host backend

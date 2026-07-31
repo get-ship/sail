@@ -11,7 +11,7 @@ describe('use:marquee', () => {
   })
 
   it('attaches a loop translate-x config using host duration/reverse', () => {
-    const attach = vi.spyOn(motion, '__sui_motion_attach').mockReturnValue(() => {})
+    const attach = vi.spyOn(motion, '__sail_motion_attach').mockReturnValue(() => {})
 
     const host = document.createElement('div')
     host.setAttribute('data-sail-host', 'ticker')
@@ -41,7 +41,7 @@ describe('use:marquee', () => {
 
   it('re-attaches when host duration/reverse attributes change', () => {
     const dispose = vi.fn()
-    const attach = vi.spyOn(motion, '__sui_motion_attach').mockReturnValue(dispose)
+    const attach = vi.spyOn(motion, '__sail_motion_attach').mockReturnValue(dispose)
 
     const host = document.createElement('div')
     host.setAttribute('data-sail-host', 'ticker')

@@ -2,7 +2,7 @@
 //! prop that leaves members without an arm warns (never errors); full
 //! coverage and non-union scrutinees stay silent.
 
-use sail_compiler::{check_all, DiagSeverity, Diagnostic};
+use sail_compiler::{DiagSeverity, Diagnostic, check_all};
 
 const RULE: &str = "sail-style-match-exhaustive";
 
@@ -27,9 +27,21 @@ props: {
     assert_eq!(diags.len(), 1, "one warning for the missing arm: {diags:?}");
     let d = &diags[0];
     assert_eq!(d.severity, DiagSeverity::Warning);
-    assert!(d.message.contains("`variant`"), "names the prop: {}", d.message);
-    assert!(d.message.contains("`c`"), "names the missing member: {}", d.message);
-    assert!(!d.message.contains("`a`") && !d.message.contains("`b`"), "covered members not named: {}", d.message);
+    assert!(
+        d.message.contains("`variant`"),
+        "names the prop: {}",
+        d.message
+    );
+    assert!(
+        d.message.contains("`c`"),
+        "names the missing member: {}",
+        d.message
+    );
+    assert!(
+        !d.message.contains("`a`") && !d.message.contains("`b`"),
+        "covered members not named: {}",
+        d.message
+    );
 }
 
 #[test]
@@ -57,7 +69,10 @@ props: {
 <div sx={match(label, { x: style.bg(primary) })}>x</div>
 <p sx={match(count, { 3: style.bg(muted) })}>y</p>
 "#;
-    assert!(warnings(src).is_empty(), "string/number scrutinees must not warn");
+    assert!(
+        warnings(src).is_empty(),
+        "string/number scrutinees must not warn"
+    );
 }
 
 #[test]
@@ -73,5 +88,9 @@ const tones = match(variant, { a: style.bg(primary) })
 "#;
     let diags = warnings(src);
     assert_eq!(diags.len(), 1, "const-declared match warns once: {diags:?}");
-    assert!(diags[0].message.contains("`b`") && diags[0].message.contains("`c`"), "names both missing members: {}", diags[0].message);
+    assert!(
+        diags[0].message.contains("`b`") && diags[0].message.contains("`c`"),
+        "names both missing members: {}",
+        diags[0].message
+    );
 }

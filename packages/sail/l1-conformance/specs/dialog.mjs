@@ -6,12 +6,21 @@
 // (a real modal is top-layer, so it can't sit in a 7-up grid).
 // BEHAVIOR: the real thing — invoker opens it modally, invoker + Escape close it.
 
-const shell = (attrs = '') =>
-  `<dialog open ${attrs} style="position:static;margin:0;max-height:none">` +
-  `<header>Delete project</header>` +
-  `<section>This cannot be undone.</section>` +
-  `<footer><button variant="ghost">Cancel</button><button variant="destructive">Delete</button></footer>` +
-  `</dialog>`
+const DL =
+  'sail-dialog sx-positionfixed sx-inset0 sx-mauto sx-pad0 sx-wfull sx-maxWpanelmaxwmd sx-overflowhidden sx-borderWidth1 sx-borderborder sx-radiusxl sx-bgsurface1 sx-fgcardforeground sx-shadowxl sx-fontFamilybody sx-open-displayflex sx-open-flexDircolumn sx-sizesm-maxWpanelmaxwsm sx-sizemd-maxWpanelmaxwmd sx-sizelg-maxWpanelmaxwlg sx-sizefull-maxWfull sx-sizefull-maxHfull sx-sidecenter-mauto sx-sidestart-inset0 sx-sidestart-maxWpanelmaxwsm sx-sidestart-radiusnone sx-sidestart-m0 sx-sideend-inset0 sx-sideend-maxWpanelmaxwsm sx-sideend-radiusnone sx-sideend-m0 sx-sidetop-inset0 sx-sidetop-wfull sx-sidetop-maxWnone sx-sidetop-radiusnone sx-sidetop-m0 sx-sidebottom-inset0 sx-sidebottom-wfull sx-sidebottom-maxWnone sx-sidebottom-radiusnone sx-sidebottom-m0'
+
+const shell = (attrs = '') => {
+  const m = attrs.match(/class="([^"]*)"/)
+  const rest = attrs.replace(/class="[^"]*"\s*/, '').trim()
+  const cls = m ? `${DL} ${m[1]}` : DL
+  return (
+    `<dialog open class="${cls}" ${rest} style="position:static;margin:0;max-height:none">` +
+    `<header>Delete project</header>` +
+    `<section>This cannot be undone.</section>` +
+    `<footer><button variant="ghost">Cancel</button><button variant="destructive">Delete</button></footer>` +
+    `</dialog>`
+  )
+}
 
 export default {
   tag: 'dialog',
@@ -42,7 +51,7 @@ export default {
       // the body is the ONLY part that scrolls
       if (cs(body, 'overflowY') !== 'auto') bad.push({ i, why: 'body-not-scrollable' })
     })
-    const scope = "[data-theme-preview='ship-light'] "
+    const scope = "[data-theme-preview='ship'] "
     const q = (s) => document.querySelector(scope + s)
     // the size channel actually narrows
     const w = (s) => q(s).getBoundingClientRect().width
@@ -53,7 +62,7 @@ export default {
       bad.push({ why: 'sheet-not-squared' })
     // frozen-token guard
     const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .l1-mark`), 'backgroundColor')
-    if (mark('ship-light') === mark('ship-dark')) bad.push({ why: 'frozen-token', light: mark('ship-light') })
+    if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
     return { count: document.querySelectorAll('dialog').length, bad: bad.slice(0, 10) }
   },
   behavior: {
@@ -61,7 +70,7 @@ export default {
     rows() {
       return [
         `<button id="open" command="show-modal" commandfor="d1">Open</button>` +
-        `<dialog id="d1"><header>Hi</header><section>Body</section>` +
+        `<dialog id="d1" class="${DL}"><header>Hi</header><section>Body</section>` +
         `<footer><button id="x" command="close" commandfor="d1">Close</button></footer></dialog>`,
       ]
     },

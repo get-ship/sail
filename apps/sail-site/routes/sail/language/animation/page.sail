@@ -1,12 +1,11 @@
 <!--
-  /sail/language/animation — chapter 6, rebuilt per owner review: say what animation
-  IS first; hero is tiles (no clipping text); full expression leads and
-  presets are one paragraph; scroll/loop prose in plain English; choreography
-  demo full-width with the code below it; compositor talk and the 30 kB jab
-  cut; Under the hood answers where Sail ends and the embedded Motion library
-  begins. The style.reveal demos are correct as written — the reveal trigger
-  currently attaches nothing at runtime (regression, job/motion-view-regression
-  dispatched with this page as the gate).
+  /sail/language/animation — chapter 6: say what animation IS first; hero is
+  tiles (no clipping text); full expression leads and presets are one
+  paragraph; scroll/loop prose in plain English; choreography demo full-width
+  with the code below it; Under the hood answers where Sail ends and the
+  embedded Motion library begins. The style.reveal demos are correct as
+  written — the reveal trigger currently attaches nothing at runtime
+  (known regression; this page is the visual gate).
 -->
 
 <controller>
@@ -80,7 +79,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       is the delay between siblings.
     </p>
   </row>
-  <if cond={dealt()}>
+  <if {dealt()}>
     <row gap="3" align="center" sx={style.minH(9)}>
       <div sx={style.w(9).h(9).radius(md).bg(primary).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })}></div>
       <div sx={style.w(9).h(9).radius(md).bg(primary).opacity(75).enter({ translate-y: 'spring:snappy', stagger: '0.07s' })}></div>
@@ -105,7 +104,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         {open() ? 'Remove' : 'Add'} the panel
       </button>
     </row>
-    <if cond={open()}>
+    <if {open()}>
       <card
 sx={style.pad(4).enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opacity: 'fade-out' })}
 >
@@ -204,10 +203,16 @@ sx={style.pad(4).enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opaci
       <span sx={style.w(8).textAlign(end).fontFamily(mono).fontSize(sm).fg(muted-foreground)}>{scrubText()}</span>
     </row>
     <row sx={style.minH(9)} align="center">
-      <card
+      <!--
+        Plain div, not <card>: card host always paints bg(card) ≈ surface-1,
+        so bg(primary) never wins and the tile disappears on most themes.
+        Matches the stagger tiles above.
+      -->
+      <div
         data-testid="timeline-tile"
+        shrink="0"
         sx={style.w(9).h(9).bg(primary).radius(md).translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale))}
-      ></card>
+      ></div>
     </row>
   </column>
   <p>

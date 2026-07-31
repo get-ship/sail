@@ -17,8 +17,7 @@
 //
 //   1. LINK THEM (preferred, and what a real app should do):
 //        <link rel="stylesheet" href="/sail.css" data-sail-contracts>
-//      The file is already materialized at @ship/tokens/sail-base.css
-//      (deprecated alias: @ship/tokens/contracts.css).
+//      The file is already materialized at @ship/tokens/sail-base.css.
 //
 //   2. IMPORT THE INSTALLER (for JS-only hosts, and convenient in dev):
 //        import '@ship/sail-runtime/contracts'

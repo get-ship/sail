@@ -1,34 +1,11 @@
-// native-cache-torture — hammer the native core on exactly the paths
-// where young caches die: races, invalidate-during-flight, unmount
-// mid-everything, retry backoff, push+pull interleave, dehydrate
-// under fire, a differential against query-core, and staleTime clock-
-// skew exactness. See
-// helm/data/missions/m-deck-standalone/scratch/native-cache-torture-omp.md
-// for the brief and
-// helm/data/missions/m-deck-standalone/scratch/native-cache-torture-report.md
-// for the kill list.
+// native-cache-torture — hammer the native core on paths where young caches
+// die: races, invalidate-during-flight, unmount mid-everything, retry
+// backoff, push+pull interleave, dehydrate under fire, and staleTime
+// clock-skew exactness.
 //
-// One real bug was found and fixed here (see the UNMOUNT MID-EVERYTHING
-// section): neither `NativeCache.dispose()` nor GC eviction bumped
-// `fetchToken` or otherwise marked the entry dead, so a fetch (or a
-// push source that ignores its own unsubscribe) already in flight at
-// teardown time would still write into the torn-down entry's signal
-// after the fact. Fixed with an `entry.disposed` flag checked in the
-// fetch resolve/reject handlers and the push callbacks, set by both
-// `dispose()` and GC eviction.
-//
-// Section 2 previously found `NativeCache` had no public `invalidate()`
-// and exercised the gap via direct `cache.attach()`/`cache.fetch()`
-// calls. `invalidate(prefix)` now exists (query-slice job, see
-// helm/data/missions/m-deck-standalone/scratch/invalidate-design-proposal.md)
-// — section 2 below exercises the real method. Section 9 covers the
-// AbortSignal wiring added alongside it (dispose/GC/invalidate all
-// abort real in-flight network work, not just discard its result).
-//
-// Section 7's differential-vs-query-core suite (and the invalidate
-// differential at the end of section 2) proved parity pre-cutover and
-// was retired along with @tanstack/query-core and queried-querycore.ts
-// — see the query-slice job's report.
+// Contract: dispose/GC must mark entries dead so in-flight fetch/push
+// cannot write after teardown (`entry.disposed`). `invalidate(prefix)`
+// and AbortSignal wiring abort real in-flight work, not just discard results.
 
 import { describe, expect, it, vi } from 'vitest'
 import { createScope, withScope, type EffectScope } from '../src/effect-scope'

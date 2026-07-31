@@ -3,14 +3,14 @@
 // side-effect-import the emitted ESM (which registers the custom element).
 // Adapted from packages/sail/runtime/example/sail-app/scripts/precompile.mjs.
 //
-// OWNERSHIP: the canonical copy of this file (and the rest of the keyed/sui
+// OWNERSHIP: the canonical copy of this file (and the rest of the keyed/sail
 // bench app) lives in the Ship repo at tests/perf/frameworks/keyed/sail/ and is
 // synced into the external js-framework-benchmark checkout by the bench harness
 // (scripts/dev/bench-lib.mjs) before each build. Edit it there, not in the
 // checkout — the checkout copy is overwritten on the next run.
 //
-// This app lives OUTSIDE the sui checkout, so in-tree compiler discovery doesn't
-// apply. Rather than hardcode an absolute path (a cutover landmine — the sui
+// This app lives OUTSIDE the sail checkout, so in-tree compiler discovery doesn't
+// apply. Rather than hardcode an absolute path (a cutover landmine — the sail
 // checkout moves), resolve a single SAIL_REPO root by env or by probing
 // conventional locations, then derive the compiler + runtime from it.
 

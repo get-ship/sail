@@ -1,8 +1,7 @@
 <!--
-  /sail/reference — index of the complete language surface, split per API.
-  Each linked page renders its own section from the generated modules
-  (apps/sail-site/src/language-surface.gen.ts, prop-registry.gen.ts,
-  runtime-surface.gen.ts) — nothing on any reference page is hand-listed.
+  /sail/reference — language surface index, split by API tier.
+  Tier A pages render compiler tables (language-surface.gen.ts / prop-registry).
+  Tier B is author-surface.json → runtime-surface.gen.ts (not the full package graph).
 -->
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
@@ -18,69 +17,79 @@ import {
   SCOPE_GRAMMAR,
   CONFIG_KEYS,
 } from '../../../src/language-surface.gen'
-import { RUNTIME_EXPORTS } from '../../../src/runtime-surface.gen'
+import { AUTHOR_RUNTIME_COUNT, RUNTIME_CATEGORIES } from '../../../src/runtime-surface.gen'
 
 interface SectionCard {
   href: string
   title: string
   count: string
   description: string
+  tier: string
 }
 
 const SECTIONS: SectionCard[] = [
   {
     href: '/sail/reference/runtime',
-    title: 'Runtime',
-    count: `${RUNTIME_EXPORTS.length} exports`,
-    description: '@ship/sail-runtime\'s complete public surface — reactivity, stores, compositions, data, motion, timeline, theme.',
+    title: 'Author runtime',
+    count: `${AUTHOR_RUNTIME_COUNT} exports`,
+    description: `Tier B — intentional @ship/sail-runtime imports (${RUNTIME_CATEGORIES.length} groups: reactivity, controller, data, motion, …). Not host/framework dumps.`,
+    tier: 'B',
   },
   {
     href: '/sail/reference/template',
     title: 'Template',
     count: `${DIRECTIVES.length} directives`,
-    description: 'Every attribute-position directive: on:, bind:, use:, Style motion (.enter/.exit/…), slots, and the block vocabulary.',
+    description: 'Tier A — every attribute-position directive: on:, bind:, use:, Style motion (.enter/.exit/…), slots, and the block vocabulary.',
+    tier: 'A',
   },
   {
     href: '/sail/reference/scope',
     title: 'Scope grammar',
     count: `${SCOPE_GRAMMAR.length} constructs`,
-    description: 'Everything a <scope> block can declare — props forms, type aliases, variants.',
+    description: 'Tier A — everything a <scope> block can declare — props forms, type aliases, variants.',
+    tier: 'A',
   },
   {
     href: '/sail/reference/sx',
     title: 'sx',
     count: `${SX_ATOMS.length} atoms`,
-    description: 'The closed styling vocabulary — atoms, refusals, state/condition prefixes, custom-property reads.',
+    description: 'Tier A — the closed styling vocabulary — atoms, refusals, state/condition prefixes, custom-property reads.',
+    tier: 'A',
   },
   {
     href: '/sail/reference/layout',
     title: 'Layout keywords',
     count: `${LAYOUT_KEYWORDS.length} keywords`,
-    description: 'Structure is elements, not CSS — the closed set of layout tags and their axis props.',
+    description: 'Tier A — structure is elements, not CSS — the closed set of layout tags and their axis props.',
+    tier: 'A',
   },
   {
     href: '/sail/reference/motion',
     title: 'Motion',
     count: `${MOTION.presets.length} presets`,
-    description: 'The one animation system — triggers, properties, presets, and the config value grammar.',
+    description: 'Tier A — Style motion triggers, properties, presets (template). Scrub-lane timeline() is tier B on Author runtime.',
+    tier: 'A',
   },
   {
     href: '/sail/reference/actions',
     title: 'Actions',
     count: `${ACTIONS.length} actions`,
-    description: 'The use: registry — built-in element behaviors, sorted, with params and summaries.',
+    description: 'Tier A — the use: registry — built-in element behaviors, sorted, with params and summaries.',
+    tier: 'A',
   },
   {
     href: '/sail/reference/elements',
     title: 'Elements',
     count: `${ELEMENTS.stdlib.length + ELEMENTS.reskins.length} elements`,
-    description: 'Every stdlib element and native reskin, with prop counts linking to full prop tables.',
+    description: 'Tier A — every stdlib element and native reskin (HTML L1 tags as specified, e.g. <img>), with prop tables.',
+    tier: 'A',
   },
   {
     href: '/sail/reference/config',
     title: 'Config',
     count: `${CONFIG_KEYS.length} keys`,
-    description: 'Every sail.config.json key, its type, its default, and its semantics.',
+    description: 'Tier A — every sail.config.json key, its type, its default, and its semantics.',
+    tier: 'A',
   },
 ]
 
@@ -88,6 +97,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   sections: () => SECTIONS,
   elementCount: () => ELEMENTS.stdlib.length + ELEMENTS.reskins.length,
   propRegistrySize: () => Object.keys(PROP_REGISTRY).length,
+  authorRuntimeCount: () => AUTHOR_RUNTIME_COUNT,
 }))
 </controller>
 
@@ -96,22 +106,29 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p role="doc-eyebrow">Reference</p>
     <h1>The language surface</h1>
     <p role="doc-lead">
-      Everything below is generated from the compiler's own tables — the
-      vocabulary the lint enforces is the vocabulary these pages document,
-      by construction. Regenerate with <code>bun run gen</code> (or
-      <code>cargo run -p sail-compiler -- prop-registry</code> for the
-      compiler tables alone).
+      Three tiers: <strong>A</strong> template / ambient (compiler tables),
+      <strong>B</strong> author runtime (intentional
+      <code>@ship/sail-runtime</code> imports — {authorRuntimeCount()} symbols),
+      <strong>C</strong> emit ABI and host entry points (<code>/internal</code>,
+      <code>server</code>, <code>framework</code>, …) which never appear on these
+      pages. Tier A regenerates with <code>cargo run -p sail-compiler -- prop-registry</code>;
+      tier B with <code>node scripts/gen-runtime-surface.mjs</code> (both via
+      <code>bun run gen</code> in sail-site). Allowlist:
+      <code>packages/sail/runtime/author-surface.json</code>.
     </p>
   </column>
 
   <grid cols="3" gap="3">
-    <for as="s" of={sections()} key={s.href}>
+    <for {sections()} as="s" key={s.href}>
       <a href={s.href}>
         <card padding="md" sx={style.minW(0).h(full)}>
           <column gap="2">
             <row justify="between" align="center">
               <h3>{s.title}</h3>
-              <small sx={style.fg(muted-foreground)}>{s.count}</small>
+              <row gap="2" align="center">
+                <badge size="sm">tier {s.tier}</badge>
+                <small sx={style.fg(muted-foreground)}>{s.count}</small>
+              </row>
             </row>
             <small sx={style.fg(muted-foreground)}>{s.description}</small>
           </column>

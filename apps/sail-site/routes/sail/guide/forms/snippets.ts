@@ -57,10 +57,10 @@ export default controller(() => {
     <button type="button" variant="ghost" on:click={onReset}>Reset</button>
   </row>
 
-  <if cond={profile.lastError()}>
+  <if {profile.lastError()}>
     <alert tone="destructive">{profile.lastError().message}</alert>
   </if>
-  <if cond={saved()}>
+  <if {saved()}>
     <alert tone="success">Saved — {saved().name} ({saved().email}).</alert>
   </if>
 </form>`,
@@ -101,17 +101,17 @@ export default controller(() => {
     {profile.pending() ? 'Saving…' : 'Save'}
   </button>
 
-  <if cond={profile.lastError()}>
+  <if {profile.lastError()}>
     <alert tone="destructive">{profile.lastError().message}</alert>
   </if>
-  <if cond={saved()}>
+  <if {saved()}>
     <alert tone="success">Saved — {saved().name} ({saved().email}).</alert>
   </if>
 </form>`,
 
   reset: `<button type="button" on:click={onReset}>Reset</button>
 <!-- profile.dirty() is true whenever any field differs from the baseline -->
-<if cond={profile.dirty()}>
+<if {profile.dirty()}>
   <p>Unsaved changes.</p>
 </if>`,
 
@@ -120,8 +120,8 @@ export default controller(() => {
   <input name="title" />
   <button type="submit">Create</button>
 
-  <if cond={$mutation().kind === 'loading'}><spinner></spinner></if>
-  <if cond={$mutation().kind === 'error'}>
+  <if {$mutation().kind === 'loading'}><spinner></spinner></if>
+  <if {$mutation().kind === 'error'}>
     <alert tone="destructive">{$mutation().error.message}</alert>
   </if>
 </form>`,

@@ -1,25 +1,22 @@
 <!--
-  <a> — native <a>. L1 platform link; when `variant` is set, becomes a
-  button link. Style value language only.
-
-  Paint (Style product only): variant×tone via flat match + compound, semantic
-  hues only (no --tone* attribute channel, no tone-* design tokens). Base
-  geometry, Tier-2 chrome (corner-image / control-frame / lift / press), the
-  global focus ring, and disabled cursor/opacity stay in contracts.css.
-  Hover deepen: solid compounds use colorDeepen(token, 15) to reproduce the prior
-  color-mix(ton, foreground 15%) shift; soft compounds use colorMix(hue, pct)
-  for a transparent hue wash (rest + deeper hover).
+  <a> — native <a>. Bare (no variant) = text link (sail-base color). With
+  variant set = button link. Do NOT default-stamp variant/tone — freeform
+  stamping would force every href into button chrome and kill site links.
 -->
 
 <scope>
   props: {
+    // Defaults exist for the type surface; freeform stamping SKIP variant/tone
+    // (see default_prop_attrs) so bare <a href> stays a text link.
     variant: 'default' | 'solid' | 'soft' | 'outline' | 'ghost' = 'default'
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
     disabled = false
   }
 
-  // Untoned variant paint — the match(variant) arm is the default-tone path.
-  // Compounds below override per tone.
+  // Button-link chrome only when variant is present (attr-gated match arms).
+  // display(inline-flex) on base — dual-gate + sail-base both center a[variant]
+  // so freeform never leaves the label top-aligned in a block box.
+  const base = style.display(inline-flex).appearance(none).fontWeight(medium).leading(none).radius(md).borderWidth(control-stroke).border(solid).border(transparent).minH(control-h-md).padX(3).fontSize(base).select(none).whitespace(nowrap).cursor(pointer).underline(none)
   const vDefault = style.bg(background).border(border).fg(foreground).shadow(xs).when({
     hover: style.bg(muted).border(border-strong),
   })
@@ -29,11 +26,11 @@
   const vSoft = style.bg(hover-bg).border(border).fg(foreground).when({
     hover: style.opacity(90),
   })
-  const vOutline = style.border(foreground).fg(foreground).when({
+  const vOutline = style.bg(transparent).border(foreground).fg(foreground).when({
     hover: style.bg(hover-bg),
     disabled: style.bg(transparent),
   })
-  const vGhost = style.fg(foreground).when({
+  const vGhost = style.bg(transparent).border(transparent).fg(foreground).when({
     hover: style.bg(hover-bg),
     disabled: style.bg(transparent),
   })
@@ -76,6 +73,7 @@
 </scope>
 
 <a sx={[
+  base,
   match(variant, {
     default: vDefault,
     solid: vSolid,

@@ -310,7 +310,11 @@ mod tests {
         let src = "<style>.x { background-color: var(--card); }</style>";
         let f = run(src);
         assert_eq!(f.len(), 1, "{f:?}");
-        assert!(f[0].message.contains("background-color"), "{}", f[0].message);
+        assert!(
+            f[0].message.contains("background-color"),
+            "{}",
+            f[0].message
+        );
     }
 
     #[test]
@@ -405,7 +409,8 @@ mod tests {
 
     #[test]
     fn commented_var_card_is_skipped() {
-        let src = "<style>/* background: var(--card); */ :host { color: var(--foreground); }</style>";
+        let src =
+            "<style>/* background: var(--card); */ :host { color: var(--foreground); }</style>";
         let f = run(src);
         assert!(f.is_empty(), "{f:?}");
     }
@@ -457,7 +462,8 @@ mod tests {
 
     #[test]
     fn multiple_uses_each_fire() {
-        let src = "<style>.a { background: var(--card); } .b { background-color: var(--card); }</style>";
+        let src =
+            "<style>.a { background: var(--card); } .b { background-color: var(--card); }</style>";
         let f = run(src);
         assert_eq!(f.len(), 2, "{f:?}");
     }

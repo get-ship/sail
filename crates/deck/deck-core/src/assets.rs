@@ -57,6 +57,7 @@ const SAIL_LSP_DIAGNOSTICS_JS: &str = include_str!("../assets/sail-lsp-diagnosti
 const SUI_LUCIDE_ICONS_JSON: &str = include_str!("../assets/lucide-icons.json");
 const LIVE_RELOAD_JS: &str = include_str!("../assets/live-reload.js");
 const ERROR_OVERLAY_JS: &str = include_str!("../assets/error-overlay.js");
+const SAIL_STUDIO_BRIDGE_JS: &str = include_str!("../assets/sail-studio-bridge.js");
 // Aliases the runtime used to resolve client-side. Promoted to the daemon so a
 // `<sail-icon name="git">` request finds `git-branch` server-side with no client
 // indirection. Keep in lockstep with `packages/components/sail/primitives/src/sail-icon/registry.ts`.
@@ -78,7 +79,42 @@ static ICON_MAP: std::sync::LazyLock<std::collections::HashMap<String, String>> 
     });
 
 fn alias_for(name: &str) -> Option<&'static str> {
-    ICON_ALIASES.iter().find_map(|(k, v)| (*k == name).then_some(*v))
+    ICON_ALIASES
+        .iter()
+        .find_map(|(k, v)| (*k == name).then_some(*v))
+}
+
+/// Sorted glyph names in the embedded lucide registry (Studio browser + tests).
+pub fn lucide_icon_names() -> Vec<String> {
+    let mut names: Vec<String> = ICON_MAP.keys().cloned().collect();
+    names.sort();
+    names
+}
+
+/// Full standalone SVG for a lucide glyph (or alias), same envelope as
+/// [`serve_sail_icon`]. Used by the bundler to emit static icon assets.
+pub fn lucide_icon_svg(name: &str) -> Option<String> {
+    if name.is_empty()
+        || name.len() > 64
+        || !name
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+    {
+        return None;
+    }
+    let resolved = if ICON_MAP.contains_key(name) {
+        name
+    } else if let Some(via) = alias_for(name) {
+        via
+    } else {
+        return None;
+    };
+    let inner = ICON_MAP.get(resolved)?;
+    Some(format!(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" \
+         stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" \
+         stroke-linejoin=\"round\">{inner}</svg>"
+    ))
 }
 /// Public helper (used by route.rs). The in-process bundler writes route bundles
 /// to `<root>/.deck/routes/<name>/route.js` (the per-route output dir the bundler
@@ -89,7 +125,10 @@ fn alias_for(name: &str) -> Option<&'static str> {
 /// Mount-scoped: the roots come from the per-request [`Resolution`] (per-app
 /// route outputs first, then `<project_root>/.deck`), never a process global —
 /// so one process serving many apps reads each app's bundles from ITS own root.
-pub fn resolve_route_js(resolution: Option<&crate::resolver::Resolution>, name: &str) -> Option<String> {
+pub fn resolve_route_js(
+    resolution: Option<&crate::resolver::Resolution>,
+    name: &str,
+) -> Option<String> {
     let resolution = resolution?;
     for route_root in resolution.route_bundle_roots() {
         if let Some(js) = read_route_bundle(&route_root, name) {
@@ -101,7 +140,9 @@ pub fn resolve_route_js(resolution: Option<&crate::resolver::Resolution>, name: 
 
 fn read_route_bundle(root: &std::path::Path, name: &str) -> Option<String> {
     let bundle = root.join(format!("routes/{name}/route.js"));
-    std::fs::read(&bundle).ok().and_then(|b| String::from_utf8(b).ok())
+    std::fs::read(&bundle)
+        .ok()
+        .and_then(|b| String::from_utf8(b).ok())
 }
 
 //
@@ -206,7 +247,10 @@ pub fn serve_scaffold(
     // Resolution). No Resolution ⇒ an honest 404, never a shared global.
     let Some(root) = crate::resolver::resolve_project_root_with(resolution) else {
         return DeckResponse::not_found(
-            format!("scaffold '{}': no project root (host must carry a Resolution)", scaffold.name),
+            format!(
+                "scaffold '{}': no project root (host must carry a Resolution)",
+                scaffold.name
+            ),
             mode,
         );
     };
@@ -244,8 +288,7 @@ pub fn serve_scaffold(
             // Substitute $param tokens.
             let resolved = substitute_params(raw_value, params);
             // JSON-encode the value so it is a safe JS string literal.
-            let js_value =
-                serde_json::to_string(&resolved).unwrap_or_else(|_| "\"\"".to_string());
+            let js_value = serde_json::to_string(&resolved).unwrap_or_else(|_| "\"\"".to_string());
             parts.push_str(&format!("window.{key}={js_value};"));
         }
         parts.push_str("</script>");
@@ -271,6 +314,25 @@ pub fn serve_scaffold(
     // Surface the app's render mode (csr|ssr) so it's legible client-side
     // rather than implicit (empty `#root` = csr was the old tell).
     let html = crate::mode_html::inject_render_meta(&html, scaffold.render);
+    // Multi-app mount (e.g. Studio at `/_studio`): CSR router strips this base.
+    let html = crate::mode_html::inject_app_route_meta(&html, &scaffold.route);
+    // Portable design studio: stamp active project + themes dir (workspace-rel).
+    // Overlay Studio (`ops_project`) targets the *primary* app, not apps/studio.
+    let ops_project_root = scaffold
+        .ops_project
+        .as_ref()
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .and_then(|rel| {
+            root.parent() // apps/
+                .and_then(|p| p.parent()) // workspace
+                .map(|ws| ws.join(rel))
+                .filter(|p| p.is_dir())
+        });
+    let meta_root = ops_project_root.as_deref().unwrap_or(&root);
+    let html = crate::mode_html::inject_project_themes_meta(&html, meta_root);
+    // Product theme picker: effective emit set (project ∪ theme.enabled).
+    let html = crate::mode_html::inject_effective_themes_meta(&html, meta_root);
     // SSR (`render: ssr`): render the matched `routes/` page server-side and
     // inject its first-paint HTML into the (otherwise empty) mount root, so the
     // client HYDRATES it instead of building from scratch. The mount-root id is
@@ -304,9 +366,9 @@ pub fn serve_scaffold(
     } else {
         html
     };
-    // Dev-only: attach the runtime error overlay (task #80). A `sail:error`
-    // event (dispatched by packages/sail/runtime when an effect or setup
-    // throw reaches no error boundary) previously had no visible surface —
+    // Dev-only: attach the runtime error overlay. A `sail:error` event
+    // (dispatched by packages/sail/runtime when an effect or setup throw
+    // reaches no error boundary) previously had no visible surface —
     // console.error only, invisible unless devtools was already open. This
     // tag is never written in Production, so the overlay ships zero bytes
     // there; the client script also self-gates on the `deck-mode` meta
@@ -338,13 +400,10 @@ pub fn serve_scaffold_asset(
 ) -> DeckResponse {
     // Reject path-traversal patterns. Only simple filenames (no slashes, no
     // leading dots, no ".." components) are valid asset names. The chunk
-    // route's same guard was here formerly (`serve_sui_chunk`); it lives
+    // route's same guard was here formerly (`serve_sail_chunk`); it lives
     // here now since the chunk route is gone.
     if file.contains("..") || file.contains('/') || file.contains('\\') || file.starts_with('.') {
-        return DeckResponse::not_found(
-            format!("invalid asset path: {file}"),
-            mode,
-        );
+        return DeckResponse::not_found(format!("invalid asset path: {file}"), mode);
     }
     // Mount-scoped root: THIS request's project. No Resolution ⇒ honest 404.
     let Some(root) = crate::resolver::resolve_project_root_with(resolution) else {
@@ -396,7 +455,13 @@ pub fn serve_public_asset(
     let Ok(body) = std::fs::read(&path) else {
         return DeckResponse::not_found(format!("public asset not found: {file}"), mode);
     };
-    DeckResponse::new(200, public_asset_content_type(file), CachePolicy::Asset, mode, body)
+    DeckResponse::new(
+        200,
+        public_asset_content_type(file),
+        CachePolicy::Asset,
+        mode,
+        body,
+    )
 }
 
 /// Content-type for a public asset by file extension; unknown extensions get
@@ -453,15 +518,15 @@ fn substitute_params(value: &str, params: &[(&str, &str)]) -> String {
 // compile-time inclusion, but the runtime serves nothing from
 // `.deck/framework/` directly.
 
-pub fn serve_sui_runtime(mode: DaemonMode) -> DeckResponse {
+pub fn serve_sail_runtime(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SUI_RUNTIME_JS.to_string(), mode)
 }
 
-pub fn serve_sui_dom(mode: DaemonMode) -> DeckResponse {
+pub fn serve_sail_dom(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SUI_DOM_JS.to_string(), mode)
 }
 
-pub fn serve_sui_sdk_client(mode: DaemonMode) -> DeckResponse {
+pub fn serve_sail_sdk_client(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SUI_SDK_CLIENT_JS.to_string(), mode)
 }
 
@@ -469,19 +534,19 @@ pub fn serve_sui_sdk_client(mode: DaemonMode) -> DeckResponse {
 /// (wasm-bindgen glue for the in-browser SAIL compiler). The importmap binds
 /// every bare import of this package to this URL; the companion `.wasm` binary
 /// is served at `/sail_compiler_bg.wasm` by the host app's `public/` assets.
-pub fn serve_sui_compiler_wasm(mode: DaemonMode) -> DeckResponse {
+pub fn serve_sail_compiler_wasm(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SAIL_COMPILER_WASM_JS.to_string(), mode)
 }
 
 /// `GET /_deck/lsp-completions.js` — the `@ship/sail-lsp-browser/completions`
 /// singleton used by the code editor for scope-aware `.sail` completions.
-pub fn serve_sui_lsp_completions(mode: DaemonMode) -> DeckResponse {
+pub fn serve_sail_lsp_completions(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SAIL_LSP_COMPLETIONS_JS.to_string(), mode)
 }
 
 /// `GET /_deck/lsp-diagnostics.js` — the `@ship/sail-lsp-browser/diagnostics`
 /// singleton used by the code editor for streaming `.sail` diagnostics.
-pub fn serve_sui_lsp_diagnostics(mode: DaemonMode) -> DeckResponse {
+pub fn serve_sail_lsp_diagnostics(mode: DaemonMode) -> DeckResponse {
     DeckResponse::js_asset(SAIL_LSP_DIAGNOSTICS_JS.to_string(), mode)
 }
 
@@ -509,9 +574,22 @@ pub fn baked_framework_stamps() -> Vec<(&'static str, Option<&'static str>)> {
         ("sail-dom.js", parse_baked_stamp(SUI_DOM_JS)),
         ("sail-sdk-client.js", parse_baked_stamp(SUI_SDK_CLIENT_JS)),
         ("deck-route.js", parse_baked_stamp(DECK_ROUTE_JS)),
-        ("sail-compiler-wasm.js", parse_baked_stamp(SAIL_COMPILER_WASM_JS)),
-        ("sail-lsp-completions.js", parse_baked_stamp(SAIL_LSP_COMPLETIONS_JS)),
-        ("sail-lsp-diagnostics.js", parse_baked_stamp(SAIL_LSP_DIAGNOSTICS_JS)),
+        (
+            "sail-compiler-wasm.js",
+            parse_baked_stamp(SAIL_COMPILER_WASM_JS),
+        ),
+        (
+            "sail-lsp-completions.js",
+            parse_baked_stamp(SAIL_LSP_COMPLETIONS_JS),
+        ),
+        (
+            "sail-lsp-diagnostics.js",
+            parse_baked_stamp(SAIL_LSP_DIAGNOSTICS_JS),
+        ),
+        (
+            "sail-studio-bridge.js",
+            parse_baked_stamp(SAIL_STUDIO_BRIDGE_JS),
+        ),
     ]
 }
 
@@ -528,41 +606,50 @@ pub fn serve_deck_route(mode: DaemonMode) -> DeckResponse {
 /// granularity that matches usage: each `<sail-icon>` triggers one tiny GET
 /// (typically <1 KB), 304-cached on second mount.
 ///
+/// Meta: `registry.json` (or bare `registry`) returns the full sorted name list
+/// for Studio glyph browser fallback when the build `manifest.json` is empty.
+///
 /// The response is a full standalone `<svg>` with lucide's canonical viewBox
 /// and `stroke="currentColor"` so the icon picks up the host's `color` CSS.
 /// Aliases (`git` → `git-branch` etc.) are resolved server-side so the
 /// client can stay alias-unaware.
-pub fn serve_sui_icon(mode: DaemonMode, name: &str) -> DeckResponse {
+pub fn serve_sail_icon(mode: DaemonMode, name: &str) -> DeckResponse {
+    // Full-pack name list for design tooling (Studio browser). Not SVG.
+    if name == "registry" || name == "registry.json" {
+        return serve_icon_registry(mode);
+    }
     // Reject path-traversal + non-lucide name shapes early — names are
     // kebab-case ASCII, identical to the file stems lucide-static ships.
     if name.is_empty()
         || name.len() > 64
-        || !name.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+        || !name
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
     {
         return DeckResponse::not_found("invalid icon name", mode);
     }
-    let resolved = if ICON_MAP.contains_key(name) {
-        name
-    } else if let Some(via) = alias_for(name) {
-        via
-    } else {
+    let Some(svg) = lucide_icon_svg(name) else {
         return DeckResponse::not_found(format!("icon not in lucide set: {name}"), mode);
     };
-    let inner = ICON_MAP.get(resolved).expect("resolved name in map");
-    // Canonical lucide attrs — kept in lockstep with `makeSvg()` in
-    // sail-icon.controller.ts so client (CDN-src mode) + daemon (named mode)
-    // render identically.
-    let svg = format!(
-        "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" \
-         stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" \
-         stroke-linejoin=\"round\">{inner}</svg>"
-    );
     DeckResponse::new(
         200,
         "image/svg+xml; charset=utf-8",
         crate::response::CachePolicy::Asset,
         mode,
         svg.into_bytes(),
+    )
+}
+
+/// `GET /_deck/icons/registry.json` — sorted lucide glyph names (full pack).
+pub fn serve_icon_registry(mode: DaemonMode) -> DeckResponse {
+    let names = lucide_icon_names();
+    let body = serde_json::to_vec(&names).unwrap_or_else(|_| b"[]".to_vec());
+    DeckResponse::new(
+        200,
+        "application/json; charset=utf-8",
+        crate::response::CachePolicy::Asset,
+        mode,
+        body,
     )
 }
 
@@ -573,7 +660,9 @@ pub fn serve_sui_icon(mode: DaemonMode, name: &str) -> DeckResponse {
 const FRAMEWORK_FONTS: &[(&str, &[u8])] = &[
     (
         "dm-sans-latin-wght-normal.woff2",
-        include_bytes!("../../../../packages/sail/tokens/src/fonts/dm-sans-latin-wght-normal.woff2"),
+        include_bytes!(
+            "../../../../packages/sail/tokens/src/fonts/dm-sans-latin-wght-normal.woff2"
+        ),
     ),
     (
         "syne-latin-wght-normal.woff2",
@@ -638,17 +727,26 @@ fn is_safe_framework_font_name(file: &str) -> bool {
 /// `GET /_deck/live-reload.js` — the one HMR client, shared by the route
 /// host and the shell. Served in every mode (it self-gates on the
 /// `deck-mode` meta tag); only subscribes when the daemon is in dev.
-pub fn serve_sui_live_reload(mode: DaemonMode) -> DeckResponse {
+pub fn serve_sail_live_reload(mode: DaemonMode) -> DeckResponse {
     let js = read_asset("live-reload.js").unwrap_or_else(|| LIVE_RELOAD_JS.to_string());
     DeckResponse::js_asset(js, mode)
 }
 
 /// `GET /_deck/error-overlay.js` — the dev-mode runtime error overlay
-/// client (task #80). Served in every mode like `live-reload.js` (it
-/// self-gates on the `deck-mode` meta tag); the injecting `<script>` tag
-/// in `serve_scaffold` is what actually keeps it out of production pages.
-pub fn serve_sui_error_overlay(mode: DaemonMode) -> DeckResponse {
+/// client. Served in every mode like `live-reload.js` (it self-gates on the
+/// `deck-mode` meta tag); the injecting `<script>` tag in `serve_scaffold`
+/// is what actually keeps it out of production pages.
+pub fn serve_sail_error_overlay(mode: DaemonMode) -> DeckResponse {
     let js = read_asset("error-overlay.js").unwrap_or_else(|| ERROR_OVERLAY_JS.to_string());
+    DeckResponse::js_asset(js, mode)
+}
+
+/// `GET /_deck/sail-studio-bridge.js` — Sail Studio bridge under `sail dev`.
+/// Baked from `@ship/sail-studio-bridge`. Imported by live-reload; self-gates
+/// on deck-mode=development. Hotkeys + FAB + selection ping only (no ops URLs).
+pub fn serve_sail_studio_bridge(mode: DaemonMode) -> DeckResponse {
+    let js =
+        read_asset("sail-studio-bridge.js").unwrap_or_else(|| SAIL_STUDIO_BRIDGE_JS.to_string());
     DeckResponse::js_asset(js, mode)
 }
 
@@ -658,7 +756,7 @@ pub fn serve_sui_error_overlay(mode: DaemonMode) -> DeckResponse {
 /// `.deck/`, so the runtime serves no shared chunks at this path. The
 /// route is gone; route bundles that used to import `../../<chunk>.js`
 /// now fail to load — route chunk serving is a follow-up.
-// (formerly `pub fn serve_sui_chunk(mode, file) -> DeckResponse`) removed.
+// (formerly `pub fn serve_sail_chunk(mode, file) -> DeckResponse`) removed.
 
 #[cfg(test)]
 mod tests {
@@ -666,7 +764,7 @@ mod tests {
 
     #[test]
     fn runtime_js_returns_baked_fallback() {
-        let resp = serve_sui_runtime(DaemonMode::Development);
+        let resp = serve_sail_runtime(DaemonMode::Development);
         assert_eq!(resp.status, 200);
     }
 
@@ -729,13 +827,14 @@ mod tests {
                 "sail-compiler-wasm.js",
                 "sail-lsp-completions.js",
                 "sail-lsp-diagnostics.js",
+                "sail-studio-bridge.js",
             ]
         );
     }
 
     #[test]
     fn icon_known_name_returns_svg() {
-        let resp = serve_sui_icon(DaemonMode::Development, "search");
+        let resp = serve_sail_icon(DaemonMode::Development, "search");
         assert_eq!(resp.status, 200, "lucide ships `search`");
         let body = std::str::from_utf8(&resp.body).unwrap();
         assert!(body.starts_with("<svg"));
@@ -744,38 +843,53 @@ mod tests {
     }
 
     #[test]
+    fn icon_registry_json_lists_full_pack() {
+        let resp = serve_sail_icon(DaemonMode::Development, "registry.json");
+        assert_eq!(resp.status, 200);
+        assert!(
+            resp.content_type.contains("json"),
+            "ct={}",
+            resp.content_type
+        );
+        let names: Vec<String> = serde_json::from_slice(&resp.body).expect("json names");
+        assert!(names.len() > 100, "full pack expected, got {}", names.len());
+        assert!(names.iter().any(|n| n == "search"));
+        assert!(names.windows(2).all(|w| w[0] <= w[1]), "sorted");
+    }
+
+    #[test]
     fn icon_alias_resolves_server_side() {
-        let direct = serve_sui_icon(DaemonMode::Development, "git-branch");
-        let aliased = serve_sui_icon(DaemonMode::Development, "git");
+        let direct = serve_sail_icon(DaemonMode::Development, "git-branch");
+        let aliased = serve_sail_icon(DaemonMode::Development, "git");
         assert_eq!(direct.status, 200);
         assert_eq!(aliased.status, 200);
-        assert_eq!(direct.body, aliased.body, "alias must serve identical bytes");
+        assert_eq!(
+            direct.body, aliased.body,
+            "alias must serve identical bytes"
+        );
     }
 
     #[test]
     fn icon_unknown_returns_404() {
-        let resp = serve_sui_icon(DaemonMode::Development, "definitely-not-a-real-icon");
+        let resp = serve_sail_icon(DaemonMode::Development, "definitely-not-a-real-icon");
         assert_eq!(resp.status, 404);
     }
 
     #[test]
     fn icon_path_traversal_rejected() {
-        let resp = serve_sui_icon(DaemonMode::Development, "../etc/passwd");
+        let resp = serve_sail_icon(DaemonMode::Development, "../etc/passwd");
         assert_eq!(resp.status, 404);
     }
 
     #[test]
     fn icon_empty_name_rejected() {
-        let resp = serve_sui_icon(DaemonMode::Development, "");
+        let resp = serve_sail_icon(DaemonMode::Development, "");
         assert_eq!(resp.status, 404);
     }
 
     #[test]
     fn framework_font_known_file_returns_woff2() {
-        let resp = serve_framework_font(
-            DaemonMode::Development,
-            "dm-sans-latin-wght-normal.woff2",
-        );
+        let resp = serve_framework_font(DaemonMode::Development, "dm-sans-latin-wght-normal.woff2");
         assert_eq!(resp.status, 200);
         assert_eq!(resp.content_type, "font/woff2");
         assert_eq!(resp.cache_control, "no-cache");
@@ -790,10 +904,7 @@ mod tests {
 
     #[test]
     fn framework_font_production_is_immutable() {
-        let resp = serve_framework_font(
-            DaemonMode::Production,
-            "syne-latin-wght-normal.woff2",
-        );
+        let resp = serve_framework_font(DaemonMode::Production, "syne-latin-wght-normal.woff2");
         assert_eq!(resp.status, 200);
         assert_eq!(resp.content_type, "font/woff2");
         assert_eq!(resp.cache_control, "public, immutable, max-age=31536000");
@@ -831,16 +942,17 @@ mod tests {
             assert_eq!(resp.status, 200, "{name} must serve");
             assert_eq!(resp.body.as_slice(), *bytes);
         }
-        assert_eq!(FRAMEWORK_FONTS.len(), 4, "FONTS manifest currently has 4 faces");
+        assert_eq!(
+            FRAMEWORK_FONTS.len(),
+            4,
+            "FONTS manifest currently has 4 faces"
+        );
     }
 
     // ── serve_scaffold ────────────────────────────────────────────────────────
 
     /// Build a minimal AppServeConfig in-memory for tests.
-    fn make_scaffold(
-        name: &str,
-        inject_globals: Vec<(&str, &str)>,
-    ) -> AppServeConfig {
+    fn make_scaffold(name: &str, inject_globals: Vec<(&str, &str)>) -> AppServeConfig {
         use std::collections::BTreeMap;
         let mut globals = BTreeMap::new();
         for (k, v) in inject_globals {
@@ -862,7 +974,14 @@ mod tests {
         // A real root is carried, but the scaffold source doesn't exist → 404.
         let dir = tempfile::tempdir().unwrap();
         let resolution = crate::resolver::Resolution::new().with_root(dir.path());
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution), None);
+        let resp = serve_scaffold(
+            DaemonMode::Development,
+            &scaffold,
+            &[],
+            None,
+            Some(&resolution),
+            None,
+        );
         assert_eq!(resp.status, 404);
     }
 
@@ -878,11 +997,17 @@ mod tests {
         // Project A: public/logo.svg = "AAA".
         let a = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(a.path().join("public")).unwrap();
-        std::fs::File::create(a.path().join("public/logo.svg")).unwrap().write_all(b"AAA").unwrap();
+        std::fs::File::create(a.path().join("public/logo.svg"))
+            .unwrap()
+            .write_all(b"AAA")
+            .unwrap();
         // Project B: public/logo.svg = "BBB".
         let b = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(b.path().join("public")).unwrap();
-        std::fs::File::create(b.path().join("public/logo.svg")).unwrap().write_all(b"BBB").unwrap();
+        std::fs::File::create(b.path().join("public/logo.svg"))
+            .unwrap()
+            .write_all(b"BBB")
+            .unwrap();
 
         let res_a = Resolution::new().with_root(a.path());
         let res_b = Resolution::new().with_root(b.path());
@@ -895,12 +1020,18 @@ mod tests {
         // And with NO Resolution there is no root to fall back to — honest 404,
         // never a leaked global from another mount.
         let none = serve_public_asset(DaemonMode::Development, "public", "logo.svg", None);
-        assert_eq!(none.status, 404, "no Resolution ⇒ 404, never a shared global");
+        assert_eq!(
+            none.status, 404,
+            "no Resolution ⇒ 404, never a shared global"
+        );
     }
     #[test]
     fn substitute_params_replaces_dollar_token() {
         assert_eq!(substitute_params("$id", &[("id", "my-space")]), "my-space");
-        assert_eq!(substitute_params("prefix-$id-suffix", &[("id", "x")]), "prefix-x-suffix");
+        assert_eq!(
+            substitute_params("prefix-$id-suffix", &[("id", "x")]),
+            "prefix-x-suffix"
+        );
         assert_eq!(substitute_params("no-token", &[("id", "x")]), "no-token");
         // Unknown token stays as-is (no panic, no empty string).
         assert_eq!(substitute_params("$other", &[("id", "x")]), "$other");
@@ -936,14 +1067,27 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "my-space")], None, Some(&resolution), None);
+        let resp = serve_scaffold(
+            DaemonMode::Development,
+            &scaffold,
+            &[("id", "my-space")],
+            None,
+            Some(&resolution),
+            None,
+        );
 
         assert_eq!(resp.status, 200);
         // The asset href is preserved (bundler wrote the final URL).
         let body = std::str::from_utf8(&resp.body).unwrap();
-        assert!(body.contains("/app/main.js"), "expected /app/main.js in: {body}");
+        assert!(
+            body.contains("/app/main.js"),
+            "expected /app/main.js in: {body}"
+        );
         // The inject_globals block lands before </head>.
-        assert!(body.contains("window.DECK_APP_ID=\"my-space\""), "expected injected global in: {body}");
+        assert!(
+            body.contains("window.DECK_APP_ID=\"my-space\""),
+            "expected injected global in: {body}"
+        );
     }
 
     /// serve_scaffold surfaces the app's render mode as a `deck-render` meta
@@ -968,7 +1112,14 @@ mod tests {
             render: RenderMode::Ssr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution), None);
+        let resp = serve_scaffold(
+            DaemonMode::Development,
+            &scaffold,
+            &[],
+            None,
+            Some(&resolution),
+            None,
+        );
         assert_eq!(resp.status, 200);
         let body = std::str::from_utf8(&resp.body).unwrap();
         assert!(
@@ -982,8 +1133,51 @@ mod tests {
     }
 
     /// serve_scaffold injects the dev-mode error-overlay script tag in
-    /// Development and NEVER in Production — task #80's "zero overlay
-    /// bytes in prod" requirement pinned at the injection site itself.
+    /// Development and NEVER in Production — zero overlay bytes in prod,
+    /// pinned at the injection site itself.
+
+    #[test]
+    fn serve_scaffold_injects_sail_project_themes_meta() {
+        use std::io::Write;
+        let dir = tempfile::tempdir().unwrap();
+        // Monorepo-shaped path: .../apps/my-app so sail_project_rel_from_root works.
+        let app = dir.path().join("apps").join("my-app");
+        let out = app.join(".deck");
+        std::fs::create_dir_all(&out).unwrap();
+        std::fs::File::create(out.join("index.html"))
+            .unwrap()
+            .write_all(b"<head><title>t</title></head><body><div id=\"root\"></div></body>")
+            .unwrap();
+        let scaffold = AppServeConfig {
+            name: "my-app".into(),
+            route: "/".into(),
+            source: ".deck".into(),
+            inject_globals: Default::default(),
+            render: RenderMode::Csr,
+            entry: None,
+        };
+        let resolution = crate::resolver::Resolution::new().with_root(&app);
+        let resp = serve_scaffold(
+            DaemonMode::Development,
+            &scaffold,
+            &[],
+            None,
+            Some(&resolution),
+            None,
+        );
+        assert_eq!(resp.status, 200);
+        let html = String::from_utf8(resp.body).unwrap();
+        assert!(
+            html.contains("name=\"sail-project\" content=\"apps/my-app\""),
+            "missing sail-project meta: {html}"
+        );
+        assert!(
+            html.contains("name=\"sail-project-themes\" content=\"apps/my-app/tokens/themes\""),
+            "missing sail-project-themes meta: {html}"
+        );
+    }
+
+
     #[test]
     fn serve_scaffold_overlay_in_dev_no_overlay_in_prod() {
         let dir = tempfile::tempdir().unwrap();
@@ -1004,14 +1198,28 @@ mod tests {
             entry: None,
         };
 
-        let dev = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution), None);
+        let dev = serve_scaffold(
+            DaemonMode::Development,
+            &scaffold,
+            &[],
+            None,
+            Some(&resolution),
+            None,
+        );
         let dev_body = std::str::from_utf8(&dev.body).unwrap();
         assert!(
             dev_body.contains("/_deck/error-overlay.js"),
             "dev-mode HTML must include the error-overlay script; got: {dev_body}"
         );
 
-        let prod = serve_scaffold(DaemonMode::Production, &scaffold, &[], None, Some(&resolution), None);
+        let prod = serve_scaffold(
+            DaemonMode::Production,
+            &scaffold,
+            &[],
+            None,
+            Some(&resolution),
+            None,
+        );
         let prod_body = std::str::from_utf8(&prod.body).unwrap();
         assert!(
             !prod_body.contains("error-overlay"),
@@ -1043,22 +1251,38 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[("id", "x")], None, Some(&resolution), None);
+        let resp = serve_scaffold(
+            DaemonMode::Development,
+            &scaffold,
+            &[("id", "x")],
+            None,
+            Some(&resolution),
+            None,
+        );
         // Status 200 is the only contract: the source-fallback path
         // served the unbuilt scaffold. The body shape is incidental.
-        assert_eq!(resp.status, 200, "source-fallback must serve the unbuilt scaffold");
+        assert_eq!(
+            resp.status, 200,
+            "source-fallback must serve the unbuilt scaffold"
+        );
     }
     #[test]
     fn scaffold_asset_dotdot_rejected() {
         let scaffold = make_scaffold("test", vec![]);
-        let resp = serve_scaffold_asset(DaemonMode::Development, &scaffold, "../../../etc/passwd", None);
+        let resp = serve_scaffold_asset(
+            DaemonMode::Development,
+            &scaffold,
+            "../../../etc/passwd",
+            None,
+        );
         assert_eq!(resp.status, 404, "'..' traversal must be rejected");
     }
 
     #[test]
     fn scaffold_asset_slash_in_name_rejected() {
         let scaffold = make_scaffold("test", vec![]);
-        let resp = serve_scaffold_asset(DaemonMode::Development, &scaffold, "sub/dir/file.js", None);
+        let resp =
+            serve_scaffold_asset(DaemonMode::Development, &scaffold, "sub/dir/file.js", None);
         assert_eq!(resp.status, 404, "slash in filename must be rejected");
     }
 
@@ -1118,7 +1342,14 @@ mod tests {
             render: RenderMode::Csr,
             entry: None,
         };
-        let resp = serve_scaffold(DaemonMode::Development, &scaffold, &[], None, Some(&resolution), None);
+        let resp = serve_scaffold(
+            DaemonMode::Development,
+            &scaffold,
+            &[],
+            None,
+            Some(&resolution),
+            None,
+        );
 
         assert_eq!(resp.status, 200);
         let body = std::str::from_utf8(&resp.body).unwrap();
@@ -1145,18 +1376,38 @@ mod tests {
             .unwrap();
         let resolution = crate::resolver::Resolution::new().with_root(tmp.path());
 
-        let ok = serve_public_asset(DaemonMode::Development, "public", "logo.svg", Some(&resolution));
+        let ok = serve_public_asset(
+            DaemonMode::Development,
+            "public",
+            "logo.svg",
+            Some(&resolution),
+        );
         assert_eq!(ok.status, 200, "present public asset serves 200");
-        assert!(ok.content_type.starts_with("image/svg+xml"), "svg content-type by extension");
+        assert!(
+            ok.content_type.starts_with("image/svg+xml"),
+            "svg content-type by extension"
+        );
         assert_eq!(ok.body, b"<svg/>", "serves the file bytes");
 
         assert_eq!(
-            serve_public_asset(DaemonMode::Development, "public", "../secret", Some(&resolution)).status,
+            serve_public_asset(
+                DaemonMode::Development,
+                "public",
+                "../secret",
+                Some(&resolution)
+            )
+            .status,
             404,
             "path traversal must 404"
         );
         assert_eq!(
-            serve_public_asset(DaemonMode::Development, "public", "nope.svg", Some(&resolution)).status,
+            serve_public_asset(
+                DaemonMode::Development,
+                "public",
+                "nope.svg",
+                Some(&resolution)
+            )
+            .status,
             404,
             "missing file must 404"
         );

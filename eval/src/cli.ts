@@ -5,10 +5,14 @@
  *   bun src/cli.ts run --lane cheap --dispatch recorded
  *   bun src/cli.ts run --lane frontier --dispatch omp --model <fuzzy> --task login-form
  *   bun src/cli.ts run --lane frontier --dispatch omp --scaffold react-tw --task login-form
+ *   bun src/cli.ts pace --model <fuzzy> --interval 10m --arms sail,react-tw,vanilla
  *   bun src/cli.ts record <dir> [--task slug] [--promote]
  *   bun src/cli.ts list
+ *   bun src/cli.ts list-arms
  */
 
+import { listArms } from './arm.ts'
+import { parseInterval, runPaced } from './pace.ts'
 import { runCorpus } from './runner.ts'
 import { recordSession } from './recorder.ts'
 import { listTasks } from './task.ts'
@@ -20,14 +24,20 @@ function usage(): never {
 Usage:
   sail-eval run [--lane cheap|frontier] [--dispatch recorded|omp]
                 [--task <slug>]... [--model <fuzzy>] [--api-key <key>]
-                [--scaffold blank|kitchen-sink|react-tw]
+                [--scaffold blank|kitchen-sink|react-tw|vanilla]
                 [--keep-workdir] [--base-url <url>] [--no-report]
                 [--strict | --no-skip]   # default: strict (missing sail fails)
                 [--allow-skip]          # soft-skip missing host tooling
                 [--cheap-behavior]      # opt-in source-text behavior on cheap
                 [--allow-skip-beauty]   # frontier: soft-skip missing beauty score
+  sail-eval pace --model <fuzzy> --interval 10m
+                [--arms sail,react-tw,vanilla] [--task <slug>]...
+                [--lane frontier] [--api-key <key>] [--keep-workdir]
+                [--no-sleep]            # tests/smoke: no inter-run delay
+                [--allow-skip] [--no-skip-beauty] [--no-report]
   sail-eval record <dir> [--task <slug>] [--prompt <text>] [--promote]
   sail-eval list
+  sail-eval list-arms
 
 Environment:
   SAIL_BIN     path to sail binary (default: target/debug|release/sail)
@@ -36,9 +46,17 @@ Environment:
 Notes:
   Cheap lane = compile + vocab + gates only (per EVAL-0).
   --cheap-behavior runs .sail source-text heuristics — not deck/playwright.
-  Model is NEVER defaulted by this package. Pass --model for omp (fuzzy match
-  e.g. "opus", "gpt-5.2") or let the omp profile resolve it. Keys via env/profile.
-  Control arms (react-tw) are the same omp dispatch + --scaffold react-tw.
+  Model is NEVER defaulted by this package. Pass --model for omp (fuzzy match)
+  or for pace (required). Keys via env/profile — never commit keys.
+  Control arms: react-tw / vanilla profiles under eval/arms/ — no sail leaks.
+  pace is resume-safe: completed (task, arm, model) triples under
+  eval/runs/<date>/<task>/<arm>/<modelSlug>/ skip (re-run same --model).
+  Control-arm behavior without --base-url is static source-text fallback only.
+  Beauty screenshots are operator-owned (screenshots/ README per run).
+
+Overnight baseline (EVAL-1):
+  cd eval && bun src/cli.ts pace --model grok --interval 10m --arms sail,react-tw,vanilla
+  # 10 tasks × 3 arms ≈ 30 runs ≈ 5h at 10m interval. Resume after interrupt with same command.
 `)
   process.exit(2)
 }
@@ -52,6 +70,8 @@ const BOOL_FLAGS = new Set([
   'allow-skip',
   'cheap-behavior',
   'allow-skip-beauty',
+  'no-skip-beauty',
+  'no-sleep',
 ])
 
 function parseArgs(argv: string[]) {
@@ -101,6 +121,69 @@ async function main() {
     return
   }
 
+  if (cmd === 'list-arms') {
+    const arms = listArms()
+    if (!arms.length) {
+      console.log('(no arms)')
+      return
+    }
+    for (const a of arms) console.log(a)
+    return
+  }
+
+  if (cmd === 'pace') {
+    const model = flags.model as string | undefined
+    if (!model || typeof model !== 'string') {
+      console.error('pace requires --model <fuzzy> (no hardcoded default)')
+      process.exit(1)
+    }
+    const intervalRaw = (flags.interval as string | undefined) ?? '10m'
+    let intervalMs: number
+    try {
+      intervalMs = parseInterval(String(intervalRaw))
+    } catch (e) {
+      console.error(e instanceof Error ? e.message : e)
+      process.exit(1)
+    }
+    const armsFlag = flags.arms as string | undefined
+    const arms = armsFlag
+      ? String(armsFlag)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : undefined
+    const tasks = flags.task as string[] | undefined
+    const lane = (flags.lane as Lane | undefined) ?? 'frontier'
+    if (lane !== 'cheap' && lane !== 'frontier') {
+      console.error(`invalid --lane ${lane}`)
+      process.exit(1)
+    }
+    const allowSkip =
+      Boolean(flags['allow-skip']) && !flags.strict && !flags['no-skip']
+    const summary = await runPaced({
+      model,
+      intervalMs,
+      arms,
+      tasks,
+      lane,
+      apiKey: flags['api-key'] as string | undefined,
+      keepWorkdir: Boolean(flags['keep-workdir']),
+      writeReport: !flags['no-report'],
+      behaviorBaseUrl: flags['base-url'] as string | undefined,
+      allowSkip,
+      // Beauty is operator-scored post-run; default soft-skip so overnight does not fail open incomplete.
+      // Pass --no-skip-beauty only if you want incomplete beauty to fail the aggregate.
+      allowSkipBeauty: !flags['no-skip-beauty'],
+      noSleep: Boolean(flags['no-sleep']),
+    })
+    console.log(
+      `pace done: ${summary.passCount} pass / ${summary.failCount} fail / ${summary.skipCount} skip` +
+        ` (${summary.runs.length} runs; resumed ${summary.paced?.resumed ?? 0}, executed ${summary.paced?.executed ?? 0})`,
+    )
+    if (summary.failCount > 0) process.exitCode = 1
+    return
+  }
+
   if (cmd === 'run') {
     const lane = (flags.lane as Lane | undefined) ?? 'cheap'
     const dispatch = (flags.dispatch as DispatchMode | undefined) ?? 'recorded'
@@ -117,7 +200,8 @@ async function main() {
       scaffold != null &&
       scaffold !== 'blank' &&
       scaffold !== 'kitchen-sink' &&
-      scaffold !== 'react-tw'
+      scaffold !== 'react-tw' &&
+      scaffold !== 'vanilla'
     ) {
       console.error(`invalid --scaffold ${scaffold}`)
       process.exit(1)

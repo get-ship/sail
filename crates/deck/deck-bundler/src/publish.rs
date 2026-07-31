@@ -44,7 +44,9 @@ fn ordered_rel_files(stage: &Path) -> Vec<PathBuf> {
 }
 
 fn collect_files(root: &Path, rel: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(rd) = std::fs::read_dir(root.join(rel)) else { return };
+    let Ok(rd) = std::fs::read_dir(root.join(rel)) else {
+        return;
+    };
     for entry in rd.flatten() {
         let child = rel.join(entry.file_name());
         match entry.file_type() {
@@ -99,8 +101,14 @@ pub fn publish_build(stage: &Path, dest: &Path, prune: bool) -> Result<()> {
 /// Remove `dest` files this build did not produce: top-level files not in the
 /// manifest, and unmanifested files (plus emptied subdirs) inside the
 /// top-level dirs the build owns. Foreign top-level dirs are skipped.
-fn prune_stale(dest: &Path, manifest: &HashSet<&Path>, owned_dirs: &HashSet<OsString>) -> Result<()> {
-    let Ok(rd) = std::fs::read_dir(dest) else { return Ok(()) };
+fn prune_stale(
+    dest: &Path,
+    manifest: &HashSet<&Path>,
+    owned_dirs: &HashSet<OsString>,
+) -> Result<()> {
+    let Ok(rd) = std::fs::read_dir(dest) else {
+        return Ok(());
+    };
     for entry in rd.flatten() {
         let name = entry.file_name();
         let path = entry.path();
@@ -126,7 +134,9 @@ fn prune_stale(dest: &Path, manifest: &HashSet<&Path>, owned_dirs: &HashSet<OsSt
 /// once it is empty (the top-level owned dir itself is kept).
 fn prune_dir(dest: &Path, rel: &Path, manifest: &HashSet<&Path>) -> Result<()> {
     let abs = dest.join(rel);
-    let Ok(rd) = std::fs::read_dir(&abs) else { return Ok(()) };
+    let Ok(rd) = std::fs::read_dir(&abs) else {
+        return Ok(());
+    };
     for entry in rd.flatten() {
         let child_rel = rel.join(entry.file_name());
         let child_abs = entry.path();
@@ -152,8 +162,8 @@ fn prune_dir(dest: &Path, rel: &Path, manifest: &HashSet<&Path>) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
 
     fn write(p: &Path, s: &str) {
         std::fs::create_dir_all(p.parent().unwrap()).unwrap();
@@ -172,6 +182,13 @@ mod tests {
         write(&dest.join("assets/entry-OLD.js"), "old-entry");
         write(&dest.join("stale-public.txt"), "removed-from-public");
         write(&dest.join("routes/git/route.js"), "bundler-owned");
+        // T1 B1 app themes (foreign top-level dir — must survive prune).
+        write(
+            &dest.join("themes/themes.css"),
+            "/* thin app themes */ :root[data-theme='ship']{}",
+        );
+        // Bare top-level themes.css would be pruned (regression guard for old path).
+        write(&dest.join("themes.css"), "/* doomed top-level */");
         // Staged new build.
         let stage = stage_path_for(&dest);
         write(&stage.join("index.html"), "new");
@@ -180,10 +197,30 @@ mod tests {
 
         publish_build(&stage, &dest, true).unwrap();
 
-        assert_eq!(std::fs::read_to_string(dest.join("index.html")).unwrap(), "new");
-        assert!(dest.join("assets/entry-NEW.js").exists(), "new asset published");
-        assert!(!dest.join("assets/entry-OLD.js").exists(), "stale asset pruned");
-        assert!(!dest.join("stale-public.txt").exists(), "stale top-level file pruned");
+        assert_eq!(
+            std::fs::read_to_string(dest.join("index.html")).unwrap(),
+            "new"
+        );
+        assert!(
+            dest.join("assets/entry-NEW.js").exists(),
+            "new asset published"
+        );
+        assert!(
+            dest.join("themes/themes.css").is_file(),
+            "B1 app themes under .deck/themes/ must survive publish prune"
+        );
+        assert!(
+            !dest.join("themes.css").exists(),
+            "bare top-level themes.css must still be pruned (foreign file)"
+        );
+        assert!(
+            !dest.join("assets/entry-OLD.js").exists(),
+            "stale asset pruned"
+        );
+        assert!(
+            !dest.join("stale-public.txt").exists(),
+            "stale top-level file pruned"
+        );
         assert_eq!(
             std::fs::read_to_string(dest.join("routes/git/route.js")).unwrap(),
             "bundler-owned",
@@ -202,8 +239,14 @@ mod tests {
         let stage = stage_path_for(&dest);
         write(&stage.join("index.html"), "new");
         publish_build(&stage, &dest, false).unwrap();
-        assert!(dest.join("assets/entry-OLD.js").exists(), "no prune ⇒ nothing deleted");
-        assert_eq!(std::fs::read_to_string(dest.join("index.html")).unwrap(), "new");
+        assert!(
+            dest.join("assets/entry-OLD.js").exists(),
+            "no prune ⇒ nothing deleted"
+        );
+        assert_eq!(
+            std::fs::read_to_string(dest.join("index.html")).unwrap(),
+            "new"
+        );
     }
 
     /// `index.html` is the LAST file published: the scaffold must never point
@@ -258,8 +301,14 @@ mod tests {
             "index.html must be observable at every instant across rebuild publishes"
         );
         // And the steady state is exactly the last build (stale assets pruned).
-        assert_eq!(std::fs::read_to_string(dest.join("index.html")).unwrap(), "v49");
+        assert_eq!(
+            std::fs::read_to_string(dest.join("index.html")).unwrap(),
+            "v49"
+        );
         assert!(dest.join("assets/entry-49.js").exists());
-        assert!(!dest.join("assets/entry-0.js").exists(), "old hashed assets pruned");
+        assert!(
+            !dest.join("assets/entry-0.js").exists(),
+            "old hashed assets pruned"
+        );
     }
 }

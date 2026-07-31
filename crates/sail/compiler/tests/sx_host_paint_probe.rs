@@ -62,7 +62,10 @@ fn style_match_variant_lowers_attr_selectors_element_mode() {
 "#;
     let out = compile_element(src, "probe").expect("style match product compiles");
     let attrs = out.manifest["attributes"].as_array().expect("attrs");
-    let variant = attrs.iter().find(|a| a["name"] == "variant").expect("variant attr");
+    let variant = attrs
+        .iter()
+        .find(|a| a["name"] == "variant")
+        .expect("variant attr");
     assert_eq!(variant["default"], "soft", "default from prop: {variant}");
     let values = variant["values"].as_array().expect("values");
     assert!(
@@ -187,7 +190,9 @@ fn avatar_tracking_and_inset_ring_on_host_sx() {
         out.structure_html.contains("sx-trackingwide")
             && (out.structure_html.contains("sx-shadowinsetring")
                 || out.skin_css.contains("box-shadow:var(--shadow-inset-ring)")
-                || out.skin_css.contains("box-shadow: var(--shadow-inset-ring)")),
+                || out
+                    .skin_css
+                    .contains("box-shadow: var(--shadow-inset-ring)")),
         "tracking-wide + shadow-inset-ring must land on host:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
@@ -535,8 +540,7 @@ fn switch_host_track_paint_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("size='sm'")
-            && out.skin_css.contains("size='lg'"),
+        out.skin_css.contains("size='sm'") && out.skin_css.contains("size='lg'"),
         "size match must land:\n{}",
         out.skin_css
     );
@@ -600,12 +604,23 @@ fn toast_start_stripe_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("border-inline-start-color:var(--foreground)")
-            || out.skin_css.contains("border-inline-start-color: var(--foreground)")
-            || out.skin_css.contains("border-inline-start-color:var(--primary)")
-            || out.skin_css.contains("border-inline-start-color: var(--primary)")
-            || out.skin_css.contains("border-inline-start-color:var(--tone-fg)")
-            || out.skin_css.contains("border-inline-start-color: var(--tone-fg)"),
+        out.skin_css
+            .contains("border-inline-start-color:var(--foreground)")
+            || out
+                .skin_css
+                .contains("border-inline-start-color: var(--foreground)")
+            || out
+                .skin_css
+                .contains("border-inline-start-color:var(--primary)")
+            || out
+                .skin_css
+                .contains("border-inline-start-color: var(--primary)")
+            || out
+                .skin_css
+                .contains("border-inline-start-color:var(--tone-fg)")
+            || out
+                .skin_css
+                .contains("border-inline-start-color: var(--tone-fg)"),
         "start stripe must bind semantic tone color:\n{}",
         out.skin_css
     );
@@ -656,15 +671,22 @@ fn card_host_paint_bulk_on_host_sx() {
     assert!(
         out.structure_html.contains("sx-backdropcardbackdropfilter")
             || out.structure_html.contains("card-backdrop-filter")
-            || out.skin_css.contains("backdrop-filter:var(--card-backdrop-filter)")
-            || out.skin_css.contains("backdrop-filter: var(--card-backdrop-filter)"),
+            || out
+                .skin_css
+                .contains("backdrop-filter:var(--card-backdrop-filter)")
+            || out
+                .skin_css
+                .contains("backdrop-filter: var(--card-backdrop-filter)"),
         "backdrop token must land:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("-webkit-backdrop-filter:var(--card-backdrop-filter)")
-            || out.skin_css.contains("-webkit-backdrop-filter: var(--card-backdrop-filter)")
+        out.skin_css
+            .contains("-webkit-backdrop-filter:var(--card-backdrop-filter)")
+            || out
+                .skin_css
+                .contains("-webkit-backdrop-filter: var(--card-backdrop-filter)")
             || out.structure_html.contains("sx-backdrop"),
         "webkit backdrop prefix must land with token:\nskin={}",
         out.skin_css
@@ -680,13 +702,19 @@ fn card_host_paint_bulk_on_host_sx() {
     );
     assert!(
         out.skin_css.contains("status-rail")
-            && (out.skin_css.contains("border-inline-start-color:var(--tone-fg)")
-                || out.skin_css.contains("border-inline-start-color: var(--tone-fg)")
+            && (out
+                .skin_css
+                .contains("border-inline-start-color:var(--tone-fg)")
+                || out
+                    .skin_css
+                    .contains("border-inline-start-color: var(--tone-fg)")
                 || out.skin_css.contains("border-inline-start-width:3px")
                 || out.skin_css.contains("border-inline-start-width: 3px")
                 || out.skin_css.contains("border-strong"))
             && (out.skin_css.contains("padding-inline-start:var(--space-4)")
-                || out.skin_css.contains("padding-inline-start: var(--space-4)")),
+                || out
+                    .skin_css
+                    .contains("padding-inline-start: var(--space-4)")),
         "status-rail compound must lower pad-adjust + rail color:\n{}",
         out.skin_css
     );
@@ -744,8 +772,10 @@ fn card_host_paint_bulk_on_host_sx() {
             && (out.skin_css.contains("height:var(--space-half)")
                 || out.skin_css.contains("height: var(--space-half)"))
             && out.skin_css.contains(":hover")
-            && (out.skin_css.contains("opacity:1") || out.skin_css.contains("opacity: 1")
-                || out.skin_css.contains("opacity:1.") || out.skin_css.contains("opacity:0")),
+            && (out.skin_css.contains("opacity:1")
+                || out.skin_css.contains("opacity: 1")
+                || out.skin_css.contains("opacity:1.")
+                || out.skin_css.contains("opacity:0")),
         "accent-bar CVA must lower before: stripe + hover opacity:\n{}",
         out.skin_css
     );
@@ -766,8 +796,7 @@ fn card_host_paint_bulk_on_host_sx() {
     assert!(
         out.structure_html.contains(r#"slot name="header""#)
             && out.structure_html.contains(r#"slot name="footer""#)
-            && (out.structure_html.contains("sx-empty-hidden")
-                || out.skin_css.contains(":empty"))
+            && (out.structure_html.contains("sx-empty-hidden") || out.skin_css.contains(":empty"))
             && (out.structure_html.contains("sx-fontheading")
                 || out.skin_css.contains("font-family:var(--heading-font)")
                 || out.skin_css.contains("font-family: var(--heading-font)")),
@@ -817,7 +846,9 @@ fn navbar_host_paint_on_sx_cva() {
             && (src.contains("padY(2)") || src.contains("py: 2"))
             && (src.contains("padX(4)") || src.contains("px: 4"))
             && (src.contains("position(sticky)") || src.contains("sticky"))
-            && (src.contains("z(sticky)") || src.contains("z: sticky") || src.contains("z-(--z-sticky)"))
+            && (src.contains("z(sticky)")
+                || src.contains("z: sticky")
+                || src.contains("z-(--z-sticky)"))
             && (src.contains("borderBWidth(1)") || src.contains("border-b"))
             && (src.contains("top(auto)") || src.contains("top: auto") || src.contains("top-auto"))
             && (src.contains("borderEWidth(1)") || src.contains("border-e"))
@@ -968,7 +999,9 @@ fn error_state_child_paint_on_structure_sx() {
                 || out.skin_css.contains("outline-color: var(--destructive)")
                 || out.structure_html.contains("outlinedestructive")
                 || out.skin_css.contains("var(--destructive)"))
-            && (out.skin_css.contains("outline-offset:calc(-1 * var(--ring-width))")
+            && (out
+                .skin_css
+                .contains("outline-offset:calc(-1 * var(--ring-width))")
                 || out.structure_html.contains("outlineoffsetringinset")
                 || out.structure_html.contains("outlineOffset"))
             && (out.structure_html.contains("controlhxl")
@@ -1030,8 +1063,12 @@ fn radio_nested_row_kills_label_flex_pe() {
         src.contains("<label")
             && src.contains("type=\"radio\"")
             && src.contains("style.")
-            && (src.contains("fontFamily(body)") || src.contains("font-family: body") || src.contains("font-body"))
-            && (src.contains("cursor(pointer)") || src.contains("cursor: pointer") || src.contains("cursor-pointer"))
+            && (src.contains("fontFamily(body)")
+                || src.contains("font-family: body")
+                || src.contains("font-body"))
+            && (src.contains("cursor(pointer)")
+                || src.contains("cursor: pointer")
+                || src.contains("cursor-pointer"))
             && (src.contains("radio-foreground") || src.contains("color: foreground")),
         "radio must be native label + input with host type paint"
     );
@@ -1072,8 +1109,12 @@ fn toggle_group_segmented_and_join_on_skins_not_pe() {
     );
     assert!(
         out.skin_css.contains("variant='segmented'")
-            && (out.skin_css.contains("background-color:var(--toggle-group)")
-                || out.skin_css.contains("background-color: var(--toggle-group)")
+            && (out
+                .skin_css
+                .contains("background-color:var(--toggle-group)")
+                || out
+                    .skin_css
+                    .contains("background-color: var(--toggle-group)")
                 || out.structure_html.contains("togglegroup"))
             && !out.skin_css.contains("--tg-"),
         "segmented Style match uses --toggle-group; no --tg-* writes:\n{}",
@@ -1138,14 +1179,18 @@ fn alert_tone_stripe_before_on_host_sx() {
     );
     assert!(
         out.structure_html.contains("sail-row")
-            && (out.structure_html.contains("sail-nowrap") || out.structure_html.contains("nowrap"))
+            && (out.structure_html.contains("sail-nowrap")
+                || out.structure_html.contains("nowrap"))
             && out.structure_html.contains("sail-g-3"),
         "host row/nowrap/gap must lower into structure:\n{}",
         out.structure_html
     );
     assert!(
-        !out.structure_html.contains("grid-template-columns: auto 1fr auto")
-            && !out.skin_css.contains("grid-template-columns: auto 1fr auto")
+        !out.structure_html
+            .contains("grid-template-columns: auto 1fr auto")
+            && !out
+                .skin_css
+                .contains("grid-template-columns: auto 1fr auto")
             && !out.skin_css.contains("grid-template-columns:auto 1fr auto"),
         "must not emit free grid-template PE in structure/skin:\n{}\n{}",
         out.structure_html,
@@ -1184,14 +1229,12 @@ fn alert_tone_stripe_before_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("var(--alert-stripe)")
-            || out.skin_css.contains("alert-stripe"),
+        out.skin_css.contains("var(--alert-stripe)") || out.skin_css.contains("alert-stripe"),
         "PE default stripe must bind alert-stripe:\n{}",
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("tone='info'")
-            && out.skin_css.contains("var(--info)"),
+        out.skin_css.contains("tone='info'") && out.skin_css.contains("var(--info)"),
         "branded match(tone) before bg(info) must lower:\n{}",
         out.skin_css
     );
@@ -1213,8 +1256,7 @@ fn alert_tone_stripe_before_on_host_sx() {
         out.skin_css
     );
     assert!(
-        out.skin_css.contains("forced-colors")
-            && out.skin_css.contains("CanvasText"),
+        out.skin_css.contains("forced-colors") && out.skin_css.contains("CanvasText"),
         "forced-colors CanvasText must lower into skin:\n{}",
         out.skin_css
     );
@@ -1324,12 +1366,18 @@ fn theme_picker_host_paint_on_structure_sx() {
             && (src.contains("size(control-h-sm)") || src.contains("control-h-sm"))
             && (src.contains("bg(theme-picker)") || src.contains("theme-picker"))
             && (src.contains("selected:") || src.contains("selected:"))
-            && (src.contains("h(24)") || src.contains("h: 24"))
             && src.contains("isolate")
             && !src.contains("class=")
-            && src.contains("cols=\"2\"")
+            // Redesigned anatomy (2026-07): header + Light/Dark/System filter
+            // tabs + a listbox of full-bleed live specimens (data-theme-preview
+            // swatch + primary/secondary/accent strips + ghost/solid controls).
+            // The old 2-col mini-card grid (cols=\"2\" / h(24) / inset-ring) is
+            // gone BY DESIGN; the needles below pin the NEW anatomy.
+            && src.contains("data-theme-preview")
+            && src.contains("role=\"listbox\"")
+            && src.contains("role=\"option\"")
+            && src.contains("data-mode-bar")
             && src.contains("<row inline")
-            && (src.contains("shadow(inset-ring)") || src.contains("inset-ring"))
             && !src.contains("sx=\""),
         "theme-picker structure must carry Style product without class anatomy"
     );
@@ -1340,30 +1388,29 @@ fn theme_picker_host_paint_on_structure_sx() {
             && (out.structure_html.contains("sx-bgthemepicker")
                 || out.structure_html.contains("bgthemepicker")
                 || out.skin_css.contains("var(--theme-picker)"))
-            && (out.structure_html.contains("sx-h24")
-                || out.structure_html.contains("h24")
-                || out.skin_css.contains("height:var(--space-24)")
-                || out.skin_css.contains("height: var(--space-24)"))
             && (out.structure_html.contains("sx-isolate")
                 || out.skin_css.contains("isolation:isolate")
                 || out.skin_css.contains("isolation: isolate"))
-            && (out.structure_html.contains("sail-grid") || out.structure_html.contains("sail-gc-2"))
+            && (out.structure_html.contains("role=\"listbox\"")
+                || out.structure_html.contains("role='listbox'"))
+            && out.structure_html.contains("data-theme-preview")
             && (out.structure_html.contains("sail-row-i") || out.skin_css.contains("inline-flex")),
         "child paint + layout classes on structure:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
-    // Swatch mini-card paint is structure Style atoms, not parent→child PE / part classes.
+    // Option rows are real nodes with selected/hover/focus borders — no tc-*
+    // mini-card classes, no part classes, primary/accent paint present.
     assert!(
         !out.structure_html.contains("tc-overlay")
             && !out.structure_html.contains("class=\"tc-")
+            && (out.structure_html.contains("role=\"option\"")
+                || out.skin_css.contains("role='option'"))
             && (out.structure_html.contains("sx-bgprimary")
                 || out.structure_html.contains("bgprimary")
                 || out.skin_css.contains("var(--primary)"))
-            && (out.structure_html.contains("sx-fgprimaryforeground")
-                || out.structure_html.contains("primaryforeground")
-                || out.skin_css.contains("var(--primary-foreground)")),
-        "swatch mini-card paint must be on real nodes without tc-* classes:\nstruct={}\nskin={}",
+            && (out.skin_css.contains("CanvasText") || out.structure_html.contains("CanvasText")),
+        "option rows must be real nodes with selected/forced-colors states:\nstruct={}\nskin={}",
         out.structure_html,
         out.skin_css
     );
@@ -1411,9 +1458,13 @@ fn prose_host_paint_on_sx_descendants_generated() {
     assert!(
         src.contains("style.")
             && (src.contains("display(block)") || src.contains("block"))
-            && (src.contains("fontFamily(body)") || src.contains("font-body") || src.contains("font-family: body"))
+            && (src.contains("fontFamily(body)")
+                || src.contains("font-body")
+                || src.contains("font-family: body"))
             && (src.contains("prose-foreground") || src.contains("text-foreground"))
-            && (src.contains("leading(normal-plus)") || src.contains("leading-normal-plus") || src.contains("leading: normal-plus")),
+            && (src.contains("leading(normal-plus)")
+                || src.contains("leading-normal-plus")
+                || src.contains("leading: normal-plus")),
         "prose host Style must carry block + body type/color/leading"
     );
     assert!(
@@ -1503,8 +1554,12 @@ fn tab_list_sticky_and_variant_on_host_not_parent_pe() {
     );
     assert!(
         out.skin_css.contains("[variant='pill']")
-            && (out.skin_css.contains("background-color:var(--tab-list-rail)")
-                || out.skin_css.contains("background-color: var(--tab-list-rail)"))
+            && (out
+                .skin_css
+                .contains("background-color:var(--tab-list-rail)")
+                || out
+                    .skin_css
+                    .contains("background-color: var(--tab-list-rail)"))
             && (out.skin_css.contains("border-radius:var(--radius-md)")
                 || out.skin_css.contains("border-radius: var(--radius-md)")),
         "pill variant CVA must lower on tab-list with --tab-list-rail:\n{}",
@@ -1577,10 +1632,14 @@ fn scroll_area_standard_scrollbar_on_host_sx() {
     let out = compile_element(src, "scroll-area").expect("scroll-area compiles");
     assert!(
         src.contains("style.")
-            && (src.contains("scrollbarThin()") || src.contains("scrollbar-thin") || src.contains("scrollbar: thin"))
+            && (src.contains("scrollbarThin()")
+                || src.contains("scrollbar-thin")
+                || src.contains("scrollbar: thin"))
             && (src.contains("scrollbarThumb(scroll-area-thumb)")
                 || src.contains("scroll-area-thumb"))
-            && (src.contains("overscroll(contain)") || src.contains("overscroll: contain") || src.contains("overscroll-contain"))
+            && (src.contains("overscroll(contain)")
+                || src.contains("overscroll: contain")
+                || src.contains("overscroll-contain"))
             && (src.contains("match(orientation") || src.contains("orientation:")),
         "scroll-area host Style must carry standard scrollbar pack via component.scroll-area tokens"
     );
@@ -1649,11 +1708,15 @@ fn code_block_pre_tab_and_tok_generated() {
     assert!(
         src.contains("style.")
             && (src.contains("tab(2)") || src.contains("tab-2") || src.contains("tab: 2"))
-            && (src.contains("leading(code)") || src.contains("leading-code") || src.contains("leading: code")),
+            && (src.contains("leading(code)")
+                || src.contains("leading-code")
+                || src.contains("leading: code")),
         "code-block pre Style must carry tab(2) + leading(code)"
     );
     assert!(
-        (out.structure_html.contains("sx-tab2") || out.structure_html.contains("tab2") || out.skin_css.contains("tab-size"))
+        (out.structure_html.contains("sx-tab2")
+            || out.structure_html.contains("tab2")
+            || out.skin_css.contains("tab-size"))
             && (out.structure_html.contains("sx-leadingcode")
                 || out.structure_html.contains("leadingcode")
                 || out.skin_css.contains("var(--leading-code)")),
@@ -1716,8 +1779,7 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
     );
     assert!(
         out.structure_html.contains("sail-grp")
-            && (out.structure_html.contains("empty")
-                || out.skin_css.contains(":empty"))
+            && (out.structure_html.contains("empty") || out.skin_css.contains(":empty"))
             && (out.structure_html.contains("groupinvalid")
                 || out.structure_html.contains("group-invalid")
                 || out.skin_css.contains(".sail-grp[invalid]")
@@ -1748,8 +1810,7 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
         );
     } else {
         assert!(
-            !contracts.contains(".sail-field .hint")
-                && !contracts.contains(".sail-field[invalid]"),
+            !contracts.contains(".sail-field .hint") && !contracts.contains(".sail-field[invalid]"),
             "field hint/error PE fully deleted from contracts"
         );
     }
@@ -1814,9 +1875,15 @@ fn pagination_size_cva_on_page() {
     assert!(
         page_src.contains("style.")
             && page_src.contains("match(size")
-            && (page_src.contains("minW(control-h-md)") || page_src.contains("min-w-control-h-md") || page_src.contains("control-h-md"))
-            && (page_src.contains("h(control-h-md)") || page_src.contains("h-control-h-md") || page_src.contains("control-h-md"))
-            && (page_src.contains("fontSize(sm)") || page_src.contains("text-sm") || page_src.contains("font-size: sm")),
+            && (page_src.contains("minW(control-h-md)")
+                || page_src.contains("min-w-control-h-md")
+                || page_src.contains("control-h-md"))
+            && (page_src.contains("h(control-h-md)")
+                || page_src.contains("h-control-h-md")
+                || page_src.contains("control-h-md"))
+            && (page_src.contains("fontSize(sm)")
+                || page_src.contains("text-sm")
+                || page_src.contains("font-size: sm")),
         "page must own size Style match with control-h / text steps"
     );
     assert!(
@@ -1863,7 +1930,9 @@ fn overlay_family_anchor_geometry_on_host_sx() {
             .unwrap_or_else(|| panic!("{tag} registered"));
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag}: {e:?}"));
         let geometry = (src.contains("position(fixed)") || src.contains("fixed"))
-            && (src.contains("inset(auto)") || src.contains("inset: auto") || src.contains("inset-auto"))
+            && (src.contains("inset(auto)")
+                || src.contains("inset: auto")
+                || src.contains("inset-auto"))
             && (src.contains("m(0)") || src.contains("m: 0") || src.contains("m-0"))
             && (src.contains("bind(anchorLeft)")
                 || src.contains("left-(--anchor-left)")
@@ -1929,12 +1998,24 @@ fn combobox_listbox_geometry_on_child_sx_options_on_popover_skin() {
     let out = compile_element(src, "combobox").expect("combobox compiles");
     assert!(
         src.contains("style.")
-            && (src.contains("bind(anchorLeft)") || src.contains("left-(--anchor-left)") || src.contains("left: (--anchor-left)"))
-            && (src.contains("bind(anchorTop)") || src.contains("top-(--anchor-top)") || src.contains("top: (--anchor-top)"))
-            && (src.contains("bind(anchorWidth)") || src.contains("min-w-(--anchor-width)") || src.contains("min-w: (--anchor-width)"))
-            && (src.contains("maxH(panel-max-h-sm)") || src.contains("max-h-panel-max-h-sm") || src.contains("panel-max-h-sm"))
-            && (src.contains("overflowY(auto)") || src.contains("overflow-y-auto") || src.contains("overflow-y: auto"))
-            && (src.contains("overscroll(contain)") || src.contains("overscroll-contain") || src.contains("overscroll: contain")),
+            && (src.contains("bind(anchorLeft)")
+                || src.contains("left-(--anchor-left)")
+                || src.contains("left: (--anchor-left)"))
+            && (src.contains("bind(anchorTop)")
+                || src.contains("top-(--anchor-top)")
+                || src.contains("top: (--anchor-top)"))
+            && (src.contains("bind(anchorWidth)")
+                || src.contains("min-w-(--anchor-width)")
+                || src.contains("min-w: (--anchor-width)"))
+            && (src.contains("maxH(panel-max-h-sm)")
+                || src.contains("max-h-panel-max-h-sm")
+                || src.contains("panel-max-h-sm"))
+            && (src.contains("overflowY(auto)")
+                || src.contains("overflow-y-auto")
+                || src.contains("overflow-y: auto"))
+            && (src.contains("overscroll(contain)")
+                || src.contains("overscroll-contain")
+                || src.contains("overscroll: contain")),
         "listbox Style must carry anchor geometry + scroll"
     );
     assert!(

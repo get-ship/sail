@@ -1,5 +1,5 @@
 // Theming — drive /sail/language/theming. Themes are applyTheme + persistTheme
-// (data-theme + .dark), not a separate light/dark mode channel.
+// (data-theme + data-mode). Dark is a mode, not a twin theme id.
 
 import { test, expect } from '@playwright/test'
 
@@ -43,28 +43,30 @@ test('theming page: picking a theme sets data-theme', async ({ page }) => {
   expect(after.primary.length).toBeGreaterThan(0)
 })
 
-test('theming page: dark theme stamps .dark and data-theme', async ({ page }) => {
+test('theming page: dark aesthetic sets data-theme + data-mode dark', async ({ page }) => {
   await page.goto('/sail/language/theming', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Theming', exact: true })).toBeVisible({
     timeout: 30_000,
   })
 
-  const dark = page.getByRole('button', { name: /SHIP Dark/i })
-  await expect(dark).toBeVisible()
-  await dark.click()
+  const consoleBtn = page.getByRole('button', { name: /Console/i }).first()
+  await expect(consoleBtn).toBeVisible()
+  await consoleBtn.click()
 
   await page.waitForFunction(
     () =>
-      (document.documentElement.dataset.theme ?? '') === 'ship-dark' &&
-      document.documentElement.classList.contains('dark'),
+      (document.documentElement.dataset.theme ?? '') === 'console' &&
+      (document.documentElement.dataset.mode ?? '') === 'dark',
     undefined,
     { timeout: 10_000 },
   )
 
   const after = await page.evaluate(() => ({
     theme: document.documentElement.dataset.theme ?? '',
-    dark: document.documentElement.classList.contains('dark'),
+    mode: document.documentElement.dataset.mode ?? '',
+    darkClass: document.documentElement.classList.contains('dark'),
   }))
-  expect(after.theme).toBe('ship-dark')
-  expect(after.dark).toBe(true)
+  expect(after.theme).toBe('console')
+  expect(after.mode).toBe('dark')
+  expect(after.darkClass).toBe(false)
 })

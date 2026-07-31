@@ -1,6 +1,6 @@
 ---
 title: "Templates react"
-description: "Zero-arg reads, event modifiers, and the control-flow blocks — {#if}, {#for key}, {#match}."
+description: "Zero-arg reads, event modifiers, and the control-flow elements — <if>, <for key>, <match>."
 order: 4
 slug: "04-templates-react"
 prev: "03-state-is-a-controller"
@@ -36,13 +36,13 @@ Debouncing, key filtering, and preventDefault are part of the
 
 ## The blocks
 
-- `<if cond={cond}>…<else>…</else></if>` — branch on a read.
-- `<match on={expr}>` with `<case of={'x'}>` / `</case><default>` — a state machine
+- `<if {cond}>…<else>…</else></if>` — branch on a read.
+- `<match {expr}>` with `<case {'x'}>` / `</case><default>` — a state machine
   rendered as one construct. The example's deploy phase walks
   idle → building → live/failed, and each branch's badge carries its own
   `style.enter`, so the swapped-in state announces itself.
-- `<for as="item" of={items()} key={item.id}>` — `key=` is **required**; the
-  compiler rejects a bare `{#for}`. The key is identity: on reorder the
+- `<for {items()} as="item" key={item.id}>` — `key=` is **required**; the
+  compiler rejects a bare `<for>` without `key=`. The key is identity: on reorder the
   reconciler *moves* the existing DOM node instead of rebuilding it, so
   focus, selection, and animation state survive.
 
@@ -50,7 +50,7 @@ Debouncing, key filtering, and preventDefault are part of the
 
 1. **Wire deploy()** (TODO 1). Set the phase to `'building'`, then
    settle it with a `setTimeout` — `'live'` usually, `'failed'`
-   sometimes. Click until you have seen every `{#match}` branch.
+   sometimes. Click until you have seen every `<match>` branch.
 2. **Finish the match** (TODO 4). Add the `building` and `live` cases
    with different `style.enter` bodies — a translate for building, a
    scale for live.

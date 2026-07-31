@@ -45,7 +45,7 @@
 </scope>
 
 <controller>
-import { controller, derived } from '@ship/sail-runtime'
+
 import { createChartData } from '../engine/create-chart-data'
 import { gaugeGeometry } from '../engine/geometry-radial'
 import type { ChartSeries } from '../engine/types'
@@ -97,9 +97,9 @@ export default controller(({
   })
 
 </controller>
-<if cond={loading()}>
+<if {loading()}>
   <span skeleton shape="circle" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
-<else-if cond={chart.error()}>
+<else-if {chart.error()}>
   <error-state></error-state>
 </else-if><else>
   <stack sx={style.w(fit)}>
@@ -112,7 +112,7 @@ export default controller(({
       sx={style.display(block)}>
       <path d={arc().trackD} fill="none" stroke="var(--muted)" stroke-width={thickness()} stroke-linecap="round">
       </path>
-      <if cond={arc().fillD}>
+      <if {arc().fillD}>
         <path d={arc().fillD} fill="none" stroke={arc().color} stroke-width={thickness()} stroke-linecap="round">
         </path>
       </if>

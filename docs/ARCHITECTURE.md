@@ -281,9 +281,7 @@ axes (`variant` / `size` / `tone` as ordinary key→sx maps) + optional
 `compound:`. Shared `tone`/`size` unions are stdlib convention (ordinary
 props). `<theme>` is hard-refused (unknown element; never widens what
 validates). Userland never gains vocabulary by authoring; it gains
-vocabulary when the stdlib grows. See mission plan
-`m-deck-standalone/scratch/FANOUT-design-system-poc.md` (locked product
-rules).
+vocabulary when the stdlib grows (locked product rules).
 
 **Fidelity gate (the absorption seam).** A component is absorbed into L1/L2
 only at computed-style equivalence with the `feat/next` baseline across

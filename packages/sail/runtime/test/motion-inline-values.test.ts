@@ -34,7 +34,7 @@ vi.mock('motion/mini', () => ({
   },
 }))
 
-import { __sui_motion_attach } from '../src/motion'
+import { __sail_motion_attach } from '../src/motion'
 import type { MotionAttachConfig } from '../src/motion'
 import { signal } from '../src/signal'
 
@@ -74,7 +74,7 @@ describe('inline magnitudes and units', () => {
       trigger: 'loop',
       motions: [{ property: 'translate-x', preset: 'inline', kind: 'tween', from: 0, to: 120 }],
     }
-    __sui_motion_attach(el, cfg)
+    __sail_motion_attach(el, cfg)
     expect(animateCalls[0]!.keyframes.translate).toEqual(['0px 0px', '120px 0px'])
   })
 
@@ -85,13 +85,13 @@ describe('inline magnitudes and units', () => {
       trigger: 'loop',
       motions: [{ property: 'translate-x', preset: 'inline', kind: 'tween', from: 0, to: '-12%' }],
     }
-    __sui_motion_attach(el, cfg)
+    __sail_motion_attach(el, cfg)
     expect(animateCalls[0]!.keyframes.translate).toEqual(['0px 0px', '-12% 0px'])
   })
 
   it('treats a numeric string and a bare number identically', () => {
     const el = connected()
-    __sui_motion_attach(el, {
+    __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [{ property: 'translate-x', preset: 'inline', kind: 'tween', from: 0, to: '120' }],
     })
@@ -100,14 +100,14 @@ describe('inline magnitudes and units', () => {
 
   it('gives rotate its degrees and honours an explicit angle unit', () => {
     const el = connected()
-    __sui_motion_attach(el, {
+    __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [{ property: 'rotate', preset: 'inline', kind: 'tween', from: 0, to: 15 }],
     })
     expect(animateCalls[0]!.keyframes.rotate).toEqual(['0deg', '15deg'])
 
     animateCalls.length = 0
-    __sui_motion_attach(connected(), {
+    __sail_motion_attach(connected(), {
       trigger: 'loop',
       motions: [{ property: 'rotate', preset: 'inline', kind: 'tween', from: 0, to: '0.25turn' }],
     })
@@ -116,7 +116,7 @@ describe('inline magnitudes and units', () => {
 
   it('keeps scale and opacity unitless even if a string arrives', () => {
     const el = connected()
-    __sui_motion_attach(el, {
+    __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [
         { property: 'scale', preset: 'inline', kind: 'tween', from: 1, to: '1.75' },
@@ -129,7 +129,7 @@ describe('inline magnitudes and units', () => {
 
   it('merges both translate axes while preserving each unit', () => {
     const el = connected()
-    __sui_motion_attach(el, {
+    __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [
         { property: 'translate-x', preset: 'inline', kind: 'tween', from: 0, to: '-12%' },
@@ -145,7 +145,7 @@ describe('inline magnitudes and units', () => {
 describe('inline timing', () => {
   it('passes an inline duration and easing straight to the transition', () => {
     const el = connected()
-    __sui_motion_attach(el, {
+    __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [
         {
@@ -177,15 +177,15 @@ describe('inline timing', () => {
       stagger: 0.45,
       motions: [{ property: 'opacity', preset: 'inline', kind: 'tween', from: 0, to: 1, delay: 0.2 }],
     })
-    __sui_motion_attach(a, cfg())
-    __sui_motion_attach(b, cfg())
+    __sail_motion_attach(a, cfg())
+    __sail_motion_attach(b, cfg())
     expect(animateCalls[0]!.transition.delay).toBeCloseTo(0.2, 5)
     expect(animateCalls[1]!.transition.delay).toBeCloseTo(0.65, 5)
   })
 
   it('applies a delay with no stagger present', () => {
     const el = connected()
-    __sui_motion_attach(el, {
+    __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [{ property: 'opacity', preset: 'inline', kind: 'tween', from: 0, to: 1, delay: 0.2 }],
     })
@@ -197,7 +197,7 @@ describe('signal-valued config fields', () => {
   it('updates the animation when a timing signal changes', () => {
     const el = connected()
     const speed = signal(1000)
-    __sui_motion_attach(el, () => ({
+    __sail_motion_attach(el, () => ({
       trigger: 'loop',
       motions: [
         {
@@ -223,7 +223,7 @@ describe('signal-valued config fields', () => {
   it('updates the animation when a keyframe signal changes', () => {
     const el = connected()
     const dist = signal(120)
-    __sui_motion_attach(el, () => ({
+    __sail_motion_attach(el, () => ({
       trigger: 'loop',
       motions: [{ property: 'translate-x', preset: 'inline', kind: 'tween', from: 0, to: dist() }],
     }))
@@ -238,7 +238,7 @@ describe('signal-valued config fields', () => {
     const el = connected()
     const used = signal(1)
     const unused = signal(99)
-    __sui_motion_attach(el, () => ({
+    __sail_motion_attach(el, () => ({
       trigger: 'loop',
       motions: [{ property: 'scale', preset: 'inline', kind: 'tween', from: 1, to: used() }],
     }))
@@ -250,7 +250,7 @@ describe('signal-valued config fields', () => {
   it('cleans up on dispose: the effect stops and the animation is cancelled', () => {
     const el = connected()
     const dist = signal(10)
-    const dispose = __sui_motion_attach(el, () => ({
+    const dispose = __sail_motion_attach(el, () => ({
       trigger: 'loop',
       motions: [{ property: 'translate-x', preset: 'inline', kind: 'tween', from: 0, to: dist() }],
     }))
@@ -267,7 +267,7 @@ describe('signal-valued config fields', () => {
 
   it('a literal (non-thunk) config still attaches with no effect involved', () => {
     const el = connected()
-    const dispose = __sui_motion_attach(el, {
+    const dispose = __sail_motion_attach(el, {
       trigger: 'loop',
       motions: [{ property: 'scale', preset: 'inline', kind: 'tween', from: 1, to: 2 }],
     })
@@ -302,7 +302,7 @@ describe('reduced motion still wins over inline values', () => {
     })
     const mod = await import('../src/motion')
     const el = connected()
-    mod.__sui_motion_attach(el, {
+    mod.__sail_motion_attach(el, {
       trigger: 'loop',
       motions: [
         {
@@ -349,7 +349,7 @@ describe('reduced motion still wins over inline values', () => {
     const sig = await import('../src/signal')
     const el = connected()
     const speed = sig.signal(3600)
-    mod.__sui_motion_attach(el, () => ({
+    mod.__sail_motion_attach(el, () => ({
       trigger: 'loop',
       motions: [
         {

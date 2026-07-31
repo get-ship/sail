@@ -13,11 +13,11 @@ import * as boundary from '../runtime/src/error-boundary'
 // because that ordering is where a whole bug class lives: an Animation minted
 // there is bound to a timeline that never advances. `runLeave` is the seam
 // `if.ts`/`for.ts` use to hold departing nodes until their exit settles.
-import { __sui_motion_attach } from '../runtime/src/motion'
+import { __sail_motion_attach } from '../runtime/src/motion'
 import { runLeave } from '../runtime/src/transition-runner'
 
-const motion = { attach: __sui_motion_attach, runLeave }
+const motion = { attach: __sail_motion_attach, runLeave }
 
-;(globalThis as unknown as { SuiActions: typeof actions }).SuiActions = actions
-;(globalThis as unknown as { SuiBoundary: typeof boundary }).SuiBoundary = boundary
-;(globalThis as unknown as { SuiMotion: typeof motion }).SuiMotion = motion
+;(globalThis as unknown as { SailActions: typeof actions }).SailActions = actions
+;(globalThis as unknown as { SailBoundary: typeof boundary }).SailBoundary = boundary
+;(globalThis as unknown as { SailMotion: typeof motion }).SailMotion = motion

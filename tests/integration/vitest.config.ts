@@ -11,10 +11,10 @@
 // touching this file.
 
 // Resolve the sibling ship-contracts checkout relative to a discovered
-// Ship umbrella root, not a hardcoded absolute path. Walks up from
+// umbrella root, not a hardcoded absolute path. Walks up from
 // import.meta.url looking for a parent that contains a `ship-contracts`
-// subdir (the same idiom helm's `scripts/_path.ts discoverShipRoot` uses).
-// `SHIP_CONTRACTS_DIR` overrides for CI / containers / non-umbrella layouts.
+// subdir. `SHIP_CONTRACTS_DIR` overrides for CI / containers / non-umbrella
+// layouts.
 
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'

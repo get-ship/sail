@@ -180,21 +180,42 @@ pub(crate) fn skip_balanced(bytes: &[u8], i: usize, end: usize) -> usize {
     while k < end {
         let c = bytes[k];
         if let Some(q) = in_str {
-            if c == b'\\' { k = (k + 2).min(end); continue; }
-            if c == q { in_str = None; }
+            if c == b'\\' {
+                k = (k + 2).min(end);
+                continue;
+            }
+            if c == q {
+                in_str = None;
+            }
             k += 1;
             continue;
         }
         match c {
-            b'"' | b'\'' | b'`' => { in_str = Some(c); k += 1; }
-            c if c == open => { depth += 1; k += 1; }
-            c if c == close => { depth -= 1; k += 1; if depth == 0 { return k; } }
+            b'"' | b'\'' | b'`' => {
+                in_str = Some(c);
+                k += 1;
+            }
+            c if c == open => {
+                depth += 1;
+                k += 1;
+            }
+            c if c == close => {
+                depth -= 1;
+                k += 1;
+                if depth == 0 {
+                    return k;
+                }
+            }
             b'/' if k + 1 < end && bytes[k + 1] == b'/' => {
-                while k < end && bytes[k] != b'\n' { k += 1; }
+                while k < end && bytes[k] != b'\n' {
+                    k += 1;
+                }
             }
             b'/' if k + 1 < end && bytes[k + 1] == b'*' => {
                 k += 2;
-                while k + 1 < end && !(bytes[k] == b'*' && bytes[k + 1] == b'/') { k += 1; }
+                while k + 1 < end && !(bytes[k] == b'*' && bytes[k + 1] == b'/') {
+                    k += 1;
+                }
                 k = (k + 2).min(end);
             }
             // A regex literal's brackets are TEXT, not structure — counting
@@ -252,6 +273,9 @@ mod tests {
         // Without regex awareness the `)` inside `[^)]` closed this call early.
         let src = r"(v.match(/cubic-bezier\(([^)]+)\)/)) rest";
         let b = src.as_bytes();
-        assert_eq!(skip_balanced(b, 0, b.len()), src.find(") rest").unwrap() + 1);
+        assert_eq!(
+            skip_balanced(b, 0, b.len()),
+            src.find(") rest").unwrap() + 1
+        );
     }
 }

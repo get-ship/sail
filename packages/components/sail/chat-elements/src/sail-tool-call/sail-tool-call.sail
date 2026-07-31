@@ -43,13 +43,14 @@
     groupStateOk: style.fg(success),
     groupStateError: style.fg(destructive),
   })
-  const rail = style.position(absolute).left(0).top(0).bottom(0).w(0_75)
+  // Status rail only — collapsible owns the caret (one disclosure chrome).
+  const rail = style.position(absolute).left(0).top(0).bottom(0).w(1)
   const dot = style.shadow(none)
   const statusLabel = style.ml(auto).fontSize(xs).textCase(uppercase).tracking(wide)
-  const trigger = style.padY(2).padX(3)
+  // padS clears the absolute rail so the first glyph never sits under it.
+  const trigger = style.padY(2).padS(4).padE(3)
   const nameText = style.fontFamily(mono).fontSize(sm).fontWeight(medium).fg(foreground).truncate()
-  const chevron = style.fg(muted-foreground).when({ groupOpen: style.rotate(90) })
-  const body = style.borderTWidth(1).borderT(border).padY(2).padX(3).fontFamily(mono).fontSize(sm).leading(normal)
+  const body = style.borderTWidth(1).borderT(border).padY(2).padS(4).padE(3).fontFamily(mono).fontSize(sm).leading(normal)
   const sectionLabel = style.display(block).fontFamily(body).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(1)
   const pre = style.whitespace(pre-wrap)
   const resultBlock = style.mt(2)
@@ -68,12 +69,6 @@
       ></span>
       <span sx={nameText}>{name()}</span>
       <span sx={[statusLabel, statusFg]}>{status()}</span>
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
-        stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-        stroke-linejoin="round" aria-hidden="true"
-        grow="0" sx={chevron}>
-        <path d="M4 2l4 4-4 4" />
-      </svg>
     </row>
     <div sx={body}>
       <span sx={sectionLabel}>Arguments</span>

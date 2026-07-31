@@ -122,7 +122,10 @@ fn for_body_yields_one_binding_not_per_iteration() {
     // for boundary, aria-current attr binding, dynamic text — 3 entries total.
     assert_eq!(r.len(), 3);
     assert_eq!(r.get(0).unwrap().kind, BindingKind::For);
-    assert_eq!(r.get(1).unwrap().kind, BindingKind::Attr("aria-current".into()));
+    assert_eq!(
+        r.get(1).unwrap().kind,
+        BindingKind::Attr("aria-current".into())
+    );
     assert_eq!(r.get(2).unwrap().kind, BindingKind::Text);
 }
 

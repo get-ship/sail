@@ -1,8 +1,16 @@
-// L1 conformance spec: <meter> (mechanism-2, native + METER_SKIN_CSS). value
+// L1 conformance spec: <meter> (mechanism-2, native + METER map). value
 // range + sizes. Probe asserts each renders with a non-zero box (the skin
 // dropped native chrome via appearance:none, so a bare meter must still show).
 
-const mt = (a) => `<meter ${a} style="width:180px"></meter>`
+const MT =
+  'sail-meter sx-appearancenone sx-displayinlineblock sx-alignmiddle sx-wfull sx-h2 sx-borderWidth0 sx-radiusfull sx-overflowhidden sx-bgmuted sx-sizesm-h15 sx-sizemd-h2 sx-sizelg-h3'
+
+const mt = (a) => {
+  const m = a.match(/class="([^"]*)"/)
+  const rest = a.replace(/class="[^"]*"\s*/, '').trim()
+  const cls = m ? `${MT} ${m[1]}` : MT
+  return `<meter class="${cls}" ${rest} style="width:180px"></meter>`
+}
 
 export default {
   tag: 'meter',

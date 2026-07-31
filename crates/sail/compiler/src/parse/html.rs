@@ -17,9 +17,12 @@ use crate::diagnostics::{CompileError, Span};
 
 mod parser;
 
+/// Brace-primary open-tag expression (`<if {expr}>`) — see `parser::PRIMARY_BRACE_ATTR`.
+pub use parser::PRIMARY_BRACE_ATTR;
+
 pub(super) const VOID_TAGS: &[&str] = &[
-    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
-    "source", "track", "wbr",
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
+    "wbr",
 ];
 
 /// Tags whose body is treated as raw text (no nested elements,

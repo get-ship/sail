@@ -31,8 +31,13 @@
     value = ''
   }
 
-  const host = style.display(block).position(relative).fontFamily(body)
-  const input = style.w(full)
+  const host = style.display(block).position(relative).fontFamily(body).w(full)
+  // Same field chrome as bare <input type=text> so combobox survives theme swaps.
+  const input = style.display(block).w(full).minH(control-h-md).padY(1_5).padX(3).fontSize(base).fg(foreground).bg(background).borderWidth(1).border(border).radius(md).shadow(xs).when({
+    hover: style.border(border-strong),
+    focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2),
+    disabled: style.cursor(not-allowed).opacity(50),
+  })
   const listbox = style.position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).minW(bind(anchorWidth)).maxH(panel-max-h-sm).overflowY(auto).overscroll(contain).pad(1).fg(combobox-foreground).bg(combobox).borderWidth(1).border(border).radius(md).shadow(lg).z(popover)
 </scope>
 

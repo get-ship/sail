@@ -17,8 +17,8 @@ export default controller(() => {
 </controller>
 
 <error-boundary on:sail-error-reset={disarm}>
-  <if cond={armed()}><p>{boom()}</p></if>
-  <if cond={!armed()}>
+  <if {armed()}><p>{boom()}</p></if>
+  <if {!armed()}>
     <p>This subtree is protected.</p>
     <button on:click={arm} tone="destructive" variant="outline">
       Throw during render
@@ -36,7 +36,7 @@ export default controller(() => {
 </error-boundary>`,
 
   async: `<!-- async failure is a STATE, not a throw — render it -->
-<while-error as="err" of="users">
+<while-error {users} as="err">
   <alert tone="destructive">{err.message}</alert>
 </while-error>`,
 }

@@ -6,7 +6,7 @@
 //! useless, so a test that only checks `is_err()` would pass on a phantom
 //! error at a consumer line.
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn opts() -> CompileOpts {
     CompileOpts {
@@ -39,7 +39,11 @@ const CTRL: &str = "<controller>\n\
 fn d1_bare_signal_in_a_text_hole_is_refused() {
     let src = format!("{CTRL}<p>{{p}}</p>");
     let err = compile(&src, opts()).expect_err("a bare `{p}` text hole must not compile");
-    assert_eq!(err.category.as_deref(), Some("sail-signal-not-called"), "{err:?}");
+    assert_eq!(
+        err.category.as_deref(),
+        Some("sail-signal-not-called"),
+        "{err:?}"
+    );
     assert!(
         err.message.contains("`{p}`") && err.message.contains("`{p()}`"),
         "must name the mistake AND the exact fix, got: {}",
@@ -52,7 +56,11 @@ fn d1_bare_signal_in_a_text_hole_is_refused() {
 fn d1_bare_signal_in_an_attribute_value_is_refused() {
     let src = format!("{CTRL}<progress value={{p}} max=\"100\"></progress>");
     let err = compile(&src, opts()).expect_err("a bare `value={p}` must not compile");
-    assert_eq!(err.category.as_deref(), Some("sail-signal-not-called"), "{err:?}");
+    assert_eq!(
+        err.category.as_deref(),
+        Some("sail-signal-not-called"),
+        "{err:?}"
+    );
     assert!(err.message.contains("p()"), "{}", err.message);
 }
 
@@ -84,9 +92,8 @@ const CTRL_REGEX: &str = "<controller>\n\
 #[test]
 fn d4_regex_literal_in_a_controller_does_not_collapse_the_scope() {
     let src = format!("{CTRL_REGEX}<div>{{rail()}}</div>");
-    compile(&src, opts()).expect(
-        "a regex literal is valid JS — the controller's returned scope must survive it",
-    );
+    compile(&src, opts())
+        .expect("a regex literal is valid JS — the controller's returned scope must survive it");
 }
 
 #[test]

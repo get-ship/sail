@@ -8,8 +8,8 @@ use crate::diagnostics::{CompileError, Span};
 use crate::ir::*;
 use crate::parse::expr;
 
-use super::tokenize::{Discriminant, Token, TokenKind};
 use super::ParseResult;
+use super::tokenize::{Discriminant, Token, TokenKind};
 
 mod for_header;
 use for_header::parse_for_header;
@@ -58,7 +58,10 @@ pub(crate) fn parse_if(
     let mut i = start + 1;
     loop {
         let body = (scope.body)(tokens, i, IF_TERMS)?;
-        branches.push(IfBranch { cond: cur_cond.clone(), body: body.instrs });
+        branches.push(IfBranch {
+            cond: cur_cond.clone(),
+            body: body.instrs,
+        });
         i = body.end;
         let term = tokens
             .get(i)
@@ -78,9 +81,9 @@ pub(crate) fn parse_if(
                 let eb = (scope.body)(tokens, i, &[Discriminant::CloseIf])?;
                 else_body = Some(eb.instrs);
                 i = eb.end;
-                let closer = tokens.get(i).ok_or_else(|| {
-                    CompileError::new("missing {/if}").with_span(head_span)
-                })?;
+                let closer = tokens
+                    .get(i)
+                    .ok_or_else(|| CompileError::new("missing {/if}").with_span(head_span))?;
                 if !matches!(closer.kind, TokenKind::CloseIf) {
                     return Err(CompileError::new("missing {/if}").with_span(head_span));
                 }
@@ -91,7 +94,11 @@ pub(crate) fn parse_if(
         }
     }
     Ok(InstrResult {
-        instr: Instr::If(IfInstr { branches, else_body, span: head_span }),
+        instr: Instr::If(IfInstr {
+            branches,
+            else_body,
+            span: head_span,
+        }),
         end: i,
     })
 }
@@ -112,12 +119,13 @@ pub(crate) fn parse_for(
     i = body.end;
     let mut else_body: Option<Vec<Instr>> = None;
     if let Some(t) = tokens.get(i)
-        && matches!(t.kind, TokenKind::Else) {
-            i += 1;
-            let eb = (scope.body)(tokens, i, &[Discriminant::CloseFor])?;
-            else_body = Some(eb.instrs);
-            i = eb.end;
-        }
+        && matches!(t.kind, TokenKind::Else)
+    {
+        i += 1;
+        let eb = (scope.body)(tokens, i, &[Discriminant::CloseFor])?;
+        else_body = Some(eb.instrs);
+        i = eb.end;
+    }
     let closer = tokens
         .get(i)
         .ok_or_else(|| CompileError::new("missing {/for}").with_span(head_span))?;
@@ -153,10 +161,20 @@ pub(crate) fn parse_while_loading(
     let mut i = start + 1;
     let body = (scope.body)(tokens, i, WHILE_LOADING_TERMS)?;
     i = body.end;
-    expect_close(tokens, i, TokenKind::CloseWhileLoading, "{/while-loading}", head_span)?;
+    expect_close(
+        tokens,
+        i,
+        TokenKind::CloseWhileLoading,
+        "{/while-loading}",
+        head_span,
+    )?;
     i += 1;
     Ok(InstrResult {
-        instr: Instr::WhileLoading(WhileLoadingInstr { bind, body: body.instrs, span: head_span }),
+        instr: Instr::WhileLoading(WhileLoadingInstr {
+            bind,
+            body: body.instrs,
+            span: head_span,
+        }),
         end: i,
     })
 }
@@ -175,10 +193,21 @@ pub(crate) fn parse_while_error(
     let mut i = start + 1;
     let body = (scope.body)(tokens, i, WHILE_ERROR_TERMS)?;
     i = body.end;
-    expect_close(tokens, i, TokenKind::CloseWhileError, "{/while-error}", head_span)?;
+    expect_close(
+        tokens,
+        i,
+        TokenKind::CloseWhileError,
+        "{/while-error}",
+        head_span,
+    )?;
     i += 1;
     Ok(InstrResult {
-        instr: Instr::WhileError(WhileErrorInstr { bind, error_var, body: body.instrs, span: head_span }),
+        instr: Instr::WhileError(WhileErrorInstr {
+            bind,
+            error_var,
+            body: body.instrs,
+            span: head_span,
+        }),
         end: i,
     })
 }
@@ -187,14 +216,18 @@ pub(crate) fn parse_while_error(
 fn parse_of_binding(src: &str, span: Span) -> Result<String, CompileError> {
     let s = src.trim();
     let rest = s.strip_prefix("of").ok_or_else(|| {
-        CompileError::new("{#while-loading} requires `of <signal>` (e.g. `{#while-loading of overview}`)")
-            .with_span(span)
+        CompileError::new(
+            "{#while-loading} requires `of <signal>` (e.g. `{#while-loading of overview}`)",
+        )
+        .with_span(span)
     })?;
     let name = rest.trim();
     if name.is_empty() || !is_identifier(name) {
-        return Err(CompileError::new(
-            format!("{{#while-loading}}: expected signal name after `of`, got {:?}", name)
-        ).with_span(span));
+        return Err(CompileError::new(format!(
+            "{{#while-loading}}: expected signal name after `of`, got {:?}",
+            name
+        ))
+        .with_span(span));
     }
     Ok(name.to_string())
 }
@@ -202,9 +235,11 @@ fn parse_of_binding(src: &str, span: Span) -> Result<String, CompileError> {
 /// Parse `<err> of <name>` from the header of `{#while-error err of <name>}`.
 fn parse_error_of_binding(src: &str, span: Span) -> Result<(String, String), CompileError> {
     let s = src.trim();
-    let err_msg = || CompileError::new(
+    let err_msg = || {
+        CompileError::new(
         "{#while-error} requires `<errVar> of <signal>` (e.g. `{#while-error err of overview}`)"
-    ).with_span(span);
+    ).with_span(span)
+    };
     let space = s.find(char::is_whitespace).ok_or_else(err_msg)?;
     let error_var = s[..space].trim().to_string();
     let rest = s[space..].trim();
@@ -235,9 +270,9 @@ fn expect_close(
     label: &'static str,
     head_span: Span,
 ) -> Result<(), CompileError> {
-    let tok = tokens.get(i).ok_or_else(|| {
-        CompileError::new(format!("missing {label}")).with_span(head_span)
-    })?;
+    let tok = tokens
+        .get(i)
+        .ok_or_else(|| CompileError::new(format!("missing {label}")).with_span(head_span))?;
     if tok.kind.discriminant() != expected.discriminant() {
         return Err(CompileError::new(format!("missing {label}")).with_span(head_span));
     }
@@ -276,7 +311,10 @@ pub(crate) fn parse_match(
                 let test = Expr::new(src.clone(), t.span, false);
                 i += 1;
                 let body = (scope.body)(tokens, i, MATCH_TERMS)?;
-                cases.push(MatchCase { test, body: body.instrs });
+                cases.push(MatchCase {
+                    test,
+                    body: body.instrs,
+                });
                 i = body.end;
             }
             TokenKind::Default => {

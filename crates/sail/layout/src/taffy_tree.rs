@@ -5,8 +5,8 @@
 //! diagnostic stream is full of false-positive "collapsed" warnings.
 
 use crate::html::Element;
-use crate::metrics::{table as metrics_table, Family, Size as TextSize};
-use crate::style::{resolve, ResolvedStyle, Role, Visibility};
+use crate::metrics::{Family, Size as TextSize, table as metrics_table};
+use crate::style::{ResolvedStyle, Role, Visibility, resolve};
 use anyhow::Result;
 use std::collections::HashMap;
 use taffy::prelude::*;
@@ -123,7 +123,9 @@ where
             available,
             |known_dimensions, available_space, node_id, ctx, _style| {
                 let Some(_ctx) = ctx else { return Size::ZERO };
-                let Some(&elem_index) = id_to_elem.get(&node_id) else { return Size::ZERO };
+                let Some(&elem_index) = id_to_elem.get(&node_id) else {
+                    return Size::ZERO;
+                };
                 let elem = &elements[elem_index];
                 if elem.text.is_empty() {
                     return Size::ZERO;
@@ -197,7 +199,10 @@ fn resolve_family_size(elem_index: usize, all: &[Element]) -> (Family, TextSize)
         cursor = node.parent;
     }
 
-    (family.unwrap_or(Family::Body), size.unwrap_or(TextSize::Base))
+    (
+        family.unwrap_or(Family::Body),
+        size.unwrap_or(TextSize::Base),
+    )
 }
 
 fn tag_default_size(tag: &str) -> Option<TextSize> {
@@ -240,20 +245,20 @@ fn measure_text(
         .iter()
         .map(|w| crate::metrics::word_width(m, w))
         .collect();
-    let max_line_width = word_widths.iter().sum::<f32>()
-        + (words.len().saturating_sub(1) as f32) * space_width;
+    let max_line_width =
+        word_widths.iter().sum::<f32>() + (words.len().saturating_sub(1) as f32) * space_width;
     let min_line_width = *word_widths
         .iter()
         .max_by(|a, b| a.partial_cmp(b).unwrap())
         .unwrap();
 
-    let inline_size = known.get_abs(inline).unwrap_or_else(|| {
-        match available.get_abs(inline) {
+    let inline_size = known
+        .get_abs(inline)
+        .unwrap_or_else(|| match available.get_abs(inline) {
             AvailableSpace::Definite(w) => w.min(max_line_width).max(min_line_width),
             AvailableSpace::MaxContent => max_line_width,
             AvailableSpace::MinContent => min_line_width,
-        }
-    });
+        });
 
     let block_size = known.get_abs(block).unwrap_or_else(|| {
         let mut lines = 1usize;
@@ -302,7 +307,10 @@ mod tests {
         ];
         let tree = build(elements, (1440.0, 900.0)).unwrap();
         assert!(tree.unknown_subtree[2], "iframe itself is unknown");
-        assert!(tree.unknown_subtree[1], "iframe wrapper propagates unknown up");
+        assert!(
+            tree.unknown_subtree[1],
+            "iframe wrapper propagates unknown up"
+        );
     }
 
     #[test]
@@ -350,7 +358,10 @@ mod tests {
         ];
         let tree = build(elements, (1440.0, 900.0)).unwrap();
         assert!(tree.unknown_subtree[2], "custom element itself is unknown");
-        assert!(tree.unknown_subtree[1], "parent of unknown is unknown_subtree");
+        assert!(
+            tree.unknown_subtree[1],
+            "parent of unknown is unknown_subtree"
+        );
     }
 
     #[test]
@@ -368,14 +379,17 @@ mod tests {
         ];
         let tree = build(elements, (1440.0, 900.0)).unwrap();
         let layout = tree.computed(1).unwrap();
-        assert!(layout.size.height > 0.0, "text height should be non-zero: {:?}", layout.size);
+        assert!(
+            layout.size.height > 0.0,
+            "text height should be non-zero: {:?}",
+            layout.size
+        );
     }
 
     #[test]
     fn measure_text_single_line_hello() {
-        let m = &crate::metrics::table()[
-            &(crate::metrics::Family::Body, crate::metrics::Size::Base)
-        ];
+        let m =
+            &crate::metrics::table()[&(crate::metrics::Family::Body, crate::metrics::Size::Base)];
         let known = Size::<Option<f32>>::NONE;
         let available = Size {
             width: AvailableSpace::Definite(1000.0),
@@ -391,9 +405,8 @@ mod tests {
 
     #[test]
     fn measure_text_wraps_to_two_lines() {
-        let m = &crate::metrics::table()[
-            &(crate::metrics::Family::Body, crate::metrics::Size::Base)
-        ];
+        let m =
+            &crate::metrics::table()[&(crate::metrics::Family::Body, crate::metrics::Size::Base)];
         let hello_w = crate::metrics::word_width(m, "Hello");
         let world_w = crate::metrics::word_width(m, "World");
         let space_w = crate::metrics::char_width(m, ' ');
@@ -419,9 +432,8 @@ mod tests {
 
     #[test]
     fn measure_text_empty_returns_zero() {
-        let m = &crate::metrics::table()[
-            &(crate::metrics::Family::Body, crate::metrics::Size::Base)
-        ];
+        let m =
+            &crate::metrics::table()[&(crate::metrics::Family::Body, crate::metrics::Size::Base)];
         let known = Size::<Option<f32>>::NONE;
         let available = Size {
             width: AvailableSpace::Definite(1000.0),

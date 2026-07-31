@@ -21,25 +21,48 @@ fn instr_references_ident(instr: &Instr, name: &str) -> bool {
             el.attrs.iter().any(|a| attr_references_ident(a, name))
                 || template_references_ident(&el.children, name)
         }
-        Instr::If(IfInstr { branches, else_body, .. }) => {
+        Instr::If(IfInstr {
+            branches,
+            else_body,
+            ..
+        }) => {
             branches.iter().any(|b| {
                 expr_references_ident(&b.cond.source, name)
                     || template_references_ident(&b.body, name)
-            }) || else_body.as_ref().is_some_and(|b| template_references_ident(b, name))
+            }) || else_body
+                .as_ref()
+                .is_some_and(|b| template_references_ident(b, name))
         }
-        Instr::For(ForInstr { iterable, key, body, else_body, .. }) => {
+        Instr::For(ForInstr {
+            iterable,
+            key,
+            body,
+            else_body,
+            ..
+        }) => {
             expr_references_ident(&iterable.source, name)
-                || key.as_ref().is_some_and(|k| expr_references_ident(&k.source, name))
+                || key
+                    .as_ref()
+                    .is_some_and(|k| expr_references_ident(&k.source, name))
                 || template_references_ident(body, name)
-                || else_body.as_ref().is_some_and(|b| template_references_ident(b, name))
+                || else_body
+                    .as_ref()
+                    .is_some_and(|b| template_references_ident(b, name))
         }
-        Instr::Match(MatchInstr { discriminant, cases, default, .. }) => {
+        Instr::Match(MatchInstr {
+            discriminant,
+            cases,
+            default,
+            ..
+        }) => {
             expr_references_ident(&discriminant.source, name)
                 || cases.iter().any(|c| {
                     expr_references_ident(&c.test.source, name)
                         || template_references_ident(&c.body, name)
                 })
-                || default.as_ref().is_some_and(|d| template_references_ident(d, name))
+                || default
+                    .as_ref()
+                    .is_some_and(|d| template_references_ident(d, name))
         }
         Instr::WhileLoading(wl) => template_references_ident(&wl.body, name),
         Instr::WhileError(we) => template_references_ident(&we.body, name),
@@ -52,17 +75,24 @@ fn attr_references_ident(attr: &AttrInstr, name: &str) -> bool {
         AttrInstr::Expr { expr, .. }
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. }
-                | AttrInstr::Mutation { expr, .. } => expr_references_ident(&expr.source, name),
+        | AttrInstr::Mutation { expr, .. } => expr_references_ident(&expr.source, name),
         AttrInstr::On { handler, .. } => expr_references_ident(&handler.source, name),
-AttrInstr::Use { action, param, .. } => {
+        AttrInstr::Use { action, param, .. } => {
             action == name
-                || param.as_ref().is_some_and(|e| expr_references_ident(&e.source, name))
+                || param
+                    .as_ref()
+                    .is_some_and(|e| expr_references_ident(&e.source, name))
         }
         AttrInstr::Motion { props, timing, .. } => {
-            timing.exprs().iter().any(|e| expr_references_ident(&e.source, name))
-                || props
-                    .iter()
-                    .any(|p| p.exprs().iter().any(|e| expr_references_ident(&e.source, name)))
+            timing
+                .exprs()
+                .iter()
+                .any(|e| expr_references_ident(&e.source, name))
+                || props.iter().any(|p| {
+                    p.exprs()
+                        .iter()
+                        .any(|e| expr_references_ident(&e.source, name))
+                })
         }
         AttrInstr::Static { .. }
         | AttrInstr::BindThis { .. }

@@ -13,20 +13,22 @@ use std::path::Path;
 
 use crate::check::controller_parse::ParsedController;
 use crate::check::symbol_table::SymbolTable;
-use crate::diagnostics::{line_col, Diagnostic};
+use crate::diagnostics::{Diagnostic, line_col};
 use crate::ir::*;
 
 /// The source's controller: its inline `<controller>` block. There is no
 /// paired-file fallback — a sibling `<stem>.controller.ts` is a compile error
 /// (`sail-paired-controller`).
-fn inline_controller(source: &str, source_path: Option<&std::path::Path>) -> Option<ParsedController> {
+fn inline_controller(
+    source: &str,
+    source_path: Option<&std::path::Path>,
+) -> Option<ParsedController> {
     let body = crate::parse::preprocess::extract_controller_block(source).1?;
     crate::check::controller_parse::parse(
         source_path.map(|p| p.to_path_buf()).unwrap_or_default(),
         body,
     )
 }
-
 
 /// A name in scope for a `.sail` template, with where it came from and (when
 /// controller-declared) where to jump to.
@@ -54,6 +56,42 @@ pub struct Hover {
     pub col: usize,
 }
 
+/// SSR tier badge for a scope binding (TOOL-2 model state section).
+///
+/// - **S** — server-safe: scope-init + pure subset only
+/// - **I** — interactive / intermediate (default)
+/// - **C** — client-only: browser API / timer / storage
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum SsrTier {
+    S,
+    I,
+    C,
+}
+
+impl SsrTier {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::S => "S",
+            Self::I => "I",
+            Self::C => "C",
+        }
+    }
+}
+
+/// One query/mutation key derived from controller source.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct QueryKeyInfo {
+    /// Kind: `query` | `mutation` | `invalidate`.
+    pub kind: String,
+    /// Static member path when resolvable (e.g. `crm.deals.list`).
+    pub key: String,
+    /// True when the call site has no client-only markers in its thunk body.
+    pub ssr_fetchable: bool,
+    pub line: usize,
+    pub col: usize,
+}
+
 /// Everything the tooling needs about one `.sail` source in a single pass.
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct Analysis {
@@ -65,6 +103,10 @@ pub struct Analysis {
     pub events: Vec<String>,
     /// Resolved paired-controller path, when one exists on disk.
     pub controller_path: Option<String>,
+    /// SSR tier per returned scope symbol name.
+    pub ssr_tiers: Vec<(String, SsrTier)>,
+    /// Query keys found in the controller module.
+    pub query_keys: Vec<QueryKeyInfo>,
 }
 
 /// Full analysis of a `.sail` source: diagnostics + scope symbols + the tag /
@@ -83,25 +125,515 @@ pub fn analyze(
             tags: Vec::new(),
             events: Vec::new(),
             controller_path: None,
+            ssr_tiers: Vec::new(),
+            query_keys: Vec::new(),
         };
     };
     let controller = inline_controller(source, source_path);
     let table = SymbolTable::build(&program, controller.as_ref());
     let symbols = symbols_from_table(&table, controller.as_ref());
     let (tags, events) = collect_tags_events(&program);
+    let ssr_tiers = ssr_tiers_from_controller(controller.as_ref());
+    let query_keys = controller
+        .as_ref()
+        .map(|c| extract_query_keys(&c.source))
+        .unwrap_or_default();
     Analysis {
         diagnostics,
         symbols,
         tags,
         events,
         controller_path: controller.as_ref().map(|c| c.path.display().to_string()),
+        ssr_tiers,
+        query_keys,
     }
+}
+
+/// Classify a value/expression slice for SSR tier badges.
+///
+/// Client markers → **C**; pure derived (no client markers, looks like
+/// `derived`/`computed`/literal) → **S**; otherwise **I**.
+pub fn classify_ssr_tier(value_src: &str) -> SsrTier {
+    let s = value_src;
+    if CLIENT_MARKERS.iter().any(|m| contains_token(s, m)) {
+        return SsrTier::C;
+    }
+    let trimmed = s.trim();
+    if trimmed.starts_with("derived(")
+        || trimmed.starts_with("computed(")
+        || trimmed.starts_with("() =>")
+        || trimmed.starts_with("function")
+    {
+        // Pure-looking derived / getter with no client markers.
+        if !contains_token(s, "await") && !contains_token(s, "fetch(") {
+            return SsrTier::S;
+        }
+    }
+    // Bare signal(initial) with literal-ish init is server-safe for first paint.
+    if let Some(rest) = trimmed.strip_prefix("signal(") {
+        let inner = rest.trim_end_matches(')').trim();
+        if looks_like_literal_init(inner) {
+            return SsrTier::S;
+        }
+    }
+    SsrTier::I
+}
+
+/// Extract `query` / `mutation` / `invalidate` call sites from controller text.
+pub fn extract_query_keys(controller_source: &str) -> Vec<QueryKeyInfo> {
+    let bytes = controller_source.as_bytes();
+    let mut out = Vec::new();
+    let kinds: &[&[u8]] = &[b"query", b"mutation", b"invalidate"];
+    let mut i = 0usize;
+    while i < bytes.len() {
+        let mut hit: Option<(&str, usize)> = None;
+        for k in kinds {
+            if i + k.len() <= bytes.len() && &bytes[i..i + k.len()] == *k {
+                let after = i + k.len();
+                let prev_ok = i == 0 || !is_ident(bytes[i - 1]);
+                let next_ok = after < bytes.len() && {
+                    let mut p = after;
+                    while p < bytes.len() && bytes[p].is_ascii_whitespace() {
+                        p += 1;
+                    }
+                    p < bytes.len() && bytes[p] == b'('
+                };
+                if prev_ok && next_ok {
+                    // SAFETY: k is pure ASCII.
+                    let kind = std::str::from_utf8(k).unwrap_or("query");
+                    hit = Some((kind, after));
+                    break;
+                }
+            }
+        }
+        let Some((kind, after_name)) = hit else {
+            i += 1;
+            continue;
+        };
+        let mut p = after_name;
+        while p < bytes.len() && bytes[p].is_ascii_whitespace() {
+            p += 1;
+        }
+        if p >= bytes.len() || bytes[p] != b'(' {
+            i += 1;
+            continue;
+        }
+        let open = p;
+        let close = match skip_balanced_paren(bytes, open) {
+            Some(c) => c,
+            None => {
+                i += 1;
+                continue;
+            }
+        };
+        // Paren body is between open+1 and close (ASCII delimiters).
+        let call_body = std::str::from_utf8(&bytes[open + 1..close]).unwrap_or("");
+        let key = extract_dot_chain_key(call_body).unwrap_or_else(|| format!("{kind}(…)"));
+        let ssr_fetchable =
+            kind != "mutation" && !CLIENT_MARKERS.iter().any(|m| contains_token(call_body, m));
+        let (line, col) = line_col(controller_source, i);
+        out.push(QueryKeyInfo {
+            kind: kind.to_string(),
+            key,
+            ssr_fetchable,
+            line,
+            col,
+        });
+        i = close + 1;
+    }
+    out
+}
+
+const CLIENT_MARKERS: &[&str] = &[
+    "window",
+    "document",
+    "localStorage",
+    "sessionStorage",
+    "setTimeout",
+    "setInterval",
+    "requestAnimationFrame",
+    "matchMedia",
+    "navigator",
+    "location.",
+    "indexedDB",
+    "crypto.subtle",
+];
+
+fn ssr_tiers_from_controller(controller: Option<&ParsedController>) -> Vec<(String, SsrTier)> {
+    let Some(c) = controller else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for m in &c.returned {
+        let slice = safe_slice(&c.source, m.value_span.start, m.value_span.end);
+        let mut tier = classify_ssr_tier(slice);
+        // Upgrade only when *this* binding is written/updated inside a
+        // statement that also uses a client marker (same balanced region).
+        if tier != SsrTier::C {
+            let name = m.name.as_str();
+            // Also check the local `const name = …` initializer when shorthand.
+            if let Some(init) = find_const_init(&c.source, name) {
+                tier = classify_ssr_tier(init);
+            }
+            if tier != SsrTier::C && binding_updated_with_client_marker(&c.source, name) {
+                tier = SsrTier::C;
+            }
+        }
+        out.push((m.name.clone(), tier));
+    }
+    out.sort_by(|a, b| a.0.cmp(&b.0));
+    out
+}
+
+fn safe_slice(src: &str, start: usize, end: usize) -> &str {
+    let start = floor_char_boundary(src, start.min(src.len()));
+    let end = floor_char_boundary(src, end.min(src.len())).max(start);
+    &src[start..end]
+}
+
+fn floor_char_boundary(s: &str, i: usize) -> usize {
+    if i >= s.len() {
+        return s.len();
+    }
+    let mut j = i;
+    while j > 0 && !s.is_char_boundary(j) {
+        j -= 1;
+    }
+    j
+}
+
+/// `const name = <init>` / `let name = <init>` RHS when present.
+fn find_const_init<'a>(src: &'a str, name: &str) -> Option<&'a str> {
+    let bytes = src.as_bytes();
+    let needle = name.as_bytes();
+    let mut i = 0usize;
+    while i + needle.len() < bytes.len() {
+        if &bytes[i..i + needle.len()] == needle {
+            let prev_ok = i == 0 || !is_ident(bytes[i - 1]);
+            let after = i + needle.len();
+            let next_ok = after >= bytes.len() || !is_ident(bytes[after]);
+            if prev_ok && next_ok {
+                // Look back for const/let
+                let before = &src[..i];
+                let trimmed = before.trim_end();
+                if trimmed.ends_with("const") || trimmed.ends_with("let") {
+                    let mut p = after;
+                    while p < bytes.len() && bytes[p].is_ascii_whitespace() {
+                        p += 1;
+                    }
+                    // optional type annotation
+                    if p < bytes.len() && bytes[p] == b':' {
+                        while p < bytes.len() && bytes[p] != b'=' {
+                            p += 1;
+                        }
+                    }
+                    while p < bytes.len() && bytes[p].is_ascii_whitespace() {
+                        p += 1;
+                    }
+                    if p < bytes.len() && bytes[p] == b'=' {
+                        p += 1;
+                        while p < bytes.len() && bytes[p].is_ascii_whitespace() {
+                            p += 1;
+                        }
+                        let start = p;
+                        // end at `;` or newline at depth 0
+                        let mut depth = 0i32;
+                        let mut in_str: Option<u8> = None;
+                        while p < bytes.len() {
+                            let c = bytes[p];
+                            if let Some(q) = in_str {
+                                if c == b'\\' {
+                                    p += 2;
+                                    continue;
+                                }
+                                if c == q {
+                                    in_str = None;
+                                }
+                                p += 1;
+                                continue;
+                            }
+                            match c {
+                                b'\'' | b'"' | b'`' => in_str = Some(c),
+                                b'(' | b'[' | b'{' => depth += 1,
+                                b')' | b']' | b'}' => depth -= 1,
+                                b';' if depth <= 0 => {
+                                    return Some(src.get(start..p).unwrap_or(""));
+                                }
+                                b'\n' if depth <= 0 => {
+                                    return Some(src.get(start..p).unwrap_or(""));
+                                }
+                                _ => {}
+                            }
+                            p += 1;
+                        }
+                        return Some(src.get(start..p).unwrap_or(""));
+                    }
+                }
+            }
+        }
+        i += 1;
+    }
+    None
+}
+
+/// True when `name.set(` / `name(...)` write appears in the same balanced
+/// statement (`;`-terminated region) as a client marker.
+fn binding_updated_with_client_marker(src: &str, name: &str) -> bool {
+    let bytes = src.as_bytes();
+    let n = name.as_bytes();
+    let mut i = 0usize;
+    while i + n.len() < bytes.len() {
+        if &bytes[i..i + n.len()] != n {
+            i += 1;
+            continue;
+        }
+        let prev_ok = i == 0 || !is_ident(bytes[i - 1]);
+        let after = i + n.len();
+        let next_ok = after >= bytes.len() || !is_ident(bytes[after]);
+        if !prev_ok || !next_ok {
+            i += 1;
+            continue;
+        }
+        // name.set( or name( — treat as write/update site
+        let mut p = after;
+        while p < bytes.len() && bytes[p].is_ascii_whitespace() {
+            p += 1;
+        }
+        let is_write = if p + 3 < bytes.len() && &bytes[p..p + 4] == b".set" {
+            true
+        } else if p < bytes.len() && bytes[p] == b'(' {
+            // call form: ticks() is read; only treat name.set as write for signals
+            false
+        } else {
+            false
+        };
+        // Also: name is closed over inside setInterval/setTimeout callback that
+        // contains name.set — scan the enclosing statement for both.
+        let stmt = enclosing_statement(src, i);
+        let has_client = CLIENT_MARKERS.iter().any(|m| contains_token(stmt, m));
+        let has_set =
+            stmt.contains(&format!("{name}.set")) || stmt.contains(&format!("{name} .set"));
+        if has_client && (is_write || has_set) {
+            return true;
+        }
+        // effect(() => { setInterval(() => name.set(...)) }) — marker + set
+        // in a window around the name (same function body depth).
+        if has_client && contains_token(stmt, name) && has_set {
+            return true;
+        }
+        i += 1;
+    }
+    // Fallback: effect/mount body that both mentions client marker and name.set
+    for marker in [
+        "setInterval",
+        "setTimeout",
+        "requestAnimationFrame",
+        "matchMedia",
+    ] {
+        if let Some(pos) = src.find(marker) {
+            let region = enclosing_balanced_call(src, pos).unwrap_or("");
+            if region.contains(&format!("{name}.set")) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn enclosing_statement(src: &str, at: usize) -> &str {
+    let bytes = src.as_bytes();
+    let mut start = at;
+    while start > 0
+        && bytes[start - 1] != b';'
+        && bytes[start - 1] != b'{'
+        && bytes[start - 1] != b'\n'
+    {
+        // don't cross too far
+        if at - start > 800 {
+            break;
+        }
+        start -= 1;
+    }
+    let mut end = at;
+    let mut depth = 0i32;
+    while end < bytes.len() {
+        match bytes[end] {
+            b'{' | b'(' | b'[' => depth += 1,
+            b'}' | b')' | b']' => depth -= 1,
+            b';' if depth <= 0 => {
+                end += 1;
+                break;
+            }
+            _ => {}
+        }
+        end += 1;
+        if end - at > 1200 {
+            break;
+        }
+    }
+    src.get(start..end).unwrap_or("")
+}
+
+fn enclosing_balanced_call(src: &str, at: usize) -> Option<&str> {
+    let bytes = src.as_bytes();
+    let mut p = at;
+    while p < bytes.len() && bytes[p] != b'(' {
+        p += 1;
+        if p - at > 40 {
+            return None;
+        }
+    }
+    if p >= bytes.len() {
+        return None;
+    }
+    let open = p;
+    let close = skip_balanced_paren(bytes, open)?;
+    src.get(open..=close)
+}
+
+fn looks_like_literal_init(inner: &str) -> bool {
+    let t = inner.trim();
+    if t.is_empty() {
+        return true;
+    }
+    if t.parse::<f64>().is_ok() {
+        return true;
+    }
+    if (t.starts_with('"') && t.ends_with('"'))
+        || (t.starts_with('\'') && t.ends_with('\''))
+        || (t.starts_with('`') && t.ends_with('`') && !t.contains("${"))
+    {
+        return true;
+    }
+    matches!(t, "true" | "false" | "null" | "undefined" | "[]" | "{}")
+}
+
+fn contains_token(hay: &str, needle: &str) -> bool {
+    if needle.ends_with('(') || needle.ends_with('.') {
+        return hay.contains(needle);
+    }
+    let bytes = hay.as_bytes();
+    let n = needle.as_bytes();
+    let mut i = 0usize;
+    while i + n.len() <= bytes.len() {
+        if &bytes[i..i + n.len()] == n {
+            let before = i == 0 || !is_ident(bytes[i - 1]);
+            let after = i + n.len() >= bytes.len() || !is_ident(bytes[i + n.len()]);
+            if before && after {
+                return true;
+            }
+        }
+        i += 1;
+    }
+    false
+}
+
+fn skip_balanced_paren(bytes: &[u8], open: usize) -> Option<usize> {
+    if bytes.get(open) != Some(&b'(') {
+        return None;
+    }
+    let mut depth = 0i32;
+    let mut i = open;
+    let mut in_str: Option<u8> = None;
+    while i < bytes.len() {
+        let c = bytes[i];
+        if let Some(q) = in_str {
+            if c == b'\\' {
+                i += 2;
+                continue;
+            }
+            if c == q {
+                in_str = None;
+            }
+            i += 1;
+            continue;
+        }
+        match c {
+            b'\'' | b'"' | b'`' => in_str = Some(c),
+            b'(' => depth += 1,
+            b')' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(i);
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    None
+}
+
+/// Best-effort static key path from a query/mutation thunk: `crm.deals.list(...)`.
+fn extract_dot_chain_key(call_body: &str) -> Option<String> {
+    // Look for `=> root.seg.seg(` or `root.seg.seg(` patterns.
+    let bytes = call_body.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        if !is_ident_start(bytes[i]) {
+            i += 1;
+            continue;
+        }
+        let start = i;
+        i += 1;
+        while i < bytes.len() && is_ident(bytes[i]) {
+            i += 1;
+        }
+        let mut end = i;
+        // Consume `.ident` chain
+        loop {
+            let mut p = end;
+            while p < bytes.len() && bytes[p].is_ascii_whitespace() {
+                p += 1;
+            }
+            if p >= bytes.len() || bytes[p] != b'.' {
+                break;
+            }
+            p += 1;
+            while p < bytes.len() && bytes[p].is_ascii_whitespace() {
+                p += 1;
+            }
+            if p >= bytes.len() || !is_ident_start(bytes[p]) {
+                break;
+            }
+            p += 1;
+            while p < bytes.len() && is_ident(bytes[p]) {
+                p += 1;
+            }
+            end = p;
+        }
+        let mut p = end;
+        while p < bytes.len() && bytes[p].is_ascii_whitespace() {
+            p += 1;
+        }
+        if p < bytes.len() && bytes[p] == b'(' {
+            let chain = call_body[start..end].trim();
+            // Skip arrow params and keywords
+            if !matches!(
+                chain,
+                "query" | "mutation" | "invalidate" | "function" | "async" | "return"
+            ) && chain.contains('.')
+            {
+                return Some(chain.to_string());
+            }
+        }
+    }
+    None
+}
+
+fn is_ident_start(b: u8) -> bool {
+    b.is_ascii_alphabetic() || b == b'_' || b == b'$'
 }
 
 /// Resolve the symbol under a 1-based `(line, col)` cursor. Finds the root of
 /// the member chain at the cursor (`items` for a cursor on `items().length`)
 /// and looks it up in the scope table.
-pub fn hover_at(source: &str, source_path: Option<&Path>, line: usize, col: usize) -> Option<Hover> {
+pub fn hover_at(
+    source: &str,
+    source_path: Option<&Path>,
+    line: usize,
+    col: usize,
+) -> Option<Hover> {
     let program = crate::parse::parse(source).ok()?;
     let controller = inline_controller(source, source_path);
     let table = SymbolTable::build(&program, controller.as_ref());
@@ -110,7 +642,13 @@ pub fn hover_at(source: &str, source_path: Option<&Path>, line: usize, col: usiz
     symbols_from_table(&table, controller.as_ref())
         .into_iter()
         .find(|s| s.name == root)
-        .map(|s| Hover { name: s.name, kind: s.kind, source: s.source, line: s.line, col: s.col })
+        .map(|s| Hover {
+            name: s.name,
+            kind: s.kind,
+            source: s.source,
+            line: s.line,
+            col: s.col,
+        })
 }
 
 /// Every scope name available for completion, with its binding kind.
@@ -131,7 +669,13 @@ fn symbols_from_table(table: &SymbolTable, controller: Option<&ParsedController>
 
     // `<prop>` lives in the .sail — no controller offset (0).
     for (name, e) in &table.props {
-        out.push(Symbol { name: name.clone(), kind: e.kind_label.to_string(), source: "prop".into(), line: 0, col: 0 });
+        out.push(Symbol {
+            name: name.clone(),
+            kind: e.kind_label.to_string(),
+            source: "prop".into(),
+            line: 0,
+            col: 0,
+        });
     }
     // Controller-declared keys carry a byte offset into the controller
     // source. There is no more `derived:`/`on:`/`use:` section to
@@ -139,7 +683,13 @@ fn symbols_from_table(table: &SymbolTable, controller: Option<&ParsedController>
     // classified by its value's shape (kind).
     for (name, e) in &table.scope {
         let (l, c) = pos(ctrl_src, e.offset);
-        out.push(Symbol { name: name.clone(), kind: e.kind.label().to_string(), source: "setup".into(), line: l, col: c });
+        out.push(Symbol {
+            name: name.clone(),
+            kind: e.kind.label().to_string(),
+            source: "setup".into(),
+            line: l,
+            col: c,
+        });
     }
     out.sort_by(|a, b| a.name.cmp(&b.name));
     out
@@ -307,7 +857,9 @@ fn root_ident_at(bytes: &[u8], offset: usize) -> Option<String> {
     while e < len && is_ident(bytes[e]) {
         e += 1;
     }
-    std::str::from_utf8(&bytes[start..e]).ok().map(|s| s.to_string())
+    std::str::from_utf8(&bytes[start..e])
+        .ok()
+        .map(|s| s.to_string())
 }
 
 #[cfg(test)]
@@ -318,9 +870,21 @@ mod tests {
     fn analyze_reports_tags_and_events() {
         let src = r#"<div><sail-button on:click={go}>Go</sail-button><span>{x}</span></div>"#;
         let a = analyze(src, None, &[]);
-        assert!(a.tags.contains(&"sail-button".to_string()), "tags: {:?}", a.tags);
-        assert!(!a.tags.iter().any(|t| t == "div" || t == "span"), "native tags leaked: {:?}", a.tags);
-        assert!(a.events.contains(&"click".to_string()), "events: {:?}", a.events);
+        assert!(
+            a.tags.contains(&"sail-button".to_string()),
+            "tags: {:?}",
+            a.tags
+        );
+        assert!(
+            !a.tags.iter().any(|t| t == "div" || t == "span"),
+            "native tags leaked: {:?}",
+            a.tags
+        );
+        assert!(
+            a.events.contains(&"click".to_string()),
+            "events: {:?}",
+            a.events
+        );
     }
 
     #[test]
@@ -334,7 +898,10 @@ mod tests {
         // cursor on `length` in `items().length` → root `items`.
         let src = "items().length";
         let on_length = src.find("length").unwrap();
-        assert_eq!(root_ident_at(src.as_bytes(), on_length).as_deref(), Some("items"));
+        assert_eq!(
+            root_ident_at(src.as_bytes(), on_length).as_deref(),
+            Some("items")
+        );
         // cursor on `items` itself → `items`.
         assert_eq!(root_ident_at(src.as_bytes(), 0).as_deref(), Some("items"));
     }
@@ -342,5 +909,49 @@ mod tests {
     #[test]
     fn root_ident_none_off_identifier() {
         assert_eq!(root_ident_at(b"  + ", 1), None);
+    }
+
+    #[test]
+    fn ssr_tier_literal_signal_is_s() {
+        assert_eq!(classify_ssr_tier("signal(0)"), SsrTier::S);
+        assert_eq!(classify_ssr_tier("signal(\"hello\")"), SsrTier::S);
+    }
+
+    #[test]
+    fn ssr_tier_derived_pure_is_s() {
+        assert_eq!(classify_ssr_tier("derived(() => pure() + 1)"), SsrTier::S);
+    }
+
+    #[test]
+    fn ssr_tier_client_markers_are_c() {
+        assert_eq!(classify_ssr_tier("signal(window.innerWidth)"), SsrTier::C);
+        assert_eq!(
+            classify_ssr_tier("signal(localStorage.getItem('x'))"),
+            SsrTier::C
+        );
+        assert_eq!(
+            classify_ssr_tier("matchMedia('(min-width: 1px)').matches"),
+            SsrTier::C
+        );
+    }
+
+    #[test]
+    fn ssr_tier_per_binding_not_whole_file() {
+        let ctrl = r#"
+export default controller((_ctx) => {
+  const pure = signal(0)
+  const ticks = signal(0)
+  effect(() => {
+    const t = setInterval(() => ticks.set((n) => n + 1), 1000)
+    return () => clearInterval(t)
+  })
+  return { pure, ticks }
+})
+"#;
+        // Fake a ParsedController-like analysis via extract on returned names
+        // by classifying init + binding_updated_with_client_marker.
+        assert_eq!(classify_ssr_tier("signal(0)"), SsrTier::S);
+        assert!(binding_updated_with_client_marker(ctrl, "ticks"));
+        assert!(!binding_updated_with_client_marker(ctrl, "pure"));
     }
 }

@@ -90,7 +90,9 @@ impl Utility {
         }
         let inner = &value[3..value.len() - 1];
         if inner.is_empty()
-            || !inner.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+            || !inner
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
         {
             return None;
         }
@@ -135,7 +137,11 @@ impl Utility {
         } else {
             let scale = self.scale.as_deref()?;
             let v = scales::lower(scale, value)?;
-            if negative { format!("calc(-1 * {v})") } else { v }
+            if negative {
+                format!("calc(-1 * {v})")
+            } else {
+                v
+            }
         };
         // `translate-x`/`translate-y` share one CSS property; the axis decides
         // which half of the pair the value lands in. The var-ref form is the
@@ -149,7 +155,12 @@ impl Utility {
             };
             return Some(vec![("translate".to_string(), pair)]);
         }
-        Some(self.css.iter().map(|p| (p.clone(), css_value.clone())).collect())
+        Some(
+            self.css
+                .iter()
+                .map(|p| (p.clone(), css_value.clone()))
+                .collect(),
+        )
     }
 }
 
@@ -173,7 +184,11 @@ fn vocab() -> &'static Vocab {
         let mut bare: HashMap<String, Utility> = HashMap::new();
         for r in raw.utilities {
             let u = Utility {
-                name: r.name.clone().or_else(|| r.atom.clone()).unwrap_or_default(),
+                name: r
+                    .name
+                    .clone()
+                    .or_else(|| r.atom.clone())
+                    .unwrap_or_default(),
                 bare: r.bare,
                 css: r.css,
                 scale: r.scale,
@@ -219,7 +234,12 @@ fn vocab() -> &'static Vocab {
         let mut names: Vec<String> = by_name.keys().cloned().collect();
         names.extend(bare.keys().cloned());
         names.sort();
-        Vocab { by_name, bare, refused: raw.refused, names }
+        Vocab {
+            by_name,
+            bare,
+            refused: raw.refused,
+            names,
+        }
     })
 }
 
@@ -252,7 +272,9 @@ pub fn resolve(atom: &str) -> Resolved {
 
     // Exact full-atom refusal first (`flex`, not a longer bare allowlist).
     if let Some(instead) = v.refused.get(body) {
-        return Resolved::Refused { instead: instead.clone() };
+        return Resolved::Refused {
+            instead: instead.clone(),
+        };
     }
 
     // Bare exact allowlist BEFORE head refusal so `animate-spin` (bare) is not
@@ -267,7 +289,9 @@ pub fn resolve(atom: &str) -> Resolved {
     // Head refusal for open ramps: `gap-4`, bare `animate-foo` without allowlist.
     if let Some((head, _)) = body.split_once('-') {
         if let Some(instead) = v.refused.get(head) {
-            return Resolved::Refused { instead: instead.clone() };
+            return Resolved::Refused {
+                instead: instead.clone(),
+            };
         }
     }
 
@@ -339,13 +363,17 @@ fn var_ref_score(var_name: &str, u: &Utility) -> i32 {
         if p.contains("weight") && var.contains("weight") {
             score += 20;
         }
-        if p.contains("family") && (var.contains("family") || var.ends_with("-font") || var.contains("-font-")) {
+        if p.contains("family")
+            && (var.contains("family") || var.ends_with("-font") || var.contains("-font-"))
+        {
             score += 20;
         }
         if p.contains("family") && var.contains("weight") {
             score -= 15;
         }
-        if p.contains("weight") && (var.ends_with("-font") || var.contains("family")) && !var.contains("weight")
+        if p.contains("weight")
+            && (var.ends_with("-font") || var.contains("family"))
+            && !var.contains("weight")
         {
             score -= 15;
         }
@@ -361,20 +389,31 @@ fn var_ref_score(var_name: &str, u: &Utility) -> i32 {
             score += 20;
         }
         if p.ends_with("color")
-            && (var.contains("color") || var.ends_with("-fg") || var.ends_with("-bg") || var.contains("tone"))
+            && (var.contains("color")
+                || var.ends_with("-fg")
+                || var.ends_with("-bg")
+                || var.contains("tone"))
         {
             score += 20;
         }
         if p.ends_with("color")
-            && (var == "bw" || var.contains("width") || var.contains("stroke") || var == "sw-w" || var.ends_with("-bw"))
+            && (var == "bw"
+                || var.contains("width")
+                || var.contains("stroke")
+                || var == "sw-w"
+                || var.ends_with("-bw"))
         {
             score -= 15;
         }
-        if p.ends_with("width") && (var.contains("color") || var.ends_with("-fg") || var.ends_with("-bg")) {
+        if p.ends_with("width")
+            && (var.contains("color") || var.ends_with("-fg") || var.ends_with("-bg"))
+        {
             score -= 15;
         }
         // Font-size vs color for the shared `text` head: `--tab-fs`, `--tg-fs`.
-        if p == "font-size" && (var.ends_with("-fs") || var.contains("font-size") || var.ends_with("-fontsize")) {
+        if p == "font-size"
+            && (var.ends_with("-fs") || var.contains("font-size") || var.ends_with("-fontsize"))
+        {
             score += 25;
         }
         if p.contains("color") && var.ends_with("-fs") {
@@ -456,39 +495,78 @@ mod tests {
 
     #[test]
     fn a_scale_utility_spends_a_token() {
-        assert_eq!(decls("p-4"), vec![("padding".into(), "var(--space-4)".into())]);
-        assert_eq!(decls("bg-surface-2"), vec![("background-color".into(), "var(--surface-2)".into())]);
+        assert_eq!(
+            decls("p-4"),
+            vec![("padding".into(), "var(--space-4)".into())]
+        );
+        assert_eq!(
+            decls("bg-surface-2"),
+            vec![("background-color".into(), "var(--surface-2)".into())]
+        );
     }
 
     #[test]
     fn one_name_disambiguates_by_value_like_tailwind() {
         // text-sm is a size, text-foreground is a colour, text-center is an alignment.
-        assert_eq!(decls("text-sm"), vec![("font-size".into(), "var(--text-sm)".into())]);
-        assert_eq!(decls("text-foreground"), vec![("color".into(), "var(--foreground)".into())]);
-        assert_eq!(decls("text-center"), vec![("text-align".into(), "center".into())]);
+        assert_eq!(
+            decls("text-sm"),
+            vec![("font-size".into(), "var(--text-sm)".into())]
+        );
+        assert_eq!(
+            decls("text-foreground"),
+            vec![("color".into(), "var(--foreground)".into())]
+        );
+        assert_eq!(
+            decls("text-center"),
+            vec![("text-align".into(), "center".into())]
+        );
     }
 
     #[test]
     fn a_mechanic_takes_its_css_keyword_with_no_allowlist() {
         // Every one of these was a "language gap" costing a component a design.
-        assert_eq!(decls("object-cover"), vec![("object-fit".into(), "cover".into())]);
-        assert_eq!(decls("touch-none"), vec![("touch-action".into(), "none".into())]);
-        assert_eq!(decls("origin-top-left"), vec![("transform-origin".into(), "top left".into())]);
-        assert_eq!(decls("cursor-crosshair"), vec![("cursor".into(), "crosshair".into())]);
-        assert_eq!(decls("select-none"), vec![("user-select".into(), "none".into())]);
+        assert_eq!(
+            decls("object-cover"),
+            vec![("object-fit".into(), "cover".into())]
+        );
+        assert_eq!(
+            decls("touch-none"),
+            vec![("touch-action".into(), "none".into())]
+        );
+        assert_eq!(
+            decls("origin-top-left"),
+            vec![("transform-origin".into(), "top left".into())]
+        );
+        assert_eq!(
+            decls("cursor-crosshair"),
+            vec![("cursor".into(), "crosshair".into())]
+        );
+        assert_eq!(
+            decls("select-none"),
+            vec![("user-select".into(), "none".into())]
+        );
     }
 
     #[test]
     fn bare_atoms_are_their_own_keyword() {
         assert_eq!(decls("hidden"), vec![("display".into(), "none".into())]);
-        assert_eq!(decls("relative"), vec![("position".into(), "relative".into())]);
-        assert_eq!(decls("italic"), vec![("font-style".into(), "italic".into())]);
+        assert_eq!(
+            decls("relative"),
+            vec![("position".into(), "relative".into())]
+        );
+        assert_eq!(
+            decls("italic"),
+            vec![("font-style".into(), "italic".into())]
+        );
     }
 
     #[test]
     fn composites_lower_to_their_whole_block() {
         let sr = decls("sr-only");
-        assert!(sr.iter().any(|(p, v)| p == "clip-path" && v == "inset(50%)"));
+        assert!(
+            sr.iter()
+                .any(|(p, v)| p == "clip-path" && v == "inset(50%)")
+        );
         // Neither declaration that would ALSO drop it from the a11y tree.
         assert!(!sr.iter().any(|(p, v)| p == "display" && v == "none"));
         assert!(!sr.iter().any(|(p, v)| p == "visibility" && v == "hidden"));
@@ -499,14 +577,25 @@ mod tests {
         // text-gradient-* / bg-glow-* are bare exact matches — they must NOT be
         // caught by the "text"/"bg" named-utility longest-prefix matcher first.
         let tg = decls("text-gradient-primary");
-        assert!(tg.iter().any(|(p, v)| p == "background-clip" && v == "text"));
+        assert!(
+            tg.iter()
+                .any(|(p, v)| p == "background-clip" && v == "text")
+        );
         assert!(tg.iter().any(|(p, v)| p == "color" && v == "transparent"));
-        assert!(decls("text-gradient-accent").iter().any(|(p, _)| p == "background"));
+        assert!(
+            decls("text-gradient-accent")
+                .iter()
+                .any(|(p, _)| p == "background")
+        );
 
         let glow = decls("bg-glow-primary");
         assert!(glow.iter().any(|(p, v)| p == "position" && v == "absolute"));
         assert!(glow.iter().any(|(p, _)| p == "background"));
-        assert!(decls("bg-glow-accent").iter().any(|(p, _)| p == "background"));
+        assert!(
+            decls("bg-glow-accent")
+                .iter()
+                .any(|(p, _)| p == "background")
+        );
     }
 
     #[test]
@@ -539,18 +628,24 @@ mod tests {
 
     #[test]
     fn longest_name_wins() {
-        assert_eq!(decls("min-w-full"), vec![("min-width".into(), "100%".into())]);
+        assert_eq!(
+            decls("min-w-full"),
+            vec![("min-width".into(), "100%".into())]
+        );
     }
 
     #[test]
     fn a_raw_value_is_not_a_token() {
         assert!(matches!(resolve("p-16px"), Resolved::BadValue { .. }));
-        assert!(matches!(resolve("bg-#3366ff"), Resolved::BadValue { .. } | Resolved::Unknown));
+        assert!(matches!(
+            resolve("bg-#3366ff"),
+            Resolved::BadValue { .. } | Resolved::Unknown
+        ));
     }
 
     #[test]
     fn a_refusal_names_the_thing_to_use_instead() {
-        // THE mission: never "find another way".
+        // Refusals must name the primitive to use instead.
         match resolve("flex") {
             Resolved::Refused { instead } => assert!(instead.contains("<row>")),
             _ => panic!("flex must be refused, and must name <row>"),
@@ -575,7 +670,10 @@ mod tests {
     fn a_var_ref_lowers_to_var_for_any_scale_utility() {
         assert_eq!(
             decls("translate-y-(--row-y)"),
-            vec![("translate".into(), "var(--sx-translate-x, 0) var(--row-y)".into())],
+            vec![(
+                "translate".into(),
+                "var(--sx-translate-x, 0) var(--row-y)".into()
+            )],
             "translate-y has the 'y' axis — defaults the x to 0"
         );
         assert_eq!(
@@ -608,10 +706,7 @@ mod tests {
             Resolved::BadValue { .. }
         ));
         // Wrong shape — `(-row-y)` lacks the leading `--`.
-        assert!(matches!(
-            resolve("top-(-row-y)"),
-            Resolved::BadValue { .. }
-        ));
+        assert!(matches!(resolve("top-(-row-y)"), Resolved::BadValue { .. }));
     }
 
     #[test]

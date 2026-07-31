@@ -62,7 +62,7 @@ export default controller(() => ({
 
 <column gap="8" sx={style.maxW(breakpoint-tablet).mx(auto).pad(6).fontFamily(body).fg(foreground)}>
   <header>
-    <h1 sx={style.fontSize(3xl).fontWeight(bold).mb(2)}>sui/chat-elements</h1>
+    <h1 sx={style.fontSize(3xl).fontWeight(bold).mb(2)}>sail/chat-elements</h1>
     <p sx={style.fontSize(md).fg(muted-foreground)}>
       Unbound multi-modal chat primitives — message · message-list · composer ·
       thinking-dots · tool-call · citation. Pure framework tier; no SDK reads.
@@ -149,7 +149,7 @@ export default controller(() => ({
       <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
         <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>role: assistant — text (default)</h3>
         <sail-message role="assistant" timestamp="2026-06-05T14:00:00Z">
-          Here is the information you requested about SUI components.
+          Here is the information you requested about Sail components.
         </sail-message>
       </column>
 
@@ -185,7 +185,7 @@ const doubled = derived(() => x() * 2);
       <column gap="3" sx={style.bg(card).borderWidth(1).border(border).radius(md).pad(4)}>
         <h3 sx={style.fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide).fg(muted-foreground)}>content-type: terminal-snapshot</h3>
         <sail-message role="assistant" content-type="terminal-snapshot">
-          $ cargo run -p sail-compiler -- build page.sui
+          $ cargo run -p sail-compiler -- build page.sail
 compiled 1 file(s)
         </sail-message>
       </column>

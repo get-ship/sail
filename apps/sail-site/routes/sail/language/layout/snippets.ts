@@ -22,7 +22,7 @@ export const code = {
 <grid min="16rem" gap="4">…</grid>`,
 
   spans: `<grid cols="4" gap="3">
-  <card data-col-span="2">wide — spans 2</card>
+  <card col-span="2">wide — spans 2</card>
   <card>one</card>
   <card>two</card>
 </grid>`,

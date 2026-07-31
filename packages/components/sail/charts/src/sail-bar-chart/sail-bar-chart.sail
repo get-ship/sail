@@ -43,7 +43,7 @@
 </scope>
 
 <controller>
-import { controller, derived } from '@ship/sail-runtime'
+
 import type { Action } from '@ship/sail-runtime'
 import { createChartData } from '../engine/create-chart-data'
 import { createChartViewport } from '../engine/create-chart-viewport'
@@ -100,11 +100,11 @@ export default controller(({ data, labels, tone, orientation, max, width, height
   })
 
 </controller>
-<if cond={loading()}>
+<if {loading()}>
   <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
-<else-if cond={chart.error()}>
+<else-if {chart.error()}>
   <error-state></error-state>
-</else-if><else-if cond={chart.isEmpty()}>
+</else-if><else-if {chart.isEmpty()}>
   <empty-state></empty-state>
 </else-if><else>
   <svg
@@ -115,7 +115,7 @@ export default controller(({ data, labels, tone, orientation, max, width, height
     aria-describedby="chart-data"
     sx={style.display(block).w(full).overflow(hidden)}
     use:observeViewport>
-    <for as="b" of={bars()} key={b.id}>
+    <for {bars()} as="b" key={b.id}>
       <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={b.rx} ry={b.ry} fill={b.color} fill-opacity="0.85">
         <title>{b.title}</title>
       </rect>
@@ -124,9 +124,9 @@ export default controller(({ data, labels, tone, orientation, max, width, height
   <column id="chart-data" sx={style.srOnly()}>
     <slot name="description">
       <table>
-        <for as="row" of={chart.ariaTable()} key={row[0].id}>
+        <for {chart.ariaTable()} as="row" key={row[0].id}>
           <tr>
-            <for as="cell" of={row} key={cell.id}>
+            <for {row} as="cell" key={cell.id}>
               <td>{cell.text}</td>
             </for>
           </tr>

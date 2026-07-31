@@ -53,7 +53,6 @@
 // author time; the lazy-load boundary is the deck bundle, not the import
 // expression.
 
-import { controller, signal, derived, effect } from "@ship/sail-runtime";
 import { bindHtml } from "@ship/sail-runtime/internal";
 import type { Action } from "@ship/sail-runtime";
 import mermaid from "mermaid";
@@ -62,9 +61,10 @@ type RenderResult =
   | { ok: true; svg: string }
   | { ok: false; error: string };
 
-/** `.dark` on <html> is the app's dark-theme switch (base.css: `:root.dark`). */
+/** Dark surface via data-mode (modes-in-file). No `.dark` class. */
 function isDark(): boolean {
-  return document.documentElement.classList.contains("dark");
+  const root = document.documentElement;
+  return root.dataset.mode === "dark";
 }
 
 /** A concrete CSS custom-property value off :root (cascades into shadow DOM). */
@@ -120,7 +120,7 @@ export default controller((ctx) => {
       // Monotonic guard so a stale async render never overwrites a newer one.
       let seq = 0;
 
-      // Watch the app theme: the `.dark`/`data-theme` swap on <html>, plus the
+      // Watch the app theme: data-theme + data-mode on <html>, plus the
       // sail-theme-picker's `sail-theme-change` event.
       const syncTheme = (): void => {
         dark.set(isDark());
@@ -128,7 +128,7 @@ export default controller((ctx) => {
       const obs = new MutationObserver(syncTheme);
       obs.observe(document.documentElement, {
         attributes: true,
-        attributeFilter: ["class", "data-theme"],
+        attributeFilter: ["data-theme", "data-mode"],
       });
       document.addEventListener("sail-theme-change", syncTheme);
 
@@ -178,7 +178,7 @@ export default controller((ctx) => {
 </controller>
 <center use:paintDiagram sx={style.w(full).minH(8)} hidden={hasError()}></center>
 
-<if cond={error()}>
+<if {error()}>
   <column gap="2" sx={style.w(full).pad(3).padX(4).borderWidth(1).border(destructive).radius(md).bg(muted).fontSize(sm)}>
     <row gap="2" align="center" sx={style.fontWeight(semibold).fg(destructive)}>
       <icon name="alert-triangle" label="" size="sm"></icon>

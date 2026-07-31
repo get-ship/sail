@@ -56,23 +56,23 @@ export default controller(() => {
       <button variant="outline" tone="primary" size="sm"
 on:click={() => toggle()} sx={style.hover({ scale: 'spring:gentle' }).press({ scale: 'press' })}>
         {open() ? 'Close tray' : 'Open tray'}
-        <if cond={unread() > 0}>
+        <if {unread() > 0}>
           <span sx={unreadDot.loop({ scale: 'pulse' })}></span>
         </if>
       </button>
     </row>
   </row>
 
-  <if cond={open()}>
+  <if {open()}>
     <column gap="2" sx={style.enter({ opacity: 'fade', translate-x: 'spring:snappy' }).exit({ opacity: 'fade-out' })}>
-      <for as="n" of={notes()} key={n.id}>
+      <for {notes()} as="n" key={n.id}>
         <row gap="3" align="center" sx={noteRow.enter({ opacity: 'fade', translate-x: 'spring:gentle', stagger: '50ms' }).exit({ opacity: 'fade-out' })}>
           <badge tone={n.tone} variant="soft" size="sm">{n.kind}</badge>
           <p grow sx={noteText}>{n.text}</p>
           <button variant="ghost" size="sm" on:click={() => dismiss(n.id)}>Dismiss</button>
         </row>
       </for>
-      <if cond={notes().length === 0}>
+      <if {notes().length === 0}>
         <p sx={empty.enter({ opacity: 'fade' })}>All clear.</p>
       </if>
     </column>

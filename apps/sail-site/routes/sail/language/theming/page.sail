@@ -6,7 +6,7 @@
 
 <controller>
 // /theming — the live theme switchboard. `pick` is the same two calls the
-// top-bar <theme-picker> makes: applyTheme (data-theme + the canonical .dark
+// top-bar <theme-picker> makes: applyTheme (data-theme + data-mode
 // class) and persistTheme (survives reload). The page IS the preview — every
 // component on it reads tokens, so the pick repaints the reader's world.
 
@@ -48,7 +48,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     themselves — is the preview.
   </p>
   <row gap="2">
-    <for as="t" of={themes()} key={t.id}>
+    <for {themes()} as="t" key={t.id}>
       <button
         on:click={() => pick(t.id)}
         variant={active() === t.id ? 'solid' : 'outline'}

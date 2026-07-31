@@ -31,7 +31,7 @@ const DEFAULT_SAIL_OUT_DIR: &str = ".sail-out";
 /// neutral default. Relative to the repo root. `pub` so consumers (deck's
 /// catalog) resolve the SAME location the compiler writes to — never a second
 /// hardcoded copy that can drift.
-pub fn sui_out_dir() -> String {
+pub fn sail_out_dir() -> String {
     std::env::var("SAIL_OUT_DIR")
         .ok()
         .filter(|s| !s.trim().is_empty())
@@ -72,22 +72,22 @@ pub fn find_repo_root(start: &Path) -> Option<PathBuf> {
 /// Returns `None` when no repo root can be located OR the source path is
 /// outside the repo (e.g. a tempdir test fixture). Callers fall back to a
 /// sibling `dist/` directory in that case so tests keep working.
-pub fn mirror_dir_for(sui_path: &Path) -> Option<PathBuf> {
-    let abs = absolutize(sui_path)?;
+pub fn mirror_dir_for(sail_path: &Path) -> Option<PathBuf> {
+    let abs = absolutize(sail_path)?;
     let root = find_repo_root(&abs)?;
     let src_dir = abs.parent()?;
     let rel = src_dir.strip_prefix(&root).ok()?;
-    Some(root.join(sui_out_dir()).join(rel))
+    Some(root.join(sail_out_dir()).join(rel))
 }
 
 /// Returns the mirror directory for a `.sail` source path, falling back to
 /// a sibling `dist/` directory when the source is outside any detectable
 /// repo (only happens in unit tests that compile from a tempdir).
-pub fn resolve_out_dir(sui_path: &Path) -> PathBuf {
-    if let Some(p) = mirror_dir_for(sui_path) {
+pub fn resolve_out_dir(sail_path: &Path) -> PathBuf {
+    if let Some(p) = mirror_dir_for(sail_path) {
         return p;
     }
-    let src_dir = sui_path.parent().unwrap_or(Path::new("."));
+    let src_dir = sail_path.parent().unwrap_or(Path::new("."));
     src_dir.join("dist")
 }
 

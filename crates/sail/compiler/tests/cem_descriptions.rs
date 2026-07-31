@@ -17,7 +17,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
@@ -34,7 +34,6 @@ fn jsdoc_above_prop_emits_description_in_cem() {
         source_path: Some(path),
         component_meta: Some(ComponentMeta {
             name: "jsdoc-prop-test".into(),
-
         }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
@@ -59,7 +58,6 @@ fn jsdoc_above_prop_emits_description_in_cem() {
     assert_eq!(tone_member["description"], "Picks the active tone");
 }
 
-
 /// THE REGRESSION GUARD. The description reaching the CEM is the feature; the prop
 /// surviving at all is the bug. A documented prop must still be named `tone` — not
 /// `____Picks_the_active_tone_`.
@@ -81,9 +79,11 @@ fn a_documented_prop_keeps_its_name() {
     let out = compile(
         src,
         CompileOpts {
-        route_params: None,
+            route_params: None,
             mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "doc-probe".into() }),
+            component_meta: Some(ComponentMeta {
+                name: "doc-probe".into(),
+            }),
             ..Default::default()
         },
     )
@@ -104,7 +104,9 @@ fn a_documented_prop_keeps_its_name() {
 
     // ...and the JSDoc reaches the CEM, joined across lines.
     let cem = out.cem.expect("CEM emitted");
-    let attrs = cem["modules"][0]["declarations"][0]["attributes"].as_array().unwrap();
+    let attrs = cem["modules"][0]["declarations"][0]["attributes"]
+        .as_array()
+        .unwrap();
     let by = |n: &str| attrs.iter().find(|a| a["name"] == n).unwrap();
     assert_eq!(by("tone")["description"], "Picks the active tone");
     assert_eq!(by("size")["description"], "Multi-line. Second line.");

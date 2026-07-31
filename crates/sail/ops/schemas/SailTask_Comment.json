@@ -1,0 +1,60 @@
+{
+  "service": "SailTask",
+  "method": "Comment",
+  "mcp_tool": "sail_task_comment",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "actor": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/TaskActor"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "body": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "project": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "body",
+      "id"
+    ],
+    "definitions": {
+      "TaskActor": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "TaskCommentRet",
+    "type": "object"
+  }
+}

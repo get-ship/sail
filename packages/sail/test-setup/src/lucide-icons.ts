@@ -48,7 +48,7 @@ const ICON_ALIASES = [
 ] as const
 
 /** Wrap a lucide inner-svg fragment in the canonical envelope — kept in
- *  lockstep with `deck-core/src/assets.rs::serve_sui_icon`. */
+ *  lockstep with `deck-core/src/assets.rs::serve_sail_icon`. */
 function wrap(inner: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" `
     + `stroke="currentColor" stroke-width="2" stroke-linecap="round" `

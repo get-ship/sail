@@ -5,7 +5,7 @@
 //! first error (a failed build needs one reason); `check_all` collects every
 //! issue so an author/agent fixes them in one pass.
 
-use sail_compiler::{check_all, compile, CompileMode, CompileOpts, DiagSeverity, Policy};
+use sail_compiler::{CompileMode, CompileOpts, DiagSeverity, Policy, check_all, compile};
 
 fn opts() -> CompileOpts {
     CompileOpts {
@@ -38,9 +38,19 @@ fn collects_multiple_errors_where_compile_stops_at_one() {
         "expected >=2 diagnostics, got {}: {diags:?}",
         diags.len()
     );
-    assert!(diags.iter().any(|d| d.line == 1), "missing line-1 diag: {diags:?}");
-    assert!(diags.iter().any(|d| d.line == 2), "missing line-2 diag: {diags:?}");
-    assert!(diags.iter().all(|d| matches!(d.severity, DiagSeverity::Error)));
+    assert!(
+        diags.iter().any(|d| d.line == 1),
+        "missing line-1 diag: {diags:?}"
+    );
+    assert!(
+        diags.iter().any(|d| d.line == 2),
+        "missing line-2 diag: {diags:?}"
+    );
+    assert!(
+        diags
+            .iter()
+            .all(|d| matches!(d.severity, DiagSeverity::Error))
+    );
 }
 
 #[test]
@@ -55,7 +65,11 @@ fn clean_source_yields_no_diagnostics() {
 fn parse_error_is_a_single_diagnostic() {
     // Nothing can run without an AST, so a parse failure is exactly one diag.
     let diags = check_all("<p>{", None, &[], None);
-    assert_eq!(diags.len(), 1, "parse error should yield one diag: {diags:?}");
+    assert_eq!(
+        diags.len(),
+        1,
+        "parse error should yield one diag: {diags:?}"
+    );
 }
 
 #[test]
@@ -65,7 +79,10 @@ fn diagnostics_are_sorted_by_position() {
     let positions: Vec<(usize, usize)> = diags.iter().map(|d| (d.line, d.col)).collect();
     let mut sorted = positions.clone();
     sorted.sort();
-    assert_eq!(positions, sorted, "diagnostics must be position-sorted: {diags:?}");
+    assert_eq!(
+        positions, sorted,
+        "diagnostics must be position-sorted: {diags:?}"
+    );
 }
 
 // ----------------------------------------------------------------------------
@@ -76,7 +93,7 @@ fn diagnostics_are_sorted_by_position() {
 // the pack root, a `.sail` source under `src/`, an undeclared `.css` next
 // to it), then `check_all()` with the overrides the CLI applies. That is
 // the same call shape the daemon and CLI take — `compile()` invokes
-// `check::gate` → `check::collect` → `sail_lint::lint_sui_template_source`
+// `check::gate` → `check::collect` → `sail_lint::lint_sail_template_source`
 // → `no_undeclared_stylesheet::check`; `check_all` skips the structural
 // passes and goes straight to `collect`, which is the path that matters
 // for the lint rules.
@@ -99,8 +116,8 @@ fn write_pack(css_files: &[(&str, &str)], config: &str) -> (tempfile::TempDir, s
     std::fs::write(tmp.path().join("sail.config.json"), config).unwrap();
     let src_dir = tmp.path().join("src");
     std::fs::create_dir_all(&src_dir).unwrap();
-    let sui_path = src_dir.join("widget.sail");
-    std::fs::write(&sui_path, "<p>{name}</p>").unwrap();
+    let sail_path = src_dir.join("widget.sail");
+    std::fs::write(&sail_path, "<p>{name}</p>").unwrap();
     for (rel, body) in css_files {
         let p = src_dir.join(rel);
         if let Some(parent) = p.parent() {
@@ -108,7 +125,7 @@ fn write_pack(css_files: &[(&str, &str)], config: &str) -> (tempfile::TempDir, s
         }
         std::fs::write(&p, body).unwrap();
     }
-    (tmp, sui_path)
+    (tmp, sail_path)
 }
 
 #[test]
@@ -116,17 +133,17 @@ fn undeclared_stylesheet_fails_real_compile_path() {
     // A pack that declares ONE sheet and then smuggles in a second one
     // that isn't in the manifest. The dispatch path the CLI uses
     // (`Policy::overrides_for` → floor + capabilities, then
-    // `check_all` → `lint_sui_template_source`) MUST surface an Error.
-    let (_tmp, sui_path) = write_pack(
+    // `check_all` → `lint_sail_template_source`) MUST surface an Error.
+    let (_tmp, sail_path) = write_pack(
         &[
             ("declared.css", ".x { color: red; }"),
             ("undeclared.css", ".y { color: blue; }"),
         ],
         r#"{"stylesheets": ["src/declared.css"]}"#,
     );
-    let src = std::fs::read_to_string(&sui_path).unwrap();
-    let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(&src, Some(&sui_path), &overrides, None);
+    let src = std::fs::read_to_string(&sail_path).unwrap();
+    let overrides = Policy::overrides_for(&sail_path);
+    let diags = check_all(&src, Some(&sail_path), &overrides, None);
     let permit_errors: Vec<_> = diags
         .iter()
         .filter(|d| {
@@ -150,13 +167,13 @@ fn undeclared_stylesheet_fails_real_compile_path() {
 fn declared_stylesheet_passes_real_compile_path() {
     // A pack that declares its ONLY sheet. No stylesheet-permit Error.
     // (Other diagnostics may exist; we filter to the rule.)
-    let (_tmp, sui_path) = write_pack(
+    let (_tmp, sail_path) = write_pack(
         &[("only.css", ".x { color: red; }")],
         r#"{"stylesheets": ["src/only.css"]}"#,
     );
-    let src = std::fs::read_to_string(&sui_path).unwrap();
-    let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(&src, Some(&sui_path), &overrides, None);
+    let src = std::fs::read_to_string(&sail_path).unwrap();
+    let overrides = Policy::overrides_for(&sail_path);
+    let diags = check_all(&src, Some(&sail_path), &overrides, None);
     let permit_errors: Vec<_> = diags
         .iter()
         .filter(|d| {
@@ -176,13 +193,13 @@ fn empty_stylesheet_array_still_permits_zero() {
     // of "no companion sheets". An undeclared sheet still fails; the
     // empty array is not a back door. Pins both ends: declared-empty
     // passes, an undeclared sheet with declared-empty fails.
-    let (_tmp, sui_path) = write_pack(
+    let (_tmp, sail_path) = write_pack(
         &[("undeclared.css", ".y { color: blue; }")],
         r#"{"stylesheets": []}"#,
     );
-    let src = std::fs::read_to_string(&sui_path).unwrap();
-    let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(&src, Some(&sui_path), &overrides, None);
+    let src = std::fs::read_to_string(&sail_path).unwrap();
+    let overrides = Policy::overrides_for(&sail_path);
+    let diags = check_all(&src, Some(&sail_path), &overrides, None);
     let permit_errors: Vec<_> = diags
         .iter()
         .filter(|d| {
@@ -206,25 +223,19 @@ fn no_class_fails_real_compile_path() {
     // removed, `class=` refuses everywhere — packs, routes, apps.
     //
     // The dispatch path the CLI uses (`Policy::overrides_for` → floor
-    // + capabilities, then `check_all` → `lint_sui_template_source`)
+    // + capabilities, then `check_all` → `lint_sail_template_source`)
     // MUST surface an Error here, and the diagnostic's rule id MUST be
     // `sail-no-class`. The path is real (a tempdir laid out like a
     // pack) — no isolation.
-    let (_tmp, sui_path) = write_pack(
-        &[],
-        r#"{"stylesheets": []}"#,
-    );
+    let (_tmp, sail_path) = write_pack(&[], r#"{"stylesheets": []}"#);
     // Replace the default widget.sail with one that has a class=.
     let src = r#"<p class="sneaky-hook">{name}</p>"#;
-    std::fs::write(&sui_path, src).unwrap();
-    let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(src, Some(&sui_path), &overrides, None);
+    std::fs::write(&sail_path, src).unwrap();
+    let overrides = Policy::overrides_for(&sail_path);
+    let diags = check_all(src, Some(&sail_path), &overrides, None);
     let class_errors: Vec<_> = diags
         .iter()
-        .filter(|d| {
-            d.severity == DiagSeverity::Error
-                && d.rule.as_deref() == Some("sail-no-class")
-        })
+        .filter(|d| d.severity == DiagSeverity::Error && d.rule.as_deref() == Some("sail-no-class"))
         .collect();
     assert_eq!(
         class_errors.len(),
@@ -232,8 +243,7 @@ fn no_class_fails_real_compile_path() {
         "expected exactly one no-class Error, got {diags:?}"
     );
     assert!(
-        class_errors[0].message.contains("class")
-            || class_errors[0].message.contains("`class`"),
+        class_errors[0].message.contains("class") || class_errors[0].message.contains("`class`"),
         "diagnostic should mention class: {}",
         class_errors[0].message
     );
@@ -244,20 +254,14 @@ fn sx_only_source_passes_real_compile_path() {
     // The negative direction: a pack source that styles with `sx=`
     // instead of `class=` is clean. The full pre-floor surface is
     // available: sx=, role, aria-*, bind:this, on:event, data-*.
-    let (_tmp, sui_path) = write_pack(
-        &[],
-        r#"{"stylesheets": []}"#,
-    );
+    let (_tmp, sail_path) = write_pack(&[], r#"{"stylesheets": []}"#);
     let src = r#"<p role="listbox" aria-label="x" sx={style.pad(4).bg(surface-2)} bind:this={el}>{name}</p>"#;
-    std::fs::write(&sui_path, src).unwrap();
-    let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(src, Some(&sui_path), &overrides, None);
+    std::fs::write(&sail_path, src).unwrap();
+    let overrides = Policy::overrides_for(&sail_path);
+    let diags = check_all(src, Some(&sail_path), &overrides, None);
     let class_errors: Vec<_> = diags
         .iter()
-        .filter(|d| {
-            d.severity == DiagSeverity::Error
-                && d.rule.as_deref() == Some("sail-no-class")
-        })
+        .filter(|d| d.severity == DiagSeverity::Error && d.rule.as_deref() == Some("sail-no-class"))
         .collect();
     assert!(
         class_errors.is_empty(),
@@ -271,14 +275,11 @@ fn class_directive_fails_real_compile_path() {
     // (same shape as `style:`). Floor lint still matches `class:` for
     // defense in depth; either path must surface an Error naming the
     // retirement — never emit a class toggle binding.
-    let (_tmp, sui_path) = write_pack(
-        &[],
-        r#"{"stylesheets": []}"#,
-    );
+    let (_tmp, sail_path) = write_pack(&[], r#"{"stylesheets": []}"#);
     let src = r#"<a class:active={flag()} href="/x">x</a>"#;
-    std::fs::write(&sui_path, src).unwrap();
-    let overrides = Policy::overrides_for(&sui_path);
-    let diags = check_all(src, Some(&sui_path), &overrides, None);
+    std::fs::write(&sail_path, src).unwrap();
+    let overrides = Policy::overrides_for(&sail_path);
+    let diags = check_all(src, Some(&sail_path), &overrides, None);
     let class_errors: Vec<_> = diags
         .iter()
         .filter(|d| {

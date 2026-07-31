@@ -23,7 +23,7 @@
 
 use std::path::PathBuf;
 
-use sail_compiler::{analyze, compile, CompileMode, CompileOpts, ComponentMeta, DiagSeverity};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, DiagSeverity, analyze, compile};
 
 const RULE: &str = "sail-prefer-primitive";
 
@@ -33,10 +33,7 @@ fn opts(name: &str, path: &str) -> CompileOpts {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(PathBuf::from(path)),
-        component_meta: Some(ComponentMeta {
-            name: name.into(),
-
-        }),
+        component_meta: Some(ComponentMeta { name: name.into() }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
@@ -64,8 +61,16 @@ fn consumer_display_grid_surfaces_a_warning() {
 </style>
 <div></div>"#;
     let diags = prefer_primitive_diags(src, CONSUMER);
-    assert_eq!(diags.len(), 1, "expected one prefer-primitive finding, got {diags:?}");
-    assert_eq!(diags[0].0, DiagSeverity::Warning, "must be a Warning, never Error: {diags:?}");
+    assert_eq!(
+        diags.len(),
+        1,
+        "expected one prefer-primitive finding, got {diags:?}"
+    );
+    assert_eq!(
+        diags[0].0,
+        DiagSeverity::Warning,
+        "must be a Warning, never Error: {diags:?}"
+    );
     assert!(
         diags[0].1.contains("<grid>") && diags[0].1.contains("sail skill"),
         "message should name the layout keywords + skill: {}",
@@ -85,8 +90,16 @@ fn prefer_primitive_is_advisory_but_floor_refuses_the_style_block() {
 <div></div>"#;
     // prefer-primitive stays a Warning — advisory, never an Error.
     let diags = prefer_primitive_diags(src, CONSUMER);
-    assert_eq!(diags.len(), 1, "expected one prefer-primitive finding, got {diags:?}");
-    assert_eq!(diags[0].0, DiagSeverity::Warning, "prefer-primitive is advisory: {diags:?}");
+    assert_eq!(
+        diags.len(),
+        1,
+        "expected one prefer-primitive finding, got {diags:?}"
+    );
+    assert_eq!(
+        diags[0].0,
+        DiagSeverity::Warning,
+        "prefer-primitive is advisory: {diags:?}"
+    );
     // ...but the authored `<style>` is a floor violation, so the build refuses.
     let err = compile(src, opts("sail-gauge", CONSUMER))
         .expect_err("authored <style> must be refused by the floor");
@@ -105,16 +118,22 @@ fn primitives_pack_component_is_exempt() {
 </style>
 <div></div>"#;
     let diags = prefer_primitive_diags(src, PRIMITIVE);
-    assert!(diags.is_empty(), "primitives pack must be exempt: {diags:?}");
+    assert!(
+        diags.is_empty(),
+        "primitives pack must be exempt: {diags:?}"
+    );
 }
 
 #[test]
-fn composing_sui_grid_emits_no_finding() {
+fn composing_sail_grid_emits_no_finding() {
     // Composing the primitive is exactly what the rule wants — no warning.
     let src = r#"<style>
   .title { color: var(--foreground); }
 </style>
 <sail-grid gap="3"><div>a</div><div>b</div></sail-grid>"#;
     let diags = prefer_primitive_diags(src, CONSUMER);
-    assert!(diags.is_empty(), "composing <sail-grid> should be silent: {diags:?}");
+    assert!(
+        diags.is_empty(),
+        "composing <sail-grid> should be silent: {diags:?}"
+    );
 }

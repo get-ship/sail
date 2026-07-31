@@ -256,8 +256,13 @@ describe('layout module rendering', () => {
     const root = document.getElementById('root')!
     await vi.waitFor(() => expect(mountCalls.length).toBeGreaterThan(1))
     const chrome = root.querySelector('x-chrome')!
-    const slot = chrome.querySelector('div[slot="route"]')
+    const slot = chrome.querySelector('div[slot="route"]') as HTMLElement
     expect(slot).not.toBeNull()
+    // Workbench fill: auto-height slot host collapsed studio panes to a top strip.
+    expect(slot.style.display).toBe('flex')
+    expect(slot.style.flexDirection).toBe('column')
+    expect(slot.style.minHeight).toBe('0px')
+    expect(slot.style.height).toBe('100%')
     const routeMountCall = mountCalls.find((c) => c.opts?.module === MOD_LEAF)
     expect(routeMountCall).toBeDefined()
     expect(routeMountCall!.target).toBe(slot)

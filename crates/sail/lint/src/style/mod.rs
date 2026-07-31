@@ -9,9 +9,9 @@ pub mod ir;
 pub mod parse;
 pub mod setters;
 
-pub use conditions::{condition_media, CONDITION_PREFIXES};
+pub use conditions::{CONDITION_PREFIXES, condition_media};
 pub use emit::{
-    emit_style, lower_style, lower_style_source, lower_style_source_with_motion, CssRule, StyleEnv,
+    CssRule, StyleEnv, emit_style, lower_style, lower_style_source, lower_style_source_with_motion,
 };
 pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 pub use parse::{
@@ -26,20 +26,36 @@ mod tests {
     #[test]
     fn chain_emits_token_vars() {
         let (style, diags) = parse("style.bg(primary).padX(2).radius(sm)");
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
         let (classes, css) = lower_style(&style, &HashMap::new());
         assert!(classes.contains("sx-"), "{classes}");
-        assert!(css.contains("var(--primary)") || css.contains("background"), "{css}");
-        assert!(css.contains("var(--space-2)") || css.contains("padding"), "{css}");
-        assert!(css.contains("var(--radius-sm)") || css.contains("border-radius"), "{css}");
+        assert!(
+            css.contains("var(--primary)") || css.contains("background"),
+            "{css}"
+        );
+        assert!(
+            css.contains("var(--space-2)") || css.contains("padding"),
+            "{css}"
+        );
+        assert!(
+            css.contains("var(--radius-sm)") || css.contains("border-radius"),
+            "{css}"
+        );
     }
 
     #[test]
     fn match_emits_attr_selectors() {
-        let (style, diags) = parse(
-            "match(variant, { solid: style.bg(primary), soft: style.bg(muted) })",
+        let (style, diags) =
+            parse("match(variant, { solid: style.bg(primary), soft: style.bg(muted) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
         let (_, css) = lower_style(&style, &HashMap::new());
         assert!(css.contains("[variant='solid']"), "{css}");
         assert!(css.contains("[variant='soft']"), "{css}");
@@ -48,10 +64,17 @@ mod tests {
     #[test]
     fn when_map_emits_hover_pseudo() {
         let (style, diags) = parse("when({ hover: style.bg(muted) })");
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
         let (_, css) = lower_style(&style, &HashMap::new());
         assert!(css.contains(":hover"), "{css}");
-        assert!(!css.contains("onclick") && !css.contains("addEventListener"), "{css}");
+        assert!(
+            !css.contains("onclick") && !css.contains("addEventListener"),
+            "{css}"
+        );
     }
 
     /// Style `when` breakpoints are design-token locked (not a legacy string path).
@@ -61,7 +84,9 @@ mod tests {
             let query = conditions::condition_media(name).expect("Style condition table");
             assert_eq!(
                 setters::when_target(name),
-                Some(setters::WhenTarget::Media(std::borrow::Cow::Borrowed(query))),
+                Some(setters::WhenTarget::Media(std::borrow::Cow::Borrowed(
+                    query
+                ))),
                 "when({{{name}:…}}) must resolve via Style conditions"
             );
             let value = crate::tokens::token_value(&format!("breakpoint-{name}"))
@@ -75,7 +100,9 @@ mod tests {
         for (name, query) in conditions::CONDITION_PREFIXES {
             assert_eq!(
                 setters::when_target(name),
-                Some(setters::WhenTarget::Media(std::borrow::Cow::Borrowed(*query))),
+                Some(setters::WhenTarget::Media(std::borrow::Cow::Borrowed(
+                    *query
+                ))),
                 "missing when key for Style condition `{name}`"
             );
         }
@@ -108,9 +135,12 @@ mod tests {
 
     #[test]
     fn compound_emits_multi_attr() {
-        let (style, diags) =
-            parse("compound({ pill: true }, style.radius(full))");
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        let (style, diags) = parse("compound({ pill: true }, style.radius(full))");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
         let (_, css) = lower_style(&style, &HashMap::new());
         assert!(css.contains("[pill]"), "{css}");
     }
@@ -119,36 +149,58 @@ mod tests {
     /// never tokenize into Words that inject spurious Refs or truncate lists.
     #[test]
     fn line_comment_between_list_items_keeps_entries() {
-        let (style, diags) =
-            parse("[ style.bg(primary), // soften the surface\n style.padX(2) ]");
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        let (style, diags) = parse("[ style.bg(primary), // soften the surface\n style.padX(2) ]");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
         let Style::List(items) = &style else {
             panic!("expected List, got {style:?}");
         };
-        assert_eq!(items.len(), 2, "comment must not drop or inject entries: {items:?}");
+        assert_eq!(
+            items.len(),
+            2,
+            "comment must not drop or inject entries: {items:?}"
+        );
     }
 
     #[test]
     fn block_comment_and_trailing_comment_before_bracket_keep_entries() {
         let (style, diags) =
             parse("[ style.bg(primary) /* block */, style.padX(2) // trailing note\n ]");
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
         let Style::List(items) = &style else {
             panic!("expected List, got {style:?}");
         };
-        assert_eq!(items.len(), 2, "trailing comment must not eat the list tail: {items:?}");
+        assert_eq!(
+            items.len(),
+            2,
+            "trailing comment must not eat the list tail: {items:?}"
+        );
     }
 
     #[test]
     fn comment_inside_compound_arg_map_keeps_conditions() {
-        let (style, diags) = parse(
-            "compound({ pill: true, // emphasis keys\n tone: primary }, style.radius(full))",
+        let (style, diags) =
+            parse("compound({ pill: true, // emphasis keys\n tone: primary }, style.radius(full))");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
         let Style::Compound { when, .. } = &style else {
             panic!("expected Compound, got {style:?}");
         };
-        assert_eq!(when.len(), 2, "comment must not drop compound conditions: {when:?}");
+        assert_eq!(
+            when.len(),
+            2,
+            "comment must not drop compound conditions: {when:?}"
+        );
         assert_eq!(when.get("tone").map(String::as_str), Some("primary"));
     }
 
@@ -157,7 +209,11 @@ mod tests {
         // Colons / dashed words inside a comment must not trip the
         // residual-product gate or leak into the token stream.
         let (style, diags) = parse("/* fixme: switch to tone-primary */ style.bg(primary)");
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
         assert!(
             matches!(style, Style::Set(_) | Style::Chain(_)),
             "chain must survive the leading comment: {style:?}"
@@ -167,7 +223,11 @@ mod tests {
     #[test]
     fn chain_when_method() {
         let (style, diags) = parse("style.bg(primary).when({ hover: style.bg(muted) })");
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
         let (_, css) = lower_style(&style, &HashMap::new());
         assert!(css.contains(":hover"), "{css}");
     }
@@ -176,7 +236,9 @@ mod tests {
     fn token_fail_closed() {
         let (_, diags) = parse("style.bg(notARealTokenZzz)");
         assert!(
-            diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
+            diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
             "{:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
@@ -186,12 +248,16 @@ mod tests {
     fn utility_string_rejected() {
         let (_, diags) = parse("bg-primary px-2");
         assert!(
-            diags.iter().any(|d| matches!(d, StyleDiagnostic::ResidualProduct { .. })),
+            diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::ResidualProduct { .. })),
             "utility string must error"
         );
         let (_, diags2) = parse("bg: primary px: 2");
         assert!(
-            diags2.iter().any(|d| matches!(d, StyleDiagnostic::ResidualProduct { .. })),
+            diags2
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::ResidualProduct { .. })),
             "colon utility soup must error"
         );
     }
@@ -201,7 +267,9 @@ mod tests {
         let (style, _) = parse("style.bg(primary).bg(muted)");
         let diags = clash::detect_clashes(&style, &HashMap::new());
         assert!(
-            diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
             "{:?}",
             diags
         );
@@ -211,10 +279,16 @@ mod tests {
     fn list_shadows_duplicate_slot_silently() {
         // Ordered composition: later items shadow earlier ones — no Clash.
         let (style, diags) = parse("[ style.bg(primary), style.bg(muted) ]");
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
         let diags = clash::detect_clashes(&style, &HashMap::new());
         assert!(
-            !diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            !diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
             "list items must shadow, not clash: {:?}",
             diags
         );
@@ -229,7 +303,9 @@ mod tests {
         let (style, _) = parse("[ base, style.bg(muted) ]");
         let diags = clash::detect_clashes(&style, &env);
         assert!(
-            !diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            !diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
             "ref-resolved shadowing must not clash: {:?}",
             diags
         );
@@ -252,7 +328,9 @@ mod tests {
         let (style, _) = parse("style.borderWidth(1).border(border)");
         let diags = clash::detect_clashes(&style, &HashMap::new());
         assert!(
-            !diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            !diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
             "borderWidth(1).border(border) must not clash: {:?}",
             diags
         );
@@ -264,7 +342,9 @@ mod tests {
         let (style, _) = parse("[ style.bg(primary).bg(muted) ]");
         let diags = clash::detect_clashes(&style, &HashMap::new());
         assert!(
-            diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+            diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
             "chain duplicates inside a list item must clash: {:?}",
             diags
         );
@@ -275,7 +355,11 @@ mod tests {
         // Stylesheet-order precedence: emit walks items in source order, so
         // the shadowing (later) rule lands after the shadowed one in the CSS.
         let (style, diags) = parse("[ style.bg(primary), style.bg(muted) ]");
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
         let (_, css) = lower_style(&style, &HashMap::new());
         let first = css.find("var(--primary)").expect("earlier rule emitted");
         let second = css.find("var(--muted)").expect("later rule emitted");
@@ -288,15 +372,26 @@ mod tests {
     #[test]
     fn bind_parses() {
         let (style, diags) = parse("style.translateY(bind(rowY))");
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
         let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(css.contains("var(--row-y)") || css.contains("translate"), "{css}");
+        assert!(
+            css.contains("var(--row-y)") || css.contains("translate"),
+            "{css}"
+        );
     }
 
     #[test]
     fn list_composition() {
         let (style, diags) = parse("[ style.bg(primary), when({ hover: style.bg(muted) }) ]");
-        assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
         let (_, css) = lower_style(&style, &HashMap::new());
         assert!(css.contains(":hover"), "{css}");
     }
@@ -308,7 +403,10 @@ mod tests {
         let (style, diags) = parse("filled");
         assert!(diags.is_empty());
         let (_, css) = lower_style(&style, &env);
-        assert!(css.contains("var(--primary)") || css.contains("background"), "{css}");
+        assert!(
+            css.contains("var(--primary)") || css.contains("background"),
+            "{css}"
+        );
     }
 
     #[test]
@@ -338,7 +436,11 @@ mod tests {
     #[test]
     fn nested_garbage_finishes_quickly() {
         let start = std::time::Instant::now();
-        let input = format!("{}{}", "[[[[", "match(x, {".repeat(40) + "style.bg(primary)");
+        let input = format!(
+            "{}{}",
+            "[[[[",
+            "match(x, {".repeat(40) + "style.bg(primary)"
+        );
         let (_style, diags) = parse(&input);
         assert!(start.elapsed().as_millis() < 500);
         let _ = diags;
@@ -355,7 +457,10 @@ mod tests {
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(css.contains(":first-child") || css.contains("margin"), "{css}");
+        assert!(
+            css.contains(":first-child") || css.contains("margin"),
+            "{css}"
+        );
     }
 
     #[test]
@@ -395,9 +500,15 @@ mod tests {
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(css.contains("list-style-type:none") || css.contains("list-style-type: none"), "{css}");
+        assert!(
+            css.contains("list-style-type:none") || css.contains("list-style-type: none"),
+            "{css}"
+        );
         assert!(css.contains(" svg") || css.contains("width:100%"), "{css}");
-        assert!(css.contains("isolation:isolate") || css.contains("isolation: isolate"), "{css}");
+        assert!(
+            css.contains("isolation:isolate") || css.contains("isolation: isolate"),
+            "{css}"
+        );
     }
 
     #[test]
@@ -411,12 +522,27 @@ mod tests {
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(css.contains("text-overflow") || css.contains("ellipsis"), "{css}");
-        assert!(css.contains("text-transform") || css.contains("uppercase"), "{css}");
-        assert!(css.contains("font-variant-numeric") || css.contains("tabular"), "{css}");
-        assert!(css.contains("transform-origin") || css.contains("bottom"), "{css}");
+        assert!(
+            css.contains("text-overflow") || css.contains("ellipsis"),
+            "{css}"
+        );
+        assert!(
+            css.contains("text-transform") || css.contains("uppercase"),
+            "{css}"
+        );
+        assert!(
+            css.contains("font-variant-numeric") || css.contains("tabular"),
+            "{css}"
+        );
+        assert!(
+            css.contains("transform-origin") || css.contains("bottom"),
+            "{css}"
+        );
         assert!(css.contains("data-state") || css.contains("live"), "{css}");
-        assert!(css.contains("aria-current") || css.contains("primary"), "{css}");
+        assert!(
+            css.contains("aria-current") || css.contains("primary"),
+            "{css}"
+        );
     }
 
     #[test]
@@ -491,13 +617,34 @@ mod tests {
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, css) = lower_style(&style, &HashMap::new());
-        assert!(css.contains("clip-path") || css.contains("1px"), "srOnly: {css}");
-        assert!(css.contains("visibility") || css.contains("hidden"), "visibility: {css}");
-        assert!(css.contains("aspect-ratio") || css.contains("1 / 1") || css.contains("1/1"), "aspect: {css}");
-        assert!(css.contains("object-fit") || css.contains("cover"), "objectFit: {css}");
-        assert!(css.contains("crosshair") || css.contains("cursor"), "cursor: {css}");
-        assert!(css.contains("font-style") || css.contains("italic"), "italic: {css}");
-        assert!(css.contains("margin-left") || css.contains("auto"), "ml: {css}");
+        assert!(
+            css.contains("clip-path") || css.contains("1px"),
+            "srOnly: {css}"
+        );
+        assert!(
+            css.contains("visibility") || css.contains("hidden"),
+            "visibility: {css}"
+        );
+        assert!(
+            css.contains("aspect-ratio") || css.contains("1 / 1") || css.contains("1/1"),
+            "aspect: {css}"
+        );
+        assert!(
+            css.contains("object-fit") || css.contains("cover"),
+            "objectFit: {css}"
+        );
+        assert!(
+            css.contains("crosshair") || css.contains("cursor"),
+            "cursor: {css}"
+        );
+        assert!(
+            css.contains("font-style") || css.contains("italic"),
+            "italic: {css}"
+        );
+        assert!(
+            css.contains("margin-left") || css.contains("auto"),
+            "ml: {css}"
+        );
         assert!(
             css.contains("var(--world-tx)") || css.contains("transform"),
             "transform bind: {css}"
@@ -580,7 +727,9 @@ mod tests {
         // colorDeepen fail-closed: third arg is BadArity.
         let (_, diags) = parse("style.colorDeepen(primary, 15, extra)");
         assert!(
-            diags.iter().any(|d| matches!(d, StyleDiagnostic::BadArity { .. })),
+            diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::BadArity { .. })),
             "colorDeepen must reject third arg: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
@@ -588,13 +737,17 @@ mod tests {
         // colorDeepen fail-closed: percent off the 5..95 step-5 ramp.
         let (_, diags) = parse("style.colorDeepen(primary, 100)");
         assert!(
-            diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
+            diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
             "colorDeepen must reject 100: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
         let (_, diags) = parse("style.colorDeepen(primary, 3)");
         assert!(
-            diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
+            diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
             "colorDeepen must reject 3: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
@@ -629,7 +782,9 @@ mod tests {
         // colorMix fail-closed: third arg is BadArity.
         let (_, diags) = parse("style.colorMix(primary, 15, extra)");
         assert!(
-            diags.iter().any(|d| matches!(d, StyleDiagnostic::BadArity { .. })),
+            diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::BadArity { .. })),
             "colorMix must reject third arg: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
@@ -637,7 +792,9 @@ mod tests {
         // colorMix fail-closed: off-ramp percent.
         let (_, diags) = parse("style.colorMix(primary, 14)");
         assert!(
-            diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
+            diags
+                .iter()
+                .any(|d| matches!(d, StyleDiagnostic::BadToken { .. })),
             "colorMix must reject 14: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
@@ -696,9 +853,8 @@ mod tests {
 
     #[test]
     fn enter_then_when_chain_order() {
-        let (style, diags) = parse(
-            "style.bg(primary).enter({ opacity: 'fade' }).when({ hover: style.bg(muted) })",
-        );
+        let (style, diags) =
+            parse("style.bg(primary).enter({ opacity: 'fade' }).when({ hover: style.bg(muted) })");
         assert!(
             diags.is_empty(),
             "{:?}",

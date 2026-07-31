@@ -24,7 +24,7 @@ export default controller(() => {
       themes: (): Theme[] => THEMES,
       active,
       // applyTheme is the ONLY writer of the theme state: it sets
-      // data-theme on <html> and toggles the canonical .dark class.
+      // data-theme + data-mode on <html>.
       // Every component repaints because components read tokens, never
       // colors. persistTheme makes the choice survive a reload.
       pick: (id: ThemeId): void => {
@@ -50,7 +50,7 @@ export default controller(() => {
   </row>
 
   <row gap="1" align="center">
-    <for as="t" of={themes()} key={t.id}>
+    <for {themes()} as="t" key={t.id}>
       <button size="sm" tone="primary" variant={active() === t.id ? 'solid' : 'ghost'} on:click={() => pick(t.id)}>
         {t.label}
       </button>

@@ -29,7 +29,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 /// Walk `out_dir` (recursively), collect every `customElements.define("<tag>", …)`
 /// call across all `.js` files, and return a map from tag → list of files that
@@ -123,9 +123,7 @@ fn extract_tag_defines(body: &str) -> Vec<String> {
         let tag_start = j;
         j += 1;
         while j < bytes.len()
-            && (bytes[j].is_ascii_lowercase()
-                || bytes[j].is_ascii_digit()
-                || bytes[j] == b'-')
+            && (bytes[j].is_ascii_lowercase() || bytes[j].is_ascii_digit() || bytes[j] == b'-')
         {
             j += 1;
         }
@@ -135,8 +133,8 @@ fn extract_tag_defines(body: &str) -> Vec<String> {
         }
         // SAFETY: tag_start..j is ASCII lowercase / digit / '-' (we just walked it)
         // and the surrounding `body` is str, so this is a valid byte boundary.
-        let tag = std::str::from_utf8(&bytes[tag_start..j])
-            .expect("ascii tag bytes are valid utf-8");
+        let tag =
+            std::str::from_utf8(&bytes[tag_start..j]).expect("ascii tag bytes are valid utf-8");
         out.push(tag.to_string());
         i = j + 1;
     }

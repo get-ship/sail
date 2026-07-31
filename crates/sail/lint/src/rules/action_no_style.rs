@@ -1,7 +1,5 @@
 //! `sail-action-no-style` — Action bodies may not class or style.
 //!
-//! Owner ruling 2026-07-20 (Part A — make `use:` honest):
-//!
 //! `use:` is a node lifetime mix-in API. Shipped registry actions and author
 //! Actions share one floor with the template/sx invariants:
 //!
@@ -79,7 +77,9 @@ impl<'src> ActionStyleVisitor<'src> {
 }
 
 /// `obj.style.setProperty` / `obj.style.removeProperty` callee shape.
-fn style_method<'a>(expr: &'a CallExpression<'a>) -> Option<(&'a str, &'a StaticMemberExpression<'a>)> {
+fn style_method<'a>(
+    expr: &'a CallExpression<'a>,
+) -> Option<(&'a str, &'a StaticMemberExpression<'a>)> {
     let Expression::StaticMemberExpression(method) = &expr.callee else {
         return None;
     };
@@ -167,7 +167,8 @@ impl<'a, 'src> Visit<'a> for ActionStyleVisitor<'src> {
         if let Expression::StaticMemberExpression(m) = &expr.callee {
             let name = m.property.name.as_str();
 
-            if (name == "setAttribute" || name == "removeAttribute") && attr_name_is(expr, &["style", "class"])
+            if (name == "setAttribute" || name == "removeAttribute")
+                && attr_name_is(expr, &["style", "class"])
             {
                 let attr = expr.arguments[0]
                     .as_expression()
@@ -243,10 +244,7 @@ impl<'a, 'src> Visit<'a> for ActionStyleVisitor<'src> {
             // nothing class/style-specific
         } else if let Some(target) = assignment_member_name(&expr.left) {
             if target == "className" {
-                self.report(
-                    expr.span,
-                    "actions do not assign `.className`.".to_string(),
-                );
+                self.report(expr.span, "actions do not assign `.className`.".to_string());
             }
         }
         walk::walk_assignment_expression(self, expr);

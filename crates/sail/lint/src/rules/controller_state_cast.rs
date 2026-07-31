@@ -87,9 +87,7 @@ impl<'a, 'src> Visit<'a> for StateCastVisitor<'src> {
 fn scope_type_name(ty: &TSType) -> Option<String> {
     match ty {
         TSType::TSTypeReference(r) => match &r.type_name {
-            TSTypeName::IdentifierReference(id)
-                if id.name == "Scope" || id.name == "ScopeView" =>
-            {
+            TSTypeName::IdentifierReference(id) if id.name == "Scope" || id.name == "ScopeView" => {
                 Some(id.name.to_string())
             }
             _ => None,

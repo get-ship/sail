@@ -1,0 +1,21 @@
+{
+  "run_id": "canned-dependent-form-sail-1",
+  "ts": "2026-07-31T12:00:00.000Z",
+  "task_id": "dependent-form",
+  "arm": "sail",
+  "model": "grok",
+  "toolchain": "deadbeef-r0.1.0",
+  "profile_hash": "canned-profile-hash",
+  "harness_ver": "eval2-0.1.0",
+  "skill_source": "generated:deadbeef-r0.1.0",
+  "wall_ms": 4100,
+  "tokens_in": null,
+  "tokens_out": null,
+  "compile_ok": 1,
+  "vocab_share": 1.0,
+  "layout_findings_json": "[]",
+  "failure_classes_json": "[]",
+  "beauty_json": null,
+  "run_dir": "/tmp/canned-run",
+  "source_page": "<column gap=\"3\">\n  <field label=\"Name\" />\n  <button type=\"button\">Save</button>\n</column>\n"
+}

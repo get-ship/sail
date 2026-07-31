@@ -9,7 +9,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use sail_compiler::check::policy::Policy;
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn opts_for(path: &PathBuf) -> CompileOpts {
     CompileOpts {
@@ -17,7 +17,9 @@ fn opts_for(path: &PathBuf) -> CompileOpts {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: Some(path.clone()),
-        component_meta: Some(ComponentMeta { name: "sail-widget".to_string() }),
+        component_meta: Some(ComponentMeta {
+            name: "sail-widget".to_string(),
+        }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
@@ -52,7 +54,10 @@ fn bare_fetch_refuses_regardless_of_path_with_no_config() {
     let (_tmp, sail) = write_fixture(None);
     let src = fs::read_to_string(&sail).unwrap();
     let err = compile(&src, opts_for(&sail)).expect_err("bare fetch with no grant must refuse");
-    assert_eq!(err.category.as_deref(), Some("sail-controller-no-ambient-authority"));
+    assert_eq!(
+        err.category.as_deref(),
+        Some("sail-controller-no-ambient-authority")
+    );
 }
 
 #[test]
@@ -79,7 +84,11 @@ fn network_grant_does_not_imply_unconfined() {
     let pkg_root = tmp.path().join("packages").join("components").join("acme");
     let src_dir = pkg_root.join("src").join("sail-widget");
     fs::create_dir_all(&src_dir).unwrap();
-    fs::write(pkg_root.join("sail.config.json"), r#"{"network": ["self"]}"#).unwrap();
+    fs::write(
+        pkg_root.join("sail.config.json"),
+        r#"{"network": ["self"]}"#,
+    )
+    .unwrap();
     let sail = src_dir.join("sail-widget.sail");
     fs::write(
         &sail,
@@ -87,14 +96,22 @@ fn network_grant_does_not_imply_unconfined() {
     )
     .unwrap();
     let src = fs::read_to_string(&sail).unwrap();
-    let err = compile(&src, opts_for(&sail)).expect_err("eval must stay refused under a network-only grant");
-    assert_eq!(err.category.as_deref(), Some("sail-controller-no-ambient-authority"));
+    let err = compile(&src, opts_for(&sail))
+        .expect_err("eval must stay refused under a network-only grant");
+    assert_eq!(
+        err.category.as_deref(),
+        Some("sail-controller-no-ambient-authority")
+    );
 }
 
 #[test]
 fn malformed_unconfined_value_fails_closed_and_stays_confined() {
     let (_tmp, sail) = write_fixture(Some(r#"{"unconfined": "yes"}"#));
     let src = fs::read_to_string(&sail).unwrap();
-    let err = compile(&src, opts_for(&sail)).expect_err("a non-bool \"unconfined\" must fail closed to confined");
-    assert_eq!(err.category.as_deref(), Some("sail-controller-no-ambient-authority"));
+    let err = compile(&src, opts_for(&sail))
+        .expect_err("a non-bool \"unconfined\" must fail closed to confined");
+    assert_eq!(
+        err.category.as_deref(),
+        Some("sail-controller-no-ambient-authority")
+    );
 }

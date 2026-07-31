@@ -109,7 +109,10 @@ mod tests {
 
     #[test]
     fn flags_style_block() {
-        assert_eq!(run(r#"<sail-card><style>:host{color:red}</style></sail-card>"#), 1);
+        assert_eq!(
+            run(r#"<sail-card><style>:host{color:red}</style></sail-card>"#),
+            1
+        );
         assert_eq!(run("<style>\n  .x { padding: 4px }\n</style>"), 1);
     }
 
@@ -129,7 +132,10 @@ mod tests {
 
     #[test]
     fn skips_comments() {
-        assert_eq!(run(r#"<!-- <style>x</style> --> <sail-card>y</sail-card>"#), 0);
+        assert_eq!(
+            run(r#"<!-- <style>x</style> --> <sail-card>y</sail-card>"#),
+            0
+        );
     }
 
     #[test]

@@ -71,15 +71,16 @@ impl<'a, 'src> Visit<'a> for PurityVisitor<'src> {
     fn visit_assignment_expression(&mut self, expr: &AssignmentExpression<'a>) {
         // <expr>.innerHTML = … / <expr>.outerHTML = …
         if let Some(prop) = static_member_property(&expr.left)
-            && (prop == "innerHTML" || prop == "outerHTML") {
-                self.report(
-                    expr.span,
-                    format!(
-                        "controllers do not write `.{prop}`. Render dynamic markup from \
+            && (prop == "innerHTML" || prop == "outerHTML")
+        {
+            self.report(
+                expr.span,
+                format!(
+                    "controllers do not write `.{prop}`. Render dynamic markup from \
                          the .sail template, or use bindHtml() for HTML-blob cases."
-                    ),
-                );
-            }
+                ),
+            );
+        }
         // Continue into both sides so chained patterns are also caught.
         oxc_ast_visit::walk::walk_assignment_target(self, &expr.left);
         self.visit_expression(&expr.right);
@@ -88,14 +89,15 @@ impl<'a, 'src> Visit<'a> for PurityVisitor<'src> {
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
         // <expr>.insertAdjacentHTML(...)
         if let Expression::StaticMemberExpression(m) = &expr.callee
-            && m.property.name.as_str() == "insertAdjacentHTML" {
-                self.report(
-                    expr.span,
-                    "controllers do not call `.insertAdjacentHTML(...)`. Render dynamic \
+            && m.property.name.as_str() == "insertAdjacentHTML"
+        {
+            self.report(
+                expr.span,
+                "controllers do not call `.insertAdjacentHTML(...)`. Render dynamic \
                      markup from the .sail template, or use bindHtml() for HTML-blob cases."
-                        .to_string(),
-                );
-            }
+                    .to_string(),
+            );
+        }
         // Continue walking arguments + callee descendants for nested cases.
         self.visit_expression(&expr.callee);
         for arg in &expr.arguments {

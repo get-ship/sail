@@ -36,8 +36,8 @@ async function main() {
   // Load the wasm-bindgen ESM shim + instantiate from local bytes. The shim's
   // default export takes `{ module_or_path }`; we pass the raw `.wasm` bytes so
   // there is no fetch / URL — purely in-process.
-  const shim = await import(join(pkgDir, 'sui_compiler.js'))
-  const wasmBytes = readFileSync(join(pkgDir, 'sui_compiler_bg.wasm'))
+  const shim = await import(join(pkgDir, 'sail_compiler.js'))
+  const wasmBytes = readFileSync(join(pkgDir, 'sail_compiler_bg.wasm'))
   await shim.default({ module_or_path: wasmBytes })
 
   const results = jobs.map((job) => {

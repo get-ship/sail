@@ -44,10 +44,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 col,
                 rule: RULE_ID,
                 severity: Severity::Warn,
-                message:
-                    "sx= is not allowed under the strict policy — compose primitives and use \
+                message: "sx= is not allowed under the strict policy — compose primitives and use \
                      their props; there is no styling escape at this tier."
-                        .to_string(),
+                    .to_string(),
                 suggest: Some(format!(
                     "Text is already styled: write <h1>-<h6> and <p> plain — they take the type \
                      scale automatically. For structure use <row>/<column>/<grid>; \
@@ -102,13 +101,19 @@ mod tests {
     #[test]
     fn flags_static_and_dynamic_sx() {
         assert_eq!(run(r#"<sail-card sx="p-4">x</sail-card>"#), 1);
-        assert_eq!(run(r#"<sail-card sx={cond ? 'p-4' : 'p-2'}>x</sail-card>"#), 1);
+        assert_eq!(
+            run(r#"<sail-card sx={cond ? 'p-4' : 'p-2'}>x</sail-card>"#),
+            1
+        );
         assert_eq!(run(r#"<sail-card sx = "p-4">x</sail-card>"#), 1);
     }
 
     #[test]
     fn does_not_flag_lookalikes_or_props() {
-        assert_eq!(run(r#"<sail-card padding="lg" data-sx="x">y</sail-card>"#), 0);
+        assert_eq!(
+            run(r#"<sail-card padding="lg" data-sx="x">y</sail-card>"#),
+            0
+        );
         assert_eq!(run(r#"<sail-card sxy="x">y</sail-card>"#), 0);
     }
 
@@ -116,6 +121,9 @@ mod tests {
     fn is_warn_and_skips_comments() {
         let f = check(Path::new("t.sail"), r#"<sail-card sx="p-4">x</sail-card>"#);
         assert!(matches!(f[0].severity, Severity::Warn));
-        assert_eq!(run(r#"<!-- <sail-card sx="p-9"> --> <sail-card>y</sail-card>"#), 0);
+        assert_eq!(
+            run(r#"<!-- <sail-card sx="p-9"> --> <sail-card>y</sail-card>"#),
+            0
+        );
     }
 }

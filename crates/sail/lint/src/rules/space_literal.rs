@@ -66,10 +66,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 let abs = block.content_offset + decl.value_offset + lit.offset;
                 let (line, col) = byte_offset_to_line_col(source, abs);
                 let suggest = match space_token_for(lit.px) {
-                    Some(n) => format!(
-                        "Replace `{}px` with `var(--space-{n})`.",
-                        lit.px
-                    ),
+                    Some(n) => format!("Replace `{}px` with `var(--space-{n})`.", lit.px),
                     None => format!(
                         "`{}px` is off the spacing scale — use the nearest \
                          `var(--space-N)` (4/8/12/16/20/24/32/40 = 1..8) or a \
@@ -351,7 +348,11 @@ mod tests {
         let f = run("<style>:host { padding: 12px; }</style>");
         assert_eq!(f.len(), 1, "{f:?}");
         assert_eq!(f[0].rule, RULE_ID);
-        assert!(f[0].suggest.as_ref().unwrap().contains("--space-3"), "{:?}", f[0].suggest);
+        assert!(
+            f[0].suggest.as_ref().unwrap().contains("--space-3"),
+            "{:?}",
+            f[0].suggest
+        );
     }
 
     #[test]
@@ -383,7 +384,12 @@ mod tests {
     fn off_scale_px_warns_without_exact_token() {
         let f = run("<style>:host { gap: 13px; }</style>");
         assert_eq!(f.len(), 1);
-        assert!(f[0].suggest.as_ref().unwrap().contains("off the spacing scale"));
+        assert!(
+            f[0].suggest
+                .as_ref()
+                .unwrap()
+                .contains("off the spacing scale")
+        );
     }
 
     #[test]

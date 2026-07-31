@@ -421,24 +421,14 @@ export const DETAILS: Record<string, DetailEntry> = {
     ],
   }),
   separator: lang('separator', 'separator', {
-    blurb: 'A themed rule with a role. Horizontal by default, vertical between inline things; tone and dashed when it must speak.',
+    blurb:
+      'Themed divider — lowers to a native <hr>. Horizontal by default, vertical between inline things; tone and dashed when it must speak. There is no separate `hr` catalog entry.',
     variants: ['solid', 'dashed'],
     variantAttr: 'variant',
     props: [
       { name: 'orientation', desc: 'which axis it divides', type: 'horizontal · vertical' },
       { name: 'tone', desc: 'line colour', type: 'default · muted · primary · destructive' },
       { name: 'variant', desc: 'line style', type: 'solid · dashed' },
-    ],
-  }),
-  hr: lang('hr', 'hrRule', {
-    blurb:
-      'The platform’s own rule, themed — the zero-JS sibling of <separator> for prose and markdown-rendered content.',
-    variants: ['default', 'muted', 'primary', 'destructive'],
-    variantAttr: 'tone',
-    props: [
-      { name: 'tone', desc: 'line colour', type: 'default · muted · primary · destructive' },
-      { name: 'variant', desc: 'line style', type: 'solid · dashed' },
-      { name: 'orientation', desc: 'vertical, between inline things', type: 'horizontal · vertical' },
     ],
   }),
   details: lang('details', 'detailsEl', {
@@ -533,8 +523,9 @@ export const DETAILS: Record<string, DetailEntry> = {
   dialog: lang('dialog', 'dialog', {
     blurb:
       'The platform dialog — top layer, focus trap, Escape, backdrop — opened and closed by invoker commands. Zero JavaScript; side= docks it to an edge as a sheet.',
+    // Chips label modal vs sheet; page.sail maps sheet → side=end (not a real attr).
     variants: ['modal', 'sheet'],
-    variantAttr: 'open as',
+    variantAttr: 'data-dialog-mode',
     props: [
       { name: 'command / commandfor', desc: 'invoker buttons open and close it', type: 'show-modal · close' },
       { name: 'size', desc: 'clamp the surface width', type: 'sm · md · lg' },
@@ -631,6 +622,19 @@ export const DETAILS: Record<string, DetailEntry> = {
     props: [
       { name: 'orientation', desc: 'which axis scrolls', type: 'vertical · horizontal · both' },
       { name: 'sx="max-h:…"', desc: 'the constraint that makes it scroll', type: 'sx' },
+    ],
+  }),
+
+  // ── Effects ──────────────────────────────────────────────────────────
+  ticker: lang('ticker', 'ticker', {
+    blurb:
+      'Infinite linear marquee. Two copies of the slot ride a track; use:marquee loops translate-x so the seam never shows. duration and reverse are props.',
+    variants: [],
+    variantAttr: '',
+    props: [
+      { name: 'duration', desc: 'loop speed', type: 'fast · normal · slow' },
+      { name: 'reverse', desc: 'flip direction', type: 'boolean' },
+      { name: 'children', desc: 'the band content — duplicated for a seamless seam', type: 'slot' },
     ],
   }),
   // Actions live in the action table, not in this element detail

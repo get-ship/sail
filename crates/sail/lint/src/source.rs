@@ -18,7 +18,9 @@ pub fn collect(dir: &Path) -> Vec<PathBuf> {
 }
 
 fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = std::fs::read_dir(dir) else { return };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
     for e in entries.flatten() {
         let p = e.path();
         // file_type() does NOT follow symlinks: a symlinked directory (a
@@ -35,9 +37,10 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
         }
         if ft.is_file()
             && let Some(name) = p.file_name().and_then(|n| n.to_str())
-            && (name.ends_with(".sail") || name.ends_with(".controller.ts")) {
-                out.push(p);
-            }
+            && (name.ends_with(".sail") || name.ends_with(".controller.ts"))
+        {
+            out.push(p);
+        }
     }
 }
 
@@ -74,7 +77,11 @@ mod tests {
 
         // node_modules with a source-shaped file inside — must be skipped whole
         fs::create_dir_all(base.join("node_modules/@ship")).unwrap();
-        fs::write(base.join("node_modules/@ship/pkg.sail"), "<column></column>").unwrap();
+        fs::write(
+            base.join("node_modules/@ship/pkg.sail"),
+            "<column></column>",
+        )
+        .unwrap();
         // a symlink cycle NOT under node_modules — proves file_type() no-follow
         symlink(base, base.join("src/loop")).unwrap();
 

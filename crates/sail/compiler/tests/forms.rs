@@ -8,7 +8,7 @@ fn compile_route(source: &str) -> sail_compiler::CompileError {
     compile(
         source,
         CompileOpts {
-        route_params: None,
+            route_params: None,
             setup_url: None,
             mode: CompileMode::Component,
             source_path: None,
@@ -16,7 +16,7 @@ fn compile_route(source: &str) -> sail_compiler::CompileError {
             emit_dts: false,
             scope_capabilities: Vec::new(),
             emit_component_imports: false,
-        lint_overrides: Vec::new(),
+            lint_overrides: Vec::new(),
         },
     )
     .expect_err("expected error")

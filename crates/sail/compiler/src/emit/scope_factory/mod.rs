@@ -128,7 +128,8 @@ fn word_appears(ty: &str, word: &str) -> bool {
         let start = from + rel;
         let end = start + word.len();
         let before_ok = start == 0
-            || !ty.as_bytes()[start - 1].is_ascii_alphanumeric() && ty.as_bytes()[start - 1] != b'_';
+            || !ty.as_bytes()[start - 1].is_ascii_alphanumeric()
+                && ty.as_bytes()[start - 1] != b'_';
         let after_ok = end >= ty.len()
             || !ty.as_bytes()[end].is_ascii_alphanumeric() && ty.as_bytes()[end] != b'_';
         if before_ok && after_ok {
@@ -370,9 +371,7 @@ where
                 }
                 i += 1;
             }
-            key = std::str::from_utf8(&bytes[s..i])
-                .unwrap_or("")
-                .to_string();
+            key = std::str::from_utf8(&bytes[s..i]).unwrap_or("").to_string();
             if i < end {
                 i += 1;
             }
@@ -432,12 +431,7 @@ fn is_shorthand(bytes: &[u8], name: &str, start: usize, end: usize) -> bool {
 /// Walk the factory body for a top-level `const NAME = …` / `let NAME = …`
 /// / `function NAME …` declaration and infer its TS type. Returns `None`
 /// if no such binding exists.
-fn resolve_local_binding(
-    bytes: &[u8],
-    name: &str,
-    start: usize,
-    end: usize,
-) -> Option<String> {
+fn resolve_local_binding(bytes: &[u8], name: &str, start: usize, end: usize) -> Option<String> {
     let nb = name.as_bytes();
     let mut i = start;
     while i < end {
@@ -466,7 +460,11 @@ fn resolve_local_binding(
                                 .unwrap_or("")
                                 .trim()
                                 .to_string();
-                            if ts.is_empty() { "void".to_string() } else { ts }
+                            if ts.is_empty() {
+                                "void".to_string()
+                            } else {
+                                ts
+                            }
                         } else {
                             "void".to_string()
                         };
@@ -563,7 +561,6 @@ mod tests {
         v.iter().map(|(a, b)| (a.as_str(), b.as_str())).collect()
     }
 
-
     #[test]
     fn typed_signal_generic_uses_generic_arg() {
         let c = ctrl(
@@ -599,7 +596,10 @@ mod tests {
              }));",
         );
         let v = extract(&c);
-        assert_eq!(names_types(&v), vec![("btn", "Signal<HTMLButtonElement | null>")]);
+        assert_eq!(
+            names_types(&v),
+            vec![("btn", "Signal<HTMLButtonElement | null>")]
+        );
     }
 
     #[test]
@@ -626,7 +626,10 @@ mod tests {
         );
         let v = extract(&c);
         let map: Vec<(&str, &str)> = names_types(&v);
-        assert!(map.contains(&("caughtError", "Signal<Error | null>")), "{map:?}");
+        assert!(
+            map.contains(&("caughtError", "Signal<Error | null>")),
+            "{map:?}"
+        );
         let reset = v.iter().find(|(n, _)| n == "reset").expect("reset present");
         assert!(reset.1.ends_with("=> void"), "got {}", reset.1);
     }
@@ -646,7 +649,10 @@ mod tests {
                });",
         );
         let v = extract(&c);
-        let es = v.iter().find(|(n, _)| n == "endSession").expect("endSession present");
+        let es = v
+            .iter()
+            .find(|(n, _)| n == "endSession")
+            .expect("endSession present");
         assert_eq!(es.1, "(id: string) => void", "body leaked: {}", es.1);
         let reset = v.iter().find(|(n, _)| n == "reset").expect("reset present");
         assert_eq!(reset.1, "() => void", "body leaked: {}", reset.1);
@@ -702,7 +708,10 @@ mod tests {
         let v = extract(&c);
         assert_eq!(
             names_types(&v),
-            vec![("pins", "Signal<unknown>"), ("btn", "Signal<HTMLButtonElement | null>")],
+            vec![
+                ("pins", "Signal<unknown>"),
+                ("btn", "Signal<HTMLButtonElement | null>")
+            ],
         );
     }
 

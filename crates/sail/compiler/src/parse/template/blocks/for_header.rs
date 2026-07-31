@@ -12,9 +12,8 @@ pub(super) struct ForHeader {
 }
 
 pub(super) fn parse_for_header(src: &str, span: Span) -> Result<ForHeader, CompileError> {
-    let of_idx = find_keyword_index(src, " of ").ok_or_else(|| {
-        CompileError::new("{#for} expects \"X of items\"").with_span(span)
-    })?;
+    let of_idx = find_keyword_index(src, " of ")
+        .ok_or_else(|| CompileError::new("{#for} expects \"X of items\"").with_span(span))?;
     let left = src[..of_idx].trim();
     let mut right = src[of_idx + 4..].trim().to_string();
 
@@ -32,16 +31,19 @@ pub(super) fn parse_for_header(src: &str, span: Span) -> Result<ForHeader, Compi
     }
     expr::validate_at(&right, false, "{#for} iterable", span)?;
     let iterable = Expr::new(right, span, false);
-    Ok(ForHeader { var_name, index_name, iterable, key })
+    Ok(ForHeader {
+        var_name,
+        index_name,
+        iterable,
+        key,
+    })
 }
 
 fn parse_for_binding(left: &str, span: Span) -> Result<(String, Option<String>), CompileError> {
     if let Some(rest) = left.strip_prefix('(') {
-        let inner = rest
-            .strip_suffix(')')
-            .ok_or_else(|| {
-                CompileError::new(format!("{{#for}} bad variable: {left}")).with_span(span)
-            })?;
+        let inner = rest.strip_suffix(')').ok_or_else(|| {
+            CompileError::new(format!("{{#for}} bad variable: {left}")).with_span(span)
+        })?;
         let mut parts = inner.split(',');
         let v = parts
             .next()

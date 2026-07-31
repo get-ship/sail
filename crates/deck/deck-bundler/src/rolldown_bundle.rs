@@ -44,7 +44,10 @@ pub async fn bundle_target(
     let stage_dir = crate::atomic::stage_dir_for(&out_dir, &target.name.replace('/', "_"));
     std::fs::create_dir_all(&out_dir)?;
     std::fs::create_dir_all(&stage_dir)?;
-    let entry_name = target.out_file.strip_suffix(".js").unwrap_or(&target.out_file);
+    let entry_name = target
+        .out_file
+        .strip_suffix(".js")
+        .unwrap_or(&target.out_file);
 
     let options = BundlerOptions {
         input: Some(vec![InputItem {
@@ -95,10 +98,7 @@ pub async fn bundle_target(
     // app builds leave component_index empty (no `@sail-tag` imports emitted).
     let emit_component_imports = target.name.starts_with("routes/");
     let resolver = if emit_component_imports {
-        component_index(
-            &layout.repo_root,
-            &layout.cfg.packs,
-        )
+        component_index(&layout.repo_root, &layout.cfg.packs)
     } else {
         ResolverIndex::empty()
     };
@@ -108,6 +108,7 @@ pub async fn bundle_target(
         component_index: resolver.index,
         shadowed_tags: resolver.shadowed,
         component_roots: crate::catalog::component_package_roots(&layout.repo_root),
+        project_dir: None,
     };
     // The bundler + its oxc module graph live in `bundler` and are dropped at
     // the end of this scope. Earlier this called malloc_trim(0) via
@@ -153,7 +154,9 @@ pub async fn bundle_target(
     // the CodeMirror 6.7.0/6.7.1 case this catches.
     crate::dup_version_check::warn_duplicate_versions(&module_paths);
     let out_path = out_dir.join(&target.out_file);
-    let bytes = std::fs::metadata(&out_path).map(|m| m.len() as usize).unwrap_or(0);
+    let bytes = std::fs::metadata(&out_path)
+        .map(|m| m.len() as usize)
+        .unwrap_or(0);
     let dropped_side_effect_modules = detect_dropped_side_effect_modules(&module_paths, &entry);
     // Emit a warning per drop. The manifest already records the drops
     // (so callers and the watcher can surface them), but the spec also
@@ -181,9 +184,10 @@ pub async fn bundle_target(
         bytes,
         inputs: match &target.entry {
             TargetEntry::Real(p) => vec![p.to_string_lossy().to_string()],
-            TargetEntry::Virtual { sources } => {
-                sources.iter().map(|p| p.to_string_lossy().to_string()).collect()
-            }
+            TargetEntry::Virtual { sources } => sources
+                .iter()
+                .map(|p| p.to_string_lossy().to_string())
+                .collect(),
         },
         modules: module_paths,
         dropped_side_effect_modules,
@@ -403,8 +407,8 @@ fn parse_bare_import_spec(after_kw: &str) -> Option<String> {
 /// correct without a per-extension patch).
 fn is_asset_extension(path: &Path) -> bool {
     const ASSET_EXTS: &[&str] = &[
-        "css", "json", "svg", "png", "jpg", "jpeg", "gif", "webp",
-        "avif", "ico", "woff", "woff2", "ttf", "otf", "eot",
+        "css", "json", "svg", "png", "jpg", "jpeg", "gif", "webp", "avif", "ico", "woff", "woff2",
+        "ttf", "otf", "eot",
     ];
     path.extension()
         .and_then(|e| e.to_str())
@@ -443,7 +447,11 @@ fn resolve_import(importer: &Path, spec: &str) -> Option<PathBuf> {
         "/index.js",
     ];
     for ext in candidates {
-        let candidate = if ext.is_empty() { p.clone() } else { p.with_extension(&ext[1..]) };
+        let candidate = if ext.is_empty() {
+            p.clone()
+        } else {
+            p.with_extension(&ext[1..])
+        };
         if candidate.is_file() {
             return Some(candidate);
         }
@@ -462,10 +470,8 @@ fn resolve_import(importer: &Path, spec: &str) -> Option<PathBuf> {
 fn resolve_ship_package(importer: &Path, name: &str) -> Option<PathBuf> {
     let repo_root = find_workspace_root(importer)?;
     let roots = crate::catalog::discover_workspace_packages(&repo_root).unwrap_or_default();
-    let map: std::collections::HashMap<String, std::path::PathBuf> = roots
-        .into_iter()
-        .map(|p| (p.name, p.root))
-        .collect();
+    let map: std::collections::HashMap<String, std::path::PathBuf> =
+        roots.into_iter().map(|p| (p.name, p.root)).collect();
     let dir = map.get(name)?;
     let idx = dir.join("src/index.ts");
     if idx.is_file() {
@@ -520,10 +526,15 @@ fn side_effects_reason(module_path: &Path) -> String {
     "no package.json found".to_string()
 }
 
-
-
-const MODULE_PRUNE: &[&str] =
-    &["node_modules", ".git", "target", "dist", deck_config::DECK_OUT_DIRNAME, ".sail-out", "sail-out"];
+const MODULE_PRUNE: &[&str] = &[
+    "node_modules",
+    ".git",
+    "target",
+    "dist",
+    deck_config::DECK_OUT_DIRNAME,
+    ".sail-out",
+    "sail-out",
+];
 
 fn extract_module_paths(output: &rolldown::BundleOutput) -> Vec<PathBuf> {
     use rolldown_common::Output;
@@ -575,8 +586,8 @@ mod tests {
         let repo = repo_root();
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();
-        let layout =
-            BundleLayout::with_config(repo, None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
+        let layout = BundleLayout::with_config(repo, None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
 
         let targets = layout.all_targets();
         let Some(marketing) = targets.iter().find(|t| t.name == "sail-marketing") else {
@@ -605,9 +616,16 @@ mod tests {
         // members — see marketing-bundle.ts). Each registers via its
         // `component(\`<tag>\`, …)` call; the tag literal survives minification.
         for tag in [
-            "sail-icon", "sail-badge", "sail-button", "sail-separator",
-            "sail-status-dot", "sail-table", "sail-bar-chart",
-            "sail-sparkline", "sail-brand-mark", "sail-theme-picker",
+            "sail-icon",
+            "sail-badge",
+            "sail-button",
+            "sail-separator",
+            "sail-status-dot",
+            "sail-table",
+            "sail-bar-chart",
+            "sail-sparkline",
+            "sail-brand-mark",
+            "sail-theme-picker",
         ] {
             assert!(
                 body.contains(&format!("`{tag}`")),
@@ -633,8 +651,8 @@ mod tests {
         let repo = repo_root();
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();
-        let layout =
-            BundleLayout::with_config(repo, None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
+        let layout = BundleLayout::with_config(repo, None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
 
         let targets = layout.all_targets();
         let Some(arcade) = targets.iter().find(|t| t.name == "sail-arcade") else {
@@ -648,7 +666,11 @@ mod tests {
             .await
             .expect("arcade should bundle");
         // The heavy lazy chunk: pixi (~800 KB) is bundled in.
-        assert!(m.bytes > 200_000, "arcade bundles pixi, got {} bytes", m.bytes);
+        assert!(
+            m.bytes > 200_000,
+            "arcade bundles pixi, got {} bytes",
+            m.bytes
+        );
         let body = std::fs::read_to_string(&m.out_path).unwrap();
         // Runtime stays external (one instance) — an import of the bare
         // specifier survives, not an inlined second copy.
@@ -657,7 +679,13 @@ mod tests {
             "arcade keeps the runtime singleton external"
         );
         // Each arcade tag registers via its `component(\`<tag>\`, …)` call.
-        for tag in ["sail-stage", "sail-sprite", "sail-emitter", "sail-stage-input", "sail-hud"] {
+        for tag in [
+            "sail-stage",
+            "sail-sprite",
+            "sail-emitter",
+            "sail-stage-input",
+            "sail-hud",
+        ] {
             assert!(
                 body.contains(&format!("`{tag}`")),
                 "arcade bundle must register {tag}"
@@ -679,8 +707,8 @@ mod tests {
         let repo = repo_root();
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();
-        let layout =
-            BundleLayout::with_config(repo, None, DeckConfig::defaults()).with_out_root(scratch.path().to_path_buf());
+        let layout = BundleLayout::with_config(repo, None, DeckConfig::defaults())
+            .with_out_root(scratch.path().to_path_buf());
 
         let targets = layout.all_targets();
         let Some(pdf) = targets.iter().find(|t| t.name == "sail-pdf") else {
@@ -694,7 +722,11 @@ mod tests {
             .await
             .expect("pdf pack must bundle through Rolldown (no `?url` abort)");
         // The heavy lazy chunk: pdf.js engine + worker are inlined.
-        assert!(m.bytes > 200_000, "pdf bundles the engine, got {} bytes", m.bytes);
+        assert!(
+            m.bytes > 200_000,
+            "pdf bundles the engine, got {} bytes",
+            m.bytes
+        );
         let body = std::fs::read_to_string(&m.out_path).unwrap();
         // Runtime stays external (one instance).
         assert!(
@@ -714,7 +746,10 @@ mod tests {
             "the `?url` asset suffix must be gone (it aborts the deck bundler)"
         );
         for needle in ["cdnjs", "unpkg", "jsdelivr"] {
-            assert!(!body.contains(needle), "worker must not load from a CDN ({needle})");
+            assert!(
+                !body.contains(needle),
+                "worker must not load from a CDN ({needle})"
+            );
         }
         // `<ship-pdf>` registers via its `component(\`ship-pdf\`, …)` call.
         assert!(
@@ -729,9 +764,16 @@ mod tests {
         let root = tmp.path();
         std::fs::create_dir_all(root.join("app")).unwrap();
         std::fs::create_dir_all(root.join("lib")).unwrap();
-        std::fs::write(root.join("app/main.ts"),
-            "import { getX } from '../lib/util.ts'; export default getX;").unwrap();
-        std::fs::write(root.join("lib/util.ts"), "export function getX() { return Math.random(); }").unwrap();
+        std::fs::write(
+            root.join("app/main.ts"),
+            "import { getX } from '../lib/util.ts'; export default getX;",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("lib/util.ts"),
+            "export function getX() { return Math.random(); }",
+        )
+        .unwrap();
 
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();
@@ -744,14 +786,25 @@ mod tests {
             out_file: "main.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
-        assert!(manifest.modules.iter().any(|m| m.ends_with("app/main.ts")),
-            "entry in module set, got: {:?}", manifest.modules);
-        assert!(manifest.modules.iter().any(|m| m.ends_with("lib/util.ts")),
-            "imported dep from different dir in module set, got: {:?}", manifest.modules);
-        assert!(!manifest.modules.iter().any(|m| m.components().any(|c| {
-            matches!(c, std::path::Component::Normal(n) if n == "node_modules")
-        })), "node_modules must not appear in module set");
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
+        assert!(
+            manifest.modules.iter().any(|m| m.ends_with("app/main.ts")),
+            "entry in module set, got: {:?}",
+            manifest.modules
+        );
+        assert!(
+            manifest.modules.iter().any(|m| m.ends_with("lib/util.ts")),
+            "imported dep from different dir in module set, got: {:?}",
+            manifest.modules
+        );
+        assert!(
+            !manifest.modules.iter().any(|m| m
+                .components()
+                .any(|c| { matches!(c, std::path::Component::Normal(n) if n == "node_modules") })),
+            "node_modules must not appear in module set"
+        );
     }
 
     /// The unresolved-import guard's failure contract: a bare import rolldown
@@ -836,9 +889,16 @@ mod tests {
         let root = tmp.path();
         std::fs::create_dir_all(root.join("app/routes")).unwrap();
         std::fs::create_dir_all(root.join("app/src")).unwrap();
-        std::fs::write(root.join("app/routes/page.ts"),
-            "import { getHelper } from '../src/helper.ts'; export default getHelper;").unwrap();
-        std::fs::write(root.join("app/src/helper.ts"), "export function getHelper() { return Math.random().toString(); }").unwrap();
+        std::fs::write(
+            root.join("app/routes/page.ts"),
+            "import { getHelper } from '../src/helper.ts'; export default getHelper;",
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("app/src/helper.ts"),
+            "export function getHelper() { return Math.random().toString(); }",
+        )
+        .unwrap();
         let scratch = tempfile::tempdir().unwrap();
         let staging = tempfile::tempdir().unwrap();
         let layout = BundleLayout::with_config(root.to_path_buf(), None, DeckConfig::defaults())
@@ -850,11 +910,23 @@ mod tests {
             out_file: "page.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
-        assert!(manifest.modules.iter().any(|m| m.ends_with("app/routes/page.ts")),
-            "entry in module set");
-        assert!(manifest.modules.iter().any(|m| m.ends_with("app/src/helper.ts")),
-            "imported src file in module set — this is the apps/hub regression");
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
+        assert!(
+            manifest
+                .modules
+                .iter()
+                .any(|m| m.ends_with("app/routes/page.ts")),
+            "entry in module set"
+        );
+        assert!(
+            manifest
+                .modules
+                .iter()
+                .any(|m| m.ends_with("app/src/helper.ts")),
+            "imported src file in module set — this is the apps/hub regression"
+        );
     }
 
     /// Unit test for the detector's asset-extension filter. A
@@ -890,20 +962,13 @@ mod tests {
             "import '../styles/global.css';\nexport const ready = true;\n",
         )
         .unwrap();
-        std::fs::write(
-            root.join("styles/global.css"),
-            ":root { --x: 1; }\n",
-        )
-        .unwrap();
+        std::fs::write(root.join("styles/global.css"), ":root { --x: 1; }\n").unwrap();
         let entry = root.join("app/entry.ts");
         // No JS modules in the bundle beyond the entry —
         // emulating "the CSS was emitted as an asset, not a
         // JS chunk".
         let module_paths = vec![entry.clone()];
-        let dropped = detect_dropped_side_effect_modules(
-            &module_paths,
-            &entry,
-        );
+        let dropped = detect_dropped_side_effect_modules(&module_paths, &entry);
         assert!(
             dropped.is_empty(),
             "detector must skip the CSS bare import — the \
@@ -923,17 +988,10 @@ mod tests {
             "import '../data/manifest.json';\nexport const ready = true;\n",
         )
         .unwrap();
-        std::fs::write(
-            root.join("data/manifest.json"),
-            r#"{"name":"fixture"}"#,
-        )
-        .unwrap();
+        std::fs::write(root.join("data/manifest.json"), r#"{"name":"fixture"}"#).unwrap();
         let entry = root.join("app/entry.ts");
         let module_paths = vec![entry.clone()];
-        let dropped = detect_dropped_side_effect_modules(
-            &module_paths,
-            &entry,
-        );
+        let dropped = detect_dropped_side_effect_modules(&module_paths, &entry);
         assert!(
             dropped.is_empty(),
             "detector must skip the JSON bare import. dropped={dropped:?}"
@@ -958,10 +1016,7 @@ mod tests {
         .unwrap();
         let entry = root.join("app/entry.ts");
         let module_paths = vec![entry.clone()];
-        let dropped = detect_dropped_side_effect_modules(
-            &module_paths,
-            &entry,
-        );
+        let dropped = detect_dropped_side_effect_modules(&module_paths, &entry);
         assert!(
             dropped.is_empty(),
             "detector must skip the SVG bare import. dropped={dropped:?}"
@@ -994,17 +1049,10 @@ mod tests {
         // The .ts file isn't in the bundle (the analyzer
         // finds no side effect, so the body is dropped).
         let module_paths = vec![entry.clone()];
-        let dropped = detect_dropped_side_effect_modules(
-            &module_paths,
-            &entry,
-        );
+        let dropped = detect_dropped_side_effect_modules(&module_paths, &entry);
         let ts_drops: Vec<_> = dropped
             .iter()
-            .filter(|d| {
-                d.module_path
-                    .extension()
-                    .is_some_and(|e| e == "ts")
-            })
+            .filter(|d| d.module_path.extension().is_some_and(|e| e == "ts"))
             .collect();
         assert!(
             !ts_drops.is_empty(),
@@ -1012,7 +1060,6 @@ mod tests {
              the asset filter must not over-match. dropped={dropped:?}"
         );
     }
-
 
     /// effect is a top-level `customElements.define(...)` — must NOT silently
     /// disappear. The default Rolldown setting (`module_side_effects = true`)
@@ -1053,7 +1100,9 @@ mod tests {
             out_file: "sidefx.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
         let body = std::fs::read_to_string(&manifest.out_path).unwrap();
         // The side effect must survive — the registration call is the
         // observable proof the module's body ran.
@@ -1097,11 +1146,7 @@ mod tests {
         // deck-bundler test fixtures use to keep the test
         // self-contained without depending on npm-style nested
         // workspace globs.
-        std::fs::write(
-            root.join("package.json"),
-            r#"{"workspaces":["*"]}"#,
-        )
-        .unwrap();
+        std::fs::write(root.join("package.json"), r#"{"workspaces":["*"]}"#).unwrap();
         // `sideEffects: false` is the bait: without the
         // `load`-hook override, Rolldown would honor this field
         // and drop the registration body's `customElements.define`
@@ -1140,7 +1185,9 @@ mod tests {
             out_file: "sidefx-pkg.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
         let body = std::fs::read_to_string(&manifest.out_path).unwrap();
         // The body MUST survive — the `load`-hook override
         // forces `side_effects = true` regardless of
@@ -1181,11 +1228,7 @@ mod tests {
         let root = tmp.path();
         std::fs::create_dir_all(root.join("app")).unwrap();
         std::fs::create_dir_all(root.join("sidefx-pkg/src")).unwrap();
-        std::fs::write(
-            root.join("package.json"),
-            r#"{"workspaces":["*"]}"#,
-        )
-        .unwrap();
+        std::fs::write(root.join("package.json"), r#"{"workspaces":["*"]}"#).unwrap();
         std::fs::write(
             root.join("sidefx-pkg/package.json"),
             r#"{"name":"@ship/sidefx-orphan","sideEffects":false}"#,
@@ -1228,7 +1271,9 @@ mod tests {
             out_file: "sidefx-orphan.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
         let body = std::fs::read_to_string(&manifest.out_path).unwrap();
         // The dead export is gone (tree-shaken), and the
         // package's body is also gone (nothing references
@@ -1270,8 +1315,7 @@ mod tests {
     async fn load_hook_propagates_read_error_for_missing_module() {
         use crate::sail_plugin::SailPlugin;
         use rolldown::plugin::{
-            HookLoadArgs, LoadPluginContext, Plugin, PluginContext,
-            SharedLoadPluginContext,
+            HookLoadArgs, LoadPluginContext, Plugin, PluginContext, SharedLoadPluginContext,
         };
         use rolldown_common::ModuleIdx;
         // The SailPlugin's `load` hook doesn't read the
@@ -1279,17 +1323,17 @@ mod tests {
         // `PluginContext::new_napi_context()` is a valid
         // stand-in for the test — it's the only
         // public constructor the type exposes.
-        let ctx: SharedLoadPluginContext =
-            std::sync::Arc::new(LoadPluginContext::new(
-                PluginContext::new_napi_context(),
-                ModuleIdx::new(0),
-            ));
+        let ctx: SharedLoadPluginContext = std::sync::Arc::new(LoadPluginContext::new(
+            PluginContext::new_napi_context(),
+            ModuleIdx::new(0),
+        ));
         let plugin = SailPlugin {
             repo_root: PathBuf::from("/nonexistent"),
             emit_component_imports: false,
             component_index: Default::default(),
             shadowed_tags: Default::default(),
             component_roots: Default::default(),
+            project_dir: None,
         };
         // A path that does not exist on disk. The
         // `read_to_string` call in `load` will fail; the
@@ -1320,8 +1364,6 @@ mod tests {
             "load hook error must name the missing file path; got: {err_str}"
         );
     }
-
-
 
     /// entry that exports a name with no consumer in the entry must still
     /// be tree-shaken (the constant must NOT appear in the bundle). This
@@ -1360,7 +1402,9 @@ mod tests {
             out_file: "dead.js".to_string(),
             lazy: false,
         };
-        let manifest = bundle_target(&layout, &target, staging.path(), false).await.unwrap();
+        let manifest = bundle_target(&layout, &target, staging.path(), false)
+            .await
+            .unwrap();
         let body = std::fs::read_to_string(&manifest.out_path).unwrap();
         assert!(
             !body.contains("sentinel-please-shake"),

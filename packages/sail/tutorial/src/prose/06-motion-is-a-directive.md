@@ -105,7 +105,7 @@ the controller does not change:
    it snap; after, watch exit-hold do its job.
 2. **Make arrival a cascade** (TODO 5). `style.enter` with a spring on
    `translate-x` and `stagger: '50ms'`, then hit Restock.
-3. **Panel lifecycle** (TODO 4). Enter and exit on the `<if cond={open()}>`
+3. **Panel lifecycle** (TODO 4). Enter and exit on the `<if {open()}>`
    panel — toggle the tray both ways.
 4. **The small stuff** (TODO 1–3). Rotate the restock hint on hover,
    press-scale the trigger, pulse the unread dot with `style.loop`.

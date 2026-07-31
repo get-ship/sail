@@ -37,7 +37,7 @@ export default defineConfig({
       // keep fresh (#255). The wasm surface stays browser-only.
     ],
     // sail-compiler emits `view.js` next to `view.sail` and the paired `view.ts`
-    // (see scripts/build-bundles.mjs::compileSui). Tests target the controller
+    // (see scripts/build-bundles.mjs::compileSail). Tests target the controller
     // source — prefer `.ts` over the generated `.js` shadow.
     extensions: ['.mts', '.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
   },

@@ -29,6 +29,7 @@ pub const FRAMEWORK_SOURCE_ROOTS: &[(&str, &str)] = &[
     ("sail-dom.js", "packages/sail/dom/src"),
     ("sail-sdk-client.js", "packages/deck/sdk-client/src"),
     ("deck-route.js", "packages/deck/router/src"),
+    ("sail-studio-bridge.js", "packages/sail/studio-bridge/src"),
 ];
 
 /// A bundle name paired with the current content hash of the source tree it
@@ -93,7 +94,11 @@ pub fn current_framework_stamps(repo_root: &Path) -> Result<Vec<FrameworkStamp>>
             continue;
         }
         let hash = hash_dir(&source_root)?;
-        stamps.push(FrameworkStamp { bundle, source_root, hash });
+        stamps.push(FrameworkStamp {
+            bundle,
+            source_root,
+            hash,
+        });
     }
     Ok(stamps)
 }
@@ -136,7 +141,10 @@ mod tests {
         std::fs::write(dir.path().join(".hidden"), b"whatever").unwrap();
         let after = hash_dir(dir.path()).unwrap();
 
-        assert_eq!(baseline, after, "node_modules/dotfiles must not affect the stamp");
+        assert_eq!(
+            baseline, after,
+            "node_modules/dotfiles must not affect the stamp"
+        );
     }
 
     #[test]
@@ -144,7 +152,10 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         // No `packages/...` tree under this dir — every root is absent.
         let stamps = current_framework_stamps(dir.path()).unwrap();
-        assert!(stamps.is_empty(), "no framework source roots present ⇒ no stamps, not an error");
+        assert!(
+            stamps.is_empty(),
+            "no framework source roots present ⇒ no stamps, not an error"
+        );
     }
 
     #[test]

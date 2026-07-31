@@ -21,7 +21,7 @@
 //   await v.flush()
 //   v.unmount()
 
-import { compileSui, evalCompiledJs, evalInlineController } from '@ship/sail-dom/test-utils'
+import { compileSail, evalCompiledJs, evalInlineController } from '@ship/sail-dom/test-utils'
 import { route as makeRoute } from '@ship/sail-runtime/route'
 import type { ControllerExport } from '@ship/sail-runtime'
 
@@ -78,7 +78,7 @@ const SETUP_MARKER = '__test_setup__'
  */
 export function renderRoute(source: string, opts: RenderOpts = {}): Rendered {
   const usesController = opts.controller != null
-  const compiled = compileSui(source, {
+  const compiled = compileSail(source, {
     ...(usesController ? { setupMarker: SETUP_MARKER } : {}),
     ...(opts.sourcePath ? { sourcePath: opts.sourcePath } : {}),
   })
@@ -156,7 +156,7 @@ export function renderComponent(
   // An SFC carries its controller inline — the compile returns the body and
   // the emitted template imports it as `setup`. An explicit `opts.controller`
   // still wins, for a fake or a block whose imports need the real module graph.
-  const probe = compileSui(source, {
+  const probe = compileSail(source, {
     componentName: tag,
     mode: 'component',
     ...(opts.sourcePath ? { sourcePath: opts.sourcePath } : {}),
@@ -164,7 +164,7 @@ export function renderComponent(
   const inline = probe.controller
   const usesController = opts.controller != null || inline != null
   const compiled = usesController
-    ? compileSui(source, {
+    ? compileSail(source, {
         componentName: tag,
         mode: 'component',
         setupMarker: SETUP_MARKER,

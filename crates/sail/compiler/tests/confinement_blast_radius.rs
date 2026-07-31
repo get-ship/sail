@@ -8,7 +8,7 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -20,7 +20,9 @@ fn repo_root() -> PathBuf {
 }
 
 fn walk_collect(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else { return };
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
     for entry in entries.flatten() {
         let path = entry.path();
         let is_dir = entry.file_type().map(|t| t.is_dir()).unwrap_or(false);
@@ -41,12 +43,19 @@ fn walk_collect(dir: &Path, out: &mut Vec<PathBuf>) {
 /// (`crates/deck/deck-bundler/src/sail_plugin.rs::detect_mode`): a valid
 /// custom-element tag must contain a hyphen and every component `.sail` uses
 /// its stem as the tag; `page`/`index` (no hyphen) are views. Both map to
-/// `sail_compiler::CompileMode::Component` (`compile.rs::compile_sui`) — the
+/// `sail_compiler::CompileMode::Component` (`compile.rs::compile_sail`) — the
 /// View/Component distinction only decides whether `component_meta` is set.
 fn classify(path: &Path) -> (CompileMode, Option<ComponentMeta>) {
-    let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_string();
+    let stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_string();
     let is_component = stem.contains('-') && stem != "page" && stem != "index";
-    (CompileMode::Component, is_component.then(|| ComponentMeta { name: stem }))
+    (
+        CompileMode::Component,
+        is_component.then(|| ComponentMeta { name: stem }),
+    )
 }
 
 #[test]
@@ -82,7 +91,11 @@ fn list_newly_refused_controllers() {
             if e.category.as_deref() == Some("sail-controller-no-ambient-authority") {
                 refused.push(format!("{}: {}", rel.display(), e.render(&source)));
             } else {
-                refused.push(format!("{}: [OTHER ERROR, not ambient-authority] {}", rel.display(), e.render(&source)));
+                refused.push(format!(
+                    "{}: [OTHER ERROR, not ambient-authority] {}",
+                    rel.display(),
+                    e.render(&source)
+                ));
             }
         }
     }

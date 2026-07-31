@@ -40,8 +40,8 @@ export function lowerFrameworkImports(source: string): string {
  * node-factory `document`, the runtime surface, the policy-gated ops).
  *
  * Transforms (after {@link lowerFrameworkImports}):
- *   - `export default EXPR`        → `const __sui_default__ = EXPR` (+ a trailing
- *     `__sui_default__;` so evaluate returns it),
+ *   - `export default EXPR`        → `const __sail_default__ = EXPR` (+ a trailing
+ *     `__sail_default__;` so evaluate returns it),
  *   - `export const|let|var|function|class …` → strip the `export ` keyword
  *     (the binding stays a module-local),
  *   - `export { … } [from '…']`    → removed.
@@ -58,8 +58,8 @@ export function lowerModuleToExpression(source: string): string {
 
   // (a) `export default EXPR` → bind it to a local we can trail.
   s = s.replace(/^([ \t]*)export\s+default\s+/m, (_m, indent: string) => {
-    defaultExpr = '__sui_default__'
-    return `${indent}const __sui_default__ = `
+    defaultExpr = '__sail_default__'
+    return `${indent}const __sail_default__ = `
   })
 
   // (b) `export { foo as default }` — the form the SAIL compiler actually emits

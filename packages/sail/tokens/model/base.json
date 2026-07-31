@@ -55,7 +55,10 @@
         }
       }
     },
-    "$type": "dimension"
+    "$type": "dimension",
+    "$extensions": {
+      "ordered": ["sm", "md", "lg", "xl"]
+    }
   },
   "space": {
     "1": {

@@ -29,13 +29,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use axum::{
-    Extension,
-    extract::Path,
-    response::Response,
-    routing::get,
-    Router,
-};
+use axum::{Extension, Router, extract::Path, response::Response, routing::get};
 
 use deck_config::AppServeConfig;
 use deck_core::DaemonMode;
@@ -56,7 +50,10 @@ pub async fn serve_app_index(
     app: Option<Extension<Arc<AppServeConfig>>>,
     resolution: Option<Extension<Arc<deck_core::Resolution>>>,
     renderer: Option<Extension<Arc<dyn deck_core::synthetic_ssr::SyntheticSsr>>>,
-    Path(params): Path<HashMap<String, String>>,
+    uri: axum::http::Uri,
+    // Static routes like `/_studio` have no path params — Path rejects those,
+    // so accept Result and treat rejection as empty captures.
+    params: Result<Path<HashMap<String, String>>, axum::extract::rejection::PathRejection>,
 ) -> Response {
     let mode_val = mode_from_ext(mode);
     let Some(app) = app.as_ref().map(|e| e.0.as_ref()) else {
@@ -65,21 +62,33 @@ pub async fn serve_app_index(
             mode_val,
         ));
     };
-    let params_refs: Vec<(&str, &str)> = params
+    let empty = HashMap::new();
+    let params_map = params.as_ref().map(|p| &p.0).unwrap_or(&empty);
+    let params_refs: Vec<(&str, &str)> = params_map
         .iter()
         .map(|(k, v)| (k.as_str(), v.as_str()))
         .collect();
-    // `None` request path: the multi-app host serve doesn't yet wire per-route
-    // SSR first-paint (it's the standalone `deck dev` path that first-paints
-    // routes/ today). An `ssr` app served here falls back to CSR until the host
-    // threads its request path through. TODO(deck-ssr-host). The mount-scoped
-    // `Resolution` IS threaded (each app carries its own via a per-route
-    // Extension) so asset resolution is per-app, never a shared global.
+    // Thread the request path so `render: ssr` apps (e.g. Studio at `/_studio`)
+    // first-paint. Overlay paths map into studio's own route table:
+    // `/_studio` → `/`, `/_studio/edit` → `/edit`, etc.
+    let path = uri.path();
+    let ssr_owned: Option<String> = if path == "/_studio" {
+        Some("/".to_string())
+    } else if let Some(rest) = path.strip_prefix("/_studio/") {
+        Some(if rest.is_empty() {
+            "/".to_string()
+        } else {
+            format!("/{}", rest.trim_start_matches('/'))
+        })
+    } else {
+        None
+    };
+    let ssr_path = ssr_owned.as_deref().unwrap_or(path);
     into_axum(deck_core::serve_scaffold(
         mode_val,
         app,
         &params_refs,
-        None,
+        Some(ssr_path),
         resolution.as_ref().map(|e| e.0.as_ref()),
         renderer.as_ref().map(|e| e.0.as_ref()),
     ))
@@ -164,11 +173,7 @@ pub fn serve_apps(apps: &[AppServeConfig]) -> Router {
         // Skip route mounting for the primary app at `/`.
         if !(is_primary && app.route == "/") {
             let app_ext = Arc::new(app.clone());
-            router = router
-                .route(
-                    &app.route,
-                    get(serve_app_index).layer(Extension(app_ext)),
-                );
+            router = router.route(&app.route, get(serve_app_index).layer(Extension(app_ext)));
         }
         // The asset namespace is the app's name. The route is
         // `/<app.name>/{file}` and the handler reads the app config

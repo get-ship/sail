@@ -27,19 +27,28 @@
 //! selector the rest of the suite uses). The assertions are about what the
 //! compiler emits, not about class=.
 
-use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn js(src: &str) -> String {
-    compile(src, CompileOpts { mode: CompileMode::Component, ..Default::default() })
-        .expect("compiles")
-        .js
+    compile(
+        src,
+        CompileOpts {
+            mode: CompileMode::Component,
+            ..Default::default()
+        },
+    )
+    .expect("compiles")
+    .js
 }
 
 /// A static subtree is hoisted to module scope and cloned — not built node by node.
 #[test]
 fn a_static_subtree_is_hoisted_and_cloned() {
     let out = js(r#"<div data-actions><button data-test="go">go</button></div>"#);
-    assert!(out.contains("__tpl("), "the markup is hoisted as a template:\n{out}");
+    assert!(
+        out.contains("__tpl("),
+        "the markup is hoisted as a template:\n{out}"
+    );
     // <button> is a native stdlib tag: stamping bakes sail-button + sx-* classes
     // and data-sail-host into the hoisted markup alongside data-test.
     assert!(
@@ -49,8 +58,14 @@ fn a_static_subtree_is_hoisted_and_cloned() {
             && out.contains(r#"\">go</button>"#),
         "static attributes and the native stamp bake into the markup — which also deletes the setAttribute call:\n{out}"
     );
-    assert!(!out.contains("createElement"), "nothing is built by hand:\n{out}");
-    assert!(!out.contains("setAttribute"), "no attribute is replayed at runtime:\n{out}");
+    assert!(
+        !out.contains("createElement"),
+        "nothing is built by hand:\n{out}"
+    );
+    assert!(
+        !out.contains("setAttribute"),
+        "no attribute is replayed at runtime:\n{out}"
+    );
 }
 
 /// The cloner lives at MODULE scope, so the markup is parsed once per program — not
@@ -60,7 +75,10 @@ fn the_cloner_is_hoisted_above_the_component() {
     let out = js(r#"<div data-x><span>y</span></div>"#);
     let tpl = out.find("const __tpl0").expect("a cloner is emitted");
     let comp = out.find("component(").expect("the component is emitted");
-    assert!(tpl < comp, "the cloner must be hoisted ABOVE the component:\n{out}");
+    assert!(
+        tpl < comp,
+        "the cloner must be hoisted ABOVE the component:\n{out}"
+    );
 }
 
 /// Bindings navigate the clone with pointer walks. `childNodes[i]` is a live NodeList
@@ -84,7 +102,10 @@ fn a_dynamic_text_slot_reserves_a_text_node() {
         out.contains(r#"__tpl("<span> </span>")"#),
         "the placeholder space forces a text node into the clone:\n{out}"
     );
-    assert!(out.contains("bindText"), "and the binding still wires to it:\n{out}");
+    assert!(
+        out.contains("bindText"),
+        "and the binding still wires to it:\n{out}"
+    );
 }
 
 /// ADJACENT TEXT would merge on parse. Rather than emit navigation that silently
@@ -103,9 +124,16 @@ fn adjacent_text_falls_back_rather_than_emitting_wrong_navigation() {
 /// Its static SIBLINGS still are — the fallback is per-element, not per-file.
 #[test]
 fn control_flow_is_not_templated_but_its_siblings_still_are() {
-    let out = js(r#"<div><p data-test="a">static</p><ul><if cond={ok()}><li>x</li></if></ul></div>"#);
-    assert!(out.contains("__tpl("), "the static <li> subtree is still hoisted:\n{out}");
-    assert!(out.contains("bindIf"), "and the control flow still wires:\n{out}");
+    let out =
+        js(r#"<div><p data-test="a">static</p><ul><if cond={ok()}><li>x</li></if></ul></div>"#);
+    assert!(
+        out.contains("__tpl("),
+        "the static <li> subtree is still hoisted:\n{out}"
+    );
+    assert!(
+        out.contains("bindIf"),
+        "and the control flow still wires:\n{out}"
+    );
 }
 
 /// Model-A stamps `sail-root` on the component's root element. It is baked into the
@@ -118,9 +146,11 @@ fn the_model_a_root_class_bakes_into_the_markup() {
     let out = compile(
         r#"<div data-card="card">x</div>"#,
         CompileOpts {
-        route_params: None,
+            route_params: None,
             mode: CompileMode::Component,
-            component_meta: Some(ComponentMeta { name: "tpl-probe".into() }),
+            component_meta: Some(ComponentMeta {
+                name: "tpl-probe".into(),
+            }),
             ..Default::default()
         },
     )
@@ -131,5 +161,8 @@ fn the_model_a_root_class_bakes_into_the_markup() {
         out.contains(r#"class=\"sail-root\""#),
         "sail-root bakes into the markup, alongside the author's data-card attribute:\n{out}"
     );
-    assert!(!out.contains("classList.add"), "not stamped at runtime:\n{out}");
+    assert!(
+        !out.contains("classList.add"),
+        "not stamped at runtime:\n{out}"
+    );
 }

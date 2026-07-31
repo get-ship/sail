@@ -19,7 +19,7 @@ mod tokenize;
 
 pub use attrs::compile_attrs;
 use blocks::ParseScope;
-pub(crate) use tokenize::{tokenize_children, Discriminant, Token, TokenKind};
+pub(crate) use tokenize::{Discriminant, Token, TokenKind, tokenize_children};
 
 /// Compile a flat list of top-level template nodes.
 pub fn compile_children(parent_children: &[Node]) -> Result<Vec<Instr>, CompileError> {
@@ -105,11 +105,10 @@ pub(crate) fn parse_tokens(
             | TokenKind::CloseMatch
             | TokenKind::CloseWhileLoading
             | TokenKind::CloseWhileError => {
-                return Err(CompileError::new(format!(
-                    "unexpected token: {}",
-                    tok.kind.label()
-                ))
-                .with_span(tok.span));
+                return Err(
+                    CompileError::new(format!("unexpected token: {}", tok.kind.label()))
+                        .with_span(tok.span),
+                );
             }
         }
     }
@@ -134,4 +133,3 @@ fn compile_element(el: &html::Element) -> Result<ElementInstr, CompileError> {
         span: el.span,
     })
 }
-

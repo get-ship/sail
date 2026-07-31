@@ -45,7 +45,7 @@ export default controller(() => {
   <p sx={style.fontSize(sm).fg(muted-foreground)}>published {formatDate(publishedAt())}</p>
 
   <column gap="1">
-    <for as="note" of={notes()} key={note.id}>
+    <for {notes()} as="note" key={note.id}>
       <row gap="3" align="center" sx={style.padX(3).padY(2).bg(surface-1).radius(md)}>
         <badge tone="muted" variant="outline" size="sm">{note.tag}</badge>
         <p sx={style.fontSize(sm)}>{note.text}</p>

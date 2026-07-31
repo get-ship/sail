@@ -17,7 +17,7 @@ tokens, a theme is **one attribute on the root element** —
 ```
 import { applyTheme, persistTheme, readStoredTheme } from '@ship/tokens/themes'
 
-applyTheme('console')     // sets data-theme + the canonical .dark class
+applyTheme('console')     // sets data-theme + data-mode
 persistTheme('console')   // survives reload
 applyTheme(readStoredTheme())  // on boot
 ```

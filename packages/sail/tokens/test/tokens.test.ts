@@ -23,7 +23,24 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-import { DEFAULT_THEME, THEMES, isDarkTheme, isValidTheme } from '../src/themes'
+import {
+  CORE_THEME_IDS,
+  DEFAULT_THEME,
+  DEFAULT_MODE,
+  THEME_MODE_STORAGE_KEY,
+  THEMES,
+  applyMode,
+  applyTheme,
+  isCoreTheme,
+  isDarkTheme,
+  isValidTheme,
+  modesForTheme,
+  paintMode,
+  persistMode,
+  readModePreference,
+  subscribeSystemPreference,
+} from '../src/themes'
+import { THEME_META } from '../src/generated/themes-meta'
 
 // Top-level file reads work fine from inside a test or describe body
 // (vitest's esbuild transform evaluates `import.meta.url` lazily); at
@@ -162,11 +179,208 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     expect(isValidTheme(DEFAULT_THEME)).toBe(true)
   })
 
+  // U2.1a — catalog mode honesty + Sail default theme
+  it('DEFAULT_THEME is sail (Sail brand, not monorepo ship)', () => {
+    expect(DEFAULT_THEME).toBe('sail')
+  })
+
+  it('CORE_THEME_IDS includes sail + neutral (ship is catalog)', () => {
+    expect([...CORE_THEME_IDS].sort()).toEqual(['neutral', 'sail'].sort())
+    expect(isCoreTheme('sail')).toBe(true)
+    expect(isCoreTheme('neutral')).toBe(true)
+    expect(isCoreTheme('ship')).toBe(false)
+  })
+
+  it('paper and brut are light-only (catalog mode honesty)', () => {
+    for (const id of ['paper', 'brut'] as const) {
+      expect(modesForTheme(id)).toEqual(['light'])
+      const meta = THEME_META.find((t) => t.id === id)
+      expect(meta?.modes).toEqual(['light'])
+      const theme = THEMES.find((t) => t.id === id)
+      expect(theme?.modes).toEqual(['light'])
+    }
+  })
+
+  it('sail is dual-mode light+dark and is a real catalog entry', () => {
+    expect(isValidTheme('sail')).toBe(true)
+    expect(modesForTheme('sail')).toEqual(['light', 'dark'])
+    const meta = THEME_META.find((t) => t.id === 'sail')
+    expect(meta?.modes).toEqual(['light', 'dark'])
+    expect(meta?.defaultMode).toBe('light')
+    const theme = THEMES.find((t) => t.id === 'sail')
+    expect(theme?.label).toBe('Sail')
+    expect(theme?.tier).toBe('core')
+  })
+
   it('every THEMES id is also a `:root[data-theme="id"]` selector in themes.css', () => {
     const selectors = extractThemeSelectors(loadSrc('../src/themes.css'))
     for (const t of THEMES) {
       expect(selectors.has(t.id)).toBe(true)
     }
+  })
+
+  it('applyTheme(DEFAULT_THEME) sets data-theme + data-mode light without .dark', () => {
+    const root = document.documentElement
+    root.removeAttribute('data-theme')
+    root.removeAttribute('data-mode')
+    root.classList.remove('dark')
+    applyTheme(DEFAULT_THEME, root)
+    expect(root.dataset.theme).toBe(DEFAULT_THEME)
+    expect(root.dataset.mode).toBe(DEFAULT_MODE)
+    expect(root.classList.contains('dark')).toBe(false)
+  })
+
+  it('applyMode(dark) sets data-mode dark without .dark class', () => {
+    const root = document.documentElement
+    applyTheme('sail', root, 'light')
+    applyMode('dark', root)
+    expect(root.dataset.theme).toBe('sail')
+    expect(root.dataset.mode).toBe('dark')
+    expect(root.classList.contains('dark')).toBe(false)
+  })
+
+  it('applyMode(dark) on paper clamps to light (single-mode lock)', () => {
+    const root = document.documentElement
+    applyTheme('paper', root, 'light')
+    applyMode('dark', root)
+    expect(root.dataset.theme).toBe('paper')
+    expect(root.dataset.mode).toBe('light')
+  })
+
+  it('never sets data-mode=system on document (paintMode resolves)', () => {
+    const root = document.documentElement
+    applyTheme('sail', root, 'light')
+    applyMode('system', root)
+    expect(root.dataset.mode).not.toBe('system')
+    expect(['light', 'dark']).toContain(root.dataset.mode)
+    applyTheme('console', root, 'system')
+    expect(root.dataset.mode).not.toBe('system')
+    expect(['light', 'dark']).toContain(root.dataset.mode)
+  })
+
+  it('paintMode maps system via prefers-color-scheme (mock)', () => {
+    const original = window.matchMedia
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: query.includes('dark') ? true : false,
+        media: query,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+        onchange: null,
+      })) as typeof window.matchMedia
+    try {
+      expect(paintMode('system')).toBe('dark')
+      expect(paintMode('light')).toBe('light')
+      expect(paintMode('dark')).toBe('dark')
+      expect(paintMode(null)).toBe('light')
+    } finally {
+      window.matchMedia = original
+    }
+  })
+
+  it('persistMode + readModePreference keep system intent', () => {
+    try {
+      localStorage.clear()
+    } catch {
+      /* */
+    }
+    persistMode('system')
+    expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe('system')
+    expect(readModePreference()).toBe('system')
+    persistMode('dark')
+    expect(readModePreference()).toBe('dark')
+    persistMode('not-a-mode')
+    // Unknown stored string normalizes via paintMode → light
+    expect(readModePreference()).toBe('light')
+  })
+
+  it("applyMode('system') paints light|dark and stores preference system", () => {
+    const root = document.documentElement
+    try {
+      localStorage.clear()
+    } catch {
+      /* */
+    }
+    applyTheme('sail', root, 'light')
+    applyMode('system', root)
+    expect(root.dataset.mode).not.toBe('system')
+    expect(['light', 'dark']).toContain(root.dataset.mode)
+    expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe('system')
+    expect(readModePreference()).toBe('system')
+  })
+
+  it("applyMode('dark') stores preference dark (not only paint)", () => {
+    const root = document.documentElement
+    try {
+      localStorage.clear()
+    } catch {
+      /* */
+    }
+    applyTheme('sail', root, 'light')
+    applyMode('dark', root)
+    expect(root.dataset.mode).toBe('dark')
+    expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe('dark')
+  })
+
+  it('subscribeSystemPreference fires only while preference is system', () => {
+    try {
+      localStorage.clear()
+    } catch {
+      /* */
+    }
+    type Listener = () => void
+    let listener: Listener | null = null
+    const original = window.matchMedia
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: false,
+        media: query,
+        addEventListener: (_: string, cb: EventListener) => {
+          listener = cb as Listener
+        },
+        removeEventListener: () => {
+          listener = null
+        },
+        addListener: (cb: Listener) => {
+          listener = cb
+        },
+        removeListener: () => {
+          listener = null
+        },
+        dispatchEvent: () => false,
+        onchange: null,
+      })) as typeof window.matchMedia
+
+    const paints: string[] = []
+    try {
+      persistMode('system')
+      const unsub = subscribeSystemPreference((p) => paints.push(p))
+      expect(listener).toBeTypeOf('function')
+      listener?.()
+      expect(paints.length).toBe(1)
+      expect(['light', 'dark']).toContain(paints[0])
+
+      paints.length = 0
+      persistMode('dark')
+      listener?.()
+      expect(paints.length).toBe(0)
+
+      unsub()
+      expect(listener).toBeNull()
+    } finally {
+      window.matchMedia = original
+    }
+  })
+
+  it('no twin theme ids — ship-dark is not a valid theme', () => {
+    expect(isValidTheme('ship-dark')).toBe(false)
+    expect(isValidTheme('ship-light')).toBe(false)
+    expect(isValidTheme('neutral-light')).toBe(false)
+    expect(isValidTheme('neutral-dark')).toBe(false)
+    expect(isValidTheme('sail-dark')).toBe(false)
   })
 })
 
@@ -216,10 +430,10 @@ describe('@ship/tokens — representative token in every theme (reskin-by-token 
 describe('@ship/tokens — sail-base.css layer (host baseline + platform tone)', () => {
   const base = loadSrc('../src/sail-base.css')
   it('has no [tone=] universal channel; no --size-h channel', () => {
-    // Tone is now an ordinary element prop on native <button> / <a> (via the
-    // stdlib button.sail / anchor.sail Style products). No global --tone*
-    // attribute channel remains in the sail-base layer.
-    expect(base).not.toMatch(/\[tone=['"]/)
+    // Tone is an ordinary element prop on native <button> / <a>. Status-dot
+    // helpers may use span[dot][tone=…]; strip those and ban residual channels.
+    const withoutDotTones = base.replace(/span\[dot\]\[tone=['"][^'"]+['"]\]/g, 'span[dot]')
+    expect(withoutDotTones).not.toMatch(/\[tone=['"]/)
     expect(base).not.toMatch(/--tone\s*:/)
     // --size-h channel stays gone; size maps to control-h/text tokens directly.
     expect(base).not.toMatch(/\[size=['"]sm['"]\]\s*\{[^}]*--size-h/)
@@ -265,6 +479,36 @@ describe('@ship/tokens — public surface footprint', () => {
   it('exports a non-trivial set of theme overrides in themes.css', () => {
     const decls = extractVarDecls(loadSrc('../src/themes.css'))
     expect(decls.size).toBeGreaterThan(0)
+  })
+})
+
+
+describe('@ship/tokens — theme values are DTCG, not CSS vars', () => {
+  /** Whole-value `var(--token)` belongs in emit, not theme JSON. Author as `{token}`. */
+  it('no pure CSS var(--x) as whole $value in model/themes', () => {
+    const dir = resolve(dirname(fileURLToPath(import.meta.url)), '../model/themes')
+    const pureVar = /^var\(\s*--[a-zA-Z0-9_-]+\s*\)$/
+    const varFallback = /^var\(\s*--[a-zA-Z0-9_-]+\s*,/
+    const leaks: string[] = []
+    for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+      const walk = (o: unknown, pth: string) => {
+        if (!o || typeof o !== 'object') return
+        const obj = o as Record<string, unknown>
+        if ('$value' in obj && typeof obj.$value === 'string') {
+          const v = obj.$value.trim()
+          if (pureVar.test(v) || varFallback.test(v)) {
+            leaks.push(`${file}:${pth}=${v}`)
+          }
+          return
+        }
+        for (const [k, v] of Object.entries(obj)) {
+          if (k.startsWith('$')) continue
+          walk(v, pth ? `${pth}.${k}` : k)
+        }
+      }
+      walk(JSON.parse(readFileSync(join(dir, file), 'utf8')), '')
+    }
+    expect(leaks, leaks.join('\n')).toEqual([])
   })
 })
 
@@ -396,7 +640,7 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     const selectors = extractThemeSelectors(loadSrc('../src/themes.css'))
     expect(selectors.size).toBeGreaterThanOrEqual(2)
     expect(selectors.has('paper')).toBe(true)
-    expect(selectors.has('console') || selectors.has('ship-dark')).toBe(true)
+    expect(selectors.has('console') || selectors.has('ship')).toBe(true)
     // Theme JSON files exist for the catalog
     const paper = JSON.parse(loadSrc('../model/themes/paper.json')) as {
       $extensions?: { ship?: { themeId?: string } }
@@ -407,18 +651,24 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
   it('theme override blocks redeclare public cssNames only (registry-known vars)', () => {
     // themes.css must override --primary / --surface-1 etc. — the same public
     // surface Layout, Fx, and contracts consume — never invent parallel names.
-    // Match only sail-compiler theme layers:
-    //   :root[data-theme='id'],
-    //   [data-theme-preview='id'] { … }
+    // Match modes-in-file theme layers:
+    //   :root[data-theme='id'][data-mode='…'],
+    //   [data-theme-preview='id'][data-mode='…'] { … }
     // (not themes-chrome structural flourishes on body/card selectors).
     const reg = loadRegistry()
     const known = new Set(reg.names)
     const themesCss = loadSrc('../src/themes.css')
     const selectors = extractThemeSelectors(themesCss)
     expect(selectors.size).toBeGreaterThanOrEqual(2)
+    // Modes-only: every theme block must mention data-mode.
+    expect(themesCss).toMatch(/data-mode=['"]light['"]/)
+    expect(themesCss).toMatch(/data-mode=['"]dark['"]/)
+    expect(themesCss).not.toMatch(/data-theme=['"]ship-light['"]/)
+    expect(themesCss).not.toMatch(/data-theme=['"]ship-dark['"]/)
 
+    // Capture selector blocks that start with :root[data-theme=…] (mode-aware).
     const blockRe =
-      /:root\[data-theme=['"]([^'"]+)['"]\]\s*,\s*\[data-theme-preview=['"]\1['"]\]\s*\{([^}]+)\}/g
+      /:root\[data-theme=['"]([^'"]+)['"]\][^{]*\{([^}]+)\}/g
     let m: RegExpExecArray | null
     let blocks = 0
     const overrideNames = new Set<string>()
@@ -609,9 +859,11 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     // Registry names appear in CssTokenName
     expect(unions).toContain("'space-4'")
     expect(unions).toContain("'primary'")
-    // Theme ids from model/themes
-    expect(unions).toContain("'ship-light'")
+    // Theme ids from model/themes (modes-in-file — no twin ids)
+    expect(unions).toContain("'ship'")
     expect(unions).toContain("'paper'")
+    expect(unions).not.toContain("'ship-light'")
+    expect(unions).not.toContain("'ship-dark'")
   })
 })
 

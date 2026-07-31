@@ -49,9 +49,10 @@ use rolldown_common::{ChunkFilenamesOutputOption, ModuleType, ResolvedExternal};
 /// The app declares nothing; deck names no ship package; the singleton
 /// owner names itself.
 ///
-/// Lucide icons are NOT here — the daemon serves them per-icon from its
-/// embedded set at `/_deck/icons/{name}.svg`. Static-only deploys without
-/// a daemon use `<sail-icon src=…>` (CDN escape hatch).
+/// Lucide icons are NOT framework singletons — the bundler emit-collects
+/// used glyphs into `<out>/_deck/icons/{name}.svg` (see `icons.rs`); the
+/// daemon serves the same path from its embed in dev. Runtime resolves
+/// local asset first; never a CDN.
 ///
 /// The package_alias MAY include a subpath: `@ship/sail-runtime/route` etc.
 /// All aliases for one source bundle point at the same output URL — the
@@ -60,20 +61,48 @@ use rolldown_common::{ChunkFilenamesOutputOption, ModuleType, ResolvedExternal};
 /// the runtime bundle.)
 const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
     ("@ship/sail-runtime", "sail-runtime.js", "_deck/runtime.js"),
-    ("@ship/sail-runtime/route", "sail-runtime.js", "_deck/runtime.js"),
-    ("@ship/sail-runtime/template-hooks", "sail-runtime.js", "_deck/runtime.js"),
-    ("@ship/sail-runtime/patch", "sail-runtime.js", "_deck/runtime.js"),
+    (
+        "@ship/sail-runtime/route",
+        "sail-runtime.js",
+        "_deck/runtime.js",
+    ),
+    (
+        "@ship/sail-runtime/template-hooks",
+        "sail-runtime.js",
+        "_deck/runtime.js",
+    ),
+    (
+        "@ship/sail-runtime/patch",
+        "sail-runtime.js",
+        "_deck/runtime.js",
+    ),
     // `/internal` is what COMPILED ROUTES import (__tpl, bind*, effect — the
     // emitter's surface). Its absence here inlined a SECOND copy of the
     // signal graph into every app bundle: route bindings subscribed in the
     // copy, controller signals wrote in the real one, and no page reacted
     // to anything. The resolve guard below makes this class of miss a
     // build error instead of a silent fork.
-    ("@ship/sail-runtime/internal", "sail-runtime.js", "_deck/runtime.js"),
+    (
+        "@ship/sail-runtime/internal",
+        "sail-runtime.js",
+        "_deck/runtime.js",
+    ),
     // Compiler auto-imports `use:` actions from this subpath (see
     // sail-compiler emit/js/imports.rs). Shares the framework-bundle
     // singleton (full action surface + runtime) — must not be inlined.
-    ("@ship/sail-runtime/actions", "sail-runtime.js", "_deck/runtime.js"),
+    (
+        "@ship/sail-runtime/actions",
+        "sail-runtime.js",
+        "_deck/runtime.js",
+    ),
+    // Virtualization (use:virtualRow / TanStack core). Same singleton —
+    // packs that import `@ship/sail-runtime/virtual` must not inline a
+    // second signal graph.
+    (
+        "@ship/sail-runtime/virtual",
+        "sail-runtime.js",
+        "_deck/runtime.js",
+    ),
     ("@ship/sail-dom", "sail-dom.js", "_deck/dom.js"),
     // `@ship/deck/router` lives in the framework because the bundler
     // generates an entry that imports it. The runtime exports
@@ -92,9 +121,21 @@ const FRAMEWORK_ASSETS: &[(&str, &str, &str)] = &[
     // `import('@ship/sail-lsp-browser/completions' | '/diagnostics')`) are
     // registered — `/worker` and `/hover` are real exports but unused by
     // any route today, so they are not surfaced here.
-    ("@ship/sail-compiler-wasm", "sail-compiler-wasm.js", "_deck/compiler-wasm.js"),
-    ("@ship/sail-lsp-browser/completions", "sail-lsp-completions.js", "_deck/lsp-completions.js"),
-    ("@ship/sail-lsp-browser/diagnostics", "sail-lsp-diagnostics.js", "_deck/lsp-diagnostics.js"),
+    (
+        "@ship/sail-compiler-wasm",
+        "sail-compiler-wasm.js",
+        "_deck/compiler-wasm.js",
+    ),
+    (
+        "@ship/sail-lsp-browser/completions",
+        "sail-lsp-completions.js",
+        "_deck/lsp-completions.js",
+    ),
+    (
+        "@ship/sail-lsp-browser/diagnostics",
+        "sail-lsp-diagnostics.js",
+        "_deck/lsp-diagnostics.js",
+    ),
 ];
 
 /// The deck-owned framework singletons surfaced in every generated importmap.
@@ -143,12 +184,8 @@ pub(crate) struct DeckFrameworkDecl {
 ///
 /// Output is pretty-printed with 2-space indent to match the existing
 /// `apps/shell/index.html` style.
-fn generate_importmap(
-    dist_prefix: &str,
-    discovered: &[DeckFrameworkDecl],
-) -> String {
-    let mut imports: std::collections::BTreeMap<String, String> =
-        std::collections::BTreeMap::new();
+fn generate_importmap(dist_prefix: &str, discovered: &[DeckFrameworkDecl]) -> String {
+    let mut imports: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
     for (alias, _src, dist_rel) in FRAMEWORK_ASSETS {
         imports.insert((*alias).to_string(), format!("{dist_prefix}/{dist_rel}"));
     }
@@ -162,7 +199,10 @@ fn generate_importmap(
             .file_name()
             .and_then(|s| s.to_str())
             .unwrap_or(&decl.serve);
-        imports.insert(decl.alias.clone(), format!("{dist_prefix}/_deck/{basename}"));
+        imports.insert(
+            decl.alias.clone(),
+            format!("{dist_prefix}/_deck/{basename}"),
+        );
     }
     let body = imports
         .iter()
@@ -178,8 +218,8 @@ fn generate_importmap(
 /// any package the importmap resolves to `/foo` is a runtime external; the
 /// route bundle's ESM imports of that package stay as bare specifiers.
 fn importmap_externals_from_json(importmap_json: &str) -> Result<HashSet<String>> {
-    let v: serde_json::Value = serde_json::from_str(importmap_json)
-        .context("generated importmap is not valid JSON")?;
+    let v: serde_json::Value =
+        serde_json::from_str(importmap_json).context("generated importmap is not valid JSON")?;
     let imports = v
         .get("imports")
         .and_then(|x| x.as_object())
@@ -309,7 +349,8 @@ fn scan_bare_specifiers(js: &str) -> Vec<String> {
                     }
                     if k < bytes.len() {
                         if let Ok(spec) = std::str::from_utf8(&bytes[start..k]) {
-                            if !spec.is_empty() && !spec.starts_with('.') && !spec.starts_with('/') {
+                            if !spec.is_empty() && !spec.starts_with('.') && !spec.starts_with('/')
+                            {
                                 out.push(spec.to_string());
                             }
                         }
@@ -337,13 +378,12 @@ fn scan_bare_specifiers(js: &str) -> Vec<String> {
 /// match is exact plus the standard importmap trailing-slash prefix form
 /// (`@ship/x/` covers `@ship/x/sub`). Scoped to `@ship/*`: a non-`@ship` bare
 /// import may be a host-provided global and is out of deck's contract.
-fn assert_pack_imports_resolved(
-    assets_dir: &Path,
-    importmap_keys: &HashSet<String>,
-) -> Result<()> {
+fn assert_pack_imports_resolved(assets_dir: &Path, importmap_keys: &HashSet<String>) -> Result<()> {
     let resolves = |spec: &str| -> bool {
         importmap_keys.contains(spec)
-            || importmap_keys.iter().any(|k| k.ends_with('/') && spec.starts_with(k.as_str()))
+            || importmap_keys
+                .iter()
+                .any(|k| k.ends_with('/') && spec.starts_with(k.as_str()))
     };
     // (specifier, chunk file) — BTreeSet for a stable, deduped report.
     let mut offenders: std::collections::BTreeSet<(String, String)> =
@@ -469,8 +509,8 @@ fn read_package_name(project: &Path) -> Result<String> {
     let pkg_path = project.join("package.json");
     let body = std::fs::read_to_string(&pkg_path)
         .with_context(|| format!("read {}", pkg_path.display()))?;
-    let v: serde_json::Value = serde_json::from_str(&body)
-        .with_context(|| format!("parse {}", pkg_path.display()))?;
+    let v: serde_json::Value =
+        serde_json::from_str(&body).with_context(|| format!("parse {}", pkg_path.display()))?;
     v.get("name")
         .and_then(|n| n.as_str())
         .map(String::from)
@@ -511,8 +551,8 @@ pub(crate) fn discover_deck_frameworks(
     let pkg_path = project.join("package.json");
     let raw = std::fs::read_to_string(&pkg_path)
         .with_context(|| format!("read {}", pkg_path.display()))?;
-    let pkg: serde_json::Value = serde_json::from_str(&raw)
-        .with_context(|| format!("parse {}", pkg_path.display()))?;
+    let pkg: serde_json::Value =
+        serde_json::from_str(&raw).with_context(|| format!("parse {}", pkg_path.display()))?;
     // Build the workspace name → root map once. The same map the
     // SailPlugin uses to resolve `@ship/<name>` to workspace source;
     // we reuse it so the discovery walker is anchored against the
@@ -727,7 +767,6 @@ fn project_runtime_dep_names(project: &Path) -> Vec<String> {
     out
 }
 
-
 /// Build deck's OWN framework singletons from node-resolved source and write
 /// each onto its served `_deck/<file>` path under `out_dir` — the self-contained
 /// `--bundle-framework` path. Entries are resolved by node resolution from
@@ -738,11 +777,7 @@ fn project_runtime_dep_names(project: &Path) -> Vec<String> {
 /// Bails when a singleton named in the importmap can't be resolved/built — a
 /// self-contained build must not ship an importmap pointing at a missing file.
 /// Returns the number of files written.
-async fn bundle_owned_framework(
-    repo_root: &Path,
-    out_dir: &Path,
-    minify: bool,
-) -> Result<usize> {
+async fn bundle_owned_framework(repo_root: &Path, out_dir: &Path, minify: bool) -> Result<usize> {
     use crate::targets::BundleLayout;
     let staging = out_dir.join(".fw-build");
     let layout = BundleLayout::with_config(
@@ -805,7 +840,9 @@ async fn bundle_owned_framework(
             if !written.insert(format!("co-asset:{co_asset}")) {
                 continue;
             }
-            let Some(entry_dir) = &entry_dir else { continue };
+            let Some(entry_dir) = &entry_dir else {
+                continue;
+            };
             let src = entry_dir.join(co_asset);
             let co_dst = out_dir.join(co_asset);
             std::fs::copy(&src, &co_dst).with_context(|| {
@@ -855,7 +892,16 @@ pub async fn bundle_app(
     minify: bool,
     bundle_framework: bool,
 ) -> Result<AppBuild> {
-    bundle_app_with_base(repo_root, packs, project, out_dir, minify, bundle_framework, None).await
+    bundle_app_with_base(
+        repo_root,
+        packs,
+        project,
+        out_dir,
+        minify,
+        bundle_framework,
+        None,
+    )
+    .await
 }
 
 /// `bundle_app` with an explicit asset-URL `base`. `base` overrides the URL
@@ -873,21 +919,21 @@ pub async fn bundle_app_with_base(
     bundle_framework: bool,
     base: Option<&str>,
 ) -> Result<AppBuild> {
-    // 0. Load the host's per-app `deck.jsonc` (optional). The file is
-    // OPTIONAL — an app without one is a valid conventional app: no
-    // injectGlobals, csr render, no `entry.gen.ts`. The whole-config
-    // `Default` lands on `render: csr`, empty injectGlobals, no entry.
-    // The host's apps.jsonc owns route/name/source; deck-config names
-    // no path — the bundler is the per-app call site, the host binds
-    // the orchestration list separately.
-    let app_cfg_path = project.join("deck.jsonc");
-    let app_cfg = if app_cfg_path.exists() {
-        let raw = std::fs::read_to_string(&app_cfg_path)
-            .with_context(|| format!("read {}", app_cfg_path.display()))?;
-        Some(deck_config::AppServeConfig::parse_deck_jsonc(&raw)
-            .with_context(|| format!("parse {}", app_cfg_path.display()))?)
-    } else {
-        None
+    // 0. Dual-read sail.config / deck.jsonc (C3) for serve keys. OPTIONAL —
+    // an app without either is fully conventional (csr, no inject, no entry).
+    // sail.config wins over deck.jsonc when both define serve keys; kill date
+    // for deck.jsonc as preferred path is Phase F.
+    let app_cfg = match deck_config::AppServeConfig::load_from_project(project) {
+        Ok(cfg) => {
+            // Treat pure-default as "absent" so callers that key on Option keep
+            // prior behavior for zero-config apps.
+            if cfg == deck_config::AppServeConfig::default() {
+                None
+            } else {
+                Some(cfg)
+            }
+        }
+        Err(e) => return Err(anyhow::anyhow!("app serve config: {e}")),
     };
     let entry_bootstrap: Option<deck_config::EntryBootstrap> =
         app_cfg.as_ref().and_then(|c| c.entry.clone());
@@ -958,11 +1004,7 @@ pub async fn bundle_app_with_base(
     // default when the host declares no `entry.bootstrap`, the host's clients
     // wired in when it does. (`routes.gen.ts` is data-only and never mounts.)
     let entry_module = "entry.gen.ts";
-    let html = crate::templates::render_index_html(
-        &project_name,
-        &importmap_json,
-        entry_module,
-    );
+    let html = crate::templates::render_index_html(&project_name, &importmap_json, entry_module);
     // Atomic publication (dev-loop-atomic): the old flow deleted the LIVE out
     // dir here and wrote `index.html` last, so every request during a watch
     // rebuild saw `scaffold '<app>' not built (missing .deck/index.html)` for
@@ -995,7 +1037,10 @@ pub async fn bundle_app_with_base(
     // app graph compiles them in-process.
     let routes_gen = project.join(entry_module);
     if !routes_gen.exists() {
-        bail!("app build: expected generated entry at {}", routes_gen.display());
+        bail!(
+            "app build: expected generated entry at {}",
+            routes_gen.display()
+        );
     }
     // CSS ships as a hashed asset via Rolldown's native `ModuleType::Asset`
     // path (`rolldown_plugin_asset_module`). The `SailPlugin::load` hook only
@@ -1035,6 +1080,8 @@ pub async fn bundle_app_with_base(
         component_index: resolver.index,
         shadowed_tags: resolver.shadowed,
         component_roots: crate::catalog::component_package_roots(repo_root),
+        // T1 B1: alias @ship/tokens/themes.css → project/.deck/themes/themes.css when present.
+        project_dir: Some(project.to_path_buf()),
     };
     let mut bundler = BundlerBuilder::default()
         .with_options(options)
@@ -1100,6 +1147,21 @@ pub async fn bundle_app_with_base(
             }
         }
     }
+    // Compile-collected icons → static `_deck/icons/{name}.svg` so named
+    // glyphs work offline / with the daemon stopped (TOOL-10). Collects from
+    // routes + app component package sources (not routes-only).
+    let emitted_icons =
+        crate::icons::collect_and_emit_project_icons(project, out_dir, repo_root)
+            .context("emit used icon assets")?;
+    if !emitted_icons.is_empty() {
+        eprintln!(
+            "deck: emitted {} icon glyph(s) → {}/_deck/icons/",
+            emitted_icons.len(),
+            out_dir.display()
+        );
+    }
+    // App-vendored fonts (SailTheme/FontAdd) — copy woff2 + fonts.css when present.
+    crate::fonts::stage_app_fonts(project, out_dir).context("stage app fonts")?;
     // Framework co-assets (e.g. `sail_compiler_bg.wasm`) must land at the SPA
     // root even when `bundle_framework` is false. deck dev serves the JS glue
     // from the baked `/_deck/compiler-wasm.js` singleton, but the companion
@@ -1116,34 +1178,17 @@ pub async fn bundle_app_with_base(
     // the per-route synthetic CSS render lifts (orthogonal layer — this is
     // the GLOBAL/linkable CSS path; the route-synthetic one handles route
     // chrome inline in SSR/CSR first-paint).
-    let mut final_html = html.replace(
-        &format!("/{entry_module}"),
-        &js_href,
-    );
+    let mut final_html = html.replace(&format!("/{entry_module}"), &js_href);
     if !css_hrefs.is_empty() {
         let link_tags = css_names
             .iter()
             .zip(css_hrefs.iter())
             .map(|(name, href)| {
-                // The `@ship/tokens/sail-base.css` entry import (deck-deploy-gap,
-                // 2nd incident) emits as `assets/contracts-<hash>.css` — the
-                // AssetModulePlugin names each emitted CSS asset after its
-                // SOURCE file stem, so `contracts-` is a stable prefix. The
-                // sail runtime's `ensureLightContracts` looks for a
-                // `link[data-sail-contracts]` before warning "framework
-                // contracts are not present"; the daemon-served scaffold
-                // shell (`scaffold-base.html`) already hand-authors the
-                // marker on its `sail.css` link, but THIS bundler-generated
-                // link (the self-contained/`entry.gen.ts` build path — what
-                // `deck dev` and `deck build --bundle-framework` both use)
-                // never carried it, so every page tripped the warning. Tag
-                // it here rather than teaching the runtime to sniff hrefs:
-                // the attribute is the existing, already-tested contract: a
-                // href-based heuristic would couple the runtime to this
-                // bundler's naming convention AND still need updating
-                // whenever that convention changes, where this is a
-                // one-line fix at the single place the link is emitted.
-                if name.starts_with("contracts-") {
+                // Runtime `ensureLightContracts` only quiets when it finds
+                // `link[data-sail-contracts]` (or a JS injector). Source is
+                // `@ship/tokens/sail-base.css` → asset stem `sail-base-*`.
+                // Also accept residual `contracts-*` stems from older bakes.
+                if name.starts_with("sail-base-") || name.starts_with("contracts-") {
                     format!("  <link rel=\"stylesheet\" href=\"{href}\" data-sail-contracts>")
                 } else {
                     format!("  <link rel=\"stylesheet\" href=\"{href}\">")
@@ -1151,28 +1196,35 @@ pub async fn bundle_app_with_base(
             })
             .collect::<Vec<_>>()
             .join("\n");
-        // Anchor immediately before the entry `<script type="module">`. The
-        // template renders `<script type="module" src="/<entry_module>">`
-        // first as a relative substitute; after the `.replace()` above it
-        // carries the final hashed href.
+        // Anchor INSIDE `</head>` — never at the body-end entry script.
+        // The runtime mount injects the page's author-sx `<style>` adjacent
+        // to the app root (top of <body>); framework sheets must precede
+        // THAT point in document order so author sx wins the shared-layer
+        // cascade (`sx-w28` on a use site beats the skin's `sx-wfull`).
+        // Links at body end landed after the mount style — the skin sheet
+        // silently beat author overrides (studio tasks-filter selects).
         final_html = final_html.replace(
-            "  <script type=\"module\"",
-            &format!("{link_tags}\n  <script type=\"module\""),
+            "</head>",
+            &format!("{link_tags}\n</head>"),
         );
     }
+    // App-vendored fonts CSS is pulled via entry `import './fonts/fonts.css'`
+    // (hashed under /{ns}/fonts-*.css). A second <link href="/{ns}/fonts/fonts.css">
+    // 404s in dev: serve_scaffold_asset only allows single-segment asset names,
+    // so nested `fonts/fonts.css` never matches. Staged `.deck/fonts/**` remains
+    // for offline specimen/render — not HTTP.
     std::fs::write(out_dir.join("index.html"), final_html)?;
     let mut framework_assets = 0;
     if bundle_framework {
-        let sui_dir = out_dir.join("_deck");
-        std::fs::create_dir_all(&sui_dir)?;
+        let sail_dir = out_dir.join("_deck");
+        std::fs::create_dir_all(&sail_dir)?;
         // Deck-owned framework singletons. Built FROM SOURCE, resolved by node
         // resolution from the project's node_modules (`framework_singletons`) —
         // no prebuilt-asset dir, no `DECK_FRAMEWORK_ASSETS_DIR`. Each singleton's
         // output is mapped onto its served `_deck/<file>` URL via FRAMEWORK_ASSETS
         // (one source bundle may back several aliases, e.g. `@ship/sail-runtime`
         // and `@ship/sail-runtime/route`).
-        framework_assets +=
-            bundle_owned_framework(repo_root, out_dir, minify).await?;
+        framework_assets += bundle_owned_framework(repo_root, out_dir, minify).await?;
         // Discovered provider-declared singletons. Each `src_path` is
         // already absolute (the dep's workspace package root +
         // `package.json#deckFramework#entry`); the importmap binds the
@@ -1245,7 +1297,9 @@ mod tests {
 
         // Default: the package name's last segment is the serve namespace.
         let out_def = r.join("dist-default");
-        let def = bundle_app(r, &[], r, &out_def, false, false).await.expect("default");
+        let def = bundle_app(r, &[], r, &out_def, false, false)
+            .await
+            .expect("default");
         assert!(
             def.js_href.starts_with("/branded-app/entry-"),
             "default uses the package-name serve namespace; got {}",
@@ -1265,7 +1319,9 @@ mod tests {
         // The static-servability invariant: the emitted URL resolves to a real
         // file under the output (a dumb by-path host would find it).
         assert!(
-            out_base.join(based.js_href.trim_start_matches('/')).exists(),
+            out_base
+                .join(based.js_href.trim_start_matches('/'))
+                .exists(),
             "emitted URL {} must resolve to a real file in the output",
             based.js_href,
         );
@@ -1285,7 +1341,10 @@ mod tests {
             &r.join("package.json"),
             r#"{"name":"@scope/dev-loop-app","private":true,"type":"module"}"#,
         );
-        write(&r.join("routes/page.sail"), "<main><late-probe>hi</late-probe></main>\n");
+        write(
+            &r.join("routes/page.sail"),
+            "<main><late-probe>hi</late-probe></main>\n",
+        );
         let out = r.join(deck_config::DECK_OUT_DIRNAME);
 
         let assets_js = |out: &Path| -> String {
@@ -1300,7 +1359,9 @@ mod tests {
         };
 
         // Build 1: the tag has no source yet — it compiles as a no-op.
-        bundle_app(r, &[], r, &out, false, false).await.expect("first build");
+        bundle_app(r, &[], r, &out, false, false)
+            .await
+            .expect("first build");
         assert!(
             !assets_js(&out).contains("late-probe-upgraded"),
             "component doesn't exist yet — nothing to compile in"
@@ -1313,18 +1374,26 @@ mod tests {
             "<template>\n  <span>late-probe-upgraded <slot></slot></span>\n</template>\n",
         );
         write(&out.join("assets/entry-STALE.js"), "from a previous build");
-        write(&out.join("routes/keep/route.js"), "bundler-owned view bundle");
+        write(
+            &out.join("routes/keep/route.js"),
+            "bundler-owned view bundle",
+        );
 
         // The watcher's structural-change hook (deck dev calls this on a
         // Create event) clears the memo; the rebuild then registers the tag.
         crate::sail_plugin::invalidate_component_index();
-        bundle_app(r, &[], r, &out, false, false).await.expect("rebuild");
+        bundle_app(r, &[], r, &out, false, false)
+            .await
+            .expect("rebuild");
 
         assert!(
             assets_js(&out).contains("late-probe-upgraded"),
             "the mid-session component dir must compile into the rebuild — no restart"
         );
-        assert!(out.join("index.html").exists(), "scaffold present after rebuild");
+        assert!(
+            out.join("index.html").exists(),
+            "scaffold present after rebuild"
+        );
         assert!(
             !out.join("assets/entry-STALE.js").exists(),
             "stale hashed asset from the previous build is pruned"
@@ -1374,27 +1443,45 @@ export default controller(() => ({ id: signal('demo') }))\n\
 
         // Behavior 1: the dev's `index.html` doesn't exist; the bundler
         // generated one at `<out>/index.html`.
-        assert!(!r.join("index.html").exists(), "dev did not author index.html");
-        assert!(out.join("index.html").exists(), "bundler generated index.html");
+        assert!(
+            !r.join("index.html").exists(),
+            "dev did not author index.html"
+        );
+        assert!(
+            out.join("index.html").exists(),
+            "bundler generated index.html"
+        );
         // The generated HTML is valid and references the entry chunk.
         let html = std::fs::read_to_string(out.join("index.html")).unwrap();
-        assert!(html.contains(&build.js_href), "html references bundled entry chunk");
+        assert!(
+            html.contains(&build.js_href),
+            "html references bundled entry chunk"
+        );
 
         // Behavior 2: the entry is the generated `routes.gen.ts` (NOT a
         // dev-authored `src/main.ts`). The bundled output references the
         // routes directory's `page.sail` pattern.
-        assert!(!r.join("src/main.ts").exists(), "dev did not author main.ts");
+        assert!(
+            !r.join("src/main.ts").exists(),
+            "dev did not author main.ts"
+        );
         // The bundler generated the entry, and the dynamic route bundled —
         // bundle_app() above would have errored if the route module failed to
         // compile into the graph. We do NOT string-match the generated TS:
         // that's presentation, and the router's behavior is covered by
         // @ship/deck/router's mount-router tests.
-        assert!(r.join("routes.gen.ts").exists(), "bundler generated the routes.gen.ts entry");
+        assert!(
+            r.join("routes.gen.ts").exists(),
+            "bundler generated the routes.gen.ts entry"
+        );
 
         // Behavior 3: the framework singletons are externalized in the
         // bundle (the importmap is the runtime's source of truth, not
         // the bundler — but the importmap must at least NAME the assets).
-        assert!(html.contains("@ship/sail-runtime"), "framework runtime in importmap");
+        assert!(
+            html.contains("@ship/sail-runtime"),
+            "framework runtime in importmap"
+        );
         // Deck must NOT hardcode any framework CLIENT (no `@ship/sdk-client`).
         // Framework clients are per-app registrations the host supplies
         // through `AppServeConfig::framework_clients`. A default build
@@ -1410,12 +1497,18 @@ export default controller(() => ({ id: signal('demo') }))\n\
         // the framework can serve it at the corresponding route
         // without a string rewrite. The URL namespace is the last
         // `/`-segment of `package.json#name` (`@ship/hub` → `hub`).
-        assert!(build.js_href.starts_with("/test-app/entry-") && build.js_href.ends_with(".js"),
-                "expected /test-app/entry-*.js, got {}", build.js_href);
+        assert!(
+            build.js_href.starts_with("/test-app/entry-") && build.js_href.ends_with(".js"),
+            "expected /test-app/entry-*.js, got {}",
+            build.js_href
+        );
         // that knows the project name; the framework serves the
         // file at `/<name>/<file>`.
-        assert!(build.js_href.starts_with("/test-app/entry-") && build.js_href.ends_with(".js"),
-                "expected /test-app/entry-*.js, got {}", build.js_href);
+        assert!(
+            build.js_href.starts_with("/test-app/entry-") && build.js_href.ends_with(".js"),
+            "expected /test-app/entry-*.js, got {}",
+            build.js_href
+        );
         // Behavior 5: public/ assets are copied to out/.
         assert!(out.join("favicon.ico").exists(), "public/ copied");
     }
@@ -1495,14 +1588,13 @@ export default controller(() => ({ id: signal('demo') }))\n\
         );
     }
 
-
     /// The dev doesn't write a main.ts. The entry is `routes.gen.ts`,
     /// which the bundler generates. A `.sail` file inside `routes/`
     /// must compile IN-PROCESS (no `.compiled.js` artifact) and be
     /// available to the bundle. A failure to compile would surface as
     /// a panic from the bundler, not as a missing chunk.
     #[tokio::test(flavor = "multi_thread")]
-    async fn app_build_compiles_sui_in_process() {
+    async fn app_build_compiles_sail_in_process() {
         let root = tempfile::tempdir().unwrap();
         let r = root.path();
         write(
@@ -1563,7 +1655,10 @@ export default controller(() => ({ id: signal('demo') }))\n\
                 }
             }
         }
-        assert!(found, "the inline controller's code (signal(41)) must land in an emitted chunk");
+        assert!(
+            found,
+            "the inline controller's code (signal(41)) must land in an emitted chunk"
+        );
     }
 
     /// When a deck app's module graph imports a `.css` file, the per-app
@@ -1640,21 +1735,29 @@ export default controller(() => ({ ok: true }))\n\
         assert!(
             css_on_disk.iter().all(|n| n.starts_with("styles-")
                 || n.starts_with("tokens-")
+                || n.starts_with("themes-")
                 || n.starts_with("contracts-")
+                || n.starts_with("sail-base-")
                 || n.starts_with("element-skins-")),
             "only the app CSS (`styles-`), the tokens CSS (`tokens-`), and \
-             the framework stylesheet halves (`contracts-`, `element-skins-`) \
+             the framework stylesheet halves (`sail-base-`/`contracts-`, `element-skins-`) \
              should be emitted (got {css_on_disk:?})"
         );
 
         // Gate 2: AppBuild exposes the absolute URLs the index.html link
         // references — one per emitted file, all under `/<namespace>/`.
-        assert_eq!(build.css_hrefs.len(), css_on_disk.len(), "css_hrefs matches disk");
+        assert_eq!(
+            build.css_hrefs.len(),
+            css_on_disk.len(),
+            "css_hrefs matches disk"
+        );
         for href in &build.css_hrefs {
             assert!(
                 (href.starts_with("/css-test-app/styles-")
                     || href.starts_with("/css-test-app/tokens-")
+                    || href.starts_with("/css-test-app/themes-")
                     || href.starts_with("/css-test-app/contracts-")
+                    || href.starts_with("/css-test-app/sail-base-")
                     || href.starts_with("/css-test-app/element-skins-"))
                     && href.ends_with(".css"),
                 "css_href uses the same URL convention as the entry (/<ns>/<file>.css), got {href}"
@@ -1670,10 +1773,7 @@ export default controller(() => ({ ok: true }))\n\
             "index.html must link the CSS asset"
         );
         for href in &build.css_hrefs {
-            assert!(
-                html.contains(href),
-                "index.html must reference {href}"
-            );
+            assert!(html.contains(href), "index.html must reference {href}");
         }
         // The link must precede the entry script (link is fetched + applied
         // before module eval; same first-paint guarantee the route-synthetic
@@ -1685,21 +1785,18 @@ export default controller(() => ({ ok: true }))\n\
             "<link rel=stylesheet> must precede <script type=module>; got link@{link_pos} script@{script_pos}"
         );
 
-        // Gate 4 (deck-deploy-gap, 2nd incident): the contracts stylesheet's
-        // `<link>` must carry `data-sail-contracts` — the runtime's
-        // `ensureLightContracts` looks for exactly that attribute before
-        // warning "framework contracts are not present". Every OTHER link
-        // (tokens, the app's own CSS) must NOT carry it — the marker means
-        // "this link satisfies the framework contracts requirement," not
-        // "this is a framework stylesheet."
+        // Gate 4: document-floor CSS (`sail-base` / legacy `contracts`) must
+        // carry `data-sail-contracts` so the runtime does not warn. Other
+        // links must not — the marker means "contracts satisfied," not
+        // "any framework sheet."
         let contracts_href = build
             .css_hrefs
             .iter()
-            .find(|h| h.contains("/contracts-"))
-            .expect("a contracts-<hash>.css asset was emitted (asserted above)");
+            .find(|h| h.contains("/sail-base-") || h.contains("/contracts-"))
+            .expect("a sail-base-/contracts- CSS asset was emitted");
         assert!(
             html.contains(&format!("href=\"{contracts_href}\" data-sail-contracts")),
-            "the contracts <link> must carry data-sail-contracts; got: {html}"
+            "the sail-base/contracts <link> must carry data-sail-contracts; got: {html}"
         );
         for href in &build.css_hrefs {
             if href == contracts_href {
@@ -1763,7 +1860,6 @@ export default controller(() => ({ ok: true }))\n\
             r#"{"name":"@ship/tokens","type":"module",
                 "exports":{".":"./src/index.ts","./tokens.css":"./src/tokens.css",
                 "./sail-base.css":"./src/sail-base.css",
-                "./contracts.css":"./src/sail-base.css",
                 "./element-skins.css":"./src/element-skins.css"}}"#,
         );
         // Bare-minimum tokens.css: a single `:root` block with the
@@ -1792,10 +1888,7 @@ export default controller(() => ({ ok: true }))\n\
         // Minimal route so the entry isn't empty. The token import goes
         // through the generated `routes.gen.ts` (not a hand-authored
         // controller) — that's the whole point of the gate.
-        write(
-            &r.join("routes/page.sail"),
-            "<div>tok</div>\n",
-        );
+        write(&r.join("routes/page.sail"), "<div>tok</div>\n");
         let out = r.join("dist");
         let build = bundle_app(r, &[], r, &out, false, false)
             .await
@@ -1819,7 +1912,10 @@ export default controller(() => ({ ok: true }))\n\
         // links it. Same URL convention as the entry JS, so the daemon's
         // `serve_app_asset` (`GET /<app>/{file}`) serves it for dev.
         assert!(
-            build.css_hrefs.iter().any(|h| h.starts_with("/tokens-app/tokens-") && h.ends_with(".css")),
+            build
+                .css_hrefs
+                .iter()
+                .any(|h| h.starts_with("/tokens-app/tokens-") && h.ends_with(".css")),
             "css_hrefs must include the bundled tokens asset, got: {:?}",
             build.css_hrefs,
         );
@@ -1833,8 +1929,12 @@ export default controller(() => ({ ok: true }))\n\
         // The link must precede the entry script (parallel fetch, before
         // first paint — the same guarantee the merged CSS-asset path
         // establishes for hand-authored CSS).
-        let link_pos = html.find("<link rel=\"stylesheet\"").expect("a <link rel=stylesheet> exists");
-        let script_pos = html.find("<script type=\"module\"").expect("entry script exists");
+        let link_pos = html
+            .find("<link rel=\"stylesheet\"")
+            .expect("a <link rel=stylesheet> exists");
+        let script_pos = html
+            .find("<script type=\"module\"")
+            .expect("entry script exists");
         assert!(
             link_pos < script_pos,
             "token <link rel=stylesheet> must precede <script type=module>; got link@{link_pos} script@{script_pos}",
@@ -1843,9 +1943,12 @@ export default controller(() => ({ ok: true }))\n\
         // Gate 3: the emitted token CSS defines `:root` tokens. The
         // presence of `--background` is the spec's named exemplar (it
         // resolves in every component that uses `var(--background)`).
-        let tokens_path = out
-            .join("assets")
-            .join(css_on_disk.iter().find(|n| n.starts_with("tokens-")).unwrap());
+        let tokens_path = out.join("assets").join(
+            css_on_disk
+                .iter()
+                .find(|n| n.starts_with("tokens-"))
+                .unwrap(),
+        );
         let tokens_css = std::fs::read_to_string(&tokens_path)
             .unwrap_or_else(|e| panic!("read {}: {e}", tokens_path.display()));
         assert!(
@@ -1970,7 +2073,10 @@ export default controller(() => ({ ok: true }))\n\
                 &r.join(format!("node_modules/{pkg}/package.json")),
                 &format!(r#"{{ "name": "{pkg}", "exports": {{ ".": "./{file}" }} }}"#),
             );
-            write(&r.join(format!("node_modules/{pkg}/{file}")), "export const ok = 1;\n");
+            write(
+                &r.join(format!("node_modules/{pkg}/{file}")),
+                "export const ok = 1;\n",
+            );
         }
         // The code-editor/playground's wasm compiler + browser LSP singletons
         // — also deck-owned, also strictly required by `bundle_owned_framework`
@@ -2030,7 +2136,10 @@ export default controller(() => ({ ok: true }))\n\
             "_deck/lsp-completions.js",
             "_deck/lsp-diagnostics.js",
         ] {
-            assert!(out.join(f).exists(), "deck-owned singleton {f} built from source");
+            assert!(
+                out.join(f).exists(),
+                "deck-owned singleton {f} built from source"
+            );
         }
         // The wasm-bindgen co-asset rides to the PROJECT ROOT, not next to
         // its JS — see `FrameworkSingleton::co_assets`.
@@ -2097,16 +2206,31 @@ export default controller(() => ({ ok: true }))\n\
             "importmap must bind the discovered SDK-client (got: {html})",
         );
         // The framework singletons still ship (deck-owned runtime + dom + route).
-        assert!(html.contains("@ship/sail-runtime"), "framework runtime in importmap");
-        assert!(html.contains("@ship/sail-dom"), "framework dom in importmap");
-        assert!(html.contains("@ship/deck/router"), "framework route in importmap");
+        assert!(
+            html.contains("@ship/sail-runtime"),
+            "framework runtime in importmap"
+        );
+        assert!(
+            html.contains("@ship/sail-dom"),
+            "framework dom in importmap"
+        );
+        assert!(
+            html.contains("@ship/deck/router"),
+            "framework route in importmap"
+        );
         // No `entry.bootstrap` declared ⇒ deck emits its DEFAULT bootstrap:
         // `entry.gen.ts` is ALWAYS written (it calls mountRouter so a
         // standalone app mounts) with no host clients; `routes.gen.ts` is the
         // data-only companion. (Previously the no-deck.jsonc case fell back to
         // routes.gen.ts-as-entry, which never mounted — inv-deck-standalone.)
-        assert!(r.join("routes.gen.ts").exists(), "routes.gen.ts (data) is emitted");
-        assert!(r.join("entry.gen.ts").exists(), "deck emits a default entry.gen.ts bootstrap even without a host entry");
+        assert!(
+            r.join("routes.gen.ts").exists(),
+            "routes.gen.ts (data) is emitted"
+        );
+        assert!(
+            r.join("entry.gen.ts").exists(),
+            "deck emits a default entry.gen.ts bootstrap even without a host entry"
+        );
     }
 
     /// `scan_bare_specifiers` extracts package specifiers from every ESM import
@@ -2169,8 +2293,11 @@ import real from "@ship/real-import";"#;
             .collect();
 
         // All importmapped → OK.
-        std::fs::write(assets.join("ok.js"), r#"import"@ship/sail-runtime";from"@ship/deck/router";"#)
-            .unwrap();
+        std::fs::write(
+            assets.join("ok.js"),
+            r#"import"@ship/sail-runtime";from"@ship/deck/router";"#,
+        )
+        .unwrap();
         assert_pack_imports_resolved(&assets, &keys).expect("all imports importmapped");
 
         // Add a chunk with an un-importmapped `@ship/*` bare import → fail loud.
@@ -2178,8 +2305,14 @@ import real from "@ship/real-import";"#;
         let err = assert_pack_imports_resolved(&assets, &keys)
             .expect_err("an un-importmapped `@ship/*` bare import must fail the build");
         let msg = format!("{err:#}");
-        assert!(msg.contains("@ship/sdk/connect"), "error names the offender: {msg}");
-        assert!(msg.contains("bad.js"), "error names the offending chunk: {msg}");
+        assert!(
+            msg.contains("@ship/sdk/connect"),
+            "error names the offender: {msg}"
+        );
+        assert!(
+            msg.contains("bad.js"),
+            "error names the offending chunk: {msg}"
+        );
     }
 
     /// A non-`@ship` bare import is OUTSIDE deck's importmap contract (it may be
@@ -2191,8 +2324,7 @@ import real from "@ship/real-import";"#;
         let assets = dir.path().join("assets");
         std::fs::create_dir_all(&assets).unwrap();
         // `@ship/sail-runtime/` (trailing slash) covers the `/route` subpath.
-        let keys: HashSet<String> =
-            ["@ship/sail-runtime/".to_string()].into_iter().collect();
+        let keys: HashSet<String> = ["@ship/sail-runtime/".to_string()].into_iter().collect();
         std::fs::write(
             assets.join("c.js"),
             r#"import"@ship/sail-runtime/route";import"lodash";from"react";"#,

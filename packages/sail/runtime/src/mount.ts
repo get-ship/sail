@@ -42,7 +42,7 @@ export type RoutePayload<Scope = Record<string, unknown>> =
  * view-host, shell) injects this adapter so the `/_deck/...` (or any) scheme
  * lives at the boundary, not in the framework.
  */
-export interface SuiLoader {
+export interface SailLoader {
   /** Resolve a route payload by `name[/sub]` (for the `mount(target, name)` form). */
   fetchRoute(nameOrPath: string): Promise<RoutePayload>
 }
@@ -68,7 +68,7 @@ export interface MountOptions {
   route?: RouteSignals
   navigate?: (path: string) => void
   /** Host loader for by-name payload fetch + component-island loading. */
-  loader?: SuiLoader
+  loader?: SailLoader
   /** HMR — overlay these values onto fresh signals after re-mount. */
   restoreScope?: Record<string, unknown>
   /** Where to inject the payload's css. Default: a `<style>` adjacent
@@ -338,7 +338,7 @@ export async function mount<Scope = Record<string, unknown>>(
     // e2e probes treat `__suiDispose` as the "channel is live" signal —
     // if a patch-elements POST hits the daemon before its per-route
     // broadcast registry has registered this connection's subscriber
-    // (`apps/shipd/src/views/sui_patch_channel.rs::publish` does not
+    // (`apps/shipd/src/views/sail_patch_channel.rs::publish` does not
     // retain frames for late subscribers), the frame is silently
     // dropped. Capped at 3s so a wedged daemon path (the SSE handler
     // can stall before flushing headers if a live-data initial resolve
@@ -428,12 +428,12 @@ function seedRouteParams(
 
 async function resolveRoute(
   nameOrPath: string,
-  loader: SuiLoader | undefined,
+  loader: SailLoader | undefined,
 ): Promise<RoutePayload> {
   if (!loader) {
     throw new Error(
       `[sail/mount] mounting by name ("${nameOrPath}") requires opts.loader — the ` +
-        `host must provide a SuiLoader. The runtime does not know the route URL scheme.`,
+        `host must provide a route loader. The runtime does not know the route URL scheme.`,
     )
   }
   return loader.fetchRoute(nameOrPath)
@@ -606,7 +606,7 @@ function openLiveChannel(
 //
 // Out-of-band DOM patches pushed by the daemon's
 // `/_deck/views/<name>/patch-elements` endpoint. The trust boundary is the
-// SSE auth in shipd's `sui_agent_push.rs` — by the time a frame reaches
+// SSE auth in shipd's `sail_agent_push.rs` — by the time a frame reaches
 // here it's already a trusted caller. The runtime's only job is to scope
 // the selector to the route root: `[data-sail-root][data-view="<name>"]`
 // is the mount target, so anything outside is silently dropped (with a

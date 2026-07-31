@@ -2,7 +2,7 @@
 
 use sail_compiler::compile_element;
 use sail_compiler::parse::preprocess::preprocess;
-use sail_lint::style::{clash, lower_style, parse, StyleDiagnostic};
+use sail_lint::style::{StyleDiagnostic, clash, lower_style, parse};
 use std::collections::HashMap;
 
 #[test]
@@ -30,14 +30,16 @@ fn match_emits_attribute_selectors() {
 
 #[test]
 fn when_emits_hover_not_events() {
-    let out = preprocess(r#"<div sx={when({ hover: style.bg(muted) })}>x</div>"#).expect("preprocess");
+    let out =
+        preprocess(r#"<div sx={when({ hover: style.bg(muted) })}>x</div>"#).expect("preprocess");
     assert!(out.contains(":hover"), "{out}");
     assert!(!out.contains("onclick"), "{out}");
 }
 
 #[test]
 fn compound_emits_intersection() {
-    let out = preprocess(r#"<div sx={compound({ pill: true }, style.radius(full))}>x</div>"#).expect("preprocess");
+    let out = preprocess(r#"<div sx={compound({ pill: true }, style.radius(full))}>x</div>"#)
+        .expect("preprocess");
     assert!(out.contains("[pill]"), "{out}");
 }
 
@@ -56,7 +58,11 @@ fn utility_string_product_errors_at_parse() {
 fn clash_fail_closed() {
     let (style, _) = parse("style.bg(primary).bg(muted)");
     let diags = clash::detect_clashes(&style, &HashMap::new());
-    assert!(diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })));
+    assert!(
+        diags
+            .iter()
+            .any(|d| matches!(d, StyleDiagnostic::Clash { .. }))
+    );
 }
 
 #[test]
@@ -79,7 +85,9 @@ fn cross_setter_disjoint_slots_do_not_clash() {
     let (style, _) = parse("style.borderWidth(1).border(primary)");
     let diags = clash::detect_clashes(&style, &HashMap::new());
     assert!(
-        !diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+        !diags
+            .iter()
+            .any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
         "disjoint per-call slots must not clash: {diags:?}"
     );
 }
@@ -90,7 +98,9 @@ fn list_shadows_silently_no_clash() {
     let (style, _) = parse("[ style.bg(primary), style.bg(muted) ]");
     let diags = clash::detect_clashes(&style, &HashMap::new());
     assert!(
-        !diags.iter().any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
+        !diags
+            .iter()
+            .any(|d| matches!(d, StyleDiagnostic::Clash { .. })),
         "list items must shadow, not clash: {diags:?}"
     );
 }
@@ -100,7 +110,11 @@ fn list_shadowed_rule_emitted_after_earlier_rule() {
     // Stylesheet order implements the precedence: the shadowing (later) rule
     // lands after the shadowed (earlier) rule in the emitted CSS text.
     let (style, diags) = parse("[ style.bg(primary), style.bg(muted) ]");
-    assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+    assert!(
+        diags.is_empty(),
+        "{:?}",
+        diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+    );
     let (_, css) = lower_style(&style, &HashMap::new());
     let first = css.find("var(--primary)").expect("earlier bg rule emitted");
     let second = css.find("var(--muted)").expect("later bg rule emitted");
@@ -113,7 +127,11 @@ fn list_shadowed_rule_emitted_after_earlier_rule() {
 #[test]
 fn token_fail_closed() {
     let (_, diags) = parse("style.bg(notARealTokenZzz999)");
-    assert!(diags.iter().any(|d| matches!(d, StyleDiagnostic::BadToken { .. })));
+    assert!(
+        diags
+            .iter()
+            .any(|d| matches!(d, StyleDiagnostic::BadToken { .. }))
+    );
 }
 
 #[test]
@@ -143,10 +161,7 @@ fn badge_proving_ground_no_cva_no_tone_star() {
 fn badge_compiles_and_emits_token_css() {
     let src = include_str!("../stdlib/badge.sail");
     let out = compile_element(src, "badge").expect("badge compiles on Style path");
-    assert!(
-        !out.structure_html.is_empty(),
-        "structure present"
-    );
+    assert!(!out.structure_html.is_empty(), "structure present");
     let paint = format!("{}{}", out.structure_html, out.skin_css);
     assert!(
         paint.contains("var(--") || paint.contains("sx-"),
@@ -160,9 +175,7 @@ fn badge_compiles_and_emits_token_css() {
 fn card_proving_ground_no_cva() {
     let src = include_str!("../stdlib/card.sail");
     assert!(
-        !src.contains("default: '")
-            && !src.contains("md: '")
-            && !src.contains("compound: ["),
+        !src.contains("default: '") && !src.contains("md: '") && !src.contains("compound: ["),
         "card must not use CVA string maps or scope compound arrays"
     );
     assert!(
@@ -192,7 +205,11 @@ fn card_compiles_and_emits_token_css() {
 #[test]
 fn list_and_bind_parse() {
     let (style, diags) = parse("[ style.bg(primary), style.translateY(bind(rowY)) ]");
-    assert!(diags.is_empty(), "{:?}", diags.iter().map(|d| d.message()).collect::<Vec<_>>());
+    assert!(
+        diags.is_empty(),
+        "{:?}",
+        diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+    );
     let (_, css) = lower_style(&style, &HashMap::new());
     assert!(css.contains("var(--"), "{css}");
 }
@@ -391,7 +408,10 @@ fn batch_e_residuals_compile_on_style_path() {
     for (tag, src) in [
         ("breadcrumb", include_str!("../stdlib/breadcrumb.sail")),
         ("collapsible", include_str!("../stdlib/collapsible.sail")),
-        ("error-boundary", include_str!("../stdlib/error-boundary.sail")),
+        (
+            "error-boundary",
+            include_str!("../stdlib/error-boundary.sail"),
+        ),
         ("icon", include_str!("../stdlib/icon.sail")),
         ("tab-panel", include_str!("../stdlib/tab-panel.sail")),
         ("tabs", include_str!("../stdlib/tabs.sail")),
@@ -435,23 +455,3 @@ fn batch_e_residuals_compile_on_style_path() {
         let _ = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

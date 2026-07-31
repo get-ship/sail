@@ -36,25 +36,49 @@ pub fn style(taffy_style: &sail_layout::taffy::Style) -> Style {
 
         style = style.with(StyleDeclaration::width(dimension(taffy_style.size.width)));
         style = style.with(StyleDeclaration::height(dimension(taffy_style.size.height)));
-        style = style.with(StyleDeclaration::min_width(dimension(taffy_style.min_size.width)));
-        style = style.with(StyleDeclaration::min_height(dimension(taffy_style.min_size.height)));
-        style = style.with(StyleDeclaration::max_width(max_size(taffy_style.max_size.width)));
-        style = style.with(StyleDeclaration::max_height(max_size(taffy_style.max_size.height)));
+        style = style.with(StyleDeclaration::min_width(dimension(
+            taffy_style.min_size.width,
+        )));
+        style = style.with(StyleDeclaration::min_height(dimension(
+            taffy_style.min_size.height,
+        )));
+        style = style.with(StyleDeclaration::max_width(max_size(
+            taffy_style.max_size.width,
+        )));
+        style = style.with(StyleDeclaration::max_height(max_size(
+            taffy_style.max_size.height,
+        )));
 
-        style = style.with(StyleDeclaration::padding_top(length(taffy_style.padding.top)));
-        style = style.with(StyleDeclaration::padding_right(length(taffy_style.padding.right)));
-        style = style.with(StyleDeclaration::padding_bottom(length(taffy_style.padding.bottom)));
-        style = style.with(StyleDeclaration::padding_left(length(taffy_style.padding.left)));
+        style = style.with(StyleDeclaration::padding_top(length(
+            taffy_style.padding.top,
+        )));
+        style = style.with(StyleDeclaration::padding_right(length(
+            taffy_style.padding.right,
+        )));
+        style = style.with(StyleDeclaration::padding_bottom(length(
+            taffy_style.padding.bottom,
+        )));
+        style = style.with(StyleDeclaration::padding_left(length(
+            taffy_style.padding.left,
+        )));
 
         style = style.with(StyleDeclaration::position(position(taffy_style.position)));
 
         style = style.with(StyleDeclaration::top(length_auto(taffy_style.inset.top)));
-        style = style.with(StyleDeclaration::right(length_auto(taffy_style.inset.right)));
-        style = style.with(StyleDeclaration::bottom(length_auto(taffy_style.inset.bottom)));
+        style = style.with(StyleDeclaration::right(length_auto(
+            taffy_style.inset.right,
+        )));
+        style = style.with(StyleDeclaration::bottom(length_auto(
+            taffy_style.inset.bottom,
+        )));
         style = style.with(StyleDeclaration::left(length_auto(taffy_style.inset.left)));
 
-        style = style.with(StyleDeclaration::flex_grow(Some(FlexGrow(taffy_style.flex_grow))));
-        style = style.with(StyleDeclaration::flex_shrink(Some(FlexGrow(taffy_style.flex_shrink))));
+        style = style.with(StyleDeclaration::flex_grow(Some(FlexGrow(
+            taffy_style.flex_grow,
+        ))));
+        style = style.with(StyleDeclaration::flex_shrink(Some(FlexGrow(
+            taffy_style.flex_shrink,
+        ))));
 
         if let Some(overflow) = overflow(taffy_style.overflow.x) {
             style = style.with(StyleDeclaration::overflow_x(overflow));

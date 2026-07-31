@@ -1,5 +1,5 @@
-// query() PUSH path — the type-directed routing that folded `live()`'s
-// PUSH half into `query()` (data-arch-seed.md, "Owner RULINGS 2026-07-18").
+// query() PUSH path — type-directed routing that folded `live()`'s PUSH
+// half into `query()`.
 //
 // A query thunk whose client method returns a `Promise<T>` routes to the
 // PULL path (one-shot fill, staleness, retry). A thunk whose method

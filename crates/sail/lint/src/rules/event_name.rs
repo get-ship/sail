@@ -33,44 +33,121 @@ pub const RULE_ID: &str = "sail-event-name";
 
 const KNOWN_EVENTS: &[&str] = &[
     // Mouse / pointer
-    "click", "dblclick", "mousedown", "mouseup", "mousemove", "mouseenter",
-    "mouseleave", "mouseover", "mouseout", "contextmenu", "wheel",
-    "pointerdown", "pointerup", "pointermove", "pointerenter", "pointerleave",
-    "pointerover", "pointerout", "pointercancel", "gotpointercapture",
+    "click",
+    "dblclick",
+    "mousedown",
+    "mouseup",
+    "mousemove",
+    "mouseenter",
+    "mouseleave",
+    "mouseover",
+    "mouseout",
+    "contextmenu",
+    "wheel",
+    "pointerdown",
+    "pointerup",
+    "pointermove",
+    "pointerenter",
+    "pointerleave",
+    "pointerover",
+    "pointerout",
+    "pointercancel",
+    "gotpointercapture",
     "lostpointercapture",
     // Touch
-    "touchstart", "touchend", "touchmove", "touchcancel",
+    "touchstart",
+    "touchend",
+    "touchmove",
+    "touchcancel",
     // Keyboard
-    "keydown", "keyup", "keypress",
+    "keydown",
+    "keyup",
+    "keypress",
     // Focus
-    "focus", "blur", "focusin", "focusout",
+    "focus",
+    "blur",
+    "focusin",
+    "focusout",
     // Form
-    "input", "change", "submit", "reset", "invalid", "select", "formdata",
+    "input",
+    "change",
+    "submit",
+    "reset",
+    "invalid",
+    "select",
+    "formdata",
     "beforeinput",
     // Drag
-    "dragstart", "drag", "dragend", "dragenter", "dragleave", "dragover", "drop",
+    "dragstart",
+    "drag",
+    "dragend",
+    "dragenter",
+    "dragleave",
+    "dragover",
+    "drop",
     // Clipboard
-    "copy", "cut", "paste",
+    "copy",
+    "cut",
+    "paste",
     // Composition (IME)
-    "compositionstart", "compositionupdate", "compositionend",
+    "compositionstart",
+    "compositionupdate",
+    "compositionend",
     // Media
-    "play", "pause", "ended", "timeupdate", "volumechange", "ratechange",
-    "loadeddata", "loadedmetadata", "canplay", "canplaythrough", "stalled",
-    "suspend", "waiting", "seeking", "seeked", "durationchange", "emptied",
-    "abort", "error",
+    "play",
+    "pause",
+    "ended",
+    "timeupdate",
+    "volumechange",
+    "ratechange",
+    "loadeddata",
+    "loadedmetadata",
+    "canplay",
+    "canplaythrough",
+    "stalled",
+    "suspend",
+    "waiting",
+    "seeking",
+    "seeked",
+    "durationchange",
+    "emptied",
+    "abort",
+    "error",
     // Window / load
-    "load", "unload", "beforeunload", "resize", "scroll", "scrollend",
-    "hashchange", "popstate", "pagehide", "pageshow", "visibilitychange",
-    "online", "offline",
+    "load",
+    "unload",
+    "beforeunload",
+    "resize",
+    "scroll",
+    "scrollend",
+    "hashchange",
+    "popstate",
+    "pagehide",
+    "pageshow",
+    "visibilitychange",
+    "online",
+    "offline",
     // Animation / transition
-    "animationstart", "animationend", "animationiteration", "animationcancel",
-    "transitionstart", "transitionend", "transitionrun", "transitioncancel",
+    "animationstart",
+    "animationend",
+    "animationiteration",
+    "animationcancel",
+    "transitionstart",
+    "transitionend",
+    "transitionrun",
+    "transitioncancel",
     // Toggle / dialog
-    "toggle", "close", "cancel",
+    "toggle",
+    "close",
+    "cancel",
     // Pointer-lock
-    "pointerlockchange", "pointerlockerror",
+    "pointerlockchange",
+    "pointerlockerror",
     // Misc
-    "wheel", "message", "messageerror", "storage",
+    "wheel",
+    "message",
+    "messageerror",
+    "storage",
 ];
 
 /// SAIL framework custom events that carry NO prefix. `<form mutation=…>`
@@ -271,7 +348,7 @@ mod tests {
     }
 
     #[test]
-    fn sui_prefixed_event_passes() {
+    fn sail_prefixed_event_passes() {
         let src = r#"<sail-rail on:sail-rail:toggle={fire}></sail-rail>"#;
         assert_eq!(lint(src).len(), 0);
     }
@@ -318,7 +395,12 @@ mod tests {
     #[test]
     fn a_comment_is_not_code() {
         let src = "<!-- on:<event> takes modifiers: |prevent, |stop -->\n<button on:click={go}>go</button>";
-        assert_eq!(lint(src).len(), 0, "prose inside a comment is not an attribute: {:?}", lint(src));
+        assert_eq!(
+            lint(src).len(),
+            0,
+            "prose inside a comment is not an attribute: {:?}",
+            lint(src)
+        );
     }
 
     /// ...but the skip must not swallow the code after the comment.

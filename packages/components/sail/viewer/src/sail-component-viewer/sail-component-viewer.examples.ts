@@ -21,7 +21,7 @@ export const sources: Record<string, string> = {
 <prop name="tone" values="default|primary" default="default" reflect />
 <button class="lane-action">{variant}/{tone}</button>`,
   'Agentic-live (no CEM)': `<div class="lane">
-  <strong>gatekeeper</strong> · reviewing <code>job/sail-framework</code>
+  <strong>gatekeeper</strong> · reviewing <code>PR #142</code>
   <span> — fresh agent source, no compiled CEM yet</span>
 </div>`,
   'Narrow viewport': `<div class="card">

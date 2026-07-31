@@ -95,7 +95,9 @@ impl<'a, 'src> Visit<'a> for SetValueVisitor<'src> {
 /// wrap setAttribute in their own helper bypass the lint, which is fine:
 /// that's an explicit choice, not the silent footgun.
 fn is_set_attribute_value(expr: &CallExpression<'_>) -> bool {
-    let Expression::StaticMemberExpression(m) = &expr.callee else { return false };
+    let Expression::StaticMemberExpression(m) = &expr.callee else {
+        return false;
+    };
     if m.property.name.as_str() != "setAttribute" {
         return false;
     }

@@ -6,10 +6,10 @@ import { controller, signal, effect } from '@ship/sail-runtime'
 // mode-of-data-theme contract the deck shell uses for its own chrome — the
 // gallery reuses the same handle so the conformance routes theme consistently
 // with the surrounding host.
-const DARK_THEMES = new Set(['ship-dark', 'console', 'contrast'])
+const DARK_THEMES = new Set(['console', 'contrast', '8bit', 'synthwave'])
 
 export default controller(() => {
-  const activeTheme = signal<string>('ship-light')
+  const activeTheme = signal<string>('ship')
 
   mount(() => {
     effect(() => {
@@ -27,9 +27,9 @@ export default controller(() => {
 
 <column gap="6" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
   <header>
-    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground)}>SUI Component Gallery</h1>
+    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground)}>Sail Component Gallery</h1>
     <p sx={style.fg(muted-foreground).fontSize(sm).leading(relaxed).mt(2)}>
-      Primitives marked <strong sx={style.fg(foreground)}>sui/*</strong> are real, fully implemented SUI
+      Primitives marked <strong sx={style.fg(foreground)}>sail/*</strong> are real, fully implemented Sail
       components. Sections marked <strong sx={style.fg(foreground)}>ship/*</strong> are domain stubs
       backed by the deck-conformance in-memory store — they exercise the live-data
       wire but carry no production Ship logic.
@@ -39,8 +39,8 @@ export default controller(() => {
   <column gap="3" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
     <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}>Theme</h2>
     <row gap="2">
-      <button aria-pressed={activeTheme() === 'ship-light'} on:click={() => activeTheme.set('ship-light')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>SHIP Light</button>
-      <button aria-pressed={activeTheme() === 'ship-dark'} on:click={() => activeTheme.set('ship-dark')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>SHIP Dark</button>
+      <button aria-pressed={activeTheme() === 'ship'} on:click={() => activeTheme.set('ship')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>SHIP</button>
+
       <button aria-pressed={activeTheme() === 'paper'} on:click={() => activeTheme.set('paper')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>Paper</button>
       <button aria-pressed={activeTheme() === 'halo'} on:click={() => activeTheme.set('halo')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>Halo</button>
       <button aria-pressed={activeTheme() === 'console'} on:click={() => activeTheme.set('console')} sx={style.radius(md).padX(3).padY(1).when({ pressed: style.bg(foreground).fg(background) })}>Console</button>
@@ -61,14 +61,14 @@ export default controller(() => {
   <column gap="2" sx={style.borderWidth(1).border(border).radius(lg).bg(surface-1).pad(5)}>
      <h2 sx={style.fontSize(lg).fontWeight(semibold).fg(foreground)}>Pack sections</h2>
     <column gap="1" sx={style.list(none).pad(0).m(0)}>
-       <li><a href="/_deck/view/counter">counter — signal basics (sui/*)</a></li>
+       <li><a href="/_deck/view/counter">counter — signal basics (sail/*)</a></li>
        <li><a href="/_deck/view/clock">clock — live data tick (&lt;client name="api"&gt;, api/demo.*)</a></li>
        <li><a href="/_deck/view/todos">todos — live list + mutation (ship/demo.*)</a></li>
        <li><a href="/_deck/view/query-demo">query-demo — query()/mutation() derived identity (crm/deals.*)</a></li>
        <li><a href="/_deck/view/boom">boom — error boundary (ship/demo.*)</a></li>
-       <li><a href="/_deck/view/greet">greet — static SSR (sui/*)</a></li>
-       <li><a href="/_deck/view/hello">hello — constant folding (sui/*)</a></li>
-       <li><a href="/_deck/view/widgets">widgets — component composition (sui/*)</a></li>
+       <li><a href="/_deck/view/greet">greet — static SSR (sail/*)</a></li>
+       <li><a href="/_deck/view/hello">hello — constant folding (sail/*)</a></li>
+       <li><a href="/_deck/view/widgets">widgets — component composition (sail/*)</a></li>
     </column>
   </column>
 </column>

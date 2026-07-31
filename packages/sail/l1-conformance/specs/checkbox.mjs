@@ -3,8 +3,17 @@
 // association, form participation, indeterminate state and keyboard for free. The
 // skin's whole job is to make :checked / :indeterminate / :disabled legible in
 // every theme, which is exactly what the probe asserts.
+// Markup mirrors freeform host stamp: sail-input + type=checkbox Style classes.
 
-const box = (attrs = '') => `<label><input type="checkbox" ${attrs}> Label</label>`
+const CB =
+  'sail-input sx-typecheckbox-appearancenone sx-typecheckbox-displayinlineblock sx-typecheckbox-alignmiddle sx-typecheckbox-m0 sx-typecheckbox-pad0 sx-typecheckbox-minH0 sx-typecheckbox-wiconsizesm sx-typecheckbox-hiconsizesm sx-typecheckbox-fontSizebase sx-typecheckbox-borderWidth2 sx-typecheckbox-borderborderstrong sx-typecheckbox-bgbackground sx-typecheckbox-shadowxs sx-typecheckbox-radiussm sx-typecheckbox-cursorpointer sx-typecheckboxchecked-bgprimary sx-typecheckboxchecked-borderprimary sx-typecheckboxdisabled-cursornotallowed sx-typecheckboxdisabled-opacity50 sx-typecheckboxsizexs-wiconsizexs sx-typecheckboxsizexs-hiconsizexs sx-typecheckboxsizesm-wiconsizexs sx-typecheckboxsizesm-hiconsizexs sx-typecheckboxsizemd-wiconsizesm sx-typecheckboxsizemd-hiconsizesm sx-typecheckboxsizelg-wiconsizemd sx-typecheckboxsizelg-hiconsizemd'
+
+const box = (attrs = '') => {
+  const m = attrs.match(/class="([^"]*)"/)
+  const rest = attrs.replace(/class="[^"]*"\s*/, '').trim()
+  const cls = m ? `${CB} ${m[1]}` : CB
+  return `<label><input type="checkbox" class="${cls}" ${rest}> Label</label>`
+}
 
 export default {
   tag: 'checkbox',
@@ -39,7 +48,7 @@ export default {
         bad.push({ i, why: 'invisible' })
     })
 
-    const scope = "[data-theme-preview='ship-light'] "
+    const scope = "[data-theme-preview='ship'] "
     const q = (s) => document.querySelector(scope + s)
     const base = q("input[type='checkbox'].l1-mark")
     const on = q("input[type='checkbox'][checked]")
@@ -61,7 +70,7 @@ export default {
     if (!(sm < md && md < lg)) bad.push({ why: 'size-channel-dead', sm, md, lg })
     // frozen-token guard
     const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .l1-mark`), 'borderTopColor')
-    if (mark('ship-light') === mark('ship-dark')) bad.push({ why: 'frozen-token', light: mark('ship-light') })
+    if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
 
     return { count: document.querySelectorAll("input[type='checkbox']").length, bad: bad.slice(0, 10) }
   },

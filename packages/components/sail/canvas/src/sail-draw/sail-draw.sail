@@ -44,7 +44,7 @@
   }
 </scope>
 <controller>
-import { controller, signal, derived, effect, debounce } from '@ship/sail-runtime'
+import { debounce } from '@ship/sail-runtime'
 import type { Scope } from './sail-draw.sail'
 import { createCanvas } from '../engine/create-canvas'
 import { createDrawScene, type DrawElement, type DrawTool } from './engine/scene'
@@ -239,7 +239,6 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
 
 </controller>
 
-
 <!-- `.toolbar` was a flex container; compose a primitive instead — flex
      layout is the floor's boundary, and `<row>` IS the row container. -->
 <row role="toolbar" aria-label="Drawing tools" gap="1" align="center" sx={style.padY(1).padX(2).borderBWidth(1).borderB(border).bg(card)}>
@@ -255,8 +254,8 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
   sx={style.display(block).position(relative).w(full).h(full).fg(foreground)}
 >
   <svg role="group" aria-label={statusLabel()} sx={style.position(absolute).top(0).left(0).overflow(visible).pointerEvents(none)}>
-    <for as="el" of={rendered()} key={el.id}>
-      <if cond={el.kind === 'text'}>
+    <for {rendered()} as="el" key={el.id}>
+      <if {el.kind === 'text'}>
         <text
           x={el.at.x}
           y={el.at.y}
@@ -282,7 +281,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
         ></path>
       </else></if>
     </for>
-    <if cond={draftPath()}>
+    <if {draftPath()}>
       <path
         d={draftPath()}
         use:swatch={draftColor()}
@@ -293,7 +292,7 @@ export default controller(({ value, sketchy, readonly }: Scope) => {
       ></path>
     </if>
 
-    <if cond={selectionRect()}>
+    <if {selectionRect()}>
       <rect
         x={selectionRect().x}
         y={selectionRect().y}

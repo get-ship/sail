@@ -17,12 +17,18 @@
 //! author writes `on:click` either way and never sees the seam. What cannot be
 //! delegated falls back to a real listener, and this file pins exactly what that is.
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn js(src: &str) -> String {
-    compile(src, CompileOpts { mode: CompileMode::Component, ..Default::default() })
-        .expect("compiles")
-        .js
+    compile(
+        src,
+        CompileOpts {
+            mode: CompileMode::Component,
+            ..Default::default()
+        },
+    )
+    .expect("compiles")
+    .js
 }
 
 /// A plain bubbling handler is delegated: a property on the node, plus ONE root
@@ -30,12 +36,18 @@ fn js(src: &str) -> String {
 #[test]
 fn a_bubbling_handler_is_delegated() {
     let out = js(r#"<button on:click={go}>go</button>"#);
-    assert!(out.contains("$$click = "), "the handler lives on the node:\n{out}");
+    assert!(
+        out.contains("$$click = "),
+        "the handler lives on the node:\n{out}"
+    );
     assert!(
         out.contains(r#"delegateEvents(["click"])"#),
         "one root listener is installed for the type:\n{out}"
     );
-    assert!(!out.contains("push(on("), "no per-element listener, and no cleanup slot:\n{out}");
+    assert!(
+        !out.contains("push(on("),
+        "no per-element listener, and no cleanup slot:\n{out}"
+    );
 }
 
 /// Each event TYPE is installed once, however many elements use it.
@@ -93,8 +105,14 @@ fn a_modified_handler_keeps_its_own_listener() {
 fn a_mixed_template_delegates_what_it_can_and_no_more() {
     let out = js(r#"<div on:click={a}><input on:focus={b}><span on:mouseover={c}>x</span></div>"#);
     assert!(out.contains("$$click = "), "click delegates:\n{out}");
-    assert!(out.contains("$$mouseover = "), "mouseover bubbles, so it delegates:\n{out}");
-    assert!(out.contains("push(on("), "focus does not, so it keeps a listener:\n{out}");
+    assert!(
+        out.contains("$$mouseover = "),
+        "mouseover bubbles, so it delegates:\n{out}"
+    );
+    assert!(
+        out.contains("push(on("),
+        "focus does not, so it keeps a listener:\n{out}"
+    );
     // ...and exactly the two delegated types are installed.
     assert!(
         out.contains(r#"delegateEvents(["click", "mouseover"])"#),

@@ -35,7 +35,7 @@
 // request).
 //
 // Per-scope context map: each scope carries a `Map<symbol, unknown>`
-// keyed by the store/context `id`. Map, not object-with-`__sui_*`
+// keyed by the store/context `id`. Map, not object-with-`__sail_*`
 // keys: insertion is O(1) on the hot path, the symbol key can't
 // collide with anything an author names, and walking the chain
 // stays tight (parent → grandparent → …) instead of dragging DOM
@@ -101,15 +101,15 @@ export function onCleanup(fn: () => void): void {
 
 /** Thrown by `mount()` when called outside a setup window — no scope
  *  is current. Named so authoring tooling and tests can match on it
- *  (`error.name === 'SuiMountOutsideSetupError'`), unlike `onCleanup`,
+ *  (`error.name === 'SailMountOutsideSetupError'`), unlike `onCleanup`,
  *  which silently no-ops outside a scope. */
-export class SuiMountOutsideSetupError extends Error {
+export class SailMountOutsideSetupError extends Error {
   constructor() {
     super(
       'mount() can only be called while a controller/component setup is executing ' +
         '(including compositions called from setup). Called outside any setup window.',
     )
-    this.name = 'SuiMountOutsideSetupError'
+    this.name = 'SailMountOutsideSetupError'
   }
 }
 
@@ -122,14 +122,14 @@ export class SuiMountOutsideSetupError extends Error {
  * EXECUTION-scoped like `onCleanup`: legal anywhere while a setup is
  * synchronously executing, including inside a composition called from
  * setup (the composition runs with the same `CURRENT_SCOPE`). Throws
- * `SuiMountOutsideSetupError` when called with no current scope —
+ * `SailMountOutsideSetupError` when called with no current scope —
  * unlike `onCleanup`, which no-ops, because a dropped `mount()` call
  * silently loses the author's DOM-ready logic instead of just leaking
  * a resource.
  */
 export function mount(fn: (el: HTMLElement) => (() => void) | void): void {
   const scope = CURRENT_SCOPE
-  if (!scope) throw new SuiMountOutsideSetupError()
+  if (!scope) throw new SailMountOutsideSetupError()
   scope.registerMount(fn)
 }
 

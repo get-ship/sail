@@ -338,7 +338,10 @@ fn param_name_text(bytes: &[u8], span: (usize, usize)) -> String {
     if e <= s {
         return String::new();
     }
-    std::str::from_utf8(&bytes[s..e]).unwrap_or("").trim().to_string()
+    std::str::from_utf8(&bytes[s..e])
+        .unwrap_or("")
+        .trim()
+        .to_string()
 }
 
 /// Shape + members of the setup function's body. Returns `(members,
@@ -370,7 +373,8 @@ fn harvest_body(bytes: &[u8], body_start: usize, end: usize) -> Option<(Vec<Scop
         let close = skip_balanced(bytes, body_start, end);
         let inner_start = skip_trivia(bytes, body_start + 1);
         let members = if inner_start < close && bytes[inner_start] == b'{' {
-            let obj_end = skip_balanced(bytes, inner_start, close.saturating_sub(1).max(inner_start));
+            let obj_end =
+                skip_balanced(bytes, inner_start, close.saturating_sub(1).max(inner_start));
             walk_and_classify(
                 bytes,
                 inner_start + 1,
@@ -402,20 +406,30 @@ fn walk_and_classify(
     body_end: usize,
 ) -> Vec<ScopeMember> {
     let mut out = Vec::new();
-    walk_object_entries(bytes, start, end, |name, key_offset, value_start, value_end| {
-        let key_span = Span::new(key_offset, key_offset + name.len());
-        let shorthand = is_shorthand(bytes, name, value_start, value_end);
-        let (value_span, kind) = if shorthand {
-            match resolve_local_binding_span(bytes, name, body_start, body_end) {
-                Some(span) => (span, classify_scope_value(bytes, span.start, span.end)),
-                None => (Span::new(value_start, value_end), ScopeKind::Other),
-            }
-        } else {
-            let span = Span::new(value_start, value_end);
-            (span, classify_scope_value(bytes, span.start, span.end))
-        };
-        out.push(ScopeMember { name: name.to_string(), key_span, value_span, kind });
-    });
+    walk_object_entries(
+        bytes,
+        start,
+        end,
+        |name, key_offset, value_start, value_end| {
+            let key_span = Span::new(key_offset, key_offset + name.len());
+            let shorthand = is_shorthand(bytes, name, value_start, value_end);
+            let (value_span, kind) = if shorthand {
+                match resolve_local_binding_span(bytes, name, body_start, body_end) {
+                    Some(span) => (span, classify_scope_value(bytes, span.start, span.end)),
+                    None => (Span::new(value_start, value_end), ScopeKind::Other),
+                }
+            } else {
+                let span = Span::new(value_start, value_end);
+                (span, classify_scope_value(bytes, span.start, span.end))
+            };
+            out.push(ScopeMember {
+                name: name.to_string(),
+                key_span,
+                value_span,
+                kind,
+            });
+        },
+    );
     out
 }
 
@@ -1058,7 +1072,9 @@ where
             while i < end && is_ident_cont(bytes[i]) {
                 i += 1;
             }
-            key = std::str::from_utf8(&bytes[key_start..i]).unwrap_or("").to_string();
+            key = std::str::from_utf8(&bytes[key_start..i])
+                .unwrap_or("")
+                .to_string();
         } else {
             i = next_entry(bytes, i, end);
             continue;

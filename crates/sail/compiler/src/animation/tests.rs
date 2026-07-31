@@ -207,9 +207,7 @@ fn spring_bake_overshoots_and_settles_within_max_duration() {
     // the rest sample to target so the WAAPI final-frame semantics
     // are exact; the peak overshoot (~1.064 at t=240ms) is past
     // the rest-detection early-stop and never appears in the bake.
-    let last_v = parse_kf_value(
-        &baked.keyframes.last().expect("non-empty keyframes").value,
-    );
+    let last_v = parse_kf_value(&baked.keyframes.last().expect("non-empty keyframes").value);
     assert!(
         (last_v - 1.0).abs() < 1e-6,
         "last keyframe should be pinned to target=1.0, got {last_v}"
@@ -293,8 +291,7 @@ fn sample_rounded(cfg: &SpringConfig, step_ms: f64) -> Vec<f64> {
         // = 10, restDelta = 0.5 (matching the test cases).
         let target = cfg.to.unwrap_or(1.0);
         if (v - target).abs() < cfg.rest_delta
-            && spring::solve_spring_velocity_analytical(cfg, t / 1000.0).abs()
-                < cfg.rest_speed
+            && spring::solve_spring_velocity_analytical(cfg, t / 1000.0).abs() < cfg.rest_speed
         {
             done = true;
         }
@@ -324,7 +321,9 @@ fn find_spring_parity_underdamped() {
         ..SpringConfig::default()
     };
     let actual = sample_rounded(&cfg, 200.0);
-    let expected = vec![100.0, 1343.0, 873.0, 1046.0, 984.0, 1005.0, 998.0, 1001.0, 1000.0];
+    let expected = vec![
+        100.0, 1343.0, 873.0, 1046.0, 984.0, 1005.0, 998.0, 1001.0, 1000.0,
+    ];
     assert_eq!(actual.len(), expected.len(), "length mismatch");
     for (i, (a, e)) in actual.iter().zip(expected.iter()).enumerate() {
         assert_approx(*a, *e, &format!("sample {i}"));
@@ -373,8 +372,8 @@ fn find_spring_parity_overdamped() {
     };
     let actual = sample_rounded(&cfg, 200.0);
     let expected = vec![
-        100.0, 499.0, 731.0, 855.0, 922.0, 958.0, 977.0, 988.0, 993.0, 996.0, 998.0, 999.0,
-        999.0, 1000.0,
+        100.0, 499.0, 731.0, 855.0, 922.0, 958.0, 977.0, 988.0, 993.0, 996.0, 998.0, 999.0, 999.0,
+        1000.0,
     ];
     assert_eq!(actual.len(), expected.len(), "length mismatch");
     for (i, (a, e)) in actual.iter().zip(expected.iter()).enumerate() {
@@ -417,8 +416,7 @@ fn tween_linear_produces_60_samples_over_1000ms() {
 
     // Successive deltas roughly equal for a linear tween.
     let d0 = parse_kf_value(&baked.keyframes[1].value) - first;
-    let d1 = parse_kf_value(&baked.keyframes[2].value)
-        - parse_kf_value(&baked.keyframes[1].value);
+    let d1 = parse_kf_value(&baked.keyframes[2].value) - parse_kf_value(&baked.keyframes[1].value);
     assert!(
         (d0 - d1).abs() < 1e-3,
         "linear deltas should be equal: d0={d0}, d1={d1}"
@@ -437,7 +435,11 @@ fn tween_ease_out_has_decreasing_delta() {
     };
     let baked = keyframes::bake(&cfg);
 
-    let vals: Vec<f64> = baked.keyframes.iter().map(|kf| parse_kf_value(&kf.value)).collect();
+    let vals: Vec<f64> = baked
+        .keyframes
+        .iter()
+        .map(|kf| parse_kf_value(&kf.value))
+        .collect();
 
     // Ease-out starts fast, ends slow → successive deltas decrease.
     let early_delta = vals[3] - vals[1];
@@ -463,10 +465,9 @@ fn tween_unknown_easing_falls_back_to_linear() {
     // Should behave like linear in the interior; the last frame is
     // pinned to `cfg.to` so we skip it when measuring deltas.
     let n = baked.keyframes.len();
-    let d0 = parse_kf_value(&baked.keyframes[1].value)
-        - parse_kf_value(&baked.keyframes[0].value);
-    let d_mid = parse_kf_value(&baked.keyframes[30].value)
-        - parse_kf_value(&baked.keyframes[29].value);
+    let d0 = parse_kf_value(&baked.keyframes[1].value) - parse_kf_value(&baked.keyframes[0].value);
+    let d_mid =
+        parse_kf_value(&baked.keyframes[30].value) - parse_kf_value(&baked.keyframes[29].value);
     let d_late = parse_kf_value(&baked.keyframes[n - 2].value)
         - parse_kf_value(&baked.keyframes[n - 3].value);
     assert!(
@@ -487,7 +488,11 @@ fn tween_cubic_bezier_easing_is_monotonic() {
     };
     let baked = keyframes::bake(&cfg);
 
-    let vals: Vec<f64> = baked.keyframes.iter().map(|kf| parse_kf_value(&kf.value)).collect();
+    let vals: Vec<f64> = baked
+        .keyframes
+        .iter()
+        .map(|kf| parse_kf_value(&kf.value))
+        .collect();
     // A monotonic ease-out cubic-bezier never decreases.
     for w in vals.windows(2) {
         assert!(

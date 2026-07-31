@@ -61,7 +61,7 @@ vi.mock('motion/mini', () => ({
   },
 }))
 
-import { __sui_motion_attach } from '../src/motion'
+import { __sail_motion_attach } from '../src/motion'
 import type { MotionAttachConfig } from '../src/motion'
 
 Object.defineProperty(window, 'matchMedia', {
@@ -134,7 +134,7 @@ afterEach(() => {
 function attachConnected(config: MotionAttachConfig): { el: HTMLElement; dispose: () => void } {
   const el = document.createElement('div')
   document.body.appendChild(el)
-  const dispose = __sui_motion_attach(el, config)
+  const dispose = __sail_motion_attach(el, config)
   return { el, dispose }
 }
 

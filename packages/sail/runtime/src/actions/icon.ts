@@ -1,19 +1,15 @@
 // `use:icon` — glyph resolution for the L1 <icon> element.
 //
-// Resolution order: `src` (arbitrary URL) wins over `name`; names fetch from
-// the host's icon endpoint (deck serves the embedded lucide set at
-// `/_deck/icons/{name}.svg`). Fetches are cached and single-flight per key;
-// `primeIconCache` seeds glyphs without a network (tests, SSR-less hosts).
-// `label` makes the element role=img with an aria-label; label-less icons are
-// aria-hidden. A failed resolve removes any injected glyph so the slotted
-// fallback shows.
+// Resolution order (TOOL-10):
+//   1. Primed cache / prior fetch (tests, SSR hosts)
+//   2. Local asset `/_deck/icons/{name}.svg` (compile-emitted used glyphs)
+//   3. Same path served by the daemon embed in dev
+//   4. Slotted fallback (failed resolve removes any injected glyph)
 //
-// `spin` is owned here (not contracts PE): the glyph is injected with no
-// structure slot, so the action attaches a fx:loop rotate on the host
-// when `[spin]` is present. Duration matches the ambient `--animate-spin`
-// 0.7s; reduced motion settles via the motion runtime (no spin).
+// Named icons NEVER use a CDN. The `src` attribute is only for **relative**
+// or **same-origin** custom SVG URLs (not a pack escape hatch).
 
-import { __sui_motion_attach } from '../motion'
+import { __sail_motion_attach } from '../motion'
 
 const ENDPOINT = '/_deck/icons/'
 
@@ -38,6 +34,40 @@ function fetchKey(url: string, key: string): Promise<string | null> {
     })
   inflight.set(key, p)
   return p
+}
+
+/**
+ * `src=` allowlist: relative paths, same-origin absolute URLs, and
+ * data/blob SVG only. Cross-origin http(s) is always rejected (no CDN).
+ */
+export function isAllowedIconSrc(url: string): boolean {
+  const u = url.trim()
+  if (!u) return false
+  // Relative / root-relative / protocol-relative blocked (//cdn.example).
+  if (u.startsWith('//')) return false
+  if (u.startsWith('/') || u.startsWith('./') || u.startsWith('../')) return true
+  if (u.startsWith('blob:')) return true
+  if (u.startsWith('data:image/svg')) return true
+  if (!/^https?:\/\//i.test(u)) {
+    // Bare filename relative to document — treat as local.
+    return !u.includes(':')
+  }
+  try {
+    const base =
+      typeof globalThis !== 'undefined' &&
+      'location' in globalThis &&
+      (globalThis as { location?: { href?: string } }).location?.href
+        ? (globalThis as { location: { href: string } }).location.href
+        : 'http://localhost/'
+    const parsed = new URL(u, base)
+    if (typeof globalThis !== 'undefined' && 'location' in globalThis) {
+      const loc = (globalThis as { location?: { origin?: string } }).location
+      if (loc?.origin && parsed.origin === loc.origin) return true
+    }
+    return false
+  } catch {
+    return false
+  }
 }
 
 function parseSvg(doc: Document, markup: string): SVGSVGElement | null {
@@ -74,9 +104,7 @@ export const icon = (node: Element) => {
     spinDispose?.()
     spinDispose = null
     if (!node.hasAttribute('spin')) return
-    // Host rotate spins the injected glyph (no structure slot for the svg).
-    // 0.7s matches the ambient --animate-spin catalog entry the PE used.
-    spinDispose = __sui_motion_attach(node, {
+    spinDispose = __sail_motion_attach(node, {
       trigger: 'loop',
       motions: [
         {
@@ -106,7 +134,6 @@ export const icon = (node: Element) => {
     if (key === lastKey) return
     const parsed = parseSvg(node.ownerDocument, markup)
     if (!parsed) return
-    // Glyph sizing is `.sail-icon svg` in the L1 skin — no class stamp.
     if (svgEl) svgEl.replaceWith(parsed)
     else node.insertBefore(parsed, node.firstChild)
     svgEl = parsed
@@ -120,22 +147,45 @@ export const icon = (node: Element) => {
     const src = node.getAttribute('src') ?? ''
     const name = node.getAttribute('name') ?? ''
 
-    const key = src ? `src:${src}` : name ? `name:${name}` : ''
-    if (!key) {
+    // Named icons always resolve via local/daemon asset path — never CDN.
+    if (name && !src) {
+      const key = `name:${name}`
+      let cached = cache.get(key)
+      if (cached === undefined) cached = cache.get(name)
+      if (cached !== undefined) {
+        if (cached) inject(cached, key)
+        else drop()
+        return
+      }
+      const ticket = ++seq
+      const url = `${ENDPOINT}${encodeURIComponent(name)}.svg`
+      void fetchKey(url, key).then((svg) => {
+        if (ticket !== seq) return
+        if (svg) inject(svg, key)
+        else drop()
+      })
+      return
+    }
+
+    if (!src) {
       drop()
       return
     }
-    // Primed lucide glyphs are stored by bare name; fetches key composite.
-    let cached = cache.get(key)
-    if (cached === undefined && !src) cached = cache.get(name)
+
+    if (!isAllowedIconSrc(src)) {
+      drop()
+      return
+    }
+
+    const key = `src:${src}`
+    const cached = cache.get(key)
     if (cached !== undefined) {
       if (cached) inject(cached, key)
       else drop()
       return
     }
     const ticket = ++seq
-    const url = src || `${ENDPOINT}${encodeURIComponent(name)}.svg`
-    void fetchKey(url, key).then((svg) => {
+    void fetchKey(src, key).then((svg) => {
       if (ticket !== seq) return
       if (svg) inject(svg, key)
       else drop()

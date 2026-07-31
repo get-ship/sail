@@ -92,7 +92,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for block in scan_style_blocks(source) {
         for decl in scan_declarations(block.content) {
-            let Some(dim) = DIMENSIONS.iter().find(|d| d.properties.contains(&decl.property))
+            let Some(dim) = DIMENSIONS
+                .iter()
+                .find(|d| d.properties.contains(&decl.property))
             else {
                 continue;
             };
@@ -178,8 +180,11 @@ fn first_scalar(value: &str, px: bool) -> Option<(u32, usize, &str)> {
                 let f = &value[fs..i];
                 frac = format!("{:0<2}", &f[..f.len().min(2)]).parse().unwrap_or(0);
             }
-            let whole: u32 = value[start..].split(|c: char| !c.is_ascii_digit()).next()
-                .and_then(|s| s.parse().ok()).unwrap_or(0);
+            let whole: u32 = value[start..]
+                .split(|c: char| !c.is_ascii_digit())
+                .next()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0);
             let centi = whole * 100 + frac;
             if px {
                 if i + 1 < b.len() && b[i] == b'p' && b[i + 1] == b'x' {
@@ -360,7 +365,11 @@ mod tests {
     fn font_size_xs_token() {
         let f = run("<style>.x { font-size: 11px; }</style>");
         assert_eq!(f.len(), 1);
-        assert!(f[0].suggest.as_ref().unwrap().contains("--text-xs"), "{:?}", f[0].suggest);
+        assert!(
+            f[0].suggest.as_ref().unwrap().contains("--text-xs"),
+            "{:?}",
+            f[0].suggest
+        );
     }
 
     #[test]
@@ -385,7 +394,12 @@ mod tests {
     fn off_scale_radius_nudges() {
         let f = run("<style>.x { border-radius: 7px; }</style>");
         assert_eq!(f.len(), 1);
-        assert!(f[0].suggest.as_ref().unwrap().contains("off the radius scale"));
+        assert!(
+            f[0].suggest
+                .as_ref()
+                .unwrap()
+                .contains("off the radius scale")
+        );
     }
 
     #[test]

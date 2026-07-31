@@ -76,10 +76,13 @@ pub enum OverrideSeverity {
     /// PROMOTE the rule's findings to Error at the build gate. Unlike
     /// `Warn`/`Off` (which soften), this *tightens*. It is how the styling
     /// policy (`check::policy::Policy`) turns a migration-Warn rule
-    /// (`sail-no-style-block`, `sail-no-raw-container`) into a hard wall for the
-    /// `full`/`strict` presets — without editing the rule. The rule's natural
+    /// (`sail-no-style-block`, `sail-no-raw-container`) into a hard wall for
+    /// the `full`/`strict` presets — without editing the rule. The rule's natural
     /// Warn still stands for an unconfigured package.
     Error,
+    /// Auto-fix findings for the named rule. Used by the compose pass:
+    /// the compiler may rewrite spacing to match the dominant rhythm.
+    Fix,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -128,6 +131,13 @@ pub fn apply_overrides(
                         }
                         OverrideSeverity::Error => {
                             f.severity = sail_lint::Severity::Error;
+                            Some(f)
+                        }
+                        OverrideSeverity::Fix => {
+                            // Fix is not a natural sail-lint severity; keep
+                            // as Warning so the finding still surfaces and
+                            // the compose/auto-fix layer can act on it.
+                            f.severity = sail_lint::Severity::Warn;
                             Some(f)
                         }
                     };

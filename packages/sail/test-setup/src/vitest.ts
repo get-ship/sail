@@ -108,7 +108,7 @@ function ensureWasm(): (source: string, optsJson: string) => unknown {
   let wasmPath: string
   try {
     jsPath = require.resolve('@ship/sail-compiler-wasm')
-    wasmPath = require.resolve('@ship/sail-compiler-wasm/sui_compiler_bg.wasm')
+    wasmPath = require.resolve('@ship/sail-compiler-wasm/sail_compiler_bg.wasm')
   } catch {
     throw new Error('[test-setup/vitest] sail-compiler-wasm not built. Run `just sail-wasm`.')
   }
@@ -124,7 +124,7 @@ function ensureWasm(): (source: string, optsJson: string) => unknown {
 /** Compile a `.sail` file to its emitted JS module. Throws on compile error.
  *  Light DOM is the default. Pass `shadow: true` only for residual foreign-
  *  content containment tests that still attach a shadow root. */
-export function compileSuiToJs(sailPath: string, opts: { shadow?: boolean } = {}): string {
+export function compileSailToJs(sailPath: string, opts: { shadow?: boolean } = {}): string {
   const compile = ensureWasm()
   const source = readFileSync(sailPath, 'utf8')
   const compileOpts: Record<string, unknown> = { mode: 'auto' }
@@ -140,7 +140,7 @@ export function compileSuiToJs(sailPath: string, opts: { shadow?: boolean } = {}
   return result.js
 }
 
-function compileSui(sailPath: string, stem: string): void {
+function compileSail(sailPath: string, stem: string): void {
   const hasBin = existsSync(compilerBin)
   const cmd = hasBin ? compilerBin : 'cargo'
   const args = hasBin
@@ -214,7 +214,7 @@ export function shadowForComponentCompilePlugin(name: string): Plugin {
 // internal subpaths) need pinned to ONE resolved instance. Subpaths first (most
 // specific) so they win over the bare-name aliases. A JS-only consumer may not
 // ship every runtime subpath (`./route`, `./virtual` were dropped in the
-// sail→deck closure), so `resolveSuiAliases` skips whatever doesn't resolve and
+// sail→deck closure), so `resolveSailAliases` skips whatever doesn't resolve and
 // lets node resolution cover the rest — keeping one factory across repos.
 const SUI_ALIAS_SPECS = [
   '@ship/sail-dom/test-utils',
@@ -228,7 +228,7 @@ const SUI_ALIAS_SPECS = [
   '@ship/sail-dom',
 ] as const
 
-function resolveSuiAliases(): Record<string, string> {
+function resolveSailAliases(): Record<string, string> {
   const out: Record<string, string> = {}
   for (const spec of SUI_ALIAS_SPECS) {
     try {
@@ -242,7 +242,7 @@ function resolveSuiAliases(): Record<string, string> {
 
 // ── Workspace-wide @ship/* alias table (exports-map driven) ─────────────────
 //
-// `resolveSuiAliases` above pins a CURATED set of specifiers through
+// `resolveSailAliases` above pins a CURATED set of specifiers through
 // `require.resolve` (node's own `exports` resolution) — that's why every
 // component package authored with `sailComponentVitestConfig()` resolves subpath
 // imports fine. Two hand-written vitest configs did NOT go through the factory:
@@ -362,7 +362,7 @@ export function shipWorkspaceAliases(): Array<{ find: string | RegExp; replaceme
   return [...regexAliases, ...stringAliases]
 }
 
-export interface SuiComponentVitestOptions {
+export interface SailComponentVitestOptions {
   /** Extra `resolve.alias` entries merged over the SAIL defaults. */
   alias?: Record<string, string>
   /** Override the default test setup files. */
@@ -463,7 +463,7 @@ export function sailSourceLoaderPlugin(): Plugin {
   }
 }
 
-export function sailComponentVitestConfig(opts: SuiComponentVitestOptions = {}) {
+export function sailComponentVitestConfig(opts: SailComponentVitestOptions = {}) {
   return defineConfig({
     // The honesty-guard setup file lives in @ship/test-setup, outside each
     // consuming package's root. Vite's dev FS guard (`/@fs/…`) blocks reads
@@ -471,10 +471,10 @@ export function sailComponentVitestConfig(opts: SuiComponentVitestOptions = {}) 
     server: { fs: { allow: [repoRoot] } },
     resolve: {
       // Resolved by package name → point at the framework source, move-proof.
-      // `resolveSuiAliases` skips any specifier not present in the consuming
+      // `resolveSailAliases` skips any specifier not present in the consuming
       // repo, so the same factory works in a JS-only carve-off.
       alias: {
-        ...resolveSuiAliases(),
+        ...resolveSailAliases(),
         ...opts.alias,
       },
     },

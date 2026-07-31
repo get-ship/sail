@@ -1,7 +1,6 @@
 <controller>
-// Task #34 regression fixture — a keyed <for> row containing a nested
-// <match> on a per-row field. `toggle(id)` replaces the row object (same
-// `id` key, so bindFor's keyed-reuse path fires — no remount) but flips
+// Keyed <for> + nested <match> fixture. `toggle(id)` replaces the row object
+// (same `id` key, so bindFor's keyed-reuse path fires — no remount) but flips
 // `status`, which should re-select the <match> arm WITHOUT changing which
 // row is mounted.
 import { controller, signal } from '@ship/sail-runtime'

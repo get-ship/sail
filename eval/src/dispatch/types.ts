@@ -15,6 +15,14 @@ export interface DispatchRequest {
   task: string
   /** Absolute path to golden/fixture source when recorded. */
   fixtureDir?: string | null
+  /**
+   * Scaffold/context profile for prompt framing (EVAL-1).
+   * Control arms must not receive sail-specific framing.
+   * Default (omit): sail blank framing (backward-compatible).
+   */
+  scaffold?: import('../types.ts').ScaffoldKind
+  /** Explicit sail-artifact flag; when false, never frame as sail authoring. */
+  sailArtifacts?: boolean
   /** Extra env for the agent process. */
   env?: Record<string, string>
   /** Abort after this many ms. */

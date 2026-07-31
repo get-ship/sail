@@ -16,12 +16,15 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController};
-use sail_compiler::parse::parse;
 use sail_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{AppManifest, AuthoredController, emit_synthetic};
+use sail_compiler::parse::parse;
 
 fn repo_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../..")
+        .canonicalize()
+        .unwrap()
 }
 
 #[test]
@@ -37,10 +40,12 @@ fn synthesized_board_client_mounts_and_stays_reactive() {
     }
 
     let manifest_src =
-        fs::read_to_string(repo.join("crates/deck/deck-conformance/app/app.manifest.jsonc")).unwrap();
+        fs::read_to_string(repo.join("crates/deck/deck-conformance/app/app.manifest.jsonc"))
+            .unwrap();
     let manifest = AppManifest::parse(&manifest_src).unwrap();
     let raw =
-        fs::read_to_string(repo.join("crates/deck/deck-conformance/app/routes/board/page.sail")).unwrap();
+        fs::read_to_string(repo.join("crates/deck/deck-conformance/app/routes/board/page.sail"))
+            .unwrap();
     // SFC: strip the `<controller>` block before parsing and materialize its
     // body here (deck serves it as a virtual sibling; this harness has no
     // bundler). The name must not collide with the SYNTHETIC controller below.
@@ -51,7 +56,11 @@ fn synthesized_board_client_mounts_and_stays_reactive() {
     let _ = fs::remove_dir_all(&work);
     fs::create_dir_all(&work).unwrap();
     let authored_path = work.join("board.authored.ts");
-    fs::write(&authored_path, inline.expect("board declares a <controller> block")).unwrap();
+    fs::write(
+        &authored_path,
+        inline.expect("board declares a <controller> block"),
+    )
+    .unwrap();
     let authored = AuthoredController {
         specifier: authored_path.to_string_lossy().into_owned(),
     };
@@ -66,7 +75,11 @@ fn synthesized_board_client_mounts_and_stays_reactive() {
     )
     .unwrap();
 
-    fs::write(work.join("board.synthetic.controller.ts"), &out.controller_ts).unwrap();
+    fs::write(
+        work.join("board.synthetic.controller.ts"),
+        &out.controller_ts,
+    )
+    .unwrap();
     fs::write(work.join("board.render.ts"), &out.render_ts).unwrap();
     write_harness(&repo, &work);
 
@@ -75,7 +88,10 @@ fn synthesized_board_client_mounts_and_stays_reactive() {
         .current_dir(&work)
         .status()
         .expect("run vitest");
-    assert!(status.success(), "the synthesized board render must client-mount + stay reactive in jsdom");
+    assert!(
+        status.success(),
+        "the synthesized board render must client-mount + stay reactive in jsdom"
+    );
 }
 
 fn write_harness(repo: &Path, work: &Path) {

@@ -2,10 +2,8 @@
 import { controller, query, mutation, signal } from '@ship/sail-runtime'
 import { crm } from '../../clients/crm-demo'
 
-// query-demo — a second, independent compile-time proof of the
-// query()/mutation() derived-identity model (query-rename-slice-spec.md),
-// alongside apps/sail-site/routes/query-demo (the one actually used for
-// the browser probe — see query-slice-report.md). `crm` is a REAL
+// query-demo — independent compile-time proof of the query()/mutation()
+// derived-identity model (query-rename-slice-spec.md). `crm` is a REAL
 // ES-imported client (app/clients/crm-demo.ts); the compiler statically
 // derives the cache key from `crm.deals.list`'s member path + the
 // `stage()` arg (crates/sail/compiler/src/check/query_keys.rs) — no

@@ -143,10 +143,12 @@ mod tests {
 
     #[test]
     fn sx_and_semantics_are_the_way() {
-        assert!(run(
-            r#"<div sx="p-4 bg-surface-2" role="listbox" aria-label="x" bind:this={el}></div>"#
-        )
-        .is_empty());
+        assert!(
+            run(
+                r#"<div sx="p-4 bg-surface-2" role="listbox" aria-label="x" bind:this={el}></div>"#
+            )
+            .is_empty()
+        );
     }
 
     #[test]

@@ -27,11 +27,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     starter to edit with a solved screen running live.
   </p>
 
-  <for as="group" of={groups()} key={group.chapter}>
+  <for {groups()} as="group" key={group.chapter}>
     <column gap="3">
       <h2>{group.title}</h2>
       <column gap="2">
-        <for as="lesson" of={group.lessons} key={lesson.slug}>
+        <for {group.lessons} as="lesson" key={lesson.slug}>
           <a href={lesson.href}
              sx={style.pad(4).radius(lg).borderWidth(1).border(border).bg(surface-1).when({ hover: style.bg(surface-2).borderWidth(1).border(border-strong) })}>
             <row gap="3" align="center">

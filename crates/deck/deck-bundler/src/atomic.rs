@@ -43,8 +43,7 @@ pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
     let from = from.as_ref();
     let to = to.as_ref();
 
-    let src = fs::read(from)
-        .with_context(|| format!("read source {}", from.display()))?;
+    let src = fs::read(from).with_context(|| format!("read source {}", from.display()))?;
 
     if let Ok(dst_meta) = fs::metadata(to) {
         if dst_meta.len() == src.len() as u64 {
@@ -67,10 +66,7 @@ pub fn copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> Result<()> {
 /// - `.deck` + suffix `routes` → `.deck.stage.routes`
 pub fn stage_dir_for(dest: &Path, suffix: &str) -> PathBuf {
     let parent = dest.parent().unwrap_or_else(|| Path::new("."));
-    let name = dest
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("out");
+    let name = dest.file_name().and_then(|s| s.to_str()).unwrap_or("out");
     parent.join(format!("{name}.stage.{suffix}"))
 }
 
@@ -86,8 +82,7 @@ pub fn publish_dir(stage: &Path, dest: &Path) -> Result<()> {
         .with_context(|| format!("walk stage dir {}", stage.display()))?;
     files.sort();
 
-    fs::create_dir_all(dest)
-        .with_context(|| format!("create dest dir {}", dest.display()))?;
+    fs::create_dir_all(dest).with_context(|| format!("create dest dir {}", dest.display()))?;
 
     for rel in &files {
         let from = stage.join(rel);
@@ -105,17 +100,13 @@ pub fn publish_dir(stage: &Path, dest: &Path) -> Result<()> {
 }
 
 fn tmp_path(path: &Path) -> PathBuf {
-    let name = path
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("tmp");
+    let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("tmp");
     path.with_file_name(format!("{name}.tmp"))
 }
 
 fn collect_files(root: &Path, rel: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
     let abs = root.join(rel);
-    let rd = fs::read_dir(&abs)
-        .with_context(|| format!("read dir {}", abs.display()))?;
+    let rd = fs::read_dir(&abs).with_context(|| format!("read dir {}", abs.display()))?;
     for entry in rd.flatten() {
         let child_rel = rel.join(entry.file_name());
         match entry.file_type() {
@@ -142,7 +133,10 @@ mod tests {
         write(&p, "new").unwrap();
 
         assert_eq!(fs::read_to_string(&p).unwrap(), "new");
-        assert!(!dir.path().join("bundle.js.tmp").exists(), "temp file leaked");
+        assert!(
+            !dir.path().join("bundle.js.tmp").exists(),
+            "temp file leaked"
+        );
     }
 
     #[test]

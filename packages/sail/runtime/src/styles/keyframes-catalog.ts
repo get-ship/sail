@@ -6,8 +6,7 @@
 // catalog (crates/sail/lint/animation-presets.json) — infinite spinners /
 // shimmers stay on CSS PE, not fx:loop.
 //
-// Always-on ambient sheet is concatenated into LIGHT_CONTRACTS_CSS and
-// materialised by emit-contracts-css.ts → packages/sail/tokens/src/sail-base.css.
+// Closed ambient loops; materialised in sail-base.css.
 
 export type KeyframeCatalogEntry = {
   /** Closed product name (`spin`, `shimmer`, …). */
@@ -98,5 +97,5 @@ export function emitKeyframeCatalogCss(
   return out
 }
 
-/** Precomputed ambient sheet consumed by LIGHT_CONTRACTS_CSS / CONTROL_SKINS_CSS. */
+/** Ambient sheet string (reference; sail-base.css is authoritative). */
 export const AMBIENT_KEYFRAMES_CSS = emitKeyframeCatalogCss()

@@ -32,7 +32,7 @@ use std::collections::BTreeSet;
 use crate::check::controller_parse::{ParsedController, ScopeKind};
 use crate::diagnostics::{CompileError, Span};
 use crate::emit::util::camel_of;
-use crate::ir::{PropKind, Program};
+use crate::ir::{Program, PropKind};
 
 /// Which returned-scope shapes an `sx` `(--x)` read may resolve to.
 ///
@@ -90,7 +90,11 @@ pub fn resolve(
 
             let scope_name = camel_of(&css_name);
 
-            if let Some(p) = program.props.iter().find(|p| camel_of(&p.name) == scope_name) {
+            if let Some(p) = program
+                .props
+                .iter()
+                .find(|p| camel_of(&p.name) == scope_name)
+            {
                 out.push(SxVarBinding {
                     css_name,
                     scope_name,
@@ -166,11 +170,7 @@ fn find_var_refs(val: &str) -> Vec<(usize, String, usize)> {
             let name_start = i + 5;
             if let Some(close_rel) = val[name_start..].find(')') {
                 let name = &val[name_start..name_start + close_rel];
-                if !name.is_empty()
-                    && name
-                        .chars()
-                        .all(|c| c.is_ascii_alphanumeric() || c == '_')
-                {
+                if !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
                     let css = camel_to_kebab(name);
                     let span_len = 5 + name.len() + 1; // bind( + name + )
                     out.push((i, css, span_len));
@@ -264,7 +264,9 @@ fn refusal(
     if let Some(s) = closest(css_name, &candidates) {
         msg.push_str(&format!(" Did you mean `(--{s})`?"));
     }
-    CompileError::new(msg).with_span(span).with_category("sail-sx-var")
+    CompileError::new(msg)
+        .with_span(span)
+        .with_category("sail-sx-var")
 }
 
 fn kebab_of(name: &str) -> String {
@@ -386,7 +388,10 @@ mod tests {
         let program = program_with_props(vec![]);
         let source = r#"<div sx="bg-(--surface-2)"></div>"#;
         let out = resolve(source, &program, None).unwrap();
-        assert!(out.is_empty(), "a global token needs no component-local wiring");
+        assert!(
+            out.is_empty(),
+            "a global token needs no component-local wiring"
+        );
     }
 
     #[test]

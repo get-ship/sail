@@ -126,6 +126,16 @@ pub(crate) const FRAMEWORK_SINGLETONS: &[FrameworkSingleton] = &[
         externals: &["@ship/sail-runtime"],
         co_assets: &[],
     },
+    // `@ship/sail-studio-bridge` — DEV-only Studio bridge (hotkeys, FAB,
+    // selection ping, annotation relay). Loaded by live-reload.js in
+    // development only. Zero runtime deps — postMessage only, no ops URLs.
+    FrameworkSingleton {
+        name: "sail-studio-bridge",
+        spec: "@ship/sail-studio-bridge",
+        out_file: "sail-studio-bridge.js",
+        externals: &[],
+        co_assets: &[],
+    },
 ];
 
 /// True for deck's own framework singletons — libraries consumed by name via the
@@ -191,16 +201,21 @@ impl BundleLayout {
     /// it carries in its runtime `Resolution`); `workspace_root` distinguishes an
     /// external-project workspace from the framework repo for source-root resolution.
     pub fn with_config(
-         repo_root: PathBuf,
-         workspace_root: Option<PathBuf>,
-         cfg: DeckConfig,
-     ) -> Self {
-         let source_roots = match &workspace_root {
-             Some(ws) if *ws != repo_root => vec![repo_root.clone(), ws.clone()],
-             _ => vec![repo_root.clone()],
-         };
-         Self { out_root: repo_root.clone(), repo_root, source_roots, cfg }
-     }
+        repo_root: PathBuf,
+        workspace_root: Option<PathBuf>,
+        cfg: DeckConfig,
+    ) -> Self {
+        let source_roots = match &workspace_root {
+            Some(ws) if *ws != repo_root => vec![repo_root.clone(), ws.clone()],
+            _ => vec![repo_root.clone()],
+        };
+        Self {
+            out_root: repo_root.clone(),
+            repo_root,
+            source_roots,
+            cfg,
+        }
+    }
 
     /// Redirect output under `out_root` (sources still resolve from `repo_root`).
     pub fn with_out_root(mut self, out_root: PathBuf) -> Self {
@@ -336,7 +351,9 @@ impl BundleLayout {
         let mut seen = HashSet::new();
         let leaf = self.cfg.route_leaf.as_deref().unwrap_or("page.sail");
         for dir in self.route_bucket_dirs() {
-            let Ok(entries) = std::fs::read_dir(&dir) else { continue };
+            let Ok(entries) = std::fs::read_dir(&dir) else {
+                continue;
+            };
             for e in entries.flatten() {
                 let name = e.file_name().to_string_lossy().into_owned();
                 if seen.contains(&name) || !e.path().is_dir() {
@@ -385,7 +402,6 @@ impl BundleLayout {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -405,11 +421,23 @@ mod tests {
     #[test]
     fn deck_out_resolves_through_the_single_shared_constant() {
         let root = PathBuf::from("/proj");
-        let writer = BundleLayout::with_config(root.clone(), None, DeckConfig::defaults()).deck_out();
+        let writer =
+            BundleLayout::with_config(root.clone(), None, DeckConfig::defaults()).deck_out();
         let shared = deck_config::deck_out_path(&root);
-        assert_eq!(writer, shared, "the bundler writer resolves .deck via the shared join");
-        assert_eq!(shared, root.join(deck_config::DECK_OUT_DIRNAME), "the shared join is root/<const>");
-        assert_eq!(deck_config::DECK_OUT_DIRNAME, ".deck", "the one declared output-dir name");
+        assert_eq!(
+            writer, shared,
+            "the bundler writer resolves .deck via the shared join"
+        );
+        assert_eq!(
+            shared,
+            root.join(deck_config::DECK_OUT_DIRNAME),
+            "the shared join is root/<const>"
+        );
+        assert_eq!(
+            deck_config::DECK_OUT_DIRNAME,
+            ".deck",
+            "the one declared output-dir name"
+        );
         // The framework sub-dir hangs off the SAME join — never a second `.deck` root.
         let l = BundleLayout::with_config(root.clone(), None, DeckConfig::defaults());
         assert_eq!(l.assets_dir_for("sail-runtime"), shared.join("framework"));
@@ -419,22 +447,46 @@ mod tests {
     fn assets_dir_routes_by_name() {
         // Framework singletons land in `.deck/framework/` (build-script staging).
         let l = BundleLayout::with_config(PathBuf::from("/repo"), None, DeckConfig::defaults());
-        assert_eq!(l.assets_dir_for("sail-runtime"), PathBuf::from("/repo/.deck/framework"));
-        assert_eq!(l.assets_dir_for("sail-dom"), PathBuf::from("/repo/.deck/framework"));
-        assert_eq!(l.assets_dir_for("sail-sdk-client"), PathBuf::from("/repo/.deck/framework"));
+        assert_eq!(
+            l.assets_dir_for("sail-runtime"),
+            PathBuf::from("/repo/.deck/framework")
+        );
+        assert_eq!(
+            l.assets_dir_for("sail-dom"),
+            PathBuf::from("/repo/.deck/framework")
+        );
+        assert_eq!(
+            l.assets_dir_for("sail-sdk-client"),
+            PathBuf::from("/repo/.deck/framework")
+        );
         // Per-tag chrome (`sail-components/<name>`) lands in `.deck/`.
         // (The umbrella `sail-components` target no longer exists — chrome
         // is per-tag tree-shaking only.)
-        assert_eq!(l.assets_dir_for("sail-components/sail-rail"), PathBuf::from("/repo/.deck"));
-        assert_eq!(l.assets_dir_for("routes/git/route"), PathBuf::from("/repo/.deck"));
+        assert_eq!(
+            l.assets_dir_for("sail-components/sail-rail"),
+            PathBuf::from("/repo/.deck")
+        );
+        assert_eq!(
+            l.assets_dir_for("routes/git/route"),
+            PathBuf::from("/repo/.deck")
+        );
         // Consumer targets (e.g. sail-marketing, sail-arcade, sail-pdf,
         // ship-code-editor) ALSO land in `.deck/` — the bake's staging
         // area, sibling to the framework singletons. No target is a host
         // asset; the bundler owns its output layout and every build
         // artifact belongs under `.deck/`.
-        assert_eq!(l.assets_dir_for("sail-marketing"), PathBuf::from("/repo/.deck"));
-        assert_eq!(l.assets_dir_for("sail-arcade"), PathBuf::from("/repo/.deck"));
-        assert_eq!(l.assets_dir_for("ship-something"), PathBuf::from("/repo/.deck"));
+        assert_eq!(
+            l.assets_dir_for("sail-marketing"),
+            PathBuf::from("/repo/.deck")
+        );
+        assert_eq!(
+            l.assets_dir_for("sail-arcade"),
+            PathBuf::from("/repo/.deck")
+        );
+        assert_eq!(
+            l.assets_dir_for("ship-something"),
+            PathBuf::from("/repo/.deck")
+        );
     }
 
     #[test]
@@ -449,13 +501,19 @@ mod tests {
             &root.join("node_modules/@ship/sail-runtime/package.json"),
             r#"{ "name": "@ship/sail-runtime", "exports": { ".": "./src/index.ts" } }"#,
         );
-        write(&root.join("node_modules/@ship/sail-runtime/src/index.ts"), "export const x=1;\n");
+        write(
+            &root.join("node_modules/@ship/sail-runtime/src/index.ts"),
+            "export const x=1;\n",
+        );
 
         let l = BundleLayout::with_config(root, None, DeckConfig::defaults());
         let targets = l.all_targets();
         let names: Vec<&str> = targets.iter().map(|t| t.name.as_str()).collect();
 
-        assert!(names.contains(&"sail-runtime"), "node-resolved framework target present");
+        assert!(
+            names.contains(&"sail-runtime"),
+            "node-resolved framework target present"
+        );
         assert!(names.contains(&"routes/git/route"), "discovered view");
     }
 
@@ -468,8 +526,7 @@ mod tests {
         let root = tmp.path().to_path_buf();
         write(&root.join("package.json"), r#"{ "name": "consumer" }"#);
         let l = BundleLayout::with_config(root, None, DeckConfig::defaults());
-        let names: Vec<String> =
-            l.all_targets().into_iter().map(|t| t.name).collect();
+        let names: Vec<String> = l.all_targets().into_iter().map(|t| t.name).collect();
         assert!(
             !names.iter().any(|n| n == "sail-runtime"),
             "no framework target when the package isn't installed"
@@ -484,10 +541,7 @@ mod tests {
     fn route_bucket_dirs_are_source_roots_times_route_dirs() {
         // Contributor mode: one source root.
         let l = BundleLayout::with_config(PathBuf::from("/repo"), None, DeckConfig::defaults());
-        assert_eq!(
-            l.route_bucket_dirs(),
-            vec![PathBuf::from("/repo/routes")],
-        );
+        assert_eq!(l.route_bucket_dirs(), vec![PathBuf::from("/repo/routes")],);
         // External-project mode: repo_root + workspace_root, each × route_dirs.
         let l2 = BundleLayout::with_config(
             PathBuf::from("/repo"),
@@ -496,10 +550,7 @@ mod tests {
         );
         assert_eq!(
             l2.route_bucket_dirs(),
-            vec![
-                PathBuf::from("/repo/routes"),
-                PathBuf::from("/ws/routes"),
-            ],
+            vec![PathBuf::from("/repo/routes"), PathBuf::from("/ws/routes"),],
         );
     }
 
@@ -511,7 +562,10 @@ mod tests {
     fn consumer_targets_discovered_from_package_self_declaration() {
         let tmp = tempdir().unwrap();
         let root = tmp.path().to_path_buf();
-        write(&root.join("package.json"), r#"{ "workspaces": ["packages/*", "apps/*"] }"#);
+        write(
+            &root.join("package.json"),
+            r#"{ "workspaces": ["packages/*", "apps/*"] }"#,
+        );
         // An eager marketing pack (apps/site) + a lazy component pack.
         write(
             &root.join("apps/site/package.json"),
@@ -529,18 +583,30 @@ mod tests {
         let l = BundleLayout::with_config(root.clone(), None, DeckConfig::defaults());
         let consumer = l.consumer_targets();
 
-        let marketing = consumer.iter().find(|t| t.name == "sail-marketing").expect("marketing discovered");
+        let marketing = consumer
+            .iter()
+            .find(|t| t.name == "sail-marketing")
+            .expect("marketing discovered");
         assert_eq!(
             marketing.entry,
             TargetEntry::Real(root.join("apps/site/src/marketing/marketing-bundle.ts")),
             "entry is package-relative, joined onto the declaring package root"
         );
-        assert_eq!(marketing.externals, vec!["@ship/sail-runtime", "@ship/sail-dom"]);
+        assert_eq!(
+            marketing.externals,
+            vec!["@ship/sail-runtime", "@ship/sail-dom"]
+        );
         assert_eq!(marketing.out_file, "sail-marketing.js");
         assert!(!marketing.lazy, "marketing is eager");
 
-        let arcade = consumer.iter().find(|t| t.name == "sail-arcade").expect("arcade discovered");
-        assert!(arcade.lazy, "arcade's lazy intent rides onto the BundleTarget");
+        let arcade = consumer
+            .iter()
+            .find(|t| t.name == "sail-arcade")
+            .expect("arcade discovered");
+        assert!(
+            arcade.lazy,
+            "arcade's lazy intent rides onto the BundleTarget"
+        );
 
         // No central registry: discovery is the only source of consumer targets.
         assert_eq!(consumer.len(), 2, "exactly the two self-declared bundles");

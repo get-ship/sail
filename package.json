@@ -9,6 +9,9 @@
       "packages/sail/tokens",
       "packages/sail/test-setup",
       "packages/sail/tutorial",
+      "packages/sail/studio-bridge",
+      "packages/sail/studio-shell",
+      "packages/sail/studio-client",
       "packages/components/sail/*",
       "packages/deck/*",
       "apps/*"
@@ -28,8 +31,9 @@
     "build:bundles": "cargo run -p deck-cli -- build-assets",
     "typecheck": "node scripts/typecheck-components.mjs",
     "typecheck:tsgo": "tsgo --noEmit -p packages/sail/runtime/tsconfig.json && tsgo --noEmit -p packages/sail/dom/tsconfig.json",
-    "test": "(vitest run; echo \"vitest exit: $?\") && bash scripts/test-no-phantom-xtask-refs.sh",
-    "test:vitest": "vitest run"
+    "test": "bash -c 'vitest run; v=$?; bun test tests/hygiene || v=1; exit $v'",
+    "test:vitest": "vitest run",
+    "test:hygiene": "bun test tests/hygiene"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

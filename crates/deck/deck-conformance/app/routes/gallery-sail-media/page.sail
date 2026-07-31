@@ -1,8 +1,8 @@
 <column gap="8" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
   <header sx={style.borderBWidth(1).borderB(border).padB(4)}>
-    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)}>sui/media — Domain Stubs</h1>
+    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)}>sail/media — Domain Stubs</h1>
     <p sx={style.fg(muted-foreground).fontSize(sm)}>
-      Pack <strong>sui/media</strong>. Each card renders the real custom element
+      Pack <strong>sail/media</strong>. Each card renders the real custom element
       tag with static mock attribute values so the shell registers and paints.
       A visible badge marks each card as a domain stub — no <code>ship.*</code>
       calls, no live data. Structured inputs (<code>src</code>,

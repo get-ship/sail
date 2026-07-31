@@ -8,13 +8,13 @@
 use std::fs;
 use std::path::PathBuf;
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
 }
 
-fn compile_sui(name: &str) -> String {
+fn compile_sail(name: &str) -> String {
     let path = fixtures_dir().join(format!("{name}.sail"));
     let source = fs::read_to_string(&path).expect("read fixture");
     let opts = CompileOpts {
@@ -34,14 +34,14 @@ fn compile_sui(name: &str) -> String {
 
 #[test]
 fn morph_directive_compiles_without_error() {
-    // Smoke-test: the compile() call inside compile_sui panics on
+    // Smoke-test: the compile() call inside compile_sail panics on
     // diagnostic; reaching this assertion means the directive parsed.
-    let _ = compile_sui("morph-directive");
+    let _ = compile_sail("morph-directive");
 }
 
 #[test]
 fn morph_directive_emits_setattribute() {
-    let js = compile_sui("morph-directive");
+    let js = compile_sail("morph-directive");
     // The directive lowers to a plain Static attribute — the marker ships to the DOM
     // as `morph=""` for `bindRawHtml` (and other HTML-producing bindings) to detect
     // at runtime. HOW it gets there is the compiler's business and it changed: a
@@ -56,7 +56,7 @@ fn morph_directive_emits_setattribute() {
 
 #[test]
 fn morph_directive_emits_no_reactive_wiring() {
-    let js = compile_sui("morph-directive");
+    let js = compile_sail("morph-directive");
     // The directive is a static marker — no bindAttr, no effect, no
     // hydration call should be generated for it.
     assert!(

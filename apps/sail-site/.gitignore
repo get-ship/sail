@@ -22,3 +22,8 @@
 /.cache/
 /src/playground-manifest.json
 /src/gallery-manifest.json
+
+# Sail defaults (merged by ensure_sail_gitignore)
+.sail/
+node_modules/
+.env

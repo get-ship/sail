@@ -12,7 +12,7 @@ export { dropzone } from './dropzone'
 export { mediaFallback } from './media-fallback'
 export { tipDescribe } from './tip-describe'
 export { variantLive } from './variant-live'
-export { icon, primeIconCache } from './icon'
+export { icon, isAllowedIconSrc, primeIconCache } from './icon'
 export { marquee } from './marquee'
 export { recoverySurface } from './recovery-surface'
 export { catchRender } from './catch-render'
@@ -31,7 +31,14 @@ export { rangeFill } from './range-fill'
 export { radioGroup } from './radio-group'
 export { tabs } from './tabs'
 export { toggleGroup } from './toggle-group'
-export { themeSelect } from './theme-select'
+export {
+  themeSelect,
+  setEffectiveThemeIds,
+  readEffectiveThemeIds,
+  parseEffectiveThemeIdsContent,
+  effectiveProductThemes,
+} from './theme-select'
+export type { EffectiveSessionIds } from './theme-select'
 export { pagination } from './pagination'
 export { menu } from './menu'
 export { contextMenu } from './context-menu'

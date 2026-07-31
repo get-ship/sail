@@ -28,9 +28,12 @@ pub struct Element {
     /// bare `style="…"`. Lowercased key → raw value (no parsing done at this
     /// layer — style resolution decodes CSS lengths from these).
     pub style: HashMap<String, String>,
-    /// Explicit grid-column span from `data-col-span`.
+    /// Other HTML attributes (tone, variant, type, …) used by L1 skin paint
+    /// matching (`[tone='primary'].sx-…`). Not consumed by the layout pass.
+    pub attrs: HashMap<String, String>,
+    /// Explicit grid-column span from language `col-span` (or legacy `data-col-span`).
     pub col_span: Option<u16>,
-    /// Explicit grid-row span from `data-row-span`.
+    /// Explicit grid-row span from language `row-span` (or legacy `data-row-span`).
     pub row_span: Option<u16>,
     /// Span into the ORIGINAL (un-preprocessed) source. We keep both: the
     /// preprocessed span for in-file precision, plus the parent source's
@@ -71,8 +74,19 @@ impl Element {
         }
         matches!(
             self.tag.as_str(),
-            "iframe" | "video" | "audio" | "embed" | "object" | "canvas" | "svg"
-                | "picture" | "source" | "track" | "math" | "slot" | "template"
+            "iframe"
+                | "video"
+                | "audio"
+                | "embed"
+                | "object"
+                | "canvas"
+                | "svg"
+                | "picture"
+                | "source"
+                | "track"
+                | "math"
+                | "slot"
+                | "template"
         )
     }
 }
@@ -90,7 +104,6 @@ pub fn parse_source(source: &str) -> Vec<Element> {
     let bytes = source.as_bytes();
     let mut pos: usize = 0;
 
-
     while pos < bytes.len() {
         // Comments.
         if let Some(rel) = find_from(bytes, pos, b"<!--") {
@@ -106,17 +119,26 @@ pub fn parse_source(source: &str) -> Vec<Element> {
         if let Some(rel_lt) = find_from(bytes, pos, b"<") {
             if rel_lt == pos {
                 // Could be a tag right here. Try parse_open_tag.
-                if let Some((consumed, elem_opt, is_close, raw_text_to)) = parse_open_tag(source, pos) {
+                if let Some((consumed, elem_opt, is_close, raw_text_to, self_closed)) =
+                    parse_open_tag(source, pos)
+                {
                     pos = consumed;
                     match (is_close, elem_opt) {
                         (false, Some(elem)) => {
                             let idx = out.len();
                             let parent = *stack.last().unwrap_or(&0);
+                            let voidish = elem_is_void(&elem.tag) || self_closed;
                             let mut e = elem;
                             e.parent = Some(parent);
                             out.push(e);
                             out[parent].children.push(idx);
-                            stack.push(idx);
+                            // Void / self-closing tags must not stay on the
+                            // stack — otherwise later siblings nest inside
+                            // `<input/>` / `<switch/>` and L1 cards "stack"
+                            // as grandchildren of the previous control.
+                            if !voidish {
+                                stack.push(idx);
+                            }
                         }
                         (true, _) => {
                             if stack.len() > 1 {
@@ -176,15 +198,12 @@ fn find_from(hay: &[u8], start: usize, needle: &[u8]) -> Option<usize> {
 }
 
 /// Try to parse an open or close tag at `pos`. Returns:
-///   - `Some((next_pos, Some(element), false, None))` for a normal open tag,
-///   - `Some((next_pos, None, false, Some(close_needle)))` for a raw-text tag
-///     whose body the caller should skip (controller / style / script),
-///   - `Some((next_pos, None, true, None))` for a close tag,
+///   - `(next_pos, Some(element), is_close, raw_text_close, self_closed)`
 ///   - `None` if `pos` doesn't begin a tag.
 fn parse_open_tag(
     source: &str,
     pos: usize,
-) -> Option<(usize, Option<Element>, bool, Option<String>)> {
+) -> Option<(usize, Option<Element>, bool, Option<String>, bool)> {
     let bytes = source.as_bytes();
     if bytes.get(pos) != Some(&b'<') {
         return None;
@@ -192,12 +211,12 @@ fn parse_open_tag(
     // `</foo>`?
     if bytes.get(pos + 1) == Some(&b'/') {
         let close_end = source[pos..].find('>')?;
-        return Some((pos + close_end + 1, None, true, None));
+        return Some((pos + close_end + 1, None, true, None, false));
     }
     // `<!…>` (declaration) — skip.
     if bytes.get(pos + 1) == Some(&b'!') {
         let close_end = source[pos..].find('>')?;
-        return Some((pos + close_end + 1, None, false, None));
+        return Some((pos + close_end + 1, None, false, None, false));
     }
 
     let (open_end, self_close) = find_tag_end(bytes, pos)?;
@@ -217,19 +236,26 @@ fn parse_open_tag(
             None,
             false,
             Some(format!("</{}>", tag)),
+            false,
         ));
     }
 
     // Skip non-visual blocks entirely (we don't even record an element for
     // these — props are part of the IR, not the layout tree).
     const SKIP: &[&str] = &[
-        "data", "client", "prop", "variants",
-        "theme", "host", "component", "while-loading", "while-error",
+        "data",
+        "client",
+        "prop",
+        "variants",
+        "theme",
+        "host",
+        "component",
+        "while-loading",
+        "while-error",
     ];
     if SKIP.contains(&tag.as_str()) {
-        return Some((open_end + 1, None, false, None));
+        return Some((open_end + 1, None, false, None, false));
     }
-
 
     let mut elem = Element {
         tag,
@@ -243,11 +269,28 @@ fn parse_open_tag(
     // distinct classes split on whitespace).
     elem.class = merge_class(&elem.class);
 
-    if self_close {
-        Some((open_end + 1, Some(elem), false, None))
-    } else {
-        Some((open_end + 1, Some(elem), false, None))
-    }
+    Some((open_end + 1, Some(elem), false, None, self_close))
+}
+
+/// HTML void elements — never have children; must not stay on the open stack.
+fn elem_is_void(tag: &str) -> bool {
+    matches!(
+        tag,
+        "area"
+            | "base"
+            | "br"
+            | "col"
+            | "embed"
+            | "hr"
+            | "img"
+            | "input"
+            | "link"
+            | "meta"
+            | "param"
+            | "source"
+            | "track"
+            | "wbr"
+    )
 }
 /// and unquoted values; bare attributes get an empty value.
 fn parse_attrs(text: &str, elem: &mut Element) {
@@ -263,10 +306,7 @@ fn parse_attrs(text: &str, elem: &mut Element) {
         }
         // Read attribute name (until `=`, whitespace, or `>`).
         let name_start = i;
-        while i < bytes.len()
-            && !bytes[i].is_ascii_whitespace()
-            && bytes[i] != b'='
-        {
+        while i < bytes.len() && !bytes[i].is_ascii_whitespace() && bytes[i] != b'=' {
             i += 1;
         }
         let name = text[name_start..i].to_ascii_lowercase();
@@ -328,16 +368,19 @@ fn set_attr(elem: &mut Element, name: &str, value: String) {
                 continue;
             }
             if let Some((k, v)) = decl.split_once(':') {
-                elem.style.insert(k.trim().to_string(), v.trim().to_string());
+                elem.style
+                    .insert(k.trim().to_string(), v.trim().to_string());
             }
         }
-    } else if name == "data-col-span" {
+    } else if name == "col-span" || name == "data-col-span" {
         elem.col_span = value.parse().ok();
-    } else if name == "data-row-span" {
+    } else if name == "row-span" || name == "data-row-span" {
         elem.row_span = value.parse().ok();
+    } else {
+        // Retain for L1 skin attribute selectors (tone/variant/type/…).
+        // Layout ignores these; paint in sail-render matches them.
+        elem.attrs.insert(name.to_string(), value);
     }
-    // Other attrs are ignored at this layer — text/event/etc. don't affect
-    // box geometry.
 }
 
 fn merge_class(c: &str) -> String {
@@ -439,6 +482,27 @@ mod tests {
     }
 
     #[test]
+    fn void_and_self_closing_do_not_nest_siblings() {
+        let src = r#"<div class="sail-col"><input type="text" /><div class="sail-card"></div><input class="sail-switch" role="switch" /><div class="after"></div></div>"#;
+        let tree = parse_source(src);
+        let root_col = tree.iter().find(|e| e.class.contains("sail-col")).unwrap();
+        // Both cards/divs and inputs are direct children of the column.
+        assert_eq!(
+            root_col.children.len(),
+            4,
+            "input void must not swallow following siblings; children={:?}",
+            root_col
+                .children
+                .iter()
+                .map(|&i| (tree[i].tag.as_str(), tree[i].class.as_str()))
+                .collect::<Vec<_>>()
+        );
+        assert!(tree[root_col.children[1]].class.contains("sail-card"));
+        assert_eq!(tree[root_col.children[2]].tag, "input");
+        assert!(tree[root_col.children[3]].class.contains("after"));
+    }
+
+    #[test]
     fn whitespace_only_text_stays_empty() {
         let src = r#"<div>   </div>"#;
         let tree = parse_source(src);
@@ -467,7 +531,10 @@ mod tests {
             ("", false),
         ];
         for (tag, expected) in cases {
-            let e = Element { tag: tag.to_string(), ..Default::default() };
+            let e = Element {
+                tag: tag.to_string(),
+                ..Default::default()
+            };
             assert_eq!(e.is_unknown(), expected, "tag={tag:?}");
         }
     }

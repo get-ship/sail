@@ -40,7 +40,7 @@
 </scope>
 
 <controller>
-import { controller, derived } from '@ship/sail-runtime'
+
 import type { Action } from '@ship/sail-runtime'
 import { createChartData } from '../engine/create-chart-data'
 import { createChartViewport } from '../engine/create-chart-viewport'
@@ -98,11 +98,11 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
 
 </controller>
 <column gap="0" w="full">
-  <if cond={loading()}>
+  <if {loading()}>
     <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
-  <else-if cond={chart.error()}>
+  <else-if {chart.error()}>
     <error-state></error-state>
-  </else-if><else-if cond={chart.isEmpty()}>
+  </else-if><else-if {chart.isEmpty()}>
     <empty-state></empty-state>
   </else-if><else>
     <svg
@@ -113,13 +113,13 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
       aria-describedby="chart-data"
       sx={style.display(block).w(full).overflow(hidden)}
       use:observeViewport>
-      <for as="g" of={gridLines()} key={g.id}>
+      <for {gridLines()} as="g" key={g.id}>
         <line x1="0" x2={viewport.width()} y1={g.y} y2={g.y} stroke="var(--border)" stroke-width="1" stroke-dasharray="2 3"></line>
       </for>
-      <for as="s" of={seriesPaths()} key={s.name}>
+      <for {seriesPaths()} as="s" key={s.name}>
         <path d={s.strokeD} fill="none" stroke={s.color} stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-        <if cond={points()}>
-          <for as="p" of={s.pts} key={p.id}>
+        <if {points()}>
+          <for {s.pts} as="p" key={p.id}>
             <circle cx={p.cx} cy={p.cy} r="2.5" fill={s.color}></circle>
           </for>
         </if>
@@ -128,9 +128,9 @@ export default controller(({ series, width, height, grid, label, loading }: Scop
     <column id="chart-data" sx={style.srOnly()}>
       <slot name="description">
         <table>
-          <for as="row" of={chart.ariaTable()} key={row[0].id}>
+          <for {chart.ariaTable()} as="row" key={row[0].id}>
             <tr>
-              <for as="cell" of={row} key={cell.id}>
+              <for {row} as="cell" key={cell.id}>
                 <td>{cell.text}</td>
               </for>
             </tr>

@@ -26,6 +26,10 @@ pub struct Expr {
 
 impl Expr {
     pub fn new(source: impl Into<String>, span: Span, allow_arrow: bool) -> Self {
-        Self { source: source.into(), span, allow_arrow }
+        Self {
+            source: source.into(),
+            span,
+            allow_arrow,
+        }
     }
 }

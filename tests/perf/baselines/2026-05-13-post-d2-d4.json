@@ -10,56 +10,56 @@
   ],
   "operations": {
     "01_run1k": {
-      "sui": 59.5,
+      "sail": 59.5,
       "solid": 50.9,
       "svelte": 51.9,
       "vue": 57.1,
       "vanillajs": 50
     },
     "02_replace1k": {
-      "sui": 65.2,
+      "sail": 65.2,
       "solid": 56.2,
       "svelte": 57.8,
       "vue": 62.5,
       "vanillajs": 52.8
     },
     "03_update10th1k_x16": {
-      "sui": 23.3,
+      "sail": 23.3,
       "solid": 10.8,
       "svelte": 8.6,
       "vue": 15.2,
       "vanillajs": 18.8
     },
     "04_select1k": {
-      "sui": 4.7,
+      "sail": 4.7,
       "solid": 3.6,
       "svelte": 4.4,
       "vue": 4.5,
       "vanillajs": 3.9
     },
     "05_swap1k": {
-      "sui": 10.3,
+      "sail": 10.3,
       "solid": 6.9,
       "svelte": 7.4,
       "vue": 6.7,
       "vanillajs": 7.4
     },
     "06_remove-one-1k": {
-      "sui": 13.2,
+      "sail": 13.2,
       "solid": 10,
       "svelte": 10.2,
       "vue": 12.2,
       "vanillajs": 10.8
     },
     "08_create1k-after1k_x2": {
-      "sui": 68.5,
+      "sail": 68.5,
       "solid": 56,
       "svelte": 56.1,
       "vue": 63.9,
       "vanillajs": 54.5
     },
     "09_clear1k_x8": {
-      "sui": 6.7,
+      "sail": 6.7,
       "solid": 5.3,
       "svelte": 5.7,
       "vue": 5.6,
@@ -68,21 +68,21 @@
   },
   "memory_mb": {
     "21_ready-memory": {
-      "sui": 0.6,
+      "sail": 0.6,
       "solid": 0.5,
       "svelte": 0.6,
       "vue": 0.8,
       "vanillajs": 0.5
     },
     "22_run-memory": {
-      "sui": 4.2,
+      "sail": 4.2,
       "solid": 2.7,
       "svelte": 2.8,
       "vue": 3.7,
       "vanillajs": 1.8
     },
     "25_run-clear-memory": {
-      "sui": 2.2,
+      "sail": 2.2,
       "solid": 0.8,
       "svelte": 0.9,
       "vue": 1.1,
@@ -91,14 +91,14 @@
   },
   "size_kb": {
     "41_size-uncompressed": {
-      "sui": 25,
+      "sail": 25,
       "solid": 11.5,
       "svelte": 34.3,
       "vue": 63.7,
       "vanillajs": 11.3
     },
     "42_size-compressed": {
-      "sui": 7.8,
+      "sail": 7.8,
       "solid": 4.5,
       "svelte": 12.2,
       "vue": 22.8,
@@ -107,7 +107,7 @@
   },
   "first_paint_ms": {
     "43_first-paint": {
-      "sui": 58.1,
+      "sail": 58.1,
       "solid": 52.1,
       "svelte": 67.9,
       "vue": 101.6,

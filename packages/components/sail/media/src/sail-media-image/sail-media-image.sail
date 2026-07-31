@@ -56,7 +56,7 @@
 // Authority: build-spec Slice 6, §"Backbone #2 — ViewerRenderer contract",
 // §"Props" (sail-media-image), §Accessibility, behavioral spec #4.
 
-import { controller, derived, effect, emit, signal } from '@ship/sail-runtime'
+import { emit } from '@ship/sail-runtime'
 import { bindHtml } from '@ship/sail-runtime/internal'
 import type { Action } from '@ship/sail-runtime'
 import type { ViewerSource } from '../engine/types'
@@ -106,7 +106,6 @@ export default controller((_ctx: Scope) => {
     // src identity — assigned to the host `src` property in mount.
     const srcSig = signal<ImageSrc>(null)
     const activeIndex = signal(0)
-
 
     // SVG text source → role=img inline path; else the raster <img> path.
     const isSvg = derived<boolean>(() => svgTextOf(firstSource(srcSig())) != null)
@@ -259,15 +258,15 @@ export default controller((_ctx: Scope) => {
   })
 
 </controller>
-<if cond={isSvg()}>
-  <center role="img" aria-label={alt()} use:svgInline sx={style.position(relative).overflow(hidden).bg(surface-1).radius(md)}></center>
+<if {isSvg()}>
+  <center role="img" aria-label={alt()} use:svgInline sx={style.position(relative).w(full).h(full).minH(28).overflow(hidden).bg(surface-1).radius(md)}></center>
 <else>
-  <center tabindex="0" use:zoomStage sx={style.position(relative).overflow(hidden).bg(surface-1).radius(md)}>
-    <img alt={alt()} use:rasterImg use:zoomPan={zoomPanSig()} sx={style.display(block).maxH(full).transform(bind(zoomTx))} />
+  <center tabindex="0" use:zoomStage sx={style.position(relative).w(full).h(full).minH(28).overflow(hidden).bg(surface-1).radius(md)}>
+    <img alt={alt()} use:rasterImg use:zoomPan={zoomPanSig()} sx={style.display(block).w(full).h(full).maxH(full).objectFit(cover).transform(bind(zoomTx))} />
   </center>
-  <if cond={isGallery()}>
+  <if {isGallery()}>
     <row role="listbox" aria-label="Image gallery" gap="2" use:galleryStrip sx={style.pad(2).overflowX(auto)}>
-      <for as="item" of={galleryItems()} key={item.id}>
+      <for {galleryItems()} as="item" key={item.id}>
         <row role="option" gap="0" grow="0" aria-selected={item.selected ? 'true' : 'false'} sx={style.pad(0).overflow(hidden).bg(surface-1).borderWidth(1).border(border).radius(sm).cursor(pointer).when({ selected: style.borderWidth(1).border(primary).shadow(accent) })}>
           <img src={item.url} alt="" />
         </row>

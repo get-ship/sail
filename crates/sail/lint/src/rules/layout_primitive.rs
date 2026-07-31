@@ -113,7 +113,6 @@ fn mk(path: &Path, line: usize, col: usize, message: &str, suggest: &str) -> Fin
     }
 }
 
-
 /// True when the rule whose body starts at position `body_offset` (i.e. the
 /// rule whose selector ends at `body_offset - 1`, the `{`) is a `:host`
 /// rule — bare `:host` or functional `:host(...)`. The host's own layout
@@ -342,7 +341,9 @@ mod tests {
 
     #[test]
     fn vertical_stack_warns() {
-        let f = run("<style>.x { display: flex; flex-direction: column; gap: var(--space-3); }</style>");
+        let f = run(
+            "<style>.x { display: flex; flex-direction: column; gap: var(--space-3); }</style>",
+        );
         assert_eq!(f.len(), 1, "{f:?}");
         assert!(f[0].message.contains("column"));
     }
@@ -357,7 +358,9 @@ mod tests {
     #[test]
     fn flex_with_justify_is_left_alone() {
         // distributes on the main axis — not a clean primitive swap.
-        let f = run("<style>.x { display: flex; flex-direction: column; gap: var(--space-3); justify-content: space-between; }</style>");
+        let f = run(
+            "<style>.x { display: flex; flex-direction: column; gap: var(--space-3); justify-content: space-between; }</style>",
+        );
         assert!(f.is_empty(), "{f:?}");
     }
 
@@ -376,7 +379,9 @@ mod tests {
 
     #[test]
     fn flex_flow_shorthand_column_warns() {
-        let f = run("<style>.x { display: flex; flex-flow: column nowrap; gap: var(--space-2); }</style>");
+        let f = run(
+            "<style>.x { display: flex; flex-flow: column nowrap; gap: var(--space-2); }</style>",
+        );
         assert_eq!(f.len(), 1);
         assert!(f[0].message.contains("column"));
     }
@@ -392,7 +397,9 @@ mod tests {
     fn media_wrapper_not_treated_as_a_decl_block() {
         // The @media wrapper has a nested `{` so it's skipped; the inner rule
         // is the one evaluated.
-        let f = run("<style>@media (min-width: 600px) { .x { display: flex; flex-direction: column; gap: var(--space-3); } }</style>");
+        let f = run(
+            "<style>@media (min-width: 600px) { .x { display: flex; flex-direction: column; gap: var(--space-3); } }</style>",
+        );
         assert_eq!(f.len(), 1, "inner rule should warn: {f:?}");
     }
 
@@ -405,14 +412,18 @@ mod tests {
     fn host_bare_selector_passes() {
         // The custom element's own `:host` is the host itself — not a
         // hand-rolled sub-stack. Pattern from `sail-input.sail:85`.
-        let f = run("<style>:host { display: inline-flex; flex-direction: column; gap: var(--space-1); }</style>");
+        let f = run(
+            "<style>:host { display: inline-flex; flex-direction: column; gap: var(--space-1); }</style>",
+        );
         assert!(f.is_empty(), "host should be exempt: {f:?}");
     }
 
     #[test]
     fn host_functional_selector_passes() {
         // `:host([tone='primary'])` is still a host-context rule.
-        let f = run("<style>:host([tone='primary']) { display: flex; flex-direction: column; gap: var(--space-2); }</style>");
+        let f = run(
+            "<style>:host([tone='primary']) { display: flex; flex-direction: column; gap: var(--space-2); }</style>",
+        );
         assert!(f.is_empty(), "host([attr]) should be exempt: {f:?}");
     }
 
@@ -420,7 +431,9 @@ mod tests {
     fn non_host_after_host_still_warns() {
         // The :host rule is exempt, but a sibling `.wrap` rule with the
         // same hand-rolled flex shape is NOT a host rule — should warn.
-        let f = run("<style>:host { display: inline-flex; flex-direction: column; gap: var(--space-1); } .wrap { display: flex; flex-direction: column; gap: var(--space-2); }</style>");
+        let f = run(
+            "<style>:host { display: inline-flex; flex-direction: column; gap: var(--space-1); } .wrap { display: flex; flex-direction: column; gap: var(--space-2); }</style>",
+        );
         assert_eq!(f.len(), 1, "{f:?}");
         assert!(f[0].message.contains("column"));
     }
@@ -429,7 +442,9 @@ mod tests {
     fn host_with_space_then_other_selector_warns() {
         // `:host .x` — the descendant is the hand-rolled stack, not the
         // host. The selector starts with `:host` but is not a host rule.
-        let f = run("<style>:host .x { display: flex; flex-direction: column; gap: var(--space-2); }</style>");
+        let f = run(
+            "<style>:host .x { display: flex; flex-direction: column; gap: var(--space-2); }</style>",
+        );
         assert_eq!(f.len(), 1, "{f:?}");
     }
 }

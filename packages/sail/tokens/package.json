@@ -7,12 +7,13 @@
   "exports": {
     ".": "./src/index.ts",
     "./themes": "./src/themes.ts",
+    "./qa-themes": "./src/qa-themes.mjs",
     "./unions": "./src/generated/unions.ts",
+    "./themes-meta": "./src/generated/themes-meta.ts",
     "./themes.css": "./src/themes.css",
     "./tokens.css": "./src/tokens.css",
     "./token-registry.json": "./src/token-registry.json",
     "./sail-base.css": "./src/sail-base.css",
-    "./contracts.css": "./src/sail-base.css",
     "./element-skins.css": "./src/element-skins.css"
   },
   "files": [

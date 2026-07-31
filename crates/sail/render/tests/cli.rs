@@ -1,37 +1,27 @@
-//! Smoke test for the `sail-render` CLI binary.
+//! CLI coverage moved to deck-cli `sail render`. Keep a library smoke here.
 
-use std::process::Command;
+use sail_render::{RenderOptions, render_file, write_png};
+use std::path::PathBuf;
 
-fn bin() -> Command {
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_sail-render"));
-    cmd.current_dir(env!("CARGO_MANIFEST_DIR"));
-    cmd
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/")).join(name)
 }
 
 #[test]
-fn cli_renders_png() {
+fn library_renders_png() {
     let out = tempfile::NamedTempFile::with_suffix(".png").unwrap();
-    let output = bin()
-        .args([
-            "--source",
-            "tests/fixtures/golden.sail",
-            "--viewport",
-            "800x600",
-            "--out",
-            out.path().to_str().unwrap(),
-            "--fonts-dir",
-            "tests/fixtures/fonts",
-        ])
-        .output()
-        .expect("spawning sail-render");
-
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(
-        output.status.success(),
-        "sail-render exited with {}:\n{stderr}",
-        output.status
-    );
-
-    let meta = std::fs::metadata(out.path()).unwrap();
-    assert!(meta.len() > 0, "PNG output must be non-empty");
+    let opts = RenderOptions {
+        viewport: (400, 300),
+        fonts_dir: Some(fixture("fonts")),
+        app_fonts_dir: None,
+        theme: Some("ship".into()),
+        mode: Some("light".into()),
+        workspace: None,
+        file: Some("paint.sail".into()),
+        drop_bg_token: None,
+    };
+    let result = render_file(&fixture("paint.sail"), opts).unwrap();
+    write_png(&result.image, out.path()).unwrap();
+    assert!(std::fs::metadata(out.path()).unwrap().len() > 0);
+    assert!(!result.html.contains("{ticks()}"));
 }

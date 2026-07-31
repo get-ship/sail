@@ -42,7 +42,7 @@ pub const RULE_ID: &str = "sail-prop-value";
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let reg = registry();
     let mut findings = Vec::new();
-    for tag in scan_sui_tags(source) {
+    for tag in scan_sail_tags(source) {
         let Some(props) = reg.get(tag.name) else {
             continue;
         };
@@ -94,7 +94,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 }
 
 /// One opening tag and its parsed attributes.
-struct SuiTag<'a> {
+struct SailTag<'a> {
     name: &'a str,
     attributes: Vec<Attribute<'a>>,
 }
@@ -121,7 +121,7 @@ enum AttrValue<'a> {
 /// comments (`<!-- ... -->`) are skipped — primitives frequently embed
 /// example tags in their leading docblock and we must not treat those
 /// as real call sites.
-fn scan_sui_tags(source: &str) -> Vec<SuiTag<'_>> {
+fn scan_sail_tags(source: &str) -> Vec<SailTag<'_>> {
     let mut out = Vec::new();
     let bytes = source.as_bytes();
     let mut i = 0;
@@ -162,7 +162,7 @@ fn scan_sui_tags(source: &str) -> Vec<SuiTag<'_>> {
         let inner_start = j;
         let inner = &source[inner_start..tag_end];
         let attributes = parse_open_tag_attributes(inner_start, inner);
-        out.push(SuiTag { name, attributes });
+        out.push(SailTag { name, attributes });
         i = tag_end + 1;
     }
     out
@@ -336,9 +336,7 @@ fn levenshtein(a: &str, b: &str, cap: usize) -> usize {
         let mut row_min = curr[0];
         for j in 1..=b.len() {
             let cost = if a[i - 1] == b[j - 1] { 0 } else { 1 };
-            curr[j] = (prev[j] + 1)
-                .min(curr[j - 1] + 1)
-                .min(prev[j - 1] + cost);
+            curr[j] = (prev[j] + 1).min(curr[j - 1] + 1).min(prev[j - 1] + cost);
             if curr[j] < row_min {
                 row_min = curr[j];
             }

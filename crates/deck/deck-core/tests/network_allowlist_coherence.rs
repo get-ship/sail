@@ -71,11 +71,14 @@ fn granted_origin_passes_lint_evil_origin_is_refused_same_config() {
     compile(&src, opts_for(&sail)).expect("a fetch to the granted origin must compile clean");
 
     // (a) an origin NOT on the same config's allowlist is refused.
-    let (_tmp2, sui2) = write_fixture(EVIL_ORIGIN);
-    let src2 = fs::read_to_string(&sui2).unwrap();
-    let err = compile(&src2, opts_for(&sui2))
+    let (_tmp2, sail2) = write_fixture(EVIL_ORIGIN);
+    let src2 = fs::read_to_string(&sail2).unwrap();
+    let err = compile(&src2, opts_for(&sail2))
         .expect_err("a fetch to an origin outside the allowlist must be refused");
-    assert_eq!(err.category.as_deref(), Some("sail-controller-no-ambient-authority"));
+    assert_eq!(
+        err.category.as_deref(),
+        Some("sail-controller-no-ambient-authority")
+    );
 }
 
 #[test]
@@ -108,7 +111,11 @@ fn served_csp_names_exactly_the_same_granted_origin() {
 fn resolved_config_network_list_drives_the_csp_header_directly() {
     let (_tmp, sail) = write_fixture(GRANTED_ORIGIN);
     let resolved = Policy::network_for(&sail);
-    assert_eq!(resolved, vec![GRANTED_ORIGIN.to_string()], "sanity: fixture resolves as declared");
+    assert_eq!(
+        resolved,
+        vec![GRANTED_ORIGIN.to_string()],
+        "sanity: fixture resolves as declared"
+    );
 
     let headers = deck_core::html_security_headers_for(&resolved);
     let csp = headers
@@ -116,5 +123,8 @@ fn resolved_config_network_list_drives_the_csp_header_directly() {
         .find(|(k, _)| *k == "Content-Security-Policy")
         .map(|(_, v)| v.clone())
         .unwrap();
-    assert!(csp.contains(&format!("connect-src {GRANTED_ORIGIN}")), "{csp}");
+    assert!(
+        csp.contains(&format!("connect-src {GRANTED_ORIGIN}")),
+        "{csp}"
+    );
 }

@@ -17,12 +17,9 @@ use crate::check::controller_parse::ParsedController;
 use crate::check::symbol_table::SymbolTable;
 use crate::diagnostics::CompileError;
 use crate::ir::{AttrInstr, Instr, Program};
-use crate::parse::expr::{parse_expression_with_arrows, AstKind};
+use crate::parse::expr::{AstKind, parse_expression_with_arrows};
 
-pub fn check(
-    program: &Program,
-    controller: Option<&ParsedController>,
-) -> Result<(), CompileError> {
+pub fn check(program: &Program, controller: Option<&ParsedController>) -> Result<(), CompileError> {
     let table = SymbolTable::build(program, controller);
     let ctx_head = controller.map(|c| c.ctx_param.as_str()).unwrap_or("");
     walk(&program.template, &table, ctx_head)
@@ -183,43 +180,33 @@ mod tests {
 
     #[test]
     fn allows_scope_action_ident() {
-        let c = ctrl(
-            "export default controller((ctx) => ({ inc: (e) => e }));",
-        );
+        let c = ctrl("export default controller((ctx) => ({ inc: (e) => e }));");
         check(&program_with_on("inc"), Some(&c)).unwrap();
     }
 
     #[test]
     fn rejects_signal_as_handler() {
-        let c = ctrl(
-            "export default controller((ctx) => ({ n: signal(0) }));",
-        );
+        let c = ctrl("export default controller((ctx) => ({ n: signal(0) }));");
         let err = check(&program_with_on("n"), Some(&c)).unwrap_err();
         assert!(err.message.contains("signal"), "{}", err.message);
     }
 
     #[test]
     fn rejects_call_expression_handler() {
-        let c = ctrl(
-            "export default controller((ctx) => ({ inc: (e) => e }));",
-        );
+        let c = ctrl("export default controller((ctx) => ({ inc: (e) => e }));");
         let err = check(&program_with_on("inc()"), Some(&c)).unwrap_err();
         assert!(err.message.contains("call expression"), "{}", err.message);
     }
 
     #[test]
     fn allows_scope_dot_action() {
-        let c = ctrl(
-            "export default controller((ctx) => ({ inc: (e) => e }));",
-        );
+        let c = ctrl("export default controller((ctx) => ({ inc: (e) => e }));");
         check(&program_with_on("ctx.inc"), Some(&c)).unwrap();
     }
 
     #[test]
     fn rejects_scope_dot_signal() {
-        let c = ctrl(
-            "export default controller((ctx) => ({ n: signal(0) }));",
-        );
+        let c = ctrl("export default controller((ctx) => ({ n: signal(0) }));");
         let err = check(&program_with_on("ctx.n"), Some(&c)).unwrap_err();
         assert!(err.message.contains("signal"), "{}", err.message);
     }

@@ -3,7 +3,7 @@
 //! Walks the IR collecting which special HTML tags are used so the emitter
 //! can decide what runtime helpers to import.
 
-use crate::ir::{Instr, ElementInstr};
+use crate::ir::{ElementInstr, Instr};
 
 /// Recursively true if any element under `instrs` is a custom
 /// element (tag contains a hyphen). Used to flag whether the emitted

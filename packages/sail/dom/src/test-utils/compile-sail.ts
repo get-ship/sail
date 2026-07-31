@@ -149,7 +149,7 @@ export interface CompileOpts {
   sourcePath?: string
 }
 
-export interface CompiledSui {
+export interface CompiledSail {
   js: string
   css: string | null
   dts: string | null
@@ -158,7 +158,7 @@ export interface CompiledSui {
   controller: string | null
 }
 
-export function compileSui(source: string, opts: CompileOpts = {}): CompiledSui {
+export function compileSail(source: string, opts: CompileOpts = {}): CompiledSail {
   const compile = ensureNative()
   const optsJson = JSON.stringify({
     mode: opts.mode ?? 'auto',
@@ -319,7 +319,7 @@ export function compileAndMount(source: string, setup: UserSetup, opts: MountOpt
     compileOpts.componentName = opts.componentName
     compileOpts.mode = 'component'
   }
-  const compiled = compileSui(source, compileOpts)
+  const compiled = compileSail(source, compileOpts)
 
   // Component mode: the compiled module is a side-effecting
   // `component(tag, def)` call that registers a custom element. No

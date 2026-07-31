@@ -4,7 +4,7 @@
 //! check fires after parse / lower and before emit, with diagnostics
 //! that carry a span.
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn opts() -> CompileOpts {
     CompileOpts {
@@ -47,8 +47,7 @@ fn rejects_this_in_text_expression() {
 fn rejects_call_with_args_in_interpolation() {
     let err = compile_route("<p>{format(name, 'short')}</p>");
     assert!(
-        err.message.contains("format")
-            || err.message.contains("call"),
+        err.message.contains("format") || err.message.contains("call"),
         "msg: {}",
         err.message
     );

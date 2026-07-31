@@ -59,8 +59,8 @@ export default {
     // frozen-token guard — on the listbox surface, which is the themed part
     const surf = (t) =>
       cs(document.querySelector(`[data-theme-preview='${t}'] .listbox`), 'backgroundColor')
-    if (surf('ship-light') === surf('ship-dark'))
-      bad.push({ why: 'frozen-token', light: surf('ship-light') })
+    if (surf('ship') === surf('console'))
+      bad.push({ why: 'frozen-token', light: surf('ship') })
 
     return { count: document.querySelectorAll('.sail-combobox').length, bad: bad.slice(0, 10) }
   },

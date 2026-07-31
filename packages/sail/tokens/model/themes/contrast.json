@@ -1,723 +1,734 @@
 {
-  "$description": "High contrast.",
+  "$description": "High contrast. Modes-in-file (light/dark).",
   "$extensions": {
     "ship": {
       "layer": "theme",
       "themeId": "contrast",
-      "dark": true,
-      "selector": ":root[data-theme='contrast'],\n[data-theme-preview='contrast']"
+      "defaultMode": "dark",
+      "supportedModes": [
+        "dark"
+      ]
     }
   },
-  "color": {
-    "brandAccent": {
-      "default": {
-        "$value": "oklch(0.87 0.18 var(--brand-hue, 85))",
-        "$extensions": {
-          "ship": {
-            "cssName": "accent"
+  "modes": {
+    "dark": {
+      "color": {
+        "brandAccent": {
+          "default": {
+            "$value": "oklch(0.87 0.18 var(--brand-hue, 85))",
+            "$extensions": {
+              "ship": {
+                "cssName": "accent"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.08 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "accent-foreground"
+              }
+            },
+            "$type": "color"
           }
         },
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.08 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "accent-foreground"
+        "background": {
+          "$value": "oklch(0.09 0 0)",
+          "$extensions": {
+            "ship": {
+              "cssName": "background"
+            }
+          },
+          "$type": "color"
+        },
+        "border": {
+          "default": {
+            "$value": "oklch(0.75 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "border"
+              }
+            },
+            "$type": "color"
+          },
+          "strong": {
+            "$value": "oklch(0.99 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "border-strong"
+              }
+            },
+            "$type": "color"
+          },
+          "subtle": {
+            "$value": "oklch(0.50 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "border-subtle"
+              }
+            },
+            "$type": "color"
           }
         },
-        "$type": "color"
-      }
-    },
-    "background": {
-      "$value": "oklch(0.09 0 0)",
-      "$extensions": {
-        "ship": {
-          "cssName": "background"
+        "destructive": {
+          "default": {
+            "$value": "oklch(0.65 0.24 25)",
+            "$extensions": {
+              "ship": {
+                "cssName": "destructive"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "foreground": {
+          "$value": "oklch(0.99 0 0)",
+          "$extensions": {
+            "ship": {
+              "cssName": "foreground"
+            }
+          },
+          "$type": "color"
+        },
+        "info": {
+          "default": {
+            "$value": "oklch(0.75 0.22 260)",
+            "$extensions": {
+              "ship": {
+                "cssName": "info"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "input": {
+          "$value": "oklch(0.75 0 0)",
+          "$extensions": {
+            "ship": {
+              "cssName": "input"
+            }
+          },
+          "$type": "color"
+        },
+        "muted": {
+          "default": {
+            "$value": "oklch(0.20 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "muted"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.85 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "muted-foreground"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "primary": {
+          "default": {
+            "$value": "oklch(0.87 0.18 var(--brand-hue, 85))",
+            "$extensions": {
+              "ship": {
+                "cssName": "primary"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.08 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "primary-foreground"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "ring": {
+          "default": {
+            "$value": "oklch(0.87 0.18 var(--brand-hue, 85)/ 60%)",
+            "$extensions": {
+              "ship": {
+                "cssName": "ring"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "sidebar": {
+          "default": {
+            "$value": "oklch(0.09 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar"
+              }
+            },
+            "$type": "color"
+          },
+          "accent": {
+            "$value": "oklch(0.20 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-accent"
+              }
+            },
+            "$type": "color"
+          },
+          "accent-foreground": {
+            "$value": "oklch(0.99 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-accent-foreground"
+              }
+            },
+            "$type": "color"
+          },
+          "border": {
+            "$value": "oklch(0.99 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-border"
+              }
+            },
+            "$type": "color"
+          },
+          "foreground": {
+            "$value": "oklch(0.99 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-foreground"
+              }
+            },
+            "$type": "color"
+          },
+          "primary": {
+            "$value": "oklch(0.87 0.18 var(--brand-hue, 85))",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-primary"
+              }
+            },
+            "$type": "color"
+          },
+          "primary-foreground": {
+            "$value": "oklch(0.08 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-primary-foreground"
+              }
+            },
+            "$type": "color"
+          },
+          "ring": {
+            "$value": "oklch(0.87 0.18 85 / 60%)",
+            "$extensions": {
+              "ship": {
+                "cssName": "sidebar-ring"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "success": {
+          "default": {
+            "$value": "oklch(0.80 0.22 150)",
+            "$extensions": {
+              "ship": {
+                "cssName": "success"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "surface": {
+          "0": {
+            "$value": "oklch(0.07 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-0"
+              }
+            },
+            "$type": "color"
+          },
+          "1": {
+            "$value": "oklch(0.12 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-1"
+              }
+            },
+            "$type": "color"
+          },
+          "2": {
+            "$value": "oklch(0.18 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-2"
+              }
+            },
+            "$type": "color"
+          },
+          "3": {
+            "$value": "oklch(0.24 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-3"
+              }
+            },
+            "$type": "color"
+          },
+          "overlay": {
+            "$value": "none",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-overlay"
+              }
+            },
+            "$type": "string"
+          },
+          "overlay-blend": {
+            "$value": "normal",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-overlay-blend"
+              }
+            },
+            "$type": "string"
+          },
+          "overlay-opacity": {
+            "$value": "1",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-overlay-opacity"
+              }
+            },
+            "$type": "number"
+          }
+        },
+        "syntax": {
+          "attr": {
+            "$value": "oklch(0.95 0.18 90)",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-attr"
+              }
+            },
+            "$type": "color"
+          },
+          "comment": {
+            "$value": "oklch(0.75 0.05 250)",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-comment"
+              }
+            },
+            "$type": "color"
+          },
+          "function": {
+            "$value": "oklch(0.95 0.16 300)",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-function"
+              }
+            },
+            "$type": "color"
+          },
+          "keyword": {
+            "$value": "oklch(0.92 0.18 90)",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-keyword"
+              }
+            },
+            "$type": "color"
+          },
+          "number": {
+            "$value": "oklch(0.92 0.18 230)",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-number"
+              }
+            },
+            "$type": "color"
+          },
+          "string": {
+            "$value": "oklch(0.92 0.18 145)",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-string"
+              }
+            },
+            "$type": "color"
+          },
+          "tag": {
+            "$value": "oklch(0.95 0.18 25)",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-tag"
+              }
+            },
+            "$type": "color"
+          },
+          "type": {
+            "$value": "oklch(0.92 0.16 195)",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-type"
+              }
+            },
+            "$type": "color"
+          },
+          "variable": {
+            "$value": "oklch(0.98 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-variable"
+              }
+            },
+            "$type": "color"
+          }
+        },
+        "warning": {
+          "default": {
+            "$value": "oklch(0.87 0.18 85)",
+            "$extensions": {
+              "ship": {
+                "cssName": "warning"
+              }
+            },
+            "$type": "color"
+          }
         }
       },
-      "$type": "color"
-    },
-    "border": {
-      "default": {
-        "$value": "oklch(0.75 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "border"
+      "interaction": {
+        "active": {
+          "strength": {
+            "$value": "22%",
+            "$extensions": {
+              "ship": {
+                "cssName": "active-strength"
+              }
+            },
+            "$type": "number"
           }
         },
-        "$type": "color"
-      },
-      "strong": {
-        "$value": "oklch(0.99 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "border-strong"
+        "hover": {
+          "strength": {
+            "$value": "14%",
+            "$extensions": {
+              "ship": {
+                "cssName": "hover-strength"
+              }
+            },
+            "$type": "number"
           }
         },
-        "$type": "color"
-      },
-      "subtle": {
-        "$value": "oklch(0.50 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "border-subtle"
+        "selected": {
+          "strength": {
+            "$value": "30%",
+            "$extensions": {
+              "ship": {
+                "cssName": "selected-strength"
+              }
+            },
+            "$type": "number"
           }
-        },
-        "$type": "color"
-      }
-    },
-    "destructive": {
-      "default": {
-        "$value": "oklch(0.65 0.24 25)",
-        "$extensions": {
-          "ship": {
-            "cssName": "destructive"
-          }
-        },
-        "$type": "color"
-      }
-    },
-    "foreground": {
-      "$value": "oklch(0.99 0 0)",
-      "$extensions": {
-        "ship": {
-          "cssName": "foreground"
         }
       },
-      "$type": "color"
-    },
-    "info": {
-      "default": {
-        "$value": "oklch(0.75 0.22 260)",
-        "$extensions": {
-          "ship": {
-            "cssName": "info"
+      "typography": {
+        "body": {
+          "font": {
+            "$value": "{font-body}",
+            "$extensions": {
+              "ship": {
+                "cssName": "body-font"
+              }
+            },
+            "$type": "fontFamily"
           }
         },
-        "$type": "color"
-      }
-    },
-    "input": {
-      "$value": "oklch(0.75 0 0)",
-      "$extensions": {
-        "ship": {
-          "cssName": "input"
+        "font": {
+          "body": {
+            "$value": "{font-body-app}",
+            "$extensions": {
+              "ship": {
+                "cssName": "font-body"
+              }
+            },
+            "$type": "fontFamily"
+          }
+        },
+        "heading": {
+          "font": {
+            "$value": "{font-display}",
+            "$extensions": {
+              "ship": {
+                "cssName": "heading-font"
+              }
+            },
+            "$type": "fontFamily"
+          },
+          "tracking": {
+            "$value": "{tracking-tight}",
+            "$extensions": {
+              "ship": {
+                "cssName": "heading-tracking"
+              }
+            },
+            "$type": "dimension"
+          },
+          "weight": {
+            "$value": "{font-weight-bold}",
+            "$extensions": {
+              "ship": {
+                "cssName": "heading-weight"
+              }
+            },
+            "$type": "number"
+          }
+        },
+        "label": {
+          "font": {
+            "$value": "{font-body}",
+            "$extensions": {
+              "ship": {
+                "cssName": "label-font"
+              }
+            },
+            "$type": "fontFamily"
+          },
+          "tracking": {
+            "$value": "{tracking-normal}",
+            "$extensions": {
+              "ship": {
+                "cssName": "label-tracking"
+              }
+            },
+            "$type": "dimension"
+          },
+          "weight": {
+            "$value": "{font-weight-bold}",
+            "$extensions": {
+              "ship": {
+                "cssName": "label-weight"
+              }
+            },
+            "$type": "number"
+          }
         }
       },
-      "$type": "color"
-    },
-    "muted": {
-      "default": {
-        "$value": "oklch(0.20 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "muted"
-          }
+      "radius": {
+        "lg": {
+          "$value": "4px",
+          "$extensions": {
+            "ship": {
+              "cssName": "radius-lg"
+            }
+          },
+          "$type": "dimension"
         },
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.85 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "muted-foreground"
-          }
+        "md": {
+          "$value": "3px",
+          "$extensions": {
+            "ship": {
+              "cssName": "radius-md"
+            }
+          },
+          "$type": "dimension"
         },
-        "$type": "color"
-      }
-    },
-    "primary": {
-      "default": {
-        "$value": "oklch(0.87 0.18 var(--brand-hue, 85))",
-        "$extensions": {
-          "ship": {
-            "cssName": "primary"
-          }
+        "sm": {
+          "$value": "2px",
+          "$extensions": {
+            "ship": {
+              "cssName": "radius-sm"
+            }
+          },
+          "$type": "dimension"
         },
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.08 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "primary-foreground"
-          }
-        },
-        "$type": "color"
-      }
-    },
-    "ring": {
-      "default": {
-        "$value": "oklch(0.87 0.18 var(--brand-hue, 85)/ 60%)",
-        "$extensions": {
-          "ship": {
-            "cssName": "ring"
-          }
-        },
-        "$type": "color"
-      }
-    },
-    "sidebar": {
-      "default": {
-        "$value": "oklch(0.09 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "sidebar"
-          }
-        },
-        "$type": "color"
-      },
-      "accent": {
-        "$value": "oklch(0.20 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "sidebar-accent"
-          }
-        },
-        "$type": "color"
-      },
-      "accent-foreground": {
-        "$value": "oklch(0.99 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "sidebar-accent-foreground"
-          }
-        },
-        "$type": "color"
-      },
-      "border": {
-        "$value": "oklch(0.99 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "sidebar-border"
-          }
-        },
-        "$type": "color"
-      },
-      "foreground": {
-        "$value": "oklch(0.99 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "sidebar-foreground"
-          }
-        },
-        "$type": "color"
-      },
-      "primary": {
-        "$value": "oklch(0.87 0.18 var(--brand-hue, 85))",
-        "$extensions": {
-          "ship": {
-            "cssName": "sidebar-primary"
-          }
-        },
-        "$type": "color"
-      },
-      "primary-foreground": {
-        "$value": "oklch(0.08 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "sidebar-primary-foreground"
-          }
-        },
-        "$type": "color"
-      },
-      "ring": {
-        "$value": "oklch(0.87 0.18 85 / 60%)",
-        "$extensions": {
-          "ship": {
-            "cssName": "sidebar-ring"
-          }
-        },
-        "$type": "color"
-      }
-    },
-    "success": {
-      "default": {
-        "$value": "oklch(0.80 0.22 150)",
-        "$extensions": {
-          "ship": {
-            "cssName": "success"
-          }
-        },
-        "$type": "color"
-      }
-    },
-    "surface": {
-      "0": {
-        "$value": "oklch(0.07 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "surface-0"
-          }
-        },
-        "$type": "color"
-      },
-      "1": {
-        "$value": "oklch(0.12 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "surface-1"
-          }
-        },
-        "$type": "color"
-      },
-      "2": {
-        "$value": "oklch(0.18 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "surface-2"
-          }
-        },
-        "$type": "color"
-      },
-      "3": {
-        "$value": "oklch(0.24 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "surface-3"
-          }
-        },
-        "$type": "color"
-      },
-      "overlay": {
-        "$value": "none",
-        "$extensions": {
-          "ship": {
-            "cssName": "surface-overlay"
-          }
-        },
-        "$type": "string"
-      },
-      "overlay-blend": {
-        "$value": "normal",
-        "$extensions": {
-          "ship": {
-            "cssName": "surface-overlay-blend"
-          }
-        },
-        "$type": "string"
-      },
-      "overlay-opacity": {
-        "$value": "1",
-        "$extensions": {
-          "ship": {
-            "cssName": "surface-overlay-opacity"
-          }
-        },
-        "$type": "number"
-      }
-    },
-    "syntax": {
-      "attr": {
-        "$value": "oklch(0.95 0.18 90)",
-        "$extensions": {
-          "ship": {
-            "cssName": "syntax-attr"
-          }
-        },
-        "$type": "color"
-      },
-      "comment": {
-        "$value": "oklch(0.75 0.05 250)",
-        "$extensions": {
-          "ship": {
-            "cssName": "syntax-comment"
-          }
-        },
-        "$type": "color"
-      },
-      "function": {
-        "$value": "oklch(0.95 0.16 300)",
-        "$extensions": {
-          "ship": {
-            "cssName": "syntax-function"
-          }
-        },
-        "$type": "color"
-      },
-      "keyword": {
-        "$value": "oklch(0.92 0.18 90)",
-        "$extensions": {
-          "ship": {
-            "cssName": "syntax-keyword"
-          }
-        },
-        "$type": "color"
-      },
-      "number": {
-        "$value": "oklch(0.92 0.18 230)",
-        "$extensions": {
-          "ship": {
-            "cssName": "syntax-number"
-          }
-        },
-        "$type": "color"
-      },
-      "string": {
-        "$value": "oklch(0.92 0.18 145)",
-        "$extensions": {
-          "ship": {
-            "cssName": "syntax-string"
-          }
-        },
-        "$type": "color"
-      },
-      "tag": {
-        "$value": "oklch(0.95 0.18 25)",
-        "$extensions": {
-          "ship": {
-            "cssName": "syntax-tag"
-          }
-        },
-        "$type": "color"
-      },
-      "type": {
-        "$value": "oklch(0.92 0.16 195)",
-        "$extensions": {
-          "ship": {
-            "cssName": "syntax-type"
-          }
-        },
-        "$type": "color"
-      },
-      "variable": {
-        "$value": "oklch(0.98 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "syntax-variable"
-          }
-        },
-        "$type": "color"
-      }
-    },
-    "warning": {
-      "default": {
-        "$value": "oklch(0.87 0.18 85)",
-        "$extensions": {
-          "ship": {
-            "cssName": "warning"
-          }
-        },
-        "$type": "color"
-      }
-    }
-  },
-  "interaction": {
-    "active": {
-      "strength": {
-        "$value": "22%",
-        "$extensions": {
-          "ship": {
-            "cssName": "active-strength"
-          }
-        },
-        "$type": "number"
-      }
-    },
-    "hover": {
-      "strength": {
-        "$value": "14%",
-        "$extensions": {
-          "ship": {
-            "cssName": "hover-strength"
-          }
-        },
-        "$type": "number"
-      }
-    },
-    "selected": {
-      "strength": {
-        "$value": "30%",
-        "$extensions": {
-          "ship": {
-            "cssName": "selected-strength"
-          }
-        },
-        "$type": "number"
-      }
-    }
-  },
-  "typography": {
-    "body": {
-      "font": {
-        "$value": "var(--font-body)",
-        "$extensions": {
-          "ship": {
-            "cssName": "body-font"
-          }
-        },
-        "$type": "fontFamily"
-      }
-    },
-    "font": {
-      "body": {
-        "$value": "var(--font-sans, system-ui, sans-serif)",
-        "$extensions": {
-          "ship": {
-            "cssName": "font-body"
-          }
-        },
-        "$type": "fontFamily"
-      }
-    },
-    "heading": {
-      "font": {
-        "$value": "var(--font-display, var(--font-body))",
-        "$extensions": {
-          "ship": {
-            "cssName": "heading-font"
-          }
-        },
-        "$type": "fontFamily"
-      },
-      "tracking": {
-        "$value": "var(--tracking-tight)",
-        "$extensions": {
-          "ship": {
-            "cssName": "heading-tracking"
-          }
-        },
-        "$type": "dimension"
-      },
-      "weight": {
-        "$value": "var(--font-weight-bold)",
-        "$extensions": {
-          "ship": {
-            "cssName": "heading-weight"
-          }
-        },
-        "$type": "number"
-      }
-    },
-    "label": {
-      "font": {
-        "$value": "var(--font-body)",
-        "$extensions": {
-          "ship": {
-            "cssName": "label-font"
-          }
-        },
-        "$type": "fontFamily"
-      },
-      "tracking": {
-        "$value": "var(--tracking-normal)",
-        "$extensions": {
-          "ship": {
-            "cssName": "label-tracking"
-          }
-        },
-        "$type": "dimension"
-      },
-      "weight": {
-        "$value": "var(--font-weight-bold)",
-        "$extensions": {
-          "ship": {
-            "cssName": "label-weight"
-          }
-        },
-        "$type": "number"
-      }
-    }
-  },
-  "radius": {
-    "lg": {
-      "$value": "4px",
-      "$extensions": {
-        "ship": {
-          "cssName": "radius-lg"
+        "xl": {
+          "$value": "6px",
+          "$extensions": {
+            "ship": {
+              "cssName": "radius-xl"
+            }
+          },
+          "$type": "dimension"
         }
       },
-      "$type": "dimension"
-    },
-    "md": {
-      "$value": "3px",
-      "$extensions": {
-        "ship": {
-          "cssName": "radius-md"
+      "scrollbar": {
+        "radius": {
+          "$value": "4px",
+          "$extensions": {
+            "ship": {
+              "cssName": "scrollbar-radius"
+            }
+          },
+          "$type": "dimension"
+        },
+        "thumb": {
+          "$value": "color-mix(in oklab, var(--foreground) 50%, transparent)",
+          "$extensions": {
+            "ship": {
+              "cssName": "scrollbar-thumb"
+            }
+          },
+          "$type": "color"
+        },
+        "thumb-hover": {
+          "$value": "{foreground}",
+          "$extensions": {
+            "ship": {
+              "cssName": "scrollbar-thumb-hover"
+            }
+          },
+          "$type": "color"
         }
       },
-      "$type": "dimension"
-    },
-    "sm": {
-      "$value": "2px",
-      "$extensions": {
-        "ship": {
-          "cssName": "radius-sm"
+      "shadow": {
+        "accent": {
+          "$value": "0 0 0 3px oklch(0.87 0.18 85 / 60%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "shadow-accent"
+            }
+          },
+          "$type": "shadow"
+        },
+        "hover": {
+          "$value": "0 0 0 2px oklch(0.87 0.18 85 / 70%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "shadow-hover"
+            }
+          },
+          "$type": "shadow"
+        },
+        "lg": {
+          "$value": "0 0 0 2px oklch(1 0 0 / 80%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "shadow-lg"
+            }
+          },
+          "$type": "shadow"
+        },
+        "md": {
+          "$value": "0 0 0 1px oklch(1 0 0 / 75%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "shadow-md"
+            }
+          },
+          "$type": "shadow"
+        },
+        "sm": {
+          "$value": "0 0 0 1px oklch(1 0 0 / 65%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "shadow-sm"
+            }
+          },
+          "$type": "shadow"
+        },
+        "sticky": {
+          "$value": "0 0 0 1px oklch(1 0 0 / 60%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "shadow-sticky"
+            }
+          },
+          "$type": "shadow"
+        },
+        "xl": {
+          "$value": "0 0 0 2px oklch(1 0 0 / 90%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "shadow-xl"
+            }
+          },
+          "$type": "shadow"
+        },
+        "xs": {
+          "$value": "0 0 0 1px oklch(1 0 0 / 60%)",
+          "$extensions": {
+            "ship": {
+              "cssName": "shadow-xs"
+            }
+          },
+          "$type": "shadow"
         }
       },
-      "$type": "dimension"
-    },
-    "xl": {
-      "$value": "6px",
-      "$extensions": {
-        "ship": {
-          "cssName": "radius-xl"
-        }
-      },
-      "$type": "dimension"
-    }
-  },
-  "scrollbar": {
-    "radius": {
-      "$value": "4px",
-      "$extensions": {
-        "ship": {
-          "cssName": "scrollbar-radius"
-        }
-      },
-      "$type": "dimension"
-    },
-    "thumb": {
-      "$value": "color-mix(in oklab, var(--foreground) 50%, transparent)",
-      "$extensions": {
-        "ship": {
-          "cssName": "scrollbar-thumb"
-        }
-      },
-      "$type": "color"
-    },
-    "thumb-hover": {
-      "$value": "var(--foreground)",
-      "$extensions": {
-        "ship": {
-          "cssName": "scrollbar-thumb-hover"
-        }
-      },
-      "$type": "color"
-    }
-  },
-  "shadow": {
-    "accent": {
-      "$value": "0 0 0 3px oklch(0.87 0.18 85 / 60%)",
-      "$extensions": {
-        "ship": {
-          "cssName": "shadow-accent"
-        }
-      },
-      "$type": "shadow"
-    },
-    "hover": {
-      "$value": "0 0 0 2px oklch(0.87 0.18 85 / 70%)",
-      "$extensions": {
-        "ship": {
-          "cssName": "shadow-hover"
-        }
-      },
-      "$type": "shadow"
-    },
-    "lg": {
-      "$value": "0 0 0 2px oklch(1 0 0 / 80%)",
-      "$extensions": {
-        "ship": {
-          "cssName": "shadow-lg"
-        }
-      },
-      "$type": "shadow"
-    },
-    "md": {
-      "$value": "0 0 0 1px oklch(1 0 0 / 75%)",
-      "$extensions": {
-        "ship": {
-          "cssName": "shadow-md"
-        }
-      },
-      "$type": "shadow"
-    },
-    "sm": {
-      "$value": "0 0 0 1px oklch(1 0 0 / 65%)",
-      "$extensions": {
-        "ship": {
-          "cssName": "shadow-sm"
-        }
-      },
-      "$type": "shadow"
-    },
-    "sticky": {
-      "$value": "0 0 0 1px oklch(1 0 0 / 60%)",
-      "$extensions": {
-        "ship": {
-          "cssName": "shadow-sticky"
-        }
-      },
-      "$type": "shadow"
-    },
-    "xl": {
-      "$value": "0 0 0 2px oklch(1 0 0 / 90%)",
-      "$extensions": {
-        "ship": {
-          "cssName": "shadow-xl"
-        }
-      },
-      "$type": "shadow"
-    },
-    "xs": {
-      "$value": "0 0 0 1px oklch(1 0 0 / 60%)",
-      "$extensions": {
-        "ship": {
-          "cssName": "shadow-xs"
-        }
-      },
-      "$type": "shadow"
-    }
-  },
-  "component": {
-    "card": {
-      "backdrop-filter": {
-        "$value": "none",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-backdrop-filter"
+      "component": {
+        "card": {
+          "backdrop-filter": {
+            "$value": "none",
+            "$extensions": {
+              "ship": {
+                "cssName": "card-backdrop-filter"
+              }
+            },
+            "$type": "string"
+          },
+          "texture": {
+            "$value": "none",
+            "$extensions": {
+              "ship": {
+                "cssName": "card-texture"
+              }
+            },
+            "$type": "string"
+          },
+          "fg": {
+            "$value": "oklch(0.99 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "card-foreground"
+              }
+            },
+            "$type": "color"
+          },
+          "bg": {
+            "$value": "oklch(0.15 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "card"
+              }
+            },
+            "$type": "color"
           }
         },
-        "$type": "string"
+        "popover": {
+          "bg": {
+            "$value": "oklch(0.15 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "popover"
+              }
+            },
+            "$type": "color"
+          },
+          "fg": {
+            "$value": "oklch(0.99 0 0)",
+            "$extensions": {
+              "ship": {
+                "cssName": "popover-foreground"
+              }
+            },
+            "$type": "color"
+          }
+        }
       },
-      "texture": {
-        "$value": "none",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-texture"
-          }
-        },
-        "$type": "string"
-      },
-      "fg": {
-        "$value": "oklch(0.99 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "card-foreground"
-          }
-        },
-        "$type": "color"
-      },
-      "bg": {
-        "$value": "oklch(0.15 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "card"
-          }
-        },
-        "$type": "color"
-      }
-    },
-    "popover": {
-      "bg": {
-        "$value": "oklch(0.15 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "popover"
-          }
-        },
-        "$type": "color"
-      },
-      "fg": {
-        "$value": "oklch(0.99 0 0)",
-        "$extensions": {
-          "ship": {
-            "cssName": "popover-foreground"
-          }
-        },
-        "$type": "color"
+      "$extensions": {
+        "ship": {
+          "dark": true
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 // Main-thread Promise API over the worker. Use from any editor:
 //
-//   import { createSuiLspClient } from '@ship/sail-lsp-browser'
-//   const lsp = createSuiLspClient(new Worker('/sail-lsp.worker.js', { type: 'module' }))
+//   import { createSailLspClient } from '@ship/sail-lsp-browser'
+//   const lsp = createSailLspClient(new Worker('/sail-lsp.worker.js', { type: 'module' }))
 //   const diags = await lsp.diagnose(text)
 //   const completions = await lsp.completionsAt(text, cursorOffset)
 //   const hover = await lsp.hoverAt(text, cursorOffset)
@@ -13,13 +13,13 @@
 // One worker per editor instance is fine — the worker is stateless
 // for the cheap endpoints; requests are matched by an incrementing id.
 
-import type { SuiDiagnostic } from './diagnostics'
-import type { SuiCompletionSource } from './completions'
-import type { SuiHoverInfo } from './hover'
+import type { SailDiagnostic } from './diagnostics'
+import type { SailCompletionSource } from './completions'
+import type { SailHoverInfo } from './hover'
 
-export type { SuiDiagnostic } from './diagnostics'
-export type { SuiCompletionSource } from './completions'
-export type { SuiHoverInfo } from './hover'
+export type { SailDiagnostic } from './diagnostics'
+export type { SailCompletionSource } from './completions'
+export type { SailHoverInfo } from './hover'
 
 interface Pending {
   resolve: (value: unknown) => void
@@ -30,11 +30,11 @@ interface OkResponse<T> { id: number; ok: true; data: T }
 interface ErrResponse    { id: number; ok: false; error: string }
 type Response<T> = OkResponse<T> | ErrResponse
 
-export interface SuiLspClient {
-  diagnose(text: string): Promise<SuiDiagnostic[]>
-  completionsAt(text: string, offset: number): Promise<SuiCompletionSource | null>
-  allSources(): Promise<SuiCompletionSource[]>
-  hoverAt(text: string, offset: number): Promise<SuiHoverInfo | null>
+export interface SailLspClient {
+  diagnose(text: string): Promise<SailDiagnostic[]>
+  completionsAt(text: string, offset: number): Promise<SailCompletionSource | null>
+  allSources(): Promise<SailCompletionSource[]>
+  hoverAt(text: string, offset: number): Promise<SailHoverInfo | null>
   /** Warm up the lazy oxc-parser bundle for identifier-aware hover.
    *  Idempotent; first call eats the network cost (~500 KB gz), every
    *  later call returns the same cached promise. */
@@ -42,7 +42,7 @@ export interface SuiLspClient {
   dispose(): void
 }
 
-export function createSuiLspClient(worker: Worker): SuiLspClient {
+export function createSailLspClient(worker: Worker): SailLspClient {
   let nextId = 1
   const pending = new Map<number, Pending>()
   let preloadCall: Promise<boolean> | null = null
@@ -65,10 +65,10 @@ export function createSuiLspClient(worker: Worker): SuiLspClient {
   }
 
   return {
-    diagnose: (text) => call<SuiDiagnostic[]>({ kind: 'diagnose', text }),
-    completionsAt: (text, offset) => call<SuiCompletionSource | null>({ kind: 'completeAt', text, offset }),
-    allSources: () => call<SuiCompletionSource[]>({ kind: 'allSources' }),
-    hoverAt: (text, offset) => call<SuiHoverInfo | null>({ kind: 'hoverAt', text, offset }),
+    diagnose: (text) => call<SailDiagnostic[]>({ kind: 'diagnose', text }),
+    completionsAt: (text, offset) => call<SailCompletionSource | null>({ kind: 'completeAt', text, offset }),
+    allSources: () => call<SailCompletionSource[]>({ kind: 'allSources' }),
+    hoverAt: (text, offset) => call<SailHoverInfo | null>({ kind: 'hoverAt', text, offset }),
     preload: () => {
       if (!preloadCall) preloadCall = call<boolean>({ kind: 'preload' })
       return preloadCall

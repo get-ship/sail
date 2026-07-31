@@ -32,10 +32,10 @@ use std::collections::BTreeMap;
 
 use serde::Deserialize;
 
-use super::writer::{js_string, Writer};
+use super::writer::{Writer, js_string};
+use crate::CompileMode;
 use crate::diagnostics::CompileError;
 use crate::ir::*;
-use crate::CompileMode;
 
 /// One app-manifest entry: a free name → the real ESM import that provides
 /// it. `construct` distinguishes a value bound directly from the import
@@ -154,7 +154,11 @@ pub(crate) fn used_clients(program: &Program, manifest: &AppManifest) -> Vec<Str
 /// (deck's `route`, say) overrides its own entries after this call. The
 /// compiler still names no provider.
 pub fn scope_capabilities(manifest: &AppManifest) -> Vec<crate::emit::dts::ScopeCapability> {
-    manifest.clients.keys().map(crate::emit::dts::ScopeCapability::client).collect()
+    manifest
+        .clients
+        .keys()
+        .map(crate::emit::dts::ScopeCapability::client)
+        .collect()
 }
 
 /// Emit the synthetic controller + render for `program`. Pure
@@ -175,13 +179,21 @@ pub fn emit_synthetic(
     // [`used_clients`]); the compiler names no host provider.
     let used = used_clients(program, manifest);
 
-
     let controller_ts = emit_controller(program, manifest, &used, authored, mode)?;
-    let render_ts =
-        render::emit_render(program, controller_specifier, component_tag, authored.is_some())?;
+    let render_ts = render::emit_render(
+        program,
+        controller_specifier,
+        component_tag,
+        authored.is_some(),
+    )?;
     let render_client_ts =
         render::emit_render_client(program, controller_specifier, component_tag)?;
-    Ok(SyntheticOutput { controller_ts, render_ts, render_client_ts, used_clients: used })
+    Ok(SyntheticOutput {
+        controller_ts,
+        render_ts,
+        render_client_ts,
+        used_clients: used,
+    })
 }
 
 pub(super) fn emit_controller(
@@ -244,12 +256,15 @@ pub(super) fn emit_controller(
     // `setup(ctx)` (below). The type imports recover its contributed scope
     // type and shape the resolver context.
     if let Some(a) = authored {
-        w.line(&format!("import __authored from {};", js_string(&a.specifier)));
+        w.line(&format!(
+            "import __authored from {};",
+            js_string(&a.specifier)
+        ));
         w.line("import type { ControllerExport, ResolverContext } from \"@ship/sail-runtime/internal\";");
         // `createScope`/`withScope` give `__authored.setup(...)` a real setup
         // window — a controller that calls the ambient `mount(fn)` (see
         // `packages/sail/runtime/src/effect-scope.ts`) throws
-        // `SuiMountOutsideSetupError` with no current scope, and the browser
+        // `SailMountOutsideSetupError` with no current scope, and the browser
         // hydrate path always runs setup inside one (`mount.ts`, `compose.ts`).
         // The synthetic render is a one-shot SSR pass with no "connect" event,
         // so `mount()` callbacks registered here are simply never fired —
@@ -259,7 +274,10 @@ pub(super) fn emit_controller(
     }
     w.nl();
 
-    if used.iter().any(|n| resolve_client(manifest, n).is_some_and(|c| c.construct)) {
+    if used
+        .iter()
+        .any(|n| resolve_client(manifest, n).is_some_and(|c| c.construct))
+    {
         w.line("// Manifest value-clients, constructed once per route.");
         for name in used {
             if resolve_client(manifest, name).is_some_and(|c| c.construct) {
@@ -282,7 +300,10 @@ pub(super) fn emit_controller(
     if authored.is_some() {
         members.push("...__authoredScope".to_string());
     }
-    w.line(&format!("export const scope = {{ {} }};", members.join(", ")));
+    w.line(&format!(
+        "export const scope = {{ {} }};",
+        members.join(", ")
+    ));
     w.line("export type Scope = typeof scope;");
     Ok(w.into_string())
 }
@@ -357,7 +378,7 @@ fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest
     w.line("} as unknown as ResolverContext;");
     // Run inside a scope: the controller's setup may call the ambient
     // `mount(fn)`/`onCleanup(fn)` (see the import comment above) — without a
-    // current scope `mount()` throws `SuiMountOutsideSetupError`. The scope
+    // current scope `mount()` throws `SailMountOutsideSetupError`. The scope
     // is NOT disposed here: a `query()`/`nativeQuery()` source homes its
     // cache on this scope as owner-tree root (`useNativeCache()`), and its
     // in-flight PULL fetch must survive past `setup()` returning — disposing
@@ -373,6 +394,8 @@ fn emit_authored_compose(w: &mut Writer, used: &[String], manifest: &AppManifest
     w.line(
         "const __authoredScope = withScope(__authoredSetupScope, () => __authored.setup(__ctx)) as __AuthoredScope;",
     );
-    w.line("export const __disposeAuthoredSetup = (): void => { __authoredSetupScope.dispose(); };");
+    w.line(
+        "export const __disposeAuthoredSetup = (): void => { __authoredSetupScope.dispose(); };",
+    );
     w.nl();
 }

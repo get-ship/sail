@@ -8,7 +8,7 @@
 
 use std::path::PathBuf;
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn route_opts(source_path: Option<PathBuf>) -> CompileOpts {
     CompileOpts {
@@ -62,7 +62,10 @@ fn multi_stmt_fails_without_ts() {
     );
     assert!(err.span.is_some(), "error must carry a span");
     assert!(
-        err.category.as_deref().map(|c| c.contains("on:")).unwrap_or(false),
+        err.category
+            .as_deref()
+            .map(|c| c.contains("on:"))
+            .unwrap_or(false),
         "category should name the on: event, got: {:?}",
         err.category
     );

@@ -111,12 +111,8 @@ fn cubic_bezier(x1: f64, y1: f64, x2: f64, y2: f64, p: f64) -> f64 {
         // x(t), y(t), x'(t), y'(t) for the cubic-bezier parametric form.
         let cx = 3.0 * it * it * t * x1 + 3.0 * it * t * t * x2 + t * t * t;
         let cy = 3.0 * it * it * t * y1 + 3.0 * it * t * t * y2 + t * t * t;
-        let dx = 3.0 * it * it * x1
-            + 6.0 * it * t * (x2 - x1)
-            + 3.0 * t * t * (1.0 - x2);
-        let dy = 3.0 * it * it * y1
-            + 6.0 * it * t * (y2 - y1)
-            + 3.0 * t * t * (1.0 - y2);
+        let dx = 3.0 * it * it * x1 + 6.0 * it * t * (x2 - x1) + 3.0 * t * t * (1.0 - x2);
+        let dy = 3.0 * it * it * y1 + 6.0 * it * t * (y2 - y1) + 3.0 * t * t * (1.0 - y2);
         (cx, cy, dx, dy)
     };
 
@@ -150,7 +146,9 @@ pub fn bake(cfg: &TweenConfig) -> BakedAnimation {
     let dt_ms = 1000.0 / sample_rate_hz as f64;
 
     // Cap duration at MAX_GENERATOR_DURATION_MS for safety.
-    let duration_ms = cfg.duration_ms.clamp(0.01, super::spring::MAX_GENERATOR_DURATION_MS);
+    let duration_ms = cfg
+        .duration_ms
+        .clamp(0.01, super::spring::MAX_GENERATOR_DURATION_MS);
 
     let num_samples = ((duration_ms / dt_ms).round() as usize).max(2);
 

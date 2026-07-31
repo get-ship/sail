@@ -12,7 +12,7 @@
     pill = false
   }
 
-  const base = style.fontFamily(body).fontWeight(semibold).leading(none).whitespace(nowrap).align(middle).borderWidth(1).radius(sm).minH(control-h-2xs).padX(2).fontSize(xs)
+  const base = style.display(inline-flex).fontFamily(body).fontWeight(semibold).leading(none).whitespace(nowrap).borderWidth(1).radius(sm).minH(control-h-2xs).padX(2).padY(px).fontSize(xs)
 
   const soft = style.bg(muted).fg(muted-foreground).border(border)
   const solid = style.bg(primary).fg(primary-foreground).border(primary).shadow(xs)

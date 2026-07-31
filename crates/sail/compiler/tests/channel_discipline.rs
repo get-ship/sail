@@ -30,8 +30,12 @@ fn no_tier_0_primitive_is_declared_inside_a_theme_block() {
     let mut breaches: Vec<String> = Vec::new();
     for (n, line) in THEMES_CSS.lines().enumerate() {
         let t = line.trim();
-        let Some(name) = t.strip_prefix("--") else { continue };
-        let Some(name) = name.split(':').next() else { continue };
+        let Some(name) = t.strip_prefix("--") else {
+            continue;
+        };
+        let Some(name) = name.split(':').next() else {
+            continue;
+        };
         if TIER_0_PREFIXES.iter().any(|p| name.starts_with(p)) {
             breaches.push(format!("themes.css:{}: --{}", n + 1, name));
         }
@@ -55,27 +59,32 @@ fn no_tier_0_primitive_is_declared_inside_a_theme_block() {
 ///
 /// `(property, channel, why)`.
 const GOVERNED: &[(&str, &str, &str)] = &[
-    ("text-transform", "--heading-transform / --label-transform", "casing"),
+    (
+        "text-transform",
+        "--heading-transform / --label-transform",
+        "casing",
+    ),
     ("border-image", "--corner-image", "corner treatment"),
 ];
 
 /// Declared exemptions, each with the reason it is NOT a channel breach.
 /// Keep this list short and argued — an entry here is a claim that the value
 /// is data, not design.
-const GOVERNED_EXEMPTIONS: &[(&str, &str)] = &[
-    (
-        "sail-avatar",
-        "avatar initials are upper-cased as a DATA transform (\"ab\" -> \"AB\"), \
+const GOVERNED_EXEMPTIONS: &[(&str, &str)] = &[(
+    "sail-avatar",
+    "avatar initials are upper-cased as a DATA transform (\"ab\" -> \"AB\"), \
          not as label styling — a theme that lower-cases its labels must not \
          turn initials into lowercase glyphs",
-    ),
-];
+)];
 
 #[test]
 fn no_skin_hardcodes_a_channel_governed_property() {
     let mut breaches: BTreeMap<String, Vec<String>> = BTreeMap::new();
 
-    for (label, css) in [("sail-base.css", CONTRACTS_CSS), ("element-skins.css", SKINS_CSS)] {
+    for (label, css) in [
+        ("sail-base.css", CONTRACTS_CSS),
+        ("element-skins.css", SKINS_CSS),
+    ] {
         // Track the nearest preceding selector so an exemption can be scoped
         // to the component it belongs to.
         let mut selector = String::new();
@@ -96,7 +105,10 @@ fn no_skin_hardcodes_a_channel_governed_property() {
                 if value.starts_with("var(--") || value == "inherit" || value == "initial" {
                     continue;
                 }
-                if GOVERNED_EXEMPTIONS.iter().any(|(scope, _)| selector.contains(scope)) {
+                if GOVERNED_EXEMPTIONS
+                    .iter()
+                    .any(|(scope, _)| selector.contains(scope))
+                {
                     continue;
                 }
                 breaches

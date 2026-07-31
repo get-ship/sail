@@ -13,7 +13,9 @@
     size: 'md' | 'sm' | 'lg' = 'md'
   }
 
-  const base = style.position(relative).fontFamily(body).fontWeight(medium).leading(none).fg(toggle-foreground).bg(toggle).cursor(pointer).whitespace(nowrap).select(none).fontSize(sm).h(control-h-md).padX(3).borderWidth(1).border(toggle-border).radius(none).ms(-px).tapHighlight(none).transition(colors).duration(fast).ease(out)
+  // border(solid) is required — bare <button> UA is border-style:outset; without
+  // it the outline join paints as separate browser chrome (not a segment).
+  const base = style.position(relative).display(inline-flex).appearance(none).fontFamily(body).fontWeight(medium).leading(none).fg(toggle-foreground).bg(toggle).cursor(pointer).whitespace(nowrap).select(none).fontSize(sm).h(control-h-md).padX(3).borderWidth(1).border(solid).border(toggle-border).radius(none).ms(-px).tapHighlight(none).transition(colors).duration(fast).ease(out)
   const sizeMd = style.fontSize(sm).h(control-h-md).padX(3)
   const sizeSm = style.fontSize(xs).h(control-h-sm).padX(2_5)
   const sizeLg = style.fontSize(base).h(control-h-lg).padX(4)
@@ -39,8 +41,10 @@
   compound({ variant: segmented }, style.border(transparent).radius(sm).ms(0).mt(0).me(1)),
   compound({ orientation: vertical, variant: ghost }, style.border(transparent).radius(md).ms(0).mt(0).me(0).mb(1)),
   compound({ orientation: vertical, variant: segmented }, style.border(transparent).radius(sm).ms(0).mt(0).me(0).mb(1)),
+  // hover-bg (not muted) — muted collapses into the surface on many dark
+  // themes and makes unpressed hover text unreadable.
   when({
-    hover: style.bg(muted),
+    hover: style.bg(hover-bg).fg(foreground),
     pressed: style.bg(foreground).fg(background).border(foreground).z(1),
     disabled: style.opacity(50).cursor(not-allowed),
     focus: style.outline(solid).outline(2).outline(ring).z(2),

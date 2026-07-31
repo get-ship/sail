@@ -1,19 +1,15 @@
 //! Compile-time CSS rule stripping.
 //!
-//! R3 (bundle-perf): rules that exist verbatim in residual `sailBaseSheet`
-//! (opt-in shadow containment via `adoptSuiSheets` — not the L1 product model)
-//! may still appear in component `<style>` blocks. Those copies are dead weight
-//! when BASE is already adopted. Light-DOM L1 paint uses document contracts +
-//! `@scope` donuts, not this path.
+//! R3 (bundle-perf): residual shadow-host base rules may still appear in
+//! component `<style>` blocks. Light-DOM L1 paint uses the document floor
+//! (`packages/sail/tokens/src/sail-base.css`) + `@scope` donuts; contracts
+//! is a no-op. Those residual copies are dead weight and are stripped here.
 //!
 //! This module recognises the exact author-form text of those residual rules
 //! and removes them from the `styles:` string before emit. Conservative by
 //! design — only literal-form matches are stripped; anything with different
 //! whitespace, ordering, or extra declarations is left alone so authors keep
 //! control of edge cases.
-//!
-//! See `packages/sail/runtime/src/styles/index.ts` (`BASE_CSS`) for the
-//! residual list; the patterns below must mirror that set.
 //!
 //! Patterns currently stripped (all variants tolerate inner whitespace
 //! and an optional trailing semicolon):
@@ -38,6 +34,10 @@ use super::writer::js_string;
 /// implement `querySelector`, so a hand-rolled `firstChild` walk is the only
 /// isomorphic option (and the dedupe only matters on re-mount, hit O(1)).
 ///
+/// CSS is always wrapped in `@layer sail` so page atomics (`.sx-bgtransparent`,
+/// etc.) compete with element-skins by specificity — not as unlayered rules
+/// that beat every layered compound fill. Skins ship in the same layer.
+///
 /// `typed` selects the flavor: `true` emits TS type annotations + casts (the
 /// synthetic emit produces type-checked `.ts`); `false` emits plain JS (the
 /// production route emit). One source of truth for both mount paths.
@@ -46,23 +46,39 @@ pub(crate) fn styles_install_js(css: &str, typed: bool) -> String {
     if css.is_empty() {
         return String::new();
     }
+    // Same layer as element-skins.css — unlayered page atomics otherwise crush
+    // compound variant fills (e.g. solid primary bg loses to .sx-bgtransparent).
+    let css = if css.starts_with("@layer ") {
+        css.to_string()
+    } else {
+        format!("@layer sail {{\n{css}\n}}")
+    };
     let key = fnv1a32_hex(css.as_bytes());
     // Type annotations + the `as Element` cast differ between the typed (TS)
     // and plain-JS flavors; everything else is identical.
     let (el_ann, node_ann, n_ref, n_assign) = if typed {
-        (": Element | null", ": Node | null", "(__n as Element)", "__n as Element")
+        (
+            ": Element | null",
+            ": Node | null",
+            "(__n as Element)",
+            "__n as Element",
+        )
     } else {
         ("", "", "__n", "__n")
     };
     let mut b = String::new();
     b.push_str(&format!("const __suiStylesKey = \"{key}\";\n"));
-    b.push_str(&format!("const __suiStyles = {};\n", js_string(css)));
+    b.push_str(&format!("const __suiStyles = {};\n", js_string(&css)));
     b.push_str("{\n");
     b.push_str(&format!("  let __existing{el_ann} = null;\n"));
     b.push_str(&format!("  let __n{node_ann} = container.firstChild;\n"));
     b.push_str("  while (__n) {\n");
-    b.push_str(&format!("    if (__n.nodeType === 1 && {n_ref}.tagName === 'STYLE' &&\n"));
-    b.push_str(&format!("        {n_ref}.getAttribute(\"data-sail-style\") === __suiStylesKey) {{\n"));
+    b.push_str(&format!(
+        "    if (__n.nodeType === 1 && {n_ref}.tagName === 'STYLE' &&\n"
+    ));
+    b.push_str(&format!(
+        "        {n_ref}.getAttribute(\"data-sail-style\") === __suiStylesKey) {{\n"
+    ));
     b.push_str(&format!("      __existing = {n_assign};\n"));
     b.push_str("      break;\n");
     b.push_str("    }\n");
@@ -159,10 +175,7 @@ pub fn strip_shared_rules(styles: &str) -> String {
             // Also drop the leading whitespace on the rule's own line.
             // Walk `out` back to the previous newline (or start) and
             // truncate any indent we already pushed.
-            let trim_to = out
-                .rfind('\n')
-                .map(|n| n + 1)
-                .unwrap_or(0);
+            let trim_to = out.rfind('\n').map(|n| n + 1).unwrap_or(0);
             if out[trim_to..].chars().all(|c| c == ' ' || c == '\t') {
                 out.truncate(trim_to);
             }
@@ -427,7 +440,10 @@ mod tests {
     fn strips_canonical_form() {
         let css = ":host { display: block; }\n  :host([hidden]) { display: none; }\nbutton { color: red; }\n";
         let out = strip_shared_rules(css);
-        assert!(!out.contains(":host([hidden])"), "rule not stripped:\n{out}");
+        assert!(
+            !out.contains(":host([hidden])"),
+            "rule not stripped:\n{out}"
+        );
         assert!(out.contains(":host { display: block; }"));
         assert!(out.contains("button { color: red; }"));
     }
@@ -474,10 +490,19 @@ mod tests {
         // `:host(<sel>)` reads the host attr and styles the root element.
         let css = ":host { display: inline-flex; }\n:host([tone='primary']) .badge { color: red; }\n:host(:not([size])) { --h: 1px; }\n::slotted([slot='leading']) { flex: none; }\n.badge { border: 0; }";
         let out = light_dom_selectors(css);
-        assert!(out.contains(".sail-root { display: inline-flex; }"), "{out}");
-        assert!(out.contains(":scope[tone='primary'] .sail-root .badge"), "{out}");
+        assert!(
+            out.contains(".sail-root { display: inline-flex; }"),
+            "{out}"
+        );
+        assert!(
+            out.contains(":scope[tone='primary'] .sail-root .badge"),
+            "{out}"
+        );
         assert!(out.contains(":scope:not([size]) .sail-root"), "{out}");
-        assert!(out.contains("slot > [slot='leading'] { flex: none; }"), "{out}");
+        assert!(
+            out.contains("slot > [slot='leading'] { flex: none; }"),
+            "{out}"
+        );
         assert!(out.contains(".badge { border: 0; }"), "{out}");
         assert!(!out.contains(":host"), "no :host survives: {out}");
     }
@@ -500,5 +525,18 @@ mod tests {
         let once = strip_shared_rules(css);
         let twice = strip_shared_rules(&once);
         assert_eq!(once, twice);
+    }
+
+    #[test]
+    fn styles_install_wraps_in_sail_layer() {
+        let js = styles_install_js(".sx-bgtransparent{background-color:transparent}", false);
+        assert!(
+            js.contains("@layer sail {"),
+            "page atomics must ship in @layer sail so they don't crush element-skins compounds:\n{js}"
+        );
+        assert!(js.contains(".sx-bgtransparent{background-color:transparent}"));
+        // Already layered → leave alone (no double wrap).
+        let once = styles_install_js("@layer sail {\n.x{color:red}\n}", false);
+        assert_eq!(once.matches("@layer sail").count(), 1, "{once}");
     }
 }

@@ -3,7 +3,7 @@
 
 use std::path::PathBuf;
 
-use super::controller_parse::{parse, ParsedController};
+use super::controller_parse::{ParsedController, parse};
 use super::pure_derived::check;
 
 fn parse_src(src: &str) -> ParsedController {

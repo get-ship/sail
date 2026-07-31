@@ -10,7 +10,7 @@
 //
 // `HostContext` replaces that: the host registers it once via
 // `setHostContext`, the runtime reads it via `hostContext()`. Same pattern
-// as `RouterPort` / `ShipHost` / `SuiLoader` — the runtime names no host
+// as `RouterPort` / `ShipHost` / `SailLoader` — the runtime names no host
 // concept, the host plugs one in. Held on `globalThis` so it's visible to
 // every bundle sharing the single `@ship/sail-runtime` instance.
 

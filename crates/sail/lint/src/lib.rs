@@ -7,9 +7,9 @@
 
 pub mod config;
 pub mod prop_registry;
-pub mod scales;
 pub mod report;
 pub mod rules;
+pub mod scales;
 pub mod source;
 pub mod style;
 pub mod sx_ir;
@@ -45,7 +45,7 @@ pub fn is_controller_path(path: &std::path::Path) -> bool {
 }
 
 /// True iff `path` is a SAIL template (`*.sail`).
-pub fn is_sui_template_path(path: &std::path::Path) -> bool {
+pub fn is_sail_template_path(path: &std::path::Path) -> bool {
     path.extension().and_then(|e| e.to_str()) == Some("sail")
 }
 
@@ -73,16 +73,15 @@ pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
     // own path gate (`is_action_source_path`) with a looser style floor
     // (custom-property setProperty is the sanctioned sx bridge).
     let p = path.to_string_lossy();
-    let components_hit = p.contains("/packages/components/sail/")
-        && (p.contains("/src/") || p.ends_with("/src"));
+    let components_hit =
+        p.contains("/packages/components/sail/") && (p.contains("/src/") || p.ends_with("/src"));
     if !components_hit {
         return false;
     }
     // Skip test files (they re-implement focus traps for assertion convenience
     // and the lint surface is irrelevant). The pack's own test directory
     // (often `test/` next to `src/`) is also out of scope.
-    p.contains("/src/")
-        || p.ends_with("/src")
+    p.contains("/src/") || p.ends_with("/src")
 }
 
 /// True iff `path` is a `use:` Action implementation the floor lints.
@@ -92,7 +91,7 @@ pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
 /// not path-detectable yet (Part A ships the registry gate first).
 ///
 /// **Exempt:** anything under `tests/perf/` (bench harness / interop may
-/// need `class=` — fail-open by path prefix, documented in ARCHITECTURE).
+/// need `class=` — fail-open by path prefix).
 pub fn is_action_source_path(path: &std::path::Path) -> bool {
     if path.extension().and_then(|e| e.to_str()) != Some("ts") {
         return false;
@@ -123,8 +122,13 @@ pub fn lint_action_source(path: &std::path::Path, source: &str) -> Vec<Finding> 
 /// happen elsewhere. No filesystem access.
 pub fn lint_controller_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
-    for (_id, check) in rules::CONTROLLER_RULES {
+    let profile = std::env::var_os("SAIL_LINT_PROFILE").is_some();
+    for (id, check) in rules::CONTROLLER_RULES {
+        let t = std::time::Instant::now();
         findings.extend(check(path, source));
+        if profile {
+            eprintln!("sail-lint: {id} {:?}", t.elapsed());
+        }
     }
     findings.sort_by(|a, b| a.line.cmp(&b.line).then_with(|| a.col.cmp(&b.col)));
     findings
@@ -149,10 +153,15 @@ pub fn lint_pack_source_source(path: &std::path::Path, source: &str) -> Vec<Find
 
 /// Lint a SAIL template (`*.sail`) from its source. Returns findings
 /// sorted by `(line, col)`. No filesystem access.
-pub fn lint_sui_template_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
+pub fn lint_sail_template_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
-    for (_id, check) in rules::SUI_TEMPLATE_RULES {
+    let profile = std::env::var_os("SAIL_LINT_PROFILE").is_some();
+    for (id, check) in rules::SUI_TEMPLATE_RULES {
+        let t = std::time::Instant::now();
         findings.extend(check(path, source));
+        if profile {
+            eprintln!("sail-lint: {id} {:?}", t.elapsed());
+        }
     }
     findings.sort_by(|a, b| a.line.cmp(&b.line).then_with(|| a.col.cmp(&b.col)));
     findings
@@ -167,11 +176,11 @@ pub fn lint_path(path: &std::path::Path) -> Vec<Finding> {
         };
         return lint_controller_source(path, &source);
     }
-    if is_sui_template_path(path) {
+    if is_sail_template_path(path) {
         let Ok(source) = std::fs::read_to_string(path) else {
             return Vec::new();
         };
-        return lint_sui_template_source(path, &source);
+        return lint_sail_template_source(path, &source);
     }
     if is_action_source_path(path) {
         let Ok(source) = std::fs::read_to_string(path) else {

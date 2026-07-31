@@ -181,7 +181,7 @@ fn collect_route_dirs(dir: &Path, out: &mut std::collections::BTreeSet<String>) 
 
 #[cfg(test)]
 mod project_root_tests {
-    use super::{detect_project_root_from, Resolution};
+    use super::{Resolution, detect_project_root_from};
     use std::path::{Path, PathBuf};
 
     /// Nested project: monorepo root has a `views/`, the inner project's
@@ -318,8 +318,8 @@ mod project_root_tests {
     /// form: reader reads exactly where writer writes.
     #[test]
     fn reader_and_writer_agree_on_deck_output_path() {
-        use deck_bundler::targets::BundleLayout;
         use deck_bundler::DeckConfig;
+        use deck_bundler::targets::BundleLayout;
         let root = PathBuf::from("/proj");
         let writer_deck =
             BundleLayout::with_config(root.clone(), None, DeckConfig::defaults()).deck_out();
@@ -342,7 +342,11 @@ mod project_root_tests {
         let mut r = Resolution::new().with_root("/proj");
         r.register_route_output("hub", "/apps/hub/.deck/views");
         let roots = r.route_bundle_roots();
-        assert_eq!(roots[0], PathBuf::from("/apps/hub/.deck/views"), "per-app output first");
+        assert_eq!(
+            roots[0],
+            PathBuf::from("/apps/hub/.deck/views"),
+            "per-app output first"
+        );
         assert_eq!(
             *roots.last().unwrap(),
             deck_config::deck_out_path(Path::new("/proj")),

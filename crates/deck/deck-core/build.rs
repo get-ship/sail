@@ -12,7 +12,7 @@
 //! The lucide icon set is committed source (`assets/lucide-icons.json`) —
 //! the daemon embeds it and serves per-icon at `/_deck/icons/{name}.svg`;
 //! regenerate after a lucide-static version bump via
-//! `cargo run -p xtask-deck -- gen-icons`.
+//! `cargo xtask gen-icons`.
 //! The workspace catalog is emitted to `.deck/catalogs/workspace.json`
 //! by `build-assets` and read at runtime by `src/packs.rs`.
 //!
@@ -61,6 +61,8 @@ const FRAMEWORK_BUNDLES: &[&str] = &[
     "sail-compiler-wasm.js",
     "sail-lsp-completions.js",
     "sail-lsp-diagnostics.js",
+    // Framework-shipped Sail Studio bridge (hotkeys/FAB under sail dev).
+    "sail-studio-bridge.js",
 ];
 
 /// Committed source assets that must be non-empty before the build proceeds.
@@ -88,6 +90,7 @@ const COARSE_SOURCE_ROOTS: &[&str] = &[
     "packages/sail/runtime/src",
     "packages/sail/dom/src",
     "packages/deck/sdk-client/src",
+    "packages/sail/studio-bridge/src",
 ];
 
 fn main() {
@@ -104,8 +107,7 @@ fn main() {
     let framework_src = deck_config::deck_out_path(&repo_root).join("framework");
     let framework_stamp = deck_config::deck_out_path(&repo_root).join("framework-stamp");
 
-    fs::create_dir_all(&assets)
-        .unwrap_or_else(|e| panic!("build.rs: mkdir assets: {e}"));
+    fs::create_dir_all(&assets).unwrap_or_else(|e| panic!("build.rs: mkdir assets: {e}"));
 
     // ── Stage: copy .deck/framework/sail-*.js → assets/sail-*.js ───────────────
     //
@@ -180,7 +182,7 @@ fn main() {
             "build.rs: committed source assets are missing or empty.\n{lines}\n\n\
              These ship in a fresh clone (unlike the framework bundles, which build.rs\n\
              now stubs and `build-assets` bakes). A missing one means a broken checkout.\n\
-             lucide-icons.json regenerates via `cargo run -p xtask-deck -- gen-icons`."
+             lucide-icons.json regenerates via `cargo xtask gen-icons`."
         );
     }
 

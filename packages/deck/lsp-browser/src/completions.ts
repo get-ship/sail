@@ -7,7 +7,7 @@
 
 import initWasm, { completion_vocabulary } from '@ship/sail-compiler-wasm'
 
-export interface SuiCompletionSource {
+export interface SailCompletionSource {
   trigger: string
   items: Array<{
     label: string
@@ -57,10 +57,10 @@ function clauseName(clause: string): string {
   return clause.replace('{:', '').replace('}', '').trim()
 }
 
-function buildSources(): Record<string, SuiCompletionSource> {
+function buildSources(): Record<string, SailCompletionSource> {
   if (!vocab) throw new Error('sail-lsp-browser completions: WASM not initialized')
 
-  const sources: Record<string, SuiCompletionSource> = {}
+  const sources: Record<string, SailCompletionSource> = {}
 
   sources['on:'] = {
     trigger: 'on:',
@@ -74,7 +74,7 @@ function buildSources(): Record<string, SuiCompletionSource> {
       const alias = m.alias
         ? { label: m.alias, detail: `modifier alias (${m.canonical})`, info: m.summary }
         : []
-      const examples: SuiCompletionSource['items'] = []
+      const examples: SailCompletionSource['items'] = []
       if (m.arg) {
         if (m.canonical === 'key') {
           examples.push(
@@ -132,7 +132,7 @@ const SOURCES = buildSources()
  *  back at most 8 characters for a trigger string. Returns null if
  *  nothing recognizable precedes the cursor — caller can then fall
  *  back to the editor's built-in completion harness. */
-export function completionsAt(source: string, offset: number): SuiCompletionSource | null {
+export function completionsAt(source: string, offset: number): SailCompletionSource | null {
   const safe = Math.max(0, Math.min(offset, source.length))
   const lookback = source.slice(Math.max(0, safe - 8), safe)
   // Longest triggers first so 'bind:' wins over ':' etc.
@@ -144,6 +144,6 @@ export function completionsAt(source: string, offset: number): SuiCompletionSour
 
 /** All sources — what the editor wants if it's going to wire static
  *  triggers and let CodeMirror handle the dispatch itself. */
-export function allSources(): SuiCompletionSource[] {
+export function allSources(): SailCompletionSource[] {
   return Object.values(SOURCES)
 }

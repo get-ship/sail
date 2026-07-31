@@ -20,11 +20,7 @@
   No LANG-GAP.
 -->
 
-
-
-
 <controller>
-import { controller } from '@ship/sail-runtime'
 
 export default controller(() => {
   mount((host) => {

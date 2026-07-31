@@ -1,185 +1,468 @@
 /**
- * Shared theme catalog for the SHIP app and marketing site.
+ * Shared theme catalog for Sail apps and the marketing site.
  *
  * Every theme is a full aesthetic bundle — palette, surfaces, radii,
- * shadows, motion, typography, and interaction strength. The picker is
- * flat: no tiers, no split. Pick one and the app *feels* different,
- * not just looks different.
+ * shadows, motion, typography, and interaction strength. Dark is a
+ * **mode** (`data-mode`), not a twin theme id.
  *
- * Palette definitions live alongside this module in `./themes.css`
- * (per-theme overrides) and `./tokens.css` (canonical ship-light +
- * ship-dark base). Consumers only need this module to know the theme
- * ids, human labels, and whether each theme should carry the canonical
- * `.dark` class.
+ * Palette definitions: `./themes.css` (per-theme mode overrides) and
+ * `./tokens.css` (base). Consumers need this module for theme ids,
+ * human labels, swatches, and apply helpers.
  */
 
 // ThemeId is generated from model/themes via `sail-compiler tokens`.
 import type { ThemeId } from './generated/unions'
-export type { ThemeId }
+import {
+  THEME_META,
+  themeMeta as generatedThemeMeta,
+  type ThemeMeta,
+} from './generated/themes-meta'
+export type { ThemeId, ThemeMeta }
+
+/**
+ * Theme shipping tier.
+ *
+ * - `core` — ships with every Sail project (identity + neutral). Keep small.
+ * - `catalog` — full aesthetic library (studio / marketing / opt-in).
+ */
+export type ThemeTier = 'core' | 'catalog'
 
 export interface Theme {
   id: ThemeId
   label: string
-  /** Whether the theme needs the canonical `.dark` class applied so
-   *  shadow/elevation tokens from ./tokens.css flip too. */
+  /**
+   * Whether the **default mode** is a dark surface.
+   * Mode switches use `applyMode` / `data-mode`, not twin theme ids.
+   */
   dark: boolean
-  /** Preview swatches for picker UIs — [background, card, primary, accent].
-   *  Mirrors the palette the theme actually paints with so cards can
-   *  show at a glance what the theme looks like. */
+  /** Shipping tier — core defaults vs catalog extras. */
+  tier: ThemeTier
+  /** Preview swatches for picker UIs — [background, card, primary, accent]. */
   swatches: readonly [string, string, string, string]
+  /** Mode names from DTCG `modes` (light/dark at minimum). */
+  modes: readonly string[]
+  defaultMode: string
 }
 
-export const THEMES: Theme[] = [
+/** Hand labels + swatches keyed by generated ThemeId. Meta (modes/dark) is generated. */
+const THEME_PRESENTATION: Record<
+  string,
   {
-    id: 'ship-light', label: 'SHIP Light', dark: false,
+    label: string
+    tier: ThemeTier
+    swatches: readonly [string, string, string, string]
+  }
+> = {
+  sail: {
+    label: 'Sail',
+    tier: 'core',
     swatches: [
-      'oklch(0.99 0.001 106.423)', // background
-      'oklch(1 0 0)',              // card
-      'oklch(0.67 0.16 58)',       // primary — SHIP amber
-      'oklch(0.61 0.23 303)',      // accent — purple
+      'oklch(0.985 0.008 250)',
+      'oklch(1 0 0)',
+      'oklch(0.58 0.18 245)',
+      'oklch(0.62 0.14 195)',
     ],
   },
-  {
-    id: 'ship-dark', label: 'SHIP Dark', dark: true,
+  ship: {
+    label: 'SHIP',
+    tier: 'catalog',
     swatches: [
-      'oklch(0.18 0.01 250)',      // background
-      'oklch(0.18 0.01 50)',       // card
-      'oklch(0.77 0.16 70)',       // primary — warm amber
-      'oklch(0.3 0.05 300)',       // accent — muted purple
+      'oklch(0.99 0.001 106.423)',
+      'oklch(1 0 0)',
+      'oklch(0.67 0.16 58)',
+      'oklch(0.61 0.23 303)',
     ],
   },
-  {
-    id: 'paper', label: 'Paper', dark: false,
+  neutral: {
+    label: 'Neutral',
+    tier: 'core',
     swatches: [
-      'oklch(0.97 0.014 80)',      // warm cream
-      'oklch(0.99 0.010 80)',      // card
-      'oklch(0.55 0.14 35)',       // terracotta primary
-      'oklch(0.48 0.09 55)',       // muted accent
+      'oklch(0.985 0.002 264)',
+      'oklch(1 0 0)',
+      'oklch(0.27 0.020 264)',
+      'oklch(0.55 0.090 255)',
     ],
   },
-  {
-    id: 'halo', label: 'Halo (Soft)', dark: false,
+  paper: {
+    label: 'Paper',
+    tier: 'catalog',
     swatches: [
-      'oklch(0.92 0.008 230)',     // soft mid-grey-blue surface
-      'oklch(0.92 0.008 230)',     // same — depth from shadow, not hue
-      'oklch(0.62 0.14 50)',       // muted orange primary
-      'oklch(0.55 0.05 230)',      // accent
+      'oklch(0.97 0.014 80)',
+      'oklch(0.99 0.010 80)',
+      'oklch(0.55 0.14 35)',
+      'oklch(0.48 0.09 55)',
     ],
   },
-  {
-    id: 'console', label: 'Console', dark: true,
+  halo: {
+    label: 'Halo (Soft)',
+    tier: 'catalog',
     swatches: [
-      'oklch(0.13 0.008 220)',     // near-black ground
-      'oklch(0.16 0.010 220)',     // tinted card
-      'oklch(0.78 0.20 145)',      // phosphor green
-      'oklch(0.78 0.16 195)',      // teal accent
+      'oklch(0.92 0.008 230)',
+      'oklch(0.92 0.008 230)',
+      'oklch(0.62 0.14 50)',
+      'oklch(0.55 0.05 230)',
     ],
   },
-  {
-    id: 'contrast', label: 'High Contrast', dark: true,
+  console: {
+    label: 'Console',
+    tier: 'catalog',
     swatches: [
-      'oklch(0.09 0 0)',           // near-black
-      'oklch(0.15 0 0)',           // card
-      'oklch(0.87 0.18 85)',       // amber primary = accent
-      'oklch(0.99 0 0)',           // pure white fg
+      'oklch(0.13 0.008 220)',
+      'oklch(0.16 0.010 220)',
+      'oklch(0.78 0.20 145)',
+      'oklch(0.78 0.16 195)',
     ],
   },
-  {
-    id: 'glass', label: 'Glass', dark: false,
+  contrast: {
+    label: 'High Contrast',
+    tier: 'catalog',
     swatches: [
-      'oklch(0.95 0.04 230)',      // soft tinted page backdrop
-      'oklch(0.99 0.005 240)',     // frosted card surface
-      'oklch(0.62 0.16 50)',       // muted brand orange
-      'oklch(0.62 0.14 280)',      // iridescent violet accent
+      'oklch(0.09 0 0)',
+      'oklch(0.15 0 0)',
+      'oklch(0.87 0.18 85)',
+      'oklch(0.99 0 0)',
     ],
   },
-  {
-    // Brand-free default for building on SAIL without adopting any
-    // product identity. Neutral slate surfaces, a deep-slate "ink"
-    // primary, one restrained slate-blue accent. Carries zero brand.
-    id: 'neutral-light', label: 'Neutral Light', dark: false,
+  glass: {
+    label: 'Glass',
+    tier: 'catalog',
     swatches: [
-      'oklch(0.985 0.002 264)',    // cool off-white background
-      'oklch(1 0 0)',              // white card
-      'oklch(0.27 0.020 264)',     // deep-slate ink primary
-      'oklch(0.55 0.090 255)',     // restrained slate-blue accent
+      'oklch(0.95 0.04 230)',
+      'oklch(0.99 0.005 240)',
+      'oklch(0.62 0.16 50)',
+      'oklch(0.62 0.14 280)',
     ],
   },
-  {
-    id: 'neutral-dark', label: 'Neutral Dark', dark: true,
+  brut: {
+    label: 'Brutalist',
+    tier: 'catalog',
     swatches: [
-      'oklch(0.18 0.008 264)',     // deep cool-slate background
-      'oklch(0.22 0.010 264)',     // lifted slate card
-      'oklch(0.92 0.008 264)',     // near-white ink primary
-      'oklch(0.70 0.100 255)',     // restrained slate-blue accent
+      'oklch(0.97 0 0)',
+      'oklch(1 0 0)',
+      'oklch(0.14 0 0)',
+      'oklch(0.62 0.24 28)',
     ],
   },
-  {
-    // The expression-channel proof: pure tokens, zero structural rules.
-    id: 'brut', label: 'Brutalist', dark: false,
+  '8bit': {
+    label: '8-Bit',
+    tier: 'catalog',
     swatches: [
-      'oklch(0.97 0 0)',           // paper white
-      'oklch(1 0 0)',              // card
-      'oklch(0.14 0 0)',           // hard black ink primary
-      'oklch(0.62 0.24 28)',       // single red accent
+      'oklch(0.18 0.05 265)',
+      'oklch(0.24 0.06 265)',
+      'oklch(0.72 0.21 25)',
+      'oklch(0.82 0.20 95)',
     ],
   },
-  {
-    id: '8bit', label: '8-Bit', dark: true,
+  synthwave: {
+    label: 'Synthwave',
+    tier: 'catalog',
     swatches: [
-      'oklch(0.18 0.05 265)',      // NES navy ground
-      'oklch(0.24 0.06 265)',      // lifted card
-      'oklch(0.72 0.21 25)',       // arcade red primary
-      'oklch(0.82 0.20 95)',       // coin-gold accent
+      'oklch(0.16 0.06 285)',
+      'oklch(0.22 0.08 285)',
+      'oklch(0.65 0.28 340)',
+      'oklch(0.75 0.22 190)',
     ],
   },
-  {
-    // The gradient/glow proof: a neon-future theme that needed the
-    // gradient-primary / gradient-surface / glow-* channels to exist.
-    id: 'synthwave', label: 'Synthwave', dark: true,
-    swatches: [
-      'oklch(0.16 0.06 285)',      // deep purple-black ground
-      'oklch(0.22 0.08 285)',      // lifted purple card
-      'oklch(0.65 0.28 340)',      // neon pink primary
-      'oklch(0.75 0.22 190)',      // cyan accent
-    ],
-  },
-]
+}
+
+function buildThemes(): Theme[] {
+  return THEME_META.map((meta) => {
+    const pres = THEME_PRESENTATION[meta.id] ?? {
+      label: meta.id
+        .split('-')
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' '),
+      tier: 'catalog' as ThemeTier,
+      swatches: [
+        'oklch(0.95 0 0)',
+        'oklch(1 0 0)',
+        'oklch(0.5 0.1 250)',
+        'oklch(0.55 0.1 280)',
+      ] as const,
+    }
+    const modes =
+      meta.modes.length > 0 ? meta.modes : (['light', 'dark'] as const)
+    return {
+      id: meta.id as ThemeId,
+      label: pres.label,
+      dark: meta.dark,
+      tier: pres.tier,
+      swatches: pres.swatches,
+      modes: [...modes],
+      defaultMode: meta.defaultMode ?? 'light',
+    }
+  })
+}
+
+/** Themes that ship into a default project stamp. Keep this set tight. */
+export const CORE_THEME_IDS = ['sail', 'neutral'] as const satisfies readonly ThemeId[]
+
+export const THEMES: Theme[] = buildThemes()
 
 const THEME_BY_ID: Record<string, Theme> = Object.fromEntries(
   THEMES.map((t) => [t.id, t]),
 )
 
-export const DEFAULT_THEME: ThemeId = 'ship-light'
+/** Themes that ship with a default project (tier: core). */
+export function coreThemes(): Theme[] {
+  return THEMES.filter((t) => t.tier === 'core')
+}
+
+/** Catalog aesthetics — available in studio / marketing, not default stamps. */
+export function catalogThemes(): Theme[] {
+  return THEMES.filter((t) => t.tier === 'catalog')
+}
+
+export function isCoreTheme(id: ThemeId): boolean {
+  return THEME_BY_ID[id]?.tier === 'core'
+}
+
+/** Modes-in-file primary default — Sail brand (not monorepo ship). */
+export const DEFAULT_THEME: ThemeId = 'sail' as ThemeId
 export const THEME_STORAGE_KEY = 'ship-site-theme'
+/** Persisted mode key. */
+export const THEME_MODE_STORAGE_KEY = 'ship-site-theme-mode'
+export const DEFAULT_MODE = 'light'
 
 export const isValidTheme = (value: unknown): value is ThemeId =>
   typeof value === 'string' && value in THEME_BY_ID
 
+/** True when the theme's default mode is dark (not "currently in dark mode"). */
 export const isDarkTheme = (id: ThemeId): boolean =>
   THEME_BY_ID[id]?.dark ?? false
 
 /**
- * Apply a theme to the given root element (or documentElement by
- * default). Sets `data-theme` and toggles the canonical `.dark` class.
+ * Document paint modes only. `"system"` is a **preference** that resolves
+ * before paint — never a `data-mode` value.
+ */
+export type PaintMode = 'light' | 'dark'
+
+/**
+ * User mode preference stored in `THEME_MODE_STORAGE_KEY`.
+ * Preference may be `system`; paint is always light|dark.
+ */
+export type ModePreference = 'light' | 'dark' | 'system'
+
+/**
+ * Map a mode preference (including `"system"`) to a document paint mode.
+ * Aligns with studio `documentModeString`: **never** returns `"system"`.
+ */
+export function paintMode(mode: string | null | undefined): PaintMode {
+  if (mode === 'dark') return 'dark'
+  if (mode === 'light') return 'light'
+  if (mode === 'system') {
+    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+      try {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+      } catch {
+        /* matchMedia can throw in odd envs */
+      }
+    }
+    return 'light'
+  }
+  // Unknown / empty → light (safe document default).
+  return 'light'
+}
+
+/**
+ * Read the persisted mode **preference** (`light` | `dark` | `system`).
+ * Invalid / missing values normalize to `light` (or a paint mode when the
+ * stored string resolves via `paintMode` to light|dark but is not a pref).
+ */
+export function readModePreference(): ModePreference {
+  const stored = readStoredMode()
+  if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
+  if (stored) {
+    // Legacy / unknown paint strings → treat as explicit light|dark preference.
+    return paintMode(stored)
+  }
+  return 'light'
+}
+
+/**
+ * Subscribe to OS `prefers-color-scheme` changes.
+ *
+ * Invokes `cb` with the resolved **paint** mode only while the stored
+ * preference is `system` (explicit light/dark preferences ignore OS flips).
+ * Returns an unsubscribe function. No-op when `matchMedia` is unavailable.
+ *
+ * Callers that want to repaint should typically: `applyMode('system')` or
+ * `paintMode('system')` + set `dataset.mode` without clearing preference.
+ */
+export function subscribeSystemPreference(
+  cb: (paint: PaintMode) => void,
+): () => void {
+  if (
+    typeof window === 'undefined' ||
+    typeof window.matchMedia !== 'function'
+  ) {
+    return () => {}
+  }
+  let mql: MediaQueryList
+  try {
+    mql = window.matchMedia('(prefers-color-scheme: dark)')
+  } catch {
+    return () => {}
+  }
+  const handler = (): void => {
+    if (readModePreference() !== 'system') return
+    cb(paintMode('system'))
+  }
+  // Safari < 14: addListener; modern: addEventListener
+  if (typeof mql.addEventListener === 'function') {
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }
+  mql.addListener(handler)
+  return () => mql.removeListener(handler)
+}
+
+/**
+ * Apply a theme (+ optional mode) to the given root element (or
+ * documentElement by default).
+ *
+ * Runtime model: **only** `data-theme` + `data-mode`. No `.dark` class.
+ * `data-mode` is always `light` | `dark` — never `"system"`.
  * Returns the applied ThemeId.
  */
 export function applyTheme(
   id: unknown,
   root: HTMLElement = document.documentElement,
+  mode?: string | null,
 ): ThemeId {
   const next: ThemeId = isValidTheme(id) ? id : DEFAULT_THEME
-  const dark = isDarkTheme(next)
+  const resolvedMode = paintMode(resolveMode(next, mode))
   root.dataset.theme = next
-  root.classList.toggle('dark', dark)
-  // Always announce theme application so chrome (status bar, devtools,
-  // etc.) can repaint deterministically without a MutationObserver.
+  root.dataset.mode = resolvedMode
+  // Explicitly clear legacy .dark if present (no dual mechanism).
+  root.classList.remove('dark')
+  const dark = resolvedMode === 'dark'
   if (typeof document !== 'undefined' && typeof CustomEvent !== 'undefined') {
     document.dispatchEvent(
-      new CustomEvent('ship:theme:change', { detail: { id: next, dark } }),
+      new CustomEvent('ship:theme:change', {
+        detail: { id: next, dark, mode: resolvedMode },
+      }),
     )
   }
   return next
+}
+
+/**
+ * Modes declared for a theme (from generated meta). Empty ⇒ treat as light|dark
+ * for legacy; single-mode themes return one entry.
+ */
+export function modesForTheme(id: string): readonly string[] {
+  const meta = lookupThemeMeta(id)
+  const modes = meta?.modes?.length
+    ? meta.modes
+    : THEME_BY_ID[id]?.modes?.length
+      ? THEME_BY_ID[id]!.modes
+      : (['light', 'dark'] as const)
+  return modes
+}
+
+/** True when the theme declares the paint mode. */
+export function themeSupportsMode(id: string, mode: string): boolean {
+  const paint = mode === 'system' ? 'system' : mode
+  if (paint === 'system') {
+    // System preference is allowed only when the theme supports both paint modes
+    // that system might resolve to — require both light and dark.
+    const m = modesForTheme(id)
+    return m.includes('light') && m.includes('dark')
+  }
+  return modesForTheme(id).includes(paint)
+}
+
+/** Resolve mode: explicit arg → stored → themes-meta default → DEFAULT_MODE.
+ * Always clamps to a mode the theme declares (single-mode lock).
+ */
+function resolveMode(id: ThemeId, mode?: string | null): string {
+  const modes = modesForTheme(id)
+  const meta = lookupThemeMeta(id)
+  const fallback =
+    (meta?.defaultMode && modes.includes(meta.defaultMode)
+      ? meta.defaultMode
+      : null) ??
+    THEME_BY_ID[id]?.defaultMode ??
+    (modes.includes('light') ? 'light' : modes[0]) ??
+    DEFAULT_MODE
+
+  const clamp = (raw: string): string => {
+    if (raw === 'system') {
+      // Only honor system when both paint modes exist; else fall back.
+      if (modes.includes('light') && modes.includes('dark')) return 'system'
+      return fallback
+    }
+    if (modes.includes(raw)) return raw
+    return fallback
+  }
+
+  if (typeof mode === 'string' && mode.length > 0) return clamp(mode)
+  const stored = readStoredMode()
+  // Stored "system" is a preference, not a paint key — resolve via paintMode later.
+  if (stored && stored !== 'system' && modes.includes(stored)) return stored
+  if (stored === 'system') return clamp('system')
+  return fallback
+}
+
+/** Meta lookup from generated themes-meta. */
+function lookupThemeMeta(
+  id: string,
+): { modes: readonly string[]; defaultMode: string | null } | undefined {
+  return generatedThemeMeta(id)
+}
+
+export function readStoredMode(): string | null {
+  if (typeof localStorage === 'undefined') return null
+  try {
+    return localStorage.getItem(THEME_MODE_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Persist a mode **preference** (`light` | `dark` | `system`).
+ * Does not paint — pair with `applyMode` / `applyTheme` for document attrs.
+ */
+export function persistMode(mode: string): void {
+  try {
+    localStorage.setItem(THEME_MODE_STORAGE_KEY, mode)
+  } catch {
+    /* opaque origin */
+  }
+}
+
+/**
+ * Apply mode for the current theme (sets data-mode only).
+ * Always paints `light` | `dark` — `"system"` resolves via prefers-color-scheme
+ * and is never written to `data-mode` (studio / site parity).
+ *
+ * **Preference vs paint:** when `mode` is `"system"`, stores preference
+ * `"system"` and paints the resolved light|dark. When `mode` is light|dark,
+ * stores that preference and paints it (clamped by the active theme's modes).
+ */
+export function applyMode(
+  mode: string,
+  root: HTMLElement = document.documentElement,
+): string {
+  const id = (root.dataset.theme as ThemeId) || DEFAULT_THEME
+  const preference: ModePreference =
+    mode === 'system' || mode === 'light' || mode === 'dark'
+      ? mode
+      : paintMode(mode)
+
+  // Pass preference through so resolveMode can honor system + single-mode clamp.
+  applyTheme(id, root, preference)
+  const paint = (root.dataset.mode as PaintMode) || paintMode(preference)
+
+  // Persist preference intent — never collapse system → resolved paint.
+  // Single-mode themes still clamp paint; preference may remain system
+  // so returning to a dual-mode theme restores auto (U2.1b).
+  persistMode(preference)
+  return paint
 }
 
 /**
@@ -219,28 +502,18 @@ export function setThemeTransport(t: ThemeTransport | null): void {
 /**
  * Persist the current theme. localStorage is the tier-4 cache the
  * pre-paint boot script reads (must be synchronous); the host transport
- * (when registered) is the tier-2 authoritative store. Write-through is
- * fire-and-forget — if the host is unreachable the local cache is still
- * correct and `syncThemeFromSettings()` reconciles on next load.
+ * (when registered) is the tier-2 authoritative store.
  */
 export function persistTheme(id: ThemeId): void {
-  // `typeof localStorage` is NOT a sufficient guard: in an opaque-origin
-  // document (sandboxed iframe, data: URL) the property GETTER itself throws
-  // SecurityError, and `typeof` does not swallow a throwing accessor. The try
-  // must cover the ACCESS, not just the write — and the transport write-through
-  // stays outside it, so a storage-denied context still persists via the host.
   try {
     localStorage.setItem(THEME_STORAGE_KEY, id)
   } catch {}
-  // Tier-2 write-through via the host transport. Fire-and-forget.
   void themeTransport?.save(id)
 }
 
 /**
  * Read the authoritative theme from the host transport and update the
- * local cache to match. Call on shell mount so another device's change
- * propagates. No transport registered (or unreachable) ⇒ localStorage
- * stays as-is.
+ * local cache to match.
  */
 export async function syncThemeFromSettings(): Promise<ThemeId | null> {
   if (!themeTransport) return null

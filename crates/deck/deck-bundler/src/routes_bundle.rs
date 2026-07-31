@@ -50,7 +50,10 @@ pub async fn bundle_routes(
                 let body: String = sources
                     .iter()
                     .map(|s| {
-                        format!("import {:?};\n", s.with_extension("compiled.js").to_string_lossy())
+                        format!(
+                            "import {:?};\n",
+                            s.with_extension("compiled.js").to_string_lossy()
+                        )
                     })
                     .collect();
                 std::fs::write(&entry, body)?;
@@ -58,7 +61,12 @@ pub async fn bundle_routes(
             }
         };
         input.push(InputItem {
-            name: Some(t.out_file.strip_suffix(".js").unwrap_or(&t.out_file).to_string()),
+            name: Some(
+                t.out_file
+                    .strip_suffix(".js")
+                    .unwrap_or(&t.out_file)
+                    .to_string(),
+            ),
             import,
         });
     }
@@ -87,16 +95,14 @@ pub async fn bundle_routes(
         ..Default::default()
     };
 
-    let resolver = component_index(
-        &layout.repo_root,
-        &layout.cfg.packs,
-    );
+    let resolver = component_index(&layout.repo_root, &layout.cfg.packs);
     let plugin = SailPlugin {
         repo_root: layout.repo_root.clone(),
         emit_component_imports: true,
         component_index: resolver.index,
         shadowed_tags: resolver.shadowed,
         component_roots: crate::catalog::component_package_roots(&layout.repo_root),
+        project_dir: None,
     };
     {
         let mut bundler = BundlerBuilder::default()
@@ -112,8 +118,7 @@ pub async fn bundle_routes(
     }
 
     // Publish atomically from the staging dir to the live dir.
-    crate::atomic::publish_dir(&stage_dir, &out_dir)
-        .with_context(|| "publish route bundles")?;
+    crate::atomic::publish_dir(&stage_dir, &out_dir).with_context(|| "publish route bundles")?;
     // (cut 4: arena.rs deleted; the malloc_trim(0) call here was the
     // glibc band-aid. shipd now uses jemalloc, which returns freed
     // arenas to the OS by default.)

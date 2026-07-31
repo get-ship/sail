@@ -299,6 +299,41 @@
         "default": ""
       }
     },
+    "details": {
+      "open": {
+        "type": "bool",
+        "default": "false"
+      }
+    },
+    "dialog": {
+      "backdrop": {
+        "values": [
+          "default",
+          "blur",
+          "solid"
+        ],
+        "default": "default"
+      },
+      "side": {
+        "values": [
+          "center",
+          "start",
+          "end",
+          "top",
+          "bottom"
+        ],
+        "default": "center"
+      },
+      "size": {
+        "values": [
+          "sm",
+          "md",
+          "lg",
+          "full"
+        ],
+        "default": "md"
+      }
+    },
     "dropdown": {
       "placement": {
         "type": "string",
@@ -370,6 +405,12 @@
         "default": "false"
       }
     },
+    "fieldset": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      }
+    },
     "hover-card": {
       "placement": {
         "type": "string",
@@ -404,6 +445,66 @@
         "default": ""
       }
     },
+    "input": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "size": {
+        "values": [
+          "xs",
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "tone": {
+        "values": [
+          "default",
+          "primary",
+          "info",
+          "success",
+          "warning",
+          "destructive",
+          "accent",
+          "muted"
+        ],
+        "default": "default"
+      },
+      "type": {
+        "values": [
+          "text",
+          "email",
+          "password",
+          "number",
+          "search",
+          "tel",
+          "url",
+          "date",
+          "time",
+          "datetime-local",
+          "month",
+          "week",
+          "file",
+          "color",
+          "checkbox",
+          "radio",
+          "range",
+          "submit",
+          "hidden"
+        ],
+        "default": "text"
+      }
+    },
     "label": {
       "required": {
         "type": "bool",
@@ -426,6 +527,40 @@
       "value": {
         "type": "string",
         "default": ""
+      }
+    },
+    "meter": {
+      "high": {
+        "type": "number",
+        "default": "1"
+      },
+      "low": {
+        "type": "number",
+        "default": "0"
+      },
+      "max": {
+        "type": "number",
+        "default": "1"
+      },
+      "min": {
+        "type": "number",
+        "default": "0"
+      },
+      "optimum": {
+        "type": "number",
+        "default": "1"
+      },
+      "size": {
+        "values": [
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "value": {
+        "type": "number",
+        "default": "0"
       }
     },
     "navbar": {
@@ -484,6 +619,24 @@
     },
     "popover": {
       "placement": {
+        "type": "string",
+        "default": ""
+      }
+    },
+    "progress": {
+      "max": {
+        "type": "number",
+        "default": "1"
+      },
+      "size": {
+        "values": [
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "value": {
         "type": "string",
         "default": ""
       }
@@ -549,6 +702,42 @@
           "both"
         ],
         "default": "vertical"
+      }
+    },
+    "select": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "multiple": {
+        "type": "bool",
+        "default": "false"
+      },
+      "size": {
+        "values": [
+          "xs",
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "tone": {
+        "values": [
+          "default",
+          "primary",
+          "info",
+          "success",
+          "warning",
+          "destructive",
+          "accent",
+          "muted"
+        ],
+        "default": "default"
       }
     },
     "separator": {
@@ -741,6 +930,24 @@
         "default": "horizontal"
       }
     },
+    "table": {
+      "bordered": {
+        "type": "bool",
+        "default": "false"
+      },
+      "dense": {
+        "type": "bool",
+        "default": "false"
+      },
+      "hoverable": {
+        "type": "bool",
+        "default": "false"
+      },
+      "striped": {
+        "type": "bool",
+        "default": "false"
+      }
+    },
     "tabs": {
       "active": {
         "type": "string",
@@ -775,10 +982,55 @@
         "default": "default"
       }
     },
+    "textarea": {
+      "disabled": {
+        "type": "bool",
+        "default": "false"
+      },
+      "invalid": {
+        "type": "bool",
+        "default": "false"
+      },
+      "placeholder": {
+        "type": "string",
+        "default": ""
+      },
+      "rows": {
+        "type": "number",
+        "default": "3"
+      },
+      "size": {
+        "values": [
+          "xs",
+          "sm",
+          "md",
+          "lg"
+        ],
+        "default": "md"
+      },
+      "tone": {
+        "values": [
+          "default",
+          "primary",
+          "info",
+          "success",
+          "warning",
+          "destructive",
+          "accent",
+          "muted"
+        ],
+        "default": "default"
+      }
+    },
     "theme-picker": {
       "inline": {
         "type": "bool",
         "default": "false"
+      },
+      "modeOnly": {
+        "type": "bool",
+        "default": "false",
+        "description": "Mode-only: sun/moon/system trigger; no theme catalog."
       },
       "value": {
         "type": "string",

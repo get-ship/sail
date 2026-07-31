@@ -1,0 +1,79 @@
+{
+  "tasks": 10,
+  "structuredMedianTokensPerTask": 22,
+  "textMedianTokensPerTask": 84,
+  "structuredFirstTryValidity": 1.0,
+  "textFirstTryValidity": 1.0,
+  "rows": [
+    {
+      "task": "set_gap_attr",
+      "structuredTokens": 20,
+      "textTokens": 85,
+      "structuredValid": true,
+      "textValid": true
+    },
+    {
+      "task": "add_pad_sx",
+      "structuredTokens": 20,
+      "textTokens": 83,
+      "structuredValid": true,
+      "textValid": true
+    },
+    {
+      "task": "wrap_in_column",
+      "structuredTokens": 22,
+      "textTokens": 85,
+      "structuredValid": true,
+      "textValid": true
+    },
+    {
+      "task": "replace_child",
+      "structuredTokens": 22,
+      "textTokens": 83,
+      "structuredValid": true,
+      "textValid": true
+    },
+    {
+      "task": "insert_sibling",
+      "structuredTokens": 25,
+      "textTokens": 85,
+      "structuredValid": true,
+      "textValid": true
+    },
+    {
+      "task": "remove_gap",
+      "structuredTokens": 18,
+      "textTokens": 82,
+      "structuredValid": true,
+      "textValid": true
+    },
+    {
+      "task": "set_grow_attr",
+      "structuredTokens": 17,
+      "textTokens": 82,
+      "structuredValid": true,
+      "textValid": true
+    },
+    {
+      "task": "batch_attr_and_sx",
+      "structuredTokens": 39,
+      "textTokens": 87,
+      "structuredValid": true,
+      "textValid": true
+    },
+    {
+      "task": "wrap_center",
+      "structuredTokens": 17,
+      "textTokens": 89,
+      "structuredValid": true,
+      "textValid": true
+    },
+    {
+      "task": "replace_root_text_child",
+      "structuredTokens": 21,
+      "textTokens": 79,
+      "structuredValid": true,
+      "textValid": true
+    }
+  ]
+}

@@ -51,7 +51,6 @@
 // drag-to-create/move ride the engine's range/intent mutators; the DOM bridge
 // (pointer drag + Shift+Arrow → engine + sail-* emits) lives in `./sail-calendar.interactions`.
 
-import { controller, derived, effect, signal } from '@ship/sail-runtime'
 import type { ControllerScope } from '@ship/sail-runtime'
 import { createCalendar } from './engine'
 import type { Calendar, CalendarEvent, DateRange, MonthCell, ViewMode } from './engine'
@@ -83,7 +82,6 @@ function weekdayLabels(weekStartsOn: number): { key: string; label: string }[] {
   }
   return out
 }
-
 
 export default controller((ctx: ControllerScope<Scope>) => {
     const { events, focusDate, weekStartsOn, slotMinutes, dayStartHour, dayEndHour, rangeMode } = ctx
@@ -374,22 +372,22 @@ export default controller((ctx: ControllerScope<Scope>) => {
     </row>
   </row>
 
-  <if cond={isEmpty()}>
+  <if {isEmpty()}>
     <div role="status" sx={style.fg(muted-foreground).padY(6).padX(density-row-px).textAlign(center)}>
       <slot name="empty">No events</slot>
     </div>
   </if>
 
-  <if cond={isMonth()}>
+  <if {isMonth()}>
   <div role="grid" aria-label={label() || 'Calendar month'}>
     <grid cols="7" gap="0" role="presentation">
-      <for as="d" of={weekdays()} key={d.key}>
+      <for {weekdays()} as="d" key={d.key}>
         <span role="columnheader" sx={style.fg(muted-foreground).fontWeight(medium).padY(density-row-py).textAlign(center).fontSize(density).borderBWidth(1).borderB(border)}>{d.label}</span>
       </for>
     </grid>
-    <for as="wk" of={weekRows()} key={wk.key}>
+    <for {weekRows()} as="wk" key={wk.key}>
       <grid cols="7" gap="0" role="row">
-        <for as="cr" of={wk.cells} key={cr.key}>
+        <for {wk.cells} as="cr" key={cr.key}>
           <column
             role="gridcell"
             data-iso={cr.cell.iso}
@@ -401,7 +399,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             sx={style.group().padY(density-row-py).padX(density-row-px).minH(panel-min-h-cell).borderRWidth(1).borderR(border).borderBWidth(1).borderB(border).when({ stateOut: style.fg(muted-foreground).bg(muted), stateWeekend: style.bg(muted), stateRange: style.bg(selected-bg) })}
           >
             <row align="center" justify="center" gap="0" sx={style.fontSize(density).minW(control-h-2xs).h(control-h-2xs).radius(full).when({ groupStateToday: style.fg(primary).fontWeight(semibold).outline(primary) })}>{cr.cell.day}</row>
-            <for as="ev" of={cr.cell.events} key={ev.id}>
+            <for {cr.cell.events} as="ev" key={ev.id}>
               <button
                 type="button"
                 data-event-id={ev.id}
@@ -414,7 +412,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
                 {ev.title}
               </button>
             </for>
-            <if cond={cr.cell.overflowCount > 0}>
+            <if {cr.cell.overflowCount > 0}>
               <span sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).padX(1)}>+{cr.cell.overflowCount} more</span>
             </if>
           </column>
@@ -424,23 +422,23 @@ export default controller((ctx: ControllerScope<Scope>) => {
   </div>
 </if>
 
-<if cond={isWeek() || isDay()}>
+<if {isWeek() || isDay()}>
   <grid use:gridTracks={timeGridTracks()} tracks="--cal-time-tracks" gap="0" role="grid" aria-label={label() || 'Calendar time grid'}>
     <column role="rowgroup" gap="0" sx={style.borderRWidth(1).borderR(border)}>
-      <for as="slot" of={timeSlots()} key={slot.key}>
+      <for {timeSlots()} as="slot" key={slot.key}>
         <div data-slot={slot.minutes} role="rowheader" sx={style.h(control-h-md).fg(muted-foreground).padX(density-row-px).fontSize(density).borderBWidth(1).borderB(border)}>{slot.label}</div>
       </for>
     </column>
     <row gap="0" grow>
-      <for as="dc" of={dayColumns()} key={dc.key}>
+      <for {dayColumns()} as="dc" key={dc.key}>
         <div data-state={dc.col.today ? 'today' : ''} data-iso={dc.col.iso} grow sx={style.position(relative).minH(panel-min-h-daycol).borderRWidth(1).borderR(border).when({ stateToday: style.bg(selected-bg) })}>
           <column gap="0" sx={style.position(absolute).top(0).right(0).bottom(0).left(0)}>
-            <for as="slot" of={timeSlots()} key={slot.key}>
+            <for {timeSlots()} as="slot" key={slot.key}>
               <div data-iso={dc.col.iso} data-minutes={slot.minutes} grow sx={style.minH(control-h-md).cursor(cell).borderBWidth(1).borderB(border).when({ hover: style.bg(hover-bg) })}></div>
             </for>
           </column>
           <column gap="1" sx={style.position(relative).z(elevated).pad(half)}>
-            <for as="ev" of={dc.col.allDayEvents} key={ev.id}>
+            <for {dc.col.allDayEvents} as="ev" key={ev.id}>
               <button
                 type="button"
                 data-event-id={ev.id}
@@ -451,7 +449,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               >{ev.title}</button>
             </for>
           </column>
-          <for as="pe" of={dc.col.laidOut} key={pe.event.id}>
+          <for {dc.col.laidOut} as="pe" key={pe.event.id}>
             <button
               type="button"
               data-event-id={pe.event.id}

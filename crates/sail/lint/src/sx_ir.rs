@@ -58,13 +58,36 @@ pub struct SxProgram {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SxError {
-    UnknownProp { prop: String, source: String },
-    UnknownAtom { atom: String, source: String },
-    BadValue { prop: String, value: String, source: String },
-    RawWithoutEscape { value: String, source: String },
-    Refused { atom: String, instead: String, source: String },
-    EmptyValue { prop: String, source: String },
-    UnknownPrefix { prefix: String, source: String },
+    UnknownProp {
+        prop: String,
+        source: String,
+    },
+    UnknownAtom {
+        atom: String,
+        source: String,
+    },
+    BadValue {
+        prop: String,
+        value: String,
+        source: String,
+    },
+    RawWithoutEscape {
+        value: String,
+        source: String,
+    },
+    Refused {
+        atom: String,
+        instead: String,
+        source: String,
+    },
+    EmptyValue {
+        prop: String,
+        source: String,
+    },
+    UnknownPrefix {
+        prefix: String,
+        source: String,
+    },
 }
 
 impl SxError {
@@ -103,7 +126,11 @@ impl SxError {
             | SxError::UnknownAtom { source, .. }
             | SxError::BadValue { source, .. }
             | SxError::RawWithoutEscape { source, .. }
-            | SxError::Refused { atom: _, instead: _, source }
+            | SxError::Refused {
+                atom: _,
+                instead: _,
+                source,
+            }
             | SxError::EmptyValue { source, .. }
             | SxError::UnknownPrefix { source, .. } => source,
         }
@@ -116,10 +143,10 @@ impl SxError {
 /// Value disambiguation (shared heads like `text` / `font` / `border`) still
 /// runs through `sx_vocab::resolve` after the atom is built.
 const PROP_ALIASES: &[(&str, &str)] = &[
-    ("color", "text"),         // text color (color-scale values)
-    ("font-size", "text"),     // type scale
-    ("font-weight", "font"),   // weight scale
-    ("font-family", "font"),   // font scale
+    ("color", "text"),       // text color (color-scale values)
+    ("font-size", "text"),   // type scale
+    ("font-weight", "font"), // weight scale
+    ("font-family", "font"), // font scale
     ("radius", "rounded"),
     ("bg-color", "bg"),
 ];
@@ -167,11 +194,12 @@ pub fn property_table() -> Vec<PropertyMeta> {
             .get(*target)
             .map(|m| m.values_sample.clone())
             .unwrap_or_default();
-        out.entry((*alias).to_string()).or_insert_with(|| PropertyMeta {
-            name: (*alias).to_string(),
-            alias_of: Some((*target).to_string()),
-            values_sample,
-        });
+        out.entry((*alias).to_string())
+            .or_insert_with(|| PropertyMeta {
+                name: (*alias).to_string(),
+                alias_of: Some((*target).to_string()),
+                values_sample,
+            });
     }
     out.into_values().collect()
 }
@@ -483,12 +511,19 @@ fn try_structured(tokens: &[&str], i: usize) -> StructuredTry {
         Ok(v) => v,
         Err(mut e) => {
             // Fill prop into empty-value errors.
-            if let SxError::EmptyValue { prop: ref mut p, source: ref mut s } = e {
+            if let SxError::EmptyValue {
+                prop: ref mut p,
+                source: ref mut s,
+            } = e
+            {
                 if p.is_empty() {
                     *p = prop.to_string();
                 }
                 *s = source.clone();
-            } else if let SxError::RawWithoutEscape { source: ref mut s, .. } = e {
+            } else if let SxError::RawWithoutEscape {
+                source: ref mut s, ..
+            } = e
+            {
                 *s = source.clone();
             }
             return StructuredTry::Err { err: e, next };
@@ -710,9 +745,27 @@ fn prop_css_properties(prop: &str) -> Option<Vec<String>> {
     // (`bg-none` → background-image) must not win over `bg-primary` (background-color)
     // when resolving raw: paint for `bg`.
     let probes = [
-        "primary", "foreground", "muted", "0", "1", "2", "4", "sm", "md", "lg", "full",
-        "auto", "solid", "hidden", "transparent", "currentColor", "center", "body",
-        "semibold", "pointer", "none",
+        "primary",
+        "foreground",
+        "muted",
+        "0",
+        "1",
+        "2",
+        "4",
+        "sm",
+        "md",
+        "lg",
+        "full",
+        "auto",
+        "solid",
+        "hidden",
+        "transparent",
+        "currentColor",
+        "center",
+        "body",
+        "semibold",
+        "pointer",
+        "none",
     ];
     for p in probes {
         let atom = format!("{prop}-{p}");
@@ -724,7 +777,9 @@ fn prop_css_properties(prop: &str) -> Option<Vec<String>> {
             // Prefer color/background-color over background-image for `bg` raw paint.
             if prop == "bg"
                 && decls.iter().any(|(k, _)| k == "background-image")
-                && !decls.iter().any(|(k, _)| k == "background-color" || k == "background")
+                && !decls
+                    .iter()
+                    .any(|(k, _)| k == "background-color" || k == "background")
             {
                 continue;
             }
@@ -1003,7 +1058,10 @@ pub fn agent_schema() -> AgentSchema {
         aliases: PROP_ALIASES.iter().copied().collect(),
         prefixes: PrefixSchema {
             states: sx_rules::STATE_PREFIXES.iter().map(|(n, _)| *n).collect(),
-            conditions: sx_rules::CONDITION_PREFIXES.iter().map(|(n, _)| *n).collect(),
+            conditions: sx_rules::CONDITION_PREFIXES
+                .iter()
+                .map(|(n, _)| *n)
+                .collect(),
             pseudo_elements: vec!["before", "after", "empty"],
             extra: vec!["group", "group-<state>:", "state-<value>:"],
         },
@@ -1147,7 +1205,10 @@ mod tests {
     fn lower_structured_bg() {
         let p = parse("bg: primary").unwrap();
         let d = lower_decl(&p.decls[0]).expect("lower bg");
-        assert_eq!(d, vec![("background-color".into(), "var(--primary)".into())]);
+        assert_eq!(
+            d,
+            vec![("background-color".into(), "var(--primary)".into())]
+        );
     }
 
     #[test]
@@ -1242,8 +1303,8 @@ mod tests {
         env.insert("filled".into(), crate::style::parse("style.bg(primary)").0);
         let mut css = String::new();
         let mut seen = std::collections::HashSet::new();
-        let classes = lower_sx_string("filled", &env, &mut css, &mut seen)
-            .expect("Style const ref lowers");
+        let classes =
+            lower_sx_string("filled", &env, &mut css, &mut seen).expect("Style const ref lowers");
         assert!(classes.contains("sx-"), "{classes}");
         assert!(
             css.contains("var(--primary)") || css.contains("background"),
@@ -1282,7 +1343,10 @@ mod tests {
     #[test]
     fn check_sx_string_reject_raw() {
         let errs = check_sx_string("bg: #fff p: 4");
-        assert!(errs.iter().any(|e| matches!(e, SxError::RawWithoutEscape { .. })));
+        assert!(
+            errs.iter()
+                .any(|e| matches!(e, SxError::RawWithoutEscape { .. }))
+        );
     }
 
     #[test]

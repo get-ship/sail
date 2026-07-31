@@ -34,8 +34,18 @@ pub fn owning_dir(from: &Path) -> Option<PathBuf> {
 /// present is a typo/unknown key — the compiler must refuse loudly rather
 /// than silently ignore it (config-loud-strict: a `{"polcy":"strict"}` typo
 /// used to fail closed with zero signal).
-pub const RECOGNIZED_KEYS: [&str; 7] =
-    ["preset", "sx", "variants", "raw_containers", "stylesheets", "network", "unconfined"];
+pub const RECOGNIZED_KEYS: [&str; 10] = [
+    "preset",
+    "sx",
+    "variants",
+    "raw_containers",
+    "compose_rhythm",
+    "autofix",
+    "stylesheets",
+    "network",
+    "unconfined",
+    "theme",
+];
 
 /// Documentation rows for [`RECOGNIZED_KEYS`] — key, value type, default
 /// when absent, and one line of semantics. The reference generator renders
@@ -44,7 +54,7 @@ pub const RECOGNIZED_KEYS: [&str; 7] =
 pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str)] = &[
     (
         "preset",
-        "\"strict\" | \"full\"",
+        "\"strict\" | \"full\" | \"repair\" | \"off\"",
         "no tier — capabilities opt in individually",
         "select a capability tier above the floor in one word",
     ),
@@ -67,6 +77,18 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str)] = &[
         "capability override: allow raw container elements instead of the layout keywords",
     ),
     (
+        "compose_rhythm",
+        "boolean",
+        "true",
+        "auto-fix sibling rhythm violations; false warns only",
+    ),
+    (
+        "autofix",
+        "\"repair\" | \"strict\" | \"off\"",
+        "repair",
+        "compose autofix preset: confluent fixes on / all error / pass silent",
+    ),
+    (
         "stylesheets",
         "string[]",
         "none",
@@ -83,6 +105,12 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str)] = &[
         "boolean",
         "confined",
         "opt out of controller ambient-authority confinement entirely; a wrong-typed value stays confined",
+    ),
+    (
+        "theme",
+        "{ default, defaultMode?, enabled: \"all\" | string[] }",
+        "no theme section — thin app emit (no catalog); package generate still full catalog",
+        "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project tokens/themes always emit",
     ),
 ];
 
@@ -103,8 +131,14 @@ impl SailConfig {
     /// no recognized signal) can tell the two apart.
     pub fn from_json(text: &str) -> SailConfig {
         match serde_json::from_str(text) {
-            Ok(raw) => SailConfig { raw, parse_ok: true },
-            Err(_) => SailConfig { raw: serde_json::Value::Null, parse_ok: false },
+            Ok(raw) => SailConfig {
+                raw,
+                parse_ok: true,
+            },
+            Err(_) => SailConfig {
+                raw: serde_json::Value::Null,
+                parse_ok: false,
+            },
         }
     }
 
@@ -128,6 +162,14 @@ impl SailConfig {
     /// if present and a bool.
     pub fn bool_key(&self, key: &str) -> Option<bool> {
         self.raw.get(key).and_then(|v| v.as_bool())
+    }
+
+    /// A string key (`"autofix"`, …), if present and a string.
+    pub fn string_key(&self, key: &str) -> Option<String> {
+        self.raw
+            .get(key)
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
     }
 
     /// Top-level keys present in the config that are NOT in [`RECOGNIZED_KEYS`]

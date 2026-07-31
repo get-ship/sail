@@ -30,38 +30,46 @@
 use std::path::PathBuf;
 
 pub mod action_manifest;
-pub mod bindings;
 pub mod analysis;
 pub mod animation;
+pub mod bindings;
+pub mod block_manifest;
 pub mod check;
 pub mod diagnostics;
+pub mod directive_manifest;
+pub mod edit;
 pub mod emit;
+pub mod escape;
+pub mod grammar_vocabulary;
 pub mod ir;
-pub mod used_tags;
 pub mod keys;
+pub mod l1_manifest;
 pub mod lower;
 pub mod out_layout;
 pub mod parse;
-pub mod stdlib;
-pub mod escape;
-pub mod l1_manifest;
 pub mod runtime_ambient;
-pub mod block_manifest;
-pub mod directive_manifest;
-pub mod scope_manifest;
-pub mod grammar_vocabulary;
-pub mod tokens_generate;
 pub(crate) mod scan;
+pub mod scope_manifest;
+pub mod stdlib;
+pub mod tokens_generate;
+pub mod used_icons;
+pub mod used_tags;
 
 #[cfg(target_arch = "wasm32")]
 pub mod wasm;
 
-pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, Span};
+pub use analysis::{
+    Analysis, Hover, QueryKeyInfo, SsrTier, Symbol, analyze, classify_ssr_tier, completions_at,
+    extract_query_keys, hover_at,
+};
 pub use check::lint_overrides::{LintOverride, OverrideSeverity};
 pub use check::policy::Policy;
-pub use analysis::{analyze, completions_at, hover_at, Analysis, Hover, Symbol};
-pub use l1_manifest::{l1_by_kind, l1_count, l1_entries, l1_kind, L1Attribute, L1Entry, L1Kind, VOID_TAGS};
-pub use grammar_vocabulary::{to_json as grammar_vocabulary_to_json, GrammarVocabulary};
+pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, Span};
+pub use grammar_vocabulary::{GrammarVocabulary, to_json as grammar_vocabulary_to_json};
+pub use l1_manifest::{
+    L1Attribute, L1Entry, L1Kind, VOID_TAGS, l1_by_kind, l1_count, l1_entries, l1_kind,
+};
+pub use used_icons::{collect_used_icons, collect_used_icons_from_source};
 /// Identity stamp embedded in every emitted artifact (JS leading
 /// comment, CEM, schema, meta sidecar) so the daemon and runtime can
 /// detect drift between the compiled bundle and the running shell —
@@ -183,10 +191,11 @@ impl CompileOpts {
         rule: impl Into<String>,
         severity: check::lint_overrides::OverrideSeverity,
     ) -> Self {
-        self.lint_overrides.push(check::lint_overrides::LintOverride {
-            rule: rule.into(),
-            severity,
-        });
+        self.lint_overrides
+            .push(check::lint_overrides::LintOverride {
+                rule: rule.into(),
+                severity,
+            });
         self
     }
 }
@@ -219,6 +228,8 @@ pub struct CompileOutput {
     /// for LSP/IDE consumption. The runtime never loads this; it's purely
     /// developer-tooling fuel.
     pub meta: Option<serde_json::Value>,
+    /// Static icon glyph names collected from the template (TOOL-10).
+    pub used_icons: std::collections::BTreeSet<String>,
 }
 
 /// Check a `.sail` source string and return **every** diagnostic, not just
@@ -249,10 +260,27 @@ pub fn check_all(
         )
     });
     match parse::parse(&stripped) {
-        Ok(program) => {
-            check::collect(&program, &stripped, source_path, controller.as_ref(), overrides, route_params)
+        Ok(program) => check::collect(
+            &program,
+            &stripped,
+            source_path,
+            controller.as_ref(),
+            overrides,
+            route_params,
+        ),
+        Err(e) => {
+            // Fatal parse/preprocess error — still surface confluent off-scale
+            // spacing rewrites from raw author tags. `mr(25)` fails as a space
+            // BadToken before compose would run; without this merge the
+            // `sail-compose-spacing` gate is unreachable on the product path.
+            let mut diags = vec![Diagnostic::from_compile_error(&e, &stripped)];
+            diags.extend(check::compose::collect_off_scale_for_check(
+                &stripped,
+                source_path,
+                overrides,
+            ));
+            diags
         }
-        Err(e) => vec![Diagnostic::from_compile_error(&e, &stripped)],
     }
 }
 
@@ -308,7 +336,11 @@ pub fn compile_element(
             "element name `{name}` is in the `sail-` component namespace — an L1 element is a              bare lowercase name (`{rest}`), and the compiler adds the `sail-` prefix to its              root class itself. A `sail-`-prefixed tag is a custom element, i.e. a component."
         )));
     }
-    if name.is_empty() || !name.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-') {
+    if name.is_empty()
+        || !name
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+    {
         return Err(CompileError::new(format!(
             "element name `{name}` must be a bare lowercase name (hyphens allowed: `tab-list`)."
         )));
@@ -413,7 +445,8 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     // `is_route` is the master route/component switch in lowering (which runtime
     // factory to import, direct-emit hydration, route detection). A source is a
     // route iff it is tagless (no `component_meta`); a tag makes it a component.
-    let lowered = lower::lower(&program, opts.component_meta.is_none()).map_err(|e| attach_path(e, &opts))?;
+    let lowered =
+        lower::lower(&program, opts.component_meta.is_none()).map_err(|e| attach_path(e, &opts))?;
 
     let js = emit::js::emit_module(&program, &lowered, &bindings, &opts, &sx_var_bindings);
     // CEM (custom-elements-manifest) describes a custom element, so it's emitted
@@ -428,12 +461,24 @@ pub fn compile(source: &str, opts: CompileOpts) -> Result<CompileOutput, Compile
     let dts = if opts.emit_dts {
         // Reuse the inline controller resolved above — one source, no re-read,
         // no paired-file fallback.
-        Some(emit::dts::emit_dts(&program, controller.as_ref(), &opts.scope_capabilities))
+        Some(emit::dts::emit_dts(
+            &program,
+            controller.as_ref(),
+            &opts.scope_capabilities,
+        ))
     } else {
         None
     };
     let meta = Some(emit::meta::emit_meta(&program, &bindings));
-    Ok(CompileOutput { js, css: None, cem, schema, dts, meta })
+    Ok(CompileOutput {
+        js,
+        css: None,
+        cem,
+        schema,
+        dts,
+        meta,
+        used_icons: lowered.used_icons,
+    })
 }
 
 fn attach_path(err: CompileError, opts: &CompileOpts) -> CompileError {
@@ -449,12 +494,27 @@ mod name_validation_tests {
 
     #[test]
     fn rejects_names_that_would_throw_at_define() {
-        assert_eq!(validate_custom_element_name("dashboard"), Err("it has no hyphen"));
+        assert_eq!(
+            validate_custom_element_name("dashboard"),
+            Err("it has no hyphen")
+        );
         assert_eq!(validate_custom_element_name(""), Err("it is empty"));
-        assert_eq!(validate_custom_element_name("Dash-Panel"), Err("it must start with a lowercase letter"));
-        assert_eq!(validate_custom_element_name("dash-Panel"), Err("it must not contain uppercase letters"));
-        assert_eq!(validate_custom_element_name("1-panel"), Err("it must start with a lowercase letter"));
-        assert_eq!(validate_custom_element_name("dash-pan!el"), Err("it contains an invalid character"));
+        assert_eq!(
+            validate_custom_element_name("Dash-Panel"),
+            Err("it must start with a lowercase letter")
+        );
+        assert_eq!(
+            validate_custom_element_name("dash-Panel"),
+            Err("it must not contain uppercase letters")
+        );
+        assert_eq!(
+            validate_custom_element_name("1-panel"),
+            Err("it must start with a lowercase letter")
+        );
+        assert_eq!(
+            validate_custom_element_name("dash-pan!el"),
+            Err("it contains an invalid character")
+        );
     }
 
     #[test]
@@ -467,7 +527,9 @@ mod name_validation_tests {
     #[test]
     fn compile_rejects_a_hyphenless_component_name() {
         let opts = CompileOpts {
-            component_meta: Some(ComponentMeta { name: "dashboard".into() }),
+            component_meta: Some(ComponentMeta {
+                name: "dashboard".into(),
+            }),
             ..CompileOpts::default()
         };
         let err = compile("<column><p>x</p></column>", opts).unwrap_err();

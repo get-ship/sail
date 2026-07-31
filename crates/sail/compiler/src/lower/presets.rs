@@ -223,7 +223,10 @@ impl<'a> Parser<'a> {
             b't' | b'f' => self.parse_bool(),
             b'n' => self.parse_null(),
             b'-' | b'0'..=b'9' => self.parse_number(),
-            other => Err(format!("unexpected `{}` at byte {}", other as char, self.pos)),
+            other => Err(format!(
+                "unexpected `{}` at byte {}",
+                other as char, self.pos
+            )),
         }
     }
 
@@ -256,7 +259,7 @@ impl<'a> Parser<'a> {
                         "expected `,` or `}}` at byte {}, got {:?}",
                         self.pos,
                         other.map(|c| c as char)
-                    ))
+                    ));
                 }
             }
         }
@@ -285,7 +288,7 @@ impl<'a> Parser<'a> {
                         "expected `,` or `]` at byte {}, got {:?}",
                         self.pos,
                         other.map(|c| c as char)
-                    ))
+                    ));
                 }
             }
         }
@@ -330,7 +333,9 @@ impl<'a> Parser<'a> {
                         Some(b'u') => {
                             self.pos += 1;
                             let hex = std::str::from_utf8(
-                                self.bytes.get(self.pos..self.pos + 4).ok_or("bad \\u escape")?,
+                                self.bytes
+                                    .get(self.pos..self.pos + 4)
+                                    .ok_or("bad \\u escape")?,
                             )
                             .map_err(|e| format!("invalid utf-8: {e}"))?;
                             let cp = u32::from_str_radix(hex, 16)
@@ -339,7 +344,12 @@ impl<'a> Parser<'a> {
                             out.push(c);
                             self.pos += 4;
                         }
-                        other => return Err(format!("bad escape `\\{}`", other.map(|b| b as char).unwrap_or('?'))),
+                        other => {
+                            return Err(format!(
+                                "bad escape `\\{}`",
+                                other.map(|b| b as char).unwrap_or('?')
+                            ));
+                        }
                     }
                 }
                 // Non-ASCII bytes are UTF-8 continuation sequences (the
@@ -368,13 +378,7 @@ impl<'a> Parser<'a> {
             self.pos += 1;
         }
         while let Some(&b) = self.bytes.get(self.pos) {
-            if b.is_ascii_digit()
-                || b == b'.'
-                || b == b'e'
-                || b == b'E'
-                || b == b'+'
-                || b == b'-'
-            {
+            if b.is_ascii_digit() || b == b'.' || b == b'e' || b == b'E' || b == b'+' || b == b'-' {
                 self.pos += 1;
             } else {
                 break;
@@ -422,10 +426,7 @@ mod tests {
         let fade = db.preset("fade").expect("fade");
         assert_eq!(fade.kind, PresetKind::Tween);
         assert_eq!(fade.duration_token.as_deref(), Some("duration-fast"));
-        assert_eq!(
-            fade.easing.as_deref(),
-            Some("cubic-bezier(0.2, 0, 0, 1)")
-        );
+        assert_eq!(fade.easing.as_deref(), Some("cubic-bezier(0.2, 0, 0, 1)"));
         assert_eq!(db.alias_value("sm"), Some(1.02));
         assert_eq!(db.alias_value("xs"), Some(0.96));
     }

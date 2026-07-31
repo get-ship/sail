@@ -1,8 +1,8 @@
 <column gap="8" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
   <header sx={style.borderBWidth(1).borderB(border).padB(4)}>
-    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)}>sui/canvas</h1>
+    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)}>sail/canvas</h1>
     <p sx={style.fg(muted-foreground).fontSize(sm)}>
-      Pack <strong>sui/canvas</strong> — pan/zoom substrate, SVG diagram board,
+      Pack <strong>sail/canvas</strong> — pan/zoom substrate, SVG diagram board,
       freehand whiteboard, and graph layout surface.
       Cards marked <em>domain-stub</em> await a backend spec before live data
       is wired; all props below are static mock values only.

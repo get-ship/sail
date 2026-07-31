@@ -14,8 +14,8 @@ describe('lowerModuleToExpression', () => {
     )
     expect(out).not.toContain('import')
     expect(out).not.toContain('export default')
-    expect(out).toContain('const __sui_default__ =')
-    expect(out.trimEnd().endsWith('__sui_default__;')).toBe(true)
+    expect(out).toContain('const __sail_default__ =')
+    expect(out.trimEnd().endsWith('__sail_default__;')).toBe(true)
   })
 
   it('strips export keyword from declarations and removes export lists', () => {

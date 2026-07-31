@@ -49,7 +49,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
   <column gap="3">
     <grid cols="1" gap="2">
-      <for as="d" of={directives()} key={d.syntax}>
+      <for {directives()} as="d" key={d.syntax}>
         <card padding="sm" sx={style.minW(0)}>
           <row gap="3" align="center">
             <code sx={style.minW(40)}>{d.syntax}</code>
@@ -68,7 +68,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <code>tag:event</code> names stay open without a row here.
     </p>
     <grid cols="2" gap="2">
-      <for as="e" of={eventNames()} key={e.name}>
+      <for {eventNames()} as="e" key={e.name}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>on:{e.name}</code>
@@ -83,7 +83,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <h3>on: modifiers</h3>
     <p sx={style.maxW(breakpoint-tablet)}>Chain any number with |, e.g. on:keydown|prevent|key:Enter.</p>
     <grid cols="2" gap="2">
-      <for as="m" of={modifierRows()} key={m.key}>
+      <for {modifierRows()} as="m" key={m.key}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{m.written}{m.arg}</code>
@@ -97,7 +97,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>bind: targets</h3>
     <grid cols="3" gap="2">
-      <for as="b" of={bindTargets()} key={b.target}>
+      <for {bindTargets()} as="b" key={b.target}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>bind:{b.target}</code>
@@ -111,7 +111,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>Blocks</h3>
     <grid cols="2" gap="2">
-      <for as="b" of={blockRows()} key={b.open}>
+      <for {blockRows()} as="b" key={b.open}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <row gap="2" align="center">
@@ -129,7 +129,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <h3>Retired</h3>
     <p sx={style.maxW(breakpoint-tablet)}>Directives the parser refuses by name, with what to use instead.</p>
     <grid cols="1" gap="2">
-      <for as="r" of={retired()} key={r.syntax}>
+      <for {retired()} as="r" key={r.syntax}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code sx={style.fg(destructive)}>{r.syntax}</code>

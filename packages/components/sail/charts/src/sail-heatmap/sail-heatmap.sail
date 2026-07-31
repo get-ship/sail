@@ -15,10 +15,10 @@
 
   Props
   ─────────────────────────────────────────────────────────────────────────────
-  data       string  reflect   1D comma nums OR JSON [[row],[row]]; series
-                               identity supersedes (normalizeSeries handles both).
-  rows       string             comma-separated y labels (shapes the grid).
-  cols       string             comma-separated x labels (shapes the grid).
+  data       string  reflect   1D comma nums OR JSON [[row],[row]].
+  values     string  reflect   Alias of `data` (docs/catalog demos use this).
+  rows       string             Comma labels **or** a count integer ("3" → 3 rows).
+  cols       string             Comma labels **or** a count integer ("5" → 5 cols).
   tone       union   reflect    cell base hue (toneColor role-token map).
   cell-size  number  20         px per cell.
   gap        number  3          px between cells.
@@ -35,6 +35,8 @@
 <scope>
   props: {
     data = ''
+    /** Alias of `data` — accepted so catalog demos (`values="…"`) actually paint. */
+    values = ''
     rows = ''
     cols = ''
     tone: 'primary' | 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
@@ -46,7 +48,7 @@
 </scope>
 
 <controller>
-import { controller, derived } from '@ship/sail-runtime'
+
 import { createChartData } from '../engine/create-chart-data'
 import { normalizeSeries } from '../engine/normalize'
 import { cellGeometry } from '../engine/geometry-grid'
@@ -66,6 +68,22 @@ function yOf(entry: ChartValue | ChartPoint): ChartValue {
 }
 
 /**
+ * `rows` / `cols` accept either:
+ *   - comma labels: `"Mon,Tue,Wed"`
+ *   - a count integer: `"3"` → `["0","1","2"]`
+ * so catalog demos (`rows="4" cols="6"`) shape a grid without inventing labels.
+ */
+function parseAxis(raw: string, prefix: string): string[] {
+  const s = String(raw ?? '').trim()
+  if (!s) return []
+  if (/^\d+$/.test(s)) {
+    const n = Math.max(0, Math.min(64, Number(s)))
+    return Array.from({ length: n }, (_, i) => `${prefix}${i}`)
+  }
+  return parseLabels(s)
+}
+
+/**
  * Resolve the canonical row-series for the grid. `normalizeSeries` already
  * yields one series per row for 2D JSON; a 1D comma string yields ONE flat
  * series, which is reshaped here into `ceil(n / cols)` rows by the cols label
@@ -81,16 +99,22 @@ function toGrid(raw: string, rowLabels: string[], colLabels: string[]): ChartSer
   const flat = (series[0]!.data as Array<ChartValue | ChartPoint>).map(yOf)
   const nc = colLabels.length || 1
   const nr = rowLabels.length || (flat.length > 0 ? Math.ceil(flat.length / nc) : 0)
-  const rows: ChartSeries[] = []
+  const out: ChartSeries[] = []
   for (let r = 0; r < nr; r++) {
-    rows.push({ name: rowLabels[r] ?? `row-${r}`, data: flat.slice(r * nc, (r + 1) * nc) })
+    out.push({ name: rowLabels[r] ?? `row-${r}`, data: flat.slice(r * nc, (r + 1) * nc) })
   }
-  return rows
+  return out
 }
 
-export default controller(({ data, rows, cols, tone, cellSize, gap, label, loading }: Scope) => {
+export default controller(({ data, values, rows, cols, tone, cellSize, gap, label, loading }: Scope) => {
+    // `values` is a documented alias of `data` (catalog tiles used it first).
+    const rawData = derived(() => {
+      const d = String(data() ?? '').trim()
+      if (d) return d
+      return String(values() ?? '').trim()
+    })
     const grid = derived<ChartSeries[]>(() =>
-      toGrid(data(), parseLabels(rows()), parseLabels(cols())),
+      toGrid(rawData(), parseAxis(rows(), 'r'), parseAxis(cols(), 'c')),
     )
     const chart = createChartData({ series: grid, isLoading: loading })
 
@@ -129,11 +153,11 @@ export default controller(({ data, rows, cols, tone, cellSize, gap, label, loadi
   })
 
 </controller>
-<if cond={loading()}>
+<if {loading()}>
   <span skeleton shape="block" size="lg" role="status" aria-label="Loading" aria-live="polite" aria-busy="true"></span>
-<else-if cond={chart.error()}>
+<else-if {chart.error()}>
   <error-state></error-state>
-</else-if><else-if cond={chart.isEmpty()}>
+</else-if><else-if {chart.isEmpty()}>
   <empty-state></empty-state>
 </else-if><else>
   <svg
@@ -144,7 +168,7 @@ export default controller(({ data, rows, cols, tone, cellSize, gap, label, loadi
     aria-label={ariaLabel()}
     aria-describedby="chart-data"
     sx={style.display(inline-block).overflow(visible).fontFamily(body)}>
-    <for as="cell" of={cells()} key={cell.id}>
+    <for {cells()} as="cell" key={cell.id}>
       <rect x={cell.x} y={cell.y} width={cell.w} height={cell.h} rx="2" fill={cell.color} fill-opacity={cell.intensity}>
       </rect>
     </for>
@@ -152,9 +176,9 @@ export default controller(({ data, rows, cols, tone, cellSize, gap, label, loadi
   <column id="chart-data" sx={style.srOnly()}>
     <slot name="description">
       <table>
-        <for as="row" of={chart.ariaTable()} key={row[0].id}>
+        <for {chart.ariaTable()} as="row" key={row[0].id}>
           <tr>
-            <for as="c" of={row} key={c.id}>
+            <for {row} as="c" key={c.id}>
               <td>{c.text}</td>
             </for>
           </tr>

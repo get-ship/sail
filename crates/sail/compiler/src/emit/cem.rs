@@ -2,12 +2,15 @@
 //! Custom-elements-manifest entry. Conforms to
 //! <https://github.com/webcomponents/custom-elements-manifest>.
 
-use crate::ir::*;
 use crate::CompileOpts;
-use serde_json::{json, Value};
+use crate::ir::*;
+use serde_json::{Value, json};
 
 pub fn emit_cem(program: &Program, opts: &CompileOpts) -> Value {
-    let meta = opts.component_meta.as_ref().expect("component_meta required for CEM");
+    let meta = opts
+        .component_meta
+        .as_ref()
+        .expect("component_meta required for CEM");
     let tag = &meta.name;
     let path = opts
         .source_path
@@ -141,13 +144,19 @@ fn attr_entry(p: &PropDecl) -> Value {
         "type": { "text": prop_type_text(&p.kind) },
     });
     if let Some(d) = p.default.as_ref() {
-        e.as_object_mut().unwrap().insert("default".into(), Value::String(d.clone()));
+        e.as_object_mut()
+            .unwrap()
+            .insert("default".into(), Value::String(d.clone()));
     }
     if let Some(desc) = p.description.as_ref() {
-        e.as_object_mut().unwrap().insert("description".into(), Value::String(desc.clone()));
+        e.as_object_mut()
+            .unwrap()
+            .insert("description".into(), Value::String(desc.clone()));
     }
     if let PropKind::Union(values) = &p.kind {
-        e.as_object_mut().unwrap().insert("values".into(), json!(values));
+        e.as_object_mut()
+            .unwrap()
+            .insert("values".into(), json!(values));
     }
     e
 }
@@ -162,16 +171,24 @@ fn member_entry(p: &PropDecl) -> Value {
     // Only attribute-backed props carry an `attribute`; Identity props are
     // property-only and must not advertise one.
     if !matches!(p.kind, PropKind::Identity(_)) {
-        m.as_object_mut().unwrap().insert("attribute".into(), Value::String(p.name.clone()));
+        m.as_object_mut()
+            .unwrap()
+            .insert("attribute".into(), Value::String(p.name.clone()));
     }
     if let Some(d) = p.default.as_ref() {
-        m.as_object_mut().unwrap().insert("default".into(), Value::String(d.clone()));
+        m.as_object_mut()
+            .unwrap()
+            .insert("default".into(), Value::String(d.clone()));
     }
     if let Some(desc) = p.description.as_ref() {
-        m.as_object_mut().unwrap().insert("description".into(), Value::String(desc.clone()));
+        m.as_object_mut()
+            .unwrap()
+            .insert("description".into(), Value::String(desc.clone()));
     }
     if p.reflect {
-        m.as_object_mut().unwrap().insert("reflects".into(), Value::Bool(true));
+        m.as_object_mut()
+            .unwrap()
+            .insert("reflects".into(), Value::Bool(true));
     }
     m
 }

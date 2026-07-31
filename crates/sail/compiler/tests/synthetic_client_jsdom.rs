@@ -18,14 +18,17 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use sail_compiler::CompileMode;
 use sail_compiler::emit::synthetic::{
-    emit_synthetic, emit_synthetic_client_module, AppManifest, AuthoredController,
+    AppManifest, AuthoredController, emit_synthetic, emit_synthetic_client_module,
 };
 use sail_compiler::parse::parse;
-use sail_compiler::CompileMode;
 
 fn repo_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../..")
+        .canonicalize()
+        .unwrap()
 }
 
 // The in-repo conformance app is the canonical fixture. App-level targets
@@ -60,11 +63,19 @@ fn synth(repo: &Path, work: &Path, t: &Target) {
     let authored = inline.as_ref().map(|body| {
         let file = work.join(format!("{}.authored.ts", t.name));
         fs::write(&file, body).expect("write authored controller");
-        AuthoredController { specifier: file.to_string_lossy().into_owned() }
+        AuthoredController {
+            specifier: file.to_string_lossy().into_owned(),
+        }
     });
 
-    let merged = emit_synthetic_client_module(&program, &manifest, authored.as_ref(), t.mode, t.component_tag)
-        .unwrap_or_else(|e| panic!("merged {}: {}", t.name, e.render(&src)));
+    let merged = emit_synthetic_client_module(
+        &program,
+        &manifest,
+        authored.as_ref(),
+        t.mode,
+        t.component_tag,
+    )
+    .unwrap_or_else(|e| panic!("merged {}: {}", t.name, e.render(&src)));
     fs::write(work.join(format!("{}.client.ts", t.name)), merged).unwrap();
 
     let split = emit_synthetic(
@@ -161,10 +172,17 @@ async function ssrHtml(name: string): Promise<string> {{
   }}
 }}
 
-// Strip insignificant whitespace BETWEEN tags so server-DOM vs jsdom
-// serialization differences don't mask structural equality.
+// Strip insignificant whitespace BETWEEN tags and canonicalize ATTRIBUTE
+// ORDER (class-first server-DOM serialization vs template-string stamp
+// order carry the same attribute SET) so server-DOM vs jsdom serialization
+// differences don't mask structural equality.
 function norm(html: string): string {{
-  return html.replace(/>\s+</g, '><').replace(/\s+/g, ' ').trim()
+  const ws = html.replace(/>\s+</g, '><').replace(/\s+/g, ' ').trim()
+  return ws.replace(/<([a-zA-Z][a-zA-Z0-9-]*)((?:\s+[a-zA-Z_:][-a-zA-Z0-9_:.]*(?:="[^"]*")?)+)/g,
+    (_m, tag, attrs) => {{
+      const parts = (attrs as string).trim().split(/\s+/).sort()
+      return `<${{tag}} ${{parts.join(' ')}}`
+    }})
 }}
 
 describe('synthetic CLIENT contract — CSR (__mount via mount.ts)', () => {{

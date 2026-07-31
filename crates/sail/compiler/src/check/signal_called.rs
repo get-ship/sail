@@ -39,7 +39,7 @@ use crate::check::controller_parse::ParsedController;
 use crate::check::symbol_table::{ScopeKind, SymbolTable};
 use crate::diagnostics::CompileError;
 use crate::ir::{AttrInstr, Expr, Instr, Program};
-use crate::parse::expr::{parse_expression, Arg, Ast, AstKind, ObjKey, TemplatePart};
+use crate::parse::expr::{Arg, Ast, AstKind, ObjKey, TemplatePart, parse_expression};
 
 pub const RULE: &str = "sail-signal-not-called";
 
@@ -60,7 +60,11 @@ pub fn collect(program: &Program, controller: Option<&ParsedController>) -> Vec<
         return Vec::new();
     }
     let ctx_head = controller.map(|c| c.ctx_param.as_str()).unwrap_or("");
-    let mut cx = Cx { table: &table, ctx_head, errs: Vec::new() };
+    let mut cx = Cx {
+        table: &table,
+        ctx_head,
+        errs: Vec::new(),
+    };
     cx.walk_instrs(&program.template);
     cx.errs
 }
@@ -125,7 +129,7 @@ impl Cx<'_> {
             AttrInstr::BindValue { .. }
             | AttrInstr::BindChecked { .. }
             | AttrInstr::BindThis { .. }
-                        | AttrInstr::Use { .. }
+            | AttrInstr::Use { .. }
             | AttrInstr::On { .. }
             | AttrInstr::Motion { .. }
             | AttrInstr::Mutation { .. }
@@ -175,7 +179,11 @@ impl Cx<'_> {
                 self.value(lhs);
                 self.value(rhs);
             }
-            AstKind::Ternary { cond, then, otherwise } => {
+            AstKind::Ternary {
+                cond,
+                then,
+                otherwise,
+            } => {
                 self.value(cond);
                 self.value(then);
                 self.value(otherwise);

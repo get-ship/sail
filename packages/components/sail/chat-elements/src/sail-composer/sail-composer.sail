@@ -36,9 +36,8 @@
   }
 </scope>
 
-
 <controller>
-import { controller, signal } from '@ship/sail-runtime'
+
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-composer.sail'
 
@@ -114,8 +113,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <div sx={style.display(contents)}>
     <slot name="attachments"></slot>
   </div>
-  <row gap="2" align="end">
-    <if cond={multiline()}>
+  <!-- nowrap: default row wraps and parks Send under the field in tight tiles. -->
+  <row nowrap gap="2" align="center">
+    <if {multiline()}>
       <textarea
         rows="1"
         placeholder={placeholder()}
@@ -123,10 +123,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         bind:value={text}
         use:fieldKeys
         grow min-w="0"
-        sx={style.minH(0).padY(1).padX(half).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none).overflowY(auto)}
+        sx={style.minW(0).minH(0).padY(1_5).padX(2).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none).overflowY(auto)}
       ></textarea>
     </if>
-    <if cond={!multiline()}>
+    <if {!multiline()}>
       <input
         type="text"
         placeholder={placeholder()}
@@ -134,16 +134,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         bind:value={text}
         use:fieldKeys
         grow min-w="0"
-        sx={style.minH(0).padY(1).padX(half).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none)}
+        sx={style.minW(0).minH(0).padY(1_5).padX(2).fontFamily(body).fontSize(base).leading(normal).fg(foreground).bg(transparent).borderWidth(0).radius(none).shadow(none)}
       />
     </if>
-    <row gap="1" align="center" grow="0">
+    <row nowrap gap="1" align="center" shrink="0">
       <slot name="trailing"></slot>
       <button
         use:sendClick
-        solid
-        primary
-        sm
+        type="button"
+        variant="solid"
+        tone="primary"
+        size="sm"
+        shrink="0"
         aria-label="Send"
         disabled={disabled() || text().trim().length === 0}
       >Send</button>

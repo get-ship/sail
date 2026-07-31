@@ -32,7 +32,7 @@ export default {
     const sqR = parseFloat(cs(document.querySelector('.sail-badge:not([pill])'), 'borderRadius'))
     if (!(pillR > sqR)) bad.push({ why: 'pill-not-rounder', pillR, sqR })
     const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .sail-badge[variant='soft'][tone='default']`), 'backgroundColor')
-    if (mark('ship-light') === mark('ship-dark')) bad.push({ why: 'frozen-token', light: mark('ship-light'), dark: mark('ship-dark') })
+    if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship'), dark: mark('console') })
     return { count: document.querySelectorAll('.sail-badge').length, bad: bad.slice(0, 10) }
   },
 }

@@ -1,7 +1,6 @@
-//! Task #34 regression (RED→GREEN pinned): a keyed `<for>` row reuse must
-//! re-select a nested `<match>` branch when the row's underlying field
-//! changes via a signal write — not just when the row's identity/index
-//! changes.
+//! Contract: a keyed `<for>` row reuse must re-select a nested `<match>`
+//! branch when the row's underlying field changes via a signal write — not
+//! just when the row's identity/index changes.
 //!
 //! Root cause: `emit_if`/`emit_match` (crates/sail/compiler/src/emit/
 //! template_emit/control_emit.rs) build their `bindIf` `test()` discriminant
@@ -20,12 +19,15 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController};
-use sail_compiler::parse::parse;
 use sail_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{AppManifest, AuthoredController, emit_synthetic};
+use sail_compiler::parse::parse;
 
 fn repo_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../..")
+        .canonicalize()
+        .unwrap()
 }
 
 #[test]
@@ -115,7 +117,7 @@ export default defineConfig({{
     let test = r#"import { describe, it, expect } from 'vitest'
 import { mount } from './fm.render.ts'
 
-describe('task #34 — keyed <for> row reuse re-tests nested <match>', () => {
+describe('keyed <for> row reuse re-tests nested <match>', () => {
   it('toggling a row field (same key) flips the matched branch, not just on reorder', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)

@@ -40,7 +40,7 @@
     'line-numbers' = true
     tone: 'default' | 'info' | 'success' | 'warning' | 'destructive' = 'default'
     theme: 'auto' | 'light' | 'dark' = 'auto'
-    'wasm-url' = '/sui_compiler_bg.wasm'
+    'wasm-url' = '/sail_compiler_bg.wasm'
     size: {
       md: 'text-sm leading-normal-plus',
       sm: 'text-xs leading-normal',
@@ -53,11 +53,9 @@
   }
 </scope>
 
-
 <controller>
 // use: action + mount() pattern: element → EditorView → event bridge → cleanup.
 
-import { controller, effect } from '@ship/sail-runtime'
 import type { Action, Signal } from '@ship/sail-runtime'
 import { EditorState, Compartment } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
@@ -83,7 +81,7 @@ import { sailEditorTheme, sailHighlighting } from './sail-code-editor.theme'
 import { loadLanguage } from './sail-code-editor.lang'
 import type { Scope } from './sail-code-editor.sail'
 
-export interface SuiDiagnostic {
+export interface SailDiagnostic {
   line: number
   column?: number
   endLine?: number
@@ -93,7 +91,7 @@ export interface SuiDiagnostic {
   source?: string
 }
 
-export interface SuiCompletionSource {
+export interface SailCompletionSource {
   trigger: string
   items: Array<{
     label: string
@@ -115,8 +113,8 @@ export default controller((ctx: Scope) => {
     let view: EditorView | null = null
     let debounceTimer: ReturnType<typeof setTimeout> | null = null
     let suppressUpdate = false
-    let pendingDiagnostics: SuiDiagnostic[] | null = null
-    let completions: SuiCompletionSource[] = []
+    let pendingDiagnostics: SailDiagnostic[] | null = null
+    let completions: SailCompletionSource[] = []
 
     const valSig = ctx.value as unknown as Signal<string>
     const langSig = ctx.language as unknown as Signal<string>
@@ -129,7 +127,7 @@ export default controller((ctx: Scope) => {
       if (completions.length === 0) return []
       return autocompletion({ override: completions.map(makeCompletionSource), defaultKeymap: true })
     }
-    function applyDiagnostics(diagnostics: SuiDiagnostic[]): void {
+    function applyDiagnostics(diagnostics: SailDiagnostic[]): void {
       if (!view) return
       const st = view.state
       const doc = st.doc
@@ -161,7 +159,6 @@ export default controller((ctx: Scope) => {
     // because the compiler pre-seeds a signal slot for every bind:this
     // target, and the controller reached it through a double cast.
     const editorMount: Action<void> = (node) => {
-
 
       function onDocChange(newValue: string): void {
         suppressUpdate = true
@@ -249,15 +246,15 @@ export default controller((ctx: Scope) => {
 
   mount((host) => {
     const el = host as HTMLElement & {
-      setDiagnostics?: ((d: SuiDiagnostic[]) => void) | undefined
-      setCompletions?: ((src: SuiCompletionSource[]) => void) | undefined
+      setDiagnostics?: ((d: SailDiagnostic[]) => void) | undefined
+      setCompletions?: ((src: SailCompletionSource[]) => void) | undefined
       focus?: () => void
     }
-    el.setDiagnostics = (diags: SuiDiagnostic[]) => {
+    el.setDiagnostics = (diags: SailDiagnostic[]) => {
       if (!view) { pendingDiagnostics = diags; return }
       applyDiagnostics(diags)
     }
-    el.setCompletions = (src: SuiCompletionSource[]) => {
+    el.setCompletions = (src: SailCompletionSource[]) => {
       completions = src ?? []
       view?.dispatch({ effects: completionCompartment.reconfigure(buildCompletionExt()) })
     }
@@ -323,8 +320,8 @@ export default controller((ctx: Scope) => {
     // seeded once from allSources. Hover deferred to a follow-up; if
     // the parse cost ever shows in the input loop, switch to a worker
     // with a Bun-compatible URL.
-    type LspDiagnoseFn = (text: string) => Promise<SuiDiagnostic[]>
-    type LspAllSourcesFn = () => SuiCompletionSource[]
+    type LspDiagnoseFn = (text: string) => Promise<SailDiagnostic[]>
+    type LspAllSourcesFn = () => SailCompletionSource[]
     let lspDiagnose: LspDiagnoseFn | null = null
     let lspDebounce: ReturnType<typeof setTimeout> | null = null
     let lspInit: Promise<void> | null = null
@@ -403,14 +400,14 @@ export default controller((ctx: Scope) => {
 
 // CodeMirror's Completion treats absent detail/info as "none"; under
 // exactOptionalPropertyTypes we can't pass `undefined` for them, so omit.
-function toCmCompletion(it: SuiCompletionSource['items'][number]): Completion {
+function toCmCompletion(it: SailCompletionSource['items'][number]): Completion {
   const c: Completion = { label: it.label, apply: it.insert ?? it.label }
   if (it.detail !== undefined) c.detail = it.detail
   if (it.info !== undefined) c.info = it.info
   return c
 }
 
-function makeCompletionSource(src: SuiCompletionSource) {
+function makeCompletionSource(src: SailCompletionSource) {
   return (ctx: CompletionContext): CompletionResult | null => {
     const { pos, state } = ctx
     const trig = src.trigger

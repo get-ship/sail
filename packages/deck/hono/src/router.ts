@@ -40,13 +40,18 @@ export interface DeckAdaptorConfig {
   live?: (req: Request, mode: DaemonMode) => Promise<Response | null> | Response | null;
 }
 
-// Framework singletons: /_deck/<route> -> deck-core/assets/<file> (assets.rs:318-387).
-const FRAMEWORK_JS: Record<string, string> = {
-  "/_deck/runtime.js": "sail-runtime.js",
-  "/_deck/dom.js": "sail-dom.js",
-  "/_deck/route.js": "deck-route.js",
-  "/_deck/sdk-client.js": "sail-sdk-client.js",
-  "/_deck/live-reload.js": "live-reload.js",
+// Framework singletons: /_deck/<route> -> file name under frameworkAssetsDir
+// (deck-core/assets bake) OR, when missing, under <buildDir>/_deck/ for
+// self-contained app builds (`--bundle-framework`).
+const FRAMEWORK_JS: Record<string, { bake: string; bundled: string }> = {
+  "/_deck/runtime.js": { bake: "sail-runtime.js", bundled: "runtime.js" },
+  "/_deck/dom.js": { bake: "sail-dom.js", bundled: "dom.js" },
+  "/_deck/route.js": { bake: "deck-route.js", bundled: "route.js" },
+  "/_deck/sdk-client.js": { bake: "sail-sdk-client.js", bundled: "sdk-client.js" },
+  "/_deck/live-reload.js": { bake: "live-reload.js", bundled: "live-reload.js" },
+  "/_deck/compiler-wasm.js": { bake: "sail-compiler-wasm.js", bundled: "compiler-wasm.js" },
+  "/_deck/lsp-completions.js": { bake: "sail-lsp-completions.js", bundled: "lsp-completions.js" },
+  "/_deck/lsp-diagnostics.js": { bake: "sail-lsp-diagnostics.js", bundled: "lsp-diagnostics.js" },
 };
 
 // SPA fallback exclusions (pages.rs:133-161): these prefixes keep an honest 404.
@@ -94,11 +99,15 @@ export function createDeckRouter(config: DeckAdaptorConfig) {
 
     if (req.method !== "GET" && req.method !== "HEAD") return null;
 
-    // 1. framework singletons
+    // 1. framework singletons (bake dir first, then self-contained app _deck/)
     const fw = FRAMEWORK_JS[path];
     if (fw) {
-      const body = await readOpt(join(config.frameworkAssetsDir, fw));
-      return body ? serve(jsAsset(body)) : serve(notFound(`framework asset ${fw} missing`, mode));
+      const body =
+        (await readOpt(join(config.frameworkAssetsDir, fw.bake))) ??
+        (await readOpt(join(config.buildDir, "_deck", fw.bundled)));
+      return body
+        ? serve(jsAsset(body))
+        : serve(notFound(`framework asset ${fw.bake} missing`, mode));
     }
 
     // 2. framework icons: /_deck/icons/<name>.svg (lucide set, deck-core/assets/lucide-icons.json)

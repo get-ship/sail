@@ -62,7 +62,9 @@ impl NavVisitor<'_> {
                  router (history + match + mount). For a deliberate full-page reload, \
                  `window.location` is fine."
             ),
-            suggest: Some("navigate(path)  // import { navigate } from '@ship/sail-runtime'".to_string()),
+            suggest: Some(
+                "navigate(path)  // import { navigate } from '@ship/sail-runtime'".to_string(),
+            ),
         });
     }
 }

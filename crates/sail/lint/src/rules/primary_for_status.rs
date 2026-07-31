@@ -100,13 +100,7 @@ const SUGGEST: &str = "Use the matching tone ramp \
 /// default-tone block, which is supposed to read like the brand), or
 /// `muted` (a non-status tint). The non-status tones map to brand or
 /// neutral layers and `--primary` there is fine.
-const STATUS_TONES: &[&str] = &[
-    "destructive",
-    "warning",
-    "success",
-    "info",
-    "accent",
-];
+const STATUS_TONES: &[&str] = &["destructive", "warning", "success", "info", "accent"];
 
 /// True iff `piece` is a selector for a *status* tone. Matches:
 /// - `:host([tone='destructive'])` (and siblings)
@@ -371,11 +365,7 @@ mod tests {
         assert_eq!(f[0].rule, RULE_ID);
         assert_eq!(f[0].severity, Severity::Warn);
         assert!(f[0].message.contains("var(--primary)"), "{}", f[0].message);
-        assert!(
-            f[0].message.contains("destructive"),
-            "{}",
-            f[0].message
-        );
+        assert!(f[0].message.contains("destructive"), "{}", f[0].message);
         assert!(f[0].suggest.as_deref().unwrap().contains("tone-X"));
     }
 
@@ -463,7 +453,8 @@ mod tests {
         // `--primary-foreground` is the paired text token; reading
         // it from a status block is the correct way to put primary-
         // coloured text on a status surface.
-        let src = "<style>:host([tone='destructive']) { color: var(--primary-foreground); }</style>";
+        let src =
+            "<style>:host([tone='destructive']) { color: var(--primary-foreground); }</style>";
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
@@ -503,7 +494,8 @@ mod tests {
     fn commented_status_block_is_skipped() {
         // The status-tone comment is just text; the only real
         // declaration is the comment. No body, no finding.
-        let src = "<style>/* :host([tone='destructive']) { background: var(--primary); } */</style>";
+        let src =
+            "<style>/* :host([tone='destructive']) { background: var(--primary); } */</style>";
         assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
@@ -539,7 +531,8 @@ mod tests {
 
     #[test]
     fn position_points_at_var_call() {
-        let src = "<style>\n  :host([tone='destructive']) { background: var(--primary); }\n</style>";
+        let src =
+            "<style>\n  :host([tone='destructive']) { background: var(--primary); }\n</style>";
         let f = run(src);
         assert_eq!(f.len(), 1);
         assert_eq!(f[0].line, 2);

@@ -2,7 +2,7 @@
 
 ## 0.3.0 — Verdaccio stamp (2026-07-26)
 
-Internal registry cut for `job/style-synthesis`.
+Internal registry cut for the style-synthesis authoring freeze.
 
 **Published to** `http://localhost:4873` as `@ship/sail-*@0.3.0` and related packs:
 
@@ -11,13 +11,11 @@ Internal registry cut for `job/style-synthesis`.
 - `@ship/sail-primitives`, `sail-canvas`, `sail-charts`, `sail-mermaid`, `sail-chat-elements`, `sail-media`, `sail-code-editor`, `sail-viewer`
 - `@ship/deck-router@0.3.0`, `@ship/deck-host@0.3.0`
 
-**Not republished:** legacy `@ship/sui-*` (marketing/helm/ship-apps stay on sui until explicit cutover — visual safety).
+**Not republished:** legacy `@ship/sail-*` (marketing/helm/ship-apps stay on sail until explicit cutover — visual safety).
 
-**Language gaps / non-language surface:** see `apps/sail-site/qa/language-gaps.md`.
+## Unreleased — style-synthesis authoring freeze (2026-07-26)
 
-## Unreleased — `job/style-synthesis` (2026-07-26)
-
-Authoring and host-surface freeze for Sail. Apps still on SUI (`.sui`, `@ship/sui-*`, brace control-flow, `ctx.clients` / `ship`) need the migrations below when pointing at this tip.
+Authoring and host-surface freeze for Sail. Apps still on Sail (`.sail`, `@ship/sail-*`, brace control-flow, `ctx.clients` / `ship`) need the migrations below when pointing at this tip.
 
 ### Breaking
 
@@ -35,7 +33,7 @@ Authoring and host-surface freeze for Sail. Apps still on SUI (`.sui`, `@ship/su
 
 Also: `<match on={…}>` / `<case of={…}>` / `<default>`, `<while-loading of="sig">`, `<while-error as="err" of="sig">`.  
 Brace `{#if}` / `{:else}` / `{/if}` compile-error with a migration hint.  
-Codemod: `scripts/migrate-control-flow.py` (works on `.sail`; rename `.sui`→`.sail` first if needed).
+Codemod: historical `scripts/migrate-control-flow.py` (removed in HYGIENE-0; brace form → element control-flow is complete).
 
 **Public `fx:` removed**
 
@@ -68,15 +66,15 @@ mount(el, payload, { ops, api, route, navigate })
 - Mutation path is `<provider>.<method>` (no `ship.` prefix)  
 - Types: augment `interface Host { … }`, not `Clients`
 
-**Package / file renames (SUI → Sail)**
+**Package / file renames (Sail → Sail)**
 
 | Before | After |
 |--------|--------|
-| `@ship/sui-runtime` | `@ship/sail-runtime` |
-| `@ship/sui-dom` | `@ship/sail-dom` |
-| `@ship/sui-primitives` etc. | `@ship/sail-primitives` etc. |
-| `.sui` sources | `.sail` |
-| `SUI_REPO` → deck | this monorepo tip (`orch` / `sui` worktree) |
+| `@ship/sail-runtime` | `@ship/sail-runtime` |
+| `@ship/sail-dom` | `@ship/sail-dom` |
+| `@ship/sail-primitives` etc. | `@ship/sail-primitives` etc. |
+| `.sail` sources | `.sail` |
+| `SUI_REPO` → deck | this monorepo tip (`orch` / `sail` worktree) |
 
 **Public runtime export pruned**
 
@@ -97,8 +95,8 @@ Language surface on `@ship/sail-runtime`. Compiler ABI (`bindFor`, `runAction`, 
 ### Upgrade checklist (polyrepo)
 
 1. Point deck/compiler at this tip (`SUI_REPO` / path overrides → orch worktree).  
-2. Rename deps `@ship/sui-*` → `@ship/sail-*`.  
-3. Rename sources `.sui` → `.sail` (and any imports/paths).  
+2. Rename deps `@ship/sail-*` → `@ship/sail-*`.  
+3. Rename sources `.sail` → `.sail` (and any imports/paths).  
 4. Run control-flow codemod.  
 5. Replace `fx:…` with Style motion methods.  
 6. Flatten inject: `ctx.clients.X` → `ctx.X` / destructure from setup; `mutation="ship…"` → `mutation="client.method"`.  

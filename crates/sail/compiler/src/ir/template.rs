@@ -50,10 +50,18 @@ pub struct WhileErrorInstr {
 #[derive(Debug, Clone)]
 pub enum AttrInstr {
     /// `attr="value"` — no expression markers.
-    Static { name: String, value: String, span: Span },
+    Static {
+        name: String,
+        value: String,
+        span: Span,
+    },
     /// `name={expr}` — single-expression dynamic field. Web backend lowers
     /// to bindDynamic / bindProp / bindAttr; authors never pick the channel.
-    Expr { name: String, expr: Expr, span: Span },
+    Expr {
+        name: String,
+        expr: Expr,
+        span: Span,
+    },
     /// `bind:value={signal}`.
     BindValue { expr: Expr, span: Span },
     /// `bind:checked={signal}`.
@@ -68,7 +76,12 @@ pub enum AttrInstr {
     /// gains or loses visible text. Slot-only; component-only.
     SlotReflectEmpty { attr: String, span: Span },
     /// `on:event|mod[:arg]…={handler}`.
-    On { event: String, handler: Expr, modifiers: Vec<Modifier>, span: Span },
+    On {
+        event: String,
+        handler: Expr,
+        modifiers: Vec<Modifier>,
+        span: Span,
+    },
     /// `mutation="client.method"` on a `<form>` — host-injected client chain.
     Mutation { expr: Expr, span: Span },
     /// `fx:trigger={...}` — declarative state-triggered animation.
@@ -105,7 +118,7 @@ pub enum AttrInstr {
         param: Option<Expr>,
         span: Span,
     },
- }
+}
 
 /// One animated property within a `fx:` config. The optional preset
 /// name resolves against `crates/sail/lint/animation-presets.json` at emit

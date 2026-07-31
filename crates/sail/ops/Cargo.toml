@@ -1,0 +1,37 @@
+[package]
+name = "sail-ops"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+publish = false
+description = "Sail ops service SSOT — Connect unary JSON handlers shared by MCP, CLI, and sail dev HTTP."
+
+[lib]
+name = "sail_ops"
+path = "src/lib.rs"
+
+[dependencies]
+sail-compiler = { path = "../compiler" }
+sail-layout = { path = "../layout" }
+sail-lint = { path = "../lint" }
+sail-render = { path = "../render" }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+axum = { workspace = true, features = ["http1"] }
+tokio = { workspace = true, features = ["rt", "sync", "macros", "time", "net", "io-util"] }
+tracing = { workspace = true }
+ulid = { workspace = true }
+schemars = { version = "0.8", features = ["derive"] }
+futures-util = { workspace = true }
+# FontAdd / FontSearch: download Google Fonts CSS + woff2 (blocking; ops handlers are sync).
+reqwest = { workspace = true, features = ["blocking", "rustls-tls", "json"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tokio = { workspace = true, features = ["rt", "macros", "time", "net", "io-util"] }
+http-body-util = "0.1"
+tower = { version = "0.5", features = ["util"] }
+
+[lints]
+workspace = true

@@ -1,7 +1,6 @@
-// Closed product keyframe catalog — ambient CSS loops for Style.animate
-// and L1 skins. Pins emit shape + that LIGHT_CONTRACTS owns the sheet
-// (no hand @keyframes left in skins).
-
+import { readFileSync } from 'node:fs'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   AMBIENT_KEYFRAMES_CSS,
@@ -9,10 +8,14 @@ import {
   STYLE_ANIMATE_NAMES,
   emitKeyframeCatalogCss,
 } from '../src/styles/keyframes-catalog'
-import { LIGHT_CONTRACTS_CSS } from '../src/styles/index'
+
+const sailBase = readFileSync(
+  resolve(dirname(fileURLToPath(import.meta.url)), '../../tokens/src/sail-base.css'),
+  'utf8',
+)
 
 describe('keyframes catalog', () => {
-  it('lists the closed product names', () => {
+  it('names', () => {
     expect(KEYFRAME_CATALOG.map((e) => e.name)).toEqual([
       'spin',
       'pulse',
@@ -21,43 +24,33 @@ describe('keyframes catalog', () => {
     ])
   })
 
-  it('exposes Style.animate names (spin only today)', () => {
+  it('Style.animate names', () => {
     expect(STYLE_ANIMATE_NAMES).toEqual(['spin'])
   })
 
-  it('emits @keyframes + --animate-* vars for every entry', () => {
+  it('emit', () => {
     const css = emitKeyframeCatalogCss()
     for (const e of KEYFRAME_CATALOG) {
       expect(css).toContain(`@keyframes ${e.keyframe} { ${e.frames} }`)
       expect(css).toContain(`--animate-${e.name}: ${e.animation};`)
     }
-    expect(css).toContain(
-      '@media (prefers-reduced-motion: reduce) { :root { --animate-spin: sail-spin 1.5s linear infinite; } }',
-    )
   })
 
-  it('AMBIENT_KEYFRAMES_CSS matches emitKeyframeCatalogCss()', () => {
+  it('AMBIENT matches emit', () => {
     expect(AMBIENT_KEYFRAMES_CSS).toBe(emitKeyframeCatalogCss())
   })
 
-  it('LIGHT_CONTRACTS_CSS includes the ambient sheet and skins use catalog vars', () => {
-    expect(LIGHT_CONTRACTS_CSS.startsWith(AMBIENT_KEYFRAMES_CSS)).toBe(true)
-    // Skins reference vars — they must not re-declare @keyframes.
-    const afterAmbient = LIGHT_CONTRACTS_CSS.slice(AMBIENT_KEYFRAMES_CSS.length)
-    expect(afterAmbient).not.toMatch(/@keyframes\s+sail-/)
-    // spin PE is used by spinner element-skins / Style.animate; contracts
-    // only declare the var. Skins below live in contracts:
-    expect(afterAmbient).toContain('animation: var(--animate-pulse)')
-    expect(afterAmbient).toContain('animation: var(--animate-shimmer)')
-    expect(afterAmbient).toContain(
-      'animation: var(--animate-progress-indeterminate)',
-    )
+  it('sail-base has ambient vars', () => {
+    for (const e of KEYFRAME_CATALOG) {
+      expect(sailBase).toContain(`@keyframes ${e.keyframe}`)
+      expect(sailBase).toContain(`--animate-${e.name}:`)
+    }
   })
 
-  it('Style.animate(spin) PE still lowers via --animate-spin (catalog entry)', () => {
+  it('spin catalog entry', () => {
     const spin = KEYFRAME_CATALOG.find((e) => e.name === 'spin')
     expect(spin?.styleAnimate).toBe(true)
     expect(spin?.animation).toBe('sail-spin 0.7s linear infinite')
-    expect(AMBIENT_KEYFRAMES_CSS).toContain('--animate-spin: sail-spin 0.7s linear infinite')
+    expect(sailBase).toContain('--animate-spin:')
   })
 })

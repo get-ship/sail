@@ -2,7 +2,7 @@
 
 use crate::diagnostics::{CompileError, Span};
 
-use super::{decode_entities, Attr, Comment, Element, Node, Text, RAW_TEXT_TAGS, VOID_TAGS};
+use super::{Attr, Comment, Element, Node, RAW_TEXT_TAGS, Text, VOID_TAGS, decode_entities};
 
 pub(super) struct Parser<'a> {
     src: &'a str,
@@ -12,7 +12,11 @@ pub(super) struct Parser<'a> {
 
 impl<'a> Parser<'a> {
     pub(super) fn new(src: &'a str) -> Self {
-        Self { src, bytes: src.as_bytes(), i: 0 }
+        Self {
+            src,
+            bytes: src.as_bytes(),
+            i: 0,
+        }
     }
 
     pub(super) fn parse_children(
@@ -24,9 +28,10 @@ impl<'a> Parser<'a> {
             if self.peek2() == Some((b'<', b'/')) {
                 let close = self.peek_close_tag()?;
                 if let Some(parent) = parent_tag
-                    && close.eq_ignore_ascii_case(parent) {
-                        return Ok(out);
-                    }
+                    && close.eq_ignore_ascii_case(parent)
+                {
+                    return Ok(out);
+                }
                 if parent_tag.is_none() {
                     self.skip_until(b'>');
                     continue;
@@ -69,7 +74,10 @@ impl<'a> Parser<'a> {
             // handle. The template tokenizer decodes Text-token bodies
             // explicitly after expression splitting; expressions stay raw.
             let data = self.src[start..self.i].to_string();
-            out.push(Node::Text(Text { data, span: Span::new(start, self.i) }));
+            out.push(Node::Text(Text {
+                data,
+                span: Span::new(start, self.i),
+            }));
         }
         if let Some(parent) = parent_tag {
             return Err(CompileError::new(format!("unterminated <{parent}>"))
@@ -86,7 +94,10 @@ impl<'a> Parser<'a> {
             if &self.bytes[self.i..self.i + 3] == b"-->" {
                 let body = self.src[body_start..self.i].to_string();
                 self.i += 3;
-                return Ok(Comment { data: body, span: Span::new(start, self.i) });
+                return Ok(Comment {
+                    data: body,
+                    span: Span::new(start, self.i),
+                });
             }
             self.i += 1;
         }
@@ -125,8 +136,9 @@ impl<'a> Parser<'a> {
             self.parse_children(Some(&tag))?
         };
         if self.peek2() != Some((b'<', b'/')) {
-            return Err(CompileError::new(format!("missing </{tag}>"))
-                .with_span(Span::point(self.i)));
+            return Err(
+                CompileError::new(format!("missing </{tag}>")).with_span(Span::point(self.i))
+            );
         }
         let close_at = self.i;
         self.i += 2;
@@ -143,11 +155,17 @@ impl<'a> Parser<'a> {
         }
         self.skip_ws();
         if self.i >= self.bytes.len() || self.bytes[self.i] != b'>' {
-            return Err(CompileError::new(format!("malformed </{tag}>"))
-                .with_span(Span::point(close_at)));
+            return Err(
+                CompileError::new(format!("malformed </{tag}>")).with_span(Span::point(close_at))
+            );
         }
         self.i += 1;
-        Ok(Element { tag, attributes, children, span: Span::new(start, self.i) })
+        Ok(Element {
+            tag,
+            attributes,
+            children,
+            span: Span::new(start, self.i),
+        })
     }
 
     fn parse_attrs(&mut self) -> Result<Vec<Attr>, CompileError> {
@@ -160,6 +178,21 @@ impl<'a> Parser<'a> {
             let c = self.bytes[self.i];
             if c == b'>' || c == b'/' {
                 break;
+            }
+            // Brace-primary attribute: `<if {open()}>`, `<match {status()}>`,
+            // `<for {items()} as="item">`. Stored as name `@primary` with the
+            // raw `{…}` value (including braces) so control-flow can resolve it
+            // without a `cond=` / `on=` / `of=` name.
+            if c == b'{' {
+                let start = self.i;
+                let (raw, vs) = self.read_brace_group()?;
+                out.push(Attr {
+                    name: PRIMARY_BRACE_ATTR.to_string(),
+                    value: raw,
+                    span: Span::new(start, self.i),
+                    value_span: vs,
+                });
+                continue;
             }
             let name_start = self.i;
             while self.i < self.bytes.len() && is_attr_name_byte(self.bytes[self.i]) {
@@ -256,7 +289,10 @@ impl<'a> Parser<'a> {
             }
             self.i += 1;
         }
-        Text { data: self.src[start..self.i].to_string(), span: Span::new(start, self.i) }
+        Text {
+            data: self.src[start..self.i].to_string(),
+            span: Span::new(start, self.i),
+        }
     }
 
     fn read_quoted(&mut self, q: u8) -> Result<(String, Span), CompileError> {
@@ -267,8 +303,9 @@ impl<'a> Parser<'a> {
             self.i += 1;
         }
         if self.i >= self.bytes.len() {
-            return Err(CompileError::new("unterminated attribute value")
-                .with_span(Span::point(qstart)));
+            return Err(
+                CompileError::new("unterminated attribute value").with_span(Span::point(qstart))
+            );
         }
         let v = self.src[value_start..self.i].to_string();
         let vs = Span::new(value_start, self.i);
@@ -285,7 +322,37 @@ impl<'a> Parser<'a> {
             }
             self.i += 1;
         }
-        (self.src[start..self.i].to_string(), Span::new(start, self.i))
+        (
+            self.src[start..self.i].to_string(),
+            Span::new(start, self.i),
+        )
+    }
+
+    /// Read a balanced `{…}` group (outer braces included in the returned
+    /// string). Nesting is counted; string/template contents are **not**
+    /// string-aware (control-flow predicates rarely need `{` inside quotes).
+    fn read_brace_group(&mut self) -> Result<(String, Span), CompileError> {
+        debug_assert_eq!(self.peek_byte(), Some(b'{'));
+        let start = self.i;
+        self.i += 1;
+        let mut depth = 1usize;
+        while self.i < self.bytes.len() {
+            match self.bytes[self.i] {
+                b'{' => depth += 1,
+                b'}' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        self.i += 1;
+                        let end = self.i;
+                        return Ok((self.src[start..end].to_string(), Span::new(start, end)));
+                    }
+                }
+                _ => {}
+            }
+            self.i += 1;
+        }
+        Err(CompileError::new("unterminated `{…}` attribute expression")
+            .with_span(Span::point(start)))
     }
 
     fn skip_ws(&mut self) {
@@ -301,11 +368,15 @@ impl<'a> Parser<'a> {
             self.i += 1;
         }
     }
-    fn peek_byte(&self) -> Option<u8> { self.bytes.get(self.i).copied() }
+    fn peek_byte(&self) -> Option<u8> {
+        self.bytes.get(self.i).copied()
+    }
     fn peek2(&self) -> Option<(u8, u8)> {
         if self.i + 1 < self.bytes.len() {
             Some((self.bytes[self.i], self.bytes[self.i + 1]))
-        } else { None }
+        } else {
+            None
+        }
     }
     fn peek_close_tag(&self) -> Result<String, CompileError> {
         let mut j = self.i + 2;
@@ -318,7 +389,9 @@ impl<'a> Parser<'a> {
         }
         Ok(self.src[start..j].to_ascii_lowercase())
     }
-    fn starts_with(&self, s: &str) -> bool { self.src[self.i..].starts_with(s) }
+    fn starts_with(&self, s: &str) -> bool {
+        self.src[self.i..].starts_with(s)
+    }
     fn starts_with_ci(&self, s: &str) -> bool {
         let rest = &self.src[self.i..];
         rest.len() >= s.len()
@@ -334,8 +407,20 @@ fn is_tag_name_byte(b: u8) -> bool {
     b.is_ascii_alphanumeric() || b == b'-' || b == b'_' || b == b':'
 }
 fn is_attr_name_byte(b: u8) -> bool {
-    !b.is_ascii_whitespace() && b != b'=' && b != b'>' && b != b'/' && b != b'"' && b != b'\''
+    // `{` / `}` are brace-primary attrs (see `parse_attrs`), not name chars.
+    !b.is_ascii_whitespace()
+        && b != b'='
+        && b != b'>'
+        && b != b'/'
+        && b != b'"'
+        && b != b'\''
+        && b != b'{'
+        && b != b'}'
 }
+
+/// Synthetic attribute name for brace-primary expressions on open tags
+/// (`<if {expr}>`). Public so control-flow lowering can resolve it.
+pub const PRIMARY_BRACE_ATTR: &str = "@primary";
 
 #[cfg(test)]
 mod tests {

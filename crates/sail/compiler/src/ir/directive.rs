@@ -39,4 +39,3 @@ pub enum PropKind {
     /// as `Signal<T>`. No reflection, no coercion — TypeScript stays TypeScript.
     Identity(String),
 }
-

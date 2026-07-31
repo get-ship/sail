@@ -5,7 +5,7 @@
 // `bounce` preset (translateY 0→-100% + opacity 0.4→1, infinite, alternate,
 // 150ms stagger step). The `pulse` preset that the migration originally
 // picked was a 1.04× scale, sub-pixel on a 7-12px dot — invisible. The
-// runtime-dispatched test below stubs `__sui_motion_attach` and asserts
+// runtime-dispatched test below stubs `__sail_motion_attach` and asserts
 // the bounce preset reaches the runtime, so a regression that swaps back
 // to `pulse` (or to a fixed scale) fails the suite.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -20,7 +20,7 @@ interface MotionCall {
 
 let motionCalls: MotionCall[] = []
 
-// The compiled component imports `__sui_motion_attach` from
+// The compiled component imports `__sail_motion_attach` from
 // `@ship/sail-runtime/internal` as a named ESM import — a live binding the
 // module namespace object exposes read-only, so `require(...).x = fn`
 // (the old approach) throws `Attempted to assign to readonly property`.
@@ -40,7 +40,7 @@ vi.mock('@ship/sail-runtime/internal', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>()
   return {
     ...actual,
-    __sui_motion_attach: (el: Element, config: MotionAttachStubConfig) => motionAttachImpl!(el, config),
+    __sail_motion_attach: (el: Element, config: MotionAttachStubConfig) => motionAttachImpl!(el, config),
   }
 })
 

@@ -1,0 +1,26 @@
+[package]
+name = "sail-mcp"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+publish = false
+description = "MCP server for Sail agent authoring — thin transport over sail-ops."
+
+[[bin]]
+name = "sail-mcp"
+path = "src/main.rs"
+
+[lib]
+name = "sail_mcp"
+path = "src/lib.rs"
+
+[dependencies]
+sail-ops = { path = "../ops" }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,34 @@
+{
+  "service": "SailAuthoring",
+  "method": "Surface",
+  "mcp_tool": "sail_surface",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "topic": {
+        "description": "core | layout | style | tokens | l1 | control-flow",
+        "type": "string"
+      }
+    },
+    "required": [
+      "topic"
+    ]
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "SurfaceRet",
+    "type": "object",
+    "required": [
+      "markdown",
+      "topic"
+    ],
+    "properties": {
+      "markdown": {
+        "type": "string"
+      },
+      "topic": {
+        "type": "string"
+      }
+    }
+  }
+}

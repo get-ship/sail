@@ -7,11 +7,10 @@
 use std::fs;
 use std::path::PathBuf;
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn fixtures_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/type_strengthening_fixtures")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/type_strengthening_fixtures")
 }
 
 fn paired_opts(path: PathBuf) -> CompileOpts {
@@ -45,8 +44,7 @@ fn standalone_opts(path: PathBuf) -> CompileOpts {
 fn read(name: &str) -> (String, PathBuf) {
     let dir = fixtures_dir();
     let sail = dir.join(format!("{name}.sail"));
-    let src = fs::read_to_string(&sail)
-        .unwrap_or_else(|e| panic!("read {}: {e}", sail.display()));
+    let src = fs::read_to_string(&sail).unwrap_or_else(|e| panic!("read {}: {e}", sail.display()));
     (src, sail)
 }
 
@@ -93,19 +91,14 @@ fn for_iterable_number_rejected() {
 fn on_handler_must_be_callable() {
     let (src, path) = read("on-handler-signal");
     let err = compile(&src, paired_opts(path)).expect_err("signal handler must fail");
-    assert!(
-        err.message.contains("callable"),
-        "msg: {}",
-        err.message
-    );
+    assert!(err.message.contains("callable"), "msg: {}", err.message);
 }
 
 #[test]
 fn happy_view_with_all_checks_compiles() {
     // The classic happy-path fixture must still compile through every
     // new check pass.
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/validate/fixtures");
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/validate/fixtures");
     let sail = dir.join("happy-derived.sail");
     let src = fs::read_to_string(&sail).unwrap();
     compile(&src, paired_opts(sail)).expect("happy-derived must still compile");

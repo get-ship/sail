@@ -29,7 +29,7 @@ fn host_layout() -> RouteLayout {
 }
 
 #[test]
-fn on_disk_page_sui_resolves_in_overridden_ship_views() {
+fn on_disk_page_sail_resolves_in_overridden_ship_views() {
     // A host that overrides `route_dirs` to add `.ship/views` resolves routes
     // from that bucket — the override path the framework default no longer bakes.
     with_tempdir(|root| {
@@ -164,7 +164,7 @@ fn symlink_leaf_inside_root_is_allowed() {
 }
 
 #[test]
-fn on_disk_page_sui_resolves_in_top_views() {
+fn on_disk_page_sail_resolves_in_top_views() {
     with_tempdir(|root| {
         let route_dir = root.join("routes/widget");
         fs::create_dir_all(&route_dir).unwrap();

@@ -29,19 +29,19 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>
     Things fail two ways. Data can fail to arrive — that is a state, and the
     <a href="/sail/language/data">Data</a> chapter renders it with
-    <code>&#123;#while-error&#125;</code>. Or code can throw — an exception in
+    <code>&lt;while-error&gt;</code>. Or code can throw — an exception in
     a component. This chapter is about the second kind: what catches a throw,
     and what the page shows instead of nothing.
   </p>
 
   <h2>When a component throws</h2>
   <p>
-    A throw while a template branch renders (an <code>&#123;#if&#125;</code>
-    branch, a <code>&#123;#for&#125;</code> row), while a controller sets up
+    A throw while a template branch renders (an <code>&lt;if&gt;</code>
+    branch, a <code>&lt;for&gt;</code> row), while a controller sets up
     or mounts, or while an effect re-runs travels up the tree to the nearest
     <code>&lt;error-boundary&gt;</code>. The boundary swaps its content for a
     fallback; the rest of the page keeps running. A throw in one
-    <code>&#123;#for&#125;</code> row skips that row and renders the healthy
+    <code>&lt;for&gt;</code> row skips that row and renders the healthy
     ones.
   </p>
   <p>
@@ -57,8 +57,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Live — throw, catch, retry</p>
       <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).minH(8).bg(surface-1)} gap="3">
         <error-boundary on:sail-error-reset={disarm}>
-          <if cond={armed()}><p>{boom()}</p></if>
-          <if cond={!armed()}>
+          <if {armed()}><p>{boom()}</p></if>
+          <if {!armed()}>
             <p>This subtree is protected.</p>
             <button on:click={arm} tone="destructive" variant="outline">
               Throw during render
@@ -101,7 +101,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.async}></code-block>
   <p sx={style.borderWidth(1).border(border).borderLWidth(3).borderL(primary).radius(md).pad(3).padX(4).fontSize(sm).fg(muted-foreground)}>
     The two systems don't overlap: a failed fetch shows the
-    <code>&#123;#while-error&#125;</code> branch, never the boundary
+    <code>&lt;while-error&gt;</code> branch, never the boundary
     fallback; a synchronous throw trips the boundary, never the error state.
     Expected failures get rendered as states; unexpected ones get contained
     by boundaries.

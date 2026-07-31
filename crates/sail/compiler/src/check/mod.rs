@@ -5,38 +5,39 @@
 //! renderable-expression subset enforced on every interpolation
 //! expression in the program.
 
+pub mod compose;
 pub mod controller_parse;
 #[cfg(test)]
 mod controller_parse_tests;
 pub mod controller_purity;
-pub mod layout;
-pub mod match_exhaustiveness;
-pub mod light_shadow_root;
-pub mod paired_controller;
-pub mod mount_ambient_shadow;
 pub mod css_token;
-pub mod sx_vars;
-pub mod lint_overrides;
-pub mod policy;
 pub mod expr_subset;
-pub mod reserved_names;
-pub mod tscheck;
+pub mod for_iterable;
 pub mod handler_complexity;
 pub(crate) mod js_scan;
+pub mod key_identity;
+pub mod layout;
+pub mod light_shadow_root;
+pub mod lint_overrides;
+pub mod match_exhaustiveness;
+pub mod mount_ambient_shadow;
+pub mod on_callable;
+pub mod paired_controller;
+pub mod policy;
 pub mod pure_derived;
 #[cfg(test)]
 mod pure_derived_tests;
+pub mod query_keys;
+pub mod reserved_names;
 pub mod scope_bound;
 mod scope_bound_expr;
 #[cfg(test)]
 mod scope_bound_expr_tests;
-pub mod symbol_table;
 pub mod scope_member;
 pub mod signal_called;
-pub mod key_identity;
-pub mod on_callable;
-pub mod for_iterable;
-pub mod query_keys;
+pub mod sx_vars;
+pub mod symbol_table;
+pub mod tscheck;
 
 use std::path::Path;
 
@@ -55,28 +56,66 @@ pub fn run(
     overrides: &[crate::check::lint_overrides::LintOverride],
     route_params: Option<&[String]>,
 ) -> Result<(), CompileError> {
-    visit_program(program, &mut |e| {
-        if e.allow_arrow {
-            return Ok(());
-        }
-        expr_subset::check(e)
-    })?;
-    check_mutations(program)?;
+    let profile = std::env::var_os("SAIL_LINT_PROFILE").is_some();
+    macro_rules! pass {
+        ($name:literal, $body:expr) => {{
+            // Instant::now panics on wasm32 (no platform clock) — profiling
+            // is a native-only affordance.
+            #[cfg(not(target_arch = "wasm32"))]
+            let __t = std::time::Instant::now();
+            let __r = $body;
+            #[cfg(not(target_arch = "wasm32"))]
+            if profile {
+                eprintln!("sail-check: {} {:?}", $name, __t.elapsed());
+            }
+            #[cfg(target_arch = "wasm32")]
+            let _ = profile;
+            __r
+        }};
+    }
+    pass!(
+        "expr-subset",
+        visit_program(program, &mut |e| {
+            if e.allow_arrow {
+                return Ok(());
+            }
+            expr_subset::check(e)
+        })
+    )?;
+    pass!("mutations", check_mutations(program))?;
     // Bare names are the language's namespace — reject unknown bare tags
     // (typos / not-yet-language elements) so L1 growth is safe.
-    reserved_names::check(program)?;
-    handler_complexity::check(program, controller.is_some())?;
-    controller_purity::check(controller, overrides)?;
-    paired_controller::check(source, source_path)?;
-    css_token::check(source, source_path, overrides)?;
-    sx_vars::resolve(source, program, controller).map(|_| ())?;
+    pass!("reserved-names", reserved_names::check(program))?;
+    pass!(
+        "handler-complexity",
+        handler_complexity::check(program, controller.is_some())
+    )?;
+    pass!(
+        "controller-purity",
+        controller_purity::check(controller, overrides)
+    )?;
+    pass!(
+        "paired-controller",
+        paired_controller::check(source, source_path)
+    )?;
+    pass!(
+        "css-token",
+        css_token::check(source, source_path, overrides)
+    )?;
+    pass!(
+        "sx-vars",
+        sx_vars::resolve(source, program, controller).map(|_| ())
+    )?;
     // `controller` is resolved by the caller: the inline `<controller>` block
     // (SFC) wins, else the paired `.controller.ts`.
     if let Some(c) = controller {
-        pure_derived::check(c)?;
-        light_shadow_root::check(Some(c))?;
-        query_keys::check(&c.source)?;
-        mount_ambient_shadow::check(&c.source)?;
+        pass!("pure-derived", pure_derived::check(c))?;
+        pass!("light-shadow-root", light_shadow_root::check(Some(c)))?;
+        pass!("query-keys", query_keys::check(&c.source))?;
+        pass!(
+            "mount-ambient-shadow",
+            mount_ambient_shadow::check(&c.source)
+        )?;
     }
     // Scope-bound checks need the controller's declared names (`scope` /
     // `derived` / `use`). We have them whenever a controller is resolved —
@@ -87,20 +126,22 @@ pub fn run(
     // every free name would false-positive as undeclared.
     let has_scope_context = source_path.is_some() || controller.is_some();
     if has_scope_context {
-        scope_bound::check(program, controller, route_params)?;
+        pass!(
+            "scope-bound",
+            scope_bound::check(program, controller, route_params)
+        )?;
     }
-    // Type-strengthening passes — see crates/sail/compiler/EXPRESSIONS.md.
-    // These run after scope_bound so the user gets the "name not declared"
-    // error first (it's the more common authoring mistake) before the
-    // shape mismatches surface.
-    key_identity::check(program)?;
-    for_iterable::check(program)?;
+    // Type-strengthening passes. These run after scope_bound so the user
+    // gets the "name not declared" error first (more common authoring
+    // mistake) before shape mismatches surface.
+    pass!("key-identity", key_identity::check(program))?;
+    pass!("for-iterable", for_iterable::check(program))?;
     if has_scope_context {
-        scope_member::check(program, controller)?;
+        pass!("scope-member", scope_member::check(program, controller))?;
         // A reactive value rendered without its `()` — the silent one: it
         // emitted the getter's SOURCE into the DOM and warned about nothing.
-        signal_called::check(program, controller)?;
-        on_callable::check(program, controller)?;
+        pass!("signal-called", signal_called::check(program, controller))?;
+        pass!("on-callable", on_callable::check(program, controller))?;
     }
     Ok(())
 }
@@ -128,9 +169,16 @@ pub fn gate(
     overrides: &[crate::check::lint_overrides::LintOverride],
     route_params: Option<&[String]>,
 ) -> Result<(), CompileError> {
-    let fatal = collect(program, source, source_path, controller, overrides, route_params)
-        .into_iter()
-        .find(|d| d.severity == DiagSeverity::Error);
+    let fatal = collect(
+        program,
+        source,
+        source_path,
+        controller,
+        overrides,
+        route_params,
+    )
+    .into_iter()
+    .find(|d| d.severity == DiagSeverity::Error);
     let Some(d) = fatal else {
         return Ok(());
     };
@@ -203,9 +251,21 @@ pub fn collect(
     // `controller` is resolved by the caller from the inline `<controller>`
     // block (SFC) — the one source, no paired-file fallback.
     push(check_mutations(program), source, &mut diags);
-    push(paired_controller::check(source, source_path), source, &mut diags);
-    push(sx_vars::resolve(source, program, controller).map(|_| ()), source, &mut diags);
-    push(handler_complexity::check(program, controller.is_some()), source, &mut diags);
+    push(
+        paired_controller::check(source, source_path),
+        source,
+        &mut diags,
+    );
+    push(
+        sx_vars::resolve(source, program, controller).map(|_| ()),
+        source,
+        &mut diags,
+    );
+    push(
+        handler_complexity::check(program, controller.is_some()),
+        source,
+        &mut diags,
+    );
     if let Some(c) = controller {
         push(pure_derived::check(c), source, &mut diags);
         push(light_shadow_root::check(Some(c)), source, &mut diags);
@@ -219,13 +279,25 @@ pub fn collect(
     if has_scope_context {
         // Collect ALL out-of-scope references (one per expression), not just the
         // first — the common "I have three typos" case.
-        push_all(scope_bound::collect(program, controller, route_params), source, &mut diags);
+        push_all(
+            scope_bound::collect(program, controller, route_params),
+            source,
+            &mut diags,
+        );
     }
     push(key_identity::check(program), source, &mut diags);
     push(for_iterable::check(program), source, &mut diags);
     if has_scope_context {
-        push_all(scope_member::collect(program, controller), source, &mut diags);
-        push_all(signal_called::collect(program, controller), source, &mut diags);
+        push_all(
+            scope_member::collect(program, controller),
+            source,
+            &mut diags,
+        );
+        push_all(
+            signal_called::collect(program, controller),
+            source,
+            &mut diags,
+        );
         push(on_callable::check(program, controller), source, &mut diags);
     }
 
@@ -258,21 +330,18 @@ pub fn collect(
     resolved.extend(defaults);
     let overrides = &resolved[..];
     let template_findings =
-        crate::check::lint_overrides::enforce_floor(
-            crate::check::lint_overrides::apply_overrides(
-                sail_lint::lint_sui_template_source(lint_path, source),
-                overrides,
-            ),
-        );
+        crate::check::lint_overrides::enforce_floor(crate::check::lint_overrides::apply_overrides(
+            sail_lint::lint_sail_template_source(lint_path, source),
+            overrides,
+        ));
     for f in template_findings {
         diags.push(finding_to_diag(&f));
     }
     if let Some(c) = controller {
-        let mut controller_findings =
-            crate::check::lint_overrides::apply_overrides(
-                sail_lint::lint_controller_source(&c.path, &c.source),
-                overrides,
-            );
+        let mut controller_findings = crate::check::lint_overrides::apply_overrides(
+            sail_lint::lint_controller_source(&c.path, &c.source),
+            overrides,
+        );
         // `sail-controller-no-ambient-authority` is `sail.config.json`
         // "network"/"unconfined"-aware, but the generic `CONTROLLER_RULES`
         // table (`lint_controller_source`, above) is config-blind — it always
@@ -283,9 +352,8 @@ pub fn collect(
         // `css_token` uses in `run()`. This is not a second
         // `sail.config.json` reader: both re-derive from the one resolver
         // (`sail_lint::config::resolve`) via `Policy::resolve_outcome`.
-        controller_findings.retain(|f| {
-            f.rule != sail_lint::rules::controller_no_ambient_authority::RULE_ID
-        });
+        controller_findings
+            .retain(|f| f.rule != sail_lint::rules::controller_no_ambient_authority::RULE_ID);
         let network = crate::check::policy::Policy::network_for(&c.path);
         let unconfined = crate::check::policy::Policy::unconfined_for(&c.path);
         let ambient_findings = crate::check::lint_overrides::apply_overrides(
@@ -305,6 +373,11 @@ pub fn collect(
     // the preprocessed source so class tokens line up with the CSS the compiler
     // emits, then spans are mapped back to the author's original source.
     diags.extend(layout::collect(source));
+
+    // Compose auto-fix — sibling rhythm (spacing) consistency. Reuses the same
+    // taffy tree the layout pass just built; emits `Fix` severity diagnostics
+    // that the `sail_edit` path turns into source rewrites.
+    diags.extend(compose::collect(source, source_path, overrides));
 
     // Style match exhaustiveness — a `match` on a closed-union scope prop
     // that leaves members arm-less warns (never gates; partial matches are a
@@ -369,16 +442,26 @@ fn check_mutations_instrs(instrs: &[Instr]) -> Result<(), CompileError> {
         }
         match instr {
             Instr::If(i) => {
-                for b in &i.branches { check_mutations_instrs(&b.body)?; }
-                if let Some(e) = &i.else_body { check_mutations_instrs(e)?; }
+                for b in &i.branches {
+                    check_mutations_instrs(&b.body)?;
+                }
+                if let Some(e) = &i.else_body {
+                    check_mutations_instrs(e)?;
+                }
             }
             Instr::For(f) => {
                 check_mutations_instrs(&f.body)?;
-                if let Some(e) = &f.else_body { check_mutations_instrs(e)?; }
+                if let Some(e) = &f.else_body {
+                    check_mutations_instrs(e)?;
+                }
             }
             Instr::Match(m) => {
-                for c in &m.cases { check_mutations_instrs(&c.body)?; }
-                if let Some(d) = &m.default { check_mutations_instrs(d)?; }
+                for c in &m.cases {
+                    check_mutations_instrs(&c.body)?;
+                }
+                if let Some(d) = &m.default {
+                    check_mutations_instrs(d)?;
+                }
             }
             Instr::WhileLoading(wl) => check_mutations_instrs(&wl.body)?,
             Instr::WhileError(we) => check_mutations_instrs(&we.body)?,
@@ -396,7 +479,9 @@ fn validate_mutation_expr(expr: &str, span: crate::diagnostics::Span) -> Result<
     let valid = parts.len() >= 2
         && parts.iter().all(|p| {
             !p.is_empty()
-                && p.chars().next().is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
+                && p.chars()
+                    .next()
+                    .is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
                 && p.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
         });
     if !valid {
@@ -450,7 +535,11 @@ where
             }
             visit_instrs(&el.children, f)?;
         }
-        Instr::If(IfInstr { branches, else_body, .. }) => {
+        Instr::If(IfInstr {
+            branches,
+            else_body,
+            ..
+        }) => {
             for b in branches {
                 f(&b.cond)?;
                 visit_instrs(&b.body, f)?;
@@ -459,7 +548,13 @@ where
                 visit_instrs(eb, f)?;
             }
         }
-        Instr::For(ForInstr { iterable, key, body, else_body, .. }) => {
+        Instr::For(ForInstr {
+            iterable,
+            key,
+            body,
+            else_body,
+            ..
+        }) => {
             f(iterable)?;
             if let Some(k) = key {
                 f(k)?;
@@ -469,7 +564,12 @@ where
                 visit_instrs(eb, f)?;
             }
         }
-        Instr::Match(MatchInstr { discriminant, cases, default, .. }) => {
+        Instr::Match(MatchInstr {
+            discriminant,
+            cases,
+            default,
+            ..
+        }) => {
             f(discriminant)?;
             for c in cases {
                 f(&c.test)?;

@@ -1,11 +1,10 @@
 import { test, expect } from '@playwright/test'
 
-// ── deck dev — runtime error overlay (task #80) ──────────────────────────────
+// ── deck dev — runtime error overlay ─────────────────────────────────────────
 //
-// Before this, an uncaught effect/setup throw with no `<sail-error-boundary>`
-// in scope reached ONLY `console.error` — the incident this kills: a page
-// that rendered nothing, dozens of throws, zero visible failure surface
-// unless a developer already had devtools open.
+// Contract: an uncaught effect/setup throw with no `<sail-error-boundary>`
+// in scope must not reach only `console.error` — a page that rendered nothing
+// with dozens of throws needs a visible failure surface.
 //
 // `/error-boom` (app/routes/error-boom/page.sail) throws from an effect on
 // mount with no boundary anywhere in the route — the exact no-boundary path.
@@ -24,7 +23,7 @@ test.describe('deck dev — runtime error overlay', () => {
 
     await page.goto('/error-boom')
 
-    const overlay = page.locator('#__sui_error_overlay')
+    const overlay = page.locator('#__sail_error_overlay')
     await expect(overlay).toBeVisible()
     await expect(overlay).toContainText('deliberate boom for overlay e2e')
     await expect(overlay).toContainText('effect threw')
@@ -41,7 +40,7 @@ test.describe('deck dev — runtime error overlay', () => {
   test('a healthy page shows no overlay', async ({ page }) => {
     await page.goto('/counter', { waitUntil: 'load' })
     await expect(page.locator('[data-counter] h1')).toHaveText('Counter')
-    await expect(page.locator('#__sui_error_overlay')).toHaveCount(0)
+    await expect(page.locator('#__sail_error_overlay')).toHaveCount(0)
   })
 
   test('dev-mode HTML includes the overlay script; served source pins the injection', async ({

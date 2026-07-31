@@ -26,7 +26,11 @@ const ROUTES_PLACEHOLDER: &str = "<!-- SAIL_NF_ROUTES -->";
 /// best-effort scan of the mount's project `root` (`list_route_names`) — empty
 /// when the caller has no root (`None`), in which case the routes block is
 /// omitted gracefully rather than rendering an empty list.
-pub fn route_not_found(mode: DaemonMode, name: &str, root: Option<&std::path::Path>) -> DeckResponse {
+pub fn route_not_found(
+    mode: DaemonMode,
+    name: &str,
+    root: Option<&std::path::Path>,
+) -> DeckResponse {
     let routes = root.map(list_route_names).unwrap_or_default();
     let body = NOT_FOUND_SHELL
         .replace(NAME_PLACEHOLDER, &escape_html(name))

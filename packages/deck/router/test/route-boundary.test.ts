@@ -56,7 +56,7 @@ const setDevMeta = (on: boolean) => {
   }
 }
 
-const defineSuiErrorState = () => {
+const defineSailErrorState = () => {
   if (!customElements.get('sail-error-state')) {
     customElements.define('sail-error-state', class extends HTMLElement {})
   }
@@ -73,7 +73,7 @@ describe('isDevMode', () => {
 
 describe('installRouteBoundary — throwing route degrades to a card', () => {
   it('renders <sail-error-state> (not a crash) when a route throws on render', () => {
-    defineSuiErrorState()
+    defineSailErrorState()
     installRouteBoundary(outlet, { onReset: () => {}, dev: true })
 
     // Simulate the route mounting a node and then throwing during render — the
@@ -94,7 +94,7 @@ describe('installRouteBoundary — throwing route degrades to a card', () => {
   })
 
   it('shows the error message + stack in dev, redacts in prod', () => {
-    defineSuiErrorState()
+    defineSailErrorState()
 
     // Dev outlet
     installRouteBoundary(outlet, { onReset: () => {}, dev: true })
@@ -116,7 +116,7 @@ describe('installRouteBoundary — throwing route degrades to a card', () => {
   })
 
   it('retry clears the error state and re-runs the route mount', () => {
-    defineSuiErrorState()
+    defineSailErrorState()
     const onReset = vi.fn()
     installRouteBoundary(outlet, { onReset, dev: true })
     runProtected(outlet, 'render', () => { throw new Error('retry-me') })

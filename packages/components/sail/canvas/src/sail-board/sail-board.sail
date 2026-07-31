@@ -35,7 +35,7 @@
   }
 </scope>
 <controller>
-import { controller, signal, derived, effect, debounce } from '@ship/sail-runtime'
+import { debounce } from '@ship/sail-runtime'
 import type { Scope } from './sail-board.sail'
 import { createCanvas } from '../engine/create-canvas'
 import { createBoardModel, type Node, type Edge, type PortRef } from './engine/board-model'
@@ -223,7 +223,6 @@ export default controller(({ value, layout }: Scope) => {
 
 </controller>
 
-
 <sail-canvas
   role="application"
   aria-label={label()}
@@ -232,15 +231,15 @@ export default controller(({ value, layout }: Scope) => {
   sx={style.display(block).position(relative).w(full).h(full)}
 >
   <svg aria-hidden="true" sx={style.position(absolute).top(0).left(0).overflow(visible).pointerEvents(none)}>
-    <for as="r" of={routes()} key={r.id}>
+    <for {routes()} as="r" key={r.id}>
       <path d={r.path} data-edge-id={r.id} data-state={incidentSet().has(r.id) ? 'incident' : null} sx={style.fill(none).stroke(border).when({ stateIncident: style.stroke(primary) })} stroke-width="2"></path>
     </for>
-    <if cond={pendingPath()}>
+    <if {pendingPath()}>
       <path d={pendingPath()} sx={style.fill(none).stroke(primary)} stroke-width="2" stroke-dasharray="6 4"></path>
     </if>
   </svg>
 
-  <for as="n" of={nodes()} key={n.id}>
+  <for {nodes()} as="n" key={n.id}>
     <div
       role="group"
       tabindex="0"
@@ -252,7 +251,7 @@ export default controller(({ value, layout }: Scope) => {
       sx={style.box(border).bg(card).fg(card-foreground).borderWidth(1).border(border).radius(md).pad(2).cursor(grab).select(none).outline(none).when({ focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2), selected: style.border(primary).outline(primary) })}
     >
       <slot name={n.id}></slot>
-      <for as="p" of={n.ports} key={p.id}>
+      <for {n.ports} as="p" key={p.id}>
         <span
           data-port-id={p.id}
           data-state={p.side}

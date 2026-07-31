@@ -26,25 +26,64 @@ const BUILTINS: &[&str] = &[
     // `ctx` is only ever a parent-scope ident in handlers — leave bare.
     "ctx",
     // JS standard objects.
-    "Math", "JSON", "Object", "Array", "String", "Number", "Boolean", "Date",
-    "Symbol", "Map", "Set", "WeakMap", "WeakSet", "Error", "RegExp",
-    "Promise", "BigInt", "ArrayBuffer", "DataView",
-    "Int8Array", "Uint8Array", "Uint8ClampedArray",
-    "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
-    "Float32Array", "Float64Array",
+    "Math",
+    "JSON",
+    "Object",
+    "Array",
+    "String",
+    "Number",
+    "Boolean",
+    "Date",
+    "Symbol",
+    "Map",
+    "Set",
+    "WeakMap",
+    "WeakSet",
+    "Error",
+    "RegExp",
+    "Promise",
+    "BigInt",
+    "ArrayBuffer",
+    "DataView",
+    "Int8Array",
+    "Uint8Array",
+    "Uint8ClampedArray",
+    "Int16Array",
+    "Uint16Array",
+    "Int32Array",
+    "Uint32Array",
+    "Float32Array",
+    "Float64Array",
     // Standard literals.
-    "null", "undefined", "true", "false", "NaN", "Infinity",
+    "null",
+    "undefined",
+    "true",
+    "false",
+    "NaN",
+    "Infinity",
     // Standard fns.
-    "parseInt", "parseFloat", "isNaN", "isFinite", "encodeURIComponent",
-    "decodeURIComponent", "encodeURI", "decodeURI",
+    "parseInt",
+    "parseFloat",
+    "isNaN",
+    "isFinite",
+    "encodeURIComponent",
+    "decodeURIComponent",
+    "encodeURI",
+    "decodeURI",
     // Browser globals commonly used in handlers.
-    "document", "window", "console", "globalThis",
+    "document",
+    "window",
+    "console",
+    "globalThis",
     // Runtime helpers imported by the compiled module.
-    "unwrap", "unwrapOr",
+    "unwrap",
+    "unwrapOr",
     // Built-in transition factories. The compiler auto-imports any of
     // these that the template references; the directive name then
     // resolves as a bare ESM binding (no `$scope.` prefix).
-    "fade", "slide", "scale",
+    "fade",
+    "slide",
+    "scale",
     // Built-in `use:` actions — the standard-library element behaviors
     // (`use:anchor`, `use:autosize`, `use:clickOutside`). Same deal as the
     // transitions: the `Use` lowering auto-imports whichever ones the
@@ -53,16 +92,54 @@ const BUILTINS: &[&str] = &[
     // `action_manifest::BUILTIN_ACTION_NAMES`; this is the bare-ident
     // subset, shared with `check::scope_bound::BUILTINS` and checked
     // for drift by `action_manifest::tests`.
-    "anchor", "autosize", "cellPad", "clickOutside", "dropzone", "eventSpan",
-    "gridTracks", "maxWidth", "pin", "portEdge", "rect", "spotlight", "swatch",
-    "targetCursor", "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
+    "anchor",
+    "autosize",
+    "cellPad",
+    "clickOutside",
+    "dropzone",
+    "eventSpan",
+    "gridTracks",
+    "maxWidth",
+    "pin",
+    "portEdge",
+    "rect",
+    "spotlight",
+    "swatch",
+    "targetCursor",
+    "virtualRow",
+    "virtualSpacer",
+    "worldTransform",
+    "zoomPan",
 ];
 
 const KEYWORDS: &[&str] = &[
-    "if", "else", "return", "let", "const", "var", "for", "while", "do",
-    "switch", "case", "break", "continue", "typeof", "instanceof", "in",
-    "of", "new", "async", "await", "yield", "function", "class", "this",
-    "super", "void", "delete",
+    "if",
+    "else",
+    "return",
+    "let",
+    "const",
+    "var",
+    "for",
+    "while",
+    "do",
+    "switch",
+    "case",
+    "break",
+    "continue",
+    "typeof",
+    "instanceof",
+    "in",
+    "of",
+    "new",
+    "async",
+    "await",
+    "yield",
+    "function",
+    "class",
+    "this",
+    "super",
+    "void",
+    "delete",
 ];
 
 /// Rewrite `src` so free identifiers are qualified with `$scope.`.
@@ -302,8 +379,7 @@ fn peek_colon(src: &str, i: usize) -> bool {
     while k < bytes.len() && bytes[k].is_ascii_whitespace() {
         k += 1;
     }
-    k < bytes.len() && bytes[k] == b':'
-        && (k + 1 >= bytes.len() || bytes[k + 1] != b':')
+    k < bytes.len() && bytes[k] == b':' && (k + 1 >= bytes.len() || bytes[k + 1] != b':')
 }
 
 /// Heuristic: `out` ends with the last byte we already emitted before
@@ -352,17 +428,37 @@ fn harvest_param_idents(src: &str, start: usize, end: usize, into: &mut Vec<Stri
     while i < end {
         let c = bytes[i];
         if let Some(q) = in_str {
-            if c == b'\\' { i += 2; continue; }
-            if c == q { in_str = None; }
+            if c == b'\\' {
+                i += 2;
+                continue;
+            }
+            if c == q {
+                in_str = None;
+            }
             i += 1;
             continue;
         }
         match c {
-            b'"' | b'\'' | b'`' => { in_str = Some(c); i += 1; }
-            b'(' | b'<' => { paren += 1; i += 1; }
-            b')' | b'>' => { paren -= 1; i += 1; }
-            b':' | b'=' if paren == 0 => { skip_until_separator = true; i += 1; }
-            b',' if paren == 0 => { skip_until_separator = false; i += 1; }
+            b'"' | b'\'' | b'`' => {
+                in_str = Some(c);
+                i += 1;
+            }
+            b'(' | b'<' => {
+                paren += 1;
+                i += 1;
+            }
+            b')' | b'>' => {
+                paren -= 1;
+                i += 1;
+            }
+            b':' | b'=' if paren == 0 => {
+                skip_until_separator = true;
+                i += 1;
+            }
+            b',' if paren == 0 => {
+                skip_until_separator = false;
+                i += 1;
+            }
             b'{' | b'[' if !skip_until_separator => {
                 let close = skip_balanced(bytes, i, end);
                 harvest_destructure_idents(src, i + 1, close.saturating_sub(1), into);
@@ -370,7 +466,9 @@ fn harvest_param_idents(src: &str, start: usize, end: usize, into: &mut Vec<Stri
             }
             _ if !skip_until_separator && is_ident_start(c) => {
                 let s = i;
-                while i < end && is_ident_cont(bytes[i]) { i += 1; }
+                while i < end && is_ident_cont(bytes[i]) {
+                    i += 1;
+                }
                 let w = &src[s..i];
                 if !KEYWORDS.contains(&w) {
                     into.push(w.to_string());
@@ -389,13 +487,19 @@ fn harvest_destructure_idents(src: &str, start: usize, end: usize, into: &mut Ve
     let mut after_colon = false;
     while i < end {
         let c = bytes[i];
-        if c.is_ascii_whitespace() { i += 1; continue; }
-        if c == b':' { after_colon = true; i += 1; continue; }
+        if c.is_ascii_whitespace() {
+            i += 1;
+            continue;
+        }
+        if c == b':' {
+            after_colon = true;
+            i += 1;
+            continue;
+        }
         if c == b',' {
-            if !after_colon
-                && let Some(w) = last_ident.take() {
-                    into.push(w);
-                }
+            if !after_colon && let Some(w) = last_ident.take() {
+                into.push(w);
+            }
             after_colon = false;
             last_ident = None;
             i += 1;
@@ -411,7 +515,9 @@ fn harvest_destructure_idents(src: &str, start: usize, end: usize, into: &mut Ve
         }
         if is_ident_start(c) {
             let s = i;
-            while i < end && is_ident_cont(bytes[i]) { i += 1; }
+            while i < end && is_ident_cont(bytes[i]) {
+                i += 1;
+            }
             let w = src[s..i].to_string();
             if after_colon {
                 into.push(w);
@@ -424,10 +530,9 @@ fn harvest_destructure_idents(src: &str, start: usize, end: usize, into: &mut Ve
         }
         i += 1;
     }
-    if !after_colon
-        && let Some(w) = last_ident {
-            into.push(w);
-        }
+    if !after_colon && let Some(w) = last_ident {
+        into.push(w);
+    }
 }
 
 /// Strip top-level `: TYPE` annotations from an arrow-param source
@@ -577,7 +682,10 @@ mod tests {
     fn prefix_is_configurable_for_synthetic_scope() {
         // The synthetic emit drives the same walk with a `scope.` prefix
         // so author expressions resolve against the typed `scope` export.
-        assert_eq!(rewrite_with_prefix("count()", &[], "scope."), "scope.count()");
+        assert_eq!(
+            rewrite_with_prefix("count()", &[], "scope."),
+            "scope.count()"
+        );
         assert_eq!(
             rewrite_with_prefix("route.params.id()", &[], "scope."),
             "scope.route.params.id()"
@@ -640,10 +748,7 @@ mod tests {
 
     #[test]
     fn template_literal_inner_qualified() {
-        assert_eq!(
-            rw("`hello ${name}!`"),
-            "`hello ${$scope.name}!`"
-        );
+        assert_eq!(rw("`hello ${name}!`"), "`hello ${$scope.name}!`");
     }
 
     #[test]
@@ -724,10 +829,7 @@ mod tests {
     fn ts_annotation_strip_handles_nested_object_type() {
         // The type expression `{ x: number }` opens with `:` at depth 0,
         // so the whole annotation (including its inner braces) drops.
-        assert_eq!(
-            rw("(opts: { x: number }) => opts"),
-            "(opts) => opts"
-        );
+        assert_eq!(rw("(opts: { x: number }) => opts"), "(opts) => opts");
     }
 
     #[test]
@@ -748,14 +850,23 @@ mod multibyte_tests {
     fn multibyte_in_string_literal_preserved() {
         // Pre-fix this emitted Latin-1 garbage for the non-ASCII bytes.
         let out = rewrite_for_scope(r#"foo("hello °, world ™")"#, &[]);
-        assert!(out.contains('°'), "° preserved in string output, got: {out}");
-        assert!(out.contains('™'), "™ preserved in string output, got: {out}");
+        assert!(
+            out.contains('°'),
+            "° preserved in string output, got: {out}"
+        );
+        assert!(
+            out.contains('™'),
+            "™ preserved in string output, got: {out}"
+        );
     }
 
     #[test]
     fn multibyte_in_template_literal_preserved() {
         let out = rewrite_for_scope(r#"`pre § post`"#, &[]);
-        assert!(out.contains('§'), "§ preserved in template literal, got: {out}");
+        assert!(
+            out.contains('§'),
+            "§ preserved in template literal, got: {out}"
+        );
     }
 
     #[test]

@@ -10,8 +10,8 @@
 //! table, never the three Rust arrays independently.
 use crate::diagnostics::CompileError;
 use crate::ir::*;
-use crate::lower::presets;
 use crate::lower::Lowered;
+use crate::lower::presets;
 
 /// Built-in `use:` actions shipped by the runtime. When a `use:` directive
 /// names one of these (a bare identifier), the compiler auto-imports it from
@@ -45,13 +45,15 @@ pub fn collect_attr_imports(
         AttrInstr::Static { .. } => {}
         AttrInstr::Expr { name, .. } => {
             // Web backend (hidden from author): CE → bindDynamic; native IDL
-            // prop table → bindProp; else bindAttr. See `native_idl_prop`.
+            // prop table → bindProp; dialog open → bindOpen; else bindAttr.
             let binder = plain_field_binder(tag, name);
             out.runtime_imports.insert(binder);
             if direct_emit {
                 out.dom_imports.insert("collectElementMarkers");
                 if binder == "bindProp" {
                     out.dom_imports.insert("hydrateProp");
+                } else if binder == "bindOpen" {
+                    // bindOpen has no separate hydrate helper — reuses full binder.
                 } else {
                     out.dom_imports.insert("hydrateAttr");
                 }
@@ -96,7 +98,7 @@ pub fn collect_attr_imports(
                 out.dom_imports.insert("collectElementMarkers");
             }
         }
-            AttrInstr::Use { action, .. } => {
+        AttrInstr::Use { action, .. } => {
             out.runtime_imports.insert("runAction");
             // A bare built-in action name (`use:anchor`, `use:autosize`, …)
             // is auto-imported from the runtime so it resolves as an ESM
@@ -110,9 +112,15 @@ pub fn collect_attr_imports(
                 out.runtime_imports.insert(builtin);
             }
         }
-        AttrInstr::Motion { trigger, props, stagger_ms: _, timing: _, span } => {
+        AttrInstr::Motion {
+            trigger,
+            props,
+            stagger_ms: _,
+            timing: _,
+            span,
+        } => {
             // `fx:` directives bake to literal `el.animate(...)`
-            // calls plus a `__sui_motion_attach(...)` wrapper. The
+            // calls plus a `__sail_motion_attach(...)` wrapper. The
             // attach wrapper and any animation-side runtime helpers
             // come from `@ship/sail-runtime/motion` (separate from
             // the umbrella `@ship/sail-runtime` import); we record
@@ -154,53 +162,83 @@ pub fn collect_attr_imports(
                     let _ = spec.kind;
                 }
                 // The motion runtime is a single symbol — the
-                // `__sui_motion_attach` helper that the dom emit
+                // `__sail_motion_attach` helper that the dom emit
                 // calls. Recording it here drives the side-effect
                 // import the imports walker emits; future
                 // per-preset spring/tween helpers will live in a
                 // separate runtime module and be imported only
                 // when their functionality is actually needed.
-                out.motion_builtins.insert("__sui_motion_attach");
+                out.motion_builtins.insert("__sail_motion_attach");
             }
         }
     }
     Ok(())
 }
 
-/// Closed IDL property table for **native** HTML tags — backend knowledge,
-/// not an author directive. When a plain `name={expr}` targets one of these
-/// names on a non-custom element, emit `bindProp` so boolean/object identity
-/// (checked, value, indeterminate, …) is preserved. Everything else on a
-/// native tag is `bindAttr`. Custom elements always use `bindDynamic`.
-pub fn native_idl_prop(name: &str) -> bool {
-    matches!(
-        name,
-        "value"
-            | "checked"
-            | "indeterminate"
-            | "selected"
-            | "open"
-            | "disabled"
-            | "multiple"
-            | "readOnly"
-            | "readonly"
-            | "required"
-            | "defaultValue"
-            | "defaultChecked"
-            | "innerHTML"
-            | "textContent"
-            | "scrollTop"
-            | "scrollLeft"
-    )
+/// Whether `name` is a real IDL property on native tag `tag`.
+/// Used so `selected={…}` on a layout host (`div` from `<row>`) binds as an
+/// attribute (CSS `[selected]`), not a dead JS property.
+pub fn native_idl_prop(tag: &str, name: &str) -> bool {
+    let t = tag.to_ascii_lowercase();
+    match name {
+        "value" | "defaultValue" => matches!(
+            t.as_str(),
+            "input" | "textarea" | "select" | "option" | "button" | "output" | "meter" | "progress"
+        ),
+        "checked" | "indeterminate" | "defaultChecked" => t == "input",
+        "selected" => t == "option",
+        // details only — dialog open is bindOpen (showModal), not IDL prop assign.
+        "open" => t == "details",
+        "disabled" => matches!(
+            t.as_str(),
+            "button"
+                | "input"
+                | "textarea"
+                | "select"
+                | "option"
+                | "optgroup"
+                | "fieldset"
+                | "link"
+        ),
+        "multiple" => matches!(t.as_str(), "select" | "input"),
+        "readOnly" | "readonly" | "required" => {
+            matches!(t.as_str(), "input" | "textarea" | "select")
+        }
+        "innerHTML" | "textContent" | "scrollTop" | "scrollLeft" => true,
+        _ => false,
+    }
 }
 
 /// Pick the web runtime binder for a plain dynamic field.
 pub fn plain_field_binder(tag: &str, name: &str) -> &'static str {
+    let t = tag.to_ascii_lowercase();
+    // Native <dialog open={sig}> must use showModal via bindOpen — assigning
+    // the IDL `open` property is non-modal (no top-layer, no backdrop dismiss).
+    if t == "dialog" && name == "open" {
+        return "bindOpen";
+    }
     if tag.contains('-') {
         "bindDynamic"
-    } else if native_idl_prop(name) {
+    } else if native_idl_prop(tag, name) {
         "bindProp"
     } else {
         "bindAttr"
     }
+}
+
+/// `open={captureOpen()}` → signal cell `captureOpen` for bindOpen write-back.
+/// Leaves complex expressions unchanged (caller still gets a boolean read).
+pub fn dialog_open_signal_expr(source: &str) -> String {
+    let t = source.trim();
+    if let Some(inner) = t.strip_suffix("()") {
+        let id = inner.trim();
+        if !id.is_empty()
+            && id
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'.' || b == b'$')
+        {
+            return id.to_string();
+        }
+    }
+    t.to_string()
 }

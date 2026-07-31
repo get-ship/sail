@@ -41,17 +41,24 @@ pub fn check(source: &str) -> Result<(), CompileError> {
         if !trimmed.starts_with("import") {
             continue;
         }
-        let Some(brace_start) = trimmed.find('{') else { continue };
-        let Some(brace_end) = trimmed.find('}') else { continue };
+        let Some(brace_start) = trimmed.find('{') else {
+            continue;
+        };
+        let Some(brace_end) = trimmed.find('}') else {
+            continue;
+        };
         if brace_end < brace_start {
             continue;
         }
         let after_brace = &trimmed[brace_end + 1..];
-        let Some(from_at) = after_brace.find("from") else { continue };
+        let Some(from_at) = after_brace.find("from") else {
+            continue;
+        };
         let from_clause = after_brace[from_at + 4..].trim();
-        let is_runtime_module = RUNTIME_SPECIFIERS
-            .iter()
-            .any(|spec| from_clause.contains(&format!("'{spec}'")) || from_clause.contains(&format!("\"{spec}\"")));
+        let is_runtime_module = RUNTIME_SPECIFIERS.iter().any(|spec| {
+            from_clause.contains(&format!("'{spec}'"))
+                || from_clause.contains(&format!("\"{spec}\""))
+        });
         if !is_runtime_module {
             continue;
         }

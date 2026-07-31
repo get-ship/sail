@@ -60,7 +60,7 @@
 >
   <row gap="2" align="baseline" sx={meta}>
     <span sx={roleLabel}>{role()}</span>
-    <if cond={timestamp()}>
+    <if {timestamp()}>
       <time datetime={timestamp()}>{timestamp()}</time>
     </if>
   </row>

@@ -142,13 +142,15 @@ fn base_css(tag: &str) -> Vec<String> {
             ".sail-grid[popover]:not(:popover-open){display:none!important}".into(),
             ".sail-grid[popover]:popover-open{display:grid;min-width:0}".into(),
             ".sail-grid>*{grid-column:span 1;grid-row:span 1;min-width:0}".into(),
-            ".sail-grid>*[data-col-span='2']{grid-column:span 2}".into(),
-            ".sail-grid>*[data-col-span='3']{grid-column:span 3}".into(),
-            ".sail-grid>*[data-col-span='4']{grid-column:span 4}".into(),
-            ".sail-grid>*[data-row-span='2']{grid-row:span 2}".into(),
-            ".sail-grid>*[data-row-span='3']{grid-row:span 3}".into(),
-            ".sail-grid>*[data-row-span='4']{grid-row:span 4}".into(),
-            "@media(max-width:720px){.sail-grid>*[data-col-span]{grid-column:span 1}.sail-grid>*[data-row-span]{grid-row:span 1}}".into(),
+            // Language attrs `col-span` / `row-span` (not data-*). data-* kept as
+            // emit-compat only if something still stamps them.
+            ".sail-grid>*[col-span='2'],.sail-grid>*[data-col-span='2']{grid-column:span 2}".into(),
+            ".sail-grid>*[col-span='3'],.sail-grid>*[data-col-span='3']{grid-column:span 3}".into(),
+            ".sail-grid>*[col-span='4'],.sail-grid>*[data-col-span='4']{grid-column:span 4}".into(),
+            ".sail-grid>*[row-span='2'],.sail-grid>*[data-row-span='2']{grid-row:span 2}".into(),
+            ".sail-grid>*[row-span='3'],.sail-grid>*[data-row-span='3']{grid-row:span 3}".into(),
+            ".sail-grid>*[row-span='4'],.sail-grid>*[data-row-span='4']{grid-row:span 4}".into(),
+            "@media(max-width:720px){.sail-grid>*[col-span],.sail-grid>*[data-col-span]{grid-column:span 1}.sail-grid>*[row-span],.sail-grid>*[data-row-span]{grid-row:span 1}}".into(),
         ],
         "center" => vec![
             ".sail-center{display:grid;place-items:center;place-content:center;width:100%}".into(),
@@ -181,13 +183,13 @@ fn inline_base_css(tag: &str) -> Vec<String> {
         "grid" => vec![
             ".sail-grid-i{display:inline-grid;min-width:0}".into(),
             ".sail-grid-i>*{grid-column:span 1;grid-row:span 1;min-width:0}".into(),
-            ".sail-grid-i>*[data-col-span='2']{grid-column:span 2}".into(),
-            ".sail-grid-i>*[data-col-span='3']{grid-column:span 3}".into(),
-            ".sail-grid-i>*[data-col-span='4']{grid-column:span 4}".into(),
-            ".sail-grid-i>*[data-row-span='2']{grid-row:span 2}".into(),
-            ".sail-grid-i>*[data-row-span='3']{grid-row:span 3}".into(),
-            ".sail-grid-i>*[data-row-span='4']{grid-row:span 4}".into(),
-            "@media(max-width:720px){.sail-grid-i>*[data-col-span]{grid-column:span 1}.sail-grid-i>*[data-row-span]{grid-row:span 1}}".into(),
+            ".sail-grid-i>*[col-span='2'],.sail-grid-i>*[data-col-span='2']{grid-column:span 2}".into(),
+            ".sail-grid-i>*[col-span='3'],.sail-grid-i>*[data-col-span='3']{grid-column:span 3}".into(),
+            ".sail-grid-i>*[col-span='4'],.sail-grid-i>*[data-col-span='4']{grid-column:span 4}".into(),
+            ".sail-grid-i>*[row-span='2'],.sail-grid-i>*[data-row-span='2']{grid-row:span 2}".into(),
+            ".sail-grid-i>*[row-span='3'],.sail-grid-i>*[data-row-span='3']{grid-row:span 3}".into(),
+            ".sail-grid-i>*[row-span='4'],.sail-grid-i>*[data-row-span='4']{grid-row:span 4}".into(),
+            "@media(max-width:720px){.sail-grid-i>*[col-span],.sail-grid-i>*[data-col-span]{grid-column:span 1}.sail-grid-i>*[row-span],.sail-grid-i>*[data-row-span]{grid-row:span 1}}".into(),
         ],
         // `<center inline>` drops the `width:100%` block default — an inline
         // center hug-wraps its content like an inline-flex equivalent of
@@ -232,7 +234,9 @@ fn default_for(tag: &str, prop: &str) -> Option<&'static str> {
 /// what fits the language's grid vocabulary — 1..=12 covers author intent
 /// without opening a `length-as-string` hole). Dynamic `cols={n()}` lowers
 /// to a runtime class binding instead of going through this enum.
-pub const COLS_VALUES: &[&str] = &["1","2","3","4","5","6","7","8","9","10","11","12"];
+pub const COLS_VALUES: &[&str] = &[
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12",
+];
 fn allowed(prop: &str) -> &'static [&'static str] {
     match prop {
         "gap" => &["0", "1", "2", "3", "4", "5", "6", "7", "8", "density"],
@@ -276,7 +280,10 @@ fn modifier(prop: &str, value: &str) -> Option<(String, String)> {
         if !is_tracks_var(value) {
             return None;
         }
-        let slug: String = value[2..].chars().filter(|c| c.is_ascii_alphanumeric()).collect();
+        let slug: String = value[2..]
+            .chars()
+            .filter(|c| c.is_ascii_alphanumeric())
+            .collect();
         return Some((
             format!("sail-gt-{slug}"),
             format!(".sail-gt-{slug}{{grid-template-columns:var({value})}}"),
@@ -293,7 +300,10 @@ fn modifier(prop: &str, value: &str) -> Option<(String, String)> {
                 "density" => "var(--density-row-gap)".to_string(),
                 _ => format!("var(--space-{value})"),
             };
-            (format!("sail-g-{value}"), format!(".sail-g-{value}{{gap:{v}}}"))
+            (
+                format!("sail-g-{value}"),
+                format!(".sail-g-{value}{{gap:{v}}}"),
+            )
         }
         "align" => {
             let v = match value {
@@ -301,7 +311,10 @@ fn modifier(prop: &str, value: &str) -> Option<(String, String)> {
                 "end" => "flex-end",
                 other => other, // center | stretch | baseline
             };
-            (format!("sail-ai-{value}"), format!(".sail-ai-{value}{{align-items:{v}}}"))
+            (
+                format!("sail-ai-{value}"),
+                format!(".sail-ai-{value}{{align-items:{v}}}"),
+            )
         }
         "justify" => {
             let v = match value {
@@ -312,7 +325,10 @@ fn modifier(prop: &str, value: &str) -> Option<(String, String)> {
                 "evenly" => "space-evenly",
                 other => other, // center
             };
-            (format!("sail-jc-{value}"), format!(".sail-jc-{value}{{justify-content:{v}}}"))
+            (
+                format!("sail-jc-{value}"),
+                format!(".sail-jc-{value}{{justify-content:{v}}}"),
+            )
         }
         "min" => {
             let rem = match value {
@@ -323,10 +339,15 @@ fn modifier(prop: &str, value: &str) -> Option<(String, String)> {
             };
             (
                 format!("sail-gm-{value}"),
-                format!(".sail-gm-{value}{{grid-template-columns:repeat(auto-fill,minmax({rem},1fr))}}"),
+                format!(
+                    ".sail-gm-{value}{{grid-template-columns:repeat(auto-fill,minmax({rem},1fr))}}"
+                ),
             )
         }
-        "flow" => (format!("sail-gf-{value}"), format!(".sail-gf-{value}{{grid-auto-flow:{value}}}")),
+        "flow" => (
+            format!("sail-gf-{value}"),
+            format!(".sail-gf-{value}{{grid-auto-flow:{value}}}"),
+        ),
         // Fixed-N column grid: same shape as the JSX/CSS idiom, with minmax(0,1fr)
         // so children can shrink (defeats the "unguarded min-content" overflow
         // trap that haunts every hand-rolled grid-template-columns).
@@ -403,7 +424,10 @@ pub enum AxisLower {
     Static { class: String, rule: String },
     /// A dynamic `class` fragment (`'sail-ai-' + (expr)`) plus EVERY rule for the
     /// axis, so whatever the expression evaluates to at runtime has a match.
-    Dynamic { class_expr: String, rules: Vec<String> },
+    Dynamic {
+        class_expr: String,
+        rules: Vec<String>,
+    },
 }
 
 /// Resolve one axis prop for a tag. `attr` is the raw attribute value if present
@@ -419,7 +443,10 @@ pub fn lower_axis(tag: &str, prop: &str, attr: Option<&str>) -> Option<AxisLower
                 .iter()
                 .filter_map(|val| modifier(prop, val).map(|(_, r)| r))
                 .collect();
-            Some(AxisLower::Dynamic { class_expr: format!("'{prefix}' + ({inner})"), rules })
+            Some(AxisLower::Dynamic {
+                class_expr: format!("'{prefix}' + ({inner})"),
+                rules,
+            })
         }
         other => {
             let val = other.or_else(|| default_for(tag, prop))?;
@@ -597,7 +624,11 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     path,
                     line,
                     col,
-                    format!("<{}> has no `{name}` — it takes: {}", t.tag, valid.join(", ")),
+                    format!(
+                        "<{}> has no `{name}` — it takes: {}",
+                        t.tag,
+                        valid.join(", ")
+                    ),
                 ));
                 continue;
             }
@@ -616,11 +647,16 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 // mistake (the author wanted to swap element variants).
                 if is_boolean_axis(name) {
                     let (block, flag) = boolean_axis_variants(name, &t.tag);
-                    findings.push(mk(path, line, col, format!(
-                        "<{}> {name}={{…}} — `{name}` is a structural axis, not a value. \
+                    findings.push(mk(
+                        path,
+                        line,
+                        col,
+                        format!(
+                            "<{}> {name}={{…}} — `{name}` is a structural axis, not a value. \
                          Pick one element: {block} or {flag}.",
-                        t.tag
-                    )));
+                            t.tag
+                        ),
+                    ));
                     continue;
                 }
                 continue;
@@ -630,11 +666,16 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 // explicit value (`inline="yes"`, `nowrap="true"`, …) is a
                 // contract violation that the rejection explains.
                 if !value.is_empty() {
-                    findings.push(mk(path, line, col, format!(
-                        "<{} {name}=\"{value}\"> — `{name}` is a flag, not a value. \
+                    findings.push(mk(
+                        path,
+                        line,
+                        col,
+                        format!(
+                            "<{} {name}=\"{value}\"> — `{name}` is a flag, not a value. \
                          Write `<{} {name}>` (presence-only).",
-                        t.tag, t.tag
-                    )));
+                            t.tag, t.tag
+                        ),
+                    ));
                 }
                 continue;
             }
@@ -647,7 +688,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                     t.tag,
                     allowed(name).join(", ")
                 );
-                if name == "gap" && (value.ends_with("px") || value.chars().all(|c| c.is_ascii_digit())) {
+                if name == "gap"
+                    && (value.ends_with("px") || value.chars().all(|c| c.is_ascii_digit()))
+                {
                     m.push_str(" (gap is a spacing token 0–8, not a raw length)");
                 }
                 findings.push(mk(path, line, col, m));
@@ -660,16 +703,15 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 /// Is `name` a layout-axis prop on ANY keyword? These get validated against
 /// the tag-specific allow-list and the per-prop enum.
 ///
-/// `cols` was added in the `job/sail-oss-grid` pass: it lives only on `<grid>`,
-/// but listing it here lets the unknown-attr error name every axis prop the
-/// user might have meant. `direction` is the legacy `<sail-stack
-/// direction="row">` alias kept for migration. `inline` is a boolean axis
-/// (no value) — present on row/column/grid/center/stack — that swaps the
-/// base layout box from `display:flex|grid` to `inline-flex|inline-grid`.
-/// The boolean axes — presence-only flags with no value (`<row inline>`,
-/// `<row nowrap>`). They swap structure rather than taking an enum value, so
-/// the lint rejects both a dynamic reading (`nowrap={x}`) and an explicit
-/// value (`nowrap="yes"`).
+/// `cols` lives only on `<grid>`, but listing it here lets the unknown-attr
+/// error name every axis prop the user might have meant. `direction` is the
+/// legacy `<sail-stack direction="row">` alias kept for migration. `inline`
+/// is a boolean axis (no value) — present on row/column/grid/center/stack —
+/// that swaps the base layout box from `display:flex|grid` to
+/// `inline-flex|inline-grid`. The boolean axes — presence-only flags with no
+/// value (`<row inline>`, `<row nowrap>`) — swap structure rather than taking
+/// an enum value, so the lint rejects both a dynamic reading (`nowrap={x}`)
+/// and an explicit value (`nowrap="yes"`).
 fn is_boolean_axis(name: &str) -> bool {
     matches!(name, "inline" | "nowrap")
 }
@@ -679,8 +721,14 @@ fn is_boolean_axis(name: &str) -> bool {
 /// two concrete elements the flag chooses between, not an abstract rule.
 fn boolean_axis_variants(name: &str, tag: &str) -> (String, String) {
     match name {
-        "inline" => (format!("<{tag}> (block)"), format!("<{tag} inline> (hug-wrap)")),
-        "nowrap" => (format!("<{tag}> (wraps)"), format!("<{tag} nowrap> (single line)")),
+        "inline" => (
+            format!("<{tag}> (block)"),
+            format!("<{tag} inline> (hug-wrap)"),
+        ),
+        "nowrap" => (
+            format!("<{tag}> (wraps)"),
+            format!("<{tag} nowrap> (single line)"),
+        ),
         _ => (format!("<{tag}>"), format!("<{tag} {name}>")),
     }
 }
@@ -688,26 +736,42 @@ fn boolean_axis_variants(name: &str, tag: &str) -> (String, String) {
 fn is_known_axis_prop(name: &str) -> bool {
     matches!(
         name,
-        "gap" | "align" | "justify" | "min" | "flow" | "cols" | "rows" | "direction" | "tracks"
-            | "inline" | "nowrap"
+        "gap"
+            | "align"
+            | "justify"
+            | "min"
+            | "flow"
+            | "cols"
+            | "rows"
+            | "direction"
+            | "tracks"
+            | "inline"
+            | "nowrap"
     ) || is_participation_attr(name)
 }
 
 /// Child participation attrs — legal on **any** element, not only layout
 /// keywords. They express how a box participates in a flex/grid parent
-/// (grow/shrink) or its layout-sized width bounds (`w` / `min-w` / `max-w`).
+/// (grow/shrink), layout-sized width bounds (`w` / `min-w` / `max-w`), or
+/// grid cell span (`col-span` / `row-span`).
 ///
 /// Boolean `grow` / `shrink` mean value `1`. Explicit `grow="0"|"1"` /
 /// `shrink="0"|"1"` are allowed. Width attrs take the same size-scale tokens
 /// Style's `w` / `minW` / `maxW` setters accept.
-pub const PARTICIPATION_ATTRS: &[&str] = &["grow", "shrink", "w", "min-w", "max-w"];
+///
+/// **Grid spans are language attrs**, not `data-*`. Author `col-span="2"`;
+/// the compiler leaves the attr on the host and layout CSS targets it.
+/// `data-col-span` is legacy emit-compat only — do not teach it.
+pub const PARTICIPATION_ATTRS: &[&str] = &[
+    "grow", "shrink", "w", "min-w", "max-w", "col-span", "row-span",
+];
 
 pub fn is_participation_attr(name: &str) -> bool {
     PARTICIPATION_ATTRS.contains(&name)
 }
 
 /// Map a participation attr name to the Style setter that owns the same CSS
-/// (`min-w` → `minW`).
+/// (`min-w` → `minW`). Grid spans have no Style setter — they stay as attrs.
 fn participation_setter(name: &str) -> Option<&'static str> {
     Some(match name {
         "grow" => "grow",
@@ -715,12 +779,14 @@ fn participation_setter(name: &str) -> Option<&'static str> {
         "w" => "w",
         "min-w" => "minW",
         "max-w" => "maxW",
+        "col-span" | "row-span" => return None,
         _ => return None,
     })
 }
 
 /// Resolve the token a participation attr lowers with. Boolean `grow` /
 /// `shrink` (empty value) → `"1"`. Width attrs require an explicit token.
+/// Spans require `"2"` | `"3"` | `"4"` (1 is the grid default).
 fn participation_token(name: &str, value: &str) -> Result<String, String> {
     match name {
         "grow" | "shrink" => {
@@ -752,6 +818,24 @@ fn participation_token(name: &str, value: &str) -> Result<String, String> {
             }
             Ok(value.to_string())
         }
+        "col-span" | "row-span" => {
+            if value.is_empty() {
+                return Err(format!(
+                    "`{name}` needs a span count (e.g. `{name}=\"2\"`). Values: 2, 3, or 4."
+                ));
+            }
+            if value.starts_with('{') {
+                return Err(format!(
+                    "`{name}={{…}}` — grid span attrs are static integers (2|3|4)."
+                ));
+            }
+            if matches!(value, "2" | "3" | "4") {
+                return Ok(value.to_string());
+            }
+            Err(format!(
+                "`{name}=\"{value}\"` — allowed values: \"2\", \"3\", or \"4\" (1 is the default)."
+            ))
+        }
         _ => Err(format!("unknown participation attr `{name}`")),
     }
 }
@@ -759,8 +843,15 @@ fn participation_token(name: &str, value: &str) -> Result<String, String> {
 /// Lower one participation attr to the same atomic class + CSS Style would
 /// emit for the matching setter (`style.grow(1)` → `sx-grow1{flex-grow:1}`,
 /// `style.w(full)` → `sx-wfull{width:100%}`, …). `None` when the value is
-/// off-vocab (lint reports it; preprocess skips).
+/// off-vocab (lint reports it; preprocess skips) **or** when the attr is a
+/// grid span that stays on the host for CSS attribute selectors.
 pub fn lower_participation(name: &str, value: &str) -> Option<(String, String)> {
+    // Grid spans: validated but not class-lowered — layout CSS selects
+    // `[col-span='N']` / `[row-span='N']` on children of `.sail-grid`.
+    if name == "col-span" || name == "row-span" {
+        let _ = participation_token(name, value).ok()?;
+        return None;
+    }
     let setter = participation_setter(name)?;
     let token = participation_token(name, value).ok()?;
     let style = crate::style::Style::Set(crate::style::PaintOp {
@@ -783,6 +874,10 @@ pub fn participation_error(name: &str, value: &str) -> Option<String> {
     match participation_token(name, value) {
         Err(msg) => Some(msg),
         Ok(token) => {
+            // Grid spans stay as attrs — valid token is enough.
+            if name == "col-span" || name == "row-span" {
+                return None;
+            }
             // Reuse Style resolution so allowed tokens stay in lockstep with
             // `style.w` / `style.minW` / `style.maxW` / grow / shrink.
             if lower_participation(name, value).is_none() {
@@ -1104,10 +1199,16 @@ fn parse_open_tag(source: &str, start: usize, tag: &str) -> Option<OpenTag> {
         }
         attrs.push((name, value));
     }
-    Some(OpenTag { tag: tag.to_string(), attrs, start, end: i, self_closing })
+    Some(OpenTag {
+        tag: tag.to_string(),
+        attrs,
+        start,
+        end: i,
+        self_closing,
+    })
 }
 
-fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
+pub(crate) fn offset_to_line_col(source: &str, offset: usize) -> (usize, usize) {
     let mut line = 1usize;
     let mut col = 1usize;
     for (i, b) in source.bytes().enumerate() {
@@ -1129,7 +1230,10 @@ mod tests {
     use super::*;
 
     fn run(src: &str) -> Vec<String> {
-        check(Path::new("t.sail"), src).into_iter().map(|f| f.message).collect()
+        check(Path::new("t.sail"), src)
+            .into_iter()
+            .map(|f| f.message)
+            .collect()
     }
 
     #[test]
@@ -1142,19 +1246,30 @@ mod tests {
     fn lowers_row_with_explicit_axes() {
         let (classes, css) = lower(
             "row",
-            &[("gap".into(), "2".into()), ("justify".into(), "between".into())],
+            &[
+                ("gap".into(), "2".into()),
+                ("justify".into(), "between".into()),
+            ],
         )
         .unwrap();
         assert!(classes.contains(&"sail-row".to_string()));
         assert!(classes.contains(&"sail-g-2".to_string()));
         assert!(classes.contains(&"sail-jc-between".to_string()));
-        assert!(css.iter().any(|r| r.contains("justify-content:space-between")));
+        assert!(
+            css.iter()
+                .any(|r| r.contains("justify-content:space-between"))
+        );
         assert!(css.iter().any(|r| r.contains(".sail-row>*{min-width:0}")));
     }
 
     #[test]
     fn accepts_valid_tags() {
-        assert!(run(r#"<column gap="4" align="center"><row gap="2" justify="between">x</row></column>"#).is_empty());
+        assert!(
+            run(
+                r#"<column gap="4" align="center"><row gap="2" justify="between">x</row></column>"#
+            )
+            .is_empty()
+        );
         assert!(run(r#"<grid min="lg" gap="4" flow="auto">x</grid>"#).is_empty());
     }
 
@@ -1181,7 +1296,9 @@ mod tests {
     #[test]
     fn passes_through_non_axis_attrs() {
         // id / class / sx / on:click / data-* are fine on a layout element.
-        assert!(run(r#"<column id="hero" sx="p-4" on:click={go()} data-x="1">x</column>"#).is_empty());
+        assert!(
+            run(r#"<column id="hero" sx="p-4" on:click={go()} data-x="1">x</column>"#).is_empty()
+        );
     }
 
     #[test]
@@ -1189,7 +1306,7 @@ mod tests {
         assert!(scan_open_tags("<rows><columns><rowish>").is_empty());
     }
 
-    // --- `cols` axis on `<grid>` (m-sail-stdlib / job/sail-oss-grid) -----------
+    // --- `cols` axis on `<grid>` -----------------------------------------------
 
     #[test]
     fn accepts_grid_cols_static() {
@@ -1212,13 +1329,17 @@ mod tests {
         assert!(classes.contains(&"sail-grid".to_string()));
         assert!(classes.contains(&"sail-gc-7".to_string()));
         assert!(
-            css.iter().any(|r| r.contains("grid-template-columns:repeat(7,minmax(0,1fr))")),
+            css.iter()
+                .any(|r| r.contains("grid-template-columns:repeat(7,minmax(0,1fr))")),
             "repeat(7,minmax(0,1fr)) rule present: {css:?}"
         );
         // Precedence: `cols` wins over `min` on `<grid>`. `lower()` mirrors
         // the compiler-side logic — when `cols` is present, the responsive
         // `min` axis is suppressed (no `sail-gm-*` class, no auto-fill rule).
-        assert!(!classes.iter().any(|c| c.starts_with("sail-gm-")), "no min class when cols wins: {classes:?}");
+        assert!(
+            !classes.iter().any(|c| c.starts_with("sail-gm-")),
+            "no min class when cols wins: {classes:?}"
+        );
     }
 
     #[test]
@@ -1228,7 +1349,11 @@ mod tests {
         // collapse to a broken grid.
         let m = run(r#"<grid cols="13">x</grid>"#);
         assert_eq!(m.len(), 1);
-        assert!(m[0].contains("13") && m[0].contains("not valid"), "got: {}", m[0]);
+        assert!(
+            m[0].contains("13") && m[0].contains("not valid"),
+            "got: {}",
+            m[0]
+        );
     }
 
     #[test]
@@ -1255,11 +1380,7 @@ mod tests {
     #[test]
     fn lowers_direction_to_flex_direction() {
         // Explicit override emits the `sail-dir-*` modifier.
-        let (classes, css) = lower(
-            "column",
-            &[("direction".into(), "row".into())],
-        )
-        .unwrap();
+        let (classes, css) = lower("column", &[("direction".into(), "row".into())]).unwrap();
         assert!(
             classes.contains(&"sail-dir-row".to_string()),
             "direction override class: {classes:?}"
@@ -1362,13 +1483,17 @@ mod tests {
         // is injected, exactly one base class is on the div. A duplicate would
         // be a specificity tie that nothing can resolve.
         let (classes, css) = lower("row", &[("inline".into(), "".into())]).unwrap();
-        assert_eq!(classes[0], "sail-row-i", "base swapped to inline variant: {classes:?}");
+        assert_eq!(
+            classes[0], "sail-row-i",
+            "base swapped to inline variant: {classes:?}"
+        );
         assert!(
             !classes.iter().any(|c| c == "sail-row"),
             "no block base leaked into inline layout: {classes:?}"
         );
         assert!(
-            css.iter().any(|r| r.starts_with(".sail-row-i{display:inline-flex")),
+            css.iter()
+                .any(|r| r.starts_with(".sail-row-i{display:inline-flex")),
             "inline-flex rule is the one we ship: {css:?}"
         );
         assert!(
@@ -1401,12 +1526,14 @@ mod tests {
         let (classes, css) = lower("grid", &[("inline".into(), "".into())]).unwrap();
         assert_eq!(classes[0], "sail-grid-i");
         assert!(
-            css.iter().any(|r| r.starts_with(".sail-grid-i{display:inline-grid")),
+            css.iter()
+                .any(|r| r.starts_with(".sail-grid-i{display:inline-grid")),
             "inline-grid base rule: {css:?}"
         );
         assert!(
-            css.iter().any(|r| r == ".sail-grid-i>*[data-col-span='2']{grid-column:span 2}"),
-            "data-col-span rule carries to the inline base: {css:?}"
+            css.iter()
+                .any(|r| r.contains("[col-span='2']") && r.contains("grid-column:span 2")),
+            "col-span rule carries to the inline base: {css:?}"
         );
     }
 
@@ -1418,7 +1545,8 @@ mod tests {
         let (classes, css) = lower("stack", &[("inline".into(), "".into())]).unwrap();
         assert_eq!(classes[0], "sail-stackz-i");
         assert!(
-            css.iter().any(|r| r.contains(".sail-stackz-i>*{grid-area:1/1;position:relative}")),
+            css.iter()
+                .any(|r| r.contains(".sail-stackz-i>*{grid-area:1/1;position:relative}")),
             "z-overlay child rule (all layers positioned, so DOM order IS paint order) \
              survives the swap: {css:?}"
         );
@@ -1472,7 +1600,7 @@ mod tests {
         );
     }
 
-    // --- `<row nowrap>` boolean axis (job/layout-pass known gap #1) --------
+    // --- `<row nowrap>` boolean axis ---------------------------------------
 
     #[test]
     fn accepts_row_nowrap() {
@@ -1485,26 +1613,44 @@ mod tests {
     #[test]
     fn lowers_row_nowrap_to_flex_wrap_override() {
         let (classes, css) = lower("row", &[("nowrap".into(), "".into())]).unwrap();
-        assert!(classes.contains(&"sail-nowrap".to_string()), "nowrap class: {classes:?}");
+        assert!(
+            classes.contains(&"sail-nowrap".to_string()),
+            "nowrap class: {classes:?}"
+        );
         assert!(
             css.iter().any(|r| r == ".sail-nowrap{flex-wrap:nowrap}"),
             "nowrap override rule: {css:?}"
         );
         // The rule is injected AFTER the base `.sail-row{…flex-wrap:wrap…}`
         // so source order gives nowrap the win.
-        let base_i = css.iter().position(|r| r.starts_with(".sail-row{")).unwrap();
-        let nowrap_i = css.iter().position(|r| r == ".sail-nowrap{flex-wrap:nowrap}").unwrap();
-        assert!(nowrap_i > base_i, "nowrap must follow the base rule: {css:?}");
+        let base_i = css
+            .iter()
+            .position(|r| r.starts_with(".sail-row{"))
+            .unwrap();
+        let nowrap_i = css
+            .iter()
+            .position(|r| r == ".sail-nowrap{flex-wrap:nowrap}")
+            .unwrap();
+        assert!(
+            nowrap_i > base_i,
+            "nowrap must follow the base rule: {css:?}"
+        );
     }
 
     #[test]
     fn nowrap_composes_with_inline() {
         // `<row inline nowrap>` — inline base swap AND the wrap override,
         // both applied.
-        let (classes, css) =
-            lower("row", &[("inline".into(), "".into()), ("nowrap".into(), "".into())]).unwrap();
+        let (classes, css) = lower(
+            "row",
+            &[("inline".into(), "".into()), ("nowrap".into(), "".into())],
+        )
+        .unwrap();
         assert_eq!(classes[0], "sail-row-i", "inline base: {classes:?}");
-        assert!(classes.contains(&"sail-nowrap".to_string()), "nowrap class: {classes:?}");
+        assert!(
+            classes.contains(&"sail-nowrap".to_string()),
+            "nowrap class: {classes:?}"
+        );
         assert!(css.iter().any(|r| r == ".sail-nowrap{flex-wrap:nowrap}"));
     }
 
@@ -1520,7 +1666,11 @@ mod tests {
         // `nowrap` is `<row>`-only — a column doesn't wrap, a grid isn't flex.
         let m = run(r#"<column nowrap>x</column>"#);
         assert_eq!(m.len(), 1);
-        assert!(m[0].contains("<column>") && m[0].contains("nowrap"), "got: {}", m[0]);
+        assert!(
+            m[0].contains("<column>") && m[0].contains("nowrap"),
+            "got: {}",
+            m[0]
+        );
     }
 
     #[test]
@@ -1537,7 +1687,7 @@ mod tests {
         assert!(m[0].contains("structural axis"), "got: {}", m[0]);
     }
 
-    // --- `<grid rows="N">` explicit row count (job/layout-pass known gap #2) -
+    // --- `<grid rows="N">` explicit row count ------------------------------
 
     #[test]
     fn accepts_grid_rows_static_and_dynamic() {
@@ -1548,9 +1698,13 @@ mod tests {
     #[test]
     fn lowers_grid_rows_to_repeat_minmax() {
         let (classes, css) = lower("grid", &[("rows".into(), "3".into())]).unwrap();
-        assert!(classes.contains(&"sail-gr-3".to_string()), "rows class: {classes:?}");
         assert!(
-            css.iter().any(|r| r.contains("grid-template-rows:repeat(3,minmax(0,1fr))")),
+            classes.contains(&"sail-gr-3".to_string()),
+            "rows class: {classes:?}"
+        );
+        assert!(
+            css.iter()
+                .any(|r| r.contains("grid-template-rows:repeat(3,minmax(0,1fr))")),
             "rows track rule: {css:?}"
         );
     }
@@ -1560,24 +1714,41 @@ mod tests {
         // A fixed N×M grid — `cols` owns the columns, `rows` owns the rows;
         // they never collide (different CSS properties), so unlike `cols`/`min`
         // there is no precedence to resolve.
-        let (classes, _css) =
-            lower("grid", &[("cols".into(), "4".into()), ("rows".into(), "3".into())]).unwrap();
-        assert!(classes.contains(&"sail-gc-4".to_string()), "cols kept: {classes:?}");
-        assert!(classes.contains(&"sail-gr-3".to_string()), "rows kept: {classes:?}");
+        let (classes, _css) = lower(
+            "grid",
+            &[("cols".into(), "4".into()), ("rows".into(), "3".into())],
+        )
+        .unwrap();
+        assert!(
+            classes.contains(&"sail-gc-4".to_string()),
+            "cols kept: {classes:?}"
+        );
+        assert!(
+            classes.contains(&"sail-gr-3".to_string()),
+            "rows kept: {classes:?}"
+        );
     }
 
     #[test]
     fn rejects_off_enum_rows() {
         let m = run(r#"<grid rows="13">x</grid>"#);
         assert_eq!(m.len(), 1);
-        assert!(m[0].contains("13") && m[0].contains("not valid"), "got: {}", m[0]);
+        assert!(
+            m[0].contains("13") && m[0].contains("not valid"),
+            "got: {}",
+            m[0]
+        );
     }
 
     #[test]
     fn rejects_rows_on_a_tag_that_doesnt_take_it() {
         let m = run(r#"<row rows="3">x</row>"#);
         assert_eq!(m.len(), 1);
-        assert!(m[0].contains("<row>") && m[0].contains("rows"), "got: {}", m[0]);
+        assert!(
+            m[0].contains("<row>") && m[0].contains("rows"),
+            "got: {}",
+            m[0]
+        );
     }
 
     // --- `justify` on `<column>` + `justify="evenly"` ----------------------
@@ -1592,20 +1763,37 @@ mod tests {
     #[test]
     fn lowers_column_justify_and_has_no_default() {
         let (classes, css) = lower("column", &[("justify".into(), "between".into())]).unwrap();
-        assert!(classes.contains(&"sail-jc-between".to_string()), "{classes:?}");
-        assert!(css.iter().any(|r| r.contains("justify-content:space-between")), "{css:?}");
+        assert!(
+            classes.contains(&"sail-jc-between".to_string()),
+            "{classes:?}"
+        );
+        assert!(
+            css.iter()
+                .any(|r| r.contains("justify-content:space-between")),
+            "{css:?}"
+        );
         // NO default — a plain `<column>` emits no justify class (no output
         // churn on existing columns).
         let (classes, _) = lower("column", &[]).unwrap();
-        assert!(!classes.iter().any(|c| c.starts_with("sail-jc-")), "{classes:?}");
+        assert!(
+            !classes.iter().any(|c| c.starts_with("sail-jc-")),
+            "{classes:?}"
+        );
     }
 
     #[test]
     fn accepts_and_lowers_justify_evenly() {
         assert!(run(r#"<row justify="evenly">x</row>"#).is_empty());
         let (classes, css) = lower("row", &[("justify".into(), "evenly".into())]).unwrap();
-        assert!(classes.contains(&"sail-jc-evenly".to_string()), "{classes:?}");
-        assert!(css.iter().any(|r| r.contains("justify-content:space-evenly")), "{css:?}");
+        assert!(
+            classes.contains(&"sail-jc-evenly".to_string()),
+            "{classes:?}"
+        );
+        assert!(
+            css.iter()
+                .any(|r| r.contains("justify-content:space-evenly")),
+            "{css:?}"
+        );
     }
 
     #[test]
@@ -1658,11 +1846,14 @@ mod tests {
         ] {
             let css = base_css(tag);
             assert!(
-                css.iter().any(|r| r.contains("[popover]:not(:popover-open)") && r.contains("display:none")),
+                css.iter()
+                    .any(|r| r.contains("[popover]:not(:popover-open)")
+                        && r.contains("display:none")),
                 "{tag} closed: {css:?}"
             );
             assert!(
-                css.iter().any(|r| r.contains("[popover]:popover-open") && r.contains(open_display)),
+                css.iter()
+                    .any(|r| r.contains("[popover]:popover-open") && r.contains(open_display)),
                 "{tag} open: {css:?}"
             );
         }
@@ -1700,7 +1891,11 @@ mod tests {
     fn rejects_boolean_w() {
         let m = run(r#"<div w>x</div>"#);
         assert_eq!(m.len(), 1, "{m:?}");
-        assert!(m[0].contains("size token") || m[0].contains("w"), "got: {}", m[0]);
+        assert!(
+            m[0].contains("size token") || m[0].contains("w"),
+            "got: {}",
+            m[0]
+        );
     }
 
     #[test]

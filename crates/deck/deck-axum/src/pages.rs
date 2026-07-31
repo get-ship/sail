@@ -51,7 +51,10 @@ pub async fn serve_themes_list(mode: Option<Extension<DaemonMode>>) -> Response 
 /// right answer).
 fn primary_app(apps: &Option<Extension<Arc<Vec<AppServeConfig>>>>) -> Option<Arc<AppServeConfig>> {
     let apps = apps.as_ref()?;
-    apps.0.iter().find(|a| a.route == "/").map(|a| Arc::new(a.clone()))
+    apps.0
+        .iter()
+        .find(|a| a.route == "/")
+        .map(|a| Arc::new(a.clone()))
 }
 
 /// `GET /` — serve the primary app's `index.html`. Deck owns no first-run
@@ -148,8 +151,7 @@ pub async fn spa_fallback(
     // none (the standalone default — deck dev has no host routes). A host's
     // real routes are matched before the fallback fires, so this list only
     // guards UNMATCHED paths under a host prefix from being served the SPA shell.
-    let deck_owns =
-        path.starts_with("/api") || path.starts_with("/_deck") || path.contains('.');
+    let deck_owns = path.starts_with("/api") || path.starts_with("/_deck") || path.contains('.');
     let host_owns = host_backend_prefixes
         .as_ref()
         .is_some_and(|hp| hp.0.iter().any(|p| path.starts_with(p.as_str())));

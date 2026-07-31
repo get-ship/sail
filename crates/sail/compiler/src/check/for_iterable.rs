@@ -12,7 +12,7 @@
 
 use crate::diagnostics::CompileError;
 use crate::ir::{ForInstr, Instr, Program};
-use crate::parse::expr::{parse_expression, AstKind};
+use crate::parse::expr::{AstKind, parse_expression};
 
 pub fn check(program: &Program) -> Result<(), CompileError> {
     walk(&program.template)
@@ -52,11 +52,9 @@ fn check_for(f: &ForInstr) -> Result<(), CompileError> {
     if let Ok(ast) = parse_expression(&it.source, it.span.start)
         && let Some(reason) = non_iterable_reason(&ast.kind)
     {
-        return Err(CompileError::new(format!(
-            "<for> iterable: {reason}"
-        ))
-        .with_span(it.span)
-        .with_category("for-iterable".to_string()));
+        return Err(CompileError::new(format!("<for> iterable: {reason}"))
+            .with_span(it.span)
+            .with_category("for-iterable".to_string()));
     }
     walk(&f.body)?;
     if let Some(eb) = &f.else_body {
@@ -71,9 +69,9 @@ fn non_iterable_reason(kind: &AstKind) -> Option<&'static str> {
         AstKind::Bool(_) => Some("a boolean is not iterable"),
         AstKind::Null => Some("`null` is not iterable"),
         AstKind::Undefined => Some("`undefined` is not iterable"),
-        AstKind::Object(_) => {
-            Some("object literals are not iterable — use `Object.keys(obj)` / `Object.entries(obj)` if you mean to iterate the keys")
-        }
+        AstKind::Object(_) => Some(
+            "object literals are not iterable — use `Object.keys(obj)` / `Object.entries(obj)` if you mean to iterate the keys",
+        ),
         _ => None,
     }
 }

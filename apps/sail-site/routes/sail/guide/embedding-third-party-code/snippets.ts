@@ -33,8 +33,8 @@ const resp = await fetch(ep, {
 })`,
 
   // crates/sail/lint/src/config.rs:36 — the complete key list.
-  keys: `pub const RECOGNIZED_KEYS: [&str; 7] =
-    ["preset", "sx", "variants", "raw_containers", "stylesheets", "network", "unconfined"];`,
+  keys: `pub const RECOGNIZED_KEYS: [&str; 8] =
+    ["preset", "sx", "variants", "raw_containers", "stylesheets", "network", "unconfined", "theme"];`,
 
   // crates/sail/lint/src/rules/controller_no_ambient_authority.rs — the set.
   banned: `const ALWAYS_BANNED_CALLS: &[&str] = &["eval"];

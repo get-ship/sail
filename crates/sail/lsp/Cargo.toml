@@ -5,9 +5,13 @@ edition = "2024"
 license.workspace = true
 description = "Language Server for SAIL `.sail` templates — thin LSP shell over sail-compiler."
 
+[lib]
+name = "sail_lsp"
+path = "src/lib.rs"
+
 [[bin]]
 name = "sail-lsp"
-path = "src/main.rs"
+path = "src/bin/sail-lsp.rs"
 
 [dependencies]
 sail-compiler = { path = "../compiler" }

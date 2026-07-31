@@ -68,7 +68,11 @@ fn walk(ast: &Ast, out: &mut Vec<String>) {
             walk(lhs, out);
             walk(rhs, out);
         }
-        AstKind::Ternary { cond, then, otherwise } => {
+        AstKind::Ternary {
+            cond,
+            then,
+            otherwise,
+        } => {
             walk(cond, out);
             walk(then, out);
             walk(otherwise, out);
@@ -124,8 +128,14 @@ mod tests {
 
     #[test]
     fn root_idents_only_through_member_and_call() {
-        assert_eq!(collect_idents("agents().items.length", false), vec!["agents".to_string()]);
-        assert_eq!(collect_idents("count.set(1)", false), vec!["count".to_string()]);
+        assert_eq!(
+            collect_idents("agents().items.length", false),
+            vec!["agents".to_string()]
+        );
+        assert_eq!(
+            collect_idents("count.set(1)", false),
+            vec!["count".to_string()]
+        );
     }
 
     #[test]

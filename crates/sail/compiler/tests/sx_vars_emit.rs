@@ -5,7 +5,7 @@
 //! with a did-you-mean; a signal not returned from `setup()` is not
 //! reachable; a global token is unaffected (no component-local wiring).
 
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn compile_component(source: &str, controller: Option<&str>) -> Result<String, String> {
     let mut src = String::new();
@@ -20,13 +20,17 @@ fn compile_component(source: &str, controller: Option<&str>) -> Result<String, S
         setup_url: Some("./view.ts".to_string()),
         mode: CompileMode::Component,
         source_path: None,
-        component_meta: Some(ComponentMeta { name: "x-widget".to_string() }),
+        component_meta: Some(ComponentMeta {
+            name: "x-widget".to_string(),
+        }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    compile(&src, opts).map(|out| out.js).map_err(|e| format!("{e:?}"))
+    compile(&src, opts)
+        .map(|out| out.js)
+        .map_err(|e| format!("{e:?}"))
 }
 
 #[test]
@@ -43,7 +47,10 @@ fn a_prop_bound_var_ref_emits_property_and_host_reflection() {
     assert!(js.contains("@property --glow-radius"), "{js}");
     assert!(js.contains("syntax: '<number>'"), "{js}");
     assert!(js.contains("$scope.glowRadius()"), "{js}");
-    assert!(js.contains("__root.style.setProperty(\"--glow-radius\""), "{js}");
+    assert!(
+        js.contains("__root.style.setProperty(\"--glow-radius\""),
+        "{js}"
+    );
     assert!(js.contains("effect("), "{js}");
 }
 

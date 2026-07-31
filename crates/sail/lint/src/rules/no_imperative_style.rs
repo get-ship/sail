@@ -8,13 +8,12 @@
 //!
 //! THE ACCESS IS THE VIOLATION, not the write. `el.style.color = 'red'`,
 //! `const s = el.style`, and `el.style.setProperty('--x', v)` are ALL errors in a
-//! controller. `.setProperty('--x')` was once the sanctioned hatch here; the owner
-//! ruling of 2026-07-18 CLOSED it — a custom property set from a controller is
-//! still CSS written in JavaScript, and the `(--x)`-declared reflection
-//! (inv-dynamic-style-is-declared, 2026-07-17) exists precisely so a controller
-//! never has to touch `.style` to move a runtime value into CSS. Banning only the
-//! write leaves aliasing as a trivial escape; a rule you can rename your way out
-//! of is not a rule, so the ACCESS is what fails.
+//! controller. `.setProperty('--x')` is not a controller hatch either — a custom
+//! property set from a controller is still CSS written in JavaScript, and the
+//! `(--x)`-declared reflection (inv-dynamic-style-is-declared) exists precisely
+//! so a controller never has to touch `.style` to move a runtime value into CSS.
+//! Banning only the write leaves aliasing as a trivial escape; a rule you can
+//! rename your way out of is not a rule, so the ACCESS is what fails.
 //!
 //! Where a runtime value goes instead — three intents, none through `.style`:
 //!
@@ -310,7 +309,10 @@ mod tests {
     use super::*;
 
     fn run(src: &str) -> Vec<String> {
-        check(Path::new("t.controller.ts"), src).into_iter().map(|f| f.message).collect()
+        check(Path::new("t.controller.ts"), src)
+            .into_iter()
+            .map(|f| f.message)
+            .collect()
     }
 
     #[test]
@@ -333,7 +335,10 @@ mod tests {
         // JavaScript like any other, and is CLOSED in controller/pack source.
         // (It was legal here before; this is the red/green gate for the closure.)
         assert_eq!(run("el.style.setProperty('--row-y', y)").len(), 1);
-        assert_eq!(run("host.style.setProperty('--sail-grid-template', tracks)").len(), 1);
+        assert_eq!(
+            run("host.style.setProperty('--sail-grid-template', tracks)").len(),
+            1
+        );
         // A CSS property through the same call was always the hole; still is.
         assert_eq!(run("el.style.setProperty('transform', t)").len(), 1);
         // A name we cannot read is a name we cannot check.
@@ -352,9 +357,18 @@ mod tests {
             !suggest.contains(".style.setProperty"),
             "the remedy must not send the author back to el.style.setProperty — got: {suggest}"
         );
-        assert!(suggest.contains("signal("), "remedy must name the declared signal path: {suggest}");
-        assert!(suggest.contains("use:"), "remedy must name the use: action path: {suggest}");
-        assert!(suggest.contains("tokens.css"), "remedy must name the token path: {suggest}");
+        assert!(
+            suggest.contains("signal("),
+            "remedy must name the declared signal path: {suggest}"
+        );
+        assert!(
+            suggest.contains("use:"),
+            "remedy must name the use: action path: {suggest}"
+        );
+        assert!(
+            suggest.contains("tokens.css"),
+            "remedy must name the token path: {suggest}"
+        );
     }
 
     #[test]
@@ -403,7 +417,10 @@ mod tests {
         ] {
             assert_eq!(run(src).len(), 1, "expected exactly one finding for: {src}");
             let s = suggests(src).remove(0);
-            assert!(s.contains("theme.preview"), "remedy must name theme.preview for `{src}` — got: {s}");
+            assert!(
+                s.contains("theme.preview"),
+                "remedy must name theme.preview for `{src}` — got: {s}"
+            );
         }
     }
 
@@ -419,13 +436,23 @@ mod tests {
         // stays the signal/`(--x)` reflection path (one finding, no theme.preview).
         let s = suggests("el.style.setProperty('--row-y', y)");
         assert_eq!(s.len(), 1);
-        assert!(s[0].contains("signal("), "arbitrary-element write keeps the reflection remedy: {}", s[0]);
-        assert!(!s[0].contains("theme.preview"), "not a theme write: {}", s[0]);
+        assert!(
+            s[0].contains("signal("),
+            "arbitrary-element write keeps the reflection remedy: {}",
+            s[0]
+        );
+        assert!(
+            !s[0].contains("theme.preview"),
+            "not a theme write: {}",
+            s[0]
+        );
     }
 
     #[test]
     fn a_controller_that_does_not_style_is_clean() {
-        assert!(run("const n = signal(0); el.addEventListener('click', () => n.set(1))").is_empty());
+        assert!(
+            run("const n = signal(0); el.addEventListener('click', () => n.set(1))").is_empty()
+        );
         assert!(run("el.setAttribute('aria-expanded', 'true')").is_empty());
         assert!(run("document.createElement('div')").is_empty());
     }

@@ -3,22 +3,20 @@
 // `runProtected`/`runEffect`/the component setup catch sites already route
 // a throw to the nearest `<sail-error-boundary>` when one is in scope. When
 // none is, the throw only ever reached `console.error` — invisible unless
-// a developer already has devtools open (task #80: a page that rendered
-// nothing, dozens of throws, zero visible failure surface). This module
-// adds a second, structured channel for that no-boundary case: a
-// `sail:error` CustomEvent a dev-mode overlay can listen for. It is a
-// fallback surface, not a boundary replacement — call it only from the
-// same branch that already falls back to `console.error`.
+// a developer already has devtools open. This module adds a second, structured
+// channel for that no-boundary case: a `sail:error` CustomEvent a dev-mode
+// overlay can listen for. It is a fallback surface, not a boundary replacement
+// — call it only from the same branch that already falls back to `console.error`.
 
 /** Origin of an error reaching the fallback channel. Mirrors the subset of
  *  `BoundarySource` that has no boundary to catch it structurally — render
  *  throws are always routed through a boundary or `runProtected`'s own
  *  console.error, so they're out of scope here. */
-export type SuiErrorPhase = 'effect' | 'setup'
+export type SailErrorPhase = 'effect' | 'setup'
 
-export interface SuiErrorDetail {
+export interface SailErrorDetail {
   error: unknown
-  phase: SuiErrorPhase
+  phase: SailErrorPhase
   host?: Element
   tag?: string
 }
@@ -30,8 +28,8 @@ export interface SuiErrorDetail {
  * `tag` defaults to `host.dataset.component`, set by the component wrapper
  * before setup/effects can run.
  */
-export function dispatchSuiError(host: Node | null, error: unknown, phase: SuiErrorPhase): void {
-  const detail: SuiErrorDetail = { error, phase }
+export function dispatchSailError(host: Node | null, error: unknown, phase: SailErrorPhase): void {
+  const detail: SailErrorDetail = { error, phase }
   let target: EventTarget = typeof document !== 'undefined' ? document : (null as unknown as EventTarget)
   if (host != null && typeof (host as Element).tagName === 'string') {
     detail.host = host as Element
@@ -46,7 +44,7 @@ export function dispatchSuiError(host: Node | null, error: unknown, phase: SuiEr
   if (typeof (target as { dispatchEvent?: unknown })?.dispatchEvent !== 'function') return
   if (typeof CustomEvent !== 'function') return
   try {
-    target.dispatchEvent(new CustomEvent<SuiErrorDetail>('sail:error', { detail, bubbles: true, composed: true }))
+    target.dispatchEvent(new CustomEvent<SailErrorDetail>('sail:error', { detail, bubbles: true, composed: true }))
   } catch {
     /* an exotic host — the console.error already carried the failure */
   }

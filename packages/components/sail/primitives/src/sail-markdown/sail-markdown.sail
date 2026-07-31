@@ -27,7 +27,7 @@
 -->
 
 <controller>
-import { controller } from '@ship/sail-runtime'
+
 import { bindHtml } from '@ship/sail-runtime/internal'
 import type { Action } from '@ship/sail-runtime'
 import type { Scope } from './sail-markdown.sail'

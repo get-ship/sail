@@ -1,16 +1,10 @@
 <!--
   <button> — native <button>. L1 platform control. Style value language only.
 
-  Paint (Style product only): variant×tone via flat match + compound (the
-  card/badge pattern — nested match currently drops host paint), semantic
-  hues only (no --tone* attribute channel, no tone-* design tokens). Base
-  geometry, Tier-2 chrome (corner-image / control-frame / lift / press), the
-  global focus ring, and disabled cursor/opacity stay in contracts.css — the
-  Style product has no setter for those channels yet.
-
-  Soft fill uses colorMix(hue, pct) — color-mix(hue pct%, transparent) — so
-  soft primary is a real primary tint, not neutral hover-bg. Soft hover
-  deepens the wash; solid hover uses opacity.
+  Paint + size live HERE. Flex geometry (inline-flex / align-items / gap) and
+  Tier-2 chrome (control-frame / corner-image / lift / press) that Style already
+  owns live here too. Focus ring + disabled opacity stay on the shared document
+  baseline — not a parallel BUTTON_SKIN_CSS residual.
 -->
 
 <scope>
@@ -21,43 +15,24 @@
     disabled = false
   }
 
-  // Size ladder — mirrors the contracts [size] geometry (control-h / text /
-  // space tokens, no --size-* channel).
+  // border(solid) kills UA button outset; without it freeform demos look like
+  // native OS chrome instead of design-system controls.
+  const base = style.display(inline-flex).appearance(none).fontWeight(medium).leading(none).radius(md).borderWidth(control-stroke).border(solid).border(transparent).borderImage(corner-image).bg(transparent).isolate().position(relative).controlFrame().select(none).whitespace(nowrap).cursor(pointer).when({ hover: style.controlLift(), active: style.press(), disabled: style.cursor(not-allowed).opacity(50) })
+
   const sizeXs = style.minH(control-h-2xs).padX(2).fontSize(xs)
   const sizeSm = style.minH(control-h-sm).padX(2_5).fontSize(sm)
   const sizeMd = style.minH(control-h-md).padX(3).fontSize(base)
   const sizeLg = style.minH(control-h-lg).padX(4).fontSize(md)
 
-  // NOTE: `//` comments inside the sx list silently drop compound entries
-  // (parser gap) — group notes live here instead. Compound groups:
-  //   solid   — the tone fill, contrast text on top
-  //   soft    — hue wash surface (colorMix), tone-fg text
-  //   outline — tone border + tone-fg text on the page surface
-  //   ghost   — tone-fg text only
-
-  // Variant paint at tone=default — the untoned path (a bare <button
-  // variant=solid> carries no tone attribute, so the match arm IS the
-  // default-tone paint; compounds below override per tone).
-  const vDefault = style.bg(background).border(border).fg(foreground).shadow(xs).when({
-    hover: style.bg(muted).border(border-strong),
-  })
-  const vSolid = style.bg(foreground).border(foreground).fg(background).shadow(xs).when({
-    hover: style.opacity(90).shadow(sm),
-  })
-  const vSoft = style.bg(hover-bg).border(border).fg(foreground).when({
-    hover: style.opacity(90),
-  })
-  const vOutline = style.border(foreground).fg(foreground).when({
-    hover: style.bg(hover-bg),
-    disabled: style.bg(transparent),
-  })
-  const vGhost = style.fg(foreground).when({
-    hover: style.bg(hover-bg),
-    disabled: style.bg(transparent),
-  })
+  const vDefault = style.bg(background).border(border).fg(foreground).shadow(xs).when({ hover: style.bg(muted).border(border-strong) })
+  const vSolid = style.bg(foreground).border(foreground).fg(background).shadow(xs).when({ hover: style.opacity(90).shadow(sm) })
+  const vSoft = style.bg(hover-bg).border(border).fg(foreground).when({ hover: style.opacity(90) })
+  const vOutline = style.border(foreground).fg(foreground).when({ hover: style.bg(hover-bg), disabled: style.bg(transparent) })
+  const vGhost = style.fg(foreground).when({ hover: style.bg(hover-bg), disabled: style.bg(transparent) })
 </scope>
 
 <button sx={[
+  base,
   match(variant, {
     default: vDefault,
     solid: vSolid,

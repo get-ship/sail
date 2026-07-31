@@ -7,7 +7,7 @@ import {
   onCleanup,
   currentScope,
   mount,
-  SuiMountOutsideSetupError,
+  SailMountOutsideSetupError,
   type EffectScope,
 } from '../src/effect-scope'
 
@@ -229,7 +229,7 @@ describe('effect-scope', () => {
 describe('mount() — ambient lifecycle', () => {
   it('throws the named error when called outside a setup window', () => {
     expect(currentScope()).toBeNull()
-    expect(() => mount(() => {})).toThrow(SuiMountOutsideSetupError)
+    expect(() => mount(() => {})).toThrow(SailMountOutsideSetupError)
     expect(() => mount(() => {})).toThrow(/setup/)
   })
 

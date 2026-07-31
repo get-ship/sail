@@ -8,7 +8,7 @@
 // unmodified). It deliberately does NOT go through the deck bundler / dev
 // server: that path is #102-blocked in a fresh worktree (`build.rs: SAIL bundle
 // assets are missing or empty`). Once #102 is unblocked, the same three
-// assertions belong on a real /theming-live demo route driven like push-proof.mjs.
+// assertions belong on a real theming-live demo route under the site chrome.
 //
 // Run:  bun run --cwd apps/sail-site  node scripts/theme-preview-proof.mjs
 //   (needs `bun` on PATH to bundle the module + `playwright` installed)

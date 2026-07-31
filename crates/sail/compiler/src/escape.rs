@@ -7,8 +7,8 @@
 /// HTML5 void elements — cannot have a closing tag.
 /// List per <https://html.spec.whatwg.org/multipage/syntax.html#void-elements>.
 const VOID_ELEMENTS: &[&str] = &[
-    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source",
-    "track", "wbr",
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
+    "wbr",
 ];
 
 /// Returns `true` if the lowercased tag is an HTML5 void element.
@@ -66,7 +66,10 @@ mod tests {
 
     #[test]
     fn escape_attr_handles_all_dangerous_chars() {
-        assert_eq!(escape_attr_value(r#"a & b"c<d>e"#), "a &amp; b&quot;c&lt;d&gt;e");
+        assert_eq!(
+            escape_attr_value(r#"a & b"c<d>e"#),
+            "a &amp; b&quot;c&lt;d&gt;e"
+        );
     }
 
     #[test]

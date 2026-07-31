@@ -13,20 +13,30 @@
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
-interface Track { id: number; title: string; artist: string; album: string; secs: number; len: string }
+interface Track {
+  id: number
+  title: string
+  artist: string
+  album: string
+  secs: number
+  len: string
+  /** Same-origin album art under /shanty/ (public). */
+  cover: string
+}
 interface Playlist { id: string; name: string; tracks: number[] }
 
+// Seven album covers from Downloads → public/cover-0N.webp (deck serves single-segment public files).
 const TRACKS: Track[] = [
-  { id: 1, title: 'Signal in the Rain', artist: 'The Reactive Quartet', album: 'Derived State', secs: 214, len: '3:34' },
-  { id: 2, title: 'Mount and Destroy', artist: 'Lifecycle', album: 'The Interval', secs: 187, len: '3:07' },
-  { id: 3, title: 'One File, One Tag', artist: 'SAIL House Band', album: 'Convention', secs: 243, len: '4:03' },
-  { id: 4, title: 'Spring Gentle', artist: 'Motion Tokens', album: 'Presets', secs: 156, len: '2:36' },
-  { id: 5, title: 'The Refusal', artist: 'Strict Mode', album: 'Compile Errors', secs: 199, len: '3:19' },
-  { id: 6, title: 'Closed Set Blues', artist: 'Strict Mode', album: 'Compile Errors', secs: 231, len: '3:51' },
-  { id: 7, title: 'Hydrate', artist: 'Deck Hands', album: 'SSR', secs: 178, len: '2:58' },
-  { id: 8, title: 'Eight-Bit Hull', artist: 'Chiptune Registry', album: 'Pixel Wake', secs: 142, len: '2:22' },
-  { id: 9, title: 'Neon Brine', artist: 'Synthwave Dockyard', album: 'Backlit Acrylic', secs: 265, len: '4:25' },
-  { id: 10, title: 'Quiet Substrate', artist: 'The Reactive Quartet', album: 'Derived State', secs: 208, len: '3:28' },
+  { id: 1, title: 'Signal in the Rain', artist: 'The Reactive Quartet', album: 'Derived State', secs: 214, len: '3:34', cover: '/cover-01.webp' },
+  { id: 2, title: 'Mount and Destroy', artist: 'Lifecycle', album: 'The Interval', secs: 187, len: '3:07', cover: '/cover-02.webp' },
+  { id: 3, title: 'One File, One Tag', artist: 'SAIL House Band', album: 'Convention', secs: 243, len: '4:03', cover: '/cover-03.webp' },
+  { id: 4, title: 'Spring Gentle', artist: 'Motion Tokens', album: 'Presets', secs: 156, len: '2:36', cover: '/cover-04.webp' },
+  { id: 5, title: 'The Refusal', artist: 'Strict Mode', album: 'Compile Errors', secs: 199, len: '3:19', cover: '/cover-05.webp' },
+  { id: 6, title: 'Closed Set Blues', artist: 'Strict Mode', album: 'Compile Errors', secs: 231, len: '3:51', cover: '/cover-05.webp' },
+  { id: 7, title: 'Hydrate', artist: 'Deck Hands', album: 'SSR', secs: 178, len: '2:58', cover: '/cover-06.webp' },
+  { id: 8, title: 'Eight-Bit Hull', artist: 'Chiptune Registry', album: 'Pixel Wake', secs: 142, len: '2:22', cover: '/cover-07.webp' },
+  { id: 9, title: 'Neon Brine', artist: 'Synthwave Dockyard', album: 'Backlit Acrylic', secs: 265, len: '4:25', cover: '/cover-02.webp' },
+  { id: 10, title: 'Quiet Substrate', artist: 'The Reactive Quartet', album: 'Derived State', secs: 208, len: '3:28', cover: '/cover-01.webp' },
 ]
 
 const PLAYLISTS: Playlist[] = [
@@ -111,25 +121,30 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 })
 </controller>
 
-<column data-theme-preview={theme()} sx={style.h(full).minH(screen).bg(background).fg(foreground)}>
+<!--
+  Fill remaining viewport under sticky site chrome (`h:fill` + use:chromeOffset
+  on the navbar). Row defaults to align=center — app panes need stretch so the
+  library rail + track list occupy the body instead of floating in dead space.
+-->
+<column data-theme-preview={theme()} gap="0" sx={style.h(fill).minH(0).overflow(hidden).bg(background).fg(foreground)}>
   <!-- ── app chrome: brand + theme picker ─────────────────────────────── -->
-  <row sx={style.pad(3).padX(5).borderBWidth(1).border(border)} align="center" gap="3">
+  <row sx={style.pad(3).padX(5).borderBWidth(1).border(border)} align="center" gap="3" shrink>
     <strong sx={style.fontFamily(mono).fontSize(lg).fg(primary)}>shanty</strong>
     <p grow sx={style.fontSize(sm).fg(muted-foreground)}>a full app in one .sail file</p>
     <row gap="1">
-      <for as="t" of={THEMES} key={t}>
+      <for {THEMES} as="t" key={t}>
         <button on:click={() => theme.set(t)} variant={theme() === t ? 'solid' : 'outline'} size="sm">{t}</button>
       </for>
     </row>
   </row>
 
-  <row grow sx={style.minH(0)} gap="0">
+  <row grow align="stretch" sx={style.minH(0)} gap="0">
     <!-- ── library rail ───────────────────────────────────────────────── -->
-    <column sx={style.w(64).pad(4).borderRWidth(1).border(border)} gap="3">
+    <column sx={style.w(64).pad(4).borderRWidth(1).border(border).minH(0).overflowY(auto)} gap="3">
       <input placeholder="Filter playlists" bind:value={query} />
       <column gap="1">
         <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>Playlists</p>
-        <for as="p" of={filteredPlaylists()} key={p.id}>
+        <for {filteredPlaylists()} as="p" key={p.id}>
           <row on:click={() => activePlaylist.set(p.id)}
                aria-current={activePlaylist() === p.id ? 'true' : null}
                sx={style.pad(2).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })} align="center" justify="between">
@@ -148,8 +163,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </column>
 
     <!-- ── playlist main ──────────────────────────────────────────────── -->
-    <column grow min-w="0" gap="0">
-      <column sx={style.pad(6).padB(4).enter({ opacity: 'fade', translate-y: 'spring:gentle' })} gap="1">
+    <column grow min-w="0" gap="0" sx={style.minH(0)}>
+      <column sx={style.pad(6).padB(4).enter({ opacity: 'fade', translate-y: 'spring:gentle' })} gap="1" shrink>
         <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent)}>Playlist</p>
         <h1 sx={style.fontSize(3xl)}>{activePlaylist() === '__liked' ? 'Liked Tracks' : playlist().name}</h1>
         <p sx={style.fontSize(sm).fg(muted-foreground)}>
@@ -158,22 +173,23 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </column>
       <scroll-area grow sx={style.minH(0).padX(6).padB(4)}>
         <column gap="1">
-          <for as="t" of={visibleTracks()} key={t.id}>
+          <for {visibleTracks()} as="t" key={t.id}>
             <row on:click={() => playTrack(t.id)}
-aria-current={currentId() === t.id ? 'true' : null}
-sx={style.pad(2).padX(3).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) }).enter({ opacity: 'fade', stagger: '0.03s' })}
-align="center" gap="3">
-              <row justify="center" shrink sx={style.w(6).fontFamily(mono).fontSize(sm).fg(muted-foreground)}>
-                <if cond={currentId() === t.id && playing()}>
-                  <row gap="1" align="end" justify="center" sx={style.minH(4)}>
-                    <i sx={style.w(1).h(3).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
-                    <i sx={style.w(1).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
-                    <i sx={style.w(1).h(2).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
-                  </row>
-                <else>
-                  {t.id}
-                </else></if>
-              </row>
+                 aria-current={currentId() === t.id ? 'true' : null}
+                 sx={style.pad(2).padX(3).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) }).enter({ opacity: 'fade', stagger: '0.03s' })}
+                 align="center" gap="3">
+              <div shrink="0" sx={style.position(relative).w(10).h(10).radius(sm).overflow(hidden).bg(muted)}>
+                <img src={t.cover} alt="" sx={style.display(block).w(full).h(full).objectFit(cover)} />
+                <if {currentId() === t.id && playing()}>
+                  <center sx={style.position(absolute).inset(0).bg(background).opacity(70)}>
+                    <row gap="1" align="end" justify="center" sx={style.minH(4)}>
+                      <i sx={style.w(1).h(3).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
+                      <i sx={style.w(1).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
+                      <i sx={style.w(1).h(2).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.08s' })}></i>
+                    </row>
+                  </center>
+                </if>
+              </div>
               <column gap="0" grow min-w="0">
                 <strong sx={when({ groupCurrent: style.fg(primary) })}>{t.title}</strong>
                 <p sx={style.fontSize(sm).fg(muted-foreground)}>{t.artist}</p>
@@ -192,15 +208,15 @@ align="center" gap="3">
   </row>
 
   <!-- ── now-playing bar ──────────────────────────────────────────────── -->
-  <column sx={style.borderTWidth(1).border(border).pad(3).padX(5)} gap="2">
+  <column sx={style.borderTWidth(1).border(border).pad(3).padX(5)} gap="2" shrink>
     <row align="center" gap="4">
       <row align="center" gap="3" grow min-w="0">
-        <div shrink sx={style.w(11).h(11).radius(md).bg(muted).borderWidth(1).border(primary)}>
-          <center sx={style.h(full)}><strong sx={style.fontSize(lg).fg(primary)}>♪</strong></center>
+        <div shrink="0" sx={style.w(12).h(12).radius(md).overflow(hidden).bg(muted).borderWidth(1).border(border)}>
+          <img src={current().cover} alt="" sx={style.display(block).w(full).h(full).objectFit(cover)} />
         </div>
         <column gap="0" sx={style.minW(0)}>
           <strong>{current().title}</strong>
-          <p sx={style.fontSize(sm).fg(muted-foreground)}>{current().artist}</p>
+          <p sx={style.fontSize(sm).fg(muted-foreground)}>{current().artist} · {current().album}</p>
         </column>
       </row>
       <column align="center" gap="1" grow>
@@ -213,15 +229,20 @@ align="center" gap="3">
           <button on:click={() => advance(1)} variant="ghost">⏭</button>
           <button on:click={() => repeat.set(!repeat())} variant={repeat() ? 'solid' : 'ghost'} size="sm">repeat</button>
         </row>
-        <row gap="2" align="center" w="full" max-w="panel-max-w-md">
-          <span sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{positionLabel()}</span>
-          <progress value={position()} max={current().secs} grow></progress>
-          <span sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{totalLabel()}</span>
+        <row gap="2" align="center" nowrap w="full" max-w="panel-max-w-md">
+          <span shrink sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{positionLabel()}</span>
+          <!-- progress host paints w-full; grow shell owns the flex share so times stay on one line -->
+          <row grow min-w="0" sx={style.minW(0)}>
+            <progress value={position()} max={current().secs}></progress>
+          </row>
+          <span shrink sx={style.fontFamily(mono).fontSize(xs).fg(muted-foreground)}>{totalLabel()}</span>
         </row>
       </column>
-      <row gap="2" align="center" justify="end" grow>
+      <row gap="2" align="center" justify="end" nowrap grow min-w="0">
         <button on:click={() => volume.set(Math.max(0, volume() - 10))} variant="ghost" size="sm">−</button>
-        <progress value={volume()} max="100" sx={style.w(20)}></progress>
+        <div sx={style.w(20).minW(20)}>
+          <progress value={volume()} max="100"></progress>
+        </div>
         <button on:click={() => volume.set(Math.min(100, volume() + 10))} variant="ghost" size="sm">+</button>
       </row>
     </row>

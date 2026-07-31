@@ -35,7 +35,7 @@
   }
 </scope>
 <controller>
-import { controller, derived, signal } from '@ship/sail-runtime'
+
 import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-file-upload.sail'
 
@@ -214,12 +214,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <span>Drag &amp; drop or <span sx={style.fg(primary)}>browse</span></span>
 </center>
 <input type="file" sx={style.display(none)} accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" bind:this={inputEl} />
-<if cond={errorMsg()}>
+<if {errorMsg()}>
   <div role="alert" sx={style.fontSize(sm).fg(destructive)}>{errorMsg()}</div>
 </if>
-<if cond={displayFiles().length > 0}>
+<if {displayFiles().length > 0}>
   <column gap="1" aria-live="polite" sx={style.mt(2)}>
-    <for as="f" of={displayFiles()} key={f.key}>
+    <for {displayFiles()} as="f" key={f.key}>
       <row align="center" gap="3">
         <span aria-hidden="true" sx={style.fg(muted-foreground)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" sx={style.w(icon-size-sm).h(icon-size-sm)}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2 2V8z"/><path d="M14 2v6h6"/></svg>

@@ -10,7 +10,7 @@ import { connectElementScope, disconnectElementScope } from './element-scope'
 import { withHost, untrack } from './signal'
 import { attachHostApi } from './host-api'
 import { findNearestBoundary } from './error-boundary'
-import { dispatchSuiError } from './error-overlay'
+import { dispatchSailError } from './error-overlay'
 
 // The declarative `component()` factory lives in component-factory.ts to
 // keep this file under the 300-line cap. Re-exported here so the public
@@ -232,7 +232,7 @@ export function defineComponent(
             boundary.catch(err, 'mount')
           } else {
             console.error(`[sail:${tag}] setup threw:`, err)
-            dispatchSuiError(this, err, 'setup')
+            dispatchSailError(this, err, 'setup')
           }
         }
         // Flush any prop values set via JS property BEFORE the factory
@@ -393,7 +393,7 @@ export function defineComponent(
           boundary.catch(err, 'mount')
         } else {
           console.error(`[sail:${tag}] setup threw:`, err)
-          dispatchSuiError(this, err, 'setup')
+          dispatchSailError(this, err, 'setup')
         }
       }
     }

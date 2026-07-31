@@ -1,8 +1,11 @@
 /** Shared types for the sail-owned eval harness. */
 
 export type Lane = 'cheap' | 'frontier'
-/** blank/kitchen-sink = sail app scaffolds; react-tw = control-arm baseline. */
-export type ScaffoldKind = 'blank' | 'kitchen-sink' | 'react-tw'
+/**
+ * blank/kitchen-sink = sail app scaffolds;
+ * react-tw / vanilla = control-arm baselines (no sail artifacts).
+ */
+export type ScaffoldKind = 'blank' | 'kitchen-sink' | 'react-tw' | 'vanilla'
 /** recorded = CI fixture replay; omp = single real-run dispatch layer. */
 export type DispatchMode = 'recorded' | 'omp'
 
@@ -152,6 +155,8 @@ export interface GradeReport {
 
 export interface RunResult {
   task: string
+  /** Context-profile arm id (EVAL-1); default `sail` for single-arm runs. */
+  arm?: string
   lane: Lane
   dispatch: DispatchMode
   model: string
@@ -161,6 +166,8 @@ export interface RunResult {
   grades: GradeReport
   startedAt: string
   finishedAt: string
+  /** Wall time ms for the full (task, arm) run. */
+  wallMs?: number
   error?: string
 }
 
@@ -173,4 +180,13 @@ export interface CorpusSummary {
   passCount: number
   failCount: number
   skipCount: number
+  /** Present for paced multi-arm sessions. */
+  arms?: string[]
+  model?: string
+  /** Paced session metadata. */
+  paced?: {
+    intervalMs: number
+    resumed: number
+    executed: number
+  }
 }

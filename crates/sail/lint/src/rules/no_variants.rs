@@ -93,7 +93,10 @@ mod tests {
 
     #[test]
     fn flags_the_variants_block() {
-        assert_eq!(run("<variants>\n  tone=success: bg:hover-bg\n</variants>"), 1);
+        assert_eq!(
+            run("<variants>\n  tone=success: bg:hover-bg\n</variants>"),
+            1
+        );
         assert_eq!(run(r#"<variants class="x">"#), 1);
     }
 
@@ -106,7 +109,10 @@ mod tests {
 
     #[test]
     fn is_warn() {
-        let f = check(Path::new("t.sail"), "<variants>tone=x: bg:surface-1</variants>");
+        let f = check(
+            Path::new("t.sail"),
+            "<variants>tone=x: bg:surface-1</variants>",
+        );
         assert!(matches!(f[0].severity, Severity::Warn));
     }
 }

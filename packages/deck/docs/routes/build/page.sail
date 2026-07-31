@@ -14,7 +14,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ buildCmd, buildOu
   <p role="doc-lead">One command emits a self-contained static directory a dumb host can serve as-is.</p>
 
   <h2>Build a static dir</h2>
-  <p><code>deck build --project . --bundle-framework</code> materializes everything the app needs into one directory.</p>
+  <p><code>sail build --project . --bundle-framework</code> materializes everything the app needs into one directory.</p>
   <pre data-code-block="true">{buildCmd}</pre>
   <pre data-code-block="true">{buildOut}</pre>
   <p>You get <code>index.html</code> (the importmap), <code>_deck/</code> (the framework singletons, materialized), and one code-split, lazily-loaded <code>assets/page-&lt;hash&gt;.js</code> chunk per route.</p>

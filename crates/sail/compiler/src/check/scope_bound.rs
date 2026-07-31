@@ -89,31 +89,83 @@ const BUILTINS: &[&str] = &[
     // object now, so there's no section-namespace left to dot into.
     "props",
     // JS standard objects.
-    "Math", "JSON", "Object", "Array", "String", "Number", "Boolean", "Date",
-    "Symbol", "Map", "Set", "WeakMap", "WeakSet", "Error", "RegExp",
-    "Promise", "BigInt", "ArrayBuffer", "DataView",
-    "Int8Array", "Uint8Array", "Uint8ClampedArray",
-    "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
-    "Float32Array", "Float64Array",
+    "Math",
+    "JSON",
+    "Object",
+    "Array",
+    "String",
+    "Number",
+    "Boolean",
+    "Date",
+    "Symbol",
+    "Map",
+    "Set",
+    "WeakMap",
+    "WeakSet",
+    "Error",
+    "RegExp",
+    "Promise",
+    "BigInt",
+    "ArrayBuffer",
+    "DataView",
+    "Int8Array",
+    "Uint8Array",
+    "Uint8ClampedArray",
+    "Int16Array",
+    "Uint16Array",
+    "Int32Array",
+    "Uint32Array",
+    "Float32Array",
+    "Float64Array",
     // Standard literals/keywords-as-identifiers.
-    "null", "undefined", "true", "false", "NaN", "Infinity",
+    "null",
+    "undefined",
+    "true",
+    "false",
+    "NaN",
+    "Infinity",
     // Standard fns.
-    "parseInt", "parseFloat", "isNaN", "isFinite", "encodeURIComponent",
-    "decodeURIComponent", "encodeURI", "decodeURI",
+    "parseInt",
+    "parseFloat",
+    "isNaN",
+    "isFinite",
+    "encodeURIComponent",
+    "decodeURIComponent",
+    "encodeURI",
+    "decodeURI",
     // Browser globals commonly used in handlers.
-    "document", "window", "console", "globalThis",
+    "document",
+    "window",
+    "console",
+    "globalThis",
     // Runtime helpers (unwrap variants are imported by the compiled
     // module; templates may also reference them via `use:` results).
-    "unwrap", "unwrapOr",
+    "unwrap",
+    "unwrapOr",
     // Built-in `use:` actions — auto-imported when referenced by a `use:`
     // directive (see `action_manifest::BUILTIN_ACTION_NAMES`), so `use:anchor`
     // &c resolve without an explicit controller import. This is the
     // bare-ident subset: the actions a template expression might
     // reference by name. Drift from `BARE_REFERENCED_ACTION_NAMES` is
     // caught by `action_manifest::tests` — the table is the source.
-    "anchor", "autosize", "cellPad", "clickOutside", "dropzone", "eventSpan",
-    "gridTracks", "maxWidth", "pin", "portEdge", "rect", "spotlight", "swatch",
-    "targetCursor", "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
+    "anchor",
+    "autosize",
+    "cellPad",
+    "clickOutside",
+    "dropzone",
+    "eventSpan",
+    "gridTracks",
+    "maxWidth",
+    "pin",
+    "portEdge",
+    "rect",
+    "spotlight",
+    "swatch",
+    "targetCursor",
+    "virtualRow",
+    "virtualSpacer",
+    "worldTransform",
+    "zoomPan",
 ];
 
 pub fn check(
@@ -122,7 +174,10 @@ pub fn check(
     route_params: Option<&[String]>,
 ) -> Result<(), CompileError> {
     let scope = build_scope(program, controller, route_params);
-    let mut visitor = Visitor { scope, errors: Vec::new() };
+    let mut visitor = Visitor {
+        scope,
+        errors: Vec::new(),
+    };
     visit_program(program, &mut visitor);
     // Errors are pushed in traversal order, so the first is the same one the
     // old short-circuiting visitor returned — the build gate's behaviour is
@@ -139,7 +194,10 @@ pub fn collect(
     route_params: Option<&[String]>,
 ) -> Vec<CompileError> {
     let scope = build_scope(program, controller, route_params);
-    let mut visitor = Visitor { scope, errors: Vec::new() };
+    let mut visitor = Visitor {
+        scope,
+        errors: Vec::new(),
+    };
     visit_program(program, &mut visitor);
     visitor.errors
 }
@@ -159,11 +217,7 @@ impl Scope {
     }
 
     pub(super) fn list_for_diagnostic(&self) -> String {
-        let mut declared: Vec<&str> = self
-            .names
-            .iter()
-            .map(|s| s.as_str())
-            .collect();
+        let mut declared: Vec<&str> = self.names.iter().map(|s| s.as_str()).collect();
         declared.sort();
         if declared.is_empty() {
             "(none — only built-ins like Math and JSON are available)".into()
@@ -225,7 +279,9 @@ fn bound_names_of_param(pattern: &str) -> BTreeSet<String> {
     if i >= bytes.len() || bytes[i] != b'{' {
         return out;
     }
-    let end = skip_balanced(bytes, i, bytes.len()).saturating_sub(1).min(bytes.len());
+    let end = skip_balanced(bytes, i, bytes.len())
+        .saturating_sub(1)
+        .min(bytes.len());
     let mut k = i + 1;
     while k < end {
         k = skip_trivia(bytes, k);
@@ -252,7 +308,9 @@ fn bound_names_of_param(pattern: &str) -> BTreeSet<String> {
         let key_start = k;
         if !is_ident_start(bytes[k]) {
             k = next_top_separator(bytes, k, end);
-            if k < end && bytes[k] == b',' { k += 1; }
+            if k < end && bytes[k] == b',' {
+                k += 1;
+            }
             continue;
         }
         while k < end && is_ident_cont(bytes[k]) {
@@ -316,7 +374,11 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
             }
             visit_instrs(&el.children, v);
         }
-        Instr::If(IfInstr { branches, else_body, .. }) => {
+        Instr::If(IfInstr {
+            branches,
+            else_body,
+            ..
+        }) => {
             for b in branches {
                 check_expr(&b.cond, v, &[]);
                 visit_instrs(&b.body, v);
@@ -325,7 +387,15 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
                 visit_instrs(eb, v);
             }
         }
-        Instr::For(ForInstr { iterable, key, body, else_body, var_name, index_name, .. }) => {
+        Instr::For(ForInstr {
+            iterable,
+            key,
+            body,
+            else_body,
+            var_name,
+            index_name,
+            ..
+        }) => {
             check_expr(iterable, v, &[]);
             // Inside the loop body, the iteration var (and optional
             // index var) are bound.
@@ -334,7 +404,15 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
                 locals.push(idx.clone());
             }
             if let Some(k) = key {
-                check_expr(k, v, locals.iter().map(|s| s.as_str()).collect::<Vec<_>>().as_slice());
+                check_expr(
+                    k,
+                    v,
+                    locals
+                        .iter()
+                        .map(|s| s.as_str())
+                        .collect::<Vec<_>>()
+                        .as_slice(),
+                );
             }
             v.scope.names.extend(locals.iter().cloned());
             visit_instrs(body, v);
@@ -345,7 +423,12 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
                 visit_instrs(eb, v);
             }
         }
-        Instr::Match(MatchInstr { discriminant, cases, default, .. }) => {
+        Instr::Match(MatchInstr {
+            discriminant,
+            cases,
+            default,
+            ..
+        }) => {
             check_expr(discriminant, v, &[]);
             for c in cases {
                 check_expr(&c.test, v, &[]);
@@ -381,7 +464,7 @@ fn visit_attr(attr: &AttrInstr, v: &mut Visitor) {
         | AttrInstr::BindChecked { expr, .. } => check_expr(expr, v, &[]),
         AttrInstr::On { handler, .. } => check_expr(handler, v, &[]),
         AttrInstr::Mutation { .. } => {}
-            AttrInstr::Use { action, param, .. } => {
+        AttrInstr::Use { action, param, .. } => {
             if let Some(e) = param {
                 check_use_value_expr(action, e, v);
             }
@@ -437,9 +520,8 @@ mod collect_tests {
 
     #[test]
     fn navigate_is_no_longer_ambient() {
-        let program =
-            crate::parse::parse("<button on:click={() => navigate('/x')}>go</button>")
-                .expect("parses");
+        let program = crate::parse::parse("<button on:click={() => navigate('/x')}>go</button>")
+            .expect("parses");
         assert!(
             check(&program, None, Some(&["id".to_string()])).is_err(),
             "navigate is not granted by route-ness — it is simply not a name"
@@ -455,6 +537,9 @@ mod collect_tests {
         let program = crate::parse::parse(src).expect("parses");
         let all = collect(&program, None, None);
         assert_eq!(all.len(), 3, "want 3 unbound, got {}: {all:?}", all.len());
-        assert!(check(&program, None, None).is_err(), "check() still flags the first");
+        assert!(
+            check(&program, None, None).is_err(),
+            "check() still flags the first"
+        );
     }
 }

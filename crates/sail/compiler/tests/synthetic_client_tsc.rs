@@ -19,12 +19,17 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest, AuthoredController, ManifestClient};
+use sail_compiler::emit::synthetic::{
+    AppManifest, AuthoredController, ManifestClient, emit_synthetic,
+};
 use sail_compiler::parse::parse;
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn repo_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().unwrap()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../..")
+        .canonicalize()
+        .unwrap()
 }
 
 fn tsc_path(repo: &Path) -> Option<PathBuf> {
@@ -52,16 +57,22 @@ const CONF_MANIFEST: &str = "crates/deck/deck-conformance/app/app.manifest.jsonc
 /// (sail-compiler can't depend on deck-core — that's a cycle — so we mirror the
 /// two entries rather than call into it.)
 fn inject_host_context(manifest: &mut AppManifest) {
-    manifest.clients.entry("route".to_string()).or_insert(ManifestClient {
-        from: "@ship/deck/router".to_string(),
-        import: "route".to_string(),
-        construct: true,
-    });
-    manifest.clients.entry("navigate".to_string()).or_insert(ManifestClient {
-        from: "@ship/deck/router".to_string(),
-        import: "navigate".to_string(),
-        construct: false,
-    });
+    manifest
+        .clients
+        .entry("route".to_string())
+        .or_insert(ManifestClient {
+            from: "@ship/deck/router".to_string(),
+            import: "route".to_string(),
+            construct: true,
+        });
+    manifest
+        .clients
+        .entry("navigate".to_string())
+        .or_insert(ManifestClient {
+            from: "@ship/deck/router".to_string(),
+            import: "navigate".to_string(),
+            construct: false,
+        });
 }
 
 /// Synthesize the CLIENT (controller + client render) for `s` into its own
@@ -77,14 +88,19 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     // A source may carry its controller INLINE (`<controller>…</controller>`)
     // rather than as a sibling `.controller.ts` — strip it before the
     // template-only parser sees it (mirrors `deck_ssr::build`).
-    let (stripped, inline_controller) = sail_compiler::parse::preprocess::extract_controller_block(&src);
-    let program = parse(&stripped).unwrap_or_else(|e| panic!("parse {}: {}", s.name, e.render(&stripped)));
+    let (stripped, inline_controller) =
+        sail_compiler::parse::preprocess::extract_controller_block(&src);
+    let program =
+        parse(&stripped).unwrap_or_else(|e| panic!("parse {}: {}", s.name, e.render(&stripped)));
 
     let dir = gendir.join(s.name);
     fs::create_dir_all(&dir).unwrap();
 
     // The source stem (page / badge) — the controller imports `./<stem>.sail`.
-    let stem = Path::new(s.source_rel).file_stem().and_then(|f| f.to_str()).unwrap_or("page");
+    let stem = Path::new(s.source_rel)
+        .file_stem()
+        .and_then(|f| f.to_str())
+        .unwrap_or("page");
 
     // Emit the view's `.sail.d.ts` so `import { Scope } from './page.sail'`
     // (in some authored controllers) resolves under allowArbitraryExtensions.
@@ -92,8 +108,12 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     if s.mode == CompileMode::Component {
         let dts = compile(
             &src,
-            CompileOpts { mode: s.mode, emit_dts: true,
-            lint_overrides: Vec::new(), ..Default::default() },
+            CompileOpts {
+                mode: s.mode,
+                emit_dts: true,
+                lint_overrides: Vec::new(),
+                ..Default::default()
+            },
         )
         .unwrap_or_else(|e| panic!("compile dts {}: {}", s.name, e.render(&src)))
         .dts
@@ -108,17 +128,28 @@ fn synth_client_into(repo: &Path, gendir: &Path, s: &Surface) {
     let authored = if let Some(c) = s.controller_rel {
         let body = fs::read_to_string(repo.join(c)).expect("read controller");
         fs::write(dir.join("controller.ts"), body).unwrap();
-        Some(AuthoredController { specifier: "./controller.ts".to_string() })
+        Some(AuthoredController {
+            specifier: "./controller.ts".to_string(),
+        })
     } else if let Some(body) = inline_controller {
         fs::write(dir.join("controller.ts"), body).unwrap();
-        Some(AuthoredController { specifier: "./controller.ts".to_string() })
+        Some(AuthoredController {
+            specifier: "./controller.ts".to_string(),
+        })
     } else {
         None
     };
 
     let controller_name = format!("{stem}.synthetic.controller.ts");
-    let out = emit_synthetic(&program, &manifest, authored.as_ref(), &format!("./{controller_name}"), s.mode, None)
-        .unwrap_or_else(|e| panic!("synthesize {}: {}", s.name, e.render(&src)));
+    let out = emit_synthetic(
+        &program,
+        &manifest,
+        authored.as_ref(),
+        &format!("./{controller_name}"),
+        s.mode,
+        None,
+    )
+    .unwrap_or_else(|e| panic!("synthesize {}: {}", s.name, e.render(&src)));
     fs::write(dir.join(&controller_name), out.controller_ts).unwrap();
     fs::write(dir.join(format!("{stem}.client.ts")), out.render_client_ts).unwrap();
 }
@@ -185,13 +216,22 @@ fn write_tsconfig(repo: &Path, work: &Path, include: &[String], name: &str) {
   }},
   "include": [{}]
 }}"#,
-        include.iter().map(|i| format!("\"{i}\"")).collect::<Vec<_>>().join(", ")
+        include
+            .iter()
+            .map(|i| format!("\"{i}\""))
+            .collect::<Vec<_>>()
+            .join(", ")
     );
     fs::write(work.join(name), cfg).unwrap();
 }
 
 fn run_tsc(tsc: &Path, dir: &Path, project: &str) -> (bool, String) {
-    let out = Command::new(tsc).arg("-p").arg(project).current_dir(dir).output().expect("run tsc");
+    let out = Command::new(tsc)
+        .arg("-p")
+        .arg(project)
+        .current_dir(dir)
+        .output()
+        .expect("run tsc");
     let combined = format!(
         "{}{}",
         String::from_utf8_lossy(&out.stdout),
@@ -257,13 +297,18 @@ fn client_contract_typechecks_green_across_real_surfaces() {
         synth_client_into(&repo, &gendir, s);
     }
 
-    let mut includes: Vec<String> =
-        surfaces.iter().map(|s| format!("generated/{}/**/*.ts", s.name)).collect();
+    let mut includes: Vec<String> = surfaces
+        .iter()
+        .map(|s| format!("generated/{}/**/*.ts", s.name))
+        .collect();
     includes.push("ship-shim.d.ts".to_string());
     write_tsconfig(&repo, &work, &includes, "tsconfig.json");
 
     let (ok, out) = run_tsc(&tsc, &work, "tsconfig.json");
-    assert!(ok, "the synthetic CLIENT contract must type-check GREEN across the real set:\n{out}");
+    assert!(
+        ok,
+        "the synthetic CLIENT contract must type-check GREEN across the real set:\n{out}"
+    );
 }
 
 /// The typed-scope thesis on the CLIENT render: a `route.parms` typo survives
@@ -280,8 +325,15 @@ fn client_render_typo_is_caught_by_tsgo() {
     let mut manifest = AppManifest::parse(&manifest_src).unwrap();
     inject_host_context(&mut manifest);
     let program = parse("<h1>Hello, {route.parms.id()}</h1>").unwrap();
-    let out = emit_synthetic(&program, &manifest, None, "./page.synthetic.controller.ts", CompileMode::Component, None)
-        .unwrap();
+    let out = emit_synthetic(
+        &program,
+        &manifest,
+        None,
+        "./page.synthetic.controller.ts",
+        CompileMode::Component,
+        None,
+    )
+    .unwrap();
 
     let work = repo.join("target/synthetic-client-tsc-typo");
     let _ = fs::remove_dir_all(&work);
@@ -290,10 +342,18 @@ fn client_render_typo_is_caught_by_tsgo() {
     write_runtime_shim(&repo, &work);
     fs::write(dir.join("page.synthetic.controller.ts"), out.controller_ts).unwrap();
     fs::write(dir.join("page.client.ts"), out.render_client_ts).unwrap();
-    write_tsconfig(&repo, &work, &["generated/typo/**/*.ts".to_string()], "tsconfig.json");
+    write_tsconfig(
+        &repo,
+        &work,
+        &["generated/typo/**/*.ts".to_string()],
+        "tsconfig.json",
+    );
 
     let (ok, output) = run_tsc(&tsc, &work, "tsconfig.json");
-    assert!(!ok, "the `route.parms` typo MUST fail the client type-check; tsc was green:\n{output}");
+    assert!(
+        !ok,
+        "the `route.parms` typo MUST fail the client type-check; tsc was green:\n{output}"
+    );
     assert!(
         output.contains("parms") && (output.contains("2339") || output.contains("does not exist")),
         "typo must be a real member-access error against RouteSignals; got:\n{output}"
@@ -347,7 +407,12 @@ fn controller_recovers_scope_factory_return_type() {
             controller_rel: Some("crates/deck/deck-conformance/app/routes/board/controller.ts"),
         },
     );
-    write_tsconfig(&repo, &work, &["generated/board/**/*.ts".to_string()], "tsconfig.json");
+    write_tsconfig(
+        &repo,
+        &work,
+        &["generated/board/**/*.ts".to_string()],
+        "tsconfig.json",
+    );
     let (ok, output) = run_tsc(&tsc, &work, "tsconfig.json");
     assert!(
         ok,

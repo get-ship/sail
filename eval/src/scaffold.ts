@@ -2,8 +2,8 @@
  * Scaffold a workdir for agent authoring.
  * - blank / kitchen-sink: sail app templates (app-level blank lives here —
  *   deck CLI scaffolds route/component/pack/theme, not a full app shell).
- * - react-tw: control-arm baseline (React + Tailwind) — same omp dispatch,
- *   different scaffold type; no separate machinery.
+ * - react-tw: Vite + React + Tailwind control-arm baseline.
+ * - vanilla: bare static html/css/js control arm.
  */
 
 import {
@@ -17,6 +17,8 @@ import {
 import { dirname, join, relative } from 'node:path'
 import type { ScaffoldKind } from './types.ts'
 import { repoRoot } from './paths.ts'
+
+export type { ScaffoldKind }
 
 const BLANK_PAGE = `<!-- eval scaffold: blank — replace with your solution -->
 <column gap="4" sx={style.pad(6)}>
@@ -61,7 +63,7 @@ const PACKAGE_JSON = `{
 }
 `
 
-/** Minimal React+Tailwind control-arm shell (identical prompts, different stack). */
+/** Vite + React + Tailwind control-arm shell (identical prompts, different stack). */
 const REACT_TW_APP = `// eval control arm: react-tw — implement the task prompt here
 export default function App() {
   return (
@@ -73,20 +75,141 @@ export default function App() {
 }
 `
 
+const REACT_TW_MAIN = `import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+`
+
+const REACT_TW_CSS = `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+`
+
+const REACT_TW_INDEX_HTML = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Untitled</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+`
+
+const REACT_TW_VITE_CONFIG = `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+})
+`
+
+const REACT_TW_POSTCSS = `export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+`
+
+const REACT_TW_TAILWIND = `/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+`
+
 const REACT_TW_PACKAGE = `{
   "name": "sail-eval-control-react-tw",
   "private": true,
   "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.0.3"
   }
 }
 `
 
-const REACT_TW_README = `# Control arm: React + Tailwind
+const REACT_TW_README = `# Control arm: Vite + React + Tailwind
 
-Same task prompt as the sail arm. Implement the UI in \`src/App.jsx\` using React and Tailwind utility classes. This arm exists so sail scores are falsifiable upward — without controls, numbers are unfalsifiable.
+Same task prompt as the sail arm. Implement the UI in \`src/App.jsx\` using React and Tailwind utility classes.
+
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`
+
+This arm exists so sail scores are falsifiable upward — without controls, numbers are unfalsifiable. There is no Sail toolchain here.
+`
+
+/** Bare static HTML/CSS/JS control arm — no framework, no sail. */
+const VANILLA_HTML = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Untitled</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <h1>Untitled</h1>
+      <p>Author your page here.</p>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
+`
+
+const VANILLA_CSS = `/* eval control arm: vanilla */
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+body {
+  margin: 0;
+}
+.page {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+`
+
+const VANILLA_JS = `// eval control arm: vanilla — implement the task prompt here
+console.info('vanilla arm ready')
+`
+
+const VANILLA_README = `# Control arm: vanilla HTML/CSS/JS
+
+Same task prompt as the sail arm. Implement the UI with static \`index.html\`, \`styles.css\`, and \`main.js\`. No React, no Tailwind toolchain, no Sail.
 `
 
 /** Write scaffold files into workdir. Returns relative paths created. */
@@ -96,6 +219,9 @@ export function scaffoldWorkdir(
 ): string[] {
   if (kind === 'react-tw') {
     return scaffoldReactTw(workdir)
+  }
+  if (kind === 'vanilla') {
+    return scaffoldVanilla(workdir)
   }
 
   mkdirSync(join(workdir, 'routes'), { recursive: true })
@@ -122,11 +248,46 @@ export function scaffoldWorkdir(
 function scaffoldReactTw(workdir: string): string[] {
   const files: string[] = []
   mkdirSync(join(workdir, 'src'), { recursive: true })
+
+  writeFileSync(join(workdir, 'index.html'), REACT_TW_INDEX_HTML)
+  files.push('index.html')
+
+  writeFileSync(join(workdir, 'vite.config.js'), REACT_TW_VITE_CONFIG)
+  files.push('vite.config.js')
+
+  writeFileSync(join(workdir, 'postcss.config.js'), REACT_TW_POSTCSS)
+  files.push('postcss.config.js')
+
+  writeFileSync(join(workdir, 'tailwind.config.js'), REACT_TW_TAILWIND)
+  files.push('tailwind.config.js')
+
+  writeFileSync(join(workdir, 'src', 'main.jsx'), REACT_TW_MAIN)
+  files.push('src/main.jsx')
+
   writeFileSync(join(workdir, 'src', 'App.jsx'), REACT_TW_APP)
   files.push('src/App.jsx')
+
+  writeFileSync(join(workdir, 'src', 'index.css'), REACT_TW_CSS)
+  files.push('src/index.css')
+
   writeFileSync(join(workdir, 'package.json'), REACT_TW_PACKAGE)
   files.push('package.json')
+
   writeFileSync(join(workdir, 'README.md'), REACT_TW_README)
+  files.push('README.md')
+
+  return files
+}
+
+function scaffoldVanilla(workdir: string): string[] {
+  const files: string[] = []
+  writeFileSync(join(workdir, 'index.html'), VANILLA_HTML)
+  files.push('index.html')
+  writeFileSync(join(workdir, 'styles.css'), VANILLA_CSS)
+  files.push('styles.css')
+  writeFileSync(join(workdir, 'main.js'), VANILLA_JS)
+  files.push('main.js')
+  writeFileSync(join(workdir, 'README.md'), VANILLA_README)
   files.push('README.md')
   return files
 }

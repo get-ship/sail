@@ -1,7 +1,7 @@
 {
   "name": "@ship/sail-primitives",
   "version": "0.3.0",
-  "description": "Ship Primitives pack \u2014 generic `<sail-*>` UI elements (button, input, dialog, popover, etc.).",
+  "description": "Ship Primitives pack — generic `<sail-*>` UI elements (diff, tree, calendar, …).",
   "type": "module",
   "license": "MIT",
   "files": [
@@ -12,7 +12,20 @@
   "types": "src/index.ts",
   "customElements": "dist/custom-elements.json",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./sail-calendar": "./src/sail-calendar/sail-calendar.compiled.js",
+    "./sail-cmdk": "./src/sail-cmdk/sail-cmdk.compiled.js",
+    "./sail-color-picker": "./src/sail-color-picker/sail-color-picker.compiled.js",
+    "./sail-date-picker": "./src/sail-date-picker/sail-date-picker.compiled.js",
+    "./sail-diff": "./src/sail-diff/sail-diff.compiled.js",
+    "./sail-error-boundary": "./src/sail-error-boundary/sail-error-boundary.compiled.js",
+    "./sail-file-upload": "./src/sail-file-upload/sail-file-upload.compiled.js",
+    "./sail-json-view": "./src/sail-json-view/sail-json-view.compiled.js",
+    "./sail-markdown": "./src/sail-markdown/sail-markdown.compiled.js",
+    "./sail-timeline": "./src/sail-timeline/sail-timeline.compiled.js",
+    "./sail-timeline-item": "./src/sail-timeline/sail-timeline-item.compiled.js",
+    "./sail-tree": "./src/sail-tree/sail-tree.compiled.js",
+    "./sail-tree-grid": "./src/sail-tree-grid/sail-tree-grid.compiled.js"
   },
   "scripts": {
     "prepublishOnly": "test -f dist/custom-elements.json || (cd ../../../.. && cargo run -p deck-cli -- build-assets)",

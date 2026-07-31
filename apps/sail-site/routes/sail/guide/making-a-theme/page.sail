@@ -68,7 +68,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     between them here to find it — every button repaints this page:
   </p>
   <row gap="2">
-    <for as="t" of={themes()} key={t.id}>
+    <for {themes()} as="t" key={t.id}>
       <button
         on:click={() => pick(t.id)}
         variant={active() === t.id ? 'solid' : 'outline'}
@@ -123,7 +123,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.themeEntry} lang="ts"></code-block>
   <p>
     <code>dark: true</code> is not cosmetic. It decides whether the
-    <code>.dark</code> class goes on the document, which a number of
+    <code>data-mode</code> attribute goes on the document, which a number of
     component skins key on. Set it to match the theme you actually built.
   </p>
   <p sx={style.fontSize(sm).fg(muted-foreground)}>
@@ -144,13 +144,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.applySource} lang="ts"></code-block>
   <p>
     Three things happen. <code>data-theme</code> goes on the document, which
-    activates your CSS block. The <code>.dark</code> class is toggled from
+    activates your CSS block. The <code>data-mode</code> attribute is set from
     the entry's <code>dark</code> flag. A <code>ship:theme:change</code>
     event is dispatched, for chrome that needs to react beyond CSS.
   </p>
   <p>
     Note the first line: an id that is not in <code>THEMES</code> is not an
-    error — it silently becomes <code>ship-light</code>. If a new theme
+    error — it silently becomes <code>ship</code>. If a new theme
     applies as the default, the missing piece is the <code>THEMES</code>
     entry, not the CSS.
   </p>
@@ -172,7 +172,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     is to ship your own stylesheet with a
     <code>:root[data-theme="mine"]</code> block and set
     <code>document.documentElement.dataset.theme</code> yourself, never
-    calling <code>applyTheme</code>. You then also own the <code>.dark</code>
+    calling <code>applyTheme</code>. You then also own the <code>data-mode</code>
     class, the change event and persistence, and your theme will not appear
     in the picker. Deck's own palette is built this way, so the approach is
     proven — but it is a bypass, not a seam.

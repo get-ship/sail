@@ -22,7 +22,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { describe, expect, it, beforeEach, afterEach } from 'vitest'
-import { compileSui, evalCompiledJs } from '@ship/sail-dom/test-utils'
+import { compileSail, evalCompiledJs } from '@ship/sail-dom/test-utils'
 import { measureMountLeakAsync, gcAvailable, type RetentionCycle } from '../src/leak-retention'
 
 // Resolve the sail primitives package by walking up to the workspace root and
@@ -113,7 +113,7 @@ function cycleFor(prim: Primitive): () => RetentionCycle {
   // Warmup: compile + eval once → `customElements.define(tag, …)`. Idempotent
   // in the runtime (defineComponent no-ops a duplicate tag), so the registry
   // settles after this one call — the define-count signal must read 0/cycle.
-  const compiled = compileSui(source, { componentName: prim.tag, mode: 'component' })
+  const compiled = compileSail(source, { componentName: prim.tag, mode: 'component' })
   evalCompiledJs(compiled.js, undefined as never)
 
   return () => {

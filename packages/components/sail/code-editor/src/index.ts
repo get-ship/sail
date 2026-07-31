@@ -12,7 +12,7 @@ import './sail-code-editor/sail-code-editor.compiled.js'
 // Re-export the imperative API for host-side wiring (the tutorial compile-error
 // squiggle flow drives `setDiagnostics` from outside).
 export type {
-  SuiDiagnostic,
-  SuiCompletionSource,
-  SuiCodeEditorApi,
+  SailDiagnostic,
+  SailCompletionSource,
+  SailCodeEditorApi,
 } from './sail-code-editor/sail-code-editor.controller'

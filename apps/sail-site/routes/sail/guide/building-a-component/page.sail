@@ -143,7 +143,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <h2>Where to go from here</h2>
   <p>
     The component above stays the same shape as it grows. Longer lists want
-    <code>&#123;#for&#125;</code>, covered in
+    <code>&lt;for&gt;</code>, covered in
     <a href="/sail/language/templates">Templates</a>; state shared between
     components is in <a href="/sail/language/state">State</a>; movement is in
     <a href="/sail/language/animation">Animation</a>.

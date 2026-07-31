@@ -3,7 +3,7 @@
 // The bindings module walks the parsed IR and computes the per-attribute
 // binding metadata (key, kind, deps) the runtime hydrates against. Bugs
 // here often manifest as emit-time inconsistencies that the LSP and
-// `sui_view.meta.json` consumers also depend on. Fuzzing this layer
+// `sail_view.meta.json` consumers also depend on. Fuzzing this layer
 // catches IR shapes that the binding builder hasn't accounted for
 // without paying the cost of the full emit pipeline.
 //

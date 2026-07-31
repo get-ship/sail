@@ -38,8 +38,7 @@ pub const MOTION_STAGGER_KEY: &str = "stagger";
 /// library's surface: a duration is a number of milliseconds and an easing is a
 /// curve, not a global design token. `sx` stays closed because colour and spacing
 /// are theming integrity; a 3600ms decorative loop never was.
-pub const MOTION_TIMING_KEYS: &[&str] =
-    &["duration", "delay", "easing", "iterations", "direction"];
+pub const MOTION_TIMING_KEYS: &[&str] = &["duration", "delay", "easing", "iterations", "direction"];
 
 /// The keys legal inside a per-channel inline object:
 /// `translate-x: { from: 0, to: '120px' }`.
@@ -156,8 +155,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             // pre-pass leaves the literal `{{ ... }}` sequence in the
             // source. Strip the outer pair.
             if bytes[k] == b'{' {
-                let mut depth: i32 = if k + 1 < bytes.len() && bytes[k + 1] == b'{'
-                {
+                let mut depth: i32 = if k + 1 < bytes.len() && bytes[k + 1] == b'{' {
                     2
                 } else {
                     1
@@ -179,13 +177,7 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 }
                 let raw = &line[k..v.min(bytes.len())];
                 let trimmed = strip_one_outer_brace_pair(raw);
-                validate_static_body(
-                    path,
-                    line_no + 1,
-                    attr_start,
-                    trimmed,
-                    &mut findings,
-                );
+                validate_static_body(path, line_no + 1, attr_start, trimmed, &mut findings);
                 i = v;
                 continue;
             }
@@ -405,16 +397,18 @@ mod tests {
 
     #[test]
     fn flags_multiple_in_one_config() {
-        let f = findings(
-            r#"<button fx:hover={{ scale: 'mystery', opacity: 'also-bad' }}>x</button>"#,
-        );
+        let f =
+            findings(r#"<button fx:hover={{ scale: 'mystery', opacity: 'also-bad' }}>x</button>"#);
         assert_eq!(f.len(), 2, "expected 2 findings, got {f:?}");
     }
 
     #[test]
     fn ignores_dynamic_form() {
         let f = findings(r#"<button fx:hover={someExpr}>x</button>"#);
-        assert!(f.is_empty(), "expected no findings for dynamic form, got {f:?}");
+        assert!(
+            f.is_empty(),
+            "expected no findings for dynamic form, got {f:?}"
+        );
     }
 
     #[test]
@@ -425,8 +419,7 @@ mod tests {
 
     #[test]
     fn skips_lines_that_are_pure_comment() {
-        let f =
-            findings("<!-- fx:hover={{ foo: 'mystery' }} -->\n<button>x</button>");
+        let f = findings("<!-- fx:hover={{ foo: 'mystery' }} -->\n<button>x</button>");
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 
@@ -434,9 +427,7 @@ mod tests {
     fn handles_utf8_source() {
         // Regression: source with a multi-byte char (`…` is 3 bytes)
         // would have panicked the rule on a byte-vs-char boundary.
-        let f = findings(
-            "<!-- Loading… -->\n<button fx:hover={{ foo: 'mystery' }}>x</button>",
-        );
+        let f = findings("<!-- Loading… -->\n<button fx:hover={{ foo: 'mystery' }}>x</button>");
         // ONE finding, not two: once `foo` is not a property, its value is
         // not a preset reference and reporting it as an unknown preset is a
         // cascade off the real mistake. Report the root cause only.

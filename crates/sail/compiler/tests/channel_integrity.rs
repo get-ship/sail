@@ -55,7 +55,10 @@ fn declarations(css: &str) -> HashSet<String> {
 
 /// Every `var(--name)` reference in `css`, without the `--` prefix.
 fn references(css: &str) -> HashSet<String> {
-    refs_with_fallback_flag(css).into_iter().map(|(n, _)| n).collect()
+    refs_with_fallback_flag(css)
+        .into_iter()
+        .map(|(n, _)| n)
+        .collect()
 }
 
 /// Every `var(--name…)` reference paired with whether it supplied a fallback.
@@ -143,7 +146,10 @@ fn no_emitted_var_is_undeclared() {
         .collect();
 
     let mut dangling: Vec<String> = Vec::new();
-    for (label, css) in [("sail-base.css", CONTRACTS_CSS), ("element-skins.css", SKINS_CSS)] {
+    for (label, css) in [
+        ("sail-base.css", CONTRACTS_CSS),
+        ("element-skins.css", SKINS_CSS),
+    ] {
         for (name, has_fallback) in refs_with_fallback_flag(css) {
             if has_fallback || declared.contains(&name) || runtime_written.contains(name.as_str()) {
                 continue;
@@ -203,9 +209,13 @@ fn every_expression_channel_has_a_reader() {
         "these expression channels are declared but nothing reads them:\n  {}\n\n\
          A channel with no reader is a variable in a costume — a theme can set \
          it and nothing happens. Either wire a reader into a generator \
-         (stdlib skin, LIGHT_CONTRACTS_CSS, or the sx vocabulary) or drop the \
+         (stdlib skin, sail-base.css, or the sx vocabulary) or drop the \
          declaration.",
-        unread.iter().map(|c| format!("--{c}")).collect::<Vec<_>>().join("\n  ")
+        unread
+            .iter()
+            .map(|c| format!("--{c}"))
+            .collect::<Vec<_>>()
+            .join("\n  ")
     );
 }
 
@@ -219,9 +229,38 @@ fn every_expression_channel_has_a_reader() {
 /// directions. Anything new that gets a skin now has to land here or in the
 /// manifest — deliberately, in a diff someone reviews.
 const PROSE_DEFAULTS: &[&str] = &[
-    "h1", "h2", "h3", "h4", "h5", "h6", "p", "small", "strong", "code", "pre", "mark", "abbr",
-    "sub", "sup", "blockquote", "img", "video", "canvas", "svg", "figure", "figcaption", "ol",
-    "li", "dl", "dt", "dd", "label", "body", "form",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "p",
+    "small",
+    "strong",
+    "code",
+    "pre",
+    "mark",
+    "abbr",
+    "sub",
+    "sup",
+    "blockquote",
+    "img",
+    "video",
+    "canvas",
+    "svg",
+    "figure",
+    "figcaption",
+    "ol",
+    "ul",
+    "li",
+    "dl",
+    "dt",
+    "dd",
+    "label",
+    "html",
+    "body",
+    "form",
     // Embedded media: `iframe { max-width: 100%; border: 0 }` is an overflow
     // guard, not a surface an author styles through attributes.
     "iframe",
@@ -246,14 +285,19 @@ fn every_skinned_tag_has_a_manifest_row_or_a_declared_exemption() {
     let mut skinned: HashSet<&str> = HashSet::new();
     for line in CONTRACTS_CSS.lines() {
         let line = line.trim();
-        let Some(brace) = line.find('{') else { continue };
+        let Some(brace) = line.find('{') else {
+            continue;
+        };
         let selector = line[..brace].trim();
         if selector.is_empty() || selector.starts_with('@') || selector.starts_with(':') {
             continue;
         }
         for part in selector.split(',') {
             let part = part.trim();
-            if part.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()) && !part.is_empty()
+            if part
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+                && !part.is_empty()
             {
                 skinned.insert(part);
             }

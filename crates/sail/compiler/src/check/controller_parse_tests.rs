@@ -3,7 +3,7 @@
 
 use std::path::PathBuf;
 
-use super::controller_parse::{parse, ParsedController, ScopeKind};
+use super::controller_parse::{ParsedController, ScopeKind, parse};
 
 fn p(src: &str) -> ParsedController {
     parse(PathBuf::from("test.ts"), src.into()).expect("expected controller call")
@@ -87,7 +87,7 @@ fn empty_return_is_legal() {
     assert!(r.returned.is_empty());
 }
 
-// ── regex literals + multi-declarator lists (job/silent-failures D4, D2) ────
+// ── regex literals + multi-declarator lists ────────────────────────────────
 
 /// A regex literal is valid JS whose brackets are TEXT. The scanner used to
 /// count them as structure, so `return {...}` became unfindable and the whole

@@ -176,14 +176,14 @@ describe('<sail-mermaid> — value prop', () => {
 })
 
 describe('<sail-mermaid> — theme reactivity', () => {
-  it('a dark/light class flip on <html> re-runs the render effect (no throw)', async () => {
+  it('a data-mode dark/light flip on <html> re-runs the render effect (no throw)', async () => {
     const m = mount('graph TD\n  A --> B')
     await settle(m, 3)
-    document.documentElement.classList.add('dark')
+    document.documentElement.dataset.mode = 'dark'
     // The MutationObserver in the controller fires syncTheme which
     // updates the dark signal — the render effect re-runs. Assert
     // no throw and a follow-up flush resolves.
     await expect(m.flush()).resolves.toBeUndefined()
-    document.documentElement.classList.remove('dark')
+    document.documentElement.dataset.mode = 'light'
   }, 15000)
 })

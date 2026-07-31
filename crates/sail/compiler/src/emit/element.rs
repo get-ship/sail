@@ -18,10 +18,10 @@
 //! to `runAction` at the use site); an inline `<controller>` block is an
 //! L2-component facility and is REJECTED here (see `compile_element`).
 
+use crate::CompileError;
 use crate::diagnostics::Span;
 use crate::ir::*;
-use crate::CompileError;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Spans on `Program`/`Instr` are byte offsets into the PREPROCESSED source
 /// (`parse::preprocess::preprocess_impl`): brace-attr quoting, self-close
@@ -91,8 +91,8 @@ fn top_level_element_spans(source: &str, from: usize) -> Vec<(Span, usize)> {
             }
             continue;
         }
-        let Some(name_end_off) = source[i + 1..]
-            .find(|c: char| c.is_whitespace() || c == '>' || c == '/')
+        let Some(name_end_off) =
+            source[i + 1..].find(|c: char| c.is_whitespace() || c == '>' || c == '/')
         else {
             break;
         };
@@ -116,9 +116,10 @@ fn top_level_element_spans(source: &str, from: usize) -> Vec<(Span, usize)> {
         let mut j = open_end;
         let end = loop {
             let next_open = source[j..].find(&open_prefix).map(|o| j + o).filter(|&o| {
-                source.as_bytes().get(o + open_prefix.len()).is_some_and(|b| {
-                    matches!(b, b' ' | b'\t' | b'\n' | b'\r' | b'>' | b'/')
-                })
+                source
+                    .as_bytes()
+                    .get(o + open_prefix.len())
+                    .is_some_and(|b| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | b'>' | b'/'))
             });
             let next_close = source[j..].find(&close_tag).map(|o| j + o);
             match (next_open, next_close) {
@@ -162,6 +163,10 @@ pub struct ElementOutput {
     /// the real tag (preprocess `lower_into`) — otherwise the host paint
     /// keyed on those classes never reaches a single element.
     pub host_classes: String,
+    /// Prop defaults to stamp as host attributes when the use site omits them
+    /// (`tone="default"`, `size="md"`, …) so Style CVA selectors match.
+    /// Bool false is omitted; bool true is presence (`name` with empty value).
+    pub default_attrs: Vec<(String, String)>,
     /// Skin CSS — keyed on `.sail-<name>` for spliced elements, on the bare
     /// tag selector for native-kind (from the source's `:host` idioms).
     pub skin_css: String,
@@ -204,10 +209,10 @@ pub fn emit_element(
     // element there to point at instead.
     let body_start = skip_scope_and_style(source);
     let Some(root) = roots.next() else {
-        return Err(CompileError::new(
-            "element mode: the template needs exactly one root element",
-        )
-        .with_span(Span::point(body_start)));
+        return Err(
+            CompileError::new("element mode: the template needs exactly one root element")
+                .with_span(Span::point(body_start)),
+        );
     };
     if roots.next().is_some()
         || program.template.iter().any(|i| match i {
@@ -241,7 +246,11 @@ pub fn emit_element(
 
     // Spliced elements key their skin on the stamped root class; native-kind
     // elements key on the tag itself — the tag IS the element.
-    let skin_root = if native { name.to_string() } else { format!(".{root_class}") };
+    let skin_root = if native {
+        name.to_string()
+    } else {
+        format!(".{root_class}")
+    };
     let mut skin_css = element_skin_selectors(&program.styles, &skin_root);
     crate::stdlib::append_descendant_skin(name, &mut skin_css);
 
@@ -251,10 +260,14 @@ pub fn emit_element(
         .map(|p| {
             let mut e = json!({ "name": p.name });
             if let PropKind::Union(values) = &p.kind {
-                e.as_object_mut().unwrap().insert("values".into(), json!(values));
+                e.as_object_mut()
+                    .unwrap()
+                    .insert("values".into(), json!(values));
             }
             if let Some(d) = p.default.as_ref() {
-                e.as_object_mut().unwrap().insert("default".into(), json!(d));
+                e.as_object_mut()
+                    .unwrap()
+                    .insert("default".into(), json!(d));
             }
             e
         })
@@ -270,15 +283,47 @@ pub fn emit_element(
     });
 
     let host_classes = root_class_attr(&structure);
+    let default_attrs = default_prop_attrs(name, &program.props);
 
     Ok(ElementOutput {
         root_class,
         native,
         structure_html: structure,
         host_classes,
+        default_attrs,
         skin_css,
         manifest,
     })
+}
+
+/// Attribute defaults for freeform hosts. Skips Identity props and bool false.
+///
+/// `<a>` is dual-mode: bare = text link (sail-base `a:not([variant])`), with
+/// `variant` = button link. Stamping the prop defaults would force every freeform
+/// href into button chrome and kill site-wide text links — so skip variant/tone.
+fn default_prop_attrs(tag: &str, props: &[crate::ir::PropDecl]) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    for p in props {
+        if tag == "a" && (p.name == "variant" || p.name == "tone") {
+            continue;
+        }
+        match &p.kind {
+            crate::ir::PropKind::Identity(_) => continue,
+            crate::ir::PropKind::Bool => {
+                if p.default.as_deref() == Some("true") {
+                    out.push((p.name.clone(), String::new()));
+                }
+            }
+            _ => {
+                if let Some(d) = p.default.as_ref() {
+                    if !d.is_empty() {
+                        out.push((p.name.clone(), d.clone()));
+                    }
+                }
+            }
+        }
+    }
+    out
 }
 
 /// Serialize a static element tree. `is_root` stamps the root class so the
@@ -465,8 +510,20 @@ fn element_skin_selectors(css: &str, root_selector: &str) -> String {
 pub(crate) fn is_void_element(tag: &str) -> bool {
     matches!(
         tag,
-        "area" | "base" | "br" | "col" | "embed" | "hr" | "img" | "input"
-            | "link" | "meta" | "param" | "source" | "track" | "wbr"
+        "area"
+            | "base"
+            | "br"
+            | "col"
+            | "embed"
+            | "hr"
+            | "img"
+            | "input"
+            | "link"
+            | "meta"
+            | "param"
+            | "source"
+            | "track"
+            | "wbr"
     )
 }
 

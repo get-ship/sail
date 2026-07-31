@@ -49,7 +49,7 @@ export default controller(() => {
   <p sx={meta}>published {published()}</p>
 
   <column gap="1">
-    <for as="note" of={notes()} key={note.id}>
+    <for {notes()} as="note" key={note.id}>
       <row gap="3" align="center" sx={noteRow}>
         <badge tone="muted" variant="outline" size="sm">{note.tag}</badge>
         <p sx={noteText}>{note.text}</p>

@@ -14,7 +14,7 @@ use std::path::PathBuf;
 
 use sail_compiler::check::query_keys;
 use sail_compiler::parse::preprocess::extract_controller_block;
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn opts(name: &str) -> CompileOpts {
     CompileOpts {
@@ -22,7 +22,9 @@ fn opts(name: &str) -> CompileOpts {
         setup_url: Some(format!("./{name}.sail.controller.ts")),
         mode: CompileMode::Component,
         source_path: Some(PathBuf::from(format!("/x/{name}.sail"))),
-        component_meta: Some(ComponentMeta { name: name.to_string() }),
+        component_meta: Some(ComponentMeta {
+            name: name.to_string(),
+        }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
@@ -31,7 +33,9 @@ fn opts(name: &str) -> CompileOpts {
 }
 
 fn controller_body(sfc: &str) -> String {
-    extract_controller_block(sfc).1.expect("has a <controller> block")
+    extract_controller_block(sfc)
+        .1
+        .expect("has a <controller> block")
 }
 
 const QUERY_SFC: &str = r#"<controller>
@@ -114,7 +118,10 @@ fn a_mutation_fixture_lowers_both_the_namespace_and_the_explicit_invalidates() {
         ),
         "unexpected lowering:\n{out}"
     );
-    assert!(!out.contains("invalidates:"), "invalidates: must be stripped from the emitted opts");
+    assert!(
+        !out.contains("invalidates:"),
+        "invalidates: must be stripped from the emitted opts"
+    );
     compile(MUTATION_INVALIDATES_SFC, opts("mutation-invalidates-demo"))
         .expect("valid mutation() usage with invalidates compiles");
 }
@@ -136,8 +143,12 @@ export default controller((ctx) => {
 fn invalidate_of_an_exact_method_lowers_to_dunder_invalidate() {
     let body = controller_body(INVALIDATE_METHOD_SFC);
     let out = query_keys::rewrite(&body).expect("statically resolvable");
-    assert!(out.contains(r#"__invalidate(["crm", "deals", "list"])"#), "unexpected lowering:\n{out}");
-    compile(INVALIDATE_METHOD_SFC, opts("invalidate-method-demo")).expect("valid invalidate() usage compiles");
+    assert!(
+        out.contains(r#"__invalidate(["crm", "deals", "list"])"#),
+        "unexpected lowering:\n{out}"
+    );
+    compile(INVALIDATE_METHOD_SFC, opts("invalidate-method-demo"))
+        .expect("valid invalidate() usage compiles");
 }
 
 const INVALIDATE_NAMESPACE_SFC: &str = r#"<controller>
@@ -157,8 +168,12 @@ export default controller((ctx) => {
 fn invalidate_of_a_namespace_lowers_to_dunder_invalidate() {
     let body = controller_body(INVALIDATE_NAMESPACE_SFC);
     let out = query_keys::rewrite(&body).expect("statically resolvable");
-    assert!(out.contains(r#"__invalidate(["crm", "deals"])"#), "unexpected lowering:\n{out}");
-    compile(INVALIDATE_NAMESPACE_SFC, opts("invalidate-namespace-demo")).expect("valid invalidate() usage compiles");
+    assert!(
+        out.contains(r#"__invalidate(["crm", "deals"])"#),
+        "unexpected lowering:\n{out}"
+    );
+    compile(INVALIDATE_NAMESPACE_SFC, opts("invalidate-namespace-demo"))
+        .expect("valid invalidate() usage compiles");
 }
 
 const INVALIDATE_CLIENT_SFC: &str = r#"<controller>
@@ -178,8 +193,12 @@ export default controller((ctx) => {
 fn invalidate_of_a_whole_client_lowers_to_dunder_invalidate() {
     let body = controller_body(INVALIDATE_CLIENT_SFC);
     let out = query_keys::rewrite(&body).expect("statically resolvable");
-    assert!(out.contains(r#"__invalidate(["crm"])"#), "unexpected lowering:\n{out}");
-    compile(INVALIDATE_CLIENT_SFC, opts("invalidate-client-demo")).expect("valid invalidate() usage compiles");
+    assert!(
+        out.contains(r#"__invalidate(["crm"])"#),
+        "unexpected lowering:\n{out}"
+    );
+    compile(INVALIDATE_CLIENT_SFC, opts("invalidate-client-demo"))
+        .expect("valid invalidate() usage compiles");
 }
 
 // ---------------------------------------------------------------------
@@ -205,7 +224,11 @@ export default controller((ctx) => {
 fn a_computed_member_thunk_is_a_compile_error() {
     let err = compile(COMPUTED_MEMBER_SFC, opts("computed-demo"))
         .expect_err("computed member access must refuse, not silently emit something");
-    assert!(err.message.contains("computed member access"), "{}", err.message);
+    assert!(
+        err.message.contains("computed member access"),
+        "{}",
+        err.message
+    );
 }
 
 const NON_IMPORTED_CLIENT_SFC: &str = r#"<controller>
@@ -225,7 +248,11 @@ export default controller((ctx) => {
 fn a_thunk_closing_over_a_non_imported_binding_is_a_compile_error() {
     let err = compile(NON_IMPORTED_CLIENT_SFC, opts("non-imported-demo"))
         .expect_err("a non-imported local can't be a client, even if it looks client-shaped");
-    assert!(err.message.contains("not a client imported"), "{}", err.message);
+    assert!(
+        err.message.contains("not a client imported"),
+        "{}",
+        err.message
+    );
 }
 
 const INVALIDATE_LITERAL_SFC: &str = r#"<controller>
@@ -244,7 +271,11 @@ export default controller((ctx) => {
 fn invalidate_with_a_string_literal_is_a_compile_error() {
     let err = compile(INVALIDATE_LITERAL_SFC, opts("invalidate-literal-demo"))
         .expect_err("a string literal is a handwritten key — must refuse");
-    assert!(err.message.contains("never a string or array literal"), "{}", err.message);
+    assert!(
+        err.message.contains("never a string or array literal"),
+        "{}",
+        err.message
+    );
 }
 
 const NO_CALL_THUNK_SFC: &str = r#"<controller>
@@ -264,5 +295,9 @@ export default controller((ctx) => {
 fn a_thunk_that_calls_nothing_is_a_compile_error() {
     let err = compile(NO_CALL_THUNK_SFC, opts("no-call-demo"))
         .expect_err("a thunk with no call has nothing to derive a key from");
-    assert!(err.message.contains("doesn't call anything"), "{}", err.message);
+    assert!(
+        err.message.contains("doesn't call anything"),
+        "{}",
+        err.message
+    );
 }

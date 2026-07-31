@@ -71,7 +71,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       <code>style.radius(…)</code>, <code>style.fg(…)</code>, and so on.
     </p>
     <grid cols="2" gap="2">
-      <for as="a" of={sxRows()} key={a.prop}>
+      <for {sxRows()} as="a" key={a.prop}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{a.prop}</code>
@@ -90,7 +90,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       each names the element or attribute to use instead.
     </p>
     <grid cols="2" gap="2">
-      <for as="r" of={refusals()} key={r.atom}>
+      <for {refusals()} as="r" key={r.atom}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code sx={style.fg(destructive)}>{r.atom}</code>
@@ -108,7 +108,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       Historical prefix names below map 1:1 to those keys.
     </p>
     <grid cols="3" gap="2">
-      <for as="s" of={statePrefixes()} key={s.prefix}>
+      <for {statePrefixes()} as="s" key={s.prefix}>
         <row gap="3" sx={style.padX(3).padY(1).radius(md)} align="center">
           <code sx={style.minW(9)}>{s.prefix}</code>
           <small sx={style.fg(muted-foreground).fontFamily(mono).maxW(ch-24)}>{s.selector}</small>
@@ -128,7 +128,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       Use <code>when(&#123; tablet: style.fontSize(lg), desktop: style.fontSize(xl) &#125;)</code>.
     </p>
     <grid cols="3" gap="2">
-      <for as="c" of={conditionPrefixes()} key={c.prefix}>
+      <for {conditionPrefixes()} as="c" key={c.prefix}>
         <row gap="3" sx={style.padX(3).padY(1).radius(md)} align="center">
           <code sx={style.minW(9)}>{c.prefix}</code>
           <small sx={style.fg(muted-foreground).fontFamily(mono).maxW(ch-24)}>{c.media}</small>
@@ -146,7 +146,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
       property (timeline tracks, range-driven paint).
     </p>
     <grid cols="2" gap="2">
-      <for as="f" of={extraForms()} key={f.form}>
+      <for {extraForms()} as="f" key={f.form}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{f.form}</code>

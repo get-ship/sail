@@ -66,7 +66,7 @@ test('LSP diagnostics populate the editor gutter for a broken .sail', async ({ p
   // to valSig; the controller's `effect(() => valSig())` then mirrors the
   // change into the CodeMirror view. The LSP effect also runs on valSig
   // change — 350ms debounce, then `lspDiagnose(text, wasmUrl())` is awaited
-  // and the resulting SuiDiagnostic[] pushed into the lint gutter.
+  // and the resulting SailDiagnostic[] pushed into the lint gutter.
   await page.evaluate(async () => {
     const src = document.querySelector('sail-code-editor[data-pane="source"]') as HTMLElement & { value: string } | null
     if (!src) throw new Error('source editor not mounted')

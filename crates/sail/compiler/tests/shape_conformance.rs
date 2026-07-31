@@ -18,7 +18,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn repo_root() -> PathBuf {
     // crates/sail/compiler -> repo root is three levels up.
@@ -30,7 +30,7 @@ fn repo_root() -> PathBuf {
         .expect("canonicalize repo root")
 }
 
-fn collect_sui_files(roots: &[PathBuf]) -> Vec<PathBuf> {
+fn collect_sail_files(roots: &[PathBuf]) -> Vec<PathBuf> {
     let mut out = Vec::new();
     for root in roots {
         walk_collect(root, &mut out);
@@ -77,12 +77,7 @@ fn classify(path: &Path, repo: &Path) -> (CompileMode, Option<ComponentMeta>) {
         // (--component-name only — no shadow override). Lighter-DOM
         // components are the norm; the compiler's check pipeline
         // handles either.
-        (
-            CompileMode::Component,
-            Some(ComponentMeta {
-                name: stem,
-            }),
-        )
+        (CompileMode::Component, Some(ComponentMeta { name: stem }))
     } else {
         (CompileMode::Component, None)
     }
@@ -292,9 +287,16 @@ fn extract_declaration_export(l: &str) -> Option<String> {
     // Strip optional `async` modifier (for async functions).
     let rest = rest.strip_prefix("async ").unwrap_or(rest);
     // Strip the declaration keyword.
-    let rest = ["function ", "const ", "let ", "class ", "interface ", "type "]
-        .iter()
-        .find_map(|kw| rest.strip_prefix(kw))?;
+    let rest = [
+        "function ",
+        "const ",
+        "let ",
+        "class ",
+        "interface ",
+        "type ",
+    ]
+    .iter()
+    .find_map(|kw| rest.strip_prefix(kw))?;
     // Extract the identifier up to the first non-identifier character.
     let name: String = rest
         .chars()
@@ -303,10 +305,7 @@ fn extract_declaration_export(l: &str) -> Option<String> {
     if name.is_empty() { None } else { Some(name) }
 }
 
-fn structural_check(
-    js_files: &[(PathBuf, String, String)],
-    repo: &Path,
-) -> Vec<String> {
+fn structural_check(js_files: &[(PathBuf, String, String)], repo: &Path) -> Vec<String> {
     let runtime_idx = repo.join("packages/sail/runtime/src/index.ts");
     let runtime_hooks_idx = repo.join("packages/sail/runtime/src/template-hooks/index.ts");
     let runtime_route_idx = repo.join("packages/sail/runtime/src/route/index.ts");
@@ -364,10 +363,10 @@ fn structural_check(
 }
 
 #[test]
-fn every_sui_compiles_and_imports_resolve() {
+fn every_sail_compiles_and_imports_resolve() {
     let repo = repo_root();
     let roots = [repo.join("packages/components")];
-    let files = collect_sui_files(&roots);
+    let files = collect_sail_files(&roots);
     assert!(
         !files.is_empty(),
         "shape-conformance found zero `.sail` files under {roots:?} — wrong repo root?"
@@ -406,7 +405,7 @@ fn every_sui_compiles_and_imports_resolve() {
 }
 
 #[test]
-fn every_sui_typechecks_against_runtime_dts() {
+fn every_sail_typechecks_against_runtime_dts() {
     let repo = repo_root();
 
     // Skip cleanly when tsc isn't available — local first-clone flow,
@@ -424,7 +423,7 @@ fn every_sui_typechecks_against_runtime_dts() {
     let temp_path = temp.path().to_path_buf();
 
     let roots = [repo.join("packages/components")];
-    let files = collect_sui_files(&roots);
+    let files = collect_sail_files(&roots);
     assert!(!files.is_empty());
 
     for sail in &files {

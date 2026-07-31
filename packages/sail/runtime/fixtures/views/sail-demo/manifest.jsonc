@@ -1,9 +1,8 @@
-// Route metadata for views/sail-demo/. See
-// docs/ship-adrs/references/docs/view-directory-convention.md.
+// Route metadata for views/sail-demo/.
 {
   "name": "sail-demo",
   "path": "/sail-demo",
-  "title": "SUI Demo",
+  "title": "Sail Demo",
   "layout": "default",
   "auth": "public"
 }

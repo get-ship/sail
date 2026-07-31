@@ -34,7 +34,7 @@ import { fileURLToPath } from 'node:url'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const APP_ROOT = join(HERE, '..')
-const BASE = process.env.SUI_BEHAVIOR_BASE ?? 'http://127.0.0.1:7878'
+const BASE = process.env.SAIL_BEHAVIOR_BASE ?? 'http://127.0.0.1:7878'
 const SHOT_DIR = join(HERE, 'qa-shots')
 mkdirSync(SHOT_DIR, { recursive: true })
 

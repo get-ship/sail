@@ -6,11 +6,12 @@
 import { readdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { renderSpec, behaveSpec, closeBrowser } from './harness.mjs'
+import { renderSpec, behaveSpec, closeBrowser, THEMES } from './harness.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const OUT = resolve(HERE, '__screenshots__')
 const only = process.argv[2]
+const THEME_N = THEMES.length
 
 const specDir = resolve(HERE, 'specs')
 const files = readdirSync(specDir)
@@ -32,7 +33,7 @@ for (const f of files) {
   const ok = all.length === 0
   const behNote = spec.behavior ? ` · behavior ${beh.length ? `${beh.length} issue(s)` : 'ok'}` : ''
   console.log(
-    `${ok ? '✓' : '✗'} ${spec.tag}  ${count} instances · ${bad.length} issue(s) · 7 themes${behNote} → __screenshots__/${spec.tag}.png`,
+    `${ok ? '✓' : '✗'} ${spec.tag}  ${count} instances · ${bad.length} issue(s) · ${THEME_N} themes${behNote} → __screenshots__/${spec.tag}.png`,
   )
   if (!ok) { failed++; for (const b of all) console.log('    ', JSON.stringify(b)) }
 }

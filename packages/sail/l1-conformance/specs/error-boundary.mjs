@@ -100,7 +100,7 @@ export default {
           })
         // Throw from a node deep inside the protected subtree and let the
         // runtime's walk find the boundary. That is the contract.
-        globalThis.SuiBoundary.runProtected(document.getElementById('fault'), 'render', () => {
+        globalThis.SailBoundary.runProtected(document.getElementById('fault'), 'render', () => {
           throw new Error('boom')
         })
         return globalThis.__caught
@@ -130,7 +130,7 @@ export default {
       // A second throw must not overwrite the first. Effects in the subtree are
       // owned by the enclosing component, survive the catch, and may throw again.
       await page.evaluate(() => {
-        globalThis.SuiBoundary.runProtected(document.getElementById('fault'), 'effect', () => {
+        globalThis.SailBoundary.runProtected(document.getElementById('fault'), 'effect', () => {
           throw new Error('echo')
         })
       })

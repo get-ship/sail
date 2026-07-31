@@ -1,5 +1,5 @@
 // Motion runtime — the single authority for every animation the framework
-// owns. `fx:` directives compile to a single `__sui_motion_attach(el, cfg)`
+// owns. `fx:` directives compile to a single `__sail_motion_attach(el, cfg)`
 // call; the runtime creates the animations and decides whether to honor
 // `prefers-reduced-motion`. No CSS kill switch owns this path — the CSS rule
 // covers transitions the runtime doesn't (button hover lift, range thumb,
@@ -456,7 +456,7 @@ function nextStaggerIndex(parent: Element, trigger: string): number {
   return index
 }
 
-/** Resolved ONCE per `__sui_motion_attach` call (per element, per
+/** Resolved ONCE per `__sail_motion_attach` call (per element, per
  *  mount) — never recomputed on repeat triggers (hover in/out, replay)
  *  — so an element's sibling phase is fixed for its lifetime. Motion's
  *  own `stagger()` distance formula (`from: 0`, the default) is
@@ -573,7 +573,7 @@ function createAnimations(
  *  permanent freeze with no console error.
  *
  *  The compiler wires `fx:` during detached subtree construction
- *  (`el = __tpl(...); __sui_motion_attach(el, ...)`), so on first mount
+ *  (`el = __tpl(...); __sail_motion_attach(el, ...)`), so on first mount
  *  the element is not yet in the document. We pin it to its rest pose
  *  immediately (so it does not flash its final value for a frame) and
  *  create the real animations on the frame after it joins the document.
@@ -784,10 +784,10 @@ function classifyTrigger(trigger: string): Branch {
  *
  *  A signal here is reactive CONFIG — it says what the animation IS, and
  *  changing it makes a new animation. A signal driving a CONTINUOUS,
- *  per-frame value is the other lane: `timeline()` + `(--x)` reflection
- *  (job/motion-timeline). Do not reach for `fx:` to scrub a value every
- *  frame; each change here costs an animation teardown. */
-export function __sui_motion_attach(
+ *  per-frame value is the other lane: `timeline()` + `(--x)` reflection.
+ *  Do not reach for `fx:` to scrub a value every frame; each change here
+ *  costs an animation teardown. */
+export function __sail_motion_attach(
   el: Element,
   config: MotionAttachConfig | (() => MotionAttachConfig),
 ): Disposer {

@@ -32,7 +32,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use sail_compiler::{compile, CompileMode, CompileOpts, ComponentMeta, Policy};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, Policy, compile};
 
 /// The lesson that is supposed to fail, as `<lesson-dir>/<variant>`.
 const EXPECTED_FAILING: &str = "08-the-compiler-talks-back/starter";

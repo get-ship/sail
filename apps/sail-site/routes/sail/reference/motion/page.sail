@@ -22,7 +22,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p role="doc-eyebrow">Reference</p>
     <h1>Motion — one system</h1>
     <p role="doc-lead">
-      <code>style.&lt;trigger&gt;({…})</code> is the only animation directive;
+      <code>style.&lt;trigger&gt;(&#123;…&#125;)</code> is the only animation directive;
       <code>transition:</code> / <code>in:</code> / <code>out:</code> are
       retired.
     </p>
@@ -34,7 +34,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>Presets</h3>
     <grid cols="3" gap="2">
-      <for as="p" of={motionPresets()} key={p.name}>
+      <for {motionPresets()} as="p" key={p.name}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{p.name}</code>
@@ -48,11 +48,11 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   <column gap="3">
     <h3>Config value grammar</h3>
     <p sx={style.maxW(breakpoint-tablet)}>
-      Inside a <code>style.&lt;trigger&gt;({…})</code> config object, every value
+      Inside a <code>style.&lt;trigger&gt;(&#123;…&#125;)</code> config object, every value
       takes one of these forms.
     </p>
     <grid cols="1" gap="2">
-      <for as="f" of={valueForms()} key={f.form}>
+      <for {valueForms()} as="f" key={f.form}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code>{f.form}</code>

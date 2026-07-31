@@ -1,0 +1,8 @@
+{
+  "name": "react-control",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "vite", "build": "vite build" },
+  "dependencies": { "react": "^19", "react-dom": "^19" },
+  "devDependencies": { "@vitejs/plugin-react": "^4", "vite": "^6", "tailwindcss": "^3", "postcss": "^8", "autoprefixer": "^10" }
+}

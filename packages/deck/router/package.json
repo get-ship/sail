@@ -1,7 +1,7 @@
 {
   "name": "@ship/deck-router",
   "version": "0.3.0",
-  "description": "Deck route surface \u2014 URL state as reactive signals, navigate(), setRouterPort, mergeRoutes, and the edit-mode toggle. Owns the SHAPES/INSTANCES registries and the popstate listener; the SAIL runtime imports it as a thin re-export for backwards compatibility, but the canonical home is here.",
+  "description": "Deck route surface \u2014 URL state as reactive signals, navigate(), setRouterPort, mergeRoutes, and the edit-mode toggle. Owns the SHAPES/INSTANCES registries and the popstate listener.",
   "type": "module",
   "license": "MIT",
   "//": "SRC-DIRECT (like sail-runtime/sail-dom/deck-host). The deck bake compiles framework-singleton SRC in-process via resolve_entry's manifest `main`; pointing at a built dist/ let dist go stale relative to src (e.g. the lazy-mountRouter change shipped to src but a stale dist served the eager build). Resolving to src means the bundle always reflects source \u2014 no separate `tsc` build to keep in sync.",

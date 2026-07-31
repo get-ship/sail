@@ -1,7 +1,7 @@
-use super::super::writer::{js_string, Writer};
+use super::super::writer::{Writer, js_string};
+use crate::CompileOpts;
 use crate::action_manifest;
 use crate::lower::Lowered;
-use crate::CompileOpts;
 
 /// Specifier for every auto-imported `use:` action. The ABI path
 /// (`@ship/sail-runtime/internal`) re-exports the runtime front door,
@@ -17,7 +17,11 @@ pub(super) fn emit_imports(
     uses_templates: bool,
     uses_delegation: bool,
 ) {
-    let mut imports: Vec<String> = lowered.runtime_imports.iter().map(|s| s.to_string()).collect();
+    let mut imports: Vec<String> = lowered
+        .runtime_imports
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
     for &name in &lowered.motion_builtins {
         let s = name.to_string();
         if !imports.contains(&s) {
@@ -75,7 +79,10 @@ pub(super) fn emit_imports(
     // default; only the bundled path opts in via `emit_component_imports`.
     if opts.emit_component_imports {
         for tag in &lowered.used_component_tags {
-            w.line(&format!("import {};", js_string(&format!("@sail-tag/{tag}"))));
+            w.line(&format!(
+                "import {};",
+                js_string(&format!("@sail-tag/{tag}"))
+            ));
         }
     }
     w.nl();

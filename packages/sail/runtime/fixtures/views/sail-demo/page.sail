@@ -1,6 +1,6 @@
 <div data-demo="true">
-  <h1>SUI Demo</h1>
-  <p>Visual sanity-check for the SUI component bundle.</p>
+  <h1>Sail Demo</h1>
+  <p>Visual sanity-check for the Sail component bundle.</p>
 
   <section>
     <h2>button — solid</h2>

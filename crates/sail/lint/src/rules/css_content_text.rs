@@ -219,7 +219,10 @@ fn scan_content_declarations(content: &str) -> Vec<ContentDecl<'_>> {
         }
         let value = content[value_start..v].trim_end();
         if name == "content" {
-            out.push(ContentDecl { value_offset: value_start, value });
+            out.push(ContentDecl {
+                value_offset: value_start,
+                value,
+            });
         }
         i = v;
     }
@@ -318,7 +321,10 @@ mod tests {
 
     #[test]
     fn two_letter_state_reports() {
-        assert_eq!(run("<style>.chip::after { content: 'ok'; }</style>").len(), 1);
+        assert_eq!(
+            run("<style>.chip::after { content: 'ok'; }</style>").len(),
+            1
+        );
     }
 
     #[test]

@@ -26,7 +26,7 @@
 
 use crate::ir::Program;
 use crate::keys::BindingRegistry;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 pub fn emit_meta(_program: &Program, bindings: &BindingRegistry) -> Value {
     let entries: Vec<Value> = bindings

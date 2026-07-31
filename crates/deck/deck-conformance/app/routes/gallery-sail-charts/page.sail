@@ -1,7 +1,7 @@
 <column gap="8" sx={style.pad(6).maxW(breakpoint-tablet).mx(auto)}>
   <header sx={style.borderBWidth(1).borderB(border).padB(4)}>
-    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)}>sui/charts</h1>
-    <p sx={style.fg(muted-foreground).fontSize(sm)}>Pack <strong>sui/charts</strong> — SVG-rendered chart primitives. Each card shows one component with representative prop/variant combinations.</p>
+    <h1 sx={style.fontSize(2xl).fontWeight(bold).fg(foreground).mb(2)}>sail/charts</h1>
+    <p sx={style.fg(muted-foreground).fontSize(sm)}>Pack <strong>sail/charts</strong> — SVG-rendered chart primitives. Each card shows one component with representative prop/variant combinations.</p>
   </header>
 
   <!-- ── sail-area-chart ─────────────────────────────────────────────────── -->

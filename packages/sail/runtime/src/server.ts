@@ -65,7 +65,7 @@ export {
   injectContext,
   contextKey,
   walkScope,
-  SuiMountOutsideSetupError,
+  SailMountOutsideSetupError,
 } from './effect-scope'
 export type { EffectScope, ContextKey } from './effect-scope'
 export { mount as mountAmbient } from './effect-scope'
@@ -134,4 +134,3 @@ export type { ServerRoot } from './server-dom'
 export { bindSlotEmpty } from './slot-empty'
 export { resolveSlots, snapshotChildren, slotFilled } from './slot'
 export { getTemplateHook, registerTemplateHook } from './template-hooks/registry'
-export { adoptSuiSheets } from './styles/index'

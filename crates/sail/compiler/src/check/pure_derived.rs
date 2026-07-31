@@ -33,14 +33,54 @@ struct Pattern {
 }
 
 const PATTERNS: &[Pattern] = &[
-    Pattern { label: "await",         token: "await",        require_dot: false, require_call: false },
-    Pattern { label: "Date.now()",    token: "Date.now",     require_dot: false, require_call: true },
-    Pattern { label: "Math.random()", token: "Math.random",  require_dot: false, require_call: true },
-    Pattern { label: "setTimeout()",  token: "setTimeout",   require_dot: false, require_call: true },
-    Pattern { label: "setInterval()", token: "setInterval",  require_dot: false, require_call: true },
-    Pattern { label: "Promise.*",     token: "Promise",      require_dot: true,  require_call: false },
-    Pattern { label: "fetch()",       token: "fetch",        require_dot: false, require_call: true },
-    Pattern { label: "ship.*",        token: "ship",         require_dot: true,  require_call: false },
+    Pattern {
+        label: "await",
+        token: "await",
+        require_dot: false,
+        require_call: false,
+    },
+    Pattern {
+        label: "Date.now()",
+        token: "Date.now",
+        require_dot: false,
+        require_call: true,
+    },
+    Pattern {
+        label: "Math.random()",
+        token: "Math.random",
+        require_dot: false,
+        require_call: true,
+    },
+    Pattern {
+        label: "setTimeout()",
+        token: "setTimeout",
+        require_dot: false,
+        require_call: true,
+    },
+    Pattern {
+        label: "setInterval()",
+        token: "setInterval",
+        require_dot: false,
+        require_call: true,
+    },
+    Pattern {
+        label: "Promise.*",
+        token: "Promise",
+        require_dot: true,
+        require_call: false,
+    },
+    Pattern {
+        label: "fetch()",
+        token: "fetch",
+        require_dot: false,
+        require_call: true,
+    },
+    Pattern {
+        label: "ship.*",
+        token: "ship",
+        require_dot: true,
+        require_call: false,
+    },
 ];
 
 pub fn check(controller: &ParsedController) -> Result<(), CompileError> {
@@ -69,21 +109,36 @@ fn scan_for_forbidden(src: &str, span: Span) -> Option<(&'static str, Span)> {
     while i < end {
         let c = bytes[i];
         if let Some(q) = in_str {
-            if c == b'\\' { i += 2; continue; }
-            if c == q { in_str = None; }
+            if c == b'\\' {
+                i += 2;
+                continue;
+            }
+            if c == q {
+                in_str = None;
+            }
             i += 1;
             continue;
         }
         match c {
-            b'"' | b'\'' | b'`' => { in_str = Some(c); i += 1; continue; }
+            b'"' | b'\'' | b'`' => {
+                in_str = Some(c);
+                i += 1;
+                continue;
+            }
             b'/' if i + 1 < end && bytes[i + 1] == b'/' => {
-                while i < end && bytes[i] != b'\n' { i += 1; }
+                while i < end && bytes[i] != b'\n' {
+                    i += 1;
+                }
                 continue;
             }
             b'/' if i + 1 < end && bytes[i + 1] == b'*' => {
                 i += 2;
-                while i + 1 < end && !(bytes[i] == b'*' && bytes[i + 1] == b'/') { i += 1; }
-                if i + 1 < end { i += 2; }
+                while i + 1 < end && !(bytes[i] == b'*' && bytes[i + 1] == b'/') {
+                    i += 1;
+                }
+                if i + 1 < end {
+                    i += 2;
+                }
                 continue;
             }
             _ => {}
@@ -99,13 +154,14 @@ fn scan_for_forbidden(src: &str, span: Span) -> Option<(&'static str, Span)> {
                 continue;
             }
             let after = i + pat.token.len();
-            if pat.require_dot
-                && (after >= end || bytes[after] != b'.') {
-                    continue;
-                }
+            if pat.require_dot && (after >= end || bytes[after] != b'.') {
+                continue;
+            }
             if pat.require_call {
                 let mut k = after;
-                while k < end && bytes[k].is_ascii_whitespace() { k += 1; }
+                while k < end && bytes[k].is_ascii_whitespace() {
+                    k += 1;
+                }
                 if k >= end || bytes[k] != b'(' {
                     continue;
                 }
@@ -119,7 +175,9 @@ fn scan_for_forbidden(src: &str, span: Span) -> Option<(&'static str, Span)> {
         }
         // Advance past this identifier so we don't re-scan it.
         let mut k = i;
-        while k < end && is_ident_cont(bytes[k]) { k += 1; }
+        while k < end && is_ident_cont(bytes[k]) {
+            k += 1;
+        }
         i = if k > i { k } else { i + 1 };
     }
     None

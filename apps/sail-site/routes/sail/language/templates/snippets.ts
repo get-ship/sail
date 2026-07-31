@@ -4,21 +4,21 @@ export const code = {
   read: `<p>Signed in as {user().name}.</p>
 <button disabled={saving()}>Save</button>`,
 
-  ifBlock: `<if cond={user()}>
+  ifBlock: `<if {user()}>
   <p>Welcome back.</p>
-<else-if cond={pending()}>
+<else-if {pending()}>
   <spinner></spinner>
 </else-if><else>
   <a href="/login">Sign in</a>
 </else></if>`,
 
-  matchBlock: `<match on={status()}>
-  <case of={'draft'}> <badge tone="muted">Draft</badge>
-  </case><case of={'live'}>  <badge tone="success">Live</badge>
+  matchBlock: `<match {status()}>
+  <case {'draft'}> <badge tone="muted">Draft</badge>
+  </case><case {'live'}>  <badge tone="success">Live</badge>
   </case><default>      <badge>Unknown</badge>
 </default></match>`,
 
-  forBlock: `<for as="row" of={rows()} key={row.id}>
+  forBlock: `<for {rows()} as="row" key={row.id}>
   <tr><td>{row.name}</td></tr>
 </for>`,
 

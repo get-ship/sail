@@ -212,7 +212,7 @@ export function route(opts?: { url?: URL; routes?: RouteShape[] }): RouteSignals
  * the *policy* — history, path→route matching, and mounting. `navigate()`
  * delegates here so a single call from any bundle actually navigates.
  *
- * Registered via {@link setRouterPort}. Mirrors `SuiLoader`:
+ * Registered via {@link setRouterPort}. Mirrors `SailLoader`:
  * the runtime names no host concept, the host plugs one in.
  */
 export interface RouterPort {

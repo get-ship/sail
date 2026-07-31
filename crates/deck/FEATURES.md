@@ -22,8 +22,8 @@ each is guarded by a dedicated gate test:
   output carries DOM wiring + bare-specifier imports only; it never bakes a
   `/_deck/...` URL or an importmap (serving is Deck's concern; the compiler knows
   no URLs). Gate: `crates/sail/compiler/tests/boundary_invariants.rs`
-  (`route_output_emits_no_behavior_or_urls`, `form_mutation_ssr_contains_no_sui_urls`,
-  `live_data_ssr_contains_no_sui_urls`). Deck injects the `/_deck/...` URLs
+  (`route_output_emits_no_behavior_or_urls`, `form_mutation_ssr_contains_no_sail_urls`,
+  `live_data_ssr_contains_no_sail_urls`). Deck injects the `/_deck/...` URLs
   host-side (form actions, the live-data `__subscribe__` URL).
 - **deck / server seam** — Deck's host + bundler crates (`deck-core`,
   `deck-axum`, `deck-host`, `deck-bundler`, `deck-config`) name no Ship app
@@ -44,7 +44,7 @@ each is guarded by a dedicated gate test:
   shared-chunk dedup, app/route builds, asset-graph, watch/HMR, catalog,
   route codegen).
 - `deck-config` — the optional `deck.jsonc` route-discovery + watch override schema.
-- `deck-cli` — the `deck` framework CLI (build / build-assets / routes / scaffold).
+- `deck-cli` — the `sail` framework CLI (build / build-assets / routes / scaffold).
 - `deck` — thin re-export facade over the above (what shipd imports).
 
 ## Executable reference
@@ -64,18 +64,18 @@ Each handler logic lives in `deck-core` and returns a `DeckResponse`; the matchi
 
 | Feature | Route | Implementation | Description |
 | --- | --- | --- | --- |
-| Compiled route module | `GET /_deck/views/{name}/view.js` | `crates/deck/deck-core/src/route.rs::serve_sui_route_setup` | Serves the per-route ESM bundle; compiles on demand when no `.deck` artifact exists. (The `/_deck/views/*` serving URL is the ship-views wire path — see the ship-ui handoff.) |
-| sail-runtime bundle | `GET /_deck/runtime.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_runtime` | Deck's own baked runtime singleton. |
-| sail-dom bundle | `GET /_deck/dom.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_dom` | Deck's own baked DOM module. |
-| sdk-client bundle | `GET /_deck/sdk-client.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_sdk_client` | Deck's own baked SDK client. |
-| Per-icon SVG | `GET /_deck/icons/{name}.svg` | `crates/deck/deck-core/src/assets.rs::serve_sui_icon` | One lucide icon per request, alias-resolved server-side, from the embedded set. |
+| Compiled route module | `GET /_deck/views/{name}/view.js` | `crates/deck/deck-core/src/route.rs::serve_sail_route_setup` | Serves the per-route ESM bundle; compiles on demand when no `.deck` artifact exists. (The `/_deck/views/*` serving URL is the ship-views wire path — see the ship-ui handoff.) |
+| sail-runtime bundle | `GET /_deck/runtime.js` | `crates/deck/deck-core/src/assets.rs::serve_sail_runtime` | Deck's own baked runtime singleton. |
+| sail-dom bundle | `GET /_deck/dom.js` | `crates/deck/deck-core/src/assets.rs::serve_sail_dom` | Deck's own baked DOM module. |
+| sdk-client bundle | `GET /_deck/sdk-client.js` | `crates/deck/deck-core/src/assets.rs::serve_sail_sdk_client` | Deck's own baked SDK client. |
+| Per-icon SVG | `GET /_deck/icons/{name}.svg` | `crates/deck/deck-core/src/assets.rs::serve_sail_icon` | One lucide icon per request, alias-resolved server-side, from the embedded set. |
 | Framework font | `GET /_deck/fonts/{file}` | `crates/deck/deck-core/src/assets.rs::serve_framework_font` | One token-package woff2 per request, allowlist-only (FONTS basenames), no path traversal. Non-bundled consumers (e.g. tutorial preview CSS) rewrite relative `url('./fonts/…')` here instead of re-hosting under app `public/fonts`. |
-| Shared chunk | `GET /_deck/{file}` | `crates/deck/deck-core/src/assets.rs::serve_sui_chunk` | Content-addressed shared chunk from the multi-entry route build, served from `.deck/`. |
+| Shared chunk | `GET /_deck/{file}` | `crates/deck/deck-core/src/assets.rs::serve_sail_chunk` | Content-addressed shared chunk from the multi-entry route build, served from `.deck/`. |
 | Scaffold shell | `GET /` and `GET /space/{id}` | `crates/deck/deck-core/src/assets.rs::serve_scaffold` | Serves an HTML scaffold (shell/space), rewriting asset hrefs and injecting validated globals. |
 | Scaffold asset | `GET /{shell,space}/_assets/{file}` | `crates/deck/deck-core/src/assets.rs::serve_scaffold_asset` | Serves a scaffold's hashed static asset with path-traversal rejection. |
 | Meta / drift stamp | `GET /_deck/meta` | `crates/deck/deck-core/src/meta.rs::serve_meta` | Compiler + daemon build identity for the shell's version-drift check. |
 | Workspace catalog | (purged — `GET /_deck/catalog/workspace`) | (purged — `deck-core/src/packs.rs`) | The runtime catalog serving was the framework's hardcoded `.deck/catalogs/` read. Purged. |
-| Live-reload client | `GET /_deck/live-reload.js` | `crates/deck/deck-core/src/assets.rs::serve_sui_live_reload` | The single HMR client; self-gates on the `ship-mode` meta so it only subscribes in dev. |
+| Live-reload client | `GET /_deck/live-reload.js` | `crates/deck/deck-core/src/assets.rs::serve_sail_live_reload` | The single HMR client; self-gates on the `ship-mode` meta so it only subscribes in dev. |
 | Styled 404 page | (host 404 body) | `crates/deck/deck-core/src/error_page.rs::route_not_found` | Rendered `text/html` not-found page (with servable-route list), not raw JSON. |
 | Route resolution | (internal) | `crates/deck/deck-core/src/resolver.rs::resolve` | Host-agnostic project-root + first-party resolution feeding every route handler. |
 | Asset-graph read | (purged — `deck-core/src/asset_graph.rs`) | (purged — `deck-purge-root`) | The runtime read of `.deck/asset-graph.json` was the framework's hardcoded `.deck/` reach. Purged. |
@@ -105,7 +105,7 @@ chunks, builds apps and routes, writes the asset graph, and watches for HMR.
 | --- | --- | --- | --- |
 | Bundler handle | (in-process) | `crates/deck/deck-bundler/src/lib.rs::Bundler` | Clone-safe handle: locate compiler once, build / build_all / watch, single-flight coalescing. |
 | Build all targets | `.deck/` + `crates/deck/deck-core/assets/` | `crates/deck/deck-bundler/src/lib.rs::build_all` | Bakes every target (routes multi-entry), refreshes the catalog, writes the asset graph; honest per-target failure. |
-| In-process compile | (JS string) | `crates/deck/deck-bundler/src/compile.rs::compile_sui` | Compiles one `.sail` to JS via `sail_compiler::compile`, auto-wiring a paired controller. |
+| In-process compile | (JS string) | `crates/deck/deck-bundler/src/compile.rs::compile_sail` | Compiles one `.sail` to JS via `sail_compiler::compile`, auto-wiring a paired controller. |
 | Rolldown driver | per-target `.js` | `crates/deck/deck-bundler/src/rolldown_bundle.rs::bundle_target` | Drives Rolldown for one target with the SAIL plugin; trims arenas after each build. |
 | SAIL resolve/load plugin | (Rolldown plugin) | `crates/deck/deck-bundler/src/sail_plugin.rs` | `resolve_id`/`load` hooks: compile `.sail`, externalize singletons, re-anchor `@ship/<pkg>`, resolve `@sail-tag/<tag>`. |
 | CSS asset url() rewrite + minify | (bundled `.css` assets) | `crates/deck/deck-bundler/src/ship_asset_css.rs::ShipAssetCssPlugin` | Rewrites local `url(...)` to hashed assets; production minifies CSS bodies after rewrite (preserves font `url()`). |
@@ -141,12 +141,12 @@ The pure SAIL-facing read side, plus the framework CLI.
 | Resolved route | (resolution result) | `crates/deck/deck-host/src/resolver.rs::ResolvedRoute` | Source + params + canonical source path returned by the resolver. |
 | Route payload shape | (JSON contract) | `crates/deck/deck-host/src/route_payload.rs::RoutePayload` | The serialized payload contract (html/css/scope/moduleUrl/params) shared with the runtime. |
 | Render helper | (source read) | `crates/deck/deck-host/src/render_helpers.rs::render_route_source` | Reads a route's `page.sail` source from the project root. |
-| CLI: build app | `deck build` | `crates/deck/deck-cli/src/main.rs` | Builds a SAIL SPA app to a static output dir. |
-| CLI: bake assets | `deck build-assets` | `crates/deck/deck-cli/src/main.rs` | Bakes framework + consumer bundles via the in-process bundler, with non-empty guards. |
-| CLI: routes | `deck routes` | `crates/deck/deck-cli/src/main.rs` | Regenerates the typed dynamic-route table standalone. `--root=<path>` is required and repeatable; the CLI walks `<root>/routes/` and writes `<root>/routes.gen.ts` with a label auto-derived from the path's basename (no app-name coupling, no monorepo-defaults heuristic). |
-| CLI: scaffold route | `deck scaffold route` | `crates/deck/deck-cli/src/scaffold.rs::run_route` | Generates a new route (page.sail + manifest.jsonc; state goes in an inline `<controller>`). |
-| CLI: scaffold component | `deck scaffold component` | `crates/deck/deck-cli/src/scaffold.rs::run_component` | Generates a new `sail-*` primitive under the primitives package. |
-| CLI: scaffold pack | `deck scaffold pack` | `crates/deck/deck-cli/src/scaffold.rs::run_pack` | Generates a new first-party `@ship/<name>` component pack. |
+| CLI: build app | `sail build` | `crates/deck/deck-cli/src/main.rs` | Builds a SAIL SPA app to a static output dir. |
+| CLI: bake assets | `sail build-assets` | `crates/deck/deck-cli/src/main.rs` | Bakes framework + consumer bundles via the in-process bundler, with non-empty guards. |
+| CLI: routes | `sail routes` | `crates/deck/deck-cli/src/main.rs` | Regenerates the typed dynamic-route table standalone. `--root=<path>` is required and repeatable; the CLI walks `<root>/routes/` and writes `<root>/routes.gen.ts` with a label auto-derived from the path's basename (no app-name coupling, no monorepo-defaults heuristic). |
+| CLI: scaffold route | `sail scaffold route` | `crates/deck/deck-cli/src/scaffold.rs::run_route` | Generates a new route (page.sail + manifest.jsonc; state goes in an inline `<controller>`). |
+| CLI: scaffold component | `sail scaffold component` | `crates/deck/deck-cli/src/scaffold.rs::run_component` | Generates a new `sail-*` primitive under the primitives package. |
+| CLI: scaffold pack | `sail scaffold pack` | `crates/deck/deck-cli/src/scaffold.rs::run_pack` | Generates a new first-party `@ship/<name>` component pack. |
 
 ## Security
 

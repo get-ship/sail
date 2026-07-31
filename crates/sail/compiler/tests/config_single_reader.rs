@@ -37,25 +37,25 @@ fn walk_ok(p: &Path) -> bool {
 /// it does not match.
 fn is_config_reader(text: &str) -> bool {
     let reads = text.contains("read_to_string") || text.contains("fs::read(");
-    let constructs = text.contains("join(\"sail.config.json\")")
-        || text.contains("join(CONFIG_FILE)");
+    let constructs =
+        text.contains("join(\"sail.config.json\")") || text.contains("join(CONFIG_FILE)");
     reads && constructs
 }
 
 #[test]
-fn sui_config_has_a_single_reader() {
+fn sail_config_has_a_single_reader() {
     // crates/sail/compiler -> crates/sail
-    let sui_root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+    let sail_root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
     let mut readers = Vec::new();
     for sub in ["compiler/src", "lint/src"] {
         let mut files = Vec::new();
-        rs_files(&sui_root.join(sub), &mut files);
+        rs_files(&sail_root.join(sub), &mut files);
         for f in files {
             let text = fs::read_to_string(&f).unwrap_or_default();
             // Test modules (fixtures write/read sail.config.json) are not readers.
             let real = text.split("#[cfg(test)]").next().unwrap_or(&text);
             if is_config_reader(real) {
-                readers.push(f.strip_prefix(sui_root).unwrap().to_path_buf());
+                readers.push(f.strip_prefix(sail_root).unwrap().to_path_buf());
             }
         }
     }

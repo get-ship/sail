@@ -1,8 +1,7 @@
 <!--
   <radio> — label + native radio. Root stays <label> for native semantics.
-  Layout flex/gap is contracts (cannot put <row> on label). Disabled dim is
-  contracts too ([disabled] attr; disabled: prefix only matches :disabled/aria-disabled).
-  Paint (Style product): host type from component.radio tokens (cssName radio-foreground).
+  Nested input paint matches freeform <input type=radio> (input.sail); inset
+  disc on checked is RADIO_INPUT_MAP (box-shadow, not Style vocab).
 -->
 
 <scope>
@@ -12,7 +11,10 @@
   }
 
   const host = style.fontFamily(body).fontSize(sm).fg(radio-foreground).cursor(pointer).select(none)
-  const input = style.m(0)
+  const input = style.appearance(none).display(inline-block).align(middle).m(0).pad(0).minH(0).w(icon-size-sm).h(icon-size-sm).fontSize(base).borderWidth(2).border(foreground).bg(background).shadow(xs).radius(full).cursor(pointer).when({
+    checked: style.bg(primary).border(primary),
+    disabled: style.cursor(not-allowed).opacity(50),
+  })
 </scope>
 
 <label sx={host}>

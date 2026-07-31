@@ -1,0 +1,42 @@
+{
+  "service": "SailTask",
+  "method": "Get",
+  "mcp_tool": "sail_task_get",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "project": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "TaskGetRet",
+    "type": "object",
+    "required": [
+      "ok",
+      "task"
+    ],
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "task": {
+        "$ref": "#/definitions/Json"
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

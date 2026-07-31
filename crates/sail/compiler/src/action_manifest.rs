@@ -44,7 +44,7 @@
 //!     surface taught in skill/docs is [`PUBLIC_ACTION_NAMES`] — a
 //!     strict subset; runtime top-level re-exports only those.
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// One entry in the action registry. The table is the contract; see
 /// the module docs for the derivation rules.
@@ -196,6 +196,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "liveRegion",
         param: "void",
         summary: "Sync role/aria-live from tone: warning|destructive → assertive alert; else polite status.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "marquee",
+        param: "void",
+        summary: "Infinite seamless track scroll for L1 <ticker> (duration/reverse on host).",
         auto_import: true,
     },
     ActionEntry {
@@ -385,15 +391,52 @@ pub fn public_actions() -> impl Iterator<Item = &'static ActionEntry> {
 /// stamps resolve; only [`PUBLIC_ACTION_NAMES`] are taught / re-exported
 /// from the runtime front door.
 pub const BUILTIN_ACTION_NAMES: &[&str] = &[
-    "anchor", "autoDismiss", "autosize", "catchRender", "cellPad",
-    "chromeOffset", "clickOutside", "combobox", "contextMenu",
-    "describedControl", "detailsDisabled", "detailsToggle", "dismissControl",
-    "dismissible", "dropzone", "eventSpan", "gridTracks", "hoverSurface",
-    "icon", "liveRegion", "maxWidth", "mediaFallback", "menu", "pagination",
-    "pin", "portEdge", "pressable", "pressed", "radioGroup", "rangeFill",
-    "recoverySurface", "rect", "spotlight", "swatch", "syntaxHighlight",
-    "tabs", "targetCursor", "themeSelect", "tipDescribe", "toggleGroup",
-    "variantLive", "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
+    "anchor",
+    "autoDismiss",
+    "autosize",
+    "catchRender",
+    "cellPad",
+    "chromeOffset",
+    "clickOutside",
+    "combobox",
+    "contextMenu",
+    "describedControl",
+    "detailsDisabled",
+    "detailsToggle",
+    "dismissControl",
+    "dismissible",
+    "dropzone",
+    "eventSpan",
+    "gridTracks",
+    "hoverSurface",
+    "icon",
+    "liveRegion",
+    "marquee",
+    "maxWidth",
+    "mediaFallback",
+    "menu",
+    "pagination",
+    "pin",
+    "portEdge",
+    "pressable",
+    "pressed",
+    "radioGroup",
+    "rangeFill",
+    "recoverySurface",
+    "rect",
+    "spotlight",
+    "swatch",
+    "syntaxHighlight",
+    "tabs",
+    "targetCursor",
+    "themeSelect",
+    "tipDescribe",
+    "toggleGroup",
+    "variantLive",
+    "virtualRow",
+    "virtualSpacer",
+    "worldTransform",
+    "zoomPan",
 ];
 
 // Drift guards: the const-time panic pattern would be cleaner but
@@ -418,9 +461,24 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
 /// `BARE_REFERENCED_ACTION_NAMES` update when a new take-a-param
 /// action is added.
 pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
-    "anchor", "autosize", "cellPad", "clickOutside", "dropzone", "eventSpan",
-    "gridTracks", "maxWidth", "pin", "portEdge", "rect", "spotlight", "swatch",
-    "targetCursor", "virtualRow", "virtualSpacer", "worldTransform", "zoomPan",
+    "anchor",
+    "autosize",
+    "cellPad",
+    "clickOutside",
+    "dropzone",
+    "eventSpan",
+    "gridTracks",
+    "maxWidth",
+    "pin",
+    "portEdge",
+    "rect",
+    "spotlight",
+    "swatch",
+    "targetCursor",
+    "virtualRow",
+    "virtualSpacer",
+    "worldTransform",
+    "zoomPan",
 ];
 
 // (see drift-guard note above — the tests in `mod tests` enforce
@@ -533,4 +591,3 @@ mod tests {
         );
     }
 }
-

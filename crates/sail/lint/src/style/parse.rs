@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use super::ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
-use super::setters::{find_setter, validate_op, when_target};
+use super::setters::{closest_unique_setter, find_setter, validate_op, when_target};
 
 /// Parse a Style expression. Returns Style + diagnostics (fail-closed flags in diags).
 pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
@@ -149,10 +149,10 @@ fn style_contains_motion(style: &Style) -> bool {
 
 /// True if input is the killed utility-string product (atoms / prop: value soup without style./match/when).
 pub fn looks_like_utility_string_product(input: &str) -> bool {
-    let t = input.trim();
+    // Preprocess may pass `{expr}` (outer brace wrapper from quote_brace_attrs).
+    let t = strip_one_outer_brace_layer(input.trim());
     if t.starts_with("style.")
         || t.starts_with("match(")
-        
         || t.starts_with("when(")
         || t.starts_with("compound(")
         || t.starts_with('[')
@@ -163,8 +163,58 @@ pub fn looks_like_utility_string_product(input: &str) -> bool {
     if t.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_') {
         return false;
     }
+    // Style const + motion method: `cta.press({ scale: 'press' })`,
+    // `wordmark.scroll({ scale: 'spring:deliberate' })`. Colons live inside the
+    // config object; that is product, not utility-string soup.
+    if is_const_ref_motion_chain(t) {
+        return false;
+    }
     // Space-separated utility soup or legacy atoms
-    t.contains(':') || t.split_whitespace().any(|w| w.contains('-') && !w.starts_with("style"))
+    t.contains(':')
+        || t.split_whitespace()
+            .any(|w| w.contains('-') && !w.starts_with("style"))
+}
+
+fn strip_one_outer_brace_layer(t: &str) -> &str {
+    let t = t.trim();
+    if !(t.starts_with('{') && t.ends_with('}') && t.len() >= 2) {
+        return t;
+    }
+    let inn = t[1..t.len() - 1].trim();
+    // Strip when the outer pair wraps a whole Style expr (not a bare `{k: v}` map).
+    if inn.starts_with("style.")
+        || inn.starts_with("match(")
+        || inn.starts_with("when(")
+        || inn.starts_with("compound(")
+        || inn.starts_with('[')
+        || inn
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b.is_ascii_whitespace())
+        || is_const_ref_motion_chain(inn)
+    {
+        return inn;
+    }
+    t
+}
+
+/// `name.enter|exit|loop|reveal|scroll|hover|press|focus…({…})` — motion attach
+/// chained off a Style const ref (not `style.`).
+fn is_const_ref_motion_chain(input: &str) -> bool {
+    let Some((head, rest)) = input.split_once('.') else {
+        return false;
+    };
+    if head.is_empty() || !head.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_') {
+        return false;
+    }
+    let method = rest.split('(').next().unwrap_or("");
+    is_motion_chain_method(method)
+}
+
+/// Public for the sx-attribute classifier (`rules::sx`): a const-ref motion
+/// chain (`row.enter({…}).exit({…})`) is a compile-time Style product, not a
+/// runtime dynamic binding.
+pub(crate) fn is_const_ref_motion_chain_pub(input: &str) -> bool {
+    is_const_ref_motion_chain(input)
 }
 
 /// Remove `//` line and `/* */` block comments, replacing each with a single
@@ -689,6 +739,7 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
             diags.push(StyleDiagnostic::UnknownSetter {
                 setter: method.to_string(),
                 source: source.clone(),
+                suggestion: closest_unique_setter(method).map(|s| s.to_string()),
             });
         } else {
             let op = PaintOp {
@@ -777,7 +828,7 @@ fn parse_match(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
         }
         let before = p.pos;
         let key = match p.bump() {
-            Some(Tok::Word(w)) => w.to_string(),
+            Some(Tok::Word(w)) => unquote(w).to_string(),
             _ => {
                 diags.push(StyleDiagnostic::ParseError {
                     message: "expected match arm key".into(),
@@ -826,7 +877,7 @@ fn parse_scrutinee(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Stri
         // $.prop or $ . prop
         let mut path = Vec::new();
         if let Some(Tok::Word(w)) = p.bump() {
-            // might be $ 
+            // might be $
             if w != "$" && w != _param {
                 // allow bare prop after =>
                 return w.to_string();
@@ -878,7 +929,10 @@ fn parse_when_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Styl
     Style::When { entries }
 }
 
-fn parse_when_map_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Vec<(String, Style)> {
+fn parse_when_map_body(
+    p: &mut Parser<'_>,
+    diags: &mut Vec<StyleDiagnostic>,
+) -> Vec<(String, Style)> {
     p.expect(Tok::LParen, diags);
     p.expect(Tok::LBrace, diags);
     let mut entries = Vec::new();
@@ -919,6 +973,20 @@ fn parse_when_map_body(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
     entries
 }
 
+/// Quoted literals arrive INSIDE the Word (the lexer keeps quotes so
+/// motion-config brace depth is undisturbed) — condition/arm consumers need
+/// the bare value, else selectors render `[offset=''8'']` and never match.
+fn unquote(w: &str) -> &str {
+    let b = w.as_bytes();
+    if b.len() >= 2
+        && ((b[0] == b'\'' && b[b.len() - 1] == b'\'') || (b[0] == b'"' && b[b.len() - 1] == b'"'))
+    {
+        &w[1..w.len() - 1]
+    } else {
+        w
+    }
+}
+
 fn parse_compound(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     p.bump(); // compound
     p.expect(Tok::LParen, diags);
@@ -936,7 +1004,7 @@ fn parse_compound(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style
         }
         let before = p.pos;
         let k = match p.bump() {
-            Some(Tok::Word(w)) => w.to_string(),
+            Some(Tok::Word(w)) => unquote(w).to_string(),
             _ => {
                 p.force_progress();
                 break;
@@ -944,7 +1012,7 @@ fn parse_compound(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style
         };
         p.expect(Tok::Colon, diags);
         let v = match p.bump() {
-            Some(Tok::Word(w)) => w.to_string(),
+            Some(Tok::Word(w)) => unquote(w).to_string(),
             _ => {
                 diags.push(StyleDiagnostic::ParseError {
                     message: "compound condition value must be a literal".into(),
@@ -999,4 +1067,19 @@ fn validate_style(style: &Style, diags: &mut Vec<StyleDiagnostic>) {
 /// Parse `const name = <style-expr>` (scope Style const line, without the `const` keyword optional).
 pub fn parse_style_const_rhs(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     parse(input)
+}
+
+#[cfg(test)]
+mod utility_detect_tests {
+    use super::looks_like_utility_string_product;
+    #[test]
+    fn const_press_is_not_utility() {
+        assert!(!looks_like_utility_string_product(
+            "cta.press({ scale: 'press' })"
+        ));
+    }
+    #[test]
+    fn atoms_are_utility() {
+        assert!(looks_like_utility_string_product("p-4 bg-muted"));
+    }
 }

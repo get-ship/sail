@@ -323,9 +323,9 @@ fn zero_config_discovers_routes_only() {
     let root = tmp.path().to_path_buf();
 
     // Write a single route.
-    let page_sui = root.join("routes/foo/page.sail");
-    std::fs::create_dir_all(page_sui.parent().unwrap()).unwrap();
-    std::fs::write(&page_sui, "<div>foo</div>\n").unwrap();
+    let page_sail = root.join("routes/foo/page.sail");
+    std::fs::create_dir_all(page_sail.parent().unwrap()).unwrap();
+    std::fs::write(&page_sail, "<div>foo</div>\n").unwrap();
 
     // Zero-config host: DeckConfig::defaults() (no deck.jsonc).
     let cfg = deck_config::DeckConfig::defaults();

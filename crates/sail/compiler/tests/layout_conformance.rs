@@ -101,19 +101,24 @@ fn extract_first_sx_class(preprocessed: &str) -> Option<String> {
     None
 }
 
-fn resolve_element_with_class(preprocessed: &str, class: &str, viewport_width: f32) -> sail_layout::ResolvedStyle {
+fn resolve_element_with_class(
+    preprocessed: &str,
+    class: &str,
+    viewport_width: f32,
+) -> sail_layout::ResolvedStyle {
     let elements = sail_layout::html::parse_source(preprocessed);
     let idx = elements
         .iter()
         .position(|e| e.class.split_whitespace().any(|c| c == class))
         .unwrap_or_else(|| panic!("no element with class {class:?} in {preprocessed:?}"));
-    sail_layout::style::resolve(&elements[idx],
-        &elements,
-        viewport_width,
-    )
+    sail_layout::style::resolve(&elements[idx], &elements, viewport_width)
 }
 
-fn resolve_child_of_class(preprocessed: &str, parent_class: &str, viewport_width: f32) -> sail_layout::ResolvedStyle {
+fn resolve_child_of_class(
+    preprocessed: &str,
+    parent_class: &str,
+    viewport_width: f32,
+) -> sail_layout::ResolvedStyle {
     let elements = sail_layout::html::parse_source(preprocessed);
     let parent_idx = elements
         .iter()
@@ -124,10 +129,7 @@ fn resolve_child_of_class(preprocessed: &str, parent_class: &str, viewport_width
         .first()
         .copied()
         .unwrap_or_else(|| panic!("parent {parent_class:?} has no children"));
-    sail_layout::style::resolve(&elements[child_idx],
-        &elements,
-        viewport_width,
-    )
+    sail_layout::style::resolve(&elements[child_idx], &elements, viewport_width)
 }
 
 #[test]
@@ -283,6 +285,52 @@ fn sx_width_full_matches_css() {
     assert_eq!(style.style.size.width, Dimension::percent(1.0));
 }
 
+/// Product participation `grow` / Style emit → `sx-grow1` (not residual `sx-grow`).
+#[test]
+fn grow_attr_maps_to_taffy_flex_grow() {
+    let src = r#"<column><div grow>body</div></column>"#;
+    let preprocessed = preprocess(src);
+    assert!(
+        preprocessed.contains("sx-grow1"),
+        "product grow class missing: {preprocessed}"
+    );
+    let style = resolve_element_with_class(&preprocessed, "sx-grow1", 1440.0);
+    assert!(
+        (style.style.flex_grow - 1.0).abs() < f32::EPSILON,
+        "sx-grow1 must set flex_grow=1, got {}",
+        style.style.flex_grow
+    );
+}
+
+/// Product `style.minW(0)` / `min-w="0"` → `sx-minW0` (camelCase, not `sx-minw0`).
+#[test]
+fn min_w_attr_maps_to_taffy_min_width() {
+    let src = r#"<div min-w="0">x</div>"#;
+    let preprocessed = preprocess(src);
+    assert!(
+        preprocessed.contains("sx-minW0"),
+        "product minW class missing: {preprocessed}"
+    );
+    let style = resolve_element_with_class(&preprocessed, "sx-minW0", 1440.0);
+    use sail_layout::taffy::prelude::*;
+    assert_eq!(style.style.min_size.width, Dimension::length(0.0));
+}
+
+/// Product `style.pad(4)` → `sx-pad4` (not residual `sx-p4`).
+#[test]
+fn style_pad_maps_to_taffy_padding() {
+    let src = r#"<div sx={style.pad(4)}>x</div>"#;
+    let preprocessed = preprocess(src);
+    assert!(
+        preprocessed.contains("sx-pad4"),
+        "product pad class missing: {preprocessed}"
+    );
+    let style = resolve_element_with_class(&preprocessed, "sx-pad4", 1440.0);
+    use sail_layout::taffy::prelude::*;
+    assert_eq!(style.style.padding.top, LengthPercentage::length(16.0));
+    assert_eq!(style.style.padding.left, LengthPercentage::length(16.0));
+}
+
 #[test]
 fn sx_hidden_matches_css() {
     let src = r#"<div sx={style.display(none)}>x</div>"#;
@@ -307,7 +355,9 @@ fn sx_hidden_matches_css() {
             }
             None
         })
-        .expect(&format!("display:none rule present in css:\n{css}\npre:\n{preprocessed}"));
+        .expect(&format!(
+            "display:none rule present in css:\n{css}\npre:\n{preprocessed}"
+        ));
     assert_eq!(rule["display"], "none");
 
     let style = resolve_element_with_class(&preprocessed, &class, 1440.0);
@@ -321,27 +371,35 @@ fn sx_hidden_matches_css() {
 
 #[test]
 fn grid_col_span_collapses_below_breakpoint() {
-    let src = r#"<grid cols="2"><div data-col-span="2">x</div></grid>"#;
+    let src = r#"<grid cols="2"><div col-span="2">x</div></grid>"#;
     let preprocessed = preprocess(src);
 
     let wide = resolve_child_of_class(&preprocessed, "sail-grid", 1440.0);
     use sail_layout::taffy::prelude::*;
     assert_eq!(wide.style.grid_column, span(2));
 
-    let narrow = resolve_child_of_class(
-        &preprocessed, "sail-grid", 600.0);
-    assert_eq!(narrow.style.grid_column, sail_layout::taffy::style::Style::default().grid_column);
+    let narrow = resolve_child_of_class(&preprocessed, "sail-grid", 600.0);
+    assert_eq!(
+        narrow.style.grid_column,
+        sail_layout::taffy::style::Style::default().grid_column
+    );
 }
 
 #[test]
 fn check_all_emits_layout_warning_with_original_span() {
-    let src = "\n\n<column gap=\"0\"><div></div></column>";
+    // Collapsed parent + sized child: the zero-main-axis contract (an empty
+    // child set totaling 0 is suppressed as analyzer noise by the layout
+    // crate's gate — see check::layout tests).
+    let src = "\n\n<column sx={style.h(0)}><div sx={style.h(20)}>x</div></column>";
     let diags = sail_compiler::check_all(src, None, &[], None);
     let layout = diags
         .iter()
         .find(|d| d.rule.as_deref() == Some("sail-layout"))
         .expect("expected a sail-layout warning");
-    assert_eq!(layout.line, 3, "warning must point at the original <column> line");
+    assert_eq!(
+        layout.line, 3,
+        "warning must point at the original <column> line"
+    );
     assert!(layout.message.contains("0px on its main axis"));
 }
 
@@ -354,8 +412,10 @@ fn unknown_subtree_suppresses_layout_collapse() {
         let src = format!("<column gap=\"0\">{unknown}</column>");
         let diags = sail_compiler::check_all(&src, None, &[], None);
         assert!(
-            !diags.iter().any(|d| d.rule.as_deref() == Some("sail-layout")
-                && d.message.contains("0px on its main axis")),
+            !diags
+                .iter()
+                .any(|d| d.rule.as_deref() == Some("sail-layout")
+                    && d.message.contains("0px on its main axis")),
             "unknown element {unknown:?} should suppress zero-main-axis"
         );
     }

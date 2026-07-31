@@ -34,9 +34,8 @@ use tokio::time::interval;
 use tokio_stream::wrappers::ReceiverStream;
 
 use deck_core::{
-    ChangeFeed, ChangeSource, DataPort,
-    WindowId, WindowSubscriptionRegistry,
-    format_mux_close, format_mux_data, format_mux_heartbeat,
+    ChangeFeed, ChangeSource, DataPort, WindowId, WindowSubscriptionRegistry, format_mux_close,
+    format_mux_data, format_mux_heartbeat,
 };
 
 /// Server heartbeat interval — the cadence of the top-level `mux-heartbeat`
@@ -62,7 +61,11 @@ impl MultiplexState {
         registry: Arc<WindowSubscriptionRegistry>,
         change_source: Arc<dyn ChangeSource>,
     ) -> Self {
-        Self { data_port, registry, change_source }
+        Self {
+            data_port,
+            registry,
+            change_source,
+        }
     }
 }
 
@@ -79,7 +82,11 @@ struct OpenResponseBody {
 async fn mux_open(Extension(state): Extension<MultiplexState>) -> Json<OpenResponseBody> {
     let session_id = format!("sess.{}", ulid::Ulid::new());
     let window_id = state.registry.open(session_id.clone());
-    Json(OpenResponseBody { window_id, session_id, heartbeat_ms: HEARTBEAT_MS })
+    Json(OpenResponseBody {
+        window_id,
+        session_id,
+        heartbeat_ms: HEARTBEAT_MS,
+    })
 }
 
 #[derive(Deserialize)]
@@ -124,21 +131,25 @@ async fn mux_subscribe(
             );
         }
     };
-    let subscription_id = match state
-        .registry
-        .subscribe(&req.window_id, req.domain, req.op, req.args)
-    {
-        Some(id) => id,
-        None => {
-            return err(
-                StatusCode::NOT_FOUND,
-                format!("unknown window '{}' — open first", req.window_id),
-            );
-        }
-    };
+    let subscription_id =
+        match state
+            .registry
+            .subscribe(&req.window_id, req.domain, req.op, req.args)
+        {
+            Some(id) => id,
+            None => {
+                return err(
+                    StatusCode::NOT_FOUND,
+                    format!("unknown window '{}' — open first", req.window_id),
+                );
+            }
+        };
     (
         StatusCode::OK,
-        Json(SubscribeResponseBody { subscription_id, initial_value: initial }),
+        Json(SubscribeResponseBody {
+            subscription_id,
+            initial_value: initial,
+        }),
     )
         .into_response()
 }
@@ -154,7 +165,9 @@ async fn mux_unsubscribe(
     Extension(state): Extension<MultiplexState>,
     Json(req): Json<UnsubscribeRequest>,
 ) -> Response {
-    let removed = state.registry.unsubscribe(&req.window_id, &req.subscription_id);
+    let removed = state
+        .registry
+        .unsubscribe(&req.window_id, &req.subscription_id);
     (
         StatusCode::OK,
         Json(serde_json::json!({ "removed": removed })),
@@ -244,7 +257,10 @@ async fn stream_producer(
     tx: tokio::sync::mpsc::Sender<Result<String, std::io::Error>>,
 ) {
     // WindowDropGuard — RAII GC: drops the bucket on stream end.
-    let _drop_guard = WindowDropGuard { registry, window_id };
+    let _drop_guard = WindowDropGuard {
+        registry,
+        window_id,
+    };
     let mut version: u32 = 0;
     let mut hb = interval(Duration::from_millis(HEARTBEAT_MS as u64));
     hb.tick().await; // skip the immediate first tick
@@ -257,7 +273,11 @@ async fn stream_producer(
         match data_port.resolve(&sub.domain, &sub.op, &sub.args) {
             Some(value) => {
                 version += 1;
-                if tx.send(Ok(format_mux_data(&sub.id, &value, version))).await.is_err() {
+                if tx
+                    .send(Ok(format_mux_data(&sub.id, &value, version)))
+                    .await
+                    .is_err()
+                {
                     return;
                 }
             }

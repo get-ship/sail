@@ -52,7 +52,7 @@
 // Authority: build-spec Slice 7, §"Backbone #2 — ViewerRenderer contract",
 // §"Props" (sail-media-av), §Accessibility, behavioral spec #5.
 
-import { controller, derived, effect, emit, signal } from '@ship/sail-runtime'
+import { emit } from '@ship/sail-runtime'
 import type { Action } from '@ship/sail-runtime'
 import type { ViewerSource } from '../engine/types'
 import { emitViewerError, emitViewerLoad } from '../engine/renderer-contract'
@@ -215,11 +215,11 @@ export default controller((_ctx: Scope) => {
   })
 
 </controller>
-<if cond={isVideo()}>
+<if {isVideo()}>
   <video use:mediaWire sx={style.display(block).w(full).radius(md).bg(surface-1).borderWidth(1).border(border).shadow(xs)}></video>
 <else>
   <audio use:mediaWire sx={style.display(block).w(full).radius(md).bg(surface-1).borderWidth(1).border(border).shadow(xs)}></audio>
-  <if cond={showWaveform()}>
+  <if {showWaveform()}>
     <canvas aria-hidden="true" use:waveform sx={style.display(block).w(full).mt(2)}></canvas>
   </if>
 </else></if>

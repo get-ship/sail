@@ -21,7 +21,7 @@
 //! `{#while-loading}` / `{#while-error}` follow the same shape via
 //! `hydrateWhileLoading` / `hydrateWhileError` (gate G).
 
-use super::super::writer::{js_string, Writer};
+use super::super::writer::{Writer, js_string};
 use super::TemplateEmitter;
 use crate::ir::*;
 use crate::lower::for_uses_row::body_references_for_vars;
@@ -164,11 +164,7 @@ impl TemplateEmitter {
         }
     }
     fn boundary_host_arg(needs_host: bool) -> &'static str {
-        if needs_host {
-            ", container"
-        } else {
-            ""
-        }
+        if needs_host { ", container" } else { "" }
     }
     pub(in crate::emit) fn emit_if(
         &mut self,
@@ -192,9 +188,7 @@ impl TemplateEmitter {
                 .is_some_and(instrs_have_reflect_empty_slot);
 
         // __mount-side: anchor + invoke hoisted handler.
-        w.line(&format!(
-            "const {anchor} = document.createComment(\"if\");"
-        ));
+        w.line(&format!("const {anchor} = document.createComment(\"if\");"));
         w.line(&format!("{parent_var}.appendChild({anchor});"));
         w.line(&format!(
             "{cleanups_var}.push(__wireBoundary_{key}({anchor}{host}));",
@@ -307,11 +301,7 @@ impl TemplateEmitter {
         // wiring. On a miss the row body is purely static (or reads
         // only outer-scope signals) and the per-row reactive plumbing
         // is dead weight — ~4 allocations × every row × every render.
-        let body_needs_v = body_references_for_vars(
-            &instr.body,
-            var,
-            instr.index_name.as_deref(),
-        );
+        let body_needs_v = body_references_for_vars(&instr.body, var, instr.index_name.as_deref());
 
         let mut h = Writer::new();
         let ap = self.machinery_param("anchor", "Comment");
@@ -402,10 +392,7 @@ impl TemplateEmitter {
         // call `for_version_comma`/`for_version_stmt` which unions into
         // self.reactive_row_use; we read the union back AFTER the walk
         // to decide what signals to allocate at the top of the IIFE.
-        let outer_reactive = std::mem::replace(
-            &mut self.reactive_row_use,
-            RowUse::None,
-        );
+        let outer_reactive = std::mem::replace(&mut self.reactive_row_use, RowUse::None);
         // The row + index binders live on the runtime `$scope` child scope
         // — qualify author references to them with `$scope.` (synthetic
         // mode), not the typed `scope.` prefix. Push for the body walk; the
@@ -641,9 +628,7 @@ impl TemplateEmitter {
         h.line(&format!("const __d = ({disc_rw});"));
         for (i, c) in instr.cases.iter().enumerate() {
             let c_rw = self.rw(&c.test.source, &[]);
-            h.line(&format!(
-                "if (__d === ({c_rw})) return {i};"
-            ));
+            h.line(&format!("if (__d === ({c_rw})) return {i};"));
         }
         let fallback = if instr.default.is_some() {
             instr.cases.len() as i32
@@ -678,7 +663,8 @@ impl TemplateEmitter {
         let k = js_string(key);
         self.hydrate_calls.line(&format!("if (__m[{k}]) {{"));
         self.hydrate_calls.line(&format!("  const __t = __m[{k}];"));
-        self.hydrate_calls.line("  const __doc = __t.ownerDocument ?? document;");
+        self.hydrate_calls
+            .line("  const __doc = __t.ownerDocument ?? document;");
         self.hydrate_calls.line(&format!(
             "  const __anchor = (__t.nodeType === 1) ? __doc.createComment({}) : __t;",
             js_string(kind),
@@ -691,12 +677,20 @@ impl TemplateEmitter {
         // In the typed synthetic render, narrow with a cast — the marker is
         // always an element boundary, so the Comment branch always wins at
         // runtime. Production emits untyped JS, so no cast there.
-        let anchor_arg = if self.is_synthetic() { "__anchor as Comment" } else { "__anchor" };
+        let anchor_arg = if self.is_synthetic() {
+            "__anchor as Comment"
+        } else {
+            "__anchor"
+        };
         // When the boundary reflects a slot, pass the host. In hydrate the
         // mount target `root` IS the host (a route hydrates into its container);
         // synthetic mode narrows since `root`'s param type is broader.
         let host_arg = if needs_host {
-            if self.is_synthetic() { ", root as HTMLElement" } else { ", root" }
+            if self.is_synthetic() {
+                ", root as HTMLElement"
+            } else {
+                ", root"
+            }
         } else {
             ""
         };
@@ -807,7 +801,9 @@ impl TemplateEmitter {
         let mut h = Writer::new();
         h.line(&format!("const {render_key} = () => {{"));
         h.enter();
-        h.line(&format!("const {frag} = document.createDocumentFragment();"));
+        h.line(&format!(
+            "const {frag} = document.createDocumentFragment();"
+        ));
         h.line(&self.decl_cleanups(&cl));
         self.boundary_depth += 1;
         self.emit_children(&mut h, body, &frag, &cl);
@@ -839,7 +835,9 @@ impl TemplateEmitter {
         h.enter();
         let frag = self.fresh("frag");
         let cl = self.fresh("c");
-        h.line(&format!("const {frag} = document.createDocumentFragment();"));
+        h.line(&format!(
+            "const {frag} = document.createDocumentFragment();"
+        ));
         h.line(&self.decl_cleanups(&cl));
         self.boundary_depth += 1;
         // The error binder lives on the runtime `$scope` child scope; qualify
@@ -867,10 +865,7 @@ mod partition_tests {
     #[test]
     fn whole_row_falls_back() {
         let u = vec![
-            (
-                "t1".into(),
-                RowUse::FieldsOnly(vec!["id".into()]),
-            ),
+            ("t1".into(), RowUse::FieldsOnly(vec!["id".into()])),
             ("t2".into(), RowUse::Whole),
         ];
         let (gated, fallback) = partition_inline_updates(&u, "row");
@@ -886,10 +881,7 @@ mod partition_tests {
                 "set_label_text".into(),
                 RowUse::FieldsOnly(vec!["label".into()]),
             ),
-            (
-                "set_id_attr".into(),
-                RowUse::FieldsOnly(vec!["id".into()]),
-            ),
+            ("set_id_attr".into(), RowUse::FieldsOnly(vec!["id".into()])),
         ];
         let (gated, _) = partition_inline_updates(&u, "row");
         let body = gated.unwrap();

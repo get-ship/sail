@@ -9,10 +9,12 @@
 
 use std::path::{Path, PathBuf};
 
-use sail_compiler::emit::synthetic::{emit_synthetic_client_module, AppManifest, AuthoredController};
+use sail_compiler::emit::synthetic::{
+    AppManifest, AuthoredController, emit_synthetic_client_module,
+};
 use sail_compiler::parse::parse;
 use sail_compiler::parse::preprocess::extract_controller_block;
-use sail_compiler::{compile, CompileMode as SuiMode, CompileOpts, ComponentMeta, Policy};
+use sail_compiler::{CompileMode as SailCompileMode, CompileOpts, ComponentMeta, Policy, compile};
 
 /// A `.sail` compiles as a custom-element (`component`) or a route. Component mode
 /// passes a tag name so the element is registered; route mode emits a route module.
@@ -37,8 +39,8 @@ pub enum CompileError {
 /// `<stem>.controller.ts`) as `import setup from "./<controller>"`.
 /// `emit_component_imports` opts the route into the per-route resolver — it emits
 /// `@sail-tag/<tag>` registration imports the bundler resolves to source.
-pub fn compile_sui(
-    sui_file: &Path,
+pub fn compile_sail(
+    sail_file: &Path,
     mode: CompileMode,
     stem: &str,
     emit_component_imports: bool,
@@ -50,33 +52,34 @@ pub fn compile_sui(
     // routes, so every other target — and the flag-off case — is byte-for-byte
     // the production emit below.
     if mode == CompileMode::Route && synthetic_client_enabled() {
-        if let Some(js) = try_synthetic_client(sui_file)? {
+        if let Some(js) = try_synthetic_client(sail_file)? {
             return Ok(js);
         }
     }
-    let source = std::fs::read_to_string(sui_file)
-        .map_err(|e| CompileError::Read(sui_file.to_path_buf(), e))?;
+    let source = std::fs::read_to_string(sail_file)
+        .map_err(|e| CompileError::Read(sail_file.to_path_buf(), e))?;
     // The FLOOR is unconditional — no <style>, no style=, in any SAIL file, with
     // or without a config. A deck project does not opt into the language. The
     // capability keys (sx / variants / raw containers) still come from the
     // nearest `sail.config.json` walking up, which is how a project dials the
     // surface ABOVE the floor.
-    let policy_overrides = Policy::overrides_for(sui_file);
+    let policy_overrides = Policy::overrides_for(sail_file);
     // POSITION GRANT, computed once: deck routes by file location, so deck
     // (not the author, not the sail compiler) decides whether this file may
     // read `route` — and with which params.
     let route_params = (mode == CompileMode::Route)
-        .then(|| deck_core::routes::route_params_for(sui_file))
+        .then(|| deck_core::routes::route_params_for(sail_file))
         .flatten();
     let opts = CompileOpts {
-        setup_url: controller_specifier(sui_file, stem, &source),
+        setup_url: controller_specifier(sail_file, stem, &source),
         mode: match mode {
-            CompileMode::Component => SuiMode::Component,
-            CompileMode::Route => SuiMode::Component,
+            CompileMode::Component => SailCompileMode::Component,
+            CompileMode::Route => SailCompileMode::Component,
         },
-        source_path: Some(sui_file.to_path_buf()),
-        component_meta: (mode == CompileMode::Component)
-            .then(|| ComponentMeta { name: stem.to_string() }),
+        source_path: Some(sail_file.to_path_buf()),
+        component_meta: (mode == CompileMode::Component).then(|| ComponentMeta {
+            name: stem.to_string(),
+        }),
         route_params: route_params.clone(),
         // The bundler reads only the JS — dts/ssr are the CLI bake's job, and
         // the CEM is walked from disk by the catalog, not returned here.
@@ -98,7 +101,12 @@ pub fn compile_sui(
             // gate, so only Warnings remain. Re-runs the collect() pass (a
             // parse + lint over this one file); cheap next to bundling and
             // only on the build path.
-            emit_build_warnings(sui_file, &source, &policy_overrides, route_params.as_deref());
+            emit_build_warnings(
+                sail_file,
+                &source,
+                &policy_overrides,
+                route_params.as_deref(),
+            );
             Ok(out.js)
         }
         Err(e) => Err(CompileError::Compile(e.render(&source))),
@@ -110,19 +118,19 @@ pub fn compile_sui(
 /// this is reached. Mirrors the CLI/MCP rendering: `<path>:<line>:<col>
 /// [<rule>] <message>`.
 fn emit_build_warnings(
-    sui_file: &Path,
+    sail_file: &Path,
     source: &str,
     overrides: &[sail_compiler::LintOverride],
     route_params: Option<&[String]>,
 ) {
-    for d in sail_compiler::check_all(source, Some(sui_file), overrides, route_params) {
+    for d in sail_compiler::check_all(source, Some(sail_file), overrides, route_params) {
         if d.severity != sail_compiler::DiagSeverity::Warning {
             continue;
         }
         let rule = d.rule.as_deref().unwrap_or("sail-lint");
         eprintln!(
             "deck warn {}:{}:{} [{}] {}",
-            sui_file.display(),
+            sail_file.display(),
             d.line,
             d.col,
             rule,
@@ -139,25 +147,28 @@ fn emit_build_warnings(
 /// `controller.ts` / `<stem>.controller.ts` on disk). Inline-wins matches
 /// `compile()`'s own controller resolution for the scope-aware checks, so what
 /// the checks validate is exactly what the bundle runs.
-fn controller_specifier(sui_file: &Path, stem: &str, source: &str) -> Option<String> {
+fn controller_specifier(sail_file: &Path, stem: &str, source: &str) -> Option<String> {
     if extract_controller_block(source).1.is_some() {
-        let file = sui_file.file_name()?.to_string_lossy();
+        let file = sail_file.file_name()?.to_string_lossy();
         return Some(format!("./{file}.controller.ts"));
     }
-    paired_controller(sui_file, stem)
+    paired_controller(sail_file, stem)
 }
 
 /// `import setup from "./<controller>"` when a sibling controller exists next to
 /// the `.sail`. Mirrors the CLI's `paired_setup` for the bundler (`--out`/
 /// in-process) case: relative `./` import that Rolldown resolves to the sibling.
-fn paired_controller(sui_file: &Path, stem: &str) -> Option<String> {
-    let parent = sui_file.parent()?;
+fn paired_controller(sail_file: &Path, stem: &str) -> Option<String> {
+    let parent = sail_file.parent()?;
     let filename = if stem == "page" {
         "controller.ts".to_string()
     } else {
         format!("{stem}.controller.ts")
     };
-    parent.join(&filename).exists().then(|| format!("./{filename}"))
+    parent
+        .join(&filename)
+        .exists()
+        .then(|| format!("./{filename}"))
 }
 
 /// The gate for the synthetic CLIENT emit. Default OFF — the bundler emits the
@@ -166,26 +177,28 @@ fn paired_controller(sui_file: &Path, stem: &str) -> Option<String> {
 /// (see [`try_synthetic_client`]). This is the slice-1 proof seam: additive,
 /// scoped, never a global default flip.
 pub fn synthetic_client_enabled() -> bool {
-    std::env::var("SAIL_CLIENT_EMIT").map(|v| v == "synthetic").unwrap_or(false)
+    std::env::var("SAIL_CLIENT_EMIT")
+        .map(|v| v == "synthetic")
+        .unwrap_or(false)
 }
 
-/// Emit the synthetic CLIENT module for `sui_file` when it opts into the
+/// Emit the synthetic CLIENT module for `sail_file` when it opts into the
 /// synthetic path: an `app.manifest.jsonc` exists at or above its directory.
 /// Returns `Ok(None)` (→ production emit) when no manifest is found, so a
 /// non-manifested route is untouched even with the flag set. The merged module
 /// composes a sibling `controller.ts` (absolute path so Rolldown resolves it)
 /// and resolves the manifest's free names as real ESM imports.
-fn try_synthetic_client(sui_file: &Path) -> Result<Option<String>, CompileError> {
-    let Some(manifest_path) = find_app_manifest(sui_file) else {
+fn try_synthetic_client(sail_file: &Path) -> Result<Option<String>, CompileError> {
+    let Some(manifest_path) = find_app_manifest(sail_file) else {
         return Ok(None);
     };
-    let source = std::fs::read_to_string(sui_file)
-        .map_err(|e| CompileError::Read(sui_file.to_path_buf(), e))?;
+    let source = std::fs::read_to_string(sail_file)
+        .map_err(|e| CompileError::Read(sail_file.to_path_buf(), e))?;
     let manifest_src = std::fs::read_to_string(&manifest_path)
         .map_err(|e| CompileError::Read(manifest_path.clone(), e))?;
     let program = parse(&source).map_err(|e| CompileError::Compile(e.render(&source)))?;
-    let mut manifest =
-        AppManifest::parse(&manifest_src).map_err(|e| CompileError::Compile(e.render(&manifest_src)))?;
+    let mut manifest = AppManifest::parse(&manifest_src)
+        .map_err(|e| CompileError::Compile(e.render(&manifest_src)))?;
     // Deck declares its host context (route/navigate -> @ship/deck/router) into
     // the manifest seam; the app's own entries win. SAIL names no host.
     for (name, client) in deck_core::host_context::host_context_clients() {
@@ -195,17 +208,23 @@ fn try_synthetic_client(sui_file: &Path) -> Result<Option<String>, CompileError>
     // virtual `.sail.controller.ts` module the plugin extracts from the source.
     let authored = extract_controller_block(&source)
         .1
-        .map(|_| format!("{}.controller.ts", sui_file.display()))
-        .or_else(|| sibling_controller_abs(sui_file))
+        .map(|_| format!("{}.controller.ts", sail_file.display()))
+        .or_else(|| sibling_controller_abs(sail_file))
         .map(|specifier| AuthoredController { specifier });
-    let js = emit_synthetic_client_module(&program, &manifest, authored.as_ref(), SuiMode::Component, None)
-        .map_err(|e| CompileError::Compile(e.render(&source)))?;
+    let js = emit_synthetic_client_module(
+        &program,
+        &manifest,
+        authored.as_ref(),
+        SailCompileMode::Component,
+        None,
+    )
+    .map_err(|e| CompileError::Compile(e.render(&source)))?;
     Ok(Some(js))
 }
 
-/// Walk up from `sui_file`'s directory to the nearest `app.manifest.jsonc`.
-fn find_app_manifest(sui_file: &Path) -> Option<PathBuf> {
-    let mut dir = sui_file.parent();
+/// Walk up from `sail_file`'s directory to the nearest `app.manifest.jsonc`.
+fn find_app_manifest(sail_file: &Path) -> Option<PathBuf> {
+    let mut dir = sail_file.parent();
     while let Some(d) = dir {
         let candidate = d.join("app.manifest.jsonc");
         if candidate.is_file() {
@@ -219,8 +238,8 @@ fn find_app_manifest(sui_file: &Path) -> Option<PathBuf> {
 /// The sibling authored controller next to a `page.sail`, as an absolute path
 /// string — the synthetic controller imports it directly so Rolldown resolves
 /// it to the on-disk `.ts`.
-fn sibling_controller_abs(sui_file: &Path) -> Option<String> {
-    let c = sui_file.parent()?.join("controller.ts");
+fn sibling_controller_abs(sail_file: &Path) -> Option<String> {
+    let c = sail_file.parent()?.join("controller.ts");
     c.is_file().then(|| c.to_string_lossy().into_owned())
 }
 
@@ -243,8 +262,11 @@ mod tests {
         let src = tempdir().unwrap();
         let sail = src.path().join("page.sail");
         std::fs::write(&sail, "<div>hi {1 + 1}</div>\n").unwrap();
-        let js = compile_sui(&sail, CompileMode::Route, "page", false).expect("view compiles");
-        assert!(js.contains("@ship/sail-runtime"), "emits a runtime import; got:\n{js}");
+        let js = compile_sail(&sail, CompileMode::Route, "page", false).expect("view compiles");
+        assert!(
+            js.contains("@ship/sail-runtime"),
+            "emits a runtime import; got:\n{js}"
+        );
     }
 
     #[test]
@@ -260,7 +282,7 @@ mod tests {
             "<style>.hero { color: var(--foreground); }</style>\n<p>hi</p>\n",
         )
         .unwrap();
-        let err = compile_sui(&sail, CompileMode::Route, "page", false)
+        let err = compile_sail(&sail, CompileMode::Route, "page", false)
             .expect_err("raw <style> in a view must not compile");
         assert!(
             format!("{err}").contains("sail-no-style-block"),
@@ -273,7 +295,7 @@ mod tests {
         let src = tempdir().unwrap();
         let sail = src.path().join("broken.sail");
         std::fs::write(&sail, "<div><if cond={cond()}>oops</if></div>\n").unwrap();
-        let err = compile_sui(&sail, CompileMode::Route, "broken", false).unwrap_err();
+        let err = compile_sail(&sail, CompileMode::Route, "broken", false).unwrap_err();
         assert!(matches!(err, CompileError::Compile(_)));
     }
 
@@ -282,9 +304,12 @@ mod tests {
         let src = tempdir().unwrap();
         let sail = src.path().join("page.sail");
         std::fs::write(&sail, "<div><sail-table></sail-table></div>\n").unwrap();
-        let on = compile_sui(&sail, CompileMode::Route, "page", true).expect("compiles");
-        assert!(on.contains("@sail-tag/sail-table"), "flag emits the registration import");
-        let off = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
+        let on = compile_sail(&sail, CompileMode::Route, "page", true).expect("compiles");
+        assert!(
+            on.contains("@sail-tag/sail-table"),
+            "flag emits the registration import"
+        );
+        let off = compile_sail(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(!off.contains("@sail-tag/"), "off: no component imports");
     }
 
@@ -304,7 +329,7 @@ mod tests {
         // Flag OFF (default): production emit regardless of manifest presence.
         let prev = std::env::var("SAIL_CLIENT_EMIT").ok();
         unsafe { std::env::remove_var("SAIL_CLIENT_EMIT") };
-        let off = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
+        let off = compile_sail(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(
             off.contains("component((ctx)") && !off.contains("export default component(() =>"),
             "flag-off must be the production emit:\n{off}"
@@ -312,7 +337,8 @@ mod tests {
 
         // Flag ON but NO manifest above → still production (scoped opt-in).
         unsafe { std::env::set_var("SAIL_CLIENT_EMIT", "synthetic") };
-        let on_no_manifest = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
+        let on_no_manifest =
+            compile_sail(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(
             on_no_manifest.contains("component((ctx)"),
             "flag-on without a manifest stays production:\n{on_no_manifest}"
@@ -324,7 +350,7 @@ mod tests {
             r#"{ "clients": { "route": { "from": "@ship/deck/router", "import": "route", "construct": true } } }"#,
         )
         .unwrap();
-        let on = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
+        let on = compile_sail(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(
             on.contains("export default component(() =>") && on.contains("__mount(container"),
             "flag-on + manifest emits the synthetic client contract:\n{on}"
@@ -348,11 +374,7 @@ mod tests {
         let _env = EMIT_ENV_LOCK.lock().unwrap_or_else(|p| p.into_inner());
         let src = tempdir().unwrap();
         let dir = src.path();
-        std::fs::write(
-            dir.join("page.sail"),
-            "<h1>id={route.params.id()}</h1>\n",
-        )
-        .unwrap();
+        std::fs::write(dir.join("page.sail"), "<h1>id={route.params.id()}</h1>\n").unwrap();
         let sail = dir.join("page.sail");
 
         // Flag ON, NO manifest above → convention still kicks in and the
@@ -367,7 +389,7 @@ mod tests {
             r#"{ "clients": {} }"#,
         )
         .unwrap();
-        let on = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
+        let on = compile_sail(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(
             on.contains("export default component(() =>") && on.contains("__mount(container"),
             "convention must drive the synthetic client contract:\n{on}"
@@ -387,7 +409,7 @@ mod tests {
             "<p>just a paragraph, no route reads</p>\n",
         )
         .unwrap();
-        let on_no_route = compile_sui(&sail, CompileMode::Route, "page", false).expect("compiles");
+        let on_no_route = compile_sail(&sail, CompileMode::Route, "page", false).expect("compiles");
         assert!(
             !on_no_route.contains("@ship/deck/router"),
             "a view that never references `route` must not import `@ship/deck/router`:\n{on_no_route}"

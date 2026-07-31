@@ -62,16 +62,19 @@ fn check_instr(instr: &Instr) -> Result<(), CompileError> {
 }
 
 fn check_attr(attr: &AttrInstr) -> Result<(), CompileError> {
-    let AttrInstr::On { event, handler, .. } = attr else { return Ok(()); };
+    let AttrInstr::On { event, handler, .. } = attr else {
+        return Ok(());
+    };
     if let Some(block_body) = arrow_block_body(&handler.source)
-        && count_stmts(block_body) > 1 {
-            return Err(CompileError::new(
-                "multi-statement handler — move it into the `<controller>` block \
+        && count_stmts(block_body) > 1
+    {
+        return Err(CompileError::new(
+            "multi-statement handler — move it into the `<controller>` block \
                  (name the handler there and reference it) for tier-2 work",
-            )
-            .with_span(handler.span)
-            .with_category(format!("on:{event} handler")));
-        }
+        )
+        .with_span(handler.span)
+        .with_category(format!("on:{event} handler")));
+    }
     Ok(())
 }
 

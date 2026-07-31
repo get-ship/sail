@@ -1,0 +1,52 @@
+{
+  "service": "SailInspect",
+  "method": "Tree",
+  "mcp_tool": "sail_inspect_tree",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "InspectTreeRet",
+    "type": "object",
+    "required": [
+      "file",
+      "modelVersion",
+      "nodes",
+      "roots"
+    ],
+    "properties": {
+      "file": {
+        "type": "string"
+      },
+      "modelVersion": {
+        "type": "integer",
+        "format": "uint32",
+        "minimum": 0.0
+      },
+      "nodes": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Json"
+        }
+      },
+      "roots": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "definitions": {
+      "Json": {}
+    }
+  }
+}

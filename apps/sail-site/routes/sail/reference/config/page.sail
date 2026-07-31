@@ -27,7 +27,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <column gap="2">
-    <for as="k" of={keys()} key={k.key}>
+    <for {keys()} as="k" key={k.key}>
       <card padding="sm" sx={style.minW(0)}>
         <column gap="1">
           <row gap="3" align="center">

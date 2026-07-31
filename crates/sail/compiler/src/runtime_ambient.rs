@@ -41,15 +41,51 @@ pub const RUNTIME_AMBIENT: &[(&str, &str, &str)] = &[
     // only ever be REFERENCED (by the rewrite pass's own emitted call),
     // never bound by the author. Ambient injection is exactly the "self-
     // contained emitted module" property this table already exists for.
-    ("__invalidate", "__invalidate", "compiler-only lowering target for `invalidate(ref)`; never authored directly"),
-    ("batch", "batch", "coalesce multiple signal writes into one flush"),
-    ("controller", "controller", "the controller factory — wraps a setup function into a bound scope"),
-    ("derived", "derived", "a read-only signal computed from other signals, recomputed on dependency change"),
-    ("effect", "effect", "run a side effect on mount and whenever its read signals change"),
-    ("mount", "mountAmbient", "run a callback once, after the controller's first render"),
-    ("onCleanup", "onCleanup", "register a callback to run when the controller tears down"),
-    ("signal", "signal", "a reactive value cell — read by calling it, written by calling it with a value"),
-    ("untrack", "untrack", "read signals inside without subscribing the enclosing effect/derived"),
+    (
+        "__invalidate",
+        "__invalidate",
+        "compiler-only lowering target for `invalidate(ref)`; never authored directly",
+    ),
+    (
+        "batch",
+        "batch",
+        "coalesce multiple signal writes into one flush",
+    ),
+    (
+        "controller",
+        "controller",
+        "the controller factory — wraps a setup function into a bound scope",
+    ),
+    (
+        "derived",
+        "derived",
+        "a read-only signal computed from other signals, recomputed on dependency change",
+    ),
+    (
+        "effect",
+        "effect",
+        "run a side effect on mount and whenever its read signals change",
+    ),
+    (
+        "mount",
+        "mountAmbient",
+        "run a callback once, after the controller's first render",
+    ),
+    (
+        "onCleanup",
+        "onCleanup",
+        "register a callback to run when the controller tears down",
+    ),
+    (
+        "signal",
+        "signal",
+        "a reactive value cell — read by calling it, written by calling it with a value",
+    ),
+    (
+        "untrack",
+        "untrack",
+        "read signals inside without subscribing the enclosing effect/derived",
+    ),
 ];
 
 #[cfg(test)]

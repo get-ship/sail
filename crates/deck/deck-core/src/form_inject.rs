@@ -150,8 +150,14 @@ mod tests {
             out.contains(r#"action="/_deck/mutation/todos?form=b0""#),
             "action must be injected; got: {out}"
         );
-        assert!(out.contains(r#"method="post""#), "method must be injected; got: {out}");
-        assert!(out.contains(r#"mutation="b0""#), "marker must be preserved; got: {out}");
+        assert!(
+            out.contains(r#"method="post""#),
+            "method must be injected; got: {out}"
+        );
+        assert!(
+            out.contains(r#"mutation="b0""#),
+            "marker must be preserved; got: {out}"
+        );
     }
 
     #[test]
@@ -177,7 +183,8 @@ mod tests {
 
     #[test]
     fn idempotent_on_already_injected_html() {
-        let html = r#"<form mutation="b0" action="/_deck/mutation/todos?form=b0" method="post"></form>"#;
+        let html =
+            r#"<form mutation="b0" action="/_deck/mutation/todos?form=b0" method="post"></form>"#;
         let out = inject_form_actions(html, "todos");
         // The action is already present — must not double-inject.
         let count = out.matches("/_deck/mutation/todos?form=b0").count();
@@ -188,7 +195,13 @@ mod tests {
     fn handles_multiple_forms() {
         let html = r#"<form mutation="b0"></form><form mutation="b2"></form>"#;
         let out = inject_form_actions(html, "myroute");
-        assert!(out.contains(r#"action="/_deck/mutation/myroute?form=b0""#), "first form; got: {out}");
-        assert!(out.contains(r#"action="/_deck/mutation/myroute?form=b2""#), "second form; got: {out}");
+        assert!(
+            out.contains(r#"action="/_deck/mutation/myroute?form=b0""#),
+            "first form; got: {out}"
+        );
+        assert!(
+            out.contains(r#"action="/_deck/mutation/myroute?form=b2""#),
+            "second form; got: {out}"
+        );
     }
 }

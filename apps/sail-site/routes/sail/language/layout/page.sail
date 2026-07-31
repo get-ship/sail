@@ -103,13 +103,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     no media query written.
   </p>
   <p>
-    A child can cover more than one cell with <code>data-col-span</code> /
-    <code>data-row-span</code>. Below 720px, spans collapse and every child
-    goes back to one cell, so a wide card never forces a phone to scroll
-    sideways:
+    A child can cover more than one cell with the layout attrs
+    <code>col-span</code> / <code>row-span</code> — same family as
+    <code>grow</code> / <code>shrink</code>, not <code>data-*</code>. Below
+    720px, spans collapse and every child goes back to one cell, so a wide
+    card never forces a phone to scroll sideways:
   </p>
   <grid cols="4" gap="3">
-    <card sx={style.pad(3)} data-col-span="2">wide — spans 2</card>
+    <card sx={style.pad(3)} col-span="2">wide — spans 2</card>
     <card sx={style.pad(3)}>one</card>
     <card sx={style.pad(3)}>two</card>
   </grid>

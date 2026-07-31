@@ -44,40 +44,39 @@ pub fn write_pack_cem(pack_root: &Path) -> Result<Option<PathBuf>> {
 
     // 2. Walk src/ for component .sail files (stem == parent dir name).
     let src_dir = pack_root.join("src");
-    let mut sui_files: Vec<PathBuf> = Vec::new();
+    let mut sail_files: Vec<PathBuf> = Vec::new();
     if src_dir.exists() {
-        walk_component_sui_files(&src_dir, &mut sui_files);
+        walk_component_sail_files(&src_dir, &mut sail_files);
     }
-    sui_files.sort();
+    sail_files.sort();
 
     // 3. Compile each component in-process and collect the CEM JSON values.
     let mut cems: Vec<Value> = Vec::new();
 
-    for sui_file in &sui_files {
-        let stem = sui_file
+    for sail_file in &sail_files {
+        let stem = sail_file
             .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("")
             .to_string();
-        let source = std::fs::read_to_string(sui_file)
-            .with_context(|| format!("read {}", sui_file.display()))?;
+        let source = std::fs::read_to_string(sail_file)
+            .with_context(|| format!("read {}", sail_file.display()))?;
         let opts = sail_compiler::CompileOpts {
-        route_params: None,
+            route_params: None,
             setup_url: None,
             mode: sail_compiler::CompileMode::Component,
-            source_path: Some(sui_file.to_path_buf()),
-            component_meta: Some(sail_compiler::ComponentMeta {
-                name: stem.clone(),
-            }),
+            source_path: Some(sail_file.to_path_buf()),
+            component_meta: Some(sail_compiler::ComponentMeta { name: stem.clone() }),
             emit_dts: false,
             scope_capabilities: Vec::new(),
             emit_component_imports: false,
             // Language policy comes from the component's own sail.config.json
             // walk-up — deck never sets or relaxes it.
-            lint_overrides: sail_compiler::Policy::overrides_for(sui_file),
+            lint_overrides: sail_compiler::Policy::overrides_for(sail_file),
         };
-        let out = sail_compiler::compile(&source, opts)
-            .map_err(|e| anyhow::anyhow!("compile {}: {}", sui_file.display(), e.render(&source)))?;
+        let out = sail_compiler::compile(&source, opts).map_err(|e| {
+            anyhow::anyhow!("compile {}: {}", sail_file.display(), e.render(&source))
+        })?;
         if let Some(cem) = out.cem {
             cems.push(cem);
         }
@@ -142,12 +141,14 @@ pub fn write_all_pack_cems(repo_root: &Path) -> Result<usize> {
 /// the parent dir — an earlier `stem == parent` filter silently dropped them
 /// from every pack's manifest. The only requirement is that the stem be a valid
 /// custom-element name (contains a hyphen); anything without one can't register.
-fn walk_component_sui_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = std::fs::read_dir(dir) else { return };
+fn walk_component_sail_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
     for entry in entries.flatten() {
         let p = entry.path();
         if p.is_dir() {
-            walk_component_sui_files(&p, out);
+            walk_component_sail_files(&p, out);
         } else if p.extension().map_or(false, |e| e == "sail") {
             // The stem is the tag; a custom element must contain a hyphen.
             let is_component = p
@@ -181,8 +182,7 @@ pub fn generate_components_gen(project: &Path, repo_root: &Path) -> Result<usize
     }
     let app_pkg_raw = std::fs::read_to_string(&app_pkg_path)
         .with_context(|| format!("read {}", app_pkg_path.display()))?;
-    let app_pkg: Value =
-        serde_json::from_str(&app_pkg_raw).context("parse app package.json")?;
+    let app_pkg: Value = serde_json::from_str(&app_pkg_raw).context("parse app package.json")?;
 
     let mut app_deps: HashSet<String> = HashSet::new();
     for key in ["dependencies", "devDependencies"] {
@@ -201,7 +201,9 @@ pub fn generate_components_gen(project: &Path, repo_root: &Path) -> Result<usize
     let mut count = 0usize;
 
     for pkg in &packages {
-        let Some(ce_field) = &pkg.custom_elements else { continue };
+        let Some(ce_field) = &pkg.custom_elements else {
+            continue;
+        };
         if !app_deps.contains(&pkg.name) {
             continue;
         }
@@ -215,7 +217,9 @@ pub fn generate_components_gen(project: &Path, repo_root: &Path) -> Result<usize
         let cem: Value = serde_json::from_str(&cem_raw)
             .with_context(|| format!("parse CEM {}", cem_path.display()))?;
 
-        let Some(modules) = cem["modules"].as_array() else { continue };
+        let Some(modules) = cem["modules"].as_array() else {
+            continue;
+        };
         for module in modules {
             let mut m = module.clone();
             if let Some(obj) = m.as_object_mut() {
@@ -250,8 +254,7 @@ pub fn generate_components_gen(project: &Path, repo_root: &Path) -> Result<usize
     );
 
     let out_path = project.join("components.gen.ts");
-    std::fs::write(&out_path, &body)
-        .with_context(|| format!("write {}", out_path.display()))?;
+    std::fs::write(&out_path, &body).with_context(|| format!("write {}", out_path.display()))?;
 
     Ok(count)
 }
@@ -294,7 +297,10 @@ mod tests {
             r#"{"name":"@ship/fixture-pack","customElements":"dist/custom-elements.json"}"#,
         );
         // Minimal component file — no props, tag comes from ComponentMeta.
-        write(&pack_root.join("src/sail-foo/sail-foo.sail"), "<div>hello</div>\n");
+        write(
+            &pack_root.join("src/sail-foo/sail-foo.sail"),
+            "<div>hello</div>\n",
+        );
 
         let result = write_pack_cem(pack_root).expect("write_pack_cem");
         let out_path = result.expect("expected Some(path)");
@@ -354,8 +360,7 @@ mod tests {
             r#"{"name":"@ship/hub","dependencies":{"@ship/charts":"^1.0.0"}}"#,
         );
 
-        let count =
-            generate_components_gen(&project, repo_root).expect("generate_components_gen");
+        let count = generate_components_gen(&project, repo_root).expect("generate_components_gen");
 
         assert_eq!(count, 1, "one component package included");
 
@@ -363,7 +368,13 @@ mod tests {
 
         assert!(out.contains("sail-bar-chart"), "charts component in output");
         assert!(!out.contains("sail-agent"), "agents component excluded");
-        assert!(out.contains("@ship/charts"), "package field present for charts");
-        assert!(!out.contains("@ship/agents"), "agents package absent from output");
+        assert!(
+            out.contains("@ship/charts"),
+            "package field present for charts"
+        );
+        assert!(
+            !out.contains("@ship/agents"),
+            "agents package absent from output"
+        );
     }
 }

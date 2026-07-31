@@ -1,0 +1,4 @@
+{
+  // ship-js SSR: empty clients map for pure-render Studio shell.
+  "clients": {}
+}

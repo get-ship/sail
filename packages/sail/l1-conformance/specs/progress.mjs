@@ -1,9 +1,17 @@
-// L1 conformance spec: <progress> (mechanism-2, native + PROGRESS_SKIN_CSS).
+// L1 conformance spec: <progress> (mechanism-2, native + PROGRESS map).
 // determinate values + sizes + indeterminate. Probe asserts each renders and
 // the determinate ones reflect value/max (native .position), indeterminate
-// reads -1.
+// reads -1. Markup mirrors freeform host stamp.
 
-const pr = (a) => `<progress ${a} style="width:180px"></progress>`
+const PR =
+  'sail-progress sx-appearancenone sx-displayinlineblock sx-alignmiddle sx-wfull sx-h2 sx-borderWidth0 sx-radiusfull sx-overflowhidden sx-bgmuted sx-fgprimary sx-sizesm-h15 sx-sizemd-h2 sx-sizelg-h3'
+
+const pr = (a) => {
+  const m = a.match(/class="([^"]*)"/)
+  const rest = a.replace(/class="[^"]*"\s*/, '').trim()
+  const cls = m ? `${PR} ${m[1]}` : PR
+  return `<progress class="${cls}" ${rest} style="width:180px"></progress>`
+}
 
 export default {
   tag: 'progress',

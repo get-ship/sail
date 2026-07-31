@@ -110,19 +110,14 @@ export type MutableState<Scope> =
   }
 
 /**
- * The controller's scope — now IDENTICAL to the generated `Scope`.
+ * The controller's scope — identical to the generated `Scope`.
  *
- * @deprecated Write `Scope` directly. This is an identity alias kept so the
- * existing corpus (`controller((ctx: ControllerScope<Scope>) => …)`) keeps
- * compiling verbatim while call sites are swept; it will be deleted.
- *
+ * Author-facing name for the setup argument: `controller((ctx: ControllerScope<Scope>) => …)`.
  * The compiler emits the resolved capability list into `Scope` itself
  * (`route`, `navigate`, and one member per declared provider — see
- * `emit::dts::emit_dts`), so the wrapper has nothing left to add. A name a route
- * never declared is a type error, which is the point.
+ * `emit::dts::emit_dts`). A name a route never declared is a type error.
  */
 export type ControllerScope<Scope = object> = Scope
-
 // ---------------------------------------------------------------------------
 // The controller surface — one function, one idiom
 // ---------------------------------------------------------------------------

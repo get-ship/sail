@@ -13,14 +13,16 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
 }
 
 fn ship_button_meta() -> ComponentMeta {
-    ComponentMeta { name: "ship-button-test".into() }
+    ComponentMeta {
+        name: "ship-button-test".into(),
+    }
 }
 
 fn compile_fixture(name: &str, mode: CompileMode, setup: Option<&str>) -> String {
@@ -34,7 +36,7 @@ fn compile_fixture(name: &str, mode: CompileMode, setup: Option<&str>) -> String
     let out = compile(
         &source,
         CompileOpts {
-        route_params: None,
+            route_params: None,
             setup_url: setup.map(String::from),
             mode,
             source_path: Some(path),
@@ -42,7 +44,7 @@ fn compile_fixture(name: &str, mode: CompileMode, setup: Option<&str>) -> String
             emit_dts: false,
             scope_capabilities: Vec::new(),
             emit_component_imports: false,
-        lint_overrides: Vec::new(),
+            lint_overrides: Vec::new(),
         },
     )
     .expect("compile");
@@ -50,10 +52,7 @@ fn compile_fixture(name: &str, mode: CompileMode, setup: Option<&str>) -> String
 }
 
 fn write_mjs(name: &str, js: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!(
-        "sail-compiler-parity-{}",
-        std::process::id()
-    ));
+    let dir = std::env::temp_dir().join(format!("sail-compiler-parity-{}", std::process::id()));
     fs::create_dir_all(&dir).unwrap();
     let p = dir.join(format!("{name}.mjs"));
     fs::write(&p, js).unwrap();
@@ -61,10 +60,7 @@ fn write_mjs(name: &str, js: &str) -> PathBuf {
 }
 
 fn node_check(path: &PathBuf) {
-    let output = Command::new("node")
-        .arg("--check")
-        .arg(path)
-        .output();
+    let output = Command::new("node").arg("--check").arg(path).output();
     let output = match output {
         Ok(o) => o,
         Err(e) => {
@@ -101,7 +97,11 @@ fn hello_compiles_to_valid_js() {
 
 #[test]
 fn counter_compiles_to_valid_js() {
-    let js = compile_fixture("counter", CompileMode::Component, Some("./counter.controller.ts"));
+    let js = compile_fixture(
+        "counter",
+        CompileMode::Component,
+        Some("./counter.controller.ts"),
+    );
     let p = write_mjs("counter", &js);
     node_check(&p);
 }
@@ -120,7 +120,11 @@ fn ship_button_compiles_to_valid_js() {
 fn compile_is_deterministic() {
     for (name, mode, setup) in [
         ("hello", CompileMode::Component, None),
-        ("counter", CompileMode::Component, Some("./counter.controller.ts")),
+        (
+            "counter",
+            CompileMode::Component,
+            Some("./counter.controller.ts"),
+        ),
         ("ship-button", CompileMode::Component, None),
     ] {
         let a = compile_fixture(name, mode, setup);
@@ -140,10 +144,7 @@ fn full_parity_with_interpreter() {
         );
         return;
     }
-    let runner = fixtures_dir()
-        .parent()
-        .unwrap()
-        .join("parity_runner.mjs");
+    let runner = fixtures_dir().parent().unwrap().join("parity_runner.mjs");
     assert!(
         runner.exists(),
         "parity_runner.mjs missing at {}",

@@ -54,7 +54,9 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
 
     // Pass 1: collect every identifier bound to `signal(...)` or
     // `derived(...)` anywhere in the source.
-    let mut collector = SignalBindingCollector { signals: HashSet::new() };
+    let mut collector = SignalBindingCollector {
+        signals: HashSet::new(),
+    };
     collector.visit_program(&ret.program);
 
     // Pass 2: flag plain assignment/update expressions targeting one of
@@ -94,8 +96,12 @@ where
 /// Match `signal(...)` or `derived(...)` — a bare call to one of those two
 /// identifiers, any argument shape.
 fn is_signal_or_derived_call(expr: &Expression<'_>) -> bool {
-    let Expression::CallExpression(call) = expr else { return false };
-    let Expression::Identifier(callee) = &call.callee else { return false };
+    let Expression::CallExpression(call) = expr else {
+        return false;
+    };
+    let Expression::Identifier(callee) = &call.callee else {
+        return false;
+    };
     matches!(callee.name.as_str(), "signal" | "derived")
 }
 
@@ -119,7 +125,9 @@ impl<'src> SetCallVisitor<'src> {
                 "`{key}` is a signal — plain assignment doesn't write through it, \
                  it just reassigns the local binding and breaks reactivity."
             ),
-            suggest: Some(format!("Use `{key}.set(...)` to write the signal, not `{key} = ...`.")),
+            suggest: Some(format!(
+                "Use `{key}.set(...)` to write the signal, not `{key} = ...`."
+            )),
         });
     }
 }
@@ -181,7 +189,13 @@ mod tests {
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].rule, RULE_ID);
         assert!(findings[0].message.contains("count"));
-        assert!(findings[0].suggest.as_ref().unwrap().contains("count.set(...)"));
+        assert!(
+            findings[0]
+                .suggest
+                .as_ref()
+                .unwrap()
+                .contains("count.set(...)")
+        );
     }
 
     #[test]

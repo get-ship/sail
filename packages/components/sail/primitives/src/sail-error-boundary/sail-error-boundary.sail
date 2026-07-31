@@ -54,10 +54,8 @@
   }
 </scope>
 
-
-
 <controller>
-import { controller, signal, attachBoundary, detachBoundary } from '@ship/sail-runtime'
+import { attachBoundary, detachBoundary } from '@ship/sail-runtime'
 import type { BoundarySource, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-error-boundary.sail'
 
@@ -129,10 +127,10 @@ export default controller((_ctx: ControllerScope<Scope>, _host?: Element) => {
   })
 
 </controller>
-<if cond={caughtError() === null}>
+<if {caughtError() === null}>
   <slot></slot>
 <else>
-  <if cond={hasFallbackSlot()}>
+  <if {hasFallbackSlot()}>
     <slot name="fallback"></slot>
   <else>
     <row role="alert" gap="3" align="start" sx={style.fontFamily(body).padY(4).padX(5).borderWidth(1).border(error-boundary-border).radius(md).bg(error-boundary).fg(error-boundary-foreground).fontSize(sm).shadow(xs)}>

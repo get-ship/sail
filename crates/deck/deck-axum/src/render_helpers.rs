@@ -14,7 +14,7 @@ use axum::{
 pub use deck_core::render_helpers::{is_valid_route_name, render_route_source};
 
 /// Plain-text 404 axum response. Used by state-aware SAIL handlers in shipd
-/// (sui_mutation, sui_sse) that build axum responses directly.
+/// (sail_mutation, sail_sse) that build axum responses directly.
 pub fn not_found(msg: &str) -> Response {
     Response::builder()
         .status(StatusCode::NOT_FOUND)

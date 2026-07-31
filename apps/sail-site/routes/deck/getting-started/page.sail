@@ -13,7 +13,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ pageExample, cont
 <article sx={style.maxW(breakpoint-tablet).mx(auto)}>
   <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(accent).mb(2)}>Introduction</p>
   <h1>Getting started</h1>
-  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>You need the <code>deck</code> CLI and a folder. No project scaffold, no install, no config to start.</p>
+  <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>You need the <code>sail</code> CLI and a folder. No project scaffold, no install, no config to start.</p>
 
   <h2>1. A page is a file</h2>
   <p>Create <code>routes/page.sail</code>. Whatever markup it holds is your page.</p>

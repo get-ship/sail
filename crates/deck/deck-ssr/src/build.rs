@@ -12,7 +12,9 @@ use std::path::{Component, Path, PathBuf};
 
 use anyhow::{anyhow, Context, Result};
 use rolldown::BundlerBuilder;
-use rolldown_common::{BundlerOptions, InputItem, Output, OutputFormat, ResolveOptions};
+use rolldown_common::{
+    BundlerOptions, CodeSplittingMode, InputItem, Output, OutputFormat, ResolveOptions,
+};
 use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest};
 use sail_compiler::parse::parse;
 use sail_compiler::parse::preprocess::extract_controller_block;
@@ -145,12 +147,36 @@ pub async fn synthesize_and_bundle_with(
 async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -> Result<String> {
     let runtime_server = repo.join("packages/sail/runtime/src/server.ts");
     let runtime_internal = repo.join("packages/sail/runtime/src/internal.ts");
+    let runtime_actions = repo.join("packages/sail/runtime/src/actions/index.ts");
     let route_server = repo.join("packages/deck/router/src/server.ts");
     let mut alias = vec![
         ("@ship/sail-runtime".to_string(), vec![Some(path_str(&runtime_server))]),
         ("@ship/sail-runtime/internal".to_string(), vec![Some(path_str(&runtime_internal))]),
+        ("@ship/sail-runtime/actions".to_string(), vec![Some(path_str(&runtime_actions))]),
         ("@ship/deck/router".to_string(), vec![Some(path_str(&route_server))]),
     ];
+    // App/workspace packages used by SSR shell (Studio) — repo-root node_modules
+    // does not hoist every workspace link, so alias to source like sail-runtime.
+    for (spec, rel) in [
+        (
+            "@ship/sail-studio-shell",
+            "packages/sail/studio-shell/src/index.ts",
+        ),
+        (
+            "@ship/sail-studio-client",
+            "packages/sail/studio-client/src/index.ts",
+        ),
+        ("@ship/studio/edit", "apps/studio/src/edit/index.ts"),
+        ("@ship/studio/checks", "apps/studio/src/checks/index.ts"),
+        ("@ship/studio/design", "apps/studio/src/design/index.ts"),
+        ("@ship/studio/tasks", "apps/studio/src/tasks/index.ts"),
+        ("@ship/studio/shell", "apps/studio/src/shell/index.ts"),
+    ] {
+        let p = repo.join(rel);
+        if p.is_file() {
+            alias.push((spec.to_string(), vec![Some(path_str(&p))]));
+        }
+    }
     for c in client_aliases {
         alias.push((c.specifier.clone(), vec![Some(path_str(&c.server_entry))]));
     }
@@ -163,6 +189,8 @@ async fn bundle(repo: &Path, build_dir: &Path, client_aliases: &[ClientAlias]) -
         }]),
         cwd: Some(repo.to_path_buf()),
         format: Some(OutputFormat::Esm),
+        // Isolate only evaluates one module string; multi-chunk `import './x.js'` is denied.
+        code_splitting: Some(CodeSplittingMode::Bool(false)),
         external: Some(vec!["ship".to_string()].into()),
         resolve: Some(ResolveOptions {
             alias: Some(alias),

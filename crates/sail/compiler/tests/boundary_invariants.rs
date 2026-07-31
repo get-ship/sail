@@ -12,7 +12,7 @@
 //! These gates run on representative compiled output (route + component) so a
 //! regression fails the build rather than slipping to web-QA.
 
-use sail_compiler::{compile, CompileMode, ComponentMeta, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
 fn route_opts(setup: Option<&str>) -> CompileOpts {
     CompileOpts {
@@ -34,7 +34,9 @@ fn component_opts(setup: Option<&str>) -> CompileOpts {
         setup_url: setup.map(|s| s.to_string()),
         mode: CompileMode::Component,
         source_path: None,
-        component_meta: Some(ComponentMeta { name: "sail-x".into() }),
+        component_meta: Some(ComponentMeta {
+            name: "sail-x".into(),
+        }),
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
@@ -42,9 +44,18 @@ fn component_opts(setup: Option<&str>) -> CompileOpts {
     }
 }
 const FORBIDDEN: &[(&str, &str)] = &[
-    ("new Proxy($scope", "hand-rolled scope proxy — call the runtime builder (componentMountState)"),
-    ("/_deck/", "a served URL — serving is Deck's concern, SAIL emits no URLs"),
-    ("importmap", "an import map — that's the host page's job, not compiler output"),
+    (
+        "new Proxy($scope",
+        "hand-rolled scope proxy — call the runtime builder (componentMountState)",
+    ),
+    (
+        "/_deck/",
+        "a served URL — serving is Deck's concern, SAIL emits no URLs",
+    ),
+    (
+        "importmap",
+        "an import map — that's the host page's job, not compiler output",
+    ),
 ];
 
 fn assert_clean(js: &str, ctx: &str) {
@@ -58,15 +69,18 @@ fn assert_clean(js: &str, ctx: &str) {
 
 #[test]
 fn route_output_emits_no_behavior_or_urls() {
-    let out = compile(r#"<p>{x()}</p>"#, route_opts(Some("./controller.ts")))
-        .expect("compile route");
+    let out =
+        compile(r#"<p>{x()}</p>"#, route_opts(Some("./controller.ts"))).expect("compile route");
     assert_clean(&out.js, "route");
 }
 
 #[test]
 fn component_output_emits_no_behavior_or_urls() {
-    let out = compile(r#"<div>{x()}</div>"#, component_opts(Some("./sail-x.controller.ts")))
-        .expect("compile component");
+    let out = compile(
+        r#"<div>{x()}</div>"#,
+        component_opts(Some("./sail-x.controller.ts")),
+    )
+    .expect("compile component");
     assert_clean(&out.js, "component");
 }
 

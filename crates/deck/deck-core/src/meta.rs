@@ -14,7 +14,7 @@
 //! same env vars via its own `build.rs`.
 
 use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Daemon-side build identity. Mirrors the relevant subset of
 /// `build_info::BuildInfo` — `&'static str` fields stay static across

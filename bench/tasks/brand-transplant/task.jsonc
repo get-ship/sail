@@ -1,0 +1,13 @@
+{
+  "id": "brand-transplant",
+  "prompt": "Read reference/brand-brief.md. Build a simple product page (hero + feature row + footer) that expresses the brand via the token / theme / sx system — deep green fintech, trustworthy, calm density. Do not invent raw hex in style attributes if tokens can carry the brand. Prefer forking or mapping tokens over one-off colors. Work in routes/page.sail (and theme files only if the surface supports it). Follow AGENTS.md: read the skill first, check after every edit, stop only when the check is fully clean.",
+  "systems": ["tokens", "sx", "theming"],
+  "scaffold": "blank",
+  "grading": {
+    "compile": true,
+    "vocab_share": { "min": 0.25 },
+    "gates": true,
+    "beauty": true
+  },
+  "falsification": "Can brand expression live inside the token system?"
+}

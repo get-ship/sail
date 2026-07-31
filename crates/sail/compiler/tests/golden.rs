@@ -12,7 +12,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use sail_compiler::{compile, CompileOpts, CompileOutput};
+use sail_compiler::{CompileOpts, CompileOutput, compile};
 
 mod common;
 use common::strip_version_stamp;

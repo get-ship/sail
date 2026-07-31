@@ -42,6 +42,7 @@ export const dismissible: Action<void> = (node) => {
   const onRemoveClick = (e: MouseEvent): void => {
     e.stopPropagation()
     if (el.hasAttribute('disabled')) return
+    if (!el.hasAttribute('removable')) return
     emitRemove()
   }
   remove?.addEventListener('click', onRemoveClick)

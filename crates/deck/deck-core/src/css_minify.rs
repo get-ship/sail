@@ -45,8 +45,16 @@ mod tests {
         assert!(!out.contains("/*"), "comments stripped: {out}");
         assert!(!out.contains("  "), "runs of whitespace collapsed: {out}");
         assert!(out.contains(".foo"), "selector preserved: {out}");
-        assert!(out.contains("red") || out.contains("#f00") || out.contains("#ff0000"), "color preserved: {out}");
-        assert!(out.len() < src.len(), "size shrinks {} → {}", src.len(), out.len());
+        assert!(
+            out.contains("red") || out.contains("#f00") || out.contains("#ff0000"),
+            "color preserved: {out}"
+        );
+        assert!(
+            out.len() < src.len(),
+            "size shrinks {} → {}",
+            src.len(),
+            out.len()
+        );
     }
 
     #[test]

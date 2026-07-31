@@ -35,7 +35,7 @@
 // `control_emit` (submodules); what remains is the single walk that dispatches
 // instructions to them. Splitting the dispatcher scatters one loop.
 use super::expr_rewrite::rewrite_scoped;
-use super::writer::{js_string, Writer};
+use super::writer::{Writer, js_string};
 use crate::ir::*;
 use crate::keys::{BindingRegistry, KeyAllocator};
 
@@ -333,20 +333,14 @@ impl TemplateEmitter {
                 // Binding doesn't read the row at all (e.g. reads only
                 // outer-scope signals like `selected()`). No per-row
                 // re-fire needed — the outer-scope sub keeps it live.
-                self.reactive_row_use = std::mem::replace(
-                    &mut self.reactive_row_use,
-                    RowUse::None,
-                )
-                .union(use_);
+                self.reactive_row_use =
+                    std::mem::replace(&mut self.reactive_row_use, RowUse::None).union(use_);
                 String::new()
             }
             RowUse::Whole => {
                 // Escalates the whole loop to the legacy __v signal.
-                self.reactive_row_use = std::mem::replace(
-                    &mut self.reactive_row_use,
-                    RowUse::None,
-                )
-                .union(use_);
+                self.reactive_row_use =
+                    std::mem::replace(&mut self.reactive_row_use, RowUse::None).union(use_);
                 format!("void $scope.__v(){sep}")
             }
             RowUse::FieldsOnly(fields) => {
@@ -355,11 +349,8 @@ impl TemplateEmitter {
                     .map(|f| format!("void $scope.__v_{f}()"))
                     .collect::<Vec<_>>()
                     .join(", ");
-                self.reactive_row_use = std::mem::replace(
-                    &mut self.reactive_row_use,
-                    RowUse::None,
-                )
-                .union(use_);
+                self.reactive_row_use =
+                    std::mem::replace(&mut self.reactive_row_use, RowUse::None).union(use_);
                 format!("{prefix}{sep}")
             }
         }
@@ -374,10 +365,7 @@ impl TemplateEmitter {
     /// binding has no row-field dep at all, but the index may still
     /// have shifted on reorder, so the stmt must re-fire — gating it
     /// would leave stale DOM after a swap.
-    pub(super) fn row_use_for_source(
-        &self,
-        source: &str,
-    ) -> crate::lower::row_field_uses::RowUse {
+    pub(super) fn row_use_for_source(&self, source: &str) -> crate::lower::row_field_uses::RowUse {
         let var = match &self.for_var_name {
             Some(v) => v,
             None => return crate::lower::row_field_uses::RowUse::None,
@@ -414,8 +402,10 @@ impl TemplateEmitter {
     pub(super) fn hoist_template(&mut self, html: &str) -> String {
         let name = format!("__tpl{}", self.tpl_id);
         self.tpl_id += 1;
-        self.module_hoists
-            .line(&format!("const {name} = /*@__PURE__*/ __tpl({});", js_string(html)));
+        self.module_hoists.line(&format!(
+            "const {name} = /*@__PURE__*/ __tpl({});",
+            js_string(html)
+        ));
         name
     }
 
@@ -457,7 +447,6 @@ impl TemplateEmitter {
         self.root_pending = false;
     }
 
-
     /// Attach the reactive text binding to an ALREADY-EXISTING text node.
     ///
     /// Extracted so the createElement path and the template-clone path share ONE
@@ -472,36 +461,35 @@ impl TemplateEmitter {
         key: &str,
     ) {
         let rw = self.rw(&expr.source, &[]);
-                if self.is_static_row_expr(&expr.source) {
-                    // D5: row-scope static read — skip the bindText
-                    // effect and write textContent directly. Saves a
-                    // closure + cleanup slot per row per binding. The
-                    // assignment is also re-run by the for's
-                    // `update()` callback so keyed-row reuse refreshes
-                    // the DOM when the row instance changes.
-                    let stmt = format!("{v}.textContent = ({rw});");
-                    w.line(&stmt);
-                    let use_ = self.row_use_for_source(&expr.source);
-                    self.inline_update_stmts.push((stmt, use_));
-                } else {
-                    let fv = self.for_version_comma(&expr.source);
-                    w.line(&format!(
-                        "{cleanups_var}.push(bindText({v}, () => ({fv}{rw})));"
-                    ));
-                }
-                // Phase 3b.3: at depth 0 in routes, also emit a direct
-                // hydrate call so SSR'd `<!--sail:text:bN-->…<!--/sail-->`
-                // markers wire up without going through the runtime
-                // walker / `bindings` manifest. The matching `text`
-                // manifest entry is suppressed in `js.rs::emit_bindings`.
-                if self.is_route && self.boundary_depth == 0 {
-                    self.hydrate_uses_text = true;
-                    self.hydrate_calls.line(&format!(
-                        "if (__t[{k}]) __cleanups.push(hydrateText(__t[{k}], () => ({rw})));",
-                        k = js_string(&key),
-                    ));
-                }
-            
+        if self.is_static_row_expr(&expr.source) {
+            // D5: row-scope static read — skip the bindText
+            // effect and write textContent directly. Saves a
+            // closure + cleanup slot per row per binding. The
+            // assignment is also re-run by the for's
+            // `update()` callback so keyed-row reuse refreshes
+            // the DOM when the row instance changes.
+            let stmt = format!("{v}.textContent = ({rw});");
+            w.line(&stmt);
+            let use_ = self.row_use_for_source(&expr.source);
+            self.inline_update_stmts.push((stmt, use_));
+        } else {
+            let fv = self.for_version_comma(&expr.source);
+            w.line(&format!(
+                "{cleanups_var}.push(bindText({v}, () => ({fv}{rw})));"
+            ));
+        }
+        // Phase 3b.3: at depth 0 in routes, also emit a direct
+        // hydrate call so SSR'd `<!--sail:text:bN-->…<!--/sail-->`
+        // markers wire up without going through the runtime
+        // walker / `bindings` manifest. The matching `text`
+        // manifest entry is suppressed in `js.rs::emit_bindings`.
+        if self.is_route && self.boundary_depth == 0 {
+            self.hydrate_uses_text = true;
+            self.hydrate_calls.line(&format!(
+                "if (__t[{k}]) __cleanups.push(hydrateText(__t[{k}], () => ({rw})));",
+                k = js_string(&key),
+            ));
+        }
     }
 
     pub(super) fn emit_children(
@@ -544,10 +532,7 @@ impl TemplateEmitter {
                 // `<!--sail:text:bN-->...<!--/sail-->`. The browser DOM
                 // has no `__hydrateKey` field so this call is a no-op;
                 // the server-DOM reads the field at toHTML time.
-                w.line(&format!(
-                    "markHydrateText({v}, {k});",
-                    k = js_string(&key),
-                ));
+                w.line(&format!("markHydrateText({v}, {k});", k = js_string(&key),));
                 w.line(&format!("{parent_var}.appendChild({v});"));
                 self.emit_text_binding(w, &v, expr, cleanups_var, &key);
             }
@@ -556,18 +541,14 @@ impl TemplateEmitter {
             }
             Instr::If(if_instr) => self.emit_if(w, if_instr, parent_var, cleanups_var),
             Instr::For(for_instr) => self.emit_for(w, for_instr, parent_var, cleanups_var),
-            Instr::Match(match_instr) => {
-                self.emit_match(w, match_instr, parent_var, cleanups_var)
-            }
+            Instr::Match(match_instr) => self.emit_match(w, match_instr, parent_var, cleanups_var),
             // While-loading/while-error: the render callback is emitted as a
             // named property on the setup return object (via `render_callbacks`
             // buffer). `__mount` emits an inline call for the legacy path.
             Instr::WhileLoading(wl) => {
                 self.emit_while_loading_block(w, wl, parent_var, cleanups_var)
             }
-            Instr::WhileError(we) => {
-                self.emit_while_error_block(w, we, parent_var, cleanups_var)
-            }
+            Instr::WhileError(we) => self.emit_while_error_block(w, we, parent_var, cleanups_var),
         }
     }
 

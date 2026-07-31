@@ -308,9 +308,7 @@ fn levenshtein(a: &str, b: &str, cap: usize) -> usize {
         let mut row_min = curr[0];
         for j in 1..=b.len() {
             let cost = if a[i - 1] == b[j - 1] { 0 } else { 1 };
-            curr[j] = (prev[j] + 1)
-                .min(curr[j - 1] + 1)
-                .min(prev[j - 1] + cost);
+            curr[j] = (prev[j] + 1).min(curr[j - 1] + 1).min(prev[j - 1] + cost);
             if curr[j] < row_min {
                 row_min = curr[j];
             }
@@ -379,7 +377,11 @@ mod tests {
         let f = run(src);
         assert_eq!(f.len(), 1);
         assert_eq!(f[0].rule, RULE_ID);
-        assert!(f[0].message.contains("--definitely-not-real"), "{}", f[0].message);
+        assert!(
+            f[0].message.contains("--definitely-not-real"),
+            "{}",
+            f[0].message
+        );
     }
 
     #[test]

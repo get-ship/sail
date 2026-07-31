@@ -39,18 +39,21 @@
 //!   zero-size diagnostic whose subtree contains an unknown node is
 //!   suppressed, because reporting a parent as "collapsed" when its only
 //!   child is an unmeasurable web component would be confidently wrong.
-//! - **Multiple viewports / breakpoints.** One fixed viewport per call.
+//! - **Multiple viewports / breakpoints.** One fixed viewport per
+//!   [`check_preprocessed`] call; the compiler's layout check pass runs at
+//!   least two (mobile + desktop) and dedups.
 //! - **`if` / `for` / dynamic content.** The static-only path catches most
 //!   real-world layout bugs.
 
+pub mod diagnostics;
 pub mod html;
 pub mod mapping;
-pub mod style;
-pub mod taffy_tree;
-pub mod diagnostics;
 pub mod metrics;
+pub mod style;
+mod style_scale;
+pub mod taffy_tree;
 
-pub use diagnostics::{Diagnostic, ScanResult, ScanInput, Severity};
+pub use diagnostics::{BoxReport, Diagnostic, ScanInput, ScanResult, Severity};
 pub use html::{Element, parse_source, source_viewport};
 pub use metrics::{Family, Size as TextSize, table as metrics_table};
 pub use style::ResolvedStyle;

@@ -303,8 +303,7 @@ mod tests {
     // (a) A consumer component with `display: grid` in its <style> warns.
     #[test]
     fn consumer_display_grid_warns() {
-        let src =
-            "<style>.wrap { display: grid; gap: var(--space-3); }</style><div class=\"wrap\"></div>";
+        let src = "<style>.wrap { display: grid; gap: var(--space-3); }</style><div class=\"wrap\"></div>";
         let f = check(&consumer(), src);
         assert_eq!(f.len(), 1, "{f:?}");
         assert_eq!(f[0].rule, RULE_ID);
@@ -328,8 +327,7 @@ mod tests {
     // (b) The SAME source under the primitives pack does NOT warn.
     #[test]
     fn primitives_pack_is_exempt() {
-        let src =
-            "<style>.wrap { display: grid; gap: var(--space-3); }</style><div class=\"wrap\"></div>";
+        let src = "<style>.wrap { display: grid; gap: var(--space-3); }</style><div class=\"wrap\"></div>";
         let f = check(&primitive(), src);
         assert!(f.is_empty(), "primitives pack must be exempt: {f:?}");
     }
@@ -338,20 +336,26 @@ mod tests {
     #[test]
     fn primitives_pack_absolute_path_is_exempt() {
         let p = PathBuf::from(
-            "/home/dev/repo/packages/components/sail/primitives/src/sail-stack/sail-stack.sail",
+            "/tmp/repo/packages/components/sail/primitives/src/sail-stack/sail-stack.sail",
         );
         let src = "<style>:host { display: flex; }</style><slot></slot>";
         let f = check(&p, src);
-        assert!(f.is_empty(), "absolute primitives path must be exempt: {f:?}");
+        assert!(
+            f.is_empty(),
+            "absolute primitives path must be exempt: {f:?}"
+        );
     }
 
     // (c) A component that composes <sail-grid> (no ad-hoc layout CSS) is silent.
     #[test]
-    fn composing_sui_grid_emits_nothing() {
+    fn composing_sail_grid_emits_nothing() {
         let src = "<style>.title { color: var(--foreground); }</style>\
                    <sail-grid gap=\"3\"><div>a</div><div>b</div></sail-grid>";
         let f = check(&consumer(), src);
-        assert!(f.is_empty(), "composing a primitive is the goal — no warning: {f:?}");
+        assert!(
+            f.is_empty(),
+            "composing a primitive is the goal — no warning: {f:?}"
+        );
     }
 
     // A non-layout display (block/none) is never flagged.

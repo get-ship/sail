@@ -24,6 +24,9 @@ const PROJECTS = [
   'packages/sail/tokens',
   'packages/sail/test-setup',
   'packages/sail/tutorial',
+  'packages/sail/studio-bridge',
+  'packages/sail/studio-shell',
+  'apps/studio',
   // `tests/integration` is intentionally omitted — its `vitest.config.ts`
   // has a pre-existing module-resolution issue (rolldown can't resolve the
   // relative TS import of `../packages/sail/test-setup/src/vitest.ts`).

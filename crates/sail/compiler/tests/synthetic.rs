@@ -6,11 +6,11 @@
 //! lives alongside the deck-conformance app; these lock the *shape* the
 //! TS proof depends on, and run in plain `cargo test` (no node toolchain).
 
+use sail_compiler::CompileMode;
 use sail_compiler::emit::synthetic::{
-    emit_synthetic, emit_synthetic_client_module, AppManifest, AuthoredController,
+    AppManifest, AuthoredController, emit_synthetic, emit_synthetic_client_module,
 };
 use sail_compiler::parse::parse;
-use sail_compiler::CompileMode;
 
 const ROUTE_MANIFEST: &str = r#"{
   "clients": {
@@ -27,8 +27,15 @@ const SHIP_MANIFEST: &str = r#"{
 fn synth(src: &str, manifest_src: &str, mode: CompileMode) -> (String, String) {
     let program = parse(src).expect("parse .sail");
     let manifest = AppManifest::parse(manifest_src).expect("parse manifest");
-    let out = emit_synthetic(&program, &manifest, None, "./page.synthetic.controller.ts", mode, None)
-        .expect("emit_synthetic");
+    let out = emit_synthetic(
+        &program,
+        &manifest,
+        None,
+        "./page.synthetic.controller.ts",
+        mode,
+        None,
+    )
+    .expect("emit_synthetic");
     (out.controller_ts, out.render_ts)
 }
 
@@ -44,8 +51,14 @@ fn route_is_a_real_import_not_a_builtin() {
         ctrl.contains(r#"import { route as __make_route } from "@ship/deck/router";"#),
         "controller must import route from the manifest module:\n{ctrl}"
     );
-    assert!(ctrl.contains("const route = __make_route();"), "route is constructed:\n{ctrl}");
-    assert!(ctrl.contains("export const scope = { route };"), "typed scope exports route:\n{ctrl}");
+    assert!(
+        ctrl.contains("const route = __make_route();"),
+        "route is constructed:\n{ctrl}"
+    );
+    assert!(
+        ctrl.contains("export const scope = { route };"),
+        "typed scope exports route:\n{ctrl}"
+    );
     // The render reads the signal by CALLING it (the closed signal-read seam).
     assert!(
         render.contains("bindText(") && render.contains("=> (scope.route.params.id())"),
@@ -76,7 +89,9 @@ fn authored_controller_is_composed_via_setup_not_rewritten() {
     // (`ControllerExport`); the synthetic controller drives its `setup(ctx)`
     // (the production `resolveController`), spreads the result, and recovers
     // the contributed scope TYPE from the export — composed, never rewritten.
-    let authored = AuthoredController { specifier: "./controller.ts".to_string() };
+    let authored = AuthoredController {
+        specifier: "./controller.ts".to_string(),
+    };
     let program = parse("<p>{greeting()} (count {count()})</p>").expect("parse");
     let manifest = AppManifest::parse("{}").expect("manifest");
     let out = emit_synthetic(
@@ -88,7 +103,10 @@ fn authored_controller_is_composed_via_setup_not_rewritten() {
         None,
     )
     .expect("emit");
-    assert!(out.controller_ts.contains(r#"import __authored from "./controller.ts";"#));
+    assert!(
+        out.controller_ts
+            .contains(r#"import __authored from "./controller.ts";"#)
+    );
     assert!(
         out.controller_ts.contains(
             "import type { ControllerExport, ResolverContext } from \"@ship/sail-runtime/internal\";"
@@ -121,7 +139,8 @@ fn authored_controller_is_composed_via_setup_not_rewritten() {
         out.controller_ts
     );
     assert!(
-        out.controller_ts.contains("export const scope = { ...__authoredScope };"),
+        out.controller_ts
+            .contains("export const scope = { ...__authoredScope };"),
         "authored scope is spread (composed), never rewritten:\n{}",
         out.controller_ts
     );
@@ -136,7 +155,9 @@ fn authored_compose_maps_manifest_clients_into_resolver_ctx() {
     // controller passes them to `setup(ctx)` in the shape `resolveController`
     // expects — well-known names as `ResolverContext` fields, the rest spread
     // into `clients`.
-    let authored = AuthoredController { specifier: "./controller.ts".to_string() };
+    let authored = AuthoredController {
+        specifier: "./controller.ts".to_string(),
+    };
     let manifest = AppManifest::parse(
         r#"{ "clients": {
             "route": { "from": "@ship/deck/router", "import": "route", "construct": true },
@@ -154,10 +175,14 @@ fn authored_compose_maps_manifest_clients_into_resolver_ctx() {
         None,
     )
     .expect("emit");
-    assert!(out.controller_ts.contains("route: route,"), "route → ctx.route:\n{}", out.controller_ts);
     assert!(
-        out.controller_ts.contains("clients: { api },"),
-        "named client → ctx.clients:\n{}",
+        out.controller_ts.contains("route: route,"),
+        "route → ctx.route:\n{}",
+        out.controller_ts
+    );
+    assert!(
+        out.controller_ts.contains("\n  api,"),
+        "named client flattens onto ctx (no nested clients bag):\n{}",
         out.controller_ts
     );
 }
@@ -165,23 +190,49 @@ fn authored_compose_maps_manifest_clients_into_resolver_ctx() {
 #[test]
 fn propless_component_synthesizes_like_a_view() {
     // demo-chip shape: slot-only component, no props, no controller.
-    let (ctrl, render) = synth("<span class=\"chip\"><slot></slot></span>", "{}", CompileMode::Component);
-    assert!(ctrl.contains("export const scope = {  };"), "empty typed scope:\n{ctrl}");
-    assert!(render.contains("export function mount(container: HTMLElement)"), "render mounts:\n{render}");
-    assert!(render.contains(r#"document.createElement("span")"#), "emits the element:\n{render}");
+    let (ctrl, render) = synth(
+        "<span class=\"chip\"><slot></slot></span>",
+        "{}",
+        CompileMode::Component,
+    );
+    assert!(
+        ctrl.contains("export const scope = {  };"),
+        "empty typed scope:\n{ctrl}"
+    );
+    assert!(
+        render.contains("export function mount(container: HTMLElement)"),
+        "render mounts:\n{render}"
+    );
+    assert!(
+        render.contains(r#"document.createElement("span")"#),
+        "emits the element:\n{render}"
+    );
 }
 
 #[test]
 fn component_props_are_rejected_for_now() {
-    let program = parse("<scope>
+    let program = parse(
+        "<scope>
   props: {
     label = ''
   }
-</scope>\n<span>{label}</span>").expect("parse");
+</scope>\n<span>{label}</span>",
+    )
+    .expect("parse");
     let manifest = AppManifest::parse("{}").expect("manifest");
-    let err = emit_synthetic(&program, &manifest, None, "./c.ts", CompileMode::Component, None)
-        .expect_err("component props must be rejected in Phase 1");
-    assert!(format!("{err:?}").contains("prop"), "error names props: {err:?}");
+    let err = emit_synthetic(
+        &program,
+        &manifest,
+        None,
+        "./c.ts",
+        CompileMode::Component,
+        None,
+    )
+    .expect_err("component props must be rejected in Phase 1");
+    assert!(
+        format!("{err:?}").contains("prop"),
+        "error names props: {err:?}"
+    );
 }
 
 #[test]
@@ -201,18 +252,37 @@ fn client_emit_returns_mount_and_hydrate_contract() {
     )
     .expect("emit");
     let client = out.render_client_ts;
-    assert!(client.contains("export default component(() => {"), "client wraps in component():\n{client}");
-    assert!(client.contains("__mount(container: HTMLElement) {"), "client has __mount:\n{client}");
-    assert!(client.contains("hydrate(root: HTMLElement) {"), "client has hydrate:\n{client}");
+    assert!(
+        client.contains("export default component(() => {"),
+        "client wraps in component():\n{client}"
+    );
+    assert!(
+        client.contains("__mount(container: HTMLElement) {"),
+        "client has __mount:\n{client}"
+    );
+    assert!(
+        client.contains("hydrate(root: HTMLElement) {"),
+        "client has hydrate:\n{client}"
+    );
     // It imports `component` from the runtime and the text hydrate helpers from
     // @ship/sail-dom (the production split).
-    assert!(client.contains("from \"@ship/sail-dom\""), "imports hydrate helpers from sail-dom:\n{client}");
-    assert!(client.contains("collectTextOpens") && client.contains("hydrateText"), "text hydrate:\n{client}");
+    assert!(
+        client.contains("from \"@ship/sail-dom\""),
+        "imports hydrate helpers from sail-dom:\n{client}"
+    );
+    assert!(
+        client.contains("collectTextOpens") && client.contains("hydrateText"),
+        "text hydrate:\n{client}"
+    );
     // __mount still reads the typed scope (the CSR path), exactly like SSR.
-    assert!(client.contains("scope.route.params.id()"), "typed scope read in __mount:\n{client}");
+    assert!(
+        client.contains("scope.route.params.id()"),
+        "typed scope read in __mount:\n{client}"
+    );
     // The SSR render stays the bare `mount` export (unchanged contract).
     assert!(
-        out.render_ts.contains("export function mount(container: HTMLElement)")
+        out.render_ts
+            .contains("export function mount(container: HTMLElement)")
             && !out.render_ts.contains("export default component"),
         "SSR render keeps its mount-only export:\n{}",
         out.render_ts
@@ -227,17 +297,24 @@ fn merged_client_module_is_self_contained() {
     let src = r#"<ul><for as="item" of={[{id: 1, text: "a"}]} key={item.id}><li>{item.text}</li></for></ul>"#;
     let program = parse(src).expect("parse");
     let manifest = AppManifest::parse(SHIP_MANIFEST).expect("manifest");
-    let merged = emit_synthetic_client_module(&program, &manifest, None, CompileMode::Component, None)
-        .expect("merged client module");
+    let merged =
+        emit_synthetic_client_module(&program, &manifest, None, CompileMode::Component, None)
+            .expect("merged client module");
     assert!(
         !merged.contains("import { scope } from"),
         "merged module must not import scope across a boundary:\n{merged}"
     );
     // The controller's `scope` const is present as a local (its export line);
     // no manifest client is referenced, so the scope is empty.
-    assert!(merged.contains("export const scope = {  };"), "scope is local:\n{merged}");
+    assert!(
+        merged.contains("export const scope = {  };"),
+        "scope is local:\n{merged}"
+    );
     // The client default export is present.
-    assert!(merged.contains("export default component(() => {"), "client default export present:\n{merged}");
+    assert!(
+        merged.contains("export default component(() => {"),
+        "client default export present:\n{merged}"
+    );
     assert!(merged.contains("bindFor("), "render body:\n{merged}");
 }
 
@@ -245,8 +322,14 @@ fn merged_client_module_is_self_contained() {
 fn only_referenced_manifest_clients_are_imported() {
     // route is in the manifest but unused → not imported.
     let (ctrl, _render) = synth("<p>static</p>", ROUTE_MANIFEST, CompileMode::Component);
-    assert!(!ctrl.contains("@ship/deck/router"), "unused manifest client must not import:\n{ctrl}");
-    assert!(ctrl.contains("export const scope = {  };"), "empty scope when nothing referenced:\n{ctrl}");
+    assert!(
+        !ctrl.contains("@ship/deck/router"),
+        "unused manifest client must not import:\n{ctrl}"
+    );
+    assert!(
+        ctrl.contains("export const scope = {  };"),
+        "empty scope when nothing referenced:\n{ctrl}"
+    );
 }
 
 /// Slice 2 G3 — a manifest client name appearing inside a string literal
@@ -302,7 +385,9 @@ export default controller(() => ({ name: signal('Hub') }))
 "#;
     // The recovery is structural (text on the emitted controller module);
     // the specifier never resolves for this unit test.
-    let authored = AuthoredController { specifier: "./in-memory.ts".to_string() };
+    let authored = AuthoredController {
+        specifier: "./in-memory.ts".to_string(),
+    };
     let out = emit_synthetic(
         &program,
         &manifest,

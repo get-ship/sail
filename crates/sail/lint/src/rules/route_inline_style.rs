@@ -123,17 +123,21 @@ mod tests {
     }
 
     #[test]
-    fn inline_style_in_page_sui_warns() {
+    fn inline_style_in_page_sail_warns() {
         let src = "<style>.foo { color: red; }</style><p>hello</p>";
         let findings = check(&page_path(), src);
         assert_eq!(findings.len(), 1, "{findings:?}");
         assert_eq!(findings[0].rule, RULE_ID);
         assert_eq!(findings[0].severity, Severity::Warn);
-        assert!(findings[0].message.contains("silently dropped"), "{}", findings[0].message);
+        assert!(
+            findings[0].message.contains("silently dropped"),
+            "{}",
+            findings[0].message
+        );
     }
 
     #[test]
-    fn inline_style_in_component_sui_passes() {
+    fn inline_style_in_component_sail_passes() {
         // Component .sail files legitimately carry <style> blocks.
         let src = "<style>:host { display: block; }</style><slot></slot>";
         let findings = check(&component_path(), src);
@@ -141,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn page_sui_without_style_passes() {
+    fn page_sail_without_style_passes() {
         let src = "<div><p>no styles here</p></div>";
         let findings = check(&page_path(), src);
         assert!(findings.is_empty(), "{findings:?}");
@@ -151,7 +155,11 @@ mod tests {
     fn multiple_style_blocks_warn_separately() {
         let src = "<style>.a{}</style><div></div><style>.b{}</style>";
         let findings = check(&page_path(), src);
-        assert_eq!(findings.len(), 2, "each <style> block is a separate finding: {findings:?}");
+        assert_eq!(
+            findings.len(),
+            2,
+            "each <style> block is a separate finding: {findings:?}"
+        );
     }
 
     #[test]
@@ -182,11 +190,14 @@ mod tests {
     }
 
     #[test]
-    fn only_page_sui_filename_triggers() {
+    fn only_page_sail_filename_triggers() {
         // A file named something other than `page.sail` even in a routes dir.
         let other = PathBuf::from("/routes/agents/layout.sail");
         let src = "<style>.foo{}</style><slot></slot>";
         let findings = check(&other, src);
-        assert!(findings.is_empty(), "only page.sail should trigger: {findings:?}");
+        assert!(
+            findings.is_empty(),
+            "only page.sail should trigger: {findings:?}"
+        );
     }
 }

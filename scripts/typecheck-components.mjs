@@ -1,4 +1,13 @@
 #!/usr/bin/env node
+/**
+ * scripts/typecheck-components.mjs — curated root helper (HYGIENE-0).
+ *
+ * Runs: `bun run typecheck` / `npm run typecheck` (package.json).
+ * Contract: regenerate adjacent `.sail.d.ts` companions, then `tsc --noEmit`
+ * per component pack. Invokes scripts/gen-component-types.mjs first.
+ *
+ * Keep scripts/ ≤2 files; do not add one-shots here — use `cargo xtask`.
+ */
 // Typecheck every sail component pack. Regenerates the adjacent `.sail.d.ts` type
 // companions FIRST (they're gitignored, so a clean checkout has none) so each
 // controller's `import type { Scope } from './x.sail'` resolves, then runs

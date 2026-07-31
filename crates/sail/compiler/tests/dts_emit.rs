@@ -3,7 +3,7 @@
 //! Each test compiles a small `.sail` snippet with `emit_dts: true` and
 //! asserts the resulting d.ts contains the expected type lines.
 
-use sail_compiler::{compile, CompileMode, CompileOpts};
+use sail_compiler::{CompileMode, CompileOpts, compile};
 
 fn compile_dts(source: &str) -> String {
     let opts = CompileOpts {
@@ -26,8 +26,8 @@ fn compile_dts(source: &str) -> String {
 /// Compile a `.sail` source whose controller is inlined as a `<controller>`
 /// block — the ONE source (the paired `.controller.ts` fallback is gone) — so
 /// the d.ts emitter can pull the scope factory's fields. Returns the d.ts text.
-fn compile_dts_with_controller(_stem: &str, sui_src: &str, controller_ts: &str) -> String {
-    let src = format!("<controller>\n{controller_ts}\n</controller>\n{sui_src}");
+fn compile_dts_with_controller(_stem: &str, sail_src: &str, controller_ts: &str) -> String {
+    let src = format!("<controller>\n{controller_ts}\n</controller>\n{sail_src}");
     let opts = CompileOpts {
         route_params: None,
         setup_url: None,
@@ -53,12 +53,15 @@ fn compile_component_dts(source: &str) -> String {
         setup_url: None,
         mode: CompileMode::Component,
         source_path: None,
-        component_meta: Some(ComponentMeta { name: "test-el".into() }),
+        component_meta: Some(ComponentMeta {
+            name: "test-el".into(),
+        }),
         emit_dts: true,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
-    
-            lint_overrides: Vec::new(),};
+
+        lint_overrides: Vec::new(),
+    };
     compile(source, opts)
         .expect("compile")
         .dts
@@ -94,9 +97,7 @@ fn prop_bool_emits_boolean() {
 
 #[test]
 fn use_hook_with_as_emits_return_type() {
-    let dts = compile_dts(
-        r#"<use-filter-list as="filter"><span>x</span></use-filter-list>"#,
-    );
+    let dts = compile_dts(r#"<use-filter-list as="filter"><span>x</span></use-filter-list>"#);
     assert!(
         dts.contains("filter: ReturnType<typeof useFilterList>"),
         "got: {dts}"
@@ -114,8 +115,9 @@ fn emit_dts_false_returns_none() {
         emit_dts: false,
         scope_capabilities: Vec::new(),
         emit_component_imports: false,
-    
-            lint_overrides: Vec::new(),};
+
+        lint_overrides: Vec::new(),
+    };
     let out = compile(r#"<p>hi</p>"#, opts).expect("compile");
     assert!(out.dts.is_none(), "expected no dts when emit_dts=false");
 }
@@ -130,9 +132,8 @@ fn no_declarations_emits_empty_scope() {
 fn reflect_empty_does_not_add_scope_entry() {
     // The slot lives inside a component since slots are component-only.
     // The reflect-empty side-effect must not surface in Scope.
-    let dts = compile_component_dts(
-        r#"<button><slot reflect-empty="data-icon-only"></slot></button>"#,
-    );
+    let dts =
+        compile_component_dts(r#"<button><slot reflect-empty="data-icon-only"></slot></button>"#);
     assert!(dts.contains("export interface Scope {}"), "got: {dts}");
     assert!(!dts.contains("data-icon-only"), "got: {dts}");
     assert!(!dts.contains("dataIconOnly"), "got: {dts}");
@@ -280,7 +281,10 @@ fn compile_dts_with_capabilities_as(
         ],
         ..base_opts()
     };
-    compile(source, opts).expect("compile").dts.expect("dts emitted")
+    compile(source, opts)
+        .expect("compile")
+        .dts
+        .expect("dts emitted")
 }
 
 fn base_opts() -> CompileOpts {
@@ -304,13 +308,19 @@ fn granted_capabilities_are_typed_members_of_scope() {
     assert!(dts.contains("api: Host['api']"), "got: {dts}");
     assert!(!dts.contains("clients:"), "got: {dts}");
     assert!(dts.contains("route: RouteSignals"), "got: {dts}");
-    assert!(dts.contains("navigate: (path: string) => void"), "got: {dts}");
+    assert!(
+        dts.contains("navigate: (path: string) => void"),
+        "got: {dts}"
+    );
     assert_eq!(
         dts.matches("from '@ship/sail-runtime'").count(),
         1,
         "capability imports must collapse to one line per module; got: {dts}"
     );
-    assert!(dts.contains("import type { Host, RouteSignals }"), "got: {dts}");
+    assert!(
+        dts.contains("import type { Host, RouteSignals }"),
+        "got: {dts}"
+    );
 }
 
 #[test]
@@ -330,9 +340,15 @@ fn a_declared_member_shadows_the_granted_capability() {
     // agree — one member, the declared one, not a duplicate key.
     let dts = compile_dts_with_capabilities_as(
         "<scope>\n  props: {\n    api = ''\n  }\n</scope>\n<p>hi</p>",
-        Some(sail_compiler::ComponentMeta { name: "test-el".into() }),
+        Some(sail_compiler::ComponentMeta {
+            name: "test-el".into(),
+        }),
     );
     assert!(dts.contains("api: Signal<string>"), "got: {dts}");
     assert!(!dts.contains("api: Clients['api']"), "got: {dts}");
-    assert_eq!(dts.matches("  api:").count(), 1, "exactly one `api` member; got: {dts}");
+    assert_eq!(
+        dts.matches("  api:").count(),
+        1,
+        "exactly one `api` member; got: {dts}"
+    );
 }

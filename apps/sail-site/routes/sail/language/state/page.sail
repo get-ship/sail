@@ -54,7 +54,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         </row>
         <column gap="1">
           <small sx={style.fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>effect output</small>
-          <for as="line" of={log()} key={line}>
+          <for {log()} as="line" key={line}>
             <p sx={style.fontSize(sm).fg(muted-foreground).fontFamily(mono)}>{line}</p>
           </for>
         </column>
@@ -218,7 +218,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
 
   <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>
-    For the full surface: <a href="/sail/reference/runtime">reference → Runtime</a>.
+    For the author runtime (tier B): <a href="/sail/reference/runtime">reference → Author runtime</a>.
   </p>
 
   <row sx={style.mt(8).padT(4).borderTWidth(1).borderT(border)} justify="between" gap="2">

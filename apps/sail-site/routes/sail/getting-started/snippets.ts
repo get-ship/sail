@@ -3,15 +3,15 @@
 export const code = {
   toolchain: `# Alpha: today the toolchain builds from source, once.
 # You need Bun and a Rust toolchain — for now.
-git clone https://github.com/get-ship/sui && cd sui
+git clone https://github.com/get-ship/sail && cd sail
 bun install                              # JS workspace
-cargo build --release -p deck-cli        # the deck binary (compiler included)`,
+cargo build --release -p deck-cli        # the sail binary (compiler included)`,
 
   app: `my-app/
 └─ routes/
    └─ page.sail        # the / route
 
-$ deck dev --project my-app
+$ sail dev --project my-app
   ▸ serving http://127.0.0.1:7878`,
 
   firstPage: `<!-- routes/page.sail — a page is markup. The components are
@@ -32,7 +32,7 @@ $ deck dev --project my-app
 </column>`,
 
   feedback: `# Write something off the system and the build says no — precisely.
-$ deck dev
+$ sail dev
 Error: routes/page.sail: line 4 col 13: [sail-sx]
   sx \`bg:blurple\` — \`blurple\` is not a token.
   allowed: accent, background, border, muted, primary, … (the token list)
@@ -61,7 +61,7 @@ export default controller((ctx) => {
    └─ [id]/
       └─ page.sail         → /users/:id   (read it: route.params.id())`,
 
-  build: `$ deck build --project my-app
+  build: `$ sail build --project my-app
 # static output: SSR'd HTML per route + hydrating bundles.
 # Deploy the directory anywhere that serves files.`,
 
@@ -93,7 +93,7 @@ export default controller((ctx) => {
 </controller>
 
 <button on:click={() => open.set(!open())}>Toggle</button>
-<if cond={open()}>
+<if {open()}>
   <card sx={style.pad(4).enter({ opacity: 'fade' })}>Hello.</card>
 </if>`,
 }

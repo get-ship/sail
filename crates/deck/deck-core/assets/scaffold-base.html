@@ -66,14 +66,23 @@
   <link rel="stylesheet" href="/api/assets/sail.css" data-sail-contracts />
   <link rel="stylesheet" href="/src/chrome/layout.css" />
 
-  <!-- Pre-paint theme (FOUC guard). Reads the persisted theme from
-       localStorage BEFORE the first paint so the document.documentElement
-       carries the matching `data-theme` attribute. The same script in
-       every scaffold — copy verbatim. -->
+  <!-- Pre-paint theme + mode (FOUC guard, U2.1b). Preference may be
+       light|dark|system; data-mode is always light|dark. Keys match
+       @ship/tokens THEME_STORAGE_KEY / THEME_MODE_STORAGE_KEY. -->
   <script>
     try {
+      var _d = document.documentElement
       var _t = localStorage.getItem('ship-site-theme')
-      if (_t) document.documentElement.setAttribute('data-theme', _t)
+      if (_t) _d.setAttribute('data-theme', _t)
+      var _m = localStorage.getItem('ship-site-theme-mode')
+      var _paint = 'light'
+      if (_m === 'dark') _paint = 'dark'
+      else if (_m === 'light') _paint = 'light'
+      else if (_m === 'system') {
+        _paint = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          ? 'dark' : 'light'
+      }
+      _d.setAttribute('data-mode', _paint)
     } catch (_e) {}
   </script>
 
