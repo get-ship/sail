@@ -4,12 +4,17 @@
 //! the IR builder sees, builds a taffy box tree, and emits layout warnings with
 //! spans mapped back to the author's original source.
 
+use std::path::Path;
+
 use crate::diagnostics::{DiagSeverity, Diagnostic};
 
 const DEFAULT_VIEWPORT: (f32, f32) = (1440.0, 900.0);
 /// Mobile-ish reference width (iPhone 14 logical). Paired with desktop so
 /// responsive layout bugs surface at compile time without a browser.
 const MOBILE_VIEWPORT: (f32, f32) = (390.0, 844.0);
+
+/// Soft taffy findings elevated to Error under `"layout": "error"` (studio).
+const PROMOTE_KINDS: &[&str] = &["child-overflows-parent", "zero-main-axis"];
 
 /// Viewports used by [`collect`]: mobile reference + source/desktop default.
 /// Dedups when the source already pins a mobile-sized viewport.
@@ -23,10 +28,12 @@ pub fn layout_viewports(preprocessed: &str) -> Vec<(f32, f32)> {
 
 /// Collect layout diagnostics as compiler `Diagnostic`s.
 ///
-/// **Severity is preserved from taffy:** silent-clip / overflow-hidden
-/// collapses map to [`DiagSeverity::Error`] and **fail the build** (via
-/// `check_all` / compile). Soft findings (zero-main-axis, open overflow)
-/// stay warnings.
+/// **Severity is preserved from taffy by default:** silent-clip /
+/// overflow-hidden collapses map to [`DiagSeverity::Error`] and **fail the
+/// build**. Soft findings (zero-main-axis, open main-axis overflow) stay
+/// warnings — unless the package opts into `"layout": "error"` (studio
+/// profile), which promotes those gate-gap kinds so `sail check` / `compile`
+/// exit non-zero.
 ///
 /// Runs the taffy pass at **at least two viewports** (mobile ~390 and the
 /// source/`data-viewport` desktop default). Identical findings (same mapped
@@ -35,10 +42,19 @@ pub fn layout_viewports(preprocessed: &str) -> Vec<(f32, f32)> {
 /// Preprocess failures return an empty vec (never panic) — the agent/MCP path
 /// must not abort the process on a layout pass error.
 pub fn collect(source: &str) -> Vec<Diagnostic> {
+    collect_for(source, None)
+}
+
+/// Like [`collect`], with optional `source_path` for `"layout": "error"`
+/// severity promotion from the nearest `sail.config`.
+pub fn collect_for(source: &str, source_path: Option<&Path>) -> Vec<Diagnostic> {
     let Ok(preprocessed) = crate::parse::preprocess::preprocess(source) else {
         return Vec::new();
     };
     let viewports = layout_viewports(&preprocessed);
+    let promote = source_path
+        .map(sail_lint::config::layout_is_error_for)
+        .unwrap_or(false);
 
     let mut out: Vec<Diagnostic> = Vec::new();
     let mut seen: std::collections::HashSet<(usize, usize, usize, usize, String)> =
@@ -51,7 +67,7 @@ pub fn collect(source: &str) -> Vec<Diagnostic> {
             Ok(result) => {
                 any_pass_ok = true;
                 for d in result.diagnostics {
-                    let mapped = map_diagnostic(source, &preprocessed, d);
+                    let mapped = map_diagnostic(source, &preprocessed, d, promote);
                     let key = (
                         mapped.line,
                         mapped.col,
@@ -87,7 +103,12 @@ pub fn collect(source: &str) -> Vec<Diagnostic> {
     out
 }
 
-fn map_diagnostic(original: &str, preprocessed: &str, diag: sail_layout::Diagnostic) -> Diagnostic {
+fn map_diagnostic(
+    original: &str,
+    preprocessed: &str,
+    diag: sail_layout::Diagnostic,
+    promote_soft: bool,
+) -> Diagnostic {
     let (line, col, end_line, end_col) = match find_original_span(original, preprocessed, &diag) {
         Some((start, end)) => {
             let (l, c) = crate::diagnostics::line_col(original, start);
@@ -106,15 +127,20 @@ fn map_diagnostic(original: &str, preprocessed: &str, diag: sail_layout::Diagnos
         }
     };
 
+    let mut severity = match diag.severity {
+        sail_layout::Severity::Error => DiagSeverity::Error,
+        sail_layout::Severity::Warning => DiagSeverity::Warning,
+    };
+    if promote_soft && severity == DiagSeverity::Warning && PROMOTE_KINDS.contains(&diag.kind) {
+        severity = DiagSeverity::Error;
+    }
+
     Diagnostic {
         line,
         col,
         end_line,
         end_col,
-        severity: match diag.severity {
-            sail_layout::Severity::Error => DiagSeverity::Error,
-            sail_layout::Severity::Warning => DiagSeverity::Warning,
-        },
+        severity,
         message: diag.message,
         rule: Some("sail-layout".to_string()),
     }
@@ -124,6 +150,7 @@ fn map_diagnostic(original: &str, preprocessed: &str, diag: sail_layout::Diagnos
 mod severity_tests {
     use super::*;
     use crate::diagnostics::DiagSeverity;
+    use std::io::Write;
 
     /// Silent-clip regressions must fail the build (Error), not warn-and-ship.
     #[test]
@@ -148,6 +175,45 @@ mod severity_tests {
         );
         // Prefer hard fail when taffy classifies Error; if only warnings, still ok.
         let _ = has_error;
+    }
+
+    /// `"layout": "error"` promotes zero-main-axis (collapsed box with children)
+    /// from Warning → Error so studio check fails closed.
+    #[test]
+    fn layout_error_profile_promotes_zero_main_axis() {
+        let src = r#"<column sx={style.h(0)}><div sx={style.h(20)}>x</div></column>"#;
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::write(
+            dir.path().join("sail.config.json"),
+            r#"{ "layout": "error" }"#,
+        )
+        .expect("write config");
+        let sail = dir.path().join("page.sail");
+        {
+            let mut f = std::fs::File::create(&sail).expect("create sail");
+            write!(f, "{src}").expect("write sail");
+        }
+        let soft = collect(src);
+        let soft_zero = soft
+            .iter()
+            .find(|d| d.message.contains("0px on its main axis"))
+            .expect("zero-main without profile");
+        assert_eq!(
+            soft_zero.severity,
+            DiagSeverity::Warning,
+            "default profile keeps soft warn"
+        );
+
+        let strict = collect_for(src, Some(&sail));
+        let strict_zero = strict
+            .iter()
+            .find(|d| d.message.contains("0px on its main axis"))
+            .expect("zero-main with layout:error");
+        assert_eq!(
+            strict_zero.severity,
+            DiagSeverity::Error,
+            "layout:error must promote collapse to Error: {strict:?}"
+        );
     }
 }
 

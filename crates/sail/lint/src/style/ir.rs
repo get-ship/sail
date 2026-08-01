@@ -155,9 +155,7 @@ impl StyleDiagnostic {
         match self {
             StyleDiagnostic::ParseError { message, .. } => message.clone(),
             StyleDiagnostic::UnknownSetter {
-                setter,
-                suggestion,
-                ..
+                setter, suggestion, ..
             } => match suggestion {
                 Some(s) => format!(
                     "style unknown setter `{setter}` — did you mean `{s}`? [sail:fix:setter={s}]"

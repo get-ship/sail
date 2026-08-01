@@ -34,6 +34,7 @@ pub mod display_on_layout;
 pub mod event_name;
 pub mod font_literal;
 pub mod for_key;
+pub mod height_chain;
 pub mod layout;
 pub mod layout_primitive;
 pub mod legacy_layout;
@@ -54,6 +55,7 @@ pub mod route_inline_style;
 pub mod space_literal;
 pub mod surface_not_card;
 pub mod sx;
+pub mod virtualizer;
 pub type RuleFn = fn(&Path, &str) -> Vec<Finding>;
 
 /// Rules that lint a paired `<stem>.controller.ts` source. The dispatcher
@@ -119,6 +121,8 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (sx::RULE_ID, sx::check),
     (layout::RULE_ID, layout::check),
     (legacy_layout::RULE_ID, legacy_layout::check),
+    (height_chain::RULE_ID, height_chain::check),
+    (virtualizer::RULE_ID, virtualizer::check),
     (participation_style::RULE_ID, participation_style::check),
     (display_on_layout::RULE_ID, display_on_layout::check),
     (no_raw_container::RULE_ID, no_raw_container::check),

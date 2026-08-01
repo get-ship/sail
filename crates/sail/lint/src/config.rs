@@ -30,11 +30,17 @@ pub fn owning_dir(from: &Path) -> Option<PathBuf> {
     None
 }
 
+/// Config filenames the walk-up accepts. `jsonc` wins when both exist in the
+/// same directory (app-level studio/sail-site convention). Capability Policy
+/// still keys off the first config found; layout severity may walk further
+/// (see [`layout_is_error_for`]).
+pub const CONFIG_FILES: &[&str] = &["sail.config.jsonc", "sail.config.json"];
+
 /// The top-level `sail.config.json` keys the parser recognizes. Anything else
 /// present is a typo/unknown key — the compiler must refuse loudly rather
 /// than silently ignore it (config-loud-strict: a `{"polcy":"strict"}` typo
 /// used to fail closed with zero signal).
-pub const RECOGNIZED_KEYS: [&str; 10] = [
+pub const RECOGNIZED_KEYS: [&str; 11] = [
     "preset",
     "sx",
     "variants",
@@ -45,6 +51,7 @@ pub const RECOGNIZED_KEYS: [&str; 10] = [
     "network",
     "unconfined",
     "theme",
+    "layout",
 ];
 
 /// Documentation rows for [`RECOGNIZED_KEYS`] — key, value type, default
@@ -111,6 +118,12 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str)] = &[
         "{ default, defaultMode?, enabled: \"all\" | string[] }",
         "no theme section — thin app emit (no catalog); package generate still full catalog",
         "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project tokens/themes always emit",
+    ),
+    (
+        "layout",
+        "\"warn\" | \"error\"",
+        "warn — taffy soft findings stay warnings; silent-clip stays Error",
+        "promote gate-gap layout findings (main-axis overflow, collapsed box, height-chain) to Error so check/dev exit non-zero (studio strict profile)",
     ),
 ];
 
@@ -239,6 +252,20 @@ impl SailConfig {
             })
             .unwrap_or_default()
     }
+
+    /// `"layout": "error"` → strict layout gate. Absent / `"warn"` / other → soft.
+    /// Wrong-typed values are treated as soft (lenient extract).
+    pub fn layout_is_error(&self) -> bool {
+        matches!(
+            self.raw.get("layout").and_then(|v| v.as_str()),
+            Some(s) if s.eq_ignore_ascii_case("error")
+        )
+    }
+
+    /// Parse JSON or JSONC body (// and /* */ comments + trailing commas).
+    pub fn from_jsonc(text: &str) -> SailConfig {
+        SailConfig::from_json(&strip_jsonc_comments(text))
+    }
 }
 
 /// A trailing clause naming the `sail.config.json` that could grant capability
@@ -259,21 +286,162 @@ pub fn grant_hint(path: &Path, key: &str) -> String {
 }
 
 /// Walk up from `dir` (inclusive) and return the path to the first
-/// `sail.config.json` found plus its parsed contents, or `None` if none exists
-/// on the walk. A present-but-unparseable config resolves to an empty
-/// `SailConfig` (`parse_ok() == false`) and stops the walk — its presence is
-/// the package's declared intent, even if its body is broken. The returned
-/// path is what a caller names in a loud refusal/announcement message.
+/// `sail.config.json` / `sail.config.jsonc` found plus its parsed contents, or
+/// `None` if none exists on the walk. A present-but-unparseable config
+/// resolves to an empty `SailConfig` (`parse_ok() == false`) and stops the
+/// walk — its presence is the package's declared intent, even if its body is
+/// broken. The returned path is what a caller names in a loud
+/// refusal/announcement message.
+///
+/// **Note:** Capability Policy still prefers pure `.json` package configs
+/// (primitives packs, routes). App-level `.jsonc` often carries serve/theme
+/// keys the Policy tier does not model (`editor`, `render`, `entry`); those
+/// would fail closed to STRICT if read here. Layout severity therefore uses
+/// [`layout_is_error_for`], which may walk past a capability config that has
+/// no `"layout"` key up to an app-level profile.
 pub fn resolve(dir: &Path) -> Option<(PathBuf, SailConfig)> {
     let mut cur = Some(dir);
     while let Some(d) = cur {
-        let candidate = d.join(CONFIG_FILE);
-        match std::fs::read_to_string(&candidate) {
-            Ok(text) => return Some((candidate, SailConfig::from_json(&text))),
-            Err(_) => cur = d.parent(),
+        // Capability Policy historically reads `.json` only. Prefer it so
+        // routes/package packs keep winning over a co-located theme-only jsonc.
+        let json = d.join(CONFIG_FILE);
+        if let Ok(text) = std::fs::read_to_string(&json) {
+            return Some((json, SailConfig::from_json(&text)));
         }
+        cur = d.parent();
     }
     None
+}
+
+/// True when the nearest config that declares `"layout"` sets it to `"error"`.
+///
+/// Walks up from `source_file`'s parent, dual-reading `sail.config.jsonc` then
+/// `sail.config.json` at each level. A config that omits `"layout"` does not
+/// stop the walk — so `apps/studio/routes/sail.config.json` (capability keys
+/// only) still inherits `apps/studio/sail.config.jsonc` `"layout": "error"`.
+///
+/// Lives in the single config reader module (not a second walk-up of policy
+/// keys). Pure layout severity — never mutates capability Policy.
+pub fn layout_is_error_for(source_file: &Path) -> bool {
+    let mut cur = source_file.parent();
+    while let Some(d) = cur {
+        for name in CONFIG_FILES {
+            let candidate = d.join(name);
+            let Ok(text) = std::fs::read_to_string(&candidate) else {
+                continue;
+            };
+            let cfg = if name.ends_with('c') {
+                SailConfig::from_jsonc(&text)
+            } else {
+                SailConfig::from_json(&text)
+            };
+            if !cfg.parse_ok() {
+                // Broken body at this path — keep walking; don't fail closed
+                // into strict layout for a comment-only parse glitch.
+                continue;
+            }
+            if cfg.has_key("layout") {
+                return cfg.layout_is_error();
+            }
+        }
+        cur = d.parent();
+    }
+    false
+}
+
+/// Std-only JSONC stripper (// + /* */ comments, trailing commas). Mirrors
+/// deck/compiler helpers so lint stays free of those deps.
+fn strip_jsonc_comments(input: &str) -> String {
+    let mut stage = String::with_capacity(input.len());
+    let mut chars = input.chars().peekable();
+    let mut in_string = false;
+    let mut escape = false;
+    while let Some(c) = chars.next() {
+        if in_string {
+            stage.push(c);
+            if escape {
+                escape = false;
+            } else if c == '\\' {
+                escape = true;
+            } else if c == '"' {
+                in_string = false;
+            }
+            continue;
+        }
+        if c == '"' {
+            in_string = true;
+            stage.push(c);
+            continue;
+        }
+        if c == '/' {
+            match chars.peek() {
+                Some('/') => {
+                    while let Some(&nc) = chars.peek() {
+                        chars.next();
+                        if nc == '\n' {
+                            stage.push('\n');
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                Some('*') => {
+                    chars.next();
+                    while let Some(nc) = chars.next() {
+                        if nc == '*' && chars.peek() == Some(&'/') {
+                            chars.next();
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                _ => {}
+            }
+        }
+        stage.push(c);
+    }
+    let src = stage.as_bytes();
+    let mut cleaned: Vec<u8> = Vec::with_capacity(src.len());
+    let mut i = 0;
+    let mut in_string2 = false;
+    let mut escape2 = false;
+    while i < src.len() {
+        let b = src[i];
+        if in_string2 {
+            cleaned.push(b);
+            if escape2 {
+                escape2 = false;
+            } else if b == b'\\' {
+                escape2 = true;
+            } else if b == b'"' {
+                in_string2 = false;
+            }
+            i += 1;
+            continue;
+        }
+        if b == b'"' {
+            in_string2 = true;
+            cleaned.push(b);
+            i += 1;
+            continue;
+        }
+        if b == b',' {
+            let mut j = i + 1;
+            while j < src.len()
+                && (src[j] == b' ' || src[j] == b'\t' || src[j] == b'\r' || src[j] == b'\n')
+            {
+                j += 1;
+            }
+            if j < src.len() && (src[j] == b']' || src[j] == b'}') {
+                i += 1;
+                continue;
+            }
+        }
+        cleaned.push(b);
+        i += 1;
+    }
+    String::from_utf8(cleaned)
+        .unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
 }
 
 #[cfg(test)]
@@ -286,6 +454,53 @@ mod config_doc_tests {
         assert_eq!(
             doc_keys, RECOGNIZED_KEYS,
             "CONFIG_KEY_DOCS must document exactly RECOGNIZED_KEYS, in the same order"
+        );
+    }
+
+    #[test]
+    fn layout_key_error_parses() {
+        let cfg = SailConfig::from_json(r#"{ "layout": "error" }"#);
+        assert!(cfg.layout_is_error());
+        let soft = SailConfig::from_json(r#"{ "layout": "warn" }"#);
+        assert!(!soft.layout_is_error());
+        let absent = SailConfig::from_json(r#"{ "sx": true }"#);
+        assert!(!absent.layout_is_error());
+    }
+
+    #[test]
+    fn layout_jsonc_strips_comments() {
+        let cfg = SailConfig::from_jsonc(
+            r#"{
+            // studio strict
+            "layout": "error",
+          }"#,
+        );
+        assert!(cfg.parse_ok());
+        assert!(cfg.layout_is_error());
+    }
+
+    #[test]
+    fn layout_is_error_walks_past_capability_json_to_app_jsonc() {
+        // routes/sail.config.json (no layout) + app sail.config.jsonc (layout:error)
+        // must still resolve strict — studio shape.
+        let dir = tempfile::tempdir().expect("tempdir");
+        let routes = dir.path().join("routes");
+        std::fs::create_dir_all(&routes).expect("mkdir");
+        std::fs::write(
+            routes.join("sail.config.json"),
+            r#"{ "sx": true, "raw_containers": false }"#,
+        )
+        .expect("write routes config");
+        std::fs::write(
+            dir.path().join("sail.config.jsonc"),
+            r#"{ "layout": "error", "theme": { "default": "studio" } }"#,
+        )
+        .expect("write app jsonc");
+        let page = routes.join("page.sail");
+        std::fs::write(&page, "<column></column>").expect("write page");
+        assert!(
+            layout_is_error_for(&page),
+            "must inherit layout:error from parent jsonc"
         );
     }
 }

@@ -369,10 +369,12 @@ pub fn collect(
     }
 
     // Layout diagnostics — build the same box tree the runtime will build and
-    // report collapsed / overflow findings back as warnings. This must run on
-    // the preprocessed source so class tokens line up with the CSS the compiler
-    // emits, then spans are mapped back to the author's original source.
-    diags.extend(layout::collect(source));
+    // report collapsed / overflow findings. Soft findings stay warnings unless
+    // the package sets `"layout": "error"` (studio profile) — then gate-gap
+    // kinds promote to Error and fail `compile` / `sail check`. Must run on
+    // the preprocessed source so class tokens line up with the CSS the
+    // compiler emits; spans map back to the author's original source.
+    diags.extend(layout::collect_for(source, source_path));
 
     // Compose auto-fix — sibling rhythm (spacing) consistency. Reuses the same
     // taffy tree the layout pass just built; emits `Fix` severity diagnostics

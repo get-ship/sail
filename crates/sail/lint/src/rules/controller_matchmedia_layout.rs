@@ -387,11 +387,7 @@ fn match_media_layout_span(expr: &Expression<'_>) -> Option<Span> {
 fn layout_query_arg<'a>(call: &CallExpression<'a>) -> Option<&'a str> {
     let arg = call.arguments.first()?.as_expression()?;
     let q = string_literal(arg)?;
-    if is_layout_query(q) {
-        Some(q)
-    } else {
-        None
-    }
+    if is_layout_query(q) { Some(q) } else { None }
 }
 
 fn string_literal<'a>(expr: &Expression<'a>) -> Option<&'a str> {
@@ -553,8 +549,7 @@ export default controller(() => {
     #[test]
     fn silent_on_prefers_color_scheme_and_print() {
         assert!(
-            lint("const d = signal(matchMedia('(prefers-color-scheme: dark)').matches)")
-                .is_empty()
+            lint("const d = signal(matchMedia('(prefers-color-scheme: dark)').matches)").is_empty()
         );
         assert!(lint("const p = signal(matchMedia('print').matches)").is_empty());
     }

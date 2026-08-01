@@ -568,6 +568,25 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
         }
     }
 
+    // `"layout"` — severity profile for taffy / height-chain findings. Does not
+    // change capability keys; counts as signal so a layout-only config is not
+    // classified as NoSignal. Actual promotion is `layout_is_error_for`.
+    if let Some(layout) = cfg.string_key("layout") {
+        match layout.to_ascii_lowercase().as_str() {
+            "error" | "warn" => signal.push(format!("layout: {layout}")),
+            other => {
+                return PolicyResolution {
+                    tier: Policy::STRICT,
+                    kind: ResolutionKind::Rejected(format!(
+                        "unrecognized layout \"{other}\" (expected \"warn\" or \"error\")"
+                    )),
+                    network: Vec::new(),
+                    unconfined: false,
+                };
+            }
+        }
+    }
+
     if signal.is_empty() {
         let recognized_present: Vec<&str> = sail_lint::config::RECOGNIZED_KEYS
             .iter()
