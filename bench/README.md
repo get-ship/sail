@@ -17,11 +17,28 @@ The lab lives outside the repo at `~/dev/sail-lab/`. After any batch,
 
 (`eval/` from EVAL-0 is a separate, older corpus — leave it alone.)
 
+## HARNESS-2 (typed path — preferred for new runs)
+
+```bash
+cd bench/eval
+bun test
+bun src/cli/sail-bench.ts run --task parallax-landing --arm sail --toolchain current --seed
+bun src/cli/sail-bench.ts report --batch <id>
+```
+
+- **Contract:** `bench/eval/CONTRACT.md` (RUN CONTRACT v1)
+- **Modules:** config, runner, gates, render, store, report, serve, grade, adapters
+- **FS:** `$SAIL_LAB/runs/<toolchain>/<task>/<model>/<word-pair>/`
+- **Store:** `$SAIL_LAB/lab-bench.sqlite` (slim; blobs on disk)
+- Legacy `lab-kit/` shell/python remains for the existing corpus (read-only /
+  migration); do not extend it for new work.
+
 ## Layout
 
 ```
 bench/
-  schema.sql                 # runs + run_events tables (store lives in lab)
+  eval/                      # HARNESS-2 typed harness (sail-bench + eval-adapter)
+  schema.sql                 # legacy runs + run_events (lab-kit path)
   profiles/*.jsonc           # context profiles (P0 baseline, …)
   agents/agents-v2.md        # AGENTS.md variant referenced by profiles
   tasks/<slug>/
@@ -33,7 +50,7 @@ bench/
     sync-to-lab.sh           # copy standards (+ lab-kit) → ~/dev/sail-lab/
     bootstrap-lab.sh         # materialize harness/payload from lab-kit
     check-repo-clean.sh      # fail if run artifacts leaked into sail repo
-  lab-kit/                   # committed harness + payload (instrument SSOT)
+  lab-kit/                   # legacy harness + payload (still used by corpus)
     harness/                 # stage/run/harvest/batch scripts
     payload/                 # sail base + react-base templates
   fixtures/
