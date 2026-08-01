@@ -75,26 +75,26 @@ describe('repo purity', () => {
 
   test('no agent-narration comment markers in tracked sources', () => {
     // Comments carry facts, decisions, risks — not a transcript of the agent's
-    // inner life or a restatement of the next line.
-    const SLOP = [
-      /^\s*\/\/\s*(Let me|Now I|First I|I will|I'll|I'm going)/,
-      /^\s*\/\/\s*This (function|method|will|handles|ensures|verifies)/i,
-      /^\s*\/\/\s*As noted (above|earlier)/i,
+    // inner life or a restatement of the next line. Single git grep pass over
+    // tracked sources (third_party keeps upstream style).
+    const PATTERNS = [
+      `'^\\s*//\\s*(Let me|Now I|First I|I will|I'\\''ll|I'\\''m going)'`,
+      `-i '^\\s*//\\s*This (function|method|will|handles|ensures|verifies)'`,
+      `-i '^\\s*//\\s*As noted (above|earlier)'`,
     ]
-    const offenders: string[] = []
-    for (const f of tracked()) {
-      if (!/\.(rs|ts|tsx|mjs|js)$/.test(f)) continue
-      if (f.startsWith('third_party/')) continue // vendored code keeps upstream style
-      let content: string
+    const hits: string[] = []
+    for (const args of PATTERNS) {
       try {
-        content = execSync(`git show :"${f}"`, { encoding: 'utf8', maxBuffer: 8 << 20 })
+        const out = execSync(
+          `git grep -n -E ${args} -- '*.rs' '*.ts' '*.tsx' '*.mjs' '*.js' ':!third_party' || true`,
+          { encoding: 'utf8', maxBuffer: 8 << 20 },
+        ).trim()
+        if (out) hits.push(out)
       } catch {
-        continue
+        // no matches
       }
-      content.split('\n').forEach((line, i) => {
-        if (SLOP.some((re) => re.test(line))) offenders.push(`${f}:${i + 1}`)
-      })
     }
+    const offenders = hits.join('\n').split('\n').filter(Boolean)
     expect(
       offenders.slice(0, 20),
       `narration comments at: ${offenders.slice(0, 10).join(', ')} (${offenders.length} total)`,
