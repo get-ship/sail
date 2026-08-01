@@ -9,6 +9,10 @@
 //     again immediately before each navigation.
 //   • A fresh push scrolls to the top; back/forward (popstate) restores the
 //     target entry's saved offset — applied AFTER the route re-renders.
+//   • Nested overflow hosts (docs main, deck route-slot, landing main) are
+//     first-class: window.scrollY is often 0 while the real offset lives on
+//     an overflow:auto ancestor. Push zeros those hosts; we also save the
+//     deepest nested Y for popstate restore when the host still exists.
 //
 // Wired from `index.ts`: `installScrollRestoration()` once, `onNavigate()` +
 // `applyScroll()` around a programmatic `navigate()`, and `onPopState()` +
@@ -22,6 +26,8 @@ interface ScrollState {
 interface Offset {
   x: number
   y: number
+  /** Deepest nested overflow host scrollTop (docs/landing scrollports). */
+  nestedY?: number
 }
 type PendingScroll = { kind: 'top' } | { kind: 'restore'; key: number } | null
 
@@ -43,9 +49,78 @@ function currentKey(): number | undefined {
   return hasWindow() ? keyOf(window.history.state) : undefined
 }
 
+/** App root — prefer #root when present (deck host). */
+function appRoot(): HTMLElement {
+  return (
+    (typeof document !== 'undefined' &&
+      (document.getElementById('root') as HTMLElement | null)) ||
+    document.body
+  )
+}
+
+/**
+ * Overflow hosts under the app that actually scroll (or can). Used to zero
+ * on push and to capture nested Y for back/forward.
+ */
+function nestedScrollHosts(): HTMLElement[] {
+  if (typeof document === 'undefined') return []
+  const out: HTMLElement[] = []
+  const walk = (el: Element): void => {
+    if (el instanceof HTMLElement && el !== document.documentElement && el !== document.body) {
+      const s = getComputedStyle(el)
+      const oy = s.overflowY
+      const ox = s.overflowX
+      const canY = oy === 'auto' || oy === 'scroll' || oy === 'overlay'
+      const canX = ox === 'auto' || ox === 'scroll' || ox === 'overlay'
+      if (
+        (canY && (el.scrollHeight > el.clientHeight + 1 || el.scrollTop > 0)) ||
+        (canX && (el.scrollWidth > el.clientWidth + 1 || el.scrollLeft > 0))
+      ) {
+        out.push(el)
+      }
+    }
+    for (const c of el.children) walk(c)
+  }
+  walk(appRoot())
+  return out
+}
+
+/** Zero every nested overflow host (and window). Call after a new route paints. */
+function scrollAllToTop(): void {
+  window.scrollTo(0, 0)
+  for (const el of nestedScrollHosts()) {
+    el.scrollTop = 0
+    el.scrollLeft = 0
+  }
+  // Route slot hosts may not yet report as "scrollable" in the same frame
+  // (jsdom / pre-measure). Force-clear any offset under the app root, including
+  // the root itself (#root is often the overflow host).
+  const root = appRoot()
+  const zero = (node: HTMLElement): void => {
+    if (node.scrollTop) node.scrollTop = 0
+    if (node.scrollLeft) node.scrollLeft = 0
+  }
+  zero(root)
+  root.querySelectorAll('*').forEach((node) => {
+    if (node instanceof HTMLElement) zero(node)
+  })
+}
+
+function deepestNestedY(): number {
+  let max = 0
+  for (const el of nestedScrollHosts()) {
+    if (el.scrollTop > max) max = el.scrollTop
+  }
+  return max
+}
+
 function save(key: number | undefined): void {
   if (key === undefined || !hasWindow()) return
-  positions.set(key, { x: window.scrollX, y: window.scrollY })
+  positions.set(key, {
+    x: window.scrollX,
+    y: window.scrollY,
+    nestedY: deepestNestedY(),
+  })
 }
 
 /** Ensure the current history entry carries a scroll key; return it. Stamps
@@ -83,18 +158,19 @@ export function installScrollRestoration(): void {
   }
   ensureKey()
   let ticking = false
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (ticking) return
-      ticking = true
-      requestAnimationFrame(() => {
-        ticking = false
-        save(currentKey())
-      })
-    },
-    { passive: true },
-  )
+  const onScroll = (): void => {
+    if (ticking) return
+    ticking = true
+    requestAnimationFrame(() => {
+      ticking = false
+      save(currentKey())
+    })
+  }
+  // Window scroll (document scrollport).
+  window.addEventListener('scroll', onScroll, { passive: true })
+  // Nested overflow hosts (docs main, landing main, deck route slot) — capture
+  // so back/forward has a nestedY even when window.scrollY stays 0.
+  document.addEventListener('scroll', onScroll, { passive: true, capture: true })
 }
 
 /**
@@ -124,6 +200,9 @@ export function onPopState(): void {
  * Call AFTER the route has re-rendered (right after `__shipSetRouteUpdate`).
  * Applies the pending scroll on the next frame, once the new route's DOM is in
  * place. No pending intent → no-op.
+ *
+ * Push always zeros **nested** overflow hosts first — those are the real
+ * scrollports after the docs/landing height-chain (window.scrollY is often 0).
  */
 export function applyScroll(): void {
   const intent = pending
@@ -131,16 +210,31 @@ export function applyScroll(): void {
   if (!intent || !hasWindow()) return
   const run = (): void => {
     if (intent.kind === 'top') {
-      window.scrollTo(0, 0)
+      scrollAllToTop()
       return
     }
+    // Restore: clear leftover nested offset from the page we left, then apply
+    // saved window + deepest nested Y onto current scroll hosts.
     const pos = positions.get(intent.key)
+    scrollAllToTop()
     window.scrollTo(pos?.x ?? 0, pos?.y ?? 0)
+    const nestedY = pos?.nestedY ?? 0
+    if (nestedY > 0) {
+      // Prefer the tallest scrollable content host (usually docs/landing main).
+      const hosts = nestedScrollHosts().sort(
+        (a, b) => b.scrollHeight - b.clientHeight - (a.scrollHeight - a.clientHeight),
+      )
+      const target = hosts[0]
+      if (target) target.scrollTop = nestedY
+    }
   }
   // Restore after paint so the destination route's height exists; fall back to
   // a synchronous apply when rAF is unavailable (jsdom without a shim).
-  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run)
-  else run()
+  // Double-rAF: first frame mounts the leaf; second has measured scrollHeight
+  // on overflow hosts so nestedY restore and top-zero stick.
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => requestAnimationFrame(run))
+  } else run()
 }
 
 /** Test seam — reset module state between cases. */

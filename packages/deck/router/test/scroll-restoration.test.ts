@@ -46,10 +46,21 @@ describe('scroll-restoration', () => {
 
   it('scrolls to the top after a fresh push', () => {
     installScrollRestoration()
+    // Nested overflow host — SPA docs/landing scroll here, not on window.
+    const nest = document.createElement('div')
+    nest.id = 'root'
+    nest.style.cssText = 'overflow:auto;height:100px'
+    const tall = document.createElement('div')
+    tall.style.height = '500px'
+    nest.appendChild(tall)
+    document.body.appendChild(nest)
+    nest.scrollTop = 180
     const state = onNavigate(false)
     window.history.pushState(state, '', '/next')
     applyScroll()
     expect(scrollTo).toHaveBeenCalledWith(0, 0)
+    expect(nest.scrollTop).toBe(0)
+    nest.remove()
   })
 
   it('restores the saved offset on back/forward', () => {

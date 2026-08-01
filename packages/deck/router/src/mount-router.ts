@@ -456,8 +456,12 @@ async function buildMountTarget(
   routeSlot.setAttribute('slot', 'route')
   // Fill the layout's route column. A bare block auto-height host collapses
   // flex children (studio/workbench panes only paint the top chrome strip).
+  // overflow:auto (not hidden): docs/landing content taller than the budget
+  // must scroll here — overflow:hidden silently clipped long pages (main's
+  // scrollHeight stayed equal to the 100%-height host). Workbench fill still
+  // works: height:100% + flex 1 1 0% + min-height:0.
   routeSlot.style.cssText =
-    'display:flex;flex-direction:column;flex:1 1 0%;min-height:0;min-width:0;height:100%;overflow:hidden'
+    'display:flex;flex-direction:column;flex:1 1 0%;min-height:0;min-width:0;height:100%;overflow:auto'
   let parent: HTMLElement = routeSlot
   const layoutHandles: MountHandle[] = []
 
