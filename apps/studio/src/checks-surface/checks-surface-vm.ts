@@ -12,9 +12,11 @@ import {
   applyFixToSource,
   applyRuleFixes,
   assignTableHost,
+  buildExpandedMap,
   closeFixReview,
   findingIsMachineFixable,
   getChecksState,
+  groupMetaFromRows,
   loadFindings,
   openFixReview,
   openSourceUrlFor,
@@ -27,6 +29,7 @@ import {
   setRuleFilter,
   snippetForFinding,
   subscribeChecks,
+  toggleCollapsedRule,
   toFindingRows,
   uiEmptyCheckedSummary,
   uiFileOptions,
@@ -316,6 +319,8 @@ export function createChecksSurface() {
   const showSuggestDiff = signal(false)
 
   const dataSig = signal<FindingTableRow[]>([])
+  /** Rules the user collapsed — never use expand-all `true` (bare toggle is no-op). */
+  let collapsedRules = new Set<string>()
   const table: Table<FindingTableRow> = createTable<FindingTableRow>({
     data: dataSig,
     columns: [
@@ -362,7 +367,8 @@ export function createChecksSurface() {
     getRowId: (r) => r.id,
     grouping: ['rule'],
     enableExpanding: true,
-    expanded: true,
+    // Explicit map only — never expand-all `true` (toggle bare becomes no-op).
+    expanded: {},
     enableSorting: true,
     enableFilters: true,
     enableRowSelection: true,
@@ -374,6 +380,12 @@ export function createChecksSurface() {
 
   const bindHost = () => {
     assignTableHost('[data-findings-table-host]', table)
+  }
+
+  /** Apply full expanded map so each group is open unless user-collapsed. */
+  const applyExpandedMap = () => {
+    const groups = groupMetaFromRows(table.rows())
+    table.setExpanded(buildExpandedMap(groups, collapsedRules))
   }
 
   const sync = () => {
@@ -401,6 +413,9 @@ export function createChecksSurface() {
     const sev = severityFilterVal()
     if (sev) table.setColumnFilter('severity', sev)
     else table.setColumnFilter('severity', undefined)
+
+    // Expand map after data (group headers exist even when collapsed).
+    applyExpandedMap()
 
     // Selection identity on the engine.
     if (cs.selectedId && findingsById.has(cs.selectedId)) {
@@ -604,28 +619,21 @@ export function createChecksSurface() {
     const btn = (e.target as Element | null)?.closest?.(
       '[data-rule-toggle]',
     ) as HTMLElement | null
-    // Prefer engine group row id (data-group-row-id); fall back to rule name.
-    const groupId =
-      btn?.dataset.groupRowId ||
+    const rule =
       btn?.dataset.ruleToggle ||
-      ''
-    if (!groupId) return
+      (() => {
+        const gid = btn?.dataset.groupRowId
+        if (!gid) return ''
+        const hit = table.rows().find((r) => r.id === gid && r.getIsGrouped())
+        return hit
+          ? String(hit.getGroupingValue('rule') ?? hit.getValue('rule') ?? '')
+          : ''
+      })()
+    if (!rule) return
     e.stopPropagation?.()
-    let expandId = groupId
-    if (!expandId.startsWith('group:')) {
-      const hit = table
-        .rows()
-        .find(
-          (r) =>
-            r.getIsGrouped() &&
-            String(r.getGroupingValue('rule')) === groupId,
-        )
-      if (hit) expandId = hit.id
-      else expandId = `group:0:rule:${groupId}`
-    }
-    // Engine expand owns collapse — not a parallel collapsedRules list.
-    table.toggleExpanded(expandId)
-    // Re-walk engine after expand mutation.
+    // Explicit map — never bare toggleExpanded under expand-all.
+    collapsedRules = toggleCollapsedRule(collapsedRules, rule)
+    applyExpandedMap()
     const cs = getChecksState()
     const ordered = uiTableFindings()
     const findingsById = new Map(ordered.map((f) => [f.id, f]))

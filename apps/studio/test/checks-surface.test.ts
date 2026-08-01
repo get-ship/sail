@@ -835,7 +835,8 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
     expect(vm).toMatch(/createTable/)
     expect(vm).toMatch(/assignTableHost/)
     expect(vm).toMatch(/groupsFromTable|table\.rows\s*\(/)
-    expect(vm).toMatch(/toggleExpanded/)
+    expect(vm).toMatch(/buildExpandedMap|setExpanded|applyExpandedMap/)
+    expect(vm).not.toMatch(/expanded:\s*true/)
     expect(vm).toMatch(/setColumnFilter\s*\(\s*['"]severity['"]/)
     expect(vm).toMatch(/grouping:\s*\[\s*['"]rule['"]\s*\]/)
   })
@@ -862,5 +863,142 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
       (host as HTMLElement & { table?: unknown }).table,
     ).toBe(table)
     host.remove()
+  })
+
+  it('explicit expanded map collapses one group without expand-all no-op', async () => {
+    const {
+      buildExpandedMap,
+      groupMetaFromRows,
+      toggleCollapsedRule,
+    } = await import('../src/checks/expand')
+    // Import engine directly — full @ship/sail-primitives side-effects fail in vitest.
+    const { createTable } = await import(
+      /* engine-only path avoids @ship/sail-primitives side-effect CE imports */
+      join(
+        REPO,
+        'packages/components/sail/primitives/src/sail-table/engine/create-table.ts',
+      )
+    )
+    type Row = {
+      id: string
+      severity: string
+      rule: string
+      fileSpan: string
+      message: string
+    }
+    const data: Row[] = [
+      {
+        id: '1',
+        severity: 'error',
+        rule: 'sail-participation-style',
+        fileSpan: 'a.sail:1',
+        message: 'grow',
+      },
+      {
+        id: '2',
+        severity: 'error',
+        rule: 'sail-participation-style',
+        fileSpan: 'a.sail:2',
+        message: 'grow2',
+      },
+      {
+        id: '3',
+        severity: 'warning',
+        rule: 'sail-layout',
+        fileSpan: 'a.sail:3',
+        message: 'collapse',
+      },
+    ]
+    // Mirror VM: never expanded:true — start empty map then set explicit opens.
+    const table = createTable<Row>({
+      data,
+      columns: [
+        { id: 'severity', accessorKey: 'severity' },
+        { id: 'rule', accessorKey: 'rule', enableGrouping: true },
+        { id: 'fileSpan', accessorKey: 'fileSpan' },
+        { id: 'message', accessorKey: 'message' },
+      ],
+      getRowId: (r) => r.id,
+      grouping: ['rule'],
+      enableExpanding: true,
+      expanded: {},
+    })
+
+    // Bare toggle under expand-all is the bug; prove expand-all still no-ops.
+    const expandAll = createTable<Row>({
+      data,
+      columns: [
+        { id: 'rule', accessorKey: 'rule', enableGrouping: true },
+        { id: 'message', accessorKey: 'message' },
+      ],
+      getRowId: (r) => r.id,
+      grouping: ['rule'],
+      enableExpanding: true,
+      expanded: true,
+    })
+    const gAll = expandAll.rows().find((r) => r.getIsGrouped())!
+    expect(gAll.getIsExpanded()).toBe(true)
+    expandAll.toggleExpanded(gAll.id) // bare — no-op
+    expect(gAll.getIsExpanded()).toBe(true)
+
+    // Explicit map path used by the surface.
+    let collapsed = new Set<string>()
+    const apply = () => {
+      const meta = groupMetaFromRows(table.rows())
+      table.setExpanded(buildExpandedMap(meta, collapsed))
+    }
+    apply()
+    const groupsOpen = table.rows().filter((r) => r.getIsGrouped())
+    expect(groupsOpen.length).toBe(2)
+    expect(groupsOpen.every((g) => g.getIsExpanded())).toBe(true)
+    // Leaves visible when open
+    expect(table.rows().some((r) => !r.getIsGrouped())).toBe(true)
+
+    // Collapse one rule — other stays open
+    collapsed = toggleCollapsedRule(collapsed, 'sail-participation-style')
+    apply()
+    const part = table
+      .rows()
+      .find(
+        (r) =>
+          r.getIsGrouped() &&
+          String(r.getGroupingValue('rule')) === 'sail-participation-style',
+      )!
+    const layout = table
+      .rows()
+      .find(
+        (r) =>
+          r.getIsGrouped() &&
+          String(r.getGroupingValue('rule')) === 'sail-layout',
+      )!
+    expect(part.getIsExpanded()).toBe(false)
+    expect(layout.getIsExpanded()).toBe(true)
+    // Collapsed group contributes no leaf rows after it in flatten
+    const afterPart = table.rows()
+    const partIdx = afterPart.findIndex((r) => r.id === part.id)
+    const next = afterPart[partIdx + 1]
+    expect(next?.getIsGrouped() || next == null || next.id === layout.id).toBe(
+      true,
+    )
+    // layout still shows its leaf
+    expect(
+      afterPart.some(
+        (r) => !r.getIsGrouped() && r.original.rule === 'sail-layout',
+      ),
+    ).toBe(true)
+
+    // Re-open
+    collapsed = toggleCollapsedRule(collapsed, 'sail-participation-style')
+    apply()
+    expect(
+      table
+        .rows()
+        .find(
+          (r) =>
+            r.getIsGrouped() &&
+            String(r.getGroupingValue('rule')) === 'sail-participation-style',
+        )!
+        .getIsExpanded(),
+    ).toBe(true)
   })
 })
