@@ -34,7 +34,13 @@ export function specimenSource(opts: SpecimenOpts): string {
       </card>
     </column>
     <column gap="2">
-      <span sx={style.fontSize(xs).fg(muted-foreground).fontWeight(semibold)}>Inputs</span>
+      <span sx={style.fontSize(xs).fg(muted-foreground).fontWeight(semibold)}>Badge · alert · field</span>
+      <row gap="2" align="center">
+        <badge tone="primary" size="sm">primary</badge>
+        <badge tone="success" size="sm">success</badge>
+        <badge tone="warning" size="sm">warning</badge>
+      </row>
+      <alert tone="info">Alert · status copy</alert>
       <input type="search" placeholder="Search…" />
     </column>
     <column gap="2" sx={style.pad(4).radius(md).bg(surface-0).fg(foreground)}>

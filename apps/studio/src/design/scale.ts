@@ -79,18 +79,20 @@ export function defaultRadiusFamily(scaleTogether = true): ScaleFamily {
 /**
  * Set one step. When scaleTogether, scale all steps proportionally around
  * the dragged key's previous value; then clamp to keep monotonic.
+ * `clampNote` explains neighbor clamps in plain language (never silent).
  */
 export function setScaleStep(
   family: ScaleFamily,
   key: string,
   nextPx: number,
-): { family: ScaleFamily; error: string | null } {
+): { family: ScaleFamily; error: string | null; clampNote: string | null } {
   const px = Math.max(0, nextPx)
   const idx = family.steps.findIndex((s) => s.key === key)
   if (idx < 0) {
-    return { family, error: "That size step isn't available" }
+    return { family, error: "That size step isn't available", clampNote: null }
   }
   let steps: ScaleStep[]
+  let clampNote: string | null = null
   if (family.scaleTogether) {
     const prev = family.steps[idx].valuePx
     const factor = prev > 0 ? px / prev : 1
@@ -101,32 +103,71 @@ export function setScaleStep(
       const v = Math.max(0, Math.round(s.valuePx * factor * 1000) / 1000)
       return { key: s.key, valuePx: v, raw: formatPx(v) }
     })
-    // After proportional scale, enforce non-decreasing with light fix-up.
-    steps = enforceMonotonic(steps, family.ordered)
+    const enforced = enforceMonotonicWithNotes(steps, family.ordered)
+    steps = enforced.steps
+    clampNote = enforced.note
   } else {
     steps = family.steps.map((s) =>
       s.key === key ? { key: s.key, valuePx: px, raw: formatPx(px) } : s,
     )
+    // Neighbor clamp so the dragged step can't break order, then full-family fix-up.
+    const ordered = family.ordered
+    const oIdx = ordered.indexOf(key)
+    if (oIdx >= 0) {
+      const byKey = new Map(steps.map((s) => [s.key, s]))
+      const prevKey = oIdx > 0 ? ordered[oIdx - 1] : null
+      const nextKey = oIdx < ordered.length - 1 ? ordered[oIdx + 1] : null
+      const prevPx = prevKey != null ? byKey.get(prevKey)?.valuePx : null
+      const nextPxVal = nextKey != null ? byKey.get(nextKey)?.valuePx : null
+      let clamped = px
+      if (prevPx != null && clamped < prevPx) {
+        clamped = prevPx
+        clampNote = `${key} can't go below ${prevKey} — adjusted`
+      }
+      if (nextPxVal != null && clamped > nextPxVal) {
+        clamped = nextPxVal
+        clampNote = `${key} can't exceed ${nextKey} — adjusted`
+      }
+      if (clamped !== px) {
+        steps = steps.map((s) =>
+          s.key === key ? { key: s.key, valuePx: clamped, raw: formatPx(clamped) } : s,
+        )
+      }
+    }
+    const enforced = enforceMonotonicWithNotes(steps, family.ordered)
+    steps = enforced.steps
+    if (enforced.note) clampNote = clampNote ?? enforced.note
   }
   const next: ScaleFamily = { ...family, steps }
   const error = validateMonotonic(next.steps, next.ordered, next.path)
-  return { family: next, error }
+  return { family: next, error, clampNote }
 }
 
 /** Nudge values so ordered steps are non-decreasing (min bump 0). */
 export function enforceMonotonic(steps: ScaleStep[], ordered: string[]): ScaleStep[] {
+  return enforceMonotonicWithNotes(steps, ordered).steps
+}
+
+function enforceMonotonicWithNotes(
+  steps: ScaleStep[],
+  ordered: string[],
+): { steps: ScaleStep[]; note: string | null } {
   const byKey = new Map(steps.map((s) => [s.key, { ...s }]))
   let prevPx = -Infinity
+  let prevKey = ''
+  let note: string | null = null
   for (const key of ordered) {
     const s = byKey.get(key)
     if (!s) continue
     if (s.valuePx < prevPx) {
+      note = `${key} can't go below ${prevKey} — adjusted`
       s.valuePx = prevPx
       s.raw = formatPx(prevPx)
     }
     prevPx = s.valuePx
+    prevKey = key
   }
-  return steps.map((s) => byKey.get(s.key) ?? s)
+  return { steps: steps.map((s) => byKey.get(s.key) ?? s), note }
 }
 
 /** Build ScaleFamily from a DTCG radius object. */

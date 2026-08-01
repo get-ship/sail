@@ -112,7 +112,7 @@ export function patchIconScale(
 }
 
 /**
- * Inheritance chain for radius: global scale + per-component override nodes.
+ * Inheritance chain for radius: base catalog → theme scale → component override.
  * Components: button, card, input (specimen-relevant).
  */
 export function radiusInheritance(doc: Record<string, unknown> | null): InheritNode[] {
@@ -121,8 +121,16 @@ export function radiusInheritance(doc: Record<string, unknown> | null): InheritN
   const globalVal = lg?.raw ?? '10px'
   const nodes: InheritNode[] = [
     {
-      id: 'global',
-      label: `Global · ${parseDimensionPx(globalVal) ?? globalVal}`,
+      id: 'base',
+      label: 'Base · catalog',
+      value: '10px',
+      isOverride: false,
+      path: 'radius.lg',
+      canReset: false,
+    },
+    {
+      id: 'theme',
+      label: `Theme · ${parseDimensionPx(globalVal) ?? globalVal}`,
       value: globalVal,
       isOverride: false,
       path: 'radius.lg',
@@ -136,7 +144,9 @@ export function radiusInheritance(doc: Record<string, unknown> | null): InheritN
     const name = comp.charAt(0).toUpperCase() + comp.slice(1)
     nodes.push({
       id: comp,
-      label: isOverride ? `${name} · custom` : `${name} · inherits`,
+      label: isOverride
+        ? `Override · ${name} · ${raw}`
+        : `Override · ${name} · inherits theme`,
       value: raw,
       isOverride,
       path,
@@ -146,31 +156,85 @@ export function radiusInheritance(doc: Record<string, unknown> | null): InheritN
   return nodes
 }
 
-export function getPathValue(
-  doc: Record<string, unknown> | null,
-  path: string,
-): string | null {
-  if (!doc) return null
+function walkPath(doc: Record<string, unknown> | null, path: string): unknown {
+  if (!doc || !path) return null
   const parts = path.split('.')
   let cur: unknown = doc
   for (const p of parts) {
     if (!cur || typeof cur !== 'object' || Array.isArray(cur)) return null
     cur = (cur as Record<string, unknown>)[p]
   }
-  if (!cur || typeof cur !== 'object') return null
-  const v = (cur as Record<string, unknown>).$value
+  return cur
+}
+
+function leafValue(node: unknown): string | null {
+  if (!node || typeof node !== 'object' || Array.isArray(node)) return null
+  const v = (node as Record<string, unknown>).$value
   return v != null ? String(v) : null
 }
 
-/** Set $value at dotted path, creating intermediate objects. */
+/**
+ * Candidate physical paths for a logical token path.
+ * Themes are modes-in-file (`modes.light.color…`); registry knobs use
+ * logical paths (`color.primary.default`). Prefer active mode, then light/dark, then root.
+ */
+export function candidatePaths(
+  path: string,
+  modeId: 'light' | 'dark' = 'light',
+): string[] {
+  if (!path || path.startsWith('$') || path.startsWith('modes.')) return [path]
+  const other = modeId === 'dark' ? 'light' : 'dark'
+  return [
+    path,
+    `modes.${modeId}.${path}`,
+    `modes.${other}.${path}`,
+    `modes.light.${path}`,
+    `modes.dark.${path}`,
+  ]
+}
+
+/** Resolve $value at logical path, walking modes when needed. */
+export function getPathValue(
+  doc: Record<string, unknown> | null,
+  path: string,
+  modeId: 'light' | 'dark' = 'light',
+): string | null {
+  if (!doc) return null
+  for (const p of candidatePaths(path, modeId)) {
+    const v = leafValue(walkPath(doc, p))
+    if (v != null) return v
+  }
+  return null
+}
+
+/** Physical path that currently holds the token (for write-back). */
+export function resolveWritePath(
+  doc: Record<string, unknown> | null,
+  path: string,
+  modeId: 'light' | 'dark' = 'light',
+): string {
+  if (!doc) return path
+  for (const p of candidatePaths(path, modeId)) {
+    if (leafValue(walkPath(doc, p)) != null) return p
+  }
+  // Prefer modes.<active> when the theme is modes-in-file.
+  if (doc.modes && typeof doc.modes === 'object') {
+    return `modes.${modeId}.${path}`
+  }
+  return path
+}
+
+/** Set $value at dotted path, creating intermediate objects. Mode-aware. */
 export function setPathValue(
   doc: Record<string, unknown>,
   path: string,
   value: string,
   type = 'dimension',
+  modeId: 'light' | 'dark' = 'light',
 ): Record<string, unknown> {
+  const target = resolveWritePath(doc, path, modeId)
   const next = structuredClone(doc) as Record<string, unknown>
-  const parts = path.split('.')
+  const parts = target.split('.')
   let cur: Record<string, unknown> = next
   for (let i = 0; i < parts.length - 1; i++) {
     const p = parts[i]
@@ -186,20 +250,20 @@ export function setPathValue(
   return next
 }
 
-/** Remove a leaf path (reset inheritance). */
+/** Remove a leaf path (reset inheritance). Mode-aware. */
 export function deletePath(
   doc: Record<string, unknown>,
   path: string,
+  modeId: 'light' | 'dark' = 'light',
 ): Record<string, unknown> {
+  const target = resolveWritePath(doc, path, modeId)
   const next = structuredClone(doc) as Record<string, unknown>
-  const parts = path.split('.')
+  const parts = target.split('.')
   let cur: Record<string, unknown> = next
-  const stack: { obj: Record<string, unknown>; key: string }[] = []
   for (let i = 0; i < parts.length - 1; i++) {
     const p = parts[i]
     const child = cur[p]
     if (!child || typeof child !== 'object') return next
-    stack.push({ obj: cur, key: p })
     cur = child as Record<string, unknown>
   }
   delete cur[parts[parts.length - 1]]

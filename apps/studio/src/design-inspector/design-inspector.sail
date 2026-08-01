@@ -1,5 +1,5 @@
 <!--
-  <design-inspector> — live specimen side panel + scale-family / type tools.
+  <design-inspector> — live specimen + scale-family / type / density tools.
   Mounted by design-surface. Ban-clean: no div/span; layout + L1 only.
 -->
 <controller>
@@ -34,9 +34,12 @@ export default controller(() => {
     fontHits: vm.fontHits,
     fontNote: vm.fontNote,
     designDensity: vm.designDensity,
+    densityLabel: vm.densityLabel,
     overrideRows: vm.overrideRows,
     hasOverrides: vm.hasOverrides,
     groupLabel: vm.groupLabel,
+    clampNote: vm.clampNote,
+    hasClampNote: vm.hasClampNote,
     onDensityClick: (e: Event) => vm.onDensityClick(e),
     onScaleTogether: (e: Event) => vm.onScaleTogether(e),
     onRadiusInput: (e: Event) => vm.onRadiusInput(e),
@@ -64,10 +67,11 @@ export default controller(() => {
   sx={style.minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(surface-1)}
 >
   <column gap="3" sx={style.pad(3).fontSize(sm)}>
-    <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Preview</p>
+    <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Live specimen</p>
     <column
       data-specimen-live
       data-specimen-fallback
+      data-specimen-panel
       gap="3"
       sx={style.pad(4).radius(lg).bg(background).fg(foreground).borderWidth(1).border(border-subtle).minW(0)}
     >
@@ -75,16 +79,17 @@ export default controller(() => {
         Aa · Preview
       </p>
       <p sx={style.fontSize(sm).fg(muted-foreground)}>
-        Surfaces update as you edit tokens.
+        Surfaces update as you edit — this is the truth, not a mock.
       </p>
       <row gap="2">
         <button type="button" tone="primary" size="sm">Primary</button>
         <button type="button" variant="outline" size="sm">Outline</button>
+        <button type="button" tone="destructive" size="sm">Danger</button>
         <badge tone="success">ok</badge>
       </row>
       <card sx={style.pad(3).radius(lg).borderWidth(1).border(border-subtle)}>
         <p sx={style.fontWeight(medium)}>Card surface</p>
-        <p sx={style.fontSize(sm).fg(muted-foreground)}>Density: {designDensity()}</p>
+        <p sx={style.fontSize(sm).fg(muted-foreground)}>Density: {densityLabel()}</p>
       </card>
       <row gap="2">
         <badge tone="primary" size="sm">primary</badge>
@@ -92,7 +97,15 @@ export default controller(() => {
         <badge tone="warning" size="sm">warning</badge>
         <badge tone="destructive" size="sm">danger</badge>
       </row>
-      <input type="search" placeholder="Search…" />
+      <alert tone="info" sx={style.fontSize(sm)}>
+        Alert · info tone for status copy
+      </alert>
+      <input type="search" placeholder="Search field…" />
+      <row gap="2" align="center">
+        <icon name="sparkles" size="sm" label="sparkles"></icon>
+        <icon name="check" size="md" label="check"></icon>
+        <icon name="settings" size="lg" label="settings"></icon>
+      </row>
     </column>
 
     <if {showScaleFamily()}>
@@ -100,7 +113,7 @@ export default controller(() => {
         <column data-panel="radius" gap="2">
           <row align="center" gap="2" justify="between" nowrap>
             <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>
-              Radius scale
+              Corner scale
             </p>
             <label sx={style.fontSize(xs)} data-scale-together>
               <input type="checkbox" checked={scaleTogetherOn()} on:change={onScaleTogether} />
@@ -124,6 +137,9 @@ export default controller(() => {
               </row>
             </for>
           </column>
+          <if {hasClampNote()}>
+            <p data-clamp-note sx={style.fontSize(xs).fg(muted-foreground)}>{clampNote()}</p>
+          </if>
           <row gap="2" align="center">
             <p data-blast-radius sx={style.fontSize(xs).fg(muted-foreground)}>{blastLabel()}</p>
             <button
@@ -148,7 +164,7 @@ export default controller(() => {
           </if>
           <column data-inheritance gap="1" sx={style.padT(2)}>
             <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>
-              Component radius
+              Inheritance · base → theme → override
             </p>
             <for {inheritRows()} as="n" key={n.key}>
               <row data-inherit-id={n.id} align="center" gap="2" sx={style.fontSize(xs)}>
@@ -160,15 +176,19 @@ export default controller(() => {
                 </if>
                 <if {!n.isOverride}>
                   <if {n.id !== 'global'}>
-                    <button
-                      type="button"
-                      size="sm"
-                      variant="soft"
-                      data-inherit-override
-                      on:click={onInheritOverride}
-                    >
-                      Customize
-                    </button>
+                    <if {n.id !== 'base'}>
+                      <if {n.id !== 'theme'}>
+                        <button
+                          type="button"
+                          size="sm"
+                          variant="soft"
+                          data-inherit-override
+                          on:click={onInheritOverride}
+                        >
+                          Customize
+                        </button>
+                      </if>
+                    </if>
                   </if>
                 </if>
               </row>
@@ -235,18 +255,27 @@ export default controller(() => {
     <if {isType()}>
       <column data-panel="type" gap="2">
         <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Type roles</p>
-        <label sx={style.fontSize(xs)}>
-          Display
-          <input data-type-role="display" value={typeDisplay()} on:change={onTypeRole} />
-        </label>
-        <label sx={style.fontSize(xs)}>
-          Body
-          <input data-type-role="body" value={typeBody()} on:change={onTypeRole} />
-        </label>
-        <label sx={style.fontSize(xs)}>
-          Mono
-          <input data-type-role="mono" value={typeMono()} on:change={onTypeRole} />
-        </label>
+        <column gap="1" data-type-role-display>
+          <label sx={style.fontSize(xs)}>
+            Display
+            <input data-type-role="display" value={typeDisplay()} on:change={onTypeRole} />
+          </label>
+          <p sx={style.fontSize(xl).fontWeight(semibold).fontFamily(heading)}>{typeDisplay()}</p>
+        </column>
+        <column gap="1" data-type-role-body>
+          <label sx={style.fontSize(xs)}>
+            Body
+            <input data-type-role="body" value={typeBody()} on:change={onTypeRole} />
+          </label>
+          <p sx={style.fontSize(sm)}>The quick brown fox — {typeBody()}</p>
+        </column>
+        <column gap="1" data-type-role-mono>
+          <label sx={style.fontSize(xs)}>
+            Mono
+            <input data-type-role="mono" value={typeMono()} on:change={onTypeRole} />
+          </label>
+          <p sx={style.fontSize(xs).fontFamily(mono)}>const ok = true // {typeMono()}</p>
+        </column>
         <row gap="2">
           <input
             type="search"
@@ -259,7 +288,7 @@ export default controller(() => {
             Add
           </button>
         </row>
-        <column gap="1" data-font-hits>
+        <column gap="1" data-font-hits data-font-cmdk>
           <for {fontHits()} as="f" key={f.key}>
             <button type="button" size="sm" variant="ghost" data-font-hit={f.name} on:click={onFontHit}>
               {f.name}
@@ -272,7 +301,7 @@ export default controller(() => {
 
     <if {isDensity()}>
       <column data-panel="density" gap="2">
-        <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Density</p>
+        <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Spacing density</p>
         <row gap="2" data-density-switch on:click={onDensityClick}>
           <button
             type="button"
@@ -290,7 +319,7 @@ export default controller(() => {
             variant={densityDefault() ? 'soft' : 'ghost'}
             tone={densityDefault() ? 'primary' : 'muted'}
           >
-            Default
+            Comfortable
           </button>
           <button
             type="button"
@@ -299,14 +328,17 @@ export default controller(() => {
             variant={densitySpacious() ? 'soft' : 'ghost'}
             tone={densitySpacious() ? 'primary' : 'muted'}
           >
-            Spacious
+            Roomy
           </button>
         </row>
+        <p sx={style.fontSize(xs).fg(muted-foreground)}>
+          Active: {densityLabel()} — specimen list spacing follows live.
+        </p>
       </column>
     </if>
 
     <if {isColor()}>
-      <column data-panel="brand" gap="2">
+      <column data-panel="brand-fork" gap="2">
         <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Copy as new theme</p>
         <row gap="2" align="center">
           <input

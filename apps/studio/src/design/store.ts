@@ -7,6 +7,7 @@ import {
   previewInAppOn,
   refreshBlastOn,
   repaintSpecimenOn,
+  setBrandColorOn,
   setDesignDensityOn,
   setIconScaleStepOn,
   setRadiusStepOn,
@@ -36,11 +37,13 @@ import {
 } from './theme-io'
 import { DEFAULT_GROUP_ID } from './token-groups'
 import type {
+  DecisionId,
   DensityId,
   DesignOpsClient,
   DesignSurfaceState,
   TypeRoles,
 } from './types'
+import { DECISION_IDS } from './types'
 
 type Listener = (s: DesignSurfaceState) => void
 
@@ -58,7 +61,7 @@ function bootState(): DesignSurfaceState {
     iconScale: defaultIconFamily(true),
     inheritance: radiusInheritance(null),
     groupId: DEFAULT_GROUP_ID,
-    statusNote: 'Pick a token group to edit',
+    statusNote: 'Pick a decision or token group',
   }
 }
 
@@ -166,9 +169,35 @@ export function setDesignMode(modeId: 'light' | 'dark'): void {
 }
 
 export function setTokenGroup(id: string): void {
-  state = { ...state, groupId: id }
+  const decisionId = (DECISION_IDS as string[]).includes(id)
+    ? (id as DecisionId)
+    : state.decisionId
+  state = { ...state, groupId: id, decisionId }
   emit()
   if (id === 'radius') void refreshBlast('radius-lg')
+  if (id === 'color') void refreshBlast('primary')
+}
+
+export function setDecision(id: DecisionId): void {
+  state = { ...state, decisionId: id, groupId: id }
+  emit()
+  if (id === 'radius') void refreshBlast('radius-lg')
+  if (id === 'color') void refreshBlast('primary')
+  if (id === 'icon') void refreshBlast('icon-md')
+}
+
+export function setSaveReviewOpen(open: boolean): void {
+  state = { ...state, saveReviewOpen: open }
+  emit()
+  if (open) {
+    const token =
+      state.groupId === 'radius'
+        ? 'radius-lg'
+        : state.groupId === 'icon'
+          ? 'icon-md'
+          : 'primary'
+    void refreshBlast(token)
+  }
 }
 
 export function setScaleTogether(on: boolean): void {
@@ -275,8 +304,24 @@ export async function setTokenValue(path: string, value: string): Promise<void> 
   await setTokenValueOn(editCtx(), path, value)
 }
 
+export async function setBrandColor(hexOrOklch: string): Promise<void> {
+  await setBrandColorOn(editCtx(), hexOrOklch)
+}
+
 export async function clearTokenValue(path: string): Promise<void> {
   await clearTokenValueOn(editCtx(), path)
+}
+
+/** Save with optional blast-radius review gate when dirty. */
+export async function requestSaveTheme(): Promise<boolean> {
+  if (!state.dirty) return saveTheme()
+  if (!state.saveReviewOpen) {
+    setSaveReviewOpen(true)
+    return false
+  }
+  const ok = await saveTheme()
+  if (ok) state = { ...state, saveReviewOpen: false }
+  return ok
 }
 
 export const searchFonts = ui.searchFonts
@@ -292,6 +337,9 @@ export const uiInheritance = ui.uiInheritance
 export const uiIconScaleSteps = ui.uiIconScaleSteps
 export const uiThemeOptions = ui.uiThemeOptions
 export const uiHeader = ui.uiHeader
+export const uiDecisions = ui.uiDecisions
+export const uiBrand = ui.uiBrand
+export const uiDensityLabel = ui.uiDensityLabel
 export const uiTokenRows = ui.uiTokenRows
 
 export async function refreshBlast(token: string): Promise<void> {

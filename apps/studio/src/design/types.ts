@@ -79,12 +79,25 @@ export type DesignDiffRow = {
   to: string
 }
 
+/** Five front-door design decisions (logical group ids). */
+export type DecisionId = 'color' | 'typography' | 'density' | 'radius' | 'icon'
+
+export const DECISION_IDS: DecisionId[] = [
+  'color',
+  'typography',
+  'density',
+  'radius',
+  'icon',
+]
+
 export type DesignSurfaceState = {
   projectRoot: string
   /** apps/<app>/tokens/themes */
   themesDir: string
   /** Active token group (color / space / radius / …). */
   groupId: string
+  /** Active front-door decision (subset of groups). */
+  decisionId: DecisionId
   density: DensityId
   /** Active working theme id (forked or catalog). */
   themeId: string
@@ -98,6 +111,8 @@ export type DesignSurfaceState = {
   themeDoc: Record<string, unknown> | null
   /** Dirty working doc vs last saved. */
   dirty: boolean
+  /** Save review open — blast radius shown before commit. */
+  saveReviewOpen: boolean
   catalogThemes: ThemeFile[]
   projectThemes: ThemeFile[]
   radius: ScaleFamily
@@ -117,6 +132,8 @@ export type DesignSurfaceState = {
   loading: boolean
   error: string | null
   lastWriteError: string | null
+  /** Plain-language clamp from scale family writes. */
+  lastClampNote: string | null
   /** Exportable DTCG diff rows (path → from/to). */
   diffRows: DesignDiffRow[]
   statusNote: string

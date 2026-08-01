@@ -2,6 +2,15 @@
  * Design surface view-models — pure projections of store state.
  */
 import {
+  BRAND_FG_PATH,
+  BRAND_PRIMARY_PATH,
+  brandContrastFlags,
+  deriveBrandRamp,
+  toPickerHex,
+  type ContrastFlag,
+  type RampStep,
+} from './color'
+import {
   colorSummary,
   getKnob,
   groupKnobs,
@@ -11,7 +20,14 @@ import {
   type TokenKnob,
 } from './token-groups'
 import { getPathValue, listTokenRows } from './theme-doc'
-import type { DesignDiffRow, DesignSurfaceState, InheritNode } from './types'
+import type {
+  DecisionId,
+  DensityId,
+  DesignDiffRow,
+  DesignSurfaceState,
+  InheritNode,
+} from './types'
+import { DECISION_IDS } from './types'
 
 export type GroupNavRow = {
   id: string
@@ -40,6 +56,8 @@ export type TokenRowUi = {
   /** Present when search spans all groups. */
   groupLabel: string
   groupId: string
+  /** Hex for sail-color-picker when isColor. */
+  pickerHex: string
 }
 
 function matchesQuery(k: TokenKnob, q: string): boolean {
@@ -109,14 +127,122 @@ function currentValue(
   state: DesignSurfaceState,
   saved: Record<string, unknown> | null,
 ): { value: string; dirty: boolean } {
-  const fromDoc = getPathValue(state.themeDoc, knob.path)
-  const fromSaved = getPathValue(saved, knob.path)
+  const mode = state.modeId
+  const fromDoc = getPathValue(state.themeDoc, knob.path, mode)
+  const fromSaved = getPathValue(saved, knob.path, mode)
   const value = fromDoc ?? knob.base
   const dirty =
     fromDoc != null && fromSaved != null
       ? fromDoc !== fromSaved
       : fromDoc != null && fromDoc !== knob.base
   return { value, dirty }
+}
+
+const DENSITY_LABEL: Record<DensityId, string> = {
+  compact: 'Compact',
+  default: 'Comfortable',
+  spacious: 'Roomy',
+}
+
+const DECISION_META: Record<
+  DecisionId,
+  { label: string; hint: string }
+> = {
+  color: { label: 'Brand color', hint: 'Primary accent' },
+  typography: { label: 'Type', hint: 'Display · body · mono' },
+  density: { label: 'Spacing density', hint: 'List + control spacing' },
+  radius: { label: 'Corners', hint: 'Radius scale' },
+  icon: { label: 'Icons', hint: 'Pack + sizes' },
+}
+
+export type DecisionCardUi = {
+  id: DecisionId
+  label: string
+  summary: string
+  active: boolean
+  key: string
+  tone: 'primary' | 'default'
+  isColor: boolean
+  swatch: string
+}
+
+/** Five front-door decision cards with live summaries. */
+export function uiDecisionCards(state: DesignSurfaceState): DecisionCardUi[] {
+  const brand = getPathValue(state.themeDoc, BRAND_PRIMARY_PATH, state.modeId) ?? ''
+  return DECISION_IDS.map((id) => {
+    const meta = DECISION_META[id]
+    let summary = meta.hint
+    let swatch = ''
+    if (id === 'color') {
+      summary = brand ? colorSummary(brand, 'primary') : meta.hint
+      swatch = brand ? toPickerHex(brand) : ''
+    } else if (id === 'typography') {
+      summary = state.typeRoles.display
+    } else if (id === 'density') {
+      summary = DENSITY_LABEL[state.density] ?? state.density
+    } else if (id === 'radius') {
+      const lo = state.radius.steps[0]?.valuePx ?? 0
+      const hi = state.radius.steps[state.radius.steps.length - 1]?.valuePx ?? 0
+      summary = `${lo}–${hi}px`
+    } else if (id === 'icon') {
+      const md = state.iconScale.steps.find((s) => s.key === 'md')
+      summary = `${state.icons.pack} · ${md?.raw ?? '16px'}`
+    }
+    const active = state.decisionId === id || state.groupId === id
+    return {
+      id,
+      label: meta.label,
+      summary,
+      active,
+      key: id,
+      tone: active ? 'primary' : 'default',
+      isColor: id === 'color',
+      swatch,
+    }
+  })
+}
+
+export type BrandPanelUi = {
+  primary: string
+  primaryHex: string
+  ramp: RampStep[]
+  contrast: ContrastFlag[]
+  contrastFailCount: number
+}
+
+export function uiBrandPanel(state: DesignSurfaceState): BrandPanelUi {
+  const mode = state.modeId
+  const primary =
+    getPathValue(state.themeDoc, BRAND_PRIMARY_PATH, mode) ??
+    'oklch(0.72 0.17 38)'
+  const primaryFg =
+    getPathValue(state.themeDoc, BRAND_FG_PATH, mode) ?? 'oklch(0.18 0.02 48)'
+  const background =
+    getPathValue(state.themeDoc, 'color.background.default', mode) ??
+    getPathValue(state.themeDoc, 'color.background', mode) ??
+    'oklch(0.16 0.01 48)'
+  const foreground =
+    getPathValue(state.themeDoc, 'color.foreground.default', mode) ??
+    getPathValue(state.themeDoc, 'color.foreground', mode) ??
+    'oklch(0.95 0.01 90)'
+  const ramp = deriveBrandRamp(primary)
+  const contrast = brandContrastFlags({
+    primary,
+    primaryFg,
+    background,
+    foreground,
+  })
+  return {
+    primary,
+    primaryHex: toPickerHex(primary),
+    ramp,
+    contrast,
+    contrastFailCount: contrast.filter((c) => !c.passAA).length,
+  }
+}
+
+export function densityLabel(d: DensityId): string {
+  return DENSITY_LABEL[d] ?? d
 }
 
 function knobToRow(
@@ -153,6 +279,7 @@ function knobToRow(
     key: k.path,
     groupLabel,
     groupId,
+    pickerHex: isColor ? toPickerHex(value) : '',
   }
 }
 
@@ -235,6 +362,7 @@ export function uiTokenRowsLabeled(
       key: r.path,
       groupLabel: gLabel,
       groupId: gid,
+      pickerHex: isColor ? toPickerHex(r.value) : '',
     }
   })
 }

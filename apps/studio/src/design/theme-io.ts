@@ -267,6 +267,7 @@ export function emptyDesignState(): DesignSurfaceState {
     projectRoot: '',
     themesDir: 'apps/studio/tokens/themes',
     groupId: DEFAULT_GROUP_ID,
+    decisionId: 'color',
     density: 'default',
     themeId: 'ship',
     modeId: 'dark',
@@ -274,6 +275,7 @@ export function emptyDesignState(): DesignSurfaceState {
     themePath: null,
     themeDoc: null,
     dirty: false,
+    saveReviewOpen: false,
     catalogThemes: [],
     projectThemes: [],
     radius: {
@@ -312,7 +314,8 @@ export function emptyDesignState(): DesignSurfaceState {
     loading: false,
     error: null,
     lastWriteError: null,
+    lastClampNote: null,
     diffRows: [],
-    statusNote: 'Pick a token group to edit',
+    statusNote: 'Pick a decision or token group',
   }
 }

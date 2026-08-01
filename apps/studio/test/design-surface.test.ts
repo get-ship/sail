@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url'
 import { readFileSync } from 'node:fs'
 import { createCliOpsClient } from '../src/edit/ops-adapter-cli'
 import {
-  NON_MONOTONIC_ERROR,
   __resetDesignForTests,
   __setWorkingDocForTests,
   applyRadiusToDoc,
@@ -56,12 +55,12 @@ describe('scale monotonicity (client)', () => {
     expect(validateMonotonic(f.steps, f.ordered)).toBeNull()
   })
 
-  it('rejects decreasing steps with NonMonotonicScale', () => {
+  it('clamps decreasing steps with plain-language note (no silent clamp)', () => {
     const f = defaultRadiusFamily(false)
-    const { family, error } = setScaleStep(f, 'md', 2) // sm=4, md=2 → non-mono
-    expect(error).toBeTruthy()
-    expect(error).toContain(NON_MONOTONIC_ERROR)
-    expect(isMonotonic(family.steps, family.ordered)).toBe(false)
+    const { family, clampNote } = setScaleStep(f, 'md', 2) // sm=4, md=2 → clamp to sm
+    expect(clampNote).toMatch(/can't go below|adjusted/i)
+    expect(family.steps.find((s) => s.key === 'md')?.valuePx).toBe(4)
+    expect(isMonotonic(family.steps, family.ordered)).toBe(true)
   })
 
   it('scale-together keeps family monotonic after drag', () => {
@@ -211,7 +210,7 @@ describe('ops SailTheme write + monotonicity parity', () => {
     }
   }, 60_000)
 
-  it('design store saveTheme refuses non-monotonic before ops', async () => {
+  it('design store clamps non-monotonic radius drag with a note (writes stay mono)', async () => {
     setDesignOpsClient(cli as DesignOpsClient)
     setDesignProjectRoot('apps/studio')
     const bad = {
@@ -225,11 +224,12 @@ describe('ops SailTheme write + monotonicity parity', () => {
       },
     }
     __setWorkingDocForTests(bad)
-    // Force non-mono family into state without scale-together fix
+    // Force independent steps — drag md below sm → clamp + explanation
     setScaleTogether(false)
     await setRadiusStep('md', 2)
     const s = getDesignState()
-    expect(s.lastWriteError ?? validateMonotonic(s.radius.steps, s.radius.ordered)).toBeTruthy()
+    expect(s.lastClampNote).toMatch(/adjusted|can't/i)
+    expect(validateMonotonic(s.radius.steps, s.radius.ordered)).toBeNull()
   }, 30_000)
 
   it('TokenUsage blast radius for radius-lg', async () => {
@@ -293,14 +293,23 @@ describe('design surface source gates', () => {
     )
     expect(surface).toMatch(/data-design-surface/)
     expect(surface).toMatch(/data-group-rail|data-decisions-rail/)
+    expect(surface).toMatch(/data-decision-bar/)
+    expect(surface).toMatch(/data-decision=/)
+    expect(surface).toMatch(/Brand color/)
+    expect(surface).toMatch(/Spacing density/)
     expect(surface).toMatch(/data-token-list|data-token-editor/)
+    expect(surface).toMatch(/sail-color-picker/)
+    expect(surface).toMatch(/data-brand-ramp|data-brand-panel/)
+    expect(surface).toMatch(/data-save-review|Confirm save/)
     expect(inspector).toMatch(/data-specimen-live|data-specimen-canvas/)
     expect(inspector).toMatch(/data-radius-sliders/)
     expect(inspector).toMatch(/data-blast-radius/)
     expect(inspector).toMatch(/data-inheritance/)
-    // No DECIDE 5-step rail as primary nav
+    expect(inspector).toMatch(/base → theme → override/)
+    // No jargon front-door labels
     expect(surface).not.toMatch(/>DECIDE</)
     expect(surface).not.toMatch(/Brand hue/)
+    expect(surface).not.toMatch(/hue-rotate|DTCG/)
     // User copy — no pair-session notes
     expect(surface).not.toMatch(/Corners follow the family/)
     expect(inspector).not.toMatch(/refused on write/)
@@ -311,7 +320,7 @@ describe('design surface source gates', () => {
     }
     // Surface does not dual-boot loadThemes on mount; retry may call it.
     const mountBody =
-      surfaceVm.match(/mount\s*\(\s*\(\)\s*=>\s*\{([\s\S]*?)\n  \}\)/)?.[1] ?? ''
+      surfaceVm.match(/mountAmbient\s*\(\s*\(\)\s*=>\s*\{([\s\S]*?)\n  \}\)/)?.[1] ?? ''
     expect(mountBody).not.toMatch(/loadThemes/)
     expect(surfaceVm).toMatch(/onRetryDesign/)
     expect(surface).not.toMatch(/<div\b/)
@@ -404,6 +413,68 @@ describe('type role token write', () => {
     const s = getDesignState()
     expect(s.typeRoles.display).toBe('Fraunces')
     expect(s.diffRows.some((r) => r.path.includes('typography.font'))).toBe(true)
+  })
+})
+
+describe('brand color + mode-aware paths + decisions', () => {
+  it('setBrandColor writes oklch primary under modes when theme is modes-in-file', async () => {
+    const { setBrandColor, getPathValue, uiDecisionCards, deriveBrandRamp, brandContrastFlags } =
+      await import('../src/design')
+    const base = {
+      $extensions: { ship: { themeId: 'brand-toy' } },
+      modes: {
+        light: {
+          color: {
+            primary: {
+              default: { $value: 'oklch(0.6 0.15 40)', $type: 'color' },
+              foreground: { $value: 'oklch(0.98 0.01 90)', $type: 'color' },
+            },
+            background: { default: { $value: 'oklch(0.98 0 0)', $type: 'color' } },
+            foreground: { default: { $value: 'oklch(0.2 0 0)', $type: 'color' } },
+          },
+        },
+      },
+    }
+    __setWorkingDocForTests(base)
+    await setBrandColor('#3b82f6')
+    const s = getDesignState()
+    const written = getPathValue(s.themeDoc, 'color.primary.default', 'light')
+    expect(written).toMatch(/^oklch\(/)
+    expect(s.diffRows.some((r) => r.path.includes('color.primary'))).toBe(true)
+    const cards = uiDecisionCards(s)
+    expect(cards).toHaveLength(5)
+    expect(cards.map((c) => c.label)).toEqual([
+      'Brand color',
+      'Type',
+      'Spacing density',
+      'Corners',
+      'Icons',
+    ])
+    const ramp = deriveBrandRamp(written!)
+    expect(ramp).toHaveLength(5)
+    expect(ramp[0]!.value).toMatch(/^oklch\(/)
+    const flags = brandContrastFlags({
+      primary: written!,
+      primaryFg: 'oklch(0.98 0.01 90)',
+      background: 'oklch(0.98 0 0)',
+      foreground: 'oklch(0.2 0 0)',
+    })
+    expect(flags.some((f) => f.id === 'fg-on-primary')).toBe(true)
+  })
+
+  it('mode-aware getPathValue reads modes.dark primary', async () => {
+    const { getPathValue } = await import('../src/design')
+    const doc = {
+      modes: {
+        dark: {
+          color: {
+            primary: { default: { $value: 'oklch(0.72 0.17 38)', $type: 'color' } },
+          },
+        },
+      },
+    }
+    expect(getPathValue(doc, 'color.primary.default', 'dark')).toBe('oklch(0.72 0.17 38)')
+    expect(getPathValue(doc, 'color.primary.default', 'light')).toBe('oklch(0.72 0.17 38)')
   })
 })
 

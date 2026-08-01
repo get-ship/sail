@@ -1,5 +1,5 @@
 /**
- * Design surface VM — token groups, search, theme chrome.
+ * Design surface VM — five decisions + token power mode + theme chrome.
  * Shell owns loadThemes + ops client.
  */
 import { mountAmbient, signal } from '@ship/sail-runtime'
@@ -11,17 +11,23 @@ import {
   loadThemes,
   openTheme,
   previewInApp,
-  saveTheme,
+  requestSaveTheme,
+  setBrandColor,
+  setDecision,
   setOverridesOnly,
+  setSaveReviewOpen,
   setTokenGroup,
   setTokenSearch,
   setTokenValue,
   subscribeDesign,
   uiActiveGroup,
+  uiBrand,
+  uiDecisions,
   uiGroupTokens,
   uiGroups,
   uiHeader,
   uiThemeOptions,
+  type DecisionId,
 } from '@ship/studio/design'
 
 type GroupUi = {
@@ -53,6 +59,7 @@ type TokenRowUi = {
   groupId: string
   showGroup: boolean
   colorEditOpen: boolean
+  pickerHex: string
 }
 type DiffUi = {
   path: string
@@ -64,9 +71,29 @@ type DiffUi = {
   isColor: boolean
   toValue: string
 }
+type DecisionUi = {
+  id: string
+  label: string
+  summary: string
+  active: boolean
+  key: string
+  tone: 'primary' | 'default'
+  isColor: boolean
+  swatch: string
+}
+type RampUi = { key: string; label: string; value: string; hex: string }
+type ContrastUi = {
+  id: string
+  label: string
+  ratio: string
+  passAA: boolean
+  key: string
+  tone: 'success' | 'destructive'
+}
 
 export function createDesignSurface() {
   const groupRows = signal<GroupUi[]>([])
+  const decisionRows = signal<DecisionUi[]>([])
   const tokenRows = signal<TokenRowUi[]>([])
   const hasTokenRows = signal(false)
   const designThemeOpts = signal<ThemeOptUi[]>([])
@@ -79,15 +106,27 @@ export function createDesignSurface() {
   const tokenSearchVal = signal('')
   const isSearching = signal(false)
   const overridesOnlyOn = signal(false)
-  const designStatusNote = signal('Pick a token group to edit')
+  const designStatusNote = signal('Pick a decision or token group')
   const designError = signal('')
   const hasDesignError = signal(false)
   const designWriteError = signal('')
   const hasDesignWriteError = signal(false)
+  const clampNote = signal('')
+  const hasClampNote = signal(false)
   const diffRows = signal<DiffUi[]>([])
   const hasDiff = signal(false)
   const tokenCountLabel = signal('')
   const colorEditPath = signal('')
+  const brandHex = signal('#e07a3d')
+  const brandRamp = signal<RampUi[]>([])
+  const contrastRows = signal<ContrastUi[]>([])
+  const hasContrastFail = signal(false)
+  const contrastFailLabel = signal('')
+  const isBrandDecision = signal(true)
+  const saveReviewOpen = signal(false)
+  const blastLabel = signal('')
+  const saveButtonLabel = signal('Save theme')
+  const canConfirmSave = signal(false)
 
   const sync = () => {
     const ds = getDesignState()
@@ -98,11 +137,24 @@ export function createDesignSurface() {
         tone: g.active ? 'primary' : 'default',
       })),
     )
+    decisionRows.set(
+      uiDecisions().map((d) => ({
+        id: d.id,
+        label: d.label,
+        summary: d.summary,
+        active: d.active,
+        key: d.key,
+        tone: d.tone,
+        isColor: d.isColor,
+        swatch: d.swatch,
+      })),
+    )
     const editPath = colorEditPath()
     const tokens = uiGroupTokens().map((t) => ({
       ...t,
       showGroup: searching && t.groupId !== ds.groupId,
       colorEditOpen: t.isColor && t.path === editPath,
+      pickerHex: t.pickerHex ?? '',
     }))
     tokenRows.set(tokens)
     hasTokenRows.set(tokens.length > 0)
@@ -125,6 +177,32 @@ export function createDesignSurface() {
     hasDesignError.set(!!ds.error)
     designWriteError.set(ds.lastWriteError ?? '')
     hasDesignWriteError.set(!!ds.lastWriteError)
+    clampNote.set(ds.lastClampNote ?? '')
+    hasClampNote.set(!!ds.lastClampNote)
+    const brand = uiBrand()
+    brandHex.set(brand.primaryHex)
+    brandRamp.set(brand.ramp)
+    contrastRows.set(
+      brand.contrast.map((c) => ({
+        id: c.id,
+        label: c.label,
+        ratio: `${c.ratio}:1`,
+        passAA: c.passAA,
+        key: c.id,
+        tone: c.passAA ? 'success' : 'destructive',
+      })),
+    )
+    hasContrastFail.set(brand.contrastFailCount > 0)
+    contrastFailLabel.set(
+      brand.contrastFailCount > 0
+        ? `${brand.contrastFailCount} contrast check${brand.contrastFailCount === 1 ? '' : 's'} below AA`
+        : 'All specimen pairs meet AA',
+    )
+    isBrandDecision.set(ds.decisionId === 'color' || g.isColor)
+    saveReviewOpen.set(ds.saveReviewOpen)
+    blastLabel.set(ds.blast?.label ?? 'Review where this theme is used')
+    saveButtonLabel.set(ds.saveReviewOpen ? 'Confirm save' : 'Save theme')
+    canConfirmSave.set(ds.dirty)
     diffRows.set(
       ds.diffRows.map((r) => {
         const line = formatDiffLine(r)
@@ -170,6 +248,13 @@ export function createDesignSurface() {
     void loadThemes().then(() => sync())
   }
 
+  const onDecisionClick = (e: Event) => {
+    const t = (e.target as Element | null)?.closest?.('[data-decision]') as HTMLElement | null
+    if (!t?.dataset.decision) return
+    setDecision(t.dataset.decision as DecisionId)
+    sync()
+  }
+
   const onGroupClick = (e: Event) => {
     const t = (e.target as Element | null)?.closest?.('[data-group]') as HTMLElement | null
     if (!t?.dataset.group) return
@@ -183,7 +268,12 @@ export function createDesignSurface() {
   }
 
   const onSaveTheme = () => {
-    void saveTheme().then(() => sync())
+    void requestSaveTheme().then(() => sync())
+  }
+
+  const onCancelSaveReview = () => {
+    setSaveReviewOpen(false)
+    sync()
   }
 
   const onExportDiff = () => {
@@ -241,6 +331,23 @@ export function createDesignSurface() {
     sync()
   }
 
+  const onTokenColor = (e: Event) => {
+    const ce = e as CustomEvent<{ value?: string }>
+    const host = e.currentTarget as HTMLElement | null
+    const path = host?.dataset?.tokenPath
+    const hex = ce.detail?.value ?? (host as HTMLElement & { value?: string })?.value
+    if (!path || !hex) return
+    void setTokenValue(path, hex).then(() => sync())
+  }
+
+  const onBrandColor = (e: Event) => {
+    const ce = e as CustomEvent<{ value?: string }>
+    const host = e.currentTarget as HTMLElement & { value?: string }
+    const hex = ce.detail?.value ?? host?.value
+    if (!hex) return
+    void setBrandColor(hex).then(() => sync())
+  }
+
   const onTokenRowActivate = (e: Event) => {
     const t = (e.target as Element | null)?.closest?.('[data-token-group]') as HTMLElement | null
     const gid = t?.dataset.tokenGroup
@@ -267,6 +374,7 @@ export function createDesignSurface() {
 
   return {
     groupRows,
+    decisionRows,
     tokenRows,
     hasTokenRows,
     designThemeOpts,
@@ -284,13 +392,27 @@ export function createDesignSurface() {
     hasDesignError,
     designWriteError,
     hasDesignWriteError,
+    clampNote,
+    hasClampNote,
     diffRows,
     hasDiff,
     tokenCountLabel,
+    brandHex,
+    brandRamp,
+    contrastRows,
+    hasContrastFail,
+    contrastFailLabel,
+    isBrandDecision,
+    saveReviewOpen,
+    blastLabel,
+    saveButtonLabel,
+    canConfirmSave,
+    onDecisionClick,
     onGroupClick,
     onRetryDesign,
     onDesignTheme,
     onSaveTheme,
+    onCancelSaveReview,
     onExportDiff,
     onPreviewInApp,
     onTokenSearch,
@@ -299,6 +421,8 @@ export function createDesignSurface() {
     onTokenNum,
     onTokenReset,
     onColorEditToggle,
+    onTokenColor,
+    onBrandColor,
     onTokenRowActivate,
   }
 }

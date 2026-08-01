@@ -2,6 +2,11 @@
  * Design edit actions — density, scale families, type, icons, path writes.
  */
 import {
+  BRAND_PRIMARY_PATH,
+  hexToOklchString,
+  toPickerHex,
+} from './color'
+import {
   defaultIconFamily,
   defaultRadiusFamily,
   setScaleStep,
@@ -65,11 +70,12 @@ export async function setRadiusStepOn(
   px: number,
 ): Promise<void> {
   const state = ctx.getState()
-  const { family, error } = setScaleStep(state.radius, key, px)
-  if (error && !family.scaleTogether) {
+  const { family, error, clampNote } = setScaleStep(state.radius, key, px)
+  if (error && !family.scaleTogether && !clampNote) {
     ctx.setState({
       ...state,
       lastWriteError: 'Radius steps must go from small to large',
+      lastClampNote: null,
       radius: family,
     })
     ctx.emit()
@@ -80,17 +86,24 @@ export async function setRadiusStepOn(
   }
   ctx.reflectCss('radius', family.steps.find((s) => s.key === 'lg')?.raw ?? null)
   if (!state.themeDoc) {
-    ctx.setState({ ...state, radius: family, lastWriteError: error })
+    ctx.setState({
+      ...state,
+      radius: family,
+      lastWriteError: error && !clampNote ? error : null,
+      lastClampNote: clampNote,
+      statusNote: clampNote ?? state.statusNote,
+    })
     ctx.emit()
     await ctx.repaintSpecimen()
     return
   }
   const doc = patchRadius(state.themeDoc, family)
   const monoErr = validateMonotonic(family.steps, family.ordered, family.path)
-  if (monoErr && !family.scaleTogether) {
+  if (monoErr && !family.scaleTogether && !clampNote) {
     ctx.setState({
       ...ctx.getState(),
       lastWriteError: 'Radius steps must go from small to large',
+      lastClampNote: null,
       radius: family,
     })
     ctx.emit()
@@ -101,6 +114,8 @@ export async function setRadiusStepOn(
     ...ctx.getState(),
     radius: { ...extractRadius(doc), scaleTogether: family.scaleTogether },
     lastWriteError: null,
+    lastClampNote: clampNote,
+    statusNote: clampNote ?? `Updated radius · ${key}`,
   })
   ctx.emit()
   await ctx.repaintSpecimen()
@@ -117,8 +132,8 @@ export async function overrideComponentRadiusOn(
   const path = `component.${component}.radius`
   const doc =
     value == null
-      ? deletePath(state.themeDoc, path)
-      : setPathValue(state.themeDoc, path, value, 'dimension')
+      ? deletePath(state.themeDoc, path, state.modeId)
+      : setPathValue(state.themeDoc, path, value, 'dimension', state.modeId)
   ctx.recomputeDerived(doc)
   ctx.setState({ ...ctx.getState(), lastWriteError: null })
   ctx.emit()
@@ -153,9 +168,14 @@ export async function setIconScaleStepOn(
   px: number,
 ): Promise<void> {
   const state = ctx.getState()
-  const { family, error } = setScaleStep(state.iconScale, key, px)
-  if (error && !family.scaleTogether) {
-    ctx.setState({ ...state, lastWriteError: error, iconScale: family })
+  const { family, error, clampNote } = setScaleStep(state.iconScale, key, px)
+  if (error && !family.scaleTogether && !clampNote) {
+    ctx.setState({
+      ...state,
+      lastWriteError: error,
+      lastClampNote: null,
+      iconScale: family,
+    })
     ctx.emit()
     return
   }
@@ -163,7 +183,12 @@ export async function setIconScaleStepOn(
     ctx.reflectCss(`icon-size-${step.key}`, step.raw)
   }
   if (!state.themeDoc) {
-    ctx.setState({ ...state, iconScale: family, lastWriteError: error })
+    ctx.setState({
+      ...state,
+      iconScale: family,
+      lastWriteError: error && !clampNote ? error : null,
+      lastClampNote: clampNote,
+    })
     ctx.emit()
     return
   }
@@ -173,8 +198,51 @@ export async function setIconScaleStepOn(
     ...ctx.getState(),
     iconScale: { ...extractIconScale(doc), scaleTogether: family.scaleTogether },
     lastWriteError: null,
+    lastClampNote: clampNote,
   })
   ctx.emit()
+}
+
+/**
+ * Brand color decision — hex from sail-color-picker → oklch write on primary.
+ * Specimen CSS vars update immediately (visual echo is not debounced).
+ */
+export async function setBrandColorOn(
+  ctx: EditCtx,
+  hexOrOklch: string,
+): Promise<void> {
+  const raw = String(hexOrOklch ?? '').trim()
+  const oklch = raw.startsWith('oklch') ? raw : hexToOklchString(raw)
+  const hex = toPickerHex(oklch)
+  ctx.reflectCss('primary', oklch)
+  const state = ctx.getState()
+  if (!state.themeDoc) {
+    ctx.setState({
+      ...state,
+      statusNote: 'Preview brand color',
+      lastWriteError: null,
+    })
+    ctx.emit()
+    return
+  }
+  const doc = setPathValue(
+    state.themeDoc,
+    BRAND_PRIMARY_PATH,
+    oklch,
+    'color',
+    state.modeId,
+  )
+  ctx.recomputeDerived(doc)
+  ctx.setState({
+    ...ctx.getState(),
+    lastWriteError: null,
+    lastClampNote: null,
+    statusNote: `Brand color · ${hex}`,
+  })
+  ctx.emit()
+  await ctx.repaintSpecimen()
+  void ctx.refreshBlast('primary')
+  void hex
 }
 
 /** Write a single registry token into the working theme doc + live specimen. */
@@ -186,7 +254,15 @@ export async function setTokenValueOn(
   const knob = getKnob(path)
   const cssName = knob?.cssName ?? path
   const type = knob?.type ?? 'string'
-  ctx.reflectCss(cssName, value)
+  let writeValue = value
+  // Color picker commits hex — store oklch.
+  if (
+    (knob?.kind === 'color' || path.includes('color.')) &&
+    /^#?[0-9a-f]{3,8}$/i.test(value.trim())
+  ) {
+    writeValue = hexToOklchString(value.trim())
+  }
+  ctx.reflectCss(cssName, writeValue)
 
   // Radius family steps — keep scale engine in sync.
   if (path.startsWith('radius.') && path !== 'radius.default') {
@@ -198,6 +274,11 @@ export async function setTokenValueOn(
     }
   }
 
+  if (path === BRAND_PRIMARY_PATH || path === 'color.primary.default') {
+    await setBrandColorOn(ctx, writeValue)
+    return
+  }
+
   const state = ctx.getState()
   if (!state.themeDoc) {
     ctx.setState({
@@ -207,11 +288,12 @@ export async function setTokenValueOn(
     ctx.emit()
     return
   }
-  const doc = setPathValue(state.themeDoc, path, value, type)
+  const doc = setPathValue(state.themeDoc, path, writeValue, type, state.modeId)
   ctx.recomputeDerived(doc)
   ctx.setState({
     ...ctx.getState(),
     lastWriteError: null,
+    lastClampNote: null,
     statusNote: `Updated ${knob?.label ?? path}`,
   })
   ctx.emit()
@@ -223,9 +305,8 @@ export async function clearTokenValueOn(ctx: EditCtx, path: string): Promise<voi
   if (knob) ctx.reflectCss(knob.cssName, null)
   const state = ctx.getState()
   if (!state.themeDoc) return
-  const base = getPathValue(null, path)
-  // Reset to saved baseline if present, else delete leaf.
-  const doc = deletePath(state.themeDoc, path)
+  const base = getPathValue(null, path, state.modeId)
+  const doc = deletePath(state.themeDoc, path, state.modeId)
   ctx.recomputeDerived(doc)
   ctx.setState({ ...ctx.getState(), lastWriteError: null })
   ctx.emit()
@@ -350,8 +431,8 @@ export async function refreshBlastOn(
       sites,
       label:
         components > 0
-          ? `Used in ${components} component${components === 1 ? '' : 's'}`
-          : 'Not used in this project',
+          ? `This change repaints ${components} component${components === 1 ? '' : 's'} across ${Math.max(1, sites.length)} surface${sites.length === 1 ? '' : 's'}`
+          : 'Not used in this project yet',
     }
     ctx.setState({ ...ctx.getState(), blast })
     ctx.emit()

@@ -3,8 +3,11 @@
  */
 import type { DesignOpsClient, DesignSurfaceState } from './types'
 import {
+  densityLabel,
   formatDiffLine,
   uiActiveGroupMeta,
+  uiBrandPanel,
+  uiDecisionCards,
   uiGroupTokenRows,
   uiHeader as uiHeaderFrom,
   uiIconScaleSteps as uiIconScaleStepsFrom,
@@ -34,6 +37,9 @@ export function makeStoreUi(access: StoreUiAccess) {
   const uiIconScaleSteps = () => uiIconScaleStepsFrom(access.getState())
   const uiThemeOptions = () => uiThemeOptionsFrom(access.getState())
   const uiHeader = () => uiHeaderFrom(access.getState())
+  const uiDecisions = () => uiDecisionCards(access.getState())
+  const uiBrand = () => uiBrandPanel(access.getState())
+  const uiDensityLabel = () => densityLabel(access.getState().density)
 
   const uiTokenRows = () =>
     uiTokenRowsLabeled(access.getState(), access.getSaved()).map((r) => ({
@@ -44,6 +50,7 @@ export function makeStoreUi(access: StoreUiAccess) {
       label: r.label,
       display: r.display,
       isColor: r.isColor,
+      pickerHex: r.pickerHex,
     }))
 
   const exportDiffText = () => {
@@ -116,6 +123,9 @@ export function makeStoreUi(access: StoreUiAccess) {
     uiIconScaleSteps,
     uiThemeOptions,
     uiHeader,
+    uiDecisions,
+    uiBrand,
+    uiDensityLabel,
     uiTokenRows,
     exportDiffText,
     filteredIconGlyphs,

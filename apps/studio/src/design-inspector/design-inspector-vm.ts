@@ -4,6 +4,7 @@
 import { mountAmbient, signal } from '@ship/sail-runtime'
 import {
   addFontFamily,
+  densityLabel,
   filteredIconGlyphs,
   forkTheme,
   getDesignState,
@@ -86,9 +87,12 @@ export function createDesignInspector() {
   const fontHits = signal<{ name: string; key: string }[]>([])
   const fontNote = signal('Search and add a font family')
   const designDensity = signal('default')
+  const densityLabelSig = signal('Comfortable')
   const overrideRows = signal<OverrideUi[]>([])
   const hasOverrides = signal(false)
   const groupLabel = signal('Color')
+  const clampNote = signal('')
+  const hasClampNote = signal(false)
 
   const sync = () => {
     const ds = getDesignState()
@@ -115,8 +119,9 @@ export function createDesignInspector() {
     densityDefault.set(ds.density === 'default')
     densitySpacious.set(ds.density === 'spacious')
     designDensity.set(ds.density)
+    densityLabelSig.set(densityLabel(ds.density))
     scaleTogetherOn.set(ds.radius.scaleTogether)
-    blastLabel.set(ds.blast?.label ?? 'Not used in this project')
+    blastLabel.set(ds.blast?.label ?? 'Not used in this project yet')
     inspectOpen.set(ds.inspectOpen)
     inspectSites.set(
       (ds.blast?.sites ?? []).slice(0, 40).map((s, i) => ({
@@ -124,12 +129,14 @@ export function createDesignInspector() {
         key: `${s.file}-${i}`,
       })),
     )
-    isType.set(g.isType)
-    isDensity.set(g.isDensity)
-    isRadius.set(g.isRadius)
-    isIcons.set(g.isIcon)
-    isColor.set(g.isColor)
-    showScaleFamily.set(g.isRadius || g.isIcon)
+    isType.set(g.isType || ds.decisionId === 'typography')
+    isDensity.set(g.isDensity || ds.decisionId === 'density')
+    isRadius.set(g.isRadius || ds.decisionId === 'radius')
+    isIcons.set(g.isIcon || ds.decisionId === 'icon')
+    isColor.set(g.isColor || ds.decisionId === 'color')
+    showScaleFamily.set(
+      g.isRadius || g.isIcon || ds.decisionId === 'radius' || ds.decisionId === 'icon',
+    )
     groupLabel.set(g.label)
     typeDisplay.set(ds.typeRoles.display)
     typeBody.set(ds.typeRoles.body)
@@ -137,6 +144,8 @@ export function createDesignInspector() {
     iconPack.set(ds.icons.pack)
     iconQuery.set(ds.icons.query)
     iconGlyphs.set(filteredIconGlyphs().map((name) => ({ name, key: name })))
+    clampNote.set(ds.lastClampNote ?? '')
+    hasClampNote.set(!!ds.lastClampNote)
     const ovr = uiTokenRows()
       .filter((r) => r.dirty)
       .slice(0, 40)
@@ -314,9 +323,12 @@ export function createDesignInspector() {
     fontHits,
     fontNote,
     designDensity,
+    densityLabel: densityLabelSig,
     overrideRows,
     hasOverrides,
     groupLabel,
+    clampNote,
+    hasClampNote,
     onDensityClick,
     onScaleTogether,
     onRadiusInput,
