@@ -1,3 +1,10 @@
+<!--
+  Agent probe s003 (settings). From sail-probe runs/20260731-135831-s003.
+  Sanitization: `variant="solid"` on the primary button so solid/primary CVA
+  paints. Bare `tone="primary"` (agent raw) uses the default variant chrome —
+  that matches browser CVA, not a paint miss. Keep this solid so goldens pin
+  the anti-steering path (L1 skins, not raw sx fills).
+-->
 <column gap="6" sx={style.pad(6)} max-w="panel-max-w-md">
   <h1 sx={style.fontSize(2xl).fontWeight(semibold).fg(foreground)}>Settings</h1>
 

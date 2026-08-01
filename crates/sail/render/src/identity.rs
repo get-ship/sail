@@ -383,12 +383,16 @@ fn resolve_layout_node_id(
             return (id.clone(), false);
         }
     }
+    // Always advance so same-tag unjoined boxes get distinct ids (sibling
+    // cards must not share `_unjoined#0#…` when the author tree is empty).
+    let occ = *cursor;
+    *cursor += 1;
     let id = tree
         .roots
         .first()
         .cloned()
         .or_else(|| tree.nodes.first().map(|n| n.id.clone()))
-        .unwrap_or_else(|| node_id("_unjoined", "0", author_tag));
+        .unwrap_or_else(|| node_id("_unjoined", &occ.to_string(), author_tag));
     (id, true)
 }
 

@@ -42,14 +42,34 @@ fn golden_path(name: &str) -> PathBuf {
     fixture(&format!("goldens/{name}.png"))
 }
 
+fn in_ci() -> bool {
+    matches!(
+        std::env::var("CI").ok().as_deref(),
+        Some("1" | "true" | "TRUE" | "yes" | "YES")
+    )
+}
+
 fn ensure_or_compare(name: &str, result: &sail_render::RenderOutput) {
     let path = golden_path(name);
     if let Some(parent) = path.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
-    if !path.is_file() || std::env::var("SAIL_RENDER_UPDATE_GOLDEN").ok().as_deref() == Some("1") {
+    let update = std::env::var("SAIL_RENDER_UPDATE_GOLDEN").ok().as_deref() == Some("1");
+    if !path.is_file() {
+        if in_ci() && !update {
+            panic!(
+                "golden {name} missing at {} (CI refuses to write; run with \
+                 SAIL_RENDER_UPDATE_GOLDEN=1 locally to mint)",
+                path.display()
+            );
+        }
         write_png(&result.image, &path).expect("write golden");
         eprintln!("wrote golden {}", path.display());
+        return;
+    }
+    if update {
+        write_png(&result.image, &path).expect("write golden");
+        eprintln!("updated golden {}", path.display());
         return;
     }
     let expected = std::fs::read(&path).expect("read golden");
@@ -68,14 +88,128 @@ fn non_bg_pixel_count(result: &sail_render::RenderOutput) -> usize {
     rgba.chunks_exact(4).filter(|c| c != &bg.as_slice()).count()
 }
 
+/// Count non-background pixels inside a parent-relative region AABB.
+/// Regions use taffy parent-relative coords; for hosts near the root this
+/// approximates viewport space well enough for a paint smoke check.
+fn non_bg_in_region(result: &sail_render::RenderOutput, r: &sail_render::Region) -> usize {
+    let rgba = result.image.as_raw();
+    let w = result.image.width() as usize;
+    let h = result.image.height() as usize;
+    if w == 0 || h == 0 {
+        return 0;
+    }
+    let bg = [rgba[0], rgba[1], rgba[2], rgba[3]];
+    let x0 = r.x.max(0.0).floor() as usize;
+    let y0 = r.y.max(0.0).floor() as usize;
+    let x1 = ((r.x + r.w).ceil() as usize).min(w);
+    let y1 = ((r.y + r.h).ceil() as usize).min(h);
+    if x0 >= x1 || y0 >= y1 {
+        return 0;
+    }
+    let mut n = 0usize;
+    for y in y0..y1 {
+        for x in x0..x1 {
+            let i = (y * w + x) * 4;
+            if rgba[i..i + 4] != bg {
+                n += 1;
+            }
+        }
+    }
+    n
+}
+
+fn assert_joined_regions(result: &sail_render::RenderOutput, label: &str) {
+    assert!(!result.regions.is_empty(), "{label}: expected regions");
+    let unjoined: Vec<_> = result
+        .regions
+        .iter()
+        .filter(|r| r.node_id.contains("_unjoined"))
+        .map(|r| (r.tag.clone(), r.node_id.clone()))
+        .collect();
+    assert!(
+        unjoined.is_empty(),
+        "{label}: expected SailInspect-joined region ids (parse_author must accept \
+         Style scale tokens like 2xl); unjoined={unjoined:?}"
+    );
+    // Layout expands L1 anatomy into extra boxes that share author hosts when
+    // tag cursors exhaust — global id uniqueness is not required. Sibling L1
+    // hosts of the same tag (cards, …) must still get distinct author ids.
+    for host in ["card", "button", "navbar"] {
+        let mut ids = std::collections::BTreeSet::new();
+        let mut n = 0usize;
+        for r in &result.regions {
+            if r.tag.as_deref() == Some(host) {
+                n += 1;
+                ids.insert(r.node_id.as_str());
+            }
+        }
+        if n >= 2 {
+            assert_eq!(
+                ids.len(),
+                n,
+                "{label}: sibling <{host}> regions must have distinct SailInspect ids \
+                 (n={n}, unique={})",
+                ids.len()
+            );
+        }
+    }
+}
+
+fn assert_regions_match_check(fixture_name: &str, viewport: (u32, u32)) {
+    let source = std::fs::read_to_string(fixture(fixture_name)).unwrap();
+    let result =
+        sail_render::render_source(&source, opts(viewport, "light")).expect("render for parity");
+
+    let preprocessed = sail_compiler::parse::preprocess::preprocess(&source).unwrap();
+    let scan =
+        sail_layout::check_preprocessed(&preprocessed, (viewport.0 as f32, viewport.1 as f32))
+            .expect("layout check (check_preprocessed)");
+
+    // check_preprocessed is the check-pass entry; it must produce the box tree
+    // even when overflow diagnostics fire (card overflow:clip + chrome is a
+    // known taffy/skin tension — not a region join failure).
+    assert!(
+        !scan.boxes.is_empty(),
+        "{fixture_name}: check_preprocessed produced no boxes"
+    );
+
+    assert_eq!(
+        result.regions.len(),
+        scan.boxes.len(),
+        "{fixture_name}: region count vs check_preprocessed boxes"
+    );
+    let tol = 0.6_f32;
+    for (i, (r, b)) in result.regions.iter().zip(scan.boxes.iter()).enumerate() {
+        assert!(
+            (r.x - b.x).abs() <= tol
+                && (r.y - b.y).abs() <= tol
+                && (r.w - b.width).abs() <= tol
+                && (r.h - b.height).abs() <= tol,
+            "{fixture_name} region/check box mismatch at {i}: region=({}, {}, {}, {}) \
+             check=({}, {}, {}, {}) tag={}",
+            r.x,
+            r.y,
+            r.w,
+            r.h,
+            b.x,
+            b.y,
+            b.width,
+            b.height,
+            b.tag
+        );
+    }
+}
+
+/// Probe s003 is agent-authored settings (stacked cards). Sanitized only by
+/// adding `variant="solid"` on the primary button so solid/primary CVA paints
+/// (product default variant is outline-ish fill, not solid primary).
 #[test]
 fn probe_s003_settings_stacked_cards_with_chrome() {
-    let result = render_file(
-        &fixture("probe-s003-settings.sail"),
-        opts((480, 720), "light"),
-    )
-    .expect("render s003");
+    let mut o = opts((480, 720), "light");
+    o.file = Some("crates/sail/render/tests/fixtures/probe-s003-settings.sail".into());
+    let result = render_file(&fixture("probe-s003-settings.sail"), o).expect("render s003");
     assert!(!result.html.contains('{'), "expr leak: {}", result.html);
+    assert_joined_regions(&result, "s003");
 
     // Two cards must stack (different y), both full-ish width.
     let cards: Vec<_> = result
@@ -94,6 +228,10 @@ fn probe_s003_settings_stacked_cards_with_chrome() {
     );
     let c0 = cards[0];
     let c1 = cards[1];
+    assert_ne!(
+        c0.node_id, c1.node_id,
+        "sibling cards must have distinct SailInspect ids"
+    );
     assert!(
         c1.y > c0.y + c0.h * 0.5,
         "cards must stack vertically: y0={} h0={} y1={}",
@@ -156,16 +294,24 @@ fn probe_s003_settings_stacked_cards_with_chrome() {
         button.h
     );
 
+    // Bridge taffy region boxes → painted pixels (double-layout smoke).
+    // Card is a near-root host (coords ≈ viewport); nested button is
+    // parent-relative so its AABB is not a viewport rect.
+    assert!(
+        non_bg_in_region(&result, c0) > 50,
+        "card region AABB must contain painted chrome"
+    );
+    // Button chrome still asserted by geometry + golden primary fill.
+
     ensure_or_compare("probe-s003-settings-480x720", &result);
 }
 
 #[test]
 fn probe_s004_dashboard_sidebar_left_row() {
-    let result = render_file(
-        &fixture("probe-s004-dashboard.sail"),
-        opts((800, 500), "light"),
-    )
-    .expect("render s004");
+    let mut o = opts((800, 500), "light");
+    o.file = Some("crates/sail/render/tests/fixtures/probe-s004-dashboard.sail".into());
+    let result = render_file(&fixture("probe-s004-dashboard.sail"), o).expect("render s004");
+    assert_joined_regions(&result, "s004");
 
     // Navbar is top; content row places sidebar left of main.
     let navbars: Vec<_> = result
@@ -174,6 +320,11 @@ fn probe_s004_dashboard_sidebar_left_row() {
         .filter(|r| r.tag.as_deref() == Some("navbar"))
         .collect();
     assert!(!navbars.is_empty(), "navbar region missing");
+    assert!(
+        navbars[0].h >= 40.0,
+        "navbar shell height, got {}",
+        navbars[0].h
+    );
 
     // Content row under the navbar (taffy coords are parent-relative; the row
     // itself sits at y ≈ navbar height under the root column).
@@ -281,6 +432,48 @@ fn l1_ten_components_emit_regions() {
         badge.w,
         badge.h
     );
+
+    // Shell size floors for hosts that only had tag-presence before.
+    let card = by("card");
+    assert!(
+        card.h > 80.0 && card.w > 100.0,
+        "card shell too small: {}×{}",
+        card.w,
+        card.h
+    );
+    let navbar = by("navbar");
+    assert!(
+        navbar.h >= 40.0 && navbar.w > 100.0,
+        "navbar shell too small: {}×{}",
+        navbar.w,
+        navbar.h
+    );
+    let dialog = by("dialog");
+    assert!(
+        dialog.w > 40.0 && dialog.h > 20.0,
+        "dialog shell too small: {}×{}",
+        dialog.w,
+        dialog.h
+    );
+    let table = by("table");
+    assert!(
+        table.h > 40.0 && table.w > 40.0,
+        "table shell too small: {}×{}",
+        table.w,
+        table.h
+    );
+
+    // Paint inside host AABBs. Button/badge sit in a top row (parent-relative
+    // y≈0 under root column padding) — still near viewport origin. Card is
+    // a subsequent root child with larger y.
+    assert!(
+        non_bg_in_region(&result, btn) > 10,
+        "button AABB should contain chrome pixels"
+    );
+    assert!(
+        non_bg_in_region(&result, card) > 20,
+        "card AABB should contain chrome pixels"
+    );
 }
 
 /// Regions geometry equals the **check pass** layout boxes (same source + viewport).
@@ -290,46 +483,15 @@ fn l1_ten_components_emit_regions() {
 /// resolve, so boxes must agree within rounding.
 #[test]
 fn regions_match_layout_pass_taffy() {
-    let source = std::fs::read_to_string(fixture("probe-s003-settings.sail")).unwrap();
-    let viewport = (480u32, 720u32);
-    let result = sail_render::render_source(&source, opts(viewport, "light")).expect("render");
+    assert_regions_match_check("probe-s003-settings.sail", (480, 720));
+}
 
-    let preprocessed = sail_compiler::parse::preprocess::preprocess(&source).unwrap();
-    let scan =
-        sail_layout::check_preprocessed(&preprocessed, (viewport.0 as f32, viewport.1 as f32))
-            .expect("layout check (check_preprocessed)");
+#[test]
+fn regions_match_layout_pass_taffy_s004() {
+    assert_regions_match_check("probe-s004-dashboard.sail", (800, 500));
+}
 
-    // check_preprocessed is the check-pass entry; it must produce the box tree
-    // even when overflow diagnostics fire (card overflow:clip + chrome is a
-    // known taffy/skin tension — not a region join failure).
-    assert!(
-        !scan.boxes.is_empty(),
-        "check_preprocessed produced no boxes"
-    );
-
-    // Match regions to check-pass boxes by document order (both skip root).
-    assert_eq!(
-        result.regions.len(),
-        scan.boxes.len(),
-        "region count vs check_preprocessed boxes"
-    );
-    let tol = 0.6_f32;
-    for (i, (r, b)) in result.regions.iter().zip(scan.boxes.iter()).enumerate() {
-        assert!(
-            (r.x - b.x).abs() <= tol
-                && (r.y - b.y).abs() <= tol
-                && (r.w - b.width).abs() <= tol
-                && (r.h - b.height).abs() <= tol,
-            "region/check box mismatch at {i}: region=({}, {}, {}, {}) check=({}, {}, {}, {}) tag={}",
-            r.x,
-            r.y,
-            r.w,
-            r.h,
-            b.x,
-            b.y,
-            b.width,
-            b.height,
-            b.tag
-        );
-    }
+#[test]
+fn regions_match_layout_pass_taffy_l1_components() {
+    assert_regions_match_check("l1-components.sail", (640, 900));
 }

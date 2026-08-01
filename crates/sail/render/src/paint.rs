@@ -132,6 +132,12 @@ impl StyleSheet {
     }
 
     /// Resolve paint decls for a lowered element (classes + tag + attrs + empty).
+    ///
+    /// **Cascade invariant:** matching rules append in **host class-list order**
+    /// (then declaration order within a rule). `Paint::from_decls` last-write-wins
+    /// per property — not CSS specificity. Host emit must stamp CVA compounds
+    /// (e.g. `[tone][variant]` fills) **after** base classes like
+    /// `sx-bgtransparent`, or primary fills are crushed by earlier matches.
     pub fn decls_for_element(&self, elem: &Element) -> Vec<(String, String)> {
         let classes: Vec<&str> = elem.class.split_whitespace().collect();
         let is_empty = elem.children.is_empty() && elem.text.trim().is_empty();
@@ -682,6 +688,8 @@ pub fn parse_px(css: &str) -> Option<f32> {
 mod tests {
     use super::*;
     use crate::theme::{ThemePalette, ThemeSelect};
+    use sail_layout::html::Element;
+    use std::collections::HashMap;
 
     #[test]
     fn parses_atomic_rules() {
@@ -699,5 +707,92 @@ mod tests {
         let sheet = StyleSheet::parse(".sx-bgprimary{background-color:var(--primary)}");
         let paint = Paint::from_decls(&sheet.decls_for_classes("sx-bgprimary"), &palette);
         assert!(paint.background_color.is_some(), "primary must paint");
+    }
+
+    /// Hosts stamp every CVA class; only attr-qualified compounds may paint.
+    /// Cascade is **class-list order** (last matching decl wins in
+    /// `Paint::from_decls`) — compounds must stamp after base transparent.
+    #[test]
+    fn cva_attr_selectors_filter_and_class_order_wins() {
+        let sheet = StyleSheet::parse(
+            r#"
+            .sx-bgtransparent{background-color:transparent}
+            [variant='default'].sx-variantdefault-bgbackground{background-color:var(--background)}
+            [variant='solid'].sx-variantsolid-bgforeground{background-color:var(--foreground)}
+            [tone='primary'][variant='solid'].sx-toneprimaryvariantsolid-bgprimary{background-color:var(--primary)}
+            [tone='info'][variant='solid'].sx-toneinfovariantsolid-bginfo{background-color:var(--info)}
+            "#,
+        );
+
+        // Real-ish stamp: base + all variants/tones; attrs select solid+primary.
+        let mut attrs = HashMap::new();
+        attrs.insert("variant".into(), "solid".into());
+        attrs.insert("tone".into(), "primary".into());
+        let host = Element {
+            tag: "button".into(),
+            class: [
+                "sx-bgtransparent",
+                "sx-variantdefault-bgbackground",
+                "sx-variantsolid-bgforeground",
+                "sx-toneinfovariantsolid-bginfo",
+                "sx-toneprimaryvariantsolid-bgprimary",
+            ]
+            .join(" "),
+            attrs,
+            ..Default::default()
+        };
+        let decls = sheet.decls_for_element(&host);
+        let bgs: Vec<&str> = decls
+            .iter()
+            .filter(|(k, _)| k == "background-color")
+            .map(|(_, v)| v.as_str())
+            .collect();
+        // transparent base + solid foreground + primary (info tone must NOT match).
+        assert!(
+            bgs.contains(&"transparent"),
+            "base transparent must match: {bgs:?}"
+        );
+        assert!(
+            bgs.contains(&"var(--foreground)"),
+            "solid variant fill: {bgs:?}"
+        );
+        assert!(
+            bgs.contains(&"var(--primary)"),
+            "primary+solid compound: {bgs:?}"
+        );
+        assert!(
+            !bgs.contains(&"var(--info)"),
+            "mismatched tone must not contribute: {bgs:?}"
+        );
+        assert_eq!(
+            bgs.last().copied(),
+            Some("var(--primary)"),
+            "class-list order: compound after base → last write is primary ({bgs:?})"
+        );
+
+        // Default variant alone: no primary compound.
+        let mut attrs = HashMap::new();
+        attrs.insert("variant".into(), "default".into());
+        let def = Element {
+            tag: "button".into(),
+            class: "sx-bgtransparent sx-variantdefault-bgbackground sx-toneprimaryvariantsolid-bgprimary"
+                .into(),
+            attrs,
+            ..Default::default()
+        };
+        let def_decls = sheet.decls_for_element(&def);
+        let def_bgs: Vec<&str> = def_decls
+            .iter()
+            .filter(|(k, _)| k == "background-color")
+            .map(|(_, v)| v.as_str())
+            .collect();
+        assert!(
+            !def_bgs.contains(&"var(--primary)"),
+            "primary+solid class without matching attrs must not paint: {def_bgs:?}"
+        );
+        assert!(
+            def_bgs.contains(&"var(--background)"),
+            "default variant must paint: {def_bgs:?}"
+        );
     }
 }
