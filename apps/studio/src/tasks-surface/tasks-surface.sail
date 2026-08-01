@@ -194,6 +194,7 @@ export default controller(() => {
     </column>
   </scroll-area>
 
+  <!-- Sheet maxH; section scrolls. overflow auto on dialog = no silent-clip error under taffy (STUDIO-4). -->
   <dialog data-task-detail open={hasTaskSelected()} size="lg" side="end" sx={style.maxH(panel-vh-md).overflow(auto)}>
     <header>
       <row align="center" gap="2" nowrap justify="between" sx={style.w(full)}>
@@ -218,7 +219,7 @@ export default controller(() => {
             Saved {taskCommitPath()}
           </p>
         </if>
-        <scroll-area data-messages sx={style.minH(0).maxH(40)}>
+        <scroll-area data-messages sx={style.minH(0).maxH(panel-max-h-sm)}>
           <column gap="2">
             <if {!taskConv().length}>
               <empty-state variant="inline" size="sm" w="full">

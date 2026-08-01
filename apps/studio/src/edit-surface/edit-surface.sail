@@ -107,8 +107,8 @@ export default controller(() => {
         <button type="button" size="sm" variant="ghost" tone="muted" data-audit-snapshot on:click={onAuditSnapshot}>
           Audit snapshot
         </button>
-        <button type="button" size="sm" tone="primary" data-save-source title="Save (⌘S)" on:click={onSaveSource}>
-          Save ⌘S
+        <button type="button" size="sm" tone="primary" data-save-source title="Save (Ctrl/Cmd+S)" on:click={onSaveSource}>
+          Save
         </button>
       </row>
     </row>
@@ -129,7 +129,8 @@ export default controller(() => {
     </if>
 
     <if {hasOpenDoc()}>
-      <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0).maxH(panel-max-h-lg).overflow(hidden)}>
+      <!-- Viewport-relative max (not fixed 720px) so tall displays fill; minH/overflow keep flex chain. -->
+      <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0).h(full).maxH(panel-vh-lg).overflow(hidden)}>
         <column
           grow
           min-w="0"

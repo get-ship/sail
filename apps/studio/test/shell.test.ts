@@ -3,10 +3,13 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  ACTIVITY_BY_DIGIT,
   activityFromPath,
   appRouteBase,
+  hotkeyMod,
   hrefForActivity,
   pathForActivity,
+  railLabel,
   railRowsForPath,
 } from '../src/shell/shell-page-vm'
 
@@ -98,9 +101,40 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(chrome).toMatch(/route\?\.pathname|r\.pathname/)
   })
 
+  it('STUDIO-0 hotkeys: digit map, rail labels, save gate, status markers', () => {
+    expect(ACTIVITY_BY_DIGIT).toEqual({
+      '1': 'edit',
+      '2': 'checks',
+      '3': 'design',
+      '4': 'tasks',
+    })
+    const mod = hotkeyMod()
+    expect(mod === '⌘' || mod === 'Ctrl+').toBe(true)
+    expect(railLabel('edit', 'Ctrl+')).toBe('Edit Ctrl+1')
+    expect(railLabel('checks', '⌘')).toBe('Checks ⌘2')
+    const rows = railRowsForPath('/design', 'Ctrl+')
+    expect(rows.find((r) => r.id === 'design')?.label).toBe('Design Ctrl+3')
+    expect(rows.find((r) => r.id === 'design')?.active).toBe(true)
+
+    // Cmd/Ctrl+S gates on activePath only — not leftover es.view === 'source'
+    expect(shellVm).toMatch(/e\.key === 's'/)
+    expect(shellVm).toMatch(/activePath/)
+    expect(shellVm).not.toMatch(/view === ['"]source['"]/)
+    expect(shellVm).toMatch(/subscribeEdit/)
+    // Route effect / hotkey paint status from path (full sync, not rail-only)
+    expect(shellVm).toMatch(/sync\(href\)|sync\(p\)|sync\(path/)
+    expect(shellVm).toMatch(/ACTIVITY_BY_DIGIT/)
+
+    expect(chrome).toMatch(/data-save-status/)
+    expect(chrome).toMatch(/data-theme-status/)
+    expect(chrome).toMatch(/data-batch-count/)
+    expect(chrome).toMatch(/saveStatusLabel|themeStatusLabel/)
+  })
+
   it('batch new task uses deck navigate, not raw pushState', () => {
     expect(shellVm).toMatch(/from ['"]@ship\/deck\/router['"]/)
-    expect(shellVm).toMatch(/navigate\(hrefForActivity\('tasks'\)\)/)
+    expect(shellVm).toMatch(/hrefForActivity\('tasks'\)/)
+    expect(shellVm).toMatch(/navigate\(href\)/)
     expect(shellVm).not.toMatch(/history\.pushState/)
     expect(shellVm).not.toMatch(/PopStateEvent/)
   })

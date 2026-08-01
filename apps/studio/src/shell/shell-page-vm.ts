@@ -24,6 +24,7 @@ import {
   seedFilesFromPaths,
   setOpsClient,
   setProjectRoot,
+  subscribeEdit,
 } from '@ship/studio/edit'
 import {
   loadFindings,
@@ -53,18 +54,19 @@ import {
 import { canExitStudio, exitStudio } from './exit'
 import { projectPaths, resolveProjectRoot } from './project'
 
-/** Core rail: verb label, icon, tooltip hotkey (⌘N; Ctrl+N also bound). */
-const RAIL: Record<string, { label: string; icon: string; hotkey: string }> = {
-  edit: { label: 'Edit', icon: 'square-pen', hotkey: '⌘1' },
-  checks: { label: 'Checks', icon: 'list-checks', hotkey: '⌘2' },
-  design: { label: 'Design', icon: 'palette', hotkey: '⌘3' },
-  tasks: { label: 'Tasks', icon: 'list-todo', hotkey: '⌘4' },
-}
-const ACTIVITY_BY_DIGIT: Record<string, ActivityId> = {
+/** Digit → activity; Ctrl/Cmd+digit navigates. */
+export const ACTIVITY_BY_DIGIT: Record<string, ActivityId> = {
   '1': 'edit',
   '2': 'checks',
   '3': 'design',
   '4': 'tasks',
+}
+
+const RAIL: Record<string, { label: string; icon: string; digit: string }> = {
+  edit: { label: 'Edit', icon: 'square-pen', digit: '1' },
+  checks: { label: 'Checks', icon: 'list-checks', digit: '2' },
+  design: { label: 'Design', icon: 'palette', digit: '3' },
+  tasks: { label: 'Tasks', icon: 'list-todo', digit: '4' },
 }
 
 export type RailRow = {
@@ -77,9 +79,19 @@ export type RailRow = {
 }
 type BatchChipUi = { id: string; label: string; key: string }
 
-function railLabel(id: string): string {
+/** Platform mod glyph for tooltips — ⌘ on Apple, Ctrl+ elsewhere. */
+export function hotkeyMod(): string {
+  if (typeof navigator === 'undefined') return 'Ctrl+'
+  const p =
+    (navigator as { userAgentData?: { platform?: string } }).userAgentData?.platform ||
+    navigator.platform ||
+    ''
+  return /mac|iphone|ipad|ipod/i.test(p) ? '⌘' : 'Ctrl+'
+}
+
+export function railLabel(id: string, mod = hotkeyMod()): string {
   const r = RAIL[id]
-  if (r) return `${r.label} ${r.hotkey}`
+  if (r) return `${r.label} ${mod}${r.digit}`
   return id.charAt(0).toUpperCase() + id.slice(1)
 }
 
@@ -122,11 +134,11 @@ export function hrefForActivity(id: ActivityId): string {
 }
 
 /** Pure rail rows for a pathname — unit-tested without DOM navigation. */
-export function railRowsForPath(pathname: string): RailRow[] {
+export function railRowsForPath(pathname: string, mod = hotkeyMod()): RailRow[] {
   const active = activityFromPath(pathname)
   return (['edit', 'checks', 'design', 'tasks'] as ActivityId[]).map((id) => ({
     id,
-    label: railLabel(id),
+    label: railLabel(id, mod),
     icon: RAIL[id]?.icon || 'box',
     href: hrefForActivity(id),
     active: active === id,
@@ -140,14 +152,8 @@ function healthTone(h: 'ok' | 'degraded' | 'down'): string {
 const SERVICE_OK = { ok: 'Service', degraded: 'Service slow', down: 'Service down' } as const
 const LIVE_OK = { ok: 'Live', degraded: 'Lagging', down: 'Offline' } as const
 
-export type ShellPageOpts = {
-  /**
-   * Live layout pathname (from deck-injected `route.pathname`).
-   * When chrome is reused across leaf navigations, this must be reactive —
-   * `popstate` alone never fires for SPA pushState.
-   */
-  pathname?: () => string
-}
+/** Live layout pathname (deck `route.pathname`) — reactive across SPA leaf nav. */
+export type ShellPageOpts = { pathname?: () => string }
 
 export function createShellPage(opts?: ShellPageOpts) {
   const rail = signal<RailRow[]>([])
@@ -162,13 +168,14 @@ export function createShellPage(opts?: ShellPageOpts) {
   const watchHealthLabel = signal('Live')
   const opsHealthTone = signal('success')
   const watchHealthTone = signal('success')
+  const mod = hotkeyMod()
 
   const readPath = () =>
     opts?.pathname?.() ??
     (typeof location !== 'undefined' ? location.pathname : '/edit')
 
   const syncRail = (pathname?: string) => {
-    rail.set(railRowsForPath(pathname ?? readPath()))
+    rail.set(railRowsForPath(pathname ?? readPath(), mod))
   }
 
   const syncTasks = () => {
@@ -188,17 +195,16 @@ export function createShellPage(opts?: ShellPageOpts) {
     setBadges(getShellState().checksBadge, uiThreadRows().length)
   }
 
-  const sync = () => {
+  const sync = (pathOverride?: string) => {
+    const path = pathOverride ?? readPath()
+    syncRail(path)
     const s = getShellState()
-    syncRail()
     const sel = s.selection.nodeId
     const selShort = sel ? sel.split('#').pop() || sel : null
     const es = getEditState()
     const dirty =
-      es.activePath && es.docs.get(es.activePath)?.source.dirty
-        ? 'Unsaved'
-        : 'Saved'
-    const route = pathForActivity(readPath()).replace(/^\//, '') || 'edit'
+      es.activePath && es.docs.get(es.activePath)?.source.dirty ? 'Unsaved' : 'Saved'
+    const route = pathForActivity(path).replace(/^\//, '') || 'edit'
     statusLine.set(
       [s.devUrl || 'Studio', route, selShort ? `sel ${selShort}` : null]
         .filter(Boolean)
@@ -218,7 +224,6 @@ export function createShellPage(opts?: ShellPageOpts) {
 
   mountAmbient(() => {
     if (typeof document !== 'undefined') {
-      // Studio workbench theme (warm charcoal + coral) — dogfood via design surface.
       document.documentElement.setAttribute('data-theme', 'studio')
       document.documentElement.setAttribute('data-mode', 'dark')
     }
@@ -237,18 +242,18 @@ export function createShellPage(opts?: ShellPageOpts) {
     setEditorSetting('vscode')
     seedFilesFromPaths(projectPaths(root))
     setBadges(0, 0)
-    const unsubShell = subscribeShell(sync)
+    const unsubShell = subscribeShell(() => sync())
     const unsubSel = bindSelectionToShell()
     const unsubBatch = bindBatchToShell()
     const unsubEditSel = bindEditSelection()
+    const unsubEdit = subscribeEdit(() => sync())
     const unsubTasks = subscribeTasks(() => sync())
-    // Live pathname: chrome reused across SPA leaf nav (pushState ≠ popstate).
+    // Live pathname: full sync so status route + rail stay aligned with SPA leaf.
     const stopRoute = effect(() => {
-      readPath()
-      syncRail()
+      const p = readPath()
+      sync(p)
     })
     const shell = getShellState()
-    // Dogfood skips nested studio iframe.
     const loadPreview = root !== 'apps/studio' && !root.endsWith('/apps/studio')
     void (async () => {
       let files = projectPaths(root)
@@ -258,7 +263,7 @@ export function createShellPage(opts?: ShellPageOpts) {
           if (listed.ok && listed.files?.length) files = listed.files
         }
       } catch {
-        /* seed paths */
+        /* seed */
       }
       seedFilesFromPaths(files)
       sync()
@@ -281,7 +286,7 @@ export function createShellPage(opts?: ShellPageOpts) {
         ])
         void loadFindings(openPath).then(() => sync())
       } catch {
-        /* explorer still seeded */
+        /* seeded explorer */
       }
       sync()
     })()
@@ -299,18 +304,18 @@ export function createShellPage(opts?: ShellPageOpts) {
       if (d.type === 'screenshot' && d.rect) void handleBridgeRegion('screenshot', d.rect)
     }
     const onKey = (e: KeyboardEvent) => {
-      const mod = e.metaKey || e.ctrlKey
-      if (mod && e.key === 's') {
-        const es = getEditState()
-        if (es.view === 'source' && es.activePath) {
-          e.preventDefault()
-          void saveActiveSource().then(() => sync())
-        }
-      }
-      if (mod && ACTIVITY_BY_DIGIT[e.key]) {
+      const isMod = e.metaKey || e.ctrlKey
+      // Dual-pane edit: do not gate save on es.view (default is still 'preview').
+      if (isMod && e.key === 's' && getEditState().activePath) {
         e.preventDefault()
-        navigate(hrefForActivity(ACTIVITY_BY_DIGIT[e.key]))
-        syncRail()
+        void saveActiveSource().then(() => sync())
+        return
+      }
+      if (isMod && ACTIVITY_BY_DIGIT[e.key]) {
+        e.preventDefault()
+        const href = hrefForActivity(ACTIVITY_BY_DIGIT[e.key])
+        navigate(href)
+        sync(href) // target path — avoid stale route.pathname
         return
       }
       if (e.altKey && (e.key === 'p' || e.key === 'P') && activityFromPath(readPath()) === 'design') {
@@ -318,7 +323,7 @@ export function createShellPage(opts?: ShellPageOpts) {
         previewInApp()
         sync()
       }
-      if (e.key === 'Escape' && canExitStudio() && !mod && !e.altKey) {
+      if (e.key === 'Escape' && canExitStudio() && !isMod && !e.altKey) {
         e.preventDefault()
         exitStudio()
       }
@@ -334,6 +339,7 @@ export function createShellPage(opts?: ShellPageOpts) {
       unsubSel()
       unsubBatch()
       unsubEditSel()
+      unsubEdit()
       unsubTasks()
       if (typeof window !== 'undefined') {
         window.removeEventListener('message', onMsg)
@@ -343,31 +349,11 @@ export function createShellPage(opts?: ShellPageOpts) {
     }
   })
 
-  const onBatchNewTask = () => {
-    void newTaskFromBatch().then(() => {
-      navigate(hrefForActivity('tasks'))
-      sync()
-    })
-  }
-
-  const onBatchSendExisting = () => {
-    const id = getTasksState().selectedId
-    if (!id) return
-    void sendBatchToExisting(id).then(() => sync())
-  }
-
   const onThemeChange = (e: Event) => {
-    const detail = (e as CustomEvent).detail as { theme?: string; mode?: string } | undefined
-    const themeId = detail?.theme || 'studio'
-    const modeId = detail?.mode || 'dark'
-    setThemeMode(themeId, modeId)
-    setDesignMode((modeId as 'light' | 'dark') || 'dark')
+    const d = (e as CustomEvent).detail as { theme?: string; mode?: string } | undefined
+    setThemeMode(d?.theme || 'studio', d?.mode || 'dark')
+    setDesignMode((d?.mode as 'light' | 'dark') || 'dark')
     sync()
-  }
-
-  /** Test/helper: force rail resync for a path (also used when pathname opts change). */
-  const setRailPath = (pathname: string) => {
-    syncRail(pathname)
   }
 
   return {
@@ -386,9 +372,18 @@ export function createShellPage(opts?: ShellPageOpts) {
     showExit: canExitStudio(),
     onExitStudio: () => exitStudio(),
     onThemeChange,
-    onBatchNewTask,
-    onBatchSendExisting,
-    setRailPath,
+    onBatchNewTask: () => {
+      void newTaskFromBatch().then(() => {
+        const href = hrefForActivity('tasks')
+        navigate(href)
+        sync(href)
+      })
+    },
+    onBatchSendExisting: () => {
+      const id = getTasksState().selectedId
+      if (id) void sendBatchToExisting(id).then(() => sync())
+    },
+    setRailPath: (pathname: string) => syncRail(pathname),
     syncRail,
   }
 }
