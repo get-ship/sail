@@ -534,21 +534,20 @@ export function sourceForSave(path: string, source: string): {
   return autoFixOnSave(source, findings, state.autoFixMode)
 }
 
-/** Composed empty-state body: what was checked, when. */
+/** Composed empty-state body: what was checked, when. Null-run → honest idle. */
 export function uiEmptyCheckedSummary(): string {
+  if (!state.lastRunAt) return 'Not checked yet'
   const path = state.lastCheckedPath
-  const when = state.lastRunAt
-    ? new Date(state.lastRunAt).toLocaleTimeString()
-    : null
+  const when = new Date(state.lastRunAt).toLocaleTimeString()
   const parts: string[] = []
   if (path) {
     const base = path.split('/').pop() || path
     parts.push(`Checked ${base}`)
   } else {
-    parts.push('No path checked yet')
+    parts.push('Checked current path')
   }
   parts.push(state.lastLayoutChecked ? 'compiler + layout' : 'compiler')
-  if (when) parts.push(`at ${when}`)
+  parts.push(`at ${when}`)
   if (state.autoFixMode !== 'off') {
     parts.push(`autofix ${state.autoFixMode} (${state.autoFixAttributed})`)
   }

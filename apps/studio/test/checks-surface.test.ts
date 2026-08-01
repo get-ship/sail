@@ -818,6 +818,8 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
     )
     expect(surface).toMatch(/data-rule-group/)
     expect(surface).toMatch(/data-findings-table/)
+    expect(surface).toMatch(/data-findings-table-host/)
+    expect(surface).toMatch(/data-filter-severity/)
     expect(surface).toMatch(/Open in editor/)
     expect(surface).toMatch(/Select element/)
     expect(surface).toMatch(/data-finding-action="open-source"/)
@@ -827,8 +829,38 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
     expect(surface).toMatch(/data-recheck/)
     expect(surface).toMatch(/data-empty-checked/)
     expect(surface).toMatch(/data-apply-rule/)
-    expect(surface).toMatch(/Here's what was checked|emptyChecked/)
+    expect(surface).toMatch(/data-rule-info|showInfoBadge/)
+    expect(surface).toMatch(/Here's what was checked|emptyChecked|Run checks/)
+    expect(surface).toMatch(/showDiff|showSuggestDiff/)
     expect(vm).toMatch(/createTable/)
+    expect(vm).toMatch(/assignTableHost/)
+    expect(vm).toMatch(/groupsFromTable|table\.rows\s*\(/)
+    expect(vm).toMatch(/toggleExpanded/)
+    expect(vm).toMatch(/setColumnFilter\s*\(\s*['"]severity['"]/)
     expect(vm).toMatch(/grouping:\s*\[\s*['"]rule['"]\s*\]/)
+  })
+
+  it('assignTableHost binds table identity on data-findings-table-host', async () => {
+    const { assignTableHost } = await import('../src/checks/assign-table')
+    const host = document.createElement('div')
+    host.setAttribute('data-findings-table-host', '')
+    document.body.appendChild(host)
+    // Stand-in for createTable facade — same identity property the CE reads.
+    const table = {
+      rows: () => [],
+      toggleExpanded: () => {},
+      setColumnFilter: () => {},
+      setRowSelection: () => {},
+    }
+    assignTableHost('[data-findings-table-host]', table)
+    expect(
+      (host as HTMLElement & { table?: unknown }).table,
+    ).toBe(table)
+    // Idempotent when same identity
+    assignTableHost('[data-findings-table-host]', table)
+    expect(
+      (host as HTMLElement & { table?: unknown }).table,
+    ).toBe(table)
+    host.remove()
   })
 })

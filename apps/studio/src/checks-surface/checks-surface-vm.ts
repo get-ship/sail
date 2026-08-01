@@ -1,6 +1,7 @@
 /**
- * Checks surface VM — compiler findings inbox grouped by rule (createTable),
- * expandable why + sail-diff suggest, autofix off|suggest|apply, re-check.
+ * Checks surface VM — createTable owns the findings inbox (grouping/sort/
+ * filter/selection/expand). Host gets table identity via assignTableHost.
+ * Detail chrome (why, sail-diff, exits) sits on selected leaf rows.
  */
 import { createTable, type Table } from '@ship/sail-primitives'
 import { mountAmbient, signal } from '@ship/sail-runtime'
@@ -10,6 +11,7 @@ import {
   applyFixReview,
   applyFixToSource,
   applyRuleFixes,
+  assignTableHost,
   closeFixReview,
   findingIsMachineFixable,
   getChecksState,
@@ -25,13 +27,11 @@ import {
   setRuleFilter,
   snippetForFinding,
   subscribeChecks,
-  toggleRuleCollapsed,
   toFindingRows,
   uiEmptyCheckedSummary,
   uiFileOptions,
   uiFixableCount,
   uiReviewAcceptedCount,
-  uiRuleGroups,
   uiRuleOptions,
   uiTableFindings,
   type AutoFixMode,
@@ -57,9 +57,8 @@ type FindingRowUi = {
   showFixChip: boolean
   showApply: boolean
   hasSuggest: boolean
-  /** sail-diff `from` — original span line (or empty). */
+  showDiff: boolean
   diffFrom: string
-  /** sail-diff `to` — suggest / rewritten line. */
   diffTo: string
   whyText: string
   snippet: SnippetLineUi[]
@@ -69,11 +68,14 @@ type FindingRowUi = {
 
 type RuleGroupUi = {
   rule: string
+  groupRowId: string
   countLabel: string
   errorBadge: string
   warningBadge: string
+  infoBadge: string
   showErrorBadge: boolean
   showWarningBadge: boolean
+  showInfoBadge: boolean
   collapsed: boolean
   open: boolean
   showApplyAll: boolean
@@ -101,12 +103,22 @@ type AutoFixOptUi = {
   key: string
 }
 
-type FindingTableRow = {
+/** Flat row fed to createTable — engine groups by `rule`. */
+export type FindingTableRow = {
   id: string
   severity: string
+  severityRank: number
   rule: string
   fileSpan: string
   message: string
+  path: string
+}
+
+const SEV_RANK: Record<string, number> = {
+  error: 0,
+  warning: 1,
+  info: 2,
+  hint: 3,
 }
 
 function severityTone(severity: string): string {
@@ -118,10 +130,15 @@ function severityTone(severity: string): string {
 function severityLabel(severity: string): string {
   if (severity === 'error') return 'error'
   if (severity === 'warning') return 'warn'
+  if (severity === 'info') return 'info'
   return severity || 'info'
 }
 
-function rowUi(f: Finding, selectedId: string | null): FindingRowUi {
+function rowUi(
+  f: Finding,
+  selectedId: string | null,
+  showSuggestDiff: boolean,
+): FindingRowUi {
   const base = toFindingRows([f], selectedId)[0]!
   const snip = snippetForFinding(f)
   const machine = findingIsMachineFixable(f)
@@ -130,7 +147,6 @@ function rowUi(f: Finding, selectedId: string | null): FindingRowUi {
     snip.lines[0]?.text ??
     ''
   const suggest = f.suggest ?? ''
-  // Suggest mode: true diff when we have a rewrite target; else empty.
   let diffFrom = ''
   let diffTo = ''
   if (machine) {
@@ -148,6 +164,7 @@ function rowUi(f: Finding, selectedId: string | null): FindingRowUi {
     diffFrom = spanLine
     diffTo = suggest
   }
+  const hasSuggest = !!suggest || (diffFrom.length > 0 && diffTo.length > 0)
   return {
     id: f.id,
     severity: f.severity,
@@ -161,7 +178,8 @@ function rowUi(f: Finding, selectedId: string | null): FindingRowUi {
     showBothViewports: base.showBothViewports,
     showFixChip: machine || base.showFixChip,
     showApply: machine && APPLY_FIX_READY,
-    hasSuggest: !!suggest || (diffFrom.length > 0 && diffTo.length > 0),
+    hasSuggest,
+    showDiff: hasSuggest && showSuggestDiff,
     diffFrom,
     diffTo,
     whyText: f.why,
@@ -199,19 +217,85 @@ function resolveCheckPath(): string {
   )
 }
 
+/**
+ * Walk engine `table.rows()` (group + leaf flatten) into UI rule groups.
+ * This is the single list source — not a parallel store groupByRule path.
+ */
+function groupsFromTable(
+  table: Table<FindingTableRow>,
+  findingsById: Map<string, Finding>,
+  selectedId: string | null,
+  showSuggestDiff: boolean,
+): RuleGroupUi[] {
+  const out: RuleGroupUi[] = []
+  let current: RuleGroupUi | null = null
+  for (const row of table.rows()) {
+    if (row.getIsGrouped()) {
+      const rule = String(
+        row.getGroupingValue('rule') ?? row.getValue('rule') ?? '',
+      )
+      const leaves = row.getLeafRows()
+      let errorCount = 0
+      let warningCount = 0
+      let infoCount = 0
+      let fixableCount = 0
+      for (const leaf of leaves) {
+        const sev = String(leaf.getValue('severity') ?? '')
+        if (sev === 'error') errorCount++
+        else if (sev === 'warning') warningCount++
+        else infoCount++
+        const f = findingsById.get(leaf.id)
+        if (f && findingIsMachineFixable(f)) fixableCount++
+      }
+      current = {
+        rule,
+        groupRowId: row.id,
+        countLabel: String(leaves.length),
+        errorBadge: errorCount > 0 ? `${errorCount}e` : '',
+        warningBadge: warningCount > 0 ? `${warningCount}w` : '',
+        infoBadge: infoCount > 0 ? `${infoCount}i` : '',
+        showErrorBadge: errorCount > 0,
+        showWarningBadge: warningCount > 0,
+        showInfoBadge: infoCount > 0,
+        collapsed: !row.getIsExpanded(),
+        open: row.getIsExpanded(),
+        showApplyAll: fixableCount > 0 && APPLY_FIX_READY,
+        applyAllLabel:
+          fixableCount > 0 ? `Apply all (${fixableCount})` : 'Apply all',
+        key: rule,
+        rows: [],
+      }
+      out.push(current)
+    } else if (current) {
+      const f = findingsById.get(row.id)
+      if (f) current.rows.push(rowUi(f, selectedId, showSuggestDiff))
+    }
+  }
+  return out
+}
+
 export function createChecksSurface() {
   const ruleGroups = signal<RuleGroupUi[]>([])
   const hasFindings = signal(false)
-  const emptyTitle = signal('No findings — project is clean')
-  const emptyBody = signal('Run checks to see what the compiler and layout pass cover.')
-  const emptyChecked = signal('')
+  const emptyTitle = signal('Run checks')
+  const emptyBody = signal(
+    'Re-check to load compiler and layout findings for the open path.',
+  )
+  const emptyChecked = signal('Not checked yet')
   const errorCountLabel = signal('0 errors')
   const warningCountLabel = signal('0 warnings')
   const checksStatusNote = signal('All clear')
   const ruleOpts = signal<OptUi[]>([{ value: '', label: 'All rules', key: 'all' }])
   const fileOpts = signal<OptUi[]>([{ value: '', label: 'All files', key: 'all' }])
+  const severityOpts = signal<OptUi[]>([
+    { value: '', label: 'All severities', key: 'all' },
+    { value: 'error', label: 'Errors', key: 'error' },
+    { value: 'warning', label: 'Warnings', key: 'warning' },
+    { value: 'info', label: 'Info', key: 'info' },
+  ])
   const ruleFilterVal = signal('')
   const fileFilterVal = signal('')
+  const severityFilterVal = signal('')
   const hasFixable = signal(false)
   const fixableCountLabel = signal('Review fixes')
   const reviewOpen = signal(false)
@@ -235,71 +319,127 @@ export function createChecksSurface() {
   const table: Table<FindingTableRow> = createTable<FindingTableRow>({
     data: dataSig,
     columns: [
-      { id: 'severity', accessorKey: 'severity', header: 'Severity', enableGrouping: false },
-      { id: 'rule', accessorKey: 'rule', header: 'Rule', enableGrouping: true },
-      { id: 'fileSpan', accessorKey: 'fileSpan', header: 'Span' },
-      { id: 'message', accessorKey: 'message', header: 'Summary' },
+      {
+        id: 'severity',
+        accessorKey: 'severity',
+        header: 'Severity',
+        enableGrouping: false,
+        enableColumnFilter: true,
+        enableSorting: true,
+        // Stable severity order via numeric rank column companion.
+        sortFn: (a, b) => {
+          const ra = Number(a.original.severityRank ?? 99)
+          const rb = Number(b.original.severityRank ?? 99)
+          return ra - rb
+        },
+      },
+      {
+        id: 'rule',
+        accessorKey: 'rule',
+        header: 'Rule',
+        enableGrouping: true,
+        enableColumnFilter: true,
+      },
+      {
+        id: 'fileSpan',
+        accessorKey: 'fileSpan',
+        header: 'Span',
+        enableColumnFilter: true,
+      },
+      {
+        id: 'message',
+        accessorKey: 'message',
+        header: 'Summary',
+      },
+      {
+        id: 'severityRank',
+        accessorKey: 'severityRank',
+        header: 'Rank',
+        enableHiding: true,
+        enableColumnFilter: false,
+      },
     ],
     getRowId: (r) => r.id,
     grouping: ['rule'],
     enableExpanding: true,
     expanded: true,
     enableSorting: true,
+    enableFilters: true,
     enableRowSelection: true,
+    initialState: {
+      sorting: [{ id: 'severity', desc: false }],
+      columnVisibility: { severityRank: false },
+    },
   })
+
+  const bindHost = () => {
+    assignTableHost('[data-findings-table-host]', table)
+  }
 
   const sync = () => {
     const cs = getChecksState()
-    const groups = uiRuleGroups()
-    const tableRows = uiTableFindings().map((f) => ({
-      id: f.id,
-      severity: f.severity,
-      rule: f.rule,
-      fileSpan: f.fileSpan,
-      message: f.message,
-    }))
-    dataSig.set(tableRows)
-    // Drive selection into sail-table engine (identity parity with explorer).
-    if (cs.selectedId) {
+    const mode = cs.autoFixMode
+    const suggestOn = mode === 'suggest' || mode === 'apply'
+    showSuggestDiff.set(suggestOn)
+
+    // Ordered leaves for createTable (count-desc rule order → first-bucket groups).
+    const ordered = uiTableFindings()
+    const findingsById = new Map(ordered.map((f) => [f.id, f]))
+    dataSig.set(
+      ordered.map((f) => ({
+        id: f.id,
+        severity: String(f.severity),
+        severityRank: SEV_RANK[String(f.severity)] ?? 99,
+        rule: f.rule,
+        fileSpan: f.fileSpan,
+        message: f.message,
+        path: f.path,
+      })),
+    )
+
+    // Severity facet lives on the table engine (not a parallel list filter).
+    const sev = severityFilterVal()
+    if (sev) table.setColumnFilter('severity', sev)
+    else table.setColumnFilter('severity', undefined)
+
+    // Selection identity on the engine.
+    if (cs.selectedId && findingsById.has(cs.selectedId)) {
       table.setRowSelection({ mode: 'include', ids: new Set([cs.selectedId]) })
     } else {
       table.resetRowSelection()
     }
 
-    ruleGroups.set(
-      groups.map((g) => ({
-        rule: g.rule,
-        countLabel: String(g.count),
-        errorBadge: g.errorCount > 0 ? `${g.errorCount}e` : '',
-        warningBadge: g.warningCount > 0 ? `${g.warningCount}w` : '',
-        showErrorBadge: g.errorCount > 0,
-        showWarningBadge: g.warningCount > 0,
-        collapsed: g.collapsed,
-        open: !g.collapsed,
-        showApplyAll: g.fixableCount > 0 && APPLY_FIX_READY,
-        applyAllLabel:
-          g.fixableCount > 0
-            ? `Apply all (${g.fixableCount})`
-            : 'Apply all',
-        key: g.rule,
-        rows: g.collapsed
-          ? []
-          : g.items.map((f) => rowUi(f, cs.selectedId)),
-      })),
-    )
-    const visible = groups.reduce((n, g) => n + g.count, 0)
-    hasFindings.set(visible > 0)
+    // THE inbox: walk engine rows (group + leaves) — sole list source.
+    const groups = groupsFromTable(table, findingsById, cs.selectedId, suggestOn)
+    ruleGroups.set(groups)
+
+    const leafCount = ordered.length
+    // After severity facet, engine may hide rows — use group leaf totals.
+    const facetVisible = groups.reduce((n, g) => n + Number(g.countLabel), 0)
+    hasFindings.set(facetVisible > 0)
     hasChecksError.set(!!cs.error)
     checksError.set(cs.error ?? '')
-    if (cs.findings.length > 0 && visible === 0) {
+
+    if (!cs.lastRunAt) {
+      emptyTitle.set('Run checks')
+      emptyBody.set(
+        'Re-check to load compiler and layout findings for the open path.',
+      )
+      emptyChecked.set('Not checked yet')
+    } else if (cs.findings.length > 0 && leafCount === 0) {
       emptyTitle.set('No findings match filters')
-      emptyBody.set('Clear rule or file filters to see all findings.')
+      emptyBody.set('Clear rule, file, or severity filters to see all findings.')
+      emptyChecked.set('')
+    } else if (facetVisible === 0 && leafCount > 0) {
+      emptyTitle.set('No findings match filters')
+      emptyBody.set('Clear rule, file, or severity filters to see all findings.')
       emptyChecked.set('')
     } else {
       emptyTitle.set('No findings — project is clean')
       emptyBody.set("Here's what was checked.")
       emptyChecked.set(uiEmptyCheckedSummary())
     }
+
     errorCountLabel.set(
       `${cs.errorCount} error${cs.errorCount === 1 ? '' : 's'}`,
     )
@@ -343,7 +483,6 @@ export function createChecksSurface() {
     const acc = uiReviewAcceptedCount()
     applyFixesLabel.set(`Apply ${acc} fix${acc === 1 ? '' : 'es'}`)
     canApplyFixes.set(acc > 0)
-    const mode = cs.autoFixMode
     autoFixOpts.set(
       (['off', 'suggest', 'apply'] as AutoFixMode[]).map((m) => ({
         mode: m,
@@ -359,16 +498,19 @@ export function createChecksSurface() {
           ? 'Autofix suggest'
           : 'Autofix apply',
     )
-    showSuggestDiff.set(mode === 'suggest' || mode === 'apply')
     lastRunLabel.set(formatLastRun(cs.lastRunAt))
     isLoading.set(cs.loading)
     recheckLabel.set(cs.loading ? 'Checking…' : 'Re-check')
+
+    // Bind engine identity to the host after DOM paint.
+    queueMicrotask(bindHost)
   }
 
   sync()
 
   mountAmbient(() => {
     const unsub = subscribeChecks(() => sync())
+    queueMicrotask(bindHost)
     return () => unsub()
   })
 
@@ -382,6 +524,35 @@ export function createChecksSurface() {
     sync()
   }
 
+  const onSeverityFilter = (e: Event) => {
+    const v = (e.target as HTMLSelectElement).value || ''
+    severityFilterVal.set(v)
+    if (v) table.setColumnFilter('severity', v)
+    else table.setColumnFilter('severity', undefined)
+    // Re-walk engine rows after facet change (no store emit).
+    const cs = getChecksState()
+    const ordered = uiTableFindings()
+    const findingsById = new Map(ordered.map((f) => [f.id, f]))
+    ruleGroups.set(
+      groupsFromTable(
+        table,
+        findingsById,
+        cs.selectedId,
+        showSuggestDiff(),
+      ),
+    )
+    const facetVisible = ruleGroups().reduce(
+      (n, g) => n + Number(g.countLabel),
+      0,
+    )
+    hasFindings.set(facetVisible > 0)
+    if (facetVisible === 0 && ordered.length > 0) {
+      emptyTitle.set('No findings match filters')
+      emptyBody.set('Clear rule, file, or severity filters to see all findings.')
+      emptyChecked.set('')
+    }
+  }
+
   const onFindingClick = (e: Event) => {
     const t = (e.target as Element | null)?.closest?.(
       '[data-finding-id]',
@@ -391,7 +562,13 @@ export function createChecksSurface() {
     if ((e.target as Element).closest?.('[data-rule-toggle]')) return
     if ((e.target as Element).closest?.('[data-apply-rule]')) return
     const id = t.dataset.findingId
-    selectFinding(getChecksState().selectedId === id ? null : id)
+    const next = getChecksState().selectedId === id ? null : id
+    selectFinding(next)
+    if (next) {
+      table.setRowSelection({ mode: 'include', ids: new Set([next]) })
+    } else {
+      table.resetRowSelection()
+    }
     sync()
   }
 
@@ -427,10 +604,39 @@ export function createChecksSurface() {
     const btn = (e.target as Element | null)?.closest?.(
       '[data-rule-toggle]',
     ) as HTMLElement | null
-    if (!btn?.dataset.ruleToggle) return
+    // Prefer engine group row id (data-group-row-id); fall back to rule name.
+    const groupId =
+      btn?.dataset.groupRowId ||
+      btn?.dataset.ruleToggle ||
+      ''
+    if (!groupId) return
     e.stopPropagation?.()
-    toggleRuleCollapsed(btn.dataset.ruleToggle)
-    sync()
+    let expandId = groupId
+    if (!expandId.startsWith('group:')) {
+      const hit = table
+        .rows()
+        .find(
+          (r) =>
+            r.getIsGrouped() &&
+            String(r.getGroupingValue('rule')) === groupId,
+        )
+      if (hit) expandId = hit.id
+      else expandId = `group:0:rule:${groupId}`
+    }
+    // Engine expand owns collapse — not a parallel collapsedRules list.
+    table.toggleExpanded(expandId)
+    // Re-walk engine after expand mutation.
+    const cs = getChecksState()
+    const ordered = uiTableFindings()
+    const findingsById = new Map(ordered.map((f) => [f.id, f]))
+    ruleGroups.set(
+      groupsFromTable(
+        table,
+        findingsById,
+        cs.selectedId,
+        showSuggestDiff(),
+      ),
+    )
   }
 
   const onApplyRule = (e: Event) => {
@@ -502,8 +708,10 @@ export function createChecksSurface() {
     checksStatusNote,
     ruleOpts,
     fileOpts,
+    severityOpts,
     ruleFilterVal,
     fileFilterVal,
+    severityFilterVal,
     hasFixable,
     fixableCountLabel,
     reviewOpen,
@@ -516,9 +724,11 @@ export function createChecksSurface() {
     isLoading,
     recheckLabel,
     showSuggestDiff,
+    /** Exposed for host/tests — createTable identity bound to data-findings-table-host. */
     table,
     onRuleFilter,
     onFileFilter,
+    onSeverityFilter,
     onFindingClick,
     onFindingAction,
     onRuleToggle,

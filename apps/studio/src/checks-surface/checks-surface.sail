@@ -1,6 +1,6 @@
 <!--
-  <checks-surface> — compiler findings, triaged to done.
-  Rule groups (createTable) · verbatim why · sail-diff suggest · two exits.
+  <checks-surface> — createTable owns the findings inbox (host.table).
+  Rule groups · verbatim why · sail-diff suggest · two exits.
   Autofix off|suggest|apply · re-check · composed empty. Ban-clean.
 -->
 <controller>
@@ -20,8 +20,10 @@ export default controller(() => {
     checksStatusNote: vm.checksStatusNote,
     ruleOpts: vm.ruleOpts,
     fileOpts: vm.fileOpts,
+    severityOpts: vm.severityOpts,
     ruleFilterVal: vm.ruleFilterVal,
     fileFilterVal: vm.fileFilterVal,
+    severityFilterVal: vm.severityFilterVal,
     hasFixable: vm.hasFixable,
     fixableCountLabel: vm.fixableCountLabel,
     reviewOpen: vm.reviewOpen,
@@ -35,6 +37,7 @@ export default controller(() => {
     showSuggestDiff: vm.showSuggestDiff,
     onRuleFilter: (e: Event) => vm.onRuleFilter(e),
     onFileFilter: (e: Event) => vm.onFileFilter(e),
+    onSeverityFilter: (e: Event) => vm.onSeverityFilter(e),
     onFindingClick: (e: Event) => vm.onFindingClick(e),
     onFindingAction: (e: Event) => vm.onFindingAction(e),
     onRuleToggle: (e: Event) => vm.onRuleToggle(e),
@@ -131,6 +134,18 @@ export default controller(() => {
       </for>
     </select>
     <separator orientation="vertical" sx={style.h(4)} />
+    <select
+      data-filter-severity
+      aria-label="Filter by severity"
+      value={severityFilterVal()}
+      on:change={onSeverityFilter}
+      w="28"
+    >
+      <for {severityOpts()} as="opt" key={opt.key}>
+        <option value={opt.value}>{opt.label}</option>
+      </for>
+    </select>
+    <separator orientation="vertical" sx={style.h(4)} />
     <row
       data-autofix-control
       align="center"
@@ -170,15 +185,20 @@ export default controller(() => {
     </row>
   </if>
 
+  <!--
+    Findings host: createTable identity assigned to host.table (assignTableHost).
+    Columns severity · rule · file:span · summary; groups from table.rows().
+  -->
   <scroll-area
     data-findings-list
     data-findings-table
+    data-findings-table-host
     grow
     min-w="0"
     on:click={onFindingClick}
     sx={style.minH(0).h(full).basis(0)}
   >
-    <column gap="2" sx={style.padY(1)}>
+    <column gap="0" sx={style.padY(1)}>
       <if {!hasFindings()}>
         <if {!hasChecksError()}>
           <empty-state
@@ -195,174 +215,199 @@ export default controller(() => {
           </empty-state>
         </if>
       </if>
-      <for {ruleGroups()} as="g" key={g.key}>
-        <column gap="0" data-rule-group={g.rule} data-severity-group="rule">
-          <row
-            align="center"
-            gap="2"
-            nowrap
-            data-rule-header={g.rule}
-            sx={style.h(6).padX(3).when({ hover: style.bg(hover-bg) })}
-          >
-            <button
-              type="button"
-              size="sm"
-              variant="ghost"
-              tone="muted"
-              data-rule-toggle={g.rule}
-              aria-expanded={g.open ? 'true' : 'false'}
-              on:click={onRuleToggle}
+      <if {hasFindings()}>
+        <table data-findings-grid hoverable sx={style.w(full)}>
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Rule</th>
+              <th>Span</th>
+              <th>Summary</th>
+            </tr>
+          </thead>
+        </table>
+        <for {ruleGroups()} as="g" key={g.key}>
+          <column gap="0" data-rule-group={g.rule} data-severity-group="rule">
+            <row
+              align="center"
+              gap="2"
+              nowrap
+              data-rule-header={g.rule}
+              data-group-row-id={g.groupRowId}
+              sx={style.h(6).padX(3).when({ hover: style.bg(hover-bg) })}
             >
-              {g.open ? '▾' : '▸'}
-            </button>
-            <p
-              grow
-              min-w="0"
-              sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).fontFamily(mono).truncate()}
-            >
-              {g.rule}
-            </p>
-            <if {g.showErrorBadge}>
-              <badge tone="destructive" size="sm" variant="soft" data-rule-errors>
-                {g.errorBadge}
-              </badge>
-            </if>
-            <if {g.showWarningBadge}>
-              <badge tone="warning" size="sm" variant="soft" data-rule-warnings>
-                {g.warningBadge}
-              </badge>
-            </if>
-            <p sx={style.fontSize(xs).fg(muted-foreground)}>{g.countLabel}</p>
-            <if {g.showApplyAll}>
               <button
                 type="button"
                 size="sm"
-                variant="soft"
-                tone="primary"
-                data-apply-rule={g.rule}
-                on:click={onApplyRule}
+                variant="ghost"
+                tone="muted"
+                data-rule-toggle={g.rule}
+                data-group-row-id={g.groupRowId}
+                aria-expanded={g.open ? 'true' : 'false'}
+                on:click={onRuleToggle}
               >
-                {g.applyAllLabel}
+                {g.open ? '▾' : '▸'}
               </button>
-            </if>
-          </row>
-          <for {g.rows} as="f" key={f.key}>
-            <collapsible
-              open={f.expanded}
-              data-finding-id={f.id}
-              data-selected={f.selected ? 'true' : 'false'}
-              data-severity={f.severity}
-              data-rule={f.rule}
-            >
-              <row
-                slot="trigger"
-                gap="2"
-                align="center"
-                nowrap
-                sx={style.h(6).padX(3).w(full).when({ hover: style.bg(hover-bg) })}
+              <p
+                grow
+                min-w="0"
+                sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).fontFamily(mono).truncate()}
               >
-                <badge
-                  data-severity-pill
-                  tone={f.severityTone}
+                {g.rule}
+              </p>
+              <if {g.showErrorBadge}>
+                <badge tone="destructive" size="sm" variant="soft" data-rule-errors>
+                  {g.errorBadge}
+                </badge>
+              </if>
+              <if {g.showWarningBadge}>
+                <badge tone="warning" size="sm" variant="soft" data-rule-warnings>
+                  {g.warningBadge}
+                </badge>
+              </if>
+              <if {g.showInfoBadge}>
+                <badge tone="muted" size="sm" variant="soft" data-rule-info>
+                  {g.infoBadge}
+                </badge>
+              </if>
+              <p sx={style.fontSize(xs).fg(muted-foreground)}>{g.countLabel}</p>
+              <if {g.showApplyAll}>
+                <button
+                  type="button"
                   size="sm"
                   variant="soft"
+                  tone="primary"
+                  data-apply-rule={g.rule}
+                  on:click={onApplyRule}
                 >
-                  {f.severityLabel}
-                </badge>
-                <p grow min-w="0" sx={style.fontSize(sm).truncate()}>{f.message}</p>
-                <if {f.showFixChip}>
-                  <p data-fix-chip sx={style.fontSize(xs).fg(primary)}>fix</p>
-                </if>
-                <p
-                  data-file-span
-                  sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}
-                >
-                  {f.fileSpan}
-                </p>
-              </row>
-              <column
-                gap="2"
-                sx={style.padX(2).padB(2)}
-                on:click={onFindingAction}
+                  {g.applyAllLabel}
+                </button>
+              </if>
+            </row>
+            <for {g.rows} as="f" key={f.key}>
+              <collapsible
+                open={f.expanded}
+                data-finding-id={f.id}
+                data-selected={f.selected ? 'true' : 'false'}
+                data-severity={f.severity}
+                data-rule={f.rule}
               >
-                <card data-finding-detail variant="outline" padding="sm">
-                  <column gap="2">
-                    <p sx={style.fontSize(xs).fg(muted-foreground)}>Why</p>
-                    <pre
-                      data-why-text
-                      sx={style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm).overflow(auto).whitespace(pre-wrap)}
-                    >
-                      {f.whyText}
-                    </pre>
-                    <if {f.hasSuggest}>
-                      <column gap="1" data-why-suggest>
-                        <p sx={style.fontSize(xs).fg(muted-foreground)}>Suggestion</p>
-                        <sail-diff
-                          data-suggest-diff
-                          from={f.diffFrom}
-                          to={f.diffTo}
-                        ></sail-diff>
-                      </column>
-                    </if>
-                    <column
-                      data-why-snippet
-                      gap="0"
-                      sx={style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm)}
-                    >
-                      <for {f.snippet} as="ln" key={ln.key}>
-                        <p
-                          data-snippet-line={ln.n}
-                          data-highlight={ln.highlight ? 'true' : 'false'}
-                        >
-                          {ln.n} {ln.text}
-                        </p>
-                      </for>
-                    </column>
-                    <row gap="2" align="center" nowrap>
-                      <button
-                        type="button"
-                        size="sm"
-                        data-finding-action="open-source"
-                        data-open-source-url={f.openSourceUrl}
-                        data-deeplink-url={f.openSourceUrl}
-                        variant="soft"
-                        tone="muted"
+                <row
+                  slot="trigger"
+                  gap="2"
+                  align="center"
+                  nowrap
+                  sx={style.h(6).padX(3).w(full).when({ hover: style.bg(hover-bg) })}
+                >
+                  <badge
+                    data-severity-pill
+                    tone={f.severityTone}
+                    size="sm"
+                    variant="soft"
+                  >
+                    {f.severityLabel}
+                  </badge>
+                  <p
+                    data-row-rule
+                    sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}
+                  >
+                    {f.rule}
+                  </p>
+                  <p
+                    data-file-span
+                    sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}
+                  >
+                    {f.fileSpan}
+                  </p>
+                  <p grow min-w="0" sx={style.fontSize(sm).truncate()}>{f.message}</p>
+                  <if {f.showFixChip}>
+                    <p data-fix-chip sx={style.fontSize(xs).fg(primary)}>fix</p>
+                  </if>
+                </row>
+                <column
+                  gap="2"
+                  sx={style.padX(2).padB(2)}
+                  on:click={onFindingAction}
+                >
+                  <card data-finding-detail variant="outline" padding="sm">
+                    <column gap="2">
+                      <p sx={style.fontSize(xs).fg(muted-foreground)}>Why</p>
+                      <pre
+                        data-why-text
+                        sx={style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm).overflow(auto).whitespace(pre-wrap)}
                       >
-                        Open in editor
-                      </button>
-                      <button
-                        type="button"
-                        size="sm"
-                        data-finding-action="select-in-app"
-                        variant="soft"
-                        tone="muted"
-                      >
-                        Select element
-                      </button>
-                      <if {f.showBothViewports}>
-                        <badge data-both-viewports tone="muted" size="sm" variant="outline">
-                          Mobile + desktop
-                        </badge>
+                        {f.whyText}
+                      </pre>
+                      <if {f.showDiff}>
+                        <column gap="1" data-why-suggest>
+                          <p sx={style.fontSize(xs).fg(muted-foreground)}>Suggestion</p>
+                          <sail-diff
+                            data-suggest-diff
+                            from={f.diffFrom}
+                            to={f.diffTo}
+                          ></sail-diff>
+                        </column>
                       </if>
-                      <if {f.showApply}>
+                      <column
+                        data-why-snippet
+                        gap="0"
+                        sx={style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm)}
+                      >
+                        <for {f.snippet} as="ln" key={ln.key}>
+                          <p
+                            data-snippet-line={ln.n}
+                            data-highlight={ln.highlight ? 'true' : 'false'}
+                          >
+                            {ln.n} {ln.text}
+                          </p>
+                        </for>
+                      </column>
+                      <row gap="2" align="center" nowrap>
                         <button
                           type="button"
                           size="sm"
-                          data-finding-action="apply-fix"
+                          data-finding-action="open-source"
+                          data-open-source-url={f.openSourceUrl}
+                          data-deeplink-url={f.openSourceUrl}
                           variant="soft"
-                          tone="primary"
+                          tone="muted"
                         >
-                          Apply fix
+                          Open in editor
                         </button>
-                      </if>
-                    </row>
-                  </column>
-                </card>
-              </column>
-            </collapsible>
-          </for>
-        </column>
-      </for>
+                        <button
+                          type="button"
+                          size="sm"
+                          data-finding-action="select-in-app"
+                          variant="soft"
+                          tone="muted"
+                        >
+                          Select element
+                        </button>
+                        <if {f.showBothViewports}>
+                          <badge data-both-viewports tone="muted" size="sm" variant="outline">
+                            Mobile + desktop
+                          </badge>
+                        </if>
+                        <if {f.showApply}>
+                          <button
+                            type="button"
+                            size="sm"
+                            data-finding-action="apply-fix"
+                            variant="soft"
+                            tone="primary"
+                          >
+                            Apply fix
+                          </button>
+                        </if>
+                      </row>
+                    </column>
+                  </card>
+                </column>
+              </collapsible>
+            </for>
+          </column>
+        </for>
+      </if>
     </column>
   </scroll-area>
 
