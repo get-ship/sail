@@ -1,8 +1,9 @@
 //! Render a `.sail` page to a painted, themed PNG screenshot without a browser.
 //!
-//! Pipeline: compiler static projection (preprocess HTML+CSS) → taffy layout →
-//! token/theme paint → takumi raster. Regions join to span-keyed node ids;
-//! dynamic/unknown subtrees are listed honestly in sidecar metadata.
+//! Pipeline (SSR-RENDER): controller S-tier initial projection → preprocess
+//! (HTML+CSS) → taffy layout → token/theme paint → takumi raster. Regions join
+//! to span-keyed node ids; residual dynamic/unknown subtrees are listed honestly
+//! in sidecar metadata. See `docs/SSR-RENDER.md`.
 
 use std::path::{Path, PathBuf};
 
@@ -14,6 +15,7 @@ pub mod identity;
 pub mod paint;
 pub mod pipeline;
 pub mod placeholder;
+pub mod ssr_project;
 pub mod theme;
 
 pub use identity::{
@@ -73,6 +75,8 @@ pub struct RenderOutput {
     pub html: String,
     /// Author tree node ids (SailInspect-compatible) used for region join.
     pub tree_ids: Vec<String>,
+    /// SSR projection notes (which S-tier bindings/branches resolved).
+    pub projected: Vec<String>,
 }
 
 /// Render `.sail` source text to an in-memory image + metadata.
@@ -105,6 +109,7 @@ pub fn render_source(source: &str, opts: RenderOptions) -> Result<RenderOutput> 
         ms: out.ms,
         html: out.html,
         tree_ids: out.tree.nodes.iter().map(|n| n.id.clone()).collect(),
+        projected: out.projected,
     })
 }
 

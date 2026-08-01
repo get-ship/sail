@@ -1,4 +1,8 @@
-//! End-to-end render pipeline: static projection → layout → painted takumi → PNG.
+//! End-to-end render pipeline: SSR projection → layout → painted takumi → PNG.
+//!
+//! Target path (SSR-RENDER):
+//! `.sail → controller initial state projection → preprocess → takumi`.
+//! See `docs/SSR-RENDER.md`. Full ship-js eval remains deck-ssr's job.
 
 use std::time::Instant;
 
@@ -14,6 +18,7 @@ use crate::identity::{
 };
 use crate::paint::{Paint, StyleSheet};
 use crate::placeholder;
+use crate::ssr_project;
 use crate::theme::{ThemePalette, ThemeSelect};
 
 /// Full render result (image + sidecar metadata).
@@ -29,6 +34,8 @@ pub struct PipelineOutput {
     pub html: String,
     /// Author tree used for identity join (tests).
     pub tree: InspectTreeIndex,
+    /// Human-readable SSR projection notes (which bindings/branches resolved).
+    pub projected: Vec<String>,
 }
 
 /// Pipeline options.
@@ -46,7 +53,7 @@ pub struct PipelineOptions {
     pub drop_bg_token: Option<String>,
 }
 
-/// Render `.sail` source text through the static no-JS projection.
+/// Render `.sail` source text through the SSR-initial → takumi pipeline.
 pub fn render(source: &str, opts: &PipelineOptions) -> Result<PipelineOutput> {
     let started = Instant::now();
     let file = opts.file.as_deref().unwrap_or("_");
@@ -54,22 +61,47 @@ pub fn render(source: &str, opts: &PipelineOptions) -> Result<PipelineOutput> {
     // 0. Author tree (SailInspect identity) before projection.
     let tree = build_inspect_tree(source, file);
 
-    // 1. Preprocess → lowered static HTML+CSS (same artifact SSR ships without JS).
-    let preprocessed = sail_compiler::parse::preprocess::preprocess(source)
+    // 1. SSR-RENDER seam: project controller signal initials into the template
+    //    (S-tier literals + simple if/for). Strips `<controller>` so braces in
+    //    setup no longer leak into paint HTML as false dynamics.
+    let projected = ssr_project::project(source);
+
+    // 2. Preprocess → lowered static HTML+CSS (sx → class, layout primitives).
+    let preprocessed = sail_compiler::parse::preprocess::preprocess(&projected.source)
         .context("preprocessing sail source")?;
     let (html_raw, css) = split_html_css(&preprocessed);
 
-    // 2. Strip template expression leaks; collect dynamics (joined after).
-    let (html, expr_dynamics_raw) = strip_expression_leaks(html_raw, file);
+    // 3. Strip residual template expression leaks; collect dynamics (joined after).
+    let (html, mut expr_dynamics_raw) = strip_expression_leaks(html_raw, file);
+    // Unresolved projection targets (text exprs, if-cond notes, for-of notes)
+    // that never appear as residual `{…}` still count as dynamics for honesty.
+    for u in &projected.unresolved {
+        if expr_dynamics_raw
+            .iter()
+            .any(|d| d.reason.contains(u.as_str()))
+        {
+            continue;
+        }
+        let id = identity::node_id(
+            file,
+            &format!("dyn.unresolved.{}", expr_dynamics_raw.len()),
+            u,
+        );
+        expr_dynamics_raw.push(DynamicRegion {
+            node_id: id,
+            reason: format!("dynamic-expr:{{{u}}}"),
+            tag: None,
+        });
+    }
 
-    // 3. Theme palette (DTCG registry + theme mode).
+    // 4. Theme palette (DTCG registry + theme mode).
     let mut palette = ThemePalette::resolve(opts.theme.clone(), opts.workspace.as_deref())
         .context("resolving theme palette")?;
     if let Some(tok) = &opts.drop_bg_token {
         palette.remove_mapping(tok);
     }
 
-    // 4. Parse paint stylesheet + element tree.
+    // 5. Parse paint stylesheet + element tree.
     // L1 skins live in the framework sheet (not inlined by preprocess). Merge
     // them with the page's atomic CSS so host-stamped sx classes paint.
     let skins = sail_compiler::stdlib::skins_css();
@@ -83,21 +115,21 @@ pub fn render(source: &str, opts: &PipelineOptions) -> Result<PipelineOutput> {
         anyhow::bail!("preprocessed source produced no renderable elements");
     }
 
-    // 5. Layout.
+    // 6. Layout.
     let viewport_f = (opts.viewport.0 as f32, opts.viewport.1 as f32);
     let layout = sail_layout::taffy_tree::build(elements.clone(), viewport_f)
         .context("computing layout with sail_layout")?;
 
-    // 6. Regions + unknown dynamics joined to SailInspect node ids (T-I3).
+    // 7. Regions + unknown dynamics joined to SailInspect node ids (T-I3).
     let (mut regions, mut dynamics) = join_layout_regions(&elements, &layout, &tree);
     dynamics.extend(join_expr_dynamics(&expr_dynamics_raw, &tree));
     // Attach resolved paint styles (same sheet+palette as the takumi tree).
     attach_region_styles(&mut regions, &elements, &layout, &sheet, &palette);
 
-    // 7. Takumi tree with paint.
+    // 8. Takumi tree with paint.
     let root = build_takumi_tree(&elements, &layout, &sheet, &palette)?;
 
-    // 8. Fonts + rasterize (framework defaults + optional app FontAdd vendors).
+    // 9. Fonts + rasterize (framework defaults + optional app FontAdd vendors).
     let mut fonts = fonts::load_fonts(&opts.fonts_dir).context("loading token fonts")?;
     if let Some(app_dir) = &opts.app_fonts_dir {
         fonts::load_app_fonts(&mut fonts, app_dir).context("loading app-vendored fonts")?;
@@ -119,6 +151,7 @@ pub fn render(source: &str, opts: &PipelineOptions) -> Result<PipelineOutput> {
         ms,
         html,
         tree,
+        projected: projected.projected,
     })
 }
 

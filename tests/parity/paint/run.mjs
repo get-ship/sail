@@ -13,7 +13,8 @@
  *
  * Controller-driven content (suite honesty):
  *   Fixtures MUST use static template text only. Signal-driven / deferred
- *   controller content is out of scope until SSR-defaults (SSR-RENDER) land.
+ *   controller content is covered by sail-render SSR-RENDER tests; this suite
+ *   stays on static L1 fixtures.
  *
  * Invoke:
  *   node tests/parity/paint/run.mjs

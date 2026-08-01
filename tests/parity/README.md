@@ -9,9 +9,12 @@ Two complementary suites:
 
 Style/size deltas are **reported** by default and only fail the process with `--strict`.
 
-> **SSR-RENDER (later):** controller-driven pages may render empty in static
-> paths. Fixtures here are **static template text only** — do not add signal-
-> driven content until the SSR-defaults contract exists.
+> **SSR-RENDER (slice landed):** `SailRender` / `sail-render` project S-tier
+> controller `signal(literal)` initials (and simple `<if>` / `<for>`) before
+> takumi — see [`crates/sail/render/docs/SSR-RENDER.md`](../../crates/sail/render/docs/SSR-RENDER.md).
+> Parity fixtures here stay **static template text only** so structure gates do
+> not depend on projection edge cases; controller regression lives in
+> `crates/sail/render/tests/ssr_render.rs`.
 >
 > **SPA path:** temp fixture stages typically fall back to **lowered-html** +
 > token/skin CSS (meaningful for L1 paint/geometry structure). Full SPA requires
