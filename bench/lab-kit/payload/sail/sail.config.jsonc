@@ -1,8 +1,0 @@
-{
-  "theme": {
-    "default": "ship",
-    "defaultMode": "light",
-    "enabled": ["ship"]
-  },
-  "render": "csr"
-}
