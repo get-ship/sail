@@ -104,69 +104,18 @@ pub fn parse_source(source: &str) -> Vec<Element> {
     let bytes = source.as_bytes();
     let mut pos: usize = 0;
 
+    // PERF-1: never full-scan for `<!--` on every iteration. The previous
+    // loop called `find_from(.., "<!--")` at each `pos`; when the remaining
+    // buffer had no comment that was O(n) per tag → O(n²) on every layout
+    // check, pegging sail at multi-core during `sail dev` cold build / HMR.
+    // Comments are only legal at a `<`; find the next `<` first, then branch.
     while pos < bytes.len() {
-        // Comments.
-        if let Some(rel) = find_from(bytes, pos, b"<!--") {
-            if let Some(end_rel) = find_from(bytes, rel + 4, b"-->") {
-                pos = end_rel + 3;
-                continue;
-            } else {
-                break;
-            }
-        }
+        let Some(rel_lt) = find_from(bytes, pos, b"<") else {
+            break;
+        };
 
-        // Tag open.
-        if let Some(rel_lt) = find_from(bytes, pos, b"<") {
-            if rel_lt == pos {
-                // Could be a tag right here. Try parse_open_tag.
-                if let Some((consumed, elem_opt, is_close, raw_text_to, self_closed)) =
-                    parse_open_tag(source, pos)
-                {
-                    pos = consumed;
-                    match (is_close, elem_opt) {
-                        (false, Some(elem)) => {
-                            let idx = out.len();
-                            let parent = *stack.last().unwrap_or(&0);
-                            let voidish = elem_is_void(&elem.tag) || self_closed;
-                            let mut e = elem;
-                            e.parent = Some(parent);
-                            out.push(e);
-                            out[parent].children.push(idx);
-                            // Void / self-closing tags must not stay on the
-                            // stack — otherwise later siblings nest inside
-                            // `<input/>` / `<switch/>` and L1 cards "stack"
-                            // as grandchildren of the previous control.
-                            if !voidish {
-                                stack.push(idx);
-                            }
-                        }
-                        (true, _) => {
-                            if stack.len() > 1 {
-                                stack.pop();
-                            }
-                        }
-                        _ => {}
-                    }
-                    // If we just consumed a raw-text open tag (controller / style /
-                    // script), skip everything until its close tag — the content is
-                    // opaque to the box tree and trying to parse it would confuse
-                    // the leaf-tagger with TS types like `<string>` and `{`.
-                    if !is_close && raw_text_to.is_some() {
-                        let needle = raw_text_to.unwrap();
-                        if let Some(end_rel) = find_from(bytes, pos, needle.as_bytes()) {
-                            pos = end_rel + needle.len();
-                            // The raw-text tag's closing tag is a sibling's child in
-                            // the parser, not its own — so we keep it off the stack
-                            // by popping now. The </tag> will be consumed in the
-                            // next iteration as a normal close.
-                        }
-                    }
-                    continue;
-                }
-            }
-            // Text content between tags — accumulate it onto whichever
-            // element is currently on the stack. The measure function will
-            // collapse whitespace the way a browser would.
+        // Text content between tags — accumulate onto the open element.
+        if rel_lt > pos {
             if let Some(&top) = stack.last() {
                 let raw = &source[pos..rel_lt];
                 let trimmed = raw.trim();
@@ -178,23 +127,93 @@ pub fn parse_source(source: &str) -> Vec<Element> {
                 }
             }
             pos = rel_lt;
+        }
+
+        // Comment at this `<`.
+        if bytes[pos..].starts_with(b"<!--") {
+            if let Some(end_rel) = find_from(bytes, pos + 4, b"-->") {
+                pos = end_rel + 3;
+                continue;
+            } else {
+                break;
+            }
+        }
+
+        // Tag open/close at this `<`.
+        if let Some((consumed, elem_opt, is_close, raw_text_to, self_closed)) =
+            parse_open_tag(source, pos)
+        {
+            pos = consumed;
+            match (is_close, elem_opt) {
+                (false, Some(elem)) => {
+                    let idx = out.len();
+                    let parent = *stack.last().unwrap_or(&0);
+                    let voidish = elem_is_void(&elem.tag) || self_closed;
+                    let mut e = elem;
+                    e.parent = Some(parent);
+                    out.push(e);
+                    out[parent].children.push(idx);
+                    // Void / self-closing tags must not stay on the
+                    // stack — otherwise later siblings nest inside
+                    // `<input/>` / `<switch/>` and L1 cards "stack"
+                    // as grandchildren of the previous control.
+                    if !voidish {
+                        stack.push(idx);
+                    }
+                }
+                (true, _) => {
+                    if stack.len() > 1 {
+                        stack.pop();
+                    }
+                }
+                _ => {}
+            }
+            // If we just consumed a raw-text open tag (controller / style /
+            // script), skip everything until its close tag — the content is
+            // opaque to the box tree and trying to parse it would confuse
+            // the leaf-tagger with TS types like `<string>` and `{`.
+            if !is_close {
+                if let Some(needle) = raw_text_to {
+                    if let Some(end_rel) = find_from(bytes, pos, needle.as_bytes()) {
+                        pos = end_rel + needle.len();
+                        // The raw-text tag's closing tag is a sibling's child in
+                        // the parser, not its own — so we keep it off the stack
+                        // by popping now. The </tag> will be consumed in the
+                        // next iteration as a normal close.
+                    }
+                }
+            }
             continue;
         }
 
-        break;
+        // Not a parseable tag (e.g. lone `<` in text) — advance one byte so
+        // we cannot livelock on the same `<`.
+        pos += 1;
     }
 
     out
 }
 
+/// Byte-string search from `start`. Single-byte needles use `memchr`-style
+/// linear scan; multi-byte uses first-byte filter then equality (avoids a
+/// pure `windows().position` full compare on every offset).
 fn find_from(hay: &[u8], start: usize, needle: &[u8]) -> Option<usize> {
-    if start >= hay.len() {
+    if needle.is_empty() || start >= hay.len() {
         return None;
     }
-    hay[start..]
-        .windows(needle.len())
-        .position(|w| w == needle)
-        .map(|p| p + start)
+    let hay = &hay[start..];
+    if needle.len() == 1 {
+        return hay.iter().position(|&b| b == needle[0]).map(|p| p + start);
+    }
+    let first = needle[0];
+    let mut i = 0;
+    while i + needle.len() <= hay.len() {
+        if hay[i] == first && hay[i..i + needle.len()] == *needle {
+            return Some(i + start);
+        }
+        i += 1;
+    }
+    None
 }
 
 /// Try to parse an open or close tag at `pos`. Returns:
@@ -537,5 +556,45 @@ mod tests {
             };
             assert_eq!(e.is_unknown(), expected, "tag={tag:?}");
         }
+    }
+
+    #[test]
+    fn comments_do_not_skip_preceding_tags() {
+        // Regression: the old loop scanned for `<!--` from every `pos` and
+        // jumped forward to the first comment in the *rest* of the file,
+        // silently dropping tags that sat before it.
+        let src = r#"<div class="before"></div><!-- mid --><span class="after"></span>"#;
+        let tree = parse_source(src);
+        assert!(
+            tree.iter()
+                .any(|e| e.tag == "div" && e.class.contains("before")),
+            "div before comment must parse"
+        );
+        assert!(
+            tree.iter()
+                .any(|e| e.tag == "span" && e.class.contains("after")),
+            "span after comment must parse"
+        );
+    }
+
+    #[test]
+    fn large_comment_free_source_parses_linearly() {
+        // PERF-1 regression: full-file `<!--` scan each iteration was O(n²)
+        // and pegged multi-core CPU during `sail dev` layout checks.
+        let mut src = String::with_capacity(80_000);
+        for i in 0..4_000 {
+            src.push_str(&format!(r#"<div class="c{i}"><span>x</span></div>"#));
+        }
+        let t0 = std::time::Instant::now();
+        let tree = parse_source(&src);
+        let dt = t0.elapsed();
+        assert!(
+            tree.iter().filter(|e| e.tag == "div").count() >= 4_000,
+            "expected thousands of divs"
+        );
+        assert!(
+            dt.as_millis() < 500,
+            "parse_source must stay linear; took {dt:?} (was multi-second O(n²) before PERF-1)"
+        );
     }
 }
