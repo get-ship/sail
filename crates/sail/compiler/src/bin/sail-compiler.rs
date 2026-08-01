@@ -802,13 +802,24 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     );
     if effective.sx {
         let _ = writeln!(md, "## sx — Style product (core)\n");
-        let _ = writeln!(
-            md,
+        // Demo tags must respect raw_containers: under no-raw, bare div/span fail check.
+        let sx_demo = if effective.raw_containers {
             "```\n\
              <div sx={{style.bg(surface-2).pad(4).radius(lg).when({{ hover: style.bg(muted) }})}} />\n\
              <span sx={{style.fg(muted-foreground).fontSize(sm)}} />\n\
+             ```\n\n"
+        } else {
+            "```\n\
+             <column gap=\"3\" sx={{style.bg(surface-2).pad(4).radius(lg).when({{ hover: style.bg(muted) }})}}>\n\
+               <p sx={{style.fg(muted-foreground).fontSize(sm)}}>…</p>\n\
+             </column>\n\
              ```\n\n\
-             Scope Style consts, `match(prop, {{…}})`, `when({{…}})`, `compound(…)`,\n\
+             No bare `<div>`/`<span>` here — use layout keywords + content tags.\n\n"
+        };
+        md.push_str(sx_demo);
+        let _ = writeln!(
+            md,
+            "Scope Style consts, `match(prop, {{…}})`, `when({{…}})`, `compound(…)`,\n\
              `bind(name)` for runtime CSS vars. Style is compile-time static — no\n\
              `sx={{jsExpr}}`. Full closed setter table: MCP `sail_surface` topic `style`.\n\
              Layout atoms refused by name: MCP topic `layout` (same `sx_vocab::refusals()`).\n"

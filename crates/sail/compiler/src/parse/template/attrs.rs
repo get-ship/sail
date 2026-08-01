@@ -157,6 +157,15 @@ fn compile_attr(
     if let Some(rest) = name.strip_prefix("use:") {
         return compile_use(rest, value, value_span, loc);
     }
+    // `sx` is Style product language (`style.fontSize(2xl)`, `style.padX(2_5)`,
+    // `style.fg(sidebar-foreground)`, …) — not a JS expression. Leading-digit
+    // scale tokens and hyphenated token names are valid Style idents and
+    // invalid / differently-parsed JS. Full preprocess validates Style via
+    // `lower_sx`; author parse (`parse_author` / SailInspect) must keep the
+    // tree intact so region join can map layout boxes to author nodes.
+    if name == "sx" {
+        return compile_sx_attr(value, value_span);
+    }
     if is_expr_value(value) {
         let inner = strip_braces(value).to_string();
         // Parse the STRIPPED inner expression — `signal(0)`,
@@ -355,6 +364,24 @@ fn strip_braces(v: &str) -> &str {
     } else {
         v
     }
+}
+
+/// Accept `sx={…}` / `sx="…"` without JS grammar. Style is lowered later
+/// (`preprocess` / `lower_sx`); author IR only needs an opaque body.
+fn compile_sx_attr(value: &str, value_span: Span) -> Result<AttrInstr, CompileError> {
+    if is_expr_value(value) {
+        let inner = strip_braces(value).to_string();
+        return Ok(AttrInstr::Expr {
+            name: "sx".into(),
+            expr: Expr::new(inner, value_span, false),
+            span: value_span,
+        });
+    }
+    Ok(AttrInstr::Static {
+        name: "sx".into(),
+        value: value.to_string(),
+        span: value_span,
+    })
 }
 
 fn compile_on(
@@ -1385,6 +1412,30 @@ mod tests {
         let msg = err.message.as_str();
         assert!(msg.contains("aria"), "must name the attribute, got: {msg}");
         assert!(err.span.is_some(), "must carry a span");
+    }
+
+    #[test]
+    fn sx_style_chain_with_leading_digit_scale_token_parses() {
+        // Product Style: `2xl` / `2_5` are valid scale tokens, not JS idents.
+        // Author parse must accept them so SailInspect / render join works.
+        let instr = compile_attr(
+            "sx",
+            "{style.fontSize(2xl).fontWeight(semibold).fg(foreground)}",
+            Span::new(0, 58),
+            "[h1 sx]",
+            false,
+        )
+        .expect("Style chain with 2xl must not fail as malformed JS");
+        match instr {
+            AttrInstr::Expr { ref expr, .. } => {
+                assert!(
+                    expr.source.contains("fontSize(2xl)"),
+                    "sx body preserved: {}",
+                    expr.source
+                );
+            }
+            other => panic!("expected AttrInstr::Expr for sx, got {other:?}"),
+        }
     }
 
     #[test]
