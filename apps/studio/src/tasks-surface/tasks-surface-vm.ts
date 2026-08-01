@@ -1,10 +1,14 @@
 /**
- * Tasks surface VM — agent monitoring table + thread detail dialog.
- * Ops client is wired by page.sail on studio mount.
+ * Tasks surface VM — thread monitoring + chat-elements detail
+ * (sail-message-list · sail-composer · sail-markdown · sail-diff).
  */
 import { mountAmbient, signal } from '@ship/sail-runtime'
+import { getBatchItems } from '@ship/sail-studio-shell'
 import {
   acceptLiveNode,
+  assignComposerAttachments,
+  assignMessageListHost,
+  attachLatestCrop,
   commitIntent,
   createThread,
   getTasksState,
@@ -20,9 +24,11 @@ import {
   uiAnchorCard,
   uiAttachmentChips,
   uiAttachmentCount,
-  uiConversation,
+  uiAttachmentDiff,
   uiEmptyCopy,
   uiHeader as uiTasksHeader,
+  uiMessageListItems,
+  uiThreadMarkdown,
   uiThreadRows,
   type ActorFilter,
   type DriftFilter,
@@ -45,25 +51,23 @@ type TaskThreadUi = {
   updatedLabel: string
   selected: boolean
   key: string
+  /** Resolved (done) threads collapse to a quieter row. */
+  collapsed: boolean
 }
 
-type TaskEventUi = {
+type AttachChipUi = {
   id: string
-  actorLabel: string
-  actorKind: string
-  time: string
-  body: string
-  hasBody: boolean
-  hasArtifacts: boolean
-  artifacts: { id: string; label: string; kind: string; key: string }[]
+  label: string
   key: string
+  kind: string
+  isRender: boolean
+  isDiff: boolean
 }
 
 export function createTasksSurface() {
   const taskThreadRows = signal<TaskThreadUi[]>([])
   const hasTaskThreads = signal(false)
   const threadCountLabel = signal('0 threads')
-  const taskConv = signal<TaskEventUi[]>([])
   const taskTitle = signal('Tasks')
   const taskDrift = signal('Not linked')
   const taskStatusLabel = signal('To do')
@@ -73,8 +77,12 @@ export function createTasksSurface() {
   const taskAnchorHas = signal(false)
   const taskAnchorSpan = signal('—')
   const taskAnchorStatus = signal('Not linked')
+  const taskAnchorStatusRaw = signal('none')
+  const taskAnchorTone = signal('muted')
   const taskAnchorPath = signal('—')
-  const taskAttachChips = signal<{ id: string; label: string; key: string }[]>([])
+  const taskAnchorFileSpan = signal('—')
+  const taskAnchorMovedHint = signal('')
+  const taskAttachChips = signal<AttachChipUi[]>([])
   const hasTaskAttach = signal(false)
   const taskError = signal('')
   /** Alert only when list has rows; empty list uses empty-state for load errors. */
@@ -89,13 +97,37 @@ export function createTasksSurface() {
   const showRebind = signal(false)
   const emptyTitle = signal('No open work')
   const emptyBody = signal('Start a task when you want help on a part of the app.')
+  const threadMarkdown = signal('')
+  const hasThreadMarkdown = signal(false)
+  const hasMessageItems = signal(false)
+  const hasTaskDiff = signal(false)
+  const diffFrom = signal('')
+  const diffTo = signal('')
+  const batchAvailable = signal(false)
+  const canAttachCrop = signal(false)
+  /** Composer submit lifecycle: idle | sending | sent | error */
+  const composerStatus = signal<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const composerStatusLabel = signal('')
+  const composerDisabled = signal(true)
+  const showComposerStatus = signal(false)
+
+  const pushChatHosts = () => {
+    const items = uiMessageListItems()
+    hasMessageItems.set(items.length > 0)
+    queueMicrotask(() => {
+      assignMessageListHost('[data-messages-host]', items)
+      assignComposerAttachments('[data-task-composer]', [])
+    })
+  }
 
   const sync = () => {
     const ts = getTasksState()
-    const rows = uiThreadRows()
+    const rows = uiThreadRows().map((r) => ({
+      ...r,
+      collapsed: r.status === 'done' || r.status === 'cancelled',
+    }))
     taskThreadRows.set(rows)
     hasTaskThreads.set(rows.length > 0)
-    taskConv.set(uiConversation())
     const h = uiTasksHeader()
     taskTitle.set(h.title)
     taskDrift.set(h.drift)
@@ -108,22 +140,35 @@ export function createTasksSurface() {
     taskAnchorHas.set(a.has)
     taskAnchorSpan.set(a.span)
     taskAnchorStatus.set(a.status)
+    taskAnchorStatusRaw.set(a.statusRaw)
+    taskAnchorTone.set(a.statusTone)
     taskAnchorPath.set(a.path)
+    taskAnchorFileSpan.set(a.fileSpan)
+    taskAnchorMovedHint.set(a.movedHint)
     showAcceptLive.set(a.showAcceptLive)
     showRebind.set(a.showRebind)
     const chips = uiAttachmentChips()
     taskAttachChips.set(chips)
     hasTaskAttach.set(chips.length > 0)
     attachCountLabel.set(String(uiAttachmentCount()))
+    const d = uiAttachmentDiff()
+    hasTaskDiff.set(d.has)
+    diffFrom.set(d.from)
+    diffTo.set(d.to)
+    const md = uiThreadMarkdown()
+    threadMarkdown.set(md)
+    hasThreadMarkdown.set(md.trim().length > 0 && h.hasSelected)
     taskError.set(ts.error ?? '')
-    // Error strip always when store.error is set; empty-state is neutral only.
     showTaskErrorAlert.set(!!ts.error)
     taskCommitPath.set(ts.commitPath ?? '')
     hasTaskCommit.set(!!ts.commitPath)
     openFilterVal.set(ts.openFilter)
     actorFilterVal.set(ts.actorFilter)
     driftFilterVal.set(ts.driftFilter)
-    // Empty copy ignores error titles when we show the error strip separately.
+    const batchN = getBatchItems().length
+    batchAvailable.set(batchN > 0)
+    canAttachCrop.set(batchN > 0 && h.hasSelected)
+    composerDisabled.set(!h.hasSelected || composerStatus() === 'sending')
     if (ts.error) {
       emptyTitle.set('No open work')
       emptyBody.set('Start a task when you want help on a part of the app.')
@@ -132,6 +177,7 @@ export function createTasksSurface() {
       emptyTitle.set(empty.title)
       emptyBody.set(empty.body)
     }
+    pushChatHosts()
   }
 
   sync()
@@ -142,12 +188,16 @@ export function createTasksSurface() {
     if (getTasksState().threads.length === 0 && !getTasksState().loading) {
       void loadThreads().then(() => sync())
     }
+    queueMicrotask(() => pushChatHosts())
     return () => unsub()
   })
 
   const onTaskThreadClick = (e: Event) => {
     const t = (e.target as Element | null)?.closest?.('[data-task-id]') as HTMLElement | null
     if (!t?.dataset.taskId) return
+    composerStatus.set('idle')
+    composerStatusLabel.set('')
+    showComposerStatus.set(false)
     void selectThread(t.dataset.taskId).then(() => sync())
   }
 
@@ -166,13 +216,42 @@ export function createTasksSurface() {
     sync()
   }
 
-  const onTaskReplyInput = (e: Event) => {
-    setReplyDraft((e.target as HTMLInputElement).value)
-    sync()
-  }
-
-  const onTaskSend = () => {
-    void sendReply().then(() => sync())
+  const onComposerSubmit = (e: Event) => {
+    const ce = e as CustomEvent<{ text?: string; attachments?: unknown[] }>
+    const text = (ce.detail?.text ?? '').trim()
+    if (!text || !getTasksState().selectedId) return
+    setReplyDraft(text)
+    composerStatus.set('sending')
+    composerStatusLabel.set('Sending…')
+    showComposerStatus.set(true)
+    composerDisabled.set(true)
+    void sendReply()
+      .then(() => {
+        const err = getTasksState().error
+        if (err) {
+          composerStatus.set('error')
+          composerStatusLabel.set('Could not send — try again')
+        } else {
+          composerStatus.set('sent')
+          composerStatusLabel.set('Sent')
+          // Brief sent flash, then idle.
+          setTimeout(() => {
+            if (composerStatus() === 'sent') {
+              composerStatus.set('idle')
+              composerStatusLabel.set('')
+              showComposerStatus.set(false)
+              sync()
+            }
+          }, 1200)
+        }
+        sync()
+      })
+      .catch(() => {
+        composerStatus.set('error')
+        composerStatusLabel.set('Could not send — try again')
+        showComposerStatus.set(true)
+        sync()
+      })
   }
 
   const onTaskCommit = () => {
@@ -180,7 +259,12 @@ export function createTasksSurface() {
   }
 
   const onCloseDetail = () => {
-    void selectThread(null).then(() => sync())
+    void selectThread(null).then(() => {
+      composerStatus.set('idle')
+      composerStatusLabel.set('')
+      showComposerStatus.set(false)
+      sync()
+    })
   }
 
   const onNewTaskQuick = () => {
@@ -223,11 +307,21 @@ export function createTasksSurface() {
     }).then(() => sync())
   }
 
+  const onAttachCrop = () => {
+    void attachLatestCrop().then((ok) => {
+      if (!ok && getBatchItems().length === 0) {
+        // Honest: nothing in the tray.
+        const ts = getTasksState()
+        if (!ts.selectedId) return
+      }
+      sync()
+    })
+  }
+
   return {
     taskThreadRows,
     hasTaskThreads,
     threadCountLabel,
-    taskConv,
     taskTitle,
     taskDrift,
     taskStatusLabel,
@@ -237,7 +331,11 @@ export function createTasksSurface() {
     taskAnchorHas,
     taskAnchorSpan,
     taskAnchorStatus,
+    taskAnchorStatusRaw,
+    taskAnchorTone,
     taskAnchorPath,
+    taskAnchorFileSpan,
+    taskAnchorMovedHint,
     taskAttachChips,
     hasTaskAttach,
     taskError,
@@ -246,23 +344,35 @@ export function createTasksSurface() {
     hasTaskCommit,
     openFilterVal,
     actorFilterVal,
-    onRetryTasks,
     driftFilterVal,
     attachCountLabel,
     showAcceptLive,
     showRebind,
     emptyTitle,
     emptyBody,
+    threadMarkdown,
+    hasThreadMarkdown,
+    hasMessageItems,
+    hasTaskDiff,
+    diffFrom,
+    diffTo,
+    batchAvailable,
+    canAttachCrop,
+    composerStatus,
+    composerStatusLabel,
+    composerDisabled,
+    showComposerStatus,
     onTaskThreadClick,
     onTaskOpenFilter,
     onTaskActorFilter,
     onTaskDriftFilter,
-    onTaskReplyInput,
-    onTaskSend,
+    onComposerSubmit,
     onTaskCommit,
     onCloseDetail,
     onNewTaskQuick,
+    onRetryTasks,
     onAcceptLiveNode,
     onRebindSelection,
+    onAttachCrop,
   }
 }

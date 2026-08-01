@@ -1,8 +1,9 @@
 import type { BatchItem } from '@ship/sail-studio-shell'
-import { clearBatch, getBatchItems } from '@ship/sail-studio-shell'
+import { clearBatch, getBatchItems, removeBatchItem } from '@ship/sail-studio-shell'
 import {
   createThread,
   getTasksOpsClient,
+  getTasksState,
   loadThreads,
   projectRootArg,
   recordBatchCount,
@@ -45,6 +46,24 @@ export async function sendBatchToExisting(taskId: string): Promise<void> {
   recordBatchCount(items.length)
   await selectThread(taskId)
   await loadThreads()
+}
+
+/**
+ * Attach the newest batch-tray crop to the selected (or given) thread.
+ * One gesture: tray → thread. Leaves remaining tray items in place.
+ */
+export async function attachLatestCrop(taskId?: string): Promise<boolean> {
+  const items = getBatchItems()
+  const client = getTasksOpsClient()
+  const id = taskId ?? getTasksState().selectedId
+  if (!items.length || !client || !id) return false
+  const latest = items[items.length - 1]!
+  await attachBatchItems(id, [latest])
+  removeBatchItem(latest.id)
+  recordBatchCount(1)
+  await selectThread(id)
+  await loadThreads()
+  return true
 }
 
 async function attachBatchItems(taskId: string, items: BatchItem[]): Promise<void> {

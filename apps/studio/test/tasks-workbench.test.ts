@@ -21,8 +21,11 @@ import {
   setTasksProjectRoot,
   statusLabel,
   statusTone,
+  uiAttachmentDiff,
   uiConversation,
   uiEmptyCopy,
+  uiMessageListItems,
+  uiThreadMarkdown,
   uiThreadRows,
 } from '../src/tasks'
 import {
@@ -288,22 +291,44 @@ describe('tasks workbench (ops + store)', () => {
     expect(surface).toMatch(/data-task-conversation/)
     expect(surface).toMatch(/data-anchor-card/)
     expect(surface).toMatch(/data-commit-intent/)
-    expect(surface).toMatch(/Save decision/)
+    expect(surface).toMatch(/>\s*Commit\s*</)
+    expect(surface).toMatch(/Ask the agent/)
+    expect(surface).toMatch(/Attach screenshot/)
     expect(surface).toMatch(/data-filter-actor/)
     expect(surface).toMatch(/data-status-badge|data-status-dot/)
     expect(surface).toMatch(/data-accept-live|data-rebind-selection/)
     expect(surface).toMatch(/attachCountLabel/)
+    // Reuse map law — chat-elements + markdown + diff
+    expect(surface).toMatch(/<sail-composer\b/)
+    expect(surface).toMatch(/<sail-message-list\b/)
+    expect(surface).toMatch(/<sail-markdown\b/)
+    expect(surface).toMatch(/<sail-diff\b/)
+    expect(surface).toMatch(/data-messages-host/)
+    expect(surface).toMatch(/data-task-composer/)
+    expect(surface).toMatch(/data-attach-crop/)
+    expect(surface).toMatch(/on:sail-composer-submit/)
     expect(surface).not.toMatch(/commit intent/i)
     expect(surface).not.toMatch(/<div\b/)
     expect(surface).not.toMatch(/<span\b/)
+    // No hand-rolled reply input — composer owns the field
+    expect(surface).not.toMatch(/data-reply-composer[\s\S]*<input\b/)
     expect(surface).toMatch(/data-thread-row/)
     expect(surface).toMatch(/<dialog\b/)
     expect(surface).toMatch(/<empty-state\b/)
     expect(ctrl).toMatch(/from ['"]@ship\/studio\/tasks['"]/)
     expect(ctrl).toMatch(/loadThreads|commitIntent/)
     expect(ctrl).toMatch(/acceptLiveNode|reanchorToNode/)
+    expect(ctrl).toMatch(/assignMessageListHost|uiMessageListItems/)
+    expect(ctrl).toMatch(/onComposerSubmit|attachLatestCrop/)
     expect(existsSync(join(root, 'tasks-surface.sail'))).toBe(true)
     expect(existsSync(join(REPO, 'apps/studio/components/tasks-surface'))).toBe(false)
+  })
+
+  it('clients registers sail-chat-elements; package depends on it', () => {
+    const clients = readFileSync(join(REPO, 'apps/studio/src/clients.ts'), 'utf8')
+    const pkg = readFileSync(join(REPO, 'apps/studio/package.json'), 'utf8')
+    expect(clients).toMatch(/@ship\/sail-chat-elements/)
+    expect(pkg).toMatch(/@ship\/sail-chat-elements/)
   })
 
   it('design modules stay CSS-free; tasks store uses SailTask ops only', () => {
@@ -418,4 +443,59 @@ describe('drift pure contract (client-visible statuses)', () => {
     expect(statuses).toContain('moved')
     expect(statuses).toContain('lost')
   })
+})
+
+describe('chat-elements projections', () => {
+  it('uiMessageListItems maps human→user and agent→assistant', async () => {
+    const project = makeProject()
+    setTasksOpsClient(cli)
+    setTasksProjectRoot(project)
+    const id = await createThread({
+      title: 'message list proof',
+      body: 'human opener with `code`',
+      anchor: {
+        nodeId: 'routes/page.sail#0.1#ml01',
+        elementPath: 'page.sail › card',
+        contentHash: 'ml01',
+        file: 'routes/page.sail',
+      },
+    })
+    await selectThread(id!)
+    setReplyDraft('@agent check this')
+    await sendReply()
+    await cli.sailTaskAgentNote!({
+      project,
+      id: id!,
+      body: 'looking now',
+      actor: { kind: 'agent', name: 'agent' },
+    })
+    await selectThread(id!)
+    const items = uiMessageListItems()
+    expect(items.length).toBeGreaterThanOrEqual(2)
+    expect(items.some((m) => m.role === 'user')).toBe(true)
+    expect(items.some((m) => m.role === 'assistant' && m.content.includes('looking'))).toBe(
+      true,
+    )
+    expect(items.every((m) => m.id && m.status === 'sent')).toBe(true)
+    const md = uiThreadMarkdown()
+    expect(md).toMatch(/message list proof/)
+    expect(md).toMatch(/human opener|looking now|@agent/)
+  }, 60_000)
+
+  it('uiAttachmentDiff empty without from/to region', async () => {
+    const project = makeProject()
+    setTasksOpsClient(cli)
+    setTasksProjectRoot(project)
+    const id = await createThread({
+      title: 'no diff yet',
+      body: 'plain',
+      anchor: {
+        nodeId: 'routes/page.sail#0.1#nd01',
+        elementPath: 'page.sail › x',
+        contentHash: 'nd01',
+      },
+    })
+    await selectThread(id!)
+    expect(uiAttachmentDiff().has).toBe(false)
+  }, 60_000)
 })

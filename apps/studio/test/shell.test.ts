@@ -396,7 +396,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(combined).toMatch(/<scroll-area\b/)
   })
 
-  it('tasks-surface: status dots, compact rows, ban-clean', () => {
+  it('tasks-surface: status dots, chat-elements, ban-clean', () => {
     const surface = readFileSync(
       join(REPO, 'apps/studio/src/tasks-surface/tasks-surface.sail'),
       'utf8',
@@ -409,13 +409,16 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surface).toMatch(/data-task-conversation/)
     expect(surface).toMatch(/data-anchor-card/)
     expect(surface).toMatch(/data-commit-intent/)
-    expect(surface).toMatch(/Save decision/)
+    expect(surface).toMatch(/>\s*Commit\s*</)
     expect(surface).toMatch(/data-filter-actor/)
     expect(surface).toMatch(/data-status-badge|data-status-dot/)
     expect(surface).toMatch(/tone=\{row\.statusTone\}/)
     expect(surface).toMatch(/data-retry-tasks|onRetryTasks|Retry/)
     expect(surface).toMatch(/data-accept-live|data-rebind-selection/)
     expect(surface).toMatch(/attachCountLabel/)
+    expect(surface).toMatch(/<sail-composer\b/)
+    expect(surface).toMatch(/<sail-message-list\b/)
+    expect(surface).toMatch(/<sail-markdown\b/)
     expect(surface).not.toMatch(/commit intent/i)
     expect(surface).not.toMatch(/<div\b/)
     expect(surface).not.toMatch(/<span\b/)

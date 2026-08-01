@@ -24,6 +24,7 @@
     "@ship/sail-studio-bridge": "workspace:*",
     "@ship/sail-studio-shell": "workspace:*",
     "@ship/sail-code-editor": "workspace:*",
+    "@ship/sail-chat-elements": "workspace:*",
     "@ship/sail-primitives": "workspace:*",
     "@ship/tokens": "workspace:*"
   },

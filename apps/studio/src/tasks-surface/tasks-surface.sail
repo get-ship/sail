@@ -1,6 +1,6 @@
 <!--
-  <tasks-surface> — what agents are doing right now.
-  Monitoring table of threads; detail in a side dialog.
+  <tasks-surface> — anchored threads, drift, crops, @agent handoff.
+  Chat-elements dogfood: sail-message-list · sail-composer · sail-markdown · sail-diff.
   Ban-clean: no div/span; layout keywords + L1 only.
 -->
 <controller>
@@ -11,17 +11,19 @@ export default controller(() => {
     taskThreadRows: vm.taskThreadRows,
     hasTaskThreads: vm.hasTaskThreads,
     threadCountLabel: vm.threadCountLabel,
-    taskConv: vm.taskConv,
     taskTitle: vm.taskTitle,
     taskDrift: vm.taskDrift,
     taskStatusLabel: vm.taskStatusLabel,
     taskStatusTone: vm.taskStatusTone,
     hasTaskSelected: vm.hasTaskSelected,
-    taskReply: vm.taskReply,
     taskAnchorHas: vm.taskAnchorHas,
     taskAnchorSpan: vm.taskAnchorSpan,
     taskAnchorStatus: vm.taskAnchorStatus,
+    taskAnchorStatusRaw: vm.taskAnchorStatusRaw,
+    taskAnchorTone: vm.taskAnchorTone,
     taskAnchorPath: vm.taskAnchorPath,
+    taskAnchorFileSpan: vm.taskAnchorFileSpan,
+    taskAnchorMovedHint: vm.taskAnchorMovedHint,
     taskAttachChips: vm.taskAttachChips,
     hasTaskAttach: vm.hasTaskAttach,
     taskError: vm.taskError,
@@ -36,18 +38,28 @@ export default controller(() => {
     showRebind: vm.showRebind,
     emptyTitle: vm.emptyTitle,
     emptyBody: vm.emptyBody,
+    threadMarkdown: vm.threadMarkdown,
+    hasThreadMarkdown: vm.hasThreadMarkdown,
+    hasMessageItems: vm.hasMessageItems,
+    hasTaskDiff: vm.hasTaskDiff,
+    diffFrom: vm.diffFrom,
+    diffTo: vm.diffTo,
+    canAttachCrop: vm.canAttachCrop,
+    composerDisabled: vm.composerDisabled,
+    composerStatusLabel: vm.composerStatusLabel,
+    showComposerStatus: vm.showComposerStatus,
     onTaskThreadClick: (e: Event) => vm.onTaskThreadClick(e),
     onTaskOpenFilter: (e: Event) => vm.onTaskOpenFilter(e),
     onTaskActorFilter: (e: Event) => vm.onTaskActorFilter(e),
     onTaskDriftFilter: (e: Event) => vm.onTaskDriftFilter(e),
-    onTaskReplyInput: (e: Event) => vm.onTaskReplyInput(e),
-    onTaskSend: () => vm.onTaskSend(),
+    onComposerSubmit: (e: Event) => vm.onComposerSubmit(e),
     onTaskCommit: () => vm.onTaskCommit(),
     onCloseDetail: () => vm.onCloseDetail(),
     onNewTaskQuick: () => vm.onNewTaskQuick(),
     onRetryTasks: () => vm.onRetryTasks(),
     onAcceptLiveNode: () => vm.onAcceptLiveNode(),
     onRebindSelection: () => vm.onRebindSelection(),
+    onAttachCrop: () => vm.onAttachCrop(),
   }
 })
 </controller>
@@ -123,7 +135,7 @@ export default controller(() => {
       <option value="moved">Moved</option>
       <option value="lost">Lost</option>
     </select>
-    <p sx={style.fontSize(xs).fg(muted-foreground)}>Filter open work by who replied or linked UI.</p>
+    <p sx={style.fontSize(xs).fg(muted-foreground)}>Filter by reply or linked UI.</p>
   </row>
 
   <if {showTaskErrorAlert()}>
@@ -163,6 +175,7 @@ export default controller(() => {
             data-thread-row
             data-drift={row.drift}
             data-selected={row.selected ? 'true' : 'false'}
+            data-collapsed={row.collapsed ? 'true' : 'false'}
             gap="2"
             align="center"
             nowrap
@@ -179,15 +192,17 @@ export default controller(() => {
               sx={style.w(2).h(2).minW(2).pad(0)}
             ></badge>
             <p grow min-w="0" sx={style.fontSize(sm).truncate()}>{row.title}</p>
-            <p data-actor-chip={row.actorChip} sx={style.fontSize(xs).fg(muted-foreground)}>
-              {row.actorChip}
-            </p>
-            <if {row.showDrift}>
-              <p data-drift-chip={row.driftChip} sx={style.fontSize(xs).fg(warning)}>
-                {row.driftChip}
+            <if {!row.collapsed}>
+              <p data-actor-chip={row.actorChip} sx={style.fontSize(xs).fg(muted-foreground)}>
+                {row.actorChip}
               </p>
+              <if {row.showDrift}>
+                <p data-drift-chip={row.driftChip} sx={style.fontSize(xs).fg(warning)}>
+                  {row.driftChip}
+                </p>
+              </if>
+              <p sx={style.fontSize(xs).fg(muted-foreground)}>{row.updatedLabel}</p>
             </if>
-            <p sx={style.fontSize(xs).fg(muted-foreground)}>{row.updatedLabel}</p>
           </row>
         </for>
       </if>
@@ -216,48 +231,62 @@ export default controller(() => {
       <column data-task-conversation gap="3" sx={style.minH(0)}>
         <if {hasTaskCommit()}>
           <p data-commit-path sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>
-            Saved {taskCommitPath()}
+            Committed {taskCommitPath()}
           </p>
         </if>
-        <scroll-area data-messages sx={style.minH(0).maxH(panel-max-h-sm)}>
-          <column gap="2">
-            <if {!taskConv().length}>
-              <empty-state variant="inline" size="sm" w="full">
-                <strong slot="title">No messages yet</strong>
-                Reply below or wait for the agent.
-              </empty-state>
-            </if>
-            <for {taskConv()} as="msg" key={msg.key}>
-              <card data-message data-actor={msg.actorKind} variant="outline" padding="sm">
-                <column gap="1">
-                  <badge data-actor-pill={msg.actorKind} tone="muted" size="sm" pill>
-                    {msg.actorLabel} · {msg.time}
-                  </badge>
-                  <if {msg.hasBody}>
-                    <p sx={style.fontSize(sm)}>{msg.body}</p>
-                  </if>
-                  <if {msg.hasArtifacts}>
-                    <row gap="2">
-                      <for {msg.artifacts} as="art" key={art.key}>
-                        <badge data-artifact={art.kind} tone="muted" size="sm" variant="outline">
-                          {art.label}
-                        </badge>
-                      </for>
-                    </row>
-                  </if>
-                </column>
-              </card>
-            </for>
-          </column>
-        </scroll-area>
+
+        <if {hasThreadMarkdown()}>
+          <sail-markdown
+            data-thread-markdown
+            value={threadMarkdown()}
+            sx={style.fontSize(sm)}
+          ></sail-markdown>
+        </if>
+
+        <column data-messages gap="0" sx={style.minH(0).maxH(panel-max-h-sm).h(panel-max-h-sm)}>
+          <sail-message-list
+            data-messages-host
+            sticky-bottom
+            sx={style.h(full).minH(0).w(full)}
+          >
+            <empty-state slot="empty" variant="inline" size="sm" w="full">
+              <strong slot="title">No messages yet</strong>
+              Ask the agent below or wait for a reply.
+            </empty-state>
+          </sail-message-list>
+        </column>
 
         <if {taskAnchorHas()}>
-          <column data-anchor-card gap="2" sx={style.pad(2).bg(surface-0).radius(sm)}>
-            <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Linked UI</p>
+          <column
+            data-anchor-card
+            data-anchor-chip
+            data-drift={taskAnchorStatusRaw()}
+            gap="2"
+            sx={style.pad(2).bg(surface-0).radius(sm).borderWidth(1).border(border-subtle)}
+          >
+            <row align="center" gap="2" nowrap>
+              <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>
+                Linked UI
+              </p>
+              <badge
+                data-anchor-drift={taskAnchorStatusRaw()}
+                tone={taskAnchorTone()}
+                size="sm"
+                variant="soft"
+                pill
+              >
+                {taskAnchorStatus()}
+              </badge>
+            </row>
             <p sx={style.fontSize(xs).fg(muted-foreground)}>{taskAnchorPath()}</p>
-            <p sx={style.fontSize(xs).fontFamily(mono)}>
-              {taskAnchorSpan()} · {taskAnchorStatus()}
+            <p data-anchor-span sx={style.fontSize(xs).fontFamily(mono)}>
+              {taskAnchorFileSpan()}
             </p>
+            <if {taskAnchorMovedHint()}>
+              <p data-anchor-hint sx={style.fontSize(xs).fg(muted-foreground)}>
+                {taskAnchorMovedHint()}
+              </p>
+            </if>
             <if {showAcceptLive()}>
               <button
                 type="button"
@@ -290,48 +319,70 @@ export default controller(() => {
             </p>
             <row gap="1">
               <for {taskAttachChips()} as="a" key={a.key}>
-                <badge data-attach-chip tone="muted" size="sm" variant="outline">{a.label}</badge>
+                <badge
+                  data-attach-chip
+                  data-attach-thumb={a.isRender ? 'true' : 'false'}
+                  data-attach-kind={a.kind}
+                  tone="muted"
+                  size="sm"
+                  variant="outline"
+                >
+                  {a.label}
+                </badge>
               </for>
             </row>
+            <if {hasTaskDiff()}>
+              <sail-diff
+                data-attach-diff
+                from={diffFrom()}
+                to={diffTo()}
+              ></sail-diff>
+            </if>
           </column>
         </if>
       </column>
     </section>
     <footer>
-      <column gap="2" sx={style.w(full)}>
-        <row
-          data-reply-composer
-          align="center"
-          gap="2"
-          nowrap
+      <column gap="2" sx={style.w(full)} data-reply-composer>
+        <if {showComposerStatus()}>
+          <p data-composer-status sx={style.fontSize(xs).fg(muted-foreground)}>
+            {composerStatusLabel()}
+          </p>
+        </if>
+        <sail-composer
+          data-task-composer
+          data-reply-input
+          multiline
+          disabled={composerDisabled()}
+          placeholder="Ask the agent… use @agent to hand off"
+          on:sail-composer-submit={onComposerSubmit}
           sx={style.w(full)}
         >
-          <input
-            type="text"
-            data-reply-input
-            grow
-            placeholder="Reply… use @agent to hand off"
-            value={taskReply()}
-            on:input={onTaskReplyInput}
-          />
-          <button type="button" size="sm" tone="primary" data-send-reply on:click={onTaskSend}>
-            Send
-          </button>
-        </row>
-        <row gap="2" justify="between" nowrap align="center">
-          <p data-attach-hint sx={style.fontSize(xs).fg(muted-foreground)}>
-            Attach with ⌘⇧A
-          </p>
-          <button
-            type="button"
-            size="sm"
-            variant="outline"
-            data-commit-intent
-            on:click={onTaskCommit}
-          >
-            Save decision
-          </button>
-        </row>
+          <row slot="trailing" gap="1" align="center" nowrap>
+            <button
+              type="button"
+              size="sm"
+              variant="ghost"
+              data-attach-crop
+              disabled={!canAttachCrop()}
+              on:click={onAttachCrop}
+            >
+              Attach screenshot
+            </button>
+            <button
+              type="button"
+              size="sm"
+              variant="outline"
+              data-commit-intent
+              on:click={onTaskCommit}
+            >
+              Commit
+            </button>
+          </row>
+        </sail-composer>
+        <p data-attach-hint sx={style.fontSize(xs).fg(muted-foreground)}>
+          Crops from the tray attach here — no file dialogs.
+        </p>
       </column>
     </footer>
   </dialog>
