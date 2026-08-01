@@ -730,6 +730,26 @@ fn skill_setter_line(s: &sail_lint::style::setters::SetterSpec) -> String {
     )
 }
 
+/// Fenced sx demos for `gen_skill`. Product SAIL uses single braces
+/// (`sx={style…}`); this is a plain string for `push_str`, not a format string.
+///
+/// `raw_containers`: when false, avoid bare `<div>`/`<span>` (no-raw policy).
+fn sx_skill_demo(raw_containers: bool) -> &'static str {
+    if raw_containers {
+        "```\n\
+         <div sx={style.bg(surface-2).pad(4).radius(lg).when({ hover: style.bg(muted) })} />\n\
+         <span sx={style.fg(muted-foreground).fontSize(sm)} />\n\
+         ```\n\n"
+    } else {
+        "```\n\
+         <column gap=\"3\" sx={style.bg(surface-2).pad(4).radius(lg).when({ hover: style.bg(muted) })}>\n\
+           <p sx={style.fg(muted-foreground).fontSize(sm)}>…</p>\n\
+         </column>\n\
+         ```\n\n\
+         No bare `<div>`/`<span>` here — use layout keywords + content tags.\n\n"
+    }
+}
+
 /// Generate the agent-authoring skill for `dir` — **progressive disclosure**.
 ///
 /// Default SKILL.md is ~one screen: hard rules, layout/participation, core
@@ -803,20 +823,9 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     if effective.sx {
         let _ = writeln!(md, "## sx — Style product (core)\n");
         // Demo tags must respect raw_containers: under no-raw, bare div/span fail check.
-        let sx_demo = if effective.raw_containers {
-            "```\n\
-             <div sx={{style.bg(surface-2).pad(4).radius(lg).when({{ hover: style.bg(muted) }})}} />\n\
-             <span sx={{style.fg(muted-foreground).fontSize(sm)}} />\n\
-             ```\n\n"
-        } else {
-            "```\n\
-             <column gap=\"3\" sx={{style.bg(surface-2).pad(4).radius(lg).when({{ hover: style.bg(muted) }})}}>\n\
-               <p sx={{style.fg(muted-foreground).fontSize(sm)}}>…</p>\n\
-             </column>\n\
-             ```\n\n\
-             No bare `<div>`/`<span>` here — use layout keywords + content tags.\n\n"
-        };
-        md.push_str(sx_demo);
+        // Plain-string demos use product SAIL single braces (`sx={style…}`). Do not
+        // write `{{` here — that is only for `writeln!` format-string escaping.
+        md.push_str(sx_skill_demo(effective.raw_containers));
         let _ = writeln!(
             md,
             "Scope Style consts, `match(prop, {{…}})`, `when({{…}})`, `compound(…)`,\n\
@@ -1637,4 +1646,57 @@ fn compile_one(
         fs::write(&dts_path, dts).with_context(|| format!("write {}", dts_path.display()))?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod skill_demo_tests {
+    use super::sx_skill_demo;
+
+    #[test]
+    fn raw_sx_demo_uses_single_braces_and_div_span() {
+        let md = sx_skill_demo(true);
+        assert!(
+            md.contains("sx={style."),
+            "product SAIL single-brace sx: {md}"
+        );
+        assert!(
+            !md.contains("sx={{style."),
+            "doubled braces are invalid Style / format-string leak: {md}"
+        );
+        assert!(
+            !md.contains("when({{"),
+            "nested when({{ is format-string leak: {md}"
+        );
+        assert!(md.contains("<div "), "full policy demos use raw div");
+        assert!(md.contains("<span "), "full policy demos use raw span");
+    }
+
+    #[test]
+    fn no_raw_sx_demo_uses_layout_keywords_and_single_braces() {
+        let md = sx_skill_demo(false);
+        assert!(
+            md.contains("sx={style."),
+            "product SAIL single-brace sx: {md}"
+        );
+        assert!(
+            !md.contains("sx={{style."),
+            "doubled braces are invalid Style / format-string leak: {md}"
+        );
+        assert!(
+            !md.contains("when({{"),
+            "nested when({{ is format-string leak: {md}"
+        );
+        assert!(
+            md.contains("<column ") && md.contains("<p "),
+            "no-raw demos use layout + content tags: {md}"
+        );
+        assert!(
+            !md.contains("<div ") && !md.contains("<span "),
+            "no-raw demos must not teach bare div/span: {md}"
+        );
+        assert!(
+            md.contains("No bare"),
+            "no-raw branch should note the ban: {md}"
+        );
+    }
 }

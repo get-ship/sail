@@ -132,6 +132,20 @@ fn skill_generator_matches_product_surface() {
         md.contains("Comments are not load-bearing") || md.contains("load-bearing"),
         "skill must state comments are not load-bearing"
     );
+    // Product Style demos must emit single-brace `sx={style…}`. Doubled
+    // `sx={{style…}}` is a format-string/`push_str` regression (agents paste it).
+    assert!(
+        md.contains("sx={style."),
+        "skill sx demos must use product single-brace syntax"
+    );
+    assert!(
+        !md.contains("sx={{style."),
+        "skill must not emit doubled-brace sx={{{{…}}}} (format-string leak)"
+    );
+    assert!(
+        !md.contains("when({{"),
+        "skill must not emit when({{{{…}}}}) — nested format-string leak"
+    );
 }
 
 #[test]

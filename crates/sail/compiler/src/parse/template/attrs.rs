@@ -368,9 +368,23 @@ fn strip_braces(v: &str) -> &str {
 
 /// Accept `sx={…}` / `sx="…"` without JS grammar. Style is lowered later
 /// (`preprocess` / `lower_sx`); author IR only needs an opaque body.
+///
+/// Stored as [`AttrInstr::Expr`] (name `"sx"`) so existing author-tree walkers
+/// keep seeing a dynamic attr without a new IR variant. Body is **not** JS —
+/// consumers must not assume expression subset validity for `name == "sx"`.
 fn compile_sx_attr(value: &str, value_span: Span) -> Result<AttrInstr, CompileError> {
     if is_expr_value(value) {
         let inner = strip_braces(value).to_string();
+        // Refuse empty `sx={}` at author parse (span-pointing); full Style
+        // validation still lives in preprocess/`lower_sx`.
+        if inner.is_empty() {
+            return Err(CompileError::new(
+                "sx={} is empty — Style product expects a style.… chain \
+                 (e.g. sx={style.pad(4).bg(surface-2)})",
+            )
+            .with_span(value_span)
+            .with_category("sx"));
+        }
         return Ok(AttrInstr::Expr {
             name: "sx".into(),
             expr: Expr::new(inner, value_span, false),
@@ -1436,6 +1450,77 @@ mod tests {
             }
             other => panic!("expected AttrInstr::Expr for sx, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn sx_empty_brace_body_is_refused() {
+        let err = compile_attr("sx", "{}", Span::new(0, 2), "[h1 sx]", false)
+            .expect_err("empty sx={} must fail at author parse");
+        assert!(
+            err.message.contains("empty") || err.message.contains("style."),
+            "must teach Style chain, got: {}",
+            err.message
+        );
+        assert!(err.span.is_some(), "must carry a span on sx");
+    }
+
+    #[test]
+    fn parse_author_keeps_sx_style_chain_with_scale_tokens_and_nested_when() {
+        // End-to-end author path: preprocess_author quotes braces, HTML parse,
+        // then attrs — the RENDER-1 / SailInspect join consumer.
+        let src = r#"
+            <h1 sx={style.fontSize(2xl).padX(2_5).fg(sidebar-foreground).when({ hover: style.fg(foreground) })}>T</h1>
+        "#;
+        let prog = crate::parse::parse_author(src)
+            .expect("parse_author must accept product Style (opaque sx)");
+        let el = prog
+            .template
+            .iter()
+            .find_map(|i| match i {
+                crate::ir::Instr::Element(e) if e.tag == "h1" => Some(e),
+                _ => None,
+            })
+            .expect("h1 in template");
+        let sx = el
+            .attrs
+            .iter()
+            .find_map(|a| match a {
+                AttrInstr::Expr { name, expr, .. } if name == "sx" => Some(expr),
+                _ => None,
+            })
+            .expect("sx attr on h1");
+        assert!(
+            sx.source.contains("fontSize(2xl)"),
+            "leading-digit scale preserved: {}",
+            sx.source
+        );
+        assert!(
+            sx.source.contains("padX(2_5)"),
+            "underscore scale token preserved: {}",
+            sx.source
+        );
+        assert!(
+            sx.source.contains("sidebar-foreground"),
+            "hyphenated token preserved: {}",
+            sx.source
+        );
+        assert!(
+            sx.source.contains("when({") && sx.source.contains("hover:"),
+            "nested when({{…}}) body preserved: {}",
+            sx.source
+        );
+    }
+
+    #[test]
+    fn parse_author_still_rejects_leading_digit_in_non_sx_expr_attr() {
+        // Opaque sx must not loosen ordinary expression attrs.
+        let src = r#"<h1 title={fontSize(2xl)}>T</h1>"#;
+        let err = crate::parse::parse_author(src)
+            .expect_err("non-sx expr with Style-shaped body must still fail JS parse");
+        assert!(
+            !err.message.is_empty(),
+            "must surface a compile error for title={{fontSize(2xl)}}"
+        );
     }
 
     #[test]
