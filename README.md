@@ -3,6 +3,11 @@
 Ahead-of-time-compiled UI framework (`.sail` → ESM) and **deck** host
 (routing, SSR, bundling, dev loop). Product docs: **`apps/sail-site`**.
 
+**Eval / agent lab** lives outside this product repo: `~/dev/sail-lab`
+(adapters + standards) with grades/list/report through fleet
+`bridge.v1.EvalService`. See `~/dev/sail-lab/fleet/README.md` and mission
+scratch `SAIL-USE-EVALSERVICE.md`. Do not write run artifacts into this tree.
+
 ## Prerequisites
 
 - [Bun](https://bun.sh)
