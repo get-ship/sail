@@ -790,6 +790,13 @@ mod tests {
              maps to this same bundle in production; a stale bake or a missing index.ts \
              re-export breaks every compiled route's router import"
         );
+        assert!(
+            SUI_RUNTIME_JS.contains("createVirtualizer"),
+            "baked sail-runtime.js missing `createVirtualizer` — `@ship/sail-runtime/virtual` \
+             maps to this same bundle; without it sail-table / sail-tree / sail-message-list \
+             fail at runtime. Fix: export ./virtual from framework-bundle.ts then \
+             `cargo run -p deck-cli -- build-assets`"
+        );
         // The removed `view()` export must be gone. Match the export list (`as
         // view`), not warning strings that merely mention the word "view".
         assert!(
@@ -1176,7 +1183,6 @@ mod tests {
             "missing sail-project-themes meta: {html}"
         );
     }
-
 
     #[test]
     fn serve_scaffold_overlay_in_dev_no_overlay_in_prod() {
