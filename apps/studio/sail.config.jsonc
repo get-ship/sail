@@ -15,6 +15,10 @@
   "render": "csr",
   // Ban <div>/<span> for app-local components under src/ (routes/ has its own).
   "raw_containers": false,
+  // Studio layout gate (Workstream A): promote main-axis overflow, collapsed
+  // boxes, and height-chain findings to Error so `sail check` / `sail dev`
+  // exit non-zero. Non-studio packages omit this key and keep soft warns.
+  "layout": "warn",
   "entry": {
     "clientsModule": "./src/clients.ts",
     "exposeNames": []
