@@ -68,7 +68,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 <scope>
   // minW(0) + overflowX clip on the page root — diagonal tickers use
   // left/right negative inset; without a hard clip the document grows sideways.
-  const page = style.w(full).maxW(full).minW(0).overflowX(hidden).overflowY(visible).bg(surface-0)
+  // Do NOT pair overflowX(hidden) with a height-capped flex parent and leave Y
+  // visible: CSS coerces Y→auto and sections become independent scrollports.
+  // Document shell is content-sized; overflowX alone is fine (no Y scrollport).
+  const page = style.w(full).maxW(full).minW(0).overflowX(hidden).bg(surface-0)
+  // Marketing sections: overflowX clips tickers/bleed; shrink=0 in markup so
+  // they never flex-compress into mini-scrollpanes under residual height locks.
   const hero = style.position(relative).padX(4).padT(12).padB(10).minW(0).overflowX(hidden).when({
     tablet: style.padX(8).padT(20).padB(16),
   })
@@ -117,7 +122,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
 <column gap="0" sx={page}>
 
-  <section sx={hero}>
+  <section shrink="0" sx={hero}>
     <div sx={glow}></div>
 
     <column gap="8" align="center" sx={heroInner}>
@@ -145,7 +150,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </column>
   </section>
 
-  <section sx={tickerSection}>
+  <section shrink="0" sx={tickerSection}>
     <div sx={tickerBand}>
       <ticker duration="slow" reverse sx={tickerDark}>
         <p sx={tickerMono}>forms + validation&nbsp;&nbsp;·&nbsp;&nbsp;live data&nbsp;&nbsp;·&nbsp;&nbsp;springs + tweens&nbsp;&nbsp;·&nbsp;&nbsp;ssr&nbsp;&nbsp;·&nbsp;&nbsp;hot reload&nbsp;&nbsp;·&nbsp;&nbsp;design tokens&nbsp;&nbsp;·&nbsp;&nbsp;</p>
@@ -158,7 +163,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </div>
   </section>
 
-  <section sx={bento}>
+  <section shrink="0" sx={bento}>
     <!--
       <grid cols> is not breakpoint-aware. Duplicate the six cards only to
       swap track count — language gap, not content gap.
@@ -350,7 +355,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </else></if>
   </section>
 
-  <section sx={foot}>
+  <section shrink="0" sx={foot}>
     <row justify="between" align="center" sx={footRow}>
       <row gap="6" align="center">
         <a href="/sail/overview" sx={footLink}>Docs</a>
@@ -363,7 +368,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     </row>
   </section>
 
-  <div sx={wordmarkWrap}>
+  <div shrink="0" sx={wordmarkWrap}>
     <p sx={wordmark}>SHIP</p>
   </div>
 </column>

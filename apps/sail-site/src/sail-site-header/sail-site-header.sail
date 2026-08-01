@@ -6,6 +6,16 @@
   mounts it at prefix `/`). Per-segment sidebars (Sail/Deck/Components/AI)
   live in their own `routes/<segment>/_layout.sail` + rail component, nested
   inside this one — this file owns none of that, only the always-on top bar.
+
+  Shell geometry (one chrome tree — theme-picker must NEVER remount on SPA):
+  - Outer column is always viewport-locked (`h(screen)`) so fill/grow children
+    (docs rails, tutorial workbench) resolve a real height budget.
+  - Landing (`/`) uses a single scrollport on <main> (overflowY auto) with
+    non-shrinking children so marketing is one continuous scroll, not sections.
+  - Document routes use overflow(hidden) on <main> so nested rails own
+    independent rail + content scrollports.
+  - Tutorial lessons (`/sail/tutorial/*`) and showcase keep the same fill shell;
+    sail-docs-rail drops the rail (workbench mode).
 -->
 
 <controller>
@@ -53,15 +63,20 @@ function productAttr(product: string): string {
   }
 }
 
+/** Live pathname — subscribe to route.pathname when present, always read location. */
+function livePath(ctx: { route?: { pathname?: () => string } }): string {
+  const r = ctx.route
+  // Touch the signal so SPA navigations re-run this derived when chrome is reused.
+  if (r?.pathname) void r.pathname()
+  if (typeof location !== 'undefined' && location.pathname) return location.pathname
+  return r?.pathname?.() ?? '/'
+}
+
 export default controller((ctx) => {
     const root = document.documentElement
     // Live pathname from the router when chrome is reused across leaf
     // navigations; fall back to location for first paint / non-router mounts.
-    const path = derived(() => {
-      const r = (ctx as { route?: { pathname?: () => string } }).route
-      if (r?.pathname) return r.pathname()
-      return typeof location !== 'undefined' ? location.pathname : '/'
-    })
+    const path = derived(() => livePath(ctx as { route?: { pathname?: () => string } }))
     const product = derived(() => productFor(path()))
     effect(() => {
       root.setAttribute('data-product', productAttr(product()))
@@ -94,11 +109,7 @@ export default controller((ctx) => {
     })
 
     // The umbrella landing (design 1c) is the marketing home — a full-bleed
-    // kinetic page (crossing diagonal tickers, giant wordmark) that must NOT
-    // sit inside the docs reading gutter, so it renders in a no-padding main
-    // like a workbench. Every other route has its own segment layout (Sail,
-    // Deck, Components, AI) that supplies its own <main> — this header must
-    // not double-wrap those, so it only wraps when nothing downstream will.
+    // kinetic page that must NOT sit inside the docs reading gutter.
     const landing = derived(() => path() === '/')
 
     return { path, product, landing }
@@ -118,19 +129,18 @@ export default controller((ctx) => {
   })
   // Phone: mark only. Tablet+: SHIP UI wordmark.
   const brandWord = style.display(none).whitespace(nowrap).when({ tablet: style.display(inline) })
-  // Clip marketing full-bleed content (tickers use negative inset) at the shell.
-  const landingMain = style.basis(0).minH(0).maxW(full).overflowX(hidden).overflowY(visible)
-  // App shell height budget (workbench + docs).
-  // - Outer: fixed to the viewport (`h(screen)`) so percent/fill children resolve.
-  // - Do NOT put overflow:hidden on the outer column — at compile time taffy
-  //   treats the whole route tree under <slot> as content and Error-fails
-  //   silent-clip; scroll responsibility lives on <main> / workbench panes.
-  // - <main> is minH(0)+grow so nested overflowY(auto) panes get a real budget.
+  // Viewport-locked shell so fill/grow children resolve. One tree — never remount
+  // the theme-picker when switching landing/docs/tutorial (SPA chrome reuse).
+  // Do NOT overflow:hidden the outer column — taffy silent-clip + popover hosts.
   const shell = style.minH(screen).h(screen)
-  const appMain = style.basis(0).minH(0).minW(0).overflowY(auto).overflowX(hidden)
+  // Landing: THE continuous scrollport. Clip ticker X; Y scrolls here only.
+  // Children must shrink=0 so sections do not compress into mini-scrollpanes.
+  const landingMain = style.basis(0).minH(0).minW(0).maxW(full).overflowX(hidden).overflowY(auto)
+  // App (docs / workbench / catalog): fill budget for nested rails; rails own scroll.
+  const appMain = style.basis(0).minH(0).minW(0).overflow(hidden)
 </scope>
 
-<!-- Single column host: navbar + main. Height is the viewport; main flexes. -->
+<!-- Single chrome tree: navbar + theme-picker never remount on route change. -->
 <column gap="0" w="full" sx={shell}>
   <navbar sticky bordered use:chromeOffset>
     <a slot="brand" href="/" aria-label="SHIP UI home" shrink="0">

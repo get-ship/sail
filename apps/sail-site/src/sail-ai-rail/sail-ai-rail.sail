@@ -7,8 +7,9 @@
 export default controller((ctx) => {
   const path = derived(() => {
     const r = (ctx as { route?: { pathname?: () => string } }).route
-    if (r?.pathname) return r.pathname()
-    return typeof location !== 'undefined' ? location.pathname : '/'
+    if (r?.pathname) void r.pathname()
+    if (typeof location !== 'undefined' && location.pathname) return location.pathname
+    return r?.pathname?.() ?? '/'
   })
   const navOpen = signal(false)
   const openNav = (): void => navOpen.set(true)
@@ -31,8 +32,9 @@ export default controller((ctx) => {
 </controller>
 
 <scope>
-  const shell = style.minH(0).h(fill).overflow(hidden)
-  const rail = style.display(none).flexDir(column).w(56).minH(0).padY(4).padX(3).borderEWidth(1).border(border).overflowY(auto).overflowX(hidden).bg(navbar).fg(navbar-foreground).when({
+  // Fill site-header <main>; rail + content independent scrollports.
+  const shell = style.minH(0).h(full).minW(0).overflow(hidden)
+  const rail = style.display(none).flexDir(column).w(56).minH(0).h(full).padY(4).padX(3).borderEWidth(1).border(border).overflowY(auto).overflowX(hidden).bg(navbar).fg(navbar-foreground).when({
     tablet: style.display(flex),
   })
   const railLabel = style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground).mt(4).mb(1)
