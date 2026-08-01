@@ -17,7 +17,10 @@ export default controller((ctx) => {
   return {
     rail: vm.rail,
     statusLine: vm.statusLine,
+    themeStatusLabel: vm.themeStatusLabel,
+    saveStatusLabel: vm.saveStatusLabel,
     hasBatch: vm.hasBatch,
+    batchCountLabel: vm.batchCountLabel,
     batchChips: vm.batchChips,
     batchNewLabel: vm.batchNewLabel,
     opsHealthLabel: vm.opsHealthLabel,
@@ -43,10 +46,17 @@ export default controller((ctx) => {
   <column
     data-studio-rail
     shrink="0"
-    gap="0"
+    gap="1"
     align="center"
-    sx={style.w(12).bg(surface-1).borderRWidth(1).borderR(border).padY(1)}
+    sx={style.w(12).bg(surface-0).borderRWidth(1).borderR(border).padY(2)}
   >
+    <center
+      shrink="0"
+      aria-hidden="true"
+      sx={style.w(8).h(8).radius(md).bg(primary).fg(primary-foreground).fontSize(xs).fontWeight(bold)}
+    >
+      S
+    </center>
     <for {rail()} as="item" key={item.key}>
       <tooltip content={item.label} placement="right">
         <a
@@ -55,7 +65,8 @@ export default controller((ctx) => {
           data-active={item.active ? 'true' : 'false'}
           aria-label={item.label}
           aria-current={item.active ? 'page' : undefined}
-          sx={style.w(12).h(12).fg(muted-foreground).borderLWidth(2).borderL(transparent).when({ hover: style.bg(hover-bg).fg(foreground) }).when({ current: style.bg(surface-2).fg(foreground).borderL(primary) })}
+          title={item.label}
+          sx={style.w(10).h(10).radius(md).fg(muted-foreground).borderLWidth(2).borderL(transparent).when({ hover: style.bg(hover-bg).fg(foreground) }).when({ current: style.bg(surface-2).fg(foreground).borderL(primary) })}
         >
           <center sx={style.w(full).h(full)}>
             <icon name={item.icon} size="sm" label={item.label}></icon>
@@ -69,10 +80,10 @@ export default controller((ctx) => {
         <button
           type="button"
           data-exit-studio
-          aria-label="Back to app"
+          aria-label="Back to app (Esc)"
           title="Back to app (Esc)"
           on:click={onExitStudio}
-          sx={style.w(12).h(12).fg(muted-foreground).borderLWidth(2).borderL(transparent).when({ hover: style.bg(hover-bg).fg(foreground) })}
+          sx={style.w(10).h(10).radius(md).fg(muted-foreground).borderLWidth(2).borderL(transparent).when({ hover: style.bg(hover-bg).fg(foreground) })}
         >
           <center sx={style.w(full).h(full)}>
             <icon name="log-out" size="sm" label="Back to app"></icon>
@@ -89,15 +100,19 @@ export default controller((ctx) => {
         align="center"
         gap="2"
         shrink="0"
-        sx={style.padX(2).padY(1).borderBWidth(1).borderB(border-subtle).bg(surface-1).h(7)}
+        nowrap
+        sx={style.padX(3).padY(1).borderBWidth(1).borderB(border-subtle).bg(surface-1).h(7)}
       >
-        <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+        <badge tone="primary" size="sm" variant="soft" data-batch-count>
+          {batchCountLabel()}
+        </badge>
+        <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>
           Collected
         </p>
         <for {batchChips()} as="chip" key={chip.key}>
-          <p data-batch-chip={chip.id} sx={style.fontSize(xs).fg(muted-foreground)}>
+          <badge data-batch-chip={chip.id} tone="muted" size="sm" variant="outline">
             {chip.label}
-          </p>
+          </badge>
         </for>
         <row grow></row>
         <button
@@ -132,15 +147,17 @@ export default controller((ctx) => {
       shrink="0"
       nowrap
       min-w="0"
-      sx={style.h(6).padX(3).borderTWidth(1).borderT(border).bg(surface-1).fontSize(xs).fg(muted-foreground).minW(0).overflow(hidden)}
+      sx={style.h(6).padX(3).borderTWidth(1).borderT(border).bg(surface-0).fontSize(xs).fg(muted-foreground).minW(0).overflow(hidden)}
     >
       <p grow min-w="0" sx={style.fontFamily(mono).minW(0).truncate()}>{statusLine()}</p>
+      <p data-save-status shrink="0" sx={style.fontSize(xs)}>{saveStatusLabel()}</p>
+      <p data-theme-status shrink="0" sx={style.fontSize(xs).fg(muted-foreground)}>{themeStatusLabel()}</p>
       <row
         data-health="ops"
         align="center"
         gap="1"
         shrink="0"
-        sx={style.padX(2).when({ hover: style.bg(hover-bg) })}
+        sx={style.padX(1).when({ hover: style.bg(hover-bg) })}
       >
         <icon name="activity" size="sm"></icon>
         <badge tone={opsHealthTone()} size="sm" variant="soft" data-health-tone="ops">
@@ -152,7 +169,7 @@ export default controller((ctx) => {
         align="center"
         gap="1"
         shrink="0"
-        sx={style.padX(2).when({ hover: style.bg(hover-bg) })}
+        sx={style.padX(1).when({ hover: style.bg(hover-bg) })}
       >
         <icon name="radio" size="sm"></icon>
         <badge tone={watchHealthTone()} size="sm" variant="soft" data-health-tone="watch">

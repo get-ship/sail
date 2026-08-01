@@ -12,7 +12,7 @@ export default controller((_ctx: ControllerScope<any>) => {
     <p>Every route renders without JavaScript.</p>
     <row gap="2">
       <button type="button" tone="primary">Get started</button>
-      <button type="button" tone="secondary">Read the docs</button>
+      <button type="button" tone="muted">Read the docs</button>
     </row>
     {ticks().toFixed(0)}
   </card>

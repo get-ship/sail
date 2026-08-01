@@ -194,7 +194,7 @@ export default controller(() => {
     </column>
   </scroll-area>
 
-  <dialog data-task-detail open={hasTaskSelected()} size="lg" side="end">
+  <dialog data-task-detail open={hasTaskSelected()} size="lg" side="end" sx={style.maxH(panel-vh-md).overflow(auto)}>
     <header>
       <row align="center" gap="2" nowrap justify="between" sx={style.w(full)}>
         <row align="center" gap="2" nowrap grow min-w="0">
@@ -211,14 +211,14 @@ export default controller(() => {
         </button>
       </row>
     </header>
-    <section>
+    <section sx={style.minH(0).maxH(panel-max-h-sm).overflow(auto)}>
       <column data-task-conversation gap="3" sx={style.minH(0)}>
         <if {hasTaskCommit()}>
           <p data-commit-path sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>
             Saved {taskCommitPath()}
           </p>
         </if>
-        <scroll-area data-messages sx={style.minH(0).maxH(64)}>
+        <scroll-area data-messages sx={style.minH(0).maxH(40)}>
           <column gap="2">
             <if {!taskConv().length}>
               <empty-state variant="inline" size="sm" w="full">

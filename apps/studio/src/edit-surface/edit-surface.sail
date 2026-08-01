@@ -107,8 +107,8 @@ export default controller(() => {
         <button type="button" size="sm" variant="ghost" tone="muted" data-audit-snapshot on:click={onAuditSnapshot}>
           Audit snapshot
         </button>
-        <button type="button" size="sm" tone="primary" data-save-source on:click={onSaveSource}>
-          Save
+        <button type="button" size="sm" tone="primary" data-save-source title="Save (⌘S)" on:click={onSaveSource}>
+          Save ⌘S
         </button>
       </row>
     </row>
@@ -120,7 +120,7 @@ export default controller(() => {
     </if>
 
     <if {!hasOpenDoc()}>
-      <column grow align="center" justify="center" sx={style.minH(0).bg(surface-0)}>
+      <column grow align="center" justify="center" sx={style.minH(0).maxH(full).overflow(hidden).bg(surface-0)}>
         <empty-state variant="placeholder" size="sm" w="full" data-edit-empty sx={style.borderWidth(1).border(border-subtle).radius(md).pad(4)}>
           <strong slot="title">Open a file from the Explorer</strong>
           Select a Sail source to edit and preview.
@@ -129,7 +129,7 @@ export default controller(() => {
     </if>
 
     <if {hasOpenDoc()}>
-      <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0)}>
+      <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0).maxH(panel-max-h-lg).overflow(hidden)}>
         <column
           grow
           min-w="0"
@@ -191,7 +191,7 @@ export default controller(() => {
           sx={style.minH(0).basis(0).h(full).borderLWidth(1).borderL(border).overflow(hidden)}
         >
           <if {hasLivePreview()}>
-            <column grow gap="0" sx={style.minH(0).h(full)}>
+            <column grow gap="0" sx={style.minH(0).h(full).overflow(hidden)}>
               <iframe
                 data-live-preview
                 title="Live app preview"
@@ -201,7 +201,7 @@ export default controller(() => {
             </column>
           </if>
           <if {!hasLivePreview()}>
-            <column grow gap="3" sx={style.minH(0).pad(4).bg(background)}>
+            <column grow gap="3" sx={style.minH(0).maxH(panel-max-h-md).overflow(auto).pad(4).bg(background)}>
               <card data-preview-skeleton variant="outline" padding="sm" sx={style.w(full).maxW(panel-max-w-md)}>
                 <column gap="2">
                   <row gap="2" align="center">

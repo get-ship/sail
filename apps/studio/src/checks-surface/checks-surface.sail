@@ -266,12 +266,12 @@ export default controller(() => {
     <p>{checksStatusNote()}</p>
   </row>
 
-  <dialog data-review-dialog open={reviewOpen()} size="lg">
+  <dialog data-review-dialog open={reviewOpen()} size="lg" sx={style.maxH(panel-vh-md).overflow(auto)}>
     <header>
       <strong>Review fixes</strong>
     </header>
-    <section>
-      <column gap="3" sx={style.padY(1)}>
+    <section sx={style.minH(0).maxH(panel-max-h-sm).overflow(auto)}>
+      <column gap="3" sx={style.padY(1).minH(0)}>
         <p sx={style.fontSize(sm).fg(muted-foreground)}>
           Accept or skip each automatic fix, then apply the ones you want.
         </p>
