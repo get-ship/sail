@@ -197,3 +197,12 @@ a.sail-a:not([variant]):not(.sx-displayinlineflex):not(.sx-displayblock) {
 [data-component] slot { display: contents; }
 @media (prefers-reduced-motion: reduce) { :where([data-component], [data-component] *, button, input, textarea, select, a, [tabindex]) { transition: none !important; animation: none; } }
 }
+
+/* use:autosize — height bridge (JS sets --autosize-h; never assigns layout CSS). */
+:where(textarea[data-autosize], [data-autosize]) {
+  height: var(--autosize-h, auto);
+  overflow-x: hidden;
+  overflow-y: hidden;
+  resize: none;
+  box-sizing: border-box;
+}
