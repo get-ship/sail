@@ -194,6 +194,7 @@ export function defineComponent(
        *  default `""` and the host's `el.value` is empty. */
       private pendingProps: Record<string, unknown> | undefined
       private internals: ElementInternals
+      private didSetup = false
 
       constructor() {
         super()
@@ -201,6 +202,12 @@ export function defineComponent(
       }
 
       private runSetup() {
+        if (this.didSetup) {
+          // Re-setup after disconnect: the previous stamp is still in the
+          // host (cleanup disposes bindings, not nodes). Clear it so the
+          // factory does not stamp a second copy — the `<if>` double-mount.
+          ;(this.shadowRoot ?? this).replaceChildren()
+        }
         // Captured into a local: `this.scope` can be cleared mid-call if the
         // element is synchronously disconnected + reconnected while its own
         // setup is still running (a parent's DOM reconciliation moving this
@@ -220,6 +227,7 @@ export function defineComponent(
           this.cleanup = withScope(scope, () =>
             withHost(this, () => reg.factory(this, this.propSignals, this.internals)),
           )
+          this.didSetup = true
           // Ambient mount() callbacks the factory (or a composition it called)
           // registered on this.scope — the element is already connected by the
           // time connectedCallback runs, so "after connect" IS now. Run inside
@@ -351,11 +359,22 @@ export function defineComponent(
     private cleanup: Disposer | undefined
     private scope: EffectScope | undefined
     private propSignals: Record<string, Signal<unknown>> = {}
+    /** Set after the first successful factory run. Re-setup after a
+     * disconnect (e.g. `<if>` swap re-insertion) must clear the previous
+     * stamp — cleanup disposes bindings, not nodes, so without this the
+     * factory stamps a second copy of the template (double-mount). */
     /** Prop values set via JS property before `connectedCallback` populated
      *  `propSignals` — buffered by the prop accessors, flushed on connect. */
     private pendingProps: Record<string, unknown> | undefined
+    private didSetup = false
 
     private runSetup() {
+      if (this.didSetup) {
+        // Re-setup after disconnect: the previous stamp is still in the
+        // host (cleanup disposes bindings, not nodes). Clear it so the
+        // factory does not stamp a second copy — the `<if>` double-mount.
+        ;(this.shadowRoot ?? this).replaceChildren()
+      }
       // Captured into a local: `this.scope` can be cleared mid-call if the
       // element is synchronously disconnected + reconnected while its own
       // setup is still running (a parent's DOM reconciliation moving this
@@ -375,6 +394,7 @@ export function defineComponent(
         this.cleanup = withScope(scope, () =>
           withHost(this, () => reg.factory(this, this.propSignals)),
         )
+        this.didSetup = true
         // Ambient mount() callbacks the factory (or a composition it called)
         // registered on this.scope — the element is already connected by the
         // time connectedCallback runs, so "after connect" IS now. Run inside

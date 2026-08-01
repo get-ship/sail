@@ -279,3 +279,30 @@ describe('component() — light-DOM capture across reconnect', () => {
     el.remove()
   })
 })
+
+describe('component() — re-setup after disconnect', () => {
+  // The <if> swap re-inserts branch nodes; a component's reconnect re-runs
+  // runSetup, and without clearing, the factory stamps a second template
+  // copy (the studio element-tree double-mount).
+  it('clears the previous stamp on reconnect (no double-mount)', async () => {
+    const tag = nextTag()
+    component(tag, { props: {} }, component(() => ({
+      __mount(container: HTMLElement | ShadowRoot) {
+        const d = document.createElement('div')
+        d.className = 'stamp'
+        container.appendChild(d)
+        return () => {}
+      },
+    })))
+    const el = document.createElement(tag)
+    document.body.appendChild(el)
+    await flushMicrotasks()
+    expect(el.querySelectorAll('.stamp').length).toBe(1)
+
+    el.remove()
+    document.body.appendChild(el)
+    await flushMicrotasks()
+    expect(el.querySelectorAll('.stamp').length).toBe(1)
+    el.remove()
+  })
+})
