@@ -1,0 +1,618 @@
+{
+  "fixture": "nested-card-flow.sail",
+  "taffy": {
+    "engine": "taffy",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "boxes": [
+      {
+        "index": 1,
+        "tag": "div",
+        "class": "sail-col sail-g-4 sail-ai-stretch sx-wfull sx-pad4",
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 318,
+        "unknown_subtree": false,
+        "collapsed": false
+      },
+      {
+        "index": 2,
+        "tag": "div",
+        "class": "sx-wfull sail-card sx-positionrelative sx-isolate sx-overflowclip sx-radiuslg sx-border1border sx-fgcardforeground sx-shadowcardrest sx-transitioncolors sx-durationfast sx-easeout sx-bgcard sx-padY4 sx-padX5 sx-backdropcardbackdropfilter sx-borderImagecornerimage sx-variantdefault-bgcard sx-variantoutline-bgtransparent sx-paddingmd-padY4 sx-paddingmd-padX5 sx-paddingnone-pad0 sx-paddingsm-padY2 sx-paddingsm-padX3 sx-paddinglg-padY5 sx-paddinglg-padX6 sx-interactivetrue-cursorpointer sx-interactivetrue-tapHighlightnone sx-interactivetruehover-borderborderstrong sx-interactivetruehover-shadowhover sx-interactivetruehover-translateYpx sx-interactivetrueactive-shadowcardrest sx-interactivetrueactive-translateY0 sx-interactivetrueactive-durationinstant sx-interactivetruemotionreduce-translateY0 sx-interactivetruefocus-outline2 sx-interactivetrueforcedcolorsfocus-outlineCanvasText sx-filltrue-bgmuted sx-filltrue-borderborder sx-toneprimary-borderprimary sx-toneinfo-borderinfo sx-tonesuccess-bordersuccess sx-tonewarning-borderwarning sx-tonedestructive-borderdestructive sx-toneaccent-borderaccent sx-tonemuted-borderborder sx-statusrailtrue-borderS3borderstrong sx-statusrailtrue-padS4 sx-paddingsmstatusrailtrue-padS2 sx-paddingmdstatusrailtrue-padS4 sx-paddinglgstatusrailtrue-padS5 sx-paddingnonestatusrailtrue-padS0 sx-accentbarstaticbefore-contentempty sx-accentbarstaticbefore-positionabsolute sx-accentbarstaticbefore-left0 sx-accentbarstaticbefore-right0 sx-accentbarstaticbefore-top0 sx-accentbarstaticbefore-hhalf sx-accentbarstaticbefore-bgImageprimaryaccent sx-accentbarstaticbefore-opacity100 sx-accentbarstaticbefore-radiusTlg sx-accentbarstaticbefore-pointerEventsnone sx-accentbarstaticbefore-transitionopacity sx-accentbarstaticbefore-durationmedium sx-accentbarstaticbefore-easeout sx-accentbarhoverbefore-contentempty sx-accentbarhoverbefore-positionabsolute sx-accentbarhoverbefore-left0 sx-accentbarhoverbefore-right0 sx-accentbarhoverbefore-top0 sx-accentbarhoverbefore-hhalf sx-accentbarhoverbefore-bgImageprimaryaccent sx-accentbarhoverbefore-opacity0 sx-accentbarhoverbefore-radiusTlg sx-accentbarhoverbefore-pointerEventsnone sx-accentbarhoverbefore-transitionopacity sx-accentbarhoverbefore-durationmedium sx-accentbarhoverbefore-easeout sx-accentbarhoverhoverbefore-opacity100",
+        "x": 16,
+        "y": 16,
+        "width": 1408,
+        "height": 135,
+        "unknown_subtree": false,
+        "collapsed": false
+      },
+      {
+        "index": 3,
+        "tag": "div",
+        "class": "sx-mt4 sx-mx5 sx-mb3 sx-padX5 sx-padY4 sx-borderB1bordersubtle sx-fontFamilyheading sx-empty-displaynone",
+        "x": 20,
+        "y": 16,
+        "width": 1368,
+        "height": 52,
+        "unknown_subtree": false,
+        "collapsed": false
+      },
+      {
+        "index": 4,
+        "tag": "span",
+        "class": "",
+        "x": 20,
+        "y": 16,
+        "width": 1328,
+        "height": 20,
+        "unknown_subtree": false,
+        "collapsed": false
+      },
+      {
+        "index": 5,
+        "tag": "span",
+        "class": "",
+        "x": 20,
+        "y": 68,
+        "width": 1368,
+        "height": 19,
+        "unknown_subtree": false,
+        "collapsed": false
+      },
+      {
+        "index": 6,
+        "tag": "div",
+        "class": "sx-mt3 sx-mx5 sx-mb4 sx-padX5 sx-padY4 sx-borderT1bordersubtle sx-empty-displaynone",
+        "x": 20,
+        "y": 87,
+        "width": 1368,
+        "height": 32,
+        "unknown_subtree": false,
+        "collapsed": false
+      },
+      {
+        "index": 7,
+        "tag": "div",
+        "class": "sx-wfull sail-card sx-positionrelative sx-isolate sx-overflowclip sx-radiuslg sx-border1border sx-fgcardforeground sx-shadowcardrest sx-transitioncolors sx-durationfast sx-easeout sx-bgcard sx-padY4 sx-padX5 sx-backdropcardbackdropfilter sx-borderImagecornerimage sx-variantdefault-bgcard sx-variantoutline-bgtransparent sx-paddingmd-padY4 sx-paddingmd-padX5 sx-paddingnone-pad0 sx-paddingsm-padY2 sx-paddingsm-padX3 sx-paddinglg-padY5 sx-paddinglg-padX6 sx-interactivetrue-cursorpointer sx-interactivetrue-tapHighlightnone sx-interactivetruehover-borderborderstrong sx-interactivetruehover-shadowhover sx-interactivetruehover-translateYpx sx-interactivetrueactive-shadowcardrest sx-interactivetrueactive-translateY0 sx-interactivetrueactive-durationinstant sx-interactivetruemotionreduce-translateY0 sx-interactivetruefocus-outline2 sx-interactivetrueforcedcolorsfocus-outlineCanvasText sx-filltrue-bgmuted sx-filltrue-borderborder sx-toneprimary-borderprimary sx-toneinfo-borderinfo sx-tonesuccess-bordersuccess sx-tonewarning-borderwarning sx-tonedestructive-borderdestructive sx-toneaccent-borderaccent sx-tonemuted-borderborder sx-statusrailtrue-borderS3borderstrong sx-statusrailtrue-padS4 sx-paddingsmstatusrailtrue-padS2 sx-paddingmdstatusrailtrue-padS4 sx-paddinglgstatusrailtrue-padS5 sx-paddingnonestatusrailtrue-padS0 sx-accentbarstaticbefore-contentempty sx-accentbarstaticbefore-positionabsolute sx-accentbarstaticbefore-left0 sx-accentbarstaticbefore-right0 sx-accentbarstaticbefore-top0 sx-accentbarstaticbefore-hhalf sx-accentbarstaticbefore-bgImageprimaryaccent sx-accentbarstaticbefore-opacity100 sx-accentbarstaticbefore-radiusTlg sx-accentbarstaticbefore-pointerEventsnone sx-accentbarstaticbefore-transitionopacity sx-accentbarstaticbefore-durationmedium sx-accentbarstaticbefore-easeout sx-accentbarhoverbefore-contentempty sx-accentbarhoverbefore-positionabsolute sx-accentbarhoverbefore-left0 sx-accentbarhoverbefore-right0 sx-accentbarhoverbefore-top0 sx-accentbarhoverbefore-hhalf sx-accentbarhoverbefore-bgImageprimaryaccent sx-accentbarhoverbefore-opacity0 sx-accentbarhoverbefore-radiusTlg sx-accentbarhoverbefore-pointerEventsnone sx-accentbarhoverbefore-transitionopacity sx-accentbarhoverbefore-durationmedium sx-accentbarhoverbefore-easeout sx-accentbarhoverhoverbefore-opacity100",
+        "x": 16,
+        "y": 167,
+        "width": 1408,
+        "height": 135,
+        "unknown_subtree": false,
+        "collapsed": false
+      },
+      {
+        "index": 8,
+        "tag": "div",
+        "class": "sx-mt4 sx-mx5 sx-mb3 sx-padX5 sx-padY4 sx-borderB1bordersubtle sx-fontFamilyheading sx-empty-displaynone",
+        "x": 20,
+        "y": 16,
+        "width": 1368,
+        "height": 52,
+        "unknown_subtree": false,
+        "collapsed": false
+      },
+      {
+        "index": 9,
+        "tag": "span",
+        "class": "",
+        "x": 20,
+        "y": 16,
+        "width": 1328,
+        "height": 20,
+        "unknown_subtree": false,
+        "collapsed": false
+      },
+      {
+        "index": 10,
+        "tag": "span",
+        "class": "",
+        "x": 20,
+        "y": 68,
+        "width": 1368,
+        "height": 19,
+        "unknown_subtree": false,
+        "collapsed": false
+      },
+      {
+        "index": 11,
+        "tag": "div",
+        "class": "sx-mt3 sx-mx5 sx-mb4 sx-padX5 sx-padY4 sx-borderT1bordersubtle sx-empty-displaynone",
+        "x": 20,
+        "y": 87,
+        "width": 1368,
+        "height": 32,
+        "unknown_subtree": false,
+        "collapsed": false
+      }
+    ]
+  },
+  "browser": {
+    "boxes": [
+      {
+        "tag": "div",
+        "class": "sail-col sail-g-4 sail-ai-stretch sx-wfull sx-pad4",
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 246,
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "w": 1440,
+          "h": 246
+        }
+      },
+      {
+        "tag": "div",
+        "class": "sx-wfull sail-card sx-positionrelative sx-isolate sx-overflowclip sx-radiuslg sx-border1border sx-fgcardforeground sx-shadowcardrest sx-transitioncolors sx-durationfast sx-easeout sx-bgcard sx-padY4 sx-padX5 sx-backdropcardbackdropfilter sx-borderImagecornerimage sx-variantdefault-bgcard sx-variantoutline-bgtransparent sx-paddingmd-padY4 sx-paddingmd-padX5 sx-paddingnone-pad0 sx-paddingsm-padY2 sx-paddingsm-padX3 sx-paddinglg-padY5 sx-paddinglg-padX6 sx-interactivetrue-cursorpointer sx-interactivetrue-tapHighlightnone sx-interactivetruehover-borderborderstrong sx-interactivetruehover-shadowhover sx-interactivetruehover-translateYpx sx-interactivetrueactive-shadowcardrest sx-interactivetrueactive-translateY0 sx-interactivetrueactive-durationinstant sx-interactivetruemotionreduce-translateY0 sx-interactivetruefocus-outline2 sx-interactivetrueforcedcolorsfocus-outlineCanvasText sx-filltrue-bgmuted sx-filltrue-borderborder sx-toneprimary-borderprimary sx-toneinfo-borderinfo sx-tonesuccess-bordersuccess sx-tonewarning-borderwarning sx-tonedestructive-borderdestructive sx-toneaccent-borderaccent sx-tonemuted-borderborder sx-statusrailtrue-borderS3borderstrong sx-statusrailtrue-padS4 sx-paddingsmstatusrailtrue-padS2 sx-paddingmdstatusrailtrue-padS4 sx-paddinglgstatusrailtrue-padS5 sx-paddingnonestatusrailtrue-padS0 sx-accentbarstaticbefore-contentempty sx-accentbarstaticbefore-positionabsolute sx-accentbarstaticbefore-left0 sx-accentbarstaticbefore-right0 sx-accentbarstaticbefore-top0 sx-accentbarstaticbefore-hhalf sx-accentbarstaticbefore-bgImageprimaryaccent sx-accentbarstaticbefore-opacity100 sx-accentbarstaticbefore-radiusTlg sx-accentbarstaticbefore-pointerEventsnone sx-accentbarstaticbefore-transitionopacity sx-accentbarstaticbefore-durationmedium sx-accentbarstaticbefore-easeout sx-accentbarhoverbefore-contentempty sx-accentbarhoverbefore-positionabsolute sx-accentbarhoverbefore-left0 sx-accentbarhoverbefore-right0 sx-accentbarhoverbefore-top0 sx-accentbarhoverbefore-hhalf sx-accentbarhoverbefore-bgImageprimaryaccent sx-accentbarhoverbefore-opacity0 sx-accentbarhoverbefore-radiusTlg sx-accentbarhoverbefore-pointerEventsnone sx-accentbarhoverbefore-transitionopacity sx-accentbarhoverbefore-durationmedium sx-accentbarhoverbefore-easeout sx-accentbarhoverhoverbefore-opacity100",
+        "x": 16,
+        "y": 16,
+        "width": 1408,
+        "height": 99,
+        "offset": {
+          "x": 16,
+          "y": 16,
+          "w": 1408,
+          "h": 99
+        }
+      },
+      {
+        "tag": "div",
+        "class": "sx-mt4 sx-mx5 sx-mb3 sx-padX5 sx-padY4 sx-borderB1bordersubtle sx-fontFamilyheading sx-empty-displaynone",
+        "x": 16,
+        "y": 16,
+        "width": 1408,
+        "height": 51.5,
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "w": 1408,
+          "h": 52
+        }
+      },
+      {
+        "tag": "span",
+        "class": "",
+        "x": 36,
+        "y": 33,
+        "width": 39.046875,
+        "height": 16,
+        "offset": {
+          "x": 20,
+          "y": 17,
+          "w": 39,
+          "h": 16
+        }
+      },
+      {
+        "tag": "span",
+        "class": "",
+        "x": 36,
+        "y": 80.5,
+        "width": 43.03125,
+        "height": 17,
+        "offset": {
+          "x": 20,
+          "y": 65,
+          "w": 43,
+          "h": 17
+        }
+      },
+      {
+        "tag": "div",
+        "class": "sx-mt3 sx-mx5 sx-mb4 sx-padX5 sx-padY4 sx-borderT1bordersubtle sx-empty-displaynone",
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0
+        }
+      },
+      {
+        "tag": "div",
+        "class": "sx-wfull sail-card sx-positionrelative sx-isolate sx-overflowclip sx-radiuslg sx-border1border sx-fgcardforeground sx-shadowcardrest sx-transitioncolors sx-durationfast sx-easeout sx-bgcard sx-padY4 sx-padX5 sx-backdropcardbackdropfilter sx-borderImagecornerimage sx-variantdefault-bgcard sx-variantoutline-bgtransparent sx-paddingmd-padY4 sx-paddingmd-padX5 sx-paddingnone-pad0 sx-paddingsm-padY2 sx-paddingsm-padX3 sx-paddinglg-padY5 sx-paddinglg-padX6 sx-interactivetrue-cursorpointer sx-interactivetrue-tapHighlightnone sx-interactivetruehover-borderborderstrong sx-interactivetruehover-shadowhover sx-interactivetruehover-translateYpx sx-interactivetrueactive-shadowcardrest sx-interactivetrueactive-translateY0 sx-interactivetrueactive-durationinstant sx-interactivetruemotionreduce-translateY0 sx-interactivetruefocus-outline2 sx-interactivetrueforcedcolorsfocus-outlineCanvasText sx-filltrue-bgmuted sx-filltrue-borderborder sx-toneprimary-borderprimary sx-toneinfo-borderinfo sx-tonesuccess-bordersuccess sx-tonewarning-borderwarning sx-tonedestructive-borderdestructive sx-toneaccent-borderaccent sx-tonemuted-borderborder sx-statusrailtrue-borderS3borderstrong sx-statusrailtrue-padS4 sx-paddingsmstatusrailtrue-padS2 sx-paddingmdstatusrailtrue-padS4 sx-paddinglgstatusrailtrue-padS5 sx-paddingnonestatusrailtrue-padS0 sx-accentbarstaticbefore-contentempty sx-accentbarstaticbefore-positionabsolute sx-accentbarstaticbefore-left0 sx-accentbarstaticbefore-right0 sx-accentbarstaticbefore-top0 sx-accentbarstaticbefore-hhalf sx-accentbarstaticbefore-bgImageprimaryaccent sx-accentbarstaticbefore-opacity100 sx-accentbarstaticbefore-radiusTlg sx-accentbarstaticbefore-pointerEventsnone sx-accentbarstaticbefore-transitionopacity sx-accentbarstaticbefore-durationmedium sx-accentbarstaticbefore-easeout sx-accentbarhoverbefore-contentempty sx-accentbarhoverbefore-positionabsolute sx-accentbarhoverbefore-left0 sx-accentbarhoverbefore-right0 sx-accentbarhoverbefore-top0 sx-accentbarhoverbefore-hhalf sx-accentbarhoverbefore-bgImageprimaryaccent sx-accentbarhoverbefore-opacity0 sx-accentbarhoverbefore-radiusTlg sx-accentbarhoverbefore-pointerEventsnone sx-accentbarhoverbefore-transitionopacity sx-accentbarhoverbefore-durationmedium sx-accentbarhoverbefore-easeout sx-accentbarhoverhoverbefore-opacity100",
+        "x": 16,
+        "y": 131,
+        "width": 1408,
+        "height": 99,
+        "offset": {
+          "x": 16,
+          "y": 131,
+          "w": 1408,
+          "h": 99
+        }
+      },
+      {
+        "tag": "div",
+        "class": "sx-mt4 sx-mx5 sx-mb3 sx-padX5 sx-padY4 sx-borderB1bordersubtle sx-fontFamilyheading sx-empty-displaynone",
+        "x": 16,
+        "y": 131,
+        "width": 1408,
+        "height": 51.5,
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "w": 1408,
+          "h": 52
+        }
+      },
+      {
+        "tag": "span",
+        "class": "",
+        "x": 36,
+        "y": 148,
+        "width": 39,
+        "height": 16,
+        "offset": {
+          "x": 20,
+          "y": 17,
+          "w": 39,
+          "h": 16
+        }
+      },
+      {
+        "tag": "span",
+        "class": "",
+        "x": 36,
+        "y": 195.5,
+        "width": 42.234375,
+        "height": 17,
+        "offset": {
+          "x": 20,
+          "y": 65,
+          "w": 42,
+          "h": 17
+        }
+      },
+      {
+        "tag": "div",
+        "class": "sx-mt3 sx-mx5 sx-mb4 sx-padX5 sx-padY4 sx-borderT1bordersubtle sx-empty-displaynone",
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "offset": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0
+        }
+      }
+    ],
+    "cdp": {
+      "documentNodeId": 1,
+      "protocol": "CDP DOM.getDocument ok"
+    },
+    "mode": "lowered-html"
+  },
+  "diff": {
+    "compared": 11,
+    "taffy_count": 11,
+    "browser_count": 11,
+    "size_match": 0,
+    "size_fail": 11,
+    "pos_fail": 7,
+    "error_count": 11,
+    "warn_count": 0,
+    "structure_ok": true,
+    "root_width_ok": true,
+    "diffs": [
+      {
+        "i": 0,
+        "severity": "error",
+        "taffy": {
+          "tag": "div",
+          "class": "sail-col sail-g-4 sail-ai-stretch sx-wfull sx-pad4",
+          "x": 0,
+          "y": 0,
+          "w": 1440,
+          "h": 318
+        },
+        "browser": {
+          "tag": "div",
+          "class": "sail-col sail-g-4 sail-ai-stretch sx-wfull sx-pad4",
+          "x": 0,
+          "y": 0,
+          "w": 1440,
+          "h": 246
+        },
+        "delta": {
+          "dw": 0,
+          "dh": 72,
+          "dx": 0,
+          "dy": 0
+        },
+        "sizeOk": false,
+        "posOk": true
+      },
+      {
+        "i": 1,
+        "severity": "error",
+        "taffy": {
+          "tag": "div",
+          "class": "sx-wfull sail-card sx-fgcardforeground sx-shadowcardrest sx-bgcard sx-padY4 sx-padX5 sx-backdropcardbackdropfilter",
+          "x": 16,
+          "y": 16,
+          "w": 1408,
+          "h": 135
+        },
+        "browser": {
+          "tag": "div",
+          "class": "sx-wfull sail-card sx-fgcardforeground sx-shadowcardrest sx-bgcard sx-padY4 sx-padX5 sx-backdropcardbackdropfilter",
+          "x": 16,
+          "y": 16,
+          "w": 1408,
+          "h": 99
+        },
+        "delta": {
+          "dw": 0,
+          "dh": 36,
+          "dx": 0,
+          "dy": 0
+        },
+        "sizeOk": false,
+        "posOk": true
+      },
+      {
+        "i": 2,
+        "severity": "error",
+        "taffy": {
+          "tag": "div",
+          "class": "sx-padX5 sx-padY4",
+          "x": 20,
+          "y": 16,
+          "w": 1368,
+          "h": 52
+        },
+        "browser": {
+          "tag": "div",
+          "class": "sx-padX5 sx-padY4",
+          "x": 16,
+          "y": 16,
+          "w": 1408,
+          "h": 51.5
+        },
+        "delta": {
+          "dw": 40,
+          "dh": 0.5,
+          "dx": 4,
+          "dy": 0
+        },
+        "sizeOk": false,
+        "posOk": true
+      },
+      {
+        "i": 3,
+        "severity": "error",
+        "taffy": {
+          "tag": "span",
+          "class": "",
+          "x": 20,
+          "y": 16,
+          "w": 1328,
+          "h": 20
+        },
+        "browser": {
+          "tag": "span",
+          "class": "",
+          "x": 36,
+          "y": 33,
+          "w": 39.046875,
+          "h": 16
+        },
+        "delta": {
+          "dw": 1288.953125,
+          "dh": 4,
+          "dx": 16,
+          "dy": 17
+        },
+        "sizeOk": false,
+        "posOk": false
+      },
+      {
+        "i": 4,
+        "severity": "error",
+        "taffy": {
+          "tag": "span",
+          "class": "",
+          "x": 20,
+          "y": 68,
+          "w": 1368,
+          "h": 19
+        },
+        "browser": {
+          "tag": "span",
+          "class": "",
+          "x": 36,
+          "y": 80.5,
+          "w": 43.03125,
+          "h": 17
+        },
+        "delta": {
+          "dw": 1324.96875,
+          "dh": 2,
+          "dx": 16,
+          "dy": 12.5
+        },
+        "sizeOk": false,
+        "posOk": true
+      },
+      {
+        "i": 5,
+        "severity": "error",
+        "taffy": {
+          "tag": "div",
+          "class": "sx-padX5 sx-padY4",
+          "x": 20,
+          "y": 87,
+          "w": 1368,
+          "h": 32
+        },
+        "browser": {
+          "tag": "div",
+          "class": "sx-padX5 sx-padY4",
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0
+        },
+        "delta": {
+          "dw": 1368,
+          "dh": 32,
+          "dx": 20,
+          "dy": 87
+        },
+        "sizeOk": false,
+        "posOk": false
+      },
+      {
+        "i": 6,
+        "severity": "error",
+        "taffy": {
+          "tag": "div",
+          "class": "sx-wfull sail-card sx-fgcardforeground sx-shadowcardrest sx-bgcard sx-padY4 sx-padX5 sx-backdropcardbackdropfilter",
+          "x": 16,
+          "y": 167,
+          "w": 1408,
+          "h": 135
+        },
+        "browser": {
+          "tag": "div",
+          "class": "sx-wfull sail-card sx-fgcardforeground sx-shadowcardrest sx-bgcard sx-padY4 sx-padX5 sx-backdropcardbackdropfilter",
+          "x": 16,
+          "y": 131,
+          "w": 1408,
+          "h": 99
+        },
+        "delta": {
+          "dw": 0,
+          "dh": 36,
+          "dx": 0,
+          "dy": 36
+        },
+        "sizeOk": false,
+        "posOk": false
+      },
+      {
+        "i": 7,
+        "severity": "error",
+        "taffy": {
+          "tag": "div",
+          "class": "sx-padX5 sx-padY4",
+          "x": 20,
+          "y": 16,
+          "w": 1368,
+          "h": 52
+        },
+        "browser": {
+          "tag": "div",
+          "class": "sx-padX5 sx-padY4",
+          "x": 16,
+          "y": 131,
+          "w": 1408,
+          "h": 51.5
+        },
+        "delta": {
+          "dw": 40,
+          "dh": 0.5,
+          "dx": 4,
+          "dy": 115
+        },
+        "sizeOk": false,
+        "posOk": false
+      },
+      {
+        "i": 8,
+        "severity": "error",
+        "taffy": {
+          "tag": "span",
+          "class": "",
+          "x": 20,
+          "y": 16,
+          "w": 1328,
+          "h": 20
+        },
+        "browser": {
+          "tag": "span",
+          "class": "",
+          "x": 36,
+          "y": 148,
+          "w": 39,
+          "h": 16
+        },
+        "delta": {
+          "dw": 1289,
+          "dh": 4,
+          "dx": 16,
+          "dy": 132
+        },
+        "sizeOk": false,
+        "posOk": false
+      },
+      {
+        "i": 9,
+        "severity": "error",
+        "taffy": {
+          "tag": "span",
+          "class": "",
+          "x": 20,
+          "y": 68,
+          "w": 1368,
+          "h": 19
+        },
+        "browser": {
+          "tag": "span",
+          "class": "",
+          "x": 36,
+          "y": 195.5,
+          "w": 42.234375,
+          "h": 17
+        },
+        "delta": {
+          "dw": 1325.765625,
+          "dh": 2,
+          "dx": 16,
+          "dy": 127.5
+        },
+        "sizeOk": false,
+        "posOk": false
+      },
+      {
+        "i": 10,
+        "severity": "error",
+        "taffy": {
+          "tag": "div",
+          "class": "sx-padX5 sx-padY4",
+          "x": 20,
+          "y": 87,
+          "w": 1368,
+          "h": 32
+        },
+        "browser": {
+          "tag": "div",
+          "class": "sx-padX5 sx-padY4",
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0
+        },
+        "delta": {
+          "dw": 1368,
+          "dh": 32,
+          "dx": 20,
+          "dy": 87
+        },
+        "sizeOk": false,
+        "posOk": false
+      }
+    ]
+  }
+}

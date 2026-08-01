@@ -105,3 +105,4 @@ __pycache__/
 
 # Hygiene prove+clean probes (tests/hygiene may write then delete these)
 **/.__hygiene_*
+tests/parity/geometry/out/
