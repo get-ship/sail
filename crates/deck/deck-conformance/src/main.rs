@@ -20,6 +20,11 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(&addr)
         .await
         .unwrap_or_else(|e| panic!("deck-conformance: bind {addr}: {e}"));
-    println!("deck-conformance: serving {} on http://{addr}", app_dir.display());
-    axum::serve(listener, app).await.expect("deck-conformance: serve");
+    println!(
+        "deck-conformance: serving {} on http://{addr}",
+        app_dir.display()
+    );
+    axum::serve(listener, app)
+        .await
+        .expect("deck-conformance: serve");
 }

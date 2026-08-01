@@ -18,7 +18,7 @@ use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use deck_core::DataPort;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use ship_js::{Dispatch, DispatchError};
 
 /// A request-shaped host: the matched route + (optionally) the live data port.
@@ -48,7 +48,12 @@ impl SsrDispatch {
     /// The recorded op names, in call order — the proof values came through
     /// the wire.
     pub fn call_path(&self) -> Vec<String> {
-        self.calls.lock().unwrap().iter().map(|(op, _)| op.clone()).collect()
+        self.calls
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|(op, _)| op.clone())
+            .collect()
     }
 
     /// The params the host will answer `route.current` with.
@@ -60,7 +65,10 @@ impl SsrDispatch {
 #[async_trait]
 impl Dispatch for SsrDispatch {
     async fn call(&self, op: &str, args: Value) -> Result<Value, DispatchError> {
-        self.calls.lock().unwrap().push((op.to_string(), args.clone()));
+        self.calls
+            .lock()
+            .unwrap()
+            .push((op.to_string(), args.clone()));
         if op == "route.current" {
             return Ok(self.route.clone());
         }
@@ -70,6 +78,8 @@ impl Dispatch for SsrDispatch {
         {
             return Ok(v);
         }
-        Err(DispatchError::Terminal(format!("deck-ssr: no host op `{op}`")))
+        Err(DispatchError::Terminal(format!(
+            "deck-ssr: no host op `{op}`"
+        )))
     }
 }

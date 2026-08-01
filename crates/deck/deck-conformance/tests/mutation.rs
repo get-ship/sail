@@ -17,8 +17,8 @@ use axum::body::Body;
 use axum::http::{Request, StatusCode, header};
 use deck_conformance::data_port::{DemoStore, resolve_demo};
 use deck_conformance::{deck_app, default_app_dir};
-use serde_json::json;
 use sail_compiler::{bindings, keys::BindingKind, parse};
+use serde_json::json;
 use tower::ServiceExt;
 
 /// The PE form endpoint is a deliberate 410 tombstone in deck's router —
@@ -85,11 +85,14 @@ fn todos_view_has_mutation_binding_for_add_todo() {
         .iter()
         .filter(|b| matches!(b.kind, BindingKind::Mutation))
         .collect();
-    assert_eq!(mutations.len(), 1, "todos route must have exactly one mutation");
+    assert_eq!(
+        mutations.len(),
+        1,
+        "todos route must have exactly one mutation"
+    );
     assert_eq!(
         mutations[0].expr, "ship.demo.addTodo",
         "mutation must point at ship.demo.addTodo; got: {}",
         mutations[0].expr
     );
 }
-

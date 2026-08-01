@@ -1150,9 +1150,8 @@ pub async fn bundle_app_with_base(
     // Compile-collected icons → static `_deck/icons/{name}.svg` so named
     // glyphs work offline / with the daemon stopped (TOOL-10). Collects from
     // routes + app component package sources (not routes-only).
-    let emitted_icons =
-        crate::icons::collect_and_emit_project_icons(project, out_dir, repo_root)
-            .context("emit used icon assets")?;
+    let emitted_icons = crate::icons::collect_and_emit_project_icons(project, out_dir, repo_root)
+        .context("emit used icon assets")?;
     if !emitted_icons.is_empty() {
         eprintln!(
             "deck: emitted {} icon glyph(s) → {}/_deck/icons/",
@@ -1203,10 +1202,7 @@ pub async fn bundle_app_with_base(
         // cascade (`sx-w28` on a use site beats the skin's `sx-wfull`).
         // Links at body end landed after the mount style — the skin sheet
         // silently beat author overrides (studio tasks-filter selects).
-        final_html = final_html.replace(
-            "</head>",
-            &format!("{link_tags}\n</head>"),
-        );
+        final_html = final_html.replace("</head>", &format!("{link_tags}\n</head>"));
     }
     // App-vendored fonts CSS is pulled via entry `import './fonts/fonts.css'`
     // (hashed under /{ns}/fonts-*.css). A second <link href="/{ns}/fonts/fonts.css">

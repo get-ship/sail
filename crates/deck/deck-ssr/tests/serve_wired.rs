@@ -54,7 +54,10 @@ fn payload_html(
     sub: Option<&str>,
 ) -> String {
     let resolved = deck_core::resolver::resolve(root, name, sub).expect("resolve route");
-    let source_path = resolved.source_path.as_deref().expect("resolved route has a source path");
+    let source_path = resolved
+        .source_path
+        .as_deref()
+        .expect("resolved route has a source path");
     let params = serde_json::to_value(&resolved.params).unwrap_or(Value::Null);
     let route_name = match sub {
         Some(s) => format!("{name}/{s}"),
@@ -69,7 +72,8 @@ fn payload_html(
         params,
         query: serde_json::json!({}),
     };
-    let raw = deck_core::synthetic_ssr::first_paint(engine, &req).expect("ship-js produced first paint");
+    let raw =
+        deck_core::synthetic_ssr::first_paint(engine, &req).expect("ship-js produced first paint");
     deck_core::inject_form_actions(&raw, &route_name)
 }
 
@@ -115,7 +119,10 @@ fn wired_serve_renders_ship_js_first_paint() {
     // global hook is banned by `sail-no-class`).
     let on_raw = payload_html(&root, engine, "board", None);
     let on = strip_markers(&on_raw);
-    assert!(on.contains("Alpha") && on.contains("Bravo"), "ship-js {{#for}} renders every row; got:\n{on}");
+    assert!(
+        on.contains("Alpha") && on.contains("Bravo"),
+        "ship-js {{#for}} renders every row; got:\n{on}"
+    );
     // Match the literal attribute form (space-prefixed, on the element
     // opening tag) — the SX stylesheet also references `[aria-pressed='true']`
     // for the pressed: state-prefix utility, so count only the attribute.

@@ -107,7 +107,10 @@ fn read_view_artifact_caps_oversized() {
         let path = root.join("big.css");
         let big = "a".repeat((MAX_ROUTE_SOURCE_BYTES as usize) + 1);
         fs::write(&path, &big).unwrap();
-        assert!(read_route_artifact(&path).is_none(), "oversized CSS must be capped to None");
+        assert!(
+            read_route_artifact(&path).is_none(),
+            "oversized CSS must be capped to None"
+        );
 
         let small = root.join("small.css");
         fs::write(&small, ".x{}").unwrap();

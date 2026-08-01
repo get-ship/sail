@@ -18,8 +18,8 @@
 
 use std::path::{Path, PathBuf};
 
-use deck::bundler::targets::{BundleLayout, BundleTarget, TargetEntry};
 use deck::bundler::routes_bundle::bundle_routes;
+use deck::bundler::targets::{BundleLayout, BundleTarget, TargetEntry};
 use deck::config::DeckConfig;
 /// Repo root — two levels up from crates/deck/deck-conformance.
 fn repo_root() -> PathBuf {
@@ -38,7 +38,9 @@ fn app_dir() -> PathBuf {
 /// Collect every `.js` file under `dir`, recursively.
 fn js_files(dir: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
-    let Ok(entries) = std::fs::read_dir(dir) else { return out };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return out;
+    };
     for e in entries.flatten() {
         let p = e.path();
         if p.is_dir() {
@@ -63,7 +65,8 @@ async fn demo_chip_lands_in_one_shared_chunk_and_both_views_import_it() {
     // as the workspace root (same as how DECK_PROJECT_DIR == app_dir in the
     // live server). The output is redirected to a tempdir so the test never
     // clobbers the committed .deck/ artifacts.
-    let layout = BundleLayout::with_config(app.clone(), None, DeckConfig::defaults()).with_out_root(out.path().to_path_buf());
+    let layout = BundleLayout::with_config(app.clone(), None, DeckConfig::defaults())
+        .with_out_root(out.path().to_path_buf());
     let staging = out.path().join("_staging");
     std::fs::create_dir_all(&staging).unwrap();
 

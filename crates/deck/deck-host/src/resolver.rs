@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-
 #[derive(Debug, serde::Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct ResolvedRoute {
@@ -151,7 +150,10 @@ fn read_resolved(
         message: format!("failed to resolve {}: {e}", leaf.display()),
     })?;
     let canonical_root = allowed_root.canonicalize().map_err(|e| ResolveError {
-        message: format!("failed to resolve views root {}: {e}", allowed_root.display()),
+        message: format!(
+            "failed to resolve views root {}: {e}",
+            allowed_root.display()
+        ),
     })?;
     if !canonical.starts_with(&canonical_root) {
         return Err(ResolveError {
@@ -256,7 +258,6 @@ fn join_request(name: &str, sub_path: Option<&str>) -> String {
         None => name.to_string(),
     }
 }
-
 
 #[cfg(test)]
 #[path = "resolver_tests.rs"]

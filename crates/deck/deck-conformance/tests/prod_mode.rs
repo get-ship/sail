@@ -27,7 +27,10 @@ async fn prod_get(path: &str) -> Response {
 }
 
 fn hdr(resp: &Response, name: header::HeaderName) -> Option<String> {
-    resp.headers().get(name).and_then(|v| v.to_str().ok()).map(str::to_string)
+    resp.headers()
+        .get(name)
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_string)
 }
 
 /// In Production, `/_deck/runtime.js` must carry an immutable Cache-Control

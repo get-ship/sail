@@ -721,11 +721,7 @@ fn generate_routes_one(spec: &RouteGenSpec) -> Result<usize> {
         .parent()
         .unwrap_or_else(|| std::path::Path::new("."));
     let entry_path = project_dir.join("entry.gen.ts");
-    let entry_body = render_entry_gen_at(
-        &tree,
-        spec.entry_bootstrap.as_ref(),
-        Some(project_dir),
-    );
+    let entry_body = render_entry_gen_at(&tree, spec.entry_bootstrap.as_ref(), Some(project_dir));
     write_if_changed(&entry_path, &entry_body)?;
     Ok(tree.routes.len())
 }

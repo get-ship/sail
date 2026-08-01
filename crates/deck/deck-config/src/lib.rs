@@ -791,4 +791,3 @@ mod tests {
         assert_eq!(entry.expose_names, vec!["b"]);
     }
 }
-

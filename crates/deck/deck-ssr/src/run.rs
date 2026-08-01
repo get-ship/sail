@@ -25,11 +25,11 @@
 
 use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use serde_json::Value;
-use ship_js::deno::{run_module_with_limits, RunLimits};
-use ship_js::dispatch::{CancellationToken, SesPolicy};
 use ship_js::Dispatch;
+use ship_js::deno::{RunLimits, run_module_with_limits};
+use ship_js::dispatch::{CancellationToken, SesPolicy};
 
 use crate::host::SsrDispatch;
 use crate::{RenderOut, SHIP_SDK};
@@ -79,7 +79,9 @@ pub fn render_with_limits(
             .map_err(|e| anyhow!("run_module: {e:?}"))
         },
     )?;
-    let first = emits.first().ok_or_else(|| anyhow!("ssr entry emitted nothing"))?;
+    let first = emits
+        .first()
+        .ok_or_else(|| anyhow!("ssr entry emitted nothing"))?;
     Ok(RenderOut {
         html: first["html"].as_str().unwrap_or_default().to_string(),
         route_params: first["routeParams"].clone(),
@@ -107,5 +109,3 @@ where
         .join()
         .map_err(|_| anyhow!("SSR VM thread panicked"))?
 }
-
-

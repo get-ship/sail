@@ -62,11 +62,12 @@ pub use window_registry::{
 };
 
 pub use assets::{
-    baked_framework_stamps, lucide_icon_names, lucide_icon_svg, parse_baked_stamp, resolve_route_js,
-    serve_deck_route, serve_framework_font, serve_public_asset, serve_scaffold,
-    serve_scaffold_asset, serve_sail_compiler_wasm, serve_sail_dom, serve_sail_error_overlay,
-    serve_sail_icon, serve_sail_live_reload, serve_sail_lsp_completions, serve_sail_lsp_diagnostics,
-    serve_sail_runtime, serve_sail_sdk_client, serve_sail_studio_bridge,
+    baked_framework_stamps, lucide_icon_names, lucide_icon_svg, parse_baked_stamp,
+    resolve_route_js, serve_deck_route, serve_framework_font, serve_public_asset,
+    serve_sail_compiler_wasm, serve_sail_dom, serve_sail_error_overlay, serve_sail_icon,
+    serve_sail_live_reload, serve_sail_lsp_completions, serve_sail_lsp_diagnostics,
+    serve_sail_runtime, serve_sail_sdk_client, serve_sail_studio_bridge, serve_scaffold,
+    serve_scaffold_asset,
 };
 pub use form_inject::inject_form_actions;
 pub use meta::{DaemonBuildInfo, serve_meta};

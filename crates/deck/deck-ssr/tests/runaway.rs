@@ -16,8 +16,8 @@ use std::time::{Duration, Instant};
 
 use deck_ssr::host::SsrDispatch;
 use deck_ssr::run::render_with_limits;
-use serde_json::{json, Value};
-use ship_js::deno::{run_module_with_limits, RunError, RunLimits, TerminateReason};
+use serde_json::{Value, json};
+use ship_js::deno::{RunError, RunLimits, TerminateReason, run_module_with_limits};
 use ship_js::dispatch::{CancellationToken, SesPolicy};
 use ship_js::{Dispatch, DispatchError};
 
@@ -98,7 +98,10 @@ fn runaway_heap_allocation_terminated_by_heap_cap() {
     let t0 = Instant::now();
     let r = render_with_limits(RUNAWAY_HEAP_BUNDLE, dispatch, limits);
     let dt = t0.elapsed();
-    assert!(dt < Duration::from_secs(10), "heap-cap render took too long: {dt:?}");
+    assert!(
+        dt < Duration::from_secs(10),
+        "heap-cap render took too long: {dt:?}"
+    );
     let err = r.expect_err("runaway heap render must return Err");
     let chain = format!("{err:#}");
     let kind = find_run_error_kind(&chain);

@@ -134,10 +134,7 @@ fn workspace_root_for_themes(project_root: &std::path::Path) -> Option<std::path
         .canonicalize()
         .unwrap_or_else(|_| project_root.to_path_buf());
     loop {
-        if cur
-            .join("packages/sail/tokens/model/themes")
-            .is_dir()
-        {
+        if cur.join("packages/sail/tokens/model/themes").is_dir() {
             return Some(cur);
         }
         cur = cur.parent()?.to_path_buf();
@@ -289,7 +286,10 @@ mod tests {
         let parts: Vec<&str> = content.split(',').filter(|s| !s.is_empty()).collect();
         assert!(parts.contains(&"neutral"), "{content}");
         assert!(parts.contains(&"paper"), "{content}");
-        assert!(!parts.contains(&"synthwave"), "full catalog leaked: {content}");
+        assert!(
+            !parts.contains(&"synthwave"),
+            "full catalog leaked: {content}"
+        );
         assert!(!parts.contains(&"glass"), "full catalog leaked: {content}");
     }
 

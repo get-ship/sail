@@ -6,22 +6,18 @@
 //! continue to resolve without changes.
 
 pub use deck_axum::{
-    apps::serve_apps,
-    into_axum, mode_from_ext, pages, router,
-    serve_framework_font,
-    serve_meta,
-    serve_deck_route,
-    serve_sail_compiler_wasm, serve_sail_dom, serve_sail_icon, serve_sail_live_reload,
-    serve_sail_lsp_completions, serve_sail_lsp_diagnostics,
+    apps::serve_apps, into_axum, mode_from_ext, pages, router, serve_deck_route,
+    serve_framework_font, serve_meta, serve_sail_compiler_wasm, serve_sail_dom, serve_sail_icon,
+    serve_sail_live_reload, serve_sail_lsp_completions, serve_sail_lsp_diagnostics,
     serve_sail_runtime, serve_sail_sdk_client,
 };
 // The named-route handlers + router moved to the `ship-views` crate
 // (deck ⊥ ship-views). A host serves routes by merging `ship_views::router()`;
 // the facade no longer re-exports the route handlers (it cannot depend on
 // ship-views).
+pub use deck_axum::multiplex::{HEARTBEAT_MS, MultiplexState, multiplex_router};
 pub use deck_config::{AppServeConfig, RenderMode};
 pub use deck_core::AppRegistry;
-pub use deck_axum::multiplex::{MultiplexState, multiplex_router, HEARTBEAT_MS};
 
 // The SPA navigation fallback. deck's `router()` deliberately sets NO fallback
 // (it merges alongside the Connect-ops router, which sets its own — two merged
@@ -38,11 +34,11 @@ pub use deck_core::{
 
 // SSE envelope encoders — single source of truth for the live-data wire protocol.
 // Both shipd and deck-conformance (and any future host) call these; no copies.
-pub use deck_core::live_wire::{
-    PatchElements, PatchElementsMode,
-    format_keepalive, format_patch_elements, format_patch_set, format_patch_signals,
-};
 pub use deck_core::live_wire;
+pub use deck_core::live_wire::{
+    PatchElements, PatchElementsMode, format_keepalive, format_patch_elements, format_patch_set,
+    format_patch_signals,
+};
 
 // Submodule surfaces consumers reach into directly (shipd, xtask SDK gen).
 //

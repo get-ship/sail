@@ -89,7 +89,9 @@ const FORBIDDEN: &[&str] = &[
 /// test file. Test files (`*_tests.rs`, the gate's own `boundary.rs`) legitimately
 /// use realistic path fixtures — the gate is about production source.
 fn collect_rs(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else { return };
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
     for entry in entries.flatten() {
         let p = entry.path();
         if p.is_dir() {
@@ -112,7 +114,9 @@ fn collect_rs(dir: &Path, out: &mut Vec<PathBuf>) {
 /// the gate exempted test scripts from the Ship-name scan, which let e2e
 /// bash hardcode `apps/shell`; this scanner closes that gap.)
 fn collect_sh(dir: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(dir) else { return };
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
     for entry in entries.flatten() {
         let p = entry.path();
         if p.is_dir() {
@@ -127,7 +131,9 @@ fn collect_sh(dir: &Path, out: &mut Vec<PathBuf>) {
 /// Skips lines inside `#[cfg(test)]` attribute + `mod tests { … }` blocks
 /// so test fixtures that pass realistic Ship paths don't trigger.
 fn scan_rs_violations(f: &Path) -> Vec<String> {
-    let Ok(text) = fs::read_to_string(f) else { return vec![] };
+    let Ok(text) = fs::read_to_string(f) else {
+        return vec![];
+    };
     let mut violations = Vec::new();
     let mut brace_depth: i32 = 0;
     // Track whether we've seen a `#[cfg(test)]` or `mod tests` opener at the
@@ -191,7 +197,9 @@ fn scan_rs_violations(f: &Path) -> Vec<String> {
 /// comments (which may cite Ship paths as documentation); bash has no block
 /// structure to track.
 fn scan_sh_violations(f: &Path) -> Vec<String> {
-    let Ok(text) = fs::read_to_string(f) else { return vec![] };
+    let Ok(text) = fs::read_to_string(f) else {
+        return vec![];
+    };
     let mut violations = Vec::new();
     for (n, line) in text.lines().enumerate() {
         let trimmed = line.trim_start();
@@ -231,7 +239,10 @@ mod scanner_self_tests {
              }\n",
         )
         .unwrap();
-        assert!(scan_rs_violations(&f).is_empty(), "test-block comments must not trip the gate");
+        assert!(
+            scan_rs_violations(&f).is_empty(),
+            "test-block comments must not trip the gate"
+        );
     }
 
     #[test]
@@ -240,8 +251,15 @@ mod scanner_self_tests {
         let f = dir.path().join("probe.rs");
         std::fs::write(&f, "fn bad() { let _ = \"apps/shell\"; }\n").unwrap();
         let v = scan_rs_violations(&f);
-        assert_eq!(v.len(), 1, "production-line literal must trip the gate: {v:?}");
-        assert!(v[0].contains("apps/shell"), "the violation names the forbidden literal: {v:?}");
+        assert_eq!(
+            v.len(),
+            1,
+            "production-line literal must trip the gate: {v:?}"
+        );
+        assert!(
+            v[0].contains("apps/shell"),
+            "the violation names the forbidden literal: {v:?}"
+        );
     }
 
     #[test]
@@ -256,8 +274,15 @@ mod scanner_self_tests {
         )
         .unwrap();
         let v = scan_sh_violations(&f);
-        assert_eq!(v.len(), 1, "non-comment line must trip the bash scanner: {v:?}");
-        assert!(v[0].contains("apps/shell"), "the violation names the forbidden literal: {v:?}");
+        assert_eq!(
+            v.len(),
+            1,
+            "non-comment line must trip the bash scanner: {v:?}"
+        );
+        assert!(
+            v[0].contains("apps/shell"),
+            "the violation names the forbidden literal: {v:?}"
+        );
     }
 }
 
@@ -276,7 +301,13 @@ fn deck_crates_name_no_ship_app() {
     let mut rs_files = Vec::new();
     let mut sh_files = Vec::new();
     for crate_name in [
-        "deck", "deck-cli", "deck-core", "deck-axum", "deck-host", "deck-bundler", "deck-config",
+        "deck",
+        "deck-cli",
+        "deck-core",
+        "deck-axum",
+        "deck-host",
+        "deck-bundler",
+        "deck-config",
     ] {
         let crate_root = deck_dir.join(crate_name);
         let src = crate_root.join("src");
@@ -345,7 +376,10 @@ fn zero_config_discovers_routes_only() {
     if deck_bundler::node_resolve::resolve_entry(&root, "@ship/sail-runtime").is_some() {
         assert!(names.contains(&"sail-runtime"), "sail-runtime present");
         assert!(names.contains(&"sail-dom"), "sail-dom present");
-        assert!(names.contains(&"sail-sdk-client"), "sail-sdk-client present");
+        assert!(
+            names.contains(&"sail-sdk-client"),
+            "sail-sdk-client present"
+        );
     } else {
         eprintln!(
             "SKIP zero_config_discovers_routes_only singleton checks: @ship/sail-runtime \
@@ -355,7 +389,10 @@ fn zero_config_discovers_routes_only() {
     }
 
     // Discovered route.
-    assert!(names.contains(&"routes/foo/route"), "routes/foo/route discovered");
+    assert!(
+        names.contains(&"routes/foo/route"),
+        "routes/foo/route discovered"
+    );
 
     // Zero consumer targets from defaults (no deck.jsonc declares any).
     assert!(
@@ -447,7 +484,13 @@ fn deck_crates_have_no_ship_prefixed_env_var_reads() {
 
     let mut files = Vec::new();
     for crate_name in [
-        "deck", "deck-cli", "deck-core", "deck-axum", "deck-host", "deck-bundler", "deck-config",
+        "deck",
+        "deck-cli",
+        "deck-core",
+        "deck-axum",
+        "deck-host",
+        "deck-bundler",
+        "deck-config",
     ] {
         let src = deck_dir.join(crate_name).join("src");
         collect_rs(&src, &mut files);
@@ -456,7 +499,10 @@ fn deck_crates_have_no_ship_prefixed_env_var_reads() {
             files.push(build_rs);
         }
     }
-    assert!(!files.is_empty(), "found no deck crate source to scan ({deck_dir:?})");
+    assert!(
+        !files.is_empty(),
+        "found no deck crate source to scan ({deck_dir:?})"
+    );
 
     let mut violations = Vec::new();
     // We need a real shell boundary check: any line whose payload contains
@@ -465,7 +511,9 @@ fn deck_crates_have_no_ship_prefixed_env_var_reads() {
     // `mod tests` blocks, doc comments, and `*_tests.rs` files are
     // excluded.
     for f in &files {
-        let Ok(text) = fs::read_to_string(f) else { continue };
+        let Ok(text) = fs::read_to_string(f) else {
+            continue;
+        };
         let mut brace_depth: i32 = 0;
         let mut test_block_depth: Option<i32> = None;
         for (n, line) in text.lines().enumerate() {

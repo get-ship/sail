@@ -15,19 +15,19 @@
 //! Heavy (V8 + a Rolldown bundle per target). Opt-in via the normal test gate;
 //! run with `cargo test -p deck-ssr --test reliability -- --nocapture`.
 
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
 
-use deck_ssr::build::{repo_root, synthesize_and_bundle_with, ClientAlias};
+use deck_core::DataPort;
+use deck_ssr::build::{ClientAlias, repo_root, synthesize_and_bundle_with};
 use deck_ssr::host::SsrDispatch;
 use deck_ssr::run::render;
-use deck_core::DataPort;
-use serde_json::{json, Value};
-use sail_compiler::emit::synthetic::{emit_synthetic, AppManifest};
-use sail_compiler::parse::parse;
 use sail_compiler::CompileMode;
+use sail_compiler::emit::synthetic::{AppManifest, emit_synthetic};
+use sail_compiler::parse::parse;
+use serde_json::{Value, json};
 
 const CONF: &str = "crates/deck/deck-conformance/app";
 // Product apps no longer carry per-app `app.manifest.jsonc` for the hub /
@@ -144,13 +144,62 @@ fn targets() -> Vec<Target> {
             expect: "sail-area-chart",
         },
         // ── Control flow + bindings (conformance routes) ───────────────────
-        v("board", "{#if}, {#for} keyed, class:, on:, nested component", "board", conf_ctrl("board"), false, "Alpha"),
-        v("counter", "on:, signal reactivity", "counter", conf_ctrl("counter"), false, "<button"),
-        v("todos", "{#for} keyed, {#if}, {#while}, class:, controller live(), form mutation", "todos", None, true, "ship it"),
-        v("feed", "{#while}, controller live() over host-dispatch", "feed", None, true, "state"),
-        v("boom", "{#if}, {#while}, controller live() error branch", "boom", None, true, ""),
-        v("clock", "{#if}, {#while}, controller live()", "clock", None, true, ""),
-        v("glyph", "inline SVG, namespaced serialization", "glyph", None, false, "<svg"),
+        v(
+            "board",
+            "{#if}, {#for} keyed, class:, on:, nested component",
+            "board",
+            conf_ctrl("board"),
+            false,
+            "Alpha",
+        ),
+        v(
+            "counter",
+            "on:, signal reactivity",
+            "counter",
+            conf_ctrl("counter"),
+            false,
+            "<button",
+        ),
+        v(
+            "todos",
+            "{#for} keyed, {#if}, {#while}, class:, controller live(), form mutation",
+            "todos",
+            None,
+            true,
+            "ship it",
+        ),
+        v(
+            "feed",
+            "{#while}, controller live() over host-dispatch",
+            "feed",
+            None,
+            true,
+            "state",
+        ),
+        v(
+            "boom",
+            "{#if}, {#while}, controller live() error branch",
+            "boom",
+            None,
+            true,
+            "",
+        ),
+        v(
+            "clock",
+            "{#if}, {#while}, controller live()",
+            "clock",
+            None,
+            true,
+            "",
+        ),
+        v(
+            "glyph",
+            "inline SVG, namespaced serialization",
+            "glyph",
+            None,
+            false,
+            "<svg",
+        ),
         Target {
             name: "greet/[id]",
             features: "dynamic route params (route.params.id)",
@@ -162,18 +211,95 @@ fn targets() -> Vec<Target> {
             params: json!({ "id": "zelda" }),
             expect: "zelda",
         },
-        v("hello", "constant folding, static markup", "hello", None, false, ""),
-        v("widgets", "repeated nested component (shared-chunk)", "widgets", None, false, "demo-chip"),
-        v("gallery", "on:, class:, authored controller, nested", "gallery", conf_ctrl("gallery"), false, ""),
+        v(
+            "hello",
+            "constant folding, static markup",
+            "hello",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "widgets",
+            "repeated nested component (shared-chunk)",
+            "widgets",
+            None,
+            false,
+            "demo-chip",
+        ),
+        v(
+            "gallery",
+            "on:, class:, authored controller, nested",
+            "gallery",
+            conf_ctrl("gallery"),
+            false,
+            "",
+        ),
         // ── Component-gallery routes (render real component tags) ───────────
-        v("gallery-sail-primitives", "{#if}, bind:, on:, style:, transitions, nested", "gallery-sail-primitives", conf_ctrl("gallery-sail-primitives"), false, ""),
-        v("gallery-sail-charts", "static chart components", "gallery-sail-charts", None, false, ""),
-        v("gallery-sail-media", "static media components", "gallery-sail-media", None, false, ""),
-        v("gallery-sail-viewer", "static viewer component", "gallery-sail-viewer", None, false, ""),
-        v("gallery-ship-markdown", "static markdown component", "gallery-ship-markdown", None, false, ""),
-        v("gallery-ship-pdf", "style:, transitions", "gallery-ship-pdf", None, false, ""),
-        v("gallery-ship-arcade", "on:, transitions", "gallery-ship-arcade", None, false, ""),
-        v("gallery-ship-code", "on:, code viewer component", "gallery-ship-code", None, false, ""),
+        v(
+            "gallery-sail-primitives",
+            "{#if}, bind:, on:, style:, transitions, nested",
+            "gallery-sail-primitives",
+            conf_ctrl("gallery-sail-primitives"),
+            false,
+            "",
+        ),
+        v(
+            "gallery-sail-charts",
+            "static chart components",
+            "gallery-sail-charts",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-sail-media",
+            "static media components",
+            "gallery-sail-media",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-sail-viewer",
+            "static viewer component",
+            "gallery-sail-viewer",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-ship-markdown",
+            "static markdown component",
+            "gallery-ship-markdown",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-ship-pdf",
+            "style:, transitions",
+            "gallery-ship-pdf",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-ship-arcade",
+            "on:, transitions",
+            "gallery-ship-arcade",
+            None,
+            false,
+            "",
+        ),
+        v(
+            "gallery-ship-code",
+            "on:, code viewer component",
+            "gallery-ship-code",
+            None,
+            false,
+            "",
+        ),
     ]
 }
 
@@ -188,7 +314,9 @@ fn run_target(repo: &Path, t: &Target) -> Outcome {
         note: String::new(),
     };
 
-    let build_dir = repo.join("target/deck-ssr-reliability").join(sanitize(t.name));
+    let build_dir = repo
+        .join("target/deck-ssr-reliability")
+        .join(sanitize(t.name));
     // Always alias the demo client. A route-host always has its clients
     // available; aliasing an UNused client is harmless (tree-shaken). This
     // also absorbs the synthetic scan's string-literal false positive —
@@ -204,7 +332,10 @@ fn run_target(repo: &Path, t: &Target) -> Outcome {
 
     // Synthesize + bundle (panics → recorded as a bundle failure, not abort).
     let bundle = catch_unwind(AssertUnwindSafe(|| {
-        let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
         rt.block_on(synthesize_and_bundle_with(
             repo,
             &t.source,
@@ -296,9 +427,19 @@ fn slice1_reliability_sweep() {
     // than fail — the conformance core (board, counter, glyph, greet/[id]) is
     // the in-repo fidelity floor. In an app repo (apps/ present) all six are
     // required again, unchanged.
-    let core = ["hub /", "routes/showcase", "board", "counter", "glyph", "greet/[id]"];
+    let core = [
+        "hub /",
+        "routes/showcase",
+        "board",
+        "counter",
+        "glyph",
+        "greet/[id]",
+    ];
     for name in core {
-        let o = outcomes.iter().find(|o| o.name == name).expect("core target present");
+        let o = outcomes
+            .iter()
+            .find(|o| o.name == name)
+            .expect("core target present");
         let src = targets
             .iter()
             .find(|t| t.name == name)
@@ -311,7 +452,11 @@ fn slice1_reliability_sweep() {
             );
             continue;
         }
-        assert!(o.correct, "core target `{}` must render correctly: {}", name, o.note);
+        assert!(
+            o.correct,
+            "core target `{}` must render correctly: {}",
+            name, o.note
+        );
     }
 }
 
@@ -324,12 +469,21 @@ fn slice1_warm_ssr_latency() {
     // pooled warm latency, not the floor.
     let repo = repo_root().expect("repo root");
     let samples: Vec<(&str, String, &str, Option<String>, &str)> = vec![
-        ("hub /", "apps/hub/routes/page.sail".to_string(), HUB_MANIFEST, Some("apps/hub/routes/controller.ts".to_string()), "/"),
+        (
+            "hub /",
+            "apps/hub/routes/page.sail".to_string(),
+            HUB_MANIFEST,
+            Some("apps/hub/routes/controller.ts".to_string()),
+            "/",
+        ),
         ("board", conf("board"), CONF_MANIFEST, None, "/"),
         ("glyph", conf("glyph"), CONF_MANIFEST, None, "/"),
     ];
     const N: usize = 9;
-    let mut lines = vec!["## Warm ship-js SSR latency (median of warm runs)\n".to_string(), format!("N = {N} renders per target (first dropped as cold), fresh isolate per render.\n")];
+    let mut lines = vec![
+        "## Warm ship-js SSR latency (median of warm runs)\n".to_string(),
+        format!("N = {N} renders per target (first dropped as cold), fresh isolate per render.\n"),
+    ];
     lines.push("| target | warm median | min | max |".to_string());
     lines.push("|---|---|---|---|".to_string());
     for (name, source, manifest, ctrl, pathname) in &samples {
@@ -346,10 +500,19 @@ fn slice1_warm_ssr_latency() {
         }
         let build_dir = repo.join("target/deck-ssr-latency").join(sanitize(name));
         let ctrl_abs = ctrl.as_ref().map(|c| repo.join(c));
-        let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
         let bundle = rt
             .block_on(synthesize_and_bundle_with(
-                &repo, source, manifest, CompileMode::Component, ctrl_abs.as_deref(), &[], &build_dir,
+                &repo,
+                source,
+                manifest,
+                CompileMode::Component,
+                ctrl_abs.as_deref(),
+                &[],
+                &build_dir,
             ))
             .expect("bundle latency sample");
         let mut times = Vec::new();
@@ -419,18 +582,19 @@ fn slice1_hub_closure_component_catalog() {
         // ABSENT means the component has been dissolved, NOT that the test
         // found a synthetic-emit gap to assert on.
         let path = repo.join(rel);
-        let name = Path::new(rel).file_stem().and_then(|s| s.to_str()).unwrap_or(rel);
+        let name = Path::new(rel)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(rel);
         let (ok, reason) = match std::fs::read_to_string(&path) {
             Err(_) => {
                 dissolved += 1;
                 (false, "dissolved to L1 (no .sail source)".to_string())
             }
-            Ok(src) => match parse(&src)
-                .map_err(|e| e.render(&src))
-                .and_then(|p| {
-                    emit_synthetic(&p, &manifest, None, "./c.ts", CompileMode::Component, None)
-                        .map_err(|e| e.render(&src))
-                }) {
+            Ok(src) => match parse(&src).map_err(|e| e.render(&src)).and_then(|p| {
+                emit_synthetic(&p, &manifest, None, "./c.ts", CompileMode::Component, None)
+                    .map_err(|e| e.render(&src))
+            }) {
                 Ok(_) => (true, "synthesizes (propless)".to_string()),
                 Err(e) => {
                     let first = e.lines().next().unwrap_or("").to_string();
@@ -438,7 +602,10 @@ fn slice1_hub_closure_component_catalog() {
                         rejected_propful += 1;
                         (false, "rejected: propful (gap G1)".to_string())
                     } else {
-                        (false, format!("rejected: {}", first.chars().take(80).collect::<String>()))
+                        (
+                            false,
+                            format!("rejected: {}", first.chars().take(80).collect::<String>()),
+                        )
                     }
                 }
             },
@@ -506,5 +673,7 @@ fn first_line(s: &str) -> String {
 }
 
 fn sanitize(s: &str) -> String {
-    s.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect()
+    s.chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
+        .collect()
 }

@@ -28,8 +28,7 @@ pub fn collect_project_icons(roots: &[&Path]) -> Result<BTreeSet<String>> {
 }
 
 fn walk_sail(dir: &Path, icons: &mut BTreeSet<String>) -> Result<()> {
-    let entries = std::fs::read_dir(dir)
-        .with_context(|| format!("read_dir {}", dir.display()))?;
+    let entries = std::fs::read_dir(dir).with_context(|| format!("read_dir {}", dir.display()))?;
     for entry in entries {
         let entry = entry?;
         let path = entry.path();
@@ -178,8 +177,7 @@ pub fn emit_icon_assets(out_dir: &Path, names: &BTreeSet<String>) -> Result<BTre
         match deck_core::lucide_icon_svg(name) {
             Some(svg) => {
                 let path = icons_dir.join(format!("{name}.svg"));
-                std::fs::write(&path, svg)
-                    .with_context(|| format!("write {}", path.display()))?;
+                std::fs::write(&path, svg).with_context(|| format!("write {}", path.display()))?;
                 written.insert(name.clone());
             }
             None => {
@@ -246,11 +244,7 @@ mod tests {
         let written = collect_and_emit_project_icons(&project, &out, tmp.path()).unwrap();
         assert_eq!(
             written,
-            BTreeSet::from([
-                "search".into(),
-                "check".into(),
-                "rocket".into()
-            ])
+            BTreeSet::from(["search".into(), "check".into(), "rocket".into()])
         );
         for name in ["search", "check", "rocket"] {
             let p = icon_asset_path(&out, name);

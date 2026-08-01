@@ -16,7 +16,7 @@ pub use handlers::{
     serve_bundle_hmr, serve_deck_route, serve_framework_font, serve_meta, serve_sail_compiler_wasm,
     serve_sail_dom, serve_sail_error_overlay, serve_sail_icon, serve_sail_live_reload,
     serve_sail_lsp_completions, serve_sail_lsp_diagnostics, serve_sail_runtime,
-    serve_sail_studio_bridge, serve_sail_sdk_client,
+    serve_sail_sdk_client, serve_sail_studio_bridge,
 };
 // The named-route handlers (serve_sail_route_setup / serve_route_host /
 // serve_route_payload[_subpath]) moved to the `ship-views` crate. deck-axum's
@@ -151,7 +151,10 @@ pub fn router() -> Router {
         .route("/_deck/fonts/{file}", get(serve_framework_font))
         .route("/_deck/live-reload.js", get(serve_sail_live_reload))
         .route("/_deck/error-overlay.js", get(serve_sail_error_overlay))
-        .route("/_deck/sail-studio-bridge.js", get(serve_sail_studio_bridge))
+        .route(
+            "/_deck/sail-studio-bridge.js",
+            get(serve_sail_studio_bridge),
+        )
         // (formerly `/\_deck/{file}` → `serve_sail_chunk`) — purged:
         // shared chunks from the multi-entry route build were served
         // from `<root>/.deck/<chunk>.js`; the framework no longer reads

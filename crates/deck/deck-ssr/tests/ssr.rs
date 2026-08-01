@@ -4,12 +4,12 @@
 
 use std::sync::Arc;
 
+use deck_core::DataPort;
 use deck_ssr::build::{repo_root, synthesize_and_bundle};
 use deck_ssr::host::SsrDispatch;
 use deck_ssr::run::render;
-use deck_core::DataPort;
-use serde_json::{json, Value};
 use sail_compiler::CompileMode;
+use serde_json::{Value, json};
 
 const GREET: &str = "crates/deck/deck-conformance/app/routes/greet/[id]/page.sail";
 const GLYPH: &str = "crates/deck/deck-conformance/app/routes/glyph/page.sail";
@@ -67,9 +67,19 @@ fn greet_first_paint_via_ship_js_with_route_through_host_dispatch() {
         .build()
         .expect("tokio runtime for bundling");
     let bundle = rt
-        .block_on(synthesize_and_bundle(&repo, GREET, MANIFEST, CompileMode::Component, &[], &build_dir))
+        .block_on(synthesize_and_bundle(
+            &repo,
+            GREET,
+            MANIFEST,
+            CompileMode::Component,
+            &[],
+            &build_dir,
+        ))
         .expect("synthesize + bundle");
-    assert!(bundle.len() > 1000, "bundle should be a real self-contained module");
+    assert!(
+        bundle.len() > 1000,
+        "bundle should be a real self-contained module"
+    );
     // `ship` is the only external import (the host wire); nothing else leaks.
     assert!(
         !bundle.contains("@ship/sail-runtime") && !bundle.contains("@ship/deck/router"),
@@ -77,7 +87,11 @@ fn greet_first_paint_via_ship_js_with_route_through_host_dispatch() {
     );
 
     // Render in the isolate with the route the deck router matched for the request.
-    let dispatch = Arc::new(SsrDispatch::for_request("/greet/zelda", json!({ "id": "zelda" }), json!({})));
+    let dispatch = Arc::new(SsrDispatch::for_request(
+        "/greet/zelda",
+        json!({ "id": "zelda" }),
+        json!({}),
+    ));
     let out = render(&bundle, dispatch).expect("render in ship-js");
 
     // First paint produced by ship-js run_module. The post-floor fixture
@@ -90,7 +104,10 @@ fn greet_first_paint_via_ship_js_with_route_through_host_dispatch() {
         html
     );
     // The value came through the host-dispatch wire.
-    assert_eq!(out.route_params["id"], "zelda", "route param resolved via host-dispatch");
+    assert_eq!(
+        out.route_params["id"], "zelda",
+        "route param resolved via host-dispatch"
+    );
     assert!(
         out.call_path.iter().any(|op| op == "route.current"),
         "the route value must have crossed the wire (route.current); call path: {:?}",
@@ -111,7 +128,10 @@ fn board_control_flow_first_paint_via_ship_js() {
     // SAME ARIA contract the framework's toggleable primitives use.
     let repo = repo_root().expect("repo root");
     let build_dir = repo.join("target/deck-ssr-test/board");
-    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap();
     let bundle = rt
         .block_on(synthesize_and_bundle(
             &repo,
@@ -136,7 +156,11 @@ fn board_control_flow_first_paint_via_ship_js() {
         out.html
     );
     // Nested component renders as its custom-element tag with slotted content.
-    assert!(out.html.contains("<demo-chip>"), "nested component tag must render; got:\n{}", out.html);
+    assert!(
+        out.html.contains("<demo-chip>"),
+        "nested component tag must render; got:\n{}",
+        out.html
+    );
     // aria-pressed={item.flagged} — only Bravo (flagged) carries the attr.
     // `bindAttr` lowers a boolean `true` value to an empty-string attribute
     // (the framework's boolean-attr convention), so we assert PRESENCE on
@@ -153,7 +177,11 @@ fn board_control_flow_first_paint_via_ship_js() {
         "Bravo row (flagged) MUST carry aria-pressed; got:\n{bravo_row}"
     );
     // The remove buttons (on:click handlers) render too.
-    assert!(out.html.contains("remove"), "on: handlers' elements must render; got:\n{}", out.html);
+    assert!(
+        out.html.contains("remove"),
+        "on: handlers' elements must render; got:\n{}",
+        out.html
+    );
 }
 
 #[test]
@@ -164,21 +192,39 @@ fn glyph_svg_first_paint_serializes_namespaced() {
     // self-close (`<circle .../>`), which HTML void elements never do.
     let repo = repo_root().expect("repo root");
     let build_dir = repo.join("target/deck-ssr-test/glyph");
-    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap();
     let bundle = rt
-        .block_on(synthesize_and_bundle(&repo, GLYPH, MANIFEST, CompileMode::Component, &[], &build_dir))
+        .block_on(synthesize_and_bundle(
+            &repo,
+            GLYPH,
+            MANIFEST,
+            CompileMode::Component,
+            &[],
+            &build_dir,
+        ))
         .expect("synthesize + bundle glyph");
 
     let dispatch = Arc::new(SsrDispatch::for_request("/glyph", json!({}), json!({})));
     let out = render(&bundle, dispatch).expect("render glyph");
 
-    assert!(out.html.contains("<svg"), "svg root must render; got:\n{}", out.html);
+    assert!(
+        out.html.contains("<svg"),
+        "svg root must render; got:\n{}",
+        out.html
+    );
     assert!(
         out.html.contains("<circle") && out.html.contains("r=\"10\""),
         "svg child + its attribute must render; got:\n{}",
         out.html
     );
-    assert!(out.html.contains("<path"), "second svg child must render; got:\n{}", out.html);
+    assert!(
+        out.html.contains("<path"),
+        "second svg child must render; got:\n{}",
+        out.html
+    );
     // Namespace-aware serialization: empty SVG elements self-close. (HTML void
     // elements like <br> never emit the slash — this is the SVG branch.)
     assert!(
@@ -197,9 +243,19 @@ fn feed_data_client_value_resolves_via_host_dispatch() {
     // paint carries the resolved state (not `loading`).
     let repo = repo_root().expect("repo root");
     let build_dir = repo.join("target/deck-ssr-test/feed");
-    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap();
     let bundle = rt
-        .block_on(synthesize_and_bundle(&repo, FEED, MANIFEST, CompileMode::Component, &[], &build_dir))
+        .block_on(synthesize_and_bundle(
+            &repo,
+            FEED,
+            MANIFEST,
+            CompileMode::Component,
+            &[],
+            &build_dir,
+        ))
         .expect("synthesize + bundle feed");
 
     let dispatch = Arc::new(
@@ -229,7 +285,9 @@ fn feed_data_client_value_resolves_via_host_dispatch() {
 /// column-tag lowering output.
 fn find_row_for(html: &str, label: &str) -> String {
     let needle = format!("<demo-chip>{label}</demo-chip>");
-    let chip_idx = html.find(&needle).unwrap_or_else(|| panic!("row {label} not in html"));
+    let chip_idx = html
+        .find(&needle)
+        .unwrap_or_else(|| panic!("row {label} not in html"));
     let div_open = html[..chip_idx]
         .rfind("<div")
         .unwrap_or_else(|| panic!("no enclosing <div for {label}"));

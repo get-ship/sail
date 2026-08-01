@@ -33,8 +33,8 @@ use axum::{
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
-use tokio::sync::{Mutex, broadcast};
 use tokio::sync::mpsc;
+use tokio::sync::{Mutex, broadcast};
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::sync::CancellationToken;
 
@@ -84,9 +84,21 @@ impl DemoStore {
         let store = Arc::new(Self {
             todos: Mutex::new(Vec::new()),
             deals: Mutex::new(vec![
-                Deal { id: "d1".to_string(), stage: "open".to_string(), amount: 4200 },
-                Deal { id: "d2".to_string(), stage: "open".to_string(), amount: 9100 },
-                Deal { id: "d3".to_string(), stage: "closed".to_string(), amount: 1500 },
+                Deal {
+                    id: "d1".to_string(),
+                    stage: "open".to_string(),
+                    amount: 4200,
+                },
+                Deal {
+                    id: "d2".to_string(),
+                    stage: "open".to_string(),
+                    amount: 9100,
+                },
+                Deal {
+                    id: "d3".to_string(),
+                    stage: "closed".to_string(),
+                    amount: 1500,
+                },
             ]),
             tick: AtomicU64::new(0),
             bump,
@@ -170,8 +182,12 @@ pub async fn resolve_demo(chain: &str, args: &Value, store: &DemoStore) -> Resul
         }
         // `demo.boom` always returns an error — used by routes/boom to exercise
         // the {#while-error} error-recovery branch without white-screening.
-        "demo.boom" => Err("demo.boom: intentional error for the error-boundary showcase".to_string()),
-        _ => Err(format!("unknown_service: demo resolver has no op `{chain}`")),
+        "demo.boom" => {
+            Err("demo.boom: intentional error for the error-boundary showcase".to_string())
+        }
+        _ => Err(format!(
+            "unknown_service: demo resolver has no op `{chain}`"
+        )),
     }
 }
 
@@ -202,7 +218,10 @@ fn parse_demo_expr(expr: &str) -> Option<(String, Value)> {
 
 const KEEPALIVE_SECS: u64 = 20;
 
-async fn keepalive_loop(tx: mpsc::Sender<Result<String, std::io::Error>>, cancel: CancellationToken) {
+async fn keepalive_loop(
+    tx: mpsc::Sender<Result<String, std::io::Error>>,
+    cancel: CancellationToken,
+) {
     let mut ticker = tokio::time::interval(Duration::from_secs(KEEPALIVE_SECS));
     ticker.tick().await; // skip immediate
     loop {
@@ -370,10 +389,7 @@ struct DataQuery {
 
 /// `GET /_deck/data?expr=` — single-expression SSE stream.
 /// Mirror: `apps/shipd/src/views/sail_data.rs` (kernel removed).
-async fn serve_data(
-    Query(q): Query<DataQuery>,
-    State(store): State<Arc<DemoStore>>,
-) -> Response {
+async fn serve_data(Query(q): Query<DataQuery>, State(store): State<Arc<DemoStore>>) -> Response {
     let expr = q.expr.trim().to_string();
     if !is_valid_expr(&expr) {
         return Response::builder()
@@ -388,8 +404,9 @@ async fn serve_data(
         None => {
             // Fallback: emit null patch and hold open.
             let frame = format_patch_set(&Value::Null, &expr);
-            let stream = futures_util::stream::once(async move { Ok::<String, std::io::Error>(frame) })
-                .chain(futures_util::stream::pending());
+            let stream =
+                futures_util::stream::once(async move { Ok::<String, std::io::Error>(frame) })
+                    .chain(futures_util::stream::pending());
             return sse_stream(stream);
         }
     };
@@ -403,7 +420,11 @@ async fn serve_data(
             Ok(v) => v,
             Err(_) => Value::Null,
         };
-        if tx.send(Ok(format_patch_set(&initial, &expr))).await.is_err() {
+        if tx
+            .send(Ok(format_patch_set(&initial, &expr)))
+            .await
+            .is_err()
+        {
             return;
         }
 
@@ -485,10 +506,12 @@ async fn post_deals_update(
     axum::Json(body): axum::Json<DealsUpdateBody>,
 ) -> Result<axum::Json<Value>, (StatusCode, String)> {
     let mut deals = store.deals.lock().await;
-    let deal = deals
-        .iter_mut()
-        .find(|d| d.id == body.id)
-        .ok_or_else(|| (StatusCode::NOT_FOUND, format!("no deal with id {}", body.id)))?;
+    let deal = deals.iter_mut().find(|d| d.id == body.id).ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            format!("no deal with id {}", body.id),
+        )
+    })?;
     deal.stage = body.stage;
     let out = deal_json(deal);
     drop(deals);
@@ -516,7 +539,10 @@ pub fn router(store: Arc<DemoStore>) -> Router {
         .route("/_deck/views/{name}/sse", get(serve_sse))
         .route("/_deck/data", get(serve_data))
         .route("/_deck/api/demo/deals", get(get_deals_list))
-        .route("/_deck/api/demo/deals/update", axum::routing::post(post_deals_update))
+        .route(
+            "/_deck/api/demo/deals/update",
+            axum::routing::post(post_deals_update),
+        )
         .with_state(store)
 }
 
@@ -584,14 +610,18 @@ mod tests {
     async fn resolve_demo_clock_returns_now() {
         let store = DemoStore::new();
         store.tick.store(42, Ordering::Relaxed);
-        let v = resolve_demo("demo.clock", &json!({}), &store).await.unwrap();
+        let v = resolve_demo("demo.clock", &json!({}), &store)
+            .await
+            .unwrap();
         assert_eq!(v["now"], 42u64);
     }
 
     #[tokio::test]
     async fn resolve_demo_todos_empty() {
         let store = DemoStore::new();
-        let v = resolve_demo("demo.todos", &json!({}), &store).await.unwrap();
+        let v = resolve_demo("demo.todos", &json!({}), &store)
+            .await
+            .unwrap();
         assert_eq!(v["items"].as_array().unwrap().len(), 0);
     }
 
@@ -601,7 +631,9 @@ mod tests {
         resolve_demo("demo.addTodo", &json!({"text": "hello"}), &store)
             .await
             .unwrap();
-        let v = resolve_demo("demo.todos", &json!({}), &store).await.unwrap();
+        let v = resolve_demo("demo.todos", &json!({}), &store)
+            .await
+            .unwrap();
         let items = v["items"].as_array().unwrap();
         assert_eq!(items.len(), 1);
         assert_eq!(items[0]["text"], "hello");
@@ -631,5 +663,4 @@ mod tests {
         assert!(r.is_err());
         assert!(r.unwrap_err().contains("unknown_service"));
     }
-
 }

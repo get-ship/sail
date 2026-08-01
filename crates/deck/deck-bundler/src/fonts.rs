@@ -43,8 +43,7 @@ fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<()> {
         if ty.is_dir() {
             copy_dir_recursive(&from, &to)?;
         } else if ty.is_file() {
-            std::fs::copy(&from, &to)
-                .with_context(|| format!("copy file {}", from.display()))?;
+            std::fs::copy(&from, &to).with_context(|| format!("copy file {}", from.display()))?;
         }
     }
     Ok(())

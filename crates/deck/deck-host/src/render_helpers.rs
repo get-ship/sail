@@ -25,7 +25,9 @@ pub fn is_valid_route_name(s: &str) -> bool {
             && *seg != ".."
             && !seg.starts_with('.')
             && !seg.starts_with('-')
-            && seg.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+            && seg
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
     })
 }
 

@@ -99,12 +99,19 @@ mod hmr_route {
             )
             .await
             .expect("response");
-        assert_eq!(resp.status(), StatusCode::OK, "/_deck/dev/hmr must be served in dev");
+        assert_eq!(
+            resp.status(),
+            StatusCode::OK,
+            "/_deck/dev/hmr must be served in dev"
+        );
         let ct = resp
             .headers()
             .get(header::CONTENT_TYPE)
             .and_then(|v| v.to_str().ok())
             .unwrap_or("");
-        assert!(ct.contains("text/event-stream"), "HMR must be an SSE stream, got '{ct}'");
+        assert!(
+            ct.contains("text/event-stream"),
+            "HMR must be an SSE stream, got '{ct}'"
+        );
     }
 }
