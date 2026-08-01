@@ -110,3 +110,6 @@ tests/parity/paint/out/
 
 # Bundled action artifacts (regenerable)
 **/.actions.bundle.js
+
+# Parity runner output (regenerated per run)
+tests/parity/*/out/

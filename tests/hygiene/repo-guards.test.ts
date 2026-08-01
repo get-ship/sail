@@ -30,6 +30,7 @@ const SKIP_DIRS = new Set([
   '.grok',
   '.agents', // org scratch; not product surface
   '.sail-out', // compiler emit cache (absolute paths)
+  'out', // test/parity runner output (absolute paths, regenerable)
   'runs',
   'eval',
 ])
