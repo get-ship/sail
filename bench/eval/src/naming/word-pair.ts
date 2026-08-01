@@ -5,18 +5,18 @@
 
 const ADJECTIVES = [
   'calm', 'brisk', 'clear', 'bold', 'quiet', 'swift', 'bright', 'keen',
-  'steady', 'crisp', 'fair', 'noble', 'pluck', 'proud', 'rapid', 'solid',
+  'steady', 'crisp', 'fair', 'noble', 'plucky', 'proud', 'rapid', 'solid',
   'vivid', 'warm', 'wise', 'zesty', 'amber', 'azure', 'coral', 'ember',
-  'flint', 'frost', 'gleam', 'haven', 'ivory', 'jade', 'lunar', 'mossy',
-  'pearl', 'quiet', 'rusty', 'silver', 'tidal', 'umber', 'velvet', 'winds',
+  'flint', 'frost', 'gleam', 'ivory', 'jade', 'lunar', 'mossy', 'pearl',
+  'rusty', 'silver', 'tidal', 'umber', 'velvet', 'windy', 'copper', 'dapple',
 ] as const
 
 const NOUNS = [
   'otter', 'heron', 'falcon', 'cedar', 'river', 'harbor', 'maple', 'osprey',
   'pine', 'reef', 'sparrow', 'stone', 'tide', 'willow', 'badger', 'canyon',
-  'delta', 'eagle', 'fjord', 'glade', 'haven', 'inlet', 'jay', 'kestrel',
-  'lark', 'meadow', 'nimbus', 'orchid', 'prairie', 'quail', 'raven', 'sage',
-  'tern', 'upland', 'vale', 'wren', 'yarrow', 'zenith', 'asp', 'brook',
+  'delta', 'eagle', 'fjord', 'glade', 'inlet', 'jay', 'kestrel', 'lark',
+  'meadow', 'nimbus', 'orchid', 'prairie', 'quail', 'raven', 'sage', 'tern',
+  'upland', 'vale', 'wren', 'yarrow', 'zenith', 'asp', 'brook', 'cove',
 ] as const
 
 /** Deterministic hash → [0, 2^32). */

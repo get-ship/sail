@@ -2,8 +2,8 @@
  * LocalRunner — sandbox dir, optional grok launch, adapter phases via RUN CONTRACT.
  */
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { invokePhase, type InvokeOptions } from '../contract/invoke.ts'
 import {
@@ -44,7 +44,11 @@ export interface LocalRunnerOptions {
   lab?: string
   standards?: string
   repo?: string
-  /** Spawn adapters as subprocess (default true). Tests set false. */
+  /**
+   * Spawn adapters as subprocess (RUN CONTRACT fidelity).
+   * Default **false** (in-process) — matches CLI default for speed.
+   * Pass `true` or CLI `--subprocess` for real eval-adapter spawns.
+   */
   subprocess?: boolean
   invoke?: InvokeOptions
 }
@@ -67,7 +71,8 @@ export class LocalRunner implements Runner {
     this.lab = opts.lab ?? labRoot()
     this.standards = opts.standards ?? standardsDir(opts.repo ?? repoRoot())
     this.repo = opts.repo ?? repoRoot()
-    const subprocess = opts.subprocess ?? true
+    // SSOT default: in-process (subprocess=false). Same as sail-bench CLI.
+    const subprocess = opts.subprocess ?? false
     this.invokeOpts = opts.invoke ?? {
       inProcess: !subprocess,
       handlers: !subprocess ? handlers : undefined,
@@ -91,14 +96,7 @@ export class LocalRunner implements Runner {
     const tc = resolveToolchain(config.toolchain, this.repo, this.lab)
 
     const modelSlug = config.modelSlug
-    const taken = listTakenRunIds(this.lab, tc.stamp, config.taskId, modelSlug)
-    const runId = allocateWordPair({ taken })
-    const runDir = runDirAbs(this.lab, {
-      toolchain: tc.stamp,
-      task: config.taskId,
-      model: modelSlug,
-      runId,
-    })
+    const { runId, runDir } = allocateExclusiveRunDir(this.lab, tc.stamp, config.taskId, modelSlug)
     const sandboxDir = join(runDir, 'sandbox')
     ensureDir(sandboxDir)
 
@@ -155,6 +153,7 @@ export class LocalRunner implements Runner {
         source: 'sandbox',
       },
       env: {
+        SAIL_LAB: this.lab,
         ...(tc.sailBin ? { SAIL_BIN: tc.sailBin } : {}),
       },
       limits: { phase_timeout_ms: 600_000 },
@@ -184,8 +183,11 @@ export class LocalRunner implements Runner {
     // execute (agent or seed)
     const exec = await this.execute(handle)
     flags.push(...exec.flags)
+    if (!exec.ok) {
+      flags.push('execute_failed')
+    }
 
-    // post phases
+    // post phases — still collect artifacts after execute failure (policy: keep evidence)
     const bundle = await this.collect(handle)
     // Prefer explicit metrics.gate_ok from adapter (may be null = not applicable)
     let gateOkNum: number | null = null
@@ -195,6 +197,19 @@ export class LocalRunner implements Runner {
       gateOkNum = null
     } else {
       gateOkNum = bundle.gate.ok ? 1 : 0
+    }
+
+    // compile_ok only for vite_build arms; else NULL + named reason
+    let compileOk: number | null = null
+    const missing: Record<string, string> = {
+      ...bundle.gate.missing,
+      ...bundle.render.missing,
+      ...bundle.collect.missing,
+    }
+    if (arm.gate === 'vite_build') {
+      compileOk = gateOkNum
+    } else {
+      missing.compile_ok = 'not_applicable_for_arm'
     }
 
     const renderOk = bundle.render.ok ? 1 : 0
@@ -207,15 +222,16 @@ export class LocalRunner implements Runner {
       ...bundle.collect.artifacts,
     ]
 
-    const missing: Record<string, string> = {
-      ...bundle.gate.missing,
-      ...bundle.render.missing,
-      ...bundle.collect.missing,
+    // Fail when execute failed OR blocking render missing.
+    // Seed mode sets exec.ok=true; live miss/nonzero sets ok=false.
+    let status: 'complete' | 'failed' = 'complete'
+    if (!exec.ok) {
+      status = 'failed'
     }
-
-    // Blocking render: no render ⇒ failed run
-    const status: 'complete' | 'failed' = renderOk === 1 ? 'complete' : 'failed'
-    if (renderOk !== 1) flags.push('blocking_render_missing')
+    if (renderOk !== 1) {
+      status = 'failed'
+      flags.push('blocking_render_missing')
+    }
 
     const wall = Date.now() - t0
     const metrics = {
@@ -225,6 +241,11 @@ export class LocalRunner implements Runner {
       collect_wall_ms: bundle.collect.wall_ms,
       execute_wall_ms: exec.wall_ms,
     }
+
+    const failureClasses: string[] = []
+    if (!exec.ok) failureClasses.push('execute')
+    if (renderOk !== 1) failureClasses.push('render')
+    if (status === 'failed' && failureClasses.length === 0) failureClasses.push('pipeline')
 
     const runRow: RunRow = {
       run_id: runId,
@@ -241,7 +262,7 @@ export class LocalRunner implements Runner {
       status,
       wall_ms: wall,
       gate_ok: gateOkNum,
-      compile_ok: gateOkNum,
+      compile_ok: compileOk,
       render_ok: renderOk,
       tokens_in: numOrNull(metrics.tokens_in),
       tokens_out: numOrNull(metrics.tokens_out),
@@ -252,7 +273,7 @@ export class LocalRunner implements Runner {
       metrics_json: JSON.stringify(metrics),
       gate_detail_json: JSON.stringify(bundle.gate.detail),
       artifacts_json: JSON.stringify(allArtifacts),
-      failure_classes_json: JSON.stringify(status === 'failed' ? ['render_or_pipeline'] : []),
+      failure_classes_json: JSON.stringify(failureClasses),
       missing_reasons_json: JSON.stringify(missing),
     }
     store.upsertRun(runRow)
@@ -273,6 +294,7 @@ export class LocalRunner implements Runner {
       status,
       wall_ms: wall,
       gate_ok: gateOkNum,
+      compile_ok: compileOk,
       render_ok: renderOk,
       flags: [...new Set(flags)],
       missing,
@@ -297,9 +319,12 @@ export class LocalRunner implements Runner {
     const manifestPath = join(runDir, 'manifest.json')
     writeFileSync(manifestPath, JSON.stringify(runManifest, null, 2) + '\n')
 
+    // n=1: single failed run → batch failed; partial multi-run later uses complete_with_failures
+    const batchStatus =
+      status === 'complete' ? 'complete' : (batchRow.n ?? 1) <= 1 ? 'failed' : 'complete_with_failures'
     store.upsertBatch({
       ...batchRow,
-      status: status === 'complete' ? 'complete' : 'complete_with_failures',
+      status: batchStatus,
       manifest_json: JSON.stringify({ batch_id: batchId, runs: [runId] }),
     })
 
@@ -519,4 +544,34 @@ export class LocalRunner implements Runner {
 function numOrNull(v: unknown): number | null {
   if (typeof v === 'number' && Number.isFinite(v)) return v
   return null
+}
+
+/**
+ * Allocate a word-pair run id and create its directory exclusively.
+ * Retries on EEXIST so concurrent runners cannot clobber the same path.
+ */
+function allocateExclusiveRunDir(
+  lab: string,
+  toolchain: string,
+  task: string,
+  model: string,
+): { runId: string; runDir: string } {
+  for (let attempt = 0; attempt < 64; attempt++) {
+    const taken = listTakenRunIds(lab, toolchain, task, model)
+    const runId = allocateWordPair({
+      taken,
+      seed: `${Date.now()}-${attempt}-${Math.random()}`,
+    })
+    const runDir = runDirAbs(lab, { toolchain, task, model, runId })
+    try {
+      mkdirSync(dirname(runDir), { recursive: true })
+      mkdirSync(runDir) // exclusive: throws EEXIST if already present
+      return { runId, runDir }
+    } catch (e) {
+      const err = e as NodeJS.ErrnoException
+      if (err.code === 'EEXIST') continue
+      throw e
+    }
+  }
+  throw new Error('failed to allocate exclusive run dir after 64 attempts')
 }

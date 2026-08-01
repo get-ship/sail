@@ -115,6 +115,11 @@ export async function collectPhase(manifest: RunManifest): Promise<PhaseResult> 
     missing.session_id = 'not_in_events'
   }
 
+  // turns not collected in v1 — explicit NULL + named reason (never bare NULL)
+  const turns: number | null = null
+  flags.push('missing_turns')
+  missing.turns = 'not_collected_v1'
+
   const eventsStat = existsSync(eventsPath) ? statSync(eventsPath) : null
   const collectBody = {
     session_id: ev.sessionId,
@@ -123,6 +128,7 @@ export async function collectPhase(manifest: RunManifest): Promise<PhaseResult> 
     tool_calls: ev.toolCalls,
     tokens_in: tokensIn,
     tokens_out: tokensOut,
+    turns,
     usage: trace.usage,
     source_rel: manifest.paths.source,
     collected_at: new Date().toISOString(),
@@ -136,7 +142,7 @@ export async function collectPhase(manifest: RunManifest): Promise<PhaseResult> 
   result.metrics = {
     tokens_in: tokensIn,
     tokens_out: tokensOut,
-    turns: null,
+    turns,
     tool_calls: ev.toolCalls,
     events_lines: ev.lines,
     session_id: ev.sessionId,

@@ -13,6 +13,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
+// resolve used for copyTree self-copy guard + lab root walk
 import {
   CONTRACT_VERSION,
   type PhaseResult,
@@ -120,8 +121,12 @@ export async function preparePhase(manifest: RunManifest): Promise<PhaseResult> 
       written.push('.bench-seed')
     }
 
-    const labHint = dirname(dirname(manifest.run_dir)) // …/runs/<tc> → not ideal; use env
-    const labRootGuess = process.env.SAIL_LAB ?? join(manifest.run_dir, '..', '..', '..', '..')
+    // Lab root: explicit env on manifest, SAIL_LAB, or walk up from
+    // runs/<tc>/<task>/<model>/<id>/ → four parents.
+    const labRootGuess =
+      manifest.env.SAIL_LAB ||
+      process.env.SAIL_LAB ||
+      resolve(join(manifest.run_dir, '..', '..', '..', '..'))
     const shared = linkSharedDeps(sandbox, manifest.standards_dir, labRootGuess, written)
 
     // Meta for collect

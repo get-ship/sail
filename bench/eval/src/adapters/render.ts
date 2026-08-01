@@ -5,7 +5,7 @@
 
 import { createServer } from 'node:http'
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
-import { extname, join } from 'node:path'
+import { extname, join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import {
   CONTRACT_VERSION,
@@ -15,6 +15,7 @@ import {
 } from '../contract/types.ts'
 import { fileSha256 } from '../config/hash.ts'
 import { resolveChrome, resolveSailBin } from '../naming/paths.ts'
+import { isPathInside } from '../naming/safe-path.ts'
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -44,11 +45,12 @@ function freePort(): Promise<number> {
 }
 
 async function serveStatic(root: string, port: number): Promise<{ close: () => Promise<void> }> {
+  const rootAbs = resolve(root)
   const server = createServer((req, res) => {
     const url = (req.url ?? '/').split('?')[0] || '/'
-    let rel = url === '/' ? '/index.html' : url
-    const file = join(root, rel)
-    if (!file.startsWith(root) || !existsSync(file) || !statSync(file).isFile()) {
+    const rel = url === '/' ? '/index.html' : url
+    const file = resolve(rootAbs, '.' + rel)
+    if (!isPathInside(rootAbs, file) || !existsSync(file) || !statSync(file).isFile()) {
       res.writeHead(404)
       res.end('not found')
       return
@@ -279,6 +281,7 @@ export async function renderPhase(manifest: RunManifest): Promise<PhaseResult> {
     result.verdict = 'error'
     result.error = { code: 'RENDER', message: msg }
     result.flags.push('render_error')
+    result.missing.render = msg
     result.artifacts = [
       {
         name: 'render.png',
@@ -288,6 +291,10 @@ export async function renderPhase(manifest: RunManifest): Promise<PhaseResult> {
         reason: msg,
       },
     ]
+    writeFileSync(
+      join(manifest.run_dir, 'render.MISSING.json'),
+      JSON.stringify({ reason: msg, ts: new Date().toISOString() }, null, 2) + '\n',
+    )
   }
 
   result.wall_ms = Date.now() - t0

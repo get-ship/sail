@@ -87,6 +87,7 @@ function gateViteBuild(sandbox: string): {
     ['npm', 'run', 'build', '--silent'],
   ]
   const tried: unknown[] = []
+  let lastFail: { ok: false; detail: Record<string, unknown> } | null = null
   for (const cmd of runners) {
     const which = spawnSync('which', [cmd[0]!], { encoding: 'utf8' })
     if (which.status !== 0) {
@@ -100,19 +101,23 @@ function gateViteBuild(sandbox: string): {
     })
     const dist = join(sandbox, 'dist/index.html')
     const ok = r.status === 0 && existsSync(dist)
-    return {
+    const detail = {
+      type: 'vite_build',
       ok,
-      detail: {
-        type: 'vite_build',
-        ok,
-        cmd,
-        exit: r.status,
-        dist_present: existsSync(dist),
-        stdout_tail: (r.stdout ?? '').slice(-500),
-        stderr_tail: (r.stderr ?? '').slice(-500),
-      },
+      cmd,
+      exit: r.status,
+      dist_present: existsSync(dist),
+      stdout_tail: (r.stdout ?? '').slice(-500),
+      stderr_tail: (r.stderr ?? '').slice(-500),
+      tried,
     }
+    if (ok) {
+      return { ok: true, detail }
+    }
+    tried.push({ cmd, exit: r.status, dist_present: existsSync(dist) })
+    lastFail = { ok: false, detail: { ...detail, tried: [...tried] } }
   }
+  if (lastFail) return lastFail
   return {
     ok: false,
     detail: {

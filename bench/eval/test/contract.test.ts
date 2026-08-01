@@ -5,7 +5,7 @@ import {
   emptyPhaseResult,
   isPhase,
 } from '../src/contract/types.ts'
-import { validateManifest } from '../src/contract/validate.ts'
+import { validateManifest, validatePhaseResult } from '../src/contract/validate.ts'
 import { invokePhase } from '../src/contract/invoke.ts'
 import { handlers } from '../src/adapters/index.ts'
 import type { RunManifest } from '../src/contract/types.ts'
@@ -46,7 +46,7 @@ function baseManifest(overrides: Partial<RunManifest> = {}): RunManifest {
       source: 'sandbox',
     },
     env: {},
-    limits: { phase_timeout_ms: 30_000 },
+    limits: { phase_timeout_ms: 60_000 },
     phase: 'prepare',
     ...overrides,
   }
@@ -63,32 +63,77 @@ describe('contract types', () => {
     expect(isPhase('nope')).toBe(false)
   })
 
-  it('validateManifest rejects missing fields', () => {
+  it('validateManifest rejects missing fields and empty paths', () => {
     const r = validateManifest({ contract_version: CONTRACT_VERSION })
     expect(r.ok).toBe(false)
+
+    const emptyPaths = validateManifest({
+      ...baseManifest(),
+      paths: {},
+    })
+    expect(emptyPaths.ok).toBe(false)
+    if (!emptyPaths.ok) expect(emptyPaths.error).toMatch(/paths\./)
+  })
+
+  it('validateManifest accepts full shape with model null', () => {
+    const r = validateManifest(baseManifest())
+    expect(r.ok).toBe(true)
+  })
+
+  it('validatePhaseResult requires verdict/artifacts/flags/missing', () => {
+    expect(validatePhaseResult({ phase: 'gate', ok: true }).ok).toBe(false)
+    expect(
+      validatePhaseResult({
+        phase: 'gate',
+        ok: true,
+        verdict: 'pass',
+        wall_ms: 1,
+        artifacts: [],
+        flags: [],
+        missing: {},
+      }).ok,
+    ).toBe(true)
   })
 
   it('in-process prepare/gate/collect roundtrip', async () => {
     const m = baseManifest()
     const prep = await invokePhase('prepare', m, { inProcess: true, handlers })
     expect(prep.contractError).toBe(false)
-    // prepare copies payload onto itself — ok may fail if payload empty tree issues; ensure no crash
     expect(prep.result.phase).toBe('prepare')
+    expect(prep.result.ok).toBe(true)
 
-    const gate = await invokePhase('gate', { ...m, phase: 'gate', arm: 'vanilla' }, {
-      inProcess: true,
-      handlers,
-    })
+    const gate = await invokePhase(
+      'gate',
+      { ...m, phase: 'gate', arm: 'vanilla' },
+      { inProcess: true, handlers },
+    )
     expect(gate.result.phase).toBe('gate')
     expect(gate.result.ok).toBe(true)
 
-    const collect = await invokePhase('collect', { ...m, phase: 'collect' }, {
-      inProcess: true,
-      handlers,
-    })
+    const collect = await invokePhase(
+      'collect',
+      { ...m, phase: 'collect' },
+      { inProcess: true, handlers },
+    )
     expect(collect.result.ok).toBe(true)
     expect(collect.result.flags).toContain('missing_usage')
+    expect(collect.result.missing.turns).toBe('not_collected_v1')
   })
+
+  it('subprocess prepare invokes eval-adapter (real stdin/stdout contract)', async () => {
+    const m = baseManifest()
+    const prep = await invokePhase('prepare', m, {
+      inProcess: false,
+      timeoutMs: 60_000,
+    })
+    expect(prep.timedOut).toBe(false)
+    expect(prep.exitCode).toBe(0)
+    expect(prep.contractError).toBe(false)
+    expect(prep.result.phase).toBe('prepare')
+    expect(prep.result.ok).toBe(true)
+    expect(Array.isArray(prep.result.artifacts)).toBe(true)
+    expect(typeof prep.result.verdict).toBe('string')
+  }, 90_000)
 
   it('emptyPhaseResult defaults', () => {
     const r = emptyPhaseResult('render')

@@ -106,17 +106,70 @@ export class RunStore {
   }
 
   private migrate(): void {
+    // Base tables (CREATE IF NOT EXISTS) — greenfield + idempotent.
     const schemaPath = join(dirname(fileURLToPath(import.meta.url)), '../../schema.sql')
     if (existsSync(schemaPath)) {
       this.db.exec(readFileSync(schemaPath, 'utf8'))
     }
+
     const row = this.db.query('SELECT value FROM schema_meta WHERE key = ?').get('version') as
       | { value: string }
       | null
+    let current = row?.value ?? '0'
     if (!row) {
       this.db
         .query('INSERT INTO schema_meta (key, value) VALUES (?, ?)')
-        .run('version', SCHEMA_VERSION)
+        .run('version', '0')
+      current = '0'
+    }
+
+    const curNum = Number.parseInt(current, 10)
+    const targetNum = Number.parseInt(SCHEMA_VERSION, 10)
+    if (Number.isFinite(curNum) && Number.isFinite(targetNum) && curNum > targetNum) {
+      throw new StoreError(
+        `store schema version ${current} is newer than supported ${SCHEMA_VERSION}`,
+        'SCHEMA_NEWER',
+      )
+    }
+
+    // Ordered migrations: version N applies steps to reach N+1, …
+    // v0 → v2: baseline schema.sql already applied (greenfield phase-1).
+    // Future ALTER TABLE steps go here keyed by from-version.
+    const steps: Array<{ from: string; to: string; apply: () => void }> = [
+      {
+        from: '0',
+        to: '2',
+        apply: () => {
+          // schema.sql CREATE IF NOT EXISTS is the v2 baseline; no ALTERs yet.
+        },
+      },
+    ]
+
+    let ver = current
+    for (const step of steps) {
+      if (ver === step.from) {
+        step.apply()
+        this.db
+          .query(
+            `INSERT INTO schema_meta (key, value) VALUES ('version', ?)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+          )
+          .run(step.to)
+        ver = step.to
+      }
+    }
+
+    if (ver !== SCHEMA_VERSION) {
+      // Unknown intermediate — stamp target only if still behind and no steps matched
+      // (e.g. fresh insert path already at schema tables).
+      if (ver === '0' || Number.parseInt(ver, 10) < targetNum) {
+        this.db
+          .query(
+            `INSERT INTO schema_meta (key, value) VALUES ('version', ?)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+          )
+          .run(SCHEMA_VERSION)
+      }
     }
   }
 

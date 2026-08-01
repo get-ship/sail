@@ -23,8 +23,7 @@ function usage(): never {
 Usage:
   sail-bench run --task <id> --arm <sail|react|vanilla> --toolchain <current|stamp>
                  [--model <slug>] [--profile p0] [--seed] [--lab <path>]
-                 [--in-process]   # adapters in-process (default for speed)
-                 [--subprocess]  # spawn eval-adapter (contract smoke)
+                 [--subprocess]  # spawn eval-adapter (default: in-process)
   sail-bench report --batch <id> [--lab <path>]
   sail-bench grade <run_id|run_dir> key=value … [note=…] [--lab <path>]
   sail-bench serve [--port N] [--lab <path>]
@@ -54,7 +53,7 @@ function parseArgs(argv: string[]) {
     const a = args[i]!
     if (a.startsWith('--')) {
       const key = a.slice(2)
-      const bools = new Set(['seed', 'in-process', 'subprocess'])
+      const bools = new Set(['seed', 'subprocess'])
       if (bools.has(key)) {
         flags[key] = true
         continue
@@ -94,11 +93,10 @@ async function main() {
       process.exit(2)
     }
 
-    const subprocess = Boolean(flags.subprocess)
-    // default in-process for speed; --subprocess for full contract
+    // Default in-process (LocalRunner SSOT). --subprocess forces contract spawn.
     const runner = new LocalRunner({
       lab,
-      subprocess,
+      subprocess: Boolean(flags.subprocess),
     })
 
     console.error(`== sail-bench run task=${task} arm=${arm} toolchain=${toolchain} model=${modelSlug} seed=${Boolean(flags.seed)} ==`)

@@ -1,8 +1,10 @@
 /**
  * Core → adapter subprocess spawn for RUN CONTRACT v1.
+ *
+ * Timeout kills the whole process group (CONTRACT failure algebra).
  */
 
-import { spawn } from 'node:child_process'
+import { spawn, type ChildProcess } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import {
@@ -14,6 +16,7 @@ import {
   emptyPhaseResult,
   isPhase,
 } from './types.ts'
+import { validatePhaseResult } from './validate.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 /** Default adapter entry (bun-runnable). Override via SAIL_EVAL_ADAPTER. */
@@ -25,7 +28,7 @@ export interface InvokeOptions {
   /** bun/node binary. Default: bun. */
   runtime?: string
   timeoutMs?: number
-  /** When true, call phase handler in-process (tests). */
+  /** When true, call phase handler in-process (tests / speed default). */
   inProcess?: boolean
   /** In-process handler map (required when inProcess). */
   handlers?: Partial<Record<Phase, (m: RunManifest) => Promise<PhaseResult>>>
@@ -94,8 +97,22 @@ export async function invokePhase(
     const t0 = Date.now()
     try {
       const result = await handler(body)
+      const v = validatePhaseResult(result)
+      if (!v.ok) {
+        return {
+          result: {
+            ...emptyPhaseResult(phase, Date.now() - t0),
+            error: { code: 'MALFORMED_STDOUT', message: v.error },
+            flags: ['malformed_adapter_stdout'],
+          },
+          exitCode: 2,
+          stderr: '',
+          timedOut: false,
+          contractError: true,
+        }
+      }
       return {
-        result,
+        result: v.value,
         exitCode: 0,
         stderr: '',
         timedOut: false,
@@ -118,10 +135,25 @@ export async function invokePhase(
 
   const runtime = opts.runtime ?? process.env.SAIL_BENCH_RUNTIME ?? 'bun'
   const adapterPath = opts.adapterPath ?? process.env.SAIL_EVAL_ADAPTER ?? DEFAULT_ADAPTER_PATH
-  const timeoutMs =
-    opts.timeoutMs ?? body.limits?.phase_timeout_ms ?? 600_000
+  const timeoutMs = opts.timeoutMs ?? body.limits?.phase_timeout_ms ?? 600_000
 
   return spawnAdapter(runtime, adapterPath, phase, body, timeoutMs)
+}
+
+/** Kill the adapter process group (CONTRACT: timeout → kill process group). */
+function killProcessGroup(child: ChildProcess, signal: NodeJS.Signals): void {
+  const pid = child.pid
+  if (pid == null) return
+  try {
+    // Negative pid = process group (requires detached / new session leader).
+    process.kill(-pid, signal)
+  } catch {
+    try {
+      child.kill(signal)
+    } catch {
+      /* already dead */
+    }
+  }
 }
 
 function spawnAdapter(
@@ -132,9 +164,12 @@ function spawnAdapter(
   timeoutMs: number,
 ): Promise<InvokeOutcome> {
   return new Promise((resolve) => {
+    // detached → new process group on Unix so timeout can kill descendants
+    // (chromium, nested tools). stdio still piped to parent.
     const child = spawn(runtime, [adapterPath, phase], {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env },
+      detached: process.platform !== 'win32',
     })
 
     let stdout = ''
@@ -142,13 +177,9 @@ function spawnAdapter(
     let timedOut = false
     const timer = setTimeout(() => {
       timedOut = true
-      child.kill('SIGTERM')
+      killProcessGroup(child, 'SIGTERM')
       setTimeout(() => {
-        try {
-          child.kill('SIGKILL')
-        } catch {
-          /* already dead */
-        }
+        killProcessGroup(child, 'SIGKILL')
       }, 2_000).unref?.()
     }, timeoutMs)
 
@@ -192,18 +223,44 @@ function spawnAdapter(
         return
       }
 
-      const contractError = code === 2
       let result: PhaseResult
+      let contractError = code === 2
       try {
-        const parsed = JSON.parse(stdout.trim() || '{}') as PhaseResult
-        result = {
-          ...emptyPhaseResult(phase),
-          ...parsed,
+        const parsed: unknown = JSON.parse(stdout.trim() || '{}')
+        const v = validatePhaseResult({
+          ...(typeof parsed === 'object' && parsed ? parsed : {}),
           phase,
-          contract_version: parsed.contract_version ?? CONTRACT_VERSION,
+          contract_version:
+            typeof parsed === 'object' && parsed && 'contract_version' in parsed
+              ? (parsed as { contract_version?: string }).contract_version ?? CONTRACT_VERSION
+              : CONTRACT_VERSION,
+        })
+        if (!v.ok) {
+          contractError = true
+          result = {
+            ...emptyPhaseResult(phase),
+            error: {
+              code: 'MALFORMED_STDOUT',
+              message: `${v.error}; raw=${stdout.slice(0, 200)}`,
+            },
+            flags: ['malformed_adapter_stdout'],
+          }
+        } else {
+          result = {
+            ...emptyPhaseResult(phase),
+            ...v.value,
+            phase,
+            contract_version: v.value.contract_version ?? CONTRACT_VERSION,
+            artifacts: v.value.artifacts ?? [],
+            flags: v.value.flags ?? [],
+            missing: v.value.missing ?? {},
+            metrics: v.value.metrics ?? {},
+            detail: v.value.detail ?? {},
+          }
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e)
+        contractError = true
         result = {
           ...emptyPhaseResult(phase),
           error: {

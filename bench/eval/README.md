@@ -85,7 +85,18 @@ $SAIL_LAB/
 
 ## Acceptance (phase 1)
 
-- `sail-bench run --task parallax-landing --arm sail --toolchain current` produces
-  complete run dir + db row
-- `sail-bench report --batch <id>` regenerates index with zero copied bytes
+```bash
+# Harness smoke (no live agent) — produces full artifact set + db row
+bun src/cli/sail-bench.ts run \
+  --task parallax-landing --arm sail --toolchain current --seed
+
+# Live agent (requires grok + model)
+bun src/cli/sail-bench.ts run \
+  --task parallax-landing --arm sail --toolchain current --model grok
+
+bun src/cli/sail-bench.ts report --batch <id>   # zero copied bytes
+```
+
+- Complete run dir: `sandbox/`, `events.jsonl`, `gate.json`, `render.png`, `manifest.json`
 - No shell-out to python on the new path
+- Default adapter invoke is in-process; pass `--subprocess` for full contract smoke

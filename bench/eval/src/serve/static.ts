@@ -7,6 +7,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { extname, join, resolve } from 'node:path'
 import { labRoot } from '../naming/paths.ts'
+import { isPathInside } from '../naming/safe-path.ts'
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -69,9 +70,10 @@ function handle(lab: string, req: IncomingMessage, res: ServerResponse): void {
   }
 
   const rel = decodeURIComponent(url).replace(/^\/+/, '')
-  const abs = resolve(join(lab, rel))
-  // Path traversal guard
-  if (!abs.startsWith(lab)) {
+  const labAbs = resolve(lab)
+  const abs = resolve(labAbs, rel)
+  // Path traversal guard (reject sibling-prefix escapes: /lab vs /lab2)
+  if (!isPathInside(labAbs, abs)) {
     res.writeHead(403)
     res.end('forbidden')
     return
