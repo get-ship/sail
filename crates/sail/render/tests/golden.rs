@@ -227,23 +227,24 @@ fn mid_size_golden_painted_tokens() {
     ensure_or_compare("mid-size-800x600", &result);
 }
 
-/// Assert a successful raster: valid size, PNG magic, and non-trivial paint.
-fn assert_visible_png(result: &sail_render::RenderOutput, min_non_white: usize) {
+/// Assert a successful raster: valid size, PNG magic, and non-bg paint.
+///
+/// Uses top-left pixel as the page background (theme surface is near-white
+/// oklch, not pure `#fff`), so a solid themed fill without chrome cannot
+/// falsely satisfy the threshold.
+fn assert_visible_png(result: &sail_render::RenderOutput, min_non_bg: usize) {
     assert!(
         result.image.width() > 0 && result.image.height() > 0,
         "viewport must be non-zero"
     );
     let png = png_bytes(&result.image).expect("encode png");
     assert!(png.starts_with(b"\x89PNG"), "must produce a PNG");
-    let non_white = result
-        .image
-        .as_raw()
-        .chunks_exact(4)
-        .filter(|c| c != &[255, 255, 255, 255])
-        .count();
+    let rgba = result.image.as_raw();
+    let bg = [rgba[0], rgba[1], rgba[2], rgba[3]];
+    let non_bg = rgba.chunks_exact(4).filter(|c| *c != bg.as_slice()).count();
     assert!(
-        non_white >= min_non_white,
-        "expected visible content (non-white px {non_white} < {min_non_white})"
+        non_bg >= min_non_bg,
+        "expected painted chrome/text (non-bg px {non_bg} < {min_non_bg}; bg={bg:?})"
     );
 }
 
@@ -252,7 +253,7 @@ fn assert_visible_png(result: &sail_render::RenderOutput, min_non_white: usize) 
 fn parley_zero_width_padded_text_does_not_panic() {
     let result = render_file(&fixture("parley-zero-width.sail"), opts((320, 200)))
         .expect("zero-width padded text must render without parley panic");
-    // Root paints theme surface; require some non-white so a blank raster fails.
+    // Root paints theme surface; require non-bg chrome/text so a blank raster fails.
     assert_visible_png(&result, 10);
 }
 
@@ -297,11 +298,42 @@ fn parley_dependent_form_agent_repro_does_not_panic() {
     );
 }
 
+/// RENDER-0 residual: unclamped multi-line text measures without panic after
+/// dropping viewport-as-max_height. Pins non-zero text-host height (not pixel
+/// parity with upstream’s viewport-capped measure).
+#[test]
+fn parley_unclamped_tall_text_measures_without_panic() {
+    let result = render_file(
+        &fixture("parley-unclamped-tall-text.sail"),
+        opts((400, 200)),
+    )
+    .expect("unclamped tall text must render without parley panic");
+    assert_visible_png(&result, 50);
+    let textish: Vec<_> = result
+        .regions
+        .iter()
+        .filter(|r| r.tag.as_deref() == Some("span") || r.h > 40.0)
+        .collect();
+    assert!(
+        textish.iter().any(|r| r.h > 30.0),
+        "expected multi-line text height > 30px, regions={:?}",
+        result
+            .regions
+            .iter()
+            .map(|r| (r.tag.clone(), r.w, r.h))
+            .collect::<Vec<_>>()
+    );
+}
+
 /// RENDER-0: float-aware BreakLines path (`clamp_lines` set) at zero content width.
 ///
 /// The common panic path no longer hits this (viewport-as-max_height removed), but
 /// `update_breaker_line` clamps still protect clamp-lines / ellipsis UI. Sail sx
 /// does not lower `line-clamp`, so this builds a raw takumi tree.
+///
+/// Note: when clamp_lines is set, measure still uses viewport height in
+/// HeightAndLines (see SAIL_PATCH.md residual) — paint uses content-box height.
+/// Align those when host line-clamp lands.
 #[test]
 fn parley_clamp_lines_zero_width_does_not_panic() {
     use takumi::prelude::*;

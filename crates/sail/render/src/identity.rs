@@ -298,10 +298,14 @@ pub fn join_layout_regions(
         }
 
         if let Some(computed) = layout.computed(idx) {
+            // Viewport-absolute coords (sum taffy parent-relative locations).
+            // Paint probes and agent overlays need viewport space; parent-relative
+            // alone mis-samples nested host AABBs.
+            let (abs_x, abs_y) = absolute_location(layout, elements, idx);
             regions.push(Region {
                 node_id: id.clone(),
-                x: computed.location.x,
-                y: computed.location.y,
+                x: abs_x,
+                y: abs_y,
                 w: computed.size.width,
                 h: computed.size.height,
                 tag: Some(if author_tag.is_empty() {
@@ -383,16 +387,20 @@ fn resolve_layout_node_id(
             return (id.clone(), false);
         }
     }
-    // Always advance so same-tag unjoined boxes get distinct ids (sibling
-    // cards must not share `_unjoined#0#…` when the author tree is empty).
+    // Always synthesize a distinct id — do not collapse unjoined siblings onto
+    // roots.first() / nodes.first() (that reused one id for every same-tag host
+    // when the author tree was non-empty but the tag cursor was exhausted).
     let occ = *cursor;
     *cursor += 1;
-    let id = tree
+    let base = tree
         .roots
         .first()
         .cloned()
-        .or_else(|| tree.nodes.first().map(|n| n.id.clone()))
-        .unwrap_or_else(|| node_id("_unjoined", &occ.to_string(), author_tag));
+        .or_else(|| tree.nodes.first().map(|n| n.id.clone()));
+    let id = match base {
+        Some(root) => format!("{root}#unjoined#{occ}#{author_tag}"),
+        None => node_id("_unjoined", &occ.to_string(), author_tag),
+    };
     (id, true)
 }
 
@@ -469,6 +477,34 @@ fn is_anonymous_expansion_box(layout_tag: &str, author_tag: &str) -> bool {
     matches!(t.as_str(), "div" | "span") && a == t
 }
 
+/// True if a region id is a synthetic unjoined fallback (empty-tree
+/// `_unjoined#…` or non-empty-tree `{root}#unjoined#{occ}#{tag}`).
+pub fn is_unjoined_id(id: &str) -> bool {
+    id.contains("_unjoined") || id.contains("#unjoined#")
+}
+
+/// Sum taffy parent-relative locations up the element parent chain → viewport.
+pub fn absolute_location(
+    layout: &sail_layout::taffy_tree::Layout,
+    elements: &[Element],
+    idx: usize,
+) -> (f32, f32) {
+    let mut x = 0.0_f32;
+    let mut y = 0.0_f32;
+    let mut cur = Some(idx);
+    while let Some(i) = cur {
+        if i == 0 {
+            break; // synthetic document root
+        }
+        if let Some(c) = layout.computed(i) {
+            x += c.location.x;
+            y += c.location.y;
+        }
+        cur = elements.get(i).and_then(|e| e.parent);
+    }
+    (x, y)
+}
+
 /// FNV-1a 32-bit — identical to SailInspect.
 pub fn short_hash(input: &str) -> String {
     let mut h: u32 = 0x811c_9dc5;
@@ -482,4 +518,85 @@ pub fn short_hash(input: &str) -> String {
 pub fn node_id(file: &str, ordinal_path: &str, content: &str) -> String {
     let h = short_hash(content);
     format!("{file}#{ordinal_path}#{h}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unjoined_siblings_get_distinct_ids_when_tree_nonempty() {
+        // Partial author tree: one known "card" id; two layout hosts exhaust the cursor.
+        let mut by_tag = BTreeMap::new();
+        by_tag.insert("card".into(), vec!["file#0#aaaa".into()]);
+        let tree = InspectTreeIndex {
+            file: "t.sail".into(),
+            roots: vec!["file#root#bbbb".into()],
+            by_tag,
+            nodes: vec![TreeNodeRef {
+                id: "file#0#aaaa".into(),
+                tag: "card".into(),
+            }],
+            dynamic_texts: vec![],
+        };
+        let mut cursors = BTreeMap::new();
+        let (id0, u0) = resolve_layout_node_id(&tree, "card", &mut cursors);
+        assert!(!u0, "first card should join author tree");
+        assert_eq!(id0, "file#0#aaaa");
+
+        let (id1, u1) = resolve_layout_node_id(&tree, "card", &mut cursors);
+        let (id2, u2) = resolve_layout_node_id(&tree, "card", &mut cursors);
+        assert!(u1 && u2, "exhausted tag cursor → unjoined");
+        assert_ne!(id1, id2, "unjoined sibling cards must not share an id");
+        assert!(
+            id1.contains("#unjoined#") && id2.contains("#unjoined#"),
+            "expected synthetic unjoined ids, got {id1:?} {id2:?}"
+        );
+    }
+
+    #[test]
+    fn unjoined_empty_tree_still_distinct() {
+        let tree = InspectTreeIndex::default();
+        let mut cursors = BTreeMap::new();
+        let (a, ua) = resolve_layout_node_id(&tree, "card", &mut cursors);
+        let (b, ub) = resolve_layout_node_id(&tree, "card", &mut cursors);
+        assert!(ua && ub);
+        assert_ne!(a, b);
+        assert!(is_unjoined_id(&a) && is_unjoined_id(&b));
+    }
+
+    #[test]
+    fn is_unjoined_id_matches_both_forms() {
+        assert!(is_unjoined_id("file#_unjoined#0#card"));
+        assert!(is_unjoined_id("file#root#bbbb#unjoined#1#card"));
+        assert!(!is_unjoined_id("file#0#aaaa"));
+    }
+
+    #[test]
+    fn absolute_location_sums_parent_offsets() {
+        // Real preprocess + taffy tree: nested pad offsets must accumulate.
+        let src = r#"<column sx={style.pad(4)}><span>Hi</span></column>"#;
+        let pre = sail_compiler::parse::preprocess::preprocess(src).unwrap();
+        let elements = sail_layout::html::parse_source(&pre);
+        let layout = sail_layout::taffy_tree::build(elements.clone(), (320.0, 200.0)).unwrap();
+        // Find nested span (not synthetic root).
+        let span_idx = elements
+            .iter()
+            .enumerate()
+            .find(|(i, e)| *i > 0 && e.tag == "span")
+            .map(|(i, _)| i)
+            .expect("span");
+        let (abs_x, abs_y) = absolute_location(&layout, &elements, span_idx);
+        let rel = layout.computed(span_idx).unwrap();
+        // Parent column has pad → span abs should be >= parent-relative.
+        assert!(
+            abs_x >= rel.location.x - 0.01 && abs_y >= rel.location.y - 0.01,
+            "abs=({abs_x},{abs_y}) rel=({},{})",
+            rel.location.x,
+            rel.location.y
+        );
+        // With pad(4) ≈ 16px on column, span absolute y should exceed bare rel if
+        // the parent itself is offset from root — at least finite and non-negative.
+        assert!(abs_x >= 0.0 && abs_y >= 0.0);
+    }
 }

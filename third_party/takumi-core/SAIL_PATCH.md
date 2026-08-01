@@ -21,9 +21,30 @@ panic when measuring non-empty text at tiny/zero content widths.
    clamp-lines via the content-box height — only the measure-time viewport
    shortcut was removed.
 
+   **Do not reintroduce viewport-as-max_height** for ordinary measures — that
+   is the panic path. Prefer an upstream takumi/parley fix of the float-aware
+   `BreakLines` assert if the optimization is restored later.
+
 2. **`FloatLayoutState::update_breaker_line`**: clamp `layout_max` to `>= 0` and
    ensure `line_max <= layout_max` so the parley assert cannot fire if the
    float path is used (still active when `clamp_lines` / floats apply).
+
+## Residual measure vs paint (clamp_lines)
+
+When `clamp_lines` is set **and** the viewport height is known, measure still
+uses `MaxHeight::HeightAndLines(viewport_height, lines)`. Paint-time
+`resolve_inline_max_height` uses the **content-box** height instead. Sail does
+not lower CSS `line-clamp` onto hosts yet (raw takumi regression covers panic
+only). If/when line-clamp lands in the host, align measure max height with the
+content box used at paint (or document intentional difference). Until then the
+mismatch is low practical impact.
+
+## Residual: unclamped tall text height
+
+Unclamped multi-line text no longer stops measure at viewport height. A
+regression fixture (`parley-unclamped-tall-text.sail` + golden test) pins that
+measure completes without panic and yields a non-zero text height; it does not
+assert pixel parity with upstream’s viewport-capped measure.
 
 ## Remove when
 
