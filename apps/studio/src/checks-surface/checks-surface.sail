@@ -266,8 +266,8 @@ export default controller(() => {
     <p>{checksStatusNote()}</p>
   </row>
 
-  <!-- Section owns scroll; dialog maxH+overflow auto keeps taffy from silent-clip errors (STUDIO-3 refine). -->
-  <dialog data-review-dialog open={reviewOpen()} size="lg" sx={style.maxH(panel-vh-md).overflow(auto)}>
+  <!-- Definite dialog height so section maxH fits (taffy in-flow was ~200px otherwise). -->
+  <dialog data-review-dialog open={reviewOpen()} size="lg" sx={style.h(panel-max-h-md).maxH(panel-vh-md).overflow(hidden)}>
     <header>
       <strong>Review fixes</strong>
     </header>

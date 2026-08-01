@@ -220,6 +220,11 @@ export function createShellPage(opts?: ShellPageOpts) {
     syncTasks()
   }
 
+  const go = (href: string) => {
+    navigate(href)
+    sync(href)
+  }
+
   sync()
 
   mountAmbient(() => {
@@ -305,17 +310,15 @@ export function createShellPage(opts?: ShellPageOpts) {
     }
     const onKey = (e: KeyboardEvent) => {
       const isMod = e.metaKey || e.ctrlKey
-      // Dual-pane edit: do not gate save on es.view (default is still 'preview').
-      if (isMod && e.key === 's' && getEditState().activePath) {
+      // Always swallow browser Save-page; save only when a doc is open.
+      if (isMod && e.key === 's') {
         e.preventDefault()
-        void saveActiveSource().then(() => sync())
+        if (getEditState().activePath) void saveActiveSource().then(() => sync())
         return
       }
       if (isMod && ACTIVITY_BY_DIGIT[e.key]) {
         e.preventDefault()
-        const href = hrefForActivity(ACTIVITY_BY_DIGIT[e.key])
-        navigate(href)
-        sync(href) // target path — avoid stale route.pathname
+        go(hrefForActivity(ACTIVITY_BY_DIGIT[e.key]))
         return
       }
       if (e.altKey && (e.key === 'p' || e.key === 'P') && activityFromPath(readPath()) === 'design') {
@@ -373,15 +376,20 @@ export function createShellPage(opts?: ShellPageOpts) {
     onExitStudio: () => exitStudio(),
     onThemeChange,
     onBatchNewTask: () => {
-      void newTaskFromBatch().then(() => {
-        const href = hrefForActivity('tasks')
-        navigate(href)
-        sync(href)
-      })
+      void newTaskFromBatch().then(() => go(hrefForActivity('tasks')))
     },
     onBatchSendExisting: () => {
       const id = getTasksState().selectedId
       if (id) void sendBatchToExisting(id).then(() => sync())
+    },
+    onRailClick: (e: Event) => {
+      const me = e as MouseEvent
+      if (me.button !== 0 || me.metaKey || me.ctrlKey || me.shiftKey || me.altKey) return
+      const a = (e.target as Element | null)?.closest?.('a[data-activity]') as HTMLAnchorElement | null
+      const href = a?.getAttribute('href')
+      if (!href) return
+      e.preventDefault()
+      go(href)
     },
     setRailPath: (pathname: string) => syncRail(pathname),
     syncRail,

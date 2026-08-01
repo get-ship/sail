@@ -48,14 +48,15 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
       const page = readFileSync(join(REPO, `apps/studio/routes/${leaf}/page.sail`), 'utf8')
       expect(page).toMatch(new RegExp(`<${tag}\\b`))
     }
-    // Signal switching deleted from shell
+    // Signal switching deleted from shell (rail uses links + click→navigate, not setActivity)
     expect(shellVm).not.toMatch(/setActivity/)
     expect(shellVm).not.toMatch(/isEdit|isChecks|isDesign|isTasks/)
-    expect(shellVm).not.toMatch(/onRailClick/)
-    expect(chrome).not.toMatch(/onRailClick|on:click=\{onRailClick\}/)
-    // Rail = real links
+    // Rail = real links + optimistic navigate/sync on click
     expect(chrome).toMatch(/href=\{item\.href\}/)
     expect(chrome).toMatch(/data-studio-rail/)
+    expect(chrome).toMatch(/on:click=\{onRailClick\}/)
+    expect(shellVm).toMatch(/onRailClick/)
+    expect(shellVm).toMatch(/navigate\(href\)/)
     expect(chrome).toMatch(/<tooltip\b/)
     expect(shellVm).toMatch(/hrefForActivity|activityFromPath/)
   })
@@ -116,14 +117,15 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(rows.find((r) => r.id === 'design')?.label).toBe('Design Ctrl+3')
     expect(rows.find((r) => r.id === 'design')?.active).toBe(true)
 
-    // Cmd/Ctrl+S gates on activePath only — not leftover es.view === 'source'
+    // Cmd/Ctrl+S always preventDefault; save only when activePath
     expect(shellVm).toMatch(/e\.key === 's'/)
+    expect(shellVm).toMatch(/preventDefault\(\)/)
     expect(shellVm).toMatch(/activePath/)
     expect(shellVm).not.toMatch(/view === ['"]source['"]/)
     expect(shellVm).toMatch(/subscribeEdit/)
-    // Route effect / hotkey paint status from path (full sync, not rail-only)
     expect(shellVm).toMatch(/sync\(href\)|sync\(p\)|sync\(path/)
     expect(shellVm).toMatch(/ACTIVITY_BY_DIGIT/)
+    expect(shellVm).toMatch(/onRailClick/)
 
     expect(chrome).toMatch(/data-save-status/)
     expect(chrome).toMatch(/data-theme-status/)

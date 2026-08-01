@@ -129,8 +129,8 @@ export default controller(() => {
     </if>
 
     <if {hasOpenDoc()}>
-      <!-- Viewport-relative max (not fixed 720px) so tall displays fill; minH/overflow keep flex chain. -->
-      <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0).h(full).maxH(panel-vh-lg).overflow(hidden)}>
+      <!-- Parent-driven fill: minH0 + h(full) + overflow; no fixed/vh max when check allows. -->
+      <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0).h(full).overflow(hidden)}>
         <column
           grow
           min-w="0"

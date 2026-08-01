@@ -31,6 +31,7 @@ export default controller((ctx) => {
     onExitStudio: () => vm.onExitStudio(),
     onBatchNewTask: () => vm.onBatchNewTask(),
     onBatchSendExisting: () => vm.onBatchSendExisting(),
+    onRailClick: (e: Event) => vm.onRailClick(e),
   }
 })
 </controller>
@@ -48,6 +49,7 @@ export default controller((ctx) => {
     shrink="0"
     gap="1"
     align="center"
+    on:click={onRailClick}
     sx={style.w(12).bg(surface-0).borderRWidth(1).borderR(border).padY(2)}
   >
     <center
