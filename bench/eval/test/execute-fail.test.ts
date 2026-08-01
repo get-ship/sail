@@ -8,45 +8,41 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { LocalRunner } from '../src/runner/local.ts'
 import { repoRoot, standardsDir } from '../src/naming/paths.ts'
+import type { ExecuteOutcome } from '../src/runner/types.ts'
 
 describe('execute failure status', () => {
-  it('live path without grok (PATH cleared) marks run failed', async () => {
+  it('injected execute failure forces status=failed (env-independent)', async () => {
     const lab = mkdtempSync(join(tmpdir(), 'sail-bench-exec-fail-'))
     const runner = new LocalRunner({
       lab,
       standards: standardsDir(repoRoot()),
       repo: repoRoot(),
       subprocess: false,
+      // Stub execute — no PATH tricks, works even if /usr/bin/grok exists.
+      executeOverride: async (): Promise<ExecuteOutcome> => ({
+        ok: false,
+        wall_ms: 1,
+        session_id: null,
+        flags: ['execute_skipped', 'grok_not_on_path'],
+        seeded: false,
+        message: 'stub: execute forced fail',
+      }),
     })
 
-    const prevPath = process.env.PATH
-    // Hide grok; keep bare minimum so nothing else breaks unexpectedly
-    process.env.PATH = '/usr/bin:/bin'
+    const outcome = await runner.runOne({
+      taskId: 'parallax-landing',
+      arm: 'sail',
+      modelSlug: 'grok',
+      model: 'grok',
+      toolchain: 'current',
+      profileId: 'p0',
+      seed: false,
+    })
 
-    try {
-      const outcome = await runner.runOne({
-        taskId: 'parallax-landing',
-        arm: 'sail',
-        modelSlug: 'grok',
-        model: 'grok',
-        toolchain: 'current',
-        profileId: 'p0',
-        seed: false, // force live execute path
-      })
-      // Even if a browser render of the scaffold would succeed, execute failure
-      // must force status=failed (issue #1).
-      expect(outcome.status).toBe('failed')
-      expect(outcome.flags).toContain('execute_failed')
-      expect(
-        outcome.flags.some(
-          (f) =>
-            f.includes('grok') ||
-            f === 'execute_skipped' ||
-            f === 'dispatch_nonzero_exit',
-        ),
-      ).toBe(true)
-    } finally {
-      process.env.PATH = prevPath
-    }
+    // Even if a browser render of the scaffold succeeds, execute failure
+    // must force status=failed.
+    expect(outcome.status).toBe('failed')
+    expect(outcome.flags).toContain('execute_failed')
+    expect(outcome.flags).toContain('execute_skipped')
   }, 120_000)
 })

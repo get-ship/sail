@@ -5,9 +5,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { spawnSync } from 'node:child_process'
-import { invokePhase, type InvokeOptions } from '../contract/invoke.ts'
+import { invokePhase, type InvokeOptions, type InvokeOutcome } from '../contract/invoke.ts'
 import {
   CONTRACT_VERSION,
+  emptyPhaseResult,
   type PhaseResult,
   type RunManifest,
 } from '../contract/types.ts'
@@ -51,6 +52,8 @@ export interface LocalRunnerOptions {
    */
   subprocess?: boolean
   invoke?: InvokeOptions
+  /** Test hook: replace live agent execute without PATH tricks. */
+  executeOverride?: (run: RunHandle) => Promise<ExecuteOutcome>
 }
 
 function batchIdNow(purpose: string): string {
@@ -66,6 +69,7 @@ export class LocalRunner implements Runner {
   readonly standards: string
   readonly repo: string
   private invokeOpts: InvokeOptions
+  private executeOverride?: (run: RunHandle) => Promise<ExecuteOutcome>
 
   constructor(opts: LocalRunnerOptions = {}) {
     this.lab = opts.lab ?? labRoot()
@@ -77,6 +81,7 @@ export class LocalRunner implements Runner {
       inProcess: !subprocess,
       handlers: !subprocess ? handlers : undefined,
     }
+    this.executeOverride = opts.executeOverride
   }
 
   openStore(): RunStore {
@@ -174,10 +179,21 @@ export class LocalRunner implements Runner {
       flags.push('missing_model_resolved')
     }
 
-    // prepare
-    const prep = await this.prepare(handle)
-    if (!prep.ok) {
-      return this.finalizeFailed(store, handle, batchRow, flags, t0, 'prepare_failed', prep)
+    // prepare — abort on contract error / crash / timeout (CONTRACT failure algebra)
+    const prepOutcome = await invokePhase('prepare', handle.manifest, this.invokeOpts)
+    const prep = prepOutcome.result
+    const prepAbort = abortReason(prepOutcome)
+    if (prepAbort || !prep.ok) {
+      if (prepAbort) flags.push(prepAbort)
+      return this.finalizeFailed(
+        store,
+        handle,
+        batchRow,
+        flags,
+        t0,
+        prepAbort ?? 'prepare_failed',
+        prep,
+      )
     }
 
     // execute (agent or seed)
@@ -187,8 +203,12 @@ export class LocalRunner implements Runner {
       flags.push('execute_failed')
     }
 
-    // post phases — still collect artifacts after execute failure (policy: keep evidence)
+    // post phases — still collect artifacts after execute failure (policy: keep evidence),
+    // but abort remaining adapter phases on contractError / crash / timeout.
     const bundle = await this.collect(handle)
+    if (bundle.aborted) {
+      flags.push(...bundle.aborted.flags)
+    }
     // Prefer explicit metrics.gate_ok from adapter (may be null = not applicable)
     let gateOkNum: number | null = null
     if (typeof bundle.gate.metrics.gate_ok === 'boolean') {
@@ -222,7 +242,7 @@ export class LocalRunner implements Runner {
       ...bundle.collect.artifacts,
     ]
 
-    // Fail when execute failed OR blocking render missing.
+    // Fail when execute failed, blocking render missing, or adapter abort.
     // Seed mode sets exec.ok=true; live miss/nonzero sets ok=false.
     let status: 'complete' | 'failed' = 'complete'
     if (!exec.ok) {
@@ -231,6 +251,9 @@ export class LocalRunner implements Runner {
     if (renderOk !== 1) {
       status = 'failed'
       flags.push('blocking_render_missing')
+    }
+    if (bundle.aborted) {
+      status = 'failed'
     }
 
     const wall = Date.now() - t0
@@ -245,6 +268,7 @@ export class LocalRunner implements Runner {
     const failureClasses: string[] = []
     if (!exec.ok) failureClasses.push('execute')
     if (renderOk !== 1) failureClasses.push('render')
+    if (bundle.aborted) failureClasses.push(bundle.aborted.reason)
     if (status === 'failed' && failureClasses.length === 0) failureClasses.push('pipeline')
 
     const runRow: RunRow = {
@@ -366,6 +390,9 @@ export class LocalRunner implements Runner {
   }
 
   async execute(run: RunHandle): Promise<ExecuteOutcome> {
+    if (this.executeOverride) {
+      return this.executeOverride(run)
+    }
     const t0 = Date.now()
     if (run.config.seed || run.manifest.options?.seed) {
       // Seed: no agent. Write a minimal events file so collect has something.
@@ -459,15 +486,64 @@ export class LocalRunner implements Runner {
   }
 
   async collect(run: RunHandle): Promise<CollectBundle> {
-    const gate = (await invokePhase('gate', { ...run.manifest, phase: 'gate' }, this.invokeOpts))
-      .result
-    const render = (
-      await invokePhase('render', { ...run.manifest, phase: 'render' }, this.invokeOpts)
-    ).result
-    const collect = (
-      await invokePhase('collect', { ...run.manifest, phase: 'collect' }, this.invokeOpts)
-    ).result
-    return { gate, render, collect }
+    // Phase policy (CONTRACT): prepare abort is handled by runOne.
+    // gate fail (ok:false) → continue; contract/crash/timeout → abort remaining.
+    // render fail → continue to collect for metrics; contract/crash/timeout → abort.
+    // collect fail → record flags only (no inventing metrics).
+    const gateOut = await invokePhase(
+      'gate',
+      { ...run.manifest, phase: 'gate' },
+      this.invokeOpts,
+    )
+    const gateAbort = abortReason(gateOut)
+    if (gateAbort) {
+      return {
+        gate: gateOut.result,
+        render: skippedPhase('render', gateAbort),
+        collect: skippedPhase('collect', gateAbort),
+        aborted: { phase: 'gate', reason: gateAbort, flags: [gateAbort, 'adapter_abort'] },
+      }
+    }
+
+    const renderOut = await invokePhase(
+      'render',
+      { ...run.manifest, phase: 'render' },
+      this.invokeOpts,
+    )
+    const renderAbort = abortReason(renderOut)
+    if (renderAbort) {
+      return {
+        gate: gateOut.result,
+        render: renderOut.result,
+        collect: skippedPhase('collect', renderAbort),
+        aborted: { phase: 'render', reason: renderAbort, flags: [renderAbort, 'adapter_abort'] },
+      }
+    }
+
+    const collectOut = await invokePhase(
+      'collect',
+      { ...run.manifest, phase: 'collect' },
+      this.invokeOpts,
+    )
+    const collectAbort = abortReason(collectOut)
+    if (collectAbort) {
+      return {
+        gate: gateOut.result,
+        render: renderOut.result,
+        collect: collectOut.result,
+        aborted: {
+          phase: 'collect',
+          reason: collectAbort,
+          flags: [collectAbort, 'adapter_abort'],
+        },
+      }
+    }
+
+    return {
+      gate: gateOut.result,
+      render: renderOut.result,
+      collect: collectOut.result,
+    }
   }
 
   private finalizeFailed(
@@ -544,6 +620,31 @@ export class LocalRunner implements Runner {
 function numOrNull(v: unknown): number | null {
   if (typeof v === 'number' && Number.isFinite(v)) return v
   return null
+}
+
+/**
+ * CONTRACT abort mapping: exit 2 / malformed → contract_error;
+ * exit 1 / spawn fail → adapter_crash; hang → adapter_timeout.
+ * Phase ok:false alone is NOT abort (gate/render may fail and continue).
+ */
+function abortReason(outcome: InvokeOutcome): string | null {
+  if (outcome.timedOut) return 'adapter_timeout'
+  if (outcome.contractError) return 'contract_error'
+  if (outcome.exitCode === 1) return 'adapter_crash'
+  return null
+}
+
+function skippedPhase(phase: 'gate' | 'render' | 'collect', reason: string): PhaseResult {
+  const r = emptyPhaseResult(phase)
+  r.verdict = 'error'
+  r.ok = false
+  r.flags = ['phase_skipped', reason]
+  r.error = {
+    code: 'PHASE_SKIPPED',
+    message: `skipped after prior adapter abort (${reason})`,
+  }
+  r.missing[phase] = reason
+  return r
 }
 
 /**

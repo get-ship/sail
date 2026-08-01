@@ -35,6 +35,15 @@ export interface CollectBundle {
   gate: PhaseResult
   render: PhaseResult
   collect: PhaseResult
+  /**
+   * Set when a phase hit CONTRACT abort conditions (contract error, crash, timeout).
+   * Remaining phases after the abort are skipped with synthetic error results.
+   */
+  aborted?: {
+    phase: 'gate' | 'render' | 'collect'
+    reason: string
+    flags: string[]
+  }
 }
 
 export interface RunOutcome {

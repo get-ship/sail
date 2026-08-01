@@ -175,12 +175,23 @@ function spawnAdapter(
     let stdout = ''
     let stderr = ''
     let timedOut = false
+    /** Escalation SIGKILL timer — must clear on close/error so recycled PIDs are not signalled. */
+    let escalateTimer: ReturnType<typeof setTimeout> | undefined
+    const clearTimers = () => {
+      clearTimeout(timer)
+      if (escalateTimer !== undefined) {
+        clearTimeout(escalateTimer)
+        escalateTimer = undefined
+      }
+    }
     const timer = setTimeout(() => {
       timedOut = true
       killProcessGroup(child, 'SIGTERM')
-      setTimeout(() => {
+      escalateTimer = setTimeout(() => {
+        escalateTimer = undefined
         killProcessGroup(child, 'SIGKILL')
-      }, 2_000).unref?.()
+      }, 2_000)
+      escalateTimer.unref?.()
     }, timeoutMs)
 
     child.stdout?.setEncoding('utf8')
@@ -193,7 +204,7 @@ function spawnAdapter(
     })
 
     child.on('error', (err) => {
-      clearTimeout(timer)
+      clearTimers()
       resolve({
         result: {
           ...emptyPhaseResult(phase),
@@ -207,7 +218,7 @@ function spawnAdapter(
     })
 
     child.on('close', (code) => {
-      clearTimeout(timer)
+      clearTimers()
       if (timedOut) {
         resolve({
           result: {
