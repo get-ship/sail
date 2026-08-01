@@ -58,13 +58,15 @@ Peers on the same binary: `sail lsp`, `sail mcp`, `sail layout`, `sail tokens`,
 
 | Path | Role |
 |---|---|
-| `crates/sail/` | Compiler, lint, LSP, layout, ops, MCP |
+| `crates/sail/` | Compiler, lint, LSP, layout, ops, MCP, render |
 | `crates/deck/` | Host crates + drift-gated `FEATURES.md` |
-| `packages/sail/` | Runtime, DOM, tokens, grammar, tutorial |
-| `packages/deck/` | Router, host, e2e, docs app |
-| `packages/components/sail/` | Component packs |
+| `packages/sail/` | Runtime, DOM, tokens, grammar, tutorial, compiler-wasm, studio bridge/shell/client |
+| `packages/deck/` | Router, host, hono, e2e, docs app, test-harness |
+| `packages/components/sail/` | Component packs (L2 + chat-elements) |
 | `apps/sail-site` | Authored product documentation + catalog |
-| `tests/` | Integration, parity, perf baselines |
+| `apps/studio` | Dev overlay (`/_studio`): edit, checks, design, tasks |
+| `skills/` | Agent skills (taste, output, motion-review, qa, design) |
+| `tests/` | Integration, parity, perf baselines, hygiene gates |
 
 Generated authoring skill: `cargo run -p sail-compiler -- skill` (do not hand-edit).
 
@@ -92,8 +94,8 @@ No third drawer: ad-hoc one-shots do not land under `scripts/`.
 ### Comment hygiene
 
 Comments carry contracts and **why** — not narration, dates/names, session
-monologue, or process ids (`job/…`, `task #N`, mission paths). Full rule and
-the `.agents/` release boundary: [docs/INDEX.md](./docs/INDEX.md).
+monologue, or process ids (`job/…`, `task #N`, mission paths). Enforced by
+`tests/hygiene/` (sanitization scan + repo purity gate).
 
 ### Entry points (prefer these)
 
