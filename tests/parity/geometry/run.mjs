@@ -7,7 +7,7 @@
  *   2. Browser boxes via sail build SPA (or lowered-HTML fallback) + Playwright CDP/DOM.
  *   3. Diff report (width/height + parent-relative x/y within tolerance).
  *
- * Paint (takumi ↔ browser style) is stubbed until RENDER-1 fully lands in CI.
+ * Paint (takumi ↔ browser style) lives in tests/parity/paint/run.mjs (RENDER-1).
  *
  * Controller-driven content contract (minimal, suite honesty):
  *   Static render / geometry fixtures MUST use static template text only.
@@ -46,6 +46,7 @@ import { createServer } from 'node:http'
 import { createReadStream } from 'node:fs'
 import { tmpdir } from 'node:os'
 import net from 'node:net'
+import { resolveChrome } from '../chrome.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../../..')
@@ -66,12 +67,8 @@ const SAIL_COMPILER =
   (existsSync(join(repoRoot, 'target/release/sail-compiler'))
     ? join(repoRoot, 'target/release/sail-compiler')
     : join(repoRoot, 'target/debug/sail-compiler'))
-const CHROME =
-  process.env.CHROME_PATH ||
-  join(
-    process.env.HOME || '',
-    '.cache/ms-playwright/chromium-1228/chrome-linux64/chrome',
-  )
+const chromeResolved = resolveChrome()
+const CHROME = chromeResolved.path
 
 const args = process.argv.slice(2)
 // `--strict` → fail on size divergences. Default still fails on structure fail
@@ -286,8 +283,11 @@ ${links.map((c) => `<link rel="stylesheet" href="${c}"/>`).join('\n')}
 }
 
 async function measureBrowser(serveDir) {
-  if (!existsSync(CHROME)) {
-    return { skipped: true, reason: `chrome missing: ${CHROME}` }
+  if (!CHROME || !existsSync(CHROME)) {
+    return {
+      skipped: true,
+      reason: `chrome missing (source=${chromeResolved.source}): ${CHROME || 'null'}`,
+    }
   }
   // dynamic import playwright from repo
   let chromium
@@ -587,6 +587,9 @@ async function main() {
 
   console.log(`PARITY-1 geometry — viewport ${VIEWPORT.width}x${VIEWPORT.height} tol=${TOL}px`)
   console.log(`sail=${SAIL_BIN}`)
+  console.log(
+    `chrome=${CHROME || 'null'} (${chromeResolved.source})${skipBrowser ? ' (taffy-only)' : ''}`,
+  )
   console.log(`fixtures=${fixtures.length}${skipBrowser ? ' (taffy-only)' : ''}`)
   console.log('')
 
@@ -728,6 +731,7 @@ async function main() {
   const summary = {
     viewport: VIEWPORT,
     tol: TOL,
+    chrome: { path: CHROME, source: chromeResolved.source },
     skipBrowser,
     strict,
     strictSpa,
@@ -752,7 +756,7 @@ async function main() {
     )
   }
   console.log(
-    'paint: stubbed (takumi↔browser style parity waits on RENDER-1 lab stamp consumption)',
+    'paint: see tests/parity/paint/run.mjs (takumi regions[].style ↔ browser computedStyle)',
   )
   const modeBits = []
   if (reportOnly) modeBits.push('report-only (structure non-fatal)')
@@ -760,6 +764,9 @@ async function main() {
   if (strict) modeBits.push('strict-size')
   if (strictSpa) modeBits.push('strict-spa')
   console.log(`mode: ${modeBits.join(', ')}`)
+  console.log(
+    'exit: 0=harness+structure_ok (default); --report-only=harness only; --strict=+size; 1=fail',
+  )
 
   if (skipBrowser) {
     process.exit(results.every((r) => r.taffy_ok && r.taffy_pass !== false) ? 0 : 1)

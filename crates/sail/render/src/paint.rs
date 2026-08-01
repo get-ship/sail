@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use sail_layout::html::Element;
 use takumi::prelude::*;
 
+use crate::identity::RegionStyle;
 use crate::theme::ThemePalette;
 
 /// One paint rule: simple compound selector (no combinators) + decls.
@@ -468,6 +469,29 @@ impl Paint {
         paint
     }
 
+    /// Serialize resolved paint for region sidecar / PARITY-1 paint compare.
+    pub fn to_region_style(&self) -> Option<RegionStyle> {
+        let style = RegionStyle {
+            background_color: self.background_color.map(color_to_css_rgba),
+            color: self.color.map(color_to_css_rgba),
+            border_color: self.border_color.map(color_to_css_rgba),
+            border_width: self.border_width,
+            border_radius: self.border_radius,
+            opacity: self.opacity,
+        };
+        if style.background_color.is_none()
+            && style.color.is_none()
+            && style.border_color.is_none()
+            && style.border_width.is_none()
+            && style.border_radius.is_none()
+            && style.opacity.is_none()
+        {
+            None
+        } else {
+            Some(style)
+        }
+    }
+
     /// Apply paint onto a takumi layout Style builder.
     pub fn apply(&self, mut style: Style) -> Style {
         if let Some(c) = self.background_color {
@@ -618,6 +642,12 @@ fn palette_misses_var(raw: &str, palette: &ThemePalette) -> bool {
         return !name.is_empty() && palette.get(name).is_none();
     }
     false
+}
+
+/// Format `Color([r,g,b,a])` as `rgba(r, g, b, a)` (a 0–255).
+pub fn color_to_css_rgba(c: Color) -> String {
+    let [r, g, b, a] = c.0;
+    format!("rgba({r}, {g}, {b}, {a})")
 }
 
 pub fn parse_color(css: &str) -> Option<Color> {

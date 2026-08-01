@@ -89,8 +89,10 @@ pub fn render(source: &str, opts: &PipelineOptions) -> Result<PipelineOutput> {
         .context("computing layout with sail_layout")?;
 
     // 6. Regions + unknown dynamics joined to SailInspect node ids (T-I3).
-    let (regions, mut dynamics) = join_layout_regions(&elements, &layout, &tree);
+    let (mut regions, mut dynamics) = join_layout_regions(&elements, &layout, &tree);
     dynamics.extend(join_expr_dynamics(&expr_dynamics_raw, &tree));
+    // Attach resolved paint styles (same sheet+palette as the takumi tree).
+    attach_region_styles(&mut regions, &elements, &layout, &sheet, &palette);
 
     // 7. Takumi tree with paint.
     let root = build_takumi_tree(&elements, &layout, &sheet, &palette)?;
@@ -247,6 +249,40 @@ fn build_takumi_tree(
                 root_bg,
             ))),
     ))
+}
+
+/// Fill `Region.style` from the paint sheet in the same element order as join.
+fn attach_region_styles(
+    regions: &mut [Region],
+    elements: &[Element],
+    layout: &sail_layout::taffy_tree::Layout,
+    sheet: &StyleSheet,
+    palette: &ThemePalette,
+) {
+    let mut ri = 0usize;
+    for (idx, elem) in elements.iter().enumerate() {
+        if idx == 0 || elem.tag.is_empty() {
+            continue;
+        }
+        if layout.computed(idx).is_none() {
+            continue;
+        }
+        if ri >= regions.len() {
+            break;
+        }
+        // Match `:empty` collapse: regions still exist from layout, but paint
+        // is skipped — leave style None so parity doesn't false-positive chrome.
+        let paint = if class_has(&elem.class, "sx-empty-displaynone")
+            && elem.children.is_empty()
+            && elem.text.trim().is_empty()
+        {
+            Paint::default()
+        } else {
+            Paint::from_decls(&sheet.decls_for_element(elem), palette)
+        };
+        regions[ri].style = paint.to_region_style();
+        ri += 1;
+    }
 }
 
 fn build_node(

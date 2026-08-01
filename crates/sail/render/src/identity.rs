@@ -9,6 +9,27 @@ use std::collections::BTreeMap;
 use sail_layout::html::Element;
 use serde::Serialize;
 
+/// Resolved static paint for a region (PARITY-1 paint half / agent overlays).
+///
+/// Colors are `rgba(r,g,b,a)` with 0–255 channels. Numbers are CSS px.
+/// Omitted when the paint sheet did not resolve a value for that slot.
+#[derive(Debug, Clone, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RegionStyle {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub background_color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub border_color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub border_width: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub border_radius: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub opacity: Option<f32>,
+}
+
 /// One painted region joined to a SailInspect-style node id.
 #[derive(Debug, Clone, Serialize)]
 pub struct Region {
@@ -20,6 +41,9 @@ pub struct Region {
     pub h: f32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tag: Option<String>,
+    /// Static paint resolved by the same stylesheet+theme as the takumi tree.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub style: Option<RegionStyle>,
 }
 
 /// Honest dynamic / unknown region listing.
@@ -313,6 +337,7 @@ pub fn join_layout_regions(
                 } else {
                     author_tag.clone()
                 }),
+                style: None,
             });
         }
 

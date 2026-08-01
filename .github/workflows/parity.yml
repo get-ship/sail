@@ -1,0 +1,150 @@
+# PARITY-1 — taffy/takumi vs browser structure gates.
+#
+# Default jobs fail on harness or structure mismatch (size/style Δ reported,
+# not fatal). Use workflow_dispatch inputs for soft report-only or strict.
+#
+# Local:  SAIL_BIN=target/release/sail node tests/parity/run.mjs
+# Docs:   tests/parity/README.md
+
+name: parity
+
+on:
+  push:
+    branches: [main, feat/next]
+    paths:
+      - 'crates/sail/layout/**'
+      - 'crates/sail/render/**'
+      - 'crates/sail/ops/**'
+      - 'crates/sail/compiler/**'
+      - 'packages/sail/tokens/**'
+      - 'tests/parity/**'
+      - '.github/workflows/parity.yml'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  pull_request:
+    paths:
+      - 'crates/sail/layout/**'
+      - 'crates/sail/render/**'
+      - 'crates/sail/ops/**'
+      - 'crates/sail/compiler/**'
+      - 'packages/sail/tokens/**'
+      - 'tests/parity/**'
+      - '.github/workflows/parity.yml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'report-only | structure (default) | strict'
+        required: false
+        default: 'structure'
+        type: choice
+        options:
+          - structure
+          - report-only
+          - strict
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  geometry-structure:
+    name: geometry (taffy ↔ browser)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: parity-sail
+
+      - name: Setup bun (workspace deps / playwright)
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install JS deps
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Install Playwright Chromium
+        run: bunx playwright install chromium --with-deps
+
+      - name: Build sail binary
+        run: cargo build -p deck-cli --release
+
+      - name: Geometry suite
+        env:
+          SAIL_BIN: ${{ github.workspace }}/target/release/sail
+          # Leave CHROME_PATH unset so suites use tests/parity/chrome.mjs
+          # (playwright.executablePath → ms-playwright cache → pinned fallback).
+        run: |
+          set -euo pipefail
+          # Optional: pre-print the same resolution the suite uses (debugging).
+          node -e "import('./tests/parity/chrome.mjs').then(m=>console.log(JSON.stringify(m.resolveChrome())))"
+          MODE="${{ github.event.inputs.mode || 'structure' }}"
+          FLAGS=()
+          if [ "$MODE" = "report-only" ]; then FLAGS+=(--report-only); fi
+          if [ "$MODE" = "strict" ]; then FLAGS+=(--strict); fi
+          node tests/parity/geometry/run.mjs "${FLAGS[@]}"
+
+      - name: Upload geometry reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-geometry-reports
+          path: tests/parity/geometry/out/
+          if-no-files-found: ignore
+
+  paint-structure:
+    name: paint (takumi ↔ browser style)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: parity-sail
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install JS deps
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Install Playwright Chromium
+        run: bunx playwright install chromium --with-deps
+
+      - name: Build sail binary
+        run: cargo build -p deck-cli --release
+
+      - name: Paint suite
+        env:
+          SAIL_BIN: ${{ github.workspace }}/target/release/sail
+        run: |
+          set -euo pipefail
+          # Same chrome.mjs resolution as local + geometry job (no divergent find).
+          node -e "import('./tests/parity/chrome.mjs').then(m=>console.log(JSON.stringify(m.resolveChrome())))"
+          MODE="${{ github.event.inputs.mode || 'structure' }}"
+          FLAGS=()
+          if [ "$MODE" = "report-only" ]; then FLAGS+=(--report-only); fi
+          if [ "$MODE" = "strict" ]; then FLAGS+=(--strict); fi
+          node tests/parity/paint/run.mjs "${FLAGS[@]}"
+
+      - name: Upload paint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-paint-reports
+          path: tests/parity/paint/out/
+          if-no-files-found: ignore
