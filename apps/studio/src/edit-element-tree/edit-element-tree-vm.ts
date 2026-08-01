@@ -1,6 +1,6 @@
 /**
  * Element tree VM — sail-tree hierarchy + L1/L2/L3 badges in labels.
- * Click/select → shared selection + source scroll.
+ * Click/select → shared selection + source scroll (when Source mounted).
  */
 import { createTable, type Table } from '@ship/sail-primitives'
 import { mountAmbient, signal } from '@ship/sail-runtime'
@@ -8,17 +8,13 @@ import {
   activeDoc,
   elementSailTreeNodes,
   getEditState,
+  querySourceEditor,
   scrollSourceEditor,
   selectEditNode,
   subscribeEdit,
   type SailTreeNode,
 } from '@ship/studio/edit'
-
-function assignTree(sel: string, table: Table<SailTreeNode>): void {
-  if (typeof document === 'undefined') return
-  const el = document.querySelector(sel) as (HTMLElement & { tree?: Table<SailTreeNode> }) | null
-  if (el && el.tree !== table) el.tree = table
-}
+import { assignTreeHost } from '../edit/assign-tree'
 
 export function createEditElementTree() {
   const hasElements = signal(false)
@@ -50,26 +46,25 @@ export function createEditElementTree() {
         mode: 'include',
         ids: new Set([es.selectionNodeId]),
       })
+    } else {
+      tree.resetRowSelection()
     }
-    queueMicrotask(() => assignTree('[data-element-tree-host]', tree))
+    queueMicrotask(() => assignTreeHost('[data-element-tree-host]', tree))
   }
 
   sync()
 
   mountAmbient(() => {
     const unsub = subscribeEdit(() => sync())
-    queueMicrotask(() => assignTree('[data-element-tree-host]', tree))
+    queueMicrotask(() => assignTreeHost('[data-element-tree-host]', tree))
     return () => unsub()
   })
 
   const selectAndScroll = (id: string) => {
     selectEditNode(id)
     sync()
-    const ta =
-      typeof document !== 'undefined'
-        ? (document.querySelector('[data-source-editor]') as HTMLTextAreaElement | null)
-        : null
-    scrollSourceEditor(ta)
+    // Only applies when Source view mounts the editor; surface re-applies on enter.
+    scrollSourceEditor(querySourceEditor())
   }
 
   const onTreeSelect = (e: Event) => {

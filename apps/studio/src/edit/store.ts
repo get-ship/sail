@@ -38,6 +38,7 @@ import {
   childrenOfSelected,
   tokensOfSelected,
   applySourceScroll,
+  applySourceEditorScroll,
 } from './views'
 import type {
   DocViewId,
@@ -54,7 +55,7 @@ import type {
 } from './types'
 import { DOC_VIEWS } from './types'
 
-export { groupHeaders, DOC_VIEWS, applySourceScroll }
+export { groupHeaders, DOC_VIEWS, applySourceScroll, applySourceEditorScroll }
 export { fileRows as buildFileRows } from './explorer'
 
 type Listener = (s: EditSurfaceState) => void
@@ -190,9 +191,8 @@ export function setView(view: DocViewId): void {
 }
 
 /**
- * Write a signal override (State view). Updates local doc values, posts to the
- * live preview iframe when present, and bumps preview so the static frame can
- * refresh without a full studio reload.
+ * Write a signal override (State view). Updates local doc values and posts to
+ * the live preview iframe when mounted (kept mounted across views for bridge).
  */
 export function writeSignalValue(name: string, value: string): void {
   const path = state.activePath
@@ -206,18 +206,30 @@ export function writeSignalValue(name: string, value: string): void {
   })
   state = { ...state, docs }
   emit()
-  if (typeof document !== 'undefined') {
-    const iframe = document.querySelector(
-      '[data-live-preview]',
-    ) as HTMLIFrameElement | null
+  if (typeof document === 'undefined') return
+  const iframe = document.querySelector(
+    '[data-live-preview]',
+  ) as HTMLIFrameElement | null
+  if (!iframe?.contentWindow) return
+  // Prefer same-origin; fall back to '*' only when origin is opaque/unreadable.
+  let targetOrigin = '*'
+  try {
+    const o = iframe.contentWindow.location.origin
+    if (o && o !== 'null') targetOrigin = o
+  } catch {
     try {
-      iframe?.contentWindow?.postMessage(
-        { type: 'sail-studio-signal', name, value },
-        '*',
-      )
+      targetOrigin = window.location.origin
     } catch {
-      /* cross-origin or missing */
+      targetOrigin = '*'
     }
+  }
+  try {
+    iframe.contentWindow.postMessage(
+      { type: 'sail-studio-signal', name, value },
+      targetOrigin,
+    )
+  } catch {
+    /* cross-origin or missing */
   }
 }
 
@@ -477,37 +489,35 @@ export function selectFromPreviewClick(
   return hit.nodeId
 }
 
-/** Hover region tooltip (tag + id) over preview image. */
+/** Hover region tooltip (tag + id) over preview image. Skips emit when unchanged. */
 export function hoverPreviewAt(x: number, y: number): HoverTip {
   const path = state.activePath
   const empty: HoverTip = { nodeId: '', label: '', visible: false }
-  if (!path) {
-    state = { ...state, hoverTip: empty }
+  const setTip = (tip: HoverTip): HoverTip => {
+    const prev = state.hoverTip
+    if (
+      prev.visible === tip.visible &&
+      prev.nodeId === tip.nodeId &&
+      prev.label === tip.label
+    ) {
+      return prev
+    }
+    state = { ...state, hoverTip: tip }
     emit()
-    return empty
+    return tip
   }
+  if (!path) return setTip(empty)
   const doc = state.docs.get(path)
-  if (!doc) {
-    state = { ...state, hoverTip: empty }
-    emit()
-    return empty
-  }
+  if (!doc) return setTip(empty)
   const hit = hitTestRegion(doc.preview.regions, x, y)
-  if (!hit) {
-    state = { ...state, hoverTip: empty }
-    emit()
-    return empty
-  }
+  if (!hit) return setTip(empty)
   const node = doc.tree.nodes.find((n) => n.id === hit.nodeId)
   const tag = hit.tag || node?.tag || 'node'
-  const tip: HoverTip = {
+  return setTip({
     nodeId: hit.nodeId,
     label: `<${tag}> · ${hit.nodeId.split('#').pop() ?? hit.nodeId}`,
     visible: true,
-  }
-  state = { ...state, hoverTip: tip }
-  emit()
-  return tip
+  })
 }
 
 export function clearHoverTip(): void {
@@ -520,12 +530,22 @@ export function clearHoverTip(): void {
 }
 
 /**
- * Scroll a Source textarea to the current selection span.
- * Call from page controller when sourceScrollNonce changes.
+ * Scroll source editor (sail-code-editor or textarea) to the selection span.
+ * Returns true when the host was present and scroll applied.
  */
-export function scrollSourceEditor(ta: HTMLTextAreaElement | null): void {
-  if (!ta || state.sourceScrollLine == null) return
-  applySourceScroll(ta, state.sourceScrollLine, state.sourceScrollCol ?? 1)
+export function scrollSourceEditor(host: HTMLElement | null): boolean {
+  if (!host || state.sourceScrollLine == null) return false
+  return applySourceEditorScroll(
+    host,
+    state.sourceScrollLine,
+    state.sourceScrollCol ?? 1,
+  )
+}
+
+/** Resolve the active source editor host (CodeMirror CE or textarea). */
+export function querySourceEditor(): HTMLElement | null {
+  if (typeof document === 'undefined') return null
+  return document.querySelector('[data-source-editor]') as HTMLElement | null
 }
 
 export function setSourceText(path: string, text: string): void {

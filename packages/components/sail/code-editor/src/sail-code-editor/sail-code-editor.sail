@@ -248,6 +248,8 @@ export default controller((ctx: Scope) => {
     const el = host as HTMLElement & {
       setDiagnostics?: ((d: SailDiagnostic[]) => void) | undefined
       setCompletions?: ((src: SailCompletionSource[]) => void) | undefined
+      /** 1-based line/col caret + scrollIntoView (studio selection → source). */
+      setCursor?: ((line: number, col?: number) => void) | undefined
       focus?: () => void
     }
     el.setDiagnostics = (diags: SailDiagnostic[]) => {
@@ -257,6 +259,19 @@ export default controller((ctx: Scope) => {
     el.setCompletions = (src: SailCompletionSource[]) => {
       completions = src ?? []
       view?.dispatch({ effects: completionCompartment.reconfigure(buildCompletionExt()) })
+    }
+    el.setCursor = (line: number, col = 1) => {
+      if (!view || line < 1) return
+      const doc = view.state.doc
+      const ln = Math.min(line, doc.lines)
+      const lineObj = doc.line(ln)
+      const colOff = Math.max(0, Math.min(lineObj.length, Math.max(0, col - 1)))
+      const pos = lineObj.from + colOff
+      view.dispatch({
+        selection: { anchor: pos, head: pos },
+        effects: EditorView.scrollIntoView(pos, { y: 'center' }),
+      })
+      view.focus()
     }
     el.focus = () => { view?.focus() }
 
@@ -387,6 +402,7 @@ export default controller((ctx: Scope) => {
       for (const d of disposers) d()
       el.setDiagnostics = undefined
       el.setCompletions = undefined
+      el.setCursor = undefined
       // Leave el.focus — shadows native HTMLElement.focus; nulling breaks it.
       try {
         delete (host as unknown as Record<string, unknown>).value

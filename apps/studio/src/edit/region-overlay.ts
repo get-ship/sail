@@ -9,6 +9,7 @@ export type RegionBoxUi = {
   key: string
 }
 
+/** Paint only selected/hover boxes (no full mesh of outlines). */
 export function paintRegionOverlay(boxes: RegionBoxUi[]): void {
   if (typeof document === 'undefined') return
   const host = document.querySelector('[data-region-overlay]') as HTMLElement | null
@@ -22,11 +23,12 @@ export function paintRegionOverlay(boxes: RegionBoxUi[]): void {
   }
   layer.replaceChildren()
   for (const box of boxes) {
+    if (!box.selected) continue
     const el = document.createElement('div')
     el.dataset.regionBox = ''
     el.dataset.nodeId = box.id
-    el.dataset.selected = box.selected ? 'true' : 'false'
-    el.style.cssText = `position:absolute;left:${box.left};top:${box.top};width:${box.width};height:${box.height};border:1px solid var(--primary);border-radius:4px;box-sizing:border-box;${box.selected ? 'background:color-mix(in oklab,var(--primary) 20%,transparent)' : ''}`
+    el.dataset.selected = 'true'
+    el.style.cssText = `position:absolute;left:${box.left};top:${box.top};width:${box.width};height:${box.height};border:1px solid var(--primary);border-radius:4px;box-sizing:border-box;background:color-mix(in oklab,var(--primary) 18%,transparent)`
     layer.appendChild(el)
   }
 }

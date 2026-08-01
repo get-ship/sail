@@ -124,7 +124,7 @@ export default controller(() => {
     </if>
 
     <if {hasOpenDoc()}>
-      <column grow gap="0" sx={style.minH(0).basis(0).maxH(panel-max-h-lg).overflow(hidden)}>
+      <column grow gap="0" sx={style.minH(0).basis(0).h(full).maxH(panel-max-h-lg).overflow(hidden)}>
       <row
         data-view-switcher
         shrink="0"
@@ -143,11 +143,11 @@ export default controller(() => {
         </tabs>
       </row>
 
-      <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0).maxH(full).overflow(hidden)}>
-        <column grow min-w="0" gap="0" sx={style.minH(0).basis(0).maxH(full).overflow(hidden).bg(surface-0)}>
+      <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0).maxH(panel-max-h-lg).overflow(hidden)}>
+        <column grow min-w="0" gap="0" sx={style.minH(0).basis(0).maxH(panel-max-h-lg).overflow(hidden).bg(surface-0)}>
           <!-- Preview: static render + region-overlay (+ live iframe when available) -->
           <if {isPreview()}>
-            <column data-view-panel="preview" grow gap="0" sx={style.minH(0).maxH(full).overflow(hidden)}>
+            <column data-view-panel="preview" grow gap="0" sx={style.minH(0).maxH(panel-max-h-lg).overflow(hidden)}>
               <row gap="2" align="center" shrink="0" sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle)}>
                 <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)} data-provenance>
                   Static render
@@ -156,7 +156,7 @@ export default controller(() => {
                   <p data-region-tooltip sx={style.fontSize(xs).fg(primary)}>{hoverLabel()}</p>
                 </if>
               </row>
-              <scroll-area grow sx={style.minH(0).pad(3).bg(background)}>
+              <scroll-area grow sx={style.minH(0).maxH(full).pad(3).bg(background)}>
                 <if {hasAudit()}>
                   <column data-region-overlay gap="0" sx={style.position(relative).w(full).maxW(panel-max-w-lg)}>
                     <img
@@ -177,16 +177,6 @@ export default controller(() => {
                   </empty-state>
                 </if>
               </scroll-area>
-              <if {hasLivePreview()}>
-                <column shrink="0" gap="0" sx={style.h(48).borderTWidth(1).borderT(border).overflow(hidden)}>
-                  <iframe
-                    data-live-preview
-                    title="Live app preview"
-                    src={livePreviewSrc()}
-                    sx={style.w(full).h(full).minH(0).borderWidth(0).bg(background)}
-                  ></iframe>
-                </column>
-              </if>
             </column>
           </if>
 
@@ -197,7 +187,7 @@ export default controller(() => {
               data-cm-mode="sail"
               grow
               gap="0"
-              sx={style.minH(0).maxH(full).overflow(hidden)}
+              sx={style.minH(0).maxH(panel-max-h-lg).overflow(hidden)}
             >
               <row gap="2" align="center" justify="between" shrink="0" sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle)}>
                 <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono).truncate()}>
@@ -235,7 +225,7 @@ export default controller(() => {
 
           <!-- State: signal cards + sail-json-view -->
           <if {isState()}>
-            <scroll-area data-view-panel="state" grow sx={style.minH(0).maxH(full).pad(3)}>
+            <scroll-area data-view-panel="state" grow sx={style.minH(0).maxH(panel-max-h-lg).overflow(auto).pad(3)}>
               <column gap="3">
                 <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
                   Signals
@@ -283,7 +273,7 @@ export default controller(() => {
 
           <!-- Layout: taffy boxes → source span -->
           <if {isLayout()}>
-            <scroll-area data-view-panel="layout" grow sx={style.minH(0).maxH(panel-max-h-md).overflow(auto).pad(2)} on:click={onLayoutClick}>
+            <scroll-area data-view-panel="layout" grow sx={style.minH(0).maxH(panel-max-h-lg).overflow(auto).pad(2)} on:click={onLayoutClick}>
               <column gap="0" sx={style.fontFamily(mono).fontSize(xs)}>
                 <for {layoutRows()} as="row" key={row.key}>
                   <button
@@ -309,7 +299,7 @@ export default controller(() => {
 
           <!-- Data: sail-json-view -->
           <if {isData()}>
-            <scroll-area data-view-panel="data" grow sx={style.minH(0).maxH(full).pad(3)}>
+            <scroll-area data-view-panel="data" grow sx={style.minH(0).maxH(panel-max-h-lg).overflow(auto).pad(3)}>
               <column gap="2">
                 <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
                   Query / data keys
@@ -321,7 +311,7 @@ export default controller(() => {
 
           <!-- A11y checklist -->
           <if {isA11y()}>
-            <scroll-area data-view-panel="a11y" grow sx={style.minH(0).maxH(full).pad(3)}>
+            <scroll-area data-view-panel="a11y" grow sx={style.minH(0).maxH(panel-max-h-lg).overflow(auto).pad(3)}>
               <column gap="2">
                 <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
                   Contract checklist
@@ -350,7 +340,7 @@ export default controller(() => {
           <scroll-area
             data-edit-rail
             shrink="0"
-            sx={style.w(52).minH(0).borderLWidth(1).borderL(border).bg(surface-1)}
+            sx={style.w(52).minH(0).maxH(full).borderLWidth(1).borderL(border).bg(surface-1)}
           >
             <column gap="0" sx={style.fontSize(sm)}>
               <row align="center" sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle)}>
@@ -374,6 +364,28 @@ export default controller(() => {
           </scroll-area>
         </if>
       </row>
+
+      <!-- Live iframe stays mounted for State write postMessage; h=0 when not Preview. -->
+      <if {hasLivePreview() && isPreview()}>
+        <column data-live-preview-host shrink="0" gap="0" sx={style.h(48).borderTWidth(1).borderT(border).overflow(hidden)}>
+          <iframe
+            data-live-preview
+            title="Live app preview"
+            src={livePreviewSrc()}
+            sx={style.w(full).h(full).minH(0).borderWidth(0).bg(background)}
+          ></iframe>
+        </column>
+      </if>
+      <if {hasLivePreview() && !isPreview()}>
+        <column data-live-preview-host shrink="0" gap="0" sx={style.h(0).overflow(hidden)} aria-hidden="true">
+          <iframe
+            data-live-preview
+            title="Live app preview"
+            src={livePreviewSrc()}
+            sx={style.w(full).h(full).minH(0).borderWidth(0)}
+          ></iframe>
+        </column>
+      </if>
       </column>
     </if>
   </column>

@@ -9,6 +9,7 @@ import {
   __resetEditForTests,
   activeDoc,
   applyModelUpdate,
+  applySourceEditorScroll,
   applySourceScroll,
   bindEditSelection,
   elementRows,
@@ -18,15 +19,19 @@ import {
   openDocument,
   parseTreeNodes,
   saveActiveSource,
+  scrollSourceEditor,
   selectEditNode,
   selectFromPreviewClick,
   setOpsClient,
   setSourceText,
+  setView,
   subscribeEdit,
   pathToLiveRoute,
   fileTreeGroups,
+  fileSailTreeNodes,
   nextTreeFocus,
   fileDisplayName,
+  writeSignalValue,
   uiAnatomy,
   uiElementRows,
   uiStateCards,
@@ -353,17 +358,123 @@ describe('selection sync explorer ↔ source span', () => {
     const ta = document.createElement('textarea')
     ta.value = activeDoc()!.source.text
     document.body.appendChild(ta)
-    applySourceScroll(ta, getEditState().sourceScrollLine!, getEditState().sourceScrollCol ?? 1)
+    expect(
+      applySourceEditorScroll(
+        ta,
+        getEditState().sourceScrollLine!,
+        getEditState().sourceScrollCol ?? 1,
+      ),
+    ).toBe(true)
+    expect(scrollSourceEditor(ta)).toBe(true)
     const line = getEditState().sourceScrollLine!
     // selectionStart should be near that line's offset
     const before = ta.value.split('\n').slice(0, line - 1).join('\n')
     const expectedStart = line > 1 ? before.length + 1 : 0
     expect(ta.selectionStart).toBeGreaterThanOrEqual(expectedStart - 1)
     expect(ta.selectionStart).toBeLessThanOrEqual(expectedStart + 80)
+
+    // sail-code-editor host API path
+    const cm = document.createElement('div') as HTMLElement & {
+      setCursor?: (line: number, col?: number) => void
+    }
+    let cursored: [number, number?] | null = null
+    cm.setCursor = (l, c) => {
+      cursored = [l, c]
+    }
+    expect(applySourceEditorScroll(cm, line, 2)).toBe(true)
+    expect(cursored).toEqual([line, 2])
     ta.remove()
 
     // Anatomy / tokens rails for selection
     selectEditNode(target!.id)
     expect(uiAnatomy().length).toBeGreaterThan(0)
   }, 120_000)
+})
+
+describe('STUDIO-1 review gates', () => {
+  it('setView persists per document and restores on re-open', async () => {
+    setOpsClient(cli)
+    unbind = bindEditSelection()
+    await openDocument(PAGE, { loadPreview: false })
+    setView('state')
+    expect(getEditState().view).toBe('state')
+    expect(activeDoc()?.view).toBe('state')
+    setView('layout')
+    expect(activeDoc()?.view).toBe('layout')
+    // Re-open same path keeps prior view
+    await openDocument(PAGE, { loadPreview: false })
+    expect(getEditState().view).toBe('layout')
+    expect(activeDoc()?.view).toBe('layout')
+  }, 120_000)
+
+  it('writeSignalValue stores override and posts to live iframe origin', async () => {
+    setOpsClient(cli)
+    await openDocument(PAGE, { loadPreview: false })
+    const iframe = document.createElement('iframe')
+    iframe.setAttribute('data-live-preview', '')
+    document.body.appendChild(iframe)
+    const posts: { data: unknown; origin: string }[] = []
+    const cw = {
+      postMessage: (data: unknown, origin: string) => {
+        posts.push({ data, origin })
+      },
+      location: { origin: window.location.origin },
+    }
+    Object.defineProperty(iframe, 'contentWindow', { value: cw, configurable: true })
+    writeSignalValue('ticks', '42')
+    expect(activeDoc()?.signalValues.ticks).toBe('42')
+    expect(posts.length).toBe(1)
+    expect(posts[0]!.data).toMatchObject({ type: 'sail-studio-signal', name: 'ticks', value: '42' })
+    expect(posts[0]!.origin).toBe(window.location.origin)
+    iframe.remove()
+  }, 120_000)
+
+  it('fileSailTreeNodes folds dirty + size meta into labels', () => {
+    const nodes = fileSailTreeNodes(
+      [
+        { path: 'apps/x/routes/page.sail', name: 'page.sail', group: 'routes', checks: 2 },
+        { path: 'apps/x/src/a.sail', name: 'a.sail', group: 'src', checks: 0 },
+      ],
+      '',
+      'apps/x/routes/page.sail',
+      {
+        dirtyPaths: new Set(['apps/x/routes/page.sail']),
+        sourceLen: (p) => (p.endsWith('page.sail') ? 2048 : null),
+      },
+    )
+    expect(nodes[0]!.id).toBe('group:routes')
+    expect(nodes[0]!.children![0]!.label).toMatch(/●/)
+    expect(nodes[0]!.children![0]!.label).toMatch(/KB|2\.0/)
+    expect(nodes[0]!.children![0]!.label).toMatch(/2/)
+  })
+
+  it('hoverPreviewAt skips emit when tip unchanged', async () => {
+    setOpsClient(cli)
+    unbind = bindEditSelection()
+    const path = 'crates/sail/render/tests/fixtures/paint.sail'
+    const { readFileSync } = await import('node:fs')
+    const { join } = await import('node:path')
+    await openDocument(path, {
+      sourceText: readFileSync(join(REPO, path), 'utf8'),
+      loadPreview: true,
+      viewport: { width: 400, height: 300 },
+      theme: 'ship',
+      mode: 'dark',
+    })
+    const region = getEditState().docs.get(path)?.preview.regions?.[0]
+    if (!region) return
+    const cx = region.x + region.w / 2
+    const cy = region.y + region.h / 2
+    let emits = 0
+    const unsub = subscribeEdit(() => {
+      emits++
+    })
+    hoverPreviewAt(cx, cy)
+    const afterFirst = emits
+    hoverPreviewAt(cx, cy)
+    hoverPreviewAt(cx, cy)
+    // Second/third identical hover should not emit
+    expect(emits).toBe(afterFirst)
+    unsub()
+  }, 180_000)
 })

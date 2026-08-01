@@ -460,3 +460,42 @@ export function applySourceScroll(
   const ratio = (target - 1) / Math.max(1, lines.length)
   ta.scrollTop = ratio * Math.max(0, ta.scrollHeight - ta.clientHeight)
 }
+
+type SourceEditorHost = HTMLElement & {
+  setCursor?: (line: number, col?: number) => void
+  focus?: () => void
+  value?: string
+}
+
+/**
+ * Scroll source host to 1-based line/col.
+ * Prefers sail-code-editor `setCursor`; falls back to textarea API.
+ * Returns true when a host was found and scroll was applied.
+ */
+export function applySourceEditorScroll(
+  host: HTMLElement | null,
+  line: number,
+  col = 1,
+): boolean {
+  if (!host || line < 1) return false
+  const el = host as SourceEditorHost
+  if (typeof el.setCursor === 'function') {
+    el.setCursor(line, col)
+    return true
+  }
+  if (host instanceof HTMLTextAreaElement || host.tagName === 'TEXTAREA') {
+    applySourceScroll(host as HTMLTextAreaElement, line, col)
+    return true
+  }
+  // Last resort: scroll .cm-scroller by line fraction (no caret).
+  const scroller = host.querySelector?.('.cm-scroller') as HTMLElement | null
+  if (!scroller) return false
+  const text =
+    typeof el.value === 'string'
+      ? el.value
+      : (host.querySelector?.('.cm-content')?.textContent ?? '')
+  const n = Math.max(1, text.split('\n').length)
+  const ratio = (Math.min(line, n) - 1) / n
+  scroller.scrollTop = ratio * Math.max(0, scroller.scrollHeight - scroller.clientHeight)
+  return true
+}

@@ -14,7 +14,7 @@ import {
   hoverPreviewAt,
   openDocument,
   pathToLiveRoute,
-  refreshPreview,
+  querySourceEditor,
   saveActiveSource,
   scrollSourceEditor,
   selectEditNode,
@@ -33,7 +33,7 @@ import {
   writeSignalValue,
 } from '@ship/studio/edit'
 import { loadFindings, sourceForSave } from '@ship/studio/checks'
-import { paintRegionOverlay } from '../edit/region-overlay'
+import { ensurePreviewOnce, paintRegions } from './preview-helpers'
 type TabRow = DocTab & {
   active: boolean
   dirtyDot: string
@@ -100,10 +100,11 @@ export function createEditSurface() {
   const a11yRows = signal<
     { id: string; check: string; status: string; detail: string; tone: string; key: string }[]
   >([])
-  let regionBoxes: import('../edit/region-overlay').RegionBoxUi[] = []
   let hoverTabId: string | null = null
   let lastScrollNonce = -1
-  let lastPreviewPath: string | null = null
+  const flight = { inflight: null as string | null, failedPath: null as string | null }
+  let lastHoverNodeId = ''
+  let lastView: DocViewId | null = null
   const applyViewFlags = (view: DocViewId) => {
     activeView.set(view)
     isPreview.set(view === 'preview')
@@ -113,24 +114,16 @@ export function createEditSurface() {
     isData.set(view === 'data')
     isA11y.set(view === 'a11y')
   }
-  const ensurePreview = () => {
+  const trySourceScroll = (): boolean => {
     const es = getEditState()
-    const doc = activeDoc()
-    if (!es.activePath || !doc) return
-    if (es.view !== 'preview' && es.view !== 'layout') return
-    if (doc.preview.imagePng && lastPreviewPath === es.activePath) return
-    lastPreviewPath = es.activePath
-    const shell = getShellState()
-    const w = shell.viewport
-    void refreshPreview({
-      theme: shell.themeId,
-      mode: shell.modeId,
-      viewport: { width: w, height: Math.round((w * 9) / 16) },
-    }).then(() => sync())
+    if (es.sourceScrollLine == null) return false
+    return scrollSourceEditor(querySourceEditor())
   }
   const sync = () => {
     const es = getEditState()
     const shell = getShellState()
+    const viewChanged = lastView !== es.view
+    lastView = es.view
     applyViewFlags(es.view)
     stateCards.set(
       uiStateCards().map((c) => ({
@@ -156,7 +149,14 @@ export function createEditSurface() {
       })),
     )
     hasChecks.set(uiCheckDiags().length > 0)
-    layoutRows.set(uiLayoutRows(shell.viewport).map((r) => ({ id: r.id, line: r.line, selected: r.selected, key: r.id })))
+    layoutRows.set(
+      uiLayoutRows(shell.viewport).map((r) => ({
+        id: r.id,
+        line: r.line,
+        selected: r.selected,
+        key: r.id,
+      })),
+    )
     a11yRows.set(
       uiA11yRows(shell.themeId, shell.modeId).map((r) => ({
         id: r.id,
@@ -199,27 +199,18 @@ export function createEditSurface() {
     sourceScrollLine.set(es.sourceScrollLine ?? 0)
     editError.set(es.error ?? '')
     hasEditError.set(!!es.error)
-    const vw = shell.viewport || 1440
-    const vh = Math.round((vw * 9) / 16)
-    const selected = es.selectionNodeId
-    const hover = es.hoverTip.visible ? es.hoverTip.nodeId : null
-    regionBoxes = (doc?.preview.regions ?? [])
-      .filter((r) => r.w > 0 && r.h > 0)
-      .map((r) => ({
-        id: r.nodeId,
-        left: `${((r.x / vw) * 100).toFixed(2)}%`,
-        top: `${((r.y / vh) * 100).toFixed(2)}%`,
-        width: `${((r.w / vw) * 100).toFixed(2)}%`,
-        height: `${((r.h / vh) * 100).toFixed(2)}%`,
-        selected: r.nodeId === selected || r.nodeId === hover,
-        key: r.nodeId,
-      }))
-    queueMicrotask(() => paintRegionOverlay(regionBoxes))
+    paintRegions()
     const realTabs = shell.tabs.filter((t) => t.id.endsWith('.sail') || t.id !== 'shell')
     const tabs = realTabs.length
       ? realTabs
       : es.activePath
-        ? [{ id: es.activePath, label: es.activePath.split('/').pop() ?? es.activePath, dirty: !!doc?.source.dirty }]
+        ? [
+            {
+              id: es.activePath,
+              label: es.activePath.split('/').pop() ?? es.activePath,
+              dirty: !!doc?.source.dirty,
+            },
+          ]
         : []
     docTabs.set(
       tabs.map((t) => {
@@ -237,15 +228,17 @@ export function createEditSurface() {
     )
     hasOpenDoc.set(!!es.activePath && !!doc)
     activePathLabel.set(es.activePath ?? '')
+    // Consume scroll nonce only when the editor is mounted and scroll applied.
     if (es.sourceScrollNonce !== lastScrollNonce) {
-      lastScrollNonce = es.sourceScrollNonce
-      const ta =
-        typeof document !== 'undefined'
-          ? (document.querySelector('[data-source-editor]') as HTMLTextAreaElement | null)
-          : null
-      if (ta) scrollSourceEditor(ta)
+      if (trySourceScroll()) lastScrollNonce = es.sourceScrollNonce
+    } else if (viewChanged && es.view === 'source') {
+      // Entering Source with a pending span (nonce already consumed or missed).
+      queueMicrotask(() => {
+        trySourceScroll()
+        lastScrollNonce = getEditState().sourceScrollNonce
+      })
     }
-    ensurePreview()
+    ensurePreviewOnce(flight, () => sync())
   }
   sync()
   mountAmbient(() => {
@@ -292,27 +285,31 @@ export function createEditSurface() {
     const { x, y } = previewCoords(e as MouseEvent, img)
     if (selectFromPreviewClick(x, y)) sync()
   }
+  /** Light hover path: tip + overlay only (no full surface rebuild). */
   const onPreviewMove = (e: Event) => {
     const img = (e.target as Element | null)?.closest?.('[data-preview-img]') as HTMLElement | null
     if (!img) return
     const { x, y } = previewCoords(e as MouseEvent, img)
-    hoverPreviewAt(x, y)
-    sync()
+    const tip = hoverPreviewAt(x, y)
+    if (tip.nodeId === lastHoverNodeId && tip.visible === hasHover()) return
+    lastHoverNodeId = tip.nodeId
+    hoverLabel.set(tip.visible ? tip.label : '')
+    hasHover.set(tip.visible)
+    paintRegions()
   }
   const onPreviewLeave = () => {
+    lastHoverNodeId = ''
     clearHoverTip()
-    sync()
+    hoverLabel.set('')
+    hasHover.set(false)
+    paintRegions()
   }
   const onLayoutClick = (e: Event) => {
     const t = (e.target as Element | null)?.closest?.('[data-layout-id]') as HTMLElement | null
     if (!t?.dataset.layoutId) return
     selectEditNode(t.dataset.layoutId)
     sync()
-    const ta =
-      typeof document !== 'undefined'
-        ? (document.querySelector('[data-source-editor]') as HTMLTextAreaElement | null)
-        : null
-    scrollSourceEditor(ta)
+    scrollSourceEditor(querySourceEditor())
   }
   const onSignalWrite = (e: Event) => {
     const host = (e.target as Element | null)?.closest?.('[data-binding]') as HTMLElement | null
