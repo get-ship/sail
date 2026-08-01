@@ -174,8 +174,51 @@ export function seedFilesFromPaths(paths: string[]): void {
 export function setView(view: DocViewId): void {
   if (!DOC_VIEWS.includes(view)) return
   if (state.view === view) return
+  const path = state.activePath
+  if (path) {
+    const doc = state.docs.get(path)
+    if (doc) {
+      const docs = new Map(state.docs)
+      docs.set(path, { ...doc, view })
+      state = { ...state, view, docs }
+      emit()
+      return
+    }
+  }
   state = { ...state, view }
   emit()
+}
+
+/**
+ * Write a signal override (State view). Updates local doc values, posts to the
+ * live preview iframe when present, and bumps preview so the static frame can
+ * refresh without a full studio reload.
+ */
+export function writeSignalValue(name: string, value: string): void {
+  const path = state.activePath
+  if (!path || !name) return
+  const doc = state.docs.get(path)
+  if (!doc) return
+  const docs = new Map(state.docs)
+  docs.set(path, {
+    ...doc,
+    signalValues: { ...doc.signalValues, [name]: value },
+  })
+  state = { ...state, docs }
+  emit()
+  if (typeof document !== 'undefined') {
+    const iframe = document.querySelector(
+      '[data-live-preview]',
+    ) as HTMLIFrameElement | null
+    try {
+      iframe?.contentWindow?.postMessage(
+        { type: 'sail-studio-signal', name, value },
+        '*',
+      )
+    } catch {
+      /* cross-origin or missing */
+    }
+  }
 }
 
 export function setAutoFixMode(mode: EditSurfaceState['autoFixMode']): void {
@@ -287,6 +330,8 @@ export async function openDocument(
       }
     }
 
+    const prior = state.docs.get(path)
+    const docView = prior?.view ?? state.view
     const doc: EditDocument = {
       path,
       label,
@@ -299,6 +344,8 @@ export async function openDocument(
       theme: model.theme,
       source,
       preview,
+      view: docView,
+      signalValues: prior?.signalValues ?? {},
     }
 
     const docs = new Map(state.docs)
@@ -308,6 +355,7 @@ export async function openDocument(
       ...state,
       docs,
       activePath: path,
+      view: docView,
       modelRev: rev,
       loading: false,
       error: null,
@@ -567,6 +615,8 @@ export function seedSourceText(path: string, text: string): void {
         loading: false,
         error: null,
       },
+      view: state.view,
+      signalValues: {},
     }
     const docs = new Map(state.docs)
     docs.set(path, stub)
@@ -638,7 +688,42 @@ export function uiElementRows(): ElementRow[] {
 }
 
 export function uiStateCards() {
-  return stateCards(activeDoc()?.state.bindings ?? [])
+  const doc = activeDoc()
+  const cards = stateCards(doc?.state.bindings ?? [])
+  const overrides = doc?.signalValues ?? {}
+  return cards.map((c) => ({
+    ...c,
+    value: overrides[c.name] ?? '',
+  }))
+}
+
+/** JSON snapshot for sail-json-view (state signals + overrides). */
+export function uiStateJson(): string {
+  const doc = activeDoc()
+  if (!doc) return '{}'
+  const body: Record<string, unknown> = {}
+  for (const b of doc.state.bindings) {
+    body[b.name] = {
+      kind: b.kind,
+      ssr: b.ssr_tier,
+      value: doc.signalValues[b.name] ?? null,
+      readers: b.readers.length,
+      writers: b.writers.length,
+    }
+  }
+  return JSON.stringify(body, null, 2)
+}
+
+/** JSON snapshot for Data view keys. */
+export function uiDataJson(): string {
+  const keys = activeDoc()?.data.keys ?? []
+  const body = Object.fromEntries(
+    keys.map((k) => [
+      k.key,
+      { kind: k.kind, ssr_fetchable: k.ssr_fetchable },
+    ]),
+  )
+  return JSON.stringify(body, null, 2)
 }
 
 export function uiLayoutRows(viewport?: ViewportId) {

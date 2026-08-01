@@ -224,13 +224,18 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surfaceVm).toMatch(/showClose/)
     expect(surface).toMatch(/data-view-panel="preview"/)
     expect(surface).toMatch(/data-view-panel="source"/)
-    expect(surface).toMatch(/data-live-preview/)
-    expect(surface).toMatch(/data-audit-snapshot/)
+    expect(surface).toMatch(/data-view-panel="state"/)
+    expect(surface).toMatch(/data-view-panel="layout"/)
+    expect(surface).toMatch(/data-view-panel="data"/)
+    expect(surface).toMatch(/data-view-panel="a11y"/)
+    expect(surface).toMatch(/data-view-switcher/)
+    expect(surface).toMatch(/data-region-overlay/)
     expect(surface).toMatch(/data-source-editor/)
+    expect(surface).toMatch(/sail-json-view/)
     expect(surface).not.toMatch(/toggle-group|onViewport|viewport picker/i)
     expect(surfaceVm).toMatch(/closeDocTab|openShellTabDocument/)
-    expect(surfaceVm).toMatch(/showDebug = signal\(false\)/)
-    expect(surfaceVm).toMatch(/showAudit = signal\(false\)/)
+    expect(surfaceVm).toMatch(/setView|onViewChange/)
+    expect(surfaceVm).toMatch(/writeSignalValue|onSignalWrite/)
     expect(surface).not.toMatch(/<div\b/)
     expect(surface).not.toMatch(/<span\b/)
   })
@@ -244,17 +249,26 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
       join(REPO, 'apps/studio/src/edit-element-tree/edit-element-tree.sail'),
       'utf8',
     )
+    const explorerVm = readFileSync(
+      join(REPO, 'apps/studio/src/edit-explorer/edit-explorer-vm.ts'),
+      'utf8',
+    )
+    const treeVm = readFileSync(
+      join(REPO, 'apps/studio/src/edit-element-tree/edit-element-tree-vm.ts'),
+      'utf8',
+    )
     expect(explorer).toMatch(/data-edit-explorer/)
     expect(explorer).toMatch(/data-file-tree/)
     expect(explorer).toMatch(/Explorer/)
     expect(explorer).toMatch(/textCase\(uppercase\)/)
-    expect(explorer).toMatch(/<collapsible\b/)
-    expect(explorer).toMatch(/role="tree"/)
+    expect(explorer).toMatch(/<sail-tree\b/)
     expect(explorer).toMatch(/<edit-element-tree\b/)
     expect(explorer).toMatch(/No files/)
+    expect(explorerVm).toMatch(/createTable/)
     expect(tree).toMatch(/data-element-tree/)
-    expect(tree).toMatch(/data-depth/)
+    expect(tree).toMatch(/<sail-tree\b/)
     expect(tree).toMatch(/layerBadge|data-layer-badge/)
+    expect(treeVm).toMatch(/createTable/)
     expect(explorer).not.toMatch(/<div\b/)
     expect(tree).not.toMatch(/<div\b/)
   })

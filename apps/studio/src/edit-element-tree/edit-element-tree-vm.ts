@@ -1,80 +1,68 @@
 /**
- * Element tree VM — hierarchy rows (depth + tag + L1 badge) + keyboard nav.
- * Click/Enter selects node and scrolls source to span.
+ * Element tree VM — sail-tree hierarchy + L1/L2/L3 badges in labels.
+ * Click/select → shared selection + source scroll.
  */
+import { createTable, type Table } from '@ship/sail-primitives'
 import { mountAmbient, signal } from '@ship/sail-runtime'
 import {
+  activeDoc,
+  elementSailTreeNodes,
   getEditState,
-  nextTreeFocus,
   scrollSourceEditor,
   selectEditNode,
   subscribeEdit,
-  uiElementRows,
+  type SailTreeNode,
 } from '@ship/studio/edit'
 
-function elDomId(id: string): string {
-  return `el-${id.replace(/[^a-zA-Z0-9_-]+/g, '-')}`
-}
-
-type ElRowUi = {
-  id: string
-  tag: string
-  label: string
-  layerBadge: string
-  selected: boolean
-  focused: boolean
-  /** Indent marker for hierarchy (token steps as spaces; ban-clean). */
-  pad: string
-  depth: number
-  tabIndex: number
-  domId: string
-  key: string
+function assignTree(sel: string, table: Table<SailTreeNode>): void {
+  if (typeof document === 'undefined') return
+  const el = document.querySelector(sel) as (HTMLElement & { tree?: Table<SailTreeNode> }) | null
+  if (el && el.tree !== table) el.tree = table
 }
 
 export function createEditElementTree() {
-  const elementRows = signal<ElRowUi[]>([])
   const hasElements = signal(false)
   const activePathLabel = signal('—')
-  const activeDescendant = signal('')
-  let kbdId: string | null = null
+  const dataSig = signal<SailTreeNode[]>([])
+  const tree = createTable<SailTreeNode>({
+    data: dataSig,
+    columns: [],
+    getRowId: (r) => r.id,
+    getSubRows: (r) => r.children,
+    enableExpanding: true,
+    enableRowSelection: true,
+    filterFromLeafRows: true,
+    navMode: 'row',
+    initialState: { expanded: true },
+  })
 
   const sync = () => {
     const es = getEditState()
-    const raw = uiElementRows()
-    if (!kbdId || !raw.some((r) => r.id === kbdId)) {
-      kbdId = es.selectionNodeId ?? raw[0]?.id ?? null
-    }
-    const rows = raw.map((r) => {
-      const focused = r.id === kbdId
-      return {
-        id: r.id,
-        tag: r.tag,
-        label: r.label,
-        layerBadge: r.layerBadge,
-        selected: r.selected,
-        focused,
-        pad: '\u00a0\u00a0'.repeat(Math.min(r.depth, 12)),
-        depth: r.depth,
-        tabIndex: focused ? 0 : -1,
-        domId: elDomId(r.id),
-        key: r.id,
-      }
-    })
-    elementRows.set(rows)
-    hasElements.set(rows.length > 0)
+    const doc = activeDoc()
+    const nodes = doc
+      ? elementSailTreeNodes(doc.tree.nodes, doc.tree.roots)
+      : []
+    dataSig.set(nodes)
+    hasElements.set(nodes.length > 0)
     activePathLabel.set(es.activePath?.split('/').pop() ?? '—')
-    activeDescendant.set(kbdId ? elDomId(kbdId) : '')
+    if (es.selectionNodeId) {
+      tree.setRowSelection({
+        mode: 'include',
+        ids: new Set([es.selectionNodeId]),
+      })
+    }
+    queueMicrotask(() => assignTree('[data-element-tree-host]', tree))
   }
 
   sync()
 
   mountAmbient(() => {
     const unsub = subscribeEdit(() => sync())
+    queueMicrotask(() => assignTree('[data-element-tree-host]', tree))
     return () => unsub()
   })
 
   const selectAndScroll = (id: string) => {
-    kbdId = id
     selectEditNode(id)
     sync()
     const ta =
@@ -84,53 +72,15 @@ export function createEditElementTree() {
     scrollSourceEditor(ta)
   }
 
-  const onElementClick = (e: Event) => {
-    const t = (e.target as Element | null)?.closest?.('[data-node-id]') as HTMLElement | null
-    if (!t?.dataset.nodeId) return
-    selectAndScroll(t.dataset.nodeId)
-  }
-
-  const onTreeKeydown = (e: Event) => {
-    const ke = e as KeyboardEvent
-    const ids = elementRows().map((r) => r.id)
-    if (!ids.length) return
-    if (ke.key === 'Enter' || ke.key === ' ') {
-      ke.preventDefault()
-      if (kbdId) selectAndScroll(kbdId)
-      return
-    }
-    const next = nextTreeFocus(ids, kbdId, ke.key)
-    if (
-      next &&
-      next !== kbdId &&
-      (ke.key === 'ArrowDown' || ke.key === 'ArrowUp' || ke.key === 'Home' || ke.key === 'End')
-    ) {
-      ke.preventDefault()
-      kbdId = next
-      sync()
-      if (typeof document !== 'undefined') {
-        const id = elDomId(next)
-        queueMicrotask(() => {
-          const el = document.getElementById(id) as HTMLElement | null
-          el?.focus?.()
-        })
-      }
-    } else if (
-      ke.key === 'ArrowDown' ||
-      ke.key === 'ArrowUp' ||
-      ke.key === 'Home' ||
-      ke.key === 'End'
-    ) {
-      ke.preventDefault()
-    }
+  const onTreeSelect = (e: Event) => {
+    const ce = e as CustomEvent<{ id?: string }>
+    if (!ce.detail?.id) return
+    selectAndScroll(ce.detail.id)
   }
 
   return {
-    elementRows,
     hasElements,
     activePathLabel,
-    activeDescendant,
-    onElementClick,
-    onTreeKeydown,
+    onTreeSelect,
   }
 }

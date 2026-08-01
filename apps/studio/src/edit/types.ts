@@ -140,6 +140,8 @@ export type StateCard = {
   writersLabel: string
   readers: string[]
   writers: string[]
+  /** Local write override (State view). */
+  value?: string
 }
 
 export type LayoutRow = {
@@ -236,6 +238,10 @@ export type EditDocument = {
   theme: unknown
   source: SourceState
   preview: PreviewState
+  /** Per-doc view switcher (Preview·Source·State·Layout·Data·A11y·Threads). */
+  view: DocViewId
+  /** Local signal write overrides (name → text). Preview may consume via bridge. */
+  signalValues: Record<string, string>
 }
 
 export type EditSurfaceState = {

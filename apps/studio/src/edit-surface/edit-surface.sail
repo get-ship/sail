@@ -1,6 +1,6 @@
 <!--
-  <edit-surface> — editor tabs + source + live preview + inspector rail.
-  Panel grammar: header · content. Ban-clean: no div/span.
+  <edit-surface> — editor tabs + view switcher + work panels + structured-edit rail.
+  Ban-clean: no div/span. Split panes absent as L2 → fixed asymmetric widths (absorption).
 -->
 <controller>
 import { createEditSurface } from './edit-surface-vm'
@@ -8,7 +8,6 @@ export default controller(() => {
   const vm = createEditSurface()
   return {
     stateCards: vm.stateCards,
-    childRows: vm.childRows,
     structOps: vm.structOps,
     sourceText: vm.sourceText,
     sourceStatus: vm.sourceStatus,
@@ -16,8 +15,6 @@ export default controller(() => {
     hasLivePreview: vm.hasLivePreview,
     auditSrc: vm.auditSrc,
     hasAudit: vm.hasAudit,
-    showAudit: vm.showAudit,
-    showDebug: vm.showDebug,
     editError: vm.editError,
     hasEditError: vm.hasEditError,
     checkRows: vm.checkRows,
@@ -31,15 +28,25 @@ export default controller(() => {
     docTabs: vm.docTabs,
     hasOpenDoc: vm.hasOpenDoc,
     activePathLabel: vm.activePathLabel,
+    activeView: vm.activeView,
+    isPreview: vm.isPreview,
+    isSource: vm.isSource,
+    isState: vm.isState,
+    isLayout: vm.isLayout,
+    isData: vm.isData,
+    isA11y: vm.isA11y,
+    stateJson: vm.stateJson,
+    dataJson: vm.dataJson,
+    layoutRows: vm.layoutRows,
+    a11yRows: vm.a11yRows,
+    onViewChange: (e: Event) => vm.onViewChange(e),
     onSourceSailChange: (e: Event) => vm.onSourceSailChange(e),
     onSaveSource: () => vm.onSaveSource(),
-    onAuditSnapshot: () => vm.onAuditSnapshot(),
-    onToggleDebug: (e: Event) => vm.onToggleDebug(e),
     onPreviewClick: (e: Event) => vm.onPreviewClick(e),
     onPreviewMove: (e: Event) => vm.onPreviewMove(e),
     onPreviewLeave: () => vm.onPreviewLeave(),
-    onElementClick: (e: Event) => vm.onElementClick(e),
-    onHideAudit: () => vm.onHideAudit(),
+    onLayoutClick: (e: Event) => vm.onLayoutClick(e),
+    onSignalWrite: (e: Event) => vm.onSignalWrite(e),
     onTabClick: (e: Event) => vm.onTabClick(e),
     onTabPointer: (e: Event) => vm.onTabPointer(e),
   }
@@ -88,25 +95,13 @@ export default controller(() => {
             <p data-dirty-dot sx={style.fontSize(xs).fg(warning)}>{tab.dirtyDot}</p>
           </if>
           <if {tab.showClose}>
-            <button
-              type="button"
-              data-tab-close
-              size="sm"
-              variant="ghost"
-              aria-label="Close tab"
-              sx={style.w(5).h(5)}
-            >
-              ×
-            </button>
+            <button type="button" data-tab-close size="sm" variant="ghost" aria-label="Close tab" sx={style.w(5).h(5)}>×</button>
           </if>
         </row>
       </for>
       <row grow min-w="0"></row>
       <row gap="2" align="center" shrink="0" sx={style.padX(2)}>
         <p sx={style.fontSize(xs).fg(muted-foreground)}>{liveRouteLabel()}</p>
-        <button type="button" size="sm" variant="ghost" tone="muted" data-audit-snapshot on:click={onAuditSnapshot}>
-          Audit snapshot
-        </button>
         <button type="button" size="sm" tone="primary" data-save-source title="Save (Ctrl/Cmd+S)" on:click={onSaveSource}>
           Save
         </button>
@@ -129,209 +124,257 @@ export default controller(() => {
     </if>
 
     <if {hasOpenDoc()}>
-      <!-- Parent-driven fill: minH0 + h(full) + overflow; no fixed/vh max when check allows. -->
-      <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0).h(full).overflow(hidden)}>
-        <column
-          grow
-          min-w="0"
-          data-edit-main
-          data-view-panel="source"
-          data-cm-mode="sail"
-          gap="0"
-          sx={style.minH(0).basis(0).h(full).overflow(hidden).bg(surface-0)}
-        >
-          <row
-            gap="2"
-            align="center"
-            justify="between"
-            shrink="0"
-            sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle)}
-          >
-            <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono).truncate()}>
-              {sourceStatus()}
-              <if {checksLabel()}> · {checksLabel()}</if>
-              <if {sourceScrollLine()}> · L{sourceScrollLine()}</if>
-            </p>
-            <if {sourceDirty()}>
-              <p sx={style.fontSize(xs).fg(warning)}>Unsaved</p>
-            </if>
-          </row>
-          <if {hasChecks()}>
-            <column
-              data-source-gutter
-              gap="0"
-              shrink="0"
-              sx={style.padX(3).padY(1).fontSize(xs).fontFamily(mono).bg(surface-2).maxH(24).overflow(auto)}
-            >
-              <for {checkRows()} as="ck" key={ck.key}>
-                <p data-check-line={ck.line} data-severity={ck.severity} sx={style.fg(destructive).h(6)}>
-                  L{ck.line} · {ck.severity}: {ck.message}
-                </p>
-              </for>
-            </column>
-          </if>
-          <column grow gap="0" sx={style.minH(0).basis(0).overflow(hidden)}>
-            <sail-code-editor
-              data-source-editor
-              language="sail"
-              size="sm"
-              chrome="flush"
-              value={sourceText()}
-              on:sail-change={onSourceSailChange}
-              aria-label="Sail source"
-              sx={style.w(full).h(full).minH(0)}
-            ></sail-code-editor>
-          </column>
-        </column>
+      <column grow gap="0" sx={style.minH(0).basis(0).maxH(panel-max-h-lg).overflow(hidden)}>
+      <row
+        data-view-switcher
+        shrink="0"
+        align="center"
+        sx={style.h(8).padX(2).borderBWidth(1).borderB(border-subtle).bg(surface-0).minW(0)}
+      >
+        <tabs active={activeView()} size="sm" on:sail-tab-change={onViewChange} sx={style.minW(0)}>
+          <tab-list variant="pill">
+            <tab name="preview">Preview</tab>
+            <tab name="source">Source</tab>
+            <tab name="state">State</tab>
+            <tab name="layout">Layout</tab>
+            <tab name="data">Data</tab>
+            <tab name="a11y">A11y</tab>
+          </tab-list>
+        </tabs>
+      </row>
 
-        <column
-          grow
-          min-w="0"
-          data-view-panel="preview"
-          gap="0"
-          sx={style.minH(0).basis(0).h(full).borderLWidth(1).borderL(border).overflow(hidden)}
-        >
-          <if {hasLivePreview()}>
-            <column grow gap="0" sx={style.minH(0).h(full).overflow(hidden)}>
-              <iframe
-                data-live-preview
-                title="Live app preview"
-                src={livePreviewSrc()}
-                sx={style.w(full).h(full).minH(0).borderWidth(0).bg(background)}
-              ></iframe>
-            </column>
-          </if>
-          <if {!hasLivePreview()}>
-            <column grow gap="3" sx={style.minH(0).maxH(panel-max-h-md).overflow(auto).pad(4).bg(background)}>
-              <card data-preview-skeleton variant="outline" padding="sm" sx={style.w(full).maxW(panel-max-w-md)}>
-                <column gap="2">
-                  <row gap="2" align="center">
-                    <center sx={style.w(8).h(8).radius(md).bg(muted)} aria-hidden="true"></center>
-                    <column grow gap="1">
-                      <center sx={style.w(40).h(3).bg(muted).radius(sm)} aria-hidden="true"></center>
-                      <center sx={style.w(28).h(2).bg(muted).radius(sm)} aria-hidden="true"></center>
-                    </column>
-                  </row>
-                  <center sx={style.w(full).h(24).radius(sm).bg(muted)} aria-hidden="true"></center>
-                  <row gap="2">
-                    <center sx={style.w(16).h(6).radius(sm).bg(muted)} aria-hidden="true"></center>
-                    <center sx={style.w(16).h(6).radius(sm).bg(muted)} aria-hidden="true"></center>
-                  </row>
-                </column>
-              </card>
-              <empty-state variant="placeholder" size="sm" w="full" sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}>
-                <strong slot="title">No live preview</strong>
-                This file is not a page the app serves. Use Audit snapshot for a still frame of the layout.
-              </empty-state>
-            </column>
-          </if>
-          <if {showAudit()}>
-            <column
-              data-audit-panel
-              gap="2"
-              shrink="0"
-              sx={style.maxH(64).borderTWidth(1).borderT(border).bg(surface-1).pad(2).overflow(auto)}
-            >
-              <row gap="2" align="center" justify="between">
+      <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0).maxH(full).overflow(hidden)}>
+        <column grow min-w="0" gap="0" sx={style.minH(0).basis(0).maxH(full).overflow(hidden).bg(surface-0)}>
+          <!-- Preview: static render + region-overlay (+ live iframe when available) -->
+          <if {isPreview()}>
+            <column data-view-panel="preview" grow gap="0" sx={style.minH(0).maxH(full).overflow(hidden)}>
+              <row gap="2" align="center" shrink="0" sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle)}>
                 <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)} data-provenance>
-                  Audit snapshot
+                  Static render
                 </p>
                 <if {hasHover()}>
                   <p data-region-tooltip sx={style.fontSize(xs).fg(primary)}>{hoverLabel()}</p>
                 </if>
-                <button type="button" size="sm" variant="ghost" on:click={onHideAudit}>Hide</button>
               </row>
-              <if {hasAudit()}>
-                <img
-                  data-preview-img
-                  src={auditSrc()}
-                  alt="Headless audit snapshot"
-                  on:click={onPreviewClick}
-                  on:mousemove={onPreviewMove}
-                  on:mouseleave={onPreviewLeave}
-                  sx={style.maxW(full).cursor(crosshair).radius(md)}
-                />
-              </if>
-              <if {!hasAudit()}>
-                <p sx={style.fontSize(xs).fg(muted-foreground)}>Rendering audit snapshot…</p>
+              <scroll-area grow sx={style.minH(0).pad(3).bg(background)}>
+                <if {hasAudit()}>
+                  <column data-region-overlay gap="0" sx={style.position(relative).w(full).maxW(panel-max-w-lg)}>
+                    <img
+                      data-preview-img
+                      src={auditSrc()}
+                      alt="Static preview"
+                      on:click={onPreviewClick}
+                      on:mousemove={onPreviewMove}
+                      on:mouseleave={onPreviewLeave}
+                      sx={style.w(full).cursor(crosshair).radius(md)}
+                    />
+                  </column>
+                </if>
+                <if {!hasAudit()}>
+                  <empty-state variant="placeholder" size="sm" w="full" sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}>
+                    <strong slot="title">Rendering preview…</strong>
+                    Static frame loads from SailRender regions.
+                  </empty-state>
+                </if>
+              </scroll-area>
+              <if {hasLivePreview()}>
+                <column shrink="0" gap="0" sx={style.h(48).borderTWidth(1).borderT(border).overflow(hidden)}>
+                  <iframe
+                    data-live-preview
+                    title="Live app preview"
+                    src={livePreviewSrc()}
+                    sx={style.w(full).h(full).minH(0).borderWidth(0).bg(background)}
+                  ></iframe>
+                </column>
               </if>
             </column>
           </if>
-        </column>
 
-        <scroll-area
-          data-edit-rail
-          shrink="0"
-          sx={style.w(56).minH(0).h(full).borderLWidth(1).borderL(border).bg(surface-1)}
-        >
-          <column gap="0" sx={style.fontSize(sm)}>
-            <row
-              align="center"
-              sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle)}
+          <!-- Source CodeMirror -->
+          <if {isSource()}>
+            <column
+              data-view-panel="source"
+              data-cm-mode="sail"
+              grow
+              gap="0"
+              sx={style.minH(0).maxH(full).overflow(hidden)}
             >
-              <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
-                Inspector
-              </p>
-            </row>
-            <column gap="0" data-debug-toggle sx={style.padX(3).padY(2)}>
-              <row gap="2" align="center">
-                <switch
-                  size="sm"
-                  tone="muted"
-                  checked={showDebug()}
-                  on:change={onToggleDebug}
-                  aria-label="Show debug state"
-                ></switch>
-                <p sx={style.fontSize(xs).fg(muted-foreground)}>Show debug state</p>
+              <row gap="2" align="center" justify="between" shrink="0" sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle)}>
+                <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono).truncate()}>
+                  {sourceStatus()}
+                  <if {checksLabel()}> · {checksLabel()}</if>
+                  <if {sourceScrollLine()}> · L{sourceScrollLine()}</if>
+                </p>
+                <if {sourceDirty()}>
+                  <p sx={style.fontSize(xs).fg(warning)}>Unsaved</p>
+                </if>
               </row>
+              <if {hasChecks()}>
+                <column data-source-gutter gap="0" shrink="0" sx={style.padX(3).padY(1).fontSize(xs).fontFamily(mono).bg(surface-2).maxH(24).overflow(auto)}>
+                  <for {checkRows()} as="ck" key={ck.key}>
+                    <p data-check-line={ck.line} data-severity={ck.severity} sx={style.fg(destructive).h(6)}>
+                      L{ck.line} · {ck.severity}: {ck.message}
+                    </p>
+                  </for>
+                </column>
+              </if>
+              <column grow gap="0" sx={style.minH(0).basis(0).overflow(hidden)}>
+                <sail-code-editor
+                  data-source-editor
+                  language="sail"
+                  size="sm"
+                  chrome="flush"
+                  value={sourceText()}
+                  on:sail-change={onSourceSailChange}
+                  aria-label="Sail source"
+                  sx={style.w(full).h(full).minH(0)}
+                ></sail-code-editor>
+              </column>
             </column>
+          </if>
 
-            <if {showDebug()}>
-              <column gap="2" data-anatomy data-debug-state sx={style.pad(3)}>
+          <!-- State: signal cards + sail-json-view -->
+          <if {isState()}>
+            <scroll-area data-view-panel="state" grow sx={style.minH(0).maxH(full).pad(3)}>
+              <column gap="3">
                 <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
-                  State
+                  Signals
                 </p>
                 <for {stateCards()} as="card" key={card.key}>
                   <column
                     data-state-card
                     data-binding={card.name}
                     data-ssr-tier={card.ssrTier}
-                    gap="1"
-                    sx={style.pad(2).borderWidth(1).border(border-subtle).radius(sm)}
+                    gap="2"
+                    sx={style.pad(3).borderWidth(1).border(border-subtle).radius(md).bg(surface-1)}
                   >
                     <row gap="2" align="center">
                       <strong sx={style.fontSize(sm)}>{card.name}</strong>
-                      <p data-tier-badge sx={style.fontSize(xs).fg(muted-foreground)}>{card.tierLabel}</p>
+                      <badge data-tier-badge size="sm" tone="muted">{card.tierLabel}</badge>
                     </row>
                     <p sx={style.fontSize(xs).fg(muted-foreground)}>{card.tierWhy}</p>
                     <p sx={style.fontSize(xs)}>{card.readersLabel} · {card.writersLabel}</p>
+                    <row gap="2" align="center">
+                      <input
+                        type="text"
+                        size="sm"
+                        placeholder="Write value"
+                        value={card.value}
+                        aria-label={`Write ${card.name}`}
+                        data-signal-input
+                        sx={style.w(full)}
+                      />
+                      <button type="button" size="sm" tone="primary" data-signal-write on:click={onSignalWrite}>
+                        Write
+                      </button>
+                    </row>
                   </column>
                 </for>
                 <if {!stateCards().length}>
                   <p sx={style.fg(muted-foreground).fontSize(xs)}>No state in this file.</p>
                 </if>
                 <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+                  Graph
+                </p>
+                <sail-json-view data={stateJson()} depth={2} sx={style.w(full)}></sail-json-view>
+              </column>
+            </scroll-area>
+          </if>
+
+          <!-- Layout: taffy boxes → source span -->
+          <if {isLayout()}>
+            <scroll-area data-view-panel="layout" grow sx={style.minH(0).maxH(panel-max-h-md).overflow(auto).pad(2)} on:click={onLayoutClick}>
+              <column gap="0" sx={style.fontFamily(mono).fontSize(xs)}>
+                <for {layoutRows()} as="row" key={row.key}>
+                  <button
+                    type="button"
+                    size="sm"
+                    variant={row.selected ? 'soft' : 'ghost'}
+                    tone={row.selected ? 'primary' : 'muted'}
+                    data-layout-id={row.id}
+                    sx={style.w(full).h(7).padX(2).radius(none).textAlign(start).when({ hover: style.bg(hover-bg) })}
+                  >
+                    {row.line}
+                  </button>
+                </for>
+                <if {!layoutRows().length}>
+                  <empty-state variant="placeholder" size="sm" w="full" sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}>
+                    <strong slot="title">No layout boxes</strong>
+                    Open preview once to attach taffy geometry.
+                  </empty-state>
+                </if>
+              </column>
+            </scroll-area>
+          </if>
+
+          <!-- Data: sail-json-view -->
+          <if {isData()}>
+            <scroll-area data-view-panel="data" grow sx={style.minH(0).maxH(full).pad(3)}>
+              <column gap="2">
+                <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+                  Query / data keys
+                </p>
+                <sail-json-view data={dataJson()} depth={2} sx={style.w(full)}></sail-json-view>
+              </column>
+            </scroll-area>
+          </if>
+
+          <!-- A11y checklist -->
+          <if {isA11y()}>
+            <scroll-area data-view-panel="a11y" grow sx={style.minH(0).maxH(full).pad(3)}>
+              <column gap="2">
+                <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+                  Contract checklist
+                </p>
+                <for {a11yRows()} as="row" key={row.key}>
+                  <column
+                    data-a11y-row
+                    data-status={row.status}
+                    gap="1"
+                    sx={style.pad(2).borderWidth(1).border(border-subtle).radius(sm)}
+                  >
+                    <row gap="2" align="center">
+                      <strong sx={style.fontSize(sm)}>{row.check}</strong>
+                      <badge size="sm" tone={row.tone}>{row.status}</badge>
+                    </row>
+                    <p sx={style.fontSize(xs).fg(muted-foreground)}>{row.detail}</p>
+                  </column>
+                </for>
+              </column>
+            </scroll-area>
+          </if>
+        </column>
+
+        <!-- Structured-edit rail (source / preview) -->
+        <if {isSource() || isPreview()}>
+          <scroll-area
+            data-edit-rail
+            shrink="0"
+            sx={style.w(52).minH(0).borderLWidth(1).borderL(border).bg(surface-1)}
+          >
+            <column gap="0" sx={style.fontSize(sm)}>
+              <row align="center" sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle)}>
+                <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+                  Inspector
+                </p>
+              </row>
+              <column gap="2" data-structured-edit sx={style.pad(3)}>
+                <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
                   Structured edit
                 </p>
                 <column gap="1">
                   <for {structOps()} as="op" key={op.key}>
-                    <button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      tone="muted"
-                      disabled={op.disabled}
-                      data-struct-op={op.id}
-                    >
+                    <button type="button" size="sm" variant="ghost" tone="muted" disabled={op.disabled} data-struct-op={op.id}>
                       {op.label}
                     </button>
                   </for>
                 </column>
               </column>
-            </if>
-          </column>
-        </scroll-area>
+            </column>
+          </scroll-area>
+        </if>
       </row>
+      </column>
     </if>
   </column>
 </row>

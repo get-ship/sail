@@ -87,13 +87,13 @@ describe('STUDIO-2 repairs + bar gates', () => {
     expect(specimen).toMatch(/\?\? ['"]Fraunces['"]/)
   })
 
-  it('B3: explorer rows carry right-aligned meta (ext · size when known)', () => {
+  it('B3: explorer sail-tree labels carry size meta when known', () => {
     const vm = readFileSync(join(REPO, 'apps/studio/src/edit-explorer/edit-explorer-vm.ts'), 'utf8')
-    const sail = readFileSync(join(REPO, 'apps/studio/src/edit-explorer/edit-explorer.sail'), 'utf8')
-    expect(vm).toMatch(/metaLabel/)
-    expect(vm).toMatch(/formatSize/)
-    expect(vm).toMatch(/docs\.get|source\?\.text/)
-    expect(sail).toMatch(/data-file-meta/)
+    const explorer = readFileSync(join(REPO, 'apps/studio/src/edit/explorer.ts'), 'utf8')
+    expect(vm).toMatch(/fileSailTreeNodes|createTable/)
+    expect(vm).toMatch(/sourceLen|source\?\.text/)
+    expect(explorer).toMatch(/fileSailTreeNodes/)
+    expect(explorer).toMatch(/KB|sourceLen/)
   })
 
   it('B4: design surface has helper guidance line', () => {

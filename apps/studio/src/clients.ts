@@ -1,4 +1,5 @@
 import '@ship/sail-code-editor'
+import '@ship/sail-primitives'
 import '@ship/tokens/tokens.css'
 import '@ship/tokens/themes.css'
 import '@ship/tokens/sail-base.css'

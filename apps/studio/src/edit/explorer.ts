@@ -16,10 +16,19 @@ const LAYER_BADGE: Record<string, string> = {
   l1: 'L1',
   l2: 'L2',
   'l2-component': 'L2',
-  userland: 'user',
-  user: 'user',
-  pack: 'pack',
+  // App / pack hosts are the third layer in studio badges (L1 keyword · L2 pack · L3 app).
+  userland: 'L3',
+  user: 'L3',
+  pack: 'L2',
   unknown: '?',
+}
+
+/** Nested node shape for `<sail-tree nodes>` / createTable identity data. */
+export type SailTreeNode = {
+  id: string
+  label: string
+  icon?: string
+  children?: SailTreeNode[]
 }
 
 const GROUP_ORDER = ['routes', 'src', 'packs', 'other'] as const
@@ -219,6 +228,93 @@ export function pathToFileEntry(path: string, checks = 0): FileEntry {
   else if (path.includes('/src/') || path.startsWith('src/')) group = 'src'
   else if (path.includes('/packs/') || path.startsWith('packs/')) group = 'packs'
   return { path, name, group, checks }
+}
+
+/** Hierarchical file nodes for sail-tree (group → files). Meta folded into label. */
+export function fileSailTreeNodes(
+  files: FileEntry[],
+  filter: string,
+  activePath: string | null,
+  opts?: {
+    dirtyPaths?: Set<string>
+    sourceLen?: (path: string) => number | null
+  },
+): SailTreeNode[] {
+  const groups = fileTreeGroups(files, filter, activePath)
+  const dirty = opts?.dirtyPaths
+  const sourceLen = opts?.sourceLen
+  return groups.map((g) => ({
+    id: `group:${g.id}`,
+    label: g.label,
+    icon: 'folder',
+    children: g.files.map((f) => {
+      const bits: string[] = [f.name]
+      if (dirty?.has(f.path)) bits[0] = `● ${f.name}`
+      const len = sourceLen?.(f.path) ?? null
+      if (len != null && len > 0) {
+        const size = len < 1024 ? `${len} B` : `${(len / 1024).toFixed(1)} KB`
+        bits.push(size)
+      }
+      if (f.hasChecks) bits.push(f.checksLabel)
+      return {
+        id: f.path,
+        label: bits.join(' · '),
+        icon: 'file-code-2',
+      }
+    }),
+  }))
+}
+
+/** Nested element nodes for sail-tree with L1/L2/L3 badge in the label. */
+export function elementSailTreeNodes(
+  nodes: TreeNode[],
+  roots: string[],
+): SailTreeNode[] {
+  const byId = new Map(nodes.map((n) => [n.id, n]))
+  const walk = (id: string): SailTreeNode | null => {
+    const n = byId.get(id)
+    if (!n) return null
+    const cf = n.control_flow
+    const controlFlow = cf
+      ? `<${cf.kind}>${cf.expr ? ` ${cf.expr}` : ''}`
+      : undefined
+    const attrs = n.attrs ?? {}
+    const nameHint =
+      attrs['name'] || attrs['data-sail-host'] || attrs['id'] || ''
+    const base = controlFlow
+      ? controlFlow
+      : nameHint
+        ? `<${n.tag}> ${nameHint}`
+        : `<${n.tag}>`
+    const badge = layerBadge(n.layer)
+    const kids = (n.children ?? [])
+      .map((c) => walk(c))
+      .filter((c): c is SailTreeNode => c != null)
+    return {
+      id: n.id,
+      label: badge ? `${base} · ${badge}` : base,
+      children: kids.length ? kids : undefined,
+    }
+  }
+  const out: SailTreeNode[] = []
+  const seen = new Set<string>()
+  for (const r of roots) {
+    const n = walk(r)
+    if (n) {
+      out.push(n)
+      const mark = (node: SailTreeNode) => {
+        seen.add(node.id)
+        for (const c of node.children ?? []) mark(c)
+      }
+      mark(n)
+    }
+  }
+  for (const n of nodes) {
+    if (seen.has(n.id)) continue
+    const t = walk(n.id)
+    if (t) out.push(t)
+  }
+  return out
 }
 
 /**

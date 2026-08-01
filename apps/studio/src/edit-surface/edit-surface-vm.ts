@@ -1,7 +1,4 @@
-/**
- * Edit surface VM — editor tabs + source + live preview + opt-in debug rail.
- * Explorer/element-tree are sibling components. Shell owns ops seed.
- */
+/** Edit surface VM — tabs + view switcher + panels. */
 import { mountAmbient, signal } from '@ship/sail-runtime'
 import {
   closeTab,
@@ -10,10 +7,12 @@ import {
   type DocTab,
 } from '@ship/sail-studio-shell'
 import {
+  DOC_VIEWS,
   activeDoc,
   clearHoverTip,
   getEditState,
   hoverPreviewAt,
+  openDocument,
   pathToLiveRoute,
   refreshPreview,
   saveActiveSource,
@@ -21,29 +20,20 @@ import {
   selectEditNode,
   selectFromPreviewClick,
   setSourceTextFromEditor,
+  setView,
   subscribeEdit,
+  type DocViewId,
+  uiA11yRows,
   uiCheckDiags,
-  uiChildren,
+  uiDataJson,
+  uiLayoutRows,
   uiStateCards,
+  uiStateJson,
   uiStructuredOps,
-  openDocument,
+  writeSignalValue,
 } from '@ship/studio/edit'
 import { loadFindings, sourceForSave } from '@ship/studio/checks'
-
-type StateCardUi = {
-  id: string
-  name: string
-  kind: string
-  ssrTier: string
-  tierLabel: string
-  tierWhy: string
-  readersLabel: string
-  writersLabel: string
-  key: string
-}
-type ChildRowUi = { id: string; tag: string; layer: string; key: string }
-type StructOpUi = { id: string; label: string; disabled: boolean; key: string }
-type CheckUi = { line: number; severity: string; message: string; key: string }
+import { paintRegionOverlay } from '../edit/region-overlay'
 type TabRow = DocTab & {
   active: boolean
   dirtyDot: string
@@ -51,37 +41,42 @@ type TabRow = DocTab & {
   showClose: boolean
   key: string
 }
-
-/** Close tab; if active, return promoted id to open (else null). */
 export function closeDocTab(closedId: string): string | null {
   const wasActive = getShellState().activeTabId === closedId
   closeTab(closedId)
   return wasActive ? getShellState().activeTabId : null
 }
-
-/** Activate a doc tab and load source when the id is a .sail path. */
 export async function openShellTabDocument(id: string): Promise<void> {
   setActiveTab(id)
   if (!id.endsWith('.sail')) return
   const s = getShellState()
   await openDocument(id, { loadPreview: false, theme: s.themeId, mode: s.modeId })
 }
-
 export function createEditSurface() {
-  const stateCards = signal<StateCardUi[]>([])
-  const childRows = signal<ChildRowUi[]>([])
-  const structOps = signal<StructOpUi[]>([])
+  const stateCards = signal<
+    {
+      id: string
+      name: string
+      kind: string
+      ssrTier: string
+      tierLabel: string
+      tierWhy: string
+      readersLabel: string
+      writersLabel: string
+      value: string
+      key: string
+    }[]
+  >([])
+  const structOps = signal<{ id: string; label: string; disabled: boolean; key: string }[]>([])
   const sourceText = signal('')
   const sourceStatus = signal('—')
   const livePreviewSrc = signal('')
   const hasLivePreview = signal(false)
   const auditSrc = signal('')
   const hasAudit = signal(false)
-  const showAudit = signal(false)
-  const showDebug = signal(false)
   const editError = signal('')
   const hasEditError = signal(false)
-  const checkRows = signal<CheckUi[]>([])
+  const checkRows = signal<{ line: number; severity: string; message: string; key: string }[]>([])
   const hasChecks = signal(false)
   const checksLabel = signal('')
   const hoverLabel = signal('')
@@ -92,13 +87,51 @@ export function createEditSurface() {
   const docTabs = signal<TabRow[]>([])
   const hasOpenDoc = signal(false)
   const activePathLabel = signal('')
-  /** Tab id under pointer — × only on hover (or always when active). */
+  const activeView = signal<DocViewId>('preview')
+  const isPreview = signal(true)
+  const isSource = signal(false)
+  const isState = signal(false)
+  const isLayout = signal(false)
+  const isData = signal(false)
+  const isA11y = signal(false)
+  const stateJson = signal('{}')
+  const dataJson = signal('{}')
+  const layoutRows = signal<{ id: string; line: string; selected: boolean; key: string }[]>([])
+  const a11yRows = signal<
+    { id: string; check: string; status: string; detail: string; tone: string; key: string }[]
+  >([])
+  let regionBoxes: import('../edit/region-overlay').RegionBoxUi[] = []
   let hoverTabId: string | null = null
   let lastScrollNonce = -1
-
+  let lastPreviewPath: string | null = null
+  const applyViewFlags = (view: DocViewId) => {
+    activeView.set(view)
+    isPreview.set(view === 'preview')
+    isSource.set(view === 'source')
+    isState.set(view === 'state')
+    isLayout.set(view === 'layout')
+    isData.set(view === 'data')
+    isA11y.set(view === 'a11y')
+  }
+  const ensurePreview = () => {
+    const es = getEditState()
+    const doc = activeDoc()
+    if (!es.activePath || !doc) return
+    if (es.view !== 'preview' && es.view !== 'layout') return
+    if (doc.preview.imagePng && lastPreviewPath === es.activePath) return
+    lastPreviewPath = es.activePath
+    const shell = getShellState()
+    const w = shell.viewport
+    void refreshPreview({
+      theme: shell.themeId,
+      mode: shell.modeId,
+      viewport: { width: w, height: Math.round((w * 9) / 16) },
+    }).then(() => sync())
+  }
   const sync = () => {
     const es = getEditState()
     const shell = getShellState()
+    applyViewFlags(es.view)
     stateCards.set(
       uiStateCards().map((c) => ({
         id: c.id,
@@ -109,25 +142,11 @@ export function createEditSurface() {
         tierWhy: c.tierWhy,
         readersLabel: c.readersLabel,
         writersLabel: c.writersLabel,
+        value: c.value ?? '',
         key: c.id,
       })),
     )
-    childRows.set(
-      uiChildren().map((c) => ({
-        id: c.id,
-        tag: `<${c.tag}>`,
-        layer: c.layer,
-        key: c.id,
-      })),
-    )
-    structOps.set(
-      uiStructuredOps().map((o) => ({
-        id: o.id,
-        label: o.label,
-        disabled: o.disabled,
-        key: o.id,
-      })),
-    )
+    structOps.set(uiStructuredOps().map((o) => ({ ...o, key: o.id })))
     checkRows.set(
       uiCheckDiags().map((c, i) => ({
         line: c.line,
@@ -137,17 +156,28 @@ export function createEditSurface() {
       })),
     )
     hasChecks.set(uiCheckDiags().length > 0)
+    layoutRows.set(uiLayoutRows(shell.viewport).map((r) => ({ id: r.id, line: r.line, selected: r.selected, key: r.id })))
+    a11yRows.set(
+      uiA11yRows(shell.themeId, shell.modeId).map((r) => ({
+        id: r.id,
+        check: r.check,
+        status: r.status,
+        detail: r.detail,
+        tone: r.status === 'pass' ? 'success' : r.status === 'warn' ? 'warning' : 'muted',
+        key: r.id,
+      })),
+    )
+    stateJson.set(uiStateJson())
+    dataJson.set(uiDataJson())
     const doc = activeDoc()
     sourceText.set(doc?.source.text ?? '')
     sourceStatus.set(doc?.source.status ?? '—')
     sourceDirty.set(!!doc?.source.dirty)
     checksLabel.set(doc?.source.checksLabel ?? '')
     const route = pathToLiveRoute(es.activePath)
-    // Never iframe the studio app into itself (dogfood nesting).
     const root = (es.projectRoot || '').replace(/\/$/, '')
-    const isStudioDogfood =
-      root === 'apps/studio' || root.endsWith('/apps/studio')
-    if (route && !isStudioDogfood) {
+    const dogfood = root === 'apps/studio' || root.endsWith('/apps/studio')
+    if (route && !dogfood) {
       livePreviewSrc.set(route)
       hasLivePreview.set(true)
       liveRouteLabel.set(route === '/' ? 'Live · /' : `Live · ${route}`)
@@ -169,7 +199,22 @@ export function createEditSurface() {
     sourceScrollLine.set(es.sourceScrollLine ?? 0)
     editError.set(es.error ?? '')
     hasEditError.set(!!es.error)
-    // Editor tabs: only real .sail docs (drop the bootstrap "shell" placeholder).
+    const vw = shell.viewport || 1440
+    const vh = Math.round((vw * 9) / 16)
+    const selected = es.selectionNodeId
+    const hover = es.hoverTip.visible ? es.hoverTip.nodeId : null
+    regionBoxes = (doc?.preview.regions ?? [])
+      .filter((r) => r.w > 0 && r.h > 0)
+      .map((r) => ({
+        id: r.nodeId,
+        left: `${((r.x / vw) * 100).toFixed(2)}%`,
+        top: `${((r.y / vh) * 100).toFixed(2)}%`,
+        width: `${((r.w / vw) * 100).toFixed(2)}%`,
+        height: `${((r.h / vh) * 100).toFixed(2)}%`,
+        selected: r.nodeId === selected || r.nodeId === hover,
+        key: r.nodeId,
+      }))
+    queueMicrotask(() => paintRegionOverlay(regionBoxes))
     const realTabs = shell.tabs.filter((t) => t.id.endsWith('.sail') || t.id !== 'shell')
     const tabs = realTabs.length
       ? realTabs
@@ -185,7 +230,6 @@ export function createEditSurface() {
           active,
           dirtyDot: t.dirty ? '●' : '',
           canClose,
-          // VSCode: × on hover; always visible on the active tab when closable.
           showClose: canClose && (active || hoverTabId === t.id),
           key: t.id,
         }
@@ -201,15 +245,19 @@ export function createEditSurface() {
           : null
       if (ta) scrollSourceEditor(ta)
     }
+    ensurePreview()
   }
-
   sync()
-
   mountAmbient(() => {
     const unsub = subscribeEdit(() => sync())
     return () => unsub()
   })
-
+  const onViewChange = (e: Event) => {
+    const name = (e as CustomEvent<{ name?: string }>).detail?.name
+    if (!name || !DOC_VIEWS.includes(name as DocViewId)) return
+    setView(name as DocViewId)
+    sync()
+  }
   const onSourceSailChange = (e: Event) => {
     const ce = e as CustomEvent<{ value?: string }>
     const v =
@@ -219,58 +267,31 @@ export function createEditSurface() {
     setSourceTextFromEditor(v)
     sync()
   }
-
   const onSaveSource = () => {
     const path = getEditState().activePath
     const doc = activeDoc()
     if (path && doc) {
       const { text, changed } = sourceForSave(path, doc.source.text)
-      if (changed && text !== doc.source.text) {
-        setSourceTextFromEditor(text)
-      }
+      if (changed && text !== doc.source.text) setSourceTextFromEditor(text)
     }
     void saveActiveSource().then(() => {
       if (path) void loadFindings(path).then(() => sync())
       else sync()
     })
   }
-
-  const onAuditSnapshot = () => {
-    const shell = getShellState()
-    showAudit.set(true)
-    const w = shell.viewport
-    void refreshPreview({
-      theme: shell.themeId,
-      mode: shell.modeId,
-      viewport: { width: w, height: Math.round((w * 9) / 16) },
-    }).then(() => sync())
-  }
-
-  const onToggleDebug = (e: Event) => {
-    const el = e.target as HTMLInputElement
-    showDebug.set(!!el.checked)
-  }
-
   const previewCoords = (e: MouseEvent, img: HTMLElement) => {
     const rect = img.getBoundingClientRect()
     const vp = getShellState().viewport
-    const vw = vp
-    const vh = Math.round((vp * 9) / 16)
-    const sx = rect.width > 0 ? vw / rect.width : 1
-    const sy = rect.height > 0 ? vh / rect.height : 1
-    return {
-      x: (e.clientX - rect.left) * sx,
-      y: (e.clientY - rect.top) * sy,
-    }
+    const sx = rect.width > 0 ? vp / rect.width : 1
+    const sy = rect.height > 0 ? Math.round((vp * 9) / 16) / rect.height : 1
+    return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy }
   }
-
   const onPreviewClick = (e: Event) => {
     const img = (e.target as Element | null)?.closest?.('[data-preview-img]') as HTMLElement | null
     if (!img) return
     const { x, y } = previewCoords(e as MouseEvent, img)
     if (selectFromPreviewClick(x, y)) sync()
   }
-
   const onPreviewMove = (e: Event) => {
     const img = (e.target as Element | null)?.closest?.('[data-preview-img]') as HTMLElement | null
     if (!img) return
@@ -278,16 +299,14 @@ export function createEditSurface() {
     hoverPreviewAt(x, y)
     sync()
   }
-
   const onPreviewLeave = () => {
     clearHoverTip()
     sync()
   }
-
-  const onElementClick = (e: Event) => {
-    const t = (e.target as Element | null)?.closest?.('[data-node-id]') as HTMLElement | null
-    if (!t?.dataset.nodeId) return
-    selectEditNode(t.dataset.nodeId)
+  const onLayoutClick = (e: Event) => {
+    const t = (e.target as Element | null)?.closest?.('[data-layout-id]') as HTMLElement | null
+    if (!t?.dataset.layoutId) return
+    selectEditNode(t.dataset.layoutId)
     sync()
     const ta =
       typeof document !== 'undefined'
@@ -295,11 +314,14 @@ export function createEditSurface() {
         : null
     scrollSourceEditor(ta)
   }
-
-  const onHideAudit = () => {
-    showAudit.set(false)
+  const onSignalWrite = (e: Event) => {
+    const host = (e.target as Element | null)?.closest?.('[data-binding]') as HTMLElement | null
+    const name = host?.dataset.binding
+    if (!name) return
+    const input = host.querySelector('input') as HTMLInputElement | null
+    writeSignalValue(name, input?.value ?? (e.target as HTMLInputElement).value ?? '')
+    sync()
   }
-
   const onTabClick = (e: Event) => {
     const closeEl = (e.target as Element | null)?.closest?.('[data-tab-close]') as HTMLElement | null
     if (closeEl) {
@@ -316,26 +338,21 @@ export function createEditSurface() {
     if (!tabEl?.dataset.tabId) return
     void openShellTabDocument(tabEl.dataset.tabId).then(() => sync())
   }
-
   const onTabPointer = (e: Event) => {
     const tabEl = (e.target as Element | null)?.closest?.('[data-tab-id]') as HTMLElement | null
     if (e.type === 'mouseleave' || e.type === 'pointerleave') {
-      // Only clear if leaving the tab strip host for this id.
       if (tabEl?.dataset.tabId === hoverTabId || !tabEl) {
         hoverTabId = null
         sync()
       }
       return
     }
-    if (!tabEl?.dataset.tabId) return
-    if (hoverTabId === tabEl.dataset.tabId) return
+    if (!tabEl?.dataset.tabId || hoverTabId === tabEl.dataset.tabId) return
     hoverTabId = tabEl.dataset.tabId
     sync()
   }
-
   return {
     stateCards,
-    childRows,
     structOps,
     sourceText,
     sourceStatus,
@@ -343,8 +360,6 @@ export function createEditSurface() {
     hasLivePreview,
     auditSrc,
     hasAudit,
-    showAudit,
-    showDebug,
     editError,
     hasEditError,
     checkRows,
@@ -358,15 +373,25 @@ export function createEditSurface() {
     docTabs,
     hasOpenDoc,
     activePathLabel,
+    activeView,
+    isPreview,
+    isSource,
+    isState,
+    isLayout,
+    isData,
+    isA11y,
+    stateJson,
+    dataJson,
+    layoutRows,
+    a11yRows,
+    onViewChange,
     onSourceSailChange,
     onSaveSource,
-    onAuditSnapshot,
-    onToggleDebug,
     onPreviewClick,
     onPreviewMove,
     onPreviewLeave,
-    onElementClick,
-    onHideAudit,
+    onLayoutClick,
+    onSignalWrite,
     onTabClick,
     onTabPointer,
   }

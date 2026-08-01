@@ -1,19 +1,15 @@
 <!--
-  <edit-element-tree> — hierarchy navigator: indent + tag + L1 badge.
-  Keyboard: ArrowUp/Down + Enter. Click selects → source span.
-  Ban-clean L1 only.
+  <edit-element-tree> — sail-tree hierarchy with L1/L2/L3 badges in labels.
+  Select → shared selection + source span scroll. Ban-clean L1 + sail-tree.
 -->
 <controller>
 import { createEditElementTree } from './edit-element-tree-vm'
 export default controller(() => {
   const vm = createEditElementTree()
   return {
-    elementRows: vm.elementRows,
     hasElements: vm.hasElements,
     activePathLabel: vm.activePathLabel,
-    activeDescendant: vm.activeDescendant,
-    onElementClick: (e: Event) => vm.onElementClick(e),
-    onTreeKeydown: (e: Event) => vm.onTreeKeydown(e),
+    onTreeSelect: (e: Event) => vm.onTreeSelect(e),
   }
 })
 </controller>
@@ -24,45 +20,24 @@ export default controller(() => {
       Elements · {activePathLabel()}
     </p>
   </row>
-  <scroll-area
-    grow
-    role="tree"
-    tabindex="0"
-    aria-label="Element tree"
-    aria-activedescendant={activeDescendant()}
-    on:click={onElementClick}
-    on:keydown={onTreeKeydown}
-    sx={style.minH(0)}
-  >
-    <column gap="0" sx={style.fontFamily(mono).fontSize(xs).padY(1)}>
-      <if {!hasElements()}>
-        <empty-state variant="placeholder" size="sm" w="full" sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}>
-          <strong slot="title">No elements yet</strong>
-          Open a .sail file to browse its tree.
-        </empty-state>
-      </if>
-      <for {elementRows()} as="el" key={el.key}>
-        <button
-          type="button"
-          id={el.domId}
-          role="treeitem"
-          tabindex={el.tabIndex}
-          data-node-id={el.id}
-          data-depth={el.depth}
-          data-selected={el.selected ? 'true' : 'false'}
-          data-focused={el.focused ? 'true' : 'false'}
-          aria-selected={el.selected ? 'true' : 'false'}
-          size="sm"
-          variant={el.selected || el.focused ? 'soft' : 'ghost'}
-          tone={el.selected ? 'primary' : 'muted'}
-          sx={style.w(full).h(6).padX(2).radius(none).when({ hover: style.bg(hover-bg) })}
-        >
-          {el.pad}{el.label}
-          <if {el.layerBadge}>
-            <p data-layer-badge sx={style.fontSize(xs).fg(muted-foreground)}>{el.layerBadge}</p>
-          </if>
-        </button>
-      </for>
-    </column>
-  </scroll-area>
+  <column grow gap="0" sx={style.minH(0).padX(1).padY(1).overflow(hidden)}>
+    <if {!hasElements()}>
+      <empty-state variant="placeholder" size="sm" w="full" sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}>
+        <strong slot="title">No elements yet</strong>
+        Open a .sail file to browse its tree.
+      </empty-state>
+    </if>
+    <if {hasElements()}>
+      <sail-tree
+        data-element-tree-host
+        data-layer-badge
+        label="Element tree"
+        selectable="single"
+        size="sm"
+        show-guides
+        on:sail-select={onTreeSelect}
+        sx={style.w(full).h(full).minH(0)}
+      ></sail-tree>
+    </if>
+  </column>
 </column>
