@@ -4,6 +4,7 @@ import {
   removeBatchItem,
 } from '@ship/sail-studio-shell'
 import { parseListItem, parseThread } from './parse'
+import { __resetThumbsForTests } from './thumbs'
 import type {
   ActorFilter,
   DriftFilter,
@@ -79,6 +80,7 @@ export function __resetTasksForTests(): void {
   client = null
   state = emptyState()
   listeners.clear()
+  __resetThumbsForTests()
 }
 
 function projectArg(): string | undefined {

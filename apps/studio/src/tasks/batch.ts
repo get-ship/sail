@@ -9,6 +9,7 @@ import {
   recordBatchCount,
   selectThread,
 } from './store'
+import { rememberArtifactThumb } from './thumbs'
 
 /** Attach batch tray items as render artifacts on a task (or create one). */
 export async function newTaskFromBatch(title?: string): Promise<string | null> {
@@ -73,17 +74,22 @@ async function attachBatchItems(taskId: string, items: BatchItem[]): Promise<voi
     const it = items[i]
     const png = it.imagePng ?? ''
     // Minimal PNG-less payload so offline tests still attach files.
+    // Prefer real crop bytes when the tray has them (evidence thumbs).
     const content =
       png ||
       (typeof btoa !== 'undefined'
         ? btoa(`batch-${it.id}`)
         : Buffer.from(`batch-${it.id}`).toString('base64'))
+    // sailTaskAddArtifact expects raw base64, not a data: URL.
+    const contentB64 = content.startsWith('data:')
+      ? content.replace(/^data:[^;]+;base64,/, '')
+      : content
     const node = it.nodes[0]
-    await client.sailTaskAddArtifact({
+    const ret = await client.sailTaskAddArtifact({
       project: projectRootArg(),
       id: taskId,
       filename: `${it.kind}-${i + 1}.png`,
-      content_base64: content,
+      content_base64: contentB64,
       mime: 'image/png',
       kind: 'render',
       label:
@@ -98,5 +104,10 @@ async function attachBatchItems(taskId: string, items: BatchItem[]): Promise<voi
       },
       actor: { kind: 'human', name: 'user' },
     })
+    // Cache evidence thumb for <img> — same bytes just written.
+    const artId = ret.artifact_id ? String(ret.artifact_id) : ''
+    const artPath = ret.path ? String(ret.path) : ''
+    if (artId) rememberArtifactThumb(artId, 'image/png', contentB64)
+    if (artPath) rememberArtifactThumb(artPath, 'image/png', contentB64)
   }
 }

@@ -3,7 +3,7 @@
  * (sail-message-list · sail-composer · sail-markdown · sail-diff).
  */
 import { mountAmbient, signal } from '@ship/sail-runtime'
-import { getBatchItems } from '@ship/sail-studio-shell'
+import { getBatchItems, getSelection, getShellState } from '@ship/sail-studio-shell'
 import {
   acceptLiveNode,
   assignComposerAttachments,
@@ -35,7 +35,6 @@ import {
   type OpenFilter,
 } from '@ship/studio/tasks'
 import { getEditState } from '@ship/studio/edit'
-import { getSelection, getShellState } from '@ship/sail-studio-shell'
 
 type TaskThreadUi = {
   id: string
@@ -62,6 +61,8 @@ type AttachChipUi = {
   kind: string
   isRender: boolean
   isDiff: boolean
+  thumbSrc: string
+  hasThumb: boolean
 }
 
 export function createTasksSurface() {
@@ -73,9 +74,7 @@ export function createTasksSurface() {
   const taskStatusLabel = signal('To do')
   const taskStatusTone = signal('muted')
   const hasTaskSelected = signal(false)
-  const taskReply = signal('')
   const taskAnchorHas = signal(false)
-  const taskAnchorSpan = signal('—')
   const taskAnchorStatus = signal('Not linked')
   const taskAnchorStatusRaw = signal('none')
   const taskAnchorTone = signal('muted')
@@ -99,11 +98,11 @@ export function createTasksSurface() {
   const emptyBody = signal('Start a task when you want help on a part of the app.')
   const threadMarkdown = signal('')
   const hasThreadMarkdown = signal(false)
+  /** True when conversation has turns — drives message-list height (empty shrinks). */
   const hasMessageItems = signal(false)
   const hasTaskDiff = signal(false)
   const diffFrom = signal('')
   const diffTo = signal('')
-  const batchAvailable = signal(false)
   const canAttachCrop = signal(false)
   /** Composer submit lifecycle: idle | sending | sent | error */
   const composerStatus = signal<'idle' | 'sending' | 'sent' | 'error'>('idle')
@@ -135,10 +134,8 @@ export function createTasksSurface() {
     taskStatusTone.set(h.statusTone)
     hasTaskSelected.set(h.hasSelected)
     threadCountLabel.set(h.threadCountLabel)
-    taskReply.set(ts.replyDraft)
     const a = uiAnchorCard()
     taskAnchorHas.set(a.has)
-    taskAnchorSpan.set(a.span)
     taskAnchorStatus.set(a.status)
     taskAnchorStatusRaw.set(a.statusRaw)
     taskAnchorTone.set(a.statusTone)
@@ -166,7 +163,6 @@ export function createTasksSurface() {
     actorFilterVal.set(ts.actorFilter)
     driftFilterVal.set(ts.driftFilter)
     const batchN = getBatchItems().length
-    batchAvailable.set(batchN > 0)
     canAttachCrop.set(batchN > 0 && h.hasSelected)
     composerDisabled.set(!h.hasSelected || composerStatus() === 'sending')
     if (ts.error) {
@@ -234,7 +230,6 @@ export function createTasksSurface() {
         } else {
           composerStatus.set('sent')
           composerStatusLabel.set('Sent')
-          // Brief sent flash, then idle.
           setTimeout(() => {
             if (composerStatus() === 'sent') {
               composerStatus.set('idle')
@@ -308,14 +303,7 @@ export function createTasksSurface() {
   }
 
   const onAttachCrop = () => {
-    void attachLatestCrop().then((ok) => {
-      if (!ok && getBatchItems().length === 0) {
-        // Honest: nothing in the tray.
-        const ts = getTasksState()
-        if (!ts.selectedId) return
-      }
-      sync()
-    })
+    void attachLatestCrop().then(() => sync())
   }
 
   return {
@@ -327,9 +315,7 @@ export function createTasksSurface() {
     taskStatusLabel,
     taskStatusTone,
     hasTaskSelected,
-    taskReply,
     taskAnchorHas,
-    taskAnchorSpan,
     taskAnchorStatus,
     taskAnchorStatusRaw,
     taskAnchorTone,
@@ -356,9 +342,7 @@ export function createTasksSurface() {
     hasTaskDiff,
     diffFrom,
     diffTo,
-    batchAvailable,
     canAttachCrop,
-    composerStatus,
     composerStatusLabel,
     composerDisabled,
     showComposerStatus,

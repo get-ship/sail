@@ -1,5 +1,6 @@
 import { getBatchItems } from '@ship/sail-studio-shell'
 import { getTasksState } from './store'
+import { artifactThumbSrc } from './thumbs'
 
 /** Chip label matching actor filter: last conversational actor. */
 function actorChipFromKind(kind: string | undefined | null): string {
@@ -194,24 +195,26 @@ export function uiMessageListItems(): MessageListItem[] {
 }
 
 /**
- * Markdown body for the selected thread context (create/open body + latest note).
- * Rendered via `<sail-markdown>` so message prose dogfoods the primitive.
+ * Markdown for selected-thread bodies (create + every comment/agent_note).
+ * `sail-message-list` owns the bubble slot as plain text (API has no rich body);
+ * this card is the reuse-map `sail-markdown` path for the same prose.
  */
 export function uiThreadMarkdown(): string {
   const t = getTasksState().selected
   if (!t) return ''
   const lines: string[] = []
   lines.push(`## ${t.title}`)
-  const created = t.events.find((e) => e.type === 'created' && e.body)
-  if (created?.body) lines.push(String(created.body))
-  const last = [...t.events].reverse().find(
-    (e) =>
-      (e.type === 'comment' || e.type === 'agent_note') && e.body && e.body.trim().length > 0,
-  )
-  if (last?.body && last.body !== created?.body) {
-    const who = last.actor?.kind === 'agent' ? 'Agent' : 'You'
-    lines.push(`### ${who}`)
-    lines.push(String(last.body))
+  for (const e of t.events) {
+    if (!e.body?.trim()) continue
+    if (e.type === 'created') {
+      lines.push(String(e.body))
+      continue
+    }
+    if (e.type === 'comment' || e.type === 'agent_note') {
+      const who = e.actor?.kind === 'agent' ? 'Agent' : 'You'
+      lines.push(`### ${who}`)
+      lines.push(String(e.body))
+    }
   }
   if (t.anchor) {
     const span =
@@ -313,6 +316,9 @@ export type AttachChipUi = {
   isDiff: boolean
   fromText: string
   toText: string
+  /** data: URL for evidence thumb when crop bytes were cached at attach. */
+  thumbSrc: string
+  hasThumb: boolean
 }
 
 export function uiAttachmentChips(): AttachChipUi[] {
@@ -332,15 +338,19 @@ export function uiAttachmentChips(): AttachChipUi[] {
           ? String(region.toText)
           : ''
     const isDiff = Boolean(fromText || toText) || a.kind === 'diff'
+    const isRender = a.kind === 'render' || (a.mime || '').startsWith('image/')
+    const thumbSrc = isRender ? artifactThumbSrc(a.id, a.path) : ''
     return {
       id: a.id,
       label: a.label || a.path.split('/').pop() || a.id,
       key: a.id,
       kind: String(a.kind || 'file'),
-      isRender: a.kind === 'render' || (a.mime || '').startsWith('image/'),
+      isRender,
       isDiff,
       fromText,
       toText,
+      thumbSrc,
+      hasThumb: Boolean(thumbSrc),
     }
   })
 }

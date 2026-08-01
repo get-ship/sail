@@ -6,8 +6,10 @@ import { tmpdir } from 'node:os'
 import { createCliOpsClient } from '../src/edit/ops-adapter-cli'
 import {
   __resetTasksForTests,
+  attachLatestCrop,
   commitIntent,
   createThread,
+  driftTone,
   getTasksState,
   loadThreads,
   newTaskFromBatch,
@@ -21,7 +23,9 @@ import {
   setTasksProjectRoot,
   statusLabel,
   statusTone,
+  uiAnchorCard,
   uiAttachmentDiff,
+  uiAttachmentChips,
   uiConversation,
   uiEmptyCopy,
   uiMessageListItems,
@@ -307,6 +311,16 @@ describe('tasks workbench (ops + store)', () => {
     expect(surface).toMatch(/data-task-composer/)
     expect(surface).toMatch(/data-attach-crop/)
     expect(surface).toMatch(/on:sail-composer-submit/)
+    // Evidence thumbs: real <img data-attach-thumb>, not badge-only
+    expect(surface).toMatch(/<img\b[^>]*data-attach-thumb/)
+    // Height chain: empty shrinks; filled uses maxH — not dual forced under sm section alone
+    expect(surface).toMatch(/hasMessageItems/)
+    expect(surface).toMatch(/data-anchor-card/)
+    // Anchor appears before messages host in source (visibility order)
+    const anchorAt = surface.indexOf('data-anchor-card')
+    const messagesAt = surface.indexOf('data-messages')
+    expect(anchorAt).toBeGreaterThan(0)
+    expect(messagesAt).toBeGreaterThan(anchorAt)
     expect(surface).not.toMatch(/commit intent/i)
     expect(surface).not.toMatch(/<div\b/)
     expect(surface).not.toMatch(/<span\b/)
@@ -320,6 +334,9 @@ describe('tasks workbench (ops + store)', () => {
     expect(ctrl).toMatch(/acceptLiveNode|reanchorToNode/)
     expect(ctrl).toMatch(/assignMessageListHost|uiMessageListItems/)
     expect(ctrl).toMatch(/onComposerSubmit|attachLatestCrop/)
+    // Dead bindings removed after composer cutover
+    expect(ctrl).not.toMatch(/\btaskReply\b/)
+    expect(ctrl).not.toMatch(/\bbatchAvailable\b/)
     expect(existsSync(join(root, 'tasks-surface.sail'))).toBe(true)
     expect(existsSync(join(REPO, 'apps/studio/components/tasks-surface'))).toBe(false)
   })
@@ -443,6 +460,129 @@ describe('drift pure contract (client-visible statuses)', () => {
     expect(statuses).toContain('moved')
     expect(statuses).toContain('lost')
   })
+
+  it('driftTone matrix: ok muted, moved warning, lost destructive', () => {
+    expect(driftTone('ok')).toBe('muted')
+    expect(driftTone('moved')).toBe('warning')
+    expect(driftTone('lost')).toBe('destructive')
+    expect(driftTone('none')).toBe('muted')
+  })
+
+  it('uiAnchorCard: moved → warning + Accept; lost → destructive + Re-link; fileSpan', async () => {
+    setTasksOpsClient({
+      sailTaskGet: async ({ id }) => ({
+        ok: true,
+        task: {
+          id,
+          title: 'drift card',
+          status: 'todo',
+          labels: [],
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+          created_by: { kind: 'human', name: 'user' },
+          artifacts: [],
+          events: [],
+          anchor: {
+            nodeId: 'routes/page.sail#0.1#ab',
+            elementPath: 'page.sail › card hero',
+            contentHash: 'ab',
+            file: 'routes/page.sail',
+            span: { start: 1, end: 2, line: 10, end_line: 12 },
+          },
+          drift: {
+            status: 'moved',
+            liveNodeId: 'routes/page.sail#0.2#cd',
+            spanDisplay: '20–22',
+          },
+        },
+      }),
+      sailTaskThreadList: async () => ({ ok: true, tasks: [] }),
+    } as never)
+    setTasksProjectRoot('apps/studio')
+    await selectThread('t-moved')
+    const moved = uiAnchorCard()
+    expect(moved.has).toBe(true)
+    expect(moved.statusRaw).toBe('moved')
+    expect(moved.statusTone).toBe('warning')
+    expect(moved.showAcceptLive).toBe(true)
+    expect(moved.showRebind).toBe(true)
+    expect(moved.fileSpan).toMatch(/page\.sail:20–22|page\.sail:20/)
+    expect(moved.movedHint).toMatch(/Now at|routes\/page\.sail/)
+
+    setTasksOpsClient({
+      sailTaskGet: async ({ id }) => ({
+        ok: true,
+        task: {
+          id,
+          title: 'lost card',
+          status: 'todo',
+          labels: [],
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+          created_by: { kind: 'human', name: 'user' },
+          artifacts: [],
+          events: [],
+          anchor: {
+            nodeId: 'routes/page.sail#0.1#zz',
+            elementPath: 'page.sail › gone',
+            contentHash: 'zz',
+            file: 'routes/page.sail',
+            span: { start: 1, end: 2, line: 5, end_line: 6 },
+          },
+          drift: { status: 'lost' },
+        },
+      }),
+      sailTaskThreadList: async () => ({ ok: true, tasks: [] }),
+    } as never)
+    await selectThread('t-lost')
+    const lost = uiAnchorCard()
+    expect(lost.statusRaw).toBe('lost')
+    expect(lost.statusTone).toBe('destructive')
+    expect(lost.showAcceptLive).toBe(false)
+    expect(lost.showRebind).toBe(true)
+    expect(lost.movedHint).toMatch(/re-link/i)
+    expect(lost.fileSpan).toMatch(/page\.sail/)
+  })
+})
+
+describe('attachLatestCrop + evidence thumbs', () => {
+  it('attaches only the newest tray item and leaves the rest', async () => {
+    const project = makeProject()
+    setTasksOpsClient(cli)
+    setTasksProjectRoot(project)
+    clearBatch()
+    const id = await createThread({
+      title: 'latest crop only',
+      body: 'attach proof',
+      anchor: {
+        nodeId: 'routes/page.sail#0.1#lc01',
+        elementPath: 'page.sail › card',
+        contentHash: 'lc01',
+      },
+    })
+    expect(id).toBeTruthy()
+    await selectThread(id!)
+    for (let i = 0; i < 3; i++) {
+      await addRegionToBatch(
+        i === 2 ? 'screenshot' : 'annotate',
+        { x: i * 10, y: 0, w: 80 + i, h: 40 },
+        {},
+      )
+    }
+    expect(getBatchItems().length).toBe(3)
+    const ok = await attachLatestCrop(id!)
+    expect(ok).toBe(true)
+    expect(getBatchItems().length).toBe(2)
+    await selectThread(id!)
+    const arts = getTasksState().selected?.artifacts ?? []
+    expect(arts.length).toBe(1)
+    expect(arts[0].kind).toBe('render')
+    // Evidence thumb cached from attach payload
+    const chips = uiAttachmentChips()
+    expect(chips.length).toBe(1)
+    expect(chips[0].hasThumb).toBe(true)
+    expect(chips[0].thumbSrc).toMatch(/^data:image\/png;base64,/)
+  }, 90_000)
 })
 
 describe('chat-elements projections', () => {

@@ -17,7 +17,6 @@ export default controller(() => {
     taskStatusTone: vm.taskStatusTone,
     hasTaskSelected: vm.hasTaskSelected,
     taskAnchorHas: vm.taskAnchorHas,
-    taskAnchorSpan: vm.taskAnchorSpan,
     taskAnchorStatus: vm.taskAnchorStatus,
     taskAnchorStatusRaw: vm.taskAnchorStatusRaw,
     taskAnchorTone: vm.taskAnchorTone,
@@ -227,6 +226,10 @@ export default controller(() => {
         </button>
       </row>
     </header>
+    <!--
+      Section: maxH only (not dual forced-h). Order: anchor first (differentiator),
+      then attachments, then messages (empty shrinks; filled gets maxH for virtualizer).
+    -->
     <section sx={style.minH(0).maxH(panel-max-h-sm).overflow(auto)}>
       <column data-task-conversation gap="3" sx={style.minH(0)}>
         <if {hasTaskCommit()}>
@@ -234,27 +237,6 @@ export default controller(() => {
             Committed {taskCommitPath()}
           </p>
         </if>
-
-        <if {hasThreadMarkdown()}>
-          <sail-markdown
-            data-thread-markdown
-            value={threadMarkdown()}
-            sx={style.fontSize(sm)}
-          ></sail-markdown>
-        </if>
-
-        <column data-messages gap="0" sx={style.minH(0).maxH(panel-max-h-sm).h(panel-max-h-sm)}>
-          <sail-message-list
-            data-messages-host
-            sticky-bottom
-            sx={style.h(full).minH(0).w(full)}
-          >
-            <empty-state slot="empty" variant="inline" size="sm" w="full">
-              <strong slot="title">No messages yet</strong>
-              Ask the agent below or wait for a reply.
-            </empty-state>
-          </sail-message-list>
-        </column>
 
         <if {taskAnchorHas()}>
           <column
@@ -313,22 +295,35 @@ export default controller(() => {
         </if>
 
         <if {hasTaskAttach()}>
-          <column data-attachments gap="1">
+          <column data-attachments gap="2">
             <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>
               Attachments · {attachCountLabel()}
             </p>
-            <row gap="1">
+            <row gap="2" align="start">
               <for {taskAttachChips()} as="a" key={a.key}>
-                <badge
-                  data-attach-chip
-                  data-attach-thumb={a.isRender ? 'true' : 'false'}
-                  data-attach-kind={a.kind}
-                  tone="muted"
-                  size="sm"
-                  variant="outline"
-                >
-                  {a.label}
-                </badge>
+                <column gap="1" data-attach-chip data-attach-kind={a.kind} sx={style.maxW(28)}>
+                  <if {a.hasThumb}>
+                    <img
+                      data-attach-thumb
+                      src={a.thumbSrc}
+                      alt={a.label}
+                      sx={style.w(24).h(16).radius(sm).borderWidth(1).border(border-subtle)}
+                    />
+                  </if>
+                  <if {!a.hasThumb}>
+                    <badge
+                      data-attach-thumb="false"
+                      tone="muted"
+                      size="sm"
+                      variant="outline"
+                    >
+                      {a.label}
+                    </badge>
+                  </if>
+                  <if {a.hasThumb}>
+                    <p sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{a.label}</p>
+                  </if>
+                </column>
               </for>
             </row>
             <if {hasTaskDiff()}>
@@ -338,6 +333,48 @@ export default controller(() => {
                 to={diffTo()}
               ></sail-diff>
             </if>
+          </column>
+        </if>
+
+        <if {hasThreadMarkdown()}>
+          <sail-markdown
+            data-thread-markdown
+            value={threadMarkdown()}
+            sx={style.fontSize(sm)}
+          ></sail-markdown>
+        </if>
+
+        <!--
+          Message list height: empty shrinks to empty-state; with turns use maxH
+          only (virtualizer needs a bound). Never dual-force h=maxH=sm under a
+          sm section — that buried the anchor chip.
+        -->
+        <if {hasMessageItems()}>
+          <column data-messages gap="0" sx={style.minH(0).maxH(panel-max-h-sm).h(panel-max-h-sm)}>
+            <sail-message-list
+              data-messages-host
+              sticky-bottom
+              sx={style.h(full).minH(0).w(full)}
+            >
+              <empty-state slot="empty" variant="inline" size="sm" w="full">
+                <strong slot="title">No messages yet</strong>
+                Ask the agent below or wait for a reply.
+              </empty-state>
+            </sail-message-list>
+          </column>
+        </if>
+        <if {!hasMessageItems()}>
+          <column data-messages gap="0" sx={style.minH(0)}>
+            <sail-message-list
+              data-messages-host
+              sticky-bottom
+              sx={style.minH(0).w(full)}
+            >
+              <empty-state slot="empty" variant="inline" size="sm" w="full">
+                <strong slot="title">No messages yet</strong>
+                Ask the agent below or wait for a reply.
+              </empty-state>
+            </sail-message-list>
           </column>
         </if>
       </column>
