@@ -7,51 +7,33 @@ import { createDesignInspector } from './design-inspector-vm'
 export default controller(() => {
   const vm = createDesignInspector()
   return {
-    radiusSteps: vm.radiusSteps,
-    iconScaleSteps: vm.iconScaleSteps,
-    inheritRows: vm.inheritRows,
-    densityCompact: vm.densityCompact,
-    densityDefault: vm.densityDefault,
-    densitySpacious: vm.densitySpacious,
-    scaleTogetherOn: vm.scaleTogetherOn,
-    blastLabel: vm.blastLabel,
-    inspectOpen: vm.inspectOpen,
-    inspectSites: vm.inspectSites,
-    isType: vm.isType,
-    isDensity: vm.isDensity,
-    isRadius: vm.isRadius,
-    isIcons: vm.isIcons,
-    isColor: vm.isColor,
-    showScaleFamily: vm.showScaleFamily,
-    typeDisplay: vm.typeDisplay,
-    typeBody: vm.typeBody,
-    typeMono: vm.typeMono,
-    iconPack: vm.iconPack,
-    iconQuery: vm.iconQuery,
-    iconGlyphs: vm.iconGlyphs,
-    forkName: vm.forkName,
-    fontSearchQ: vm.fontSearchQ,
-    fontHits: vm.fontHits,
-    fontNote: vm.fontNote,
-    designDensity: vm.designDensity,
-    densityLabel: vm.densityLabel,
-    overrideRows: vm.overrideRows,
-    hasOverrides: vm.hasOverrides,
-    groupLabel: vm.groupLabel,
-    clampNote: vm.clampNote,
-    hasClampNote: vm.hasClampNote,
+    designThemeOpts: vm.designThemeOpts, designThemeId: vm.designThemeId,
+    radiusSteps: vm.radiusSteps, iconScaleSteps: vm.iconScaleSteps,
+    inheritRows: vm.inheritRows, densityCompact: vm.densityCompact,
+    densityDefault: vm.densityDefault, densitySpacious: vm.densitySpacious,
+    scaleTogetherOn: vm.scaleTogetherOn, blastLabel: vm.blastLabel,
+    inspectOpen: vm.inspectOpen, inspectSites: vm.inspectSites,
+    isType: vm.isType, isDensity: vm.isDensity, isRadius: vm.isRadius,
+    isIcons: vm.isIcons, isColor: vm.isColor, showScaleFamily: vm.showScaleFamily,
+    typeDisplay: vm.typeDisplay, typeBody: vm.typeBody, typeMono: vm.typeMono,
+    iconPack: vm.iconPack, iconQuery: vm.iconQuery, iconGlyphs: vm.iconGlyphs,
+    forkName: vm.forkName, fontSearchQ: vm.fontSearchQ, fontHits: vm.fontHits,
+    fontNote: vm.fontNote, designDensity: vm.designDensity,
+    densityLabel: vm.densityLabel, overrideRows: vm.overrideRows,
+    hasOverrides: vm.hasOverrides, groupLabel: vm.groupLabel,
+    clampNote: vm.clampNote, hasClampNote: vm.hasClampNote,
     onDensityClick: (e: Event) => vm.onDensityClick(e),
     onScaleTogether: (e: Event) => vm.onScaleTogether(e),
     onRadiusInput: (e: Event) => vm.onRadiusInput(e),
-    onInspectToggle: () => vm.onInspectToggle(),
+    onInspectToggle: (e: Event) => vm.onInspectToggle(e),
     onInheritReset: (e: Event) => vm.onInheritReset(e),
     onInheritOverride: (e: Event) => vm.onInheritOverride(e),
-    onForkTheme: () => vm.onForkTheme(),
+    onForkTheme: (e: Event) => vm.onForkTheme(e),
     onForkName: (e: Event) => vm.onForkName(e),
     onIconScaleInput: (e: Event) => vm.onIconScaleInput(e),
     onTypeRole: (e: Event) => vm.onTypeRole(e),
     onFontSearch: (e: Event) => vm.onFontSearch(e),
-    onFontAdd: () => vm.onFontAdd(),
+    onFontAdd: (e: Event) => vm.onFontAdd(e),
     onFontHit: (e: Event) => vm.onFontHit(e),
     onIconPack: (e: Event) => vm.onIconPack(e),
     onIconQuery: (e: Event) => vm.onIconQuery(e),
@@ -64,27 +46,27 @@ export default controller(() => {
   data-specimen-canvas
   gap="0"
   grow
-  sx={style.minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(surface-1)}
+  sx={style.minH(0).h(full).minW(56).borderLWidth(1).borderL(border-subtle).bg(surface-1)}
 >
-  <column gap="3" sx={style.pad(3).fontSize(sm)}>
+  <column gap="4" sx={style.pad(4).fontSize(sm)}>
     <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Live specimen</p>
     <column
       data-specimen-live
       data-specimen-fallback
       data-specimen-panel
-      gap="3"
-      sx={style.pad(4).radius(lg).bg(background).fg(foreground).borderWidth(1).border(border-subtle).minW(0)}
+      gap="4"
+      sx={style.pad(5).radius(lg).bg(background).fg(foreground).borderWidth(1).border(border-subtle).minW(0)}
     >
       <p data-specimen-hero sx={style.fontSize(xl).fontWeight(semibold).fontFamily(heading)}>
         Aa · Preview
       </p>
-      <p sx={style.fontSize(sm).fg(muted-foreground)}>
+      <p sx={style.fontSize(sm).fg(muted-foreground).leading(snug)}>
         Surfaces update as you edit — this is the truth, not a mock.
       </p>
-      <row gap="2">
-        <button type="button" tone="primary" size="sm">Primary</button>
-        <button type="button" variant="outline" size="sm">Outline</button>
-        <button type="button" tone="destructive" size="sm">Danger</button>
+      <row gap="3">
+        <button type="button" tone="primary">Primary</button>
+        <button type="button" variant="outline">Outline</button>
+        <button type="button" tone="destructive">Danger</button>
         <badge tone="success">ok</badge>
       </row>
       <card sx={style.pad(3).radius(lg).borderWidth(1).border(border-subtle)}>
@@ -144,7 +126,6 @@ export default controller(() => {
             <p data-blast-radius sx={style.fontSize(xs).fg(muted-foreground)}>{blastLabel()}</p>
             <button
               type="button"
-              size="sm"
               variant="soft"
               tone="muted"
               data-inspect-sites
@@ -170,14 +151,13 @@ export default controller(() => {
               <row data-inherit-id={n.id} align="center" gap="2" sx={style.fontSize(xs)}>
                 <p grow min-w="0">{n.label}</p>
                 <if {n.canReset}>
-                  <button type="button" size="sm" data-inherit-reset on:click={onInheritReset}>
+                  <button type="button" data-inherit-reset on:click={onInheritReset}>
                     Reset
                   </button>
                 </if>
                 <if {n.canCustomize}>
                   <button
                     type="button"
-                    size="sm"
                     variant="soft"
                     data-inherit-override
                     on:click={onInheritOverride}
@@ -278,13 +258,19 @@ export default controller(() => {
             value={fontSearchQ()}
             on:input={onFontSearch}
           />
-          <button type="button" size="sm" data-font-add on:click={onFontAdd}>
+          <button type="button" data-font-add on:click={onFontAdd}>
             Add
           </button>
         </row>
-        <column gap="1" data-font-hits data-font-cmdk>
+        <column gap="2" data-font-hits data-font-cmdk>
           <for {fontHits()} as="f" key={f.key}>
-            <button type="button" size="sm" variant="ghost" data-font-hit={f.name} on:click={onFontHit}>
+            <button
+              type="button"
+              variant="ghost"
+              data-font-hit={f.name}
+              on:click={onFontHit}
+              sx={style.w(full).minH(9).h(auto).padY(2).whitespace(normal)}
+            >
               {f.name}
             </button>
           </for>
@@ -294,38 +280,38 @@ export default controller(() => {
     </if>
 
     <if {isDensity()}>
-      <column data-panel="density" gap="2">
+      <column data-panel="density" gap="3">
         <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Spacing density</p>
-        <row gap="2" data-density-switch on:click={onDensityClick}>
+        <column gap="2" data-density-switch on:click={onDensityClick}>
           <button
             type="button"
-            size="sm"
             data-density="compact"
             variant={densityCompact() ? 'soft' : 'ghost'}
             tone={densityCompact() ? 'primary' : 'muted'}
+            sx={style.w(full).minH(9)}
           >
             Compact
           </button>
           <button
             type="button"
-            size="sm"
             data-density="default"
             variant={densityDefault() ? 'soft' : 'ghost'}
             tone={densityDefault() ? 'primary' : 'muted'}
+            sx={style.w(full).minH(9)}
           >
             Comfortable
           </button>
           <button
             type="button"
-            size="sm"
             data-density="spacious"
             variant={densitySpacious() ? 'soft' : 'ghost'}
             tone={densitySpacious() ? 'primary' : 'muted'}
+            sx={style.w(full).minH(9)}
           >
             Roomy
           </button>
-        </row>
-        <p sx={style.fontSize(xs).fg(muted-foreground)}>
+        </column>
+        <p sx={style.fontSize(xs).fg(muted-foreground).leading(snug)}>
           Active: {densityLabel()} — specimen list spacing follows live.
         </p>
       </column>
@@ -342,7 +328,7 @@ export default controller(() => {
             value={forkName()}
             on:input={onForkName}
           />
-          <button type="button" size="sm" data-fork-theme on:click={onForkTheme}>
+          <button type="button" data-fork-theme on:click={onForkTheme}>
             Create
           </button>
         </row>

@@ -5,7 +5,7 @@
       "layer": "theme",
       "themeId": "studio",
       "defaultMode": "dark",
-      "density": "compact"
+      "density": "default"
     }
   },
   "modes": {

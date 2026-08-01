@@ -27,9 +27,16 @@ export function buildRegionBoxes(): RegionBoxUi[] {
       top: `${((r.y / vh) * 100).toFixed(2)}%`,
       width: `${((r.w / vw) * 100).toFixed(2)}%`,
       height: `${((r.h / vh) * 100).toFixed(2)}%`,
-      selected: r.nodeId === selected || r.nodeId === hover,
+      selected: r.nodeId === selected,
+      hover: r.nodeId === hover,
       key: r.nodeId,
     }))
+}
+
+/** Region count label for the static preview chrome (empty when none). */
+export function regionMetaLabel(count: number): string {
+  if (count <= 0) return ''
+  return count === 1 ? '1 region' : `${count} regions`
 }
 
 export function paintRegions(): RegionBoxUi[] {
@@ -38,7 +45,43 @@ export function paintRegions(): RegionBoxUi[] {
   return boxes
 }
 
-/** Single-flight preview load; fails soft and will not storm. */
+function shellViewport(): { width: number; height: number } {
+  const w = getShellState().viewport
+  return { width: w, height: Math.round((w * 9) / 16) }
+}
+
+/**
+ * Bookkeep flight only when refresh actually applied (gen still current).
+ * Superseded settles must not clear a newer inflight or sticky-fail early.
+ */
+function settleFlight(
+  flight: PreviewFlight,
+  path: string,
+  applied: boolean,
+  onDone: () => void,
+): void {
+  if (applied) {
+    if (flight.inflight === path) flight.inflight = null
+    const next = activeDoc()
+    if (next?.preview.imagePng) flight.failedPath = null
+    else if (getEditState().activePath === path) flight.failedPath = path
+  } else if (flight.inflight === path) {
+    // Superseded: keep inflight if a newer refresh still owns loading; else unstick
+    // so openDocument / path change cannot leave single-flight stuck forever.
+    const d = activeDoc()
+    if (getEditState().activePath !== path || !d?.preview.loading) {
+      flight.inflight = null
+    }
+  }
+  onDone()
+}
+
+/**
+ * Single-flight preview load; fails soft and will not storm.
+ * Timeout / reject paths leave `doc.preview.error` set and `failedPath` sticky
+ * until {@link retryPreviewOnce}. Uses `refreshPreview().applied` so superseded
+ * settles do not clear a newer flight.
+ */
 export function ensurePreviewOnce(
   flight: PreviewFlight,
   onDone: () => void,
@@ -51,25 +94,48 @@ export function ensurePreviewOnce(
     flight.failedPath = null
     return
   }
-  if (flight.inflight === es.activePath) return
+  // Already failed for this path — UI shows error + retry; do not re-storm.
   if (flight.failedPath === es.activePath) return
+  if (doc.preview.error && !doc.preview.loading) {
+    flight.failedPath = es.activePath
+    return
+  }
+  if (flight.inflight === es.activePath) return
+  if (doc.preview.loading) {
+    flight.inflight = es.activePath
+    return
+  }
   const path = es.activePath
   flight.inflight = path
   const shell = getShellState()
-  const w = shell.viewport
   void refreshPreview({
     theme: shell.themeId,
     mode: shell.modeId,
-    viewport: { width: w, height: Math.round((w * 9) / 16) },
+    viewport: shellViewport(),
   })
-    .then(() => {
-      flight.inflight = null
-      flight.failedPath = activeDoc()?.preview.imagePng ? null : path
-      onDone()
+    .then((r) => settleFlight(flight, path, r.applied, onDone))
+    .catch(() => settleFlight(flight, path, false, onDone))
+}
+
+/** Clear sticky failure and re-run preview (user Retry). */
+export function retryPreviewOnce(
+  flight: PreviewFlight,
+  onDone: () => void,
+): void {
+  const path = getEditState().activePath
+  if (!path) return
+  flight.failedPath = null
+  flight.inflight = null
+  const doc = activeDoc()
+  if (doc?.preview.error || doc?.preview.imagePng == null) {
+    flight.inflight = path
+    const shell = getShellState()
+    void refreshPreview({
+      theme: shell.themeId,
+      mode: shell.modeId,
+      viewport: shellViewport(),
     })
-    .catch(() => {
-      flight.inflight = null
-      flight.failedPath = path
-      onDone()
-    })
+      .then((r) => settleFlight(flight, path, r.applied, onDone))
+      .catch(() => settleFlight(flight, path, false, onDone))
+  }
 }

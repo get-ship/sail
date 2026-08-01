@@ -28,6 +28,11 @@ export type SailTreeNode = {
   id: string
   label: string
   icon?: string
+  /**
+   * Row meta for sail-tree `node-trailing` (e.g. dirty `●`).
+   * Keep labels short — never fold meta into `label`.
+   */
+  trailing?: string
   children?: SailTreeNode[]
 }
 
@@ -230,42 +235,107 @@ export function pathToFileEntry(path: string, checks = 0): FileEntry {
   return { path, name, group, checks }
 }
 
-/** Hierarchical file nodes for sail-tree (group → files). Meta folded into label. */
+/** Intermediate dir while assembling a group-relative path trie. */
+type FileSegNode = {
+  name: string
+  /** Set when this segment is a leaf file (source path = openDocument id). */
+  filePath?: string
+  children: Map<string, FileSegNode>
+}
+
+function insertFileSeg(root: FileSegNode, relPath: string, filePath: string): void {
+  const segs = relPath.replace(/\\/g, '/').split('/').filter(Boolean)
+  if (!segs.length) return
+  let cur = root
+  for (let i = 0; i < segs.length; i++) {
+    const seg = segs[i]!
+    let child = cur.children.get(seg)
+    if (!child) {
+      child = { name: seg, children: new Map() }
+      cur.children.set(seg, child)
+    }
+    if (i === segs.length - 1) child.filePath = filePath
+    else cur = child
+  }
+}
+
+function fileSegToSailTree(
+  node: FileSegNode,
+  groupId: string,
+  rel: string,
+  dirty?: Set<string>,
+): SailTreeNode {
+  const kids = [...node.children.values()]
+    .sort((a, b) => {
+      // Directories before files, then alpha — denser IDE-style tree.
+      const aIsDir = a.children.size > 0 || !a.filePath
+      const bIsDir = b.children.size > 0 || !b.filePath
+      if (aIsDir !== bIsDir) return aIsDir ? -1 : 1
+      return a.name.localeCompare(b.name)
+    })
+    .map((c) => {
+      const childRel = rel ? `${rel}/${c.name}` : c.name
+      return fileSegToSailTree(c, groupId, childRel, dirty)
+    })
+
+  if (node.filePath) {
+    return {
+      id: node.filePath,
+      label: node.name,
+      icon: 'file-code-2',
+      trailing: dirty?.has(node.filePath) ? '●' : undefined,
+      children: kids.length ? kids : undefined,
+    }
+  }
+  return {
+    id: `dir:${groupId}/${rel}`,
+    label: node.name,
+    icon: 'folder',
+    children: kids.length ? kids : undefined,
+  }
+}
+
+/**
+ * Full project file tree for the Files tab — group roots → nested dirs → files.
+ * Labels stay short (basename / dir name only). Dirty goes in `trailing` for
+ * sail-tree `node-trailing` (not label cram). Filter prunes via `filterFiles`.
+ */
 export function fileSailTreeNodes(
   files: FileEntry[],
   filter: string,
   activePath: string | null,
   opts?: {
     dirtyPaths?: Set<string>
-    sourceLen?: (path: string) => number | null
   },
 ): SailTreeNode[] {
   const groups = fileTreeGroups(files, filter, activePath)
   const dirty = opts?.dirtyPaths
-  const sourceLen = opts?.sourceLen
-  return groups.map((g) => ({
-    id: `group:${g.id}`,
-    label: g.label,
-    icon: 'folder',
-    children: g.files.map((f) => {
-      const bits: string[] = [f.name]
-      if (dirty?.has(f.path)) bits[0] = `● ${f.name}`
-      const len = sourceLen?.(f.path) ?? null
-      if (len != null && len > 0) {
-        const size = len < 1024 ? `${len} B` : `${(len / 1024).toFixed(1)} KB`
-        bits.push(size)
-      }
-      if (f.hasChecks) bits.push(f.checksLabel)
-      return {
-        id: f.path,
-        label: bits.join(' · '),
-        icon: 'file-code-2',
-      }
-    }),
-  }))
+  return groups.map((g) => {
+    const root: FileSegNode = { name: g.id, children: new Map() }
+    for (const f of g.files) insertFileSeg(root, f.name, f.path)
+    const children = [...root.children.values()]
+      .sort((a, b) => {
+        const aIsDir = a.children.size > 0 || !a.filePath
+        const bIsDir = b.children.size > 0 || !b.filePath
+        if (aIsDir !== bIsDir) return aIsDir ? -1 : 1
+        return a.name.localeCompare(b.name)
+      })
+      .map((c) => fileSegToSailTree(c, g.id, c.name, dirty))
+    return {
+      id: `group:${g.id}`,
+      label: g.label,
+      icon: 'folder',
+      children,
+    }
+  })
 }
 
-/** Nested element nodes for sail-tree with L1/L2/L3 badge in the label. */
+/**
+ * Nested element nodes for the Components tab sail-tree.
+ * Labels stay short (tag / control-flow / name hint). Layer badge lives in
+ * `trailing` (not label cram — same 557 B lesson as Files dirty dots).
+ * Active-doc tree only; project-wide needs a multi-file index (not inventable).
+ */
 export function elementSailTreeNodes(
   nodes: TreeNode[],
   roots: string[],
@@ -281,7 +351,8 @@ export function elementSailTreeNodes(
     const attrs = n.attrs ?? {}
     const nameHint =
       attrs['name'] || attrs['data-sail-host'] || attrs['id'] || ''
-    const base = controlFlow
+    // Dense label: control-flow expr, else <tag> + optional host/name/id.
+    const label = controlFlow
       ? controlFlow
       : nameHint
         ? `<${n.tag}> ${nameHint}`
@@ -292,7 +363,12 @@ export function elementSailTreeNodes(
       .filter((c): c is SailTreeNode => c != null)
     return {
       id: n.id,
-      label: badge ? `${base} · ${badge}` : base,
+      label,
+      // Layer badge as trail meta (L1 keyword · L2 pack · L3 app).
+      trailing: badge || undefined,
+      // Density cue by layer — leaf-friendly lucide names.
+      icon:
+        badge === 'L2' ? 'component' : badge === 'L3' ? 'box' : 'square',
       children: kids.length ? kids : undefined,
     }
   }
@@ -318,12 +394,12 @@ export function elementSailTreeNodes(
 }
 
 /**
- * Map a .sail workspace path to the served app route for live iframe preview.
- * `routes/page.sail` → `/`; `routes/foo/bar/page.sail` → `/foo/bar`.
- * Dynamic segments (`[tag]`, `[...slug]`) → null (no live URL; use audit).
- * Non-route files return null.
+ * Map a routes `page.sail` path to its URL path shape (including dynamics).
+ * `routes/page.sail` → `/`; `routes/edit/page.sail` → `/edit`;
+ * `routes/components/[tag]/page.sail` → `/components/[tag]`.
+ * Layouts and non-page files → null.
  */
-export function pathToLiveRoute(path: string | null | undefined): string | null {
+export function pathToRoutePath(path: string | null | undefined): string | null {
   if (!path) return null
   const p = path.replace(/\\/g, '/')
   if (/(?:^|\/)routes\/page\.sail$/.test(p)) return '/'
@@ -331,11 +407,128 @@ export function pathToLiveRoute(path: string | null | undefined): string | null 
   if (!m?.[1]) return null
   const segs = m[1].split('/').filter(Boolean)
   if (!segs.length) return '/'
+  return `/${segs.join('/')}`
+}
+
+/**
+ * Map a .sail workspace path to the served app route for live iframe preview.
+ * Same as pathToRoutePath, but dynamic segments (`[tag]`, `[...slug]`) → null
+ * (no concrete live URL). Non-route files return null.
+ */
+export function pathToLiveRoute(path: string | null | undefined): string | null {
+  const route = pathToRoutePath(path)
+  if (!route) return null
+  const segs = route === '/' ? [] : route.slice(1).split('/')
   // Unresolved dynamic params are not real served URLs.
   if (segs.some((s) => /^\[[^\]]+\]$/.test(s) || /^\[\.\.\.[^\]]+\]$/.test(s))) {
     return null
   }
-  return `/${segs.join('/')}`
+  return route
+}
+
+/** Trie node while assembling routeSailTreeNodes. */
+type RouteSegNode = {
+  routePath: string
+  filePath?: string
+  children: Map<string, RouteSegNode>
+}
+
+function routeSegToSailTree(
+  node: RouteSegNode,
+  dirty?: Set<string>,
+): SailTreeNode {
+  const kids = [...node.children.values()]
+    .sort((a, b) => a.routePath.localeCompare(b.routePath))
+    .map((c) => routeSegToSailTree(c, dirty))
+  const id = node.filePath ?? `route:${node.routePath}`
+  const base = node.routePath
+  const label =
+    node.filePath && dirty?.has(node.filePath) ? `● ${base}` : base
+  return {
+    id,
+    label,
+    icon: node.filePath ? 'file-code-2' : 'folder',
+    children: kids.length ? kids : undefined,
+  }
+}
+
+/**
+ * Route hierarchy for the Routes tab — pages as routes (path labels), not file paths.
+ * Top-level siblings (`/`, `/edit`, `/sail`…); multi-segment pages nest under prefixes.
+ * Leaf/page ids are source paths (selection opens the file). Intermediate segments
+ * without a page use `route:<path>` ids (expand only).
+ */
+export function routeSailTreeNodes(
+  files: FileEntry[],
+  filter: string,
+  opts?: {
+    dirtyPaths?: Set<string>
+  },
+): SailTreeNode[] {
+  const dirty = opts?.dirtyPaths
+  const q = filter.trim().toLowerCase()
+  const root: RouteSegNode = {
+    routePath: '/',
+    children: new Map(),
+  }
+
+  // Insert all route pages; filter prunes the built tree (keeps ancestors of hits).
+  for (const f of files) {
+    if (f.group !== 'routes') continue
+    const route = pathToRoutePath(f.path)
+    if (!route) continue
+    if (route === '/') {
+      root.filePath = f.path
+      continue
+    }
+    const segs = route.slice(1).split('/').filter(Boolean)
+    let cur = root
+    let acc = ''
+    for (const seg of segs) {
+      acc += `/${seg}`
+      let child = cur.children.get(seg)
+      if (!child) {
+        child = { routePath: acc, children: new Map() }
+        cur.children.set(seg, child)
+      }
+      cur = child
+    }
+    cur.filePath = f.path
+  }
+
+  const out: SailTreeNode[] = []
+  if (root.filePath) {
+    out.push({
+      id: root.filePath,
+      label: dirty?.has(root.filePath) ? '● /' : '/',
+      icon: 'file-code-2',
+    })
+  }
+  for (const child of [...root.children.values()].sort((a, b) =>
+    a.routePath.localeCompare(b.routePath),
+  )) {
+    out.push(routeSegToSailTree(child, dirty))
+  }
+
+  if (!q) return out
+
+  // Prune: keep a node if its label/id matches or any descendant does.
+  const prune = (nodes: SailTreeNode[]): SailTreeNode[] => {
+    const kept: SailTreeNode[] = []
+    for (const n of nodes) {
+      const kids = prune(n.children ?? [])
+      const self =
+        n.label.toLowerCase().includes(q) || n.id.toLowerCase().includes(q)
+      if (self) {
+        // Self match: keep full original subtree (re-resolve from n).
+        kept.push(n)
+      } else if (kids.length) {
+        kept.push({ ...n, children: kids })
+      }
+    }
+    return kept
+  }
+  return prune(out)
 }
 
 /** Discover .sail files under project dirs (Node/fs). Browser: pass seed paths. */

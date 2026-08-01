@@ -1,18 +1,12 @@
 /** Edit surface VM — tabs + view switcher + panels. */
 import { mountAmbient, signal } from '@ship/sail-runtime'
-import {
-  closeTab,
-  getShellState,
-  setActiveTab,
-  type DocTab,
-} from '@ship/sail-studio-shell'
+import { getShellState } from '@ship/sail-studio-shell'
 import {
   DOC_VIEWS,
   activeDoc,
   clearHoverTip,
   getEditState,
   hoverPreviewAt,
-  openDocument,
   pathToLiveRoute,
   querySourceEditor,
   saveActiveSource,
@@ -29,51 +23,47 @@ import {
   uiLayoutRows,
   uiStateCards,
   uiStateJson,
-  uiStructuredOps,
   writeSignalValue,
 } from '@ship/studio/edit'
 import { loadFindings, sourceForSave } from '@ship/studio/checks'
-import { ensurePreviewOnce, paintRegions } from './preview-helpers'
-type TabRow = DocTab & {
-  active: boolean
-  dirtyDot: string
-  canClose: boolean
-  showClose: boolean
-  key: string
-}
-export function closeDocTab(closedId: string): string | null {
-  const wasActive = getShellState().activeTabId === closedId
-  closeTab(closedId)
-  return wasActive ? getShellState().activeTabId : null
-}
-export async function openShellTabDocument(id: string): Promise<void> {
-  setActiveTab(id)
-  if (!id.endsWith('.sail')) return
-  const s = getShellState()
-  await openDocument(id, { loadPreview: false, theme: s.themeId, mode: s.modeId })
-}
+import {
+  closeDocTab,
+  isMiddleButton,
+  mapDocTabs,
+  openShellTabDocument,
+  resolveDocTabs,
+  tabIdFromEvent,
+  type TabRow,
+} from './edit-surface-tabs'
+import {
+  ensurePreviewOnce,
+  paintRegions,
+  regionMetaLabel,
+  retryPreviewOnce,
+} from './preview-helpers'
+
+export { closeDocTab, openShellTabDocument, mapDocTabs, resolveDocTabs } from './edit-surface-tabs'
+
 export function createEditSurface() {
-  const stateCards = signal<
-    {
-      id: string
-      name: string
-      kind: string
-      ssrTier: string
-      tierLabel: string
-      tierWhy: string
-      readersLabel: string
-      writersLabel: string
-      value: string
-      key: string
-    }[]
-  >([])
-  const structOps = signal<{ id: string; label: string; disabled: boolean; key: string }[]>([])
+  type Card = {
+    id: string; name: string; kind: string; ssrTier: string; tierLabel: string
+    tierWhy: string; readersLabel: string; writersLabel: string; value: string; key: string
+  }
+  const stateCards = signal<Card[]>([])
   const sourceText = signal('')
   const sourceStatus = signal('—')
   const livePreviewSrc = signal('')
   const hasLivePreview = signal(false)
   const auditSrc = signal('')
   const hasAudit = signal(false)
+  const isPreviewReady = signal(false)
+  const isPreviewLoading = signal(false)
+  const isPreviewEmpty = signal(false)
+  const previewError = signal('')
+  const hasPreviewError = signal(false)
+  const previewProvenance = signal('Audit snapshot')
+  const previewRegionsLabel = signal('')
+  const hasPreviewRegions = signal(false)
   const editError = signal('')
   const hasEditError = signal(false)
   const checkRows = signal<{ line: number; severity: string; message: string; key: string }[]>([])
@@ -83,6 +73,8 @@ export function createEditSurface() {
   const hasHover = signal(false)
   const sourceScrollLine = signal(0)
   const sourceDirty = signal(false)
+  const isSourceReady = signal(false)
+  const isSourceEmpty = signal(false)
   const liveRouteLabel = signal('')
   const docTabs = signal<TabRow[]>([])
   const hasOpenDoc = signal(false)
@@ -100,11 +92,11 @@ export function createEditSurface() {
   const a11yRows = signal<
     { id: string; check: string; status: string; detail: string; tone: string; key: string }[]
   >([])
-  let hoverTabId: string | null = null
   let lastScrollNonce = -1
   const flight = { inflight: null as string | null, failedPath: null as string | null }
   let lastHoverNodeId = ''
   let lastView: DocViewId | null = null
+
   const applyViewFlags = (view: DocViewId) => {
     activeView.set(view)
     isPreview.set(view === 'preview')
@@ -114,11 +106,67 @@ export function createEditSurface() {
     isData.set(view === 'data')
     isA11y.set(view === 'a11y')
   }
-  const trySourceScroll = (): boolean => {
-    const es = getEditState()
-    if (es.sourceScrollLine == null) return false
-    return scrollSourceEditor(querySourceEditor())
+  const trySourceScroll = (): boolean =>
+    getEditState().sourceScrollLine == null ? false : scrollSourceEditor(querySourceEditor())
+  /** Push authoring checks into CodeMirror lint gutter when the host is mounted. */
+  const pushSourceDiagnostics = () => {
+    if (typeof document === 'undefined') return
+    if (getEditState().view !== 'source') return
+    const host = querySourceEditor() as
+      | (HTMLElement & {
+          setDiagnostics?: (
+            d: { line: number; severity: 'error' | 'warning' | 'info'; message: string }[],
+          ) => void
+        })
+      | null
+    if (!host || typeof host.setDiagnostics !== 'function') return
+    host.setDiagnostics(
+      uiCheckDiags().map((c) => ({
+        line: c.line,
+        severity:
+          c.severity === 'warning' || c.severity === 'info'
+            ? (c.severity as 'warning' | 'info')
+            : 'error',
+        message: c.message,
+      })),
+    )
   }
+  const syncSourceFields = (doc: ReturnType<typeof activeDoc>) => {
+    const text = doc?.source.text ?? ''
+    sourceText.set(text)
+    sourceStatus.set(doc?.source.status ?? '—')
+    sourceDirty.set(!!doc?.source.dirty)
+    checksLabel.set(doc?.source.checksLabel ?? '')
+    // Ready = has bytes; empty = open doc with no text (load miss). Dirty overlays ready.
+    isSourceReady.set(!!text)
+    isSourceEmpty.set(!!doc && !text)
+  }
+  const syncPreviewFields = (doc: ReturnType<typeof activeDoc>) => {
+    const png = doc?.preview.imagePng
+    const pErr = doc?.preview.error ?? ''
+    const loading = !!doc?.preview.loading
+    if (png) {
+      auditSrc.set(png.startsWith('data:') ? png : `data:image/png;base64,${png}`)
+      hasAudit.set(true)
+      isPreviewReady.set(true)
+    } else {
+      auditSrc.set('')
+      hasAudit.set(false)
+      isPreviewReady.set(false)
+    }
+    previewError.set(pErr)
+    hasPreviewError.set(!!pErr && !png)
+    // Loading only when no frame yet (ready keeps prior frame if reloading).
+    isPreviewLoading.set(loading && !png && !pErr)
+    // Idle empty: open doc, nothing loading/errored/ready — distinct from loading.
+    isPreviewEmpty.set(!!doc && !png && !pErr && !loading)
+    previewProvenance.set(doc?.preview.provenance || 'Audit snapshot')
+    const n = doc?.preview.regions?.length ?? 0
+    const meta = regionMetaLabel(n)
+    previewRegionsLabel.set(meta)
+    hasPreviewRegions.set(!!meta)
+  }
+
   const sync = () => {
     const es = getEditState()
     const shell = getShellState()
@@ -139,7 +187,6 @@ export function createEditSurface() {
         key: c.id,
       })),
     )
-    structOps.set(uiStructuredOps().map((o) => ({ ...o, key: o.id })))
     checkRows.set(
       uiCheckDiags().map((c, i) => ({
         line: c.line,
@@ -170,10 +217,7 @@ export function createEditSurface() {
     stateJson.set(uiStateJson())
     dataJson.set(uiDataJson())
     const doc = activeDoc()
-    sourceText.set(doc?.source.text ?? '')
-    sourceStatus.set(doc?.source.status ?? '—')
-    sourceDirty.set(!!doc?.source.dirty)
-    checksLabel.set(doc?.source.checksLabel ?? '')
+    syncSourceFields(doc)
     const route = pathToLiveRoute(es.activePath)
     const root = (es.projectRoot || '').replace(/\/$/, '')
     const dogfood = root === 'apps/studio' || root.endsWith('/apps/studio')
@@ -186,65 +230,46 @@ export function createEditSurface() {
       hasLivePreview.set(false)
       liveRouteLabel.set('No live preview for this file')
     }
-    const png = doc?.preview.imagePng
-    if (png) {
-      auditSrc.set(png.startsWith('data:') ? png : `data:image/png;base64,${png}`)
-      hasAudit.set(true)
-    } else {
-      auditSrc.set('')
-      hasAudit.set(false)
-    }
+    syncPreviewFields(doc)
     hoverLabel.set(es.hoverTip.visible ? es.hoverTip.label : '')
     hasHover.set(es.hoverTip.visible)
     sourceScrollLine.set(es.sourceScrollLine ?? 0)
     editError.set(es.error ?? '')
     hasEditError.set(!!es.error)
     paintRegions()
-    const realTabs = shell.tabs.filter((t) => t.id.endsWith('.sail') || t.id !== 'shell')
-    const tabs = realTabs.length
-      ? realTabs
-      : es.activePath
-        ? [
-            {
-              id: es.activePath,
-              label: es.activePath.split('/').pop() ?? es.activePath,
-              dirty: !!doc?.source.dirty,
-            },
-          ]
-        : []
-    docTabs.set(
-      tabs.map((t) => {
-        const active = t.id === (shell.activeTabId ?? es.activePath)
-        const canClose = tabs.length > 1
-        return {
-          ...t,
-          active,
-          dirtyDot: t.dirty ? '●' : '',
-          canClose,
-          showClose: canClose && (active || hoverTabId === t.id),
-          key: t.id,
-        }
-      }),
+    const dirtyById = new Map<string, boolean>()
+    for (const [p, d] of es.docs) dirtyById.set(p, !!d.source.dirty)
+    const tabs = resolveDocTabs(
+      shell.tabs,
+      shell.activeTabId,
+      es.activePath,
+      !!doc?.source.dirty,
     )
+    docTabs.set(mapDocTabs(tabs, shell.activeTabId ?? es.activePath, dirtyById))
     hasOpenDoc.set(!!es.activePath && !!doc)
     activePathLabel.set(es.activePath ?? '')
-    // Consume scroll nonce only when the editor is mounted and scroll applied.
     if (es.sourceScrollNonce !== lastScrollNonce) {
       if (trySourceScroll()) lastScrollNonce = es.sourceScrollNonce
+      pushSourceDiagnostics()
     } else if (viewChanged && es.view === 'source') {
-      // Entering Source with a pending span (nonce already consumed or missed).
       queueMicrotask(() => {
         trySourceScroll()
+        pushSourceDiagnostics()
         lastScrollNonce = getEditState().sourceScrollNonce
       })
+    } else if (es.view === 'source') {
+      pushSourceDiagnostics()
     }
     ensurePreviewOnce(flight, () => sync())
   }
+
   sync()
   mountAmbient(() => {
     const unsub = subscribeEdit(() => sync())
     return () => unsub()
   })
+
+  const onRetryPreview = () => retryPreviewOnce(flight, () => sync())
   const onViewChange = (e: Event) => {
     const name = (e as CustomEvent<{ name?: string }>).detail?.name
     if (!name || !DOC_VIEWS.includes(name as DocViewId)) return
@@ -279,15 +304,16 @@ export function createEditSurface() {
     const sy = rect.height > 0 ? Math.round((vp * 9) / 16) / rect.height : 1
     return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy }
   }
+  const previewImg = (e: Event) =>
+    (e.target as Element | null)?.closest?.('[data-preview-img]') as HTMLElement | null
   const onPreviewClick = (e: Event) => {
-    const img = (e.target as Element | null)?.closest?.('[data-preview-img]') as HTMLElement | null
+    const img = previewImg(e)
     if (!img) return
     const { x, y } = previewCoords(e as MouseEvent, img)
     if (selectFromPreviewClick(x, y)) sync()
   }
-  /** Light hover path: tip + overlay only (no full surface rebuild). */
   const onPreviewMove = (e: Event) => {
-    const img = (e.target as Element | null)?.closest?.('[data-preview-img]') as HTMLElement | null
+    const img = previewImg(e)
     if (!img) return
     const { x, y } = previewCoords(e as MouseEvent, img)
     const tip = hoverPreviewAt(x, y)
@@ -319,77 +345,43 @@ export function createEditSurface() {
     writeSignalValue(name, input?.value ?? (e.target as HTMLInputElement).value ?? '')
     sync()
   }
+  const promoteAfterClose = (next: string | null) => {
+    if (next) void openShellTabDocument(next).then(() => sync())
+    else sync()
+  }
   const onTabClick = (e: Event) => {
     const closeEl = (e.target as Element | null)?.closest?.('[data-tab-close]') as HTMLElement | null
     if (closeEl) {
-      const host = closeEl.closest?.('[data-tab-id]') as HTMLElement | null
-      if (!host?.dataset.tabId) return
+      const id = tabIdFromEvent(e)
+      if (!id) return
       e.preventDefault()
       e.stopPropagation()
-      const next = closeDocTab(host.dataset.tabId)
-      if (next) void openShellTabDocument(next).then(() => sync())
-      else sync()
+      promoteAfterClose(closeDocTab(id))
       return
     }
-    const tabEl = (e.target as Element | null)?.closest?.('[data-tab-id]') as HTMLElement | null
-    if (!tabEl?.dataset.tabId) return
-    void openShellTabDocument(tabEl.dataset.tabId).then(() => sync())
+    const id = tabIdFromEvent(e)
+    if (!id) return
+    void openShellTabDocument(id).then(() => sync())
   }
-  const onTabPointer = (e: Event) => {
-    const tabEl = (e.target as Element | null)?.closest?.('[data-tab-id]') as HTMLElement | null
-    if (e.type === 'mouseleave' || e.type === 'pointerleave') {
-      if (tabEl?.dataset.tabId === hoverTabId || !tabEl) {
-        hoverTabId = null
-        sync()
-      }
-      return
-    }
-    if (!tabEl?.dataset.tabId || hoverTabId === tabEl.dataset.tabId) return
-    hoverTabId = tabEl.dataset.tabId
-    sync()
+  /** Middle-click closes a doc tab (STUDIO-0). */
+  const onTabMiddle = (e: Event) => {
+    if (!isMiddleButton(e)) return
+    const id = tabIdFromEvent(e)
+    if (!id) return
+    e.preventDefault()
+    promoteAfterClose(closeDocTab(id))
   }
+
   return {
-    stateCards,
-    structOps,
-    sourceText,
-    sourceStatus,
-    livePreviewSrc,
-    hasLivePreview,
-    auditSrc,
-    hasAudit,
-    editError,
-    hasEditError,
-    checkRows,
-    hasChecks,
-    checksLabel,
-    hoverLabel,
-    hasHover,
-    sourceScrollLine,
-    sourceDirty,
-    liveRouteLabel,
-    docTabs,
-    hasOpenDoc,
-    activePathLabel,
-    activeView,
-    isPreview,
-    isSource,
-    isState,
-    isLayout,
-    isData,
-    isA11y,
-    stateJson,
-    dataJson,
-    layoutRows,
-    a11yRows,
-    onViewChange,
-    onSourceSailChange,
-    onSaveSource,
-    onPreviewClick,
-    onPreviewMove,
-    onPreviewLeave,
-    onLayoutClick,
-    onSignalWrite,
-    onTabClick,
-    onTabPointer,
+    stateCards, sourceText, sourceStatus, livePreviewSrc, hasLivePreview, auditSrc, hasAudit,
+    isPreviewReady, isPreviewLoading, isPreviewEmpty, previewError, hasPreviewError,
+    previewProvenance, previewRegionsLabel, hasPreviewRegions,
+    editError, hasEditError, checkRows,
+    hasChecks, checksLabel, hoverLabel, hasHover, sourceScrollLine, sourceDirty,
+    isSourceReady, isSourceEmpty, liveRouteLabel,
+    docTabs, hasOpenDoc, activePathLabel, activeView, isPreview, isSource, isState, isLayout,
+    isData, isA11y, stateJson, dataJson, layoutRows, a11yRows, onViewChange, onSourceSailChange,
+    onSaveSource, onRetryPreview, onPreviewClick, onPreviewMove, onPreviewLeave, onLayoutClick,
+    onSignalWrite, onTabClick, onTabMiddle,
   }
 }

@@ -1,8 +1,8 @@
 /**
- * Element tree VM — sail-tree hierarchy + L1/L2/L3 badges in labels.
- * Click/select → shared selection + source scroll (when Source mounted).
+ * Components tab element tree — active-doc sail-tree, L1/L2/L3 in trailing.
+ * Select → shared selection + Source view + span scroll (when editor mounted).
  */
-import { createTable, type Table } from '@ship/sail-primitives'
+import { createTable } from '@ship/sail-primitives'
 import { mountAmbient, signal } from '@ship/sail-runtime'
 import {
   activeDoc,
@@ -11,6 +11,7 @@ import {
   querySourceEditor,
   scrollSourceEditor,
   selectEditNode,
+  setView,
   subscribeEdit,
   type SailTreeNode,
 } from '@ship/studio/edit'
@@ -35,6 +36,7 @@ export function createEditElementTree() {
   const sync = () => {
     const es = getEditState()
     const doc = activeDoc()
+    // Active-doc tree only — no project-wide element index in the store.
     const nodes = doc
       ? elementSailTreeNodes(doc.tree.nodes, doc.tree.roots)
       : []
@@ -62,9 +64,10 @@ export function createEditElementTree() {
 
   const selectAndScroll = (id: string) => {
     selectEditNode(id)
+    // Components → source at span (surface re-scrolls when editor mounts).
+    setView('source')
     sync()
-    // Only applies when Source view mounts the editor; surface re-applies on enter.
-    scrollSourceEditor(querySourceEditor())
+    queueMicrotask(() => scrollSourceEditor(querySourceEditor()))
   }
 
   const onTreeSelect = (e: Event) => {

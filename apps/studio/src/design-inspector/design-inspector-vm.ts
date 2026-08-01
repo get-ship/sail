@@ -58,6 +58,7 @@ type OverrideUi = {
   key: string
 }
 
+/** Controller API for `<design-inspector>` — return this factory directly (no re-export soup). */
 export function createDesignInspector() {
   const designThemeOpts = signal<ThemeOptUi[]>([])
   const designThemeId = signal('ship')
@@ -349,3 +350,6 @@ export function createDesignInspector() {
     onIconQuery,
   }
 }
+
+/** Alias preferred by the composition authoring model. */
+export const createDesignInspectorController = createDesignInspector

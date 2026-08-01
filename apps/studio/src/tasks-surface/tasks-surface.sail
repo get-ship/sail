@@ -70,36 +70,16 @@ export default controller(() => {
   grow
   sx={style.minH(0).h(full).minW(0).overflow(hidden)}
 >
-  <row
-    data-tasks-header
-    align="center"
-    gap="2"
-    shrink="0"
-    nowrap
-    justify="between"
-    sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
-  >
-    <row align="center" gap="2" nowrap grow min-w="0">
-      <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
-        Tasks
-      </p>
-      <p data-thread-count sx={style.fontSize(xs).fg(muted-foreground)}>
-        {threadCountLabel()}
-      </p>
-    </row>
-    <button type="button" size="sm" tone="primary" data-new-task on:click={onNewTaskQuick}>
+  <studio-page-header data-tasks-header title="Tasks">
+    <p data-thread-count sx={style.fontSize(xs).fg(muted-foreground)}>
+      {threadCountLabel()}
+    </p>
+    <button slot="actions" type="button" size="sm" tone="primary" data-new-task on:click={onNewTaskQuick}>
       New task
     </button>
-  </row>
+  </studio-page-header>
 
-  <row
-    data-tasks-toolbar
-    align="center"
-    gap="2"
-    shrink="0"
-    nowrap
-    sx={style.h(7).padX(2).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
-  >
+  <studio-toolbar data-tasks-toolbar>
     <select
       data-filter-open
       value={openFilterVal()}
@@ -135,7 +115,7 @@ export default controller(() => {
       <option value="lost">Lost</option>
     </select>
     <p sx={style.fontSize(xs).fg(muted-foreground)}>Filter by reply or linked UI.</p>
-  </row>
+  </studio-toolbar>
 
   <if {showTaskErrorAlert()}>
     <row
@@ -158,13 +138,13 @@ export default controller(() => {
     on:click={onTaskThreadClick}
     sx={style.minH(0).h(full).basis(0)}
   >
-    <column gap="0" data-tasks-table sx={style.padY(1)}>
+    <row justify="center" sx={style.w(full)}>
+      <column gap="0" data-tasks-table sx={style.padY(1).w(full).maxW(panel-max-w-lg).padX(3)}>
       <if {!hasTaskThreads()}>
         <if {!showTaskErrorAlert()}>
-          <empty-state data-tasks-empty variant="placeholder" size="sm" w="full" sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}>
-            <strong slot="title">{emptyTitle()}</strong>
+          <studio-empty data-tasks-empty title={emptyTitle()}>
             {emptyBody()}
-          </empty-state>
+          </studio-empty>
         </if>
       </if>
       <if {hasTaskThreads()}>
@@ -188,28 +168,33 @@ export default controller(() => {
               variant="solid"
               pill
               aria-label={row.statusLabel}
+              shrink="0"
               sx={style.w(2).h(2).minW(2).pad(0)}
             ></badge>
             <p grow min-w="0" sx={style.fontSize(sm).truncate()}>{row.title}</p>
             <if {!row.collapsed}>
-              <p data-actor-chip={row.actorChip} sx={style.fontSize(xs).fg(muted-foreground)}>
-                {row.actorChip}
-              </p>
-              <if {row.showDrift}>
-                <p data-drift-chip={row.driftChip} sx={style.fontSize(xs).fg(warning)}>
-                  {row.driftChip}
+              <!-- shrink=0: keep meta as a tight trailing cluster (not crushed/scattered) -->
+              <row align="center" gap="2" nowrap shrink="0" data-thread-meta>
+                <p data-actor-chip={row.actorChip} sx={style.fontSize(xs).fg(muted-foreground)}>
+                  {row.actorChip}
                 </p>
-              </if>
-              <p sx={style.fontSize(xs).fg(muted-foreground)}>{row.updatedLabel}</p>
+                <if {row.showDrift}>
+                  <p data-drift-chip={row.driftChip} sx={style.fontSize(xs).fg(warning)}>
+                    {row.driftChip}
+                  </p>
+                </if>
+                <p sx={style.fontSize(xs).fg(muted-foreground)}>{row.updatedLabel}</p>
+              </row>
             </if>
           </row>
         </for>
       </if>
     </column>
+    </row>
   </scroll-area>
 
   <!-- Side sheet: definite px height so section maxH fits under taffy (vh alone under-measured). -->
-  <dialog data-task-detail open={hasTaskSelected()} size="lg" side="end" sx={style.h(panel-max-h-md).maxH(panel-vh-md).overflow(hidden)}>
+  <dialog data-task-detail open={hasTaskSelected()} size="lg" side="end" sx={style.h(panel-max-h-lg).maxH(panel-vh-md).minH(0).overflow(hidden)}>
     <header>
       <row align="center" gap="2" nowrap justify="between" sx={style.w(full)}>
         <row align="center" gap="2" nowrap grow min-w="0">

@@ -318,14 +318,12 @@ export function parseThreads(raw: unknown[], scopePath: string | null): ThreadRo
     .map(({ id, title, status, nodeId }) => ({ id, title, status, nodeId }))
 }
 
+/**
+ * Structured tree edits are not wired to SailAuthoring yet.
+ * Return empty so the surface can hide the rail (no decorative dead buttons).
+ */
 export function structuredEditOps(): StructuredEditOp[] {
-  return [
-    { id: 'insert', label: 'Insert child or sibling…', disabled: true },
-    { id: 'wrap', label: 'Wrap in a layout…', disabled: true },
-    { id: 'setSx', label: 'Style — pad, background, radius…', disabled: true },
-    { id: 'setAttr', label: 'Set attribute — tone, gap…', disabled: true },
-    { id: 'move', label: 'Move, replace, or remove', disabled: true },
-  ]
+  return []
 }
 
 export function childrenOfSelected(

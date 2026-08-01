@@ -60,24 +60,11 @@ export default controller(() => {
   grow
   sx={style.minH(0).h(full).minW(0).overflow(hidden)}
 >
-  <row
-    data-checks-header
-    align="center"
-    gap="3"
-    shrink="0"
-    nowrap
-    justify="between"
-    sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
-  >
-    <row align="center" gap="2" nowrap grow min-w="0">
-      <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
-        Checks
-      </p>
-      <p data-error-count sx={style.fontSize(xs).fg(destructive)}>{errorCountLabel()}</p>
-      <p data-warning-count sx={style.fontSize(xs).fg(warning)}>{warningCountLabel()}</p>
-      <p data-last-run sx={style.fontSize(xs).fg(muted-foreground)}>{lastRunLabel()}</p>
-    </row>
-    <row gap="2" align="center" nowrap shrink="0">
+  <studio-page-header data-checks-header title="Checks">
+    <p data-error-count sx={style.fontSize(xs).fg(destructive)}>{errorCountLabel()}</p>
+    <p data-warning-count sx={style.fontSize(xs).fg(warning)}>{warningCountLabel()}</p>
+    <p data-last-run sx={style.fontSize(xs).fg(muted-foreground)}>{lastRunLabel()}</p>
+    <row slot="actions" gap="2" align="center" nowrap shrink="0">
       <button
         type="button"
         size="sm"
@@ -100,16 +87,9 @@ export default controller(() => {
         </button>
       </if>
     </row>
-  </row>
+  </studio-page-header>
 
-  <row
-    data-checks-toolbar
-    align="center"
-    gap="2"
-    shrink="0"
-    nowrap
-    sx={style.h(7).padX(2).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
-  >
+  <studio-toolbar data-checks-toolbar>
     <select
       data-filter-rule
       aria-label="Filter by rule"
@@ -168,7 +148,7 @@ export default controller(() => {
         </button>
       </for>
     </row>
-  </row>
+  </studio-toolbar>
 
   <if {hasChecksError()}>
     <row
@@ -201,18 +181,14 @@ export default controller(() => {
     <column gap="0" sx={style.padY(1)}>
       <if {!hasFindings()}>
         <if {!hasChecksError()}>
-          <empty-state
+          <studio-empty
             data-findings-empty
             data-checks-empty
-            variant="placeholder"
-            size="sm"
-            w="full"
-            sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}
+            title={emptyTitle()}
           >
-            <strong slot="title">{emptyTitle()}</strong>
             {emptyBody()}
             <p data-empty-checked sx={style.fontSize(xs).fg(muted-foreground)}>{emptyChecked()}</p>
-          </empty-state>
+          </studio-empty>
         </if>
       </if>
       <if {hasFindings()}>
@@ -334,7 +310,7 @@ export default controller(() => {
                       <p sx={style.fontSize(xs).fg(muted-foreground)}>Why</p>
                       <pre
                         data-why-text
-                        sx={style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm).overflow(auto).whitespace(pre-wrap)}
+                        sx={style.fontFamily(mono).fontSize(xs).bg(surface-0).pad(2).radius(sm).minH(0).maxH(40).overflow(auto).whitespace(pre-wrap)}
                       >
                         {f.whyText}
                       </pre>
@@ -420,7 +396,7 @@ export default controller(() => {
     <p>{checksStatusNote()}</p>
   </row>
 
-  <dialog data-review-dialog open={reviewOpen()} size="lg" sx={style.h(panel-max-h-md).maxH(panel-vh-md).overflow(hidden)}>
+  <dialog data-review-dialog open={reviewOpen()} size="lg" sx={style.h(panel-max-h-lg).maxH(panel-vh-md).minH(0).overflow(hidden)}>
     <header>
       <strong>Review fixes</strong>
     </header>

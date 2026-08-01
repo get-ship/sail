@@ -256,6 +256,8 @@ export async function openDocument(
     emit()
     return null
   }
+  // Own this open; supersedes in-flight refresh / prior open applies.
+  const gen = ++previewGen
   state = { ...state, loading: true, error: null, activePath: path }
   emit()
   setSailPath(path)
@@ -267,6 +269,8 @@ export async function openDocument(
       path,
       viewport: opts?.viewport,
     })
+    if (gen !== previewGen) return null
+
     const treeRaw = model.tree as { roots?: string[]; nodes?: unknown[] }
     const nodes = parseTreeNodes(treeRaw?.nodes ?? [])
     const roots = treeRaw?.roots ?? []
@@ -291,6 +295,7 @@ export async function openDocument(
     if (!sourceText) {
       sourceText = state.docs.get(path)?.source.text ?? ''
     }
+    if (gen !== previewGen) return null
 
     let checks = parseCheckDiagnostics([])
     let checksLabel = ''
@@ -314,33 +319,25 @@ export async function openDocument(
       checksLabel,
     }
 
-    let preview: PreviewState = {
-      imagePng: null,
-      regions: [],
-      dynamics: [],
-      provenance: 'Audit snapshot',
-      loading: false,
-      error: null,
-    }
+    // Open-time preview is empty; load via refreshPreview after the doc is
+    // installed so one gen-gated apply path owns screenshot settles.
+    const preview: PreviewState = emptyPreview(
+      opts?.loadPreview !== false ? { loading: true } : undefined,
+    )
 
-    if (opts?.loadPreview !== false) {
-      preview = await loadPreview(path, {
-        theme: opts?.theme,
-        mode: opts?.mode,
-        viewport: opts?.viewport,
-      })
-    }
     let threads: ThreadRow[] = []
     if (client.sailTaskList) {
       try {
-        const project =
-          path.split('/').slice(0, 2).join('/') || state.projectRoot || undefined
-        const tl = await client.sailTaskList({ project })
+        const tl = await client.sailTaskList({
+          project:
+            path.split('/').slice(0, 2).join('/') || state.projectRoot || undefined,
+        })
         threads = parseThreads(tl.tasks ?? [], path)
       } catch {
         threads = []
       }
     }
+    if (gen !== previewGen) return null
 
     const prior = state.docs.get(path)
     const docView = prior?.view ?? state.view
@@ -374,13 +371,27 @@ export async function openDocument(
       threads,
     }
     setModelRev(rev)
-    // Keep file list membership
     if (!state.files.some((f) => f.path === path)) {
       state = { ...state, files: [...state.files, pathToFileEntry(path)] }
     }
     emit()
-    return doc
+
+    // Re-check after install: a concurrent open may have taken gen/activePath.
+    // Never call refreshPreview for a stolen activePath (it reads state.activePath).
+    if (gen !== previewGen) return null
+
+    if (opts?.loadPreview !== false) {
+      await refreshPreview({
+        theme: opts?.theme,
+        mode: opts?.mode,
+        viewport: opts?.viewport,
+      })
+      // refreshPreview bumps gen; judge ownership by path, not open gen.
+      if (state.activePath !== path) return null
+    }
+    return state.docs.get(path) ?? doc
   } catch (e) {
+    if (gen !== previewGen) return null
     state = {
       ...state,
       loading: false,
@@ -391,33 +402,90 @@ export async function openDocument(
   }
 }
 
+/** Default cap so SailRender can never leave the surface on "Rendering…" forever. */
+export const PREVIEW_TIMEOUT_MS = 25_000
+
+let previewTimeoutMs = PREVIEW_TIMEOUT_MS
+/**
+ * Monotonic generation for preview loads. Each refreshPreview/openDocument bumps it;
+ * only the settle whose gen is still current may write preview state (drops stale races).
+ */
+let previewGen = 0
+
+/** Test-only: shorten (or restore) the preview hang timeout. */
+export function __setPreviewTimeoutForTests(ms: number | null): void {
+  previewTimeoutMs = ms == null ? PREVIEW_TIMEOUT_MS : ms
+}
+
+/** Test-only: current preview generation (for concurrent-refresh assertions). */
+export function __previewGenForTests(): number {
+  return previewGen
+}
+
+function emptyPreview(partial?: Partial<PreviewState>): PreviewState {
+  return {
+    imagePng: null,
+    regions: [],
+    dynamics: [],
+    provenance: 'Audit snapshot',
+    loading: false,
+    error: null,
+    ...partial,
+  }
+}
+
+/**
+ * Race a promise against a wall-clock timeout. Clears the timer in `finally`.
+ * Does **not** cancel the underlying ops work (no AbortSignal on SailRender yet);
+ * callers must use `previewGen` so late settles are ignored after supersede/retry.
+ */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  label: string,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`${label} timed out after ${ms}ms`)),
+          ms,
+        )
+      }),
+    ])
+  } finally {
+    if (timer !== undefined) clearTimeout(timer)
+  }
+}
+
 async function loadPreview(
   path: string,
   opts?: {
     theme?: string
     mode?: string
     viewport?: { width: number; height: number }
+    timeoutMs?: number
   },
 ): Promise<PreviewState> {
   if (!client) {
-    return {
-      imagePng: null,
-      regions: [],
-      dynamics: [],
-      provenance: 'Audit snapshot',
-      loading: false,
-      error: 'Studio is not connected yet.',
-    }
+    return emptyPreview({ error: 'Studio is not connected yet.' })
   }
+  const timeoutMs = opts?.timeoutMs ?? previewTimeoutMs
   try {
     const vp = opts?.viewport ?? { width: 1440, height: 900 }
-    const ret = await client.sailRenderScreenshot({
-      path,
-      theme: opts?.theme ?? 'ship',
-      mode: opts?.mode ?? 'dark',
-      viewport: `${vp.width}x${vp.height}`,
-    })
-    return {
+    const ret = await withTimeout(
+      client.sailRenderScreenshot({
+        path,
+        theme: opts?.theme ?? 'ship',
+        mode: opts?.mode ?? 'dark',
+        viewport: `${vp.width}x${vp.height}`,
+      }),
+      timeoutMs,
+      'Preview render',
+    )
+    return emptyPreview({
       imagePng: ret.imagePng,
       regions: parseRegions(ret.regions ?? []),
       dynamics: (ret.dynamics ?? []).map((d) => {
@@ -428,36 +496,82 @@ async function loadPreview(
           tag: o.tag != null ? String(o.tag) : undefined,
         }
       }),
-      provenance: 'Audit snapshot',
       loading: false,
       error: null,
-    }
+    })
   } catch (e) {
-    return {
-      imagePng: null,
-      regions: [],
-      dynamics: [],
-      provenance: 'Audit snapshot',
+    const timedOut =
+      e instanceof Error && /timed out/i.test(e.message)
+    return emptyPreview({
       loading: false,
-      error: userError(e, 'Could not render the audit snapshot — try again.'),
-    }
+      error: userError(
+        e,
+        timedOut
+          ? 'Preview timed out — try again, or open a smaller file.'
+          : 'Could not render the audit snapshot — try again.',
+      ),
+    })
   }
 }
 
+export type RefreshPreviewResult = { applied: boolean }
+
+/**
+ * Load/refresh audit screenshot for the active doc.
+ * Returns `{ applied: true }` only when this generation still owns the settle
+ * (stale concurrent refresh/open returns `{ applied: false }`).
+ */
 export async function refreshPreview(opts?: {
   theme?: string
   mode?: string
   viewport?: { width: number; height: number }
-}): Promise<void> {
+  timeoutMs?: number
+}): Promise<RefreshPreviewResult> {
   const path = state.activePath
-  if (!path) return
+  if (!path) return { applied: false }
   const doc = state.docs.get(path)
-  if (!doc) return
+  if (!doc) return { applied: false }
+  // Bump gen so a concurrent/prior refresh cannot apply after this one starts
+  // (retry and re-open supersede in-flight settles; ops may still run — see withTimeout).
+  const gen = ++previewGen
+  // Surface loading immediately so the UI never sticks on a silent hang.
+  const docsLoading = new Map(state.docs)
+  docsLoading.set(path, {
+    ...doc,
+    preview: {
+      ...doc.preview,
+      loading: true,
+      error: null,
+    },
+  })
+  state = { ...state, docs: docsLoading }
+  emit()
+
   const preview = await loadPreview(path, opts)
+  if (gen !== previewGen) {
+    // Dropped settle: clear sticky loading only when focus moved away so a
+    // newer same-path refresh (still loading) is not clobbered.
+    if (state.activePath !== path) {
+      const stale = state.docs.get(path)
+      if (stale?.preview.loading) {
+        const docs = new Map(state.docs)
+        docs.set(path, {
+          ...stale,
+          preview: { ...stale.preview, loading: false },
+        })
+        state = { ...state, docs }
+        emit()
+      }
+    }
+    return { applied: false }
+  }
+  const latest = state.docs.get(path)
+  if (!latest || state.activePath !== path) return { applied: false }
   const docs = new Map(state.docs)
-  docs.set(path, { ...doc, preview })
+  docs.set(path, { ...latest, preview })
   state = { ...state, docs }
   emit()
+  return { applied: true }
 }
 
 /** Select node from explorer / preview / source — shared shell selection. */
@@ -815,6 +929,8 @@ export function viewFlags(view: DocViewId = state.view) {
 export function __resetEditForTests(): void {
   state = emptyState()
   client = null
+  previewTimeoutMs = PREVIEW_TIMEOUT_MS
+  previewGen = 0
   unsubSelection?.()
   unsubSelection = null
   listeners.clear()

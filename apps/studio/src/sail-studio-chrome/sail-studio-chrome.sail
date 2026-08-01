@@ -1,7 +1,8 @@
 <!--
-  <sail-studio-chrome> — shell: activity bar + status bar + route slot.
+  <sail-studio-chrome> — shell: activity rail + status + route slot.
   Surfaces own sidebar + main. VSCode grammar: density, left-accent active.
-  Ban-clean: no div/span; layout keywords + L1 only.
+  Stable zones: rail/status fixed; surface slot minH(0)/grow so leaf remounts
+  do not shift chrome. Brand/header rhythm: h(8). Ban-clean: layout + L1 only.
 -->
 <controller>
 import { createShellPage } from '../shell/shell-page-vm'
@@ -42,23 +43,10 @@ export default controller((ctx) => {
   w="full"
   nowrap
   align="stretch"
-  sx={style.minH(screen).h(screen).w(full).bg(background).fg(foreground).fontFamily(body).fontSize(sm).overflow(hidden)}
+  sx={style.minH(screen).h(screen).w(full).minW(0).bg(background).fg(foreground).fontFamily(body).fontSize(sm).overflow(hidden)}
 >
-  <column
-    data-studio-rail
-    shrink="0"
-    gap="1"
-    align="center"
-    on:click={onRailClick}
-    sx={style.w(12).bg(surface-0).borderRWidth(1).borderR(border).padY(2)}
-  >
-    <center
-      shrink="0"
-      aria-hidden="true"
-      sx={style.w(8).h(8).radius(md).bg(primary).fg(primary-foreground).fontSize(xs).fontWeight(bold)}
-    >
-      S
-    </center>
+  <!-- Activity rail: single width token w(12) owned by studio-activity-bar -->
+  <studio-activity-bar data-studio-rail on:click={onRailClick}>
     <for {rail()} as="item" key={item.key}>
       <tooltip content={item.label} placement="right">
         <a
@@ -71,31 +59,34 @@ export default controller((ctx) => {
           sx={style.w(10).h(10).radius(md).fg(muted-foreground).borderLWidth(2).borderL(transparent).when({ hover: style.bg(hover-bg).fg(foreground) }).when({ current: style.bg(surface-2).fg(foreground).borderL(primary) })}
         >
           <center sx={style.w(full).h(full)}>
-            <icon name={item.icon} size="sm" label={item.label}></icon>
+            <!-- icon unlabeled: link aria-label is the single accessible name -->
+            <icon name={item.icon} size="sm"></icon>
           </center>
         </a>
       </tooltip>
     </for>
-    <column grow></column>
-    <if {showExit}>
-      <tooltip content="Back to app (Esc)" placement="right">
-        <button
-          type="button"
-          data-exit-studio
-          aria-label="Back to app (Esc)"
-          title="Back to app (Esc)"
-          on:click={onExitStudio}
-          sx={style.w(10).h(10).radius(md).fg(muted-foreground).borderLWidth(2).borderL(transparent).when({ hover: style.bg(hover-bg).fg(foreground) })}
-        >
-          <center sx={style.w(full).h(full)}>
-            <icon name="log-out" size="sm" label="Back to app"></icon>
-          </center>
-        </button>
-      </tooltip>
-    </if>
-  </column>
+    <column slot="footer" shrink="0" align="center" gap="0" sx={style.padB(1)}>
+      <if {showExit}>
+        <tooltip content="Back to app (Esc)" placement="right">
+          <button
+            type="button"
+            data-exit-studio
+            aria-label="Back to app (Esc)"
+            title="Back to app (Esc)"
+            on:click={onExitStudio}
+            sx={style.w(10).h(10).radius(md).fg(muted-foreground).borderLWidth(2).borderL(transparent).when({ hover: style.bg(hover-bg).fg(foreground) })}
+          >
+            <center sx={style.w(full).h(full)}>
+              <icon name="log-out" size="sm"></icon>
+            </center>
+          </button>
+        </tooltip>
+      </if>
+    </column>
+  </studio-activity-bar>
 
-  <column grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden).h(full)}>
+  <!-- Main column: batch (optional) + surface (grow) + status (fixed). -->
+  <column grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden).h(full).minW(0)}>
     <if {hasBatch()}>
       <row
         data-batch-tray
@@ -103,7 +94,7 @@ export default controller((ctx) => {
         gap="2"
         shrink="0"
         nowrap
-        sx={style.padX(3).padY(1).borderBWidth(1).borderB(border-subtle).bg(surface-1).h(7)}
+        sx={style.padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1).h(7).minH(7)}
       >
         <badge tone="primary" size="sm" variant="soft" data-batch-count>
           {batchCountLabel()}
@@ -138,7 +129,12 @@ export default controller((ctx) => {
       </row>
     </if>
 
-    <column grow data-studio-surface sx={style.minH(0).basis(0).overflow(hidden).h(full).minW(0)}>
+    <column
+      grow
+      data-studio-surface
+      min-w="0"
+      sx={style.minH(0).basis(0).overflow(hidden).h(full).minW(0)}
+    >
       <slot name="route"></slot>
     </column>
 
@@ -149,7 +145,7 @@ export default controller((ctx) => {
       shrink="0"
       nowrap
       min-w="0"
-      sx={style.h(6).padX(3).borderTWidth(1).borderT(border).bg(surface-0).fontSize(xs).fg(muted-foreground).minW(0).overflow(hidden)}
+      sx={style.h(6).minH(6).padX(3).borderTWidth(1).borderT(border).bg(surface-0).fontSize(xs).fg(muted-foreground).minW(0).overflow(hidden)}
     >
       <p grow min-w="0" sx={style.fontFamily(mono).minW(0).truncate()}>{statusLine()}</p>
       <p data-save-status shrink="0" sx={style.fontSize(xs)}>{saveStatusLabel()}</p>

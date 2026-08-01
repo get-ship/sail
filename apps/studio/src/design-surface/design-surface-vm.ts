@@ -91,6 +91,7 @@ type ContrastUi = {
   tone: 'success' | 'destructive'
 }
 
+/** Controller API for `<design-surface>` — return this factory directly (no re-export soup). */
 export function createDesignSurface() {
   const groupRows = signal<GroupUi[]>([])
   const decisionRows = signal<DecisionUi[]>([])
@@ -426,3 +427,6 @@ export function createDesignSurface() {
     onTokenRowActivate,
   }
 }
+
+/** Alias preferred by the composition authoring model. */
+export const createDesignSurfaceController = createDesignSurface

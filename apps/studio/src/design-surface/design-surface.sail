@@ -1,54 +1,36 @@
 <!--
-  <design-surface> — five design decisions + token power mode + specimen.
+  <design-surface> — three-pane design workbench.
   Front door: Brand color · Type · Spacing density · Corners · Icons.
-  Power mode: full token groups. Ban-clean: no div/span; layout + L1 only.
+  Primary: decisions + brand · Middle: token power mode · Right: specimen.
+  Ban-clean: no div/span; layout + L1 only.
 -->
 <controller>
 import { createDesignSurface } from './design-surface-vm'
 export default controller(() => {
   const vm = createDesignSurface()
   return {
-    groupRows: vm.groupRows,
-    decisionRows: vm.decisionRows,
-    tokenRows: vm.tokenRows,
-    hasTokenRows: vm.hasTokenRows,
-    designThemeOpts: vm.designThemeOpts,
-    designThemeId: vm.designThemeId,
-    designForkLabel: vm.designForkLabel,
-    designOverridesLabel: vm.designOverridesLabel,
-    designThemeLabel: vm.designThemeLabel,
-    activeGroupLabel: vm.activeGroupLabel,
-    activeGroupId: vm.activeGroupId,
-    tokenSearchVal: vm.tokenSearchVal,
-    isSearching: vm.isSearching,
-    overridesOnlyOn: vm.overridesOnlyOn,
-    designStatusNote: vm.designStatusNote,
-    designError: vm.designError,
-    hasDesignError: vm.hasDesignError,
-    designWriteError: vm.designWriteError,
-    hasDesignWriteError: vm.hasDesignWriteError,
-    clampNote: vm.clampNote,
-    hasClampNote: vm.hasClampNote,
-    diffRows: vm.diffRows,
-    hasDiff: vm.hasDiff,
-    tokenCountLabel: vm.tokenCountLabel,
-    brandHex: vm.brandHex,
-    brandRamp: vm.brandRamp,
-    contrastRows: vm.contrastRows,
-    hasContrastFail: vm.hasContrastFail,
-    contrastFailLabel: vm.contrastFailLabel,
-    isBrandDecision: vm.isBrandDecision,
-    saveReviewOpen: vm.saveReviewOpen,
-    blastLabel: vm.blastLabel,
-    saveButtonLabel: vm.saveButtonLabel,
-    canConfirmSave: vm.canConfirmSave,
-    onDecisionClick: (e: Event) => vm.onDecisionClick(e),
+    groupRows: vm.groupRows, decisionRows: vm.decisionRows, tokenRows: vm.tokenRows,
+    hasTokenRows: vm.hasTokenRows, designThemeOpts: vm.designThemeOpts,
+    designThemeId: vm.designThemeId, designForkLabel: vm.designForkLabel,
+    designOverridesLabel: vm.designOverridesLabel, designThemeLabel: vm.designThemeLabel,
+    activeGroupLabel: vm.activeGroupLabel, activeGroupId: vm.activeGroupId,
+    tokenSearchVal: vm.tokenSearchVal, isSearching: vm.isSearching,
+    overridesOnlyOn: vm.overridesOnlyOn, designStatusNote: vm.designStatusNote,
+    designError: vm.designError, hasDesignError: vm.hasDesignError,
+    designWriteError: vm.designWriteError, hasDesignWriteError: vm.hasDesignWriteError,
+    clampNote: vm.clampNote, hasClampNote: vm.hasClampNote, diffRows: vm.diffRows,
+    hasDiff: vm.hasDiff, tokenCountLabel: vm.tokenCountLabel, brandHex: vm.brandHex,
+    brandRamp: vm.brandRamp, contrastRows: vm.contrastRows,
+    hasContrastFail: vm.hasContrastFail, contrastFailLabel: vm.contrastFailLabel,
+    isBrandDecision: vm.isBrandDecision, saveReviewOpen: vm.saveReviewOpen,
+    blastLabel: vm.blastLabel, saveButtonLabel: vm.saveButtonLabel,
+    canConfirmSave: vm.canConfirmSave, onDecisionClick: (e: Event) => vm.onDecisionClick(e),
     onGroupClick: (e: Event) => vm.onGroupClick(e),
-    onRetryDesign: () => vm.onRetryDesign(),
+    onRetryDesign: (e: Event) => vm.onRetryDesign(e),
     onDesignTheme: (e: Event) => vm.onDesignTheme(e),
     onSaveTheme: () => vm.onSaveTheme(),
     onCancelSaveReview: () => vm.onCancelSaveReview(),
-    onExportDiff: () => vm.onExportDiff(),
+    onExportDiff: (e: Event) => vm.onExportDiff(e),
     onPreviewInApp: () => vm.onPreviewInApp(),
     onTokenSearch: (e: Event) => vm.onTokenSearch(e),
     onOverridesOnly: (e: Event) => vm.onOverridesOnly(e),
@@ -77,13 +59,18 @@ export default controller(() => {
     shrink="0"
     nowrap
     justify="between"
-    sx={style.h(8).maxH(8).padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1).minW(0).overflow(hidden)}
+    sx={style.minH(10).h(auto).padX(3).padY(2).borderBWidth(1).borderB(border-subtle).bg(surface-1).minW(0)}
   >
-    <row align="center" gap="2" nowrap grow min-w="0" sx={style.minW(0).minH(0).maxH(full).overflow(hidden)}>
+    <row align="center" gap="2" nowrap grow min-w="0" sx={style.minW(0).minH(0)}>
       <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
         Design
       </p>
-      <select data-design-theme on:change={onDesignTheme} value={designThemeId()} w="28" size="sm" sx={style.maxH(6)}>
+      <select
+        data-design-theme
+        on:change={onDesignTheme}
+        value={designThemeId()}
+        sx={style.minW(40)}
+      >
         <for {designThemeOpts()} as="t" key={t.key}>
           <option value={t.id}>{t.label}</option>
         </for>
@@ -98,10 +85,9 @@ export default controller(() => {
         {designOverridesLabel()}
       </p>
     </row>
-    <row gap="2" align="center" nowrap shrink="0" sx={style.minW(0)}>
+    <row gap="2" align="center" nowrap shrink="0">
       <button
         type="button"
-        size="sm"
         variant="ghost"
         tone="muted"
         data-preview-in-app
@@ -111,7 +97,6 @@ export default controller(() => {
       </button>
       <button
         type="button"
-        size="sm"
         variant="ghost"
         tone="muted"
         data-export-diff
@@ -119,7 +104,7 @@ export default controller(() => {
       >
         Copy changes
       </button>
-      <button type="button" size="sm" tone="primary" data-save-theme on:click={onSaveTheme}>
+      <button type="button" tone="primary" data-save-theme on:click={onSaveTheme}>
         {saveButtonLabel()}
       </button>
     </row>
@@ -174,90 +159,64 @@ export default controller(() => {
     </row>
   </if>
 
-  <scroll-area
-    data-decision-bar
-    shrink="0"
-    sx={style.maxH(16).borderBWidth(1).borderB(border-subtle).bg(surface-0).minW(0)}
+  <!-- Three-pane workbench: decisions+brand | token power | specimen -->
+  <row
+    data-design-workbench
+    grow
+    gap="0"
+    nowrap
+    align="stretch"
+    sx={style.minH(0).basis(0).minW(0)}
   >
-    <row
-      gap="2"
-      align="stretch"
-      nowrap
-      on:click={onDecisionClick}
-      sx={style.padX(3).padY(2).minW(0)}
-    >
-      <for {decisionRows()} as="d" key={d.key}>
-        <button
-          type="button"
-          size="sm"
-          variant={d.active ? 'soft' : 'ghost'}
-          tone={d.tone}
-          data-decision={d.id}
-          data-active={d.active ? 'true' : 'false'}
-          sx={style.minW(28).h(12).maxH(12).padX(3).radius(md).when({ hover: style.bg(hover-bg) })}
-        >
-          <column gap="1" align="start" sx={style.w(full).maxH(10).overflow(hidden)}>
-            <row gap="2" align="center" nowrap>
-              <if {d.isColor}>
-                <center
-                  data-swatch={d.swatch}
-                  shrink="0"
-                  sx={style.w(3).h(3).radius(full).borderWidth(1).border(border-subtle)}
-                  aria-hidden="true"
-                ></center>
-              </if>
-              <p sx={style.fontSize(sm).fontWeight(semibold).truncate()}>{d.label}</p>
-            </row>
-            <p sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{d.summary}</p>
-          </column>
-        </button>
-      </for>
-    </row>
-  </scroll-area>
-
-  <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0)}>
+    <!-- PRIMARY: decisions + brand controls (usable width, not starved) -->
     <scroll-area
-      data-group-rail
+      data-decision-bar
       data-decisions-rail
+      data-primary-pane
       shrink="0"
-      sx={style.w(44).minH(0).h(full).borderRWidth(1).borderR(border-subtle).bg(surface-1)}
+      sx={style.w(56).minW(52).minH(0).h(full).borderRWidth(1).borderR(border-subtle).bg(surface-1)}
     >
       <column gap="0">
         <row align="center" sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle)}>
           <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
-            All tokens
+            Decisions
           </p>
         </row>
-        <column gap="0" on:click={onGroupClick} sx={style.padY(1)}>
-          <for {groupRows()} as="g" key={g.key}>
+        <column gap="2" on:click={onDecisionClick} sx={style.pad(3)}>
+          <for {decisionRows()} as="d" key={d.key}>
             <button
               type="button"
-              size="sm"
-              variant={g.active ? 'soft' : 'ghost'}
-              tone={g.tone}
-              data-group={g.id}
-              data-active={g.active ? 'true' : 'false'}
-              sx={style.w(full).h(6).padX(3).radius(none).when({ hover: style.bg(hover-bg) })}
+              variant={d.active ? 'soft' : 'ghost'}
+              tone={d.tone}
+              data-decision={d.id}
+              data-active={d.active ? 'true' : 'false'}
+              sx={style.w(full).minH(14).h(auto).padX(3).padY(3).radius(md).whitespace(normal).leading(snug).when({ hover: style.bg(hover-bg) })}
             >
-              <row gap="2" align="center" grow nowrap>
-                <p grow min-w="0" sx={style.truncate().fontSize(sm)}>{g.label}</p>
-                <p sx={style.fontSize(xs).fg(muted-foreground)}>{g.count}</p>
-              </row>
+              <column gap="1" align="start" sx={style.w(full).minW(0)}>
+                <row gap="2" align="center" nowrap sx={style.w(full).minW(0)}>
+                  <if {d.isColor}>
+                    <center
+                      data-swatch={d.swatch}
+                      shrink="0"
+                      sx={style.w(4).h(4).radius(full).borderWidth(1).border(border-subtle)}
+                      aria-hidden="true"
+                    ></center>
+                  </if>
+                  <p sx={style.fontSize(sm).fontWeight(semibold).textAlign(start).whitespace(normal)}>{d.label}</p>
+                </row>
+                <p sx={style.fontSize(xs).fg(muted-foreground).textAlign(start).whitespace(normal)}>{d.summary}</p>
+              </column>
             </button>
           </for>
         </column>
-      </column>
-    </scroll-area>
 
-    <scroll-area
-      data-token-editor
-      grow
-      min-w="0"
-      sx={style.minH(0).h(full).basis(0).minW(0).bg(surface-0)}
-    >
-      <column gap="0" sx={style.minW(0)}>
         <if {isBrandDecision()}>
-          <column data-panel="brand" data-brand-panel gap="3" sx={style.pad(3).borderBWidth(1).borderB(border-subtle)}>
+          <column
+            data-panel="brand"
+            data-brand-panel
+            gap="3"
+            sx={style.pad(3).borderTWidth(1).borderT(border-subtle)}
+          >
             <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
               Brand color
             </p>
@@ -272,11 +231,11 @@ export default controller(() => {
               <column gap="1" grow min-w="0">
                 <p sx={style.fontSize(sm).fontWeight(medium)}>Pick one brand color</p>
                 <p sx={style.fontSize(xs).fg(muted-foreground)}>
-                  The scale below updates live. Contrast failures are flagged before you save.
+                  Scale updates live. Contrast failures flag before save.
                 </p>
               </column>
             </row>
-            <row data-brand-ramp gap="2" align="center" nowrap sx={style.overflow(auto)}>
+            <row data-brand-ramp gap="2" align="center" nowrap sx={style.overflow(auto).minW(0)}>
               <for {brandRamp()} as="s" key={s.key}>
                 <column gap="1" align="center" sx={style.minW(10)}>
                   <center
@@ -290,10 +249,7 @@ export default controller(() => {
               </for>
             </row>
             <column data-contrast-flags gap="1">
-              <p
-                sx={style.fontSize(xs).fontWeight(medium)}
-                data-contrast-summary
-              >
+              <p sx={style.fontSize(xs).fontWeight(medium)} data-contrast-summary>
                 {contrastFailLabel()}
               </p>
               <for {contrastRows()} as="c" key={c.key}>
@@ -306,165 +262,223 @@ export default controller(() => {
             </column>
           </column>
         </if>
-
-        <row
-          align="center"
-          gap="2"
-          nowrap
-          shrink="0"
-          sx={style.h(7).padX(2).borderBWidth(1).borderB(border-subtle).minW(0)}
-        >
-          <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
-            {activeGroupLabel()}
-          </p>
-          <p sx={style.fontSize(xs).fg(muted-foreground)}>{tokenCountLabel()}</p>
-          <input
-            type="search"
-            data-token-search
-            placeholder="Search all tokens…"
-            value={tokenSearchVal()}
-            on:input={onTokenSearch}
-            grow
-            size="sm"
-          />
-          <separator orientation="vertical" sx={style.h(4)} />
-          <label sx={style.fontSize(xs).fg(muted-foreground)} data-overrides-only>
-            <input type="checkbox" checked={overridesOnlyOn()} on:change={onOverridesOnly} />
-            Changed only
-          </label>
-        </row>
-        <p data-design-helper sx={style.fontSize(xs).fg(muted-foreground).padX(2).padB(1)}>
-          Search any token, or show only values you've changed.
-        </p>
-
-        <if {!hasTokenRows()}>
-          <empty-state variant="placeholder" size="sm" w="full" data-token-empty sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}>
-            <strong slot="title">No tokens match</strong>
-            Clear search or the changed-only filter.
-          </empty-state>
-        </if>
-
-        <column gap="0" data-token-list on:click={onTokenRowActivate} sx={style.padY(1)}>
-          <for {tokenRows()} as="tok" key={tok.key}>
-            <row
-              data-token-path={tok.path}
-              data-token-group={tok.groupId}
-              data-dirty={tok.dirty ? 'true' : 'false'}
-              gap="2"
-              align="center"
-              nowrap
-              sx={style.h(7).padX(3).minW(0).when({ hover: style.bg(hover-bg) })}
-            >
-              <if {tok.isColor}>
-                <sail-color-picker
-                  size="sm"
-                  data-token-path={tok.path}
-                  value={tok.pickerHex}
-                  on:sail-change={onTokenColor}
-                ></sail-color-picker>
-              </if>
-              <column gap="0" grow min-w="0">
-                <p sx={style.fontSize(sm).truncate()}>{tok.label}</p>
-                <p sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{tok.display}</p>
-              </column>
-              <if {tok.showGroup}>
-                <p sx={style.fontSize(xs).fg(muted-foreground)}>{tok.groupLabel}</p>
-              </if>
-              <if {tok.isColor}>
-                <button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  data-color-edit
-                  data-token-path={tok.path}
-                  on:click={onColorEditToggle}
-                >
-                  Raw
-                </button>
-              </if>
-              <if {tok.isDim}>
-                <input
-                  type="range"
-                  min={tok.min}
-                  max={tok.max}
-                  step={tok.step}
-                  value={tok.num}
-                  data-token-path={tok.path}
-                  data-token-unit={tok.unit}
-                  on:input={onTokenNum}
-                  aria-label={tok.label}
-                />
-                <p sx={style.fontSize(xs).fontFamily(mono).w(10).truncate()}>{tok.display}</p>
-              </if>
-              <if {tok.isText}>
-                <input
-                  type="text"
-                  data-token-path={tok.path}
-                  value={tok.value}
-                  on:change={onTokenText}
-                  aria-label={tok.label}
-                  w="32"
-                  size="sm"
-                />
-              </if>
-              <if {tok.dirty}>
-                <button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  data-token-reset
-                  data-token-path={tok.path}
-                  on:click={onTokenReset}
-                >
-                  Reset
-                </button>
-              </if>
-            </row>
-            <if {tok.colorEditOpen}>
-              <row gap="2" align="center" data-color-raw-edit sx={style.padX(3).padB(1)}>
-                <p sx={style.fontSize(xs).fg(muted-foreground)}>Raw value</p>
-                <input
-                  type="text"
-                  data-token-path={tok.path}
-                  value={tok.value}
-                  on:change={onTokenText}
-                  aria-label={`Raw value for ${tok.label}`}
-                  grow
-                  size="sm"
-                />
-              </row>
-            </if>
-          </for>
-        </column>
-
-        <if {hasDiff()}>
-          <column
-            data-design-diff
-            gap="2"
-            sx={style.fontSize(xs).pad(2).bg(surface-1).radius(sm)}
-          >
-            <strong>Changes</strong>
-            <for {diffRows()} as="r" key={r.key}>
-              <row data-diff-row gap="2" align="center" nowrap>
-                <if {r.isColor}>
-                  <center
-                    data-swatch={r.toValue}
-                    shrink="0"
-                    sx={style.w(4).h(4).radius(sm).borderWidth(1).border(border-subtle)}
-                    aria-hidden="true"
-                  ></center>
-                </if>
-                <p grow min-w="0" sx={style.truncate()}>
-                  {r.label}: {r.fromDisplay} → {r.toDisplay}
-                </p>
-              </row>
-            </for>
-          </column>
-        </if>
       </column>
     </scroll-area>
 
-    <design-inspector shrink="0" sx={style.w(64).minH(0).h(full)} />
+    <!-- MIDDLE / SECONDARY: token power mode (scrolls alone) -->
+    <column
+      data-token-power
+      data-secondary-pane
+      grow
+      min-w="0"
+      gap="0"
+      sx={style.minH(0).h(full).basis(0).minW(0).bg(surface-0)}
+    >
+      <row grow gap="0" nowrap align="stretch" sx={style.minH(0).basis(0).minW(0)}>
+        <scroll-area
+          data-group-rail
+          shrink="0"
+          sx={style.w(40).minW(36).minH(0).h(full).borderRWidth(1).borderR(border-subtle).bg(surface-1)}
+        >
+          <column gap="0">
+            <row align="center" sx={style.h(7).padX(3).borderBWidth(1).borderB(border-subtle)}>
+              <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+                All tokens
+              </p>
+            </row>
+            <column gap="1" on:click={onGroupClick} sx={style.padY(2).padX(1)}>
+              <for {groupRows()} as="g" key={g.key}>
+                <button
+                  type="button"
+                  variant={g.active ? 'soft' : 'ghost'}
+                  tone={g.tone}
+                  data-group={g.id}
+                  data-active={g.active ? 'true' : 'false'}
+                  sx={style.w(full).minH(9).h(auto).padX(3).padY(2).radius(md).when({ hover: style.bg(hover-bg) })}
+                >
+                  <row gap="2" align="center" grow nowrap sx={style.w(full).minW(0)}>
+                    <p grow min-w="0" sx={style.fontSize(sm).textAlign(start).whitespace(normal)}>{g.label}</p>
+                    <p shrink="0" sx={style.fontSize(xs).fg(muted-foreground)}>{g.count}</p>
+                  </row>
+                </button>
+              </for>
+            </column>
+          </column>
+        </scroll-area>
+
+        <scroll-area
+          data-token-editor
+          grow
+          min-w="0"
+          sx={style.minH(0).h(full).basis(0).minW(0).bg(surface-0)}
+        >
+          <column gap="0" sx={style.minW(0)}>
+            <row
+              align="center"
+              gap="2"
+              nowrap
+              shrink="0"
+              sx={style.h(7).padX(2).borderBWidth(1).borderB(border-subtle).minW(0)}
+            >
+              <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+                {activeGroupLabel()}
+              </p>
+              <p sx={style.fontSize(xs).fg(muted-foreground)}>{tokenCountLabel()}</p>
+              <input
+                type="search"
+                data-token-search
+                placeholder="Search all tokens…"
+                value={tokenSearchVal()}
+                on:input={onTokenSearch}
+                grow
+                size="sm"
+              />
+              <separator orientation="vertical" sx={style.h(4)} />
+              <label sx={style.fontSize(xs).fg(muted-foreground)} data-overrides-only>
+                <input type="checkbox" checked={overridesOnlyOn()} on:change={onOverridesOnly} />
+                Changed only
+              </label>
+            </row>
+            <p data-design-helper sx={style.fontSize(xs).fg(muted-foreground).padX(2).padB(1)}>
+              Search any token, or show only values you've changed.
+            </p>
+
+            <if {!hasTokenRows()}>
+              <empty-state variant="placeholder" size="sm" w="full" data-token-empty sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}>
+                <strong slot="title">No tokens match</strong>
+                Clear search or the changed-only filter.
+              </empty-state>
+            </if>
+
+            <column gap="2" data-token-list on:click={onTokenRowActivate} sx={style.padY(2).padX(2)}>
+              <for {tokenRows()} as="tok" key={tok.key}>
+                <row
+                  data-token-path={tok.path}
+                  data-token-group={tok.groupId}
+                  data-dirty={tok.dirty ? 'true' : 'false'}
+                  gap="3"
+                  align="center"
+                  nowrap
+                  sx={style.minH(12).h(auto).padX(3).padY(3).radius(md).minW(0).when({ hover: style.bg(hover-bg) })}
+                >
+                  <if {tok.isColor}>
+                    <sail-color-picker
+                      size="md"
+                      shrink="0"
+                      data-token-path={tok.path}
+                      value={tok.pickerHex}
+                      on:sail-change={onTokenColor}
+                    ></sail-color-picker>
+                  </if>
+                  <column gap="1" grow min-w="0" sx={style.minW(0)}>
+                    <p sx={style.fontSize(sm).fontWeight(medium).whitespace(normal)}>{tok.label}</p>
+                    <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono).whitespace(normal)}>{tok.display}</p>
+                  </column>
+                  <if {tok.showGroup}>
+                    <p shrink="0" sx={style.fontSize(xs).fg(muted-foreground)}>{tok.groupLabel}</p>
+                  </if>
+                  <if {tok.isColor}>
+                    <button
+                      type="button"
+                      variant="ghost"
+                      shrink="0"
+                      data-color-edit
+                      data-token-path={tok.path}
+                      on:click={onColorEditToggle}
+                    >
+                      Raw
+                    </button>
+                  </if>
+                  <if {tok.isDim}>
+                    <input
+                      type="range"
+                      min={tok.min}
+                      max={tok.max}
+                      step={tok.step}
+                      value={tok.num}
+                      data-token-path={tok.path}
+                      data-token-unit={tok.unit}
+                      on:input={onTokenNum}
+                      aria-label={tok.label}
+                      grow
+                      sx={style.minW(24).maxW(48)}
+                    />
+                    <p shrink="0" sx={style.fontSize(xs).fontFamily(mono).minW(12)}>{tok.display}</p>
+                  </if>
+                  <if {tok.isText}>
+                    <input
+                      type="text"
+                      data-token-path={tok.path}
+                      value={tok.value}
+                      on:change={onTokenText}
+                      aria-label={tok.label}
+                      sx={style.minW(32)}
+                    />
+                  </if>
+                  <if {tok.dirty}>
+                    <button
+                      type="button"
+                      variant="ghost"
+                      shrink="0"
+                      data-token-reset
+                      data-token-path={tok.path}
+                      on:click={onTokenReset}
+                    >
+                      Reset
+                    </button>
+                  </if>
+                </row>
+                <if {tok.colorEditOpen}>
+                  <row gap="2" align="center" data-color-raw-edit sx={style.padX(3).padB(2)}>
+                    <p sx={style.fontSize(xs).fg(muted-foreground)}>Raw value</p>
+                    <input
+                      type="text"
+                      data-token-path={tok.path}
+                      value={tok.value}
+                      on:change={onTokenText}
+                      aria-label={`Raw value for ${tok.label}`}
+                      grow
+                    />
+                  </row>
+                </if>
+              </for>
+            </column>
+
+            <if {hasDiff()}>
+              <column
+                data-design-diff
+                gap="2"
+                sx={style.fontSize(xs).pad(2).bg(surface-1).radius(sm)}
+              >
+                <strong>Changes</strong>
+                <for {diffRows()} as="r" key={r.key}>
+                  <row data-diff-row gap="2" align="center" nowrap>
+                    <if {r.isColor}>
+                      <center
+                        data-swatch={r.toValue}
+                        shrink="0"
+                        sx={style.w(4).h(4).radius(sm).borderWidth(1).border(border-subtle)}
+                        aria-hidden="true"
+                      ></center>
+                    </if>
+                    <p grow min-w="0" sx={style.truncate()}>
+                      {r.label}: {r.fromDisplay} → {r.toDisplay}
+                    </p>
+                  </row>
+                </for>
+              </column>
+            </if>
+          </column>
+        </scroll-area>
+      </row>
+    </column>
+
+    <!-- RIGHT: specimen always visible; min width so never crushed -->
+    <design-inspector
+      data-specimen-pane
+      shrink="0"
+      sx={style.w(64).minW(56).minH(0).h(full)}
+    />
   </row>
 
   <row

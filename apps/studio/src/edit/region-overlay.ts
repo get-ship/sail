@@ -5,8 +5,23 @@ export type RegionBoxUi = {
   top: string
   width: string
   height: string
+  /** Selection (explorer / click). Takes visual precedence over hover. */
   selected: boolean
+  /** Pointer hover on the static frame (may coincide with selected). */
+  hover: boolean
   key: string
+}
+
+function boxStyle(box: RegionBoxUi): string {
+  // Selected: solid primary fill. Hover-only: dashed outline, lighter fill.
+  const selected = box.selected
+  const border = selected
+    ? '1px solid var(--primary)'
+    : '1px dashed color-mix(in oklab,var(--primary) 70%,transparent)'
+  const bg = selected
+    ? 'color-mix(in oklab,var(--primary) 18%,transparent)'
+    : 'color-mix(in oklab,var(--primary) 10%,transparent)'
+  return `position:absolute;left:${box.left};top:${box.top};width:${box.width};height:${box.height};border:${border};border-radius:4px;box-sizing:border-box;background:${bg}`
 }
 
 /** Paint only selected/hover boxes (no full mesh of outlines). */
@@ -23,12 +38,13 @@ export function paintRegionOverlay(boxes: RegionBoxUi[]): void {
   }
   layer.replaceChildren()
   for (const box of boxes) {
-    if (!box.selected) continue
+    if (!box.selected && !box.hover) continue
     const el = document.createElement('div')
     el.dataset.regionBox = ''
     el.dataset.nodeId = box.id
-    el.dataset.selected = 'true'
-    el.style.cssText = `position:absolute;left:${box.left};top:${box.top};width:${box.width};height:${box.height};border:1px solid var(--primary);border-radius:4px;box-sizing:border-box;background:color-mix(in oklab,var(--primary) 18%,transparent)`
+    if (box.selected) el.dataset.selected = 'true'
+    if (box.hover) el.dataset.hover = 'true'
+    el.style.cssText = boxStyle(box)
     layer.appendChild(el)
   }
 }

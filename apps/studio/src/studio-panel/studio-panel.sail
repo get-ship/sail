@@ -1,0 +1,42 @@
+<!--
+  <studio-panel> — bordered workbench panel (header + body + footer).
+  Header h(8) matches shell header rhythm (sidebar, brand, edit tabs).
+  Props: title. Slots: header (overrides title row), actions, default, footer.
+  Ban-clean: layout keywords + L1 only (bordered column, not a parallel system).
+-->
+<scope>
+  props: {
+    title = ''
+  }
+</scope>
+
+<column
+  data-studio-panel
+  gap="0"
+  grow
+  min-w="0"
+  sx={style.minH(0).minW(0).h(full).borderWidth(1).border(border-subtle).radius(md).bg(surface-1).overflow(hidden)}
+>
+  <slot name="header">
+    <row
+      data-studio-panel-header
+      align="center"
+      gap="2"
+      shrink="0"
+      nowrap
+      justify="between"
+      sx={style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle)}
+    >
+      <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+        {title()}
+      </p>
+      <row align="center" gap="1" nowrap shrink="0">
+        <slot name="actions"></slot>
+      </row>
+    </row>
+  </slot>
+  <column data-studio-panel-body grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden)}>
+    <slot></slot>
+  </column>
+  <slot name="footer"></slot>
+</column>

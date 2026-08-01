@@ -6,18 +6,22 @@ import { fileURLToPath } from 'node:url'
 import { __resetSelectionForTests, getSelection, getShellState } from '@ship/sail-studio-shell'
 import { createCliOpsClient } from '../src/edit/ops-adapter-cli'
 import {
+  __previewGenForTests,
   __resetEditForTests,
+  __setPreviewTimeoutForTests,
   activeDoc,
   applyModelUpdate,
   applySourceEditorScroll,
   applySourceScroll,
   bindEditSelection,
   elementRows,
+  elementSailTreeNodes,
   getEditState,
   hitTestRegion,
   hoverPreviewAt,
   openDocument,
   parseTreeNodes,
+  refreshPreview,
   saveActiveSource,
   scrollSourceEditor,
   selectEditNode,
@@ -27,6 +31,8 @@ import {
   setView,
   subscribeEdit,
   pathToLiveRoute,
+  pathToRoutePath,
+  routeSailTreeNodes,
   fileTreeGroups,
   fileSailTreeNodes,
   nextTreeFocus,
@@ -35,8 +41,17 @@ import {
   uiAnatomy,
   uiElementRows,
   uiStateCards,
+  uiStructuredOps,
   type OpsClient,
 } from '../src/edit'
+import {
+  buildRegionBoxes,
+  ensurePreviewOnce,
+  regionMetaLabel,
+  retryPreviewOnce,
+  type PreviewFlight,
+} from '../src/edit-surface/preview-helpers'
+import { paintRegionOverlay } from '../src/edit/region-overlay'
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 // Chrome shell (activity bar + status) — richer tree than the root redirect page.
@@ -94,6 +109,82 @@ describe('live Source load from Model.source', () => {
     expect(doc!.source.dirty).toBe(false)
     expect(doc!.source.status).toMatch(/Saved|saved/)
   }, 120_000)
+})
+
+describe('C2 static preview helpers + region overlay', () => {
+  it('regionMetaLabel covers zero / singular / plural', () => {
+    expect(regionMetaLabel(0)).toBe('')
+    expect(regionMetaLabel(1)).toBe('1 region')
+    expect(regionMetaLabel(12)).toBe('12 regions')
+  })
+
+  it('paintRegionOverlay draws hover and selected with distinct attrs', () => {
+    const host = document.createElement('div')
+    host.setAttribute('data-region-overlay', '')
+    document.body.appendChild(host)
+    paintRegionOverlay([
+      {
+        id: 'sel',
+        left: '0%',
+        top: '0%',
+        width: '10%',
+        height: '10%',
+        selected: true,
+        hover: false,
+        key: 'sel',
+      },
+      {
+        id: 'hov',
+        left: '20%',
+        top: '20%',
+        width: '10%',
+        height: '10%',
+        selected: false,
+        hover: true,
+        key: 'hov',
+      },
+      {
+        id: 'idle',
+        left: '40%',
+        top: '40%',
+        width: '10%',
+        height: '10%',
+        selected: false,
+        hover: false,
+        key: 'idle',
+      },
+    ])
+    const boxes = host.querySelectorAll('[data-region-box]')
+    expect(boxes.length).toBe(2)
+    const sel = host.querySelector('[data-node-id="sel"]') as HTMLElement
+    const hov = host.querySelector('[data-node-id="hov"]') as HTMLElement
+    expect(sel?.dataset.selected).toBe('true')
+    expect(hov?.dataset.hover).toBe('true')
+    expect(host.querySelector('[data-node-id="idle"]')).toBeNull()
+    host.remove()
+  })
+
+  it('buildRegionBoxes flags selected vs hover independently', async () => {
+    setOpsClient(cli)
+    unbind = bindEditSelection()
+    const path = 'crates/sail/render/tests/fixtures/paint.sail'
+    const doc = await openDocument(path, {
+      sourceText: readFileSync(join(REPO, path), 'utf8'),
+      loadPreview: true,
+      viewport: { width: 400, height: 300 },
+      theme: 'ship',
+      mode: 'dark',
+    })
+    expect(doc).not.toBeNull()
+    expect(doc!.preview.regions.length).toBeGreaterThan(0)
+    const region = doc!.preview.regions.find((r) => r.w > 0 && r.h > 0)!
+    selectEditNode(region.nodeId)
+    const boxes = buildRegionBoxes()
+    const row = boxes.find((b) => b.id === region.nodeId)
+    expect(row).toBeTruthy()
+    expect(row!.selected).toBe(true)
+    expect(row!.hover).toBe(false)
+  }, 180_000)
 })
 
 describe('preview region click selects node', () => {
@@ -156,6 +247,86 @@ describe('preview region click selects node', () => {
     )
     expect(hit?.nodeId).toBe('inner')
   })
+})
+
+describe('C3 source pane: ready/empty/dirty + scroll-to-span', () => {
+  it('openDocument source is ready (has text) and not dirty', async () => {
+    setOpsClient(cli)
+    const doc = await openDocument(PAGE, { loadPreview: false })
+    expect(doc).not.toBeNull()
+    expect(doc!.source.text.length).toBeGreaterThan(0)
+    expect(doc!.source.dirty).toBe(false)
+    expect(doc!.source.status).toMatch(/Saved|saved|Loaded/i)
+    // Empty only when bytes missing
+    expect(!!doc!.source.text).toBe(true)
+  }, 120_000)
+
+  it('setSourceText marks dirty; save clears dirty; status cycle', async () => {
+    const rel = 'apps/studio/test/fixtures/_tmp-c3-dirty.sail'
+    const abs = join(REPO, rel)
+    const original = `<column gap="1"><span>c3-a</span></column>\n`
+    writeFileSync(abs, original)
+    try {
+      setOpsClient(cli)
+      await openDocument(rel, { sourceText: original, loadPreview: false })
+      expect(activeDoc()?.source.dirty).toBe(false)
+      setSourceText(rel, `<column gap="1"><span>c3-b</span></column>\n`)
+      expect(activeDoc()?.source.dirty).toBe(true)
+      expect(activeDoc()?.source.status).toMatch(/Unsaved/i)
+      const rev = await saveActiveSource()
+      expect(rev).toBeTruthy()
+      expect(activeDoc()?.source.dirty).toBe(false)
+      expect(activeDoc()?.source.status).toMatch(/Saved|saved/)
+    } finally {
+      try {
+        rmSync(abs)
+      } catch {
+        /* */
+      }
+    }
+  }, 180_000)
+
+  it('selectFromPreviewClick sets sourceScrollLine for CM scroll-to-span', async () => {
+    setOpsClient(cli)
+    unbind = bindEditSelection()
+    const path = 'crates/sail/render/tests/fixtures/paint.sail'
+    const doc = await openDocument(path, {
+      sourceText: readFileSync(join(REPO, path), 'utf8'),
+      loadPreview: true,
+      viewport: { width: 400, height: 300 },
+      theme: 'ship',
+      mode: 'dark',
+    })
+    expect(doc).not.toBeNull()
+    const region = [...(doc!.preview.regions ?? [])]
+      .filter((r) => r.w > 4 && r.h > 4)
+      .sort((a, b) => a.w * a.h - b.w * b.h)[0]
+    if (!region) return
+    const cx = region.x + region.w / 2
+    const cy = region.y + region.h / 2
+    selectFromPreviewClick(cx, cy)
+    const inTree = doc!.tree.nodes.some((n) => n.id === region.nodeId)
+    if (inTree) {
+      expect(getEditState().sourceScrollLine).toBeTruthy()
+      expect(getEditState().sourceScrollNonce).toBeGreaterThan(0)
+      // setCursor host path still applies after C3 chrome
+      const cm = document.createElement('div') as HTMLElement & {
+        setCursor?: (line: number, col?: number) => void
+      }
+      let cursored: [number, number?] | null = null
+      cm.setCursor = (l, c) => {
+        cursored = [l, c]
+      }
+      expect(
+        applySourceEditorScroll(
+          cm,
+          getEditState().sourceScrollLine!,
+          getEditState().sourceScrollCol ?? 1,
+        ),
+      ).toBe(true)
+      expect(cursored?.[0]).toBe(getEditState().sourceScrollLine)
+    }
+  }, 180_000)
 })
 
 describe('source edit + save model rev', () => {
@@ -309,6 +480,127 @@ describe('live route + explorer tree groups (Unit 3)', () => {
     expect(pathToLiveRoute('apps/x/routes/docs/[...slug]/page.sail')).toBeNull()
   })
 
+  it('pathToRoutePath maps pages to route shapes including dynamics', () => {
+    expect(pathToRoutePath('apps/studio/routes/page.sail')).toBe('/')
+    expect(pathToRoutePath('apps/studio/routes/edit/page.sail')).toBe('/edit')
+    expect(pathToRoutePath('apps/sail-site/routes/sail/tutorial/page.sail')).toBe(
+      '/sail/tutorial',
+    )
+    expect(pathToRoutePath('apps/sail-site/routes/components/[tag]/page.sail')).toBe(
+      '/components/[tag]',
+    )
+    expect(pathToRoutePath('apps/x/routes/docs/[...slug]/page.sail')).toBe(
+      '/docs/[...slug]',
+    )
+    expect(pathToRoutePath('apps/studio/routes/_layout.sail')).toBeNull()
+    expect(pathToRoutePath('apps/x/src/a.sail')).toBeNull()
+    expect(pathToRoutePath(null)).toBeNull()
+  })
+
+  it('routeSailTreeNodes builds route hierarchy with path labels', () => {
+    const nodes = routeSailTreeNodes(
+      [
+        {
+          path: 'apps/x/routes/page.sail',
+          name: 'page.sail',
+          group: 'routes',
+          checks: 0,
+        },
+        {
+          path: 'apps/x/routes/edit/page.sail',
+          name: 'page.sail',
+          group: 'routes',
+          checks: 0,
+        },
+        {
+          path: 'apps/x/routes/components/page.sail',
+          name: 'page.sail',
+          group: 'routes',
+          checks: 0,
+        },
+        {
+          path: 'apps/x/routes/components/[tag]/page.sail',
+          name: 'page.sail',
+          group: 'routes',
+          checks: 0,
+        },
+        {
+          path: 'apps/x/routes/sail/tutorial/page.sail',
+          name: 'page.sail',
+          group: 'routes',
+          checks: 0,
+        },
+        {
+          path: 'apps/x/routes/_layout.sail',
+          name: '_layout.sail',
+          group: 'routes',
+          checks: 0,
+        },
+        {
+          path: 'apps/x/src/a.sail',
+          name: 'a.sail',
+          group: 'src',
+          checks: 0,
+        },
+      ],
+      '',
+    )
+    // Top-level: index + first segments (not raw file paths)
+    expect(nodes.map((n) => n.label)).toEqual([
+      '/',
+      '/components',
+      '/edit',
+      '/sail',
+    ])
+    expect(nodes[0]!.id).toBe('apps/x/routes/page.sail')
+    expect(nodes[1]!.id).toBe('apps/x/routes/components/page.sail')
+    expect(nodes[1]!.children![0]!.label).toBe('/components/[tag]')
+    expect(nodes[1]!.children![0]!.id).toBe(
+      'apps/x/routes/components/[tag]/page.sail',
+    )
+    // Intermediate segment without page.sail is expand-only meta id
+    expect(nodes[3]!.label).toBe('/sail')
+    expect(nodes[3]!.id).toBe('route:/sail')
+    expect(nodes[3]!.children![0]!.label).toBe('/sail/tutorial')
+    expect(nodes[3]!.children![0]!.id).toBe(
+      'apps/x/routes/sail/tutorial/page.sail',
+    )
+  })
+
+  it('routeSailTreeNodes dirty dot + filter by route path', () => {
+    const files = [
+      {
+        path: 'apps/x/routes/page.sail',
+        name: 'page.sail',
+        group: 'routes' as const,
+        checks: 0,
+      },
+      {
+        path: 'apps/x/routes/edit/page.sail',
+        name: 'page.sail',
+        group: 'routes' as const,
+        checks: 0,
+      },
+      {
+        path: 'apps/x/routes/sail/tutorial/page.sail',
+        name: 'page.sail',
+        group: 'routes' as const,
+        checks: 0,
+      },
+    ]
+    const dirty = routeSailTreeNodes(files, '', {
+      dirtyPaths: new Set(['apps/x/routes/edit/page.sail']),
+    })
+    expect(dirty.find((n) => n.id.endsWith('/edit/page.sail'))!.label).toBe(
+      '● /edit',
+    )
+    expect(dirty.find((n) => n.label === '/')!.label).toBe('/')
+
+    const filtered = routeSailTreeNodes(files, 'tutorial')
+    expect(filtered.map((n) => n.label)).toEqual(['/sail'])
+    expect(filtered[0]!.children![0]!.label).toBe('/sail/tutorial')
+  })
+
   it('fileTreeGroups yields collapsible dir buckets with selection', () => {
     const groups = fileTreeGroups(
       [
@@ -429,23 +721,137 @@ describe('STUDIO-1 review gates', () => {
     iframe.remove()
   }, 120_000)
 
-  it('fileSailTreeNodes folds dirty + size meta into labels', () => {
+  it('elementSailTreeNodes: short labels, layer badge in trailing (not label cram)', () => {
+    const nodes = parseTreeNodes([
+      {
+        id: 'root',
+        tag: 'column',
+        layer: 'l1-keyword',
+        children: ['btn', 'pack'],
+        span: { line: 1, col: 1 },
+      },
+      {
+        id: 'btn',
+        tag: 'button',
+        layer: 'l2-component',
+        attrs: { name: 'save' },
+        children: [],
+        span: { line: 2, col: 3 },
+      },
+      {
+        id: 'pack',
+        tag: 'edit-explorer',
+        layer: 'userland',
+        children: ['cf'],
+        span: { line: 3, col: 3 },
+      },
+      {
+        id: 'cf',
+        tag: 'template',
+        layer: 'l1-keyword',
+        control_flow: { kind: 'if', expr: 'open' },
+        children: [],
+        span: { line: 4, col: 5 },
+      },
+    ])
+    const tree = elementSailTreeNodes(nodes, ['root'])
+    expect(tree).toHaveLength(1)
+    expect(tree[0]!.label).toBe('<column>')
+    expect(tree[0]!.trailing).toBe('L1')
+    expect(tree[0]!.label).not.toMatch(/L1|·/)
+    const btn = tree[0]!.children!.find((c) => c.id === 'btn')!
+    expect(btn.label).toBe('<button> save')
+    expect(btn.trailing).toBe('L2')
+    expect(btn.icon).toBe('component')
+    const pack = tree[0]!.children!.find((c) => c.id === 'pack')!
+    expect(pack.label).toBe('<edit-explorer>')
+    expect(pack.trailing).toBe('L3')
+    expect(pack.icon).toBe('box')
+    const cf = pack.children![0]!
+    expect(cf.label).toBe('<if> open')
+    expect(cf.trailing).toBe('L1')
+    // No badge/meta crammed into labels
+    for (const n of [tree[0]!, btn, pack, cf]) {
+      expect(n.label).not.toMatch(/·\s*L[123]/)
+    }
+  })
+
+  it('fileSailTreeNodes: nested dirs, short labels, dirty in trailing (not label)', () => {
     const nodes = fileSailTreeNodes(
       [
         { path: 'apps/x/routes/page.sail', name: 'page.sail', group: 'routes', checks: 2 },
+        {
+          path: 'apps/x/routes/edit/page.sail',
+          name: 'page.sail',
+          group: 'routes',
+          checks: 0,
+        },
+        {
+          path: 'apps/x/routes/sail/tutorial/page.sail',
+          name: 'page.sail',
+          group: 'routes',
+          checks: 0,
+        },
         { path: 'apps/x/src/a.sail', name: 'a.sail', group: 'src', checks: 0 },
       ],
       '',
       'apps/x/routes/page.sail',
       {
-        dirtyPaths: new Set(['apps/x/routes/page.sail']),
-        sourceLen: (p) => (p.endsWith('page.sail') ? 2048 : null),
+        dirtyPaths: new Set(['apps/x/routes/page.sail', 'apps/x/src/a.sail']),
       },
     )
-    expect(nodes[0]!.id).toBe('group:routes')
-    expect(nodes[0]!.children![0]!.label).toMatch(/●/)
-    expect(nodes[0]!.children![0]!.label).toMatch(/KB|2\.0/)
-    expect(nodes[0]!.children![0]!.label).toMatch(/2/)
+    expect(nodes.map((n) => n.id)).toEqual(['group:routes', 'group:src'])
+    // Group-relative nesting: edit/ and sail/ dirs + root page.sail
+    const routes = nodes[0]!.children!
+    const routeLabels = routes.map((n) => n.label)
+    expect(routeLabels).toContain('edit')
+    expect(routeLabels).toContain('sail')
+    expect(routeLabels).toContain('page.sail')
+    const rootPage = routes.find((n) => n.id === 'apps/x/routes/page.sail')!
+    expect(rootPage.label).toBe('page.sail')
+    expect(rootPage.trailing).toBe('●')
+    // No size / checks meta crammed into labels
+    expect(rootPage.label).not.toMatch(/KB|·|●/)
+    const editDir = routes.find((n) => n.id === 'dir:routes/edit')!
+    expect(editDir.label).toBe('edit')
+    expect(editDir.children![0]!.id).toBe('apps/x/routes/edit/page.sail')
+    expect(editDir.children![0]!.label).toBe('page.sail')
+    expect(editDir.children![0]!.trailing).toBeUndefined()
+    const sailDir = routes.find((n) => n.id === 'dir:routes/sail')!
+    expect(sailDir.children![0]!.id).toBe('dir:routes/sail/tutorial')
+    expect(sailDir.children![0]!.children![0]!.id).toBe(
+      'apps/x/routes/sail/tutorial/page.sail',
+    )
+    const srcLeaf = nodes[1]!.children![0]!
+    expect(srcLeaf.label).toBe('a.sail')
+    expect(srcLeaf.trailing).toBe('●')
+  })
+
+  it('fileSailTreeNodes filter keeps path ancestors under group roots', () => {
+    const files = [
+      { path: 'apps/x/routes/page.sail', name: 'page.sail', group: 'routes', checks: 0 },
+      {
+        path: 'apps/x/routes/edit/page.sail',
+        name: 'page.sail',
+        group: 'routes',
+        checks: 0,
+      },
+      {
+        path: 'apps/x/routes/sail/tutorial/page.sail',
+        name: 'page.sail',
+        group: 'routes',
+        checks: 0,
+      },
+      { path: 'apps/x/src/a.sail', name: 'a.sail', group: 'src', checks: 0 },
+    ]
+    const filtered = fileSailTreeNodes(files, 'tutorial', null)
+    expect(filtered.map((n) => n.id)).toEqual(['group:routes'])
+    const sail = filtered[0]!.children![0]!
+    expect(sail.id).toBe('dir:routes/sail')
+    expect(sail.children![0]!.id).toBe('dir:routes/sail/tutorial')
+    expect(sail.children![0]!.children![0]!.id).toBe(
+      'apps/x/routes/sail/tutorial/page.sail',
+    )
   })
 
   it('hoverPreviewAt skips emit when tip unchanged', async () => {
@@ -477,4 +883,348 @@ describe('STUDIO-1 review gates', () => {
     expect(emits).toBe(afterFirst)
     unsub()
   }, 180_000)
+})
+
+describe('preview failure surfaces error + retry (no infinite opening)', () => {
+  const path = 'crates/sail/render/tests/fixtures/paint.sail'
+
+  afterEach(() => {
+    __setPreviewTimeoutForTests(null)
+  })
+
+  function mockClient(
+    screenshot: OpsClient['sailRenderScreenshot'],
+  ): OpsClient {
+    return {
+      ...cli,
+      sailRenderScreenshot: screenshot,
+    }
+  }
+
+  it('openDocument with rejecting screenshot sets preview.error and not loading', async () => {
+    setOpsClient(
+      mockClient(async () => {
+        throw new Error('render boom')
+      }),
+    )
+    const doc = await openDocument(path, {
+      sourceText: readFileSync(join(REPO, path), 'utf8'),
+      loadPreview: true,
+      viewport: { width: 400, height: 300 },
+    })
+    expect(doc).not.toBeNull()
+    expect(doc!.preview.imagePng).toBeFalsy()
+    expect(doc!.preview.loading).toBe(false)
+    expect(doc!.preview.error).toMatch(/Could not render the audit snapshot/)
+  }, 60_000)
+
+  it('hanging screenshot times out — never leaves loading true', async () => {
+    __setPreviewTimeoutForTests(80)
+    setOpsClient(
+      mockClient(
+        () =>
+          new Promise(() => {
+            /* never settles */
+          }),
+      ),
+    )
+    const doc = await openDocument(path, {
+      sourceText: readFileSync(join(REPO, path), 'utf8'),
+      loadPreview: true,
+      viewport: { width: 400, height: 300 },
+    })
+    expect(doc).not.toBeNull()
+    expect(doc!.preview.loading).toBe(false)
+    expect(doc!.preview.error).toBeTruthy()
+    expect(doc!.preview.error).toMatch(/timed out|try again/i)
+  }, 30_000)
+
+  it('ensurePreviewOnce + retryPreviewOnce: fail sticky then reload on retry', async () => {
+    let calls = 0
+    setOpsClient(
+      mockClient(async () => {
+        calls++
+        if (calls === 1) throw new Error('first fail')
+        return {
+          dynamics: [],
+          imagePng: 'iVBORw0KGgo=',
+          ms: 1,
+          regions: [],
+          theme: 'ship',
+          viewport: { width: 400, height: 300 },
+        }
+      }),
+    )
+    // Open without preview; surface will load via ensure/refresh
+    const doc = await openDocument(path, {
+      sourceText: readFileSync(join(REPO, path), 'utf8'),
+      loadPreview: false,
+    })
+    expect(doc).not.toBeNull()
+    setView('preview')
+
+    const flight: PreviewFlight = { inflight: null, failedPath: null }
+    await new Promise<void>((resolve) => {
+      ensurePreviewOnce(flight, resolve)
+    })
+    expect(activeDoc()?.preview.loading).toBe(false)
+    expect(activeDoc()?.preview.error).toBeTruthy()
+    expect(flight.failedPath).toBe(path)
+    expect(calls).toBe(1)
+
+    // Sticky: second ensure must not re-storm
+    let secondDone = false
+    ensurePreviewOnce(flight, () => {
+      secondDone = true
+    })
+    expect(secondDone).toBe(false)
+    expect(calls).toBe(1)
+
+    await new Promise<void>((resolve) => {
+      retryPreviewOnce(flight, resolve)
+    })
+    expect(calls).toBe(2)
+    expect(activeDoc()?.preview.imagePng).toBeTruthy()
+    expect(activeDoc()?.preview.error).toBeNull()
+    expect(activeDoc()?.preview.loading).toBe(false)
+    expect(flight.failedPath).toBeNull()
+  }, 60_000)
+
+  it('refreshPreview sets loading then settles with error on failure', async () => {
+    setOpsClient(
+      mockClient(async () => {
+        throw new Error('nope')
+      }),
+    )
+    await openDocument(path, {
+      sourceText: readFileSync(join(REPO, path), 'utf8'),
+      loadPreview: false,
+    })
+    const seenLoading: boolean[] = []
+    const unsub = subscribeEdit((s) => {
+      const p = s.docs.get(path)?.preview
+      if (p) seenLoading.push(p.loading)
+    })
+    await refreshPreview({ viewport: { width: 400, height: 300 } })
+    unsub()
+    expect(seenLoading.some((v) => v === true)).toBe(true)
+    expect(activeDoc()?.preview.loading).toBe(false)
+    expect(activeDoc()?.preview.error).toBeTruthy()
+  }, 60_000)
+
+  it('structured edit ops are empty (rail hidden — no dead stubs)', () => {
+    expect(uiStructuredOps()).toEqual([])
+  })
+
+  it('concurrent refreshPreview: only latest gen applies (stale settle ignored)', async () => {
+    let resolveSlow: ((v: {
+      dynamics: unknown[]
+      imagePng: string
+      ms: number
+      regions: unknown[]
+      theme: string
+      viewport: unknown
+    }) => void) | null = null
+    let calls = 0
+    setOpsClient(
+      mockClient(() => {
+        calls++
+        if (calls === 1) {
+          return new Promise((resolve) => {
+            resolveSlow = resolve
+          })
+        }
+        return Promise.resolve({
+          dynamics: [],
+          imagePng: 'fast-png',
+          ms: 1,
+          regions: [],
+          theme: 'ship',
+          viewport: { width: 400, height: 300 },
+        })
+      }),
+    )
+    await openDocument(path, {
+      sourceText: readFileSync(join(REPO, path), 'utf8'),
+      loadPreview: false,
+    })
+    const genBefore = __previewGenForTests()
+    const slow = refreshPreview({ viewport: { width: 400, height: 300 } })
+    const genSlow = __previewGenForTests()
+    expect(genSlow).toBeGreaterThan(genBefore)
+    // Supersede with a fast second refresh (retry path).
+    const fastResult = await refreshPreview({ viewport: { width: 400, height: 300 } })
+    expect(fastResult.applied).toBe(true)
+    expect(activeDoc()?.preview.imagePng).toBe('fast-png')
+    expect(activeDoc()?.preview.error).toBeNull()
+    expect(activeDoc()?.preview.loading).toBe(false)
+    const genFast = __previewGenForTests()
+    expect(genFast).toBeGreaterThan(genSlow)
+    // Late slow settle must not overwrite the fast result.
+    resolveSlow!({
+      dynamics: [],
+      imagePng: 'slow-stale-png',
+      ms: 99,
+      regions: [],
+      theme: 'ship',
+      viewport: { width: 400, height: 300 },
+    })
+    const slowResult = await slow
+    expect(slowResult.applied).toBe(false)
+    expect(activeDoc()?.preview.imagePng).toBe('fast-png')
+    expect(activeDoc()?.preview.imagePng).not.toBe('slow-stale-png')
+    expect(__previewGenForTests()).toBe(genFast)
+  }, 60_000)
+
+  it('concurrent openDocument: superseded open does not clobber newer activePath', async () => {
+    const pathA = path
+    const pathB = PAGE
+    let releaseA: (() => void) | null = null
+    const gateA = new Promise<void>((r) => {
+      releaseA = r
+    })
+    let aEntered = false
+    setOpsClient({
+      ...cli,
+      sailInspectModel: async (args) => {
+        if (args.path === pathA && !aEntered) {
+          aEntered = true
+          await gateA
+        }
+        return cli.sailInspectModel(args)
+      },
+    })
+    const slowA = openDocument(pathA, {
+      sourceText: readFileSync(join(REPO, pathA), 'utf8'),
+      loadPreview: false,
+    })
+    // Let A block inside sailInspectModel
+    await new Promise((r) => setTimeout(r, 20))
+    const genDuringA = __previewGenForTests()
+    const fastB = await openDocument(pathB, { loadPreview: false })
+    expect(fastB).not.toBeNull()
+    expect(getEditState().activePath).toBe(pathB)
+    expect(__previewGenForTests()).toBeGreaterThan(genDuringA)
+
+    releaseA!()
+    const aResult = await slowA
+    expect(aResult).toBeNull()
+    expect(getEditState().activePath).toBe(pathB)
+    expect(activeDoc()?.path).toBe(pathB)
+  }, 120_000)
+
+  it('concurrent openDocument: supersede after install does not refresh wrong path', async () => {
+    const pathA = path
+    const pathB = PAGE
+    const shotPaths: string[] = []
+    setOpsClient({
+      ...cli,
+      sailRenderScreenshot: async (args) => {
+        shotPaths.push(String(args.path ?? getEditState().activePath ?? ''))
+        return {
+          dynamics: [],
+          imagePng: `png-for-${args.path}`,
+          ms: 1,
+          regions: [],
+          theme: 'ship',
+          viewport: { width: 400, height: 300 },
+        }
+      },
+    })
+
+    // Re-enter open B from A’s install emit — bumps gen before A’s post-install
+    // refreshPreview (which reads state.activePath and would target B).
+    let bPromise: Promise<Awaited<ReturnType<typeof openDocument>>> | null = null
+    let kicked = false
+    const unsub = subscribeEdit(() => {
+      if (kicked) return
+      const st = getEditState()
+      if (st.activePath === pathA && st.docs.has(pathA) && !st.loading) {
+        kicked = true
+        bPromise = openDocument(pathB, { loadPreview: false })
+      }
+    })
+
+    const aResult = await openDocument(pathA, {
+      sourceText: readFileSync(join(REPO, pathA), 'utf8'),
+      loadPreview: true,
+      viewport: { width: 400, height: 300 },
+    })
+    unsub()
+
+    expect(kicked).toBe(true)
+    expect(aResult).toBeNull()
+    expect(bPromise).not.toBeNull()
+    const bResult = await bPromise!
+    expect(bResult).not.toBeNull()
+    expect(getEditState().activePath).toBe(pathB)
+    // A must not have started a screenshot for the stolen active path B.
+    expect(shotPaths).not.toContain(pathB)
+  }, 120_000)
+
+  it('flight bookkeeping: superseded refresh does not sticky-fail or clear newer inflight', async () => {
+    let resolveSlow: ((v: {
+      dynamics: unknown[]
+      imagePng: string
+      ms: number
+      regions: unknown[]
+      theme: string
+      viewport: unknown
+    }) => void) | null = null
+    let calls = 0
+    setOpsClient(
+      mockClient(() => {
+        calls++
+        if (calls === 1) {
+          return new Promise((resolve) => {
+            resolveSlow = resolve
+          })
+        }
+        return Promise.resolve({
+          dynamics: [],
+          imagePng: 'winner-png',
+          ms: 1,
+          regions: [],
+          theme: 'ship',
+          viewport: { width: 400, height: 300 },
+        })
+      }),
+    )
+    await openDocument(path, {
+      sourceText: readFileSync(join(REPO, path), 'utf8'),
+      loadPreview: false,
+    })
+    setView('preview')
+    const flight: PreviewFlight = { inflight: null, failedPath: null }
+
+    const firstDone = new Promise<void>((resolve) => {
+      ensurePreviewOnce(flight, resolve)
+    })
+    expect(flight.inflight).toBe(path)
+
+    // Retry while first is in flight — clears then re-sets inflight for winner.
+    const secondDone = new Promise<void>((resolve) => {
+      retryPreviewOnce(flight, resolve)
+    })
+    expect(flight.failedPath).toBeNull()
+    expect(flight.inflight).toBe(path)
+
+    await secondDone
+    expect(activeDoc()?.preview.imagePng).toBe('winner-png')
+    expect(flight.failedPath).toBeNull()
+    expect(flight.inflight).toBeNull()
+
+    // Late first settle must not sticky-fail after success.
+    resolveSlow!({
+      dynamics: [],
+      imagePng: 'stale-png',
+      ms: 1,
+      regions: [],
+      theme: 'ship',
+      viewport: { width: 400, height: 300 },
+    })
+    await firstDone
+    expect(flight.failedPath).toBeNull()
+    expect(activeDoc()?.preview.imagePng).toBe('winner-png')
+  }, 60_000)
 })
