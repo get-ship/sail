@@ -42,14 +42,34 @@ fn golden_path(name: &str) -> PathBuf {
     fixture(&format!("goldens/{name}.png"))
 }
 
+fn in_ci() -> bool {
+    matches!(
+        std::env::var("CI").ok().as_deref(),
+        Some("1" | "true" | "TRUE" | "yes" | "YES")
+    )
+}
+
 fn ensure_or_compare(name: &str, result: &sail_render::RenderOutput) {
     let path = golden_path(name);
     if let Some(parent) = path.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
-    if !path.is_file() || std::env::var("SAIL_RENDER_UPDATE_GOLDEN").ok().as_deref() == Some("1") {
+    let update = std::env::var("SAIL_RENDER_UPDATE_GOLDEN").ok().as_deref() == Some("1");
+    if !path.is_file() {
+        if in_ci() && !update {
+            panic!(
+                "golden {name} missing at {} (CI refuses to write; run with \
+                 SAIL_RENDER_UPDATE_GOLDEN=1 locally to mint)",
+                path.display()
+            );
+        }
         write_png(&result.image, &path).expect("write golden");
         eprintln!("wrote golden {}", path.display());
+        return;
+    }
+    if update {
+        write_png(&result.image, &path).expect("write golden");
+        eprintln!("updated golden {}", path.display());
         return;
     }
     let expected = std::fs::read(&path).expect("read golden");
@@ -207,6 +227,55 @@ fn mid_size_golden_painted_tokens() {
     ensure_or_compare("mid-size-800x600", &result);
 }
 
+/// Assert a successful raster: valid size, PNG magic, and non-trivial paint.
+fn assert_visible_png(result: &sail_render::RenderOutput, min_non_white: usize) {
+    assert!(
+        result.image.width() > 0 && result.image.height() > 0,
+        "viewport must be non-zero"
+    );
+    let png = png_bytes(&result.image).expect("encode png");
+    assert!(png.starts_with(b"\x89PNG"), "must produce a PNG");
+    let non_white = result
+        .image
+        .as_raw()
+        .chunks_exact(4)
+        .filter(|c| c != &[255, 255, 255, 255])
+        .count();
+    assert!(
+        non_white >= min_non_white,
+        "expected visible content (non-white px {non_white} < {min_non_white})"
+    );
+}
+
+/// RENDER-0: zero-width padded text used to panic parley (line_break assert).
+#[test]
+fn parley_zero_width_padded_text_does_not_panic() {
+    let result = render_file(&fixture("parley-zero-width.sail"), opts((320, 200)))
+        .expect("zero-width padded text must render without parley panic");
+    // Root paints theme surface; require some non-white so a blank raster fails.
+    assert_visible_png(&result, 10);
+}
+
+/// RENDER-0: center + field + select (grid min-content of padded option text).
+#[test]
+fn parley_center_field_select_does_not_panic() {
+    let result = render_file(
+        &fixture("parley-center-field-select.sail"),
+        opts((640, 900)),
+    )
+    .expect("center/field/select must render without parley panic");
+    assert_visible_png(&result, 100);
+    assert!(
+        !result.regions.is_empty(),
+        "form chrome must produce layout regions"
+    );
+    let html = result.html.to_lowercase();
+    assert!(
+        html.contains("shipping") && (html.contains("country") || html.contains("select")),
+        "expected form chrome in static html"
+    );
+}
+
 /// RENDER-0: agent-produced dependent-form page that crashed the baseline batch.
 #[test]
 fn parley_dependent_form_agent_repro_does_not_panic() {
@@ -215,12 +284,7 @@ fn parley_dependent_form_agent_repro_does_not_panic() {
         opts((1440, 900)),
     )
     .expect("dependent-form agent page must render without parley panic");
-    assert!(
-        result.image.width() > 0 && result.image.height() > 0,
-        "viewport must be non-zero"
-    );
-    let png = png_bytes(&result.image).expect("encode png");
-    assert!(png.starts_with(b"\x89PNG"), "must produce a PNG");
+    assert_visible_png(&result, 100);
     assert!(
         !result.regions.is_empty(),
         "agent form must produce layout regions"
@@ -231,4 +295,81 @@ fn parley_dependent_form_agent_repro_does_not_panic() {
         "expected form chrome in static html, got a prefix: {:?}",
         html.chars().take(200).collect::<String>()
     );
+}
+
+/// RENDER-0: float-aware BreakLines path (`clamp_lines` set) at zero content width.
+///
+/// The common panic path no longer hits this (viewport-as-max_height removed), but
+/// `update_breaker_line` clamps still protect clamp-lines / ellipsis UI. Sail sx
+/// does not lower `line-clamp`, so this builds a raw takumi tree.
+#[test]
+fn parley_clamp_lines_zero_width_does_not_panic() {
+    use takumi::prelude::*;
+
+    let fonts = sail_render::fonts::load_fonts(&fonts()).expect("load fixture fonts");
+    let text =
+        Node::text("hello world this text is long enough to wrap under a line clamp at zero width")
+            .with_style(
+                Style::default()
+                    .with(StyleDeclaration::color(ColorInput::Value(Color::black())))
+                    .with(StyleDeclaration::font_size(FontSize::Length(Length::Px(
+                        16.0,
+                    ))))
+                    .with(StyleDeclaration::font_family(FontFamily::from_names([
+                        "DM Sans".to_string(),
+                    ]))),
+            );
+    // max-lines + continue:collapse → clamp_lines() = Some(2) → float-aware path.
+    let clamped = Node::container(vec![text]).with_style(
+        Style::default()
+            .with(StyleDeclaration::display(Display::Block))
+            .with(StyleDeclaration::width(Length::Px(0.0)))
+            .with(StyleDeclaration::padding_left(Length::Px(12.0)))
+            .with(StyleDeclaration::padding_right(Length::Px(12.0)))
+            .with(StyleDeclaration::padding_top(Length::Px(12.0)))
+            .with(StyleDeclaration::padding_bottom(Length::Px(12.0)))
+            .with(StyleDeclaration::max_lines(Some(2)))
+            .with(StyleDeclaration::r#continue(Continue::Collapse)),
+    );
+    // Also cover nowrap+ellipsis (forces single-line clamp via clamp_lines()).
+    let ellipsis = Node::container(vec![
+        Node::text("ellipsis clamp at zero width").with_style(
+            Style::default()
+                .with(StyleDeclaration::color(ColorInput::Value(Color::black())))
+                .with(StyleDeclaration::font_size(FontSize::Length(Length::Px(
+                    16.0,
+                ))))
+                .with(StyleDeclaration::font_family(FontFamily::from_names([
+                    "DM Sans".to_string(),
+                ]))),
+        ),
+    ])
+    .with_style(
+        Style::default()
+            .with(StyleDeclaration::display(Display::Block))
+            .with(StyleDeclaration::width(Length::Px(0.0)))
+            .with(StyleDeclaration::padding_left(Length::Px(12.0)))
+            .with(StyleDeclaration::padding_right(Length::Px(12.0)))
+            .with(StyleDeclaration::text_wrap_mode(TextWrapMode::NoWrap))
+            .with(StyleDeclaration::text_overflow(TextOverflow::Ellipsis)),
+    );
+    let root = Node::container(vec![clamped, ellipsis]).with_style(
+        Style::default()
+            .with(StyleDeclaration::display(Display::Flex))
+            .with(StyleDeclaration::flex_direction(FlexDirection::Column))
+            .with(StyleDeclaration::width(Length::Percentage(100.0)))
+            .with(StyleDeclaration::height(Length::Percentage(100.0)))
+            .with(StyleDeclaration::background_color(ColorInput::Value(
+                Color::white(),
+            ))),
+    );
+    let options = RenderOptions::builder()
+        .viewport(Viewport::new((320u32, 200u32)))
+        .node(root)
+        .fonts(&fonts)
+        .build();
+    let image = takumi::render(options).expect("clamp-lines at zero width must not panic");
+    assert!(image.width() > 0 && image.height() > 0);
+    let png = png_bytes(&image).expect("encode png");
+    assert!(png.starts_with(b"\x89PNG"), "must produce a PNG");
 }
