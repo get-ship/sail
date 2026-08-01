@@ -4666,6 +4666,7 @@ dependencies = [
  "oxc_ast_visit 0.128.0",
  "oxc_parser 0.128.0",
  "oxc_span 0.128.0",
+ "oxc_syntax 0.128.0",
  "serde",
  "serde_json",
  "tempfile",

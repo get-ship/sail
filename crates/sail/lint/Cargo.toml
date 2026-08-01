@@ -18,6 +18,7 @@ oxc_ast       = "0.128"
 oxc_ast_visit = "0.128"
 oxc_allocator = "0.128"
 oxc_span      = "0.128"
+oxc_syntax    = "0.128"
 
 # Loading the primitive-prop registry (prop_registry.rs) from
 # crates/sail/compiler/primitives.json (compile-time `include_str!`).

@@ -4,14 +4,17 @@
 //! Flags `window.matchMedia(...)` / bare `matchMedia(...)` when:
 //! 1. The query is **layout-flavored** (`min-width` / `max-width` / `orientation`), and
 //! 2. The result's `.matches` **drives template-visible state** — it is stored into
-//!    a `signal` / `.set(...)` / returned value (not merely used as a condition for a
-//!    side effect like "close the drawer when the rail appears").
+//!    a `signal(...)` / a **known signal's** `.set(...)` / a property of the
+//!    controller factory's **export return object** (not a helper `return`, and
+//!    not `Map.set` / other non-signal `.set`).
 //!
 //! **Not flagged** (legitimate imperative surface):
 //! - `prefers-reduced-motion`, `prefers-color-scheme`, `print`, and other
 //!   non-layout media queries
 //! - Layout `matchMedia` used only as a condition (`if (mq.matches) …`) without
 //!   writing `.matches` into reactive state
+//! - Helper functions that `return matchMedia(...).matches` (condition helpers)
+//! - Non-signal `.set` (`Map.set`, `Set.add` siblings, etc.)
 //!
 //! Natural severity: **Warn** (surfaces in LSP / `sail-lint`; does not hard-fail
 //! compile). Under `strict` profiles a host may promote via lint overrides —
@@ -30,6 +33,7 @@ use oxc_ast::ast::*;
 use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
+use oxc_syntax::scope::ScopeFlags;
 
 pub const RULE_ID: &str = "sail-controller-matchmedia-layout";
 
@@ -43,15 +47,30 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         return Vec::new();
     }
 
+    // Pass 1: every local bound to `signal(...)` — only those receivers count
+    // as template-visible `.set` writers (not Map/Set/etc.).
+    let mut signals = HashSet::new();
+    {
+        let mut collector = SignalBindingCollector {
+            signals: &mut signals,
+        };
+        collector.visit_program(&ret.program);
+    }
+
     let mut visitor = MatchMediaVisitor {
         source,
         file: path.to_path_buf(),
+        signals,
         // binding name → matchMedia call span (layout query only)
         layout_mqls: HashMap::new(),
         // binding name → originating matchMedia span (bound from .matches)
         layout_matches_vals: HashMap::new(),
         // matchMedia call spans already reported (by start offset)
         reported: HashSet::new(),
+        // true while walking the setup fn passed to `controller(...)`
+        in_controller_setup: false,
+        // when true, the next arrow/function body entered is controller setup
+        pending_controller_setup: false,
         findings: Vec::new(),
     };
     visitor.visit_program(&ret.program);
@@ -61,12 +80,33 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     visitor.findings
 }
 
+/// Collects identifiers bound via `const/let X = signal(...)`.
+struct SignalBindingCollector<'a> {
+    signals: &'a mut HashSet<String>,
+}
+
+impl<'a> Visit<'a> for SignalBindingCollector<'_> {
+    fn visit_variable_declarator(&mut self, decl: &VariableDeclarator<'a>) {
+        if let Some(init) = &decl.init {
+            if is_signal_call(init) {
+                if let Some(name) = binding_name(&decl.id) {
+                    self.signals.insert(name);
+                }
+            }
+            self.visit_expression(init);
+        }
+    }
+}
+
 struct MatchMediaVisitor<'src> {
     source: &'src str,
     file: PathBuf,
+    signals: HashSet<String>,
     layout_mqls: HashMap<String, Span>,
     layout_matches_vals: HashMap<String, Span>,
     reported: HashSet<u32>,
+    in_controller_setup: bool,
+    pending_controller_setup: bool,
     findings: Vec<Finding>,
 }
 
@@ -145,6 +185,27 @@ impl MatchMediaVisitor<'_> {
             self.report_at(span);
         }
     }
+
+    /// Enter a function/arrow body. If it was the pending controller setup
+    /// argument, mark `in_controller_setup` for the duration of the body.
+    fn enter_function_like(&mut self) -> bool {
+        if self.pending_controller_setup {
+            self.pending_controller_setup = false;
+            let prev = self.in_controller_setup;
+            self.in_controller_setup = true;
+            prev
+        } else {
+            // Nested function inside setup (helpers, mount callbacks, …): leave
+            // setup scope so their returns are not treated as export returns.
+            let prev = self.in_controller_setup;
+            self.in_controller_setup = false;
+            prev
+        }
+    }
+
+    fn exit_function_like(&mut self, prev: bool) {
+        self.in_controller_setup = prev;
+    }
 }
 
 impl<'a> Visit<'a> for MatchMediaVisitor<'_> {
@@ -168,11 +229,34 @@ impl<'a> Visit<'a> for MatchMediaVisitor<'_> {
     }
 
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
-        // `signal(<layout-matches>)` or `foo.set(<layout-matches>)`
-        if is_signal_callee(&expr.callee) || is_set_method(&expr.callee) {
+        // `controller(setup)` — next function/arrow entered is the setup body.
+        if is_controller_callee(&expr.callee) {
+            if let Some(arg) = expr.arguments.first().and_then(|a| a.as_expression()) {
+                if matches!(
+                    arg,
+                    Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)
+                ) {
+                    self.pending_controller_setup = true;
+                }
+            }
+        }
+
+        // `signal(<layout-matches>)` — always template-visible state.
+        if is_signal_callee(&expr.callee) {
             for arg in &expr.arguments {
                 if let Some(e) = arg.as_expression() {
                     self.flag_if_layout_matches_value(e);
+                }
+            }
+        }
+        // `isWide.set(<layout-matches>)` only when `isWide` is a known signal.
+        // `Map.set` / other `.set` APIs stay silent.
+        else if let Some(receiver) = signal_set_receiver(&expr.callee) {
+            if self.signals.contains(receiver) {
+                for arg in &expr.arguments {
+                    if let Some(e) = arg.as_expression() {
+                        self.flag_if_layout_matches_value(e);
+                    }
                 }
             }
         }
@@ -183,22 +267,50 @@ impl<'a> Visit<'a> for MatchMediaVisitor<'_> {
                 self.visit_expression(e);
             }
         }
+        // Clear sticky pending if the setup arg was not a function (rare).
+        self.pending_controller_setup = false;
+    }
+
+    fn visit_arrow_function_expression(&mut self, expr: &ArrowFunctionExpression<'a>) {
+        let prev = self.enter_function_like();
+        oxc_ast_visit::walk::walk_arrow_function_expression(self, expr);
+        self.exit_function_like(prev);
+    }
+
+    fn visit_function(&mut self, func: &Function<'a>, flags: ScopeFlags) {
+        let prev = self.enter_function_like();
+        oxc_ast_visit::walk::walk_function(self, func, flags);
+        self.exit_function_like(prev);
     }
 
     fn visit_return_statement(&mut self, stmt: &ReturnStatement<'a>) {
-        if let Some(arg) = &stmt.argument {
-            // `return { isWide }` shorthand or `return { isWide: …matches }`
-            if let Expression::ObjectExpression(obj) = arg {
-                for prop in &obj.properties {
-                    if let ObjectPropertyKind::ObjectProperty(p) = prop {
-                        self.flag_if_layout_matches_value(&p.value);
+        // Only the controller factory's export object can put raw layout
+        // matches into template-visible scope. Helper `return mq.matches` is
+        // condition-intent and stays silent (same as `if (mq.matches)`).
+        if self.in_controller_setup {
+            if let Some(arg) = &stmt.argument {
+                if let Expression::ObjectExpression(obj) = arg {
+                    for prop in &obj.properties {
+                        if let ObjectPropertyKind::ObjectProperty(p) = prop {
+                            self.flag_if_layout_matches_value(&p.value);
+                        }
                     }
                 }
-            } else {
-                self.flag_if_layout_matches_value(arg);
             }
+        }
+        if let Some(arg) = &stmt.argument {
             self.visit_expression(arg);
         }
+    }
+}
+
+/// `controller` or `controller<…>` (instantiation).
+fn is_controller_callee(expr: &Expression<'_>) -> bool {
+    match expr {
+        Expression::Identifier(id) => id.name.as_str() == "controller",
+        Expression::TSInstantiationExpression(te) => is_controller_callee(&te.expression),
+        Expression::ParenthesizedExpression(p) => is_controller_callee(&p.expression),
+        _ => false,
     }
 }
 
@@ -227,12 +339,32 @@ fn is_signal_callee(expr: &Expression<'_>) -> bool {
     }
 }
 
-/// `<expr>.set(...)` — signal writer.
-fn is_set_method(expr: &Expression<'_>) -> bool {
+fn is_signal_call(expr: &Expression<'_>) -> bool {
     match expr {
-        Expression::StaticMemberExpression(m) => m.property.name.as_str() == "set",
-        Expression::ParenthesizedExpression(p) => is_set_method(&p.expression),
+        Expression::CallExpression(call) => is_signal_callee(&call.callee),
+        Expression::ParenthesizedExpression(p) => is_signal_call(&p.expression),
+        Expression::TSAsExpression(a) => is_signal_call(&a.expression),
+        Expression::TSSatisfiesExpression(s) => is_signal_call(&s.expression),
         _ => false,
+    }
+}
+
+/// If `expr` is `<ident>.set`, return the receiver identifier name.
+/// Non-identifier receivers (`cache.set`, `foo.bar.set`) yield `None`.
+fn signal_set_receiver<'a>(expr: &Expression<'a>) -> Option<&'a str> {
+    match expr {
+        Expression::StaticMemberExpression(m) if m.property.name.as_str() == "set" => {
+            match &m.object {
+                Expression::Identifier(id) => Some(id.name.as_str()),
+                Expression::ParenthesizedExpression(p) => match &p.expression {
+                    Expression::Identifier(id) => Some(id.name.as_str()),
+                    _ => None,
+                },
+                _ => None,
+            }
+        }
+        Expression::ParenthesizedExpression(p) => signal_set_receiver(&p.expression),
+        _ => None,
     }
 }
 
@@ -384,6 +516,21 @@ export default controller(() => {
     }
 
     #[test]
+    fn flags_controller_export_return_of_layout_matches() {
+        // Raw boolean in the export object is still template-visible state.
+        let src = r#"
+export default controller(() => {
+  return {
+    isWide: window.matchMedia('(min-width: 768px)').matches,
+  }
+})
+"#;
+        let f = lint(src);
+        assert_eq!(f.len(), 1, "{f:?}");
+        assert_eq!(f[0].rule, RULE_ID);
+    }
+
+    #[test]
     fn silent_on_prefers_reduced_motion() {
         let src = r#"
 export default controller(() => {
@@ -439,6 +586,68 @@ export default controller(() => {
     }
 
     #[test]
+    fn silent_helper_return_of_layout_matches() {
+        // Factoring the condition into a helper must stay silent — same intent
+        // as `if (mq.matches) open.set(false)`.
+        let src = r#"
+function isTablet(): boolean {
+  return window.matchMedia('(min-width: 768px)').matches
+}
+export default controller(() => {
+  const open = signal(false)
+  mount(() => {
+    if (isTablet()) open.set(false)
+  })
+  return { open }
+})
+"#;
+        assert!(
+            lint(src).is_empty(),
+            "helper return must be silent: {:?}",
+            msgs(src)
+        );
+    }
+
+    #[test]
+    fn silent_nested_helper_inside_controller() {
+        let src = r#"
+export default controller(() => {
+  const open = signal(false)
+  function isTablet(): boolean {
+    return window.matchMedia('(min-width: 768px)').matches
+  }
+  mount(() => {
+    if (isTablet()) open.set(false)
+  })
+  return { open }
+})
+"#;
+        assert!(
+            lint(src).is_empty(),
+            "nested helper return must be silent: {:?}",
+            msgs(src)
+        );
+    }
+
+    #[test]
+    fn silent_map_set_of_layout_matches() {
+        // Non-signal `.set` is bookkeeping, not template-visible state.
+        let src = r#"
+export default controller(() => {
+  const cache = new Map<string, boolean>()
+  const mq = window.matchMedia('(min-width: 768px)')
+  cache.set('wide', mq.matches)
+  return {}
+})
+"#;
+        assert!(
+            lint(src).is_empty(),
+            "Map.set must be silent: {:?}",
+            msgs(src)
+        );
+    }
+
+    #[test]
     fn landing_shaped_fixture_fires() {
         // Minimal mirror of apps/sail-site/routes/page.sail controller.
         let src = r#"
@@ -463,5 +672,7 @@ export default controller((_ctx) => {
             "expected at least one finding on landing fixture, got {f:?}"
         );
         assert!(f.iter().all(|x| x.rule == RULE_ID));
+        // signal init + known-signal .set → two call sites
+        assert_eq!(f.len(), 2, "expected both landing call sites: {f:?}");
     }
 }
