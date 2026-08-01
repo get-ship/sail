@@ -107,3 +107,6 @@ __pycache__/
 **/.__hygiene_*
 tests/parity/geometry/out/
 tests/parity/paint/out/
+
+# Bundled action artifacts (regenerable)
+**/.actions.bundle.js
