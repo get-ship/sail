@@ -329,6 +329,25 @@ describe('<sail-tree> — virtualized over tree.rows() (behavioral spec #6)', ()
     // 5000 rows × any non-trivial estimate → a tall spacer the window never matches.
     expect(h).toBeGreaterThan(10_000)
   })
+
+  it('windowed rows apply --row-y via translate (do not stack at y=0)', async () => {
+    // Regression: sail-tree once set use:virtualRow without translateY(bind(rowY)),
+    // so every absolute treeitem painted at the same origin (studio explorer illegible).
+    const { shadow } = mountTree(true)
+    await flush()
+    const items = Array.from(shadow!.querySelectorAll('[role="treeitem"]')) as HTMLElement[]
+    expect(items.length).toBeGreaterThan(1)
+    const rowYs = items.map((el) => el.style.getPropertyValue('--row-y'))
+    // At least two distinct offsets from the virtualizer.
+    expect(new Set(rowYs.filter(Boolean)).size).toBeGreaterThan(1)
+    // sx must consume --row-y (class atom or inline translate).
+    const consumes =
+      items[1]!.className.includes('translateY') ||
+      items[1]!.className.includes('translate-y') ||
+      getComputedStyle(items[1]!).translate !== 'none' ||
+      /translate|var\(--row-y\)/.test(items[1]!.getAttribute('style') || '')
+    expect(consumes || items[1]!.className.includes('sx-translateYbindrowY')).toBe(true)
+  })
 })
 
 describe('<sail-tree> — keyboard nav via the engine nav (REAL navMode:row keymap, spec #7)', () => {

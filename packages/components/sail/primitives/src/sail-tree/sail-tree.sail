@@ -219,7 +219,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <div bind:this={viewportEl} sx={style.position(relative).w(full).overflowY(auto).maxH(panel-max-h-md)}>
     <div use:virtualSpacer={totalSize()} sx={style.h(bind(rowsH)).position(relative).w(full)}>
       <for {windowItems()} as="w" key={w.key}>
-        <row align="center" gap="density" role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} use:cellPad={w.indent} sx={style.group().position(absolute).left(0).w(full).padY(density-row-py).padR(density-row-px).radius(sm).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).fontWeight(medium), busy: style.fg(muted-foreground).italic(true).cursor(default), focus: style.outline(ring) })}>
+        <!--
+          virtualRow writes --row-y; sx MUST apply translateY(bind(rowY)) or every
+          absolute row stacks at y=0 (studio explorer "mojibake" / illegible list).
+          Same pattern as sail-tree-grid + sail-message-list. cellPad → padS(bind(cellPs)).
+        -->
+        <row align="center" gap="density" nowrap role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} use:cellPad={w.indent} sx={style.group().position(absolute).left(0).w(full).translateY(bind(rowY)).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)).radius(sm).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).fontWeight(medium), busy: style.fg(muted-foreground).italic(true).cursor(default), focus: style.outline(ring) })}>
           <if {w.canExpand}>
             <row data-action="toggle" aria-hidden="true" align="center" justify="center" sx={style.w(density-icon).h(density-icon).minW(density-icon).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
               <icon name="chevron-right" size="xs"></icon>
@@ -245,7 +250,24 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <slot name="node-icon"></slot>
           </else></if>
           <span grow min-w="0" sx={style.truncate()}>{w.label}</span>
-          <span sx={style.ml(auto).fg(muted-foreground).fontSize(xs)}><slot name="node-trailing"></slot></span>
+          <!--
+            Trail: data `node.trailing` (e.g. dirty ●) then host slot for custom meta.
+            Meta lives here — never folded into the label (557 B / stacked-text lesson).
+          -->
+          <span sx={style.ml(auto).fontSize(xs)}>
+            <!--
+              Trailing meta: dirty ● (warning) vs text badges (muted, e.g. L1/L2/L3).
+              Never fold meta into the label (557 B / stacked-text lesson).
+            -->
+            <if {w.trailing !== ''}>
+              <if {w.trailing === '●'}>
+                <span sx={style.fg(warning)} aria-label="Unsaved">●</span>
+              <else>
+                <span sx={style.fg(muted-foreground)} aria-label={`Meta ${w.trailing}`}>{w.trailing}</span>
+              </else></if>
+            </if>
+            <span sx={style.fg(muted-foreground)}><slot name="node-trailing"></slot></span>
+          </span>
         </row>
       </for>
     </div>

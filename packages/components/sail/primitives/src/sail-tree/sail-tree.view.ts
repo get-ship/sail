@@ -43,6 +43,11 @@ export interface TreeRowView {
   /** Per-node `<sail-icon>` name from `node.icon` (`''` when unset) — the
    *  template renders it ahead of the label, else falls back to the slot. */
   icon: string
+  /**
+   * Per-node trailing meta from `node.trailing` (`''` when unset) — rendered
+   * in the row's trail slot (dirty dots, badges) without cramming the label.
+   */
+  trailing: string
   depth: number
   level: number
   posInSet: number
@@ -109,7 +114,12 @@ function toRowView<T extends TreeNode>(
   // with `original.lazy`. The engine reports `getCanExpand()=false` while that
   // branch carries no sub-rows yet, so the view honors the consumer's `lazy` flag
   // to keep the disclosure caret present before the first load.
-  const orig = row.original as { lazy?: boolean; pending?: boolean; icon?: string } | undefined
+  const orig = row.original as {
+    lazy?: boolean
+    pending?: boolean
+    icon?: string
+    trailing?: string
+  } | undefined
   const pending = orig?.pending === true
   const canExpand = row.getCanExpand() || orig?.lazy === true
   const cells = rowCells(row, cols)
@@ -121,6 +131,7 @@ function toRowView<T extends TreeNode>(
     id: row.id,
     label: rowLabel(row, cols),
     icon: orig?.icon != null ? String(orig.icon) : '',
+    trailing: orig?.trailing != null ? String(orig.trailing) : '',
     depth: row.depth,
     level: row.depth + 1,
     posInSet: row.getPosInSet(),
