@@ -194,9 +194,10 @@ pub fn parse_source(source: &str) -> Vec<Element> {
     out
 }
 
-/// Byte-string search from `start`. Single-byte needles use `memchr`-style
-/// linear scan; multi-byte uses first-byte filter then equality (avoids a
-/// pure `windows().position` full compare on every offset).
+/// Byte-string search from `start`. Single-byte needles use a plain linear
+/// scan (`Iterator::position`); multi-byte filters on the first byte then
+/// full-slice equality. Call sites advance past each match so total work over
+/// a parse stays O(n).
 fn find_from(hay: &[u8], start: usize, needle: &[u8]) -> Option<usize> {
     if needle.is_empty() || start >= hay.len() {
         return None;
@@ -578,22 +579,54 @@ mod tests {
     }
 
     #[test]
+    fn tags_between_two_comments_parse() {
+        let src = r#"<!-- a --><div class="mid"></div><!-- b --><span class="tail"></span>"#;
+        let tree = parse_source(src);
+        assert!(
+            tree.iter()
+                .any(|e| e.tag == "div" && e.class.contains("mid")),
+            "tag between comments must parse"
+        );
+        assert!(
+            tree.iter()
+                .any(|e| e.tag == "span" && e.class.contains("tail")),
+            "tag after second comment must parse"
+        );
+    }
+
+    #[test]
+    fn text_split_by_comment_inside_open_element() {
+        // Text before each `<` is accumulated; comments at that `<` are
+        // skipped so surrounding text collapses onto the open element.
+        let src = r#"<div>hello <!-- c --> world</div>"#;
+        let tree = parse_source(src);
+        let div = tree.iter().find(|e| e.tag == "div").expect("div");
+        assert_eq!(
+            div.text, "hello world",
+            "comment must not drop surrounding text leaves"
+        );
+    }
+
+    #[test]
     fn large_comment_free_source_parses_linearly() {
         // PERF-1 regression: full-file `<!--` scan each iteration was O(n²)
         // and pegged multi-core CPU during `sail dev` layout checks.
-        let mut src = String::with_capacity(80_000);
-        for i in 0..4_000 {
+        // 20k tags keeps the O(n²) path catastrophically slow if reintroduced
+        // while a 2s wall budget absorbs overloaded CI noise.
+        const N: usize = 20_000;
+        let mut src = String::with_capacity(N * 40);
+        for i in 0..N {
             src.push_str(&format!(r#"<div class="c{i}"><span>x</span></div>"#));
         }
         let t0 = std::time::Instant::now();
         let tree = parse_source(&src);
         let dt = t0.elapsed();
         assert!(
-            tree.iter().filter(|e| e.tag == "div").count() >= 4_000,
-            "expected thousands of divs"
+            tree.iter().filter(|e| e.tag == "div").count() >= N,
+            "expected {N} divs"
         );
         assert!(
-            dt.as_millis() < 500,
+            dt.as_millis() < 2_000,
             "parse_source must stay linear; took {dt:?} (was multi-second O(n²) before PERF-1)"
         );
     }
