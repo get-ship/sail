@@ -197,17 +197,76 @@ export function radiusFamilyFromDoc(
   return { path: 'radius', ordered, scaleTogether, steps }
 }
 
-/** Apply scale family into a mutable theme doc at `family.path` (e.g. radius, icon). */
+/**
+ * Where to write a scale group for modes-in-file themes.
+ * Prefer existing active-mode group, then root if no modes; never the inactive mode.
+ */
+export function resolveScaleWritePath(
+  doc: Record<string, unknown>,
+  groupKey: string,
+  modeId: 'light' | 'dark' = 'light',
+): string {
+  const modes = doc.modes as Record<string, unknown> | undefined
+  const active = modes?.[modeId] as Record<string, unknown> | undefined
+  if (active?.[groupKey] && typeof active[groupKey] === 'object') {
+    return `modes.${modeId}.${groupKey}`
+  }
+  if (doc[groupKey] && typeof doc[groupKey] === 'object' && !Array.isArray(doc[groupKey])) {
+    // Modes-in-file themes should not accumulate dual root + mode sources.
+    if (modes && typeof modes === 'object') {
+      return `modes.${modeId}.${groupKey}`
+    }
+    return groupKey
+  }
+  if (modes && typeof modes === 'object') {
+    return `modes.${modeId}.${groupKey}`
+  }
+  return groupKey
+}
+
+function setNestedGroup(
+  doc: Record<string, unknown>,
+  dottedPath: string,
+  group: Record<string, unknown>,
+): void {
+  const parts = dottedPath.split('.')
+  let cur: Record<string, unknown> = doc
+  for (let i = 0; i < parts.length - 1; i++) {
+    const p = parts[i]!
+    const child = cur[p]
+    if (!child || typeof child !== 'object' || Array.isArray(child)) {
+      cur[p] = {}
+    }
+    cur = cur[p] as Record<string, unknown>
+  }
+  cur[parts[parts.length - 1]!] = group
+}
+
+function getNestedGroup(
+  doc: Record<string, unknown>,
+  dottedPath: string,
+): Record<string, unknown> | null {
+  const parts = dottedPath.split('.')
+  let cur: unknown = doc
+  for (const p of parts) {
+    if (!cur || typeof cur !== 'object' || Array.isArray(cur)) return null
+    cur = (cur as Record<string, unknown>)[p]
+  }
+  if (!cur || typeof cur !== 'object' || Array.isArray(cur)) return null
+  return cur as Record<string, unknown>
+}
+
+/** Apply scale family into a theme doc at root or modes.{modeId}.{path}. */
 export function applyScaleToDoc(
   doc: Record<string, unknown>,
   family: ScaleFamily,
+  modeId: 'light' | 'dark' = 'light',
 ): Record<string, unknown> {
   const next = structuredClone(doc) as Record<string, unknown>
   const key = family.path
-  const group: Record<string, unknown> =
-    next[key] && typeof next[key] === 'object' && !Array.isArray(next[key])
-      ? { ...(next[key] as Record<string, unknown>) }
-      : {}
+  const target = resolveScaleWritePath(next, key, modeId)
+  const prevGroup = getNestedGroup(next, target) ?? {}
+  const group: Record<string, unknown> = { ...prevGroup }
   for (const step of family.steps) {
     const prev = (group[step.key] as Record<string, unknown> | undefined) ?? {}
     group[step.key] = {
@@ -220,16 +279,21 @@ export function applyScaleToDoc(
     ...((group.$extensions as object) ?? {}),
     ordered: family.ordered,
   }
-  next[key] = group
+  setNestedGroup(next, target, group)
+  // Drop stale root copy when writing under modes (avoids dual sources).
+  if (target.startsWith('modes.') && next[key]) {
+    delete next[key]
+  }
   return next
 }
 
-/** Apply scale family into a mutable theme doc (root-level radius). */
+/** Apply radius scale family (mode-aware). */
 export function applyRadiusToDoc(
   doc: Record<string, unknown>,
   family: ScaleFamily,
+  modeId: 'light' | 'dark' = 'light',
 ): Record<string, unknown> {
-  return applyScaleToDoc(doc, { ...family, path: 'radius' })
+  return applyScaleToDoc(doc, { ...family, path: 'radius' }, modeId)
 }
 
 /** Default icon size family (sm…xl subset). */

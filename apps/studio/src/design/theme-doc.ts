@@ -75,48 +75,69 @@ export function setDensity(
   return next
 }
 
-/** Read radius family from root or modes.light.radius. */
-export function extractRadius(doc: Record<string, unknown> | null): ScaleFamily {
-  if (!doc) return radiusFamilyFromDoc(null)
-  if (doc.radius && typeof doc.radius === 'object') {
-    return radiusFamilyFromDoc(doc.radius as Record<string, unknown>)
-  }
+/** Read a scale group object from root or modes (prefer active mode). */
+function extractScaleGroup(
+  doc: Record<string, unknown> | null,
+  group: string,
+  modeId: 'light' | 'dark' = 'light',
+): Record<string, unknown> | null {
+  if (!doc) return null
   const modes = doc.modes as Record<string, unknown> | undefined
-  const light = modes?.light as Record<string, unknown> | undefined
-  if (light?.radius && typeof light.radius === 'object') {
-    return radiusFamilyFromDoc(light.radius as Record<string, unknown>)
+  const active = modes?.[modeId] as Record<string, unknown> | undefined
+  if (active?.[group] && typeof active[group] === 'object') {
+    return active[group] as Record<string, unknown>
   }
-  return radiusFamilyFromDoc(null)
+  if (doc[group] && typeof doc[group] === 'object' && !Array.isArray(doc[group])) {
+    return doc[group] as Record<string, unknown>
+  }
+  const other = modeId === 'dark' ? 'light' : 'dark'
+  const fallback = modes?.[other] as Record<string, unknown> | undefined
+  if (fallback?.[group] && typeof fallback[group] === 'object') {
+    return fallback[group] as Record<string, unknown>
+  }
+  return null
+}
+
+/** Read radius family from active mode, then root, then other mode. */
+export function extractRadius(
+  doc: Record<string, unknown> | null,
+  modeId: 'light' | 'dark' = 'light',
+): ScaleFamily {
+  return radiusFamilyFromDoc(extractScaleGroup(doc, 'radius', modeId))
 }
 
 export function patchRadius(
   doc: Record<string, unknown>,
   family: ScaleFamily,
+  modeId: 'light' | 'dark' = 'light',
 ): Record<string, unknown> {
-  return applyRadiusToDoc(doc, family)
+  return applyRadiusToDoc(doc, family, modeId)
 }
 
-export function extractIconScale(doc: Record<string, unknown> | null): ScaleFamily {
-  if (!doc) return iconFamilyFromDoc(null)
-  if (doc.icon && typeof doc.icon === 'object') {
-    return iconFamilyFromDoc(doc.icon as Record<string, unknown>)
-  }
-  return iconFamilyFromDoc(null)
+export function extractIconScale(
+  doc: Record<string, unknown> | null,
+  modeId: 'light' | 'dark' = 'light',
+): ScaleFamily {
+  return iconFamilyFromDoc(extractScaleGroup(doc, 'icon', modeId))
 }
 
 export function patchIconScale(
   doc: Record<string, unknown>,
   family: ScaleFamily,
+  modeId: 'light' | 'dark' = 'light',
 ): Record<string, unknown> {
-  return applyScaleToDoc(doc, { ...family, path: 'icon' })
+  return applyScaleToDoc(doc, { ...family, path: 'icon' }, modeId)
 }
 
 /**
  * Inheritance chain for radius: base catalog → theme scale → component override.
  * Components: button, card, input (specimen-relevant).
  */
-export function radiusInheritance(doc: Record<string, unknown> | null): InheritNode[] {
-  const family = extractRadius(doc)
+export function radiusInheritance(
+  doc: Record<string, unknown> | null,
+  modeId: 'light' | 'dark' = 'light',
+): InheritNode[] {
+  const family = extractRadius(doc, modeId)
   const lg = family.steps.find((s) => s.key === 'lg')
   const globalVal = lg?.raw ?? '10px'
   const nodes: InheritNode[] = [
@@ -139,7 +160,7 @@ export function radiusInheritance(doc: Record<string, unknown> | null): InheritN
   ]
   for (const comp of ['button', 'card', 'input']) {
     const path = `component.${comp}.radius`
-    const raw = getPathValue(doc, path)
+    const raw = getPathValue(doc, path, modeId)
     const isOverride = raw != null
     const name = comp.charAt(0).toUpperCase() + comp.slice(1)
     nodes.push({
@@ -174,9 +195,8 @@ function leafValue(node: unknown): string | null {
 }
 
 /**
- * Candidate physical paths for a logical token path.
- * Themes are modes-in-file (`modes.light.color…`); registry knobs use
- * logical paths (`color.primary.default`). Prefer active mode, then light/dark, then root.
+ * Read candidates for a logical token path.
+ * Prefer root, then active mode, then the other mode (read fallback only).
  */
 export function candidatePaths(
   path: string,
@@ -184,16 +204,23 @@ export function candidatePaths(
 ): string[] {
   if (!path || path.startsWith('$') || path.startsWith('modes.')) return [path]
   const other = modeId === 'dark' ? 'light' : 'dark'
-  return [
-    path,
-    `modes.${modeId}.${path}`,
-    `modes.${other}.${path}`,
-    `modes.light.${path}`,
-    `modes.dark.${path}`,
-  ]
+  const out = [path, `modes.${modeId}.${path}`, `modes.${other}.${path}`]
+  return [...new Set(out)]
 }
 
-/** Resolve $value at logical path, walking modes when needed. */
+/**
+ * Write candidates — never the inactive mode.
+ * Prefer existing root leaf, then active mode leaf; create under active when modes-in-file.
+ */
+export function writeCandidatePaths(
+  path: string,
+  modeId: 'light' | 'dark' = 'light',
+): string[] {
+  if (!path || path.startsWith('$') || path.startsWith('modes.')) return [path]
+  return [path, `modes.${modeId}.${path}`]
+}
+
+/** Resolve $value at logical path, walking modes when needed (read may fall back). */
 export function getPathValue(
   doc: Record<string, unknown> | null,
   path: string,
@@ -207,17 +234,17 @@ export function getPathValue(
   return null
 }
 
-/** Physical path that currently holds the token (for write-back). */
+/** Physical path for write-back — never clobbers the inactive mode. */
 export function resolveWritePath(
   doc: Record<string, unknown> | null,
   path: string,
   modeId: 'light' | 'dark' = 'light',
 ): string {
   if (!doc) return path
-  for (const p of candidatePaths(path, modeId)) {
+  for (const p of writeCandidatePaths(path, modeId)) {
     if (leafValue(walkPath(doc, p)) != null) return p
   }
-  // Prefer modes.<active> when the theme is modes-in-file.
+  // Create under active mode when the theme is modes-in-file.
   if (doc.modes && typeof doc.modes === 'object') {
     return `modes.${modeId}.${path}`
   }
@@ -270,22 +297,29 @@ export function deletePath(
   return next
 }
 
-export function extractTypeRoles(doc: Record<string, unknown> | null): TypeRoles {
+export function extractTypeRoles(
+  doc: Record<string, unknown> | null,
+  modeId: 'light' | 'dark' = 'light',
+): TypeRoles {
   const defaults: TypeRoles = {
-    display: 'Syne',
+    display: 'Fraunces',
     body: 'DM Sans',
     mono: 'JetBrains Mono',
   }
   if (!doc) return defaults
+  // Studio / ship themes: heading.font (display), body.font / font.body, mono stacks.
   const display =
-    getPathValue(doc, 'typography.font.display') ??
-    getPathValue(doc, 'typography.font.display-app')
+    getPathValue(doc, 'typography.heading.font', modeId) ??
+    getPathValue(doc, 'typography.font.display', modeId) ??
+    getPathValue(doc, 'typography.font.display-app', modeId)
   const body =
-    getPathValue(doc, 'typography.font.body') ??
-    getPathValue(doc, 'typography.font.body-app')
+    getPathValue(doc, 'typography.body.font', modeId) ??
+    getPathValue(doc, 'typography.font.body', modeId) ??
+    getPathValue(doc, 'typography.font.body-app', modeId)
   const mono =
-    getPathValue(doc, 'typography.font.mono') ??
-    getPathValue(doc, 'typography.font.mono-app')
+    getPathValue(doc, 'typography.font.mono', modeId) ??
+    getPathValue(doc, 'typography.font.mono-app', modeId) ??
+    getPathValue(doc, 'typography.mono.font', modeId)
   return {
     display: familyName(display) || defaults.display,
     body: familyName(body) || defaults.body,
@@ -295,24 +329,68 @@ export function extractTypeRoles(doc: Record<string, unknown> | null): TypeRoles
 
 function familyName(raw: string | null): string {
   if (!raw) return ''
-  // "\"Syne Variable\", …" or {alias}
+  // Token alias — not a face name; leave empty so caller uses default.
+  if (raw.trim().startsWith('{')) return ''
+  // "\"Syne Variable\", …" or bare Fraunces, ui-serif, Georgia
   const m = raw.match(/"([^"]+)"/)
   if (m) return m[1].replace(/\s+Variable$/, '')
-  if (raw.startsWith('{')) return raw
   return raw.split(',')[0]?.replace(/"/g, '').trim() ?? ''
 }
 
-/** Patch typography font stacks (FontAdd handles binary vendoring). */
+/** Patch typography faces into theme + app stacks (mode-aware). */
 export function patchTypeRoles(
   doc: Record<string, unknown>,
   roles: TypeRoles,
+  modeId: 'light' | 'dark' = 'light',
 ): Record<string, unknown> {
   const stack = (name: string, fallback: string) =>
     `"${name}", "${fallback}", sans-serif`
+  const displayStack = (name: string) =>
+    `${name}, ui-serif, Georgia, serif`
   const mono = (name: string) => `"${name}", ui-monospace, monospace`
-  let next = setPathValue(doc, 'typography.font.display-app', stack(roles.display, 'Inter'), 'fontFamily')
-  next = setPathValue(next, 'typography.font.body-app', stack(roles.body, 'Inter'), 'fontFamily')
-  return setPathValue(next, 'typography.font.mono-app', mono(roles.mono), 'fontFamily')
+  // Prefer heading.font when the theme already uses it (studio/ship).
+  const hasHeading =
+    getPathValue(doc, 'typography.heading.font', modeId) != null ||
+    !!(doc.modes && typeof doc.modes === 'object')
+  let next = doc
+  if (hasHeading) {
+    next = setPathValue(
+      next,
+      'typography.heading.font',
+      displayStack(roles.display),
+      'fontFamily',
+      modeId,
+    )
+  }
+  next = setPathValue(
+    next,
+    'typography.font.display-app',
+    stack(roles.display, 'Inter'),
+    'fontFamily',
+    modeId,
+  )
+  next = setPathValue(
+    next,
+    'typography.font.body-app',
+    stack(roles.body, 'Inter'),
+    'fontFamily',
+    modeId,
+  )
+  // body.font alias target when present as concrete stack later
+  next = setPathValue(
+    next,
+    'typography.body.font',
+    stack(roles.body, 'Inter'),
+    'fontFamily',
+    modeId,
+  )
+  return setPathValue(
+    next,
+    'typography.font.mono-app',
+    mono(roles.mono),
+    'fontFamily',
+    modeId,
+  )
 }
 
 /** Diff two theme docs as path → $value rows (shallow leaf walk + ship density). */

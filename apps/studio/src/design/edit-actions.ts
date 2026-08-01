@@ -2,8 +2,11 @@
  * Design edit actions — density, scale families, type, icons, path writes.
  */
 import {
+  BRAND_FG_PATH,
   BRAND_PRIMARY_PATH,
   hexToOklchString,
+  isHex,
+  normHex,
   toPickerHex,
 } from './color'
 import {
@@ -18,7 +21,6 @@ import {
   densityOf,
   extractIconScale,
   extractRadius,
-  getPathValue,
   patchIconScale,
   patchRadius,
   patchTypeRoles,
@@ -97,7 +99,7 @@ export async function setRadiusStepOn(
     await ctx.repaintSpecimen()
     return
   }
-  const doc = patchRadius(state.themeDoc, family)
+  const doc = patchRadius(state.themeDoc, family, state.modeId)
   const monoErr = validateMonotonic(family.steps, family.ordered, family.path)
   if (monoErr && !family.scaleTogether && !clampNote) {
     ctx.setState({
@@ -112,7 +114,10 @@ export async function setRadiusStepOn(
   ctx.recomputeDerived(doc)
   ctx.setState({
     ...ctx.getState(),
-    radius: { ...extractRadius(doc), scaleTogether: family.scaleTogether },
+    radius: {
+      ...extractRadius(doc, state.modeId),
+      scaleTogether: family.scaleTogether,
+    },
     lastWriteError: null,
     lastClampNote: clampNote,
     statusNote: clampNote ?? `Updated radius · ${key}`,
@@ -155,7 +160,7 @@ export async function setTypeRoleOn(
     return
   }
   const roles = { ...state.typeRoles, [role]: family }
-  const doc = patchTypeRoles(state.themeDoc, roles)
+  const doc = patchTypeRoles(state.themeDoc, roles, state.modeId)
   ctx.recomputeDerived(doc)
   ctx.setState({ ...ctx.getState(), typeRoles: roles, lastWriteError: null })
   ctx.emit()
@@ -192,11 +197,14 @@ export async function setIconScaleStepOn(
     ctx.emit()
     return
   }
-  const doc = patchIconScale(state.themeDoc, family)
+  const doc = patchIconScale(state.themeDoc, family, state.modeId)
   ctx.recomputeDerived(doc)
   ctx.setState({
     ...ctx.getState(),
-    iconScale: { ...extractIconScale(doc), scaleTogether: family.scaleTogether },
+    iconScale: {
+      ...extractIconScale(doc, state.modeId),
+      scaleTogether: family.scaleTogether,
+    },
     lastWriteError: null,
     lastClampNote: clampNote,
   })
@@ -205,14 +213,32 @@ export async function setIconScaleStepOn(
 
 /**
  * Brand color decision — hex from sail-color-picker → oklch write on primary.
- * Specimen CSS vars update immediately (visual echo is not debounced).
+ * Also co-writes primary-foreground for AA when L is extreme.
+ * Ramp in the panel is preview-only (derived; not persisted as a scale).
  */
 export async function setBrandColorOn(
   ctx: EditCtx,
   hexOrOklch: string,
 ): Promise<void> {
   const raw = String(hexOrOklch ?? '').trim()
-  const oklch = raw.startsWith('oklch') ? raw : hexToOklchString(raw)
+  if (!raw) return
+  const oklch = raw.startsWith('oklch')
+    ? raw
+    : (() => {
+        try {
+          return hexToOklchString(raw)
+        } catch {
+          return null
+        }
+      })()
+  if (!oklch) {
+    ctx.setState({
+      ...ctx.getState(),
+      lastWriteError: 'That color is not valid',
+    })
+    ctx.emit()
+    return
+  }
   const hex = toPickerHex(oklch)
   ctx.reflectCss('primary', oklch)
   const state = ctx.getState()
@@ -225,13 +251,21 @@ export async function setBrandColorOn(
     ctx.emit()
     return
   }
-  const doc = setPathValue(
+  let doc = setPathValue(
     state.themeDoc,
     BRAND_PRIMARY_PATH,
     oklch,
     'color',
     state.modeId,
   )
+  // Co-write label color so Primary buttons stay readable (soft auto).
+  const L = (() => {
+    const m = oklch.match(/^oklch\(\s*([\d.]+)/i)
+    return m ? Number(m[1]) : 0.5
+  })()
+  const fg = L >= 0.55 ? 'oklch(0.18 0.02 48)' : 'oklch(0.98 0.01 90)'
+  doc = setPathValue(doc, BRAND_FG_PATH, fg, 'color', state.modeId)
+  ctx.reflectCss('primary-foreground', fg)
   ctx.recomputeDerived(doc)
   ctx.setState({
     ...ctx.getState(),
@@ -242,7 +276,6 @@ export async function setBrandColorOn(
   ctx.emit()
   await ctx.repaintSpecimen()
   void ctx.refreshBlast('primary')
-  void hex
 }
 
 /** Write a single registry token into the working theme doc + live specimen. */
@@ -255,12 +288,10 @@ export async function setTokenValueOn(
   const cssName = knob?.cssName ?? path
   const type = knob?.type ?? 'string'
   let writeValue = value
-  // Color picker commits hex — store oklch.
-  if (
-    (knob?.kind === 'color' || path.includes('color.')) &&
-    /^#?[0-9a-f]{3,8}$/i.test(value.trim())
-  ) {
-    writeValue = hexToOklchString(value.trim())
+  // Color picker commits hex — store oklch (6-digit only).
+  if (knob?.kind === 'color' || path.includes('color.')) {
+    const h = normHex(value.trim())
+    if (h && isHex(h)) writeValue = hexToOklchString(h)
   }
   ctx.reflectCss(cssName, writeValue)
 
@@ -305,13 +336,11 @@ export async function clearTokenValueOn(ctx: EditCtx, path: string): Promise<voi
   if (knob) ctx.reflectCss(knob.cssName, null)
   const state = ctx.getState()
   if (!state.themeDoc) return
-  const base = getPathValue(null, path, state.modeId)
   const doc = deletePath(state.themeDoc, path, state.modeId)
   ctx.recomputeDerived(doc)
   ctx.setState({ ...ctx.getState(), lastWriteError: null })
   ctx.emit()
   await ctx.repaintSpecimen()
-  void base
 }
 
 export function previewInAppOn(ctx: EditCtx): {
@@ -402,37 +431,63 @@ export async function refreshBlastOn(
   ctx: EditCtx,
   token: string,
 ): Promise<void> {
+  await refreshBlastAggregateOn(ctx, [token], 0)
+}
+
+/** Aggregate token-usage for dirty-path tokens (save-review blast). */
+export async function refreshBlastAggregateOn(
+  ctx: EditCtx,
+  tokens: string[],
+  dirtyCount = 0,
+): Promise<void> {
   const client = ctx.getClient()
+  const list = tokens.length > 0 ? tokens : ['primary']
   if (!client?.sailInspectTokenUsage) {
+    const n = dirtyCount || list.length
     ctx.setState({
       ...ctx.getState(),
       blast: {
-        token,
+        token: list.join(','),
         components: 0,
         componentIds: [],
         sites: [],
-        label: 'Not used in this project',
+        label:
+          n > 0
+            ? `${n} changed path${n === 1 ? '' : 's'} · usage not available offline`
+            : 'Not used in this project yet',
       },
     })
     ctx.emit()
     return
   }
   try {
-    const r = await client.sailInspectTokenUsage({ token })
-    const components = r.components ?? 0
-    const sites = (r.sites ?? []).map((s) => {
-      const o = s as { file?: string; span?: { line?: number; col?: number } }
-      return { file: o.file ?? '', span: o.span }
-    })
+    const componentIds = new Set<string>()
+    const sites: { file: string; span?: { line?: number; col?: number } }[] = []
+    let components = 0
+    for (const token of list.slice(0, 6)) {
+      const r = await client.sailInspectTokenUsage({ token })
+      components += r.components ?? 0
+      for (const id of r.componentIds ?? []) componentIds.add(id)
+      for (const s of r.sites ?? []) {
+        const o = s as { file?: string; span?: { line?: number; col?: number } }
+        sites.push({ file: o.file ?? '', span: o.span })
+      }
+    }
+    const uniqueComponents = componentIds.size || components
+    const surfaces = new Set(sites.map((s) => s.file).filter(Boolean)).size
+    const pathNote =
+      dirtyCount > 0
+        ? `${dirtyCount} changed path${dirtyCount === 1 ? '' : 's'} · `
+        : ''
     const blast: BlastRadius = {
-      token: r.token ?? token,
-      components,
-      componentIds: r.componentIds ?? [],
+      token: list.join(','),
+      components: uniqueComponents,
+      componentIds: [...componentIds],
       sites,
       label:
-        components > 0
-          ? `This change repaints ${components} component${components === 1 ? '' : 's'} across ${Math.max(1, sites.length)} surface${sites.length === 1 ? '' : 's'}`
-          : 'Not used in this project yet',
+        uniqueComponents > 0
+          ? `${pathNote}repaints ${uniqueComponents} component${uniqueComponents === 1 ? '' : 's'} across ${Math.max(1, surfaces)} surface${surfaces === 1 ? '' : 's'}`
+          : `${pathNote}not used in this project yet`,
     }
     ctx.setState({ ...ctx.getState(), blast })
     ctx.emit()

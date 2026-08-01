@@ -43,6 +43,7 @@ type InheritUi = {
   label: string
   isOverride: boolean
   canReset: boolean
+  canCustomize: boolean
   value: string
   key: string
 }
@@ -111,6 +112,8 @@ export function createDesignInspector() {
         label: n.label,
         isOverride: n.isOverride,
         canReset: n.canReset,
+        canCustomize:
+          !n.isOverride && n.id !== 'base' && n.id !== 'theme' && n.id !== 'global',
         value: n.value ?? '',
         key: n.id,
       })),

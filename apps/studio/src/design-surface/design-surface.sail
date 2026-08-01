@@ -160,7 +160,14 @@ export default controller(() => {
         <button type="button" size="sm" variant="ghost" data-cancel-save on:click={onCancelSaveReview}>
           Cancel
         </button>
-        <button type="button" size="sm" tone="primary" data-confirm-save on:click={onSaveTheme}>
+        <button
+          type="button"
+          size="sm"
+          tone="primary"
+          data-confirm-save
+          disabled={!canConfirmSave()}
+          on:click={onSaveTheme}
+        >
           Confirm save
         </button>
       </row>

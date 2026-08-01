@@ -93,11 +93,11 @@ const lin = (c: number): number => {
   return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
 }
 
-/** `#rrggbb` → oklch string for token write-back. */
+/** `#rrggbb` → oklch string for token write-back. Throws on invalid hex. */
 export function hexToOklchString(hex: string): string {
   const h = normHex(hex) || hex
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(h)
-  if (!m) return 'oklch(0.5 0.1 30)'
+  if (!m) throw new Error('invalid hex color')
   const r = lin(parseInt(m[1]!, 16))
   const g = lin(parseInt(m[2]!, 16))
   const b = lin(parseInt(m[3]!, 16))

@@ -5,6 +5,7 @@ import {
   clearTokenValueOn,
   overrideComponentRadiusOn,
   previewInAppOn,
+  refreshBlastAggregateOn,
   refreshBlastOn,
   repaintSpecimenOn,
   setBrandColorOn,
@@ -70,9 +71,10 @@ function emit(): void {
 }
 
 function recomputeDerived(doc: Record<string, unknown> | null): void {
-  const radius = extractRadius(doc)
+  const mode = state.modeId
+  const radius = extractRadius(doc, mode)
   radius.scaleTogether = state.radius.scaleTogether
-  const iconScale = extractIconScale(doc)
+  const iconScale = extractIconScale(doc, mode)
   iconScale.scaleTogether = state.iconScale.scaleTogether
   state = {
     ...state,
@@ -80,8 +82,8 @@ function recomputeDerived(doc: Record<string, unknown> | null): void {
     density: densityOf(doc),
     radius,
     iconScale,
-    inheritance: radiusInheritance(doc),
-    typeRoles: extractTypeRoles(doc),
+    inheritance: radiusInheritance(doc, mode),
+    typeRoles: extractTypeRoles(doc, mode),
     overrideCount: countOverrides(doc, savedDoc),
     diffRows: diffThemeDocs(savedDoc, doc),
     dirty: !!doc && JSON.stringify(doc) !== JSON.stringify(savedDoc),
@@ -164,6 +166,8 @@ export function setDesignProjectRoot(root: string): void {
 export function setDesignMode(modeId: 'light' | 'dark'): void {
   if (state.modeId === modeId) return
   state = { ...state, modeId }
+  // Re-extract scale families + type roles for the active mode.
+  recomputeDerived(state.themeDoc)
   emit()
   void repaintSpecimen()
 }
@@ -190,14 +194,30 @@ export function setSaveReviewOpen(open: boolean): void {
   state = { ...state, saveReviewOpen: open }
   emit()
   if (open) {
-    const token =
-      state.groupId === 'radius'
-        ? 'radius-lg'
-        : state.groupId === 'icon'
-          ? 'icon-md'
-          : 'primary'
-    void refreshBlast(token)
+    void refreshBlastForDirty()
   }
+}
+
+/** Map dirty DTCG paths → usage tokens for blast aggregation. */
+export function blastTokensFromDiffs(
+  rows: { path: string }[],
+): string[] {
+  const tokens = new Set<string>()
+  for (const r of rows) {
+    const p = r.path
+    if (p.includes('radius')) tokens.add('radius-lg')
+    else if (p.includes('icon')) tokens.add('icon-md')
+    else if (p.includes('primary') || p.includes('color.')) tokens.add('primary')
+    else if (p.includes('typography') || p.includes('font')) tokens.add('font-body')
+    else if (p.includes('density')) tokens.add('space-4')
+  }
+  if (tokens.size === 0) tokens.add('primary')
+  return [...tokens]
+}
+
+export async function refreshBlastForDirty(): Promise<void> {
+  const tokens = blastTokensFromDiffs(state.diffRows)
+  await refreshBlastAggregate(tokens, state.diffRows.length)
 }
 
 export function setScaleTogether(on: boolean): void {
@@ -346,6 +366,13 @@ export async function refreshBlast(token: string): Promise<void> {
   await refreshBlastOn(editCtx(), token)
 }
 
+export async function refreshBlastAggregate(
+  tokens: string[],
+  dirtyCount = 0,
+): Promise<void> {
+  await refreshBlastAggregateOn(editCtx(), tokens, dirtyCount)
+}
+
 export function previewInApp(): {
   ok: boolean
   patchKeys: string[]
@@ -372,6 +399,12 @@ export function __resetDesignForTests(): void {
 export function __setWorkingDocForTests(doc: Record<string, unknown> | null): void {
   savedDoc = doc ? structuredClone(doc) : null
   recomputeDerived(doc)
+  emit()
+}
+
+/** Test-only: project theme path so saveTheme skips fork. */
+export function __setThemePathForTests(path: string | null): void {
+  state = { ...state, themePath: path }
   emit()
 }
 

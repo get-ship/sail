@@ -441,6 +441,8 @@ describe('brand color + mode-aware paths + decisions', () => {
     const written = getPathValue(s.themeDoc, 'color.primary.default', 'light')
     expect(written).toMatch(/^oklch\(/)
     expect(s.diffRows.some((r) => r.path.includes('color.primary'))).toBe(true)
+    // Co-writes primary-foreground for AA
+    expect(getPathValue(s.themeDoc, 'color.primary.foreground', 'light')).toMatch(/^oklch\(/)
     const cards = uiDecisionCards(s)
     expect(cards).toHaveLength(5)
     expect(cards.map((c) => c.label)).toEqual([
@@ -474,7 +476,138 @@ describe('brand color + mode-aware paths + decisions', () => {
       },
     }
     expect(getPathValue(doc, 'color.primary.default', 'dark')).toBe('oklch(0.72 0.17 38)')
+    // Read may fall back across modes
     expect(getPathValue(doc, 'color.primary.default', 'light')).toBe('oklch(0.72 0.17 38)')
+  })
+
+  it('setBrandColor while light does not clobber dark-only primary', async () => {
+    const { setBrandColor, setDesignMode, getPathValue } = await import('../src/design')
+    const base = {
+      $extensions: { ship: { themeId: 'asymm' } },
+      modes: {
+        dark: {
+          color: {
+            primary: { default: { $value: 'oklch(0.72 0.17 38)', $type: 'color' } },
+          },
+        },
+      },
+    }
+    __setWorkingDocForTests(base)
+    setDesignMode('light')
+    await setBrandColor('#22c55e')
+    const s = getDesignState()
+    const light = getPathValue(s.themeDoc, 'color.primary.default', 'light')
+    const darkLeaf = (s.themeDoc as { modes?: { dark?: { color?: { primary?: { default?: { $value?: string } } } } } })
+      ?.modes?.dark?.color?.primary?.default?.$value
+    expect(light).toMatch(/^oklch\(/)
+    expect(darkLeaf).toBe('oklch(0.72 0.17 38)')
+    // Physical write target is modes.light, not dark
+    const lightLeaf = (s.themeDoc as { modes?: { light?: { color?: { primary?: { default?: { $value?: string } } } } } })
+      ?.modes?.light?.color?.primary?.default?.$value
+    expect(lightLeaf).toBe(light)
+  })
+
+  it('radius step writes modes.{mode}.radius on modes-only themes (not root)', async () => {
+    const { setRadiusStep, setDesignMode } = await import('../src/design')
+    const base = {
+      $extensions: { ship: { themeId: 'rad-modes' } },
+      modes: {
+        light: {
+          radius: {
+            sm: { $value: '4px', $type: 'dimension' },
+            md: { $value: '6px', $type: 'dimension' },
+            lg: { $value: '10px', $type: 'dimension' },
+            xl: { $value: '14px', $type: 'dimension' },
+            $extensions: { ordered: ['sm', 'md', 'lg', 'xl'] },
+          },
+        },
+      },
+    }
+    __setWorkingDocForTests(base)
+    setDesignMode('light')
+    await setRadiusStep('lg', 18)
+    const s = getDesignState()
+    const doc = s.themeDoc as {
+      radius?: unknown
+      modes?: { light?: { radius?: { lg?: { $value?: string } } } }
+    }
+    expect(doc.radius).toBeUndefined()
+    expect(doc.modes?.light?.radius?.lg?.$value).toBe('18px')
+  })
+
+  it('type roles extract heading.font and write under active mode', async () => {
+    const { extractTypeRoles, setTypeRole, setDesignMode } = await import('../src/design')
+    const base = {
+      $extensions: { ship: { themeId: 'type-toy' } },
+      modes: {
+        light: {
+          typography: {
+            heading: { font: { $value: 'Fraunces, ui-serif, Georgia, serif', $type: 'fontFamily' } },
+            body: { font: { $value: '{font-body}', $type: 'fontFamily' } },
+            font: { body: { $value: '{font-body-app}', $type: 'fontFamily' } },
+          },
+        },
+      },
+    }
+    __setWorkingDocForTests(base)
+    setDesignMode('light')
+    const roles = extractTypeRoles(base, 'light')
+    expect(roles.display).toBe('Fraunces')
+    // alias alone is not a face name → default body
+    expect(roles.body).toBe('DM Sans')
+    await setTypeRole('display', 'Playfair Display')
+    const s = getDesignState()
+    const heading = (
+      s.themeDoc as {
+        modes?: { light?: { typography?: { heading?: { font?: { $value?: string } } } } }
+      }
+    )?.modes?.light?.typography?.heading?.font?.$value
+    expect(heading).toMatch(/Playfair Display/)
+  })
+
+  it('requestSaveTheme two-step: review open then confirm', async () => {
+    const {
+      requestSaveTheme,
+      setDesignOpsClient,
+      setDesignDensity,
+      __setThemePathForTests,
+    } = await import('../src/design')
+    __setWorkingDocForTests({
+      $extensions: { ship: { themeId: 'save-gate', density: 'default' } },
+    })
+    __setThemePathForTests('apps/studio/tokens/themes/save-gate.json')
+    let writes = 0
+    setDesignOpsClient({
+      sailThemeList: async () => ({ files: [] }),
+      sailThemeRead: async () => ({ content: '{}' }),
+      sailThemeWrite: async () => {
+        writes += 1
+        return { ok: true }
+      },
+      sailThemeFork: async () => ({ ok: true }),
+    })
+    await setDesignDensity('compact')
+    expect(getDesignState().dirty).toBe(true)
+    const first = await requestSaveTheme()
+    expect(first).toBe(false)
+    expect(getDesignState().saveReviewOpen).toBe(true)
+    expect(writes).toBe(0)
+    const second = await requestSaveTheme()
+    expect(second).toBe(true)
+    expect(writes).toBe(1)
+    expect(getDesignState().saveReviewOpen).toBe(false)
+  })
+
+  it('blastTokensFromDiffs maps dirty paths to usage tokens', async () => {
+    const { blastTokensFromDiffs } = await import('../src/design')
+    expect(blastTokensFromDiffs([{ path: 'modes.light.radius.lg' }])).toContain('radius-lg')
+    expect(blastTokensFromDiffs([{ path: 'color.primary.default' }])).toContain('primary')
+    expect(
+      blastTokensFromDiffs([
+        { path: 'modes.light.radius.md' },
+        { path: 'color.primary.default' },
+      ]).length,
+    ).toBeGreaterThan(1)
   })
 })
 

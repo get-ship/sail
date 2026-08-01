@@ -174,22 +174,16 @@ export default controller(() => {
                     Reset
                   </button>
                 </if>
-                <if {!n.isOverride}>
-                  <if {n.id !== 'global'}>
-                    <if {n.id !== 'base'}>
-                      <if {n.id !== 'theme'}>
-                        <button
-                          type="button"
-                          size="sm"
-                          variant="soft"
-                          data-inherit-override
-                          on:click={onInheritOverride}
-                        >
-                          Customize
-                        </button>
-                      </if>
-                    </if>
-                  </if>
+                <if {n.canCustomize}>
+                  <button
+                    type="button"
+                    size="sm"
+                    variant="soft"
+                    data-inherit-override
+                    on:click={onInheritOverride}
+                  >
+                    Customize
+                  </button>
                 </if>
               </row>
             </for>
