@@ -21,8 +21,8 @@
 //! second serialization contract to keep in sync.
 
 use napi_derive::napi;
+use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile as native_compile};
 use serde::{Deserialize, Serialize};
-use sail_compiler::{compile as native_compile, CompileMode, CompileOpts, ComponentMeta};
 
 /// JS-facing opts — identical field set + camelCase mapping to
 /// `wasm.rs::WasmOpts`. The harness passes
@@ -110,13 +110,14 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
         Some(other) => {
             return Err(format!(
                 "unknown mode {other:?} — expected route / component / auto"
-            ))
+            ));
         }
     };
 
-    let component_meta = parsed.component_name.as_ref().map(|name| ComponentMeta {
-        name: name.clone(),
-            });
+    let component_meta = parsed
+        .component_name
+        .as_ref()
+        .map(|name| ComponentMeta { name: name.clone() });
 
     // Language policy comes from the source's own sail.config.json walk-up —
     // this seam enforces exactly what deck and the CLI enforce.
@@ -137,8 +138,7 @@ fn compile_to_result(source: &str, opts_json: &str) -> Result<NapiResult, String
         lint_overrides,
     };
 
-    let inline_controller =
-        sail_compiler::parse::preprocess::extract_controller_block(source).1;
+    let inline_controller = sail_compiler::parse::preprocess::extract_controller_block(source).1;
     Ok(match native_compile(source, opts) {
         Ok(out) => NapiResult::Ok {
             js: out.js,
@@ -194,11 +194,7 @@ mod tests {
 
     #[test]
     fn component_name_forces_component_mode() {
-        let json = compile_to_result(
-            "<div>hi</div>",
-            r#"{"componentName":"sail-x"}"#,
-        )
-        .unwrap();
+        let json = compile_to_result("<div>hi</div>", r#"{"componentName":"sail-x"}"#).unwrap();
         let v = serde_json::to_value(&json).unwrap();
         assert_eq!(v["kind"], "ok");
         // component mode emits a customElements registration.
@@ -239,8 +235,7 @@ mod tests {
         // else the rule can't fire and this test would silently pass on `ok`
         // (the exact rot that hid behind the old `<sail-button variant>` input
         // once `sail-button` was dropped from the registry).
-        let json =
-            compile_to_result(r#"<badge tone="destructiv">x</badge>"#, "{}").unwrap();
+        let json = compile_to_result(r#"<badge tone="destructiv">x</badge>"#, "{}").unwrap();
         let v = serde_json::to_value(&json).unwrap();
         assert_eq!(v["kind"], "err", "{v}");
         assert_eq!(v["category"], "sail-prop-value");

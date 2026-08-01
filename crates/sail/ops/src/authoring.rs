@@ -651,9 +651,7 @@ pub fn list_files(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     }
     let root = ctx.workspace().join(&project);
     if !root.is_dir() {
-        return Err(OpError::NotFound(format!(
-            "project not found: {project}"
-        )));
+        return Err(OpError::NotFound(format!("project not found: {project}")));
     }
     let mut files: Vec<String> = Vec::new();
     for sub in ["routes", "src", "packs"] {

@@ -22,7 +22,9 @@ fn token_present(token: &str) -> bool {
     let tag = tag_from(token);
     let open = format!("'<{tag}'");
     let close = format!("'</{tag}>'");
-    GRAMMAR_SRC.contains(&open) || GRAMMAR_SRC.contains(&close) || GRAMMAR_SRC.contains(&format!("'{tag}'"))
+    GRAMMAR_SRC.contains(&open)
+        || GRAMMAR_SRC.contains(&close)
+        || GRAMMAR_SRC.contains(&format!("'{tag}'"))
 }
 
 #[test]

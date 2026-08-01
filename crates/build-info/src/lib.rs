@@ -91,7 +91,8 @@ macro_rules! build_info {
                 Some("1") | Some("true")
             ),
             timestamp: $crate::__private::option_env!("BUILD_TIMESTAMP").unwrap_or("unknown"),
-            rustc_version: $crate::__private::option_env!("BUILD_RUSTC_VERSION").unwrap_or("unknown"),
+            rustc_version: $crate::__private::option_env!("BUILD_RUSTC_VERSION")
+                .unwrap_or("unknown"),
             profile: $crate::__private::option_env!("BUILD_PROFILE").unwrap_or("unknown"),
         }
     }};
@@ -167,7 +168,10 @@ pub fn emit_build_env() {
     let profile = std::env::var("PROFILE").unwrap_or_else(|_| "unknown".to_string());
 
     println!("cargo:rustc-env=BUILD_GIT_SHA={sha}");
-    println!("cargo:rustc-env=BUILD_GIT_DIRTY={}", if dirty { "1" } else { "0" });
+    println!(
+        "cargo:rustc-env=BUILD_GIT_DIRTY={}",
+        if dirty { "1" } else { "0" }
+    );
     println!("cargo:rustc-env=BUILD_TIMESTAMP={timestamp}");
     println!("cargo:rustc-env=BUILD_RUSTC_VERSION={rustc}");
     println!("cargo:rustc-env=BUILD_PROFILE={profile}");
@@ -205,9 +209,7 @@ fn format_rfc3339_utc(secs: u64) -> String {
     let m = (if mp < 10 { mp + 3 } else { mp - 9 }) as u32;
     let y = if m <= 2 { y + 1 } else { y };
 
-    format!(
-        "{y:04}-{m:02}-{d:02}T{hour:02}:{minute:02}:{second:02}Z"
-    )
+    format!("{y:04}-{m:02}-{d:02}T{hour:02}:{minute:02}:{second:02}Z")
 }
 
 #[cfg(test)]

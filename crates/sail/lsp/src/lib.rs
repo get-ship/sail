@@ -382,8 +382,7 @@ fn icon_completion_items(prefix: &str) -> Vec<CompletionItem> {
 }
 
 /// Lucide icon registry (TOOL-10 asset). Keys only — SVG bodies unused here.
-const LUCIDE_ICONS_JSON: &str =
-    include_str!("../../../deck/deck-core/assets/lucide-icons.json");
+const LUCIDE_ICONS_JSON: &str = include_str!("../../../deck/deck-core/assets/lucide-icons.json");
 
 static ICON_NAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
     let v: serde_json::Value =
@@ -1235,7 +1234,10 @@ mod tests {
             .expect("trigger_characters");
         assert!(triggers.contains(&"-".to_string()), "missing '-' trigger");
         assert!(triggers.contains(&"(".to_string()), "missing '(' trigger");
-        assert!(triggers.contains(&"\"".to_string()), "missing quote trigger");
+        assert!(
+            triggers.contains(&"\"".to_string()),
+            "missing quote trigger"
+        );
         assert!(
             caps.code_action_provider.is_some(),
             "code actions required for TOOL-9 auto-fix"

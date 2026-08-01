@@ -23,7 +23,9 @@ fn workspace_root() -> PathBuf {
 }
 
 fn run(cmd: &mut Command) -> Result<String, String> {
-    let output = cmd.output().map_err(|e| format!("failed to spawn {cmd:?}: {e}"))?;
+    let output = cmd
+        .output()
+        .map_err(|e| format!("failed to spawn {cmd:?}: {e}"))?;
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
     if !output.status.success() {
@@ -66,7 +68,11 @@ fn generated_grammar_matches_committed_files() {
         ])
         .current_dir(&ws);
     run(&mut vocab_cmd).expect("vocab dump should succeed");
-    assert!(vocab.exists(), "vocab dump should write {}", vocab.display());
+    assert!(
+        vocab.exists(),
+        "vocab dump should write {}",
+        vocab.display()
+    );
 
     // 2. Run the generator into the temp directory.
     let mut gen_cmd = Command::new("bun");
@@ -101,10 +107,18 @@ fn generated_grammar_matches_committed_files() {
         );
     }
 
-    let lhs_highlights = std::fs::read_to_string(&generated_highlights)
-        .unwrap_or_else(|_| panic!("generated highlights missing: {}", generated_highlights.display()));
-    let rhs_highlights = std::fs::read_to_string(&committed_highlights)
-        .unwrap_or_else(|_| panic!("committed highlights missing: {}", committed_highlights.display()));
+    let lhs_highlights = std::fs::read_to_string(&generated_highlights).unwrap_or_else(|_| {
+        panic!(
+            "generated highlights missing: {}",
+            generated_highlights.display()
+        )
+    });
+    let rhs_highlights = std::fs::read_to_string(&committed_highlights).unwrap_or_else(|_| {
+        panic!(
+            "committed highlights missing: {}",
+            committed_highlights.display()
+        )
+    });
     if lhs_highlights != rhs_highlights {
         panic!(
             "queries/highlights.scm is stale; regenerate with `bun run generate` in packages/sail/grammar.\n\
