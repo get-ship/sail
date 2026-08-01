@@ -16,11 +16,13 @@ import {
   applyFix,
   applyFixReview,
   applyFixStub,
+  applyRuleFixes,
   autoFixOnSave,
   bothViewportsRan,
   buildFixReviewItems,
   editorDeepLink,
   getChecksState,
+  groupByRule,
   groupBySeverity,
   isValidEditorDeepLink,
   loadFindings,
@@ -28,6 +30,7 @@ import {
   openSourceUrlFor,
   parseCheckFindings,
   parseEditorSetting,
+  recheckFindings,
   selectFinding,
   selectInApp,
   setAutoFixMode,
@@ -36,8 +39,10 @@ import {
   setFixReviewAccepted,
   setProjectRoot,
   sourceForSave,
+  uiEmptyCheckedSummary,
   uiFindingRows,
   uiFixableCount,
+  uiRuleGroups,
   uiSeverityGroups,
   type ChecksOpsClient,
 } from '../src/checks'
@@ -651,5 +656,179 @@ describe('Review fixes dialog flow', () => {
     expect(getChecksState().findings).toHaveLength(0)
     expect(getChecksState().reviewNote).toMatch(/Applied 1 fix/)
     expect(getEditState().docs.get(path)?.source.text).not.toContain('style.grow')
+    // Attribution recorded (rule + before/after + timestamp)
+    expect(getChecksState().attributions.length).toBeGreaterThan(0)
+    expect(getChecksState().attributions[0]!.rule).toBe('sail-participation-style')
+    expect(getChecksState().attributions[0]!.before).toMatch(/grow/)
+    expect(getChecksState().attributions[0]!.at).toBeGreaterThan(0)
+  })
+})
+
+describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
+  it('groupByRule sorts by count desc with severity badge counts', async () => {
+    setChecksOpsClient({
+      sailAuthoringCheck: async () => ({
+        ok: true,
+        count: 4,
+        diagnostics: [
+          {
+            severity: 'warning',
+            rule: 'sail-layout',
+            message: 'collapsed',
+            line: 1,
+            col: 1,
+            path: 'a.sail',
+          },
+          {
+            severity: 'error',
+            rule: 'sail-participation-style',
+            message: 'grow a',
+            line: 2,
+            col: 1,
+            path: 'a.sail',
+          },
+          {
+            severity: 'error',
+            rule: 'sail-participation-style',
+            message: 'grow b',
+            line: 3,
+            col: 1,
+            path: 'a.sail',
+          },
+          {
+            severity: 'error',
+            rule: 'sail-participation-style',
+            message: 'grow c',
+            line: 4,
+            col: 1,
+            path: 'b.sail',
+          },
+        ],
+      }),
+    })
+    await loadFindings('a.sail')
+    const groups = groupByRule(getChecksState().findings)
+    expect(groups[0]!.rule).toBe('sail-participation-style')
+    expect(groups[0]!.count).toBe(3)
+    expect(groups[0]!.errorCount).toBe(3)
+    expect(groups[1]!.rule).toBe('sail-layout')
+    expect(groups[1]!.warningCount).toBe(1)
+    const ui = uiRuleGroups()
+    expect(ui[0]!.rule).toBe('sail-participation-style')
+    expect(ui.map((g) => g.rule)).toEqual([
+      'sail-participation-style',
+      'sail-layout',
+    ])
+  })
+
+  it('why is verbatim compiler message (never paraphrased)', async () => {
+    const why =
+      'style.grow — use grow attr\n  suggest: use grow attribute on the host'
+    setChecksOpsClient({
+      sailAuthoringCheck: async () => ({
+        ok: true,
+        count: 1,
+        diagnostics: [
+          {
+            severity: 'error',
+            rule: 'sail-participation-style',
+            message: why,
+            line: 1,
+            col: 1,
+            path: 't.sail',
+          },
+        ],
+      }),
+    })
+    await loadFindings('t.sail', {
+      source: '<div sx={style.grow(1)}>x</div>',
+    })
+    const f = getChecksState().findings[0]!
+    expect(f.why).toBe(why)
+    expect(f.message).toBe('style.grow — use grow attr')
+    expect(f.suggest).toMatch(/grow attribute/)
+  })
+
+  it('applyRuleFixes applies all machine fixes for one rule + attributes', async () => {
+    const src = '<div sx={style.grow(1)}>x</div>'
+    const path = 'multi.sail'
+    seedSourceText(path, src)
+    setChecksOpsClient({
+      sailAuthoringCheck: async () => ({
+        ok: true,
+        count: 1,
+        diagnostics: [
+          {
+            severity: 'error',
+            rule: 'sail-participation-style',
+            message: 'grow\n  suggest: use attr',
+            line: 1,
+            col: 1,
+            path,
+          },
+        ],
+      }),
+    })
+    await loadFindings(path, { source: src })
+    const { applied } = applyRuleFixes('sail-participation-style')
+    expect(applied).toBe(1)
+    expect(getChecksState().findings).toHaveLength(0)
+    expect(getChecksState().attributions[0]!.rule).toBe(
+      'sail-participation-style',
+    )
+  })
+
+  it('setAutoFixMode + recheckFindings updates lastRunAt and empty summary', async () => {
+    setChecksOpsClient({
+      sailAuthoringCheck: async () => ({
+        ok: true,
+        count: 0,
+        diagnostics: [],
+      }),
+      sailAuthoringLayoutCheck: async () => ({
+        ok: true,
+        viewports: [{}, {}],
+        diagnostics: [],
+      }),
+    })
+    setAutoFixMode('suggest', 'studio checks')
+    await loadFindings('clean.sail', { source: '<column></column>\n' })
+    const first = getChecksState().lastRunAt
+    expect(first).toBeTruthy()
+    expect(getChecksState().lastCheckedPath).toBe('clean.sail')
+    expect(getChecksState().lastLayoutChecked).toBe(true)
+    expect(getChecksState().autoFixMode).toBe('suggest')
+    const summary = uiEmptyCheckedSummary()
+    expect(summary).toMatch(/clean\.sail|Checked/)
+    expect(summary).toMatch(/compiler \+ layout/)
+    expect(summary).toMatch(/autofix suggest/)
+    await recheckFindings()
+    expect(getChecksState().lastRunAt).toBeGreaterThanOrEqual(first!)
+    expect(getChecksState().findings).toHaveLength(0)
+  })
+
+  it('surface markers: rule groups, sail-diff, two exits, autofix, re-check', () => {
+    const surface = readFileSync(
+      join(REPO, 'apps/studio/src/checks-surface/checks-surface.sail'),
+      'utf8',
+    )
+    const vm = readFileSync(
+      join(REPO, 'apps/studio/src/checks-surface/checks-surface-vm.ts'),
+      'utf8',
+    )
+    expect(surface).toMatch(/data-rule-group/)
+    expect(surface).toMatch(/data-findings-table/)
+    expect(surface).toMatch(/Open in editor/)
+    expect(surface).toMatch(/Select element/)
+    expect(surface).toMatch(/data-finding-action="open-source"/)
+    expect(surface).toMatch(/data-finding-action="select-in-app"/)
+    expect(surface).toMatch(/<sail-diff\b/)
+    expect(surface).toMatch(/data-autofix-mode/)
+    expect(surface).toMatch(/data-recheck/)
+    expect(surface).toMatch(/data-empty-checked/)
+    expect(surface).toMatch(/data-apply-rule/)
+    expect(surface).toMatch(/Here's what was checked|emptyChecked/)
+    expect(vm).toMatch(/createTable/)
+    expect(vm).toMatch(/grouping:\s*\[\s*['"]rule['"]\s*\]/)
   })
 })

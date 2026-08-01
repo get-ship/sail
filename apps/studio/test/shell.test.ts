@@ -330,9 +330,14 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
       join(REPO, 'apps/studio/src/checks-surface/checks-surface.sail'),
       'utf8',
     )
+    const vm = readFileSync(
+      join(REPO, 'apps/studio/src/checks-surface/checks-surface-vm.ts'),
+      'utf8',
+    )
     expect(surface).toMatch(/data-checks-surface/)
     expect(surface).toMatch(/data-surface="checks"/)
     expect(surface).toMatch(/data-findings-list/)
+    expect(surface).toMatch(/data-findings-table|data-rule-group/)
     expect(surface).toMatch(/data-severity-group/)
     expect(surface).toMatch(/data-review-fixes/)
     expect(surface).toMatch(/data-review-dialog/)
@@ -343,6 +348,13 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surface).toMatch(/data-error-count|data-warning-count/)
     expect(surface).toMatch(/emptyTitle|emptyBody/)
     expect(surface).toMatch(/No findings|project is clean|emptyTitle/)
+    expect(surface).toMatch(/data-empty-checked|emptyChecked/)
+    expect(surface).toMatch(/data-autofix-control|data-autofix-mode/)
+    expect(surface).toMatch(/data-recheck|onRecheck/)
+    expect(surface).toMatch(/Open in editor/)
+    expect(surface).toMatch(/Select element/)
+    expect(surface).toMatch(/<sail-diff\b/)
+    expect(vm).toMatch(/createTable/)
     // Error strip + retry (not empty-state-as-error only)
     expect(surface).toMatch(/data-checks-error/)
     expect(surface).toMatch(/data-retry-checks|onRetryChecks|Retry/)

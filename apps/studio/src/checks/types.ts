@@ -62,6 +62,17 @@ export type FixReviewItem = {
   machine: boolean
 }
 
+/** Recorded applied fix — rule, before/after, timestamp. */
+export type FixAttribution = {
+  id: string
+  rule: string
+  path: string
+  findingId: string
+  before: string
+  after: string
+  at: number
+}
+
 export type ChecksSurfaceState = {
   projectRoot: string
   findings: Finding[]
@@ -87,6 +98,16 @@ export type ChecksSurfaceState = {
   reviewItems: FixReviewItem[]
   /** Last apply-review status line (user-facing). */
   reviewNote: string
+  /** Last successful check run (ms epoch); null before first run. */
+  lastRunAt: number | null
+  /** Path last checked (for composed empty state). */
+  lastCheckedPath: string | null
+  /** Whether layout (taffy) check ran on last load. */
+  lastLayoutChecked: boolean
+  /** Applied fixes with attribution (newest first). */
+  attributions: FixAttribution[]
+  /** Collapsed rule ids in the findings table. */
+  collapsedRules: string[]
 }
 
 export type ChecksOpsClient = {

@@ -226,19 +226,6 @@ export function toFindingRows(
   }))
 }
 
-/** Group findings by rule for list headers (stable order by first appearance). */
-export function groupByRule(findings: Finding[]): { rule: string; items: Finding[] }[] {
-  const order: string[] = []
-  const map = new Map<string, Finding[]>()
-  for (const f of findings) {
-    if (!map.has(f.rule)) {
-      map.set(f.rule, [])
-      order.push(f.rule)
-    }
-    map.get(f.rule)!.push(f)
-  }
-  return order.map((rule) => ({ rule, items: map.get(rule)! }))
-}
 
 /**
  * Source snippet around a finding span (1-based line/col).
