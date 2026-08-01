@@ -365,24 +365,22 @@ export default controller(() => {
         </if>
       </row>
 
-      <!-- Live iframe stays mounted for State write postMessage; h=0 when not Preview. -->
-      <if {hasLivePreview() && isPreview()}>
-        <column data-live-preview-host shrink="0" gap="0" sx={style.h(48).borderTWidth(1).borderT(border).overflow(hidden)}>
+      <!-- Single live iframe: stays mounted for State postMessage; h 48 vs 0 via isPreview. -->
+      <if {hasLivePreview()}>
+        <column
+          data-live-preview-host
+          data-preview-visible={isPreview() ? 'true' : 'false'}
+          shrink="0"
+          gap="0"
+          aria-current={isPreview() ? 'true' : undefined}
+          aria-hidden={isPreview() ? undefined : 'true'}
+          sx={style.h(0).overflow(hidden).when({ current: style.h(48).borderTWidth(1).borderT(border) })}
+        >
           <iframe
             data-live-preview
             title="Live app preview"
             src={livePreviewSrc()}
             sx={style.w(full).h(full).minH(0).borderWidth(0).bg(background)}
-          ></iframe>
-        </column>
-      </if>
-      <if {hasLivePreview() && !isPreview()}>
-        <column data-live-preview-host shrink="0" gap="0" sx={style.h(0).overflow(hidden)} aria-hidden="true">
-          <iframe
-            data-live-preview
-            title="Live app preview"
-            src={livePreviewSrc()}
-            sx={style.w(full).h(full).minH(0).borderWidth(0)}
           ></iframe>
         </column>
       </if>
