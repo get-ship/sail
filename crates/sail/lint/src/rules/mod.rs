@@ -16,6 +16,7 @@ pub mod attr_bool_prop;
 pub mod attr_presence;
 pub mod controller_context;
 pub mod controller_empty;
+pub mod controller_matchmedia_layout;
 pub mod controller_navigation;
 pub mod controller_no_ambient_authority;
 pub mod controller_no_load_state;
@@ -80,6 +81,10 @@ pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
     (
         controller_no_load_state::RULE_ID,
         controller_no_load_state::check,
+    ),
+    (
+        controller_matchmedia_layout::RULE_ID,
+        controller_matchmedia_layout::check,
     ),
 ];
 

@@ -927,7 +927,12 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          - State in `<controller>` via `controller(() => {{ … return {{ … }} }})`.\n\
          - Import from `@ship/sail-runtime` (never `/internal`).\n\
          - Control flow: `<if>` / `<for key={{…}}>` / `<match>` — full grammar:\n  \
-           MCP `sail_surface` topic `control-flow`.\n\n\
+           MCP `sail_surface` topic `control-flow`.\n\
+         - **No layout `matchMedia` in controllers** (`sail-controller-matchmedia-layout`):\n  \
+           do not drive template-visible layout from `window.matchMedia('(min-width:…)')`\n  \
+           / `max-width` / `orientation`. Use Style `when({{ tablet: style.… }})` for sx;\n  \
+           attr-level responsive work lands under RESPONSIVE-1. Non-layout media\n  \
+           (`prefers-reduced-motion`, `prefers-color-scheme`, `print`) may stay imperative.\n\n\
          ```\n\
          <controller>\n  \
            import {{ controller, signal }} from '@ship/sail-runtime'\n  \
