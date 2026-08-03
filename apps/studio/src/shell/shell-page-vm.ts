@@ -35,7 +35,6 @@ import {
 import {
   loadIconGlyphs,
   loadThemes,
-  previewInApp,
   setDesignOpsClient,
   setDesignProjectRoot,
   setDesignMode,
@@ -54,19 +53,21 @@ import {
 import { canExitStudio, exitStudio } from './exit'
 import { projectPaths, resolveProjectRoot } from './project'
 
-/** Digit → activity; Ctrl/Cmd+digit navigates. */
+/** Digit → activity; Ctrl/Cmd+digit navigates. Design removed (Themes sole token editor). */
 export const ACTIVITY_BY_DIGIT: Record<string, ActivityId> = {
   '1': 'edit',
-  '2': 'checks',
-  '3': 'design',
+  '2': 'components',
+  '3': 'themes',
   '4': 'tasks',
+  '5': 'checks',
 }
 
 const RAIL: Record<string, { label: string; icon: string; digit: string }> = {
-  edit: { label: 'Edit', icon: 'square-pen', digit: '1' },
-  checks: { label: 'Checks', icon: 'list-checks', digit: '2' },
-  design: { label: 'Design', icon: 'palette', digit: '3' },
-  tasks: { label: 'Tasks', icon: 'list-todo', digit: '4' },
+  edit: { label: 'Edit', icon: 'files', digit: '1' },
+  components: { label: 'Components', icon: 'box', digit: '2' },
+  themes: { label: 'Themes', icon: 'palette', digit: '3' },
+  tasks: { label: 'Tasks', icon: 'messages-square', digit: '4' },
+  checks: { label: 'Checks', icon: 'clipboard-check', digit: '5' },
 }
 
 export type RailRow = {
@@ -118,11 +119,13 @@ export function pathForActivity(pathname: string): string {
   return pathname || '/'
 }
 
-/** Map path → activity id. `/` and `/edit` both mean edit. */
+/** Map path → activity id. `/` and `/edit` both mean edit. `/design` → themes (cutover). */
 export function activityFromPath(pathname: string): ActivityId {
   const p = pathForActivity(pathname)
+  if (p === '/components' || p.startsWith('/components/')) return 'components'
   if (p === '/checks' || p.startsWith('/checks/')) return 'checks'
-  if (p === '/design' || p.startsWith('/design/')) return 'design'
+  if (p === '/design' || p.startsWith('/design/')) return 'themes'
+  if (p === '/themes' || p.startsWith('/themes/')) return 'themes'
   if (p === '/tasks' || p.startsWith('/tasks/')) return 'tasks'
   return 'edit'
 }
@@ -136,7 +139,7 @@ export function hrefForActivity(id: ActivityId): string {
 /** Pure rail rows for a pathname — unit-tested without DOM navigation. */
 export function railRowsForPath(pathname: string, mod = hotkeyMod()): RailRow[] {
   const active = activityFromPath(pathname)
-  return (['edit', 'checks', 'design', 'tasks'] as ActivityId[]).map((id) => ({
+  return (['edit', 'components', 'themes', 'tasks', 'checks'] as ActivityId[]).map((id) => ({
     id,
     label: railLabel(id, mod),
     icon: RAIL[id]?.icon || 'box',
@@ -228,10 +231,9 @@ export function createShellPage(opts?: ShellPageOpts) {
   sync()
 
   mountAmbient(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', 'studio')
-      document.documentElement.setAttribute('data-mode', 'dark')
-    }
+    // Theme/mode attrs: setThemeMode below + host chrome — no documentElement writes
+    // (sail-no-ambient-dom). SAIL-LINT-CHAT if shell still needs data-theme on :root
+    // without theme-select / tokens path.
     const ops = createOpsClient()
     setOpsClient(ops)
     setChecksOpsClient(ops)
@@ -321,11 +323,6 @@ export function createShellPage(opts?: ShellPageOpts) {
         go(hrefForActivity(ACTIVITY_BY_DIGIT[e.key]))
         return
       }
-      if (e.altKey && (e.key === 'p' || e.key === 'P') && activityFromPath(readPath()) === 'design') {
-        e.preventDefault()
-        previewInApp()
-        sync()
-      }
       if (e.key === 'Escape' && canExitStudio() && !isMod && !e.altKey) {
         e.preventDefault()
         exitStudio()
@@ -389,7 +386,11 @@ export function createShellPage(opts?: ShellPageOpts) {
       const href = a?.getAttribute('href')
       if (!href) return
       e.preventDefault()
-      go(href)
+      // Themes dirty leave guard (session registers while a facet is open).
+      void import('../theme-session/theme-leave-bridge').then((m) => {
+        const proceed = m.requestThemeLeaveNavigate(href)
+        if (proceed) go(href)
+      })
     },
     setRailPath: (pathname: string) => syncRail(pathname),
     syncRail,

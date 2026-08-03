@@ -6,11 +6,17 @@
   Dirty leave: Save / Discard / Cancel dialog.
 -->
 <controller>
-import { signal } from '@ship/sail-runtime'
+import { mountAmbient } from '@ship/sail-runtime'
 import type { ThemeSession } from '../theme-session/theme-session'
 
 export default controller(() => {
   const sessionSig = signal<ThemeSession | null>(null)
+  /**
+   * Real signal for bindOpen → showModal() (top layer + backdrop).
+   * Static `open` is non-modal and nests in the chrome column — density UI
+   * bled through and Discard was clipped. Mirror session leaveOpen here.
+   */
+  const leaveOpen = signal(false)
 
   // Ambient lifecycle mount (do not import { mount } — that is the host view-mounter).
   mount((host) => {
@@ -24,6 +30,12 @@ export default controller(() => {
       },
     })
   })
+
+  mountAmbient(() =>
+    effect(() => {
+      leaveOpen.set(sessionSig()?.leaveOpen() ?? false)
+    }),
+  )
 
   const s = () => sessionSig()
   const nameEdit = () => s()?.nameEdit() ?? ''
@@ -46,7 +58,6 @@ export default controller(() => {
   const pathMenuId = () => s()?.pathMenuId ?? 'theme-path-menu'
   const pathNav = () => s()?.pathNav() ?? []
   const saveButtonLabel = () => s()?.saveButtonLabel() ?? 'Save'
-  const leaveOpen = () => s()?.leaveOpen() ?? false
 
   const goBack = () => s()?.goBack()
   const onNameInput = (e: Event) => s()?.onNameInput(e)
@@ -267,16 +278,26 @@ export default controller(() => {
     </row>
   </row>
 
-  <!-- Dirty leave / switch — Save · Discard · Cancel -->
-  <dialog data-theme-leave-dialog open={leaveOpen()} size="sm" aria-labelledby="theme-leave-title">
-    <column gap="3" sx={style.pad(4).minW(0)}>
-      <p id="theme-leave-title" sx={style.fontSize(md).fontWeight(semibold).fg(foreground)}>
-        Unsaved theme changes
-      </p>
-      <p sx={style.fontSize(sm).fg(muted-foreground).leading(snug)}>
-        Save writes the project theme JSON and regenerates app theme tables. Discard drops edits in memory only.
-      </p>
-      <row gap="2" justify="end" align="center" nowrap sx={style.padT(2)}>
+  <!--
+    Dirty leave — mount only when open (closed dialog + overflow:hidden is a
+    sail-layout trap against content height). open={leaveOpen()} → bindOpen →
+    showModal(): top layer + backdrop so Overview density (etc.) cannot bleed
+    through; actions use dialog footer anatomy so they never clip.
+    ESC / backdrop → sail-close → cancel leave (pending navigation dropped).
+  -->
+  <if {leaveOpen()}>
+    <dialog
+      data-theme-leave-dialog
+      open={leaveOpen()}
+      size="md"
+      aria-labelledby="theme-leave-title"
+      on:sail-close={onLeaveCancel}
+    >
+      <header id="theme-leave-title">Unsaved theme changes</header>
+      <section>
+        Save writes the theme to the project. Discard drops in-memory edits.
+      </section>
+      <footer>
         <button type="button" size="sm" variant="ghost" tone="muted" data-leave-cancel on:click={onLeaveCancel}>
           Cancel
         </button>
@@ -286,7 +307,7 @@ export default controller(() => {
         <button type="button" size="sm" variant="solid" tone="primary" data-leave-save on:click={onLeaveSave}>
           Save
         </button>
-      </row>
-    </column>
-  </dialog>
+      </footer>
+    </dialog>
+  </if>
 </column>

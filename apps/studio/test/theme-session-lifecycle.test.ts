@@ -211,6 +211,59 @@ describe('dirty leave guard', () => {
     expect(navigated).toEqual(['/edit'])
   })
 
+  it('Save path navigates after successful save; failed save keeps dialog open', async () => {
+    const navigated: string[] = []
+    let dirty = true
+    let saveOk = false
+    const guard = createLeaveGuard({
+      isDirty: () => dirty,
+      save: async () => {
+        if (!saveOk) return false
+        dirty = false
+        return true
+      },
+      discard: () => {
+        dirty = false
+      },
+      navigate: (href) => navigated.push(href),
+      openTheme: () => {},
+    })
+
+    expect(guard.requestLeave({ href: '/themes', openThemeId: null, reason: 'back' })).toBe(
+      false,
+    )
+    expect(await guard.choose('save')).toBe(false)
+    expect(guard.isOpen()).toBe(true)
+    expect(navigated).toEqual([])
+    expect(dirty).toBe(true)
+
+    saveOk = true
+    expect(await guard.choose('save')).toBe(true)
+    expect(guard.isOpen()).toBe(false)
+    expect(dirty).toBe(false)
+    expect(navigated).toEqual(['/themes'])
+  })
+
+  it('theme switch openThemeId completes after discard', async () => {
+    const opened: string[] = []
+    let dirty = true
+    const guard = createLeaveGuard({
+      isDirty: () => dirty,
+      save: async () => true,
+      discard: () => {
+        dirty = false
+      },
+      navigate: () => {},
+      openTheme: (id) => opened.push(id),
+    })
+    expect(
+      guard.requestLeave({ href: null, openThemeId: 'other-theme', reason: 'switch' }),
+    ).toBe(false)
+    await guard.choose('discard')
+    expect(opened).toEqual(['other-theme'])
+    expect(dirty).toBe(false)
+  })
+
   it('saveThemeForLeave skips Used-by review gate', async () => {
     const writes: string[] = []
     setDesignProjectRoot('apps/studio')
@@ -332,6 +385,12 @@ describe('chrome contracts (hygiene, not product proof)', () => {
     expect(chrome).toMatch(/data-leave-save/)
     expect(chrome).toMatch(/data-leave-discard/)
     expect(chrome).toMatch(/data-leave-cancel/)
+    // Modal isolation: bindOpen via open={leaveOpen()} — NOT static open (non-modal).
+    expect(chrome).toMatch(/open=\{leaveOpen\(\)\}/)
+    expect(chrome).not.toMatch(/<dialog[^>]*\sopen[\s>]/)
+    expect(chrome).toMatch(/on:sail-close=\{onLeaveCancel\}/)
+    expect(chrome).toMatch(/<header\b[^>]*>[\s\S]*Unsaved theme changes/)
+    expect(chrome).toMatch(/<footer\b/)
     expect(chrome).not.toMatch(/data-facet-overflow/)
     expect(chrome).not.toMatch(/overflowMenuId|overflowNav/)
     expect(chrome).toMatch(/Add to project/)

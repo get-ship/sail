@@ -25,6 +25,7 @@ import {
   unbindPreviewHost,
 } from './theme-draft-paint'
 import { createLeaveGuard } from './theme-leave-guard'
+import { setThemeLeaveNavigate } from './theme-leave-bridge'
 import {
   FACET_DOORS,
   PATH_NAV,
@@ -222,8 +223,12 @@ export function createThemeSession(opts: ThemeSessionOpts) {
   })
 
   const requestNavigate = (href: string, reason = 'Leave theme editor') => {
-    leaveGuard.requestLeave({ href, openThemeId: null, reason })
+    // true = navigated; false = dialog open (caller must not also navigate)
+    return leaveGuard.requestLeave({ href, openThemeId: null, reason })
   }
+
+  // Shell activity rail → same leave dialog when dirty.
+  setThemeLeaveNavigate((href) => requestNavigate(href, 'Leave theme editor'))
 
   const requestSwitchTheme = (id: string, reason = 'Switch theme') => {
     const ds = getDesignState()
@@ -482,6 +487,7 @@ export function createThemeSession(opts: ThemeSessionOpts) {
     return () => {
       unsub()
       leaveGuard.reset()
+      setThemeLeaveNavigate(null)
       if (typeof window !== 'undefined') {
         window.removeEventListener('beforeunload', onBeforeUnload)
       }
@@ -527,6 +533,12 @@ export function createThemeSession(opts: ThemeSessionOpts) {
     leaveReason,
     pathNav: () => PATH_NAV.map((p) => ({ ...p })),
     facetDoors: () => FACET_DOORS.map((p) => ({ ...p })),
+    /**
+     * Overflow menu removed from chrome (delete/remix on Themes home).
+     * Keep a no-op iterator so stale HMR bundles that still call
+     * `s().overflowNav()` do not crash the route boundary.
+     */
+    overflowNav: () => [] as { key: string; value: string; icon: string; label: string }[],
     pathMenuId: `theme-${facet}-path-menu`,
     chromeMarker: facet,
     goBack,
