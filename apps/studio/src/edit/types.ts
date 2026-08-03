@@ -436,6 +436,17 @@ export type OpsClient = {
     new_id?: string
     content?: string
   }) => Promise<{ ok?: boolean; dest_path?: string; path?: string }>
+  sailThemeDelete?: (args: {
+    path: string
+  }) => Promise<{ ok?: boolean; path?: string }>
+  /** SailTheme/Generate — mode=app after project theme Save. */
+  sailThemeGenerate?: (args: {
+    mode?: string
+    project?: string
+    workspace?: string
+    model?: string
+    out?: string
+  }) => Promise<Record<string, unknown>>
   sailThemeGraph?: (args: { themeId?: string }) => Promise<Record<string, unknown>>
   sailThemeFontAdd?: (args: {
     family: string

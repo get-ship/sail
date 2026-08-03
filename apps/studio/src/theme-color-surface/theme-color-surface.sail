@@ -1,0 +1,515 @@
+<!--
+  Theme color facet — thin shell: chrome + roles editor + specimen.
+  Controller composition: session + color domain.
+-->
+<scope>
+  const sectionTitle = style.fontSize(sm).fontWeight(semibold)
+  const fieldHint = style.fontSize(xs).fg(muted-foreground)
+  const monoMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
+  const pathMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
+  const doorTitle = style.fontWeight(semibold)
+  const editorCol = style.padX(6).padT(6).padB(10).maxW(panel-max-w-lg)
+  const brandCard = style.radius(lg).borderWidth(1).border(border-subtle).overflow(hidden).minW(0).bg(surface-1)
+  // position:relative sized box — sail-color-picker host is display:contents; swatch fills this box.
+  const brandSwatch = style.position(relative).h(28).minH(28).w(full).overflow(hidden).when({ stateEdit: style.cursor(pointer), stateLocked: style.cursor(default) })
+  // Token-row chip: explicit size + relative so absolute-fill swatch has a real hit target.
+  const tokenChip = style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden)
+  const heroMeta = style.padX(3).padY(2)
+  const tokenRow = style.padY(2).minW(0)
+  const seedDot = style.w(4).h(4).minW(4).minH(4).radius(full).borderWidth(1).border(border-subtle).bg(bind(swatchColor))
+  const surfaceChip = style.padX(2).padY(1).radius(md).borderWidth(1).border(border-subtle).bg(surface-0)
+  const surfaceDot = style.w(3).h(3).minW(3).minH(3).radius(full).borderWidth(1).border(border-subtle).bg(bind(swatchColor))
+  const bandStatus = style.padX(4).padY(2)
+  const bandError = style.padX(4).padY(2).borderBWidth(1).borderB(border)
+</scope>
+
+<controller>
+import { effect, mountAmbient, signal } from '@ship/sail-runtime'
+import { createThemeSession } from '../theme-session/theme-session'
+import { createColorEdit } from './theme-color-edit'
+// createThemeColorSurface() lives in theme-color-surface-vm for tests
+export default controller(() => {
+  const session = createThemeSession({
+    facet: 'color',
+    editGuardMessage: 'Add this theme to the project to edit color.',
+    saveSuccessMessage: 'Color roles saved to DTCG source.',
+  })
+  const color = createColorEdit(session)
+  const primaryHex = signal(color.primaryHex())
+  const secondaryHex = signal(color.secondaryHex())
+  const accentHex = signal(color.accentHex())
+  const bgHex = signal(color.bgHex())
+  const surface1Hex = signal(color.surface1Hex())
+  const surface2Hex = signal(color.surface2Hex())
+  const cardHex = signal(color.cardHex())
+  const fgHex = signal(color.fgHex())
+  const mutedHex = signal(color.mutedHex())
+  const borderHex = signal(color.borderHex())
+  const ringHex = signal(color.ringHex())
+  const successHex = signal(color.successHex())
+  const warningHex = signal(color.warningHex())
+  const dangerHex = signal(color.dangerHex())
+  const infoHex = signal(color.infoHex())
+  mountAmbient(() =>
+    effect(() => {
+      primaryHex.set(color.primaryHex())
+      secondaryHex.set(color.secondaryHex())
+      accentHex.set(color.accentHex())
+      bgHex.set(color.bgHex())
+      surface1Hex.set(color.surface1Hex())
+      surface2Hex.set(color.surface2Hex())
+      cardHex.set(color.cardHex())
+      fgHex.set(color.fgHex())
+      mutedHex.set(color.mutedHex())
+      borderHex.set(color.borderHex())
+      ringHex.set(color.ringHex())
+      successHex.set(color.successHex())
+      warningHex.set(color.warningHex())
+      dangerHex.set(color.dangerHex())
+      infoHex.set(color.infoHex())
+    }),
+  )
+  return {
+    session,
+    color,
+    primaryHex,
+    secondaryHex,
+    accentHex,
+    bgHex,
+    surface1Hex,
+    surface2Hex,
+    cardHex,
+    fgHex,
+    mutedHex,
+    borderHex,
+    ringHex,
+    successHex,
+    warningHex,
+    dangerHex,
+    infoHex,
+  }
+})
+</controller>
+
+<column
+  data-surface="themes"
+  data-theme-color-surface
+  data-color-chrome
+  gap="0"
+  grow
+  sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
+>
+  <theme-facet-chrome session={session}></theme-facet-chrome>
+
+  <if {session.hasError()}>
+    <row data-color-error align="center" gap="2" shrink="0" sx={bandError}>
+      <p grow min-w="0" sx={style.fontSize(sm).fg(destructive).truncate()}>{session.errorText()}</p>
+      <button type="button" size="sm" variant="ghost" data-color-retry on:click={session.onRetry}>
+        Retry
+      </button>
+    </row>
+  </if>
+
+  <if {session.loading()}>
+    <row data-color-loading align="center" gap="2" shrink="0" sx={bandStatus}>
+      <spinner size="sm"></spinner>
+      <p sx={fieldHint}>Loading…</p>
+    </row>
+  </if>
+
+<row
+    data-color-workbench
+    grow
+    gap="0"
+    nowrap
+    align="stretch"
+    sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)}
+  >
+    <scroll-area
+      data-color-editor
+      grow
+      min-w="0"
+      sx={style.minH(0).basis(0).h(full).minW(0).bg(background)}
+    >
+      <column gap="8" sx={editorCol}>
+        <column data-color-header gap="2">
+          <p sx={style.fontSize(xl).fontWeight(semibold).tracking(tight)}>Color</p>
+          <p sx={fieldHint}>Brand · surfaces · text · semantic</p>
+        </column>
+
+        <!-- Seed strip — Generate deferred (not built yet) -->
+        <row data-seed-strip align="center" gap="3" nowrap sx={style.pad(3).radius(lg).borderWidth(1).border(border-subtle).bg(surface-0).minW(0)}>
+          <p sx={fieldHint} shrink="0">Seed</p>
+          <row gap="1" align="center" nowrap grow min-w="0" aria-hidden="true">
+            <stack use:swatch={primaryHex()} sx={seedDot}></stack>
+            <stack use:swatch={secondaryHex()} sx={seedDot}></stack>
+            <stack use:swatch={accentHex()} sx={seedDot}></stack>
+            <stack use:swatch={bgHex()} sx={seedDot}></stack>
+            <stack use:swatch={fgHex()} sx={seedDot}></stack>
+            <stack use:swatch={mutedHex()} sx={seedDot}></stack>
+            <stack use:swatch={borderHex()} sx={seedDot}></stack>
+          </row>
+          <button type="button" size="sm" variant="outline" tone="muted" data-seed-generate disabled on:click={color.onSeedGenerate} title="Coming soon">
+            Generate…
+          </button>
+        </row>
+
+        <!-- 1. Brand -->
+        <column data-section="brand" gap="3">
+          <row align="baseline" justify="between" gap="3" nowrap>
+            <p sx={sectionTitle}>Brand</p>
+            <p sx={pathMeta}>color.primary · secondary · accent</p>
+          </row>
+          <row data-brand-grid gap="3" align="stretch">
+            <column data-brand-card data-role="primary" grow gap="0" min-w="0" sx={brandCard}>
+              <stack data-role="primary" sx={brandSwatch}>
+                <sail-color-picker
+                  data-role="primary"
+                  value={primaryHex()}
+                  disabled={!session.canEdit()}
+                  variant="swatch"
+                  showHex={false}
+                  aria-label="Primary"
+                  on:sail-change={color.onRoleColor}
+                  sx={style.w(full).h(full).minH(full)}
+                ></sail-color-picker>
+              </stack>
+              <row align="center" justify="between" sx={heroMeta}>
+                <column gap="0" min-w="0">
+                  <p sx={doorTitle}>Primary</p>
+                  <p sx={pathMeta}>color.primary</p>
+                </column>
+                <p sx={monoMeta}>{primaryHex()}</p>
+              </row>
+            </column>
+            <column data-brand-card data-role="secondary" grow gap="0" min-w="0" sx={brandCard}>
+              <stack data-role="secondary" sx={brandSwatch}>
+                <sail-color-picker
+                  data-role="secondary"
+                  value={secondaryHex()}
+                  disabled={!session.canEdit()}
+                  variant="swatch"
+                  showHex={false}
+                  aria-label="Secondary"
+                  on:sail-change={color.onRoleColor}
+                  sx={style.w(full).h(full).minH(full)}
+                ></sail-color-picker>
+              </stack>
+              <row align="center" justify="between" sx={heroMeta}>
+                <column gap="0" min-w="0">
+                  <p sx={doorTitle}>Secondary</p>
+                  <p sx={pathMeta}>color.secondary</p>
+                </column>
+                <p sx={monoMeta}>{secondaryHex()}</p>
+              </row>
+            </column>
+            <column data-brand-card data-role="accent" grow gap="0" min-w="0" sx={brandCard}>
+              <stack data-role="accent" sx={brandSwatch}>
+                <sail-color-picker
+                  data-role="accent"
+                  value={accentHex()}
+                  disabled={!session.canEdit()}
+                  variant="swatch"
+                  showHex={false}
+                  aria-label="Accent"
+                  on:sail-change={color.onRoleColor}
+                  sx={style.w(full).h(full).minH(full)}
+                ></sail-color-picker>
+              </stack>
+              <row align="center" justify="between" sx={heroMeta}>
+                <column gap="0" min-w="0">
+                  <p sx={doorTitle}>Accent</p>
+                  <p sx={pathMeta}>color.accent</p>
+                </column>
+                <p sx={monoMeta}>{accentHex()}</p>
+              </row>
+            </column>
+          </row>
+          <if {session.catalogHint()}>
+            <p data-catalog-hint sx={fieldHint}>Add to project to edit.</p>
+          </if>
+        </column>
+
+        <!-- 2. Surfaces -->
+        <column data-section="surfaces" gap="3">
+          <row align="baseline" justify="between" gap="3" nowrap>
+            <p sx={sectionTitle}>Surfaces</p>
+            <p sx={pathMeta}>color.bg · surface · card</p>
+          </row>
+          <column data-token-list gap="1">
+            <row data-token-row data-role="bg" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="bg"
+                value={bgHex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Background"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Background</p>
+                <p sx={pathMeta}>color.bg</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{bgHex()}</p>
+            </row>
+            <row data-token-row data-role="surface1" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="surface1"
+                value={surface1Hex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Surface 1"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Surface 1</p>
+                <p sx={pathMeta}>color.surface.1</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{surface1Hex()}</p>
+            </row>
+            <row data-token-row data-role="surface2" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="surface2"
+                value={surface2Hex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Surface 2"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Surface 2</p>
+                <p sx={pathMeta}>color.surface.2</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{surface2Hex()}</p>
+            </row>
+            <row data-token-row data-role="card" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="card"
+                value={cardHex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Card"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Card</p>
+                <p sx={pathMeta}>color.surface.3</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{cardHex()}</p>
+            </row>
+          </column>
+          <row data-surface-chips gap="2" align="center" nowrap aria-hidden="true">
+            <row align="center" gap="1" sx={surfaceChip}>
+              <stack use:swatch={bgHex()} sx={surfaceDot}></stack>
+              <p sx={pathMeta}>bg</p>
+            </row>
+            <row align="center" gap="1" sx={surfaceChip}>
+              <stack use:swatch={surface1Hex()} sx={surfaceDot}></stack>
+              <p sx={pathMeta}>surface-1</p>
+            </row>
+            <row align="center" gap="1" sx={surfaceChip}>
+              <stack use:swatch={surface2Hex()} sx={surfaceDot}></stack>
+              <p sx={pathMeta}>surface-2</p>
+            </row>
+            <row align="center" gap="1" sx={surfaceChip}>
+              <stack use:swatch={cardHex()} sx={surfaceDot}></stack>
+              <p sx={pathMeta}>card</p>
+            </row>
+          </row>
+        </column>
+
+        <!-- 3. Text & borders -->
+        <column data-section="text" gap="3">
+          <row align="baseline" justify="between" gap="3" nowrap>
+            <p sx={sectionTitle}>Text &amp; borders</p>
+            <p sx={pathMeta}>color.fg · muted · border · ring</p>
+          </row>
+          <column data-token-list gap="1">
+            <row data-token-row data-role="fg" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="fg"
+                value={fgHex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Foreground"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Foreground</p>
+                <p sx={pathMeta}>color.foreground</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{fgHex()}</p>
+            </row>
+            <row data-token-row data-role="muted" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="muted"
+                value={mutedHex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Muted"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Muted</p>
+                <p sx={pathMeta}>color.muted</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{mutedHex()}</p>
+            </row>
+            <row data-token-row data-role="border" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="border"
+                value={borderHex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Border"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Border</p>
+                <p sx={pathMeta}>color.border</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{borderHex()}</p>
+            </row>
+            <row data-token-row data-role="ring" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="ring"
+                value={ringHex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Ring"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Ring</p>
+                <p sx={pathMeta}>color.ring</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{ringHex()}</p>
+            </row>
+          </column>
+        </column>
+
+        <!-- 4. Semantic -->
+        <column data-section="semantic" gap="3">
+          <row align="baseline" justify="between" gap="3" nowrap>
+            <p sx={sectionTitle}>Semantic</p>
+            <p sx={pathMeta}>color.success · warning · danger · info</p>
+          </row>
+          <column data-token-list gap="1">
+            <row data-token-row data-role="success" data-sem="success" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="success"
+                value={successHex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Success"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Success</p>
+                <p sx={pathMeta}>color.success</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{successHex()}</p>
+            </row>
+            <row data-token-row data-role="warning" data-sem="warning" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="warning"
+                value={warningHex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Warning"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Warning</p>
+                <p sx={pathMeta}>color.warning</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{warningHex()}</p>
+            </row>
+            <row data-token-row data-role="danger" data-sem="danger" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="danger"
+                value={dangerHex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Danger"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Danger</p>
+                <p sx={pathMeta}>color.danger</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{dangerHex()}</p>
+            </row>
+            <row data-token-row data-role="info" data-sem="info" align="center" gap="3" nowrap sx={tokenRow}>
+              <stack data-token-chip shrink="0" sx={tokenChip}>
+              <sail-color-picker
+                data-role="info"
+                value={infoHex()}
+                disabled={!session.canEdit()}
+                variant="swatch"
+                showHex={false}
+                aria-label="Info"
+                on:sail-change={color.onRoleColor}
+              ></sail-color-picker>
+              </stack>
+              <column gap="0" grow min-w="0">
+                <p sx={doorTitle}>Info</p>
+                <p sx={pathMeta}>color.info</p>
+              </column>
+              <p sx={monoMeta} shrink="0">{infoHex()}</p>
+            </row>
+          </column>
+        </column>
+
+        <column data-color-footer gap="2" sx={style.padT(2).borderTWidth(1).borderT(border-subtle)}>
+          <p sx={fieldHint}>
+            
+          </p>
+        </column>
+      </column>
+    </scroll-area>
+
+    <theme-color-specimen session={session}></theme-color-specimen>
+  </row>
+
+  <toast-region position="bottom-end" data-color-toast-region>
+    <for {session.toastItems()} as="t" key={t.key}>
+      <toast tone={t.tone} data-color-toast on:sail-toast-dismiss={session.onToastDismiss}>
+        {t.message}
+      </toast>
+    </for>
+  </toast-region>
+</column>

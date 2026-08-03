@@ -1,28 +1,24 @@
 // theme.ts — the sanctioned runtime theme-write hatch.
 //
-// A theme write is THE one sanctioned CSS write, sanctioned by SHAPE not by
-// permission: it writes DECLARED tokens to `:root` (system-wide). "Applies
-// everywhere" is the floor's whole point — the opposite of the off-system
-// `el.style`-on-a-random-node write the `no_imperative_style` floor exists to
-// kill. This module can ONLY write declared token names to `:root`; an
-// arbitrary property, or any target other than `:root`, is refused. That shape
-// constraint is the entire sanction — there is NO capability gate and NO
-// `sail.config` flag.
+// Two write surfaces (both framework-owned, lint-exempt `.style` on purpose):
 //
-// Mechanistically this is the `:root`-targeting sibling of the compiler's
-// signal→`(--x)` reflection: that reflection writes a token onto the host via
-// the privileged framework path (`root.style.setProperty` inside framework
-// code); this writes one to `:root`. Same authority, aimed one level up. The
-// `no_imperative_style` lint bans `.style` in controller/pack source precisely
-// so this is the ONLY door; framework runtime code (this file) is exempt at the
-// dispatch level, so the `root.style.setProperty` below is not a violation.
+// 1) **`:root` session hatch** (`preview` / `commit` / `reset` / `current`)
+//    Writes DECLARED tokens to `:root` only. Shape sanction: non-token keys
+//    refuse. Product live-preview / persist — not Studio draft edit.
+//
+// 2) **Host draft scope** (`applyScope` / `clearScope`)
+//    Lowers an in-memory DTCG theme doc (same walk as themes.css emit) and
+//    writes `--*` custom properties **only on the given host**. Teardown clears
+//    them. Studio edit-loop preview; chrome keeps the app theme on `:root`.
+//    Mode comes from args / doc defaultMode — not a second author attr API.
 //
 // Surface:
-//   theme.preview(patch)  — live :root write (session): the live-preview mechanism
-//   theme.commit(patch)   — persist: dev → theme data file (→HMR) via host hook;
-//                           live → localStorage (default) or host backend
-//   theme.reset()         — drop preview overrides, back to the committed theme
-//   theme.current()       — active theme id + resolved token values
+//   theme.preview(patch)     — live :root write (session)
+//   theme.commit(patch)      — persist + apply on :root
+//   theme.reset()            — drop session :root previews
+//   theme.current()          — active theme id + resolved override values
+//   theme.applyScope(host, { doc, mode }) — host-scoped DTCG draft paint
+//   theme.clearScope(host)   — teardown applyScope writes
 
 /** A patch maps token names (`--foo`) to CSS values. TokenName is validated at
  *  write time against the registered `@property` tokens (or a declared `:root`
@@ -254,16 +250,335 @@ export function hydrateTheme(): void {
   }
 }
 
+// ─── applyScope: host-scoped DTCG draft paint ───────────────────────────────
+//
+// SSOT: THEMES-DRAFT-PAINT-SPEC.md §3.2. Live edit preview paints a **host**
+// only (not :root) by lowering the in-memory DTCG doc with the same walk as
+// sail-compiler `tokens_generate::flatten_tokens` + `resolve_value`, then
+// writing `--cssName` custom properties onto `host`. Descendants inherit.
+// Teardown clears only what this API wrote. No themes.css regen, no Studio
+// CSSOM, no `data-theme-preview`.
+//
+// Mode is an arg (or defaultMode on the doc) — not a second top-level author
+// attr. Platform cascade bits set on the host: `theme` (framework IR) +
+// `data-mode` (paint mode). Old dual CSS selectors remain a generate concern.
+
+/** Loose DTCG theme document (modes-in-file or flat). */
+export type ThemeDoc = Record<string, unknown>
+
+/** Options for {@link theme.applyScope}. */
+export interface ThemeApplyScopeOptions {
+  /** In-memory DTCG theme document (project/catalog JSON shape). */
+  doc: ThemeDoc
+  /**
+   * Active paint mode (`light` | `dark` | declared mode id).
+   * Omit → `$extensions.ship.defaultMode` → `light` → first `modes` key.
+   */
+  mode?: string | null
+}
+
+/** One lowered token: css custom-property name (`--x`) → CSS value. */
+export type ThemeScopePatch = Record<string, string>
+
+/** Leaf from the DTCG walk (mirrors compiler Token before css_value resolve). */
+export interface LoweredThemeToken {
+  path: string
+  cssName: string
+  value: string
+  cssValue: string
+  type: string
+}
+
+export interface LowerThemeResult {
+  mode: string
+  themeId: string
+  tokens: LoweredThemeToken[]
+  /** `--cssName` → cssValue — ready for host style writes. */
+  patch: ThemeScopePatch
+}
+
+interface AppliedScope {
+  names: string[]
+  themeId: string
+  mode: string
+}
+
+const appliedScopes = new WeakMap<HTMLElement, AppliedScope>()
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return v != null && typeof v === 'object' && !Array.isArray(v)
+}
+
+function isTokenLeaf(node: Record<string, unknown>): boolean {
+  return Object.prototype.hasOwnProperty.call(node, '$value')
+}
+
+function valueToString(v: unknown): string {
+  if (typeof v === 'string') return v
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
+  if (v == null) return 'null'
+  // Objects/arrays are not legal DTCG scalar $value for theme emit.
+  return ''
+}
+
 /**
- * `theme` — the sanctioned runtime theme-write hatch. A plain ambient API
- * (`import { theme } from '@ship/sail-runtime'`), NOT `ctx`-scoped: a theme
- * write is a GLOBAL `:root` write, so it needs no route scope.
+ * Port of `tokens_generate::flatten_tokens` — walk DTCG groups, collect leaves.
+ * cssName from `$extensions.ship.cssName`, else path segments joined with `-`.
+ */
+function flattenTokens(
+  doc: unknown,
+  pathPrefix: string[],
+  inheritedType: string | undefined,
+  out: Array<{ path: string; cssName: string; value: string; type: string }>,
+): void {
+  if (!isPlainObject(doc)) return
+  for (const [key, node] of Object.entries(doc)) {
+    if (key.startsWith('$')) continue
+    if (!isPlainObject(node)) continue
+    if (isTokenLeaf(node)) {
+      const pathParts = [...pathPrefix, key]
+      const path = pathParts.join('.')
+      const ship = isPlainObject(node.$extensions)
+        ? (node.$extensions as Record<string, unknown>).ship
+        : undefined
+      const cssFromExt =
+        isPlainObject(ship) && typeof ship.cssName === 'string' ? ship.cssName : undefined
+      const cssName = cssFromExt && cssFromExt.length > 0 ? cssFromExt : pathParts.join('-')
+      const ty =
+        (typeof node.$type === 'string' ? node.$type : undefined) ?? inheritedType ?? 'string'
+      const value = valueToString(node.$value)
+      if (value === '' && node.$value !== '' && node.$value !== 0 && node.$value !== false) {
+        continue
+      }
+      out.push({ path, cssName, value, type: ty })
+    } else {
+      const groupType =
+        typeof node.$type === 'string' ? node.$type : inheritedType
+      flattenTokens(node, [...pathPrefix, key], groupType, out)
+    }
+  }
+}
+
+/** Port of `tokens_generate::parse_alias` — whole-value `{path}` / `{cssName}`. */
+function parseAlias(value: string): string | null {
+  if (value.length < 3 || value[0] !== '{' || value[value.length - 1] !== '}') return null
+  const inner = value.slice(1, -1)
+  if (!inner) return null
+  for (let i = 0; i < inner.length; i++) {
+    const c = inner.charCodeAt(i)
+    const ok =
+      (c >= 48 && c <= 57) || // 0-9
+      (c >= 65 && c <= 90) || // A-Z
+      (c >= 97 && c <= 122) || // a-z
+      c === 95 || // _
+      c === 46 || // .
+      c === 45 // -
+    if (!ok) return null
+  }
+  return inner
+}
+
+/**
+ * Port of `tokens_generate::resolve_value` — `{alias}` → `var(--cssName)`.
+ * Index is built from the same document's leaves (path + cssName).
+ */
+function resolveValue(
+  value: string,
+  pathToCss: Map<string, string>,
+  cssNames: Set<string>,
+): string {
+  const ref = parseAlias(value)
+  if (ref == null) return value
+  const cssName = pathToCss.get(ref) ?? (cssNames.has(ref) ? ref : ref.replace(/\./g, '-'))
+  return `var(--${cssName})`
+}
+
+function themeIdOf(doc: ThemeDoc): string {
+  const ext = doc.$extensions
+  if (isPlainObject(ext) && isPlainObject(ext.ship) && typeof ext.ship.themeId === 'string') {
+    return ext.ship.themeId
+  }
+  return ''
+}
+
+function defaultModeOf(doc: ThemeDoc): string | null {
+  const ext = doc.$extensions
+  if (
+    isPlainObject(ext) &&
+    isPlainObject(ext.ship) &&
+    typeof ext.ship.defaultMode === 'string' &&
+    ext.ship.defaultMode.length > 0
+  ) {
+    return ext.ship.defaultMode
+  }
+  return null
+}
+
+function modeNodeOf(doc: ThemeDoc, mode: string): { mode: string; node: unknown } {
+  const modes = doc.modes
+  if (isPlainObject(modes) && Object.keys(modes).length > 0) {
+    if (isPlainObject(modes[mode])) return { mode, node: modes[mode] }
+    if (isPlainObject(modes.light)) return { mode: 'light', node: modes.light }
+    const first = Object.keys(modes)[0]!
+    return { mode: first, node: modes[first] }
+  }
+  // Flat / non-modes draft: walk the whole doc (exclude handled by $ skip).
+  return { mode: mode || 'light', node: doc }
+}
+
+/**
+ * Lower a DTCG theme document for one mode into CSS custom-property writes.
+ *
+ * Same walk + alias resolve as sail-compiler `tokens_generate` theme layers
+ * (see `flatten_tokens` / `resolve_value` in `tokens_generate.rs`). Does **not**
+ * call the Rust binary — Studio must paint from RAM draft; this is the TS twin.
+ *
+ * @returns tokens + `--name` patch; empty tokens if mode branch missing/empty.
+ */
+export function lowerThemeDoc(
+  doc: ThemeDoc,
+  mode?: string | null,
+): LowerThemeResult {
+  const preferred =
+    (typeof mode === 'string' && mode.length > 0 ? mode : null) ??
+    defaultModeOf(doc) ??
+    'light'
+  const { mode: resolvedMode, node } = modeNodeOf(doc, preferred)
+  const raw: Array<{ path: string; cssName: string; value: string; type: string }> = []
+  flattenTokens(node, [], undefined, raw)
+
+  const pathToCss = new Map<string, string>()
+  const cssNames = new Set<string>()
+  for (const t of raw) {
+    pathToCss.set(t.path, t.cssName)
+    cssNames.add(t.cssName)
+  }
+
+  const tokens: LoweredThemeToken[] = []
+  const patch: ThemeScopePatch = {}
+  for (const t of raw) {
+    const cssValue = resolveValue(t.value, pathToCss, cssNames)
+    tokens.push({
+      path: t.path,
+      cssName: t.cssName,
+      value: t.value,
+      cssValue,
+      type: t.type,
+    })
+    patch[`--${t.cssName}`] = cssValue
+  }
+
+  return {
+    mode: resolvedMode,
+    themeId: themeIdOf(doc),
+    tokens,
+    patch,
+  }
+}
+
+function writeHostProp(host: HTMLElement, name: string, value: string): void {
+  host.style.setProperty(name, value)
+}
+
+function clearHostProp(host: HTMLElement, name: string): void {
+  host.style.removeProperty(name)
+}
+
+/**
+ * Apply a DTCG draft onto `host` only (custom properties + theme/mode attrs).
+ * Re-entrant: a second call on the same host replaces the previous scope write.
+ * Returns a disposer equivalent to {@link clearThemeScope}.
+ *
+ * Does **not** touch `:root` session preview/commit state.
+ */
+function applyScope(
+  host: HTMLElement,
+  options: ThemeApplyScopeOptions,
+): () => void {
+  if (host == null || typeof host.style?.setProperty !== 'function') {
+    throw new TypeError('theme.applyScope: host must be an HTMLElement')
+  }
+  if (options == null || !isPlainObject(options.doc)) {
+    throw new TypeError('theme.applyScope: options.doc must be a theme document object')
+  }
+
+  const lowered = lowerThemeDoc(options.doc, options.mode)
+  const prev = appliedScopes.get(host)
+  const nextNames = Object.keys(lowered.patch)
+
+  // Drop props from a prior apply that are absent in this patch (mode switch /
+  // token delete) so values cannot stick.
+  if (prev) {
+    const nextSet = new Set(nextNames)
+    for (const name of prev.names) {
+      if (!nextSet.has(name)) clearHostProp(host, name)
+    }
+  }
+
+  for (const name of nextNames) {
+    writeHostProp(host, name, lowered.patch[name]!)
+  }
+
+  // Framework-owned theme IR on the host; mode is a cascade bit (D10/D11).
+  if (lowered.themeId) {
+    host.setAttribute('theme', lowered.themeId)
+  } else if (prev?.themeId) {
+    host.removeAttribute('theme')
+  }
+  host.setAttribute('data-mode', lowered.mode)
+  // Dual-attr cutover: keep data-theme in sync when we know the id so residual
+  // non-preview rules can still key off it. Never set data-theme-preview.
+  if (lowered.themeId) {
+    host.setAttribute('data-theme', lowered.themeId)
+  } else if (prev?.themeId) {
+    host.removeAttribute('data-theme')
+  }
+
+  appliedScopes.set(host, {
+    names: nextNames,
+    themeId: lowered.themeId,
+    mode: lowered.mode,
+  })
+
+  return () => clearThemeScope(host)
+}
+
+/**
+ * Teardown a prior {@link theme.applyScope} on `host` — removes written custom
+ * properties and the theme/mode attrs this API set. Safe if never applied.
+ */
+export function clearThemeScope(host: HTMLElement): void {
+  const prev = appliedScopes.get(host)
+  if (!prev) return
+  for (const name of prev.names) {
+    clearHostProp(host, name)
+  }
+  if (prev.themeId) {
+    if (host.getAttribute('theme') === prev.themeId) host.removeAttribute('theme')
+    if (host.getAttribute('data-theme') === prev.themeId) host.removeAttribute('data-theme')
+  }
+  if (host.getAttribute('data-mode') === prev.mode) host.removeAttribute('data-mode')
+  appliedScopes.delete(host)
+}
+
+/**
+ * `theme` — the sanctioned runtime theme-write hatch.
+ *
+ * - **`:root` session** (`preview` / `commit` / `reset` / `current`): live
+ *   product theme overrides, declared tokens only.
+ * - **Host draft scope** (`applyScope`): Studio/in-session preview of a DTCG
+ *   document on a nested host — not `:root`, not themes.css.
+ *
+ * Plain ambient API (`import { theme } from '@ship/sail-runtime'`).
  */
 export const theme = {
   preview,
   commit,
   reset,
   current,
+  applyScope,
+  /** Alias of {@link clearThemeScope} for symmetric teardown. */
+  clearScope: clearThemeScope,
 } as const
 
 export type Theme = typeof theme

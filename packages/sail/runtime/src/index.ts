@@ -58,8 +58,26 @@ export { setHostContext, hostContext } from './host-context'
 export type { HostContext } from './host-context'
 export type { Host } from './host'
 
-export { theme, setThemePersist, hydrateTheme, clearThemeOverrides } from './theme'
-export type { Theme, ThemePatch, ThemeTokenName, ThemeState, ThemePersist } from './theme'
+export {
+  theme,
+  setThemePersist,
+  hydrateTheme,
+  clearThemeOverrides,
+  clearThemeScope,
+  lowerThemeDoc,
+} from './theme'
+export type {
+  Theme,
+  ThemePatch,
+  ThemeTokenName,
+  ThemeState,
+  ThemePersist,
+  ThemeDoc,
+  ThemeApplyScopeOptions,
+  ThemeScopePatch,
+  LoweredThemeToken,
+  LowerThemeResult,
+} from './theme'
 
 export { form, selection, filteredList } from './compositions'
 export type { FormOptions, ListSource } from './compositions'

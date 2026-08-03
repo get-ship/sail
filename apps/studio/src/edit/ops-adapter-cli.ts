@@ -78,7 +78,9 @@ export function createCliOpsClient(repoRoot: string): OpsClient {
     sailThemeList: (args) => run('SailTheme/List', args),
     sailThemeRead: (args) => run('SailTheme/Read', args),
     sailThemeWrite: (args) => run('SailTheme/Write', args),
+    sailThemeDelete: (args) => run('SailTheme/Delete', args),
     sailThemeFork: (args) => run('SailTheme/Fork', args),
+    sailThemeGenerate: (args) => run('SailTheme/Generate', args),
     sailThemeGraph: (args) => run('SailTheme/Graph', args),
     sailThemeEffectiveIds: (args) => run('SailTheme/EffectiveIds', args),
     readSource: async (path: string) => {

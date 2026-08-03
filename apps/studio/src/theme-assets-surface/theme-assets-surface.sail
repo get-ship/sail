@@ -1,0 +1,348 @@
+<!--
+  Theme assets facet — type roles + icons deep edit.
+  Thin shell: chrome + editor + specimen under data-theme-preview.
+-->
+<scope>
+  const sectionTitle = style.fontSize(sm).fontWeight(semibold)
+  const fieldHint = style.fontSize(xs).fg(muted-foreground)
+  const pathMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
+  const doorTitle = style.fontWeight(semibold)
+  const editorCol = style.padX(6).padT(6).padB(10).maxW(panel-max-w-lg)
+  const bandStatus = style.padX(4).padY(2)
+  const bandError = style.padX(4).padY(2).borderBWidth(1).borderB(border)
+  const iconCell = style.w(10).h(10).minW(10).minH(10).radius(md).borderWidth(1).border(border-subtle).bg(surface-0)
+  const fullBtn = style.w(full)
+  const fontHit = style.pad(2_5).radius(md).borderWidth(1).border(border-subtle).bg(surface-0).minW(0)
+  const fontSample = style.fontSize(lg).leading(snug).fg(foreground).minW(0)
+  const catChip = style.when({ selected: style.bg(selected-bg).fg(foreground).border(border) })
+</scope>
+
+<controller>
+import { createThemeSession } from '../theme-session/theme-session'
+import { watchPreviewHost } from '../theme-session/bind-preview-host'
+import { createAssetsEdit } from './theme-assets-edit'
+export default controller(() => {
+  const session = createThemeSession({
+    facet: 'assets',
+    editGuardMessage: 'Add this theme to the project to edit assets.',
+    saveSuccessMessage: 'Type and icon choices saved where the store persists them.',
+  })
+  const assets = createAssetsEdit(session)
+  mount((host) => watchPreviewHost(host, (el) => session.attachPreviewHost(el)))
+  return { session, assets }
+})
+</controller>
+
+<column
+  data-surface="themes"
+  data-theme-assets-surface
+  data-assets-chrome
+  gap="0"
+  grow
+  sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
+>
+  <theme-facet-chrome session={session}></theme-facet-chrome>
+
+  <if {session.hasError()}>
+    <row data-assets-error align="center" gap="2" shrink="0" sx={bandError}>
+      <p grow min-w="0" sx={style.fontSize(sm).fg(destructive).truncate()}>{session.errorText()}</p>
+      <button type="button" size="sm" variant="ghost" data-assets-retry on:click={session.onRetry}>Retry</button>
+    </row>
+  </if>
+
+  <if {session.loading()}>
+    <row data-assets-loading align="center" gap="2" shrink="0" sx={bandStatus}>
+      <spinner size="sm"></spinner>
+      <p sx={fieldHint}>Loading…</p>
+    </row>
+  </if>
+
+  <row
+    data-assets-workbench
+    grow
+    gap="0"
+    nowrap
+    align="stretch"
+    sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)}
+  >
+    <scroll-area
+      data-assets-editor
+      grow
+      min-w="0"
+      sx={style.minH(0).basis(0).h(full).minW(0).bg(background)}
+    >
+      <column gap="8" sx={editorCol}>
+        <column data-assets-header gap="2">
+          <p sx={fieldHint}>Assets facet</p>
+          <p sx={style.fontSize(xl).fontWeight(semibold).tracking(tight)}>Type &amp; icons</p>
+          <p sx={fieldHint}>
+            Deep type roles and icon pack judgment. Overview keeps shallow teasers only.
+          </p>
+          <p sx={pathMeta}>{session.modesMeta()}</p>
+          <if {session.catalogHint()}>
+            <p data-catalog-hint sx={fieldHint}>Add to project to edit.</p>
+          </if>
+        </column>
+
+        <column data-section="type" gap="4">
+          <row align="baseline" justify="between" gap="3" nowrap>
+            <p sx={sectionTitle}>Type</p>
+            <p sx={pathMeta}>display · body · mono</p>
+          </row>
+          <column gap="3">
+            <column gap="1">
+              <p sx={fieldHint}>Display</p>
+              <select data-type-role="display" size="sm" value={assets.typeDisplay()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
+                <for {assets.displayFontOpts()} as="o" key={o.key}>
+                  <option value={o.value}>{o.label}</option>
+                </for>
+              </select>
+            </column>
+            <column gap="1">
+              <p sx={fieldHint}>Body</p>
+              <select data-type-role="body" size="sm" value={assets.typeBody()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
+                <for {assets.bodyFontOpts()} as="o" key={o.key}>
+                  <option value={o.value}>{o.label}</option>
+                </for>
+              </select>
+            </column>
+            <column gap="1">
+              <p sx={fieldHint}>Mono</p>
+              <select data-type-role="mono" size="sm" value={assets.typeMono()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
+                <for {assets.monoFontOpts()} as="o" key={o.key}>
+                  <option value={o.value}>{o.label}</option>
+                </for>
+              </select>
+            </column>
+          </column>
+
+          <column data-font-discoverer gap="3">
+            <row align="baseline" justify="between" gap="3" nowrap>
+              <p sx={sectionTitle}>Font discoverer</p>
+              <p sx={pathMeta}>{assets.fontCatalogMeta()}</p>
+            </row>
+            <p sx={fieldHint}>
+              Full Google Fonts catalog — search, preview, assign to a role, or install (vendor woff2 into the project).
+            </p>
+            <row gap="2" align="center" nowrap data-font-search>
+              <input
+                type="search"
+                size="sm"
+                grow
+                min-w="0"
+                placeholder="Search 1,900+ families (Poppins, Noto, Fraunces…)"
+                value={assets.fontSearchQ()}
+                on:input={assets.onFontSearchInput}
+                aria-label="Search fonts"
+              />
+              <button type="button" size="sm" variant="outline" tone="muted" data-font-search-btn on:click={assets.onFontSearch} shrink="0">
+                Search
+              </button>
+            </row>
+            <row gap="1" align="center" nowrap data-font-cats sx={style.overflowX(auto).minW(0)}>
+              <for {assets.fontCategoryOpts()} as="c" key={c.key}>
+                <button
+                  type="button"
+                  size="xs"
+                  variant="outline"
+                  tone="muted"
+                  data-font-cat={c.id}
+                  data-selected={c.on ? 'true' : null}
+                  on:click={assets.onFontCategory}
+                  shrink="0"
+                  sx={catChip}
+                >
+                  {c.label}
+                </button>
+              </for>
+            </row>
+            <if {assets.fontSearching()}>
+              <row align="center" gap="2" data-font-loading>
+                <spinner size="sm"></spinner>
+                <p sx={fieldHint}>Searching catalog…</p>
+              </row>
+            </if>
+            <if {assets.hasFontHits()}>
+              <column gap="2" data-font-hits>
+                <for {assets.fontSearchHits()} as="f" key={f.key}>
+                  <column gap="2" data-font-hit data-font-family={f.family} sx={fontHit}>
+                    <row align="baseline" justify="between" gap="2" nowrap>
+                      <p sx={doorTitle} grow min-w="0">{f.family}</p>
+                      <p sx={pathMeta} shrink="0">{f.category}</p>
+                    </row>
+                    <p data-font-sample data-face={f.family} sx={fontSample}>{f.sample}</p>
+                    <row gap="1" align="center">
+                      <button type="button" size="xs" variant="outline" tone="muted" data-font-family={f.family} data-font-role="display" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
+                        Display
+                      </button>
+                      <button type="button" size="xs" variant="outline" tone="muted" data-font-family={f.family} data-font-role="body" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
+                        Body
+                      </button>
+                      <button type="button" size="xs" variant="outline" tone="muted" data-font-family={f.family} data-font-role="mono" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
+                        Mono
+                      </button>
+                      <button type="button" size="xs" variant="soft" tone="primary" data-font-family={f.family} data-font-role="body" on:click={assets.onFontInstall} disabled={!session.canEdit()} shrink="0">
+                        Install
+                      </button>
+                    </row>
+                  </column>
+                </for>
+              </column>
+            </if>
+            <if {!assets.hasFontHits() && !assets.fontSearching()}>
+              <p data-font-empty sx={fieldHint}>No families match — try another query or category.</p>
+            </if>
+          </column>
+        </column>
+
+        <column data-section="icons" gap="4">
+          <row align="baseline" justify="between" gap="3" nowrap>
+            <p sx={sectionTitle}>Icons</p>
+            <p sx={pathMeta}>browse · size scale</p>
+          </row>
+          <column gap="1">
+            <p sx={fieldHint}>Pack (session until pack token ships)</p>
+            <select data-icon-pack size="sm" value={assets.iconPack()} disabled={!session.canEdit()} on:change={assets.onIconPack}>
+              <option value="lucide">Lucide</option>
+              <option value="phosphor">Phosphor</option>
+            </select>
+          </column>
+          <column gap="1">
+            <p sx={fieldHint}>Browse glyphs</p>
+            <input
+              type="search"
+              size="sm"
+              placeholder="Filter by name…"
+              value={assets.iconQuery()}
+              on:input={assets.onIconQuery}
+              aria-label="Filter icons"
+            />
+          </column>
+          <if {assets.hasIconGlyphs()}>
+            <grid cols="4" gap="2" data-icon-grid>
+              <for {assets.iconGlyphs()} as="g" key={g.key}>
+                <center shrink="0" sx={iconCell} title={g.name}>
+                  <icon name={g.name} size="md" label={g.name}></icon>
+                </center>
+              </for>
+            </grid>
+          </if>
+          <column data-icon-scale gap="2">
+            <row align="baseline" justify="between" gap="3" nowrap>
+              <p sx={fieldHint}>Size scale (sm → xl)</p>
+              <p sx={pathMeta}>{assets.iconScaleReadout()}</p>
+            </row>
+            <p sx={fieldHint}>Drag master to set the md step; other steps follow when scale-together is on.</p>
+            <column gap="1">
+              <row align="center" justify="between" gap="2" nowrap>
+                <p sx={fieldHint}>Master</p>
+                <p sx={pathMeta}>{assets.iconScaleMasterPx()}px</p>
+              </row>
+              <input
+                type="range"
+                min="10"
+                max="32"
+                step="1"
+                value={assets.iconScaleMasterPx()}
+                disabled={!session.canEdit()}
+                data-icon-scale-master
+                aria-label="Icon scale master"
+                on:input={assets.onIconScaleMaster}
+              />
+            </column>
+          </column>
+        </column>
+      </column>
+    </scroll-area>
+
+    <column
+      data-specimen-dock
+      gap="0"
+      grow
+      min-w="0"
+      sx={style.minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background).overflow(hidden)}
+    >
+      <column grow gap="0" sx={style.minH(0).h(full).pad(4)}>
+        <card
+          data-assets-specimen
+          data-preview-specimen
+          data-theme-preview={session.paintId()}
+          data-mode={session.paintMode()}
+          padding="none"
+          sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}
+        >
+          <column gap="0" grow sx={style.minH(0).h(full)}>
+            <row
+              data-specimen-chrome
+              align="center"
+              gap="2"
+              nowrap
+              shrink="0"
+              sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
+            >
+              <row gap="2" align="center" nowrap shrink="0" aria-hidden="true" sx={style.minW(12)}>
+                <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
+                <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
+                <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>
+              </row>
+              <p grow min-w="0" sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{session.nameEdit()}</p>
+              <p sx={pathMeta} shrink="0">{session.paintMode()}</p>
+            </row>
+          <scroll-area grow sx={style.minH(0).h(full).bg(background)}>
+            <column data-specimen-body gap="5" sx={style.pad(5).minW(0)}>
+              <column gap="2" data-type-stack>
+                <p sx={style.fontFamily(display).fontSize(2xl).fontWeight(semibold).tracking(tight)}>
+                  {assets.typeDisplay()}
+                </p>
+                <p sx={style.fontFamily(body).fontSize(sm).leading(relaxed)}>
+                  {assets.typeBody()} — body copy for product UI judgment.
+                </p>
+                <p sx={style.fontFamily(mono).fontSize(xs)}>
+                  {assets.typeMono()} — const pack = "lucide"
+                </p>
+              </column>
+              <row gap="2" align="center" nowrap data-specimen-toolbar>
+                <button type="button" size="sm" variant="solid" tone="primary">
+                  <icon name="plus" size="sm"></icon>
+                  New
+                </button>
+                <button type="button" size="sm" variant="outline" tone="muted">
+                  <icon name="search" size="sm"></icon>
+                  Find
+                </button>
+                <button type="button" size="sm" variant="ghost" tone="muted">
+                  <icon name="settings" size="sm"></icon>
+                </button>
+              </row>
+              <if {assets.hasIconGlyphs()}>
+                <row data-specimen-icons gap="3" align="center" nowrap>
+                  <for {assets.iconGlyphs()} as="g" key={g.key}>
+                    <icon name={g.name} size={assets.iconPreviewSize()} label={g.name} shrink="0"></icon>
+                  </for>
+                </row>
+              </if>
+              <card padding="sm">
+                <column gap="2">
+                  <row gap="2" align="center" nowrap>
+                    <icon name="folder" size="sm"></icon>
+                    <p sx={doorTitle}>Project list row</p>
+                  </row>
+                  <p sx={fieldHint}>Icons inherit currentColor under the theme table.</p>
+                </column>
+              </card>
+            </column>
+          </scroll-area>
+          </column>
+        </card>
+      </column>
+    </column>
+  </row>
+
+  <toast-region position="bottom-end" data-assets-toast-region>
+    <for {session.toastItems()} as="t" key={t.key}>
+      <toast tone={t.tone} data-assets-toast on:sail-toast-dismiss={session.onToastDismiss}>
+        {t.message}
+      </toast>
+    </for>
+  </toast-region>
+</column>

@@ -428,6 +428,7 @@ export function uiThemeOptions(state: DesignSurfaceState): {
 
 export function uiHeader(state: DesignSurfaceState): {
   themeLabel: string
+  /** Origin label — never "fork" in product copy. */
   forkLabel: string
   overridesLabel: string
   canSave: boolean

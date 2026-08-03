@@ -1,5 +1,7 @@
 /**
- * Theme list / open / save / fork via SailTheme ops.
+ * Theme list / open / save / add-to-project via SailTheme ops.
+ * Save + delete + add also run SailTheme/Generate mode=app so
+ * registered app tables match disk for table consumers.
  */
 import { validateMonotonic } from './scale'
 import {
@@ -14,6 +16,44 @@ import type { DesignOpsClient, DesignSurfaceState, ThemeFile } from './types'
 import { CATALOG_THEMES_DIR } from './types'
 import { DEFAULT_GROUP_ID } from './token-groups'
 import { userError } from '../user-error'
+
+/** After project JSON write — regenerate app theme tables (not the edit-loop paint). */
+async function generateAppThemes(
+  ctx: ThemeIoCtx,
+  noteOnFail = true,
+): Promise<void> {
+  const client = ctx.getClient()
+  const state = ctx.getState()
+  if (!client?.sailThemeGenerate) {
+    // Honest gap: ops client without Generate (tests / offline). JSON still saved.
+    if (noteOnFail) {
+      ctx.setState({
+        ...ctx.getState(),
+        statusNote:
+          (ctx.getState().statusNote || 'Theme saved') +
+          ' · tables not regenerated (Generate unavailable)',
+      })
+    }
+    return
+  }
+  try {
+    await client.sailThemeGenerate({
+      mode: 'app',
+      project: state.projectRoot || undefined,
+    })
+  } catch (e) {
+    if (noteOnFail) {
+      ctx.setState({
+        ...ctx.getState(),
+        lastWriteError: userError(
+          e,
+          'Theme JSON saved, but app theme tables failed to regenerate.',
+        ),
+      })
+      ctx.emit()
+    }
+  }
+}
 
 export type ThemeIoCtx = {
   getClient: () => DesignOpsClient | null
@@ -149,6 +189,10 @@ export async function openThemeOn(ctx: ThemeIoCtx, themeId: string): Promise<voi
   }
 }
 
+/**
+ * Add a catalog (or project) theme into the project as `newId`.
+ * Product UI: "Add to project" — never "fork".
+ */
 export async function forkThemeOn(
   ctx: ThemeIoCtx,
   newId: string,
@@ -170,6 +214,15 @@ export async function forkThemeOn(
     return false
   }
   const state = ctx.getState()
+  // Clobber risk: refuse silent overwrite of an existing project theme.
+  if (state.projectThemes.some((t) => t.id === id)) {
+    ctx.setState({
+      ...ctx.getState(),
+      lastWriteError: `Project already has a theme named “${id}”.`,
+    })
+    ctx.emit()
+    return false
+  }
   const srcId = sourceId || state.themeId
   const src =
     state.projectThemes.find((t) => t.id === srcId) ||
@@ -194,12 +247,13 @@ export async function forkThemeOn(
       themeId: id,
       lastWriteError: null,
     })
+    await generateAppThemes(ctx, false)
     await loadThemesOn(ctx, { themeId: id })
     return true
   } catch (e) {
     ctx.setState({
       ...ctx.getState(),
-      lastWriteError: userError(e, 'Could not create that theme — try again.'),
+      lastWriteError: userError(e, 'Could not add that theme to the project — try again.'),
     })
     ctx.emit()
     return false
@@ -250,12 +304,78 @@ export async function saveThemeOn(ctx: ThemeIoCtx): Promise<boolean> {
       statusNote: 'Theme saved',
     })
     ctx.emit()
+    // Registered CSS tables for cold path / non-apply consumers.
+    await generateAppThemes(ctx, true)
     await ctx.repaintSpecimen()
     return true
   } catch (e) {
     ctx.setState({
       ...ctx.getState(),
       lastWriteError: userError(e, 'Could not save the theme — try again.'),
+    })
+    ctx.emit()
+    return false
+  }
+}
+
+/** Delete a project theme file (catalog themes refused by ops). */
+export async function deleteThemeOn(
+  ctx: ThemeIoCtx,
+  themeId: string,
+): Promise<boolean> {
+  const client = ctx.getClient()
+  const state = ctx.getState()
+  if (!client?.sailThemeDelete) {
+    ctx.setState({
+      ...state,
+      lastWriteError: 'Theme delete is not available offline.',
+    })
+    ctx.emit()
+    return false
+  }
+  const row =
+    state.projectThemes.find((t) => t.id === themeId) ||
+    (state.themeId === themeId && state.themePath
+      ? { id: themeId, path: state.themePath, file: '', catalog: false }
+      : null)
+  if (!row?.path || row.catalog) {
+    ctx.setState({
+      ...state,
+      lastWriteError: 'Only project themes can be deleted.',
+    })
+    ctx.emit()
+    return false
+  }
+  try {
+    await client.sailThemeDelete({ path: row.path })
+    // Clear active if we deleted the open theme.
+    if (state.themeId === themeId) {
+      ctx.setSavedDoc(null)
+      ctx.setState({
+        ...ctx.getState(),
+        themeId: '',
+        themePath: null,
+        themeDoc: null,
+        dirty: false,
+        diffRows: [],
+        lastWriteError: null,
+        statusNote: 'Theme deleted',
+      })
+    } else {
+      ctx.setState({
+        ...ctx.getState(),
+        lastWriteError: null,
+        statusNote: 'Theme deleted',
+      })
+    }
+    ctx.emit()
+    await generateAppThemes(ctx, false)
+    await loadThemesOn(ctx)
+    return true
+  } catch (e) {
+    ctx.setState({
+      ...ctx.getState(),
+      lastWriteError: userError(e, 'Could not delete the theme — try again.'),
     })
     ctx.emit()
     return false
@@ -317,5 +437,7 @@ export function emptyDesignState(): DesignSurfaceState {
     lastClampNote: null,
     diffRows: [],
     statusNote: 'Pick a decision or token group',
+    canUndo: false,
+    canRedo: false,
   }
 }

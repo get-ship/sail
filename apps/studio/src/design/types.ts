@@ -111,7 +111,7 @@ export type DesignSurfaceState = {
   themeDoc: Record<string, unknown> | null
   /** Dirty working doc vs last saved. */
   dirty: boolean
-  /** Save review open — blast radius shown before commit. */
+  /** Save review open — Used by / usage summary shown before commit. */
   saveReviewOpen: boolean
   catalogThemes: ThemeFile[]
   projectThemes: ThemeFile[]
@@ -137,6 +137,10 @@ export type DesignSurfaceState = {
   /** Exportable DTCG diff rows (path → from/to). */
   diffRows: DesignDiffRow[]
   statusNote: string
+  /** Theme doc undo stack non-empty. */
+  canUndo: boolean
+  /** Theme doc redo stack non-empty. */
+  canRedo: boolean
 }
 
 export type DesignOpsClient = {
@@ -154,12 +158,25 @@ export type DesignOpsClient = {
     path: string
     content: string
   }) => Promise<{ ok?: boolean; path?: string; bytes?: number }>
+  sailThemeDelete?: (args: {
+    path: string
+  }) => Promise<{ ok?: boolean; path?: string }>
   sailThemeFork: (args: {
     source_path: string
     dest_path: string
     new_id?: string
     content?: string
   }) => Promise<{ ok?: boolean; dest_path?: string; path?: string }>
+  /**
+   * SailTheme/Generate — regenerate registered app theme tables (mode=app).
+   */
+  sailThemeGenerate?: (args: {
+    mode?: string
+    project?: string
+    workspace?: string
+    model?: string
+    out?: string
+  }) => Promise<Record<string, unknown>>
   sailThemeGraph?: (args: { themeId?: string }) => Promise<Record<string, unknown>>
   sailThemeEffectiveIds?: (args: {
     project?: string
@@ -186,10 +203,23 @@ export type DesignOpsClient = {
     family: string
     axes?: string
   }) => Promise<Record<string, unknown>>
-  /** SailTheme/FontSearch — Google catalog proxy. */
+  /** SailTheme/FontSearch — full Google Fonts catalog (bundled + filter). */
   sailThemeFontSearch?: (args: {
-    query: string
-  }) => Promise<{ families?: string[] }>
+    query?: string
+    category?: string
+    limit?: number
+  }) => Promise<{
+    families?: string[]
+    hits?: Array<{
+      family?: string
+      category?: string
+      popularity?: number
+      mono?: boolean
+    }>
+    count?: number
+    catalogSize?: number
+    source?: string
+  }>
 }
 
 export const CATALOG_THEMES_DIR = 'packages/sail/tokens/model/themes'

@@ -1,0 +1,129 @@
+<!--
+  Color facet specimen — draft paint via theme-draft-paint adapter.
+  session={session} identity bind. Host registered for applyScope re-apply.
+-->
+<controller>
+import { signal } from '@ship/sail-runtime'
+import type { ThemeSession } from '../theme-session/theme-session'
+import { watchPreviewHost } from '../theme-session/bind-preview-host'
+
+export default controller(() => {
+  const sessionSig = signal<ThemeSession | null>(null)
+  mount((host) => {
+    const pre = (host as unknown as { session?: ThemeSession | null }).session
+    if (pre != null) sessionSig.set(pre)
+    Object.defineProperty(host, 'session', {
+      configurable: true,
+      get: () => sessionSig(),
+      set: (s: ThemeSession | null) => sessionSig.set(s),
+    })
+    return watchPreviewHost(host, (el) => sessionSig()?.attachPreviewHost?.(el))
+  })
+  const s = () => sessionSig()
+  return {
+    paintId: () => s()?.paintId() ?? 'studio',
+    paintMode: () => s()?.paintMode() ?? 'light',
+    nameEdit: () => s()?.nameEdit() ?? '',
+  }
+})
+</controller>
+
+<scope>
+  const fieldHint = style.fontSize(xs).fg(muted-foreground)
+  const pathMeta = style.fontSize(xs).fontFamily(mono).fg(muted-foreground)
+</scope>
+
+<column
+  data-specimen-dock
+  gap="0"
+  grow
+  min-w="0"
+  sx={style.minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background).overflow(hidden)}
+>
+  <column grow gap="0" sx={style.minH(0).h(full).pad(4)}>
+    <!-- Frame chrome (dots + name + mode) is enough — no Preview/light/helper stack. -->
+    <card
+      data-color-specimen
+      data-preview-specimen
+      data-theme-preview={paintId()}
+      data-mode={paintMode()}
+      padding="none"
+      sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}
+    >
+      <column gap="0" grow sx={style.minH(0).h(full)}>
+        <row
+          data-specimen-chrome
+          align="center"
+          gap="2"
+          nowrap
+          shrink="0"
+          sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
+        >
+          <row gap="2" align="center" nowrap shrink="0" aria-hidden="true" sx={style.minW(12)}>
+            <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
+            <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
+            <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>
+          </row>
+          <p grow min-w="0" sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{nameEdit()}</p>
+          <p sx={pathMeta} shrink="0">{paintMode()}</p>
+        </row>
+        <scroll-area grow sx={style.minH(0).basis(0).h(full).bg(background)}>
+          <column data-specimen-body gap="4" sx={style.pad(5).minW(0)}>
+            <column gap="1">
+              <p sx={style.fontSize(md).fontWeight(semibold).fontFamily(heading)}>Product UI</p>
+              <p sx={style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)}>
+                Brand + surfaces paint this host. Mode flips the color table, not the editor chrome.
+              </p>
+            </column>
+            <row gap="2" align="center" nowrap data-specimen-buttons>
+              <button type="button" size="sm" variant="solid" tone="primary">Primary</button>
+              <button type="button" size="sm" variant="solid" tone="accent">Accent</button>
+              <button type="button" size="sm" variant="ghost" tone="muted">Ghost</button>
+            </row>
+            <row gap="2" align="center" nowrap data-specimen-badges>
+              <badge tone="muted" size="sm" variant="solid" pill>Secondary</badge>
+              <badge tone="primary" size="sm" variant="solid" pill>Primary</badge>
+              <badge tone="accent" size="sm" variant="solid" pill>Accent</badge>
+            </row>
+            <column data-surface-stack gap="2" aria-label="Surface stack">
+              <column gap="2" sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(background)}>
+                <p sx={pathMeta}>bg</p>
+                <column gap="2" sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-1)}>
+                  <p sx={pathMeta}>surface-1</p>
+                  <column gap="2" sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-2)}>
+                    <p sx={pathMeta}>surface-2</p>
+                    <column sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-3)}>
+                      <p sx={pathMeta}>card</p>
+                    </column>
+                  </column>
+                </column>
+              </column>
+            </column>
+            <column gap="1">
+              <p sx={style.fontSize(sm).fg(foreground)}>Foreground on surface</p>
+              <p sx={style.fontSize(xs).fg(muted-foreground)}>Muted secondary copy · border + ring below</p>
+            </column>
+            <column gap="1">
+              <p sx={style.fontSize(xs).fg(muted-foreground)}>Email</p>
+              <input type="email" size="sm" placeholder="you@company.com" aria-label="Sample email" />
+            </column>
+            <card padding="sm">
+              <column gap="2">
+                <p sx={style.fontSize(sm).fontWeight(semibold)}>Card surface</p>
+                <p sx={style.fontSize(xs).fg(muted-foreground).leading(relaxed)}>
+                  Focus ring uses color.ring. Borders use color.border.
+                </p>
+              </column>
+            </card>
+            <row data-sem-row gap="2" align="center" nowrap aria-label="Semantic tones">
+              <badge tone="success" size="sm" variant="solid" pill>Success</badge>
+              <badge tone="warning" size="sm" variant="solid" pill>Warning</badge>
+              <badge tone="destructive" size="sm" variant="solid" pill>Danger</badge>
+              <badge tone="info" size="sm" variant="solid" pill>Info</badge>
+            </row>
+          </column>
+        </scroll-area>
+      </column>
+    </card>
+  </column>
+</column>
