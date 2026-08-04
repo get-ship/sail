@@ -1,12 +1,14 @@
 <!--
   <edit-element-tree> — Components tab: sail-tree of the active doc.
   Labels short; L1/L2/L3 in node-trailing. Select → Source + span scroll.
+  Engine: tree={tree} identity bind.
 -->
 <controller>
 import { createEditElementTree } from './edit-element-tree-vm'
 export default controller(() => {
   const vm = createEditElementTree()
   return {
+    tree: vm.tree,
     hasElements: vm.hasElements,
     activePathLabel: vm.activePathLabel,
     onTreeSelect: (e: Event) => vm.onTreeSelect(e),
@@ -56,6 +58,7 @@ export default controller(() => {
       <sail-tree
         data-element-tree-host
         data-layer-badge
+        tree={tree}
         label="Component tree"
         selectable="single"
         size="sm"

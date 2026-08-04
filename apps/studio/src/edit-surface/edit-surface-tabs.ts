@@ -13,6 +13,23 @@ export type TabRow = DocTab & {
   key: string
 }
 
+/**
+ * Path-aware tab label: bare basename when unique among open tabs;
+ * otherwise parent/basename (e.g. edit/page.sail) so multi page.sail is legible.
+ */
+export function pathAwareTabLabel(path: string, openIds: readonly string[]): string {
+  const norm = path.replace(/\\/g, '/')
+  const base = norm.split('/').pop() || norm
+  const sameBase = openIds.filter((id) => {
+    const p = id.replace(/\\/g, '/')
+    return (p.split('/').pop() || p) === base
+  })
+  if (sameBase.length <= 1) return base
+  const parts = norm.split('/').filter(Boolean)
+  if (parts.length >= 2) return `${parts[parts.length - 2]}/${parts[parts.length - 1]}`
+  return base
+}
+
 /** Map shell/edit open docs into strip rows: label/dirty/close/active. */
 export function mapDocTabs(
   tabs: DocTab[],
@@ -26,11 +43,13 @@ export function mapDocTabs(
     return !!dirtyById.get(id)
   }
   const canClose = tabs.length > 1
+  const openIds = tabs.map((t) => t.id)
   return tabs.map((t) => {
     const active = t.id === activeId
     const dirty = isDirty(t.id, t.dirty)
     return {
       ...t,
+      label: pathAwareTabLabel(t.id, openIds),
       dirty,
       active,
       dirtyDot: dirty ? '●' : '',

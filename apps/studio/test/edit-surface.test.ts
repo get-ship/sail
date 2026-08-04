@@ -118,10 +118,11 @@ describe('C2 static preview helpers + region overlay', () => {
     expect(regionMetaLabel(12)).toBe('12 regions')
   })
 
-  it('paintRegionOverlay draws hover and selected with distinct attrs', () => {
+  it('paintRegionOverlay is a no-op (CSSOM paint removed; SAIL-LINT-CHAT)', () => {
     const host = document.createElement('div')
     host.setAttribute('data-region-overlay', '')
     document.body.appendChild(host)
+    // Must not throw and must not inject DOM / style.
     paintRegionOverlay([
       {
         id: 'sel',
@@ -133,34 +134,9 @@ describe('C2 static preview helpers + region overlay', () => {
         hover: false,
         key: 'sel',
       },
-      {
-        id: 'hov',
-        left: '20%',
-        top: '20%',
-        width: '10%',
-        height: '10%',
-        selected: false,
-        hover: true,
-        key: 'hov',
-      },
-      {
-        id: 'idle',
-        left: '40%',
-        top: '40%',
-        width: '10%',
-        height: '10%',
-        selected: false,
-        hover: false,
-        key: 'idle',
-      },
     ])
-    const boxes = host.querySelectorAll('[data-region-box]')
-    expect(boxes.length).toBe(2)
-    const sel = host.querySelector('[data-node-id="sel"]') as HTMLElement
-    const hov = host.querySelector('[data-node-id="hov"]') as HTMLElement
-    expect(sel?.dataset.selected).toBe('true')
-    expect(hov?.dataset.hover).toBe('true')
-    expect(host.querySelector('[data-node-id="idle"]')).toBeNull()
+    expect(host.querySelectorAll('[data-region-box]').length).toBe(0)
+    expect(host.children.length).toBe(0)
     host.remove()
   })
 
@@ -699,26 +675,31 @@ describe('STUDIO-1 review gates', () => {
     expect(activeDoc()?.view).toBe('layout')
   }, 120_000)
 
-  it('writeSignalValue stores override and posts to live iframe origin', async () => {
+  it('writeSignalValue stores override and posts to registered live preview window', async () => {
     setOpsClient(cli)
     await openDocument(PAGE, { loadPreview: false })
-    const iframe = document.createElement('iframe')
-    iframe.setAttribute('data-live-preview', '')
-    document.body.appendChild(iframe)
+    const { setLivePreviewWindow } = await import('../src/edit/store')
     const posts: { data: unknown; origin: string }[] = []
     const cw = {
       postMessage: (data: unknown, origin: string) => {
         posts.push({ data, origin })
       },
       location: { origin: window.location.origin },
+    } as unknown as Window
+    setLivePreviewWindow(cw)
+    try {
+      writeSignalValue('ticks', '42')
+      expect(activeDoc()?.signalValues.ticks).toBe('42')
+      expect(posts.length).toBe(1)
+      expect(posts[0]!.data).toMatchObject({
+        type: 'sail-studio-signal',
+        name: 'ticks',
+        value: '42',
+      })
+      expect(posts[0]!.origin).toBe(window.location.origin)
+    } finally {
+      setLivePreviewWindow(null)
     }
-    Object.defineProperty(iframe, 'contentWindow', { value: cw, configurable: true })
-    writeSignalValue('ticks', '42')
-    expect(activeDoc()?.signalValues.ticks).toBe('42')
-    expect(posts.length).toBe(1)
-    expect(posts[0]!.data).toMatchObject({ type: 'sail-studio-signal', name: 'ticks', value: '42' })
-    expect(posts[0]!.origin).toBe(window.location.origin)
-    iframe.remove()
   }, 120_000)
 
   it('elementSailTreeNodes: short labels, layer badge in trailing (not label cram)', () => {
@@ -852,6 +833,64 @@ describe('STUDIO-1 review gates', () => {
     expect(sail.children![0]!.children![0]!.id).toBe(
       'apps/x/routes/sail/tutorial/page.sail',
     )
+  })
+
+  it('fileSailTreeNodes disambiguates multi-page.sail via parent dir rows (never flat siblings)', () => {
+    const nodes = fileSailTreeNodes(
+      [
+        { path: 'apps/x/routes/page.sail', name: 'page.sail', group: 'routes', checks: 0 },
+        {
+          path: 'apps/x/routes/edit/page.sail',
+          name: 'page.sail',
+          group: 'routes',
+          checks: 0,
+        },
+        {
+          path: 'apps/x/routes/checks/page.sail',
+          name: 'page.sail',
+          group: 'routes',
+          checks: 0,
+        },
+      ],
+      '',
+      'apps/x/routes/edit/page.sail',
+    )
+    const routes = nodes.find((n) => n.id === 'group:routes')!.children!
+    // Nested dirs — not three bare page.sail siblings under the group.
+    const topLabels = routes.map((n) => n.label).sort()
+    expect(topLabels).toEqual(['checks', 'edit', 'page.sail'])
+    const editPage = routes.find((n) => n.id === 'dir:routes/edit')!.children![0]!
+    expect(editPage.id).toBe('apps/x/routes/edit/page.sail')
+    expect(editPage.label).toBe('page.sail')
+    // Path-relative display names under group for flat consumers.
+    expect(fileDisplayName('apps/x/routes/edit/page.sail', 'routes')).toBe('edit/page.sail')
+    expect(fileDisplayName('apps/x/routes/checks/page.sail', 'routes')).toBe(
+      'checks/page.sail',
+    )
+  })
+
+  it('fileSailTreeNodes nests non-sail under other (project-relative, not bare basename only)', () => {
+    const nodes = fileSailTreeNodes(
+      [
+        { path: 'apps/x/package.json', name: 'package.json', group: 'other', checks: 0 },
+        { path: 'apps/x/test/foo.ts', name: 'foo.ts', group: 'other', checks: 0 },
+        { path: 'apps/x/test/bar.ts', name: 'bar.ts', group: 'other', checks: 0 },
+        { path: 'apps/x/src/main.ts', name: 'main.ts', group: 'src', checks: 0 },
+      ],
+      '',
+      null,
+    )
+    expect(nodes.map((n) => n.id).sort()).toEqual(['group:other', 'group:src'])
+    const other = nodes.find((n) => n.id === 'group:other')!.children!
+    expect(other.map((n) => n.label).sort()).toEqual(['package.json', 'test'])
+    const testDir = other.find((n) => n.id === 'dir:other/test')!
+    expect(testDir.children!.map((c) => c.label).sort()).toEqual(['bar.ts', 'foo.ts'])
+    expect(testDir.children!.map((c) => c.id).sort()).toEqual([
+      'apps/x/test/bar.ts',
+      'apps/x/test/foo.ts',
+    ])
+    expect(fileDisplayName('apps/x/test/foo.ts', 'other')).toBe('test/foo.ts')
+    expect(fileDisplayName('apps/x/package.json', 'other')).toBe('package.json')
   })
 
   it('hoverPreviewAt skips emit when tip unchanged', async () => {

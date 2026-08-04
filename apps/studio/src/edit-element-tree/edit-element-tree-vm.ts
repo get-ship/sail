@@ -1,6 +1,7 @@
 /**
  * Components tab element tree — active-doc sail-tree, L1/L2/L3 in trailing.
  * Select → shared selection + Source view + span scroll (when editor mounted).
+ * Live Table identity returned for `tree={tree}` on `<sail-tree>`.
  */
 import { createTable } from '@ship/sail-primitives'
 import { mountAmbient, signal } from '@ship/sail-runtime'
@@ -15,7 +16,6 @@ import {
   subscribeEdit,
   type SailTreeNode,
 } from '@ship/studio/edit'
-import { assignTreeHost } from '../edit/assign-tree'
 
 export function createEditElementTree() {
   const hasElements = signal(false)
@@ -51,14 +51,12 @@ export function createEditElementTree() {
     } else {
       tree.resetRowSelection()
     }
-    queueMicrotask(() => assignTreeHost('[data-element-tree-host]', tree))
   }
 
   sync()
 
   mountAmbient(() => {
     const unsub = subscribeEdit(() => sync())
-    queueMicrotask(() => assignTreeHost('[data-element-tree-host]', tree))
     return () => unsub()
   })
 
@@ -77,6 +75,8 @@ export function createEditElementTree() {
   }
 
   return {
+    /** Live Table identity for `<sail-tree tree={tree}>`. */
+    tree,
     hasElements,
     activePathLabel,
     onTreeSelect,

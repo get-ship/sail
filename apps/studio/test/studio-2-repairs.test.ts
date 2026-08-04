@@ -17,9 +17,9 @@ const SURFACE_VMS = [
   'apps/studio/src/edit-explorer/edit-explorer-vm.ts',
   'apps/studio/src/edit-element-tree/edit-element-tree-vm.ts',
   'apps/studio/src/checks-surface/checks-surface-vm.ts',
-  'apps/studio/src/design-surface/design-surface-vm.ts',
-  'apps/studio/src/design-inspector/design-inspector-vm.ts',
+  'apps/studio/src/themes-surface/themes-surface-vm.ts',
   'apps/studio/src/tasks-surface/tasks-surface-vm.ts',
+  'apps/studio/src/theme-session/theme-session.ts',
 ] as const
 
 describe('STUDIO-2 repairs + bar gates', () => {
@@ -70,21 +70,24 @@ describe('STUDIO-2 repairs + bar gates', () => {
     ]) {
       const src = readFileSync(join(REPO, rel), 'utf8')
       expect(src, rel).not.toMatch(/empty-state[^>]*tone=["']warning["']/)
-      expect(src, rel).toMatch(/border\(border-subtle\)|variant="placeholder"/)
+      // Neutral empty borders: border / borderT / placeholder variants all count
+      expect(src, rel).toMatch(
+        /border(?:T|B|L|R)?\(border-subtle\)|variant="placeholder"|variant="inline"/,
+      )
     }
   })
 
-  it('B2: design specimen hero uses heading/display serif pairing', () => {
-    const inspector = readFileSync(
-      join(REPO, 'apps/studio/src/design-inspector/design-inspector.sail'),
-      'utf8',
-    )
-    expect(inspector).toMatch(/fontFamily\(heading\)/)
-    expect(inspector).toMatch(/Aa · Preview/)
+  it('B2: theme domain specimen + type roles keep Fraunces display pairing', () => {
     const themeIo = readFileSync(join(REPO, 'apps/studio/src/design/theme-io.ts'), 'utf8')
     expect(themeIo).toMatch(/display:\s*['"]Fraunces['"]/)
     const specimen = readFileSync(join(REPO, 'apps/studio/src/design/specimen.ts'), 'utf8')
     expect(specimen).toMatch(/\?\? ['"]Fraunces['"]/)
+    // Themes facets own product UI (Design surface removed)
+    const colorSpec = readFileSync(
+      join(REPO, 'apps/studio/src/theme-color-specimen/theme-color-specimen.sail'),
+      'utf8',
+    )
+    expect(colorSpec).toMatch(/data-theme-preview|data-color-specimen/)
   })
 
   it('B3: explorer sail-tree labels stay short (no size meta — stacked-text fix)', () => {
@@ -96,13 +99,15 @@ describe('STUDIO-2 repairs + bar gates', () => {
     expect(explorer).not.toMatch(/KB/)
   })
 
-  it('B4: design surface has helper guidance line', () => {
-    const surface = readFileSync(
-      join(REPO, 'apps/studio/src/design-surface/design-surface.sail'),
+  it('B4: Themes no permanent Used by chrome + no Design product surface', () => {
+    const chrome = readFileSync(
+      join(REPO, 'apps/studio/src/theme-facet-chrome/theme-facet-chrome.sail'),
       'utf8',
     )
-    expect(surface).toMatch(/data-design-helper/)
-    expect(surface).toMatch(/Search any token/)
+    expect(chrome).not.toMatch(/data-used-by/)
+    expect(chrome).toMatch(/data-theme-facet-chrome/)
+    expect(existsSync(join(REPO, 'apps/studio/src/design-surface'))).toBe(false)
+    expect(existsSync(join(REPO, 'apps/studio/src/design-inspector'))).toBe(false)
   })
 
   it(

@@ -6,6 +6,7 @@
 import {
   clearSelection,
   getSelection,
+  getShellState,
   openTab,
   selectNode,
   setModelRev,
@@ -82,7 +83,7 @@ function emptyState(): EditSurfaceState {
     filter: '',
     files: [],
     activePath: null,
-    view: 'preview',
+    view: 'source',
     docs: new Map(),
     modelRev: 0,
     selectionNodeId: null,
@@ -206,15 +207,14 @@ export function writeSignalValue(name: string, value: string): void {
   })
   state = { ...state, docs }
   emit()
-  if (typeof document === 'undefined') return
-  const iframe = document.querySelector(
-    '[data-live-preview]',
-  ) as HTMLIFrameElement | null
-  if (!iframe?.contentWindow) return
-  // Prefer same-origin; fall back to '*' only when origin is opaque/unreadable.
+  // SAIL-LINT-CHAT: was document.querySelector('[data-live-preview]') +
+  // contentWindow.postMessage. Register the live-preview Window from the
+  // template/controller (ref/prop) via setLivePreviewWindow — no ambient lookup.
+  const win = livePreviewWindow
+  if (!win) return
   let targetOrigin = '*'
   try {
-    const o = iframe.contentWindow.location.origin
+    const o = win.location.origin
     if (o && o !== 'null') targetOrigin = o
   } catch {
     try {
@@ -224,13 +224,16 @@ export function writeSignalValue(name: string, value: string): void {
     }
   }
   try {
-    iframe.contentWindow.postMessage(
-      { type: 'sail-studio-signal', name, value },
-      targetOrigin,
-    )
+    win.postMessage({ type: 'sail-studio-signal', name, value }, targetOrigin)
   } catch {
     /* cross-origin or missing */
   }
+}
+
+/** Register the live-preview contentWindow (template/controller owns the host). */
+let livePreviewWindow: Window | null = null
+export function setLivePreviewWindow(w: Window | null): void {
+  livePreviewWindow = w
 }
 
 export function setAutoFixMode(mode: EditSurfaceState['autoFixMode']): void {
@@ -238,8 +241,42 @@ export function setAutoFixMode(mode: EditSurfaceState['autoFixMode']): void {
   emit()
 }
 
+/** True for Sail sources that go through SailInspect. */
+export function isSailSourcePath(path: string): boolean {
+  return path.replace(/\\/g, '/').toLowerCase().endsWith('.sail')
+}
+
+function installOpenedDoc(
+  path: string,
+  doc: EditDocument,
+  threads: ThreadRow[],
+  gen: number,
+): EditDocument | null {
+  if (gen !== previewGen) return null
+  const docs = new Map(state.docs)
+  docs.set(path, doc)
+  const rev = state.modelRev + 1
+  state = {
+    ...state,
+    docs,
+    activePath: path,
+    view: doc.view,
+    modelRev: rev,
+    loading: false,
+    error: null,
+    threads,
+  }
+  setModelRev(rev)
+  if (!state.files.some((f) => f.path === path)) {
+    state = { ...state, files: [...state.files, pathToFileEntry(path)] }
+  }
+  emit()
+  return state.docs.get(path) ?? doc
+}
+
 /**
- * Open a .sail path: load SailInspect model (+ optional preview), open shell tab.
+ * Open a project path: .sail → SailInspect model (+ optional preview);
+ * other text files → source-only (no inspect tree). Always selects the path.
  */
 export async function openDocument(
   path: string,
@@ -261,10 +298,67 @@ export async function openDocument(
   state = { ...state, loading: true, error: null, activePath: path }
   emit()
   setSailPath(path)
-  const label = path.split('/').pop() ?? path
+  // Label is path-aware among open tabs (edit/page.sail vs bare page.sail).
+  const openIds = [...getShellState().tabs.map((t) => t.id), path]
+  const parts = path.replace(/\\/g, '/').split('/').filter(Boolean)
+  const base = parts[parts.length - 1] ?? path
+  const collisions = openIds.filter((id) => {
+    const p = id.replace(/\\/g, '/')
+    return (p.split('/').pop() || p) === base
+  })
+  const label =
+    collisions.length > 1 && parts.length >= 2
+      ? `${parts[parts.length - 2]}/${parts[parts.length - 1]}`
+      : base
   openTab({ id: path, label, dirty: false })
 
   try {
+    // Non-Sail: list in explorer, open as text when readSource works; otherwise
+    // empty doc with a clear status (tree still selects the path).
+    if (!isSailSourcePath(path)) {
+      let sourceText = opts?.sourceText ?? ''
+      if (!sourceText && client.readSource) {
+        try {
+          sourceText = await client.readSource(path)
+        } catch {
+          /* fall through */
+        }
+      }
+      if (!sourceText) {
+        sourceText = state.docs.get(path)?.source.text ?? ''
+      }
+      if (gen !== previewGen) return null
+      const prior = state.docs.get(path)
+      const docView = prior?.view ?? 'source'
+      const hasText = sourceText.length > 0
+      const source: SourceState = {
+        text: sourceText,
+        dirty: false,
+        status: hasText
+          ? 'Text file'
+          : 'Non-Sail file — source not available here (open .sail or use CLI ops)',
+        cursorSpan: '—',
+        checks: [],
+        checksLabel: '',
+      }
+      const doc: EditDocument = {
+        path,
+        label,
+        modelVersion: prior?.modelVersion ?? 'text',
+        tree: { roots: [], nodes: [] },
+        layout: { boxes: [] },
+        state: { bindings: [] },
+        data: { keys: [] },
+        diagnostics: [],
+        theme: prior?.theme,
+        source,
+        preview: emptyPreview(),
+        view: docView,
+        signalValues: prior?.signalValues ?? {},
+      }
+      return installOpenedDoc(path, doc, [], gen)
+    }
+
     const model = await client.sailInspectModel({
       path,
       viewport: opts?.viewport,
@@ -357,24 +451,8 @@ export async function openDocument(
       signalValues: prior?.signalValues ?? {},
     }
 
-    const docs = new Map(state.docs)
-    docs.set(path, doc)
-    const rev = state.modelRev + 1
-    state = {
-      ...state,
-      docs,
-      activePath: path,
-      view: docView,
-      modelRev: rev,
-      loading: false,
-      error: null,
-      threads,
-    }
-    setModelRev(rev)
-    if (!state.files.some((f) => f.path === path)) {
-      state = { ...state, files: [...state.files, pathToFileEntry(path)] }
-    }
-    emit()
+    const installed = installOpenedDoc(path, doc, threads, gen)
+    if (!installed) return null
 
     // Re-check after install: a concurrent open may have taken gen/activePath.
     // Never call refreshPreview for a stolen activePath (it reads state.activePath).
@@ -588,6 +666,17 @@ export function selectEditNode(nodeId: string | null): void {
   emit()
 }
 
+/** Scroll source editor to a file span (Checks → Edit deep link). */
+export function requestSourceScroll(line: number, col = 1): void {
+  state = {
+    ...state,
+    sourceScrollLine: line,
+    sourceScrollCol: col,
+    sourceScrollNonce: state.sourceScrollNonce + 1,
+  }
+  emit()
+}
+
 /** Click on preview image → hit-test region → select. */
 export function selectFromPreviewClick(
   x: number,
@@ -656,10 +745,20 @@ export function scrollSourceEditor(host: HTMLElement | null): boolean {
   )
 }
 
-/** Resolve the active source editor host (CodeMirror CE or textarea). */
+/**
+ * Resolve the active source editor host (CodeMirror CE or textarea).
+ *
+ * // SAIL-LINT-CHAT: was document.querySelector('[data-source-editor]'). Needs
+ * // a controller/template ref or prop bind for the CE host — no ambient lookup.
+ * // Callers should pass the host they already hold; this returns the registered
+ * // ref only.
+ */
+let sourceEditorHost: HTMLElement | null = null
+export function setSourceEditorHost(el: HTMLElement | null): void {
+  sourceEditorHost = el
+}
 export function querySourceEditor(): HTMLElement | null {
-  if (typeof document === 'undefined') return null
-  return document.querySelector('[data-source-editor]') as HTMLElement | null
+  return sourceEditorHost
 }
 
 export function setSourceText(path: string, text: string): void {

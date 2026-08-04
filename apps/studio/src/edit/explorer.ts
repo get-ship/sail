@@ -72,15 +72,25 @@ export function fileRows(
 }
 
 /**
- * Display label under a group root (disambiguates multi-`page.sail`).
+ * Display / trie path under a group root (disambiguates multi-`page.sail`).
  * `apps/x/routes/foo/page.sail` + group routes → `foo/page.sail`.
+ * Group `other`: project-relative path when under `apps/<name>/`, else full path
+ * (never bare basename alone when nested — tree nesting needs the segments).
  */
 export function fileDisplayName(path: string, group: string): string {
   const p = path.replace(/\\/g, '/')
-  const re = new RegExp(`(?:^|/)${group}/(.+)$`)
-  const m = p.match(re)
-  if (m?.[1]) return m[1]
-  return p.split('/').pop() ?? p
+  if (group !== 'other') {
+    const re = new RegExp(`(?:^|/)${group}/(.+)$`)
+    const m = p.match(re)
+    if (m?.[1]) return m[1]
+  }
+  // Project-relative under apps/<pkg>/… so other/ nests test/, package.json, etc.
+  const underApp = p.match(/^apps\/[^/]+\/(.+)$/)
+  if (underApp?.[1]) return underApp[1]
+  // Bare project root files (routes/… already handled above for known groups).
+  if (!p.includes('/')) return p
+  // Fall back to full relative path (not basename) so nested siblings stay distinct.
+  return p.replace(/^\.\//, '')
 }
 
 /** Stable DOM id for aria-activedescendant tree items. */
@@ -259,6 +269,15 @@ function insertFileSeg(root: FileSegNode, relPath: string, filePath: string): vo
   }
 }
 
+function fileIconForName(name: string): string {
+  if (name.endsWith('.sail')) return 'file-code-2'
+  if (/\.(ts|tsx|js|jsx|mjs|cjs)$/.test(name)) return 'file-code'
+  if (/\.(json|toml|ya?ml)$/.test(name)) return 'file-json'
+  if (/\.(css|scss)$/.test(name)) return 'file-type'
+  if (/\.md$/.test(name)) return 'file-text'
+  return 'file'
+}
+
 function fileSegToSailTree(
   node: FileSegNode,
   groupId: string,
@@ -281,8 +300,10 @@ function fileSegToSailTree(
   if (node.filePath) {
     return {
       id: node.filePath,
+      // Basename under nested dirs; path-relative insert already disambiguates
+      // multi-`page.sail` via parent dir rows (never flat sibling page.sail list).
       label: node.name,
-      icon: 'file-code-2',
+      icon: fileIconForName(node.name),
       trailing: dirty?.has(node.filePath) ? '●' : undefined,
       children: kids.length ? kids : undefined,
     }

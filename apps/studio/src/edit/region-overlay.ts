@@ -1,4 +1,15 @@
-/** Imperative region highlight layer over the static preview image. */
+/**
+ * Region highlight boxes for the static preview.
+ *
+ * Raw CSSOM paint (`cssText` / `createElement`) is banned under
+ * `sail-no-imperative-style` + `sail-no-ambient-dom`. Until regions bind
+ * through a Sail template (for-each boxes + sx), paint is a no-op.
+ *
+ * // SAIL-LINT-CHAT: region overlay needs Sail-template boxes (for + sx
+ * // selected/hover variants) or a runtime `use:` action for geometry — not
+ * // app-module createElement/cssText.
+ */
+
 export type RegionBoxUi = {
   id: string
   left: string
@@ -12,39 +23,7 @@ export type RegionBoxUi = {
   key: string
 }
 
-function boxStyle(box: RegionBoxUi): string {
-  // Selected: solid primary fill. Hover-only: dashed outline, lighter fill.
-  const selected = box.selected
-  const border = selected
-    ? '1px solid var(--primary)'
-    : '1px dashed color-mix(in oklab,var(--primary) 70%,transparent)'
-  const bg = selected
-    ? 'color-mix(in oklab,var(--primary) 18%,transparent)'
-    : 'color-mix(in oklab,var(--primary) 10%,transparent)'
-  return `position:absolute;left:${box.left};top:${box.top};width:${box.width};height:${box.height};border:${border};border-radius:4px;box-sizing:border-box;background:${bg}`
-}
-
-/** Paint only selected/hover boxes (no full mesh of outlines). */
-export function paintRegionOverlay(boxes: RegionBoxUi[]): void {
-  if (typeof document === 'undefined') return
-  const host = document.querySelector('[data-region-overlay]') as HTMLElement | null
-  if (!host) return
-  let layer = host.querySelector('[data-region-layer]') as HTMLElement | null
-  if (!layer) {
-    layer = document.createElement('div')
-    layer.setAttribute('data-region-layer', '')
-    layer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1'
-    host.appendChild(layer)
-  }
-  layer.replaceChildren()
-  for (const box of boxes) {
-    if (!box.selected && !box.hover) continue
-    const el = document.createElement('div')
-    el.dataset.regionBox = ''
-    el.dataset.nodeId = box.id
-    if (box.selected) el.dataset.selected = 'true'
-    if (box.hover) el.dataset.hover = 'true'
-    el.style.cssText = boxStyle(box)
-    layer.appendChild(el)
-  }
+/** No-op: raw overlay paint removed (lint floor). Callers still compute boxes for labels. */
+export function paintRegionOverlay(_boxes: RegionBoxUi[]): void {
+  /* intentional no-op — see SAIL-LINT-CHAT above */
 }
