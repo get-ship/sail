@@ -21,6 +21,20 @@ first and last section with the middle skipped; one example standing
 in for repeated structure; describing what the sail should do instead
 of writing it.
 
+### Framework stack escapes (hard fail — reject the PR)
+
+In `apps/` (and any product authoring surface), never:
+
+- `document.createElement` / imperative DOM trees
+- `style.cssText` / element `.style.*` mutation from controllers
+- `document.querySelector` (or similar) then assign host props —
+  use identity binds (`prop:tree={table}`, `prop:table={…}`)
+- module `let state` + manual sync when `@ship/sail-runtime` stores/
+  signals exist
+
+Use: signals/stores, `use:` actions, L1–L2/compositions, sx+tokens.
+Missing primitive → report gap; do not invent DOM.
+
 ## Process
 
 1. Scope — count the distinct deliverables (routes, sections, states,

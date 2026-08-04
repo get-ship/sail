@@ -29,7 +29,32 @@ Set after the read; every layout/motion/density decision is gated by them.
 Baseline 8/6/4 for marketing; 5/3/3 for calm product; 3/2/5 for
 trust-first; match existing +1 motion for preserve-redesigns.
 
-## 2. Sail mechanics (the only stack)
+## 2. Framework stack (do not invent alternatives)
+
+Agents that skip this invent `createElement` / `cssText` / manual DOM.
+That is a hard fail — not a style preference.
+
+1. **Signals + stores in the signal graph** — not module `let state` +
+   manual sync when the store API exists. Shared/stateful logic:
+   `defineStore` / `useStore` from `@ship/sail-runtime` (studio and apps
+   use that surface). Local UI state: `signal` / `derived` in
+   `<controller>`, still in the graph.
+2. **Actions (`use:`)** — sanctioned DOM/measurement home; live under
+   runtime. App controllers do **not** touch `.style` / `createElement`.
+3. **Compositions / L1–L2 primitives** — tabs, tooltip, sail-tree, form,
+   selection, etc. Use the primitive before hand-rolling.
+4. **`prop:tree={table}`** (identity bind) for sail-tree — NEVER
+   `document.querySelector` + assign the host (same law as
+   `prop:table` for tables).
+5. **sx + tokens** — only styling path. `style.cssText` / `.style` /
+   raw CSS / utility-string sx is a compile error.
+6. **If the primitive is missing** — stop and report the language gap.
+   Do not escape to DOM.
+
+**Hard fails:** any PR with `createElement` / `cssText` /
+`querySelector` assign in `apps/` is rejected.
+
+### Surface mechanics
 
 - Layout: `column`/`row`/`stack`/`grid`/`center`. Never raw containers.
 - Spacing/typography/color: sx setters with token values only —
