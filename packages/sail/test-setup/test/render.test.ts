@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { signal } from '@ship/sail-runtime'
-import { renderRoute } from '../src/render'
+import { renderComponent, renderRoute } from '../src/render'
 
 describe('renderRoute — static template', () => {
   it('renders interpolated text and attributes', () => {
@@ -51,5 +51,37 @@ describe('renderRoute — conditional branch', () => {
     expect(v.root.querySelector('[data-testid="ok"]')).not.toBeNull()
     expect(v.root.querySelector('[data-testid="wait"]')).toBeNull()
     v.unmount()
+  })
+})
+
+// LANG-1 G2: app-local component controllers use the same ambient vocabulary
+// as route controllers. Bare `signal()` (no import) must mount and react.
+describe('renderComponent — ambient signal (LANG-1 G2)', () => {
+  it('mounts an app-local CE whose controller uses bare signal() with no import', async () => {
+    const source = `
+<controller>
+export default controller(() => {
+  const count = signal(0)
+  return {
+    count,
+    inc: () => count.set(count() + 1),
+  }
+})
+</controller>
+<scope>
+  props: {
+    label = 'Probe'
+  }
+</scope>
+<button data-probe on:click={inc}>{label()}:{count()}</button>
+`
+    const tag = 'sail-g2-ambient-probe'
+    const { el, fire, flush, unmount } = renderComponent(source, tag)
+    expect(el.isConnected).toBe(true)
+    expect(el.textContent).toContain('Probe:0')
+    fire('[data-probe]', 'click')
+    await flush()
+    expect(el.textContent).toContain('Probe:1')
+    unmount()
   })
 })

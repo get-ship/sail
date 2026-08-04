@@ -108,15 +108,18 @@ pub async fn synthesize_and_bundle_with(
             specifier: path_str(p),
         })
     } else if let Some(inline_src) = inline.as_deref() {
-        // Lower `query()`/`mutation()`/`invalidate()` before writing the
-        // controller module — same step the `synthesize` CLI does
-        // (bin/sail-compiler.rs). Without it, a `query(() => client.m())`
-        // reaches the runtime with no compiler-derived key and throws. A
-        // no-op for controllers that use none of the three primitives.
+        // Lower `query()`/`mutation()`/`invalidate()`, then ambient-wrap —
+        // same order as CLI `synthesize` (bin/sail-compiler.rs). Without
+        // rewrite, a `query(() => client.m())` reaches the runtime with no
+        // compiler-derived key and throws. Without the wrap, bare ambient
+        // idents (`signal`, `controller`, …) are free variables at runtime
+        // (LANG-1 G2). A no-op for controllers that use none of the three
+        // primitives / already bind every ambient they reference.
         let lowered = sail_compiler::check::query_keys::rewrite(inline_src)
             .map_err(|e| anyhow!("synthesize (query keys): {}", e.render(inline_src)))?;
+        let wrapped = sail_compiler::parse::preprocess::wrap_controller_body(&lowered);
         let inline_path = build_dir.join("page.inline.controller.ts");
-        std::fs::write(&inline_path, &lowered)
+        std::fs::write(&inline_path, &wrapped)
             .with_context(|| format!("write inline controller {}", inline_path.display()))?;
         Some(AuthoredController {
             specifier: path_str(&inline_path),

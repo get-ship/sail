@@ -356,16 +356,16 @@ impl Plugin for SailPlugin {
                         sail.display()
                     )
                 })?;
-            // Lower `query()`/`mutation()`/`invalidate()` before serving —
-            // see `sail_compiler::check::query_keys`. A refusal here is a
-            // real dev-server compile error, not a runtime one. The
-            // rewrite itself injects the `__invalidate` import a lowered
-            // `invalidate()` call needs, so the served module is
-            // self-contained without running the full ambient-import wrap
-            // (which this path has never run, and which auto-imports a
-            // wider set of names this hook has no reason to newly affect).
-            let body = sail_compiler::check::query_keys::rewrite(&body)
+            // Lower `query()`/`mutation()`/`invalidate()`, then re-run the
+            // ambient-import wrap so the served module is self-contained
+            // (LANG-1 G2: app-local component controllers need bare `signal()`
+            // etc. to resolve — same as route controllers). `extract` already
+            // wraps once; rewrite may inject `__invalidate` / leave free
+            // ambient idents; wrap after is idempotent for already-bound names
+            // and fills any gap. Matches CLI `synthesize` + `tscheck`.
+            let rewritten = sail_compiler::check::query_keys::rewrite(&body)
                 .map_err(|e| anyhow!("{}", e.render(&body)))?;
+            let body = sail_compiler::parse::preprocess::wrap_controller_body(&rewritten);
             return Ok(Some(HookLoadOutput {
                 code: body.into(),
                 module_type: Some(ModuleType::Ts),
