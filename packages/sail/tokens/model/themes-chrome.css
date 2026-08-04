@@ -4,8 +4,8 @@
  * into src/themes.css. This file is concatenated after theme token blocks.
  */
 
-:root[data-theme='halo'] body,
-[data-theme-preview='halo'].tc-bg {
+:root[theme='halo'] body,
+[theme='halo'].tc-bg {
   background-image: radial-gradient(
     ellipse 90% 60% at 50% -10%,
     oklch(1 0 0 / 8%),
@@ -13,14 +13,14 @@
   );
   background-attachment: fixed;
 }
-:root[data-theme='halo'] button:active,
-:root[data-theme='halo'] .dash-link-btn:active {
+:root[theme='halo'] button:active,
+:root[theme='halo'] .dash-link-btn:active {
   box-shadow: var(--shadow-inset-soft);
 }
-:root[data-theme='ship'] body,
-:root[data-theme='ship'][data-mode='dark'] body,
-[data-theme-preview='ship'].tc-bg,
-[data-theme-preview='ship'][data-mode='dark'].tc-bg {
+:root[theme='ship'] body,
+:root[theme='ship'][data-mode='dark'] body,
+[theme='ship'].tc-bg,
+[theme='ship'][data-mode='dark'].tc-bg {
   background-image: linear-gradient(
     to bottom,
     color-mix(in oklch, var(--surface-0) 100%, white 1.5%) 0%,
@@ -29,8 +29,8 @@
   );
   background-attachment: fixed;
 }
-:root[data-theme='glass'] body,
-[data-theme-preview='glass'].tc-bg {
+:root[theme='glass'] body,
+[theme='glass'].tc-bg {
   background-color: oklch(0.97 0.005 240);
   background-image:
     radial-gradient(ellipse 80% 60% at 0% 0%, oklch(0.92 0.05 220 / 18%), transparent 75%),
@@ -38,7 +38,7 @@
     radial-gradient(ellipse 60% 45% at 100% 0%, oklch(0.93 0.04 300 / 10%), transparent 80%);
   background-attachment: fixed;
 }
-:root[data-theme='ship'][data-mode='dark'] body {
+:root[theme='ship'][data-mode='dark'] body {
   background-image:
     radial-gradient(ellipse 60% 40% at 0% 0%, oklch(1 0 0 / 4%), transparent 60%),
     linear-gradient(
@@ -49,9 +49,9 @@
     );
   background-attachment: fixed;
 }
-:root[data-theme='paper'] sail-card,
-:root[data-theme='paper'] .sail-card,
-:root[data-theme='paper'] [class*='card'] {
+:root[theme='paper'] sail-card,
+:root[theme='paper'] .sail-card,
+:root[theme='paper'] [class*='card'] {
   /* Soft paper-fold corner cue: extra warm inner shadow on the top-left
    * to hint at a leaf of paper sitting on the page. Skipped under
    * reduced-motion to keep the page perfectly still on request. */
@@ -61,14 +61,14 @@
     transparent 12px
   );
 }
-:root[data-theme='halo'] body {
+:root[theme='halo'] body {
   background-image:
     radial-gradient(ellipse 60% 40% at 50% 0%, oklch(0.85 0.06 40 / 28%), transparent 60%),
     radial-gradient(ellipse 90% 60% at 50% -10%, oklch(1 0 0 / 8%), transparent 70%);
   background-attachment: fixed;
 }
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-theme='halo'] button:hover {
+  :root[theme='halo'] button:hover {
     box-shadow:
       -3px -3px 8px oklch(1 0 0 / 80%),
       3px 3px 8px oklch(0 0 0 / 8%),
@@ -76,7 +76,7 @@
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-theme='glass'] body {
+  :root[theme='glass'] body {
     animation: ship-glass-mesh 36s ease-in-out infinite alternate;
   }
 }
@@ -84,8 +84,8 @@
   0%   { background-position: 0% 0%, 100% 100%, 100% 0%; }
   100% { background-position: 8% 4%, 92% 96%, 96% 4%; }
 }
-:root[data-theme='glass'] sail-card,
-:root[data-theme='glass'] .sail-card {
+:root[theme='glass'] sail-card,
+:root[theme='glass'] .sail-card {
   border-image: linear-gradient(
     135deg,
     oklch(0.62 0.14 280 / 50%),
@@ -94,19 +94,19 @@
     oklch(1 0 0 / 60%)
   ) 1;
 }
-:root[data-theme='glass'] h1,
-:root[data-theme='glass'] h2,
-:root[data-theme='glass'] [class*='heading'] {
+:root[theme='glass'] h1,
+:root[theme='glass'] h2,
+:root[theme='glass'] [class*='heading'] {
   text-shadow:
     0 1px 0 oklch(1 0 0 / 50%),
     0 0 12px oklch(0.62 0.14 280 / 14%);
 }
-:root[data-theme='glass'] sail-card:hover,
-:root[data-theme='glass'] .sail-card:hover {
+:root[theme='glass'] sail-card:hover,
+:root[theme='glass'] .sail-card:hover {
   --card-backdrop-filter: blur(32px) saturate(220%);
 }
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-theme='console'] :focus-visible {
+  :root[theme='console'] :focus-visible {
     animation: ship-console-blink 1.05s steps(2, end) infinite;
   }
 }
@@ -116,10 +116,10 @@
 }
 /* Dark-mode syntax palette — data-mode only (no .dark / twin theme ids). */
 :root[data-mode='dark'],
-:root[data-theme='console'][data-mode='dark'],
-:root[data-theme='contrast'][data-mode='dark'],
-:root[data-theme='console']:not([data-mode]),
-:root[data-theme='contrast']:not([data-mode]) {
+:root[theme='console'][data-mode='dark'],
+:root[theme='contrast'][data-mode='dark'],
+:root[theme='console']:not([data-mode]),
+:root[theme='contrast']:not([data-mode]) {
   --syntax-keyword:  oklch(0.78 0.16 290);
   --syntax-string:   oklch(0.80 0.15 145);
   --syntax-number:   oklch(0.78 0.14 230);

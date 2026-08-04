@@ -38,7 +38,7 @@ body::after {
 /* The same channel, scoped to a THEMED SUBTREE.
  *
  * `body::after` only fires for the theme on <html>/<body>. A subtree that
- * carries its own [data-theme] — a docs theme preview, a split-screen
+ * carries its own [theme] — a docs theme preview, a split-screen
  * comparison, a studio canvas — set --surface-overlay and got nothing:
  * the only painter was body-level, so scanlines/grain/dither silently
  * dropped out of exactly the surface built to demonstrate them.
@@ -46,11 +46,11 @@ body::after {
  * `position: fixed` would be wrong here (the overlay must clip to the
  * subtree, not the viewport), so this variant is absolutely positioned
  * and the subtree is made a containing block. z-index stays local. */
-[data-theme]:not(:root) {
+[theme]:not(:root) {
   position: relative;
   isolation: isolate;
 }
-[data-theme]:not(:root)::after {
+[theme]:not(:root)::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -62,7 +62,7 @@ body::after {
 }
 @media (prefers-reduced-motion: reduce) {
   body::after,
-  [data-theme]:not(:root)::after { display: none; }
+  [theme]:not(:root)::after { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

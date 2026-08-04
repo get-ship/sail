@@ -1180,29 +1180,26 @@ fn load_theme_layers_from_dir(
             meta.default_mode = default_mode.clone();
             meta.dark = mode_ext_dark;
             meta.layer = "theme".into();
-            // Selector family (Job 5d / D7–D11):
-            //   • `:root[data-theme=…]` — app product theme on documentElement
-            //   • `[theme=…]` — author IR for scoped hosts (Studio home cards,
-            //     draft cold path, nested previews)
-            //   • `[data-theme-preview=…]` — temporary dual-emit for residual
-            //     consumers (sail-site picker, tutorial, etc.); not Studio SSOT
-            // Default mode also matches bare theme / data-theme (no data-mode)
-            // so cold loads without applyTheme still paint the default mode.
+            // Selector family (hard cutover — theme attr only):
+            //   • `:root[theme=…]` — app product theme on documentElement
+            //   • `[theme=…]` — scoped hosts (Studio cards, draft cold path,
+            //     picker specimens, nested previews)
+            // Mode is a cascade bit via `data-mode` (light|dark). No data-theme
+            // / data-theme-preview dual-emit.
+            // Default mode also matches bare `theme` (no data-mode) so cold
+            // loads without applyTheme still paint the default mode.
             let is_default = default_mode.as_deref() == Some(mode_name.as_str());
             meta.selector = if is_default {
                 format!(
-                    ":root[data-theme='{id}'][data-mode='{mode_name}'],\n\
-                     :root[data-theme='{id}']:not([data-mode]),\n\
+                    ":root[theme='{id}'][data-mode='{mode_name}'],\n\
+                     :root[theme='{id}']:not([data-mode]),\n\
                      [theme='{id}'][data-mode='{mode_name}'],\n\
-                     [theme='{id}']:not([data-mode]),\n\
-                     [data-theme-preview='{id}'][data-mode='{mode_name}'],\n\
-                     [data-theme-preview='{id}']:not([data-mode])"
+                     [theme='{id}']:not([data-mode])"
                 )
             } else {
                 format!(
-                    ":root[data-theme='{id}'][data-mode='{mode_name}'],\n\
-                     [theme='{id}'][data-mode='{mode_name}'],\n\
-                     [data-theme-preview='{id}'][data-mode='{mode_name}']"
+                    ":root[theme='{id}'][data-mode='{mode_name}'],\n\
+                     [theme='{id}'][data-mode='{mode_name}']"
                 )
             };
             let raw = flatten_tokens(&mode_doc, &[], None);
@@ -1512,7 +1509,7 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
     let body = format!(
         "{{\n\
          \x20\x20// Sail app config — theme section (T0).\n\
-         \x20\x20// `default` / `defaultMode` drive first paint (data-theme / data-mode).\n\
+         \x20\x20// `default` / `defaultMode` drive first paint (theme / data-mode).\n\
          \x20\x20// `enabled` is the catalog allowlist for app CSS emit:\n\
          \x20\x20//   omit → default theme ship; [] → no catalog; [\"id\"] → those; \"all\" → full.\n\
          \x20\x20// Project themes under tokens/themes/ always emit. Package generate\n\
@@ -2484,7 +2481,7 @@ mod tests {
         );
         write_file(
             &model.join("themes-chrome.css"),
-            "/* themes chrome */\nbody[data-theme='paper'] { background: white; }\n",
+            "/* themes chrome */\nbody[theme='paper'] { background: white; }\n",
         );
 
         let report = generate(&model, &out).unwrap();
@@ -2506,8 +2503,8 @@ mod tests {
 
         let themes_css = fs::read_to_string(&report.themes_css).unwrap();
         assert!(
-            themes_css.contains("data-theme='paper'][data-mode='light'")
-                || themes_css.contains(":root[data-theme='paper']"),
+            themes_css.contains("theme='paper'][data-mode='light'")
+                || themes_css.contains(":root[theme='paper']"),
             "paper modes selectors missing: {themes_css}"
         );
         assert!(themes_css.contains("--primary:"));
@@ -2913,8 +2910,8 @@ mod tests {
         let report = generate_with_options(&model, &out, &opts).unwrap();
         assert_eq!(report.theme_count, 1);
         let css = fs::read_to_string(&report.themes_css).unwrap();
-        assert!(css.contains("data-theme='custom'"));
-        assert!(!css.contains("data-theme='paper'"));
+        assert!(css.contains("theme='custom'"));
+        assert!(!css.contains("theme='paper'"));
 
         // Unknown id in enabled: silent drop (no catalog match); project still emits.
         write_file(
@@ -2955,8 +2952,8 @@ mod tests {
             "omit enabled ships default ship"
         );
         let bare_css = fs::read_to_string(&bare_report.themes_css).unwrap();
-        assert!(bare_css.contains("data-theme='ship'"));
-        assert!(!bare_css.contains("data-theme='paper'"));
+        assert!(bare_css.contains("theme='ship'"));
+        assert!(!bare_css.contains("theme='paper'"));
 
         // Explicit "all" → full catalog on app path.
         write_file(
@@ -3158,18 +3155,18 @@ mod tests {
             "project paper leaf must win: {themes_css}"
         );
         assert!(
-            themes_css.contains(":root[data-theme='custom']"),
+            themes_css.contains(":root[theme='custom']") || themes_css.contains("[theme='custom']"),
             "project-only theme must emit: {themes_css}"
         );
         assert!(
-            !themes_css.contains("data-theme='glass'"),
+            !themes_css.contains("theme='glass'"),
             "disabled catalog theme must not emit: {themes_css}"
         );
         // Catalog-only generate still emits full catalog.
         let full = generate(&model, &dir.path().join("src-full")).unwrap();
         assert_eq!(full.theme_count, 2);
         let full_css = fs::read_to_string(&full.themes_css).unwrap();
-        assert!(full_css.contains("data-theme='glass'"));
+        assert!(full_css.contains("theme='glass'"));
         assert!(
             full_css.contains("oklch(0.4 0.05 75)"),
             "catalog paper value"
@@ -3269,11 +3266,11 @@ mod tests {
             "project DTCG leaf must appear in generated themes.css: marker missing"
         );
         assert!(
-            css.contains("data-theme='ship'") || css.contains("data-theme=\"ship\""),
+            css.contains("theme='ship'") || css.contains("theme=\"ship\""),
             "default theme selector must emit"
         );
         assert!(
-            !css.contains("data-theme='synthwave'"),
+            !css.contains("theme='synthwave'"),
             "thin app emit must not ship unused catalog theme synthwave"
         );
 
@@ -3292,8 +3289,8 @@ mod tests {
             "project override still merges into shared full-catalog emit"
         );
         assert!(
-            shared_css.contains("data-theme='synthwave'")
-                || shared_css.contains("data-theme=\"synthwave\""),
+            shared_css.contains("theme='synthwave'")
+                || shared_css.contains("theme=\"synthwave\""),
             "package emit keeps full catalog including synthwave"
         );
 
@@ -3322,7 +3319,7 @@ mod tests {
         );
         let app_css = fs::read_to_string(&app_report.themes_css).unwrap();
         assert!(app_css.contains(marker));
-        assert!(!app_css.contains("data-theme='synthwave'"));
+        assert!(!app_css.contains("theme='synthwave'"));
     }
 
     #[test]
@@ -3417,11 +3414,11 @@ mod tests {
         generate(&model, &out).expect("single-mode theme must generate");
         let css = fs::read_to_string(out.join("themes.css")).unwrap();
         assert!(
-            css.contains("data-theme='glass'][data-mode='light']"),
+            css.contains("theme='glass'][data-mode='light']"),
             "expected light selector, got: {css}"
         );
         assert!(
-            !css.contains("data-theme='glass'][data-mode='dark']"),
+            !css.contains("theme='glass'][data-mode='dark']"),
             "single-mode glass must not emit dark block"
         );
         let meta = fs::read_to_string(out.join("generated/themes-meta.ts")).unwrap();
@@ -3565,12 +3562,12 @@ mod tests {
         assert_eq!(report.theme_count, 1, "one theme id, two modes");
         let css = fs::read_to_string(&report.themes_css).unwrap();
         assert!(
-            css.contains("data-theme='ship'][data-mode='light'")
-                || css.contains(r#"data-theme='ship'][data-mode='light'"#),
+            css.contains("theme='ship'][data-mode='light'")
+                || css.contains(r#"theme='ship'][data-mode='light'"#),
             "light mode selector missing: {css}"
         );
         assert!(
-            css.contains("data-theme='ship'][data-mode='dark'"),
+            css.contains("theme='ship'][data-mode='dark'"),
             "dark mode selector missing: {css}"
         );
         assert!(
@@ -3580,7 +3577,7 @@ mod tests {
         );
         assert!(
             css.contains(":not([data-mode])"),
-            "default mode must match bare data-theme / theme"
+            "default mode must match bare theme (no data-mode)"
         );
         let meta = fs::read_to_string(out.join("generated/themes-meta.ts")).unwrap();
         assert!(meta.contains("id: 'ship'"));

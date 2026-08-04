@@ -67,10 +67,10 @@ function extractVarDecls(css: string): Set<string> {
   return out
 }
 
-/** Every `:root[data-theme='X']` selector. Captures the theme id. */
+/** Every `:root[theme='X']` selector. Captures the theme id. */
 function extractThemeSelectors(css: string): Set<string> {
   const out = new Set<string>()
-  const re = /:root\[data-theme=['"]([^'"]+)['"]\]/g
+  const re = /:root\[theme=['"]([^'"]+)['"]\]/g
   let m: RegExpExecArray | null
   while ((m = re.exec(css)) !== null) {
     out.add(m[1]!)
@@ -212,20 +212,20 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     expect(theme?.tier).toBe('core')
   })
 
-  it('every THEMES id is also a `:root[data-theme="id"]` selector in themes.css', () => {
+  it('every THEMES id is also a `:root[theme="id"]` selector in themes.css', () => {
     const selectors = extractThemeSelectors(loadSrc('../src/themes.css'))
     for (const t of THEMES) {
       expect(selectors.has(t.id)).toBe(true)
     }
   })
 
-  it('applyTheme(DEFAULT_THEME) sets data-theme + data-mode light without .dark', () => {
+  it('applyTheme(DEFAULT_THEME) sets theme + data-mode light without .dark', () => {
     const root = document.documentElement
-    root.removeAttribute('data-theme')
+    root.removeAttribute('theme')
     root.removeAttribute('data-mode')
     root.classList.remove('dark')
     applyTheme(DEFAULT_THEME, root)
-    expect(root.dataset.theme).toBe(DEFAULT_THEME)
+    expect(root.getAttribute('theme')).toBe(DEFAULT_THEME)
     expect(root.dataset.mode).toBe(DEFAULT_MODE)
     expect(root.classList.contains('dark')).toBe(false)
   })
@@ -234,7 +234,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     const root = document.documentElement
     applyTheme('sail', root, 'light')
     applyMode('dark', root)
-    expect(root.dataset.theme).toBe('sail')
+    expect(root.getAttribute('theme')).toBe('sail')
     expect(root.dataset.mode).toBe('dark')
     expect(root.classList.contains('dark')).toBe(false)
   })
@@ -243,7 +243,7 @@ describe('@ship/tokens — theme catalog (THEMES export)', () => {
     const root = document.documentElement
     applyTheme('paper', root, 'light')
     applyMode('dark', root)
-    expect(root.dataset.theme).toBe('paper')
+    expect(root.getAttribute('theme')).toBe('paper')
     expect(root.dataset.mode).toBe('light')
   })
 
@@ -420,8 +420,8 @@ describe('@ship/tokens — representative token in every theme (reskin-by-token 
   // regression: the catalog lies about its presence).
   const themesCss = loadSrc('../src/themes.css')
   for (const id of THEMES.map((t) => t.id)) {
-    it(`theme '${id}' has a :root[data-theme] override block`, () => {
-      const re = new RegExp(`:root\\[data-theme=['"]${id}['"]\\]`, 'm')
+    it(`theme '${id}' has a :root[theme] override block`, () => {
+      const re = new RegExp(`:root\\[theme=['"]${id}['"]\\]`, 'm')
       expect(themesCss).toMatch(re)
     })
   }
@@ -652,8 +652,8 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     // themes.css must override --primary / --surface-1 etc. — the same public
     // surface Layout, Fx, and contracts consume — never invent parallel names.
     // Match modes-in-file theme layers:
-    //   :root[data-theme='id'][data-mode='…'],
-    //   [data-theme-preview='id'][data-mode='…'] { … }
+    //   :root[theme='id'][data-mode='…'],
+    //   [theme='id'][data-mode='…'] { … }
     // (not themes-chrome structural flourishes on body/card selectors).
     const reg = loadRegistry()
     const known = new Set(reg.names)
@@ -663,12 +663,12 @@ describe('@ship/tokens — DTCG SSOT / generate drift lock', () => {
     // Modes-only: every theme block must mention data-mode.
     expect(themesCss).toMatch(/data-mode=['"]light['"]/)
     expect(themesCss).toMatch(/data-mode=['"]dark['"]/)
-    expect(themesCss).not.toMatch(/data-theme=['"]ship-light['"]/)
-    expect(themesCss).not.toMatch(/data-theme=['"]ship-dark['"]/)
+    expect(themesCss).not.toMatch(/theme=['"]ship-light['"]/)
+    expect(themesCss).not.toMatch(/theme=['"]ship-dark['"]/)
 
-    // Capture selector blocks that start with :root[data-theme=…] (mode-aware).
+    // Capture selector blocks that start with :root[theme=…] (mode-aware).
     const blockRe =
-      /:root\[data-theme=['"]([^'"]+)['"]\][^{]*\{([^}]+)\}/g
+      /:root\[theme=['"]([^'"]+)['"]\][^{]*\{([^}]+)\}/g
     let m: RegExpExecArray | null
     let blocks = 0
     const overrideNames = new Set<string>()
