@@ -1,0 +1,145 @@
+/**
+ * Components page domain types — library records + inspect / detail VMs.
+ */
+
+export type ComponentOrigin = 'project' | 'pack'
+
+export type ComponentLayer = 'app' | 'L2' | 'unknown'
+
+export type ComponentProp = {
+  name: string
+  type: string
+  defaultValue: string
+  required: boolean
+  description: string
+}
+
+export type ComponentRecord = {
+  id: string
+  displayName: string
+  origin: ComponentOrigin
+  package: string
+  path: string
+  layer: ComponentLayer
+  description: string
+  props: ComponentProp[]
+  slots: string[]
+  issueCount: number
+  ssrTierSummary: string
+  hasPreview: boolean
+  threadCount: number
+  /** True when Open in Edit has a real project path. */
+  canOpenInEdit: boolean
+}
+
+export type ComponentRowUi = {
+  id: string
+  title: string
+  meta: string
+  path: string
+  origin: ComponentOrigin
+  package: string
+  selected: boolean
+  originLabel: string
+  originTone: string
+  issueLabel: string
+  hasIssues: boolean
+  key: string
+}
+
+export type ComponentMode = 'library' | 'inspect'
+
+export type DetailTabId = 'overview' | 'contract' | 'health' | 'theme'
+
+export type PropRowUi = {
+  name: string
+  type: string
+  defaultValue: string
+  requiredLabel: string
+  description: string
+  key: string
+}
+
+export type KvRowUi = {
+  label: string
+  value: string
+  key: string
+}
+
+export type SurfaceOption = {
+  value: string
+  label: string
+  key: string
+  /** route | file | open — for grouping in inspect list */
+  kind?: 'route' | 'file' | 'open'
+  selected?: boolean
+}
+
+export type InspectNodeDetail = {
+  nodeId: string
+  tag: string
+  layer: string
+  path: string
+  spanLabel: string
+  line: number
+  col: number
+}
+
+export type IssueRowUi = {
+  id: string
+  severity: string
+  tone: string
+  message: string
+  spanLabel: string
+  key: string
+}
+
+export type LayoutBoxUi = {
+  id: string
+  tag: string
+  dims: string
+  flags: string
+  key: string
+}
+
+export type StateRowUi = {
+  id: string
+  name: string
+  kind: string
+  tierLabel: string
+  tierTone: string
+  key: string
+}
+
+/** CEM-ish catalog shape (components.gen + fixtures). */
+export type CatalogAttribute = {
+  name?: string
+  type?: { text?: string } | string
+  default?: string
+  required?: boolean
+  description?: string
+}
+
+export type CatalogDeclaration = {
+  kind?: string
+  name?: string
+  tagName?: string
+  customElement?: boolean
+  description?: string
+  attributes?: CatalogAttribute[]
+  slots?: string[] | { name?: string }[]
+  cssParts?: unknown
+  cssProperties?: unknown
+}
+
+export type CatalogModule = {
+  kind?: string
+  path?: string
+  package?: string
+  declarations?: CatalogDeclaration[]
+}
+
+export type ComponentsCatalog = {
+  schemaVersion?: string
+  modules?: CatalogModule[]
+}
