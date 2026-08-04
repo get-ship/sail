@@ -28,11 +28,21 @@ import {
   subscribeEdit,
 } from '@ship/studio/edit'
 import {
+  getChecksState,
   loadFindings,
   setChecksOpsClient,
   setEditorSetting,
   setProjectRoot as setChecksProjectRoot,
+  subscribeChecks,
 } from '@ship/studio/checks'
+
+function getChecksStateSafe(): ReturnType<typeof getChecksState> | null {
+  try {
+    return getChecksState()
+  } catch {
+    return null
+  }
+}
 import {
   loadIconGlyphs,
   loadThemes,
@@ -98,9 +108,13 @@ export function createShellPage(opts?: ShellPageOpts) {
   const opsHealthTone = signal('success')
   const watchHealthTone = signal('success')
   const checksPanelOpen = signal(false)
-  const checksBadgeLabel = signal('Checks')
-  const checksBadgeTone = signal('muted')
   const hasChecksFindings = signal(false)
+  const hasFindingsErrors = signal(false)
+  const hasFindingsWarnings = signal(false)
+  const findingsErrorLabel = signal('0')
+  const findingsWarningLabel = signal('0')
+  const findingsStatusTone = signal('muted')
+  const findingsStatusAria = signal('Findings · clean')
   const mod = hotkeyMod()
 
   const readPath = () =>
@@ -151,10 +165,21 @@ export function createShellPage(opts?: ShellPageOpts) {
     watchHealthTone.set(healthTone(s.watchHealth))
     hasBatch.set(s.batchCount > 0)
     checksPanelOpen.set(s.checksPanelOpen)
-    const n = s.checksBadge
-    hasChecksFindings.set(n > 0)
-    checksBadgeLabel.set(n > 0 ? `Checks · ${n}` : 'Checks')
-    checksBadgeTone.set(n > 0 ? 'destructive' : 'muted')
+    // Prefer checks store severities when mounted; shell badge is error floor
+    const cs = getChecksStateSafe()
+    const err = cs?.errorCount ?? s.checksBadge
+    const warn = cs?.warningCount ?? 0
+    hasFindingsErrors.set(err > 0)
+    hasFindingsWarnings.set(warn > 0)
+    hasChecksFindings.set(err + warn > 0)
+    findingsErrorLabel.set(String(err))
+    findingsWarningLabel.set(String(warn))
+    findingsStatusTone.set(err > 0 ? 'destructive' : warn > 0 ? 'warning' : 'muted')
+    findingsStatusAria.set(
+      err + warn > 0
+        ? `Findings · ${err} error${err === 1 ? '' : 's'} · ${warn} warning${warn === 1 ? '' : 's'}`
+        : 'Findings · clean',
+    )
     syncTasks()
   }
 
@@ -190,6 +215,7 @@ export function createShellPage(opts?: ShellPageOpts) {
     const unsubEditSel = bindEditSelection()
     const unsubEdit = subscribeEdit(() => sync())
     const unsubTasks = subscribeTasks(() => sync())
+    const unsubChecks = subscribeChecks(() => sync())
     // Live pathname: full sync so status route + rail stay aligned with SPA leaf.
     const stopRoute = effect(() => {
       const p = readPath()
@@ -289,6 +315,7 @@ export function createShellPage(opts?: ShellPageOpts) {
       unsubEditSel()
       unsubEdit()
       unsubTasks()
+      unsubChecks()
       if (typeof window !== 'undefined') {
         window.removeEventListener('message', onMsg)
         window.removeEventListener('keydown', onKey)
@@ -318,9 +345,13 @@ export function createShellPage(opts?: ShellPageOpts) {
     opsHealthTone,
     watchHealthTone,
     checksPanelOpen,
-    checksBadgeLabel,
-    checksBadgeTone,
     hasChecksFindings,
+    hasFindingsErrors,
+    hasFindingsWarnings,
+    findingsErrorLabel,
+    findingsWarningLabel,
+    findingsStatusTone,
+    findingsStatusAria,
     showExit: canExitStudio(),
     onExitStudio: () => exitStudio(),
     onThemeChange,

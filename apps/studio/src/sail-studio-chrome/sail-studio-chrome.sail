@@ -30,9 +30,13 @@ export default controller((ctx) => {
     opsHealthTone: vm.opsHealthTone,
     watchHealthTone: vm.watchHealthTone,
     checksPanelOpen: vm.checksPanelOpen,
-    checksBadgeLabel: vm.checksBadgeLabel,
-    checksBadgeTone: vm.checksBadgeTone,
     hasChecksFindings: vm.hasChecksFindings,
+    hasFindingsErrors: vm.hasFindingsErrors,
+    hasFindingsWarnings: vm.hasFindingsWarnings,
+    findingsErrorLabel: vm.findingsErrorLabel,
+    findingsWarningLabel: vm.findingsWarningLabel,
+    findingsStatusTone: vm.findingsStatusTone,
+    findingsStatusAria: vm.findingsStatusAria,
     showExit: vm.showExit,
     onExitStudio: () => vm.onExitStudio(),
     onBatchNewTask: () => vm.onBatchNewTask(),
@@ -153,24 +157,26 @@ export default controller((ctx) => {
         <column
           data-checks-panel
           data-checks-drawer
+          data-findings-panel
           shrink="0"
           gap="0"
           role="dialog"
           aria-modal="true"
-          aria-label="Checks findings"
-          sx={style.minH(0).h(full).w(panel-max-w-md).minW(panel-min-w-md).maxW(panel-max-w-lg).borderLWidth(1).borderL(border).bg(surface-0).overflow(hidden).shadow(lg)}
+          aria-label="Findings"
+          sx={style.minH(0).h(full).w(panel-max-w-lg).minW(panel-min-w-md).maxW(panel-max-w-lg).borderLWidth(1).borderL(border).bg(surface-0).overflow(hidden).shadow(lg)}
         >
           <row
             data-checks-panel-head
+            data-findings-panel-head
             align="center"
             justify="between"
             gap="2"
             shrink="0"
             nowrap
-            sx={style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle)}
+            sx={style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
           >
-            <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
-              Checks
+            <p sx={style.fontSize(xs).fontWeight(semibold).fg(foreground).textCase(uppercase).tracking(wide)}>
+              Findings
             </p>
             <button
               type="button"
@@ -178,14 +184,15 @@ export default controller((ctx) => {
               variant="ghost"
               tone="muted"
               data-close-checks-panel
-              aria-label="Close checks panel"
+              aria-label="Close findings panel"
               on:click={onCloseChecksPanel}
             >
               Close
             </button>
           </row>
-          <column grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden).h(full)}>
-            <checks-surface grow sx={style.minH(0).h(full).minW(0).overflow(hidden)} />
+          <column grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden).h(full).minW(0)}>
+            <!-- panel prop: compact tools, no full-page header (avoids double chrome + overflow) -->
+            <checks-surface panel grow sx={style.minH(0).h(full).minW(0).overflow(hidden)} />
           </column>
         </column>
       </if>
@@ -203,27 +210,52 @@ export default controller((ctx) => {
       <p grow min-w="0" sx={style.fontFamily(mono).minW(0).truncate()}>{statusLine()}</p>
       <p data-save-status shrink="0" sx={style.fontSize(xs)}>{saveStatusLabel()}</p>
       <p data-theme-status shrink="0" sx={style.fontSize(xs).fg(muted-foreground)}>{themeStatusLabel()}</p>
+      <!-- Findings status: colored error · warn counts (not a mute "Checks" label) -->
       <button
         type="button"
         data-checks-badge
+        data-findings-status
         data-open-checks-panel
         size="sm"
-        variant="ghost"
-        tone={checksBadgeTone()}
-        title="Open checks panel (Ctrl/⌘+Shift+K)"
-        aria-label={checksBadgeLabel()}
+        variant={hasChecksFindings() ? 'soft' : 'ghost'}
+        tone={findingsStatusTone()}
+        title="Open findings (Ctrl/⌘+Shift+K)"
+        aria-label={findingsStatusAria()}
         aria-pressed={checksPanelOpen() ? 'true' : 'false'}
         on:click={onToggleChecksPanel}
         shrink="0"
+        sx={style.padX(2).h(5).minH(5)}
       >
-        <badge
-          tone={hasChecksFindings() ? 'destructive' : 'muted'}
-          size="sm"
-          variant="soft"
-          data-checks-badge-count
-        >
-          {checksBadgeLabel()}
-        </badge>
+        <row data-findings-status-inner align="center" gap="1" nowrap>
+          <if {hasFindingsErrors()}>
+            <badge
+              data-findings-errors
+              data-checks-badge-count
+              tone="destructive"
+              size="sm"
+              variant="solid"
+              pill
+            >
+              {findingsErrorLabel()}
+            </badge>
+          </if>
+          <if {hasFindingsWarnings()}>
+            <badge
+              data-findings-warnings
+              tone="warning"
+              size="sm"
+              variant="solid"
+              pill
+            >
+              {findingsWarningLabel()}
+            </badge>
+          </if>
+          <if {!hasChecksFindings()}>
+            <badge data-findings-clean data-checks-badge-count tone="muted" size="sm" variant="soft" pill>
+              0
+            </badge>
+          </if>
+        </row>
       </button>
       <row
         data-health="ops"
