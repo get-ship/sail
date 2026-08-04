@@ -68,6 +68,17 @@ pub fn surface_markdown(topic: SurfaceTopic) -> String {
             );
             let _ = writeln!(
                 md,
+                "## Framework stack (do not invent alternatives)\n\n\
+                 1. Signals + stores (`defineStore`/`useStore`/`signal` from `@ship/sail-runtime`) — not module `let` + sync.\n\
+                 2. Actions (`use:`) — only sanctioned DOM/measurement; controllers never `.style` / `createElement`.\n\
+                 3. Compositions / L1–L2 first (tabs, tooltip, sail-tree, …).\n\
+                 4. `prop:tree={{table}}` identity bind for sail-tree — never querySelector+assign host.\n\
+                 5. sx + tokens only — `cssText` / `.style` / raw CSS is a compile error.\n\
+                 6. Missing primitive → report gap; do not escape to DOM.\n\n\
+                 **Hard fails in `apps/`:** `createElement` / `cssText` / `querySelector` assign.\n"
+            );
+            let _ = writeln!(
+                md,
                 "- No `<style>` / `style=` / raw px-hex — tokens only.\n\
                  - Style product: `sx={{style.pad(4).bg(surface-2)}}` — not utility strings.\n\
                  - Layout keywords: `<row>` `<column>` `<grid>` `<center>` `<stack>`.\n\
@@ -629,7 +640,8 @@ pub fn layout_check(args: &Value) -> Result<Value, OpError> {
     sail_layout_check(&source)
 }
 
-/// List workspace-relative `.sail` files under a project (explorer seed).
+/// List workspace-relative project source files (explorer seed).
+/// Walks the full project tree (ts/json/css/sail/…) with sane directory ignores.
 pub fn list_files(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     let project = args
         .get("project")
@@ -654,12 +666,7 @@ pub fn list_files(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         return Err(OpError::NotFound(format!("project not found: {project}")));
     }
     let mut files: Vec<String> = Vec::new();
-    for sub in ["routes", "src", "packs"] {
-        let dir = root.join(sub);
-        if dir.is_dir() {
-            walk_sail_under(&root, &dir, &project, &mut files);
-        }
-    }
+    walk_project_files(&root, &root, &project, &mut files);
     files.sort();
     files.dedup();
     Ok(json!({
@@ -669,19 +676,86 @@ pub fn list_files(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     }))
 }
 
-fn walk_sail_under(project_root: &Path, dir: &Path, project_rel: &str, out: &mut Vec<String>) {
+/// Directory names skipped while listing project sources for the explorer.
+fn is_ignored_dir(name: &str) -> bool {
+    name.starts_with('.')
+        || name == "node_modules"
+        || name == "target"
+        || name == "dist"
+        || name == ".deck"
+        || name == "coverage"
+        || name == "__pycache__"
+}
+
+/// True for ordinary text-ish source files (not binary blobs / lock noise).
+fn is_listed_source_file(name: &str) -> bool {
+    if name.starts_with('.') {
+        // Keep common config dotfiles; skip the rest of hidden files.
+        return matches!(
+            name,
+            ".gitignore"
+                | ".npmrc"
+                | ".editorconfig"
+                | ".env"
+                | ".env.example"
+                | ".prettierrc"
+                | ".eslintrc"
+                | ".eslintrc.cjs"
+                | ".eslintrc.js"
+        );
+    }
+    // Skip heavy / generated lockfiles from the tree (still list package.json).
+    if name.ends_with(".lock") || name == "package-lock.json" || name == "pnpm-lock.yaml" {
+        return false;
+    }
+    let Some(ext) = Path::new(name).extension().and_then(|e| e.to_str()) else {
+        // Extensionless: allow common script names only.
+        return matches!(name, "Makefile" | "Dockerfile" | "Procfile" | "LICENSE" | "README");
+    };
+    matches!(
+        ext,
+        "sail"
+            | "ts"
+            | "tsx"
+            | "js"
+            | "jsx"
+            | "mjs"
+            | "cjs"
+            | "json"
+            | "jsonc"
+            | "css"
+            | "scss"
+            | "md"
+            | "mdx"
+            | "html"
+            | "svg"
+            | "toml"
+            | "yaml"
+            | "yml"
+            | "txt"
+            | "rs"
+            | "sh"
+    )
+}
+
+fn walk_project_files(
+    project_root: &Path,
+    dir: &Path,
+    project_rel: &str,
+    out: &mut Vec<String>,
+) {
     let Ok(rd) = std::fs::read_dir(dir) else {
         return;
     };
     for ent in rd.flatten() {
         let p = ent.path();
         let name = ent.file_name().to_string_lossy().into_owned();
-        if name.starts_with('.') || name == "node_modules" || name == "target" {
-            continue;
-        }
         if p.is_dir() {
-            walk_sail_under(project_root, &p, project_rel, out);
-        } else if p.extension().and_then(|e| e.to_str()) == Some("sail") {
+            if is_ignored_dir(&name) {
+                continue;
+            }
+            walk_project_files(project_root, &p, project_rel, out);
+        } else if is_listed_source_file(&name) {
             if let Ok(rel) = p.strip_prefix(project_root) {
                 let rel = rel.to_string_lossy().replace('\\', "/");
                 out.push(format!("{project_rel}/{rel}"));
@@ -881,5 +955,74 @@ mod tests {
             })
             .expect("zero-main-axis");
         assert_eq!(zero["line"], 3, "must map to original <column> line");
+    }
+
+    #[test]
+    fn list_files_includes_non_sail_and_ignores_deps() {
+        use crate::ctx::Ctx;
+        let dir = tempfile::tempdir().unwrap();
+        let ws = dir.path();
+        let proj = ws.join("apps/demo");
+        std::fs::create_dir_all(proj.join("routes/edit")).unwrap();
+        std::fs::create_dir_all(proj.join("src")).unwrap();
+        std::fs::create_dir_all(proj.join("node_modules/x")).unwrap();
+        std::fs::create_dir_all(proj.join("target/debug")).unwrap();
+        std::fs::create_dir_all(proj.join("dist")).unwrap();
+        std::fs::create_dir_all(proj.join(".git/objects")).unwrap();
+        std::fs::write(proj.join("routes/page.sail"), "<column></column>\n").unwrap();
+        std::fs::write(proj.join("routes/edit/page.sail"), "<column></column>\n").unwrap();
+        std::fs::write(proj.join("src/main.ts"), "export {}\n").unwrap();
+        std::fs::write(proj.join("package.json"), "{}\n").unwrap();
+        std::fs::write(proj.join("node_modules/x/index.js"), "1\n").unwrap();
+        std::fs::write(proj.join("target/debug/foo"), "bin\n").unwrap();
+        std::fs::write(proj.join("dist/out.js"), "1\n").unwrap();
+        std::fs::write(proj.join(".git/objects/x"), "x\n").unwrap();
+
+        let ctx = Ctx::new(ws, &proj, ws);
+        let out = list_files(&json!({ "project": "apps/demo" }), &ctx).unwrap();
+        assert_eq!(out["ok"], true, "{out}");
+        let files = out["files"].as_array().expect("files array");
+        let paths: Vec<&str> = files.iter().filter_map(|v| v.as_str()).collect();
+        assert!(
+            paths.iter().any(|p| p.ends_with("routes/page.sail")),
+            "sail listed: {paths:?}"
+        );
+        assert!(
+            paths.iter().any(|p| p.ends_with("src/main.ts")),
+            "ts listed: {paths:?}"
+        );
+        assert!(
+            paths.iter().any(|p| p.ends_with("package.json")),
+            "json listed: {paths:?}"
+        );
+        assert!(
+            paths.iter().all(|p| !p.contains("node_modules")),
+            "node_modules ignored: {paths:?}"
+        );
+        assert!(
+            paths.iter().all(|p| !p.contains("/target/") && !p.ends_with("/target")),
+            "target ignored: {paths:?}"
+        );
+        assert!(
+            paths.iter().all(|p| !p.contains("/dist/") && !p.contains(".git")),
+            "dist/.git ignored: {paths:?}"
+        );
+    }
+
+    #[test]
+    fn is_listed_source_file_accepts_common_exts() {
+        assert!(is_listed_source_file("page.sail"));
+        assert!(is_listed_source_file("app.ts"));
+        assert!(is_listed_source_file("package.json"));
+        assert!(is_listed_source_file("theme.css"));
+        assert!(!is_listed_source_file("package-lock.json"));
+        assert!(!is_listed_source_file("foo.lock"));
+        assert!(!is_listed_source_file("secret.bin"));
+        assert!(is_ignored_dir("node_modules"));
+        assert!(is_ignored_dir(".git"));
+        assert!(is_ignored_dir("target"));
+        assert!(is_ignored_dir("dist"));
+        assert!(is_ignored_dir(".deck"));
+        assert!(!is_ignored_dir("src"));
     }
 }

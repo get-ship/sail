@@ -613,6 +613,23 @@ export async function sailThemeWrite(
   return postJson<ThemeWriteRet>('/sail.ops.v1.SailTheme/Write', args ?? {}, opts)
 }
 
+export interface ThemeDeleteArgs {
+  path: string
+}
+
+export interface ThemeDeleteRet {
+  ok: boolean
+  path: string
+}
+
+// SailTheme/Delete — remove a project theme JSON under apps/.../tokens/themes only.
+export async function sailThemeDelete(
+  args: ThemeDeleteArgs,
+  opts?: ClientOptions,
+): Promise<ThemeDeleteRet> {
+  return postJson<ThemeDeleteRet>('/sail.ops.v1.SailTheme/Delete', args ?? {}, opts)
+}
+
 // SailTheme/Fork — Fork a catalog or project theme into apps/*/tokens/themes/. Optional new_id rewrites $extensions.ship.themeId.
 export async function sailThemeFork(
   args: ThemeForkArgs,

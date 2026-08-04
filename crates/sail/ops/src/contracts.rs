@@ -107,7 +107,8 @@ pub struct LayoutCheckRet {
     pub body: Json,
 }
 
-/// List workspace-relative `.sail` paths under a project (explorer seed).
+/// List workspace-relative project source paths under a project (explorer seed).
+/// Includes sail/ts/json/css/… with node_modules/.git/target/dist ignored.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ListFilesArgs {
     /// Workspace-relative project root (`apps/sail-site`). Default: ops project.
@@ -119,6 +120,7 @@ pub struct ListFilesArgs {
 pub struct ListFilesRet {
     pub ok: bool,
     pub project: String,
+    /// Workspace-relative paths (`apps/x/routes/page.sail`, `apps/x/package.json`, …).
     pub files: Vec<String>,
 }
 
@@ -252,6 +254,17 @@ pub struct ThemeWriteRet {
     pub ok: bool,
     pub path: String,
     pub bytes: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ThemeDeleteArgs {
+    pub path: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ThemeDeleteRet {
+    pub ok: bool,
+    pub path: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -869,6 +882,18 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "ThemeWriteRet",
         "  path: string\n  content: string\n",
         "  ok: boolean\n  path: string\n  bytes: number\n"
+    ),
+    contract!(
+        "SailTheme",
+        "Delete",
+        "sail_theme_delete",
+        "Delete a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only (catalog refused).",
+        ThemeDeleteArgs,
+        ThemeDeleteRet,
+        "ThemeDeleteArgs",
+        "ThemeDeleteRet",
+        "  path: string\n",
+        "  ok: boolean\n  path: string\n"
     ),
     contract!(
         "SailTheme",

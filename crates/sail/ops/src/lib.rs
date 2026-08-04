@@ -120,6 +120,10 @@ pub fn call_rpc(
             let _a: contracts::ThemeWriteArgs = parse_args(args_json)?;
             theme::write(args_json, ctx)
         }
+        ("SailTheme", "Delete") => {
+            let _a: contracts::ThemeDeleteArgs = parse_args(args_json)?;
+            theme::delete(args_json, ctx)
+        }
         ("SailTheme", "Fork") => {
             // Accept source/dest aliases before strict typed parse.
             let normalized = normalize_fork_args(args_json);

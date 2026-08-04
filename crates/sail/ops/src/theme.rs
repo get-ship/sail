@@ -352,6 +352,34 @@ fn parse_dimension_px(raw: &str) -> Option<f64> {
     s.parse().ok()
 }
 
+/// Delete a **project** theme JSON under the write allowlist (catalog paths refused).
+pub fn delete(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let rel = args
+        .get("path")
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| OpError::InvalidArgument("Delete requires non-empty `path`".into()))?;
+
+    if !is_write_theme_path(rel) {
+        return Err(OpError::PermissionDenied(format!(
+            "path not deletable (apps/*/tokens/themes/*.json only): {rel}"
+        )));
+    }
+
+    let target = ctx.workspace_root.join(rel);
+    let resolved = ensure_under_workspace(&ctx.workspace_root, &target)?;
+    if !resolved.is_file() {
+        return Err(OpError::NotFound(format!("theme not found: {rel}")));
+    }
+    std::fs::remove_file(&resolved)
+        .map_err(|e| OpError::Internal(format!("delete {rel}: {e}")))?;
+    Ok(json!({
+        "ok": true,
+        "path": rel,
+    }))
+}
+
 /// Fork a catalog (or project) theme into a new project theme file.
 ///
 /// Args: `source_path`, `dest_path` (must be write-allowlisted), optional `content`

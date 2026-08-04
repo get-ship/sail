@@ -17,9 +17,12 @@ use crate::error::OpError;
 /// Browser UA so Google returns woff2 (not ttf) in the CSS API.
 const CSS_UA: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
-const METADATA_URL: &str = "https://fonts.google.com/metadata/fonts";
+/// Bundled Google Fonts catalog (family + category + popularity rank).
+/// Generated from https://fonts.google.com/metadata/fonts — offline SSOT so
+/// FontSearch is a real discoverer, not a 15-name guess list.
+const BUNDLED_CATALOG_JSON: &str = include_str!("../data/google-fonts-catalog.json");
 
-/// Curated fallback catalog when network is unavailable (search still works offline).
+/// Tiny last-resort if the bundled JSON is ever missing/corrupt.
 const FALLBACK_FAMILIES: &[&str] = &[
     "DM Sans",
     "Syne",
@@ -36,9 +39,23 @@ const FALLBACK_FAMILIES: &[&str] = &[
     "Fira Code",
     "Outfit",
     "Manrope",
+    "Poppins",
+    "Montserrat",
+    "Open Sans",
+    "Lato",
+    "Noto Sans",
 ];
 
-static FAMILY_CATALOG: OnceLock<Vec<String>> = OnceLock::new();
+#[derive(Debug, Clone)]
+struct FontEntry {
+    family: String,
+    category: String,
+    /// Lower = more popular (Google popularity rank).
+    popularity: u32,
+    mono: bool,
+}
+
+static FAMILY_CATALOG: OnceLock<Vec<FontEntry>> = OnceLock::new();
 
 fn http_client() -> Result<reqwest::blocking::Client, OpError> {
     reqwest::blocking::Client::builder()
@@ -65,56 +82,70 @@ where
     }
 }
 
-fn load_catalog() -> Vec<String> {
-    FAMILY_CATALOG
-        .get_or_init(|| {
-            // Catalog fetch is best-effort; fail fast so FontSearch stays offline-capable
-            // and tests/HTTP do not hang on a dead network path.
-            match run_blocking_http(fetch_google_catalog) {
-                Ok(list) if !list.is_empty() => list,
-                _ => FALLBACK_FAMILIES.iter().map(|s| (*s).to_string()).collect(),
-            }
-        })
-        .clone()
-}
-
-fn fetch_google_catalog() -> Result<Vec<String>, OpError> {
-    let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(5))
-        .connect_timeout(Duration::from_secs(2))
-        .user_agent(CSS_UA)
-        .build()
-        .map_err(|e| OpError::Internal(format!("http client: {e}")))?;
-    let text = client
-        .get(METADATA_URL)
-        .send()
-        .map_err(|e| OpError::Internal(format!("FontSearch metadata: {e}")))?
-        .error_for_status()
-        .map_err(|e| OpError::Internal(format!("FontSearch metadata status: {e}")))?
-        .text()
-        .map_err(|e| OpError::Internal(format!("FontSearch metadata body: {e}")))?;
-    // Response may start with `)]}'` XSS prefix.
-    let json_text = text.trim_start_matches(")]}'").trim();
-    let v: Value = serde_json::from_str(json_text)
-        .map_err(|e| OpError::Internal(format!("FontSearch metadata JSON: {e}")))?;
-    let mut out = Vec::new();
-    if let Some(arr) = v
-        .get("familyMetadataList")
-        .and_then(|x| x.as_array())
-        .or_else(|| v.get("familyMetadata").and_then(|x| x.as_array()))
-    {
-        for item in arr {
-            if let Some(f) = item.get("family").and_then(|x| x.as_str()) {
-                out.push(f.to_string());
-            }
-        }
+fn parse_bundled_catalog(raw: &str) -> Vec<FontEntry> {
+    let Ok(v) = serde_json::from_str::<Value>(raw) else {
+        return Vec::new();
+    };
+    let Some(arr) = v.as_array() else {
+        return Vec::new();
+    };
+    let mut out = Vec::with_capacity(arr.len());
+    for item in arr {
+        let Some(family) = item.get("family").and_then(|x| x.as_str()) else {
+            continue;
+        };
+        let category = item
+            .get("category")
+            .and_then(|x| x.as_str())
+            .unwrap_or("Other")
+            .to_string();
+        let popularity = item
+            .get("popularity")
+            .and_then(|x| x.as_u64())
+            .unwrap_or(99_999) as u32;
+        let mono = item
+            .get("mono")
+            .and_then(|x| x.as_bool())
+            .unwrap_or(false)
+            || category.eq_ignore_ascii_case("Monospace");
+        out.push(FontEntry {
+            family: family.to_string(),
+            category,
+            popularity,
+            mono,
+        });
     }
-    out.sort();
-    out.dedup();
-    Ok(out)
+    // Popularity ascending (1 = most popular), then name.
+    out.sort_by(|a, b| {
+        a.popularity
+            .cmp(&b.popularity)
+            .then_with(|| a.family.cmp(&b.family))
+    });
+    out
 }
 
-/// `SailTheme/FontSearch { query }` — filter Google Fonts (or fallback) family names.
+fn load_catalog() -> &'static [FontEntry] {
+    FAMILY_CATALOG.get_or_init(|| {
+        let mut list = parse_bundled_catalog(BUNDLED_CATALOG_JSON);
+        if list.is_empty() {
+            list = FALLBACK_FAMILIES
+                .iter()
+                .enumerate()
+                .map(|(i, s)| FontEntry {
+                    family: (*s).to_string(),
+                    category: "Other".into(),
+                    popularity: i as u32,
+                    mono: s.to_ascii_lowercase().contains("mono")
+                        || s.to_ascii_lowercase().contains("code"),
+                })
+                .collect();
+        }
+        list
+    })
+}
+
+/// `SailTheme/FontSearch { query, category? }` — filter the full Google Fonts catalog.
+/// Empty query returns the most popular families (real discoverer, not a stub list).
 pub fn font_search(args: &Value, _ctx: &Ctx) -> Result<Value, OpError> {
     let query = args
         .get("query")
@@ -122,22 +153,74 @@ pub fn font_search(args: &Value, _ctx: &Ctx) -> Result<Value, OpError> {
         .unwrap_or("")
         .trim()
         .to_ascii_lowercase();
+    let category = args
+        .get("category")
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty() && !s.eq_ignore_ascii_case("all"))
+        .map(|s| s.to_ascii_lowercase());
+    let limit = args
+        .get("limit")
+        .and_then(|v| v.as_u64())
+        .map(|n| n.clamp(1, 80) as usize)
+        .unwrap_or(40);
+
     let catalog = load_catalog();
-    let mut families: Vec<String> = if query.is_empty() {
-        catalog.into_iter().take(40).collect()
-    } else {
-        catalog
-            .into_iter()
-            .filter(|f| f.to_ascii_lowercase().contains(&query))
-            .take(40)
-            .collect()
-    };
-    families.sort();
+    let mut hits: Vec<&FontEntry> = catalog
+        .iter()
+        .filter(|e| {
+            if let Some(ref cat) = category {
+                let ec = e.category.to_ascii_lowercase();
+                if cat == "mono" || cat == "monospace" {
+                    if !e.mono && ec != "monospace" {
+                        return false;
+                    }
+                } else if !ec.contains(cat) {
+                    return false;
+                }
+            }
+            if query.is_empty() {
+                return true;
+            }
+            e.family.to_ascii_lowercase().contains(&query)
+        })
+        .take(limit)
+        .collect();
+
+    // Keep popularity order for empty query; for non-empty prefer prefix matches first.
+    if !query.is_empty() {
+        hits.sort_by(|a, b| {
+            let a_pref = a.family.to_ascii_lowercase().starts_with(&query);
+            let b_pref = b.family.to_ascii_lowercase().starts_with(&query);
+            b_pref
+                .cmp(&a_pref)
+                .then_with(|| a.popularity.cmp(&b.popularity))
+                .then_with(|| a.family.cmp(&b.family))
+        });
+    }
+
+    let families: Vec<String> = hits.iter().map(|e| e.family.clone()).collect();
+    let hit_rows: Vec<Value> = hits
+        .iter()
+        .map(|e| {
+            json!({
+                "family": e.family,
+                "category": e.category,
+                "popularity": e.popularity,
+                "mono": e.mono,
+            })
+        })
+        .collect();
+
     Ok(json!({
         "ok": true,
         "query": query,
+        "category": category,
         "families": families,
+        "hits": hit_rows,
         "count": families.len(),
+        "catalogSize": catalog.len(),
+        "source": "bundled-google-fonts",
     }))
 }
 

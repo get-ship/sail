@@ -53,6 +53,7 @@ pub fn connect_router_with_ctx(ctx: Ctx) -> Router {
         .route("/sail.ops.v1.SailTheme/List", post(unary))
         .route("/sail.ops.v1.SailTheme/Read", post(unary))
         .route("/sail.ops.v1.SailTheme/Write", post(unary))
+        .route("/sail.ops.v1.SailTheme/Delete", post(unary))
         .route("/sail.ops.v1.SailTheme/Fork", post(unary))
         .route("/sail.ops.v1.SailTheme/Generate", post(unary))
         .route("/sail.ops.v1.SailTheme/EffectiveIds", post(unary))
