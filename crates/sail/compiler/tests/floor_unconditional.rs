@@ -193,10 +193,13 @@ fn undeclared_stylesheet_cannot_be_softened() {
 
 // ---------------------------------------------------------------------------
 // 4. Doc/parser key match: no `.rs` DOC/prose in compiler/src or lint/src may
-//    advertise the drifted `{"policy":"floor|stripped|strictest"}` schema. The
-//    parser reads `"preset"` (proven in `check::policy` unit tests); the docs
-//    must name the same key. Test bodies are excluded (they assert on the
-//    drifted form on purpose).
+//    advertise the drifted `{"policy":"floor|stripped|strictest"}` schema.
+//    Capability tiers use `"preset"` (proven in `check::policy` unit tests).
+//
+//    The nested registry object `"policy": { ... }` (SPEC-POLICY-1) is the
+//    legitimate config surface and must *not* trip this scan. Only the
+//    preset-string form — `"policy"` followed by a JSON string value — is
+//    banned. Test bodies are excluded (they assert on the drifted form).
 // ---------------------------------------------------------------------------
 
 fn rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
@@ -214,6 +217,25 @@ fn rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
+/// True when `text` advertises the drifted preset-string form
+/// (`"policy": "floor"` / `"policy":"strictest"`, …), not the legitimate
+/// nested registry object (`"policy": { … }`).
+fn advertises_drifted_policy_string(text: &str) -> bool {
+    let needle = "\"policy\":";
+    let mut rest = text;
+    while let Some(idx) = rest.find(needle) {
+        let after = rest[idx + needle.len()..].trim_start();
+        // Drifted: value is a JSON string. Legitimate: object `{`, or other
+        // non-string JSON (null/bool/number) — only the string preset alias
+        // was ever documented incorrectly.
+        if after.starts_with('"') {
+            return true;
+        }
+        rest = &rest[idx + needle.len()..];
+    }
+    false
+}
+
 #[test]
 fn no_source_advertises_the_drifted_policy_key() {
     // crates/sail/compiler -> crates/sail
@@ -227,14 +249,16 @@ fn no_source_advertises_the_drifted_policy_key() {
             // Exclude test modules: they intentionally reference the drifted
             // form to assert the parser rejects it.
             let real = text.split("#[cfg(test)]").next().unwrap_or(&text);
-            if real.contains("\"policy\":") {
+            if advertises_drifted_policy_string(real) {
                 offenders.push(f.strip_prefix(sail_root).unwrap().to_path_buf());
             }
         }
     }
     assert!(
         offenders.is_empty(),
-        "docs must name the parser's config key `preset`, not the drifted \
-         `{{\"policy\":\"floor|stripped|strictest\"}}`. Offending files: {offenders:#?}"
+        "docs must name capability tiers with `preset`, not the drifted \
+         `{{\"policy\":\"floor|stripped|strictest\"}}` string form. Nested \
+         `{{\"policy\":{{…}}}}` registry object is legitimate (SPEC-POLICY-1). \
+         Offending files: {offenders:#?}"
     );
 }
