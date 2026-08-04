@@ -153,8 +153,18 @@ export function createVirtualizer<TScroll extends Element = HTMLElement>(
   // tracks it, so a count change re-windows. We re-pull every reactive option
   // and re-arm the observers via `_willUpdate()` (which is a no-op when the
   // scroll element identity is unchanged).
+  //
+  // When count DROPS (tree collapse, filter, delete), clear measurementsCache.
+  // Stale measured sizes keep getTotalSize() tall → absolute rows leave a hole
+  // under a spacer that never shrinks (studio explorer collapse bug).
+  let prevCount = initialCount
   const stopBridge = effect(() => {
     const count = options.count()
+    if (count < prevCount) {
+      // TanStack Virtualizer field — force re-estimate from estimateSize.
+      ;(core as { measurementsCache: unknown[] }).measurementsCache = []
+    }
+    prevCount = count
     core.setOptions({
       ...core.options,
       count,

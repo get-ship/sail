@@ -86,6 +86,9 @@ describe('createVirtualizer — reactive count (binds to centerRows().length)', 
     expect(v.totalSize()).toBe(100 * 20)
     count.set(500)
     expect(v.totalSize()).toBe(500 * 20)
+    // Collapse / filter: count drop must shrink spacer (no layout hole).
+    count.set(10)
+    expect(v.totalSize()).toBe(10 * 20)
   })
 })
 

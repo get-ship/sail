@@ -49,12 +49,51 @@ export function bindOpen(
   opts: DialogOptions = {},
 ): Disposer {
   const dismissible = opts.dismissible !== false
+  let disposed = false
+  let pendingConnect: (() => void) | null = null
+
+  /**
+   * showModal() throws InvalidStateError when the dialog is not connected.
+   * Compiler emit for `<if {open()}><dialog open={open()}></if>` runs bindOpen
+   * (and this effect) while the node is still in a DocumentFragment — insert
+   * happens only after the branch render returns. Defer until connected so
+   * dirty-leave modals actually enter the top layer.
+   */
+  const showWhenReady = () => {
+    if (disposed || el.open || !sig()) return
+    if (el.isConnected) {
+      try {
+        el.showModal()
+      } catch {
+        // Already open / racing close — next signal tick re-applies.
+      }
+      return
+    }
+    if (pendingConnect) return
+    const retry = () => {
+      pendingConnect = null
+      if (disposed || el.open || !sig()) return
+      if (el.isConnected) {
+        try {
+          el.showModal()
+        } catch {
+          /* ignore */
+        }
+        return
+      }
+      // Still detached (slow parent) — one more frame.
+      pendingConnect = retry
+      requestAnimationFrame(retry)
+    }
+    pendingConnect = retry
+    queueMicrotask(retry)
+  }
 
   // signal → modal state. Guard on el.open so a re-run never double-calls
   // showModal()/close() (both throw / no-op in the wrong state).
   const dispose = effect(() => {
     const want = sig()
-    if (want && !el.open) el.showModal()
+    if (want && !el.open) showWhenReady()
     else if (!want && el.open) el.close()
   })
 
@@ -91,6 +130,8 @@ export function bindOpen(
   el.addEventListener('click', onClick)
 
   return () => {
+    disposed = true
+    pendingConnect = null
     dispose()
     el.removeEventListener('close', onClose)
     el.removeEventListener('cancel', onCancel)

@@ -121,22 +121,39 @@ export const anchor: Action<AnchorPlacement | undefined> = (node, placement) => 
     el.style.setProperty('--anchor-width', `${Math.max(r.width, 0)}px`)
   }
 
+  /** Double rAF so slotted content (minW / scroll-area) has measured width before place. */
+  const scheduleReposition = () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(reposition)
+    })
+  }
+
   const onToggle = (e: Event) => {
-    const opening = (e as unknown as { newState?: string }).newState === 'open'
+    const te = e as Event & { newState?: string }
+    // Prefer ToggleEvent.newState; fall back to :popover-open (some open paths omit newState).
+    const opening =
+      te.newState === 'open' ||
+      (te.newState !== 'closed' && isOpen())
     openMirror = opening
-    if (opening) requestAnimationFrame(reposition)
+    if (opening) scheduleReposition()
   }
   el.addEventListener('toggle', onToggle)
+  // beforetoggle fires earlier — reposition as soon as the browser commits open.
+  el.addEventListener('beforetoggle', onToggle)
   window.addEventListener('resize', reposition)
   window.addEventListener('scroll', reposition, true)
 
+  // If already open when the action attaches (late-mounted menus), place immediately.
+  if (isOpen()) scheduleReposition()
+
   return {
     update: (p) => {
-      place = p ?? 'bottom'
-      reposition()
+      place = p ?? ((el.getAttribute('placement') as AnchorPlacement) || 'bottom')
+      if (isOpen()) scheduleReposition()
     },
     destroy: () => {
       el.removeEventListener('toggle', onToggle)
+      el.removeEventListener('beforetoggle', onToggle)
       window.removeEventListener('resize', reposition)
       window.removeEventListener('scroll', reposition, true)
       el.style.removeProperty('--anchor-left')
