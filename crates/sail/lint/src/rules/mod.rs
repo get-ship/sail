@@ -38,7 +38,14 @@ pub mod height_chain;
 pub mod layout;
 pub mod layout_primitive;
 pub mod legacy_layout;
+pub mod ambient;
 pub mod no_ambient_dom;
+pub mod no_ambient_events;
+pub mod no_ambient_nav;
+pub mod no_ambient_network;
+pub mod no_ambient_storage;
+pub mod no_ambient_timers;
+pub mod no_data_attr;
 pub mod no_class;
 pub mod no_imperative_style;
 pub mod no_inline_style;
@@ -134,6 +141,8 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (no_class::RULE_ID, no_class::check),
     (no_inline_style::RULE_ID, no_inline_style::check),
     (animate_token_only::RULE_ID, animate_token_only::check),
+    // SPEC-DOMDEC-1: data-* ban on app .sail only (path-gated inside rule).
+    (no_data_attr::RULE_ID, no_data_attr::check),
 ];
 
 /// Rules that lint a pack's `.ts` source files (composition modules,
@@ -162,6 +171,12 @@ pub const PACK_SOURCE_RULES: &[(&str, RuleFn)] = &[
 pub const APP_SOURCE_RULES: &[(&str, RuleFn)] = &[
     (no_imperative_style::RULE_ID, no_imperative_style::check),
     (no_ambient_dom::RULE_ID, no_ambient_dom::check),
+    // SPEC-DOMDEC-1 ambient family (path-gated inside each rule).
+    (no_ambient_events::RULE_ID, no_ambient_events::check),
+    (no_ambient_timers::RULE_ID, no_ambient_timers::check),
+    (no_ambient_storage::RULE_ID, no_ambient_storage::check),
+    (no_ambient_nav::RULE_ID, no_ambient_nav::check),
+    (no_ambient_network::RULE_ID, no_ambient_network::check),
 ];
 
 /// Rules that lint a shipped / author `use:` Action body.

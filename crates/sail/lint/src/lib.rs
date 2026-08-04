@@ -85,7 +85,8 @@ pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
     p.contains("/src/") || p.ends_with("/src")
 }
 
-/// True iff `path` is plain app TypeScript under `apps/*/src/**/*.ts`.
+/// True iff `path` is plain app TypeScript under `apps/*/src/**` or
+/// `apps/*/routes/**` (SPEC-DOMDEC-1).
 ///
 /// Controllers (`.controller.ts`) are matched first by `is_controller_path`
 /// and never count as app sources. Test files (`*.test.ts`, `*.spec.ts`) are
@@ -102,12 +103,21 @@ pub fn is_app_source_ts(path: &std::path::Path) -> bool {
         return false;
     }
     let p = path.to_string_lossy().replace('\\', "/");
-    if p.contains(".test.ts") || p.contains(".spec.ts") || p.contains("/__tests__/") {
+    if p.contains(".test.ts")
+        || p.contains(".spec.ts")
+        || p.contains("/__tests__/")
+        || p.contains("/test/")
+        || p.contains("/qa/")
+        || p.contains("/scripts/")
+    {
         return false;
     }
     // Workspace-relative (`apps/studio/src/…`) or absolute (`…/apps/studio/src/…`).
-    let under_apps_src = (p.contains("/apps/") || p.starts_with("apps/")) && p.contains("/src/");
-    under_apps_src
+    let under_apps = p.contains("/apps/") || p.starts_with("apps/");
+    if !under_apps {
+        return false;
+    }
+    p.contains("/src/") || p.contains("/routes/")
 }
 
 /// True iff `path` is a `use:` Action implementation the floor lints.

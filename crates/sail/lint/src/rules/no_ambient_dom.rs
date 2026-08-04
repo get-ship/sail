@@ -32,6 +32,15 @@ const REMEDY: &str = "Bind host state through Sail (prop:/signals/sx), not ambie
      Measurement-driven geometry belongs in a `use:` action in the runtime package.";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
+    // SPEC-DOMDEC-1 path gate (apps only). Controllers historically always ran
+    // this rule; keep controllers in-scope via .controller.ts under apps or
+    // the ambient gate for apps/*/src|routes.
+    use super::ambient::{is_ambient_app_path, is_sail_allowed};
+    let p = path.to_string_lossy();
+    let is_controller = p.ends_with(".controller.ts");
+    if !is_ambient_app_path(path) && !is_controller {
+        return Vec::new();
+    }
     let allocator = Allocator::default();
     let ret = Parser::new(&allocator, source, SourceType::ts()).parse();
     if !ret.errors.is_empty() {
@@ -43,6 +52,8 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         findings: Vec::new(),
     };
     visitor.visit_program(&ret.program);
+    // Apply sail-allow after visit.
+    visitor.findings.retain(|f| !is_sail_allowed(source, f.line, RULE_ID));
     visitor.findings.sort_by_key(|f| (f.line, f.col));
     visitor.findings
 }
