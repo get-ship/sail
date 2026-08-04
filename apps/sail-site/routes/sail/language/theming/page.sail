@@ -6,7 +6,7 @@
 
 <controller>
 // /theming — the live theme switchboard. `pick` is the same two calls the
-// top-bar <theme-picker> makes: applyTheme (data-theme + data-mode
+// top-bar <theme-picker> makes: applyTheme (theme + data-mode
 // class) and persistTheme (survives reload). The page IS the preview — every
 // component on it reads tokens, so the pick repaints the reader's world.
 

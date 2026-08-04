@@ -564,7 +564,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(surface).toMatch(/data-theme-row/)
     expect(surface).toMatch(/data-list-group/)
     expect(surface).toMatch(/data-new-theme/)
-    // Job 5d: paint authority is theme={id}, not load-bearing data-theme-preview
+    // Job 5d: paint authority is theme={id}, not load-bearing theme
     expect(surface).toMatch(/theme=\{row\.previewId\}|theme=\{previewPaintId\(\)\}/)
     expect(surface).not.toMatch(/data-theme-preview=\{/)
     expect(surface).toMatch(/createThemesSurface\(\)/)

@@ -35,7 +35,7 @@ export default {
         bad.push({ i, why: 'not-design-font', got: cs(el, 'fontFamily'), want })
     })
 
-    const scope = "[data-theme-preview='ship'] "
+    const scope = "[theme='ship'] "
     const q = (s) => document.querySelector(scope + s)
     if (cs(q('textarea.l1-mark'), 'borderTopColor') === cs(q('textarea[invalid]'), 'borderTopColor'))
       bad.push({ why: 'invalid-not-distinct' })
@@ -47,7 +47,7 @@ export default {
     if (!(base < four)) bad.push({ why: 'rows-not-honored', base, four })
     if (cs(q('textarea.l1-mark'), 'boxSizing') !== 'border-box')
       bad.push({ why: 'not-border-box' })
-    const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .l1-mark`), 'backgroundColor')
+    const mark = (t) => cs(document.querySelector(`[theme='${t}'] .l1-mark`), 'backgroundColor')
     if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
 
     return { count: document.querySelectorAll('textarea').length, bad: bad.slice(0, 10) }

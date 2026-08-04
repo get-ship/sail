@@ -51,7 +51,7 @@ export default {
     // slipped through before: the neutral surface must resolve differently in
     // light vs dark, or a token is frozen at one mode's value.
     const mark = (t) =>
-      getComputedStyle(document.querySelector(`[data-theme-preview='${t}'] .l1-mark`)).backgroundColor
+      getComputedStyle(document.querySelector(`[theme='${t}'] .l1-mark`)).backgroundColor
     const light = mark('ship')
     const dark = mark('console')
     if (light === dark)

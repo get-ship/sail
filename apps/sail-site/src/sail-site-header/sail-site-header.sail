@@ -24,7 +24,7 @@
 //
 // THEME and PRODUCT are separate channels with separate owners. The theme —
 // one of @ship/tokens' nine — owns every surface and ink on the page;
-// `applyTheme` is its only writer (data-theme + data-mode),
+// `applyTheme` is its only writer (theme + data-mode),
 // and the picker persists the choice. The product — derived from the path —
 // owns only the accent hue, on its own attribute (data-product), so crossing
 // into Deck turns the brand violet without repainting the reader's theme.
@@ -82,7 +82,7 @@ export default controller((ctx) => {
       root.setAttribute('data-product', productAttr(product()))
     })
 
-    // Theme application. applyTheme is the ONLY writer of data-theme/data-mode and
+    // Theme application. applyTheme is the ONLY writer of theme/data-mode and
     // does NOT persist (the picker owns localStorage) — so re-running per
     // navigation is free and never overrides an explicit pick.
     //

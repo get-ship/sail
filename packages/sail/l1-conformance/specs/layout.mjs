@@ -79,7 +79,7 @@ export default {
   probe() {
     const bad = []
     const cs = (el, p) => getComputedStyle(el)[p]
-    const scope = "[data-theme-preview='ship'] "
+    const scope = "[theme='ship'] "
     const q = (t) => document.querySelector(`${scope}[data-t='${t}']`)
     const kids = (t) => [...q(t).children].map((c) => c.getBoundingClientRect())
 

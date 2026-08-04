@@ -48,7 +48,7 @@ export default {
         bad.push({ i, why: 'invisible' })
     })
 
-    const scope = "[data-theme-preview='ship'] "
+    const scope = "[theme='ship'] "
     const q = (s) => document.querySelector(scope + s)
     const base = q("input[type='checkbox'].l1-mark")
     const on = q("input[type='checkbox'][checked]")
@@ -69,7 +69,7 @@ export default {
     const [sm, md, lg] = [w('sm'), w('md'), w('lg')]
     if (!(sm < md && md < lg)) bad.push({ why: 'size-channel-dead', sm, md, lg })
     // frozen-token guard
-    const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .l1-mark`), 'borderTopColor')
+    const mark = (t) => cs(document.querySelector(`[theme='${t}'] .l1-mark`), 'borderTopColor')
     if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
 
     return { count: document.querySelectorAll("input[type='checkbox']").length, bad: bad.slice(0, 10) }

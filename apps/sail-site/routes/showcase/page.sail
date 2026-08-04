@@ -5,7 +5,7 @@
   bar), a real playback engine (position ticks on an effect whose cleanup IS
   the pause button), queue advance with shuffle+repeat, liked tracks, a
   filterable library, and an equalizer that exists in the DOM only while
-  playing. The frame wears any theme via data-theme-preview — the markup
+  playing. The frame wears any theme via theme — the markup
   says what the app is, never what it looks like.
 -->
 
@@ -126,7 +126,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   on the navbar). Row defaults to align=center — app panes need stretch so the
   library rail + track list occupy the body instead of floating in dead space.
 -->
-<column data-theme-preview={theme()} gap="0" sx={style.h(fill).minH(0).overflow(hidden).bg(background).fg(foreground)}>
+<column theme={theme()} gap="0" sx={style.h(fill).minH(0).overflow(hidden).bg(background).fg(foreground)}>
   <!-- ── app chrome: brand + theme picker ─────────────────────────────── -->
   <row sx={style.pad(3).padX(5).borderBWidth(1).border(border)} align="center" gap="3" shrink>
     <strong sx={style.fontFamily(mono).fontSize(lg).fg(primary)}>shanty</strong>

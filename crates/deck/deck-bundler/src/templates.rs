@@ -61,7 +61,7 @@ pub const INDEX_HTML_TEMPLATE: &str = r#"<!doctype html>
     try {
       var _d = document.documentElement;
       var _t = localStorage.getItem('ship-site-theme');
-      if (_t) _d.setAttribute('data-theme', _t);
+      if (_t) _d.setAttribute('theme', _t);
       var _m = localStorage.getItem('ship-site-theme-mode');
       var _paint = 'light';
       if (_m === 'dark') _paint = 'dark';

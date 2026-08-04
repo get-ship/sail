@@ -40,7 +40,7 @@ export default {
       if (grew !== el.open) bad.push({ i, why: 'panel-out-of-sync', open: el.open, grew })
     })
 
-    const scope = "[data-theme-preview='ship'] "
+    const scope = "[theme='ship'] "
     const q = (s) => document.querySelector(scope + s)
     // The chevron must turn when open — the affordance that says which way the
     // disclosure goes. The skin hides the UA ::marker and draws its own on
@@ -48,7 +48,7 @@ export default {
     const arrow = (sel) => getComputedStyle(q(sel), '::after').transform
     if (arrow('details.l1-mark summary') === arrow('details[open] summary'))
       bad.push({ why: 'no-open-affordance', shut: arrow('details.l1-mark summary') })
-    const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .l1-mark summary`), 'color')
+    const mark = (t) => cs(document.querySelector(`[theme='${t}'] .l1-mark summary`), 'color')
     if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
 
     return { count: document.querySelectorAll('details').length, bad: bad.slice(0, 10) }

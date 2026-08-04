@@ -51,7 +51,7 @@ impl ThemeSelect {
         Self { id, mode }
     }
 
-    /// `data-theme` attribute value (theme id only).
+    /// `theme` attribute value (theme id only).
     pub fn data_theme(&self) -> &str {
         if self.id.is_empty() { "ship" } else { &self.id }
     }

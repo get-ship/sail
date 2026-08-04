@@ -261,7 +261,7 @@ function writeLoweredBundle(serveDir, parts) {
   writeFileSync(
     join(serveDir, 'index.html'),
     `<!doctype html>
-<html lang="en" data-theme="ship" data-mode="light">
+<html lang="en" theme="ship" data-mode="light">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>

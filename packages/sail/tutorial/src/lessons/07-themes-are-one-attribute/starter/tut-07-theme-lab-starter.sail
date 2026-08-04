@@ -2,7 +2,7 @@
   Lesson 07 starter — the picker updates a label, not the page.
 
   Fix pick() in the controller so the theme actually applies, then pin
-  the second preview panel: data-theme-preview scopes the token table to
+  the second preview panel: theme scopes the token table to
   a subtree, which is how two themes sit side by side on one page.
 -->
 
@@ -49,7 +49,7 @@ export default controller(() => {
   </row>
 
   <grid cols="2" gap="4">
-    <column data-theme-preview="paper" gap="2" sx={preview}>
+    <column theme="paper" gap="2" sx={preview}>
       <small sx={muted}>pinned: paper</small>
       <card padding="md">
         <column gap="2">
@@ -67,7 +67,7 @@ export default controller(() => {
     </column>
 
     <!-- TODO 2: this panel follows the page theme. Pin it to 'console'
-         with data-theme-preview so the two previews stop agreeing. -->
+         with theme so the two previews stop agreeing. -->
     <column gap="2" sx={preview}>
       <small sx={muted}>pinned: (not yet)</small>
       <card padding="md">

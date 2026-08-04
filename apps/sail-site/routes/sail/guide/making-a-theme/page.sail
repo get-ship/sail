@@ -48,7 +48,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <ol sx={style.list(decimal).padL(6)}>
     <li>
       a block in <code>src/themes.css</code> that assigns the tokens, keyed
-      on <code>[data-theme='…']</code>;
+      on <code>[theme='…']</code>;
     </li>
     <li>
       an entry in the <code>THEMES</code> array in <code>src/themes.ts</code>,
@@ -85,8 +85,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <code-block code={code.paperBlock} lang="css"></code-block>
   <p>
     Two details in there are worth understanding before you copy it. The
-    selector is doubled: <code>:root[data-theme='paper']</code> repaints the
-    document, and <code>[data-theme-preview='paper']</code> repaints one
+    selector is doubled: <code>:root[theme='paper']</code> repaints the
+    document, and <code>[theme='paper']</code> repaints one
     subtree — that is how a swatch shows a theme without switching the page.
     And the brand tokens are written
     <code>oklch(L C var(--brand-hue, 30))</code>: lightness and chroma are
@@ -129,7 +129,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p sx={style.fontSize(sm).fg(muted-foreground)}>
     The two files are kept in step by the token package's own tests: for
     every id in <code>THEMES</code>, one asserts a matching
-    <code>:root[data-theme]</code> block exists in
+    <code>:root[theme]</code> block exists in
     <code>themes.css</code>. Edit one file and forget the other and the suite
     says so.
   </p>
@@ -143,7 +143,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>Its whole implementation:</p>
   <code-block code={code.applySource} lang="ts"></code-block>
   <p>
-    Three things happen. <code>data-theme</code> goes on the document, which
+    Three things happen. <code>theme</code> goes on the document, which
     activates your CSS block. The <code>data-mode</code> attribute is set from
     the entry's <code>dark</code> flag. A <code>ship:theme:change</code>
     event is dispatched, for chrome that needs to react beyond CSS.
@@ -170,8 +170,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     If editing the package is not available to you, the one path that works
     is to ship your own stylesheet with a
-    <code>:root[data-theme="mine"]</code> block and set
-    <code>document.documentElement.dataset.theme</code> yourself, never
+    <code>:root[theme="mine"]</code> block and set
+    <code>document.documentElement.setAttribute('theme', 'mine')</code> yourself, never
     calling <code>applyTheme</code>. You then also own the <code>data-mode</code>
     class, the change event and persistence, and your theme will not appear
     in the picker. Deck's own palette is built this way, so the approach is

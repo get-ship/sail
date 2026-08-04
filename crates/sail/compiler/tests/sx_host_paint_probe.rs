@@ -1369,11 +1369,11 @@ fn theme_picker_host_paint_on_structure_sx() {
             && src.contains("isolate")
             && !src.contains("class=")
             // Redesigned anatomy (2026-07): header + Light/Dark/System filter
-            // tabs + a listbox of full-bleed live specimens (data-theme-preview
+            // tabs + a listbox of full-bleed live specimens (theme=
             // swatch + primary/secondary/accent strips + ghost/solid controls).
             // The old 2-col mini-card grid (cols=\"2\" / h(24) / inset-ring) is
             // gone BY DESIGN; the needles below pin the NEW anatomy.
-            && src.contains("data-theme-preview")
+            && src.contains("theme=\"")
             && src.contains("role=\"listbox\"")
             && src.contains("role=\"option\"")
             && src.contains("data-mode-bar")
@@ -1393,7 +1393,7 @@ fn theme_picker_host_paint_on_structure_sx() {
                 || out.skin_css.contains("isolation: isolate"))
             && (out.structure_html.contains("role=\"listbox\"")
                 || out.structure_html.contains("role='listbox'"))
-            && out.structure_html.contains("data-theme-preview")
+            && out.structure_html.contains("theme=\"")
             && (out.structure_html.contains("sail-row-i") || out.skin_css.contains("inline-flex")),
         "child paint + layout classes on structure:\nstruct={}\nskin={}",
         out.structure_html,

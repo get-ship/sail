@@ -1,9 +1,9 @@
 // Theming — drive /sail/language/theming. Themes are applyTheme + persistTheme
-// (data-theme + data-mode). Dark is a mode, not a twin theme id.
+// (theme + data-mode). Dark is a mode, not a twin theme id.
 
 import { test, expect } from '@playwright/test'
 
-test('theming page: picking a theme sets data-theme', async ({ page }) => {
+test('theming page: picking a theme sets theme', async ({ page }) => {
   await page.goto('/sail/language/theming', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Theming', exact: true })).toBeVisible({
     timeout: 30_000,
@@ -20,7 +20,7 @@ test('theming page: picking a theme sets data-theme', async ({ page }) => {
     byLabel(/Console/i)?.click()
   })
   await page.waitForFunction(
-    () => (document.documentElement.dataset.theme ?? '') === 'console',
+    () => (document.documentElement.getAttribute('theme') ?? '') === 'console',
     undefined,
     { timeout: 15_000 },
   )
@@ -30,20 +30,20 @@ test('theming page: picking a theme sets data-theme', async ({ page }) => {
     buttons.find((b) => /Paper/i.test(b.textContent ?? ''))?.click()
   })
   await page.waitForFunction(
-    () => (document.documentElement.dataset.theme ?? '') === 'paper',
+    () => (document.documentElement.getAttribute('theme') ?? '') === 'paper',
     undefined,
     { timeout: 15_000 },
   )
 
   const after = await page.evaluate(() => ({
-    theme: document.documentElement.dataset.theme ?? '',
+    theme: document.documentElement.getAttribute('theme') ?? '',
     primary: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
   }))
   expect(after.theme).toBe('paper')
   expect(after.primary.length).toBeGreaterThan(0)
 })
 
-test('theming page: dark aesthetic sets data-theme + data-mode dark', async ({ page }) => {
+test('theming page: dark aesthetic sets theme + data-mode dark', async ({ page }) => {
   await page.goto('/sail/language/theming', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Theming', exact: true })).toBeVisible({
     timeout: 30_000,
@@ -55,14 +55,14 @@ test('theming page: dark aesthetic sets data-theme + data-mode dark', async ({ p
 
   await page.waitForFunction(
     () =>
-      (document.documentElement.dataset.theme ?? '') === 'console' &&
+      (document.documentElement.getAttribute('theme') ?? '') === 'console' &&
       (document.documentElement.dataset.mode ?? '') === 'dark',
     undefined,
     { timeout: 10_000 },
   )
 
   const after = await page.evaluate(() => ({
-    theme: document.documentElement.dataset.theme ?? '',
+    theme: document.documentElement.getAttribute('theme') ?? '',
     mode: document.documentElement.dataset.mode ?? '',
     darkClass: document.documentElement.classList.contains('dark'),
   }))

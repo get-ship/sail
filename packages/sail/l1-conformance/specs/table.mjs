@@ -46,7 +46,7 @@ export default {
         bad.push({ i, why: 'numeric-not-tabular' })
     })
 
-    const scope = "[data-theme-preview='ship'] "
+    const scope = "[theme='ship'] "
     const q = (s) => document.querySelector(scope + s)
     // [striped] actually stripes: an even row differs from an odd one
     const odd = cs(q('table[striped] tbody tr:nth-child(1)'), 'backgroundColor')
@@ -59,7 +59,7 @@ export default {
     // [bordered] boxes every cell
     if (cs(q('table[bordered] td'), 'borderLeftWidth') === '0px') bad.push({ why: 'bordered-no-box' })
     // frozen-token guard
-    const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .l1-mark th`), 'color')
+    const mark = (t) => cs(document.querySelector(`[theme='${t}'] .l1-mark th`), 'color')
     if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
 
     return { count: document.querySelectorAll('table').length, bad: bad.slice(0, 10) }

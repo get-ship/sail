@@ -44,7 +44,7 @@ describe('theme-shape-surface', () => {
     expect(sail).toMatch(/data-radius-master/)
     expect(sail).toMatch(/data-elev-chips/)
     expect(sail).toMatch(/data-radius-ladder/)
-    // Draft paint = applyScope bind; no load-bearing data-theme-preview on facet host (D7/Job 3).
+    // Draft paint = applyScope bind; no load-bearing theme on facet host (D7/Job 3).
     expect(sail).not.toMatch(/data-theme-preview=\{/)
     expect(sail).toMatch(/watchPreviewHost/)
     expect(sail).toMatch(/data-mode=\{/)

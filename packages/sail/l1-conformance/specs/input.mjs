@@ -29,7 +29,7 @@ export default {
       if (clear(border) && (!shadow || shadow === 'none'))
         bad.push({ why: 'field-not-visible', val: el.value, border, shadow })
     })
-    const scope = "[data-theme-preview='ship'] "
+    const scope = "[theme='ship'] "
     const q = (sel) => document.querySelector(scope + sel)
     // invalid border must be distinct from the default field border
     const defBorder = cs(q('input:not([invalid]):not([disabled])'), 'borderTopColor')
@@ -40,7 +40,7 @@ export default {
     const [sm, md, lg] = [h("input[size='sm']"), h("input[size='md']"), h("input[size='lg']")]
     if (!(sm < md && md < lg)) bad.push({ why: 'size-not-monotonic', sm, md, lg })
     // frozen-token guard
-    const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .l1-mark`), 'borderTopColor')
+    const mark = (t) => cs(document.querySelector(`[theme='${t}'] .l1-mark`), 'borderTopColor')
     if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship'), dark: mark('console') })
     return { count: document.querySelectorAll('input').length, bad: bad.slice(0, 10) }
   },

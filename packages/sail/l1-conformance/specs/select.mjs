@@ -41,7 +41,7 @@ export default {
       if (el.options.length < 3) bad.push({ i, why: 'options-missing' })
     })
 
-    const scope = "[data-theme-preview='ship'] "
+    const scope = "[theme='ship'] "
     const q = (s) => document.querySelector(scope + s)
     // disabled + invalid are each distinct from the resting field
     const base = q('select.l1-mark')
@@ -56,7 +56,7 @@ export default {
     const [sm, md, lg] = [h("select[size='sm']"), h("select[size='md']"), h("select[size='lg']")]
     if (!(sm < md && md < lg)) bad.push({ why: 'size-not-monotonic', sm, md, lg })
     // frozen-token guard
-    const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .l1-mark`), 'backgroundColor')
+    const mark = (t) => cs(document.querySelector(`[theme='${t}'] .l1-mark`), 'backgroundColor')
     if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
 
     return { count: document.querySelectorAll('select').length, bad: bad.slice(0, 10) }

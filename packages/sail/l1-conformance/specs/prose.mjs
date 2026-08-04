@@ -34,7 +34,7 @@ export default {
   },
   probe() {
     const bad = []
-    const scope = "[data-theme-preview='ship'] .l1-prose "
+    const scope = "[theme='ship'] .l1-prose "
     const q = (s) => document.querySelector(scope + s)
     const cs = (s, p) => getComputedStyle(q(s))[p]
     const px = (s, p) => parseFloat(cs(s, p))
@@ -105,7 +105,7 @@ export default {
 
     // 6. FROZEN-TOKEN GUARD — the prose surface must actually re-theme.
     const at = (t, sel, p) =>
-      getComputedStyle(document.querySelector(`[data-theme-preview='${t}'] .l1-prose ${sel}`))[p]
+      getComputedStyle(document.querySelector(`[theme='${t}'] .l1-prose ${sel}`))[p]
     if (at('ship', 'h1', 'color') === at('console', 'h1', 'color'))
       bad.push({ why: 'frozen-token', el: 'h1', light: at('ship', 'h1', 'color') })
     if (at('ship', 'code', 'backgroundColor') === at('console', 'code', 'backgroundColor'))

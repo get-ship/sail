@@ -5,7 +5,7 @@
   //   omit / []  → thin (no catalog themes)
   //   ["ship"]   → only those catalog ids
   //   "all"      → explicit full catalog (marketing site)
-  // Phase D: modes-in-file primary `ship` (data-theme + data-mode).
+  // Phase D: modes-in-file primary `ship` (theme + data-mode).
   "theme": {
     "default": "ship",
     "defaultMode": "light",

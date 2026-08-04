@@ -1,7 +1,7 @@
 // L1 conformance spec: <theme-picker> (mechanism-1, use:themeSelect + use:anchor).
 //
 // A trigger that opens a native [popover] of theme cards. Each card previews its
-// theme through [data-theme-preview], so the swatch is painted by the real
+// theme through [theme], so the swatch is painted by the real
 // stylesheet and cannot drift from the theme it advertises.
 //
 // The rows are the compiler's OWN lowered output (see lowered.mjs), not markup
@@ -37,7 +37,7 @@ export default {
     const bad = []
     const cs = (el, p) => (el ? getComputedStyle(el)[p] : null)
 
-    // Every swatch must render its OWN theme. If [data-theme-preview] were inert
+    // Every swatch must render its OWN theme. If [theme] were inert
     // — as [data-theme] on a <span> is — every card would come out identical,
     // which is exactly what a hand-picked hex gives you.
     const surfaces = [], cards = [], ctas = []
@@ -45,7 +45,7 @@ export default {
       surfaces.push(cs(sw, 'backgroundColor'))
       const c = sw.querySelector('.tc-card')
       const a = sw.querySelector('.tc-cta')
-      if (!c) return bad.push({ id: sw.getAttribute('data-theme-preview'), why: 'no-card' })
+      if (!c) return bad.push({ id: sw.getAttribute('theme'), why: 'no-card' })
       cards.push(cs(c, 'backgroundColor'))
       if (a) ctas.push(cs(a, 'backgroundColor'))
     })
@@ -75,7 +75,7 @@ export default {
     ],
     async run(page) {
       const bad = []
-      const rootTheme = () => page.evaluate(() => document.documentElement.dataset.theme)
+      const rootTheme = () => page.evaluate(() => document.documentElement.getAttribute('theme'))
       const rootMode = () => page.evaluate(() => document.documentElement.dataset.mode || '')
       const panelOpen = () =>
         page.evaluate(() => document.querySelector('.sail-theme-panel')?.matches(':popover-open') ?? false)
@@ -84,12 +84,12 @@ export default {
       await page.locator('.sail-theme-trigger').click()
       if (!(await panelOpen())) bad.push({ why: 'trigger-did-not-open-panel' })
 
-      // Selecting must route through applyTheme: data-theme + data-mode
+      // Selecting must route through applyTheme: theme + data-mode
       // AND the panel closing.
       await page.locator('.sail-theme-option[value="console"]').click()
 
       const t1 = await rootTheme()
-      if (t1 !== 'console') bad.push({ why: 'data-theme-not-applied', got: t1 })
+      if (t1 !== 'console') bad.push({ why: 'theme-not-applied', got: t1 })
       const m1 = await rootMode()
       if (m1 !== 'dark')
         bad.push({ why: 'data-mode-not-dark', got: m1, note: 'console defaultMode is dark' })

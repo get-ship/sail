@@ -192,7 +192,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <column gap="0" sx={cardCol}>
               <p sx={cardEyebrow}>Theming</p>
               <strong sx={cardTitle}>Nine themes. One token graph.</strong>
-              <p sx={cardBody}>Swap data-theme and every surface, ink, and control re-resolves.</p>
+              <p sx={cardBody}>Swap theme and every surface, ink, and control re-resolves.</p>
               <row gap="2" sx={cardFoot}>
                 <div sx={[swatch, style.bg(primary)]}></div>
                 <div sx={[swatch, style.bg(accent)]}></div>
@@ -284,7 +284,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <column gap="0" sx={cardCol}>
               <p sx={cardEyebrow}>Theming</p>
               <strong sx={cardTitle}>Nine themes. One token graph.</strong>
-              <p sx={cardBody}>Swap data-theme and every surface, ink, and control re-resolves.</p>
+              <p sx={cardBody}>Swap theme and every surface, ink, and control re-resolves.</p>
               <row gap="2" sx={cardFoot}>
                 <div sx={[swatch, style.bg(primary)]}></div>
                 <div sx={[swatch, style.bg(accent)]}></div>

@@ -22,11 +22,11 @@ export default {
     document.querySelectorAll('.sail-switch').forEach((el) => {
       if (cs(el, 'appearance') !== 'none') bad.push({ why: 'not-appearance-none', appearance: cs(el, 'appearance') })
     })
-    const scope = "[data-theme-preview='ship'] "
+    const scope = "[theme='ship'] "
     const off = cs(document.querySelector(scope + '.sail-switch:not([checked]):not([disabled])'), 'backgroundColor')
     const on = cs(document.querySelector(scope + ".sail-switch[checked]:not([tone]):not([disabled])"), 'backgroundColor')
     if (off === on) bad.push({ why: 'checked-no-color-change', off, on })
-    const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .sail-switch:not([checked]):not([disabled])`), 'backgroundColor')
+    const mark = (t) => cs(document.querySelector(`[theme='${t}'] .sail-switch:not([checked]):not([disabled])`), 'backgroundColor')
     if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship'), dark: mark('console') })
     return { count: document.querySelectorAll('.sail-switch').length, bad: bad.slice(0, 10) }
   },

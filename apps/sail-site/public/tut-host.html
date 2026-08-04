@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="sail">
+<html lang="en" theme="sail">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,14 +7,14 @@
   <script>
     // Stamp the SAIL theme + light/dark mode the parent passes via ?mode=.
     // The sail-site has a single brand theme ("sail") with a light/dark mode
-    // axis (data-theme="sail" + data-mode="dark") — mirror exactly what the
+    // axis (theme="sail" + data-mode="dark") — mirror exactly what the
     // sail-site-shell sets on the top document so every var(--…) resolves the
     // same inside the preview as on the page.
     (function () {
       var p = new URLSearchParams(location.search)
       var mode = p.get('mode') === 'dark' ? 'dark' : 'light'
       var root = document.documentElement
-      root.dataset.theme = 'sail'
+      root.setAttribute('theme', 'sail')
       if (mode === 'dark') root.dataset.mode = 'dark'
       else delete root.dataset.mode
     })()

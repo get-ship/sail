@@ -4,8 +4,8 @@
 // can paste it.
 export const code = {
   // packages/sail/tokens/src/themes.css:56-100, abridged where marked.
-  paperBlock: `:root[data-theme='paper'],
-[data-theme-preview='paper'] {
+  paperBlock: `:root[theme='paper'],
+[theme='paper'] {
   --background: oklch(0.985 0.020 75);
   --foreground: oklch(0.20 0.015 60);
   --card: oklch(0.995 0.012 75);
@@ -45,8 +45,8 @@ export const code = {
 }`,
 
   // The copy: same block, new id, three values changed.
-  mineBlock: `:root[data-theme='sandstone'],
-[data-theme-preview='sandstone'] {
+  mineBlock: `:root[theme='sandstone'],
+[theme='sandstone'] {
   --background: oklch(0.960 0.030 85);   /* warmer, darker paper */
   --foreground: oklch(0.24 0.020 55);
   --card: oklch(0.985 0.022 85);
@@ -96,7 +96,7 @@ export interface Theme {
     ],
   },`,
 
-  // packages/sail/tokens/src/themes.ts applyTheme — data-theme + data-mode only.
+  // packages/sail/tokens/src/themes.ts applyTheme — theme + data-mode only.
   applySource: `export function applyTheme(
   id: unknown,
   root: HTMLElement = document.documentElement,
@@ -104,7 +104,7 @@ export interface Theme {
 ): ThemeId {
   const next: ThemeId = isValidTheme(id) ? id : DEFAULT_THEME
   const resolvedMode = resolveMode(next, mode)
-  root.dataset.theme = next
+  root.setAttribute('theme', next)
   root.dataset.mode = resolvedMode
   root.classList.remove('dark') // no dual mechanism
   // …announce ship:theme:change
@@ -113,7 +113,7 @@ export interface Theme {
 
   apply: `import { applyTheme, applyMode, persistTheme } from '@ship/tokens/themes'
 
-applyTheme('sandstone')     // sets data-theme + data-mode, announces the change
+applyTheme('sandstone')     // sets theme + data-mode, announces the change
 applyMode('dark')           // mode switch — not a twin theme id
 persistTheme('sandstone')   // localStorage, and the host transport if one is set`,
 

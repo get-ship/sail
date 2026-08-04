@@ -5,7 +5,7 @@
 // It only asserts that after generate + applyTheme, critical *emitted* vars
 // resolve on a real page (/components) so mode-incomplete themes fail CI.
 //
-// Apply path: data-theme + data-mode (same as applyTheme / applyMode).
+// Apply path: theme + data-mode (same as applyTheme / applyMode).
 //
 // Single-mode themes (supportedModes / only one key under modes): skip missing
 // modes in the matrix — path parity is among declared modes only.
@@ -68,7 +68,7 @@ async function applyThemeMode(page: Page, theme: string, mode: string) {
         /* ignore */
       }
       const root = document.documentElement
-      root.dataset.theme = t
+      root.setAttribute('theme', t)
       root.dataset.mode = m
       root.classList.remove('dark')
       // Prefer framework helper when present (importmap / app bundle).
@@ -83,10 +83,10 @@ async function applyThemeMode(page: Page, theme: string, mode: string) {
   )
   // Attribute flip is sync; re-read immediately (no waitForFunction race with HMR).
   const applied = await page.evaluate(() => ({
-    theme: document.documentElement.dataset.theme ?? '',
+    theme: document.documentElement.getAttribute('theme') ?? '',
     mode: document.documentElement.dataset.mode ?? '',
   }))
-  expect(applied.theme, `expected data-theme=${theme}`).toBe(theme)
+  expect(applied.theme, `expected theme=${theme}`).toBe(theme)
   expect(applied.mode, `expected data-mode=${mode}`).toBe(mode)
 }
 
@@ -105,7 +105,7 @@ test.describe('theme × mode paint matrix (/components)', () => {
     // Page chrome + L1 buttons must exist before we trust theme paint.
     await expect(page.locator('body')).toBeVisible({ timeout: 60_000 })
     await page.waitForFunction(
-      () => document.documentElement.dataset.theme != null || true,
+      () => document.documentElement.getAttribute('theme') != null || true,
       undefined,
       { timeout: 5_000 },
     )

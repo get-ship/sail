@@ -55,7 +55,7 @@ test.describe('U2.1b site theme-picker', () => {
     const { panel } = await openHeaderPicker(page)
 
     const before = await page.evaluate(() => ({
-      theme: document.documentElement.dataset.theme ?? '',
+      theme: document.documentElement.getAttribute('theme') ?? '',
       mode: document.documentElement.dataset.mode ?? '',
       pref: localStorage.getItem('ship-site-theme-mode'),
     }))
@@ -74,7 +74,7 @@ test.describe('U2.1b site theme-picker', () => {
     )
 
     const afterDark = await page.evaluate(() => ({
-      theme: document.documentElement.dataset.theme ?? '',
+      theme: document.documentElement.getAttribute('theme') ?? '',
       mode: document.documentElement.dataset.mode ?? '',
       pref: localStorage.getItem('ship-site-theme-mode'),
     }))
@@ -85,7 +85,7 @@ test.describe('U2.1b site theme-picker', () => {
 
     // Dual-mode theme swatches track filter specimen mode.
     const shipSwatch = await panel
-      .locator('[data-theme-preview="ship"], [data-theme-preview="sail"]')
+      .locator('[theme="ship"], [theme="sail"]')
       .first()
       .getAttribute('data-mode')
     expect(shipSwatch).toBe('dark')
@@ -102,7 +102,7 @@ test.describe('U2.1b site theme-picker', () => {
       { timeout: 10_000 },
     )
     const afterSystem = await page.evaluate(() => ({
-      theme: document.documentElement.dataset.theme ?? '',
+      theme: document.documentElement.getAttribute('theme') ?? '',
       mode: document.documentElement.dataset.mode ?? '',
       pref: localStorage.getItem('ship-site-theme-mode'),
     }))
@@ -130,7 +130,7 @@ test.describe('U2.1b site theme-picker', () => {
     expect(afterLight.pref).toBe(before.pref)
   })
 
-  test('selecting a theme applies data-theme, marks aria-selected, keeps panel open', async ({
+  test('selecting a theme applies theme, marks aria-selected, keeps panel open', async ({
     page,
   }) => {
     const { trigger, panel } = await openHeaderPicker(page)
@@ -141,12 +141,12 @@ test.describe('U2.1b site theme-picker', () => {
     // paper remains dual-mode; safe pick that keeps light valid.
     await panel.locator('[role="option"][value="paper"]').click()
     await page.waitForFunction(
-      () => (document.documentElement.dataset.theme ?? '') === 'paper',
+      () => (document.documentElement.getAttribute('theme') ?? '') === 'paper',
       undefined,
       { timeout: 10_000 },
     )
     const after = await page.evaluate(() => ({
-      theme: document.documentElement.dataset.theme ?? '',
+      theme: document.documentElement.getAttribute('theme') ?? '',
       mode: document.documentElement.dataset.mode ?? '',
       darkClass: document.documentElement.classList.contains('dark'),
     }))
@@ -172,7 +172,7 @@ test.describe('U2.1b site theme-picker', () => {
     const { panel } = await openHeaderPicker(page)
 
     // Live preview specimens present (not chip-only).
-    await expect(panel.locator('[data-theme-preview]').first()).toBeVisible()
+    await expect(panel.locator('[theme]').first()).toBeVisible()
 
     // Row layout: options are full-width list rows (not a 2-col card grid of huge cards).
     const layout = await panel.locator('[data-theme-grid]').evaluate((grid) => {
@@ -214,7 +214,7 @@ test.describe('U2.1b site theme-picker', () => {
 
     // dual preview paints dark specimen
     const shipMode = await panel
-      .locator('[data-theme-preview="ship"], [data-theme-preview="sail"]')
+      .locator('[theme="ship"], [theme="sail"]')
       .first()
       .getAttribute('data-mode')
     expect(shipMode).toBe('dark')
@@ -223,7 +223,7 @@ test.describe('U2.1b site theme-picker', () => {
     await panel.locator('[role="option"][value="neutral"]').click()
     await page.waitForFunction(
       () =>
-        (document.documentElement.dataset.theme ?? '') === 'neutral' &&
+        (document.documentElement.getAttribute('theme') ?? '') === 'neutral' &&
         (document.documentElement.dataset.mode ?? '') === 'dark',
       undefined,
       { timeout: 10_000 },

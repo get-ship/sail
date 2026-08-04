@@ -37,14 +37,14 @@ warm print inks, and "destructive" stays legible in both.
 ## Previews pin their own table
 
 Sometimes one page needs two themes — a picker showing you Console
-while the page stays Paper. That is `data-theme-preview`: the same
+while the page stays Paper. That is `theme`: the same
 token table, scoped to a subtree, without touching the reader's choice.
 The two panels in the example are byte-identical markup; only the
 attribute differs.
 
 ```
-<column data-theme-preview="paper">…</column>
-<column data-theme-preview="console">…</column>
+<column theme="paper">…</column>
+<column theme="console">…</column>
 ```
 
 ## Try it
@@ -52,7 +52,7 @@ attribute differs.
 1. **Fix pick()** (TODO 1). Import `applyTheme` and `persistTheme`, call
    both, and click through all the themes. Reload — your pick held.
 2. **Pin the second panel** (TODO 2). Add
-   `data-theme-preview="console"` and watch the panels disagree while
+   `theme="console"` and watch the panels disagree while
    the page follows the picker.
 3. **Audit the panels.** Change the page theme with both panels pinned:
    nothing inside them moves. Remove a pin: that panel follows the page

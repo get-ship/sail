@@ -123,7 +123,7 @@ describe('theme home e2e (live studio)', () => {
       expect(honesty.hasForkWord, 'UI must not say fork').toBe(false)
       expect(honesty.hasEnableSwitch, 'no fake enable switch').toBe(false)
       expect(honesty.hasDefaultStar, 'no default star theater').toBe(false)
-      // Job 5d: home hosts use theme=; no load-bearing data-theme-preview
+      // Hard cutover: home hosts use theme=; zero data-theme-preview residue
       expect(
         honesty.themeHostCount,
         'home cards/preview should set theme= for table paint',

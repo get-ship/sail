@@ -7,7 +7,7 @@
  *
  * Default applier is framework `theme.applyScope` (T1). Tests may inject
  * via setDraftPaintApplier. Without a doc, falls back to theme/mode attrs
- * for registered-table cold path only (never data-theme-preview).
+ * for registered-table cold path only (never theme).
  *
  * Wire:
  *   bindPreviewHost(el) once per specimen; store emit → scheduleDraftPaint.
@@ -170,10 +170,10 @@ function applyOne(host: HTMLElement, opts: DraftPaintOpts): void {
 function applyRegisteredAttrs(host: HTMLElement, opts: DraftPaintOpts): void {
   const id = opts.paintId || opts.themeId || 'studio'
   // Author IR `theme` + mode — paint authority for registered tables
-  // (`[theme=id]` in themes.css). Dual-write data-theme for residual
-  // :root / legacy selectors only. Never invent data-theme-preview (D7).
+  // (`[theme=id]` in themes.css). Never data-theme / data-theme-preview.
   host.setAttribute('theme', id)
-  host.setAttribute('data-theme', id)
+  host.removeAttribute('data-theme')
+  host.removeAttribute('data-theme-preview')
   host.setAttribute('data-mode', opts.mode)
 }
 

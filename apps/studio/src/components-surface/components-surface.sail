@@ -245,7 +245,7 @@ export default controller(() => {
                 </p>
                 <badge tone="muted" size="sm" variant="outline" pill shrink="0">preview</badge>
               </row>
-              <column data-theme-preview data-mode="dark" data-specimen-body gap="2" sx={style.pad(6).minH(32).bg(background)}>
+              <column data-mode="dark" data-specimen-body gap="2" sx={style.pad(6).minH(32).bg(background)}>
                 <p sx={style.fontSize(md).fontWeight(semibold).fontFamily(heading)}>{library.previewTitle()}</p>
                 <p sx={style.fontSize(sm).fg(muted-foreground).leading(relaxed)}>{library.previewHint()}</p>
               </column>

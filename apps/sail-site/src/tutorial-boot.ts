@@ -175,13 +175,13 @@ export function listenPreview(
   return () => window.removeEventListener('message', onMessage)
 }
 
-/** The reader's theme lives on <html data-theme/data-mode> — an external DOM
+/** The reader's theme lives on <html theme + data-mode> — an external DOM
  *  channel, so a MutationObserver is the honest seam. Returns dispose. */
 export function observeTheme(onChange: () => void): () => void {
   const obs = new MutationObserver(onChange)
   obs.observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ['data-mode', 'data-theme'],
+    attributeFilter: ['data-mode', 'theme'],
   })
   return () => obs.disconnect()
 }

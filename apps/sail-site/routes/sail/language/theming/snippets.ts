@@ -8,7 +8,7 @@ export const code = {
   apply: `import { applyTheme, persistTheme } from '@ship/tokens/themes'
 
 // applyTheme is the ONLY writer of the theme state: it sets
-// data-theme + data-mode on <html> for light/dark
+// theme + data-mode on <html> for light/dark
 // themes, and announces ship:theme:change for any chrome listening.
 applyTheme('console')
 persistTheme('console')   // survives reload

@@ -21,11 +21,11 @@ export default {
     document.querySelectorAll('.sail-card').forEach((el) => {
       if (clear(csv(el, 'backgroundColor'))) bad.push({ why: 'no-surface', fill: el.hasAttribute('fill') })
     })
-    const scope = "[data-theme-preview='ship'] "
+    const scope = "[theme='ship'] "
     const pad = (v) => parseFloat(getComputedStyle(document.querySelector(`${scope}.sail-card[padding='${v}']`)).paddingTop)
     const [sm, md, lg] = [pad('sm'), pad('md'), pad('lg')]
     if (!(sm < md && md < lg)) bad.push({ why: 'padding-not-monotonic', sm, md, lg })
-    const mark = (t) => getComputedStyle(document.querySelector(`[data-theme-preview='${t}'] .sail-card`)).backgroundColor
+    const mark = (t) => getComputedStyle(document.querySelector(`[theme='${t}'] .sail-card`)).backgroundColor
     if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship'), dark: mark('console') })
     return { count: document.querySelectorAll('.sail-card').length, bad: bad.slice(0, 8) }
   },

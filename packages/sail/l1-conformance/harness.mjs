@@ -60,7 +60,7 @@ export async function closeBrowser() {
 export async function renderSpec(spec, outDir) {
   const rows = spec.rows().map((r) => `<div class="l1-row">${r}</div>`).join('')
   const section = (t) =>
-    `<section data-theme-preview="${t}" data-mode="${isDarkTheme(t) ? 'dark' : 'light'}"><div class="l1-theme">${t}</div>${rows}</section>`
+    `<section theme="${t}" data-mode="${isDarkTheme(t) ? 'dark' : 'light'}"><div class="l1-theme">${t}</div>${rows}</section>`
   const extra = spec.css ? `\n${spec.css}` : ''
   const html = `<!doctype html><html><head><meta charset="utf8"><style>${FRAMEWORK_CSS}\n${SHELL_CSS}${extra}</style></head><body>${THEMES.map(section).join('')}</body></html>`
 

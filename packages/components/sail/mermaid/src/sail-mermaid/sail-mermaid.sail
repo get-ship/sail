@@ -128,7 +128,7 @@ export default controller((ctx) => {
       const obs = new MutationObserver(syncTheme);
       obs.observe(document.documentElement, {
         attributes: true,
-        attributeFilter: ["data-theme", "data-mode"],
+        attributeFilter: ["theme", "data-mode"],
       });
       document.addEventListener("sail-theme-change", syncTheme);
 

@@ -185,7 +185,7 @@ mod tests {
         // T1 B1 app themes (foreign top-level dir — must survive prune).
         write(
             &dest.join("themes/themes.css"),
-            "/* thin app themes */ :root[data-theme='ship']{}",
+            "/* thin app themes */ :root[theme='ship']{}",
         );
         // Bare top-level themes.css would be pruned (regression guard for old path).
         write(&dest.join("themes.css"), "/* doomed top-level */");

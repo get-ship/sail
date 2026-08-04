@@ -51,7 +51,7 @@ export default {
       // the body is the ONLY part that scrolls
       if (cs(body, 'overflowY') !== 'auto') bad.push({ i, why: 'body-not-scrollable' })
     })
-    const scope = "[data-theme-preview='ship'] "
+    const scope = "[theme='ship'] "
     const q = (s) => document.querySelector(scope + s)
     // the size channel actually narrows
     const w = (s) => q(s).getBoundingClientRect().width
@@ -61,7 +61,7 @@ export default {
     if (cs(q("dialog[side='end']"), 'borderTopRightRadius') !== '0px')
       bad.push({ why: 'sheet-not-squared' })
     // frozen-token guard
-    const mark = (t) => cs(document.querySelector(`[data-theme-preview='${t}'] .l1-mark`), 'backgroundColor')
+    const mark = (t) => cs(document.querySelector(`[theme='${t}'] .l1-mark`), 'backgroundColor')
     if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
     return { count: document.querySelectorAll('dialog').length, bad: bad.slice(0, 10) }
   },

@@ -58,7 +58,7 @@ export default {
 
     // frozen-token guard — on the listbox surface, which is the themed part
     const surf = (t) =>
-      cs(document.querySelector(`[data-theme-preview='${t}'] .listbox`), 'backgroundColor')
+      cs(document.querySelector(`[theme='${t}'] .listbox`), 'backgroundColor')
     if (surf('ship') === surf('console'))
       bad.push({ why: 'frozen-token', light: surf('ship') })
 

@@ -52,7 +52,7 @@ const SKIP = new Set(['style', 'slot', 'script', 'template', 'link', 'meta', 'de
 export async function probe(page, tag, theme) {
   await page.evaluate(([t, d]) => {
     const r = document.documentElement
-    r.setAttribute('data-theme', t); r.setAttribute('data-mode', d ? 'dark' : 'light'); r.classList.remove('dark')
+    r.setAttribute('theme', t); r.setAttribute('data-mode', d ? 'dark' : 'light'); r.classList.remove('dark')
   }, [theme, isDarkTheme(theme)])
   await page.waitForTimeout(350)
   return page.evaluate(({ tag, SKIP }) => {

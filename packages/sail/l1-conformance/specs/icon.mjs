@@ -17,7 +17,7 @@ export default {
     document.querySelectorAll('.sail-icon').forEach((el) => {
       if (el.getBoundingClientRect().width <= 0) bad.push({ why: 'not-rendered', size: el.getAttribute('size') })
     })
-    const scope = "[data-theme-preview='ship'] "
+    const scope = "[theme='ship'] "
     const w = (s) => document.querySelector(`${scope}.sail-icon[size='${s}']`).getBoundingClientRect().width
     const [xs, sm, lg] = [w('xs'), w('sm'), w('lg')]
     if (!(xs < sm && sm < lg)) bad.push({ why: 'size-not-monotonic', xs, sm, lg })

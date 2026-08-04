@@ -139,7 +139,7 @@ const RAW_LESSONS: TutorialLesson[] = [
   {
     "slug": "07-themes-are-one-attribute",
     "title": "Themes are one attribute",
-    "description": "Components read tokens, never colors — so data-theme repaints everything, and previews pin their own table.",
+    "description": "Components read tokens, never colors — so theme repaints everything, and previews pin their own table.",
     "chapter": "system",
     "order": 7,
     "prev": "06-motion-is-a-directive",
@@ -252,7 +252,7 @@ export const TUTORIAL_GROUPS: TutorialGroup[] = [
       {
         "slug": "07-themes-are-one-attribute",
         "title": "Themes are one attribute",
-        "description": "Components read tokens, never colors — so data-theme repaints everything, and previews pin their own table.",
+        "description": "Components read tokens, never colors — so theme repaints everything, and previews pin their own table.",
         "order": 7,
         "href": "/sail/tutorial/07-themes-are-one-attribute"
       }

@@ -9,8 +9,8 @@
 use crate::{CachePolicy, DaemonMode, DeckResponse};
 
 /// Design tokens + route base styles + per-theme overrides, concatenated at
-/// compile time. The theme picker applies a theme by toggling `data-theme`
-/// on `<html>` — the `:root[data-theme='paper']` etc. blocks come from
+/// compile time. The theme picker applies a theme by toggling `theme`
+/// on `<html>` — the `:root[theme='paper']` etc. blocks come from
 /// `themes.css`.
 const VIEW_TOKENS_CSS: &str = concat!(
     include_str!("../../../../packages/sail/tokens/src/tokens.css"),

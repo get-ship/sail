@@ -40,7 +40,7 @@ export default controller(() => {
   sx={style.minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background).overflow(hidden)}
 >
   <column grow gap="0" sx={style.minH(0).h(full).pad(4)}>
-    <!-- Draft paint = applyScope via theme-session bind (not data-theme-preview). -->
+    <!-- Draft paint = applyScope via theme-session bind (not theme). -->
     <card
       data-color-specimen
       data-preview-specimen

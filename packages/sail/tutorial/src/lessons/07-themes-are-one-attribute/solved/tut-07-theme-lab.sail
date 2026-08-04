@@ -3,7 +3,7 @@
 
   pick() calls applyTheme + persistTheme; everything on the page repaints
   because every surface reads tokens. The two panels below opt OUT: each
-  pins its own token table with data-theme-preview, which is how a picker
+  pins its own token table with theme, which is how a picker
   can show you a theme without applying it.
 -->
 
@@ -58,7 +58,7 @@ export default controller(() => {
   </row>
 
   <grid cols="2" gap="4">
-    <column data-theme-preview="paper" gap="2" sx={preview}>
+    <column theme="paper" gap="2" sx={preview}>
       <small sx={muted}>pinned: paper</small>
       <card padding="md">
         <column gap="2">
@@ -75,7 +75,7 @@ export default controller(() => {
       </card>
     </column>
 
-    <column data-theme-preview="console" gap="2" sx={preview}>
+    <column theme="console" gap="2" sx={preview}>
       <small sx={muted}>pinned: console</small>
       <card padding="md">
         <column gap="2">
