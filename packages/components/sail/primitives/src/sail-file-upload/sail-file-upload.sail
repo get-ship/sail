@@ -57,8 +57,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const files = signal<File[]>([])
     const over = signal(false)
     const errorMsg = signal('')
-    // Cross-element ref: `openPicker` clicks this input from the DROPZONE's
-    // handlers. Captured via use: (bind:this is retired).
+    // Cross-element ref: `openPicker` clicks this input from the DROPZONE's handlers.
     const inputEl = signal<HTMLInputElement | null>(null)
     const captureInput: Action<void> = (node) => {
       inputEl.set(node as HTMLInputElement)

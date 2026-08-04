@@ -88,7 +88,7 @@ pub struct TemplateEmitter {
     /// the `collectTextOpens(root)` preamble emit in `js.rs`.
     pub(super) hydrate_uses_text: bool,
     /// True iff `hydrate_calls` includes any element-binding wiring
-    /// (`on:*`, plain fields, `bind:value`, `bind:this`)
+    /// (`on:*`, plain fields, `bind:value`)
     /// — drives the `collectElementMarkers(root)` preamble emit in
     /// `js.rs`.
     pub(super) hydrate_uses_markers: bool,

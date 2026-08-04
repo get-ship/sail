@@ -595,7 +595,7 @@ where
         AttrInstr::Static { .. } => {}
         AttrInstr::Expr { expr, .. } => f(expr)?,
         AttrInstr::BindValue { expr, .. } | AttrInstr::BindChecked { expr, .. } => f(expr)?,
-        AttrInstr::BindThis { .. } | AttrInstr::SlotReflectEmpty { .. } => {}
+        AttrInstr::SlotReflectEmpty { .. } => {}
         AttrInstr::On { handler, .. } => f(handler)?,
         AttrInstr::Mutation { .. } => {}
         AttrInstr::Use { param, .. } => {

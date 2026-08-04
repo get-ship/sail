@@ -54,7 +54,7 @@ export type {
 } from './while'
 export { bindSlotEmpty } from './slot-empty'
 
-// ── ABI-only: action runner (use: / bind:this) ─────────────────────────────
+// ── ABI-only: action runner (use:) ─────────────────────────────────────────
 export { runAction } from './action'
 
 // ── ABI-only: template / hydrate / motion plumbing ─────────────────────────

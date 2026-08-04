@@ -128,7 +128,6 @@ impl Cx<'_> {
             // Handle-passing positions — see the module docs.
             AttrInstr::BindValue { .. }
             | AttrInstr::BindChecked { .. }
-            | AttrInstr::BindThis { .. }
             | AttrInstr::Use { .. }
             | AttrInstr::On { .. }
             | AttrInstr::Motion { .. }

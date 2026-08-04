@@ -289,17 +289,6 @@ impl TemplateEmitter {
                     ));
                 }
             }
-            AttrInstr::BindThis { var, .. } => {
-                // `bind:this={var}` is an element-as-value capture: it writes
-                // the mounted element into the plain signal slot the controller
-                // declared as `var`. It uses the same `runAction` lifecycle as
-                // `use:` actions, so the slot is reset to `null` on unmount.
-                w.line(&format!(
-                    "runAction({el_var}, (__n) => {{ $scope.{var}.set(__n); return {{ destroy: () => $scope.{var}.set(null) }}; }}, undefined);",
-                    el_var = el_var,
-                    var = var
-                ));
-            }
             AttrInstr::SlotReflectEmpty { attr, .. } => {
                 // `bindSlotEmpty(slot, host, attr)` reflects the attr on the
                 // HOST element. In the emitted `__mount(container)` scope the

@@ -66,10 +66,6 @@ pub enum AttrInstr {
     BindValue { expr: Expr, span: Span },
     /// `bind:checked={signal}`.
     BindChecked { expr: Expr, span: Span },
-    /// `bind:this={varName}` — write a typed handle to the rendered
-    /// element into the named scope variable. The expression must be a
-    /// bare identifier; refs are write-once-from-runtime, not derivable.
-    BindThis { var: String, span: Span },
     /// `<slot reflect-empty="data-attr">` — declarative slot-emptiness
     /// reactivity. Wires a `slotchange` listener that toggles the named
     /// attribute on the host whenever the slot's assigned content

@@ -170,7 +170,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <p sx={cardEyebrow}>Animation</p>
               <strong sx={cardTitle}>Motion as a language surface</strong>
               <p sx={cardBody}>Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
-              <row gap="1" align="end" sx={cardFoot} testid="landing-motion-bars">
+              <row gap="1" align="end" sx={cardFoot} id="landing-motion-bars">
                 <div testid="landing-motion-bar" sx={style.w(1_5).h(6).radius(sm).bg(primary).opacity(40)}></div>
                 <div sx={style.w(1_5).h(10).radius(sm).bg(primary).opacity(60)}></div>
                 <div sx={style.w(1_5).h(8).radius(sm).bg(primary).opacity(70)}></div>
@@ -262,7 +262,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <p sx={cardEyebrow}>Animation</p>
               <strong sx={cardTitle}>Motion as a language surface</strong>
               <p sx={cardBody}>Springs, tweens, and stagger — declared in markup, not choreographed in JS.</p>
-              <row gap="1" align="end" sx={cardFoot} testid="landing-motion-bars">
+              <row gap="1" align="end" sx={cardFoot} id="landing-motion-bars">
                 <div testid="landing-motion-bar" sx={style.w(1_5).h(6).radius(sm).bg(primary).opacity(40)}></div>
                 <div sx={style.w(1_5).h(10).radius(sm).bg(primary).opacity(60)}></div>
                 <div sx={style.w(1_5).h(8).radius(sm).bg(primary).opacity(70)}></div>

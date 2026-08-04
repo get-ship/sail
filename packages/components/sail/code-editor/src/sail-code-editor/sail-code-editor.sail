@@ -242,11 +242,7 @@ export default controller((ctx: Scope) => {
       mergeAndApplyDiagnostics()
     }
 
-    // The editor element owns the EditorView: the action builds it on mount
-    // and destroys it on unmount. `editorHost` used to be a `bind:this`
-    // target that was never declared in scope at all — it existed only
-    // because the compiler pre-seeds a signal slot for every bind:this
-    // target, and the controller reached it through a double cast.
+    // EditorView lives on the host element: built on mount, destroyed on unmount.
     const editorMount: Action<void> = (node) => {
 
       function onDocChange(newValue: string): void {

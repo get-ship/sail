@@ -73,15 +73,6 @@ pub fn collect_attr_imports(
                 out.dom_imports.insert("hydrateBindChecked");
             }
         }
-        AttrInstr::BindThis { .. } => {
-            // `bind:this={var}` is an element capture: it writes the mounted
-            // element into a plain signal slot declared by the controller.
-            // The directive is lowered to the same `runAction` lifecycle the
-            // `use:` directive uses, so it auto-disposes (sets the slot back
-            // to null) when the element unmounts. The target must be declared
-            // in scope; undeclared targets are caught by scope_bound.
-            out.runtime_imports.insert("runAction");
-        }
         AttrInstr::SlotReflectEmpty { .. } => {
             out.runtime_imports.insert("bindSlotEmpty");
         }

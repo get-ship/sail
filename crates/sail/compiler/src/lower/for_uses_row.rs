@@ -70,7 +70,6 @@ fn instr_references(instr: &Instr, var_name: &str, idx_name: Option<&str>) -> bo
 fn attr_references(attr: &AttrInstr, var_name: &str, idx_name: Option<&str>) -> bool {
     match attr {
         AttrInstr::Static { .. }
-        | AttrInstr::BindThis { .. }
         | AttrInstr::SlotReflectEmpty { .. }
         | AttrInstr::Motion { .. } => false,
         AttrInstr::Expr { expr, .. }

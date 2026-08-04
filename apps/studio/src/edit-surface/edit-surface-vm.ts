@@ -154,7 +154,6 @@ export function createEditSurface() {
   sync()
   mountAmbient(() => {
     const unsub = subscribeEdit(() => sync())
-    // Register source editor host from template use:captureEditor — legal ref path.
     const stopEd = effect(() => {
       setSourceEditorHost(editorEl())
     })

@@ -1,4 +1,4 @@
-<!-- Historical name: was bind:this; now use: capture (bind:this retired). -->
+<!-- Element capture via local use: action. -->
 <controller>
 import { controller, signal, type Action } from '@ship/sail-runtime'
 export default controller((_ctx) => {

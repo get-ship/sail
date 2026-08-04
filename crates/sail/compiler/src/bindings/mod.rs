@@ -115,10 +115,6 @@ impl Builder {
             AttrInstr::BindChecked { expr, .. } => {
                 self.push(BindingKind::BindChecked, &expr.source, expr.allow_arrow);
             }
-            AttrInstr::BindThis { .. } => {
-                // `bind:this` is direct-emitted as `runAction(...)` in the
-                // generated JS; it does not need a runtime manifest entry.
-            }
             AttrInstr::SlotReflectEmpty { .. } => {
                 // Side-effect wiring on the host's attribute set. No scope
                 // entry, no marker — the compiled component setup body

@@ -94,9 +94,7 @@ fn attr_references_ident(attr: &AttrInstr, name: &str) -> bool {
                         .any(|e| expr_references_ident(&e.source, name))
                 })
         }
-        AttrInstr::Static { .. }
-        | AttrInstr::BindThis { .. }
-        | AttrInstr::SlotReflectEmpty { .. } => false,
+        AttrInstr::Static { .. } | AttrInstr::SlotReflectEmpty { .. } => false,
     }
 }
 

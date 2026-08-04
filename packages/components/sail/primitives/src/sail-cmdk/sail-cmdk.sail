@@ -115,7 +115,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const listId = signal(`sail-cmdk-list-${seq}`)
 
     // Cross-element refs: `scrollActiveIntoView` reads `listEl` from keydown
-    // handlers bound to the INPUT. Captured via use: (bind:this is retired).
+    // handlers bound to the INPUT.
     const inputEl = signal<HTMLInputElement | null>(null)
     const listEl = signal<HTMLUListElement | null>(null)
     const captureInput: Action<void> = (node) => {

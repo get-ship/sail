@@ -109,10 +109,7 @@ export function renderMarkdown(src: string): string {
 }
 
 export default controller((ctx: Scope) => {
-  // The prose <div> owns its own painting: the action receives the element on
-  // mount and hands back bindHtml's stop as its teardown. No ref, no cast —
-  // `contentEl` was never declared in scope, it only existed because the
-  // compiler pre-seeds a signal slot for every `bind:this` target.
+  // Prose owns its painting: action mounts bindHtml and returns its teardown.
   const paintMarkdown: Action<void> = (node) => {
     const stop = bindHtml(node as HTMLElement, () => renderMarkdown(ctx.value() ?? ''))
     return { destroy: stop }

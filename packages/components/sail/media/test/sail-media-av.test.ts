@@ -27,9 +27,7 @@ import mediaRenderer from '../src/sail-media-av/sail-media-av.sail.controller.ts
 
 const SOURCE_URL = new URL('../src/sail-media-av/sail-media-av.sail', import.meta.url)
 const SOURCE = readFileSync(SOURCE_URL, 'utf8')
-// On-disk path so the compiler pairs the controller and runs the
-// controller-aware passes (bind:this targets must be `ref(null)`) — the
-// harness then rejects exactly what the daemon + CLI do (#263-A).
+// On-disk path so the compiler pairs the controller and runs controller-aware passes.
 const SOURCE_PATH = fileURLToPath(SOURCE_URL)
 
 interface ViewerSource {

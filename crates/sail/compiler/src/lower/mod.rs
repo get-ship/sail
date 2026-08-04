@@ -131,7 +131,6 @@ fn check_attr_for_route(a: &AttrInstr, out: &mut Lowered) {
             }
         }
         AttrInstr::Static { .. }
-        | AttrInstr::BindThis { .. }
         | AttrInstr::SlotReflectEmpty { .. }
         | AttrInstr::Motion { .. } => {}
         AttrInstr::Use { param, .. } => {

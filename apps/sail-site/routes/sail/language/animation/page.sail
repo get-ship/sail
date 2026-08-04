@@ -160,7 +160,7 @@ sx={style.pad(4).enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opaci
     offsets siblings so a row reads as a wave. A user whose system asks for
     reduced motion gets none of this, automatically.
   </p>
-  <row gap="3" align="center" sx={style.minH(9)} testid="loop-row">
+  <row gap="3" align="center" sx={style.minH(9)} id="loop-row">
     <div testid="ambient-dot" sx={style.w(4).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })}></div>
     <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })}></div>
     <div sx={style.w(4).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })}></div>

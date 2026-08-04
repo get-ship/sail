@@ -60,9 +60,9 @@ export function markHydrateText(node: Text, key: string): void {
 /**
  * Tag an element with a hydration marker attribute. Names are the SSR
  * wire format (`on:event`, `attr:name`, `prop:name`, `bind:value`,
- * `bind:checked`, `bind:this`, `attr-dynamic`, `mutation`) — backend
- * mechanism strings, not author directives. Server-DOM serialization sets
- * the attribute on the element; browser DOM ignores.
+ * `bind:checked`, `attr-dynamic`, `mutation`) — backend mechanism strings,
+ * not author directives. Server-DOM serialization sets the attribute on
+ * the element; browser DOM ignores.
  *
  * `name` is the marker's attribute name (`"on:click"`, `"attr:href"`,
  * etc.); `key` is the `b<N>` string.

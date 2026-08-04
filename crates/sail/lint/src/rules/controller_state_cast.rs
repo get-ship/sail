@@ -10,7 +10,7 @@
 //!
 //! These casts were load-bearing only while the read-side was untyped. The
 //! controller's `state` is `MutableState<Scope & SC>`, which exposes:
-//! - signal keys (props, `bind:this` refs, factory signals) via
+//! - signal keys (props, factory signals, element capture signals) via
 //!   `state.$signals.x` (call to read, `.set` to write) or the assignment
 //!   proxy (`state.x` / `state.x = v`),
 //! - factory functions / non-signal members via `state.x`.

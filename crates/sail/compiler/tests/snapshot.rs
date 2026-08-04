@@ -167,7 +167,6 @@ fn ship_button_snapshot() {
 
 #[test]
 fn bind_this_button_snapshot() {
-    // Fixture renamed in spirit: element capture is use: (bind:this retired).
     let fx = &fixture_named("bind-this-button");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
@@ -191,8 +190,6 @@ fn element_capture_use_action_emits_run_action() {
         lint_overrides: Vec::new(),
     };
     let out = compile(&source, opts).expect("compile");
-    // Local use: capture action wires via runAction — same lifecycle as
-    // the retired bind:this direct-emit, without the bind:this syntax.
     assert!(
         out.js.contains("runAction("),
         "expected runAction call for use: capture, got:\n{}",
@@ -200,7 +197,7 @@ fn element_capture_use_action_emits_run_action() {
     );
     assert!(
         !out.js.contains("hydrateRef"),
-        "did not expect hydrateRef after unifying onto actions, got:\n{}",
+        "did not expect hydrateRef, got:\n{}",
         out.js
     );
     assert!(

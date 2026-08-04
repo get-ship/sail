@@ -8,7 +8,6 @@ import type { Action } from '@ship/sail-runtime'
 import { createEditSurface } from './edit-surface-vm'
 export default controller(() => {
   const vm = createEditSurface()
-  // Element capture via use: (bind:this is retired).
   const captureEditor: Action<void> = (node) => {
     vm.editorEl.set(node as HTMLElement)
     return { destroy: () => vm.editorEl.set(null) }

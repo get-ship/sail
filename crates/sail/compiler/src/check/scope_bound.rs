@@ -451,14 +451,6 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
 fn visit_attr(attr: &AttrInstr, v: &mut Visitor) {
     match attr {
         AttrInstr::Static { .. } | AttrInstr::SlotReflectEmpty { .. } => {}
-        AttrInstr::BindThis { var, span } => {
-            // `bind:this={var}` is a scope reference: the target signal must be
-            // declared by the controller (or a prop). Use the standard expr check
-            // so undeclared targets produce the same scope-bound diagnostic as
-            // any other free identifier.
-            let e = Expr::new(var.clone(), *span, false);
-            check_expr(&e, v, &[]);
-        }
         AttrInstr::Expr { expr, .. }
         | AttrInstr::BindValue { expr, .. }
         | AttrInstr::BindChecked { expr, .. } => check_expr(expr, v, &[]),

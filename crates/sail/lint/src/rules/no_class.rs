@@ -76,7 +76,8 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
                 suggest: Some(
                     "Style with sx=. For visual state use aria-* plus the state prefixes \
                      (hover:, selected:, expanded:, …). For behavior attached to an element use use: \
-                     (the default); for element-as-value use bind:this. For anatomy \
+                     (the default); for element-as-value use a local use: action that \
+                     sets a signal on mount and clears it on destroy. For anatomy \
                      — including what a test selects on — use the element's own semantics: its \
                      role, its aria-*, its tag."
                         .to_string(),
