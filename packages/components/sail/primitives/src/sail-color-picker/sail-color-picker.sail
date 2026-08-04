@@ -12,6 +12,8 @@
     value = '#000000'
     disabled = false
     showHex = true
+    /** swatch = color fill only (no hex field / "Pick color" chrome) — for design studio cards. */
+    variant: 'default' | 'swatch' = 'default'
     tone: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'destructive' | 'accent' | 'muted' = 'default'
     size: 'md' | 'sm' | 'lg' = 'md'
   }
@@ -170,41 +172,61 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         emitIfChanged(hex)
       }
 
-      const triggerEl = inputEl() as HTMLElement | null
-      if (!triggerEl) return
-      const rootForQuery = host.shadowRoot ?? host
-      const hexInput = rootForQuery.querySelector(
-        'input[type="text"][aria-label="Hex color"]',
-      ) as HTMLInputElement | null
+      const rootNode = () => (host.shadowRoot ?? host) as ParentNode
+      const getTrigger = () =>
+        (inputEl() as HTMLElement | null) ||
+        (rootNode().querySelector('[data-color-trigger-btn]') as HTMLElement | null)
+      const getHexInput = () =>
+        rootNode().querySelector(
+          'input[type="text"][aria-label="Hex color"]',
+        ) as HTMLInputElement | null
+
+      const showPanelPopover = (): boolean => {
+        const panel = rootNode().querySelector('[data-color-panel]') as HTMLElement & {
+          showPopover?: () => void
+        } | null
+        if (!panel) return false
+        try {
+          panel.showPopover?.()
+        } catch {
+          /* ignore API errors */
+        }
+        // popover API can leave panel closed if showPopover races mount —
+        // force top-layer visibility as last resort for studio pickers.
+        const st = getComputedStyle(panel)
+        if (st.display === 'none' || !(panel as HTMLElement & { matches: (s: string) => boolean }).matches?.(':popover-open')) {
+          try {
+            // Re-try showPopover once more after style read
+            panel.showPopover?.()
+          } catch {
+            /* ignore */
+          }
+        }
+        return true
+      }
+
+      /** Panel is gated by open() — if-render is async; retry until mounted. */
+      const ensurePanelShown = (attempts = 16) => {
+        if (showPanelPopover()) return
+        if (attempts <= 0) return
+        requestAnimationFrame(() => ensurePanelShown(attempts - 1))
+      }
 
       const openPanel = () => {
         if (_ctx.disabled() || open()) return
-        // Snapshot hex at open; dismiss without edit must not rewrite parent oklch.
         const cur = normHex(String(_ctx.value() ?? '')) || String(_ctx.value() ?? '').toLowerCase()
         openHex = isHex(cur) ? cur : ''
         userEdited = false
         if (openHex) syncFromHex(openHex)
         open.set(true)
-        // Panel is gated by `if {open()}` — showPopover after it mounts.
-        queueMicrotask(() => {
-          const root = host.shadowRoot ?? host
-          const panel = root.querySelector('[data-color-panel]') as HTMLElement & {
-            showPopover?: () => void
-          } | null
-          try {
-            panel?.showPopover?.()
-          } catch {
-            /* open signal still shows panel via if */
-          }
-        })
+        ensurePanelShown()
       }
       const closePanel = () => {
         if (!open()) return
         open.set(false)
         userEdited = false
         openHex = ''
-        const root = host.shadowRoot ?? host
-        const panel = root.querySelector('[data-color-panel]') as HTMLElement & {
+        const panel = rootNode().querySelector('[data-color-panel]') as HTMLElement & {
           hidePopover?: () => void
         } | null
         try {
@@ -221,9 +243,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         closePanel()
       }
 
-      const onTriggerClick = () => openPanel()
+      const onTriggerClick = (e: Event) => {
+        e.preventDefault()
+        e.stopPropagation()
+        openPanel()
+      }
       const onInputChange = () => {
-        // User typed a hex in the trigger input.
+        const hexInput = getHexInput()
         if (!hexInput) return
         const v = hexInput.value?.trim?.() ?? ''
         if (v === '') return
@@ -240,15 +266,55 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           openPanel()
         }
       }
-      triggerEl.addEventListener('click', onTriggerClick)
-      hexInput?.addEventListener('click', onTriggerClick)
-      hexInput?.addEventListener('change', onInputChange)
-      hexInput?.addEventListener('keydown', onInputKeydown)
-      triggerEl.addEventListener('keydown', onInputKeydown)
+
+      // Attach listeners when trigger exists (bind:this may lag mount by a frame).
+      let attached: HTMLElement | null = null
+      let hexAttached: HTMLInputElement | null = null
+      const attachTrigger = () => {
+        const triggerEl = getTrigger()
+        if (!triggerEl || triggerEl === attached) return !!triggerEl
+        if (attached) {
+          attached.removeEventListener('click', onTriggerClick)
+          attached.removeEventListener('keydown', onInputKeydown)
+        }
+        triggerEl.addEventListener('click', onTriggerClick)
+        triggerEl.addEventListener('keydown', onInputKeydown)
+        attached = triggerEl
+        const hexInput = getHexInput()
+        if (hexInput && hexInput !== hexAttached) {
+          hexAttached?.removeEventListener('click', onTriggerClick)
+          hexAttached?.removeEventListener('change', onInputChange)
+          hexAttached?.removeEventListener('keydown', onInputKeydown)
+          hexInput.addEventListener('click', onTriggerClick)
+          hexInput.addEventListener('change', onInputChange)
+          hexInput.addEventListener('keydown', onInputKeydown)
+          hexAttached = hexInput
+        }
+        return true
+      }
+      // Immediate + rAF retries (swatch if-branch bind:this)
+      if (!attachTrigger()) {
+        let tries = 20
+        const tick = () => {
+          if (attachTrigger() || tries-- <= 0) return
+          requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+      }
 
       const onShadowClick = (e: Event) => {
         const t = e.target as HTMLElement | null
-        const sw = t?.closest?.('button[data-hex]') as HTMLElement | null
+        if (!t) return
+        // Delegate trigger open — survives if/branch re-renders (no bind:this race).
+        const trigger = t.closest?.('[data-color-trigger-btn], [data-color-trigger]') as HTMLElement | null
+        if (trigger && !t.closest?.('[data-color-panel]')) {
+          // Don't steal clicks from hex text input (default variant).
+          if (!(t instanceof HTMLInputElement)) {
+            onTriggerClick(e)
+            return
+          }
+        }
+        const sw = t.closest?.('button[data-hex]') as HTMLElement | null
         if (sw) {
           const hex = (sw.dataset.hex ?? '').toLowerCase()
           if (isHex(hex)) commitHex(hex)
@@ -303,8 +369,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       document.addEventListener('pointerup', onRangePointerUp)
 
       host.expose!({
-        focus: () => (hexInput ?? triggerEl).focus?.(),
-        blur: () => (hexInput ?? triggerEl).blur?.(),
+        focus: () => (getHexInput() ?? getTrigger())?.focus?.(),
+        blur: () => (getHexInput() ?? getTrigger())?.blur?.(),
         open: openPanel,
         close: closePanel,
       })
@@ -312,11 +378,15 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       return () => {
         stopValueSync()
         sliderEffect()
-        triggerEl.removeEventListener('click', onTriggerClick)
-        triggerEl.removeEventListener('keydown', onInputKeydown)
-        hexInput?.removeEventListener('click', onTriggerClick)
-        hexInput?.removeEventListener('change', onInputChange)
-        hexInput?.removeEventListener('keydown', onInputKeydown)
+        if (attached) {
+          attached.removeEventListener('click', onTriggerClick)
+          attached.removeEventListener('keydown', onInputKeydown)
+        }
+        if (hexAttached) {
+          hexAttached.removeEventListener('click', onTriggerClick)
+          hexAttached.removeEventListener('change', onInputChange)
+          hexAttached.removeEventListener('keydown', onInputKeydown)
+        }
         rootEl.removeEventListener('click', onShadowClick)
         rootEl.removeEventListener('change', onHexInputChange)
         rootEl.removeEventListener('pointerdown', onRangePointerDown)
@@ -327,143 +397,128 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       }
     })
 
+    const isSwatchOnly = () => {
+      const v = _ctx.variant() as unknown
+      return v === 'swatch'
+    }
     const showHexUi = () => {
+      if (isSwatchOnly()) return false
       const v = _ctx.showHex() as unknown
       return v !== false && v !== 'false' && v !== 0
     }
 
     return {
       open, hue, sat, light, hueText, satText, lightText, hexDraft,
-      inputEl, hueId, satId, lightId, panelId, swatches, showHexUi,
+      inputEl, hueId, satId, lightId, panelId, swatches, showHexUi, isSwatchOnly,
     }
   })
 
 </controller>
-<column gap="0" sx={style.position(relative).w(full)}>
-  <!-- Trigger: the color itself is the control (never "Edit color" text alone). -->
-  <row
-    data-color-trigger
-    align="center"
-    gap="2"
-    sx={style.w(full).minH(size-h).padY(1).padX(1_5).bg(background).fg(foreground).borderWidth(1).border(border).radius(md).cursor(pointer).when({ focusWithin: style.outline(ring) })}
-  >
+<!--
+  Host is display:contents — host `sx` size is ignored. Swatch mode must absolute-fill
+  a position:relative parent (brand/hero stack or token chip wrapper); % width collapses
+  to 0 in auto grid tracks (2px border-only hit target → "picker does not launch").
+-->
+<if {isSwatchOnly()}>
+  <column gap="0" data-color-picker-root data-variant="swatch" sx={style.position(absolute).top(0).left(0).right(0).bottom(0).minW(0).minH(0)}>
     <button
       type="button"
+      data-color-trigger
+      data-color-trigger-btn
+      data-variant="swatch"
+      size="sm"
+      variant="ghost"
       disabled={disabled() ? true : null}
       aria-haspopup="dialog"
       aria-expanded={open() ? 'true' : 'false'}
       aria-label="Choose color"
-      popovertarget={panelId()}
       bind:this={inputEl}
       use:swatch={value() || '#000000'}
-      shrink="0"
-      sx={style.size(10).minW(10).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).cursor(pointer).pad(0)}
+      sx={style.w(full).h(full).minW(0).minH(0).radius(md).borderWidth(1).border(border-subtle).bg(bind(swatchColor)).cursor(pointer).pad(0).shadow(none).when({ focusWithin: style.outline(ring) })}
     ></button>
-    <if {showHexUi()}>
-      <input
-        type="text"
-        flush
-        grow
-        min-w="0"
-        sx={style.fontFamily(mono).textCase(lowercase).cursor(pointer)}
-        name={name()}
-        placeholder="#000000"
-        disabled={disabled()}
-        autocomplete="off"
-        aria-label="Hex color"
-        bind:value={value}
-      />
-    </if>
-    <if {!showHexUi()}>
-      <span grow min-w="0" sx={style.fontSize(xs).fg(muted-foreground).truncate()}>
-        Pick color
-      </span>
-    </if>
-  </row>
-  <if {open() && !disabled()}>
-    <div
-      id={panelId()}
-      data-color-panel
-      popover="manual"
-      use:anchor
-      placement="bottom"
-      role="dialog"
-      aria-label="Choose color"
-      sx={style.z(popover).w(panel-max-w-md).pad(3).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontSize(size-fs)}
-    >
-      <column gap="3">
-        <!-- LIVE preview of the color under edit (must update with every slider drag). -->
-        <div
-          use:swatch={value() || '#000000'}
-          sx={style.w(full).h(16).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm)}
-          aria-hidden="true"
-        ></div>
-        <grid cols="6" gap="2">
-          <for {swatches()} as="sw" key={sw.hex}>
-            <button
-              type="button"
-              aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
-              data-hex={sw.hex}
-              aria-label={sw.label}
-              use:swatch={sw.hex}
-              sx={style.borderWidth(1).border(border-subtle).radius(sm).pad(0).aspect(square).cursor(pointer).bg(bind(swatchColor)).when({ selected: style.outline(primary) })}
-            ></button>
-          </for>
-        </grid>
-        <column gap="2">
-          <row align="center" gap="2">
-            <label for={hueId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>H</label>
-            <input
-              id={hueId()}
-              type="range"
-              min="0"
-              max="360"
-              step="1"
-              bind:value={hueText}
-              data-axis="h"
-              use:rangeFill
-              grow
-              min-w="0"
-              aria-label="Hue"
-            />
-            <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{hue()}°</span>
-          </row>
-          <row align="center" gap="2">
-            <label for={satId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>S</label>
-            <input
-              id={satId()}
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              bind:value={satText}
-              data-axis="s"
-              use:rangeFill
-              grow
-              min-w="0"
-              aria-label="Saturation"
-            />
-            <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{sat()}%</span>
-          </row>
-          <row align="center" gap="2">
-            <label for={lightId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>L</label>
-            <input
-              id={lightId()}
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              bind:value={lightText}
-              data-axis="l"
-              use:rangeFill
-              grow
-              min-w="0"
-              aria-label="Lightness"
-            />
-            <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{light()}%</span>
-          </row>
-        </column>
-        <if {showHexUi()}>
+    <if {open() && !disabled()}>
+      <div
+        id={panelId()}
+        data-color-panel
+        popover="manual"
+        use:anchor
+        placement="bottom-start"
+        role="dialog"
+        aria-label="Choose color"
+        sx={style.z(popover).w(panel-max-w-md).pad(3).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontSize(size-fs)}
+      >
+        <column gap="3">
+          <div
+            use:swatch={value() || '#000000'}
+            sx={style.w(full).h(16).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm)}
+            aria-hidden="true"
+          ></div>
+          <grid cols="6" gap="2">
+            <for {swatches()} as="sw" key={sw.hex}>
+              <button
+                type="button"
+                aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
+                data-hex={sw.hex}
+                aria-label={sw.label}
+                use:swatch={sw.hex}
+                sx={style.borderWidth(1).border(border-subtle).radius(sm).pad(0).aspect(square).cursor(pointer).bg(bind(swatchColor)).when({ selected: style.outline(primary) })}
+              ></button>
+            </for>
+          </grid>
+          <column gap="2">
+            <row align="center" gap="2">
+              <label for={hueId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>H</label>
+              <input
+                id={hueId()}
+                type="range"
+                min="0"
+                max="360"
+                step="1"
+                bind:value={hueText}
+                data-axis="h"
+                use:rangeFill
+                grow
+                min-w="0"
+                aria-label="Hue"
+              />
+              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{hue()}°</span>
+            </row>
+            <row align="center" gap="2">
+              <label for={satId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>S</label>
+              <input
+                id={satId()}
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                bind:value={satText}
+                data-axis="s"
+                use:rangeFill
+                grow
+                min-w="0"
+                aria-label="Saturation"
+              />
+              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{sat()}%</span>
+            </row>
+            <row align="center" gap="2">
+              <label for={lightId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>L</label>
+              <input
+                id={lightId()}
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                bind:value={lightText}
+                data-axis="l"
+                use:rangeFill
+                grow
+                min-w="0"
+                aria-label="Lightness"
+              />
+              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{light()}%</span>
+            </row>
+          </column>
+          <!-- Always expose hex — studio shows hex on tokens; picker must accept paste. -->
           <row align="center" gap="2">
             <span sx={style.fg(muted-foreground).fontSize(xs)}>Hex</span>
             <input
@@ -476,8 +531,145 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               sx={style.fontFamily(mono).textCase(lowercase).fontSize(xs)}
             />
           </row>
-        </if>
-      </column>
-    </div>
-  </if>
-</column>
+        </column>
+      </div>
+    </if>
+  </column>
+</if>
+<if {!isSwatchOnly()}>
+  <column gap="0" data-color-picker-root data-variant="default" sx={style.position(relative).w(full).minH(0)}>
+    <row
+      data-color-trigger
+      align="center"
+      gap="2"
+      sx={style.w(full).minH(size-h).padY(1).padX(1_5).bg(background).fg(foreground).borderWidth(1).border(border).radius(md).cursor(pointer).when({ focusWithin: style.outline(ring) })}
+    >
+      <button
+        type="button"
+        data-color-trigger-btn
+        disabled={disabled() ? true : null}
+        aria-haspopup="dialog"
+        aria-expanded={open() ? 'true' : 'false'}
+        aria-label="Choose color"
+        bind:this={inputEl}
+        use:swatch={value() || '#000000'}
+        shrink="0"
+        sx={style.size(10).minW(10).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).cursor(pointer).pad(0)}
+      ></button>
+      <if {showHexUi()}>
+        <input
+          type="text"
+          flush
+          grow
+          min-w="0"
+          sx={style.fontFamily(mono).textCase(lowercase).cursor(pointer)}
+          name={name()}
+          placeholder="#000000"
+          disabled={disabled()}
+          autocomplete="off"
+          aria-label="Hex color"
+          bind:value={value}
+        />
+      </if>
+    </row>
+    <if {open() && !disabled()}>
+      <div
+        id={panelId()}
+        data-color-panel
+        popover="manual"
+        use:anchor
+        placement="bottom-start"
+        role="dialog"
+        aria-label="Choose color"
+        sx={style.z(popover).w(panel-max-w-md).pad(3).bg(popover).fg(popover-foreground).borderWidth(1).border(border).radius(md).shadow(md).fontSize(size-fs)}
+      >
+        <column gap="3">
+          <div
+            use:swatch={value() || '#000000'}
+            sx={style.w(full).h(16).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).shadow(sm)}
+            aria-hidden="true"
+          ></div>
+          <grid cols="6" gap="2">
+            <for {swatches()} as="sw" key={sw.hex}>
+              <button
+                type="button"
+                aria-selected={sw.hex === value().toLowerCase() ? 'true' : 'false'}
+                data-hex={sw.hex}
+                aria-label={sw.label}
+                use:swatch={sw.hex}
+                sx={style.borderWidth(1).border(border-subtle).radius(sm).pad(0).aspect(square).cursor(pointer).bg(bind(swatchColor)).when({ selected: style.outline(primary) })}
+              ></button>
+            </for>
+          </grid>
+          <column gap="2">
+            <row align="center" gap="2">
+              <label for={hueId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>H</label>
+              <input
+                id={hueId()}
+                type="range"
+                min="0"
+                max="360"
+                step="1"
+                bind:value={hueText}
+                data-axis="h"
+                use:rangeFill
+                grow
+                min-w="0"
+                aria-label="Hue"
+              />
+              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{hue()}°</span>
+            </row>
+            <row align="center" gap="2">
+              <label for={satId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>S</label>
+              <input
+                id={satId()}
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                bind:value={satText}
+                data-axis="s"
+                use:rangeFill
+                grow
+                min-w="0"
+                aria-label="Saturation"
+              />
+              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{sat()}%</span>
+            </row>
+            <row align="center" gap="2">
+              <label for={lightId()} sx={style.w(4).fg(muted-foreground).fontSize(xs)}>L</label>
+              <input
+                id={lightId()}
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                bind:value={lightText}
+                data-axis="l"
+                use:rangeFill
+                grow
+                min-w="0"
+                aria-label="Lightness"
+              />
+              <span sx={style.w(8).textAlign(end).fg(muted-foreground).fontSize(xs).fontFamily(mono)}>{light()}%</span>
+            </row>
+          </column>
+          <if {showHexUi()}>
+            <row align="center" gap="2">
+              <span sx={style.fg(muted-foreground).fontSize(xs)}>Hex</span>
+              <input
+                type="text"
+                bind:value={hexDraft}
+                spellcheck="false"
+                autocomplete="off"
+                aria-label="Hex color"
+                grow min-w="0"
+                sx={style.fontFamily(mono).textCase(lowercase).fontSize(xs)}
+              />
+            </row>
+          </if>
+        </column>
+      </div>
+    </if>
+  </column>
+</if>

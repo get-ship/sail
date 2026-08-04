@@ -132,4 +132,35 @@ describe('<sail-color-picker>', () => {
     expect(events).toHaveLength(0)
     expect(el.getAttribute('value')).toBe('#5194d5')
   })
+
+  it('variant=swatch: full-bleed trigger opens panel and swatch pick emits sail-change', async () => {
+    // Studio themes color facet uses variant=swatch (no hex field).
+    const { el } = mount(reg, 'sail-color-picker', {
+      value: '#ff0000',
+      variant: 'swatch',
+    })
+    await flush()
+    expect(inputOf(el)).toBeNull()
+    const trigger = shadow(el).querySelector(
+      'button[data-color-trigger-btn][data-variant="swatch"], button[aria-label="Choose color"]',
+    ) as HTMLButtonElement | null
+    expect(trigger).not.toBeNull()
+    trigger!.click()
+    await flush()
+    expect(panelOf(el)).not.toBeNull()
+    const events: CustomEvent[] = []
+    el.addEventListener('sail-change', (e) => {
+      events.push(e as CustomEvent)
+    })
+    const sw =
+      swatches(el).find((b) => (b.dataset.hex || '').toLowerCase() !== '#ff0000') ??
+      swatches(el)[0]!
+    const hex = sw.dataset.hex!
+    sw.click()
+    await flush()
+    expect(events.length).toBeGreaterThanOrEqual(1)
+    expect(events.at(-1)!.detail).toEqual({ value: hex })
+    const live = (el as HTMLElement & { value?: string }).value ?? el.getAttribute('value')
+    expect(String(live).toLowerCase()).toBe(hex.toLowerCase())
+  })
 })
