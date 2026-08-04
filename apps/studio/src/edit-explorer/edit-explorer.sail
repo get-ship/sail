@@ -28,7 +28,7 @@ export default controller(() => {
     <input
       type="search"
       data-edit-filter
-      placeholder="Filter files"
+      placeholder="Filter files…"
       value={filterText()}
       on:input={onFilterInput}
       aria-label="Filter files"
