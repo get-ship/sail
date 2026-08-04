@@ -170,9 +170,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
   <column gap="2" w="full" min-w="0">
     <p sx={eyebrow}>Packs</p>
-    <div sx={packStack} role="toolbar" aria-label="Component packs">
+    <div sx={packStack} label="Component packs">
       <for {packs()} as="p" key={p.id}>
-        <button shrink="0" sx={packBtn} on:click={() => pickPack(p.id)} aria-pressed={packSel() === p.id ? 'true' : 'false'}>
+        <button shrink="0" sx={packBtn} on:click={() => pickPack(p.id)} pressed={packSel() === p.id ? 'true' : 'false'}>
           <row gap="2" align="center" sx={tileMeta}>
             <strong sx={packLabel}>{p.label}</strong>
             <span sx={packCount}>{p.count}</span>
@@ -194,7 +194,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </row>
       <row gap="1" align="center" sx={catRow}>
         <for {cats()} as="c" key={c}>
-          <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)} aria-pressed={catSel() === c ? 'true' : 'false'}>{c}</button>
+          <button size="sm" tone="primary" variant={catSel() === c ? 'solid' : 'ghost'} on:click={() => pickCat(c)} pressed={catSel() === c ? 'true' : 'false'}>{c}</button>
         </for>
       </row>
     </row>
@@ -260,7 +260,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                   </radio-group>
                 </else-if><else-if {e.tag === 'switch'}>
                   <row gap="2" align="center">
-                    <switch bind:checked={notify} aria-label="Desktop notifications"></switch>
+                    <switch bind:checked={notify} label="Desktop notifications"></switch>
                     <p sx={mutedXs}>{notify() ? 'Notifications on' : 'Notifications off'}</p>
                   </row>
                 </else-if><else-if {e.tag === 'slider'}>
@@ -272,7 +272,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <slider bind:value={volume} tone="primary" w="full"></slider>
                   </column>
                 </else-if><else-if {e.tag === 'toggle-group'}>
-                  <toggle-group value="day" aria-label="Range">
+                  <toggle-group value="day" label="Range">
                     <toggle value="day">Day</toggle>
                     <toggle value="week">Week</toggle>
                     <toggle value="month">Month</toggle>
@@ -485,7 +485,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
                     <small>field</small>
                   </breadcrumb>
                 </else-if><else-if {e.tag === 'pagination'}>
-                  <pagination value="2" aria-label="Pages">
+                  <pagination value="2" label="Pages">
                     <page value="1">1</page>
                     <page value="2">2</page>
                     <page value="3">3</page>

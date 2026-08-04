@@ -88,25 +88,25 @@ export default controller(() => {
     </studio-page-header>
 
     <studio-toolbar checks-toolbar>
-      <select filter-rule aria-label="Filter by rule" value={ruleFilterVal()} on:change={onRuleFilter} w="28">
+      <select filter-rule label="Filter by rule" value={ruleFilterVal()} on:change={onRuleFilter} w="28">
         <for {ruleOpts()} as="opt" key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
       <separator orientation="vertical" sx={style.h(4)} />
-      <select filter-file aria-label="Filter by file" value={fileFilterVal()} on:change={onFileFilter} w="28">
+      <select filter-file label="Filter by file" value={fileFilterVal()} on:change={onFileFilter} w="28">
         <for {fileOpts()} as="opt" key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
       <separator orientation="vertical" sx={style.h(4)} />
-      <select filter-severity aria-label="Filter by severity" value={severityFilterVal()} on:change={onSeverityFilter} w="28">
+      <select filter-severity label="Filter by severity" value={severityFilterVal()} on:change={onSeverityFilter} w="28">
         <for {severityOpts()} as="opt" key={opt.key}>
           <option value={opt.value}>{opt.label}</option>
         </for>
       </select>
       <separator orientation="vertical" sx={style.h(4)} />
-      <row autofix-control align="center" gap="1" nowrap on:click={onAutoFixMode} aria-label={autoFixModeLabel()}>
+      <row autofix-control align="center" gap="1" nowrap on:click={onAutoFixMode} label={autoFixModeLabel()}>
         <p sx={style.fontSize(xs).fg(muted-foreground)}>Autofix</p>
         <for {autoFixOpts()} as="m" key={m.key}>
           <button
@@ -143,7 +143,7 @@ export default controller(() => {
       </row>
       <select
         filter-severity
-        aria-label="Filter by severity"
+        label="Filter by severity"
         value={severityFilterVal()}
         on:change={onSeverityFilter}
         size="sm"
@@ -229,7 +229,7 @@ export default controller(() => {
                 tone="muted"
                 rule-toggle={g.rule}
                 group-row-id={g.groupRowId}
-                aria-expanded={g.open ? 'true' : 'false'}
+                expanded={g.open ? 'true' : 'false'}
                 on:click={onRuleToggle}
               >
                 {g.open ? '▾' : '▸'}

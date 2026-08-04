@@ -38,9 +38,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column gap="6" sx={style.minW(0)}>
   <column sx={style.maxW(breakpoint-tablet)} gap="5">
-    <p role="doc-eyebrow">Reference</p>
+    <p token="doc-eyebrow">Reference</p>
     <h1>Elements — {stdlibCount()} stdlib + {reskinCount()} reskins</h1>
-    <p role="doc-lead">
+    <p token="doc-lead">
       Every standard element, with its one-line description and its full
       prop table on its detail page.
     </p>
@@ -72,7 +72,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </grid>
   </column>
 
-  <row role="navigation">
+  <row>
     <a variant="default" href="/sail/reference">← Reference index</a>
     <a variant="solid" href="/sail/reference/layout">Layout keywords →</a>
   </row>

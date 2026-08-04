@@ -15,9 +15,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column gap="6" sx={style.minW(0)}>
   <column sx={style.maxW(breakpoint-tablet)} gap="5">
-    <p role="doc-eyebrow">Reference</p>
+    <p token="doc-eyebrow">Reference</p>
     <h1>Behavior — {actionCount()} public actions</h1>
-    <p role="doc-lead">
+    <p token="doc-lead">
       <code>use:action</code> attaches reusable, attach-anywhere behavior.
       This table is the curated public surface. Widget-private wiring
       (tabs, menu, pagination, radio-group, combobox) lives as closed
@@ -41,7 +41,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </for>
   </grid>
 
-  <row role="navigation">
+  <row>
     <a variant="default" href="/sail/reference/motion">← Motion</a>
     <a variant="solid" href="/sail/reference/template">Template →</a>
   </row>

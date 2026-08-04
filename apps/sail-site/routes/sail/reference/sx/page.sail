@@ -45,9 +45,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column gap="6" sx={style.minW(0)}>
   <column sx={style.maxW(breakpoint-tablet)} gap="5">
-    <p role="doc-eyebrow">Reference</p>
+    <p token="doc-eyebrow">Reference</p>
     <h1>Style — paint on sx</h1>
-    <p role="doc-lead">
+    <p token="doc-lead">
       Paint is Style only: <code>sx=&#123;style.bg(primary).padX(2)&#125;</code>,
       <code>sx=&#123;[base, match(…), when(…)]&#125;</code>, or a scope const.
       Every setter argument is a design token from a closed scale — the rows
@@ -157,7 +157,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </grid>
   </column>
 
-  <row role="navigation">
+  <row>
     <a variant="default" href="/sail/reference/layout">← Layout keywords</a>
     <a variant="solid" href="/sail/reference/motion">Motion →</a>
   </row>

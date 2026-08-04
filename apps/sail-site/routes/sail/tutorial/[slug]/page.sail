@@ -361,13 +361,13 @@ export default controller((ctx: ControllerScope<Scope>) => {
         <small sx={style.fontFamily(mono).fontSize(xs).tracking(wide).fg(muted-foreground)}>{lessonNumLabel()} / {totalLessons()}</small>
       </row>
 
-      <row gap="1" aria-label="Lesson progress">
+      <row gap="1" label="Lesson progress">
         <for {steps()} as="step" key={step.slug}>
           <match {step.state}>
             <case {'done'}>
               <a href={step.href} title={step.title} grow sx={style.h(1).radius(full).bg(primary)}></a>
             </case><case {'current'}>
-              <a href={step.href} title={step.title} aria-current="step" grow sx={style.h(1).radius(full).bg(primary).opacity(50)}></a>
+              <a href={step.href} title={step.title} current="step" grow sx={style.h(1).radius(full).bg(primary).opacity(50)}></a>
             </case><default>
               <a href={step.href} title={step.title} grow sx={style.h(1).radius(full).bg(surface-2)}></a>
           </default></match>
@@ -462,7 +462,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         ></iframe>
       </column>
       <!-- h(16) ≈ 4rem ≈ 5 mono lines; was maxH(7)=28px under a gap-4 column. -->
-      <column role="log" aria-live="polite" aria-label="Preview console" gap="0" shrink="0"
+      <column live="polite" label="Preview console" gap="0" shrink="0"
               sx={style.h(16).minH(16).borderTWidth(1).borderT(border).bg(surface-0).padY(1).padX(2).overflowY(auto).fontFamily(mono).fontSize(xs)}>
         <for {logs()} as="line" key={line.id}>
           <match {line.kind}>
@@ -544,7 +544,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
           sx={style.w(full).h(full).minH(0).borderWidth(0).bg(surface-0)}
         ></iframe>
       </column>
-      <column role="log" aria-live="polite" aria-label="Preview console" gap="0" shrink="0"
+      <column live="polite" label="Preview console" gap="0" shrink="0"
               sx={style.h(14).minH(14).borderTWidth(1).borderT(border).bg(surface-0).padY(1).padX(2).overflowY(auto).fontFamily(mono).fontSize(xs)}>
         <for {logs()} as="line" key={line.id}>
           <match {line.kind}>

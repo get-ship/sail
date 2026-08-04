@@ -92,7 +92,7 @@ export default controller(() => {
           <column gap="3">
             <column gap="1">
               <p sx={fieldHint}>Display</p>
-              <select type-role="display" size="sm" value={assets.typeDisplay()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
+              <select type-token="display" size="sm" value={assets.typeDisplay()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.displayFontOpts()} as="o" key={o.key}>
                   <option value={o.value}>{o.label}</option>
                 </for>
@@ -100,7 +100,7 @@ export default controller(() => {
             </column>
             <column gap="1">
               <p sx={fieldHint}>Body</p>
-              <select type-role="body" size="sm" value={assets.typeBody()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
+              <select type-token="body" size="sm" value={assets.typeBody()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.bodyFontOpts()} as="o" key={o.key}>
                   <option value={o.value}>{o.label}</option>
                 </for>
@@ -108,7 +108,7 @@ export default controller(() => {
             </column>
             <column gap="1">
               <p sx={fieldHint}>Mono</p>
-              <select type-role="mono" size="sm" value={assets.typeMono()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
+              <select type-token="mono" size="sm" value={assets.typeMono()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.monoFontOpts()} as="o" key={o.key}>
                   <option value={o.value}>{o.label}</option>
                 </for>
@@ -133,7 +133,7 @@ export default controller(() => {
                 placeholder="Search 1,900+ families (Poppins, Noto, Fraunces…)"
                 value={assets.fontSearchQ()}
                 on:input={assets.onFontSearchInput}
-                aria-label="Search fonts"
+                label="Search fonts"
               />
               <button type="button" size="sm" variant="outline" tone="muted" font-search-btn on:click={assets.onFontSearch} shrink="0">
                 Search
@@ -172,16 +172,16 @@ export default controller(() => {
                     </row>
                     <p font-sample face={f.family} sx={fontSample}>{f.sample}</p>
                     <row gap="1" align="center">
-                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-role="display" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
+                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-token="display" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
                         Display
                       </button>
-                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-role="body" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
+                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-token="body" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
                         Body
                       </button>
-                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-role="mono" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
+                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-token="mono" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
                         Mono
                       </button>
-                      <button type="button" size="xs" variant="soft" tone="primary" font-family={f.family} font-role="body" on:click={assets.onFontInstall} disabled={!session.canEdit()} shrink="0">
+                      <button type="button" size="xs" variant="soft" tone="primary" font-family={f.family} font-token="body" on:click={assets.onFontInstall} disabled={!session.canEdit()} shrink="0">
                         Install
                       </button>
                     </row>
@@ -215,7 +215,7 @@ export default controller(() => {
               placeholder="Filter by name…"
               value={assets.iconQuery()}
               on:input={assets.onIconQuery}
-              aria-label="Filter icons"
+              label="Filter icons"
             />
           </column>
           <if {assets.hasIconGlyphs()}>
@@ -246,7 +246,7 @@ export default controller(() => {
                 value={assets.iconScaleMasterPx()}
                 disabled={!session.canEdit()}
                 icon-scale-master
-                aria-label="Icon scale master"
+                label="Icon scale master"
                 on:input={assets.onIconScaleMaster}
               />
             </column>
@@ -279,7 +279,7 @@ export default controller(() => {
               shrink="0"
               sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
             >
-              <row gap="2" align="center" nowrap shrink="0" aria-hidden="true" sx={style.minW(12)}>
+              <row gap="2" align="center" nowrap shrink="0" hidden="true" sx={style.minW(12)}>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>
@@ -309,7 +309,7 @@ export default controller(() => {
                   <icon name="search" size="sm"></icon>
                   Find
                 </button>
-                <button type="button" size="sm" variant="ghost" tone="muted">
+                <button type="button" size="sm" variant="ghost" tone="muted" label="Settings">
                   <icon name="settings" size="sm"></icon>
                 </button>
               </row>

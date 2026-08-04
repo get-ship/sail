@@ -66,7 +66,7 @@
     type="button"
     popovertarget="sail-theme-panel"
     data-picker-trigger="full"
-    aria-label="Choose theme"
+    label="Choose theme"
     sx={[
       trigger,
       when({
@@ -76,7 +76,7 @@
       }),
     ]}
   >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" shrink="0" sx={triggerIcon}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" hidden="true" shrink="0" sx={triggerIcon}>
       <circle cx="13.5" cy="6.5" r="1.5"></circle>
       <circle cx="17.5" cy="10.5" r="1.5"></circle>
       <circle cx="8.5" cy="7.5" r="1.5"></circle>
@@ -89,7 +89,7 @@
     type="button"
     data-picker-trigger="mode"
     data-mode-only-trigger="1"
-    aria-label="Color mode"
+    label="Color mode"
     hidden
     sx={[
       modeTrigger,
@@ -99,9 +99,9 @@
       }),
     ]}
   >
-    <span data-mode-icon="light" aria-hidden="true" shrink="0" sx={glyph}>☀</span>
-    <span data-mode-icon="dark" hidden aria-hidden="true" shrink="0" sx={glyph}>☾</span>
-    <span data-mode-icon="system" hidden aria-hidden="true" shrink="0" sx={glyph}>◐</span>
+    <span data-mode-icon="light" hidden="true" shrink="0" sx={glyph}>☀</span>
+    <span data-mode-icon="dark" hidden hidden="true" shrink="0" sx={glyph}>☾</span>
+    <span data-mode-icon="system" hidden hidden="true" shrink="0" sx={glyph}>◐</span>
   </button>
 
   <div
@@ -110,7 +110,7 @@
     use:anchor
     placement="bottom-end"
     role="listbox"
-    aria-label="Theme"
+    label="Theme"
     sx={[
       panel,
       when({
@@ -128,8 +128,8 @@
       </column>
 
       <!-- Filter tabs: selected = bold + fill + primary underline (readable on every host theme) -->
-      <row gap="0" role="tablist" aria-label="Filter themes by mode" data-mode-bar data-mode-segment nowrap min-w="0" sx={modeSeg}>
-        <button type="button" data-mode="light" role="tab" aria-selected="true" data-active="true" title="Show light themes" grow min-w="0" sx={[
+      <row gap="0" role="tablist" label="Filter themes by mode" data-mode-bar data-mode-segment nowrap min-w="0" sx={modeSeg}>
+        <button type="button" data-mode="light" role="tab" selected="true" data-active="true" title="Show light themes" grow min-w="0" sx={[
           modeSegBtn,
           when({
             hover: style.fg(theme-picker-foreground).bg(theme-picker-option-hover-bg),
@@ -139,7 +139,7 @@
         ]}>
           Light
         </button>
-        <button type="button" data-mode="dark" role="tab" aria-selected="false" title="Show dark themes" grow min-w="0" sx={[
+        <button type="button" data-mode="dark" role="tab" selected="false" title="Show dark themes" grow min-w="0" sx={[
           modeSegBtn,
           when({
             hover: style.fg(theme-picker-foreground).bg(theme-picker-option-hover-bg),
@@ -149,7 +149,7 @@
         ]}>
           Dark
         </button>
-        <button type="button" data-mode="system" role="tab" aria-selected="false" title="Show dual-mode themes" grow min-w="0" sx={[
+        <button type="button" data-mode="system" role="tab" selected="false" title="Show dual-mode themes" grow min-w="0" sx={[
           modeSegBtn,
           when({
             hover: style.fg(theme-picker-foreground).bg(theme-picker-option-hover-bg),
@@ -178,15 +178,15 @@
       ]}>
         <column gap="0" min-w="0" sx={optionCol}>
           <!-- Full-bleed live specimen: heading face + chromatic strips + controls -->
-          <column theme="sail" data-mode="light" aria-hidden="true" sx={swatch}>
+          <column theme="sail" data-mode="light" hidden="true" sx={swatch}>
             <span sx={overlay}></span>
             <column gap="2" justify="between" min-w="0" sx={specimen}>
               <row align="center" gap="2" nowrap min-w="0" w="full">
                 <span data-swatch-title grow min-w="0" sx={title}>Sail</span>
-                <span data-selected-check hidden aria-hidden="true" shrink="0" sx={checkMark}>✓</span>
+                <span data-selected-check hidden hidden="true" shrink="0" sx={checkMark}>✓</span>
               </row>
               <!-- primary · secondary · accent — equal strips, no surface-matching noise -->
-              <row align="center" gap="1" nowrap min-w="0" w="full" aria-hidden="true">
+              <row align="center" gap="1" nowrap min-w="0" w="full" hidden="true">
                 <span grow min-w="0" sx={stripPrimary}></span>
                 <span grow min-w="0" sx={stripSecondary}></span>
                 <span grow min-w="0" sx={stripAccent}></span>

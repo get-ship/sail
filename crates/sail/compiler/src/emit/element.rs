@@ -243,6 +243,8 @@ pub fn emit_element(
     let native = root.tag == name;
     let mut structure = String::new();
     serialize_static(root, &root_class, true, &mut structure)?;
+    // Fixed host role/live/label from the anatomy table (authors don't stamp).
+    structure = crate::semantic_props::stamp_host_anatomy(name, &structure);
 
     // Spliced elements key their skin on the stamped root class; native-kind
     // elements key on the tag itself — the tag IS the element.
@@ -273,13 +275,37 @@ pub fn emit_element(
         })
         .collect();
     let (classes, slots) = super::cem::collect_anatomy(&program.template);
+    // Surface fixed host semantics in the element contract (skill / CEM).
+    let host_sem = crate::semantic_props::host_anatomy(name).map(|a| {
+        let mut m = serde_json::Map::new();
+        if let Some(r) = a.role {
+            m.insert("role".into(), json!(r));
+        }
+        if let Some(l) = a.live {
+            m.insert("live".into(), json!(l));
+        }
+        if let Some(at) = a.atomic {
+            m.insert("atomic".into(), json!(at));
+        }
+        if let Some(lab) = a.label {
+            m.insert("label".into(), json!(lab));
+        }
+        Value::Object(m)
+    });
+    let mut anatomy = json!({ "dom": "light", "classes": classes, "slots": slots });
+    if let Some(hs) = host_sem {
+        anatomy
+            .as_object_mut()
+            .unwrap()
+            .insert("host".into(), hs);
+    }
     let manifest = json!({
         "kind": "element",
         "tag": name,
         "native": native,
         "rootClass": root_class,
         "attributes": attributes,
-        "anatomy": { "dom": "light", "classes": classes, "slots": slots },
+        "anatomy": anatomy,
     });
 
     let host_classes = root_class_attr(&structure);
@@ -350,12 +376,37 @@ fn serialize_static(
                 if is_root && name == "data-sail-host" {
                     host_attr_written = true;
                 }
+                // Semantic props (label/current/…) lower to aria-* in structure.
+                let emit_name = crate::semantic_props::lower_attr_name_str_valued(
+                    &el.tag,
+                    name,
+                    Some(&value),
+                );
+                let mut stamp_value = value.clone();
+                if crate::semantic_props::is_aria_bool_attr(emit_name) {
+                    stamp_value =
+                        crate::semantic_props::coerce_aria_bool_static(&stamp_value).to_string();
+                }
                 out.push(' ');
-                out.push_str(name);
-                if !value.is_empty() {
+                out.push_str(emit_name);
+                if !stamp_value.is_empty() {
                     out.push_str("=\"");
-                    out.push_str(&value);
+                    out.push_str(&stamp_value);
                     out.push('"');
+                }
+                if let Some(extra) = crate::semantic_props::dual_stamp_aria(&el.tag, name) {
+                    let extra_val = if crate::semantic_props::is_aria_bool_attr(extra) {
+                        crate::semantic_props::coerce_aria_bool_static(&value).to_string()
+                    } else {
+                        stamp_value.clone()
+                    };
+                    out.push(' ');
+                    out.push_str(extra);
+                    if !extra_val.is_empty() {
+                        out.push_str("=\"");
+                        out.push_str(&extra_val);
+                        out.push('"');
+                    }
                 }
             }
             // `use:action` — a reusable BEHAVIOR (a toolchain action) bundled

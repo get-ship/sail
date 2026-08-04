@@ -170,8 +170,8 @@ export function createOverviewEdit(session: ThemeSession) {
     if (!hex) return
     const host = e.target as HTMLElement | null
     const role =
-      host?.getAttribute('role') ||
-      host?.closest?.('[role]')?.getAttribute('role')
+      host?.getAttribute('token') ||
+      host?.closest?.('[token]')?.getAttribute('token')
     if (role === 'primary') {
       primaryHex.set(hex)
       void setBrandColor(hex).then(() => session.sync())

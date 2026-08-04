@@ -146,7 +146,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       'sail-message':     [{ name: 'role',  type: 'string', desc: 'Message author role.' }, { name: 'state', type: 'string', desc: 'Message state (user|assistant|...).' }, { name: 'content', type: 'string', desc: 'Body text.' }],
       'sail-citation':    [{ name: 'source', type: 'string', desc: 'Citation source label.' }, { name: 'href',  type: 'string', desc: 'Click target.' }],
       'sail-composer':    [{ name: 'placeholder', type: 'string', desc: 'Empty-state copy.' }],
-      'sail-thinking-dots': [{ name: 'aria-label', type: 'string', desc: 'Live-region label.' }],
+      'sail-thinking-dots': [{ name: 'label', type: 'string', desc: 'Live-region label.' }],
       'sail-tool-call':   [{ name: 'name',   type: 'string', desc: 'Tool name.' }, { name: 'status', type: 'string', desc: 'running|ok|error.' }],
       'sail-canvas':      [{ name: 'width',  type: 'number', desc: 'Viewport width in px.' }, { name: 'height', type: 'number', desc: 'Viewport height in px.' }],
       'sail-graph-canvas': [{ name: 'nodes', type: 'string (JSON)', desc: '[{id, kind, title, x, y}].' }, { name: 'edges', type: 'string (JSON)', desc: '[{from, to}].' }],

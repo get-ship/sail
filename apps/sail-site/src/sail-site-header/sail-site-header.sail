@@ -136,9 +136,9 @@ export default controller((ctx) => {
 <!-- Single chrome tree: navbar + theme-picker never remount on route change. -->
 <column gap="0" w="full" sx={shell}>
   <navbar sticky bordered use:chromeOffset>
-    <a slot="brand" href="/" aria-label="SHIP UI home" shrink="0">
+    <a slot="brand" href="/" label="SHIP UI home" shrink="0">
       <row gap="2" align="center" nowrap>
-        <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 26 26" fill="none" hidden="true">
           <circle cx="6" cy="6" r="3.4" fill="var(--primary)" />
           <circle cx="20" cy="6" r="3.4" fill="var(--primary)" opacity="0.45" />
           <circle cx="6" cy="20" r="3.4" fill="var(--primary)" opacity="0.45" />
@@ -149,11 +149,11 @@ export default controller((ctx) => {
       </row>
     </a>
 
-    <row slot="center" gap="1" align="center" nowrap min-w="0" sx={productSwitch} aria-label="Products">
-      <a href="/sail/overview" shrink="0" sx={productLink} aria-current={product() === 'sail' ? 'page' : null}>Sail</a>
-      <a href="/deck" shrink="0" sx={productLink} aria-current={product() === 'deck' ? 'page' : null}>Deck</a>
-      <a href="/components" shrink="0" sx={productLink} aria-current={product() === 'components' ? 'page' : null}>Components</a>
-      <a href="/ai" shrink="0" sx={productLink} aria-current={product() === 'ai' ? 'page' : null}>AI</a>
+    <row slot="center" gap="1" align="center" nowrap min-w="0" sx={productSwitch} label="Products">
+      <a href="/sail/overview" shrink="0" sx={productLink} current={product() === 'sail' ? 'page' : null}>Sail</a>
+      <a href="/deck" shrink="0" sx={productLink} current={product() === 'deck' ? 'page' : null}>Deck</a>
+      <a href="/components" shrink="0" sx={productLink} current={product() === 'components' ? 'page' : null}>Components</a>
+      <a href="/ai" shrink="0" sx={productLink} current={product() === 'ai' ? 'page' : null}>AI</a>
     </row>
 
     <theme-picker slot="actions"></theme-picker>

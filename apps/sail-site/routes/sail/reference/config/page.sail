@@ -16,9 +16,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column gap="6" sx={style.minW(0)}>
   <column sx={style.maxW(breakpoint-tablet)} gap="5">
-    <p role="doc-eyebrow">Reference</p>
+    <p token="doc-eyebrow">Reference</p>
     <h1>sail.config.json — {keyCount()} keys</h1>
-    <p role="doc-lead">
+    <p token="doc-lead">
       Resolved by one walk-up from a source file to the nearest
       <code>sail.config.json</code>, one parse. Any other top-level key is a
       typo or a made-up name — the compiler refuses it loudly rather than
@@ -41,7 +41,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </for>
   </column>
 
-  <row role="navigation">
+  <row>
     <a variant="default" href="/sail/reference/runtime">← Runtime</a>
     <a variant="solid" href="/sail/reference">Reference index →</a>
   </row>

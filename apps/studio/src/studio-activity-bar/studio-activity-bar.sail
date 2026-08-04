@@ -6,19 +6,11 @@
   Slots: brand, default (items), footer (exit — same item style as activities).
   Ban-clean: layout keywords + L1 only.
 -->
-<column
-  studio-activity-bar
-  role="navigation"
-  aria-label="Studio activities"
-  shrink="0"
-  gap="0"
-  align="center"
-  sx={style.w(12).minW(12).maxW(12).minH(0).h(full).bg(surface-0).borderRWidth(1).borderR(border).overflow(visible)}
->
+<nav label="Studio activities" shrink="0" sx={style.display(flex).flexDir(column).w(12).minW(12).maxW(12).minH(0).h(full).bg(surface-0).borderRWidth(1).borderR(border).overflow(visible)}>
   <slot name="brand">
     <center
       shrink="0"
-      aria-hidden="true"
+      hidden="true"
       sx={style.w(full).h(12).minH(12).padX(1).padY(1).borderBWidth(1).borderB(border-subtle)}
     >
       <center
@@ -48,4 +40,4 @@
   >
     <slot name="footer"></slot>
   </column>
-</column>
+</nav>

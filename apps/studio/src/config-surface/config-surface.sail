@@ -54,7 +54,7 @@ export default controller(() => {
               size="sm"
               variant={cat.selected ? 'soft' : 'ghost'}
               tone={cat.selected ? 'primary' : 'muted'}
-              aria-current={cat.selected ? 'true' : undefined}
+              current={cat.selected ? 'true' : undefined}
               sx={style.w(full)}
             >
               {cat.label}

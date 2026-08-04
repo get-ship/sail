@@ -39,7 +39,6 @@
   nowrap
   align="center"
   gap="4"
-  role="navigation"
   w="full"
   sx={[
     base,

@@ -131,9 +131,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <p>
     The <code>&lt;field&gt;</code> element wraps a control with a label, a
     hint, and an error slot. It does more than lay them out: it points the
-    control's <code>aria-describedby</code> at whichever message is showing
+    control's field anatomy association at whichever message is showing
     — the hint normally, the error when <code>invalid</code> is set — keeps
-    <code>aria-invalid</code> in sync, and announces the error region
+    semantic prop <code>invalid</code> in sync, and announces the error region
     politely to screen readers. You get all of that by filling in the slots.
   </p>
   <code-block code={code.bind}></code-block>

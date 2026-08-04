@@ -157,9 +157,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     Keyboard traversal, focus management, filtering, ARIA — the parts every
     team gets subtly wrong ship inside the tag. The tabs above answer arrow
     keys, Home and End with a roving tabindex, and stamp
-    <code>role="tab"</code> and <code>aria-selected</code> themselves. A
+    semantic <code>selected</code> / tab anatomy themselves. A
     dropdown closes on Escape and supports type-ahead. A switch is a real
-    <code>&lt;input type="checkbox" role="switch"&gt;</code>, so Space, Tab
+    <code>&lt;switch&gt;</code> (L1 anatomy stamps role=switch), so Space, Tab
     and form submission are the platform's own. You write the options; the
     component does the rest. Try it:
   </p>
@@ -203,8 +203,8 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </row>
   <p sx={style.fontSize(sm).fg(muted-foreground)}>
     Accessibility is the <code>label</code> field — with it the icon is
-    <code>role="img"</code> with an <code>aria-label</code>; without it the
-    icon is marked <code>aria-hidden</code> — decoration, invisible to a
+    accessible name via semantic prop <code>label</code>; without it the
+    icon is marked <code>hidden</code> — decoration, invisible to a
     screen reader. <code>size</code> runs <code>xs</code> to
     <code>xl</code>, <code>spin</code> rotates (and respects reduced-motion),
     and <code>src=</code> fetches any SVG URL when you need a glyph that

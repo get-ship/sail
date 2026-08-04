@@ -50,6 +50,7 @@ pub mod no_ambient_network;
 pub mod no_ambient_storage;
 pub mod no_ambient_timers;
 pub mod no_data_attr;
+pub mod no_free_aria;
 pub mod no_class;
 pub mod no_imperative_style;
 pub mod no_inline_style;
@@ -149,6 +150,8 @@ pub const SUI_TEMPLATE_RULES: &[(&str, RuleFn)] = &[
     (animate_token_only::RULE_ID, animate_token_only::check),
     // SPEC-DOMDEC-1: data-* ban on app .sail only (path-gated inside rule).
     (no_data_attr::RULE_ID, no_data_attr::check),
+    // SPEC-ARIA-1: free aria-*/role= Warning this cycle (apps only).
+    (no_free_aria::RULE_ID, no_free_aria::check),
 ];
 
 /// Rules that lint a pack's `.ts` source files (composition modules,

@@ -19,9 +19,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column gap="6" sx={style.minW(0)}>
   <column sx={style.maxW(breakpoint-tablet)} gap="5">
-    <p role="doc-eyebrow">Reference</p>
+    <p token="doc-eyebrow">Reference</p>
     <h1>Motion — one system</h1>
-    <p role="doc-lead">
+    <p token="doc-lead">
       <code>style.&lt;trigger&gt;(&#123;…&#125;)</code> is the only animation directive;
       <code>transition:</code> / <code>in:</code> / <code>out:</code> are
       retired.
@@ -63,7 +63,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </grid>
   </column>
 
-  <row role="navigation">
+  <row>
     <a variant="default" href="/sail/reference/sx">← sx</a>
     <a variant="solid" href="/sail/reference/actions">Actions →</a>
   </row>

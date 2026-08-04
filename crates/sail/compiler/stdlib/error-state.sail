@@ -32,7 +32,6 @@
   justify="center"
   gap="3"
   use:recoverySurface
-  role="alert"
   sx={[
     base,
     match(size, {
@@ -54,7 +53,7 @@
     nowrap
     align="center"
     justify="center"
-    aria-hidden="true"
+    hidden="true"
     shrink
     sx={[
       icon,
@@ -90,7 +89,7 @@
     <button
       type="button"
       anatomy
-      aria-expanded="false"
+      expanded="false"
       sx={[
         detailsToggle,
         when({

@@ -34,6 +34,7 @@ mod scope_bound_expr;
 #[cfg(test)]
 mod scope_bound_expr_tests;
 pub mod scope_member;
+pub mod semantic_a11y;
 pub mod signal_called;
 pub mod sx_vars;
 pub mod symbol_table;
@@ -143,6 +144,8 @@ pub fn run(
         pass!("signal-called", signal_called::check(program, controller))?;
         pass!("on-callable", on_callable::check(program, controller))?;
     }
+    // SPEC-ARIA-1: icon-only buttons require semantic prop `label`.
+    pass!("semantic-a11y", semantic_a11y::check(program))?;
     Ok(())
 }
 
@@ -287,6 +290,7 @@ pub fn collect(
     }
     push(key_identity::check(program), source, &mut diags);
     push(for_iterable::check(program), source, &mut diags);
+    push_all(semantic_a11y::collect(program), source, &mut diags);
     if has_scope_context {
         push_all(
             scope_member::collect(program, controller),

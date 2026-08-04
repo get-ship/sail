@@ -26,15 +26,15 @@ const __wireBoundary_b4 = (anchor) => bindIf({
   },
   branches: [
     () => {
-      const __frag4 = document.createDocumentFragment();
-      const __c5 = [];
-      const __t6 = document.createTextNode("\n    ");
-      __frag4.appendChild(__t6);
-      const __e7 = __tpl1();
-      __frag4.appendChild(__e7);
-      const __t8 = document.createTextNode("\n  ");
-      __frag4.appendChild(__t8);
-      return { nodes: Array.from(__frag4.childNodes), cleanup: () => { for (const c of __c5) try { c(); } catch (e) {} } };
+      const __frag5 = document.createDocumentFragment();
+      const __c6 = [];
+      const __t7 = document.createTextNode("\n    ");
+      __frag5.appendChild(__t7);
+      const __e8 = __tpl1();
+      __frag5.appendChild(__e8);
+      const __t9 = document.createTextNode("\n  ");
+      __frag5.appendChild(__t9);
+      return { nodes: Array.from(__frag5.childNodes), cleanup: () => { for (const c of __c6) try { c(); } catch (e) {} } };
     },
   ],
 });
@@ -43,24 +43,24 @@ const __wireBoundary_b4 = (anchor) => bindIf({
 const __cleanups = [];
 const __root = container.shadowRoot ?? container;
 const __e0 = document.createElement("button");
-__e0.setAttribute("class", "sail-button sx-displayinlineflex sx-appearancenone sx-fontWeightmedium sx-leadingnone sx-radiusmd sx-borderWidthcontrolstroke sx-bordersolid sx-bordertransparent sx-borderImagecornerimage sx-bgtransparent sx-isolate sx-positionrelative sx-controlFrame sx-selectnone sx-whitespacenowrap sx-cursorpointer sx-hover-controlLift sx-active-press sx-disabled-cursornotallowed sx-disabled-opacity50 sx-variantdefault-bgbackground sx-variantdefault-borderborder sx-variantdefault-fgforeground sx-variantdefault-shadowxs sx-sizemd-minHcontrolhmd sx-sizemd-padX3 sx-sizemd-fontSizebase");
+__e0.setAttribute("class", "sail-button sx-displayinlineflex sx-appearancenone sx-fontWeightmedium sx-leadingnone sx-radiusmd sx-borderWidthcontrolstroke sx-bordersolid sx-bordertransparent sx-borderImagecornerimage sx-isolate sx-positionrelative sx-controlFrame sx-selectnone sx-whitespacenowrap sx-cursorpointer sx-hover-controlLift sx-active-press sx-disabled-cursornotallowed sx-disabled-opacity50 sx-variantdefault-bgbackground sx-variantdefault-borderborder sx-variantdefault-fgforeground sx-variantdefault-shadowxs sx-sizemd-minHcontrolhmd sx-sizemd-padX3 sx-sizemd-fontSizebase");
 __e0.setAttribute("data-sail-host", "button");
 __e0.setAttribute("data-test", "root");
 __cleanups.push(bindProp(__e0, "disabled", () => ($scope.disabled() || $scope.loading())));
-__cleanups.push(bindAttr(__e0, "aria-busy", () => ($scope.loading() ? 'true' : 'false')));
+__cleanups.push((() => { const __read = () => { const __av1 = ($scope.loading() ? 'true' : 'false'); return __av1 == null || __av1 === false || __av1 === "" ? null : (__av1 === true ? "true" : String(__av1)); }; return bindAttr(__e0, "aria-busy", __read); })());
 __cleanups.push(bindAttr(__e0, "aria-label", () => ($scope.label())));
 __e0.setAttribute("variant", "default");
 __e0.setAttribute("tone", "default");
 __e0.setAttribute("size", "md");
 __e0.classList.add("sail-root");
-const __e1 = __tpl0();
-const __t2 = __e1.firstChild;
-markHydrateText(__t2, "b3");
-__cleanups.push(bindText(__t2, () => ($scope.label())));
-__e0.appendChild(__e1);
-const __ifAnchor3 = document.createComment("if");
-__e0.appendChild(__ifAnchor3);
-__cleanups.push(__wireBoundary_b4(__ifAnchor3));
+const __e2 = __tpl0();
+const __t3 = __e2.firstChild;
+markHydrateText(__t3, "b3");
+__cleanups.push(bindText(__t3, () => ($scope.label())));
+__e0.appendChild(__e2);
+const __ifAnchor4 = document.createComment("if");
+__e0.appendChild(__ifAnchor4);
+__cleanups.push(__wireBoundary_b4(__ifAnchor4));
 __root.appendChild(__e0);
 return () => { for (const c of __cleanups) try { c(); } catch (e) {} };
     },

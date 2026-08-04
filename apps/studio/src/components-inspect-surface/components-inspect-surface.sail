@@ -46,7 +46,7 @@ export default controller(() => {
         </row>
         <row mode-toggle gap="1" align="center" nowrap on:click={session.onModeToggle}>
           <button type="button" size="sm" mode="library" variant="ghost" tone="muted">Library</button>
-          <button type="button" size="sm" mode="inspect" variant="solid" tone="primary" aria-pressed="true">Inspect</button>
+          <button type="button" size="sm" mode="inspect" variant="solid" tone="primary" pressed="true">Inspect</button>
         </row>
         <p sx={pathMeta}>Surface picker · open files & routes</p>
         <scroll-area surface-picker surface-list sx={style.maxH(28)} on:click={inspect.onSurfacePick}>

@@ -2,7 +2,7 @@
   <ticker> — infinite linear marquee. Host overflow Style; track is a nowrap
   row. Duration/reverse drive use:marquee (motion loop) — not contracts PE.
 
-  Track is two identical copies side-by-side (second is aria-hidden). Marquee
+  Track is two identical copies side-by-side (second is decorative/hidden). Marquee
   translates the track by -50% (or +50% reverse) so the seam is invisible.
   w(max) on the track is required: without it the row collapses to host width
   and percent translate moves nothing useful.
@@ -24,6 +24,6 @@
 <div sx={host}>
   <row nowrap use:marquee sx={track}>
     <span shrink="0" sx={cell}><slot></slot></span>
-    <span shrink="0" aria-hidden="true" sx={cell}><slot></slot></span>
+    <span shrink="0" hidden="true" sx={cell}><slot></slot></span>
   </row>
 </div>

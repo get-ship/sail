@@ -67,7 +67,7 @@ fn compile_attr(
         return Err(CompileError::new(
             "`class:` has been removed — styling is sx (or a named `use:` action \
              that writes a custom property sx can read via (--name)); state is \
-             aria-* attributes, closed sx state prefixes (`selected:`, `hover:`, …), \
+             semantic props (label/current/selected/…), closed sx state prefixes (`selected:`, `hover:`, …), \
              or layout. Bare `class=` is also banned. Do not use `class=` as a \
              substitute.",
         )

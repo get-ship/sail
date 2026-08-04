@@ -40,9 +40,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column gap="6" sx={style.minW(0)}>
   <column sx={style.maxW(breakpoint-tablet)} gap="5">
-    <p role="doc-eyebrow">Reference</p>
+    <p token="doc-eyebrow">Reference</p>
     <h1>Template directives</h1>
-    <p role="doc-lead">
+    <p token="doc-lead">
       Every attribute-position directive the parser accepts, in one table.
     </p>
   </column>
@@ -140,7 +140,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </grid>
   </column>
 
-  <row role="navigation">
+  <row>
     <a variant="default" href="/sail/reference/actions">← Actions</a>
     <a variant="solid" href="/sail/reference/scope">Scope grammar →</a>
   </row>

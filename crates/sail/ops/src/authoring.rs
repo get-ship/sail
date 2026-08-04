@@ -96,6 +96,13 @@ Controllers never `.style` / `createElement`.\n\
                    (`sail-participation-style` bans `style.grow`/`shrink`).\n\
                  - Never `style.display(…)` on layout keywords (`sail-display-on-layout`):\n  \
                    `.sail-col` / `.sail-row` beat `.sx-displaynone`. Plain host + nest layout.\n\
+                 - **a11y IR (SPEC-ARIA-1):** never free `aria-*` / free ARIA `role=` \
+                   (Warning now, Error next). Semantic props: `label` `description` \
+                   `expanded` `selected` `pressed` `current` `level` `live` `invalid` \
+                   `hidden` — compiler stamps the correct aria on the correct part. \
+                   Fixed roles come from native tags or L1 anatomy (navbar/dialog/tabs/…). \
+                   Icon-only buttons **require** `label`. Design identity that used `role=` \
+                   → `token=`.\n\
                  - Comments are not load-bearing — tools/lints own the recipes.\n\
                  - Check with MCP `sail_check` (optional `fix`: off|suggest|apply).\n\
                  - Structured edits via MCP `sail_edit` (validate-before-write; never leaves broken intermediates).\n\
@@ -211,9 +218,32 @@ Controllers never `.style` / `createElement`.\n\
             let (stdlib, reskin) = sail_compiler::l1_by_kind();
             let _ = writeln!(
                 md,
-                "{} stdlib + {} reskins (from `l1_manifest`).\n\n### Stdlib\n",
+                "{} stdlib + {} reskins (from `l1_manifest`).\n\n\
+                 ### Semantic a11y props (SPEC-ARIA-1)\n\n\
+                 Authors never write free `aria-*` / free ARIA `role=`. Use these \
+                 props; the compiler stamps the correct attribute. Fixed host roles \
+                 come from L1 anatomy (see each element's contract).\n",
                 stdlib.len(),
                 reskin.len()
+            );
+            for p in sail_compiler::SEMANTIC_PROPS {
+                let ty = match p.kind {
+                    sail_compiler::SemanticKind::String => "string".to_string(),
+                    sail_compiler::SemanticKind::Bool => "bool".to_string(),
+                    sail_compiler::SemanticKind::Number => "number".to_string(),
+                    sail_compiler::SemanticKind::Union(vs) => vs.join(" | "),
+                };
+                let _ = writeln!(
+                    md,
+                    "- `{}` → `{}` ({ty}) — {}",
+                    p.name, p.aria, p.summary
+                );
+            }
+            let _ = writeln!(
+                md,
+                "\nIcon-only `<button>` requires `label`. `selected` dual-stamps \
+                 `aria-selected` while keeping the design attr for chip/pressed.\n\n\
+                 ### Stdlib\n"
             );
             for e in &stdlib {
                 let _ = writeln!(md, "- `<{}>` — {}", e.tag, e.description);

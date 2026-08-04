@@ -1,7 +1,7 @@
 <!--
   <studio-list-row> — dense IDE list row: leading · truncate title · meta.
   Props: title, meta, selected. Slots: leading (badge), trailing, default.
-  Selected: aria-selected drives when({ selected }) paint.
+  Selected: selected dual-stamps aria-selected for when({ selected }) paint.
   Ban-clean: layout keywords + L1 only.
 -->
 <scope>
@@ -15,7 +15,7 @@
 <row
   studio-list-row
   selected={selected() ? 'true' : 'false'}
-  aria-selected={selected() ? 'true' : 'false'}
+  selected={selected() ? 'true' : 'false'}
   gap="2"
   align="center"
   nowrap

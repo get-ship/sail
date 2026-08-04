@@ -150,7 +150,7 @@ export default controller(() => {
                 theme-id={row.id}
                 theme-scope="project"
                 selected={row.selected ? 'true' : 'false'}
-                aria-current={row.selected ? 'true' : null}
+                current={row.selected ? 'true' : null}
                 gap="3"
                 align="center"
                 nowrap
@@ -165,7 +165,7 @@ export default controller(() => {
                   gap="0"
                   nowrap
                   sx={style.w(14).h(7).minW(14).radius(sm).overflow(hidden).borderWidth(1).border(border-subtle)}
-                  aria-hidden="true"
+                  hidden="true"
                 >
                   <center grow sx={style.bg(background).minW(0).h(full)}></center>
                   <center grow sx={style.bg(surface-2).minW(0).h(full)}></center>
@@ -185,8 +185,7 @@ export default controller(() => {
                     popovertarget={row.menuId}
                     theme-menu
                     theme-id={row.id}
-                    aria-label="Theme menu"
-                    aria-haspopup="menu"
+                    label="Theme menu"
                     on:click={onMenuOpen}
                   >
                     <icon name="ellipsis" size="sm"></icon>
@@ -214,7 +213,7 @@ export default controller(() => {
                 theme-id={row.id}
                 theme-scope="catalog"
                 selected={row.selected ? 'true' : 'false'}
-                aria-current={row.selected ? 'true' : null}
+                current={row.selected ? 'true' : null}
                 gap="3"
                 align="center"
                 nowrap
@@ -228,7 +227,7 @@ export default controller(() => {
                   gap="0"
                   nowrap
                   sx={style.w(14).h(7).minW(14).radius(sm).overflow(hidden).borderWidth(1).border(border-subtle)}
-                  aria-hidden="true"
+                  hidden="true"
                 >
                   <center grow sx={style.bg(background).minW(0).h(full)}></center>
                   <center grow sx={style.bg(surface-2).minW(0).h(full)}></center>
@@ -248,7 +247,7 @@ export default controller(() => {
                     tone="primary"
                     theme-add-project
                     theme-id={row.id}
-                    aria-label="Add to project"
+                    label="Add to project"
                     on:click={onAddToProject}
                   >
                     Add
@@ -261,8 +260,7 @@ export default controller(() => {
                     popovertarget={row.menuId}
                     theme-menu
                     theme-id={row.id}
-                    aria-label="Theme menu"
-                    aria-haspopup="menu"
+                    label="Theme menu"
                     on:click={onMenuOpen}
                   >
                     <icon name="ellipsis" size="sm"></icon>
@@ -316,7 +314,7 @@ export default controller(() => {
 
             <!-- Mode: one sun/moon switch only (no Light/Dark button segments) -->
             <if {canToggleMode()}>
-              <row preview-mode dual-mode gap="2" align="center" nowrap aria-label="Theme mode">
+              <row preview-mode dual-mode gap="2" align="center" nowrap label="Theme mode">
                 <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Mode</p>
                 <icon name="sun" size="sm" label="Light" shrink="0" sx={style.fg(muted-foreground)}></icon>
                 <switch
@@ -324,7 +322,7 @@ export default controller(() => {
                   tone="muted"
                   mode-switch
                   checked={modeDarkOn()}
-                  aria-label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
+                  label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
                   on:change={onPreviewModeSwitch}
                 ></switch>
                 <icon name="moon" size="sm" label="Dark" shrink="0" sx={style.fg(muted-foreground)}></icon>
@@ -410,19 +408,19 @@ export default controller(() => {
             <!-- Outline tiles so radius is legible; solid fills read as one blob when steps are close. -->
             <row gap="2" align="end" radius-chips>
               <column gap="1" align="center">
-                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(sm)} aria-hidden="true"></center>
+                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(sm)} hidden="true"></center>
                 <p sx={style.fontSize(xs).fg(muted-foreground)}>sm</p>
               </column>
               <column gap="1" align="center">
-                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(md)} aria-hidden="true"></center>
+                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(md)} hidden="true"></center>
                 <p sx={style.fontSize(xs).fg(muted-foreground)}>md</p>
               </column>
               <column gap="1" align="center">
-                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(lg)} aria-hidden="true"></center>
+                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(lg)} hidden="true"></center>
                 <p sx={style.fontSize(xs).fg(muted-foreground)}>lg</p>
               </column>
               <column gap="1" align="center">
-                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(xl)} aria-hidden="true"></center>
+                <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(xl)} hidden="true"></center>
                 <p sx={style.fontSize(xs).fg(muted-foreground)}>xl</p>
               </column>
             </row>
@@ -469,7 +467,7 @@ export default controller(() => {
                       <badge tone="warning" size="sm" variant="solid" pill>Warning</badge>
                       <badge tone="destructive" size="sm" variant="solid" pill>Danger</badge>
                     </row>
-                    <input type="search" size="sm" placeholder="Search field" aria-label="Sample search" />
+                    <input type="search" size="sm" placeholder="Search field" label="Sample search" />
                   </column>
                 </card>
               </column>

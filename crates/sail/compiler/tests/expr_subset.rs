@@ -98,7 +98,7 @@ fn rejects_tagged_template() {
 fn allows_on_handler_with_arrow_and_args() {
     // Event handlers must be exempt from the renderable subset.
     compile(
-        r#"<button on:click={() => navigate('/x')}></button>"#,
+        r#"<button on:click={() => navigate('/x')}>go</button>"#,
         opts(),
     )
     .expect("event handlers may use arrows + arg-bearing calls");

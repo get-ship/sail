@@ -145,7 +145,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground)}>Playlists</p>
         <for {filteredPlaylists()} as="p" key={p.id}>
           <row on:click={() => activePlaylist.set(p.id)}
-               aria-current={activePlaylist() === p.id ? 'true' : null}
+               current={activePlaylist() === p.id ? 'true' : null}
                sx={style.pad(2).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })} align="center" justify="between">
             <span>{p.name}</span>
             <badge tone="muted">{p.tracks.length}</badge>
@@ -154,7 +154,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </column>
       <separator></separator>
       <row on:click={() => activePlaylist.set('__liked')}
-           aria-current={activePlaylist() === '__liked' ? 'true' : null}
+           current={activePlaylist() === '__liked' ? 'true' : null}
            sx={style.pad(2).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) })} align="center" justify="between">
         <span>♥ Liked</span>
         <badge tone="primary">{liked().length}</badge>
@@ -174,7 +174,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <column gap="1">
           <for {visibleTracks()} as="t" key={t.id}>
             <row on:click={() => playTrack(t.id)}
-                 aria-current={currentId() === t.id ? 'true' : null}
+                 current={currentId() === t.id ? 'true' : null}
                  sx={style.pad(2).padX(3).radius(md).cursor(pointer).when({ hover: style.bg(muted), current: style.bg(muted) }).enter({ opacity: 'fade', stagger: '0.03s' })}
                  align="center" gap="3">
               <div shrink="0" sx={style.position(relative).w(10).h(10).radius(sm).overflow(hidden).bg(muted)}>

@@ -140,7 +140,7 @@ export default controller(() => {
         <!-- Seed strip — Generate deferred (not built yet) -->
         <row seed-strip align="center" gap="3" nowrap sx={style.pad(3).radius(lg).borderWidth(1).border(border-subtle).bg(surface-0).minW(0)}>
           <p sx={fieldHint} shrink="0">Seed</p>
-          <row gap="1" align="center" nowrap grow min-w="0" aria-hidden="true">
+          <row gap="1" align="center" nowrap grow min-w="0" hidden="true">
             <stack use:swatch={primaryHex()} sx={seedDot}></stack>
             <stack use:swatch={secondaryHex()} sx={seedDot}></stack>
             <stack use:swatch={accentHex()} sx={seedDot}></stack>
@@ -161,15 +161,15 @@ export default controller(() => {
             <p sx={pathMeta}>color.primary · secondary · accent</p>
           </row>
           <row brand-grid gap="3" align="stretch">
-            <column brand-card role="primary" grow gap="0" min-w="0" sx={brandCard}>
-              <stack role="primary" sx={brandSwatch}>
+            <column brand-card token="primary" grow gap="0" min-w="0" sx={brandCard}>
+              <stack token="primary" sx={brandSwatch}>
                 <sail-color-picker
-                  role="primary"
+                  token="primary"
                   value={primaryHex()}
                   disabled={!session.canEdit()}
                   variant="swatch"
                   showHex={false}
-                  aria-label="Primary"
+                  label="Primary"
                   on:sail-change={color.onRoleColor}
                   sx={style.w(full).h(full).minH(full)}
                 ></sail-color-picker>
@@ -182,15 +182,15 @@ export default controller(() => {
                 <p sx={monoMeta}>{primaryHex()}</p>
               </row>
             </column>
-            <column brand-card role="secondary" grow gap="0" min-w="0" sx={brandCard}>
-              <stack role="secondary" sx={brandSwatch}>
+            <column brand-card token="secondary" grow gap="0" min-w="0" sx={brandCard}>
+              <stack token="secondary" sx={brandSwatch}>
                 <sail-color-picker
-                  role="secondary"
+                  token="secondary"
                   value={secondaryHex()}
                   disabled={!session.canEdit()}
                   variant="swatch"
                   showHex={false}
-                  aria-label="Secondary"
+                  label="Secondary"
                   on:sail-change={color.onRoleColor}
                   sx={style.w(full).h(full).minH(full)}
                 ></sail-color-picker>
@@ -203,15 +203,15 @@ export default controller(() => {
                 <p sx={monoMeta}>{secondaryHex()}</p>
               </row>
             </column>
-            <column brand-card role="accent" grow gap="0" min-w="0" sx={brandCard}>
-              <stack role="accent" sx={brandSwatch}>
+            <column brand-card token="accent" grow gap="0" min-w="0" sx={brandCard}>
+              <stack token="accent" sx={brandSwatch}>
                 <sail-color-picker
-                  role="accent"
+                  token="accent"
                   value={accentHex()}
                   disabled={!session.canEdit()}
                   variant="swatch"
                   showHex={false}
-                  aria-label="Accent"
+                  label="Accent"
                   on:sail-change={color.onRoleColor}
                   sx={style.w(full).h(full).minH(full)}
                 ></sail-color-picker>
@@ -237,15 +237,15 @@ export default controller(() => {
             <p sx={pathMeta}>color.bg · surface · card</p>
           </row>
           <column token-list gap="1">
-            <row token-row role="bg" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="bg" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="bg"
+                token="bg"
                 value={bgHex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Background"
+                label="Background"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
@@ -255,15 +255,15 @@ export default controller(() => {
               </column>
               <p sx={monoMeta} shrink="0">{bgHex()}</p>
             </row>
-            <row token-row role="surface1" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="surface1" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="surface1"
+                token="surface1"
                 value={surface1Hex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Surface 1"
+                label="Surface 1"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
@@ -273,15 +273,15 @@ export default controller(() => {
               </column>
               <p sx={monoMeta} shrink="0">{surface1Hex()}</p>
             </row>
-            <row token-row role="surface2" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="surface2" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="surface2"
+                token="surface2"
                 value={surface2Hex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Surface 2"
+                label="Surface 2"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
@@ -291,15 +291,15 @@ export default controller(() => {
               </column>
               <p sx={monoMeta} shrink="0">{surface2Hex()}</p>
             </row>
-            <row token-row role="card" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="card" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="card"
+                token="card"
                 value={cardHex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Card"
+                label="Card"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
@@ -310,7 +310,7 @@ export default controller(() => {
               <p sx={monoMeta} shrink="0">{cardHex()}</p>
             </row>
           </column>
-          <row surface-chips gap="2" align="center" nowrap aria-hidden="true">
+          <row surface-chips gap="2" align="center" nowrap hidden="true">
             <row align="center" gap="1" sx={surfaceChip}>
               <stack use:swatch={bgHex()} sx={surfaceDot}></stack>
               <p sx={pathMeta}>bg</p>
@@ -337,15 +337,15 @@ export default controller(() => {
             <p sx={pathMeta}>color.fg · muted · border · ring</p>
           </row>
           <column token-list gap="1">
-            <row token-row role="fg" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="fg" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="fg"
+                token="fg"
                 value={fgHex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Foreground"
+                label="Foreground"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
@@ -355,15 +355,15 @@ export default controller(() => {
               </column>
               <p sx={monoMeta} shrink="0">{fgHex()}</p>
             </row>
-            <row token-row role="muted" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="muted" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="muted"
+                token="muted"
                 value={mutedHex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Muted"
+                label="Muted"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
@@ -373,15 +373,15 @@ export default controller(() => {
               </column>
               <p sx={monoMeta} shrink="0">{mutedHex()}</p>
             </row>
-            <row token-row role="border" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="border" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="border"
+                token="border"
                 value={borderHex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Border"
+                label="Border"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
@@ -391,15 +391,15 @@ export default controller(() => {
               </column>
               <p sx={monoMeta} shrink="0">{borderHex()}</p>
             </row>
-            <row token-row role="ring" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="ring" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="ring"
+                token="ring"
                 value={ringHex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Ring"
+                label="Ring"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
@@ -419,15 +419,15 @@ export default controller(() => {
             <p sx={pathMeta}>color.success · warning · danger · info</p>
           </row>
           <column token-list gap="1">
-            <row token-row role="success" sem="success" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="success" sem="success" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="success"
+                token="success"
                 value={successHex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Success"
+                label="Success"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
@@ -437,15 +437,15 @@ export default controller(() => {
               </column>
               <p sx={monoMeta} shrink="0">{successHex()}</p>
             </row>
-            <row token-row role="warning" sem="warning" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="warning" sem="warning" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="warning"
+                token="warning"
                 value={warningHex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Warning"
+                label="Warning"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
@@ -455,15 +455,15 @@ export default controller(() => {
               </column>
               <p sx={monoMeta} shrink="0">{warningHex()}</p>
             </row>
-            <row token-row role="danger" sem="danger" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="danger" sem="danger" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="danger"
+                token="danger"
                 value={dangerHex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Danger"
+                label="Danger"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>
@@ -473,15 +473,15 @@ export default controller(() => {
               </column>
               <p sx={monoMeta} shrink="0">{dangerHex()}</p>
             </row>
-            <row token-row role="info" sem="info" align="center" gap="3" nowrap sx={tokenRow}>
+            <row token-row token="info" sem="info" align="center" gap="3" nowrap sx={tokenRow}>
               <stack token-chip shrink="0" sx={tokenChip}>
               <sail-color-picker
-                role="info"
+                token="info"
                 value={infoHex()}
                 disabled={!session.canEdit()}
                 variant="swatch"
                 showHex={false}
-                aria-label="Info"
+                label="Info"
                 on:sail-change={color.onRoleColor}
               ></sail-color-picker>
               </stack>

@@ -61,7 +61,7 @@ fn statement_in_text_expression_is_rejected() {
 #[test]
 fn arrow_in_on_handler_is_allowed() {
     // sanity: on:click={() => fn()} must not trigger the arrow check.
-    let src = r#"<button on:click={() => x()}></button>"#;
+    let src = r#"<button on:click={() => x()}>Go</button>"#;
     compile(
         src,
         CompileOpts {

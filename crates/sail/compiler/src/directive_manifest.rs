@@ -848,7 +848,7 @@ pub const RETIRED_DIRECTIVES: &[RetiredEntry] = &[
     },
     RetiredEntry {
         syntax: "class:<name>",
-        instead: "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is aria-*/closed sx state prefixes/layout — not a global CSS class toggle. Bare class= is also banned",
+        instead: "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is semantic props/closed sx state prefixes/layout — not a global CSS class toggle. Bare class= is also banned",
     },
     RetiredEntry {
         syntax: "style:<prop>",

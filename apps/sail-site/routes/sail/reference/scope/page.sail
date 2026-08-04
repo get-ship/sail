@@ -17,9 +17,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column gap="6" sx={style.minW(0)}>
   <column sx={style.maxW(breakpoint-tablet)} gap="5">
-    <p role="doc-eyebrow">Reference</p>
+    <p token="doc-eyebrow">Reference</p>
     <h1>&lt;scope&gt; grammar</h1>
-    <p role="doc-lead">
+    <p token="doc-lead">
       Everything a <code>&lt;scope&gt;</code> block can declare: props forms,
       type aliases, and the variants table. Nothing in the block executes —
       it is types and literals only.
@@ -55,7 +55,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </column>
   </column>
 
-  <row role="navigation">
+  <row>
     <a variant="default" href="/sail/reference/template">← Template</a>
     <a variant="solid" href="/sail/reference/runtime">Runtime →</a>
   </row>

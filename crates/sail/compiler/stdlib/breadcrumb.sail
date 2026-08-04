@@ -4,7 +4,7 @@
 <scope>
   const list = style.m(0).pad(0).list(none).fontFamily(body).fontSize(sm)
 </scope>
-<nav aria-label="Breadcrumb">
+<nav>
   <ol sx={list}>
     <slot></slot>
   </ol>

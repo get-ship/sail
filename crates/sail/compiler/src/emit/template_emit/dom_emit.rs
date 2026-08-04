@@ -65,13 +65,15 @@ fn svg_camel_case(lower: &str) -> Option<&'static str> {
 }
 
 impl TemplateEmitter {
-    fn attr_name_for_emit(&self, name: &str) -> String {
+    fn attr_name_for_emit(&self, tag: &str, name: &str, value: Option<&str>) -> String {
+        // Semantic props (label/current/…) lower to aria-* before DOM write.
+        let lowered = crate::semantic_props::lower_attr_name_str_valued(tag, name, value);
         if self.svg_depth > 0
-            && let Some(canonical) = svg_camel_case(name)
+            && let Some(canonical) = svg_camel_case(lowered)
         {
             return canonical.to_string();
         }
-        name.to_string()
+        lowered.to_string()
     }
 
     /// Emit an element. Returns the variable holding it.
@@ -182,12 +184,30 @@ impl TemplateEmitter {
     ) {
         match a {
             AttrInstr::Static { name, value, .. } => {
-                let emit_name = self.attr_name_for_emit(name);
+                let emit_name = self.attr_name_for_emit(tag, name, Some(value));
+                let emit_value = if crate::semantic_props::is_aria_bool_attr(&emit_name) {
+                    crate::semantic_props::coerce_aria_bool_static(value)
+                } else {
+                    value.as_str()
+                };
                 w.line(&format!(
                     "{el_var}.setAttribute({}, {});",
                     js_string(&emit_name),
-                    js_string(value)
+                    js_string(emit_value)
                 ));
+                // Dual-stamp selected → aria-selected (AT + when({selected})).
+                if let Some(extra) = crate::semantic_props::dual_stamp_aria(tag, name) {
+                    let extra_val = if crate::semantic_props::is_aria_bool_attr(extra) {
+                        crate::semantic_props::coerce_aria_bool_static(value)
+                    } else {
+                        emit_value
+                    };
+                    w.line(&format!(
+                        "{el_var}.setAttribute({}, {});",
+                        js_string(extra),
+                        js_string(extra_val)
+                    ));
+                }
             }
             AttrInstr::Expr { name, expr, .. } => {
                 let key = self.next_key();
@@ -211,14 +231,29 @@ impl TemplateEmitter {
                 } else if self.is_static_row_expr(&expr.source) {
                     // D5: row-scope static field. IDL props assign the property;
                     // everything else matches bindAttr presence semantics.
+                    // Semantic ARIA bools stamp "true"/"false" strings.
                     let stmt = if binder == "bindProp" {
                         let prop_key = camel_of(name);
                         format!("{el_var}[{n}] = ({rw});", n = js_string(&prop_key))
                     } else {
                         let v = self.fresh("av");
-                        let emit_name = self.attr_name_for_emit(name);
+                        let emit_name = self.attr_name_for_emit(tag, name, None);
+                        let true_val = if crate::semantic_props::is_aria_bool_attr(&emit_name) {
+                            "\"true\""
+                        } else {
+                            "\"\""
+                        };
+                        let dual = crate::semantic_props::dual_stamp_aria(tag, name);
+                        let dual_stmt = if let Some(extra) = dual {
+                            format!(
+                                " if ({v} == null || {v} === false || {v} === \"\") {el_var}.removeAttribute({e}); else {el_var}.setAttribute({e}, {v} === true ? \"true\" : String({v}));",
+                                e = js_string(extra)
+                            )
+                        } else {
+                            String::new()
+                        };
                         format!(
-                            "{{ const {v} = ({rw}); if ({v} == null || {v} === false || {v} === \"\") {el_var}.removeAttribute({n}); else {el_var}.setAttribute({n}, {v} === true ? \"\" : String({v})); }}",
+                            "{{ const {v} = ({rw}); if ({v} == null || {v} === false || {v} === \"\") {el_var}.removeAttribute({n}); else {el_var}.setAttribute({n}, {v} === true ? {true_val} : String({v}));{dual_stmt} }}",
                             n = js_string(&emit_name)
                         )
                     };
@@ -236,11 +271,28 @@ impl TemplateEmitter {
                             n = js_string(&prop_key)
                         ));
                     } else {
-                        let emit_name = self.attr_name_for_emit(name);
-                        w.line(&format!(
-                            "{cleanups_var}.push({binder}({el_var}, {n}, () => ({fv}{rw})));",
-                            n = js_string(&emit_name)
-                        ));
+                        let emit_name = self.attr_name_for_emit(tag, name, None);
+                        // ARIA bools: true → "true" so assistive tech sees the token.
+                        if crate::semantic_props::is_aria_bool_attr(&emit_name) {
+                            let v = self.fresh("av");
+                            w.line(&format!(
+                                "{cleanups_var}.push((() => {{ const __read = () => {{ const {v} = ({fv}{rw}); return {v} == null || {v} === false || {v} === \"\" ? null : ({v} === true ? \"true\" : String({v})); }}; return {binder}({el_var}, {n}, __read); }})());",
+                                n = js_string(&emit_name),
+                            ));
+                        } else {
+                            w.line(&format!(
+                                "{cleanups_var}.push({binder}({el_var}, {n}, () => ({fv}{rw})));",
+                                n = js_string(&emit_name)
+                            ));
+                        }
+                        // Dual-stamp selected → aria-selected as a second bindAttr.
+                        if let Some(extra) = crate::semantic_props::dual_stamp_aria(tag, name) {
+                            let v = self.fresh("av");
+                            w.line(&format!(
+                                "{cleanups_var}.push({binder}({el_var}, {n}, () => {{ const {v} = ({fv}{rw}); return {v} == null || {v} === false || {v} === \"\" ? null : ({v} === true ? \"true\" : String({v})); }}));",
+                                n = js_string(extra),
+                            ));
+                        }
                     }
                 }
                 if binder != "bindOpen" && self.is_route && self.boundary_depth == 0 {
@@ -884,11 +936,35 @@ impl super::TemplateEmitter {
                     if name.eq_ignore_ascii_case("class") {
                         classes.push(value.clone());
                     } else {
+                        let emit_name = crate::semantic_props::lower_attr_name_str_valued(
+                            &el.tag, name, Some(value),
+                        );
+                        let emit_value = if crate::semantic_props::is_aria_bool_attr(emit_name)
+                        {
+                            crate::semantic_props::coerce_aria_bool_static(value)
+                        } else {
+                            value.as_str()
+                        };
                         out.push(' ');
-                        out.push_str(name);
+                        out.push_str(emit_name);
                         out.push_str("=\"");
-                        out.push_str(&escape_attr(value));
+                        out.push_str(&escape_attr(emit_value));
                         out.push('"');
+                        if let Some(extra) =
+                            crate::semantic_props::dual_stamp_aria(&el.tag, name)
+                        {
+                            let extra_val = if crate::semantic_props::is_aria_bool_attr(extra)
+                            {
+                                crate::semantic_props::coerce_aria_bool_static(value)
+                            } else {
+                                emit_value
+                            };
+                            out.push(' ');
+                            out.push_str(extra);
+                            out.push_str("=\"");
+                            out.push_str(&escape_attr(extra_val));
+                            out.push('"');
+                        }
                     }
                 }
                 // Everything else is applied at runtime after the clone.

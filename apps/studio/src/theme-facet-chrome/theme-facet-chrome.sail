@@ -123,24 +123,24 @@ export default controller(() => {
     sx={style.padX(4).h(10).minH(10).borderBWidth(1).borderB(border-subtle).bg(background).minW(0)}
   >
     <row align="center" gap="2" grow min-w="0" nowrap sx={style.minW(0)}>
-      <button type="button" size="sm" variant="ghost" tone="muted" facet-back on:click={goBack} aria-label="Back to Themes">
+      <button type="button" size="sm" variant="ghost" tone="muted" facet-back on:click={goBack} label="Back to Themes">
         Themes
       </button>
-      <p sx={style.fg(muted-foreground).fontSize(sm)} aria-hidden="true">/</p>
+      <p sx={style.fg(muted-foreground).fontSize(sm)} hidden="true">/</p>
       <input
         type="text"
         theme-name
         size="sm"
         use:autosize
         value={nameEdit()}
-        aria-label="Theme name"
+        label="Theme name"
         spellcheck="false"
         disabled={!canEdit()}
         on:input={onNameInput}
         on:change={onNameChange}
         sx={style.maxW(48).fontWeight(semibold).borderWidth(0)}
       />
-      <p sx={style.fg(muted-foreground).fontSize(sm)} aria-hidden="true">/</p>
+      <p sx={style.fg(muted-foreground).fontSize(sm)} hidden="true">/</p>
       <button
         type="button"
         size="sm"
@@ -148,8 +148,7 @@ export default controller(() => {
         tone="muted"
         popovertarget={pathMenuId()}
         path-trigger
-        aria-haspopup="listbox"
-        aria-label="Section"
+        label="Section"
       >
         {pathCrumb()}
         <icon name="chevron-down" size="sm"></icon>
@@ -178,7 +177,7 @@ export default controller(() => {
           variant="ghost"
           tone="muted"
           facet-undo
-          aria-label="Undo"
+          label="Undo"
           disabled={!canUndo()}
           on:click={onUndo}
           shrink="0"
@@ -191,7 +190,7 @@ export default controller(() => {
           variant="ghost"
           tone="muted"
           facet-redo
-          aria-label="Redo"
+          label="Redo"
           disabled={!canRedo()}
           on:click={onRedo}
           shrink="0"
@@ -208,8 +207,7 @@ export default controller(() => {
             shrink="0"
             unsaved-trigger
             popovertarget={diffMenuId()}
-            aria-haspopup="menu"
-            aria-label="Unsaved changes"
+            label="Unsaved changes"
           >
             Unsaved
             <icon name="chevron-down" size="sm"></icon>
@@ -252,18 +250,18 @@ export default controller(() => {
         </if>
       </row>
 
-      <stack aria-hidden="true" sx={style.w(half).h(5).minW(half).bg(border-subtle)}></stack>
+      <stack hidden="true" sx={style.w(half).h(5).minW(half).bg(border-subtle)}></stack>
 
       <row mode-cluster align="center" gap="2" shrink="0" nowrap>
         <if {canToggleMode()}>
-          <row dual-mode gap="2" align="center" nowrap shrink="0" aria-label="Theme mode">
+          <row dual-mode gap="2" align="center" nowrap shrink="0" label="Theme mode">
             <icon name="sun" size="sm" label="Light" shrink="0" sx={style.fg(muted-foreground)}></icon>
             <switch
               size="sm"
               tone="muted"
               mode-switch
               checked={modeDarkOn()}
-              aria-label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
+              label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
               on:change={onModeSwitch}
             ></switch>
             <icon name="moon" size="sm" label="Dark" shrink="0" sx={style.fg(muted-foreground)}></icon>
@@ -290,7 +288,6 @@ export default controller(() => {
     theme-leave-dialog
     open={leaveOpen()}
     size="md"
-    aria-labelledby="theme-leave-title"
     on:sail-close={onLeaveCancel}
   >
     <header id="theme-leave-title">Unsaved theme changes</header>

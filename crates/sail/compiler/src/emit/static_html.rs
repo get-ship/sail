@@ -67,11 +67,30 @@ fn write_element(out: &mut String, el: &ElementInstr) {
     out.push_str(&el.tag);
     for a in &el.attrs {
         if let AttrInstr::Static { name, value, .. } = a {
+            let emit_name =
+                crate::semantic_props::lower_attr_name_str_valued(&el.tag, name, Some(value));
+            let emit_value = if crate::semantic_props::is_aria_bool_attr(emit_name) {
+                crate::semantic_props::coerce_aria_bool_static(value)
+            } else {
+                value.as_str()
+            };
             out.push(' ');
-            out.push_str(name);
+            out.push_str(emit_name);
             out.push_str("=\"");
-            escape_attr(out, value);
+            escape_attr(out, emit_value);
             out.push('"');
+            if let Some(extra) = crate::semantic_props::dual_stamp_aria(&el.tag, name) {
+                let extra_val = if crate::semantic_props::is_aria_bool_attr(extra) {
+                    crate::semantic_props::coerce_aria_bool_static(value)
+                } else {
+                    emit_value
+                };
+                out.push(' ');
+                out.push_str(extra);
+                out.push_str("=\"");
+                escape_attr(out, extra_val);
+                out.push('"');
+            }
         }
     }
     out.push('>');

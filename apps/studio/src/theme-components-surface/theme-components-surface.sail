@@ -100,7 +100,7 @@ export default controller(() => {
             on:input={components.onFilterInput}
             placeholder="Filter components…"
             spellcheck="false"
-            aria-label="Filter components"
+            label="Filter components"
           />
         </column>
         <column l1-list gap="1" on:click={components.onSelect}>
@@ -108,7 +108,7 @@ export default controller(() => {
             <row
               l1={row.id}
               selected={row.selected ? 'true' : 'false'}
-              aria-selected={row.selected ? 'true' : 'false'}
+              selected={row.selected ? 'true' : 'false'}
               align="center"
               gap="2"
               nowrap
@@ -158,7 +158,7 @@ export default controller(() => {
               shrink="0"
               sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
             >
-              <row gap="2" align="center" nowrap shrink="0" aria-hidden="true" sx={style.minW(12)}>
+              <row gap="2" align="center" nowrap shrink="0" hidden="true" sx={style.minW(12)}>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>
@@ -227,14 +227,14 @@ export default controller(() => {
                   </if>
                   <if {components.stage.input()}>
                     <column gap="2" w="full" sx={style.maxW(panel-max-w-sm)}>
-                      <input type="text" size="sm" placeholder="Sample field" value={components.sampleText()} on:input={components.onSampleInput} aria-label="Sample field" />
+                      <input type="text" size="sm" placeholder="Sample field" value={components.sampleText()} on:input={components.onSampleInput} label="Sample field" />
                     </column>
                   </if>
                   <if {components.stage.textarea()}>
-                    <textarea size="sm" rows="3" placeholder="Multiline" aria-label="Sample textarea" w="full" sx={style.maxW(panel-max-w-sm)}></textarea>
+                    <textarea size="sm" rows="3" placeholder="Multiline" label="Sample textarea" w="full" sx={style.maxW(panel-max-w-sm)}></textarea>
                   </if>
                   <if {components.stage.select()}>
-                    <select size="sm" aria-label="Sample select" w="full" sx={style.maxW(panel-max-w-sm)}>
+                    <select size="sm" label="Sample select" w="full" sx={style.maxW(panel-max-w-sm)}>
                       <option>Option A</option>
                       <option>Option B</option>
                       <option>Option C</option>
@@ -258,13 +258,13 @@ export default controller(() => {
                   </if>
                   <if {components.stage.switchToggle()}>
                     <row gap="3" align="center">
-                      <switch size={components.variant() || 'md'} tone="primary" checked={components.notify()} aria-label="Sample switch"></switch>
+                      <switch size={components.variant() || 'md'} tone="primary" checked={components.notify()} label="Sample switch"></switch>
                       <p sx={fieldHint}>{components.notify() ? 'on' : 'off'}</p>
                     </row>
                   </if>
                   <if {components.stage.slider()}>
                     <column gap="2" w="full" sx={style.maxW(panel-max-w-sm)}>
-                      <slider value={components.load()} min="0" max="100" tone={components.variant() || 'primary'} aria-label="Sample slider"></slider>
+                      <slider value={components.load()} min="0" max="100" tone={components.variant() || 'primary'} label="Sample slider"></slider>
                       <p sx={fieldHint}>{components.load()}%</p>
                     </column>
                   </if>
@@ -381,8 +381,8 @@ export default controller(() => {
                   </if>
                   <if {components.stage.avatar()}>
                     <row gap="3" align="center" nowrap>
-                      <avatar initials="AL" size={components.variant() || 'md'} tone="primary" aria-label="Ada"></avatar>
-                      <avatar initials="GH" size={components.variant() || 'md'} shape="square" aria-label="GH"></avatar>
+                      <avatar initials="AL" size={components.variant() || 'md'} tone="primary" label="Ada"></avatar>
+                      <avatar initials="GH" size={components.variant() || 'md'} shape="square" label="GH"></avatar>
                     </row>
                   </if>
                   <if {components.stage.icon()}>

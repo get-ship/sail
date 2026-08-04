@@ -25,9 +25,6 @@
   gap="3"
   use:liveRegion
   use:dismissControl
-  role="status"
-  aria-live="polite"
-  aria-atomic="true"
   sx={[
     base,
     when({
@@ -90,7 +87,7 @@
     data-dismiss
     type="button"
     anatomy
-    aria-label="Dismiss"
+    label="Dismiss"
     shrink
     sx={[
       close,
@@ -101,7 +98,7 @@
       }),
     ]}
   >
-    <svg viewBox="0 0 10 10" aria-hidden="true" sx={xmark} stroke-width="1.75" stroke-linecap="round">
+    <svg viewBox="0 0 10 10" hidden="true" sx={xmark} stroke-width="1.75" stroke-linecap="round">
       <path d="M2 2 L8 8 M8 2 L2 8"></path>
     </svg>
   </button>

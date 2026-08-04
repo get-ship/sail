@@ -17,7 +17,7 @@
   const enclosed = style.borderBWidth(1).border(tab-list-border)
 </scope>
 
-<row align="stretch" gap="1" role="tablist" sx={[
+<row align="stretch" gap="1" sx={[
   base,
   match(variant, {
     line: line,

@@ -101,27 +101,27 @@ export default controller(() => {
         <column color-hero gap="3">
           <p sx={sectionTitle}>Color</p>
           <row hero-colors gap="3" align="stretch">
-            <column hero-card role="primary" grow gap="0" min-w="0" sx={heroCard}>
+            <column hero-card token="primary" grow gap="0" min-w="0" sx={heroCard}>
               <stack use:swatch={primaryHex()} state={session.canEdit() ? 'edit' : 'locked'} sx={heroSwatch}>
-                <sail-color-picker role="primary" value={primaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} aria-label="Primary" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
+                <sail-color-picker token="primary" value={primaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Primary" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
               </stack>
               <row align="center" justify="between" sx={heroMeta}>
                 <p sx={doorTitle}>Primary</p>
                 <p sx={monoMeta}>{primaryHex()}</p>
               </row>
             </column>
-            <column hero-card role="secondary" grow gap="0" min-w="0" sx={heroCard}>
+            <column hero-card token="secondary" grow gap="0" min-w="0" sx={heroCard}>
               <stack use:swatch={secondaryHex()} state={session.canEdit() ? 'edit' : 'locked'} sx={heroSwatch}>
-                <sail-color-picker role="secondary" value={secondaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} aria-label="Secondary" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
+                <sail-color-picker token="secondary" value={secondaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Secondary" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
               </stack>
               <row align="center" justify="between" sx={heroMeta}>
                 <p sx={doorTitle}>Secondary</p>
                 <p sx={monoMeta}>{secondaryHex()}</p>
               </row>
             </column>
-            <column hero-card role="accent" grow gap="0" min-w="0" sx={heroCard}>
+            <column hero-card token="accent" grow gap="0" min-w="0" sx={heroCard}>
               <stack use:swatch={accentHex()} state={session.canEdit() ? 'edit' : 'locked'} sx={heroSwatch}>
-                <sail-color-picker role="accent" value={accentHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} aria-label="Accent" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
+                <sail-color-picker token="accent" value={accentHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} label="Accent" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
               </stack>
               <row align="center" justify="between" sx={heroMeta}>
                 <p sx={doorTitle}>Accent</p>
@@ -140,7 +140,7 @@ export default controller(() => {
             <column gap="3">
               <column gap="1">
                 <p sx={fieldHint}>Display</p>
-                <select type-role="display" size="sm" value={overview.typeDisplay()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
+                <select type-token="display" size="sm" value={overview.typeDisplay()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
                   <for {overview.displayFontOpts()} as="o" key={o.key}>
                     <option value={o.value}>{o.label}</option>
                   </for>
@@ -148,7 +148,7 @@ export default controller(() => {
               </column>
               <column gap="1">
                 <p sx={fieldHint}>Body</p>
-                <select type-role="body" size="sm" value={overview.typeBody()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
+                <select type-token="body" size="sm" value={overview.typeBody()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
                   <for {overview.bodyFontOpts()} as="o" key={o.key}>
                     <option value={o.value}>{o.label}</option>
                   </for>
@@ -156,7 +156,7 @@ export default controller(() => {
               </column>
               <column gap="1">
                 <p sx={fieldHint}>Mono</p>
-                <select type-role="mono" size="sm" value={overview.typeMono()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
+                <select type-token="mono" size="sm" value={overview.typeMono()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
                   <for {overview.monoFontOpts()} as="o" key={o.key}>
                     <option value={o.value}>{o.label}</option>
                   </for>
@@ -195,7 +195,7 @@ export default controller(() => {
                   density={d.id}
                   variant={d.on ? 'solid' : 'soft'}
                   tone={d.on ? 'primary' : 'muted'}
-                  aria-pressed={d.on ? 'true' : 'false'}
+                  pressed={d.on ? 'true' : 'false'}
                   disabled={!session.canEdit()}
                   sx={fullBtn}
                 >
@@ -250,7 +250,7 @@ export default controller(() => {
               shrink="0"
               sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
             >
-              <row gap="2" align="center" nowrap shrink="0" aria-hidden="true" sx={style.minW(12)}>
+              <row gap="2" align="center" nowrap shrink="0" hidden="true" sx={style.minW(12)}>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>
@@ -298,7 +298,7 @@ export default controller(() => {
                 </if>
                 <div sx={style.display(flex).flexDir(column).gap(bind(specimenStackGap))}>
                   <p sx={style.fontSize(xs).fg(muted-foreground)}>Email</p>
-                  <input type="email" size={overview.controlSize()} placeholder="you@company.com" aria-label="Sample email" />
+                  <input type="email" size={overview.controlSize()} placeholder="you@company.com" label="Sample email" />
                 </div>
                 <card padding={overview.cardPadding()}>
                   <div sx={style.display(flex).flexDir(column).gap(bind(specimenStackGap))}>

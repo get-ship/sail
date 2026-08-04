@@ -103,9 +103,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column gap="6" sx={style.minW(0)}>
   <column sx={style.maxW(breakpoint-tablet)} gap="5">
-    <p role="doc-eyebrow">Reference</p>
+    <p token="doc-eyebrow">Reference</p>
     <h1>The language surface</h1>
-    <p role="doc-lead">
+    <p token="doc-lead">
       Three tiers: <strong>A</strong> template / ambient (compiler tables),
       <strong>B</strong> author runtime (intentional
       <code>@ship/sail-runtime</code> imports — {authorRuntimeCount()} symbols),
@@ -137,7 +137,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </for>
   </grid>
 
-  <row role="navigation">
+  <row>
     <a variant="default" href="/sail/language/templates">← Templates</a>
     <a variant="solid" href="/components">Component catalog →</a>
   </row>

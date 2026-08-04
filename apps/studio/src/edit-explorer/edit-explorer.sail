@@ -31,7 +31,7 @@ export default controller(() => {
       placeholder="Filter files…"
       value={filterText()}
       on:input={onFilterInput}
-      aria-label="Filter files"
+      label="Filter files"
       size="sm"
       sx={style.w(full)}
     />

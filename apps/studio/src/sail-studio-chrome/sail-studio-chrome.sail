@@ -63,8 +63,8 @@ export default controller((ctx) => {
           href={item.href}
           activity={item.id}
           active={item.active ? 'true' : 'false'}
-          aria-label={item.label}
-          aria-current={item.active ? 'page' : undefined}
+          label={item.label}
+          current={item.active ? 'page' : undefined}
           title={item.label}
           sx={style.w(10).h(10).minW(10).minH(10).radius(md).fg(muted-foreground).when({ hover: style.bg(hover-bg).fg(foreground) }).when({ current: style.bg(selected-bg).fg(primary) })}
         >
@@ -80,7 +80,7 @@ export default controller((ctx) => {
           type="button"
           exit-studio
           activity="exit"
-          aria-label="Back to app (Esc)"
+          label="Back to app (Esc)"
           title="Back to app (Esc)"
           on:click={onExitStudio}
           sx={style.w(10).h(10).minW(10).minH(10).radius(md).fg(muted-foreground).bg(transparent).borderWidth(0).cursor(pointer).when({ hover: style.bg(hover-bg).fg(foreground) })}
@@ -165,7 +165,7 @@ export default controller((ctx) => {
       open={checksPanelOpen()}
       side="end"
       size="lg"
-      aria-label="Findings"
+      label="Findings"
       on:sail-close={onCloseChecksPanel}
     >
       <header findings-panel-head checks-panel-head>
@@ -183,7 +183,7 @@ export default controller((ctx) => {
           variant="ghost"
           tone="muted"
           close-checks-panel
-          aria-label="Close findings"
+          label="Close findings"
           on:click={onCloseChecksPanel}
         >
           Close
@@ -213,8 +213,8 @@ export default controller((ctx) => {
         variant={hasChecksFindings() ? 'soft' : 'ghost'}
         tone={findingsStatusTone()}
         title="Open findings (Ctrl/⌘+Shift+K)"
-        aria-label={findingsStatusAria()}
-        aria-pressed={checksPanelOpen() ? 'true' : 'false'}
+        label={findingsStatusAria()}
+        pressed={checksPanelOpen() ? 'true' : 'false'}
         on:click={onToggleChecksPanel}
         shrink="0"
         sx={style.padX(2).h(5).minH(5)}

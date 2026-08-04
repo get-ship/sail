@@ -16,9 +16,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column gap="6" sx={style.minW(0)}>
   <column sx={style.maxW(breakpoint-tablet)} gap="5">
-    <p role="doc-eyebrow">Reference</p>
+    <p token="doc-eyebrow">Reference</p>
     <h1>Layout keywords</h1>
-    <p role="doc-lead">
+    <p token="doc-lead">
       Structure is elements, not CSS. Each keyword takes a closed set of
       axis props; anything else is a compile error.
     </p>
@@ -35,7 +35,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </for>
   </grid>
 
-  <row role="navigation">
+  <row>
     <a variant="default" href="/sail/reference/elements">← Elements</a>
     <a variant="solid" href="/sail/reference/sx">sx →</a>
   </row>

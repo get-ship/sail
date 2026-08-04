@@ -76,6 +76,30 @@ pub fn finding(
     message: impl Into<String>,
     suggest: impl Into<String>,
 ) -> Option<Finding> {
+    finding_with_severity(path, source, offset, rule, Severity::Error, message, suggest)
+}
+
+/// Warning-severity finding (SPEC-ARIA-1 free aria/role this cycle).
+pub fn finding_warn(
+    path: &Path,
+    source: &str,
+    offset: usize,
+    rule: &'static str,
+    message: impl Into<String>,
+    suggest: impl Into<String>,
+) -> Option<Finding> {
+    finding_with_severity(path, source, offset, rule, Severity::Warn, message, suggest)
+}
+
+fn finding_with_severity(
+    path: &Path,
+    source: &str,
+    offset: usize,
+    rule: &'static str,
+    severity: Severity,
+    message: impl Into<String>,
+    suggest: impl Into<String>,
+) -> Option<Finding> {
     let (line, col) = byte_offset_to_line_col(source, offset);
     if is_sail_allowed(source, line, rule) {
         return None;
@@ -85,7 +109,7 @@ pub fn finding(
         line,
         col,
         rule,
-        severity: Severity::Error,
+        severity,
         message: message.into(),
         suggest: Some(suggest.into()),
     })

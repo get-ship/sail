@@ -49,9 +49,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
 
 <column gap="6" sx={style.minW(0)}>
   <column sx={style.maxW(breakpoint-tablet)} gap="5">
-    <p role="doc-eyebrow">Reference · tier B</p>
+    <p token="doc-eyebrow">Reference · tier B</p>
     <h1>Author runtime — {totalCount()} exports</h1>
-    <p role="doc-lead">
+    <p token="doc-lead">
       Intentional imports from <code>@ship/sail-runtime</code> (root barrel),
       filtered by <code>author-surface.json</code>. Host subpaths
       (<code>./framework</code>, <code>./server</code>, <code>./dev</code>, …)
@@ -100,7 +100,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </column>
   </for>
 
-  <row role="navigation">
+  <row>
     <a variant="default" href="/sail/reference/scope">← Scope grammar</a>
     <a variant="solid" href="/sail/reference/config">Config →</a>
   </row>

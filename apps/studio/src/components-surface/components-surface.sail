@@ -48,10 +48,10 @@ export default controller(() => {
           </button>
         </row>
         <row mode-toggle gap="1" align="center" nowrap on:click={session.onModeToggle}>
-          <button type="button" size="sm" mode="library" variant="solid" tone="primary" aria-pressed="true">
+          <button type="button" size="sm" mode="library" variant="solid" tone="primary" pressed="true">
             Library
           </button>
-          <button type="button" size="sm" mode="inspect" variant="ghost" tone="muted" aria-pressed="false">
+          <button type="button" size="sm" mode="inspect" variant="ghost" tone="muted" pressed="false">
             Inspect
           </button>
         </row>
@@ -240,7 +240,7 @@ export default controller(() => {
                 shrink="0"
                 sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
               >
-                <row gap="2" align="center" nowrap shrink="0" aria-hidden="true" sx={style.minW(12)}>
+                <row gap="2" align="center" nowrap shrink="0" hidden="true" sx={style.minW(12)}>
                   <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
                   <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
                   <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>

@@ -26,7 +26,7 @@
   }),
 ]}>
   <slot></slot>
-  <span aria-hidden="true" sx={[
+  <span hidden="true" sx={[
     req,
     when({
       group-required: style.display(inline),

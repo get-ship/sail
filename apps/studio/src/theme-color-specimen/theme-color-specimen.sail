@@ -57,7 +57,7 @@ export default controller(() => {
           shrink="0"
           sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
         >
-          <row gap="2" align="center" nowrap shrink="0" aria-hidden="true" sx={style.minW(12)}>
+          <row gap="2" align="center" nowrap shrink="0" hidden="true" sx={style.minW(12)}>
             <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
             <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
             <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>
@@ -83,7 +83,7 @@ export default controller(() => {
               <badge tone="primary" size="sm" variant="solid" pill>Primary</badge>
               <badge tone="accent" size="sm" variant="solid" pill>Accent</badge>
             </row>
-            <column surface-stack gap="2" aria-label="Surface stack">
+            <column surface-stack gap="2" label="Surface stack">
               <column gap="2" sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(background)}>
                 <p sx={pathMeta}>bg</p>
                 <column gap="2" sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-1)}>
@@ -103,7 +103,7 @@ export default controller(() => {
             </column>
             <column gap="1">
               <p sx={style.fontSize(xs).fg(muted-foreground)}>Email</p>
-              <input type="email" size="sm" placeholder="you@company.com" aria-label="Sample email" />
+              <input type="email" size="sm" placeholder="you@company.com" label="Sample email" />
             </column>
             <card padding="sm">
               <column gap="2">
@@ -113,7 +113,7 @@ export default controller(() => {
                 </p>
               </column>
             </card>
-            <row sem-row gap="2" align="center" nowrap aria-label="Semantic tones">
+            <row sem-row gap="2" align="center" nowrap label="Semantic tones">
               <badge tone="success" size="sm" variant="solid" pill>Success</badge>
               <badge tone="warning" size="sm" variant="solid" pill>Warning</badge>
               <badge tone="destructive" size="sm" variant="solid" pill>Danger</badge>

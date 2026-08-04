@@ -41,9 +41,9 @@ export default controller((ctx) => {
 
     <row align="center" justify="between" nowrap gap="3">
       <row align="center" gap="2" nowrap>
-        <button size="sm" variant="outline" on:click={() => remove()} aria-label="One fewer person">−</button>
+        <button size="sm" variant="outline" on:click={() => remove()} label="One fewer person">−</button>
         <span sx={peopleCount}>{people()}</span>
-        <button size="sm" variant="outline" on:click={() => add()} aria-label="One more person">+</button>
+        <button size="sm" variant="outline" on:click={() => add()} label="One more person">+</button>
       </row>
       <span sx={shareText}>{share()}</span>
     </row>

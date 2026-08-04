@@ -69,7 +69,7 @@ export default controller(() => {
         size="sm"
         value={openFilterVal()}
         on:change={onTaskOpenFilter}
-        aria-label="Open or all"
+        label="Open or all"
         sx={style.w(24)}
       >
         <option value="open">Open</option>
@@ -80,7 +80,7 @@ export default controller(() => {
         size="sm"
         value={actorFilterVal()}
         on:change={onTaskActorFilter}
-        aria-label="Last reply"
+        label="Last reply"
         sx={style.w(28)}
       >
         <option value="all">Anyone</option>
@@ -149,7 +149,7 @@ export default controller(() => {
                   size="sm"
                   variant="soft"
                   pill
-                  aria-label={row.statusLabel}
+                  label={row.statusLabel}
                   shrink="0"
                 >
                   {row.statusLabel}

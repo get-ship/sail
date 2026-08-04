@@ -30,8 +30,6 @@
   justify="center"
   gap="3"
   use:variantLive
-  role="note"
-  aria-live="off"
   sx={[
     base,
     match(size, {
@@ -55,7 +53,7 @@
     nowrap
     align="center"
     justify="center"
-    aria-hidden="true"
+    hidden="true"
     shrink
     sx={[
       icon,

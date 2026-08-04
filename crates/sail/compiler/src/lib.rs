@@ -51,6 +51,7 @@ pub mod policy;
 pub mod runtime_ambient;
 pub(crate) mod scan;
 pub mod scope_manifest;
+pub mod semantic_props;
 pub mod stdlib;
 pub mod tokens_generate;
 pub mod used_icons;
@@ -69,6 +70,10 @@ pub use diagnostics::{CompileError, DiagSeverity, Diagnostic, Span};
 pub use grammar_vocabulary::{GrammarVocabulary, to_json as grammar_vocabulary_to_json};
 pub use l1_manifest::{
     L1Attribute, L1Entry, L1Kind, VOID_TAGS, l1_by_kind, l1_count, l1_entries, l1_kind,
+};
+pub use semantic_props::{
+    HOST_ANATOMY, HostAnatomy, SEMANTIC_PROPS, SemanticKind, SemanticProp, host_anatomy,
+    is_free_aria_attr, lower_attr_name_str, lookup as lookup_semantic_prop,
 };
 pub use used_icons::{collect_used_icons, collect_used_icons_from_source};
 /// Identity stamp embedded in every emitted artifact (JS leading

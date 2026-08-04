@@ -13,7 +13,7 @@
   const close = style.ms(auto).fg(muted-foreground).bg(transparent).borderWidth(0).radius(sm).cursor(pointer)
 </scope>
 
-<row align="start" gap="3" use:autoDismiss use:dismissControl role="status" aria-live="polite" sx={[
+<row align="start" gap="3" use:autoDismiss use:dismissControl sx={[
   base,
   match(tone, {
     default: style.borderS(foreground),
@@ -27,7 +27,7 @@
   }),
 ]}>
   <slot></slot>
-  <button data-toast-close type="button" anatomy aria-label="Dismiss" shrink="0" grow="0" sx={[
+  <button data-toast-close type="button" anatomy label="Dismiss" shrink="0" grow="0" sx={[
     close,
     when({
       hover: style.fg(foreground).bg(muted),

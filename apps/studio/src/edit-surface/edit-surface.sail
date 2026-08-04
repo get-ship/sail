@@ -68,8 +68,7 @@ export default controller(() => {
     >
       <row
         edit-tab-list
-        role="tablist"
-        aria-label="Open documents"
+        label="Open documents"
         grow
         min-w="0"
         gap="0"
@@ -84,9 +83,8 @@ export default controller(() => {
             tab-id={tab.id}
             active={tab.active ? 'true' : 'false'}
             tab-select
-            role="tab"
-            aria-selected={tab.active ? 'true' : 'false'}
-            aria-current={tab.active ? 'page' : undefined}
+            selected={tab.active ? 'true' : 'false'}
+            current={tab.active ? 'page' : undefined}
             title={tab.id}
             gap="1"
             align="center"
@@ -97,7 +95,7 @@ export default controller(() => {
             <icon name="file-code-2" size="sm"></icon>
             <p grow min-w="0" sx={style.truncate()}>{tab.label}</p>
             <if {tab.dirtyDot}>
-              <p dirty-dot aria-label="Unsaved" sx={style.fontSize(xs).fg(warning)}>
+              <p dirty-dot label="Unsaved" sx={style.fontSize(xs).fg(warning)}>
                 {tab.dirtyDot}
               </p>
             </if>
@@ -107,7 +105,7 @@ export default controller(() => {
                 tab-close
                 size="sm"
                 variant="ghost"
-                aria-label="Close tab"
+                label="Close tab"
                 sx={style.w(5).h(5)}
               >
                 ×
@@ -243,7 +241,7 @@ export default controller(() => {
                 use:captureEditor
                 on:sail-change={onSourceSailChange}
                 on:sail-save={onSaveSource}
-                aria-label="Source editor"
+                label="Source editor"
                 sx={style.w(full).h(full).minH(0)}
               ></sail-code-editor>
             </column>

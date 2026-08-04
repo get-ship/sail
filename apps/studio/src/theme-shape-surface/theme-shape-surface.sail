@@ -192,7 +192,7 @@ export default controller(() => {
                 recipe={r.id}
                 variant={r.on ? 'solid' : 'outline'}
                 tone={r.on ? 'primary' : 'muted'}
-                aria-pressed={r.on ? 'true' : 'false'}
+                pressed={r.on ? 'true' : 'false'}
                 disabled={!session.canEdit()}
                 sx={fullBtn}
               >
@@ -208,19 +208,19 @@ export default controller(() => {
             <p sx={sectionTitle}>Radius scale</p>
             <p sx={pathMeta}>{shape.radiusReadout()}</p>
           </row>
-          <row radius-chips gap="2" align="stretch" nowrap on:click={shape.onRadiusChip} aria-label="Radius steps">
+          <row radius-chips gap="2" align="stretch" nowrap on:click={shape.onRadiusChip} label="Radius steps">
             <button
               type="button"
               size="sm"
               radius="sm"
               variant="outline"
               tone={shape.focusStep() === 'sm' ? 'primary' : 'muted'}
-              aria-pressed={shape.focusStep() === 'sm' ? 'true' : 'false'}
+              pressed={shape.focusStep() === 'sm' ? 'true' : 'false'}
               title="radius.sm"
               sx={chipCol}
             >
               <column gap="1" align="center">
-                <stack aria-hidden="true" use:liveBox={liveCornerSmBox()} sx={cornerChip}></stack>
+                <stack hidden="true" use:liveBox={liveCornerSmBox()} sx={cornerChip}></stack>
                 <p sx={pathMeta}>sm</p>
                 <p sx={monoMeta}>{shape.radiusSmLabel()}</p>
               </column>
@@ -231,12 +231,12 @@ export default controller(() => {
               radius="md"
               variant="outline"
               tone={shape.focusStep() === 'md' ? 'primary' : 'muted'}
-              aria-pressed={shape.focusStep() === 'md' ? 'true' : 'false'}
+              pressed={shape.focusStep() === 'md' ? 'true' : 'false'}
               title="radius.md"
               sx={chipCol}
             >
               <column gap="1" align="center">
-                <stack aria-hidden="true" use:liveBox={liveCornerMdBox()} sx={cornerChip}></stack>
+                <stack hidden="true" use:liveBox={liveCornerMdBox()} sx={cornerChip}></stack>
                 <p sx={pathMeta}>md</p>
                 <p sx={monoMeta}>{shape.radiusMdLabel()}</p>
               </column>
@@ -247,12 +247,12 @@ export default controller(() => {
               radius="lg"
               variant="outline"
               tone={shape.focusStep() === 'lg' ? 'primary' : 'muted'}
-              aria-pressed={shape.focusStep() === 'lg' ? 'true' : 'false'}
+              pressed={shape.focusStep() === 'lg' ? 'true' : 'false'}
               title="radius.lg"
               sx={chipCol}
             >
               <column gap="1" align="center">
-                <stack aria-hidden="true" use:liveBox={liveCornerLgBox()} sx={cornerChip}></stack>
+                <stack hidden="true" use:liveBox={liveCornerLgBox()} sx={cornerChip}></stack>
                 <p sx={pathMeta}>lg</p>
                 <p sx={monoMeta}>{shape.radiusLgLabel()}</p>
               </column>
@@ -263,12 +263,12 @@ export default controller(() => {
               radius="xl"
               variant="outline"
               tone={shape.focusStep() === 'xl' ? 'primary' : 'muted'}
-              aria-pressed={shape.focusStep() === 'xl' ? 'true' : 'false'}
+              pressed={shape.focusStep() === 'xl' ? 'true' : 'false'}
               title="radius.xl"
               sx={chipCol}
             >
               <column gap="1" align="center">
-                <stack aria-hidden="true" use:liveBox={liveCornerXlBox()} sx={cornerChip}></stack>
+                <stack hidden="true" use:liveBox={liveCornerXlBox()} sx={cornerChip}></stack>
                 <p sx={pathMeta}>xl</p>
                 <p sx={monoMeta}>{shape.radiusXlLabel()}</p>
               </column>
@@ -287,7 +287,7 @@ export default controller(() => {
               value={shape.masterPx()}
               disabled={!session.canEdit()}
               radius-master
-              aria-label="Radius master"
+              label="Radius master"
               on:input={shape.onMasterInput}
             />
           </column>
@@ -300,18 +300,18 @@ export default controller(() => {
             <p sx={sectionTitle}>Shadow steps</p>
             <p sx={pathMeta}>elevation · {shape.elevLabel()}</p>
           </row>
-          <grid cols="3" gap="2" elev-chips on:click={shape.onElevClick} aria-label="Elevation steps">
+          <grid cols="3" gap="2" elev-chips on:click={shape.onElevClick} label="Elevation steps">
             <button
               type="button"
               size="sm"
               elev="none"
               variant="outline"
               tone={shape.elevKey() === 'none' ? 'primary' : 'muted'}
-              aria-pressed={shape.elevKey() === 'none' ? 'true' : 'false'}
+              pressed={shape.elevKey() === 'none' ? 'true' : 'false'}
               disabled={!session.canEdit()}
             >
               <row gap="2" align="center" nowrap>
-                <stack aria-hidden="true" sx={elevMarkNone}></stack>
+                <stack hidden="true" sx={elevMarkNone}></stack>
                 <column gap="0" align="start" min-w="0">
                   <p sx={doorTitle}>none</p>
                   <p sx={pathMeta}>flat</p>
@@ -324,11 +324,11 @@ export default controller(() => {
               elev="xs"
               variant="outline"
               tone={shape.elevKey() === 'xs' ? 'primary' : 'muted'}
-              aria-pressed={shape.elevKey() === 'xs' ? 'true' : 'false'}
+              pressed={shape.elevKey() === 'xs' ? 'true' : 'false'}
               disabled={!session.canEdit()}
             >
               <row gap="2" align="center" nowrap>
-                <stack aria-hidden="true" sx={elevMarkXs}></stack>
+                <stack hidden="true" sx={elevMarkXs}></stack>
                 <column gap="0" align="start" min-w="0">
                   <p sx={doorTitle}>xs</p>
                   <p sx={pathMeta}>hair</p>
@@ -341,11 +341,11 @@ export default controller(() => {
               elev="sm"
               variant="outline"
               tone={shape.elevKey() === 'sm' ? 'primary' : 'muted'}
-              aria-pressed={shape.elevKey() === 'sm' ? 'true' : 'false'}
+              pressed={shape.elevKey() === 'sm' ? 'true' : 'false'}
               disabled={!session.canEdit()}
             >
               <row gap="2" align="center" nowrap>
-                <stack aria-hidden="true" sx={elevMarkSm}></stack>
+                <stack hidden="true" sx={elevMarkSm}></stack>
                 <column gap="0" align="start" min-w="0">
                   <p sx={doorTitle}>sm</p>
                   <p sx={pathMeta}>rest</p>
@@ -358,11 +358,11 @@ export default controller(() => {
               elev="md"
               variant="outline"
               tone={shape.elevKey() === 'md' ? 'primary' : 'muted'}
-              aria-pressed={shape.elevKey() === 'md' ? 'true' : 'false'}
+              pressed={shape.elevKey() === 'md' ? 'true' : 'false'}
               disabled={!session.canEdit()}
             >
               <row gap="2" align="center" nowrap>
-                <stack aria-hidden="true" sx={elevMarkMd}></stack>
+                <stack hidden="true" sx={elevMarkMd}></stack>
                 <column gap="0" align="start" min-w="0">
                   <p sx={doorTitle}>md</p>
                   <p sx={pathMeta}>card</p>
@@ -375,11 +375,11 @@ export default controller(() => {
               elev="lg"
               variant="outline"
               tone={shape.elevKey() === 'lg' ? 'primary' : 'muted'}
-              aria-pressed={shape.elevKey() === 'lg' ? 'true' : 'false'}
+              pressed={shape.elevKey() === 'lg' ? 'true' : 'false'}
               disabled={!session.canEdit()}
             >
               <row gap="2" align="center" nowrap>
-                <stack aria-hidden="true" sx={elevMarkLg}></stack>
+                <stack hidden="true" sx={elevMarkLg}></stack>
                 <column gap="0" align="start" min-w="0">
                   <p sx={doorTitle}>lg</p>
                   <p sx={pathMeta}>float</p>
@@ -392,11 +392,11 @@ export default controller(() => {
               elev="xl"
               variant="outline"
               tone={shape.elevKey() === 'xl' ? 'primary' : 'muted'}
-              aria-pressed={shape.elevKey() === 'xl' ? 'true' : 'false'}
+              pressed={shape.elevKey() === 'xl' ? 'true' : 'false'}
               disabled={!session.canEdit()}
             >
               <row gap="2" align="center" nowrap>
-                <stack aria-hidden="true" sx={elevMarkXl}></stack>
+                <stack hidden="true" sx={elevMarkXl}></stack>
                 <column gap="0" align="start" min-w="0">
                   <p sx={doorTitle}>xl</p>
                   <p sx={pathMeta}>modal</p>
@@ -426,7 +426,7 @@ export default controller(() => {
               value={shape.borderW()}
               disabled={!session.canEdit()}
               border-width
-              aria-label="Border width"
+              label="Border width"
               on:input={shape.onBorderWidth}
             />
           </column>
@@ -453,7 +453,7 @@ export default controller(() => {
                 value={shape.surfaceOpPct()}
                 disabled={!session.canEdit()}
                 surface-opacity
-                aria-label="Surface opacity"
+                label="Surface opacity"
                 on:input={shape.onSurfaceOp}
               />
             </column>
@@ -470,7 +470,7 @@ export default controller(() => {
                 value={shape.surfaceBlur()}
                 disabled={!session.canEdit()}
                 surface-blur
-                aria-label="Backdrop blur"
+                label="Backdrop blur"
                 on:input={shape.onSurfaceBlur}
               />
             </column>
@@ -522,7 +522,7 @@ export default controller(() => {
               shrink="0"
               sx={style.padX(3).h(8).minH(8).minW(0).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
             >
-              <row gap="2" align="center" nowrap shrink="0" aria-hidden="true" sx={style.minW(12)}>
+              <row gap="2" align="center" nowrap shrink="0" hidden="true" sx={style.minW(12)}>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(destructive)}></stack>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(warning)}></stack>
                 <stack shrink="0" sx={style.w(2).h(2).minW(2).minH(2).radius(full).bg(success)}></stack>
@@ -560,7 +560,7 @@ export default controller(() => {
                     </row>
                     <column gap="1">
                       <p sx={fieldHint}>Project name</p>
-                      <input type="text" size="sm" value="aurora-shell" aria-label="Sample project name" spellcheck="false" />
+                      <input type="text" size="sm" value="aurora-shell" label="Sample project name" spellcheck="false" />
                     </column>
                     <row gap="2" align="center" nowrap>
                       <button type="button" size="sm" variant="solid" tone="primary">Primary</button>
@@ -602,7 +602,7 @@ export default controller(() => {
                   </column>
                 </if>
 
-                <column radius-ladder gap="2" align="center" aria-hidden="true">
+                <column radius-ladder gap="2" align="center" hidden="true">
                   <p sx={fieldHint}>Radius ladder</p>
                   <row gap="4" align="end" nowrap>
                     <column gap="1" align="center">
