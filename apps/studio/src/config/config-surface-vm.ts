@@ -65,6 +65,24 @@ export type ConfigFieldsCtx = {
   moduleCount: number
 }
 
+/** Live shell fields Config mirrors (selective refresh — not selection/badges). */
+export type ConfigLiveShell = {
+  devUrl: string
+  moduleCount: number
+}
+
+/** True when a live Config field may have changed (devUrl or module activity count). */
+export function liveShellChanged(prev: ConfigLiveShell, next: ConfigLiveShell): boolean {
+  return prev.devUrl !== next.devUrl || prev.moduleCount !== next.moduleCount
+}
+
+export function readLiveShell(s = getShellState()): ConfigLiveShell {
+  return {
+    devUrl: s.devUrl || 'sail dev',
+    moduleCount: s.moduleActivities.length,
+  }
+}
+
 /**
  * Pure field builder — unit-tested for source honesty.
  * Live: project root, shell devUrl, module activity count.
@@ -151,12 +169,14 @@ export function createConfigSurfaceCore() {
   const showShipCloud = signal(false)
   const showDanger = signal(false)
   const projectRoot = signal(resolveProjectRoot())
-  const devUrl = signal(getShellState().devUrl || 'sail dev')
+  const live = readLiveShell()
+  const devUrl = signal(live.devUrl)
+  const moduleCount = signal(live.moduleCount)
 
   const ctx = (): ConfigFieldsCtx => ({
     root: projectRoot(),
     devUrl: devUrl(),
-    moduleCount: getShellState().moduleActivities.length,
+    moduleCount: moduleCount(),
   })
 
   const publish = (id: ConfigCatId) => {
@@ -202,20 +222,32 @@ export function createConfigSurfaceCore() {
     selectCategory,
     selected,
     devUrl,
+    moduleCount,
+    /** Apply live shell snapshot; republish when devUrl or module count changes. */
+    applyLiveShell: (next: ConfigLiveShell) => {
+      const prev: ConfigLiveShell = {
+        devUrl: devUrl(),
+        moduleCount: moduleCount(),
+      }
+      if (!liveShellChanged(prev, next)) return false
+      devUrl.set(next.devUrl)
+      moduleCount.set(next.moduleCount)
+      publish(selected())
+      return true
+    },
     publish,
   }
 }
 
-/** Controller entry — binds shell live fields only when devUrl changes. */
+/**
+ * Controller entry — refresh when live shell fields change
+ * (devUrl, moduleActivities.length). Ignore selection/badge thrash.
+ */
 export function createConfigSurface() {
   const core = createConfigSurfaceCore()
   mountAmbient(() => {
     const unsub = subscribeShell((s) => {
-      const next = s.devUrl || 'sail dev'
-      // Only republish when live deck fields change (avoid selection/badge thrash).
-      if (core.devUrl() === next) return
-      core.devUrl.set(next)
-      core.publish(core.selected())
+      core.applyLiveShell(readLiveShell(s))
     })
     return () => unsub()
   })

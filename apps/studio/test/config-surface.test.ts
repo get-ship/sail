@@ -10,6 +10,7 @@ import {
   CHECKS_HOTKEY_LABEL,
   CONFIG_CATS,
   createConfigSurfaceCore,
+  liveShellChanged,
   type ConfigCatId,
 } from '../src/config/config-surface-vm'
 
@@ -110,5 +111,41 @@ describe('config-surface', () => {
     vm.onCatClick({ target } as unknown as Event)
     expect(vm.selected()).toBe('compiler')
     expect(vm.sectionTitle()).toBe('Compiler')
+  })
+
+  it('liveShellChanged: devUrl or moduleCount only (not selection thrash)', () => {
+    const base = { devUrl: 'sail dev', moduleCount: 0 }
+    expect(liveShellChanged(base, base)).toBe(false)
+    expect(liveShellChanged(base, { ...base, devUrl: 'http://127.0.0.1:7893' })).toBe(true)
+    expect(liveShellChanged(base, { ...base, moduleCount: 2 })).toBe(true)
+    expect(
+      liveShellChanged(
+        { devUrl: 'a', moduleCount: 1 },
+        { devUrl: 'a', moduleCount: 1 },
+      ),
+    ).toBe(false)
+  })
+
+  it('applyLiveShell republishes plugins module count without thrash', () => {
+    const vm = createConfigSurfaceCore()
+    vm.selectCategory('plugins')
+    expect(vm.fields().find((f) => f.key === 'modules')?.value).toMatch(/0 module/)
+
+    // Same live snapshot — no-op (selection/badge thrash equivalent)
+    expect(vm.applyLiveShell({ devUrl: vm.devUrl(), moduleCount: vm.moduleCount() })).toBe(
+      false,
+    )
+    expect(vm.fields().find((f) => f.key === 'modules')?.value).toMatch(/0 module/)
+
+    // Module host loaded activities — live field updates
+    expect(vm.applyLiveShell({ devUrl: vm.devUrl(), moduleCount: 3 })).toBe(true)
+    expect(vm.moduleCount()).toBe(3)
+    expect(vm.fields().find((f) => f.key === 'modules')?.value).toMatch(/3 module/)
+    expect(vm.fields().find((f) => f.key === 'modules')?.source).toBe('live')
+
+    // devUrl change also republishes
+    expect(vm.applyLiveShell({ devUrl: 'http://127.0.0.1:9', moduleCount: 3 })).toBe(true)
+    vm.selectCategory('deck')
+    expect(vm.fields().find((f) => f.key === 'dev')?.value).toBe('http://127.0.0.1:9')
   })
 })
