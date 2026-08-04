@@ -38,6 +38,7 @@
     "apps/studio": {
       "name": "@ship/studio",
       "dependencies": {
+        "@ship/sail-chat-elements": "workspace:*",
         "@ship/sail-code-editor": "workspace:*",
         "@ship/sail-dom": "workspace:*",
         "@ship/sail-primitives": "workspace:*",
@@ -45,6 +46,7 @@
         "@ship/sail-studio-bridge": "workspace:*",
         "@ship/sail-studio-client": "workspace:*",
         "@ship/sail-studio-shell": "workspace:*",
+        "@ship/sail-viewer": "workspace:*",
         "@ship/tokens": "workspace:*",
       },
       "devDependencies": {

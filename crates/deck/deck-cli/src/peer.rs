@@ -169,6 +169,11 @@ fn parse_op_target(target: &str) -> Result<(String, String)> {
 }
 
 /// `sail check` — compile-time diagnostics for one `.sail` file or directory.
+///
+/// Directories also lint plain app TypeScript under `apps/*/src/**/*.ts`
+/// (floor + ambient DOM). That closes the escape hatch where a side module
+/// under studio carried `cssText` / `createElement` because only `.sail`
+/// templates were walked.
 pub fn check(input: PathBuf, fix: String) -> Result<()> {
     let path = if input.is_absolute() {
         input
@@ -176,15 +181,24 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
         std::env::current_dir()?.join(input)
     };
     if path.is_file() {
-        check_one(&path, &fix)?;
+        if path.extension().and_then(|e| e.to_str()) == Some("ts")
+            && sail_lint::is_app_source_ts(&path)
+        {
+            check_app_ts(&path)?;
+        } else {
+            check_one(&path, &fix)?;
+        }
     } else if path.is_dir() {
         let mut files = Vec::new();
         collect_sail_files(&path, &mut files)?;
-        if files.is_empty() {
-            bail!("no .sail files under {}", path.display());
+        let mut app_ts = Vec::new();
+        collect_app_source_ts(&path, &mut app_ts)?;
+        if files.is_empty() && app_ts.is_empty() {
+            bail!("no .sail or app source .ts files under {}", path.display());
         }
         let mut failed = 0usize;
         let mut fixed = 0usize;
+        let total = files.len() + app_ts.len();
         for f in &files {
             match check_one(f, &fix) {
                 Ok(n) => fixed += n,
@@ -194,18 +208,47 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
                 }
             }
         }
+        for f in &app_ts {
+            if let Err(e) = check_app_ts(f) {
+                eprintln!("sail check: {}: {e:#}", f.display());
+                failed += 1;
+            }
+        }
         if failed > 0 {
-            bail!("{failed}/{} file(s) failed check", files.len());
+            bail!("{failed}/{total} file(s) failed check");
         }
         println!(
             "sail check: {} file(s) ok, {} fix(es) applied",
-            files.len(),
-            fixed
+            total, fixed
         );
     } else {
         bail!("not a file or directory: {}", path.display());
     }
     Ok(())
+}
+
+/// Lint a plain `apps/*/src/**/*.ts` module via sail-lint dispatch.
+fn check_app_ts(path: &Path) -> Result<()> {
+    let findings = sail_lint::lint_path(path);
+    let errors: Vec<_> = findings
+        .iter()
+        .filter(|f| matches!(f.severity, sail_lint::Severity::Error))
+        .collect();
+    if errors.is_empty() {
+        println!("sail check: {} ok", path.display());
+        return Ok(());
+    }
+    for f in &errors {
+        eprintln!(
+            "{}:{}:{}: {} ({})",
+            path.display(),
+            f.line,
+            f.col,
+            f.message,
+            f.rule
+        );
+    }
+    bail!("{} error(s)", errors.len())
 }
 
 fn check_one(path: &Path, fix: &str) -> Result<usize> {
@@ -314,6 +357,30 @@ fn collect_sail_files(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
             }
             collect_sail_files(&p, out)?;
         } else if p.extension().and_then(|e| e.to_str()) == Some("sail") {
+            out.push(p);
+        }
+    }
+    Ok(())
+}
+
+/// Walk `dir` for plain app TypeScript that `is_app_source_ts` admits.
+///
+/// When `dir` is `apps/studio` (or any apps/* tree), modules under `src/` are
+/// the floor surface. When `dir` is a monorepo root, every `apps/*/src/**/*.ts`
+/// under it is included. Paths already classified as controllers/actions are
+/// filtered by `is_app_source_ts`.
+fn collect_app_source_ts(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
+    for entry in std::fs::read_dir(dir).with_context(|| format!("read dir {}", dir.display()))? {
+        let entry = entry?;
+        let p = entry.path();
+        if p.is_dir() {
+            let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            if name == "node_modules" || name == "target" || name == "dist" || name.starts_with('.')
+            {
+                continue;
+            }
+            collect_app_source_ts(&p, out)?;
+        } else if sail_lint::is_app_source_ts(&p) {
             out.push(p);
         }
     }

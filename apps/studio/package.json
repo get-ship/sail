@@ -2,7 +2,7 @@
   "name": "@ship/studio",
   "private": true,
   "type": "module",
-  "description": "Sail Studio — activity rail and editor workspace. Surfaces: Edit · Checks · Design · Tasks.",
+  "description": "Sail Studio — activity rail and editor workspace. Surfaces: Edit · Components · Themes · Tasks · Checks.",
   "exports": {
     ".": "./src/shell/index.ts",
     "./shell": "./src/shell/index.ts",
@@ -26,6 +26,7 @@
     "@ship/sail-code-editor": "workspace:*",
     "@ship/sail-chat-elements": "workspace:*",
     "@ship/sail-primitives": "workspace:*",
+    "@ship/sail-viewer": "workspace:*",
     "@ship/tokens": "workspace:*"
   },
   "devDependencies": {

@@ -938,6 +938,7 @@ dependencies = [
  "notify",
  "sail-compiler",
  "sail-layout",
+ "sail-lint",
  "sail-lsp",
  "sail-mcp",
  "sail-ops",
