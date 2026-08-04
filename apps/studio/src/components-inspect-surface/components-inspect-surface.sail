@@ -40,26 +40,23 @@ export default controller(() => {
       gap="0"
       sx={style.minH(0).h(full).minW(panel-min-w-lg).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-0).overflow(hidden)}
     >
-      <column shrink="0" gap="2" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
-        <p sx={eyebrow}>Inspect</p>
+      <column data-inspect-tree-head shrink="0" gap="2" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
+        <row align="center" justify="between" nowrap gap="2">
+          <p sx={eyebrow}>Components</p>
+        </row>
         <row data-mode-toggle gap="1" align="center" nowrap on:click={session.onModeToggle}>
           <button type="button" size="sm" data-mode="library" variant="ghost" tone="muted">Library</button>
           <button type="button" size="sm" data-mode="inspect" variant="solid" tone="primary" aria-pressed="true">Inspect</button>
         </row>
-        <p sx={pathMeta}>Open files & routes</p>
-        <scroll-area data-surface-list sx={style.maxH(28)} on:click={inspect.onSurfacePick}>
+        <p sx={pathMeta}>Surface picker · open files & routes</p>
+        <scroll-area data-surface-picker data-surface-list sx={style.maxH(28)} on:click={inspect.onSurfacePick}>
           <column gap="1">
             <for {inspect.surfaces()} as="s" key={s.key}>
-              <row
+              <studio-list-row
                 data-surface-path={s.value}
-                data-selected={s.selected ? 'true' : 'false'}
-                align="center"
-                nowrap
-                gap="2"
-                sx={style.h(7).padX(2).radius(md).cursor(pointer).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).borderLWidth(2).borderL(primary) })}
-              >
-                <p grow min-w="0" sx={style.fontSize(sm).fontFamily(mono).truncate()}>{s.label}</p>
-              </row>
+                title={s.label}
+                selected={s.selected}
+              ></studio-list-row>
             </for>
           </column>
         </scroll-area>
@@ -113,7 +110,7 @@ export default controller(() => {
       data-components-detail
       grow
       gap="0"
-      sx={style.minH(0).h(full).minW(0).basis(0).bg(background).overflow(hidden)}
+      sx={style.minH(0).h(full).minW(panel-min-w-md).basis(0).bg(background).overflow(hidden)}
     >
       <column shrink="0" gap="3" sx={style.padX(5).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-0)}>
         <if {!inspect.hasNode()}>

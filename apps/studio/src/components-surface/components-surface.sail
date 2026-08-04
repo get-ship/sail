@@ -42,9 +42,9 @@ export default controller(() => {
     >
       <column data-components-nav-head shrink="0" gap="2" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
         <row align="center" justify="between" nowrap gap="2">
-          <p sx={eyebrow}>Library</p>
+          <p sx={eyebrow}>Components</p>
           <button type="button" size="sm" variant="solid" tone="primary" data-new-component on:click={session.onNewOpen} shrink="0">
-            New
+            New…
           </button>
         </row>
         <row data-mode-toggle gap="1" align="center" nowrap on:click={session.onModeToggle}>
@@ -58,7 +58,7 @@ export default controller(() => {
         <input
           type="search"
           size="sm"
-          placeholder="Filter…"
+          placeholder="Filter name, pack, path…"
           data-components-filter
           value={session.filterQuery()}
           on:input={session.onFilterInput}
@@ -88,23 +88,17 @@ export default controller(() => {
               </studio-empty>
             </if>
             <for {library.projectRows()} as="row" key={row.key}>
-              <row
+              <studio-list-row
                 data-component-row
                 data-component-id={row.id}
-                data-selected={row.selected ? 'true' : 'false'}
-                aria-selected={row.selected ? 'true' : 'false'}
-                gap="2"
-                align="center"
-                nowrap
-                min-w="0"
-                sx={style.h(7).padX(2).radius(md).cursor(pointer).minW(0).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).borderLWidth(2).borderL(primary) })}
+                title={row.title}
+                meta={row.meta}
+                selected={row.selected}
               >
-                <column grow min-w="0" gap="0">
-                  <p sx={style.fontSize(sm).truncate()}>{row.title}</p>
-                  <p sx={pathMeta}>{row.meta}</p>
-                </column>
-                <badge tone={row.originTone} size="sm" variant="outline" pill shrink="0">{row.originLabel}</badge>
-              </row>
+                <badge slot="trailing" tone={row.originTone} size="sm" variant="outline" pill shrink="0">
+                  {row.originLabel}
+                </badge>
+              </studio-list-row>
             </for>
           </column>
 
@@ -117,23 +111,17 @@ export default controller(() => {
               <p sx={muted}>No installed packs</p>
             </if>
             <for {library.packRows()} as="row" key={row.key}>
-              <row
+              <studio-list-row
                 data-component-row
                 data-component-id={row.id}
-                data-selected={row.selected ? 'true' : 'false'}
-                aria-selected={row.selected ? 'true' : 'false'}
-                gap="2"
-                align="center"
-                nowrap
-                min-w="0"
-                sx={style.h(7).padX(2).radius(md).cursor(pointer).minW(0).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).borderLWidth(2).borderL(primary) })}
+                title={row.title}
+                meta={row.meta}
+                selected={row.selected}
               >
-                <column grow min-w="0" gap="0">
-                  <p sx={style.fontSize(sm).truncate()}>{row.title}</p>
-                  <p sx={pathMeta}>{row.meta}</p>
-                </column>
-                <badge tone="muted" size="sm" variant="outline" pill shrink="0">pack</badge>
-              </row>
+                <badge slot="trailing" tone="muted" size="sm" variant="outline" pill shrink="0">
+                  pack
+                </badge>
+              </studio-list-row>
             </for>
           </column>
 
@@ -180,15 +168,32 @@ export default controller(() => {
               tone="primary"
               data-open-edit
               disabled={!library.canOpenInEdit()}
+              title={library.canOpenInEdit() ? 'Open this component source in Edit' : 'No project path to open in Edit'}
               on:click={library.onOpenInEdit}
             >
-              Edit
+              Open in Edit
             </button>
-            <button type="button" size="sm" variant="default" data-start-thread on:click={library.onStartThread} title="Open a Work thread tagged to this component">
-              Discuss
+            <button
+              type="button"
+              size="sm"
+              variant="default"
+              data-start-thread
+              disabled={!library.hasSelected()}
+              title={library.hasSelected() ? 'Start a Work thread for this component' : 'Select a component first'}
+              on:click={library.onStartThread}
+            >
+              Start thread
             </button>
-            <button type="button" size="sm" variant="ghost" data-copy-brief on:click={library.onCopyBrief} title="Copy a structured brief for an agent (name, path, intent)">
-              Copy brief
+            <button
+              type="button"
+              size="sm"
+              variant="ghost"
+              data-copy-brief
+              disabled={!library.hasSelected()}
+              title={library.hasSelected() ? 'Copy a structured brief for an agent' : 'Select a component first'}
+              on:click={library.onCopyBrief}
+            >
+              Copy agent brief
             </button>
           </row>
         </row>

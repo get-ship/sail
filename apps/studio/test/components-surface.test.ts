@@ -122,16 +122,18 @@ describe('components-surface', () => {
   })
 
   it('shell rail + routes include components', () => {
+    const shellRail = readFileSync(join(REPO, 'apps/studio/src/shell/shell-rail.ts'), 'utf8')
     const shellVm = readFileSync(join(REPO, 'apps/studio/src/shell/shell-page-vm.ts'), 'utf8')
     const routesGen = readFileSync(join(REPO, 'apps/studio/routes.gen.ts'), 'utf8')
     const model = readFileSync(
       join(REPO, 'packages/sail/studio-shell/src/model.ts'),
       'utf8',
     )
-    expect(shellVm).toMatch(/'2':\s*'components'/)
-    expect(shellVm).toMatch(/components:\s*\{\s*label:\s*'Components'/)
-    expect(shellVm).toMatch(/\/components/)
-    expect(shellVm).toMatch(/icon:\s*'box'/)
+    expect(shellRail).toMatch(/'2':\s*'components'/)
+    expect(shellRail).toMatch(/components:\s*\{\s*label:\s*'Components'/)
+    expect(shellRail).toMatch(/icon:\s*'box'/)
+    expect(shellVm).toMatch(/shell-rail/)
+    expect(shellVm).toMatch(/ACTIVITY_BY_DIGIT/)
     expect(routesGen).toMatch(/pattern: '\/components'/)
     expect(routesGen).toMatch(/pattern: '\/components\/inspect'/)
     expect(routesGen).toMatch(/pattern: '\/components\/:id'/)

@@ -1,7 +1,4 @@
-/**
- * Components inspect domain — surface picker, IR tree, instance detail panels.
- * Source-derived only (SailInspect); no live-DOM tree.
- */
+/** Components inspect domain — surface picker, IR tree, instance panels (SailInspect). */
 import { createTable } from '@ship/sail-primitives'
 import { mountAmbient, signal } from '@ship/sail-runtime'
 import {
@@ -28,7 +25,7 @@ import type {
 import type { ComponentsSession } from '../components-session/components-session'
 import { stateCards } from '../edit/views'
 
-/** Pack + project ids currently known for "Show in library" honesty. */
+/** Pack + project ids for "Show in library" honesty. */
 function knownLibraryIds(): Set<string> {
   const ids = new Set(recordsFromCatalog(COMPONENTS_CATALOG).map((r) => r.id))
   for (const f of getEditState().files ?? []) {
@@ -38,6 +35,27 @@ function knownLibraryIds(): Set<string> {
 }
 
 export type ComponentsInspect = ReturnType<typeof createComponentsInspect>
+
+function flattenTree(ns: SailTreeNode[]): SailTreeNode[] {
+  const out: SailTreeNode[] = []
+  const walk = (list: SailTreeNode[]) => {
+    for (const n of list) {
+      out.push(n)
+      if (n.children?.length) walk(n.children)
+    }
+  }
+  walk(ns)
+  return out
+}
+
+function surfaceLabel(path: string): string {
+  const base = path.split('/').pop() || path
+  if (!path.includes('/routes/')) return path.split('/').slice(-2).join('/')
+  if (base === 'page.sail') {
+    return path.replace(/^.*\/routes\//, '/').replace(/\/page\.sail$/, '') || '/'
+  }
+  return path.replace(/^.*\/routes\//, '')
+}
 
 export function createComponentsInspect(session: ComponentsSession) {
   const surfaces = signal<SurfaceOption[]>([])
@@ -90,26 +108,18 @@ export function createComponentsInspect(session: ComponentsSession) {
     const opts: SurfaceOption[] = []
     const seen = new Set<string>()
     const add = (path: string, kind: 'route' | 'file' | 'open' = 'file') => {
-      if (!path || seen.has(path)) return
-      if (!path.endsWith('.sail')) return
+      if (!path || seen.has(path) || !path.endsWith('.sail')) return
       seen.add(path)
-      const base = path.split('/').pop() || path
-      const underRoutes = path.includes('/routes/')
-      const label = underRoutes
-        ? base === 'page.sail'
-          ? path.replace(/^.*\/routes\//, '/').replace(/\/page\.sail$/, '') || '/'
-          : path.replace(/^.*\/routes\//, '')
-        : path.split('/').slice(-2).join('/')
+      const label = surfaceLabel(path)
       opts.push({
         value: path,
         label: kind === 'open' ? `${label} · open` : label,
         key: path,
-        kind: underRoutes ? 'route' : kind,
+        kind: path.includes('/routes/') ? 'route' : kind,
       } as SurfaceOption & { kind?: string })
     }
     if (es.activePath) add(es.activePath, 'open')
     for (const t of es.docs.keys()) add(t, 'open')
-    // Prefer routes pages first for intuition
     for (const f of es.files ?? []) {
       if (f.path.includes('/routes/') && f.path.endsWith('page.sail')) add(f.path, 'route')
     }
@@ -117,10 +127,7 @@ export function createComponentsInspect(session: ComponentsSession) {
       if (!f.path.includes('/routes/')) add(f.path, 'file')
     }
     const cur = selectedSurface()
-    const sliced = opts.slice(0, 80).map((o) => ({
-      ...o,
-      selected: o.value === cur,
-    }))
+    const sliced = opts.slice(0, 80).map((o) => ({ ...o, selected: o.value === cur }))
     surfaces.set(sliced)
     if (!cur && sliced[0]) {
       selectedSurface.set(sliced[0].value)
@@ -168,22 +175,14 @@ export function createComponentsInspect(session: ComponentsSession) {
     nodeId.set(node.id)
     nodeLayer.set(node.trailing || '')
     nodePath.set(path)
-    // SailTreeNode may not carry span — recover from active doc model when possible
-    const doc = activeDoc()
-    const modelNode = doc?.tree.nodes.find((n) => n.id === node.id)
-    if (modelNode?.span) {
-      nodeSpanLabel.set(`L${modelNode.span.line}:${modelNode.span.col}`)
-      nodeLine.set(modelNode.span.line)
-      nodeCol.set(modelNode.span.col)
-    } else {
-      nodeSpanLabel.set('—')
-      nodeLine.set(0)
-      nodeCol.set(0)
-    }
+    const modelNode = activeDoc()?.tree.nodes.find((n) => n.id === node.id)
+    const span = modelNode?.span
+    nodeSpanLabel.set(span ? `L${span.line}:${span.col}` : '—')
+    nodeLine.set(span?.line ?? 0)
+    nodeCol.set(span?.col ?? 0)
     canOpenNode.set(!!path)
     const tag = extractTagName(modelNode?.tag, node.label || '')
     mappedComponentId.set(tag)
-    // Only enable when tag is a known pack/project library id (not bare L1 layout).
     canShowInLibrary.set(!!tag && knownLibraryIds().has(tag))
   }
 
@@ -271,19 +270,9 @@ export function createComponentsInspect(session: ComponentsSession) {
     dataSig.set(nodes)
     hasTree.set(nodes.length > 0)
     if (selectedNodeId) {
-      const flat: SailTreeNode[] = []
-      const walk = (ns: SailTreeNode[]) => {
-        for (const n of ns) {
-          flat.push(n)
-          if (n.children?.length) walk(n.children)
-        }
-      }
-      walk(nodes)
-      const found = flat.find((n) => n.id === selectedNodeId) ?? null
+      const found = flattenTree(nodes).find((n) => n.id === selectedNodeId) ?? null
       publishNode(found, path)
-      if (found) {
-        tree.setRowSelection({ mode: 'include', ids: new Set([found.id]) })
-      }
+      if (found) tree.setRowSelection({ mode: 'include', ids: new Set([found.id]) })
     }
     publishPanelsFromDoc()
   }
@@ -385,19 +374,10 @@ export function createComponentsInspect(session: ComponentsSession) {
   }
 
   const onTreeSelect = (e: Event) => {
-    const ce = e as CustomEvent<{ id?: string }>
-    const id = ce.detail?.id
+    const id = (e as CustomEvent<{ id?: string }>).detail?.id
     if (!id) return
     selectedNodeId = id
-    const flat: SailTreeNode[] = []
-    const walk = (ns: SailTreeNode[]) => {
-      for (const n of ns) {
-        flat.push(n)
-        if (n.children?.length) walk(n.children)
-      }
-    }
-    walk(dataSig())
-    publishNode(flat.find((n) => n.id === id) ?? null, selectedSurface())
+    publishNode(flattenTree(dataSig()).find((n) => n.id === id) ?? null, selectedSurface())
   }
 
   const onOpenNodeInEdit = () => {
