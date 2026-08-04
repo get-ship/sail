@@ -35,6 +35,7 @@ beforeEach(() => {
   clearThemeOverrides()
   // Clear any committed state left on :root / storage between tests.
   root().removeAttribute('style')
+  root().removeAttribute('theme')
   root().removeAttribute('data-theme')
   try {
     localStorage.clear()
@@ -106,7 +107,7 @@ describe('theme.commit — persist + apply', () => {
 
 describe('theme.current — active id + resolved overrides', () => {
   it('reports the active theme id and the overridden tokens', () => {
-    root().dataset.theme = 'console'
+    root().setAttribute('theme', 'console')
     theme.commit({ '--brand-hue': '200' })
     theme.preview({ '--surface-1': 'blue' })
     const cur = theme.current()
@@ -257,11 +258,11 @@ describe('theme.applyScope — host only + teardown', () => {
     expect(sibling.style.getPropertyValue('--primary')).toBe('')
   })
 
-  it('sets framework theme + data-mode (never data-theme-preview)', () => {
+  it('sets framework theme + data-mode only (never data-theme / data-theme-preview)', () => {
     theme.applyScope(host, { doc: sampleDoc({ themeId: 'paper' }), mode: 'dark' })
     expect(host.getAttribute('theme')).toBe('paper')
     expect(host.getAttribute('data-mode')).toBe('dark')
-    expect(host.getAttribute('data-theme')).toBe('paper') // dual-attr cutover
+    expect(host.hasAttribute('data-theme')).toBe(false)
     expect(host.hasAttribute('data-theme-preview')).toBe(false)
   })
 

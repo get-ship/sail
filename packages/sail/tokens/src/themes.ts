@@ -323,7 +323,8 @@ export function subscribeSystemPreference(
  * Apply a theme (+ optional mode) to the given root element (or
  * documentElement by default).
  *
- * Runtime model: **only** `data-theme` + `data-mode`. No `.dark` class.
+ * Runtime model: **only** `theme` + `data-mode`. No `.dark` class,
+ * no `data-theme` / `data-theme-preview`.
  * `data-mode` is always `light` | `dark` — never `"system"`.
  * Returns the applied ThemeId.
  */
@@ -334,7 +335,10 @@ export function applyTheme(
 ): ThemeId {
   const next: ThemeId = isValidTheme(id) ? id : DEFAULT_THEME
   const resolvedMode = paintMode(resolveMode(next, mode))
-  root.dataset.theme = next
+  // Author IR: plain `theme` attr (not data-theme). dataset.theme would set data-theme.
+  root.setAttribute('theme', next)
+  root.removeAttribute('data-theme')
+  root.removeAttribute('data-theme-preview')
   root.dataset.mode = resolvedMode
   // Explicitly clear legacy .dark if present (no dual mechanism).
   root.classList.remove('dark')
@@ -448,7 +452,8 @@ export function applyMode(
   mode: string,
   root: HTMLElement = document.documentElement,
 ): string {
-  const id = (root.dataset.theme as ThemeId) || DEFAULT_THEME
+  const raw = root.getAttribute('theme')
+  const id = (isValidTheme(raw) ? raw : DEFAULT_THEME) as ThemeId
   const preference: ModePreference =
     mode === 'system' || mode === 'light' || mode === 'dark'
       ? mode

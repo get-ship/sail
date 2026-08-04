@@ -3,7 +3,7 @@
 
   Full popover:
   - Light | Dark | System = filter tabs only (never paint the site)
-  - One theme per row: live [data-theme-preview] specimen (theme fonts +
+  - One theme per row: live [theme=…] specimen (theme fonts +
     primary/accent color dots + type sample) — name once, no "Theme" spam
   - Compact, no h-scroll, mobile-safe
   - Theme click applies; panel stays open
@@ -44,7 +44,7 @@
   const option = style.w(full).minW(0).pad(0).bg(transparent).borderWidth(border-width).border(transparent).radius(md).cursor(pointer).overflow(hidden).textAlign(start)
   const optionCol = style.w(full).minW(0)
 
-  // Live specimen — full-bleed via data-theme-preview (theme fonts + tokens).
+  // Live specimen — full-bleed via theme= (theme fonts + tokens).
   // Same height as before (space-20); content rebalanced, not resized.
   const swatch = style.position(relative).w(full).minW(0).h(20).minH(20).radius(md).overflow(hidden).isolate().bg(background).fg(foreground)
   const overlay = style.position(absolute).inset(0).z(1).pointerEvents(none).opacity(bind(surface-overlay-opacity)).mixBlend(bind(surface-overlay-blend)).bg(bind(surface-overlay))
@@ -178,7 +178,7 @@
       ]}>
         <column gap="0" min-w="0" sx={optionCol}>
           <!-- Full-bleed live specimen: heading face + chromatic strips + controls -->
-          <column data-theme-preview="sail" data-mode="light" aria-hidden="true" sx={swatch}>
+          <column theme="sail" data-mode="light" aria-hidden="true" sx={swatch}>
             <span sx={overlay}></span>
             <column gap="2" justify="between" min-w="0" sx={specimen}>
               <row align="center" gap="2" nowrap min-w="0" w="full">

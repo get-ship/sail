@@ -28,7 +28,7 @@ export type ThemePatch = Record<ThemeTokenName, string>
 
 /** What `theme.current()` reports. */
 export interface ThemeState {
-  /** Active theme id — the `:root` `data-theme` attribute (empty if unset). */
+  /** Active theme id — the `:root` `theme` attribute (empty if unset). */
   id: string
   /** Resolved values of the tokens overridden this session (preview ∪ committed),
    *  read back from `:root` so they reflect what is actually painted. */
@@ -198,7 +198,7 @@ function current(): ThemeState {
     for (const name of names) tokens[name] = committed.get(name) ?? session.get(name) ?? ''
   }
   return {
-    id: hasDocument() ? (root().dataset.theme ?? '') : '',
+    id: hasDocument() ? (root().getAttribute('theme') ?? '') : '',
     tokens,
   }
 }
@@ -257,11 +257,11 @@ export function hydrateTheme(): void {
 // sail-compiler `tokens_generate::flatten_tokens` + `resolve_value`, then
 // writing `--cssName` custom properties onto `host`. Descendants inherit.
 // Teardown clears only what this API wrote. No themes.css regen, no Studio
-// CSSOM, no `data-theme-preview`.
+// CSSOM.
 //
 // Mode is an arg (or defaultMode on the doc) — not a second top-level author
 // attr. Platform cascade bits set on the host: `theme` (framework IR) +
-// `data-mode` (paint mode). Old dual CSS selectors remain a generate concern.
+// `data-mode` (paint mode). Never data-theme / data-theme-preview.
 
 /** Loose DTCG theme document (modes-in-file or flat). */
 export type ThemeDoc = Record<string, unknown>
@@ -594,21 +594,16 @@ function applyScope(
   }
 
   // Framework-owned theme IR on the host; mode is a cascade bit (D10/D11).
-  // Paint authority attr is `theme` (matches tokens_generate `[theme=id]`).
+  // Paint authority attr is `theme` only (matches tokens_generate `[theme=id]`).
   if (lowered.themeId) {
     host.setAttribute('theme', lowered.themeId)
   } else if (prev?.themeId) {
     host.removeAttribute('theme')
   }
   host.setAttribute('data-mode', lowered.mode)
-  // Dual-attr cutover (temporary): keep data-theme in sync so residual
-  // :root[data-theme] consumers / non-preview rules still key off it.
-  // Never set data-theme-preview (D7 — Studio load-bearing path is dead).
-  if (lowered.themeId) {
-    host.setAttribute('data-theme', lowered.themeId)
-  } else if (prev?.themeId) {
-    host.removeAttribute('data-theme')
-  }
+  // Hard cutover: never dual-write data-theme / data-theme-preview.
+  if (host.hasAttribute('data-theme')) host.removeAttribute('data-theme')
+  if (host.hasAttribute('data-theme-preview')) host.removeAttribute('data-theme-preview')
 
   appliedScopes.set(host, {
     names: nextNames,
@@ -631,7 +626,6 @@ export function clearThemeScope(host: HTMLElement): void {
   }
   if (prev.themeId) {
     if (host.getAttribute('theme') === prev.themeId) host.removeAttribute('theme')
-    if (host.getAttribute('data-theme') === prev.themeId) host.removeAttribute('data-theme')
   }
   if (host.getAttribute('data-mode') === prev.mode) host.removeAttribute('data-mode')
   appliedScopes.delete(host)

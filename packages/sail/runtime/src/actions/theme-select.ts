@@ -41,7 +41,7 @@ import type { Action } from '../action'
  *   - Dark → themes that declare dark
  *   - System → dual-mode themes only (can honor prefers-color-scheme)
  * - Tabs NEVER applyMode / applyTheme / persist mode or mutate document paint
- * - Live [data-theme-preview] specimens paint in the filter specimen mode
+ * - Live [theme=…] specimens paint in the filter specimen mode
  * - Selecting a **theme row** applies theme + mode intent from the active filter
  * - Selecting a theme does **not** auto-close the popover
  *
@@ -316,7 +316,8 @@ export const themeSelect: Action<void> = (node) => {
   }
 
   const currentTheme = (): ThemeId => {
-    const attr = root.getAttribute('value') || document.documentElement.dataset.theme
+    const attr =
+      root.getAttribute('value') || document.documentElement.getAttribute('theme')
     return isValidTheme(attr) ? attr : 'sail'
   }
 
@@ -428,10 +429,10 @@ export const themeSelect: Action<void> = (node) => {
     const optionLabel = opt.querySelector<HTMLElement>('[data-option-label]')
     if (optionLabel) optionLabel.textContent = theme.label
 
-    // Live specimen: themes.css scopes tokens via data-theme-preview + data-mode.
-    const preview = opt.querySelector<HTMLElement>('[data-theme-preview]')
+    // Live specimen: themes.css scopes tokens via theme + data-mode.
+    const preview = opt.querySelector<HTMLElement>('[theme]')
     if (preview) {
-      preview.setAttribute('data-theme-preview', theme.id)
+      preview.setAttribute('theme', theme.id)
     }
 
     // Optional static chip row fallback (if markup still has data-swatch-row).
@@ -540,9 +541,9 @@ export const themeSelect: Action<void> = (node) => {
         o.removeAttribute('data-filtered-out')
       }
 
-      const preview = o.querySelector<HTMLElement>('[data-theme-preview]')
+      const preview = o.querySelector<HTMLElement>('[theme]')
       if (preview && isValidTheme(id)) {
-        preview.setAttribute('data-theme-preview', id)
+        preview.setAttribute('theme', id)
         preview.setAttribute('data-mode', swatchModeFor(id, catalogFilter, paint))
       } else if (preview) {
         preview.setAttribute('data-mode', paint)

@@ -112,7 +112,7 @@ function harness(opts?: { modeOnly?: boolean; extraOption?: string }) {
     btn.setAttribute('value', id)
     const row = document.createElement('div')
     const preview = document.createElement('div')
-    preview.setAttribute('data-theme-preview', id)
+    preview.setAttribute('theme', id)
     preview.setAttribute('data-mode', 'light')
     const title = document.createElement('span')
     title.setAttribute('data-swatch-title', '')
@@ -135,7 +135,7 @@ function harness(opts?: { modeOnly?: boolean; extraOption?: string }) {
   panel.appendChild(grid)
 
   document.body.appendChild(root)
-  document.documentElement.dataset.theme = 'ship'
+  document.documentElement.setAttribute('theme', 'ship')
   document.documentElement.dataset.mode = 'light'
   return {
     root,
@@ -153,7 +153,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
   beforeEach(() => {
     setEffectiveThemeIds(null)
     vi.unstubAllGlobals()
-    document.documentElement.removeAttribute('data-theme')
+    document.documentElement.removeAttribute('theme')
     document.documentElement.removeAttribute('data-mode')
     document.documentElement.classList.remove('dark')
     delete document.documentElement.dataset.studioPreview
@@ -175,7 +175,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     setEffectiveThemeIds(null)
     vi.unstubAllGlobals()
     document.body.replaceChildren()
-    document.documentElement.removeAttribute('data-theme')
+    document.documentElement.removeAttribute('theme')
     document.documentElement.removeAttribute('data-mode')
     delete document.documentElement.dataset.studioPreview
     document.head
@@ -424,21 +424,21 @@ describe('themeSelect — catalog filter + theme apply', () => {
     destroy = action?.destroy
 
     const before = {
-      theme: document.documentElement.dataset.theme,
+      theme: document.documentElement.getAttribute('theme'),
       mode: document.documentElement.dataset.mode,
       stored: localStorage.getItem(THEME_MODE_STORAGE_KEY),
       pref: readModePreference(),
     }
 
     root.querySelector<HTMLButtonElement>('button[data-mode="dark"]')!.click()
-    expect(document.documentElement.dataset.theme).toBe(before.theme)
+    expect(document.documentElement.getAttribute('theme')).toBe(before.theme)
     expect(document.documentElement.dataset.mode).toBe(before.mode)
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe(before.stored)
     expect(readModePreference()).toBe(before.pref)
     expect(root.getAttribute('data-catalog-filter')).toBe('dark')
 
     root.querySelector<HTMLButtonElement>('button[data-mode="system"]')!.click()
-    expect(document.documentElement.dataset.theme).toBe(before.theme)
+    expect(document.documentElement.getAttribute('theme')).toBe(before.theme)
     expect(document.documentElement.dataset.mode).toBe(before.mode)
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe(before.stored)
     expect(document.documentElement.dataset.mode).not.toBe('system')
@@ -465,10 +465,10 @@ describe('themeSelect — catalog filter + theme apply', () => {
     // duals visible with dark preview
     expect(root.querySelector<HTMLElement>('[role="option"][value="ship"]')?.hidden).toBe(false)
     expect(
-      root.querySelector('[data-theme-preview="ship"]')?.getAttribute('data-mode'),
+      root.querySelector('[theme="ship"]')?.getAttribute('data-mode'),
     ).toBe('dark')
     expect(
-      root.querySelector('[data-theme-preview="synthwave"]')?.getAttribute('data-mode'),
+      root.querySelector('[theme="synthwave"]')?.getAttribute('data-mode'),
     ).toBe('dark')
     expect(root.querySelector('[data-catalog-label]')?.textContent).toMatch(/Dark/i)
     expect(
@@ -491,10 +491,10 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(root.querySelector<HTMLElement>('[role="option"][value="glass"]')?.hidden).toBe(false)
     expect(root.querySelector<HTMLElement>('[role="option"][value="ship"]')?.hidden).toBe(false)
     expect(
-      root.querySelector('[data-theme-preview="ship"]')?.getAttribute('data-mode'),
+      root.querySelector('[theme="ship"]')?.getAttribute('data-mode'),
     ).toBe('light')
     expect(
-      root.querySelector('[data-theme-preview="glass"]')?.getAttribute('data-mode'),
+      root.querySelector('[theme="glass"]')?.getAttribute('data-mode'),
     ).toBe('light')
     expect(root.querySelector('[data-catalog-label]')?.textContent).toMatch(/Light/i)
   })
@@ -532,7 +532,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(neutral.hidden).toBe(false)
     neutral.click()
 
-    expect(document.documentElement.dataset.theme).toBe('neutral')
+    expect(document.documentElement.getAttribute('theme')).toBe('neutral')
     expect(document.documentElement.dataset.mode).toBe('dark')
     expect(readModePreference()).toBe('dark')
     expect(localStorage.getItem(THEME_MODE_STORAGE_KEY)).toBe('dark')
@@ -547,7 +547,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     const action = themeSelect(root)
     destroy = action?.destroy
     root.querySelector<HTMLButtonElement>('[role="option"][value="neutral"]')!.click()
-    expect(document.documentElement.dataset.theme).toBe('neutral')
+    expect(document.documentElement.getAttribute('theme')).toBe('neutral')
     expect(closed).toBe(false)
   })
 
@@ -589,7 +589,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     root.querySelector<HTMLButtonElement>('button[data-mode="light"]')!.click()
     const neutral = root.querySelector<HTMLButtonElement>('[role="option"][value="neutral"]')!
     neutral.click()
-    expect(document.documentElement.dataset.theme).toBe('neutral')
+    expect(document.documentElement.getAttribute('theme')).toBe('neutral')
     expect(document.documentElement.dataset.mode).toBe('light')
     expect(neutral.getAttribute('aria-selected')).toBe('true')
     expect(
@@ -609,7 +609,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
 
     // dual-mode theme under system filter
     root.querySelector<HTMLButtonElement>('[role="option"][value="neutral"]')!.click()
-    expect(document.documentElement.dataset.theme).toBe('neutral')
+    expect(document.documentElement.getAttribute('theme')).toBe('neutral')
     expect(readModePreference()).toBe('system')
     expect(document.documentElement.dataset.mode).not.toBe('system')
     expect(['light', 'dark']).toContain(document.documentElement.dataset.mode)
@@ -617,7 +617,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
 
   it('modeOnly hides theme grid and cycles mode on trigger', () => {
     const { root, grid, modeTrigger } = harness({ modeOnly: true })
-    document.documentElement.dataset.theme = 'ship'
+    document.documentElement.setAttribute('theme', 'ship')
     document.documentElement.dataset.mode = 'light'
     persistMode('light')
     const action = themeSelect(root)
@@ -663,7 +663,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
   })
 
   it('heals legacy data-mode=system on the document', () => {
-    document.documentElement.dataset.theme = 'ship'
+    document.documentElement.setAttribute('theme', 'ship')
     document.documentElement.dataset.mode = 'system'
     const { root } = harness()
     const action = themeSelect(root)
@@ -676,7 +676,7 @@ describe('themeSelect — catalog filter + theme apply', () => {
     const { root } = harness()
     const action = themeSelect(root)
     destroy = action?.destroy
-    document.documentElement.dataset.theme = 'ship'
+    document.documentElement.setAttribute('theme', 'ship')
     document.documentElement.dataset.mode = 'light'
     document.documentElement.dataset.studioPreview = '1'
 
@@ -686,25 +686,25 @@ describe('themeSelect — catalog filter + theme apply', () => {
     expect(root.getAttribute('data-catalog-filter')).toBe('dark')
 
     root.querySelector<HTMLButtonElement>('[role="option"][value="paper"]')!.click()
-    expect(document.documentElement.dataset.theme).toBe('ship')
+    expect(document.documentElement.getAttribute('theme')).toBe('ship')
   })
 
   it('initial catalog filter follows readModePreference without re-applying theme', () => {
     applyTheme('ship', document.documentElement, 'dark')
     persistMode('dark')
-    const themeBefore = document.documentElement.dataset.theme
+    const themeBefore = document.documentElement.getAttribute('theme')
     const modeBefore = document.documentElement.dataset.mode
 
     const { root } = harness()
     // harness overwrites dataset — restore after mount prep
-    document.documentElement.dataset.theme = 'ship'
+    document.documentElement.setAttribute('theme', 'ship')
     document.documentElement.dataset.mode = 'dark'
 
     const action = themeSelect(root)
     destroy = action?.destroy
 
     expect(root.getAttribute('data-catalog-filter')).toBe('dark')
-    expect(document.documentElement.dataset.theme).toBe(themeBefore)
+    expect(document.documentElement.getAttribute('theme')).toBe(themeBefore)
     expect(document.documentElement.dataset.mode).toBe(modeBefore)
     expect(
       root.querySelector('button[data-mode="dark"]')?.getAttribute('aria-selected'),
