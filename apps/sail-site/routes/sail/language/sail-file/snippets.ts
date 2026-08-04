@@ -54,16 +54,13 @@ export default controller((ctx) => {
   )
   const departed = signal(0)
 
-  effect(() => {
-    const t = setInterval(() => {
-      flights.set((rows) => {
-        const [head, ...rest] = rows
-        if (head) departed.set((n) => n + 1)
-        return [...rest, nextFlight()]
-      })
-    }, 2400)
-    return () => clearInterval(t)
-  })
+  interval(() => {
+    flights.set((rows) => {
+      const [head, ...rest] = rows
+      if (head) departed.set((n) => n + 1)
+      return [...rest, nextFlight()]
+    })
+  }, 2400)
 
   return { flights, departed }
 })

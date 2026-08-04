@@ -10,7 +10,7 @@
 -->
 
 <controller>
-import type { ControllerScope } from '@ship/sail-runtime'
+import { interval, type ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
 
 interface Track {
@@ -85,15 +85,14 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     }
 
     // The clock: an effect that TRACKS playing(). Pause re-runs it and the
-    // cleanup stops the interval — the same cleanup that runs on unmount.
+    // lifecycle interval clears — same as unmount.
     effect(() => {
       if (!playing()) return
-      const t = setInterval(() => {
+      interval(() => {
         const total = current().secs
         if (position() + 1 >= total) advance(1)
         else position.set((p) => p + 1)
       }, 1000)
-      return () => clearInterval(t)
     })
 
     const playTrack = (id: number): void => {

@@ -121,6 +121,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         auto_import: true,
     },
     ActionEntry {
+        name: "clipboard",
+        param: "ClipboardParam",
+        summary: "Copy param text (or host text content) to the clipboard on click; optional onCopy success callback.",
+        auto_import: true,
+    },
+    ActionEntry {
         name: "combobox",
         param: "void",
         summary: "Combobox keyboard/ARIA behavior for an input + list pairing.",
@@ -178,6 +184,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "gridTracks",
         param: "string | null | undefined",
         summary: "Measure a CSS grid's resolved track widths/positions for layout math.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "hotkeys",
+        param: "HotkeysMap | undefined",
+        summary: "Declarative key→handler map on the document; ignores editable fields unless allowInInputs.",
         auto_import: true,
     },
     ActionEntry {
@@ -364,13 +376,15 @@ pub const ACTIONS: &[ActionEntry] = &[
 
 /// App-author `use:` surface taught in skill/docs. Internal stamps stay
 /// auto-imported for stdlib but are not the taught package API.
-pub const PUBLIC_ACTION_COUNT: usize = 12;
+pub const PUBLIC_ACTION_COUNT: usize = 14;
 pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "anchor",
     "autosize",
     "clickOutside",
+    "clipboard",
     "contextMenu",
     "dropzone",
+    "hotkeys",
     "icon",
     "menu",
     "rect",
@@ -404,6 +418,7 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "cellPad",
     "chromeOffset",
     "clickOutside",
+    "clipboard",
     "combobox",
     "contextMenu",
     "describedControl",
@@ -414,6 +429,7 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "dropzone",
     "eventSpan",
     "gridTracks",
+    "hotkeys",
     "hoverSurface",
     "icon",
     "liveBox",
@@ -472,9 +488,11 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
     "autosize",
     "cellPad",
     "clickOutside",
+    "clipboard",
     "dropzone",
     "eventSpan",
     "gridTracks",
+    "hotkeys",
     "liveBox",
     "maxWidth",
     "pin",
@@ -575,7 +593,7 @@ mod tests {
     #[test]
     fn public_action_count_matches_names_array() {
         assert_eq!(PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES.len());
-        assert_eq!(PUBLIC_ACTION_COUNT, 12);
+        assert_eq!(PUBLIC_ACTION_COUNT, 14);
     }
 
     #[test]

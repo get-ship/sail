@@ -6,6 +6,8 @@
 // console lines, editor values) lives as signals in the route's <controller>,
 // and the template reads it.
 
+import { debounce } from '@ship/sail-runtime'
+
 /** The wasm compile result the engine returns (mirrors @ship/sail-viewer). */
 export type CompileResult =
   | { kind: 'ok'; js: string; css?: string | null }
@@ -59,12 +61,17 @@ export function tsToEsm(src: string): string {
   return s
 }
 
-/** A one-slot trailing debouncer. */
+/** A one-slot trailing debouncer (lifecycle-bound when called under a setup scope). */
 export function createDebouncer(ms: number): (fn: () => void) => void {
-  let timer: ReturnType<typeof setTimeout> | null = null
+  let pending: (() => void) | null = null
+  const fire = debounce(() => {
+    const f = pending
+    pending = null
+    f?.()
+  }, ms)
   return (fn: () => void) => {
-    if (timer) clearTimeout(timer)
-    timer = setTimeout(fn, ms)
+    pending = fn
+    fire()
   }
 }
 

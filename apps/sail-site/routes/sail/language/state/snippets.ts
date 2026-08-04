@@ -33,17 +33,16 @@ doubled()      // 4
 count.set(10)
 doubled()      // 20 — recomputed lazily, only when read`,
 
-  effect: `import { signal, effect } from '@ship/sail-runtime'
+  effect: `import { signal, effect, debounce } from '@ship/sail-runtime'
 
 const count = signal(0)
 
 // Runs now; re-runs whenever a signal it reads changes.
-// The returned function is the undo — it runs before each
-// re-run and on dispose, so the timer is never left behind.
+// Debounced work is lifecycle-bound — cleared on re-run / dispose.
 const dispose = effect(() => {
   const n = count()
-  const id = setTimeout(() => { document.title = \`count: \${n}\` }, 200)
-  return () => clearTimeout(id)
+  const push = debounce(() => { document.title = \`count: \${n}\` }, 200)
+  push()
 })
 
 count.set(1)   // cancels the pending update, schedules a fresh one
@@ -107,15 +106,12 @@ export default controller(() => {
   return { clicks, add }
 })`,
 
-  composition: `import { signal, effect } from '@ship/sail-runtime'
+  composition: `import { signal, interval } from '@ship/sail-runtime'
 
-// A composition: state + the effect that maintains it, as one function.
+// A composition: state + the interval that maintains it, as one function.
 export function ticker(ms: number) {
   const now = signal(Date.now())
-  effect(() => {
-    const id = setInterval(() => now.set(Date.now()), ms)
-    return () => clearInterval(id)
-  })
+  interval(() => now.set(Date.now()), ms)
   return now
 }
 

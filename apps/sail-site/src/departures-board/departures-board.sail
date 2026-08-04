@@ -36,6 +36,8 @@ const POOL: Array<[string, string]> = [
   ['Ulaanbaatar', 'B1'],
 ]
 
+import { interval } from '@ship/sail-runtime'
+
 export default controller((ctx) => {
   let seq = 0
   const boardRow = (i: number, status: Flight['status']): Flight => {
@@ -56,19 +58,16 @@ export default controller((ctx) => {
   )
   const departed = signal(0)
 
-  effect(() => {
-    const t = setInterval(() => {
-      flights.set((rows) => {
-        const [head, ...rest] = rows
-        if (head) departed.set((n) => n + 1)
-        const promoted = rest.map((f, i) =>
-          i === 0 && f.status === 'on-time' ? { ...f, status: 'boarding' as const } : f,
-        )
-        return [...promoted, boardRow(seq, 'on-time')]
-      })
-    }, 2400)
-    return () => clearInterval(t)
-  })
+  interval(() => {
+    flights.set((rows) => {
+      const [head, ...rest] = rows
+      if (head) departed.set((n) => n + 1)
+      const promoted = rest.map((f, i) =>
+        i === 0 && f.status === 'on-time' ? { ...f, status: 'boarding' as const } : f,
+      )
+      return [...promoted, boardRow(seq, 'on-time')]
+    })
+  }, 2400)
 
   return { flights, departed }
 })

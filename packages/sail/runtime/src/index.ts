@@ -88,9 +88,11 @@ export type { Disposer } from './bind'
 export {
   anchor,
   autosize,
+  clipboard,
   clickOutside,
   contextMenu,
   dropzone,
+  hotkeys,
   icon,
   primeIconCache,
   menu,
@@ -100,7 +102,7 @@ export {
   virtualRow,
   zoomPan,
 } from './actions'
-export type { AnchorPlacement } from './actions'
+export type { AnchorPlacement, ClipboardParam, HotkeyEntry, HotkeyHandler, HotkeysMap } from './actions'
 
 export {
   focusableWithin,
@@ -136,7 +138,11 @@ export {
 } from './decode'
 export type { Decoder } from './decode'
 
-export { debounce } from './signal'
+// Signal-value debounce stays on `./signal` (import path for existing call
+// sites). Platform lifecycle-bound timing is the author-facing debounce.
+export { debounce, interval } from './timing'
+export { persisted } from './persisted'
+export type { PersistedOpts } from './persisted'
 
 // `__invalidate` is compiler ambient only (authors never type it).
 export { query, queryKeyed, mutation, __invalidate, unwrap, unwrapOr } from './query'

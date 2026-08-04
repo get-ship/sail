@@ -57,6 +57,7 @@ pub mod no_undeclared_stylesheet;
 pub mod no_variants;
 pub mod participation_style;
 pub mod prefer_primitive;
+pub mod prefer_query;
 pub mod primary_for_status;
 pub mod prop_value;
 pub mod route_inline_style;
@@ -96,6 +97,7 @@ pub const CONTROLLER_RULES: &[(&str, RuleFn)] = &[
         controller_matchmedia_layout::RULE_ID,
         controller_matchmedia_layout::check,
     ),
+    (prefer_query::RULE_ID, prefer_query::check),
 ];
 
 /// Rules that lint a `*.sail` template source. The dispatcher in
@@ -177,6 +179,8 @@ pub const APP_SOURCE_RULES: &[(&str, RuleFn)] = &[
     (no_ambient_storage::RULE_ID, no_ambient_storage::check),
     (no_ambient_nav::RULE_ID, no_ambient_nav::check),
     (no_ambient_network::RULE_ID, no_ambient_network::check),
+    // SPEC-CTX-1 teach-side (warn only).
+    (prefer_query::RULE_ID, prefer_query::check),
 ];
 
 /// Rules that lint a shipped / author `use:` Action body.

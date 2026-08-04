@@ -37,7 +37,7 @@
 import '@ship/tokens/themes.css' // the swappable theme library (paper/halo/glass/console/contrast)
 import '@ship/tokens/products.css' // brand hue per data-product; themes own lightness/chroma
 import '@ship/tokens/sail-base.css' // sail-base (document floor): bare h1/p/ul/code/pre/button/anchor skins; the design system applied to a Sail document, no class hooks needed
-import { applyTheme, isValidTheme, THEME_STORAGE_KEY, DEFAULT_THEME } from '@ship/tokens/themes'
+import { applyTheme, readStoredTheme, isValidTheme, DEFAULT_THEME } from '@ship/tokens/themes'
 
 // Ship UI is ONE site with a top product switcher (Sail · Deck · Components · AI).
 // The active product is derived from the path; each drives its own segment
@@ -83,29 +83,20 @@ export default controller((ctx) => {
     })
 
     // Theme application. applyTheme is the ONLY writer of theme/mode and
-    // does NOT persist (the picker owns localStorage) — so re-running per
-    // navigation is free and never overrides an explicit pick.
+    // does NOT persist (the picker owns storage via persistTheme) — so
+    // re-running per navigation is free and never overrides an explicit pick.
+    // Storage reads go through readStoredTheme() (tokens package seam).
     //
-    // The marketing home (design 1c) leads with the kinetic DARK design, so a
-    // first-time reader with no stored preference lands on `ship` dark mode; the
-    // docs then present in the stored/default theme. An explicit choice in
-    // localStorage always wins, on the home or anywhere else.
-    const explicitTheme = (): string | null => {
-      if (typeof localStorage === 'undefined') return null
-      try {
-        const raw = localStorage.getItem(THEME_STORAGE_KEY)
-        return isValidTheme(raw) ? raw : null
-      } catch {
-        return null
-      }
-    }
+    // The marketing home leads with kinetic ship/dark when the stored theme
+    // is the package default (unset or default pick).
     effect(() => {
-      const chosen = explicitTheme()
-      if (chosen) {
-        applyTheme(chosen)
+      const stored = readStoredTheme()
+      if (path() === '/' && stored === DEFAULT_THEME) {
+        applyTheme('ship', document.documentElement, 'dark')
         return
       }
-      applyTheme(path() === '/' ? 'ship' : DEFAULT_THEME, document.documentElement, path() === '/' ? 'dark' : undefined)
+      if (isValidTheme(stored)) applyTheme(stored)
+      else applyTheme(DEFAULT_THEME)
     })
 
     // The umbrella landing (design 1c) is the marketing home — a full-bleed

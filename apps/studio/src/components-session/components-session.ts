@@ -40,10 +40,17 @@ export type ComponentsSessionOpts = {
   mode?: ComponentMode
 }
 
+/**
+ * Programmatic clipboard write for session actions (copy brief).
+ * Prefer `use:clipboard` on click hosts; this path is for non-click handlers.
+ * Returns false when the Clipboard API is unavailable.
+ */
 async function writeClipboard(text: string): Promise<boolean> {
   try {
-    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text)
+    // Clipboard API is the platform primitive behind use:clipboard.
+    const clip = globalThis.navigator?.clipboard
+    if (clip?.writeText) {
+      await clip.writeText(text)
       return true
     }
   } catch {

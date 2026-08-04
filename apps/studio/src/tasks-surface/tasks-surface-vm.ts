@@ -2,7 +2,7 @@
  * Tasks surface VM — thread monitoring + chat-elements detail
  * (sail-message-list · sail-composer · sail-markdown · sail-diff).
  */
-import { mountAmbient, signal } from '@ship/sail-runtime'
+import { debounce, mountAmbient, signal } from '@ship/sail-runtime'
 import { getBatchItems, getSelection, getShellState } from '@ship/sail-studio-shell'
 import {
   acceptLiveNode,
@@ -212,6 +212,15 @@ export function createTasksSurface() {
     sync()
   }
 
+  const clearSentStatus = debounce(() => {
+    if (composerStatus() === 'sent') {
+      composerStatus.set('idle')
+      composerStatusLabel.set('')
+      showComposerStatus.set(false)
+      sync()
+    }
+  }, 1200)
+
   const onComposerSubmit = (e: Event) => {
     const ce = e as CustomEvent<{ text?: string; attachments?: unknown[] }>
     const text = (ce.detail?.text ?? '').trim()
@@ -230,14 +239,7 @@ export function createTasksSurface() {
         } else {
           composerStatus.set('sent')
           composerStatusLabel.set('Sent')
-          setTimeout(() => {
-            if (composerStatus() === 'sent') {
-              composerStatus.set('idle')
-              composerStatusLabel.set('')
-              showComposerStatus.set(false)
-              sync()
-            }
-          }, 1200)
+          clearSentStatus()
         }
         sync()
       })

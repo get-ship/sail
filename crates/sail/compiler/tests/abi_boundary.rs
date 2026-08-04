@@ -202,7 +202,7 @@ fn action_table_is_exported_by_the_runtime() {
         return;
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 12);
+    assert_eq!(PUBLIC_ACTION_COUNT, 14);
 
     let missing: Vec<&str> = ACTIONS
         .iter()
@@ -247,7 +247,7 @@ fn action_table_has_no_phantom_consumers() {
         return;
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 12);
+    assert_eq!(PUBLIC_ACTION_COUNT, 14);
 
     // Every action in the table must be re-exported from the full
     // actions barrel. Drift here is the class of bug this test exists
@@ -296,7 +296,7 @@ fn action_table_has_no_phantom_consumers() {
     );
 }
 
-/// The curated public `use:` surface is exactly 12 names, all present
+/// The curated public `use:` surface is exactly 14 names, all present
 /// in ACTIONS, sorted, and the only action names on the runtime front
 /// door. The compiler still auto-imports *all* actions from
 /// `@ship/sail-runtime/actions` (stdlib needs internal stamps).
@@ -306,9 +306,9 @@ fn public_action_surface_is_curated() {
         ACTIONS, PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES, is_public_action, public_actions,
     };
 
-    assert_eq!(PUBLIC_ACTION_COUNT, 12);
-    assert_eq!(PUBLIC_ACTION_NAMES.len(), 12);
-    assert_eq!(public_actions().count(), 12);
+    assert_eq!(PUBLIC_ACTION_COUNT, 14);
+    assert_eq!(PUBLIC_ACTION_NAMES.len(), 14);
+    assert_eq!(public_actions().count(), 14);
 
     let mut sorted = PUBLIC_ACTION_NAMES.to_vec();
     sorted.sort();

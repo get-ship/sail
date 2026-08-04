@@ -5,7 +5,11 @@
 // hand-wired refs + effects for element behavior.
 
 export { autosize } from './autosize'
+export { clipboard } from './clipboard'
+export type { ClipboardParam } from './clipboard'
 export { clickOutside } from './click-outside'
+export { hotkeys } from './hotkeys'
+export type { HotkeyEntry, HotkeyHandler, HotkeysMap } from './hotkeys'
 export { anchor } from './anchor'
 export type { AnchorPlacement } from './anchor'
 export { dropzone } from './dropzone'

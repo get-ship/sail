@@ -29,6 +29,8 @@
 <controller>
 const CITIES = ['Osaka', 'Nairobi', 'Tbilisi', 'Porto', 'Auckland', 'Reykjavík']
 
+import { debounce, interval } from '@ship/sail-runtime'
+
 export default controller(() => {
   let seq = 0
   const mk = (): Row => {
@@ -40,28 +42,22 @@ export default controller(() => {
   const departed = signal(0)
   const step = signal('idle')
 
-  effect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = []
-    const at = (ms: number, fn: () => void): void => {
-      timers.push(setTimeout(fn, ms))
-    }
-    const t = setInterval(() => {
-      step.set('write')
-      at(2500, () => {
-        rows.set((r) => [...r.slice(1), mk()])
-        step.set('reconcile')
-      })
-      at(5000, () => {
-        departed.set((n) => n + 1)
-        step.set('paint')
-      })
-      at(7500, () => step.set('idle'))
-    }, 10000)
-    return () => {
-      clearInterval(t)
-      timers.forEach((x) => clearTimeout(x))
-    }
-  })
+  // Lifecycle-bound: debounce one-shots + interval, auto-cleared on dispose.
+  const phaseReconcile = debounce(() => {
+    rows.set((r) => [...r.slice(1), mk()])
+    step.set('reconcile')
+  }, 2500)
+  const phasePaint = debounce(() => {
+    departed.set((n) => n + 1)
+    step.set('paint')
+  }, 5000)
+  const phaseIdle = debounce(() => step.set('idle'), 7500)
+  interval(() => {
+    step.set('write')
+    phaseReconcile()
+    phasePaint()
+    phaseIdle()
+  }, 10000)
 
   return { rows, departed, step }
 })

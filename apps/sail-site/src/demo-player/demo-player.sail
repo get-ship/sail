@@ -21,12 +21,13 @@
 <controller>
 import type { Scope } from './demo-player.sail'
 
+import { interval } from '@ship/sail-runtime'
+
 export default controller((ctx: Scope) => {
     const position = signal(23)
     effect(() => {
       if (!ctx.playing()) return
-      const t = setInterval(() => position.set((p) => (p + 1) % 100), 150)
-      return () => clearInterval(t)
+      interval(() => position.set((p) => (p + 1) % 100), 150)
     })
     return { position }
 })

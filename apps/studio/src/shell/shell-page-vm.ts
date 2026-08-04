@@ -1,5 +1,5 @@
 /** Studio chrome VM — activity rail (real links) + status bar + ops boot. */
-import { effect, mountAmbient, signal } from '@ship/sail-runtime'
+import { effect, hotkeys, mountAmbient, signal } from '@ship/sail-runtime'
 import { navigate } from '@ship/deck/router'
 import {
   bindBatchToShell,
@@ -269,43 +269,33 @@ export function createShellPage(opts?: ShellPageOpts) {
       if (d.type === 'annotate' && d.rect) void handleBridgeRegion('annotate', d.rect)
       if (d.type === 'screenshot' && d.rect) void handleBridgeRegion('screenshot', d.rect)
     }
-    const onKey = (e: KeyboardEvent) => {
-      const isMod = e.metaKey || e.ctrlKey
-      // Always swallow browser Save-page; save only when a doc is open.
-      if (isMod && e.key === 's') {
-        e.preventDefault()
+    // Declarative shell hotkeys (SPEC-CTX-1 / G4) — no ambient keydown.
+    const digitMap: Record<string, () => void> = {}
+    for (const d of Object.keys(ACTIVITY_BY_DIGIT)) {
+      digitMap[`mod+${d}`] = () => go(hrefForActivity(ACTIVITY_BY_DIGIT[d]!))
+    }
+    const hk = hotkeys(document.documentElement, {
+      'mod+s': () => {
         if (getEditState().activePath) void saveActiveSource().then(() => sync())
-        return
-      }
-      // Ctrl/⌘+Shift+K — not Shift+C (Chromium Inspect Element).
-      if (isMod && e.shiftKey && (e.key === 'k' || e.key === 'K')) {
-        e.preventDefault()
+      },
+      'mod+shift+k': () => {
         toggleChecksPanel()
         sync()
-        return
-      }
-      if (isMod && ACTIVITY_BY_DIGIT[e.key]) {
-        e.preventDefault()
-        go(hrefForActivity(ACTIVITY_BY_DIGIT[e.key]))
-        return
-      }
-      if (e.key === 'Escape' && getShellState().checksPanelOpen) {
-        e.preventDefault()
-        setChecksPanelOpen(false)
-        sync()
-        return
-      }
-      if (e.key === 'Escape' && canExitStudio() && !isMod && !e.altKey) {
-        e.preventDefault()
-        exitStudio()
-      }
-    }
-    // Shell chrome: window bus until hotkeys/message primitives land (DOMDEC).
+      },
+      ...digitMap,
+      Escape: () => {
+        if (getShellState().checksPanelOpen) {
+          setChecksPanelOpen(false)
+          sync()
+          return
+        }
+        if (canExitStudio()) exitStudio()
+      },
+    })
+    // Shell chrome: message / theme bus still ambient (no platform primitive yet).
     if (typeof window !== 'undefined') {
       // sail-allow sail-no-ambient-events
       window.addEventListener('message', onMsg)
-      // sail-allow sail-no-ambient-events
-      window.addEventListener('keydown', onKey)
       // sail-allow sail-no-ambient-events
       window.addEventListener('sail-theme-change', onThemeChange)
     }
@@ -318,9 +308,9 @@ export function createShellPage(opts?: ShellPageOpts) {
       unsubEdit()
       unsubTasks()
       unsubChecks()
+      hk?.destroy?.()
       if (typeof window !== 'undefined') {
         window.removeEventListener('message', onMsg)
-        window.removeEventListener('keydown', onKey)
         window.removeEventListener('sail-theme-change', onThemeChange)
       }
     }

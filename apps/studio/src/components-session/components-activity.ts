@@ -1,7 +1,9 @@
 /**
  * Cross-route activity bag for Components (Library ↔ Inspect remounts).
- * In-memory only until a persisted signal primitive lands (DOMDEC gap).
+ * Backed by `persisted` (session storage) so remounts keep selection/filter.
  */
+import { persisted } from '@ship/sail-runtime'
+
 export type ComponentsActivityBag = {
   selectedId: string
   filterQuery: string
@@ -9,21 +11,26 @@ export type ComponentsActivityBag = {
 
 const empty = (): ComponentsActivityBag => ({ selectedId: '', filterQuery: '' })
 
-let bag: ComponentsActivityBag = empty()
+const bag = persisted<ComponentsActivityBag>(
+  'studio.components-activity',
+  empty(),
+  { storage: 'session', debounceMs: 50 },
+)
 
 export function readComponentsActivity(): ComponentsActivityBag {
-  return { ...bag }
+  return { ...bag() }
 }
 
 export function writeComponentsActivity(patch: Partial<ComponentsActivityBag>): void {
-  bag = {
-    selectedId: patch.selectedId !== undefined ? patch.selectedId : bag.selectedId,
+  const cur = bag()
+  bag.set({
+    selectedId: patch.selectedId !== undefined ? patch.selectedId : cur.selectedId,
     filterQuery:
-      patch.filterQuery !== undefined ? patch.filterQuery : bag.filterQuery,
-  }
+      patch.filterQuery !== undefined ? patch.filterQuery : cur.filterQuery,
+  })
 }
 
-/** Test helper */
+/** Test helper — resets the in-memory signal (storage write is debounced). */
 export function __clearComponentsActivityForTests(): void {
-  bag = empty()
+  bag.set(empty())
 }
