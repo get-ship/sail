@@ -4,59 +4,41 @@
 <controller>
 import { createTasksSurface } from './tasks-surface-vm'
 export default controller(() => {
-  const vm = createTasksSurface()
+  const c = createTasksSurface()
   return {
-    taskThreadRows: vm.taskThreadRows,
-    hasTaskThreads: vm.hasTaskThreads,
-    threadCountLabel: vm.threadCountLabel,
-    taskTitle: vm.taskTitle,
-    taskDrift: vm.taskDrift,
-    taskStatusLabel: vm.taskStatusLabel,
-    taskStatusTone: vm.taskStatusTone,
-    hasTaskSelected: vm.hasTaskSelected,
-    taskAnchorHas: vm.taskAnchorHas,
-    taskAnchorStatus: vm.taskAnchorStatus,
-    taskAnchorStatusRaw: vm.taskAnchorStatusRaw,
-    taskAnchorTone: vm.taskAnchorTone,
-    taskAnchorPath: vm.taskAnchorPath,
-    taskAnchorFileSpan: vm.taskAnchorFileSpan,
-    taskAnchorMovedHint: vm.taskAnchorMovedHint,
-    taskAttachChips: vm.taskAttachChips,
-    hasTaskAttach: vm.hasTaskAttach,
-    taskError: vm.taskError,
-    showTaskErrorAlert: vm.showTaskErrorAlert,
-    taskCommitPath: vm.taskCommitPath,
-    hasTaskCommit: vm.hasTaskCommit,
-    openFilterVal: vm.openFilterVal,
-    actorFilterVal: vm.actorFilterVal,
-    driftFilterVal: vm.driftFilterVal,
-    attachCountLabel: vm.attachCountLabel,
-    showAcceptLive: vm.showAcceptLive,
-    showRebind: vm.showRebind,
-    emptyTitle: vm.emptyTitle,
-    emptyBody: vm.emptyBody,
-    threadMarkdown: vm.threadMarkdown,
-    hasThreadMarkdown: vm.hasThreadMarkdown,
-    hasMessageItems: vm.hasMessageItems,
-    hasTaskDiff: vm.hasTaskDiff,
-    diffFrom: vm.diffFrom,
-    diffTo: vm.diffTo,
-    canAttachCrop: vm.canAttachCrop,
-    composerDisabled: vm.composerDisabled,
-    composerStatusLabel: vm.composerStatusLabel,
-    showComposerStatus: vm.showComposerStatus,
-    onTaskThreadClick: (e: Event) => vm.onTaskThreadClick(e),
-    onTaskOpenFilter: (e: Event) => vm.onTaskOpenFilter(e),
-    onTaskActorFilter: (e: Event) => vm.onTaskActorFilter(e),
-    onTaskDriftFilter: (e: Event) => vm.onTaskDriftFilter(e),
-    onComposerSubmit: (e: Event) => vm.onComposerSubmit(e),
-    onTaskCommit: () => vm.onTaskCommit(),
-    onCloseDetail: () => vm.onCloseDetail(),
-    onNewTaskQuick: () => vm.onNewTaskQuick(),
-    onRetryTasks: () => vm.onRetryTasks(),
-    onAcceptLiveNode: () => vm.onAcceptLiveNode(),
-    onRebindSelection: () => vm.onRebindSelection(),
-    onAttachCrop: () => vm.onAttachCrop(),
+    taskThreadRows: c.taskThreadRows,
+    hasTaskThreads: c.hasTaskThreads,
+    threadCountLabel: c.threadCountLabel,
+    taskTitle: c.taskTitle,
+    taskStatusLabel: c.taskStatusLabel,
+    taskStatusTone: c.taskStatusTone,
+    hasTaskSelected: c.hasTaskSelected,
+    taskAnchorHas: c.taskAnchorHas,
+    taskAnchorStatus: c.taskAnchorStatus,
+    taskAnchorStatusRaw: c.taskAnchorStatusRaw,
+    taskAnchorTone: c.taskAnchorTone,
+    taskAnchorPath: c.taskAnchorPath,
+    taskAttachChips: c.taskAttachChips,
+    hasTaskAttach: c.hasTaskAttach,
+    taskError: c.taskError,
+    showTaskErrorAlert: c.showTaskErrorAlert,
+    openFilterVal: c.openFilterVal,
+    actorFilterVal: c.actorFilterVal,
+    emptyTitle: c.emptyTitle,
+    emptyBody: c.emptyBody,
+    threadMarkdown: c.threadMarkdown,
+    hasThreadMarkdown: c.hasThreadMarkdown,
+    hasMessageItems: c.hasMessageItems,
+    composerDisabled: c.composerDisabled,
+    canAttachCrop: c.canAttachCrop,
+    onTaskThreadClick: (e: Event) => c.onTaskThreadClick(e),
+    onTaskOpenFilter: (e: Event) => c.onTaskOpenFilter(e),
+    onTaskActorFilter: (e: Event) => c.onTaskActorFilter(e),
+    onComposerSubmit: (e: Event) => c.onComposerSubmit(e),
+    onCloseDetail: () => c.onCloseDetail(),
+    onNewTaskQuick: () => c.onNewTaskQuick(),
+    onRetryTasks: () => c.onRetryTasks(),
+    onAttachCrop: () => c.onAttachCrop(),
   }
 })
 </controller>
@@ -68,58 +50,55 @@ export default controller(() => {
   grow
   sx={style.minH(0).h(full).minW(0).overflow(hidden)}
 >
-  <studio-page-header data-tasks-header title="Tasks">
-    <p data-thread-count sx={style.fontSize(xs).fg(muted-foreground)}>
-      {threadCountLabel()}
-    </p>
-    <button slot="actions" type="button" size="sm" tone="primary" data-new-task on:click={onNewTaskQuick}>
+  <row
+    data-tasks-header
+    align="center"
+    justify="between"
+    gap="3"
+    shrink="0"
+    nowrap
+    sx={style.h(10).padX(4).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
+  >
+    <row align="center" gap="3" nowrap grow min-w="0">
+      <p sx={style.fontSize(md).fontWeight(semibold)}>Tasks</p>
+      <p data-thread-count sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>
+        {threadCountLabel()}
+      </p>
+      <select
+        data-filter-open
+        size="sm"
+        value={openFilterVal()}
+        on:change={onTaskOpenFilter}
+        aria-label="Open or all"
+        sx={style.w(24)}
+      >
+        <option value="open">Open</option>
+        <option value="all">All</option>
+      </select>
+      <select
+        data-filter-actor
+        size="sm"
+        value={actorFilterVal()}
+        on:change={onTaskActorFilter}
+        aria-label="Last reply"
+        sx={style.w(28)}
+      >
+        <option value="all">Anyone</option>
+        <option value="human">You</option>
+        <option value="agent">Agent</option>
+      </select>
+    </row>
+    <button type="button" size="sm" tone="primary" data-new-task on:click={onNewTaskQuick} shrink="0">
       New task
     </button>
-  </studio-page-header>
-
-  <studio-toolbar data-tasks-toolbar>
-    <select
-      data-filter-open
-      value={openFilterVal()}
-      on:change={onTaskOpenFilter}
-      aria-label="Show open or all tasks"
-      w="28"
-    >
-      <option value="open">Open</option>
-      <option value="all">All</option>
-    </select>
-    <separator orientation="vertical" sx={style.h(4)} />
-    <select
-      data-filter-actor
-      value={actorFilterVal()}
-      on:change={onTaskActorFilter}
-      aria-label="Filter by who last replied"
-      w="28"
-    >
-      <option value="all">Anyone</option>
-      <option value="human">You</option>
-      <option value="agent">Agent</option>
-    </select>
-    <select
-      data-filter-drift
-      value={driftFilterVal()}
-      on:change={onTaskDriftFilter}
-      aria-label="Filter by linked location"
-      w="28"
-    >
-      <option value="all">Any location</option>
-      <option value="ok">In place</option>
-      <option value="moved">Moved</option>
-      <option value="lost">Lost</option>
-    </select>
-    <p sx={style.fontSize(xs).fg(muted-foreground)}>Filter by reply or linked UI.</p>
-  </studio-toolbar>
+  </row>
 
   <if {showTaskErrorAlert()}>
     <row
       data-tasks-error
       align="center"
       gap="2"
+      shrink="0"
       sx={style.padX(3).h(7).borderBWidth(1).borderB(border)}
     >
       <p grow min-w="0" sx={style.fontSize(xs).fg(destructive).truncate()}>{taskError()}</p>
@@ -129,16 +108,14 @@ export default controller(() => {
     </row>
   </if>
 
-  <!-- Master–detail: thread list | conversation + composer (no side-sheet dialog). -->
   <row
     data-tasks-workbench
     grow
     gap="0"
     nowrap
     align="stretch"
-    sx={style.minH(0).basis(0).h(full).minW(0)}
+    sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden)}
   >
-    <!-- Thread list: studio-list-row + panel tokens (not hand-rolled h(8) rows) -->
     <column
       data-threads-list
       data-tasks-nav
@@ -146,17 +123,7 @@ export default controller(() => {
       gap="0"
       sx={style.minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-1).overflow(hidden)}
     >
-      <column shrink="0" gap="1" sx={style.padX(3).padT(3).padB(2).borderBWidth(1).borderB(border-subtle)}>
-        <p sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)}>
-          Threads
-        </p>
-        <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{threadCountLabel()}</p>
-      </column>
-      <scroll-area
-        grow
-        on:click={onTaskThreadClick}
-        sx={style.minH(0).basis(0).h(full)}
-      >
+      <scroll-area grow on:click={onTaskThreadClick} sx={style.minH(0).basis(0).h(full)}>
         <column gap="0" data-tasks-table sx={style.padY(1).padX(1)}>
           <if {!hasTaskThreads()}>
             <if {!showTaskErrorAlert()}>
@@ -171,7 +138,6 @@ export default controller(() => {
                 data-task-id={row.id}
                 data-thread-row
                 data-drift={row.drift}
-                data-collapsed={row.collapsed ? 'true' : 'false'}
                 title={row.title}
                 meta={row.updatedLabel}
                 selected={row.selected}
@@ -179,7 +145,6 @@ export default controller(() => {
                 <badge
                   slot="leading"
                   data-status-badge={row.status}
-                  data-status-dot={row.status}
                   tone={row.statusTone}
                   size="sm"
                   variant="soft"
@@ -189,19 +154,6 @@ export default controller(() => {
                 >
                   {row.statusLabel}
                 </badge>
-                <if {row.showDrift}>
-                  <badge
-                    slot="trailing"
-                    data-drift-chip={row.driftChip}
-                    tone="warning"
-                    size="sm"
-                    variant="outline"
-                    pill
-                    shrink="0"
-                  >
-                    {row.driftChip}
-                  </badge>
-                </if>
               </studio-list-row>
             </for>
           </if>
@@ -214,13 +166,13 @@ export default controller(() => {
       grow
       gap="0"
       min-w="0"
-      sx={style.minH(0).h(full).basis(0).minW(0).bg(surface-0)}
+      sx={style.minH(0).h(full).basis(0).minW(0).bg(surface-0).overflow(hidden)}
     >
       <if {!hasTaskSelected()}>
         <column grow align="center" justify="center" sx={style.minH(0).h(full).pad(4)}>
           <empty-state variant="placeholder" size="sm" w="full" data-task-detail-empty>
             <strong slot="title">Select a task</strong>
-            Pick a thread from the list, or create a new one.
+            Or create a new one.
           </empty-state>
         </column>
       </if>
@@ -235,13 +187,10 @@ export default controller(() => {
           justify="between"
           sx={style.h(10).padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1).minW(0)}
         >
-          <row align="center" gap="2" nowrap grow min-w="0" sx={style.minW(0)}>
+          <row align="center" gap="2" nowrap grow min-w="0">
             <strong sx={style.fontSize(md).truncate()}>{taskTitle()}</strong>
             <badge data-status-detail tone={taskStatusTone()} size="sm" variant="soft" pill>
               {taskStatusLabel()}
-            </badge>
-            <badge data-anchor-status={taskDrift()} tone="muted" size="sm" pill>
-              {taskDrift()}
             </badge>
           </row>
           <button type="button" size="sm" variant="ghost" tone="muted" on:click={onCloseDetail}>
@@ -249,143 +198,70 @@ export default controller(() => {
           </button>
         </row>
 
-        <scroll-area
+        <!-- Anchor: status only when present — no re-link/accept choreography in scaffold -->
+        <if {taskAnchorHas()}>
+          <row
+            data-anchor-card
+            data-anchor-chip
+            data-drift={taskAnchorStatusRaw()}
+            align="center"
+            gap="2"
+            nowrap
+            shrink="0"
+            sx={style.padX(3).padY(2).borderBWidth(1).borderB(border-subtle).bg(surface-0).minW(0)}
+          >
+            <badge
+              data-anchor-drift={taskAnchorStatusRaw()}
+              tone={taskAnchorTone()}
+              size="sm"
+              variant="soft"
+              pill
+              shrink="0"
+            >
+              {taskAnchorStatus()}
+            </badge>
+            <p grow min-w="0" sx={style.fontSize(xs).fontFamily(mono).truncate()}>
+              {taskAnchorPath()}
+            </p>
+          </row>
+        </if>
+
+        <if {hasTaskAttach()}>
+          <row data-attachments gap="2" align="center" shrink="0" sx={style.padX(3).padY(2).borderBWidth(1).borderB(border-subtle)}>
+            <for {taskAttachChips()} as="a" key={a.key}>
+              <badge data-attach-chip data-attach-kind={a.kind} tone="muted" size="sm" variant="outline" pill>
+                {a.label}
+              </badge>
+            </for>
+          </row>
+        </if>
+
+        <column
           data-task-conversation
           grow
-          sx={style.minH(0).basis(0).h(full)}
+          gap="0"
+          sx={style.minH(0).basis(0).h(full).overflow(hidden)}
         >
-          <column gap="3" sx={style.pad(3).minH(0)}>
-            <if {hasTaskCommit()}>
-              <p data-commit-path sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>
-                Committed {taskCommitPath()}
-              </p>
-            </if>
-
-            <if {taskAnchorHas()}>
-              <column
-                data-anchor-card
-                data-anchor-chip
-                data-drift={taskAnchorStatusRaw()}
-                gap="2"
-                sx={style.pad(2).bg(surface-1).radius(sm).borderWidth(1).border(border-subtle)}
-              >
-                <row align="center" gap="2" nowrap>
-                  <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>
-                    Linked UI
-                  </p>
-                  <badge
-                    data-anchor-drift={taskAnchorStatusRaw()}
-                    tone={taskAnchorTone()}
-                    size="sm"
-                    variant="soft"
-                    pill
-                  >
-                    {taskAnchorStatus()}
-                  </badge>
-                </row>
-                <p sx={style.fontSize(xs).fg(muted-foreground)}>{taskAnchorPath()}</p>
-                <p data-anchor-span sx={style.fontSize(xs).fontFamily(mono)}>
-                  {taskAnchorFileSpan()}
-                </p>
-                <if {taskAnchorMovedHint()}>
-                  <p data-anchor-hint sx={style.fontSize(xs).fg(muted-foreground)}>
-                    {taskAnchorMovedHint()}
-                  </p>
-                </if>
-                <if {showAcceptLive()}>
-                  <button
-                    type="button"
-                    size="sm"
-                    variant="soft"
-                    data-accept-live
-                    on:click={onAcceptLiveNode}
-                  >
-                    Accept new location
-                  </button>
-                </if>
-                <if {showRebind()}>
-                  <button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    data-rebind-selection
-                    on:click={onRebindSelection}
-                  >
-                    Re-link to selection
-                  </button>
-                </if>
+          <if {hasThreadMarkdown()}>
+            <scroll-area shrink="0" sx={style.maxH(32).minH(0)}>
+              <column sx={style.pad(3)}>
+                <sail-markdown data-thread-markdown value={threadMarkdown()} sx={style.fontSize(sm)}></sail-markdown>
               </column>
-            </if>
-
-            <if {hasTaskAttach()}>
-              <column data-attachments gap="2">
-                <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>
-                  Attachments · {attachCountLabel()}
-                </p>
-                <row gap="2" align="start">
-                  <for {taskAttachChips()} as="a" key={a.key}>
-                    <column gap="1" data-attach-chip data-attach-kind={a.kind} sx={style.maxW(28)}>
-                      <if {a.hasThumb}>
-                        <img
-                          data-attach-thumb
-                          src={a.thumbSrc}
-                          alt={a.label}
-                          sx={style.w(24).h(16).radius(sm).borderWidth(1).border(border-subtle)}
-                        />
-                      </if>
-                      <if {!a.hasThumb}>
-                        <badge
-                          data-attach-thumb="false"
-                          tone="muted"
-                          size="sm"
-                          variant="outline"
-                        >
-                          {a.label}
-                        </badge>
-                      </if>
-                      <if {a.hasThumb}>
-                        <p sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{a.label}</p>
-                      </if>
-                    </column>
-                  </for>
-                </row>
-                <if {hasTaskDiff()}>
-                  <sail-diff
-                    data-attach-diff
-                    from={diffFrom()}
-                    to={diffTo()}
-                  ></sail-diff>
-                </if>
-              </column>
-            </if>
-
-            <if {hasThreadMarkdown()}>
-              <sail-markdown
-                data-thread-markdown
-                value={threadMarkdown()}
-                sx={style.fontSize(sm)}
-              ></sail-markdown>
-            </if>
-
-            <column
-              data-messages
-              gap="0"
-              grow
-              sx={style.minH(48).h(panel-max-h-md).maxH(panel-max-h-lg)}
-            >
-              <sail-message-list
-                data-messages-host
-                sticky-bottom
-                sx={style.h(full).minH(0).w(full)}
-              >
-                <empty-state slot="empty" variant="inline" size="sm" w="full">
-                  <strong slot="title">No messages yet</strong>
-                  Ask the agent below or wait for a reply.
-                </empty-state>
-              </sail-message-list>
-            </column>
-          </column>
-        </scroll-area>
+            </scroll-area>
+          </if>
+          <sail-message-list
+            data-messages-host
+            data-messages
+            sticky-bottom
+            grow
+            sx={style.minH(0).h(full).w(full).basis(0)}
+          >
+            <empty-state slot="empty" variant="inline" size="sm" w="full">
+              <strong slot="title">No messages yet</strong>
+              Write below to start.
+            </empty-state>
+          </sail-message-list>
+        </column>
 
         <column
           data-reply-composer
@@ -393,45 +269,29 @@ export default controller(() => {
           shrink="0"
           sx={style.pad(3).borderTWidth(1).borderT(border-subtle).bg(surface-1)}
         >
-          <if {showComposerStatus()}>
-            <p data-composer-status sx={style.fontSize(xs).fg(muted-foreground)}>
-              {composerStatusLabel()}
-            </p>
-          </if>
           <sail-composer
             data-task-composer
             data-reply-input
             multiline
             disabled={composerDisabled()}
-            placeholder="Ask the agent… use @agent to hand off"
+            placeholder="Message…"
             on:sail-composer-submit={onComposerSubmit}
             sx={style.w(full)}
           >
             <row slot="trailing" gap="1" align="center" nowrap>
-              <button
-                type="button"
-                size="sm"
-                variant="ghost"
-                data-attach-crop
-                disabled={!canAttachCrop()}
-                on:click={onAttachCrop}
-              >
-                Attach screenshot
-              </button>
-              <button
-                type="button"
-                size="sm"
-                variant="outline"
-                data-commit-intent
-                on:click={onTaskCommit}
-              >
-                Commit
-              </button>
+              <if {canAttachCrop()}>
+                <button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  data-attach-crop
+                  on:click={onAttachCrop}
+                >
+                  Attach crop
+                </button>
+              </if>
             </row>
           </sail-composer>
-          <p data-attach-hint sx={style.fontSize(xs).fg(muted-foreground)}>
-            Crops from the tray attach here — no file dialogs.
-          </p>
         </column>
       </if>
     </column>

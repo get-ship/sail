@@ -55,7 +55,7 @@ export default controller(() => {
               variant={cat.selected ? 'soft' : 'ghost'}
               tone={cat.selected ? 'primary' : 'muted'}
               aria-current={cat.selected ? 'true' : undefined}
-              sx={style.w(full).justify(start)}
+              sx={style.w(full)}
             >
               {cat.label}
             </button>
@@ -167,7 +167,7 @@ export default controller(() => {
                       <for {sec.fields} as="f" key={f.key}>
                         <tr data-config-field={f.key}>
                           <td>
-                            <p sx={style.fontSize(sm).fontWeight(medium)}>{f.label}</p>
+                            <p sx={style.fontSize(sm).fontWeight(semibold)}>{f.label}</p>
                           </td>
                           <td>
                             <p sx={style.fontSize(sm).fontFamily(mono)}>{f.value}</p>

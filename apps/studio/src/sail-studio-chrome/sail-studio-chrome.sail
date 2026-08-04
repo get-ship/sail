@@ -152,51 +152,44 @@ export default controller((ctx) => {
       >
         <slot name="route"></slot>
       </column>
-
-      <if {checksPanelOpen()}>
-        <column
-          data-checks-panel
-          data-checks-drawer
-          data-findings-panel
-          shrink="0"
-          gap="0"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Findings"
-          sx={style.minH(0).h(full).w(panel-max-w-lg).minW(panel-min-w-md).maxW(panel-max-w-lg).borderLWidth(1).borderL(border).bg(surface-0).overflow(hidden).shadow(lg)}
-        >
-          <row
-            data-checks-panel-head
-            data-findings-panel-head
-            align="center"
-            justify="between"
-            gap="2"
-            shrink="0"
-            nowrap
-            sx={style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
-          >
-            <p sx={style.fontSize(xs).fontWeight(semibold).fg(foreground).textCase(uppercase).tracking(wide)}>
-              Findings
-            </p>
-            <button
-              type="button"
-              size="sm"
-              variant="ghost"
-              tone="muted"
-              data-close-checks-panel
-              aria-label="Close findings panel"
-              on:click={onCloseChecksPanel}
-            >
-              Close
-            </button>
-          </row>
-          <column grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden).h(full).minW(0)}>
-            <!-- panel prop: compact tools, no full-page header (avoids double chrome + overflow) -->
-            <checks-surface panel grow sx={style.minH(0).h(full).minW(0).overflow(hidden)} />
-          </column>
-        </column>
-      </if>
     </row>
+
+    <!--
+      Findings: L1 dialog side sheet (overlay) — always mounted for showModal.
+      Flat header/section/footer anatomy (nested chrome failed closed-dialog layout lint).
+    -->
+    <dialog
+      data-checks-panel
+      data-checks-drawer
+      data-findings-panel
+      open={checksPanelOpen()}
+      side="end"
+      size="lg"
+      aria-label="Findings"
+      on:sail-close={onCloseChecksPanel}
+    >
+      <header data-findings-panel-head data-checks-panel-head>
+        Findings
+      </header>
+      <section data-findings-panel-body>
+        <if {checksPanelOpen()}>
+          <checks-surface panel />
+        </if>
+      </section>
+      <footer>
+        <button
+          type="button"
+          size="sm"
+          variant="ghost"
+          tone="muted"
+          data-close-checks-panel
+          aria-label="Close findings"
+          on:click={onCloseChecksPanel}
+        >
+          Close
+        </button>
+      </footer>
+    </dialog>
 
     <row
       data-studio-status
