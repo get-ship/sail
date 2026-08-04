@@ -468,11 +468,85 @@ export function lowerThemeDoc(
     patch[`--${t.cssName}`] = cssValue
   }
 
+  // Role samples use --display-font / --body-font / --heading-font, which on
+  // :root are var() aliases into *-app stacks. applyScope only writes leaves
+  // present in the doc — expand concrete stacks onto the public role vars so
+  // preview faces actually change when type roles are edited.
+  expandFontRoleCascade(patch)
+
   return {
     mode: resolvedMode,
     themeId: themeIdOf(doc),
     tokens,
     patch,
+  }
+}
+
+/**
+ * Map app font stacks onto the public cascade names sx fontFamily() uses.
+ *
+ * Theme docs often leave role leaves as `{font-press-start}` / `{font-mono}` while
+ * Studio patches concrete stacks onto `*-app` / role leaves. Pure flatten+alias
+ * would emit `var(--font-press-start)` without defining that name on the host —
+ * the browser then inherits :root pixel stacks. When a concrete stack is present
+ * anywhere in the role chain, expand it onto every public name the specimen reads.
+ *
+ * This is an applyScope live-preview aid. Rust `tokens_generate` does not expand:
+ * authors (patchTypeRoles) must write concrete public leaves for Generate parity.
+ */
+function expandFontRoleCascade(patch: ThemeScopePatch): void {
+  /** Prefer concrete stacks; unwrap var(--x) only when --x is already in this patch. */
+  const concrete = (key: string, seen: Set<string> = new Set()): string | undefined => {
+    if (seen.has(key)) return undefined
+    seen.add(key)
+    const v = patch[key]
+    if (!v) return undefined
+    if (!v.startsWith('var(')) return v
+    const m = /^var\(\s*--([^),\s]+)/.exec(v)
+    if (!m) return undefined
+    return concrete(`--${m[1]}`, seen)
+  }
+  const take = (...keys: string[]): string | undefined => {
+    for (const k of keys) {
+      const v = concrete(k)
+      if (v) return v
+    }
+    return undefined
+  }
+  const display = take(
+    '--font-display-app',
+    '--display-font',
+    '--font-display',
+    '--heading-font',
+    '--typography-heading-font',
+  )
+  const body = take(
+    '--font-body-app',
+    '--body-font',
+    '--font-body',
+    '--typography-body-font',
+  )
+  const mono = take(
+    '--font-mono-app',
+    '--mono-font',
+    '--font-mono',
+    '--typography-mono-font',
+  )
+  if (display) {
+    patch['--font-display-app'] = display
+    patch['--font-display'] = display
+    patch['--display-font'] = display
+    patch['--heading-font'] = display
+  }
+  if (body) {
+    patch['--font-body-app'] = body
+    patch['--font-body'] = body
+    patch['--body-font'] = body
+  }
+  if (mono) {
+    patch['--font-mono-app'] = mono
+    patch['--font-mono'] = mono
+    patch['--mono-font'] = mono
   }
 }
 

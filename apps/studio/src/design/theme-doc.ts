@@ -339,6 +339,8 @@ export function setPathValue(
   value: string,
   type = 'dimension',
   modeId: 'light' | 'dark' = 'light',
+  /** Optional `$extensions.ship.cssName` so lower/emit hit framework token names (e.g. font-display-app). */
+  cssName?: string,
 ): Record<string, unknown> {
   const target = resolveWritePath(doc, path, modeId)
   const next = structuredClone(doc) as Record<string, unknown>
@@ -354,7 +356,27 @@ export function setPathValue(
   }
   const leaf = parts[parts.length - 1]
   const prev = (cur[leaf] as Record<string, unknown> | undefined) ?? {}
-  cur[leaf] = { ...prev, $value: value, $type: prev.$type ?? type }
+  const prevExt =
+    prev.$extensions && typeof prev.$extensions === 'object' && !Array.isArray(prev.$extensions)
+      ? (prev.$extensions as Record<string, unknown>)
+      : {}
+  const prevShip =
+    prevExt.ship && typeof prevExt.ship === 'object' && !Array.isArray(prevExt.ship)
+      ? (prevExt.ship as Record<string, unknown>)
+      : {}
+  const ship = cssName
+    ? { ...prevShip, cssName }
+    : prevShip
+  const extensions =
+    cssName || Object.keys(prevExt).length > 0
+      ? { ...prevExt, ...(Object.keys(ship).length ? { ship } : {}) }
+      : prev.$extensions
+  cur[leaf] = {
+    ...prev,
+    $value: value,
+    $type: prev.$type ?? type,
+    ...(extensions ? { $extensions: extensions } : {}),
+  }
   return next
 }
 
@@ -378,6 +400,38 @@ export function deletePath(
   return next
 }
 
+/**
+ * Public cssName → DTCG path for type-role leaves (token-registry paths).
+ * Used to walk `{alias}` when extracting faces from a theme doc.
+ */
+const FONT_CSS_TO_PATH: Record<string, string> = {
+  'display-font': 'typography.displayFont',
+  'heading-font': 'typography.heading.font',
+  'body-font': 'typography.body.font',
+  'mono-font': 'typography.monoFont',
+  'font-display': 'typography.font.display',
+  'font-display-app': 'typography.font.display-app',
+  'font-body': 'typography.font.body',
+  'font-body-app': 'typography.font.body-app',
+  'font-mono': 'typography.font.mono',
+  'font-mono-app': 'typography.font.mono-app',
+}
+
+/**
+ * Base-layer stack names that themes alias into (tokens model base / fonts.ts).
+ * Not product CSS — identity for honest role labels when the DTCG leaf is `{cssName}`.
+ */
+const PLATFORM_STACK_FACE: Record<string, string> = {
+  'font-press-start': 'Press Start 2P',
+  'font-press-start-app': 'Press Start 2P',
+  'font-display-app': 'Syne',
+  'font-display': 'Syne',
+  'font-body-app': 'DM Sans',
+  'font-body': 'DM Sans',
+  'font-mono-app': 'JetBrains Mono',
+  'font-mono': 'JetBrains Mono',
+}
+
 export function extractTypeRoles(
   doc: Record<string, unknown> | null,
   modeId: 'light' | 'dark' = 'light',
@@ -388,67 +442,133 @@ export function extractTypeRoles(
     mono: 'JetBrains Mono',
   }
   if (!doc) return defaults
-  // Studio / ship themes: heading.font (display), body.font / font.body, mono stacks.
-  const display =
+  // Prefer public role leaves (sx uses --display-font / --body-font / --mono-font).
+  // Include displayFont — 8bit/brut bind display here; heading alone is often an alias.
+  const displayRaw =
+    getPathValue(doc, 'typography.displayFont', modeId) ??
     getPathValue(doc, 'typography.heading.font', modeId) ??
     getPathValue(doc, 'typography.font.display', modeId) ??
     getPathValue(doc, 'typography.font.display-app', modeId)
-  const body =
+  const bodyRaw =
     getPathValue(doc, 'typography.body.font', modeId) ??
     getPathValue(doc, 'typography.font.body', modeId) ??
     getPathValue(doc, 'typography.font.body-app', modeId)
-  const mono =
+  const monoRaw =
+    getPathValue(doc, 'typography.monoFont', modeId) ??
     getPathValue(doc, 'typography.font.mono', modeId) ??
     getPathValue(doc, 'typography.font.mono-app', modeId) ??
     getPathValue(doc, 'typography.mono.font', modeId)
   return {
-    display: familyName(display) || defaults.display,
-    body: familyName(body) || defaults.body,
-    mono: familyName(mono) || defaults.mono,
+    display: resolveFaceName(doc, displayRaw, modeId) || defaults.display,
+    body: resolveFaceName(doc, bodyRaw, modeId) || defaults.body,
+    mono: resolveFaceName(doc, monoRaw, modeId) || defaults.mono,
   }
 }
 
+/** First family name from a concrete stack: `"Fraunces", …` or bare `Fraunces, serif`. */
 function familyName(raw: string | null): string {
   if (!raw) return ''
-  // Token alias — not a face name; leave empty so caller uses default.
-  if (raw.trim().startsWith('{')) return ''
-  // "\"Syne Variable\", …" or bare Fraunces, ui-serif, Georgia
-  const m = raw.match(/"([^"]+)"/)
+  const t = raw.trim()
+  if (!t || t.startsWith('{')) return ''
+  const m = t.match(/"([^"]+)"/)
   if (m) return m[1].replace(/\s+Variable$/, '')
-  return raw.split(',')[0]?.replace(/"/g, '').trim() ?? ''
+  return t.split(',')[0]?.replace(/"/g, '').trim() ?? ''
 }
 
-/** Patch typography faces into theme + app stacks (mode-aware). */
+/**
+ * Resolve a DTCG font $value to a UI face name.
+ * Walks whole-value `{alias}` through the same doc + known base stacks.
+ * Never invents Fraunces when the theme aliases to Press Start / mono.
+ */
+function resolveFaceName(
+  doc: Record<string, unknown>,
+  raw: string | null,
+  modeId: 'light' | 'dark',
+  depth = 0,
+): string {
+  if (!raw) return ''
+  const t = raw.trim()
+  if (!t) return ''
+  if (t.startsWith('{') && t.endsWith('}')) {
+    if (depth > 6) return ''
+    const ref = t.slice(1, -1)
+    if (!ref) return ''
+    const platform = PLATFORM_STACK_FACE[ref]
+    if (platform) return platform
+    const path = FONT_CSS_TO_PATH[ref] ?? (ref.includes('.') ? ref : null)
+    if (path) {
+      return resolveFaceName(doc, getPathValue(doc, path, modeId), modeId, depth + 1)
+    }
+    // Bare cssName without path map — try path-join kebab → dotted under typography
+    return ''
+  }
+  return familyName(t)
+}
+
+/** Patch typography faces into public role leaves + app stacks (mode-aware). */
 export function patchTypeRoles(
   doc: Record<string, unknown>,
   roles: TypeRoles,
   modeId: 'light' | 'dark' = 'light',
 ): Record<string, unknown> {
+  // Always quote family names so multi-word faces (Cal Sans, Press Start 2P) parse.
   const stack = (name: string, fallback: string) =>
     `"${name}", "${fallback}", sans-serif`
-  const displayStack = (name: string) =>
-    `${name}, ui-serif, Georgia, serif`
-  const mono = (name: string) => `"${name}", ui-monospace, monospace`
-  // Prefer heading.font when the theme already uses it (studio/ship).
-  const hasHeading =
-    getPathValue(doc, 'typography.heading.font', modeId) != null ||
-    !!(doc.modes && typeof doc.modes === 'object')
+  const displayStack = (name: string) => `"${name}", ui-serif, Georgia, serif`
+  const monoStack = (name: string) => `"${name}", ui-monospace, monospace`
+
   let next = doc
-  if (hasHeading) {
-    next = setPathValue(
-      next,
-      'typography.heading.font',
-      displayStack(roles.display),
-      'fontFamily',
-      modeId,
-    )
-  }
+  // Public cascade names sx fontFamily(display|body|mono|heading) resolve to.
+  // Must be **concrete** stacks so (1) applyScope paints faces and (2) SailTheme
+  // Generate rewrites theme table leaves — not leftover {font-press-start} aliases.
+  next = setPathValue(
+    next,
+    'typography.displayFont',
+    displayStack(roles.display),
+    'fontFamily',
+    modeId,
+    'display-font',
+  )
+  next = setPathValue(
+    next,
+    'typography.heading.font',
+    displayStack(roles.display),
+    'fontFamily',
+    modeId,
+    'heading-font',
+  )
+  next = setPathValue(
+    next,
+    'typography.body.font',
+    stack(roles.body, 'Inter'),
+    'fontFamily',
+    modeId,
+    'body-font',
+  )
+  next = setPathValue(
+    next,
+    'typography.monoFont',
+    monoStack(roles.mono),
+    'fontFamily',
+    modeId,
+    'mono-font',
+  )
+  // App stacks + mid-tier names themes often rebind (console/8bit → mono/press-start).
   next = setPathValue(
     next,
     'typography.font.display-app',
     stack(roles.display, 'Inter'),
     'fontFamily',
     modeId,
+    'font-display-app',
+  )
+  next = setPathValue(
+    next,
+    'typography.font.display',
+    stack(roles.display, 'Inter'),
+    'fontFamily',
+    modeId,
+    'font-display',
   )
   next = setPathValue(
     next,
@@ -456,21 +576,31 @@ export function patchTypeRoles(
     stack(roles.body, 'Inter'),
     'fontFamily',
     modeId,
+    'font-body-app',
   )
-  // body.font alias target when present as concrete stack later
   next = setPathValue(
     next,
-    'typography.body.font',
+    'typography.font.body',
     stack(roles.body, 'Inter'),
     'fontFamily',
     modeId,
+    'font-body',
+  )
+  next = setPathValue(
+    next,
+    'typography.font.mono-app',
+    monoStack(roles.mono),
+    'fontFamily',
+    modeId,
+    'font-mono-app',
   )
   return setPathValue(
     next,
-    'typography.font.mono-app',
-    mono(roles.mono),
+    'typography.font.mono',
+    monoStack(roles.mono),
     'fontFamily',
     modeId,
+    'font-mono',
   )
 }
 
