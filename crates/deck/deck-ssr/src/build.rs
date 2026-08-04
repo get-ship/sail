@@ -20,6 +20,18 @@ use sail_compiler::emit::synthetic::{AppManifest, emit_synthetic};
 use sail_compiler::parse::parse;
 use sail_compiler::parse::preprocess::extract_controller_block;
 
+/// Lower `query()`/`mutation()`/`invalidate()`, then ambient-wrap an extracted
+/// controller body for `page.inline.controller.ts`. Same order as CLI
+/// `synthesize` / bundler virtual-controller load. Without rewrite, a
+/// `query(() => client.m())` reaches the runtime with no compiler-derived key.
+/// Without the wrap, bare ambient idents (`signal`, `controller`, …) are free
+/// variables at runtime. Re-wrap is idempotent for already-bound names.
+pub fn materialize_inline_controller(inline_src: &str) -> Result<String> {
+    let lowered = sail_compiler::check::query_keys::rewrite(inline_src)
+        .map_err(|e| anyhow!("synthesize (query keys): {}", e.render(inline_src)))?;
+    Ok(sail_compiler::parse::preprocess::wrap_controller_body(&lowered))
+}
+
 /// Walk up from this crate to the repo root (the dir holding `package.json`
 /// and `packages/`). Anchors the route / manifest / server-entry paths.
 pub fn repo_root() -> Result<PathBuf> {
@@ -108,16 +120,7 @@ pub async fn synthesize_and_bundle_with(
             specifier: path_str(p),
         })
     } else if let Some(inline_src) = inline.as_deref() {
-        // Lower `query()`/`mutation()`/`invalidate()`, then ambient-wrap —
-        // same order as CLI `synthesize` (bin/sail-compiler.rs). Without
-        // rewrite, a `query(() => client.m())` reaches the runtime with no
-        // compiler-derived key and throws. Without the wrap, bare ambient
-        // idents (`signal`, `controller`, …) are free variables at runtime
-        // (LANG-1 G2). A no-op for controllers that use none of the three
-        // primitives / already bind every ambient they reference.
-        let lowered = sail_compiler::check::query_keys::rewrite(inline_src)
-            .map_err(|e| anyhow!("synthesize (query keys): {}", e.render(inline_src)))?;
-        let wrapped = sail_compiler::parse::preprocess::wrap_controller_body(&lowered);
+        let wrapped = materialize_inline_controller(inline_src)?;
         let inline_path = build_dir.join("page.inline.controller.ts");
         std::fs::write(&inline_path, &wrapped)
             .with_context(|| format!("write inline controller {}", inline_path.display()))?;

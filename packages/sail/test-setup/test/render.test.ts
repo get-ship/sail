@@ -54,9 +54,9 @@ describe('renderRoute — conditional branch', () => {
   })
 })
 
-// LANG-1 G2: app-local component controllers use the same ambient vocabulary
-// as route controllers. Bare `signal()` (no import) must mount and react.
-describe('renderComponent — ambient signal (LANG-1 G2)', () => {
+// App-local component controllers use the same ambient vocabulary as route
+// controllers. Bare `signal()` (no import) must mount and react.
+describe('renderComponent — ambient signal on app-local CE', () => {
   it('mounts an app-local CE whose controller uses bare signal() with no import', async () => {
     const source = `
 <controller>

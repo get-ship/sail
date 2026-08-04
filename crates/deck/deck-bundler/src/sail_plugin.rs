@@ -119,6 +119,23 @@ pub struct ResolverIndex {
     pub shadowed: Arc<HashMap<String, String>>,
 }
 
+/// Materialize the virtual `.sail.controller.ts` module body from a `.sail`
+/// source. Same order as CLI `synthesize` / `tscheck`: extract → query_keys
+/// rewrite → ambient wrap. Extract already wraps once; rewrite may introduce
+/// free ambient idents (e.g. `__invalidate`); re-wrap is idempotent for
+/// already-bound names and fills any gap so bare `signal()` / `controller()` /
+/// `derived()` resolve without an authored runtime import.
+pub(crate) fn materialize_virtual_controller(source: &str) -> Result<Option<String>> {
+    let Some(body) = sail_compiler::parse::preprocess::extract_controller_block(source).1 else {
+        return Ok(None);
+    };
+    let rewritten = sail_compiler::check::query_keys::rewrite(&body)
+        .map_err(|e| anyhow!("{}", e.render(&body)))?;
+    Ok(Some(
+        sail_compiler::parse::preprocess::wrap_controller_body(&rewritten),
+    ))
+}
+
 impl ResolverIndex {
     /// Empty resolver — for builds that emit no `@sail-tag` imports (framework/
     /// app non-view targets).
@@ -347,25 +364,13 @@ impl Plugin for SailPlugin {
             let sail = Path::new(base);
             let source = std::fs::read_to_string(sail)
                 .map_err(|e| anyhow!("read {} for its inline <controller>: {e}", sail.display()))?;
-            let body = sail_compiler::parse::preprocess::extract_controller_block(&source)
-                .1
-                .ok_or_else(|| {
-                    anyhow!(
-                        "`{id}` names the inline controller of `{}`, but that file has no \
-                         <controller> block",
-                        sail.display()
-                    )
-                })?;
-            // Lower `query()`/`mutation()`/`invalidate()`, then re-run the
-            // ambient-import wrap so the served module is self-contained
-            // (LANG-1 G2: app-local component controllers need bare `signal()`
-            // etc. to resolve — same as route controllers). `extract` already
-            // wraps once; rewrite may inject `__invalidate` / leave free
-            // ambient idents; wrap after is idempotent for already-bound names
-            // and fills any gap. Matches CLI `synthesize` + `tscheck`.
-            let rewritten = sail_compiler::check::query_keys::rewrite(&body)
-                .map_err(|e| anyhow!("{}", e.render(&body)))?;
-            let body = sail_compiler::parse::preprocess::wrap_controller_body(&rewritten);
+            let body = materialize_virtual_controller(&source)?.ok_or_else(|| {
+                anyhow!(
+                    "`{id}` names the inline controller of `{}`, but that file has no \
+                     <controller> block",
+                    sail.display()
+                )
+            })?;
             return Ok(Some(HookLoadOutput {
                 code: body.into(),
                 module_type: Some(ModuleType::Ts),
@@ -449,6 +454,136 @@ mod tests {
 
     fn detect(path: &str) -> CompileMode {
         detect_mode(Path::new(path), &fake_root()).0
+    }
+
+    fn ambient_import_line(body: &str) -> Option<&str> {
+        body.lines().find(|l| {
+            let t = l.trim_start();
+            t.starts_with("import") && t.contains("@ship/sail-runtime/internal")
+        })
+    }
+
+    fn assert_ambient(body: &str, idents: &[&str]) {
+        let line = ambient_import_line(body).unwrap_or_else(|| {
+            panic!("expected ambient import from /internal, got module:\n{body}")
+        });
+        for ident in idents {
+            assert!(
+                line.contains(ident),
+                "ambient `{ident}` missing from inject line `{line}`\nmodule:\n{body}"
+            );
+        }
+    }
+
+    /// Hyphenated app-local CE — the exact virtual-controller load path:
+    /// extract → query_keys rewrite → wrap_controller_body.
+    const APP_LOCAL_CE: &str = r#"
+<!-- apps/site/src/sail-g2-probe/sail-g2-probe.sail -->
+<controller>
+export default controller(() => {
+  const count = signal(0)
+  const doubled = derived(() => count() * 2)
+  return {
+    count,
+    doubled,
+    inc: () => count.set(count() + 1),
+  }
+})
+</controller>
+<button on:click={inc}>{count()} / {doubled()}</button>
+"#;
+
+    #[test]
+    fn virtual_controller_load_injects_ambient_signal_for_hyphenated_ce() {
+        assert!(
+            !APP_LOCAL_CE.contains("from '@ship/sail-runtime'")
+                && !APP_LOCAL_CE.contains("from \"@ship/sail-runtime\""),
+            "fixture must use bare ambient only"
+        );
+        let stem = "sail-g2-probe";
+        assert!(
+            stem.contains('-') && stem != "page" && stem != "index",
+            "fixture models a custom-element component (hyphenated stem)"
+        );
+        let body = materialize_virtual_controller(APP_LOCAL_CE)
+            .expect("materialize")
+            .expect("inline controller");
+        assert_ambient(&body, &["controller", "signal", "derived"]);
+    }
+
+    /// Rewrite surface: authored `invalidate(...)` lowers to `__invalidate`
+    /// and the module stays self-contained after ambient re-wrap.
+    #[test]
+    fn virtual_controller_load_keeps_invalidate_self_contained() {
+        let source = r#"
+<controller>
+import { invalidate } from '@ship/sail-runtime'
+import { crm } from '@app/clients/crm'
+export default controller(() => {
+  const count = signal(0)
+  const refresh = () => invalidate(crm.deals.list)
+  return { count, refresh }
+})
+</controller>
+<button on:click={refresh}>{count()}</button>
+"#;
+        let body = materialize_virtual_controller(source)
+            .expect("materialize")
+            .expect("inline controller");
+        assert_ambient(&body, &["controller", "signal"]);
+        assert!(
+            body.contains("__invalidate")
+                && (body.contains("from '@ship/sail-runtime'")
+                    || body.contains("from \"@ship/sail-runtime\"")),
+            "rewrite must bind __invalidate from sail-runtime:\n{body}"
+        );
+        assert!(
+            !body.contains("invalidate(crm"),
+            "authored invalidate() must be lowered:\n{body}"
+        );
+    }
+
+    fn repo_root() -> PathBuf {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        while !d.join("packages").is_dir() || !d.join("apps").is_dir() {
+            if !d.pop() {
+                panic!("repo root not found from CARGO_MANIFEST_DIR");
+            }
+        }
+        d
+    }
+
+    /// In-tree bare-ambient app-local CE (sail-site bill-split guide component).
+    #[test]
+    fn sail_site_bill_split_virtual_controller_gets_ambient() {
+        let path = repo_root().join("apps/sail-site/src/bill-split/bill-split.sail");
+        let source = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        assert!(
+            source.contains("signal(") && source.contains("controller("),
+            "bill-split must still author bare signal/controller"
+        );
+        assert!(
+            !source.contains("from '@ship/sail-runtime'")
+                && !source.contains("from \"@ship/sail-runtime\""),
+            "bill-split must not author a sail-runtime import"
+        );
+        let body = materialize_virtual_controller(&source)
+            .expect("materialize bill-split")
+            .expect("bill-split has <controller>");
+        assert_ambient(&body, &["controller", "signal", "derived"]);
+    }
+
+    /// Peer rail CE — bare signal/derived/mount/effect under sail-site src/.
+    #[test]
+    fn sail_site_ai_rail_virtual_controller_gets_ambient() {
+        let path = repo_root().join("apps/sail-site/src/sail-ai-rail/sail-ai-rail.sail");
+        let source = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        let body = materialize_virtual_controller(&source)
+            .expect("materialize sail-ai-rail")
+            .expect("sail-ai-rail has <controller>");
+        assert_ambient(&body, &["controller", "signal", "derived", "mount", "effect"]);
     }
 
     /// GROUPED-DIRECTORY component: stem differs from parent dir but has a hyphen.

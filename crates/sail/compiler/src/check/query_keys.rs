@@ -99,11 +99,10 @@ pub fn rewrite(source: &str) -> Result<String, CompileError> {
     // `__invalidate` is never authored — it's this rewrite's own lowering
     // target, so the emitted module must import it itself (the author's
     // `import { invalidate } from '@ship/sail-runtime'` names a different,
-    // now-unused, binding). `runtime_ambient::RUNTIME_AMBIENT` also lists
-    // it for the materialized-controller paths that run the ambient-import
-    // wrap after this rewrite; this covers the path that doesn't (the dev
-    // server's virtual controller module), so the output is self-contained
-    // either way.
+    // now-unused, binding). Materialize paths (CLI synthesize, bundler
+    // virtual controller, SSR inline write) also re-run the ambient wrap
+    // after this rewrite; the direct inject here keeps the rewritten body
+    // self-contained even if a caller only rewrites.
     if used_dunder_invalidate && !imports.contains("__invalidate") {
         out = format!("import {{ __invalidate }} from '@ship/sail-runtime'\n{out}");
     }

@@ -1,13 +1,13 @@
-//! LANG-1 G2 — ambient `signal` on app-local component controllers.
+//! Ambient `signal` on app-local component controllers.
 //!
 //! Route page controllers and app-local `src/sail-*/` component controllers
 //! share the same `<controller>` file shape. Bare `signal()` / `controller()`
 //! / `derived()` must compile to a self-contained module with the ambient
 //! import injected from `@ship/sail-runtime/internal` — no authored import.
 //!
-//! Repro context (eval-ui GAPS G2): omitting the import (lint: redundant
-//! ambient) left `ReferenceError: signal is not defined` on app-local custom
-//! elements when the serve path did not re-wrap after transforms.
+//! Omitting the authored import (lint: redundant ambient) must not leave
+//! `ReferenceError: signal is not defined` on app-local custom elements; the
+//! serve/materialize path re-wraps after transforms.
 
 use sail_compiler::check::query_keys;
 use sail_compiler::parse::preprocess::{extract_controller_block, wrap_controller_body};
