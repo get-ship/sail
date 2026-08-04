@@ -40,7 +40,7 @@ pub const CONFIG_FILES: &[&str] = &["sail.config.jsonc", "sail.config.json"];
 /// present is a typo/unknown key — the compiler must refuse loudly rather
 /// than silently ignore it (config-loud-strict: a `{"polcy":"strict"}` typo
 /// used to fail closed with zero signal).
-pub const RECOGNIZED_KEYS: [&str; 11] = [
+pub const RECOGNIZED_KEYS: [&str; 12] = [
     "preset",
     "sx",
     "variants",
@@ -52,6 +52,7 @@ pub const RECOGNIZED_KEYS: [&str; 11] = [
     "unconfined",
     "theme",
     "layout",
+    "policy",
 ];
 
 /// Documentation rows for [`RECOGNIZED_KEYS`] — key, value type, default
@@ -125,6 +126,12 @@ pub const CONFIG_KEY_DOCS: &[(&str, &str, &str, &str)] = &[
         "warn — taffy soft findings stay warnings; silent-clip stays Error",
         "promote gate-gap layout findings (main-axis overflow, collapsed box, height-chain) to Error so check/dev exit non-zero (studio strict profile)",
     ),
+    (
+        "policy",
+        "{ layout.raw_containers?, lint.severity.<rule-id>? }",
+        "registry defaults (see `sail-compiler policy`)",
+        "typed compiler policy registry object; unknown keys are a hard error naming the closest valid key",
+    ),
 ];
 
 /// The parsed contents of the nearest `sail.config.json` on the walk up. Holds
@@ -159,6 +166,13 @@ impl SailConfig {
     /// file, not merely an unrecognized key).
     pub fn parse_ok(&self) -> bool {
         self.parse_ok
+    }
+
+    /// The raw parsed JSON body — the single value every typed accessor reads.
+    /// Callers that need a nested object (e.g. the compiler policy registry's
+    /// `"policy"` target) use this rather than re-parsing the file.
+    pub fn raw(&self) -> &serde_json::Value {
+        &self.raw
     }
 
     /// The `"preset"` string, if present and a string.

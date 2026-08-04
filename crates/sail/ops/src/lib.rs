@@ -96,6 +96,10 @@ pub fn call_rpc(
             let _a: contracts::ListFilesArgs = parse_args(args_json)?;
             authoring::list_files(args_json, ctx)
         }
+        ("SailAuthoring", "Policy") => {
+            let _a: contracts::PolicyArgs = parse_args(args_json)?;
+            authoring::policy(args_json, ctx)
+        }
         ("SailInspect", "Model") => {
             let _a: contracts::InspectModelArgs = parse_args(args_json)?;
             inspect::model(args_json, ctx)

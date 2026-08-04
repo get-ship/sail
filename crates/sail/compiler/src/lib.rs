@@ -47,6 +47,7 @@ pub mod l1_manifest;
 pub mod lower;
 pub mod out_layout;
 pub mod parse;
+pub mod policy;
 pub mod runtime_ambient;
 pub(crate) mod scan;
 pub mod scope_manifest;

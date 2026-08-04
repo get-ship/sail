@@ -444,6 +444,37 @@
       }
     },
     {
+      "service": "SailAuthoring",
+      "method": "Policy",
+      "mcp_tool": "sail_policy",
+      "description": "Compiler policy registry (SPEC-POLICY-1). mode=list returns types/defaults/descriptions; mode=get returns the same rows plus resolved values. Same payload as `sail-compiler policy --json` and GET /_deck/policy.",
+      "path": "/sail.ops.v1.SailAuthoring/Policy",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "description": "`list` (registry rows) or `get` (registry + resolved values).",
+            "type": "string"
+          },
+          "project": {
+            "description": "Optional project directory for `get` (workspace-relative or absolute).",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "PolicyRet",
+        "type": "object"
+      }
+    },
+    {
       "service": "SailInspect",
       "method": "Model",
       "mcp_tool": "sail_inspect_model",

@@ -227,7 +227,10 @@ impl Policy {
         match Policy::resolve_outcome(path) {
             Some((config_path, resolution)) => {
                 announce(&config_path, &resolution);
-                resolution.tier.capabilities()
+                // Capability dial + registry lint.severity.* tree — one bundle.
+                let mut out = resolution.tier.capabilities();
+                out.extend(resolution.lint_severity_overrides);
+                out
             }
             None => Vec::new(),
         }
@@ -411,6 +414,19 @@ pub struct PolicyResolution {
     /// `network` — the styling capability keys and the per-origin network
     /// grant don't gate it and it doesn't gate them.
     pub unconfined: bool,
+    /// Registry `lint.severity.<rule-id>` overrides from the `"policy"` object.
+    /// Empty on every `Rejected` resolution and when the tree is unset.
+    pub lint_severity_overrides: Vec<LintOverride>,
+}
+
+fn rejected(reason: String) -> PolicyResolution {
+    PolicyResolution {
+        tier: Policy::STRICT,
+        kind: ResolutionKind::Rejected(reason),
+        network: Vec::new(),
+        unconfined: false,
+        lint_severity_overrides: Vec::new(),
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -436,30 +452,30 @@ pub enum ResolutionKind {
 /// parse is owned by `sail_lint::config`; this only classifies the parsed value.
 fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
     if !cfg.parse_ok() {
-        return PolicyResolution {
-            tier: Policy::STRICT,
-            kind: ResolutionKind::Rejected("the file is not valid JSON".to_string()),
-            network: Vec::new(),
-            unconfined: false,
-        };
+        return rejected("the file is not valid JSON".to_string());
     }
     let unknown = cfg.unknown_keys();
     if !unknown.is_empty() {
-        return PolicyResolution {
-            tier: Policy::STRICT,
-            kind: ResolutionKind::Rejected(format!(
-                "unrecognized key{} {}",
-                if unknown.len() == 1 { "" } else { "s" },
-                unknown
-                    .iter()
-                    .map(|k| format!("\"{k}\""))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )),
-            network: Vec::new(),
-            unconfined: false,
-        };
+        return rejected(format!(
+            "unrecognized key{} {}",
+            if unknown.len() == 1 { "" } else { "s" },
+            unknown
+                .iter()
+                .map(|k| format!("\"{k}\""))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
     }
+
+    // Registry `"policy"` object — unknown keys hard-fail naming the closest
+    // valid key (SPEC-POLICY-1). Parse once here so capability tier + registry
+    // share the body.
+    let registry = match crate::policy::apply_config_to_resolved(cfg) {
+        Ok(r) => r,
+        Err(e) => return rejected(e.message),
+    };
+    let lint_severity_overrides = registry.lint_overrides();
+    let policy_object_present = cfg.has_key("policy");
 
     let mut p = Policy::STRICT;
     let mut signal = Vec::new();
@@ -470,14 +486,9 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
                 signal.push(format!("preset: {name}"));
             }
             None => {
-                return PolicyResolution {
-                    tier: Policy::STRICT,
-                    kind: ResolutionKind::Rejected(format!(
-                        "unrecognized preset \"{name}\" (expected \"full\", \"strict\", \"repair\", or \"off\")"
-                    )),
-                    network: Vec::new(),
-                    unconfined: false,
-                };
+                return rejected(format!(
+                    "unrecognized preset \"{name}\" (expected \"full\", \"strict\", \"repair\", or \"off\")"
+                ));
             }
         }
     }
@@ -494,6 +505,30 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
             signal.push(format!("{key}: {b}"));
         }
     }
+    // Registry knobs: explicit `policy.layout.raw_containers` overrides any
+    // earlier preset/top-level value (layout.raw_containers is the SSOT name).
+    // A policy object that only carries lint.severity.* does NOT clobber
+    // preset/top-level raw_containers.
+    if registry.raw_containers_explicit {
+        // Drop a prior signal line for the legacy key if present — the nested
+        // name is authoritative.
+        signal.retain(|s| !s.starts_with("raw_containers:"));
+        p.raw_containers = registry.raw_containers;
+        signal.push(format!(
+            "policy.layout.raw_containers: {}",
+            registry.raw_containers
+        ));
+    }
+    if policy_object_present && !registry.lint_severities.is_empty() {
+        signal.push(format!(
+            "policy.lint.severity: {} override(s)",
+            registry.lint_severities.len()
+        ));
+    } else if policy_object_present && !registry.raw_containers_explicit {
+        // Empty or lint-only policy object still counts as tier signal so a
+        // policy-only config is not classified as NoSignal.
+        signal.push("policy: registry".to_string());
+    }
     if let Some(af) = cfg.string_key("autofix") {
         match AutofixPreset::parse(&af) {
             Some(preset) => {
@@ -504,14 +539,9 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
                 signal.push(format!("autofix: {af}"));
             }
             None => {
-                return PolicyResolution {
-                    tier: Policy::STRICT,
-                    kind: ResolutionKind::Rejected(format!(
-                        "unrecognized autofix \"{af}\" (expected \"repair\", \"strict\", or \"off\")"
-                    )),
-                    network: Vec::new(),
-                    unconfined: false,
-                };
+                return rejected(format!(
+                    "unrecognized autofix \"{af}\" (expected \"repair\", \"strict\", or \"off\")"
+                ));
             }
         }
     }
@@ -531,14 +561,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
                 network = origins;
             }
             Err(()) => {
-                return PolicyResolution {
-                    tier: Policy::STRICT,
-                    kind: ResolutionKind::Rejected(
-                        "\"network\" must be an array of origin strings".to_string(),
-                    ),
-                    network: Vec::new(),
-                    unconfined: false,
-                };
+                return rejected("\"network\" must be an array of origin strings".to_string());
             }
         }
     }
@@ -558,12 +581,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
                 unconfined = b;
             }
             Err(()) => {
-                return PolicyResolution {
-                    tier: Policy::STRICT,
-                    kind: ResolutionKind::Rejected("\"unconfined\" must be a boolean".to_string()),
-                    network: Vec::new(),
-                    unconfined: false,
-                };
+                return rejected("\"unconfined\" must be a boolean".to_string());
             }
         }
     }
@@ -575,14 +593,9 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
         match layout.to_ascii_lowercase().as_str() {
             "error" | "warn" => signal.push(format!("layout: {layout}")),
             other => {
-                return PolicyResolution {
-                    tier: Policy::STRICT,
-                    kind: ResolutionKind::Rejected(format!(
-                        "unrecognized layout \"{other}\" (expected \"warn\" or \"error\")"
-                    )),
-                    network: Vec::new(),
-                    unconfined: false,
-                };
+                return rejected(format!(
+                    "unrecognized layout \"{other}\" (expected \"warn\" or \"error\")"
+                ));
             }
         }
     }
@@ -603,6 +616,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
             kind: ResolutionKind::NoSignal(hint),
             network: Vec::new(),
             unconfined: false,
+            lint_severity_overrides: Vec::new(),
         }
     } else {
         PolicyResolution {
@@ -610,6 +624,7 @@ fn classify(cfg: &sail_lint::config::SailConfig) -> PolicyResolution {
             kind: ResolutionKind::Recognized(signal.join(", ")),
             network,
             unconfined,
+            lint_severity_overrides,
         }
     }
 }

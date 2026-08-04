@@ -3,7 +3,14 @@
 //! `axum::response::Response` via [`into_axum`](crate::into_axum). No
 //! hosting logic lives here — it all sits in `deck-core`.
 
-use axum::{Extension, Json, extract::Path, response::Response};
+use std::path::PathBuf;
+
+use axum::{
+    Extension, Json,
+    extract::{Path, Query},
+    response::Response,
+};
+use serde::Deserialize;
 use serde_json::Value;
 
 use deck_core::{DaemonBuildInfo, DaemonMode};
@@ -87,6 +94,43 @@ pub async fn serve_sail_studio_bridge(mode: Option<Extension<DaemonMode>>) -> Re
 /// `GET /_deck/meta` — wraps deck-core's plain JSON value in `axum::Json`.
 pub async fn serve_meta(daemon: Option<Extension<DaemonBuildInfo>>) -> Json<Value> {
     Json(deck_core::serve_meta(daemon.map(|e| e.0)))
+}
+
+/// Query for `GET /_deck/policy` — same shape as MCP `sail_policy` args.
+#[derive(Debug, Default, Deserialize)]
+pub struct PolicyQuery {
+    /// `list` (default) or `get`.
+    #[serde(default = "default_policy_mode")]
+    pub mode: String,
+    /// Optional project directory for `get` resolution.
+    #[serde(default)]
+    pub project: Option<String>,
+}
+
+fn default_policy_mode() -> String {
+    "list".into()
+}
+
+/// `GET /_deck/policy` — compiler policy registry (SPEC-POLICY-1).
+///
+/// Shared serialization with `sail-compiler policy --json` and MCP
+/// `sail_policy`. Read-only; no write path.
+pub async fn serve_policy(Query(q): Query<PolicyQuery>) -> Json<Value> {
+    let project = q.project.as_ref().map(PathBuf::from);
+    // deck-config owns the filename convention; the registry owns the body.
+    // When a project is named we still resolve via the compiler walk-up
+    // (sail_lint::config inside resolve_for_source) — deck-config's
+    // load_sail_config_text is available for hosts that need the raw bytes.
+    let _ = project
+        .as_ref()
+        .and_then(|p| deck_config::load_sail_config_text(p));
+    match sail_compiler::policy::serialize_policy(&q.mode, project.as_deref()) {
+        Ok(v) => Json(v),
+        Err(e) => Json(serde_json::json!({
+            "error": e.message,
+            "mode": q.mode,
+        })),
+    }
 }
 
 // ── HMR (dev) handler ─────────────────────────────────────────────────────────

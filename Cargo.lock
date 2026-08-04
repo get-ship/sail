@@ -891,6 +891,7 @@ dependencies = [
  "deck-core",
  "futures-util",
  "reqwest",
+ "sail-compiler",
  "serde",
  "serde_json",
  "specta",
@@ -6809,6 +6810,10 @@ dependencies = [
 ]
 
 [[patch.unused]]
+name = "ship-proto"
+version = "0.1.0"
+
+[[patch.unused]]
 name = "agent-driver"
 version = "0.1.0"
 
@@ -6846,8 +6851,4 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "sail-compiler"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "ship-proto"
 version = "0.1.0"

@@ -169,6 +169,23 @@ pub struct CompleteRet {
     pub items: Vec<Json>,
 }
 
+/// Compiler policy registry projection (SPEC-POLICY-1).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct PolicyArgs {
+    /// `list` (registry rows) or `get` (registry + resolved values).
+    pub mode: String,
+    /// Optional project directory for `get` (workspace-relative or absolute).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct PolicyRet {
+    /// Shared serialization payload (`mode`, `entries`, optional `values`).
+    #[serde(flatten)]
+    pub body: Json,
+}
+
 // ── SailInspect ─────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -854,6 +871,18 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         "ListFilesRet",
         "  project?: string\n",
         "  ok: boolean\n  project: string\n  files: string[]\n"
+    ),
+    contract!(
+        "SailAuthoring",
+        "Policy",
+        "sail_policy",
+        "Compiler policy registry (SPEC-POLICY-1). mode=list returns types/defaults/descriptions; mode=get returns the same rows plus resolved values. Same payload as `sail-compiler policy --json` and GET /_deck/policy.",
+        PolicyArgs,
+        PolicyRet,
+        "PolicyArgs",
+        "PolicyRet",
+        "  mode: string\n  project?: string\n",
+        "  [key: string]: JsonValue | undefined\n"
     ),
     contract!(
         "SailInspect",

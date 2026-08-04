@@ -1,0 +1,29 @@
+{
+  "service": "SailAuthoring",
+  "method": "Policy",
+  "mcp_tool": "sail_policy",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "description": "`list` (registry rows) or `get` (registry + resolved values).",
+        "type": "string"
+      },
+      "project": {
+        "description": "Optional project directory for `get` (workspace-relative or absolute).",
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "mode"
+    ]
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "PolicyRet",
+    "type": "object"
+  }
+}

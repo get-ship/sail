@@ -90,6 +90,27 @@ pub fn deck_out_path(root: &Path) -> PathBuf {
     root.join(DECK_OUT_DIRNAME)
 }
 
+/// Filenames the host may find for a project's compiler policy config.
+/// `jsonc` is preferred when both exist (app-level studio convention).
+///
+/// Wire-through only: deck does not parse the policy registry — that lives in
+/// `sail_compiler::policy`. Hosts (deck-axum policy endpoint) use these names
+/// to locate the file the registry deserializes.
+pub const SAIL_CONFIG_FILES: &[&str] = &["sail.config.jsonc", "sail.config.json"];
+
+/// First existing sail config under `project_root`, preferring jsonc.
+/// Returns `(path, raw_text)` so callers can hand the body to the compiler
+/// policy registry without re-implementing the filename convention.
+pub fn load_sail_config_text(project_root: &Path) -> Option<(PathBuf, String)> {
+    for name in SAIL_CONFIG_FILES {
+        let path = project_root.join(name);
+        if let Ok(text) = std::fs::read_to_string(&path) {
+            return Some((path, text));
+        }
+    }
+    None
+}
+
 /// One app's serve configuration — the parsed contents of a per-app
 /// `apps/<app>/deck.jsonc` (or `Default::default()` when the file is
 /// absent), and the shape deck's per-app router consumes. shipd (or
@@ -587,6 +608,7 @@ mod tests {
                 name: String::new(),
                 route: String::new(),
                 source: String::new(),
+                ops_project: None,
                 inject_globals: [("DECK_APP_ID".to_string(), "$id".to_string())]
                     .into_iter()
                     .collect(),

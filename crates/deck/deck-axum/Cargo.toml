@@ -22,6 +22,8 @@ specta = ["dep:specta", "deck-core/specta"]
 deck-config = { path = "../deck-config" }
 deck-core = { path = "../deck-core" }
 deck-bundler = { path = "../deck-bundler" }
+# Policy registry payload (SPEC-POLICY-1) — shared serialization with CLI/MCP.
+sail-compiler = { path = "../../sail/compiler" }
 
 axum = { workspace = true, features = ["http1", "tokio", "ws"] }
 futures-util = { workspace = true }

@@ -117,6 +117,20 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// Print the compiler policy registry (SPEC-POLICY-1). This IS the docs
+    /// projection — no markdown file. Default: human table. `--json` emits the
+    /// shared serialization used by MCP `sail_policy` and GET `/_deck/policy`.
+    Policy {
+        /// `list` (registry rows) or `get` (registry + resolved values).
+        #[arg(long, default_value = "list")]
+        mode: String,
+        /// Directory for `get` resolution (walks up for sail.config). Default: cwd.
+        #[arg(long)]
+        dir: Option<PathBuf>,
+        /// Emit the shared JSON payload instead of the human table.
+        #[arg(long)]
+        json: bool,
+    },
     /// Emit the framework's stdlib element skins as a single CSS file — the
     /// compiler's half of the framework stylesheet (`sail.css`); the runtime's
     /// contracts sheet is the other half. The registry is the SSOT; a drift
@@ -246,6 +260,7 @@ fn main() -> Result<()> {
             emit_component_imports,
         ),
         Command::Skill { dir, out } => gen_skill(dir, out),
+        Command::Policy { mode, dir, json } => print_policy(mode, dir, json),
         Command::FrameworkCss { out } => gen_framework_css(out),
         Command::PropRegistry { out, ts_out } => gen_prop_registry(out, ts_out),
         Command::Synthesize {
@@ -750,6 +765,23 @@ fn sx_skill_demo(raw_containers: bool) -> &'static str {
     }
 }
 
+/// Print the compiler policy registry (table or shared JSON serialization).
+fn print_policy(mode: String, dir: Option<PathBuf>, as_json: bool) -> Result<()> {
+    let dir = match dir {
+        Some(d) => d,
+        None => std::env::current_dir()?,
+    };
+    // Human table is the docs projection for `list` without `--json`.
+    if !as_json && mode == "list" {
+        print!("{}", sail_compiler::policy::format_registry_table());
+        return Ok(());
+    }
+    let payload = sail_compiler::policy::serialize_policy(&mode, Some(&dir))
+        .map_err(|e| anyhow::anyhow!(e.message))?;
+    println!("{}", serde_json::to_string_pretty(&payload)?);
+    Ok(())
+}
+
 /// Generate the agent-authoring skill for `dir` — **progressive disclosure**.
 ///
 /// Default SKILL.md is ~one screen: hard rules, layout/participation, core
@@ -772,6 +804,15 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         Some(_) => "full (stdlib/primitive authoring)",
         None => "none configured — full surface (stdlib default)",
     };
+    // Registry-resolved knobs (layout.raw_containers + lint.severity.*) — the
+    // skill section is a projection of the same table as CLI/MCP/axum.
+    // When the nested policy object did not set raw_containers, the capability
+    // tier (preset / top-level key) still owns the effective value.
+    let mut registry_resolved = sail_compiler::policy::resolve_for_source(&dir.join("_probe.sail"))
+        .unwrap_or_else(|_| sail_compiler::policy::ResolvedPolicy::defaults());
+    if !registry_resolved.raw_containers_explicit {
+        registry_resolved.raw_containers = effective.raw_containers;
+    }
 
     let mut md = String::new();
     let _ = writeln!(
@@ -818,6 +859,9 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          **Hard fails:** any PR with `createElement` / `cssText` / `querySelector`\n\
          assign in `apps/` is rejected.\n"
     );
+
+    // Resolved policy section — FROM the registry (SPEC-POLICY-1).
+    md.push_str(&sail_compiler::policy::format_skill_section(&registry_resolved));
 
     let _ = writeln!(md, "## The hard rules (every policy)\n");
     let _ = writeln!(

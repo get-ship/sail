@@ -141,6 +141,15 @@ export interface ListFilesRet {
   project: string
 }
 
+export interface PolicyArgs {
+  mode: string
+  project?: string
+}
+
+export interface PolicyRet {
+  [key: string]: JsonValue | undefined
+}
+
 export interface InspectModelArgs {
   path: string
   viewport?: InspectViewport
@@ -614,6 +623,14 @@ export async function sailAuthoringListFiles(
   opts?: ClientOptions,
 ): Promise<ListFilesRet> {
   return postJson<ListFilesRet>('/sail.ops.v1.SailAuthoring/ListFiles', args ?? {}, opts)
+}
+
+// SailAuthoring/Policy — Compiler policy registry (SPEC-POLICY-1). mode=list returns types/defaults/descriptions; mode=get returns the same rows plus resolved values. Same payload as `sail-compiler policy --json` and GET /_deck/policy.
+export async function sailAuthoringPolicy(
+  args: PolicyArgs,
+  opts?: ClientOptions,
+): Promise<PolicyRet> {
+  return postJson<PolicyRet>('/sail.ops.v1.SailAuthoring/Policy', args ?? {}, opts)
 }
 
 // SailInspect/Model — Canonical per-file Sail model (tree, layout, state, diagnostics, data, theme). Source-derived; modelVersion 1.

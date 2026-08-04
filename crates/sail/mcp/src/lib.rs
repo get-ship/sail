@@ -96,6 +96,28 @@ mod tests {
         assert!(names.contains(&"sail_theme_write"));
         assert!(names.contains(&"sail_tokens_generate"));
     }
+
+    #[test]
+    fn sail_policy_list_matches_rpc_and_has_proof_knobs() {
+        let ctx = Ctx::from_env();
+        let args = json!({"mode": "list"});
+        let mcp = call_tool_with_ctx("sail_policy", &args, &ctx).unwrap();
+        let rpc = call_rpc("SailAuthoring", "Policy", &args, &ctx).unwrap();
+        assert_eq!(mcp, rpc, "MCP and RPC must share one serialization");
+        assert_eq!(mcp["mode"], "list");
+        let names: Vec<_> = mcp["entries"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|e| e.get("name").and_then(|n| n.as_str()))
+            .collect();
+        assert!(names.contains(&"layout.raw_containers"), "{names:?}");
+        assert!(names.contains(&"lint.severity.<rule-id>"), "{names:?}");
+        // No platforms field on any row.
+        for e in mcp["entries"].as_array().unwrap() {
+            assert!(e.get("platforms").is_none(), "{e}");
+        }
+    }
 }
 
 // ── stdio JSON-RPC MCP server (also used by `sail mcp`) ─────────────────────
@@ -173,7 +195,7 @@ fn print_stdio_help() {
     eprintln!(
         "sail mcp — MCP server for Sail authoring (stdio JSON-RPC)\n\n\
          Tools: sail_surface, sail_check, sail_edit, sail_layout_check,\n\
-                sail_theme_list/read/write/fork, sail_tokens_generate,\n\
+                sail_policy, sail_theme_list/read/write/fork, sail_tokens_generate,\n\
                 sail_dev_server_start/status/stop\n\
          Handlers: sail-ops (same as CLI `sail op` and Connect HTTP).\n\n\
          Usage:\n  \

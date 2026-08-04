@@ -13,10 +13,10 @@ pub mod pages;
 pub mod render_helpers;
 pub mod sail_source;
 pub use handlers::{
-    serve_bundle_hmr, serve_deck_route, serve_framework_font, serve_meta, serve_sail_compiler_wasm,
-    serve_sail_dom, serve_sail_error_overlay, serve_sail_icon, serve_sail_live_reload,
-    serve_sail_lsp_completions, serve_sail_lsp_diagnostics, serve_sail_runtime,
-    serve_sail_sdk_client, serve_sail_studio_bridge,
+    serve_bundle_hmr, serve_deck_route, serve_framework_font, serve_meta, serve_policy,
+    serve_sail_compiler_wasm, serve_sail_dom, serve_sail_error_overlay, serve_sail_icon,
+    serve_sail_live_reload, serve_sail_lsp_completions, serve_sail_lsp_diagnostics,
+    serve_sail_runtime, serve_sail_sdk_client, serve_sail_studio_bridge,
 };
 // The named-route handlers (serve_sail_route_setup / serve_route_host /
 // serve_route_payload[_subpath]) moved to the `ship-views` crate. deck-axum's
@@ -165,6 +165,8 @@ pub fn router() -> Router {
         // — purged with `packs::serve_catalog_workspace` and the
         // `.deck/catalogs/workspace.json` write.
         .route("/_deck/meta", get(serve_meta))
+        // Compiler policy registry (SPEC-POLICY-1) — same JSON as CLI/MCP.
+        .route("/_deck/policy", get(serve_policy))
         // The named-route endpoints (`/_deck/views/{name}/view.js`,
         // `/_deck/views/{name}[/{*sub}]`, `/_deck/view/{name}[/{*sub}]`) moved to
         // `ship_views::router()`. A host that serves routes merges that router

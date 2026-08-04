@@ -1,4 +1,4 @@
-//! `SailAuthoring` RPCs — Surface, Check, Edit, LayoutCheck, ListFiles, Hover, Complete.
+//! `SailAuthoring` RPCs — Surface, Check, Edit, LayoutCheck, ListFiles, Policy, Hover, Complete.
 
 use std::path::{Path, PathBuf};
 
@@ -755,6 +755,37 @@ pub fn layout_check(args: &Value) -> Result<Value, OpError> {
         ));
     };
     sail_layout_check(&source)
+}
+
+/// Compiler policy registry — `mode=list|get`, same payload as CLI / axum.
+pub fn policy(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let mode = args
+        .get("mode")
+        .and_then(|v| v.as_str())
+        .unwrap_or("list");
+    let project = args
+        .get("project")
+        .and_then(|v| v.as_str())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+    let project_path = project.map(|p| {
+        let path = PathBuf::from(&p);
+        if path.is_absolute() {
+            path
+        } else {
+            ctx.workspace().join(p)
+        }
+    });
+    // When get has no project, resolve against the ops project root.
+    let dir = project_path.or_else(|| {
+        if mode == "get" {
+            Some(ctx.project().to_path_buf())
+        } else {
+            None
+        }
+    });
+    sail_compiler::policy::serialize_policy(mode, dir.as_deref())
+        .map_err(|e| OpError::InvalidArgument(e.message))
 }
 
 /// List workspace-relative project source files (explorer seed).
