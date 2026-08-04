@@ -17,7 +17,11 @@
 
   // border(solid) kills UA button outset; without it freeform demos look like
   // native OS chrome instead of design-system controls.
-  const base = style.display(inline-flex).appearance(none).fontWeight(medium).leading(none).radius(md).borderWidth(control-stroke).border(solid).border(transparent).borderImage(corner-image).bg(transparent).isolate().position(relative).controlFrame().select(none).whitespace(nowrap).cursor(pointer).when({ hover: style.controlLift(), active: style.press(), disabled: style.cursor(not-allowed).opacity(50) })
+  //
+  // No base bg(transparent): that class is a cascade landmine (F7). Unlayered
+  // product `.sx-bgtransparent` beats layered solid skins and empties primary
+  // fills. Variants own background; ghost is the only transparent fill.
+  const base = style.display(inline-flex).appearance(none).fontWeight(medium).leading(none).radius(md).borderWidth(control-stroke).border(solid).border(transparent).borderImage(corner-image).isolate().position(relative).controlFrame().select(none).whitespace(nowrap).cursor(pointer).when({ hover: style.controlLift(), active: style.press(), disabled: style.cursor(not-allowed).opacity(50) })
 
   const sizeXs = style.minH(control-h-2xs).padX(2).fontSize(xs)
   const sizeSm = style.minH(control-h-sm).padX(2_5).fontSize(sm)
@@ -28,7 +32,7 @@
   const vSolid = style.bg(foreground).border(foreground).fg(background).shadow(xs).when({ hover: style.opacity(90).shadow(sm) })
   const vSoft = style.bg(hover-bg).border(border).fg(foreground).when({ hover: style.opacity(90) })
   const vOutline = style.border(foreground).fg(foreground).when({ hover: style.bg(hover-bg), disabled: style.bg(transparent) })
-  const vGhost = style.fg(foreground).when({ hover: style.bg(hover-bg), disabled: style.bg(transparent) })
+  const vGhost = style.bg(transparent).fg(foreground).when({ hover: style.bg(hover-bg), disabled: style.bg(transparent) })
 </scope>
 
 <button sx={[

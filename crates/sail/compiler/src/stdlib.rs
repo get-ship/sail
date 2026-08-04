@@ -158,7 +158,11 @@ fn descendant_map(tag: &str) -> Option<&'static [DescRule]> {
         "code-block" => Some(CODE_BLOCK_MAP),
         "breadcrumb" => Some(BREADCRUMB_MAP),
         "dialog" => Some(DIALOG_MAP),
+        // details + collapsible both host a native <summary> chevron; collapsible
+        // is its own CE (`.sail-collapsible`) so it needs the same map — without
+        // it summary::after is only a solid bg square (mask never applied).
         "details" => Some(DETAILS_MAP),
+        "collapsible" => Some(DETAILS_MAP),
         "summary" => Some(SUMMARY_MAP),
         "table" => Some(TABLE_MAP),
         "progress" => Some(PROGRESS_MAP),
@@ -541,6 +545,30 @@ const DIALOG_MAP: &[DescRule] = &[
 ];
 
 const DETAILS_MAP: &[DescRule] = &[
+    // Kill UA disclosure marker on the hosted summary (collapsible does not
+    // wrap the <summary> L1 component, so SUMMARY_MAP never runs on it).
+    DescRule {
+        sel: "> summary::-webkit-details-marker",
+        paint: DescPaint(&[("display", "none")]),
+    },
+    DescRule {
+        sel: "> summary::marker",
+        paint: DescPaint(&[("content", "''")]),
+    },
+    // Chevron via mask + background color (sx after:bg supplies the fill).
+    // Without mask, after:size + bg paints a solid square — the broken caret.
+    DescRule {
+        sel: "> summary::after",
+        paint: DescPaint(&[
+            ("flex", "0 0 auto"),
+            ("-webkit-mask", SUMMARY_CHEVRON_MASK),
+            ("mask", SUMMARY_CHEVRON_MASK),
+            (
+                "transition",
+                "transform var(--duration-medium) var(--ease-out), background var(--duration-fast) var(--ease-out)",
+            ),
+        ]),
+    },
     DescRule {
         sel: "[open] > summary",
         paint: DescPaint(&[
@@ -570,6 +598,22 @@ const DETAILS_MAP: &[DescRule] = &[
     },
     DescRule {
         sel: "+ .sail-details",
+        paint: DescPaint(&[
+            ("border-top", "0"),
+            ("border-top-left-radius", "0"),
+            ("border-top-right-radius", "0"),
+        ]),
+    },
+    // Collapsible hosts stack the same way (class is .sail-collapsible).
+    DescRule {
+        sel: ":has(+ .sail-collapsible)",
+        paint: DescPaint(&[
+            ("border-bottom-left-radius", "0"),
+            ("border-bottom-right-radius", "0"),
+        ]),
+    },
+    DescRule {
+        sel: "+ .sail-collapsible",
         paint: DescPaint(&[
             ("border-top", "0"),
             ("border-top-left-radius", "0"),

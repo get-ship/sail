@@ -796,6 +796,29 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          `.mcp.json` may be **Ship-managed** and wiped on `ship compile` — re-add the\n\
          sail server (prefer the release binary) if tools disappear.\n"
     );
+    let _ = writeln!(md, "## Framework stack (do not invent alternatives)\n");
+    let _ = writeln!(
+        md,
+        "Skip this and agents invent `createElement` / `cssText` / querySelector\n\
+         host assign. That is a **hard fail**, not a style preference.\n\n\
+         1. **Signals + stores in the signal graph** — not module `let state` +\n   \
+            manual sync when the store API exists. Shared/stateful logic:\n   \
+            `defineStore` / `useStore` from `@ship/sail-runtime` (studio + apps).\n   \
+            Local UI: `signal` / `derived` in `<controller>`, still in the graph.\n\
+         2. **Actions (`use:`)** — sanctioned DOM/measurement home; live under\n   \
+            runtime. App controllers do **not** touch `.style` / `createElement`.\n\
+         3. **Compositions / L1–L2 primitives** — tabs, tooltip, sail-tree, form,\n   \
+            selection, …. Use the primitive before hand-rolling.\n\
+         4. **`prop:tree={{table}}`** (identity bind) for sail-tree — NEVER\n   \
+            `document.querySelector` + assign the host (same as `prop:table`).\n\
+         5. **sx + tokens** — only styling path. `style.cssText` / `.style` / raw\n   \
+            CSS / utility-string sx is a compile error.\n\
+         6. **If the primitive is missing** — stop and report the language gap.\n   \
+            Do not escape to DOM.\n\n\
+         **Hard fails:** any PR with `createElement` / `cssText` / `querySelector`\n\
+         assign in `apps/` is rejected.\n"
+    );
+
     let _ = writeln!(md, "## The hard rules (every policy)\n");
     let _ = writeln!(
         md,
@@ -923,9 +946,11 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
     let _ = writeln!(md, "## Behavior + state (pointer)\n");
     let _ = writeln!(
         md,
-        "- `use:action` on elements; compositions (`form`, `selection`, …) return signals.\n\
+        "See **Framework stack** above — this section is the syntax pointer only.\n\n\
+         - `use:action` on elements; compositions (`form`, `selection`, …) return signals.\n\
          - State in `<controller>` via `controller(() => {{ … return {{ … }} }})`.\n\
-         - Import from `@ship/sail-runtime` (never `/internal`).\n\
+         - Shared state: `defineStore` / `useStore` from `@ship/sail-runtime` (never `/internal`).\n\
+         - Identity binds for engines: `prop:tree={{table}}`, `prop:table={{…}}` — not querySelector.\n\
          - Control flow: `<if>` / `<for key={{…}}>` / `<match>` — full grammar:\n  \
            MCP `sail_surface` topic `control-flow`.\n\
          - **No layout `matchMedia` in controllers** (`sail-controller-matchmedia-layout`):\n  \

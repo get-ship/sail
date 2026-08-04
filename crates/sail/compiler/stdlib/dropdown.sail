@@ -12,7 +12,10 @@
     placement = ''
   }
 
-  const host = style.position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).pad(1).fg(dropdown-foreground).bg(dropdown).borderWidth(1).border(border).radius(md).shadow(md).z(popover)
+  // w(max)=max-content hugs the longest item. No minW floor — 12rem menu-min-w
+  // made short path menus look empty. Product scoped sx does not reach top-layer
+  // popovers; sizing lives here. pad(1_5) gives a light panel inset around items.
+  const host = style.position(fixed).inset(auto).m(0).left(bind(anchorLeft)).top(bind(anchorTop)).w(max).pad(1_5).fg(dropdown-foreground).bg(dropdown).borderWidth(1).border(border).radius(md).shadow(md).z(popover)
 </scope>
 
 <div popover use:anchor use:menu sx={host}><slot></slot></div>

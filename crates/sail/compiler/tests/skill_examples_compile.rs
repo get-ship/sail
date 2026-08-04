@@ -83,6 +83,17 @@ fn skill_generator_matches_product_surface() {
     let Some(md) = generate_skill() else { return };
 
     assert!(
+        md.contains("## Framework stack (do not invent alternatives)"),
+        "skill must mandate Framework stack so agents do not invent DOM/cssText"
+    );
+    assert!(
+        md.contains("defineStore")
+            && md.contains("use:")
+            && md.contains("prop:tree")
+            && md.contains("createElement"),
+        "framework stack must name stores, use:, prop:tree, and ban createElement"
+    );
+    assert!(
         md.contains("### Core Style setters"),
         "skill must lead with a core setter section for progressive disclosure"
     );

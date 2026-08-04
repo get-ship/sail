@@ -93,7 +93,7 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "autosize",
         param: "void",
-        summary: "Autosize a textarea to its content as the user types.",
+        summary: "Autosize a textarea (height) or single-line input (width) to its content.",
         auto_import: true,
     },
     ActionEntry {
@@ -190,6 +190,12 @@ pub const ACTIONS: &[ActionEntry] = &[
         name: "icon",
         param: "void",
         summary: "Resolve a glyph from the icon cache and stamp the matching <use href>.",
+        auto_import: true,
+    },
+    ActionEntry {
+        name: "liveBox",
+        param: "string | null | undefined",
+        summary: "Apply freeform CSS declarations for live specimen geometry (border-radius, box-shadow, …).",
         auto_import: true,
     },
     ActionEntry {
@@ -410,6 +416,7 @@ pub const BUILTIN_ACTION_NAMES: &[&str] = &[
     "gridTracks",
     "hoverSurface",
     "icon",
+    "liveBox",
     "liveRegion",
     "marquee",
     "maxWidth",
@@ -468,6 +475,7 @@ pub const BARE_REFERENCED_ACTION_NAMES: &[&str] = &[
     "dropzone",
     "eventSpan",
     "gridTracks",
+    "liveBox",
     "maxWidth",
     "pin",
     "portEdge",
