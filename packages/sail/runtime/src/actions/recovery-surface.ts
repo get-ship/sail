@@ -14,6 +14,11 @@ import type { Action } from '../action'
  * Anatomy is host-relative structure (not class names):
  *   children[0] icon, [1] copy column, [2] actions row
  *   copy: title, desc, code, details-toggle button, details
+ *
+ * MutationObserver writes MUST be idempotent. The observer watches subtree
+ * childList + characterData (light-DOM slot projection + dynamic default-slot
+ * text). Unconditional `textContent = …` replaces the text node every time,
+ * re-queues the observer, and wedges the event loop (G6 / LANG-1 item 1).
  */
 export const recoverySurface: Action<void> = (node) => {
   const el = node as HTMLElement
@@ -24,8 +29,20 @@ export const recoverySurface: Action<void> = (node) => {
   const details = (toggle?.nextElementSibling as HTMLElement | null) ?? null
   const actions = el.children[2] as HTMLElement | undefined
 
+  const writeText = (target: HTMLElement, next: string): void => {
+    if (target.textContent !== next) target.textContent = next
+  }
+
+  const writeAttr = (target: Element, name: string, next: string | null): void => {
+    if (next === null) {
+      if (target.hasAttribute(name)) target.removeAttribute(name)
+      return
+    }
+    if (target.getAttribute(name) !== next) target.setAttribute(name, next)
+  }
+
   const syncCode = (): void => {
-    if (code) code.textContent = el.getAttribute('code') ?? ''
+    if (code) writeText(code, el.getAttribute('code') ?? '')
   }
 
   const hasDetails = (): boolean =>
@@ -39,10 +56,10 @@ export const recoverySurface: Action<void> = (node) => {
   /** Stamp `data-state` tokens the structure sx group-state-*: prefixes read. */
   const setState = (has: boolean, open: boolean): void => {
     if (!has) {
-      el.removeAttribute('data-state')
+      writeAttr(el, 'data-state', null)
       return
     }
-    el.setAttribute('data-state', open ? 'has-details open' : 'has-details')
+    writeAttr(el, 'data-state', open ? 'has-details open' : 'has-details')
   }
 
   const syncDetails = (): void => {
@@ -51,8 +68,8 @@ export const recoverySurface: Action<void> = (node) => {
     } else {
       setState(false, false)
       if (toggle) {
-        toggle.textContent = 'Show details'
-        toggle.setAttribute('aria-expanded', 'false')
+        writeText(toggle, 'Show details')
+        writeAttr(toggle, 'aria-expanded', 'false')
       }
     }
   }
@@ -61,8 +78,8 @@ export const recoverySurface: Action<void> = (node) => {
     const open = !isOpen()
     setState(hasDetails(), open)
     if (toggle) {
-      toggle.textContent = open ? 'Hide details' : 'Show details'
-      toggle.setAttribute('aria-expanded', open ? 'true' : 'false')
+      writeText(toggle, open ? 'Hide details' : 'Show details')
+      writeAttr(toggle, 'aria-expanded', open ? 'true' : 'false')
     }
   }
   toggle?.addEventListener('click', onToggle)
