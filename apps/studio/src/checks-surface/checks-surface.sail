@@ -346,9 +346,9 @@ export default controller(() => {
                           data-open-source-url={f.openSourceUrl}
                           data-deeplink-url={f.openSourceUrl}
                           variant="soft"
-                          tone="muted"
+                          tone="primary"
                         >
-                          Open in editor
+                          Open in Edit
                         </button>
                         <button
                           type="button"

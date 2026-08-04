@@ -313,8 +313,8 @@ describe('tasks workbench (ops + store)', () => {
     expect(surface).toMatch(/on:sail-composer-submit/)
     // Evidence thumbs: real <img data-attach-thumb>, not badge-only
     expect(surface).toMatch(/<img\b[^>]*data-attach-thumb/)
-    // Height chain: empty shrinks; filled uses maxH — not dual forced under sm section alone
-    expect(surface).toMatch(/hasMessageItems/)
+    // Master–detail workbench (list | conversation + composer) — no side-sheet dialog
+    expect(surface).toMatch(/data-tasks-workbench/)
     expect(surface).toMatch(/data-anchor-card/)
     // Anchor appears before messages host in source (visibility order)
     const anchorAt = surface.indexOf('data-anchor-card')
@@ -327,7 +327,7 @@ describe('tasks workbench (ops + store)', () => {
     // No hand-rolled reply input — composer owns the field
     expect(surface).not.toMatch(/data-reply-composer[\s\S]*<input\b/)
     expect(surface).toMatch(/data-thread-row/)
-    expect(surface).toMatch(/<dialog\b/)
+    expect(surface).not.toMatch(/<dialog\b/)
     expect(surface).toMatch(/<empty-state\b/)
     expect(surface).toMatch(/<studio-empty\b/)
     expect(surface).toMatch(/<studio-page-header\b/)

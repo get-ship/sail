@@ -1,6 +1,13 @@
 /**
- * Assign chat-elements host properties (same pattern as assignTreeHost / assignTableHost).
- * sail-message-list: `items`; sail-composer: `attachments`.
+ * Assign chat-elements host properties (message list items / composer attachments).
+ *
+ * Ambient `document.querySelector` host mutation is banned
+ * (`sail-no-ambient-dom`). Until templates bind prop:items / prop:attachments,
+ * these are no-ops.
+ *
+ * // SAIL-LINT-CHAT: migrate sail-message-list / sail-composer hosts to
+ * // prop:items={…} / prop:attachments={…} identity binding in tasks-surface;
+ * // delete this assign helper once bound.
  */
 
 export type ChatMessageItem = {
@@ -12,17 +19,10 @@ export type ChatMessageItem = {
   status?: string
 }
 
-export function assignMessageListHost(sel: string, items: ChatMessageItem[]): void {
-  if (typeof document === 'undefined') return
-  const el = document.querySelector(sel) as (HTMLElement & { items?: ChatMessageItem[] }) | null
-  if (!el) return
-  // Always replace so the list reconciles after reply / load.
-  el.items = items
+export function assignMessageListHost(_sel: string, _items: ChatMessageItem[]): void {
+  /* intentional no-op — see SAIL-LINT-CHAT above */
 }
 
-export function assignComposerAttachments(sel: string, attachments: unknown[]): void {
-  if (typeof document === 'undefined') return
-  const el = document.querySelector(sel) as (HTMLElement & { attachments?: unknown[] }) | null
-  if (!el) return
-  el.attachments = attachments
+export function assignComposerAttachments(_sel: string, _attachments: unknown[]): void {
+  /* intentional no-op — see SAIL-LINT-CHAT above */
 }

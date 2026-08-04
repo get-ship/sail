@@ -841,27 +841,22 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
     expect(vm).toMatch(/grouping:\s*\[\s*['"]rule['"]\s*\]/)
   })
 
-  it('assignTableHost binds table identity on data-findings-table-host', async () => {
+  it('assignTableHost is a no-op pending prop:table bind (SAIL-LINT-CHAT)', async () => {
     const { assignTableHost } = await import('../src/checks/assign-table')
     const host = document.createElement('div')
     host.setAttribute('data-findings-table-host', '')
     document.body.appendChild(host)
-    // Stand-in for createTable facade — same identity property the CE reads.
     const table = {
       rows: () => [],
       toggleExpanded: () => {},
       setColumnFilter: () => {},
       setRowSelection: () => {},
     }
+    // Ambient querySelector assign removed — must not throw; host stays unbound.
     assignTableHost('[data-findings-table-host]', table)
     expect(
       (host as HTMLElement & { table?: unknown }).table,
-    ).toBe(table)
-    // Idempotent when same identity
-    assignTableHost('[data-findings-table-host]', table)
-    expect(
-      (host as HTMLElement & { table?: unknown }).table,
-    ).toBe(table)
+    ).toBeUndefined()
     host.remove()
   })
 

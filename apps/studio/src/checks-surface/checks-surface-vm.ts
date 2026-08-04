@@ -40,8 +40,10 @@ import {
   type AutoFixMode,
   type Finding,
 } from '@ship/studio/checks'
-import { getEditState } from '@ship/studio/edit'
+import { navigate } from '@ship/deck/router'
+import { getEditState, openDocument, requestSourceScroll } from '@ship/studio/edit'
 import { getShellState } from '@ship/sail-studio-shell'
+import { hrefForActivity } from '../shell/shell-page-vm'
 
 type SnippetLineUi = { n: number; text: string; highlight: boolean; key: string }
 type OptUi = { value: string; label: string; key: string }
@@ -599,12 +601,26 @@ export function createChecksSurface() {
     selectFinding(row.dataset.findingId)
     const action = btn.dataset.findingAction
     if (action === 'open-source') {
-      const url = openSourceUrlFor()
-      if (url && typeof window !== 'undefined') {
-        try {
-          window.open(url, '_blank')
-        } catch {
-          /* */
+      // Primary: open the file in Studio Edit at the finding span.
+      const f = getChecksState().findings.find((x) => x.id === row.dataset.findingId)
+      if (f?.path) {
+        void openDocument(f.path, {
+          loadPreview: false,
+          theme: getShellState().themeId,
+          mode: getShellState().modeId,
+        }).then(() => {
+          requestSourceScroll(f.line, f.col)
+          navigate(hrefForActivity('edit'))
+        })
+      } else {
+        // Fallback: external editor deep link when path is unavailable.
+        const url = openSourceUrlFor()
+        if (url && typeof window !== 'undefined') {
+          try {
+            window.open(url, '_blank')
+          } catch {
+            /* */
+          }
         }
       }
     } else if (action === 'select-in-app') {

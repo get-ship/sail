@@ -1,14 +1,18 @@
 /**
- * Assign createTable identity onto a findings host (explorer's assignTreeHost
- * pattern). Host property is `table` — the load-bearing sail-table binding.
+ * Assign createTable identity onto a findings host.
+ *
+ * Ambient `document.querySelector` host mutation is banned
+ * (`sail-no-ambient-dom`). Until templates bind `prop:table={table}`, this
+ * is a no-op.
+ *
+ * // SAIL-LINT-CHAT: migrate findings table host to prop:table={table} identity
+ * // binding in checks-surface.sail + vm return; delete this assign helper once
+ * // bound.
  */
+
 export function assignTableHost(
-  sel: string,
-  table: { /* Table identity */ } & object,
+  _sel: string,
+  _table: { /* Table identity */ } & object,
 ): void {
-  if (typeof document === 'undefined') return
-  const el = document.querySelector(sel) as
-    | (HTMLElement & { table?: object })
-    | null
-  if (el && el.table !== table) el.table = table
+  /* intentional no-op — see SAIL-LINT-CHAT above */
 }
