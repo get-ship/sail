@@ -253,7 +253,8 @@ export function createShellPage(opts?: ShellPageOpts) {
         if (getEditState().activePath) void saveActiveSource().then(() => sync())
         return
       }
-      if (isMod && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
+      // Ctrl/⌘+Shift+K — not Shift+C (Chromium Inspect Element).
+      if (isMod && e.shiftKey && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault()
         toggleChecksPanel()
         sync()

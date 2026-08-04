@@ -2,7 +2,7 @@
   "name": "@ship/studio",
   "private": true,
   "type": "module",
-  "description": "Sail Studio — activity rail and editor workspace. Surfaces: Edit · Components · Themes · Work · Config. Checks is a shell panel.",
+  "description": "Sail Studio — activity rail and editor workspace. Surfaces: Edit · Components · Themes · Tasks · Config. Checks is a shell panel.",
   "exports": {
     ".": "./src/shell/index.ts",
     "./shell": "./src/shell/index.ts",

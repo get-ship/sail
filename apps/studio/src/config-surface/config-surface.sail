@@ -19,7 +19,6 @@ export default controller(() => {
     sectionLead: vm.sectionLead,
     fields: vm.fields,
     showShipCloud: vm.showShipCloud,
-    showPlugins: vm.showPlugins,
     showDanger: vm.showDanger,
     onCatClick: (e: Event) => vm.onCatClick(e),
   }

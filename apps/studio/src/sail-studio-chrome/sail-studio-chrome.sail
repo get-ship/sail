@@ -156,6 +156,7 @@ export default controller((ctx) => {
           shrink="0"
           gap="0"
           role="dialog"
+          aria-modal="true"
           aria-label="Checks findings"
           sx={style.minH(0).h(full).w(panel-max-w-md).minW(panel-min-w-md).maxW(panel-max-w-lg).borderLWidth(1).borderL(border).bg(surface-0).overflow(hidden).shadow(lg)}
         >
@@ -209,7 +210,7 @@ export default controller((ctx) => {
         size="sm"
         variant="ghost"
         tone={checksBadgeTone()}
-        title="Open checks panel (Ctrl/⌘+Shift+C)"
+        title="Open checks panel (Ctrl/⌘+Shift+K)"
         aria-label={checksBadgeLabel()}
         aria-pressed={checksPanelOpen() ? 'true' : 'false'}
         on:click={onToggleChecksPanel}

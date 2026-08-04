@@ -90,9 +90,10 @@ let moduleActivities: ModuleActivity[] = []
 
 // ── Chrome state <-> URL hash ────────────────────────────────────────────
 // The shell's location IS state: `#/<activity>` or `#/<activity>/<tabId>`.
-// Deep-linkable (an agent can hand a user `#/checks`), survives SPA HMR
-// remounts and full reloads — a remount re-reads the hash instead of
-// resetting to the default surface. Browser-only; tests run hashless.
+// Activities are rail ids only (edit|components|themes|tasks|config).
+// Checks is a **panel**, not a hash activity — deep-link path `/checks`
+// opens the panel via routes/checks (setChecksPanelOpen) + Edit.
+// Unknown hash activities fall back to edit. Browser-only; tests run hashless.
 const hasDom = () => typeof location !== 'undefined' && typeof history !== 'undefined'
 
 function chromeFromHash(): { activity?: ActivityId; tabId?: string } {
