@@ -57,10 +57,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const files = signal<File[]>([])
     const over = signal(false)
     const errorMsg = signal('')
-    // KEPT as a ref, deliberately: `openPicker` clicks this input from the
-    // DROPZONE's handlers. The element is needed as a VALUE reachable from
-    // another element's behavior, which is the one thing an action can't do.
+    // Cross-element ref: `openPicker` clicks this input from the DROPZONE's
+    // handlers. Captured via use: (bind:this is retired).
     const inputEl = signal<HTMLInputElement | null>(null)
+    const captureInput: Action<void> = (node) => {
+      inputEl.set(node as HTMLInputElement)
+      return { destroy: () => inputEl.set(null) }
+    }
     const displayFiles = derived<DisplayFile[]>(() =>
       files().map((file, idx) => ({
         file,
@@ -203,7 +206,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       }
     })
 
-    return { files, over, errorMsg, displayFiles, dropTarget, inputEl }
+    return { files, over, errorMsg, displayFiles, dropTarget, captureInput }
   })
 
 </controller>
@@ -213,7 +216,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </row>
   <span>Drag &amp; drop or <span sx={style.fg(primary)}>browse</span></span>
 </center>
-<input type="file" sx={style.display(none)} accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" bind:this={inputEl} />
+<input type="file" sx={style.display(none)} accept={accept()} multiple={multiple()} aria-hidden="true" tabindex="-1" use:captureInput />
 <if {errorMsg()}>
   <div role="alert" sx={style.fontSize(sm).fg(destructive)}>{errorMsg()}</div>
 </if>

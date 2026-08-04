@@ -86,7 +86,7 @@ use action without param
     close_tag: (tag_name)))
 
 ==================
-motion attribute with static preset object
+public fx: is retired — parses as a plain attr_name, not a directive
 ==================
 
 <badge fx:enter={{ opacity: 'fade', stagger: '150ms' }}>live</badge>
@@ -96,9 +96,12 @@ motion attribute with static preset object
 (source_file
   (element
     tag: (tag_name)
-    (fx_attr
-      trigger: (attr_local)
-      config: (brace_expression))
+    (dynamic_attr
+      name: (attr_name)
+      (ERROR
+        (UNEXPECTED ':')
+        (tag_name))
+      value: (brace_expression))
     (text)
     close_tag: (tag_name)))
 

@@ -31,7 +31,7 @@
 
 <controller>
 
-import type { Derived, ControllerScope } from '@ship/sail-runtime'
+import type { Action, Derived, ControllerScope } from '@ship/sail-runtime'
 import {
   createVirtualizer,
   type Virtual,
@@ -74,7 +74,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     // The virtualizer windows the thread over the scroll element. `count`
     // tracks `items().length`; `getScrollElement` is the ref thunk (null until
-    // `bind:this` mounts). Keyed by item id so `{#for}` recycles rows on
+    // captureScroll mounts). Keyed by item id so `{#for}` recycles rows on
     // append/reorder rather than re-creating the whole window.
     const virt: Virtual = createVirtualizer({
       count: () => items().length,
@@ -146,13 +146,17 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       }
     })
 
-    return { items, scrollEl, virt, totalSize, windowItems }
+    const captureScroll: Action<void> = (node) => {
+      scrollEl.set(node as HTMLElement)
+      return { destroy: () => scrollEl.set(null) }
+    }
+    return { items, captureScroll, virt, totalSize, windowItems }
   })
 
 </controller>
 <scroll-area
   orientation="vertical"
-  bind:this={scrollEl}
+  use:captureScroll
   sx={style.position(relative).h(full).minH(0).pad(3).fontFamily(body)}
 >
   <div use:virtualSpacer={totalSize()} sx={style.position(relative).w(full).h(bind(rowsH))}>

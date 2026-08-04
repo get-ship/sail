@@ -306,10 +306,6 @@
         },
         {
           "type": "SYMBOL",
-          "name": "fx_attr"
-        },
-        {
-          "type": "SYMBOL",
           "name": "dynamic_attr"
         },
         {
@@ -439,35 +435,6 @@
               "type": "BLANK"
             }
           ]
-        }
-      ]
-    },
-    "fx_attr": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "fx:"
-        },
-        {
-          "type": "FIELD",
-          "name": "trigger",
-          "content": {
-            "type": "SYMBOL",
-            "name": "attr_local"
-          }
-        },
-        {
-          "type": "STRING",
-          "value": "="
-        },
-        {
-          "type": "FIELD",
-          "name": "config",
-          "content": {
-            "type": "SYMBOL",
-            "name": "brace_expression"
-          }
         }
       ]
     },

@@ -167,6 +167,7 @@ fn ship_button_snapshot() {
 
 #[test]
 fn bind_this_button_snapshot() {
+    // Fixture renamed in spirit: element capture is use: (bind:this retired).
     let fx = &fixture_named("bind-this-button");
     let js = compile_fixture(fx);
     let path = fixtures_dir().join(format!("{}.expected.js", fx.name));
@@ -174,7 +175,7 @@ fn bind_this_button_snapshot() {
 }
 
 #[test]
-fn bind_this_button_direct_emits_hydrate_ref() {
+fn element_capture_use_action_emits_run_action() {
     use sail_compiler::compile;
     let path = fixtures_dir().join("bind-this-button.sail");
     let source = std::fs::read_to_string(&path).unwrap();
@@ -190,12 +191,11 @@ fn bind_this_button_direct_emits_hydrate_ref() {
         lint_overrides: Vec::new(),
     };
     let out = compile(&source, opts).expect("compile");
-    // Phase 3b.4: the bind:this leaf is direct-emit — the view's
-    // `hydrate(root, ctx)` calls `hydrateRef` with the bare scope
-    // variable name; the manifest no longer carries a `bind:this` row.
+    // Local use: capture action wires via runAction — same lifecycle as
+    // the retired bind:this direct-emit, without the bind:this syntax.
     assert!(
-        out.js.contains("runAction(__e0, (__n) =>"),
-        "expected runAction call for bind:this, got:\n{}",
+        out.js.contains("runAction("),
+        "expected runAction call for use: capture, got:\n{}",
         out.js
     );
     assert!(
@@ -205,7 +205,7 @@ fn bind_this_button_direct_emits_hydrate_ref() {
     );
     assert!(
         !out.js.contains("kind: \"bind:this\""),
-        "did not expect bind:this manifest entry post-direct-emit, got:\n{}",
+        "did not expect bind:this manifest entry, got:\n{}",
         out.js
     );
 }

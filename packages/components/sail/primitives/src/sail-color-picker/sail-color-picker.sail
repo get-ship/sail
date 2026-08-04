@@ -20,7 +20,7 @@
 </scope>
 <controller>
 
-import type { ControllerScope } from '@ship/sail-runtime'
+import type { Action, ControllerScope } from '@ship/sail-runtime'
 import {
   type Swatch,
   deriveSwatches,
@@ -267,7 +267,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         }
       }
 
-      // Attach listeners when trigger exists (bind:this may lag mount by a frame).
+      // Attach listeners when trigger exists (capture may lag mount by a frame).
       let attached: HTMLElement | null = null
       let hexAttached: HTMLInputElement | null = null
       const attachTrigger = () => {
@@ -292,7 +292,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         }
         return true
       }
-      // Immediate + rAF retries (swatch if-branch bind:this)
+      // Immediate + rAF retries (swatch if-branch capture)
       if (!attachTrigger()) {
         let tries = 20
         const tick = () => {
@@ -305,7 +305,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       const onShadowClick = (e: Event) => {
         const t = e.target as HTMLElement | null
         if (!t) return
-        // Delegate trigger open — survives if/branch re-renders (no bind:this race).
+        // Delegate trigger open — survives if/branch re-renders (no capture race).
         const trigger = t.closest?.('[data-color-trigger-btn], [data-color-trigger]') as HTMLElement | null
         if (trigger && !t.closest?.('[data-color-panel]')) {
           // Don't steal clicks from hex text input (default variant).
@@ -407,9 +407,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       return v !== false && v !== 'false' && v !== 0
     }
 
+    const captureInput: Action<void> = (node) => {
+      inputEl.set(node as HTMLElement)
+      return { destroy: () => inputEl.set(null) }
+    }
     return {
       open, hue, sat, light, hueText, satText, lightText, hexDraft,
-      inputEl, hueId, satId, lightId, panelId, swatches, showHexUi, isSwatchOnly,
+      captureInput, hueId, satId, lightId, panelId, swatches, showHexUi, isSwatchOnly,
     }
   })
 
@@ -432,7 +436,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       aria-haspopup="dialog"
       aria-expanded={open() ? 'true' : 'false'}
       aria-label="Choose color"
-      bind:this={inputEl}
+      use:captureInput
       use:swatch={value() || '#000000'}
       sx={style.w(full).h(full).minW(0).minH(0).radius(md).borderWidth(1).border(border-subtle).bg(bind(swatchColor)).cursor(pointer).pad(0).shadow(none).when({ focusWithin: style.outline(ring) })}
     ></button>
@@ -551,7 +555,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         aria-haspopup="dialog"
         aria-expanded={open() ? 'true' : 'false'}
         aria-label="Choose color"
-        bind:this={inputEl}
+        use:captureInput
         use:swatch={value() || '#000000'}
         shrink="0"
         sx={style.size(10).minW(10).radius(md).borderWidth(1).border(border).bg(bind(swatchColor)).cursor(pointer).pad(0)}

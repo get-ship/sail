@@ -232,11 +232,12 @@ fn no_scope_section_leaves_scope_unchanged() {
 
 #[test]
 fn template_member_clashing_with_factory_is_dropped_from_scope() {
-    // A name in BOTH a template-derived member (a `bind:this` ref) AND the
-    // factory: the template-derived `Signal<...>` is dropped (clash-retain)
-    // and the factory type is NOT re-declared (omit) — so `config` is absent
-    // from Scope entirely and typed solely by the inferred SC.
-    let sail = r#"<div bind:this={config}>x</div>"#;
+    // A name in BOTH a template-derived member (`use-filter-list as="config"`)
+    // AND the factory: the template-derived type is dropped (clash-retain) and
+    // the factory type is NOT re-declared (omit) — so `config` is absent from
+    // Scope entirely and typed solely by the inferred SC.
+    // (Historically this used bind:this; that directive is retired.)
+    let sail = r#"<use-filter-list as="config"><span>x</span></use-filter-list>"#;
     let controller = r#"
         import { controller, signal } from '@ship/sail-runtime'
         export default controller((ctx) => ({ config: signal<HTMLDivElement | null>(null) }))

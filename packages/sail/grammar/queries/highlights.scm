@@ -41,7 +41,6 @@
 "bind:"   @keyword.directive
 "on:"     @keyword.directive
 "use:"    @keyword.directive
-"fx:"     @keyword.directive
 "|"       @punctuation.delimiter
 
 ; ── template control flow markers ────────────────────────────────────

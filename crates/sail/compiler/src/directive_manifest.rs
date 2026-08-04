@@ -1,8 +1,8 @@
 //! The template-directive vocabulary — one source of truth for every
 //! attribute-position directive the parser accepts (`on:`, `bind:`, `use:`,
-//! `fx:`, slots, `mutation`), every `on:` event name, every `on:`
+//! slots, `mutation`), every `on:` event name, every `on:`
 //! event modifier, every `bind:` target, and every retired directive with
-//! the thing to use instead.
+//! the thing to use instead. Public `fx:` is retired (Style motion methods).
 //!
 //! A sibling of `block_manifest` / `action_manifest` / `runtime_ambient`:
 //! the closed vocabulary is data, not a hand-listed paragraph on the docs
@@ -26,8 +26,10 @@ pub struct DirectiveEntry {
 /// plain attribute names. The grammar generates a dedicated rule for
 /// each prefix so `bind:value`, `on:click`, etc. parse as directives
 /// rather than as ordinary `attr_name` tokens. Keep this in sync with
-/// the `DIRECTIVES` entries whose syntax starts with `<prefix>:`.
-pub const DIRECTIVE_PREFIXES: &[&str] = &["bind", "on", "use", "fx"];
+/// the *active* `DIRECTIVES` entries whose syntax starts with `<prefix>:`.
+/// Retired prefixes (e.g. `fx`) belong in [`RETIRED_DIRECTIVES`], not here —
+/// the drift test below enforces that.
+pub const DIRECTIVE_PREFIXES: &[&str] = &["bind", "on", "use"];
 
 /// Element names that are directive-like in the grammar: the parser treats
 /// them as ordinary HTML elements, but the highlight query gives them a
@@ -42,8 +44,8 @@ pub const DIRECTIVES: &[DirectiveEntry] = &[
         summary: "attach a DOM event handler; chain modifiers with | (full modifier table below)",
     },
     DirectiveEntry {
-        syntax: "bind:value / bind:checked / bind:this",
-        summary: "two-way binding sugar; the three targets are the whole surface (table below)",
+        syntax: "bind:value / bind:checked",
+        summary: "two-way binding sugar; value and checked are the whole surface (table below)",
     },
     DirectiveEntry {
         syntax: "use:<action> / use:<action>={param}",
@@ -52,10 +54,6 @@ pub const DIRECTIVES: &[DirectiveEntry] = &[
     DirectiveEntry {
         syntax: "sx=\"atom atom …\"",
         summary: "static styling atoms from the closed sx vocabulary; sx={expr} is a compile error",
-    },
-    DirectiveEntry {
-        syntax: "fx:<trigger>={…}",
-        summary: "the one animation directive — triggers, properties, and config in the motion reference",
     },
     DirectiveEntry {
         syntax: "(--name) inside sx values",
@@ -817,7 +815,7 @@ pub struct BindTargetEntry {
 }
 
 /// Every `bind:` target. Anything else is a compile error that renders
-/// this list.
+/// this list. (`bind:this` is retired — use a local `use:` action.)
 pub const BIND_TARGETS: &[BindTargetEntry] = &[
     BindTargetEntry {
         target: "value",
@@ -826,10 +824,6 @@ pub const BIND_TARGETS: &[BindTargetEntry] = &[
     BindTargetEntry {
         target: "checked",
         summary: "two-way binding to a checkbox or radio checked state",
-    },
-    BindTargetEntry {
-        target: "this",
-        summary: "capture the element handle into a bare scope variable — write-once, not derivable",
     },
 ];
 
@@ -868,16 +862,25 @@ pub const RETIRED_DIRECTIVES: &[RetiredEntry] = &[
         syntax: "transition: / in: / out:",
         instead: "style.enter / style.exit",
     },
+    RetiredEntry {
+        syntax: "fx:<trigger>",
+        instead: "attach motion on Style: sx={style.… .enter({…}).exit({…})} (or .loop / .reveal / .scroll({…}))",
+    },
+    RetiredEntry {
+        syntax: "bind:this",
+        instead: "a local use: action that sets a signal on mount and clears it on destroy (const captureEl: Action = (node) => { el.set(node); return { destroy: () => el.set(null) } }; template: use:captureEl)",
+    },
 ];
 
-/// One value form the `fx:` config grammar accepts.
+/// One value form the motion config grammar accepts (private `motion:` from
+/// Style `.enter`/`.exit`/…; public `fx:` is retired).
 #[derive(Debug, Clone, Serialize)]
 pub struct MotionValueForm {
     pub form: &'static str,
     pub summary: &'static str,
 }
 
-/// The value grammar inside a `fx:` config object — what each shape of
+/// The value grammar inside a motion config object — what each shape of
 /// value means. Enforced by `parse::template::attrs::parse_motion_value`.
 pub const MOTION_VALUE_FORMS: &[MotionValueForm] = &[
     MotionValueForm {
@@ -955,5 +958,75 @@ mod tests {
         assert!(!is_known_event("Click"));
         assert_eq!(suggest_event("clik"), Some("click"));
         assert_eq!(suggest_event("Click"), Some("click"));
+    }
+
+    /// Active lexer prefixes must match live DIRECTIVES rows; fully-retired
+    /// prefixes must not reappear. This is the hole that let public `fx:` stay
+    /// in DIRECTIVE_PREFIXES after retirement (parser already refused it, but
+    /// the grammar/docs vocabulary still advertised the prefix).
+    #[test]
+    fn directive_prefixes_match_active_directives_not_retired() {
+        // Every prefix has at least one active DIRECTIVES row that uses it.
+        for prefix in DIRECTIVE_PREFIXES {
+            let needle = format!("{prefix}:");
+            assert!(
+                DIRECTIVES.iter().any(|d| d.syntax.contains(&needle)),
+                "DIRECTIVE_PREFIXES has `{prefix}` but no DIRECTIVES row contains `{needle}`"
+            );
+        }
+        // Colon-prefixed rows in DIRECTIVES use a registered active prefix.
+        for d in DIRECTIVES {
+            let Some((raw_head, _)) = d.syntax.split_once(':') else {
+                continue;
+            };
+            let head = raw_head
+                .chars()
+                .filter(|c| c.is_ascii_alphanumeric())
+                .collect::<String>();
+            if matches!(head.as_str(), "on" | "bind" | "use") {
+                assert!(
+                    DIRECTIVE_PREFIXES.contains(&head.as_str()),
+                    "DIRECTIVES advertises `{head}:` (`{}`) but it is not in DIRECTIVE_PREFIXES",
+                    d.syntax
+                );
+            }
+            // Fully retired prefixes must never reappear as active rows.
+            assert!(
+                !matches!(head.as_str(), "fx" | "prop" | "attr" | "class" | "style" | "transition" | "in" | "out"),
+                "DIRECTIVES still advertises retired prefix `{head}:` (`{}`) — move to RETIRED_DIRECTIVES",
+                d.syntax
+            );
+        }
+        // Fully-retired prefixes (whole family gone) must leave DIRECTIVE_PREFIXES.
+        // Note: `bind:` stays active for value/checked; only `bind:this` is retired.
+        const FULLY_RETIRED_PREFIXES: &[&str] = &["fx", "prop", "attr", "class", "style", "transition", "in", "out"];
+        for p in FULLY_RETIRED_PREFIXES {
+            assert!(
+                !DIRECTIVE_PREFIXES.contains(p),
+                "fully-retired prefix `{p}` must not be in DIRECTIVE_PREFIXES"
+            );
+        }
+        assert!(!DIRECTIVE_PREFIXES.contains(&"fx"));
+        assert!(!BIND_TARGETS.iter().any(|b| b.target == "this"));
+        assert!(
+            RETIRED_DIRECTIVES.iter().any(|r| r.syntax.contains("fx:")),
+            "fx: must be listed in RETIRED_DIRECTIVES"
+        );
+        assert!(
+            RETIRED_DIRECTIVES
+                .iter()
+                .any(|r| r.syntax.contains("bind:this")),
+            "bind:this must be listed in RETIRED_DIRECTIVES"
+        );
+        // Active bind: docs must not still list `this`.
+        let bind_row = DIRECTIVES
+            .iter()
+            .find(|d| d.syntax.contains("bind:"))
+            .expect("bind: row");
+        assert!(
+            !bind_row.syntax.contains("this"),
+            "active bind: DIRECTIVES row must not list bind:this: {}",
+            bind_row.syntax
+        );
     }
 }

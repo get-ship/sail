@@ -109,7 +109,6 @@ export default grammar({
       $.bind_attr,
       $.event_attr,
       $.use_attr,
-      $.fx_attr,
       $.dynamic_attr,
       $.static_attr,
       $.boolean_attr,
@@ -133,13 +132,6 @@ export default grammar({
       'use:',
       field('action', $.attr_local),
       optional(seq('=', field('param', $.brace_expression))),
-    ),
-    // `fx:trigger={{ prop: 'preset' }}` — animation config.
-    fx_attr: $ => seq(
-      'fx:',
-      field('trigger', $.attr_local),
-      '=',
-      field('config', $.brace_expression),
     ),
 
     dynamic_attr: $ => seq(

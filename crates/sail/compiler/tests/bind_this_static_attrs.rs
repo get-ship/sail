@@ -1,34 +1,25 @@
 //! Regression guard (#285): a static attribute authored on an element
-//! that ALSO carries `bind:this` must survive compilation in every emit
-//! path. The ref binding must not claim — or suppress — the element's
-//! static attribute slot.
+//! that ALSO carries an element-capture `use:` action must survive
+//! compilation in every emit path. The capture must not claim — or
+//! suppress — the element's static attribute slot.
 //!
-//! The behavioral report (shadow-DOM dumps in the @ship/pipelines packs)
-//! observed a `data-static` hook element rendering as a bare `<div>` —
-//! container-by-attribute selectors found nothing. These assertions pin
-//! the compiler contract so the regression can never re-enter through
-//! the CSR (`__mount` / component setup) or SSR-skeleton paths.
-//!
-//! (The original regression used `class="dag"`, but `class=` is now banned
-//! at the floor — the same regression shape is what matters, and any
-//! static attribute pins it. The test now exercises `data-static`.)
+//! (Historically this used `bind:this`; that directive is retired in
+//! favour of a local `use:` action with the same lifecycle.)
 
 use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile};
 
-// `part=` was RETIRED with shadow parts (light DOM has none — anatomy is
-// classes + attributes, and `class` is the published styling hook — and
-// the floor now bans it). The regression this guards is unchanged and
-// still real: a static attribute on an element that also carries
-// `bind:this` must survive every emit path — the ref binding must not
-// claim or suppress the element's static attribute slot.
 const REF_WITH_STATIC: &str = r#"<controller>
-import { controller, signal } from '@ship/sail-runtime'
-export default controller((ctx) => {
+import { controller, signal, type Action } from '@ship/sail-runtime'
+export default controller((_ctx) => {
   const rowsEl = signal<HTMLElement | null>(null)
-  return { rowsEl }
+  const captureRows: Action<void> = (node) => {
+    rowsEl.set(node as HTMLElement)
+    return { destroy: () => rowsEl.set(null) }
+  }
+  return { captureRows }
 })
 </controller>
-<div data-static="rows" bind:this={rowsEl}><span>x</span></div>"#;
+<div data-static="rows" use:captureRows><span>x</span></div>"#;
 
 fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOpts {
     CompileOpts {
@@ -46,44 +37,38 @@ fn component_opts(setup_url: Option<&str>, component_imports: bool) -> CompileOp
     }
 }
 
-/// The static attribute must SURVIVE. How it survives is the compiler's
-/// business, and it changed: a static attribute is now baked into the
-/// hoisted template markup (`<div data-static="rows">`) rather than
-/// replayed as a `setAttribute` call at runtime — which is both correct
-/// and strictly faster (it deletes a DOM round-trip per element per
-/// instance). Asserting on `setAttribute` was asserting the MECHANISM;
-/// the invariant is that the attribute reaches the DOM.
 #[test]
-fn static_attrs_survive_bind_this_in_component_csr() {
+fn static_attrs_survive_capture_action_in_component_csr() {
     let out = compile(REF_WITH_STATIC, component_opts(None, false)).expect("compile");
     assert!(
         out.js.contains(r#"data-static=\"rows\""#)
             || out.js.contains(r#"setAttribute("data-static", "rows")"#),
-        "data-static must reach the DOM alongside bind:this — baked into the template or set at runtime:\n{}",
+        "data-static must reach the DOM alongside use: capture — baked into the template or set at runtime:\n{}",
         out.js
     );
     assert!(
         out.js.contains("runAction"),
-        "bind:this still wires via an action:\n{}",
+        "use: capture still wires via an action:\n{}",
         out.js
     );
 }
 
 #[test]
-fn static_attrs_survive_bind_this_with_production_component_opts() {
-    // Exact path the @ship/pipelines packs (dag/graph/run-history) compile
-    // through: shadow component, a controller (setup_url), component-imports on.
+fn static_attrs_survive_capture_action_with_production_component_opts() {
     let src = r#"
 <controller>
-import { controller, signal } from '@ship/sail-runtime'
-export default controller((ctx) => {
+import { controller, signal, type Action } from '@ship/sail-runtime'
+export default controller((_ctx) => {
   const contentEl = signal<HTMLElement | null>(null)
-  return { contentEl }
+  const captureContent: Action<void> = (node) => {
+    contentEl.set(node as HTMLElement)
+    return { destroy: () => contentEl.set(null) }
+  }
+  return { captureContent }
 })
 </controller>
-<div data-static="dag" bind:this={contentEl}></div>"#;
+<div data-static="dag" use:captureContent></div>"#;
     let out = compile(src, component_opts(Some("./x.controller.ts"), true)).expect("compile");
-    // The static attribute rides alongside bind:this into the DOM.
     assert!(
         out.js.contains(r#"data-static=\"dag\""#)
             || out.js.contains(r#"setAttribute("data-static", "dag")"#),
@@ -92,7 +77,18 @@ export default controller((ctx) => {
     );
     assert!(
         out.js.contains("runAction"),
-        "bind:this still wires via an action:\n{}",
+        "use: capture still wires via an action:\n{}",
         out.js
+    );
+}
+
+#[test]
+fn bind_this_is_retired_with_use_migration() {
+    let src = r#"<button bind:this={btnEl}>x</button>"#;
+    let err = compile(src, component_opts(None, false)).expect_err("bind:this must refuse");
+    assert!(
+        err.message.contains("retired") && err.message.contains("use:"),
+        "expected bind:this retirement with use: hint, got: {}",
+        err.message
     );
 }

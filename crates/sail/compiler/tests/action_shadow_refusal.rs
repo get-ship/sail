@@ -66,10 +66,14 @@ export default controller(({ value }: Scope) => {
     const t = canvas().transform()
     return `translate(${t.x}px, ${t.y}px) scale(${t.scale})`
   })
-  return { canvas, viewportEl, worldTransform }
+  const captureViewport = (node) => {
+    viewportEl.set(node)
+    return { destroy: () => viewportEl.set(null) }
+  }
+  return { canvas, captureViewport, worldTransform }
 })
 </controller>
-<div bind:this={viewportEl} sx={style.position(relative)}>
+<div use:captureViewport sx={style.position(relative)}>
   <div use:worldTransform={worldTransform()} sx={style.position(absolute)}>
     <slot></slot>
   </div>

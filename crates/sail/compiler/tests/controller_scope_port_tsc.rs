@@ -43,7 +43,7 @@ fn generated_scope_dts() -> String {
         emit_component_imports: false,
         lint_overrides: Vec::new(),
     };
-    compile(r#"<button bind:this={btnEl}>x</button>"#, opts)
+    compile(r#"<button on:click={noop}>x</button>"#, opts)
         .expect("compile")
         .dts
         .expect("dts emitted")

@@ -88,7 +88,7 @@
 </scope>
 <controller>
 
-import type { ControllerScope } from '@ship/sail-runtime'
+import type { Action, ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './sail-date-picker.sail'
 
 interface DayCell {
@@ -363,13 +363,17 @@ export default controller(({ value, min, max, disabled }: ControllerScope<Scope>
       }
     })
 
-    return { open, today, focused, viewYear, viewMonth, inputEl, monthLabel, dayHeaders, monthCells }
+    const captureInput: Action<void> = (node) => {
+      inputEl.set(node as HTMLInputElement)
+      return { destroy: () => inputEl.set(null) }
+    }
+    return { open, today, focused, viewYear, viewMonth, captureInput, monthLabel, dayHeaders, monthCells }
   })
 
 </controller>
 <column gap="0" sx={style.position(relative).w(full)}>
 <row gap="2" align="center" sx={style.w(full).h(control-h-md).padX(2_5).bg(background).fg(foreground).borderWidth(1).border(border).radius(md).when({ focusWithin: style.outline(ring) })}>
-  <input type="text" flush grow min-w="0" sx={style.fontFamily(body).when({ disabled: style.cursor(not-allowed) })} name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} bind:this={inputEl} />
+  <input type="text" flush grow min-w="0" sx={style.fontFamily(body).when({ disabled: style.cursor(not-allowed) })} name={name()} placeholder={placeholder()} disabled={disabled()} autocomplete="off" inputmode="numeric" aria-haspopup="dialog" aria-expanded={open() ? 'true' : 'false'} bind:value={value} use:captureInput />
   <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" sx={style.w(icon-size-sm).h(icon-size-sm).minW(icon-size-sm).fg(muted-foreground).pointerEvents(none)}>
     <rect x="2" y="3" width="12" height="11" rx="1.5"></rect>
     <path d="M2 6h12 M5 1.5v3 M11 1.5v3"></path>

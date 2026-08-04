@@ -11,7 +11,7 @@
 //!   styling   sx=, and the framework skins for bare elements
 //!   state     aria-* + the closed sx state prefixes (`hover:`, `selected:`, …)
 //!   anatomy   the element's own semantics — role, aria-*, tag
-//!   handles   bind:this — a ref, not a selector
+//!   handles   use: capture action — a ref, not a selector
 //!
 //! The compiler emits its own classes (`sail-root`, layout, sx atoms). Those are
 //! the framework's, not the author's; this rule only sees what the source wrote.
@@ -145,7 +145,7 @@ mod tests {
     fn sx_and_semantics_are_the_way() {
         assert!(
             run(
-                r#"<div sx="p-4 bg-surface-2" role="listbox" aria-label="x" bind:this={el}></div>"#
+                r#"<div sx="p-4 bg-surface-2" role="listbox" aria-label="x" use:captureEl></div>"#
             )
             .is_empty()
         );

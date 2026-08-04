@@ -81,7 +81,7 @@
 //
 // Authority: build-spec §"The view", §"sail-tree-grid", Slice 5; behavioral #8.
 
-import type { ControllerScope } from '@ship/sail-runtime'
+import type { Action, ControllerScope } from '@ship/sail-runtime'
 import { createVirtualizer, type Virtual } from '@ship/sail-runtime/virtual'
 import { createTable, type Table } from '../sail-table/engine/create-table'
 import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
@@ -196,9 +196,13 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       }
     })
 
+    const captureViewport: Action<void> = (node) => {
+      viewportEl.set(node as HTMLElement)
+      return { destroy: () => viewportEl.set(null) }
+    }
     return {
       treeSig,
-      viewportEl,
+      captureViewport,
       tree,
       virt,
       headers,
@@ -251,7 +255,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </row>
     </for>
   </grid>
-  <div bind:this={viewportEl} sx={style.position(relative).w(full).h(full).minH(0).overflowY(auto)}>
+  <div use:captureViewport sx={style.position(relative).w(full).h(full).minH(0).overflowY(auto)}>
       <for {windowItems()} as="w" key={`${w.key}|${w.cellsKey}`}>
         <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} sx={style.group().position(absolute).left(0).w(full).translateY(bind(rowY)).cursor(pointer).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg), focus: style.outline(ring) })}>
           <span aria-hidden="true" sx={style.position(absolute).left(0).top(1).bottom(1).w(half).radius(full).bg(primary).visibility(hidden).when({ groupSelected: style.visibility(visible) })}></span>

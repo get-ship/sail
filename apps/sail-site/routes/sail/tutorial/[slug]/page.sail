@@ -7,9 +7,9 @@
   Playground state — active tab, status badge, console lines, editor values —
   is signals in the <controller>; the template is a pure read. tutorial-boot
   owns the FFI seams only (wasm compile, iframe postMessage, theme observer);
-  the editor's imperative API is reached through bind:this refs. The Sail
-  docs segment layout renders /sail/tutorial/* lessons full-bleed
-  (sail-docs-rail `workbench`).
+  the editor's imperative API is reached through use: capture actions that set
+  signal refs. The Sail docs segment layout renders /sail/tutorial/* lessons
+  full-bleed (sail-docs-rail `workbench`).
 
   LANG-GAP (renders without these until the vocabulary grows):
   - column clamp: the lesson pane wants exactly minmax(0, 30rem); it uses
@@ -82,9 +82,17 @@ export default controller((ctx: ControllerScope<Scope>) => {
       return () => mq.removeEventListener('change', onChange)
     })
 
-    // ── FFI refs: the editors, the preview iframe ────────────────────────
+    // ── FFI refs: the editors, the preview iframe (via use: capture actions) ──
     const editorEl = signal<CodeEditorHost | null>(null)
     const iframeEl = signal<HTMLIFrameElement | null>(null)
+    const captureEditor: Action<void> = (node) => {
+      editorEl.set(node as CodeEditorHost)
+      return { destroy: () => editorEl.set(null) }
+    }
+    const captureIframe: Action<void> = (node) => {
+      iframeEl.set(node as HTMLIFrameElement)
+      return { destroy: () => iframeEl.set(null) }
+    }
 
     // ── Playground state — signals the template reads ────────────────────
     const tab = signal<string>('source')
@@ -234,7 +242,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       // when the editor's own valSig ticks (user typing / CM internal sync).
       const key = lastSourceSlug + '\0' + source.length + '\0' + source.slice(0, 32)
       if (key === lastPushedKey) return
-      // bind:this can fire before the CE's connectedCallback publishes host.value
+      // captureEditor can fire before the CE's connectedCallback publishes host.value
       // (defineProperty). Writing then is a dead expando that mount overwrites with
       // ''. Wait until setDiagnostics exists — that runs in the same mount() as the
       // value property — then assign and mark pushed.
@@ -309,8 +317,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       solutionShown,
       srcValue,
       fileName,
-      editorEl,
-      iframeEl,
+      captureEditor,
+      captureIframe,
       prose,
       steps,
       onSourceChange,
@@ -401,7 +409,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         One pane at a time via if (not hidden=). Boolean hidden="false" is still
         present in HTML and keeps display:none — both panes fought for grow and
         collapsed the editor to ~0. Remount re-pushes via the existing editor
-        effect when bind:this fires again.
+        effect when captureEditor fires again.
       -->
       <column grow gap="0" sx={style.minH(0).overflow(hidden)}>
         <if {tab() === 'source'}>
@@ -412,7 +420,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               size="sm"
               chrome="flush"
               wasm-url="/sail_compiler_bg.wasm"
-              bind:this={editorEl}
+              use:captureEditor
               on:sail-change={onSourceChange}
             ></sail-code-editor>
           </column>
@@ -449,7 +457,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
           base-src="/tut-host.html"
           title="Tutorial preview"
           sandbox="allow-scripts allow-same-origin"
-          bind:this={iframeEl}
+          use:captureIframe
           sx={style.w(full).h(full).minH(0).borderWidth(0).bg(surface-0)}
         ></iframe>
       </column>
@@ -507,7 +515,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
               size="sm"
               chrome="flush"
               wasm-url="/sail_compiler_bg.wasm"
-              bind:this={editorEl}
+              use:captureEditor
               on:sail-change={onSourceChange}
             ></sail-code-editor>
           </column>
@@ -532,7 +540,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
           base-src="/tut-host.html"
           title="Tutorial preview"
           sandbox="allow-scripts allow-same-origin"
-          bind:this={iframeEl}
+          use:captureIframe
           sx={style.w(full).h(full).minH(0).borderWidth(0).bg(surface-0)}
         ></iframe>
       </column>

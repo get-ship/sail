@@ -9,7 +9,7 @@
 //      dispose() empties the container (cleanup() + remove appended nodes).
 //
 // The stage is a plain container element living inside `sail-render`'s OWN
-// shadow root (obtained via `bind:this={stageEl}`). Compiled CSS adopts onto
+// shadow root (obtained via `use:captureStage`). Compiled CSS adopts onto
 // that owning shadow root's `adoptedStyleSheets` (scoped, no global leak) and
 // the inherited-property baseline is re-rooted from role tokens on the stage
 // container so a host-page `font`/`color` does NOT bleed into the specimen
@@ -65,7 +65,7 @@ const INHERITED_BASELINE: Record<string, string> = {
  * so its template renders into the host's light DOM. The controller `mount`
  * runs AFTER that render, so the engine moves the already-wired template
  * subtree into a fresh shadow root — node identity is preserved, so every
- * binding (`{#if}` anchors, the `bind:this={stageEl}` ref) stays live. This
+ * binding (`{#if}` anchors, the `use:captureStage` ref) stays live. This
  * gives the specimen real shadow isolation + adopted-CSS scoping, and the
  * theme/density custom properties still inherit through the boundary.
  * Idempotent — a second call is a no-op once the shadow exists.

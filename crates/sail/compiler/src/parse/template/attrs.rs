@@ -485,6 +485,20 @@ fn compile_bind(
     value_span: Span,
     loc: &str,
 ) -> Result<AttrInstr, CompileError> {
+    // `bind:this` is retired — element capture is a local `use:` action that
+    // sets a signal on mount and clears it on destroy (see RETIRED_DIRECTIVES).
+    // Keep bind:value / bind:checked (two-way state, sanctioned).
+    if target == "this" {
+        return Err(CompileError::new(
+            "`bind:this` is retired — capture the element with a local `use:` action \
+             that sets a signal on mount and clears it on destroy \
+             (e.g. `const captureEl: Action<void> = (node) => { el.set(node); \
+             return { destroy: () => el.set(null) }; }`, template: `use:captureEl`). \
+             Keep `bind:value` / `bind:checked` for two-way state.",
+        )
+        .with_span(value_span)
+        .with_category(loc.to_string()));
+    }
     if !is_expr_value(value) {
         return Err(
             CompileError::new(format!("bind:{target} expects {{signal}}"))
@@ -493,19 +507,6 @@ fn compile_bind(
         );
     }
     let inner = strip_braces(value).to_string();
-    if target == "this" {
-        if !is_bare_identifier(&inner) {
-            return Err(CompileError::new(
-                "bind:this={var} expects a bare identifier (refs are write-once, not derivable)",
-            )
-            .with_span(value_span)
-            .with_category(loc.to_string()));
-        }
-        return Ok(AttrInstr::BindThis {
-            var: inner,
-            span: value_span,
-        });
-    }
     expr::validate_at(&inner, false, loc, value_span)?;
     let expr = Expr::new(inner, value_span, false);
     match target {
@@ -1657,9 +1658,8 @@ mod tests {
     fn every_manifest_bind_target_parses_and_no_others() {
         let span = Span::new(0, 0);
         for b in crate::directive_manifest::BIND_TARGETS {
-            let value = if b.target == "this" { "{el}" } else { "{sig}" };
             assert!(
-                compile_bind(b.target, value, span, "t").is_ok(),
+                compile_bind(b.target, "{sig}", span, "t").is_ok(),
                 "manifest bind target `{}` is not accepted by the parser",
                 b.target
             );
@@ -1673,6 +1673,13 @@ mod tests {
                 err.message
             );
         }
+        // bind:this is retired with a teaching error (not "unknown bind").
+        let retired = compile_bind("this", "{el}", span, "t").unwrap_err();
+        assert!(
+            retired.message.contains("retired") && retired.message.contains("use:"),
+            "bind:this must retire with a use: migration hint, got: {}",
+            retired.message
+        );
     }
 
     #[test]

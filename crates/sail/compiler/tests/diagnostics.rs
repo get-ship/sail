@@ -89,26 +89,20 @@ fn assignment_diagnostic_has_a_span() {
 }
 
 #[test]
-fn bind_this_with_non_identifier_is_rejected() {
-    let src = r#"<button bind:this={a.b}>x</button>"#;
-    let err = compile_route(src);
-    assert!(
-        err.message.contains("identifier") || err.message.contains("bare"),
-        "msg: {}",
-        err.message
-    );
-    assert!(err.span.is_some());
-}
-
-#[test]
-fn bind_this_with_call_expression_is_rejected() {
-    let src = r#"<button bind:this={getRef()}>x</button>"#;
-    let err = compile_route(src);
-    assert!(
-        err.message.contains("identifier") || err.message.contains("bare"),
-        "msg: {}",
-        err.message
-    );
+fn bind_this_is_retired_regardless_of_value_shape() {
+    for src in [
+        r#"<button bind:this={a.b}>x</button>"#,
+        r#"<button bind:this={getRef()}>x</button>"#,
+        r#"<button bind:this={el}>x</button>"#,
+    ] {
+        let err = compile_route(src);
+        assert!(
+            err.message.contains("retired") && err.message.contains("use:"),
+            "bind:this must retire with use: migration, got: {}",
+            err.message
+        );
+        assert!(err.span.is_some());
+    }
 }
 
 #[test]

@@ -252,10 +252,10 @@ fn no_class_fails_real_compile_path() {
 #[test]
 fn sx_only_source_passes_real_compile_path() {
     // The negative direction: a pack source that styles with `sx=`
-    // instead of `class=` is clean. The full pre-floor surface is
-    // available: sx=, role, aria-*, bind:this, on:event, data-*.
+    // instead of `class=` is clean. The full floor surface is
+    // available: sx=, role, aria-*, on:event, data-*.
     let (_tmp, sail_path) = write_pack(&[], r#"{"stylesheets": []}"#);
-    let src = r#"<p role="listbox" aria-label="x" sx={style.pad(4).bg(surface-2)} bind:this={el}>{name}</p>"#;
+    let src = r#"<p role="listbox" aria-label="x" sx={style.pad(4).bg(surface-2)} on:click={noop}>{name}</p>"#;
     std::fs::write(&sail_path, src).unwrap();
     let overrides = Policy::overrides_for(&sail_path);
     let diags = check_all(src, Some(&sail_path), &overrides, None);

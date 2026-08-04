@@ -114,12 +114,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const highlight = signal(0)
     const listId = signal(`sail-cmdk-list-${seq}`)
 
-    // KEPT as refs, deliberately: `scrollActiveIntoView` reads `listEl` from
-    // keydown handlers bound to the INPUT, and `openPicker`-style cross-element
-    // reach is the one thing an action can't express. See the ref-excision
-    // report's (b) classification.
+    // Cross-element refs: `scrollActiveIntoView` reads `listEl` from keydown
+    // handlers bound to the INPUT. Captured via use: (bind:this is retired).
     const inputEl = signal<HTMLInputElement | null>(null)
     const listEl = signal<HTMLUListElement | null>(null)
+    const captureInput: Action<void> = (node) => {
+      inputEl.set(node as HTMLInputElement)
+      return { destroy: () => inputEl.set(null) }
+    }
+    const captureList: Action<void> = (node) => {
+      listEl.set(node as HTMLUListElement)
+      return { destroy: () => listEl.set(null) }
+    }
 
     // Set by mount before any handler below can fire.
     let hostEl: (HTMLElement & { open: boolean }) | null = null
@@ -372,7 +378,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     return {
       itemsSig, query, highlight, listId,
-      dialogBridge, inputEl, listEl,
+      dialogBridge, captureInput, captureList,
       visible, navigable, safeHighlight, highlightId, activeId, rows,
     }
   })
@@ -382,9 +388,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   <column gap="0" sx={style.minH(0).fg(foreground).fontFamily(body)}>
     <row align="center" gap="2" grow="0" sx={style.pad(3).padX(4).borderBWidth(1).borderB(border-subtle)}>
       <icon name="search" size="sm" grow="0"></icon>
-      <input type="text" flush grow min-w="0" sx={style.fontFamily(body).fontSize(base).leading(normal)} autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} bind:this={inputEl} />
+      <input type="text" flush grow min-w="0" sx={style.fontFamily(body).fontSize(base).leading(normal)} autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls={listId()} aria-activedescendant={activeId()} aria-label={label()} placeholder={placeholder()} bind:value={query} use:captureInput />
     </row>
-    <ul grow sx={style.maxH(panel-vh-sm).pad(1).overflowY(auto).minH(0)} role="listbox" id={listId()} aria-label={label()} bind:this={listEl}>
+    <ul grow sx={style.maxH(panel-vh-sm).pad(1).overflowY(auto).minH(0)} role="listbox" id={listId()} aria-label={label()} use:captureList>
       <for {rows()} as="row" key={row.key}>
         <if {row.isHeading}>
           <li role="presentation" sx={style.padY(2).padB(1).fontSize(xs).fontWeight(semibold).tracking(wide).fg(muted-foreground).textCase(uppercase).select(none)}>{row.heading}</li>

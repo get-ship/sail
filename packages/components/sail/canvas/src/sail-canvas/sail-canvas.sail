@@ -38,6 +38,7 @@
   }
 </scope>
 <controller>
+import type { Action } from '@ship/sail-runtime'
 import { debounce } from '@ship/sail-runtime'
 import type { Scope } from './sail-canvas.sail'
 import { createCanvas } from '../engine/create-canvas'
@@ -135,14 +136,18 @@ export default controller(({ value }: Scope) => {
     }
   })
 
-  return { canvas, injected, fallback, viewportEl, debounced, worldTransformCss, pointerDown, pointerMove, pointerUp, wheel }
+  const captureViewport: Action<void> = (node) => {
+    viewportEl.set(node as HTMLDivElement)
+    return { destroy: () => viewportEl.set(null) }
+  }
+  return { canvas, injected, fallback, captureViewport, debounced, worldTransformCss, pointerDown, pointerMove, pointerUp, wheel }
 })
 
 </controller>
 <div
   role="application"
   aria-label={label()}
-  bind:this={viewportEl}
+  use:captureViewport
   on:pointerdown={pointerDown}
   on:pointermove={pointerMove}
   on:pointerup={pointerUp}

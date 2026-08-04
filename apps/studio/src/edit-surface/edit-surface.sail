@@ -4,9 +4,15 @@
   Ban-clean: no div/span.
 -->
 <controller>
+import type { Action } from '@ship/sail-runtime'
 import { createEditSurface } from './edit-surface-vm'
 export default controller(() => {
   const vm = createEditSurface()
+  // Element capture via use: (bind:this is retired).
+  const captureEditor: Action<void> = (node) => {
+    vm.editorEl.set(node as HTMLElement)
+    return { destroy: () => vm.editorEl.set(null) }
+  }
   return {
     sourceText: vm.sourceText,
     sourceStatus: vm.sourceStatus,
@@ -23,7 +29,7 @@ export default controller(() => {
     hasOpenDoc: vm.hasOpenDoc,
     editError: vm.editError,
     hasEditError: vm.hasEditError,
-    editorEl: vm.editorEl,
+    captureEditor,
     opsUrl: vm.opsUrl,
     opsPath: vm.opsPath,
     onSourceSailChange: (e: Event) => vm.onSourceSailChange(e),
@@ -235,7 +241,7 @@ export default controller(() => {
                 ops-url={opsUrl()}
                 ops-path={opsPath()}
                 value={sourceText()}
-                bind:this={editorEl}
+                use:captureEditor
                 on:sail-change={onSourceSailChange}
                 on:sail-save={onSaveSource}
                 aria-label="Source editor"

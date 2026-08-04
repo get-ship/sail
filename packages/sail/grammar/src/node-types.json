@@ -114,10 +114,6 @@
           "named": true
         },
         {
-          "type": "fx_attr",
-          "named": true
-        },
-        {
           "type": "html_comment",
           "named": true
         },
@@ -202,10 +198,6 @@
         },
         {
           "type": "for_block",
-          "named": true
-        },
-        {
-          "type": "fx_attr",
           "named": true
         },
         {
@@ -343,10 +335,6 @@
           "named": true
         },
         {
-          "type": "fx_attr",
-          "named": true
-        },
-        {
           "type": "html_comment",
           "named": true
         },
@@ -434,10 +422,6 @@
           "named": true
         },
         {
-          "type": "fx_attr",
-          "named": true
-        },
-        {
           "type": "html_comment",
           "named": true
         },
@@ -522,10 +506,6 @@
         },
         {
           "type": "for_block",
-          "named": true
-        },
-        {
-          "type": "fx_attr",
           "named": true
         },
         {
@@ -652,10 +632,6 @@
           "named": true
         },
         {
-          "type": "fx_attr",
-          "named": true
-        },
-        {
           "type": "html_comment",
           "named": true
         },
@@ -692,32 +668,6 @@
           "named": true
         }
       ]
-    }
-  },
-  {
-    "type": "fx_attr",
-    "named": true,
-    "fields": {
-      "config": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "brace_expression",
-            "named": true
-          }
-        ]
-      },
-      "trigger": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "attr_local",
-            "named": true
-          }
-        ]
-      }
     }
   },
   {
@@ -766,10 +716,6 @@
         },
         {
           "type": "for_block",
-          "named": true
-        },
-        {
-          "type": "fx_attr",
           "named": true
         },
         {
@@ -872,10 +818,6 @@
         },
         {
           "type": "for_block",
-          "named": true
-        },
-        {
-          "type": "fx_attr",
           "named": true
         },
         {
@@ -1087,10 +1029,6 @@
           "named": true
         },
         {
-          "type": "fx_attr",
-          "named": true
-        },
-        {
           "type": "html_comment",
           "named": true
         },
@@ -1175,10 +1113,6 @@
         },
         {
           "type": "for_block",
-          "named": true
-        },
-        {
-          "type": "fx_attr",
           "named": true
         },
         {
@@ -1330,10 +1264,6 @@
   },
   {
     "type": "bind:",
-    "named": false
-  },
-  {
-    "type": "fx:",
     "named": false
   },
   {

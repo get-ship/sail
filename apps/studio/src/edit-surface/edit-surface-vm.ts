@@ -51,7 +51,7 @@ export function createEditSurface() {
   const docTabs = signal<TabRow[]>([])
   const hasOpenDoc = signal(false)
   const activePathLabel = signal('')
-  /** Host ref via `bind:this` — no ambient document.querySelector. */
+  /** Host ref via `use:captureEditor` — no ambient document.querySelector. */
   const editorEl = signal<HTMLElement | null>(null)
   /** Same base as createOpsClient() — relative same-origin SailAuthoring. */
   const opsUrl = signal(STUDIO_OPS_URL)
@@ -154,7 +154,7 @@ export function createEditSurface() {
   sync()
   mountAmbient(() => {
     const unsub = subscribeEdit(() => sync())
-    // Register source editor host from template bind:this — legal ref path.
+    // Register source editor host from template use:captureEditor — legal ref path.
     const stopEd = effect(() => {
       setSourceEditorHost(editorEl())
     })

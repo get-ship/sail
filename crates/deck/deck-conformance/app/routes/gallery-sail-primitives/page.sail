@@ -977,10 +977,10 @@ export default controller(() => ({
           <span tone="destructive" sx={style.display(inline-block).minH(control-h-2xs).padX(2).fontSize(xs).fontWeight(medium).radius(full).bg(tone-bg).borderWidth(1).border(tone-border).fg(tone-fg).whitespace(nowrap)}>blocked by #263 — production-compile gap</span>
         </row>
         <p sx={style.fontSize(xs).fg(muted-foreground).leading(relaxed)}>
-          All three <code>sail-media-*</code> components use <code>bind:this</code> on
-          non-root elements inside conditional branches, which the real compiler rejects.
+          All three <code>sail-media-*</code> components capture non-root elements via
+          local <code>use:</code> actions inside conditional branches.
           The gallery-sail-media view covers the scalar-attr surface of these components
-          (no expressions involving the blocked patterns). Tracked in #263.
+          (no expressions involving blocked patterns).
         </p>
       </column>
 

@@ -8335,8 +8335,8 @@ export const DIRECTIVES: DirectiveDoc[] = [
     "summary": "attach a DOM event handler; chain modifiers with | (full modifier table below)"
   },
   {
-    "syntax": "bind:value / bind:checked / bind:this",
-    "summary": "two-way binding sugar; the three targets are the whole surface (table below)"
+    "syntax": "bind:value / bind:checked",
+    "summary": "two-way binding sugar; value and checked are the whole surface (table below)"
   },
   {
     "syntax": "use:<action> / use:<action>={param}",
@@ -8345,10 +8345,6 @@ export const DIRECTIVES: DirectiveDoc[] = [
   {
     "syntax": "sx=\"atom atom …\"",
     "summary": "static styling atoms from the closed sx vocabulary; sx={expr} is a compile error"
-  },
-  {
-    "syntax": "fx:<trigger>={…}",
-    "summary": "the one animation directive — triggers, properties, and config in the motion reference"
   },
   {
     "syntax": "(--name) inside sx values",
@@ -9015,10 +9011,6 @@ export const BIND_TARGETS: BindTargetDoc[] = [
   {
     "target": "checked",
     "summary": "two-way binding to a checkbox or radio checked state"
-  },
-  {
-    "target": "this",
-    "summary": "capture the element handle into a bare scope variable — write-once, not derivable"
   }
 ]
 
@@ -9051,6 +9043,14 @@ export const RETIRED_DIRECTIVES: RetiredDoc[] = [
   {
     "syntax": "transition: / in: / out:",
     "instead": "style.enter / style.exit"
+  },
+  {
+    "syntax": "fx:<trigger>",
+    "instead": "attach motion on Style: sx={style.… .enter({…}).exit({…})} (or .loop / .reveal / .scroll({…}))"
+  },
+  {
+    "syntax": "bind:this",
+    "instead": "a local use: action that sets a signal on mount and clears it on destroy (const captureEl: Action = (node) => { el.set(node); return { destroy: () => el.set(null) } }; template: use:captureEl)"
   }
 ]
 
