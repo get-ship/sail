@@ -295,12 +295,15 @@ export async function setBrandColorOn(
     ctx.emit()
     return
   }
+  const primaryCss = getKnob(BRAND_PRIMARY_PATH)?.cssName ?? 'primary'
+  const fgCss = getKnob(BRAND_FG_PATH)?.cssName ?? 'primary-foreground'
   let doc = setPathValue(
     state.themeDoc,
     BRAND_PRIMARY_PATH,
     oklch,
     'color',
     state.modeId,
+    primaryCss,
   )
   // Co-write label color so Primary buttons stay readable (soft auto).
   const L = (() => {
@@ -308,7 +311,7 @@ export async function setBrandColorOn(
     return m ? Number(m[1]) : 0.5
   })()
   const fg = L >= 0.55 ? 'oklch(0.18 0.02 48)' : 'oklch(0.98 0.01 90)'
-  doc = setPathValue(doc, BRAND_FG_PATH, fg, 'color', state.modeId)
+  doc = setPathValue(doc, BRAND_FG_PATH, fg, 'color', state.modeId, fgCss)
   ctx.reflectCss('primary-foreground', fg)
   ctx.recomputeDerived(doc)
   ctx.setState({
@@ -370,7 +373,16 @@ export async function setTokenValueOn(
     ctx.emit()
     return
   }
-  const doc = setPathValue(state.themeDoc, path, writeValue, type, state.modeId)
+  // Always stamp registry cssName so lowerer emits public names (e.g. --success
+  // not --color-success-default from path-join).
+  const doc = setPathValue(
+    state.themeDoc,
+    path,
+    writeValue,
+    type,
+    state.modeId,
+    knob?.cssName ?? (cssName.includes('.') ? undefined : cssName),
+  )
   ctx.recomputeDerived(doc)
   ctx.setState({
     ...ctx.getState(),
