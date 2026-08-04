@@ -10,7 +10,11 @@
 use crate::report::Finding;
 use std::path::Path;
 
+pub mod action_host_only;
+pub mod action_no_network;
+pub mod action_no_state;
 pub mod action_no_style;
+pub mod action_signature;
 pub mod animate_token_only;
 pub mod attr_bool_prop;
 pub mod attr_presence;
@@ -183,12 +187,18 @@ pub const APP_SOURCE_RULES: &[(&str, RuleFn)] = &[
     (prefer_query::RULE_ID, prefer_query::check),
 ];
 
-/// Rules that lint a shipped / author `use:` Action body.
+/// Rules that lint an **author** `use:` Action body (ACTIONS-1 regime).
 ///
-/// Dispatches on `packages/sail/runtime/src/actions/**` (and any future
-/// path `is_action_source_path` admits). Bench harness sources under
-/// `tests/perf/` are exempt at the path gate — interop may need `class=`.
+/// Dispatches on app `src/actions/**` (and any path `is_action_source_path`
+/// admits). The framework catalog (`packages/sail/runtime/src/actions/*`) is
+/// **trusted** and not subject to this floor.
 ///
-/// Floor matches the template invariants: no class, no style assignment,
-/// only `setProperty`/`removeProperty` on `--*` custom properties.
-pub const ACTION_RULES: &[(&str, RuleFn)] = &[(action_no_style::RULE_ID, action_no_style::check)];
+/// Floor (ERROR): no style/class/layout writes; no state primitives; no
+/// network; handed host only; Action signature.
+pub const ACTION_RULES: &[(&str, RuleFn)] = &[
+    (action_no_style::RULE_ID, action_no_style::check),
+    (action_no_state::RULE_ID, action_no_state::check),
+    (action_no_network::RULE_ID, action_no_network::check),
+    (action_host_only::RULE_ID, action_host_only::check),
+    (action_signature::RULE_ID, action_signature::check),
+];

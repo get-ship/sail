@@ -13,11 +13,13 @@ const isOpen = (el: HTMLElement): boolean => {
 }
 
 /**
- * `use:menu` — menu semantics + keyboard for the L1 `<dropdown>` / `<context-menu>`
- * content (a native `[popover]`). Wires role=menu / menuitem, roving focus
- * (ArrowUp/Down, Home/End), Escape to close, focuses the first item on open, and
- * closes after activating an item. Positioning is `use:anchor`'s job; open/close
- * and light-dismiss are the native popover's.
+ * Internal: L1 `<dropdown>` / `<context-menu>` closed behavior (not a public `use:`).
+ * Authors compose `<dropdown>` / `<context-menu>` + `<menu-item>`, not `use:menu`.
+ *
+ * Wires role=menu / menuitem, roving focus (ArrowUp/Down, Home/End), Escape to
+ * close, focuses the first item on open, and closes after activating an item.
+ * Positioning is `use:anchor`'s job; open/close and light-dismiss are the
+ * native popover's.
  */
 export const menu: Action<void> = (node) => {
   const root = node as HTMLElement

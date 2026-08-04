@@ -7820,7 +7820,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "theme-picker",
-      "description": "Product theme catalog + mode control (redesign)."
+      "description": "catalog + optional mode-only."
     },
     {
       "tag": "ticker",
@@ -7882,7 +7882,7 @@ export const ACTIONS: ActionDoc[] = [
   {
     "name": "autosize",
     "param": "void",
-    "summary": "Autosize a textarea to its content as the user types.",
+    "summary": "Autosize a textarea (height) or single-line input (width) to its content.",
     "public": true
   },
   {
@@ -7910,9 +7910,15 @@ export const ACTIONS: ActionDoc[] = [
     "public": true
   },
   {
+    "name": "clipboard",
+    "param": "ClipboardParam",
+    "summary": "Copy param text (or host text content) to the clipboard on click; optional onCopy success callback.",
+    "public": true
+  },
+  {
     "name": "combobox",
     "param": "void",
-    "summary": "Combobox keyboard/ARIA behavior for an input + list pairing.",
+    "summary": "Internal: L1 <combobox> closed behavior (not public use: — attach the widget).",
     "public": false
   },
   {
@@ -7970,6 +7976,12 @@ export const ACTIONS: ActionDoc[] = [
     "public": false
   },
   {
+    "name": "hotkeys",
+    "param": "HotkeysMap | undefined",
+    "summary": "Declarative key→handler map on the document; ignores editable fields unless allowInInputs.",
+    "public": true
+  },
+  {
     "name": "hoverSurface",
     "param": "void",
     "summary": "Hover-triggered card; open on pointer-in, close on pointer-out with delay.",
@@ -7980,6 +7992,12 @@ export const ACTIONS: ActionDoc[] = [
     "param": "void",
     "summary": "Resolve a glyph from the icon cache and stamp the matching <use href>.",
     "public": true
+  },
+  {
+    "name": "liveBox",
+    "param": "string | null | undefined",
+    "summary": "Apply freeform CSS declarations for live specimen geometry (border-radius, box-shadow, …).",
+    "public": false
   },
   {
     "name": "liveRegion",
@@ -8008,13 +8026,13 @@ export const ACTIONS: ActionDoc[] = [
   {
     "name": "menu",
     "param": "void",
-    "summary": "Dropdown menu: keyboard nav, roving tabindex, ARIA menu role.",
-    "public": true
+    "summary": "Internal: L1 <dropdown>/<context-menu> closed behavior (not public use: — attach the widget).",
+    "public": false
   },
   {
     "name": "pagination",
     "param": "void",
-    "summary": "Pagination controls; page number + prev/next wired to the controller.",
+    "summary": "Internal: L1 <pagination> closed behavior (not public use: — attach the widget).",
     "public": false
   },
   {
@@ -8044,7 +8062,7 @@ export const ACTIONS: ActionDoc[] = [
   {
     "name": "radioGroup",
     "param": "void",
-    "summary": "Radio-group keyboard nav: arrow keys move the checked item.",
+    "summary": "Internal: L1 <radio-group> closed behavior (not public use: — attach the widget).",
     "public": false
   },
   {
@@ -8086,8 +8104,8 @@ export const ACTIONS: ActionDoc[] = [
   {
     "name": "tabs",
     "param": "void",
-    "summary": "Tabs keyboard nav: left/right arrows move the active tab, ARIA tablist role.",
-    "public": true
+    "summary": "Internal: L1 <tabs> closed behavior (not public use: — attach the widget).",
+    "public": false
   },
   {
     "name": "targetCursor",
@@ -8156,13 +8174,19 @@ export const PUBLIC_ACTIONS: ActionDoc[] = [
   {
     "name": "autosize",
     "param": "void",
-    "summary": "Autosize a textarea to its content as the user types.",
+    "summary": "Autosize a textarea (height) or single-line input (width) to its content.",
     "public": true
   },
   {
     "name": "clickOutside",
     "param": "(() => void) | undefined",
     "summary": "Fire a callback when a click lands outside the element.",
+    "public": true
+  },
+  {
+    "name": "clipboard",
+    "param": "ClipboardParam",
+    "summary": "Copy param text (or host text content) to the clipboard on click; optional onCopy success callback.",
     "public": true
   },
   {
@@ -8178,27 +8202,21 @@ export const PUBLIC_ACTIONS: ActionDoc[] = [
     "public": true
   },
   {
+    "name": "hotkeys",
+    "param": "HotkeysMap | undefined",
+    "summary": "Declarative key→handler map on the document; ignores editable fields unless allowInInputs.",
+    "public": true
+  },
+  {
     "name": "icon",
     "param": "void",
     "summary": "Resolve a glyph from the icon cache and stamp the matching <use href>.",
     "public": true
   },
   {
-    "name": "menu",
-    "param": "void",
-    "summary": "Dropdown menu: keyboard nav, roving tabindex, ARIA menu role.",
-    "public": true
-  },
-  {
     "name": "rect",
     "param": "BoxRect | null | undefined",
     "summary": "Track the element's bounding rect via ResizeObserver.",
-    "public": true
-  },
-  {
-    "name": "tabs",
-    "param": "void",
-    "summary": "Tabs keyboard nav: left/right arrows move the active tab, ARIA tablist role.",
     "public": true
   },
   {
@@ -9187,7 +9205,7 @@ export interface ConfigKeyDoc {
 export const CONFIG_KEYS: ConfigKeyDoc[] = [
   {
     "key": "preset",
-    "type": "\"strict\" | \"full\"",
+    "type": "\"strict\" | \"full\" | \"repair\" | \"off\"",
     "default": "no tier — capabilities opt in individually",
     "doc": "select a capability tier above the floor in one word"
   },
@@ -9208,6 +9226,18 @@ export const CONFIG_KEYS: ConfigKeyDoc[] = [
     "type": "boolean",
     "default": "off",
     "doc": "capability override: allow raw container elements instead of the layout keywords"
+  },
+  {
+    "key": "compose_rhythm",
+    "type": "boolean",
+    "default": "true",
+    "doc": "auto-fix sibling rhythm violations; false warns only"
+  },
+  {
+    "key": "autofix",
+    "type": "\"repair\" | \"strict\" | \"off\"",
+    "default": "repair",
+    "doc": "compose autofix preset: confluent fixes on / all error / pass silent"
   },
   {
     "key": "stylesheets",
@@ -9232,6 +9262,18 @@ export const CONFIG_KEYS: ConfigKeyDoc[] = [
     "type": "{ default, defaultMode?, enabled: \"all\" | string[] }",
     "default": "no theme section — thin app emit (no catalog); package generate still full catalog",
     "doc": "app theme emit set: default id, optional mode, catalog allowlist (omit/[] thin; \"all\" full; list filter). Project tokens/themes always emit"
+  },
+  {
+    "key": "layout",
+    "type": "\"warn\" | \"error\"",
+    "default": "warn — taffy soft findings stay warnings; silent-clip stays Error",
+    "doc": "promote gate-gap layout findings (main-axis overflow, collapsed box, height-chain) to Error so check/dev exit non-zero (studio strict profile)"
+  },
+  {
+    "key": "policy",
+    "type": "{ layout.raw_containers?, lint.severity.<rule-id>? }",
+    "default": "registry defaults (see `sail-compiler policy`)",
+    "doc": "typed compiler policy registry object; unknown keys are a hard error naming the closest valid key"
   }
 ]
 

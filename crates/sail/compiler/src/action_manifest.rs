@@ -129,7 +129,7 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "combobox",
         param: "void",
-        summary: "Combobox keyboard/ARIA behavior for an input + list pairing.",
+        summary: "Internal: L1 <combobox> closed behavior (not public use: — attach the widget).",
         auto_import: true,
     },
     ActionEntry {
@@ -237,13 +237,13 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "menu",
         param: "void",
-        summary: "Dropdown menu: keyboard nav, roving tabindex, ARIA menu role.",
+        summary: "Internal: L1 <dropdown>/<context-menu> closed behavior (not public use: — attach the widget).",
         auto_import: true,
     },
     ActionEntry {
         name: "pagination",
         param: "void",
-        summary: "Pagination controls; page number + prev/next wired to the controller.",
+        summary: "Internal: L1 <pagination> closed behavior (not public use: — attach the widget).",
         auto_import: true,
     },
     ActionEntry {
@@ -273,7 +273,7 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "radioGroup",
         param: "void",
-        summary: "Radio-group keyboard nav: arrow keys move the checked item.",
+        summary: "Internal: L1 <radio-group> closed behavior (not public use: — attach the widget).",
         auto_import: true,
     },
     ActionEntry {
@@ -315,7 +315,7 @@ pub const ACTIONS: &[ActionEntry] = &[
     ActionEntry {
         name: "tabs",
         param: "void",
-        summary: "Tabs keyboard nav: left/right arrows move the active tab, ARIA tablist role.",
+        summary: "Internal: L1 <tabs> closed behavior (not public use: — attach the widget).",
         auto_import: true,
     },
     ActionEntry {
@@ -376,7 +376,10 @@ pub const ACTIONS: &[ActionEntry] = &[
 
 /// App-author `use:` surface taught in skill/docs. Internal stamps stay
 /// auto-imported for stdlib but are not the taught package API.
-pub const PUBLIC_ACTION_COUNT: usize = 14;
+///
+/// ACTIONS-1 diet: widget-private behaviors (`tabs`, `radioGroup`, `menu`,
+/// `pagination`, `combobox`) are closed impl inside L1 widgets — not public.
+pub const PUBLIC_ACTION_COUNT: usize = 12;
 pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "anchor",
     "autosize",
@@ -386,9 +389,7 @@ pub const PUBLIC_ACTION_NAMES: &[&str; PUBLIC_ACTION_COUNT] = &[
     "dropzone",
     "hotkeys",
     "icon",
-    "menu",
     "rect",
-    "tabs",
     "tipDescribe",
     "virtualRow",
     "zoomPan",
@@ -593,7 +594,21 @@ mod tests {
     #[test]
     fn public_action_count_matches_names_array() {
         assert_eq!(PUBLIC_ACTION_COUNT, PUBLIC_ACTION_NAMES.len());
-        assert_eq!(PUBLIC_ACTION_COUNT, 14);
+        assert_eq!(PUBLIC_ACTION_COUNT, 12);
+    }
+
+    #[test]
+    fn diet_five_are_not_public() {
+        for name in ["tabs", "radioGroup", "menu", "pagination", "combobox"] {
+            assert!(
+                !is_public_action(name),
+                "{name} must not be on the public use: surface (ACTIONS-1 diet)"
+            );
+            assert!(
+                ACTIONS.iter().any(|a| a.name == name),
+                "{name} stays in ACTIONS as internal auto-import for stdlib widgets"
+            );
+        }
     }
 
     #[test]

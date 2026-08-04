@@ -171,7 +171,8 @@ fn parse_op_target(target: &str) -> Result<(String, String)> {
 /// `sail check` — compile-time diagnostics for one `.sail` file or directory.
 ///
 /// Directories also lint plain app TypeScript under `apps/*/src/**/*.ts`
-/// (floor + ambient DOM). That closes the escape hatch where a side module
+/// (floor + ambient DOM) and author action modules under `src/actions/**`
+/// (ACTIONS-1 regime). That closes the escape hatch where a side module
 /// under studio carried `cssText` / `createElement` because only `.sail`
 /// templates were walked.
 pub fn check(input: PathBuf, fix: String) -> Result<()> {
@@ -182,7 +183,7 @@ pub fn check(input: PathBuf, fix: String) -> Result<()> {
     };
     if path.is_file() {
         if path.extension().and_then(|e| e.to_str()) == Some("ts")
-            && sail_lint::is_app_source_ts(&path)
+            && (sail_lint::is_app_source_ts(&path) || sail_lint::is_action_source_path(&path))
         {
             check_app_ts(&path)?;
         } else {
@@ -363,12 +364,12 @@ fn collect_sail_files(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-/// Walk `dir` for plain app TypeScript that `is_app_source_ts` admits.
+/// Walk `dir` for plain app TypeScript that `is_app_source_ts` admits, plus
+/// author action modules under `src/actions/**` (`is_action_source_path`).
 ///
 /// When `dir` is `apps/studio` (or any apps/* tree), modules under `src/` are
 /// the floor surface. When `dir` is a monorepo root, every `apps/*/src/**/*.ts`
-/// under it is included. Paths already classified as controllers/actions are
-/// filtered by `is_app_source_ts`.
+/// under it is included. Controllers are excluded by both predicates.
 fn collect_app_source_ts(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
     for entry in std::fs::read_dir(dir).with_context(|| format!("read dir {}", dir.display()))? {
         let entry = entry?;
@@ -380,7 +381,7 @@ fn collect_app_source_ts(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
                 continue;
             }
             collect_app_source_ts(&p, out)?;
-        } else if sail_lint::is_app_source_ts(&p) {
+        } else if sail_lint::is_app_source_ts(&p) || sail_lint::is_action_source_path(&p) {
             out.push(p);
         }
     }

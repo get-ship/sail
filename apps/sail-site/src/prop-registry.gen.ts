@@ -844,8 +844,7 @@ export const PROP_REGISTRY: Record<string, GenProp[]> = {
     {
       "name": "modeOnly",
       "type": "bool",
-      "default": "false",
-      "desc": "Mode-only: sun/moon/system trigger; no theme catalog."
+      "default": "false"
     }
   ],
   "ticker": [

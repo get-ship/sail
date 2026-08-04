@@ -3,7 +3,8 @@ import type { Action } from '../action'
 let _seq = 0
 
 /**
- * `use:radioGroup` — the L1 `<radio-group>` element's behavior. Native radios
+ * Internal: L1 `<radio-group>` closed behavior (not a public `use:`).
+ * Authors use `<radio-group>`, not `use:radioGroup`. Native radios
  * that share a `name` already give single selection, arrow-key roving, focus,
  * and form submission for free; this action supplies the wiring CSS can't:
  *  - give every child <radio>'s inner <input> the shared group name + its own

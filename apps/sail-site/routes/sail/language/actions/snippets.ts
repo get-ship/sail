@@ -7,23 +7,26 @@ export const code = {
 <textarea use:autosize></textarea>
 <div use:clickOutside={close}>…</div>`,
 
-  author: `// autofocus.ts — an action IS a function over an element.
-// No registry, no base class, no lifecycle to implement.
+  author: `// src/actions/autofocus.ts — author hatch under the action floor.
+// No style/class, no signal/store/query, no fetch, host-only.
 import type { Action } from '@ship/sail-runtime'
 
 export const autofocus: Action<void> = (node) => {
   const el = node as HTMLElement
   const id = requestAnimationFrame(() => el.focus())
-  // Return the cleanup. The runtime calls it when the element goes away.
   return { destroy: () => cancelAnimationFrame(id) }
 }`,
 
   param: `<!-- an action takes a reactive param: its update() runs on change -->
 <div use:anchor={{ to: trigger, placement: 'bottom-start' }}>…</div>`,
 
-  stdlib: `<!-- this is not a special mechanism for you: it is how the standard
-     library gets ITS behavior. <combobox> is markup + use:combobox. -->
+  stdlib: `<!-- Prefer the L1 widget. Widget-private behavior is closed impl —
+     not a public use: you reattach. -->
 <combobox placeholder="Search">
   <option value="a">Apple</option>
-</combobox>`,
+</combobox>
+<tabs active="a">
+  <tab-list><tab name="a">A</tab></tab-list>
+  <tab-panel name="a">…</tab-panel>
+</tabs>`,
 }

@@ -385,7 +385,7 @@ fn lint_path_dispatches_app_source_ts() {
 }
 
 #[test]
-fn setproperty_custom_prop_refuses_in_controller_allows_in_action() {
+fn author_action_path_and_floor_regime() {
     use crate::{
         is_action_source_path, is_controller_path, is_pack_source_ts, lint_action_source,
         lint_controller_source,
@@ -398,20 +398,33 @@ fn setproperty_custom_prop_refuses_in_controller_allows_in_action() {
     assert_eq!(controller.len(), 1);
     assert_eq!(controller[0].rule, "sail-no-imperative-style");
 
-    // Actions (2026-07-20): same call is the sanctioned sx bridge — allowed.
-    let action = Path::new("/repo/packages/sail/runtime/src/actions/grid-tracks.ts");
+    // Framework catalog is TRUSTED — not an author-action path.
+    let catalog = Path::new("/repo/packages/sail/runtime/src/actions/grid-tracks.ts");
+    assert!(!is_action_source_path(catalog));
+
+    // Author hatch: apps/*/src/actions/**
+    let action = Path::new("/repo/apps/demo/src/actions/autofocus.ts");
     assert!(!is_controller_path(action));
     assert!(!is_pack_source_ts(action));
     assert!(is_action_source_path(action));
-    let action_ok = lint_action_source(action, "el.style.setProperty('--row-y', y)");
-    assert!(action_ok.is_empty(), "{action_ok:?}");
 
-    // Plain CSS property assignment in an action REFUSES.
-    let action_bad = lint_action_source(action, "el.style.height = 'auto'");
-    assert_eq!(action_bad.len(), 1);
-    assert_eq!(action_bad[0].rule, "sail-action-no-style");
+    // Author floor: NO style — not even CSS custom properties.
+    let action_style = lint_action_source(action, "el.style.setProperty('--row-y', y)");
+    assert!(
+        action_style.iter().any(|f| f.rule == "sail-action-no-style"),
+        "{action_style:?}"
+    );
 
-    // Bench harness path is exempt (interop class=).
+    // Legal author action: host listener only.
+    let legal = r#"
+export const autofocus = (node: Element) => {
+  (node as HTMLElement).focus()
+}
+"#;
+    let ok = lint_action_source(action, legal);
+    assert!(ok.is_empty(), "{ok:?}");
+
+    // Bench harness path is exempt.
     assert!(!is_action_source_path(Path::new(
         "/repo/tests/perf/frameworks/keyed/sail/src/main.ts"
     )));

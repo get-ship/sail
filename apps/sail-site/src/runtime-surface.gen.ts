@@ -20,7 +20,7 @@ export interface RuntimeCategoryDoc {
 }
 
 /** Documented tier-B allowlist size (author-surface.json). */
-export const AUTHOR_RUNTIME_COUNT = 110
+export const AUTHOR_RUNTIME_COUNT = 108
 
 export const RUNTIME_CATEGORIES: RuntimeCategoryDoc[] = [
   {
@@ -61,7 +61,7 @@ export const RUNTIME_CATEGORIES: RuntimeCategoryDoc[] = [
   {
     "id": "actions",
     "summary": "Public use: actions + Action types (full use: table also on /sail/reference/actions)",
-    "count": 17
+    "count": 15
   },
   {
     "id": "errors",
@@ -847,7 +847,7 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "name": "contextMenu",
     "kind": "function",
     "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:contextMenu` — opens the L1 `<context-menu>` (a native `[popover]`) at the pointer on right-click. The menu's `for` attribute names the target element (or it defaults to the menu's parent); we suppress the native context menu, place the popover at the pointer, and show it. Item semantics/keyboard come from `use:menu`; light-dismiss + top-layer come from the native popover.",
+    "doc": "`use:contextMenu` — opens the L1 `<context-menu>` (a native `[popover]`) at the pointer on right-click. The menu's `for` attribute names the target element (or it defaults to the menu's parent); we suppress the native context menu, place the popover at the pointer, and show it. Item semantics/keyboard come from the widget closed impl; light-dismiss + top-layer come from the native popover.",
     "loc": "src/actions/context-menu.ts:10"
   },
   {
@@ -880,15 +880,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
   {
     "subpath": ".",
     "category": "actions",
-    "name": "menu",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:menu` — menu semantics + keyboard for the L1 `<dropdown>` / `<context-menu>` content (a native `[popover]`). Wires role=menu / menuitem, roving focus (ArrowUp/Down, Home/End), Escape to close, focuses the first item on open, and closes after activating an item. Positioning is `use:anchor`'s job; open/close and light-dismiss are the native popover's.",
-    "loc": "src/actions/menu.ts:22"
-  },
-  {
-    "subpath": ".",
-    "category": "actions",
     "name": "primeIconCache",
     "kind": "function",
     "signature": "(glyphs: Record<string, string>): void",
@@ -903,15 +894,6 @@ export const RUNTIME_EXPORTS: RuntimeExportDoc[] = [
     "signature": "(node: Element, param: BoxRect | null | undefined): void | ActionResult<BoxRect | null | undefined>",
     "doc": "",
     "loc": "src/actions/rect-box.ts:35"
-  },
-  {
-    "subpath": ".",
-    "category": "actions",
-    "name": "tabs",
-    "kind": "function",
-    "signature": "(node: Element, param: void): void | ActionResult<void>",
-    "doc": "`use:tabs` — L1 `<tabs>` behavior in light DOM. Finds tab / tab-panel / tab-list hosts via compiler `data-sail-host` stamps.",
-    "loc": "src/actions/tabs.ts:18"
   },
   {
     "subpath": ".",

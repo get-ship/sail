@@ -5,22 +5,25 @@
 <controller>
 import type { ControllerScope } from '@ship/sail-runtime'
 import type { Scope } from './page.sail'
-import { ACTIONS } from '../../../../src/language-surface.gen'
+import { PUBLIC_ACTIONS } from '../../../../src/language-surface.gen'
 
 export default controller((_ctx: ControllerScope<Scope>) => ({
-  actions: () => ACTIONS,
-  actionCount: () => ACTIONS.length,
+  actions: () => PUBLIC_ACTIONS,
+  actionCount: () => PUBLIC_ACTIONS.length,
 }))
 </controller>
 
 <column gap="6" sx={style.minW(0)}>
   <column sx={style.maxW(breakpoint-tablet)} gap="5">
     <p role="doc-eyebrow">Reference</p>
-    <h1>Behavior — {actionCount()} actions</h1>
+    <h1>Behavior — {actionCount()} public actions</h1>
     <p role="doc-lead">
-      <code>use:action</code> attaches behavior bound to an element — the
-      built-in <code>use:</code> registry, sorted, param + one-line summary.
-      A scope value works the same way for a one-off, non-built-in action.
+      <code>use:action</code> attaches reusable, attach-anywhere behavior.
+      This table is the curated public surface. Widget-private wiring
+      (tabs, menu, pagination, radio-group, combobox) lives as closed
+      implementation inside the L1 widget — use the tag, not a public
+      <code>use:</code>. Author actions live under <code>src/actions/</code>
+      under a strict compile floor.
     </p>
   </column>
 

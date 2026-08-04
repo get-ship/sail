@@ -3,7 +3,8 @@ import type { Action } from '../action'
 const host = (name: string) => `[data-sail-host="${name}"]`
 
 /**
- * `use:pagination` — the L1 `<pagination>` behavior. Marks the page host whose
+ * Internal: L1 `<pagination>` closed behavior (not a public `use:`).
+ * Authors use `<pagination>`, not `use:pagination`. Marks the page host whose
  * value matches the element's `value` with `aria-current="page"`, and on click
  * of a page sets `value` + emits `sail-page-change`. Prev/next are just pages
  * whose value is the target page. Structure (which pages/ellipsis to show) is

@@ -1,9 +1,13 @@
 //! SAIL authoring lint engine.
 //!
 //! Lints `*.controller.ts` (paired SAIL controllers), `*.sail` templates,
-//! the `.ts` composition modules under a component pack's `src/`, and
-//! shipped `use:` Action bodies under `packages/sail/runtime/src/actions/`.
-//! Rule IDs are prefixed `sail-<descriptor>`.
+//! the `.ts` composition modules under a component pack's `src/`, plain app
+//! TypeScript under `apps/*/src/**`, and **author** `use:` Action bodies under
+//! app `src/actions/**` (ACTIONS-1 regime). Rule IDs are prefixed
+//! `sail-<descriptor>`.
+//!
+//! The framework catalog (`packages/sail/runtime/src/actions/*`) is trusted and
+//! is not floor-linted this cycle.
 
 pub mod config;
 pub mod prop_registry;
@@ -53,9 +57,9 @@ pub fn is_sail_template_path(path: &std::path::Path) -> bool {
 /// True iff `path` is a pack source `.ts` (a composition module a component ships).
 ///
 /// The set is "any `.ts` file a component pack ships, not under the framework
-/// runtime". Action bodies are a separate category (`is_action_source_path`)
-/// with their own floor (custom-property writes allowed). Controllers stay
-/// on `lint_controller_source`.
+/// runtime". Author action modules are a separate category
+/// (`is_action_source_path`) with the ACTIONS-1 floor. Controllers stay on
+/// `lint_controller_source`.
 ///
 /// Detection walks the path's segments: a path under `packages/components/sail/**/src/`
 /// (or the repo-local equivalent) is a pack source. The `*.controller.ts`
@@ -70,9 +74,9 @@ pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
     if is_controller_path(path) {
         return false;
     }
-    // The framework layer — actions are NOT pack sources. They have their
-    // own path gate (`is_action_source_path`) with a looser style floor
-    // (custom-property setProperty is the sanctioned sx bridge).
+    if is_action_source_path(path) {
+        return false;
+    }
     let p = path.to_string_lossy();
     let components_hit =
         p.contains("/packages/components/sail/") && (p.contains("/src/") || p.ends_with("/src"));
@@ -102,6 +106,11 @@ pub fn is_app_source_ts(path: &std::path::Path) -> bool {
     if is_controller_path(path) {
         return false;
     }
+    // Author actions get the stricter ACTION_RULES floor via
+    // `is_action_source_path` — not the app-source ambient set.
+    if is_action_source_path(path) {
+        return false;
+    }
     let p = path.to_string_lossy().replace('\\', "/");
     if p.contains(".test.ts")
         || p.contains(".spec.ts")
@@ -120,28 +129,42 @@ pub fn is_app_source_ts(path: &std::path::Path) -> bool {
     p.contains("/src/") || p.contains("/routes/")
 }
 
-/// True iff `path` is a `use:` Action implementation the floor lints.
+/// True iff `path` is an **author** `use:` Action module the regime floor lints.
 ///
-/// Today: shipped registry actions under
-/// `packages/sail/runtime/src/actions/**/*.ts`. Author-local Actions are
-/// not path-detectable yet (Part A ships the registry gate first).
+/// Convention (fixed, no config knob): modules under `src/actions/**/*.ts`.
 ///
-/// **Exempt:** anything under `tests/perf/` (bench harness / interop may
-/// need `class=` — fail-open by path prefix).
+/// **Exempt (trusted):** framework catalog
+/// `packages/sail/runtime/src/actions/**` — not subject to the author floor
+/// this cycle (CSS-var bridges, document listeners, etc. by design).
+///
+/// **Exempt:** tests, benches, generated files.
 pub fn is_action_source_path(path: &std::path::Path) -> bool {
     if path.extension().and_then(|e| e.to_str()) != Some("ts") {
         return false;
     }
     let p = path.to_string_lossy().replace('\\', "/");
-    if p.contains("/tests/perf/") {
+    if p.contains("/tests/perf/")
+        || p.contains(".test.ts")
+        || p.contains(".spec.ts")
+        || p.contains("/__tests__/")
+        || p.contains("/test/")
+        || p.contains(".gen.")
+    {
         return false;
     }
-    // index.ts re-exports only — no body to constrain, but cheap to lint.
-    p.contains("/packages/sail/runtime/src/actions/")
+    // Framework catalog is TRUSTED — never author-floor.
+    if p.contains("/packages/sail/runtime/") {
+        return false;
+    }
+    // Fixed convention: src/actions/**
+    p.contains("/src/actions/") || p.starts_with("src/actions/")
 }
 
-/// Lint a `use:` Action body from its source. Returns findings sorted by
-/// `(line, col)`. No filesystem access.
+/// Lint an **author** `use:` Action body from its source. Returns findings
+/// sorted by `(line, col)`. No filesystem access.
+///
+/// Applies the ACTIONS-1 floor (ERROR): style/class/layout, state primitives,
+/// network, host-only, signature.
 pub fn lint_action_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
     for (_id, check) in rules::ACTION_RULES {

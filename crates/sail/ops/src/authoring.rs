@@ -77,7 +77,10 @@ pub fn surface_markdown(topic: SurfaceTopic) -> String {
                 md,
                 "## Framework stack (do not invent alternatives)\n\n\
                  1. Signals + stores (`defineStore`/`useStore`/`signal` from `@ship/sail-runtime`) — not module `let` + sync.\n\
-                 2. Actions (`use:`) — only sanctioned DOM/measurement; controllers never `.style` / `createElement`.\n\
+                 2. Actions (`use:`) — public catalog is attach-anywhere capabilities; \
+widget-private (tabs/menu/pagination/radioGroup/combobox) is closed inside L1 widgets. \
+Author actions: `src/actions/` under floor ERROR (no style, no state primitives, no network, host-only). \
+Controllers never `.style` / `createElement`.\n\
                  3. Compositions / L1–L2 first (tabs, tooltip, sail-tree, …).\n\
                  4. `prop:tree={{table}}` identity bind for sail-tree — never querySelector+assign host.\n\
                  5. sx + tokens only — `cssText` / `.style` / raw CSS is a compile error.\n\

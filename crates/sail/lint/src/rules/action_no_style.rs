@@ -1,30 +1,27 @@
-//! `sail-action-no-style` — Action bodies may not class or style.
+//! `sail-action-no-style` — author action modules may not class, style, or write layout.
 //!
-//! `use:` is a node lifetime mix-in API. Shipped registry actions and author
-//! Actions share one floor with the template/sx invariants:
+//! **Author floor (ACTIONS-1):** ERROR. Applies to app `src/actions/**` and other
+//! modules the dispatcher classifies as author action bodies. The framework
+//! catalog (`packages/sail/runtime/src/actions/*`) is trusted and is **not**
+//! dispatched here.
 //!
 //! **Refuse**
-//! - `.classList` mutation, `.className` writes, `setAttribute('class'|…)`,
-//!   `removeAttribute('class')`
-//! - `.style` **except** `setProperty` / `removeProperty` on **`--*`**
-//!   custom-property names (string-literal allowlist)
-//! - `setAttribute('style'|…)` / `removeAttribute('style')`
+//! - any `.style` access (including `setProperty` / `removeProperty` / CSS vars)
+//! - `.classList` mutation, `.className` writes
+//! - `setAttribute` / `removeAttribute` for `class` | `style`
+//! - layout-affecting property writes (`scrollTop` / `scrollLeft` / `cssText`)
 //!
 //! **Allow**
-//! - listeners, focus, measure (RO/IO), DOM structure queries
-//! - `el.style.setProperty('--x', v)` / `removeProperty('--x')` (sx bridge)
+//! - listeners, focus, measure (RO/IO), DOM structure queries on the host
 //! - ARIA / role attribute updates
 //!
-//! Path scope is decided at dispatch (`is_action_source_path`); this rule
-//! assumes every source it sees is an Action body. Bench harness sources
-//! under `tests/perf/` are exempt at dispatch (interop class=).
+//! Path scope is decided at dispatch (`is_action_source_path`).
 
 use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    AssignmentTarget, CallExpression, Expression, NewExpression, SimpleAssignmentTarget,
-    StaticMemberExpression,
+    AssignmentTarget, CallExpression, Expression, SimpleAssignmentTarget, StaticMemberExpression,
 };
 use oxc_ast_visit::{Visit, walk};
 use oxc_parser::Parser;
@@ -34,10 +31,9 @@ use crate::report::{Finding, Severity};
 
 pub const RULE_ID: &str = "sail-action-no-style";
 
-const REMEDY: &str = "Actions bridge runtime geometry through CSS custom properties \
-     that sx (or a skin) reads: `el.style.setProperty('--row-y', px)` / \
-     `removeProperty('--row-y')`. No class, no layout CSS property, no \
-     `style=` attribute. Visual state is ARIA/data the skin keys on.";
+const REMEDY: &str = "Author actions must not paint or lay out. Put visuals in sx/tokens \
+     (or an L1 widget). ARIA/data attributes and host listeners are the sanctioned surface. \
+     CSS custom-property bridges stay in the trusted framework catalog, not author modules.";
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let allocator = Allocator::default();
@@ -76,54 +72,6 @@ impl<'src> ActionStyleVisitor<'src> {
     }
 }
 
-/// `obj.style.setProperty` / `obj.style.removeProperty` callee shape.
-fn style_method<'a>(
-    expr: &'a CallExpression<'a>,
-) -> Option<(&'a str, &'a StaticMemberExpression<'a>)> {
-    let Expression::StaticMemberExpression(method) = &expr.callee else {
-        return None;
-    };
-    let name = method.property.name.as_str();
-    if name != "setProperty" && name != "removeProperty" {
-        return None;
-    }
-    let Expression::StaticMemberExpression(style) = &method.object else {
-        return None;
-    };
-    if style.property.name.as_str() != "style" {
-        return None;
-    }
-    Some((name, style))
-}
-
-fn first_arg_custom_prop_ok(expr: &CallExpression<'_>) -> bool {
-    let Some(arg) = expr.arguments.first().and_then(|a| a.as_expression()) else {
-        // removeProperty() with no args is nonsense — refuse.
-        return false;
-    };
-    match arg {
-        // Literal name must be a custom property. This is the gate that
-        // catches `setProperty('height', …)` / `setProperty('left', …)`.
-        Expression::StringLiteral(s) => s.value.as_str().starts_with("--"),
-        Expression::TemplateLiteral(t) if t.expressions.is_empty() => t
-            .quasis
-            .first()
-            .map(|q| {
-                q.value
-                    .cooked
-                    .as_ref()
-                    .map(|c| c.as_str())
-                    .unwrap_or(q.value.raw.as_str())
-            })
-            .is_some_and(|s| s.starts_with("--")),
-        // Non-literal (`name`, `KEYS[i]`) — allow. Registry actions fold
-        // known `--*` keys through a helper; refusing identifiers would
-        // force unrolled literals without catching more real abuse than
-        // the literal check already does.
-        _ => true,
-    }
-}
-
 fn attr_name_is(expr: &CallExpression<'_>, names: &[&str]) -> bool {
     expr.arguments
         .first()
@@ -137,33 +85,6 @@ fn attr_name_is(expr: &CallExpression<'_>, names: &[&str]) -> bool {
 
 impl<'a, 'src> Visit<'a> for ActionStyleVisitor<'src> {
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
-        // Sanctioned bridge: el.style.setProperty('--x', …) / removeProperty('--x').
-        // Walk arguments only so the intermediate `.style` member is not flagged.
-        if let Some((method, _style)) = style_method(expr) {
-            if first_arg_custom_prop_ok(expr) {
-                for arg in &expr.arguments {
-                    if let Some(e) = arg.as_expression() {
-                        self.visit_expression(e);
-                    }
-                }
-                return;
-            }
-            self.report(
-                expr.span,
-                format!(
-                    "actions may only `style.{method}()` a `--*` custom property \
-                     (string literal); bare CSS properties reopen layout/style."
-                ),
-            );
-            // Still walk args; skip callee to avoid a duplicate `.style` hit.
-            for arg in &expr.arguments {
-                if let Some(e) = arg.as_expression() {
-                    self.visit_expression(e);
-                }
-            }
-            return;
-        }
-
         if let Expression::StaticMemberExpression(m) = &expr.callee {
             let name = m.property.name.as_str();
 
@@ -180,13 +101,12 @@ impl<'a, 'src> Visit<'a> for ActionStyleVisitor<'src> {
                 self.report(
                     expr.span,
                     format!(
-                        "actions do not `{name}('{attr}', …)` — class/style attributes are \
-                         the same hatch the template floor closes."
+                        "author actions do not `{name}('{attr}', …)` — class/style attributes \
+                         reopen the paint hatch the floor closes"
                     ),
                 );
             }
 
-            // classList mutation only (reads stay observation).
             if matches!(name, "add" | "remove" | "toggle" | "replace")
                 && let Expression::StaticMemberExpression(class_list) = &m.object
                 && class_list.property.name.as_str() == "classList"
@@ -194,8 +114,21 @@ impl<'a, 'src> Visit<'a> for ActionStyleVisitor<'src> {
                 self.report(
                     expr.span,
                     format!(
-                        "actions do not mutate `.classList.{name}()` — a class is a global \
-                         CSS target; stamp ARIA/data and let the skin follow."
+                        "author actions do not mutate `.classList.{name}()` — stamp ARIA/data \
+                         and let sx/skin follow"
+                    ),
+                );
+            }
+
+            // Any style.* call (setProperty, removeProperty, getPropertyValue, …).
+            if let Expression::StaticMemberExpression(style) = &m.object
+                && style.property.name.as_str() == "style"
+            {
+                self.report(
+                    expr.span,
+                    format!(
+                        "author actions do not call `.style.{name}(…)` — no style, no CSS \
+                         custom-property bridge in author modules"
                     ),
                 );
             }
@@ -210,8 +143,8 @@ impl<'a, 'src> Visit<'a> for ActionStyleVisitor<'src> {
         if name == "style" {
             self.report(
                 m.span,
-                "actions do not touch `.style` except `setProperty`/`removeProperty` on a \
-                 `--*` custom property — layout CSS stays in skins/sx."
+                "author actions do not touch `.style` — paint and layout stay in sx/tokens \
+                 (framework catalog may bridge CSS vars; author modules may not)"
                     .to_string(),
             );
         }
@@ -219,17 +152,17 @@ impl<'a, 'src> Visit<'a> for ActionStyleVisitor<'src> {
         if name == "className" {
             self.report(
                 m.span,
-                "actions do not write `.className` — light DOM has no boundary; a class is \
-                 a global CSS target."
+                "author actions do not write `.className` — a class is a global CSS target"
                     .to_string(),
             );
         }
 
-        if name == "attributeStyleMap" {
+        if name == "attributeStyleMap" || name == "cssText" {
             self.report(
                 m.span,
-                "actions do not touch `.attributeStyleMap` — Typed OM twin of `.style`."
-                    .to_string(),
+                format!(
+                    "author actions do not touch `.{name}` — CSSOM twin of the style hatch"
+                ),
             );
         }
 
@@ -237,22 +170,21 @@ impl<'a, 'src> Visit<'a> for ActionStyleVisitor<'src> {
     }
 
     fn visit_assignment_expression(&mut self, expr: &oxc_ast::ast::AssignmentExpression<'a>) {
-        // `el.className = …` / `el.style = …` via non-member paths already
-        // covered by member visit; catch `el.style.left =` left-hand shape
-        // with a clearer message (member visit also fires on `.style`).
-        if let AssignmentTarget::AssignmentTargetIdentifier(_) = &expr.left {
-            // nothing class/style-specific
-        } else if let Some(target) = assignment_member_name(&expr.left) {
-            if target == "className" {
-                self.report(expr.span, "actions do not assign `.className`.".to_string());
+        if let Some(target) = assignment_member_name(&expr.left) {
+            if matches!(
+                target,
+                "className" | "cssText" | "scrollTop" | "scrollLeft"
+            ) {
+                self.report(
+                    expr.span,
+                    format!(
+                        "author actions do not assign `.{target}` — layout/paint stays out of \
+                         the action body"
+                    ),
+                );
             }
         }
         walk::walk_assignment_expression(self, expr);
-    }
-
-    fn visit_new_expression(&mut self, expr: &NewExpression<'a>) {
-        // Not in the Part A refuse list — leave CSSStyleSheet alone here.
-        walk::walk_new_expression(self, expr);
     }
 }
 
@@ -290,54 +222,34 @@ mod tests {
     use std::path::Path;
 
     fn run(src: &str) -> Vec<Finding> {
-        check(Path::new("packages/sail/runtime/src/actions/x.ts"), src)
+        check(Path::new("apps/demo/src/actions/x.ts"), src)
     }
 
+    /// Fixture: legal author action — listeners + ARIA only.
     #[test]
-    fn allows_setproperty_custom_prop() {
-        assert!(run("el.style.setProperty('--row-y', y)").is_empty());
-        assert!(run("el.style.removeProperty('--row-y')").is_empty());
+    fn fixture_legal_pattern_passes() {
+        let src = r#"
+import type { Action } from '@ship/sail-runtime'
+export const pressHint: Action<void> = (node) => {
+  const el = node as HTMLElement
+  const on = () => el.setAttribute('aria-pressed', 'true')
+  el.addEventListener('click', on)
+  return { destroy: () => el.removeEventListener('click', on) }
+}
+"#;
+        assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
+    /// Fixture: style/class/layout writes fire ERROR.
     #[test]
-    fn refuses_style_property_assignment() {
-        let f = run("el.style.height = 'auto'");
-        assert!(!f.is_empty(), "{f:?}");
-        assert!(f.iter().all(|x| x.rule == RULE_ID));
-    }
-
-    #[test]
-    fn refuses_setproperty_plain_css_name() {
-        let f = run("el.style.setProperty('height', '10px')");
-        assert_eq!(f.len(), 1);
-        assert!(f[0].message.contains("custom property"), "{}", f[0].message);
-    }
-
-    #[test]
-    fn allows_dynamic_custom_prop_name() {
-        // Helper form used by event-span / rect-box / port-edge.
-        assert!(run("el.style.setProperty(name, val)").is_empty());
-        assert!(run("el.style.removeProperty(k)").is_empty());
-    }
-
-    #[test]
-    fn refuses_class_and_style_attributes() {
-        assert!(!run("el.setAttribute('class', 'x')").is_empty());
-        assert!(!run("el.setAttribute('style', 'color:red')").is_empty());
-        assert!(!run("el.removeAttribute('class')").is_empty());
-    }
-
-    #[test]
-    fn refuses_class_name_and_class_list_writes() {
-        assert!(!run("el.className = 'x'").is_empty());
+    fn fixture_style_class_layout_error() {
+        assert!(!run("el.style.height = 'auto'").is_empty());
+        assert!(!run("el.style.setProperty('--row-y', y)").is_empty());
         assert!(!run("el.classList.add('x')").is_empty());
-        assert!(!run("el.classList.toggle('on')").is_empty());
-    }
-
-    #[test]
-    fn allows_class_list_reads_and_aria() {
-        assert!(run("el.classList.contains('dark')").is_empty());
-        assert!(run("el.setAttribute('aria-pressed', 'true')").is_empty());
-        assert!(run("el.setAttribute('role', 'button')").is_empty());
+        assert!(!run("el.setAttribute('class', 'x')").is_empty());
+        assert!(!run("el.scrollTop = 0").is_empty());
+        let f = run("el.style.setProperty('--x', v)");
+        assert_eq!(f[0].rule, RULE_ID);
+        assert!(f[0].message.contains("author actions"), "{}", f[0].message);
     }
 }

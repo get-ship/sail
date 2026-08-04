@@ -1029,8 +1029,7 @@
       },
       "modeOnly": {
         "type": "bool",
-        "default": "false",
-        "description": "Mode-only: sun/moon/system trigger; no theme catalog."
+        "default": "false"
       },
       "value": {
         "type": "string",

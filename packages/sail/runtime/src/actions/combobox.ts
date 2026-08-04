@@ -1,8 +1,8 @@
 import type { Action } from '../action'
 
 /**
- * `use:combobox` — the L1 `<combobox>` behavior: a text input that filters a
- * listbox and commits one option.
+ * Internal: L1 `<combobox>` closed behavior (not a public `use:`).
+ * Authors use `<combobox>`, not `use:combobox`.
  *
  * The platform ALMOST has this: `<input list>` + `<datalist>` gives typeahead
  * with zero JS, but its popup is drawn by the UA and cannot be styled or themed

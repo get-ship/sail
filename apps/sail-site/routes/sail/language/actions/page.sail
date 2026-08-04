@@ -61,13 +61,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
   </p>
   <code-block code={code.param}></code-block>
 
-  <h2>The standard library uses the same mechanism</h2>
+  <h2>Widgets own their private behavior</h2>
   <p>
-    Built-in components get their behavior the same way. A
-    <code>&lt;combobox&gt;</code> is markup plus <code>use:combobox</code>;
-    tabs, menus, and dialogs follow the same pattern. There is no private
-    API underneath the standard library — what it uses is what you can
-    write.
+    L1 widgets like <code>&lt;tabs&gt;</code>, <code>&lt;dropdown&gt;</code>,
+    <code>&lt;combobox&gt;</code>, <code>&lt;pagination&gt;</code>, and
+    <code>&lt;radio-group&gt;</code> keep their keyboard/ARIA wiring as
+    <em>closed implementation</em> inside the widget — not as public
+    <code>use:</code> actions you reattach by hand. Prefer the widget tag.
+    Public <code>use:</code> stays for reusable, attach-anywhere capabilities
+    (<code>use:anchor</code>, <code>use:clickOutside</code>,
+    <code>use:autosize</code>, …). Author actions live under
+    <code>src/actions/</code> and compile under a strict floor (no style, no
+    state primitives, no network, host-only).
   </p>
   <code-block code={code.stdlib}></code-block>
 

@@ -3,8 +3,8 @@ import type { Action } from '../action'
 const host = (name: string) => `[data-sail-host="${name}"]`
 
 /**
- * `use:tabs` — L1 `<tabs>` behavior in light DOM. Finds tab / tab-panel /
- * tab-list hosts via compiler `data-sail-host` stamps.
+ * Internal: L1 `<tabs>` closed behavior (not a public `use:`).
+ * Stdlib widget attaches this; authors use `<tabs>`, not `use:tabs`.
  *
  * Wires the ARIA tablist contract (role, aria-selected, aria-controls /
  * aria-labelledby), roving tabindex, keyboard nav (Arrow per orientation,
