@@ -1,6 +1,7 @@
 import '@ship/sail-code-editor'
 import '@ship/sail-chat-elements'
 import '@ship/sail-primitives'
+import '@ship/sail-viewer'
 import '@ship/tokens/tokens.css'
 import '@ship/tokens/themes.css'
 import '@ship/tokens/sail-base.css'

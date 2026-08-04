@@ -17,8 +17,8 @@ import {
 } from './batch'
 import type { BridgeRect } from './channel'
 
-/** Built-in Studio activities (core). */
-export type CoreActivityId = 'edit' | 'checks' | 'design' | 'tasks'
+/** Built-in Studio activities (core). Design removed — Themes is sole token editor. */
+export type CoreActivityId = 'edit' | 'components' | 'checks' | 'themes' | 'tasks'
 
 /**
  * Activity id on the rail: core ids or module-provided ids.
@@ -76,7 +76,7 @@ export type ShellState = {
 
 type Listener = (s: ShellState) => void
 
-const CORE_ACTIVITIES: CoreActivityId[] = ['edit', 'checks', 'design', 'tasks']
+const CORE_ACTIVITIES: CoreActivityId[] = ['edit', 'components', 'themes', 'tasks', 'checks']
 
 const CORE_SET = new Set<string>(CORE_ACTIVITIES)
 

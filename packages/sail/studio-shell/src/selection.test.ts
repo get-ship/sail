@@ -139,7 +139,7 @@ describe('module activity seam', () => {
     clearModuleActivities()
     expect(getShellState().activity).toBe('edit')
     expect(getShellState().moduleRoute).toBeNull()
-    expect(activities()).toEqual(['edit', 'checks', 'design', 'tasks'])
+    expect(activities()).toEqual(['edit', 'components', 'themes', 'tasks', 'checks'])
     setActivity('checks')
     expect(getShellState().activity).toBe('checks')
   })

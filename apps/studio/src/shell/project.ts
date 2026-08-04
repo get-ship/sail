@@ -1,14 +1,17 @@
 /** Project root resolution + seed paths for Studio explorer. */
+import { hostSailProject } from '@ship/sail-studio-shell'
 
 export function projectPaths(proj: string): string[] {
   const root = proj.replace(/\/$/, '')
-  const paths = [`${root}/routes/page.sail`]
+  // Seed includes non-.sail so the explorer shows a full-project shape before ListFiles.
+  const paths = [`${root}/routes/page.sail`, `${root}/package.json`]
   if (root === 'apps/studio' || root.endsWith('/apps/studio')) {
     paths.push(
       'apps/studio/test/fixtures/sample.sail',
       'apps/studio/test/fixtures/tier-s.sail',
       'apps/studio/test/fixtures/tier-i.sail',
       'apps/studio/test/fixtures/tier-c.sail',
+      'apps/studio/src/edit-explorer/edit-explorer-vm.ts',
     )
   }
   return paths
@@ -16,7 +19,8 @@ export function projectPaths(proj: string): string[] {
 
 /**
  * Ops target (workspace-relative).
- * `?project=apps/…` → sail-project meta → apps/studio dogfood.
+ * `?project=apps/…` → host sail-project meta → apps/studio dogfood.
+ * Meta is host-stamped; apps read via studio-shell, not document.querySelector.
  */
 export function resolveProjectRoot(): string {
   if (typeof document === 'undefined') return 'apps/studio'
@@ -28,9 +32,7 @@ export function resolveProjectRoot(): string {
   } catch {
     /* ignore */
   }
-  const meta =
-    document.querySelector('meta[name="sail-project"]')?.getAttribute('content')?.trim() ||
-    ''
-  if (meta) return meta.replace(/\/$/, '')
+  const meta = hostSailProject()
+  if (meta) return meta
   return 'apps/studio'
 }

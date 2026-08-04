@@ -1,8 +1,9 @@
 <!--
-  <studio-activity-bar> — VS Code activity rail (fixed width, stable height chain).
-  Width: one token w(12). Brand zone: h(8) full-rail — aligns with sidebar/tab headers.
-  Slots: brand (top mark), default (icon links/buttons), footer (e.g. exit).
-  Selected state: aria-current="page" on the active item; when({ current }) paints.
+  <studio-activity-bar> — VS Code activity rail.
+  Fixed outer width w(12); inner items are w/h 10 with padX(1) so hit targets
+  center consistently (no mixed sizes). Brand mark matches item box geometry.
+  overflow visible so right tooltips are not clipped.
+  Slots: brand, default (items), footer (exit — same item style as activities).
   Ban-clean: layout keywords + L1 only.
 -->
 <column
@@ -10,24 +11,41 @@
   role="navigation"
   aria-label="Studio activities"
   shrink="0"
-  gap="1"
+  gap="0"
   align="center"
-  sx={style.w(12).minH(0).h(full).bg(surface-0).borderRWidth(1).borderR(border).overflow(hidden)}
+  sx={style.w(12).minW(12).maxW(12).minH(0).h(full).bg(surface-0).borderRWidth(1).borderR(border).overflow(visible)}
 >
   <slot name="brand">
     <center
       shrink="0"
       aria-hidden="true"
-      sx={style.w(full).h(8).borderBWidth(1).borderB(border-subtle)}
+      sx={style.w(full).h(12).minH(12).padX(1).padY(1).borderBWidth(1).borderB(border-subtle)}
     >
       <center
-        sx={style.w(6).h(6).radius(md).bg(primary).fg(primary-foreground).fontSize(xs).fontWeight(bold)}
+        data-studio-brand-mark
+        sx={style.w(10).h(10).minW(10).minH(10).radius(md).bg(surface-1).fg(muted-foreground).borderWidth(1).border(border-subtle)}
       >
-        S
+        <icon name="ship" size="sm"></icon>
       </center>
     </center>
   </slot>
-  <slot></slot>
+  <column
+    data-studio-activity-items
+    gap="1"
+    align="center"
+    shrink="0"
+    sx={style.w(full).padY(2).padX(1)}
+  >
+    <slot></slot>
+  </column>
   <column grow sx={style.minH(0)}></column>
-  <slot name="footer"></slot>
+  <column
+    data-studio-activity-footer
+    shrink="0"
+    align="center"
+    gap="1"
+    sx={style.w(full).padY(2).padX(1).borderTWidth(1).borderT(border-subtle)}
+  >
+    <slot name="footer"></slot>
+  </column>
 </column>

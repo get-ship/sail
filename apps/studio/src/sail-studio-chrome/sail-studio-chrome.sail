@@ -1,8 +1,9 @@
 <!--
   <sail-studio-chrome> — shell: activity rail + status + route slot.
-  Surfaces own sidebar + main. VSCode grammar: density, left-accent active.
-  Stable zones: rail/status fixed; surface slot minH(0)/grow so leaf remounts
-  do not shift chrome. Brand/header rhythm: h(8). Ban-clean: layout + L1 only.
+  Rail: fixed hit targets (w/h 10), equal pad, muted icons.
+  Selected activity uses primary color (fg + soft fill) — the only accent.
+  Tooltips placement=right; rail overflow visible so bubbles paint.
+  Exit matches activity item geometry. Ban-clean: layout + L1 only.
 -->
 <controller>
 import { createShellPage } from '../shell/shell-page-vm'
@@ -45,7 +46,6 @@ export default controller((ctx) => {
   align="stretch"
   sx={style.minH(screen).h(screen).w(full).minW(0).bg(background).fg(foreground).fontFamily(body).fontSize(sm).overflow(hidden)}
 >
-  <!-- Activity rail: single width token w(12) owned by studio-activity-bar -->
   <studio-activity-bar data-studio-rail on:click={onRailClick}>
     <for {rail()} as="item" key={item.key}>
       <tooltip content={item.label} placement="right">
@@ -56,36 +56,33 @@ export default controller((ctx) => {
           aria-label={item.label}
           aria-current={item.active ? 'page' : undefined}
           title={item.label}
-          sx={style.w(10).h(10).radius(md).fg(muted-foreground).borderLWidth(2).borderL(transparent).when({ hover: style.bg(hover-bg).fg(foreground) }).when({ current: style.bg(surface-2).fg(foreground).borderL(primary) })}
+          sx={style.w(10).h(10).minW(10).minH(10).radius(md).fg(muted-foreground).when({ hover: style.bg(hover-bg).fg(foreground) }).when({ current: style.bg(selected-bg).fg(primary) })}
         >
           <center sx={style.w(full).h(full)}>
-            <!-- icon unlabeled: link aria-label is the single accessible name -->
             <icon name={item.icon} size="sm"></icon>
           </center>
         </a>
       </tooltip>
     </for>
-    <column slot="footer" shrink="0" align="center" gap="0" sx={style.padB(1)}>
-      <if {showExit}>
-        <tooltip content="Back to app (Esc)" placement="right">
-          <button
-            type="button"
-            data-exit-studio
-            aria-label="Back to app (Esc)"
-            title="Back to app (Esc)"
-            on:click={onExitStudio}
-            sx={style.w(10).h(10).radius(md).fg(muted-foreground).borderLWidth(2).borderL(transparent).when({ hover: style.bg(hover-bg).fg(foreground) })}
-          >
-            <center sx={style.w(full).h(full)}>
-              <icon name="log-out" size="sm"></icon>
-            </center>
-          </button>
-        </tooltip>
-      </if>
-    </column>
+    <if {showExit}>
+      <tooltip slot="footer" content="Back to app (Esc)" placement="right">
+        <button
+          type="button"
+          data-exit-studio
+          data-activity="exit"
+          aria-label="Back to app (Esc)"
+          title="Back to app (Esc)"
+          on:click={onExitStudio}
+          sx={style.w(10).h(10).minW(10).minH(10).radius(md).fg(muted-foreground).bg(transparent).borderWidth(0).cursor(pointer).when({ hover: style.bg(hover-bg).fg(foreground) })}
+        >
+          <center sx={style.w(full).h(full)}>
+            <icon name="log-out" size="sm"></icon>
+          </center>
+        </button>
+      </tooltip>
+    </if>
   </studio-activity-bar>
 
-  <!-- Main column: batch (optional) + surface (grow) + status (fixed). -->
   <column grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden).h(full).minW(0)}>
     <if {hasBatch()}>
       <row

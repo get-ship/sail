@@ -5,16 +5,10 @@
  * - Host bridge iframe → postMessage close to parent
  * - Else history.back() or `/`
  */
-import { STUDIO_CHANNEL } from '@ship/sail-studio-shell'
+import { hostDeckAppRoute, STUDIO_CHANNEL } from '@ship/sail-studio-shell'
 
 function deckAppRouteBase(): string {
-  if (typeof document === 'undefined') return ''
-  const raw = document
-    .querySelector('meta[name="deck-app-route"]')
-    ?.getAttribute('content')
-    ?.trim()
-  if (!raw || raw === '/') return ''
-  return raw.replace(/\/$/, '')
+  return hostDeckAppRoute()
 }
 
 export function isStudioOverlayPath(pathname?: string): boolean {
