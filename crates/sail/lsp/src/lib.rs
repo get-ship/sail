@@ -1,15 +1,34 @@
 //! `sail-lsp` — Language Server for `.sail` templates.
 //!
-//! A thin LSP/stdio shell over the `sail-compiler` analysis facade. All
-//! intelligence (diagnostics, hover, completion, definition) comes from the
-//! one Rust grammar — no TypeScript, no WASM. This single binary serves every
-//! LSP client: Claude Code (`.lsp.json`), VS Code (`sail.serverPath`), and any
-//! editor.
+//! A thin LSP/stdio shell over the `sail-compiler` analysis facade, plus a
+//! **tsgo** sidecar for TypeScript intelligence inside `<controller>`,
+//! `<scope>`, and `{…}` template expressions (SPEC-LSP-1). Structure
+//! intelligence (elements, props, icons, sail diagnostics) stays in Rust;
+//! position-based TS requests are proxied to tsgo against a per-file virtual
+//! TS document and mapped back to `.sail` offsets.
 //!
 //! Transport is the synchronous `lsp-server` loop (rust-analyzer lineage);
 //! `lsp-types` is used only to (de)serialize protocol payloads. Capabilities
 //! are pushed diagnostics on open/change/save, plus hover / completion /
 //! go-to-definition, code actions (auto-fix), and icon-name completion.
+//!
+//! When `tsgo` is missing the server degrades to structure-only (one log line).
+
+mod tsgo;
+mod virtual_ts;
+
+// Integration tests (`tests/tsgo_proxy.rs`) exercise the public surface of the
+// virtual-doc builder and tsgo session without going through stdio.
+#[doc(hidden)]
+pub mod tsgo_test {
+    pub use super::tsgo::{discover_tsgo, TsgoSession};
+}
+#[doc(hidden)]
+pub mod virtual_ts_test {
+    pub use super::virtual_ts::{
+        build_virtual_ts, offset_to_lsp_position, RegionKind, VirtualFile, VirtualTs,
+    };
+}
 
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
@@ -24,6 +43,8 @@ use lsp_types::{
     Position, PublishDiagnosticsParams, Range, ServerCapabilities, TextDocumentEdit,
     TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, Url, WorkspaceEdit,
 };
+
+use tsgo::TsgoSession;
 
 type Docs = HashMap<Url, String>;
 
@@ -57,15 +78,19 @@ fn server_capabilities() -> ServerCapabilities {
 
 fn main_loop(conn: &Connection) -> anyhow::Result<()> {
     let mut docs: Docs = HashMap::new();
+    // Discover tsgo from CWD / repo; degrades cleanly when absent.
+    let mut tsgo = TsgoSession::start(std::env::current_dir().ok().as_deref());
     for msg in &conn.receiver {
         match msg {
             Message::Request(req) => {
                 if conn.handle_shutdown(&req)? {
                     return Ok(());
                 }
-                handle_request(conn, &docs, req)?;
+                handle_request(conn, &docs, &mut tsgo, req)?;
             }
-            Message::Notification(note) => handle_notification(conn, &mut docs, note)?,
+            Message::Notification(note) => {
+                handle_notification(conn, &mut docs, &mut tsgo, note)?
+            }
             Message::Response(_) => {}
         }
     }
@@ -77,6 +102,7 @@ fn main_loop(conn: &Connection) -> anyhow::Result<()> {
 fn handle_notification(
     conn: &Connection,
     docs: &mut Docs,
+    tsgo: &mut TsgoSession,
     note: lsp_server::Notification,
 ) -> anyhow::Result<()> {
     match note.method.as_str() {
@@ -84,7 +110,8 @@ fn handle_notification(
             let p: lsp_types::DidOpenTextDocumentParams = serde_json::from_value(note.params)?;
             let uri = p.text_document.uri.clone();
             docs.insert(uri.clone(), p.text_document.text.clone());
-            publish_diagnostics(conn, &uri, &p.text_document.text)?;
+            tsgo.on_sail_change(uri.as_str(), &p.text_document.text);
+            publish_diagnostics(conn, tsgo, &uri, &p.text_document.text)?;
         }
         "textDocument/didChange" => {
             let p: lsp_types::DidChangeTextDocumentParams = serde_json::from_value(note.params)?;
@@ -92,18 +119,20 @@ fn handle_notification(
             if let Some(change) = p.content_changes.into_iter().last() {
                 let uri = p.text_document.uri.clone();
                 docs.insert(uri.clone(), change.text.clone());
-                publish_diagnostics(conn, &uri, &change.text)?;
+                tsgo.on_sail_change(uri.as_str(), &change.text);
+                publish_diagnostics(conn, tsgo, &uri, &change.text)?;
             }
         }
         "textDocument/didSave" => {
             let p: lsp_types::DidSaveTextDocumentParams = serde_json::from_value(note.params)?;
             let uri = p.text_document.uri;
             if let Some(text) = docs.get(&uri).cloned() {
-                publish_diagnostics(conn, &uri, &text)?;
+                publish_diagnostics(conn, tsgo, &uri, &text)?;
             }
         }
         "textDocument/didClose" => {
             let p: lsp_types::DidCloseTextDocumentParams = serde_json::from_value(note.params)?;
+            tsgo.on_sail_close(p.text_document.uri.as_str());
             docs.remove(&p.text_document.uri);
         }
         _ => {}
@@ -111,10 +140,19 @@ fn handle_notification(
     Ok(())
 }
 
-fn publish_diagnostics(conn: &Connection, uri: &Url, text: &str) -> anyhow::Result<()> {
+fn publish_diagnostics(
+    conn: &Connection,
+    tsgo: &mut TsgoSession,
+    uri: &Url,
+    text: &str,
+) -> anyhow::Result<()> {
     let path = uri.to_file_path().ok();
     let analysis = sail_compiler::analyze(text, path.as_deref(), &[]);
-    let diagnostics: Vec<Diagnostic> = analysis.diagnostics.iter().map(diag_to_lsp).collect();
+    let mut diagnostics: Vec<Diagnostic> = analysis.diagnostics.iter().map(diag_to_lsp).collect();
+    // Merge mapped tsgo diagnostics (controller / template expression typos).
+    if tsgo.is_live() {
+        diagnostics.extend(tsgo.diagnostics_mapped(uri.as_str(), text));
+    }
     let params = PublishDiagnosticsParams {
         uri: uri.clone(),
         diagnostics,
@@ -130,12 +168,21 @@ fn publish_diagnostics(conn: &Connection, uri: &Url, text: &str) -> anyhow::Resu
 
 // ── requests: hover / completion / definition ──────────────────────────────
 
-fn handle_request(conn: &Connection, docs: &Docs, req: Request) -> anyhow::Result<()> {
+fn handle_request(
+    conn: &Connection,
+    docs: &Docs,
+    tsgo: &mut TsgoSession,
+    req: Request,
+) -> anyhow::Result<()> {
     let resp = match req.method.as_str() {
-        "textDocument/hover" => respond(req, |id, req| on_hover(docs, id, req)),
-        "textDocument/completion" => respond(req, |id, req| on_completion(docs, id, req)),
-        "textDocument/definition" => respond(req, |id, req| on_definition(docs, id, req)),
-        "textDocument/codeAction" => respond(req, |id, req| on_code_action(docs, id, req)),
+        "textDocument/hover" => respond(req, |id, params| on_hover(docs, tsgo, id, params)),
+        "textDocument/completion" => {
+            respond(req, |id, params| on_completion(docs, tsgo, id, params))
+        }
+        "textDocument/definition" => {
+            respond(req, |id, params| on_definition(docs, tsgo, id, params))
+        }
+        "textDocument/codeAction" => respond(req, |id, params| on_code_action(docs, id, params)),
         _ => None,
     };
     if let Some(resp) = resp {
@@ -184,9 +231,24 @@ fn cast<P: serde::de::DeserializeOwned>(
     Ok((id, params))
 }
 
-fn on_hover(docs: &Docs, _id: RequestId, params: HoverParams) -> Option<Hover> {
+fn on_hover(
+    docs: &Docs,
+    tsgo: &mut TsgoSession,
+    _id: RequestId,
+    params: HoverParams,
+) -> Option<Hover> {
     let tdp = params.text_document_position_params;
     let (text, path) = doc(docs, &tdp.text_document.uri)?;
+    // Prefer tsgo when the cursor is in a mapped TS region.
+    if tsgo.is_live() {
+        let col_byte = utf16_col_to_byte(&text, tdp.position.line as usize, tdp.position.character as usize);
+        let sail_offset = line_byte_offset(&text, tdp.position.line as usize, col_byte);
+        if let Some(raw) = tsgo.hover_mapped(tdp.text_document.uri.as_str(), &text, sail_offset) {
+            if let Some(h) = hover_from_tsgo(raw) {
+                return Some(h);
+            }
+        }
+    }
     let (line, col) = from_lsp_pos(tdp.position);
     let h = sail_compiler::hover_at(&text, path.as_deref(), line, col)?;
     let loc = if h.line > 0 {
@@ -206,6 +268,7 @@ fn on_hover(docs: &Docs, _id: RequestId, params: HoverParams) -> Option<Hover> {
 
 fn on_completion(
     docs: &Docs,
+    tsgo: &mut TsgoSession,
     _id: RequestId,
     params: CompletionParams,
 ) -> Option<Vec<CompletionItem>> {
@@ -229,6 +292,19 @@ fn on_completion(
     // failure, not a silent gap.
     if let Some(prefix) = tag_open_prefix(&text, pos.line as usize, col) {
         return Some(l1_completion_items(&prefix));
+    }
+    // Proxy to tsgo inside TS regions (controller / expressions).
+    if tsgo.is_live() {
+        let sail_offset = line_byte_offset(&text, pos.line as usize, col);
+        if let Some(raw) =
+            tsgo.completion_mapped(tdp.text_document.uri.as_str(), &text, sail_offset)
+        {
+            if let Some(items) = completion_from_tsgo(raw) {
+                if !items.is_empty() {
+                    return Some(items);
+                }
+            }
+        }
     }
     let items = sail_compiler::completions_at(&text, path.as_deref())
         .into_iter()
@@ -455,11 +531,24 @@ fn l1_completion_items(prefix: &str) -> Vec<CompletionItem> {
 
 fn on_definition(
     docs: &Docs,
+    tsgo: &mut TsgoSession,
     _id: RequestId,
     params: GotoDefinitionParams,
 ) -> Option<GotoDefinitionResponse> {
     let tdp = params.text_document_position_params;
     let (text, path) = doc(docs, &tdp.text_document.uri)?;
+    if tsgo.is_live() {
+        let col_byte =
+            utf16_col_to_byte(&text, tdp.position.line as usize, tdp.position.character as usize);
+        let sail_offset = line_byte_offset(&text, tdp.position.line as usize, col_byte);
+        if let Some(raw) =
+            tsgo.definition_mapped(tdp.text_document.uri.as_str(), &text, sail_offset)
+        {
+            if let Some(resp) = definition_from_tsgo(raw) {
+                return Some(resp);
+            }
+        }
+    }
     let (line, col) = from_lsp_pos(tdp.position);
     let h = sail_compiler::hover_at(&text, path.as_deref(), line, col)?;
     // Only controller-declared symbols carry a jump target (line > 0).
@@ -474,6 +563,49 @@ fn on_definition(
         uri,
         range: Range::new(pos, pos),
     }))
+}
+
+/// Byte offset of `(line, col_byte)` in `text` (line 0-based, col is a byte
+/// index within the line from [`utf16_col_to_byte`]).
+fn line_byte_offset(text: &str, line_idx: usize, col_byte: usize) -> usize {
+    let mut idx = 0usize;
+    for (i, row) in text.split_inclusive('\n').enumerate() {
+        if i == line_idx {
+            let content_len = row.strip_suffix('\n').map(|s| s.len()).unwrap_or(row.len());
+            return idx + col_byte.min(content_len);
+        }
+        idx += row.len();
+    }
+    text.len()
+}
+
+fn hover_from_tsgo(raw: serde_json::Value) -> Option<Hover> {
+    serde_json::from_value(raw).ok()
+}
+
+fn completion_from_tsgo(raw: serde_json::Value) -> Option<Vec<CompletionItem>> {
+    // CompletionList | CompletionItem[]
+    if let Some(items) = raw.as_array() {
+        return Some(
+            items
+                .iter()
+                .filter_map(|v| serde_json::from_value(v.clone()).ok())
+                .collect(),
+        );
+    }
+    if let Some(items) = raw.get("items").and_then(|v| v.as_array()) {
+        return Some(
+            items
+                .iter()
+                .filter_map(|v| serde_json::from_value(v.clone()).ok())
+                .collect(),
+        );
+    }
+    None
+}
+
+fn definition_from_tsgo(raw: serde_json::Value) -> Option<GotoDefinitionResponse> {
+    serde_json::from_value(raw).ok()
 }
 
 // ── pure mappers (unit-tested) ─────────────────────────────────────────────
@@ -1029,11 +1161,13 @@ mod tests {
         // Key families an author completes against must each be non-empty.
         // (One representative prefix per major axis: color scales, spacing,
         // radii, typography, motion, elevation, and the tone channel.)
+        // Families an author completes against — must each be non-empty.
+        // (`tone-*` ramps were retired; use surface/primary + glow instead.)
         for family in [
             "space-",
             "radius",
             "primary",
-            "tone-",
+            "surface-",
             "font-",
             "duration-",
             "shadow-",
@@ -1090,6 +1224,11 @@ mod tests {
         assert!(!looks_like_color("none"));
     }
 
+    fn degraded_tsgo() -> TsgoSession {
+        // Structure-only session: no tsgo subprocess.
+        TsgoSession::start(Some(std::path::Path::new("/nonexistent-sail-tsgo-root")))
+    }
+
     fn build_item(uri: &str, line: u32, character: u32) -> Vec<lsp_types::CompletionItem> {
         let mut docs: Docs = HashMap::new();
         let url = Url::parse(uri).unwrap();
@@ -1103,7 +1242,8 @@ mod tests {
             partial_result_params: Default::default(),
             context: None,
         };
-        on_completion(&docs, RequestId::from(1), params).expect("completion")
+        let mut tsgo = degraded_tsgo();
+        on_completion(&docs, &mut tsgo, RequestId::from(1), params).expect("completion")
     }
 
     // Rust's `\<newline>` line-continuation in string literals strips all
@@ -1154,7 +1294,9 @@ mod tests {
             partial_result_params: Default::default(),
             context: None,
         };
-        let items = on_completion(&docs, RequestId::from(1), params).expect("completion");
+        let mut tsgo = degraded_tsgo();
+        let items =
+            on_completion(&docs, &mut tsgo, RequestId::from(1), params).expect("completion");
         let space_3 = items
             .iter()
             .find(|i| i.label == "--space-3")
@@ -1182,7 +1324,9 @@ mod tests {
             partial_result_params: Default::default(),
             context: None,
         };
-        let items = on_completion(&docs, RequestId::from(1), params).expect("completion");
+        let mut tsgo = degraded_tsgo();
+        let items =
+            on_completion(&docs, &mut tsgo, RequestId::from(1), params).expect("completion");
         let primary = items
             .iter()
             .find(|i| i.label == "--primary")
@@ -1217,7 +1361,9 @@ mod tests {
             partial_result_params: Default::default(),
             context: None,
         };
-        let items = on_completion(&docs, RequestId::from(1), params).expect("completion");
+        let mut tsgo = degraded_tsgo();
+        let items =
+            on_completion(&docs, &mut tsgo, RequestId::from(1), params).expect("completion");
         assert!(
             items.iter().all(|i| !i.label.starts_with("--")),
             "expected no token completions without var(--); got {items:?}"
@@ -1489,14 +1635,19 @@ mod tests {
             empty.iter().any(|i| i.label == "button"),
             "<button> must be offered"
         );
+        // Native reskins remaining in the L1 manifest (select/button skins
+        // migrated to stdlib elements; document-floor reskins are thin).
         assert!(
-            empty.iter().any(|i| i.label == "select"),
-            "<select> must be offered (the spec's whole point — no more \
-             agents saying select doesn't exist)"
+            empty.iter().any(|i| i.label == "hr"),
+            "<hr> reskin must be offered"
+        );
+        assert!(
+            empty.iter().any(|i| i.label == "kbd"),
+            "<kbd> reskin must be offered"
         );
         // The `kind` is `CLASS`; the `detail` names the L1 source.
-        let select = empty.iter().find(|i| i.label == "select").unwrap();
-        assert!(select.detail.as_deref().unwrap().contains("reskin"));
+        let hr = empty.iter().find(|i| i.label == "hr").unwrap();
+        assert!(hr.detail.as_deref().unwrap().contains("reskin"));
         let card = empty.iter().find(|i| i.label == "card").unwrap();
         assert!(card.detail.as_deref().unwrap().contains("stdlib"));
     }
