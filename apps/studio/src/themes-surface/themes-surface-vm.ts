@@ -47,7 +47,7 @@ export type ThemeRowUi = {
   inProject: boolean
   isCatalog: boolean
   catalog: boolean
-  /** Registered catalog id for data-theme-preview. */
+  /** Registered catalog id for theme= paint (registered tables). */
   previewId: string
   /** Mode that has a generated CSS table for this theme. */
   paintMode: 'light' | 'dark'

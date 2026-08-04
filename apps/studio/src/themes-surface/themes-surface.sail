@@ -2,7 +2,7 @@
   <themes-surface> — project theme catalog master–detail (Variant B).
   List (In project / Catalog) + preview with color story + L1 chrome under scoped theme.
   Membership = project file on disk. Catalog: Add to project (confirm). No fake enable/default.
-  Ban-clean: layout keywords + L1. Color identity via data-theme-preview + token bg (no CSSOM).
+  Ban-clean: layout keywords + L1. Color identity via theme= + registered tables (no CSSOM).
 -->
 <controller>
 import { createThemesSurface } from './themes-surface-vm'
@@ -156,10 +156,10 @@ export default controller(() => {
                 nowrap
                 sx={style.pad(2).radius(md).cursor(pointer).borderWidth(1).border(transparent).when({ hover: style.bg(hover-bg) }).when({ current: style.bg(selected-bg).border(selected-border) })}
               >
-                <!-- Color identity: scoped token paint (registered theme tables) -->
+                <!-- Color identity: scoped token paint via theme= (registered tables) -->
                 <row
                   data-theme-swatches
-                  data-theme-preview={row.previewId}
+                  theme={row.previewId}
                   data-mode={row.paintMode}
                   shrink="0"
                   gap="0"
@@ -222,7 +222,7 @@ export default controller(() => {
               >
                 <row
                   data-theme-swatches
-                  data-theme-preview={row.previewId}
+                  theme={row.previewId}
                   data-mode={row.paintMode}
                   shrink="0"
                   gap="0"
@@ -359,7 +359,7 @@ export default controller(() => {
               Color story
             </p>
             <row
-              data-theme-preview={previewPaintId()}
+              theme={previewPaintId()}
               data-mode={previewModeId()}
               gap="2"
               data-color-story-grid
@@ -390,7 +390,7 @@ export default controller(() => {
           <!-- Type + radius under scoped theme -->
           <column
             data-type-story
-            data-theme-preview={previewPaintId()}
+            theme={previewPaintId()}
             data-mode={previewModeId()}
             gap="2"
             sx={style.pad(4).radius(lg).borderWidth(1).border(border-subtle).bg(surface-1).fg(foreground)}
@@ -434,7 +434,7 @@ export default controller(() => {
               Live chrome
             </p>
             <column
-              data-theme-preview={previewPaintId()}
+              theme={previewPaintId()}
               data-mode={previewModeId()}
               data-preview-specimen
               gap="0"

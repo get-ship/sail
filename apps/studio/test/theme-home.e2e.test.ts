@@ -80,9 +80,27 @@ describe('theme home e2e (live studio)', () => {
         { timeout: 20_000 },
       )
 
-      // Honesty smoke on live DOM
+      // Honesty smoke on live DOM + Job 5d theme= paint authority
       const honesty = await page.evaluate(() => {
         const text = document.body?.innerText || ''
+        const swatch = document.querySelector(
+          '[data-theme-swatches]',
+        ) as HTMLElement | null
+        const previewHost = document.querySelector(
+          '[data-themes-preview] [data-preview-specimen], [data-color-story-grid], [data-type-story]',
+        ) as HTMLElement | null
+        const themeHosts = document.querySelectorAll(
+          '[data-themes-surface] [theme]',
+        )
+        const loadBearingPreview = document.querySelectorAll(
+          '[data-themes-surface] [data-theme-preview]',
+        )
+        const swatchTheme = swatch?.getAttribute('theme') || ''
+        // Table paint: --primary should resolve from themes.css via [theme=id]
+        const primary =
+          swatch && swatchTheme
+            ? getComputedStyle(swatch).getPropertyValue('--primary').trim()
+            : ''
         return {
           hasEnablePacks: /Enable catalog packs/i.test(text),
           hasForkWord: /\bfork\b/i.test(text),
@@ -93,6 +111,11 @@ describe('theme home e2e (live studio)', () => {
             '[data-theme-row][data-theme-scope="project"]',
           ).length,
           catalogAddCount: document.querySelectorAll('[data-theme-add-project]').length,
+          themeHostCount: themeHosts.length,
+          loadBearingPreviewCount: loadBearingPreview.length,
+          swatchTheme,
+          swatchPrimary: primary,
+          previewHostTheme: previewHost?.getAttribute('theme') || null,
         }
       })
       expect(honesty.hasSurface).toBe(true)
@@ -100,6 +123,21 @@ describe('theme home e2e (live studio)', () => {
       expect(honesty.hasForkWord, 'UI must not say fork').toBe(false)
       expect(honesty.hasEnableSwitch, 'no fake enable switch').toBe(false)
       expect(honesty.hasDefaultStar, 'no default star theater').toBe(false)
+      // Job 5d: home hosts use theme=; no load-bearing data-theme-preview
+      expect(
+        honesty.themeHostCount,
+        'home cards/preview should set theme= for table paint',
+      ).toBeGreaterThan(0)
+      expect(
+        honesty.loadBearingPreviewCount,
+        'home must not use data-theme-preview as paint path',
+      ).toBe(0)
+      if (honesty.swatchTheme) {
+        expect(
+          honesty.swatchPrimary.length,
+          `swatch theme=${honesty.swatchTheme} should resolve --primary from tables`,
+        ).toBeGreaterThan(0)
+      }
 
       // Prefer project row → Open
       let opened = false

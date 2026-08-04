@@ -204,6 +204,14 @@ describe('themes home — honesty UI contracts (source)', () => {
     expect(sail).toMatch(/data-mode-switch/)
   })
 
+  it('paints catalog/project hosts via theme= not data-theme-preview (Job 5d)', () => {
+    const sail = readFileSync(SURFACE, 'utf8')
+    expect(sail).toMatch(/theme=\{row\.previewId\}/)
+    expect(sail).toMatch(/theme=\{previewPaintId\(\)\}/)
+    // Load-bearing preview attr must not remain on home hosts
+    expect(sail).not.toMatch(/data-theme-preview=\{/)
+  })
+
   it('New theme uses confirmNewTheme, not Add-to-project copy', () => {
     const vm = readFileSync(VM, 'utf8')
     const confirm = readFileSync(

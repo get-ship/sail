@@ -169,7 +169,9 @@ function applyOne(host: HTMLElement, opts: DraftPaintOpts): void {
 
 function applyRegisteredAttrs(host: HTMLElement, opts: DraftPaintOpts): void {
   const id = opts.paintId || opts.themeId || 'studio'
-  // Author IR `theme` + mode — never invent data-theme-preview (T1 kill list).
+  // Author IR `theme` + mode — paint authority for registered tables
+  // (`[theme=id]` in themes.css). Dual-write data-theme for residual
+  // :root / legacy selectors only. Never invent data-theme-preview (D7).
   host.setAttribute('theme', id)
   host.setAttribute('data-theme', id)
   host.setAttribute('data-mode', opts.mode)

@@ -931,6 +931,9 @@ pub fn is_passthrough_attr(name: &str) -> bool {
             | "translate"
             | "dir"
             | "lang"
+            // Framework theme IR (Job 5d / D10): host paint authority attr.
+            // Matches tokens_generate `[theme=id]` + theme.applyScope writes.
+            | "theme"
             | "itemprop"
             | "itemscope"
             | "itemtype"
@@ -990,7 +993,7 @@ fn unknown_attr_hint(tag: &str) -> String {
     } else {
         format!(
             "<{tag}> takes these axis props: {} — plus participation attrs (grow, shrink, w, min-w, max-w) \
-             or any HTML/global pass-through (id, sx, data-*, aria-*, on:*, bind:*, attr:*, prop:*, fx:*).",
+             or any HTML/global pass-through (id, sx, theme, data-*, aria-*, on:*, bind:*, attr:*, prop:*, fx:*).",
             axes.join(", ")
         )
     }
@@ -1440,6 +1443,7 @@ mod tests {
         assert!(is_passthrough_attr("data-x"));
         assert!(is_passthrough_attr("on:click"));
         assert!(is_passthrough_attr("aria-label"));
+        assert!(is_passthrough_attr("theme"), "framework theme IR pass-through");
         assert!(!is_passthrough_attr("bogus"));
         assert!(!is_passthrough_attr("clss"));
         assert!(!is_passthrough_attr("colz"));

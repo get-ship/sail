@@ -196,11 +196,12 @@ function editCtx(): EditCtx {
   }
 }
 
-// SAIL-LINT-CHAT: reflectCss wrote previewRoot.style.setProperty/removeProperty.
-// Live specimen tokens need signal → (--x) reflection or theme.preview for
-// declared tokens — not element.style from the design store.
+// SAIL-LINT-CHAT: reflectCss used to write previewRoot.style. Live draft paint
+// is DTCG → emit → scheduleDraftPaint → theme.applyScope only (Job 5d).
+// Call sites in edit-actions remain for API stability; they must not be the
+// sole paint path — recomputeDerived + emit always follow writers.
 function reflectCss(_cssName: string, _value: string | null): void {
-  /* intentional no-op — see SAIL-LINT-CHAT above */
+  /* intentional no-op — paint via scheduleDraftPaint / applyScope */
 }
 
 const ui = makeStoreUi({

@@ -1180,19 +1180,28 @@ fn load_theme_layers_from_dir(
             meta.default_mode = default_mode.clone();
             meta.dark = mode_ext_dark;
             meta.layer = "theme".into();
-            // Default mode also matches bare data-theme (no data-mode) so
-            // cold loads without applyTheme still paint the default mode.
+            // Selector family (Job 5d / D7–D11):
+            //   • `:root[data-theme=…]` — app product theme on documentElement
+            //   • `[theme=…]` — author IR for scoped hosts (Studio home cards,
+            //     draft cold path, nested previews)
+            //   • `[data-theme-preview=…]` — temporary dual-emit for residual
+            //     consumers (sail-site picker, tutorial, etc.); not Studio SSOT
+            // Default mode also matches bare theme / data-theme (no data-mode)
+            // so cold loads without applyTheme still paint the default mode.
             let is_default = default_mode.as_deref() == Some(mode_name.as_str());
             meta.selector = if is_default {
                 format!(
                     ":root[data-theme='{id}'][data-mode='{mode_name}'],\n\
                      :root[data-theme='{id}']:not([data-mode]),\n\
+                     [theme='{id}'][data-mode='{mode_name}'],\n\
+                     [theme='{id}']:not([data-mode]),\n\
                      [data-theme-preview='{id}'][data-mode='{mode_name}'],\n\
                      [data-theme-preview='{id}']:not([data-mode])"
                 )
             } else {
                 format!(
                     ":root[data-theme='{id}'][data-mode='{mode_name}'],\n\
+                     [theme='{id}'][data-mode='{mode_name}'],\n\
                      [data-theme-preview='{id}'][data-mode='{mode_name}']"
                 )
             };
@@ -3565,8 +3574,13 @@ mod tests {
             "dark mode selector missing: {css}"
         );
         assert!(
+            css.contains("[theme='ship'][data-mode='light']")
+                || css.contains("[theme='ship']"),
+            "author IR [theme=id] selector missing: {css}"
+        );
+        assert!(
             css.contains(":not([data-mode])"),
-            "default mode must match bare data-theme"
+            "default mode must match bare data-theme / theme"
         );
         let meta = fs::read_to_string(out.join("generated/themes-meta.ts")).unwrap();
         assert!(meta.contains("id: 'ship'"));

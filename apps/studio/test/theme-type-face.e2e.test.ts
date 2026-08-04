@@ -291,6 +291,27 @@ describe('Job 1 type face e2e (live studio product tree)', () => {
         `host still pixel/press-start after set to ${chosen}: ${hostStack}`,
       ).toBe(false)
 
+      // Job 5d: draft host paint authority is theme= + applyScope; no data-theme-preview
+      const attrProof = await page.evaluate(() => {
+        const host =
+          (document.querySelector('[data-preview-specimen]') as HTMLElement | null) ||
+          (document.querySelector('[data-overview-specimen]') as HTMLElement | null)
+        return {
+          theme: host?.getAttribute('theme') ?? null,
+          dataThemePreview: host?.getAttribute('data-theme-preview') ?? null,
+          draftPaint: host?.getAttribute('data-draft-paint') ?? null,
+        }
+      })
+      expect(
+        attrProof.theme,
+        'draft host must carry theme= after applyScope',
+      ).toBeTruthy()
+      expect(
+        attrProof.dataThemePreview,
+        'draft host must not set data-theme-preview',
+      ).toBeNull()
+      expect(attrProof.draftPaint, 'draft paint path').toBe('apply')
+
       // PASS if host prop has the family (preferred when webfont not installed)
       // OR computed face contains it.
       expect(

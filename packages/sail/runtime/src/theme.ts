@@ -594,14 +594,16 @@ function applyScope(
   }
 
   // Framework-owned theme IR on the host; mode is a cascade bit (D10/D11).
+  // Paint authority attr is `theme` (matches tokens_generate `[theme=id]`).
   if (lowered.themeId) {
     host.setAttribute('theme', lowered.themeId)
   } else if (prev?.themeId) {
     host.removeAttribute('theme')
   }
   host.setAttribute('data-mode', lowered.mode)
-  // Dual-attr cutover: keep data-theme in sync when we know the id so residual
-  // non-preview rules can still key off it. Never set data-theme-preview.
+  // Dual-attr cutover (temporary): keep data-theme in sync so residual
+  // :root[data-theme] consumers / non-preview rules still key off it.
+  // Never set data-theme-preview (D7 — Studio load-bearing path is dead).
   if (lowered.themeId) {
     host.setAttribute('data-theme', lowered.themeId)
   } else if (prev?.themeId) {
