@@ -138,6 +138,27 @@ describe('<sail-code-editor> — language prop', () => {
   })
 })
 
+describe('<sail-code-editor> — ops-url degrade', () => {
+  it('mounts without ops-url (sail-site / non-studio embeds)', () => {
+    const m = mount({ language: 'sail', value: '<column></column>' })
+    expect(cmEditor(m)).not.toBeNull()
+    expect(m.el.getAttribute('ops-url')).toBeFalsy()
+  })
+
+  it('accepts ops-url + ops-path without throwing', async () => {
+    const m = mount({
+      language: 'sail',
+      'ops-url': '/',
+      'ops-path': 'apps/studio/routes/page.sail',
+      value: 'const n = signal(0)',
+    })
+    await m.flush()
+    expect(m.el.getAttribute('ops-url')).toBe('/')
+    expect(m.el.getAttribute('ops-path')).toBe('apps/studio/routes/page.sail')
+    expect(cmEditor(m)).not.toBeNull()
+  })
+})
+
 describe('<sail-code-editor> — change event contract', () => {
   it('sail-change detail shape is { value } and crosses the shadow boundary', () => {
     const m = mount({ value: '' })

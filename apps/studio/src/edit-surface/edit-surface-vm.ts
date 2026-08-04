@@ -27,6 +27,13 @@ import {
 
 export { closeDocTab, openShellTabDocument, mapDocTabs, resolveDocTabs } from './edit-surface-tabs'
 
+/**
+ * Ops HTTP base for <sail-code-editor ops-url>.
+ * Matches `createOpsClient()` / studio-client default: same-origin (empty base).
+ * The editor treats `"/"` as same-origin after normalize (trailing slash strip).
+ */
+export const STUDIO_OPS_URL = '/'
+
 export function createEditSurface() {
   const sourceText = signal('')
   const sourceStatus = signal('—')
@@ -46,6 +53,10 @@ export function createEditSurface() {
   const activePathLabel = signal('')
   /** Host ref via `bind:this` — no ambient document.querySelector. */
   const editorEl = signal<HTMLElement | null>(null)
+  /** Same base as createOpsClient() — relative same-origin SailAuthoring. */
+  const opsUrl = signal(STUDIO_OPS_URL)
+  /** Active document path for Hover/Complete/diagnostics. */
+  const opsPath = signal('')
   let lastScrollNonce = -1
   let lastView: string | null = null
 
@@ -125,6 +136,7 @@ export function createEditSurface() {
     docTabs.set(mapDocTabs(tabs, shell.activeTabId ?? es.activePath, dirtyById))
     hasOpenDoc.set(!!es.activePath && !!doc)
     activePathLabel.set(es.activePath ?? '')
+    opsPath.set(es.activePath ?? '')
 
     if (es.sourceScrollNonce !== lastScrollNonce) {
       if (trySourceScroll()) lastScrollNonce = es.sourceScrollNonce
@@ -223,6 +235,8 @@ export function createEditSurface() {
     docTabs,
     hasOpenDoc,
     activePathLabel,
+    opsUrl,
+    opsPath,
     editorEl,
     onSourceSailChange,
     onSaveSource,

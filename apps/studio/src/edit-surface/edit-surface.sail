@@ -24,6 +24,8 @@ export default controller(() => {
     editError: vm.editError,
     hasEditError: vm.hasEditError,
     editorEl: vm.editorEl,
+    opsUrl: vm.opsUrl,
+    opsPath: vm.opsPath,
     onSourceSailChange: (e: Event) => vm.onSourceSailChange(e),
     onSaveSource: () => vm.onSaveSource(),
     onTabClick: (e: Event) => vm.onTabClick(e),
@@ -230,6 +232,8 @@ export default controller(() => {
                 size="sm"
                 chrome="flush"
                 line-numbers
+                ops-url={opsUrl()}
+                ops-path={opsPath()}
                 value={sourceText()}
                 bind:this={editorEl}
                 on:sail-change={onSourceSailChange}

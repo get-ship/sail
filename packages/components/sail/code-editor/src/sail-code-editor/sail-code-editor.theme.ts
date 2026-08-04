@@ -61,6 +61,14 @@ export const sailEditorTheme = EditorView.theme({
     borderRadius: 'var(--radius-md)',
     boxShadow: 'var(--shadow-md)',
   },
+  // Hover payload DOM (controller only sets className — no .style in controller).
+  '.cm-tooltip-sail-hover': {
+    padding: '6px 10px',
+    maxWidth: '36rem',
+    whiteSpace: 'pre-wrap',
+    fontSize: '12px',
+    lineHeight: '1.4',
+  },
   '.cm-tooltip-autocomplete': {
     '& > ul > li[aria-selected]': {
       backgroundColor: 'var(--muted)',

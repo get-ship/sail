@@ -13,6 +13,10 @@
   size (sm|md|lg, md, reflect)     controls font-size + line-height
   tone (default|info|success|warning|destructive, default, reflect)
   theme (light|dark|auto, auto, reflect)
+  wasm-url (string)        compiler WASM URL for browser structure diagnose
+  ops-url (string)         SailAuthoring HTTP base (Studio). Empty = off.
+                           Use "/" for same-origin (createOpsClient default).
+  ops-path (string)        Open file path forwarded to Hover/Complete/Check.
   ───────────────────────────────────────────────────────────────────────────
   sail-change              debounced 150ms `value` updates
   sail-save                Mod-s saves (host-bound events)
@@ -41,6 +45,10 @@
     tone: 'default' | 'info' | 'success' | 'warning' | 'destructive' = 'default'
     theme: 'auto' | 'light' | 'dark' = 'auto'
     'wasm-url' = '/sail_compiler_bg.wasm'
+    /** SailAuthoring ops base URL. Empty disables; "/" = same-origin. */
+    'ops-url' = ''
+    /** Active file path for Hover/Complete/diagnostics RPCs. */
+    'ops-path' = ''
     size: {
       md: 'text-sm leading-normal-plus',
       sm: 'text-xs leading-normal',
@@ -80,6 +88,12 @@ import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { lintGutter, setDiagnostics as cmSetDiagnostics, type Diagnostic } from '@codemirror/lint'
 import { sailEditorTheme, sailHighlighting } from './sail-code-editor.theme'
 import { loadLanguage } from './sail-code-editor.lang'
+import {
+  createOpsAuthoringClient,
+  normalizeOpsBase,
+  offsetToLineCol,
+  type OpsAuthoringClient,
+} from './sail-code-editor.ops'
 import type { Scope } from './sail-code-editor.sail'
 
 export interface SailDiagnostic {
@@ -102,7 +116,17 @@ export interface SailCompletionSource {
   }>
 }
 
+/** Imperative host API surface (setDiagnostics / setCompletions / …). */
+export interface SailCodeEditorApi {
+  value: string
+  setDiagnostics(diagnostics: SailDiagnostic[]): void
+  setCompletions(sources: SailCompletionSource[]): void
+  setCursor?(line: number, col?: number): void
+  focus(): void
+}
+
 const DEBOUNCE_MS = 150
+const OPS_DEBOUNCE_MS = 350
 
 export default controller((ctx: Scope) => {
     const langCompartment = new Compartment()
@@ -114,13 +138,23 @@ export default controller((ctx: Scope) => {
     let view: EditorView | null = null
     let debounceTimer: ReturnType<typeof setTimeout> | null = null
     let suppressUpdate = false
-    /** Host-pushed diagnostics (studio checks). Merged with browser LSP diags. */
+    /** Host-pushed diagnostics (studio checks). Merged with browser LSP + ops. */
     let hostDiagnostics: SailDiagnostic[] = []
     /** Browser LSP diagnose() results. */
     let lspDiagnostics: SailDiagnostic[] = []
+    /** Ops SailAuthoring Check/Diagnose (typed TS + structure when available). */
+    let opsDiagnostics: SailDiagnostic[] = []
     let pendingDiagnostics: SailDiagnostic[] | null = null
     let completions: SailCompletionSource[] = []
     let hoverAtFn: ((source: string, offset: number) => { contents: string } | null) | null = null
+
+    /** Mutable ops wiring — closed over by hover/complete sources. */
+    let opsClient: OpsAuthoringClient | null = null
+    let opsPath = ''
+    let opsCompleteAbort: AbortController | null = null
+    let opsDiagAbort: AbortController | null = null
+    let opsHoverAbort: AbortController | null = null
+    let opsDiagDebounce: ReturnType<typeof setTimeout> | null = null
 
     const valSig = ctx.value as unknown as Signal<string>
     const langSig = ctx.language as unknown as Signal<string>
@@ -128,10 +162,24 @@ export default controller((ctx: Scope) => {
     const lnSig = ctx.lineNumbers as unknown as Signal<boolean>
     const phSig = ctx.placeholder as unknown as Signal<string>
     const wasmUrlSig = ctx.wasmUrl as unknown as Signal<string>
+    const opsUrlSig = ctx.opsUrl as unknown as Signal<string>
+    const opsPathSig = ctx.opsPath as unknown as Signal<string>
 
     function buildCompletionExt(): Extension {
-      if (completions.length === 0) return []
-      return autocompletion({ override: completions.map(makeCompletionSource), defaultKeymap: true })
+      const sources = completions.map(makeCompletionSource)
+      if (opsClient && langSig() === 'sail') {
+        sources.push(makeOpsCompletionSource(() => opsClient, () => opsPath, () => {
+          opsCompleteAbort?.abort()
+          opsCompleteAbort = new AbortController()
+          return opsCompleteAbort
+        }))
+      }
+      if (sources.length === 0) return []
+      return autocompletion({ override: sources, defaultKeymap: true })
+    }
+
+    function reconfigureCompletions(): void {
+      view?.dispatch({ effects: completionCompartment.reconfigure(buildCompletionExt()) })
     }
 
     /** Map a diagnostic to a tight CM range — never paint the whole line. */
@@ -169,11 +217,11 @@ export default controller((ctx: Scope) => {
       if (!view) return
       const st = view.state
       const doc = st.doc
-      // Dedupe by line+col+message so host checks and browser LSP don't
-      // paint two squiggles on the same span.
+      // Dedupe by line+col+message so host checks, browser LSP, and ops
+      // don't paint two squiggles on the same span.
       const seen = new Set<string>()
       const merged: Diagnostic[] = []
-      for (const d of [...lspDiagnostics, ...hostDiagnostics]) {
+      for (const d of [...opsDiagnostics, ...lspDiagnostics, ...hostDiagnostics]) {
         const key = `${d.line}|${d.column ?? 0}|${d.message}`
         if (seen.has(key)) continue
         seen.add(key)
@@ -255,24 +303,43 @@ export default controller((ctx: Scope) => {
         sailEditorTheme,
         sailHighlighting,
         lintGutter(),
-        // Hover: SAIL structure docs from sail-lsp-browser/hover when available.
-        hoverTooltip((v, pos): Tooltip | null => {
-          if (!hoverAtFn) return null
+        // Hover: prefer SailAuthoring/Hover when ops-url is set; else structure
+        // docs from sail-lsp-browser/hover or staticSailHover.
+        hoverTooltip((v, pos): Tooltip | null | Promise<Tooltip | null> => {
           const text = v.state.doc.toString()
+          const client = opsClient
+          if (client && langSig() === 'sail') {
+            opsHoverAbort?.abort()
+            const ac = new AbortController()
+            opsHoverAbort = ac
+            const { line, column } = offsetToLineCol(text, pos)
+            return client
+              .hover({
+                source: text,
+                path: opsPath || undefined,
+                line,
+                column,
+                signal: ac.signal,
+              })
+              .then((opsInfo) => {
+                if (ac.signal.aborted) return null
+                if (opsInfo?.contents) return makeHoverTooltip(pos, opsInfo.contents)
+                // Soft miss → structure / static fallback
+                if (!hoverAtFn) return null
+                const info = hoverAtFn(text, pos)
+                return info ? makeHoverTooltip(pos, info.contents) : null
+              })
+              .catch(() => {
+                if (ac.signal.aborted) return null
+                if (!hoverAtFn) return null
+                const info = hoverAtFn(text, pos)
+                return info ? makeHoverTooltip(pos, info.contents) : null
+              })
+          }
+          if (!hoverAtFn) return null
           const info = hoverAtFn(text, pos)
           if (!info) return null
-          return {
-            pos,
-            above: true,
-            create() {
-              const dom = document.createElement('div')
-              dom.className = 'cm-tooltip-sail-hover'
-              dom.style.cssText =
-                'padding:6px 10px;max-width:36rem;white-space:pre-wrap;font-size:12px;line-height:1.4'
-              dom.textContent = info.contents
-              return { dom }
-            },
-          }
+          return makeHoverTooltip(pos, info.contents)
         }, { hoverTime: 350 }),
         langCompartment.of([]),
         completionCompartment.of(buildCompletionExt()),
@@ -319,7 +386,7 @@ export default controller((ctx: Scope) => {
     }
     el.setCompletions = (src: SailCompletionSource[]) => {
       completions = src ?? []
-      view?.dispatch({ effects: completionCompartment.reconfigure(buildCompletionExt()) })
+      reconfigureCompletions()
     }
     el.setCursor = (line: number, col = 1) => {
       if (!view || line < 1) return
@@ -389,9 +456,8 @@ export default controller((ctx: Scope) => {
     }))
 
     // ── Browser LSP integration ───────────────────────────────────
-    // Diagnostics from sail-lsp-browser merge with host checks (not replace).
-    // Hover uses sail-lsp-browser/hover when the framework singleton is
-    // available; otherwise a small static tag/directive fallback.
+    // Diagnostics from sail-lsp-browser merge with host checks + ops (not replace).
+    // Hover prefers ops SailAuthoring/Hover; structure hover is degrade only.
     type LspDiagnoseFn = (text: string, wasmUrl?: string) => Promise<SailDiagnostic[]>
     type LspAllSourcesFn = () => SailCompletionSource[]
     type LspHoverFn = (source: string, offset: number) => { contents: string } | null
@@ -441,13 +507,77 @@ export default controller((ctx: Scope) => {
           lspDiagnostics = out ?? []
           mergeAndApplyDiagnostics()
         } catch { /* best-effort */ }
-      }, 350)
+      }, OPS_DEBOUNCE_MS)
+    }))
+
+    // ── Ops SailAuthoring (Studio typed hover/complete/diags) ─────
+    disposers.push(effect(() => {
+      const base = normalizeOpsBase(opsUrlSig())
+      opsPath = String(opsPathSig() ?? '')
+      // null → ops disabled (no prop / empty). '' → same-origin (from "/").
+      if (base === null) {
+        if (opsClient) {
+          opsClient = null
+          opsDiagnostics = []
+          reconfigureCompletions()
+          mergeAndApplyDiagnostics()
+        }
+        return
+      }
+      const prevKey = (opsClient as unknown as { __base?: string } | null)?.__base
+      if (!opsClient || prevKey !== base) {
+        // Pass "/" when base is '' so normalizeOpsBase inside client is stable.
+        const client = createOpsAuthoringClient({ baseUrl: base || '/' })
+        ;(client as unknown as { __base?: string }).__base = base
+        opsClient = client
+        reconfigureCompletions()
+      }
+    }))
+    disposers.push(effect(() => {
+      const text = valSig()
+      const lang = langSig()
+      // Track path so live buffer diags use the open file identity.
+      opsPath = String(opsPathSig() ?? '')
+      if (lang !== 'sail' || !opsClient) {
+        if (opsDiagnostics.length) {
+          opsDiagnostics = []
+          mergeAndApplyDiagnostics()
+        }
+        return
+      }
+      if (opsDiagDebounce) clearTimeout(opsDiagDebounce)
+      opsDiagDebounce = setTimeout(async () => {
+        const client = opsClient
+        if (!client) return
+        opsDiagAbort?.abort()
+        const ac = new AbortController()
+        opsDiagAbort = ac
+        try {
+          const out = await client.diagnostics({
+            source: text,
+            path: opsPath || undefined,
+            signal: ac.signal,
+          })
+          if (ac.signal.aborted) return
+          opsDiagnostics = out ?? []
+          mergeAndApplyDiagnostics()
+        } catch {
+          if (ac.signal.aborted) return
+          /* best-effort — keep prior ops diags or empty */
+        }
+      }, OPS_DEBOUNCE_MS)
     }))
     disposers.push(() => {
       if (lspDebounce) clearTimeout(lspDebounce)
+      if (opsDiagDebounce) clearTimeout(opsDiagDebounce)
+      opsHoverAbort?.abort()
+      opsCompleteAbort?.abort()
+      opsDiagAbort?.abort()
       lspDiagnose = null
       lspInit = null
       hoverAtFn = null
+      opsClient = null
+      opsDiagnostics = []
     })
 
     disposers.push(effect(() => {
@@ -483,6 +613,57 @@ export default controller((ctx: Scope) => {
   })
   return { editorMount }
 })
+
+function makeHoverTooltip(pos: number, contents: string): Tooltip {
+  return {
+    pos,
+    above: true,
+    create() {
+      const dom = document.createElement('div')
+      // Styles live in sail-code-editor.theme.ts (.cm-tooltip-sail-hover).
+      dom.className = 'cm-tooltip-sail-hover'
+      dom.textContent = contents
+      return { dom }
+    },
+  }
+}
+
+/** Async completion source backed by SailAuthoring/Complete (tsgo via ops). */
+function makeOpsCompletionSource(
+  getClient: () => OpsAuthoringClient | null,
+  getPath: () => string,
+  nextAbort: () => AbortController,
+): (ctx: CompletionContext) => Promise<CompletionResult | null> {
+  return async (ctx) => {
+    const client = getClient()
+    if (!client) return null
+    const text = ctx.state.doc.toString()
+    const { line, column } = offsetToLineCol(text, ctx.pos)
+    const ac = nextAbort()
+    try {
+      const items = await client.complete({
+        source: text,
+        path: getPath() || undefined,
+        line,
+        column,
+        signal: ac.signal,
+      })
+      if (ac.signal.aborted || !items.length) return null
+      const word = ctx.matchBefore(/[A-Za-z0-9_$.]*/)
+      return {
+        from: word ? word.from : ctx.pos,
+        options: items.map((it) => {
+          const c: Completion = { label: it.label, apply: it.insert ?? it.label }
+          if (it.detail !== undefined) c.detail = it.detail
+          if (it.info !== undefined) c.info = it.info
+          return c
+        }),
+      }
+    } catch {
+      return null
+    }
+  }
+}
 
 /** Static hover fallback when `@ship/sail-lsp-browser/hover` is not on the importmap. */
 function staticSailHover(source: string, offset: number): { contents: string } | null {

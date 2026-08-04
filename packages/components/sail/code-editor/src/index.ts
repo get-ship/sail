@@ -16,3 +16,17 @@ export type {
   SailCompletionSource,
   SailCodeEditorApi,
 } from './sail-code-editor/sail-code-editor.controller'
+
+// Thin ops client (testable without mounting CodeMirror).
+export {
+  createOpsAuthoringClient,
+  normalizeOpsBase,
+  offsetToLineCol,
+  parseOpsDiagnostics,
+} from './sail-code-editor/sail-code-editor.ops'
+export type {
+  OpsAuthoringClient,
+  OpsCompletionItem,
+  OpsDiagnostic,
+  OpsHoverResult,
+} from './sail-code-editor/sail-code-editor.ops'
