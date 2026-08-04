@@ -3500,6 +3500,32 @@ mod tests {
         assert!(out.contains(r#"aria-label="x""#), "aria-* survived: {out}");
         assert!(out.contains(r#"role="region""#), "role survived: {out}");
     }
+
+    #[test]
+    fn surface_and_domdec_markers_ride_to_the_div() {
+        // DOMDEC-1 bare markers on layout keywords must survive lowering so
+        // chrome / test hooks stay addressable on the emitted div.
+        let out = preprocess(
+            r#"<row surface="edit" edit-surface tab-id="a" grow>x</row>"#,
+        )
+        .expect("preprocess");
+        assert!(
+            out.contains(r#"surface="edit""#),
+            "surface survived: {out}"
+        );
+        assert!(
+            out.contains("edit-surface"),
+            "hyphenated boolean marker survived: {out}"
+        );
+        assert!(
+            out.contains(r#"tab-id="a""#),
+            "hyphenated value marker survived: {out}"
+        );
+        assert!(
+            !out.contains("colz="),
+            "unknown axis typos must not invent attrs: {out}"
+        );
+    }
     #[test]
     fn directive_prefixes_ride_to_the_div() {
         // SAIL directive attrs (`bind:this`, `use:*`, plain fields,

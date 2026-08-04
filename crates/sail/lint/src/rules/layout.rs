@@ -917,6 +917,16 @@ pub fn is_passthrough_attr(name: &str) -> bool {
     {
         return true;
     }
+    // DOMDEC-1: app `.sail` may not author `data-*`. Markers that used to be
+    // `data-edit-surface` / `data-tab-id` are written bare (`edit-surface`,
+    // `tab-id`). Hyphenated names are the stable author form of those hooks
+    // and must ride to the lowered div. Participation attrs that also use a
+    // hyphen (`min-w`, `max-w`, `col-span`, `row-span`) stay out of this path
+    // so value validation still runs. Axis-prop typos stay single words
+    // (`colz`, `gapp`) and remain unknown-attr errors.
+    if name.contains('-') && !is_participation_attr(name) {
+        return true;
+    }
     matches!(
         name,
         "class"
@@ -934,6 +944,19 @@ pub fn is_passthrough_attr(name: &str) -> bool {
             // Framework theme IR (Job 5d / D10): host paint authority attr.
             // Matches tokens_generate `[theme=id]` + theme.applyScope writes.
             | "theme"
+            // DOMDEC-1 bare (non-hyphen) former data-* host markers used on
+            // layout keywords across studio surfaces — chrome / test hooks.
+            | "surface"
+            | "section"
+            | "mode"
+            | "sem"
+            | "state"
+            | "panel"
+            | "health"
+            | "drift"
+            | "attachments"
+            | "active"
+            | "l1"
             | "itemprop"
             | "itemscope"
             | "itemtype"
@@ -993,7 +1016,7 @@ fn unknown_attr_hint(tag: &str) -> String {
     } else {
         format!(
             "<{tag}> takes these axis props: {} — plus participation attrs (grow, shrink, w, min-w, max-w) \
-             or any HTML/global pass-through (id, sx, theme, data-*, aria-*, on:*, bind:*, attr:*, prop:*, fx:*).",
+             or any HTML/global pass-through (id, sx, theme, surface, hyphenated markers, data-*, aria-*, on:*, bind:*, attr:*, prop:*, fx:*).",
             axes.join(", ")
         )
     }
@@ -1444,9 +1467,35 @@ mod tests {
         assert!(is_passthrough_attr("on:click"));
         assert!(is_passthrough_attr("aria-label"));
         assert!(is_passthrough_attr("theme"), "framework theme IR pass-through");
+        assert!(is_passthrough_attr("surface"), "DOMDEC bare host marker");
+        assert!(
+            is_passthrough_attr("edit-surface"),
+            "DOMDEC hyphenated marker (former data-edit-surface)"
+        );
+        assert!(
+            is_passthrough_attr("tab-id"),
+            "DOMDEC hyphenated marker with value"
+        );
         assert!(!is_passthrough_attr("bogus"));
         assert!(!is_passthrough_attr("clss"));
         assert!(!is_passthrough_attr("colz"));
+    }
+
+    #[test]
+    fn surface_and_domdec_markers_pass_on_layout_keywords() {
+        // Studio surfaces after DOMDEC-1: `surface="edit"` + bare hooks on
+        // layout keywords must not trip unknown-attr.
+        assert!(run(
+            r#"<row surface="edit" edit-surface gap="0" grow>x</row>"#
+        )
+        .is_empty());
+        assert!(run(
+            r#"<column surface="tasks" tasks-surface tasks-header section="list">x</column>"#
+        )
+        .is_empty());
+        // Axis typos still hard-error (guard not weakened).
+        let m = run(r#"<grid colz="7">x</grid>"#);
+        assert!(m.iter().any(|s| s.contains("unknown")), "got: {m:?}");
     }
 
     #[test]
