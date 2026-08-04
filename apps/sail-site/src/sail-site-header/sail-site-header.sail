@@ -136,8 +136,10 @@ export default controller((ctx) => {
   // Landing: THE continuous scrollport. Clip ticker X; Y scrolls here only.
   // Children must shrink=0 so sections do not compress into mini-scrollpanes.
   const landingMain = style.basis(0).minH(0).minW(0).maxW(full).overflowX(hidden).overflowY(auto)
-  // App (docs / workbench / catalog): fill budget for nested rails; rails own scroll.
-  const appMain = style.basis(0).minH(0).minW(0).overflow(hidden)
+  // App (docs / workbench / catalog): flex column so nested shells resolve h(full).
+  // Without display:flex, children size to content → overflow:hidden clips → no scroll
+  // (components catalog was unscrollable for exactly this reason).
+  const appMain = style.display(flex).flexDir(column).basis(0).minH(0).minW(0).overflow(hidden)
 </scope>
 
 <!-- Single chrome tree: navbar + theme-picker never remount on route change. -->

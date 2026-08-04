@@ -1,11 +1,30 @@
 <!--
-  <sail-components-rail> — mounted by routes/components/_layout.sail for
-  every /components/* route. The catalog renders full-screen (no sidebar) —
-  the operator's "no nested nav bars" rule: one product switcher + one
-  sidebar, never stacked, and Components has none.
+  <sail-components-rail> — /components/* layout (no sidebar).
+
+  Parent is site-header <main> with overflow:hidden + a definite flex height.
+  This shell MUST fill that budget (h(full)) and own the only scrollport.
+  A bare <main grow overflowY auto> under a non-flex parent expands to content
+  height → parent clips → nothing scrolls. Same geometry as sail-docs-rail.
 -->
 
-<!-- Catalog fills site-header <main>; own scrollport (no nested rail). -->
-<main grow min-w="0" w="full" sx={style.basis(0).minH(0).minW(0).overflowY(auto).overflowX(hidden).padX(0).padY(0)}>
-  <slot name="route"></slot>
-</main>
+<!-- Fill site-header appMain; independent catalog scrollport. -->
+<row
+  nowrap
+  align="stretch"
+  w="full"
+  grow
+  min-w="0"
+  gap="0"
+  data-components-shell
+  sx={style.minH(0).h(full).minW(0).overflow(hidden)}
+>
+  <main
+    grow
+    min-w="0"
+    w="full"
+    data-components-scroll
+    sx={style.basis(0).minH(0).minW(0).h(full).overflowY(auto).overflowX(hidden)}
+  >
+    <slot name="route"></slot>
+  </main>
+</row>
