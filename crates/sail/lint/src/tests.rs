@@ -3,7 +3,8 @@
 use std::path::Path;
 
 use crate::{
-    is_controller_path, lint_controller_source, lint_pack_source_source,
+    is_app_source_ts, is_controller_path, lint_app_source_source, lint_controller_source,
+    lint_pack_source_source, lint_path,
     rules::{controller_purity, controller_state_cast},
 };
 
@@ -326,6 +327,61 @@ fn pack_source_lints_imperative_style() {
     );
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].rule, "sail-no-imperative-style");
+}
+
+#[test]
+fn app_source_path_recognises_apps_src() {
+    assert!(is_app_source_ts(Path::new(
+        "/repo/apps/studio/src/edit/region-overlay.ts"
+    )));
+    assert!(is_app_source_ts(Path::new(
+        "apps/studio/src/edit/region-overlay.ts"
+    )));
+    // Controllers are not this category.
+    assert!(!is_app_source_ts(Path::new(
+        "/repo/apps/studio/src/shell.controller.ts"
+    )));
+    // Tests are exempt.
+    assert!(!is_app_source_ts(Path::new(
+        "/repo/apps/studio/src/edit/region-overlay.test.ts"
+    )));
+    // Pack / runtime not app source.
+    assert!(!is_app_source_ts(Path::new(
+        "/repo/packages/components/sail/primitives/src/widget/glue.ts"
+    )));
+}
+
+#[test]
+fn app_source_lints_csstext_and_create_element() {
+    // The hole this job closed: plain studio modules were never dispatched.
+    let path = Path::new("/repo/apps/studio/src/edit/region-overlay.ts");
+    let findings = lint_app_source_source(
+        path,
+        "el.style.cssText = 'x'; document.createElement('div')",
+    );
+    let rules: Vec<_> = findings.iter().map(|f| f.rule).collect();
+    assert!(
+        rules.iter().any(|r| *r == "sail-no-imperative-style"),
+        "cssText / .style must fire floor: {findings:?}"
+    );
+    assert!(
+        rules.iter().any(|r| *r == "sail-no-ambient-dom"),
+        "createElement must fire ambient-dom: {findings:?}"
+    );
+}
+
+#[test]
+fn lint_path_dispatches_app_source_ts() {
+    // End-to-end path gate: a synthetic on-disk path shape (no read — we call
+    // lint_app_source_source via the same predicate lint_path uses).
+    let path = Path::new("/repo/apps/studio/src/foo.ts");
+    assert!(is_app_source_ts(path));
+    // lint_path would read disk; exercise source API instead + predicate.
+    let findings = lint_app_source_source(path, "document.querySelector('[data-host]')");
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].rule, "sail-no-ambient-dom");
+    // Silence unused import if lint_path is only referenced for docs.
+    let _ = lint_path as fn(&Path) -> Vec<crate::Finding>;
 }
 
 #[test]

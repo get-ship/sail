@@ -38,6 +38,7 @@ pub mod height_chain;
 pub mod layout;
 pub mod layout_primitive;
 pub mod legacy_layout;
+pub mod no_ambient_dom;
 pub mod no_class;
 pub mod no_imperative_style;
 pub mod no_inline_style;
@@ -150,6 +151,17 @@ pub const PACK_SOURCE_RULES: &[(&str, RuleFn)] = &[
         no_undeclared_stylesheet::RULE_ID,
         no_undeclared_stylesheet::check,
     ),
+];
+
+/// Rules that lint plain app TypeScript under `apps/*/src/**/*.ts`.
+///
+/// Closes the escape hatch where studio (and sibling apps) put CSSOM /
+/// ambient DOM in a side module that was never a `.controller.ts` and
+/// therefore never saw the floor. Floor + ambient-DOM ban — not the full
+/// controller purity suite (those rules assume controller shape).
+pub const APP_SOURCE_RULES: &[(&str, RuleFn)] = &[
+    (no_imperative_style::RULE_ID, no_imperative_style::check),
+    (no_ambient_dom::RULE_ID, no_ambient_dom::check),
 ];
 
 /// Rules that lint a shipped / author `use:` Action body.

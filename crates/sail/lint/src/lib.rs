@@ -27,6 +27,7 @@ pub fn all_rule_ids() -> Vec<&'static str> {
         .iter()
         .chain(rules::SUI_TEMPLATE_RULES.iter())
         .chain(rules::PACK_SOURCE_RULES.iter())
+        .chain(rules::APP_SOURCE_RULES.iter())
         .chain(rules::ACTION_RULES.iter())
         .map(|(id, _)| *id)
         .collect()
@@ -82,6 +83,31 @@ pub fn is_pack_source_ts(path: &std::path::Path) -> bool {
     // and the lint surface is irrelevant). The pack's own test directory
     // (often `test/` next to `src/`) is also out of scope.
     p.contains("/src/") || p.ends_with("/src")
+}
+
+/// True iff `path` is plain app TypeScript under `apps/*/src/**/*.ts`.
+///
+/// Controllers (`.controller.ts`) are matched first by `is_controller_path`
+/// and never count as app sources. Test files (`*.test.ts`, `*.spec.ts`) are
+/// out of scope — vitest harnesses create DOM freely.
+///
+/// This is the gate that closed the studio escape hatch: a side module under
+/// `apps/studio/src/edit/region-overlay.ts` used to skip every style floor
+/// because it was neither a controller nor a pack source.
+pub fn is_app_source_ts(path: &std::path::Path) -> bool {
+    if path.extension().and_then(|e| e.to_str()) != Some("ts") {
+        return false;
+    }
+    if is_controller_path(path) {
+        return false;
+    }
+    let p = path.to_string_lossy().replace('\\', "/");
+    if p.contains(".test.ts") || p.contains(".spec.ts") || p.contains("/__tests__/") {
+        return false;
+    }
+    // Workspace-relative (`apps/studio/src/…`) or absolute (`…/apps/studio/src/…`).
+    let under_apps_src = (p.contains("/apps/") || p.starts_with("apps/")) && p.contains("/src/");
+    under_apps_src
 }
 
 /// True iff `path` is a `use:` Action implementation the floor lints.
@@ -151,6 +177,21 @@ pub fn lint_pack_source_source(path: &std::path::Path, source: &str) -> Vec<Find
     findings
 }
 
+/// Lint a plain app `.ts` module under `apps/*/src/**`. Returns findings
+/// sorted by `(line, col)`. No filesystem access.
+///
+/// Runs the floor (`sail-no-imperative-style`) plus `sail-no-ambient-dom`
+/// so a side module cannot reintroduce CSSOM / createElement / querySelector
+/// host mutation by living outside `.controller.ts`.
+pub fn lint_app_source_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for (_id, check) in rules::APP_SOURCE_RULES {
+        findings.extend(check(path, source));
+    }
+    findings.sort_by(|a, b| a.line.cmp(&b.line).then_with(|| a.col.cmp(&b.col)));
+    findings
+}
+
 /// Lint a SAIL template (`*.sail`) from its source. Returns findings
 /// sorted by `(line, col)`. No filesystem access.
 pub fn lint_sail_template_source(path: &std::path::Path, source: &str) -> Vec<Finding> {
@@ -193,6 +234,12 @@ pub fn lint_path(path: &std::path::Path) -> Vec<Finding> {
             return Vec::new();
         };
         return lint_pack_source_source(path, &source);
+    }
+    if is_app_source_ts(path) {
+        let Ok(source) = std::fs::read_to_string(path) else {
+            return Vec::new();
+        };
+        return lint_app_source_source(path, &source);
     }
     Vec::new()
 }
