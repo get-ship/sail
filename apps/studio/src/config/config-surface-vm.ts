@@ -214,8 +214,8 @@ export function createConfigSurfaceCore() {
   publish('project')
 
   const onCatClick = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[data-config-cat]') as HTMLElement | null
-    const id = el?.getAttribute('data-config-cat') as ConfigCatId | null
+    const el = (e.target as Element | null)?.closest?.('[config-cat]') as HTMLElement | null
+    const id = el?.getAttribute('config-cat') as ConfigCatId | null
     if (!id || !CONFIG_CATS.some((c) => c.id === id)) return
     publish(id)
   }

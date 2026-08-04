@@ -18,7 +18,7 @@ export default controller(() => {
 })
 </controller>
 
-<studio-sidebar data-edit-explorer title="Explorer">
+<studio-sidebar edit-explorer title="Explorer">
   <column
     slot="toolbar"
     shrink="0"
@@ -27,7 +27,7 @@ export default controller(() => {
   >
     <input
       type="search"
-      data-edit-filter
+      edit-filter
       placeholder="Filter files…"
       value={filterText()}
       on:input={onFilterInput}
@@ -36,11 +36,11 @@ export default controller(() => {
       sx={style.w(full)}
     />
     <row align="center" justify="between" nowrap gap="2">
-      <p data-file-count sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>
+      <p file-count sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>
         {fileCountLabel()}
       </p>
       <if {dirtyCountLabel()}>
-        <badge data-dirty-count tone="warning" size="sm" variant="soft" pill>
+        <badge dirty-count tone="warning" size="sm" variant="soft" pill>
           {dirtyCountLabel()}
         </badge>
       </if>
@@ -48,7 +48,7 @@ export default controller(() => {
   </column>
 
   <column
-    data-file-tree
+    file-tree
     grow
     gap="0"
     sx={style.minH(0).basis(0).h(full).padX(1).padY(1).overflow(hidden).bg(surface-0)}
@@ -58,7 +58,7 @@ export default controller(() => {
         variant="placeholder"
         size="sm"
         w="full"
-        data-files-empty
+        files-empty
         sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}
       >
         <strong slot="title">No files</strong>
@@ -67,7 +67,7 @@ export default controller(() => {
     </if>
     <if {hasTree()}>
       <sail-tree
-        data-file-tree-host
+        file-tree-host
         tree={tree}
         label="Project files"
         selectable="single"

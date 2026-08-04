@@ -39,15 +39,14 @@ export function requestThemeLeaveNavigate(href: string): boolean {
   try {
     const ds = getDesignState()
     if (!ds.dirty) return true
-    const from =
-      typeof location !== 'undefined' ? pathForActivity(location.pathname) : ''
+    // Without ambient location, treat any leave of /themes/* as leave-theme.
     const dest = relPath(href)
-    const m = from.match(/^\/themes\/([^/]+)/)
-    if (!m) return true
-    const id = m[1]
-    const stay =
-      dest === `/themes/${id}` || dest.startsWith(`/themes/${id}/`)
-    if (stay) return true
+    const stayOnThemes = dest === '/themes' || dest.startsWith('/themes/')
+    if (stayOnThemes) {
+      // Same theme facet switches stay; leaving theme id entirely still fires.
+      // Without from-id, only destinations outside /themes trigger the dialog.
+      return true
+    }
     if (!navigateHandler) return true
     return navigateHandler(href)
   } catch {

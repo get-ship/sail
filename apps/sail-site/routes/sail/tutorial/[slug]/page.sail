@@ -208,7 +208,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
     // ── Lesson lifecycle ─────────────────────────────────────────────────
     // Source seed is independent of wasm / preview iframe. The e2e contract is
-    // that sail-code-editor[data-pane=source].value holds the lesson `.sail` as
+    // that sail-code-editor[pane]=source].value holds the lesson `.sail` as
     // soon as the editor upgrades — gating that on compile/iframe left the
     // editor empty whenever the host ref raced the one-shot write, or when
     // wasm was still loading.
@@ -407,7 +407,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         <if {tab() === 'source'}>
           <column grow gap="0" sx={style.minH(0).overflow(hidden)}>
             <sail-code-editor
-              data-pane="source"
+              pane="source"
               language="sail"
               size="sm"
               chrome="flush"
@@ -445,8 +445,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </row>
       <column grow gap="0" sx={style.minH(0).overflow(hidden)}>
         <iframe
-          data-testid="tut-preview"
-          data-base-src="/tut-host.html"
+          testid="tut-preview"
+          base-src="/tut-host.html"
           title="Tutorial preview"
           sandbox="allow-scripts allow-same-origin"
           bind:this={iframeEl}
@@ -502,7 +502,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
         <if {tab() === 'source'}>
           <column grow gap="0" sx={style.minH(0).overflow(hidden)}>
             <sail-code-editor
-              data-pane="source"
+              pane="source"
               language="sail"
               size="sm"
               chrome="flush"
@@ -528,8 +528,8 @@ export default controller((ctx: ControllerScope<Scope>) => {
       </row>
       <column grow gap="0" sx={style.minH(0).overflow(hidden)}>
         <iframe
-          data-testid="tut-preview"
-          data-base-src="/tut-host.html"
+          testid="tut-preview"
+          base-src="/tut-host.html"
           title="Tutorial preview"
           sandbox="allow-scripts allow-same-origin"
           bind:this={iframeEl}

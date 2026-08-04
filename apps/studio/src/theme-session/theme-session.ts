@@ -481,6 +481,7 @@ export function createThemeSession(opts: ThemeSessionOpts) {
       e.preventDefault()
       e.returnValue = ''
     }
+    // sail-allow sail-no-ambient-events
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', onBeforeUnload)
     }

@@ -121,10 +121,10 @@ export function createColorEdit(session: ThemeSession) {
     const t = e.currentTarget as HTMLElement | null
     const host = (e.target as HTMLElement | null)
     const el =
-      t?.closest?.('[data-role]') ||
-      host?.closest?.('[data-role]') ||
+      t?.closest?.('[role]') ||
+      host?.closest?.('[role]') ||
       (host?.hasAttribute?.('data-role') ? host : null)
-    const key = el?.getAttribute('data-role') as ColorRoleKey | null
+    const key = el?.getAttribute('role') as ColorRoleKey | null
     return key && key in COLOR_ROLES ? key : null
   }
 

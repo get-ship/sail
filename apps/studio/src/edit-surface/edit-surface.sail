@@ -33,8 +33,8 @@ export default controller(() => {
 </controller>
 
 <row
-  data-surface="edit"
-  data-edit-surface
+  surface="edit"
+  edit-surface
   gap="0"
   grow
   nowrap
@@ -51,8 +51,8 @@ export default controller(() => {
   >
     <!-- Doc tabs strip -->
     <row
-      data-studio-tabs
-      data-edit-tabs
+      studio-tabs
+      edit-tabs
       gap="0"
       shrink="0"
       align="stretch"
@@ -60,7 +60,7 @@ export default controller(() => {
       sx={style.h(8).borderBWidth(1).borderB(border).bg(surface-1).minW(0).overflow(hidden)}
     >
       <row
-        data-edit-tab-list
+        edit-tab-list
         role="tablist"
         aria-label="Open documents"
         grow
@@ -74,9 +74,9 @@ export default controller(() => {
       >
         <for {docTabs()} as="tab" key={tab.key}>
           <row
-            data-tab-id={tab.id}
-            data-active={tab.active ? 'true' : 'false'}
-            data-tab-select
+            tab-id={tab.id}
+            active={tab.active ? 'true' : 'false'}
+            tab-select
             role="tab"
             aria-selected={tab.active ? 'true' : 'false'}
             aria-current={tab.active ? 'page' : undefined}
@@ -90,14 +90,14 @@ export default controller(() => {
             <icon name="file-code-2" size="sm"></icon>
             <p grow min-w="0" sx={style.truncate()}>{tab.label}</p>
             <if {tab.dirtyDot}>
-              <p data-dirty-dot aria-label="Unsaved" sx={style.fontSize(xs).fg(warning)}>
+              <p dirty-dot aria-label="Unsaved" sx={style.fontSize(xs).fg(warning)}>
                 {tab.dirtyDot}
               </p>
             </if>
             <if {tab.showClose}>
               <button
                 type="button"
-                data-tab-close
+                tab-close
                 size="sm"
                 variant="ghost"
                 aria-label="Close tab"
@@ -122,8 +122,8 @@ export default controller(() => {
           type="button"
           size="sm"
           tone="primary"
-          data-save-source
-          data-dirty={sourceDirty() ? 'true' : 'false'}
+          save-source
+          dirty={sourceDirty() ? 'true' : 'false'}
           title="Save (Ctrl/Cmd+S)"
           on:click={onSaveSource}
         >
@@ -134,7 +134,7 @@ export default controller(() => {
 
     <if {hasEditError()}>
       <row
-        data-edit-error
+        edit-error
         align="center"
         gap="2"
         sx={style.padX(3).padY(1).bg(surface-1).borderBWidth(1).borderB(border)}
@@ -154,7 +154,7 @@ export default controller(() => {
           variant="placeholder"
           size="sm"
           w="full"
-          data-edit-empty
+          edit-empty
           sx={style.borderWidth(1).border(border-subtle).radius(md).pad(4)}
         >
           <strong slot="title">Open a file</strong>
@@ -165,8 +165,8 @@ export default controller(() => {
 
     <if {hasOpenDoc()}>
       <column
-        data-source-host
-        data-cm-mode="sail"
+        source-host
+        cm-mode="sail"
         grow
         gap="0"
         sx={style.minH(0).basis(0).h(full).overflow(hidden).bg(surface-0)}
@@ -174,7 +174,7 @@ export default controller(() => {
         <!-- Status lives on tab (dirty) + chrome status bar — no SOURCE toolbar row. -->
         <if {isSourceLoading()}>
           <empty-state
-            data-source-loading
+            source-loading
             variant="placeholder"
             size="sm"
             w="full"
@@ -187,7 +187,7 @@ export default controller(() => {
 
         <if {isSourceEmpty()}>
           <empty-state
-            data-source-empty
+            source-empty
             variant="placeholder"
             size="sm"
             w="full"
@@ -200,22 +200,22 @@ export default controller(() => {
 
         <if {isSourceReady()}>
           <column
-            data-source-ready
+            source-ready
             grow
             gap="0"
             sx={style.minH(0).basis(0).h(full).overflow(hidden)}
           >
             <if {hasChecks()}>
               <column
-                data-source-gutter
+                source-gutter
                 gap="0"
                 shrink="0"
                 sx={style.padX(3).padY(1).fontSize(xs).fontFamily(mono).bg(surface-2).maxH(20).minH(0).overflow(auto)}
               >
                 <for {checkRows()} as="ck" key={ck.key}>
                   <p
-                    data-check-line={ck.line}
-                    data-severity={ck.severity}
+                    check-line={ck.line}
+                    severity={ck.severity}
                     sx={style.fg(destructive).h(5)}
                   >
                     L{ck.line} · {ck.severity}: {ck.message}
@@ -225,7 +225,7 @@ export default controller(() => {
             </if>
             <column grow gap="0" sx={style.minH(0).basis(0).h(full).overflow(hidden)}>
               <sail-code-editor
-                data-source-editor
+                source-editor
                 language="sail"
                 size="sm"
                 chrome="flush"

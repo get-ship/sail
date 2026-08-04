@@ -33,7 +33,7 @@ export default controller(() => {
 </scope>
 
 <column
-  data-specimen-dock
+  specimen-dock
   gap="0"
   grow
   min-w="0"
@@ -42,15 +42,15 @@ export default controller(() => {
   <column grow gap="0" sx={style.minH(0).h(full).pad(4)}>
     <!-- Draft paint = applyScope via theme-session bind (not theme). -->
     <card
-      data-color-specimen
-      data-preview-specimen
-      data-mode={paintMode()}
+      color-specimen
+      preview-specimen
+      mode={paintMode()}
       padding="none"
       sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}
     >
       <column gap="0" grow sx={style.minH(0).h(full)}>
         <row
-          data-specimen-chrome
+          specimen-chrome
           align="center"
           gap="2"
           nowrap
@@ -66,24 +66,24 @@ export default controller(() => {
           <p sx={pathMeta} shrink="0">{paintMode()}</p>
         </row>
         <scroll-area grow sx={style.minH(0).basis(0).h(full).bg(background)}>
-          <column data-specimen-body gap="4" sx={style.pad(5).minW(0)}>
+          <column specimen-body gap="4" sx={style.pad(5).minW(0)}>
             <column gap="1">
               <p sx={style.fontSize(md).fontWeight(semibold).fontFamily(heading)}>Product UI</p>
               <p sx={style.fontSize(sm).fg(muted-foreground).leading(relaxed).fontFamily(body)}>
                 Brand + surfaces paint this host. Mode flips the color table, not the editor chrome.
               </p>
             </column>
-            <row gap="2" align="center" nowrap data-specimen-buttons>
+            <row gap="2" align="center" nowrap specimen-buttons>
               <button type="button" size="sm" variant="solid" tone="primary">Primary</button>
               <button type="button" size="sm" variant="solid" tone="accent">Accent</button>
               <button type="button" size="sm" variant="ghost" tone="muted">Ghost</button>
             </row>
-            <row gap="2" align="center" nowrap data-specimen-badges>
+            <row gap="2" align="center" nowrap specimen-badges>
               <badge tone="muted" size="sm" variant="solid" pill>Secondary</badge>
               <badge tone="primary" size="sm" variant="solid" pill>Primary</badge>
               <badge tone="accent" size="sm" variant="solid" pill>Accent</badge>
             </row>
-            <column data-surface-stack gap="2" aria-label="Surface stack">
+            <column surface-stack gap="2" aria-label="Surface stack">
               <column gap="2" sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(background)}>
                 <p sx={pathMeta}>bg</p>
                 <column gap="2" sx={style.pad(3).radius(md).borderWidth(1).border(border-subtle).bg(surface-1)}>
@@ -113,7 +113,7 @@ export default controller(() => {
                 </p>
               </column>
             </card>
-            <row data-sem-row gap="2" align="center" nowrap aria-label="Semantic tones">
+            <row sem-row gap="2" align="center" nowrap aria-label="Semantic tones">
               <badge tone="success" size="sm" variant="solid" pill>Success</badge>
               <badge tone="warning" size="sm" variant="solid" pill>Warning</badge>
               <badge tone="destructive" size="sm" variant="solid" pill>Danger</badge>

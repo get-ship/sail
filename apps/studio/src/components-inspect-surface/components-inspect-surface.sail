@@ -19,15 +19,15 @@ export default controller(() => {
 </controller>
 
 <column
-  data-surface="components"
-  data-components-surface
-  data-components-inspect
+  surface="components"
+  components-surface
+  components-inspect
   gap="0"
   grow
   sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
 >
   <row
-    data-components-workbench
+    components-workbench
     grow
     gap="0"
     nowrap
@@ -35,25 +35,25 @@ export default controller(() => {
     sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden)}
   >
     <column
-      data-inspect-tree-pane
+      inspect-tree-pane
       grow
       gap="0"
       sx={style.minH(0).h(full).minW(panel-min-w-lg).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-0).overflow(hidden)}
     >
-      <column data-inspect-tree-head shrink="0" gap="2" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
+      <column inspect-tree-head shrink="0" gap="2" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
         <row align="center" justify="between" nowrap gap="2">
           <p sx={eyebrow}>Components</p>
         </row>
-        <row data-mode-toggle gap="1" align="center" nowrap on:click={session.onModeToggle}>
-          <button type="button" size="sm" data-mode="library" variant="ghost" tone="muted">Library</button>
-          <button type="button" size="sm" data-mode="inspect" variant="solid" tone="primary" aria-pressed="true">Inspect</button>
+        <row mode-toggle gap="1" align="center" nowrap on:click={session.onModeToggle}>
+          <button type="button" size="sm" mode="library" variant="ghost" tone="muted">Library</button>
+          <button type="button" size="sm" mode="inspect" variant="solid" tone="primary" aria-pressed="true">Inspect</button>
         </row>
         <p sx={pathMeta}>Surface picker · open files & routes</p>
-        <scroll-area data-surface-picker data-surface-list sx={style.maxH(28)} on:click={inspect.onSurfacePick}>
+        <scroll-area surface-picker surface-list sx={style.maxH(28)} on:click={inspect.onSurfacePick}>
           <column gap="1">
             <for {inspect.surfaces()} as="s" key={s.key}>
               <studio-list-row
-                data-surface-path={s.value}
+                surface-path={s.value}
                 title={s.label}
                 selected={s.selected}
               ></studio-list-row>
@@ -64,7 +64,7 @@ export default controller(() => {
           type="search"
           size="sm"
           placeholder="Filter tree…"
-          data-tree-filter
+          tree-filter
           value={inspect.treeFilter()}
           on:input={inspect.onTreeFilterInput}
         />
@@ -91,7 +91,7 @@ export default controller(() => {
           </if>
           <if {inspect.hasTree()}>
             <sail-tree
-              data-inspect-tree-host
+              inspect-tree-host
               tree={inspect.tree}
               label="Instance tree"
               selectable="single"
@@ -106,8 +106,8 @@ export default controller(() => {
     </column>
 
     <column
-      data-inspect-detail
-      data-components-detail
+      inspect-detail
+      components-detail
       grow
       gap="0"
       sx={style.minH(0).h(full).minW(panel-min-w-md).basis(0).bg(background).overflow(hidden)}
@@ -119,7 +119,7 @@ export default controller(() => {
         </if>
         <if {inspect.hasNode()}>
           <column gap="1">
-            <p data-node-tag sx={style.fontSize(lg).fontWeight(semibold).fontFamily(mono)}>{inspect.nodeTag()}</p>
+            <p node-tag sx={style.fontSize(lg).fontWeight(semibold).fontFamily(mono)}>{inspect.nodeTag()}</p>
             <p sx={pathMeta}>{inspect.nodePath()} · {inspect.nodeSpanLabel()}</p>
             <row gap="2" nowrap>
               <if {inspect.nodeLayer()}>
@@ -128,14 +128,14 @@ export default controller(() => {
             </row>
           </column>
           <row gap="2" nowrap>
-            <button type="button" size="sm" variant="solid" tone="primary" data-open-edit-node on:click={inspect.onOpenNodeInEdit}>
+            <button type="button" size="sm" variant="solid" tone="primary" open-edit-node on:click={inspect.onOpenNodeInEdit}>
               Open in Edit
             </button>
             <button
               type="button"
               size="sm"
               variant="ghost"
-              data-show-in-library
+              show-in-library
               disabled={!inspect.canShowInLibrary()}
               on:click={inspect.onShowInLibrary}
             >
@@ -151,7 +151,7 @@ export default controller(() => {
             <p sx={muted}>{inspect.panelsNote()}</p>
           </if>
 
-          <column data-inspect-issues gap="2">
+          <column inspect-issues gap="2">
             <p sx={eyebrow}>Issues</p>
             <if {!inspect.hasIssues()}>
               <p sx={muted}>No diagnostics on this surface.</p>
@@ -167,7 +167,7 @@ export default controller(() => {
             </for>
           </column>
 
-          <column data-inspect-layout gap="2">
+          <column inspect-layout gap="2">
             <p sx={eyebrow}>Layout</p>
             <if {!inspect.hasLayout()}>
               <p sx={muted}>No layout boxes for this surface yet.</p>
@@ -186,7 +186,7 @@ export default controller(() => {
             </if>
           </column>
 
-          <column data-inspect-state gap="2">
+          <column inspect-state gap="2">
             <p sx={eyebrow}>State</p>
             <if {!inspect.hasState()}>
               <p sx={muted}>No state bindings on this surface.</p>
@@ -204,9 +204,9 @@ export default controller(() => {
     </column>
   </row>
 
-  <toast-region position="bottom-end" data-components-toast-region>
+  <toast-region position="bottom-end" components-toast-region>
     <for {session.toastItems()} as="t" key={t.key}>
-      <toast tone={t.tone} data-components-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} components-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

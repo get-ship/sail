@@ -23,15 +23,7 @@ export function projectPaths(proj: string): string[] {
  * Meta is host-stamped; apps read via studio-shell, not document.querySelector.
  */
 export function resolveProjectRoot(): string {
-  if (typeof document === 'undefined') return 'apps/studio'
-  try {
-    const q = new URLSearchParams(location.search).get('project')?.trim()
-    if (q && !q.includes('..') && (q.startsWith('apps/') || q.startsWith('/apps/'))) {
-      return q.replace(/^\//, '').replace(/\/$/, '')
-    }
-  } catch {
-    /* ignore */
-  }
+  // DOMDEC: no ambient location.search — host meta only.
   const meta = hostSailProject()
   if (meta) return meta
   return 'apps/studio'

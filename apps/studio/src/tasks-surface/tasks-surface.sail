@@ -44,14 +44,14 @@ export default controller(() => {
 </controller>
 
 <column
-  data-surface="tasks"
-  data-tasks-surface
+  surface="tasks"
+  tasks-surface
   gap="0"
   grow
   sx={style.minH(0).h(full).minW(0).overflow(hidden)}
 >
   <row
-    data-tasks-header
+    tasks-header
     align="center"
     justify="between"
     gap="3"
@@ -61,11 +61,11 @@ export default controller(() => {
   >
     <row align="center" gap="3" nowrap grow min-w="0">
       <p sx={style.fontSize(md).fontWeight(semibold)}>Tasks</p>
-      <p data-thread-count sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>
+      <p thread-count sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>
         {threadCountLabel()}
       </p>
       <select
-        data-filter-open
+        filter-open
         size="sm"
         value={openFilterVal()}
         on:change={onTaskOpenFilter}
@@ -76,7 +76,7 @@ export default controller(() => {
         <option value="all">All</option>
       </select>
       <select
-        data-filter-actor
+        filter-actor
         size="sm"
         value={actorFilterVal()}
         on:change={onTaskActorFilter}
@@ -88,28 +88,28 @@ export default controller(() => {
         <option value="agent">Agent</option>
       </select>
     </row>
-    <button type="button" size="sm" tone="primary" data-new-task on:click={onNewTaskQuick} shrink="0">
+    <button type="button" size="sm" tone="primary" new-task on:click={onNewTaskQuick} shrink="0">
       New task
     </button>
   </row>
 
   <if {showTaskErrorAlert()}>
     <row
-      data-tasks-error
+      tasks-error
       align="center"
       gap="2"
       shrink="0"
       sx={style.padX(3).h(7).borderBWidth(1).borderB(border)}
     >
       <p grow min-w="0" sx={style.fontSize(xs).fg(destructive).truncate()}>{taskError()}</p>
-      <button type="button" size="sm" variant="ghost" data-retry-tasks on:click={onRetryTasks}>
+      <button type="button" size="sm" variant="ghost" retry-tasks on:click={onRetryTasks}>
         Retry
       </button>
     </row>
   </if>
 
   <row
-    data-tasks-workbench
+    tasks-workbench
     grow
     gap="0"
     nowrap
@@ -117,17 +117,17 @@ export default controller(() => {
     sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden)}
   >
     <column
-      data-threads-list
-      data-tasks-nav
+      threads-list
+      tasks-nav
       grow
       gap="0"
       sx={style.minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-1).overflow(hidden)}
     >
       <scroll-area grow on:click={onTaskThreadClick} sx={style.minH(0).basis(0).h(full)}>
-        <column gap="0" data-tasks-table sx={style.padY(1).padX(1)}>
+        <column gap="0" tasks-table sx={style.padY(1).padX(1)}>
           <if {!hasTaskThreads()}>
             <if {!showTaskErrorAlert()}>
-              <studio-empty data-tasks-empty title={emptyTitle()} size="sm">
+              <studio-empty tasks-empty title={emptyTitle()} size="sm">
                 {emptyBody()}
               </studio-empty>
             </if>
@@ -135,16 +135,16 @@ export default controller(() => {
           <if {hasTaskThreads()}>
             <for {taskThreadRows()} as="row" key={row.key}>
               <studio-list-row
-                data-task-id={row.id}
-                data-thread-row
-                data-drift={row.drift}
+                task-id={row.id}
+                thread-row
+                drift={row.drift}
                 title={row.title}
                 meta={row.updatedLabel}
                 selected={row.selected}
               >
                 <badge
                   slot="leading"
-                  data-status-badge={row.status}
+                  status-badge={row.status}
                   tone={row.statusTone}
                   size="sm"
                   variant="soft"
@@ -162,7 +162,7 @@ export default controller(() => {
     </column>
 
     <column
-      data-task-detail
+      task-detail
       grow
       gap="0"
       min-w="0"
@@ -170,7 +170,7 @@ export default controller(() => {
     >
       <if {!hasTaskSelected()}>
         <column grow align="center" justify="center" sx={style.minH(0).h(full).pad(4)}>
-          <empty-state variant="placeholder" size="sm" w="full" data-task-detail-empty>
+          <empty-state variant="placeholder" size="sm" w="full" task-detail-empty>
             <strong slot="title">Select a task</strong>
             Or create a new one.
           </empty-state>
@@ -179,7 +179,7 @@ export default controller(() => {
 
       <if {hasTaskSelected()}>
         <row
-          data-task-detail-header
+          task-detail-header
           align="center"
           gap="2"
           nowrap
@@ -189,7 +189,7 @@ export default controller(() => {
         >
           <row align="center" gap="2" nowrap grow min-w="0">
             <strong sx={style.fontSize(md).truncate()}>{taskTitle()}</strong>
-            <badge data-status-detail tone={taskStatusTone()} size="sm" variant="soft" pill>
+            <badge status-detail tone={taskStatusTone()} size="sm" variant="soft" pill>
               {taskStatusLabel()}
             </badge>
           </row>
@@ -201,9 +201,9 @@ export default controller(() => {
         <!-- Anchor: status only when present — no re-link/accept choreography in scaffold -->
         <if {taskAnchorHas()}>
           <row
-            data-anchor-card
-            data-anchor-chip
-            data-drift={taskAnchorStatusRaw()}
+            anchor-card
+            anchor-chip
+            drift={taskAnchorStatusRaw()}
             align="center"
             gap="2"
             nowrap
@@ -211,7 +211,7 @@ export default controller(() => {
             sx={style.padX(3).padY(2).borderBWidth(1).borderB(border-subtle).bg(surface-0).minW(0)}
           >
             <badge
-              data-anchor-drift={taskAnchorStatusRaw()}
+              anchor-drift={taskAnchorStatusRaw()}
               tone={taskAnchorTone()}
               size="sm"
               variant="soft"
@@ -227,9 +227,9 @@ export default controller(() => {
         </if>
 
         <if {hasTaskAttach()}>
-          <row data-attachments gap="2" align="center" shrink="0" sx={style.padX(3).padY(2).borderBWidth(1).borderB(border-subtle)}>
+          <row attachments gap="2" align="center" shrink="0" sx={style.padX(3).padY(2).borderBWidth(1).borderB(border-subtle)}>
             <for {taskAttachChips()} as="a" key={a.key}>
-              <badge data-attach-chip data-attach-kind={a.kind} tone="muted" size="sm" variant="outline" pill>
+              <badge attach-chip attach-kind={a.kind} tone="muted" size="sm" variant="outline" pill>
                 {a.label}
               </badge>
             </for>
@@ -237,7 +237,7 @@ export default controller(() => {
         </if>
 
         <column
-          data-task-conversation
+          task-conversation
           grow
           gap="0"
           sx={style.minH(0).basis(0).h(full).overflow(hidden)}
@@ -245,13 +245,13 @@ export default controller(() => {
           <if {hasThreadMarkdown()}>
             <scroll-area shrink="0" sx={style.maxH(32).minH(0)}>
               <column sx={style.pad(3)}>
-                <sail-markdown data-thread-markdown value={threadMarkdown()} sx={style.fontSize(sm)}></sail-markdown>
+                <sail-markdown thread-markdown value={threadMarkdown()} sx={style.fontSize(sm)}></sail-markdown>
               </column>
             </scroll-area>
           </if>
           <sail-message-list
-            data-messages-host
-            data-messages
+            messages-host
+            messages
             sticky-bottom
             grow
             sx={style.minH(0).h(full).w(full).basis(0)}
@@ -264,14 +264,14 @@ export default controller(() => {
         </column>
 
         <column
-          data-reply-composer
+          reply-composer
           gap="2"
           shrink="0"
           sx={style.pad(3).borderTWidth(1).borderT(border-subtle).bg(surface-1)}
         >
           <sail-composer
-            data-task-composer
-            data-reply-input
+            task-composer
+            reply-input
             multiline
             disabled={composerDisabled()}
             placeholder="Message…"
@@ -284,7 +284,7 @@ export default controller(() => {
                   type="button"
                   size="sm"
                   variant="ghost"
-                  data-attach-crop
+                  attach-crop
                   on:click={onAttachCrop}
                 >
                   Attach crop

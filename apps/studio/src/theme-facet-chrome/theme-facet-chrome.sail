@@ -112,9 +112,9 @@ export default controller(() => {
 })
 </controller>
 
-<column data-theme-facet-chrome-root shrink="0" gap="0" sx={style.minW(0)}>
+<column theme-facet-chrome-root shrink="0" gap="0" sx={style.minW(0)}>
   <row
-    data-theme-facet-chrome
+    theme-facet-chrome
     align="center"
     justify="between"
     gap="3"
@@ -123,13 +123,13 @@ export default controller(() => {
     sx={style.padX(4).h(10).minH(10).borderBWidth(1).borderB(border-subtle).bg(background).minW(0)}
   >
     <row align="center" gap="2" grow min-w="0" nowrap sx={style.minW(0)}>
-      <button type="button" size="sm" variant="ghost" tone="muted" data-facet-back on:click={goBack} aria-label="Back to Themes">
+      <button type="button" size="sm" variant="ghost" tone="muted" facet-back on:click={goBack} aria-label="Back to Themes">
         Themes
       </button>
       <p sx={style.fg(muted-foreground).fontSize(sm)} aria-hidden="true">/</p>
       <input
         type="text"
-        data-theme-name
+        theme-name
         size="sm"
         use:autosize
         value={nameEdit()}
@@ -147,7 +147,7 @@ export default controller(() => {
         variant="ghost"
         tone="muted"
         popovertarget={pathMenuId()}
-        data-path-trigger
+        path-trigger
         aria-haspopup="listbox"
         aria-label="Section"
       >
@@ -163,7 +163,7 @@ export default controller(() => {
         </for>
       </dropdown>
       <if {showStateChip()}>
-        <badge data-state-chip tone={stateChipTone()} size="sm" variant="outline" pill shrink="0">
+        <badge state-chip tone={stateChipTone()} size="sm" variant="outline" pill shrink="0">
           {stateChipLabel()}
         </badge>
       </if>
@@ -171,13 +171,13 @@ export default controller(() => {
 
     <!-- Edit cluster (save / unsaved / undo) — separate from mode switch on the right. -->
     <row align="center" gap="3" shrink="0" nowrap>
-      <row data-edit-cluster align="center" gap="1" shrink="0" nowrap>
+      <row edit-cluster align="center" gap="1" shrink="0" nowrap>
         <button
           type="button"
           size="sm"
           variant="ghost"
           tone="muted"
-          data-facet-undo
+          facet-undo
           aria-label="Undo"
           disabled={!canUndo()}
           on:click={onUndo}
@@ -190,7 +190,7 @@ export default controller(() => {
           size="sm"
           variant="ghost"
           tone="muted"
-          data-facet-redo
+          facet-redo
           aria-label="Redo"
           disabled={!canRedo()}
           on:click={onRedo}
@@ -206,7 +206,7 @@ export default controller(() => {
             variant="soft"
             tone="primary"
             shrink="0"
-            data-unsaved-trigger
+            unsaved-trigger
             popovertarget={diffMenuId()}
             aria-haspopup="menu"
             aria-label="Unsaved changes"
@@ -222,7 +222,7 @@ export default controller(() => {
               <scroll-area sx={style.maxH(48)}>
                 <column gap="2">
                   <for {diffRows()} as="row" key={row.key}>
-                    <column gap="0" data-diff-row>
+                    <column gap="0" diff-row>
                       <p sx={style.fontSize(xs).fontFamily(mono).fg(foreground).truncate()}>{row.path}</p>
                       <p sx={style.fontSize(xs).fontFamily(mono).fg(muted-foreground).truncate()}>
                         {row.from} → {row.to}
@@ -235,18 +235,18 @@ export default controller(() => {
             <if {!hasDiffRows()}>
               <p sx={style.fontSize(xs).fg(muted-foreground)}>Edits pending — save to write theme JSON.</p>
             </if>
-            <button type="button" size="sm" variant="solid" tone="primary" data-diff-save on:click={onSave}>
+            <button type="button" size="sm" variant="solid" tone="primary" diff-save on:click={onSave}>
               Save
             </button>
           </column>
         </dropdown>
         <if {canEdit()}>
-          <button type="button" size="sm" variant="solid" tone="primary" data-facet-save on:click={onSave} shrink="0">
+          <button type="button" size="sm" variant="solid" tone="primary" facet-save on:click={onSave} shrink="0">
             {saveButtonLabel()}
           </button>
         </if>
         <if {isCatalog()}>
-          <button type="button" size="sm" variant="solid" tone="primary" data-facet-add-project on:click={onAddToProject} shrink="0">
+          <button type="button" size="sm" variant="solid" tone="primary" facet-add-project on:click={onAddToProject} shrink="0">
             Add to project
           </button>
         </if>
@@ -254,14 +254,14 @@ export default controller(() => {
 
       <stack aria-hidden="true" sx={style.w(half).h(5).minW(half).bg(border-subtle)}></stack>
 
-      <row data-mode-cluster align="center" gap="2" shrink="0" nowrap>
+      <row mode-cluster align="center" gap="2" shrink="0" nowrap>
         <if {canToggleMode()}>
-          <row data-dual-mode gap="2" align="center" nowrap shrink="0" aria-label="Theme mode">
+          <row dual-mode gap="2" align="center" nowrap shrink="0" aria-label="Theme mode">
             <icon name="sun" size="sm" label="Light" shrink="0" sx={style.fg(muted-foreground)}></icon>
             <switch
               size="sm"
               tone="muted"
-              data-mode-switch
+              mode-switch
               checked={modeDarkOn()}
               aria-label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
               on:change={onModeSwitch}
@@ -270,7 +270,7 @@ export default controller(() => {
           </row>
         </if>
         <if {showAddMode()}>
-          <button type="button" size="sm" variant="ghost" tone="muted" data-add-mode on:click={onAddMode} shrink="0">
+          <button type="button" size="sm" variant="ghost" tone="muted" add-mode on:click={onAddMode} shrink="0">
             {addModeLabel()}
           </button>
         </if>
@@ -287,7 +287,7 @@ export default controller(() => {
     ESC / backdrop → sail-close → cancel leave (pending navigation dropped).
   -->
   <dialog
-    data-theme-leave-dialog
+    theme-leave-dialog
     open={leaveOpen()}
     size="md"
     aria-labelledby="theme-leave-title"
@@ -298,13 +298,13 @@ export default controller(() => {
       Save writes the theme to the project. Discard drops in-memory edits.
     </section>
     <footer>
-      <button type="button" size="sm" variant="ghost" tone="muted" data-leave-cancel on:click={onLeaveCancel}>
+      <button type="button" size="sm" variant="ghost" tone="muted" leave-cancel on:click={onLeaveCancel}>
         Cancel
       </button>
-      <button type="button" size="sm" variant="outline" tone="destructive" data-leave-discard on:click={onLeaveDiscard}>
+      <button type="button" size="sm" variant="outline" tone="destructive" leave-discard on:click={onLeaveDiscard}>
         Discard
       </button>
-      <button type="button" size="sm" variant="solid" tone="primary" data-leave-save on:click={onLeaveSave}>
+      <button type="button" size="sm" variant="solid" tone="primary" leave-save on:click={onLeaveSave}>
         Save
       </button>
     </footer>

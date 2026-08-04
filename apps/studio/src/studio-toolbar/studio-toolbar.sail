@@ -4,7 +4,7 @@
   Ban-clean: layout keywords + L1 only.
 -->
 <row
-  data-studio-toolbar
+  studio-toolbar
   align="center"
   gap="2"
   shrink="0"

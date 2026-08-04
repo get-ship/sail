@@ -170,8 +170,8 @@ export function createOverviewEdit(session: ThemeSession) {
     if (!hex) return
     const host = e.target as HTMLElement | null
     const role =
-      host?.getAttribute('data-role') ||
-      host?.closest?.('[data-role]')?.getAttribute('data-role')
+      host?.getAttribute('role') ||
+      host?.closest?.('[role]')?.getAttribute('role')
     if (role === 'primary') {
       primaryHex.set(hex)
       void setBrandColor(hex).then(() => session.sync())
@@ -229,7 +229,7 @@ export function createOverviewEdit(session: ThemeSession) {
 
   const onDensityClick = (e: Event) => {
     if (!session.guardEdit()) return
-    const el = (e.target as Element | null)?.closest?.('[data-density]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[density]') as HTMLElement | null
     const d = el?.dataset.density as DensityId | undefined
     if (!d || !['compact', 'default', 'spacious'].includes(d)) return
     void setDesignDensity(d).then(() => session.sync())

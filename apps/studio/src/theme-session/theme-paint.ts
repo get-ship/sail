@@ -102,9 +102,8 @@ export function themeDisplayName(id: string): string {
  * Theme id from location for any facet path:
  * /themes/:id, /themes/:id/color|shape|assets|components
  */
-export function themeIdFromLocation(): string {
-  if (typeof location === 'undefined') return ''
-  const path = location.pathname || ''
+export function themeIdFromLocation(pathname = ''): string {
+  const path = pathname
   const base = appRouteBase()
   const rest = base && path.startsWith(base) ? path.slice(base.length) : path
   const m = rest.match(/^\/themes\/([^/]+)(?:\/(?:color|shape|assets|components))?\/?$/)

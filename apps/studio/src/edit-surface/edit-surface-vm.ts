@@ -179,7 +179,7 @@ export function createEditSurface() {
 
   const onTabClick = (e: Event) => {
     const closeEl = (e.target as Element | null)?.closest?.(
-      '[data-tab-close]',
+      '[tab-close]',
     ) as HTMLElement | null
     if (closeEl) {
       const id = tabIdFromEvent(e)

@@ -54,24 +54,24 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     <column>
       <p sx={style.fontFamily(mono).fontSize(xs).textCase(uppercase).tracking(wide).fg(muted-foreground).mb(2)}>Live — saves to a 900 ms fake API</p>
       <column sx={style.pad(6).borderWidth(1).border(border).radius(lg).bg(surface-1)} gap="3">
-        <form on:submit={onSubmit} data-testid="forms-demo">
+        <form on:submit={onSubmit} testid="forms-demo">
           <column gap="3">
             <field invalid={tried() && !!profile.errors().name}>
               <label slot="label" for="profile-name">Display name</label>
-              <input id="profile-name" bind:value={profile.fields.name} data-testid="forms-name" />
+              <input id="profile-name" bind:value={profile.fields.name} testid="forms-name" />
               <span slot="hint">Public — shows on your profile.</span>
               <span slot="error">{profile.errors().name}</span>
             </field>
 
             <field invalid={tried() && !!profile.errors().email}>
               <label slot="label" for="profile-email">Email</label>
-              <input id="profile-email" bind:value={profile.fields.email} data-testid="forms-email" />
+              <input id="profile-email" bind:value={profile.fields.email} testid="forms-email" />
               <span slot="hint">We never send anything to it.</span>
               <span slot="error">{profile.errors().email}</span>
             </field>
 
             <row gap="2">
-              <button type="submit" disabled={profile.pending()} data-testid="forms-submit">
+              <button type="submit" disabled={profile.pending()} testid="forms-submit">
                 {profile.pending() ? 'Saving…' : 'Save'}
               </button>
               <button type="button" variant="ghost" on:click={onReset}>Reset</button>
@@ -82,10 +82,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
               <row gap="2" align="center"><spinner></spinner> <p sx={style.fontSize(sm).fg(muted-foreground)}>saving…</p></row>
             </if>
             <if {profile.lastError()}>
-              <alert tone="destructive" data-testid="forms-error">{profile.lastError().message}</alert>
+              <alert tone="destructive" testid="forms-error">{profile.lastError().message}</alert>
             </if>
             <if {saved()}>
-              <alert tone="success" data-testid="forms-success">Saved — {saved().name} ({saved().email}).</alert>
+              <alert tone="success" testid="forms-success">Saved — {saved().name} ({saved().email}).</alert>
             </if>
           </column>
         </form>

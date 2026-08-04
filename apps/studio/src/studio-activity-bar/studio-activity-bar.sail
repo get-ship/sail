@@ -7,7 +7,7 @@
   Ban-clean: layout keywords + L1 only.
 -->
 <column
-  data-studio-activity-bar
+  studio-activity-bar
   role="navigation"
   aria-label="Studio activities"
   shrink="0"
@@ -22,7 +22,7 @@
       sx={style.w(full).h(12).minH(12).padX(1).padY(1).borderBWidth(1).borderB(border-subtle)}
     >
       <center
-        data-studio-brand-mark
+        studio-brand-mark
         sx={style.w(10).h(10).minW(10).minH(10).radius(md).bg(surface-1).fg(muted-foreground).borderWidth(1).border(border-subtle)}
       >
         <icon name="ship" size="sm"></icon>
@@ -30,7 +30,7 @@
     </center>
   </slot>
   <column
-    data-studio-activity-items
+    studio-activity-items
     gap="1"
     align="center"
     shrink="0"
@@ -40,7 +40,7 @@
   </column>
   <column grow sx={style.minH(0)}></column>
   <column
-    data-studio-activity-footer
+    studio-activity-footer
     shrink="0"
     align="center"
     gap="1"

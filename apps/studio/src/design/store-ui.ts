@@ -200,15 +200,8 @@ async function fetchIconRegistryNames(): Promise<string[]> {
   return used
 }
 
-async function fetchJsonNameList(url: string): Promise<string[]> {
-  try {
-    const r = await fetch(url)
-    if (!r.ok) return []
-    const j = (await r.json()) as unknown
-    if (Array.isArray(j)) return j.map(String).filter(Boolean)
-  } catch {
-    /* offline */
-  }
+async function fetchJsonNameList(_url: string): Promise<string[]> {
+  // DOMDEC: ambient fetch banned — icon name list needs query() inject (gap).
   return []
 }
 

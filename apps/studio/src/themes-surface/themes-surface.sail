@@ -54,15 +54,15 @@ export default controller(() => {
 </controller>
 
 <column
-  data-surface="themes"
-  data-themes-surface
+  surface="themes"
+  themes-surface
   gap="0"
   grow
   sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
 >
   <!-- Page header — not the compact uppercase chrome strip -->
   <row
-    data-themes-header
+    themes-header
     align="center"
     justify="between"
     gap="4"
@@ -79,31 +79,31 @@ export default controller(() => {
       </p>
     </column>
     <row gap="2" align="center" shrink="0" nowrap>
-      <button type="button" size="sm" variant="solid" tone="primary" data-new-theme on:click={onNewTheme}>
+      <button type="button" size="sm" variant="solid" tone="primary" new-theme on:click={onNewTheme}>
         New theme
       </button>
     </row>
   </row>
 
   <if {hasThemesError()}>
-    <row data-themes-error align="center" gap="2" shrink="0" sx={style.padX(6).padY(2).borderBWidth(1).borderB(border)}>
+    <row themes-error align="center" gap="2" shrink="0" sx={style.padX(6).padY(2).borderBWidth(1).borderB(border)}>
       <p grow min-w="0" sx={style.fontSize(sm).fg(destructive).truncate()}>{themesError()}</p>
-      <button type="button" size="sm" variant="ghost" data-retry-themes on:click={onRetryThemes}>
+      <button type="button" size="sm" variant="ghost" retry-themes on:click={onRetryThemes}>
         Retry
       </button>
     </row>
   </if>
 
   <if {isLoading()}>
-    <row data-themes-loading align="center" gap="2" shrink="0" sx={style.padX(6).padY(2)}>
+    <row themes-loading align="center" gap="2" shrink="0" sx={style.padX(6).padY(2)}>
       <spinner size="sm"></spinner>
       <p sx={style.fontSize(sm).fg(muted-foreground)}>{loadingLabel()}</p>
     </row>
   </if>
 
   <row
-    data-themes-workbench
-    data-themes-split
+    themes-workbench
+    themes-split
     grow
     gap="0"
     nowrap
@@ -112,12 +112,12 @@ export default controller(() => {
   >
     <!-- LIST -->
     <column
-      data-themes-list-pane
+      themes-list-pane
       grow
       gap="0"
       sx={style.minH(0).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-1)}
     >
-      <column data-themes-list-head shrink="0" gap="1" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
+      <column themes-list-head shrink="0" gap="1" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
         <p sx={style.fontSize(xs).fontWeight(bold).textCase(uppercase).tracking(wide).fg(muted-foreground)}>
           Library
         </p>
@@ -126,11 +126,11 @@ export default controller(() => {
         </p>
       </column>
 
-      <scroll-area data-themes-list grow on:click={onListClick} sx={style.minH(0).basis(0).h(full)}>
+      <scroll-area themes-list grow on:click={onListClick} sx={style.minH(0).basis(0).h(full)}>
         <column gap="1" sx={style.pad(3)}>
           <if {!hasAnyThemes()}>
             <if {!hasThemesError()}>
-              <empty-state variant="placeholder" size="sm" w="full" data-themes-empty>
+              <empty-state variant="placeholder" size="sm" w="full" themes-empty>
                 <strong slot="title">No themes loaded</strong>
                 Retry, or create a project theme with New theme.
               </empty-state>
@@ -139,17 +139,17 @@ export default controller(() => {
 
           <if {hasProjectRows()}>
             <p
-              data-list-group="project"
+              list-group="project"
               sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground).padX(2).padT(1).padB(1)}
             >
               In project
             </p>
             <for {projectRows()} as="row" key={row.key}>
               <row
-                data-theme-row
-                data-theme-id={row.id}
-                data-theme-scope="project"
-                data-selected={row.selected ? 'true' : 'false'}
+                theme-row
+                theme-id={row.id}
+                theme-scope="project"
+                selected={row.selected ? 'true' : 'false'}
                 aria-current={row.selected ? 'true' : null}
                 gap="3"
                 align="center"
@@ -158,9 +158,9 @@ export default controller(() => {
               >
                 <!-- Color identity: scoped token paint via theme= (registered tables) -->
                 <row
-                  data-theme-swatches
+                  theme-swatches
                   theme={row.previewId}
-                  data-mode={row.paintMode}
+                  mode={row.paintMode}
                   shrink="0"
                   gap="0"
                   nowrap
@@ -183,8 +183,8 @@ export default controller(() => {
                     variant="ghost"
                     tone="muted"
                     popovertarget={row.menuId}
-                    data-theme-menu
-                    data-theme-id={row.id}
+                    theme-menu
+                    theme-id={row.id}
                     aria-label="Theme menu"
                     aria-haspopup="menu"
                     on:click={onMenuOpen}
@@ -203,17 +203,17 @@ export default controller(() => {
 
           <if {hasCatalogRows()}>
             <p
-              data-list-group="catalog"
+              list-group="catalog"
               sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground).padX(2).padT(4).padB(1)}
             >
               Catalog
             </p>
             <for {catalogRows()} as="row" key={row.key}>
               <row
-                data-theme-row
-                data-theme-id={row.id}
-                data-theme-scope="catalog"
-                data-selected={row.selected ? 'true' : 'false'}
+                theme-row
+                theme-id={row.id}
+                theme-scope="catalog"
+                selected={row.selected ? 'true' : 'false'}
                 aria-current={row.selected ? 'true' : null}
                 gap="3"
                 align="center"
@@ -221,9 +221,9 @@ export default controller(() => {
                 sx={style.pad(2).radius(md).cursor(pointer).borderWidth(1).border(transparent).when({ hover: style.bg(hover-bg) }).when({ current: style.bg(selected-bg).border(selected-border) })}
               >
                 <row
-                  data-theme-swatches
+                  theme-swatches
                   theme={row.previewId}
-                  data-mode={row.paintMode}
+                  mode={row.paintMode}
                   shrink="0"
                   gap="0"
                   nowrap
@@ -246,8 +246,8 @@ export default controller(() => {
                     size="sm"
                     variant="outline"
                     tone="primary"
-                    data-theme-add-project
-                    data-theme-id={row.id}
+                    theme-add-project
+                    theme-id={row.id}
                     aria-label="Add to project"
                     on:click={onAddToProject}
                   >
@@ -259,8 +259,8 @@ export default controller(() => {
                     variant="ghost"
                     tone="muted"
                     popovertarget={row.menuId}
-                    data-theme-menu
-                    data-theme-id={row.id}
+                    theme-menu
+                    theme-id={row.id}
                     aria-label="Theme menu"
                     aria-haspopup="menu"
                     on:click={onMenuOpen}
@@ -282,22 +282,22 @@ export default controller(() => {
 
     <!-- PREVIEW -->
     <scroll-area
-      data-themes-preview
-      data-theme-preview-pane
+      themes-preview
+      theme-preview-pane
       grow
       min-w="0"
       sx={style.minH(0).basis(0).h(full).minW(0).bg(background)}
     >
       <column gap="6" sx={style.padX(8).padT(6).padB(10).maxW(panel-max-w-lg)}>
         <if {!hasSelected()}>
-          <empty-state variant="placeholder" size="sm" w="full" data-themes-preview-empty>
+          <empty-state variant="placeholder" size="sm" w="full" themes-preview-empty>
             <strong slot="title">Nothing selected</strong>
             Pick a theme in the library to preview its surfaces and controls.
           </empty-state>
         </if>
 
         <if {hasSelected()}>
-          <column data-preview-head gap="3">
+          <column preview-head gap="3">
             <row gap="2" align="center">
               <p sx={style.fontFamily(display).fontSize(2xl).fontWeight(medium).tracking(tight)}>
                 {previewTitle()}
@@ -307,7 +307,7 @@ export default controller(() => {
                   {previewStatusLabel()}
                 </badge>
               </if>
-              <badge tone="muted" size="sm" variant="outline" pill data-modes-chip>
+              <badge tone="muted" size="sm" variant="outline" pill modes-chip>
                 {previewModesLabel()}
               </badge>
             </row>
@@ -316,13 +316,13 @@ export default controller(() => {
 
             <!-- Mode: one sun/moon switch only (no Light/Dark button segments) -->
             <if {canToggleMode()}>
-              <row data-preview-mode data-dual-mode gap="2" align="center" nowrap aria-label="Theme mode">
+              <row preview-mode dual-mode gap="2" align="center" nowrap aria-label="Theme mode">
                 <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>Mode</p>
                 <icon name="sun" size="sm" label="Light" shrink="0" sx={style.fg(muted-foreground)}></icon>
                 <switch
                   size="sm"
                   tone="muted"
-                  data-mode-switch
+                  mode-switch
                   checked={modeDarkOn()}
                   aria-label={modeDarkOn() ? 'Switch to light mode' : 'Switch to dark mode'}
                   on:change={onPreviewModeSwitch}
@@ -331,22 +331,22 @@ export default controller(() => {
               </row>
             </if>
             <if {!canToggleMode()}>
-              <p data-mode-fixed sx={style.fontSize(xs).fg(muted-foreground)}>
+              <p mode-fixed sx={style.fontSize(xs).fg(muted-foreground)}>
                 This theme ships {previewModesLabel().toLowerCase()} — preview uses that table.
               </p>
             </if>
 
             <row gap="2" align="center">
               <if {previewInProject()}>
-                <button type="button" size="sm" variant="solid" tone="primary" data-preview-open on:click={onPreviewOpen}>
+                <button type="button" size="sm" variant="solid" tone="primary" preview-open on:click={onPreviewOpen}>
                   Open
                 </button>
               </if>
               <if {previewIsCatalog()}>
-                <button type="button" size="sm" variant="solid" tone="primary" data-preview-add-project on:click={onPreviewAddToProject}>
+                <button type="button" size="sm" variant="solid" tone="primary" preview-add-project on:click={onPreviewAddToProject}>
                   Add to project
                 </button>
-                <button type="button" size="sm" variant="outline" tone="primary" data-preview-open on:click={onPreviewOpen}>
+                <button type="button" size="sm" variant="outline" tone="primary" preview-open on:click={onPreviewOpen}>
                   Open
                 </button>
               </if>
@@ -354,15 +354,15 @@ export default controller(() => {
           </column>
 
           <!-- Color story -->
-          <column data-color-story gap="3">
+          <column color-story gap="3">
             <p sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)}>
               Color story
             </p>
             <row
               theme={previewPaintId()}
-              data-mode={previewModeId()}
+              mode={previewModeId()}
               gap="2"
-              data-color-story-grid
+              color-story-grid
             >
               <column grow gap="1" min-w="0">
                 <center sx={style.h(16).radius(md).bg(primary).borderWidth(1).border(border-subtle)}></center>
@@ -389,9 +389,9 @@ export default controller(() => {
 
           <!-- Type + radius under scoped theme -->
           <column
-            data-type-story
+            type-story
             theme={previewPaintId()}
-            data-mode={previewModeId()}
+            mode={previewModeId()}
             gap="2"
             sx={style.pad(4).radius(lg).borderWidth(1).border(border-subtle).bg(surface-1).fg(foreground)}
           >
@@ -408,7 +408,7 @@ export default controller(() => {
               mono — const theme = "preview"
             </p>
             <!-- Outline tiles so radius is legible; solid fills read as one blob when steps are close. -->
-            <row gap="2" align="end" data-radius-chips>
+            <row gap="2" align="end" radius-chips>
               <column gap="1" align="center">
                 <center sx={style.w(8).h(8).bg(transparent).borderWidth(2).border(primary).radius(sm)} aria-hidden="true"></center>
                 <p sx={style.fontSize(xs).fg(muted-foreground)}>sm</p>
@@ -429,14 +429,14 @@ export default controller(() => {
           </column>
 
           <!-- Live chrome specimen under scoped theme -->
-          <column data-preview-chrome gap="2">
+          <column preview-chrome gap="2">
             <p sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)}>
               Live chrome
             </p>
             <column
               theme={previewPaintId()}
-              data-mode={previewModeId()}
-              data-preview-specimen
+              mode={previewModeId()}
+              preview-specimen
               gap="0"
               sx={style.radius(lg).borderWidth(1).border(border).overflow(hidden).minW(0).shadow(md).bg(background).fg(foreground)}
             >
@@ -481,9 +481,9 @@ export default controller(() => {
   </row>
 
   <!-- Ephemeral notes: fixed overlay — does not reflow master–detail -->
-  <toast-region position="bottom-end" data-themes-toast-region>
+  <toast-region position="bottom-end" themes-toast-region>
     <for {toastItems()} as="t" key={t.key}>
-      <toast tone={t.tone} data-themes-toast on:sail-toast-dismiss={onToastDismiss}>
+      <toast tone={t.tone} themes-toast on:sail-toast-dismiss={onToastDismiss}>
         {t.message}
       </toast>
     </for>

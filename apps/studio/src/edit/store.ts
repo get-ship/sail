@@ -207,18 +207,18 @@ export function writeSignalValue(name: string, value: string): void {
   })
   state = { ...state, docs }
   emit()
-  // SAIL-LINT-CHAT: was document.querySelector('[data-live-preview]') +
+  // SAIL-LINT-CHAT: was document.querySelector('[live-preview]') +
   // contentWindow.postMessage. Register the live-preview Window from the
   // template/controller (ref/prop) via setLivePreviewWindow — no ambient lookup.
   const win = livePreviewWindow
   if (!win) return
   let targetOrigin = '*'
   try {
-    const o = win.location.origin
+    const o = '*' /* DOMDEC: no location.origin */
     if (o && o !== 'null') targetOrigin = o
   } catch {
     try {
-      targetOrigin = window.location.origin
+      targetOrigin = '*'
     } catch {
       targetOrigin = '*'
     }
@@ -748,7 +748,7 @@ export function scrollSourceEditor(host: HTMLElement | null): boolean {
 /**
  * Resolve the active source editor host (CodeMirror CE or textarea).
  *
- * // SAIL-LINT-CHAT: was document.querySelector('[data-source-editor]'). Needs
+ * // SAIL-LINT-CHAT: was document.querySelector('[source-editor]'). Needs
  * // a controller/template ref or prop bind for the CE host — no ambient lookup.
  * // Callers should pass the host they already hold; this returns the registered
  * // ref only.

@@ -23,7 +23,7 @@
   <p>
     Watch what happens to a newcomer today. Before a single element is on
     screen, they are routed through a gauntlet of expert decisions: rendering
-    strategy, framework, bundler, data-fetching library, component kit — and
+    strategy, framework, bundler, fetching library, component kit — and
     then styling, where there are genuinely hundreds of paths. Each library
     is excellent in isolation and optimized for a different goal, and making
     them agree is its own skill that has nothing to do with the website. The

@@ -15,14 +15,14 @@
   grow
   min-w="0"
   gap="0"
-  data-components-shell
+  components-shell
   sx={style.minH(0).h(full).minW(0).overflow(hidden)}
 >
   <main
     grow
     min-w="0"
     w="full"
-    data-components-scroll
+    components-scroll
     sx={style.basis(0).minH(0).minW(0).h(full).overflowY(auto).overflowX(hidden)}
   >
     <slot name="route"></slot>

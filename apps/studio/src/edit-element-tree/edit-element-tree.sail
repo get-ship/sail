@@ -17,8 +17,8 @@ export default controller(() => {
 </controller>
 
 <column
-  data-element-tree
-  data-components-tree
+  element-tree
+  components-tree
   gap="0"
   grow
   sx={style.minH(0).basis(0).minW(0).h(full).overflow(hidden)}
@@ -33,7 +33,7 @@ export default controller(() => {
       Components
     </p>
     <p
-      data-element-file
+      element-file
       grow
       min-w="0"
       sx={style.fontSize(xs).fg(muted-foreground).truncate().fontFamily(mono)}
@@ -47,7 +47,7 @@ export default controller(() => {
         variant="placeholder"
         size="sm"
         w="full"
-        data-elements-empty
+        elements-empty
         sx={style.borderWidth(1).border(border-subtle).radius(md).pad(3)}
       >
         <strong slot="title">No elements yet</strong>
@@ -56,8 +56,8 @@ export default controller(() => {
     </if>
     <if {hasElements()}>
       <sail-tree
-        data-element-tree-host
-        data-layer-badge
+        element-tree-host
+        layer-badge
         tree={tree}
         label="Component tree"
         selectable="single"

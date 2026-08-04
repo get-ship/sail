@@ -102,7 +102,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       void packSel()
       void visibleList()
       requestAnimationFrame(() => {
-        document.querySelectorAll('[data-tile="sail-media-image"] sail-media-image').forEach((el) => {
+        document.querySelectorAll('[tile]="sail-media-image"] sail-media-image').forEach((el) => {
           const host = el as HTMLElement & { src?: string }
           if (host.src !== DEMO_PHOTO) host.src = DEMO_PHOTO
         })
@@ -204,9 +204,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 
     <grid cols="2" gap="3">
         <for {visibleList()} as="e" key={e.key}>
-          <card padding="none" data-tile={e.tag} data-live={e.live ? 'true' : null} sx={tile}>
+          <card padding="none" tile={e.tag} live={e.live ? 'true' : null} sx={tile}>
             <column gap="0" sx={tileCol}>
-              <row data-preview align="center" justify="center" grow w="full" sx={preview}>
+              <row preview align="center" justify="center" grow w="full" sx={preview}>
                 <if {!e.live}>
                   <p sx={dormant}>Select pack in the rail to mount</p>
                 <else-if {e.tag === 'button'}>

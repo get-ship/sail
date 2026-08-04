@@ -89,7 +89,7 @@ export function unbindPreviewHost(host: HTMLElement | null | undefined): void {
     }
     teardowns.delete(host)
   }
-  host.removeAttribute('data-draft-paint')
+  host.removeAttribute('draft-paint')
 }
 
 export function teardownDraftPaint(): void {
@@ -151,19 +151,19 @@ function applyOne(host: HTMLElement, opts: DraftPaintOpts): void {
 
   const fn = getDraftPaintApplier()
   if (fn) {
-    host.setAttribute('data-draft-paint', opts.doc ? 'apply' : 'registered')
+    host.setAttribute('draft-paint', opts.doc ? 'apply' : 'registered')
     try {
       const td = fn(host, opts)
       if (typeof td === 'function') teardowns.set(host, td)
     } catch (e) {
-      host.setAttribute('data-draft-paint', 'error')
+      host.setAttribute('draft-paint', 'error')
       console.warn('[theme-draft-paint] applier failed', e)
     }
     return
   }
 
   // Explicit null applier (tests): registered attrs only.
-  host.setAttribute('data-draft-paint', 'registered')
+  host.setAttribute('draft-paint', 'registered')
   applyRegisteredAttrs(host, opts)
 }
 
@@ -172,9 +172,9 @@ function applyRegisteredAttrs(host: HTMLElement, opts: DraftPaintOpts): void {
   // Author IR `theme` + mode — paint authority for registered tables
   // (`[theme=id]` in themes.css). Never data-theme / data-theme-preview.
   host.setAttribute('theme', id)
-  host.removeAttribute('data-theme')
-  host.removeAttribute('data-theme-preview')
-  host.setAttribute('data-mode', opts.mode)
+  host.removeAttribute('theme')
+  host.removeAttribute('theme-preview')
+  host.setAttribute('mode', opts.mode)
 }
 
 /** Test helper — bound host count. */

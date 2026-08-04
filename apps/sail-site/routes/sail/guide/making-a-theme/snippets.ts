@@ -118,9 +118,9 @@ applyMode('dark')           // mode switch — not a twin theme id
 persistTheme('sandstone')   // localStorage, and the host transport if one is set`,
 
   // packages/sail/tokens/src/products.css, verbatim (the whole file body).
-  products: `:root[data-product='ship']       { --brand-hue: 195; }  /* teal   — umbrella */
-:root[data-product='sail']        { --brand-hue: 27; }   /* red    — the framework */
-:root[data-product='deck']       { --brand-hue: 285; }  /* violet — the app framework */
-:root[data-product='components'] { --brand-hue: 155; }  /* green  — the library */
-:root[data-product='ai']         { --brand-hue: 255; }  /* blue   — agent tooling */`,
+  products: `:root[product]='ship']       { --brand-hue: 195; }  /* teal   — umbrella */
+:root[product]='sail']        { --brand-hue: 27; }   /* red    — the framework */
+:root[product]='deck']       { --brand-hue: 285; }  /* violet — the app framework */
+:root[product]='components'] { --brand-hue: 155; }  /* green  — the library */
+:root[product]='ai']         { --brand-hue: 255; }  /* blue   — agent tooling */`,
 }

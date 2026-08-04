@@ -406,7 +406,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             <if {stage.toast()}>
               <toast tone={variant()} duration="0" w="full" max-w="panel-max-w-sm">
                 <strong>Saved.</strong> Sticky at duration 0 — hover pauses real ones.
-                <button data-toast-close variant="ghost" size="sm">×</button>
+                <button toast-close variant="ghost" size="sm">×</button>
               </toast>
             </if>
 
@@ -668,83 +668,83 @@ export default controller((ctx: ControllerScope<Scope>) => {
 
             <!-- ══ Pack components ═══════════════════════════════════════ -->
             <if {stage.sailSparkline()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-sparkline">
+              <column gap="3" align="center" tile-stage="sail-pack-sparkline">
                 <sail-sparkline data="2,5,3,8,4,6,7" width="200" height="60"></sail-sparkline>
               </column>
             </if>
             <if {stage.sailAreaChart()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-area-chart">
+              <column gap="3" align="center" tile-stage="sail-pack-area-chart">
                 <sail-area-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="200" height="120"></sail-area-chart>
               </column>
             </if>
             <if {stage.sailBarChart()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-bar-chart">
+              <column gap="3" align="center" tile-stage="sail-pack-bar-chart">
                 <sail-bar-chart data="2,5,3,8,4" labels="A,B,C,D,E" width="200" height="120"></sail-bar-chart>
               </column>
             </if>
             <if {stage.sailDonut()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-donut">
+              <column gap="3" align="center" tile-stage="sail-pack-donut">
                 <sail-donut data='[{"label":"a","value":40},{"label":"b","value":30},{"label":"c","value":30}]' diameter="120" thickness="12"></sail-donut>
               </column>
             </if>
             <if {stage.sailGauge()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-gauge">
+              <column gap="3" align="center" tile-stage="sail-pack-gauge">
                 <sail-gauge value="72" diameter="120" thickness="12"></sail-gauge>
               </column>
             </if>
             <if {stage.sailHeatmap()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-heatmap">
+              <column gap="3" align="center" tile-stage="sail-pack-heatmap">
                 <sail-heatmap rows="4" cols="6" values="1,2,3,4,3,2,4,5,6,5,4,3,2,1,2,3,4,3,2,1,2,3,4,5" cell-size="22" gap="3"></sail-heatmap>
               </column>
             </if>
             <if {stage.sailLineChart()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-line-chart">
+              <column gap="3" align="center" tile-stage="sail-pack-line-chart">
                 <sail-line-chart series='[{"name":"a","data":[2,4,3,5]}]' labels="Q1,Q2,Q3,Q4" width="200" height="120"></sail-line-chart>
               </column>
             </if>
             <if {stage.sailMediaImage()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-media-image" sx={style.w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden).radius(md)}>
+              <column gap="3" align="center" tile-stage="sail-pack-media-image" sx={style.w(full).maxW(panel-max-w-sm).h(48).minH(48).overflow(hidden).radius(md)}>
                 <sail-media-image alt="Harbor at dusk" fit="cover" zoomable={false} sx={style.w(full).h(full)}></sail-media-image>
               </column>
             </if>
             <if {stage.sailMediaAv()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-media-av">
+              <column gap="3" align="center" tile-stage="sail-pack-media-av">
                 <sail-media-av></sail-media-av>
               </column>
             </if>
             <if {stage.sailCodeEditor()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-code-editor">
+              <column gap="3" align="center" tile-stage="sail-pack-code-editor">
                 <sail-code-editor value="const greeting = 'hi';" language="js" line-numbers size="md"></sail-code-editor>
               </column>
             </if>
             <if {stage.sailMermaid()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-mermaid">
+              <column gap="3" align="center" tile-stage="sail-pack-mermaid">
                 <sail-mermaid value="graph TD; A[Idea]-->B[Build]; B-->C[Ship]"></sail-mermaid>
               </column>
             </if>
             <if {stage.sailMessage()}>
-              <column gap="3" w="full" max-w="panel-max-w-md" data-tile-stage="sail-pack-message">
+              <column gap="3" w="full" max-w="panel-max-w-md" tile-stage="sail-pack-message">
                 <sail-message role="user" status="sent">Can you summarize yesterday's deploy?</sail-message>
                 <sail-message role="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
               </column>
             </if>
             <if {stage.sailCitation()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-citation">
+              <column gap="3" align="center" tile-stage="sail-pack-citation">
                 <sail-citation source="docs.ship.dev" href="https://docs.ship.dev">Deploy pipeline overview</sail-citation>
               </column>
             </if>
             <if {stage.sailComposer()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-composer">
+              <column gap="3" align="center" tile-stage="sail-pack-composer">
                 <sail-composer placeholder="Message the agent…"></sail-composer>
               </column>
             </if>
             <if {stage.sailThinkingDots()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-thinking-dots">
+              <column gap="3" align="center" tile-stage="sail-pack-thinking-dots">
                 <sail-thinking-dots></sail-thinking-dots>
               </column>
             </if>
             <if {stage.sailToolCall()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-tool-call">
+              <column gap="3" align="center" tile-stage="sail-pack-tool-call">
                 <sail-tool-call name="list_deploys" status="ok" open>
                   {`{ "env": "prod", "limit": 5 }`}
                   <span slot="result">{`[{ "id": "d-1842", "status": "healthy" }]`}</span>
@@ -752,39 +752,39 @@ export default controller((ctx: ControllerScope<Scope>) => {
               </column>
             </if>
             <if {stage.sailCanvas()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-canvas">
+              <column gap="3" align="center" tile-stage="sail-pack-canvas">
                 <sail-canvas width="200" height="120"></sail-canvas>
               </column>
             </if>
             <if {stage.sailBoard()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-board">
+              <column gap="3" align="center" tile-stage="sail-pack-board">
                 <sail-board width="200" height="120">
                   <sail-canvas width="200" height="120"></sail-canvas>
                 </sail-board>
               </column>
             </if>
             <if {stage.sailDraw()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-draw">
+              <column gap="3" align="center" tile-stage="sail-pack-draw">
                 <sail-draw width="200" height="120"></sail-draw>
               </column>
             </if>
             <if {stage.sailGraphCanvas()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-graph-canvas">
+              <column gap="3" align="center" tile-stage="sail-pack-graph-canvas">
                 <sail-graph-canvas width="200" height="120" nodes='[{"id":"a","kind":"agent","title":"A","x":80,"y":60},{"id":"b","kind":"skill","title":"B","x":120,"y":60}]' edges="[]"></sail-graph-canvas>
               </column>
             </if>
             <if {stage.sailAnnotationLayer()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-annotation-layer">
+              <column gap="3" align="center" tile-stage="sail-pack-annotation-layer">
                 <sail-annotation-layer></sail-annotation-layer>
               </column>
             </if>
             <if {stage.sailAnnotationList()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-annotation-list">
+              <column gap="3" align="center" tile-stage="sail-pack-annotation-list">
                 <sail-annotation-list></sail-annotation-list>
               </column>
             </if>
             <if {stage.sailAnnotationMarker()}>
-              <column gap="3" align="center" data-tile-stage="sail-pack-annotation-marker">
+              <column gap="3" align="center" tile-stage="sail-pack-annotation-marker">
                 <sail-annotation-marker x="50" y="30"></sail-annotation-marker>
               </column>
             </if>

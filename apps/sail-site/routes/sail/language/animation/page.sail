@@ -124,7 +124,7 @@ sx={style.pad(4).enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opaci
     the same loop — one at 500&nbsp;ms, one at 2500&nbsp;ms:
   </p>
   <row gap="5" align="center" sx={style.minH(9)}>
-    <div data-testid="inline-demo" sx={style.w(8).h(8).radius(md).bg(primary).loop({ translate-x: { from: 0, to: '80px' }, duration: 500 })}></div>
+    <div testid="inline-demo" sx={style.w(8).h(8).radius(md).bg(primary).loop({ translate-x: { from: 0, to: '80px' }, duration: 500 })}></div>
     <div sx={style.w(8).h(8).radius(md).bg(primary).opacity(75).loop({ translate-x: { from: 0, to: '80px' }, duration: 2500 })}></div>
   </row>
   <code-block code={code.express}></code-block>
@@ -159,13 +159,13 @@ sx={style.pad(4).enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opaci
     offsets siblings so a row reads as a wave. A user whose system asks for
     reduced motion gets none of this, automatically.
   </p>
-  <row gap="3" align="center" sx={style.minH(9)} data-testid="loop-row">
-    <div data-testid="ambient-dot" sx={style.w(4).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })}></div>
+  <row gap="3" align="center" sx={style.minH(9)} testid="loop-row">
+    <div testid="ambient-dot" sx={style.w(4).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })}></div>
     <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })}></div>
     <div sx={style.w(4).h(4).radius(full).bg(primary).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })}></div>
     <div sx={style.w(4).h(4).radius(full).bg(primary).opacity(75).loop({ translate-y: 'spring:gentle', stagger: '0.15s' })}></div>
     <row grow></row>
-    <div data-testid="spin-demo" sx={style.w(8).h(8).radius(md).bg(primary).loop({ rotate: 'spin' })}></div>
+    <div testid="spin-demo" sx={style.w(8).h(8).radius(md).bg(primary).loop({ rotate: 'spin' })}></div>
   </row>
   <code-block code={code.loop}></code-block>
 
@@ -197,7 +197,7 @@ sx={style.pad(4).enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opaci
         max="100"
         step="1"
         bind:value={scrubText}
-        data-testid="timeline-scrub"
+        testid="timeline-scrub"
         grow min-w="0"
       />
       <span sx={style.w(8).textAlign(end).fontFamily(mono).fontSize(sm).fg(muted-foreground)}>{scrubText()}</span>
@@ -209,7 +209,7 @@ sx={style.pad(4).enter({ opacity: 'fade', scale: 'spring:snappy' }).exit({ opaci
         Matches the stagger tiles above.
       -->
       <div
-        data-testid="timeline-tile"
+        testid="timeline-tile"
         shrink="0"
         sx={style.w(9).h(9).bg(primary).radius(md).translateX(bind(tileX)).rotate(bind(tileRotate)).scale(bind(tileScale))}
       ></div>

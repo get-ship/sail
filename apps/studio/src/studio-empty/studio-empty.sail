@@ -12,7 +12,7 @@
 </scope>
 
 <empty-state
-  data-studio-empty
+  studio-empty
   variant={variant()}
   size={size()}
   w="full"

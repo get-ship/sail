@@ -57,9 +57,9 @@ export default controller(() => {
 </controller>
 
 <column
-  data-surface="themes"
-  data-theme-overview-surface
-  data-overview-chrome
+  surface="themes"
+  theme-overview-surface
+  overview-chrome
   gap="0"
   grow
   sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
@@ -67,24 +67,24 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row data-overview-error align="center" gap="2" shrink="0" sx={bandError}>
+    <row overview-error align="center" gap="2" shrink="0" sx={bandError}>
       <p grow min-w="0" sx={style.fontSize(sm).fg(destructive).truncate()}>{session.errorText()}</p>
-      <button type="button" size="sm" variant="ghost" data-overview-retry on:click={session.onRetry}>
+      <button type="button" size="sm" variant="ghost" overview-retry on:click={session.onRetry}>
         Retry
       </button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row data-overview-loading align="center" gap="2" shrink="0" sx={bandStatus}>
+    <row overview-loading align="center" gap="2" shrink="0" sx={bandStatus}>
       <spinner size="sm"></spinner>
       <p sx={fieldHint}>Loading…</p>
     </row>
   </if>
 
   <row
-    data-overview-workbench
-    data-editorial-split
+    overview-workbench
+    editorial-split
     grow
     gap="0"
     nowrap
@@ -92,36 +92,36 @@ export default controller(() => {
     sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)}
   >
     <scroll-area
-      data-identity-column
+      identity-column
       grow
       min-w="0"
       sx={style.minH(0).basis(0).h(full).minW(0).bg(background)}
     >
       <column gap="8" sx={identityCol}>
-        <column data-color-hero gap="3">
+        <column color-hero gap="3">
           <p sx={sectionTitle}>Color</p>
-          <row data-hero-colors gap="3" align="stretch">
-            <column data-hero-card data-role="primary" grow gap="0" min-w="0" sx={heroCard}>
-              <stack use:swatch={primaryHex()} data-state={session.canEdit() ? 'edit' : 'locked'} sx={heroSwatch}>
-                <sail-color-picker data-role="primary" value={primaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} aria-label="Primary" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
+          <row hero-colors gap="3" align="stretch">
+            <column hero-card role="primary" grow gap="0" min-w="0" sx={heroCard}>
+              <stack use:swatch={primaryHex()} state={session.canEdit() ? 'edit' : 'locked'} sx={heroSwatch}>
+                <sail-color-picker role="primary" value={primaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} aria-label="Primary" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
               </stack>
               <row align="center" justify="between" sx={heroMeta}>
                 <p sx={doorTitle}>Primary</p>
                 <p sx={monoMeta}>{primaryHex()}</p>
               </row>
             </column>
-            <column data-hero-card data-role="secondary" grow gap="0" min-w="0" sx={heroCard}>
-              <stack use:swatch={secondaryHex()} data-state={session.canEdit() ? 'edit' : 'locked'} sx={heroSwatch}>
-                <sail-color-picker data-role="secondary" value={secondaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} aria-label="Secondary" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
+            <column hero-card role="secondary" grow gap="0" min-w="0" sx={heroCard}>
+              <stack use:swatch={secondaryHex()} state={session.canEdit() ? 'edit' : 'locked'} sx={heroSwatch}>
+                <sail-color-picker role="secondary" value={secondaryHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} aria-label="Secondary" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
               </stack>
               <row align="center" justify="between" sx={heroMeta}>
                 <p sx={doorTitle}>Secondary</p>
                 <p sx={monoMeta}>{secondaryHex()}</p>
               </row>
             </column>
-            <column data-hero-card data-role="accent" grow gap="0" min-w="0" sx={heroCard}>
-              <stack use:swatch={accentHex()} data-state={session.canEdit() ? 'edit' : 'locked'} sx={heroSwatch}>
-                <sail-color-picker data-role="accent" value={accentHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} aria-label="Accent" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
+            <column hero-card role="accent" grow gap="0" min-w="0" sx={heroCard}>
+              <stack use:swatch={accentHex()} state={session.canEdit() ? 'edit' : 'locked'} sx={heroSwatch}>
+                <sail-color-picker role="accent" value={accentHex()} disabled={!session.canEdit()} variant="swatch" showHex={false} aria-label="Accent" on:sail-change={overview.onHeroColor} sx={style.w(full).h(20).minH(20)}></sail-color-picker>
               </stack>
               <row align="center" justify="between" sx={heroMeta}>
                 <p sx={doorTitle}>Accent</p>
@@ -130,17 +130,17 @@ export default controller(() => {
             </column>
           </row>
           <if {session.catalogHint()}>
-            <p data-catalog-hint sx={fieldHint}>Add to project to edit.</p>
+            <p catalog-hint sx={fieldHint}>Add to project to edit.</p>
           </if>
         </column>
 
-        <grid cols="3" gap="3" data-editorial-band>
-          <column data-panel="type" gap="3" sx={panelCard}>
+        <grid cols="3" gap="3" editorial-band>
+          <column panel="type" gap="3" sx={panelCard}>
             <p sx={sectionTitle}>Type</p>
             <column gap="3">
               <column gap="1">
                 <p sx={fieldHint}>Display</p>
-                <select data-type-role="display" size="sm" value={overview.typeDisplay()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
+                <select type-role="display" size="sm" value={overview.typeDisplay()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
                   <for {overview.displayFontOpts()} as="o" key={o.key}>
                     <option value={o.value}>{o.label}</option>
                   </for>
@@ -148,7 +148,7 @@ export default controller(() => {
               </column>
               <column gap="1">
                 <p sx={fieldHint}>Body</p>
-                <select data-type-role="body" size="sm" value={overview.typeBody()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
+                <select type-role="body" size="sm" value={overview.typeBody()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
                   <for {overview.bodyFontOpts()} as="o" key={o.key}>
                     <option value={o.value}>{o.label}</option>
                   </for>
@@ -156,7 +156,7 @@ export default controller(() => {
               </column>
               <column gap="1">
                 <p sx={fieldHint}>Mono</p>
-                <select data-type-role="mono" size="sm" value={overview.typeMono()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
+                <select type-role="mono" size="sm" value={overview.typeMono()} disabled={!session.canEdit()} on:change={overview.onTypeSelect}>
                   <for {overview.monoFontOpts()} as="o" key={o.key}>
                     <option value={o.value}>{o.label}</option>
                   </for>
@@ -165,17 +165,17 @@ export default controller(() => {
             </column>
           </column>
 
-          <column data-panel="icons" gap="3" sx={panelCard}>
+          <column panel="icons" gap="3" sx={panelCard}>
             <p sx={sectionTitle}>Icons</p>
             <column gap="1">
               <p sx={fieldHint}>Pack</p>
-              <select data-icon-pack size="sm" value={overview.iconPack()} disabled={!session.canEdit()} on:change={overview.onIconPack}>
+              <select icon-pack size="sm" value={overview.iconPack()} disabled={!session.canEdit()} on:change={overview.onIconPack}>
                 <option value="lucide">Lucide</option>
                 <option value="phosphor">Phosphor</option>
               </select>
             </column>
             <if {overview.hasIconGlyphs()}>
-              <grid cols="4" gap="2" data-icon-sample sx={style.padT(1)}>
+              <grid cols="4" gap="2" icon-sample sx={style.padT(1)}>
                 <for {overview.iconGlyphs()} as="g" key={g.key}>
                   <center shrink="0" sx={iconCell} title={g.name}>
                     <icon name={g.name} size="sm" label={g.name}></icon>
@@ -185,14 +185,14 @@ export default controller(() => {
             </if>
           </column>
 
-          <column data-panel="density" gap="3" sx={panelCard}>
+          <column panel="density" gap="3" sx={panelCard}>
             <p sx={sectionTitle}>Density</p>
-            <column data-density-seg gap="2" on:click={overview.onDensityClick}>
+            <column density-seg gap="2" on:click={overview.onDensityClick}>
               <for {overview.densityOptions()} as="d" key={d.key}>
                 <button
                   type="button"
                   size="sm"
-                  data-density={d.id}
+                  density={d.id}
                   variant={d.on ? 'solid' : 'soft'}
                   tone={d.on ? 'primary' : 'muted'}
                   aria-pressed={d.on ? 'true' : 'false'}
@@ -206,11 +206,11 @@ export default controller(() => {
           </column>
         </grid>
 
-        <column data-doors-row gap="3">
+        <column doors-row gap="3">
           <p sx={sectionTitle}>More detail</p>
-          <grid cols="2" gap="3" data-facet-doors on:click={session.onFacet}>
+          <grid cols="2" gap="3" facet-doors on:click={session.onFacet}>
             <for {overview.facetDoors()} as="door" key={door.key}>
-              <card data-facet={door.facet} sx={doorCard}>
+              <card facet={door.facet} sx={doorCard}>
                 <row gap="2" align="center">
                   <icon name={door.icon} size="sm" shrink="0" sx={mutedIcon}></icon>
                   <column gap="0" grow min-w="0">
@@ -226,7 +226,7 @@ export default controller(() => {
     </scroll-area>
 
     <column
-      data-specimen-dock
+      specimen-dock
       gap="0"
       grow
       min-w="0"
@@ -234,16 +234,16 @@ export default controller(() => {
     >
       <column grow gap="0" sx={style.minH(0).h(full).pad(4)}>
         <card
-          data-overview-specimen
-          data-preview-specimen
-          data-mode={session.paintMode()}
-          data-density={overview.specimenDensity()}
+          overview-specimen
+          preview-specimen
+          mode={session.paintMode()}
+          density={overview.specimenDensity()}
           padding="none"
           sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}
         >
           <column gap="0" grow sx={style.minH(0).h(full)}>
             <row
-              data-specimen-chrome
+              specimen-chrome
               align="center"
               gap="2"
               nowrap
@@ -264,21 +264,21 @@ export default controller(() => {
                 which beats sx.gap(bind). stack rejects style.display (owns flex itself).
               -->
               <div
-                data-specimen-body
+                specimen-body
                 sx={style.display(flex).flexDir(column).w(full).minW(0).pad(bind(densityPad)).gap(bind(specimenGap))}
               >
-                <row gap="2" align="center" nowrap data-specimen-buttons>
+                <row gap="2" align="center" nowrap specimen-buttons>
                   <button type="button" size={overview.controlSize()} variant="solid" tone="primary">Primary</button>
                   <button type="button" size={overview.controlSize()} variant="solid" tone="accent">Accent</button>
                   <button type="button" size={overview.controlSize()} variant="outline" tone="primary">Outline</button>
                 </row>
-                <row gap="2" align="center" nowrap data-specimen-badges>
+                <row gap="2" align="center" nowrap specimen-badges>
                   <badge tone="primary" size={overview.badgeSize()} variant="solid" pill>Primary</badge>
                   <badge tone="success" size={overview.badgeSize()} variant="solid" pill>Success</badge>
                   <badge tone="warning" size={overview.badgeSize()} variant="solid" pill>Warning</badge>
                   <badge tone="destructive" size={overview.badgeSize()} variant="solid" pill>Danger</badge>
                 </row>
-                <div data-type-samples sx={style.display(flex).flexDir(column).gap(bind(specimenStackGap))}>
+                <div type-samples sx={style.display(flex).flexDir(column).gap(bind(specimenStackGap))}>
                   <p sx={style.fontFamily(display).fontSize(xl).fontWeight(semibold).tracking(tight)}>
                     {overview.typeDisplay()}
                   </p>
@@ -290,7 +290,7 @@ export default controller(() => {
                   </p>
                 </div>
                 <if {overview.hasIconGlyphs()}>
-                  <row data-specimen-icons gap="2" align="center" nowrap>
+                  <row specimen-icons gap="2" align="center" nowrap>
                     <for {overview.iconGlyphs()} as="g" key={g.key}>
                       <icon name={g.name} size={overview.iconSize()} label={g.name} shrink="0"></icon>
                     </for>
@@ -320,9 +320,9 @@ export default controller(() => {
     </column>
   </row>
 
-  <toast-region position="bottom-end" data-overview-toast-region>
+  <toast-region position="bottom-end" overview-toast-region>
     <for {session.toastItems()} as="t" key={t.key}>
-      <toast tone={t.tone} data-overview-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} overview-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

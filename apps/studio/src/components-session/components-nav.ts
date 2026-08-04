@@ -18,9 +18,8 @@ export function componentHref(id: string, mode?: ComponentMode): string {
 }
 
 /** Component id from /components or /components/:id (app-base aware). */
-export function componentIdFromLocation(pathname?: string): string {
-  if (typeof location === 'undefined' && !pathname) return ''
-  const path = pathname ?? (typeof location !== 'undefined' ? location.pathname : '')
+export function componentIdFromLocation(pathname = ''): string {
+  const path = pathname
   const base = appRouteBase()
   const rest = base && path.startsWith(base) ? path.slice(base.length) : path
   // /components/inspect is a mode segment, not an id
@@ -29,18 +28,14 @@ export function componentIdFromLocation(pathname?: string): string {
   return m ? decodeURIComponent(m[1]!) : ''
 }
 
-export function modeFromLocation(search?: string, pathname?: string): ComponentMode {
-  const path =
-    pathname ??
-    (typeof location !== 'undefined' ? location.pathname : '')
+export function modeFromLocation(search = '', pathname = ''): ComponentMode {
+  const path = pathname
   const base = appRouteBase()
   const rest = base && path.startsWith(base) ? path.slice(base.length) : path
   if (rest === '/components/inspect' || rest.startsWith('/components/inspect/')) {
     return 'inspect'
   }
-  const raw =
-    search ??
-    (typeof location !== 'undefined' ? location.search : '')
+  const raw = search
   try {
     const q = new URLSearchParams(raw.startsWith('?') ? raw : `?${raw}`)
     if (q.get('mode') === 'inspect') return 'inspect'

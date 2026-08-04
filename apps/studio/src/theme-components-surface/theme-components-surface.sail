@@ -41,9 +41,9 @@ export default controller(() => {
 </controller>
 
 <column
-  data-surface="themes"
-  data-theme-components-surface
-  data-components-chrome
+  surface="themes"
+  theme-components-surface
+  components-chrome
   gap="0"
   grow
   sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
@@ -51,14 +51,14 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row data-components-error align="center" gap="2" shrink="0" sx={bandError}>
+    <row components-error align="center" gap="2" shrink="0" sx={bandError}>
       <p grow min-w="0" sx={style.fontSize(sm).fg(destructive).truncate()}>{session.errorText()}</p>
-      <button type="button" size="sm" variant="ghost" data-components-retry on:click={session.onRetry}>Retry</button>
+      <button type="button" size="sm" variant="ghost" components-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row data-components-loading align="center" gap="2" shrink="0" sx={bandStatus}>
+    <row components-loading align="center" gap="2" shrink="0" sx={bandStatus}>
       <spinner size="sm"></spinner>
       <p sx={fieldHint}>Loading…</p>
     </row>
@@ -66,7 +66,7 @@ export default controller(() => {
 
   <!-- Storybook-ish: rail | LARGE stage | inspector -->
   <row
-    data-components-workbench
+    components-workbench
     grow
     gap="0"
     nowrap
@@ -75,7 +75,7 @@ export default controller(() => {
   >
     <!-- LEFT: component catalog rail -->
     <scroll-area
-      data-components-rail
+      components-rail
       shrink="0"
       sx={style.minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full).borderRWidth(1).borderR(border-subtle).bg(background)}
     >
@@ -83,7 +83,7 @@ export default controller(() => {
         <column gap="2">
           <p sx={eyebrow}>Components</p>
           <p sx={style.fontSize(md).fontWeight(semibold).tracking(tight)}>Theme overrides</p>
-          <p sx={fieldHint} data-l1-facet-blurb>
+          <p sx={fieldHint} l1-facet-blurb>
             Per-element exceptions for this theme — not the project Components library.
           </p>
           <row gap="2" align="center" nowrap>
@@ -95,7 +95,7 @@ export default controller(() => {
           <input
             type="search"
             size="sm"
-            data-l1-filter
+            l1-filter
             value={components.filter()}
             on:input={components.onFilterInput}
             placeholder="Filter components…"
@@ -103,11 +103,11 @@ export default controller(() => {
             aria-label="Filter components"
           />
         </column>
-        <column data-l1-list gap="1" on:click={components.onSelect}>
+        <column l1-list gap="1" on:click={components.onSelect}>
           <for {components.componentRows()} as="row" key={row.key}>
             <row
-              data-l1={row.id}
-              data-selected={row.selected ? 'true' : 'false'}
+              l1={row.id}
+              selected={row.selected ? 'true' : 'false'}
               aria-selected={row.selected ? 'true' : 'false'}
               align="center"
               gap="2"
@@ -129,8 +129,8 @@ export default controller(() => {
 
     <!-- CENTER: large live specimen stage -->
     <column
-      data-specimen-dock
-      data-components-stage
+      specimen-dock
+      components-stage
       gap="0"
       grow
       min-w="0"
@@ -143,15 +143,15 @@ export default controller(() => {
           Frame chrome shows theme name + mode — no external Preview/light label.
         -->
         <card
-          data-components-specimen
-          data-preview-specimen
-          data-mode={session.paintMode()}
+          components-specimen
+          preview-specimen
+          mode={session.paintMode()}
           padding="none"
           sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}
         >
           <column gap="0" grow sx={style.minH(0).h(full)}>
             <row
-              data-specimen-chrome
+              specimen-chrome
               align="center"
               gap="2"
               nowrap
@@ -171,7 +171,7 @@ export default controller(() => {
 
             <if {components.hasVariants()}>
               <row
-                data-specimen-variants
+                specimen-variants
                 align="center"
                 gap="2"
                 nowrap
@@ -186,7 +186,7 @@ export default controller(() => {
                     size="sm"
                     tone="primary"
                     variant={c.btnVariant}
-                    data-variant={c.v}
+                    variant={c.v}
                   >
                     {c.v}
                   </button>
@@ -196,8 +196,8 @@ export default controller(() => {
 
             <scroll-area grow sx={style.minH(0).basis(0).h(full).bg(background)}>
               <column
-                data-specimen-body
-                data-l1-live-stage={components.selectedId()}
+                specimen-body
+                l1-live-stage={components.selectedId()}
                 gap="5"
                 align="stretch"
                 sx={style.pad(5).minW(0).minH(full)}
@@ -212,7 +212,7 @@ export default controller(() => {
                   <p sx={pathMeta}>{components.registryNote()}</p>
                 </column>
 
-                <column gap="4" align="start" w="full" data-l1-stage-host>
+                <column gap="4" align="start" w="full" l1-stage-host>
 
                   <!-- ── Inputs ─────────────────────────────────────── -->
                   <if {components.stage.button()}>
@@ -597,8 +597,8 @@ export default controller(() => {
 
     <!-- RIGHT: override inspector -->
     <scroll-area
-      data-components-editor
-      data-components-inspector
+      components-editor
+      components-inspector
       shrink="0"
       sx={style.minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background)}
     >
@@ -610,34 +610,34 @@ export default controller(() => {
           </p>
           <p sx={fieldHint}>{components.registryNote()}</p>
           <if {session.catalogHint()}>
-            <p data-catalog-hint sx={fieldHint}>Add to project to edit.</p>
+            <p catalog-hint sx={fieldHint}>Add to project to edit.</p>
           </if>
         </column>
 
-        <column data-section="component-tokens" gap="3">
+        <column section="component-tokens" gap="3">
           <row align="baseline" justify="between" gap="2" nowrap>
             <p sx={sectionTitle}>Component tokens</p>
             <p sx={pathMeta}>component.*</p>
           </row>
           <if {components.hasComponentKnobs()}>
-            <column gap="3" data-component-knob-list>
+            <column gap="3" component-knob-list>
               <for {components.componentKnobs()} as="tok" key={tok.key}>
-                <column data-token-path={tok.path} gap="1" sx={tokenRow}>
+                <column token-path={tok.path} gap="1" sx={tokenRow}>
                   <row align="center" justify="between" gap="2" nowrap>
                     <column gap="0" grow min-w="0">
                       <p sx={doorTitle}>{tok.label}</p>
                       <p sx={pathMeta}>{tok.path}</p>
                     </column>
                     <if {tok.isOverridden}>
-                      <button type="button" size="sm" variant="ghost" tone="muted" data-token-path={tok.path} on:click={components.onClearComponent} disabled={!session.canEdit()}>
+                      <button type="button" size="sm" variant="ghost" tone="muted" token-path={tok.path} on:click={components.onClearComponent} disabled={!session.canEdit()}>
                         Clear
                       </button>
                     </if>
                   </row>
                   <if {tok.isColor}>
                     <row align="center" gap="2" nowrap>
-                      <stack data-token-chip shrink="0" sx={style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)}>
-                        <sail-color-picker data-token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onComponentColor}></sail-color-picker>
+                      <stack token-chip shrink="0" sx={style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)}>
+                        <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onComponentColor}></sail-color-picker>
                       </stack>
                       <column gap="0" grow min-w="0">
                         <p sx={pathMeta}>{tok.hexLabel}</p>
@@ -659,7 +659,7 @@ export default controller(() => {
           </if>
         </column>
 
-        <column data-section="global-tokens" gap="3">
+        <column section="global-tokens" gap="3">
           <row align="baseline" justify="between" gap="2" nowrap>
             <p sx={sectionTitle}>Theme tokens this face uses</p>
             <p sx={pathMeta}>theme-wide</p>
@@ -668,17 +668,17 @@ export default controller(() => {
             Edit a shared theme color here, or set a component token above to override only this component.
           </p>
           <if {components.hasGlobalKnobs()}>
-            <column gap="3" data-global-knob-list>
+            <column gap="3" global-knob-list>
               <for {components.globalKnobs()} as="tok" key={tok.key}>
-                <column data-token-path={tok.path} gap="1" sx={tokenRow}>
+                <column token-path={tok.path} gap="1" sx={tokenRow}>
                   <column gap="0">
                     <p sx={doorTitle}>{tok.label}</p>
                     <p sx={pathMeta}>{tok.path}</p>
                   </column>
                   <if {tok.isColor}>
                     <row align="center" gap="2" nowrap>
-                      <stack data-token-chip shrink="0" sx={style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)}>
-                        <sail-color-picker data-token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onGlobalColor}></sail-color-picker>
+                      <stack token-chip shrink="0" sx={style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)}>
+                        <sail-color-picker token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onGlobalColor}></sail-color-picker>
                       </stack>
                       <p sx={pathMeta}>{tok.hexLabel}</p>
                     </row>
@@ -698,9 +698,9 @@ export default controller(() => {
     </scroll-area>
   </row>
 
-  <toast-region position="bottom-end" data-components-toast-region>
+  <toast-region position="bottom-end" components-toast-region>
     <for {session.toastItems()} as="t" key={t.key}>
-      <toast tone={t.tone} data-components-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} components-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

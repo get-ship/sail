@@ -381,7 +381,7 @@ export function createChecksSurface() {
   })
 
   const bindHost = () => {
-    assignTableHost('[data-findings-table-host]', table)
+    assignTableHost('[findings-table-host]', table)
   }
 
   /** Apply full expanded map so each group is open unless user-collapsed. */
@@ -572,12 +572,12 @@ export function createChecksSurface() {
 
   const onFindingClick = (e: Event) => {
     const t = (e.target as Element | null)?.closest?.(
-      '[data-finding-id]',
+      '[finding-id]',
     ) as HTMLElement | null
     if (!t?.dataset.findingId) return
-    if ((e.target as Element).closest?.('[data-finding-action]')) return
-    if ((e.target as Element).closest?.('[data-rule-toggle]')) return
-    if ((e.target as Element).closest?.('[data-apply-rule]')) return
+    if ((e.target as Element).closest?.('[finding-action]')) return
+    if ((e.target as Element).closest?.('[rule-toggle]')) return
+    if ((e.target as Element).closest?.('[apply-rule]')) return
     const id = t.dataset.findingId
     const next = getChecksState().selectedId === id ? null : id
     selectFinding(next)
@@ -591,10 +591,10 @@ export function createChecksSurface() {
 
   const onFindingAction = (e: Event) => {
     const btn = (e.target as Element | null)?.closest?.(
-      '[data-finding-action]',
+      '[finding-action]',
     ) as HTMLElement | null
     const row = (e.target as Element | null)?.closest?.(
-      '[data-finding-id]',
+      '[finding-id]',
     ) as HTMLElement | null
     if (!btn?.dataset.findingAction || !row?.dataset.findingId) return
     e.stopPropagation?.()
@@ -633,7 +633,7 @@ export function createChecksSurface() {
 
   const onRuleToggle = (e: Event) => {
     const btn = (e.target as Element | null)?.closest?.(
-      '[data-rule-toggle]',
+      '[rule-toggle]',
     ) as HTMLElement | null
     const rule =
       btn?.dataset.ruleToggle ||
@@ -665,7 +665,7 @@ export function createChecksSurface() {
 
   const onApplyRule = (e: Event) => {
     const btn = (e.target as Element | null)?.closest?.(
-      '[data-apply-rule]',
+      '[apply-rule]',
     ) as HTMLElement | null
     if (!btn?.dataset.applyRule) return
     e.stopPropagation?.()
@@ -683,7 +683,7 @@ export function createChecksSurface() {
 
   const onAutoFixMode = (e: Event) => {
     const btn = (e.target as Element | null)?.closest?.(
-      '[data-autofix-mode]',
+      '[autofix-mode]',
     ) as HTMLElement | null
     if (!btn?.dataset.autofixMode) return
     const mode = btn.dataset.autofixMode as AutoFixMode
@@ -704,7 +704,7 @@ export function createChecksSurface() {
 
   const onReviewToggle = (e: Event) => {
     const btn = (e.target as Element | null)?.closest?.(
-      '[data-review-id]',
+      '[review-id]',
     ) as HTMLElement | null
     if (!btn?.dataset.reviewId) return
     const id = btn.dataset.reviewId

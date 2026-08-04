@@ -280,7 +280,7 @@ export function createComponentsLibrary(session: ComponentsSession) {
 
   const onListClick = (e: Event) => {
     const el = (e.target as Element | null)?.closest?.(
-      '[data-component-id]',
+      '[component-id]',
     ) as HTMLElement | null
     if (!el?.dataset.componentId) return
     const ctrl = (e.target as Element | null)?.closest?.(

@@ -114,8 +114,8 @@ export function createTasksSurface() {
     const items = uiMessageListItems()
     hasMessageItems.set(items.length > 0)
     queueMicrotask(() => {
-      assignMessageListHost('[data-messages-host]', items)
-      assignComposerAttachments('[data-task-composer]', [])
+      assignMessageListHost('[messages-host]', items)
+      assignComposerAttachments('[task-composer]', [])
     })
   }
 
@@ -189,7 +189,7 @@ export function createTasksSurface() {
   })
 
   const onTaskThreadClick = (e: Event) => {
-    const t = (e.target as Element | null)?.closest?.('[data-task-id]') as HTMLElement | null
+    const t = (e.target as Element | null)?.closest?.('[task-id]') as HTMLElement | null
     if (!t?.dataset.taskId) return
     composerStatus.set('idle')
     composerStatusLabel.set('')

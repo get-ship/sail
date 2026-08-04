@@ -72,7 +72,7 @@ export default controller(() => {
     <row align="center" justify="between" nowrap>
       <strong sx={boardTitle}>Board</strong>
       <span
-        data-state={step() === 'paint' ? 'live' : null}
+        state={step() === 'paint' ? 'live' : null}
         sx={departedBadge}
       >{departed()} departed</span>
     </row>
@@ -85,15 +85,15 @@ export default controller(() => {
     </column>
   </card>
   <column gap="2">
-    <card data-state={step() === 'write' ? 'live' : null} sx={stage}>
+    <card state={step() === 'write' ? 'live' : null} sx={stage}>
       <strong sx={stageTitle}>1 · the write</strong>
       <p sx={stageBody}>the interval fires: flights.set(rows =&gt; ...)</p>
     </card>
-    <card data-state={step() === 'reconcile' ? 'live' : null} sx={stage}>
+    <card state={step() === 'reconcile' ? 'live' : null} sx={stage}>
       <strong sx={stageTitle}>2 · the reconcile</strong>
       <p sx={stageBody}>watch the board: one row leaves, one enters</p>
     </card>
-    <card data-state={step() === 'paint' ? 'live' : null} sx={stage}>
+    <card state={step() === 'paint' ? 'live' : null} sx={stage}>
       <strong sx={stageTitle}>3 · the repaint</strong>
       <p sx={stageBody}>one text node: the counter, top right</p>
     </card>

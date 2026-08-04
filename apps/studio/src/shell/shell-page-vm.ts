@@ -117,9 +117,7 @@ export function createShellPage(opts?: ShellPageOpts) {
   const findingsStatusAria = signal('Findings · clean')
   const mod = hotkeyMod()
 
-  const readPath = () =>
-    opts?.pathname?.() ??
-    (typeof location !== 'undefined' ? location.pathname : '/edit')
+  const readPath = () => opts?.pathname?.() ?? '/edit'
 
   const syncRail = (pathname?: string) => {
     rail.set(railRowsForPath(pathname ?? readPath(), mod))
@@ -302,9 +300,13 @@ export function createShellPage(opts?: ShellPageOpts) {
         exitStudio()
       }
     }
+    // Shell chrome: window bus until hotkeys/message primitives land (DOMDEC).
     if (typeof window !== 'undefined') {
+      // sail-allow sail-no-ambient-events
       window.addEventListener('message', onMsg)
+      // sail-allow sail-no-ambient-events
       window.addEventListener('keydown', onKey)
+      // sail-allow sail-no-ambient-events
       window.addEventListener('sail-theme-change', onThemeChange)
     }
     return () => {
@@ -373,7 +375,7 @@ export function createShellPage(opts?: ShellPageOpts) {
     onRailClick: (e: Event) => {
       const me = e as MouseEvent
       if (me.button !== 0 || me.metaKey || me.ctrlKey || me.shiftKey || me.altKey) return
-      const a = (e.target as Element | null)?.closest?.('a[data-activity]') as HTMLAnchorElement | null
+      const a = (e.target as Element | null)?.closest?.('a[activity]') as HTMLAnchorElement | null
       const href = a?.getAttribute('href')
       if (!href) return
       e.preventDefault()

@@ -10,7 +10,7 @@
 </scope>
 
 <row
-  data-studio-page-header
+  studio-page-header
   align="center"
   gap="2"
   shrink="0"

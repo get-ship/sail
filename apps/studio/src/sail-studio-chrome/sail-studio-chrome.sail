@@ -49,20 +49,20 @@ export default controller((ctx) => {
 </controller>
 
 <row
-  data-sail-studio-shell
+  sail-studio-shell
   gap="0"
   w="full"
   nowrap
   align="stretch"
   sx={style.minH(screen).h(screen).w(full).minW(0).bg(background).fg(foreground).fontFamily(body).fontSize(sm).overflow(hidden)}
 >
-  <studio-activity-bar data-studio-rail on:click={onRailClick}>
+  <studio-activity-bar studio-rail on:click={onRailClick}>
     <for {rail()} as="item" key={item.key}>
       <tooltip content={item.label} placement="right">
         <a
           href={item.href}
-          data-activity={item.id}
-          data-active={item.active ? 'true' : 'false'}
+          activity={item.id}
+          active={item.active ? 'true' : 'false'}
           aria-label={item.label}
           aria-current={item.active ? 'page' : undefined}
           title={item.label}
@@ -78,8 +78,8 @@ export default controller((ctx) => {
       <tooltip slot="footer" content="Back to app (Esc)" placement="right">
         <button
           type="button"
-          data-exit-studio
-          data-activity="exit"
+          exit-studio
+          activity="exit"
           aria-label="Back to app (Esc)"
           title="Back to app (Esc)"
           on:click={onExitStudio}
@@ -96,21 +96,21 @@ export default controller((ctx) => {
   <column grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden).h(full).minW(0)}>
     <if {hasBatch()}>
       <row
-        data-batch-tray
+        batch-tray
         align="center"
         gap="2"
         shrink="0"
         nowrap
         sx={style.padX(3).borderBWidth(1).borderB(border-subtle).bg(surface-1).h(7).minH(7)}
       >
-        <badge tone="primary" size="sm" variant="soft" data-batch-count>
+        <badge tone="primary" size="sm" variant="soft" batch-count>
           {batchCountLabel()}
         </badge>
         <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground)}>
           Collected
         </p>
         <for {batchChips()} as="chip" key={chip.key}>
-          <badge data-batch-chip={chip.id} tone="muted" size="sm" variant="outline">
+          <badge batch-chip={chip.id} tone="muted" size="sm" variant="outline">
             {chip.label}
           </badge>
         </for>
@@ -119,7 +119,7 @@ export default controller((ctx) => {
           type="button"
           size="sm"
           variant="ghost"
-          data-batch-send-existing
+          batch-send-existing
           on:click={onBatchSendExisting}
         >
           Add to open task
@@ -128,7 +128,7 @@ export default controller((ctx) => {
           type="button"
           size="sm"
           tone="primary"
-          data-batch-new-task
+          batch-new-task
           on:click={onBatchNewTask}
         >
           {batchNewLabel()}
@@ -146,7 +146,7 @@ export default controller((ctx) => {
     >
       <column
         grow
-        data-studio-surface
+        studio-surface
         min-w="0"
         sx={style.minH(0).basis(0).overflow(hidden).h(full).minW(0)}
       >
@@ -159,19 +159,19 @@ export default controller((ctx) => {
       Flat header/section/footer anatomy (nested chrome failed closed-dialog layout lint).
     -->
     <dialog
-      data-checks-panel
-      data-checks-drawer
-      data-findings-panel
+      checks-panel
+      checks-drawer
+      findings-panel
       open={checksPanelOpen()}
       side="end"
       size="lg"
       aria-label="Findings"
       on:sail-close={onCloseChecksPanel}
     >
-      <header data-findings-panel-head data-checks-panel-head>
+      <header findings-panel-head checks-panel-head>
         Findings
       </header>
-      <section data-findings-panel-body>
+      <section findings-panel-body>
         <if {checksPanelOpen()}>
           <checks-surface panel />
         </if>
@@ -182,7 +182,7 @@ export default controller((ctx) => {
           size="sm"
           variant="ghost"
           tone="muted"
-          data-close-checks-panel
+          close-checks-panel
           aria-label="Close findings"
           on:click={onCloseChecksPanel}
         >
@@ -192,7 +192,7 @@ export default controller((ctx) => {
     </dialog>
 
     <row
-      data-studio-status
+      studio-status
       align="center"
       gap="3"
       shrink="0"
@@ -201,14 +201,14 @@ export default controller((ctx) => {
       sx={style.h(6).minH(6).padX(3).borderTWidth(1).borderT(border).bg(surface-0).fontSize(xs).fg(muted-foreground).minW(0).overflow(hidden)}
     >
       <p grow min-w="0" sx={style.fontFamily(mono).minW(0).truncate()}>{statusLine()}</p>
-      <p data-save-status shrink="0" sx={style.fontSize(xs)}>{saveStatusLabel()}</p>
-      <p data-theme-status shrink="0" sx={style.fontSize(xs).fg(muted-foreground)}>{themeStatusLabel()}</p>
+      <p save-status shrink="0" sx={style.fontSize(xs)}>{saveStatusLabel()}</p>
+      <p theme-status shrink="0" sx={style.fontSize(xs).fg(muted-foreground)}>{themeStatusLabel()}</p>
       <!-- Findings status: colored error · warn counts (not a mute "Checks" label) -->
       <button
         type="button"
-        data-checks-badge
-        data-findings-status
-        data-open-checks-panel
+        checks-badge
+        findings-status
+        open-checks-panel
         size="sm"
         variant={hasChecksFindings() ? 'soft' : 'ghost'}
         tone={findingsStatusTone()}
@@ -219,11 +219,11 @@ export default controller((ctx) => {
         shrink="0"
         sx={style.padX(2).h(5).minH(5)}
       >
-        <row data-findings-status-inner align="center" gap="1" nowrap>
+        <row findings-status-inner align="center" gap="1" nowrap>
           <if {hasFindingsErrors()}>
             <badge
-              data-findings-errors
-              data-checks-badge-count
+              findings-errors
+              checks-badge-count
               tone="destructive"
               size="sm"
               variant="solid"
@@ -234,7 +234,7 @@ export default controller((ctx) => {
           </if>
           <if {hasFindingsWarnings()}>
             <badge
-              data-findings-warnings
+              findings-warnings
               tone="warning"
               size="sm"
               variant="solid"
@@ -244,33 +244,33 @@ export default controller((ctx) => {
             </badge>
           </if>
           <if {!hasChecksFindings()}>
-            <badge data-findings-clean data-checks-badge-count tone="muted" size="sm" variant="soft" pill>
+            <badge findings-clean checks-badge-count tone="muted" size="sm" variant="soft" pill>
               0
             </badge>
           </if>
         </row>
       </button>
       <row
-        data-health="ops"
+        health="ops"
         align="center"
         gap="1"
         shrink="0"
         sx={style.padX(1).when({ hover: style.bg(hover-bg) })}
       >
         <icon name="activity" size="sm"></icon>
-        <badge tone={opsHealthTone()} size="sm" variant="soft" data-health-tone="ops">
+        <badge tone={opsHealthTone()} size="sm" variant="soft" health-tone="ops">
           {opsHealthLabel()}
         </badge>
       </row>
       <row
-        data-health="watch"
+        health="watch"
         align="center"
         gap="1"
         shrink="0"
         sx={style.padX(1).when({ hover: style.bg(hover-bg) })}
       >
         <icon name="radio" size="sm"></icon>
-        <badge tone={watchHealthTone()} size="sm" variant="soft" data-health-tone="watch">
+        <badge tone={watchHealthTone()} size="sm" variant="soft" health-tone="watch">
           {watchHealthLabel()}
         </badge>
       </row>

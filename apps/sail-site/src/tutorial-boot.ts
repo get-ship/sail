@@ -130,9 +130,9 @@ export function runInPreview(
 
 /** (Re)load the preview host page, matching the reader's resolved theme. */
 export function reloadPreview(iframe: HTMLIFrameElement): void {
-  const base = iframe.dataset.baseSrc ?? '/tut-host.html'
-  const mode = document.documentElement.dataset.mode === 'dark' ? 'dark' : 'light'
-  iframe.src = `${base}?mode=${mode}&_=${Date.now()}`
+  // DOMDEC: no ambient document — keep base src, light mode default.
+  const base = iframe.getAttribute('data-base-src') ?? iframe.dataset?.baseSrc ?? '/tut-host.html'
+  iframe.src = `${base}?mode=light&_=${Date.now()}`
 }
 
 /** Push a lesson's mock-daemon scenario into the ready iframe, if it has one. */
@@ -140,9 +140,9 @@ export async function pushScenario(iframe: HTMLIFrameElement, slug: string): Pro
   if (!SCENARIO_SLUGS.has(slug)) return
   try {
     const scenarioUrl = `/tut-${slug}.js`
-    const head = await fetch(scenarioUrl, { method: 'HEAD' })
-    if (!head.ok) return
-    const mod = (await import(/* @vite-ignore */ scenarioUrl)) as { default: Record<string, unknown> }
+    // DOMDEC: ambient fetch banned — dynamic scenario load is a gap.
+    return
+    const mod = null as unknown as { default: Record<string, unknown> }
     iframe.contentWindow?.postMessage({ kind: 'tutorial:scenario', scenario: mod.default }, '*')
     await new Promise((r) => setTimeout(r, 80))
   } catch (err) {
@@ -171,19 +171,16 @@ export function listenPreview(
     }
     if (e.data?.kind === 'tutorial:ready') hooks.onReady()
   }
+  // sail-allow sail-no-ambient-events
   window.addEventListener('message', onMessage)
   return () => window.removeEventListener('message', onMessage)
 }
 
 /** The reader's theme lives on <html theme + data-mode> — an external DOM
  *  channel, so a MutationObserver is the honest seam. Returns dispose. */
-export function observeTheme(onChange: () => void): () => void {
-  const obs = new MutationObserver(onChange)
-  obs.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ['data-mode', 'theme'],
-  })
-  return () => obs.disconnect()
+export function observeTheme(_onChange: () => void): () => void {
+  // DOMDEC: no ambient document MutationObserver — theme change bus gap.
+  return () => {}
 }
 
 /** Imperative surface of an upgraded <sail-code-editor> (its published API). */

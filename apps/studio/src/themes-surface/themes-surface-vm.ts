@@ -332,10 +332,10 @@ export function createThemesSurface() {
   }
 
   const onListClick = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[data-theme-id]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[theme-id]') as HTMLElement | null
     if (!el?.dataset.themeId) return
     const ctrl = (e.target as Element | null)?.closest?.(
-      'switch, [role="switch"], button, menu-item, [data-sail-host="menu-item"], a, input, [popover]',
+      'switch, [role="switch"], button, menu-item, [sail-host]="menu-item"], a, input, [popover]',
     )
     if (ctrl && ctrl !== el) return
     selectTheme(el.dataset.themeId)
@@ -343,7 +343,7 @@ export function createThemesSurface() {
 
   const onMenuOpen = (e: Event) => {
     e.stopPropagation()
-    const el = (e.target as Element | null)?.closest?.('[data-theme-id]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[theme-id]') as HTMLElement | null
     const id = el?.dataset.themeId
     if (id) {
       menuTargetId.set(id)
@@ -379,7 +379,7 @@ export function createThemesSurface() {
   /** List-row Add to project (catalog only). */
   const onAddToProject = (e: Event) => {
     e.stopPropagation()
-    const el = (e.target as Element | null)?.closest?.('[data-theme-id]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[theme-id]') as HTMLElement | null
     const id = el?.dataset.themeId
     if (!id) return
     selectTheme(id)

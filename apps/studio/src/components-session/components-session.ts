@@ -209,7 +209,7 @@ export function createComponentsSession(opts?: ComponentsSessionOpts) {
   const onModeInspect = () => applyMode('inspect')
 
   const onModeToggle = (e: Event) => {
-    const btn = (e.target as Element | null)?.closest?.('[data-mode]') as HTMLElement | null
+    const btn = (e.target as Element | null)?.closest?.('[mode]') as HTMLElement | null
     const m = btn?.dataset.mode
     if (m === 'library' || m === 'inspect') applyMode(m)
   }
@@ -287,16 +287,9 @@ export function createComponentsSession(opts?: ComponentsSessionOpts) {
   syncFromRoute()
 
   mountAmbient(() => {
+    // Route sync on mount; popstate needs a deck route signal (DOMDEC gap).
     syncFromRoute()
-    const onPop = () => syncFromRoute()
-    if (typeof window !== 'undefined') {
-      window.addEventListener('popstate', onPop)
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('popstate', onPop)
-      }
-    }
+    return () => {}
   })
 
   return {

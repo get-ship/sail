@@ -361,7 +361,7 @@ export function createComponentsEdit(session: ThemeSession) {
   }
 
   const onSelect = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[data-l1]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[l1]') as HTMLElement | null
     const id = el?.dataset.l1
     if (!id || !FACES.some((f) => f.id === id)) return
     selectedId.set(id)
@@ -383,8 +383,8 @@ export function createComponentsEdit(session: ThemeSession) {
   const pathFromEvent = (e: Event): string | null => {
     const t = e.target as HTMLElement | null
     return (
-      t?.getAttribute('data-token-path') ||
-      t?.closest?.('[data-token-path]')?.getAttribute('data-token-path') ||
+      t?.getAttribute('token-path') ||
+      t?.closest?.('[token-path]')?.getAttribute('token-path') ||
       null
     )
   }
@@ -422,17 +422,17 @@ export function createComponentsEdit(session: ThemeSession) {
   }
 
   const onVariantPick = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[data-variant]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[variant]') as HTMLElement | null
     const v = el?.dataset.variant
     if (v != null) variant.set(v)
   }
   const onSizePick = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[data-size]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[size]') as HTMLElement | null
     const v = el?.dataset.size
     if (v != null) size.set(v)
   }
   const onTonePick = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[data-tone]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[tone]') as HTMLElement | null
     const v = el?.dataset.tone
     if (v != null) tone.set(v)
   }

@@ -130,7 +130,7 @@ export function makeSessionShellActions(ctx: SessionActionCtx) {
   }
 
   const onFacet = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[data-facet]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[facet]') as HTMLElement | null
     const f = el?.dataset.facet
     if (!f) return
     if (isFacet(f)) {

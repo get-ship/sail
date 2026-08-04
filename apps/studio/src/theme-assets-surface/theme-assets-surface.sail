@@ -34,9 +34,9 @@ export default controller(() => {
 </controller>
 
 <column
-  data-surface="themes"
-  data-theme-assets-surface
-  data-assets-chrome
+  surface="themes"
+  theme-assets-surface
+  assets-chrome
   gap="0"
   grow
   sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
@@ -44,21 +44,21 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row data-assets-error align="center" gap="2" shrink="0" sx={bandError}>
+    <row assets-error align="center" gap="2" shrink="0" sx={bandError}>
       <p grow min-w="0" sx={style.fontSize(sm).fg(destructive).truncate()}>{session.errorText()}</p>
-      <button type="button" size="sm" variant="ghost" data-assets-retry on:click={session.onRetry}>Retry</button>
+      <button type="button" size="sm" variant="ghost" assets-retry on:click={session.onRetry}>Retry</button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row data-assets-loading align="center" gap="2" shrink="0" sx={bandStatus}>
+    <row assets-loading align="center" gap="2" shrink="0" sx={bandStatus}>
       <spinner size="sm"></spinner>
       <p sx={fieldHint}>Loading…</p>
     </row>
   </if>
 
   <row
-    data-assets-workbench
+    assets-workbench
     grow
     gap="0"
     nowrap
@@ -66,13 +66,13 @@ export default controller(() => {
     sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)}
   >
     <scroll-area
-      data-assets-editor
+      assets-editor
       grow
       min-w="0"
       sx={style.minH(0).basis(0).h(full).minW(0).bg(background)}
     >
       <column gap="8" sx={editorCol}>
-        <column data-assets-header gap="2">
+        <column assets-header gap="2">
           <p sx={fieldHint}>Assets facet</p>
           <p sx={style.fontSize(xl).fontWeight(semibold).tracking(tight)}>Type &amp; icons</p>
           <p sx={fieldHint}>
@@ -80,11 +80,11 @@ export default controller(() => {
           </p>
           <p sx={pathMeta}>{session.modesMeta()}</p>
           <if {session.catalogHint()}>
-            <p data-catalog-hint sx={fieldHint}>Add to project to edit.</p>
+            <p catalog-hint sx={fieldHint}>Add to project to edit.</p>
           </if>
         </column>
 
-        <column data-section="type" gap="4">
+        <column section="type" gap="4">
           <row align="baseline" justify="between" gap="3" nowrap>
             <p sx={sectionTitle}>Type</p>
             <p sx={pathMeta}>display · body · mono</p>
@@ -92,7 +92,7 @@ export default controller(() => {
           <column gap="3">
             <column gap="1">
               <p sx={fieldHint}>Display</p>
-              <select data-type-role="display" size="sm" value={assets.typeDisplay()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
+              <select type-role="display" size="sm" value={assets.typeDisplay()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.displayFontOpts()} as="o" key={o.key}>
                   <option value={o.value}>{o.label}</option>
                 </for>
@@ -100,7 +100,7 @@ export default controller(() => {
             </column>
             <column gap="1">
               <p sx={fieldHint}>Body</p>
-              <select data-type-role="body" size="sm" value={assets.typeBody()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
+              <select type-role="body" size="sm" value={assets.typeBody()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.bodyFontOpts()} as="o" key={o.key}>
                   <option value={o.value}>{o.label}</option>
                 </for>
@@ -108,7 +108,7 @@ export default controller(() => {
             </column>
             <column gap="1">
               <p sx={fieldHint}>Mono</p>
-              <select data-type-role="mono" size="sm" value={assets.typeMono()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
+              <select type-role="mono" size="sm" value={assets.typeMono()} disabled={!session.canEdit()} on:change={assets.onTypeSelect}>
                 <for {assets.monoFontOpts()} as="o" key={o.key}>
                   <option value={o.value}>{o.label}</option>
                 </for>
@@ -116,7 +116,7 @@ export default controller(() => {
             </column>
           </column>
 
-          <column data-font-discoverer gap="3">
+          <column font-discoverer gap="3">
             <row align="baseline" justify="between" gap="3" nowrap>
               <p sx={sectionTitle}>Font discoverer</p>
               <p sx={pathMeta}>{assets.fontCatalogMeta()}</p>
@@ -124,7 +124,7 @@ export default controller(() => {
             <p sx={fieldHint}>
               Full Google Fonts catalog — search, preview, assign to a role, or install (vendor woff2 into the project).
             </p>
-            <row gap="2" align="center" nowrap data-font-search>
+            <row gap="2" align="center" nowrap font-search>
               <input
                 type="search"
                 size="sm"
@@ -135,19 +135,19 @@ export default controller(() => {
                 on:input={assets.onFontSearchInput}
                 aria-label="Search fonts"
               />
-              <button type="button" size="sm" variant="outline" tone="muted" data-font-search-btn on:click={assets.onFontSearch} shrink="0">
+              <button type="button" size="sm" variant="outline" tone="muted" font-search-btn on:click={assets.onFontSearch} shrink="0">
                 Search
               </button>
             </row>
-            <row gap="1" align="center" nowrap data-font-cats sx={style.overflowX(auto).minW(0)}>
+            <row gap="1" align="center" nowrap font-cats sx={style.overflowX(auto).minW(0)}>
               <for {assets.fontCategoryOpts()} as="c" key={c.key}>
                 <button
                   type="button"
                   size="xs"
                   variant="outline"
                   tone="muted"
-                  data-font-cat={c.id}
-                  data-selected={c.on ? 'true' : null}
+                  font-cat={c.id}
+                  selected={c.on ? 'true' : null}
                   on:click={assets.onFontCategory}
                   shrink="0"
                   sx={catChip}
@@ -157,31 +157,31 @@ export default controller(() => {
               </for>
             </row>
             <if {assets.fontSearching()}>
-              <row align="center" gap="2" data-font-loading>
+              <row align="center" gap="2" font-loading>
                 <spinner size="sm"></spinner>
                 <p sx={fieldHint}>Searching catalog…</p>
               </row>
             </if>
             <if {assets.hasFontHits()}>
-              <column gap="2" data-font-hits>
+              <column gap="2" font-hits>
                 <for {assets.fontSearchHits()} as="f" key={f.key}>
-                  <column gap="2" data-font-hit data-font-family={f.family} sx={fontHit}>
+                  <column gap="2" font-hit font-family={f.family} sx={fontHit}>
                     <row align="baseline" justify="between" gap="2" nowrap>
                       <p sx={doorTitle} grow min-w="0">{f.family}</p>
                       <p sx={pathMeta} shrink="0">{f.category}</p>
                     </row>
-                    <p data-font-sample data-face={f.family} sx={fontSample}>{f.sample}</p>
+                    <p font-sample face={f.family} sx={fontSample}>{f.sample}</p>
                     <row gap="1" align="center">
-                      <button type="button" size="xs" variant="outline" tone="muted" data-font-family={f.family} data-font-role="display" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
+                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-role="display" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
                         Display
                       </button>
-                      <button type="button" size="xs" variant="outline" tone="muted" data-font-family={f.family} data-font-role="body" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
+                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-role="body" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
                         Body
                       </button>
-                      <button type="button" size="xs" variant="outline" tone="muted" data-font-family={f.family} data-font-role="mono" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
+                      <button type="button" size="xs" variant="outline" tone="muted" font-family={f.family} font-role="mono" on:click={assets.onFontUseRole} disabled={!session.canEdit()}>
                         Mono
                       </button>
-                      <button type="button" size="xs" variant="soft" tone="primary" data-font-family={f.family} data-font-role="body" on:click={assets.onFontInstall} disabled={!session.canEdit()} shrink="0">
+                      <button type="button" size="xs" variant="soft" tone="primary" font-family={f.family} font-role="body" on:click={assets.onFontInstall} disabled={!session.canEdit()} shrink="0">
                         Install
                       </button>
                     </row>
@@ -190,19 +190,19 @@ export default controller(() => {
               </column>
             </if>
             <if {!assets.hasFontHits() && !assets.fontSearching()}>
-              <p data-font-empty sx={fieldHint}>No families match — try another query or category.</p>
+              <p font-empty sx={fieldHint}>No families match — try another query or category.</p>
             </if>
           </column>
         </column>
 
-        <column data-section="icons" gap="4">
+        <column section="icons" gap="4">
           <row align="baseline" justify="between" gap="3" nowrap>
             <p sx={sectionTitle}>Icons</p>
             <p sx={pathMeta}>browse · size scale</p>
           </row>
           <column gap="1">
             <p sx={fieldHint}>Pack (session until pack token ships)</p>
-            <select data-icon-pack size="sm" value={assets.iconPack()} disabled={!session.canEdit()} on:change={assets.onIconPack}>
+            <select icon-pack size="sm" value={assets.iconPack()} disabled={!session.canEdit()} on:change={assets.onIconPack}>
               <option value="lucide">Lucide</option>
               <option value="phosphor">Phosphor</option>
             </select>
@@ -219,7 +219,7 @@ export default controller(() => {
             />
           </column>
           <if {assets.hasIconGlyphs()}>
-            <grid cols="4" gap="2" data-icon-grid>
+            <grid cols="4" gap="2" icon-grid>
               <for {assets.iconGlyphs()} as="g" key={g.key}>
                 <center shrink="0" sx={iconCell} title={g.name}>
                   <icon name={g.name} size="md" label={g.name}></icon>
@@ -227,7 +227,7 @@ export default controller(() => {
               </for>
             </grid>
           </if>
-          <column data-icon-scale gap="2">
+          <column icon-scale gap="2">
             <row align="baseline" justify="between" gap="3" nowrap>
               <p sx={fieldHint}>Size scale (sm → xl)</p>
               <p sx={pathMeta}>{assets.iconScaleReadout()}</p>
@@ -245,7 +245,7 @@ export default controller(() => {
                 step="1"
                 value={assets.iconScaleMasterPx()}
                 disabled={!session.canEdit()}
-                data-icon-scale-master
+                icon-scale-master
                 aria-label="Icon scale master"
                 on:input={assets.onIconScaleMaster}
               />
@@ -256,7 +256,7 @@ export default controller(() => {
     </scroll-area>
 
     <column
-      data-specimen-dock
+      specimen-dock
       gap="0"
       grow
       min-w="0"
@@ -264,15 +264,15 @@ export default controller(() => {
     >
       <column grow gap="0" sx={style.minH(0).h(full).pad(4)}>
         <card
-          data-assets-specimen
-          data-preview-specimen
-          data-mode={session.paintMode()}
+          assets-specimen
+          preview-specimen
+          mode={session.paintMode()}
           padding="none"
           sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}
         >
           <column gap="0" grow sx={style.minH(0).h(full)}>
             <row
-              data-specimen-chrome
+              specimen-chrome
               align="center"
               gap="2"
               nowrap
@@ -288,8 +288,8 @@ export default controller(() => {
               <p sx={pathMeta} shrink="0">{session.paintMode()}</p>
             </row>
           <scroll-area grow sx={style.minH(0).h(full).bg(background)}>
-            <column data-specimen-body gap="5" sx={style.pad(5).minW(0)}>
-              <column gap="2" data-type-stack>
+            <column specimen-body gap="5" sx={style.pad(5).minW(0)}>
+              <column gap="2" type-stack>
                 <p sx={style.fontFamily(display).fontSize(2xl).fontWeight(semibold).tracking(tight)}>
                   {assets.typeDisplay()}
                 </p>
@@ -300,7 +300,7 @@ export default controller(() => {
                   {assets.typeMono()} — const pack = "lucide"
                 </p>
               </column>
-              <row gap="2" align="center" nowrap data-specimen-toolbar>
+              <row gap="2" align="center" nowrap specimen-toolbar>
                 <button type="button" size="sm" variant="solid" tone="primary">
                   <icon name="plus" size="sm"></icon>
                   New
@@ -314,7 +314,7 @@ export default controller(() => {
                 </button>
               </row>
               <if {assets.hasIconGlyphs()}>
-                <row data-specimen-icons gap="3" align="center" nowrap>
+                <row specimen-icons gap="3" align="center" nowrap>
                   <for {assets.iconGlyphs()} as="g" key={g.key}>
                     <icon name={g.name} size={assets.iconPreviewSize()} label={g.name} shrink="0"></icon>
                   </for>
@@ -337,9 +337,9 @@ export default controller(() => {
     </column>
   </row>
 
-  <toast-region position="bottom-end" data-assets-toast-region>
+  <toast-region position="bottom-end" assets-toast-region>
     <for {session.toastItems()} as="t" key={t.key}>
-      <toast tone={t.tone} data-assets-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} assets-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

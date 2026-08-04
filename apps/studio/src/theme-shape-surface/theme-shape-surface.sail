@@ -123,9 +123,9 @@ export default controller(() => {
 </controller>
 
 <column
-  data-surface="themes"
-  data-theme-shape-surface
-  data-shape-chrome
+  surface="themes"
+  theme-shape-surface
+  shape-chrome
   gap="0"
   grow
   sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
@@ -133,16 +133,16 @@ export default controller(() => {
   <theme-facet-chrome session={session}></theme-facet-chrome>
 
   <if {session.hasError()}>
-    <row data-shape-error align="center" gap="2" shrink="0" sx={bandError}>
+    <row shape-error align="center" gap="2" shrink="0" sx={bandError}>
       <p grow min-w="0" sx={style.fontSize(sm).fg(destructive).truncate()}>{session.errorText()}</p>
-      <button type="button" size="sm" variant="ghost" data-shape-retry on:click={session.onRetry}>
+      <button type="button" size="sm" variant="ghost" shape-retry on:click={session.onRetry}>
         Retry
       </button>
     </row>
   </if>
 
   <if {session.loading()}>
-    <row data-shape-loading align="center" gap="2" shrink="0" sx={bandStatus}>
+    <row shape-loading align="center" gap="2" shrink="0" sx={bandStatus}>
       <spinner size="sm"></spinner>
       <p sx={fieldHint}>Loading…</p>
     </row>
@@ -150,7 +150,7 @@ export default controller(() => {
 
   <!-- Shape: left controls ~panel | right LARGE specimen (inverted vs Color). -->
   <row
-    data-shape-workbench
+    shape-workbench
     grow
     gap="0"
     nowrap
@@ -158,12 +158,12 @@ export default controller(() => {
     sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)}
   >
     <scroll-area
-      data-shape-controls
+      shape-controls
       shrink="0"
       sx={style.minW(panel-min-w-sm).maxW(panel-max-w-sm).w(panel-max-w-sm).minH(0).h(full).borderRWidth(1).borderR(border-subtle).bg(background)}
     >
       <column gap="4" sx={controlsCol}>
-        <column data-shape-header gap="2">
+        <column shape-header gap="2">
           <p sx={eyebrow}>Globals · character</p>
           <p sx={style.fontSize(2xl).fontWeight(semibold).tracking(tight).fontFamily(heading)}>Shape</p>
           <p sx={fieldHint}>
@@ -174,22 +174,22 @@ export default controller(() => {
             <badge tone="muted" size="sm" variant="soft" pill>{shape.statRecipe()}</badge>
           </row>
           <if {session.catalogHint()}>
-            <p data-catalog-hint sx={fieldHint}>Add to project to edit.</p>
+            <p catalog-hint sx={fieldHint}>Add to project to edit.</p>
           </if>
         </column>
 
         <!-- Quick patterns (recipes) -->
-        <column data-section="recipes" gap="2" sx={sectionPanel}>
+        <column section="recipes" gap="2" sx={sectionPanel}>
           <row align="baseline" justify="between" gap="2" nowrap>
             <p sx={sectionTitle}>Quick patterns</p>
             <p sx={pathMeta}>recipes</p>
           </row>
-          <grid cols="3" gap="2" data-recipe-grid on:click={shape.onRecipeClick}>
+          <grid cols="3" gap="2" recipe-grid on:click={shape.onRecipeClick}>
             <for {shape.recipes()} as="r" key={r.key}>
               <button
                 type="button"
                 size="sm"
-                data-recipe={r.id}
+                recipe={r.id}
                 variant={r.on ? 'solid' : 'outline'}
                 tone={r.on ? 'primary' : 'muted'}
                 aria-pressed={r.on ? 'true' : 'false'}
@@ -203,16 +203,16 @@ export default controller(() => {
         </column>
 
         <!-- Radius scale — outline corner chips + master -->
-        <column data-section="radius" gap="3" sx={sectionPanel}>
+        <column section="radius" gap="3" sx={sectionPanel}>
           <row align="baseline" justify="between" gap="2" nowrap>
             <p sx={sectionTitle}>Radius scale</p>
             <p sx={pathMeta}>{shape.radiusReadout()}</p>
           </row>
-          <row data-radius-chips gap="2" align="stretch" nowrap on:click={shape.onRadiusChip} aria-label="Radius steps">
+          <row radius-chips gap="2" align="stretch" nowrap on:click={shape.onRadiusChip} aria-label="Radius steps">
             <button
               type="button"
               size="sm"
-              data-radius="sm"
+              radius="sm"
               variant="outline"
               tone={shape.focusStep() === 'sm' ? 'primary' : 'muted'}
               aria-pressed={shape.focusStep() === 'sm' ? 'true' : 'false'}
@@ -228,7 +228,7 @@ export default controller(() => {
             <button
               type="button"
               size="sm"
-              data-radius="md"
+              radius="md"
               variant="outline"
               tone={shape.focusStep() === 'md' ? 'primary' : 'muted'}
               aria-pressed={shape.focusStep() === 'md' ? 'true' : 'false'}
@@ -244,7 +244,7 @@ export default controller(() => {
             <button
               type="button"
               size="sm"
-              data-radius="lg"
+              radius="lg"
               variant="outline"
               tone={shape.focusStep() === 'lg' ? 'primary' : 'muted'}
               aria-pressed={shape.focusStep() === 'lg' ? 'true' : 'false'}
@@ -260,7 +260,7 @@ export default controller(() => {
             <button
               type="button"
               size="sm"
-              data-radius="xl"
+              radius="xl"
               variant="outline"
               tone={shape.focusStep() === 'xl' ? 'primary' : 'muted'}
               aria-pressed={shape.focusStep() === 'xl' ? 'true' : 'false'}
@@ -274,7 +274,7 @@ export default controller(() => {
               </column>
             </button>
           </row>
-          <column data-radius-master gap="1" sx={sliderRow}>
+          <column radius-master gap="1" sx={sliderRow}>
             <row align="center" justify="between" gap="2" nowrap>
               <p sx={fieldHint}>Master · family</p>
               <p sx={monoMeta}>{shape.masterLabel()}</p>
@@ -286,7 +286,7 @@ export default controller(() => {
               step="1"
               value={shape.masterPx()}
               disabled={!session.canEdit()}
-              data-radius-master
+              radius-master
               aria-label="Radius master"
               on:input={shape.onMasterInput}
             />
@@ -295,16 +295,16 @@ export default controller(() => {
         </column>
 
         <!-- Shadow / elevation -->
-        <column data-section="shadow" gap="3" sx={sectionPanel}>
+        <column section="shadow" gap="3" sx={sectionPanel}>
           <row align="baseline" justify="between" gap="2" nowrap>
             <p sx={sectionTitle}>Shadow steps</p>
             <p sx={pathMeta}>elevation · {shape.elevLabel()}</p>
           </row>
-          <grid cols="3" gap="2" data-elev-chips on:click={shape.onElevClick} aria-label="Elevation steps">
+          <grid cols="3" gap="2" elev-chips on:click={shape.onElevClick} aria-label="Elevation steps">
             <button
               type="button"
               size="sm"
-              data-elev="none"
+              elev="none"
               variant="outline"
               tone={shape.elevKey() === 'none' ? 'primary' : 'muted'}
               aria-pressed={shape.elevKey() === 'none' ? 'true' : 'false'}
@@ -321,7 +321,7 @@ export default controller(() => {
             <button
               type="button"
               size="sm"
-              data-elev="xs"
+              elev="xs"
               variant="outline"
               tone={shape.elevKey() === 'xs' ? 'primary' : 'muted'}
               aria-pressed={shape.elevKey() === 'xs' ? 'true' : 'false'}
@@ -338,7 +338,7 @@ export default controller(() => {
             <button
               type="button"
               size="sm"
-              data-elev="sm"
+              elev="sm"
               variant="outline"
               tone={shape.elevKey() === 'sm' ? 'primary' : 'muted'}
               aria-pressed={shape.elevKey() === 'sm' ? 'true' : 'false'}
@@ -355,7 +355,7 @@ export default controller(() => {
             <button
               type="button"
               size="sm"
-              data-elev="md"
+              elev="md"
               variant="outline"
               tone={shape.elevKey() === 'md' ? 'primary' : 'muted'}
               aria-pressed={shape.elevKey() === 'md' ? 'true' : 'false'}
@@ -372,7 +372,7 @@ export default controller(() => {
             <button
               type="button"
               size="sm"
-              data-elev="lg"
+              elev="lg"
               variant="outline"
               tone={shape.elevKey() === 'lg' ? 'primary' : 'muted'}
               aria-pressed={shape.elevKey() === 'lg' ? 'true' : 'false'}
@@ -389,7 +389,7 @@ export default controller(() => {
             <button
               type="button"
               size="sm"
-              data-elev="xl"
+              elev="xl"
               variant="outline"
               tone={shape.elevKey() === 'xl' ? 'primary' : 'muted'}
               aria-pressed={shape.elevKey() === 'xl' ? 'true' : 'false'}
@@ -408,7 +408,7 @@ export default controller(() => {
         </column>
 
         <!-- Border strength -->
-        <column data-section="border" gap="3" sx={sectionPanel}>
+        <column section="border" gap="3" sx={sectionPanel}>
           <row align="baseline" justify="between" gap="2" nowrap>
             <p sx={sectionTitle}>Border strength</p>
             <p sx={pathMeta}>{shape.borderWLabel()}</p>
@@ -425,7 +425,7 @@ export default controller(() => {
               step="0.5"
               value={shape.borderW()}
               disabled={!session.canEdit()}
-              data-border-width
+              border-width
               aria-label="Border width"
               on:input={shape.onBorderWidth}
             />
@@ -435,7 +435,7 @@ export default controller(() => {
 
         <!-- Glass material — gated until Glass recipe / material dials -->
         <if {shape.showGlass()}>
-          <column data-section="glass" gap="3" sx={sectionPanel}>
+          <column section="glass" gap="3" sx={sectionPanel}>
             <row align="baseline" justify="between" gap="2" nowrap>
               <p sx={sectionTitle}>Glass material</p>
               <p sx={pathMeta}>card fill α · blur</p>
@@ -452,7 +452,7 @@ export default controller(() => {
                 step="5"
                 value={shape.surfaceOpPct()}
                 disabled={!session.canEdit()}
-                data-surface-opacity
+                surface-opacity
                 aria-label="Surface opacity"
                 on:input={shape.onSurfaceOp}
               />
@@ -469,7 +469,7 @@ export default controller(() => {
                 step="1"
                 value={shape.surfaceBlur()}
                 disabled={!session.canEdit()}
-                data-surface-blur
+                surface-blur
                 aria-label="Backdrop blur"
                 on:input={shape.onSurfaceBlur}
               />
@@ -478,7 +478,7 @@ export default controller(() => {
           </column>
         </if>
 
-        <column data-shape-footer gap="2">
+        <column shape-footer gap="2">
           <row gap="2" align="center" nowrap>
             <p sx={tokenStrip}>radius.*</p>
             <p sx={tokenStrip}>shadow.*</p>
@@ -494,8 +494,8 @@ export default controller(() => {
 
     <!-- RIGHT: large specimen canvas (grow) -->
     <column
-      data-specimen-dock
-      data-shape-canvas
+      specimen-dock
+      shape-canvas
       gap="0"
       grow
       min-w="0"
@@ -507,15 +507,15 @@ export default controller(() => {
           No external Specimen/Preview/light label stack.
         -->
         <card
-          data-shape-specimen
-          data-preview-specimen
-          data-mode={session.paintMode()}
+          shape-specimen
+          preview-specimen
+          mode={session.paintMode()}
           padding="none"
           sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}
         >
           <column gap="0" grow sx={style.minH(0).h(full)}>
             <row
-              data-specimen-chrome
+              specimen-chrome
               align="center"
               gap="2"
               nowrap
@@ -535,7 +535,7 @@ export default controller(() => {
 
             <scroll-area grow sx={stageSolid}>
               <column
-                data-specimen-body
+                specimen-body
                 gap="5"
                 align="center"
                 sx={style.pad(6).minW(0).w(full)}
@@ -548,7 +548,7 @@ export default controller(() => {
                 </column>
 
                 <!-- Single character card: freeform fill (frost α live), not solid nested plate. -->
-                <stack data-spec-card use:liveBox={liveCardBox()} sx={liveCard}>
+                <stack spec-card use:liveBox={liveCardBox()} sx={liveCard}>
                   <column gap="4" sx={style.maxW(panel-max-w-sm).w(full)}>
                     <row gap="3" align="center" nowrap>
                       <avatar size="sm" initials="S" tone="primary"></avatar>
@@ -589,7 +589,7 @@ export default controller(() => {
                 </stack>
 
                 <if {shape.showGlass()}>
-                  <column data-glass-mini gap="2" use:liveBox={liveGlassBox()} sx={glassMini}>
+                  <column glass-mini gap="2" use:liveBox={liveGlassBox()} sx={glassMini}>
                     <p sx={pathMeta}>Glass material</p>
                     <p sx={style.fontSize(sm).fontWeight(semibold).fontFamily(heading)}>Frosted pane</p>
                     <p sx={style.fontSize(xs).fg(muted-foreground).leading(relaxed)}>
@@ -602,7 +602,7 @@ export default controller(() => {
                   </column>
                 </if>
 
-                <column data-radius-ladder gap="2" align="center" aria-hidden="true">
+                <column radius-ladder gap="2" align="center" aria-hidden="true">
                   <p sx={fieldHint}>Radius ladder</p>
                   <row gap="4" align="end" nowrap>
                     <column gap="1" align="center">
@@ -636,9 +636,9 @@ export default controller(() => {
     </column>
   </row>
 
-  <toast-region position="bottom-end" data-shape-toast-region>
+  <toast-region position="bottom-end" shape-toast-region>
     <for {session.toastItems()} as="t" key={t.key}>
-      <toast tone={t.tone} data-shape-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} shape-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

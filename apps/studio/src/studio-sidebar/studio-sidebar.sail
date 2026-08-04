@@ -14,14 +14,14 @@
 </scope>
 
 <column
-  data-studio-sidebar
+  studio-sidebar
   shrink="0"
   gap="0"
   sx={style.w(64).minW(64).minH(0).h(full).borderRWidth(1).borderR(border).bg(surface-1).overflow(hidden)}
 >
   <slot name="header">
     <row
-      data-studio-sidebar-header
+      studio-sidebar-header
       align="center"
       shrink="0"
       sx={style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle)}
@@ -33,7 +33,7 @@
   </slot>
   <slot name="toolbar"></slot>
   <column
-    data-studio-sidebar-body
+    studio-sidebar-body
     grow
     gap="0"
     min-w="0"

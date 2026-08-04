@@ -11,7 +11,7 @@
 </scope>
 
 <column
-  data-studio-panel
+  studio-panel
   gap="0"
   grow
   min-w="0"
@@ -19,7 +19,7 @@
 >
   <slot name="header">
     <row
-      data-studio-panel-header
+      studio-panel-header
       align="center"
       gap="2"
       shrink="0"
@@ -35,7 +35,7 @@
       </row>
     </row>
   </slot>
-  <column data-studio-panel-body grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden)}>
+  <column studio-panel-body grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden)}>
     <slot></slot>
   </column>
   <slot name="footer"></slot>

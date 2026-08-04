@@ -19,15 +19,15 @@ export default controller(() => {
 </controller>
 
 <column
-  data-surface="components"
-  data-components-surface
-  data-components-library
+  surface="components"
+  components-surface
+  components-library
   gap="0"
   grow
   sx={style.minH(0).h(full).minW(0).overflow(hidden).bg(background)}
 >
   <row
-    data-components-workbench
+    components-workbench
     grow
     gap="0"
     nowrap
@@ -35,23 +35,23 @@ export default controller(() => {
     sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden)}
   >
     <column
-      data-components-nav
+      components-nav
       grow
       gap="0"
       sx={style.minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-0).overflow(hidden)}
     >
-      <column data-components-nav-head shrink="0" gap="2" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
+      <column components-nav-head shrink="0" gap="2" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
         <row align="center" justify="between" nowrap gap="2">
           <p sx={eyebrow}>Components</p>
-          <button type="button" size="sm" variant="solid" tone="primary" data-new-component on:click={session.onNewOpen} shrink="0">
+          <button type="button" size="sm" variant="solid" tone="primary" new-component on:click={session.onNewOpen} shrink="0">
             New…
           </button>
         </row>
-        <row data-mode-toggle gap="1" align="center" nowrap on:click={session.onModeToggle}>
-          <button type="button" size="sm" data-mode="library" variant="solid" tone="primary" aria-pressed="true">
+        <row mode-toggle gap="1" align="center" nowrap on:click={session.onModeToggle}>
+          <button type="button" size="sm" mode="library" variant="solid" tone="primary" aria-pressed="true">
             Library
           </button>
-          <button type="button" size="sm" data-mode="inspect" variant="ghost" tone="muted" aria-pressed="false">
+          <button type="button" size="sm" mode="inspect" variant="ghost" tone="muted" aria-pressed="false">
             Inspect
           </button>
         </row>
@@ -59,7 +59,7 @@ export default controller(() => {
           type="search"
           size="sm"
           placeholder="Filter name, pack, path…"
-          data-components-filter
+          components-filter
           value={session.filterQuery()}
           on:input={session.onFilterInput}
         />
@@ -72,9 +72,9 @@ export default controller(() => {
         </row>
       </if>
 
-      <scroll-area data-components-list grow on:click={library.onListClick} sx={style.minH(0).basis(0).h(full)}>
+      <scroll-area components-list grow on:click={library.onListClick} sx={style.minH(0).basis(0).h(full)}>
         <column gap="3" sx={style.pad(3)}>
-          <column data-list-group="project" gap="1">
+          <column list-group="project" gap="1">
             <row align="center" justify="between" nowrap>
               <p sx={eyebrow}>This project</p>
               <p sx={pathMeta}>{library.projectCountLabel()}</p>
@@ -82,15 +82,15 @@ export default controller(() => {
             <if {library.emptyProject()}>
               <studio-empty title="No project components" size="sm">
                 Author components under src/, or start a brief with New…
-                <button slot="action" type="button" size="sm" variant="solid" tone="primary" data-new-component on:click={session.onNewOpen}>
+                <button slot="action" type="button" size="sm" variant="solid" tone="primary" new-component on:click={session.onNewOpen}>
                   New…
                 </button>
               </studio-empty>
             </if>
             <for {library.projectRows()} as="row" key={row.key}>
               <studio-list-row
-                data-component-row
-                data-component-id={row.id}
+                component-row
+                component-id={row.id}
                 title={row.title}
                 meta={row.meta}
                 selected={row.selected}
@@ -102,7 +102,7 @@ export default controller(() => {
             </for>
           </column>
 
-          <column data-list-group="packs" gap="1">
+          <column list-group="packs" gap="1">
             <row align="center" justify="between" nowrap>
               <p sx={eyebrow}>Installed packs</p>
               <p sx={pathMeta}>{library.packCountLabel()}</p>
@@ -112,8 +112,8 @@ export default controller(() => {
             </if>
             <for {library.packRows()} as="row" key={row.key}>
               <studio-list-row
-                data-component-row
-                data-component-id={row.id}
+                component-row
+                component-id={row.id}
                 title={row.title}
                 meta={row.meta}
                 selected={row.selected}
@@ -125,9 +125,9 @@ export default controller(() => {
             </for>
           </column>
 
-          <p data-l1-footnote sx={style.fontSize(xs).fg(muted-foreground).leading(snug).padX(1)}>
+          <p l1-footnote sx={style.fontSize(xs).fg(muted-foreground).leading(snug).padX(1)}>
             Element skins live under Themes → Components — not listed here.
-            <button type="button" size="sm" variant="ghost" tone="muted" data-themes-components on:click={session.goThemesComponents}>
+            <button type="button" size="sm" variant="ghost" tone="muted" themes-components on:click={session.goThemesComponents}>
               Open Themes
             </button>
           </p>
@@ -136,23 +136,23 @@ export default controller(() => {
     </column>
 
     <column
-      data-components-detail
+      components-detail
       grow
       gap="0"
       sx={style.minH(0).h(full).minW(0).basis(0).bg(background).overflow(hidden)}
     >
       <column
-        data-components-detail-head
+        components-detail-head
         shrink="0"
         gap="3"
         sx={style.padX(5).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-0)}
       >
         <row align="start" justify="between" gap="3" nowrap>
           <column grow min-w="0" gap="1">
-            <p data-detail-title sx={style.fontSize(lg).fontWeight(semibold).tracking(tight).truncate()}>
+            <p detail-title sx={style.fontSize(lg).fontWeight(semibold).tracking(tight).truncate()}>
               {library.detailTitle()}
             </p>
-            <p data-detail-path sx={pathMeta}>{library.detailPath()}</p>
+            <p detail-path sx={pathMeta}>{library.detailPath()}</p>
             <row gap="2" align="center" nowrap>
               <if {library.hasSelected()}>
                 <badge tone={library.detailOriginTone()} size="sm" variant="soft" pill>{library.detailOriginLabel()}</badge>
@@ -166,7 +166,7 @@ export default controller(() => {
               size="sm"
               variant="solid"
               tone="primary"
-              data-open-edit
+              open-edit
               disabled={!library.canOpenInEdit()}
               title={library.canOpenInEdit() ? 'Open this component source in Edit' : 'No project path to open in Edit'}
               on:click={library.onOpenInEdit}
@@ -177,7 +177,7 @@ export default controller(() => {
               type="button"
               size="sm"
               variant="default"
-              data-start-thread
+              start-thread
               disabled={!library.hasSelected()}
               title={library.hasSelected() ? 'Start a Work thread for this component' : 'Select a component first'}
               on:click={library.onStartThread}
@@ -188,7 +188,7 @@ export default controller(() => {
               type="button"
               size="sm"
               variant="ghost"
-              data-copy-brief
+              copy-brief
               disabled={!library.hasSelected()}
               title={library.hasSelected() ? 'Copy a structured brief for an agent' : 'Select a component first'}
               on:click={library.onCopyBrief}
@@ -199,10 +199,10 @@ export default controller(() => {
         </row>
       </column>
 
-      <scroll-area data-components-detail-body grow sx={style.minH(0).basis(0).h(full)}>
+      <scroll-area components-detail-body grow sx={style.minH(0).basis(0).h(full)}>
         <column gap="4" sx={style.pad(5).minW(0)}>
           <if {session.showNewForm()}>
-            <card data-new-form padding="md" sx={style.minW(0)}>
+            <card new-form padding="md" sx={style.minW(0)}>
               <column gap="3">
                 <p sx={style.fontSize(md).fontWeight(semibold)}>New component</p>
                 <p sx={muted}>Creates a draft brief only — does not write files yet.</p>
@@ -219,7 +219,7 @@ export default controller(() => {
                   </select>
                 </field>
                 <row gap="2" nowrap>
-                  <button type="button" size="sm" variant="solid" tone="primary" data-create-brief on:click={session.onCreateBrief}>
+                  <button type="button" size="sm" variant="solid" tone="primary" create-brief on:click={session.onCreateBrief}>
                     Create brief
                   </button>
                   <button type="button" size="sm" variant="default" on:click={session.onStartThreadFromNew}>
@@ -230,10 +230,10 @@ export default controller(() => {
             </card>
           </if>
 
-          <card data-components-preview data-preview-specimen padding="none" sx={style.minW(0).overflow(hidden).shadow(lg)}>
+          <card components-preview preview-specimen padding="none" sx={style.minW(0).overflow(hidden).shadow(lg)}>
             <column gap="0">
               <row
-                data-specimen-chrome
+                specimen-chrome
                 align="center"
                 gap="2"
                 nowrap
@@ -250,14 +250,14 @@ export default controller(() => {
                 </p>
                 <badge tone="muted" size="sm" variant="outline" pill shrink="0">preview</badge>
               </row>
-              <column data-mode="dark" data-specimen-body gap="2" sx={style.pad(6).minH(32).bg(background)}>
+              <column mode="dark" specimen-body gap="2" sx={style.pad(6).minH(32).bg(background)}>
                 <p sx={style.fontSize(md).fontWeight(semibold).fontFamily(heading)}>{library.previewTitle()}</p>
                 <p sx={style.fontSize(sm).fg(muted-foreground).leading(relaxed)}>{library.previewHint()}</p>
               </column>
             </column>
           </card>
 
-          <tabs data-components-tabs default-value="overview">
+          <tabs components-tabs default-value="overview">
             <tab-list variant="line">
               <tab value="overview">Overview</tab>
               <tab value="contract">Contract</tab>
@@ -266,12 +266,12 @@ export default controller(() => {
               <column gap="3" sx={style.padY(3)}>
                 <column gap="1">
                   <p sx={eyebrow}>Intent</p>
-                  <p data-detail-intent sx={style.fontSize(sm).leading(relaxed)}>{library.detailIntent()}</p>
+                  <p detail-intent sx={style.fontSize(sm).leading(relaxed)}>{library.detailIntent()}</p>
                 </column>
                 <column gap="2">
                   <p sx={eyebrow}>Meta</p>
                   <for {library.kvRows()} as="kv" key={kv.key}>
-                    <row data-kv-row gap="3" align="start" nowrap>
+                    <row kv-row gap="3" align="start" nowrap>
                       <p shrink="0" sx={style.fontSize(xs).fg(muted-foreground).w(24)}>{kv.label}</p>
                       <p grow min-w="0" sx={style.fontSize(sm).fontFamily(mono).truncate()}>{kv.value}</p>
                     </row>
@@ -287,7 +287,7 @@ export default controller(() => {
             <tab-panel value="contract">
               <column gap="3" sx={style.padY(3)}>
                 <if {library.schemaNote()}>
-                  <p data-schema-note sx={muted}>{library.schemaNote()}</p>
+                  <p schema-note sx={muted}>{library.schemaNote()}</p>
                 </if>
                 <if {!library.hasProps()}>
                   <studio-empty title="No props in catalog" size="sm">
@@ -295,14 +295,14 @@ export default controller(() => {
                   </studio-empty>
                 </if>
                 <if {library.hasProps()}>
-                  <column data-props-table gap="1">
+                  <column props-table gap="1">
                     <row gap="3" nowrap sx={style.padY(1).borderBWidth(1).borderB(border-subtle)}>
                       <p grow sx={eyebrow}>Name</p>
                       <p sx={eyebrow}>Type</p>
                       <p sx={eyebrow}>Default</p>
                     </row>
                     <for {library.propRows()} as="prop" key={prop.key}>
-                      <row data-prop-row gap="3" align="start" nowrap sx={style.padY(2).borderBWidth(1).borderB(border-subtle)}>
+                      <row prop-row gap="3" align="start" nowrap sx={style.padY(2).borderBWidth(1).borderB(border-subtle)}>
                         <column grow min-w="0" gap="0">
                           <p sx={style.fontSize(sm).fontFamily(mono)}>{prop.name}</p>
                           <p sx={style.fontSize(xs).fg(muted-foreground)}>{prop.requiredLabel}</p>
@@ -321,9 +321,9 @@ export default controller(() => {
     </column>
   </row>
 
-  <toast-region position="bottom-end" data-components-toast-region>
+  <toast-region position="bottom-end" components-toast-region>
     <for {session.toastItems()} as="t" key={t.key}>
-      <toast tone={t.tone} data-components-toast on:sail-toast-dismiss={session.onToastDismiss}>
+      <toast tone={t.tone} components-toast on:sail-toast-dismiss={session.onToastDismiss}>
         {t.message}
       </toast>
     </for>

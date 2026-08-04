@@ -82,7 +82,7 @@ export default controller((ctx) => {
       root.setAttribute('data-product', productAttr(product()))
     })
 
-    // Theme application. applyTheme is the ONLY writer of theme/data-mode and
+    // Theme application. applyTheme is the ONLY writer of theme/mode and
     // does NOT persist (the picker owns localStorage) — so re-running per
     // navigation is free and never overrides an explicit pick.
     //

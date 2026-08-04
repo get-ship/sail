@@ -68,32 +68,12 @@ function fontOpts(list: string[], current: string): FontOpt[] {
   return vals.map((v) => ({ value: v, label: v, key: v }))
 }
 
-/** Inject Google Fonts CSS for live preview (discoverer only; install vendors woff2). */
-function ensurePreviewFaces(families: string[]) {
-  if (typeof document === 'undefined') return
-  const unique = [...new Set(families.filter(Boolean))].slice(0, 40)
-  if (!unique.length) return
-  const id = 'sail-font-discoverer-preview'
-  let link = document.getElementById(id) as HTMLLinkElement | null
-  const familiesParam = unique
-    .map((f) => `family=${encodeURIComponent(f).replace(/%20/g, '+')}:wght@400;600`)
-    .join('&')
-  const href = `https://fonts.googleapis.com/css2?${familiesParam}&display=swap`
-  if (!link) {
-    link = document.createElement('link')
-    link.id = id
-    link.rel = 'stylesheet'
-    document.head.appendChild(link)
-  }
-  if (link.getAttribute('href') !== href) link.setAttribute('href', href)
-  // Apply face to sample nodes (host is display:contents — sx cannot take per-row families).
-  requestAnimationFrame(() => {
-    document.querySelectorAll<HTMLElement>('[data-font-sample][data-face]').forEach((el) => {
-      const face = el.getAttribute('data-face')
-      if (!face) return
-      el.style.fontFamily = `'${face.replace(/'/g, "\\'")}', system-ui, sans-serif`
-    })
-  })
+/**
+ * Live font preview inject — ambient document/CSSOM banned (DOMDEC).
+ * No-op until a platform font-preview primitive lands; samples use theme tokens.
+ */
+function ensurePreviewFaces(_families: string[]) {
+  /* gap: no document.createElement / querySelector in apps */
 }
 
 export function createAssetsEdit(session: ThemeSession) {
@@ -214,7 +194,7 @@ export function createAssetsEdit(session: ThemeSession) {
   }
 
   const onIconSize = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[data-icon-size]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[icon-size]') as HTMLElement | null
     const size = el?.dataset.iconSize as 'sm' | 'md' | 'lg' | 'xl' | undefined
     if (!size) return
     iconPreviewSize.set(size)
@@ -243,7 +223,7 @@ export function createAssetsEdit(session: ThemeSession) {
 
   const onIconScaleStep = (e: Event) => {
     if (!session.guardEdit()) return
-    const el = (e.target as Element | null)?.closest?.('[data-icon-scale]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[icon-scale]') as HTMLElement | null
     const key = el?.dataset.iconScale
     if (!key) return
     const steps = uiIconScaleSteps()
@@ -308,7 +288,7 @@ export function createAssetsEdit(session: ThemeSession) {
   }
 
   const onFontCategory = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[data-font-cat]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[font-cat]') as HTMLElement | null
     const cat = el?.dataset.fontCat
     if (!cat) return
     fontCategory.set(cat)
@@ -331,7 +311,7 @@ export function createAssetsEdit(session: ThemeSession) {
   }
 
   const onFontUseRole = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[data-font-family][data-font-role]') as
+    const el = (e.target as Element | null)?.closest?.('[font-family][font-role]') as
       | HTMLElement
       | null
     const family = el?.dataset.fontFamily
@@ -342,7 +322,7 @@ export function createAssetsEdit(session: ThemeSession) {
 
   const onFontInstall = (e: Event) => {
     if (!session.guardEdit()) return
-    const el = (e.target as Element | null)?.closest?.('[data-font-family]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[font-family]') as HTMLElement | null
     const family = el?.dataset.fontFamily
     const role = (el?.dataset.fontRole as 'display' | 'body' | 'mono' | undefined) || 'body'
     if (!family) return

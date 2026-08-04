@@ -10,9 +10,9 @@ const task: EvalTask = {
   catalog: await loadCatalog(),       // the component catalog
   spec: {
     interactions: [
-      { action: 'click', selector: 'button[data-test="bump-up"]' },
+      { action: 'click', selector: 'button[test]="bump-up"]' },
       { assert: 'text',  selector: 'strong',                value: '1' },
-      { action: 'click', selector: 'button[data-test="reset"]' },
+      { action: 'click', selector: 'button[test]="reset"]' },
       { assert: 'text',  selector: 'strong',                value: '0' },
     ],
   },

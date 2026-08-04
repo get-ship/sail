@@ -13,8 +13,8 @@
 </scope>
 
 <row
-  data-studio-list-row
-  data-selected={selected() ? 'true' : 'false'}
+  studio-list-row
+  selected={selected() ? 'true' : 'false'}
   aria-selected={selected() ? 'true' : 'false'}
   gap="2"
   align="center"
@@ -25,7 +25,7 @@
   <slot name="leading"></slot>
   <p grow min-w="0" sx={style.fontSize(sm).truncate()}>{title()}</p>
   <if {meta()}>
-    <p data-studio-list-meta shrink="0" sx={style.fontSize(xs).fg(muted-foreground)}>
+    <p studio-list-meta shrink="0" sx={style.fontSize(xs).fg(muted-foreground)}>
       {meta()}
     </p>
   </if>

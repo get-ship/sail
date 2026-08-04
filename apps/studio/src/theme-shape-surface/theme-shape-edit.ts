@@ -372,7 +372,7 @@ export function createShapeEdit(session: ThemeSession) {
 
   const onRecipeClick = (e: Event) => {
     if (!session.guardEdit()) return
-    const el = (e.target as Element | null)?.closest?.('[data-recipe]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[recipe]') as HTMLElement | null
     const id = el?.dataset.recipe as Exclude<RecipeId, 'custom'> | undefined
     if (!id || !(id in RECIPES)) return
     const r = RECIPES[id]
@@ -399,7 +399,7 @@ export function createShapeEdit(session: ThemeSession) {
   }
 
   const onRadiusChip = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[data-radius]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[radius]') as HTMLElement | null
     const key = el?.dataset.radius as RadiusKey | undefined
     if (!key || !RADIUS_KEYS.includes(key)) return
     focusStep.set(key)
@@ -416,7 +416,7 @@ export function createShapeEdit(session: ThemeSession) {
 
   const onElevClick = (e: Event) => {
     if (!session.guardEdit()) return
-    const el = (e.target as Element | null)?.closest?.('[data-elev]') as HTMLElement | null
+    const el = (e.target as Element | null)?.closest?.('[elev]') as HTMLElement | null
     const key = el?.dataset.elev as ElevKey | undefined
     if (!key || !ELEV_STEPS.some((s) => s.key === key)) return
     markCustom()

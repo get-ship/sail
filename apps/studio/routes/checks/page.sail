@@ -18,8 +18,8 @@ export default controller(() => {
 </controller>
 
 <column
-  data-studio-redirect
-  data-checks-redirect
+  studio-redirect
+  checks-redirect
   grow
   align="center"
   justify="center"

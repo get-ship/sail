@@ -15,7 +15,7 @@ export default controller(() => {
 </controller>
 
 <column
-  data-studio-redirect
+  studio-redirect
   grow
   align="center"
   justify="center"
