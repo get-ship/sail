@@ -90,6 +90,23 @@ describe('createVirtualizer — reactive count (binds to centerRows().length)', 
     count.set(10)
     expect(v.totalSize()).toBe(10 * 20)
   })
+
+  it('measure() after count drop clears oversized measurementsCache (tree collapse hole)', () => {
+    const viewport = makeViewport(200)
+    const count = signal(100)
+    const v = createVirtualizer({
+      count: () => count(),
+      estimateSize: () => 20,
+      getScrollElement: () => viewport,
+    })
+    expect(v.totalSize()).toBe(100 * 20)
+    // Simulate measured rows filling the cache, then collapse.
+    count.set(100)
+    v.measure()
+    count.set(5)
+    v.measure()
+    expect(v.totalSize()).toBe(5 * 20)
+  })
 })
 
 describe('createVirtualizer — identity short-circuit (the corrected gotcha)', () => {

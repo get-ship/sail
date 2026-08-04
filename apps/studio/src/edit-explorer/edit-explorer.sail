@@ -1,19 +1,19 @@
 <!--
-  <edit-explorer> — project file tree only (VS Code explorer).
-  Full height sail-tree; filter in toolbar. No Routes/Components tabs.
-  Engine: tree={tree} identity bind (plain field — prop: prefix is refused).
-  Ban-clean.
+  <edit-explorer> — project file tree.
+  studio-sidebar · input · empty-state · sail-tree (createTable identity).
 -->
 <controller>
 import { createEditExplorer } from './edit-explorer-vm'
 export default controller(() => {
-  const vm = createEditExplorer()
+  const c = createEditExplorer()
   return {
-    tree: vm.tree,
-    filterText: vm.filterText,
-    hasTree: vm.hasTree,
-    onFilterInput: (e: Event) => vm.onFilterInput(e),
-    onTreeSelect: (e: Event) => vm.onTreeSelect(e),
+    tree: c.tree,
+    filterText: c.filterText,
+    hasTree: c.hasTree,
+    dirtyCountLabel: c.dirtyCountLabel,
+    fileCountLabel: c.fileCountLabel,
+    onFilterInput: (e: Event) => c.onFilterInput(e),
+    onTreeSelect: (e: Event) => c.onTreeSelect(e),
   }
 })
 </controller>
@@ -23,7 +23,7 @@ export default controller(() => {
     slot="toolbar"
     shrink="0"
     gap="2"
-    sx={style.pad(2).borderBWidth(1).borderB(border-subtle)}
+    sx={style.pad(2).borderBWidth(1).borderB(border-subtle).bg(surface-1)}
   >
     <input
       type="search"
@@ -35,13 +35,23 @@ export default controller(() => {
       size="sm"
       sx={style.w(full)}
     />
+    <row align="center" justify="between" nowrap gap="2">
+      <p data-file-count sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>
+        {fileCountLabel()}
+      </p>
+      <if {dirtyCountLabel()}>
+        <badge data-dirty-count tone="warning" size="sm" variant="soft" pill>
+          {dirtyCountLabel()}
+        </badge>
+      </if>
+    </row>
   </column>
 
   <column
     data-file-tree
     grow
     gap="0"
-    sx={style.minH(0).basis(0).h(full).padX(1).padY(1).overflow(hidden)}
+    sx={style.minH(0).basis(0).h(full).padX(1).padY(1).overflow(hidden).bg(surface-0)}
   >
     <if {!hasTree()}>
       <empty-state

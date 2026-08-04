@@ -191,7 +191,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         multi: () => (host.getAttribute('selectable') ?? 'none') === 'multi',
         navRoleSelector: '[role="tree"]',
         getWindow: () => windowItems(),
-        onExpanded: () => virt.measure(),
+        // Collapse must shrink the virtualizer spacer (not only hide rows).
+        onExpanded: () => {
+          virt.measure()
+        },
       })
 
       return () => {

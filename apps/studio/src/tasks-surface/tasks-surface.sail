@@ -1,7 +1,5 @@
 <!--
-  <tasks-surface> — anchored threads, drift, crops, @agent handoff.
-  Chat-elements dogfood: sail-message-list · sail-composer · sail-markdown · sail-diff.
-  Ban-clean: no div/span; layout keywords + L1 only.
+  <tasks-surface> — thread list + conversation + composer.
 -->
 <controller>
 import { createTasksSurface } from './tasks-surface-vm'
@@ -140,65 +138,76 @@ export default controller(() => {
     align="stretch"
     sx={style.minH(0).basis(0).h(full).minW(0)}
   >
-    <scroll-area
+    <!-- Thread list: studio-list-row + panel tokens (not hand-rolled h(8) rows) -->
+    <column
       data-threads-list
-      shrink="0"
-      on:click={onTaskThreadClick}
-      sx={style.w(64).minW(56).minH(0).h(full).borderRWidth(1).borderR(border-subtle).bg(surface-1)}
+      data-tasks-nav
+      grow
+      gap="0"
+      sx={style.minH(0).h(full).minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-1).overflow(hidden)}
     >
-      <column gap="0" data-tasks-table sx={style.padY(1)}>
-        <if {!hasTaskThreads()}>
-          <if {!showTaskErrorAlert()}>
-            <studio-empty data-tasks-empty title={emptyTitle()}>
-              {emptyBody()}
-            </studio-empty>
-          </if>
-        </if>
-        <if {hasTaskThreads()}>
-          <for {taskThreadRows()} as="row" key={row.key}>
-            <row
-              data-task-id={row.id}
-              data-thread-row
-              data-drift={row.drift}
-              data-selected={row.selected ? 'true' : 'false'}
-              data-collapsed={row.collapsed ? 'true' : 'false'}
-              gap="2"
-              align="center"
-              nowrap
-              sx={style.h(8).padX(3).when({ hover: style.bg(hover-bg) })}
-            >
-              <badge
-                data-status-badge={row.status}
-                data-status-dot={row.status}
-                tone={row.statusTone}
-                size="sm"
-                variant="solid"
-                pill
-                aria-label={row.statusLabel}
-                shrink="0"
-                sx={style.w(2).h(2).minW(2).pad(0)}
-              ></badge>
-              <column grow min-w="0" gap="0">
-                <p sx={style.fontSize(sm).truncate()}>{row.title}</p>
-                <if {!row.collapsed}>
-                  <row align="center" gap="2" nowrap data-thread-meta>
-                    <p data-actor-chip={row.actorChip} sx={style.fontSize(xs).fg(muted-foreground)}>
-                      {row.actorChip}
-                    </p>
-                    <if {row.showDrift}>
-                      <p data-drift-chip={row.driftChip} sx={style.fontSize(xs).fg(warning)}>
-                        {row.driftChip}
-                      </p>
-                    </if>
-                    <p sx={style.fontSize(xs).fg(muted-foreground)}>{row.updatedLabel}</p>
-                  </row>
-                </if>
-              </column>
-            </row>
-          </for>
-        </if>
+      <column shrink="0" gap="1" sx={style.padX(3).padT(3).padB(2).borderBWidth(1).borderB(border-subtle)}>
+        <p sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)}>
+          Threads
+        </p>
+        <p sx={style.fontSize(xs).fg(muted-foreground).fontFamily(mono)}>{threadCountLabel()}</p>
       </column>
-    </scroll-area>
+      <scroll-area
+        grow
+        on:click={onTaskThreadClick}
+        sx={style.minH(0).basis(0).h(full)}
+      >
+        <column gap="0" data-tasks-table sx={style.padY(1).padX(1)}>
+          <if {!hasTaskThreads()}>
+            <if {!showTaskErrorAlert()}>
+              <studio-empty data-tasks-empty title={emptyTitle()} size="sm">
+                {emptyBody()}
+              </studio-empty>
+            </if>
+          </if>
+          <if {hasTaskThreads()}>
+            <for {taskThreadRows()} as="row" key={row.key}>
+              <studio-list-row
+                data-task-id={row.id}
+                data-thread-row
+                data-drift={row.drift}
+                data-collapsed={row.collapsed ? 'true' : 'false'}
+                title={row.title}
+                meta={row.updatedLabel}
+                selected={row.selected}
+              >
+                <badge
+                  slot="leading"
+                  data-status-badge={row.status}
+                  data-status-dot={row.status}
+                  tone={row.statusTone}
+                  size="sm"
+                  variant="soft"
+                  pill
+                  aria-label={row.statusLabel}
+                  shrink="0"
+                >
+                  {row.statusLabel}
+                </badge>
+                <if {row.showDrift}>
+                  <badge
+                    slot="trailing"
+                    data-drift-chip={row.driftChip}
+                    tone="warning"
+                    size="sm"
+                    variant="outline"
+                    pill
+                    shrink="0"
+                  >
+                    {row.driftChip}
+                  </badge>
+                </if>
+              </studio-list-row>
+            </for>
+          </if>
+        </column>
+      </scroll-area>
+    </column>
 
     <column
       data-task-detail

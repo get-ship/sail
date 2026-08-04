@@ -27,9 +27,23 @@ function isTreeMetaId(id: string): boolean {
   return id.startsWith('group:') || id.startsWith('dir:')
 }
 
+function countLeaves(nodes: SailTreeNode[]): number {
+  let n = 0
+  const walk = (list: SailTreeNode[]) => {
+    for (const node of list) {
+      if (node.children?.length) walk(node.children)
+      else n += 1
+    }
+  }
+  walk(nodes)
+  return n
+}
+
 export function createEditExplorer() {
   const filterText = signal('')
   const hasTree = signal(false)
+  const dirtyCountLabel = signal('')
+  const fileCountLabel = signal('0 files')
   const dataSig = signal<SailTreeNode[]>([])
   const tree = createTable<SailTreeNode>({
     data: dataSig,
@@ -65,6 +79,11 @@ export function createEditExplorer() {
       shown.some((g) => (g.children?.length ?? 0) > 0) || shown.length > 0,
     )
     filterText.set(es.filter)
+    const leaves = countLeaves(shown)
+    fileCountLabel.set(leaves === 1 ? '1 file' : `${leaves} files`)
+    dirtyCountLabel.set(
+      dirty.size > 0 ? `${dirty.size} dirty` : '',
+    )
     syncSelection(es.activePath)
   }
 
@@ -107,6 +126,8 @@ export function createEditExplorer() {
     tree,
     filterText,
     hasTree,
+    dirtyCountLabel,
+    fileCountLabel,
     onFilterInput,
     onTreeSelect,
   }

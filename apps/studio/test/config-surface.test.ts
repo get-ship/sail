@@ -1,5 +1,5 @@
 /**
- * Config surface — fixture honesty + category publish markers.
+ * Config surface — live/project fields + category publish.
  */
 import { describe, expect, it } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
@@ -25,127 +25,99 @@ describe('config-surface', () => {
     expect(existsSync(join(REPO, 'apps/studio/src/config/config-surface-vm.ts'))).toBe(true)
   })
 
-  it('page mounts config-surface; surface ban-clean markers', () => {
-    const page = readFileSync(join(REPO, 'apps/studio/routes/config/page.sail'), 'utf8')
+  it('surface uses button nav + table fields (no diary chrome)', () => {
     const surface = readFileSync(
       join(REPO, 'apps/studio/src/config-surface/config-surface.sail'),
       'utf8',
     )
-    expect(page).toMatch(/<config-surface\b/)
     expect(surface).toMatch(/data-config-surface/)
     expect(surface).toMatch(/data-config-nav/)
-    expect(surface).toMatch(/data-config-main/)
-    expect(surface).toMatch(/data-plugin="ship-cloud"/)
-    expect(surface).toMatch(/data-section="danger"/)
-    expect(surface).toMatch(/data-install-ship-cloud/)
-    expect(surface).toMatch(/disabled/)
+    expect(surface).toMatch(/data-config-cat=/)
+    expect(surface).toMatch(/<button\b/)
+    expect(surface).toMatch(/<table\b/)
+    expect(surface).toMatch(/\bdense\b/)
+    expect(surface).toMatch(/data-config-fields/)
+    expect(surface).not.toMatch(/L1 table dense/)
+    expect(surface).not.toMatch(/honest/)
+    expect(surface).not.toMatch(/dogfood/)
+    expect(surface).not.toMatch(/scaffold/)
     expect(surface).not.toMatch(/showPlugins/)
     expect(surface).not.toMatch(/<div\b/)
     expect(surface).not.toMatch(/<span\b/)
   })
 
-  it('buildConfigFields: live vs fixture honesty', () => {
-    const ctx = { root: 'apps/studio', devUrl: 'http://127.0.0.1:7893', moduleCount: 2 }
+  it('buildConfigFields: only live/project/disabled sources', () => {
+    const ctx = {
+      root: 'apps/studio',
+      devUrl: 'http://127.0.0.1:7893',
+      moduleCount: 2,
+      themeId: 'studio',
+      modeId: 'dark',
+    }
     const project = buildConfigFields('project', ctx)
     expect(project.find((f) => f.key === 'root')?.source).toBe('project')
-    expect(project.find((f) => f.key === 'root')?.value).toBe('apps/studio')
-    expect(project.find((f) => f.key === 'pkg')?.source).toBe('fixture')
-    expect(project.find((f) => f.key === 'render')?.source).toBe('fixture')
+    expect(project.find((f) => f.key === 'theme')?.value).toBe('studio')
+    expect(project.every((f) => f.source === 'project' || f.source === 'live')).toBe(true)
 
-    const compiler = buildConfigFields('compiler', ctx)
-    expect(compiler.every((f) => f.source === 'fixture')).toBe(true)
-
-    const deck = buildConfigFields('deck', ctx)
-    expect(deck.find((f) => f.key === 'dev')?.source).toBe('live')
-    expect(deck.find((f) => f.key === 'dev')?.value).toBe(ctx.devUrl)
-    expect(deck.find((f) => f.key === 'route')?.source).toBe('fixture')
-
-    const studio = buildConfigFields('studio', ctx)
-    expect(studio.find((f) => f.key === 'checks-hotkey')?.value).toBe(CHECKS_HOTKEY_LABEL)
-    expect(studio.find((f) => f.key === 'checks-hotkey')?.source).toBe('fixture')
-    expect(CHECKS_HOTKEY_LABEL).toMatch(/Shift\+K/)
-    expect(CHECKS_HOTKEY_LABEL).not.toMatch(/Shift\+C$/)
-
-    const plugins = buildConfigFields('plugins', ctx)
-    expect(plugins.find((f) => f.key === 'modules')?.source).toBe('live')
-    expect(plugins.find((f) => f.key === 'modules')?.value).toMatch(/2 module/)
+    const runtime = buildConfigFields('runtime', ctx)
+    expect(runtime.find((f) => f.key === 'dev')?.source).toBe('live')
+    expect(runtime.find((f) => f.key === 'findings-hotkey')?.value).toBe(CHECKS_HOTKEY_LABEL)
+    expect(runtime.every((f) => f.source === 'live')).toBe(true)
 
     const danger = buildConfigFields('danger', ctx)
     expect(danger.every((f) => f.source === 'disabled')).toBe(true)
+
+    // No invented fixture compiler knobs
+    for (const id of CONFIG_CATS.map((c) => c.id) as ConfigCatId[]) {
+      const rows = buildConfigFields(id, ctx)
+      expect(rows.some((f) => f.source === 'fixture')).toBe(false)
+    }
   })
 
   it('createConfigSurfaceCore defaults to project; selectCategory flips flags', () => {
-    // Core has no mountAmbient — unit-safe outside controller setup.
-    const vm = createConfigSurfaceCore()
-    expect(vm.selected()).toBe('project')
-    expect(vm.sectionTitle()).toBe('Project')
-    expect(vm.showShipCloud()).toBe(false)
-    expect(vm.showDanger()).toBe(false)
-    expect(vm.categories()).toHaveLength(CONFIG_CATS.length)
-    expect(vm.categories().find((c) => c.id === 'project')?.selected).toBe(true)
+    const c = createConfigSurfaceCore()
+    expect(c.selected()).toBe('project')
+    expect(c.sectionTitle()).toBe('Project')
+    expect(c.showShipCloud()).toBe(false)
+    expect(c.showDanger()).toBe(false)
+    expect(c.categories()).toHaveLength(CONFIG_CATS.length)
 
-    vm.selectCategory('plugins')
-    expect(vm.selected()).toBe('plugins')
-    expect(vm.showShipCloud()).toBe(true)
-    expect(vm.showDanger()).toBe(false)
-    expect(vm.categories().find((c) => c.id === 'plugins')?.selected).toBe(true)
+    c.selectCategory('plugins')
+    expect(c.selected()).toBe('plugins')
+    expect(c.showShipCloud()).toBe(true)
 
-    vm.selectCategory('danger')
-    expect(vm.showDanger()).toBe(true)
-    expect(vm.showShipCloud()).toBe(false)
-    expect(vm.fields().every((f) => f.source === 'disabled')).toBe(true)
-
-    for (const id of CONFIG_CATS.map((c) => c.id) as ConfigCatId[]) {
-      vm.selectCategory(id)
-      expect(vm.selected()).toBe(id)
-      expect(vm.fields().length).toBeGreaterThan(0)
-    }
+    c.selectCategory('danger')
+    expect(c.showDanger()).toBe(true)
+    expect(c.fields().every((f) => f.source === 'disabled')).toBe(true)
   })
 
   it('onCatClick reads data-config-cat', () => {
-    const vm = createConfigSurfaceCore()
+    const c = createConfigSurfaceCore()
     const target = {
       closest: (sel: string) =>
-        sel === '[data-config-cat]' ? { getAttribute: () => 'compiler' } : null,
+        sel === '[data-config-cat]' ? { getAttribute: () => 'runtime' } : null,
     }
-    vm.onCatClick({ target } as unknown as Event)
-    expect(vm.selected()).toBe('compiler')
-    expect(vm.sectionTitle()).toBe('Compiler')
+    c.onCatClick({ target } as unknown as Event)
+    expect(c.selected()).toBe('runtime')
   })
 
-  it('liveShellChanged: devUrl or moduleCount only (not selection thrash)', () => {
-    const base = { devUrl: 'sail dev', moduleCount: 0 }
+  it('liveShellChanged: shell live fields only', () => {
+    const base = { devUrl: 'sail dev', moduleCount: 0, themeId: 'studio', modeId: 'dark' }
     expect(liveShellChanged(base, base)).toBe(false)
-    expect(liveShellChanged(base, { ...base, devUrl: 'http://127.0.0.1:7893' })).toBe(true)
-    expect(liveShellChanged(base, { ...base, moduleCount: 2 })).toBe(true)
-    expect(
-      liveShellChanged(
-        { devUrl: 'a', moduleCount: 1 },
-        { devUrl: 'a', moduleCount: 1 },
-      ),
-    ).toBe(false)
+    expect(liveShellChanged(base, { ...base, devUrl: 'http://x' })).toBe(true)
+    expect(liveShellChanged(base, { ...base, themeId: 'ship' })).toBe(true)
   })
 
-  it('applyLiveShell republishes plugins module count without thrash', () => {
-    const vm = createConfigSurfaceCore()
-    vm.selectCategory('plugins')
-    expect(vm.fields().find((f) => f.key === 'modules')?.value).toMatch(/0 module/)
-
-    // Same live snapshot — no-op (selection/badge thrash equivalent)
-    expect(vm.applyLiveShell({ devUrl: vm.devUrl(), moduleCount: vm.moduleCount() })).toBe(
-      false,
-    )
-    expect(vm.fields().find((f) => f.key === 'modules')?.value).toMatch(/0 module/)
-
-    // Module host loaded activities — live field updates
-    expect(vm.applyLiveShell({ devUrl: vm.devUrl(), moduleCount: 3 })).toBe(true)
-    expect(vm.moduleCount()).toBe(3)
-    expect(vm.fields().find((f) => f.key === 'modules')?.value).toMatch(/3 module/)
-    expect(vm.fields().find((f) => f.key === 'modules')?.source).toBe('live')
-
-    // devUrl change also republishes
-    expect(vm.applyLiveShell({ devUrl: 'http://127.0.0.1:9', moduleCount: 3 })).toBe(true)
-    vm.selectCategory('deck')
-    expect(vm.fields().find((f) => f.key === 'dev')?.value).toBe('http://127.0.0.1:9')
+  it('applyLiveShell republishes module count', () => {
+    const c = createConfigSurfaceCore()
+    c.selectCategory('plugins')
+    expect(c.applyLiveShell({
+      devUrl: c.devUrl(),
+      moduleCount: 3,
+      themeId: 'studio',
+      modeId: 'dark',
+    })).toBe(true)
+    expect(c.moduleCount()).toBe(3)
+    expect(c.fields().find((f) => f.key === 'modules')?.value).toMatch(/3/)
   })
 })

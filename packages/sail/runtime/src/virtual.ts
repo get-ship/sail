@@ -241,7 +241,17 @@ export function createVirtualizer<TScroll extends Element = HTMLElement>(
     core.scrollToOffset(px, opts)
   }
   const measure = (): void => {
+    // Tree collapse / filter often calls measure() after expand toggles.
+    // If measurementsCache still has entries past the new count, getTotalSize()
+    // stays tall → absolute rows vanish but the spacer does not shrink
+    // (studio explorer: "collapse hides children, leaves a hole").
+    const count = options.count()
+    const cache = (core as { measurementsCache?: unknown[] }).measurementsCache
+    if (Array.isArray(cache) && cache.length > count) {
+      ;(core as { measurementsCache: unknown[] }).measurementsCache = []
+    }
     core.measure()
+    untrack(() => tick.set((n) => n + 1))
   }
 
   let disposed = false

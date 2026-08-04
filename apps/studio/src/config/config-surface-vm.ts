@@ -1,6 +1,6 @@
 /**
- * Config surface domain — fixture/read-only scaffold for project settings.
- * No write path in v1 scaffold; field sources are honest (live vs fixture).
+ * Config surface domain — settings from shell + project only (no invented knobs).
+ * Writes not wired; danger actions disabled.
  */
 import { mountAmbient, signal } from '@ship/sail-runtime'
 import { getShellState, subscribeShell } from '@ship/sail-studio-shell'
@@ -8,9 +8,7 @@ import { resolveProjectRoot } from '../shell/project'
 
 export type ConfigCatId =
   | 'project'
-  | 'compiler'
-  | 'deck'
-  | 'studio'
+  | 'runtime'
   | 'plugins'
   | 'danger'
 
@@ -25,35 +23,41 @@ export type ConfigFieldRow = {
   key: string
   label: string
   value: string
-  /** Honesty: `live` / `project` when read at runtime; `fixture` when hardcoded scaffold. */
+  /** `live` shell · `project` path · `disabled` for unwired ops */
   source: string
+}
+
+export type ConfigSectionVm = {
+  id: ConfigCatId
+  key: string
+  title: string
+  lead: string
+  fields: ConfigFieldRow[]
+  selected: boolean
+  showShipCloud: boolean
+  showDanger: boolean
+  showFields: boolean
 }
 
 export const CONFIG_CATS: { id: ConfigCatId; label: string }[] = [
   { id: 'project', label: 'Project' },
-  { id: 'compiler', label: 'Compiler' },
-  { id: 'deck', label: 'Deck' },
-  { id: 'studio', label: 'Studio' },
+  { id: 'runtime', label: 'Runtime' },
   { id: 'plugins', label: 'Plugins' },
   { id: 'danger', label: 'Danger zone' },
 ]
 
 const TITLES: Record<ConfigCatId, string> = {
   project: 'Project',
-  compiler: 'Compiler',
-  deck: 'Deck',
-  studio: 'Studio preferences',
+  runtime: 'Runtime',
   plugins: 'Plugins',
   danger: 'Danger zone',
 }
 
 const LEADS: Record<ConfigCatId, string> = {
-  project: 'Where Studio opens sources and runs ops.',
-  compiler: 'Layout gate and ban policy for this project (read-only scaffold).',
-  deck: 'Dev server and app mount.',
-  studio: 'Editor integration and chrome prefs (fixture).',
-  plugins: 'Official + community slots. Ship Cloud is not a second app.',
-  danger: 'Destructive project ops — disabled until productized.',
+  project: 'Open root and theme/mode from the running shell.',
+  runtime: 'Dev server and loaded module activities.',
+  plugins: 'Module activities on the rail. Ship Cloud install is not wired.',
+  danger: 'Destructive actions are not available yet.',
 }
 
 /** Checks panel chord — avoids Chromium Inspect Element (Ctrl/⌘+Shift+C). */
@@ -63,73 +67,61 @@ export type ConfigFieldsCtx = {
   root: string
   devUrl: string
   moduleCount: number
+  themeId: string
+  modeId: string
 }
 
-/** Live shell fields Config mirrors (selective refresh — not selection/badges). */
 export type ConfigLiveShell = {
   devUrl: string
   moduleCount: number
+  themeId: string
+  modeId: string
 }
 
-/** True when a live Config field may have changed (devUrl or module activity count). */
 export function liveShellChanged(prev: ConfigLiveShell, next: ConfigLiveShell): boolean {
-  return prev.devUrl !== next.devUrl || prev.moduleCount !== next.moduleCount
+  return (
+    prev.devUrl !== next.devUrl ||
+    prev.moduleCount !== next.moduleCount ||
+    prev.themeId !== next.themeId ||
+    prev.modeId !== next.modeId
+  )
 }
 
 export function readLiveShell(s = getShellState()): ConfigLiveShell {
   return {
-    devUrl: s.devUrl || 'sail dev',
+    devUrl: s.devUrl || '—',
     moduleCount: s.moduleActivities.length,
+    themeId: s.themeId || '—',
+    modeId: s.modeId || '—',
   }
 }
 
 /**
- * Pure field builder — unit-tested for source honesty.
- * Live: project root, shell devUrl, module activity count.
- * Everything else is explicit `fixture` until real reads land.
+ * Only values we can read from the running Studio shell / project root.
+ * No placeholder compiler knobs.
  */
 export function buildConfigFields(id: ConfigCatId, ctx: ConfigFieldsCtx): ConfigFieldRow[] {
   switch (id) {
     case 'project':
       return [
         { key: 'root', label: 'Root', value: ctx.root, source: 'project' },
-        { key: 'pkg', label: 'Package', value: '@ship/studio', source: 'fixture' },
-        { key: 'render', label: 'Render', value: 'csr', source: 'fixture' },
+        { key: 'theme', label: 'Theme', value: ctx.themeId, source: 'live' },
+        { key: 'mode', label: 'Mode', value: ctx.modeId, source: 'live' },
       ]
-    case 'compiler':
-      return [
-        { key: 'layout', label: 'Layout severity', value: 'warn', source: 'fixture' },
-        {
-          key: 'raw',
-          label: 'Raw containers',
-          value: 'false (ban div/span in src)',
-          source: 'fixture',
-        },
-        {
-          key: 'theme',
-          label: 'Default theme',
-          value: 'studio · dark',
-          source: 'fixture',
-        },
-      ]
-    case 'deck':
+    case 'runtime':
       return [
         { key: 'dev', label: 'Dev URL', value: ctx.devUrl, source: 'live' },
         {
-          key: 'route',
-          label: 'App route',
-          value: '/ (standalone) or /_studio',
-          source: 'fixture',
+          key: 'modules',
+          label: 'Module activities',
+          value: String(ctx.moduleCount),
+          source: 'live',
         },
-      ]
-    case 'studio':
-      return [
-        { key: 'editor', label: 'External editor', value: 'vscode', source: 'fixture' },
         {
-          key: 'checks-hotkey',
-          label: 'Checks hotkey',
+          key: 'findings-hotkey',
+          label: 'Findings hotkey',
           value: CHECKS_HOTKEY_LABEL,
-          source: 'fixture',
+          source: 'live',
         },
       ]
     case 'plugins':
@@ -137,7 +129,7 @@ export function buildConfigFields(id: ConfigCatId, ctx: ConfigFieldsCtx): Config
         {
           key: 'modules',
           label: 'Loaded modules',
-          value: `${ctx.moduleCount} module activities on rail`,
+          value: `${ctx.moduleCount} on rail`,
           source: 'live',
         },
       ]
@@ -146,52 +138,75 @@ export function buildConfigFields(id: ConfigCatId, ctx: ConfigFieldsCtx): Config
         {
           key: 'reset',
           label: 'Reset Studio state',
-          value: 'Clear local shell + editor tabs',
+          value: 'Not available',
           source: 'disabled',
         },
         {
           key: 'purge',
           label: 'Purge theme drafts',
-          value: 'Drop unsaved theme session drafts',
+          value: 'Not available',
           source: 'disabled',
         },
       ]
   }
 }
 
-/** Pure surface state — no mountAmbient (unit-testable outside controller setup). */
+function buildSections(selected: ConfigCatId, ctx: ConfigFieldsCtx): ConfigSectionVm[] {
+  return CONFIG_CATS.map((c) => {
+    const id = c.id
+    return {
+      id,
+      key: id,
+      title: TITLES[id],
+      lead: LEADS[id],
+      fields: buildConfigFields(id, ctx),
+      selected: id === selected,
+      showShipCloud: id === 'plugins',
+      showDanger: id === 'danger',
+      showFields: true,
+    }
+  })
+}
+
 export function createConfigSurfaceCore() {
   const selected = signal<ConfigCatId>('project')
   const categories = signal<ConfigCatRow[]>([])
   const sectionTitle = signal(TITLES.project)
   const sectionLead = signal(LEADS.project)
   const fields = signal<ConfigFieldRow[]>([])
+  const sections = signal<ConfigSectionVm[]>([])
   const showShipCloud = signal(false)
   const showDanger = signal(false)
   const projectRoot = signal(resolveProjectRoot())
   const live = readLiveShell()
   const devUrl = signal(live.devUrl)
   const moduleCount = signal(live.moduleCount)
+  const themeId = signal(live.themeId)
+  const modeId = signal(live.modeId)
 
   const ctx = (): ConfigFieldsCtx => ({
     root: projectRoot(),
     devUrl: devUrl(),
     moduleCount: moduleCount(),
+    themeId: themeId(),
+    modeId: modeId(),
   })
 
   const publish = (id: ConfigCatId) => {
     selected.set(id)
+    const c = ctx()
     categories.set(
-      CONFIG_CATS.map((c) => ({
-        id: c.id,
-        label: c.label,
-        key: c.id,
-        selected: c.id === id,
+      CONFIG_CATS.map((cat) => ({
+        id: cat.id,
+        label: cat.label,
+        key: cat.id,
+        selected: cat.id === id,
       })),
     )
     sectionTitle.set(TITLES[id])
     sectionLead.set(LEADS[id])
-    fields.set(buildConfigFields(id, ctx()))
+    fields.set(buildConfigFields(id, c))
+    sections.set(buildSections(id, c))
     showShipCloud.set(id === 'plugins')
     showDanger.set(id === 'danger')
   }
@@ -205,7 +220,6 @@ export function createConfigSurfaceCore() {
     publish(id)
   }
 
-  /** Test / programmatic select (same as cat click). */
   const selectCategory = (id: ConfigCatId) => {
     if (!CONFIG_CATS.some((c) => c.id === id)) return
     publish(id)
@@ -216,6 +230,7 @@ export function createConfigSurfaceCore() {
     sectionTitle,
     sectionLead,
     fields,
+    sections,
     showShipCloud,
     showDanger,
     onCatClick,
@@ -223,15 +238,18 @@ export function createConfigSurfaceCore() {
     selected,
     devUrl,
     moduleCount,
-    /** Apply live shell snapshot; republish when devUrl or module count changes. */
     applyLiveShell: (next: ConfigLiveShell) => {
       const prev: ConfigLiveShell = {
         devUrl: devUrl(),
         moduleCount: moduleCount(),
+        themeId: themeId(),
+        modeId: modeId(),
       }
       if (!liveShellChanged(prev, next)) return false
       devUrl.set(next.devUrl)
       moduleCount.set(next.moduleCount)
+      themeId.set(next.themeId)
+      modeId.set(next.modeId)
       publish(selected())
       return true
     },
@@ -239,10 +257,6 @@ export function createConfigSurfaceCore() {
   }
 }
 
-/**
- * Controller entry — refresh when live shell fields change
- * (devUrl, moduleActivities.length). Ignore selection/badge thrash.
- */
 export function createConfigSurface() {
   const core = createConfigSurfaceCore()
   mountAmbient(() => {

@@ -1,26 +1,22 @@
 <!--
-  <config-surface> — project / compiler / deck / studio / plugins scaffold.
-  Read-only fixture fields; Ship Cloud official plugin card; danger zone disabled.
-  Height chain: side cat nav + main sections. Ban-clean.
+  <config-surface> — project/runtime settings from shell + project root.
+  Nav: buttons. Fields: table. Product copy only.
 -->
 <scope>
   const eyebrow = style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)
   const muted = style.fontSize(sm).fg(muted-foreground)
-  const monoVal = style.fontSize(sm).fontFamily(mono).fg(foreground)
 </scope>
 
 <controller>
 import { createConfigSurface } from '../config/config-surface-vm'
 export default controller(() => {
-  const vm = createConfigSurface()
+  const c = createConfigSurface()
   return {
-    categories: vm.categories,
-    sectionTitle: vm.sectionTitle,
-    sectionLead: vm.sectionLead,
-    fields: vm.fields,
-    showShipCloud: vm.showShipCloud,
-    showDanger: vm.showDanger,
-    onCatClick: (e: Event) => vm.onCatClick(e),
+    categories: c.categories,
+    sections: c.sections,
+    sectionTitle: c.sectionTitle,
+    sectionLead: c.sectionLead,
+    onCatClick: (e: Event) => c.onCatClick(e),
   }
 })
 </controller>
@@ -44,19 +40,25 @@ export default controller(() => {
       data-config-nav
       grow
       gap="0"
-      sx={style.minH(0).h(full).minW(panel-min-w-sm).maxW(panel-max-w-sm).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-0).overflow(hidden)}
+      sx={style.minH(0).h(full).minW(panel-min-w-sm).maxW(panel-max-w-sm).basis(0).borderRWidth(1).borderR(border-subtle).bg(surface-1).overflow(hidden)}
     >
-      <column shrink="0" gap="1" sx={style.padX(4).padT(4).padB(3).borderBWidth(1).borderB(border-subtle)}>
+      <column shrink="0" sx={style.padX(3).padT(3).padB(2).borderBWidth(1).borderB(border-subtle)}>
         <p sx={eyebrow}>Config</p>
       </column>
       <scroll-area data-config-cat-list grow on:click={onCatClick} sx={style.minH(0).basis(0).h(full)}>
         <column gap="1" sx={style.pad(2)}>
           <for {categories()} as="cat" key={cat.key}>
-            <studio-list-row
+            <button
+              type="button"
               data-config-cat={cat.id}
-              title={cat.label}
-              selected={cat.selected}
-            ></studio-list-row>
+              size="sm"
+              variant={cat.selected ? 'soft' : 'ghost'}
+              tone={cat.selected ? 'primary' : 'muted'}
+              aria-current={cat.selected ? 'true' : undefined}
+              sx={style.w(full).justify(start)}
+            >
+              {cat.label}
+            </button>
           </for>
         </column>
       </scroll-area>
@@ -72,7 +74,7 @@ export default controller(() => {
         data-config-head
         shrink="0"
         gap="1"
-        sx={style.padX(5).padY(4).borderBWidth(1).borderB(border-subtle).bg(surface-0)}
+        sx={style.padX(5).padY(3).borderBWidth(1).borderB(border-subtle).bg(surface-0)}
       >
         <p data-config-section-title sx={style.fontSize(lg).fontWeight(semibold).tracking(tight)}>
           {sectionTitle()}
@@ -81,91 +83,106 @@ export default controller(() => {
       </column>
 
       <scroll-area data-config-body grow sx={style.minH(0).basis(0).h(full)}>
-        <column gap="4" sx={style.pad(5).minW(0)}>
-          <if {showShipCloud()}>
-            <card data-plugin="ship-cloud" padding="md" sx={style.minW(0).borderWidth(1).border(primary)}>
-              <row gap="3" align="start" nowrap>
-                <center
-                  shrink="0"
-                  sx={style.w(10).h(10).minW(10).minH(10).radius(md).bg(surface-2).borderWidth(1).border(border-subtle).fg(primary)}
-                >
-                  <p sx={style.fontSize(xs).fontWeight(semibold)}>SC</p>
-                </center>
-                <column grow min-w="0" gap="1">
-                  <row gap="2" align="center" nowrap>
-                    <p sx={style.fontSize(md).fontWeight(semibold)}>Ship Cloud</p>
-                    <badge tone="primary" size="sm" variant="soft" pill>official</badge>
-                  </row>
-                  <p sx={muted}>
-                    Account, project memory, sync, hosted agents. Fills Studio slots when installed —
-                    OSS keeps empty honest states until then.
-                  </p>
-                </column>
-                <button
-                  type="button"
-                  size="sm"
-                  variant="default"
-                  disabled
-                  title="Plugin host install path not wired in scaffold"
-                  data-install-ship-cloud
-                  shrink="0"
-                >
-                  Install…
-                </button>
-              </row>
-            </card>
-          </if>
+        <column gap="3" sx={style.pad(4).minW(0)}>
+          <for {sections()} as="sec" key={sec.key}>
+            <if {sec.selected}>
+              <column
+                data-config-block={sec.id}
+                gap="0"
+                sx={style.minW(0).radius(md).borderWidth(1).border(border-subtle).bg(surface-0).overflow(hidden)}
+              >
+                <if {sec.showShipCloud}>
+                  <column gap="0" sx={style.pad(3).borderBWidth(1).borderB(border-subtle)}>
+                    <card data-plugin="ship-cloud" padding="md" sx={style.minW(0).borderWidth(1).border(primary).bg(surface-1)}>
+                      <row gap="3" align="start" nowrap>
+                        <column grow min-w="0" gap="1">
+                          <row gap="2" align="center" nowrap>
+                            <p sx={style.fontSize(md).fontWeight(semibold)}>Ship Cloud</p>
+                            <badge tone="primary" size="sm" variant="soft" pill>official</badge>
+                          </row>
+                          <p sx={muted}>Account, sync, and hosted agents when the plugin host is available.</p>
+                        </column>
+                        <button
+                          type="button"
+                          size="sm"
+                          variant="default"
+                          disabled
+                          title="Install path not available"
+                          data-install-ship-cloud
+                          shrink="0"
+                        >
+                          Install…
+                        </button>
+                      </row>
+                    </card>
+                  </column>
+                </if>
 
-          <card data-config-fields padding="md" sx={style.minW(0)}>
-            <column gap="0">
-              <for {fields()} as="f" key={f.key}>
-                <row
-                  data-config-field={f.key}
-                  gap="3"
-                  align="center"
-                  nowrap
-                  sx={style.padY(3).borderBWidth(1).borderB(border-subtle)}
-                >
-                  <p shrink="0" sx={style.fontSize(sm).fontWeight(semibold).w(36)}>{f.label}</p>
-                  <p grow min-w="0" sx={monoVal}>{f.value}</p>
-                  <badge tone="muted" size="sm" variant="outline" pill shrink="0">{f.source}</badge>
-                </row>
-              </for>
-            </column>
-          </card>
+                <if {sec.showDanger}>
+                  <column data-section="danger" gap="3" sx={style.pad(4).borderBWidth(1).borderB(border-subtle).bg(surface-1)}>
+                    <row gap="2" nowrap>
+                      <button
+                        type="button"
+                        size="sm"
+                        variant="default"
+                        tone="destructive"
+                        disabled
+                        title="Not available"
+                        data-reset-studio
+                      >
+                        Reset Studio state…
+                      </button>
+                      <button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        tone="destructive"
+                        disabled
+                        title="Not available"
+                        data-purge-theme-drafts
+                      >
+                        Purge theme drafts…
+                      </button>
+                    </row>
+                  </column>
+                </if>
 
-          <if {showDanger()}>
-            <card data-section="danger" padding="md" tone="destructive" sx={style.minW(0)}>
-              <column gap="3">
-                <p sx={style.fontSize(sm).fontWeight(semibold).fg(destructive)}>Danger zone</p>
-                <p sx={muted}>Destructive ops are disabled in this scaffold.</p>
-                <row gap="2" nowrap>
-                  <button
-                    type="button"
-                    size="sm"
-                    variant="default"
-                    tone="destructive"
-                    disabled
-                    title="Not wired"
-                    data-reset-studio
+                <if {sec.showFields}>
+                  <table
+                    data-config-fields
+                    data-config-table={sec.id}
+                    w="full"
+                    dense
+                    hoverable
+                    sx={style.w(full)}
                   >
-                    Reset Studio state…
-                  </button>
-                  <button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    tone="destructive"
-                    disabled
-                    title="Not wired"
-                    data-purge-theme-drafts
-                  >
-                    Purge theme drafts…
-                  </button>
-                </row>
+                    <thead>
+                      <tr>
+                        <th>Setting</th>
+                        <th>Value</th>
+                        <th>Source</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <for {sec.fields} as="f" key={f.key}>
+                        <tr data-config-field={f.key}>
+                          <td>
+                            <p sx={style.fontSize(sm).fontWeight(medium)}>{f.label}</p>
+                          </td>
+                          <td>
+                            <p sx={style.fontSize(sm).fontFamily(mono)}>{f.value}</p>
+                          </td>
+                          <td>
+                            <badge tone="muted" size="sm" variant="outline" pill>{f.source}</badge>
+                          </td>
+                        </tr>
+                      </for>
+                    </tbody>
+                  </table>
+                </if>
               </column>
-            </card>
-          </if>
+            </if>
+          </for>
         </column>
       </scroll-area>
     </column>
