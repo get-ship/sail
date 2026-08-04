@@ -72,9 +72,9 @@ describe('shared selection store', () => {
     selectNode('node-a')
     expect(getShellState().selection.nodeId).toBe('node-a')
 
-    setActivity('checks')
+    setActivity('config')
     expect(getShellState().selection.nodeId).toBe('node-a')
-    expect(getShellState().activity).toBe('checks')
+    expect(getShellState().activity).toBe('config')
 
     setActivity('tasks')
     selectFromBridge('node-b')
@@ -139,9 +139,9 @@ describe('module activity seam', () => {
     clearModuleActivities()
     expect(getShellState().activity).toBe('edit')
     expect(getShellState().moduleRoute).toBeNull()
-    expect(activities()).toEqual(['edit', 'components', 'themes', 'tasks', 'checks'])
-    setActivity('checks')
-    expect(getShellState().activity).toBe('checks')
+    expect(activities()).toEqual(['edit', 'components', 'themes', 'tasks', 'config'])
+    setActivity('config')
+    expect(getShellState().activity).toBe('config')
   })
 })
 

@@ -16,17 +16,20 @@ import {
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..')
 const CHROME = join(REPO, 'apps/studio/src/sail-studio-chrome/sail-studio-chrome.sail')
 const SHELL_VM = join(REPO, 'apps/studio/src/shell/shell-page-vm.ts')
+const SHELL_RAIL = join(REPO, 'apps/studio/src/shell/shell-rail.ts')
 const ROUTES_GEN = join(REPO, 'apps/studio/routes.gen.ts')
 
 describe('Studio routes + chrome (STUDIO-1)', () => {
   const chrome = readFileSync(CHROME, 'utf8')
   const shellVm = readFileSync(SHELL_VM, 'utf8')
+  const shellRail = readFileSync(SHELL_RAIL, 'utf8')
   const routesGen = readFileSync(ROUTES_GEN, 'utf8')
   const layout = readFileSync(join(REPO, 'apps/studio/routes/_layout.sail'), 'utf8')
 
   it('routes.gen exposes leaf surfaces + layout chrome', () => {
     expect(routesGen).toMatch(/pattern: '\/edit'/)
     expect(routesGen).toMatch(/pattern: '\/checks'/)
+    expect(routesGen).toMatch(/pattern: '\/config'/)
     expect(routesGen).toMatch(/pattern: '\/components'/)
     expect(routesGen).toMatch(/pattern: '\/design'/)
     expect(routesGen).toMatch(/pattern: '\/themes'/)
@@ -36,6 +39,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(layout).toMatch(/<sail-studio-chrome/)
     expect(existsSync(join(REPO, 'apps/studio/routes/edit/page.sail'))).toBe(true)
     expect(existsSync(join(REPO, 'apps/studio/routes/checks/page.sail'))).toBe(true)
+    expect(existsSync(join(REPO, 'apps/studio/routes/config/page.sail'))).toBe(true)
     expect(existsSync(join(REPO, 'apps/studio/routes/components/page.sail'))).toBe(true)
     expect(existsSync(join(REPO, 'apps/studio/routes/design/page.sail'))).toBe(true)
     expect(existsSync(join(REPO, 'apps/studio/routes/themes/page.sail'))).toBe(true)
@@ -44,12 +48,17 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     const designPage = readFileSync(join(REPO, 'apps/studio/routes/design/page.sail'), 'utf8')
     expect(designPage).toMatch(/\/themes/)
     expect(designPage).not.toMatch(/<design-surface\b/)
+    // /checks deep-link opens panel + lands on Edit (not a rail page)
+    const checksPage = readFileSync(join(REPO, 'apps/studio/routes/checks/page.sail'), 'utf8')
+    expect(checksPage).toMatch(/setChecksPanelOpen/)
+    expect(checksPage).toMatch(/\/edit/)
+    expect(checksPage).not.toMatch(/<checks-surface\b/)
   })
 
   it('leaf routes mount surfaces; no activity-signal switching in chrome', () => {
     for (const [leaf, tag] of [
       ['edit', 'edit-surface'],
-      ['checks', 'checks-surface'],
+      ['config', 'config-surface'],
       ['components', 'components-surface'],
       ['themes', 'themes-surface'],
       ['tasks', 'tasks-surface'],
@@ -73,14 +82,16 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
   it('activityFromPath + hrefForActivity cover all surfaces', () => {
     expect(activityFromPath('/edit')).toBe('edit')
     expect(activityFromPath('/')).toBe('edit')
-    expect(activityFromPath('/checks')).toBe('checks')
+    // Checks deep-link maps to edit activity (panel is chrome-hosted)
+    expect(activityFromPath('/checks')).toBe('edit')
+    expect(activityFromPath('/config')).toBe('config')
     expect(activityFromPath('/components')).toBe('components')
     expect(activityFromPath('/components/sail-tree')).toBe('components')
     expect(activityFromPath('/design')).toBe('themes')
     expect(activityFromPath('/themes')).toBe('themes')
     expect(activityFromPath('/tasks')).toBe('tasks')
     expect(hrefForActivity('edit')).toMatch(/\/edit$/)
-    expect(hrefForActivity('checks')).toMatch(/\/checks$/)
+    expect(hrefForActivity('config')).toMatch(/\/config$/)
     expect(hrefForActivity('components')).toMatch(/\/components$/)
     expect(hrefForActivity('themes')).toMatch(/\/themes$/)
     expect(pathForActivity('/edit')).toBe('/edit')
@@ -94,10 +105,16 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(edit.find((r) => r.id === 'edit')?.active).toBe(true)
     expect(edit.filter((r) => r.active)).toHaveLength(1)
     expect(edit.find((r) => r.id === 'design')).toBeUndefined()
+    expect(edit.find((r) => r.id === 'checks')).toBeUndefined()
 
-    const checks = railRowsForPath('/checks')
-    expect(checks.find((r) => r.id === 'checks')?.active).toBe(true)
-    expect(checks.find((r) => r.id === 'edit')?.active).toBe(false)
+    // /checks deep-link highlights Edit (panel opens separately)
+    const checksPath = railRowsForPath('/checks')
+    expect(checksPath.find((r) => r.id === 'edit')?.active).toBe(true)
+    expect(checksPath.find((r) => r.id === 'checks')).toBeUndefined()
+
+    const config = railRowsForPath('/config')
+    expect(config.find((r) => r.id === 'config')?.active).toBe(true)
+    expect(config.find((r) => r.id === 'edit')?.active).toBe(false)
 
     // Legacy /design path highlights Themes (cutover)
     const design = railRowsForPath('/design')
@@ -127,19 +144,21 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
       '2': 'components',
       '3': 'themes',
       '4': 'tasks',
-      '5': 'checks',
+      '5': 'config',
     })
     const mod = hotkeyMod()
     expect(mod === '⌘' || mod === 'Ctrl+').toBe(true)
     expect(railLabel('edit', 'Ctrl+')).toBe('Edit Ctrl+1')
     expect(railLabel('components', '⌘')).toBe('Components ⌘2')
     expect(railLabel('themes', 'Ctrl+')).toBe('Themes Ctrl+3')
-    expect(railLabel('checks', '⌘')).toBe('Checks ⌘5')
+    expect(railLabel('config', '⌘')).toBe('Config ⌘5')
     const themeRows = railRowsForPath('/themes', 'Ctrl+')
     expect(themeRows.find((r) => r.id === 'themes')?.label).toBe('Themes Ctrl+3')
     expect(themeRows.find((r) => r.id === 'tasks')?.label).toBe('Tasks Ctrl+4')
     expect(themeRows.find((r) => r.id === 'components')?.label).toBe('Components Ctrl+2')
+    expect(themeRows.find((r) => r.id === 'config')?.label).toBe('Config Ctrl+5')
     expect(themeRows.find((r) => r.id === 'design')).toBeUndefined()
+    expect(themeRows.find((r) => r.id === 'checks')).toBeUndefined()
 
     // Cmd/Ctrl+S always preventDefault; save only when activePath
     expect(shellVm).toMatch(/e\.key === 's'/)
@@ -150,10 +169,12 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(shellVm).toMatch(/sync\(href\)|sync\(p\)|sync\(path/)
     expect(shellVm).toMatch(/ACTIVITY_BY_DIGIT/)
     expect(shellVm).toMatch(/onRailClick/)
+    expect(shellVm).toMatch(/toggleChecksPanel|setChecksPanelOpen/)
 
     expect(chrome).toMatch(/data-save-status/)
     expect(chrome).toMatch(/data-theme-status/)
     expect(chrome).toMatch(/data-batch-count/)
+    expect(chrome).toMatch(/data-checks-badge/)
     expect(chrome).toMatch(/saveStatusLabel|themeStatusLabel/)
   })
 
@@ -175,12 +196,15 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(chrome).not.toMatch(/data-hotkey-hints|>esc</)
     expect(chrome).not.toMatch(/data-studio-tabs/)
     expect(chrome).not.toMatch(/selectionLabel/)
-    expect(chrome).not.toMatch(/data-badge|hasBadge/)
     expect(shellVm).not.toMatch(/setViewport|onViewport/)
     expect(shellVm).not.toMatch(/ViewportId/)
     // Health tones bound (soft badge tone from ops/watch health signals)
     expect(chrome).toMatch(/tone=\{opsHealthTone\(\)\}/)
     expect(chrome).toMatch(/tone=\{watchHealthTone\(\)\}/)
+    // Checks panel host (not rail)
+    expect(chrome).toMatch(/data-checks-panel/)
+    expect(chrome).toMatch(/checksPanelOpen/)
+    expect(chrome).toMatch(/data-checks-badge/)
   })
 
   it('status bar is slim with health segments', () => {
@@ -252,12 +276,13 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(chrome).toMatch(/when\(\{\s*current:\s*style\.bg\(selected-bg\)\.fg\(primary\)/)
     expect(chrome).toMatch(/fg\(muted-foreground\)/)
     // Distinct icons per activity (not one generic glyph)
-    expect(shellVm).toMatch(/icon:\s*'files'/)
-    expect(shellVm).toMatch(/icon:\s*'box'/)
-    expect(shellVm).toMatch(/icon:\s*'clipboard-check'/)
-    expect(shellVm).toMatch(/icon:\s*'palette'/)
-    expect(shellVm).toMatch(/icon:\s*'messages-square'/)
-    expect(shellVm).not.toMatch(/icon:\s*'swatch-book'/)
+    expect(shellRail).toMatch(/icon:\s*'files'/)
+    expect(shellRail).toMatch(/icon:\s*'box'/)
+    expect(shellRail).toMatch(/icon:\s*'settings'/)
+    expect(shellRail).toMatch(/icon:\s*'palette'/)
+    expect(shellRail).toMatch(/icon:\s*'messages-square'/)
+    expect(shellRail).not.toMatch(/icon:\s*'clipboard-check'/)
+    expect(shellRail).not.toMatch(/icon:\s*'swatch-book'/)
     // Exit matches activity item geometry
     expect(chrome).toMatch(/data-exit-studio[\s\S]*w\(10\)\.h\(10\)/)
     expect(chrome).not.toMatch(/variant=\{item\.active \? 'solid'/)
@@ -391,7 +416,7 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(explorer).toMatch(/<sail-tree\b/)
     expect(explorer).toMatch(/data-file-tree-host/)
     expect(explorer).toMatch(/data-edit-filter/)
-    expect(explorer).toMatch(/Filter files/)
+    expect(explorer).toMatch(/Filter files…|Filter files/)
     expect(explorer).toMatch(/No files/)
     // No nested Routes/Files/Components menus
     expect(explorer).not.toMatch(/data-rail-tabs/)
@@ -462,13 +487,15 @@ describe('Studio routes + chrome (STUDIO-1)', () => {
     expect(mountBody).not.toMatch(/openDocument/)
   })
 
-  it('chrome boots ops + seed; surfaces not dual-mounted in chrome', () => {
+  it('chrome boots ops + seed; rail surfaces not dual-mounted (checks panel hosts findings)', () => {
     expect(chrome).not.toMatch(/<edit-surface\b/)
-    expect(chrome).not.toMatch(/<checks-surface\b/)
     expect(chrome).not.toMatch(/<components-surface\b/)
     expect(chrome).not.toMatch(/<design-surface\b/)
     expect(chrome).not.toMatch(/<themes-surface\b/)
     expect(chrome).not.toMatch(/<tasks-surface\b/)
+    expect(chrome).not.toMatch(/<config-surface\b/)
+    // Checks panel intentionally mounts checks-surface when open
+    expect(chrome).toMatch(/data-checks-panel[\s\S]*<checks-surface\b|<checks-surface\b[\s\S]*data-checks-panel/)
     expect(shellVm).toMatch(/from ['"]@ship\/studio\/edit['"]/)
     expect(shellVm).toMatch(/openDocument|createOpsClient|setOpsClient/)
     expect(shellVm).toMatch(/seedFilesFromPaths|bindEditSelection/)

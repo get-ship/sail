@@ -820,7 +820,7 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
     expect(surface).toMatch(/data-findings-table/)
     expect(surface).toMatch(/data-findings-table-host/)
     expect(surface).toMatch(/data-filter-severity/)
-    expect(surface).toMatch(/Open in editor/)
+    expect(surface).toMatch(/Open in Edit|Open in editor/)
     expect(surface).toMatch(/Select element/)
     expect(surface).toMatch(/data-finding-action="open-source"/)
     expect(surface).toMatch(/data-finding-action="select-in-app"/)

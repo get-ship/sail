@@ -17,8 +17,12 @@ import {
 } from './batch'
 import type { BridgeRect } from './channel'
 
-/** Built-in Studio activities (core). Design removed — Themes is sole token editor. */
-export type CoreActivityId = 'edit' | 'components' | 'checks' | 'themes' | 'tasks'
+/**
+ * Built-in Studio rail activities (core).
+ * Design removed — Themes is sole token editor.
+ * Checks is a shell **panel**, not a rail activity (STUDIO-V1-LAUNCH).
+ */
+export type CoreActivityId = 'edit' | 'components' | 'themes' | 'tasks' | 'config'
 
 /**
  * Activity id on the rail: core ids or module-provided ids.
@@ -62,6 +66,8 @@ export type ShellState = {
   selection: Selection
   checksBadge: number
   tasksBadge: number
+  /** Checks findings panel open (status badge / hotkey — not a rail home). */
+  checksPanelOpen: boolean
   /** Last annotate/screenshot region nodes (chips under selection) */
   regionNodes: { nodeId: string; label: string }[]
   batchCount: number
@@ -76,7 +82,7 @@ export type ShellState = {
 
 type Listener = (s: ShellState) => void
 
-const CORE_ACTIVITIES: CoreActivityId[] = ['edit', 'components', 'themes', 'tasks', 'checks']
+const CORE_ACTIVITIES: CoreActivityId[] = ['edit', 'components', 'themes', 'tasks', 'config']
 
 const CORE_SET = new Set<string>(CORE_ACTIVITIES)
 
@@ -127,6 +133,7 @@ let state: ShellState = {
   selection: getSelection(),
   checksBadge: 0,
   tasksBadge: 0,
+  checksPanelOpen: false,
   regionNodes: [],
   batchCount: 0,
   sailPath: null,
@@ -297,6 +304,16 @@ export function setBadges(checks: number, tasks: number): void {
   emit()
 }
 
+export function setChecksPanelOpen(open: boolean): void {
+  if (state.checksPanelOpen === open) return
+  state = { ...state, checksPanelOpen: open }
+  emit()
+}
+
+export function toggleChecksPanel(): void {
+  setChecksPanelOpen(!state.checksPanelOpen)
+}
+
 export function setSailPath(path: string | null): void {
   state = { ...state, sailPath: path }
   emit()
@@ -375,6 +392,7 @@ export function __resetShellForTests(): void {
     selection: { nodeId: null, selector: null, source: 'clear' },
     checksBadge: 0,
     tasksBadge: 0,
+    checksPanelOpen: false,
     regionNodes: [],
     batchCount: 0,
     sailPath: null,

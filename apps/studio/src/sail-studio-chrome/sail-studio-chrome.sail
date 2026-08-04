@@ -1,6 +1,6 @@
 <!--
   <sail-studio-chrome> — shell: activity rail + status + route slot.
-  Rail: fixed hit targets (w/h 10), equal pad, muted icons.
+  Rail: Edit · Components · Themes · Tasks · Config (Checks = status panel).
   Selected activity uses primary color (fg + soft fill) — the only accent.
   Tooltips placement=right; rail overflow visible so bubbles paint.
   Exit matches activity item geometry. Ban-clean: layout + L1 only.
@@ -29,10 +29,16 @@ export default controller((ctx) => {
     watchHealthLabel: vm.watchHealthLabel,
     opsHealthTone: vm.opsHealthTone,
     watchHealthTone: vm.watchHealthTone,
+    checksPanelOpen: vm.checksPanelOpen,
+    checksBadgeLabel: vm.checksBadgeLabel,
+    checksBadgeTone: vm.checksBadgeTone,
+    hasChecksFindings: vm.hasChecksFindings,
     showExit: vm.showExit,
     onExitStudio: () => vm.onExitStudio(),
     onBatchNewTask: () => vm.onBatchNewTask(),
     onBatchSendExisting: () => vm.onBatchSendExisting(),
+    onToggleChecksPanel: () => vm.onToggleChecksPanel(),
+    onCloseChecksPanel: () => vm.onCloseChecksPanel(),
     onRailClick: (e: Event) => vm.onRailClick(e),
   }
 })
@@ -126,14 +132,63 @@ export default controller((ctx) => {
       </row>
     </if>
 
-    <column
+    <row
       grow
-      data-studio-surface
+      gap="0"
+      nowrap
+      align="stretch"
       min-w="0"
       sx={style.minH(0).basis(0).overflow(hidden).h(full).minW(0)}
     >
-      <slot name="route"></slot>
-    </column>
+      <column
+        grow
+        data-studio-surface
+        min-w="0"
+        sx={style.minH(0).basis(0).overflow(hidden).h(full).minW(0)}
+      >
+        <slot name="route"></slot>
+      </column>
+
+      <if {checksPanelOpen()}>
+        <column
+          data-checks-panel
+          data-checks-drawer
+          shrink="0"
+          gap="0"
+          role="dialog"
+          aria-label="Checks findings"
+          sx={style.minH(0).h(full).w(panel-max-w-md).minW(panel-min-w-md).maxW(panel-max-w-lg).borderLWidth(1).borderL(border).bg(surface-0).overflow(hidden).shadow(lg)}
+        >
+          <row
+            data-checks-panel-head
+            align="center"
+            justify="between"
+            gap="2"
+            shrink="0"
+            nowrap
+            sx={style.h(8).minH(8).padX(3).borderBWidth(1).borderB(border-subtle)}
+          >
+            <p sx={style.fontSize(xs).fontWeight(semibold).fg(muted-foreground).textCase(uppercase).tracking(wide)}>
+              Checks
+            </p>
+            <button
+              type="button"
+              size="sm"
+              variant="ghost"
+              tone="muted"
+              data-close-checks-panel
+              aria-label="Close checks panel"
+              on:click={onCloseChecksPanel}
+            >
+              Close
+            </button>
+          </row>
+          <column grow gap="0" min-w="0" sx={style.minH(0).basis(0).overflow(hidden).h(full)}>
+            <checks-surface grow sx={style.minH(0).h(full).minW(0).overflow(hidden)} />
+          </column>
+        </column>
+      </if>
+    </row>
 
     <row
       data-studio-status
@@ -147,6 +202,28 @@ export default controller((ctx) => {
       <p grow min-w="0" sx={style.fontFamily(mono).minW(0).truncate()}>{statusLine()}</p>
       <p data-save-status shrink="0" sx={style.fontSize(xs)}>{saveStatusLabel()}</p>
       <p data-theme-status shrink="0" sx={style.fontSize(xs).fg(muted-foreground)}>{themeStatusLabel()}</p>
+      <button
+        type="button"
+        data-checks-badge
+        data-open-checks-panel
+        size="sm"
+        variant="ghost"
+        tone={checksBadgeTone()}
+        title="Open checks panel (Ctrl/⌘+Shift+C)"
+        aria-label={checksBadgeLabel()}
+        aria-pressed={checksPanelOpen() ? 'true' : 'false'}
+        on:click={onToggleChecksPanel}
+        shrink="0"
+      >
+        <badge
+          tone={hasChecksFindings() ? 'destructive' : 'muted'}
+          size="sm"
+          variant="soft"
+          data-checks-badge-count
+        >
+          {checksBadgeLabel()}
+        </badge>
+      </button>
       <row
         data-health="ops"
         align="center"

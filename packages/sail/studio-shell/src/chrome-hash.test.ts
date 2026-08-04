@@ -3,8 +3,8 @@ import { getShellState, openTab, setActiveTab, setActivity } from './model'
 
 describe('chrome state <-> URL hash', () => {
   it('activity switches write #/<activity>', () => {
-    setActivity('checks')
-    expect(location.hash).toBe('#/checks')
+    setActivity('config')
+    expect(location.hash).toBe('#/config')
     setActivity('themes')
     expect(location.hash).toBe('#/themes')
   })
