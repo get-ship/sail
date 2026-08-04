@@ -124,13 +124,13 @@ const VARIANT_META: Partial<
 }
 
 const DEFAULT_BLURB =
-  'Live Sail L1 under the theme preview — radius and component tokens paint here.'
+  'Live component under the theme preview — radius and component tokens paint here.'
 
 export function viewerMetaFor(id: L1Id): L1ViewerMeta {
   const v = VARIANT_META[id]
   return {
     key: stageKeyFor(id),
-    blurb: v?.blurb ?? `${l1Label(id)} — live L1 specimen under theme paint.`,
+    blurb: v?.blurb ?? `${l1Label(id)} — live specimen under theme paint.`,
     variants: v?.variants ?? [],
     variantAttr: v?.variantAttr ?? '',
   }

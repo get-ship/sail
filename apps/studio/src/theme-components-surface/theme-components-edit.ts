@@ -1,10 +1,9 @@
 /**
- * Themes → Components facet — L1 skinning from token **registry** SSOT.
- * - List only faces that have component.* tokens (or explicit global hooks).
+ * Themes → Components facet — component-scoped DTCG overrides for this theme.
+ * - List faces with component.* tokens (or explicit global hooks).
  * - Composite faces (tabs, toast, radio) collapse sub-tags.
- * - Writable knobs from registry; global color.* can be edited from here too.
- * - Paths shown as DTCG paths — never CSS var names as product labels.
- * - No free-text radius as the primary (or only) control.
+ * - Defaults: model/registry aliases → theme color paths (never var(--*) labels).
+ * - Overrides write component.* leaves; Clear removes them.
  */
 import { signal } from '@ship/sail-runtime'
 import {
@@ -15,11 +14,14 @@ import {
   getPathValue,
   l1Label,
   setTokenValue,
-  toPickerHex,
   type L1Id,
   type TokenKnob,
 } from '@ship/studio/design'
 import type { ThemeSession } from '../theme-session/theme-session'
+import {
+  effectiveComponentColor,
+  effectiveGlobalColor,
+} from './theme-component-colors'
 import {
   buildStageGates,
   viewerMetaFor,
@@ -150,19 +152,39 @@ function isColorKnob(k: TokenKnob): boolean {
   return k.kind === 'color'
 }
 
-function hexForPath(
-  doc: Record<string, unknown> | null,
-  path: string,
-  mode: 'light' | 'dark',
-  fallback = '#888888',
-): string {
-  const raw = getPathValue(doc, path, mode)
-  if (!raw) return fallback
-  try {
-    return toPickerHex(String(raw))
-  } catch {
-    return fallback
-  }
+type ComponentKnobRow = {
+  /** for-key — must change when display resolves so Sail rebinds text/swatch */
+  key: string
+  path: string
+  label: string
+  kind: string
+  hex: string
+  canPickColor: boolean
+  hexLabel: string
+  raw: string
+  isColor: boolean
+  isOverridden: boolean
+  scope: string
+}
+
+type GlobalKnobRow = {
+  key: string
+  path: string
+  label: string
+  kind: string
+  hex: string
+  canPickColor: boolean
+  hexLabel: string
+  raw: string
+  isColor: boolean
+  isRadius: boolean
+  isOverridden: boolean
+  scope: string
+}
+
+/** Stable path + display fingerprint so keyed <for> remounts when hex resolves. */
+function knobRenderKey(path: string, hexLabel: string, hex: string, overridden: boolean): string {
+  return `${path}|${overridden ? 'o' : 'd'}|${hexLabel}|${hex}`
 }
 
 export function createComponentsEdit(session: ThemeSession) {
@@ -172,6 +194,15 @@ export function createComponentsEdit(session: ThemeSession) {
   const variant = signal('')
   const size = signal('')
   const tone = signal('')
+  /**
+   * Signal-backed knob lists — rebuilt on every session/design sync.
+   * Plain getters that only call getDesignState() during first paint freeze on
+   * themeDoc=null (openTheme later fills the store without changing selectedId).
+   */
+  const componentKnobList = signal<ComponentKnobRow[]>([])
+  const globalKnobList = signal<GlobalKnobRow[]>([])
+  /** Rail override badges + override count — same freeze risk without a signal. */
+  const faceOverrideBits = signal<Record<string, number>>({})
 
   const seedVariant = (faceId: string) => {
     const face = FACES.find((f) => f.id === faceId)
@@ -187,9 +218,112 @@ export function createComponentsEdit(session: ThemeSession) {
     tone.set('primary')
   }
 
+  const face = () => FACES.find((f) => f.id === selectedId())
+
+  const rebuildInspector = () => {
+    const f = face()
+    const ds = getDesignState()
+    const mode = session.writeMode()
+
+    if (!f) {
+      componentKnobList.set([])
+    } else {
+      const next = knobsForFace(f).map((k) => {
+        const isColor = isColorKnob(k)
+        if (isColor) {
+          const eff = effectiveComponentColor(ds.themeDoc, k, mode)
+          return {
+            key: knobRenderKey(k.path, eff.hexLabel, eff.hex, eff.isOverridden),
+            path: k.path,
+            label: k.label || k.path.split('.').slice(2).join('.'),
+            kind: k.kind,
+            // Resolved hex only — never invent #888 / #fff when default is unresolvable.
+            hex: eff.hex,
+            canPickColor: true,
+            hexLabel: eff.hexLabel,
+            raw: eff.raw,
+            isColor: true,
+            isOverridden: eff.isOverridden,
+            scope: 'component',
+          }
+        }
+        const raw = getPathValue(ds.themeDoc, k.path, mode)
+        const hexLabel = ''
+        const isOverridden = raw != null
+        const display = raw != null ? String(raw) : 'Default'
+        return {
+          key: knobRenderKey(k.path, display, '', isOverridden),
+          path: k.path,
+          label: k.label || k.path.split('.').slice(2).join('.'),
+          kind: k.kind,
+          hex: '',
+          canPickColor: false,
+          hexLabel,
+          raw: display,
+          isColor: false,
+          isOverridden,
+          scope: 'component',
+        }
+      })
+      componentKnobList.set(next)
+    }
+
+    const globals = FACE_GLOBALS[selectedId()] ?? []
+    globalKnobList.set(
+      globals.map((g) => {
+        const isColor = g.path.includes('color.') || g.path.startsWith('color.')
+        const isRadius = g.path.startsWith('radius.')
+        if (isColor) {
+          const eff = effectiveGlobalColor(ds.themeDoc, g.path, mode)
+          return {
+            key: knobRenderKey(g.path, eff.hexLabel, eff.hex, eff.isOverridden),
+            path: g.path,
+            label: g.label,
+            kind: 'color',
+            hex: eff.hex,
+            canPickColor: true,
+            hexLabel: eff.hexLabel,
+            raw: eff.raw,
+            isColor: true,
+            isRadius: false,
+            isOverridden: eff.isOverridden,
+            scope: 'global',
+          }
+        }
+        const raw = getPathValue(ds.themeDoc, g.path, mode)
+        const display = raw != null ? String(raw) : 'Default'
+        return {
+          key: knobRenderKey(g.path, display, '', false),
+          path: g.path,
+          label: g.label,
+          kind: isRadius ? 'dimension' : 'other',
+          hex: '',
+          canPickColor: false,
+          hexLabel: '',
+          raw: display,
+          isColor: false,
+          isRadius,
+          isOverridden: false,
+          scope: 'global',
+        }
+      }),
+    )
+
+    const bits: Record<string, number> = {}
+    for (const faceDef of FACES) {
+      let overrides = 0
+      for (const k of knobsForFace(faceDef)) {
+        if (getPathValue(ds.themeDoc, k.path, ds.modeId) != null) overrides += 1
+      }
+      bits[faceDef.id] = overrides
+    }
+    faceOverrideBits.set(bits)
+  }
+
   const sync = () => {
-    const face = FACES.find((f) => f.id === selectedId())
-    selectedLabel.set(face?.label ?? selectedId())
+    const f = FACES.find((x) => x.id === selectedId())
+    selectedLabel.set(f?.label ?? selectedId())
+    rebuildInspector()
   }
 
   session.onSync(sync)
@@ -198,6 +332,7 @@ export function createComponentsEdit(session: ThemeSession) {
 
   const componentRows = () => {
     const q = filter().trim().toLowerCase()
+    const bits = faceOverrideBits()
     return FACES.filter((f) => {
       if (!q) return true
       return (
@@ -207,11 +342,7 @@ export function createComponentsEdit(session: ThemeSession) {
       )
     }).map((f) => {
       const knobs = knobsForFace(f)
-      const ds = getDesignState()
-      let overrides = 0
-      for (const k of knobs) {
-        if (getPathValue(ds.themeDoc, k.path, ds.modeId) != null) overrides += 1
-      }
+      const overrides = bits[f.id] ?? 0
       return {
         key: f.id,
         id: f.id,
@@ -238,62 +369,10 @@ export function createComponentsEdit(session: ThemeSession) {
     sync()
   }
 
-  const face = () => FACES.find((f) => f.id === selectedId())
-
-  const componentKnobs = () => {
-    const f = face()
-    if (!f) return [] as {
-      key: string
-      path: string
-      label: string
-      kind: string
-      hex: string
-      raw: string
-      isColor: boolean
-      isOverridden: boolean
-      scope: string
-    }[]
-    const ds = getDesignState()
-    const mode = session.writeMode()
-    return knobsForFace(f).map((k) => {
-      const raw = getPathValue(ds.themeDoc, k.path, mode)
-      const isColor = isColorKnob(k)
-      return {
-        key: k.path,
-        path: k.path,
-        label: k.label || k.path.split('.').slice(2).join('.'),
-        kind: k.kind,
-        hex: isColor ? hexForPath(ds.themeDoc, k.path, mode) : '',
-        raw: raw != null ? String(raw) : 'inherit / default',
-        isColor,
-        isOverridden: raw != null,
-        scope: 'component',
-      }
-    })
-  }
-
-  const globalKnobs = () => {
-    const globals = FACE_GLOBALS[selectedId()] ?? []
-    const ds = getDesignState()
-    const mode = session.writeMode()
-    return globals.map((g) => {
-      const raw = getPathValue(ds.themeDoc, g.path, mode)
-      const isColor = g.path.includes('color.') || g.path.startsWith('color.')
-      const isRadius = g.path.startsWith('radius.')
-      return {
-        key: g.path,
-        path: g.path,
-        label: g.label,
-        kind: isColor ? 'color' : isRadius ? 'dimension' : 'other',
-        hex: isColor ? hexForPath(ds.themeDoc, g.path, mode) : '',
-        raw: raw != null ? String(raw) : 'theme default',
-        isColor,
-        isRadius,
-        isOverridden: false,
-        scope: 'global',
-      }
-    })
-  }
+  // Expose signals directly so template `components.componentKnobs()` tracks them.
+  // Wrapping as () => list() can fail to re-bind keyed <for> after openTheme.
+  const componentKnobs = componentKnobList
+  const globalKnobs = globalKnobList
 
   const colorFromEvent = (e: Event): string => {
     const ce = e as CustomEvent<{ value?: string }>
@@ -419,13 +498,15 @@ export function createComponentsEdit(session: ThemeSession) {
     }))
   }
 
-  const hasComponentKnobs = () => componentKnobs().length > 0
-  const hasGlobalKnobs = () => globalKnobs().length > 0
+  const hasComponentKnobs = () => componentKnobList().length > 0
+  const hasGlobalKnobs = () => globalKnobList().length > 0
   const faceCount = () => FACES.length
-  const registryNote = () =>
-    hasComponentKnobs()
-      ? `${componentKnobs().length} component token${componentKnobs().length === 1 ? '' : 's'} in registry`
+  const registryNote = () => {
+    const n = componentKnobList().length
+    return n > 0
+      ? `${n} component token${n === 1 ? '' : 's'} in registry`
       : 'No component-scoped tokens in registry — edit related globals below'
+  }
 
   return {
     filter,
@@ -475,3 +556,10 @@ export function createComponentsEdit(session: ThemeSession) {
 
 export type { L1Id }
 export type ViewerPropRowReexport = ViewerPropRow
+export {
+  dtcgDefaultAlias,
+  effectiveComponentColor,
+  effectiveGlobalColor,
+  resolveColorRaw,
+  assertNoCssExhaustLabel,
+} from './theme-component-colors'

@@ -1,7 +1,7 @@
 <!--
-  Themes → Components facet — L1 skinning (not the Components entity page).
-  Storybook-ish: L1 rail | large stage | override inspector.
-  Writable override: component.{id}.radius via scale chips. Registry paints listed read-only.
+  Themes → Components facet — component token overrides (not the Components entity page).
+  Storybook-ish: catalog rail | large stage | override inspector.
+  Defaults resolve via DTCG color paths; overrides write component.* leaves.
 -->
 <scope>
   const sectionTitle = style.fontSize(sm).fontWeight(semibold)
@@ -32,7 +32,7 @@ export default controller(() => {
   const session = createThemeSession({
     facet: 'components',
     editGuardMessage: 'Add this theme to the project to edit component tokens.',
-    saveSuccessMessage: 'L1 overrides saved to DTCG source.',
+    saveSuccessMessage: 'Component overrides saved.',
   })
   const components = createComponentsEdit(session)
   mount((host) => watchPreviewHost(host, (el) => session.attachPreviewHost(el)))
@@ -73,7 +73,7 @@ export default controller(() => {
     align="stretch"
     sx={style.minH(0).basis(0).h(full).minW(0).overflow(hidden).bg(background)}
   >
-    <!-- LEFT: L1 catalog rail -->
+    <!-- LEFT: component catalog rail -->
     <scroll-area
       data-components-rail
       shrink="0"
@@ -87,7 +87,7 @@ export default controller(() => {
             Per-element exceptions for this theme — not the project Components library.
           </p>
           <row gap="2" align="center" nowrap>
-            <badge tone="muted" size="sm" variant="outline" pill>{components.l1Count()} L1</badge>
+            <badge tone="muted" size="sm" variant="outline" pill>{components.l1Count()} components</badge>
             <if {components.overrideCount()}>
               <badge tone="primary" size="sm" variant="soft" pill>{components.overrideCount()} overrides</badge>
             </if>
@@ -98,9 +98,9 @@ export default controller(() => {
             data-l1-filter
             value={components.filter()}
             on:input={components.onFilterInput}
-            placeholder="Filter L1…"
+            placeholder="Filter components…"
             spellcheck="false"
-            aria-label="Filter L1 components"
+            aria-label="Filter components"
           />
         </column>
         <column data-l1-list gap="1" on:click={components.onSelect}>
@@ -139,7 +139,7 @@ export default controller(() => {
       <column grow gap="0" sx={style.minH(0).h(full).pad(4)}>
         <!--
           One themed host only. Stage content sits ON background —
-          no nested white plate under the live L1 (light-mode clash).
+          no nested white plate under the live specimen (light-mode clash).
           Frame chrome shows theme name + mode — no external Preview/light label.
         -->
         <card
@@ -605,7 +605,7 @@ export default controller(() => {
     >
       <column gap="5" sx={inspectorCol}>
         <column gap="2">
-          <p sx={eyebrow}>L1 theme overrides</p>
+          <p sx={eyebrow}>Theme overrides</p>
           <p sx={style.fontSize(xl).fontWeight(semibold).tracking(tight).fontFamily(heading)}>
             {components.selectedLabel()}
           </p>
@@ -636,9 +636,17 @@ export default controller(() => {
                     </if>
                   </row>
                   <if {tok.isColor}>
-                    <stack data-token-chip shrink="0" sx={style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden)}>
-                      <sail-color-picker data-token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onComponentColor}></sail-color-picker>
-                    </stack>
+                    <row align="center" gap="2" nowrap>
+                      <stack data-token-chip shrink="0" sx={style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)}>
+                        <sail-color-picker data-token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onComponentColor}></sail-color-picker>
+                      </stack>
+                      <column gap="0" grow min-w="0">
+                        <p sx={pathMeta}>{tok.hexLabel}</p>
+                        <if {!tok.isOverridden}>
+                          <p sx={fieldHint}>Default · pick to override for this component only</p>
+                        </if>
+                      </column>
+                    </row>
                   </if>
                   <if {!tok.isColor}>
                     <p sx={fieldHint}>{tok.raw}</p>
@@ -658,7 +666,7 @@ export default controller(() => {
             <p sx={pathMeta}>theme-wide</p>
           </row>
           <p sx={fieldHint}>
-            Edit a global here, or set a component leaf above to override only this L1.
+            Edit a shared theme color here, or set a component token above to override only this component.
           </p>
           <if {components.hasGlobalKnobs()}>
             <column gap="3" data-global-knob-list>
@@ -669,9 +677,12 @@ export default controller(() => {
                     <p sx={pathMeta}>{tok.path}</p>
                   </column>
                   <if {tok.isColor}>
-                    <stack data-token-chip shrink="0" sx={style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden)}>
-                      <sail-color-picker data-token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onGlobalColor}></sail-color-picker>
-                    </stack>
+                    <row align="center" gap="2" nowrap>
+                      <stack data-token-chip shrink="0" sx={style.position(relative).w(9).h(9).minW(9).minH(9).radius(md).borderWidth(1).border(border-subtle).overflow(hidden).bg(surface-0)}>
+                        <sail-color-picker data-token-path={tok.path} value={tok.hex} disabled={!session.canEdit()} variant="swatch" showHex={false} on:sail-change={components.onGlobalColor}></sail-color-picker>
+                      </stack>
+                      <p sx={pathMeta}>{tok.hexLabel}</p>
+                    </row>
                   </if>
                   <if {!tok.isColor}>
                     <p sx={fieldHint}>{tok.raw}</p>
