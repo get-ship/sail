@@ -44,7 +44,9 @@ describe('theme-shape-surface', () => {
     expect(sail).toMatch(/data-radius-master/)
     expect(sail).toMatch(/data-elev-chips/)
     expect(sail).toMatch(/data-radius-ladder/)
-    expect(sail).toMatch(/data-theme-preview=\{/)
+    // Draft paint = applyScope bind; no load-bearing data-theme-preview on facet host (D7/Job 3).
+    expect(sail).not.toMatch(/data-theme-preview=\{/)
+    expect(sail).toMatch(/watchPreviewHost/)
     expect(sail).toMatch(/data-mode=\{/)
     expect(sail).toMatch(/createThemeSession|createShapeEdit/)
     expect(sail).toMatch(/variant="solid"\s+tone="primary"/)
@@ -74,7 +76,8 @@ describe('theme-shape-surface', () => {
     expect(sail).toMatch(/data-radius="sm"[\s\S]{0,80}variant="outline"/)
     expect(sail).toMatch(/data-elev=/)
     expect(sail).toMatch(/data-section="glass"|showGlass/)
-    expect(sail).toMatch(/data-preview-specimen|data-theme-preview=/)
+    expect(sail).toMatch(/data-preview-specimen/)
+    expect(sail).not.toMatch(/data-theme-preview=/)
     expect(sail).toMatch(/bg\(background\)/)
     expect(sail).toMatch(/data-spec-card/)
     // No "live" badge theater.

@@ -87,7 +87,8 @@ describe('STUDIO-2 repairs + bar gates', () => {
       join(REPO, 'apps/studio/src/theme-color-specimen/theme-color-specimen.sail'),
       'utf8',
     )
-    expect(colorSpec).toMatch(/data-theme-preview|data-color-specimen/)
+    expect(colorSpec).toMatch(/data-color-specimen|data-preview-specimen/)
+    expect(colorSpec).not.toMatch(/data-theme-preview=/)
   })
 
   it('B3: explorer sail-tree labels stay short (no size meta — stacked-text fix)', () => {

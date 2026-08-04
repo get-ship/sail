@@ -236,7 +236,6 @@ export default controller(() => {
         <card
           data-overview-specimen
           data-preview-specimen
-          data-theme-preview={session.paintId()}
           data-mode={session.paintMode()}
           data-density={overview.specimenDensity()}
           padding="none"

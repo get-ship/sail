@@ -1,6 +1,6 @@
 <!--
   Theme assets facet — type roles + icons deep edit.
-  Thin shell: chrome + editor + specimen under data-theme-preview.
+  Thin shell: chrome + editor + specimen (draft paint via applyScope bind).
 -->
 <scope>
   const sectionTitle = style.fontSize(sm).fontWeight(semibold)
@@ -266,7 +266,6 @@ export default controller(() => {
         <card
           data-assets-specimen
           data-preview-specimen
-          data-theme-preview={session.paintId()}
           data-mode={session.paintMode()}
           padding="none"
           sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}

@@ -21,7 +21,6 @@ export default controller(() => {
   })
   const s = () => sessionSig()
   return {
-    paintId: () => s()?.paintId() ?? 'studio',
     paintMode: () => s()?.paintMode() ?? 'light',
     nameEdit: () => s()?.nameEdit() ?? '',
   }
@@ -41,11 +40,10 @@ export default controller(() => {
   sx={style.minW(panel-min-w-md).maxW(panel-max-w-md).basis(0).minH(0).h(full).borderLWidth(1).borderL(border-subtle).bg(background).overflow(hidden)}
 >
   <column grow gap="0" sx={style.minH(0).h(full).pad(4)}>
-    <!-- Frame chrome (dots + name + mode) is enough — no Preview/light/helper stack. -->
+    <!-- Draft paint = applyScope via theme-session bind (not data-theme-preview). -->
     <card
       data-color-specimen
       data-preview-specimen
-      data-theme-preview={paintId()}
       data-mode={paintMode()}
       padding="none"
       sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}

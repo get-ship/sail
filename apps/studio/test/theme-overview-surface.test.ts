@@ -52,7 +52,9 @@ describe('theme-overview-surface', () => {
     expect(sail).toMatch(/data-overview-specimen|data-preview-specimen/)
     expect(sail).toMatch(/data-color-hero|data-hero-colors/)
     expect(sail).toMatch(/data-editorial-split|data-overview-workbench/)
-    expect(sail).toMatch(/data-theme-preview=\{/)
+    // Draft paint = applyScope bind; no load-bearing data-theme-preview on facet host (D7/Job 3).
+    expect(sail).not.toMatch(/data-theme-preview=\{/)
+    expect(sail).toMatch(/watchPreviewHost/)
     expect(sail).toMatch(/data-mode=\{/)
     expect(sail).toMatch(/variant="solid"\s+tone="primary"/)
     expect(sail).toMatch(/variant="solid"\s+tone="accent"/)

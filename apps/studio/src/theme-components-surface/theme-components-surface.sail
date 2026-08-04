@@ -145,7 +145,6 @@ export default controller(() => {
         <card
           data-components-specimen
           data-preview-specimen
-          data-theme-preview={session.paintId()}
           data-mode={session.paintMode()}
           padding="none"
           sx={style.minW(0).minH(0).h(full).overflow(hidden).shadow(lg)}

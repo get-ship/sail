@@ -5,7 +5,7 @@
 import { bindPreviewHost, unbindPreviewHost } from './theme-draft-paint'
 
 const SELECTOR =
-  '[data-preview-specimen], [data-color-specimen], [data-shape-specimen], [data-overview-specimen]'
+  '[data-preview-specimen], [data-color-specimen], [data-shape-specimen], [data-overview-specimen], [data-assets-specimen], [data-components-specimen]'
 
 export function watchPreviewHost(
   root: ParentNode,
