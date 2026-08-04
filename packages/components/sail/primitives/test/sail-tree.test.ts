@@ -263,89 +263,42 @@ describe('<sail-tree> — branch tri-state via #240 getIsSomeSelected (behaviora
   })
 })
 
-describe('<sail-tree> — virtualized over tree.rows() (behavioral spec #6)', () => {
-  it('a large expanded tree renders ~viewport+overscan rows, not all nodes', async () => {
-    // 5000 root branches, each with 1 child → 10000 visible flattened nodes.
-    const big: FileNode[] = Array.from({ length: 5000 }, (_, i) => ({
-      id: `d${i}`,
-      label: `dir ${i}`,
-      children: [{ id: `d${i}/f`, label: 'file.ts' }],
-    }))
-    const tree = createTable<FileNode>({
-      data: big,
-      columns: [],
-      getRowId: (r) => r.id,
-      getSubRows: (r) => r.children,
-      enableExpanding: true,
-      navMode: 'row',
-      initialState: { expanded: true },
-    })
-    const { el, shadow } = mount(reg, 'sail-tree', {})
-    ;(el as unknown as { tree: Table<FileNode> }).tree = tree
+describe('<sail-tree> — flow list over tree.rows() (SPEC-TREE-1 path A)', () => {
+  it('renders one treeitem per visible engine row (full list, not windowed)', async () => {
+    const { shadow, tree } = mountTree(true)
     await flush()
-    expect(tree.rows().length).toBe(10000)
-    const rendered = shadow!.querySelectorAll('[role="treeitem"]')
-    // Only a window renders — NOT all 10000 nodes.
-    expect(rendered.length).toBeGreaterThan(0)
-    expect(rendered.length).toBeLessThan(500)
-  })
-
-  it('the virtualizer count source is tree.rows().length — expanding grows it + re-windows', async () => {
-    const { shadow, tree } = mountTree({})
-    await flush()
-    const before = tree.rows().length // 2 roots, all collapsed
-    expect(before).toBe(2)
-    tree.toggleExpanded('src')
-    await flush()
-    // tree.rows() grew (src's two direct children surfaced) and the body re-windowed.
-    expect(tree.rows().length).toBe(4)
     expect(itemIds(shadow).length).toBe(tree.rows().length)
   })
 
-  it('totalSize spacer sizes the scrollbar from the FULL flattened count, not the window', async () => {
-    const big: FileNode[] = Array.from({ length: 5000 }, (_, i) => ({
-      id: `n${i}`,
-      label: `node ${i}`,
-    }))
-    const tree = createTable<FileNode>({
-      data: big,
-      columns: [],
-      getRowId: (r) => r.id,
-      getSubRows: (r) => r.children,
-      enableExpanding: true,
-      navMode: 'row',
-      initialState: { expanded: {} },
-    })
-    const { el, shadow } = mount(reg, 'sail-tree', {})
-    ;(el as unknown as { tree: Table<FileNode> }).tree = tree
+  it('expanding grows the DOM list; collapsing removes children (no hole)', async () => {
+    const { shadow, tree } = mountTree({})
     await flush()
-    const spacer = shadow!.querySelector('[role="tree"] > div > div') as HTMLElement
-    expect(spacer).not.toBeNull()
-    // `use:virtualSpacer` writes the height as the `--rows-h` custom
-    // property (sx's `h-(--rows-h)` atom turns it into layout) — never a
-    // direct `.style.height` write.
-    const h = parseFloat(spacer.style.getPropertyValue('--rows-h') || '0')
-    // 5000 rows × any non-trivial estimate → a tall spacer the window never matches.
-    expect(h).toBeGreaterThan(10_000)
+    expect(tree.rows().length).toBe(2)
+    tree.toggleExpanded('src')
+    await flush()
+    expect(tree.rows().length).toBe(4)
+    expect(itemIds(shadow)).toEqual(['src', 'src/index.ts', 'src/lib', 'readme'])
+    tree.toggleExpanded('src')
+    await flush()
+    expect(tree.rows().length).toBe(2)
+    expect(itemIds(shadow)).toEqual(['src', 'readme'])
+    // Flow layout: no absolute --row-y / virtual spacer.
+    const items = Array.from(shadow!.querySelectorAll('[role="treeitem"]')) as HTMLElement[]
+    for (const el of items) {
+      expect(el.style.getPropertyValue('--row-y')).toBe('')
+      expect(getComputedStyle(el).position).not.toBe('absolute')
+    }
   })
 
-  it('windowed rows apply --row-y via translate (do not stack at y=0)', async () => {
-    // Regression: sail-tree once set use:virtualRow without translateY(bind(rowY)),
-    // so every absolute treeitem painted at the same origin (studio explorer illegible).
+  it('rows are not absolute-stacked (no virtualizer translateY)', async () => {
     const { shadow } = mountTree(true)
     await flush()
     const items = Array.from(shadow!.querySelectorAll('[role="treeitem"]')) as HTMLElement[]
     expect(items.length).toBeGreaterThan(1)
-    const rowYs = items.map((el) => el.style.getPropertyValue('--row-y'))
-    // At least two distinct offsets from the virtualizer.
-    expect(new Set(rowYs.filter(Boolean)).size).toBeGreaterThan(1)
-    // sx must consume --row-y (class atom or inline translate).
-    const consumes =
-      items[1]!.className.includes('translateY') ||
-      items[1]!.className.includes('translate-y') ||
-      getComputedStyle(items[1]!).translate !== 'none' ||
-      /translate|var\(--row-y\)/.test(items[1]!.getAttribute('style') || '')
-    expect(consumes || items[1]!.className.includes('sx-translateYbindrowY')).toBe(true)
+    for (const el of items) {
+      expect(el.className).not.toMatch(/translateY|translate-y/)
+      expect(el.style.getPropertyValue('--row-y')).toBe('')
+    }
   })
 })
 

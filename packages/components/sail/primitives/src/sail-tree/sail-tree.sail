@@ -5,8 +5,9 @@
   expansion model turned on, NOT a parallel engine. There is no createTree().
   The controller calls createTable({ getSubRows, getRowId, columns: [],
   initialState: { expanded } }), reads the flattened depth-first, expansion-
-  respecting table.rows(), and renders it WINDOWED through createVirtualizer —
-  one [role=treeitem] per VISIBLE node, indented by row.depth.
+  respecting table.rows(), and renders one [role=treeitem] per VISIBLE node
+  in document FLOW (SPEC-TREE-1 path A — no absolute virtualizer; explorer-
+  scale trees reflow on collapse without --row-y / estimateSize hitboxes).
 
   The live Table<T> arrives via tree IDENTITY binding (never a serialized
   object attribute); a `nodes` JSON attribute is the SSR/declarative fallback.
@@ -67,12 +68,11 @@
 <controller>
 // <sail-tree> controller — engine-backed, virtualized hierarchical tree.
 //
-// REUSES the Table engine (createTable with getSubRows+expanded) and the shipped
-// createVirtualizer; there is NO createTree(). The live `Table<T>` arrives via
-// the `tree` IDENTITY host property (never serialized); a `nodes` JSON
-// attribute is the SSR/declarative fallback. The windowed body renders
-// `tree.rows()` (flattened, depth-first, expansion-respecting) through a
-// createVirtualizer viewport, one [role=treeitem] per VISIBLE node.
+// REUSES the Table engine (createTable with getSubRows+expanded); there is NO
+// createTree(). The live `Table<T>` arrives via the `tree` IDENTITY host
+// property (never serialized); a `nodes` JSON attribute is the SSR/declarative
+// fallback. Body renders ALL visible `tree.rows()` in document flow (no
+// createVirtualizer — SPEC-TREE-1 path A).
 //
 // Templates declare, controllers do: mutations + emit live in mount's delegated
 // listeners; aria/level/posinset/setsize are derived in the TEMPLATE from the
@@ -81,12 +81,11 @@
 // Authority: build-spec §"Controller shape", §"Backbone reuse", Slices 2-4.
 
 import type { ControllerScope } from '@ship/sail-runtime'
-import { createVirtualizer, type Virtual } from '@ship/sail-runtime/virtual'
 import { createTable, type Table } from '../sail-table/engine/create-table'
 import type { TreeNode } from '../sail-tree-view/sail-tree-view.controller'
 import { parseJsonNodes } from './decode'
 import { treeTableOptions } from './sail-tree.engine'
-import { windowTreeRows } from './sail-tree.view'
+import { flowTreeRows } from './sail-tree.view'
 import { wireTreeInteractions } from './sail-tree.interactions'
 import type { Scope } from './sail-tree.sail'
 
@@ -94,36 +93,20 @@ type AnyTreeNode = TreeNode & Record<string, unknown>
 
 /** Fallback indent step (px) when the density channel is unmeasured (jsdom). */
 const INDENT_STEP = 16
-/** Row-height estimate seed for the virtualizer (density-derived at runtime). */
-const ROW_HEIGHT = 32
 
-/** A stable empty engine so the windowed read never branches on null. */
+/** A stable empty engine so the list read never branches on null. */
 function emptyTree(): Table<AnyTreeNode> {
   return createTable<AnyTreeNode>(treeTableOptions<AnyTreeNode>({ data: [] }))
 }
 
 export default controller((_ctx: ControllerScope<Scope>) => {
     const treeSig = signal<Table<AnyTreeNode> | null>(null)
-    const viewportEl = signal<HTMLDivElement | null>(null)
 
     const EMPTY = emptyTree()
     const tree = derived<Table<AnyTreeNode>>(() => treeSig() ?? EMPTY)
 
-    const virt: Virtual = createVirtualizer({
-      // Read expanded + rows so collapse re-windows (count alone can lag if
-      // measurements cache holds a tall spacer after children drop out).
-      count: () => {
-        void tree().state.expanded()
-        return tree().rows().length
-      },
-      estimateSize: (_index) => ROW_HEIGHT,
-      getScrollElement: () => viewportEl(),
-      overscan: 8,
-      getItemKey: (i) => tree().rows()[i]?.id ?? i,
-    })
-
-    const windowItems = windowTreeRows<AnyTreeNode>(tree, virt.virtualItems, () => INDENT_STEP)
-    const totalSize = virt.totalSize
+    // Full visible list in flow — collapse removes children and layout closes.
+    const flowItems = flowTreeRows<AnyTreeNode>(tree, () => INDENT_STEP)
     const rowCount = derived<number>(() => tree().rowCount())
 
     // Roving-tabindex: the active row is nav's focus, defaulting to the first
@@ -142,17 +125,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     )
 
     mount((host) => {
-      // Collapse/expand must remeasure: absolute rows leave the DOM but a stale
-      // totalSize spacer leaves a visual hole (explorer empty band / filter gap).
-      const stopMeasure = effect(() => {
-        void tree().state.expanded()
-        void tree().rows().length
-        virt.measure()
-      })
       // ── tree IDENTITY wiring ────────────────────────────────────────────
       // The engine is a LIVE JS reference assigned to the host `tree` property
       // (never a stringified attribute). Route it into the scope signal so the
-      // windowed render reacts.
+      // list render reacts.
       // Capture any pre-connect assignment (`tree={table}` / bindDynamic may
       // fire before mount defines the accessor — same pattern as message-list).
       const preTree = (host as unknown as { tree?: Table<AnyTreeNode> | null }).tree
@@ -190,27 +166,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         selectable: () => (host.getAttribute('selectable') ?? 'none') !== 'none',
         multi: () => (host.getAttribute('selectable') ?? 'none') === 'multi',
         navRoleSelector: '[role="tree"]',
-        getWindow: () => windowItems(),
-        // Collapse must shrink the virtualizer spacer (not only hide rows).
-        onExpanded: () => {
-          virt.measure()
-        },
+        getWindow: () => flowItems(),
       })
 
       return () => {
-        stopMeasure()
         stop()
-        virt.dispose()
       }
     })
 
     return {
       treeSig,
-      viewportEl,
       tree,
-      virt,
-      windowItems,
-      totalSize,
+      flowItems,
       rowCount,
       activeRowId,
       isEmptyInitial,
@@ -237,64 +204,49 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </div>
 </else-if><else>
 <div role="tree" sx={style.w(full).fontFamily(body).fontSize(density).fg(foreground)} aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
-  <!-- Fill parent height chain (studio explorer / workbench). maxH(panel-max-h-md)
-       starved scrollports and left virtualizer gaps — parent owns the height. -->
-  <div bind:this={viewportEl} sx={style.position(relative).w(full).h(full).minH(0).overflowY(auto)}>
-    <div use:virtualSpacer={totalSize()} sx={style.h(bind(rowsH)).position(relative).w(full)}>
-      <for {windowItems()} as="w" key={w.key}>
-        <!--
-          virtualRow writes --row-y; sx MUST apply translateY(bind(rowY)) or every
-          absolute row stacks at y=0 (studio explorer "mojibake" / illegible list).
-          Same pattern as sail-tree-grid + sail-message-list. cellPad → padS(bind(cellPs)).
-        -->
-        <row align="center" gap="density" nowrap role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} use:cellPad={w.indent} sx={style.group().position(absolute).left(0).w(full).translateY(bind(rowY)).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)).radius(sm).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).fontWeight(medium), busy: style.fg(muted-foreground).italic(true).cursor(default), focus: style.outline(ring) })}>
-          <!-- Chevron is paint only (aria-expanded / data-expanded). Expand is the row. -->
-          <if {w.canExpand}>
-            <row data-tree-caret aria-hidden="true" align="center" justify="center" sx={style.w(8).h(8).minW(8).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
-              <icon name="chevron-right" size="sm"></icon>
-            </row>
-          <else>
-            <span aria-hidden="true" sx={style.w(density-icon).minW(density-icon)}></span>
-          </else></if>
+  <!-- Flow list: parent owns height; overflow scrolls. No absolute virtualizer
+       (collapse reflows; row boxes don't share a fixed estimate). -->
+  <div sx={style.w(full).h(full).minH(0).overflowY(auto)}>
+    <for {flowItems()} as="w" key={w.key}>
+      <row align="center" gap="density" nowrap role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:cellPad={w.indent} sx={style.group().w(full).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)).radius(sm).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).fontWeight(medium), busy: style.fg(muted-foreground).italic(true).cursor(default), focus: style.outline(ring) })}>
+        <!-- Chevron is paint only (aria-expanded / data-expanded). Expand is the row. -->
+        <if {w.canExpand}>
+          <row data-tree-caret aria-hidden="true" align="center" justify="center" sx={style.w(8).h(8).minW(8).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
+            <icon name="chevron-right" size="sm"></icon>
+          </row>
+        <else>
+          <span aria-hidden="true" sx={style.w(density-icon).minW(density-icon)}></span>
+        </else></if>
 
-          <if {selectable() === 'multi'}>
-            <span sx={style}>
-              <input
-                type="checkbox"
-                size="sm"
-                aria-label={`Select ${w.label}`}
-                checked={w.checked}
-                indeterminate={w.someSelected}
-              />
-            </span>
-          </if>
-          <if {w.icon !== ''}>
-            <icon name={w.icon} size="sm" sx={style.fg(muted-foreground).when({ groupSelected: style.fg(foreground) })}></icon>
-          <else>
-            <slot name="node-icon"></slot>
-          </else></if>
-          <span grow min-w="0" sx={style.truncate()}>{w.label}</span>
-          <!--
-            Trail: data `node.trailing` (e.g. dirty ●) then host slot for custom meta.
-            Meta lives here — never folded into the label (557 B / stacked-text lesson).
-          -->
-          <span sx={style.ml(auto).fontSize(xs)}>
-            <!--
-              Trailing meta: dirty ● (warning) vs text badges (muted, e.g. L1/L2/L3).
-              Never fold meta into the label (557 B / stacked-text lesson).
-            -->
-            <if {w.trailing !== ''}>
-              <if {w.trailing === '●'}>
-                <span sx={style.fg(warning)} aria-label="Unsaved">●</span>
-              <else>
-                <span sx={style.fg(muted-foreground)} aria-label={`Meta ${w.trailing}`}>{w.trailing}</span>
-              </else></if>
-            </if>
-            <span sx={style.fg(muted-foreground)}><slot name="node-trailing"></slot></span>
+        <if {selectable() === 'multi'}>
+          <span sx={style}>
+            <input
+              type="checkbox"
+              size="sm"
+              aria-label={`Select ${w.label}`}
+              checked={w.checked}
+              indeterminate={w.someSelected}
+            />
           </span>
-        </row>
-      </for>
-    </div>
+        </if>
+        <if {w.icon !== ''}>
+          <icon name={w.icon} size="sm" sx={style.fg(muted-foreground).when({ groupSelected: style.fg(foreground) })}></icon>
+        <else>
+          <slot name="node-icon"></slot>
+        </else></if>
+        <span grow min-w="0" sx={style.truncate()}>{w.label}</span>
+        <span sx={style.ml(auto).fontSize(xs)}>
+          <if {w.trailing !== ''}>
+            <if {w.trailing === '●'}>
+              <span sx={style.fg(warning)} aria-label="Unsaved">●</span>
+            <else>
+              <span sx={style.fg(muted-foreground)} aria-label={`Meta ${w.trailing}`}>{w.trailing}</span>
+            </else></if>
+          </if>
+          <span sx={style.fg(muted-foreground)}><slot name="node-trailing"></slot></span>
+        </span>
+      </row>
+    </for>
   </div>
 </div>
 </else></if>

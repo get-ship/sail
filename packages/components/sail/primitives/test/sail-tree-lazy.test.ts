@@ -190,7 +190,8 @@ describe('<sail-tree> — lazy-children consumer seam (behavioral spec #9)', () 
       const expanded = (e as CustomEvent).detail.expanded as Record<string, boolean>
       for (const id of Object.keys(expanded)) if (expanded[id]) void loader(id)
     })
-    caretFor(shadow, 'remote').click()
+    // Whole row is the expand target (chevron is paint-only).
+    rowFor(shadow, 'remote').click()
     await flush()
     await flush()
     expect(loader).toHaveBeenCalledWith('remote')

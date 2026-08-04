@@ -109,8 +109,11 @@ export function wireTreeInteractions(
     const me = e as MouseEvent
     const tree = getTree()
     const row = tree.getRow(id)
+    // Engine capability OR consumer lazy flag (children not loaded yet).
+    const orig = row?.original as { lazy?: boolean } | undefined
+    const canExpand = (row?.getCanExpand() ?? false) || orig?.lazy === true
     // Engine capability — not a data-action marker. Branch row = expand target.
-    if (row?.getCanExpand()) {
+    if (canExpand) {
       toggleExpand(id)
       selectOnly(id, me.shiftKey === true)
     } else {

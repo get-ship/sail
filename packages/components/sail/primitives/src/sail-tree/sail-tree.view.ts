@@ -216,3 +216,38 @@ export function windowTreeRows<T extends TreeNode>(
     return out
   })
 }
+
+/**
+ * Full-list (non-virtual) row views — document flow.
+ * Prefer for explorer-scale trees: collapse reflows for free; no absolute
+ * --row-y / estimateSize hitbox bugs (SPEC-TREE-1 path A).
+ */
+export function flowTreeRows<T extends TreeNode>(
+  table: () => Table<T>,
+  indentStep: () => number,
+): Derived<TreeRowView[]> {
+  return derived<TreeRowView[]>(() => {
+    const tab = table()
+    // expanded + rows so collapse re-derives the flat list.
+    void tab.state.expanded()
+    const rows = tab.rows()
+    const cols = tab.visibleLeafColumns()
+    const step = indentStep()
+    const selectedSet = new Set(tab.selectedRowIds())
+    const out: TreeRowView[] = []
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]!
+      // Synthetic VirtualItem geometry — unused by flow layout (no absolute).
+      const item: VirtualItem = {
+        key: row.id,
+        index: i,
+        start: 0,
+        size: 0,
+        end: 0,
+        lane: 0,
+      }
+      out.push(toRowView(row, item, cols, step, selectedSet))
+    }
+    return out
+  })
+}

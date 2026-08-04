@@ -133,7 +133,8 @@ describe('<sail-tree> — shift-click range select over the displayed tree order
   it('the span is taken over displayed order — a deep child between shallow nodes is included', async () => {
     const { shadow, tree } = mountTree(true)
     await flush()
-    clickRow(shadow, 'src') // anchor at depth-0 root
+    // Anchor via engine (branch click would toggle expand and drop children).
+    tree.toggleRowSelected('src', true)
     await flush()
     clickRow(shadow, 'src/lib/a.ts', true) // target at depth-2
     await flush()
@@ -147,9 +148,10 @@ describe('<sail-tree> — shift-click range select over the displayed tree order
   })
 
   it('shift-click extending the range pivots around the SAME anchor', async () => {
-    const { shadow } = mountTree(true)
+    const { shadow, tree } = mountTree(true)
     await flush()
-    clickRow(shadow, 'src/lib') // anchor
+    // Anchor via engine so branch expand state stays open.
+    tree.toggleRowSelected('src/lib', true)
     await flush()
     clickRow(shadow, 'readme', true) // span lib..readme
     await flush()
@@ -165,7 +167,8 @@ describe('<sail-tree> — shift-click range select over the displayed tree order
     // src open, src/lib COLLAPSED → a.ts/b.ts are absent from tree.rows().
     const { shadow, tree } = mountTree({ src: true })
     await flush()
-    clickRow(shadow, 'src') // anchor
+    // Anchor via engine — row click on src would collapse and hide the span.
+    tree.toggleRowSelected('src', true)
     await flush()
     clickRow(shadow, 'readme', true) // span over the VISIBLE order only
     await flush()
