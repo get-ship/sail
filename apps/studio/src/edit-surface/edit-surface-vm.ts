@@ -65,11 +65,15 @@ export function createEditSurface() {
     host.setDiagnostics(
       uiCheckDiags().map((c) => ({
         line: c.line,
+        column: c.column,
+        endLine: c.endLine,
+        endColumn: c.endColumn,
         severity:
           c.severity === 'warning' || c.severity === 'info'
             ? (c.severity as 'warning' | 'info')
             : 'error',
         message: c.message,
+        source: 'check',
       })),
     )
   }

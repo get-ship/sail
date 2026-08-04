@@ -42,7 +42,7 @@ function ensureInit(): Promise<void> {
   return initDone
 }
 
-await ensureInit()
+// Lazy — do NOT top-level await (breaks framework singleton bake + importmap).
 
 const TAG_ATTR_RE = /([\w:-]+)(?=\s*=|\s|$)/g
 
@@ -69,7 +69,12 @@ function directivePrefix(syntax: string): string {
  * or block keyword; null otherwise.
  */
 export function hoverAt(source: string, offset: number): SailHoverInfo | null {
-  if (!vocab) throw new Error('sail-lsp-browser hover: WASM not initialized')
+  // Sync path for editor tooltips — vocab may still be loading; return null
+  // until ready rather than throwing (would break hoverTooltip).
+  if (!vocab) {
+    void ensureInit()
+    return null
+  }
   if (offset < 0 || offset > source.length) return null
 
   // Walk back over identifier chars only (and `:` so `on:click` and

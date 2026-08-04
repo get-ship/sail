@@ -1,5 +1,5 @@
 {
-  "$description": "Studio workbench — warm charcoal dark, coral accent, compact density dogfood.",
+  "$description": "Studio workbench \u2014 warm charcoal dark, coral accent, compact density dogfood.",
   "$extensions": {
     "ship": {
       "layer": "theme",
@@ -192,6 +192,89 @@
               }
             },
             "$type": "number"
+          }
+        },
+        "syntax": {
+          "keyword": {
+            "$value": "oklch(0.48 0.18 32)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-keyword"
+              }
+            }
+          },
+          "string": {
+            "$value": "oklch(0.42 0.14 152)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-string"
+              }
+            }
+          },
+          "number": {
+            "$value": "oklch(0.42 0.14 250)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-number"
+              }
+            }
+          },
+          "function": {
+            "$value": "oklch(0.45 0.16 305)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-function"
+              }
+            }
+          },
+          "type": {
+            "$value": "oklch(0.42 0.14 200)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-type"
+              }
+            }
+          },
+          "tag": {
+            "$value": "oklch(0.45 0.16 20)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-tag"
+              }
+            }
+          },
+          "attr": {
+            "$value": "oklch(0.48 0.14 60)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-attr"
+              }
+            }
+          },
+          "comment": {
+            "$value": "oklch(0.55 0.02 70)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-comment"
+              }
+            }
+          },
+          "variable": {
+            "$value": "{foreground}",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-variable"
+              }
+            }
           }
         }
       },
@@ -627,6 +710,89 @@
               }
             },
             "$type": "number"
+          }
+        },
+        "syntax": {
+          "keyword": {
+            "$value": "oklch(0.78 0.14 32)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-keyword"
+              }
+            }
+          },
+          "string": {
+            "$value": "oklch(0.78 0.12 152)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-string"
+              }
+            }
+          },
+          "number": {
+            "$value": "oklch(0.80 0.12 250)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-number"
+              }
+            }
+          },
+          "function": {
+            "$value": "oklch(0.80 0.14 305)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-function"
+              }
+            }
+          },
+          "type": {
+            "$value": "oklch(0.78 0.12 200)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-type"
+              }
+            }
+          },
+          "tag": {
+            "$value": "oklch(0.78 0.14 20)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-tag"
+              }
+            }
+          },
+          "attr": {
+            "$value": "oklch(0.78 0.12 60)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-attr"
+              }
+            }
+          },
+          "comment": {
+            "$value": "oklch(0.58 0.03 70)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-comment"
+              }
+            }
+          },
+          "variable": {
+            "$value": "{foreground}",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "syntax-variable"
+              }
+            }
           }
         }
       },

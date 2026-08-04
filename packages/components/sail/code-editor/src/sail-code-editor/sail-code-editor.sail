@@ -64,6 +64,7 @@ import {
   placeholder as cmPlaceholder, lineNumbers,
   highlightActiveLine, highlightActiveLineGutter,
   drawSelection, rectangularSelection,
+  hoverTooltip, type Tooltip,
 } from '@codemirror/view'
 import {
   defaultHighlightStyle, syntaxHighlighting,
@@ -113,8 +114,13 @@ export default controller((ctx: Scope) => {
     let view: EditorView | null = null
     let debounceTimer: ReturnType<typeof setTimeout> | null = null
     let suppressUpdate = false
+    /** Host-pushed diagnostics (studio checks). Merged with browser LSP diags. */
+    let hostDiagnostics: SailDiagnostic[] = []
+    /** Browser LSP diagnose() results. */
+    let lspDiagnostics: SailDiagnostic[] = []
     let pendingDiagnostics: SailDiagnostic[] | null = null
     let completions: SailCompletionSource[] = []
+    let hoverAtFn: ((source: string, offset: number) => { contents: string } | null) | null = null
 
     const valSig = ctx.value as unknown as Signal<string>
     const langSig = ctx.language as unknown as Signal<string>
@@ -127,30 +133,65 @@ export default controller((ctx: Scope) => {
       if (completions.length === 0) return []
       return autocompletion({ override: completions.map(makeCompletionSource), defaultKeymap: true })
     }
-    function applyDiagnostics(diagnostics: SailDiagnostic[]): void {
+
+    /** Map a diagnostic to a tight CM range — never paint the whole line. */
+    function diagToCm(doc: EditorState['doc'], d: SailDiagnostic): Diagnostic {
+      const line = Math.max(1, Math.min(doc.lines, d.line | 0))
+      const startLine = doc.line(line)
+      const col = Math.max(1, (d.column ?? 1) | 0)
+      const from = Math.min(startLine.to, startLine.from + col - 1)
+      let to: number
+      if (d.endLine != null && d.endColumn != null) {
+        const endL = Math.max(1, Math.min(doc.lines, d.endLine | 0))
+        const endLineObj = doc.line(endL)
+        to = Math.min(endLineObj.to, endLineObj.from + Math.max(0, (d.endColumn | 0) - 1))
+      } else if (d.endColumn != null) {
+        to = Math.min(startLine.to, startLine.from + Math.max(0, (d.endColumn | 0) - 1))
+      } else {
+        // No end: span one identifier/token, not the remainder of the line
+        // (full-line underlines stack into the "overlapping warnings" mess).
+        let end = from
+        const text = doc.sliceString(from, startLine.to)
+        const m = text.match(/^[A-Za-z0-9_$:.-]+/)
+        end = m ? from + m[0].length : Math.min(startLine.to, from + 1)
+        to = end
+      }
+      return {
+        from,
+        to: Math.max(from + 1, to),
+        severity: d.severity,
+        message: d.message,
+        source: d.source,
+      } as Diagnostic
+    }
+
+    function mergeAndApplyDiagnostics(): void {
       if (!view) return
       const st = view.state
       const doc = st.doc
-      const cmDiags: Diagnostic[] = diagnostics.map((d) => {
-        const line = Math.max(1, Math.min(doc.lines, d.line | 0))
-        const startLine = doc.line(line)
-        const col = Math.max(1, (d.column ?? 1) | 0)
-        const from = Math.min(startLine.to, startLine.from + col - 1)
-        const endL = d.endLine ?? line
-        const endLineObj = doc.line(Math.max(1, Math.min(doc.lines, endL | 0)))
-        const endCol = d.endColumn
-        const to = endCol != null
-          ? Math.min(endLineObj.to, endLineObj.from + (endCol - 1))
-          : endLineObj.to
-        return {
-          from,
-          to: Math.max(from + 1, to),
-          severity: d.severity,
-          message: d.message,
-          source: d.source,
-        } as Diagnostic
-      })
-      view.dispatch(cmSetDiagnostics(st, cmDiags))
+      // Dedupe by line+col+message so host checks and browser LSP don't
+      // paint two squiggles on the same span.
+      const seen = new Set<string>()
+      const merged: Diagnostic[] = []
+      for (const d of [...lspDiagnostics, ...hostDiagnostics]) {
+        const key = `${d.line}|${d.column ?? 0}|${d.message}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        merged.push(diagToCm(doc, d))
+      }
+      // Sort by from so CM lint layer is stable.
+      merged.sort((a, b) => a.from - b.from || a.to - b.to)
+      view.dispatch(cmSetDiagnostics(st, merged))
+    }
+
+    function applyDiagnostics(diagnostics: SailDiagnostic[]): void {
+      // Public host API: treat as host/check stream (replaces prior host set).
+      hostDiagnostics = diagnostics ?? []
+      if (!view) {
+        pendingDiagnostics = diagnostics
+        return
+      }
+      mergeAndApplyDiagnostics()
     }
 
     // The editor element owns the EditorView: the action builds it on mount
@@ -214,6 +255,25 @@ export default controller((ctx: Scope) => {
         sailEditorTheme,
         sailHighlighting,
         lintGutter(),
+        // Hover: SAIL structure docs from sail-lsp-browser/hover when available.
+        hoverTooltip((v, pos): Tooltip | null => {
+          if (!hoverAtFn) return null
+          const text = v.state.doc.toString()
+          const info = hoverAtFn(text, pos)
+          if (!info) return null
+          return {
+            pos,
+            above: true,
+            create() {
+              const dom = document.createElement('div')
+              dom.className = 'cm-tooltip-sail-hover'
+              dom.style.cssText =
+                'padding:6px 10px;max-width:36rem;white-space:pre-wrap;font-size:12px;line-height:1.4'
+              dom.textContent = info.contents
+              return { dom }
+            },
+          }
+        }, { hoverTime: 350 }),
         langCompartment.of([]),
         completionCompartment.of(buildCompletionExt()),
         readonlyCompartment.of(EditorState.readOnly.of(roSig())),
@@ -231,8 +291,9 @@ export default controller((ctx: Scope) => {
       })
 
       if (pendingDiagnostics) {
-        applyDiagnostics(pendingDiagnostics)
+        hostDiagnostics = pendingDiagnostics
         pendingDiagnostics = null
+        mergeAndApplyDiagnostics()
       }
 
       return {
@@ -328,15 +389,12 @@ export default controller((ctx: Scope) => {
     }))
 
     // ── Browser LSP integration ───────────────────────────────────
-    // For `.sail` content, run sail-lsp-browser's pure analyser on the
-    // main thread (no worker — the `?worker` Vite suffix isn't supported
-    // by the deck bundler, our chrome bundler). Diagnostics stream into
-    // setDiagnostics on every debounced doc change; completions are
-    // seeded once from allSources. Hover deferred to a follow-up; if
-    // the parse cost ever shows in the input loop, switch to a worker
-    // with a Bun-compatible URL.
-    type LspDiagnoseFn = (text: string) => Promise<SailDiagnostic[]>
+    // Diagnostics from sail-lsp-browser merge with host checks (not replace).
+    // Hover uses sail-lsp-browser/hover when the framework singleton is
+    // available; otherwise a small static tag/directive fallback.
+    type LspDiagnoseFn = (text: string, wasmUrl?: string) => Promise<SailDiagnostic[]>
     type LspAllSourcesFn = () => SailCompletionSource[]
+    type LspHoverFn = (source: string, offset: number) => { contents: string } | null
     let lspDiagnose: LspDiagnoseFn | null = null
     let lspDebounce: ReturnType<typeof setTimeout> | null = null
     let lspInit: Promise<void> | null = null
@@ -353,6 +411,16 @@ export default controller((ctx: Scope) => {
         } catch (err) {
           console.warn('[sail-code-editor] LSP init failed; diagnostics unavailable', err)
         }
+        // Hover is optional — importmap may not list it yet.
+        try {
+          const hoverMod = await import(
+            /* @vite-ignore */ '@ship/sail-lsp-browser/hover'
+          ) as unknown as { hoverAt: LspHoverFn }
+          if (typeof hoverMod.hoverAt === 'function') hoverAtFn = hoverMod.hoverAt
+        } catch {
+          hoverAtFn = staticSailHover
+        }
+        if (!hoverAtFn) hoverAtFn = staticSailHover
       })()
       await lspInit
     }
@@ -370,7 +438,8 @@ export default controller((ctx: Scope) => {
         if (!lspDiagnose) return
         try {
           const out = await lspDiagnose(text, wasmUrlSig())
-          el.setDiagnostics?.(out)
+          lspDiagnostics = out ?? []
+          mergeAndApplyDiagnostics()
         } catch { /* best-effort */ }
       }, 350)
     }))
@@ -378,6 +447,7 @@ export default controller((ctx: Scope) => {
       if (lspDebounce) clearTimeout(lspDebounce)
       lspDiagnose = null
       lspInit = null
+      hoverAtFn = null
     })
 
     disposers.push(effect(() => {
@@ -413,6 +483,35 @@ export default controller((ctx: Scope) => {
   })
   return { editorMount }
 })
+
+/** Static hover fallback when `@ship/sail-lsp-browser/hover` is not on the importmap. */
+function staticSailHover(source: string, offset: number): { contents: string } | null {
+  if (offset < 0 || offset > source.length) return null
+  let start = offset
+  while (start > 0 && /[\w:-]/.test(source[start - 1]!)) start--
+  let end = offset
+  while (end < source.length && /[\w:-]/.test(source[end]!)) end++
+  const token = source.slice(start, end)
+  if (!token) return null
+  const docs: Record<string, string> = {
+    controller: '<controller>\n\nAuthored TypeScript for this surface. Export default a setup that returns scope.',
+    scope: '<scope>\n\nDeclares props and style helpers for the template.',
+    column: '<column>\n\nVertical flex stack (L1 layout primitive).',
+    row: '<row>\n\nHorizontal flex stack (L1 layout primitive).',
+    grow: 'grow\n\nFlex grow — fills remaining space on the cross/main axis.',
+    sx: 'sx\n\nStyle expression attribute — chain style.* helpers.',
+    'on:': 'on:<event>\n\nEvent handler binding. Supports |prevent |stop |debounce:N modifiers.',
+    'bind:': 'bind:<prop>\n\nTwo-way binding into a signal/scope member.',
+  }
+  if (docs[token]) return { contents: docs[token]! }
+  if (token.startsWith('on:')) return { contents: docs['on:']! }
+  if (token.startsWith('bind:')) return { contents: docs['bind:']! }
+  // Inside controller: offer a light TS hint for common imports.
+  if (token === 'import' || token === 'export' || token === 'const' || token === 'function') {
+    return { contents: `\`${token}\`\n\nTypeScript keyword (controller/scope body).` }
+  }
+  return null
+}
 
 // CodeMirror's Completion treats absent detail/info as "none"; under
 // exactOptionalPropertyTypes we can't pass `undefined` for them, so omit.

@@ -51,6 +51,27 @@ const CLS_INTERP_BRACE = 'sail-interp-brace'   // the { and } themselves
 const CLS_ATTR_PREFIX = 'sail-attr-prefix'     // bind: / on: / class: / …
 const CLS_ATTR_NAME = 'sail-attr-name'         // the rest of an attribute name
 const CLS_ATTR_MODIFIER = 'sail-attr-modifier' // |prevent / |debounce:N …
+// TypeScript-ish tokens inside <controller> / <scope> script bodies.
+const CLS_TS_KW = 'sail-ts-kw'
+const CLS_TS_STR = 'sail-ts-str'
+const CLS_TS_NUM = 'sail-ts-num'
+const CLS_TS_CMT = 'sail-ts-cmt'
+const CLS_TS_FN = 'sail-ts-fn'
+
+/** Tags whose text body is authored TypeScript, not SAIL template text. */
+const SCRIPT_TAGS = new Set(['controller', 'scope'])
+
+const TS_KEYWORDS = new Set([
+  'break', 'case', 'catch', 'class', 'const', 'continue', 'debugger', 'default',
+  'delete', 'do', 'else', 'enum', 'export', 'extends', 'false', 'finally',
+  'for', 'function', 'if', 'import', 'in', 'instanceof', 'let', 'new', 'null',
+  'return', 'super', 'switch', 'this', 'throw', 'true', 'try', 'typeof',
+  'undefined', 'var', 'void', 'while', 'with', 'yield', 'async', 'await',
+  'from', 'as', 'of', 'type', 'interface', 'implements', 'readonly', 'satisfies',
+  'infer', 'keyof', 'never', 'unknown', 'any', 'string', 'number', 'boolean',
+  'symbol', 'bigint', 'object', 'declare', 'namespace', 'module', 'abstract',
+  'static', 'public', 'private', 'protected', 'override', 'get', 'set',
+])
 
 // ─── Grammar tables (mirrors `crates/sail/compiler`) ──────────────────
 const OPEN_KEYWORDS = [
@@ -344,6 +365,119 @@ class SailHighlighter implements PluginValue {
   }
 }
 
+/**
+ * Find `<controller>` / `<scope>` body ranges in the full source.
+ * Bodies are TypeScript — must not get SAIL `{expr}` interpolation marks.
+ */
+function findScriptBodies(source: string): Array<{ from: number; to: number }> {
+  const out: Array<{ from: number; to: number }> = []
+  for (const tag of SCRIPT_TAGS) {
+    const openRe = new RegExp(`<${tag}(\\s[^>]*)?>`, 'gi')
+    let m: RegExpExecArray | null
+    while ((m = openRe.exec(source)) !== null) {
+      const bodyStart = m.index + m[0].length
+      const close = `</${tag}>`
+      const closeAt = source.toLowerCase().indexOf(close, bodyStart)
+      if (closeAt < 0) continue
+      if (closeAt > bodyStart) out.push({ from: bodyStart, to: closeAt })
+      openRe.lastIndex = closeAt + close.length
+    }
+  }
+  out.sort((a, b) => a.from - b.from)
+  return out
+}
+
+function covers(ranges: Array<{ from: number; to: number }>, from: number, to: number): boolean {
+  // Interval fully inside a script body.
+  for (const r of ranges) {
+    if (from >= r.from && to <= r.to) return true
+  }
+  return false
+}
+
+/**
+ * Lightweight TS lexer for controller/scope bodies. Not a full parser —
+ * enough keyword/string/comment/number/function coloring to stop the
+ * monochrome "no highlighting" look when HTML mode treats the body as text.
+ */
+function scanTsRange(
+  source: string,
+  base: number,
+  from: number,
+  to: number,
+  builder: RangeSetBuilder<Decoration>,
+): void {
+  let i = from
+  while (i < to) {
+    const ch = source[i]!
+    // line comment
+    if (ch === '/' && source[i + 1] === '/') {
+      let j = i + 2
+      while (j < to && source[j] !== '\n') j++
+      builder.add(base + i, base + j, Decoration.mark({ class: CLS_TS_CMT }))
+      i = j
+      continue
+    }
+    // block comment
+    if (ch === '/' && source[i + 1] === '*') {
+      let j = i + 2
+      while (j < to - 1 && !(source[j] === '*' && source[j + 1] === '/')) j++
+      j = Math.min(to, j + 2)
+      builder.add(base + i, base + j, Decoration.mark({ class: CLS_TS_CMT }))
+      i = j
+      continue
+    }
+    // string
+    if (ch === '"' || ch === "'" || ch === '`') {
+      const q = ch
+      let j = i + 1
+      while (j < to) {
+        if (source[j] === '\\') { j += 2; continue }
+        if (source[j] === q) { j++; break }
+        // template ${…} — stop at ${ and resume after matching }
+        if (q === '`' && source[j] === '$' && source[j + 1] === '{') {
+          j += 2
+          let depth = 1
+          while (j < to && depth > 0) {
+            if (source[j] === '{') depth++
+            else if (source[j] === '}') depth--
+            j++
+          }
+          continue
+        }
+        j++
+      }
+      builder.add(base + i, base + j, Decoration.mark({ class: CLS_TS_STR }))
+      i = j
+      continue
+    }
+    // number
+    if (/[0-9]/.test(ch) || (ch === '.' && /[0-9]/.test(source[i + 1] ?? ''))) {
+      let j = i + 1
+      while (j < to && /[0-9_xXa-fA-FnNeE.+-]/.test(source[j]!)) j++
+      builder.add(base + i, base + j, Decoration.mark({ class: CLS_TS_NUM }))
+      i = j
+      continue
+    }
+    // identifier / keyword / function-call
+    if (/[A-Za-z_$]/.test(ch)) {
+      let j = i + 1
+      while (j < to && /[A-Za-z0-9_$]/.test(source[j]!)) j++
+      const word = source.slice(i, j)
+      let k = j
+      while (k < to && /\s/.test(source[k]!)) k++
+      if (source[k] === '(') {
+        builder.add(base + i, base + j, Decoration.mark({ class: CLS_TS_FN }))
+      } else if (TS_KEYWORDS.has(word)) {
+        builder.add(base + i, base + j, Decoration.mark({ class: CLS_TS_KW }))
+      }
+      i = j
+      continue
+    }
+    i++
+  }
+}
+
 function build(view: EditorView): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>()
   const tree = syntaxTree(view.state)
@@ -353,6 +487,8 @@ function build(view: EditorView): DecorationSet {
   // highlighting. Visible range = what CodeMirror is about to render.
   const visible = view.visibleRanges
   const docEnd = view.state.doc.length
+  const source = view.state.doc.toString()
+  const scriptBodies = findScriptBodies(source)
 
   // Collect text + attribute intervals first so we can intersect with
   // the visible range cheaply.
@@ -370,23 +506,64 @@ function build(view: EditorView): DecorationSet {
     },
   })
 
-  const source = view.state.doc.toString()
   const clip = (from: number, to: number) => [Math.max(0, from), Math.min(docEnd, to)] as const
+
+  // Collect all marks then sort — script-body TS scan and SAIL scan must
+  // not emit overlapping ranges out of order into RangeSetBuilder.
+  type Mark = { from: number; to: number; cls: string }
+  const marks: Mark[] = []
+  const markBuilder = {
+    add(from: number, to: number, dec: Decoration) {
+      // Decoration.mark stores class in spec
+      const spec = (dec as unknown as { spec?: { class?: string } }).spec
+      const cls = spec?.class
+      if (cls && from < to) marks.push({ from, to, cls })
+    },
+  } as unknown as RangeSetBuilder<Decoration>
 
   for (const vis of visible) {
     const [vFrom, vTo] = clip(vis.from, vis.to)
+    // TS highlight for visible script bodies.
+    for (const body of scriptBodies) {
+      if (body.to <= vFrom || body.from >= vTo) continue
+      const from = Math.max(body.from, vFrom)
+      const to = Math.min(body.to, vTo)
+      scanTsRange(source, 0, from, to, markBuilder)
+    }
     for (const iv of intervals) {
       if (iv.to <= vFrom || iv.from >= vTo) continue
       const from = Math.max(iv.from, vFrom)
       const to = Math.min(iv.to, vTo)
       if (iv.kind === 'text') {
-        scanTextRange(source.slice(from, to), from, builder)
+        // Skip SAIL brace overlay inside controller/scope bodies — those
+        // braces are TS, not template interpolations.
+        if (covers(scriptBodies, from, to)) continue
+        // Partial overlap: still scan non-script subranges by clipping.
+        let cursor = from
+        const blockers = scriptBodies
+          .filter((b) => b.to > from && b.from < to)
+          .sort((a, b) => a.from - b.from)
+        for (const b of blockers) {
+          if (cursor < b.from) scanTextRange(source.slice(cursor, b.from), cursor, markBuilder)
+          cursor = Math.max(cursor, b.to)
+        }
+        if (cursor < to) scanTextRange(source.slice(cursor, to), cursor, markBuilder)
       } else if (iv.kind === 'attrName') {
-        scanAttributeName(source, from, to, builder)
+        scanAttributeName(source, from, to, markBuilder)
       } else {
-        scanAttributeValue(source, from, to, builder)
+        scanAttributeValue(source, from, to, markBuilder)
       }
     }
+  }
+
+  marks.sort((a, b) => a.from - b.from || a.to - b.to)
+  // RangeSetBuilder rejects overlapping/out-of-order ranges — drop overlaps.
+  let lastTo = -1
+  for (const m of marks) {
+    if (m.from < lastTo) continue
+    if (m.from >= m.to) continue
+    builder.add(m.from, m.to, Decoration.mark({ class: m.cls }))
+    lastTo = m.to
   }
 
   return builder.finish()
@@ -439,6 +616,24 @@ const sailHighlightTheme = EditorView.theme({
   // `|prevent`, `|debounce:N`, … on `on:`.
   '& .sail-attr-modifier': {
     color: 'var(--syntax-number)',
+  },
+  // TypeScript inside <controller> / <scope>.
+  '& .sail-ts-kw': {
+    color: 'var(--syntax-keyword)',
+    fontWeight: '500',
+  },
+  '& .sail-ts-str': {
+    color: 'var(--syntax-string)',
+  },
+  '& .sail-ts-num': {
+    color: 'var(--syntax-number)',
+  },
+  '& .sail-ts-cmt': {
+    color: 'var(--syntax-comment)',
+    fontStyle: 'italic',
+  },
+  '& .sail-ts-fn': {
+    color: 'var(--syntax-function)',
   },
 })
 

@@ -424,8 +424,14 @@ export function parseCheckDiagnostics(raw: unknown[]): import('./types').CheckDi
   if (!Array.isArray(raw)) return []
   return raw.map((d) => {
     const o = d as Record<string, unknown>
+    const col = o.column ?? o.col ?? o.startColumn ?? o.start_col
+    const endCol = o.endColumn ?? o.end_col ?? o.endCol
+    const endLine = o.endLine ?? o.end_line
     return {
       line: Number(o.line ?? o.startLine ?? 1),
+      column: col != null ? Number(col) : undefined,
+      endLine: endLine != null ? Number(endLine) : undefined,
+      endColumn: endCol != null ? Number(endCol) : undefined,
       severity: String(o.severity ?? 'error'),
       message: String(o.message ?? ''),
       rule: o.rule != null ? String(o.rule) : undefined,

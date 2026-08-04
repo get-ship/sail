@@ -196,6 +196,10 @@ export type HoverTip = {
 
 export type CheckDiag = {
   line: number
+  /** 1-based column when the checker provides a span. */
+  column?: number
+  endLine?: number
+  endColumn?: number
   severity: string
   message: string
   rule?: string
