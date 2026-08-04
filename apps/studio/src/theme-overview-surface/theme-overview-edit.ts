@@ -12,7 +12,7 @@ import {
   setIconPack,
   setTokenValue,
   setTypeRole,
-  toPickerHex,
+  tryPickerHex,
   type DensityId,
 } from '@ship/studio/design'
 import type { ThemeSession } from '../theme-session/theme-session'
@@ -64,11 +64,7 @@ function colorHex(
 ): string {
   const raw = getPathValue(doc, path, mode)
   if (!raw) return fallback
-  try {
-    return toPickerHex(raw)
-  } catch {
-    return fallback
-  }
+  return tryPickerHex(raw) ?? ''
 }
 
 export function createOverviewEdit(session: ThemeSession) {

@@ -2,8 +2,24 @@
   "theme": {
     "default": "studio",
     "defaultMode": "dark",
-    // Project themes + catalog: studio workbench is the dogfood default.
-    "enabled": ["studio", "ship"]
+    // Themes activity dogfoods the full catalog: app delivery CSS must include
+    // every id we list, or data-theme-preview paint is a no-op (all look like :root).
+    "enabled": [
+      "studio",
+      "my-ship",
+      "my-theme-vbtk",
+      "ship",
+      "sail",
+      "neutral",
+      "paper",
+      "halo",
+      "console",
+      "contrast",
+      "glass",
+      "brut",
+      "8bit",
+      "synthwave"
+    ]
   },
   "editor": "vscode",
   "network": ["self"],

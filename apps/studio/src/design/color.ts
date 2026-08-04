@@ -76,16 +76,31 @@ export function normHex(s: string): string {
   return ''
 }
 
-/** OKLCH (or hex) → `#rrggbb` for sail-color-picker. */
-export function toPickerHex(value: string): string {
+/**
+ * OKLCH (or hex) → `#rrggbb` for sail-color-picker.
+ * Returns null when the value cannot be converted — **never** invent mid-gray.
+ * Callers must treat null as "unresolved / not pickable as hex".
+ */
+export function tryPickerHex(value: string): string | null {
   const v = String(value ?? '').trim()
+  if (!v) return null
   if (isHex(v)) return v.toLowerCase()
   const n = normHex(v)
   if (n) return n
+  // color-mix / var() / multi-shadow — not a single swatch hex
+  if (/var\(|color-mix\(|gradient\(|url\(/i.test(v)) return null
   const ok = parseOklch(v)
-  if (!ok) return '#888888'
+  if (!ok) return null
   const rgb = oklchToRgb(ok)
   return rgbToHex(rgb.r, rgb.g, rgb.b)
+}
+
+/**
+ * OKLCH (or hex) → `#rrggbb`. Empty string when unconvertible (honest UI).
+ * Prefer {@link tryPickerHex} when you need null vs empty.
+ */
+export function toPickerHex(value: string): string {
+  return tryPickerHex(value) ?? ''
 }
 
 const lin = (c: number): number => {
@@ -148,10 +163,13 @@ function relativeLuminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
-/** WCAG contrast ratio between two color strings (oklch/hex). */
+/** WCAG contrast ratio between two color strings (oklch/hex). 0 when either is unconvertible. */
 export function contrastRatio(fg: string, bg: string): number {
-  const L1 = relativeLuminance(toPickerHex(fg))
-  const L2 = relativeLuminance(toPickerHex(bg))
+  const a = tryPickerHex(fg)
+  const b = tryPickerHex(bg)
+  if (!a || !b) return 0
+  const L1 = relativeLuminance(a)
+  const L2 = relativeLuminance(b)
   const lighter = Math.max(L1, L2)
   const darker = Math.min(L1, L2)
   return (lighter + 0.05) / (darker + 0.05)

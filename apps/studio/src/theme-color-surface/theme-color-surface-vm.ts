@@ -3,7 +3,7 @@
  */
 export { COLOR_ROLES, createColorEdit, type ColorRoleKey } from './theme-color-edit'
 export { createThemeSession, paintIdFor, modesForPaintId } from '../theme-session/theme-session'
-export { PATH_NAV, OVERFLOW_NAV } from '../theme-session/theme-nav'
+export { PATH_NAV } from '../theme-session/theme-nav'
 
 import { createThemeSession } from '../theme-session/theme-session'
 import { createColorEdit } from './theme-color-edit'

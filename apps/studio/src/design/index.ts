@@ -1,3 +1,4 @@
+// Theme domain store — product UI is Themes only (STUDIO-V1-THEMES).
 export * from './types'
 export * from './scale'
 export * from './theme-doc'

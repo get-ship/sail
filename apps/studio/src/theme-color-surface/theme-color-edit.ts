@@ -7,7 +7,7 @@ import {
   getPathValue,
   setBrandColor,
   setTokenValue,
-  toPickerHex,
+  tryPickerHex,
 } from '@ship/studio/design'
 import type { ThemeSession } from '../theme-session/theme-session'
 
@@ -57,12 +57,9 @@ function colorHex(
   fallback: string,
 ): string {
   const raw = getPathValue(doc, path, mode)
+  // Missing leaf → seed fallback for empty themes. Present but unconvertible → empty (no gray lie).
   if (!raw) return fallback
-  try {
-    return toPickerHex(raw)
-  } catch {
-    return fallback
-  }
+  return tryPickerHex(raw) ?? ''
 }
 
 export function createColorEdit(session: ThemeSession) {
@@ -138,7 +135,7 @@ export function createColorEdit(session: ThemeSession) {
     const key = roleFromEvent(e)
     if (!key) return
     const def = COLOR_ROLES[key]
-    hexByKey[key].set(toPickerHex(hex) || hex)
+    hexByKey[key].set(tryPickerHex(hex) || hex)
     const write = key === 'primary' ? setBrandColor(hex) : setTokenValue(def.path, hex)
     void write.then(() => session.sync())
   }

@@ -23,7 +23,7 @@ export const FACET_DOORS = [
   { key: 'color', facet: 'color', icon: 'palette', label: 'Color', hint: 'Brand, surfaces, semantic' },
   { key: 'shape', facet: 'shape', icon: 'shapes', label: 'Shape', hint: 'Radius, elevation, material' },
   { key: 'assets', facet: 'assets', icon: 'sparkles', label: 'Assets', hint: 'Type and icons' },
-  { key: 'components', facet: 'components', icon: 'component', label: 'Components', hint: 'L1 overrides and preview' },
+  { key: 'components', facet: 'components', icon: 'component', label: 'Components', hint: 'Component overrides and preview' },
 ] as const
 
 const FACET_CRUMB: Record<ThemeFacet, string> = {

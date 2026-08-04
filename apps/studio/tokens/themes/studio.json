@@ -1,5 +1,5 @@
 {
-  "$description": "Studio workbench \u2014 warm charcoal dark, coral accent, compact density dogfood.",
+  "$description": "Studio workbench — warm charcoal dark, coral accent, compact density dogfood.",
   "$extensions": {
     "ship": {
       "layer": "theme",
@@ -130,6 +130,42 @@
           }
         },
         "surface": {
+          "0": {
+            "$value": "oklch(0.97 0.004 80)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-0"
+              }
+            }
+          },
+          "1": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-1"
+              }
+            }
+          },
+          "2": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-2"
+              }
+            }
+          },
+          "3": {
+            "$value": "oklch(1 0 0)",
+            "$type": "color",
+            "$extensions": {
+              "ship": {
+                "cssName": "surface-3"
+              }
+            }
+          },
           "overlay": {
             "$value": "none",
             "$extensions": {
@@ -156,42 +192,6 @@
               }
             },
             "$type": "number"
-          },
-          "3": {
-            "$value": "oklch(1 0 0)",
-            "$type": "color",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-3"
-              }
-            }
-          },
-          "2": {
-            "$value": "oklch(1 0 0)",
-            "$type": "color",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-2"
-              }
-            }
-          },
-          "0": {
-            "$value": "oklch(0.97 0.004 80)",
-            "$type": "color",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-0"
-              }
-            }
-          },
-          "1": {
-            "$value": "oklch(1 0 0)",
-            "$type": "color",
-            "$extensions": {
-              "ship": {
-                "cssName": "surface-1"
-              }
-            }
           }
         }
       },

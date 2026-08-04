@@ -133,6 +133,87 @@ export function patchIconScale(
  * Inheritance chain for radius: base catalog → theme scale → component override.
  * Components: button, card, input (specimen-relevant).
  */
+/**
+ * Full Sail L1 stdlib catalog (Themes Components rail SSOT).
+ * Keep in sync with `crates/sail/compiler/src/stdlib.rs` `SOURCES` tags.
+ * Tag `a` is the anchor element (file: anchor.sail).
+ */
+export const L1_CATALOG = [
+  'spinner',
+  'button',
+  'input',
+  'textarea',
+  'select',
+  'dialog',
+  'details',
+  'summary',
+  'table',
+  'fieldset',
+  'legend',
+  'progress',
+  'meter',
+  'a',
+  'separator',
+  'icon',
+  'label',
+  'card',
+  'switch',
+  'badge',
+  'avatar',
+  'tooltip',
+  'alert',
+  'empty-state',
+  'error-state',
+  'error-boundary',
+  'code-block',
+  'chip',
+  'field',
+  'collapsible',
+  'slider',
+  'radio',
+  'radio-group',
+  'tabs',
+  'tab-list',
+  'tab',
+  'tab-panel',
+  'toggle-group',
+  'toggle',
+  'scroll-area',
+  'ticker',
+  'theme-picker',
+  'navbar',
+  'pagination',
+  'page',
+  'breadcrumb',
+  'popover',
+  'prose',
+  'combobox',
+  'dropdown',
+  'menu-item',
+  'context-menu',
+  'hover-card',
+  'toast-region',
+  'toast',
+] as const
+
+export type L1Id = (typeof L1_CATALOG)[number]
+
+/** @deprecated Prefer L1_CATALOG — radius C2 applies to every L1 via component.{id}.radius. */
+export const RADIUS_OVERRIDE_L1S = L1_CATALOG
+
+/** Display label for an L1 tag (`a` → Anchor, `menu-item` → Menu Item). */
+export function l1Label(id: string): string {
+  if (id === 'a') return 'Anchor'
+  return id
+    .split('-')
+    .map((p) => (p ? p.charAt(0).toUpperCase() + p.slice(1) : p))
+    .join(' ')
+}
+
+/**
+ * Inheritance chain for radius: base catalog → theme scale → per-L1 override.
+ * One node per L1 in {@link L1_CATALOG} so Themes Components + Design stay aligned.
+ */
 export function radiusInheritance(
   doc: Record<string, unknown> | null,
   modeId: 'light' | 'dark' = 'light',
@@ -158,11 +239,11 @@ export function radiusInheritance(
       canReset: false,
     },
   ]
-  for (const comp of ['button', 'card', 'input']) {
+  for (const comp of L1_CATALOG) {
     const path = `component.${comp}.radius`
     const raw = getPathValue(doc, path, modeId)
     const isOverride = raw != null
-    const name = comp.charAt(0).toUpperCase() + comp.slice(1)
+    const name = l1Label(comp)
     nodes.push({
       id: comp,
       label: isOverride

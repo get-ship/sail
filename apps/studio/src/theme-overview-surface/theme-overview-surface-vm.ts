@@ -4,7 +4,6 @@
  */
 export {
   PATH_NAV,
-  OVERFLOW_NAV,
   FACET_DOORS,
   themeFacetHref,
   type ThemeFacet,

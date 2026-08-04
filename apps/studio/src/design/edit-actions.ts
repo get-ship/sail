@@ -66,6 +66,43 @@ export async function setDesignDensityOn(
   await ctx.repaintSpecimen()
 }
 
+function commitRadiusFamily(
+  ctx: EditCtx,
+  family: ReturnType<typeof setScaleStep>['family'],
+  clampNote: string | null,
+  statusNote: string,
+): void {
+  const state = ctx.getState()
+  for (const step of family.steps) {
+    ctx.reflectCss(`radius-${step.key}`, step.raw)
+  }
+  ctx.reflectCss('radius', family.steps.find((s) => s.key === 'lg')?.raw ?? null)
+  if (!state.themeDoc) {
+    ctx.setState({
+      ...state,
+      radius: family,
+      lastWriteError: null,
+      lastClampNote: clampNote,
+      statusNote: clampNote ?? statusNote,
+    })
+    ctx.emit()
+    return
+  }
+  const doc = patchRadius(state.themeDoc, family, state.modeId)
+  ctx.recomputeDerived(doc)
+  ctx.setState({
+    ...ctx.getState(),
+    radius: {
+      ...extractRadius(doc, state.modeId),
+      scaleTogether: family.scaleTogether,
+    },
+    lastWriteError: null,
+    lastClampNote: clampNote,
+    statusNote: clampNote ?? statusNote,
+  })
+  ctx.emit()
+}
+
 export async function setRadiusStepOn(
   ctx: EditCtx,
   key: string,
@@ -83,27 +120,10 @@ export async function setRadiusStepOn(
     ctx.emit()
     return
   }
-  for (const step of family.steps) {
-    ctx.reflectCss(`radius-${step.key}`, step.raw)
-  }
-  ctx.reflectCss('radius', family.steps.find((s) => s.key === 'lg')?.raw ?? null)
-  if (!state.themeDoc) {
-    ctx.setState({
-      ...state,
-      radius: family,
-      lastWriteError: error && !clampNote ? error : null,
-      lastClampNote: clampNote,
-      statusNote: clampNote ?? state.statusNote,
-    })
-    ctx.emit()
-    await ctx.repaintSpecimen()
-    return
-  }
-  const doc = patchRadius(state.themeDoc, family, state.modeId)
   const monoErr = validateMonotonic(family.steps, family.ordered, family.path)
   if (monoErr && !family.scaleTogether && !clampNote) {
     ctx.setState({
-      ...ctx.getState(),
+      ...state,
       lastWriteError: 'Radius steps must go from small to large',
       lastClampNote: null,
       radius: family,
@@ -111,20 +131,44 @@ export async function setRadiusStepOn(
     ctx.emit()
     return
   }
-  ctx.recomputeDerived(doc)
-  ctx.setState({
-    ...ctx.getState(),
-    radius: {
-      ...extractRadius(doc, state.modeId),
-      scaleTogether: family.scaleTogether,
-    },
-    lastWriteError: null,
-    lastClampNote: clampNote,
-    statusNote: clampNote ?? `Updated radius · ${key}`,
-  })
-  ctx.emit()
+  commitRadiusFamily(ctx, family, clampNote, `Updated radius · ${key}`)
   await ctx.repaintSpecimen()
   void ctx.refreshBlast(`radius-${key}`)
+}
+
+/** Write the full radius ladder in one doc patch (avoids 4× clamp thrash on master drag). */
+export async function setRadiusFamilyOn(
+  ctx: EditCtx,
+  steps: { key: string; px: number }[],
+  scaleTogether = true,
+): Promise<void> {
+  const state = ctx.getState()
+  const ordered = state.radius.ordered.length
+    ? state.radius.ordered
+    : steps.map((s) => s.key)
+  const family = {
+    path: state.radius.path || 'radius',
+    ordered,
+    scaleTogether,
+    steps: steps.map((s) => ({
+      key: s.key,
+      valuePx: s.px,
+      raw: `${Math.round(s.px * 10) / 10}px`,
+    })),
+  }
+  const monoErr = validateMonotonic(family.steps, family.ordered, family.path)
+  if (monoErr) {
+    ctx.setState({
+      ...state,
+      lastWriteError: 'Radius steps must go from small to large',
+      lastClampNote: null,
+    })
+    ctx.emit()
+    return
+  }
+  commitRadiusFamily(ctx, family, null, 'Updated radius family')
+  await ctx.repaintSpecimen()
+  void ctx.refreshBlast('radius-md')
 }
 
 export async function overrideComponentRadiusOn(
@@ -289,7 +333,14 @@ export async function setTokenValueOn(
   const type = knob?.type ?? 'string'
   let writeValue = value
   // Color picker commits hex — store oklch (6-digit only).
-  if (knob?.kind === 'color' || path.includes('color.')) {
+  // Includes component.* color leaves (alert.bg, badge.fg, …) via knob.kind.
+  if (
+    knob?.kind === 'color' ||
+    path.includes('color.') ||
+    /\.(bg|fg|border|stripe|thumb|track|rail|line|hint|error|hover-bg|selected-bg|selected-fg|current-bg|current-fg|message-fg|icon-fg|retry-bg|retry-fg|option-fg|option-hover-bg|trigger-fg)$/.test(
+      path,
+    )
+  ) {
     const h = normHex(value.trim())
     if (h && isHex(h)) writeValue = hexToOklchString(h)
   }
@@ -359,16 +410,9 @@ export function previewInAppOn(ctx: EditCtx): {
   const density = state.density
   const themeId = state.themeId
 
-  if (typeof document !== 'undefined') {
-    const root = document.documentElement
-    if (themeId) root.setAttribute('data-theme', themeId)
-    if (density === 'default') root.removeAttribute('data-density')
-    else root.setAttribute('data-density', density)
-    for (const [name, value] of Object.entries(patch)) {
-      root.style.setProperty(name, value)
-    }
-  }
-
+  // SAIL-LINT-CHAT: was document.documentElement style/attrs + setProperty for live
+  // theme preview. Route live token writes through `theme.preview` (declared tokens
+  // only) or a design-surface signal/sx bridge — no raw CSSOM / documentElement.
   if (typeof window !== 'undefined') {
     window.postMessage(
       {
@@ -430,34 +474,53 @@ export async function repaintSpecimenOn(ctx: EditCtx): Promise<void> {
 export async function refreshBlastOn(
   ctx: EditCtx,
   token: string,
+  isCurrent: () => boolean = () => true,
 ): Promise<void> {
-  await refreshBlastAggregateOn(ctx, [token], 0)
+  await refreshBlastAggregateOn(ctx, [token], 0, isCurrent)
 }
 
-/** Aggregate token-usage for dirty-path tokens (save-review blast). */
+/** Product copy for token usage ("Used by") — never "blast radius" in UI. */
+export function formatUsedByLabel(opts: {
+  components: number
+  files: number
+  dirtyCount?: number
+  offline?: boolean
+}): string {
+  if (opts.offline) return 'Usage unavailable offline'
+  if (opts.components <= 0) return 'Not used in this project yet'
+  const n = opts.components
+  const f = Math.max(1, opts.files)
+  if ((opts.dirtyCount ?? 0) > 0) {
+    return `Save updates ${n} component${n === 1 ? '' : 's'} across ${f} file${f === 1 ? '' : 's'}`
+  }
+  return `Used by · ${n} component${n === 1 ? '' : 's'}`
+}
+
+/**
+ * Aggregate token-usage for dirty-path tokens (save-review / Used by).
+ * @param isCurrent — generation guard; stale async settles must no-op.
+ */
 export async function refreshBlastAggregateOn(
   ctx: EditCtx,
   tokens: string[],
   dirtyCount = 0,
+  isCurrent: () => boolean = () => true,
 ): Promise<void> {
   const client = ctx.getClient()
   const list = tokens.length > 0 ? tokens : ['primary']
-  if (!client?.sailInspectTokenUsage) {
-    const n = dirtyCount || list.length
-    ctx.setState({
-      ...ctx.getState(),
-      blast: {
-        token: list.join(','),
-        components: 0,
-        componentIds: [],
-        sites: [],
-        label:
-          n > 0
-            ? `${n} changed path${n === 1 ? '' : 's'} · usage not available offline`
-            : 'Not used in this project yet',
-      },
-    })
+  const apply = (blast: BlastRadius) => {
+    if (!isCurrent()) return
+    ctx.setState({ ...ctx.getState(), blast })
     ctx.emit()
+  }
+  if (!client?.sailInspectTokenUsage) {
+    apply({
+      token: list.join(','),
+      components: 0,
+      componentIds: [],
+      sites: [],
+      label: formatUsedByLabel({ components: 0, files: 0, dirtyCount, offline: true }),
+    })
     return
   }
   try {
@@ -465,6 +528,7 @@ export async function refreshBlastAggregateOn(
     const sites: { file: string; span?: { line?: number; col?: number } }[] = []
     let components = 0
     for (const token of list.slice(0, 6)) {
+      if (!isCurrent()) return
       const r = await client.sailInspectTokenUsage({ token })
       components += r.components ?? 0
       for (const id of r.componentIds ?? []) componentIds.add(id)
@@ -474,25 +538,27 @@ export async function refreshBlastAggregateOn(
       }
     }
     const uniqueComponents = componentIds.size || components
-    const surfaces = new Set(sites.map((s) => s.file).filter(Boolean)).size
-    const pathNote =
-      dirtyCount > 0
-        ? `${dirtyCount} changed path${dirtyCount === 1 ? '' : 's'} · `
-        : ''
-    const blast: BlastRadius = {
+    const files = new Set(sites.map((s) => s.file).filter(Boolean)).size
+    apply({
       token: list.join(','),
       components: uniqueComponents,
       componentIds: [...componentIds],
       sites,
-      label:
-        uniqueComponents > 0
-          ? `${pathNote}repaints ${uniqueComponents} component${uniqueComponents === 1 ? '' : 's'} across ${Math.max(1, surfaces)} surface${surfaces === 1 ? '' : 's'}`
-          : `${pathNote}not used in this project yet`,
-    }
-    ctx.setState({ ...ctx.getState(), blast })
-    ctx.emit()
+      label: formatUsedByLabel({
+        components: uniqueComponents,
+        files,
+        dirtyCount,
+      }),
+    })
   } catch {
-    /* soft */
+    // Soft fail — clear to offline label so prior theme/token usage does not stick.
+    apply({
+      token: list.join(','),
+      components: 0,
+      componentIds: [],
+      sites: [],
+      label: formatUsedByLabel({ components: 0, files: 0, dirtyCount, offline: true }),
+    })
   }
 }
 

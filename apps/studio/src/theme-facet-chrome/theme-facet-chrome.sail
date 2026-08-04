@@ -279,35 +279,34 @@ export default controller(() => {
   </row>
 
   <!--
-    Dirty leave — mount only when open (closed dialog + overflow:hidden is a
-    sail-layout trap against content height). open={leaveOpen()} → bindOpen →
-    showModal(): top layer + backdrop so Overview density (etc.) cannot bleed
-    through; actions use dialog footer anatomy so they never clip.
+    Dirty leave — keep <dialog> mounted (not inside <if>). bindIf renders the
+    branch into a DocumentFragment and only then inserts; bindOpen's showModal
+    requires a connected element, so if+open=true never entered the top layer
+    (density bled through a closed/zero-size dialog). Always-mounted +
+    open={leaveOpen()} → bindOpen showModal when dirty leave fires.
     ESC / backdrop → sail-close → cancel leave (pending navigation dropped).
   -->
-  <if {leaveOpen()}>
-    <dialog
-      data-theme-leave-dialog
-      open={leaveOpen()}
-      size="md"
-      aria-labelledby="theme-leave-title"
-      on:sail-close={onLeaveCancel}
-    >
-      <header id="theme-leave-title">Unsaved theme changes</header>
-      <section>
-        Save writes the theme to the project. Discard drops in-memory edits.
-      </section>
-      <footer>
-        <button type="button" size="sm" variant="ghost" tone="muted" data-leave-cancel on:click={onLeaveCancel}>
-          Cancel
-        </button>
-        <button type="button" size="sm" variant="outline" tone="destructive" data-leave-discard on:click={onLeaveDiscard}>
-          Discard
-        </button>
-        <button type="button" size="sm" variant="solid" tone="primary" data-leave-save on:click={onLeaveSave}>
-          Save
-        </button>
-      </footer>
-    </dialog>
-  </if>
+  <dialog
+    data-theme-leave-dialog
+    open={leaveOpen()}
+    size="md"
+    aria-labelledby="theme-leave-title"
+    on:sail-close={onLeaveCancel}
+  >
+    <header id="theme-leave-title">Unsaved theme changes</header>
+    <section>
+      Save writes the theme to the project. Discard drops in-memory edits.
+    </section>
+    <footer>
+      <button type="button" size="sm" variant="ghost" tone="muted" data-leave-cancel on:click={onLeaveCancel}>
+        Cancel
+      </button>
+      <button type="button" size="sm" variant="outline" tone="destructive" data-leave-discard on:click={onLeaveDiscard}>
+        Discard
+      </button>
+      <button type="button" size="sm" variant="solid" tone="primary" data-leave-save on:click={onLeaveSave}>
+        Save
+      </button>
+    </footer>
+  </dialog>
 </column>
