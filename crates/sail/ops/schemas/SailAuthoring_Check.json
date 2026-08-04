@@ -19,6 +19,13 @@
           "null"
         ]
       },
+      "includeTs": {
+        "description": "When true (default), merge mapped tsgo TypeScript diagnostics into structure/check results (SPEC-LSP-1 studio gutters). Soft-noops when tsgo is absent. Set `false` for structure-only / faster agent polls.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
       "path": {
         "type": [
           "string",

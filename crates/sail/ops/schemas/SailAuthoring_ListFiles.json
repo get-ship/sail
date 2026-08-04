@@ -1,0 +1,42 @@
+{
+  "service": "SailAuthoring",
+  "method": "ListFiles",
+  "mcp_tool": "sail_list_files",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project": {
+        "description": "Workspace-relative project root (`apps/sail-site`). Default: ops project.",
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ListFilesRet",
+    "type": "object",
+    "required": [
+      "files",
+      "ok",
+      "project"
+    ],
+    "properties": {
+      "files": {
+        "description": "Workspace-relative paths (`apps/x/routes/page.sail`, `apps/x/package.json`, …).",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "ok": {
+        "type": "boolean"
+      },
+      "project": {
+        "type": "string"
+      }
+    }
+  }
+}

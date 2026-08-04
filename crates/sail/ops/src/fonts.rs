@@ -103,10 +103,7 @@ fn parse_bundled_catalog(raw: &str) -> Vec<FontEntry> {
             .get("popularity")
             .and_then(|x| x.as_u64())
             .unwrap_or(99_999) as u32;
-        let mono = item
-            .get("mono")
-            .and_then(|x| x.as_bool())
-            .unwrap_or(false)
+        let mono = item.get("mono").and_then(|x| x.as_bool()).unwrap_or(false)
             || category.eq_ignore_ascii_case("Monospace");
         out.push(FontEntry {
             family: family.to_string(),

@@ -372,8 +372,7 @@ pub fn delete(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     if !resolved.is_file() {
         return Err(OpError::NotFound(format!("theme not found: {rel}")));
     }
-    std::fs::remove_file(&resolved)
-        .map_err(|e| OpError::Internal(format!("delete {rel}: {e}")))?;
+    std::fs::remove_file(&resolved).map_err(|e| OpError::Internal(format!("delete {rel}: {e}")))?;
     Ok(json!({
         "ok": true,
         "path": rel,

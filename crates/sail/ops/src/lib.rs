@@ -76,6 +76,14 @@ pub fn call_rpc(
             let _a: contracts::CheckArgs = parse_args(args_json)?;
             authoring::check(args_json, ctx)
         }
+        ("SailAuthoring", "Hover") => {
+            let _a: contracts::HoverArgs = parse_args(args_json)?;
+            authoring::hover(args_json, ctx)
+        }
+        ("SailAuthoring", "Complete") => {
+            let _a: contracts::CompleteArgs = parse_args(args_json)?;
+            authoring::complete(args_json, ctx)
+        }
         ("SailAuthoring", "Edit") => {
             let _a: contracts::EditArgs = parse_args(args_json)?;
             authoring::edit(args_json, ctx)

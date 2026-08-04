@@ -17,7 +17,7 @@
   },
   {
     "name": "sail_check",
-    "description": "Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col). Optional `fix`: off|suggest|apply for machine rewrites (participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` reads any readable filesystem path (local agent trust model).",
+    "description": "Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col, optional rewrite FixPlan). Optional `fix`: off|suggest|apply for confluent allow-listed rewrites (sail-compose-rhythm, sail-compose-contrast, sail-compose-spacing, sail-no-raw-container, sail-sx typo, participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` reads any readable filesystem path (local agent trust model).",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -35,6 +35,13 @@
             "null"
           ]
         },
+        "includeTs": {
+          "description": "When true (default), merge mapped tsgo TypeScript diagnostics into structure/check results (SPEC-LSP-1 studio gutters). Soft-noops when tsgo is absent. Set `false` for structure-only / faster agent polls.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "path": {
           "type": [
             "string",
@@ -48,6 +55,78 @@
           ]
         }
       }
+    }
+  },
+  {
+    "name": "sail_hover",
+    "description": "Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + tsgo for controller/scope/template TS regions; structure symbols otherwise. Soft-degrades when tsgo is absent.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "description": "1-based column.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "line": {
+          "description": "1-based line (matches Check diagnostics / compiler hover).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "column",
+        "line"
+      ]
+    }
+  },
+  {
+    "name": "sail_complete",
+    "description": "Completions at a 1-based .sail position. Proxies tsgo inside TS regions; falls back to structure scope symbols. Soft-degrades when tsgo is absent.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "column": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "line": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "column",
+        "line"
+      ]
     }
   },
   {
@@ -118,6 +197,22 @@
           ]
         },
         "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "name": "sail_list_files",
+    "description": "List workspace-relative .sail paths under a project (routes/src/packs). Studio explorer seed.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "description": "Workspace-relative project root (`apps/sail-site`). Default: ops project.",
           "type": [
             "string",
             "null"
@@ -275,6 +370,21 @@
       },
       "required": [
         "content",
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "sail_theme_delete",
+    "description": "Delete a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only (catalog refused).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
         "path"
       ]
     }

@@ -41,7 +41,7 @@
       "service": "SailAuthoring",
       "method": "Check",
       "mcp_tool": "sail_check",
-      "description": "Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col). Optional `fix`: off|suggest|apply for machine rewrites (participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` reads any readable filesystem path (local agent trust model).",
+      "description": "Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col, optional rewrite FixPlan). Optional `fix`: off|suggest|apply for confluent allow-listed rewrites (sail-compose-rhythm, sail-compose-contrast, sail-compose-spacing, sail-no-raw-container, sail-sx typo, participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` reads any readable filesystem path (local agent trust model).",
       "path": "/sail.ops.v1.SailAuthoring/Check",
       "inputSchema": {
         "type": "object",
@@ -57,6 +57,13 @@
             "description": "Auto-fix: `off` | `suggest` | `apply`. Default `off` (unattended). `suggest` attaches machine fix payloads without writing; `apply` rewrites the file when `path` is set (or returns fixed `source` when inline).",
             "type": [
               "string",
+              "null"
+            ]
+          },
+          "includeTs": {
+            "description": "When true (default), merge mapped tsgo TypeScript diagnostics into structure/check results (SPEC-LSP-1 studio gutters). Soft-noops when tsgo is absent. Set `false` for structure-only / faster agent polls.",
+            "type": [
+              "boolean",
               "null"
             ]
           },
@@ -121,6 +128,131 @@
               "string",
               "null"
             ]
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailAuthoring",
+      "method": "Hover",
+      "mcp_tool": "sail_hover",
+      "description": "Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + tsgo for controller/scope/template TS regions; structure symbols otherwise. Soft-degrades when tsgo is absent.",
+      "path": "/sail.ops.v1.SailAuthoring/Hover",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "column": {
+            "description": "1-based column.",
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "line": {
+            "description": "1-based line (matches Check diagnostics / compiler hover).",
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "column",
+          "line"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "HoverRet",
+        "type": "object",
+        "properties": {
+          "contents": {
+            "description": "Markdown hover contents. Empty/absent when nothing to show.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "range": {
+            "description": "Optional range in 1-based line/col.",
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Json"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "definitions": {
+          "Json": {}
+        }
+      }
+    },
+    {
+      "service": "SailAuthoring",
+      "method": "Complete",
+      "mcp_tool": "sail_complete",
+      "description": "Completions at a 1-based .sail position. Proxies tsgo inside TS regions; falls back to structure scope symbols. Soft-degrades when tsgo is absent.",
+      "path": "/sail.ops.v1.SailAuthoring/Complete",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "column": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "line": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "column",
+          "line"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "CompleteRet",
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Json"
+            }
           }
         },
         "definitions": {
@@ -265,6 +397,50 @@
         "$schema": "http://json-schema.org/draft-07/schema#",
         "title": "LayoutCheckRet",
         "type": "object"
+      }
+    },
+    {
+      "service": "SailAuthoring",
+      "method": "ListFiles",
+      "mcp_tool": "sail_list_files",
+      "description": "List workspace-relative .sail paths under a project (routes/src/packs). Studio explorer seed.",
+      "path": "/sail.ops.v1.SailAuthoring/ListFiles",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "description": "Workspace-relative project root (`apps/sail-site`). Default: ops project.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ListFilesRet",
+        "type": "object",
+        "required": [
+          "files",
+          "ok",
+          "project"
+        ],
+        "properties": {
+          "files": {
+            "description": "Workspace-relative paths (`apps/x/routes/page.sail`, `apps/x/package.json`, …).",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "project": {
+            "type": "string"
+          }
+        }
       }
     },
     {
@@ -667,6 +843,41 @@
             "format": "uint",
             "minimum": 0.0
           },
+          "ok": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "service": "SailTheme",
+      "method": "Delete",
+      "mcp_tool": "sail_theme_delete",
+      "description": "Delete a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only (catalog refused).",
+      "path": "/sail.ops.v1.SailTheme/Delete",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ThemeDeleteRet",
+        "type": "object",
+        "required": [
+          "ok",
+          "path"
+        ],
+        "properties": {
           "ok": {
             "type": "boolean"
           },

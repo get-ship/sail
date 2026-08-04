@@ -13,20 +13,32 @@
 //! go-to-definition, code actions (auto-fix), and icon-name completion.
 //!
 //! When `tsgo` is missing the server degrades to structure-only (one log line).
+//!
+//! Library callers (Studio via sail-ops) use [`intelligence`] — the same
+//! virtual_ts + tsgo path as this stdio shell.
 
+mod intelligence;
 mod tsgo;
 mod virtual_ts;
+
+/// Public library API: hover / complete / diagnostics without stdio LSP.
+pub use intelligence::{
+    CompletionItemPayload, DiagPayload, HoverPayload, Intelligence, RangePayload, complete_sail,
+    complete_with_session, completion_payloads_from_tsgo, diagnostics_sail,
+    diagnostics_with_session, doc_key, hover_payload_from_tsgo, hover_sail, hover_with_session,
+    with_global_session,
+};
 
 // Integration tests (`tests/tsgo_proxy.rs`) exercise the public surface of the
 // virtual-doc builder and tsgo session without going through stdio.
 #[doc(hidden)]
 pub mod tsgo_test {
-    pub use super::tsgo::{discover_tsgo, TsgoSession};
+    pub use super::tsgo::{TsgoSession, discover_tsgo};
 }
 #[doc(hidden)]
 pub mod virtual_ts_test {
     pub use super::virtual_ts::{
-        build_virtual_ts, offset_to_lsp_position, RegionKind, VirtualFile, VirtualTs,
+        RegionKind, VirtualFile, VirtualTs, build_virtual_ts, offset_to_lsp_position,
     };
 }
 
@@ -88,9 +100,7 @@ fn main_loop(conn: &Connection) -> anyhow::Result<()> {
                 }
                 handle_request(conn, &docs, &mut tsgo, req)?;
             }
-            Message::Notification(note) => {
-                handle_notification(conn, &mut docs, &mut tsgo, note)?
-            }
+            Message::Notification(note) => handle_notification(conn, &mut docs, &mut tsgo, note)?,
             Message::Response(_) => {}
         }
     }
@@ -239,31 +249,50 @@ fn on_hover(
 ) -> Option<Hover> {
     let tdp = params.text_document_position_params;
     let (text, path) = doc(docs, &tdp.text_document.uri)?;
-    // Prefer tsgo when the cursor is in a mapped TS region.
+    // Prefer tsgo with correct UTF-16 → byte offset (LSP positions are UTF-16).
     if tsgo.is_live() {
-        let col_byte = utf16_col_to_byte(&text, tdp.position.line as usize, tdp.position.character as usize);
+        let col_byte = utf16_col_to_byte(
+            &text,
+            tdp.position.line as usize,
+            tdp.position.character as usize,
+        );
         let sail_offset = line_byte_offset(&text, tdp.position.line as usize, col_byte);
         if let Some(raw) = tsgo.hover_mapped(tdp.text_document.uri.as_str(), &text, sail_offset) {
-            if let Some(h) = hover_from_tsgo(raw) {
-                return Some(h);
+            if let Some(p) = intelligence::hover_payload_from_tsgo(raw) {
+                return Some(hover_from_payload(p));
             }
         }
     }
+    // Structure fallback via shared library path.
     let (line, col) = from_lsp_pos(tdp.position);
-    let h = sail_compiler::hover_at(&text, path.as_deref(), line, col)?;
-    let loc = if h.line > 0 {
-        format!("\n\nDeclared at controller {}:{}", h.line, h.col)
-    } else {
-        String::new()
-    };
-    let value = format!("**{}** · `{}` (from `{}`){loc}", h.name, h.kind, h.source);
-    Some(Hover {
+    let payload = intelligence::hover_with_session(
+        tsgo,
+        &text,
+        path.as_deref(),
+        tdp.text_document.uri.as_str(),
+        line as u32,
+        col as u32,
+    )?;
+    Some(hover_from_payload(payload))
+}
+
+fn hover_from_payload(p: intelligence::HoverPayload) -> Hover {
+    let range = p.range.map(|r| {
+        Range::new(
+            Position::new(
+                r.start_line.saturating_sub(1),
+                r.start_col.saturating_sub(1),
+            ),
+            Position::new(r.end_line.saturating_sub(1), r.end_col.saturating_sub(1)),
+        )
+    });
+    Hover {
         contents: HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,
-            value,
+            value: p.contents,
         }),
-        range: None,
-    })
+        range,
+    }
 }
 
 fn on_completion(
@@ -293,29 +322,61 @@ fn on_completion(
     if let Some(prefix) = tag_open_prefix(&text, pos.line as usize, col) {
         return Some(l1_completion_items(&prefix));
     }
-    // Proxy to tsgo inside TS regions (controller / expressions).
+    // Proxy to tsgo inside TS regions (UTF-16-correct offset), then structure fallback.
     if tsgo.is_live() {
         let sail_offset = line_byte_offset(&text, pos.line as usize, col);
         if let Some(raw) =
             tsgo.completion_mapped(tdp.text_document.uri.as_str(), &text, sail_offset)
         {
-            if let Some(items) = completion_from_tsgo(raw) {
-                if !items.is_empty() {
-                    return Some(items);
-                }
+            let payloads = intelligence::completion_payloads_from_tsgo(raw);
+            if !payloads.is_empty() {
+                return Some(
+                    payloads
+                        .into_iter()
+                        .map(completion_item_from_payload)
+                        .collect(),
+                );
             }
         }
     }
-    let items = sail_compiler::completions_at(&text, path.as_deref())
-        .into_iter()
-        .map(|s| CompletionItem {
-            label: s.name,
-            kind: Some(completion_kind(&s.kind)),
-            detail: Some(format!("{} ({})", s.kind, s.source)),
-            ..Default::default()
-        })
-        .collect();
-    Some(items)
+    let (line, col_1) = from_lsp_pos(pos);
+    let payloads = intelligence::complete_with_session(
+        // Pass a non-live path for structure-only: session still consulted but
+        // tsgo already tried above; complete_with_session will re-try tsgo which
+        // is fine (cached virtuals) and fall through to structure symbols.
+        tsgo,
+        &text,
+        path.as_deref(),
+        tdp.text_document.uri.as_str(),
+        line as u32,
+        col_1 as u32,
+    );
+    Some(
+        payloads
+            .into_iter()
+            .map(completion_item_from_payload)
+            .collect(),
+    )
+}
+
+fn completion_item_from_payload(p: intelligence::CompletionItemPayload) -> CompletionItem {
+    CompletionItem {
+        label: p.label,
+        kind: p
+            .kind
+            .as_deref()
+            .map(completion_kind)
+            .or(Some(CompletionItemKind::VALUE)),
+        detail: p.detail,
+        insert_text: p.insert_text,
+        documentation: p.documentation.map(|d| {
+            lsp_types::Documentation::MarkupContent(MarkupContent {
+                kind: MarkupKind::Markdown,
+                value: d,
+            })
+        }),
+        ..Default::default()
+    }
 }
 
 fn on_code_action(
@@ -538,8 +599,11 @@ fn on_definition(
     let tdp = params.text_document_position_params;
     let (text, path) = doc(docs, &tdp.text_document.uri)?;
     if tsgo.is_live() {
-        let col_byte =
-            utf16_col_to_byte(&text, tdp.position.line as usize, tdp.position.character as usize);
+        let col_byte = utf16_col_to_byte(
+            &text,
+            tdp.position.line as usize,
+            tdp.position.character as usize,
+        );
         let sail_offset = line_byte_offset(&text, tdp.position.line as usize, col_byte);
         if let Some(raw) =
             tsgo.definition_mapped(tdp.text_document.uri.as_str(), &text, sail_offset)
@@ -577,31 +641,6 @@ fn line_byte_offset(text: &str, line_idx: usize, col_byte: usize) -> usize {
         idx += row.len();
     }
     text.len()
-}
-
-fn hover_from_tsgo(raw: serde_json::Value) -> Option<Hover> {
-    serde_json::from_value(raw).ok()
-}
-
-fn completion_from_tsgo(raw: serde_json::Value) -> Option<Vec<CompletionItem>> {
-    // CompletionList | CompletionItem[]
-    if let Some(items) = raw.as_array() {
-        return Some(
-            items
-                .iter()
-                .filter_map(|v| serde_json::from_value(v.clone()).ok())
-                .collect(),
-        );
-    }
-    if let Some(items) = raw.get("items").and_then(|v| v.as_array()) {
-        return Some(
-            items
-                .iter()
-                .filter_map(|v| serde_json::from_value(v.clone()).ok())
-                .collect(),
-        );
-    }
-    None
 }
 
 fn definition_from_tsgo(raw: serde_json::Value) -> Option<GotoDefinitionResponse> {
@@ -660,10 +699,31 @@ fn diag_to_lsp(d: &sail_compiler::Diagnostic) -> Diagnostic {
 
 fn completion_kind(kind: &str) -> CompletionItemKind {
     match kind {
-        "signal" | "ref" => CompletionItemKind::VARIABLE,
-        "derived" => CompletionItemKind::PROPERTY,
-        "action" => CompletionItemKind::FUNCTION,
-        "data" | "prop" => CompletionItemKind::FIELD,
+        // Structure (sail_compiler) kinds
+        "signal" | "ref" | "variable" => CompletionItemKind::VARIABLE,
+        "derived" | "property" => CompletionItemKind::PROPERTY,
+        "action" | "function" | "method" => CompletionItemKind::FUNCTION,
+        "data" | "prop" | "field" => CompletionItemKind::FIELD,
+        // tsgo CompletionItemKind names
+        "class" => CompletionItemKind::CLASS,
+        "interface" => CompletionItemKind::INTERFACE,
+        "module" => CompletionItemKind::MODULE,
+        "keyword" => CompletionItemKind::KEYWORD,
+        "snippet" => CompletionItemKind::SNIPPET,
+        "constant" | "enumMember" => CompletionItemKind::CONSTANT,
+        "enum" => CompletionItemKind::ENUM,
+        "constructor" => CompletionItemKind::CONSTRUCTOR,
+        "typeParameter" => CompletionItemKind::TYPE_PARAMETER,
+        "text" => CompletionItemKind::TEXT,
+        "color" => CompletionItemKind::COLOR,
+        "file" => CompletionItemKind::FILE,
+        "folder" => CompletionItemKind::FOLDER,
+        "reference" => CompletionItemKind::REFERENCE,
+        "unit" => CompletionItemKind::UNIT,
+        "value" => CompletionItemKind::VALUE,
+        "struct" => CompletionItemKind::STRUCT,
+        "event" => CompletionItemKind::EVENT,
+        "operator" => CompletionItemKind::OPERATOR,
         _ => CompletionItemKind::VALUE,
     }
 }

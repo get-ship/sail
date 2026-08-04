@@ -158,7 +158,11 @@ impl VirtualTs {
     }
 
     #[allow(dead_code)]
-    pub fn map_sail_range(&self, s_start: usize, s_end: usize) -> Option<(VirtualFile, usize, usize)> {
+    pub fn map_sail_range(
+        &self,
+        s_start: usize,
+        s_end: usize,
+    ) -> Option<(VirtualFile, usize, usize)> {
         let (file, v) = self.sail_to_virtual(s_start)?;
         if s_end <= s_start {
             return Some((file, v, v));
@@ -543,10 +547,7 @@ fn find_outside_comments(source: &str, needle: &str) -> Option<usize> {
         if source[i..].starts_with(needle) {
             let after = i + needle.len();
             let next_ok = after >= bytes.len()
-                || matches!(
-                    bytes[after],
-                    b'>' | b'/' | b' ' | b'\t' | b'\n' | b'\r'
-                );
+                || matches!(bytes[after], b'>' | b'/' | b' ' | b'\t' | b'\n' | b'\r');
             if next_ok {
                 return Some(i);
             }

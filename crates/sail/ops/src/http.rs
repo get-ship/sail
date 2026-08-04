@@ -42,6 +42,8 @@ pub fn connect_router_with_ctx(ctx: Ctx) -> Router {
         .route("/sail.ops.v1.watch", get(watch::watch_sse))
         .route("/sail.ops.v1.SailAuthoring/Surface", post(unary))
         .route("/sail.ops.v1.SailAuthoring/Check", post(unary))
+        .route("/sail.ops.v1.SailAuthoring/Hover", post(unary))
+        .route("/sail.ops.v1.SailAuthoring/Complete", post(unary))
         .route("/sail.ops.v1.SailAuthoring/Edit", post(unary))
         .route("/sail.ops.v1.SailAuthoring/LayoutCheck", post(unary))
         .route("/sail.ops.v1.SailAuthoring/ListFiles", post(unary))

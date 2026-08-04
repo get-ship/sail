@@ -66,6 +66,7 @@ export interface SurfaceRet {
 export interface CheckArgs {
   actor?: string
   fix?: string
+  includeTs?: boolean
   path?: string
   source?: string
 }
@@ -77,6 +78,29 @@ export interface CheckRet {
   fixes?: JsonValue[]
   ok: boolean
   source?: string
+}
+
+export interface HoverArgs {
+  column: number
+  line: number
+  path?: string
+  source?: string
+}
+
+export interface HoverRet {
+  contents?: string
+  range?: JsonValue
+}
+
+export interface CompleteArgs {
+  column: number
+  line: number
+  path?: string
+  source?: string
+}
+
+export interface CompleteRet {
+  items: JsonValue[]
 }
 
 export interface EditArgs {
@@ -105,6 +129,16 @@ export interface LayoutCheckArgs {
 
 export interface LayoutCheckRet {
   [key: string]: JsonValue | undefined
+}
+
+export interface ListFilesArgs {
+  project?: string
+}
+
+export interface ListFilesRet {
+  files: string[]
+  ok: boolean
+  project: string
 }
 
 export interface InspectModelArgs {
@@ -191,6 +225,15 @@ export interface ThemeWriteArgs {
 
 export interface ThemeWriteRet {
   bytes: number
+  ok: boolean
+  path: string
+}
+
+export interface ThemeDeleteArgs {
+  path: string
+}
+
+export interface ThemeDeleteRet {
   ok: boolean
   path: string
 }
@@ -525,12 +568,28 @@ export async function sailAuthoringSurface(
   return postJson<SurfaceRet>('/sail.ops.v1.SailAuthoring/Surface', args ?? {}, opts)
 }
 
-// SailAuthoring/Check — Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col). Optional `fix`: off|suggest|apply for machine rewrites (participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` reads any readable filesystem path (local agent trust model).
+// SailAuthoring/Check — Run Sail lint/compile diagnostics for a file path or inline source. Returns structured JSON diagnostics (severity, rule, message, line/col, optional rewrite FixPlan). Optional `fix`: off|suggest|apply for confluent allow-listed rewrites (sail-compose-rhythm, sail-compose-contrast, sail-compose-spacing, sail-no-raw-container, sail-sx typo, participation-style, display-on-layout, prefer-primitive). Prefer `source` for snippets; `path` reads any readable filesystem path (local agent trust model).
 export async function sailAuthoringCheck(
   args: CheckArgs,
   opts?: ClientOptions,
 ): Promise<CheckRet> {
   return postJson<CheckRet>('/sail.ops.v1.SailAuthoring/Check', args ?? {}, opts)
+}
+
+// SailAuthoring/Hover — Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + tsgo for controller/scope/template TS regions; structure symbols otherwise. Soft-degrades when tsgo is absent.
+export async function sailAuthoringHover(
+  args: HoverArgs,
+  opts?: ClientOptions,
+): Promise<HoverRet> {
+  return postJson<HoverRet>('/sail.ops.v1.SailAuthoring/Hover', args ?? {}, opts)
+}
+
+// SailAuthoring/Complete — Completions at a 1-based .sail position. Proxies tsgo inside TS regions; falls back to structure scope symbols. Soft-degrades when tsgo is absent.
+export async function sailAuthoringComplete(
+  args: CompleteArgs,
+  opts?: ClientOptions,
+): Promise<CompleteRet> {
+  return postJson<CompleteRet>('/sail.ops.v1.SailAuthoring/Complete', args ?? {}, opts)
 }
 
 // SailAuthoring/Edit — Structured grammar-aware Sail edits (insert/replace/wrap/setAttr/removeAttr/setSx/move). Atomic batch; validates before write so the file never holds an uncompilable intermediate. Response: applied, modelRevision, diagnostics, autoFixed[].
@@ -547,6 +606,14 @@ export async function sailAuthoringLayoutCheck(
   opts?: ClientOptions,
 ): Promise<LayoutCheckRet> {
   return postJson<LayoutCheckRet>('/sail.ops.v1.SailAuthoring/LayoutCheck', args ?? {}, opts)
+}
+
+// SailAuthoring/ListFiles — List workspace-relative .sail paths under a project (routes/src/packs). Studio explorer seed.
+export async function sailAuthoringListFiles(
+  args: ListFilesArgs,
+  opts?: ClientOptions,
+): Promise<ListFilesRet> {
+  return postJson<ListFilesRet>('/sail.ops.v1.SailAuthoring/ListFiles', args ?? {}, opts)
 }
 
 // SailInspect/Model — Canonical per-file Sail model (tree, layout, state, diagnostics, data, theme). Source-derived; modelVersion 1.
@@ -613,16 +680,7 @@ export async function sailThemeWrite(
   return postJson<ThemeWriteRet>('/sail.ops.v1.SailTheme/Write', args ?? {}, opts)
 }
 
-export interface ThemeDeleteArgs {
-  path: string
-}
-
-export interface ThemeDeleteRet {
-  ok: boolean
-  path: string
-}
-
-// SailTheme/Delete — remove a project theme JSON under apps/.../tokens/themes only.
+// SailTheme/Delete — Delete a project theme JSON. Allowlist: apps/*/tokens/themes/**/*.json only (catalog refused).
 export async function sailThemeDelete(
   args: ThemeDeleteArgs,
   opts?: ClientOptions,

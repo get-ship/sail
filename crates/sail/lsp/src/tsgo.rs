@@ -20,9 +20,7 @@ use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
 
-use crate::virtual_ts::{
-    VirtualFile, VirtualTs, lsp_position_to_offset, offset_to_lsp_position,
-};
+use crate::virtual_ts::{VirtualFile, VirtualTs, lsp_position_to_offset, offset_to_lsp_position};
 
 static DEGRADE_LOGGED: AtomicBool = AtomicBool::new(false);
 static TSGO_AVAILABLE: AtomicBool = AtomicBool::new(false);
@@ -276,7 +274,9 @@ impl TsgoClient {
                 let result: Vec<Value> = (0..items).map(|_| json!({})).collect();
                 self.reply(id, Value::Array(result))?;
             }
-            "client/registerCapability" | "client/unregisterCapability" | "window/workDoneProgress/create" => {
+            "client/registerCapability"
+            | "client/unregisterCapability"
+            | "window/workDoneProgress/create" => {
                 self.reply(id, Value::Null)?;
             }
             _ => {
@@ -559,17 +559,19 @@ impl TsgoSession {
             let (ctrl_uri, view_uri) = virtual_uris(sail_uri, &self.work_dir);
             // Materialize controller as `__ctrl__.ts` relative import target
             // from the view file, and the view itself under a stable name.
-            let ctrl_path = self.work_dir.join(format!("{}.ctrl.ts", doc_stem(sail_uri)));
-            let view_path = self.work_dir.join(format!("{}.view.ts", doc_stem(sail_uri)));
+            let ctrl_path = self
+                .work_dir
+                .join(format!("{}.ctrl.ts", doc_stem(sail_uri)));
+            let view_path = self
+                .work_dir
+                .join(format!("{}.view.ts", doc_stem(sail_uri)));
             // View imports `./__ctrl__.ts` — write a symlink/copy under that name
             // per document is racy for multi-doc; rewrite import to the real
             // relative name instead.
             let mut view_text = virt.view_text.clone();
             let ctrl_name = format!("{}.ctrl.ts", doc_stem(sail_uri));
-            view_text = view_text.replace(
-                "from \"./__ctrl__.ts\"",
-                &format!("from \"./{ctrl_name}\""),
-            );
+            view_text =
+                view_text.replace("from \"./__ctrl__.ts\"", &format!("from \"./{ctrl_name}\""));
             let _ = std::fs::write(&ctrl_path, &virt.controller_text);
             let _ = std::fs::write(&view_path, &view_text);
             // Keep a mutated copy for position mapping (import path length may differ).
@@ -661,14 +663,7 @@ impl TsgoSession {
         let client = self.client.as_mut()?;
         let mut result = client.definition(&uri, line, col).ok().flatten()?;
         let (ctrl_uri, view_uri) = virtual_uris(sail_uri, &self.work_dir);
-        map_definition_locations(
-            &mut result,
-            virt,
-            sail_uri,
-            sail_text,
-            &ctrl_uri,
-            &view_uri,
-        );
+        map_definition_locations(&mut result, virt, sail_uri, sail_text, &ctrl_uri, &view_uri);
         Some(result)
     }
 
@@ -1024,13 +1019,15 @@ mod tests {
             "<controller>\nconst x = 1\nexport default { x }\n</controller>\n<div>{x}</div>",
         );
         assert!(session.virtual_for("file:///x.sail").is_some());
-        assert!(session
-            .hover_mapped(
-                "file:///x.sail",
-                "<controller>\nconst x = 1\n</controller>",
-                0
-            )
-            .is_none());
+        assert!(
+            session
+                .hover_mapped(
+                    "file:///x.sail",
+                    "<controller>\nconst x = 1\n</controller>",
+                    0
+                )
+                .is_none()
+        );
         assert!(session.diagnostics_mapped("file:///x.sail", "").is_empty());
         let _ = std::fs::remove_dir_all(&work_dir);
     }

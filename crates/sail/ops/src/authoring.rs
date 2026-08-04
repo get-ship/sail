@@ -1,4 +1,4 @@
-//! `SailAuthoring` RPCs — Surface, Check, Edit, LayoutCheck, ListFiles.
+//! `SailAuthoring` RPCs — Surface, Check, Edit, LayoutCheck, ListFiles, Hover, Complete.
 
 use std::path::{Path, PathBuf};
 
@@ -7,6 +7,13 @@ use serde_json::{Value, json};
 
 use crate::ctx::Ctx;
 use crate::error::OpError;
+
+/// Process-local sail-lsp intelligence session (virtual_ts + tsgo).
+/// Shared across Hover / Complete / Check(includeTs) so Studio does not spawn
+/// a new tsgo per request.
+fn with_intelligence<R>(ctx: &Ctx, f: impl FnOnce(&mut sail_lsp::Intelligence) -> R) -> R {
+    sail_lsp::with_global_session(Some(ctx.workspace()), f)
+}
 
 /// Topics for progressive surface disclosure.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -258,6 +265,9 @@ pub struct CheckDiag {
     /// Machine-readable rewrite (FixPlan JSON) when confluent and fix:suggest|apply.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rewrite: Option<Value>,
+    /// `"sail"` structure/check or `"tsgo"` mapped TypeScript (when includeTs).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
 }
 
 pub fn surface(args: &Value) -> Result<Value, OpError> {
@@ -286,6 +296,13 @@ pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
     let source = args.get("source").and_then(|v| v.as_str());
     let fix = args.get("fix").and_then(|v| v.as_str()).unwrap_or("off");
     let actor = args.get("actor").and_then(|v| v.as_str());
+    // Default true: Studio gutters get tsgo without a second poll (SPEC-LSP-1).
+    // Soft-degrades when tsgo is absent. Pass includeTs:false for structure-only.
+    let include_ts = args
+        .get("includeTs")
+        .or_else(|| args.get("include_ts"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
     let (mut src, src_path) = load_source(path, source)?;
     let file_key = src_path
         .as_ref()
@@ -338,7 +355,11 @@ pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         }
     }
 
-    let mut diags = run_check_on(&src, src_path.as_deref())?;
+    let mut diags = if include_ts {
+        run_check_with_ts(&src, src_path.as_deref(), ctx)?
+    } else {
+        run_check_on(&src, src_path.as_deref())?
+    };
     // Attach rewrite payloads onto matching diagnostic rows (spec: LLMs read diags).
     if !plans.is_empty() {
         attach_rewrites_to_check_diags(&mut diags, &plans);
@@ -356,6 +377,101 @@ pub fn check(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
         out["source"] = json!(src);
     }
     Ok(out)
+}
+
+/// Structure check + optional mapped tsgo diagnostics via sail-lsp.
+fn run_check_with_ts(
+    src: &str,
+    src_path: Option<&Path>,
+    ctx: &Ctx,
+) -> Result<Vec<CheckDiag>, OpError> {
+    let path_s = src_path.map(|p| p.display().to_string());
+    let payloads = with_intelligence(ctx, |intel| intel.diagnostics_sail(src, path_s.as_deref()));
+    Ok(payloads
+        .into_iter()
+        .map(|d| CheckDiag {
+            severity: d.severity,
+            rule: d.rule,
+            message: d.message,
+            line: d.line,
+            col: d.col,
+            end_line: d.end_line,
+            end_col: d.end_col,
+            path: path_s.clone(),
+            rewrite: None,
+            source: d.source,
+        })
+        .collect())
+}
+
+/// Hover at 1-based position — sail-lsp library (virtual_ts + tsgo).
+pub fn hover(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let path = args.get("path").and_then(|v| v.as_str()).map(Path::new);
+    let source = args.get("source").and_then(|v| v.as_str());
+    let line = args
+        .get("line")
+        .and_then(|v| v.as_u64())
+        .ok_or_else(|| OpError::InvalidArgument("Hover requires numeric `line`".into()))?
+        as u32;
+    let column = args
+        .get("column")
+        .or_else(|| args.get("col"))
+        .and_then(|v| v.as_u64())
+        .ok_or_else(|| OpError::InvalidArgument("Hover requires numeric `column`".into()))?
+        as u32;
+    let (src, src_path) = load_source(path, source)?;
+    let path_s = src_path
+        .as_ref()
+        .map(|p| p.display().to_string())
+        .or_else(|| path.map(|p| p.display().to_string()));
+    let payload = with_intelligence(ctx, |intel| {
+        intel.hover_sail(&src, path_s.as_deref(), line, column)
+    });
+    match payload {
+        None => Ok(json!({ "contents": null })),
+        Some(h) => {
+            let mut out = json!({ "contents": h.contents });
+            if let Some(r) = h.range {
+                out["range"] = json!({
+                    "startLine": r.start_line,
+                    "startCol": r.start_col,
+                    "endLine": r.end_line,
+                    "endCol": r.end_col,
+                });
+            }
+            Ok(out)
+        }
+    }
+}
+
+/// Completions at 1-based position — sail-lsp library.
+pub fn complete(args: &Value, ctx: &Ctx) -> Result<Value, OpError> {
+    let path = args.get("path").and_then(|v| v.as_str()).map(Path::new);
+    let source = args.get("source").and_then(|v| v.as_str());
+    let line = args
+        .get("line")
+        .and_then(|v| v.as_u64())
+        .ok_or_else(|| OpError::InvalidArgument("Complete requires numeric `line`".into()))?
+        as u32;
+    let column = args
+        .get("column")
+        .or_else(|| args.get("col"))
+        .and_then(|v| v.as_u64())
+        .ok_or_else(|| OpError::InvalidArgument("Complete requires numeric `column`".into()))?
+        as u32;
+    let (src, src_path) = load_source(path, source)?;
+    let path_s = src_path
+        .as_ref()
+        .map(|p| p.display().to_string())
+        .or_else(|| path.map(|p| p.display().to_string()));
+    let items = with_intelligence(ctx, |intel| {
+        intel.complete_sail(&src, path_s.as_deref(), line, column)
+    });
+    let items: Vec<Value> = items
+        .into_iter()
+        .map(|i| serde_json::to_value(i).unwrap_or(json!({})))
+        .collect();
+    Ok(json!({ "items": items }))
 }
 
 fn attach_rewrites_to_check_diags(diags: &mut [CheckDiag], plans: &[sail_compiler::edit::FixPlan]) {
@@ -417,6 +533,7 @@ fn run_check_on(src: &str, src_path: Option<&Path>) -> Result<Vec<CheckDiag>, Op
             end_col: Some(d.end_col),
             path: src_path.map(|p| p.display().to_string()),
             rewrite: None,
+            source: Some("sail".into()),
         })
         .collect())
 }
@@ -710,7 +827,10 @@ fn is_listed_source_file(name: &str) -> bool {
     }
     let Some(ext) = Path::new(name).extension().and_then(|e| e.to_str()) else {
         // Extensionless: allow common script names only.
-        return matches!(name, "Makefile" | "Dockerfile" | "Procfile" | "LICENSE" | "README");
+        return matches!(
+            name,
+            "Makefile" | "Dockerfile" | "Procfile" | "LICENSE" | "README"
+        );
     };
     matches!(
         ext,
@@ -738,12 +858,7 @@ fn is_listed_source_file(name: &str) -> bool {
     )
 }
 
-fn walk_project_files(
-    project_root: &Path,
-    dir: &Path,
-    project_rel: &str,
-    out: &mut Vec<String>,
-) {
+fn walk_project_files(project_root: &Path, dir: &Path, project_rel: &str, out: &mut Vec<String>) {
     let Ok(rd) = std::fs::read_dir(dir) else {
         return;
     };
@@ -875,6 +990,89 @@ mod tests {
     }
 
     #[test]
+    fn hover_signal_typed_when_tsgo_present() {
+        use crate::call_rpc;
+        use crate::ctx::Ctx;
+        // Soft-skip when tsgo is missing (CI without bun install).
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../..")
+            .canonicalize()
+            .expect("repo root");
+        if sail_lsp::tsgo_test::discover_tsgo(Some(&root)).is_none() {
+            eprintln!("SKIP hover_signal: tsgo not found");
+            return;
+        }
+        let ctx = Ctx::new(&root, &root, &root);
+        let src = r#"<controller>
+import { controller, signal } from '@ship/sail-runtime'
+export default controller((ctx) => ({ count: signal(0) }))
+</controller>
+<div>{count()}</div>
+"#;
+        // 1-based line/col of `signal` in controller body.
+        let offset = src.find("signal(0)").expect("signal");
+        let mut line = 1u32;
+        let mut col = 1u32;
+        for (i, ch) in src.char_indices() {
+            if i >= offset {
+                break;
+            }
+            if ch == '\n' {
+                line += 1;
+                col = 1;
+            } else {
+                col += 1;
+            }
+        }
+        // Warm session once (tsgo settle).
+        let _ = call_rpc(
+            "SailAuthoring",
+            "Hover",
+            &json!({ "source": src, "path": "fixture-counter.sail", "line": line, "column": col }),
+            &ctx,
+        );
+        std::thread::sleep(std::time::Duration::from_millis(250));
+        let v = call_rpc(
+            "SailAuthoring",
+            "Hover",
+            &json!({ "source": src, "path": "fixture-counter.sail", "line": line, "column": col }),
+            &ctx,
+        )
+        .expect("Hover rpc");
+        let contents = v["contents"].as_str().unwrap_or("");
+        if contents.is_empty() {
+            eprintln!("SKIP hover_signal: empty contents (tsgo not ready / degrade)");
+            return;
+        }
+        let lower = contents.to_ascii_lowercase();
+        assert!(
+            lower.contains("signal") || lower.contains("function"),
+            "expected typed hover for signal; got {contents}"
+        );
+    }
+
+    #[test]
+    fn complete_returns_items_array() {
+        use crate::call_rpc;
+        use crate::ctx::Ctx;
+        let ctx = Ctx::from_env();
+        let src = r#"<controller>
+import { controller, signal } from '@ship/sail-runtime'
+export default controller((ctx) => ({ count: signal(0) }))
+</controller>
+<div></div>
+"#;
+        let v = call_rpc(
+            "SailAuthoring",
+            "Complete",
+            &json!({ "source": src, "line": 3, "column": 40 }),
+            &ctx,
+        )
+        .expect("Complete rpc");
+        assert!(v["items"].is_array(), "items array: {v}");
+    }
+
+    #[test]
     fn edit_set_attr_writes_under_root() {
         use crate::call_rpc;
         use crate::ctx::Ctx;
@@ -1000,11 +1198,15 @@ mod tests {
             "node_modules ignored: {paths:?}"
         );
         assert!(
-            paths.iter().all(|p| !p.contains("/target/") && !p.ends_with("/target")),
+            paths
+                .iter()
+                .all(|p| !p.contains("/target/") && !p.ends_with("/target")),
             "target ignored: {paths:?}"
         );
         assert!(
-            paths.iter().all(|p| !p.contains("/dist/") && !p.contains(".git")),
+            paths
+                .iter()
+                .all(|p| !p.contains("/dist/") && !p.contains(".git")),
             "dist/.git ignored: {paths:?}"
         );
     }

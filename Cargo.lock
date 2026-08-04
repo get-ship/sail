@@ -4707,6 +4707,7 @@ dependencies = [
  "sail-compiler",
  "sail-layout",
  "sail-lint",
+ "sail-lsp",
  "sail-render",
  "schemars",
  "serde",
@@ -6829,6 +6830,22 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "yoke"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "deck"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "deck-core"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "deck-ssr"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "sail-compiler"
 version = "0.1.0"
 
 [[patch.unused]]

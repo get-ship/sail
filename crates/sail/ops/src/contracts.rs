@@ -38,6 +38,12 @@ pub struct CheckArgs {
     /// Attribution when fix=apply (e.g. `agent`, `human:name`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub actor: Option<String>,
+    /// When true (default), merge mapped tsgo TypeScript diagnostics into
+    /// structure/check results (SPEC-LSP-1 studio gutters). Soft-noops when
+    /// tsgo is absent. Set `false` for structure-only / faster agent polls.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "includeTs")]
+    pub include_ts: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -122,6 +128,45 @@ pub struct ListFilesRet {
     pub project: String,
     /// Workspace-relative paths (`apps/x/routes/page.sail`, `apps/x/package.json`, …).
     pub files: Vec<String>,
+}
+
+/// Hover at a 1-based position in a `.sail` source (TS regions via virtual_ts+tsgo).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct HoverArgs {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
+    /// 1-based line (matches Check diagnostics / compiler hover).
+    pub line: u32,
+    /// 1-based column.
+    pub column: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct HoverRet {
+    /// Markdown hover contents. Empty/absent when nothing to show.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contents: Option<String>,
+    /// Optional range in 1-based line/col.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub range: Option<Json>,
+}
+
+/// Completions at a 1-based position (tsgo in TS regions; structure fallback).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct CompleteArgs {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
+    pub line: u32,
+    pub column: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct CompleteRet {
+    pub items: Vec<Json>,
 }
 
 // ── SailInspect ─────────────────────────────────────────────────────────────
@@ -747,8 +792,32 @@ pub const METHOD_CONTRACTS: &[MethodContract] = &[
         CheckRet,
         "CheckArgs",
         "CheckRet",
-        "  path?: string\n  source?: string\n  fix?: string\n  actor?: string\n",
+        "  path?: string\n  source?: string\n  fix?: string\n  actor?: string\n  includeTs?: boolean\n",
         "  ok: boolean\n  diagnostics: JsonValue[]\n  count: number\n  fixes?: JsonValue[]\n  source?: string\n  autoFixed?: JsonValue[]\n"
+    ),
+    contract!(
+        "SailAuthoring",
+        "Hover",
+        "sail_hover",
+        "Typed hover at a 1-based .sail position. Uses sail-lsp virtual_ts + tsgo for controller/scope/template TS regions; structure symbols otherwise. Soft-degrades when tsgo is absent.",
+        HoverArgs,
+        HoverRet,
+        "HoverArgs",
+        "HoverRet",
+        "  path?: string\n  source?: string\n  line: number\n  column: number\n",
+        "  contents?: string\n  range?: JsonValue\n"
+    ),
+    contract!(
+        "SailAuthoring",
+        "Complete",
+        "sail_complete",
+        "Completions at a 1-based .sail position. Proxies tsgo inside TS regions; falls back to structure scope symbols. Soft-degrades when tsgo is absent.",
+        CompleteArgs,
+        CompleteRet,
+        "CompleteArgs",
+        "CompleteRet",
+        "  path?: string\n  source?: string\n  line: number\n  column: number\n",
+        "  items: JsonValue[]\n"
     ),
     contract!(
         "SailAuthoring",

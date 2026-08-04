@@ -5,9 +5,9 @@
 
 use std::path::PathBuf;
 
-use sail_lsp::tsgo_test::{discover_tsgo, TsgoSession};
+use sail_lsp::tsgo_test::{TsgoSession, discover_tsgo};
 use sail_lsp::virtual_ts_test::{
-    build_virtual_ts, offset_to_lsp_position, RegionKind, VirtualFile,
+    RegionKind, VirtualFile, build_virtual_ts, offset_to_lsp_position,
 };
 
 fn repo_root() -> PathBuf {
@@ -155,8 +155,7 @@ fn tsgo_template_typo_maps_to_sail_span() {
     // Character should be near the typo (allow small mapping slack for
     // rewritten scope. prefix proportional map).
     assert!(
-        (d.range.start.character as i64 - col as i64).abs() <= 8
-            || d.range.end.character > col,
+        (d.range.start.character as i64 - col as i64).abs() <= 8 || d.range.end.character > col,
         "diagnostic col should near countt col {col}, got {:?}",
         d.range
     );
@@ -214,10 +213,7 @@ fn tsgo_hover_in_controller_returns_typed_result() {
         "expected tsgo hover on signal() in controller"
     );
     let h = hover.unwrap();
-    let text = h
-        .get("contents")
-        .map(|c| c.to_string())
-        .unwrap_or_default();
+    let text = h.get("contents").map(|c| c.to_string()).unwrap_or_default();
     assert!(
         text.to_ascii_lowercase().contains("signal") || text.contains("function"),
         "hover contents should mention signal; got {text}"
