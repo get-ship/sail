@@ -110,10 +110,8 @@ const itemIds = (shadow: ShadowRoot | null): string[] =>
     (r) => r.getAttribute('data-node-id') as string,
   )
 
-const caretFor = (shadow: ShadowRoot | null, id: string): HTMLElement =>
-  (shadow!.querySelector(`[data-node-id="${id}"]`) as HTMLElement).querySelector(
-    '[data-action="toggle"]',
-  ) as HTMLElement
+const rowFor = (shadow: ShadowRoot | null, id: string): HTMLElement =>
+  shadow!.querySelector(`[data-node-id="${id}"]`) as HTMLElement
 
 describe('<sail-tree> — lazy-children consumer seam (behavioral spec #9)', () => {
   it('a lazy branch renders with a caret even before its children are loaded', async () => {
@@ -129,7 +127,8 @@ describe('<sail-tree> — lazy-children consumer seam (behavioral spec #9)', () 
     await flush()
     const fn = vi.fn()
     el.addEventListener('sail-expand-change', fn)
-    caretFor(shadow, 'remote').click()
+    // Row click → engine toggleExpanded (no data-action hatch).
+    rowFor(shadow, 'remote').click()
     await flush()
     expect(fn).toHaveBeenCalled()
     const detail = (fn.mock.calls.at(-1)![0] as CustomEvent).detail

@@ -110,7 +110,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     const tree = derived<Table<AnyTreeNode>>(() => treeSig() ?? EMPTY)
 
     const virt: Virtual = createVirtualizer({
-      count: () => tree().rows().length,
+      // Read expanded + rows so collapse re-windows (count alone can lag if
+      // measurements cache holds a tall spacer after children drop out).
+      count: () => {
+        void tree().state.expanded()
+        return tree().rows().length
+      },
       estimateSize: (_index) => ROW_HEIGHT,
       getScrollElement: () => viewportEl(),
       overscan: 8,
@@ -137,10 +142,21 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     )
 
     mount((host) => {
+      // Collapse/expand must remeasure: absolute rows leave the DOM but a stale
+      // totalSize spacer leaves a visual hole (explorer empty band / filter gap).
+      const stopMeasure = effect(() => {
+        void tree().state.expanded()
+        void tree().rows().length
+        virt.measure()
+      })
       // ── tree IDENTITY wiring ────────────────────────────────────────────
       // The engine is a LIVE JS reference assigned to the host `tree` property
       // (never a stringified attribute). Route it into the scope signal so the
       // windowed render reacts.
+      // Capture any pre-connect assignment (`tree={table}` / bindDynamic may
+      // fire before mount defines the accessor — same pattern as message-list).
+      const preTree = (host as unknown as { tree?: Table<AnyTreeNode> | null }).tree
+      if (preTree != null) treeSig.set(preTree)
       Object.defineProperty(host, 'tree', {
         configurable: true,
         get: () => tree(),
@@ -168,16 +184,18 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         }
       }
 
-      // ── Delegated caret/row interactions + deduped engine-state emission ──────
+      // Engine-driven row interactions — no data-action toggle markers.
       const stop = wireTreeInteractions(host, () => tree(), {
         expandOnSelect: () => host.hasAttribute('expand-on-select'),
         selectable: () => (host.getAttribute('selectable') ?? 'none') !== 'none',
         multi: () => (host.getAttribute('selectable') ?? 'none') === 'multi',
         navRoleSelector: '[role="tree"]',
         getWindow: () => windowItems(),
+        onExpanded: () => virt.measure(),
       })
 
       return () => {
+        stopMeasure()
         stop()
         virt.dispose()
       }
@@ -216,7 +234,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </div>
 </else-if><else>
 <div role="tree" sx={style.w(full).fontFamily(body).fontSize(density).fg(foreground)} aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
-  <div bind:this={viewportEl} sx={style.position(relative).w(full).overflowY(auto).maxH(panel-max-h-md)}>
+  <!-- Fill parent height chain (studio explorer / workbench). maxH(panel-max-h-md)
+       starved scrollports and left virtualizer gaps — parent owns the height. -->
+  <div bind:this={viewportEl} sx={style.position(relative).w(full).h(full).minH(0).overflowY(auto)}>
     <div use:virtualSpacer={totalSize()} sx={style.h(bind(rowsH)).position(relative).w(full)}>
       <for {windowItems()} as="w" key={w.key}>
         <!--
@@ -225,9 +245,10 @@ export default controller((_ctx: ControllerScope<Scope>) => {
           Same pattern as sail-tree-grid + sail-message-list. cellPad → padS(bind(cellPs)).
         -->
         <row align="center" gap="density" nowrap role="treeitem" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} data-pending={w.pending ? 'true' : null} aria-busy={w.pending ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} use:cellPad={w.indent} sx={style.group().position(absolute).left(0).w(full).translateY(bind(rowY)).padY(density-row-py).padR(density-row-px).padS(bind(cellPs)).radius(sm).cursor(pointer).fg(foreground).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg).fontWeight(medium), busy: style.fg(muted-foreground).italic(true).cursor(default), focus: style.outline(ring) })}>
+          <!-- Chevron is paint only (aria-expanded / data-expanded). Expand is the row. -->
           <if {w.canExpand}>
-            <row data-action="toggle" aria-hidden="true" align="center" justify="center" sx={style.w(density-icon).h(density-icon).minW(density-icon).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
-              <icon name="chevron-right" size="xs"></icon>
+            <row data-tree-caret aria-hidden="true" align="center" justify="center" sx={style.w(8).h(8).minW(8).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
+              <icon name="chevron-right" size="sm"></icon>
             </row>
           <else>
             <span aria-hidden="true" sx={style.w(density-icon).minW(density-icon)}></span>

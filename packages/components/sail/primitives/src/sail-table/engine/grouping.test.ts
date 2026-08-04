@@ -202,6 +202,22 @@ describe('expansion — recursive flatten + tree members', () => {
     expect(table.rows().map((r) => r.id)).toEqual(['root', 'c1', 'g1', 'c2'])
   })
 
+  it('toggleExpanded under expand-all collapses that branch and keeps siblings expanded', () => {
+    // Bare caret click (v undefined) used to no-op when expanded === true.
+    const table = mkTree({ expanded: true })
+    expect(table.getRow('root')!.getIsExpanded()).toBe(true)
+    expect(table.getRow('c1')!.getIsExpanded()).toBe(true)
+    table.toggleExpanded('c1') // collapse only c1
+    expect(table.getRow('c1')!.getIsExpanded()).toBe(false)
+    expect(table.getRow('root')!.getIsExpanded()).toBe(true)
+    // g1 hidden under collapsed c1; c2 (leaf under root) still visible via root
+    expect(table.rows().map((r) => r.id)).toEqual(['root', 'c1', 'c2'])
+    // Re-expand c1
+    table.toggleExpanded('c1')
+    expect(table.getRow('c1')!.getIsExpanded()).toBe(true)
+    expect(table.rows().map((r) => r.id)).toEqual(['root', 'c1', 'g1', 'c2'])
+  })
+
   it('getLeafRows / getParentRows / subRows expose the tree', () => {
     const table = mkTree({ expanded: true })
     const root = table.getRow('root')!

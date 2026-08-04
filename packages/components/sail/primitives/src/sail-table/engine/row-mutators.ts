@@ -18,6 +18,13 @@ export interface RowMutatorCallbacks {
   onGroupingChange?: (g: string[]) => void
   onExpandedChange?: (e: ExpandedState) => void
   onStateChange?: (s: TableState) => void
+  /**
+   * All expandable row ids in the full tree (not just visible). Required so a
+   * collapse under expand-all (`true`) can demote to a sparse map that keeps
+   * every OTHER branch expanded — bare `{ [id]: false }` would collapse the
+   * whole tree (missing keys are collapsed under map semantics).
+   */
+  expandableIds?: () => string[]
 }
 
 export interface RowMutators {
@@ -65,10 +72,18 @@ export function buildRowMutators(
   function toggleExpanded(id: string, v?: boolean): void {
     setExpanded((prev) => {
       if (prev === true) {
-        // Expand-all → opening a specific id is a no-op; closing one demotes to
-        // an explicit map (id off) — but only `false` collapses from expand-all.
-        if (v === false) return { [id]: false }
-        return true
+        // Expand-all: every row is expanded. Bare toggle (v undefined) and
+        // explicit collapse (v false) demote to a sparse map with this id off
+        // and every other expandable id on. Explicit expand (v true) is a no-op.
+        // Without materializing siblings, `{ [id]: false }` collapses the whole
+        // tree (map semantics: missing key ⇒ collapsed).
+        if (v === true) return true
+        const next: Record<string, boolean> = {}
+        for (const eid of cb.expandableIds?.() ?? []) {
+          next[eid] = eid !== id
+        }
+        next[id] = false
+        return next
       }
       const cur = prev[id] === true
       const next = v ?? !cur

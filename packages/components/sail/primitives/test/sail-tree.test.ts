@@ -151,14 +151,13 @@ describe('<sail-tree> — shared-engine flatten (behavioral spec #1)', () => {
 })
 
 describe('<sail-tree> — expand/collapse via the engine (behavioral spec #2)', () => {
-  it('clicking a caret calls tree.toggleExpanded(id): children appear, no remount', async () => {
+  it('clicking a branch row expands via the engine (no data-action hatch)', async () => {
     const { el, shadow } = mountTree({})
     await flush()
     const before = el
     const srcRow = shadow!.querySelector('[data-node-id="src"]') as HTMLElement
-    const caret = srcRow.querySelector('[data-action="toggle"]') as HTMLElement
-    expect(caret).not.toBeNull()
-    caret.click()
+    // Whole row is the expand target — chevron is paint only.
+    srcRow.click()
     await flush()
     // The branch expanded: src's direct children are now in the flat list.
     expect(itemIds(shadow)).toContain('src/index.ts')
@@ -223,7 +222,7 @@ describe('<sail-tree> — disclosure caret composes sail-icon (NOT inline svg)',
     const { shadow } = mountTree(true)
     await flush()
     const branch = shadow!.querySelector('[data-node-id="src"]') as HTMLElement
-    const caret = branch.querySelector('[data-action="toggle"]') as HTMLElement
+    const caret = branch.querySelector('[data-tree-caret]') as HTMLElement
     expect(caret).not.toBeNull()
     const icon = caret.querySelector('.sail-icon') as HTMLElement
     expect(icon).not.toBeNull()
@@ -410,10 +409,10 @@ describe('<sail-tree> — events via host.emit! (behavioral spec #3)', () => {
     const fn = vi.fn()
     // Listen on the ANCESTOR — only a bubbling, composed event reaches it.
     container.addEventListener('sail-toggle', fn)
-    const caret = (el.shadowRoot ?? el).querySelector(
-      '[data-node-id="src"] [data-action="toggle"]',
+    const row = (el.shadowRoot ?? el).querySelector(
+      '[data-node-id="src"]',
     ) as HTMLElement
-    caret.click()
+    row.click()
     await flush()
     expect(fn).toHaveBeenCalled()
     const detail = (fn.mock.calls[0]![0] as CustomEvent).detail
@@ -426,10 +425,10 @@ describe('<sail-tree> — events via host.emit! (behavioral spec #3)', () => {
     await flush()
     const fn = vi.fn()
     el.addEventListener('sail-expand-change', fn)
-    const caret = (el.shadowRoot ?? el).querySelector(
-      '[data-node-id="src"] [data-action="toggle"]',
+    const row = (el.shadowRoot ?? el).querySelector(
+      '[data-node-id="src"]',
     ) as HTMLElement
-    caret.click()
+    row.click()
     await flush()
     expect(fn).toHaveBeenCalled()
     const detail = (fn.mock.calls.at(-1)![0] as CustomEvent).detail

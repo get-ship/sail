@@ -114,10 +114,25 @@ export function createTable<T>(options: TableOptions<T>): Table<T> {
   bindings.selection = selection
 
   // ── Grouping + expansion mutators (+ the row-bound expansion handle) ─────────
+  /** Walk the full core tree for expandable ids (expand-all demotion needs them). */
+  const expandableIds = (): string[] => {
+    const out: string[] = []
+    const walk = (rows: Row<T>[]): void => {
+      for (const r of rows) {
+        if (r.subRows.length > 0) {
+          out.push(r.id)
+          walk(r.subRows)
+        }
+      }
+    }
+    walk(coreRows())
+    return out
+  }
   const rowMut = buildRowMutators(state, snap, {
     ...(options.onGroupingChange && { onGroupingChange: options.onGroupingChange }),
     ...(options.onExpandedChange && { onExpandedChange: options.onExpandedChange }),
     ...(options.onStateChange && { onStateChange: options.onStateChange }),
+    expandableIds,
   })
   bindings.expansion = {
     isExpanded: rowMut.isExpanded,

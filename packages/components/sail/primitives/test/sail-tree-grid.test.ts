@@ -147,11 +147,11 @@ describe('<sail-tree-grid> — disclosure caret + indent in the FIRST visible co
     const srcRow = shadow!.querySelector('[role="row"][data-node-id="src"]') as HTMLElement
     const cells = srcRow.querySelectorAll('[role="gridcell"]')
     const firstCell = cells[0] as HTMLElement
-    const caret = firstCell.querySelector('[data-action="toggle"] .sail-icon') as HTMLElement
+    const caret = firstCell.querySelector('[data-tree-caret] .sail-icon') as HTMLElement
     expect(caret).not.toBeNull()
     expect(caret.getAttribute('name')).toBe('chevron-right')
     // No caret in any later column.
-    expect((cells[1] as HTMLElement).querySelector('[data-action="toggle"]')).toBeNull()
+    expect((cells[1] as HTMLElement).querySelector('[data-tree-caret]')).toBeNull()
   })
 
   it('aria-level reflects row.depth + 1 (flat-list tree depth)', async () => {
@@ -170,7 +170,7 @@ describe('<sail-tree-grid> — disclosure caret + indent in the FIRST visible co
     const { shadow } = mountTreeGrid(true)
     await flush()
     const leaf = shadow!.querySelector('[role="row"][data-node-id="readme"]') as HTMLElement
-    expect(leaf.querySelector('[data-action="toggle"] .sail-icon')).toBeNull()
+    expect(leaf.querySelector('[data-tree-caret] .sail-icon')).toBeNull()
     expect(leaf.hasAttribute('aria-expanded')).toBe(false)
   })
 })

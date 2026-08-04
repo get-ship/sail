@@ -224,9 +224,9 @@ describe('<sail-tree-grid> — column VISIBILITY via the reused engine', () => {
     await flush()
     const srcRow = shadow!.querySelector('[role="row"][data-node-id="src"]') as HTMLElement
     const cells = srcRow.querySelectorAll('[role="gridcell"]')
-    const firstCaret = (cells[0] as HTMLElement).querySelector('[data-action="toggle"] .sail-icon')
+    const firstCaret = (cells[0] as HTMLElement).querySelector('[data-tree-caret] .sail-icon')
     expect(firstCaret).not.toBeNull()
-    expect((cells[1] as HTMLElement).querySelector('[data-action="toggle"]')).toBeNull()
+    expect((cells[1] as HTMLElement).querySelector('[data-tree-caret]')).toBeNull()
   })
 
   it('a column header exposes a hide control (the reused dropdown-menu pattern)', async () => {

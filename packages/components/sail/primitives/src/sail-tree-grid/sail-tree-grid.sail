@@ -144,6 +144,9 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     )
 
     mount((host) => {
+      // Capture pre-connect `tree={table}` identity (bindDynamic may fire first).
+      const preTree = (host as unknown as { tree?: Table<AnyTreeNode> | null }).tree
+      if (preTree != null) treeSig.set(preTree)
       Object.defineProperty(host, 'tree', {
         configurable: true,
         get: () => tree(),
@@ -248,7 +251,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
       </row>
     </for>
   </grid>
-  <div bind:this={viewportEl} sx={style.position(relative).w(full).overflowY(auto).maxH(panel-max-h-md)}>
+  <div bind:this={viewportEl} sx={style.position(relative).w(full).h(full).minH(0).overflowY(auto)}>
       <for {windowItems()} as="w" key={`${w.key}|${w.cellsKey}`}>
         <grid tracks="--sail-grid-template" gap="0" role="row" data-node-id={w.id} aria-level={w.level} aria-posinset={w.posInSet} aria-setsize={w.setSize} aria-rowindex={w.index + 1} aria-expanded={w.canExpand ? (w.expanded ? 'true' : 'false') : null} aria-selected={selectable() !== 'none' ? (w.selected ? 'true' : 'false') : null} data-can-expand={w.canExpand ? 'true' : null} data-expanded={w.expanded ? 'true' : null} data-selected={w.selected ? 'true' : null} tabindex={w.id === activeRowId() ? '0' : '-1'} use:virtualRow={w.start} sx={style.group().position(absolute).left(0).w(full).translateY(bind(rowY)).cursor(pointer).when({ hover: style.bg(hover-bg), selected: style.bg(selected-bg), focus: style.outline(ring) })}>
           <span aria-hidden="true" sx={style.position(absolute).left(0).top(1).bottom(1).w(half).radius(full).bg(primary).visibility(hidden).when({ groupSelected: style.visibility(visible) })}></span>
@@ -256,7 +259,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
             <if {c.first}>
               <row role="gridcell" use:cellPad={w.indent} sx={style.padY(density-row-py).padX(density-row-px).borderBWidth(1).borderB(border-subtle).fg(foreground).minW(0).padS(bind(cellPs))}>
                 <if {w.canExpand}>
-                  <span data-action="toggle" aria-hidden="true" sx={style.w(density-icon).h(density-icon).minW(density-icon).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
+                  <span aria-hidden="true" data-tree-caret sx={style.w(density-icon).h(density-icon).minW(density-icon).fg(muted-foreground).when({ groupExpanded: style.rotate(90) })}>
                     <icon name="chevron-right" size="xs"></icon>
                   </span>
                 </if>
