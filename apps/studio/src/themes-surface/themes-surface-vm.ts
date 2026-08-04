@@ -6,7 +6,9 @@
  * Light-only themes (paper, glass, halo, brut, …) have no dark CSS tables —
  * forcing data-mode=dark makes preview fall through to :root (studio).
  *
+ * Membership model = project file on disk (catalog vs project).
  * Delete + Add to project require confirm. UI never says "fork".
+ * No fake enable-off switch; no session-default star theater.
  */
 import { mountAmbient, signal } from '@ship/sail-runtime'
 import { navigate } from '@ship/deck/router'
@@ -24,6 +26,7 @@ import { appRouteBase } from '../shell/shell-page-vm'
 import {
   confirmAddToProject,
   confirmDeleteTheme,
+  confirmNewTheme,
   confirmRemixTheme,
 } from '../theme-session/theme-confirm'
 import {
@@ -40,8 +43,8 @@ export type ThemeRowUi = {
   statusLabel: string
   statusTone: string
   selected: boolean
-  enabled: boolean
-  isDefault: boolean
+  /** True when theme has a project file (not catalog-only). */
+  inProject: boolean
   isCatalog: boolean
   catalog: boolean
   /** Registered catalog id for data-theme-preview. */
@@ -79,7 +82,7 @@ function titleCase(id: string): string {
   )
 }
 
-/** Human label + blurb + paint id for a theme id (registered or forked). */
+/** Human label + blurb + paint id for a theme id (registered or project copy). */
 function describeTheme(
   id: string,
   forkedFrom?: string | null,
@@ -126,8 +129,8 @@ export function createThemesSurface() {
   const previewMeta = signal('')
   const previewStatusLabel = signal('')
   const previewStatusTone = signal('muted')
-  const previewEnabled = signal(false)
-  const previewIsDefault = signal(false)
+  /** True when selected theme is in the project (file on disk). */
+  const previewInProject = signal(false)
   const previewIsCatalog = signal(false)
   const previewThemeId = signal('studio')
   const previewPaintId = signal('studio')
@@ -152,8 +155,6 @@ export function createThemesSurface() {
   const projectCountLabel = signal('0')
   const catalogCountLabel = signal('0')
 
-  /** Exclusive default for star UI only — not persisted. */
-  const defaultId = signal<string | null>(null)
   const menuTargetId = signal('')
 
   /**
@@ -173,24 +174,20 @@ export function createThemesSurface() {
   const mapRow = (
     t: ThemeFile,
     sel: string,
-    def: string | null,
     open?: { themeId: string; forkedFrom: string | null },
   ): ThemeRowUi => {
-    const enabled = !t.catalog
-    const isDefault = def === t.id
-    // Project rows: quiet (Default only when starred). Catalog: Catalog chip.
-    const statusLabel = isDefault ? 'Default' : enabled ? '' : 'Catalog'
-    const statusTone = isDefault ? 'primary' : 'muted'
+    const inProject = !t.catalog
+    // Catalog chip only; project rows have no fake "Default" / enable status.
+    const statusLabel = inProject ? '' : 'Catalog'
+    const statusTone = 'muted'
     // Store forkedFrom applies only to the currently open theme row.
     const rowFork =
       open?.forkedFrom && open.themeId === t.id ? open.forkedFrom : null
     const d = describeTheme(t.id, rowFork)
     const paintMode = resolvePaintMode(d.previewId)
-    const meta = isDefault
-      ? `Default · ${d.modeInfo.modesLabel}`
-      : enabled
-        ? d.modeInfo.modesLabel
-        : `Catalog · ${d.modeInfo.modesLabel}`
+    const meta = inProject
+      ? d.modeInfo.modesLabel
+      : `Catalog · ${d.modeInfo.modesLabel}`
     return {
       id: t.id,
       name: d.name,
@@ -199,8 +196,7 @@ export function createThemesSurface() {
       statusLabel,
       statusTone,
       selected: sel === t.id,
-      enabled,
-      isDefault,
+      inProject,
       isCatalog: t.catalog,
       catalog: t.catalog,
       previewId: d.previewId,
@@ -222,26 +218,13 @@ export function createThemesSurface() {
       ds.catalogThemes[0]?.id ||
       ''
     if (sel && selectedId() !== sel) selectedId.set(sel)
-    let def = defaultId()
-    if (
-      def &&
-      !ds.projectThemes.some((t) => t.id === def) &&
-      !ds.catalogThemes.some((t) => t.id === def)
-    ) {
-      def = null
-      defaultId.set(null)
-    }
-    if (!def && ds.projectThemes[0]) {
-      def = ds.projectThemes[0].id
-      defaultId.set(def)
-    }
 
     const open = { themeId: ds.themeId || '', forkedFrom: ds.forkedFrom }
-    const proj = ds.projectThemes.map((t) => mapRow(t, sel, def, open))
+    const proj = ds.projectThemes.map((t) => mapRow(t, sel, open))
     const projIds = new Set(ds.projectThemes.map((t) => t.id))
     const cat = ds.catalogThemes
       .filter((t) => !projIds.has(t.id))
-      .map((t) => mapRow(t, sel, def, open))
+      .map((t) => mapRow(t, sel, open))
 
     projectRows.set(proj)
     catalogRows.set(cat)
@@ -266,8 +249,7 @@ export function createThemesSurface() {
       previewMeta.set(row.meta)
       previewStatusLabel.set(row.statusLabel)
       previewStatusTone.set(row.statusTone)
-      previewEnabled.set(row.enabled)
-      previewIsDefault.set(row.isDefault)
+      previewInProject.set(row.inProject)
       previewIsCatalog.set(row.isCatalog)
       previewThemeId.set(row.id)
       previewPaintId.set(previewId)
@@ -286,8 +268,7 @@ export function createThemesSurface() {
       previewMeta.set('')
       previewStatusLabel.set('')
       previewStatusTone.set('muted')
-      previewEnabled.set(false)
-      previewIsDefault.set(false)
+      previewInProject.set(false)
       previewIsCatalog.set(false)
       previewThemeId.set(ds.themeId || 'studio')
       previewPaintId.set(ds.themeId || 'studio')
@@ -370,74 +351,39 @@ export function createThemesSurface() {
     }
   }
 
-  const onSetDefault = (e: Event) => {
+  /** Catalog → project file via confirm + addThemeToProject. */
+  const addCatalogToProject = (id: string) => {
+    const row = allRows().find((r) => r.id === id)
+    if (!row || row.inProject) return
+    const newId = id.startsWith('my-') ? id : `my-${id}`
+    const srcName = describeTheme(id).name
+    if (!confirmAddToProject(srcName, newId)) {
+      setNote('Add to project cancelled.')
+      return
+    }
+    setNote(`Adding ${srcName} to the project…`)
+    void addThemeToProject(newId, id).then((ok) => {
+      if (ok) {
+        selectedId.set(newId)
+        setNote(`${describeTheme(newId).name} is in the project.`, 'success')
+      } else {
+        setNote(
+          getDesignState().lastWriteError || 'Could not add that theme to the project.',
+          'destructive',
+        )
+      }
+      sync()
+    })
+  }
+
+  /** List-row Add to project (catalog only). */
+  const onAddToProject = (e: Event) => {
     e.stopPropagation()
     const el = (e.target as Element | null)?.closest?.('[data-theme-id]') as HTMLElement | null
     const id = el?.dataset.themeId
     if (!id) return
-    const row = allRows().find((r) => r.id === id)
-    if (row?.isCatalog) {
-      setNote('Enable this theme in the project before making it the default.', 'warning')
-      return
-    }
-    defaultId.set(id)
-    setNote(`${describeTheme(id).name} is the default for this project (session only).`, 'success')
-    sync()
-  }
-
-  const onEnableChange = (e: Event) => {
-    e.stopPropagation()
-    const t = e.target as HTMLInputElement
-    const el = t.closest?.('[data-theme-id]') as HTMLElement | null
-    const id = el?.dataset.themeId || t.dataset.themeId
-    if (!id) return
-    const row = allRows().find((r) => r.id === id)
-    if (!row) return
-    if (t.checked) {
-      if (row.enabled) {
-        selectTheme(id)
-        return
-      }
-      const newId = id.startsWith('my-') ? id : `my-${id}`
-      const srcName = describeTheme(id).name
-      if (!confirmAddToProject(srcName, newId)) {
-        setNote('Add to project cancelled.')
-        sync()
-        return
-      }
-      setNote(`Adding ${srcName} to the project…`)
-      void addThemeToProject(newId, id).then((ok) => {
-        if (ok) {
-          selectedId.set(newId)
-          if (!defaultId()) defaultId.set(newId)
-          setNote(`${describeTheme(newId).name} is in the project.`, 'success')
-        } else {
-          setNote(
-            getDesignState().lastWriteError || 'Could not add that theme to the project.',
-            'destructive',
-          )
-        }
-        sync()
-      })
-    } else {
-      if (defaultId() === id) {
-        setNote('Choose another default before turning this one off.', 'warning')
-        sync()
-        return
-      }
-      // Do NOT delete on switch off — that was destroying project themes silently.
-      // Project themes stay on disk; use the menu Delete action to remove them.
-      if (row.enabled && !row.isCatalog) {
-        setNote(
-          'Turned off in the list only — project file is still on disk. Use Delete in the menu to remove it.',
-          'warning',
-        )
-        // Snap switch back to on (enabled = has project file).
-        sync()
-        return
-      }
-      sync()
-    }
+    selectTheme(id)
+    addCatalogToProject(id)
   }
 
   const onOpenTheme = (id?: string) => {
@@ -460,41 +406,10 @@ export function createThemesSurface() {
 
   const onPreviewOpen = () => onOpenTheme()
 
-  const onPreviewEnable = () => {
+  const onPreviewAddToProject = () => {
     const id = selectedId()
     if (!id) return
-    const row = allRows().find((r) => r.id === id)
-    if (!row || row.enabled) return
-    const newId = id.startsWith('my-') ? id : `my-${id}`
-    const srcName = describeTheme(id).name
-    if (!confirmAddToProject(srcName, newId)) {
-      setNote('Add to project cancelled.')
-      return
-    }
-    setNote(`Adding ${srcName} to the project…`)
-    void addThemeToProject(newId, id).then((ok) => {
-      if (ok) {
-        selectedId.set(newId)
-        if (!defaultId()) defaultId.set(newId)
-        setNote(`${describeTheme(newId).name} is in the project.`, 'success')
-      } else {
-        setNote(getDesignState().lastWriteError || 'Could not add that theme.', 'destructive')
-      }
-      sync()
-    })
-  }
-
-  const onPreviewSetDefault = () => {
-    const id = selectedId()
-    if (!id) return
-    const row = allRows().find((r) => r.id === id)
-    if (row?.isCatalog) {
-      setNote('Enable this theme in the project before making it the default.', 'warning')
-      return
-    }
-    defaultId.set(id)
-    setNote(`${describeTheme(id).name} is the default (session only).`, 'success')
-    sync()
+    addCatalogToProject(id)
   }
 
   const onNewTheme = () => {
@@ -506,7 +421,7 @@ export function createThemesSurface() {
     const stamp = Date.now().toString(36).slice(-4)
     const newId = `my-theme-${stamp}`
     const srcName = describeTheme(src).name
-    if (!confirmAddToProject(srcName, newId)) {
+    if (!confirmNewTheme(srcName, newId)) {
       setNote('New theme cancelled.')
       return
     }
@@ -514,7 +429,6 @@ export function createThemesSurface() {
     void addThemeToProject(newId, src).then((ok) => {
       if (ok) {
         selectedId.set(newId)
-        defaultId.set(newId)
         setNote(`Created ${describeTheme(newId).name} from ${srcName}.`, 'success')
       } else {
         setNote(getDesignState().lastWriteError || 'Could not create theme.', 'destructive')
@@ -530,12 +444,9 @@ export function createThemesSurface() {
     if (!cmd || !id) return
     selectTheme(id)
     if (cmd === 'open') onOpenTheme(id)
-    else if (cmd === 'enable') {
-      selectedId.set(id)
-      onPreviewEnable()
-    } else if (cmd === 'default') {
-      selectedId.set(id)
-      onPreviewSetDefault()
+    else if (cmd === 'enable' || cmd === 'add') {
+      // Menu primary for catalog: Add to project
+      addCatalogToProject(id)
     } else if (cmd === 'remix' || cmd === 'duplicate') {
       const stamp = Date.now().toString(36).slice(-4)
       const newId = `my-${id}-${stamp}`.replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')
@@ -566,7 +477,6 @@ export function createThemesSurface() {
       void deleteTheme(id).then((ok) => {
         if (ok) {
           if (selectedId() === id) selectedId.set('')
-          if (defaultId() === id) defaultId.set('')
           setNote('Theme deleted.', 'success')
         } else {
           setNote(getDesignState().lastWriteError || 'Could not delete theme.', 'destructive')
@@ -607,8 +517,9 @@ export function createThemesSurface() {
     previewMeta,
     previewStatusLabel,
     previewStatusTone,
-    previewEnabled,
-    previewIsDefault,
+    previewInProject,
+    /** @deprecated alias — project membership, not an enable flag */
+    previewEnabled: previewInProject,
     previewIsCatalog,
     previewThemeId,
     previewPaintId,
@@ -629,11 +540,11 @@ export function createThemesSurface() {
     catalogCountLabel,
     onListClick,
     onMenuOpen,
-    onSetDefault,
-    onEnableChange,
+    onAddToProject,
     onPreviewOpen,
-    onPreviewEnable,
-    onPreviewSetDefault,
+    onPreviewAddToProject,
+    /** @deprecated alias for template migration */
+    onPreviewEnable: onPreviewAddToProject,
     onPreviewModeSwitch,
     onNewTheme,
     onRowMenu,

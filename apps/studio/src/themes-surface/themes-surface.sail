@@ -1,6 +1,7 @@
 <!--
   <themes-surface> — project theme catalog master–detail (Variant B).
   List (In project / Catalog) + preview with color story + L1 chrome under scoped theme.
+  Membership = project file on disk. Catalog: Add to project (confirm). No fake enable/default.
   Ban-clean: layout keywords + L1. Color identity via data-theme-preview + token bg (no CSSOM).
 -->
 <controller>
@@ -19,8 +20,7 @@ export default controller(() => {
     previewMeta: vm.previewMeta,
     previewStatusLabel: vm.previewStatusLabel,
     previewStatusTone: vm.previewStatusTone,
-    previewEnabled: vm.previewEnabled,
-    previewIsDefault: vm.previewIsDefault,
+    previewInProject: vm.previewInProject,
     previewIsCatalog: vm.previewIsCatalog,
     previewThemeId: vm.previewThemeId,
     previewPaintId: vm.previewPaintId,
@@ -41,11 +41,9 @@ export default controller(() => {
     catalogCountLabel: vm.catalogCountLabel,
     onListClick: (e: Event) => vm.onListClick(e),
     onMenuOpen: (e: Event) => vm.onMenuOpen(e),
-    onSetDefault: (e: Event) => vm.onSetDefault(e),
-    onEnableChange: (e: Event) => vm.onEnableChange(e),
+    onAddToProject: (e: Event) => vm.onAddToProject(e),
     onPreviewOpen: () => vm.onPreviewOpen(),
-    onPreviewEnable: () => vm.onPreviewEnable(),
-    onPreviewSetDefault: () => vm.onPreviewSetDefault(),
+    onPreviewAddToProject: () => vm.onPreviewAddToProject(),
     onPreviewModeSwitch: (e: Event) => vm.onPreviewModeSwitch(e),
     onNewTheme: () => vm.onNewTheme(),
     onRowMenu: (e: Event) => vm.onRowMenu(e),
@@ -77,7 +75,7 @@ export default controller(() => {
         Themes
       </p>
       <p sx={style.fontSize(sm).fg(muted-foreground).leading(snug)}>
-        Choose how this app looks. Enable catalog packs, set a default, open a theme to edit.
+        Project themes live on disk. Add catalog themes to the project, then open one to edit.
       </p>
     </column>
     <row gap="2" align="center" shrink="0" nowrap>
@@ -152,7 +150,6 @@ export default controller(() => {
                 data-theme-id={row.id}
                 data-theme-scope="project"
                 data-selected={row.selected ? 'true' : 'false'}
-                data-default={row.isDefault ? 'true' : 'false'}
                 aria-current={row.selected ? 'true' : null}
                 gap="3"
                 align="center"
@@ -179,34 +176,7 @@ export default controller(() => {
                   <p sx={style.fontSize(sm).fontWeight(semibold).truncate()}>{row.name}</p>
                   <p sx={style.fontSize(xs).fg(muted-foreground).truncate()}>{row.meta}</p>
                 </column>
-                <if {row.statusLabel}>
-                  <badge data-theme-status={row.statusLabel} tone={row.statusTone} size="sm" variant="solid" pill shrink="0">
-                    {row.statusLabel}
-                  </badge>
-                </if>
                 <row gap="1" align="center" shrink="0" nowrap>
-                  <button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    tone={row.isDefault ? 'primary' : 'muted'}
-                    data-theme-default
-                    data-theme-id={row.id}
-                    aria-pressed={row.isDefault ? 'true' : 'false'}
-                    aria-label={row.isDefault ? 'Default theme' : 'Set as default'}
-                    on:click={onSetDefault}
-                  >
-                    <icon name="star" size="sm"></icon>
-                  </button>
-                  <switch
-                    size="sm"
-                    tone="primary"
-                    checked={row.enabled}
-                    data-theme-enable
-                    data-theme-id={row.id}
-                    aria-label="In project"
-                    on:change={onEnableChange}
-                  ></switch>
                   <button
                     type="button"
                     size="sm"
@@ -223,7 +193,6 @@ export default controller(() => {
                   </button>
                   <dropdown id={row.menuId} placement="bottom-end" on:sail-menu-select={onRowMenu}>
                     <menu-item value="open">Open</menu-item>
-                    <menu-item value="default">Set default</menu-item>
                     <menu-item value="remix">Remix</menu-item>
                     <menu-item value="delete">Delete</menu-item>
                   </dropdown>
@@ -275,24 +244,15 @@ export default controller(() => {
                   <button
                     type="button"
                     size="sm"
-                    variant="ghost"
-                    tone="muted"
-                    data-theme-default
-                    data-theme-id={row.id}
-                    aria-label="Set as default"
-                    on:click={onSetDefault}
-                  >
-                    <icon name="star" size="sm"></icon>
-                  </button>
-                  <switch
-                    size="sm"
+                    variant="outline"
                     tone="primary"
-                    checked={row.enabled}
-                    data-theme-enable
+                    data-theme-add-project
                     data-theme-id={row.id}
                     aria-label="Add to project"
-                    on:change={onEnableChange}
-                  ></switch>
+                    on:click={onAddToProject}
+                  >
+                    Add
+                  </button>
                   <button
                     type="button"
                     size="sm"
@@ -377,18 +337,13 @@ export default controller(() => {
             </if>
 
             <row gap="2" align="center">
-              <if {previewEnabled()}>
+              <if {previewInProject()}>
                 <button type="button" size="sm" variant="solid" tone="primary" data-preview-open on:click={onPreviewOpen}>
                   Open
                 </button>
-                <if {!previewIsDefault()}>
-                  <button type="button" size="sm" variant="outline" tone="primary" data-preview-set-default on:click={onPreviewSetDefault}>
-                    Set as default
-                  </button>
-                </if>
               </if>
               <if {previewIsCatalog()}>
-                <button type="button" size="sm" variant="solid" tone="primary" data-preview-enable on:click={onPreviewEnable}>
+                <button type="button" size="sm" variant="solid" tone="primary" data-preview-add-project on:click={onPreviewAddToProject}>
                   Add to project
                 </button>
                 <button type="button" size="sm" variant="outline" tone="primary" data-preview-open on:click={onPreviewOpen}>
@@ -473,7 +428,7 @@ export default controller(() => {
             </row>
           </column>
 
-          <!-- L1 chrome under scoped theme -->
+          <!-- Live chrome specimen under scoped theme -->
           <column data-preview-chrome gap="2">
             <p sx={style.fontSize(xs).fontWeight(semibold).textCase(uppercase).tracking(wide).fg(muted-foreground)}>
               Live chrome

@@ -39,6 +39,13 @@ export function confirmAddToProject(sourceName: string, newId: string): boolean 
   )
 }
 
+/** New theme from home — not “Add catalog pack” wording. */
+export function confirmNewTheme(sourceName: string, newId: string): boolean {
+  return themeConfirm(
+    `Create new project theme “${newId}” based on “${sourceName}”?`,
+  )
+}
+
 export function confirmRemixTheme(sourceName: string, newId: string): boolean {
   return themeConfirm(
     `Remix “${sourceName}” into a new project theme “${newId}”?`,
