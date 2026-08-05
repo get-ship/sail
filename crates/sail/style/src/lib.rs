@@ -876,5 +876,139 @@ mod tests {
         // motion must not produce CSS atoms
         assert!(!css.contains("fade"), "{css}");
     }
+
+    /// Emit identity: old chain vs new channel form must mint the same classes + CSS.
+    fn emit_pair(old: &str, new: &str) {
+        let (s_old, d_old) = parse(old);
+        let (s_new, d_new) = parse(new);
+        assert!(
+            d_old.is_empty(),
+            "old form diags for `{old}`: {:?}",
+            d_old.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        assert!(
+            d_new.is_empty(),
+            "new form diags for `{new}`: {:?}",
+            d_new.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (c_old, css_old) = lower_style(&s_old, &HashMap::new());
+        let (c_new, css_new) = lower_style(&s_new, &HashMap::new());
+        assert_eq!(
+            c_old, c_new,
+            "class list identity failed\nold: {old}\nnew: {new}\nold classes: {c_old}\nnew classes: {c_new}"
+        );
+        assert_eq!(
+            css_old, css_new,
+            "CSS identity failed\nold: {old}\nnew: {new}\nold css:\n{css_old}\nnew css:\n{css_new}"
+        );
+    }
+
+    #[test]
+    fn channels_emit_identity_box_only() {
+        emit_pair("style.pad(4).gap(2)", "style({ box: pad(4).gap(2) })");
+    }
+
+    #[test]
+    fn channels_emit_identity_paint_only() {
+        emit_pair(
+            "style.bg(primary).radius(md)",
+            "style({ paint: bg(primary).radius(md) })",
+        );
+    }
+
+    #[test]
+    fn channels_emit_identity_box_and_paint() {
+        emit_pair(
+            "style.pad(4).gap(2).bg(primary).radius(md)",
+            "style({ box: pad(4).gap(2), paint: bg(primary).radius(md) })",
+        );
+    }
+
+    #[test]
+    fn channels_emit_identity_when_hover_paint() {
+        emit_pair(
+            "style.bg(primary).when({ hover: style.bg(muted) })",
+            "style({ paint: bg(primary) }).when(hover, { paint: bg(muted) })",
+        );
+    }
+
+    #[test]
+    fn channels_old_form_control_still_green() {
+        let (style, diags) = parse("style.pad(4).bg(primary).when({ hover: style.bg(muted) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (classes, css) = lower_style(&style, &HashMap::new());
+        assert!(classes.contains("sx-"), "{classes}");
+        assert!(css.contains(":hover"), "{css}");
+    }
+
+    #[test]
+    fn box_sizing_rename_and_alias_error() {
+        let (style, diags) = parse("style.boxSizing(border)");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (classes, css) = lower_style(&style, &HashMap::new());
+        assert!(
+            classes.split_whitespace().any(|c| c == "sx-boxSizingborder"),
+            "{classes}"
+        );
+        assert!(
+            css.contains("box-sizing") && css.contains("border-box"),
+            "{css}"
+        );
+
+        let (_, diags) = parse("style.box(border)");
+        assert!(
+            diags.iter().any(|d| {
+                let m = d.message();
+                m.contains("boxSizing") && m.contains("style.box")
+            }),
+            "style.box must point at boxSizing: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+
+        // Channel key `box:` remains geometry (not the retired method).
+        let (style, diags) = parse("style({ box: pad(2) })");
+        assert!(
+            diags.is_empty(),
+            "{:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+        let (classes, _) = lower_style(&style, &HashMap::new());
+        assert!(classes.contains("sx-pad2") || classes.contains("pad"), "{classes}");
+    }
+
+    #[test]
+    fn channels_flatten_order_paint_after_box() {
+        // Author may write paint before box; flatten order is always box then paint.
+        emit_pair(
+            "style.pad(4).bg(primary)",
+            "style({ paint: bg(primary), box: pad(4) })",
+        );
+    }
+
+    #[test]
+    fn channels_animate_key_deferred() {
+        let (_, diags) = parse("style({ animate: enter({ opacity: 'fade' }) })");
+        assert!(
+            diags.iter().any(|d| d.message().contains("Phase 2b")),
+            "animate channel must refuse with Phase 2b: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn channels_when_map_form_still_works_on_spine() {
+        emit_pair(
+            "style.pad(2).when({ hover: style.bg(muted) })",
+            "style({ box: pad(2) }).when({ hover: style.bg(muted) })",
+        );
+    }
 }
 

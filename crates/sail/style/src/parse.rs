@@ -23,7 +23,7 @@ pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     // Residual utility-string product → hard error (not architecture).
     if looks_like_utility_string_product(trimmed) {
         diags.push(StyleDiagnostic::ResidualProduct {
-            message: "utility-string sx is not the Style product — use style.bg(token).… chains, match, when({…}), compound"
+            message: "utility-string sx is not the Style product — use style.… chains, style({ box, paint, text }), match, when, compound"
                 .into(),
             source: trimmed.chars().take(80).collect(),
         });
@@ -152,6 +152,7 @@ pub fn looks_like_utility_string_product(input: &str) -> bool {
     // Preprocess may pass `{expr}` (outer brace wrapper from quote_brace_attrs).
     let t = strip_one_outer_brace_layer(input.trim());
     if t.starts_with("style.")
+        || t.starts_with("style(")
         || t.starts_with("match(")
         || t.starts_with("when(")
         || t.starts_with("compound(")
@@ -183,6 +184,7 @@ fn strip_one_outer_brace_layer(t: &str) -> &str {
     let inn = t[1..t.len() - 1].trim();
     // Strip when the outer pair wraps a whole Style expr (not a bare `{k: v}` map).
     if inn.starts_with("style.")
+        || inn.starts_with("style(")
         || inn.starts_with("match(")
         || inn.starts_with("when(")
         || inn.starts_with("compound(")
@@ -580,7 +582,7 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
                         }
                     };
                     if method == "when" {
-                        let entries = parse_when_map_body(p, diags);
+                        let entries = parse_when_args(p, diags);
                         base = Style::chain(vec![base, Style::When { entries }]);
                     } else if is_motion_chain_method(method) {
                         // `scroll` on a ref is motion only when the arg is `{…}`.
@@ -592,7 +594,7 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
                         }
                     } else {
                         diags.push(StyleDiagnostic::ParseError {
-                            message: "only `.when({…})` / `.enter` / `.exit` / `.loop` / `.reveal` / `.scroll({…})` may follow a Style ref".into(),
+                            message: "only `.when(…)` / `.enter` / `.exit` / `.loop` / `.reveal` / `.scroll({…})` may follow a Style ref".into(),
                             source: p.remainder(),
                         });
                         break;
@@ -605,7 +607,7 @@ fn parse_style_expr(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Sty
         }
         _ => {
             diags.push(StyleDiagnostic::ParseError {
-                message: "expected Style expression (style.…, match, when, compound, name, or […])"
+                message: "expected Style expression (style.…, style({…}), match, when, compound, name, or […])"
                     .into(),
                 source: p.remainder(),
             });
@@ -644,6 +646,10 @@ fn parse_list(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
 
 fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     p.expect(Tok::Word("style"), diags);
+    // Channel spine: `style({ box: …, paint: …, text: … }).when(…)`
+    if p.peek() == Some(&Tok::LParen) {
+        return parse_style_channels(p, diags);
+    }
     let mut ops = Vec::new();
     let mut iters = 0usize;
     loop {
@@ -669,9 +675,9 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
                 break;
             }
         };
-        // `.when({…})` — may appear anywhere in the chain (not only terminal).
+        // `.when(…)` — map form or cond form; may appear anywhere in the chain.
         if method == "when" {
-            let entries = parse_when_map_body(p, diags);
+            let entries = parse_when_args(p, diags);
             ops.push(Style::When { entries });
             continue;
         }
@@ -708,59 +714,303 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
             }
             continue;
         }
-        p.expect(Tok::LParen, diags);
-        // Empty-arg markers (style.group()) or comma-separated paint args
-        // (`style.border(1, border)` — width + color in one call).
-        let mut args = Vec::new();
-        if p.peek() == Some(&Tok::RParen) {
-            args.push(PaintArg::Token(String::new()));
-        } else {
-            args.push(parse_paint_arg(p, diags));
-            while p.eat(&Tok::Comma) {
-                args.push(parse_paint_arg(p, diags));
+        // Temporary rename pointer: box-sizing method was `box`, now `boxSizing`
+        // so the channel key `box` is free.
+        if method == "box" {
+            let args = parse_paren_args(p, diags);
+            let arg_text = format_arg_text(&args);
+            diags.push(StyleDiagnostic::ParseError {
+                message: "`style.box(…)` was renamed to `style.boxSizing(…)` for box-sizing"
+                    .into(),
+                source: format!("style.box({arg_text})"),
+            });
+            if p.pos == before {
+                p.force_progress();
             }
+            continue;
         }
-        p.expect(Tok::RParen, diags);
+        let args = parse_paren_args(p, diags);
         if p.pos == before {
             p.force_progress();
             continue;
         }
-        let arg_text = args
-            .iter()
-            .map(|a| match a {
-                PaintArg::Token(t) => t.clone(),
-                PaintArg::Bind(n) => format!("bind({n})"),
-            })
-            .collect::<Vec<_>>()
-            .join(", ");
+        let arg_text = format_arg_text(&args);
         let source = format!("style.{method}({arg_text})");
-        if find_setter(method).is_none() {
-            diags.push(StyleDiagnostic::UnknownSetter {
-                setter: method.to_string(),
-                source: source.clone(),
-                suggestion: closest_unique_setter(method).map(|s| s.to_string()),
-            });
-        } else {
-            let op = PaintOp {
-                setter: method.to_string(),
-                args: args.clone(),
-                source: source.clone(),
-            };
-            if let Err(d) = validate_op(&op) {
-                diags.push(d);
-            }
-        }
-        ops.push(Style::Set(PaintOp {
-            setter: method.to_string(),
-            args,
-            source,
-        }));
+        push_paint_op(&mut ops, method, args, source, diags);
     }
     if ops.is_empty() {
         Style::Empty
     } else {
         Style::chain(ops)
     }
+}
+
+/// `style({ box: …, paint: …, text: … })` then optional `.when` / motion tails.
+fn parse_style_channels(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
+    p.expect(Tok::LParen, diags);
+    if p.peek() != Some(&Tok::LBrace) {
+        diags.push(StyleDiagnostic::ParseError {
+            message: "expected `style({ box, paint, text })` channel object".into(),
+            source: p.remainder(),
+        });
+        // Consume to `)` when possible so the rest of the file can still parse.
+        let mut depth = 1i32;
+        while !p.at_end() && depth > 0 {
+            match p.bump() {
+                Some(Tok::LParen) | Some(Tok::LBrace) | Some(Tok::LBrack) => depth += 1,
+                Some(Tok::RParen) | Some(Tok::RBrace) | Some(Tok::RBrack) => depth -= 1,
+                _ => {}
+            }
+        }
+        return Style::Empty;
+    }
+    let mut base = parse_channel_object(p, diags);
+    p.expect(Tok::RParen, diags);
+
+    // Dual tails: `.when(…)` and flat-chain motion (animate channel deferred).
+    let mut iters = 0usize;
+    while p.eat(&Tok::Dot) {
+        iters += 1;
+        if iters > MAX_PARSE_ITERS {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "style channel tail too long".into(),
+                source: p.remainder(),
+            });
+            break;
+        }
+        let method = match p.bump() {
+            Some(Tok::Word(w)) => w,
+            _ => {
+                diags.push(StyleDiagnostic::ParseError {
+                    message: "expected `.when(…)` or motion method after `style({…})`".into(),
+                    source: p.remainder(),
+                });
+                break;
+            }
+        };
+        if method == "when" {
+            let entries = parse_when_args(p, diags);
+            base = Style::chain(vec![base, Style::When { entries }]);
+            continue;
+        }
+        if is_motion_chain_method(method) {
+            if let Some(m) = parse_motion_call(p, method, diags) {
+                base = Style::chain(vec![base, m]);
+            }
+            continue;
+        }
+        diags.push(StyleDiagnostic::ParseError {
+            message: format!(
+                "only `.when(…)` / motion methods may follow `style({{…}})`; found `.{method}`"
+            ),
+            source: p.remainder(),
+        });
+        break;
+    }
+    base
+}
+
+/// Channel object `{ box: chain, paint: chain, text: chain }` → flatten box→paint→text.
+fn parse_channel_object(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
+    p.expect(Tok::LBrace, diags);
+    let mut box_ch = Style::Empty;
+    let mut paint_ch = Style::Empty;
+    let mut text_ch = Style::Empty;
+    let mut iters = 0usize;
+    while !p.at_end() && p.peek() != Some(&Tok::RBrace) {
+        iters += 1;
+        if iters > MAX_PARSE_ITERS {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "style channel object too many entries".into(),
+                source: p.remainder(),
+            });
+            break;
+        }
+        let before = p.pos;
+        let key = match p.bump() {
+            Some(Tok::Word(w)) => w,
+            _ => {
+                p.force_progress();
+                break;
+            }
+        };
+        p.expect(Tok::Colon, diags);
+        match key {
+            "box" => box_ch = parse_channel_chain(p, diags),
+            "paint" => paint_ch = parse_channel_chain(p, diags),
+            "text" => text_ch = parse_channel_chain(p, diags),
+            "animate" => {
+                diags.push(StyleDiagnostic::ParseError {
+                    message: "`animate` channel is Phase 2b — keep motion on the flat Style chain (`.enter` / `.exit` / …)".into(),
+                    source: "animate".into(),
+                });
+                // Skip a value so recovery can continue.
+                let _ = parse_channel_chain(p, diags);
+            }
+            other => {
+                diags.push(StyleDiagnostic::ParseError {
+                    message: format!(
+                        "unknown style channel `{other}` — expected `box`, `paint`, or `text`"
+                    ),
+                    source: other.to_string(),
+                });
+                let _ = parse_channel_chain(p, diags);
+            }
+        }
+        p.eat(&Tok::Comma);
+        if p.pos <= before {
+            p.force_progress();
+        }
+    }
+    p.expect(Tok::RBrace, diags);
+    Style::chain(vec![box_ch, paint_ch, text_ch])
+}
+
+/// Method chain without `style.` head: `pad(4).gap(2).w(full)`.
+fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
+    // Empty body (trailing comma / omitted value) — leave Empty.
+    if matches!(
+        p.peek(),
+        Some(Tok::Comma) | Some(Tok::RBrace) | Some(Tok::RParen) | None
+    ) {
+        return Style::Empty;
+    }
+    let mut ops = Vec::new();
+    let mut iters = 0usize;
+    let mut first = true;
+    loop {
+        iters += 1;
+        if iters > MAX_PARSE_ITERS {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "channel chain too many setters".into(),
+                source: p.remainder(),
+            });
+            break;
+        }
+        if !first && !p.eat(&Tok::Dot) {
+            break;
+        }
+        first = false;
+        let before = p.pos;
+        let method = match p.bump() {
+            Some(Tok::Word(w)) => w,
+            _ => {
+                diags.push(StyleDiagnostic::ParseError {
+                    message: "expected channel setter name".into(),
+                    source: p.remainder(),
+                });
+                break;
+            }
+        };
+        if method == "when" {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "`.when` belongs on the `style({…})` head, not inside a channel chain"
+                    .into(),
+                source: p.remainder(),
+            });
+            break;
+        }
+        if method == "box" {
+            let args = parse_paren_args(p, diags);
+            let arg_text = format_arg_text(&args);
+            diags.push(StyleDiagnostic::ParseError {
+                message: "`box(…)` as a setter was renamed to `boxSizing(…)` — use channel key `box:` for geometry"
+                    .into(),
+                source: format!("box({arg_text})"),
+            });
+            if p.pos == before {
+                p.force_progress();
+            }
+            continue;
+        }
+        let motion_object = if is_motion_chain_method(method) {
+            if p.peek() == Some(&Tok::LParen) {
+                let after_paren = p.tokens.get(p.pos + 1).map(|t| &t.tok);
+                after_paren == Some(&Tok::LBrace) || !matches!(method, "scroll" | "press")
+            } else {
+                true
+            }
+        } else {
+            false
+        };
+        if motion_object {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "motion methods are not channel-chain setters in Phase 2a — chain them after `style({…})` or use the flat Style chain"
+                    .into(),
+                source: method.to_string(),
+            });
+            let _ = parse_motion_call(p, method, diags);
+            continue;
+        }
+        let args = parse_paren_args(p, diags);
+        if p.pos == before {
+            p.force_progress();
+            continue;
+        }
+        let arg_text = format_arg_text(&args);
+        let source = format!("{method}({arg_text})");
+        push_paint_op(&mut ops, method, args, source, diags);
+    }
+    if ops.is_empty() {
+        Style::Empty
+    } else {
+        Style::chain(ops)
+    }
+}
+
+fn parse_paren_args(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Vec<PaintArg> {
+    p.expect(Tok::LParen, diags);
+    let mut args = Vec::new();
+    if p.peek() == Some(&Tok::RParen) {
+        args.push(PaintArg::Token(String::new()));
+    } else {
+        args.push(parse_paint_arg(p, diags));
+        while p.eat(&Tok::Comma) {
+            args.push(parse_paint_arg(p, diags));
+        }
+    }
+    p.expect(Tok::RParen, diags);
+    args
+}
+
+fn format_arg_text(args: &[PaintArg]) -> String {
+    args.iter()
+        .map(|a| match a {
+            PaintArg::Token(t) => t.clone(),
+            PaintArg::Bind(n) => format!("bind({n})"),
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+fn push_paint_op(
+    ops: &mut Vec<Style>,
+    method: &str,
+    args: Vec<PaintArg>,
+    source: String,
+    diags: &mut Vec<StyleDiagnostic>,
+) {
+    if find_setter(method).is_none() {
+        diags.push(StyleDiagnostic::UnknownSetter {
+            setter: method.to_string(),
+            source: source.clone(),
+            suggestion: closest_unique_setter(method).map(|s| s.to_string()),
+        });
+    } else {
+        let op = PaintOp {
+            setter: method.to_string(),
+            args: args.clone(),
+            source: source.clone(),
+        };
+        if let Err(d) = validate_op(&op) {
+            diags.push(d);
+        }
+    }
+    ops.push(Style::Set(PaintOp {
+        setter: method.to_string(),
+        args,
+        source,
+    }));
 }
 
 /// Parse `( {…} )` after a motion method name has already been consumed.
@@ -924,15 +1174,47 @@ fn parse_scrutinee(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Stri
 
 fn parse_when_call(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     p.bump(); // when
-    let entries = parse_when_map_body(p, diags);
+    let entries = parse_when_args(p, diags);
     Style::When { entries }
 }
 
-fn parse_when_map_body(
+/// Dual-accept when args:
+/// - map form: `({ hover: style.bg(x), … })`
+/// - cond form: `(hover, { paint: bg(x) })` or `(hover, style.bg(x))` or `(hover, bg(x))`
+fn parse_when_args(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Vec<(String, Style)> {
+    p.expect(Tok::LParen, diags);
+    if p.peek() == Some(&Tok::LBrace) {
+        let entries = parse_when_map_entries(p, diags);
+        p.expect(Tok::RParen, diags);
+        return entries;
+    }
+    let key = match p.bump() {
+        Some(Tok::Word(w)) => unquote(w).to_string(),
+        _ => {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "expected when condition key or `{…}` map".into(),
+                source: p.remainder(),
+            });
+            p.expect(Tok::RParen, diags);
+            return Vec::new();
+        }
+    };
+    if when_target(&key).is_none() {
+        diags.push(StyleDiagnostic::UnknownWhenKey {
+            key: key.clone(),
+            source: key.clone(),
+        });
+    }
+    p.expect(Tok::Comma, diags);
+    let body = parse_when_partial(p, diags);
+    p.expect(Tok::RParen, diags);
+    vec![(key, body)]
+}
+
+fn parse_when_map_entries(
     p: &mut Parser<'_>,
     diags: &mut Vec<StyleDiagnostic>,
 ) -> Vec<(String, Style)> {
-    p.expect(Tok::LParen, diags);
     p.expect(Tok::LBrace, diags);
     let mut entries = Vec::new();
     let mut iters = 0usize;
@@ -968,8 +1250,35 @@ fn parse_when_map_body(
         }
     }
     p.expect(Tok::RBrace, diags);
-    p.expect(Tok::RParen, diags);
     entries
+}
+
+/// Partial body of cond-form when: channel object, full Style expr, or bare chain.
+fn parse_when_partial(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
+    match p.peek() {
+        Some(Tok::LBrace) => parse_channel_object(p, diags),
+        Some(Tok::Word("style"))
+        | Some(Tok::Word("match"))
+        | Some(Tok::Word("when"))
+        | Some(Tok::Word("compound"))
+        | Some(Tok::LBrack) => parse_style_expr(p, diags),
+        Some(Tok::Word(_)) => {
+            let next = p.tokens.get(p.pos + 1).map(|t| &t.tok);
+            if next == Some(&Tok::LParen) {
+                parse_channel_chain(p, diags)
+            } else {
+                parse_style_expr(p, diags)
+            }
+        }
+        _ => {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "expected when partial (`{ box|paint|text: … }`, style expr, or chain)"
+                    .into(),
+                source: p.remainder(),
+            });
+            Style::Empty
+        }
+    }
 }
 
 /// Quoted literals arrive INSIDE the Word (the lexer keeps quotes so

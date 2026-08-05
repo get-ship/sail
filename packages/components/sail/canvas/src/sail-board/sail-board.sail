@@ -248,7 +248,7 @@ export default controller(({ value, layout }: Scope) => {
       data-node-id={n.id}
       use:rect={{top: n.rect.y, left: n.rect.x, width: n.rect.w, height: n.rect.h}}
       on:pointerdown={nodePointerDown}
-      sx={style.box(border).bg(card).fg(card-foreground).borderWidth(1).border(border).radius(md).pad(2).cursor(grab).select(none).outline(none).when({ focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2), selected: style.border(primary).outline(primary) })}
+      sx={style.boxSizing(border).bg(card).fg(card-foreground).borderWidth(1).border(border).radius(md).pad(2).cursor(grab).select(none).outline(none).when({ focus: style.outline(solid).outline(2).outline(ring).outlineOffset(2), selected: style.border(primary).outline(primary) })}
     >
       <slot name={n.id}></slot>
       <for {n.ports} as="p" key={p.id}>

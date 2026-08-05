@@ -979,7 +979,7 @@ pub fn setters() -> &'static [SetterSpec] {
             slots: &["align-self"],
         },
         SetterSpec {
-            name: "box",
+            name: "boxSizing",
             vocab: "box",
             scale: None,
             keywords: &["border", "content"],
