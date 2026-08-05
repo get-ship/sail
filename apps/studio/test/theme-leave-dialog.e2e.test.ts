@@ -64,9 +64,9 @@ async function resolveThemeOverviewUrl(page: import('playwright').Page): Promise
     await page.waitForTimeout(2000)
     const hasOverview = await page.evaluate(() => {
       return !!(
-        document.querySelector('[data-density-seg]') ||
-        document.querySelector('[data-theme-facet-chrome]') ||
-        document.querySelector('[data-panel="density"]')
+        document.querySelector('[density-seg]') ||
+        document.querySelector('[theme-facet-chrome]') ||
+        document.querySelector('[panel="density"]')
       )
     })
     if (hasOverview) return page.url()
@@ -75,7 +75,7 @@ async function resolveThemeOverviewUrl(page: import('playwright').Page): Promise
       const opened = await page.evaluate(() => {
         const link =
           (document.querySelector('a[href*="/themes/"]') as HTMLAnchorElement | null) ||
-          (document.querySelector('[data-theme-id]') as HTMLElement | null)
+          (document.querySelector('[theme-id]') as HTMLElement | null)
         if (link instanceof HTMLAnchorElement && link.href) {
           return link.href
         }
@@ -90,14 +90,14 @@ async function resolveThemeOverviewUrl(page: import('playwright').Page): Promise
         await page.waitForTimeout(2500)
         const ok = await page.evaluate(
           () =>
-            !!document.querySelector('[data-density-seg], [data-theme-facet-chrome]'),
+            !!document.querySelector('[density-seg], [theme-facet-chrome]'),
         )
         if (ok) return page.url()
       } else if (opened === 'clicked') {
         await page.waitForTimeout(2500)
         const ok = await page.evaluate(
           () =>
-            !!document.querySelector('[data-density-seg], [data-theme-facet-chrome]'),
+            !!document.querySelector('[density-seg], [theme-facet-chrome]'),
         )
         if (ok) return page.url()
       }
@@ -121,19 +121,19 @@ describe('theme leave dialog e2e (live studio)', () => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
     try {
       await resolveThemeOverviewUrl(page)
-      await page.waitForSelector('[data-theme-facet-chrome], [data-density-seg]', {
+      await page.waitForSelector('[theme-facet-chrome], [density-seg]', {
         timeout: 20_000,
       })
       await page.waitForTimeout(1500)
 
       // Ensure density controls exist
-      const densityCount = await page.locator('[data-density]').count()
+      const densityCount = await page.locator('[density]').count()
       expect(densityCount, 'overview density controls present').toBeGreaterThanOrEqual(2)
 
       // Make dirty: click a density option that is not currently pressed
       const dirtyed = await page.evaluate(() => {
         const btns = [
-          ...document.querySelectorAll('[data-density-seg] [data-density]'),
+          ...document.querySelectorAll('[density-seg] [density]'),
         ] as HTMLButtonElement[]
         const target =
           btns.find((b) => b.getAttribute('aria-pressed') !== 'true') || btns[0]
@@ -141,7 +141,7 @@ describe('theme leave dialog e2e (live studio)', () => {
         target.click()
         return {
           ok: true,
-          id: target.getAttribute('data-density'),
+          id: target.getAttribute('density'),
           label: (target.textContent || '').trim(),
         }
       })
@@ -150,9 +150,9 @@ describe('theme leave dialog e2e (live studio)', () => {
 
       // Confirm dirty if chip exists; still proceed to Back either way
       const dirtyHint = await page.evaluate(() => {
-        const chip = document.querySelector('[data-state-chip], [data-dirty]')
+        const chip = document.querySelector('[state-chip], [data-dirty]')
         const save = document.querySelector(
-          '[data-theme-facet-chrome] button',
+          '[theme-facet-chrome] button',
         ) as HTMLButtonElement | null
         return {
           chip: chip?.textContent?.trim() || '',
@@ -162,32 +162,32 @@ describe('theme leave dialog e2e (live studio)', () => {
       void dirtyHint
 
       // Click Back (Themes crumb)
-      await page.waitForSelector('[data-facet-back]', { timeout: 10_000 })
-      await page.click('[data-facet-back]')
+      await page.waitForSelector('[facet-back]', { timeout: 10_000 })
+      await page.click('[facet-back]')
       await page.waitForTimeout(800)
 
       // Dialog must appear
-      await page.waitForSelector('[data-theme-leave-dialog]', {
+      await page.waitForSelector('[theme-leave-dialog]', {
         state: 'visible',
         timeout: 10_000,
       })
 
       const modalState = await page.evaluate(() => {
         const d = document.querySelector(
-          '[data-theme-leave-dialog]',
+          '[theme-leave-dialog]',
         ) as HTMLDialogElement | null
         if (!d) return null
         const openAttr = d.hasAttribute('open') || d.open === true
         const isModal =
           typeof d.matches === 'function' ? d.matches(':modal') : false
         const text = (d.textContent || '').replace(/\s+/g, ' ').trim()
-        const hasCancel = !!d.querySelector('[data-leave-cancel]')
-        const hasDiscard = !!d.querySelector('[data-leave-discard]')
-        const hasSave = !!d.querySelector('[data-leave-save]')
+        const hasCancel = !!d.querySelector('[leave-cancel]')
+        const hasDiscard = !!d.querySelector('[leave-discard]')
+        const hasSave = !!d.querySelector('[leave-save]')
         const labels = [...d.querySelectorAll('button')].map((b) =>
           (b.textContent || '').trim(),
         )
-        const densityInside = [...d.querySelectorAll('[data-density]')].map((el) =>
+        const densityInside = [...d.querySelectorAll('[density]')].map((el) =>
           (el.textContent || '').trim(),
         )
         const rect = d.getBoundingClientRect()
@@ -197,10 +197,10 @@ describe('theme leave dialog e2e (live studio)', () => {
         const topIsDialog =
           !!topAtCenter &&
           (topAtCenter === d ||
-            !!topAtCenter.closest?.('[data-theme-leave-dialog]'))
+            !!topAtCenter.closest?.('[theme-leave-dialog]'))
 
         // Density controls should not be the hit target under dialog center
-        const densityHits = [...document.querySelectorAll('[data-density]')].map(
+        const densityHits = [...document.querySelectorAll('[density]')].map(
           (el) => {
             const r = el.getBoundingClientRect()
             const cx = r.left + r.width / 2
@@ -208,14 +208,14 @@ describe('theme leave dialog e2e (live studio)', () => {
             const hit = document.elementFromPoint(cx, cy)
             const blocked =
               !hit ||
-              !!hit.closest?.('[data-theme-leave-dialog]') ||
+              !!hit.closest?.('[theme-leave-dialog]') ||
               hit !== el
             return {
-              id: el.getAttribute('data-density'),
+              id: el.getAttribute('density'),
               label: (el.textContent || '').trim(),
               blocked,
               hitTag: hit?.tagName,
-              hitDialog: !!hit?.closest?.('[data-theme-leave-dialog]'),
+              hitDialog: !!hit?.closest?.('[theme-leave-dialog]'),
             }
           },
         )
@@ -256,7 +256,7 @@ describe('theme leave dialog e2e (live studio)', () => {
       const densityWords = /compact|comfortable|roomy/i
       expect(
         modalState!.densityInside.length,
-        'no [data-density] nodes inside dialog',
+        'no [density] nodes inside dialog',
       ).toBe(0)
       const primaryLabels = modalState!.labels.join(' | ')
       expect(primaryLabels).toMatch(/Cancel/i)

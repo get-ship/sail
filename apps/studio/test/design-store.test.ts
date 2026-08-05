@@ -148,7 +148,7 @@ describe('theme doc density + inheritance + diff', () => {
 describe('specimen source', () => {
   it('embeds density attribute for compact', () => {
     const src = specimenSource({ density: 'compact' })
-    expect(src).toContain('data-density="compact"')
+    expect(src).toContain('density="compact"')
     expect(src).toContain('Primary')
     expect(src).not.toMatch(/\.css/)
   })
@@ -299,8 +299,8 @@ describe('design surface source gates', () => {
       'utf8',
     )
     // Wave 1: always-on Used by band removed from facet chrome.
-    expect(chrome).not.toMatch(/data-used-by/)
-    expect(chrome).not.toMatch(/data-used-by-band/)
+    expect(chrome).not.toMatch(/used-by/)
+    expect(chrome).not.toMatch(/used-by-band/)
     expect(chrome).toMatch(/saveButtonLabel|Confirm save/)
     expect(session).toMatch(/usedByLabel/)
     expect(session).toMatch(/saveReviewOpen/)
@@ -309,11 +309,11 @@ describe('design surface source gates', () => {
     expect(actions).not.toMatch(/Review changes in Design/)
     expect(actions).not.toMatch(/use Design/)
     // No permanent inline Used by on color/shape either.
-    expect(color).not.toMatch(/data-used-by/)
-    expect(shape).not.toMatch(/data-used-by/)
-    expect(chrome).not.toMatch(/blast radius|data-blast-radius/i)
-    expect(color).not.toMatch(/blast radius|data-used-by-token/i)
-    expect(shape).not.toMatch(/blast radius|data-used-by-token/i)
+    expect(color).not.toMatch(/used-by/)
+    expect(shape).not.toMatch(/used-by/)
+    expect(chrome).not.toMatch(/blast radius|blast-radius/i)
+    expect(color).not.toMatch(/blast radius|used-by-token/i)
+    expect(shape).not.toMatch(/blast radius|used-by-token/i)
     const themesVm = readFileSync(
       join(REPO, 'apps/studio/src/themes-surface/themes-surface-vm.ts'),
       'utf8',
@@ -331,7 +331,7 @@ describe('design surface source gates', () => {
     expect(nav).not.toMatch(/value: 'peek'/)
     expect(chrome).not.toMatch(/data-facet-peek/)
     expect(chrome).not.toMatch(/data-facet-overflow/)
-    expect(chrome).toMatch(/data-theme-leave-dialog/)
+    expect(chrome).toMatch(/theme-leave-dialog/)
   })
 
   it('usage refresh ignores stale async settles (blastGen)', async () => {

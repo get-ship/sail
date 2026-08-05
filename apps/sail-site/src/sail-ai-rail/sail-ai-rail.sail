@@ -48,9 +48,6 @@ export default controller((ctx) => {
  const mobileBar = style.display(flex).gap(2).padX(3).padY(2).borderBWidth(1).borderB(border).bg(navbar).when({
  tablet: style.display(none),
  })
- const drawer = style.position(fixed).inset(0).z(popover).display(flex)
- const drawerPanel = style.display(flex).flexDir(column).w(56).maxW(full).h(full).padY(4).padX(3).bg(navbar).fg(navbar-foreground).overflowY(auto).overflowX(hidden).borderEWidth(1).border(border).shadow(lg)
- const backdrop = style.bg(foreground).opacity(40)
 </scope>
 
 <row nowrap align="stretch" w="full" grow min-w="0" gap="0" sx={shell}>
@@ -73,19 +70,25 @@ export default controller((ctx) => {
  </column>
 </row>
 
-<if {navOpen()}>
- <div sx={drawer} id="sail-ai-drawer" label="AI docs navigation">
- <div sx={drawerPanel}>
- <row align="center" justify="between" gap="2" sx={style.padB(3).borderBWidth(1).borderB(border).mb(2)}>
- <strong sx={style.fontSize(sm)}>AI docs</strong>
- <button type="button" variant="ghost" size="sm" on:click={closeNav}>Close</button>
- </row>
- <p sx={railLabel}>AI</p>
- <a href="/ai" sx={railLink} on:click={closeNav} current={path() === '/ai' ? 'page' : null}>Overview</a>
- <a href="/ai/authoring" sx={railLink} on:click={closeNav} current={path() === '/ai/authoring' ? 'page' : null}>Authoring</a>
- <a href="/ai/tooling" sx={railLink} on:click={closeNav} current={path() === '/ai/tooling' ? 'page' : null}>Tooling</a>
- <a href="/ai/eval" sx={railLink} on:click={closeNav} current={path() === '/ai/eval' ? 'page' : null}>Eval</a>
- </div>
- <div grow sx={backdrop} on:click={closeNav} hidden="true"></div>
- </div>
-</if>
+<dialog
+ id="sail-ai-drawer"
+ open={navOpen()}
+ side="start"
+ size="sm"
+ label="AI docs navigation"
+ on:sail-close={closeNav}
+>
+ <header>
+  <row align="center" justify="between" gap="2" w="full">
+   <strong sx={style.fontSize(sm)}>AI docs</strong>
+   <button type="button" variant="ghost" size="sm" on:click={closeNav}>Close</button>
+  </row>
+ </header>
+ <section>
+  <p sx={railLabel}>AI</p>
+  <a href="/ai" sx={railLink} on:click={closeNav} current={path() === '/ai' ? 'page' : null}>Overview</a>
+  <a href="/ai/authoring" sx={railLink} on:click={closeNav} current={path() === '/ai/authoring' ? 'page' : null}>Authoring</a>
+  <a href="/ai/tooling" sx={railLink} on:click={closeNav} current={path() === '/ai/tooling' ? 'page' : null}>Tooling</a>
+  <a href="/ai/eval" sx={railLink} on:click={closeNav} current={path() === '/ai/eval' ? 'page' : null}>Eval</a>
+ </section>
+</dialog>

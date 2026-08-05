@@ -206,7 +206,7 @@ export function createOverviewEdit(session: ThemeSession) {
   const onTypeSelect = (e: Event) => {
     if (!session.guardEdit()) return
     const t = e.target as HTMLSelectElement
-    const role = t.dataset.typeRole as 'display' | 'body' | 'mono' | undefined
+    const role = t.getAttribute('type-token') as 'display' | 'body' | 'mono' | null
     if (!role) return
     void setTypeRole(role, t.value).then(() => session.sync())
   }

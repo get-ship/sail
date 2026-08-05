@@ -15,7 +15,6 @@
 <row
   studio-list-row
   selected={selected() ? 'true' : 'false'}
-  selected={selected() ? 'true' : 'false'}
   gap="2"
   align="center"
   nowrap

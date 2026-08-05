@@ -135,12 +135,12 @@ describe('C1 doc tabs strip — mapping + chrome contract', () => {
     ).toEqual([{ id: FIX_A, label: 'sample.sail', dirty: false }])
   })
 
-  it('middle-click helpers: button 1 + tab id from data-tab-id', () => {
+  it('middle-click helpers: button 1 + tab id from tab-id', () => {
     expect(isMiddleButton({ button: 1 } as MouseEvent)).toBe(true)
     expect(isMiddleButton({ button: 0 } as MouseEvent)).toBe(false)
 
     const host = document.createElement('div')
-    host.setAttribute('data-tab-id', FIX_A)
+    host.setAttribute('tab-id', FIX_A)
     const child = document.createElement('button')
     host.appendChild(child)
     document.body.appendChild(host)
@@ -151,20 +151,19 @@ describe('C1 doc tabs strip — mapping + chrome contract', () => {
   it('edit-surface markup: scrollable tab list, h(8), close, middle-click, one accent', () => {
     const src = readFileSync(SURFACE, 'utf8')
     // Bounded strip + independent scroll for open files (not wrap)
-    expect(src).toMatch(/data-edit-tabs[\s\S]*h\(8\)/)
-    expect(src).toMatch(/data-edit-tab-list/)
+    expect(src).toMatch(/edit-tabs[\s\S]*h\(8\)/)
+    expect(src).toMatch(/edit-tab-list/)
     expect(src).toMatch(/overflowX\(auto\)/)
     expect(src).toMatch(/nowrap/)
-    expect(src).toMatch(/role="tablist"/)
-    expect(src).toMatch(/aria-label="Open documents"/)
+    expect(src).toMatch(/label="Open documents"/)
     // Per-tab: label path title, dirty, close, active accent via current/primary
-    expect(src).toMatch(/data-tab-id=\{tab\.id\}/)
-    expect(src).toMatch(/data-dirty-dot/)
-    expect(src).toMatch(/data-tab-close/)
+    expect(src).toMatch(/tab-id=\{tab\.id\}/)
+    expect(src).toMatch(/dirty-dot/)
+    expect(src).toMatch(/tab-close/)
     expect(src).toMatch(/when\(\{\s*current:[\s\S]*borderT\(primary\)/)
     expect(src).toMatch(/on:mousedown=\{onTabMiddle\}/)
     // Save/actions pinned outside the scroll list
-    expect(src).toMatch(/data-save-source/)
+    expect(src).toMatch(/save-source/)
     expect(src).toMatch(/absorption:\s*studio-tabs|absorption vote|studio-tabs/)
   })
 })

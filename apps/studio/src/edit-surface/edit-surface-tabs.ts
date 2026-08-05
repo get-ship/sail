@@ -82,7 +82,7 @@ export function resolveDocTabs(
 
 export function tabIdFromEvent(e: Event): string | null {
   const el = (e.target as Element | null)?.closest?.('[tab-id]') as HTMLElement | null
-  return el?.dataset.tabId ?? null
+  return el?.getAttribute('tab-id') ?? null
 }
 
 export function isMiddleButton(e: Event): boolean {

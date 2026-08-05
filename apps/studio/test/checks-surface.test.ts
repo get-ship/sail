@@ -411,8 +411,8 @@ describe('empty vs error (no client)', () => {
       join(REPO, 'apps/studio/src/checks-surface/checks-surface.sail'),
       'utf8',
     )
-    expect(surface).toMatch(/data-checks-error/)
-    expect(surface).toMatch(/data-retry-checks/)
+    expect(surface).toMatch(/checks-error/)
+    expect(surface).toMatch(/retry-checks/)
     expect(surface).toMatch(/Retry/)
     // Empty-state only when !hasChecksError
     expect(surface).toMatch(/hasChecksError/)
@@ -816,20 +816,20 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
       join(REPO, 'apps/studio/src/checks-surface/checks-surface-vm.ts'),
       'utf8',
     )
-    expect(surface).toMatch(/data-rule-group/)
-    expect(surface).toMatch(/data-findings-table/)
-    expect(surface).toMatch(/data-findings-table-host/)
-    expect(surface).toMatch(/data-filter-severity/)
+    expect(surface).toMatch(/rule-group/)
+    expect(surface).toMatch(/findings-table/)
+    expect(surface).toMatch(/findings-table-host/)
+    expect(surface).toMatch(/filter-severity/)
     expect(surface).toMatch(/Open in Edit|Open in editor/)
     expect(surface).toMatch(/Select element/)
-    expect(surface).toMatch(/data-finding-action="open-source"/)
-    expect(surface).toMatch(/data-finding-action="select-in-app"/)
+    expect(surface).toMatch(/finding-action="open-source"/)
+    expect(surface).toMatch(/finding-action="select-in-app"/)
     expect(surface).toMatch(/<sail-diff\b/)
-    expect(surface).toMatch(/data-autofix-mode/)
-    expect(surface).toMatch(/data-recheck/)
-    expect(surface).toMatch(/data-empty-checked/)
-    expect(surface).toMatch(/data-apply-rule/)
-    expect(surface).toMatch(/data-rule-info|showInfoBadge/)
+    expect(surface).toMatch(/autofix-mode/)
+    expect(surface).toMatch(/recheck/)
+    expect(surface).toMatch(/empty-checked/)
+    expect(surface).toMatch(/apply-rule/)
+    expect(surface).toMatch(/rule-info|showInfoBadge/)
     expect(surface).toMatch(/Here's what was checked|emptyChecked|Run checks/)
     expect(surface).toMatch(/showDiff|showSuggestDiff/)
     expect(vm).toMatch(/createTable/)
@@ -844,7 +844,7 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
   it('assignTableHost is a no-op pending prop:table bind (SAIL-LINT-CHAT)', async () => {
     const { assignTableHost } = await import('../src/checks/assign-table')
     const host = document.createElement('div')
-    host.setAttribute('data-findings-table-host', '')
+    host.setAttribute('findings-table-host', '')
     document.body.appendChild(host)
     const table = {
       rows: () => [],
@@ -853,7 +853,7 @@ describe('STUDIO-3: rule groups + autofix + re-check + empty', () => {
       setRowSelection: () => {},
     }
     // Ambient querySelector assign removed — must not throw; host stays unbound.
-    assignTableHost('[data-findings-table-host]', table)
+    assignTableHost('[findings-table-host]', table)
     expect(
       (host as HTMLElement & { table?: unknown }).table,
     ).toBeUndefined()

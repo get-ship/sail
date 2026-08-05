@@ -381,10 +381,10 @@ describe('chrome contracts (hygiene, not product proof)', () => {
       join(repo, 'apps/studio/src/theme-facet-chrome/theme-facet-chrome.sail'),
       'utf8',
     )
-    expect(chrome).toMatch(/data-theme-leave-dialog/)
-    expect(chrome).toMatch(/data-leave-save/)
-    expect(chrome).toMatch(/data-leave-discard/)
-    expect(chrome).toMatch(/data-leave-cancel/)
+    expect(chrome).toMatch(/theme-leave-dialog/)
+    expect(chrome).toMatch(/leave-save/)
+    expect(chrome).toMatch(/leave-discard/)
+    expect(chrome).toMatch(/leave-cancel/)
     // Modal isolation: bindOpen via open={leaveOpen()} — NOT static open (non-modal).
     expect(chrome).toMatch(/open=\{leaveOpen\(\)\}/)
     expect(chrome).not.toMatch(/<dialog[^>]*\sopen[\s>]/)

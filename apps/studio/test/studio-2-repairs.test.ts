@@ -59,7 +59,7 @@ describe('STUDIO-2 repairs + bar gates', () => {
     // Warm shadows (not cool hue 250)
     expect(theme).not.toMatch(/oklch\([^)]*\s250\s/)
     const shellVm = readFileSync(SHELL_VM, 'utf8')
-    expect(shellVm).toMatch(/data-theme',\s*'studio'|setThemeMode\('studio'/)
+    expect(shellVm).toMatch(/theme',\s*'studio'|setThemeMode\('studio'/)
     const cfg = readFileSync(join(REPO, 'apps/studio/sail.config.jsonc'), 'utf8')
     expect(cfg).toMatch(/"default"\s*:\s*"studio"/)
     for (const rel of [
@@ -87,8 +87,8 @@ describe('STUDIO-2 repairs + bar gates', () => {
       join(REPO, 'apps/studio/src/theme-color-specimen/theme-color-specimen.sail'),
       'utf8',
     )
-    expect(colorSpec).toMatch(/data-color-specimen|data-preview-specimen/)
-    expect(colorSpec).not.toMatch(/data-theme-preview=/)
+    expect(colorSpec).toMatch(/color-specimen|preview-specimen/)
+    expect(colorSpec).not.toMatch(/theme-preview=/)
   })
 
   it('B3: explorer sail-tree labels stay short (no size meta — stacked-text fix)', () => {
@@ -105,8 +105,8 @@ describe('STUDIO-2 repairs + bar gates', () => {
       join(REPO, 'apps/studio/src/theme-facet-chrome/theme-facet-chrome.sail'),
       'utf8',
     )
-    expect(chrome).not.toMatch(/data-used-by/)
-    expect(chrome).toMatch(/data-theme-facet-chrome/)
+    expect(chrome).not.toMatch(/used-by/)
+    expect(chrome).toMatch(/theme-facet-chrome/)
     expect(existsSync(join(REPO, 'apps/studio/src/design-surface'))).toBe(false)
     expect(existsSync(join(REPO, 'apps/studio/src/design-inspector'))).toBe(false)
   })

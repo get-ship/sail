@@ -63,7 +63,7 @@ describe('color picker e2e (live studio)', () => {
 
       const before = await page.evaluate(() => {
         const el = document.querySelector(
-          'sail-color-picker[data-role="primary"]',
+          'sail-color-picker[token="primary"]',
         ) as HTMLElement & { value?: string } | null
         return {
           value: el?.value || el?.getAttribute('value') || '',
@@ -80,8 +80,8 @@ describe('color picker e2e (live studio)', () => {
       const box = await page.evaluate(() => {
         const stack =
           document.querySelector(
-            '[data-brand-card][data-role="primary"] [data-role="primary"]',
-          ) || document.querySelector('[data-brand-card][data-role="primary"]')
+            '[brand-card][token="primary"] [token="primary"]',
+          ) || document.querySelector('[brand-card][token="primary"]')
         const r = stack!.getBoundingClientRect()
         return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
       })
@@ -89,7 +89,7 @@ describe('color picker e2e (live studio)', () => {
       await page.waitForTimeout(500)
 
       const open = await page.evaluate(() => {
-        const el = document.querySelector('sail-color-picker[data-role="primary"]')
+        const el = document.querySelector('sail-color-picker[token="primary"]')
         const panel = el?.querySelector('[data-color-panel]')
         return {
           panel: !!panel,
@@ -103,7 +103,7 @@ describe('color picker e2e (live studio)', () => {
 
       // Click a palette swatch that is not the current value.
       const picked = await page.evaluate((current) => {
-        const el = document.querySelector('sail-color-picker[data-role="primary"]')
+        const el = document.querySelector('sail-color-picker[token="primary"]')
         const panel = el?.querySelector('[data-color-panel]')
         const btns = [
           ...(panel?.querySelectorAll('button[data-hex]') ?? []),
@@ -123,10 +123,10 @@ describe('color picker e2e (live studio)', () => {
       // Commit may also come from slider path — accept either value change or dirty chrome.
       const after = await page.evaluate(() => {
         const el = document.querySelector(
-          'sail-color-picker[data-role="primary"]',
+          'sail-color-picker[token="primary"]',
         ) as HTMLElement & { value?: string } | null
         const meta = document
-          .querySelector('[data-brand-card][data-role="primary"]')
+          .querySelector('[brand-card][token="primary"]')
           ?.textContent?.match(/#[0-9a-fA-F]{6}/)?.[0]
         const body = document.body.innerText
         return {

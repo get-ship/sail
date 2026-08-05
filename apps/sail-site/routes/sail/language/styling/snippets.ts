@@ -10,8 +10,8 @@ export const code = {
   \`radius\` accepts scale tokens (none, sm, md, lg, xl, full, …); did you mean \`full\`?`,
 
   current: `<row gap="1" align="center" sx={style.pad(1).bg(surface-2).borderWidth(1).border(border).radius(full)}>
-  <a href="/docs" sx={style.padX(3).padY(1).radius(full).fontSize(sm).when({ current: style.bg(primary).fg(primary-foreground) })} aria-current={onDocs() ? 'page' : null}>Docs</a>
-  <a href="/blog" sx={style.padX(3).padY(1).radius(full).fontSize(sm).when({ current: style.bg(primary).fg(primary-foreground) })} aria-current={onDocs() ? null : 'page'}>Blog</a>
+  <a href="/docs" sx={style.padX(3).padY(1).radius(full).fontSize(sm).when({ current: style.bg(primary).fg(primary-foreground) })} current={onDocs() ? 'page' : null}>Docs</a>
+  <a href="/blog" sx={style.padX(3).padY(1).radius(full).fontSize(sm).when({ current: style.bg(primary).fg(primary-foreground) })} current={onDocs() ? null : 'page'}>Blog</a>
 </row>`,
 
   conditions: `<column gap="2" sx={style.pad(3).bg(surface-1).borderWidth(1).border(border).radius(lg).when({ tablet: style.pad(6) })}>

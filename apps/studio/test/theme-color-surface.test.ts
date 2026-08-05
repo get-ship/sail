@@ -178,14 +178,14 @@ describe('color facet event adapter (sail-change shape)', () => {
     expect(hexToOklchString(hex)).toMatch(/^oklch\(/)
   })
 
-  it('role resolution prefers data-role on host (brand card / token row)', () => {
+  it('token resolution prefers token on host (brand card / token row)', () => {
     const host = document.createElement('div')
-    host.setAttribute('data-role', 'primary')
+    host.setAttribute('token', 'primary')
     const picker = document.createElement('button')
     host.appendChild(picker)
     const role =
-      picker.closest?.('[data-role]')?.getAttribute('data-role') ||
-      host.getAttribute('data-role')
+      picker.closest?.('[token]')?.getAttribute('token') ||
+      host.getAttribute('token')
     expect(role).toBe('primary')
     expect(role! in COLOR_ROLES).toBe(true)
   })

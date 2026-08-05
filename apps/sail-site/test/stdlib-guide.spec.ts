@@ -37,8 +37,9 @@ test('errors chapter: rail entry renders, boundary fallback UI is present, retry
   await expect(page.getByRole('heading', { name: 'Errors', exact: true })).toBeVisible()
 
   // The docs rail renders the new Concepts entry and marks it current.
+  // Drawer dialog also mounts the same links (always-mounted L1 dialog).
   await expect(
-    page.locator('a[href="/sail/language/errors"][aria-current="page"]'),
+    page.locator('nav a[href="/sail/language/errors"][aria-current="page"]').first(),
   ).toBeVisible()
 
   // The live demo is in its healthy state.

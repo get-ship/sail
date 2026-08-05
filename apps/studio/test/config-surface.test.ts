@@ -30,13 +30,13 @@ describe('config-surface', () => {
       join(REPO, 'apps/studio/src/config-surface/config-surface.sail'),
       'utf8',
     )
-    expect(surface).toMatch(/data-config-surface/)
-    expect(surface).toMatch(/data-config-nav/)
-    expect(surface).toMatch(/data-config-cat=/)
+    expect(surface).toMatch(/config-surface/)
+    expect(surface).toMatch(/config-nav/)
+    expect(surface).toMatch(/config-cat=/)
     expect(surface).toMatch(/<button\b/)
     expect(surface).toMatch(/<table\b/)
     expect(surface).toMatch(/\bdense\b/)
-    expect(surface).toMatch(/data-config-fields/)
+    expect(surface).toMatch(/config-fields/)
     expect(surface).not.toMatch(/L1 table dense/)
     expect(surface).not.toMatch(/honest/)
     expect(surface).not.toMatch(/dogfood/)
@@ -91,11 +91,11 @@ describe('config-surface', () => {
     expect(c.fields().every((f) => f.source === 'disabled')).toBe(true)
   })
 
-  it('onCatClick reads data-config-cat', () => {
+  it('onCatClick reads config-cat', () => {
     const c = createConfigSurfaceCore()
     const target = {
       closest: (sel: string) =>
-        sel === '[data-config-cat]' ? { getAttribute: () => 'runtime' } : null,
+        sel === '[config-cat]' ? { getAttribute: () => 'runtime' } : null,
     }
     c.onCatClick({ target } as unknown as Event)
     expect(c.selected()).toBe('runtime')

@@ -44,11 +44,11 @@ export default controller(() => {
 
   states: `<!-- users.sail — the three states are explicit, never forgotten -->
 <while-loading {users}>
-  <p role="status">Loading…</p>
+  <spinner></spinner>
 </while-loading>
 
 <while-error {users} as="err">
-  <p role="alert">{err.message}</p>
+  <alert tone="destructive">{err.message}</alert>
 </while-error>
 
 <if {users().kind === 'ok'}>

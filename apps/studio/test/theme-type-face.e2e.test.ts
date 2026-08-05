@@ -74,9 +74,9 @@ async function resolveThemeOverviewUrl(page: import('playwright').Page): Promise
     await page.waitForTimeout(2000)
     const hasOverview = await page.evaluate(() => {
       return !!(
-        document.querySelector('[data-type-role="display"]') ||
-        document.querySelector('[data-preview-specimen]') ||
-        document.querySelector('[data-theme-overview-surface]')
+        document.querySelector('[type-token="display"]') ||
+        document.querySelector('[preview-specimen]') ||
+        document.querySelector('[theme-overview-surface]')
       )
     })
     if (hasOverview) return page.url()
@@ -84,7 +84,7 @@ async function resolveThemeOverviewUrl(page: import('playwright').Page): Promise
       const opened = await page.evaluate(() => {
         const link =
           (document.querySelector('a[href*="/themes/"]') as HTMLAnchorElement | null) ||
-          (document.querySelector('[data-theme-id]') as HTMLElement | null)
+          (document.querySelector('[theme-id]') as HTMLElement | null)
         if (link instanceof HTMLAnchorElement && link.href) return link.href
         if (link) {
           link.click()
@@ -99,7 +99,7 @@ async function resolveThemeOverviewUrl(page: import('playwright').Page): Promise
         await page.waitForTimeout(2500)
       }
       const ok = await page.evaluate(
-        () => !!document.querySelector('[data-type-role="display"], [data-preview-specimen]'),
+        () => !!document.querySelector('[type-token="display"], [preview-specimen]'),
       )
       if (ok) return page.url()
     }
@@ -127,8 +127,8 @@ describe('Job 1 type face e2e (live studio product tree)', () => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
     try {
       await resolveThemeOverviewUrl(page)
-      await page.waitForSelector('[data-type-role="display"]', { timeout: 20_000 })
-      await page.waitForSelector('[data-preview-specimen], [data-type-samples]', {
+      await page.waitForSelector('[type-token="display"]', { timeout: 20_000 })
+      await page.waitForSelector('[preview-specimen], [type-samples]', {
         timeout: 20_000,
       })
       await page.waitForTimeout(1500)
@@ -136,12 +136,12 @@ describe('Job 1 type face e2e (live studio product tree)', () => {
       // Baseline paint props before edit
       const before = await page.evaluate(() => {
         const host =
-          (document.querySelector('[data-preview-specimen]') as HTMLElement | null) ||
-          (document.querySelector('[data-overview-specimen]') as HTMLElement | null)
+          (document.querySelector('[preview-specimen]') as HTMLElement | null) ||
+          (document.querySelector('[overview-specimen]') as HTMLElement | null)
         const select = document.querySelector(
-          '[data-type-role="display"]',
+          '[type-token="display"]',
         ) as HTMLSelectElement | null
-        const samples = document.querySelector('[data-type-samples]')
+        const samples = document.querySelector('[type-samples]')
         const displayEl = samples?.querySelector('p') as HTMLElement | null
         const hostDisplay =
           host?.style.getPropertyValue('--display-font')?.trim() ||
@@ -182,7 +182,7 @@ describe('Job 1 type face e2e (live studio product tree)', () => {
 
       const setResult = await page.evaluate((family) => {
         const select = document.querySelector(
-          '[data-type-role="display"]',
+          '[type-token="display"]',
         ) as HTMLSelectElement | null
         if (!select) return { ok: false as const, reason: 'no select' }
         // Ensure option exists
@@ -206,9 +206,9 @@ describe('Job 1 type face e2e (live studio product tree)', () => {
       const after = await page.waitForFunction(
         (family) => {
           const host =
-            (document.querySelector('[data-preview-specimen]') as HTMLElement | null) ||
-            (document.querySelector('[data-overview-specimen]') as HTMLElement | null)
-          const samples = document.querySelector('[data-type-samples]')
+            (document.querySelector('[preview-specimen]') as HTMLElement | null) ||
+            (document.querySelector('[overview-specimen]') as HTMLElement | null)
+          const samples = document.querySelector('[type-samples]')
           const displayEl = samples?.querySelector('p') as HTMLElement | null
           const hostInline = host?.style.getPropertyValue('--display-font')?.trim() || ''
           const hostComputed = host
@@ -219,7 +219,7 @@ describe('Job 1 type face e2e (live studio product tree)', () => {
           const sampleStyle = displayEl?.style.fontFamily || ''
           const draftPaint = host?.getAttribute('data-draft-paint') ?? null
           const select = document.querySelector(
-            '[data-type-role="display"]',
+            '[type-token="display"]',
           ) as HTMLSelectElement | null
           const label = (displayEl?.textContent || '').trim()
           const needle = family.toLowerCase()
@@ -294,11 +294,11 @@ describe('Job 1 type face e2e (live studio product tree)', () => {
       // Hard cutover: draft host paint authority is theme= + applyScope
       const attrProof = await page.evaluate(() => {
         const host =
-          (document.querySelector('[data-preview-specimen]') as HTMLElement | null) ||
-          (document.querySelector('[data-overview-specimen]') as HTMLElement | null)
+          (document.querySelector('[preview-specimen]') as HTMLElement | null) ||
+          (document.querySelector('[overview-specimen]') as HTMLElement | null)
         return {
           theme: host?.getAttribute('theme') ?? null,
-          dataTheme: host?.getAttribute('data-theme') ?? null,
+          dataTheme: host?.getAttribute('theme') ?? null,
           dataThemePreview: host?.getAttribute('data-theme-preview') ?? null,
           draftPaint: host?.getAttribute('data-draft-paint') ?? null,
         }
@@ -307,7 +307,7 @@ describe('Job 1 type face e2e (live studio product tree)', () => {
         attrProof.theme,
         'draft host must carry theme= after applyScope',
       ).toBeTruthy()
-      expect(attrProof.dataTheme, 'draft host must not set data-theme').toBeNull()
+      expect(attrProof.dataTheme, 'draft host must not set theme').toBeNull()
       expect(
         attrProof.dataThemePreview,
         'draft host must not set data-theme-preview',

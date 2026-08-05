@@ -65,16 +65,16 @@ describe('theme home e2e (live studio)', () => {
       })
       expect(res && res.status() < 500, `themes status ${res?.status()}`).toBe(true)
 
-      await page.waitForSelector('[data-themes-surface]', { timeout: 20_000 })
+      await page.waitForSelector('[themes-surface]', { timeout: 20_000 })
       // Library list should appear (project and/or catalog groups).
       await page.waitForFunction(
         () => {
-          const surface = document.querySelector('[data-themes-surface]')
+          const surface = document.querySelector('[themes-surface]')
           if (!surface) return false
           return !!(
-            document.querySelector('[data-theme-row]') ||
-            document.querySelector('[data-themes-empty]') ||
-            document.querySelector('[data-themes-loading]')
+            document.querySelector('[theme-row]') ||
+            document.querySelector('[themes-empty]') ||
+            document.querySelector('[themes-loading]')
           )
         },
         { timeout: 20_000 },
@@ -84,16 +84,16 @@ describe('theme home e2e (live studio)', () => {
       const honesty = await page.evaluate(() => {
         const text = document.body?.innerText || ''
         const swatch = document.querySelector(
-          '[data-theme-swatches]',
+          '[theme-swatches]',
         ) as HTMLElement | null
         const previewHost = document.querySelector(
-          '[data-themes-preview] [data-preview-specimen], [data-color-story-grid], [data-type-story]',
+          '[themes-preview] [preview-specimen], [color-story-grid], [type-story]',
         ) as HTMLElement | null
         const themeHosts = document.querySelectorAll(
-          '[data-themes-surface] [theme]',
+          '[themes-surface] [theme]',
         )
         const loadBearingPreview = document.querySelectorAll(
-          '[data-themes-surface] [data-theme-preview]',
+          '[themes-surface] [data-theme-preview]',
         )
         const swatchTheme = swatch?.getAttribute('theme') || ''
         // Table paint: --primary should resolve from themes.css via [theme=id]
@@ -106,11 +106,11 @@ describe('theme home e2e (live studio)', () => {
           hasForkWord: /\bfork\b/i.test(text),
           hasEnableSwitch: !!document.querySelector('[data-theme-enable]'),
           hasDefaultStar: !!document.querySelector('[data-theme-default]'),
-          hasSurface: !!document.querySelector('[data-themes-surface]'),
+          hasSurface: !!document.querySelector('[themes-surface]'),
           projectRowCount: document.querySelectorAll(
-            '[data-theme-row][data-theme-scope="project"]',
+            '[theme-row][theme-scope="project"]',
           ).length,
-          catalogAddCount: document.querySelectorAll('[data-theme-add-project]').length,
+          catalogAddCount: document.querySelectorAll('[theme-add-project]').length,
           themeHostCount: themeHosts.length,
           loadBearingPreviewCount: loadBearingPreview.length,
           swatchTheme,
@@ -142,9 +142,9 @@ describe('theme home e2e (live studio)', () => {
       // Prefer project row → Open
       let opened = false
       if (honesty.projectRowCount > 0) {
-        await page.click('[data-theme-row][data-theme-scope="project"]')
+        await page.click('[theme-row][theme-scope="project"]')
         await page.waitForTimeout(400)
-        const openBtn = page.locator('[data-preview-open]').first()
+        const openBtn = page.locator('[preview-open]').first()
         await openBtn.waitFor({ state: 'visible', timeout: 10_000 })
         await openBtn.click()
         await page.waitForTimeout(2500)
@@ -156,17 +156,17 @@ describe('theme home e2e (live studio)', () => {
         const onFacet = await page.evaluate(
           () =>
             !!document.querySelector(
-              '[data-theme-facet-chrome], [data-theme-overview-surface], [data-density-seg], [data-preview-specimen]',
+              '[theme-facet-chrome], [theme-overview-surface], [density-seg], [preview-specimen]',
             ),
         )
         expect(onFacet, 'should land on theme detail / overview').toBe(true)
       } else {
         // Catalog-only fallback: select catalog, Open still navigates (view-only)
-        const cat = page.locator('[data-theme-row][data-theme-scope="catalog"]').first()
+        const cat = page.locator('[theme-row][theme-scope="catalog"]').first()
         if ((await cat.count()) > 0) {
           await cat.click()
           await page.waitForTimeout(400)
-          const openBtn = page.locator('[data-preview-open]').first()
+          const openBtn = page.locator('[preview-open]').first()
           await openBtn.waitFor({ state: 'visible', timeout: 10_000 })
           await openBtn.click()
           await page.waitForTimeout(2500)

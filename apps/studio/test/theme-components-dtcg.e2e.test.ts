@@ -51,8 +51,8 @@ async function studioUp(): Promise<boolean> {
 function extractVisibleText(page: import('playwright').Page): Promise<string> {
   return page.evaluate(() => {
     const root =
-      (document.querySelector('[data-theme-components-surface]') as HTMLElement | null) ||
-      (document.querySelector('[data-components-chrome]') as HTMLElement | null) ||
+      (document.querySelector('[theme-components-surface]') as HTMLElement | null) ||
+      (document.querySelector('[components-chrome]') as HTMLElement | null) ||
       document.body
     return (root.innerText || '').replace(/\s+/g, ' ').trim()
   })
@@ -86,7 +86,7 @@ describe('Job C components DTCG e2e (live studio)', () => {
         const ok = await page.evaluate(
           () =>
             !!document.querySelector(
-              '[data-theme-components-surface], [data-components-workbench], [data-components-rail]',
+              '[theme-components-surface], [components-workbench], [components-rail]',
             ),
         )
         if (ok) {
@@ -97,7 +97,7 @@ describe('Job C components DTCG e2e (live studio)', () => {
       expect(landed, 'Components facet surface must load').toBe(true)
 
       await page.waitForSelector(
-        '[data-components-rail], [data-l1-list], [data-components-inspector]',
+        '[components-rail], [l1-list], [components-inspector]',
         { timeout: 20_000 },
       )
       await page.waitForTimeout(800)
@@ -106,11 +106,11 @@ describe('Job C components DTCG e2e (live studio)', () => {
       const selected = await page.evaluate(() => {
         const alertRow =
           (document.querySelector('[data-l1="alert"]') as HTMLElement | null) ||
-          [...document.querySelectorAll('[data-l1-list] [data-l1], [data-components-rail] [data-l1]')].find(
+          [...document.querySelectorAll('[l1-list] [data-l1], [components-rail] [data-l1]')].find(
             (el) => /alert/i.test(el.textContent || ''),
           )
         if (!alertRow) return { clicked: false, reason: 'no alert row' }
-        if (alertRow.getAttribute('data-selected') !== 'true') {
+        if (alertRow.getAttribute('selected') !== 'true') {
           alertRow.click()
         }
         return { clicked: true, id: alertRow.getAttribute('data-l1') }
@@ -121,14 +121,14 @@ describe('Job C components DTCG e2e (live studio)', () => {
       // Inspector must show component.alert.* color rows, then wait for DTCG hex resolve
       // (themeDoc loads async; docEpoch re-renders knobs once openTheme completes).
       await page.waitForSelector(
-        '[data-token-path="component.alert.bg"], [data-component-knob-list] [data-token-path]',
+        '[token-path="component.alert.bg"], [component-knob-list] [token-path]',
         { timeout: 15_000 },
       )
 
       await page.waitForFunction(
         () => {
           const row = document.querySelector(
-            '[data-token-path="component.alert.bg"]',
+            '[token-path="component.alert.bg"]',
           ) as HTMLElement | null
           if (!row || row.tagName === 'SAIL-COLOR-PICKER') return false
           const texts = [...row.querySelectorAll('p')].map((p) => (p.textContent || '').trim())
@@ -154,9 +154,9 @@ describe('Job C components DTCG e2e (live studio)', () => {
             { hexLabel: string; hex: string; hasClear: boolean; path: string }
           > = {}
           for (const row of [
-            ...document.querySelectorAll('[data-token-path^="component.alert"]'),
+            ...document.querySelectorAll('[token-path^="component.alert"]'),
           ] as HTMLElement[]) {
-            const path = row.getAttribute('data-token-path') || ''
+            const path = row.getAttribute('token-path') || ''
             if (!path.startsWith('component.alert')) continue
             if (row.tagName === 'SAIL-COLOR-PICKER') continue
             if (byPath[path]) continue
@@ -174,10 +174,10 @@ describe('Job C components DTCG e2e (live studio)', () => {
             }
           }
           const inspector =
-            (document.querySelector('[data-components-inspector]') as HTMLElement | null) ||
-            (document.querySelector('[data-components-editor]') as HTMLElement | null)
+            (document.querySelector('[components-inspector]') as HTMLElement | null) ||
+            (document.querySelector('[components-editor]') as HTMLElement | null)
           const surface =
-            (document.querySelector('[data-theme-components-surface]') as HTMLElement | null) ||
+            (document.querySelector('[theme-components-surface]') as HTMLElement | null) ||
             document.body
           const visible = (surface.innerText || '').replace(/\s+/g, ' ')
           const inspectorText = (inspector?.innerText || '').replace(/\s+/g, ' ')
@@ -192,7 +192,7 @@ describe('Job C components DTCG e2e (live studio)', () => {
             inspectorHasL1Word: /\bL1\b/.test(inspectorText),
             varSnippets: (visible.match(/.{0,24}var\s*\(\s*--[^)]*\).{0,24}/gi) || []).slice(0, 5),
             l1Snippets: (visible.match(/.{0,24}\bL1\b.{0,24}/g) || []).slice(0, 5),
-            canEdit: !document.querySelector('[data-catalog-hint]'),
+            canEdit: !document.querySelector('[catalog-hint]'),
             inspectorText: inspectorText.slice(0, 800),
           }
         })
@@ -236,7 +236,7 @@ describe('Job C components DTCG e2e (live studio)', () => {
       if (baseline.alertBg!.hasClear) {
         await page.evaluate(() => {
           const row = document.querySelector(
-            '[data-token-path="component.alert.bg"]',
+            '[token-path="component.alert.bg"]',
           ) as HTMLElement | null
           const btn = [...(row?.querySelectorAll('button') ?? [])].find((b) =>
             /clear/i.test(b.textContent || ''),
@@ -248,7 +248,7 @@ describe('Job C components DTCG e2e (live studio)', () => {
 
       const beforePick = await page.evaluate(() => {
         const row = document.querySelector(
-          '[data-token-path="component.alert.bg"]',
+          '[token-path="component.alert.bg"]',
         ) as HTMLElement | null
         const picker = row?.querySelector(
           'sail-color-picker',
@@ -261,7 +261,7 @@ describe('Job C components DTCG e2e (live studio)', () => {
         return {
           hex: picker?.value || picker?.getAttribute('value') || '',
           hexLabel,
-          canEdit: !document.querySelector('[data-catalog-hint]'),
+          canEdit: !document.querySelector('[catalog-hint]'),
         }
       })
 
@@ -274,9 +274,9 @@ describe('Job C components DTCG e2e (live studio)', () => {
 
       // Open Bg color picker and pick a different palette swatch.
       const bgBox = await page.evaluate(() => {
-        const row = document.querySelector('[data-token-path="component.alert.bg"]')
+        const row = document.querySelector('[token-path="component.alert.bg"]')
         const chip =
-          row?.querySelector('[data-token-chip]') ||
+          row?.querySelector('[token-chip]') ||
           row?.querySelector('sail-color-picker') ||
           row?.querySelector('[data-color-trigger-btn]')
         const r = (chip as HTMLElement | null)?.getBoundingClientRect()
@@ -290,7 +290,7 @@ describe('Job C components DTCG e2e (live studio)', () => {
       const picked = await page.evaluate((current) => {
         const pickers = [
           ...document.querySelectorAll(
-            'sail-color-picker[data-token-path="component.alert.bg"]',
+            'sail-color-picker[token-path="component.alert.bg"]',
           ),
         ]
         const el =
@@ -326,7 +326,7 @@ describe('Job C components DTCG e2e (live studio)', () => {
       const afterPick = await page.waitForFunction(
         (pickedHex) => {
           const row = document.querySelector(
-            '[data-token-path="component.alert.bg"]',
+            '[token-path="component.alert.bg"]',
           ) as HTMLElement | null
           const picker = row?.querySelector(
             'sail-color-picker',
@@ -384,7 +384,7 @@ describe('Job C components DTCG e2e (live studio)', () => {
       // Clear restores Default · #hex
       await page.evaluate(() => {
         const row = document.querySelector(
-          '[data-token-path="component.alert.bg"]',
+          '[token-path="component.alert.bg"]',
         ) as HTMLElement | null
         const btn = [...(row?.querySelectorAll('button') ?? [])].find((b) =>
           /clear/i.test(b.textContent || ''),
@@ -396,7 +396,7 @@ describe('Job C components DTCG e2e (live studio)', () => {
       const afterClear = await page.waitForFunction(
         () => {
           const row = document.querySelector(
-            '[data-token-path="component.alert.bg"]',
+            '[token-path="component.alert.bg"]',
           ) as HTMLElement | null
           const picker = row?.querySelector(
             'sail-color-picker',

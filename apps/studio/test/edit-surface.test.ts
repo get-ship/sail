@@ -102,8 +102,8 @@ describe('live Source load from Model.source', () => {
     expect(doc!.source.text.length).toBeGreaterThan(100)
     expect(doc!.source.text).toContain('<controller>')
     // Chrome shell markers (activity rail + status); surfaces live on leaf routes
-    expect(doc!.source.text).toContain('data-sail-studio-shell')
-    expect(doc!.source.text).toContain('data-studio-rail')
+    expect(doc!.source.text).toContain('sail-studio-shell')
+    expect(doc!.source.text).toContain('studio-rail')
     // Matches disk (Model reads same file)
     expect(doc!.source.text).toBe(disk)
     expect(doc!.source.dirty).toBe(false)

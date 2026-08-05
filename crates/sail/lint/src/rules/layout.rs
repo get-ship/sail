@@ -944,6 +944,17 @@ pub fn is_passthrough_attr(name: &str) -> bool {
             // Framework theme IR (Job 5d / D10): host paint authority attr.
             // Matches tokens_generate `[theme=id]` + theme.applyScope writes.
             | "theme"
+            // Design-token identity (ARIA-1: former design `role=` misuse).
+            | "token"
+            // Semantic a11y props (ARIA-1) — compiler lowers to aria-*/role.
+            | "label"
+            | "description"
+            | "expanded"
+            | "pressed"
+            | "current"
+            | "level"
+            | "live"
+            | "invalid"
             // DOMDEC-1 bare (non-hyphen) former data-* host markers used on
             // layout keywords across studio surfaces — chrome / test hooks.
             | "surface"
@@ -957,6 +968,8 @@ pub fn is_passthrough_attr(name: &str) -> bool {
             | "attachments"
             | "active"
             | "l1"
+            | "testid"
+            | "preview"
             | "itemprop"
             | "itemscope"
             | "itemtype"
@@ -1467,6 +1480,9 @@ mod tests {
         assert!(is_passthrough_attr("on:click"));
         assert!(is_passthrough_attr("aria-label"));
         assert!(is_passthrough_attr("theme"), "framework theme IR pass-through");
+        assert!(is_passthrough_attr("token"), "design-token identity pass-through");
+        assert!(is_passthrough_attr("label"), "semantic a11y prop");
+        assert!(is_passthrough_attr("current"), "semantic a11y prop");
         assert!(is_passthrough_attr("surface"), "DOMDEC bare host marker");
         assert!(
             is_passthrough_attr("edit-surface"),

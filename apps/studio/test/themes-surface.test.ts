@@ -186,7 +186,7 @@ describe('themes home — honesty UI contracts (source)', () => {
     const vm = readFileSync(VM, 'utf8')
     // H-L1 / H-L2: no enable-switch theater
     expect(sail).not.toMatch(/data-theme-enable/)
-    expect(sail).toMatch(/data-theme-add-project/)
+    expect(sail).toMatch(/theme-add-project/)
     expect(sail).toMatch(/Add to project/)
     expect(vm).not.toMatch(/onEnableChange/)
     // H-L4 option A: no default star / Set default UI
@@ -201,7 +201,7 @@ describe('themes home — honesty UI contracts (source)', () => {
     // H-L6 never say fork in product UI
     expect(sail).not.toMatch(/\bfork\b/i)
     // Mode switch only (not enable) may remain for dual-mode preview
-    expect(sail).toMatch(/data-mode-switch/)
+    expect(sail).toMatch(/mode-switch/)
   })
 
   it('paints catalog/project hosts via theme= not theme (Job 5d)', () => {
@@ -209,7 +209,7 @@ describe('themes home — honesty UI contracts (source)', () => {
     expect(sail).toMatch(/theme=\{row\.previewId\}/)
     expect(sail).toMatch(/theme=\{previewPaintId\(\)\}/)
     // Load-bearing preview attr must not remain on home hosts
-    expect(sail).not.toMatch(/data-theme-preview=\{/)
+    expect(sail).not.toMatch(/theme-preview=\{/)
   })
 
   it('New theme uses confirmNewTheme, not Add-to-project copy', () => {

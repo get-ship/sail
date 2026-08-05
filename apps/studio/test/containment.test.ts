@@ -31,8 +31,8 @@ describe('studio style containment', () => {
       join(REPO, 'apps/studio/src/sail-studio-chrome/sail-studio-chrome.sail'),
       'utf8',
     )
-    expect(chrome).toMatch(/data-sail-studio-shell/)
-    expect(chrome).toMatch(/data-studio-rail/)
+    expect(chrome).toMatch(/sail-studio-shell/)
+    expect(chrome).toMatch(/studio-rail/)
   })
 
   it('runtime: host is outside #root and has shadow root', () => {

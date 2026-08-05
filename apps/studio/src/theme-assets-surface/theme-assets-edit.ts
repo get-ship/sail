@@ -168,7 +168,7 @@ export function createAssetsEdit(session: ThemeSession) {
   const onTypeSelect = (e: Event) => {
     if (!session.guardEdit()) return
     const t = e.target as HTMLSelectElement
-    const role = t.dataset.typeRole as 'display' | 'body' | 'mono' | undefined
+    const role = t.getAttribute('type-token') as 'display' | 'body' | 'mono' | null
     if (!role) return
     rememberFamily(t.value)
     void setTypeRole(role, t.value).then(() => session.sync())
@@ -311,11 +311,11 @@ export function createAssetsEdit(session: ThemeSession) {
   }
 
   const onFontUseRole = (e: Event) => {
-    const el = (e.target as Element | null)?.closest?.('[font-family][font-role]') as
+    const el = (e.target as Element | null)?.closest?.('[font-family][font-token]') as
       | HTMLElement
       | null
-    const family = el?.dataset.fontFamily
-    const role = el?.dataset.fontRole as 'display' | 'body' | 'mono' | undefined
+    const family = el?.getAttribute('font-family') ?? undefined
+    const role = el?.getAttribute('font-token') as 'display' | 'body' | 'mono' | null
     if (!family || !role) return
     void applyRole(family, role)
   }
@@ -323,8 +323,9 @@ export function createAssetsEdit(session: ThemeSession) {
   const onFontInstall = (e: Event) => {
     if (!session.guardEdit()) return
     const el = (e.target as Element | null)?.closest?.('[font-family]') as HTMLElement | null
-    const family = el?.dataset.fontFamily
-    const role = (el?.dataset.fontRole as 'display' | 'body' | 'mono' | undefined) || 'body'
+    const family = el?.getAttribute('font-family') ?? undefined
+    const role =
+      (el?.getAttribute('font-token') as 'display' | 'body' | 'mono' | null) || 'body'
     if (!family) return
     fontBusyFamily.set(family)
     void addFontFamily(family, role).then((r) => {
