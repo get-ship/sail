@@ -502,6 +502,44 @@ fn switch_host_track_paint_on_host_sx() {
             && src.contains("size(icon-size-sm)"),
         "switch Style host: track + before thumb + size/tone match + semantic tones"
     );
+    // boxSizing rename drift guard: class mint + live skin + committed
+    // element-skins.css must stay in lockstep. Phase 2a renamed style.box →
+    // boxSizing and left .sx-boxborder stale in the framework half until regen.
+    assert!(
+        src.contains("boxSizing(border)"),
+        "switch host must call boxSizing (not retired style.box)"
+    );
+    assert!(
+        out.structure_html.contains("boxSizingborder")
+            || out.skin_css.contains("sx-boxSizingborder"),
+        "boxSizing class mint must stamp: struct={}\nskin={}",
+        out.structure_html,
+        out.skin_css
+    );
+    assert!(
+        out.skin_css.contains("box-sizing:border-box")
+            || out.skin_css.contains("box-sizing: border-box"),
+        "box-sizing:border-box must emit in switch skin:\n{}",
+        out.skin_css
+    );
+    assert!(
+        !out.skin_css.contains("sx-boxborder") && !out.structure_html.contains("sx-boxborder"),
+        "retired sx-boxborder must not appear (regen skins after boxSizing rename)"
+    );
+    let skins_file = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../packages/sail/tokens/src/element-skins.css"
+    ));
+    assert!(
+        skins_file.contains(".sx-boxSizingborder{")
+            && (skins_file.contains("box-sizing:border-box")
+                || skins_file.contains("box-sizing: border-box")),
+        "element-skins.css stale for boxSizing — run: cargo run -p sail-compiler -- framework-css"
+    );
+    assert!(
+        !skins_file.contains(".sx-boxborder{"),
+        "element-skins.css still has retired .sx-boxborder — regenerate framework-css"
+    );
     assert!(
         out.structure_html.contains("appearancenone")
             || out.skin_css.contains("appearance:none")
