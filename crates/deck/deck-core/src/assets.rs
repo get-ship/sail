@@ -972,6 +972,7 @@ mod tests {
             inject_globals: globals,
             render: RenderMode::Csr,
             entry: None,
+            ops_project: None,
         }
     }
 
@@ -1073,6 +1074,7 @@ mod tests {
             inject_globals: globals,
             render: RenderMode::Csr,
             entry: None,
+            ops_project: None,
         };
         let resp = serve_scaffold(
             DaemonMode::Development,
@@ -1118,6 +1120,7 @@ mod tests {
             inject_globals: std::collections::BTreeMap::new(),
             render: RenderMode::Ssr,
             entry: None,
+            ops_project: None,
         };
         let resp = serve_scaffold(
             DaemonMode::Development,
@@ -1162,6 +1165,7 @@ mod tests {
             inject_globals: Default::default(),
             render: RenderMode::Csr,
             entry: None,
+            ops_project: None,
         };
         let resolution = crate::resolver::Resolution::new().with_root(&app);
         let resp = serve_scaffold(
@@ -1202,6 +1206,7 @@ mod tests {
             inject_globals: std::collections::BTreeMap::new(),
             render: RenderMode::Csr,
             entry: None,
+            ops_project: None,
         };
 
         let dev = serve_scaffold(
@@ -1256,6 +1261,7 @@ mod tests {
             inject_globals: std::collections::BTreeMap::new(),
             render: RenderMode::Csr,
             entry: None,
+            ops_project: None,
         };
         let resp = serve_scaffold(
             DaemonMode::Development,
@@ -1347,6 +1353,7 @@ mod tests {
             inject_globals: globals,
             render: RenderMode::Csr,
             entry: None,
+            ops_project: None,
         };
         let resp = serve_scaffold(
             DaemonMode::Development,

@@ -295,11 +295,12 @@ fn sail_workspace_root() -> Option<&'static Path> {
                 return None;
             }
         }
-        // Confirm it's sail's workspace: a `package.json` + `packages/` dir,
-        // AND it actually declares the carved `@ship/tokens` package. The
-        // tokens check is the cheap, specific guard that this is sail (not some
-        // other ancestor workspace) without a full discovery walk.
-        if d.join("package.json").exists() && d.join("packages/sail/tokens/package.json").exists() {
+        // Confirm it's sail's workspace without requiring the tokens package
+        // on disk (catalog is baked; external apps have no packages/sail).
+        // Runtime package is the stable framework marker under packages/sail.
+        if d.join("package.json").exists()
+            && d.join("packages/sail/runtime/package.json").exists()
+        {
             Some(d)
         } else {
             None

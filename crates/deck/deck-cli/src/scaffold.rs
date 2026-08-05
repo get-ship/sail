@@ -312,12 +312,12 @@ pub fn run_pack(name: String) -> Result<()> {
     Ok(())
 }
 
-/// C5: copy one Sail catalog theme into the project's `tokens/themes/` and
-/// seed a thin `sail.config.jsonc` theme section when the project has none.
+/// Copy one Sail catalog theme into the project's `themes/` and seed a thin
+/// `sail.config.jsonc` theme section when the project has none.
 ///
-/// Thin `enabled: [id]` documents the intended allowlist for a future per-app
-/// CSS path. Monorepo `sail dev` writes shared `@ship/tokens` with **full
-/// catalog + project theme merge** so scaffold cannot poison package CSS.
+/// Theme source is the **baked** catalog (no monorepo `packages/` walk). When
+/// a monorepo disk model is present under cwd, it is preferred so catalog
+/// development forks the live tree (`sail tokens --model` story).
 pub fn run_theme(project: PathBuf, theme_id: Option<String>) -> Result<()> {
     let cwd = std::env::current_dir().context("cwd")?;
     let project_dir = if project.is_absolute() {
@@ -328,8 +328,6 @@ pub fn run_theme(project: PathBuf, theme_id: Option<String>) -> Result<()> {
     if !project_dir.is_dir() {
         bail!("project dir does not exist: {}", project_dir.display());
     }
-    let repo_root = find_repo_root(&project_dir).or_else(|_| find_repo_root(&cwd))?;
-    let catalog = repo_root.join("packages/sail/tokens/model/themes");
     // Prefer --id; else existing sail.config theme.default; else ship (modes-in-file).
     let id = match theme_id {
         Some(id) => id,
@@ -338,9 +336,18 @@ pub fn run_theme(project: PathBuf, theme_id: Option<String>) -> Result<()> {
             .to_string(),
     };
     sail_compiler::tokens_generate::validate_theme_id(&id)?;
+
+    // Disk catalog when monorepo model is on disk (cwd or project ancestor via
+    // cargo root); otherwise `None` → baked catalog body.
+    let catalog_dir = find_repo_root(&project_dir)
+        .or_else(|_| find_repo_root(&cwd))
+        .ok()
+        .map(|root| root.join("packages/sail/tokens/model/themes"))
+        .filter(|p| p.is_dir());
+
     let dest = sail_compiler::tokens_generate::scaffold_default_project_theme(
         &project_dir,
-        &catalog,
+        catalog_dir.as_deref(),
         Some(&id),
     )?;
     println!(
@@ -366,10 +373,10 @@ pub fn run_theme(project: PathBuf, theme_id: Option<String>) -> Result<()> {
         .map_err(|e| anyhow!("ensure project store (.gitignore / .sail): {e}"))?;
     println!("[scaffold] ensured .gitignore + .sail/README.md");
     println!("[scaffold] next steps:");
-    println!("  1. Edit tokens/themes/{id}.json — project DTCG SSOT");
+    println!("  1. Edit themes/{id}.json — project DTCG SSOT");
     println!(
-        "  2. sail dev — dual generate: package full catalog + app-local \
-         .deck/themes/themes.css (thin enabled set); HMR swaps CSS"
+        "  2. sail dev — app-local .deck/themes/themes.css from baked catalog + \
+         project themes (monorepo also regenerates package delivery when present)"
     );
     Ok(())
 }

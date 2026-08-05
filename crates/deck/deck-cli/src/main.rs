@@ -1521,9 +1521,29 @@ fn is_structural_change(kind: &notify::EventKind) -> bool {
 /// dirs themselves so Create events from mid-session scaffold fire generate).
 fn is_project_theme_path(path: &Path) -> bool {
     let norm = format!("/{}", path.to_string_lossy().replace('\\', "/"));
-    norm.contains("/tokens/themes/")
+    // Never treat monorepo catalog model as project themes.
+    if norm.contains("/packages/sail/tokens/model/") {
+        return false;
+    }
+    // Legacy monorepo layout: <project>/tokens/themes/**
+    if norm.contains("/tokens/themes/")
         || norm.ends_with("/tokens/themes")
         || norm.ends_with("/tokens")
+    {
+        return true;
+    }
+    // Modern external layout: <project>/themes/** — require a project segment
+    // before /themes (not bare catalog model paths).
+    if let Some(i) = norm.rfind("/themes/") {
+        let before = &norm[..i];
+        // Reject packages/sail/tokens/model/themes (already gated above) and
+        // bare "/themes/" at root-ish paths without a project parent.
+        return !before.is_empty() && before != "/";
+    }
+    if let Some(stripped) = norm.strip_suffix("/themes") {
+        return !stripped.is_empty() && stripped != "/";
+    }
+    false
 }
 
 /// Project-root (or any) `sail.config.json` / `sail.config.jsonc` — theme
@@ -1543,6 +1563,10 @@ fn attach_project_theme_watches(w: &mut impl notify::Watcher, project_dir: &Path
     let tokens = project_dir.join("tokens");
     if tokens.is_dir() {
         let _ = w.watch(&tokens, notify::RecursiveMode::Recursive);
+    }
+    let themes = project_dir.join("themes");
+    if themes.is_dir() {
+        let _ = w.watch(&themes, notify::RecursiveMode::Recursive);
     }
     let mut n_cfg = 0usize;
     for name in ["sail.config.jsonc", "sail.config.json"] {
@@ -1566,17 +1590,19 @@ fn path_suggests_new_theme_watch(path: &Path, project_dir: &Path) -> bool {
     if is_project_sail_config_path(path) {
         return true;
     }
-    // tokens or tokens/themes directory only — not themes/<id>.json leaves.
+    // Theme tree roots only — not themes/<id>.json leaves.
     let norm = format!("/{}", path.to_string_lossy().replace('\\', "/"));
-    let is_tokens_root = norm.ends_with("/tokens") || norm.ends_with("/tokens/themes");
-    if !is_tokens_root {
+    let is_theme_root = norm.ends_with("/tokens")
+        || norm.ends_with("/tokens/themes")
+        || norm.ends_with("/themes");
+    if !is_theme_root {
         return false;
     }
     // Prefer paths under this project when we can resolve parents.
     let Some(parent) = path.parent() else {
         return false;
     };
-    // `…/tokens` → parent is project; `…/tokens/themes` → parent is tokens,
+    // `…/tokens` or `…/themes` → parent is project; `…/tokens/themes` →
     // grandparent is project.
     let project_candidate = if norm.ends_with("/tokens/themes") {
         parent.parent()
@@ -1631,61 +1657,56 @@ fn is_tokens_generated_delivery(path: &str) -> bool {
     norm.contains("/packages/sail/tokens/src/generated/")
 }
 
-/// Dual generate for `sail dev` paint path (T1 B1):
+/// Dev paint path tokens generate:
 ///
-/// 1. **Package** — full catalog + project merge → `packages/sail/tokens/src`
-///    (shared library; thin `theme.enabled` must not rewrite workspace CSS).
-/// 2. **App** — T0 effective set only → `<project>/.deck/themes/themes.css`
-///    (foreign dir survives SPA prune) so the bundler aliases
-///    `@ship/tokens/themes.css` to the filtered app sheet.
+/// 1. **App** (always) — baked catalog (or monorepo disk model) + project
+///    themes → `<project>/.deck/themes/themes.css` (bundler aliases
+///    `@ship/tokens/themes.css` here when present).
+/// 2. **Package** (monorepo only) — full catalog + project merge →
+///    `packages/sail/tokens/src`, gated by
+///    [`sail_compiler::tokens_generate::should_generate_package_delivery`]
+///    (opt out: `SAIL_TOKENS_PACKAGE_GENERATE=0`). External apps never write
+///    package delivery.
 ///
-/// Returns the **app** report when available (theme_count reflects emit set);
-/// falls back to package report fields for logging.
+/// Returns the **app** report (theme_count reflects emit set).
 fn run_tokens_generate(
     workspace_root: &Path,
     project_dir: &Path,
 ) -> Result<sail_compiler::tokens_generate::GenerateReport> {
-    let ctx = sail_ops::Ctx::for_dev(workspace_root, project_dir);
-    let model_dir = workspace_root.join("packages/sail/tokens/model");
-    let package_out = workspace_root.join("packages/sail/tokens/src");
-    let app_out = sail_compiler::tokens_generate::app_themes_out_dir(project_dir);
+    // Resolve model in-process (baked catalog when monorepo model is absent).
+    // Avoids RPC path confinement rejecting the temp baked-model directory.
+    let app_report =
+        sail_compiler::tokens_generate::generate_app_delivery(workspace_root, project_dir)
+            .map_err(|e| anyhow::anyhow!("tokens generate (app): {e:#}"))?;
 
-    // 1) Package (full catalog + project merge).
-    let package_args = serde_json::json!({
-        "mode": "package",
-        "workspace": workspace_root.display().to_string(),
-        "project": project_dir.display().to_string(),
-        "model": model_dir.display().to_string(),
-        "out": package_out.display().to_string(),
-    });
-    let package_v = sail_ops::call_rpc("SailTheme", "Generate", &package_args, &ctx)
-        .map_err(|e| anyhow::anyhow!("tokens generate (package): {e}"))?;
+    let package_out = workspace_root.join(sail_compiler::tokens_generate::MONOREPO_TOKENS_SRC_REL);
+    let mut tokens_css = PathBuf::new();
+    let mut unions_ts = PathBuf::new();
+    let mut token_count = app_report.token_count;
 
-    // 2) App-local filtered themes (B1).
-    let app_args = serde_json::json!({
-        "mode": "app",
-        "workspace": workspace_root.display().to_string(),
-        "project": project_dir.display().to_string(),
-        "model": model_dir.display().to_string(),
-        "out": app_out.display().to_string(),
-    });
-    let app_v = sail_ops::call_rpc("SailTheme", "Generate", &app_args, &ctx)
-        .map_err(|e| anyhow::anyhow!("tokens generate (app): {e}"))?;
+    if sail_compiler::tokens_generate::should_generate_package_delivery(workspace_root) {
+        let package_report = sail_compiler::tokens_generate::generate_package_delivery(
+            workspace_root,
+            Some(project_dir),
+        )
+        .map_err(|e| anyhow::anyhow!("tokens generate (package): {e:#}"))?;
+        tokens_css = package_report.tokens_css;
+        unions_ts = package_report.unions_ts;
+        if token_count == 0 {
+            token_count = package_report.token_count;
+        }
+    }
 
-    // Prefer app report for paint-path logging (emit set story).
     Ok(sail_compiler::tokens_generate::GenerateReport {
-        token_count: app_v["token_count"]
-            .as_u64()
-            .or_else(|| package_v["token_count"].as_u64())
-            .unwrap_or(0) as usize,
-        theme_count: app_v["theme_count"].as_u64().unwrap_or(0) as usize,
-        color_count: 0,
-        path_count: 0,
-        layers: Vec::new(),
-        tokens_css: PathBuf::from(package_v["tokens_css"].as_str().unwrap_or_default()),
-        themes_css: PathBuf::from(app_v["themes_css"].as_str().unwrap_or_default()),
+        token_count,
+        theme_count: app_report.theme_count,
+        color_count: app_report.color_count,
+        path_count: app_report.path_count,
+        layers: app_report.layers,
+        tokens_css,
+        themes_css: app_report.themes_css,
         registry_json: package_out.join("token-registry.json"),
-        unions_ts: PathBuf::from(package_v["unions_ts"].as_str().unwrap_or_default()),
+        unions_ts,
     })
 }
 
@@ -1721,6 +1742,8 @@ mod tests {
         assert!(is_project_theme_path(Path::new(
             "apps/sail-site/tokens/themes"
         )));
+        assert!(is_project_theme_path(Path::new("my-app/themes/ship.json")));
+        assert!(is_project_theme_path(Path::new("my-app/themes")));
         assert!(is_theme_source_path(Path::new(
             "apps/sail-site/sail.config.jsonc"
         )));
@@ -1743,9 +1766,17 @@ mod tests {
             Path::new("apps/demo/tokens/themes"),
             Path::new("apps/demo")
         ));
+        assert!(path_suggests_new_theme_watch(
+            Path::new("apps/demo/themes"),
+            Path::new("apps/demo")
+        ));
         // Leaf theme edits must not re-queue attach (#15).
         assert!(!path_suggests_new_theme_watch(
             Path::new("apps/demo/tokens/themes/ship.json"),
+            Path::new("apps/demo")
+        ));
+        assert!(!path_suggests_new_theme_watch(
+            Path::new("apps/demo/themes/ship.json"),
             Path::new("apps/demo")
         ));
         assert!(!path_suggests_new_theme_watch(

@@ -1,17 +1,24 @@
 //! DTCG model → `tokens.css` + `themes.css` + `token-registry.json` +
 //! `generated/unions.ts`.
 //!
-//! SSOT is `packages/sail/tokens/model/**` (Design Tokens Format groups + themes).
-//! Port of the former Node `generate.mjs` — pure Rust, no Node in the path.
+//! SSOT is the design-token catalog: baked into the binary at compile time
+//! (same idea as delivery CSS) and optionally overridden by an on-disk
+//! monorepo tree at `packages/sail/tokens/model/**` or `--model`.
 //!
 //! Invoke: `cargo run -p sail-compiler -- tokens`
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 use anyhow::{Context, Result, anyhow, bail};
 use serde_json::{Map, Value};
+
+/// Compile-time baked catalog (`packages/sail/tokens/model/**` at build).
+mod baked_tokens_model {
+    include!(concat!(env!("OUT_DIR"), "/baked_tokens_model.rs"));
+}
 
 const GENERATED_HEADER: &str = "\
 /*
@@ -179,8 +186,14 @@ pub struct GenerateReport {
     pub unions_ts: PathBuf,
 }
 
-/// Default project theme id scaffolded into `tokens/themes/` (modes-in-file).
+/// Default project theme id scaffolded into `<project>/themes/` (modes-in-file).
 pub const DEFAULT_PROJECT_THEME_ID: &str = "ship";
+
+/// Relative monorepo path to the on-disk DTCG model (catalog development).
+pub const MONOREPO_MODEL_REL: &str = "packages/sail/tokens/model";
+
+/// Relative monorepo path to package delivery output.
+pub const MONOREPO_TOKENS_SRC_REL: &str = "packages/sail/tokens/src";
 
 /// Catalog allowlist from `theme.enabled` in `sail.config` (T0).
 ///
@@ -258,7 +271,7 @@ impl ThemeConfig {
 /// Resolved emit-set membership for studio / tests / validation (T1).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct EffectiveThemeIds {
-    /// Stems of project `tokens/themes/*.json`.
+    /// Stems of project `themes/*.json` (and legacy `tokens/themes/*.json`).
     pub project: Vec<String>,
     /// Catalog ids that participate (allowlist ∩ existing catalog files).
     pub catalog: Vec<String>,
@@ -285,8 +298,9 @@ impl EffectiveThemeIds {
 ///   (`Some([])` when thin/omit — never silent full catalog).
 #[derive(Debug, Clone, Default)]
 pub struct GenerateOptions {
-    /// Project DTCG theme directories (`apps/<app>/tokens/themes`). Every
-    /// `*.json` here is always in the emit set; same `themeId` overrides catalog.
+    /// Project DTCG theme directories (`<project>/themes`, legacy
+    /// `tokens/themes`). Every `*.json` here is always in the emit set; same
+    /// `themeId` overrides catalog.
     pub project_theme_dirs: Vec<PathBuf>,
     /// When `Some`, only these **catalog** theme ids are emitted (project themes
     /// still always emit). When `None`, all catalog themes emit.
@@ -294,6 +308,192 @@ pub struct GenerateOptions {
     /// When true, write **only** `themes.css` (app B1 delivery). Skips tokens.css,
     /// registry, unions, themes-meta so app out dirs stay free of package litter.
     pub themes_only: bool,
+}
+
+// ── Baked catalog / model resolution ────────────────────────────────────────
+
+/// Materialize the compile-time catalog to a process-local cache directory.
+///
+/// Generate still reads a filesystem tree; baking avoids requiring
+/// `packages/sail/tokens/model` on disk for external apps.
+pub fn materialize_baked_model() -> Result<PathBuf> {
+    static DIR: OnceLock<Result<PathBuf, String>> = OnceLock::new();
+    let cached = DIR.get_or_init(|| materialize_baked_model_inner().map_err(|e| e.to_string()));
+    match cached {
+        Ok(p) => Ok(p.clone()),
+        Err(e) => bail!("baked tokens model: {e}"),
+    }
+}
+
+fn materialize_baked_model_inner() -> Result<PathBuf> {
+    let base = std::env::temp_dir().join(format!(
+        "sail-baked-tokens-model-{}",
+        baked_model_fingerprint()
+    ));
+    let marker = base.join(".complete");
+    if marker.is_file() && base.join("base.json").is_file() {
+        return Ok(base);
+    }
+    // Rebuild from scratch if incomplete/stale.
+    if base.exists() {
+        let _ = fs::remove_dir_all(&base);
+    }
+    for (rel, body) in baked_tokens_model::BAKED_MODEL_FILES {
+        let dest = base.join(rel);
+        if let Some(parent) = dest.parent() {
+            fs::create_dir_all(parent)
+                .with_context(|| format!("mkdir {}", parent.display()))?;
+        }
+        fs::write(&dest, body).with_context(|| format!("write {}", dest.display()))?;
+    }
+    fs::write(&marker, b"ok\n").with_context(|| format!("write {}", marker.display()))?;
+    Ok(base)
+}
+
+fn baked_model_fingerprint() -> u64 {
+    // Cheap content fingerprint so model edits at compile time land in a new dir.
+    use std::hash::{Hash, Hasher};
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    baked_tokens_model::BAKED_MODEL_FILES.len().hash(&mut h);
+    for (rel, body) in baked_tokens_model::BAKED_MODEL_FILES {
+        rel.hash(&mut h);
+        body.len().hash(&mut h);
+        // Sample ends so tiny edits still move the fingerprint.
+        body.bytes().next().hash(&mut h);
+        body.bytes().last().hash(&mut h);
+    }
+    h.finish()
+}
+
+/// Theme ids present in the baked catalog (sorted).
+pub fn baked_catalog_theme_ids() -> Vec<String> {
+    let mut ids: Vec<String> = baked_tokens_model::BAKED_MODEL_FILES
+        .iter()
+        .filter_map(|(rel, _)| {
+            let rel = rel.replace('\\', "/");
+            let rest = rel.strip_prefix("themes/")?;
+            if rest.contains('/') {
+                return None;
+            }
+            let stem = rest.strip_suffix(".json")?;
+            if stem.is_empty() || stem.starts_with('.') {
+                return None;
+            }
+            Some(stem.to_string())
+        })
+        .collect();
+    ids.sort();
+    ids
+}
+
+/// Raw JSON body for a baked catalog theme id, if present.
+pub fn baked_catalog_theme_json(theme_id: &str) -> Option<&'static str> {
+    let want = format!("themes/{theme_id}.json");
+    baked_tokens_model::BAKED_MODEL_FILES
+        .iter()
+        .find(|(rel, _)| *rel == want || rel.replace('\\', "/") == want)
+        .map(|(_, body)| *body)
+}
+
+/// Resolve the DTCG model directory for generate.
+///
+/// Precedence:
+/// 1. `model_override` when set (CLI `--model` / monorepo catalog development)
+/// 2. `<workspace>/packages/sail/tokens/model` when that tree exists on disk
+/// 3. Materialized baked catalog (external / no monorepo tree)
+pub fn resolve_model_dir(
+    workspace_root: Option<&Path>,
+    model_override: Option<&Path>,
+) -> Result<PathBuf> {
+    if let Some(m) = model_override {
+        if m.is_dir() {
+            return Ok(m.to_path_buf());
+        }
+        bail!("model directory not found: {}", m.display());
+    }
+    if let Some(ws) = workspace_root {
+        let disk = ws.join(MONOREPO_MODEL_REL);
+        if disk.is_dir() {
+            return Ok(disk);
+        }
+    }
+    materialize_baked_model()
+}
+
+/// True when `workspace_root` hosts the monorepo `@ship/tokens` package tree.
+pub fn monorepo_tokens_package_present(workspace_root: &Path) -> bool {
+    workspace_root
+        .join("packages/sail/tokens/package.json")
+        .is_file()
+        && workspace_root.join(MONOREPO_MODEL_REL).is_dir()
+}
+
+/// Whether dual `sail dev` should also write package delivery into
+/// `packages/sail/tokens/src`.
+///
+/// Package delivery is monorepo-only (catalog development). External apps never
+/// write it. Opt out in monorepo: `SAIL_TOKENS_PACKAGE_GENERATE=0`.
+pub fn should_generate_package_delivery(workspace_root: &Path) -> bool {
+    match std::env::var("SAIL_TOKENS_PACKAGE_GENERATE") {
+        Ok(v) if v == "0" || v.eq_ignore_ascii_case("false") => false,
+        Ok(v) if v == "1" || v.eq_ignore_ascii_case("true") => {
+            monorepo_tokens_package_present(workspace_root)
+        }
+        _ => monorepo_tokens_package_present(workspace_root),
+    }
+}
+
+/// Project theme directories: `<project>/themes` then legacy `tokens/themes`.
+///
+/// Only existing directories are returned. Modern external layout is `themes/`;
+/// in-tree apps still use `tokens/themes` until E4 flatten.
+pub fn project_theme_dirs(project_dir: &Path) -> Vec<PathBuf> {
+    let mut dirs = Vec::new();
+    let modern = project_dir.join("themes");
+    let legacy = project_dir.join("tokens").join("themes");
+    if modern.is_dir() {
+        dirs.push(modern);
+    }
+    if legacy.is_dir() {
+        dirs.push(legacy);
+    }
+    dirs
+}
+
+/// Prefer `<project>/themes` for new writes; fall back to legacy dir if that is
+/// where themes already live and `themes/` does not.
+pub fn project_themes_write_dir(project_dir: &Path) -> PathBuf {
+    let modern = project_dir.join("themes");
+    let legacy = project_dir.join("tokens").join("themes");
+    if modern.is_dir() {
+        return modern;
+    }
+    if legacy.is_dir() && !modern.exists() {
+        return legacy;
+    }
+    modern
+}
+
+/// Union of theme ids across all project theme dirs (sorted, unique).
+pub fn list_project_theme_ids(project_dir: &Path) -> Vec<String> {
+    let mut set = BTreeSet::new();
+    for dir in project_theme_dirs(project_dir) {
+        for id in list_theme_ids_in_dir(&dir) {
+            set.insert(id);
+        }
+    }
+    set.into_iter().collect()
+}
+
+/// Absolute path candidates for a project theme id (modern then legacy).
+fn project_theme_file_candidates(project_dir: &Path, theme_id: &str) -> [PathBuf; 2] {
+    [
+        project_dir.join("themes").join(format!("{theme_id}.json")),
+        project_dir
+            .join("tokens")
+            .join("themes")
+            .join(format!("{theme_id}.json")),
+    ]
 }
 
 /// Read DTCG under `model_dir` and write the three artifacts into `out_dir`.
@@ -1445,50 +1645,59 @@ fn strip_jsonc_comments(input: &str) -> String {
         .unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
 }
 
-/// Copy one Sail catalog theme into `project_dir/tokens/themes/<id>.json` (C5).
+/// Copy one Sail catalog theme into `<project>/themes/<id>.json`.
 ///
-/// Uses `theme_id` (default [`DEFAULT_PROJECT_THEME_ID`]) from
-/// `catalog_themes_dir`. Does not overwrite an existing project file.
-/// Returns the destination path.
+/// Uses `theme_id` (default [`DEFAULT_PROJECT_THEME_ID`]). When
+/// `catalog_themes_dir` is `None`, sources the baked catalog (no monorepo
+/// tree required). Does not overwrite an existing project file (modern or
+/// legacy path). Returns the destination path.
 pub fn scaffold_default_project_theme(
     project_dir: &Path,
-    catalog_themes_dir: &Path,
+    catalog_themes_dir: Option<&Path>,
     theme_id: Option<&str>,
 ) -> Result<PathBuf> {
     let id = theme_id
         .filter(|s| !s.is_empty())
         .unwrap_or(DEFAULT_PROJECT_THEME_ID);
     validate_theme_id(id)?;
-    if !catalog_themes_dir.is_dir() {
-        bail!(
-            "catalog themes dir not found: {}",
-            catalog_themes_dir.display()
-        );
+
+    // Already present under modern or legacy project themes — leave alone.
+    for existing in project_theme_file_candidates(project_dir, id) {
+        if existing.is_file() {
+            return Ok(existing);
+        }
     }
-    let src = catalog_themes_dir.join(format!("{id}.json"));
-    if !src.is_file() {
-        bail!(
-            "catalog theme not found: {} (need packages/sail/tokens/model/themes/{id}.json)",
-            src.display()
-        );
-    }
-    if !path_is_under(&src, catalog_themes_dir)? {
-        bail!("catalog theme path escapes catalog dir: {}", src.display());
-    }
-    let dest_dir = project_dir.join("tokens/themes");
+
+    let dest_dir = project_themes_write_dir(project_dir);
     fs::create_dir_all(&dest_dir).with_context(|| format!("mkdir {}", dest_dir.display()))?;
     let dest = dest_dir.join(format!("{id}.json"));
     if !path_is_under(&dest, &dest_dir)? {
-        bail!(
-            "project theme path escapes tokens/themes: {}",
-            dest.display()
-        );
+        bail!("project theme path escapes themes dir: {}", dest.display());
     }
-    if dest.is_file() {
+
+    if let Some(catalog_dir) = catalog_themes_dir {
+        if !catalog_dir.is_dir() {
+            bail!("catalog themes dir not found: {}", catalog_dir.display());
+        }
+        let src = catalog_dir.join(format!("{id}.json"));
+        if !src.is_file() {
+            bail!(
+                "catalog theme not found: {} (baked catalog or model/themes/{id}.json)",
+                src.display()
+            );
+        }
+        if !path_is_under(&src, catalog_dir)? {
+            bail!("catalog theme path escapes catalog dir: {}", src.display());
+        }
+        fs::copy(&src, &dest)
+            .with_context(|| format!("copy {} → {}", src.display(), dest.display()))?;
         return Ok(dest);
     }
-    fs::copy(&src, &dest)
-        .with_context(|| format!("copy {} → {}", src.display(), dest.display()))?;
+
+    let Some(body) = baked_catalog_theme_json(id) else {
+        bail!("catalog theme not found in baked catalog: {id}");
+    };
+    fs::write(&dest, body).with_context(|| format!("write {}", dest.display()))?;
     Ok(dest)
 }
 
@@ -1512,8 +1721,8 @@ pub fn scaffold_theme_config(project_dir: &Path, theme_id: &str) -> Result<Optio
          \x20\x20// `default` / `defaultMode` drive first paint (theme / data-mode).\n\
          \x20\x20// `enabled` is the catalog allowlist for app CSS emit:\n\
          \x20\x20//   omit → default theme ship; [] → no catalog; [\"id\"] → those; \"all\" → full.\n\
-         \x20\x20// Project themes under tokens/themes/ always emit. Package generate\n\
-         \x20\x20// (shared @ship/tokens) always emits full catalog + project overrides.\n\
+         \x20\x20// Project themes under themes/ always emit. Package generate\n\
+         \x20\x20// (shared @ship/tokens, monorepo only) emits full catalog + overrides.\n\
          \x20\x20\"theme\": {{\n\
          \x20\x20\x20\x20\"default\": \"{theme_id}\",\n\
          \x20\x20\x20\x20\"defaultMode\": \"light\",\n\
@@ -1572,16 +1781,26 @@ pub fn list_theme_ids_in_dir(dir: &Path) -> Vec<String> {
 /// Effective theme set for a project (T0/T1 algorithm).
 ///
 /// ```text
-/// project_ids = stems of project tokens/themes/*.json
+/// project_ids = stems of project themes/*.json (+ legacy tokens/themes)
 /// catalog_allow = all | list | default [ship] | explicit []
-/// effective_catalog = catalog_allow ∩ existing catalog files
+/// effective_catalog = catalog_allow ∩ catalog (disk model or baked)
 /// emit_set = project ∪ effective_catalog (project wins on id at emit)
 /// ```
+///
+/// `workspace_root` is optional: when the monorepo model tree is present it is
+/// preferred for live catalog edits; otherwise the baked catalog is used.
 pub fn effective_theme_ids(workspace_root: &Path, project_dir: &Path) -> Result<EffectiveThemeIds> {
+    effective_theme_ids_opt(Some(workspace_root), project_dir)
+}
+
+/// Like [`effective_theme_ids`] with optional workspace (external apps pass `None`).
+pub fn effective_theme_ids_opt(
+    workspace_root: Option<&Path>,
+    project_dir: &Path,
+) -> Result<EffectiveThemeIds> {
     let cfg = load_theme_config(project_dir)?;
-    let project = list_theme_ids_in_dir(&project_dir.join("tokens/themes"));
-    let catalog_dir = workspace_root.join("packages/sail/tokens/model/themes");
-    let catalog_all = list_theme_ids_in_dir(&catalog_dir);
+    let project = list_project_theme_ids(project_dir);
+    let catalog_all = catalog_theme_ids(workspace_root)?;
     let catalog = match &cfg.enabled {
         CatalogAllowlist::Default => catalog_all
             .into_iter()
@@ -1600,6 +1819,17 @@ pub fn effective_theme_ids(workspace_root: &Path, project_dir: &Path) -> Result<
     Ok(EffectiveThemeIds { project, catalog })
 }
 
+/// Catalog theme ids from disk model (when present) or the baked catalog.
+pub fn catalog_theme_ids(workspace_root: Option<&Path>) -> Result<Vec<String>> {
+    if let Some(ws) = workspace_root {
+        let disk = ws.join(MONOREPO_MODEL_REL).join("themes");
+        if disk.is_dir() {
+            return Ok(list_theme_ids_in_dir(&disk));
+        }
+    }
+    Ok(baked_catalog_theme_ids())
+}
+
 /// Config-loud validation: `default` ∈ effective set; `defaultMode` exists on
 /// the theme when the DTCG file is loadable.
 pub fn validate_theme_config(
@@ -1607,7 +1837,16 @@ pub fn validate_theme_config(
     project_dir: &Path,
     cfg: &ThemeConfig,
 ) -> Result<()> {
-    let effective = effective_theme_ids(workspace_root, project_dir)?;
+    validate_theme_config_opt(Some(workspace_root), project_dir, cfg)
+}
+
+/// Like [`validate_theme_config`] with optional workspace (baked catalog ok).
+pub fn validate_theme_config_opt(
+    workspace_root: Option<&Path>,
+    project_dir: &Path,
+    cfg: &ThemeConfig,
+) -> Result<()> {
+    let effective = effective_theme_ids_opt(workspace_root, project_dir)?;
     let all = effective.all_ids();
     if let Some(default) = cfg.default.as_deref().filter(|s| !s.is_empty()) {
         if !all.iter().any(|id| id == default) {
@@ -1643,30 +1882,50 @@ pub fn validate_theme_config(
 
 /// Mode keys for a theme id (project file wins, else catalog). Empty if unknown.
 fn load_theme_mode_names(
-    workspace_root: &Path,
+    workspace_root: Option<&Path>,
     project_dir: &Path,
     theme_id: &str,
 ) -> Result<Vec<String>> {
     validate_theme_id(theme_id)?;
-    let candidates = [
-        project_dir.join(format!("tokens/themes/{theme_id}.json")),
-        workspace_root.join(format!("packages/sail/tokens/model/themes/{theme_id}.json")),
-    ];
-    for path in candidates {
-        if !path.is_file() {
-            continue;
+    // Project files first (modern then legacy).
+    for path in project_theme_file_candidates(project_dir, theme_id) {
+        if let Some(modes) = read_theme_mode_keys(&path)? {
+            return Ok(modes);
         }
-        let text =
-            fs::read_to_string(&path).with_context(|| format!("read theme {}", path.display()))?;
-        let doc: Value = serde_json::from_str(&text)
-            .with_context(|| format!("parse theme JSON {}", path.display()))?;
-        if let Some(modes) = doc.get("modes").and_then(|m| m.as_object()) {
-            let mut keys: Vec<String> = modes.keys().cloned().collect();
-            keys.sort_by(|a, b| mode_rank(a).cmp(&mode_rank(b)).then_with(|| a.cmp(b)));
-            return Ok(keys);
+    }
+    // Disk catalog when monorepo model is present.
+    if let Some(ws) = workspace_root {
+        let catalog = ws
+            .join(MONOREPO_MODEL_REL)
+            .join("themes")
+            .join(format!("{theme_id}.json"));
+        if let Some(modes) = read_theme_mode_keys(&catalog)? {
+            return Ok(modes);
         }
-        // No modes object — nothing to validate against.
-        return Ok(Vec::new());
+    }
+    // Baked catalog body.
+    if let Some(body) = baked_catalog_theme_json(theme_id) {
+        return mode_keys_from_theme_json(body);
+    }
+    Ok(Vec::new())
+}
+
+fn read_theme_mode_keys(path: &Path) -> Result<Option<Vec<String>>> {
+    if !path.is_file() {
+        return Ok(None);
+    }
+    let text = fs::read_to_string(path).with_context(|| format!("read theme {}", path.display()))?;
+    mode_keys_from_theme_json(&text).map(Some)
+}
+
+fn mode_keys_from_theme_json(text: &str) -> Result<Vec<String>> {
+    let stripped = strip_jsonc_comments(text);
+    let doc: Value =
+        serde_json::from_str(&stripped).with_context(|| "parse theme JSON for mode keys")?;
+    if let Some(modes) = doc.get("modes").and_then(|m| m.as_object()) {
+        let mut keys: Vec<String> = modes.keys().cloned().collect();
+        keys.sort_by(|a, b| mode_rank(a).cmp(&mode_rank(b)).then_with(|| a.cmp(b)));
+        return Ok(keys);
     }
     Ok(Vec::new())
 }
@@ -1678,15 +1937,18 @@ fn load_theme_mode_names(
 ///
 /// Validates `default` / `defaultMode` against the effective set (config-loud).
 pub fn options_for_project(workspace_root: &Path, project_dir: &Path) -> Result<GenerateOptions> {
+    options_for_project_opt(Some(workspace_root), project_dir)
+}
+
+/// Like [`options_for_project`] with optional workspace (baked catalog).
+pub fn options_for_project_opt(
+    workspace_root: Option<&Path>,
+    project_dir: &Path,
+) -> Result<GenerateOptions> {
     let theme_cfg = load_theme_config(project_dir)?;
-    validate_theme_config(workspace_root, project_dir, &theme_cfg)?;
-    let mut project_theme_dirs = Vec::new();
-    let themes_dir = project_dir.join("tokens/themes");
-    if themes_dir.is_dir() {
-        project_theme_dirs.push(themes_dir);
-    }
+    validate_theme_config_opt(workspace_root, project_dir, &theme_cfg)?;
     Ok(GenerateOptions {
-        project_theme_dirs,
+        project_theme_dirs: project_theme_dirs(project_dir),
         enabled_catalog: theme_cfg.enabled_catalog_for_app(),
         themes_only: false,
     })
@@ -1710,24 +1972,34 @@ pub fn options_for_shared_package(
 
 /// Generate **app delivery** themes into `<project>/.deck/themes/` (T1 B1).
 ///
-/// Uses [`options_for_project`] (effective set only) and writes **only**
-/// `themes.css` (`themes_only`). Does **not** touch the shared package
-/// `packages/sail/tokens/src`. Survives SPA `publish_build` prune (foreign dir).
+/// Uses the baked catalog (or monorepo disk model when present) + project
+/// themes; writes **only** `themes.css`. Does **not** touch package delivery.
 pub fn generate_app_delivery(workspace_root: &Path, project_dir: &Path) -> Result<GenerateReport> {
-    let model_dir = workspace_root.join("packages/sail/tokens/model");
+    generate_app_delivery_opt(Some(workspace_root), project_dir)
+}
+
+/// Like [`generate_app_delivery`] with optional workspace (external apps).
+pub fn generate_app_delivery_opt(
+    workspace_root: Option<&Path>,
+    project_dir: &Path,
+) -> Result<GenerateReport> {
+    let model_dir = resolve_model_dir(workspace_root, None)?;
     let out_dir = app_themes_out_dir(project_dir);
-    let mut opts = options_for_project(workspace_root, project_dir)?;
+    let mut opts = options_for_project_opt(workspace_root, project_dir)?;
     opts.themes_only = true;
     generate_with_options(&model_dir, &out_dir, &opts)
 }
 
 /// Generate **package** delivery into `packages/sail/tokens/src` (full catalog).
+///
+/// Monorepo catalog development only — callers should gate with
+/// [`should_generate_package_delivery`] / [`monorepo_tokens_package_present`].
 pub fn generate_package_delivery(
     workspace_root: &Path,
     project_dir: Option<&Path>,
 ) -> Result<GenerateReport> {
-    let model_dir = workspace_root.join("packages/sail/tokens/model");
-    let out_dir = workspace_root.join("packages/sail/tokens/src");
+    let model_dir = resolve_model_dir(Some(workspace_root), None)?;
+    let out_dir = workspace_root.join(MONOREPO_TOKENS_SRC_REL);
     if let Some(project) = project_dir {
         let opts = options_for_shared_package(workspace_root, project)?;
         generate_with_options(&model_dir, &out_dir, &opts)
@@ -1737,11 +2009,10 @@ pub fn generate_package_delivery(
 }
 
 /// True when the project has theme SSOT that should drive a cold-start generate
-/// (`tokens/themes/*.json` or a project-root `sail.config` with a `theme` key).
+/// (`themes/*.json`, legacy `tokens/themes/*.json`, or sail.config `theme`).
 pub fn project_wants_theme_generate(project_dir: &Path) -> bool {
-    let themes = project_dir.join("tokens/themes");
-    if themes.is_dir() {
-        if let Ok(rd) = fs::read_dir(&themes) {
+    for dir in project_theme_dirs(project_dir) {
+        if let Ok(rd) = fs::read_dir(&dir) {
             let has_json = rd.filter_map(|e| e.ok()).any(|e| {
                 e.path()
                     .extension()
@@ -3182,12 +3453,18 @@ mod tests {
             &catalog.join("ship.json"),
             r#"{ "$extensions": { "ship": { "themeId": "ship", "defaultMode": "light" } }, "modes": { "light": {}, "dark": {} } }"#,
         );
-        let dest = scaffold_default_project_theme(&project, &catalog, None).unwrap();
+        let dest = scaffold_default_project_theme(&project, Some(&catalog), None).unwrap();
         assert!(dest.is_file());
         assert_eq!(dest.file_name().and_then(|n| n.to_str()), Some("ship.json"));
+        // Modern external layout: <project>/themes/<id>.json
+        assert!(
+            dest.ends_with("themes/ship.json") || dest.ends_with("themes\\ship.json"),
+            "dest={}",
+            dest.display()
+        );
         // Second call does not overwrite (even if source changes).
         write_file(&catalog.join("ship.json"), r#"{ "changed": true }"#);
-        let again = scaffold_default_project_theme(&project, &catalog, None).unwrap();
+        let again = scaffold_default_project_theme(&project, Some(&catalog), None).unwrap();
         assert_eq!(again, dest);
         let body = fs::read_to_string(&dest).unwrap();
         assert!(body.contains("ship"));
@@ -3208,7 +3485,57 @@ mod tests {
         // Existing config is left alone.
         assert!(scaffold_theme_config(&project, "paper").unwrap().is_none());
         // Bad id rejected.
-        assert!(scaffold_default_project_theme(&project, &catalog, Some("../x")).is_err());
+        assert!(scaffold_default_project_theme(&project, Some(&catalog), Some("../x")).is_err());
+    }
+
+    #[test]
+    fn scaffold_from_baked_catalog_without_disk_model() {
+        let dir = tempfile::tempdir().unwrap();
+        let project = dir.path().join("external-app");
+        let dest = scaffold_default_project_theme(&project, None, Some("ship")).unwrap();
+        assert!(dest.is_file());
+        assert!(dest.ends_with("themes/ship.json") || dest.ends_with("themes\\ship.json"));
+        let body = fs::read_to_string(&dest).unwrap();
+        assert!(body.contains("ship") || body.contains("themeId"), "{body}");
+        // Baked ids include known catalog stems.
+        let ids = baked_catalog_theme_ids();
+        assert!(ids.contains(&"ship".to_string()), "{ids:?}");
+        assert!(ids.contains(&"paper".to_string()), "{ids:?}");
+    }
+
+    /// No monorepo model under the project: baked catalog + project themes
+    /// still emit app delivery CSS.
+    #[test]
+    fn external_app_delivery_uses_baked_catalog() {
+        let dir = tempfile::tempdir().unwrap();
+        // Isolated "workspace" with no packages/sail/tokens tree.
+        let fake_ws = dir.path().join("not-a-monorepo");
+        let project = fake_ws.join("my-app");
+        fs::create_dir_all(&project).unwrap();
+        assert!(!fake_ws.join("packages/sail/tokens/model").exists());
+        scaffold_default_project_theme(&project, None, Some("ship")).unwrap();
+        write_file(
+            &project.join("sail.config.jsonc"),
+            r#"{ "theme": { "default": "ship", "defaultMode": "light", "enabled": ["ship"] } }"#,
+        );
+        let report = generate_app_delivery(&fake_ws, &project).unwrap();
+        assert_eq!(report.theme_count, 1);
+        assert!(report.themes_css.is_file());
+        let css = fs::read_to_string(&report.themes_css).unwrap();
+        assert!(
+            css.contains("theme='ship'") || css.contains("theme=\"ship\""),
+            "baked ship theme must paint: {css}"
+        );
+        assert!(
+            !css.contains("theme='synthwave'"),
+            "thin enabled must not emit full catalog"
+        );
+        // Package delivery must not run for non-monorepo workspaces.
+        assert!(!should_generate_package_delivery(&fake_ws));
+        // Effective ids from baked catalog alone.
+        let ids = effective_theme_ids_opt(None, &project).unwrap();
+        assert!(ids.catalog.contains(&"ship".to_string()), "{ids:?}");
+        assert!(ids.project.contains(&"ship".to_string()), "{ids:?}");
     }
 
     /// Monorepo-path proof: real catalog model + project theme leaf → CSS.
@@ -3232,7 +3559,7 @@ mod tests {
         // Scaffold default theme then override a primary leaf with a unique marker.
         let dest = scaffold_default_project_theme(
             &project,
-            &model.join("themes"),
+            Some(&model.join("themes")),
             Some(DEFAULT_PROJECT_THEME_ID),
         )
         .unwrap();

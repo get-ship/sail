@@ -128,30 +128,19 @@ pub fn inject_project_themes_meta(html: &str, project_root: &std::path::Path) ->
     inject_named_meta(&html, "sail-project-themes", &themes)
 }
 
-/// Walk ancestors for the monorepo root that owns `packages/sail/tokens/model`.
-fn workspace_root_for_themes(project_root: &std::path::Path) -> Option<std::path::PathBuf> {
-    let mut cur = project_root
-        .canonicalize()
-        .unwrap_or_else(|_| project_root.to_path_buf());
-    loop {
-        if cur.join("packages/sail/tokens/model/themes").is_dir() {
-            return Some(cur);
-        }
-        cur = cur.parent()?.to_path_buf();
-    }
-}
-
 /// Inject `<meta name="sail-effective-themes" content="id1,id2,…">` so the
 /// product theme picker lists only the T0 effective emit set (project themes ∪
 /// `theme.enabled` allowlist), matching `SailTheme/EffectiveIds`.
 ///
-/// When the workspace cannot be resolved or effective ids fail, HTML is
-/// unchanged (client falls back to full `THEMES` or ops fetch).
+/// Catalog membership comes from the **baked** DTCG model — no monorepo
+/// ancestor walk for `packages/sail/tokens`. Project themes are read from
+/// `<project>/themes` and legacy `<project>/tokens/themes`.
+///
+/// When effective ids fail, HTML is unchanged (client falls back to full
+/// `THEMES` or ops fetch).
 pub fn inject_effective_themes_meta(html: &str, project_root: &std::path::Path) -> String {
-    let Some(workspace) = workspace_root_for_themes(project_root) else {
-        return html.to_string();
-    };
-    let Ok(ids) = sail_compiler::tokens_generate::effective_theme_ids(&workspace, project_root)
+    let Ok(ids) =
+        sail_compiler::tokens_generate::effective_theme_ids_opt(None, project_root)
     else {
         return html.to_string();
     };
@@ -254,19 +243,11 @@ mod tests {
 
     #[test]
     fn inject_effective_themes_meta_stamps_allowlist() {
-        // Self-contained fixture: minimal catalog stems under packages/.../themes
-        // so the test always runs (no real monorepo / symlink / OS skip).
+        // Baked catalog supplies neutral/paper/… — no monorepo packages/ tree.
         let dir = tempfile::tempdir().unwrap();
-        let workspace = dir.path();
-        let catalog = workspace.join("packages/sail/tokens/model/themes");
-        std::fs::create_dir_all(&catalog).unwrap();
-        for id in ["neutral", "paper", "synthwave", "glass"] {
-            // list_theme_ids_in_dir only needs *.json stems; body unused.
-            std::fs::write(catalog.join(format!("{id}.json")), "{}\n").unwrap();
-        }
-        let app = workspace.join("apps").join("thin-app");
-        std::fs::create_dir_all(app.join("tokens/themes")).unwrap();
-        // Thin allowlist — only neutral + paper from catalog.
+        let app = dir.path().join("thin-app");
+        std::fs::create_dir_all(app.join("themes")).unwrap();
+        // Thin allowlist — only neutral + paper from baked catalog.
         std::fs::write(
             app.join("sail.config.jsonc"),
             r#"{ "theme": { "default": "neutral", "enabled": ["neutral", "paper"] } }"#,
@@ -294,11 +275,15 @@ mod tests {
     }
 
     #[test]
-    fn inject_effective_themes_meta_noop_without_workspace() {
+    fn inject_effective_themes_meta_uses_baked_default_without_workspace() {
+        // External empty app: no packages/, no project themes — default ship
+        // from baked catalog still stamps (dev paint path).
         let dir = tempfile::tempdir().unwrap();
         let html = "<head>\n<title>X</title>\n</head>";
         let out = inject_effective_themes_meta(html, dir.path());
-        assert!(!out.contains("sail-effective-themes"));
-        assert_eq!(out, html);
+        assert!(
+            out.contains("name=\"sail-effective-themes\" content=\"ship\""),
+            "expected default ship from baked catalog: {out}"
+        );
     }
 }

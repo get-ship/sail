@@ -345,15 +345,25 @@ fn gen_types(
 }
 
 /// DTCG model → tokens.css + themes.css + token-registry.json + generated/unions.ts.
+///
+/// `--model` is the monorepo catalog-development override; default prefers
+/// on-disk `packages/sail/tokens/model`, else the baked catalog.
 fn gen_tokens(model: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
-    let root = workspace_root()?;
-    let model_dir = match model {
-        Some(p) => p,
-        None => root.join("packages/sail/tokens/model"),
-    };
+    let root = workspace_root().ok();
+    let model_dir = sail_compiler::tokens_generate::resolve_model_dir(
+        root.as_deref(),
+        model.as_deref(),
+    )?;
     let out_dir = match out {
         Some(p) => p,
-        None => root.join("packages/sail/tokens/src"),
+        None => root
+            .as_ref()
+            .map(|r| r.join(sail_compiler::tokens_generate::MONOREPO_TOKENS_SRC_REL))
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "tokens --out required when workspace root is unknown (no monorepo checkout)"
+                )
+            })?,
     };
     let report = sail_compiler::tokens_generate::generate(&model_dir, &out_dir)?;
     println!(
