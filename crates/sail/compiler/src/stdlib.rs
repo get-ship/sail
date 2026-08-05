@@ -299,10 +299,10 @@ const INPUT_MAP: &[DescRule] = &[
 
 const SELECT_MAP: &[DescRule] = &[
     DescRule {
-        // Host self: end pad + chevron (UA arrow already cleared by sail-base appearance:none).
+        // Host self: chevron glyph only. End pad lives on Style base (`padE(8)`)
+        // so the size ladder can set `padS` without clobbering chevron room.
         sel: "",
         paint: DescPaint(&[
-            ("padding-inline-end", "var(--space-8)"),
             ("background-image", SELECT_CHEVRON),
             ("background-repeat", "no-repeat"),
             ("background-position", "right var(--space-3) center"),

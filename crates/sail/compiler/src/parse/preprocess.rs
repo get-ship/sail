@@ -699,6 +699,24 @@ fn freeform_axis_value_matches(head: &str, want: &str) -> bool {
         || rem.starts_with("tone")
 }
 
+/// Author already names a width channel on `<select>` — participation
+/// `w` / `min-w` / `max-w`, or Style `.w(` / `.minW(` / `.maxW(`.
+fn author_sets_select_width(attrs: &[(String, String)]) -> bool {
+    for (name, value) in attrs {
+        match name.as_str() {
+            "w" | "min-w" | "max-w" => return true,
+            "sx" => {
+                let v = value.trim_matches(['"', '\'']);
+                if v.contains(".w(") || v.contains(".minW(") || v.contains(".maxW(") {
+                    return true;
+                }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
 /// Whether a freeform host class is needed for the active attr set.
 ///
 /// Host Style lowers *every* `match` / `compound` arm into classes. Freeform
@@ -871,9 +889,17 @@ fn stamp_native_host(
         }
     }
 
+    // Select base ships `w(full)` for form columns; when the author already
+    // sets width (participation or Style), drop the default so fixed toolbar
+    // widths are not dual-classed with `sx-wfull`.
+    let drop_select_wfull = tag_name == "select" && author_sets_select_width(&attrs);
+
     let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
     let mut merged: Vec<&str> = Vec::new();
     for c in host_classes.split_whitespace() {
+        if drop_select_wfull && c == "sx-wfull" {
+            continue;
+        }
         if !bare_link && !freeform_class_active(c, &active) {
             continue;
         }
@@ -3020,6 +3046,51 @@ mod tests {
             !out.contains("font-family: var(--font-body)"),
             "the tag-keyed skin ships in element-skins.css: {out}"
         );
+    }
+
+    #[test]
+    fn select_stamps_pad_s_ladder_and_pad_e_chevron_room() {
+        let out = preprocess(
+            r#"<select size="sm"><option>All</option></select>"#,
+        )
+        .expect("preprocess");
+        assert!(out.contains("sail-select"), "host stamp: {out}");
+        assert!(out.contains("sx-padE8"), "chevron room on base: {out}");
+        assert!(
+            out.contains("sx-sizesm-padS25") || out.contains("padS25"),
+            "size ladder uses padS not padX: {out}"
+        );
+        assert!(
+            !out.contains("sx-sizesm-padX") && !out.contains("sx-padX3"),
+            "size/base must not set padX (clobbers end pad): {out}"
+        );
+        assert!(out.contains("sx-wfull"), "bare select keeps w(full): {out}");
+    }
+
+    #[test]
+    fn select_drops_default_wfull_when_author_sets_width_participation() {
+        let via_w = preprocess(r#"<select w="28" size="sm"><option>x</option></select>"#)
+            .expect("w attr");
+        assert!(via_w.contains("sx-w28") || via_w.contains("w28"), "author w: {via_w}");
+        assert!(
+            !via_w.contains("sx-wfull"),
+            "default w(full) dropped for participation w: {via_w}"
+        );
+
+        let via_min = preprocess(r#"<select min-w="ch-16" w="ch-20" size="sm"><option>x</option></select>"#)
+            .expect("min-w");
+        assert!(
+            !via_min.contains("sx-wfull"),
+            "default w(full) dropped for min-w/w: {via_min}"
+        );
+
+        let via_sx = preprocess(r#"<select size="sm" sx={style.w(24)}><option>x</option></select>"#)
+            .expect("sx w");
+        assert!(
+            !via_sx.contains("sx-wfull"),
+            "default w(full) dropped for Style w: {via_sx}"
+        );
+        assert!(via_sx.contains("sx-w24") || via_sx.contains("w24"), "author sx w: {via_sx}");
     }
 
     #[test]

@@ -5,7 +5,7 @@
 // Markup mirrors freeform host stamp: sail-select + Style field classes.
 
 const SEL =
-  'sail-select sx-displayblock sx-minHcontrolhmd sx-padY15 sx-padX3 sx-fontSizebase sx-fgforeground sx-bgbackground sx-borderWidth1 sx-borderborder sx-radiusmd sx-shadowxs sx-wfull sx-cursorpointer sx-hover-borderborderstrong sx-disabled-cursornotallowed sx-disabled-opacity50 sx-sizexs-minHcontrolh2xs sx-sizexs-padX2 sx-sizexs-fontSizexs sx-sizesm-minHcontrolhsm sx-sizesm-padX25 sx-sizesm-fontSizesm sx-sizemd-minHcontrolhmd sx-sizemd-padX3 sx-sizemd-fontSizebase sx-sizelg-minHcontrolhlg sx-sizelg-padX4 sx-sizelg-fontSizemd sx-invalidtrue-borderdestructive'
+  'sail-select sx-displayblock sx-minHcontrolhmd sx-padY15 sx-padS3 sx-padE8 sx-fontSizebase sx-fgforeground sx-bgbackground sx-borderWidth1 sx-borderborder sx-radiusmd sx-shadowxs sx-wfull sx-cursorpointer sx-hover-borderborderstrong sx-disabled-cursornotallowed sx-disabled-opacity50 sx-sizexs-minHcontrolh2xs sx-sizexs-padS2 sx-sizexs-fontSizexs sx-sizesm-minHcontrolhsm sx-sizesm-padS25 sx-sizesm-fontSizesm sx-sizemd-minHcontrolhmd sx-sizemd-padS3 sx-sizemd-fontSizebase sx-sizelg-minHcontrolhlg sx-sizelg-padS4 sx-sizelg-fontSizemd sx-invalidtrue-borderdestructive'
 
 const sel = (attrs = '') => {
   const m = attrs.match(/class="([^"]*)"/)
@@ -55,6 +55,13 @@ export default {
     const h = (s) => q(s).getBoundingClientRect().height
     const [sm, md, lg] = [h("select[size='sm']"), h("select[size='md']"), h("select[size='lg']")]
     if (!(sm < md && md < lg)) bad.push({ why: 'size-not-monotonic', sm, md, lg })
+    // Chevron room: padE(8) on base must survive every size step (not clobbered by padX).
+    const padE = (s) => parseFloat(cs(q(s), 'paddingInlineEnd')) || 0
+    for (const s of ["select[size='sm']", "select[size='md']", "select[size='lg']", 'select.l1-mark']) {
+      const pe = padE(s)
+      // --space-8 is 32px in the token sheet; allow minor UA rounding.
+      if (pe < 30) bad.push({ why: 'chevron-padE-clobbered', sel: s, padE: pe })
+    }
     // frozen-token guard
     const mark = (t) => cs(document.querySelector(`[theme='${t}'] .l1-mark`), 'backgroundColor')
     if (mark('ship') === mark('console')) bad.push({ why: 'frozen-token', light: mark('ship') })
