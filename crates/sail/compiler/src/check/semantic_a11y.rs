@@ -1,6 +1,4 @@
-//! SPEC-ARIA-1 — a11y IR checks.
-//!
-//! Icon-only buttons require a `label` semantic prop (compile Error).
+//! A11y IR checks: icon-only buttons require a `label` semantic prop.
 
 use crate::diagnostics::{CompileError, Span};
 use crate::ir::*;
@@ -53,6 +51,12 @@ fn walk_collect(instrs: &[Instr], out: &mut Vec<CompileError>) {
             }
             Instr::WhileLoading(w) => walk_collect(&w.body, out),
             Instr::WhileError(w) => walk_collect(&w.body, out),
+            Instr::When(w) => {
+                walk_collect(&w.body, out);
+                if let Some(body) = &w.else_body {
+                    walk_collect(body, out);
+                }
+            }
             _ => {}
         }
     }
@@ -108,6 +112,16 @@ fn check_instr(instr: &Instr) -> Result<(), CompileError> {
         Instr::WhileError(w) => {
             for c in &w.body {
                 check_instr(c)?;
+            }
+        }
+        Instr::When(w) => {
+            for c in &w.body {
+                check_instr(c)?;
+            }
+            if let Some(body) = &w.else_body {
+                for c in body {
+                    check_instr(c)?;
+                }
             }
         }
         Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => {}
