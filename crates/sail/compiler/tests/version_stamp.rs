@@ -6,7 +6,7 @@
 
 use sail_compiler::{CompileMode, CompileOpts, ComponentMeta, compile, compiler_version};
 
-const ROUTE_SRC: &str = r#"<ul><for as="row" index="_i" of={[{id: 1, label: "a"}]} key={row.id}><li>{row.label}</li></for></ul>
+const ROUTE_SRC: &str = r#"<ul><for {[{id: 1, label: "a"}]} as="row" index="_i" key={row.id}><li>{row.label}</li></for></ul>
 "#;
 
 const COMPONENT_SRC: &str = r#"<scope>

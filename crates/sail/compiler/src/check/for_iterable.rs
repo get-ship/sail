@@ -1,4 +1,4 @@
-//! Type-strengthening #5: `<for as="x" of={EXPR}>` iterable shape.
+//! Type-strengthening #5: `<for {EXPR} as="x">` iterable shape.
 //!
 //! `<for>` walks an iterable. Number, boolean, null, and undefined
 //! literals can never satisfy that contract; the runtime currently

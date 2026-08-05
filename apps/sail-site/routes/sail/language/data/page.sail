@@ -52,7 +52,7 @@ export default controller((_ctx: ControllerScope<Scope>) => {
         <while-loading {users}>
           <row gap="2" align="center"><spinner></spinner> <p sx={style.fontSize(sm).fg(muted-foreground)}>loading…</p></row>
         </while-loading>
-        <while-error {users} as="err">
+        <while-error {users}> as="err">
           <alert tone="destructive">{err.message}</alert>
         </while-error>
         <if {users().kind === 'ok'}>

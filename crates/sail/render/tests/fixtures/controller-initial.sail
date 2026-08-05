@@ -14,9 +14,9 @@ export default controller(() => {
 
 <column gap="3" sx={style.pad(4).bg(surface-0)}>
   <h1 sx={style.fontSize(xl).fg(foreground)}>{title()}</h1>
-  <if cond={items().length > 0}>
+  <if {items().length > 0}>
     <column gap="2">
-      <for as="item" of={items()} key={item.id}>
+      <for {items()} as="item" key={item.id}>
         <row gap="2" sx={style.pad(2).bg(surface-1).radius(sm)}>
           <span sx={style.fg(foreground)}>{item.label}</span>
         </row>

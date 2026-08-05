@@ -15,7 +15,7 @@ const tracked = (): string[] =>
 /** Top-level entries that are product. Anything else tracked = a conversation first. */
 const TOP_LEVEL_ALLOWLIST = new Set([
   '.cargo', '.deck', '.github', '.gitignore', '.lsp.json', '.npmrc',
-  'CHANGELOG.md', 'Cargo.lock', 'Cargo.toml', 'LICENSE', 'README.md',
+  'AGENTS.md', 'CHANGELOG.md', 'Cargo.lock', 'Cargo.toml', 'LICENSE', 'README.md',
   'apps', 'bun.lock', 'crates', 'package.json', 'packages',
   'rust-toolchain.toml', 'scripts', 'skills', 'tests', 'third_party',
   'vitest.config.ts', 'xtask',

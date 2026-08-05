@@ -1,8 +1,8 @@
 //! The template-directive vocabulary — one source of truth for every
 //! attribute-position directive the parser accepts (`on:`, `bind:`, `use:`,
 //! slots, `mutation`), every `on:` event name, every `on:`
-//! event modifier, every `bind:` target, and every retired directive with
-//! the thing to use instead. Public `fx:` is retired (Style motion methods).
+//! event modifier, every `bind:` target, and permanent foreign-idiom
+//! teaching (HTML/CSS/JS habits → sail way).
 //!
 //! A sibling of `block_manifest` / `action_manifest` / `runtime_ambient`:
 //! the closed vocabulary is data, not a hand-listed paragraph on the docs
@@ -27,8 +27,8 @@ pub struct DirectiveEntry {
 /// each prefix so `bind:value`, `on:click`, etc. parse as directives
 /// rather than as ordinary `attr_name` tokens. Keep this in sync with
 /// the *active* `DIRECTIVES` entries whose syntax starts with `<prefix>:`.
-/// Retired prefixes (e.g. `fx`) belong in [`RETIRED_DIRECTIVES`], not here —
-/// the drift test below enforces that.
+/// Unknown colon-prefixes fail with the generic unknown-vocabulary error
+/// that lists these; foreign HTML/CSS habits live in [`FOREIGN_IDIOMS`].
 pub const DIRECTIVE_PREFIXES: &[&str] = &["bind", "on", "use"];
 
 /// Element names that are directive-like in the grammar: the parser treats
@@ -815,7 +815,7 @@ pub struct BindTargetEntry {
 }
 
 /// Every `bind:` target. Anything else is a compile error that renders
-/// this list. (`bind:this` is retired — use a local `use:` action.)
+/// this list.
 pub const BIND_TARGETS: &[BindTargetEntry] = &[
     BindTargetEntry {
         target: "value",
@@ -827,53 +827,43 @@ pub const BIND_TARGETS: &[BindTargetEntry] = &[
     },
 ];
 
-/// One retired directive and its replacement. The parser rejects these
-/// with an error naming the replacement; this table is the docs' copy of
-/// the same redirect.
+/// One foreign-language habit and the sail way. Permanent teaching for
+/// authors reaching for HTML/CSS/JS idioms — not a tombstone for our own
+/// retired APIs (those are scrubbed out of existence).
 #[derive(Debug, Clone, Serialize)]
-pub struct RetiredEntry {
+pub struct ForeignIdiomEntry {
     pub syntax: &'static str,
     pub instead: &'static str,
 }
 
-/// Every directive the parser refuses by name, with what to use instead.
-pub const RETIRED_DIRECTIVES: &[RetiredEntry] = &[
-    RetiredEntry {
-        syntax: "prop:<name>",
-        instead: "write plain name={expr}; the compiler/runtime lowers field → property or attribute from contracts + value shape — no author attr/property split",
+/// Foreign idioms the parser and docs teach against. Own-API ghosts are not
+/// listed here — after a scrub they simply do not exist (generic
+/// unknown-vocabulary handles them).
+pub const FOREIGN_IDIOMS: &[ForeignIdiomEntry] = &[
+    ForeignIdiomEntry {
+        syntax: "class= / class:<name>",
+        instead: "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is semantic props, closed sx state prefixes, or layout — not a global CSS class toggle",
     },
-    RetiredEntry {
-        syntax: "attr:<name> / attr:{nameExpr}",
-        instead: "write plain name={expr}; dynamic field names are not an author directive — fixed-name fields only",
+    ForeignIdiomEntry {
+        syntax: "style= / style:<prop>",
+        instead: "runtime geometry is owned by named, typed actions (use:rect, use:pin, use:virtualRow, …) — sx reads the variables they write via (--name); paint is Style product sx={style.…}",
     },
-    RetiredEntry {
-        syntax: "class:<name>",
-        instead: "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is semantic props/closed sx state prefixes/layout — not a global CSS class toggle. Bare class= is also banned",
-    },
-    RetiredEntry {
-        syntax: "style:<prop>",
-        instead: "runtime geometry is owned by named, typed actions (use:rect, use:pin, use:virtualRow, …) — sx reads the variables they write via (--name)",
-    },
-    RetiredEntry {
+    ForeignIdiomEntry {
         syntax: "part=\"…\"",
-        instead: "style with sx on the element itself",
+        instead: "style with sx on the element itself — light DOM has no shadow parts",
     },
-    RetiredEntry {
-        syntax: "transition: / in: / out:",
-        instead: "style.enter / style.exit",
+    ForeignIdiomEntry {
+        syntax: "<div> / <span> for layout structure",
+        instead: "layout keywords <column>, <row>, <grid>, <stack>, <center>, … with participation attrs (grow, gap, align, …)",
     },
-    RetiredEntry {
-        syntax: "fx:<trigger>",
-        instead: "attach motion on Style: sx={style.… .enter({…}).exit({…})} (or .loop / .reveal / .scroll({…}))",
-    },
-    RetiredEntry {
-        syntax: "bind:this",
-        instead: "a local use: action that sets a signal on mount and clears it on destroy (const captureEl: Action = (node) => { el.set(node); return { destroy: () => el.set(null) } }; template: use:captureEl)",
+    ForeignIdiomEntry {
+        syntax: "document.querySelector / getElementById in a controller",
+        instead: "a local use: action that captures the node on mount (and clears on destroy), or closed-over state + on: handlers — controllers do not reach into the DOM by selector",
     },
 ];
 
-/// One value form the motion config grammar accepts (private `motion:` from
-/// Style `.enter`/`.exit`/…; public `fx:` is retired).
+/// One value form the motion config grammar accepts (compiler-private Style
+/// motion attach from `.enter` / `.exit` / …).
 #[derive(Debug, Clone, Serialize)]
 pub struct MotionValueForm {
     pub form: &'static str,
@@ -960,13 +950,10 @@ mod tests {
         assert_eq!(suggest_event("Click"), Some("click"));
     }
 
-    /// Active lexer prefixes must match live DIRECTIVES rows; fully-retired
-    /// prefixes must not reappear. This is the hole that let public `fx:` stay
-    /// in DIRECTIVE_PREFIXES after retirement (parser already refused it, but
-    /// the grammar/docs vocabulary still advertised the prefix).
+    /// Active lexer prefixes must match live DIRECTIVES rows; dead prefixes
+    /// must not reappear as active vocabulary.
     #[test]
-    fn directive_prefixes_match_active_directives_not_retired() {
-        // Every prefix has at least one active DIRECTIVES row that uses it.
+    fn directive_prefixes_match_active_directives() {
         for prefix in DIRECTIVE_PREFIXES {
             let needle = format!("{prefix}:");
             assert!(
@@ -974,7 +961,6 @@ mod tests {
                 "DIRECTIVE_PREFIXES has `{prefix}` but no DIRECTIVES row contains `{needle}`"
             );
         }
-        // Colon-prefixed rows in DIRECTIVES use a registered active prefix.
         for d in DIRECTIVES {
             let Some((raw_head, _)) = d.syntax.split_once(':') else {
                 continue;
@@ -990,35 +976,55 @@ mod tests {
                     d.syntax
                 );
             }
-            // Fully retired prefixes must never reappear as active rows.
             assert!(
-                !matches!(head.as_str(), "fx" | "prop" | "attr" | "class" | "style" | "transition" | "in" | "out"),
-                "DIRECTIVES still advertises retired prefix `{head}:` (`{}`) — move to RETIRED_DIRECTIVES",
+                !matches!(
+                    head.as_str(),
+                    "fx" | "prop" | "attr" | "class" | "style" | "transition" | "in" | "out" | "motion"
+                ),
+                "DIRECTIVES still advertises dead prefix `{head}:` (`{}`)",
                 d.syntax
             );
         }
-        // Fully-retired prefixes (whole family gone) must leave DIRECTIVE_PREFIXES.
-        // Note: `bind:` stays active for value/checked; only `bind:this` is retired.
-        const FULLY_RETIRED_PREFIXES: &[&str] = &["fx", "prop", "attr", "class", "style", "transition", "in", "out"];
-        for p in FULLY_RETIRED_PREFIXES {
+        const DEAD_PREFIXES: &[&str] = &[
+            "fx",
+            "prop",
+            "attr",
+            "class",
+            "style",
+            "transition",
+            "in",
+            "out",
+            "motion",
+        ];
+        for p in DEAD_PREFIXES {
             assert!(
                 !DIRECTIVE_PREFIXES.contains(p),
-                "fully-retired prefix `{p}` must not be in DIRECTIVE_PREFIXES"
+                "dead prefix `{p}` must not be in DIRECTIVE_PREFIXES"
             );
         }
-        assert!(!DIRECTIVE_PREFIXES.contains(&"fx"));
         assert!(!BIND_TARGETS.iter().any(|b| b.target == "this"));
         assert!(
-            RETIRED_DIRECTIVES.iter().any(|r| r.syntax.contains("fx:")),
-            "fx: must be listed in RETIRED_DIRECTIVES"
+            FOREIGN_IDIOMS
+                .iter()
+                .any(|r| r.syntax.contains("class=")),
+            "class= must be listed in FOREIGN_IDIOMS"
         );
         assert!(
-            RETIRED_DIRECTIVES
+            FOREIGN_IDIOMS
+                .iter()
+                .any(|r| r.syntax.contains("style=")),
+            "style= must be listed in FOREIGN_IDIOMS"
+        );
+        assert!(
+            !FOREIGN_IDIOMS.iter().any(|r| r.syntax.contains("fx:")),
+            "own-API ghosts must not live in FOREIGN_IDIOMS"
+        );
+        assert!(
+            !FOREIGN_IDIOMS
                 .iter()
                 .any(|r| r.syntax.contains("bind:this")),
-            "bind:this must be listed in RETIRED_DIRECTIVES"
+            "own-API ghosts must not live in FOREIGN_IDIOMS"
         );
-        // Active bind: docs must not still list `this`.
         let bind_row = DIRECTIVES
             .iter()
             .find(|d| d.syntax.contains("bind:"))

@@ -11,7 +11,7 @@ import {
   EVENT_NAMES,
   EVENT_MODIFIERS,
   BIND_TARGETS,
-  RETIRED_DIRECTIVES,
+  FOREIGN_IDIOMS,
   BLOCKS,
 } from '../../../../src/language-surface.gen'
 
@@ -33,7 +33,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   eventNames: () => EVENT_NAMES,
   modifierRows: () => MODIFIER_ROWS,
   bindTargets: () => BIND_TARGETS,
-  retired: () => RETIRED_DIRECTIVES,
+  foreignIdioms: () => FOREIGN_IDIOMS,
   blockRows: () => BLOCK_ROWS,
 }))
 </controller>
@@ -126,10 +126,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <column gap="3">
-    <h3>Retired</h3>
-    <p sx={style.maxW(breakpoint-tablet)}>Directives the parser refuses by name, with what to use instead.</p>
+    <h3>Foreign idioms</h3>
+    <p sx={style.maxW(breakpoint-tablet)}>
+      HTML/CSS/JS habits the parser teaches against, with the sail way.
+    </p>
     <grid cols="1" gap="2">
-      <for {retired()} as="r" key={r.syntax}>
+      <for {foreignIdioms()} as="r" key={r.syntax}>
         <card padding="sm" sx={style.minW(0)}>
           <column gap="1">
             <code sx={style.fg(destructive)}>{r.syntax}</code>

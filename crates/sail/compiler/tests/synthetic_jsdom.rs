@@ -138,7 +138,7 @@ describe('synthesized board — client mount + reactivity', () => {
     document.body.appendChild(container)
     const dispose = mount(container)
 
-    // <if cond={items().length > 0}> → true → the list renders both <for> rows.
+    // <if {items().length > 0}> → true → the list renders both <for> rows.
     // The canonical fixture authors <row>, which lowers to div.sail-row —
     // the old <ul>/<li> markup died with the corpus codemod.
     expect(container.querySelectorAll('.sail-row').length).toBe(2)

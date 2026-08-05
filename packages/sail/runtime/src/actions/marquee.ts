@@ -1,6 +1,6 @@
 // `use:marquee` — seamless infinite track scroll for L1 <ticker>.
 //
-// Stamps a fx:loop translate-x animation on the attached node (the
+// Stamps a style.loop translate-x animation on the attached node (the
 // track). Reads `duration` / `reverse` from the nearest ticker host
 // (`data-sail-host="ticker"`) so prop axes stay attribute-driven. Duration
 // map matches the retired PE (fast 16s / normal 24s / slow 32s). Reduced

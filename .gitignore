@@ -65,8 +65,8 @@ crates/deck/deck-core/assets/sail-custom-elements.json
 .ship/*.db-*
 
 # Generated agent config — never committed (mirror og Ship/ship).
+# AGENTS.md is product doctrine (retirement-is-a-scrub) and is tracked.
 CLAUDE.md
-AGENTS.md
 GEMINI.md
 .mcp.json
 .claude/

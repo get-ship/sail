@@ -6,7 +6,7 @@ export default controller((ctx) => ({
 </controller>
 
 <ul>
-  <for as="row" of={rows()} key={row.id}>
+  <for {rows()} as="row" key={row.id}>
     <li>{row.label.toUpperCase()}</li>
   </for>
 </ul>

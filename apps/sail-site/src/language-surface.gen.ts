@@ -8498,14 +8498,14 @@ export const BLOCKS: BlockDoc[] = [
       "<else-if {…}>",
       "<else>"
     ],
-    "summary": "conditional branches; brace-primary predicate (residual: cond={…}); any number of <else-if>, optional trailing <else> as direct children"
+    "summary": "conditional branches; brace-primary predicate; any number of <else-if>, optional trailing <else> as direct children"
   },
   {
     "open": "<for {…} as=\"item\" key={…}>",
     "clauses": [
       "<else>"
     ],
-    "summary": "iterate a list; brace-primary iterable (residual: of={…}); `as` item binding, `key` required for stable DOM; optional `index`; <else> when empty"
+    "summary": "iterate a list; brace-primary iterable; `as` item binding, `key` required for stable DOM; optional `index`; <else> when empty"
   },
   {
     "open": "<match {…}>",
@@ -8513,7 +8513,7 @@ export const BLOCKS: BlockDoc[] = [
       "<case {…}>",
       "<default>"
     ],
-    "summary": "pattern branches over a brace-primary discriminant (residual: on={…}); cases use brace-primary or of={…}; optional <default>"
+    "summary": "pattern branches over a brace-primary discriminant; cases use brace-primary; optional <default>"
   },
   {
     "open": "<when {token}>",
@@ -8525,12 +8525,12 @@ export const BLOCKS: BlockDoc[] = [
   {
     "open": "<while-loading {sig}>",
     "clauses": [],
-    "summary": "renders while an async query signal is pending; brace-primary signal name (residual: of=\"sig\")"
+    "summary": "renders while an async query signal is pending; brace-primary signal name"
   },
   {
     "open": "<while-error as=\"err\" {sig}>",
     "clauses": [],
-    "summary": "renders while an async query signal is rejected; `as` names the error binding; brace-primary or of= for the signal"
+    "summary": "renders while an async query signal is rejected; `as` names the error binding; brace-primary signal name"
   }
 ]
 export interface DirectiveDoc {
@@ -9223,43 +9223,31 @@ export const BIND_TARGETS: BindTargetDoc[] = [
   }
 ]
 
-export interface RetiredDoc {
+export interface ForeignIdiomDoc {
   syntax: string
   instead: string
 }
 
-export const RETIRED_DIRECTIVES: RetiredDoc[] = [
+export const FOREIGN_IDIOMS: ForeignIdiomDoc[] = [
   {
-    "syntax": "prop:<name>",
-    "instead": "write plain name={expr}; the compiler/runtime lowers field → property or attribute from contracts + value shape — no author attr/property split"
+    "syntax": "class= / class:<name>",
+    "instead": "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is semantic props, closed sx state prefixes, or layout — not a global CSS class toggle"
   },
   {
-    "syntax": "attr:<name> / attr:{nameExpr}",
-    "instead": "write plain name={expr}; dynamic field names are not an author directive — fixed-name fields only"
-  },
-  {
-    "syntax": "class:<name>",
-    "instead": "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is semantic props/closed sx state prefixes/layout — not a global CSS class toggle. Bare class= is also banned"
-  },
-  {
-    "syntax": "style:<prop>",
-    "instead": "runtime geometry is owned by named, typed actions (use:rect, use:pin, use:virtualRow, …) — sx reads the variables they write via (--name)"
+    "syntax": "style= / style:<prop>",
+    "instead": "runtime geometry is owned by named, typed actions (use:rect, use:pin, use:virtualRow, …) — sx reads the variables they write via (--name); paint is Style product sx={style.…}"
   },
   {
     "syntax": "part=\"…\"",
-    "instead": "style with sx on the element itself"
+    "instead": "style with sx on the element itself — light DOM has no shadow parts"
   },
   {
-    "syntax": "transition: / in: / out:",
-    "instead": "style.enter / style.exit"
+    "syntax": "<div> / <span> for layout structure",
+    "instead": "layout keywords <column>, <row>, <grid>, <stack>, <center>, … with participation attrs (grow, gap, align, …)"
   },
   {
-    "syntax": "fx:<trigger>",
-    "instead": "attach motion on Style: sx={style.… .enter({…}).exit({…})} (or .loop / .reveal / .scroll({…}))"
-  },
-  {
-    "syntax": "bind:this",
-    "instead": "a local use: action that sets a signal on mount and clears it on destroy (const captureEl: Action = (node) => { el.set(node); return { destroy: () => el.set(null) } }; template: use:captureEl)"
+    "syntax": "document.querySelector / getElementById in a controller",
+    "instead": "a local use: action that captures the node on mount (and clears on destroy), or closed-over state + on: handlers — controllers do not reach into the DOM by selector"
   }
 ]
 

@@ -20,7 +20,7 @@ pub struct GrammarVocabulary {
     pub events: Vec<&'static str>,
     pub modifiers: &'static [crate::directive_manifest::ModifierEntry],
     pub bind_targets: &'static [crate::directive_manifest::BindTargetEntry],
-    pub retired_directives: &'static [crate::directive_manifest::RetiredEntry],
+    pub foreign_idioms: &'static [crate::directive_manifest::ForeignIdiomEntry],
     pub motion_value_forms: &'static [crate::directive_manifest::MotionValueForm],
 }
 
@@ -39,7 +39,7 @@ pub fn to_json() -> serde_json::Value {
             .collect(),
         modifiers: crate::directive_manifest::EVENT_MODIFIERS,
         bind_targets: crate::directive_manifest::BIND_TARGETS,
-        retired_directives: crate::directive_manifest::RETIRED_DIRECTIVES,
+        foreign_idioms: crate::directive_manifest::FOREIGN_IDIOMS,
         motion_value_forms: crate::directive_manifest::MOTION_VALUE_FORMS,
     })
     .expect("grammar vocabulary is serializable")

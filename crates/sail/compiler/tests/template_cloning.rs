@@ -125,7 +125,7 @@ fn adjacent_text_falls_back_rather_than_emitting_wrong_navigation() {
 #[test]
 fn control_flow_is_not_templated_but_its_siblings_still_are() {
     let out =
-        js(r#"<div><p data-test="a">static</p><ul><if cond={ok()}><li>x</li></if></ul></div>"#);
+        js(r#"<div><p data-test="a">static</p><ul><if {ok()}><li>x</li></if></ul></div>"#);
     assert!(
         out.contains("__tpl("),
         "the static <li> subtree is still hoisted:\n{out}"

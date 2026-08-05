@@ -54,30 +54,24 @@ fn attribute_interp_emits_attr_binding() {
 
 #[test]
 fn class_directive_is_rejected_at_parse_time() {
-    // `class:` has been deleted from the language — same floor as bare
-    // `class=`. Styling is sx / named use: actions; state is aria-* /
-    // closed sx prefixes / layout. The compiler refuses so the rejection
-    // names the replacement.
     let err = crate::parse::parse("<p class:active={on}>x</p>").unwrap_err();
     let msg = format!("{err:?}");
     assert!(
-        msg.contains("class:") && (msg.contains("removed") || msg.contains("retired")),
-        "the rejection should name class: retirement; got: {msg}"
+        msg.contains("foreign idiom") && msg.contains("class"),
+        "class: must be foreign-idiom: {msg}"
     );
+    assert!(!msg.to_ascii_lowercase().contains("retired"), "{msg}");
 }
 
 #[test]
 fn style_directive_is_rejected_at_parse_time() {
-    // `style:` has been deleted from the language. Runtime geometry is a
-    // named, typed action (`use:virtualRow`, `use:eventSpan`, …); the
-    // compiler refuses the form so the rejection names the replacement
-    // rather than silently compiling to an untokened write.
     let err = crate::parse::parse("<p style:color={c}>x</p>").unwrap_err();
     let msg = format!("{err:?}");
     assert!(
-        msg.contains("style:") && msg.contains("removed"),
-        "the rejection should name the mechanism that replaced style:; got: {msg}"
+        msg.contains("foreign idiom") && msg.contains("style"),
+        "style: must be foreign-idiom: {msg}"
     );
+    assert!(!msg.to_ascii_lowercase().contains("retired"), "{msg}");
 }
 
 #[test]
@@ -89,7 +83,7 @@ fn prop_and_attr_prefixes_are_rejected() {
 
 #[test]
 fn if_emits_if_binding_then_walks_body() {
-    let r = build_for("<if cond={x}><p>{x}</p></if>");
+    let r = build_for("<if {x}><p>{x}</p></if>");
     assert_eq!(r.len(), 2);
     assert_eq!(r.get(0).unwrap().kind, BindingKind::If);
     assert_eq!(r.get(0).unwrap().expr, "x");
@@ -98,7 +92,7 @@ fn if_emits_if_binding_then_walks_body() {
 
 #[test]
 fn if_walks_else_body() {
-    let r = build_for("<if cond={a}><p>{a}</p><else><p>{b}</p></else></if>");
+    let r = build_for("<if {a}><p>{a}</p><else><p>{b}</p></else></if>");
     // bindings: if, text(a), text(b)
     assert_eq!(r.len(), 3);
     assert_eq!(r.get(0).unwrap().kind, BindingKind::If);
@@ -108,7 +102,7 @@ fn if_walks_else_body() {
 
 #[test]
 fn for_iterable_emits_for_binding() {
-    let r = build_for(r#"<for as="n" of={xs}><li>{n}</li></for>"#);
+    let r = build_for(r#"<for {xs} as="n"><li>{n}</li></for>"#);
     assert_eq!(r.len(), 2);
     assert_eq!(r.get(0).unwrap().kind, BindingKind::For);
     assert_eq!(r.get(0).unwrap().expr, "xs");
@@ -118,7 +112,7 @@ fn for_iterable_emits_for_binding() {
 #[test]
 fn for_body_yields_one_binding_not_per_iteration() {
     // Even if the body has many bindings, the registry walks it once.
-    let r = build_for(r#"<for as="n" of={xs}><li aria-current={n}>{n}</li></for>"#);
+    let r = build_for(r#"<for {xs} as="n"><li aria-current={n}>{n}</li></for>"#);
     // for boundary, aria-current attr binding, dynamic text — 3 entries total.
     assert_eq!(r.len(), 3);
     assert_eq!(r.get(0).unwrap().kind, BindingKind::For);
@@ -132,7 +126,7 @@ fn for_body_yields_one_binding_not_per_iteration() {
 #[test]
 fn match_emits_match_binding_and_walks_cases() {
     let r = build_for(
-        "<match on={k}><case of={'a'}><p>{k}</p></case><case of={'b'}><p>B</p></case><default><p>D</p></default></match>",
+        "<match {k}><case {'a'}><p>{k}</p></case><case {'b'}><p>B</p></case><default><p>D</p></default></match>",
     );
     // match boundary, text(k), no bindings in case 'b' or default.
     assert_eq!(r.len(), 2);
@@ -143,7 +137,7 @@ fn match_emits_match_binding_and_walks_cases() {
 
 #[test]
 fn nested_control_flow_walks_outer_then_inner() {
-    let r = build_for(r#"<if cond={x}><for as="n" of={xs}><li>{n}</li></for></if>"#);
+    let r = build_for(r#"<if {x}><for {xs} as="n"><li>{n}</li></for></if>"#);
     // bindings: if, for, text
     assert_eq!(r.len(), 3);
     assert_eq!(r.get(0).unwrap().kind, BindingKind::If);

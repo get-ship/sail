@@ -901,19 +901,13 @@ pub fn is_passthrough_attr(name: &str) -> bool {
         || name.starts_with("aria-")
         || name.starts_with("on")
             && name.as_bytes().get(2) == Some(&b':')
-        // SAIL directive prefixes — framework bindings that the compiler
-        // understands (see `crates/sail/compiler/src/parse/template/attrs.rs`).
-        // `bind:`, `use:`, `attr:`, `prop:`, `motion:` (private Style motion
-        // inject from `.enter`/`.exit`/…), legacy `fx:` (compile-error with
-        // migration message). Each is fully validated downstream; the layout
+        // SAIL directive prefixes and the compiler-private Style motion
+        // handoff (`_sail_m_<trigger>`). Validated downstream; layout
         // keyword lowering passes them through to the div unchanged.
-        // `class:` / `style:` are retired and intentionally absent here.
         || name.starts_with("bind:")
         || name.starts_with("use:")
-        || name.starts_with("attr:")
-        || name.starts_with("prop:")
-        || name.starts_with("motion:")
-        || name.starts_with("fx:")
+        || name.starts_with("on:")
+        || name.starts_with("_sail_m_")
     {
         return true;
     }
@@ -1029,7 +1023,7 @@ fn unknown_attr_hint(tag: &str) -> String {
     } else {
         format!(
             "<{tag}> takes these axis props: {} — plus participation attrs (grow, shrink, w, min-w, max-w) \
-             or any HTML/global pass-through (id, sx, theme, surface, hyphenated markers, data-*, aria-*, on:*, bind:*, attr:*, prop:*, fx:*).",
+             or any HTML/global pass-through (id, sx, theme, surface, hyphenated markers, data-*, aria-*, on:*, bind:*, use:*).",
             axes.join(", ")
         )
     }

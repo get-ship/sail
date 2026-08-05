@@ -77,23 +77,23 @@ fn an_unknown_preset_fails_the_build() {
     );
 }
 
-/// The retired directives name their replacement. A retirement error that only says
-/// "no" leaves the author (or the agent) guessing; this one teaches.
+/// Second-system author forms are not sail vocabulary — generic unknown
+/// directive (Style motion is the product surface).
 #[test]
-fn the_second_animation_system_is_retired_with_a_teaching_error() {
-    for (src, expect) in [
-        (r#"<card transition:fade>x</card>"#, ".enter"),
-        (r#"<card in:slide>x</card>"#, "style.enter"),
-        (r#"<card out:fade>x</card>"#, "style.exit"),
+fn the_second_animation_system_is_unknown_vocabulary() {
+    for src in [
+        r#"<card transition:fade>x</card>"#,
+        r#"<card in:slide>x</card>"#,
+        r#"<card out:fade>x</card>"#,
     ] {
         let msg = err_for(src);
         assert!(
-            msg.contains("retired") && msg.contains("one animation system"),
-            "must say it is retired and why: {msg}"
+            msg.contains("unknown directive") || msg.contains("style."),
+            "must be unknown-directive or Style pointer: {msg}"
         );
         assert!(
-            msg.contains(expect),
-            "must name the replacement `{expect}`: {msg}"
+            !msg.to_ascii_lowercase().contains("retired"),
+            "must not embalm: {msg}"
         );
     }
 }

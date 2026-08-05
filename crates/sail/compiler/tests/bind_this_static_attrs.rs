@@ -83,12 +83,17 @@ export default controller((_ctx) => {
 }
 
 #[test]
-fn bind_this_is_retired_with_use_migration() {
+fn bind_this_is_unknown_bind_target() {
     let src = r#"<button bind:this={btnEl}>x</button>"#;
     let err = compile(src, component_opts(None, false)).expect_err("bind:this must refuse");
     assert!(
-        err.message.contains("retired") && err.message.contains("use:"),
-        "expected bind:this retirement with use: hint, got: {}",
+        err.message.contains("unknown bind:this") && err.message.contains("value"),
+        "expected generic unknown-bind, got: {}",
+        err.message
+    );
+    assert!(
+        !err.message.to_ascii_lowercase().contains("retired"),
+        "must not embalm bind:this: {}",
         err.message
     );
 }

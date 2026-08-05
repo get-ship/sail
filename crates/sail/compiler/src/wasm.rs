@@ -169,7 +169,7 @@ pub fn hover_at(source: &str, line: usize, col: usize) -> Result<JsValue, JsValu
 
 /// Closed vocabulary the browser LSP needs for trigger-based completions and
 /// hover docs: event names, modifiers, bind targets, blocks, directives, and
-/// retired forms. All tables are owned by the compiler; this export replaces
+/// foreign idioms. All tables are owned by the compiler; this export replaces
 /// every hand-maintained TypeScript copy in the browser LSP.
 #[derive(Serialize)]
 struct CompletionVocabulary {
@@ -178,7 +178,7 @@ struct CompletionVocabulary {
     bind_targets: &'static [directive_manifest::BindTargetEntry],
     blocks: &'static [block_manifest::BlockEntry],
     directives: &'static [directive_manifest::DirectiveEntry],
-    retired_directives: &'static [directive_manifest::RetiredEntry],
+    foreign_idioms: &'static [directive_manifest::ForeignIdiomEntry],
     motion_value_forms: &'static [directive_manifest::MotionValueForm],
 }
 
@@ -193,7 +193,7 @@ pub fn completion_vocabulary() -> Result<JsValue, JsValue> {
         bind_targets: directive_manifest::BIND_TARGETS,
         blocks: block_manifest::BLOCKS,
         directives: directive_manifest::DIRECTIVES,
-        retired_directives: directive_manifest::RETIRED_DIRECTIVES,
+        foreign_idioms: directive_manifest::FOREIGN_IDIOMS,
         motion_value_forms: directive_manifest::MOTION_VALUE_FORMS,
     };
     serde_wasm_bindgen::to_value(&vocab)

@@ -1,7 +1,6 @@
 //! Style motion chain methods → `__sail_motion_attach(...)` integration tests.
 //!
 //! Author form: `sx={style.… .enter({…}) / .hover({…}) / .loop({…}) …}`.
-//! Config body grammar is identical to the retired `fx:<trigger>={{…}}`.
 //! Property is one of the closed `MOTION_PROPERTIES`; preset resolves against
 //! `animation-presets.json` (e.g. `spring:snappy`, `fade`, `press`).
 
@@ -80,13 +79,17 @@ fn unknown_preset_is_a_compile_error() {
 /// FIELDS may now be signals; that is the point of this surface, and the
 /// error says so rather than the old blanket "dynamic configs".
 #[test]
-fn whole_config_as_one_expression_is_rejected_and_names_the_fix() {
-    // Public fx: is retired with a migration error (not the old dynamic-config wording).
+fn whole_config_as_one_expression_is_rejected_and_names_the_surface() {
+    // Authored text-level motion channels are unknown vocabulary (Style is product).
     let err = compile_motion(r#"<button fx:hover={someExpr}>x</button>"#)
         .expect_err("expected compile error");
     assert!(
-        err.contains("retired") || err.contains("style."),
-        "expected fx: retirement / Style migration wording: {err}"
+        err.contains("unknown directive") || err.contains("style."),
+        "expected unknown-directive / Style pointer: {err}"
+    );
+    assert!(
+        !err.to_ascii_lowercase().contains("retired"),
+        "must not embalm fx:: {err}"
     );
 }
 
@@ -180,9 +183,23 @@ fn enter_exit_on_style_chain_with_paint() {
 }
 
 #[test]
-fn fx_directive_is_a_compile_error_naming_style_methods() {
+fn fx_directive_is_unknown_vocabulary() {
     let err = compile_motion(r#"<card fx:enter={{ opacity: 'fade' }}>x</card>"#)
         .expect_err("fx: must error");
-    assert!(err.contains("retired"), "{err}");
-    assert!(err.contains(".enter") || err.contains("style."), "{err}");
+    assert!(
+        err.contains("unknown directive") || err.contains("style."),
+        "{err}"
+    );
+    assert!(!err.to_ascii_lowercase().contains("retired"), "{err}");
+}
+
+#[test]
+fn authored_motion_attr_is_unknown_vocabulary() {
+    let err = compile_motion(r#"<card motion:enter={{ opacity: 'fade' }}>x</card>"#)
+        .expect_err("authored motion: must error");
+    assert!(
+        err.contains("unknown directive") || err.contains("style."),
+        "{err}"
+    );
+    assert!(!err.to_ascii_lowercase().contains("retired"), "{err}");
 }

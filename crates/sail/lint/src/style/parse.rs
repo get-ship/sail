@@ -71,8 +71,8 @@ fn is_motion_chain_method(name: &str) -> bool {
 }
 
 /// Collect `MotionAttach` nodes from a Style tree (pre-order, source order).
-/// Used by preprocess to inject private `motion:` attributes next to the
-/// lowered class list.
+/// Used by preprocess to inject compiler-private `_sail_m_*` attributes next
+/// to the lowered class list.
 pub fn collect_motion_attaches(style: &Style) -> Vec<(String, String)> {
     let mut out = Vec::new();
     collect_motion_attaches_inner(style, &mut out);
@@ -675,8 +675,7 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
             ops.push(Style::When { entries });
             continue;
         }
-        // Motion chain methods: `.enter({…})` etc. Config-object form only
-        // (identical grammar to retired `fx:enter={{…}}` body).
+        // Motion chain methods: `.enter({…})` etc. Config-object form only.
         // Dual paint/motion methods: only brace-object form is motion —
         //   `style.scroll(auto)` paint vs `style.scroll({ scale: '…' })` motion
         //   `style.press()` paint marker vs `style.press({ scale: 'press' })` motion

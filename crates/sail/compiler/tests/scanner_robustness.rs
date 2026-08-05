@@ -93,7 +93,7 @@ fn if_marker_in_double_quoted_string_expr_is_text() {
 fn brace_close_marker_in_string_expr_does_not_affect_element_if() {
     // Brace-form `{/if}` is retired; a quoted remnant in an expression must
     // not interact with element-form `<if>` / `</if>` structure.
-    let src = r#"<div><if cond={true}><span>{'{/if}'}</span></if></div>"#;
+    let src = r#"<div><if {true}><span>{'{/if}'}</span></if></div>"#;
     let out = compile_src(src).expect("quoted brace close is inert text");
     assert!(
         out.js.contains("{/if}"),

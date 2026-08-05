@@ -99,7 +99,7 @@ describe('@ship/sail-compiler-wasm', () => {
       bind_targets: Array<{ target: string; summary: string }>
       blocks: Array<{ open: string; clauses: string[]; summary: string }>
       directives: Array<{ syntax: string; summary: string }>
-      retired_directives: Array<{ syntax: string; instead: string }>
+      foreign_idioms: Array<{ syntax: string; instead: string }>
       motion_value_forms: Array<{ form: string; summary: string }>
     }
     expect(vocab.events).toContain('click')
@@ -109,7 +109,7 @@ describe('@ship/sail-compiler-wasm', () => {
     expect(vocab.bind_targets.map((b) => b.target)).toContain('value')
     expect(vocab.blocks.map((b) => b.open)).toContain('<match {…}>')
     expect(vocab.directives.some((d) => d.syntax.includes('on:'))).toBe(true)
-    expect(vocab.retired_directives.some((d) => d.syntax.includes('style:'))).toBe(true)
+    expect(vocab.foreign_idioms.some((d) => d.syntax.includes('style'))).toBe(true)
     expect(vocab.motion_value_forms.some((f) => f.form.includes('quoted'))).toBe(true)
   })
 })

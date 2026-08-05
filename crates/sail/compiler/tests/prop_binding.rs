@@ -40,10 +40,11 @@ fn prop_prefix_is_compile_error() {
     let src = r#"<my-grid prop:items={items()}></my-grid>"#;
     let err = compile(src, route_opts()).expect_err("prop: must fail");
     assert!(
-        err.message.contains("`prop:`") && err.message.contains("plain"),
+        err.message.contains("unknown directive") && err.message.contains("prop:items"),
         "msg: {}",
         err.message
     );
+    assert!(!err.message.to_ascii_lowercase().contains("retired"));
 }
 
 #[test]
@@ -51,10 +52,11 @@ fn attr_prefix_is_compile_error() {
     let src = r#"<div attr:hidden={h()}></div>"#;
     let err = compile(src, route_opts()).expect_err("attr: must fail");
     assert!(
-        err.message.contains("`attr:`") && err.message.contains("plain"),
+        err.message.contains("unknown directive") && err.message.contains("attr:hidden"),
         "msg: {}",
         err.message
     );
+    assert!(!err.message.to_ascii_lowercase().contains("retired"));
 }
 
 #[test]

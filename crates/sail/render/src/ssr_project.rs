@@ -1227,7 +1227,7 @@ export default controller(() => {
 })
 </controller>
 <ul>
-  <for as="item" of={items()} key={item.id}>
+  <for {items()} as="item" key={item.id}>
     <li>{item.label}</li>
   </for>
 </ul>
@@ -1250,8 +1250,8 @@ export default controller(() => {
 })
 </controller>
 <div>
-  <if cond={show()}><p>visible</p></if>
-  <if cond={hide()}><p>nope</p><else><p>fallback</p></else></if>
+  <if {show()}><p>visible</p></if>
+  <if {hide()}><p>nope</p><else><p>fallback</p></else></if>
 </div>
 "#;
         let p = project(src);
@@ -1285,7 +1285,7 @@ export default controller(() => {
     fn unknown_if_drops_both_branches() {
         let src = r#"
 <div>
-  <if cond={window.x}><p>yes-branch</p><else><p>no-branch</p></else></if>
+  <if {window.x}><p>yes-branch</p><else><p>no-branch</p></else></if>
   <p>after</p>
 </div>
 "#;
@@ -1307,7 +1307,7 @@ export default controller(() => {
     fn unknown_for_drops_template_body() {
         let src = r#"
 <ul>
-  <for as="item" of={window.list} key={item}>
+  <for {window.list} as="item" key={item}>
     <li>row-shell</li>
   </for>
 </ul>

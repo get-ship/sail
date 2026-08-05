@@ -766,10 +766,10 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     )?);
     sf.push_str("\n\n");
 
-    sf.push_str("export interface RetiredDoc {\n  syntax: string\n  instead: string\n}\n\n");
-    sf.push_str("export const RETIRED_DIRECTIVES: RetiredDoc[] = ");
+    sf.push_str("export interface ForeignIdiomDoc {\n  syntax: string\n  instead: string\n}\n\n");
+    sf.push_str("export const FOREIGN_IDIOMS: ForeignIdiomDoc[] = ");
     sf.push_str(&serde_json::to_string_pretty(
-        &sail_compiler::directive_manifest::RETIRED_DIRECTIVES,
+        &sail_compiler::directive_manifest::FOREIGN_IDIOMS,
     )?);
     sf.push_str("\n\n");
 

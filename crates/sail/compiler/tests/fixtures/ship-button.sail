@@ -13,7 +13,7 @@
   aria-label={label()}
 >
   <span data-test="label">{label()}</span>
-  <if cond={loading()}>
+  <if {loading()}>
     <span data-test="spinner" aria-hidden="true"></span>
   </if>
 </button>

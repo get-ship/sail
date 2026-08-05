@@ -27,6 +27,6 @@ export default controller((_ctx) => ({ t: query(() => call('api.demo.clock', {})
 </controller>
 
 <while-loading {t}><p>Connecting…</p></while-loading>
-<while-error {t} as="err"><p>Lost: {err.message}</p></while-error>
+<while-error {t}> as="err"><p>Lost: {err.message}</p></while-error>
 <p>state: {t().kind}</p>`,
 }

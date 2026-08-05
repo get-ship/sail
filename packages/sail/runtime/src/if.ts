@@ -1,5 +1,5 @@
 // Conditional render. The sail compiler turns
-// `<if cond={cond}>then{:elif …}<else>else</else></if>` (and `{#match}`) into a
+// `<if {cond}>then{:elif …}<else>else</else></if>` (and `{#match}`) into a
 // call to bindIf.
 //
 // Anchor-based: a Comment placeholder marks the insertion point;
@@ -66,7 +66,7 @@ export type BindIfOptions = BindIfTwoBranchOptions | BindIfMultiBranchOptions
  * invoked. The previous branch's `cleanup` runs on swap, freeing its
  * bindings.
  *
- * Compiler target: `<if cond={cond}>then{:elif …}<else>else</else></if>` and
+ * Compiler target: `<if {cond}>then{:elif …}<else>else</else></if>` and
  * `{#match}`. The compiler always passes the multi-branch shape; the
  * two-branch shape is preserved for hand-rolled callers.
  *

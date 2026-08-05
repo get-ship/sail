@@ -2,7 +2,7 @@
 // of DOM nodes, preserving identity (focus, scroll, animation state)
 // across reorders, inserts, removes, and updates.
 //
-// The sail compiler turns `<for as="item" of={list} key={item.id}>…</for>` into
+// The sail compiler turns `<for {list} as="item" key={item.id}>…</for>` into
 // a call to bindFor at hydrate time. Authors don't import this directly.
 //
 
@@ -96,7 +96,7 @@ function computeLisMaskInto(
  * minimise DOM moves. Matched keys already in a stable relative order
  * are never moved; only out-of-order and new keys are inserted.
  *
- * Compiler target: `<for as="item" of={list} key={item.id}>…</for>`.
+ * Compiler target: `<for {list} as="item" key={item.id}>…</for>`.
  *
  * @param opts Anchor, reactive items source, key fn, and render fn.
  * @returns Disposer that detaches every row and stops updates.

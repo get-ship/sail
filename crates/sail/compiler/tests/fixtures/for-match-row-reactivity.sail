@@ -26,13 +26,13 @@ export default controller(() => {
 </controller>
 
 <column gap="2">
-  <for as="task" of={tasks()} key={task.id}>
+  <for {tasks()} as="task" key={task.id}>
   <row gap="2" data-test="row" data-id={task.id}>
     <span>{task.label}</span>
-    <match on={task.status}>
-      <case of={'todo'}>
+    <match {task.status}>
+      <case {'todo'}>
         <em data-test="status">todo</em>
-      </case><case of={'done'}>
+      </case><case {'done'}>
         <strong data-test="status">done</strong>
     </case></match>
     <button data-test="toggle" on:click={() => toggle(task.id)}>toggle</button>

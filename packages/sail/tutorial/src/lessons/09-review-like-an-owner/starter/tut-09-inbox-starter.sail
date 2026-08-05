@@ -56,7 +56,7 @@ export default controller(() => {
     </row>
   </row>
 
-  <while-error {inbox} as="err">
+  <while-error {inbox}> as="err">
     <alert tone="destructive">{err.message}</alert>
   </while-error>
 

@@ -266,8 +266,8 @@ pub fn lower_style_source(
 /// Like [`lower_style_source`], but also returns motion attaches extracted from
 /// `.enter` / `.exit` / `.loop` / `.reveal` / `.scroll({…})` chain methods.
 ///
-/// Preprocess injects these as private `motion:<trigger>="{{…}}"` attributes so
-/// the existing `AttrInstr::Motion` emit path handles them unchanged.
+/// Preprocess injects these as compiler-private `_sail_m_<trigger>="{{…}}"`
+/// attributes so the existing `AttrInstr::Motion` emit path handles them.
 pub fn lower_style_source_with_motion(
     src: &str,
     env: &StyleEnv,

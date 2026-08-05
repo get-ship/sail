@@ -24,7 +24,7 @@ interface WasmVocabulary {
   }>
   blocks: Array<{ open: string; clauses: string[]; summary: string }>
   directives: Array<{ syntax: string; summary: string }>
-  retired_directives: Array<{ syntax: string; instead: string }>
+  foreign_idioms: Array<{ syntax: string; instead: string }>
 }
 
 const WASM_URL = '/sail_compiler_bg.wasm'
@@ -98,12 +98,11 @@ export function hoverAt(source: string, offset: number): SailHoverInfo | null {
     }
   }
 
-  // 1b. Retired directives (style:, transition:, etc.) — render the
-  //     redirect instead of failing silently.
-  for (const d of vocab.retired_directives) {
+  // 1b. Foreign idioms (class:, style:, …) — teach the sail way.
+  for (const d of vocab.foreign_idioms) {
     const prefix = d.syntax.replace(':', ':').split(' ')[0]!
     if (token === prefix || token.startsWith(prefix)) {
-      return renderEntry(d.syntax, `**Retired.** ${d.instead}`)
+      return renderEntry(d.syntax, `**Foreign idiom.** ${d.instead}`)
     }
   }
 

@@ -8,7 +8,7 @@
 
 const GRAMMAR_SRC: &str = include_str!("../grammar.js");
 
-/// Tag name from element-form open/clause, e.g. `"<if cond={…}>"` → `"if"`.
+/// Tag name from element-form open/clause, e.g. `"<if {…}>"` → `"if"`.
 fn tag_from(token: &str) -> &str {
     let t = token.trim_start_matches('<').trim_start_matches('/');
     t.split(|c: char| c.is_whitespace() || c == '>' || c == '/')

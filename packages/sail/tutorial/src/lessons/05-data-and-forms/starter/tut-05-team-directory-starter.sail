@@ -56,7 +56,7 @@ export default controller(() => {
   <!-- TODO 4: <while-loading {team}> — a spinner row, so the first
        paint isn't blank. -->
 
-  <!-- TODO 5: <while-error {team} as="err"> — an <alert tone="destructive">
+  <!-- TODO 5: <while-error {team}> as="err"> — an <alert tone="destructive">
        showing err.message. -->
 
   <if {team().kind === 'ok'}>

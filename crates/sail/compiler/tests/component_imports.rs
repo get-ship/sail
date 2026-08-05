@@ -60,7 +60,7 @@ fn flag_collects_tags_nested_in_control_flow() {
         ..CompileOpts::default()
     };
     let out = compile(
-        "<div><if cond={cond()}><sail-a></sail-a><else><sail-b></sail-b></else></if></div>",
+        "<div><if {cond()}><sail-a></sail-a><else><sail-b></sail-b></else></if></div>",
         opts,
     )
     .expect("compile");

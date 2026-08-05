@@ -138,8 +138,8 @@ mod tests {
     fn nested_control_flow() {
         let got = icons(
             r#"<div>
-            <if cond={c()}><icon name="check"></icon><else><icon name="x"></icon></else></if>
-            <for as="i" of={items()}><icon name="circle"></icon></for>
+            <if {c()}><icon name="check"></icon><else><icon name="x"></icon></else></if>
+            <for {items()} as="i"><icon name="circle"></icon></for>
           </div>"#,
         );
         assert_eq!(

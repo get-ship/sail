@@ -29,12 +29,7 @@ fn compile_attr(
     on_slot: bool,
 ) -> Result<AttrInstr, CompileError> {
     if name == "part" {
-        return Err(CompileError::new(
-            "the `part` attribute is retired — light DOM has no shadow parts. \
-             Style with sx.",
-        )
-        .with_span(value_span)
-        .with_category(loc.to_string()));
+        return Err(foreign_idiom_error("part=\"…\"", value_span, loc));
     }
     if name == "reflect-empty" {
         return compile_reflect_empty(value, value_span, loc, on_slot);
@@ -58,104 +53,26 @@ fn compile_attr(
     if let Some(rest) = name.strip_prefix("bind:") {
         return compile_bind(rest, value, value_span, loc);
     }
-    // `class:` is DELETED from the language — same floor as bare `class=`.
-    // Styling is sx (and named `use:` actions that write custom properties
-    // sx can read). State is aria-* / closed sx state prefixes / layout —
-    // not a global CSS class toggle. Refuse so the error names the
-    // replacement rather than silently accepting a refused HTML-lookalike.
-    if name.starts_with("class:") {
-        return Err(CompileError::new(
-            "`class:` has been removed — styling is sx (or a named `use:` action \
-             that writes a custom property sx can read via (--name)); state is \
-             semantic props (label/current/selected/…), closed sx state prefixes (`selected:`, `hover:`, …), \
-             or layout. Bare `class=` is also banned. Do not use `class=` as a \
-             substitute.",
-        )
-        .with_span(value_span)
-        .with_category(loc.to_string()));
-    }
-    // `style:` is DELETED from the language — runtime geometry moves to
-    // a named, typed action (`use:virtualRow={start}`,
-    // `use:eventSpan={rect}`, etc.). The compiler refuses the form so
-    // the rejection names the replacement rather than silently
-    // compiling to a property write that no lint will ever see.
-    if name.starts_with("style:") {
-        return Err(CompileError::new(
-            "`style:` has been removed — runtime geometry is owned by a named, typed \
-             action (`use:virtualRow`, `use:eventSpan`, `use:rect`, `use:pin`, \
-             `use:zoomPan`, `use:worldTransform`, `use:maxWidth`, `use:cellPad`, \
-             `use:virtualSpacer`, `use:swatch`). The action writes to a custom \
-             property; sx reads it via the matching `(--name)` atom \
-             (`translate-y-(--row-y)`, `top-(--evt-top)`, …).",
-        )
-        .with_span(value_span)
-        .with_category(loc.to_string()));
-    }
-    // `prop:` / `attr:` are DELETED from the author surface. Web is a compile
-    // target: plain `name={expr}` is the field form; the backend picks
-    // bindDynamic / bindProp / bindAttr. Refuse with teaching text.
-    if name.starts_with("prop:") {
-        return Err(CompileError::new(
-            "`prop:` has been removed — write plain `name={expr}`. Identity and \
-             non-string fields are plain bindings; the compiler/runtime lowers \
-             property vs attribute from contracts and value shape. There is no \
-             author attr/property split.",
-        )
-        .with_span(value_span)
-        .with_category(loc.to_string()));
-    }
-    if name.starts_with("attr:") {
-        return Err(CompileError::new(
-            "`attr:` has been removed — write plain `name={expr}`. Fixed-name \
-             fields are plain bindings; dynamic attribute names are not an \
-             author directive. The web backend chooses attribute vs property.",
-        )
-        .with_span(value_span)
-        .with_category(loc.to_string()));
-    }
-    // `transition:` / `in:` / `out:` are RETIRED. They were a second animation
-    // system — a second preset catalog (fade/slide/scale), a second registry
-    // (`registerTransition`), a second runtime — sitting beside motion attach,
-    // which already bakes to `el.animate()` with compile-time-validated spring
-    // presets. Two systems meant two vocabularies to learn.
-    //
-    // The CAPABILITY survives intact: holding an element in the DOM until its exit
-    // animation finishes is real, and CSS cannot do it alone. It is Style
-    // `.exit({…})` now, running on the same lifecycle seam, from the one catalog.
-    for (retired, hint) in [
-        ("transition:", "style.… .enter({…}).exit({…})"),
-        ("in:", "style.enter({…})"),
-        ("out:", "style.exit({…})"),
-    ] {
-        if let Some(rest) = name.strip_prefix(retired) {
-            return Err(CompileError::new(format!(
-                "`{retired}{rest}` is retired — there is one animation system. \
-                 Use `{hint}` with a preset from the motion catalog \
-                 (e.g. `sx={{style.exit({{ opacity: 'fade-out' }})}}`)."
-            ))
-            .with_span(value_span)
-            .with_category(loc.to_string()));
-        }
-    }
-    // Public `fx:` is retired — Style chain methods are the product surface.
-    // Private `motion:` is the preprocess-injected form from `.enter` / `.exit` /
-    // `.loop` / `.reveal` / `.scroll({…})` and still lowers via compile_motion.
-    if let Some(rest) = name.strip_prefix("fx:") {
-        return Err(CompileError::new(format!(
-            "`fx:{rest}` is retired — attach motion on Style: \
-             `sx={{style.… .enter({{…}}).exit({{…}})}}` (or `.loop` / `.reveal` / \
-             `.scroll({{…}})`). Interaction press/hover: prefer \
-             `when({{ active: style.scale(96) }})` + transition tokens. \
-             Config body grammar is unchanged from the old `fx:{rest}={{{{…}}}}`."
-        ))
-        .with_span(value_span)
-        .with_category(loc.to_string()));
-    }
-    if let Some(rest) = name.strip_prefix("motion:") {
+    // Compiler-private Style motion handoff (preprocess inject). Not an
+    // author attribute — authored `motion:` / `fx:` fall through as unknown.
+    if let Some(rest) = name.strip_prefix("_sail_m_") {
         return compile_motion(rest, value, value_span, loc);
+    }
+    if name.starts_with("class:") {
+        return Err(foreign_idiom_error("class= / class:<name>", value_span, loc));
+    }
+    if name.starts_with("style:") {
+        return Err(foreign_idiom_error("style= / style:<prop>", value_span, loc));
     }
     if let Some(rest) = name.strip_prefix("use:") {
         return compile_use(rest, value, value_span, loc);
+    }
+    // Unknown colon-prefix: not an active directive. Foreign idioms already
+    // handled above; everything else is generic unknown vocabulary.
+    if let Some((prefix, _)) = name.split_once(':') {
+        if !matches!(prefix, "on" | "bind" | "use") && !prefix.is_empty() {
+            return Err(unknown_directive_error(name, value_span, loc));
+        }
     }
     // `sx` is Style product language (`style.fontSize(2xl)`, `style.padX(2_5)`,
     // `style.fg(sidebar-foreground)`, …) — not a JS expression. Leading-digit
@@ -485,20 +402,6 @@ fn compile_bind(
     value_span: Span,
     loc: &str,
 ) -> Result<AttrInstr, CompileError> {
-    // `bind:this` is retired — element capture is a local `use:` action that
-    // sets a signal on mount and clears it on destroy (see RETIRED_DIRECTIVES).
-    // Keep bind:value / bind:checked (two-way state, sanctioned).
-    if target == "this" {
-        return Err(CompileError::new(
-            "`bind:this` is retired — capture the element with a local `use:` action \
-             that sets a signal on mount and clears it on destroy \
-             (e.g. `const captureEl: Action<void> = (node) => { el.set(node); \
-             return { destroy: () => el.set(null) }; }`, template: `use:captureEl`). \
-             Keep `bind:value` / `bind:checked` for two-way state.",
-        )
-        .with_span(value_span)
-        .with_category(loc.to_string()));
-    }
     if !is_expr_value(value) {
         return Err(
             CompileError::new(format!("bind:{target} expects {{signal}}"))
@@ -531,6 +434,27 @@ fn compile_bind(
             )
         }
     }
+}
+
+fn foreign_idiom_error(syntax_key: &str, value_span: Span, loc: &str) -> CompileError {
+    let instead = crate::directive_manifest::FOREIGN_IDIOMS
+        .iter()
+        .find(|e| e.syntax == syntax_key)
+        .map(|e| e.instead)
+        .unwrap_or("use the sail form from the language surface");
+    CompileError::new(format!("`{syntax_key}` is a foreign idiom — {instead}"))
+        .with_span(value_span)
+        .with_category(loc.to_string())
+}
+
+fn unknown_directive_error(name: &str, value_span: Span, loc: &str) -> CompileError {
+    let known = crate::directive_manifest::DIRECTIVE_PREFIXES.join(":, ");
+    CompileError::new(format!(
+        "unknown directive `{name}` — attribute directives use the prefixes: {known}:… \
+         (plus sx=, mutation=, slot=). Motion is Style: sx={{style.<trigger>({{…}})}}."
+    ))
+    .with_span(value_span)
+    .with_category(loc.to_string())
 }
 
 fn compile_reflect_empty(
@@ -637,16 +561,12 @@ fn compile_use(
         span: value_span,
     })
 }
-/// Compile a motion attach config (private `motion:<trigger>=…` from Style
-/// `.enter` / `.exit` / `.loop` / `.reveal` / `.scroll({…})` lowering).
+/// Compile a motion attach config from the compiler-private `_sail_m_<trigger>`
+/// handoff produced by Style `.enter` / `.exit` / `.loop` / `.reveal` /
+/// `.scroll({…})` lowering. Authors write Style methods, never this attr.
 ///
-/// Accepts only a static object literal (`motion:enter="{{ scale: 'sm' }}"`);
-/// dynamic expressions are rejected so the runtime never has to evaluate an
-/// animation config.
-///
-/// Returns an [`AttrInstr::Motion`] carrying the resolved property ->
-/// preset pairs (validated in the lower layer against
-/// `animation-presets.json`).
+/// Accepts only a static object literal; dynamic expressions are rejected so
+/// the runtime never has to evaluate an animation config.
 fn compile_motion(
     trigger: &str,
     value: &str,
@@ -663,12 +583,6 @@ fn compile_motion(
             "motion attach requires a trigger name (enter, exit, loop, hover, press, …)".into(),
         ));
     }
-    // The allowlist IS the validation — no shape check ahead of it. A trigger is a
-    // kebab-case name mirroring the CSS pseudo-class (`focus-visible`), not a JS
-    // identifier, and an allowlist is strictly stronger than any shape test anyway.
-    //
-    // An unknown trigger must be an error, not a silent no-op: the runtime has no
-    // dispatch for `motion:hovr={…}`, so it would do nothing and ship.
     if !MOTION_TRIGGERS.contains(&trigger) {
         return Err(err(format!(
             "motion trigger `{trigger}` is not supported. Triggers: {}.",
@@ -679,21 +593,10 @@ fn compile_motion(
         return Err(err("motion attach requires a config object".into()));
     }
 
-    // Disambiguate `motion:enter={{ prop: 'value' }}` (static) from
-    // `motion:enter={someExpr}` (dynamic). The pre-pass delivers the
-    // value with both outer and inner braces intact for brace-attrs;
-    // strip the outermost pair before the static parser. Treat as
-    // dynamic ONLY when the body has no `:` separator (a key/value
-    // shape). If the body has a `:` but the static parser still
-    // rejects it (unknown property, malformed value, etc.), surface
-    // the static-shape error verbatim — the author clearly meant
-    // a static config.
     fn has_static_shape(body: &str) -> bool {
         let s = body.trim();
         s.starts_with('{') && s.contains(':') && s.ends_with('}')
     }
-    // Track how many bytes we drop off the front so expression spans inside
-    // the config still point at the author's source.
     let trimmed = value.trim_start();
     let mut base = value.len() - trimmed.len();
     let stripped = trimmed.trim_end();
@@ -727,13 +630,12 @@ fn compile_motion(
     })
 }
 
-// The property vocabulary lives in sail-lint — ONE list, two readers. The compiler
-// kept its own copy, and the copies drifted the first time a key was added.
+// The property vocabulary lives in sail-lint — ONE list, two readers.
 use sail_lint::rules::animate_token_only::{
     MOTION_CHANNEL_KEYS, MOTION_PROPERTIES, MOTION_STAGGER_KEY, MOTION_TIMING_KEYS, MOTION_TRIGGERS,
 };
 
-/// Parse the static object body of a `fx:trigger={{…}}` directive.
+/// Parse the static object body of a Style motion config (`style.<trigger>({…})`).
 ///
 /// The grammar, in one sentence: **quoted is a literal, unquoted is code.**
 ///
@@ -1330,7 +1232,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn prop_prefix_is_refused_with_teaching() {
+    fn prop_prefix_is_unknown_directive() {
         let err = compile_attr(
             "prop:items",
             "{rows()}",
@@ -1340,14 +1242,15 @@ mod tests {
         )
         .unwrap_err();
         assert!(
-            err.message.contains("`prop:`") && err.message.contains("plain"),
-            "expected prop: teaching refuse, got: {}",
+            err.message.contains("unknown directive") && err.message.contains("prop:items"),
+            "expected unknown directive, got: {}",
             err.message
         );
+        assert!(!err.message.to_ascii_lowercase().contains("retired"));
     }
 
     #[test]
-    fn attr_prefix_is_refused_with_teaching() {
+    fn attr_prefix_is_unknown_directive() {
         let err = compile_attr(
             "attr:hidden",
             "{h()}",
@@ -1357,10 +1260,11 @@ mod tests {
         )
         .unwrap_err();
         assert!(
-            err.message.contains("`attr:`") && err.message.contains("plain"),
-            "expected attr: teaching refuse, got: {}",
+            err.message.contains("unknown directive") && err.message.contains("attr:hidden"),
+            "expected unknown directive, got: {}",
             err.message
         );
+        assert!(!err.message.to_ascii_lowercase().contains("retired"));
     }
 
     // ── Fix 1: fail-loud on malformed `{…}` attribute bodies ─────────────
@@ -1673,12 +1577,17 @@ mod tests {
                 err.message
             );
         }
-        // bind:this is retired with a teaching error (not "unknown bind").
-        let retired = compile_bind("this", "{el}", span, "t").unwrap_err();
+        // bind:this is not a bind target — generic unknown-bind (no tombstone).
+        let unknown = compile_bind("this", "{el}", span, "t").unwrap_err();
         assert!(
-            retired.message.contains("retired") && retired.message.contains("use:"),
-            "bind:this must retire with a use: migration hint, got: {}",
-            retired.message
+            unknown.message.contains("unknown bind:this") && unknown.message.contains("value"),
+            "bind:this must be generic unknown-bind, got: {}",
+            unknown.message
+        );
+        assert!(
+            !unknown.message.to_ascii_lowercase().contains("retired"),
+            "must not embalm bind:this: {}",
+            unknown.message
         );
     }
 

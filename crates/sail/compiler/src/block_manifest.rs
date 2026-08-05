@@ -31,17 +31,17 @@ pub const BLOCKS: &[BlockEntry] = &[
     BlockEntry {
         open: "<if {…}>",
         clauses: &["<else-if {…}>", "<else>"],
-        summary: "conditional branches; brace-primary predicate (residual: cond={…}); any number of <else-if>, optional trailing <else> as direct children",
+        summary: "conditional branches; brace-primary predicate; any number of <else-if>, optional trailing <else> as direct children",
     },
     BlockEntry {
         open: "<for {…} as=\"item\" key={…}>",
         clauses: &["<else>"],
-        summary: "iterate a list; brace-primary iterable (residual: of={…}); `as` item binding, `key` required for stable DOM; optional `index`; <else> when empty",
+        summary: "iterate a list; brace-primary iterable; `as` item binding, `key` required for stable DOM; optional `index`; <else> when empty",
     },
     BlockEntry {
         open: "<match {…}>",
         clauses: &["<case {…}>", "<default>"],
-        summary: "pattern branches over a brace-primary discriminant (residual: on={…}); cases use brace-primary or of={…}; optional <default>",
+        summary: "pattern branches over a brace-primary discriminant; cases use brace-primary; optional <default>",
     },
     BlockEntry {
         open: "<when {token}>",
@@ -51,12 +51,12 @@ pub const BLOCKS: &[BlockEntry] = &[
     BlockEntry {
         open: "<while-loading {sig}>",
         clauses: &[],
-        summary: "renders while an async query signal is pending; brace-primary signal name (residual: of=\"sig\")",
+        summary: "renders while an async query signal is pending; brace-primary signal name",
     },
     BlockEntry {
         open: "<while-error as=\"err\" {sig}>",
         clauses: &[],
-        summary: "renders while an async query signal is rejected; `as` names the error binding; brace-primary or of= for the signal",
+        summary: "renders while an async query signal is rejected; `as` names the error binding; brace-primary signal name",
     },
 ];
 

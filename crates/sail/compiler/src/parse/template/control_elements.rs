@@ -1,5 +1,6 @@
 //! Expand reserved control-flow **elements** into the flat token stream
-//! used by `blocks.rs`. Author form (product + residual named attrs):
+//! used by `blocks.rs`. Author form (brace-primary only for the primary
+//! expression):
 //!
 //! ```sail
 //! <if {open()}>…<else-if {x()}>…</else-if><else>…</else></if>
@@ -9,11 +10,11 @@
 //!   <default>…</default>
 //! </match>
 //! <while-loading {users}>…</while-loading>
-//! <while-error as="err" of="users">…</while-error>
+//! <while-error as="err" {users}>…</while-error>
 //! ```
 //!
-//! Named attrs still work: `cond=`, `on=`/`value=`, `of=`, `as=`, `key=`.
-//! Brace-primary (`{expr}` right after the tag) is preferred.
+//! Named attrs that remain: `as=`, `key=`, `index=` (and `as=` on
+//! while-error). Primary expressions are brace-primary only.
 //!
 //! Brace blocks (`{#if}`, …) are rejected at classify time.
 
@@ -52,7 +53,7 @@ pub fn expand_control_element(el: &Element, out: &mut Vec<Token>) {
         "else-if" => {
             out.push(Token {
                 kind: TokenKind::ElseIf {
-                    src: primary_or_named(el, &["cond"]).unwrap_or_default(),
+                    src: brace_primary(el).unwrap_or_default(),
                 },
                 span: el.span,
             });
@@ -68,7 +69,7 @@ pub fn expand_control_element(el: &Element, out: &mut Vec<Token>) {
         "case" => {
             out.push(Token {
                 kind: TokenKind::Case {
-                    src: primary_or_named(el, &["of"]).unwrap_or_default(),
+                    src: brace_primary(el).unwrap_or_default(),
                 },
                 span: el.span,
             });
@@ -86,7 +87,7 @@ pub fn expand_control_element(el: &Element, out: &mut Vec<Token>) {
 }
 
 fn expand_if(el: &Element, out: &mut Vec<Token>) {
-    let cond = primary_or_named(el, &["cond"]).unwrap_or_default();
+    let cond = brace_primary(el).unwrap_or_default();
     out.push(Token {
         kind: TokenKind::OpenIf { src: cond },
         span: el.span,
@@ -106,7 +107,7 @@ fn flatten_if_children(nodes: &[Node], out: &mut Vec<Token>) {
             Node::Element(child) if child.tag == "else-if" => {
                 out.push(Token {
                     kind: TokenKind::ElseIf {
-                        src: primary_or_named(child, &["cond"]).unwrap_or_default(),
+                        src: brace_primary(child).unwrap_or_default(),
                     },
                     span: child.span,
                 });
@@ -129,7 +130,7 @@ fn expand_for(el: &Element, out: &mut Vec<Token>) {
     //   `item of items()` or `(item, i) of items() key={…}`
     let as_name = attr_raw(el, "as").unwrap_or_else(|| "item".into());
     let index = attr_raw(el, "index");
-    let iterable = primary_or_named(el, &["of"]).unwrap_or_default();
+    let iterable = brace_primary(el).unwrap_or_default();
     let key = attr_expr(el, "key");
 
     let left = match index {
@@ -172,7 +173,7 @@ fn flatten_for_children(nodes: &[Node], out: &mut Vec<Token>) {
 }
 
 fn expand_match(el: &Element, out: &mut Vec<Token>) {
-    let disc = primary_or_named(el, &["on", "value"]).unwrap_or_default();
+    let disc = brace_primary(el).unwrap_or_default();
     out.push(Token {
         kind: TokenKind::OpenMatch { src: disc },
         span: el.span,
@@ -182,7 +183,7 @@ fn expand_match(el: &Element, out: &mut Vec<Token>) {
             Node::Element(child) if child.tag == "case" => {
                 out.push(Token {
                     kind: TokenKind::Case {
-                        src: primary_or_named(child, &["of"]).unwrap_or_default(),
+                        src: brace_primary(child).unwrap_or_default(),
                     },
                     span: child.span,
                 });
@@ -208,7 +209,7 @@ fn expand_match(el: &Element, out: &mut Vec<Token>) {
 fn expand_when(el: &Element, out: &mut Vec<Token>) {
     // Token is a theme breakpoint name, not an expression — same brace-primary
     // surface as other blocks (`<when {tablet}>`).
-    let token = primary_or_named(el, &["bp", "breakpoint"]).unwrap_or_default();
+    let token = brace_primary(el).unwrap_or_default();
     out.push(Token {
         kind: TokenKind::OpenWhen { src: token },
         span: el.span,
@@ -236,12 +237,10 @@ fn flatten_when_children(nodes: &[Node], out: &mut Vec<Token>) {
 }
 
 fn expand_while_loading(el: &Element, out: &mut Vec<Token>) {
-    // Header: `of <signalName>` — signal is a bare identifier.
-    // Prefer brace-primary `<while-loading {users}>`, then `of=`.
-    let name = primary_or_named(el, &["of"])
+    // Header: `of <signalName>` — signal is a bare identifier from brace-primary.
+    let name = brace_primary(el)
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
-        .or_else(|| attr_ident(el, "of"))
         .unwrap_or_default();
     out.push(Token {
         kind: TokenKind::OpenWhileLoading {
@@ -259,10 +258,9 @@ fn expand_while_loading(el: &Element, out: &mut Vec<Token>) {
 fn expand_while_error(el: &Element, out: &mut Vec<Token>) {
     // Header: `<errVar> of <signalName>`
     let err = attr_raw(el, "as").unwrap_or_else(|| "err".into());
-    let name = primary_or_named(el, &["of"])
+    let name = brace_primary(el)
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
-        .or_else(|| attr_ident(el, "of"))
         .unwrap_or_default();
     out.push(Token {
         kind: TokenKind::OpenWhileError {
@@ -307,7 +305,7 @@ fn flatten_node(n: &Node, out: &mut Vec<Token>) {
     }
 }
 
-/// Expression attribute: `cond={open()}` → `open()` after preprocess quoting.
+/// Expression attribute: `key={item.id}` → `item.id` after preprocess quoting.
 fn attr_expr(el: &Element, name: &str) -> Option<String> {
     let raw = el.get_attribute(name)?;
     Some(strip_attr_expr(&raw).to_string())
@@ -317,33 +315,15 @@ fn attr_raw(el: &Element, name: &str) -> Option<String> {
     el.get_attribute(name).map(|s| s.trim().to_string())
 }
 
-/// Identifier attribute (`of="users"` or `of={users}`).
-fn attr_ident(el: &Element, name: &str) -> Option<String> {
-    let s = attr_expr(el, name).or_else(|| attr_raw(el, name))?;
-    let s = s.trim().to_string();
-    if s.is_empty() {
-        return None;
+/// Brace-primary `{expr}` on the open tag — the only primary-expression form.
+fn brace_primary(el: &Element) -> Option<String> {
+    let raw = el.get_attribute(PRIMARY_BRACE_ATTR)?;
+    let inner = strip_attr_expr(&raw).to_string();
+    if inner.is_empty() {
+        None
+    } else {
+        Some(inner)
     }
-    Some(s)
-}
-
-/// Product form first: brace-primary `{expr}` on the open tag, then named
-/// attrs (`cond` / `on` / `of` / …) for residual compatibility.
-fn primary_or_named(el: &Element, named: &[&str]) -> Option<String> {
-    if let Some(raw) = el.get_attribute(PRIMARY_BRACE_ATTR) {
-        let inner = strip_attr_expr(&raw).to_string();
-        if !inner.is_empty() {
-            return Some(inner);
-        }
-    }
-    for name in named {
-        if let Some(v) = attr_expr(el, name) {
-            if !v.is_empty() {
-                return Some(v);
-            }
-        }
-    }
-    None
 }
 
 fn strip_attr_expr(raw: &str) -> &str {
@@ -371,12 +351,26 @@ mod tests {
 
     #[test]
     fn expands_if_else() {
-        let el = parse_el("<if cond={a()}><p>y</p><else><p>n</p></else></if>");
+        let el = parse_el("<if {a()}><p>y</p><else><p>n</p></else></if>");
         let mut out = Vec::new();
         expand_control_element(&el, &mut out);
         assert!(matches!(out[0].kind, TokenKind::OpenIf { .. }));
         assert!(out.iter().any(|t| matches!(t.kind, TokenKind::Else)));
         assert!(matches!(out.last().unwrap().kind, TokenKind::CloseIf));
+    }
+
+    #[test]
+    fn residual_cond_named_attr_is_ignored() {
+        // Named residual form must not supply the primary expression.
+        let el = parse_el("<if cond={a()}><p>y</p></if>");
+        let mut out = Vec::new();
+        expand_control_element(&el, &mut out);
+        match &out[0].kind {
+            TokenKind::OpenIf { src } => {
+                assert!(src.is_empty(), "cond= must not supply primary, got {src}")
+            }
+            other => panic!("expected OpenIf, got {other:?}"),
+        }
     }
 
     #[test]

@@ -20,7 +20,7 @@ export default controller(() => {
 <while-loading {users}>
   <spinner></spinner>
 </while-loading>
-<while-error {users} as="err">
+<while-error {users}> as="err">
   <alert tone="destructive">{err.message}</alert>
 </while-error>
 <if {users().kind === 'ok'}>
@@ -47,7 +47,7 @@ export default controller(() => {
   <spinner></spinner>
 </while-loading>
 
-<while-error {users} as="err">
+<while-error {users}> as="err">
   <alert tone="destructive">{err.message}</alert>
 </while-error>
 

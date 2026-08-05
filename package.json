@@ -38,7 +38,8 @@
     "test:parity": "node tests/parity/run.mjs",
     "test:parity:geometry": "node tests/parity/geometry/run.mjs",
     "test:parity:paint": "node tests/parity/paint/run.mjs",
-    "test:parity:report": "node tests/parity/run.mjs --report-only"
+    "test:parity:report": "node tests/parity/run.mjs --report-only",
+    "test:scrub": "bun test tests/scrub"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

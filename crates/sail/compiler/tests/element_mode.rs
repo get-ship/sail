@@ -78,7 +78,7 @@ fn element_emits_structure_skin_and_manifest() {
 
 #[test]
 fn element_rejects_control_flow_as_component() {
-    let src = "<span class=\"x\"><if cond={open()}><b>y</b></if></span>";
+    let src = "<span class=\"x\"><if {open()}><b>y</b></if></span>";
     let err = compile_element(src, "toggle").unwrap_err();
     assert!(
         format!("{err:?}").contains("component"),

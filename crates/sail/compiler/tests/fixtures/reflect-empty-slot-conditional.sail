@@ -4,7 +4,7 @@
   }
 </scope>
 <button>
-  <if cond={busy()}>
+  <if {busy()}>
     <span aria-hidden="true"></span>
   <else>
     <slot reflect-empty="data-icon-only"></slot>

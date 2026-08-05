@@ -294,7 +294,7 @@ fn merged_client_module_is_self_contained() {
     // The bundler-facing single module: controller + client render fused.
     // The cross-module `import { scope }` is dropped (scope is now local),
     // and the two import blocks merge without duplicate bindings.
-    let src = r#"<ul><for as="item" of={[{id: 1, text: "a"}]} key={item.id}><li>{item.text}</li></for></ul>"#;
+    let src = r#"<ul><for {[{id: 1, text: "a"}]} as="item" key={item.id}><li>{item.text}</li></for></ul>"#;
     let program = parse(src).expect("parse");
     let manifest = AppManifest::parse(SHIP_MANIFEST).expect("manifest");
     let merged =

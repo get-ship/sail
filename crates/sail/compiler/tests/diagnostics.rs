@@ -89,7 +89,7 @@ fn assignment_diagnostic_has_a_span() {
 }
 
 #[test]
-fn bind_this_is_retired_regardless_of_value_shape() {
+fn bind_this_is_unknown_bind_regardless_of_value_shape() {
     for src in [
         r#"<button bind:this={a.b}>x</button>"#,
         r#"<button bind:this={getRef()}>x</button>"#,
@@ -97,8 +97,13 @@ fn bind_this_is_retired_regardless_of_value_shape() {
     ] {
         let err = compile_route(src);
         assert!(
-            err.message.contains("retired") && err.message.contains("use:"),
-            "bind:this must retire with use: migration, got: {}",
+            err.message.contains("unknown bind:this") && err.message.contains("value"),
+            "bind:this must be generic unknown-bind, got: {}",
+            err.message
+        );
+        assert!(
+            !err.message.to_ascii_lowercase().contains("retired"),
+            "must not embalm: {}",
             err.message
         );
         assert!(err.span.is_some());

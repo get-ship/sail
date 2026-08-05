@@ -12,15 +12,15 @@ export default controller((_ctx) => ({ list: query(() => call('ship.demo.todos',
     <button type="submit">Add</button>
   </form>
 
-  <while-loading of="list">
+  <while-loading {list}>
   <p sx={style.fg(muted-foreground).fontSize(sm)}>Loading…</p>
   </while-loading>
-  <while-error as="err" of="list">
+  <while-error as="err" {list}>
   <p sx={style.fg(destructive).fontSize(sm)}>Error: {err.message}</p>
   </while-error>
-  <if cond={list().kind === 'ok'}>
+  <if {list().kind === 'ok'}>
   <column gap="1" sx={style.list(none).pad(0).m(0)}>
-    <for as="item" of={list().value.items} key={item.id}>
+    <for {list().value.items} as="item" key={item.id}>
     <li aria-pressed={item.done} sx={style.radius(md).pad(1).when({ pressed: style.underline(line-through).fg(muted-foreground) })}>{item.text}</li>
     </for>
   </column>

@@ -374,7 +374,16 @@ fn public_action_surface_is_curated() {
 fn builtin_actions_emit_bare_not_scope_qualified() {
     let mut broken = Vec::new();
     for a in sail_compiler::lower::bindings::BUILTIN_ACTIONS {
-        let src = format!(r#"<div use:{a}></div>"#);
+        // Pairing checks require the sx bridge on the same node for some actions.
+        let src = match *a {
+            "virtualRow" => {
+                r#"<div use:virtualRow sx={style.translateY(bind(rowY))}></div>"#.to_string()
+            }
+            "virtualSpacer" => {
+                r#"<div use:virtualSpacer sx={style.h(bind(rowsH))}></div>"#.to_string()
+            }
+            _ => format!(r#"<div use:{a}></div>"#),
+        };
         let out = sail_compiler::compile(
             &src,
             sail_compiler::CompileOpts {
@@ -382,7 +391,7 @@ fn builtin_actions_emit_bare_not_scope_qualified() {
                 ..Default::default()
             },
         )
-        .expect("compiles")
+        .unwrap_or_else(|e| panic!("compiles for use:{a}: {e:?}"))
         .js;
         if out.contains(&format!("$scope.{a}")) {
             broken.push(*a);

@@ -41,15 +41,15 @@ export default controller(() => {
     <button on:click={() => stage.set('closed')} aria-pressed={stage() === 'closed'}>closed</button>
   </row>
 
-  <if cond={deals().kind === 'loading'}>
+  <if {deals().kind === 'loading'}>
   <p sx={style.fg(muted-foreground).fontSize(sm)} data-testid="deals-loading">Loading…</p>
   </if>
-  <if cond={deals().kind === 'error'}>
+  <if {deals().kind === 'error'}>
   <p sx={style.fg(destructive).fontSize(sm)} data-testid="deals-error">Error</p>
   </if>
-  <if cond={deals().kind === 'ok'}>
+  <if {deals().kind === 'ok'}>
   <column gap="1" sx={style.list(none).pad(0).m(0)} data-testid="deals-list">
-    <for as="deal" of={deals().value.items} key={deal.id}>
+    <for {deals().value.items} as="deal" key={deal.id}>
     <li>{deal.id} — {deal.stage} — {deal.amount}</li>
     </for>
   </column>

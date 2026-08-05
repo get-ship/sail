@@ -338,10 +338,8 @@ fn lower_sx_value(
     sail_lint::sx_ir::lower_sx_string_with_motion(val, env, css, seen)
 }
 
-/// Inject private `motion:<trigger>="{{…}}"` attrs produced by Style `.enter` etc.
-///
-/// The attribute value mirrors the retired author form `fx:enter={{…}}` after
-/// brace-quoting (`"{{…}}"`), so `compile_motion` can parse it unchanged.
+/// Inject compiler-private `_sail_m_<trigger>="{{…}}"` attrs produced by Style
+/// `.enter` / `.exit` / … . Not an author channel — authors write Style methods.
 fn push_motion_attrs(out: &mut String, motions: &[(String, String)]) {
     for (trigger, config) in motions {
         // config includes braces: `{ opacity: 'fade' }`
@@ -349,7 +347,7 @@ fn push_motion_attrs(out: &mut String, motions: &[(String, String)]) {
         let value = format!("{{{config}}}");
         let escaped = value.replace('"', "&quot;");
         out.push(' ');
-        out.push_str("motion:");
+        out.push_str("_sail_m_");
         out.push_str(trigger);
         out.push_str("=\"");
         out.push_str(&escaped);
@@ -3599,28 +3597,14 @@ mod tests {
     }
     #[test]
     fn directive_prefixes_ride_to_the_div() {
-        // SAIL directive attrs (`bind:this`, `use:*`, plain fields,
+        // SAIL directive attrs (`bind:value`, `use:*`, plain fields,
         // etc.) are framework bindings — they ride through the layout
         // lowering unchanged so the compiler's later directive-handling
-        // pass can resolve them. The lint acknowledges the same
-        // vocabulary, so they are not "unknown attribute" errors.
-        //
-        // `class:` and `style:` are GONE — class toggles and runtime
-        // geometry moved off directives. The preprocess pass therefore
-        // does NOT carry those attributes forward; the parser refuses
-        // each form with a hint at the replacement.
-        let out = preprocess(r#"<row bind:this={panelEl} hidden={!cr.cell.inMonth}>x</row>"#)
+        // pass can resolve them.
+        let out = preprocess(r#"<row bind:value={name} hidden={!cr.cell.inMonth}>x</row>"#)
             .expect("preprocess");
-        assert!(out.contains("bind:this="), "bind:this survives: {out}");
+        assert!(out.contains("bind:value="), "bind:value survives: {out}");
         assert!(out.contains("hidden="), "plain hidden survives: {out}");
-        assert!(
-            !out.contains("class:"),
-            "the deleted `class:` directive is not allowed through: {out}"
-        );
-        assert!(
-            !out.contains("style:"),
-            "the deleted `style:` directive is not allowed through: {out}"
-        );
     }
 
     #[test]

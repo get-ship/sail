@@ -198,7 +198,7 @@ describe('fx:reveal — no timeline support degrades to play-on-first-reveal', (
     const c = controlsMade[0]!
     expect(c.complete).toHaveBeenCalledTimes(1) // visible, not invisible-forever
     expect(warn).toHaveBeenCalledTimes(1)
-    expect(String(warn.mock.calls[0]![0])).toContain('fx:reveal')
+    expect(String(warn.mock.calls[0]![0])).toContain('style.reveal')
     dispose()
   })
 })

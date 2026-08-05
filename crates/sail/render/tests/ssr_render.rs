@@ -148,7 +148,7 @@ export default controller(() => {
 fn unknown_if_does_not_paint_both_branches() {
     let src = r#"
 <div sx={style.pad(2).bg(surface-0)}>
-  <if cond={window.x}>
+  <if {window.x}>
     <p>yes-branch</p>
     <else>
       <p>no-branch</p>

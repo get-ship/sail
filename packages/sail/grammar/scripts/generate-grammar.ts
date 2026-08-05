@@ -35,14 +35,14 @@ interface Vocabulary {
   blocks: Block[];
 }
 
-/** Tag from element-form open like `<if cond={…}>` → `if`. */
+/** Tag from element-form open like `<if {…}>` → `if`. */
 function tagFromOpen(open: string): string {
   const m = open.match(/^<([a-z][a-z0-9-]*)/i);
   if (!m) throw new Error(`block open is not element form: ${open}`);
   return m[1]!;
 }
 
-/** Tag from clause like `<else-if cond={…}>` → `else-if`. */
+/** Tag from clause like `<else-if {…}>` → `else-if`. */
 function tagFromClause(clause: string): string {
   const m = clause.match(/^<\/?([a-z][a-z0-9-]*)/i);
   if (!m) throw new Error(`clause is not element form: ${clause}`);

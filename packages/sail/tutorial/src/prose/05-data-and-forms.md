@@ -37,7 +37,7 @@ it has not confirmed arrived:
   <spinner></spinner>
 </while-loading>
 
-<while-error {team} as="err">
+<while-error {team}> as="err">
   <alert tone="destructive">{err.message}</alert>
 </while-error>
 

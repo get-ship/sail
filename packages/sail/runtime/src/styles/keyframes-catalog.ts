@@ -2,9 +2,9 @@
 //
 // SSOT for product @keyframes + --animate-* vars. Style.animate(name)
 // lowers to `animation: var(--animate-{name})`; L1 skins (status-dot,
-// skeleton, progress) reference the same vars. Not the fx: interaction
+// skeleton, progress) reference the same vars. Not Style motion interaction
 // catalog (crates/sail/lint/animation-presets.json) — infinite spinners /
-// shimmers stay on CSS PE, not fx:loop.
+// shimmers stay on CSS PE, not style.loop.
 //
 // Closed ambient loops; materialised in sail-base.css.
 

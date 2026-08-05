@@ -8,7 +8,7 @@ import { runScenarios, type BehaviorSpec } from '../src/scenario-runner'
 // A tiny two-step wizard exercising navigation, an input→preview binding, and a
 // single-select group — the same shapes create-space.behavior.jsonc asserts.
 const WIZARD = `
-<if cond={step() === 0}>
+<if {step() === 0}>
   <h2>Welcome</h2>
   <button on:click={() => step.set(1)}>Start</button>
 <else>

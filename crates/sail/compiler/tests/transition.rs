@@ -1,6 +1,5 @@
-//! `transition:` is RETIRED — there is one animation system (`fx:*`).
-//! The directive must fail compile with a message that names the replacement,
-//! so an author (or agent) migrating old sources gets steered, not stranded.
+//! `transition:` / `in:` / `out:` are not sail vocabulary — unknown directive.
+//! Authors use Style motion (`style.enter` / `style.exit`).
 
 use sail_compiler::{CompileMode, CompileOpts, compile};
 
@@ -18,23 +17,32 @@ fn opts() -> CompileOpts {
     }
 }
 
-#[test]
-fn transition_directive_is_a_compile_error_pointing_at_motion() {
-    let err = compile(r#"<div transition:fade>x</div>"#, opts())
-        .expect_err("retired directive must not compile");
+fn assert_unknown_directive(src: &str) {
+    let err = compile(src, opts()).expect_err("must not compile");
     assert!(
-        err.message.contains("retired")
-            && (err.message.contains("style.enter")
-                || err.message.contains(".enter")
-                || err.message.contains("style.exit")),
-        "error must name the Style motion replacement: {}",
+        err.message.contains("unknown directive") || err.message.contains("style."),
+        "expected unknown-directive or Style pointer: {}",
+        err.message
+    );
+    assert!(
+        !err.message.to_ascii_lowercase().contains("retired"),
+        "must not embalm: {}",
         err.message
     );
 }
 
 #[test]
-fn custom_transition_names_are_equally_retired() {
-    let err = compile(r#"<div transition:myfx={{ dur: 1 }}>x</div>"#, opts())
-        .expect_err("retired directive must not compile");
-    assert!(err.message.contains("retired"), "{}", err.message);
+fn transition_directive_is_unknown_vocabulary() {
+    assert_unknown_directive(r#"<div transition:fade>x</div>"#);
+}
+
+#[test]
+fn custom_transition_names_are_equally_unknown() {
+    assert_unknown_directive(r#"<div transition:myfx={{ dur: 1 }}>x</div>"#);
+}
+
+#[test]
+fn in_and_out_are_unknown_vocabulary() {
+    assert_unknown_directive(r#"<div in:slide>x</div>"#);
+    assert_unknown_directive(r#"<div out:fade>x</div>"#);
 }

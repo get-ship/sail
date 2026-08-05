@@ -1,10 +1,10 @@
-//! `sail-animate-token-only` — the `fx:` animation directive accepts
-//! only the closed property/preset vocabulary that maps cleanly to the
-//! design system.
+//! `sail-animate-token-only` — Style motion configs
+//! (`style.<trigger>({ … })` / `.enter({ … })` chain methods) accept only the
+//! closed property/preset vocabulary that maps cleanly to the design system.
 //!
-//! `fx:<trigger>={{ <prop>: '<preset>' }}` — the property must be one
-//! of [`MOTION_PROPERTIES`] (the same closed set the parser enforces),
-//! and the preset must be a name known to `animation-presets.json`.
+//! `style.<trigger>({ <prop>: '<preset>' })` — the property must be one of
+//! [`MOTION_PROPERTIES`] (the same closed set the parser enforces), and the
+//! preset must be a name known to `animation-presets.json`.
 
 use std::path::Path;
 
@@ -13,10 +13,7 @@ use crate::report::{Finding, Severity};
 pub const RULE_ID: &str = "sail-animate-token-only";
 
 /// THE property vocabulary — one list, two readers. The compiler's parser imports
-/// this rather than keeping its own copy, because it kept its own copy and the two
-/// drifted the first time a key was added (`stagger` compiled fine, then failed the
-/// lint). A comment claiming "the same closed set the parser enforces" is not a
-/// mechanism; this is.
+/// this rather than keeping its own copy.
 pub const MOTION_PROPERTIES: &[&str] = &[
     "scale",
     "scale-x",
@@ -34,32 +31,28 @@ pub const MOTION_STAGGER_KEY: &str = "stagger";
 /// THE timing vocabulary — the config-level (and per-channel) keys that are not
 /// animated properties. Same one-list-two-readers contract as the properties above.
 ///
-/// These take INLINE VALUES, and that is the point. `fx:` is the animation
-/// library's surface: a duration is a number of milliseconds and an easing is a
-/// curve, not a global design token. `sx` stays closed because colour and spacing
-/// are theming integrity; a 3600ms decorative loop never was.
+/// These take INLINE VALUES. Style motion is the animation library's surface: a
+/// duration is a number of milliseconds and an easing is a curve, not a global
+/// design token. `sx` paint stays closed because colour and spacing are theming
+/// integrity; a 3600ms decorative loop never was.
 pub const MOTION_TIMING_KEYS: &[&str] = &["duration", "delay", "easing", "iterations", "direction"];
 
 /// The keys legal inside a per-channel inline object:
 /// `translate-x: { from: 0, to: '120px' }`.
 pub const MOTION_CHANNEL_KEYS: &[&str] = &["from", "to", "preset"];
 
-/// THE trigger vocabulary — what can drive a `fx:` directive. One list, read by
-/// the parser (which rejects anything off it), by the runtime (which dispatches on
-/// it), and by the generated agent skill (which teaches it).
+/// THE trigger vocabulary — what can drive Style motion
+/// (`style.<trigger>({…})`). One list, read by the parser, the runtime, and
+/// the generated agent skill.
 ///
 /// Three kinds, and the difference matters:
 ///   INTERACTION  hover, press, focus, focus-visible — rest <-> active, event-driven
 ///   LIFECYCLE    enter, exit — the element joining or leaving the DOM. `exit` is the
 ///                one thing CSS cannot do alone: it needs the framework to HOLD the
 ///                element in the tree until the animation finishes.
-///   TIMELINE     reveal, scroll — PROGRESS-driven, not time-driven. Reveal-on-scroll
-///                and parallax, at zero JS runtime cost (the platform drives them off
-///                the main thread — no listener, no rAF, no IntersectionObserver).
+///   TIMELINE     reveal, scroll — PROGRESS-driven, not time-driven.
 ///   AMBIENT      loop — continuous: the baked animation alternates forever
-///                (iterations: Infinity). The idle life of a page — a bouncing
-///                specimen, a drifting card, a pulsing dot. Fully disabled
-///                under prefers-reduced-motion.
+///                (iterations: Infinity). Fully disabled under prefers-reduced-motion.
 pub const MOTION_TRIGGERS: &[&str] = &[
     "hover",
     "press",
@@ -72,11 +65,6 @@ pub const MOTION_TRIGGERS: &[&str] = &[
     "loop",
 ];
 
-/// The preset catalog is `animation-presets.json` — the SAME file the compiler
-/// bakes from. It used to be hand-copied into a `KNOWN_PRESETS` array here: a second
-/// source of truth for a vocabulary that must not drift. A preset the compiler knows
-/// and the lint does not is a build that passes one gate and fails the other for no
-/// reason the author can see.
 const PRESETS_JSON: &str = include_str!("../../animation-presets.json");
 
 fn known_presets() -> Vec<String> {
@@ -92,107 +80,86 @@ fn known_presets() -> Vec<String> {
 
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
     let mut findings = Vec::new();
-    // Walk by line so the byte index we hand to `find("fx:")`
-    // is always on a char boundary — no multi-byte trap.
     for (line_no, line) in source.lines().enumerate() {
-        // Skip lines that are entirely inside an HTML comment. This
-        // is a coarse check; the precise comment-skip lives in the
-        // compiler's pre-pass, not here.
         if line.trim_start().starts_with("<!--") && line.contains("-->") {
             continue;
         }
         let bytes = line.as_bytes();
         let mut i = 0;
         while i < bytes.len() {
-            // Find next `fx:` in this line.
             let rest = &line[i..];
-            let Some(colon_rel) = rest.find("fx:") else {
+            let Some(dot_rel) = rest.find('.') else {
                 break;
             };
-            let attr_start = i + colon_rel;
-            if attr_start > i && is_attr_name_continuation(bytes[attr_start - 1]) {
-                i = attr_start + "fx:".len();
-                continue;
+            let method_start = i + dot_rel + 1;
+            if method_start > i && is_attr_name_continuation(bytes[method_start - 1]) {
+                // `.` after ident char is fine; we still scan the method name.
             }
-            let after_prefix = attr_start + "fx:".len();
-            let Some(trigger_len) = scan_ident(&line[after_prefix..]) else {
-                i = attr_start + "fx:".len();
+            let Some(method_len) = scan_ident(&line[method_start..]) else {
+                i = method_start;
                 continue;
             };
-            let trigger_end = after_prefix + trigger_len;
-            let mut k = trigger_end;
+            let method = &line[method_start..method_start + method_len];
+            if !MOTION_TRIGGERS.contains(&method) {
+                i = method_start + method_len;
+                continue;
+            }
+            let mut k = method_start + method_len;
             while k < bytes.len() && bytes[k].is_ascii_whitespace() {
                 k += 1;
             }
-            if k >= bytes.len() || bytes[k] != b'=' {
-                i = k.max(trigger_end + 1);
+            if k >= bytes.len() || bytes[k] != b'(' {
+                i = k.max(method_start + method_len + 1);
                 continue;
             }
             k += 1;
             while k < bytes.len() && bytes[k].is_ascii_whitespace() {
                 k += 1;
             }
-            if k >= bytes.len() {
-                break;
-            }
-            // String form `fx:trigger="..."`.
-            if bytes[k] == b'"' {
-                let value_start = k + 1;
-                let mut v = value_start;
-                while v < bytes.len() {
-                    match bytes[v] {
-                        b'\\' if v + 1 < bytes.len() => v += 2,
-                        b'"' => break,
-                        _ => v += 1,
-                    }
-                }
-                let value = &line[value_start..v.min(bytes.len())];
-                validate_static_body(path, line_no + 1, attr_start, value, &mut findings);
-                i = v + 1;
+            if k >= bytes.len() || bytes[k] != b'{' {
+                // Dual paint/motion methods (`press()`, `scroll(auto)`) — skip.
+                i = k.max(method_start + method_len + 1);
                 continue;
             }
-            // Brace-attr form `fx:trigger={{...}}`. The compiler
-            // pre-pass leaves the literal `{{ ... }}` sequence in the
-            // source. Strip the outer pair.
-            if bytes[k] == b'{' {
-                let mut depth: i32 = if k + 1 < bytes.len() && bytes[k + 1] == b'{' {
-                    2
-                } else {
-                    1
-                };
-                let mut v = if depth == 2 { k + 2 } else { k + 1 };
-                while v < bytes.len() {
-                    match bytes[v] {
-                        b'{' => depth += 1,
-                        b'}' => {
-                            depth -= 1;
-                            if depth == 0 {
+            let mut depth: i32 = 1;
+            let body_start = k;
+            let mut v = k + 1;
+            while v < bytes.len() {
+                match bytes[v] {
+                    b'{' => depth += 1,
+                    b'}' => {
+                        depth -= 1;
+                        if depth == 0 {
+                            v += 1;
+                            break;
+                        }
+                    }
+                    b'"' | b'\'' => {
+                        let q = bytes[v];
+                        v += 1;
+                        while v < bytes.len() {
+                            if bytes[v] == b'\\' && v + 1 < bytes.len() {
+                                v += 2;
+                                continue;
+                            }
+                            if bytes[v] == q {
                                 v += 1;
                                 break;
                             }
+                            v += 1;
                         }
-                        _ => {}
+                        continue;
                     }
-                    v += 1;
+                    _ => {}
                 }
-                let raw = &line[k..v.min(bytes.len())];
-                let trimmed = strip_one_outer_brace_pair(raw);
-                validate_static_body(path, line_no + 1, attr_start, trimmed, &mut findings);
-                i = v;
-                continue;
+                v += 1;
             }
-            // Dynamic form `fx:hover={expr}` — skip silently.
-            i = k + 1;
+            let raw = &line[body_start..v.min(bytes.len())];
+            validate_static_body(path, line_no + 1, method_start, raw, &mut findings);
+            i = v;
         }
     }
     findings
-}
-
-fn strip_one_outer_brace_pair(s: &str) -> &str {
-    let s = s.trim();
-    let s = s.strip_prefix('{').unwrap_or(s);
-    let s = s.strip_suffix('}').unwrap_or(s);
-    s.trim()
 }
 
 fn is_attr_name_continuation(c: u8) -> bool {
@@ -241,9 +208,6 @@ fn validate_static_body(
         };
         let key = key_raw.trim();
         if key == MOTION_STAGGER_KEY || MOTION_TIMING_KEYS.contains(&key) {
-            // Inline timing — a number of ms, a keyword, a bezier, or a signal.
-            // Shape and range are the compiler parser's call; it has the span and
-            // the better message. This rule guards the CLOSED vocabularies only.
             continue;
         }
         if !MOTION_PROPERTIES.contains(&key) {
@@ -254,7 +218,7 @@ fn validate_static_body(
                 rule: RULE_ID,
                 severity: Severity::Error,
                 message: format!(
-                    "fx property `{}` is not supported. Supported properties: {}",
+                    "motion property `{}` is not supported. Supported properties: {}",
                     key,
                     MOTION_PROPERTIES.join(", ")
                 ),
@@ -265,13 +229,8 @@ fn validate_static_body(
             });
             continue;
         }
-        // The value is either a preset NAME (closed — this rule's job) or an
-        // inline object / number / expression (open — the author's own values,
-        // which is the whole point of the inline surface).
         let val_trimmed = val_raw.trim();
         let preset_name = if val_trimmed.starts_with('{') {
-            // `translate-x: { preset: 'pop', to: 1.9 }` — only the named default
-            // inside is closed vocabulary; the magnitudes are free.
             match inline_object_preset(val_trimmed) {
                 Some(name) => name,
                 None => continue,
@@ -279,7 +238,6 @@ fn validate_static_body(
         } else if let Some(name) = quoted_literal(val_trimmed) {
             name
         } else {
-            // A number, a bezier, or an expression. Not a preset reference.
             continue;
         };
         let presets = known_presets();
@@ -305,8 +263,6 @@ fn validate_static_body(
     }
 }
 
-/// The text inside a single- or double-quoted literal, or `None` if the
-/// value is not a quoted string at all.
 fn quoted_literal(s: &str) -> Option<String> {
     let b = s.as_bytes();
     let q = *b.first()?;
@@ -319,7 +275,6 @@ fn quoted_literal(s: &str) -> Option<String> {
     Some(s[1..s.len() - 1].to_string())
 }
 
-/// Pull `preset: 'name'` out of an inline channel object, if it has one.
 fn inline_object_preset(s: &str) -> Option<String> {
     let inner = s.strip_prefix('{')?.strip_suffix('}')?;
     for pair in split_top_level_commas(inner) {
@@ -375,13 +330,13 @@ mod tests {
 
     #[test]
     fn accepts_static_hover_with_known_preset_and_prop() {
-        let f = findings(r#"<button fx:hover={{ scale: 'spring:snappy' }}>x</button>"#);
+        let f = findings(r#"<button sx={style.hover({ scale: 'spring:snappy' })}>x</button>"#);
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 
     #[test]
     fn flags_unknown_property() {
-        let f = findings(r#"<button fx:hover={{ foo: 'spring:snappy' }}>x</button>"#);
+        let f = findings(r#"<button sx={style.hover({ foo: 'spring:snappy' })}>x</button>"#);
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
         assert!(f[0].message.contains("foo"));
         assert!(f[0].message.contains("scale"));
@@ -389,7 +344,7 @@ mod tests {
 
     #[test]
     fn flags_unknown_preset() {
-        let f = findings(r#"<button fx:hover={{ scale: 'mystery' }}>x</button>"#);
+        let f = findings(r#"<button sx={style.hover({ scale: 'mystery' })}>x</button>"#);
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
         assert!(f[0].message.contains("mystery"));
         assert!(f[0].message.contains("spring:snappy"));
@@ -397,17 +352,18 @@ mod tests {
 
     #[test]
     fn flags_multiple_in_one_config() {
-        let f =
-            findings(r#"<button fx:hover={{ scale: 'mystery', opacity: 'also-bad' }}>x</button>"#);
+        let f = findings(
+            r#"<button sx={style.hover({ scale: 'mystery', opacity: 'also-bad' })}>x</button>"#,
+        );
         assert_eq!(f.len(), 2, "expected 2 findings, got {f:?}");
     }
 
     #[test]
-    fn ignores_dynamic_form() {
-        let f = findings(r#"<button fx:hover={someExpr}>x</button>"#);
+    fn ignores_paint_press_without_config_object() {
+        let f = findings(r#"<button sx={style.press().bg(primary)}>x</button>"#);
         assert!(
             f.is_empty(),
-            "expected no findings for dynamic form, got {f:?}"
+            "expected no findings for paint press(), got {f:?}"
         );
     }
 
@@ -419,19 +375,25 @@ mod tests {
 
     #[test]
     fn skips_lines_that_are_pure_comment() {
-        let f = findings("<!-- fx:hover={{ foo: 'mystery' }} -->\n<button>x</button>");
+        let f = findings("<!-- style.hover({ foo: 'mystery' }) -->\n<button>x</button>");
         assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 
     #[test]
     fn handles_utf8_source() {
-        // Regression: source with a multi-byte char (`…` is 3 bytes)
-        // would have panicked the rule on a byte-vs-char boundary.
-        let f = findings("<!-- Loading… -->\n<button fx:hover={{ foo: 'mystery' }}>x</button>");
-        // ONE finding, not two: once `foo` is not a property, its value is
-        // not a preset reference and reporting it as an unknown preset is a
-        // cascade off the real mistake. Report the root cause only.
+        let f = findings(
+            "<!-- Loading… -->\n<button sx={style.hover({ foo: 'mystery' })}>x</button>",
+        );
         assert_eq!(f.len(), 1, "expected 1 finding, got {f:?}");
-        assert!(f[0].message.contains("`foo` is not supported"), "got {f:?}");
+        assert!(
+            f[0].message.contains("`foo` is not supported"),
+            "got {f:?}"
+        );
+    }
+
+    #[test]
+    fn chain_method_form_without_style_prefix() {
+        let f = findings(r#"sx={cta.enter({ opacity: 'fade' })}"#);
+        assert!(f.is_empty(), "expected no findings, got {f:?}");
     }
 }
