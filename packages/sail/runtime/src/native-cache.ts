@@ -55,6 +55,10 @@ interface CacheEntry<T> {
    *  already in flight (or a push source that keeps delivering after
    *  its own unsubscribe) writes into a torn-down entry's signal. */
   disposed: boolean
+  /** Test seam: when true, `fetch()` / invalidate-refetch no-op so a
+   *  forced LiveState (loading/error/ok) is not overwritten by a real
+   *  source. Cleared by `clearMock` / root dispose. */
+  mockLocked: boolean
 }
 
 const toError = (err: unknown): Error => (err instanceof Error ? err : new Error(String(err)))
@@ -154,6 +158,7 @@ export class NativeCache {
         abortController: null,
         pushUnsubscribe: null,
         disposed: false,
+        mockLocked: false,
       }
       this.entries.set(hashed, entry as CacheEntry<unknown>)
     }
@@ -211,10 +216,13 @@ export class NativeCache {
     entry: CacheEntry<T>,
     fn: (signal: AbortSignal) => Promise<T> | LiveSource<T>,
   ): void {
+    // Always retain the latest fetcher so clearMock + invalidate can
+    // revalidate after a test unlocks the entry.
+    entry.fetchFn = fn as (signal: AbortSignal) => Promise<unknown>
+    if (entry.mockLocked) return
     if (entry.status === 'fetching') return
     entry.status = 'fetching'
     const myToken = ++entry.fetchToken
-    entry.fetchFn = fn as (signal: AbortSignal) => Promise<unknown>
     // Only a genuinely empty/errored entry flashes to loading. An
     // invalidate-triggered background revalidate of `ok` data zeroes
     // `dataUpdatedAt` (staleness bookkeeping) but must NOT flip the
@@ -332,6 +340,7 @@ export class NativeCache {
       if (!isKeyPrefixedBy(entry.key, prefix)) continue
 
       entry.dataUpdatedAt = 0
+      if (entry.mockLocked) continue // test seam owns the entry
       if (entry.pushUnsubscribe !== null) continue // rule 4: push-fed, exempt
       if (entry.observers === 0) continue // rule 3: unobserved, just marked stale above
 
@@ -378,6 +387,46 @@ export class NativeCache {
       const entry = this.getOrCreate(d.key)
       entry.sig.set({ kind: 'ok', value: d.value })
       entry.dataUpdatedAt = d.dataUpdatedAt
+    }
+  }
+
+  /**
+   * Test seam: force `key` into any `LiveState` without running a fetcher.
+   * Locks the entry so attach/fetch/invalidate cannot overwrite until
+   * `clearMock` (or root dispose). Call inside the same owner-tree scope
+   * that will run `query()` / `queryKeyed()`.
+   */
+  mockState<T>(key: QueryKey, state: LiveState<T>): void {
+    const entry = this.getOrCreate<T>(key)
+    if (entry.status === 'fetching') {
+      entry.abortController?.abort()
+      entry.abortController = null
+      entry.fetchToken++
+      entry.status = 'idle'
+    }
+    if (entry.retryTimer !== null) {
+      clearTimeout(entry.retryTimer)
+      entry.retryTimer = null
+    }
+    entry.mockLocked = true
+    entry.retryCount = 0
+    if (state.kind === 'ok') {
+      entry.dataUpdatedAt = Date.now()
+    } else {
+      entry.dataUpdatedAt = 0
+    }
+    entry.sig.set(state)
+  }
+
+  /** Drop mock lock for one key, or every mocked entry when `key` is omitted. */
+  clearMock(key?: QueryKey): void {
+    if (key !== undefined) {
+      const entry = this.entries.get(hashKey(key))
+      if (entry) entry.mockLocked = false
+      return
+    }
+    for (const entry of this.entries.values()) {
+      entry.mockLocked = false
     }
   }
 
@@ -580,4 +629,19 @@ export function dehydrateNative(cache: NativeCache): DehydratedEntry[] {
 /** SSR: seed `cache` from a prior `dehydrateNative()` payload. */
 export function hydrateNative(cache: NativeCache, dehydrated: DehydratedEntry[]): void {
   cache.hydrate(dehydrated)
+}
+
+/**
+ * Test seam: force a query cache entry into loading / error / ok with no
+ * backend. Resolves the owner-tree `NativeCache` (same as `query()`), so
+ * call from inside the mount/setup scope that owns the query. Mock lock
+ * blocks real fetch until `clearQueryMocks`.
+ */
+export function mockQueryState<T>(key: QueryKey, state: LiveState<T>): void {
+  useNativeCache().mockState(key, state)
+}
+
+/** Drop mock lock for `key`, or all mocked entries on this owner-tree cache. */
+export function clearQueryMocks(key?: QueryKey): void {
+  useNativeCache().clearMock(key)
 }

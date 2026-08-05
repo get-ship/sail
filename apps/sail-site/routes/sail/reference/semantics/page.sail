@@ -97,6 +97,42 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
   </column>
 
   <column gap="3">
+    <h3>Selector contract (app tests)</h3>
+    <p sx={style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)}>
+      Versioned public API for locating UI in behavioral tests
+      (<code>@ship/sail-test</code>). Same tables as above — regenerated
+      from compiler SSOT (<code>SEMANTIC_PROPS</code> +
+      <code>HOST_ANATOMY</code>), not hand lists.
+    </p>
+    <card padding="sm" sx={style.minW(0)}>
+      <column gap="2">
+        <p sx={style.fontSize(sm)}>
+          <strong>Role</strong> — native tags (<code>button</code>,
+          <code>nav</code>, <code>h1</code>…) or host anatomy stamps
+          (table above). Never free <code>role=</code> in app markup.
+        </p>
+        <p sx={style.fontSize(sm)}>
+          <strong>Name</strong> — <code>label</code> prop →
+          <code>aria-label</code>, labelled text, or visible text.
+        </p>
+        <p sx={style.fontSize(sm)}>
+          <strong>State</strong> — semantic props
+          <code>expanded</code> / <code>selected</code> /
+          <code>pressed</code> / <code>current</code> / <code>invalid</code>
+          / <code>hidden</code> / <code>live</code>.
+        </p>
+        <p sx={style.fontSize(sm).fg(muted-foreground)}>
+          Prefer <code>getByRole(root, role, &#123; name, …state &#125;)</code>.
+          Do not query <code>data-sail-host</code> or other
+          <code>data-*</code> in app suites. Force query lifecycle with
+          <code>mockQueryState</code>; force <code>&lt;when&gt;</code> via
+          viewport helpers — no private runtime poke.
+        </p>
+      </column>
+    </card>
+  </column>
+
+  <column gap="3">
     <h3>Authoring bans ({banCount()})</h3>
     <p sx={style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)}>
       Constructs the language refuses, with the rule id that fails closed.

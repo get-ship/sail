@@ -58,3 +58,13 @@ fn svg_including_camelcase_passes() {
     )
     .is_ok());
 }
+
+#[test]
+fn test_region_is_reserved_post_rc() {
+    let err = compile("<test>probe</test>", opts()).unwrap_err();
+    let m = format!("{err:?}");
+    assert!(
+        m.contains("reserved") && m.contains("post-RC"),
+        "expected reserved post-RC message, got: {m}"
+    );
+}

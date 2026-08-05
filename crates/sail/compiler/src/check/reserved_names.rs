@@ -72,6 +72,15 @@ fn check_tag(el: &ElementInstr, parent_tag: Option<&str>) -> Result<(), CompileE
     if tag.contains('-') {
         return Ok(());
     }
+    // Post-RC region keyword — claim the name now so nothing else can.
+    if tag.eq_ignore_ascii_case("test") {
+        return Err(CompileError::new(
+            "`<test>` is reserved — lands post-RC (behavior-space test regions). \
+             Do not use it as a tag; app tests live outside .sail source via \
+             @ship/sail-test semantic queries + mock seams.",
+        )
+        .with_span(el.span));
+    }
     // `<on key=… action=…>` is the `<use-kbd>` template hook's declarative
     // shortcut record (see `dom_emit::collect_kbd_shortcuts`) — a bare tag
     // that is neither HTML nor hyphenated, but only valid as a direct child

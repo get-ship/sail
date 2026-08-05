@@ -157,6 +157,10 @@ export type {
   LiveValueOf,
 } from './query'
 
+// Test seam — force query cache entries without a backend. Not tier-B
+// author surface; prefer importing via `@ship/sail-test`.
+export { mockQueryState, clearQueryMocks } from './native-cache'
+
 export { component, prop } from './component'
 export type { PropDef, ComponentDef, ComponentSetupContext } from './component'
 

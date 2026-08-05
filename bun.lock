@@ -288,6 +288,19 @@
         "vitest": "^4.1.5",
       },
     },
+    "packages/sail/sail-test": {
+      "name": "@ship/sail-test",
+      "version": "0.1.0",
+      "dependencies": {
+        "@ship/sail-runtime": "workspace:*",
+      },
+      "devDependencies": {
+        "@ship/test-setup": "workspace:*",
+        "happy-dom": "^20.9.0",
+        "typescript": "~5.8.3",
+        "vitest": "^4.1.5",
+      },
+    },
     "packages/sail/studio-bridge": {
       "name": "@ship/sail-studio-bridge",
       "version": "0.1.0",
@@ -336,6 +349,10 @@
         "@ship/test-setup": "workspace:*",
         "vitest": "^4.1.5",
       },
+    },
+    "packages/sail/tsconfig": {
+      "name": "@ship/sail-tsconfig",
+      "version": "0.1.0",
     },
     "packages/sail/tutorial": {
       "name": "@ship/sail-tutorial",
@@ -535,6 +552,10 @@
     "@ship/sail-studio-client": ["@ship/sail-studio-client@workspace:packages/sail/studio-client"],
 
     "@ship/sail-studio-shell": ["@ship/sail-studio-shell@workspace:packages/sail/studio-shell"],
+
+    "@ship/sail-test": ["@ship/sail-test@workspace:packages/sail/sail-test"],
+
+    "@ship/sail-tsconfig": ["@ship/sail-tsconfig@workspace:packages/sail/tsconfig"],
 
     "@ship/sail-tutorial": ["@ship/sail-tutorial@workspace:packages/sail/tutorial"],
 

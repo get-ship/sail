@@ -8,6 +8,7 @@
       "packages/sail/runtime",
       "packages/sail/tokens",
       "packages/sail/test-setup",
+      "packages/sail/sail-test",
       "packages/sail/tutorial",
       "packages/sail/studio-bridge",
       "packages/sail/studio-shell",

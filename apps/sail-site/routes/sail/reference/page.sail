@@ -90,7 +90,7 @@ const SECTIONS: SectionCard[] = [
     href: '/sail/reference/semantics',
     title: 'Semantics',
     count: `${SEMANTIC_PROPS.length} props · ${AUTHORING_BANS.length} bans`,
-    description: 'Tier A — semantic a11y props, compiler-stamped host anatomy, and floor authoring bans (data-*, free aria, raw style/script).',
+    description: 'Tier A — semantic a11y props, compiler-stamped host anatomy (selector contract for @ship/sail-test), and floor authoring bans (data-*, free aria, raw style/script).',
     tier: 'A',
   },
   {
