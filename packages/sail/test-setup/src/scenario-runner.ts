@@ -37,6 +37,10 @@ export interface ScenarioResult {
 }
 
 /* --------------------------- accessible queries --------------------------- */
+// Debt: weaker parallel a11y helpers (CSS role selectors + label-only name).
+// Prefer @ship/sail-test getByRole for app behavioral suites. Re-home this
+// runner onto sail-test when next touching scenario eval (not mass-rewritten
+// on SPEC-TEST-1 FIX).
 
 const ROLE_SELECTORS: Record<string, string> = {
   button: 'button, [role="button"]',

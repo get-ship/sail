@@ -24,6 +24,9 @@
 import { compileSail, evalCompiledJs, evalInlineController } from '@ship/sail-dom/test-utils'
 import { route as makeRoute } from '@ship/sail-runtime/route'
 import type { ControllerExport } from '@ship/sail-runtime'
+// Owner-tree effect scope — same seam production `mount()` uses so
+// `query()` / `mockQueryState` share one NativeCache root.
+import { createScope, withScope } from '@ship/sail-runtime/internal'
 
 /** A controller's default export (the `controller(fn)` shape, which carries
  *  a `.setup`), a `ControllerExport<Scope>` with a typed setup, or a bare
@@ -63,7 +66,14 @@ export interface Rendered {
   fire(selector: string, type: string, init?: EventInit): boolean
   /** Resolve after a microtask + macrotask so signal effects have flushed. */
   flush(): Promise<void>
-  /** Unmount the route and remove the root from the document. */
+  /**
+   * Run `fn` inside the route's owner-tree effect scope. Required for
+   * post-mount `mockQueryState` / `clearQueryMocks` so they hit the same
+   * NativeCache as controller `query()` / `queryKeyed` (production mount
+   * parity). Controller setup already runs in this scope.
+   */
+  inScope<T>(fn: () => T): T
+  /** Unmount the route, dispose the owner-tree scope, remove the root. */
   unmount(): void
 }
 
@@ -94,7 +104,12 @@ export function renderRoute(source: string, opts: RenderOpts = {}): Rendered {
     route: makeRoute({ url: new URL(opts.url ?? '/', 'http://localhost') }),
     navigate: opts.navigate ?? (() => {}),
   }
-  const scope = def.setup(ctx) as Record<string, unknown> & {
+  // Mirror production mount: setup runs under an owner-tree effect scope so
+  // query()/mockQueryState share one NativeCache (not the anon-root fallback).
+  const owner = createScope()
+  const scope = withScope(owner, () =>
+    def.setup(ctx),
+  ) as Record<string, unknown> & {
     __mount: (c: HTMLElement) => () => void
   }
   const cleanup = scope.__mount(root)
@@ -109,11 +124,17 @@ export function renderRoute(source: string, opts: RenderOpts = {}): Rendered {
       return el.dispatchEvent(new Event(type, { bubbles: true, ...init }))
     },
     flush: () => new Promise((r) => setTimeout(r, 0)),
+    inScope: (fn) => withScope(owner, fn),
     unmount() {
       try {
         cleanup()
       } catch {
         /* mount cleanup is best-effort */
+      }
+      try {
+        owner.dispose()
+      } catch {
+        /* scope dispose is best-effort */
       }
       root.remove()
     },

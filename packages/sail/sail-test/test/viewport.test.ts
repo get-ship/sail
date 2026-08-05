@@ -1,9 +1,5 @@
-import { describe, expect, it, afterEach } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { installViewport, forceBreakpoint, BREAKPOINT_MIN_WIDTH } from '../src/viewport'
-
-afterEach(() => {
-  // force restore if a test forgot
-})
 
 describe('installViewport', () => {
   it('matchMedia reports tablet min-width against forced width', () => {

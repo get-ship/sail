@@ -11,13 +11,19 @@ export type ByRoleOptions = {
   checked?: boolean | 'mixed'
   current?: boolean | string
   level?: number
-  /** When true, match the first of several; default requires exactly one. */
+  /**
+   * String name matching only (ignored for RegExp). Default `true`: full
+   * equality after whitespace normalize. `false`: substring match.
+   */
   exact?: boolean
 }
 
-function matchesText(actual: string, expected: string | RegExp): boolean {
+function matchesText(actual: string, expected: string | RegExp, exact = true): boolean {
   const n = actual.replace(/\s+/g, ' ').trim()
-  if (typeof expected === 'string') return n === expected || n.includes(expected)
+  if (typeof expected === 'string') {
+    const e = expected.replace(/\s+/g, ' ').trim()
+    return exact ? n === e : n.includes(e)
+  }
   return expected.test(n)
 }
 
@@ -164,7 +170,8 @@ function matchesRole(el: Element, role: string, opts: ByRoleOptions): boolean {
   if (!opts.hidden && isAriaHidden(el)) return false
 
   if (opts.name !== undefined) {
-    if (!matchesText(accessibleName(el), opts.name)) return false
+    // exact defaults true for string names; RegExp ignores the flag.
+    if (!matchesText(accessibleName(el), opts.name, opts.exact !== false)) return false
   }
 
   if (opts.pressed !== undefined) {

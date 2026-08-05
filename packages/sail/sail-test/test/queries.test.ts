@@ -85,6 +85,18 @@ describe('getByRole — ARIA-1 stamps', () => {
     click(getByRole(root, 'button', { name: 'Go' }))
     expect(n).toBe(1)
   })
+
+  it('name exact defaults true; exact:false allows substring', () => {
+    const root = mount(`<button type="button">Save draft now</button>`)
+    expect(queryByRole(root, 'button', { name: 'Save draft' })).toBeNull()
+    expect(getByRole(root, 'button', { name: 'Save draft', exact: false }).textContent).toBe(
+      'Save draft now',
+    )
+    expect(getByRole(root, 'button', { name: 'Save draft now' }).textContent).toBe(
+      'Save draft now',
+    )
+    expect(getByRole(root, 'button', { name: /Save draft/ }).textContent).toBe('Save draft now')
+  })
 })
 
 describe('getByText', () => {
