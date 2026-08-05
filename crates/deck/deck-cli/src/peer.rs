@@ -75,6 +75,55 @@ fn topmost_cargo_root(start: &Path) -> Option<PathBuf> {
     topmost
 }
 
+/// `sail types` — ambient pack for tsc/tsgo (SPEC-TS-1).
+pub fn types(
+    project: Option<PathBuf>,
+    out: Option<PathBuf>,
+    tsconfig_out: Option<PathBuf>,
+) -> Result<()> {
+    let cwd = std::env::current_dir().context("cwd")?;
+    let project_dir = match project {
+        Some(p) if p.is_absolute() => p,
+        Some(p) => cwd.join(p),
+        None => cwd,
+    };
+    let path = match out {
+        Some(p) => {
+            if let Some(parent) = p.parent() {
+                if !parent.as_os_str().is_empty() {
+                    std::fs::create_dir_all(parent)
+                        .with_context(|| format!("mkdir {}", parent.display()))?;
+                }
+            }
+            let text = sail_compiler::ambients::emit_types_dts();
+            std::fs::write(&p, &text).with_context(|| format!("write {}", p.display()))?;
+            p
+        }
+        None => sail_compiler::ambients::write_project_types(&project_dir)?,
+    };
+    println!("sail types: {}", path.display());
+    if let Some(ts_out) = tsconfig_out {
+        let body = sail_compiler::ambients::emit_project_tsconfig_json(&[
+            "src/**/*.ts",
+            "routes/**/*.ts",
+        ]);
+        if ts_out.as_os_str() == "-" {
+            print!("{body}");
+        } else {
+            if let Some(parent) = ts_out.parent() {
+                if !parent.as_os_str().is_empty() {
+                    std::fs::create_dir_all(parent)
+                        .with_context(|| format!("mkdir {}", parent.display()))?;
+                }
+            }
+            std::fs::write(&ts_out, body)
+                .with_context(|| format!("write {}", ts_out.display()))?;
+            println!("sail types: tsconfig → {}", ts_out.display());
+        }
+    }
+    Ok(())
+}
+
 /// `sail tokens` — DTCG model → delivery CSS/registry/unions via SailTheme/Generate.
 pub fn tokens(
     model: Option<PathBuf>,

@@ -214,6 +214,23 @@ enum Command {
         #[arg(long)]
         out: Option<PathBuf>,
     },
+    /// Emit the sail ambient TypeScript pack (`.sail/types.d.ts`) from the
+    /// same manifests that drive the compiler (runtime ambient vocabulary +
+    /// Style setters + token scales). Project-local artifact for tsc/tsgo —
+    /// not hand-authored app source.
+    Types {
+        /// Project directory that receives `.sail/types.d.ts`. Default: cwd.
+        #[arg(long)]
+        project: Option<PathBuf>,
+        /// Optional path for a committed base `tsconfig` snippet (stdout if
+        /// `-`). When set, also writes (or prints) the recommended sail
+        /// project tsconfig that includes the ambient pack.
+        #[arg(long)]
+        tsconfig_out: Option<PathBuf>,
+        /// Write the pack to this path instead of `<project>/.sail/types.d.ts`.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
 }
 
 #[derive(Clone, Debug, clap::ValueEnum)]
@@ -271,7 +288,60 @@ fn main() -> Result<()> {
         Command::Duplicates { dir, out } => gen_duplicates_report(dir, out),
         Command::Vocabulary { out } => gen_vocabulary(out),
         Command::Tokens { model, out } => gen_tokens(model, out),
+        Command::Types {
+            project,
+            tsconfig_out,
+            out,
+        } => gen_types(project, tsconfig_out, out),
     }
+}
+
+/// Ambient pack → `<project>/.sail/types.d.ts` (+ optional tsconfig body).
+fn gen_types(
+    project: Option<PathBuf>,
+    tsconfig_out: Option<PathBuf>,
+    out: Option<PathBuf>,
+) -> Result<()> {
+    let project_dir = match project {
+        Some(p) => p,
+        None => std::env::current_dir().context("cwd")?,
+    };
+    let path = match out {
+        Some(p) => {
+            if let Some(parent) = p.parent() {
+                if !parent.as_os_str().is_empty() {
+                    fs::create_dir_all(parent)
+                        .with_context(|| format!("mkdir {}", parent.display()))?;
+                }
+            }
+            let text = sail_compiler::ambients::emit_types_dts();
+            fs::write(&p, text).with_context(|| format!("write {}", p.display()))?;
+            p
+        }
+        None => sail_compiler::ambients::write_project_types(&project_dir)?,
+    };
+    println!("types: {}", path.display());
+
+    if let Some(ts_out) = tsconfig_out {
+        let body = sail_compiler::ambients::emit_project_tsconfig_json(&[
+            "src/**/*.ts",
+            "routes/**/*.ts",
+        ]);
+        if ts_out.as_os_str() == "-" {
+            print!("{body}");
+        } else {
+            if let Some(parent) = ts_out.parent() {
+                if !parent.as_os_str().is_empty() {
+                    fs::create_dir_all(parent)
+                        .with_context(|| format!("mkdir {}", parent.display()))?;
+                }
+            }
+            fs::write(&ts_out, body)
+                .with_context(|| format!("write {}", ts_out.display()))?;
+            println!("tsconfig: {}", ts_out.display());
+        }
+    }
+    Ok(())
 }
 
 /// DTCG model → tokens.css + themes.css + token-registry.json + generated/unions.ts.

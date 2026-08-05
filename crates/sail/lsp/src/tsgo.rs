@@ -761,8 +761,9 @@ fn write_tsconfig(work_dir: &Path, workspace_hint: Option<&Path>) {
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "strict": true,
+    "noImplicitAny": true,
     "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
@@ -770,14 +771,21 @@ fn write_tsconfig(work_dir: &Path, workspace_hint: Option<&Path>) {
 {paths}      "ship": ["./ship-shim.d.ts"]
     }}
   }},
-  "include": ["./**/*.ts"]
+  "include": ["./**/*.ts", "./sail-types.d.ts"]
 }}
 "#
     );
     let _ = std::fs::write(work_dir.join("tsconfig.json"), cfg);
+    // Host-dispatch module — not subsumed by the sail ambient pack (different
+    // namespace: `import … from 'ship'` vs controller globals).
     let _ = std::fs::write(
         work_dir.join("ship-shim.d.ts"),
         "declare module 'ship' {\n  export function call(op: string, args?: Record<string, unknown>): Promise<unknown>\n  export function emit(value: unknown): void\n}\n",
+    );
+    // SPEC-TS-1 ambient pack (runtime + Style) — same emit as `sail-compiler types`.
+    let _ = std::fs::write(
+        work_dir.join("sail-types.d.ts"),
+        sail_compiler::ambients::emit_types_dts(),
     );
 }
 

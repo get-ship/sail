@@ -147,6 +147,9 @@ The pure SAIL-facing read side, plus the framework CLI.
 | CLI: scaffold route | `sail scaffold route` | `crates/deck/deck-cli/src/scaffold.rs::run_route` | Generates a new route (page.sail + manifest.jsonc; state goes in an inline `<controller>`). |
 | CLI: scaffold component | `sail scaffold component` | `crates/deck/deck-cli/src/scaffold.rs::run_component` | Generates a new `sail-*` primitive under the primitives package. |
 | CLI: scaffold pack | `sail scaffold pack` | `crates/deck/deck-cli/src/scaffold.rs::run_pack` | Generates a new first-party `@ship/<name>` component pack. |
+| CLI: types (ambient pack) | `sail types` | `crates/deck/deck-cli/src/peer.rs::types` | Emits `<project>/.sail/types.d.ts` from compiler manifests (runtime ambients + Style builder + token scales) for tsc/tsgo. |
+| CLI: build --typecheck | `sail build --typecheck` | `crates/deck/deck-cli/src/typecheck.rs::run` | Regenerates ambients + runs `tsc --noEmit` with sail tsconfig defaults. **tsc** owns controller/logic/Style types; **sail-compiler** owns template/layout/vocabulary. |
+| Base tsconfig | `@ship/sail-tsconfig/base` | `packages/sail/tsconfig/tsconfig.base.json` | Shared strict/bundler/DOM defaults for sail projects. |
 
 ## Security
 

@@ -34,7 +34,7 @@ fn parse_render_viewport(s: &str) -> Result<(u32, u32), String> {
 #[derive(Parser)]
 #[command(
     name = "sail",
-    about = "Sail — the UI framework CLI (dev, build, scaffold, compile, tokens, check, lsp, mcp, op, layout, render, doctor, version)",
+    about = "Sail — the UI framework CLI (dev, build, scaffold, compile, tokens, types, check, lsp, mcp, op, layout, render, doctor, version)",
     version,
     propagate_version = true
 )]
@@ -140,6 +140,24 @@ enum Command {
         /// Project root for project-theme merge (optional).
         #[arg(long)]
         project: Option<PathBuf>,
+    },
+
+    /// Emit the sail ambient TypeScript pack (`.sail/types.d.ts`) for tsc/tsgo.
+    ///
+    /// Regenerated from compiler manifests (runtime ambients + Style setters +
+    /// token scales). Pair with `@ship/sail-tsconfig/base` or
+    /// `deck build --typecheck`. tsc owns controller/logic types; sail-compiler
+    /// owns template/layout/vocabulary.
+    Types {
+        /// Project directory that receives `.sail/types.d.ts`. Default: cwd.
+        #[arg(long)]
+        project: Option<PathBuf>,
+        /// Write ambient pack to this path instead of `<project>/.sail/types.d.ts`.
+        #[arg(long)]
+        out: Option<PathBuf>,
+        /// Also write a recommended project tsconfig (use `-` for stdout).
+        #[arg(long)]
+        tsconfig_out: Option<PathBuf>,
     },
 
     /// Run compile-time checks on `.sail` files.
@@ -340,6 +358,11 @@ fn run() -> Result<()> {
             out,
             project,
         } => peer::tokens(model, out, project),
+        Command::Types {
+            project,
+            out,
+            tsconfig_out,
+        } => peer::types(project, out, tsconfig_out),
         Command::Check { input, fix } => peer::check(input, fix),
         Command::Lsp => peer::lsp(),
         Command::Mcp => {

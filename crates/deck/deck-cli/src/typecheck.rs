@@ -1,15 +1,20 @@
-//! Opt-in `deck build --typecheck`: an on-the-fly tsconfig + `tsc --noEmit`
-//! pass over the app's `.ts` sources (authored controllers + the bundler's
-//! generated `routes.gen.ts` / `entry.gen.ts` /
+//! Opt-in `deck build --typecheck`: ambient pack + on-the-fly tsconfig +
+//! `tsc --noEmit` over the app's `.ts` sources (authored controllers + the
+//! bundler's generated `routes.gen.ts` / `entry.gen.ts` /
 //! `components.gen.ts`), failing the build command on TypeScript errors.
 //!
-//! Default build behavior is unchanged — the flag is opt-in for v1. The
-//! tsconfig + subprocess invocation are modeled on the compiler's
-//! `crates/sail/compiler/tests/synthetic_tsc.rs` (`write_tsconfig` / `run_tsc`):
-//! full-strict, `noEmit`, `moduleResolution: Bundler`, run with `tsc -p <cfg>`.
+//! Default build behavior is unchanged — the flag is opt-in for v1.
 //!
-//! Unlike the test (which SKIPs when `tsc` is absent), the flag was requested
-//! explicitly, so a missing `node_modules/.bin/tsc` is a hard error.
+//! ## Two-checker contract (SPEC-TS-1)
+//!
+//! - **tsc** — controller / scope / logic types; Style builder types when the
+//!   source is valid TypeScript; ambient globals from `.sail/types.d.ts`.
+//! - **sail-compiler** — template / layout / vocabulary; Style DSL forms that
+//!   are not expressible as TS (hyphenated bare tokens, etc.).
+//!
+//! Unlike the synthetic_tsc test (which SKIPs when `tsc` is absent), the flag
+//! was requested explicitly, so a missing `node_modules/.bin/tsc` is a hard
+//! error.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -40,31 +45,49 @@ fn find_tsc(project: &Path, repo_root: &Path) -> Option<PathBuf> {
     None
 }
 
-/// Write the on-the-fly tsconfig into `out_dir` and return its path. Modeled on
-/// `synthetic_tsc.rs::write_tsconfig`: full-strict, `noEmit`, `Bundler`
-/// resolution. `include`/`exclude`/`baseUrl` are ABSOLUTE so the config can
+/// Write the ambient pack + on-the-fly tsconfig into `out_dir` and return the
+/// tsconfig path. `include`/`exclude`/`baseUrl` are ABSOLUTE so the config can
 /// live in the build output dir while still covering the project tree —
-/// `@ship/*` and friends resolve through the consumer's own `node_modules`
-/// (no `paths` map needed; a general consumer is not the sail workspace).
+/// `@ship/*` resolves through the consumer's own `node_modules`.
 fn write_tsconfig(project: &Path, out_dir: &Path) -> Result<PathBuf> {
-    let proj = project.display();
-    let out = out_dir.display();
+    // Project-local pack (gitignored `.sail/types.d.ts`) so editors + tsc share
+    // one ambient surface. Also mirror into out_dir for the ephemeral project.
+    let ambient = sail_compiler::ambients::write_project_types(project)?;
+    let ambient_copy = out_dir.join("sail-types.d.ts");
+    std::fs::copy(&ambient, &ambient_copy).with_context(|| {
+        format!(
+            "copy {} → {}",
+            ambient.display(),
+            ambient_copy.display()
+        )
+    })?;
+
+    let proj = project.display().to_string().replace('\\', "/");
+    let out = out_dir.display().to_string().replace('\\', "/");
+    let ambient_abs = ambient
+        .canonicalize()
+        .unwrap_or(ambient.clone())
+        .display()
+        .to_string()
+        .replace('\\', "/");
+    let opts = sail_compiler::ambients::sail_tsconfig_compiler_options_json();
+    // Drop outer braces from the shared options object so we can inject baseUrl.
+    let opts_inner = opts
+        .trim()
+        .trim_start_matches('{')
+        .trim_end_matches('}')
+        .trim();
     let cfg = format!(
         r#"{{
   "compilerOptions": {{
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "strict": true,
-    "noImplicitAny": true,
-    "skipLibCheck": true,
-    "noEmit": true,
-    "allowImportingTsExtensions": true,
+    {opts_inner},
     "baseUrl": "{proj}"
   }},
-  "include": ["{proj}/**/*.ts"],
-  "exclude": ["{proj}/node_modules", "{out}"]
+  "include": [
+    "{proj}/**/*.ts",
+    "{ambient_abs}"
+  ],
+  "exclude": ["{proj}/node_modules", "{out}", "{proj}/.deck", "{proj}/.sail-out"]
 }}"#
     );
     let path = out_dir.join("tsconfig.typecheck.json");
@@ -104,10 +127,9 @@ pub fn run(project: &Path, out_dir: &Path, repo_root: &Path) -> Result<()> {
     let cfg = write_tsconfig(project, out_dir)?;
     let (ok, output) = run_tsc(&tsc, &cfg, repo_root)?;
     if !ok {
-        // Surface tsc's own diagnostics, then fail the command.
         eprint!("{output}");
         bail!("deck build --typecheck: tsc reported type errors");
     }
-    println!("  typecheck  ok (tsc --noEmit)");
+    println!("  typecheck  ok (tsc --noEmit; ambients {})", sail_compiler::ambients::PROJECT_TYPES_REL);
     Ok(())
 }

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "$comment": "Sail project defaults (SPEC-TS-1). Include `.sail/types.d.ts` from `sail-compiler types`. tsc owns controller/scope/logic + Style builder types; sail-compiler owns template/layout/vocabulary and Style DSL forms that are not valid TypeScript.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  }
+}
