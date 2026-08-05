@@ -136,14 +136,16 @@ match / case / default
 when / else
 ==================
 
-<when {tablet}><row>wide</row><else><column>narrow</column></else></when>
+<when bp={tablet}><row>wide</row><else><column>narrow</column></else></when>
 
 ---
 
 (source_file
   (when_block
-    (brace_expression
-      (identifier))
+    (dynamic_attr
+      name: (attr_name)
+      value: (brace_expression
+        (identifier)))
     (element
       tag: (tag_name)
       (text)

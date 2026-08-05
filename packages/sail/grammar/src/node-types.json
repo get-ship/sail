@@ -142,6 +142,10 @@
           "named": true
         },
         {
+          "type": "when_block",
+          "named": true
+        },
+        {
           "type": "while_error_block",
           "named": true
         },
@@ -226,6 +230,10 @@
         },
         {
           "type": "use_attr",
+          "named": true
+        },
+        {
+          "type": "when_block",
           "named": true
         },
         {
@@ -363,6 +371,10 @@
           "named": true
         },
         {
+          "type": "when_block",
+          "named": true
+        },
+        {
           "type": "while_error_block",
           "named": true
         },
@@ -450,6 +462,10 @@
           "named": true
         },
         {
+          "type": "when_block",
+          "named": true
+        },
+        {
           "type": "while_error_block",
           "named": true
         },
@@ -534,6 +550,10 @@
         },
         {
           "type": "use_attr",
+          "named": true
+        },
+        {
+          "type": "when_block",
           "named": true
         },
         {
@@ -660,6 +680,10 @@
           "named": true
         },
         {
+          "type": "when_block",
+          "named": true
+        },
+        {
           "type": "while_error_block",
           "named": true
         },
@@ -744,6 +768,10 @@
         },
         {
           "type": "use_attr",
+          "named": true
+        },
+        {
+          "type": "when_block",
           "named": true
         },
         {
@@ -849,6 +877,10 @@
           "named": true
         },
         {
+          "type": "when_block",
+          "named": true
+        },
+        {
           "type": "while_error_block",
           "named": true
         },
@@ -910,6 +942,10 @@
         },
         {
           "type": "text",
+          "named": true
+        },
+        {
+          "type": "when_block",
           "named": true
         },
         {
@@ -978,6 +1014,97 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "when_block",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "bind_attr",
+          "named": true
+        },
+        {
+          "type": "boolean_attr",
+          "named": true
+        },
+        {
+          "type": "case_clause",
+          "named": true
+        },
+        {
+          "type": "default_clause",
+          "named": true
+        },
+        {
+          "type": "dynamic_attr",
+          "named": true
+        },
+        {
+          "type": "element",
+          "named": true
+        },
+        {
+          "type": "else_clause",
+          "named": true
+        },
+        {
+          "type": "else_if_clause",
+          "named": true
+        },
+        {
+          "type": "event_attr",
+          "named": true
+        },
+        {
+          "type": "for_block",
+          "named": true
+        },
+        {
+          "type": "html_comment",
+          "named": true
+        },
+        {
+          "type": "if_block",
+          "named": true
+        },
+        {
+          "type": "interpolation",
+          "named": true
+        },
+        {
+          "type": "match_block",
+          "named": true
+        },
+        {
+          "type": "static_attr",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "use_attr",
+          "named": true
+        },
+        {
+          "type": "when_block",
+          "named": true
+        },
+        {
+          "type": "while_error_block",
+          "named": true
+        },
+        {
+          "type": "while_loading_block",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -1054,6 +1181,10 @@
         },
         {
           "type": "use_attr",
+          "named": true
+        },
+        {
+          "type": "when_block",
           "named": true
         },
         {
@@ -1144,6 +1275,10 @@
           "named": true
         },
         {
+          "type": "when_block",
+          "named": true
+        },
+        {
           "type": "while_error_block",
           "named": true
         },
@@ -1203,6 +1338,10 @@
     "named": false
   },
   {
+    "type": "</when>",
+    "named": false
+  },
+  {
     "type": "</while-error>",
     "named": false
   },
@@ -1236,6 +1375,10 @@
   },
   {
     "type": "<match",
+    "named": false
+  },
+  {
+    "type": "<when",
     "named": false
   },
   {

@@ -31,6 +31,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "when_block"
+        },
+        {
+          "type": "SYMBOL",
           "name": "while_loading_block"
         },
         {
@@ -689,6 +693,37 @@
         {
           "type": "STRING",
           "value": "</match>"
+        }
+      ]
+    },
+    "when_block": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "<when"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_attribute"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ">"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_template_node"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "</when>"
         }
       ]
     },
