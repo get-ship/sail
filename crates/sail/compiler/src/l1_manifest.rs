@@ -165,36 +165,51 @@ static STDLIB_ROWS: LazyLock<Vec<L1Entry>> = LazyLock::new(|| {
 
 /// The first non-blank line of the source's leading `<!--  … -->` block,
 /// stripped of the leading `<tag> — ` prefix. Empty string if the source
-/// has no docblock.
+/// has no docblock. Handles single-line (`<!-- <tag> — desc -->`) and
+/// multi-line docblocks.
 fn first_line_description(source: &str) -> Option<String> {
     let mut in_block = false;
     for line in source.lines() {
         let trimmed = line.trim();
         if !in_block {
-            if trimmed.starts_with("<!--") {
-                in_block = true;
-                if trimmed.ends_with("-->") {
+            let Some(rest) = trimmed.strip_prefix("<!--") else {
+                continue;
+            };
+            let rest = rest.trim_start();
+            if let Some(inner) = rest.strip_suffix("-->") {
+                let inner = inner.trim();
+                if inner.is_empty() {
                     return None;
                 }
+                return Some(strip_tag_emdash(inner));
+            }
+            in_block = true;
+            if !rest.is_empty() {
+                return Some(strip_tag_emdash(rest));
             }
             continue;
         }
-        if trimmed.ends_with("-->") {
-            return None;
+        if let Some(inner) = trimmed.strip_suffix("-->") {
+            let inner = inner.trim();
+            if inner.is_empty() {
+                return None;
+            }
+            return Some(strip_tag_emdash(inner));
         }
         if trimmed.is_empty() {
             continue;
         }
-        // Strip the `  <name> — ` lead. The first em-dash IS the
-        // heading separator; everything else (including later em-dashes
-        // inside the sentence) is the description.
-        let after_dash = trimmed
-            .find('—')
-            .map(|i| trimmed[i + '—'.len_utf8()..].trim_start().to_string())
-            .unwrap_or_else(|| trimmed.to_string());
-        return Some(after_dash);
+        return Some(strip_tag_emdash(trimmed));
     }
     None
+}
+
+/// Strip the leading `<name> — ` heading separator; later em-dashes stay.
+fn strip_tag_emdash(trimmed: &str) -> String {
+    trimmed
+        .find('—')
+        .map(|i| trimmed[i + '—'.len_utf8()..].trim_start().to_string())
+        .unwrap_or_else(|| trimmed.to_string())
 }
 
 const EMPTY_ATTRS: [(&'static str, &'static [&'static str]); 0] = [];
@@ -204,13 +219,13 @@ const RESKINS: &[ReskinRow] = &[
         tag: "hr",
         selectors: &["hr {"],
         attributes: &EMPTY_ATTRS,
-        description: "Document rule divider. Prefer `<separator>` for orientation/variant/tone.",
+        description: "Native reskin of HTML <hr> — document rule divider. Prefer <separator> for orientation/variant/tone.",
     },
     ReskinRow {
         tag: "kbd",
         selectors: &["kbd {"],
         attributes: &EMPTY_ATTRS,
-        description: "Keycap — mono on muted chip, doubled bottom edge.",
+        description: "Native reskin of HTML <kbd> — mono keycap on muted chip, doubled bottom edge.",
     },
 ];
 

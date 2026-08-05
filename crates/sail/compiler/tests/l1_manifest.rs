@@ -233,3 +233,40 @@ fn proof_adding_a_fake_reskin_breaks_consistency() {
         );
     }
 }
+
+#[test]
+fn every_l1_entry_has_nonempty_description() {
+    for e in l1_entries() {
+        assert!(
+            !e.description.trim().is_empty(),
+            "L1 `{}` has empty description — fix stdlib docblock or RESKINS row",
+            e.tag
+        );
+    }
+}
+
+#[test]
+fn chip_description_is_filter_selection_pill() {
+    let chip = l1_entries()
+        .into_iter()
+        .find(|e| e.tag == "chip")
+        .expect("chip in L1");
+    assert!(
+        chip.description.contains("filter") || chip.description.contains("pill"),
+        "chip description unexpected: {}",
+        chip.description
+    );
+}
+
+#[test]
+fn reskin_descriptions_name_native_reskin_contract() {
+    let (_, reskins) = l1_by_kind();
+    for e in reskins {
+        assert!(
+            e.description.to_ascii_lowercase().contains("native reskin"),
+            "reskin `{}` description must name native reskin contract: {}",
+            e.tag,
+            e.description
+        );
+    }
+}

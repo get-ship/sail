@@ -612,6 +612,62 @@ fn gen_prop_registry(out: Option<PathBuf>, ts_out: Option<PathBuf>) -> Result<()
     sf.push_str(&serde_json::to_string_pretty(&elements)?);
     sf.push_str("\n\n");
 
+    // SEMANTIC PROPS — author a11y IR (SPEC-ARIA-1). Compiler stamps aria.
+    let semantic_props: Vec<serde_json::Value> = sail_compiler::SEMANTIC_PROPS
+        .iter()
+        .map(|p| {
+            let kind = match p.kind {
+                sail_compiler::SemanticKind::String => "string".to_string(),
+                sail_compiler::SemanticKind::Bool => "bool".to_string(),
+                sail_compiler::SemanticKind::Number => "number".to_string(),
+                sail_compiler::SemanticKind::Union(vs) => vs.join(" | "),
+            };
+            serde_json::json!({
+                "name": p.name,
+                "aria": p.aria,
+                "kind": kind,
+                "summary": p.summary,
+            })
+        })
+        .collect();
+    sf.push_str(
+        "export interface SemanticPropDoc {\n  name: string\n  aria: string\n  kind: string\n  summary: string\n}\n\n",
+    );
+    sf.push_str("export const SEMANTIC_PROPS: SemanticPropDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&semantic_props)?);
+    sf.push_str("\n\n");
+
+    // HOST_ANATOMY — compiler-stamped roles/live/atomic/labels (not free author API).
+    let host_anatomy: Vec<serde_json::Value> = sail_compiler::HOST_ANATOMY
+        .iter()
+        .map(|(tag, a)| {
+            serde_json::json!({
+                "tag": tag,
+                "role": a.role,
+                "live": a.live,
+                "atomic": a.atomic,
+                "label": a.label,
+            })
+        })
+        .collect();
+    sf.push_str(
+        "export interface HostAnatomyDoc {\n  tag: string\n  role: string | null\n  live: string | null\n  atomic: string | null\n  label: string | null\n}\n\n",
+    );
+    sf.push_str("/** Compiler-stamped L1 host anatomy — not free author API. */\n");
+    sf.push_str("export const HOST_ANATOMY: HostAnatomyDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(&host_anatomy)?);
+    sf.push_str("\n\n");
+
+    // AUTHORING_BANS — data-*/free aria/style/script with rule ids.
+    sf.push_str(
+        "export interface AuthoringBanDoc {\n  syntax: string\n  rule: string\n  instead: string\n}\n\n",
+    );
+    sf.push_str("export const AUTHORING_BANS: AuthoringBanDoc[] = ");
+    sf.push_str(&serde_json::to_string_pretty(
+        &sail_compiler::AUTHORING_BANS,
+    )?);
+    sf.push_str("\n\n");
+
     // ACTIONS — the `use:` registry, straight from action_manifest::ACTIONS
     // (already sorted, already carries a prose `summary` per entry).
     // `public` marks the curated app-author surface (PUBLIC_ACTION_NAMES).

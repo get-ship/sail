@@ -52,12 +52,12 @@ pub const DIRECTIVES: &[DirectiveEntry] = &[
         summary: "attach behavior bound to the element's lifecycle; built-ins live in the actions reference, a scope value works too",
     },
     DirectiveEntry {
-        syntax: "sx=\"atom atom …\"",
-        summary: "static styling atoms from the closed sx vocabulary; sx={expr} is a compile error",
+        syntax: "sx={style.…}",
+        summary: "Style product paint — style.bg(…).padX(2), match, when, compound; utility-string sx=\"atom atom\" is a residual compile error",
     },
     DirectiveEntry {
-        syntax: "(--name) inside sx values",
-        summary: "read a CSS custom property: any sx atom accepts (--name) and lowers to var(--name); typed actions write them",
+        syntax: "(--name) inside Style values",
+        summary: "read a CSS custom property as any Style setter argument; lowers to var(--name); typed actions write them",
     },
     DirectiveEntry {
         syntax: "slot=\"name\" (use site)",
@@ -1027,6 +1027,25 @@ mod tests {
             !bind_row.syntax.contains("this"),
             "active bind: DIRECTIVES row must not list bind:this: {}",
             bind_row.syntax
+        );
+        let sx_row = DIRECTIVES
+            .iter()
+            .find(|d| d.syntax.starts_with("sx"))
+            .expect("sx DIRECTIVES row");
+        assert!(
+            sx_row.syntax.contains("style."),
+            "sx DIRECTIVES must teach Style product, got {}",
+            sx_row.syntax
+        );
+        assert!(
+            !sx_row.syntax.contains("atom atom"),
+            "sx DIRECTIVES must not advertise utility-string atoms: {}",
+            sx_row.syntax
+        );
+        assert!(
+            sx_row.summary.contains("utility-string") || sx_row.summary.contains("residual"),
+            "sx summary must call out residual utility-string: {}",
+            sx_row.summary
         );
     }
 }

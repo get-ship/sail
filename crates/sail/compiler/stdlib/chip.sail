@@ -1,4 +1,6 @@
-<!-- <chip> — filter/selection pill. -->
+<!--
+  <chip> — filter/selection pill.
+-->
 
 <scope>
   props: {

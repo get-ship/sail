@@ -1788,7 +1788,7 @@
     "gap-y": "host paint via style.gapY(2) — or <column gap=\"2\">",
     "grid-cols": "<grid cols=\"3\">",
     "grid-rows": "<grid rows=\"3\"> \u2014 an explicit row count",
-    "animate": "fx: \u2014 springs, scroll, stagger, FLIP",
+    "animate": "style.loop / style.press / style.enter / style.exit / style.reveal / style.scroll \u2014 Style motion",
     "sr-only-focusable": "sr-only"
   }
 }

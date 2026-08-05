@@ -16,6 +16,8 @@ import {
   DIRECTIVES,
   SCOPE_GRAMMAR,
   CONFIG_KEYS,
+  SEMANTIC_PROPS,
+  AUTHORING_BANS,
 } from '../../../src/language-surface.gen'
 import { AUTHOR_RUNTIME_COUNT, RUNTIME_CATEGORIES } from '../../../src/runtime-surface.gen'
 
@@ -82,6 +84,13 @@ const SECTIONS: SectionCard[] = [
     title: 'Elements',
     count: `${ELEMENTS.stdlib.length + ELEMENTS.reskins.length} elements`,
     description: 'Tier A — every stdlib element and native reskin (HTML L1 tags as specified, e.g. <img>), with prop tables.',
+    tier: 'A',
+  },
+  {
+    href: '/sail/reference/semantics',
+    title: 'Semantics',
+    count: `${SEMANTIC_PROPS.length} props · ${AUTHORING_BANS.length} bans`,
+    description: 'Tier A — semantic a11y props, compiler-stamped host anatomy, and floor authoring bans (data-*, free aria, raw style/script).',
     tier: 'A',
   },
   {

@@ -59,7 +59,12 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     </grid>
 
     <h3>Native reskins</h3>
-    <p>Bare HTML tags the framework styles — the tag is still the API.</p>
+    <p sx={style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)}>
+      Runtime-styled native HTML tags (<code>hr</code>, <code>kbd</code>).
+      The tag remains the API; the framework only reskins paint. Prefer
+      stdlib <code>separator</code> when you need orientation, variant, or
+      tone props.
+    </p>
     <grid cols="3" gap="2">
       <for {reskinElements()} as="e" key={e.tag}>
         <card padding="sm" sx={style.minW(0)}>

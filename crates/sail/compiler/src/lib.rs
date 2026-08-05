@@ -37,6 +37,7 @@ pub mod bindings;
 pub mod block_manifest;
 pub mod breakpoints;
 pub mod check;
+pub mod authoring_bans;
 pub mod diagnostics;
 pub mod directive_manifest;
 pub mod edit;
@@ -73,6 +74,7 @@ pub use grammar_vocabulary::{GrammarVocabulary, to_json as grammar_vocabulary_to
 pub use l1_manifest::{
     L1Attribute, L1Entry, L1Kind, VOID_TAGS, l1_by_kind, l1_count, l1_entries, l1_kind,
 };
+pub use authoring_bans::{AUTHORING_BANS, AuthoringBan};
 pub use semantic_props::{
     HOST_ANATOMY, HostAnatomy, SEMANTIC_PROPS, SemanticKind, SemanticProp, host_anatomy,
     is_free_aria_attr, lower_attr_name_str, lookup as lookup_semantic_prop,

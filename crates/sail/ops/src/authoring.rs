@@ -243,8 +243,41 @@ Controllers never `.style` / `createElement`.\n\
                 md,
                 "\nIcon-only `<button>` requires `label`. `selected` dual-stamps \
                  `aria-selected` while keeping the design attr for chip/pressed.\n\n\
-                 ### Stdlib\n"
+                 ### Host anatomy (compiler-stamped — not free author API)\n\n\
+                 The compiler stamps these roles / live / atomic / labels onto L1 \
+                 hosts. Authors never write free `role=` / `aria-live` / `aria-atomic` \
+                 for them.\n"
             );
+            for (tag, a) in sail_compiler::HOST_ANATOMY {
+                let mut parts = Vec::new();
+                if let Some(r) = a.role {
+                    parts.push(format!("role=`{r}`"));
+                }
+                if let Some(l) = a.live {
+                    parts.push(format!("aria-live=`{l}`"));
+                }
+                if let Some(at) = a.atomic {
+                    parts.push(format!("aria-atomic=`{at}`"));
+                }
+                if let Some(lb) = a.label {
+                    parts.push(format!("aria-label=`{lb}`"));
+                }
+                let detail = if parts.is_empty() {
+                    "(structure-only / native tag carries semantics)".into()
+                } else {
+                    parts.join(", ")
+                };
+                let _ = writeln!(md, "- `<{tag}>` — {detail}");
+            }
+            let _ = writeln!(md, "\n### Authoring bans\n");
+            for b in sail_compiler::AUTHORING_BANS {
+                let _ = writeln!(
+                    md,
+                    "- `{}` (`{}`) — {}",
+                    b.syntax, b.rule, b.instead
+                );
+            }
+            let _ = writeln!(md, "\n### Stdlib\n");
             for e in &stdlib {
                 let _ = writeln!(md, "- `<{}>` — {}", e.tag, e.description);
             }
@@ -1046,6 +1079,11 @@ mod tests {
             !style.contains("style.grow(…)"),
             "must not teach style.grow"
         );
+        let l1 = surface_markdown(SurfaceTopic::L1);
+        assert!(l1.contains("label"), "semantic props: {l1}");
+        assert!(l1.contains("Host anatomy"), "host anatomy section: {l1}");
+        assert!(l1.contains("sail-no-data-attr"), "authoring bans: {l1}");
+        assert!(l1.contains("Native reskin") || l1.contains("native reskin") || l1.contains("<hr>"), "reskins: {l1}");
     }
 
     #[test]

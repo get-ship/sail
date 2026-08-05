@@ -7426,7 +7426,7 @@ export const LAYOUT_KEYWORDS: Array<{ tag: string; props: string[] }> = [
 export const SX_REFUSALS: Array<{ atom: string; instead: string }> = [
   {
     "atom": "animate",
-    "instead": "fx: — springs, scroll, stagger, FLIP"
+    "instead": "style.loop / style.press / style.enter / style.exit / style.reveal / style.scroll — Style motion"
   },
   {
     "atom": "flex",
@@ -7656,7 +7656,7 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
     },
     {
       "tag": "chip",
-      "description": ""
+      "description": "filter/selection pill."
     },
     {
       "tag": "code-block",
@@ -7850,14 +7850,216 @@ export const ELEMENTS: { stdlib: ElementDoc[]; reskins: ElementDoc[] } = {
   "reskins": [
     {
       "tag": "hr",
-      "description": "Document rule divider. Prefer `<separator>` for orientation/variant/tone."
+      "description": "Native reskin of HTML <hr> — document rule divider. Prefer <separator> for orientation/variant/tone."
     },
     {
       "tag": "kbd",
-      "description": "Keycap — mono on muted chip, doubled bottom edge."
+      "description": "Native reskin of HTML <kbd> — mono keycap on muted chip, doubled bottom edge."
     }
   ]
 }
+
+export interface SemanticPropDoc {
+  name: string
+  aria: string
+  kind: string
+  summary: string
+}
+
+export const SEMANTIC_PROPS: SemanticPropDoc[] = [
+  {
+    "name": "label",
+    "aria": "aria-label",
+    "kind": "string",
+    "summary": "Accessible name (required on icon-only buttons)"
+  },
+  {
+    "name": "description",
+    "aria": "aria-description",
+    "kind": "string",
+    "summary": "Accessible description text (IDREF association is L1 anatomy)"
+  },
+  {
+    "name": "expanded",
+    "aria": "aria-expanded",
+    "kind": "bool",
+    "summary": "Expand/collapse state for disclosures and drawers"
+  },
+  {
+    "name": "selected",
+    "aria": "aria-selected",
+    "kind": "bool",
+    "summary": "Selection state — stamps aria-selected; keeps selected for compound/pressed"
+  },
+  {
+    "name": "pressed",
+    "aria": "aria-pressed",
+    "kind": "bool",
+    "summary": "Toggle pressed state for buttons"
+  },
+  {
+    "name": "current",
+    "aria": "aria-current",
+    "kind": "page | step | location | date | time | true | false",
+    "summary": "Nav currency (page/step/…) for current location in a set"
+  },
+  {
+    "name": "level",
+    "aria": "aria-level",
+    "kind": "number",
+    "summary": "Hierarchical level (heading / tree item)"
+  },
+  {
+    "name": "live",
+    "aria": "aria-live",
+    "kind": "off | polite | assertive",
+    "summary": "Live region politeness"
+  },
+  {
+    "name": "invalid",
+    "aria": "invalid",
+    "kind": "bool",
+    "summary": "Field invalidity (CSS [invalid]; describedControl stamps aria-invalid)"
+  },
+  {
+    "name": "hidden",
+    "aria": "aria-hidden",
+    "kind": "bool",
+    "summary": "Hide decorative content from the accessibility tree"
+  }
+]
+
+export interface HostAnatomyDoc {
+  tag: string
+  role: string | null
+  live: string | null
+  atomic: string | null
+  label: string | null
+}
+
+/** Compiler-stamped L1 host anatomy — not free author API. */
+export const HOST_ANATOMY: HostAnatomyDoc[] = [
+  {
+    "tag": "navbar",
+    "role": "navigation",
+    "live": null,
+    "atomic": null,
+    "label": null
+  },
+  {
+    "tag": "pagination",
+    "role": "navigation",
+    "live": null,
+    "atomic": null,
+    "label": null
+  },
+  {
+    "tag": "breadcrumb",
+    "role": null,
+    "live": null,
+    "atomic": null,
+    "label": "Breadcrumb"
+  },
+  {
+    "tag": "alert",
+    "role": "status",
+    "live": "polite",
+    "atomic": "true",
+    "label": null
+  },
+  {
+    "tag": "toast",
+    "role": "status",
+    "live": "polite",
+    "atomic": null,
+    "label": null
+  },
+  {
+    "tag": "empty-state",
+    "role": "note",
+    "live": "off",
+    "atomic": null,
+    "label": null
+  },
+  {
+    "tag": "error-state",
+    "role": "alert",
+    "live": null,
+    "atomic": null,
+    "label": null
+  },
+  {
+    "tag": "spinner",
+    "role": "status",
+    "live": null,
+    "atomic": null,
+    "label": "Loading"
+  },
+  {
+    "tag": "switch",
+    "role": "switch",
+    "live": null,
+    "atomic": null,
+    "label": null
+  },
+  {
+    "tag": "tab-list",
+    "role": "tablist",
+    "live": null,
+    "atomic": null,
+    "label": null
+  },
+  {
+    "tag": "radio-group",
+    "role": "radiogroup",
+    "live": null,
+    "atomic": null,
+    "label": null
+  },
+  {
+    "tag": "tooltip",
+    "role": null,
+    "live": null,
+    "atomic": null,
+    "label": null
+  },
+  {
+    "tag": "field",
+    "role": null,
+    "live": null,
+    "atomic": null,
+    "label": null
+  }
+]
+
+export interface AuthoringBanDoc {
+  syntax: string
+  rule: string
+  instead: string
+}
+
+export const AUTHORING_BANS: AuthoringBanDoc[] = [
+  {
+    "syntax": "data-*",
+    "rule": "sail-no-data-attr",
+    "instead": "prefer accessible name, visible text, or authored id; event wiring via on: + closed-over state"
+  },
+  {
+    "syntax": "free aria-* / role=",
+    "rule": "sail-no-free-aria",
+    "instead": "typed semantic props (label, description, expanded, selected, pressed, current, level, live, invalid, hidden); fixed roles from native tags or L1 host anatomy"
+  },
+  {
+    "syntax": "raw <style>",
+    "rule": "sail-no-style-block",
+    "instead": "Style product sx={style.…} and design tokens (floor)"
+  },
+  {
+    "syntax": "raw <script>",
+    "rule": "sail-no-script",
+    "instead": "imperative logic lives in the <controller> block"
+  }
+]
 
 export interface ActionDoc {
   name: string
@@ -8350,12 +8552,12 @@ export const DIRECTIVES: DirectiveDoc[] = [
     "summary": "attach behavior bound to the element's lifecycle; built-ins live in the actions reference, a scope value works too"
   },
   {
-    "syntax": "sx=\"atom atom …\"",
-    "summary": "static styling atoms from the closed sx vocabulary; sx={expr} is a compile error"
+    "syntax": "sx={style.…}",
+    "summary": "Style product paint — style.bg(…).padX(2), match, when, compound; utility-string sx=\"atom atom\" is a residual compile error"
   },
   {
-    "syntax": "(--name) inside sx values",
-    "summary": "read a CSS custom property: any sx atom accepts (--name) and lowers to var(--name); typed actions write them"
+    "syntax": "(--name) inside Style values",
+    "summary": "read a CSS custom property as any Style setter argument; lowers to var(--name); typed actions write them"
   },
   {
     "syntax": "slot=\"name\" (use site)",
@@ -9037,7 +9239,7 @@ export const RETIRED_DIRECTIVES: RetiredDoc[] = [
   },
   {
     "syntax": "class:<name>",
-    "instead": "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is aria-*/closed sx state prefixes/layout — not a global CSS class toggle. Bare class= is also banned"
+    "instead": "styling is sx (or a named use: action writing a custom property sx reads via (--name)); state is semantic props/closed sx state prefixes/layout — not a global CSS class toggle. Bare class= is also banned"
   },
   {
     "syntax": "style:<prop>",
