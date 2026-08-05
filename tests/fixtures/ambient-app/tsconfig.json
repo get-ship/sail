@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../packages/sail/tsconfig/tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@ship/sail-runtime": ["../../../packages/sail/runtime/src/index.ts"],
+      "@ship/sail-runtime/*": ["../../../packages/sail/runtime/src/*"]
+    }
+  },
+  "include": [
+    ".sail/types.d.ts",
+    "routes/**/*.ts",
+    "src/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", ".deck", ".sail-out"]
+}

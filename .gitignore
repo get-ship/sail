@@ -55,7 +55,7 @@ crates/deck/deck-core/assets/sail-custom-elements.json
 # config too, so ignore selectively: the sail-compiler's `.ship/sail-out/` mirror,
 # worktrees, and local dbs are generated/runtime — never committed.
 .sail-out/
-# Project ambient pack (SPEC-TS-1) — regenerate via `sail-compiler types`.
+# Project ambient pack — regenerate via `sail-compiler types` / `sail types`.
 .sail/
 .ship/sail-out/
 .ship/worktrees/

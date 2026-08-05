@@ -782,7 +782,7 @@ fn write_tsconfig(work_dir: &Path, workspace_hint: Option<&Path>) {
         work_dir.join("ship-shim.d.ts"),
         "declare module 'ship' {\n  export function call(op: string, args?: Record<string, unknown>): Promise<unknown>\n  export function emit(value: unknown): void\n}\n",
     );
-    // SPEC-TS-1 ambient pack (runtime + Style) — same emit as `sail-compiler types`.
+    // Sail ambient pack (runtime + Style) — same emit as `sail-compiler types`.
     let _ = std::fs::write(
         work_dir.join("sail-types.d.ts"),
         sail_compiler::ambients::emit_types_dts(),

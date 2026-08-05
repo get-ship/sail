@@ -36,7 +36,7 @@ pub const PROJECT_TYPES_REL: &str = ".sail/types.d.ts";
 const HEADER: &str = "\
 // GENERATED FILE — do not edit by hand.
 //
-// Sail ambient pack (SPEC-TS-1). Source of truth:
+// Sail ambient pack. Source of truth:
 //   crates/sail/compiler/src/runtime_ambient.rs
 //   crates/sail/lint/src/style/setters.rs (+ scales / token registry)
 // Regenerate: cargo run -p sail-compiler -- types [--project <dir>]
@@ -548,9 +548,15 @@ fn emit_globals(out: &mut String, bare_tokens: &BTreeSet<String>) {
                 out.push_str("  function onCleanup(fn: () => void): void\n");
             }
             "controller" => {
+                // Match runtime `controller<Ctx, SC>`: Ctx from the setup
+                // parameter annotation, SC from the return — so authors can
+                // write `controller((ctx: ControllerScope<Scope>) => …)`.
                 out.push_str(
-                    "  function controller<SC extends Record<string, unknown>>(\n\
-                     \x20\x20  setup: (ctx: ControllerScope) => SC,\n\
+                    "  function controller<\n\
+                     \x20\x20  Ctx = object,\n\
+                     \x20\x20  SC extends Record<string, unknown> = Record<string, unknown>,\n\
+                     \x20\x20>(\n\
+                     \x20\x20  setup: (ctx: ControllerScope<Ctx>, host?: Element) => SC,\n\
                      \x20\x20): ControllerDef<SC>\n",
                 );
             }

@@ -1,4 +1,4 @@
-//! tsc proof for the SPEC-TS-1 ambient Style pack.
+//! tsc proof for the ambient Style pack.
 //!
 //! Writes a tiny fixture against the generated `.sail/types.d.ts` and asserts:
 //! - good Style usage typechecks green

@@ -5,7 +5,7 @@
 //!
 //! Default build behavior is unchanged — the flag is opt-in for v1.
 //!
-//! ## Two-checker contract (SPEC-TS-1)
+//! ## Two-checker contract
 //!
 //! - **tsc** — controller / scope / logic types; Style builder types when the
 //!   source is valid TypeScript; ambient globals from `.sail/types.d.ts`.

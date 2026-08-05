@@ -75,7 +75,7 @@ fn topmost_cargo_root(start: &Path) -> Option<PathBuf> {
     topmost
 }
 
-/// `sail types` — ambient pack for tsc/tsgo (SPEC-TS-1).
+/// `sail types` — ambient pack for tsc/tsgo.
 pub fn types(
     project: Option<PathBuf>,
     out: Option<PathBuf>,

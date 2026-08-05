@@ -249,8 +249,8 @@ pub fn run_pack(name: String) -> Result<()> {
     );
     fs::write(base.join("package.json"), pkg_json)?;
 
-    // Align with SPEC-TS-1 / packages/sail/tsconfig/tsconfig.base.json (inline
-    // so a freshly scaffolded pack typechecks without an extra workspace dep).
+    // Align with packages/sail/tsconfig/tsconfig.base.json (inline so a
+    // freshly scaffolded pack typechecks without an extra workspace dep).
     let tsconfig = "{\n  \
          \"compilerOptions\": {\n    \
          \"target\": \"ES2022\",\n    \
