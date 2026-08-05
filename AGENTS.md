@@ -28,5 +28,13 @@ deprecation windows instead of instant scrub.
    only for the migration window, and are deleted with the tombstone. They
    never intermix with legitimate behavioral suites.
 
+## App tests
+
+App and product behavioral tests locate UI via **role, accessible name, and
+visible text** (ARIA-1 contract) — not `data-sail-host` or other `data-*`
+selectors. `data-sail-host` is compiler-only L1 part identity for closed-widget
+action discovery; framework unit tests may use the stamp for part discovery,
+app suites must not.
+
 Do not revive `ARCHITECTURE.md`. Doctrine for agents lives here until internal
 tools land.

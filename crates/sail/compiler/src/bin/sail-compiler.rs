@@ -1011,6 +1011,9 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
         "- NO `<style>` blocks, NO `style=` attributes. NO raw values (px/hex) — spend a token.\n\
          - NO utility-string sx (`sx=\"p-4 bg-surface-2\"`). Product is Style:\n  \
            `sx={{style.pad(4).bg(surface-2)}}` / `when({{…}})` / `match`.\n\
+         - NO `data-*` in app markup (`sail-no-data-attr`). The compiler stamps\n  \
+           `data-sail-host` on L1 as closed-widget part identity — never author it.\n  \
+           App tests use role / accessible name / visible text, not that stamp.\n\
          - **Comments are not load-bearing.** Layout recipes that used to live only as\n  \
            HTML comments are **lints** (`sail-display-on-layout`, participation, …).\n  \
            Do not invent workarounds in comments — fix the structure so tools pass.\n\

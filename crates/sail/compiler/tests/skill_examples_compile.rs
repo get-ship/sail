@@ -102,6 +102,12 @@ fn skill_generator_matches_product_surface() {
         "skill must point agents at MCP sail_surface / sail_check"
     );
     assert!(
+        md.contains("data-sail-host")
+            && md.contains("sail-no-data-attr")
+            && (md.contains("role") && md.contains("name") || md.contains("role / accessible name")),
+        "skill must teach data-sail-host is compiler-only and tests use role/name/text"
+    );
+    assert!(
         md.contains("sail_edit") && !md.contains("sail_apply"),
         "skill must list live MCP sail_edit (sail_apply removed)"
     );

@@ -246,7 +246,12 @@ Controllers never `.style` / `createElement`.\n\
                  ### Host anatomy (compiler-stamped — not free author API)\n\n\
                  The compiler stamps these roles / live / atomic / labels onto L1 \
                  hosts. Authors never write free `role=` / `aria-live` / `aria-atomic` \
-                 for them.\n"
+                 for them.\n\n\
+                 The compiler also stamps `data-sail-host` as **part identity for closed \
+                 L1 widgets** (runtime action part discovery). It is not an author API \
+                 and is refused under `sail-no-data-attr` if written in app sources. \
+                 Framework emit keeps the stamp; app tests locate UI via role, accessible \
+                 name, and visible text — not `[data-sail-host]`.\n"
             );
             for (tag, a) in sail_compiler::HOST_ANATOMY {
                 let mut parts = Vec::new();
@@ -1083,6 +1088,10 @@ mod tests {
         assert!(l1.contains("label"), "semantic props: {l1}");
         assert!(l1.contains("Host anatomy"), "host anatomy section: {l1}");
         assert!(l1.contains("sail-no-data-attr"), "authoring bans: {l1}");
+        assert!(
+            l1.contains("data-sail-host") && l1.contains("part identity"),
+            "host anatomy must document compiler-only data-sail-host: {l1}"
+        );
         assert!(l1.contains("Native reskin") || l1.contains("native reskin") || l1.contains("<hr>"), "reskins: {l1}");
     }
 

@@ -2,6 +2,8 @@
 //!
 //! All data-* (static or bound) are Errors. Selectors that target `[data-…]`
 //! are also Errors. Tests should use role / name / text / authored id.
+//! Compiler-emitted `data-sail-host` (L1 part identity) is framework-only —
+//! authors never write it; this rule refuses authored stamps in app sources.
 
 use std::path::Path;
 
@@ -11,7 +13,8 @@ use crate::report::Finding;
 pub const RULE_ID: &str = "sail-no-data-attr";
 
 const REMEDY: &str = "Do not use data-* in .sail markup. Prefer role, accessible name, \
-     visible text, or authored id. Event wiring: on: handlers + closed-over state.";
+     visible text, or authored id. Event wiring: on: handlers + closed-over state. \
+     data-sail-host is compiler-only L1 part identity — never author it.";
 
 /// Scan .sail source for data-* attributes and [data- selectors.
 pub fn check(path: &Path, source: &str) -> Vec<Finding> {
@@ -49,14 +52,13 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
         }
         // [data- selector
         if i + 6 <= bytes.len() && &bytes[i..i + 6] == b"[data-" {
-            if let Some(f) = finding(
-                path,
-                source,
-                i,
-                RULE_ID,
-                "data-* selector is banned (style/test channel bypass)",
-                REMEDY,
-            ) {
+            let is_host = source[i..].starts_with("[data-sail-host");
+            let msg = if is_host {
+                "data-sail-host selector is banned — compiler-only part identity; use role/name/text"
+            } else {
+                "data-* selector is banned (style/test channel bypass)"
+            };
+            if let Some(f) = finding(path, source, i, RULE_ID, msg, REMEDY) {
                 findings.push(f);
             }
             i += 6;
@@ -68,14 +70,13 @@ pub fn check(path: &Path, source: &str) -> Vec<Finding> {
             && &bytes[i + 1..i + 6] == b"data-"
             && bytes.get(i + 6).is_some_and(|b| b.is_ascii_alphabetic())
         {
-            if let Some(f) = finding(
-                path,
-                source,
-                i + 1,
-                RULE_ID,
-                "data-* attributes are banned in app .sail markup",
-                REMEDY,
-            ) {
+            let is_host = source[i + 1..].starts_with("data-sail-host");
+            let msg = if is_host {
+                "data-sail-host is compiler-only part identity — not an author API"
+            } else {
+                "data-* attributes are banned in app .sail markup"
+            };
+            if let Some(f) = finding(path, source, i + 1, RULE_ID, msg, REMEDY) {
                 findings.push(f);
             }
             i += 6;
@@ -100,6 +101,35 @@ mod tests {
             r#"<button data-action="go">x</button>"#,
         );
         assert!(!f.is_empty(), "{f:?}");
+    }
+
+    #[test]
+    fn flags_authored_data_sail_host() {
+        let f = check(
+            Path::new("apps/studio/src/x.sail"),
+            r#"<button data-sail-host="button">Save</button>"#,
+        );
+        assert_eq!(f.len(), 1, "{f:?}");
+        assert_eq!(f[0].rule, RULE_ID);
+        assert!(
+            f[0].message.contains("compiler-only part identity"),
+            "expected teach, got: {}",
+            f[0].message
+        );
+    }
+
+    #[test]
+    fn flags_data_sail_host_selector() {
+        let f = check(
+            Path::new("apps/sail-site/src/x.sail"),
+            r#".x [data-sail-host="tab"] { color: red }"#,
+        );
+        assert_eq!(f.len(), 1, "{f:?}");
+        assert!(
+            f[0].message.contains("compiler-only part identity"),
+            "expected teach, got: {}",
+            f[0].message
+        );
     }
 
     #[test]
@@ -129,5 +159,22 @@ mod tests {
             r#".foo [data-selected] { color: red }"#,
         );
         assert!(!f.is_empty());
+    }
+
+    #[test]
+    fn packages_and_stdlib_paths_are_exempt() {
+        let src = r#"<button data-sail-host="button">x</button>"#;
+        assert!(
+            check(Path::new("packages/components/sail/button.sail"), src).is_empty(),
+            "packages exempt"
+        );
+        assert!(
+            check(
+                Path::new("crates/sail/compiler/stdlib/button.sail"),
+                src
+            )
+            .is_empty(),
+            "stdlib exempt (compiler stamps, never authors)"
+        );
     }
 }

@@ -8042,7 +8042,7 @@ export const AUTHORING_BANS: AuthoringBanDoc[] = [
   {
     "syntax": "data-*",
     "rule": "sail-no-data-attr",
-    "instead": "prefer accessible name, visible text, or authored id; event wiring via on: + closed-over state"
+    "instead": "prefer accessible name, visible text, or authored id; event wiring via on: + closed-over state. `data-sail-host` is compiler-only L1 part identity for closed widgets — never author it; app tests use role/name/text"
   },
   {
     "syntax": "free aria-* / role=",

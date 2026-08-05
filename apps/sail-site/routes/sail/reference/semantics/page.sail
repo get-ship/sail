@@ -80,6 +80,9 @@ export default controller((_ctx: ControllerScope<Scope>) => ({
     <p sx={style.maxW(breakpoint-tablet).fontSize(sm).fg(muted-foreground)}>
       Fixed roles / live regions / labels on L1 hosts. Authors never write
       these attributes for listed elements — the compiler stamps them.
+      The compiler also stamps <code>data-sail-host</code> as closed-widget
+      part identity (not an author API; refused by
+      <code>sail-no-data-attr</code>). App tests use role / name / text.
     </p>
     <grid cols="2" gap="2">
       <for {anatomyRows()} as="a" key={a.tag}>
