@@ -38,7 +38,7 @@ const HEADER: &str = "\
 //
 // Sail ambient pack. Source of truth:
 //   crates/sail/compiler/src/runtime_ambient.rs
-//   crates/sail/lint/src/style/setters.rs (+ scales / token registry)
+//   crates/sail/style/src/setters.rs (+ scales / token registry)
 // Regenerate: cargo run -p sail-compiler -- types [--project <dir>]
 //             (or: sail types --project <dir>)
 //

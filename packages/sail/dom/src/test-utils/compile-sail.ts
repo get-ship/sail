@@ -40,6 +40,7 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(HERE, '../../../../..')
 const COMPILER_SRC = resolve(REPO_ROOT, 'crates/sail/compiler/src')
 const LINT_SRC = resolve(REPO_ROOT, 'crates/sail/lint/src')
+const STYLE_SRC = resolve(REPO_ROOT, 'crates/sail/style/src')
 
 // Platform cdylib name `cargo build` produces for crates/sail/compiler-napi.
 // Node loads a napi cdylib directly via `process.dlopen` (it exports the
@@ -102,12 +103,16 @@ function resolveAddonPath(): string {
 function assertFresh(addonPath: string): void {
   try {
     const addonMtime = statSync(addonPath).mtimeMs
-    const newest = Math.max(newestMtime(COMPILER_SRC), newestMtime(LINT_SRC))
+    const newest = Math.max(
+      newestMtime(COMPILER_SRC),
+      newestMtime(LINT_SRC),
+      newestMtime(STYLE_SRC),
+    )
     if (newest > addonMtime) {
       const mins = Math.max(1, Math.round((newest - addonMtime) / 60_000))
       // A stale compiler silently tests yesterday's language — halt, don't warn.
       throw new Error(
-        `[sail-compiler-napi] STALE addon: crates/sail/{compiler,lint}/src changed ` +
+        `[sail-compiler-napi] STALE addon: crates/sail/{compiler,lint,style}/src changed ` +
           `~${mins}m after the built addon. Rebuild: cargo build -p sail-compiler-napi`,
       )
     }

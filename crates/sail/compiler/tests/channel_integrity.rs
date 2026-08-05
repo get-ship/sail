@@ -25,8 +25,8 @@ const TOKENS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/toke
 const THEMES_CSS: &str = include_str!("../../../../packages/sail/tokens/src/themes.css");
 const CONTRACTS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/sail-base.css");
 const SKINS_CSS: &str = include_str!("../../../../packages/sail/tokens/src/element-skins.css");
-const SX_VOCAB: &str = include_str!("../../lint/sx-vocabulary.json");
-const SCALES_RS: &str = include_str!("../../lint/src/scales.rs");
+const SX_VOCAB: &str = include_str!("../../style/sx-vocabulary.json");
+const SCALES_RS: &str = include_str!("../../style/src/scales.rs");
 
 /// Every `--name:` declaration in `css`, without the `--` prefix.
 fn declarations(css: &str) -> HashSet<String> {

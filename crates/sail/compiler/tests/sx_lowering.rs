@@ -3,7 +3,7 @@
 //!
 //! Utility-string `sx="…"` is residual product and must not emit classes.
 //! The shared Style setters re-home vocab heads from
-//! `crates/sail/lint/sx-vocabulary.json` (lint + emit SSOT).
+//! `crates/sail/style/sx-vocabulary.json` (style + emit SSOT).
 
 use sail_compiler::parse::preprocess::preprocess as preprocess_src;
 
