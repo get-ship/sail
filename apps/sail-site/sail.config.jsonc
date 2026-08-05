@@ -1,14 +1,17 @@
 {
-  // App-level Sail config (T0 theme contract). Dual-read with sail.config.json.
-  // Project themes: tokens/themes/*.json (always in generate emit set).
+  // App-level Sail config (theme + serve). Project themes: tokens/themes/*.json.
   // `enabled` catalog allowlist:
   //   omit / []  → thin (no catalog themes)
   //   ["ship"]   → only those catalog ids
   //   "all"      → explicit full catalog (marketing site)
-  // Phase D: modes-in-file primary `ship` (theme + data-mode).
   "theme": {
     "default": "ship",
     "defaultMode": "light",
     "enabled": "all"
+  },
+  // clientsModule is side-effect-only (no named providers).
+  "entry": {
+    "clientsModule": "./src/clients.ts",
+    "exposeNames": []
   }
 }

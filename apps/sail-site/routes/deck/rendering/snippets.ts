@@ -1,6 +1,6 @@
 // Rendering-mode examples for the deck Rendering page.
 
-export const ssrConfig = `// deck.jsonc
+export const ssrConfig = `// sail.config.jsonc
 {
   "render": "ssr"
 }`

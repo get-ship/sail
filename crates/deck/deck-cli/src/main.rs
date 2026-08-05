@@ -899,12 +899,12 @@ fn dev(project: PathBuf, addr: String) -> Result<()> {
         // (`AppBuild::url_namespace`) rather than recomputing it here, killing
         // the second namespace derivation that could silently drift from the
         // bake. `source` is the build out dir relative to the project root.
-        // Dual-read sail.config / deck.jsonc (C3) for injectGlobals / render /
-        // entry — name/route/source are host-bound here, never the file's.
+        // sail.config serve keys for injectGlobals / render / entry —
+        // name/route/source are host-bound here, never the file's.
         let mut app_cfg = deck_config::AppServeConfig::load_from_project(&project_dir)
             .map_err(|e| anyhow::anyhow!("app serve config: {e}"))?;
         // SSR engine: only spin up ship-js (V8) when this app opts into SSR
-        // (`deck.jsonc { "render": "ssr" }`). A CSR app (the default) pays no
+        // (`sail.config { "render": "ssr" }`). A CSR app (the default) pays no
         // V8 cost. Standalone dev has no live data port, so the engine renders
         // with NoopData (None). The engine is a MOUNT-SCOPED handle layered as
         // an Extension below — not a process-global install. If it can't start,

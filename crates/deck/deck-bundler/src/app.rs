@@ -919,10 +919,9 @@ pub async fn bundle_app_with_base(
     bundle_framework: bool,
     base: Option<&str>,
 ) -> Result<AppBuild> {
-    // 0. Dual-read sail.config / deck.jsonc (C3) for serve keys. OPTIONAL —
-    // an app without either is fully conventional (csr, no inject, no entry).
-    // sail.config wins over deck.jsonc when both define serve keys; kill date
-    // for deck.jsonc as preferred path is Phase F.
+    // 0. sail.config serve keys (render / injectGlobals / entry). OPTIONAL —
+    // an app without sail.config is fully conventional (csr, no inject, no
+    // entry). Presence of deck.jsonc is a hard migration error.
     let app_cfg = match deck_config::AppServeConfig::load_from_project(project) {
         Ok(cfg) => {
             // Treat pure-default as "absent" so callers that key on Option keep

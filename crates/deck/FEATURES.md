@@ -43,7 +43,7 @@ each is guarded by a dedicated gate test:
 - `deck-bundler` — in-process Rolldown bundler (compile, per-route resolve,
   shared-chunk dedup, app/route builds, asset-graph, watch/HMR, catalog,
   route codegen).
-- `deck-config` — the optional `deck.jsonc` route-discovery + watch override schema.
+- `deck-config` — host-supplied route-discovery layout + per-app serve config (`sail.config`).
 - `deck-cli` — the `sail` framework CLI (build / build-assets / routes / scaffold).
 - `deck` — thin re-export facade over the above (what shipd imports).
 
@@ -126,9 +126,9 @@ chunks, builds apps and routes, writes the asset graph, and watches for HMR.
 
 | Feature | File | Implementation | Description |
 | --- | --- | --- | --- |
-| Manifest schema | `deck.jsonc` (optional) | `crates/deck/deck-config/src/lib.rs::DeckConfig` | Optional host override for the ROUTE-discovery + watch layout: source roots, watch dirs, packs, route dirs, route leaf. Consumer bundles + `@ship/<name>` resolution are NOT here (self-declared + discovered). |
-| Config load | (startup) | `crates/deck/deck-config/src/lib.rs` | Reads `<root>/deck.jsonc` when present, strips JSONC comments, falls back to defaults (never panics). |
-| Zero-config defaults | (built-in) | `crates/deck/deck-config/src/lib.rs::defaults` | The defaults a host with no `deck.jsonc` (deck-conformance, and the Ship repo itself) runs on. |
+| Host layout schema | host-constructed | `crates/deck/deck-config/src/lib.rs::DeckConfig` | Host-supplied ROUTE-discovery + watch layout: source roots, watch dirs, packs, route dirs, route leaf. Not auto-loaded from disk. Consumer bundles + `@ship/<name>` resolution are NOT here (self-declared + discovered). |
+| Per-app serve load | `sail.config.jsonc` / `.json` | `crates/deck/deck-config/src/lib.rs::AppServeConfig::load_from_project` | Reads serve keys (`render`, `injectGlobals`, `entry`) from sail.config. Presence of `deck.jsonc` is a hard migration error. |
+| Zero-config defaults | (built-in) | `crates/deck/deck-config/src/lib.rs::defaults` | Defaults when no sail.config serve keys (and for host layout when the host uses `DeckConfig::defaults`). |
 | Bundle self-declaration | `package.json` `deck.bundles[]` | `crates/deck/deck-bundler/src/catalog/workspace.rs::BundleDecl` | One consumer bundle a package declares for itself (name, package-relative entry, externals, lazy). Discovered by the bundler — no central registry. |
 
 ## Host contract (`deck-host`, `deck-cli`)

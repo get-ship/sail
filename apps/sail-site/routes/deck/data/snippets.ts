@@ -1,6 +1,6 @@
 // Code snippets for the deck data-seam page.
 
-export const configExample = `// deck.jsonc
+export const configExample = `// sail.config.jsonc
 {
   "entry": {
     "clientsModule": "./src/clients.ts",

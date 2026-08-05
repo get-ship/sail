@@ -20,7 +20,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ ssrConfig, buildC
   <p>deck serves an empty <code>&lt;div id="root"&gt;</code> and an importmap shell. The client entry mounts the <code>routes/</code> SPA and paints. The initial document is near-empty; everything is drawn in the browser.</p>
 
   <h2>SSR</h2>
-  <p>Set <code>"render": "ssr"</code> in <code>deck.jsonc</code>. The matched route is server-rendered (via ship-js) into <code>#root</code>, and the client hydrates it in place.</p>
+  <p>Set <code>"render": "ssr"</code> in <code>sail.config.jsonc</code>. The matched route is server-rendered (via ship-js) into <code>#root</code>, and the client hydrates it in place.</p>
   <code-block code={ssrConfig} lang="json"></code-block>
   <p>With SSR the route's markup is in the <strong>raw server bytes</strong> — good for first paint and for crawlers. (This docs site itself runs CSR; deck's SSR path is proven by the framework's own browser test harness.)</p>
 

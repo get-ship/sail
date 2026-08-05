@@ -1,0 +1,4 @@
+{
+  // Opt this app into server-side first paint.
+  "render": "ssr"
+}

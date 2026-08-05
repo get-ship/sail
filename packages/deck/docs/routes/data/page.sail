@@ -21,7 +21,7 @@ export default controller((ctx: ControllerScope<Scope>) => ({
   <p role="doc-lead">deck mounts routes but owns no data. Your app exposes named clients through one seam; every route reads them off <code>ctx.clients</code>.</p>
 
   <h2>The clients seam</h2>
-  <p>Declare a clients module in <code>deck.jsonc</code>. deck wires its exports into the router, and every route reads them by name.</p>
+  <p>Declare a clients module in <code>sail.config.jsonc</code>. deck wires its exports into the router, and every route reads them by name.</p>
   <pre data-code-block="true">{configExample}</pre>
   <pre data-code-block="true">{usageExample}</pre>
 

@@ -8,7 +8,7 @@ Deck host / meta-framework for SAIL routes: routing, SSR, bundling, CLI.
 | `deck-axum/` | axum adapter |
 | `deck-host/` | Host integration |
 | `deck-bundler/` | In-process Rolldown bundler |
-| `deck-config/` | `deck.jsonc` |
+| `deck-config/` | serve config + host layout types |
 | `deck-cli/` | `sail` binary |
 | `deck/` | Facade |
 | `deck-conformance/` | Standalone harness app |

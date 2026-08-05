@@ -25,7 +25,7 @@ export default controller((_ctx: ControllerScope<Scope>) => ({ configExample, us
   <p sx={style.fontSize(lg).fg(muted-foreground).leading(relaxed)}>deck mounts routes but owns no data. Your app exposes named clients through one seam; every route reads them straight off <code>ctx</code> — flattened, no nested bag.</p>
 
   <h2>The clients seam</h2>
-  <p>Declare a clients module in <code>deck.jsonc</code>. deck wires its exports into the router, and every route reads them by name.</p>
+  <p>Declare a clients module in <code>sail.config.jsonc</code>. deck wires its exports into the router, and every route reads them by name.</p>
   <code-block code={configExample} lang="json"></code-block>
   <code-block code={usageExample} lang="ts"></code-block>
 

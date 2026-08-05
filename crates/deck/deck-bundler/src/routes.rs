@@ -27,7 +27,7 @@ pub struct RouteGenSpec {
     /// codegen ALWAYS writes `entry.gen.ts` (next to the data-only
     /// `routes.gen.ts`) — the bootstrap that imports the data tables, the
     /// token CSS, and calls `mountRouter`. When `Some` (a host
-    /// `deck.jsonc#entry`), the host's named `clients` are imported off its
+    /// sail.config `entry`), the host's named `clients` are imported off its
     /// `clientsModule` and spread into the `clients` map; when `None`
     /// (standalone), no clients are wired and `mountRouter` runs with the
     /// routes/layouts/modules alone — deck's default bootstrap stands on its
@@ -538,8 +538,9 @@ pub(crate) fn render_entry_gen_at(
     // Host providers (when declared). A standalone deck app has none: no
     // provider import, and the `providers` field is omitted from the call
     // (MountRouterOptions.providers is optional). When a host declares an
-    // `entry` bootstrap, its named providers are imported off `clientsModule`
-    // and flattened onto the mount surface via `providers: { … }`.
+    // `entry` bootstrap, `clientsModule` is always imported — named exports
+    // become `providers: { … }`; empty `exposeNames` is a side-effect import
+    // (theme boot, CE registration) with no providers field.
     let (clients_import, providers_field) = match entry_bootstrap {
         Some(b) if !b.expose_names.is_empty() => {
             let names_csv = b.expose_names.join(", ");
@@ -554,7 +555,8 @@ pub(crate) fn render_entry_gen_at(
                 format!("\n  providers: {{\n{providers_obj}\n  }},"),
             )
         }
-        _ => (String::new(), String::new()),
+        Some(b) => (format!("import '{}';\n", b.clients_module), String::new()),
+        None => (String::new(), String::new()),
     };
     let app_fonts_import = project_dir
         .filter(|p| p.join("fonts/fonts.css").is_file())
@@ -572,12 +574,12 @@ pub(crate) fn render_entry_gen_at(
 // `unified-deck-router`.
 //
 // deck ALWAYS emits this bootstrap — it is the framework's DEFAULT host-inject
-// wiring, so a standalone app (no host, no `deck.jsonc`) mounts on its own.
-// A host `deck.jsonc#entry` only CUSTOMIZES the providers map (which names,
-// off which module); the router call itself is deck's. Routes are data
-// (`routes.gen.ts`); providers are the host's concrete. The framework names no
-// product SDK. The runtime exposes each provider as a bare name on every
-// route's scope (`ctx.api`, `demo.addTodo()`).
+// wiring, so a standalone app mounts on its own. A host `entry` only
+// CUSTOMIZES the providers map (which names, off which module); the router
+// call itself is deck's. Routes are data (`routes.gen.ts`); providers are the
+// host's concrete. The framework names no product SDK. The runtime exposes
+// each provider as a bare name on every route's scope (`ctx.api`,
+// `demo.addTodo()`).
 import {{ mountRouter }} from '@ship/deck/router';
 {clients_import}import {{
   DYNAMIC_ROUTE_PATTERNS,
@@ -712,8 +714,8 @@ fn generate_routes_one(spec: &RouteGenSpec) -> Result<usize> {
     write_if_changed(&spec.out, &body)?;
     // deck ALWAYS emits the SPA bootstrap (`entry.gen.ts`) next to the data
     // file — it is the framework's default client wiring, so a standalone app
-    // mounts with no host. A host `deck.jsonc#entry` (when present) only
-    // customizes the `clients` map; the router call is deck's. Without this, a
+    // mounts with no host. A host `entry` (when present) only customizes the
+    // `clients` map; the router call is deck's. Without this, a
     // standalone deck app served a data-only entry that never called
     // mountRouter — `#root` stayed empty (inv-deck-standalone).
     let project_dir = spec
@@ -1190,6 +1192,39 @@ mod tests {
             !ts.contains("from './src/"),
             "default bootstrap imports no host clientsModule: {ts}"
         );
+    }
+
+    /// `entry.clientsModule` with empty `exposeNames` still imports the module
+    /// for side effects (theme boot, CE registration). No `providers` field.
+    #[test]
+    fn render_entry_gen_side_effect_clients_module_when_expose_names_empty() {
+        let tree = RouteTree {
+            label: "side-effect".to_string(),
+            routes: vec![Route {
+                pattern: "/".to_string(),
+                params: vec![],
+                builder: "index".to_string(),
+            }],
+            layouts: vec![],
+        };
+        let bootstrap = deck_config::EntryBootstrap {
+            clients_module: "./src/clients.ts".to_string(),
+            expose_names: vec![],
+        };
+        let ts = render_entry_gen(&tree, Some(&bootstrap));
+        assert!(
+            ts.contains("import './src/clients.ts';"),
+            "side-effect import of clientsModule when exposeNames empty: {ts}"
+        );
+        assert!(
+            !ts.contains("from './src/clients.ts'"),
+            "no named import from clientsModule when exposeNames empty: {ts}"
+        );
+        assert!(
+            !ts.contains("providers:"),
+            "no providers field when exposeNames empty: {ts}"
+        );
+        assert!(ts.contains("mountRouter("), "still mounts: {ts}");
     }
 
     // Regression: routes.gen.ts lives under the watched `apps/...` root and

@@ -15,7 +15,7 @@
 /// helper stays so a host that DOES want JSONC parsing for its own
 /// config (e.g. `apps.jsonc`) can build a `DeckConfig` via
 /// `serde_json::from_str(&strip_jsonc_comments(&raw))` and pass it in. The
-/// per-app `deck.jsonc` parser (`AppServeConfig::parse_deck_jsonc`) calls it
+/// per-app serve parser (`AppServeConfig::parse_deck_jsonc`) calls it
 /// internally — one stripper, no second copy.
 ///
 /// NOTE: this is a deliberate second copy of the JSONC stripper inlined

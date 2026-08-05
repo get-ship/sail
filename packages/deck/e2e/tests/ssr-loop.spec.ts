@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 // ── deck dev — routes/ SSR (render: ssr) ─────────────────────────────────────
 //
-// Drives the `app-ssr` fixture (deck.jsonc { render: ssr }) on its own port.
+// Drives the `app-ssr` fixture (sail.config { render: ssr }) on its own port.
 // Proves deck's OWN routes/ path server-first-paints via the ship-js (V8)
 // engine and the client hydrates it — verified empirically before pinning:
 //
