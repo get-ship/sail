@@ -213,7 +213,7 @@ fn is_const_ref_motion_chain(input: &str) -> bool {
 /// Public for the sx-attribute classifier (`rules::sx`): a const-ref motion
 /// chain (`row.enter({…}).exit({…})`) is a compile-time Style product, not a
 /// runtime dynamic binding.
-pub(crate) fn is_const_ref_motion_chain_pub(input: &str) -> bool {
+pub fn is_const_ref_motion_chain_pub(input: &str) -> bool {
     is_const_ref_motion_chain(input)
 }
 

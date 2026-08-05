@@ -13,12 +13,22 @@ pub mod config;
 pub mod prop_registry;
 pub mod report;
 pub mod rules;
-pub mod scales;
 pub mod source;
-pub mod style;
-pub mod sx_ir;
-pub mod sx_vocab;
-pub mod tokens;
+
+// CHANNELS-1: Style pipeline lives in `sail-style`. Re-export under the
+// historical `sail_lint::{style,sx_ir,sx_vocab,scales,tokens}` paths so
+// compiler/layout/ops/lsp keep compiling without a fan-out import thrash.
+pub use sail_style::{scales, sx_ir, sx_vocab, tokens};
+
+/// Style product surface — re-export of `sail-style` (parse / IR / emit / clash).
+pub mod style {
+    pub use sail_style::{
+        CONDITION_PREFIXES, CssRule, PaintArg, PaintOp, Style, StyleDiagnostic, StyleEnv,
+        clash, collect_motion_attaches, condition_media, conditions, emit, emit_style, ir,
+        looks_like_utility_string_product, lower_style, lower_style_source,
+        lower_style_source_with_motion, parse, parse_style_const_rhs, prefixes, setters,
+    };
+}
 
 #[cfg(test)]
 mod tests;

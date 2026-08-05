@@ -1,13 +1,22 @@
 //! Compile-time Style value language: chain + match / when / compound / bind.
 //!
 //! Sole paint architecture: chain + match / when / compound / bind.
+//!
+//! This crate owns Style parse / IR / emit / clash / setters, plus the leaf
+//! sx machinery (`sx_ir`, `sx_vocab`), token scales, and design-token registry
+//! used by Style lower and layout class resolution.
 
 pub mod clash;
 pub mod conditions;
 pub mod emit;
 pub mod ir;
 pub mod parse;
+pub mod prefixes;
+pub mod scales;
 pub mod setters;
+pub mod sx_ir;
+pub mod sx_vocab;
+pub mod tokens;
 
 pub use conditions::{CONDITION_PREFIXES, condition_media};
 pub use emit::{
@@ -868,3 +877,4 @@ mod tests {
         assert!(!css.contains("fade"), "{css}");
     }
 }
+

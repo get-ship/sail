@@ -4669,6 +4669,7 @@ dependencies = [
  "oxc_parser 0.128.0",
  "oxc_span 0.128.0",
  "oxc_syntax 0.128.0",
+ "sail-style",
  "serde",
  "serde_json",
  "tempfile",
@@ -4735,6 +4736,14 @@ dependencies = [
  "takumi",
  "tempfile",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "sail-style"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -6810,10 +6819,6 @@ dependencies = [
 ]
 
 [[patch.unused]]
-name = "ship-proto"
-version = "0.1.0"
-
-[[patch.unused]]
 name = "deck"
 version = "0.1.0"
 
@@ -6827,6 +6832,10 @@ version = "0.1.0"
 
 [[patch.unused]]
 name = "sail-compiler"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "ship-proto"
 version = "0.1.0"
 
 [[patch.unused]]

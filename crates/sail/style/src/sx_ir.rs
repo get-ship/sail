@@ -10,7 +10,7 @@ use std::sync::OnceLock;
 
 use serde::Serialize;
 
-use crate::rules::sx as sx_rules;
+use crate::prefixes as sx_rules;
 use crate::sx_vocab::{self, Resolved};
 use crate::tokens;
 
@@ -992,26 +992,26 @@ pub fn emit_selector(decl: &SxDecl) -> Option<EmitSelector> {
 /// Old `sx_ir` parse/emit remains as internal leaf helper for paint-op emit only.
 pub fn lower_sx_string(
     val: &str,
-    env: &crate::style::StyleEnv,
+    env: &crate::StyleEnv,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
-) -> Result<String, Vec<crate::style::ir::StyleDiagnostic>> {
-    crate::style::emit::lower_style_source(val, env, css, seen)
+) -> Result<String, Vec<crate::StyleDiagnostic>> {
+    crate::emit::lower_style_source(val, env, css, seen)
 }
 
 /// Product Style lower + extracted motion attaches (`.enter` / `.exit` / …).
 pub fn lower_sx_string_with_motion(
     val: &str,
-    env: &crate::style::StyleEnv,
+    env: &crate::StyleEnv,
     css: &mut String,
     seen: &mut std::collections::HashSet<String>,
-) -> Result<(String, Vec<(String, String)>), Vec<crate::style::ir::StyleDiagnostic>> {
-    crate::style::emit::lower_style_source_with_motion(val, env, css, seen)
+) -> Result<(String, Vec<(String, String)>), Vec<crate::StyleDiagnostic>> {
+    crate::emit::lower_style_source_with_motion(val, env, css, seen)
 }
 
 /// Parse-only residual detection for preprocess/lint (utility string product).
 pub fn is_residual_utility_sx(val: &str) -> bool {
-    crate::style::parse::looks_like_utility_string_product(val.trim())
+    crate::parse::looks_like_utility_string_product(val.trim())
 }
 
 // ─── Agent schema ────────────────────────────────────────────────────────────
@@ -1300,7 +1300,7 @@ mod tests {
     #[test]
     fn lower_sx_string_resolves_style_const_env() {
         let mut env = std::collections::HashMap::new();
-        env.insert("filled".into(), crate::style::parse("style.bg(primary)").0);
+        env.insert("filled".into(), crate::parse("style.bg(primary)").0);
         let mut css = String::new();
         let mut seen = std::collections::HashSet::new();
         let classes =

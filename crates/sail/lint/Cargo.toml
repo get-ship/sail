@@ -11,6 +11,9 @@ path = "src/lib.rs"
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 
+# Style parse/IR/emit + scales/tokens (CHANNELS-1 extract).
+sail-style = { path = "../style" }
+
 # Rust-native TS/JS parsing — Solid-shaped fine-grained AST. Walks via
 # the Visit trait. No tsc dependency.
 oxc_parser    = "0.128"

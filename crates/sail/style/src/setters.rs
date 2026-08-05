@@ -2,7 +2,7 @@
 
 use std::borrow::Cow;
 
-use crate::rules::sx as sx_rules;
+use crate::prefixes as sx_rules;
 use crate::scales;
 use crate::sx_ir::{self, SxDecl, SxValue};
 use crate::sx_vocab::{self, Resolved};
