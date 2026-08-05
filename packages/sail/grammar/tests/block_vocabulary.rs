@@ -49,9 +49,9 @@ fn grammar_block_vocabulary_matches_compiler_manifest() {
     }
     assert_eq!(
         sail_compiler::block_manifest::BLOCKS.len(),
-        5,
+        6,
         "block_manifest::BLOCKS changed size — update grammar.js's block \
-         rules (if/for/match/while-loading/while-error today) and this \
+         rules (if/for/match/when/while-loading/while-error today) and this \
          test's expected count together.",
     );
 }

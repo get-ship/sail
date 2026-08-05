@@ -123,17 +123,16 @@ impl MatchMediaVisitor<'_> {
             rule: RULE_ID,
             severity: Severity::Warn,
             message: "layout breakpoints via `matchMedia` drive template-visible state \
-                 — use Style `when({ tablet: … })` / `when({ mobile: … })` for sx \
-                 instead. Breakpoint-aware attrs (RESPONSIVE-1) are the landing spot \
-                 for attr-level responsive work. Non-layout media \
+                 — use `<when {tablet}>` for different trees, Style \
+                 `when({ tablet: … })` for paint. Non-layout media \
                  (`prefers-reduced-motion`, `prefers-color-scheme`, `print`) may stay \
                  imperative."
                 .to_string(),
             suggest: Some(
-                "For sx: `style.….when({ tablet: style.… })` (breakpoints are Style \
-                 conditions, not controller signals). For layout track count / cols, \
-                 prefer CSS `when` on the grid host once RESPONSIVE-1 attrs land — \
-                 do not swap trees with `<if {isWide()}>` from matchMedia."
+                "Structure: `<when {tablet}>…wide…<else>…mobile…</else></when>` \
+                 (theme tokens: mobile/tablet/desktop; SSR emits else). Paint: \
+                 `style.….when({ tablet: style.… })`. Do not swap trees with \
+                 `<if {isWide()}>` from matchMedia."
                     .to_string(),
             ),
         });
@@ -463,17 +462,18 @@ export default controller(() => {
         assert_eq!(f[0].rule, RULE_ID);
         assert_eq!(f[0].severity, Severity::Warn);
         assert!(
-            f[0].message.contains("when({ tablet"),
+            f[0].message.contains("<when {tablet}>")
+                || f[0].message.contains("when({ tablet"),
             "message must name the fix: {}",
             f[0].message
         );
         assert!(
-            f[0].message.contains("RESPONSIVE-1")
+            f[0].message.contains("<when")
                 || f[0]
                     .suggest
                     .as_ref()
-                    .is_some_and(|s| s.contains("RESPONSIVE-1")),
-            "must name RESPONSIVE-1: msg={} suggest={:?}",
+                    .is_some_and(|s| s.contains("<when {tablet}>")),
+            "must name structural <when>: msg={} suggest={:?}",
             f[0].message,
             f[0].suggest
         );

@@ -469,6 +469,12 @@ fn check_mutations_instrs(instrs: &[Instr]) -> Result<(), CompileError> {
                     check_mutations_instrs(d)?;
                 }
             }
+            Instr::When(w) => {
+                check_mutations_instrs(&w.body)?;
+                if let Some(e) = &w.else_body {
+                    check_mutations_instrs(e)?;
+                }
+            }
             Instr::WhileLoading(wl) => check_mutations_instrs(&wl.body)?,
             Instr::WhileError(we) => check_mutations_instrs(&we.body)?,
             _ => {}
@@ -583,6 +589,12 @@ where
             }
             if let Some(d) = default {
                 visit_instrs(d, f)?;
+            }
+        }
+        Instr::When(w) => {
+            visit_instrs(&w.body, f)?;
+            if let Some(e) = &w.else_body {
+                visit_instrs(e, f)?;
             }
         }
         Instr::WhileLoading(wl) => visit_instrs(&wl.body, f)?,

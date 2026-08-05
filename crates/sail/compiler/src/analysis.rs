@@ -750,7 +750,13 @@ fn walk(instrs: &[Instr], tags: &mut BTreeSet<String>, events: &mut BTreeSet<Str
                     walk(d, tags, events);
                 }
             }
-            Instr::WhileLoading(wl) => walk(&wl.body, tags, events),
+            Instr::When(w) => {
+                walk(&w.body, tags, events);
+                if let Some(e) = &w.else_body {
+                    walk(e, tags, events);
+                }
+            }
+                        Instr::WhileLoading(wl) => walk(&wl.body, tags, events),
             Instr::WhileError(we) => walk(&we.body, tags, events),
             _ => {}
         }

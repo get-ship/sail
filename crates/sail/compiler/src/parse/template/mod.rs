@@ -84,6 +84,12 @@ pub(crate) fn parse_tokens(
                 instrs.push(r.instr);
                 i = r.end;
             }
+            TokenKind::OpenWhen { .. } => {
+                let scope = make_scope();
+                let r = blocks::parse_when(tokens, i, &scope)?;
+                instrs.push(r.instr);
+                i = r.end;
+            }
             TokenKind::OpenWhileLoading { .. } => {
                 let scope = make_scope();
                 let r = blocks::parse_while_loading(tokens, i, &scope)?;
@@ -103,6 +109,7 @@ pub(crate) fn parse_tokens(
             | TokenKind::CloseIf
             | TokenKind::CloseFor
             | TokenKind::CloseMatch
+            | TokenKind::CloseWhen
             | TokenKind::CloseWhileLoading
             | TokenKind::CloseWhileError => {
                 return Err(

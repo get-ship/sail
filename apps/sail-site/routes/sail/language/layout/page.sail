@@ -169,6 +169,23 @@ export default controller((_ctx: ControllerScope<Scope>) => {
     the language level, so <code>style.truncate()</code> works the first time.
   </p>
 
+  <h2><code>&lt;when&gt;</code> — different trees per breakpoint</h2>
+  <p>
+    When the layout itself changes shape — a side-by-side workbench on tablet,
+    a stacked column on mobile — that is a <strong>tree</strong> decision, not
+    paint. <code>&lt;when &#123;tablet&#125;&gt;</code> takes a theme breakpoint
+    token (<code>mobile</code> / <code>tablet</code> / <code>desktop</code>) and
+    keeps an optional <code>&lt;else&gt;</code> as the default branch:
+  </p>
+  <code-block code={code.when}></code-block>
+  <p>
+    The server cannot know the viewport, so <strong>SSR always emits the
+    <code>&lt;else&gt;</code> / default branch</strong> (mobile-first). After
+    hydrate, the client matchMedia-swaps to the matching branch. No UA sniffing.
+    Style <code>.when(&#123; tablet: style.… &#125;)</code> stays paint-level —
+    density and color tweaks — and is unchanged.
+  </p>
+
   <p sx={style.mt(4).fontSize(sm).fg(muted-foreground)}>
     For the full surface: <a href="/sail/reference/layout">reference → Layout keywords</a>.
   </p>

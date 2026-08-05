@@ -542,6 +542,7 @@ impl TemplateEmitter {
             Instr::If(if_instr) => self.emit_if(w, if_instr, parent_var, cleanups_var),
             Instr::For(for_instr) => self.emit_for(w, for_instr, parent_var, cleanups_var),
             Instr::Match(match_instr) => self.emit_match(w, match_instr, parent_var, cleanups_var),
+            Instr::When(when_instr) => self.emit_when(w, when_instr, parent_var, cleanups_var),
             // While-loading/while-error: the render callback is emitted as a
             // named property on the setup return object (via `render_callbacks`
             // buffer). `__mount` emits an inline call for the legacy path.

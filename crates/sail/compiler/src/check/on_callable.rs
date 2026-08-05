@@ -58,7 +58,13 @@ fn walk(instrs: &[Instr], table: &SymbolTable, ctx_head: &str) -> Result<(), Com
                     walk(d, table, ctx_head)?;
                 }
             }
-            Instr::WhileLoading(wl) => walk(&wl.body, table, ctx_head)?,
+            Instr::When(w) => {
+                walk(&w.body, table, ctx_head)?;
+                if let Some(e) = &w.else_body {
+                    walk(e, table, ctx_head)?;
+                }
+            }
+                        Instr::WhileLoading(wl) => walk(&wl.body, table, ctx_head)?,
             Instr::WhileError(we) => walk(&we.body, table, ctx_head)?,
             _ => {}
         }

@@ -51,7 +51,13 @@ fn walk(instrs: &[Instr], parent_tag: Option<&str>) -> Result<(), CompileError> 
                     walk(d, parent_tag)?;
                 }
             }
-            Instr::WhileLoading(wl) => walk(&wl.body, parent_tag)?,
+            Instr::When(w) => {
+                walk(&w.body, parent_tag)?;
+                if let Some(e) = &w.else_body {
+                    walk(e, parent_tag)?;
+                }
+            }
+                        Instr::WhileLoading(wl) => walk(&wl.body, parent_tag)?,
             Instr::WhileError(we) => walk(&we.body, parent_tag)?,
             _ => {}
         }

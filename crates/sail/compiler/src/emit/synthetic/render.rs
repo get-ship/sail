@@ -458,7 +458,13 @@ fn unsupported_feature(instrs: &[Instr]) -> Option<CompileError> {
                 }
                 m.default.as_deref()
             }
-            Instr::WhileLoading(wl) => Some(&wl.body),
+            Instr::When(w) => {
+                if let Some(e) = unsupported_feature(&w.body) {
+                    return Some(e);
+                }
+                w.else_body.as_deref()
+            }
+                        Instr::WhileLoading(wl) => Some(&wl.body),
             Instr::WhileError(we) => Some(&we.body),
             _ => None,
         };

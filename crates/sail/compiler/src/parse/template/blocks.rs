@@ -40,6 +40,7 @@ const MATCH_TERMS: &[Discriminant] = &[
     Discriminant::Default,
     Discriminant::CloseMatch,
 ];
+const WHEN_TERMS: &[Discriminant] = &[Discriminant::Else, Discriminant::CloseWhen];
 
 pub(crate) fn parse_if(
     tokens: &[Token],
@@ -277,6 +278,71 @@ fn expect_close(
         return Err(CompileError::new(format!("missing {label}")).with_span(head_span));
     }
     Ok(())
+}
+
+pub(crate) fn parse_when(
+    tokens: &[Token],
+    start: usize,
+    scope: &ParseScope,
+) -> Result<InstrResult, CompileError> {
+    let head_span = tokens[start].span;
+    let head_src = match &tokens[start].kind {
+        TokenKind::OpenWhen { src } => src.clone(),
+        _ => unreachable!(),
+    };
+    let token = head_src.trim();
+    let media_query = resolve_when_token(token, head_span)?;
+    let mut i = start + 1;
+    let body = (scope.body)(tokens, i, WHEN_TERMS)?;
+    i = body.end;
+    let mut else_body: Option<Vec<Instr>> = None;
+    if let Some(t) = tokens.get(i)
+        && matches!(t.kind, TokenKind::Else)
+    {
+        i += 1;
+        let eb = (scope.body)(tokens, i, &[Discriminant::CloseWhen])?;
+        else_body = Some(eb.instrs);
+        i = eb.end;
+    }
+    expect_close(tokens, i, TokenKind::CloseWhen, "</when>", head_span)?;
+    i += 1;
+    Ok(InstrResult {
+        instr: Instr::When(WhenInstr {
+            token: token.to_string(),
+            media_query: media_query.to_string(),
+            body: body.instrs,
+            else_body,
+            span: head_span,
+        }),
+        end: i,
+    })
+}
+
+fn resolve_when_token(token: &str, span: Span) -> Result<&'static str, CompileError> {
+    let list = crate::breakpoints::breakpoint_token_list();
+    if token.is_empty() {
+        return Err(CompileError::new(format!(
+            "<when> requires a theme breakpoint token: {list}"
+        ))
+        .with_span(span));
+    }
+    // Raw length or media query — never accepted (theme tokens only).
+    if token.chars().any(|c| c.is_ascii_digit())
+        || token.contains('(')
+        || token.contains(':')
+        || token.contains(' ')
+    {
+        return Err(CompileError::new(format!(
+            "<when> rejects raw media queries and pixel values; use a theme breakpoint token: {list} (got {token:?})"
+        ))
+        .with_span(span));
+    }
+    crate::breakpoints::breakpoint_media(token).ok_or_else(|| {
+        CompileError::new(format!(
+            "unknown breakpoint token {token:?} in <when>; theme scale is: {list}"
+        ))
+        .with_span(span)
+    })
 }
 
 pub(crate) fn parse_match(

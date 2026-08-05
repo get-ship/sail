@@ -65,7 +65,13 @@ const EPSILON: f32 = 0.5;
 fn is_control_flow_tag(tag: &str) -> bool {
     matches!(
         tag,
-        "if" | "else" | "else-if" | "for" | "match" | "case" | "default"
+        "if" | "else"
+            | "else-if"
+            | "for"
+            | "match"
+            | "when"
+            | "case"
+            | "default"
     )
 }
 

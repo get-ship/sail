@@ -146,6 +146,12 @@ fn instr_has_reflect_empty_slot(instr: &Instr) -> bool {
                     .as_deref()
                     .is_some_and(instrs_have_reflect_empty_slot)
         }
+        Instr::When(w) => {
+            instrs_have_reflect_empty_slot(&w.body)
+                || w.else_body
+                    .as_deref()
+                    .is_some_and(instrs_have_reflect_empty_slot)
+        }
         Instr::WhileLoading(w) => instrs_have_reflect_empty_slot(&w.body),
         Instr::WhileError(w) => instrs_have_reflect_empty_slot(&w.body),
         Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => false,
@@ -653,10 +659,60 @@ impl TemplateEmitter {
         self.boundary_hoists.push_str(&h.into_string());
     }
 
-    /// Emit a hydrate-side dispatch for an `if` / `for` / `match`
-    /// boundary. The compiled `hydrate(root, ctx)` body looks up the
-    /// SSR'd `<sail-{kind} key="b<N>">` element via `__m`, swaps it for
-    /// a Comment anchor, and invokes the hoisted `__wireBoundary_b<N>`
+    pub(in crate::emit) fn emit_when(
+        &mut self,
+        w: &mut Writer,
+        instr: &WhenInstr,
+        parent_var: &str,
+        cleanups_var: &str,
+    ) {
+        let key = self.next_key();
+        let anchor = self.fresh("whenAnchor");
+
+        let needs_host = instrs_have_reflect_empty_slot(&instr.body)
+            || instr
+                .else_body
+                .as_deref()
+                .is_some_and(instrs_have_reflect_empty_slot);
+
+        w.line(&format!(
+            "const {anchor} = document.createComment(\"when\");"
+        ));
+        w.line(&format!("{parent_var}.appendChild({anchor});"));
+        w.line(&format!(
+            "{cleanups_var}.push(__wireBoundary_{key}({anchor}{host}));",
+            host = Self::boundary_host_arg(needs_host)
+        ));
+
+        if self.is_route && self.boundary_depth == 0 {
+            self.hydrate_uses_markers = true;
+            self.emit_boundary_hydrate(&key, "when", needs_host);
+        }
+
+        let mut h = Writer::new();
+        let ap = self.machinery_param("anchor", "Comment");
+        h.line(&format!(
+            "const __wireBoundary_{key} = ({ap}{host}) => bindWhen({{",
+            host = self.boundary_host_param(needs_host)
+        ));
+        h.enter();
+        h.line("anchor,");
+        h.line(&format!("query: {},", js_string(&instr.media_query)));
+        h.line("then_:");
+        self.emit_branch(&mut h, &instr.body);
+        if let Some(eb) = &instr.else_body {
+            h.line("else_:");
+            self.emit_branch(&mut h, eb);
+        }
+        h.leave();
+        h.line("});");
+        self.boundary_hoists.push_str(&h.into_string());
+    }
+
+    /// Emit a hydrate-side dispatch for an `if` / `for` / `match` /
+    /// `when` boundary. The compiled `hydrate(root, ctx)` body looks up
+    /// the SSR'd `<sail-{kind} key="b<N>">` element via `__m`, swaps it
+    /// for a Comment anchor, and invokes the hoisted `__wireBoundary_b<N>`
     /// helper — same shape the legacy `__bN_attach` named property used
     /// to expose, just inlined into the unified hydrate function.
     fn emit_boundary_hydrate(&mut self, key: &str, kind: &str, needs_host: bool) {

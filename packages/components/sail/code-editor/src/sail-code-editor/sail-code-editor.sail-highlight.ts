@@ -75,11 +75,11 @@ const TS_KEYWORDS = new Set([
 
 // ─── Grammar tables (mirrors `crates/sail/compiler`) ──────────────────
 const OPEN_KEYWORDS = [
-  'if', 'for', 'match', 'while-loading', 'while-error',
+  'if', 'for', 'match', 'when', 'while-loading', 'while-error',
 ] as const
 
 const CLOSE_KEYWORDS = [
-  'if', 'for', 'match', 'while-loading', 'while-error',
+  'if', 'for', 'match', 'when', 'while-loading', 'while-error',
 ] as const
 
 const CONTINUATION_KEYWORDS = [

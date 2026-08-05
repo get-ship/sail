@@ -128,6 +128,13 @@ pub(crate) fn collect_anatomy(template: &[Instr]) -> (Vec<String>, Vec<String>) 
                     }
                     &[]
                 }
+                Instr::When(w) => {
+                    walk(&w.body, classes, slots);
+                    if let Some(e) = &w.else_body {
+                        walk(e, classes, slots);
+                    }
+                    &[]
+                }
                 Instr::WhileLoading(w) => &w.body,
                 Instr::WhileError(w) => &w.body,
                 _ => &[],

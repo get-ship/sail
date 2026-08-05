@@ -62,7 +62,13 @@ fn instr_references(instr: &Instr, var_name: &str, idx_name: Option<&str>) -> bo
                     .as_ref()
                     .is_some_and(|b| body_references_for_vars(b, var_name, idx_name))
         }
-        Instr::WhileLoading(w) => body_references_for_vars(&w.body, var_name, idx_name),
+        Instr::When(w) => {
+            body_references_for_vars(&w.body, var_name, idx_name)
+                || w.else_body.as_ref().is_some_and(|e| {
+                    body_references_for_vars(e, var_name, idx_name)
+                })
+        }
+                Instr::WhileLoading(w) => body_references_for_vars(&w.body, var_name, idx_name),
         Instr::WhileError(w) => body_references_for_vars(&w.body, var_name, idx_name),
     }
 }

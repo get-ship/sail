@@ -120,6 +120,7 @@ export { wireFormMutation } from './mutation'
 export { markHydrateText, markHydrateAttr, markHydrateBoundary } from './hydrate-mark'
 // ── control flow ────────────────────────────────────────────────────────────
 export { bindIf } from './if'
+export { bindWhen, acquireMediaQuery } from './when'
 export { bindFor, bindForSignal } from './for'
 export { bindWhileLoading, bindWhileError } from './while'
 

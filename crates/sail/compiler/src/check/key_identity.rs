@@ -45,7 +45,13 @@ fn walk_instrs(instrs: &[Instr]) -> Result<(), CompileError> {
                 }
             }
             Instr::Element(el) => walk_instrs(&el.children)?,
-            Instr::WhileLoading(wl) => walk_instrs(&wl.body)?,
+            Instr::When(w) => {
+                walk_instrs(&w.body)?;
+                if let Some(e) = &w.else_body {
+                    walk_instrs(e)?;
+                }
+            }
+                        Instr::WhileLoading(wl) => walk_instrs(&wl.body)?,
             Instr::WhileError(we) => walk_instrs(&we.body)?,
             _ => {}
         }

@@ -64,6 +64,16 @@ fn instr_references_ident(instr: &Instr, name: &str) -> bool {
                     .as_ref()
                     .is_some_and(|d| template_references_ident(d, name))
         }
+        Instr::When(WhenInstr {
+            body,
+            else_body,
+            ..
+        }) => {
+            template_references_ident(body, name)
+                || else_body
+                    .as_ref()
+                    .is_some_and(|b| template_references_ident(b, name))
+        }
         Instr::WhileLoading(wl) => template_references_ident(&wl.body, name),
         Instr::WhileError(we) => template_references_ident(&we.body, name),
         Instr::StaticText { .. } | Instr::Comment { .. } => false,

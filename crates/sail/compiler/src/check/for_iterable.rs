@@ -39,7 +39,13 @@ fn walk(instrs: &[Instr]) -> Result<(), CompileError> {
                 }
             }
             Instr::Element(el) => walk(&el.children)?,
-            Instr::WhileLoading(wl) => walk(&wl.body)?,
+            Instr::When(w) => {
+                walk(&w.body)?;
+                if let Some(e) = &w.else_body {
+                    walk(e)?;
+                }
+            }
+                        Instr::WhileLoading(wl) => walk(&wl.body)?,
             Instr::WhileError(we) => walk(&we.body)?,
             _ => {}
         }

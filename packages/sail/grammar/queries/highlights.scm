@@ -48,7 +48,7 @@
 ; brace form is retired.
 ; control-flow element tags
 ((tag_name) @keyword.directive
-  (#match? @keyword.directive "^(if|else-if|else|for|match|case|default|while-loading|while-error)$"))
+  (#match? @keyword.directive "^(if|else-if|else|for|match|case|default|when|while-loading|while-error)$"))
 "<if"                @keyword.directive
 "</if>"              @keyword.directive
 "<else-if"           @keyword.directive
@@ -63,6 +63,8 @@
 "</case>"            @keyword.directive
 "<default"           @keyword.directive
 "</default>"         @keyword.directive
+"<when"              @keyword.directive
+"</when>"            @keyword.directive
 "<while-loading"     @keyword.directive
 "</while-loading>"   @keyword.directive
 "<while-error"       @keyword.directive

@@ -34,6 +34,7 @@ pub mod analysis;
 pub mod animation;
 pub mod bindings;
 pub mod block_manifest;
+pub mod breakpoints;
 pub mod check;
 pub mod diagnostics;
 pub mod directive_manifest;

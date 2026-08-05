@@ -8314,6 +8314,13 @@ export const BLOCKS: BlockDoc[] = [
     "summary": "pattern branches over a brace-primary discriminant (residual: on={…}); cases use brace-primary or of={…}; optional <default>"
   },
   {
+    "open": "<when {token}>",
+    "clauses": [
+      "<else>"
+    ],
+    "summary": "structural viewport branch on a theme breakpoint token (mobile/tablet/desktop); optional <else> is the SSR/mobile-first default; matchMedia swap on the client"
+  },
+  {
     "open": "<while-loading {sig}>",
     "clauses": [],
     "summary": "renders while an async query signal is pending; brace-primary signal name (residual: of=\"sig\")"

@@ -268,12 +268,19 @@ Controllers never `.style` / `createElement`.\n\
                    <case {{'ok'}}>…</case>\n  \
                    <default>…</default>\n\
                  </match>\n\
+                 <when {{tablet}}>…wide…\
+                 <else>…mobile-first default…</else></when>\n\
                  <while-loading {{sig}}>…</while-loading>\n\
                  <while-error as=\"err\" {{sig}}>…</while-error>\n\
                  ```\n\n\
                  Residual named attrs (`cond=`, `on=`, `of=`) still parse.\n\
                  `key=` is required on `<for>` — without it the reconciler falls back to\n\
-                 positional matching and loses DOM identity on reorder.\n"
+                 positional matching and loses DOM identity on reorder.\n\
+                 `<when {{token}}>` is structural responsiveness (different trees per\n\
+                 theme breakpoint: mobile/tablet/desktop). SSR emits the `<else>` /\n\
+                 default branch only (mobile-first); the client matchMedia-swaps when\n\
+                 the query matches. Paint-level Style `.when({{ tablet: style.… }})` is\n\
+                 separate and unchanged.\n"
             );
         }
     }

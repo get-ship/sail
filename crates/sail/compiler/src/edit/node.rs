@@ -233,6 +233,30 @@ impl<'a> IndexBuild<'a> {
                 );
                 Some(id)
             }
+            Instr::When(w) => {
+                let content = format!("when|{}", w.token);
+                let id = node_id(self.file, &path, &content);
+                let open_span = self.author_open_span("when");
+                let full_span =
+                    full_element_span(self.source, open_span, "when").unwrap_or(open_span);
+                let mut kids = self.walk_block(&w.body, &path, Some(id.clone()));
+                if let Some(e) = &w.else_body {
+                    kids.extend(self.walk_block(e, &format!("{path}.else"), Some(id.clone())));
+                }
+                self.nodes.insert(
+                    id.clone(),
+                    EditNode {
+                        id: id.clone(),
+                        tag: "when".into(),
+                        open_span,
+                        full_span,
+                        parent_id,
+                        children: kids,
+                        static_attrs: BTreeMap::new(),
+                    },
+                );
+                Some(id)
+            }
             Instr::WhileLoading(wl) => {
                 let content = format!("while-loading|{}", wl.bind);
                 let id = node_id(self.file, &path, &content);

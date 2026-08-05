@@ -31,6 +31,7 @@ export default grammar({
       $.if_block,
       $.for_block,
       $.match_block,
+      $.when_block,
       $.while_loading_block,
       $.while_error_block,
       $.else_if_clause,
@@ -192,6 +193,14 @@ export default grammar({
       '>',
       repeat($._template_node),
       '</match>',
+    ),
+
+    when_block: $ => seq(
+      '<when',
+      repeat($._attribute),
+      '>',
+      repeat($._template_node),
+      '</when>',
     ),
 
     while_loading_block: $ => seq(

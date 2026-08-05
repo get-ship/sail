@@ -438,6 +438,16 @@ fn visit_instr(instr: &Instr, v: &mut Visitor) {
                 visit_instrs(d, v);
             }
         }
+        Instr::When(WhenInstr {
+            body,
+            else_body,
+            ..
+        }) => {
+            visit_instrs(body, v);
+            if let Some(eb) = else_body {
+                visit_instrs(eb, v);
+            }
+        }
         Instr::WhileLoading(wl) => visit_instrs(&wl.body, v),
         Instr::WhileError(we) => {
             // `{#while-error err" of={agents}>` binds `err` inside the body.

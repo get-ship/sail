@@ -1001,13 +1001,17 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
          - State in `<controller>` via `controller(() => {{ … return {{ … }} }})`.\n\
          - Shared state: `defineStore` / `useStore` from `@ship/sail-runtime` (never `/internal`).\n\
          - Identity binds for engines: `prop:tree={{table}}`, `prop:table={{…}}` — not querySelector.\n\
-         - Control flow: `<if>` / `<for key={{…}}>` / `<match>` — full grammar:\n  \
+         - Control flow: `<if>` / `<for key={{…}}>` / `<match>` / `<when {{tablet}}>` — full grammar:\n  \
            MCP `sail_surface` topic `control-flow`.\n\
+         - **Structural responsiveness** is `<when {{token}}>` (theme breakpoints:\n  \
+           mobile/tablet/desktop). Different trees per viewport; SSR paints the\n  \
+           `<else>` / default branch only (mobile-first), then hydrates with matchMedia.\n\
+         - Style `.when({{ tablet: style.… }})` stays paint-level (density, color) — not trees.\n\
          - **No layout `matchMedia` in controllers** (`sail-controller-matchmedia-layout`):\n  \
            do not drive template-visible layout from `window.matchMedia('(min-width:…)')`\n  \
-           / `max-width` / `orientation`. Use Style `when({{ tablet: style.… }})` for sx;\n  \
-           attr-level responsive work lands under RESPONSIVE-1. Non-layout media\n  \
-           (`prefers-reduced-motion`, `prefers-color-scheme`, `print`) may stay imperative.\n\n\
+           / `max-width` / `orientation`. Use `<when {{tablet}}>` for structure; Style\n  \
+           `when` for sx. Non-layout media (`prefers-reduced-motion`, `prefers-color-scheme`,\n  \
+           `print`) may stay imperative.\n\n\
          ```\n\
          <controller>\n  \
            import {{ controller, signal }} from '@ship/sail-runtime'\n  \
@@ -1017,6 +1021,7 @@ fn gen_skill(dir: Option<PathBuf>, out: Option<PathBuf>) -> Result<()> {
            }})\n\
          </controller>\n\
          <if {{open()}}><column gap=\"4\">…</column></if>\n\
+         <when {{tablet}}><row>…wide…</row><else><column>…narrow…</column></else></when>\n\
          ```\n"
     );
 

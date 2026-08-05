@@ -1,12 +1,13 @@
 //! The template-block vocabulary — one source of truth for element control
-//! flow (`<if>`, `<for>`, `<match>`, `<while-loading>`, `<while-error>`) and
-//! every sub-clause each block accepts. Brace form (`{#if}`, …) is retired.
+//! flow (`<if>`, `<for>`, `<match>`, `<when>`, `<while-loading>`,
+//! `<while-error>`) and every sub-clause each block accepts. Brace form
+//! (`{#if}`, …) is retired.
 //!
 //! The parser (`parse::template::blocks` + `control_elements`) enumerates
 //! these same block and clause kinds as `Discriminant` variants with no
 //! attached prose, so this table is authored here rather than derived —
 //! but the set of rows is kept in lockstep with the parser's `IF_TERMS` /
-//! `FOR_TERMS` / `MATCH_TERMS` by the test below.
+//! `FOR_TERMS` / `MATCH_TERMS` / `WHEN_TERMS` by the test below.
 
 use serde::Serialize;
 
@@ -43,6 +44,11 @@ pub const BLOCKS: &[BlockEntry] = &[
         summary: "pattern branches over a brace-primary discriminant (residual: on={…}); cases use brace-primary or of={…}; optional <default>",
     },
     BlockEntry {
+        open: "<when {token}>",
+        clauses: &["<else>"],
+        summary: "structural viewport branch on a theme breakpoint token (mobile/tablet/desktop); optional <else> is the SSR/mobile-first default; matchMedia swap on the client",
+    },
+    BlockEntry {
         open: "<while-loading {sig}>",
         clauses: &[],
         summary: "renders while an async query signal is pending; brace-primary signal name (residual: of=\"sig\")",
@@ -61,8 +67,8 @@ mod tests {
     #[test]
     fn covers_every_known_clause() {
         // Kept in lockstep by hand with blocks.rs's IF_TERMS/FOR_TERMS/
-        // MATCH_TERMS (the parser's Discriminant variants carry no prose,
-        // so this table can't be derived from them — see module docs).
+        // MATCH_TERMS/WHEN_TERMS (the parser's Discriminant variants carry
+        // no prose, so this table can't be derived from them — see module docs).
         let all_clauses: Vec<&str> = BLOCKS
             .iter()
             .flat_map(|b| b.clauses.iter().copied())
@@ -73,8 +79,8 @@ mod tests {
         assert!(all_clauses.contains(&"<default>"));
         assert_eq!(
             BLOCKS.len(),
-            5,
-            "one row per block kind: if, for, match, while-loading, while-error"
+            6,
+            "one row per block kind: if, for, match, when, while-loading, while-error"
         );
     }
 

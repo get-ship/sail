@@ -29,6 +29,7 @@ pub fn is_control_tag(tag: &str) -> bool {
             | "else"
             | "for"
             | "match"
+            | "when"
             | "case"
             | "default"
             | "while-loading"
@@ -43,6 +44,7 @@ pub fn expand_control_element(el: &Element, out: &mut Vec<Token>) {
         "if" => expand_if(el, out),
         "for" => expand_for(el, out),
         "match" => expand_match(el, out),
+        "when" => expand_when(el, out),
         "while-loading" => expand_while_loading(el, out),
         "while-error" => expand_while_error(el, out),
         // Stray clause tags at this level become errors later as unexpected tokens
@@ -201,6 +203,36 @@ fn expand_match(el: &Element, out: &mut Vec<Token>) {
         kind: TokenKind::CloseMatch,
         span: el.span,
     });
+}
+
+fn expand_when(el: &Element, out: &mut Vec<Token>) {
+    // Token is a theme breakpoint name, not an expression — same brace-primary
+    // surface as other blocks (`<when {tablet}>`).
+    let token = primary_or_named(el, &["bp", "breakpoint"]).unwrap_or_default();
+    out.push(Token {
+        kind: TokenKind::OpenWhen { src: token },
+        span: el.span,
+    });
+    flatten_when_children(&el.children, out);
+    out.push(Token {
+        kind: TokenKind::CloseWhen,
+        span: el.span,
+    });
+}
+
+fn flatten_when_children(nodes: &[Node], out: &mut Vec<Token>) {
+    for n in nodes {
+        match n {
+            Node::Element(child) if child.tag == "else" => {
+                out.push(Token {
+                    kind: TokenKind::Else,
+                    span: child.span,
+                });
+                flatten_nodes(&child.children, out);
+            }
+            other => flatten_node(other, out),
+        }
+    }
 }
 
 fn expand_while_loading(el: &Element, out: &mut Vec<Token>) {

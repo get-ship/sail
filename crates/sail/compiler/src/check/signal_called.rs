@@ -115,7 +115,13 @@ impl Cx<'_> {
                         self.walk_instrs(d);
                     }
                 }
-                Instr::WhileLoading(wl) => self.walk_instrs(&wl.body),
+                Instr::When(w) => {
+                    self.walk_instrs(&w.body);
+                    if let Some(e) = &w.else_body {
+                        self.walk_instrs(e);
+                    }
+                }
+                                Instr::WhileLoading(wl) => self.walk_instrs(&wl.body),
                 Instr::WhileError(we) => self.walk_instrs(&we.body),
                 Instr::StaticText { .. } | Instr::Comment { .. } => {}
             }

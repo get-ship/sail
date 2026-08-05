@@ -84,6 +84,7 @@ impl Builder {
             Instr::If(if_instr) => self.walk_if(if_instr),
             Instr::For(for_instr) => self.walk_for(for_instr),
             Instr::Match(match_instr) => self.walk_match(match_instr),
+            Instr::When(when_instr) => self.walk_when(when_instr),
             Instr::WhileLoading(wl) => self.walk_while_loading(wl),
             Instr::WhileError(we) => self.walk_while_error(we),
         }
@@ -181,6 +182,16 @@ impl Builder {
         }
         if let Some(default) = &instr.default {
             self.walk_block(default);
+        }
+    }
+
+    /// `<when>`: one binding for the boundary (expr = breakpoint token);
+    /// then-body and optional else walked.
+    fn walk_when(&mut self, instr: &WhenInstr) {
+        self.push(BindingKind::When, &instr.token, false);
+        self.walk_block(&instr.body);
+        if let Some(else_body) = &instr.else_body {
+            self.walk_block(else_body);
         }
     }
 

@@ -84,6 +84,8 @@ pub enum BindingKind {
     For,
     /// `{#match}` boundary.
     Match,
+    /// `<when {token}>` viewport boundary.
+    When,
     /// `<form mutation="client.method">` — form mutation directive.
     Mutation,
     /// `{#while-loading of <signal>}` boundary.
@@ -105,6 +107,7 @@ impl BindingKind {
             BindingKind::If => "if".into(),
             BindingKind::For => "for".into(),
             BindingKind::Match => "match".into(),
+            BindingKind::When => "when".into(),
             BindingKind::Mutation => "mutation".into(),
             BindingKind::WhileLoading => "while-loading".into(),
             BindingKind::WhileError => "while-error".into(),

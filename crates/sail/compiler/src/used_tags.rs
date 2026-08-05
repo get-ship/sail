@@ -46,6 +46,12 @@ fn visit(instrs: &[Instr], found: &mut BTreeSet<String>) {
                     visit(default, found);
                 }
             }
+            Instr::When(w) => {
+                visit(&w.body, found);
+                if let Some(e) = &w.else_body {
+                    visit(e, found);
+                }
+            }
             Instr::WhileLoading(wl) => visit(&wl.body, found),
             Instr::WhileError(we) => visit(&we.body, found),
             Instr::StaticText { .. } | Instr::DynamicText { .. } | Instr::Comment { .. } => {}

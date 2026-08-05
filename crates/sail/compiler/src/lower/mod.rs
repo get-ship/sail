@@ -296,6 +296,22 @@ fn walk_instr(
             }
             *depth -= 1;
         }
+        Instr::When(WhenInstr {
+            body,
+            else_body,
+            ..
+        }) => {
+            out.runtime_imports.insert("bindWhen");
+            if is_route && *depth == 0 {
+                out.dom_imports.insert("collectElementMarkers");
+            }
+            *depth += 1;
+            walk_instrs(body, out, is_route, depth)?;
+            if let Some(eb) = else_body {
+                walk_instrs(eb, out, is_route, depth)?;
+            }
+            *depth -= 1;
+        }
     }
     Ok(())
 }

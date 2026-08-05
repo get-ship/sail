@@ -450,6 +450,34 @@ impl<'a> TreeBuild<'a> {
                 });
                 Some(id)
             }
+            Instr::When(w) => {
+                let content = format!("when|{}", w.token);
+                let id = node_id(self.file, &path, &content);
+                let mut kids = self.walk_block(&w.body, &path);
+                if let Some(e) = &w.else_body {
+                    kids.extend(self.walk_block(e, &format!("{path}.else")));
+                }
+                let span = self.author_span_for_tag("when");
+                self.by_start.insert(span.start, id.clone());
+                self.by_tag
+                    .entry("when".into())
+                    .or_default()
+                    .push(id.clone());
+                self.nodes.push(TreeNode {
+                    id: id.clone(),
+                    file: self.file.to_string(),
+                    span,
+                    tag: "when".into(),
+                    layer: "l1-keyword".into(),
+                    attrs: BTreeMap::new(),
+                    control_flow: Some(ControlFlowEdge {
+                        kind: "when".into(),
+                        expr: Some(w.token.clone()),
+                    }),
+                    children: kids,
+                });
+                Some(id)
+            }
             Instr::WhileLoading(wl) => {
                 let content = format!("while-loading|{}", wl.bind);
                 let id = node_id(self.file, &path, &content);

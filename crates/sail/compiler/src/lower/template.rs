@@ -23,7 +23,11 @@ pub fn has_custom_element(instrs: &[Instr]) -> bool {
             m.cases.iter().any(|c| has_custom_element(&c.body))
                 || m.default.as_ref().is_some_and(|d| has_custom_element(d))
         }
-        Instr::WhileLoading(wl) => has_custom_element(&wl.body),
+        Instr::When(w) => {
+            has_custom_element(&w.body)
+                || w.else_body.as_ref().is_some_and(|e| has_custom_element(e))
+        }
+                Instr::WhileLoading(wl) => has_custom_element(&wl.body),
         Instr::WhileError(we) => has_custom_element(&we.body),
         _ => false,
     })

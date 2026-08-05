@@ -69,19 +69,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
     const lesson = derived(() => BY_SLUG[ctx.route.params.slug() ?? ''])
     const nextSlug = derived(() => lesson()?.next ?? '')
 
-    // tablet+ (768px) keeps the two-pane workbench; below that we stack.
-    const isWide = signal(
-      typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches,
-    )
-    mount(() => {
-      if (typeof window === 'undefined') return
-      const mq = window.matchMedia('(min-width: 768px)')
-      const onChange = (): void => isWide.set(mq.matches)
-      onChange()
-      mq.addEventListener('change', onChange)
-      return () => mq.removeEventListener('change', onChange)
-    })
-
     // ── FFI refs: the editors, the preview iframe (via use: capture actions) ──
     const editorEl = signal<CodeEditorHost | null>(null)
     const iframeEl = signal<HTMLIFrameElement | null>(null)
@@ -336,7 +323,6 @@ export default controller((ctx: ControllerScope<Scope>) => {
       hasNext: derived(() => Boolean(nextSlug())),
       nextHref: derived(() => (nextSlug() ? '/sail/tutorial/' + nextSlug() : '/sail/tutorial')),
       nextTitle: derived(() => (BY_SLUG[nextSlug()]?.title ?? '') + ' →'),
-      isWide,
     }
 })
 </controller>
@@ -348,10 +334,9 @@ export default controller((ctx: ControllerScope<Scope>) => {
   ate the editor. Tabs drive a signal; panes are plain grow columns.
 -->
 <!--
-  isWide (tablet+): side-by-side workbench.
-  Mobile: stacked column — lesson prose (max half viewport) then playground.
+  tablet+: side-by-side workbench. Mobile (else / SSR default): stacked.
 -->
-<if {isWide()}>
+<when {tablet}>
 <row nowrap align="stretch" w="full" sx={style.h(fill).minH(0).minW(0).overflow(hidden)} gap="0">
   <!-- Lesson pane -->
   <column shrink sx={style.w(panel-max-w-md).minW(0).maxW(panel-max-w-md).minH(0).bg(surface-1).borderRWidth(1).borderR(border)}>
@@ -562,5 +547,5 @@ export default controller((ctx: ControllerScope<Scope>) => {
     </column>
   </column>
 </column>
-</else></if>
+</else></when>
 

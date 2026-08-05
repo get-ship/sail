@@ -16,6 +16,7 @@ pub enum Instr {
     If(IfInstr),
     For(ForInstr),
     Match(MatchInstr),
+    When(WhenInstr),
     WhileLoading(WhileLoadingInstr),
     WhileError(WhileErrorInstr),
 }
@@ -277,4 +278,17 @@ pub struct MatchInstr {
 pub struct MatchCase {
     pub test: Expr,
     pub body: Vec<Instr>,
+}
+
+/// Structural viewport branch: different trees per theme breakpoint.
+/// Paint-level Style `.when()` is separate and untouched.
+#[derive(Debug, Clone)]
+pub struct WhenInstr {
+    /// Theme breakpoint token (`mobile` / `tablet` / `desktop`).
+    pub token: String,
+    /// Resolved media query for the runtime matchMedia listener.
+    pub media_query: String,
+    pub body: Vec<Instr>,
+    pub else_body: Option<Vec<Instr>>,
+    pub span: Span,
 }

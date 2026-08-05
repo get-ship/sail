@@ -253,6 +253,25 @@ impl<'a> TreeBuild<'a> {
                 self.parent_stack.pop();
                 Some(id)
             }
+            Instr::When(w) => {
+                let content = format!("when|{}", w.token);
+                let id = node_id(self.file, &path, &content);
+                self.by_tag
+                    .entry("when".into())
+                    .or_default()
+                    .push(id.clone());
+                self.nodes.push(TreeNodeRef {
+                    id: id.clone(),
+                    tag: "when".into(),
+                });
+                self.parent_stack.push(id.clone());
+                let _ = self.walk_block(&w.body, &path);
+                if let Some(e) = &w.else_body {
+                    let _ = self.walk_block(e, &format!("{path}.else"));
+                }
+                self.parent_stack.pop();
+                Some(id)
+            }
             Instr::WhileLoading(wl) => {
                 let content = format!("while-loading|{}", wl.bind);
                 let id = node_id(self.file, &path, &content);

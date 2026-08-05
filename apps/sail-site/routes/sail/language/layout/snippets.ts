@@ -41,4 +41,11 @@ export const code = {
   <badge tone="success" shrink>Active</badge>
 </row>`,
 
+  when: `<when {tablet}>
+  <row nowrap>…side-by-side workbench…</row>
+  <else>
+    <column>…stacked mobile layout…</column>
+  </else>
+</when>`,
+
 }

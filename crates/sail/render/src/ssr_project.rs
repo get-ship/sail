@@ -707,7 +707,46 @@ fn try_expand_control_at(
     {
         return expand_for(src, start, scope, projected, unresolved);
     }
+    if rest.starts_with("<when")
+        && rest
+            .as_bytes()
+            .get(5)
+            .map(|b| b.is_ascii_whitespace() || *b == b'{' || *b == b'>')
+            .unwrap_or(false)
+    {
+        return expand_when(src, start, scope, projected, unresolved);
+    }
     None
+}
+
+/// Structural `<when>`: paint the default/`else` branch only (mobile-first).
+/// Viewport is unknown at SSR/takumi; client hydration swaps on matchMedia.
+fn expand_when(
+    src: &str,
+    start: usize,
+    scope: &HashMap<String, Value>,
+    projected: &mut Vec<String>,
+    unresolved: &mut Vec<String>,
+) -> Option<(usize, String)> {
+    let (open_end, attrs) = parse_open_tag(src, start)?;
+    if tag_name(&attrs).as_deref() != Some("when") {
+        return None;
+    }
+    let close = find_matching_close(src, open_end, "when")?;
+    let body = &src[open_end..close];
+    let end = close + "</when>".len();
+
+    let token = attrs
+        .get("__primary")
+        .cloned()
+        .or_else(|| attrs.get("bp").cloned())
+        .or_else(|| attrs.get("breakpoint").cloned())
+        .map(|s| strip_attr_braces(&s).to_string())
+        .unwrap_or_default();
+    projected.push(format!("when {{{token}}} → else (ssr default)"));
+    let (_then_body, else_body) = split_if_branches(body);
+    let expanded = expand_control_flow(else_body, scope, projected, unresolved);
+    Some((end, expanded))
 }
 
 fn expand_if(

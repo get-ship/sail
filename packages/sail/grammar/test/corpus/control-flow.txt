@@ -133,6 +133,28 @@ match / case / default
         close_tag: (tag_name)))))
 
 ==================
+when / else
+==================
+
+<when {tablet}><row>wide</row><else><column>narrow</column></else></when>
+
+---
+
+(source_file
+  (when_block
+    (brace_expression
+      (identifier))
+    (element
+      tag: (tag_name)
+      (text)
+      close_tag: (tag_name))
+    (else_clause
+      (element
+        tag: (tag_name)
+        (text)
+        close_tag: (tag_name)))))
+
+==================
 nested for inside if
 ==================
 
