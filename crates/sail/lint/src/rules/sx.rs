@@ -1,6 +1,7 @@
 //! `sail-sx` — the inline style surface.
 //!
 //! Product form is Style: `sx={style.pad(4).bg(surface-2).radius(lg)}`,
+//! `sx={style({ box: pad(4), paint: bg(surface-2) })}`,
 //! `sx={when({ hover: style.bg(muted) })}`, `sx={[ match(…), when(…) ]}`, or a
 //! scope Style const ref. Utility-string atoms (`sx="p-4 bg-surface-2"`) are a
 //! **hard residual error** — not architecture.
@@ -454,6 +455,7 @@ fn is_style_product_value(val: &str) -> bool {
         .map(str::trim)
         .unwrap_or(t);
     t.starts_with("style.")
+        || t.starts_with("style(")
         || t.starts_with("match(")
         || t.starts_with("when(")
         || t.starts_with("compound(")
@@ -559,6 +561,12 @@ mod tests {
             "{:?}",
             run(r#"<div sx={style.bg(primary).padX(2)}>x</div>"#)
         );
+    }
+
+    #[test]
+    fn style_channel_object_product_passes() {
+        let src = r#"<div sx={style({ box: pad(2), paint: bg(primary), animate: enter({ opacity: 'fade' }) })}>x</div>"#;
+        assert!(run(src).is_empty(), "{:?}", run(src));
     }
 
     #[test]

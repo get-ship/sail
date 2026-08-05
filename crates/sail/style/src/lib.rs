@@ -877,7 +877,8 @@ mod tests {
         assert!(!css.contains("fade"), "{css}");
     }
 
-    /// Emit identity: old chain vs new channel form must mint the same classes + CSS.
+    /// Emit identity: old chain vs new channel form must mint the same
+    /// classes + CSS + motion attach list (trigger + config).
     fn emit_pair(old: &str, new: &str) {
         let (s_old, d_old) = parse(old);
         let (s_new, d_new) = parse(new);
@@ -900,6 +901,12 @@ mod tests {
         assert_eq!(
             css_old, css_new,
             "CSS identity failed\nold: {old}\nnew: {new}\nold css:\n{css_old}\nnew css:\n{css_new}"
+        );
+        let m_old = collect_motion_attaches(&s_old);
+        let m_new = collect_motion_attaches(&s_new);
+        assert_eq!(
+            m_old, m_new,
+            "motion attach identity failed\nold: {old}\nnew: {new}\nold motions: {m_old:?}\nnew motions: {m_new:?}"
         );
     }
 
@@ -994,11 +1001,57 @@ mod tests {
     }
 
     #[test]
-    fn channels_animate_key_deferred() {
-        let (_, diags) = parse("style({ animate: enter({ opacity: 'fade' }) })");
+    fn channels_emit_identity_animate_enter() {
+        emit_pair(
+            "style.enter({ opacity: 'fade' })",
+            "style({ animate: enter({ opacity: 'fade' }) })",
+        );
+    }
+
+    #[test]
+    fn channels_emit_identity_animate_enter_exit() {
+        emit_pair(
+            "style.enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' })",
+            "style({ animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })",
+        );
+    }
+
+    #[test]
+    fn channels_emit_identity_paint_plus_animate() {
+        emit_pair(
+            "style.bg(primary).enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' })",
+            "style({ paint: bg(primary), animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })",
+        );
+    }
+
+    #[test]
+    fn channels_emit_identity_flat_motion_tail_still_dual() {
+        // Flat motion after channel spine remains dual-accept with animate:.
+        emit_pair(
+            "style({ paint: bg(primary) }).enter({ opacity: 'fade' })",
+            "style({ paint: bg(primary), animate: enter({ opacity: 'fade' }) })",
+        );
+    }
+
+    #[test]
+    fn channels_animate_rejects_paint_setter() {
+        let (_, diags) = parse("style({ animate: bg(primary) })");
         assert!(
-            diags.iter().any(|d| d.message().contains("Phase 2b")),
-            "animate channel must refuse with Phase 2b: {:?}",
+            diags.iter().any(|d| {
+                let m = d.message();
+                m.contains("not a motion trigger") || m.contains("animate:")
+            }),
+            "paint setter in animate: must fail: {:?}",
+            diags.iter().map(|d| d.message()).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn channels_motion_in_box_channel_points_to_animate() {
+        let (_, diags) = parse("style({ box: pad(2).enter({ opacity: 'fade' }) })");
+        assert!(
+            diags.iter().any(|d| d.message().contains("animate:")),
+            "motion inside box: must point at animate: {:?}",
             diags.iter().map(|d| d.message()).collect::<Vec<_>>()
         );
     }

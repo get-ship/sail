@@ -228,6 +228,7 @@ fn parse_style_const(
 fn looks_like_style_const_rhs(rhs: &str) -> bool {
     let t = rhs.trim();
     if t.starts_with("style.")
+        || t.starts_with("style(")
         || t.starts_with("match(")
         || t.starts_with("when(")
         || t.starts_with("compound(")

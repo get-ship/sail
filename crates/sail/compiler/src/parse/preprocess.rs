@@ -365,6 +365,7 @@ fn strip_outer_braces(val: &str) -> &str {
         // with `[` or `style`/`match`/`when`/`compound`/ident, not bare `{k:`.
         let inn = inner.trim();
         if inn.starts_with("style.")
+            || inn.starts_with("style(")
             || inn.starts_with("match(")
             || inn.starts_with("when(")
             || inn.starts_with("compound(")

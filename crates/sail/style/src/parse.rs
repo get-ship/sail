@@ -23,7 +23,7 @@ pub fn parse(input: &str) -> (Style, Vec<StyleDiagnostic>) {
     // Residual utility-string product → hard error (not architecture).
     if looks_like_utility_string_product(trimmed) {
         diags.push(StyleDiagnostic::ResidualProduct {
-            message: "utility-string sx is not the Style product — use style.… chains, style({ box, paint, text }), match, when, compound"
+            message: "utility-string sx is not the Style product — use style.… chains, style({ box, paint, text, animate }), match, when, compound"
                 .into(),
             source: trimmed.chars().take(80).collect(),
         });
@@ -745,12 +745,12 @@ fn parse_style_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> St
     }
 }
 
-/// `style({ box: …, paint: …, text: … })` then optional `.when` / motion tails.
+/// `style({ box: …, paint: …, text: …, animate: … })` then optional `.when` / motion tails.
 fn parse_style_channels(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     p.expect(Tok::LParen, diags);
     if p.peek() != Some(&Tok::LBrace) {
         diags.push(StyleDiagnostic::ParseError {
-            message: "expected `style({ box, paint, text })` channel object".into(),
+            message: "expected `style({ box, paint, text, animate })` channel object".into(),
             source: p.remainder(),
         });
         // Consume to `)` when possible so the rest of the file can still parse.
@@ -767,7 +767,7 @@ fn parse_style_channels(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) ->
     let mut base = parse_channel_object(p, diags);
     p.expect(Tok::RParen, diags);
 
-    // Dual tails: `.when(…)` and flat-chain motion (animate channel deferred).
+    // Dual tails: `.when(…)` and flat-chain motion (also accepted under `animate:`).
     let mut iters = 0usize;
     while p.eat(&Tok::Dot) {
         iters += 1;
@@ -810,12 +810,13 @@ fn parse_style_channels(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) ->
     base
 }
 
-/// Channel object `{ box: chain, paint: chain, text: chain }` → flatten box→paint→text.
+/// Channel object `{ box, paint, text, animate }` → flatten box→paint→text→animate.
 fn parse_channel_object(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
     p.expect(Tok::LBrace, diags);
     let mut box_ch = Style::Empty;
     let mut paint_ch = Style::Empty;
     let mut text_ch = Style::Empty;
+    let mut animate_ch = Style::Empty;
     let mut iters = 0usize;
     while !p.at_end() && p.peek() != Some(&Tok::RBrace) {
         iters += 1;
@@ -839,18 +840,11 @@ fn parse_channel_object(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) ->
             "box" => box_ch = parse_channel_chain(p, diags),
             "paint" => paint_ch = parse_channel_chain(p, diags),
             "text" => text_ch = parse_channel_chain(p, diags),
-            "animate" => {
-                diags.push(StyleDiagnostic::ParseError {
-                    message: "`animate` channel is Phase 2b — keep motion on the flat Style chain (`.enter` / `.exit` / …)".into(),
-                    source: "animate".into(),
-                });
-                // Skip a value so recovery can continue.
-                let _ = parse_channel_chain(p, diags);
-            }
+            "animate" => animate_ch = parse_animate_channel_chain(p, diags),
             other => {
                 diags.push(StyleDiagnostic::ParseError {
                     message: format!(
-                        "unknown style channel `{other}` — expected `box`, `paint`, or `text`"
+                        "unknown style channel `{other}` — expected `box`, `paint`, `text`, or `animate`"
                     ),
                     source: other.to_string(),
                 });
@@ -863,7 +857,7 @@ fn parse_channel_object(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) ->
         }
     }
     p.expect(Tok::RBrace, diags);
-    Style::chain(vec![box_ch, paint_ch, text_ch])
+    Style::chain(vec![box_ch, paint_ch, text_ch, animate_ch])
 }
 
 /// Method chain without `style.` head: `pad(4).gap(2).w(full)`.
@@ -935,7 +929,7 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
         };
         if motion_object {
             diags.push(StyleDiagnostic::ParseError {
-                message: "motion methods are not channel-chain setters in Phase 2a — chain them after `style({…})` or use the flat Style chain"
+                message: "motion methods belong in the `animate:` channel or after `style({…})` — not inside box/paint/text"
                     .into(),
                 source: method.to_string(),
             });
@@ -950,6 +944,105 @@ fn parse_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> 
         let arg_text = format_arg_text(&args);
         let source = format!("{method}({arg_text})");
         push_paint_op(&mut ops, method, args, source, diags);
+    }
+    if ops.is_empty() {
+        Style::Empty
+    } else {
+        Style::chain(ops)
+    }
+}
+
+/// `animate:` body — motion trigger chain without `style.` head:
+/// `enter({…}).exit({…}).loop({…})` → same `MotionAttach` IR as flat methods.
+fn parse_animate_channel_chain(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> Style {
+    if matches!(
+        p.peek(),
+        Some(Tok::Comma) | Some(Tok::RBrace) | Some(Tok::RParen) | None
+    ) {
+        return Style::Empty;
+    }
+    let mut ops = Vec::new();
+    let mut iters = 0usize;
+    let mut first = true;
+    loop {
+        iters += 1;
+        if iters > MAX_PARSE_ITERS {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "animate channel chain too many triggers".into(),
+                source: p.remainder(),
+            });
+            break;
+        }
+        if !first && !p.eat(&Tok::Dot) {
+            break;
+        }
+        first = false;
+        let before = p.pos;
+        let method = match p.bump() {
+            Some(Tok::Word(w)) => w,
+            _ => {
+                diags.push(StyleDiagnostic::ParseError {
+                    message: "expected motion trigger in `animate:` (`enter` / `exit` / `loop` / …)"
+                        .into(),
+                    source: p.remainder(),
+                });
+                break;
+            }
+        };
+        if method == "when" {
+            diags.push(StyleDiagnostic::ParseError {
+                message: "`.when` belongs on the `style({…})` head, not inside `animate:`".into(),
+                source: p.remainder(),
+            });
+            break;
+        }
+        if !is_motion_chain_method(method) {
+            diags.push(StyleDiagnostic::ParseError {
+                message: format!(
+                    "`{method}` is not a motion trigger — `animate:` accepts enter/exit/loop/reveal/scroll/hover/press/focus/…"
+                ),
+                source: method.to_string(),
+            });
+            if p.peek() == Some(&Tok::LParen) {
+                let _ = parse_paren_args(p, diags);
+            } else if p.pos == before {
+                p.force_progress();
+            }
+            continue;
+        }
+        // Animate channel is motion-config only. Dual paint forms
+        // (`scroll(auto)`, bare `press()`) are not motion attaches here.
+        let motion_object = if p.peek() == Some(&Tok::LParen) {
+            let after_paren = p.tokens.get(p.pos + 1).map(|t| &t.tok);
+            if after_paren == Some(&Tok::LBrace) {
+                true
+            } else if matches!(method, "scroll" | "press") {
+                false
+            } else {
+                true
+            }
+        } else {
+            true
+        };
+        if !motion_object {
+            diags.push(StyleDiagnostic::ParseError {
+                message: format!(
+                    "`animate:{method}` requires a `{{…}}` motion config object — paint forms of `{method}` belong in `paint:`"
+                ),
+                source: method.to_string(),
+            });
+            let _ = parse_paren_args(p, diags);
+            if p.pos == before {
+                p.force_progress();
+            }
+            continue;
+        }
+        if let Some(m) = parse_motion_call(p, method, diags) {
+            ops.push(m);
+        }
+        if p.pos == before {
+            p.force_progress();
+        }
     }
     if ops.is_empty() {
         Style::Empty
@@ -1272,7 +1365,7 @@ fn parse_when_partial(p: &mut Parser<'_>, diags: &mut Vec<StyleDiagnostic>) -> S
         }
         _ => {
             diags.push(StyleDiagnostic::ParseError {
-                message: "expected when partial (`{ box|paint|text: … }`, style expr, or chain)"
+                message: "expected when partial (`{ box|paint|text|animate: … }`, style expr, or chain)"
                     .into(),
                 source: p.remainder(),
             });

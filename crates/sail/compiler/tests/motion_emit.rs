@@ -183,6 +183,17 @@ fn enter_exit_on_style_chain_with_paint() {
 }
 
 #[test]
+fn enter_exit_via_animate_channel() {
+    let js = compile_motion(
+        r#"<card sx={style({ box: pad(4), animate: enter({ opacity: 'fade' }).exit({ opacity: 'fade-out' }) })}>x</card>"#,
+    )
+    .expect("compile animate channel");
+    assert!(js.contains(r#"trigger: "enter""#), "{js}");
+    assert!(js.contains(r#"trigger: "exit""#), "{js}");
+    assert!(js.contains("__sail_motion_attach"), "{js}");
+}
+
+#[test]
 fn fx_directive_is_unknown_vocabulary() {
     let err = compile_motion(r#"<card fx:enter={{ opacity: 'fade' }}>x</card>"#)
         .expect_err("fx: must error");
