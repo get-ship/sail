@@ -1,8 +1,11 @@
 //! Shared ambient-platform rule helpers (SPEC-DOMDEC-1).
 //!
-//! Path gate: app sources under `apps/*/src/**` and `apps/*/routes/**` only
-//! (not test/qa/scripts/packages). Allowlist: `// sail-allow <rule-id>` on
-//! the same or previous line.
+//! Path gate (app sources only; not test/qa/scripts/packages):
+//! - monorepo: `apps/*/src/**` and `apps/*/routes/**`
+//! - external / lab sandboxes: project-root `routes/**` and `src/**`
+//!   (eval-ui, blank sail payloads, baseline-1 authoring sandboxes)
+//!
+//! Allowlist: `// sail-allow <rule-id>` on the same or previous line.
 
 use std::path::Path;
 
@@ -25,10 +28,14 @@ pub fn is_ambient_app_path(path: &Path) -> bool {
         return false;
     }
     let under_apps = p.contains("/apps/") || p.starts_with("apps/");
-    if !under_apps {
-        return false;
+    if under_apps {
+        return p.contains("/src/") || p.contains("/routes/");
     }
-    p.contains("/src/") || p.contains("/routes/")
+    // External apps + lab sandboxes: top-level routes/ or src/ (not packages).
+    // Without this, DOMDEC-1 never fires on eval-ui or baseline-1 payloads.
+    let under_root_routes = p.contains("/routes/") || p.starts_with("routes/");
+    let under_root_src = p.contains("/src/") || p.starts_with("src/");
+    under_root_routes || under_root_src
 }
 
 /// Line (1-based) has `// sail-allow <rule>` or the previous non-empty line does.
