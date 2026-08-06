@@ -16,8 +16,8 @@ use serde_json::{Value, json};
 
 pub use workspace::{
     BundleDecl, WorkspacePackage, component_package_roots, composed_component_index,
-    discover_bundle_declarations, discover_workspace_packages, discover_workspace_packages_scoped,
-    pack_id_for_name,
+    discover_bundle_declarations, discover_dependency_packages, discover_workspace_packages,
+    discover_workspace_packages_scoped, pack_id_for_name,
 };
 use workspace::{read_json, source_tags_for_package};
 
@@ -862,6 +862,85 @@ mod tests {
         assert!(
             scoped.is_empty(),
             "unknown declared pack contributes nothing"
+        );
+    }
+
+    /// EXT-1 E3: external app with NO `workspaces` field discovers a component
+    /// pack only through `node_modules` (the post-`bun add` layout). Workspace
+    /// globs contribute nothing; dependency resolution is the sole source.
+    #[test]
+    fn external_pack_via_node_modules_without_workspace_map() {
+        let tmp = tempdir().unwrap();
+        let app = tmp.path();
+        // No workspaces — pure external consumer.
+        write(
+            &app.join("package.json"),
+            r#"{"name":"external-hello","dependencies":{"@ship/sail-charts":"^0.3.0"}}"#,
+        );
+        let pack = app.join("node_modules/@ship/sail-charts");
+        write(
+            &pack.join("package.json"),
+            r#"{"name":"@ship/sail-charts","customElements":"dist/custom-elements.json"}"#,
+        );
+        write(
+            &pack.join("src/sail-bar-chart/sail-bar-chart.sail"),
+            "<div>sail-bar-chart-marker</div>\n",
+        );
+
+        // Discovery sees the pack without any workspace map.
+        let pkgs = discover_workspace_packages(app).expect("discover");
+        assert_eq!(pkgs.len(), 1, "only the node_modules pack");
+        assert_eq!(pkgs[0].name, "@ship/sail-charts");
+        assert!(
+            pkgs[0].root.ends_with("node_modules/@ship/sail-charts"),
+            "root must be under node_modules; got: {:?}",
+            pkgs[0].root
+        );
+
+        // Tag index feeds the per-route compile path.
+        let idx = tag_source_index(app);
+        let src = idx
+            .get("sail-bar-chart")
+            .expect("tag must resolve from node_modules pack");
+        assert!(src.is_file());
+        assert!(
+            src.ends_with("node_modules/@ship/sail-charts/src/sail-bar-chart/sail-bar-chart.sail"),
+            "got: {src:?}"
+        );
+    }
+
+    /// EXT-1 E3: hoisted install — pack lives at parent `node_modules`, not
+    /// the app dir's own. Ancestor walk must find it (bun/npm hoist).
+    #[test]
+    fn external_pack_via_hoisted_node_modules_ancestor() {
+        let tmp = tempdir().unwrap();
+        let root = tmp.path();
+        let app = root.join("apps/hello");
+        write(
+            &app.join("package.json"),
+            r#"{"name":"external-hello","dependencies":{"@ship/sail-charts":"^0.3.0"}}"#,
+        );
+        // Hoisted to the enclosing tree (no workspaces on either package.json).
+        write(&root.join("package.json"), r#"{"name":"consumer-root"}"#);
+        let pack = root.join("node_modules/@ship/sail-charts");
+        write(
+            &pack.join("package.json"),
+            r#"{"name":"@ship/sail-charts","customElements":"dist/custom-elements.json"}"#,
+        );
+        write(
+            &pack.join("src/sail-bar-chart/sail-bar-chart.sail"),
+            "<div>bar</div>\n",
+        );
+
+        let pkgs = discover_dependency_packages(&app);
+        assert_eq!(pkgs.len(), 1, "ancestor node_modules must resolve");
+        assert_eq!(pkgs[0].name, "@ship/sail-charts");
+
+        // discover_workspace_packages on the app dir must also union the dep.
+        let ws = discover_workspace_packages(&app).expect("discover");
+        assert!(
+            ws.iter().any(|p| p.name == "@ship/sail-charts"),
+            "workspace discovery must include hoisted dep pack"
         );
     }
 }
