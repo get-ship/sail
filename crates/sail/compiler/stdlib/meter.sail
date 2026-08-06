@@ -14,7 +14,8 @@
     size: 'sm' | 'md' | 'lg' = 'md'
   }
 
-  const base = style({ box: display(inline-block).w(full).h(2).overflow(hidden), paint: appearance(none).align(middle).borderWidth(0).radius(full).bg(muted) })
+  // Track rides component.meter tokens (global fallbacks in the pack).
+  const base = style({ box: display(inline-block).w(full).h(2).overflow(hidden), paint: appearance(none).align(middle).borderWidth(0).radius(full).bg(meter) })
   const sizeSm = style({ box: h(1_5) })
   const sizeMd = style({ box: h(2) })
   const sizeLg = style({ box: h(3) })

@@ -5,7 +5,8 @@
 <scope>
   props: {}
 
-  const base = style({ box: padX(2), paint: fg(foreground), text: fontSize(sm).fontWeight(medium) })
+  // Caption rides component.legend tokens (global fallbacks in the pack).
+  const base = style({ box: padX(2), paint: fg(legend-foreground), text: fontSize(sm).fontWeight(medium) })
 </scope>
 
 <legend>

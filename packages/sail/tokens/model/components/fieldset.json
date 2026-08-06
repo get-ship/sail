@@ -1,0 +1,16 @@
+{
+  "$description": "Fieldset component tokens (group chrome border). Defaults alias globals; themes may override component.fieldset.* only.",
+  "component": {
+    "fieldset": {
+      "border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "fieldset-border"
+          }
+        }
+      }
+    }
+  }
+}

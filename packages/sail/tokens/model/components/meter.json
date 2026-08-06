@@ -1,0 +1,43 @@
+{
+  "$description": "Meter component tokens (track + optimum bands). Defaults alias globals; themes may override component.meter.* only.",
+  "component": {
+    "meter": {
+      "track": {
+        "$value": "{color.muted.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "meter"
+          }
+        }
+      },
+      "optimum": {
+        "$value": "{color.success.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "meter-optimum"
+          }
+        }
+      },
+      "suboptimum": {
+        "$value": "{color.warning.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "meter-suboptimum"
+          }
+        }
+      },
+      "sub-suboptimum": {
+        "$value": "{color.destructive.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "meter-sub-suboptimum"
+          }
+        }
+      }
+    }
+  }
+}

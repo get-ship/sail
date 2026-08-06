@@ -1,0 +1,43 @@
+{
+  "$description": "Table component tokens (host text + structural surfaces). Defaults alias globals; themes may override component.table.* only. Row/cell border color-mix still samples table-foreground.",
+  "component": {
+    "table": {
+      "fg": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "table-foreground"
+          }
+        }
+      },
+      "muted-fg": {
+        "$value": "{color.muted.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "table-muted-foreground"
+          }
+        }
+      },
+      "stripe": {
+        "$value": "{color.surface.2}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "table-stripe"
+          }
+        }
+      },
+      "sticky-bg": {
+        "$value": "{color.background}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "table-sticky-bg"
+          }
+        }
+      }
+    }
+  }
+}

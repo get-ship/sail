@@ -1,0 +1,34 @@
+{
+  "$description": "Slider / range track tokens. Defaults alias globals; themes may override component.slider.* only. Thumb face stays field; thumb rim uses slider-fill.",
+  "component": {
+    "slider": {
+      "track": {
+        "$value": "{color.muted.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "slider-track"
+          }
+        }
+      },
+      "fill": {
+        "$value": "{color.primary.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "slider-fill"
+          }
+        }
+      },
+      "track-border": {
+        "$value": "{color.border.default}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "slider-track-border"
+          }
+        }
+      }
+    }
+  }
+}

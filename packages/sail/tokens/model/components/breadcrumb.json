@@ -1,0 +1,25 @@
+{
+  "$description": "Breadcrumb trail tokens (link/separator + current). Defaults alias globals; themes may override component.breadcrumb.* only.",
+  "component": {
+    "breadcrumb": {
+      "fg": {
+        "$value": "{color.muted.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "breadcrumb-foreground"
+          }
+        }
+      },
+      "current": {
+        "$value": "{color.foreground}",
+        "$type": "color",
+        "$extensions": {
+          "ship": {
+            "cssName": "breadcrumb-current"
+          }
+        }
+      }
+    }
+  }
+}
