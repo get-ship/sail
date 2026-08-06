@@ -58,6 +58,29 @@ const FORBIDDEN_IN_SAIL: Array<{ name: string; re: RegExp }> = [
     name: 'retired const = style.method( product',
     re: /\bconst\s+[a-zA-Z_][\w]*\s*=\s*style\.[a-zA-Z]/,
   },
+  // CHANNELS Phase V — bare layout participation attrs (box channel only).
+  // Axis sugar gap/align/justify on row|column|grid KEPT. col-span/row-span KEPT.
+  // Measured 0 hits on product corpus before locking.
+  {
+    name: 'bare grow participation attr',
+    re: /<[A-Za-z][\w:-]*[^>]*\sgrow(?:\s*=|\s|\/|>)/,
+  },
+  {
+    name: 'bare shrink participation attr',
+    re: /<[A-Za-z][\w:-]*[^>]*\sshrink(?:\s*=|\s|\/|>)/,
+  },
+  {
+    name: 'bare w= participation attr',
+    re: /<[A-Za-z][\w:-]*[^>]*\sw\s*=/,
+  },
+  {
+    name: 'bare min-w= participation attr',
+    re: /<[A-Za-z][\w:-]*[^>]*\smin-w\s*=/,
+  },
+  {
+    name: 'bare max-w= participation attr',
+    re: /<[A-Za-z][\w:-]*[^>]*\smax-w\s*=/,
+  },
 ]
 
 function gitLs(glob: string): string[] {
