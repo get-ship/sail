@@ -247,8 +247,10 @@ pub struct HostAnatomy {
 
 /// Host anatomy table (stdlib element name → fixed semantics).
 ///
-/// Widget-internal multi-part roles (theme-picker tabs/options, toast close)
-/// stay in structure as anatomy parts using semantic props for labels.
+/// Widget-internal multi-part roles (theme-picker listbox/tabs/options, tooltip
+/// bubble, field/error-boundary alert parts) are stamped by closed `use:` actions
+/// (themeSelect / tipDescribe / describedControl / catchRender) — not free
+/// author markup. Semantic props still cover labels on those parts.
 pub const HOST_ANATOMY: &[(&str, HostAnatomy)] = &[
     (
         "navbar",

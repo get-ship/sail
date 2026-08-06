@@ -116,7 +116,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       if (t === 'sail-media-av') return 'Audio/video primitive with platform controls + framework skin.'
       if (t === 'sail-code-editor') return 'CodeMirror 6 wrapped as a primitive; controlled value + language prop.'
       if (t === 'sail-mermaid') return 'Mermaid-rendered SVG; pass the source as the value prop.'
-      if (t === 'sail-message') return 'A single chat message; role, state, content, timestamp props.'
+      if (t === 'sail-message') return 'A single chat message; from, status, content, timestamp props.'
       if (t === 'sail-citation') return 'Citation pill with source/label; click to follow href.'
       if (t === 'sail-composer') return 'Chat-composer input with submit + cancel events.'
       if (t === 'sail-thinking-dots') return 'Three bouncing dots with polite live status.'
@@ -143,7 +143,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
       'sail-media-av':    [{ name: 'src',   type: 'string', desc: 'Audio/video URL.' }, { name: 'mime', type: 'string', desc: 'Override mime type.' }],
       'sail-code-editor': [{ name: 'value', type: 'string', desc: 'Editor text.' }, { name: 'language', type: 'string', desc: 'CodeMirror language.' }, { name: 'line-numbers', type: 'bool', desc: 'Show gutter.' }],
       'sail-mermaid':     [{ name: 'value', type: 'string', desc: 'Mermaid source text.' }],
-      'sail-message':     [{ name: 'role',  type: 'string', desc: 'Message author role.' }, { name: 'state', type: 'string', desc: 'Message state (user|assistant|...).' }, { name: 'content', type: 'string', desc: 'Body text.' }],
+      'sail-message':     [{ name: 'from',  type: 'string', desc: 'Message author (user|assistant|system|tool).' }, { name: 'state', type: 'string', desc: 'Message state (user|assistant|...).' }, { name: 'content', type: 'string', desc: 'Body text.' }],
       'sail-citation':    [{ name: 'source', type: 'string', desc: 'Citation source label.' }, { name: 'href',  type: 'string', desc: 'Click target.' }],
       'sail-composer':    [{ name: 'placeholder', type: 'string', desc: 'Empty-state copy.' }],
       'sail-thinking-dots': [{ name: 'label', type: 'string', desc: 'Live-region label.' }],
@@ -874,8 +874,8 @@ center — both axes at once</p>
               <column gap="3" tile-stage="sail-pack-message">
                 style({ box: w(full).maxW(panel-max-w-md) })
 
-                <sail-message role="user" status="sent">Can you summarize yesterday's deploy?</sail-message>
-                <sail-message role="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
+                <sail-message from="user" status="sent">Can you summarize yesterday's deploy?</sail-message>
+                <sail-message from="assistant" status="sent">v0.4.2 went out at 14:02 — 3 services, zero rollbacks.</sail-message>
               </column>
             </if>
             <if {stage.sailCitation()}>

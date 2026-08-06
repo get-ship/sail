@@ -34,10 +34,8 @@
   style(host)
 
   <slot></slot>
-  <span
-    role="tooltip"
-
-  >
+  <!-- tooltip role stamped by use:tipDescribe (closed part anatomy) -->
+  <span data-tooltip-bubble>
     style([
       bubble,
       when({

@@ -212,12 +212,23 @@ export const themeSelect: Action<void> = (node) => {
       'button[popovertarget], button[type="button"]:not([data-mode])',
     )
 
-  const panel = root.querySelector<HTMLElement>('[popover], [role="listbox"]')
+  const panel = root.querySelector<HTMLElement>(
+    '[data-theme-listbox], [popover], [role="listbox"]',
+  )
+  // Closed multi-part anatomy: stamp listbox on the panel (not free author role=).
+  if (panel && !panel.hasAttribute('role')) panel.setAttribute('role', 'listbox')
 
   const modeOnly = isModeOnlyHost(root)
 
   const themeGrid = root.querySelector<HTMLElement>('[data-theme-grid]')
   const modeBar = root.querySelector<HTMLElement>('[data-mode-bar]')
+  // Filter bar = tablist; mode buttons = tabs (stamped here, not in .sail markup).
+  if (modeBar) {
+    if (!modeBar.hasAttribute('role')) modeBar.setAttribute('role', 'tablist')
+    for (const tab of modeBar.querySelectorAll<HTMLElement>('button[data-mode]')) {
+      if (!tab.hasAttribute('role')) tab.setAttribute('role', 'tab')
+    }
+  }
   const modeLockBanner = root.querySelector<HTMLElement>('[data-mode-lock-banner]')
   const selectedLabel = root.querySelector<HTMLElement>('[data-selected-label]')
   const selectedTier = root.querySelector<HTMLElement>('[data-selected-tier]')

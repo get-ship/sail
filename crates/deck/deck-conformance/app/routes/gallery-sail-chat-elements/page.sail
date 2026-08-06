@@ -4,7 +4,7 @@ import { controller, signal } from '@ship/sail-runtime'
 interface MessageItem {
   id: string
   content: string
-  role?: string
+  from?: string
   contentType?: string
   timestamp?: string
   status?: string
@@ -13,14 +13,14 @@ interface MessageItem {
 const THREAD_ITEMS: MessageItem[] = [
   {
     id: 'msg-1',
-    role: 'user',
+    from: 'user',
     content: 'Can you help me understand the chat-elements pack?',
     timestamp: '2026-06-05T14:00:00Z',
     status: 'sent',
   },
   {
     id: 'msg-2',
-    role: 'assistant',
+    from: 'assistant',
     content:
       'The chat-elements pack provides six unbound primitives: sail-message, ' +
       'sail-message-list, sail-composer, sail-thinking-dots, sail-tool-call, and sail-citation.',
@@ -29,14 +29,14 @@ const THREAD_ITEMS: MessageItem[] = [
   },
   {
     id: 'msg-3',
-    role: 'user',
+    from: 'user',
     content: 'What does "unbound" mean?',
     timestamp: '2026-06-05T14:00:30Z',
     status: 'sent',
   },
   {
     id: 'msg-4',
-    role: 'assistant',
+    from: 'assistant',
     content:
       'Unbound means the primitives carry no Ship SDK dependency — no data ' +
       'fetching, no SSE subscriptions. Consumers supply their own arrays and ' +
@@ -47,7 +47,7 @@ const THREAD_ITEMS: MessageItem[] = [
   },
   {
     id: 'msg-5',
-    role: 'system',
+    from: 'system',
     content: 'Tool call: search_code { query: "sail-message" }',
     contentType: 'tool-call',
     status: 'sent',
@@ -204,8 +204,8 @@ sail-message</h2>
 
         <h3>
           style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })
-role: assistant — text (default)</h3>
-        <sail-message role="assistant" timestamp="2026-06-05T14:00:00Z">
+from: assistant — text (default)</h3>
+        <sail-message from="assistant" timestamp="2026-06-05T14:00:00Z">
           Here is the information you requested about Sail components.
         </sail-message>
       </column>
@@ -215,8 +215,8 @@ role: assistant — text (default)</h3>
 
         <h3>
           style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })
-role: user</h3>
-        <sail-message role="user" timestamp="2026-06-05T14:01:00Z">
+from: user</h3>
+        <sail-message from="user" timestamp="2026-06-05T14:01:00Z">
           Can you show me the chat-elements pack?
         </sail-message>
       </column>
@@ -226,8 +226,8 @@ role: user</h3>
 
         <h3>
           style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })
-role: system</h3>
-        <sail-message role="system">
+from: system</h3>
+        <sail-message from="system">
           You are a helpful assistant with access to Ship tools.
         </sail-message>
       </column>
@@ -237,8 +237,8 @@ role: system</h3>
 
         <h3>
           style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })
-role: tool</h3>
-        <sail-message role="tool" content-type="text">
+from: tool</h3>
+        <sail-message from="tool" content-type="text">
           Tool output: 42 results found.
         </sail-message>
       </column>
@@ -249,7 +249,7 @@ role: tool</h3>
         <h3>
           style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })
 content-type: code</h3>
-        <sail-message role="assistant" content-type="code">
+        <sail-message from="assistant" content-type="code">
           const x = signal(0);
 const doubled = derived(() => x() * 2);
         </sail-message>
@@ -261,7 +261,7 @@ const doubled = derived(() => x() * 2);
         <h3>
           style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })
 content-type: terminal-snapshot</h3>
-        <sail-message role="assistant" content-type="terminal-snapshot">
+        <sail-message from="assistant" content-type="terminal-snapshot">
           $ cargo run -p sail-compiler -- build page.sail
 compiled 1 file(s)
         </sail-message>
@@ -273,7 +273,7 @@ compiled 1 file(s)
         <h3>
           style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })
 status: sending</h3>
-        <sail-message role="user" status="sending">
+        <sail-message from="user" status="sending">
           Sending this message now…
         </sail-message>
       </column>
@@ -284,7 +284,7 @@ status: sending</h3>
         <h3>
           style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })
 status: error</h3>
-        <sail-message role="user" status="error">
+        <sail-message from="user" status="error">
           This message failed to send.
         </sail-message>
       </column>
@@ -295,7 +295,7 @@ status: error</h3>
         <h3>
           style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })
 with trailing slot — copy action</h3>
-        <sail-message role="assistant" timestamp="2026-06-05T14:02:00Z">
+        <sail-message from="assistant" timestamp="2026-06-05T14:02:00Z">
           The answer is forty-two.
           <span slot="trailing">
             style({ paint: fg(muted-foreground), text: fontSize(xs) })
@@ -414,7 +414,7 @@ custom label — overrides announced text</h3>
         <h3>
           style({ paint: fg(muted-foreground), text: fontSize(xs).fontWeight(medium).textCase(uppercase).tracking(wide) })
 inline inside a message bubble</h3>
-        <sail-message role="assistant">
+        <sail-message from="assistant">
           <sail-thinking-dots size="sm" tone="muted"></sail-thinking-dots>
         </sail-message>
       </column>

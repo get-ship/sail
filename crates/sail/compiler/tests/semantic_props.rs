@@ -182,8 +182,8 @@ fn alert_anatomy_stamps_live_region() {
 #[test]
 fn stdlib_sources_have_no_free_aria_attrs() {
     // Drift: stdlib .sail must not hand-write aria-* attributes
-    // (semantic props / anatomy only). role mentions and role= on widget
-    // parts (theme-picker tabs, tooltip bubble) remain.
+    // (semantic props / anatomy only). Free role= attrs are also banned —
+    // host roles come from HOST_ANATOMY; multi-part roles from closed use: actions.
     for (tag, src) in sail_compiler::stdlib::sources() {
         let mut in_block_comment = false;
         for (i, line) in src.lines().enumerate() {
@@ -204,6 +204,14 @@ fn stdlib_sources_have_no_free_aria_attrs() {
             if line.contains(" aria-") {
                 panic!(
                     "stdlib `{tag}` line {}: free aria-* attr — use semantic props / anatomy\n  {line}",
+                    i + 1
+                );
+            }
+            // Free role= on structure (not comments, not prose about role=menu contracts).
+            // Allow bare word "role" in comments already skipped; attribute form only.
+            if line.contains(" role=") || line.contains("\trole=") {
+                panic!(
+                    "stdlib `{tag}` line {}: free role= attr — use HOST_ANATOMY or closed use: action stamp\n  {line}",
                     i + 1
                 );
             }

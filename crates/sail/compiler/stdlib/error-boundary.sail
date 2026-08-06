@@ -35,7 +35,8 @@
     }),
   ])
 
-    <row align="start" gap="3" role="alert">
+    <!-- alert role stamped by use:catchRender (closed anatomy, not free author API) -->
+    <row align="start" gap="3" data-error-alert>
       style(alert)
 
       <slot name="fallback">

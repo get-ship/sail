@@ -1421,12 +1421,14 @@ fn theme_picker_host_paint_on_structure_sx() {
             // The old 2-col mini-card grid (cols=\"2\" / h(24) / inset-ring) is
             // gone BY DESIGN; the needles below pin the NEW anatomy.
             && src.contains("theme=\"")
-            && src.contains("role=\"listbox\"")
-            && src.contains("role=\"option\"")
+            && src.contains("data-theme-listbox")
+            && src.contains("data-theme-grid")
             && src.contains("data-mode-bar")
+            && src.contains("use:themeSelect")
+            && !src.contains(" role=")
             && src.contains("<row inline")
             && !src.contains("sx=\""),
-        "theme-picker structure must carry Style product without class anatomy"
+        "theme-picker structure must carry Style product without class anatomy; roles via use:themeSelect"
     );
     assert!(
         (out.structure_html.contains("sx-sizecontrolhsm")
@@ -1438,8 +1440,8 @@ fn theme_picker_host_paint_on_structure_sx() {
             && (out.structure_html.contains("sx-isolate")
                 || out.skin_css.contains("isolation:isolate")
                 || out.skin_css.contains("isolation: isolate"))
-            && (out.structure_html.contains("role=\"listbox\"")
-                || out.structure_html.contains("role='listbox'"))
+            && (out.structure_html.contains("data-theme-listbox")
+                || out.structure_html.contains("use:themeSelect"))
             && out.structure_html.contains("theme=\"")
             && (out.structure_html.contains("sail-row-i") || out.skin_css.contains("inline-flex")),
         "child paint + layout classes on structure:\nstruct={}\nskin={}",
@@ -1448,11 +1450,12 @@ fn theme_picker_host_paint_on_structure_sx() {
     );
     // Option rows are real nodes with selected/hover/focus borders — no tc-*
     // mini-card classes, no part classes, primary/accent paint present.
+    // role=option is stamped at runtime by use:themeSelect, not structure HTML.
     assert!(
         !out.structure_html.contains("tc-overlay")
             && !out.structure_html.contains("class=\"tc-")
-            && (out.structure_html.contains("role=\"option\"")
-                || out.skin_css.contains("role='option'"))
+            && (out.structure_html.contains("data-theme-grid")
+                || out.structure_html.contains("value=\"sail\""))
             && (out.structure_html.contains("sx-bgprimary")
                 || out.structure_html.contains("bgprimary")
                 || out.skin_css.contains("var(--primary)"))
@@ -1819,10 +1822,12 @@ fn field_empty_and_invalid_hint_on_structure_sx() {
             && src.contains("empty:")
             && src.contains("group-invalid:")
             && !src.contains("class=")
-            && src.contains("role=\"alert\"")
+            && src.contains("data-field-error")
+            && src.contains("use:describedControl")
+            && !src.contains(" role=")
             && src.contains("field-hint")
             && src.contains("field-error"),
-        "field structure must carry group + empty/group-invalid Style gates without part classes"
+        "field structure must carry group + empty/group-invalid Style gates without part classes; alert via use:describedControl"
     );
     assert!(
         out.structure_html.contains("sail-grp")
