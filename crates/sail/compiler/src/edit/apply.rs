@@ -298,14 +298,34 @@ fn apply_one(source: &str, file: &str, op: &EditOp) -> Result<String, String> {
             let open = source
                 .get(node.open_span.start..node.open_span.end)
                 .ok_or_else(|| "open span out of range".to_string())?;
-            let call = format_sx_call(setter, args);
-            let next_open = set_sx_in_open(open, &call);
-            Ok(replace_range(
-                source,
-                node.open_span.start,
-                node.open_span.end,
-                &next_open,
-            ))
+            // Product Style is a block statement after `>`, not an HTML attr.
+            let self_closing = open.trim_end().ends_with("/>");
+            if self_closing
+                || !source.get(node.open_span.end..).is_some_and(|s| {
+                    let t = s.trim_start();
+                    !t.is_empty() && !t.starts_with("</")
+                })
+            {
+                return Err(
+                    "setSx requires an element body for block style({…}); got self-closing or empty host"
+                        .into(),
+                );
+            }
+            let after = &source[node.open_span.end..node.full_span.end];
+            if let Some((body_lo, body_hi, expr)) = try_block_style_in_body(after) {
+                let merged = merge_channel_setter(&expr, setter, args)?;
+                let abs_lo = node.open_span.end + body_lo;
+                let abs_hi = node.open_span.end + body_hi;
+                Ok(replace_range(source, abs_lo, abs_hi, &merged))
+            } else {
+                let insert = format!("\n  {}\n", channel_style_stmt(setter, args));
+                Ok(replace_range(
+                    source,
+                    node.open_span.end,
+                    node.open_span.end,
+                    &insert,
+                ))
+            }
         }
         EditOp::Move {
             node_id,
@@ -533,7 +553,6 @@ pub fn validate_sx_setter(setter: &str, args: &[serde_json::Value]) -> Result<()
 fn allowed_setter_names() -> Vec<&'static str> {
     sail_lint::style::setters::setters()
         .iter()
-        .filter(|s| !matches!(s.name, "grow" | "shrink"))
         .map(|s| s.name)
         .collect()
 }
@@ -548,11 +567,14 @@ fn arg_to_token(v: &serde_json::Value) -> Option<String> {
 }
 
 fn format_sx_call(setter: &str, args: &[serde_json::Value]) -> String {
-    let args_s: Vec<String> = args
-        .iter()
+    let args_s = format_sx_args(args);
+    format!("style.{setter}({args_s})")
+}
+
+fn format_sx_args(args: &[serde_json::Value]) -> String {
+    args.iter()
         .map(|a| match a {
             serde_json::Value::String(s) => {
-                // bare tokens unquoted when identifier-like
                 if s.chars()
                     .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
                 {
@@ -565,63 +587,180 @@ fn format_sx_call(setter: &str, args: &[serde_json::Value]) -> String {
             serde_json::Value::Bool(b) => b.to_string(),
             other => other.to_string(),
         })
-        .collect();
-    format!("style.{setter}({})", args_s.join(", "))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
-fn set_sx_in_open(open: &str, call: &str) -> String {
-    // If sx already present, append `.setter(…)` onto chain; else add style={call}.
-    const STYLE_KEY: &str = "style={";
-    if let Some(sx_at) = open.find(STYLE_KEY) {
-        let expr_start = sx_at + STYLE_KEY.len();
-        let mut depth = 1i32;
-        let bytes = open.as_bytes();
-        let mut j = expr_start;
-        while j < bytes.len() {
-            match bytes[j] {
-                b'{' => depth += 1,
-                b'}' => {
-                    depth -= 1;
-                    if depth == 0 {
-                        break;
-                    }
+fn channel_key_for_setter(setter: &str) -> &'static str {
+    match sail_lint::style::channel_for_setter(setter) {
+        Some(sail_lint::style::Channel::Box) => "box",
+        Some(sail_lint::style::Channel::Text) => "text",
+        Some(sail_lint::style::Channel::Animate) => "animate",
+        Some(sail_lint::style::Channel::Paint) | None => "paint",
+    }
+}
+
+fn channel_style_stmt(setter: &str, args: &[serde_json::Value]) -> String {
+    let ch = channel_key_for_setter(setter);
+    let args_s = format_sx_args(args);
+    format!("style({{ {ch}: {setter}({args_s}) }})")
+}
+
+/// Merge a setter into an existing `style({…})` expression (channel spine).
+fn merge_channel_setter(
+    expr: &str,
+    setter: &str,
+    args: &[serde_json::Value],
+) -> Result<String, String> {
+    let t = expr.trim();
+    let args_s = format_sx_args(args);
+    let call = format!("{setter}({args_s})");
+    let ch = channel_key_for_setter(setter);
+    // style({ box: pad(2), paint: bg(x) }) — inject into matching channel key.
+    if let Some(rest) = t.strip_prefix("style(").and_then(|r| r.strip_suffix(')')) {
+        let body = rest.trim();
+        if body.starts_with('{') && body.ends_with('}') {
+            let inner = body[1..body.len() - 1].trim();
+            let key = format!("{ch}:");
+            if let Some(idx) = find_channel_key(inner, ch) {
+                // Append `.setter(…)` after the channel's chain value.
+                let after_key = idx + key.len();
+                let (val_start, val_end) = channel_value_span(inner, after_key);
+                let val = inner[val_start..val_end].trim();
+                let new_val = if val.is_empty() {
+                    call
+                } else {
+                    format!("{val}.{call}")
+                };
+                let mut out = String::new();
+                out.push_str("style({ ");
+                out.push_str(inner[..val_start].trim_end());
+                if !out.ends_with(' ') {
+                    out.push(' ');
                 }
-                _ => {}
+                out.push_str(&new_val);
+                let tail = inner[val_end..].trim_start();
+                if !tail.is_empty() {
+                    if !new_val.is_empty() {
+                        out.push(' ');
+                    }
+                    out.push_str(tail);
+                }
+                out.push_str(" })");
+                return Ok(out);
             }
-            j += 1;
-        }
-        if depth == 0 {
-            let expr = &open[expr_start..j];
-            // call is `style.foo(…)` — if expr is `style.bar(…)` append `.foo(…)`
-            let method_part = call.strip_prefix("style.").unwrap_or(call);
-            let new_expr = if expr.trim().is_empty() {
-                call.to_string()
-            } else if expr.trim().starts_with("style.") {
-                format!("{expr}.{method_part}")
-            } else {
-                // bare ref — wrap: style chain can't merge; replace
-                call.to_string()
-            };
-            let mut out = String::new();
-            out.push_str(&open[..expr_start]);
-            out.push_str(&new_expr);
-            out.push_str(&open[j..]);
-            return out;
+            // No matching channel — add `, box: call`
+            let sep = if inner.is_empty() { "" } else { ", " };
+            return Ok(format!("style({{ {inner}{sep}{ch}: {call} }})"));
         }
     }
-    // Insert sx= before closing >
-    let insert = format!(" style={{{call}}}");
-    if let Some(gt) = open.rfind('>') {
-        let self_close = open[..gt].trim_end().ends_with('/');
-        if self_close {
-            let slash = open[..gt].rfind('/').unwrap_or(gt);
-            format!("{}{}{}>", &open[..slash], insert, &open[slash..])
-        } else {
-            format!("{}{}{}", &open[..gt], insert, &open[gt..])
+    // Flat residual or other forms: replace with channel spine stmt.
+    Ok(channel_style_stmt(setter, args))
+}
+
+fn find_channel_key(inner: &str, ch: &str) -> Option<usize> {
+    let key = format!("{ch}:");
+    let bytes = inner.as_bytes();
+    let mut i = 0;
+    let mut depth = 0i32;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'(' | b'{' | b'[' => depth += 1,
+            b')' | b'}' | b']' => depth -= 1,
+            _ => {}
         }
-    } else {
-        format!("{open}{insert}")
+        if depth == 0 && inner[i..].starts_with(&key) {
+            // word boundary before key
+            if i == 0 || bytes[i - 1].is_ascii_whitespace() || bytes[i - 1] == b',' {
+                return Some(i);
+            }
+        }
+        i += 1;
     }
+    None
+}
+
+fn channel_value_span(inner: &str, after_key: usize) -> (usize, usize) {
+    let bytes = inner.as_bytes();
+    let mut i = after_key;
+    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+        i += 1;
+    }
+    let start = i;
+    let mut paren = 0i32;
+    let mut brace = 0i32;
+    let mut bracket = 0i32;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'(' => paren += 1,
+            b')' => paren -= 1,
+            b'{' => brace += 1,
+            b'}' => brace -= 1,
+            b'[' => bracket += 1,
+            b']' => bracket -= 1,
+            b',' if paren == 0 && brace == 0 && bracket == 0 => break,
+            _ => {}
+        }
+        i += 1;
+    }
+    (start, i)
+}
+
+/// Locate block Style statement at the start of an element body.
+fn try_block_style_in_body(body: &str) -> Option<(usize, usize, String)> {
+    let bytes = body.as_bytes();
+    let mut start = 0;
+    while start < bytes.len() && bytes[start].is_ascii_whitespace() {
+        start += 1;
+    }
+    if start >= bytes.len() {
+        return None;
+    }
+    if bytes[start] == b'<' || bytes[start] == b'{' {
+        return None;
+    }
+    let rest = &body[start..];
+    let t = rest.trim_start();
+    if !(t.starts_with("style(") || t.starts_with("style.") || t.starts_with("match(")) {
+        return None;
+    }
+    // balanced consume
+    let mut i = 0;
+    let mut paren = 0i32;
+    let mut brace = 0i32;
+    let mut bracket = 0i32;
+    let b = rest.as_bytes();
+    while i < b.len() {
+        match b[i] {
+            b'(' => paren += 1,
+            b')' => {
+                paren -= 1;
+                if paren == 0 && brace == 0 && bracket == 0 {
+                    i += 1;
+                    // allow .when / motion chain
+                    while i < b.len() && b[i].is_ascii_whitespace() {
+                        i += 1;
+                    }
+                    if i < b.len() && b[i] == b'.' {
+                        i += 1;
+                        continue;
+                    }
+                    break;
+                }
+            }
+            b'{' => brace += 1,
+            b'}' => brace -= 1,
+            b'[' => bracket += 1,
+            b']' => bracket -= 1,
+            _ => {}
+        }
+        i += 1;
+    }
+    if paren != 0 || brace != 0 || bracket != 0 {
+        return None;
+    }
+    let expr = rest[..i].trim_end().to_string();
+    Some((start, start + i, expr))
 }
 
 fn set_attr_in_open(open: &str, name: &str, value: Option<&str>) -> String {
@@ -740,22 +879,27 @@ mod tests {
 
     #[test]
     fn set_attr_and_set_sx() {
+        // Participation is box channel (not bare attr). SetSx grows + pads.
         let src = r#"<column gap="2"><div>x</div></column>"#;
         let id = root_id(src);
         let r = apply_ops_to_source(
             src,
             "t.sail",
-            &[EditOp::SetAttr {
+            &[EditOp::SetSx {
                 node_id: id.clone(),
-                name: "grow".into(),
-                value: None,
+                setter: "grow".into(),
+                args: vec![json!(1)],
             }],
             None,
             AutofixMode::Off,
             None,
         );
         assert!(r.applied, "{:?}", r.message);
-        assert!(r.source.contains(" grow") || r.source.contains(" grow>"));
+        assert!(
+            r.source.contains("style({") && r.source.contains("grow(1)"),
+            "expected box grow block: {}",
+            r.source
+        );
 
         let r2 = apply_ops_to_source(
             &r.source,
@@ -770,7 +914,11 @@ mod tests {
             None,
         );
         assert!(r2.applied, "{:?}", r2.message);
-        assert!(r2.source.contains("style.pad(2)"));
+        assert!(
+            r2.source.contains("pad(2)") && r2.source.contains("style({"),
+            "expected channel pad merge: {}",
+            r2.source
+        );
     }
 
     #[test]

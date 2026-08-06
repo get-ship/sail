@@ -373,7 +373,7 @@ fn find_nth_fingerprint(
         if ch == '<' {
             // Try to parse an opening tag.
             if let Some((tag_end, tag_name, attrs)) = parse_open_tag(source, pos) {
-                if tag_matches_fingerprint(tag_name, &attrs, fingerprint) {
+                if tag_matches_fingerprint(source, tag_end, tag_name, &attrs, fingerprint) {
                     if seen == n {
                         return Some((pos, tag_end));
                     }
@@ -389,6 +389,8 @@ fn find_nth_fingerprint(
 }
 
 fn tag_matches_fingerprint(
+    source: &str,
+    tag_end: usize,
     tag_name: &str,
     attrs: &[(String, String)],
     fingerprint: &Fingerprint,
@@ -403,29 +405,100 @@ fn tag_matches_fingerprint(
         return true;
     }
 
-    let Some(sx_value) = attrs
-        .iter()
-        .find(|(n, _)| n == "style")
-        .map(|(_, v)| v.as_str())
-    else {
+    let sx_owned;
+    let sx_value: &str = if let Some(v) = attrs.iter().find(|(n, _)| n == "style").map(|(_, v)| v.as_str())
+    {
+        v
+    } else if let Some(expr) = block_style_expr_after(source, tag_end) {
+        sx_owned = expr;
+        sx_owned.as_str()
+    } else {
         return false;
     };
 
+    let collapsed: String = sx_value
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .collect();
     let source_atoms: std::collections::HashSet<String> = sx_value
-        .split_whitespace()
-        .map(|pair| {
-            // Strip a condition prefix (`hover:`) before sanitizing.
-            let atom = pair.rsplit_once(':').map(|(_, a)| a).unwrap_or(pair);
-            atom.chars()
-                .filter(|c| c.is_ascii_alphanumeric())
-                .collect::<String>()
-        })
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_string())
         .collect();
 
-    fingerprint
-        .sx_atoms
-        .iter()
-        .all(|a| source_atoms.contains(a))
+    fingerprint.sx_atoms.iter().all(|a| {
+        source_atoms.contains(a)
+            || source_atoms
+                .iter()
+                .any(|s| s.contains(a.as_str()) || a.contains(s.as_str()))
+            || collapsed.contains(a.as_str())
+    })
+}
+
+/// First block Style statement immediately after an open tag (`>`).
+fn block_style_expr_after(source: &str, tag_end: usize) -> Option<String> {
+    if tag_end >= source.len() {
+        return None;
+    }
+    let body = &source[tag_end..];
+    let bytes = body.as_bytes();
+    let mut start = 0;
+    while start < bytes.len() && bytes[start].is_ascii_whitespace() {
+        start += 1;
+    }
+    if start >= bytes.len() || bytes[start] == b'<' || bytes[start] == b'{' {
+        return None;
+    }
+    let rest = &body[start..];
+    let t = rest.trim_start();
+    if !(t.starts_with("style(")
+        || t.starts_with("style.")
+        || t.starts_with("match(")
+        || t.starts_with("when(")
+        || t.starts_with("compound(")
+        || t.starts_with('['))
+    {
+        return None;
+    }
+    let mut i = 0;
+    let mut paren = 0i32;
+    let mut brace = 0i32;
+    let mut bracket = 0i32;
+    let mut saw_group = false;
+    let b = rest.as_bytes();
+    while i < b.len() {
+        match b[i] {
+            b'(' => {
+                paren += 1;
+                saw_group = true;
+            }
+            b')' => paren -= 1,
+            b'{' => {
+                brace += 1;
+                saw_group = true;
+            }
+            b'}' => brace -= 1,
+            b'[' => {
+                bracket += 1;
+                saw_group = true;
+            }
+            b']' => bracket -= 1,
+            _ => {}
+        }
+        i += 1;
+        if saw_group && paren == 0 && brace == 0 && bracket == 0 {
+            let mut j = i;
+            while j < b.len() && b[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if j < b.len() && b[j] == b'.' {
+                i = j;
+                continue;
+            }
+            return Some(rest[..i].trim_end().to_string());
+        }
+    }
+    None
 }
 
 /// Parse an opening tag at `pos`, returning `(end_byte, tag_name, attrs)`.

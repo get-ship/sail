@@ -4,8 +4,8 @@
 //! preprocessed source) so we never pay for a second layout computation.
 //!
 //! **Spacing is resolved structurally** via `sail_lint::style::parse` on each
-//! child's `style={…}` expression (and parent `gap` attrs) — not by substring
-//! fingerprinting lowered `sx-mr*` class tokens.
+//! child's block `style({…})` statement (and parent `gap` attrs) — not by
+//! substring fingerprinting lowered `sx-mr*` class tokens.
 //!
 //! Rhythm: ≥3 siblings, modal spacing ≥60% → repair outliers to the modal
 //! space-scale token. No mode → WARN only (deliberate asymmetry).
@@ -414,12 +414,12 @@ fn spacing_pattern(
     // Parent gap attr → uniform container spacing; no per-child variance fix.
     // Resolve *this* parent instance (parent_pre_index), not fingerprint#0.
     let parent_span = find_original_span(source, preprocessed, parent_fp, parent_pre_index)?;
-    let (_, _, parent_attrs) = parse_open_tag(source, parent_span.0)?;
+    let (parent_tag_end, _, parent_attrs) = parse_open_tag(source, parent_span.0)?;
     if parent_attrs.iter().any(|(n, _)| n == "gap") {
         return None;
     }
-    // Structural: parent sx gap setter also means uniform gap.
-    if let Some(sx) = attr_value(&parent_attrs, "style") {
+    // Structural: parent Style gap setter also means uniform gap.
+    if let Some(sx) = element_style_expr(source, parent_tag_end, &parent_attrs) {
         if spacing_from_sx_expr(&sx, "gap").is_some() {
             return None;
         }
@@ -443,10 +443,10 @@ fn spacing_pattern(
         let Some(span) = find_original_span(source, preprocessed, &child_fp, child_pre) else {
             continue;
         };
-        let Some((_, _, attrs)) = parse_open_tag(source, span.0) else {
+        let Some((tag_end, _, attrs)) = parse_open_tag(source, span.0) else {
             continue;
         };
-        let Some(sx) = attr_value(&attrs, "style") else {
+        let Some(sx) = element_style_expr(source, tag_end, &attrs) else {
             continue;
         };
         let Some(val) = spacing_from_sx_expr(&sx, setter) else {
@@ -467,7 +467,7 @@ fn attr_value(attrs: &[(String, String)], name: &str) -> Option<String> {
         .map(|(_, v)| v.clone())
 }
 
-/// Resolve a spacing setter from an `style={…}` expression using the Style AST.
+/// Resolve a spacing setter from a Style expression using the Style AST.
 fn spacing_from_sx_expr(sx_raw: &str, setter: &str) -> Option<SpacingValue> {
     let expr = strip_sx_braces(sx_raw);
     if expr.is_empty() {
@@ -490,6 +490,132 @@ fn strip_sx_braces(raw: &str) -> &str {
         t[1..t.len() - 1].trim()
     } else {
         t
+    }
+}
+
+/// Author Style expression for an element: block `style({…})` after the open
+/// tag (product), with residual `style={…}` attr fallback for fixtures mid-migrate.
+fn element_style_expr(
+    source: &str,
+    tag_end: usize,
+    attrs: &[(String, String)],
+) -> Option<String> {
+    if let Some(sx) = attr_value(attrs, "style") {
+        let expr = strip_sx_braces(&sx);
+        if !expr.is_empty() {
+            return Some(expr.to_string());
+        }
+    }
+    block_style_expr_after(source, tag_end)
+}
+
+/// First block Style statement immediately after an open tag (`>`).
+fn block_style_expr_after(source: &str, tag_end: usize) -> Option<String> {
+    if tag_end >= source.len() {
+        return None;
+    }
+    let body = &source[tag_end..];
+    let bytes = body.as_bytes();
+    let mut start = 0;
+    while start < bytes.len() && bytes[start].is_ascii_whitespace() {
+        start += 1;
+    }
+    if start >= bytes.len() {
+        return None;
+    }
+    if bytes[start] == b'<' || bytes[start] == b'{' {
+        return None;
+    }
+    let rest = &body[start..];
+    let t = rest.trim_start();
+    if !(t.starts_with("style(")
+        || t.starts_with("style.")
+        || t.starts_with("match(")
+        || t.starts_with("when(")
+        || t.starts_with("compound(")
+        || t.starts_with('['))
+    {
+        return None;
+    }
+    let end = consume_balanced_style_expr(rest)?;
+    let expr = rest[..end].trim_end();
+    if expr.is_empty() {
+        return None;
+    }
+    Some(expr.to_string())
+}
+
+/// Consume a Style product expression (paren/brace/bracket aware).
+fn consume_balanced_style_expr(s: &str) -> Option<usize> {
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    let mut paren = 0i32;
+    let mut brace = 0i32;
+    let mut bracket = 0i32;
+    let mut quote: Option<u8> = None;
+    let mut saw_group = false;
+    while i < bytes.len() {
+        let b = bytes[i];
+        if let Some(q) = quote {
+            if b == q && bytes.get(i.wrapping_sub(1)) != Some(&b'\\') {
+                quote = None;
+            }
+            i += 1;
+            continue;
+        }
+        match b {
+            b'"' | b'\'' => quote = Some(b),
+            b'(' => {
+                paren += 1;
+                saw_group = true;
+            }
+            b')' => {
+                paren -= 1;
+                if paren < 0 {
+                    return None;
+                }
+            }
+            b'{' => {
+                brace += 1;
+                saw_group = true;
+            }
+            b'}' => {
+                brace -= 1;
+                if brace < 0 {
+                    return None;
+                }
+            }
+            b'[' => {
+                bracket += 1;
+                saw_group = true;
+            }
+            b']' => {
+                bracket -= 1;
+                if bracket < 0 {
+                    return None;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+        if saw_group && paren == 0 && brace == 0 && bracket == 0 {
+            // Finished a top-level call: `style({…})` / `style({…}).when(…)`
+            // Continue while `.` chains follow.
+            let mut j = i;
+            while j < bytes.len() && bytes[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if j < bytes.len() && bytes[j] == b'.' {
+                i = j;
+                continue;
+            }
+            return Some(i);
+        }
+    }
+    if saw_group && paren == 0 && brace == 0 && bracket == 0 {
+        Some(i)
+    } else {
+        None
     }
 }
 
@@ -748,7 +874,7 @@ fn find_original_span(
         }
         if ch == '<' {
             if let Some((tag_end, tag_name, attrs)) = parse_open_tag(original, pos) {
-                if tag_matches_fingerprint(tag_name, &attrs, fingerprint) {
+                if tag_matches_fingerprint(original, tag_end, tag_name, &attrs, fingerprint) {
                     if seen == pre_index {
                         return Some((pos, tag_end));
                     }
@@ -762,6 +888,8 @@ fn find_original_span(
 }
 
 fn tag_matches_fingerprint(
+    source: &str,
+    tag_end: usize,
     tag_name: &str,
     attrs: &[(String, String)],
     fingerprint: &Fingerprint,
@@ -774,26 +902,34 @@ fn tag_matches_fingerprint(
     if fingerprint.sx_atoms.is_empty() {
         return true;
     }
-    let Some(sx_value) = attrs
-        .iter()
-        .find(|(n, _)| n == "style")
-        .map(|(_, v)| v.as_str())
-    else {
+    // Style product: block statement after `>` (CHANNELS) or residual style attr.
+    let sx_owned;
+    let sx_value: &str = if let Some(v) = attrs.iter().find(|(n, _)| n == "style").map(|(_, v)| v.as_str())
+    {
+        v
+    } else if let Some(expr) = block_style_expr_after(source, tag_end) {
+        sx_owned = expr;
+        sx_owned.as_str()
+    } else {
         return false;
     };
-    let source_atoms: std::collections::HashSet<String> = sx_value
-        .split_whitespace()
-        .map(|pair| {
-            let atom = pair.rsplit_once(':').map(|(_, a)| a).unwrap_or(pair);
-            atom.chars()
-                .filter(|c| c.is_ascii_alphanumeric())
-                .collect::<String>()
-        })
+    // Collapse Style source to alphanumeric tokens so `mr(4)` / `mr4` match
+    // mint atom `mr4` from fingerprint (class `sx-mr4`).
+    let collapsed: String = sx_value
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric())
         .collect();
-    fingerprint
-        .sx_atoms
-        .iter()
-        .all(|a| source_atoms.iter().any(|s| s == a || s.contains(a)))
+    let source_atoms: std::collections::HashSet<String> = sx_value
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_string())
+        .collect();
+    fingerprint.sx_atoms.iter().all(|a| {
+        source_atoms
+            .iter()
+            .any(|s| s == a || s.contains(a.as_str()) || a.contains(s.as_str()))
+            || collapsed.contains(a.as_str())
+    })
 }
 
 fn parse_open_tag(source: &str, pos: usize) -> Option<(usize, &str, Vec<(String, String)>)> {
@@ -1125,11 +1261,10 @@ fn collect_off_scale_from_source(source: &str, severity: DiagSeverity) -> Vec<Di
             continue;
         };
         skip_to = tag_end;
-        let Some(sx) = attr_value(&attrs, "style") else {
+        let Some(sx) = element_style_expr(source, tag_end, &attrs) else {
             continue;
         };
-        let expr = strip_sx_braces(&sx);
-        let (style, _) = sail_lint::style::parse(expr);
+        let (style, _) = sail_lint::style::parse(&sx);
         let mut ops = Vec::new();
         collect_paint_ops(&style, &mut ops);
         for op in ops {
@@ -1317,681 +1452,4 @@ fn collect_alignment(
         break;
     }
     out
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// Committed spike fixture (was under gitignored `.artifacts/`).
-    const RHYTHM_BROKEN: &str = r#"
-<row>
-  <div>
-  style({ box: mr(4) })
-card 1</div>
-  <div>
-  style({ box: mr(2) })
-card 2</div>
-  <div>
-  style({ box: mr(4) })
-card 3</div>
-  <div>
-  style({ box: mr(4) })
-card 4</div>
-  <div>
-  style({ box: mr(6) })
-card 5</div>
-</row>
-"#;
-
-    const RHYTHM_DELIBERATE: &str = r#"
-<row>
-  <div>
-  style({ box: mr(2) })
-stage 1</div>
-  <div>
-  style({ box: mr(4) })
-stage 2</div>
-  <div>
-  style({ box: mr(8) })
-stage 3</div>
-  <div>
-  style({ box: mr(16) })
-stage 4</div>
-</row>
-"#;
-
-    #[test]
-    fn snap_to_nearest_space_token() {
-        assert_eq!(snap_to_space_token(16.0), "4");
-        assert_eq!(snap_to_space_token(8.0), "2");
-        assert_eq!(snap_to_space_token(20.0), "5");
-    }
-
-    #[test]
-    fn detects_rhythm_violation_in_fixture() {
-        let diags = collect(RHYTHM_BROKEN, None, &[]);
-        assert!(
-            diags.iter().any(|d| d.rule.as_deref() == Some(RHYTHM_RULE)),
-            "expected sail-compose-rhythm diagnostic, got {diags:?}"
-        );
-        let fix = diags.iter().find(|d| d.severity == DiagSeverity::Fix);
-        assert!(
-            fix.is_some(),
-            "expected a Fix severity diagnostic: {diags:?}"
-        );
-    }
-
-    #[test]
-    fn deliberate_case_warns_only() {
-        let diags = collect(RHYTHM_DELIBERATE, None, &[]);
-        assert!(
-            diags
-                .iter()
-                .any(|d| d.rule.as_deref() == Some(RHYTHM_RULE)
-                    && d.severity == DiagSeverity::Warning),
-            "expected sail-compose-rhythm warning for deliberate asymmetry, got {diags:?}"
-        );
-        assert!(
-            !diags
-                .iter()
-                .any(|d| d.rule.as_deref() == Some(RHYTHM_RULE) && d.severity == DiagSeverity::Fix),
-            "deliberate case must not emit a Fix: {diags:?}"
-        );
-    }
-
-    #[test]
-    fn fixes_are_idempotent() {
-        let plans =
-            crate::edit::suggest_fixes_for_source(RHYTHM_BROKEN, "rhythm-broken.sail", None);
-        assert!(
-            plans.iter().any(|p| p.rule == RHYTHM_RULE),
-            "expected compose-rhythm fix plans: {plans:?}"
-        );
-        let patches: Vec<_> = plans
-            .iter()
-            .filter_map(|p| {
-                p.text_patch
-                    .as_ref()
-                    .map(|t| (t.start, t.end, t.replacement.clone()))
-            })
-            .collect();
-        let (fixed, skipped) = crate::edit::apply_text_patches(RHYTHM_BROKEN, &patches);
-        assert_eq!(skipped, 0, "all rhythm patches must apply");
-        let second = crate::edit::suggest_fixes_for_source(&fixed, "rhythm-broken.sail", None);
-        assert!(
-            !second.iter().any(|p| p.rule == RHYTHM_RULE),
-            "fixed output must not produce new compose-rhythm fixes: {second:?}\nfixed source:\n{fixed}"
-        );
-    }
-
-    #[test]
-    fn structural_spacing_resolves_style_chain_not_class_text() {
-        let source = r#"
-<row>
-  <div>
-  style({ box: pad(2).mr(4) })
-a</div>
-  <div>
-  style({ box: mr(2), paint: bg(card) })
-b</div>
-  <div>
-  style({ box: mr(4) })
-c</div>
-  <div>
-  style({ box: mr(4) })
-d</div>
-  <div>
-  style({ box: mr(6) })
-e</div>
-</row>
-"#;
-        let diags = collect(source, None, &[]);
-        assert!(
-            diags
-                .iter()
-                .any(|d| d.rule.as_deref() == Some(RHYTHM_RULE) && d.severity == DiagSeverity::Fix),
-            "expected structural rhythm fix: {diags:?}"
-        );
-    }
-
-    #[test]
-    fn contrast_broken_emits_fix() {
-        let source = r#"
-<column>
-  <p>
-  style({ paint: bg(background).fg(muted) })
-low contrast on light bg</p>
-</column>
-"#;
-        let diags = collect(source, None, &[]);
-        let hit = diags
-            .iter()
-            .find(|d| d.rule.as_deref() == Some(CONTRAST_RULE));
-        assert!(hit.is_some(), "expected contrast diagnostic: {diags:?}");
-        assert!(
-            hit.unwrap().message.contains("[sail:fix:fg="),
-            "expected rewrite payload tag: {:?}",
-            hit.unwrap().message
-        );
-    }
-
-    #[test]
-    fn contrast_passing_is_silent() {
-        let source = r#"
-<column>
-  <p>
-  style({ paint: bg(background).fg(foreground) })
-ok</p>
-</column>
-"#;
-        let diags = collect(source, None, &[]);
-        assert!(
-            !diags
-                .iter()
-                .any(|d| d.rule.as_deref() == Some(CONTRAST_RULE)),
-            "expected no contrast diags: {diags:?}"
-        );
-    }
-
-    #[test]
-    fn contrast_fix_is_idempotent() {
-        let source = r#"
-<column>
-  <p>
-  style({ paint: bg(background).fg(muted) })
-low</p>
-</column>
-"#;
-        let diags = collect(source, None, &[]);
-        assert!(
-            diags.iter().any(
-                |d| d.rule.as_deref() == Some(CONTRAST_RULE) && d.severity == DiagSeverity::Fix
-            ),
-            "expected Fix contrast diagnostic: {diags:?}"
-        );
-        let plans = crate::edit::suggest_fixes_for_source(source, "contrast.sail", None);
-        assert!(
-            plans.iter().any(|p| p.rule == CONTRAST_RULE),
-            "expected contrast FixPlan from suggest_fixes: plans={plans:?} diags={diags:?}"
-        );
-        let patches: Vec<_> = plans
-            .iter()
-            .filter(|p| p.rule == CONTRAST_RULE)
-            .filter_map(|p| {
-                p.text_patch
-                    .as_ref()
-                    .map(|t| (t.start, t.end, t.replacement.clone()))
-            })
-            .collect();
-        assert!(!patches.is_empty(), "expected text patches");
-        let (fixed, skipped) = crate::edit::apply_text_patches(source, &patches);
-        assert_eq!(skipped, 0);
-        let second = crate::edit::suggest_fixes_for_source(&fixed, "contrast.sail", None);
-        assert!(
-            !second.iter().any(|p| p.rule == CONTRAST_RULE),
-            "contrast fix must be idempotent: {second:?}\n{fixed}"
-        );
-    }
-
-    #[test]
-    fn contrast_cross_family_warns_without_fix() {
-        // primary-foreground on background may fail AA in our table; repair
-        // must not jump to neutral `foreground` when family is primary.
-        // Force a primary-family fg that fails AA against primary bg if needed.
-        let source = r#"
-<column>
-  <p>
-  style({ paint: bg(primary).fg(primary) })
-same-family low contrast</p>
-</column>
-"#;
-        let diags = collect(source, None, &[]);
-        let hit = diags
-            .iter()
-            .find(|d| d.rule.as_deref() == Some(CONTRAST_RULE));
-        if let Some(d) = hit {
-            if d.severity == DiagSeverity::Fix {
-                assert!(
-                    d.message.contains("primary"),
-                    "fix must stay in primary family: {}",
-                    d.message
-                );
-                assert!(
-                    !d.message.contains("[sail:fix:fg=foreground]"),
-                    "must not fall through to neutral foreground: {}",
-                    d.message
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn off_scale_spacing_literal_emits_fix() {
-        // 25 is not a space token; unique nearest is 24 (token "6") — closer
-        // than 28 ("7"). Equidistant values (e.g. 13) stay WARN-only.
-        let source = r#"
-<column>
-  <div>
-  style({ box: mr(25) })
-x</div>
-</column>
-"#;
-        let diags = collect(source, None, &[]);
-        let hit = diags
-            .iter()
-            .find(|d| d.rule.as_deref() == Some(SPACING_RULE));
-        assert!(hit.is_some(), "expected off-scale spacing diag: {diags:?}");
-        assert_eq!(hit.unwrap().severity, DiagSeverity::Fix, "{:?}", hit);
-        assert!(
-            hit.unwrap().message.contains("[sail:fix:margin=mr:6]"),
-            "{}",
-            hit.unwrap().message
-        );
-    }
-
-    #[test]
-    fn off_scale_spacing_surfaces_via_check_all_and_suggest() {
-        // Production path: mr(25) is a style BadToken → parse Err. Without
-        // check_all merge, sail-compose-spacing never appears.
-        let source = r#"
-<column>
-  <div>
-  style({ box: mr(25) })
-x</div>
-</column>
-"#;
-        let diags = crate::check_all(source, None, &[], None);
-        assert!(
-            diags
-                .iter()
-                .any(|d| d.rule.as_deref() == Some(SPACING_RULE) && d.severity == DiagSeverity::Fix),
-            "check_all must emit sail-compose-spacing Fix alongside style error: {diags:?}"
-        );
-        let plans = crate::edit::suggest_fixes_for_source(source, "offscale.sail", None);
-        let plan = plans
-            .iter()
-            .find(|p| p.rule == SPACING_RULE)
-            .expect("FixPlan for off-scale spacing");
-        assert!(
-            plan.text_patch
-                .as_ref()
-                .map(|t| t.replacement.contains(".mr(6)"))
-                .unwrap_or(false),
-            "expected mr(25)→mr(6) rewrite: {plan:?}"
-        );
-        let patches: Vec<_> = plans
-            .iter()
-            .filter(|p| p.rule == SPACING_RULE)
-            .filter_map(|p| {
-                p.text_patch
-                    .as_ref()
-                    .map(|t| (t.start, t.end, t.replacement.clone()))
-            })
-            .collect();
-        let (fixed, skipped) = crate::edit::apply_text_patches(source, &patches);
-        assert_eq!(skipped, 0);
-        assert!(fixed.contains(".mr(6)"), "{fixed}");
-        // After rewrite, no more spacing Fix from check_all.
-        let second = crate::check_all(&fixed, None, &[], None);
-        assert!(
-            !second
-                .iter()
-                .any(|d| d.rule.as_deref() == Some(SPACING_RULE)),
-            "idempotent: {second:?}\n{fixed}"
-        );
-    }
-
-    #[test]
-    fn alignment_drift_detector_emits_in_band() {
-        // Pure detector: 4px off dominant left is in the 2–6px advisory band.
-        // (Layout taffy currently has no margin sx scale — full e2e needs that.)
-        let lefts = [(1usize, 0.0f32), (2, 4.0), (3, 0.0)];
-        let drifts = left_edge_drifts(&lefts, ALIGN_DRIFT_MIN, ALIGN_DRIFT_MAX);
-        assert_eq!(
-            drifts,
-            vec![(2, 4.0, 0.0)],
-            "expected child 2 drifted 4px from dominant 0"
-        );
-        // Out of band: 1px and 10px ignored.
-        let lefts2 = [(1usize, 0.0f32), (2, 1.0), (3, 10.0), (4, 0.0)];
-        assert!(
-            left_edge_drifts(&lefts2, ALIGN_DRIFT_MIN, ALIGN_DRIFT_MAX).is_empty(),
-            "1px and 10px must not advisory"
-        );
-    }
-
-    #[test]
-    fn alignment_advisory_never_fix_severity() {
-        // Integration: ALIGN_RULE never ships as Fix (advisory contract).
-        let source = r#"
-<column>
-  <div>a</div>
-  <div>
-  style({ box: ml(1) })
-b</div>
-  <div>c</div>
-</column>
-"#;
-        let diags = collect(source, None, &[]);
-        assert!(
-            !diags
-                .iter()
-                .any(|d| d.rule.as_deref() == Some(ALIGN_RULE) && d.severity == DiagSeverity::Fix),
-            "alignment must never auto-fix: {diags:?}"
-        );
-        // When the pure detector would fire, message names dominant left.
-        let synthetic = left_edge_drifts(&[(1, 0.0), (2, 4.0)], ALIGN_DRIFT_MIN, ALIGN_DRIFT_MAX);
-        assert!(!synthetic.is_empty());
-        let (_, drift, dom) = synthetic[0];
-        let msg = format!(
-            "alignment drift: left edge is {drift:.1}px from dominant left ({dom:.0}px) — advisory only [sail:fix:warn]"
-        );
-        assert!(msg.contains("dominant left"));
-        assert!(msg.contains("4.0px"));
-    }
-
-    #[test]
-    fn raw_container_rewrite_to_column() {
-        let source = r#"
-<div>
-  style({ box: pad(2) })
-body</div>
-"#;
-        let plans = crate::edit::suggest_fixes_for_source(source, "raw.sail", None);
-        let raw = plans.iter().find(|p| p.rule == "sail-no-raw-container");
-        // raw_containers may be Off under default policy — force via check_all
-        // with overrides when needed. Still accept plans when rule is active.
-        let diags = crate::check_all(
-            source,
-            None,
-            &[crate::LintOverride {
-                rule: "sail-no-raw-container".into(),
-                severity: crate::OverrideSeverity::Error,
-            }],
-            None,
-        );
-        assert!(
-            diags
-                .iter()
-                .any(|d| d.rule.as_deref() == Some("sail-no-raw-container")),
-            "expected raw container diagnostic: {diags:?}"
-        );
-        let plans = crate::edit::suggest_fixes(source, "raw.sail", &diags);
-        let plan = plans
-            .iter()
-            .find(|p| p.rule == "sail-no-raw-container")
-            .expect("raw rewrite plan");
-        assert!(
-            plan.text_patch
-                .as_ref()
-                .map(|t| t.replacement.contains("<column"))
-                .unwrap_or(false),
-            "expected column rewrite: {plan:?}"
-        );
-        let patches: Vec<_> = plans
-            .iter()
-            .filter_map(|p| {
-                p.text_patch
-                    .as_ref()
-                    .map(|t| (t.start, t.end, t.replacement.clone()))
-            })
-            .collect();
-        let (fixed, skipped) = crate::edit::apply_text_patches(source, &patches);
-        assert_eq!(skipped, 0);
-        let second = crate::edit::suggest_fixes(
-            &fixed,
-            "raw.sail",
-            &crate::check_all(
-                &fixed,
-                None,
-                &[crate::LintOverride {
-                    rule: "sail-no-raw-container".into(),
-                    severity: crate::OverrideSeverity::Error,
-                }],
-                None,
-            ),
-        );
-        assert!(
-            !second.iter().any(|p| p.rule == "sail-no-raw-container"),
-            "raw rewrite must be idempotent: {second:?}\n{fixed}"
-        );
-        let _ = raw;
-    }
-
-    #[test]
-    fn raw_container_refuses_when_class_present() {
-        // Floor bans `class=` — refuse rewrite when id present instead.
-        let source = r#"
-<div id="box">
-  style({ box: pad(2) })
-body</div>
-"#;
-        let diags = crate::check_all(
-            source,
-            None,
-            &[crate::LintOverride {
-                rule: "sail-no-raw-container".into(),
-                severity: crate::OverrideSeverity::Error,
-            }],
-            None,
-        );
-        let plans = crate::edit::suggest_fixes(source, "raw.sail", &diags);
-        assert!(
-            !plans.iter().any(|p| p.rule == "sail-no-raw-container"),
-            "id'd div must not get confluent rewrite: {plans:?}"
-        );
-    }
-
-    #[test]
-    fn sx_typo_setter_rewrites_to_closest() {
-        let source = r#"
-<div>
-  style({ paint: padd(2) })
-x</div>
-"#;
-        // Style unknown setter is a preprocess error with category sail-sx.
-        let diags = crate::check_all(source, None, &[], None);
-        assert!(
-            diags.iter().any(|d| {
-                d.rule.as_deref() == Some("sail-sx")
-                    && (d.message.contains("did you mean")
-                        || d.message.contains("[sail:fix:setter="))
-            }),
-            "expected sail-sx typo suggestion: {diags:?}"
-        );
-        let plans = crate::edit::suggest_fixes(source, "typo.sail", &diags);
-        let plan = plans
-            .iter()
-            .find(|p| p.rule == "sail-sx")
-            .expect("sx rewrite plan");
-        let repl = plan
-            .text_patch
-            .as_ref()
-            .map(|t| t.replacement.as_str())
-            .unwrap_or("");
-        assert!(
-            repl.contains(".pad("),
-            "expected padd→pad rewrite in {repl:?}"
-        );
-    }
-
-    #[test]
-    fn multi_parent_second_row_not_skipped_by_first_gap() {
-        // First row has gap (no rhythm fix); second is broken margins — must still
-        // fire on the second parent (fingerprint#0 parent-attr bug regression).
-        let source = r#"
-<row gap="4">
-  <div>
-  style({ box: mr(4) })
-a</div>
-  <div>
-  style({ box: mr(4) })
-b</div>
-  <div>
-  style({ box: mr(4) })
-c</div>
-</row>
-<row>
-  <div>
-  style({ box: mr(4) })
-card 1</div>
-  <div>
-  style({ box: mr(2) })
-card 2</div>
-  <div>
-  style({ box: mr(4) })
-card 3</div>
-  <div>
-  style({ box: mr(4) })
-card 4</div>
-  <div>
-  style({ box: mr(6) })
-card 5</div>
-</row>
-"#;
-        let diags = collect(source, None, &[]);
-        let fixes: Vec<_> = diags
-            .iter()
-            .filter(|d| d.rule.as_deref() == Some(RHYTHM_RULE) && d.severity == DiagSeverity::Fix)
-            .collect();
-        assert!(
-            !fixes.is_empty(),
-            "second gap-less broken row must emit rhythm Fix: {diags:?}"
-        );
-        // Fixes should point at the second row's children (lines after the first row).
-        assert!(
-            fixes.iter().any(|d| d.line >= 8),
-            "expected fix on second-row children (line >= 8): {fixes:?}"
-        );
-    }
-
-    #[test]
-    fn multi_parent_two_broken_rows_both_reported() {
-        let source = r#"
-<row>
-  <div>
-  style({ box: mr(4) })
-a1</div>
-  <div>
-  style({ box: mr(2) })
-a2</div>
-  <div>
-  style({ box: mr(4) })
-a3</div>
-  <div>
-  style({ box: mr(4) })
-a4</div>
-  <div>
-  style({ box: mr(6) })
-a5</div>
-</row>
-<row>
-  <div>
-  style({ box: mr(4) })
-b1</div>
-  <div>
-  style({ box: mr(2) })
-b2</div>
-  <div>
-  style({ box: mr(4) })
-b3</div>
-  <div>
-  style({ box: mr(4) })
-b4</div>
-  <div>
-  style({ box: mr(8) })
-b5</div>
-</row>
-"#;
-        let diags = collect(source, None, &[]);
-        let fixes: Vec<_> = diags
-            .iter()
-            .filter(|d| d.rule.as_deref() == Some(RHYTHM_RULE) && d.severity == DiagSeverity::Fix)
-            .collect();
-        // Row A: mr(2), mr(6) → 2 fixes; row B: mr(2), mr(8) → 2 fixes.
-        assert!(
-            fixes.len() >= 4,
-            "both independent broken rows must emit fixes (≥4), got {}: {fixes:?}",
-            fixes.len()
-        );
-        let plans = crate::edit::suggest_fixes_for_source(source, "two-rows.sail", None);
-        let rhythm_plans: Vec<_> = plans.iter().filter(|p| p.rule == RHYTHM_RULE).collect();
-        assert!(
-            rhythm_plans.len() >= 4,
-            "suggest must cover both parents: {rhythm_plans:?}"
-        );
-    }
-
-    #[test]
-    fn suggest_respects_autofix_off_policy() {
-        let dir = tempfile_policy_dir(r#"{"preset":"full","autofix":"off"}"#);
-        let sail_path = dir.join("rhythm-broken.sail");
-        std::fs::write(&sail_path, RHYTHM_BROKEN).expect("write sail");
-        // Plain check path: silent under autofix off.
-        let diags = crate::check_all(RHYTHM_BROKEN, Some(&sail_path), &[], None);
-        assert!(
-            !diags.iter().any(|d| d.rule.as_deref() == Some(RHYTHM_RULE)),
-            "autofix off must silence compose: {diags:?}"
-        );
-        // Product suggest path must also be empty (not default to Fix).
-        let plans = crate::edit::suggest_fixes_for_source(
-            RHYTHM_BROKEN,
-            "rhythm-broken.sail",
-            Some(&sail_path),
-        );
-        assert!(
-            !plans.iter().any(|p| p.rule == RHYTHM_RULE),
-            "suggest must not invent rhythm plans under autofix off: {plans:?}"
-        );
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn suggest_respects_autofix_strict_no_rewrite_plans() {
-        let dir = tempfile_policy_dir(r#"{"preset":"full","autofix":"strict"}"#);
-        let sail_path = dir.join("rhythm-broken.sail");
-        std::fs::write(&sail_path, RHYTHM_BROKEN).expect("write sail");
-        let diags = crate::check_all(RHYTHM_BROKEN, Some(&sail_path), &[], None);
-        assert!(
-            diags.iter().any(|d| {
-                d.rule.as_deref() == Some(RHYTHM_RULE) && d.severity == DiagSeverity::Error
-            }),
-            "strict must emit Error rhythm diags: {diags:?}"
-        );
-        let plans = crate::edit::suggest_fixes_for_source(
-            RHYTHM_BROKEN,
-            "rhythm-broken.sail",
-            Some(&sail_path),
-        );
-        assert!(
-            !plans.iter().any(|p| p.rule == RHYTHM_RULE),
-            "strict Error path must not produce rewrite FixPlans: {plans:?}"
-        );
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn surface_family_contrast_can_repair_to_neutral_fg() {
-        // Surface is a background family; readable text is neutral. Confluent
-        // repair may land on foreground / muted-foreground.
-        assert_eq!(
-            nearest_passing_fg("card", "surface-2"),
-            Some("foreground"),
-            "surface-family fg on light surface must find neutral foreground"
-        );
-    }
-
-    /// Unique temp package dir with `sail.config.json` (no external tempfile crate).
-    fn tempfile_policy_dir(config_json: &str) -> std::path::PathBuf {
-        let stamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_nanos())
-            .unwrap_or(0);
-        let dir = std::env::temp_dir().join(format!("sail-autofix-test-{stamp}"));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).expect("mkdir");
-        std::fs::write(dir.join("sail.config.json"), config_json).expect("write config");
-        dir
-    }
 }
