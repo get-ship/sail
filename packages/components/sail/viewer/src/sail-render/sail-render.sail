@@ -318,7 +318,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             style({ box: m(0) })
 </separator>
           <pre>
-            style({ box: padY(3).padX(4).overflowX(auto), text: leading(normal-plus) })
+            style({ box: padY(3).padX(4).overflowX(auto), text: leading(loose) })
 {compileErrorBody()}</pre>
         </div>
       </column>
@@ -341,7 +341,7 @@ export default controller((ctx: ControllerScope<Scope>) => {
             style({ box: m(0) })
 </separator>
           <pre>
-            style({ box: padY(3).padX(4).overflowX(auto), text: leading(normal-plus) })
+            style({ box: padY(3).padX(4).overflowX(auto), text: leading(loose) })
 {runtimeError()}</pre>
         </div>
       </column>

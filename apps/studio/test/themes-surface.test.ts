@@ -61,12 +61,18 @@ const DOC = JSON.stringify({
   },
 })
 
-const STUDIO_DOC = JSON.stringify({
-  $extensions: { ship: { themeId: 'studio' } },
+/** Dual-mode catalog theme present in package THEME_META (not project-only studio). */
+const SHIP_DOC = JSON.stringify({
+  $extensions: { ship: { themeId: 'ship' } },
   modes: {
     light: {
       color: {
         primary: { default: { $value: 'oklch(0.55 0.1 40)', $type: 'color' } },
+      },
+    },
+    dark: {
+      color: {
+        primary: { default: { $value: 'oklch(0.7 0.12 40)', $type: 'color' } },
       },
     },
   },
@@ -85,13 +91,14 @@ function wireProjectAndCatalog(opts?: {
         if (String(path).includes('apps/studio/tokens/themes')) {
           return { files: [...projectFiles] }
         }
-        return { files: ['studio.json'] }
+        // Catalog = package model themes (ship is dual-mode and always registered).
+        return { files: ['ship.json'] }
       },
       sailThemeRead: async ({ path }) => {
         if (String(path).includes('my-ship')) {
           return { path, content: DOC }
         }
-        return { path, content: STUDIO_DOC }
+        return { path, content: SHIP_DOC }
       },
       sailThemeDelete: async (args: { path: string }) => {
         opts?.onDelete?.(args.path)
@@ -170,7 +177,7 @@ describe('themes home — delete behavior (store)', () => {
     expect(ok).toBe(true)
     expect(deleted).toEqual(['apps/studio/tokens/themes/my-ship.json'])
     const after = getDesignState()
-    expect(after.themeId === '' || after.themeId === 'studio').toBe(true)
+    expect(after.themeId === '' || after.themeId === 'ship').toBe(true)
     if (after.themeId === '') {
       expect(after.themeDoc).toBeNull()
     } else {
@@ -256,6 +263,7 @@ describe('themes home — surface handlers (behavioral)', () => {
     // Drive menuTarget via onMenuOpen then onRowMenu
     const btn = document.createElement('button')
     btn.dataset.themeId = 'my-ship'
+    btn.setAttribute('theme-id', 'my-ship')
     document.body.appendChild(btn)
     vm.onMenuOpen({ target: btn, stopPropagation() {} } as unknown as Event)
     vm.onRowMenu(menuEvent('delete'))
@@ -275,6 +283,7 @@ describe('themes home — surface handlers (behavioral)', () => {
     const vm = makeSurface()
     const btn = document.createElement('button')
     btn.dataset.themeId = 'my-ship'
+    btn.setAttribute('theme-id', 'my-ship')
     document.body.appendChild(btn)
     vm.onMenuOpen({ target: btn, stopPropagation() {} } as unknown as Event)
     vm.onRowMenu(menuEvent('delete'))
@@ -289,13 +298,14 @@ describe('themes home — surface handlers (behavioral)', () => {
       projectFiles: [],
       onDelete: (p) => deleted.push(p),
     })
-    await loadThemes({ themeId: 'studio' })
+    await loadThemes({ themeId: 'ship' })
     setThemeConfirm(() => true)
 
     const vm = makeSurface()
-    expect(vm.catalogRows().some((r) => r.id === 'studio')).toBe(true)
+    expect(vm.catalogRows().some((r) => r.id === 'ship')).toBe(true)
     const btn = document.createElement('button')
-    btn.dataset.themeId = 'studio'
+    btn.dataset.themeId = 'ship'
+    btn.setAttribute('theme-id', 'ship')
     document.body.appendChild(btn)
     vm.onMenuOpen({ target: btn, stopPropagation() {} } as unknown as Event)
     vm.onRowMenu(menuEvent('delete'))
@@ -310,18 +320,19 @@ describe('themes home — surface handlers (behavioral)', () => {
       projectFiles: [],
       onFork: (a) => forks.push({ new_id: a.new_id, source_path: a.source_path }),
     })
-    await loadThemes({ themeId: 'studio' })
+    await loadThemes({ themeId: 'ship' })
     setThemeConfirm(() => true)
 
     const vm = makeSurface()
     const btn = document.createElement('button')
-    btn.dataset.themeId = 'studio'
+    btn.dataset.themeId = 'ship'
+    btn.setAttribute('theme-id', 'ship')
     document.body.appendChild(btn)
     vm.onAddToProject({ target: btn, stopPropagation() {} } as unknown as Event)
     await new Promise((r) => setTimeout(r, 30))
     expect(forks.length).toBe(1)
-    expect(forks[0]!.new_id).toBe('my-studio')
-    expect(vm.selectedId()).toBe('my-studio')
+    expect(forks[0]!.new_id).toBe('my-ship')
+    expect(vm.selectedId()).toBe('my-ship')
   })
 
   it('add to project confirm false → no fork', async () => {
@@ -330,12 +341,13 @@ describe('themes home — surface handlers (behavioral)', () => {
       projectFiles: [],
       onFork: (a) => forks.push(a.new_id),
     })
-    await loadThemes({ themeId: 'studio' })
+    await loadThemes({ themeId: 'ship' })
     setThemeConfirm(() => false)
 
     const vm = makeSurface()
     const btn = document.createElement('button')
-    btn.dataset.themeId = 'studio'
+    btn.dataset.themeId = 'ship'
+    btn.setAttribute('theme-id', 'ship')
     document.body.appendChild(btn)
     vm.onAddToProject({ target: btn, stopPropagation() {} } as unknown as Event)
     await new Promise((r) => setTimeout(r, 20))
@@ -345,13 +357,10 @@ describe('themes home — surface handlers (behavioral)', () => {
 
   it('mode switch updates previewModeId for dual-mode themes', async () => {
     wireProjectAndCatalog({ projectFiles: [] })
-    await loadThemes({ themeId: 'studio' })
+    await loadThemes({ themeId: 'ship' })
     const vm = makeSurface()
-    // Select a dual-mode catalog theme (studio ships light + dark).
-    const row = document.createElement('div')
-    row.dataset.themeId = 'studio'
-    document.body.appendChild(row)
-    vm.onListClick({ target: row } as unknown as Event)
+    // loadThemes opens ship (dual-mode catalog); surface sync selects it.
+    expect(vm.selectedId()).toBe('ship')
     expect(vm.canToggleMode()).toBe(true)
     const start = vm.previewModeId()
     const flipToDark = start !== 'dark'

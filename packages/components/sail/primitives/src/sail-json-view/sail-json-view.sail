@@ -132,7 +132,7 @@ export default controller(({ data, expanded, depth }: Scope) => {
 
 <column gap="0">
   <span>
-    style({ box: display(contents), text: fontFamily(mono).fontSize(sm).leading(normal-plus) })
+    style({ box: display(contents), text: fontFamily(mono).fontSize(sm).leading(loose) })
     <if {parseError() !== ''}>
     <span role="alert">
       style({ paint: fg(destructive) })

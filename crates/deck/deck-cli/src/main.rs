@@ -1648,7 +1648,12 @@ fn is_tokens_generated_delivery(path: &str) -> bool {
         return false;
     }
     // Must stay in sync with tokens_generate delivery artifacts.
-    const GENERATED_BASENAMES: &[&str] = &["tokens.css", "themes.css", "token-registry.json"];
+    const GENERATED_BASENAMES: &[&str] = &[
+        "tokens.css",
+        "themes.css",
+        "products.css",
+        "token-registry.json",
+    ];
     if let Some(name) = Path::new(path).file_name().and_then(|n| n.to_str()) {
         if GENERATED_BASENAMES.contains(&name) {
             return true;
@@ -1681,6 +1686,7 @@ fn run_tokens_generate(
 
     let package_out = workspace_root.join(sail_compiler::tokens_generate::MONOREPO_TOKENS_SRC_REL);
     let mut tokens_css = PathBuf::new();
+    let mut products_css = PathBuf::new();
     let mut unions_ts = PathBuf::new();
     let mut token_count = app_report.token_count;
 
@@ -1691,6 +1697,7 @@ fn run_tokens_generate(
         )
         .map_err(|e| anyhow::anyhow!("tokens generate (package): {e:#}"))?;
         tokens_css = package_report.tokens_css;
+        products_css = package_report.products_css;
         unions_ts = package_report.unions_ts;
         if token_count == 0 {
             token_count = package_report.token_count;
@@ -1705,6 +1712,7 @@ fn run_tokens_generate(
         layers: app_report.layers,
         tokens_css,
         themes_css: app_report.themes_css,
+        products_css,
         registry_json: package_out.join("token-registry.json"),
         unions_ts,
     })
