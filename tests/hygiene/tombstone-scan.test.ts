@@ -30,6 +30,9 @@ const SKIP_DIRS = new Set([
   'out',
   'runs',
   'eval',
+  // generated / test compile dumps — not product source
+  '.compiled',
+  '.compiled-repro',
 ])
 
 /** Dead machinery names scrubbed by SPEC-SCRUB-1 — must stay gone. */
@@ -84,6 +87,7 @@ function* walkFiles(dir: string): Generator<string> {
   }
   for (const entry of entries) {
     if (SKIP_DIRS.has(entry)) continue
+    if (entry.startsWith('.deck.stage')) continue
     const p = join(dir, entry)
     let st
     try {
@@ -115,6 +119,11 @@ describe('tombstone scan: scrubbed dead machinery stays gone', () => {
       // This file itself names the dead strings.
       if (rel.startsWith('tests/hygiene/tombstone-scan')) continue
       if (rel === 'CHANGELOG.md' || rel === 'AGENTS.md') continue
+      // forever-id pin intentionally lists retired rule ids
+      if (rel.endsWith('diagnostic_id_drift.rs')) continue
+      if (rel === 'crates/sail/lint/src/lib.rs') continue
+      // baked framework assets rebuild from packages; scrub source, not bake dump
+      if (rel.includes('deck-core/assets/')) continue
       if (/\.(png|webp|jpg|jpeg|svg|woff2?|lock|wasm)$/i.test(rel)) continue
       const text = readText(file)
       if (!text) continue

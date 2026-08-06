@@ -38,7 +38,16 @@ mod tests;
 
 pub use report::{Category, Finding, Severity};
 
-/// All rule IDs defined by this crate. Generated from the registry.
+/// Rule IDs that remain forever after the rule body was scrubbed.
+/// HARDENING-1 WI6: IDs are never deleted — only superseded. SCRUB may
+/// remove machinery; the id string stays pinned so drift tests catch
+/// accidental loss of history.
+pub const RETIRED_RULE_IDS: &[&str] = &[
+    // Superseded by language-level layout keywords (`row`/`column`/`grid`/`center`).
+    "sail-legacy-layout",
+];
+
+/// All rule IDs defined by this crate (live rules + retired forever-ids).
 pub fn all_rule_ids() -> Vec<&'static str> {
     rules::CONTROLLER_RULES
         .iter()
@@ -47,6 +56,7 @@ pub fn all_rule_ids() -> Vec<&'static str> {
         .chain(rules::APP_SOURCE_RULES.iter())
         .chain(rules::ACTION_RULES.iter())
         .map(|(id, _)| *id)
+        .chain(RETIRED_RULE_IDS.iter().copied())
         .collect()
 }
 
