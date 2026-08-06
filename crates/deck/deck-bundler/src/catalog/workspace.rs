@@ -203,24 +203,46 @@ pub fn discover_workspace_packages_scoped(
     Ok(out)
 }
 
-/// Resolve a dependency spec to its package dir: `file:<path>` (relative to
-/// `repo_root`) or `<repo_root>/node_modules/<name>`.
-fn resolve_dependency_dir(repo_root: &Path, name: &str, spec: &str) -> Option<PathBuf> {
-    let dir = match spec.strip_prefix("file:") {
-        Some(p) => repo_root.join(p),
-        None => repo_root.join("node_modules").join(name),
+/// Resolve a dependency spec to its package dir relative to `start`:
+/// - `file:<path>` — path relative to `start` (the declaring package.json dir)
+/// - otherwise — Node-style `node_modules` ancestor walk from `start`
+///   (`<anc>/node_modules/<name>/package.json`), matching bun/npm hoist.
+///
+/// Does **not** fall back to workspace members — that path is handled by the
+/// workspace glob walk above. Avoids recursion through
+/// [`crate::node_resolve::resolve_package_root`].
+fn resolve_dependency_dir(start: &Path, name: &str, spec: &str) -> Option<PathBuf> {
+    let dir = if let Some(rel) = spec.strip_prefix("file:") {
+        start.join(rel)
+    } else {
+        // node_modules ancestor walk (registry install / `bun add` path).
+        let mut cur = Some(start);
+        let mut found = None;
+        while let Some(dir) = cur {
+            let candidate = dir.join("node_modules").join(name);
+            if candidate.join("package.json").is_file() {
+                found = Some(candidate);
+                break;
+            }
+            cur = dir.parent();
+        }
+        found?
     };
     let dir = dir.canonicalize().ok()?;
-    dir.join("package.json").exists().then_some(dir)
+    dir.join("package.json").is_file().then_some(dir)
 }
 
-/// Discover component packages declared as dependencies. Only deps carrying a
-/// `package.json#customElements` marker count — that marker is what makes a
-/// package a component library. The app declares the dependency; the bundler
-/// resolves it (file: link now; a registry/CDN install populates the same
-/// node_modules later).
-fn discover_dependency_packages(repo_root: &Path) -> Vec<WorkspacePackage> {
-    let Some(manifest) = read_json(&repo_root.join("package.json")) else {
+/// Discover component packages declared as dependencies of `start`'s
+/// `package.json`. Only deps carrying a `package.json#customElements` marker
+/// count — that marker is what makes a package a component library. The app
+/// declares the dependency; the bundler resolves it (`file:` link or
+/// `node_modules` install from a registry).
+///
+/// Public for `generate_components_gen`: when an app project sits under a
+/// monorepo root, its pack deps hang off the **app** package.json /
+/// `node_modules`, not the workspace root's.
+pub fn discover_dependency_packages(start: &Path) -> Vec<WorkspacePackage> {
+    let Some(manifest) = read_json(&start.join("package.json")) else {
         return Vec::new();
     };
     let mut out = Vec::new();
@@ -230,7 +252,7 @@ fn discover_dependency_packages(repo_root: &Path) -> Vec<WorkspacePackage> {
         };
         for (name, spec) in deps {
             let Some(spec) = spec.as_str() else { continue };
-            let Some(dir) = resolve_dependency_dir(repo_root, name, spec) else {
+            let Some(dir) = resolve_dependency_dir(start, name, spec) else {
                 continue;
             };
             let Some(pkg) = read_json(&dir.join("package.json")) else {

@@ -164,14 +164,15 @@ fn walk_component_sail_files(dir: &Path, out: &mut Vec<PathBuf>) {
 
 /// Emit `<project>/components.gen.ts` for an app.
 ///
-/// Uses `catalog::workspace::discover_workspace_packages(repo_root)` to find
-/// component packs that have a CEM file (`customElements` in their
-/// `package.json`). Filters to packs the app actually depends on (checks
-/// app's `package.json` `dependencies` + `devDependencies` for the package
-/// name). Reads each pack's CEM, annotates every module object with a
-/// `package` field (the pack's npm name), merges all modules (path-sorted,
-/// deterministic). Emits the generated TypeScript file. Returns count of
-/// component packages included.
+/// Discovers component packs the app depends on via:
+/// 1. workspace package map at `repo_root` (monorepo members + that root's deps)
+/// 2. the app's own `package.json` deps resolved through `node_modules` / `file:`
+///    (external apps; monorepo apps whose packs hang off the app dir)
+///
+/// Filters to packs listed in the app's `dependencies` / `devDependencies`,
+/// reads each pack's CEM, annotates every module with a `package` field (npm
+/// name), merges modules (path-sorted, deterministic), and writes
+/// `components.gen.ts`. Returns count of component packages included.
 ///
 /// No-op (returns `Ok(0)`) when the app has no `package.json`.
 pub fn generate_components_gen(project: &Path, repo_root: &Path) -> Result<usize> {
@@ -193,9 +194,20 @@ pub fn generate_components_gen(project: &Path, repo_root: &Path) -> Result<usize
         }
     }
 
-    // 2. Discover workspace packages; keep those in the app's graph with a CEM.
-    let packages = discover_workspace_packages(repo_root)
+    // 2. Discover packs: workspace map at repo_root, union project-local
+    //    dependency resolution (node_modules / file:). External apps have no
+    //    workspaces field — only (2) contributes. Monorepo apps get (1) and
+    //    also (2) when project ≠ repo_root so app-dir installs are visible.
+    let mut packages = discover_workspace_packages(repo_root)
         .map_err(|e| anyhow::anyhow!("discover workspace packages: {e}"))?;
+    if project != repo_root {
+        let mut seen: HashSet<String> = packages.iter().map(|p| p.name.clone()).collect();
+        for pkg in crate::catalog::discover_dependency_packages(project) {
+            if seen.insert(pkg.name.clone()) {
+                packages.push(pkg);
+            }
+        }
+    }
 
     let mut all_modules: Vec<Value> = Vec::new();
     let mut count = 0usize;
@@ -375,6 +387,99 @@ mod tests {
         assert!(
             !out.contains("@ship/agents"),
             "agents package absent from output"
+        );
+    }
+
+    /// EXT-1 E3: external app — no `workspaces` map — depends on a pack only
+    /// via `node_modules` (the `bun add @ship/sail-charts` shape). Tag must
+    /// resolve and `components.gen.ts` must include it.
+    #[test]
+    fn external_pack_via_node_modules_without_workspace_map() {
+        let tmp = tempdir().unwrap();
+        let app = tmp.path();
+
+        // Pure external app: package.json deps only — no workspaces field.
+        write(
+            &app.join("package.json"),
+            r#"{"name":"external-hello","dependencies":{"@ship/sail-charts":"^0.3.0"}}"#,
+        );
+
+        // Installed pack under node_modules (registry / bun add layout).
+        let pack = app.join("node_modules/@ship/sail-charts");
+        write(
+            &pack.join("package.json"),
+            r#"{"name":"@ship/sail-charts","customElements":"dist/custom-elements.json"}"#,
+        );
+        write(
+            &pack.join("src/sail-bar-chart/sail-bar-chart.sail"),
+            "<div>sail-bar-chart-marker</div>\n",
+        );
+        write(
+            &pack.join("dist/custom-elements.json"),
+            &cem_fixture("sail-bar-chart"),
+        );
+
+        // components.gen aggregates the pack CEM without a workspace map.
+        let count =
+            generate_components_gen(app, app).expect("generate_components_gen external");
+        assert_eq!(count, 1, "node_modules pack must be included");
+        let catalog = std::fs::read_to_string(app.join("components.gen.ts")).unwrap();
+        assert!(
+            catalog.contains("sail-bar-chart"),
+            "components.gen must list sail-bar-chart; got:\n{catalog}"
+        );
+        assert!(
+            catalog.contains("@ship/sail-charts"),
+            "components.gen must stamp package name; got:\n{catalog}"
+        );
+
+        // Tag source index resolves from node_modules (compile path input).
+        let idx = crate::catalog::tag_source_index(app);
+        let src = idx
+            .get("sail-bar-chart")
+            .expect("sail-bar-chart must resolve from node_modules pack");
+        assert!(src.is_file());
+        assert!(
+            src.ends_with("node_modules/@ship/sail-charts/src/sail-bar-chart/sail-bar-chart.sail"),
+            "resolved path must be under node_modules; got: {src:?}"
+        );
+    }
+
+    /// EXT-1 E3: same external shape, pack linked via `file:` instead of a
+    /// registry install. Still no workspaces map.
+    #[test]
+    fn external_pack_via_file_dep_without_workspace_map() {
+        let tmp = tempdir().unwrap();
+        let app = tmp.path();
+        let vendor = app.join("vendor/sail-charts");
+
+        write(
+            &vendor.join("package.json"),
+            r#"{"name":"@ship/sail-charts","customElements":"dist/custom-elements.json"}"#,
+        );
+        write(
+            &vendor.join("src/sail-bar-chart/sail-bar-chart.sail"),
+            "<div>bar</div>\n",
+        );
+        write(
+            &vendor.join("dist/custom-elements.json"),
+            &cem_fixture("sail-bar-chart"),
+        );
+        write(
+            &app.join("package.json"),
+            r#"{"name":"external-hello","dependencies":{"@ship/sail-charts":"file:./vendor/sail-charts"}}"#,
+        );
+
+        let count = generate_components_gen(app, app).expect("generate_components_gen file:");
+        assert_eq!(count, 1);
+        let catalog = std::fs::read_to_string(app.join("components.gen.ts")).unwrap();
+        assert!(catalog.contains("sail-bar-chart"));
+        assert!(catalog.contains("@ship/sail-charts"));
+
+        let idx = crate::catalog::tag_source_index(app);
+        assert!(
+            idx.contains_key("sail-bar-chart"),
+            "file: pack tag must resolve"
         );
     }
 }
