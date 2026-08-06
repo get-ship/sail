@@ -426,6 +426,432 @@ fn scan_string(src: &str, start: usize) -> usize {
     pos
 }
 
+// ── Teaching codemod: lift `style=` / `sx=` attribute hosts → block statements ──
+
+/// Flat → channel, then lift product Style attrs into block attach form.
+pub fn rewrite_teaching_source(src: &str) -> String {
+    lift_style_attr_hosts(&rewrite_source(src))
+}
+
+/// Product Style on `style=` / `sx=` → remove the attribute and inject a block
+/// statement after the open tag’s `>`.
+///
+/// ```text
+/// <div style={style({ box: pad(4) })}>x</div>
+/// // →
+/// <div>
+///   style({ box: pad(4) })
+///   x
+/// </div>
+/// ```
+pub fn lift_style_attr_hosts(src: &str) -> String {
+    let bytes = src.as_bytes();
+    let mut edits: Vec<AttrLiftEdit> = Vec::new();
+    let mut i = 0usize;
+
+    while i < bytes.len() {
+        // Skip HTML comments.
+        if src[i..].starts_with("<!--") {
+            if let Some(rel) = src[i..].find("-->") {
+                i += rel + 3;
+                continue;
+            }
+            break;
+        }
+        // Skip raw <style>…</style> blocks (CSS, not Style product).
+        if src[i..].starts_with("<style") {
+            let after = i + "<style".len();
+            if after < bytes.len() {
+                let c = bytes[after];
+                if c.is_ascii_whitespace() || c == b'>' || c == b'/' {
+                    if let Some(rel) = src[i..].find("</style>") {
+                        i += rel + "</style>".len();
+                        continue;
+                    }
+                }
+            }
+        }
+        // Skip <script> / <controller> / <scope> raw bodies — attrs still scanned.
+        if bytes[i] == b'<' && i + 1 < bytes.len() && bytes[i + 1] != b'/' && bytes[i + 1] != b'!'
+        {
+            let tag_start = i + 1;
+            let mut tag_end = tag_start;
+            while tag_end < bytes.len()
+                && (bytes[tag_end].is_ascii_alphanumeric()
+                    || bytes[tag_end] == b'-'
+                    || bytes[tag_end] == b'_'
+                    || bytes[tag_end] == b':')
+            {
+                tag_end += 1;
+            }
+            if tag_end == tag_start {
+                i += 1;
+                continue;
+            }
+            let tag = &src[tag_start..tag_end];
+            let mut k = tag_end;
+            let mut product_attr: Option<(usize, usize, String)> = None;
+
+            // Scan attributes until `>` / `/>`.
+            loop {
+                while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                    k += 1;
+                }
+                if k >= bytes.len() {
+                    break;
+                }
+                if bytes[k] == b'>' {
+                    break;
+                }
+                if bytes[k] == b'/' && k + 1 < bytes.len() && bytes[k + 1] == b'>' {
+                    break;
+                }
+                // Attribute name.
+                let name_lo = k;
+                while k < bytes.len()
+                    && (bytes[k].is_ascii_alphanumeric()
+                        || bytes[k] == b'-'
+                        || bytes[k] == b'_'
+                        || bytes[k] == b':'
+                        || bytes[k] == b'.')
+                {
+                    k += 1;
+                }
+                if k == name_lo {
+                    // Unexpected token — advance one byte to avoid hang.
+                    k += 1;
+                    continue;
+                }
+                let name = &src[name_lo..k];
+                while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                    k += 1;
+                }
+                if k >= bytes.len() || bytes[k] != b'=' {
+                    // Boolean attr.
+                    continue;
+                }
+                k += 1;
+                while k < bytes.len() && bytes[k].is_ascii_whitespace() {
+                    k += 1;
+                }
+                if k >= bytes.len() {
+                    break;
+                }
+                let (val_hi, raw_val) = match bytes[k] {
+                    b'{' => {
+                        let end = scan_balanced(src, k);
+                        (end, src[k..end].to_string())
+                    }
+                    b'"' | b'\'' => {
+                        let end = scan_string(src, k);
+                        (end, src[k..end].to_string())
+                    }
+                    _ => {
+                        // Unquoted value — rare; take until ws or `>`/`/`.
+                        let start = k;
+                        while k < bytes.len()
+                            && !bytes[k].is_ascii_whitespace()
+                            && bytes[k] != b'>'
+                            && bytes[k] != b'/'
+                        {
+                            k += 1;
+                        }
+                        (k, src[start..k].to_string())
+                    }
+                };
+                k = val_hi;
+
+                if name == "style" || name == "sx" {
+                    let product_src = strip_attr_value_wrapper(&raw_val);
+                    if looks_like_style_product_value(product_src) {
+                        // Leading whitespace before attr name belongs to the attr span.
+                        let mut attr_lo = name_lo;
+                        while attr_lo > tag_end && bytes[attr_lo - 1].is_ascii_whitespace() {
+                            // Keep one newline context: include spaces/tabs on the same line.
+                            if bytes[attr_lo - 1] == b'\n' {
+                                break;
+                            }
+                            attr_lo -= 1;
+                        }
+                        // Prefer eating the preceding space when attr is mid-line.
+                        if attr_lo > tag_end && bytes[attr_lo - 1] == b' ' {
+                            attr_lo -= 1;
+                        }
+                        let stmt = normalize_style_block_stmt(product_src);
+                        product_attr = Some((attr_lo, val_hi, stmt));
+                    }
+                }
+            }
+
+            if k >= bytes.len() {
+                break;
+            }
+
+            let self_closing = bytes[k] == b'/';
+            let gt_pos = if self_closing { k + 1 } else { k }; // index of `>`
+            // Ensure `>` is where we think.
+            let gt_pos = if gt_pos < bytes.len() && bytes[gt_pos] == b'>' {
+                gt_pos
+            } else if k < bytes.len() && bytes[k] == b'>' {
+                k
+            } else {
+                i = tag_end;
+                continue;
+            };
+
+            if let Some((attr_lo, attr_hi, stmt)) = product_attr {
+                let indent = open_tag_indent(src, i);
+                edits.push(AttrLiftEdit {
+                    attr_lo,
+                    attr_hi,
+                    gt_pos,
+                    self_closing,
+                    tag: tag.to_string(),
+                    stmt,
+                    indent,
+                });
+            }
+
+            // Advance past open tag; raw-text tags skip their body.
+            let body_start = gt_pos + 1;
+            if is_raw_skip_tag(tag) && !self_closing {
+                let close = format!("</{tag}>");
+                if let Some(rel) = src[body_start..].find(&close) {
+                    i = body_start + rel + close.len();
+                    continue;
+                }
+            }
+            i = body_start;
+            continue;
+        }
+        // Advance one Unicode scalar so byte indexes stay on char boundaries.
+        let mut n = i + 1;
+        while n < bytes.len() && (bytes[n] & 0xC0) == 0x80 {
+            n += 1;
+        }
+        i = n;
+    }
+
+    if edits.is_empty() {
+        return src.to_string();
+    }
+
+    // Apply reverse so earlier offsets stay valid.
+    let mut out = src.to_string();
+    for e in edits.into_iter().rev() {
+        apply_attr_lift(&mut out, &e);
+    }
+    out
+}
+
+struct AttrLiftEdit {
+    attr_lo: usize,
+    attr_hi: usize,
+    gt_pos: usize,
+    self_closing: bool,
+    tag: String,
+    stmt: String,
+    indent: String,
+}
+
+fn apply_attr_lift(out: &mut String, e: &AttrLiftEdit) {
+    // gt_pos is still valid relative to pre-attr-removal source only if attr is
+    // before `>`. After removing the attr, gt shifts left when attr_lo < gt.
+    let gt = e.gt_pos;
+    let attr_lo = e.attr_lo;
+    let attr_hi = e.attr_hi;
+    debug_assert!(attr_hi <= gt, "attr must end before `>`");
+
+    let pad = format!("{}  ", e.indent); // 2-space child indent
+    let injection = if e.self_closing {
+        // Expand `/>` → `>\n  STMT\n</tag>` (drop the `/` by rewriting from gt-1).
+        format!(">\n{pad}{}\n{}</{}>", e.stmt, e.indent, e.tag)
+    } else {
+        format!(">\n{pad}{}", e.stmt)
+    };
+
+    // 1) Remove attribute.
+    out.replace_range(attr_lo..attr_hi, "");
+    let shift = attr_hi - attr_lo;
+    let gt2 = gt - shift;
+
+    // 2) Inject after `>` (or expand self-closing).
+    if e.self_closing {
+        // `/>` ends at gt2; `/` at gt2-1.
+        let slash = if gt2 > 0 && out.as_bytes()[gt2 - 1] == b'/' {
+            gt2 - 1
+        } else {
+            gt2
+        };
+        // Replace from slash through `>` with injection (which starts with `>`).
+        out.replace_range(slash..gt2 + 1, &injection);
+    } else {
+        // Insert statement right after `>`.
+        let insert_at = gt2 + 1;
+        let after = &out[insert_at..];
+        let only_stmt = if after.starts_with('\n') || after.starts_with("\r\n") {
+            format!("\n{pad}{}", e.stmt)
+        } else if after.is_empty() || after.starts_with("</") {
+            // Empty body or immediate close — still put stmt on its own line.
+            format!("\n{pad}{}\n{}", e.stmt, e.indent)
+        } else {
+            // Inline children: break them onto the next indented line.
+            format!("\n{pad}{}\n{pad}", e.stmt)
+        };
+        out.insert_str(insert_at, &only_stmt);
+    }
+}
+
+fn open_tag_indent(src: &str, tag_lt: usize) -> String {
+    let bytes = src.as_bytes();
+    let mut line_start = tag_lt;
+    while line_start > 0 && bytes[line_start - 1] != b'\n' {
+        line_start -= 1;
+    }
+    let mut n = 0usize;
+    let mut i = line_start;
+    while i < tag_lt {
+        match bytes[i] {
+            b' ' => n += 1,
+            b'\t' => n += 2,
+            _ => break,
+        }
+        i += 1;
+    }
+    " ".repeat(n)
+}
+
+fn is_raw_skip_tag(tag: &str) -> bool {
+    matches!(
+        tag,
+        "script" | "style" | "controller" | "scope" | "pre" | "code"
+    )
+}
+
+/// Strip one layer of attr quoting: `{…}` or `"…"` / `'…'`.
+fn strip_attr_value_wrapper(raw: &str) -> &str {
+    let t = raw.trim();
+    if t.starts_with('{') && t.ends_with('}') {
+        // Only strip outer braces when balanced as a single group.
+        let end = scan_balanced(t, 0);
+        if end == t.len() {
+            return t[1..t.len() - 1].trim();
+        }
+    }
+    if (t.starts_with('"') && t.ends_with('"') && t.len() >= 2)
+        || (t.starts_with('\'') && t.ends_with('\'') && t.len() >= 2)
+    {
+        return t[1..t.len() - 1].trim();
+    }
+    t
+}
+
+/// Same product gate idea as compiler `looks_like_style_product` + bare const ref.
+fn looks_like_style_product_value(s: &str) -> bool {
+    let t = s.trim();
+    if looks_like_style_product_value_inner(t) {
+        return true;
+    }
+    // Optional outer `{…}` wrapper (nested quote forms).
+    if t.starts_with('{') && t.ends_with('}') {
+        let end = scan_balanced(t, 0);
+        if end == t.len() {
+            return looks_like_style_product_value_inner(t[1..t.len() - 1].trim());
+        }
+    }
+    false
+}
+
+fn looks_like_style_product_value_inner(t: &str) -> bool {
+    let t = t.trim_start();
+    t.starts_with("style.")
+        || t.starts_with("style(")
+        || t.starts_with("match(")
+        || t.starts_with("when(")
+        || t.starts_with("compound(")
+        || t.starts_with('[')
+        || is_ident_method_call(t)
+        || is_bare_ident(t)
+}
+
+fn is_bare_ident(s: &str) -> bool {
+    let t = s.trim();
+    if t.is_empty() {
+        return false;
+    }
+    let mut chars = t.chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_alphabetic() || c == '_' => {
+            t.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+        }
+        _ => false,
+    }
+}
+
+fn is_ident_method_call(s: &str) -> bool {
+    let Some((head, rest)) = s.split_once('.') else {
+        return false;
+    };
+    if head.is_empty()
+        || !head
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_')
+    {
+        return false;
+    }
+    // Not `style.…` (handled by starts_with).
+    if head == "style" {
+        return false;
+    }
+    let r = rest.trim_start().as_bytes();
+    let mut i = 0;
+    while i < r.len() && (r[i].is_ascii_alphanumeric() || r[i] == b'_' || r[i] == b'-') {
+        i += 1;
+    }
+    if i == 0 {
+        return false;
+    }
+    let mut j = i;
+    while j < r.len() && r[j].is_ascii_whitespace() {
+        j += 1;
+    }
+    j < r.len() && r[j] == b'('
+}
+
+/// Normalize a product Style attr value into a block statement expression.
+fn normalize_style_block_stmt(value: &str) -> String {
+    let mut v = value.trim().to_string();
+    // Strip one outer `{…}` if the whole value is wrapped.
+    if v.starts_with('{') && v.ends_with('}') {
+        let end = scan_balanced(&v, 0);
+        if end == v.len() {
+            v = v[1..v.len() - 1].trim().to_string();
+        }
+    }
+    // Nested flats → channel (idempotent if already rewritten).
+    v = rewrite_source(&v);
+
+    let t = v.trim();
+    if t.starts_with("style(")
+        || t.starts_with("when(")
+        || t.starts_with("match(")
+        || t.starts_with("compound(")
+    {
+        return t.to_string();
+    }
+    if t.starts_with('[') {
+        return format!("style({t})");
+    }
+    if t.starts_with("style.") {
+        return rewrite_style_expr(t);
+    }
+    if is_bare_ident(t) {
+        return format!("style({t})");
+    }
+    // Const-ref motion chain etc. — keep as-is (already product).
+    t.to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -679,5 +1105,94 @@ mod tests {
             "style({ animate: focus-visible({ scale: 'spring:snappy' }) })"
         );
         emit_pair(old, &new);
+    }
+
+    #[test]
+    fn lift_attr_host_to_block() {
+        let src = r#"<div style={style.pad(4).bg(primary)}>x</div>"#;
+        let out = rewrite_teaching_source(src);
+        assert!(
+            out.contains("style({ box: pad(4), paint: bg(primary) })"),
+            "{out}"
+        );
+        assert!(!out.contains("style="), "{out}");
+        assert!(!out.contains("style={"), "{out}");
+    }
+
+    #[test]
+    fn lift_list_form() {
+        let src = r#"<button style={[ base, match(v, { a: a }) ]}>ok</button>"#;
+        let out = rewrite_teaching_source(src);
+        assert!(out.contains("style(["), "{out}");
+        assert!(out.contains("match(v, { a: a })"), "{out}");
+        assert!(!out.contains("style="), "{out}");
+    }
+
+    #[test]
+    fn lift_when_only() {
+        let src = r#"<button style={when({ hover: style.bg(muted) })}>h</button>"#;
+        let out = rewrite_teaching_source(src);
+        assert!(out.contains("when("), "{out}");
+        assert!(
+            out.contains("style({ paint: bg(muted) })") || out.contains("bg(muted)"),
+            "{out}"
+        );
+        assert!(!out.contains("style="), "{out}");
+    }
+
+    #[test]
+    fn lift_const_ref() {
+        let src = r#"<span style={filled}>x</span>"#;
+        let out = rewrite_teaching_source(src);
+        assert!(out.contains("style(filled)"), "{out}");
+        assert!(!out.contains("style={filled}"), "{out}");
+    }
+
+    #[test]
+    fn rewrite_flat_const() {
+        let src = "const base = style.pad(2)";
+        let out = rewrite_source(src);
+        assert_eq!(out, "const base = style({ box: pad(2) })");
+    }
+
+    #[test]
+    fn raw_css_string_attr_not_lifted() {
+        let src = r#"<div style="color: red">x</div>"#;
+        let out = rewrite_teaching_source(src);
+        assert!(out.contains(r#"style="color: red""#), "{out}");
+    }
+
+    #[test]
+    fn lift_sx_host_same_as_style() {
+        let src = r#"<div sx={style.pad(4).bg(primary)}>x</div>"#;
+        let out = rewrite_teaching_source(src);
+        assert!(
+            out.contains("style({ box: pad(4), paint: bg(primary) })"),
+            "{out}"
+        );
+        assert!(!out.contains("sx="), "{out}");
+    }
+
+    #[test]
+    fn lift_self_closing_expands() {
+        let src = r#"<div style={style.pad(2)} />"#;
+        let out = rewrite_teaching_source(src);
+        assert!(out.contains("style({ box: pad(2) })"), "{out}");
+        assert!(out.contains("</div>"), "{out}");
+        assert!(!out.contains("/>"), "{out}");
+        assert!(!out.contains("style="), "{out}");
+    }
+
+    #[test]
+    fn lift_preserves_sibling_attrs() {
+        let src = r#"<button on:click={invite} style={style.press({ scale: 'press' })}>Invite</button>"#;
+        let out = rewrite_teaching_source(src);
+        assert!(out.contains("on:click={invite}"), "{out}");
+        assert!(
+            out.contains("style({ animate: press({ scale: 'press' }) })")
+                || out.contains("press({ scale: 'press' })"),
+            "{out}"
+        );
+        assert!(!out.contains("style="), "{out}");
     }
 }

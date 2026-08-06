@@ -33,7 +33,9 @@ pub use ir::{PaintArg, PaintOp, Style, StyleDiagnostic};
 pub use parse::{
     collect_motion_attaches, looks_like_utility_string_product, parse, parse_style_const_rhs,
 };
-pub use rewrite::{rewrite_source, rewrite_style_expr};
+pub use rewrite::{
+    lift_style_attr_hosts, rewrite_source, rewrite_style_expr, rewrite_teaching_source,
+};
 
 #[cfg(test)]
 mod tests {
