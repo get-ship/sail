@@ -15,9 +15,6 @@ export default controller(() => {
   return {
     sourceText: vm.sourceText,
     sourceStatus: vm.sourceStatus,
-    checkRows: vm.checkRows,
-    hasChecks: vm.hasChecks,
-    checksLabel: vm.checksLabel,
     sourceScrollLine: vm.sourceScrollLine,
     sourceDirty: vm.sourceDirty,
     isSourceReady: vm.isSourceReady,
@@ -167,25 +164,6 @@ export default controller(() => {
           <column source-ready gap="0">
             style({  box: grow(1).minH(0).basis(0).h(full).overflow(hidden)  })
 
-            <if {hasChecks()}>
-              <column source-gutter gap="0">
-                style({  box: shrink(0).padX(3).padY(1).maxH(20).minH(0).overflow(auto), paint: bg(surface-2)  })
-                <span>
-                  style({ box: display(contents), text: fontSize(xs).fontFamily(mono) })
-                  <for {checkRows()} as="ck" key={ck.key}>
-                  <p
-                    check-line={ck.line}
-                    severity={ck.severity}
-
-                  >
-                    style({ box: h(5), paint: fg(destructive) })
-
-                    L{ck.line} · {ck.severity}: {ck.message}
-                  </p>
-                </for>
-                </span>
-</column>
-            </if>
             <column gap="0">
               style({  box: grow(1).minH(0).basis(0).h(full).overflow(hidden)  })
 

@@ -39,9 +39,6 @@ export function createEditSurface() {
   const sourceStatus = signal('—')
   const editError = signal('')
   const hasEditError = signal(false)
-  const checkRows = signal<{ line: number; severity: string; message: string; key: string }[]>([])
-  const hasChecks = signal(false)
-  const checksLabel = signal('')
   const sourceScrollLine = signal(0)
   const sourceDirty = signal(false)
   const isSourceReady = signal(false)
@@ -94,7 +91,6 @@ export function createEditSurface() {
     sourceText.set(text)
     sourceStatus.set(loading ? 'Loading…' : (doc?.source.status ?? '—'))
     sourceDirty.set(!!doc?.source.dirty)
-    checksLabel.set(doc?.source.checksLabel ?? '')
     // Ready only when we have text and are not mid-open — avoids empty/error flash.
     isSourceLoading.set(loading && !text)
     isSourceReady.set(!!text && !loading)
@@ -108,15 +104,6 @@ export function createEditSurface() {
     const viewChanged = lastView !== 'source'
     lastView = 'source'
 
-    checkRows.set(
-      uiCheckDiags().map((c, i) => ({
-        line: c.line,
-        severity: c.severity,
-        message: c.message,
-        key: `${c.line}-${i}`,
-      })),
-    )
-    hasChecks.set(uiCheckDiags().length > 0)
     const doc = activeDoc()
     syncSourceFields(doc, !!es.loading)
     const route = pathToLiveRoute(es.activePath)
@@ -222,9 +209,6 @@ export function createEditSurface() {
     sourceStatus,
     editError,
     hasEditError,
-    checkRows,
-    hasChecks,
-    checksLabel,
     sourceScrollLine,
     sourceDirty,
     isSourceReady,
