@@ -1,7 +1,7 @@
 // hydrate-mark.ts — record hydration markers on the server-DOM.
 //
 // The synthetic render's SSR path runs against the shared server-DOM
-// (the SAME `bindText` / `bindFor` / `bindIf` / `bindOn` / `bindWhile*`
+// (the SAME `bindText` / `bindFor` / `bindIf` / `bindOn`
 // runtime helpers the browser path uses). For client hydration to
 // re-attach reactivity on top of SSR'd HTML, the serialized output
 // must carry the marker contract the client `hydrate()` reads —
@@ -76,7 +76,7 @@ export function markHydrateAttr(el: Element, name: string, key: string): void {
 
 /**
  * Tag a control-flow boundary wrapper element. The synthetic render
- * inserts `<sail-{if,for,match,await,while-loading,while-error}>` comment
+ * inserts `<sail-{if,for,match,when,await}>` comment
  * or element wrappers around each branch's children; this stamps the
  * key onto the wrapper so the client's `collectElementMarkers` picks
  * it up via the `key="bN"` attribute (matches the walker contract).

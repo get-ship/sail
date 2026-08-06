@@ -174,8 +174,8 @@ pub fn rewrite_with_prefix(src: &str, extra_locals: &[&str], prefix: &str) -> St
 /// places, checked in order:
 ///   1. `extra_locals` (plus arrow params harvested mid-walk) → left bare.
 ///   2. `machinery` → qualified with the **runtime** `$scope.` prefix,
-///      regardless of `prefix`. The synthetic emit uses this for `{#for}`
-///      row binders and `{#while-error}` error binders: those live on the
+///      regardless of `prefix`. The synthetic emit uses this for `<for>`
+///      row binders and `<match>` payload binders: those live on the
 ///      runtime-mutable `$scope` child scope (which the keyed-reuse
 ///      `update` callback reassigns), not on the typed `scope` export.
 ///   3. everything else → qualified with `prefix`.

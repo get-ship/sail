@@ -43,20 +43,19 @@ describe('hoverAt', () => {
     expect(info!.contents).toContain('|key:')
   })
 
-  it('hovers a block keyword after {# from compiler vocabulary', () => {
-    const src = '{#if x()}<p>hi</p>{/if}'
-    const info = hoverAt(src, 3)
+  it('hovers a block keyword after < from compiler vocabulary', () => {
+    const src = '<if {x()}><p>hi</p></if>'
+    const info = hoverAt(src, 2)
     expect(info).not.toBeNull()
-    expect(info!.contents).toContain('{#if}')
+    expect(info!.contents).toContain('<if')
     expect(info!.contents).toContain('conditional')
   })
 
-  it('hovers while-loading block from compiler vocabulary', () => {
-    const src = '{#while-loading of items}…{/while-loading}'
-    const info = hoverAt(src, 6)
+  it('hovers match block from compiler vocabulary', () => {
+    const src = '<match {status()}>{ok => ok}</match>'
+    const info = hoverAt(src, 2)
     expect(info).not.toBeNull()
-    expect(info!.contents).toContain('{#while-loading}')
-    expect(info!.contents).toContain('async')
+    expect(info!.contents).toContain('<match')
   })
 
   it('returns null on a plain word that has no entry', () => {

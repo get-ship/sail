@@ -10,8 +10,8 @@
 //! ```
 //!
 //! That re-implements, in the ViewModel, what `.sail` already gives for free:
-//! `{#while-loading of src}` / `{#while-error err of src}` / `{#if src().kind ===
-//! 'ok'}`. The controller's job is the DATA (`unwrap`/`unwrapOr` for the value,
+//! `<match {src()}>` with `{loading}` / `{error}` / `{ok}` arms. The
+//! controller's job is the DATA (`unwrap`/`unwrapOr` for the value,
 //! `derived` for transforms) — not the load-state flow. Expose the live source
 //! and let the template own the states.
 //!
@@ -72,12 +72,12 @@ impl LoadStateVisitor<'_> {
             severity: Severity::Warn,
             message: "controllers must not branch on a live source's `.kind` — loading/error/ok \
                  are render states. Expose the live source and let the template own them via \
-                 `{#while-loading of src}` / `{#while-error err of src}` / `{#if src().kind === \
-                 'ok'}`. Use `unwrap`/`unwrapOr` for the value in the controller."
+                 `<match {src()}>` with `{loading}` / `{error}` / `{ok}` arms. Use \
+                 `unwrap`/`unwrapOr` for the value in the controller."
                 .to_string(),
             suggest: Some(
                 "return the live source from `scope`; branch states in the `.sail` with \
-                 {#while-loading}/{#while-error}"
+                 <match {src()}> {loading => …} {error as e => …} {ok as v => …}"
                     .to_string(),
             ),
         });

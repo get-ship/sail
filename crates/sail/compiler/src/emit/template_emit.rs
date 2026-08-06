@@ -60,11 +60,9 @@ pub struct TemplateEmitter {
     /// type (`delegateEvents([...])`, emitted once at module scope) instead of one
     /// `addEventListener` per element.
     pub(super) delegated_events: std::collections::BTreeSet<String>,
-    /// Sequential counters for while-loading/while-error render-callback names.
-    /// Both the bindings pass and this emit pass walk the IR in the same source
-    /// Render callbacks for `{#while-loading}` / `{#while-error}` blocks,
-    /// emitted as named properties on the setup return object (outside
-    /// `__mount`) so `attach()` can look them up by `renderKey`.
+    /// Named render callbacks emitted as properties on the setup return
+    /// object (outside `__mount`) so hydrate can look them up by `renderKey`.
+    /// Reserved for boundary kinds that still need a named branch renderer.
     pub(super) render_callbacks: Writer,
     /// Hoisted `const __wireBoundary_b<N> = (anchor) => bindIf(...)`
     /// declarations for each `{#if}` / `{#for}` / `{#match}` boundary.
@@ -154,8 +152,8 @@ pub struct TemplateEmitter {
     /// emitter generates (child scopes, version signals) keeps using the
     /// literal `$scope` runtime variable. See `emit::synthetic`.
     pub(super) expr_prefix: String,
-    /// Stack of row/error binders introduced by enclosing `{#for}` /
-    /// `{#while-error}` blocks. These live on the runtime-mutable `$scope`
+    /// Stack of row / match-arm payload binders introduced by enclosing
+    /// `<for>` / `<match>` blocks. These live on the runtime-mutable `$scope`
     /// child scope (which keyed-reuse `update` reassigns), so author
     /// expressions referencing them are qualified with `$scope.` even when
     /// `expr_prefix` is `"scope."`. Pushed entering a body, popped exiting;
@@ -252,7 +250,7 @@ impl TemplateEmitter {
     /// render type-checks under `noImplicitAny`. Production stays byte-identical
     /// (bare `name`, valid JS — a TS annotation would be a syntax error there).
     /// The generated machinery types are FIXED by the runtime contract (the
-    /// boundary anchor is a `Comment`, the `{#while-error}` binder is an
+    /// boundary anchor is a `Comment`, match error payload binders are
     /// `Error`), so the annotation is precise, not a widening to `any`.
     pub(super) fn machinery_param(&self, name: &str, ty: &str) -> String {
         if self.is_synthetic() {

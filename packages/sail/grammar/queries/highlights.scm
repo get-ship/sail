@@ -29,9 +29,8 @@
 
 ; ── directive elements (recognised by tag name) ──────────────────────
 ; Highlight `<scope>` and `<slot>` distinctively so authors can see
-; the runtime contract at a glance. `<data>`, `<state>`, `<component>`,
-; `<prop>` are retired; element-form `<while-loading>`/`<while-error>`
-; are retired in favor of the brace-block forms below.
+; the runtime contract at a glance. Retired own-API tags are not listed
+; (DEEMBALM: generic unknown-vocabulary after scrub).
 ((tag_name) @keyword.directive
   (#match? @keyword.directive "^(scope|slot)$"))
 
@@ -44,31 +43,18 @@
 "|"       @punctuation.delimiter
 
 ; ── template control flow markers ────────────────────────────────────
-; `{:elif}` is deliberately absent — the compiler's tokenizer only
-; brace form is retired.
-; control-flow element tags
+; Four blocks only: if / for / match / when. Arms are brace interpolations.
+; control-flow element tags (four blocks: if/for/match/when)
 ((tag_name) @keyword.directive
-  (#match? @keyword.directive "^(if|else-if|else|for|match|case|default|when|while-loading|while-error)$"))
-"<if"                @keyword.directive
-"</if>"              @keyword.directive
-"<else-if"           @keyword.directive
-"</else-if>"         @keyword.directive
-"<else"              @keyword.directive
-"</else>"            @keyword.directive
-"<for"               @keyword.directive
-"</for>"             @keyword.directive
-"<match"             @keyword.directive
-"</match>"           @keyword.directive
-"<case"              @keyword.directive
-"</case>"            @keyword.directive
-"<default"           @keyword.directive
-"</default>"         @keyword.directive
-"<when"              @keyword.directive
-"</when>"            @keyword.directive
-"<while-loading"     @keyword.directive
-"</while-loading>"   @keyword.directive
-"<while-error"       @keyword.directive
-"</while-error>"     @keyword.directive
+  (#match? @keyword.directive "^(if|for|match|when)$"))
+"<if"        @keyword.directive
+"</if>"      @keyword.directive
+"<for"       @keyword.directive
+"</for>"     @keyword.directive
+"<match"     @keyword.directive
+"</match>"   @keyword.directive
+"<when"      @keyword.directive
+"</when>"    @keyword.directive
 
 ; Brace boundaries.
 "{" @punctuation.special
@@ -77,13 +63,9 @@
 ; ── expression body (inside `{…}`) ─────────────────────────────────
 ; Identifiers in expression position are variable reads; member
 ; access shows up as a single `.foo` token (the `_member` rule).
+; Arm heads (`{loading => …}`, `{ok as x => …}`) land here too.
 (interpolation (identifier) @variable)
 (brace_expression (identifier) @variable)
-
-; For-loop binding pattern names are locals introduced by the loop.
-
-; `{#while-error <errVar> of <signal>}` — the error binding is a local
-; introduced by the block, scoped to its body.
 
 ; ── comments ─────────────────────────────────────────────────────────
 (html_comment) @comment

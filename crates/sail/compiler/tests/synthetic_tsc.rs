@@ -8,7 +8,7 @@
 //! shows a deliberate `route.parms` typo is CAUGHT (TS2339).
 //!
 //! The tsconfig is FULL STRICT (`strict: true`, `noImplicitAny: true`): the
-//! synthetic render's generated machinery (boundary `anchor`, `<while-error>`
+//! synthetic render's generated machinery (boundary `anchor`, match error
 //! binder, disposer arrays) is type-annotated mode-aware, so no implicit-`any`
 //! remains. Author expressions were already fully checked; this closes the
 //! machinery gap so a synthesized view checks exactly as strictly as authored TS.

@@ -270,8 +270,6 @@ fn parse_open_tag(
         "theme",
         "host",
         "component",
-        "while-loading",
-        "while-error",
     ];
     if SKIP.contains(&tag.as_str()) {
         return Some((open_end + 1, None, false, None, false));

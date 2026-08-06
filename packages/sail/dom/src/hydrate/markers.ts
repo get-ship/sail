@@ -1,7 +1,7 @@
 // Single-pass scan for every SSR hydration marker attribute
 // (`on:*`, `attr:*`, `attr-dynamic`, `style:*`, `prop:*`,
 // `bind:*`, `mutation`) AND every control-flow boundary wrapper element
-// (`<sail-if|sail-for|sail-match|sail-when|sail-await|sail-while-loading|sail-while-error key="bN">`)
+// (`<sail-if|sail-for|sail-match|sail-when|sail-await key="bN">`)
 // under `root`. Returns a map from binding key (`bN`) → the SSR'd
 // element carrying the marker.
 //
@@ -21,8 +21,6 @@ const BOUNDARY_TAGS = new Set([
   'sail-match',
   'sail-when',
   'sail-await',
-  'sail-while-loading',
-  'sail-while-error',
 ])
 
 export function collectElementMarkers(root: Node): Record<string, Element> {

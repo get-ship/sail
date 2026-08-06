@@ -78,13 +78,12 @@ mod tests {
 
     #[test]
     fn finds_tags_nested_in_control_flow() {
-        // if / for / match / while-loading / while-error each carry a distinct tag.
+        // if / for / match / when each carry a distinct tag.
         let src = r#"<div>
             <if {cond()}><sail-a></sail-a>{else => <sail-b></sail-b>}</if>
             <for {items() as x}><sail-c></sail-c></for>
             <match {m()}>{1 => <sail-d></sail-d>}{else => <sail-e></sail-e>}</match>
-            <while-loading {data}><sail-f></sail-f></while-loading>
-            <while-error as="err" {data}><sail-g></sail-g></while-error>
+            <when {tablet}><sail-f></sail-f>{else => <sail-g></sail-g>}</when>
         </div>"#;
         let tags = used_tags(src);
         for t in [

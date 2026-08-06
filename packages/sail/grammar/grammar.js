@@ -33,8 +33,6 @@ export default grammar({
       $.match_block,
       $.when_block,
       $.element,
-      // Arms (`{ok as x => …}`, `{else => …}`) parse as interpolations;
-      // the compiler re-classifies `=>` brace groups as control arms.
       $.interpolation,
       $.text,
     ),
@@ -199,6 +197,8 @@ export default grammar({
       '</when>',
     ),
 
+    // `x of items` (bare binding) or `(x, i) of items` (parenthesized
+    // tuple with index) — matches
     // ── opaque expression body ────────────────────────────────────
     // Inside `{…}` we capture everything as a balanced atom stream so
     // the host-language injection (TypeScript) can highlight it. The

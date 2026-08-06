@@ -351,9 +351,9 @@ pub(super) struct Visitor {
 
 // The walk no longer short-circuits on the first error — `check_expr` pushes
 // one diagnostic per offending expression and the traversal continues, so
-// `collect()` sees every out-of-scope reference. `<for as="}` / `<while-error>`
-// locals are still added before the body and removed after, so the scope
-// stays balanced regardless of how many errors were found.
+// `collect()` sees every out-of-scope reference. `<for {… as item}>` /
+// `<match>` payload locals are still added before the body and removed
+// after, so the scope stays balanced regardless of how many errors were found.
 fn visit_program(program: &Program, v: &mut Visitor) {
     visit_instrs(&program.template, v);
 }

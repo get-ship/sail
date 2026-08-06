@@ -10,7 +10,7 @@
 //! Unlike the desugar spike — which hand-rolled a minimal element/text
 //! emitter — this REUSES the production [`TemplateEmitter`]. Driving the
 //! same walk with a `"scope."` prefix is the whole point: every template
-//! feature (`{#if/#for/#match/#while-*}`, `on:`, `bind:`, plain fields,
+//! feature (`<if>`/`<for>`/`<match>`/`<when>`, `on:`, `bind:`, plain fields,
 //! slots, nested components) emits identically to production,
 //! so the synthetic path inherits the emitter's full behavior for free.
 //!
@@ -19,10 +19,10 @@
 //!     tsgo checks them against the controller's `Scope` type.
 //!   * `$scope` — the runtime-mutable scope (`Object.create(scope)`). The
 //!     emitter's machinery (child scopes, per-row `__v` version signals,
-//!     `bindWhileLoading({ signal: $scope.<name> })`) drives this. It
-//!     inherits every member of `scope` through the prototype, so a
-//!     machinery read of a scope signal resolves to the same object an
-//!     author read does — one source of truth, two reference paths.
+//!     `bindIf` / match kind arms) drives this. It inherits every member
+//!     of `scope` through the prototype, so a machinery read of a scope
+//!     signal resolves to the same object an author read does — one
+//!     source of truth, two reference paths.
 
 use super::super::template_emit::TemplateEmitter;
 use super::super::writer::{Writer, js_string};

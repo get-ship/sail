@@ -47,11 +47,15 @@ function ensureInit(): Promise<void> {
 const TAG_ATTR_RE = /([\w:-]+)(?=\s*=|\s|$)/g
 
 function blockName(open: string): string {
-  return open.replace('{#', '').replace('}', '')
+  // Element form: `<if {…}>` / legacy brace form: `{#if}`
+  const s = open.replace(/^\{#/, '').replace(/^</, '')
+  return s.split(/[\s{>/]/)[0] ?? s
 }
 
 function clauseName(clause: string): string {
-  return clause.replace('{:', '').replace('}', '').trim()
+  // Arms: `{else => …}` / `{loading => …}` — take the head keyword.
+  const s = clause.replace(/^\{:?/, '').trim()
+  return s.split(/[\s=>]/)[0] ?? s
 }
 
 function directivePrefix(syntax: string): string {
@@ -118,9 +122,16 @@ export function hoverAt(source: string, offset: number): SailHoverInfo | null {
     }
   }
 
-  // 3. Block keyword — preceded by `{#` or `{:`.
-  //    `{#while-loading}` → cursor in `while-loading`,
-  //    source[start-2..start] === '{#'.
+  // 3. Block keyword — element open `<match`, legacy `{#if}`, arm `{else`.
+  if (start >= 1 && source[start - 1] === '<') {
+    for (const b of vocab.blocks) {
+      if (blockName(b.open) === token) {
+        const clauses = b.clauses.join(' ')
+        const sig = `${b.open}${clauses ? ` … ${clauses}` : ''}`
+        return renderEntry(sig, b.summary)
+      }
+    }
+  }
   if (start >= 2) {
     const sigil = source.slice(start - 2, start)
     if (sigil === '{#' || sigil === '{:') {
@@ -134,6 +145,14 @@ export function hoverAt(source: string, offset: number): SailHoverInfo | null {
           const sig = `${sigil}${token}`
           return renderEntry(sig, b.summary)
         }
+      }
+    }
+  }
+  // Arm head inside `{loading => …}` / `{else => …}` (no preceding `#`/`: `).
+  if (start >= 1 && source[start - 1] === '{') {
+    for (const b of vocab.blocks) {
+      if (b.clauses.some((c) => clauseName(c) === token || c.includes(token))) {
+        return renderEntry(b.open, b.summary)
       }
     }
   }

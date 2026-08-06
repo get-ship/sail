@@ -149,7 +149,7 @@ export function tokenizeSail(source: string): SailToken[] {
 }
 
 function isDirectiveTag(name: string): boolean {
-  return /^(if|else-if|else|for|match|case|default|while-loading|while-error|scope|slot|controller)$/i.test(
+  return /^(if|else-if|else|for|match|when|case|default|scope|slot|controller)$/i.test(
     name,
   )
 }
