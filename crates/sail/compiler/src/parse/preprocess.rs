@@ -328,7 +328,7 @@ fn refuse_sx_attr(source: &str) -> Result<(), CompileError> {
         {
             return Err(CompileError::new(
                 "sx= is retired — attach Style as a block statement on the element: \
-                 <el> style.pad(4).bg(primary) … </el>  or  style({ box, paint })  \
+                 style({ box: …, paint: …, text: … }).when(hover, { paint: … })  \
                  or  style([ base, match(…) ])",
             )
             .with_span(Span::new(i, i + 2))
@@ -364,7 +364,8 @@ fn refuse_sx_attr(source: &str) -> Result<(), CompileError> {
                 if looks_like_style_product(stripped) {
                     return Err(CompileError::new(
                         "style={…} as an attribute is not Style attachment — use a block \
-                         statement: <el> style.… </el>  (not an HTML style attribute)",
+                         statement: style({ box: …, paint: … }).when(hover, { paint: … })  \
+                         or  style([ base, match(…) ])  (not an HTML style attribute)",
                     )
                     .with_span(Span::new(i, i + 5))
                     .with_category("sail-sx"));
@@ -4084,22 +4085,116 @@ export default controller({ setup: () => ({ d: derived(() => signal(0)()) }) })\
     fn flat_style_method_chain_is_refused_on_product_path() {
         let err = preprocess(r#"<div> style.pad(4).bg(primary) x</div>"#)
             .expect_err("flat chain must fail product lower");
+        let msg = &err.message;
         assert!(
-            err.message.contains("retired") || err.message.contains("channel spine"),
-            "got: {}",
-            err.message
+            msg.contains("retired") || msg.contains("channel spine"),
+            "got: {msg}"
+        );
+        // Diagnostic must teach channel block form, not revive flat style.pad chains.
+        assert!(
+            msg.contains("style({") || msg.contains("channel"),
+            "must point at block channel spine: {msg}"
+        );
+        assert!(
+            !msg.contains("style.pad(4).bg(primary)") || msg.contains("retired"),
+            "must not present flat chain as the fix: {msg}"
         );
     }
 
+    #[test]
     fn sx_attr_is_refused() {
-        let err = preprocess(r#"<div sx={style.pad(4)}>x</div>"#).expect_err("sx");
-        assert!(format!("{err:?}").contains("retired") || format!("{err:?}").contains("sx="));
+        let err = preprocess(r#"<div sx={style.pad(4)}>x</div>"#).expect_err("sx=");
+        let msg = format!("{err:?}");
+        assert!(
+            msg.contains("retired") || msg.contains("sx="),
+            "must name retired sx=: {msg}"
+        );
+        assert!(
+            msg.contains("style({") || msg.contains("block"),
+            "must teach block channel form: {msg}"
+        );
+        // Must not teach dead flat product form as the migration target.
+        assert!(
+            !msg.contains("style.pad(4).bg(primary)"),
+            "must not teach flat style.method chain: {msg}"
+        );
     }
+
     #[test]
     fn style_attr_product_is_refused() {
+        // Flat product on attribute host.
         let err = preprocess(r#"<div style={style.pad(4)}>x</div>"#).expect_err("style=");
         let m = format!("{err:?}");
-        assert!(m.contains("block") || m.contains("style="), "{m}");
+        assert!(
+            m.contains("block") || m.contains("style={"),
+            "must refuse attr Style product: {m}"
+        );
+        assert!(
+            m.contains("style({") || m.contains("block"),
+            "must teach block channel form: {m}"
+        );
+        assert!(
+            !m.contains("<el> style.…"),
+            "must not teach flat style.… chain: {m}"
+        );
+
+        // Channel spine on attribute host is still product-on-attr — refuse.
+        let err = preprocess(r#"<div style={style({ paint: bg(primary) })}>x</div>"#)
+            .expect_err("style={channel} still attr product");
+        let m = format!("{err:?}");
+        assert!(
+            m.contains("block") || m.contains("style={") || m.contains("attribute"),
+            "channel spine on attr must still refuse: {m}"
+        );
+    }
+
+    #[test]
+    fn raw_html_style_string_attr_is_not_style_product_refuse() {
+        // Foreign HTML `style="…"` CSS strings are not Style product attachment.
+        // refuse_sx_attr only refuses brace-product Style on the style= host.
+        let out = preprocess(r#"<div style="color: red">x</div>"#)
+            .expect("raw CSS style string must not hit Style product refuse");
+        assert!(
+            out.contains(r#"style="color: red""#) || out.contains("color: red"),
+            "raw CSS attr should survive preprocess: {out}"
+        );
+    }
+
+    #[test]
+    fn text_channel_refused_on_non_text_host() {
+        let err = preprocess(r#"<div> style({ text: fontSize(sm) }) x</div>"#)
+            .expect_err("text channel on div");
+        let msg = &err.message;
+        assert!(
+            msg.contains("text channel") || msg.contains("text-bearing"),
+            "must name text channel / text-bearing law: {msg}"
+        );
+        assert!(
+            msg.contains("<div>") || msg.contains("div"),
+            "must name the host tag: {msg}"
+        );
+    }
+
+    #[test]
+    fn text_channel_allowed_on_text_bearing_hosts() {
+        let out = preprocess(r#"<p> style({ text: fontSize(sm) }) x</p>"#)
+            .expect("p is text-bearing");
+        assert!(out.contains("sx-") || out.contains("font-size"), "{out}");
+
+        let out = preprocess(
+            r#"<button> style({ text: fontSize(sm), paint: bg(primary) }) go</button>"#,
+        )
+        .expect("button is text-bearing");
+        assert!(out.contains("sx-"), "{out}");
+    }
+
+    #[test]
+    fn non_text_host_box_paint_only_is_ok() {
+        let out =
+            preprocess(r#"<div> style({ box: pad(4), paint: bg(primary) }) x</div>"#)
+                .expect("box+paint on div is legal");
+        assert!(out.contains("sx-"), "{out}");
+        assert!(!out.contains("style({"), "block Style must lift: {out}");
     }
 
 }

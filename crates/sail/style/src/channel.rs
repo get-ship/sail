@@ -401,6 +401,51 @@ mod tests {
         );
     }
 
+    /// Geometry-class × interaction matrix (SPEC: state can't gate dimensional box).
+    /// Asserts only current product law — display/overflow are non-dimensional box.
+    #[test]
+    fn geometry_interaction_matrix() {
+        fn gate_err(src: &str) -> bool {
+            let (_, diags) = parse(src);
+            diags.iter().any(|d| d.message().contains("state can't gate layout"))
+        }
+
+        // Dimensional geometry under interaction keys — refuse.
+        for key in ["hover", "group-hover", "state-open", "focusWithin"] {
+            let src = format!("style({{ box: pad(2) }}).when({key}, {{ box: pad(4) }})");
+            assert!(gate_err(&src), "pad under {key} must refuse: {src}");
+            let src = format!("style({{ box: w(full) }}).when({key}, {{ box: gap(2) }})");
+            assert!(gate_err(&src), "gap under {key} must refuse: {src}");
+        }
+
+        // Media / preference may still gate box geometry.
+        for key in ["tablet", "dark"] {
+            let src = format!("style({{ box: pad(2) }}).when({key}, {{ box: pad(4) }})");
+            assert!(!gate_err(&src), "pad under media {key} must allow: {src}");
+        }
+
+        // Paint under interaction is legal.
+        assert!(!gate_err(
+            "style({ paint: bg(primary) }).when(hover, { paint: bg(muted) })"
+        ));
+        assert!(!gate_err(
+            "style({ box: pad(2), paint: bg(primary) }).when(hover, { paint: bg(muted) })"
+        ));
+
+        // Non-dimensional box (display/overflow) under interaction — currently legal
+        // (is_geometry_setter excludes them so show/hide slots don't thrash pad law).
+        assert!(
+            !is_geometry_setter("display") && !is_geometry_setter("overflow"),
+            "display/overflow stay non-geometry for interaction gate"
+        );
+        assert!(!gate_err(
+            "style({ box: display(none) }).when(hover, { box: display(block) })"
+        ));
+        assert!(!gate_err(
+            "style({ box: overflow(hidden) }).when(group-hover, { box: overflow(auto) })"
+        ));
+    }
+
     #[test]
     fn color_setter_refused_with_fg_pointer() {
         let (_, diags) = parse("style({ paint: color(primary) })");

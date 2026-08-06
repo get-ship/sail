@@ -1071,5 +1071,110 @@ mod tests {
             "style({ box: pad(2) }).when({ hover: style.bg(muted) })",
         );
     }
+
+    // ── Product-path locks (`lower_style_source`) ──────────────────────────
+    // Unit `parse`+`lower_style` still accept flat form for emit-identity /
+    // codemod dual path. Product entry refuses flat chains (channel spine only).
+
+    fn product_lower(src: &str) -> Result<(String, String), Vec<StyleDiagnostic>> {
+        let mut css = String::new();
+        let mut seen = std::collections::HashSet::new();
+        let classes = lower_style_source(src, &HashMap::new(), &mut css, &mut seen)?;
+        Ok((classes, css))
+    }
+
+    fn product_err_msgs(src: &str) -> Vec<String> {
+        match product_lower(src) {
+            Ok((c, css)) => panic!("expected Err for `{src}`, got classes={c} css={css}"),
+            Err(diags) => diags.into_iter().map(|d| d.message()).collect(),
+        }
+    }
+
+    #[test]
+    fn product_path_channel_spine_lowers() {
+        let (classes, css) = product_lower(
+            "style({ box: pad(4).gap(2), paint: bg(primary).radius(md) })",
+        )
+        .expect("channel spine is product form");
+        assert!(
+            classes.split_whitespace().any(|c| c.contains("pad") || c.contains("sx-")),
+            "pad mint missing: {classes}"
+        );
+        assert!(
+            classes.split_whitespace().any(|c| c.contains("gap") || c.contains("sx-")),
+            "gap mint missing: {classes}"
+        );
+        assert!(classes.contains("sx-"), "{classes}");
+        for needle in ["padding", "gap", "background", "border-radius"] {
+            assert!(
+                css.contains(needle)
+                    || css.contains("var(--primary)")
+                    || css.contains("var(--radius"),
+                "expected {needle}-ish in css:\n{css}"
+            );
+        }
+        // Stronger property presence (not only class names).
+        assert!(
+            css.contains("padding") || css.contains("--spacing"),
+            "pad must emit padding-ish CSS:\n{css}"
+        );
+        assert!(css.contains("gap") || css.contains("--spacing"), "gap CSS:\n{css}");
+        assert!(
+            css.contains("background") || css.contains("--primary"),
+            "bg CSS:\n{css}"
+        );
+        assert!(
+            css.contains("border-radius") || css.contains("--radius"),
+            "radius CSS:\n{css}"
+        );
+    }
+
+    #[test]
+    fn product_path_flat_chain_is_refused() {
+        let msgs = product_err_msgs("style.pad(4)");
+        let joined = msgs.join("; ");
+        assert!(
+            joined.contains("retired") || joined.contains("channel spine"),
+            "flat product must refuse: {joined}"
+        );
+        assert!(
+            joined.contains("style({") || joined.contains("channel"),
+            "must teach channel spine: {joined}"
+        );
+    }
+
+    #[test]
+    fn product_path_when_hover_paint() {
+        let (classes, css) = product_lower(
+            "style({ paint: bg(primary) }).when(hover, { paint: bg(muted) })",
+        )
+        .expect("hover paint through product path");
+        assert!(classes.contains("sx-"), "{classes}");
+        assert!(css.contains(":hover"), "hover pseudo missing:\n{css}");
+    }
+
+    #[test]
+    fn product_path_geometry_under_interaction_fails_closed() {
+        let msgs = product_err_msgs(
+            "style({ box: pad(2) }).when(hover, { box: pad(4) })",
+        );
+        let joined = msgs.join("; ");
+        assert!(
+            joined.contains("state can't gate layout")
+                || joined.contains("cannot appear inside interaction when")
+                || joined.contains("geometry"),
+            "geometry under hover must hard-fail product path: {joined}"
+        );
+    }
+
+    #[test]
+    fn product_path_color_alias_fails_closed() {
+        let msgs = product_err_msgs("style({ paint: color(primary) })");
+        let joined = msgs.join("; ");
+        assert!(
+            joined.contains("fg") && (joined.contains("color") || joined.contains("renamed")),
+            "color→fg must hard-fail product path: {joined}"
+        );
+    }
 }
 

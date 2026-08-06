@@ -43,6 +43,21 @@ const FORBIDDEN_IN_SAIL: Array<{ name: string; re: RegExp }> = [
   { name: 'residual cond=', re: /<(?:if|else-if)\s+cond=/ },
   { name: 'residual of=', re: /<(?:for|case|while-loading|while-error)[^>]*\sof=/ },
   { name: 'residual match on=', re: /<match\s+on=/ },
+  // CHANNELS Phase V — Style dual-debt locks (product .sail author surface only).
+  // Measured 0 hits before locking. Teaching site TS snippets are out of scope.
+  { name: 'retired sx= host', re: /\ssx\s*=/ },
+  // Style product as attribute host (`style={…}`); raw CSS `style="…"` is allowed.
+  { name: 'retired style={ product attr', re: /\sstyle\s*=\s*\{/ },
+  // Flat method chain as block/const product (`style.pad(…)`). Requires `(` so
+  // prose like <code>style.enter</code> / media names `style.css…` do not trip.
+  {
+    name: 'retired flat style.method( product',
+    re: /(?:^|[\n>])\s*style\.[a-zA-Z][a-zA-Z0-9_-]*\s*\(/m,
+  },
+  {
+    name: 'retired const = style.method( product',
+    re: /\bconst\s+[a-zA-Z_][\w]*\s*=\s*style\.[a-zA-Z]/,
+  },
 ]
 
 function gitLs(glob: string): string[] {
@@ -82,8 +97,10 @@ describe('scrub: retired author forms absent from corpus', () => {
         } catch {
           continue
         }
-        // Strip HTML comments so doc examples in comments do not fail scrub.
-        const stripped = text.replace(/<!--[\s\S]*?-->/g, '')
+        // Strip HTML comments + // line comments so doc/example prose does not fail scrub.
+        const stripped = text
+          .replace(/<!--[\s\S]*?-->/g, '')
+          .replace(/\/\/[^\n]*/g, '')
         if (re.test(stripped)) {
           hits.push(rel)
         }

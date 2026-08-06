@@ -77,7 +77,9 @@ fn compile_attr(
     // `sx=` is retired. Style attaches as a block statement in the element body.
     if name == "sx" {
         return Err(CompileError::new(
-            "sx= is retired — attach Style as a block statement:              <el> style.pad(4).bg(primary) … </el>",
+            "sx= is retired — attach Style as a block statement: \
+             style({ box: …, paint: … }).when(hover, { paint: … })  \
+             or  style([ base, match(…) ])",
         )
         .with_span(value_span)
         .with_category("sx"));
