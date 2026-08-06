@@ -380,7 +380,7 @@ fn builtin_actions_emit_bare_not_scope_qualified() {
                 r#"<div use:virtualRow> style.translateY(bind(rowY)) </div>"#.to_string()
             }
             "virtualSpacer" => {
-                r#"<div use:virtualSpacer sx={style.h(bind(rowsH))}></div>"#.to_string()
+                r#"<div use:virtualSpacer> style.h(bind(rowsH)) </div>"#.to_string()
             }
             _ => format!(r#"<div use:{a}></div>"#),
         };

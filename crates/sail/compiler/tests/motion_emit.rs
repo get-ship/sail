@@ -1,6 +1,6 @@
 //! Style motion chain methods → `__sail_motion_attach(...)` integration tests.
 //!
-//! Author form: `sx={style.… .enter({…}) / .hover({…}) / .loop({…}) …}`.
+//! Author form: block Style statement `style.… .enter({…}) / .hover({…}) / …`.
 //! Property is one of the closed `MOTION_PROPERTIES`; preset resolves against
 //! `animation-presets.json` (e.g. `spring:snappy`, `fade`, `press`).
 

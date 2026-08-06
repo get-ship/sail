@@ -390,7 +390,7 @@ fn check_all_emits_layout_warning_with_original_span() {
     // Collapsed parent + sized child: the zero-main-axis contract (an empty
     // child set totaling 0 is suppressed as analyzer noise by the layout
     // crate's gate — see check::layout tests).
-    let src = "\n\n<column sx={style.h(0)}><div sx={style.h(20)}>x</div></column>";
+    let src = "\n\n<column>\n  style.h(0)\n  <div>\n    style.h(20)\n    x\n  </div>\n</column>";
     let diags = sail_compiler::check_all(src, None, &[], None);
     let layout = diags
         .iter()

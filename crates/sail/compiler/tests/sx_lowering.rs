@@ -1,5 +1,5 @@
 //! Style product lowering — focused tests for the AOT path the compiler runs
-//! on every `<el sx={style.…}>` attribute before emit.
+//! on every element block Style statement (`style.…` / `style({…})`) before emit.
 //!
 //! Utility-string `sx="…"` is residual product and must not emit classes.
 //! The shared Style setters re-home vocab heads from

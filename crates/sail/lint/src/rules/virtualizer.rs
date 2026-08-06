@@ -1,10 +1,10 @@
 //! `sail-virtualizer` — `use:virtualRow` / `use:virtualSpacer` must wire CSS.
 //!
-//! Runtime actions write geometry to custom properties; **sx must read them**
-//! or every absolute row stacks at y=0 (the studio explorer disaster) and the
-//! spacer contributes no scroll height.
+//! Runtime actions write geometry to custom properties; **block Style must
+//! read them** or every absolute row stacks at y=0 (the studio explorer
+//! disaster) and the spacer contributes no scroll height.
 //!
-//! | Action              | Required sx bridge                                      |
+//! | Action              | Required Style bridge                                   |
 //! |---------------------|---------------------------------------------------------|
 //! | `use:virtualRow`    | `translateY(bind(rowY))` or `translate-y-(--row-y)`     |
 //! | `use:virtualSpacer` | `h(bind(rowsH))` / `height-(--rows-h)` / `h-(--rows-h)` |
@@ -44,16 +44,10 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
         return None;
     }
 
-    let sx = t
-        .attrs
-        .iter()
-        .find(|(n, _)| n == "style")
-        .map(|(_, v)| v.as_str())
-        .unwrap_or("");
-
+    let style_txt = block_style_after_open(source, t);
     let (line, col) = layout::offset_to_line_col(source, t.start);
 
-    if has_row && !has_row_translate(sx) {
+    if has_row && !has_row_translate(&style_txt) {
         return Some(Finding {
             file: path.to_path_buf(),
             line,
@@ -63,19 +57,19 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
             message: format!(
                 "<{}> has use:virtualRow but no translateY(bind(rowY)) (or \
                  translate-y-(--row-y)) on the same node — virtualRow writes \
-                 --row-y; without the sx bridge every absolute row stacks at y=0.",
+                 --row-y; without the Style bridge every absolute row stacks at y=0.",
                 t.tag
             ),
             suggest: Some(
-                "Add sx translate for the row offset, e.g. \
-                 `style={style.position(absolute).left(0).w(full).translateY(bind(rowY))}` \
+                "Add a block Style statement with translate for the row offset, e.g. \
+                 `<el use:virtualRow> style.position(absolute).left(0).w(full).translateY(bind(rowY))` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
         });
     }
 
-    if has_spacer && !has_spacer_height(sx) {
+    if has_spacer && !has_spacer_height(&style_txt) {
         return Some(Finding {
             file: path.to_path_buf(),
             line,
@@ -89,8 +83,8 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
                 t.tag
             ),
             suggest: Some(
-                "Add height from the spacer var, e.g. \
-                 `style={style.h(bind(rowsH)).position(relative).w(full)}` \
+                "Add a block Style statement with height from the spacer var, e.g. \
+                 `<el use:virtualSpacer> style.h(bind(rowsH)).position(relative).w(full)` \
                  (see sail-tree / virtual-row.ts)."
                     .to_string(),
             ),
@@ -100,13 +94,101 @@ fn check_tag(path: &Path, source: &str, t: &OpenTag) -> Option<Finding> {
     None
 }
 
+/// First Style product statement in the element body after `t`'s open tag.
+fn block_style_after_open(source: &str, t: &OpenTag) -> String {
+    let bytes = source.as_bytes();
+    let mut k = t.start;
+    let mut quote: Option<u8> = None;
+    while k < bytes.len() {
+        match (quote, bytes[k]) {
+            (Some(q), b) if b == q => quote = None,
+            (None, b'"') | (None, b'\'') => quote = Some(bytes[k]),
+            (None, b'>') => break,
+            _ => {}
+        }
+        k += 1;
+    }
+    if k >= bytes.len() {
+        return String::new();
+    }
+    let body = &source[k + 1..];
+    let trimmed = body.trim_start();
+    let starts = trimmed.starts_with("style.")
+        || trimmed.starts_with("style(")
+        || trimmed.starts_with("match(")
+        || trimmed.starts_with("when(")
+        || trimmed.starts_with("compound(")
+        || trimmed.starts_with('[');
+    if !starts {
+        return String::new();
+    }
+    let mut end = 0usize;
+    let mut paren = 0i32;
+    let mut brack = 0i32;
+    let mut brace = 0i32;
+    let tb = trimmed.as_bytes();
+    let mut i = 0;
+    let mut saw = false;
+    while i < tb.len() {
+        match tb[i] {
+            b'(' => {
+                paren += 1;
+                saw = true;
+            }
+            b')' => paren -= 1,
+            b'[' => {
+                brack += 1;
+                saw = true;
+            }
+            b']' => brack -= 1,
+            b'{' => {
+                brace += 1;
+                saw = true;
+            }
+            b'}' => brace -= 1,
+            _ => {}
+        }
+        i += 1;
+        if saw && paren == 0 && brack == 0 && brace == 0 {
+            let mut j = i;
+            while j < tb.len() && tb[j].is_ascii_whitespace() {
+                j += 1;
+            }
+            if j < tb.len() && tb[j] == b'.' {
+                let after_dot = j + 1;
+                let mut k = after_dot;
+                while k < tb.len()
+                    && (tb[k].is_ascii_alphanumeric() || tb[k] == b'_' || tb[k] == b'-')
+                {
+                    k += 1;
+                }
+                if k > after_dot {
+                    let mut m = k;
+                    while m < tb.len() && tb[m].is_ascii_whitespace() {
+                        m += 1;
+                    }
+                    if m < tb.len() && tb[m] == b'(' {
+                        i = m;
+                        continue;
+                    }
+                }
+            }
+            end = i;
+            break;
+        }
+    }
+    if end == 0 {
+        end = trimmed.len().min(500);
+    }
+    trimmed[..end].to_string()
+}
+
 /// Accept Style API and token forms that read `--row-y`.
 ///
 /// **Loose same-node accept is intentional:** after exact forms, any
 /// `translateY` / `translate-y` co-occurring with `rowY` / `row-y` / `--row-y`
-/// on the same `sx` string passes. The rule is a same-node wiring check (action
-/// + sx on one tag), not a full Style-AST proof — reducing false negatives on
-/// real primitives matters more than rejecting exotic dead-code substrings.
+/// on the same element's Style region passes. The rule is a same-node wiring
+/// check (action + Style on one element), not a full Style-AST proof.
 fn has_row_translate(sx: &str) -> bool {
     let s = sx;
     // style.translateY(bind(rowY)) / translateY(bind(rowY))
@@ -130,7 +212,7 @@ fn has_row_translate(sx: &str) -> bool {
 /// Accept Style API and token forms that read `--rows-h`.
 ///
 /// **Loose same-node accept is intentional** (mirrors [`has_row_translate`]):
-/// height setter + `rowsH` / `--rows-h` on the same `sx` is enough.
+/// height setter + `rowsH` / `--rows-h` on the same element Style is enough.
 fn has_spacer_height(sx: &str) -> bool {
     let s = sx;
     if contains_ci(s, "h(bind(rowsH))")
@@ -171,7 +253,8 @@ mod tests {
     #[test]
     fn virtual_row_without_translate_fails() {
         let src = r#"
-            <div use:virtualRow={w.start} style={style.position(absolute).left(0).w(full)}>
+            <div use:virtualRow={w.start}>
+              style.position(absolute).left(0).w(full)
               row
             </div>
         "#;
@@ -185,7 +268,8 @@ mod tests {
     #[test]
     fn virtual_row_with_translate_passes() {
         let src = r#"
-            <row use:virtualRow={w.start} style={style.position(absolute).left(0).w(full).translateY(bind(rowY))}>
+            <row use:virtualRow={w.start}>
+              style.position(absolute).left(0).w(full).translateY(bind(rowY))
               row
             </row>
         "#;
@@ -195,7 +279,8 @@ mod tests {
     #[test]
     fn virtual_spacer_without_height_fails() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()} style={style.position(relative).w(full)}>
+            <div use:virtualSpacer={totalSize()}>
+              style.position(relative).w(full)
             </div>
         "#;
         let f = lint(src);
@@ -206,7 +291,8 @@ mod tests {
     #[test]
     fn virtual_spacer_with_rows_h_passes() {
         let src = r#"
-            <div use:virtualSpacer={totalSize()} style={style.h(bind(rowsH)).position(relative).w(full)}>
+            <div use:virtualSpacer={totalSize()}>
+              style.h(bind(rowsH)).position(relative).w(full)
             </div>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));
@@ -215,7 +301,8 @@ mod tests {
     #[test]
     fn token_form_translate_accepted() {
         let src = r#"
-            <grid use:virtualRow={w.start} style="translate-y-(--row-y) absolute left-0 w-full">
+            <grid use:virtualRow={w.start}>
+              style.translateY(bind(rowY)).position(absolute).left(0).w(full)
             </grid>
         "#;
         assert!(lint(src).is_empty(), "{:?}", lint(src));

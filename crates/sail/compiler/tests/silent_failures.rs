@@ -124,7 +124,7 @@ fn d2_every_declarator_in_a_multi_declarator_const_registers() {
     // `(--b)` is the sx reflection of the SECOND declarator. Before the fix it
     // failed `sail-sx-var` with a did-you-mean pointing at its sibling `a`.
     let src = format!(
-        "{CTRL_COMMA}<div sx={{style.opacity(bind(a))}}><span sx={{style.opacity(bind(b))}}></span></div>"
+        "{CTRL_COMMA}<div>\n  style.opacity(bind(a))\n  <span>\n    style.opacity(bind(b))\n  </span>\n</div>"
     );
     compile(&src, opts()).expect("both `a` and `b` are signals — both must reflect");
 }

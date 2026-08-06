@@ -348,7 +348,7 @@ fn batch_c_surfaces_compile_on_style_path() {
                     || src.contains("when(")
                     || src.contains("compound(")
                     || src.contains("style(")
-                    || src.contains("sx={")),
+                    || src.contains("style.")),
             "{tag} must use Style product (no CVA string maps / tone-* paint):\n{src}"
         );
         let out = compile_element(src, tag).unwrap_or_else(|e| panic!("{tag} compile: {e}"));
