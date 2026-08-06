@@ -206,11 +206,12 @@ export default controller((_ctx: ControllerScope<Scope>) => {
 </div>
 </else-if><else>
 <div role="tree" aria-label={label() || null} aria-multiselectable={selectable() === 'multi' ? 'true' : null}>
-  style({ box: w(full), paint: fg(foreground) })
+  style({ box: w(full).h(full).minH(0).overflow(hidden), paint: fg(foreground) })
   <span>
     style({ box: display(contents), text: fontFamily(body).fontSize(density) })
-    <!-- Flow list: parent owns height; overflow scrolls. No absolute virtualizer
-       (collapse reflows; row boxes don't share a fixed estimate). -->
+    <!-- Host fills parent (h/minH + overflow hidden); display(contents) text wrap
+       does not generate a box so scroll child resolves % height on the host.
+       Flow list: overflow scrolls. No absolute virtualizer (collapse reflows). -->
   <div>
     style({ box: w(full).h(full).minH(0).overflowY(auto) })
 
